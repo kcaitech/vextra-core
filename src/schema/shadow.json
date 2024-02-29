@@ -8,6 +8,10 @@
                 "type": "number"
             }
         },
+        "typeId": {
+            "type": "string",
+            "default": "shape"
+        },
         "id": {
             "type": "string",
             "minLength": 32,
@@ -46,6 +50,7 @@
     },
     "required": [
         "crdtidx",
+        "typeId",
         "id",
         "isEnabled",
         "blurRadius",

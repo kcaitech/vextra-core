@@ -13,7 +13,7 @@ export type Variable = {
     id: string
     type: VariableType
     name: string
-    value: (number | string | boolean | Color | Text | Gradient | Style | (Border | Fill)[])
+    value: (number | string | boolean | Color | Text | Gradient | Style | (Border | Fill | Shadow)[] | ContextSettings | TableShape)
 }
 /* variable types */
 export enum VariableType {
@@ -31,7 +31,7 @@ export enum VariableType {
     Style = 'style',
     ContextSettings = 'contextSettings',
     Table = 'table',
-    BorderStyle = 'borderStyle',
+    MarkerType = 'markerType',
 }
 /* user infomation */
 export type UserInfo = {
@@ -198,6 +198,7 @@ export type ShapeFrame = {
 /* shadow */
 export type Shadow = {
     crdtidx: number[]
+    typeId: string
     id: string
     isEnabled: boolean
     blurRadius: number
@@ -264,7 +265,8 @@ export enum OverrideType {
     SymbolID = 'symbolID',
     ContextSettings = 'contextSettings',
     Table = 'table',
-    BorderStyle = 'borderStyle',
+    StartMarkerType = 'startMarkerType',
+    EndMarkerType = 'endMarkerType',
 }
 /* marker type */
 export enum MarkerType {
@@ -414,6 +416,7 @@ export type CrdtNumber = {
 }
 /* context settings */
 export type ContextSettings = {
+    typeId: string
     blenMode: BlendMode
     opacity: number
 }
@@ -640,7 +643,6 @@ export type GroupShape = Shape & {
 }
 /* symbol shape */
 export type SymbolShape = GroupShape & {
-    overrides?: Map<string, string>
     variables: Map<string, Variable>
     symtags?: Map<string, string>
 }

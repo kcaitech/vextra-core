@@ -43,9 +43,18 @@
                             },
                             {
                                 "$ref": "./fill.json"
+                            },
+                            {
+                                "$ref": "./shadow.json"
                             }
                         ]
                     }
+                },
+                {
+                    "$ref": "./context-settings.json"
+                },
+                {
+                    "$ref": "./table-shape.json"
                 }
             ]
         }

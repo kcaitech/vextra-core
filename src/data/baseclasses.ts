@@ -80,12 +80,12 @@ export class Variable extends Basic {
     id: string
     type: VariableType
     name: string
-    value: (number | string | boolean | Color | Text | Gradient | Style | BasicArray<(Border | Fill) >)
+    value: (number | string | boolean | Color | Text | Gradient | Style | BasicArray<(Border | Fill | Shadow) > | ContextSettings | TableShape)
     constructor(
         id: string,
         type: VariableType,
         name: string,
-        value: (number | string | boolean | Color | Text | Gradient | Style | BasicArray<(Border | Fill) >)
+        value: (number | string | boolean | Color | Text | Gradient | Style | BasicArray<(Border | Fill | Shadow) > | ContextSettings | TableShape)
     ) {
         super()
         this.id = id
@@ -1232,7 +1232,6 @@ export class GroupShape extends Shape {
  */
 export class SymbolShape extends GroupShape {
     typeId = 'symbol-shape'
-    overrides?: BasicMap<string, string>
     variables: BasicMap<string, Variable>
     symtags?: BasicMap<string, string>
     constructor(

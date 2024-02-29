@@ -50,10 +50,10 @@ function handler(h: Function, style: Style, border: Border, path: string, shape:
 }
 
 
-export function render(h: Function, style: Style, borders: Border[], path: string, shape: Shape): Array<any> {
+export function render(h: Function, style: Style, borders: Border[], startMarkerType: MarkerType | undefined, endMarkerType: MarkerType | undefined, path: string, shape: Shape): Array<any> {
     const bc = borders.length;
     let elArr = new Array();
-    const sm = style.startMarkerType, em = style.endMarkerType;
+    const sm = startMarkerType, em = endMarkerType;
     for (let i = 0; i < bc; i++) {
         const border: Border = borders[i];
         if (!border.isEnabled) continue;
@@ -67,9 +67,12 @@ export function render(h: Function, style: Style, borders: Border[], path: strin
 
 export function renderWithVars(h: Function, shape: Shape, frame: ShapeFrame, path: string,
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
+    const style = shape.style;
     let borders = shape.style.borders;
+    let startMarkerType = style.startMarkerType;
+    let endMarkerType = style.endMarkerType;
     if (varsContainer) {
-        const _vars = findOverrideAndVar(shape, OverrideType.Borders, varsContainer);
+        let _vars = findOverrideAndVar(shape, OverrideType.Borders, varsContainer);
         if (_vars) {
             // (hdl as any as VarWatcher)._watch_vars(propertyKey.toString(), _vars);
             const _var = _vars[_vars.length - 1];
@@ -78,6 +81,24 @@ export function renderWithVars(h: Function, shape: Shape, frame: ShapeFrame, pat
                 borders = _var.value;
             }
         }
+        _vars = findOverrideAndVar(shape, OverrideType.StartMarkerType, varsContainer);
+        if (_vars) {
+            // (hdl as any as VarWatcher)._watch_vars(propertyKey.toString(), _vars);
+            const _var = _vars[_vars.length - 1];
+            if (_var && _var.type === VariableType.MarkerType) {
+                // return _var.value;
+                startMarkerType = _var.value;
+            }
+        }
+        _vars = findOverrideAndVar(shape, OverrideType.EndMarkerType, varsContainer);
+        if (_vars) {
+            // (hdl as any as VarWatcher)._watch_vars(propertyKey.toString(), _vars);
+            const _var = _vars[_vars.length - 1];
+            if (_var && _var.type === VariableType.MarkerType) {
+                // return _var.value;
+                endMarkerType = _var.value;
+            }
+        }
     }
-    return render(h, shape.style, borders, path, shape);
+    return render(h, shape.style, borders, startMarkerType, endMarkerType, path, shape);
 }

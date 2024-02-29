@@ -10,11 +10,11 @@ import { uuid } from "../basic/uuid";
 import { Shape, SymbolShape } from "./shape";
 import { Path } from "./path";
 import { Variable } from "./variable";
-import { findOverrideAndVar } from "./utils";
+// import { findOverrideAndVar } from "./utils";
 
 function genRefId(refId: string, type: OverrideType) {
     if (type === OverrideType.Variable) return refId;
-    return refId + '/' + type;
+    return refId.length > 0 ? refId + '/' + type : type;
 }
 
 export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
@@ -25,7 +25,6 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
 
     overrides?: BasicMap<string, string> // 同varbinds，只是作用域为引用的symbol对象
     variables: BasicMap<string, Variable>
-
     // __childs?: Shape[];
 
     constructor(
@@ -80,17 +79,17 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         return this.__symMgr;
     }
 
-    getRefId2(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
-        if (this.isVirtualShape) return this.refId;
-        if (!varsContainer) return this.refId;
-        const _vars = findOverrideAndVar(this, OverrideType.SymbolID, varsContainer);
-        if (!_vars) return this.refId;
-        const _var = _vars[_vars.length - 1];
-        if (_var && _var.type === VariableType.SymbolRef) {
-            return _var.value;
-        }
-        return this.refId;
-    }
+    // getRefId2(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
+    //     if (this.isVirtualShape) return this.refId;
+    //     if (!varsContainer) return this.refId;
+    //     const _vars = findOverrideAndVar(this, OverrideType.SymbolID, varsContainer);
+    //     if (!_vars) return this.refId;
+    //     const _var = _vars[_vars.length - 1];
+    //     if (_var && _var.type === VariableType.SymbolRef) {
+    //         return _var.value;
+    //     }
+    //     return this.refId;
+    // }
 
     getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
         const x = 0;
@@ -110,32 +109,34 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     private _createVar4Override(type: OverrideType, value: any) {
         switch (type) {
             case OverrideType.Borders:
-                return new Variable(uuid(), classes.VariableType.Borders, "", value);
+                return new Variable(uuid(), VariableType.Borders, "", value);
             case OverrideType.Fills:
-                return new Variable(uuid(), classes.VariableType.Fills, "", value);
+                return new Variable(uuid(), VariableType.Fills, "", value);
             case OverrideType.Image:
-                return new Variable(uuid(), classes.VariableType.ImageRef, "", value);
+                return new Variable(uuid(), VariableType.ImageRef, "", value);
             // case OverrideType.StringValue:
             //     return new Variable(uuid(), classes.VariableType.StringValue, "");
             case OverrideType.Text:
-                return new Variable(uuid(), classes.VariableType.Text, "", value);
+                return new Variable(uuid(), VariableType.Text, "", value);
             case OverrideType.Visible:
-                return new Variable(uuid(), classes.VariableType.Visible, "", value);
+                return new Variable(uuid(), VariableType.Visible, "", value);
             case OverrideType.Lock:
-                return new Variable(uuid(), classes.VariableType.Lock, "", value);
+                return new Variable(uuid(), VariableType.Lock, "", value);
             case OverrideType.SymbolID:
-                return new Variable(uuid(), classes.VariableType.SymbolRef, "", value);
+                return new Variable(uuid(), VariableType.SymbolRef, "", value);
             case OverrideType.Variable:
                 const _val = value as Variable;
                 return _val;
-            case OverrideType.BorderStyle:
-                return new Variable(uuid(), classes.VariableType.BorderStyle, "", value);
+            case OverrideType.EndMarkerType:
+                return new Variable(uuid(), VariableType.MarkerType, "", value);
+            case OverrideType.StartMarkerType:
+                return new Variable(uuid(), VariableType.MarkerType, "", value);
             case OverrideType.ContextSettings:
-                return new Variable(uuid(), classes.VariableType.ContextSettings, "", value);
+                return new Variable(uuid(), VariableType.ContextSettings, "", value);
             case OverrideType.Shadows:
-                return new Variable(uuid(), classes.VariableType.Shadows, "", value);
+                return new Variable(uuid(), VariableType.Shadows, "", value);
             case OverrideType.Table:
-                return new Variable(uuid(), classes.VariableType.Table, "", value);
+                return new Variable(uuid(), VariableType.Table, "", value);
             default:
                 throw new Error("unknow override type: " + type)
         }
@@ -162,14 +163,14 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     addOverrid(refId: string, attr: OverrideType, value: any) {
         switch (attr) {
             case OverrideType.Text:
-            // case OverrideType.StringValue:
             case OverrideType.Image:
             case OverrideType.Borders:
             case OverrideType.Fills:
             case OverrideType.Visible:
             case OverrideType.Lock:
             case OverrideType.SymbolID:
-            case OverrideType.BorderStyle:
+            case OverrideType.StartMarkerType:
+            case OverrideType.EndMarkerType:
             case OverrideType.ContextSettings:
             case OverrideType.Shadows:
             case OverrideType.Table:
