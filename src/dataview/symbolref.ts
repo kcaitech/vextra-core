@@ -54,7 +54,7 @@ export class SymbolRefView extends ShapeView {
     }
 
     getRefId(): string {
-        const v = this._findOV(OverrideType.SymbolID, VariableType.SymbolRef);
+        const v = super._findOV(OverrideType.SymbolID, VariableType.SymbolRef);
         return v ? v.value : (this.m_data as SymbolRefShape).refId;
     }
 
