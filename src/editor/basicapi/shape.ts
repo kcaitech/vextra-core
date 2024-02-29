@@ -173,10 +173,10 @@ export function shapeBindVar(page: Page, shape: Shape, type: OverrideType, varId
 export function shapeUnbindVar(shape: Shape, type: OverrideType) {
     if (shape.varbinds) return crdtSetAttr(shape.varbinds, type, undefined);
 }
-export function shapeModifyOverride(page: Page, shape: SymbolShape | SymbolRefShape, refId: string, attr: OverrideType, value: string) {
-    shapeAddOverride(page, shape, refId, attr, value);
+export function shapeModifyOverride(page: Page, shape: SymbolRefShape, refId: string, value: string) {
+    shapeAddOverride(page, shape, refId, value);
 }
-export function shapeAddOverride(page: Page, shape: SymbolShape | SymbolRefShape, refId: string, attr: OverrideType, value: string) {
+export function shapeAddOverride(page: Page, shape: SymbolRefShape, refId: string, value: string) {
     if (!shape.overrides) shape.overrides = new BasicMap<string, string>();
     // refId = genRefId(refId, attr); // id+type->var
     shape.overrides.set(refId, value);
@@ -186,6 +186,6 @@ export function shapeModifyVartag(page: Page, shape: SymbolShape, varId: string,
     if (!shape.symtags) shape.symtags = new BasicMap();
     return crdtSetAttr(shape.symtags, varId, tag);
 }
-export function shapeRemoveOverride(shape: SymbolShape | SymbolRefShape, refId: string) {
+export function shapeRemoveOverride(shape: SymbolRefShape, refId: string) {
     if (shape.overrides) return crdtSetAttr(shape.overrides, refId, undefined);
 }

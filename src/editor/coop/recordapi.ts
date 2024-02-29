@@ -281,7 +281,7 @@ export class Api {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.shapeRemoveVariable(page, shape, key));
     }
-    shapeRemoveVirbindsEx(page: Page, shape: SymbolShape | SymbolRefShape, key: string, varId: string, type: VariableType) {
+    shapeRemoveOverride(page: Page, shape: SymbolRefShape, key: string, varId: string, type: VariableType) {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.shapeRemoveOverride(shape, key));
     }
@@ -294,9 +294,9 @@ export class Api {
         this.addOp(basicapi.shapeUnbindVar(shape, type));
     }
 
-    shapeAddOverride(page: Page, shape: SymbolShape | SymbolRefShape, refId: string, attr: OverrideType, value: string) {
+    shapeAddOverride(page: Page, shape: SymbolRefShape, refId: string, value: string) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeAddOverride(page, shape, refId, attr, value));
+        this.addOp(basicapi.shapeAddOverride(page, shape, refId, value));
     }
 
     private _shapeModifyAttr(page: Page, shape: Shape, attr: string, val: any) {

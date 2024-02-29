@@ -36,7 +36,7 @@ import { importContextSettings, importCurvePoint } from "../data/baseimport";
 import { exportCurvePoint } from "../data/baseexport";
 import { is_state } from "./utils/other";
 import { after_migrate, unable_to_migrate } from "./utils/migrate";
-import { get_state_name } from "./utils/symbol";
+import { get_state_name, shape4contextSettings } from "./symbol";
 import { __pre_curve, after_insert_point, pathEdit, contact_edit, pointsEdit, update_frame_by_points, before_modify_side } from "./utils/path";
 import { Color } from "../data/color";
 import { ContactLineView, PageView, PathShapeView, ShapeView, adapt2Shape } from "../dataview";
@@ -44,7 +44,6 @@ import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
 import { BasicArray } from "../data/basic";
 import { Fill } from "../data/style";
 import { FrameType } from "../data/consts";
-import { shape4contextSettings } from "./shape";
 
 interface PageXY { // 页面坐标系的xy
     x: number

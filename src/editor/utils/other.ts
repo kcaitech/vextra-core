@@ -30,6 +30,7 @@ import * as types from "../../data/typesdefine";
 import { expandTo, translateTo } from "../frame";
 import { exportStyle } from "../../data/baseexport";
 import { importStyle } from "../../data/baseimport";
+import { PageView, ShapeView } from "dataview";
 
 interface _Api {
     shapeModifyWH(page: Page, shape: Shape, w: number, h: number): void;
@@ -263,11 +264,11 @@ export function is_default_state(state: SymbolShape) {
  * @description 是否为可变组件
  * @param shape
  */
-export function is_state(shape: Shape) {
+export function is_state(shape: Shape | ShapeView) {
     return shape.type === ShapeType.Symbol && (shape?.parent instanceof SymbolUnionShape);
 }
 
-function is_sym(shape: Shape) {
+function is_sym(shape: Shape | ShapeView) {
     return shape.type === ShapeType.Symbol;
 }
 
@@ -299,8 +300,8 @@ export function find_layers_by_varid(symbol: SymbolShape, var_id: string, type: 
 /**
  * @description 给一个图层，返回这个图层所在的组件，如果不是组件内的图层，则return undefined;
  */
-export function get_symbol_by_layer(layer: Shape): SymbolShape | undefined {
-    let s: Shape | undefined = layer;
+export function get_symbol_by_layer(layer: ShapeView | Shape): SymbolShape | undefined {
+    let s: Shape | ShapeView | undefined = layer;
     while (s && !is_sym(s)) {
         s = s.parent;
     }
@@ -365,7 +366,8 @@ function get_x_type_option(symbol: Shape, group: Shape, type: VariableType, vari
 /**
  * @description 删除图层在组件身上留下的影响
  */
-export function clear_binds_effect(page: Page, shape: Shape, symbol: SymbolShape, api: Api) {
+export function clear_binds_effect(_page: PageView | Page, shape: ShapeView | Shape, symbol: SymbolShape, api: Api) {
+    const page = _page instanceof Page ? _page : _page.data;
     if (!shape.varbinds) return;
     const v1 = shape.varbinds.get(OverrideType.Visible);
     if (v1) {
@@ -449,6 +451,7 @@ export function modify_index(parent: GroupShape, s1: Shape, s2: Shape, index: nu
     return (parent.indexOfChild(s1) < parent.indexOfChild(s2)) ? index - 1 : index;
 }
 
-export function after_remove(parent: GroupShape) {
-    return ((parent?.type === ShapeType.Group) || (parent instanceof SymbolUnionShape)) && !parent?.childs?.length;
+export function after_remove(parent: GroupShape | ShapeView) {
+    return parent instanceof Shape ? (((parent?.type === ShapeType.Group) || (parent instanceof SymbolUnionShape)) && !parent?.childs?.length) :
+    (((parent?.type === ShapeType.Group) || (parent.data instanceof SymbolUnionShape)) && !(parent?.data as GroupShape).childs?.length);
 }

@@ -3,7 +3,7 @@ import { GroupShape, Shape, ShapeType, SymbolUnionShape } from "../../data/shape
 import { is_circular_ref2 } from "./ref_check";
 import { Api } from "../coop/recordapi";
 import { Page } from "../../data/page";
-import { is_exist_invalid_shape2, is_part_of_symbol } from "./symbol";
+import { is_exist_invalid_shape2, is_part_of_symbol } from "../symbol";
 import { Document } from "../../data/document";
 
 /**

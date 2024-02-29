@@ -39,12 +39,9 @@ import {
     Path,
     PathShape,
     Style,
-    SymbolRefShape,
-    TableShape,
-    Text
-} from "../data/classes";
+    SymbolRefShape} from "../data/classes";
 import { TextShapeEditor } from "./textshape";
-import { get_frame, modify_frame_after_insert, set_childs_id, transform_data } from "../io/cilpboard";
+import { modify_frame_after_insert, set_childs_id, transform_data } from "../io/cilpboard";
 import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
 import { render2path } from "../render";
 import { Matrix } from "../basic/matrix";
@@ -59,7 +56,7 @@ import { gPal } from "../basic/pal";
 import { findUsableBorderStyle, findUsableFillStyle } from "../render/boolgroup";
 import { BasicArray } from "../data/basic";
 import { TableEditor } from "./table";
-import { exportArtboard, exportShapeFrame, exportStyle, exportSymbolShape, exportVariable } from "../data/baseexport";
+import { exportArtboard, exportStyle, exportSymbolShape, exportVariable } from "../data/baseexport";
 import {
     adjust_selection_before_group,
     after_remove,
@@ -74,12 +71,12 @@ import {
 } from "./utils/other";
 import { v4 } from "uuid";
 import {
-    is_exist_invalid_shape, is_exist_invalid_shape2, is_part_of_symbol,
+    is_exist_invalid_shape2, is_part_of_symbol,
     is_part_of_symbolref,
     modify_variable_with_api,
     shape4border,
     shape4fill
-} from "./utils/symbol";
+} from "./symbol";
 import { is_circular_ref2 } from "./utils/ref_check";
 import { ExportFormat, Shadow } from "../data/baseclasses";
 import { get_rotate_for_straight, is_straight, update_frame_by_points } from "./utils/path";
@@ -87,7 +84,7 @@ import { modify_shapes_height, modify_shapes_width } from "./utils/common";
 import { CoopRepository } from "./coop/cooprepo";
 import { Api } from "./coop/recordapi";
 import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
-import { ShapeView, SymbolView, TableCellView, TableView, TextShapeView, adapt2Shape } from "../dataview";
+import { PageView, ShapeView, SymbolView, TableCellView, TableView, TextShapeView, adapt2Shape } from "../dataview";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -118,73 +115,73 @@ export interface FlipAction { // isFlippedHorizontal、isFlippedVertical
 }
 
 export interface FillColorAction { // fill.color
-    target: Shape
+    target: ShapeView
     index: number
     value: Color
 }
 
 export interface FillEnableAction { // fill.Enabled
-    target: Shape
+    target: ShapeView
     index: number
     value: boolean
 }
 
 export interface FillAddAction { // style.fills
-    target: Shape
+    target: ShapeView
     value: Fill
 }
 
 export interface FillDeleteAction { // style.fills
-    target: Shape
+    target: ShapeView
     index: number
 }
 
 export interface FillsReplaceAction { // style.fills
-    target: Shape
+    target: ShapeView
     value: Fill[]
 }
 
 export interface BorderColorAction { // border.color
-    target: Shape
+    target: ShapeView
     index: number
     value: Color
 }
 
 export interface BorderEnableAction { // border.Enabled
-    target: Shape
+    target: ShapeView
     index: number
     value: boolean
 }
 
 export interface BorderAddAction { // style.borders
-    target: Shape
+    target: ShapeView
     value: Border
 }
 
 export interface BorderDeleteAction { // style.borders
-    target: Shape
+    target: ShapeView
     index: number
 }
 
 export interface BordersReplaceAction { // style.borders
-    target: Shape
+    target: ShapeView
     value: Border[]
 }
 
 export interface BorderPositionAction {
-    target: Shape
+    target: ShapeView
     index: number
     value: BorderPosition
 }
 
 export interface BorderThicknessAction {
-    target: Shape
+    target: ShapeView
     index: number
     value: number
 }
 
 export interface BorderStyleAction {
-    target: Shape
+    target: ShapeView
     index: number
     value: BorderStyle
 }
@@ -977,7 +974,8 @@ export class PageEditor {
         }
     }
 
-    private delete_inner(page: Page, shape: Shape, api: Api): boolean {
+    private delete_inner(page: Page, _shape: ShapeView | Shape, api: Api): boolean {
+        const shape = _shape instanceof Shape ? _shape : _shape.data;
         const p = shape.parent as GroupShape;
         if (!p) return false;
         if (shape.type === ShapeType.Contact) { // 连接线删除之后需要删除两边的连接关系
@@ -985,17 +983,17 @@ export class PageEditor {
         } else {
             this.removeContact(api, page, shape);
         }
-        api.shapeDelete(this.__document, page, p, p.indexOfChild(shape));
+        api.shapeDelete(this.__document, page, p as GroupShape, (p as GroupShape).indexOfChild(shape));
         if (p.childs.length <= 0 && p.type === ShapeType.Group) {
             this.delete_inner(page, p, api)
         }
         return true;
     }
 
-    delete(shape: Shape): boolean {
-        const page = shape.getPage() as Page;
+    delete(shape: ShapeView): boolean {
+        const page = shape.getPage() as PageView;
         if (!page) return false;
-        const savep = shape.parent as GroupShape;
+        const savep = shape.parent as ShapeView;
         if (!savep) return false;
         const api = this.__repo.start("delete", (selection: ISave4Restore, isUndo: boolean) => {
             const state = {} as SelectionState;
@@ -1005,19 +1003,18 @@ export class PageEditor {
         });
         try {
             if (is_part_of_symbolref(shape)) {
-                if (modify_variable_with_api(api, this.__page, shape, VariableType.Visible, OverrideType.Visible, (_var) => {
-                    return _var ? !_var.value : !shape.isVisible;
-                })) return true;
-                api.shapeModifyVisible(this.__page, shape, !shape.isVisible);
+                const isVisible = !shape.isVisible;
+                if (modify_variable_with_api(api, this.__page, shape, VariableType.Visible, OverrideType.Visible, isVisible)) return true;
+                api.shapeModifyVisible(this.__page, shape.data, isVisible);
                 return true;
             }
             const symbol = get_symbol_by_layer(shape);
             if (symbol) {
-                clear_binds_effect(this.__page, shape, symbol, api);
+                clear_binds_effect(page, shape, symbol, api);
             }
-            if (this.delete_inner(page, shape, api)) {
+            if (this.delete_inner(page.data, shape, api)) {
                 if (after_remove(savep)) {
-                    this.delete_inner(page, savep, api);
+                    this.delete_inner(page.data, savep, api);
                 }
                 if (shape.type === ShapeType.Symbol) {
                     this.__document.__correspondent.notify('update-symbol-list');
@@ -1035,7 +1032,7 @@ export class PageEditor {
     }
 
     // 批量删除
-    delete_batch(shapes: Shape[]) {
+    delete_batch(shapes: ShapeView[]) {
         const api = this.__repo.start("deleteBatch", (selection: ISave4Restore, isUndo: boolean) => {
             const state = {} as SelectionState;
             if (isUndo) state.shapes = shapes.map(s => s.id);
@@ -1047,10 +1044,9 @@ export class PageEditor {
             try {
                 const shape = shapes[i];
                 if (is_part_of_symbolref(shape)) {
-                    if (modify_variable_with_api(api, this.__page, shape, VariableType.Visible, OverrideType.Visible, (_var) => {
-                        return _var ? !_var.value : !shape.isVisible;
-                    })) continue;
-                    api.shapeModifyVisible(this.__page, shape, !shape.isVisible);
+                    const isVisible = !shape.isVisible;
+                    if (modify_variable_with_api(api, this.__page, shape, VariableType.Visible, OverrideType.Visible, isVisible)) continue;
+                    api.shapeModifyVisible(this.__page, shape.data, isVisible);
                     continue;
                 }
                 const symbol = get_symbol_by_layer(shape);
@@ -1058,13 +1054,13 @@ export class PageEditor {
                     clear_binds_effect(this.__page, shape, symbol, api);
                 }
                 if (shape.type === ShapeType.Symbol) need_special_notify = true;
-                const page = shape.getPage() as Page;
+                const page = shape.getPage() as PageView;
                 if (!page) return false;
-                const savep = shape.parent as GroupShape;
+                const savep = shape.parent as ShapeView;
                 if (!savep) return false;
-                this.delete_inner(page, shape, api);
+                this.delete_inner(page.data, shape, api);
                 if (after_remove(savep)) {
-                    this.delete_inner(page, savep, api);
+                    this.delete_inner(page.data, savep, api);
                 }
             } catch (error) {
                 this.__repo.rollback();
@@ -2109,22 +2105,22 @@ export class PageEditor {
         }
     }
 
-    toggleShapesVisible(shapes: Shape[]) {
+    toggleShapesVisible(shapes: ShapeView[]) {
         const api = this.__repo.start('setShapesVisible');
         try {
             for (let i = 0; i < shapes.length; i++) {
-                let shape: Shape = shapes[i];
+                let shape: ShapeView = shapes[i];
                 if (!shape) continue;
-                if (modify_variable_with_api(api, this.__page, shape, VariableType.Visible, OverrideType.Visible, (_var) => {
-                    return _var ? !_var.value : !shape.isVisible;
-                })) {
+                const isVisible = !shape.isVisible;
+                if (modify_variable_with_api(api, this.__page, shape, VariableType.Visible, OverrideType.Visible, isVisible)) {
                     continue;
                 }
-                if (shape.type === ShapeType.Group) {
-                    shape = this.__page.shapes.get(shape.id)!;
-                    if (!shape) continue;
-                }
-                api.shapeModifyVisible(this.__page, shape, !shape.isVisible);
+                // ?
+                // if (shape.type === ShapeType.Group) {
+                //     shape = this.__page.shapes.get(shape.id)!;
+                //     if (!shape) continue;
+                // }
+                api.shapeModifyVisible(this.__page, shape.data, isVisible);
             }
             this.__repo.commit();
         } catch (error) {
@@ -2132,21 +2128,21 @@ export class PageEditor {
         }
     }
 
-    toggleShapesLock(shapes: Shape[]) {
+    toggleShapesLock(shapes: ShapeView[]) {
         const api = this.__repo.start('setShapesLocked');
         try {
             for (let i = 0; i < shapes.length; i++) {
-                let shape: Shape | undefined = shapes[i];
-                if (modify_variable_with_api(api, this.__page, shape, VariableType.Lock, OverrideType.Lock, (_var) => {
-                    return _var ? !_var.value : !shape?.isLocked;
-                })) {
+                let shape: ShapeView | undefined = shapes[i];
+                const isLocked = !shape.isLocked;
+                if (modify_variable_with_api(api, this.__page, shape, VariableType.Lock, OverrideType.Lock, isLocked)) {
                     continue;
                 }
-                if (shape.type === ShapeType.Group) {
-                    shape = this.__page.shapes.get(shape.id)
-                }
-                if (!shape) continue;
-                api.shapeModifyLock(this.__page, shape, !shape.isLocked);
+                // ?
+                // if (shape.type === ShapeType.Group) {
+                //     shape = this.__page.shapes.get(shape.id)
+                // }
+                // if (!shape) continue;
+                api.shapeModifyLock(this.__page, shape.data, isLocked);
             }
             this.__repo.commit();
         } catch (error) {
