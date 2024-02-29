@@ -600,10 +600,10 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         this.variables = variables;
     }
 
-    // getOpTarget(path: string[]): any {
-    //     if (path[0] === 'overrides' && !this.overrides) this.overrides = new BasicMap<string, string>();
-    //     return super.getOpTarget(path);
-    // }
+    getOpTarget(path: string[]): any {
+        if (path[0] === 'symtags' && !this.symtags) this.symtags = new BasicMap<string, string>();
+        return super.getOpTarget(path);
+    }
 
     addVar(v: Variable): Variable {
         if (!this.variables) this.variables = new BasicMap<string, Variable>();
