@@ -116,9 +116,6 @@ inject['SymbolShape']['before'] = `\
     if (!source.variables) {
         source.variables = {} as any
     }
-    if ((source as any).virbindsEx) {
-        source.overrides = (source as any).virbindsEx
-    }
 `
 inject['SymbolShape']['after'] = `\
     // inject code

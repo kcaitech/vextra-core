@@ -89,69 +89,74 @@ export class SymbolRefView extends ShapeView {
 
     // todo
     findOverride(refId: string, type: OverrideType): Variable[] | undefined {
-        if (this.symData) {
-            const override = this.symData.getOverrid(refId, type);
-            if (override) {
-                const ret = [override.v];
-                if (this.varsContainer) findVar(override.v.id, ret, this.varsContainer);
-                return ret;
-            }
-        }
-        const override = this.data.getOverrid(refId, type);
-        if (override) {
-            const ret = [override.v];
-            // this.id
-            refId = override.v.id;
-            if (this.isVirtualShape) {
-                refId = (this.data).id + '/' + refId;
-            }
-            else {
-                refId = this.id + '/' + refId;
-            }
-            if (this.varsContainer) findVar(refId, ret, this.varsContainer);
-            return ret;
-        }
-        const thisId = this.isVirtualShape ? (this.data).id : this.id;
-        if (refId !== thisId) refId = thisId + '/' + refId; // fix ref自己查找自己的override
-        return this.varsContainer && findOverride(refId, type, this.varsContainer);
+        // if (this.symData) {
+        //     const override = this.symData.getOverrid(refId, type);
+        //     if (override) {
+        //         const ret = [override.v];
+        //         if (this.varsContainer) findVar(override.v.id, ret, this.varsContainer);
+        //         return ret;
+        //     }
+        // }
+        // const override = this.data.getOverrid(refId, type);
+        // if (override) {
+        //     const ret = [override.v];
+        //     // this.id
+        //     refId = override.v.id;
+        //     if (this.isVirtualShape) {
+        //         refId = (this.data).id + '/' + refId;
+        //     }
+        //     else {
+        //         refId = this.id + '/' + refId;
+        //     }
+        //     if (this.varsContainer) findVar(refId, ret, this.varsContainer);
+        //     return ret;
+        // }
+        // const thisId = this.isVirtualShape ? (this.data).id : this.id;
+        // if (refId !== thisId) refId = thisId + '/' + refId; // fix ref自己查找自己的override
+        // return this.varsContainer && findOverride(refId, type, this.varsContainer);
+
+        return findOverride(refId, type, this.varsContainer || []);
     }
 
     // todo
     findVar(varId: string, ret: Variable[]) {            // todo subdata, proxy
-        if (this.symData) {
-            const override = this.symData.getOverrid(varId, OverrideType.Variable);
-            if (override) {
-                ret.push(override.v);
-                // scope??
-                varId = override.v.id;
-            }
-            else {
-                const _var = this.symData.getVar(varId);
-                if (_var) {
-                    ret.push(_var);
-                }
-            }
-        }
-        const override = this.data.getOverrid(varId, OverrideType.Variable);
-        if (override) {
-            ret.push(override.v);
-            if (this.varsContainer) findVar(override.v.id, ret, this.varsContainer);
-            return;
-        }
-        const _var = this.data.getVar(varId);
-        if (_var) {
-            ret.push(_var);
-        }
-        // 考虑scope
-        // varId要叠加上refid
-        if (this.isVirtualShape) {
-            varId = (this.data).id + '/' + varId;
-        }
-        else {
-            varId = this.id + '/' + varId;
-        }
-        if (this.varsContainer) findVar(varId, ret, this.varsContainer);
-        return;
+
+        findVar(varId, ret, this.varsContainer || []);
+
+        // if (this.symData) {
+        //     const override = this.symData.getOverrid(varId, OverrideType.Variable);
+        //     if (override) {
+        //         ret.push(override.v);
+        //         // scope??
+        //         varId = override.v.id;
+        //     }
+        //     else {
+        //         const _var = this.symData.getVar(varId);
+        //         if (_var) {
+        //             ret.push(_var);
+        //         }
+        //     }
+        // }
+        // const override = this.data.getOverrid(varId, OverrideType.Variable);
+        // if (override) {
+        //     ret.push(override.v);
+        //     if (this.varsContainer) findVar(override.v.id, ret, this.varsContainer);
+        //     return;
+        // }
+        // const _var = this.data.getVar(varId);
+        // if (_var) {
+        //     ret.push(_var);
+        // }
+        // // 考虑scope
+        // // varId要叠加上refid
+        // if (this.isVirtualShape) {
+        //     varId = (this.data).id + '/' + varId;
+        // }
+        // else {
+        //     varId = this.id + '/' + varId;
+        // }
+        // if (this.varsContainer) findVar(varId, ret, this.varsContainer);
+        // return;
     }
 
     // 需要自己加载symbol

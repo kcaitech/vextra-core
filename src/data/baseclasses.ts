@@ -1232,7 +1232,6 @@ export class GroupShape extends Shape {
  */
 export class SymbolShape extends GroupShape {
     typeId = 'symbol-shape'
-    overrides?: BasicMap<string, string>
     variables: BasicMap<string, Variable>
     symtags?: BasicMap<string, string>
     constructor(

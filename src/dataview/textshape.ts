@@ -15,7 +15,9 @@ export class TextShapeView extends ShapeView {
 
     getText(): Text {
         const v = this._findOV(OverrideType.Text, VariableType.Text);
-        return v ? v.value : (this.m_data as TextShape).text;
+        const text = v ? v.value : (this.m_data as TextShape).text;
+        if (typeof text === 'string') throw new Error("");
+        return text;
     }
     get data() {
         return this.m_data as TextShape;

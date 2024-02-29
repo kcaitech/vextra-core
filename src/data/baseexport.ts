@@ -1606,14 +1606,6 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
                 });
                 return ret;
             })(),
-        overrides: source.overrides && (() => {
-            const val = source.overrides;
-            const ret: any = {};
-            val.forEach((v, k) => {
-                ret[k] = v
-            });
-            return ret;
-        })(),
         variables: (() => {
             const val = source.variables;
             const ret: any = {};
@@ -1721,14 +1713,6 @@ export function exportSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IEx
                 const ret: any = {};
                 val.forEach((v, k) => {
                     ret[k] = exportVariable(v, ctx)
-                });
-                return ret;
-            })(),
-        overrides: source.overrides && (() => {
-                const val = source.overrides;
-                const ret: any = {};
-                val.forEach((v, k) => {
-                    ret[k] = v
                 });
                 return ret;
             })(),

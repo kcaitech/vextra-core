@@ -643,7 +643,6 @@ export type GroupShape = Shape & {
 }
 /* symbol shape */
 export type SymbolShape = GroupShape & {
-    overrides?: Map<string, string>
     variables: Map<string, Variable>
     symtags?: Map<string, string>
 }

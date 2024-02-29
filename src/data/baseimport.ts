@@ -1644,9 +1644,6 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
     if (!source.variables) {
         source.variables = {} as any
     }
-    if ((source as any).virbindsEx) {
-        source.overrides = (source as any).virbindsEx
-    }
     const ret: impl.SymbolShape = new impl.SymbolShape (
         (() => {
             const ret = new BasicArray<number>()
@@ -1774,15 +1771,6 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
         });
         return ret
     })()
-    if (source.overrides !== undefined) ret.overrides = (() => {
-        const ret = new BasicMap<string, string>()
-        const val = source.overrides as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-        Object.keys(val).forEach((k) => {
-            const v = val[k];
-            ret.set(k, v)
-        });
-        return ret
-    })()
     if (source.symtags !== undefined) ret.symtags = (() => {
         const ret = new BasicMap<string, string>()
         const val = source.symtags as any; // json没有map对象,导入导出的是{[key: string]: value}对象
@@ -1904,15 +1892,6 @@ export function importSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IIm
             return ret
         })()
     )
-    if (source.overrides !== undefined) ret.overrides = (() => {
-        const ret = new BasicMap<string, string>()
-        const val = source.overrides as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-        Object.keys(val).forEach((k) => {
-            const v = val[k];
-            ret.set(k, v)
-        });
-        return ret
-    })()
     if (source.symtags !== undefined) ret.symtags = (() => {
         const ret = new BasicMap<string, string>()
         const val = source.symtags as any; // json没有map对象,导入导出的是{[key: string]: value}对象

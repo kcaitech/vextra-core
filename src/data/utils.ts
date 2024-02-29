@@ -832,43 +832,36 @@ export function path_for_free_start_contact(points: CurvePoint[], end: PageXY | 
     __handle[direction](points, start, _end);
 }
 
-function findVar(varId: string, ret: Variable[], varsContainer: (SymbolRefShape | SymbolShape)[], i: number | undefined = undefined) {
-    i = i === undefined ? varsContainer.length - 1 : i;
+export function findVar(varId: string, ret: Variable[], varsContainer: (SymbolRefShape | SymbolShape)[], _i: number | undefined = undefined) {
+    let i = _i === undefined ? varsContainer.length - 1 : _i;
     for (; i >= 0; --i) {
         const container = varsContainer[i];
-        const override = container.getOverrid(varId, OverrideType.Variable);
-        if (override) {
-            ret.push(override.v);
-            // scope??
-            varId = override.v.id;
-        }
-        else {
-            const _var = container.getVar(varId);
-            if (_var) {
-                ret.push(_var);
-            }
-        }
-        if (container instanceof SymbolRefShape) varId = container.id + '/' + varId;
+        const _var = container.getVar(varId);
+        if (!_var) continue;
+        ret.push(_var);
+        const ov = findOverride(varId, OverrideType.Variable, varsContainer.slice(0, i));
+        if (ov) ret.push(...ov);
+        return ret;
     }
 }
 
 export function findOverride(refId: string, type: OverrideType, varsContainer: (SymbolRefShape | SymbolShape)[]) {
+    let ret;
     for (let i = varsContainer.length - 1; i >= 0; --i) {
         const container = varsContainer[i];
-        const override = container.getOverrid(refId, type);
-        if (override) {
-            const ret = [override.v];
-            refId = override.v.id;
-            if (container instanceof SymbolRefShape) refId = container.id + '/' + refId;
-            findVar(refId, ret, varsContainer, i - 1);
-            return ret;
+        if (container instanceof SymbolRefShape) {
+            const override = container.getOverrid(refId, type);
+            if (override) {
+                ret = override;
+            }
+            refId = refId.length > 0 ? (container.id + '/' + refId) : container.id;
         }
-        if (container instanceof SymbolRefShape) refId = container.id + '/' + refId;
     }
+    return ret ? [ret.v] : undefined;
 }
 
 export function findOverrideAndVar(
-    shape: Shape, // proxyed
+    shape: Shape, // not proxyed
     overType: OverrideType,
     varsContainer: (SymbolRefShape | SymbolShape)[]) {
 
