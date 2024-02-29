@@ -268,8 +268,8 @@ function _ov(varType: VariableType, overrideType: OverrideType, valuefun: (_var:
             const pIdx = varsContainer.findIndex((v) => v.id === p.id);
             // if (pIdx < 0) throw new Error(); // 可能的，当前view为symbolref，正在修改组件变量
             const hostIdx = varsContainer.findIndex((v) => v instanceof SymbolRefShape);
-            if (hostIdx < 0) throw new Error();
-            if (pIdx >= 0 && pIdx <= hostIdx) return _var; // 可直接修改
+            // if (hostIdx < 0) throw new Error();
+            if (hostIdx < 0 || pIdx >= 0 && pIdx <= hostIdx) return _var; // 可直接修改
             // return _ov_3(_var, _var.name, valuefun, view, page, api);
             // 否则重新override
         }
@@ -361,11 +361,19 @@ export function modify_variable(document: Document, page: Page, view: ShapeView,
         if (attr.value) api.shapeModifyVariable(page, _var, attr.value);
         return;
     }
-    const host = varsContainer[hostIdx] as SymbolRefShape;
+
+    let value = attr.value;
+    if (_var.type === VariableType.Text
+        && typeof value === 'string') {
+        const origin = _var.value as Text;
+        const text = newText2(origin.attr, origin.paras[0]?.attr, origin.paras[0]?.spans[0]);
+        text.insertText(value, 0);
+        value = text;
+    }
 
     // 到这需要override
     let override_id;
-    if (p instanceof SymbolRefShape) {
+    if (p instanceof SymbolRefShape) { // p不可以修改
         const overrides = p.overrides;
         if (!overrides) throw new Error(); // 废var?
         for (let k in overrides) {
@@ -375,29 +383,59 @@ export function modify_variable(document: Document, page: Page, view: ShapeView,
             }
         }
         if (!override_id) throw new Error();
+
+        const idx = override_id.lastIndexOf('/');
+        const _overrideType = idx >= 0 ? override_id.slice(idx + 1) : override_id;
+        let ot;
+        switch (_overrideType) {
+            case OverrideType.Borders:
+            case OverrideType.ContextSettings:
+            case OverrideType.EndMarkerType:
+            case OverrideType.Fills:
+            case OverrideType.Image:
+            case OverrideType.Lock:
+            case OverrideType.Shadows:
+            case OverrideType.StartMarkerType:
+            case OverrideType.SymbolID:
+            case OverrideType.Table:
+            case OverrideType.Text:
+            case OverrideType.Visible:
+                ot = _overrideType as OverrideType;
+                break;
+            default:
+                ot = OverrideType.Variable;
+                break;
+        }
+
+        const _vars = findOverride(override_id, ot, pIdx >= 0 ? varsContainer.slice(0, pIdx) : varsContainer)
+        if (_vars) {
+            const _var1 = _ov_3(_vars, _var.name, () => value, view, page, api);
+            if (_var1 && _var1 === _vars[_vars.length - 1]) {
+                api.shapeModifyVariable(page, _var1, value);
+            }
+            return;
+        }
     } else {
         // SymbolShape
         override_id = _var.id;
+        const _vars = findOverride(override_id, OverrideType.Variable, pIdx >= 0 ? varsContainer.slice(0, pIdx) : varsContainer)
+        if (_vars) {
+            const _var1 = _ov_3(_vars, _var.name, () => value, view, page, api);
+            if (_var1 && _var1 === _vars[_vars.length - 1]) {
+                api.shapeModifyVariable(page, _var1, value);
+            }
+            return;
+        }
     }
-
     if (pIdx < 0) { // 可能的，当前view为symbolref，正在修改组件变量
         // 组件中的变量，不在ref中也不在view的子view中
         pIdx = varsContainer.length - 1;
     }
-
+    const host = varsContainer[hostIdx] as SymbolRefShape;
     for (let i = pIdx; i >= 0; --i) {
         const c = varsContainer[i];
         if (c === host) break;
         if (c instanceof SymbolRefShape) override_id = c.id + '/' + override_id;
-    }
-
-    let value = attr.value;
-    if (_var.type === VariableType.Text
-        && typeof value === 'string') {
-        const origin = _var.value as Text;
-        const text = newText2(origin.attr, origin.paras[0]?.attr, origin.paras[0]?.spans[0]);
-        text.insertText(value, 0);
-        value = text;
     }
 
     const _var2 = _ov_newvar(host, attr.name ?? _var.name, value ?? _clone_value(_var.value, document, page), _var.type, page, api);
