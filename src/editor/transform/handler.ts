@@ -7,10 +7,10 @@ import { PageView, adapt2Shape } from "../../dataview";
 export type FrameLike = { x: number, y: number, width: number, height: number };
 
 export class AsyncApiCaller {
-    private __repo: CoopRepository;
-    private __document: Document;
-    private api: Api;
-    private page: Page;
+    __repo: CoopRepository;
+    __document: Document;
+    api: Api;
+    page: Page;
 
     constructor(repo: CoopRepository, document: Document, page: PageView, desc: string) {
         this.__repo = repo;
