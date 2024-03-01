@@ -379,7 +379,7 @@ export function modify_variable(document: Document, page: Page, view: ShapeView,
     const varsContainer = _varsContainer(view);
     if (!varsContainer || varsContainer.length === 0) {
         if (attr.name && _var.name !== attr.name) api.shapeModifyVariableName(page, _var, attr.name);
-        if (attr.value) api.shapeModifyVariable(page, _var, attr.value);
+        if (attr.hasOwnProperty('value')) api.shapeModifyVariable(page, _var, attr.value);
         return;
     }
 
@@ -389,7 +389,7 @@ export function modify_variable(document: Document, page: Page, view: ShapeView,
     // if (hostIdx < 0) throw new Error();
     if (hostIdx < 0 || pIdx >= 0 && pIdx <= hostIdx) {
         if (attr.name && _var.name !== attr.name) api.shapeModifyVariableName(page, _var, attr.name);
-        if (attr.value) api.shapeModifyVariable(page, _var, attr.value);
+        if (attr.hasOwnProperty('value')) api.shapeModifyVariable(page, _var, attr.value);
         return;
     }
 
