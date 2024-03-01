@@ -1,4 +1,6 @@
-import { OverrideType, Shape, ShapeFrame, SymbolRefShape, SymbolShape, Variable } from "../data/classes";
+import { Shape, ShapeFrame, SymbolRefShape, SymbolShape } from "../data/classes";
+
+export { findVar, findOverride, findOverrideAndVar } from "../data/utils"
 
 export function stringh(tag: string, attrs?: any, childs?: Array<string>): string;
 export function stringh(tag: string, childs?: Array<string>): string;
@@ -45,42 +47,6 @@ export function stringh(...args: any[]): string {
     return ret;
 }
 
-// 待优化
-export function findVar(varId: string, ret: Variable[], varsContainer: (SymbolRefShape | SymbolShape)[], i: number | undefined = undefined) {
-    i = i === undefined ? varsContainer.length - 1 : i;
-    for (; i >= 0; --i) {
-        const container = varsContainer[i];
-        const override = container.getOverrid(varId, OverrideType.Variable);
-        if (override) {
-            ret.push(override.v);
-            // scope??
-            varId = override.v.id;
-        }
-        else {
-            const _var = container.getVar(varId);
-            if (_var) {
-                ret.push(_var);
-            }
-        }
-        if (container instanceof SymbolRefShape) varId = container.id + '/' + varId;
-    }
-}
-
-export function findOverride(refId: string, type: OverrideType, varsContainer: (SymbolRefShape | SymbolShape)[]) {
-    for (let i = varsContainer.length - 1; i >= 0; --i) {
-        const container = varsContainer[i];
-        const override = container.getOverrid(refId, type);
-        if (override) {
-            const ret = [override.v];
-            refId = override.v.id;
-            if (container instanceof SymbolRefShape) refId = container.id + '/' + refId;
-            findVar(refId, ret, varsContainer, i - 1);
-            return ret;
-        }
-        if (container instanceof SymbolRefShape) refId = container.id + '/' + refId;
-    }
-}
-
 export function genid(shape: Shape,
     varsContainer: (SymbolRefShape | SymbolShape)[]) {
     if (varsContainer.length > 0) {
@@ -103,26 +69,6 @@ export function getShapeViewId(shape: Shape,
     varsContainer?: (SymbolRefShape | SymbolShape)[]) {
     if (varsContainer) return genid(shape, varsContainer);
     return shape.id;
-}
-
-export function findOverrideAndVar(
-    shape: Shape, // not proxyed
-    overType: OverrideType,
-    varsContainer: (SymbolRefShape | SymbolShape)[]) {
-
-    const varbinds = shape.varbinds;
-    const varId = varbinds?.get(overType);
-    if (varId) {
-        const _vars: Variable[] = [];
-        findVar(varId, _vars, varsContainer);
-        if (_vars && _vars.length > 0) return _vars;
-    }
-
-    // find override
-    // id: xxx/xxx/xxx
-    const id = shape.id; // genid(shape, varsContainer);
-    const _vars = findOverride(id, overType, varsContainer);
-    return _vars;
 }
 
 

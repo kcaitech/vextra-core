@@ -12,6 +12,8 @@
         "symbolID",
         "contextSettings",
         "table",
-        "borderStyle"
+        "startMarkerType",
+        "endMarkerType",
+        "exportOptions"
     ]
 }

@@ -9,16 +9,18 @@ import { CursorLocate, TextLocate, locateCursor, locateRange, locateText } from 
 export class TableCellView extends ShapeView {
 
     private m_imgPH: string;
+    private m_index: { row: number, col: number };
 
-    constructor(ctx: DViewCtx, props: PropsType & { frame?: ShapeFrame }, imgPH: string) {
+    constructor(ctx: DViewCtx, props: PropsType & { frame: ShapeFrame } & { index: { row: number, col: number } }, imgPH: string) {
         super(ctx, props, false);
         this.m_imgPH = imgPH;
 
-        const frame = props.frame!;
+        const frame = props.frame;
         this.m_frame.x = frame.x;
         this.m_frame.y = frame.y;
         this.m_frame.width = frame.width;
         this.m_frame.height = frame.height;
+        this.m_index = props.index;
         this.afterInit();
     }
 
@@ -33,13 +35,18 @@ export class TableCellView extends ShapeView {
     get data(): TableCell {
         return this.m_data as TableCell;
     }
+    get index() {
+        return this.m_index;
+    }
 
-    layout(props?: PropsType & { frame?: ShapeFrame }): void {
+    layout(props?: PropsType & { frame: ShapeFrame, index: { row: number, col: number } }): void {
 
         this.m_ctx.removeReLayout(this);
 
-        const frame = props?.frame;
-        if (frame && isDiffShapeFrame(this.m_frame, frame)) {
+        if (!props) return;
+
+        const frame = props.frame;
+        if (isDiffShapeFrame(this.m_frame, frame)) {
             this.updateLayoutArgs(frame, undefined, undefined, undefined, undefined);
             this.m_textpath = undefined;
             this.m_layout = undefined; // todo
@@ -48,6 +55,12 @@ export class TableCellView extends ShapeView {
             //     shape.text?.updateSize(frame.width, frame.height);
             // }
             this.m_ctx.setDirty(this);
+        }
+
+        const index = props.index;
+        if (index.col !== this.m_index.col || index.row !== this.m_index.row) {
+            this.m_index = index;
+            // this.m_ctx.setDirty(this);
         }
     }
 
@@ -73,7 +86,7 @@ export class TableCellView extends ShapeView {
     __preText: Text | undefined;
     getLayout() {
         const text = this.getText();
-        if (this.__preText !== text && this.__layoutToken && this.__preText) this.__preText.dropLayout(this.__layoutToken, this.id); 
+        if (this.__preText !== text && this.__layoutToken && this.__preText) this.__preText.dropLayout(this.__layoutToken, this.id);
         const frame = this.frame;
         const layout = text.getLayout3(frame.width, frame.height, this.id, this.__layoutToken);
         this.__layoutToken = layout.token;
@@ -154,13 +167,13 @@ export class TableCellView extends ShapeView {
             //     shape.text?.updateSize(frame.width, frame.height);
             // }
             const layout = this.getLayout();
-            return renderTextLayout(elh, layout);
+            return renderTextLayout(elh, layout, frame);
         }
         return [];
     }
 
     onDestory(): void {
         super.onDestory();
-        if (this.__layoutToken && this.__preText) this.__preText.dropLayout(this.__layoutToken, this.id); 
+        if (this.__layoutToken && this.__preText) this.__preText.dropLayout(this.__layoutToken, this.id);
     }
 }

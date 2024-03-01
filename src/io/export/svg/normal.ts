@@ -1,4 +1,4 @@
-import { GroupShape, ImageShape, PathShape, RectShape, Shape, SymbolShape, TextShape } from "../../../data/shape";
+import { GroupShape, ImageShape, OverrideType, PathShape, RectShape, Shape, SymbolShape, TextShape, VariableType } from "../../../data/shape";
 import { renderArtboard as art } from "../../../render";
 import { renderGroup as group } from "../../../render";
 import { renderBoolOpShape as boolgroup } from "../../../render";
@@ -17,7 +17,7 @@ import {
     LineView, PathShapeView, PathShapeView2,
     RectShapeView, SymbolRefView, SymbolView,
     TableCellView, TableView, TextShapeView,
-    adapt2Shape, isAdaptedShape
+    adapt2Shape, findOverrideAndVar, isAdaptedShape
 } from "../../../dataview";
 
 const comsMap: Map<ShapeType, ComType> = new Map();
@@ -86,12 +86,25 @@ function makeAdapt(shape: SymbolRefShape, varsContainer: (SymbolRefShape | Symbo
     const adapt = adapt2Shape(adaptView) as SymbolRefShape;
     return { shape: adapt, view: adaptView, ctx: adaptCtx };
 }
+
+function getRefId2(_this: SymbolRefShape, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
+    if (_this.isVirtualShape) return _this.refId;
+    if (!varsContainer) return _this.refId;
+    const _vars = findOverrideAndVar(_this, OverrideType.SymbolID, varsContainer);
+    if (!_vars) return _this.refId;
+    const _var = _vars[_vars.length - 1];
+    if (_var && _var.type === VariableType.SymbolRef) {
+        return _var.value;
+    }
+    return _this.refId;
+}
+
 comsMap.set(ShapeType.SymbolRef, (data: Shape,
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
     const shape = data as SymbolRefShape;
     const symMgr = shape.getSymbolMgr();
     if (!symMgr) return "";
-    const refId = shape.getRefId2(varsContainer);
+    const refId = getRefId2(shape, varsContainer);
     const sym0 = symMgr.getSync(refId);
     if (!sym0) return "";
 

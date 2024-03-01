@@ -42,6 +42,9 @@ export function exportVariable(source: types.Variable, ctx?: IExportContext): ty
                             if (val.typeId == 'fill') {
                                 return exportFill(val as types.Fill, ctx)
                             }
+                            if (val.typeId == 'shadow') {
+                                return exportShadow(val as types.Shadow, ctx)
+                            }
                             {
                                 throw new Error('unknow val: ' + val)
                             }
@@ -62,6 +65,15 @@ export function exportVariable(source: types.Variable, ctx?: IExportContext): ty
             }
             if (val.typeId == 'style') {
                 return exportStyle(val as types.Style, ctx)
+            }
+            if (val.typeId == 'context-settings') {
+                return exportContextSettings(val as types.ContextSettings, ctx)
+            }
+            if (val.typeId == 'table-shape') {
+                return exportTableShape(val as types.TableShape, ctx)
+            }
+            if (val.typeId == 'export-options') {
+                return exportExportOptions(val as types.ExportOptions, ctx)
             }
             {
                 throw new Error('unknow val: ' + val)
@@ -207,7 +219,7 @@ export function exportStop(source: types.Stop, ctx?: IExportContext): types.Stop
         })(),
         id: source.id,
         position: source.position,
-        color: source.color && exportColor(source.color, ctx),
+        color: exportColor(source.color, ctx),
     }
     return ret
 }
@@ -226,6 +238,8 @@ export function exportSpanAttr(source: types.SpanAttr, ctx?: IExportContext): ty
         kerning: source.kerning,
         transform: source.transform && exportTextTransformType(source.transform, ctx),
         placeholder: source.placeholder,
+        fillType: source.fillType && exportFillType(source.fillType, ctx),
+        gradient: source.gradient && exportGradient(source.gradient, ctx),
     }
     return ret
 }
@@ -299,6 +313,7 @@ export function exportShadow(source: types.Shadow, ctx?: IExportContext): types.
             }
             return ret
         })(),
+        typeId: source.typeId,
         id: source.id,
         isEnabled: source.isEnabled,
         blurRadius: source.blurRadius,
@@ -433,6 +448,7 @@ export function exportGradient(source: types.Gradient, ctx?: IExportContext): ty
             return ret
         })(),
         gradientType: exportGradientType(source.gradientType, ctx),
+        gradientOpacity: source.gradientOpacity,
     }
     return ret
 }
@@ -475,6 +491,7 @@ export function exportExportVisibleScaleType(source: types.ExportVisibleScaleTyp
 /* export options */
 export function exportExportOptions(source: types.ExportOptions, ctx?: IExportContext): types.ExportOptions {
     const ret = {
+        typeId: source.typeId,
         exportFormats: (() => {
             const ret = []
             for (let i = 0, len = source.exportFormats.length; i < len; i++) {
@@ -604,6 +621,7 @@ export function exportCrdtNumber(source: types.CrdtNumber, ctx?: IExportContext)
 /* context settings */
 export function exportContextSettings(source: types.ContextSettings, ctx?: IExportContext): types.ContextSettings {
     const ret = {
+        typeId: source.typeId,
         blenMode: exportBlendMode(source.blenMode, ctx),
         opacity: source.opacity,
     }
@@ -1005,6 +1023,8 @@ export function exportSpan(source: types.Span, ctx?: IExportContext): types.Span
         kerning: source.kerning,
         transform: source.transform && exportTextTransformType(source.transform, ctx),
         placeholder: source.placeholder,
+        fillType: source.fillType && exportFillType(source.fillType, ctx),
+        gradient: source.gradient && exportGradient(source.gradient, ctx),
         length: source.length,
     }
     return ret
@@ -1182,6 +1202,8 @@ export function exportParaAttr(source: types.ParaAttr, ctx?: IExportContext): ty
         kerning: source.kerning,
         transform: source.transform && exportTextTransformType(source.transform, ctx),
         placeholder: source.placeholder,
+        fillType: source.fillType && exportFillType(source.fillType, ctx),
+        gradient: source.gradient && exportGradient(source.gradient, ctx),
         alignment: source.alignment && exportTextHorAlign(source.alignment, ctx),
         paraSpacing: source.paraSpacing,
         minimumLineHeight: source.minimumLineHeight,
@@ -1210,6 +1232,8 @@ export function exportTextAttr(source: types.TextAttr, ctx?: IExportContext): ty
         kerning: source.kerning,
         transform: source.transform && exportTextTransformType(source.transform, ctx),
         placeholder: source.placeholder,
+        fillType: source.fillType && exportFillType(source.fillType, ctx),
+        gradient: source.gradient && exportGradient(source.gradient, ctx),
         verAlign: source.verAlign && exportTextVerAlign(source.verAlign, ctx),
         orientation: source.orientation && exportTextOrientation(source.orientation, ctx),
         textBehaviour: source.textBehaviour && exportTextBehaviour(source.textBehaviour, ctx),
@@ -1595,14 +1619,6 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
                 });
                 return ret;
             })(),
-        overrides: source.overrides && (() => {
-            const val = source.overrides;
-            const ret: any = {};
-            val.forEach((v, k) => {
-                ret[k] = v
-            });
-            return ret;
-        })(),
         variables: (() => {
             const val = source.variables;
             const ret: any = {};
@@ -1710,14 +1726,6 @@ export function exportSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IEx
                 const ret: any = {};
                 val.forEach((v, k) => {
                     ret[k] = exportVariable(v, ctx)
-                });
-                return ret;
-            })(),
-        overrides: source.overrides && (() => {
-                const val = source.overrides;
-                const ret: any = {};
-                val.forEach((v, k) => {
-                    ret[k] = v
                 });
                 return ret;
             })(),

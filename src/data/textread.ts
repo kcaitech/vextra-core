@@ -3,6 +3,8 @@ import { Para, AttrGetter, Span, SpanAttr, Text, ParaAttr, UnderlineType, Strike
 import { _travelTextPara } from "./texttravel";
 import { mergeParaAttr, mergeSpanAttr } from "./textutils";
 import { Color } from "./color";
+import { FillType } from "./style";
+import { gradient_equals } from "../io/cilpboard";
 export function getSimpleText(shapetext: Text, index: number, length: number): string {
     let text = '';
     _travelTextPara(shapetext.paras, index, length, (paraArray, paraIndex, para, index, length) => {
@@ -31,6 +33,7 @@ export function getTextWithFmt(shapetext: Text, index: number, length: number): 
 }
 
 const _NullColor = new Color(1, 0, 0, 0);
+
 function _getSpanFormat(attr: SpanAttr, attrGetter: AttrGetter, paraAttr: ParaAttr | undefined, textAttr: TextAttr | undefined) {
     const color = attr.color ?? (paraAttr?.color) ?? (textAttr?.color) ?? _NullColor;
     if (attrGetter.color === undefined) {
@@ -46,6 +49,14 @@ function _getSpanFormat(attr: SpanAttr, attrGetter: AttrGetter, paraAttr: ParaAt
     else if (!(color.equals(attrGetter.color))) {
         // 两个都不是_NullColor
         attrGetter.colorIsMulti = true;
+    }
+    const gradient = attr.gradient ?? (paraAttr?.gradient) ?? (textAttr?.gradient);
+    if (attrGetter.gradient === undefined) {
+        attrGetter.gradient = gradient;
+    } else if (gradient === undefined) {
+        attrGetter.gradientIsMulti = true;
+    } else if (!gradient_equals(attrGetter.gradient, gradient)) {
+        attrGetter.gradientIsMulti = true;
     }
 
     const fontName = attr.fontName ?? (paraAttr?.fontName) ?? (textAttr?.fontName) ?? '';
@@ -135,6 +146,14 @@ function _getSpanFormat(attr: SpanAttr, attrGetter: AttrGetter, paraAttr: ParaAt
     else if (bulletNumbers && attrGetter.bulletNumbers.type !== bulletNumbers.type) {
         attrGetter.bulletNumbersIsMulti = true;
     }
+
+    const fillType = attr.fillType ?? (paraAttr?.fillType) ?? (textAttr?.fillType) ?? FillType.SolidColor;
+    if (attrGetter.fillType === undefined) {
+        if (fillType) attrGetter.fillType = fillType;
+    }
+    else if (fillType && attrGetter.fillType !== fillType) {
+        attrGetter.fillTypeIsMulti = true;
+    }
 }
 
 function _mergeSpanFormat(from: AttrGetter, to: AttrGetter) {
@@ -178,6 +197,12 @@ function _mergeSpanFormat(from: AttrGetter, to: AttrGetter) {
     // bulletnumbers
     if (from.bulletNumbersIsMulti) to.bulletNumbersIsMulti = true;
     else if (from.bulletNumbers !== undefined) to.bulletNumbers = from.bulletNumbers;
+
+    if (from.fillTypeIsMulti) to.fillTypeIsMulti = true;
+    else if (from.fillType) to.fillType = from.fillType;
+
+    if (from.gradientIsMulti) to.gradientIsMulti = true;
+    else if (from.gradient) to.gradient = from.gradient;
 }
 
 function _getParaFormat(attr: ParaAttr, attrGetter: AttrGetter, defaultAttr: TextAttr | undefined) {
@@ -293,6 +318,14 @@ function coverFormat(fmt: AttrGetter, attr: SpanAttrSetter) {
     if (attr.transformIsSet) {
         fmt.transform = attr.transform;
         fmt.transformIsMulti = false;
+    }
+    if (attr.fillTypeIsSet) {
+        fmt.fillType = attr.fillType;
+        fmt.fillTypeIsMulti = false;
+    }
+    if (attr.gradientIsSet) {
+        fmt.gradient = attr.gradient;
+        fmt.gradientIsMulti = false;
     }
 }
 

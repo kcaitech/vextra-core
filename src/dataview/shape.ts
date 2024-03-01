@@ -3,14 +3,14 @@ import { VariableType, OverrideType, Variable, ShapeFrame, SymbolRefShape, Symbo
 import { findOverrideAndVar } from "./basic";
 import { RenderTransform } from "./basic";
 import { EL, elh } from "./el";
-import { FrameType, ResizingConstraints, ResizingConstraints2 } from "../data/consts";
+import { FrameType } from "../data/consts";
 import { Matrix } from "../basic/matrix";
 import { DataView } from "./view"
 import { DViewCtx, PropsType } from "./viewctx";
 import { objectId } from "../basic/objectid";
 import { fixConstrainFrame } from "../editor/frame";
-import { exportShapeFrame } from "../data/baseexport";
 import { BasicArray } from "../data/basic";
+import { MarkerType } from "../data/typesdefine";
 
 export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     return (
@@ -192,10 +192,12 @@ export class ShapeView extends DataView {
         return this.data.style;
     }
     get exportOptions() {
-        return this.data.exportOptions;
+        const v = this._findOV(OverrideType.ExportOptions, VariableType.ExportOptions);
+        return v ? v.value : this.data.exportOptions;
     }
     get contextSettings() {
-        return this.data.style.contextSettings;
+        const v = this._findOV(OverrideType.ContextSettings, VariableType.ContextSettings);
+        return v ? v.value : this.data.style.contextSettings;
     }
     get naviChilds(): ShapeView[] | undefined {
         return this.m_children as ShapeView[];
@@ -357,6 +359,15 @@ export class ShapeView extends DataView {
     getBorders(): Border[] {
         const v = this._findOV(OverrideType.Borders, VariableType.Borders);
         return v ? v.value : this.m_data.style.borders;
+    }
+
+    get startMarkerType(): MarkerType | undefined {
+        const v = this._findOV(OverrideType.StartMarkerType, VariableType.MarkerType);
+        return v ? v.value : this.m_data.style.startMarkerType;
+    }
+    get endMarkerType(): MarkerType | undefined {
+        const v = this._findOV(OverrideType.EndMarkerType, VariableType.MarkerType);
+        return v ? v.value : this.m_data.style.endMarkerType;
     }
 
     getShadows(): Shadow[] {
@@ -621,12 +632,11 @@ export class ShapeView extends DataView {
     }
 
     protected renderProps(): { [key: string]: string } {
-        const shape = this.m_data;
         const frame = this.frame;
         // const path = this.getPath(); // cache
         const props: any = {}
 
-        const contextSettings = shape.style.contextSettings;
+        const contextSettings = this.contextSettings;
         if (contextSettings && (contextSettings.opacity ?? 1) !== 1) {
             props.opacity = contextSettings.opacity;
         }

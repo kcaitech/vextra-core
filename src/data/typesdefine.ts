@@ -13,7 +13,7 @@ export type Variable = {
     id: string
     type: VariableType
     name: string
-    value: (number | string | boolean | Color | Text | Gradient | Style | (Border | Fill)[])
+    value: (number | string | boolean | Color | Text | Gradient | Style | (Border | Fill | Shadow)[] | ContextSettings | TableShape | ExportOptions)
 }
 /* variable types */
 export enum VariableType {
@@ -31,7 +31,8 @@ export enum VariableType {
     Style = 'style',
     ContextSettings = 'contextSettings',
     Table = 'table',
-    BorderStyle = 'borderStyle',
+    MarkerType = 'markerType',
+    ExportOptions = 'exportOptions',
 }
 /* user infomation */
 export type UserInfo = {
@@ -118,7 +119,7 @@ export type Stop = {
     crdtidx: number[]
     id: string
     position: number
-    color?: Color
+    color: Color
 }
 /* span attr */
 export type SpanAttr = {
@@ -134,6 +135,8 @@ export type SpanAttr = {
     kerning?: number
     transform?: TextTransformType
     placeholder?: boolean
+    fillType?: FillType
+    gradient?: Gradient
 }
 /* shape */
 export type Shape = {
@@ -198,6 +201,7 @@ export type ShapeFrame = {
 /* shadow */
 export type Shadow = {
     crdtidx: number[]
+    typeId: string
     id: string
     isEnabled: boolean
     blurRadius: number
@@ -264,7 +268,9 @@ export enum OverrideType {
     SymbolID = 'symbolID',
     ContextSettings = 'contextSettings',
     Table = 'table',
-    BorderStyle = 'borderStyle',
+    StartMarkerType = 'startMarkerType',
+    EndMarkerType = 'endMarkerType',
+    ExportOptions = 'exportOptions',
 }
 /* marker type */
 export enum MarkerType {
@@ -296,11 +302,12 @@ export type GraphicsContextSettings = {
 /* gradient */
 export type Gradient = {
     typeId: string
-    elipseLength: number
+    elipseLength?: number
     from: Point2D
     to: Point2D
     stops: Stop[]
     gradientType: GradientType
+    gradientOpacity?: number
 }
 /* gradient type */
 export enum GradientType {
@@ -334,6 +341,7 @@ export enum ExportVisibleScaleType {
 }
 /* export options */
 export type ExportOptions = {
+    typeId: string
     exportFormats: ExportFormat[]
     childOptions: number
     shouldTrim: boolean
@@ -414,6 +422,7 @@ export type CrdtNumber = {
 }
 /* context settings */
 export type ContextSettings = {
+    typeId: string
     blenMode: BlendMode
     opacity: number
 }
@@ -640,7 +649,6 @@ export type GroupShape = Shape & {
 }
 /* symbol shape */
 export type SymbolShape = GroupShape & {
-    overrides?: Map<string, string>
     variables: Map<string, Variable>
     symtags?: Map<string, string>
 }
