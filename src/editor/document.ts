@@ -86,7 +86,7 @@ export class DocEditor {
         try {
             const api = this.__repo.start('pagemove');
             hostIdx = offsetOverhalf ? hostIdx + 1 : hostIdx;
-            if (wandererIdx <= hostIdx) hostIdx--;
+            // if (wandererIdx <= hostIdx) hostIdx--;
             api.pageMove(this.__document, wandererId, wandererIdx, hostIdx);
             this.__repo.commit();
         } catch (error) {
@@ -100,4 +100,17 @@ export class DocEditor {
         const result = this.insert(index, page);
         if (result) return page;
     }
+
+    setPageName(name: string, pageId: string) {
+        const api = this.__repo.start("setPageName");
+        try {
+            api.pageModifyName(this.__document, pageId, name);
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error);
+            this.__repo.rollback();
+            return false;
+        }
+    }
+
 }

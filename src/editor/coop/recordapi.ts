@@ -19,11 +19,11 @@ import { BulletNumbers, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAl
 import { RectShape, SymbolRefShape, TableCellType, TableShape } from "../../data/classes";
 import {
     BoolOp, BulletNumbersBehavior, BulletNumbersType, ExportFileFormat, OverrideType, Point2D,
-    StrikethroughType, TextTransformType, UnderlineType, ShadowPosition, ExportFormatNameingScheme, FillType
+    StrikethroughType, TextTransformType, UnderlineType, ShadowPosition, ExportFormatNameingScheme, FillType, BlendMode
 } from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
-import { ContactForm, ContactRole, CurvePoint, ExportFormat } from "../../data/baseclasses";
+import { ContactForm, ContactRole, ContextSettings, CurvePoint, ExportFormat } from "../../data/baseclasses";
 import { ContactShape } from "../../data/contact"
 import { Color } from "../../data/classes";
 import { Op, OpType } from "../../coop/common/op";
@@ -79,8 +79,8 @@ export class Api {
     private cmd: Cmd | undefined;
     private needUpdateFrame: { shape: Shape, page: Page }[] = [];
 
-    start(saveselection: SelectionState | undefined, 
-        selectionupdater: (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => void, 
+    start(saveselection: SelectionState | undefined,
+        selectionupdater: (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => void,
         description: string = "") {
         // todo 添加selection op
         this.cmd = {
@@ -281,7 +281,7 @@ export class Api {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.shapeRemoveVariable(page, shape, key));
     }
-    shapeRemoveVirbindsEx(page: Page, shape: SymbolShape | SymbolRefShape, key: string, varId: string, type: VariableType) {
+    shapeRemoveOverride(page: Page, shape: SymbolRefShape, key: string, varId: string, type: VariableType) {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.shapeRemoveOverride(shape, key));
     }
@@ -294,11 +294,15 @@ export class Api {
         this.addOp(basicapi.shapeUnbindVar(shape, type));
     }
 
-    shapeAddOverride(page: Page, shape: SymbolShape | SymbolRefShape, refId: string, attr: OverrideType, value: string) {
+    shapeAddOverride(page: Page, shape: SymbolRefShape, refId: string, value: string) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeAddOverride(page, shape, refId, attr, value));
+        this.addOp(basicapi.shapeAddOverride(page, shape, refId, value));
     }
 
+    private _shapeModifyAttr(page: Page, shape: Shape, attr: string, val: any) {
+        checkShapeAtPage(page, shape);
+        this.addOp(basicapi.crdtSetAttr(shape, attr, val));
+    }
     /**
      * @description 初始化或修改组件的状态属性
      */
@@ -307,44 +311,43 @@ export class Api {
         this.addOp(basicapi.shapeModifyVartag(page, shape, varId, tag));
     }
     shapeModifyVisible(page: Page, shape: Shape, isVisible: boolean) {
-        checkShapeAtPage(page, shape);
-        this.addOp(basicapi.crdtSetAttr(shape, "isVisible", isVisible));
+        this._shapeModifyAttr(page, shape, "isVisible", isVisible);
     }
     shapeModifySymRef(page: Page, shape: SymbolRefShape, refId: string) {
-        checkShapeAtPage(page, shape);
-        this.addOp(basicapi.crdtSetAttr(shape, "refId", refId));
+        this._shapeModifyAttr(page, shape, "refId", refId);
     }
-
     shapeModifyLock(page: Page, shape: Shape, isLocked: boolean) {
-        checkShapeAtPage(page, shape);
-        this.addOp(basicapi.crdtSetAttr(shape, "isLocked", isLocked));
+        this._shapeModifyAttr(page, shape, "isLocked", isLocked);
     }
     shapeModifyHFlip(page: Page, shape: Shape, hflip: boolean | undefined) {
-        checkShapeAtPage(page, shape);
-        this.addOp(basicapi.crdtSetAttr(shape, "isFlippedHorizontal", hflip));
+        this._shapeModifyAttr(page, shape, "isFlippedHorizontal", hflip);
     }
     shapeModifyVFlip(page: Page, shape: Shape, vflip: boolean | undefined) {
-        checkShapeAtPage(page, shape);
-        this.addOp(basicapi.crdtSetAttr(shape, "isFlippedVertical", vflip));
+        this._shapeModifyAttr(page, shape, "isFlippedVertical", vflip);
     }
-    shapeModifyContextSettingsOpacity(page: Page, shape: Shape, contextSettingsOpacity: number) {
-        if (shape.isVirtualShape) {
-            return; // todo
-        }
+    shapeModifyContextSettingsOpacity(page: Page, shape: Shape | Variable, contextSettingsOpacity: number) {
+        // if (shape.isVirtualShape) {
+        //     return; // todo
+        // }
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyContextSettingOpacity(shape, contextSettingsOpacity));
+        let contextSettings;
+        if (shape instanceof Shape) {
+            if (!shape.style.contextSettings) shape.style.contextSettings = new ContextSettings(BlendMode.Normal, 1);
+            contextSettings = shape.style.contextSettings;
+        } else {
+            contextSettings = shape.value;
+        }
+        this.addOp(basicapi. crdtSetAttr(contextSettings, 'opacity', contextSettingsOpacity));
     }
     shapeModifyResizingConstraint(page: Page, shape: Shape, resizingConstraint: number) {
-        checkShapeAtPage(page, shape);
-        this.addOp(basicapi.crdtSetAttr(shape, "resizingConstraint", resizingConstraint));
+        this._shapeModifyAttr(page, shape, "resizingConstraint", resizingConstraint);
     }
     shapeModifyRadius(page: Page, shape: RectShape, lt: number, rt: number, rb: number, lb: number) {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.shapeModifyRadius(shape, lt, rt, rb, lb));
     }
     shapeModifyFixedRadius(page: Page, shape: GroupShape | PathShape | PathShape2 | TextShape, fixedRadius: number | undefined) {
-        checkShapeAtPage(page, shape);
-        this.addOp(basicapi.crdtSetAttr(shape, "fixedRadius", fixedRadius));
+        this._shapeModifyAttr(page, shape, "fixedRadius", fixedRadius);
     }
     shapeModifyCurvPoint(page: Page, shape: PathShape, index: number, point: Point2D) {
         checkShapeAtPage(page, shape);
@@ -359,12 +362,10 @@ export class Api {
         this.addOp(basicapi.shapeModifyCurvToPoint(page, shape, index, point));
     }
     shapeModifyBoolOp(page: Page, shape: Shape, op: BoolOp | undefined) {
-        checkShapeAtPage(page, shape);
-        this.addOp(basicapi.crdtSetAttr(shape, "boolOp", op));
+        this._shapeModifyAttr(page, shape, "boolOp", op);
     }
     shapeModifyBoolOpShape(page: Page, shape: GroupShape, isOpShape: boolean | undefined) {
-        checkShapeAtPage(page, shape);
-        this.addOp(basicapi.crdtSetAttr(shape, "isBoolOpShape", isOpShape));
+        this._shapeModifyAttr(page, shape, "isBoolOpShape", isOpShape);
     }
 
     // 添加一次fill

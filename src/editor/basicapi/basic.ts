@@ -284,7 +284,7 @@ export function crdtArrayMove(arr: BasicArray<CrdtItem>, from: number, to: numbe
     if (from < 0 || from >= arr.length) throw new Error("index out of range");
     if (to < 0 || to > arr.length) throw new Error("index out of range");
     const item = arr[from];
-    if (!item || Math.abs(from - to) <= 1) return;
+    if (!item || Math.abs(from - to) <= 0) return;
     const ops: ArrayMoveOpRecord[] = [];
     const oldidx = item.crdtidx;
     let newidx = crdtGetArrIndex(arr, to);

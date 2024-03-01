@@ -19,7 +19,6 @@ import {
 } from "../data/shape";
 import { ContactShape } from "../data/contact"
 import * as types from "../data/typesdefine"
-import { BlendMode } from "../data/typesdefine"
 import {
     importArtboard,
     importGroupShape,
@@ -34,7 +33,6 @@ import template_text_shape from "./template/text-shape.json"
 import {
     Border,
     Color,
-    ContextSettings,
     CurveMode,
     CurvePoint,
     Ellipse,
@@ -118,7 +116,7 @@ export function newStyle(): Style {
     const fills = new BasicArray<Fill>();
     const style = new Style(borders, fills, new BasicArray<Shadow>());
     style.fills.push(fill);
-    style.contextSettings = new ContextSettings(BlendMode.Normal, 1);
+    // style.contextSettings = new ContextSettings(BlendMode.Normal, 1);
     return style;
 }
 
@@ -127,7 +125,7 @@ export function newflatStyle(): Style {
     const fills = new BasicArray<Fill>();
     const shadows = new BasicArray<Shadow>();
     const style = new Style(borders, fills, shadows);
-    style.contextSettings = new ContextSettings(BlendMode.Normal, 1);
+    // style.contextSettings = new ContextSettings(BlendMode.Normal, 1);
     return style;
 }
 

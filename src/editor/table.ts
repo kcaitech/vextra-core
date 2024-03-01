@@ -11,6 +11,7 @@ import { importBorder, importFill, importGradient } from "../data/baseimport";
 import { Document, Color } from "../data/classes";
 import { newText } from "../data/textutils";
 import { AsyncGradientEditor, Status } from "./controller";
+import { TableView } from "../dataview";
 
 const MinCellSize = TableShape.MinCellSize;
 const MaxColCount = TableShape.MaxColCount;
@@ -18,12 +19,12 @@ const MaxRowCount = TableShape.MaxRowCount;
 
 export class TableEditor extends ShapeEditor {
 
-    constructor(shape: TableShape, page: Page, repo: CoopRepository, document: Document) {
+    constructor(shape: TableView, page: Page, repo: CoopRepository, document: Document) {
         super(shape, page, repo, document)
     }
 
     get shape(): TableShape {
-        return this.__shape as TableShape;
+        return this.__shape.data as TableShape;
     }
 
     // 水平拆分单元格
@@ -1273,7 +1274,7 @@ export class TableEditor extends ShapeEditor {
                 })
             }
             else {
-                api.addFillAt(this.__page, this.__shape, fill, this.__shape.style.fills.length);
+                api.addFillAt(this.__page, this.shape, fill, this.shape.style.fills.length);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1305,7 +1306,7 @@ export class TableEditor extends ShapeEditor {
         }
     }
     public setFillColor(idx: number, color: Color, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        // const fill: Fill = this.__shape.style.fills[idx];
+        // const fill: Fill = this.shape.style.fills[idx];
         // if (!fill) return;
 
         const api = this.__repo.start("setFillColor");
@@ -1316,7 +1317,7 @@ export class TableEditor extends ShapeEditor {
                 })
             }
             else {
-                api.setFillColor(this.__page, this.__shape, idx, color)
+                api.setFillColor(this.__page, this.shape, idx, color)
             }
             this.__repo.commit();
         } catch (error) {
@@ -1334,7 +1335,7 @@ export class TableEditor extends ShapeEditor {
                 })
             }
             else {
-                api.setFillEnable(this.__page, this.__shape, idx, value);
+                api.setFillEnable(this.__page, this.shape, idx, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1351,7 +1352,7 @@ export class TableEditor extends ShapeEditor {
                 })
             }
             else {
-                api.setFillType(this.__page, this.__shape, idx, type);
+                api.setFillType(this.__page, this.shape, idx, type);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1360,7 +1361,7 @@ export class TableEditor extends ShapeEditor {
         }
     }
     public deleteFill(idx: number, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        // const fill = this.__shape.style.fills[idx];
+        // const fill = this.shape.style.fills[idx];
         // if (!fill) return;
         const api = this.__repo.start("deleteFill");
         try {
@@ -1370,7 +1371,7 @@ export class TableEditor extends ShapeEditor {
                 })
             }
             else {
-                api.deleteFillAt(this.__page, this.__shape, idx);
+                api.deleteFillAt(this.__page, this.shape, idx);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1381,7 +1382,7 @@ export class TableEditor extends ShapeEditor {
 
     // border
     public setBorderEnable(idx: number, isEnabled: boolean, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        // const border = this.__shape.style.borders[idx];
+        // const border = this.shape.style.borders[idx];
         // if (!border) return;
         const api = this.__repo.start("setBorderEnable");
         try {
@@ -1391,7 +1392,7 @@ export class TableEditor extends ShapeEditor {
                 })
             }
             else {
-                api.setBorderEnable(this.__page, this.__shape, idx, isEnabled);
+                api.setBorderEnable(this.__page, this.shape, idx, isEnabled);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1400,7 +1401,7 @@ export class TableEditor extends ShapeEditor {
         }
     }
     public setBorderColor(idx: number, color: Color, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        // const border = this.__shape.style.borders[idx];
+        // const border = this.shape.style.borders[idx];
         // if (!border) return;
 
         const api = this.__repo.start("setBorderColor");
@@ -1411,7 +1412,7 @@ export class TableEditor extends ShapeEditor {
                 })
             }
             else {
-                api.setBorderColor(this.__page, this.__shape, idx, color);
+                api.setBorderColor(this.__page, this.shape, idx, color);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1420,7 +1421,7 @@ export class TableEditor extends ShapeEditor {
         }
     }
     public setBorderThickness(idx: number, thickness: number, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        // const border = this.__shape.style.borders[idx];
+        // const border = this.shape.style.borders[idx];
         // if (!border) return;
         const api = this.__repo.start("setBorderThickness");
         try {
@@ -1430,7 +1431,7 @@ export class TableEditor extends ShapeEditor {
                 })
             }
             else {
-                api.setBorderThickness(this.__page, this.__shape, idx, thickness);
+                api.setBorderThickness(this.__page, this.shape, idx, thickness);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1439,7 +1440,7 @@ export class TableEditor extends ShapeEditor {
         }
     }
     public setBorderPosition(idx: number, position: BorderPosition, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        // const border = this.__shape.style.borders[idx];
+        // const border = this.shape.style.borders[idx];
         // if (!border) return;
         const api = this.__repo.start("setBorderPosition");
         try {
@@ -1449,7 +1450,7 @@ export class TableEditor extends ShapeEditor {
                 })
             }
             else {
-                api.setBorderPosition(this.__page, this.__shape, idx, position);
+                api.setBorderPosition(this.__page, this.shape, idx, position);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1458,7 +1459,7 @@ export class TableEditor extends ShapeEditor {
         }
     }
     public setBorderStyle(idx: number, borderStyle: BorderStyle, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        // const border = this.__shape.style.borders[idx];
+        // const border = this.shape.style.borders[idx];
         // if (!border) return;
         const api = this.__repo.start("setBorderStyle");
         try {
@@ -1468,7 +1469,7 @@ export class TableEditor extends ShapeEditor {
                 })
             }
             else {
-                api.setBorderStyle(this.__page, this.__shape, idx, borderStyle);
+                api.setBorderStyle(this.__page, this.shape, idx, borderStyle);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1478,7 +1479,7 @@ export class TableEditor extends ShapeEditor {
     }
 
     public deleteBorder(idx: number, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        // const border = this.__shape.style.borders[idx];
+        // const border = this.shape.style.borders[idx];
         // if (!border) return;
         const api = this.__repo.start("deleteBorder");
         try {
@@ -1488,7 +1489,7 @@ export class TableEditor extends ShapeEditor {
                 })
             }
             else {
-                api.deleteBorderAt(this.__page, this.__shape, idx)
+                api.deleteBorderAt(this.__page, this.shape, idx)
             }
             this.__repo.commit();
         } catch (error) {
@@ -1514,7 +1515,7 @@ export class TableEditor extends ShapeEditor {
                 })
             }
             else {
-                api.addBorderAt(this.__page, this.__shape, border, this.__shape.style.borders.length);
+                api.addBorderAt(this.__page, this.shape, border, this.shape.style.borders.length);
             }
             this.__repo.commit();
         } catch (error) {

@@ -19,7 +19,7 @@ import {
 } from "./frame";
 import { CurvePoint, GroupShape, PathShape, Shape, ShapeFrame, TextShape } from "../data/shape";
 import { getFormatFromBase64 } from "../basic/utils";
-import { ContactRoleType, CurveMode, FillType, ShapeType } from "../data/typesdefine";
+import { ContactRoleType, CurveMode, FillType, OverrideType, ShapeType, VariableType } from "../data/typesdefine";
 import { newArrowShape, newArtboard, newContact, newImageShape, newLineShape, newOvalShape, newRectShape, newTable, newTextShape, newCutoutShape, getTransformByEnv, modifyTransformByEnv } from "./creator";
 
 import { Page } from "../data/page";
@@ -32,11 +32,11 @@ import { Artboard } from "../data/artboard";
 import { uuid } from "../basic/uuid";
 import { ContactForm, ContactRole } from "../data/baseclasses";
 import { ContactShape } from "../data/contact";
-import { importCurvePoint, importGradient } from "../data/baseimport";
+import { importCurvePoint, importGradient, importContextSettings } from "../data/baseimport";
 import { exportCurvePoint, exportGradient } from "../data/baseexport";
 import { is_state } from "./utils/other";
 import { after_migrate, unable_to_migrate } from "./utils/migrate";
-import { get_state_name, shape4fill } from "./utils/symbol";
+import { get_state_name, shape4contextSettings, shape4fill } from "./symbol";
 import { __pre_curve, after_insert_point, pathEdit, contact_edit, pointsEdit, update_frame_by_points, before_modify_side } from "./utils/path";
 import { Color } from "../data/color";
 import { ContactLineView, PageView, PathShapeView, ShapeView, adapt2Shape } from "../dataview";
@@ -1076,8 +1076,8 @@ export class Controller {
         return { pre, modify_contact_from, modify_contact_to, before, modify_sides, migrate, close }
     }
 
-    public asyncOpacityEditor(_shapes: Shape[] | ShapeView[], _page: Page | PageView): AsyncOpacityEditor {
-        const shapes: Shape[] = _shapes[0] instanceof ShapeView ? _shapes.map((s) => adapt2Shape(s as ShapeView)) : _shapes as Shape[];
+    public asyncOpacityEditor(_shapes: ShapeView[], _page: Page | PageView): AsyncOpacityEditor {
+        const shapes: ShapeView[] = _shapes;
         const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
 
         const api = this.__repo.start("asyncOpacityEditor");
@@ -1086,7 +1086,7 @@ export class Controller {
             status = Status.Pending;
             try {
                 for (let i = 0, l = shapes.length; i < l; i++) {
-                    const shape = shapes[i];
+                    const shape = shape4contextSettings(api, shapes[i], page);
                     api.shapeModifyContextSettingsOpacity(page, shape, contextSettingOpacity);
                 }
                 this.__repo.transactCtx.fireNotify();
@@ -1164,8 +1164,7 @@ export class Controller {
         }
         return { pre, execute, abort, close };
     }
-    public asyncGradientEditor(_shapes: Shape[] | ShapeView[], _page: Page | PageView, index: number, type: 'fills' | 'borders'): AsyncGradientEditor {
-        const shapes: Shape[] = _shapes[0] instanceof ShapeView ? _shapes.map((s) => adapt2Shape(s as ShapeView)) : _shapes as Shape[];
+    public asyncGradientEditor(shapes: ShapeView[], _page: Page | PageView, index: number, type: 'fills' | 'borders'): AsyncGradientEditor {
         const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
         const api = this.__repo.start("asyncGradientEditor");
         let status: Status = Status.Pending;
