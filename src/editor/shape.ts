@@ -17,7 +17,7 @@ import { BoolOp, ContextSettings, CurvePoint, ExportFormat } from "../data/basec
 import { Artboard } from "../data/artboard";
 import { Page } from "../data/page";
 import { CoopRepository } from "./coop/cooprepo";
-import { CurveMode, OverrideType, ShadowPosition, ExportFileFormat, ExportFormatNameingScheme, BlendMode } from "../data/typesdefine";
+import { CurveMode, OverrideType, ShadowPosition, ExportFileFormat, ExportFormatNameingScheme, BlendMode, ExportOptions } from "../data/typesdefine";
 import { Api } from "./coop/recordapi";
 import { IImportContext, importBorder, importColor, importContextSettings, importCurvePoint, importFill, importGradient, importShadow, importStyle, importTableShape, importText } from "../data/baseimport";
 import { v4 } from "uuid";
@@ -38,7 +38,7 @@ import { _clip, _typing_modify, get_points_for_init, modify_points_xy, update_fr
 import { Color } from "../data/color";
 import { adapt_for_artboard } from "./utils/common";
 import { ShapeView, SymbolRefView, SymbolView, adapt2Shape, findOverride, findVar, isAdaptedShape } from "../dataview";
-import { is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union, modify_variable, modify_variable_with_api, override_variable, shape4border, shape4contextSettings, shape4fill, shape4shadow } from "./symbol";
+import { is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union, modify_variable, modify_variable_with_api, override_variable, shape4border, shape4contextSettings, shape4exportOptions, shape4fill, shape4shadow } from "./symbol";
 
 export class ShapeEditor {
     protected __shape: ShapeView;
@@ -823,10 +823,13 @@ export class ShapeEditor {
     public addExportFormat(formats: ExportFormat[]) {
         const api = this.__repo.start("addExportFormat");
         try {
+            const shape = shape4exportOptions(api, this.__shape, this.__page);
+            const options = shape instanceof Shape ? shape.exportOptions : shape.value as ExportOptions;
+            const len = options?.exportFormats.length || 0;
             for (let i = 0; i < formats.length; i++) {
                 const format = formats[i];
-                const length = this.shape.exportOptions ? this.shape.exportOptions.exportFormats.length : 0;
-                api.addExportFormat(this.__page, this.shape, format, length);
+                const length = len + i;
+                api.addExportFormat(this.__page, shape, format, length);
             }
             this.__repo.commit();
         } catch (e) {
@@ -835,11 +838,12 @@ export class ShapeEditor {
         }
     }
     public deleteExportFormat(idx: number) {
-        const format = this.shape.exportOptions?.exportFormats[idx];
+        const format = this.__shape.exportOptions?.exportFormats[idx];
         if (format) {
             const api = this.__repo.start("deleteExportFormat");
             try {
-                api.deleteExportFormatAt(this.__page, this.shape, idx)
+                const shape = shape4exportOptions(api, this.__shape, this.__page);
+                api.deleteExportFormatAt(this.__page, shape, idx)
                 this.__repo.commit();
             } catch (e) {
                 console.error(e);
@@ -848,11 +852,12 @@ export class ShapeEditor {
         }
     }
     public setExportFormatScale(idx: number, scale: number) {
-        const format = this.shape.exportOptions?.exportFormats[idx];
+        const format = this.__shape.exportOptions?.exportFormats[idx];
         if (format) {
             const api = this.__repo.start("setExportFormatScale");
             try {
-                api.setExportFormatScale(this.__page, this.shape, idx, scale);
+                const shape = shape4exportOptions(api, this.__shape, this.__page);
+                api.setExportFormatScale(this.__page, shape, idx, scale);
                 this.__repo.commit();
             } catch (e) {
                 console.error(e);
@@ -861,11 +866,12 @@ export class ShapeEditor {
         }
     }
     public setExportFormatName(idx: number, name: string) {
-        const format = this.shape.exportOptions?.exportFormats[idx];
+        const format = this.__shape.exportOptions?.exportFormats[idx];
         if (format) {
             const api = this.__repo.start("setExportFormatName");
             try {
-                api.setExportFormatName(this.__page, this.shape, idx, name);
+                const shape = shape4exportOptions(api, this.__shape, this.__page);
+                api.setExportFormatName(this.__page, shape, idx, name);
                 this.__repo.commit();
             } catch (e) {
                 console.error(e);
@@ -874,11 +880,12 @@ export class ShapeEditor {
         }
     }
     public setExportFormatFileFormat(idx: number, fileFormat: ExportFileFormat) {
-        const format = this.shape.exportOptions?.exportFormats[idx];
+        const format = this.__shape.exportOptions?.exportFormats[idx];
         if (format) {
             const api = this.__repo.start("setExportFormatFileFormat");
             try {
-                api.setExportFormatFileFormat(this.__page, this.shape, idx, fileFormat);
+                const shape = shape4exportOptions(api, this.__shape, this.__page);
+                api.setExportFormatFileFormat(this.__page, shape, idx, fileFormat);
                 this.__repo.commit();
             } catch (e) {
                 console.error(e);
@@ -887,11 +894,12 @@ export class ShapeEditor {
         }
     }
     public setExportFormatPerfix(idx: number, perfix: ExportFormatNameingScheme) {
-        const format = this.shape.exportOptions?.exportFormats[idx];
+        const format = this.__shape.exportOptions?.exportFormats[idx];
         if (format) {
             const api = this.__repo.start("setExportFormatPerfix");
             try {
-                api.setExportFormatPerfix(this.__page, this.shape, idx, perfix);
+                const shape = shape4exportOptions(api, this.__shape, this.__page);
+                api.setExportFormatPerfix(this.__page, shape, idx, perfix);
                 this.__repo.commit();
             } catch (e) {
                 console.error(e);

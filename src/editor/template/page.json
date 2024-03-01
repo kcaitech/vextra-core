@@ -16,6 +16,7 @@
     "rotation": 0,
     "shouldBreakMaskChain": false,
     "exportOptions": {
+        "typeId": "export-options",
         "includedChildIds": [],
         "childOptions": 0,
         "shouldTrim": false,
