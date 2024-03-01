@@ -116,15 +116,12 @@ inject['SymbolShape']['before'] = `\
     if (!source.variables) {
         source.variables = {} as any
     }
-    if ((source as any).virbindsEx) {
-        source.overrides = (source as any).virbindsEx
-    }
 `
 inject['SymbolShape']['after'] = `\
     // inject code
     if (ctx?.document) {
         const registed = ctx.document.symbolregist.get(ret.id);
-        if (!registed || registed === ctx.curPage) {
+        if (!registed || registed === 'freesymbols' || registed === ctx.curPage) {
             ctx.document.symbolsMgr.add(ret.id, ret);
         }
     }

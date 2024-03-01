@@ -1,0 +1,24 @@
+{
+    "description": "context settings",
+    "type": "object",
+    "properties": {
+        "typeId": {
+            "type": "string",
+            "default": "shape"
+        },
+        "blenMode": {
+            "$ref": "./blend-mode.json",
+            "default": "normal"
+        },
+        "opacity": {
+            "type": "number",
+            "default": 0
+        }
+    },
+    "required": [
+        "typeId",
+        "blenMode",
+        "opacity"
+    ],
+    "additionalProperties": false
+}

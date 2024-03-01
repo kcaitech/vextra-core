@@ -2,15 +2,6 @@
     "description": "symbol shape",
     "type": "object",
     "properties": {
-        "overrides": {
-            "type": "map",
-            "key": {
-                "type": "string"
-            },
-            "value": {
-                "type": "string"
-            }
-        },
         "variables": {
             "type": "map",
             "key": {

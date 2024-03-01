@@ -237,14 +237,32 @@ export class Text extends Basic implements classes.Text {
 
     private __layouts: Map<string, LayoutItem> = new Map();
     getLayout3(width: number, height: number, owner: string, token: string | undefined): { token: string, layout: TextLayout } {
+
+        const updateLayout = (o: LayoutItem) => {
+            if (!o.layout) {
+                const layoutWidth = ((b: TextBehaviour): number => {
+                    switch (b) {
+                        case TextBehaviour.Flexible: return Number.MAX_VALUE;
+                        case TextBehaviour.Fixed: return width;
+                        case TextBehaviour.FixWidthAndHeight: return width;
+                    }
+                })(this.attr?.textBehaviour ?? TextBehaviour.Flexible)
+                o.layout = layoutText(this, layoutWidth, height);
+            }
+        }
+
         const cur = [width, height].join(',');
         if (cur !== token) {
             let o = token && this.__layouts.get(token);
             if (o) {
-                if (o.owners.length === 1) {
-                    if (o.owners[0] !== owner) throw new Error();
+                if (o.owners.length === 1 && o.owners[0] === owner) {
+                    o.update(width, height, this.attr);
                     this.__layouts.delete(token!);
                     this.__layouts.set(cur, o);
+
+                    updateLayout(o);
+            
+                    return { token: cur, layout: o.layout! }
                 } else {
                     const i = o.owners.indexOf(owner);
                     if (i >= 0) {
@@ -264,18 +282,9 @@ export class Text extends Basic implements classes.Text {
             this.__layouts.set(cur, o)
         }
 
-        if (!o.layout) {
-            const layoutWidth = ((b: TextBehaviour): number => {
-                switch (b) {
-                    case TextBehaviour.Flexible: return Number.MAX_VALUE;
-                    case TextBehaviour.Fixed: return width;
-                    case TextBehaviour.FixWidthAndHeight: return width;
-                }
-            })(this.attr?.textBehaviour ?? TextBehaviour.Flexible)
-            o.layout = layoutText(this, layoutWidth, height);
-        }
+        updateLayout(o);
 
-        return { token: cur, layout: o.layout }
+        return { token: cur, layout: o.layout! }
     }
 
     getLayout2(width: number, height: number, id: string): TextLayout {

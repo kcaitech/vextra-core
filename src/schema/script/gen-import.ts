@@ -306,7 +306,7 @@ ${indent(level)}    }`
         }
         if (typename) {
             let crdtidx = ""
-            if (needCompatibleSet.has(filename)) {
+            if (needCompatibleSet.has(filename) && className !== 'Variable') {
                 crdtidx = `
 ${indent(level)}        if (!val.crdtidx) val.crdtidx = [i]`
             }
