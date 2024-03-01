@@ -72,6 +72,9 @@ export function exportVariable(source: types.Variable, ctx?: IExportContext): ty
             if (val.typeId == 'table-shape') {
                 return exportTableShape(val as types.TableShape, ctx)
             }
+            if (val.typeId == 'export-options') {
+                return exportExportOptions(val as types.ExportOptions, ctx)
+            }
             {
                 throw new Error('unknow val: ' + val)
             }
@@ -488,6 +491,7 @@ export function exportExportVisibleScaleType(source: types.ExportVisibleScaleTyp
 /* export options */
 export function exportExportOptions(source: types.ExportOptions, ctx?: IExportContext): types.ExportOptions {
     const ret = {
+        typeId: source.typeId,
         exportFormats: (() => {
             const ret = []
             for (let i = 0, len = source.exportFormats.length; i < len; i++) {

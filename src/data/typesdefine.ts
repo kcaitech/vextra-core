@@ -13,7 +13,7 @@ export type Variable = {
     id: string
     type: VariableType
     name: string
-    value: (number | string | boolean | Color | Text | Gradient | Style | (Border | Fill | Shadow)[] | ContextSettings | TableShape)
+    value: (number | string | boolean | Color | Text | Gradient | Style | (Border | Fill | Shadow)[] | ContextSettings | TableShape | ExportOptions)
 }
 /* variable types */
 export enum VariableType {
@@ -32,6 +32,7 @@ export enum VariableType {
     ContextSettings = 'contextSettings',
     Table = 'table',
     MarkerType = 'markerType',
+    ExportOptions = 'exportOptions',
 }
 /* user infomation */
 export type UserInfo = {
@@ -269,6 +270,7 @@ export enum OverrideType {
     Table = 'table',
     StartMarkerType = 'startMarkerType',
     EndMarkerType = 'endMarkerType',
+    ExportOptions = 'exportOptions',
 }
 /* marker type */
 export enum MarkerType {
@@ -339,6 +341,7 @@ export enum ExportVisibleScaleType {
 }
 /* export options */
 export type ExportOptions = {
+    typeId: string
     exportFormats: ExportFormat[]
     childOptions: number
     shouldTrim: boolean

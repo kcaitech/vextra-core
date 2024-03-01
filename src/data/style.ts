@@ -2,7 +2,7 @@ import * as classes from "./baseclasses"
 import {
     Blur, BorderOptions, ColorControls, ContextSettings,
     Shadow, WindingRule, FillType, BorderPosition,
-    BorderStyle, MarkerType, ContactRole, VariableType, Point2D, GradientType, Stop
+    BorderStyle, MarkerType, ContactRole, VariableType, Point2D, GradientType, Stop, BlendMode
 } from "./baseclasses";
 import { Basic, BasicArray, BasicMap, ResourceMgr } from "./basic";
 import { Variable } from "./variable";
@@ -192,7 +192,9 @@ export class Style extends Basic implements classes.Style {
     }
 
     getOpTarget(path: string[]) {
-        if (path[0] === 'contacts' && !this.contacts) this.contacts = new BasicArray<ContactRole>();
+        const path0 = path[0];
+        if (path0 === 'contacts' && !this.contacts) this.contacts = new BasicArray<ContactRole>();
+        if (path0 === 'contextSettings' && !this.contextSettings) this.contextSettings = new ContextSettings(BlendMode.Normal, 1)
         return super.getOpTarget(path);
     }
 

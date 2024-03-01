@@ -13,6 +13,7 @@
         "contextSettings",
         "table",
         "startMarkerType",
-        "endMarkerType"
+        "endMarkerType",
+        "exportOptions"
     ]
 }

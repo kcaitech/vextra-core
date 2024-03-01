@@ -15,6 +15,7 @@
         "style",
         "contextSettings",
         "table",
-        "markerType"
+        "markerType",
+        "exportOptions"
     ]
 }

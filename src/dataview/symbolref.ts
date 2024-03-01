@@ -54,7 +54,7 @@ export class SymbolRefView extends ShapeView {
     }
 
     getRefId(): string {
-        const v = super._findOV(OverrideType.SymbolID, VariableType.SymbolRef);
+        const v = this._findOV(OverrideType.SymbolID, VariableType.SymbolRef);
         return v ? v.value : (this.m_data as SymbolRefShape).refId;
     }
 
@@ -114,14 +114,14 @@ export class SymbolRefView extends ShapeView {
         // const thisId = this.isVirtualShape ? (this.data).id : this.id;
         // if (refId !== thisId) refId = thisId + '/' + refId; // fix ref自己查找自己的override
         // return this.varsContainer && findOverride(refId, type, this.varsContainer);
-
-        return findOverride(refId, type, this.varsContainer || []);
+        const varsContainer = (this.varsContainer || []).concat(this.data);
+        return findOverride(refId, type, varsContainer || []);
     }
 
     // todo
     findVar(varId: string, ret: Variable[]) {            // todo subdata, proxy
-
-        findVar(varId, ret, this.varsContainer || []);
+        const varsContainer = (this.varsContainer || []).concat(this.data);
+        findVar(varId, ret, varsContainer || []);
 
         // if (this.symData) {
         //     const override = this.symData.getOverrid(varId, OverrideType.Variable);
@@ -432,7 +432,7 @@ export class SymbolRefView extends ShapeView {
         throw new Error("Method not implemented.");
     }
 
-    protected _findOV(ot: OverrideType, vt: VariableType): Variable | undefined {
+    protected _findOV2(ot: OverrideType, vt: VariableType): Variable | undefined {
         const data = this.data;
         const varsContainer = (this.varsContainer || []).concat(data);
         const id = ""; // ?
@@ -445,34 +445,34 @@ export class SymbolRefView extends ShapeView {
     }
 
     get contextSettings(): ContextSettings | undefined {
-        const v = this._findOV(OverrideType.ContextSettings, VariableType.ContextSettings);
+        const v = this._findOV2(OverrideType.ContextSettings, VariableType.ContextSettings);
         if (v) return v.value;
         return this.m_sym?.style.contextSettings;
     }
 
     getFills(): Fill[] {
-        const v = this._findOV(OverrideType.Fills, VariableType.Fills);
+        const v = this._findOV2(OverrideType.Fills, VariableType.Fills);
         if (v) return v.value;
         return this.m_sym?.style.fills || [];
     }
 
     getBorders(): Border[] {
-        const v = this._findOV(OverrideType.Borders, VariableType.Borders);
+        const v = this._findOV2(OverrideType.Borders, VariableType.Borders);
         if (v) return v.value;
         return this.m_sym?.style.borders || [];
     }
 
     get startMarkerType(): MarkerType | undefined {
-        const v = this._findOV(OverrideType.StartMarkerType, VariableType.MarkerType);
+        const v = this._findOV2(OverrideType.StartMarkerType, VariableType.MarkerType);
         return v ? v.value : this.m_sym?.style.startMarkerType;
     }
     get endMarkerType(): MarkerType | undefined {
-        const v = this._findOV(OverrideType.EndMarkerType, VariableType.MarkerType);
+        const v = this._findOV2(OverrideType.EndMarkerType, VariableType.MarkerType);
         return v ? v.value : this.m_sym?.style.endMarkerType;
     }
 
     getShadows(): Shadow[] {
-        const v = this._findOV(OverrideType.Shadows, VariableType.Shadows);
+        const v = this._findOV2(OverrideType.Shadows, VariableType.Shadows);
         if (v) return v.value;
         return this.m_sym?.style.shadows || [];
     }
