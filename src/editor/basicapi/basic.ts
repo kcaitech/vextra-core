@@ -120,14 +120,14 @@ export function crdtSetAttr(obj: Basic | BasicMap<any, any>, key: string, value:
     let origin;
     if (obj instanceof Map) {
         origin = obj.get(key);
-        if (value) {
+        if (value !== undefined) {
             obj.set(key, value);
         } else {
             obj.delete(key);
         }
     } else if (obj instanceof ResourceMgr) {
         origin = obj.getSync(key);
-        if (value) {
+        if (value !== undefined) {
             obj.add(key, value);
         }
     } else {
@@ -284,7 +284,7 @@ export function crdtArrayMove(arr: BasicArray<CrdtItem>, from: number, to: numbe
     if (from < 0 || from >= arr.length) throw new Error("index out of range");
     if (to < 0 || to > arr.length) throw new Error("index out of range");
     const item = arr[from];
-    if (!item || Math.abs(from - to) <= 1) return;
+    if (!item || Math.abs(from - to) <= 0) return;
     const ops: ArrayMoveOpRecord[] = [];
     const oldidx = item.crdtidx;
     let newidx = crdtGetArrIndex(arr, to);

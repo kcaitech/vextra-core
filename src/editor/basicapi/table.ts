@@ -1,6 +1,6 @@
 import { Text } from "../../data/text";
 import { TableCell, TableCellType, TableShape } from "../../data/table";
-import { Color, CrdtNumber, Page, ShapeFrame, ShapeType, StrikethroughType, Style, TextAttr, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType } from "../../data/classes";
+import { Color, CrdtNumber, FillType, Gradient, Page, ShapeFrame, ShapeType, StrikethroughType, Style, TextAttr, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType } from "../../data/classes";
 import { crdtArrayInsert, crdtArrayRemove, crdtSetAttr, newText, otTextInsert } from "./basic";
 import { deleteText, insertComplexText } from "./text";
 import { uuid } from "../../basic/uuid";
@@ -162,4 +162,13 @@ export function tableModifyTextItalic(table: TableShape, italic: boolean) {
 export function tableModifyTextTransform(table: TableShape, transform: TextTransformType | undefined) {
     if (!table.textAttr) table.textAttr = new TextAttr();
     return crdtSetAttr(table.textAttr, "transform", transform);
+}
+
+export function tableModifyTextFillType(table: TableShape, filltype: FillType | undefined) {
+    if (!table.textAttr) table.textAttr = new TextAttr();
+    return crdtSetAttr(table.textAttr, "filltype", filltype);
+}
+export function tableModifyTextGradient(table: TableShape, gradient: Gradient | undefined) {
+    if (!table.textAttr) table.textAttr = new TextAttr();
+    return crdtSetAttr(table.textAttr, "gradient", gradient);
 }

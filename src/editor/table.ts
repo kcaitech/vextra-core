@@ -2,14 +2,16 @@ import { TableCell, TableShape } from "../data/table";
 import { ShapeEditor } from "./shape";
 import { Page } from "../data/page";
 import { CoopRepository } from "./coop/cooprepo";
-import { BorderPosition, BorderStyle, StrikethroughType, TableCellType, TextBehaviour, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType } from "../data/baseclasses";
+import { BorderPosition, BorderStyle, StrikethroughType, TableCellType, TextBehaviour, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType, FillType, ResizeType } from "../data/baseclasses";
 import { adjColum, adjRow } from "./tableadjust";
-import { Border, Fill } from "../data/style";
+import { Border, Fill, Gradient } from "../data/style";
 import { fixTableShapeFrameByLayout } from "./utils/other";
 import { Api } from "./coop/recordapi";
-import { importBorder, importFill } from "../data/baseimport";
+import { importBorder, importFill, importGradient } from "../data/baseimport";
 import { Document, Color } from "../data/classes";
 import { newText } from "../data/textutils";
+import { AsyncGradientEditor, Status } from "./controller";
+import { TableView } from "../dataview";
 
 const MinCellSize = TableShape.MinCellSize;
 const MaxColCount = TableShape.MaxColCount;
@@ -17,12 +19,12 @@ const MaxRowCount = TableShape.MaxRowCount;
 
 export class TableEditor extends ShapeEditor {
 
-    constructor(shape: TableShape, page: Page, repo: CoopRepository, document: Document) {
+    constructor(shape: TableView, page: Page, repo: CoopRepository, document: Document) {
         super(shape, page, repo, document)
     }
 
     get shape(): TableShape {
-        return this.__shape as TableShape;
+        return this.__shape.data as TableShape;
     }
 
     // 水平拆分单元格
@@ -1077,6 +1079,165 @@ export class TableEditor extends ShapeEditor {
         }
         return false;
     }
+    public setTextFillType(fillType: FillType, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
+        const api = this.__repo.start("setTableTextFillType");
+        try {
+            if (range) {
+                this._initCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd, api);
+                const cells = this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
+                cells.forEach((c) => {
+                    const cell = c.cell;
+                    if (cell && cell.cellType === TableCellType.Text && cell.text) {
+                        api.textModifyFillType(this.__page, cell as any, fillType, 0, cell.text.length);
+                    }
+                })
+            } else {
+                api.tableModifyTextFillType(this.__page, this.shape, fillType);
+                const cells = this.shape.datas;
+                cells.forEach((cell) => {
+                    if (cell && cell.cellType === TableCellType.Text && cell.text) {
+                        api.textModifyFillType(this.__page, cell as any, fillType, 0, cell.text.length);
+                    }
+                })
+            }
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+    public setTextGradient(gradient: Gradient | undefined, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
+        const api = this.__repo.start("setTableTextGradient");
+        try {
+            if (range) {
+                this._initCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd, api);
+                const cells = this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
+                cells.forEach((c) => {
+                    const cell = c.cell;
+                    if (cell && cell.cellType === TableCellType.Text && cell.text) {
+                        api.setTextGradient(this.__page, cell as any, gradient, 0, cell.text.length);
+                    }
+                })
+            }
+            else {
+                api.tableModifyTextGradient(this.__page, this.shape, gradient);
+                const cells = this.shape.datas;
+                cells.forEach((cell) => {
+                    if (cell && cell.cellType === TableCellType.Text && cell.text) {
+                        api.setTextGradient(this.__page, cell as any, gradient, 0, cell.text.length);
+                    }
+                })
+            }
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+
+    public asyncSetTextGradient(gradient: Gradient | undefined, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }): AsyncGradientEditor {
+        const api = this.__repo.start("asyncSetTextGradient");
+        let status: Status = Status.Pending;
+        const execute_from = (from: { x: number, y: number }) => {
+            status = Status.Pending;
+            try {
+                const new_gradient = importGradient(gradient!);
+                new_gradient.from.x = from.x;
+                new_gradient.from.y = from.y;
+                set_gradient(new_gradient);
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const execute_to = (to: { x: number, y: number }) => {
+            status = Status.Pending;
+            try {
+                const new_gradient = importGradient(gradient!);
+                new_gradient.to.x = to.x;
+                new_gradient.to.y = to.y;
+                set_gradient(new_gradient);
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const execute_elipselength = (length: number) => {
+            status = Status.Pending;
+            try {
+                const new_gradient = importGradient(gradient!);
+                new_gradient.elipseLength = length;
+                set_gradient(new_gradient);
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const execute_stop_position = (position: number, id: string) => {
+            status = Status.Pending;
+            try {
+                const new_gradient = importGradient(gradient!);
+                const i = new_gradient.stops.findIndex((item) => item.id === id);
+                new_gradient.stops[i].position = position;
+                const g_s = new_gradient.stops;
+                g_s.sort((a, b) => {
+                    if (a.position > b.position) {
+                        return 1;
+                    } else if (a.position < b.position) {
+                        return -1;
+                    } else {
+                        return 0;
+                    }
+                })
+                set_gradient(new_gradient);
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const close = () => {
+            if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
+                this.__repo.commit();
+            } else {
+                this.__repo.rollback();
+            }
+            return undefined;
+        }
+        const set_gradient = (new_gradient: Gradient) => {
+            if (range) {
+                this._initCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd, api);
+                const cells = this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
+                cells.forEach((c) => {
+                    const cell = c.cell;
+                    if (cell && cell.cellType === TableCellType.Text && cell.text) {
+                        api.setTextGradient(this.__page, cell as any, new_gradient, 0, cell.text.length);
+                    }
+                })
+            }
+            else {
+                api.tableModifyTextGradient(this.__page, this.shape, new_gradient);
+                const cells = this.shape.datas;
+                cells.forEach((cell) => {
+                    if (cell && cell.cellType === TableCellType.Text && cell.text) {
+                        api.setTextGradient(this.__page, cell as any, new_gradient, 0, cell.text.length);
+                    }
+                })
+            }
+        }
+        return { execute_from, execute_to, execute_elipselength, execute_stop_position, close }
+    }
 
     public initTextCell(rowIdx: number, colIdx: number) { // 初始化为文本单元格
         const api = this.__repo.start("initCell");
@@ -1113,7 +1274,7 @@ export class TableEditor extends ShapeEditor {
                 })
             }
             else {
-                api.addFillAt(this.__page, this.__shape, fill, this.__shape.style.fills.length);
+                api.addFillAt(this.__page, this.shape, fill, this.shape.style.fills.length);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1145,7 +1306,7 @@ export class TableEditor extends ShapeEditor {
         }
     }
     public setFillColor(idx: number, color: Color, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        // const fill: Fill = this.__shape.style.fills[idx];
+        // const fill: Fill = this.shape.style.fills[idx];
         // if (!fill) return;
 
         const api = this.__repo.start("setFillColor");
@@ -1156,7 +1317,7 @@ export class TableEditor extends ShapeEditor {
                 })
             }
             else {
-                api.setFillColor(this.__page, this.__shape, idx, color)
+                api.setFillColor(this.__page, this.shape, idx, color)
             }
             this.__repo.commit();
         } catch (error) {
@@ -1174,7 +1335,24 @@ export class TableEditor extends ShapeEditor {
                 })
             }
             else {
-                api.setFillEnable(this.__page, this.__shape, idx, value);
+                api.setFillEnable(this.__page, this.shape, idx, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.error(error);
+            this.__repo.rollback();
+        }
+    }
+    public setFillType(idx: number, type: FillType, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
+        const api = this.__repo.start("setFillType");
+        try {
+            if (range) {
+                this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
+                    if (cell.cell) api.setFillType(this.__page, cell.cell, idx, type);
+                })
+            }
+            else {
+                api.setFillType(this.__page, this.shape, idx, type);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1183,7 +1361,7 @@ export class TableEditor extends ShapeEditor {
         }
     }
     public deleteFill(idx: number, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        // const fill = this.__shape.style.fills[idx];
+        // const fill = this.shape.style.fills[idx];
         // if (!fill) return;
         const api = this.__repo.start("deleteFill");
         try {
@@ -1193,7 +1371,7 @@ export class TableEditor extends ShapeEditor {
                 })
             }
             else {
-                api.deleteFillAt(this.__page, this.__shape, idx);
+                api.deleteFillAt(this.__page, this.shape, idx);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1204,7 +1382,7 @@ export class TableEditor extends ShapeEditor {
 
     // border
     public setBorderEnable(idx: number, isEnabled: boolean, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        // const border = this.__shape.style.borders[idx];
+        // const border = this.shape.style.borders[idx];
         // if (!border) return;
         const api = this.__repo.start("setBorderEnable");
         try {
@@ -1214,7 +1392,7 @@ export class TableEditor extends ShapeEditor {
                 })
             }
             else {
-                api.setBorderEnable(this.__page, this.__shape, idx, isEnabled);
+                api.setBorderEnable(this.__page, this.shape, idx, isEnabled);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1223,7 +1401,7 @@ export class TableEditor extends ShapeEditor {
         }
     }
     public setBorderColor(idx: number, color: Color, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        // const border = this.__shape.style.borders[idx];
+        // const border = this.shape.style.borders[idx];
         // if (!border) return;
 
         const api = this.__repo.start("setBorderColor");
@@ -1234,7 +1412,7 @@ export class TableEditor extends ShapeEditor {
                 })
             }
             else {
-                api.setBorderColor(this.__page, this.__shape, idx, color);
+                api.setBorderColor(this.__page, this.shape, idx, color);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1243,7 +1421,7 @@ export class TableEditor extends ShapeEditor {
         }
     }
     public setBorderThickness(idx: number, thickness: number, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        // const border = this.__shape.style.borders[idx];
+        // const border = this.shape.style.borders[idx];
         // if (!border) return;
         const api = this.__repo.start("setBorderThickness");
         try {
@@ -1253,7 +1431,7 @@ export class TableEditor extends ShapeEditor {
                 })
             }
             else {
-                api.setBorderThickness(this.__page, this.__shape, idx, thickness);
+                api.setBorderThickness(this.__page, this.shape, idx, thickness);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1262,7 +1440,7 @@ export class TableEditor extends ShapeEditor {
         }
     }
     public setBorderPosition(idx: number, position: BorderPosition, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        // const border = this.__shape.style.borders[idx];
+        // const border = this.shape.style.borders[idx];
         // if (!border) return;
         const api = this.__repo.start("setBorderPosition");
         try {
@@ -1272,7 +1450,7 @@ export class TableEditor extends ShapeEditor {
                 })
             }
             else {
-                api.setBorderPosition(this.__page, this.__shape, idx, position);
+                api.setBorderPosition(this.__page, this.shape, idx, position);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1281,7 +1459,7 @@ export class TableEditor extends ShapeEditor {
         }
     }
     public setBorderStyle(idx: number, borderStyle: BorderStyle, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        // const border = this.__shape.style.borders[idx];
+        // const border = this.shape.style.borders[idx];
         // if (!border) return;
         const api = this.__repo.start("setBorderStyle");
         try {
@@ -1291,7 +1469,7 @@ export class TableEditor extends ShapeEditor {
                 })
             }
             else {
-                api.setBorderStyle(this.__page, this.__shape, idx, borderStyle);
+                api.setBorderStyle(this.__page, this.shape, idx, borderStyle);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1301,7 +1479,7 @@ export class TableEditor extends ShapeEditor {
     }
 
     public deleteBorder(idx: number, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        // const border = this.__shape.style.borders[idx];
+        // const border = this.shape.style.borders[idx];
         // if (!border) return;
         const api = this.__repo.start("deleteBorder");
         try {
@@ -1311,7 +1489,7 @@ export class TableEditor extends ShapeEditor {
                 })
             }
             else {
-                api.deleteBorderAt(this.__page, this.__shape, idx)
+                api.deleteBorderAt(this.__page, this.shape, idx)
             }
             this.__repo.commit();
         } catch (error) {
@@ -1337,7 +1515,7 @@ export class TableEditor extends ShapeEditor {
                 })
             }
             else {
-                api.addBorderAt(this.__page, this.__shape, border, this.__shape.style.borders.length);
+                api.addBorderAt(this.__page, this.shape, border, this.shape.style.borders.length);
             }
             this.__repo.commit();
         } catch (error) {

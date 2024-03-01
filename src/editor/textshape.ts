@@ -22,7 +22,7 @@ import {
     ParaAttr,
     Span,
     ShapeType,
-    Variable, Document, TableShape
+    Variable, Document, TableShape, FillType, GradientType, Gradient, Point2D, Stop
 } from "../data/classes";
 import { CoopRepository } from "./coop/cooprepo";
 import { Api } from "./coop/recordapi";
@@ -30,24 +30,26 @@ import { ShapeEditor } from "./shape";
 import { fixTableShapeFrameByLayout, fixTextShapeFrameByLayout } from "./utils/other";
 import { BasicArray } from "../data/basic";
 import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "../data/textutils";
-import { importText } from "../data/baseimport";
+import { importGradient, importText } from "../data/baseimport";
 import * as basicapi from "./basicapi"
+import { AsyncGradientEditor, Status } from "./controller";
 import { CmdMergeType } from "./coop/localcmd";
+import { ShapeView, TableCellView, TextShapeView, adapt2Shape } from "../dataview";
 
 type TextShapeLike = Shape & { text: Text }
 
-function createTextByString(stringValue: string, refShape: TextShapeLike) {
+function createTextByString(stringValue: string, refText: Text) {
     const text = new Text(new BasicArray());
-    if (refShape.text.attr) {
-        mergeTextAttr(text, refShape.text.attr);
+    if (refText.attr) {
+        mergeTextAttr(text, refText.attr);
     }
     const para = new Para('\n', new BasicArray());
     para.attr = new ParaAttr();
     text.paras.push(para);
     const span = new Span(para.length);
     para.spans.push(span);
-    mergeParaAttr(para, refShape.text.paras[0]);
-    mergeSpanAttr(span, refShape.text.paras[0].spans[0]);
+    mergeParaAttr(para, refText.paras[0]);
+    mergeSpanAttr(span, refText.paras[0].spans[0]);
     text.insertText(stringValue, 0);
     return text;
 }
@@ -62,15 +64,11 @@ export class TextShapeEditor extends ShapeEditor {
 
     private __cachedSpanAttr?: SpanAttrSetter;
 
-    constructor(shape: TextShapeLike, page: Page, repo: CoopRepository, document: Document) {
+    constructor(shape: TextShapeView | TableCellView, page: Page, repo: CoopRepository, document: Document) {
         super(shape, page, repo, document);
-        //
-        if (shape.isVirtualShape) {
-
-        }
     }
     get shape(): TextShapeLike {
-        return this.__shape as TextShapeLike;
+        return adapt2Shape(this.__shape) as TextShapeLike;
     }
 
     public resetCachedSpanAttr() {
@@ -96,26 +94,26 @@ export class TextShapeEditor extends ShapeEditor {
         else if (shape instanceof TableCell) fixTableShapeFrameByLayout(api, this.__page, shape);
     }
 
-    private shape4edit(api: Api, shape?: TextShapeLike) {
-        const _shape = shape ?? this.__shape as TextShapeLike;
+    private shape4edit(api: Api, shape?: TextShapeView | TableCellView) {
+        const _shape = shape ?? this.__shape as (TextShapeView | TableCellView);
         const _var = this.overrideVariable(VariableType.Text, OverrideType.Text, (_var) => {
             if (_var) {
                 if (_var.value instanceof Text) return importText(_var.value);
-                if (typeof _var.value === 'string') return createTextByString(_var.value, _shape);
+                if (typeof _var.value === 'string') return createTextByString(_var.value, _shape.text);
             }
             else {
                 return importText(_shape.text);
             }
             throw new Error();
         }, api, shape);
-        
+
         if (_var && typeof _var.value === 'string') {
-            api.shapeModifyVariable(this.__page, _var, createTextByString(_var.value, _shape));
+            api.shapeModifyVariable(this.__page, _var, createTextByString(_var.value, _shape.text));
         }
         if (_var) {
             this.__repo.updateTextSelection(_var.value);
         }
-        return _var || _shape as TextShapeLike;
+        return _var || _shape.data as TextShapeLike;
     }
 
     public deleteText(index: number, count: number): number { // 清空后，在失去焦点时，删除shape
@@ -145,10 +143,11 @@ export class TextShapeEditor extends ShapeEditor {
         return 0;
     }
     public updateName(api: Api) {
-        if (this.__shape.nameIsFixed || this.__shape.isVirtualShape) return;
-        const name = (this.__shape as TextShape).text.getText(0, Infinity);
+        const shape = this.shape;
+        if (shape.nameIsFixed || shape.isVirtualShape) return;
+        const name = (shape as TextShapeLike).text.getText(0, Infinity);
         const i = name.indexOf('\n');
-        api.shapeModifyName(this.__page, this.__shape, name.slice(0, i));
+        api.shapeModifyName(this.__page, shape, name.slice(0, i));
     }
     public insertText2(text: string, index: number, del: number, attr?: SpanAttr): number {
         //
@@ -346,7 +345,7 @@ export class TextShapeEditor extends ShapeEditor {
         const shape = this.shape4edit(api);
         try {
             if (del > 0) api.deleteText(this.__page, shape, index, del);
-        } catch(e) {
+        } catch (e) {
             console.error(e);
         }
     }
@@ -361,7 +360,7 @@ export class TextShapeEditor extends ShapeEditor {
             this.fixFrameByLayout(api);
             this.__repo.transactCtx.fireNotify(); // 会导致不断排版绘制
             return true;
-        } catch(e) {
+        } catch (e) {
             console.error(e);
             return false;
         }
@@ -396,11 +395,11 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
 
-    public setTextColorMulti(shapes: Shape[], color: Color | undefined) {
+    public setTextColorMulti(shapes: (TextShapeView | TableCellView)[], color: Color | undefined) {
         const api = this.__repo.start("setTextColorMulti");
         try {
             for (let i = 0, len = shapes.length; i < len; i++) {
-                const text_shape: TextShape = shapes[i] as TextShape;
+                const text_shape = shapes[i];
                 if (text_shape.type !== ShapeType.Text) continue;
                 const shape = this.shape4edit(api, text_shape);
                 const text = shape instanceof Shape ? shape.text : shape.value as Text;
@@ -436,11 +435,11 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
 
-    public setTextHighlightColorMulti(shapes: Shape[], color: Color | undefined) {
+    public setTextHighlightColorMulti(shapes: (TextShapeView | TableCellView)[], color: Color | undefined) {
         const api = this.__repo.start("setTextHighlightColorMulti");
         try {
             for (let i = 0, len = shapes.length; i < len; i++) {
-                const text_shape: TextShape = shapes[i] as TextShape;
+                const text_shape = shapes[i];
                 if (text_shape.type !== ShapeType.Text) continue;
                 const shape = this.shape4edit(api, text_shape);
                 const text = shape instanceof Shape ? shape.text : shape.value as Text;
@@ -476,11 +475,11 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
-    public setTextFontNameMulti(shapes: Shape[], fontName: string) {
+    public setTextFontNameMulti(shapes: (TextShapeView | TableCellView)[], fontName: string) {
         const api = this.__repo.start("setTextFontNameMulti");
         try {
             for (let i = 0, len = shapes.length; i < len; i++) {
-                const text_shape: TextShape = shapes[i] as TextShape;
+                const text_shape = shapes[i];
                 if (text_shape.type !== ShapeType.Text) continue;
                 const shape = this.shape4edit(api, text_shape);
                 const text = shape instanceof Shape ? shape.text : shape.value as Text;
@@ -523,11 +522,11 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
 
-    public setTextFontSizeMulti(shapes: Shape[], fontSize: number) {
+    public setTextFontSizeMulti(shapes: (TextShapeView | TableCellView)[], fontSize: number) {
         const api = this.__repo.start("setTextFontSizeMulti");
         try {
             for (let i = 0, len = shapes.length; i < len; i++) {
-                const text_shape: TextShape = shapes[i] as TextShape;
+                const text_shape = shapes[i];
                 if (text_shape.type !== ShapeType.Text) continue;
                 const shape = this.shape4edit(api, text_shape);
                 const text = shape instanceof Shape ? shape.text : shape.value as Text;
@@ -559,11 +558,11 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
-    public setTextBehaviourMulti(shapes: Shape[], textBehaviour: TextBehaviour) {
+    public setTextBehaviourMulti(shapes: (TextShapeView | TableCellView)[], textBehaviour: TextBehaviour) {
         const api = this.__repo.start("setTextBehaviourMulti");
         try {
             for (let i = 0, len = shapes.length; i < len; i++) {
-                const text_shape: TextShape = shapes[i] as TextShape;
+                const text_shape = shapes[i];
                 if (text_shape.type !== ShapeType.Text) continue;
                 const shape = this.shape4edit(api, text_shape);
                 const text = shape instanceof Shape ? shape.text : shape.value as Text;
@@ -594,11 +593,11 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
-    public setTextVerAlignMulti(shapes: Shape[], verAlign: TextVerAlign) {
+    public setTextVerAlignMulti(shapes: (TextShapeView | TableCellView)[], verAlign: TextVerAlign) {
         const api = this.__repo.start("setTextVerAlignMulti");
         try {
             for (let i = 0, len = shapes.length; i < len; i++) {
-                const text_shape: TextShape = shapes[i] as TextShape;
+                const text_shape = shapes[i];
                 if (text_shape.type !== ShapeType.Text) continue;
                 const shape = this.shape4edit(api, text_shape);
                 api.shapeModifyTextVerAlign(this.__page, shape, verAlign);
@@ -627,11 +626,11 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
 
-    public setTextHorAlignMulti(shapes: Shape[], horAlign: TextHorAlign) {
+    public setTextHorAlignMulti(shapes: (TextShapeView | TableCellView)[], horAlign: TextHorAlign) {
         const api = this.__repo.start("setTextHorAlignMulti");
         try {
             for (let i = 0, len = shapes.length; i < len; i++) {
-                const text_shape: TextShape = shapes[i] as TextShape;
+                const text_shape = shapes[i];
                 if (text_shape.type !== ShapeType.Text) continue;
                 const shape = this.shape4edit(api, text_shape);
                 const text = shape instanceof Shape ? shape.text : shape.value as Text;
@@ -693,11 +692,11 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
-    public setLineHeightMulit(shapes: Shape[], lineHeight: number) {
+    public setLineHeightMulit(shapes: (TextShapeView | TableCellView)[], lineHeight: number) {
         const api = this.__repo.start("setLineHeightMulit");
         try {
             for (let i = 0; i < shapes.length; i++) {
-                const text_shape: TextShape = shapes[i] as TextShape;
+                const text_shape = shapes[i];
                 if (text_shape.type !== ShapeType.Text) continue;
                 const shape = this.shape4edit(api, text_shape);
                 const text = shape instanceof Shape ? shape.text : shape.value as Text;
@@ -736,11 +735,11 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
-    public setCharSpacingMulit(shapes: Shape[], kerning: number) {
+    public setCharSpacingMulit(shapes: (TextShapeView | TableCellView)[], kerning: number) {
         const api = this.__repo.start("setCharSpacingMulit");
         try {
             for (let i = 0; i < shapes.length; i++) {
-                const text_shape: TextShape = shapes[i] as TextShape;
+                const text_shape = shapes[i];
                 if (text_shape.type !== ShapeType.Text) continue;
                 const shape = this.shape4edit(api, text_shape);
                 const text = shape instanceof Shape ? shape.text : shape.value as Text;
@@ -771,11 +770,11 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
-    public setParaSpacingMulit(shapes: Shape[], paraSpacing: number) {
+    public setParaSpacingMulit(shapes: (TextShapeView | TableCellView)[], paraSpacing: number) {
         const api = this.__repo.start("setParaSpacingMulit");
         try {
             for (let i = 0; i < shapes.length; i++) {
-                const text_shape: TextShape = shapes[i] as TextShape;
+                const text_shape = shapes[i];
                 if (text_shape.type !== ShapeType.Text) continue;
                 const shape = this.shape4edit(api, text_shape);
                 const text = shape instanceof Shape ? shape.text : shape.value as Text;
@@ -815,11 +814,11 @@ export class TextShapeEditor extends ShapeEditor {
     /**
      * @description 多选文字对象时，给每个文字对象的全部文字设置下划线
      */
-    public setTextUnderlineMulti(shapes: Shape[], underline: boolean) {
+    public setTextUnderlineMulti(shapes: (TextShapeView | TableCellView)[], underline: boolean) {
         const api = this.__repo.start("setTextUnderlineMulti");
         try {
             for (let i = 0, len = shapes.length; i < len; i++) {
-                const text_shape: TextShape = shapes[i] as TextShape;
+                const text_shape = shapes[i];
                 if (text_shape.type !== ShapeType.Text) continue;
                 const shape = this.shape4edit(api, text_shape);
                 const text = shape instanceof Shape ? shape.text : shape.value as Text;
@@ -856,17 +855,57 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
 
-    public setTextStrikethroughMulti(shapes: Shape[], strikethrough: boolean) {
+    public setTextStrikethroughMulti(shapes: (TextShapeView | TableCellView)[], strikethrough: boolean) {
         const api = this.__repo.start("setTextStrikethroughMulti");
         try {
             for (let i = 0, len = shapes.length; i < len; i++) {
-                const text_shape: TextShape = shapes[i] as TextShape;
+                const text_shape = shapes[i];
                 if (text_shape.type !== ShapeType.Text) continue;
                 const shape = this.shape4edit(api, text_shape);
                 const text = shape instanceof Shape ? shape.text : shape.value as Text;
                 const text_length = text.length;
                 if (text_length === 0) continue;
                 api.textModifyStrikethrough(this.__page, shape, strikethrough ? StrikethroughType.Single : undefined, 0, text_length);
+            }
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+
+    public setTextFillType(fillType: FillType, index: number, len: number) {
+        if (len === 0) {
+            if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
+            this.__cachedSpanAttr.fillType = fillType;
+            this.__cachedSpanAttr.fillTypeIsSet = true;
+            return;
+        }
+        const api = this.__repo.start("setTextFillType");
+        try {
+            const shape = this.shape4edit(api);
+            api.textModifyFillType(this.__page, shape, fillType, index, len)
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+    public setTextFillTypeMulti(shapes: (TextShapeView | TableCellView)[], fillType: FillType) {
+        const api = this.__repo.start("setTextFillTypeMulti");
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const text_shape = shapes[i];
+                if (text_shape.type !== ShapeType.Text) continue;
+                const shape = this.shape4edit(api, text_shape);
+                const text = shape instanceof Shape ? shape.text : shape.value as Text;
+                const text_length = text.length;
+                if (text_length === 0) continue;
+                api.textModifyFillType(this.__page, shape, fillType, 0, text_length);
             }
             this.__repo.commit();
             return true;
@@ -916,11 +955,11 @@ export class TextShapeEditor extends ShapeEditor {
     /**
      * @description 多选文字对象时，给每个文字对象的全部文字设置粗体
      */
-    public setTextBoldMulti(shapes: Shape[], bold: boolean) {
+    public setTextBoldMulti(shapes: (TextShapeView | TableCellView)[], bold: boolean) {
         const api = this.__repo.start("setTextBoldMulti");
         try {
             for (let i = 0, len = shapes.length; i < len; i++) {
-                const text_shape: TextShape = shapes[i] as TextShape;
+                const text_shape = shapes[i];
                 if (text_shape.type !== ShapeType.Text) continue;
                 const shape = this.shape4edit(api, text_shape);
                 const text = shape instanceof Shape ? shape.text : shape.value as Text;
@@ -934,7 +973,7 @@ export class TextShapeEditor extends ShapeEditor {
             console.log(error)
             this.__repo.rollback();
         }
-        return true;
+        return false;
     }
 
     public setTextItalic(italic: boolean, index: number, len: number) {
@@ -959,11 +998,11 @@ export class TextShapeEditor extends ShapeEditor {
     /**
      * @description 多选文字对象时，给每个文字对象的全部文字设置斜体
      */
-    public setTextItalicMulti(shapes: Shape[], italic: boolean) {
+    public setTextItalicMulti(shapes: (TextShapeView | TableCellView)[], italic: boolean) {
         const api = this.__repo.start("setTextItalicMulti");
         try {
             for (let i = 0, len = shapes.length; i < len; i++) {
-                const text_shape: TextShape = shapes[i] as TextShape;
+                const text_shape = shapes[i];
                 if (text_shape.type !== ShapeType.Text) continue;
                 const shape = this.shape4edit(api, text_shape);
                 const text = shape instanceof Shape ? shape.text : shape.value as Text;
@@ -995,11 +1034,11 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
-    public setTextBulletNumbersMulti(shapes: Shape[], type: BulletNumbersType) {
+    public setTextBulletNumbersMulti(shapes: (TextShapeView | TableCellView)[], type: BulletNumbersType) {
         const api = this.__repo.start("setTextBulletNumbersMulti");
         try {
             for (let i = 0, len = shapes.length; i < len; i++) {
-                const text_shape: TextShape = shapes[i] as TextShape;
+                const text_shape = shapes[i];
                 if (text_shape.type !== ShapeType.Text) continue;
                 const shape = this.shape4edit(api, text_shape);
                 const text = shape instanceof Shape ? shape.text : shape.value as Text;
@@ -1068,11 +1107,11 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
 
-    public setTextTransformMulti(shapes: Shape[], type: TextTransformType | undefined) {
+    public setTextTransformMulti(shapes: (TextShapeView | TableCellView)[], type: TextTransformType | undefined) {
         const api = this.__repo.start("setTextTransformMulti");
         try {
             for (let i = 0, len = shapes.length; i < len; i++) {
-                const text_shape: TextShape = shapes[i] as TextShape;
+                const text_shape = shapes[i];
                 if (text_shape.type !== ShapeType.Text) continue;
                 const shape = this.shape4edit(api, text_shape);
                 const text = shape instanceof Shape ? shape.text : shape.value as Text;
@@ -1115,5 +1154,145 @@ export class TextShapeEditor extends ShapeEditor {
             this.__repo.rollback();
         }
         return false;
+    }
+    public setTextGradient(gradient: Gradient, index: number, len: number) {
+        if (len === 0) {
+            if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
+            this.__cachedSpanAttr.gradient = gradient;
+            this.__cachedSpanAttr.gradientIsSet = true;
+            return;
+        }
+        const api = this.__repo.start("setTextGradient");
+        try {
+            const shape = this.shape4edit(api);
+            api.setTextGradient(this.__page, shape, gradient, index, len);
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+    public setTextGradientMulti(shapes: (TextShapeView | TableCellView)[], gradient: Gradient) {
+        const api = this.__repo.start("setTextGradientMulti");
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const text_shape = shapes[i];
+                if (text_shape.type !== ShapeType.Text) continue;
+                const shape = this.shape4edit(api, text_shape);
+                const text = shape instanceof Shape ? shape.text : shape.value as Text;
+                const text_length = text.length;
+                if (text_length === 0) continue;
+                api.setTextGradient(this.__page, shape, gradient, 0, text_length);
+            }
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+    public asyncSetTextGradient(shapes: (TextShapeView | TableCellView)[], gradient: Gradient, index: number, len: number): AsyncGradientEditor {
+        const api = this.__repo.start("asyncSetTextGradient");
+        let status: Status = Status.Pending;
+        const execute_from = (from: { x: number, y: number }) => {
+            status = Status.Pending;
+            try {
+                const new_gradient = importGradient(gradient);
+                new_gradient.from.x = from.x;
+                new_gradient.from.y = from.y;
+                set_gradient(new_gradient);
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const execute_to = (to: { x: number, y: number }) => {
+            status = Status.Pending;
+            try {
+                const new_gradient = importGradient(gradient);
+                new_gradient.to.x = to.x;
+                new_gradient.to.y = to.y;
+                set_gradient(new_gradient);
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const execute_elipselength = (length: number) => {
+            status = Status.Pending;
+            try {
+                const new_gradient = importGradient(gradient);
+                new_gradient.elipseLength = length;
+                set_gradient(new_gradient);
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const execute_stop_position = (position: number, id: string) => {
+            status = Status.Pending;
+            try {
+                const new_gradient = importGradient(gradient);
+                const i = new_gradient.stops.findIndex((item) => item.id === id);
+                new_gradient.stops[i].position = position;
+                const g_s = new_gradient.stops;
+                g_s.sort((a, b) => {
+                    if (a.position > b.position) {
+                        return 1;
+                    } else if (a.position < b.position) {
+                        return -1;
+                    } else {
+                        return 0;
+                    }
+                })
+                set_gradient(new_gradient);
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const close = () => {
+            if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
+                this.__repo.commit();
+            } else {
+                this.__repo.rollback();
+            }
+            return undefined;
+        }
+        const set_gradient = (new_gradient: Gradient) => {
+            if (shapes.length === 1) {
+                const g = importGradient(new_gradient);
+                if (len === 0) {
+                    if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
+                    this.__cachedSpanAttr.gradient = g;
+                    this.__cachedSpanAttr.gradientIsSet = true;
+                }
+                const shape = this.shape4edit(api);
+                api.setTextGradient(this.__page, shape, g, index, len);
+            } else if (shapes.length > 1) {
+                for (let i = 0, l = shapes.length; i < l; i++) {
+                    const g = importGradient(new_gradient);
+                    const text_shape = shapes[i];
+                    if (text_shape.type !== ShapeType.Text) continue;
+                    const shape = this.shape4edit(api, text_shape);
+                    const text = shape instanceof Shape ? shape.text : shape.value as Text;
+                    const text_length = text.length;
+                    if (text_length === 0) continue;
+                    api.setTextGradient(this.__page, shape, g, 0, text_length);
+                }
+            }
+        }
+        return { execute_from, execute_to, execute_elipselength, execute_stop_position, close }
     }
 }

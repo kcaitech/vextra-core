@@ -17,9 +17,9 @@ import {
     translate,
     translateTo,
 } from "./frame";
-import { CurvePoint, GroupShape, PathShape, Shape, ShapeFrame } from "../data/shape";
+import { CurvePoint, GroupShape, PathShape, Shape, ShapeFrame, TextShape } from "../data/shape";
 import { getFormatFromBase64 } from "../basic/utils";
-import { ContactRoleType, CurveMode, FillType, ShapeType } from "../data/typesdefine";
+import { ContactRoleType, CurveMode, FillType, OverrideType, ShapeType, VariableType } from "../data/typesdefine";
 import { newArrowShape, newArtboard, newContact, newImageShape, newLineShape, newOvalShape, newRectShape, newTable, newTextShape, newCutoutShape, getTransformByEnv, modifyTransformByEnv } from "./creator";
 
 import { Page } from "../data/page";
@@ -32,11 +32,11 @@ import { Artboard } from "../data/artboard";
 import { uuid } from "../basic/uuid";
 import { ContactForm, ContactRole } from "../data/baseclasses";
 import { ContactShape } from "../data/contact";
-import { importCurvePoint } from "../data/baseimport";
-import { exportCurvePoint } from "../data/baseexport";
+import { importCurvePoint, importGradient, importContextSettings } from "../data/baseimport";
+import { exportCurvePoint, exportGradient } from "../data/baseexport";
 import { is_state } from "./utils/other";
 import { after_migrate, unable_to_migrate } from "./utils/migrate";
-import { get_state_name } from "./utils/symbol";
+import { get_state_name, shape4contextSettings, shape4fill } from "./symbol";
 import { __pre_curve, after_insert_point, pathEdit, contact_edit, pointsEdit, update_frame_by_points, before_modify_side } from "./utils/path";
 import { Color } from "../data/color";
 import { ContactLineView, PageView, PathShapeView, ShapeView, adapt2Shape } from "../dataview";
@@ -173,6 +173,14 @@ export interface AsyncPathHandle {
     pre: (index: number) => void;
     execute: (side: Side, from: XY, to: XY) => void;
     abort: () => undefined;
+    close: () => undefined;
+}
+
+export interface AsyncGradientEditor {
+    execute_from: (from: { x: number, y: number }) => void;
+    execute_to: (from: { x: number, y: number }) => void;
+    execute_elipselength: (length: number) => void;
+    execute_stop_position: (position: number, id: string) => void;
     close: () => undefined;
 }
 
@@ -1068,8 +1076,8 @@ export class Controller {
         return { pre, modify_contact_from, modify_contact_to, before, modify_sides, migrate, close }
     }
 
-    public asyncOpacityEditor(_shapes: Shape[] | ShapeView[], _page: Page | PageView): AsyncOpacityEditor {
-        const shapes: Shape[] = _shapes[0] instanceof ShapeView ? _shapes.map((s) => adapt2Shape(s as ShapeView)) : _shapes as Shape[];
+    public asyncOpacityEditor(_shapes: ShapeView[], _page: Page | PageView): AsyncOpacityEditor {
+        const shapes: ShapeView[] = _shapes;
         const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
 
         const api = this.__repo.start("asyncOpacityEditor");
@@ -1078,7 +1086,7 @@ export class Controller {
             status = Status.Pending;
             try {
                 for (let i = 0, l = shapes.length; i < l; i++) {
-                    const shape = shapes[i];
+                    const shape = shape4contextSettings(api, shapes[i], page);
                     api.shapeModifyContextSettingsOpacity(page, shape, contextSettingOpacity);
                 }
                 this.__repo.transactCtx.fireNotify();
@@ -1155,6 +1163,140 @@ export class Controller {
             return undefined;
         }
         return { pre, execute, abort, close };
+    }
+    public asyncGradientEditor(shapes: ShapeView[], _page: Page | PageView, index: number, type: 'fills' | 'borders'): AsyncGradientEditor {
+        const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
+        const api = this.__repo.start("asyncGradientEditor");
+        let status: Status = Status.Pending;
+        const execute_from = (from: { x: number, y: number }) => {
+            status = Status.Pending;
+            try {
+                for (let i = 0, l = shapes.length; i < l; i++) {
+                    const shape = shapes[i];
+                    const grad_type = shape.style[type];
+                    if (!grad_type?.length) {
+                        continue;
+                    }
+                    const gradient_container = grad_type[index];
+                    const gradient = gradient_container.gradient;
+                    if (!gradient) return;
+                    const new_gradient = importGradient(exportGradient(gradient));
+                    new_gradient.from.x = from.x;
+                    new_gradient.from.y = from.y;
+                    const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
+                    const s = shape4fill(api, page, shape);
+                    f(page, s, index, new_gradient);
+                }
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const execute_to = (to: { x: number, y: number }) => {
+            status = Status.Pending;
+            try {
+                for (let i = 0, l = shapes.length; i < l; i++) {
+                    const shape = shapes[i];
+                    const grad_type = shape.style[type];
+                    if (!grad_type?.length) {
+                        continue;
+                    }
+                    const gradient_container = grad_type[index];
+                    const gradient = gradient_container.gradient;
+                    if (!gradient) return;
+                    const new_gradient = importGradient(exportGradient(gradient));
+                    new_gradient.to.x = to.x;
+                    new_gradient.to.y = to.y;
+                    const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
+                    const s = shape4fill(api, page, shape);
+                    f(page, s, index, new_gradient);
+                }
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const execute_elipselength = (length: number) => {
+            status = Status.Pending;
+            try {
+                for (let i = 0, l = shapes.length; i < l; i++) {
+                    const shape = shapes[i];
+                    const grad_type = shape.style[type];
+                    if (!grad_type?.length) {
+                        continue;
+                    }
+                    const gradient_container = grad_type[index];
+                    const gradient = gradient_container.gradient;
+                    if (!gradient) return;
+                    const new_gradient = importGradient(exportGradient(gradient));
+                    new_gradient.elipseLength = length;
+                    const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
+                    const s = shape4fill(api, page, shape);
+                    f(page, s, index, new_gradient);
+                }
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const execute_stop_position = (position: number, id: string) => {
+            status = Status.Pending;
+            try {
+                const f_stop = shapes[0].style[type][index].gradient?.stops;
+                if(f_stop) {
+                    const idx = f_stop.findIndex((stop) => stop.id === id);
+                    for (let i = 0, l = shapes.length; i < l; i++) {
+                        const shape = shapes[i];
+                        const grad_type = shape.style[type];
+                        if (!grad_type?.length) {
+                            continue;
+                        }
+                        const gradient_container = grad_type[index];
+                        const gradient = gradient_container.gradient;
+                        if (!gradient) return;
+                        const new_gradient = importGradient(exportGradient(gradient));
+                        if (idx === -1) {
+                            console.warn(`gradient stop not found: ${id}`);
+                            continue;
+                        }
+                        new_gradient.stops[idx].position = position;
+                        const g_s = new_gradient.stops;
+                        g_s.sort((a, b) => {
+                            if (a.position > b.position) {
+                                return 1;
+                            } else if (a.position < b.position) {
+                                return -1;
+                            } else {
+                                return 0;
+                            }
+                        })
+                        const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
+                        const s = shape4fill(api, page, shape);
+                        f(page, s, index, new_gradient);
+                    }
+                }
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const close = () => {
+            if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
+                this.__repo.commit();
+            } else {
+                this.__repo.rollback();
+            }
+            return undefined;
+        }
+        return { execute_from, execute_to, execute_elipselength, execute_stop_position, close }
     }
 }
 

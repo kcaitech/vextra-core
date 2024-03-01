@@ -4,13 +4,17 @@ import { ExportFormat, ExportOptions, Shape } from "../../data/shape";
 import { ExportFileFormat, ExportFormatNameingScheme } from "../../data/style";
 import { crdtArrayInsert, crdtArrayRemove, crdtSetAttr } from "./basic";
 import { ArrayMoveOpRecord } from "../../coop/client/crdt";
+import { Variable } from "data/typesdefine";
 
-export function addExportFormat(shape: Shape, format: ExportFormat, index: number) {
-    if (!shape.exportOptions) {
-        const formats = new BasicArray<ExportFormat>();
-        shape.exportOptions = new ExportOptions(formats, 0, false, false, false, false);
+export function addExportFormat(shape: Shape | Variable, format: ExportFormat, index: number) {
+    let options;
+    if (shape instanceof Shape) {
+        if (!shape.exportOptions) shape.exportOptions = new ExportOptions(new BasicArray(), 0, false, false, false, false);
+        options = shape.exportOptions;
+    } else {
+        options = shape.value as ExportOptions;
     }
-    return crdtArrayInsert(shape.exportOptions.exportFormats, index, format);
+    return crdtArrayInsert(options.exportFormats, index, format);
 }
 export function addPageExportFormat(page: Page, format: ExportFormat, index: number) {
     return addExportFormat(page, format, index);

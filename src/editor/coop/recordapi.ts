@@ -14,16 +14,16 @@ import {
     CurveMode
 } from "../../data/shape";
 import { updateShapesFrame } from "./utils";
-import { Border, BorderPosition, BorderStyle, Fill, MarkerType, Shadow } from "../../data/style";
+import { Border, BorderPosition, BorderStyle, Fill, Gradient, MarkerType, Shadow } from "../../data/style";
 import { BulletNumbers, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
 import { RectShape, SymbolRefShape, TableCellType, TableShape } from "../../data/classes";
 import {
     BoolOp, BulletNumbersBehavior, BulletNumbersType, ExportFileFormat, OverrideType, Point2D,
-    StrikethroughType, TextTransformType, UnderlineType, ShadowPosition, ExportFormatNameingScheme
+    StrikethroughType, TextTransformType, UnderlineType, ShadowPosition, ExportFormatNameingScheme, FillType, BlendMode
 } from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
-import { ContactForm, ContactRole, CurvePoint, ExportFormat } from "../../data/baseclasses";
+import { ContactForm, ContactRole, ContextSettings, CurvePoint, ExportFormat, ExportOptions } from "../../data/baseclasses";
 import { ContactShape } from "../../data/contact"
 import { Color } from "../../data/classes";
 import { Op, OpType } from "../../coop/common/op";
@@ -281,7 +281,7 @@ export class Api {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.shapeRemoveVariable(page, shape, key));
     }
-    shapeRemoveVirbindsEx(page: Page, shape: SymbolShape | SymbolRefShape, key: string, varId: string, type: VariableType) {
+    shapeRemoveOverride(page: Page, shape: SymbolRefShape, key: string, varId: string, type: VariableType) {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.shapeRemoveOverride(shape, key));
     }
@@ -294,11 +294,15 @@ export class Api {
         this.addOp(basicapi.shapeUnbindVar(shape, type));
     }
 
-    shapeAddOverride(page: Page, shape: SymbolShape | SymbolRefShape, refId: string, attr: OverrideType, value: string) {
+    shapeAddOverride(page: Page, shape: SymbolRefShape, refId: string, value: string) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeAddOverride(page, shape, refId, attr, value));
+        this.addOp(basicapi.shapeAddOverride(page, shape, refId, value));
     }
 
+    private _shapeModifyAttr(page: Page, shape: Shape, attr: string, val: any) {
+        checkShapeAtPage(page, shape);
+        this.addOp(basicapi.crdtSetAttr(shape, attr, val));
+    }
     /**
      * @description 初始化或修改组件的状态属性
      */
@@ -307,44 +311,43 @@ export class Api {
         this.addOp(basicapi.shapeModifyVartag(page, shape, varId, tag));
     }
     shapeModifyVisible(page: Page, shape: Shape, isVisible: boolean) {
-        checkShapeAtPage(page, shape);
-        this.addOp(basicapi.crdtSetAttr(shape, "isVisible", isVisible));
+        this._shapeModifyAttr(page, shape, "isVisible", isVisible);
     }
     shapeModifySymRef(page: Page, shape: SymbolRefShape, refId: string) {
-        checkShapeAtPage(page, shape);
-        this.addOp(basicapi.crdtSetAttr(shape, "refId", refId));
+        this._shapeModifyAttr(page, shape, "refId", refId);
     }
-
     shapeModifyLock(page: Page, shape: Shape, isLocked: boolean) {
-        checkShapeAtPage(page, shape);
-        this.addOp(basicapi.crdtSetAttr(shape, "isLocked", isLocked));
+        this._shapeModifyAttr(page, shape, "isLocked", isLocked);
     }
     shapeModifyHFlip(page: Page, shape: Shape, hflip: boolean | undefined) {
-        checkShapeAtPage(page, shape);
-        this.addOp(basicapi.crdtSetAttr(shape, "isFlippedHorizontal", hflip));
+        this._shapeModifyAttr(page, shape, "isFlippedHorizontal", hflip);
     }
     shapeModifyVFlip(page: Page, shape: Shape, vflip: boolean | undefined) {
-        checkShapeAtPage(page, shape);
-        this.addOp(basicapi.crdtSetAttr(shape, "isFlippedVertical", vflip));
+        this._shapeModifyAttr(page, shape, "isFlippedVertical", vflip);
     }
-    shapeModifyContextSettingsOpacity(page: Page, shape: Shape, contextSettingsOpacity: number) {
-        if (shape.isVirtualShape) {
-            return; // todo
-        }
+    shapeModifyContextSettingsOpacity(page: Page, shape: Shape | Variable, contextSettingsOpacity: number) {
+        // if (shape.isVirtualShape) {
+        //     return; // todo
+        // }
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyContextSettingOpacity(shape, contextSettingsOpacity));
+        let contextSettings;
+        if (shape instanceof Shape) {
+            if (!shape.style.contextSettings) shape.style.contextSettings = new ContextSettings(BlendMode.Normal, 1);
+            contextSettings = shape.style.contextSettings;
+        } else {
+            contextSettings = shape.value;
+        }
+        this.addOp(basicapi. crdtSetAttr(contextSettings, 'opacity', contextSettingsOpacity));
     }
     shapeModifyResizingConstraint(page: Page, shape: Shape, resizingConstraint: number) {
-        checkShapeAtPage(page, shape);
-        this.addOp(basicapi.crdtSetAttr(shape, "resizingConstraint", resizingConstraint));
+        this._shapeModifyAttr(page, shape, "resizingConstraint", resizingConstraint);
     }
     shapeModifyRadius(page: Page, shape: RectShape, lt: number, rt: number, rb: number, lb: number) {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.shapeModifyRadius(shape, lt, rt, rb, lb));
     }
     shapeModifyFixedRadius(page: Page, shape: GroupShape | PathShape | PathShape2 | TextShape, fixedRadius: number | undefined) {
-        checkShapeAtPage(page, shape);
-        this.addOp(basicapi.crdtSetAttr(shape, "fixedRadius", fixedRadius));
+        this._shapeModifyAttr(page, shape, "fixedRadius", fixedRadius);
     }
     shapeModifyCurvPoint(page: Page, shape: PathShape, index: number, point: Point2D) {
         checkShapeAtPage(page, shape);
@@ -359,12 +362,10 @@ export class Api {
         this.addOp(basicapi.shapeModifyCurvToPoint(page, shape, index, point));
     }
     shapeModifyBoolOp(page: Page, shape: Shape, op: BoolOp | undefined) {
-        checkShapeAtPage(page, shape);
-        this.addOp(basicapi.crdtSetAttr(shape, "boolOp", op));
+        this._shapeModifyAttr(page, shape, "boolOp", op);
     }
     shapeModifyBoolOpShape(page: Page, shape: GroupShape, isOpShape: boolean | undefined) {
-        checkShapeAtPage(page, shape);
-        this.addOp(basicapi.crdtSetAttr(shape, "isBoolOpShape", isOpShape));
+        this._shapeModifyAttr(page, shape, "isBoolOpShape", isOpShape);
     }
 
     // 添加一次fill
@@ -434,6 +435,34 @@ export class Api {
         const fill: Fill = fills[idx];
         if (!fill) return;
         this.addOp(basicapi.crdtSetAttr(fill, "isEnabled", isEnable));
+    }
+    setFillType(page: Page, shape: Shape | Variable, idx: number, fillType: FillType) {
+        checkShapeAtPage(page, shape);
+        const fills = shape instanceof Shape ? shape.style.fills : shape.value;
+        const fill: Fill = fills[idx];
+        if (!fill) return;
+        this.addOp(basicapi.crdtSetAttr(fill, "fillType", fillType));
+    }
+    setBorderFillType(page: Page, shape: Shape | Variable, idx: number, fillType: FillType) {
+        checkShapeAtPage(page, shape);
+        const borders = shape instanceof Shape ? shape.style.borders : shape.value;
+        const border: Fill = borders[idx];
+        if (!border) return;
+        this.addOp(basicapi.crdtSetAttr(border, "fillType", fillType));
+    }
+    setFillGradient(page: Page, shape: Shape | Variable, idx: number, gradient: Gradient) {
+        checkShapeAtPage(page, shape);
+        const fills = shape instanceof Shape ? shape.style.fills : shape.value;
+        const fill: Fill = fills[idx];
+        if (!fill) return;
+        this.addOp(basicapi.crdtSetAttr(fill, "gradient", gradient));
+    }
+    setBorderGradient(page: Page, shape: Shape | Variable, idx: number, gradient: Gradient) {
+        checkShapeAtPage(page, shape);
+        const borders = shape instanceof Shape ? shape.style.borders : shape.value;
+        const border = borders[idx];
+        if (!border) return;
+        this.addOp(basicapi.crdtSetAttr(border, "gradient", gradient));
     }
     setBorderColor(page: Page, shape: Shape | Variable, idx: number, color: Color) {
         checkShapeAtPage(page, shape);
@@ -584,10 +613,11 @@ export class Api {
         this.addOp(basicapi.setShadowPosition(shadows, idx, position));
     }
     // cutout
-    deleteExportFormatAt(page: Page, shape: Shape, idx: number) {
+    deleteExportFormatAt(page: Page, shape: Shape | Variable, idx: number) {
         checkShapeAtPage(page, shape);
-        if (!shape.exportOptions) return;
-        this.addOp(basicapi.deleteExportFormatAt(shape.exportOptions, idx));
+        const options = shape instanceof Shape ? shape.exportOptions : shape.value as ExportOptions;
+        if (!options) return;
+        this.addOp(basicapi.deleteExportFormatAt(options, idx));
     }
     deletePageExportFormatAt(page: Page, idx: number) {
         if (!page.exportOptions) return;
@@ -605,63 +635,70 @@ export class Api {
             this.addOp(basicapi.addExportFormat(shape, format, i));
         }
     }
-    addExportFormat(page: Page, shape: Shape, format: ExportFormat, index: number) {
+    addExportFormat(page: Page, shape: Shape | Variable, format: ExportFormat, index: number) {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.addExportFormat(shape, format, index));
     }
     addPageExportFormat(page: Page, format: ExportFormat, index: number) {
         this.addOp(basicapi.addPageExportFormat(page, format, index));
     }
-    setExportFormatScale(page: Page, shape: Shape, idx: number, scale: number) {
+    setExportFormatScale(page: Page, shape: Shape | Variable, idx: number, scale: number) {
         checkShapeAtPage(page, shape);
-        if (!shape.exportOptions) return;
-        this.addOp(basicapi.setExportFormatScale(shape.exportOptions, idx, scale));
+        const options = shape instanceof Shape ? shape.exportOptions : shape.value as ExportOptions;
+        if (!options) return;
+        this.addOp(basicapi.setExportFormatScale(options, idx, scale));
     }
     setPageExportFormatScale(page: Page, idx: number, scale: number) {
         if (!page.exportOptions) return;
         this.addOp(basicapi.setPageExportFormatScale(page.exportOptions, idx, scale));
     }
-    setExportFormatName(page: Page, shape: Shape, idx: number, name: string) {
+    setExportFormatName(page: Page, shape: Shape | Variable, idx: number, name: string) {
         checkShapeAtPage(page, shape);
-        if (!shape.exportOptions) return;
-        this.addOp(basicapi.setExportFormatName(shape.exportOptions, idx, name));
+        const options = shape instanceof Shape ? shape.exportOptions : shape.value as ExportOptions;
+        if (!options) return;
+        this.addOp(basicapi.setExportFormatName(options, idx, name));
     }
     setPageExportFormatName(page: Page, idx: number, name: string) {
         if (!page.exportOptions) return;
         this.addOp(basicapi.setPageExportFormatName(page.exportOptions, idx, name));
     }
-    setExportFormatFileFormat(page: Page, shape: Shape, idx: number, fileFormat: ExportFileFormat) {
+    setExportFormatFileFormat(page: Page, shape: Shape | Variable, idx: number, fileFormat: ExportFileFormat) {
         checkShapeAtPage(page, shape);
-        if (!shape.exportOptions) return;
-        this.addOp(basicapi.setExportFormatFileFormat(shape.exportOptions, idx, fileFormat));
+        const options = shape instanceof Shape ? shape.exportOptions : shape.value as ExportOptions;
+        if (!options) return;
+        this.addOp(basicapi.setExportFormatFileFormat(options, idx, fileFormat));
     }
     setPageExportFormatFileFormat(page: Page, idx: number, fileFormat: ExportFileFormat) {
         if (!page.exportOptions) return;
         this.addOp(basicapi.setPageExportFormatFileFormat(page.exportOptions, idx, fileFormat));
     }
-    setExportFormatPerfix(page: Page, shape: Shape, idx: number, perfix: ExportFormatNameingScheme) {
+    setExportFormatPerfix(page: Page, shape: Shape | Variable, idx: number, perfix: ExportFormatNameingScheme) {
         checkShapeAtPage(page, shape);
-        if (!shape.exportOptions) return;
-        this.addOp(basicapi.setExportFormatPerfix(shape.exportOptions, idx, perfix));
+        const options = shape instanceof Shape ? shape.exportOptions : shape.value as ExportOptions;
+        if (!options) return;
+        this.addOp(basicapi.setExportFormatPerfix(options, idx, perfix));
     }
     setPageExportFormatPerfix(page: Page, idx: number, perfix: ExportFormatNameingScheme) {
         if (!page.exportOptions) return;
         this.addOp(basicapi.setPageExportFormatPerfix(page.exportOptions, idx, perfix));
     }
-    setExportTrimTransparent(page: Page, shape: Shape, trim: boolean) {
+    setExportTrimTransparent(page: Page, shape: Shape | Variable, trim: boolean) {
         checkShapeAtPage(page, shape);
-        if (!shape.exportOptions) return;
-        this.addOp(basicapi.setExportTrimTransparent(shape.exportOptions, trim));
+        const options = shape instanceof Shape ? shape.exportOptions : shape.value as ExportOptions;
+        if (!options) return;
+        this.addOp(basicapi.setExportTrimTransparent(options, trim));
     }
-    setExportCanvasBackground(page: Page, shape: Shape, background: boolean) {
+    setExportCanvasBackground(page: Page, shape: Shape | Variable, background: boolean) {
         checkShapeAtPage(page, shape);
-        if (!shape.exportOptions) return;
-        this.addOp(basicapi.setExportCanvasBackground(shape.exportOptions, background));
+        const options = shape instanceof Shape ? shape.exportOptions : shape.value as ExportOptions;
+        if (!options) return;
+        this.addOp(basicapi.setExportCanvasBackground(options, background));
     }
-    setExportPreviewUnfold(page: Page, shape: Shape, unfold: boolean) {
+    setExportPreviewUnfold(page: Page, shape: Shape | Variable, unfold: boolean) {
         checkShapeAtPage(page, shape);
-        if (!shape.exportOptions) return;
-        this.addOp(basicapi.setExportPreviewUnfold(shape.exportOptions, unfold));
+        const options = shape instanceof Shape ? shape.exportOptions : shape.value as ExportOptions;
+        if (!options) return;
+        this.addOp(basicapi.setExportPreviewUnfold(options, unfold));
     }
     setPageExportPreviewUnfold(document: Document, pageId: string, unfold: boolean) {
         const item = document.pagesMgr.getSync(pageId);
@@ -749,6 +786,12 @@ export class Api {
         const _text = shape instanceof Shape ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
         this.addOp(basicapi.textModifyItalic(shape, _text, italic, index, len));
+    }
+    textModifyFillType(page: Page, shape: TextShapeLike | Variable, fillType: FillType, index: number, len: number) {
+        checkShapeAtPage(page, shape);
+        const _text = shape instanceof Shape ? shape.text : shape.value;
+        if (!_text || !(_text instanceof Text)) throw Error();
+        this.addOp(basicapi.textModifyFillType(shape, _text, index, len, fillType));
     }
 
     private _textModifyRemoveBulletNumbers(page: Page, shape: TextShapeLike | Variable, index: number, len: number) {
@@ -890,6 +933,12 @@ export class Api {
         }
         this.addOp(basicapi.textModifySpanTransfrom(shape, _text, transform, index, len));
     }
+    setTextGradient(page: Page, shape: TextShapeLike | Variable, gradient: Gradient | undefined, index: number, len: number) {
+        checkShapeAtPage(page, shape);
+        const _text = shape instanceof Shape ? shape.text : shape.value;
+        if (!_text || !(_text instanceof Text)) throw Error();
+        this.addOp(basicapi.textModifyGradient(shape, _text, index, len, gradient));
+    }
 
     // table
     tableSetCellContentType(page: Page, table: TableShape, rowIdx: number, colIdx: number, contentType: TableCellType | undefined) {
@@ -1018,5 +1067,13 @@ export class Api {
     tableModifyTextTransform(page: Page, table: TableShape, transform: TextTransformType | undefined) {
         checkShapeAtPage(page, table);
         this.addOp(basicapi.tableModifyTextTransform(table, transform));
+    }
+    tableModifyTextFillType(page: Page, table: TableShape, fillType: FillType | undefined) {
+        checkShapeAtPage(page, table);
+        this.addOp(basicapi.tableModifyTextFillType(table, fillType));
+    }
+    tableModifyTextGradient(page: Page, table: TableShape, gradient: Gradient | undefined) {
+        checkShapeAtPage(page, table);
+        this.addOp(basicapi.tableModifyTextGradient(table, gradient));
     }
 }

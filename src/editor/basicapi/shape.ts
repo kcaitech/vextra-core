@@ -103,12 +103,12 @@ export function shapeModifyVFlip(page: Page, shape: Shape, vflip: boolean | unde
 export function shapeModifyResizingConstraint(shape: Shape, resizingConstraint: number) {
     return crdtSetAttr(shape, 'resizingConstraint', resizingConstraint);
 }
-export function shapeModifyContextSettingOpacity(shape: Shape, contextSettingsOpacity: number) {
-    if (!shape.style.contextSettings) {
-        shape.style.contextSettings = new ContextSettings(BlendMode.Normal, 1);
-    }
-    return crdtSetAttr(shape.style.contextSettings, 'opacity', contextSettingsOpacity);
-}
+// export function shapeModifyContextSettingOpacity(shape: Shape, contextSettingsOpacity: number) {
+//     if (!shape.style.contextSettings) {
+//         shape.style.contextSettings = new ContextSettings(BlendMode.Normal, 1);
+//     }
+//     return crdtSetAttr(shape.style.contextSettings, 'opacity', contextSettingsOpacity);
+// }
 export function shapeModifyRadius(shape: RectShape, lt: number, rt: number, rb: number, lb: number) {
     const ps = shape.points;
     if (ps.length === 4) {
@@ -173,12 +173,12 @@ export function shapeBindVar(page: Page, shape: Shape, type: OverrideType, varId
 export function shapeUnbindVar(shape: Shape, type: OverrideType) {
     if (shape.varbinds) return crdtSetAttr(shape.varbinds, type, undefined);
 }
-export function shapeModifyOverride(page: Page, shape: SymbolShape | SymbolRefShape, refId: string, attr: OverrideType, value: string) {
-    shapeAddOverride(page, shape, refId, attr, value);
+export function shapeModifyOverride(page: Page, shape: SymbolRefShape, refId: string, value: string) {
+    shapeAddOverride(page, shape, refId, value);
 }
-export function shapeAddOverride(page: Page, shape: SymbolShape | SymbolRefShape, refId: string, attr: OverrideType, value: string) {
+export function shapeAddOverride(page: Page, shape: SymbolRefShape, refId: string, value: string) {
     if (!shape.overrides) shape.overrides = new BasicMap<string, string>();
-    refId = genRefId(refId, attr); // id+type->var
+    // refId = genRefId(refId, attr); // id+type->var
     shape.overrides.set(refId, value);
     return crdtSetAttr(shape.overrides, refId, value);
 }
@@ -186,6 +186,6 @@ export function shapeModifyVartag(page: Page, shape: SymbolShape, varId: string,
     if (!shape.symtags) shape.symtags = new BasicMap();
     return crdtSetAttr(shape.symtags, varId, tag);
 }
-export function shapeRemoveOverride(shape: SymbolShape | SymbolRefShape, refId: string) {
+export function shapeRemoveOverride(shape: SymbolRefShape, refId: string) {
     if (shape.overrides) return crdtSetAttr(shape.overrides, refId, undefined);
 }

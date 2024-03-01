@@ -12,7 +12,7 @@ import {
 } from "../data/shape";
 import { ShapeEditor } from "./shape";
 import * as types from "../data/typesdefine";
-import { BoolOp, BorderPosition, ExportFileFormat, ExportFormatNameingScheme, ShadowPosition, ShapeType } from "../data/typesdefine";
+import { BoolOp, BorderPosition, ExportFileFormat, ExportFormatNameingScheme, FillType, GradientType, ShadowPosition, ShapeType } from "../data/typesdefine";
 import { Page } from "../data/page";
 import {
     initFrame,
@@ -34,25 +34,26 @@ import { uuid } from "../basic/uuid";
 import {
     Artboard,
     Border,
-    BorderStyle,
     Color,
-    Fill,
     Path,
     PathShape,
     Style,
     SymbolRefShape,
     TableShape,
-    Text
+    Text,
+    Stop,
+    Gradient
 } from "../data/classes";
 import { TextShapeEditor } from "./textshape";
-import { get_frame, modify_frame_after_insert, set_childs_id, transform_data } from "../io/cilpboard";
+import { modify_frame_after_insert, set_childs_id, transform_data } from "../io/cilpboard";
 import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
 import { render2path } from "../render";
 import { Matrix } from "../basic/matrix";
 import {
     IImportContext,
     importArtboard,
-    importBorder, importShapeFrame,
+    importBorder, importGradient, importShapeFrame,
+    importStop,
     importStyle,
     importSymbolShape
 } from "../data/baseimport";
@@ -60,7 +61,7 @@ import { gPal } from "../basic/pal";
 import { findUsableBorderStyle, findUsableFillStyle } from "../render/boolgroup";
 import { BasicArray } from "../data/basic";
 import { TableEditor } from "./table";
-import { exportArtboard, exportShapeFrame, exportStyle, exportSymbolShape, exportVariable } from "../data/baseexport";
+import { exportArtboard, exportGradient, exportShapeFrame, exportStop, exportStyle, exportSymbolShape, exportVariable } from "../data/baseexport";
 import {
     adjust_selection_before_group,
     after_remove,
@@ -75,20 +76,21 @@ import {
 } from "./utils/other";
 import { v4 } from "uuid";
 import {
-    is_exist_invalid_shape, is_exist_invalid_shape2, is_part_of_symbol,
+    is_exist_invalid_shape2, is_part_of_symbol,
     is_part_of_symbolref,
     modify_variable_with_api,
     shape4border,
     shape4fill
-} from "./utils/symbol";
+} from "./symbol";
 import { is_circular_ref2 } from "./utils/ref_check";
-import { ExportFormat, Shadow } from "../data/baseclasses";
+import { BorderStyle, ExportFormat, Point2D, Shadow } from "../data/baseclasses";
 import { get_rotate_for_straight, is_straight, update_frame_by_points } from "./utils/path";
 import { modify_shapes_height, modify_shapes_width } from "./utils/common";
 import { CoopRepository } from "./coop/cooprepo";
 import { Api } from "./coop/recordapi";
 import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
 import { unable_to_migrate } from "./utils/migrate";
+import { PageView, ShapeView, SymbolView, TableCellView, TableView, TextShapeView, adapt2Shape } from "../dataview";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -96,96 +98,72 @@ export interface PositonAdjust { // 涉及属性：frame.x、frame.y
     transX: number
     transY: number
 }
-
-export interface ConstrainerProportionsAction { // constrainerProportions
-    target: Shape
-    value: boolean
-}
-
 export interface FrameAdjust { // frame.width、frame.height
     target: Shape
     widthExtend: number
     heightExtend: number
 }
 
-export interface RotateAdjust { // rotation
-    target: Shape
-    value: number
-}
-
-export interface FlipAction { // isFlippedHorizontal、isFlippedVertical
-    target: Shape
-    direction: 'horizontal' | 'vertical'
-}
-
-export interface FillColorAction { // fill.color
-    target: Shape
+export interface BatchAction { // targer、index、value
+    target: ShapeView
     index: number
-    value: Color
+    value: any
 }
-
-export interface FillEnableAction { // fill.Enabled
-    target: Shape
-    index: number
-    value: boolean
+export interface BatchAction2 { // targer、value
+    target: ShapeView
+    value: any
 }
-
-export interface FillAddAction { // style.fills
-    target: Shape
-    value: Fill
-}
-
-export interface FillDeleteAction { // style.fills
-    target: Shape
+export interface BatchAction3 { // targer、index
+    target: ShapeView
     index: number
 }
-
-export interface FillsReplaceAction { // style.fills
-    target: Shape
-    value: Fill[]
-}
-
-export interface BorderColorAction { // border.color
-    target: Shape
+export interface BatchAction4 { // targer、value、type
+    target: ShapeView
     index: number
-    value: Color
+    type: 'fills' | 'borders'
+}
+export interface BatchAction5 { // targer、value、type
+    target: ShapeView
+    index: number
+    value: any
+    type: 'fills' | 'borders'
 }
 
 export interface BorderEnableAction { // border.Enabled
-    target: Shape
+    target: ShapeView
     index: number
     value: boolean
 }
 
 export interface BorderAddAction { // style.borders
-    target: Shape
+    target: ShapeView
     value: Border
 }
 
 export interface BorderDeleteAction { // style.borders
-    target: Shape
+    target: ShapeView
     index: number
 }
 
 export interface BordersReplaceAction { // style.borders
-    target: Shape
+    target: ShapeView
     value: Border[]
 }
 
 export interface BorderPositionAction {
-    target: Shape
+    target: ShapeView
     index: number
     value: BorderPosition
 }
 
 export interface BorderThicknessAction {
-    target: Shape
+    target: ShapeView
     index: number
     value: number
 }
 
 export interface BorderStyleAction {
-    target: Shape
+    target: ShapeView
     index: number
     value: BorderStyle
 }
@@ -540,7 +518,8 @@ export class PageEditor {
      * @param dlt 属性默认值
      * @return symbol 集合union
      */
-    makeStatus(symbol: SymbolShape, attri_name: string, dlt: string, isDefault: boolean) {
+    makeStatus(symbolView: SymbolView, attri_name: string, dlt: string, isDefault: boolean) {
+        let symbol = adapt2Shape(symbolView) as SymbolShape;
         const api = this.__repo.start("makeStatus");
         try {
             if (symbol instanceof SymbolUnionShape) {
@@ -976,7 +955,8 @@ export class PageEditor {
         }
     }
 
-    private delete_inner(page: Page, shape: Shape, api: Api): boolean {
+    private delete_inner(page: Page, _shape: ShapeView | Shape, api: Api): boolean {
+        const shape = _shape instanceof Shape ? _shape : _shape.data;
         const p = shape.parent as GroupShape;
         if (!p) return false;
         if (shape.type === ShapeType.Contact) { // 连接线删除之后需要删除两边的连接关系
@@ -984,17 +964,17 @@ export class PageEditor {
         } else {
             this.removeContact(api, page, shape);
         }
-        api.shapeDelete(this.__document, page, p, p.indexOfChild(shape));
+        api.shapeDelete(this.__document, page, p as GroupShape, (p as GroupShape).indexOfChild(shape));
         if (p.childs.length <= 0 && p.type === ShapeType.Group) {
             this.delete_inner(page, p, api)
         }
         return true;
     }
 
-    delete(shape: Shape): boolean {
-        const page = shape.getPage() as Page;
+    delete(shape: ShapeView): boolean {
+        const page = shape.getPage() as PageView;
         if (!page) return false;
-        const savep = shape.parent as GroupShape;
+        const savep = shape.parent as ShapeView;
         if (!savep) return false;
         const api = this.__repo.start("delete", (selection: ISave4Restore, isUndo: boolean) => {
             const state = {} as SelectionState;
@@ -1004,19 +984,18 @@ export class PageEditor {
         });
         try {
             if (is_part_of_symbolref(shape)) {
-                if (modify_variable_with_api(api, this.__page, shape, VariableType.Visible, OverrideType.Visible, (_var) => {
-                    return _var ? !_var.value : !shape.isVisible;
-                })) return true;
-                api.shapeModifyVisible(this.__page, shape, !shape.isVisible);
+                const isVisible = !shape.isVisible;
+                if (modify_variable_with_api(api, this.__page, shape, VariableType.Visible, OverrideType.Visible, isVisible)) return true;
+                api.shapeModifyVisible(this.__page, shape.data, isVisible);
                 return true;
             }
             const symbol = get_symbol_by_layer(shape);
             if (symbol) {
-                clear_binds_effect(this.__page, shape, symbol, api);
+                clear_binds_effect(page, shape, symbol, api);
             }
-            if (this.delete_inner(page, shape, api)) {
+            if (this.delete_inner(page.data, shape, api)) {
                 if (after_remove(savep)) {
-                    this.delete_inner(page, savep, api);
+                    this.delete_inner(page.data, savep, api);
                 }
                 if (shape.type === ShapeType.Symbol) {
                     this.__document.__correspondent.notify('update-symbol-list');
@@ -1034,7 +1013,7 @@ export class PageEditor {
     }
 
     // 批量删除
-    delete_batch(shapes: Shape[]) {
+    delete_batch(shapes: ShapeView[]) {
         const api = this.__repo.start("deleteBatch", (selection: ISave4Restore, isUndo: boolean) => {
             const state = {} as SelectionState;
             if (isUndo) state.shapes = shapes.map(s => s.id);
@@ -1046,10 +1025,9 @@ export class PageEditor {
             try {
                 const shape = shapes[i];
                 if (is_part_of_symbolref(shape)) {
-                    if (modify_variable_with_api(api, this.__page, shape, VariableType.Visible, OverrideType.Visible, (_var) => {
-                        return _var ? !_var.value : !shape.isVisible;
-                    })) continue;
-                    api.shapeModifyVisible(this.__page, shape, !shape.isVisible);
+                    const isVisible = !shape.isVisible;
+                    if (modify_variable_with_api(api, this.__page, shape, VariableType.Visible, OverrideType.Visible, isVisible)) continue;
+                    api.shapeModifyVisible(this.__page, shape.data, isVisible);
                     continue;
                 }
                 const symbol = get_symbol_by_layer(shape);
@@ -1057,13 +1035,13 @@ export class PageEditor {
                     clear_binds_effect(this.__page, shape, symbol, api);
                 }
                 if (shape.type === ShapeType.Symbol) need_special_notify = true;
-                const page = shape.getPage() as Page;
+                const page = shape.getPage() as PageView;
                 if (!page) return false;
-                const savep = shape.parent as GroupShape;
+                const savep = shape.parent as ShapeView;
                 if (!savep) return false;
-                this.delete_inner(page, shape, api);
+                this.delete_inner(page.data, shape, api);
                 if (after_remove(savep)) {
-                    this.delete_inner(page, savep, api);
+                    this.delete_inner(page.data, savep, api);
                 }
             } catch (error) {
                 this.__repo.rollback();
@@ -1502,18 +1480,6 @@ export class PageEditor {
         }
     }
 
-    setName(name: string) {
-        const api = this.__repo.start("setName");
-        try {
-            api.pageModifyName(this.__document, this.__page.id, name);
-            this.__repo.commit();
-        } catch (error) {
-            console.log(error);
-            this.__repo.rollback();
-            return false;
-        }
-    }
-
     arrange(actions: PositonAdjust[]) {
         const api = this.__repo.start('arrange');
         try {
@@ -1553,12 +1519,12 @@ export class PageEditor {
         }
     }
 
-    setShapesConstrainerProportions(actions: ConstrainerProportionsAction[]) {
+    setShapesConstrainerProportions(actions: BatchAction2[]) {
         const api = this.__repo.start('setShapesConstrainerProportions');
         try {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                api.shapeModifyConstrainerProportions(this.__page, target, value);
+                api.shapeModifyConstrainerProportions(this.__page, adapt2Shape(target), value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1622,15 +1588,15 @@ export class PageEditor {
         }
     }
 
-    shapesFlip(actions: FlipAction[]) {
+    shapesFlip(actions: BatchAction2[]) {
         const api = this.__repo.start('shapesFlip');
         try {
             for (let i = 0; i < actions.length; i++) {
-                const { target, direction } = actions[i];
-                if (direction === 'horizontal') {
-                    api.shapeModifyHFlip(this.__page, target, !target.isFlippedHorizontal);
-                } else if (direction === 'vertical') {
-                    api.shapeModifyVFlip(this.__page, target, !target.isFlippedVertical);
+                const { target, value } = actions[i];
+                if (value === 'horizontal') {
+                    api.shapeModifyHFlip(this.__page, adapt2Shape(target), !target.isFlippedHorizontal);
+                } else if (value === 'vertical') {
+                    api.shapeModifyVFlip(this.__page, adapt2Shape(target), !target.isFlippedVertical);
                 }
             }
             this.__repo.commit();
@@ -1639,7 +1605,294 @@ export class PageEditor {
         }
     }
 
-    setShapesFillColor(actions: FillColorAction[]) {
+    // 渐变
+    //翻转
+    reverseShapesGradient(actions: BatchAction4[]) {
+        try {
+            const api = this.__repo.start('reverseShapesGradient');
+            for (let i = 0, l = actions.length; i < l; i++) {
+                const { target, index, type } = actions[i];
+                const arr = target.style[type];
+                if (!arr?.length) {
+                    continue;
+                }
+                const gradient_container = arr[index];
+                if (!gradient_container || !gradient_container.gradient) {
+                    continue;
+                }
+                const gradient = gradient_container.gradient;
+                const stops = gradient.stops;
+                if (!stops?.length) {
+                    continue;
+                }
+                const new_stops: BasicArray<Stop> = new BasicArray<Stop>();
+                for (let _i = 0, _l = stops.length; _i < _l; _i++) {
+                    const _stop = stops[_i];
+                    const inver_index = stops.length - 1 - _i;
+                    new_stops.push(importStop(exportStop(new Stop(_stop.crdtidx, _stop.id, _stop.position, stops[inver_index].color))));
+                }
+                const s = shape4fill(api, this.__page, target);
+                if (type === 'fills') {
+                    api.setFillColor(this.__page, s, index, new_stops[0].color as Color);
+                } else {
+                    api.setBorderColor(this.__page, s, index, new_stops[0].color as Color);
+                }
+                const ng = importGradient(exportGradient(gradient));
+                ng.stops = new_stops;
+                const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
+                f(this.__page, s, index, ng);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.log('reverseShapesGradient:', error);
+            this.__repo.rollback();
+        }
+    }
+    //旋转90度
+    rotateShapesGradient(actions: BatchAction4[]) {
+        try {
+            const api = this.__repo.start('rotateShapesGradient');
+            for (let i = 0, l = actions.length; i < l; i++) {
+                const { target, index, type } = actions[i];
+                const arr = target.style[type];
+                if (!arr?.length) {
+                    continue;
+                }
+                const gradient_container = arr[index];
+                if (!gradient_container || !gradient_container.gradient) {
+                    continue;
+                }
+                const gradient = importGradient(exportGradient(gradient_container.gradient));
+                const { from, to } = gradient;
+                const gradientType = gradient.gradientType;
+                if (gradientType === types.GradientType.Linear) {
+                    const midpoint = { x: (to.x + from.x) / 2, y: (to.y + from.y) / 2 };
+                    const m = new Matrix();
+                    m.trans(-midpoint.x, -midpoint.y);
+                    m.rotate(Math.PI / 2);
+                    m.trans(midpoint.x, midpoint.y);
+                    gradient.to = m.computeCoord3(to) as any;
+                    gradient.from = m.computeCoord3(from) as any;
+                } else if (gradientType === types.GradientType.Radial || gradientType === types.GradientType.Angular) {
+                    const m = new Matrix();
+                    m.trans(-from.x, -from.y);
+                    m.rotate(Math.PI / 2);
+                    m.trans(from.x, from.y);
+                    gradient.to = m.computeCoord3(to) as any;
+                }
+                // todo 旋转渐变
+                const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
+                const shape = shape4fill(api, this.__page, target);
+                f(this.__page, shape, index, gradient);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.log('rotateShapesGradient:', error);
+            this.__repo.rollback();
+        }
+    }
+    // 添加节点
+    addShapesGradientStop(actions: BatchAction5[]) {
+        try {
+            const api = this.__repo.start('addShapesGradientStop');
+            for (let i = 0, l = actions.length; i < l; i++) {
+                const { target, index, type, value } = actions[i];
+                const grad_type = target.style[type];
+                if (!grad_type?.length) {
+                    continue;
+                }
+                const gradient_container = grad_type[index];
+                if (!gradient_container) {
+                    continue;
+                }
+                const gradient = gradient_container.gradient;
+                if (!gradient) {
+                    continue;
+                }
+                const new_gradient = importGradient(exportGradient(gradient));
+                new_gradient.stops.push(importStop(exportStop(value)));
+                const s = new_gradient.stops;
+                s.sort((a, b) => {
+                    if (a.position > b.position) {
+                        return 1;
+                    } else if (a.position < b.position) {
+                        return -1;
+                    } else {
+                        return 0;
+                    }
+                })
+                new_gradient.stops.forEach((v, i) => { 
+                    const idx = new BasicArray<number>();
+                    idx.push(i);
+                    v.crdtidx = idx;
+                 })
+                const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
+                const shape = shape4fill(api, this.__page, target);
+                console.log('stops:', new_gradient.stops);
+                
+                f(this.__page, shape, index, new_gradient);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.log('addShapesGradientStop:', error);
+            this.__repo.rollback();
+        }
+    }
+    toggerShapeGradientType(actions: BatchAction5[]) {
+        try {
+            const api = this.__repo.start('toggerShapeGradientType');
+            for (let i = 0, l = actions.length; i < l; i++) {
+                const { target, index, type, value } = actions[i];
+                const grad_type = target.style[type];
+                if (!grad_type?.length) {
+                    continue;
+                }
+                const gradient_container = grad_type[index];
+                if (!gradient_container) {
+                    continue;
+                }
+                const gradient = gradient_container.gradient;
+                const s = shape4fill(api, this.__page, target);
+                if (gradient_container.fillType !== FillType.Gradient) {
+                    type === 'fills' ? api.setFillType(this.__page, s, index, FillType.Gradient) : api.setBorderFillType(this.__page, s, index, FillType.Gradient);
+                }
+                if (gradient) {
+                    const new_gradient = importGradient(exportGradient(gradient));
+                    new_gradient.gradientType = value;
+                    if (value === GradientType.Linear && gradient.gradientType !== GradientType.Linear) {
+                        new_gradient.from.y = new_gradient.from.y - (new_gradient.to.y - new_gradient.from.y);
+                        new_gradient.from.x = new_gradient.from.x - (new_gradient.to.x - new_gradient.from.x);
+                    } else if (gradient.gradientType === GradientType.Linear && value !== GradientType.Linear) {
+                        new_gradient.from.y = new_gradient.from.y + (new_gradient.to.y - new_gradient.from.y) / 2;
+                        new_gradient.from.x = new_gradient.from.x + (new_gradient.to.x - new_gradient.from.x) / 2;
+                    }
+                    if (value === GradientType.Radial && new_gradient.elipseLength === undefined) {
+                        new_gradient.elipseLength = 1;
+                    }
+                    new_gradient.stops[0].color = gradient_container.color;
+                    const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
+                    f(this.__page, s, index, new_gradient);
+                } else {
+                    const stops = new BasicArray<Stop>();
+                    const frame = target.frame;
+                    const { alpha, red, green, blue } = gradient_container.color;
+                    stops.push(new Stop(new BasicArray(), uuid(), 0, new Color(alpha, red, green, blue)), new Stop(new BasicArray(), uuid(), 1, new Color(0, red, green, blue)))
+                    const from = value === GradientType.Linear ? { x: 0.5, y: 0 } : { x: 0.5, y: 0.5 };
+                    const to = { x: 0.5, y: 1 };
+                    let elipseLength = undefined;
+                    if (value === GradientType.Radial) {
+                        elipseLength = 1;
+                    }
+                    const new_gradient = new Gradient(from as Point2D, to as Point2D, value, stops, elipseLength);
+                    new_gradient.stops.forEach((v, i) => { 
+                        const idx = new BasicArray<number>();
+                        idx.push(i);
+                        v.crdtidx = idx;
+                     })
+                    const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
+                    f(this.__page, s, index, new_gradient);
+                }
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.log('toggerShapeGradientType:', error);
+            this.__repo.rollback();
+        }
+    }
+    setShapesGradientStopColor(actions: BatchAction5[]) {
+        try {
+            const api = this.__repo.start('setShapesGradientStopColor');
+            for (let i = 0, l = actions.length; i < l; i++) {
+                const { target, index, type, value } = actions[i];
+                const grad_type = target.style[type];
+                if (!grad_type?.length) {
+                    continue;
+                }
+                const gradient_container = grad_type[index];
+                if (!gradient_container || !gradient_container.gradient || gradient_container.fillType !== FillType.Gradient) {
+                    continue;
+                }
+                const gradient = gradient_container.gradient;
+                const stops = gradient.stops;
+                if (!stops?.length) {
+                    continue;
+                }
+                const { color, stop_i } = value;
+                const new_gradient = importGradient(exportGradient(gradient));
+                new_gradient.stops[stop_i].color = color;
+                const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
+                const shape = shape4fill(api, this.__page, target);
+                if (type === 'fills') {
+                    api.setFillColor(this.__page, shape, index, new_gradient.stops[0].color as Color);
+                } else {
+                    api.setBorderColor(this.__page, shape, index, new_gradient.stops[0].color as Color);
+                }
+                f(this.__page, shape, index, new_gradient);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.log('setShapesGradientStopColor:', error);
+            this.__repo.rollback();
+        }
+    }
+    deleteShapesGradientStop(actions: BatchAction5[]) {
+        try {
+            const api = this.__repo.start('setShapesGradientStopColor');
+            for (let i = 0, l = actions.length; i < l; i++) {
+                const { target, index, type, value } = actions[i];
+                const grad_type = target.style[type];
+                if (!grad_type?.length) {
+                    continue;
+                }
+                const gradient_container = grad_type[index];
+                if (!gradient_container || !gradient_container.gradient || gradient_container.fillType !== FillType.Gradient) {
+                    continue;
+                }
+                const gradient = gradient_container.gradient;
+                const stops = gradient.stops;
+                if (!stops?.length || gradient.stops.length === 1) {
+                    continue;
+                }
+                const new_gradient = importGradient(exportGradient(gradient));
+                new_gradient.stops.splice(value, 1);
+                const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
+                const shape = shape4fill(api, this.__page, target);
+                f(this.__page, shape, index, new_gradient);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.log('setShapesGradientStopColor:', error);
+            this.__repo.rollback();
+        }
+    }
+    setGradientOpacity(actions: BatchAction5[]) {
+        try {
+            const api = this.__repo.start('setGradientOpacity');
+            for (let i = 0, l = actions.length; i < l; i++) {
+                const { target, index, type, value } = actions[i];
+                const grad_type = target.style[type];
+                if (!grad_type?.length) {
+                    continue;
+                }
+                const gradient_container = grad_type[index];
+                if (!gradient_container || !gradient_container.gradient || gradient_container.fillType !== FillType.Gradient) {
+                    continue;
+                }
+                const gradient = gradient_container.gradient;
+                const new_gradient = importGradient(exportGradient(gradient));
+                new_gradient.gradientOpacity = value;
+                const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
+                const shape = shape4fill(api, this.__page, target);
+                f(this.__page, shape, index, new_gradient);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.log('setGradientOpacity:', error);
+            this.__repo.rollback();
+        }
+    }
+    // 填充
+    setShapesFillColor(actions: BatchAction[]) {
         const api = this.__repo.start('setShapesFillColor');
         try {
             for (let i = 0; i < actions.length; i++) {
@@ -1653,7 +1906,7 @@ export class PageEditor {
         }
     }
 
-    setShapesFillEnabled(actions: FillEnableAction[]) {
+    setShapesFillEnabled(actions: BatchAction[]) {
         const api = this.__repo.start('setShapesFillEnabled');
         try {
             for (let i = 0; i < actions.length; i++) {
@@ -1666,8 +1919,21 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+    setShapesFillType(actions: BatchAction[]) {
+        const api = this.__repo.start('setShapesFillType');
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index, value } = actions[i];
+                const s = shape4fill(api, this.__page, target);
+                api.setFillType(this.__page, s, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
 
-    shapesAddFill(actions: FillAddAction[]) {
+    shapesAddFill(actions: BatchAction2[]) {
         const api = this.__repo.start('shapesAddFill');
         try {
             for (let i = 0; i < actions.length; i++) {
@@ -1682,7 +1948,7 @@ export class PageEditor {
         }
     }
 
-    shapesDeleteFill(actions: FillDeleteAction[]) {
+    shapesDeleteFill(actions: BatchAction3[]) {
         const api = this.__repo.start('shapesDeleteFill');
         try {
             for (let i = 0; i < actions.length; i++) {
@@ -1696,7 +1962,7 @@ export class PageEditor {
         }
     }
 
-    shapesFillsUnify(actions: FillsReplaceAction[]) {
+    shapesFillsUnify(actions: BatchAction2[]) {
         const api = this.__repo.start('shapesFillsUnify'); // 统一多个shape的填充设置。eg:[red, red], [green], [blue, blue, blue] => [red, red], [red, red], [red, red];
         try {
             for (let i = 0; i < actions.length; i++) {
@@ -1714,7 +1980,7 @@ export class PageEditor {
     }
 
     //boders
-    setShapesBorderColor(actions: BorderColorAction[]) {
+    setShapesBorderColor(actions: BatchAction[]) {
         const api = this.__repo.start('setShapesBorderColor');
         try {
             for (let i = 0; i < actions.length; i++) {
@@ -1728,7 +1994,7 @@ export class PageEditor {
         }
     }
 
-    setShapesBorderEnabled(actions: BorderEnableAction[]) {
+    setShapesBorderEnabled(actions: BatchAction[]) {
         const api = this.__repo.start('setShapesBorderEnabled');
         try {
             for (let i = 0; i < actions.length; i++) {
@@ -1742,7 +2008,21 @@ export class PageEditor {
         }
     }
 
-    shapesAddBorder(actions: BorderAddAction[]) {
+    setShapesBorderType(actions: BatchAction[]) {
+        const api = this.__repo.start('setShapesBorderType');
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index, value } = actions[i];
+                const s = shape4border(api, this.__page, target);
+                api.setBorderFillType(this.__page, s, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    shapesAddBorder(actions: BatchAction2[]) {
         const api = this.__repo.start('shapesAddBorder');
         try {
             for (let i = 0; i < actions.length; i++) {
@@ -1758,7 +2038,7 @@ export class PageEditor {
         }
     }
 
-    shapesDeleteBorder(actions: BorderDeleteAction[]) {
+    shapesDeleteBorder(actions: BatchAction3[]) {
         const api = this.__repo.start('shapesDeleteBorder');
         try {
             for (let i = 0; i < actions.length; i++) {
@@ -1772,7 +2052,7 @@ export class PageEditor {
         }
     }
 
-    shapesBordersUnify(actions: BordersReplaceAction[]) {
+    shapesBordersUnify(actions: BatchAction2[]) {
         const api = this.__repo.start('shapesBordersUnify');
         try {
             for (let i = 0; i < actions.length; i++) {
@@ -1787,11 +2067,12 @@ export class PageEditor {
         }
     }
 
-    setShapesBorderPosition(actions: BorderPositionAction[]) {
+    setShapesBorderPosition(actions: BatchAction[]) {
         const api = this.__repo.start('setShapesBorderPosition');
         try {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value, index } = actions[i];
+                if (target.type === ShapeType.Table) continue;
                 const s = shape4border(api, this.__page, target);
                 api.setBorderPosition(this.__page, s, index, value);
             }
@@ -1801,7 +2082,7 @@ export class PageEditor {
         }
     }
 
-    setShapesBorderThickness(actions: BorderThicknessAction[]) {
+    setShapesBorderThickness(actions: BatchAction[]) {
         const api = this.__repo.start('setShapesBorderThickness');
         try {
             for (let i = 0; i < actions.length; i++) {
@@ -1815,7 +2096,7 @@ export class PageEditor {
         }
     }
 
-    setShapesBorderStyle(actions: BorderStyleAction[]) {
+    setShapesBorderStyle(actions: BatchAction[]) {
         const api = this.__repo.start('setShapesBorderStyle');
         try {
             for (let i = 0; i < actions.length; i++) {
@@ -1830,12 +2111,12 @@ export class PageEditor {
     }
 
     // shadow
-    setShapesShadowOffsetY(actions: ShadowOffsetYAction[]) {
+    setShapesShadowOffsetY(actions: BatchAction[]) {
         try {
             const api = this.__repo.start('setShapesShadowOffsetY');
             for (let i = 0; i < actions.length; i++) {
                 const { target, value, index } = actions[i];
-                api.setShadowOffsetY(this.__page, target, index, value);
+                api.setShadowOffsetY(this.__page, adapt2Shape(target), index, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1843,12 +2124,12 @@ export class PageEditor {
         }
     }
 
-    setShapesShadowOffsetX(actions: ShadowOffsetXAction[]) {
+    setShapesShadowOffsetX(actions: BatchAction[]) {
         try {
             const api = this.__repo.start('setShapesShadowOffsetX');
             for (let i = 0; i < actions.length; i++) {
                 const { target, value, index } = actions[i];
-                api.setShadowOffsetX(this.__page, target, index, value);
+                api.setShadowOffsetX(this.__page, adapt2Shape(target), index, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1856,12 +2137,12 @@ export class PageEditor {
         }
     }
 
-    setShapesShadowSpread(actions: ShadowSpreadAction[]) {
+    setShapesShadowSpread(actions: BatchAction[]) {
         try {
             const api = this.__repo.start('setShapesShadowSpread');
             for (let i = 0; i < actions.length; i++) {
                 const { target, value, index } = actions[i];
-                api.setShadowSpread(this.__page, target, index, value);
+                api.setShadowSpread(this.__page, adapt2Shape(target), index, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1869,12 +2150,12 @@ export class PageEditor {
         }
     }
 
-    setShapesShadowBlurRadius(actions: ShadowBlurRadiusAction[]) {
+    setShapesShadowBlurRadius(actions: BatchAction[]) {
         try {
             const api = this.__repo.start('setShapesShadowBlurRadius');
             for (let i = 0; i < actions.length; i++) {
                 const { target, value, index } = actions[i];
-                api.setShadowBlur(this.__page, target, index, value);
+                api.setShadowBlur(this.__page, adapt2Shape(target), index, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1882,12 +2163,12 @@ export class PageEditor {
         }
     }
 
-    setShapesShadowColor(actions: ShadowColorAction[]) {
+    setShapesShadowColor(actions: BatchAction[]) {
         try {
             const api = this.__repo.start('setShapesShadowColor');
             for (let i = 0; i < actions.length; i++) {
                 const { target, index, value } = actions[i];
-                api.setShadowColor(this.__page, target, index, value);
+                api.setShadowColor(this.__page, adapt2Shape(target), index, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1895,12 +2176,12 @@ export class PageEditor {
         }
     }
 
-    setShapesShadowPosition(actions: ShadowPositionAction[]) {
+    setShapesShadowPosition(actions: BatchAction[]) {
         try {
             const api = this.__repo.start('setShapesShadowPosition');
             for (let i = 0; i < actions.length; i++) {
                 const { target, value, index } = actions[i];
-                api.setShadowPosition(this.__page, target, index, value);
+                api.setShadowPosition(this.__page, adapt2Shape(target), index, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1908,12 +2189,12 @@ export class PageEditor {
         }
     }
 
-    setShapesShadowEnabled(actions: ShadowEnableAction[]) {
+    setShapesShadowEnabled(actions: BatchAction[]) {
         try {
             const api = this.__repo.start('setShapesShadowEnabled');
             for (let i = 0; i < actions.length; i++) {
                 const { target, index, value } = actions[i];
-                api.setShadowEnable(this.__page, target, index, value);
+                api.setShadowEnable(this.__page, adapt2Shape(target), index, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1921,12 +2202,12 @@ export class PageEditor {
         }
     }
 
-    shapesDeleteShasow(actions: ShadowDeleteAction[]) {
+    shapesDeleteShasow(actions: BatchAction3[]) {
         try {
             const api = this.__repo.start('shapesDeleteShasow');
             for (let i = 0; i < actions.length; i++) {
                 const { target, index } = actions[i];
-                api.deleteShadowAt(this.__page, target, index);
+                api.deleteShadowAt(this.__page, adapt2Shape(target), index);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1934,12 +2215,12 @@ export class PageEditor {
         }
     }
 
-    shapesAddShadow(actions: ShadowAddAction[]) {
+    shapesAddShadow(actions: BatchAction2[]) {
         try {
             const api = this.__repo.start('shapesAddShadow');
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                api.addShadow(this.__page, target, value, target.style.shadows.length);
+                api.addShadow(this.__page, adapt2Shape(target), value, target.style.shadows.length);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1947,13 +2228,13 @@ export class PageEditor {
         }
     }
 
-    shapesShadowsUnify(actions: ShadowReplaceAction[]) {
+    shapesShadowsUnify(actions: BatchAction2[]) {
         try {
             const api = this.__repo.start('shapesShadowsUnify');
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                api.deleteShadows(this.__page, target, 0, target.style.shadows.length);
-                api.addShadows(this.__page, target, value);
+                api.deleteShadows(this.__page, adapt2Shape(target), 0, target.style.shadows.length);
+                api.addShadows(this.__page, adapt2Shape(target), value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -2124,22 +2405,22 @@ export class PageEditor {
         }
     }
 
-    toggleShapesVisible(shapes: Shape[]) {
+    toggleShapesVisible(shapes: ShapeView[]) {
         const api = this.__repo.start('setShapesVisible');
         try {
             for (let i = 0; i < shapes.length; i++) {
-                let shape: Shape = shapes[i];
+                let shape: ShapeView = shapes[i];
                 if (!shape) continue;
-                if (modify_variable_with_api(api, this.__page, shape, VariableType.Visible, OverrideType.Visible, (_var) => {
-                    return _var ? !_var.value : !shape.isVisible;
-                })) {
+                const isVisible = !shape.isVisible;
+                if (modify_variable_with_api(api, this.__page, shape, VariableType.Visible, OverrideType.Visible, isVisible)) {
                     continue;
                 }
-                if (shape.type === ShapeType.Group) {
-                    shape = this.__page.shapes.get(shape.id)!;
-                    if (!shape) continue;
-                }
-                api.shapeModifyVisible(this.__page, shape, !shape.isVisible);
+                // ?
+                // if (shape.type === ShapeType.Group) {
+                //     shape = this.__page.shapes.get(shape.id)!;
+                //     if (!shape) continue;
+                // }
+                api.shapeModifyVisible(this.__page, shape.data, isVisible);
             }
             this.__repo.commit();
         } catch (error) {
@@ -2147,21 +2428,21 @@ export class PageEditor {
         }
     }
 
-    toggleShapesLock(shapes: Shape[]) {
+    toggleShapesLock(shapes: ShapeView[]) {
         const api = this.__repo.start('setShapesLocked');
         try {
             for (let i = 0; i < shapes.length; i++) {
-                let shape: Shape | undefined = shapes[i];
-                if (modify_variable_with_api(api, this.__page, shape, VariableType.Lock, OverrideType.Lock, (_var) => {
-                    return _var ? !_var.value : !shape?.isLocked;
-                })) {
+                let shape: ShapeView | undefined = shapes[i];
+                const isLocked = !shape.isLocked;
+                if (modify_variable_with_api(api, this.__page, shape, VariableType.Lock, OverrideType.Lock, isLocked)) {
                     continue;
                 }
-                if (shape.type === ShapeType.Group) {
-                    shape = this.__page.shapes.get(shape.id)
-                }
-                if (!shape) continue;
-                api.shapeModifyLock(this.__page, shape, !shape.isLocked);
+                // ?
+                // if (shape.type === ShapeType.Group) {
+                //     shape = this.__page.shapes.get(shape.id)
+                // }
+                // if (!shape) continue;
+                api.shapeModifyLock(this.__page, shape.data, isLocked);
             }
             this.__repo.commit();
         } catch (error) {
@@ -2353,15 +2634,15 @@ export class PageEditor {
         }
     }
 
-    editor4Shape(shape: Shape): ShapeEditor {
+    editor4Shape(shape: ShapeView): ShapeEditor {
         return new ShapeEditor(shape, this.__page, this.__repo, this.__document);
     }
 
-    editor4TextShape(shape: Shape & { text: Text }): TextShapeEditor {
+    editor4TextShape(shape: TextShapeView | TableCellView): TextShapeEditor {
         return new TextShapeEditor(shape, this.__page, this.__repo, this.__document);
     }
 
-    editor4Table(shape: TableShape): TableEditor {
+    editor4Table(shape: TableView): TableEditor {
         return new TableEditor(shape, this.__page, this.__repo, this.__document);
     }
 }
