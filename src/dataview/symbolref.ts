@@ -114,14 +114,14 @@ export class SymbolRefView extends ShapeView {
         // const thisId = this.isVirtualShape ? (this.data).id : this.id;
         // if (refId !== thisId) refId = thisId + '/' + refId; // fix ref自己查找自己的override
         // return this.varsContainer && findOverride(refId, type, this.varsContainer);
-
-        return findOverride(refId, type, this.varsContainer || []);
+        const varsContainer = (this.varsContainer || []).concat(this.data);
+        return findOverride(refId, type, varsContainer || []);
     }
 
     // todo
     findVar(varId: string, ret: Variable[]) {            // todo subdata, proxy
-
-        findVar(varId, ret, this.varsContainer || []);
+        const varsContainer = (this.varsContainer || []).concat(this.data);
+        findVar(varId, ret, varsContainer || []);
 
         // if (this.symData) {
         //     const override = this.symData.getOverrid(varId, OverrideType.Variable);
