@@ -71,6 +71,9 @@ export function importVariable(source: types.Variable, ctx?: IImportContext): im
             if (val.typeId == 'table-shape') {
                 return importTableShape(val as types.TableShape, ctx)
             }
+            if (val.typeId == 'export-options') {
+                return importExportOptions(val as types.ExportOptions, ctx)
+            }
             {
                 throw new Error('unknow val: ' + val)
             }

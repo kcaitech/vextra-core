@@ -69,6 +69,7 @@ export class Shape extends Basic implements classes.Shape {
         const id0 = path[0];
         if (id0 === 'style') return this.style.getOpTarget(path.slice(1));
         if (id0 === 'varbinds' && !this.varbinds) this.varbinds = new BasicMap();
+        if (id0 === "exportOptions" && !this.exportOptions) this.exportOptions = new ExportOptions(new BasicArray(), 0, false, false, false, false);
         return super.getOpTarget(path);
     }
 
@@ -600,10 +601,10 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         this.variables = variables;
     }
 
-    // getOpTarget(path: string[]): any {
-    //     if (path[0] === 'overrides' && !this.overrides) this.overrides = new BasicMap<string, string>();
-    //     return super.getOpTarget(path);
-    // }
+    getOpTarget(path: string[]): any {
+        if (path[0] === 'symtags' && !this.symtags) this.symtags = new BasicMap<string, string>();
+        return super.getOpTarget(path);
+    }
 
     addVar(v: Variable): Variable {
         if (!this.variables) this.variables = new BasicMap<string, Variable>();

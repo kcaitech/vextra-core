@@ -192,7 +192,8 @@ export class ShapeView extends DataView {
         return this.data.style;
     }
     get exportOptions() {
-        return this.data.exportOptions;
+        const v = this._findOV(OverrideType.ExportOptions, VariableType.ExportOptions);
+        return v ? v.value : this.data.exportOptions;
     }
     get contextSettings() {
         const v = this._findOV(OverrideType.ContextSettings, VariableType.ContextSettings);
