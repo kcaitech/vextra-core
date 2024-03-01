@@ -69,6 +69,7 @@ export class Shape extends Basic implements classes.Shape {
         const id0 = path[0];
         if (id0 === 'style') return this.style.getOpTarget(path.slice(1));
         if (id0 === 'varbinds' && !this.varbinds) this.varbinds = new BasicMap();
+        if (id0 === "exportOptions" && !this.exportOptions) this.exportOptions = new ExportOptions(new BasicArray(), 0, false, false, false, false);
         return super.getOpTarget(path);
     }
 
