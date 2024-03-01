@@ -1,5 +1,5 @@
 import { OverrideType, Shape, ShapeType, SymbolShape, Variable, VariableType, SymbolUnionShape, GroupShape } from "../data/shape";
-import { SymbolRefShape } from "../data/symbolref";
+import { ExportOptions, SymbolRefShape } from "../data/symbolref";
 import { uuid } from "../basic/uuid";
 import { Page } from "../data/page";
 import { Api } from "./coop/recordapi";
@@ -7,7 +7,7 @@ import { newText2 } from "./creator";
 import { BlendMode, Border, ContextSettings, Fill, Shadow, Text } from "../data/classes";
 import { findOverride, findVar } from "../data/utils";
 import { BasicArray } from "../data/basic";
-import { IImportContext, importBorder, importColor, importContextSettings, importFill, importGradient, importShadow, importStyle, importTableShape, importText } from "../data/baseimport";
+import { IImportContext, importBorder, importColor, importContextSettings, importExportOptions, importFill, importGradient, importShadow, importStyle, importTableShape, importText } from "../data/baseimport";
 import { ShapeView, SymbolRefView, isAdaptedShape } from "../dataview";
 import { Document } from "../data/classes";
 
@@ -255,7 +255,27 @@ function _ov(varType: VariableType, overrideType: OverrideType, valuefun: (_var:
         }
     }
 
-    if (!view.isVirtualShape && !(view.data instanceof SymbolRefShape)) return;
+    if (!view.isVirtualShape) {
+        if (!(view.data instanceof SymbolRefShape)) return;
+        switch (overrideType) {
+            case OverrideType.Borders:
+            case OverrideType.ContextSettings:
+            case OverrideType.EndMarkerType:
+            case OverrideType.Fills:
+            case OverrideType.Shadows:
+            case OverrideType.StartMarkerType:
+                break;
+            case OverrideType.ExportOptions:
+            case OverrideType.Image:
+            case OverrideType.Lock:
+            case OverrideType.SymbolID:
+            case OverrideType.Table:
+            case OverrideType.Text:
+            case OverrideType.Variable:
+            case OverrideType.Visible:
+                return;
+        }
+    }
 
     const refId = view.data instanceof SymbolRefShape ? "" : view.data.id;
     const _vars = findOverride(refId, overrideType, varsContainer);
@@ -323,6 +343,8 @@ function _clone_value(_var: Variable, document: Document, page: Page) {
             return _var.value instanceof Text ? importText(_var.value) : _var.value;
         case VariableType.Visible:
             return _var.value;
+        case VariableType.ExportOptions:
+            return importExportOptions(_var.value, ctx);
         default:
             throw new Error();
     }
@@ -338,6 +360,15 @@ export function shape4contextSettings(api: Api, _shape: ShapeView, page: Page) {
     return _var || _shape.data;
 }
 
+export function shape4exportOptions(api: Api, _shape: ShapeView, page: Page) {
+    const valuefun = (_var: Variable | undefined) => {
+        const clone: ExportOptions | undefined = _shape.exportOptions;
+        const options = _var?.value ?? clone;
+        return options && importExportOptions(options) || new ExportOptions(new BasicArray(), 0, false, false, false, false);
+    };
+    const _var = _ov(VariableType.ExportOptions, OverrideType.ExportOptions, valuefun, _shape, page, api);
+    return _var || _shape.data;
+}
 
 // 变量可能的情况
 // 1. 存在于symbolref中，则变量一定是override某个属性或者变量的。此时如果symbolref非virtual，可以直接修改，否则要再override
@@ -348,7 +379,7 @@ export function modify_variable(document: Document, page: Page, view: ShapeView,
     const varsContainer = _varsContainer(view);
     if (!varsContainer || varsContainer.length === 0) {
         if (attr.name && _var.name !== attr.name) api.shapeModifyVariableName(page, _var, attr.name);
-        if (attr.value) api.shapeModifyVariable(page, _var, attr.value);
+        if (attr.hasOwnProperty('value')) api.shapeModifyVariable(page, _var, attr.value);
         return;
     }
 
@@ -358,7 +389,7 @@ export function modify_variable(document: Document, page: Page, view: ShapeView,
     // if (hostIdx < 0) throw new Error();
     if (hostIdx < 0 || pIdx >= 0 && pIdx <= hostIdx) {
         if (attr.name && _var.name !== attr.name) api.shapeModifyVariableName(page, _var, attr.name);
-        if (attr.value) api.shapeModifyVariable(page, _var, attr.value);
+        if (attr.hasOwnProperty('value')) api.shapeModifyVariable(page, _var, attr.value);
         return;
     }
 
@@ -401,6 +432,7 @@ export function modify_variable(document: Document, page: Page, view: ShapeView,
             case OverrideType.Table:
             case OverrideType.Text:
             case OverrideType.Visible:
+            case OverrideType.ExportOptions:
                 ot = _overrideType as OverrideType;
                 break;
             default:

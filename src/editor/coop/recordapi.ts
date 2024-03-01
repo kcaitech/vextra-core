@@ -23,7 +23,7 @@ import {
 } from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
-import { ContactForm, ContactRole, ContextSettings, CurvePoint, ExportFormat } from "../../data/baseclasses";
+import { ContactForm, ContactRole, ContextSettings, CurvePoint, ExportFormat, ExportOptions } from "../../data/baseclasses";
 import { ContactShape } from "../../data/contact"
 import { Color } from "../../data/classes";
 import { Op, OpType } from "../../coop/common/op";
@@ -613,10 +613,11 @@ export class Api {
         this.addOp(basicapi.setShadowPosition(shadows, idx, position));
     }
     // cutout
-    deleteExportFormatAt(page: Page, shape: Shape, idx: number) {
+    deleteExportFormatAt(page: Page, shape: Shape | Variable, idx: number) {
         checkShapeAtPage(page, shape);
-        if (!shape.exportOptions) return;
-        this.addOp(basicapi.deleteExportFormatAt(shape.exportOptions, idx));
+        const options = shape instanceof Shape ? shape.exportOptions : shape.value as ExportOptions;
+        if (!options) return;
+        this.addOp(basicapi.deleteExportFormatAt(options, idx));
     }
     deletePageExportFormatAt(page: Page, idx: number) {
         if (!page.exportOptions) return;
@@ -634,63 +635,70 @@ export class Api {
             this.addOp(basicapi.addExportFormat(shape, format, i));
         }
     }
-    addExportFormat(page: Page, shape: Shape, format: ExportFormat, index: number) {
+    addExportFormat(page: Page, shape: Shape | Variable, format: ExportFormat, index: number) {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.addExportFormat(shape, format, index));
     }
     addPageExportFormat(page: Page, format: ExportFormat, index: number) {
         this.addOp(basicapi.addPageExportFormat(page, format, index));
     }
-    setExportFormatScale(page: Page, shape: Shape, idx: number, scale: number) {
+    setExportFormatScale(page: Page, shape: Shape | Variable, idx: number, scale: number) {
         checkShapeAtPage(page, shape);
-        if (!shape.exportOptions) return;
-        this.addOp(basicapi.setExportFormatScale(shape.exportOptions, idx, scale));
+        const options = shape instanceof Shape ? shape.exportOptions : shape.value as ExportOptions;
+        if (!options) return;
+        this.addOp(basicapi.setExportFormatScale(options, idx, scale));
     }
     setPageExportFormatScale(page: Page, idx: number, scale: number) {
         if (!page.exportOptions) return;
         this.addOp(basicapi.setPageExportFormatScale(page.exportOptions, idx, scale));
     }
-    setExportFormatName(page: Page, shape: Shape, idx: number, name: string) {
+    setExportFormatName(page: Page, shape: Shape | Variable, idx: number, name: string) {
         checkShapeAtPage(page, shape);
-        if (!shape.exportOptions) return;
-        this.addOp(basicapi.setExportFormatName(shape.exportOptions, idx, name));
+        const options = shape instanceof Shape ? shape.exportOptions : shape.value as ExportOptions;
+        if (!options) return;
+        this.addOp(basicapi.setExportFormatName(options, idx, name));
     }
     setPageExportFormatName(page: Page, idx: number, name: string) {
         if (!page.exportOptions) return;
         this.addOp(basicapi.setPageExportFormatName(page.exportOptions, idx, name));
     }
-    setExportFormatFileFormat(page: Page, shape: Shape, idx: number, fileFormat: ExportFileFormat) {
+    setExportFormatFileFormat(page: Page, shape: Shape | Variable, idx: number, fileFormat: ExportFileFormat) {
         checkShapeAtPage(page, shape);
-        if (!shape.exportOptions) return;
-        this.addOp(basicapi.setExportFormatFileFormat(shape.exportOptions, idx, fileFormat));
+        const options = shape instanceof Shape ? shape.exportOptions : shape.value as ExportOptions;
+        if (!options) return;
+        this.addOp(basicapi.setExportFormatFileFormat(options, idx, fileFormat));
     }
     setPageExportFormatFileFormat(page: Page, idx: number, fileFormat: ExportFileFormat) {
         if (!page.exportOptions) return;
         this.addOp(basicapi.setPageExportFormatFileFormat(page.exportOptions, idx, fileFormat));
     }
-    setExportFormatPerfix(page: Page, shape: Shape, idx: number, perfix: ExportFormatNameingScheme) {
+    setExportFormatPerfix(page: Page, shape: Shape | Variable, idx: number, perfix: ExportFormatNameingScheme) {
         checkShapeAtPage(page, shape);
-        if (!shape.exportOptions) return;
-        this.addOp(basicapi.setExportFormatPerfix(shape.exportOptions, idx, perfix));
+        const options = shape instanceof Shape ? shape.exportOptions : shape.value as ExportOptions;
+        if (!options) return;
+        this.addOp(basicapi.setExportFormatPerfix(options, idx, perfix));
     }
     setPageExportFormatPerfix(page: Page, idx: number, perfix: ExportFormatNameingScheme) {
         if (!page.exportOptions) return;
         this.addOp(basicapi.setPageExportFormatPerfix(page.exportOptions, idx, perfix));
     }
-    setExportTrimTransparent(page: Page, shape: Shape, trim: boolean) {
+    setExportTrimTransparent(page: Page, shape: Shape | Variable, trim: boolean) {
         checkShapeAtPage(page, shape);
-        if (!shape.exportOptions) return;
-        this.addOp(basicapi.setExportTrimTransparent(shape.exportOptions, trim));
+        const options = shape instanceof Shape ? shape.exportOptions : shape.value as ExportOptions;
+        if (!options) return;
+        this.addOp(basicapi.setExportTrimTransparent(options, trim));
     }
-    setExportCanvasBackground(page: Page, shape: Shape, background: boolean) {
+    setExportCanvasBackground(page: Page, shape: Shape | Variable, background: boolean) {
         checkShapeAtPage(page, shape);
-        if (!shape.exportOptions) return;
-        this.addOp(basicapi.setExportCanvasBackground(shape.exportOptions, background));
+        const options = shape instanceof Shape ? shape.exportOptions : shape.value as ExportOptions;
+        if (!options) return;
+        this.addOp(basicapi.setExportCanvasBackground(options, background));
     }
-    setExportPreviewUnfold(page: Page, shape: Shape, unfold: boolean) {
+    setExportPreviewUnfold(page: Page, shape: Shape | Variable, unfold: boolean) {
         checkShapeAtPage(page, shape);
-        if (!shape.exportOptions) return;
-        this.addOp(basicapi.setExportPreviewUnfold(shape.exportOptions, unfold));
+        const options = shape instanceof Shape ? shape.exportOptions : shape.value as ExportOptions;
+        if (!options) return;
+        this.addOp(basicapi.setExportPreviewUnfold(options, unfold));
     }
     setPageExportPreviewUnfold(document: Document, pageId: string, unfold: boolean) {
         const item = document.pagesMgr.getSync(pageId);

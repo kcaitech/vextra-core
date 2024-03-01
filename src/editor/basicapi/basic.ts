@@ -120,14 +120,14 @@ export function crdtSetAttr(obj: Basic | BasicMap<any, any>, key: string, value:
     let origin;
     if (obj instanceof Map) {
         origin = obj.get(key);
-        if (value) {
+        if (value !== undefined) {
             obj.set(key, value);
         } else {
             obj.delete(key);
         }
     } else if (obj instanceof ResourceMgr) {
         origin = obj.getSync(key);
-        if (value) {
+        if (value !== undefined) {
             obj.add(key, value);
         }
     } else {
