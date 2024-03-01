@@ -39,7 +39,8 @@ import {
     Path,
     PathShape,
     Style,
-    SymbolRefShape} from "../data/classes";
+    SymbolRefShape
+} from "../data/classes";
 import { TextShapeEditor } from "./textshape";
 import { modify_frame_after_insert, set_childs_id, transform_data } from "../io/cilpboard";
 import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
@@ -643,6 +644,14 @@ export class PageEditor {
             }
         }
 
+        const clearBindvars = (shape: types.Shape) => {
+            if (shape.varbinds) shape.varbinds = undefined;
+            const g = shape as types.GroupShape;
+            if (Array.isArray(g.childs)) {
+                g.childs.forEach((c) => clearBindvars(c));
+            }
+        }
+
         const transferVars = (rootRef: SymbolRefShape, g: { childs: types.Shape[] }) => {
             const overrides = rootRef.overrides;
             const vars = rootRef.variables;
@@ -726,7 +735,7 @@ export class PageEditor {
                 curPage: string = _this.__page.id
             };
             if (style) {
-                style = importStyle(exportStyle(style), ctx);
+                style = importStyle((style), ctx);
             }
             const tmpArtboard: Artboard = newArtboard(shape.name, tmpFrame, style);
             initFrame(tmpArtboard, shape.frame);
@@ -736,7 +745,7 @@ export class PageEditor {
 
             // 遍历symbolData,如有symbolref,则查找根shape是否有对应override的变量,如有则存到symbolref内
             transferVars(shape, symbolData);
-
+            clearBindvars(symbolData);
             replaceId(symbolData);
             const parent = shape.parent;
             if (!parent) {
