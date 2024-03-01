@@ -4,7 +4,14 @@ import { Api } from "../../editor/coop/recordapi";
 import { Page } from "../../data/page";
 import { PageView, adapt2Shape } from "../../dataview";
 
-export type FrameLike = { x: number, y: number, width: number, height: number };
+export type FrameLike = {
+    x: number;
+    y: number;
+    right: number;
+    bottom: number;
+    width: number;
+    height: number;
+};
 
 export class AsyncApiCaller {
     __repo: CoopRepository;
@@ -28,7 +35,7 @@ export class AsyncApiCaller {
         this.__repo.rollback();
     }
 
-    commit() {
+    commit() {        
         if (this.__repo.isNeedCommit()) {
             this.__repo.commit();
         } else {

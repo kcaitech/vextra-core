@@ -44,8 +44,10 @@ export class Scaler extends AsyncApiCaller {
 
                 this.api.shapeModifyX(this.page, shape, x);
                 this.api.shapeModifyY(this.page, shape, y);
-                // this.api.shapeModifyWH(this.page, shape, width, height);
-                expandTo(this.api, this.page, shape, width, height);
+                this.api.shapeModifyWH(this.page, shape, width, height);
+                // expandTo(this.api, this.page, shape, width, height);
+
+                // todo 约束
             }
             this.updateView();
         } catch (error) {
