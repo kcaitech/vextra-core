@@ -15,7 +15,7 @@ function renderStop(h: Function, d: Stop): any {
     return n;
 }
 
-export function render(h: Function, value: Gradient, frame: ShapeFrame): { id: string, style: string | undefined, node: any } {
+export function render(h: Function, value: Gradient, frame: ShapeFrame, thickness: number): { id: string, style: string | undefined, node: any } {
     const id = "gradient" + objectId(value);
     let style;
     let node: any;
@@ -99,18 +99,15 @@ export function render(h: Function, value: Gradient, frame: ShapeFrame): { id: s
             const { r, g, b, a } = calcSmoothColor();
             gradient = gradient + "," + "rgba(" + r + "," + g + "," + b + "," + a + ")" + " 360deg";
         }
-        // defsChilds.push(h("style", {}, "." + id + "{" +
         const rotate = Math.atan2((value.to.y * frame.height - value.from.y * frame.height), (value.to.x * frame.width - value.from.x * frame.width)) / Math.PI * 180 + 90;
-        const from = "from " + rotate + "deg at " + value.from.x * 100 + "% " + value.from.y * 100 + "%";
+        const from = "from " + rotate + "deg at " + ((value.from.x * frame.width) + (thickness * 6)) + "px " + ((value.from.y * frame.height) + (thickness * 6)) + "px";
         style =
             "background: conic-gradient(" + from + "," + gradient + ");" +
             "height:-webkit-fill-available;" +
             "width:-webkit-fill-available;"
-            // "transform: rotate(90deg);"
-        // "transform-origin: left top;" +
-        // "rotation:90deg" +
-        // "rotation-point:0% 0%;" +
-        // "}"));
     }
     return { id, style, node };
 }
+
+
+

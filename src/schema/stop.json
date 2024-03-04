@@ -22,7 +22,8 @@
     "required": [
         "crdtidx",
         "id",
-        "position"
+        "position",
+        "color"
     ],
     "additionalProperties": false
 }

@@ -40,24 +40,27 @@ export {
  */
 export class Gradient extends Basic implements classes.Gradient {
     typeId = 'gradient'
-    elipseLength: number
+    elipseLength?: number
     from: Point2D
     to: Point2D
     stops: BasicArray<Stop>
     gradientType: GradientType
+    gradientOpacity?: number;
     constructor(
-        elipseLength: number,
         from: Point2D,
         to: Point2D,
         gradientType: GradientType,
-        stops: BasicArray<Stop>
+        stops: BasicArray<Stop>,
+        elipseLength?: number,
+        gradientOpacity?: number
     ) {
         super()
-        this.elipseLength = elipseLength
         this.from = from
         this.to = to
         this.gradientType = gradientType
         this.stops = stops
+        this.elipseLength = elipseLength
+        this.gradientOpacity = gradientOpacity
     }
 }
 
@@ -94,6 +97,7 @@ export class Border extends Basic implements classes.Border {
         this.borderStyle = borderStyle
     }
 }
+
 
 export class Fill extends Basic implements classes.Fill {
     typeId = 'fill'

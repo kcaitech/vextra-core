@@ -18,6 +18,9 @@ function handler(h: Function, style: Style, border: Border, path: string, shape:
     if (fillType === FillType.SolidColor) {
         const color = border.color;
         body_props.stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + (color.alpha) + ")";
+    }else if (fillType === FillType.Gradient) {
+        const color = border.color;
+        body_props.stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + (color.alpha) + ")";
     }
     const g_cs: any[] = [h('path', body_props)];
     if (endMarkerType !== MarkerType.Line || startMarkerType !== MarkerType.Line) {
@@ -46,7 +49,7 @@ export function render(h: Function, style: Style, path: string, shape: Shape): A
         const border: Border = style.borders[i];
         if (!border.isEnabled) continue;
         const fillType = border.fillType;
-        (fillType === FillType.SolidColor) && (() => {
+        (() => {
             elArr = elArr.concat(handler(h, style, border, path, shape, sm, em));
         })()
     }
