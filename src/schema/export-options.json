@@ -2,6 +2,10 @@
     "description": "export options",
     "type": "object",
     "properties": {
+        "typeId": {
+            "type": "string",
+            "default": "shape"
+        },
         "exportFormats": {
             "type": "array",
             "items": {
@@ -30,6 +34,7 @@
         }
     },
     "required": [
+        "typeId",
         "exportFormats",
         "childOptions",
         "shouldTrim",

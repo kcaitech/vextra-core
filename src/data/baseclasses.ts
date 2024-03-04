@@ -80,12 +80,12 @@ export class Variable extends Basic {
     id: string
     type: VariableType
     name: string
-    value: (number | string | boolean | Color | Text | Gradient | Style | BasicArray<(Border | Fill) >)
+    value: (number | string | boolean | Color | Text | Gradient | Style | BasicArray<(Border | Fill | Shadow) > | ContextSettings | TableShape | ExportOptions)
     constructor(
         id: string,
         type: VariableType,
         name: string,
-        value: (number | string | boolean | Color | Text | Gradient | Style | BasicArray<(Border | Fill) >)
+        value: (number | string | boolean | Color | Text | Gradient | Style | BasicArray<(Border | Fill | Shadow) > | ContextSettings | TableShape | ExportOptions)
     ) {
         super()
         this.id = id
@@ -165,16 +165,18 @@ export class Stop extends Basic {
     crdtidx: BasicArray<number >
     id: string
     position: number
-    color?: Color
+    color: Color
     constructor(
         crdtidx: BasicArray<number >,
         id: string,
-        position: number
+        position: number,
+        color: Color
     ) {
         super()
         this.crdtidx = crdtidx
         this.id = id
         this.position = position
+        this.color = color
     }
 }
 /**
@@ -194,6 +196,8 @@ export class SpanAttr extends Basic {
     kerning?: number
     transform?: TextTransformType
     placeholder?: boolean
+    fillType?: FillType
+    gradient?: Gradient
     constructor(
     ) {
         super()
@@ -412,20 +416,19 @@ export class GraphicsContextSettings extends Basic {
  */
 export class Gradient extends Basic {
     typeId = 'gradient'
-    elipseLength: number
+    elipseLength?: number
     from: Point2D
     to: Point2D
     stops: BasicArray<Stop >
     gradientType: GradientType
+    gradientOpacity?: number
     constructor(
-        elipseLength: number,
         from: Point2D,
         to: Point2D,
         gradientType: GradientType,
         stops: BasicArray<Stop >
     ) {
         super()
-        this.elipseLength = elipseLength
         this.from = from
         this.to = to
         this.gradientType = gradientType
@@ -1232,7 +1235,6 @@ export class GroupShape extends Shape {
  */
 export class SymbolShape extends GroupShape {
     typeId = 'symbol-shape'
-    overrides?: BasicMap<string, string>
     variables: BasicMap<string, Variable>
     symtags?: BasicMap<string, string>
     constructor(

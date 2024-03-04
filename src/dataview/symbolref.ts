@@ -1,9 +1,9 @@
-import { OverrideType, Shape, ShapeFrame, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType } from "../data/classes";
+import { Border, BorderOptions, ContextSettings, Fill, MarkerType, OverrideType, Shadow, Shape, ShapeFrame, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType } from "../data/classes";
 import { ShapeView } from "./shape";
 import { ShapeType } from "../data/classes";
 import { DataView, RootView } from "./view";
 import { fixFrameByConstrain, isDiffRenderTransform, isDiffVarsContainer, isNoTransform } from "./shape";
-import { RenderTransform, getShapeViewId } from "./basic";
+import { RenderTransform, findOverrideAndVar, getShapeViewId } from "./basic";
 import { DViewCtx, PropsType, VarsContainer } from "./viewctx";
 import { ResizingConstraints } from "../data/consts";
 import { Matrix } from "../basic/matrix";
@@ -89,69 +89,74 @@ export class SymbolRefView extends ShapeView {
 
     // todo
     findOverride(refId: string, type: OverrideType): Variable[] | undefined {
-        if (this.symData) {
-            const override = this.symData.getOverrid(refId, type);
-            if (override) {
-                const ret = [override.v];
-                if (this.varsContainer) findVar(override.v.id, ret, this.varsContainer);
-                return ret;
-            }
-        }
-        const override = this.data.getOverrid(refId, type);
-        if (override) {
-            const ret = [override.v];
-            // this.id
-            refId = override.v.id;
-            if (this.isVirtualShape) {
-                refId = (this.data).id + '/' + refId;
-            }
-            else {
-                refId = this.id + '/' + refId;
-            }
-            if (this.varsContainer) findVar(refId, ret, this.varsContainer);
-            return ret;
-        }
-        const thisId = this.isVirtualShape ? (this.data).id : this.id;
-        if (refId !== thisId) refId = thisId + '/' + refId; // fix ref自己查找自己的override
-        return this.varsContainer && findOverride(refId, type, this.varsContainer);
+        // if (this.symData) {
+        //     const override = this.symData.getOverrid(refId, type);
+        //     if (override) {
+        //         const ret = [override.v];
+        //         if (this.varsContainer) findVar(override.v.id, ret, this.varsContainer);
+        //         return ret;
+        //     }
+        // }
+        // const override = this.data.getOverrid(refId, type);
+        // if (override) {
+        //     const ret = [override.v];
+        //     // this.id
+        //     refId = override.v.id;
+        //     if (this.isVirtualShape) {
+        //         refId = (this.data).id + '/' + refId;
+        //     }
+        //     else {
+        //         refId = this.id + '/' + refId;
+        //     }
+        //     if (this.varsContainer) findVar(refId, ret, this.varsContainer);
+        //     return ret;
+        // }
+        // const thisId = this.isVirtualShape ? (this.data).id : this.id;
+        // if (refId !== thisId) refId = thisId + '/' + refId; // fix ref自己查找自己的override
+        // return this.varsContainer && findOverride(refId, type, this.varsContainer);
+        const varsContainer = (this.varsContainer || []).concat(this.data);
+        return findOverride(refId, type, varsContainer || []);
     }
 
     // todo
     findVar(varId: string, ret: Variable[]) {            // todo subdata, proxy
-        if (this.symData) {
-            const override = this.symData.getOverrid(varId, OverrideType.Variable);
-            if (override) {
-                ret.push(override.v);
-                // scope??
-                varId = override.v.id;
-            }
-            else {
-                const _var = this.symData.getVar(varId);
-                if (_var) {
-                    ret.push(_var);
-                }
-            }
-        }
-        const override = this.data.getOverrid(varId, OverrideType.Variable);
-        if (override) {
-            ret.push(override.v);
-            if (this.varsContainer) findVar(override.v.id, ret, this.varsContainer);
-            return;
-        }
-        const _var = this.data.getVar(varId);
-        if (_var) {
-            ret.push(_var);
-        }
-        // 考虑scope
-        // varId要叠加上refid
-        if (this.isVirtualShape) {
-            varId = (this.data).id + '/' + varId;
-        }
-        else {
-            varId = this.id + '/' + varId;
-        }
-        if (this.varsContainer) findVar(varId, ret, this.varsContainer);
-        return;
+        const varsContainer = (this.varsContainer || []).concat(this.data);
+        findVar(varId, ret, varsContainer || []);
+
+        // if (this.symData) {
+        //     const override = this.symData.getOverrid(varId, OverrideType.Variable);
+        //     if (override) {
+        //         ret.push(override.v);
+        //         // scope??
+        //         varId = override.v.id;
+        //     }
+        //     else {
+        //         const _var = this.symData.getVar(varId);
+        //         if (_var) {
+        //             ret.push(_var);
+        //         }
+        //     }
+        // }
+        // const override = this.data.getOverrid(varId, OverrideType.Variable);
+        // if (override) {
+        //     ret.push(override.v);
+        //     if (this.varsContainer) findVar(override.v.id, ret, this.varsContainer);
+        //     return;
+        // }
+        // const _var = this.data.getVar(varId);
+        // if (_var) {
+        //     ret.push(_var);
+        // }
+        // // 考虑scope
+        // // varId要叠加上refid
+        // if (this.isVirtualShape) {
+        //     varId = (this.data).id + '/' + varId;
+        // }
+        // else {
+        //     varId = this.id + '/' + varId;
+        // }
+        // if (this.varsContainer) findVar(varId, ret, this.varsContainer);
+        // return;
     }
 
     // 需要自己加载symbol
@@ -182,13 +187,17 @@ export class SymbolRefView extends ShapeView {
         }
         if (trysync) {
             const val = symMgr.getSync(refId);
-            onload(val as SymbolShape);
-            return;
+            if (val) {
+                onload(val as SymbolShape);
+                return;
+            }
         }
         symMgr.get(refId).then((val) => {
-            onload(val as SymbolShape);
+            if (val) onload(val as SymbolShape);
+            else this.m_refId = undefined;
         }).catch((e) => {
             console.error(e);
+            this.m_refId = undefined;
         })
     }
 
@@ -423,19 +432,48 @@ export class SymbolRefView extends ShapeView {
         throw new Error("Method not implemented.");
     }
 
-
-    protected renderProps(): { [key: string]: string; } {
-        const props = super.renderProps() as any;
-        if (!this.m_sym) return props;
-        const contextSettings = this.m_sym.style.contextSettings;
-        if (contextSettings && (contextSettings.opacity ?? 1) !== 1) {
-            if (props.opacity !== undefined) {
-                props.opacity = props.opacity * contextSettings.opacity;
-            }
-            else {
-                props.opacity = contextSettings.opacity;
-            }
+    protected _findOV2(ot: OverrideType, vt: VariableType): Variable | undefined {
+        const data = this.data;
+        const varsContainer = (this.varsContainer || []).concat(data);
+        const id = ""; // ?
+        const _vars = findOverride(id, ot, varsContainer);
+        if (!_vars) return;
+        const _var = _vars[_vars.length - 1];
+        if (_var && _var.type === vt) {
+            return _var;
         }
-        return props;
+    }
+
+    get contextSettings(): ContextSettings | undefined {
+        const v = this._findOV2(OverrideType.ContextSettings, VariableType.ContextSettings);
+        if (v) return v.value;
+        return this.m_sym?.style.contextSettings;
+    }
+
+    getFills(): Fill[] {
+        const v = this._findOV2(OverrideType.Fills, VariableType.Fills);
+        if (v) return v.value;
+        return this.m_sym?.style.fills || [];
+    }
+
+    getBorders(): Border[] {
+        const v = this._findOV2(OverrideType.Borders, VariableType.Borders);
+        if (v) return v.value;
+        return this.m_sym?.style.borders || [];
+    }
+
+    get startMarkerType(): MarkerType | undefined {
+        const v = this._findOV2(OverrideType.StartMarkerType, VariableType.MarkerType);
+        return v ? v.value : this.m_sym?.style.startMarkerType;
+    }
+    get endMarkerType(): MarkerType | undefined {
+        const v = this._findOV2(OverrideType.EndMarkerType, VariableType.MarkerType);
+        return v ? v.value : this.m_sym?.style.endMarkerType;
+    }
+
+    getShadows(): Shadow[] {
+        const v = this._findOV2(OverrideType.Shadows, VariableType.Shadows);
+        if (v) return v.value;
+        return this.m_sym?.style.shadows || [];
     }
 }

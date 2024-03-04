@@ -31,17 +31,18 @@ export function importVariable(source: types.Variable, ctx?: IImportContext): im
             if (val instanceof Array) {
                 const _val = val;
                 return (() => {
-                    const ret = new BasicArray<(impl.Border | impl.Fill)>()
+                    const ret = new BasicArray<(impl.Border | impl.Fill | impl.Shadow)>()
                     for (let i = 0, len = _val && _val.length; i < len; i++) {
                         const r = (() => {
                             const val = _val[i]
                             if (val.typeId == 'border') {
-                                if (!val.crdtidx) val.crdtidx = [i]
                                 return importBorder(val as types.Border, ctx)
                             }
                             if (val.typeId == 'fill') {
-                                if (!val.crdtidx) val.crdtidx = [i]
                                 return importFill(val as types.Fill, ctx)
+                            }
+                            if (val.typeId == 'shadow') {
+                                return importShadow(val as types.Shadow, ctx)
                             }
                             {
                                 throw new Error('unknow val: ' + val)
@@ -63,6 +64,15 @@ export function importVariable(source: types.Variable, ctx?: IImportContext): im
             }
             if (val.typeId == 'style') {
                 return importStyle(val as types.Style, ctx)
+            }
+            if (val.typeId == 'context-settings') {
+                return importContextSettings(val as types.ContextSettings, ctx)
+            }
+            if (val.typeId == 'table-shape') {
+                return importTableShape(val as types.TableShape, ctx)
+            }
+            if (val.typeId == 'export-options') {
+                return importExportOptions(val as types.ExportOptions, ctx)
             }
             {
                 throw new Error('unknow val: ' + val)
@@ -216,9 +226,9 @@ export function importStop(source: types.Stop, ctx?: IImportContext): impl.Stop 
             return ret
         })(),
         source.id,
-        source.position
+        source.position,
+        importColor(source.color, ctx)
     )
-    if (source.color !== undefined) ret.color = importColor(source.color, ctx)
     return ret
 }
 /* span attr */
@@ -237,6 +247,8 @@ export function importSpanAttr(source: types.SpanAttr, ctx?: IImportContext): im
     if (source.kerning !== undefined) ret.kerning = source.kerning
     if (source.transform !== undefined) ret.transform = importTextTransformType(source.transform, ctx)
     if (source.placeholder !== undefined) ret.placeholder = source.placeholder
+    if (source.fillType !== undefined) ret.fillType = importFillType(source.fillType, ctx)
+    if (source.gradient !== undefined) ret.gradient = importGradient(source.gradient, ctx)
     return ret
 }
 /* shape */
@@ -432,7 +444,6 @@ export function importGraphicsContextSettings(source: types.GraphicsContextSetti
 /* gradient */
 export function importGradient(source: types.Gradient, ctx?: IImportContext): impl.Gradient {
     const ret: impl.Gradient = new impl.Gradient (
-        source.elipseLength,
         importPoint2D(source.from, ctx),
         importPoint2D(source.to, ctx),
         importGradientType(source.gradientType, ctx),
@@ -447,6 +458,8 @@ export function importGradient(source: types.Gradient, ctx?: IImportContext): im
             return ret
         })()
     )
+    if (source.elipseLength !== undefined) ret.elipseLength = source.elipseLength
+    if (source.gradientOpacity !== undefined) ret.gradientOpacity = source.gradientOpacity
     return ret
 }
 /* gradient type */
@@ -1089,6 +1102,8 @@ export function importSpan(source: types.Span, ctx?: IImportContext): impl.Span 
     if (source.kerning !== undefined) ret.kerning = source.kerning
     if (source.transform !== undefined) ret.transform = importTextTransformType(source.transform, ctx)
     if (source.placeholder !== undefined) ret.placeholder = source.placeholder
+    if (source.fillType !== undefined) ret.fillType = importFillType(source.fillType, ctx)
+    if (source.gradient !== undefined) ret.gradient = importGradient(source.gradient, ctx)
     return ret
 }
 /* path shape */
@@ -1271,6 +1286,8 @@ export function importParaAttr(source: types.ParaAttr, ctx?: IImportContext): im
     if (source.kerning !== undefined) ret.kerning = source.kerning
     if (source.transform !== undefined) ret.transform = importTextTransformType(source.transform, ctx)
     if (source.placeholder !== undefined) ret.placeholder = source.placeholder
+    if (source.fillType !== undefined) ret.fillType = importFillType(source.fillType, ctx)
+    if (source.gradient !== undefined) ret.gradient = importGradient(source.gradient, ctx)
     if (source.alignment !== undefined) ret.alignment = importTextHorAlign(source.alignment, ctx)
     if (source.paraSpacing !== undefined) ret.paraSpacing = source.paraSpacing
     if (source.minimumLineHeight !== undefined) ret.minimumLineHeight = source.minimumLineHeight
@@ -1299,6 +1316,8 @@ export function importTextAttr(source: types.TextAttr, ctx?: IImportContext): im
     if (source.kerning !== undefined) ret.kerning = source.kerning
     if (source.transform !== undefined) ret.transform = importTextTransformType(source.transform, ctx)
     if (source.placeholder !== undefined) ret.placeholder = source.placeholder
+    if (source.fillType !== undefined) ret.fillType = importFillType(source.fillType, ctx)
+    if (source.gradient !== undefined) ret.gradient = importGradient(source.gradient, ctx)
     if (source.verAlign !== undefined) ret.verAlign = importTextVerAlign(source.verAlign, ctx)
     if (source.orientation !== undefined) ret.orientation = importTextOrientation(source.orientation, ctx)
     if (source.textBehaviour !== undefined) ret.textBehaviour = importTextBehaviour(source.textBehaviour, ctx)
@@ -1637,9 +1656,6 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
     if (!source.variables) {
         source.variables = {} as any
     }
-    if ((source as any).virbindsEx) {
-        source.overrides = (source as any).virbindsEx
-    }
     const ret: impl.SymbolShape = new impl.SymbolShape (
         (() => {
             const ret = new BasicArray<number>()
@@ -1767,15 +1783,6 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
         });
         return ret
     })()
-    if (source.overrides !== undefined) ret.overrides = (() => {
-        const ret = new BasicMap<string, string>()
-        const val = source.overrides as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-        Object.keys(val).forEach((k) => {
-            const v = val[k];
-            ret.set(k, v)
-        });
-        return ret
-    })()
     if (source.symtags !== undefined) ret.symtags = (() => {
         const ret = new BasicMap<string, string>()
         const val = source.symtags as any; // json没有map对象,导入导出的是{[key: string]: value}对象
@@ -1788,7 +1795,7 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
     // inject code
     if (ctx?.document) {
         const registed = ctx.document.symbolregist.get(ret.id);
-        if (!registed || registed === ctx.curPage) {
+        if (!registed || registed === 'freesymbols' || registed === ctx.curPage) {
             ctx.document.symbolsMgr.add(ret.id, ret);
         }
     }
@@ -1897,15 +1904,6 @@ export function importSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IIm
             return ret
         })()
     )
-    if (source.overrides !== undefined) ret.overrides = (() => {
-        const ret = new BasicMap<string, string>()
-        const val = source.overrides as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-        Object.keys(val).forEach((k) => {
-            const v = val[k];
-            ret.set(k, v)
-        });
-        return ret
-    })()
     if (source.symtags !== undefined) ret.symtags = (() => {
         const ret = new BasicMap<string, string>()
         const val = source.symtags as any; // json没有map对象,导入导出的是{[key: string]: value}对象

@@ -12,7 +12,7 @@ export class LineView extends PathShapeView {
 
     protected renderBorders(): EL[] {
         if (this.m_data.style.borders.length > 0) {
-            return renderBorders(elh, this.m_data.style, this.getBorders(), this.getPathStr(), this.m_data);
+            return renderBorders(elh, this.m_data.style, this.getBorders(), this.startMarkerType, this.endMarkerType, this.getPathStr(), this.m_data);
         } else {
             // const props: any = {};
             // props.stroke = '#000000';
