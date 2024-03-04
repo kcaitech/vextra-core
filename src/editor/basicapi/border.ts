@@ -1,4 +1,4 @@
-import { Border, BorderPosition, BorderStyle } from "../../data/style";
+import { Border, BorderPosition, BorderStyle, FillType } from "../../data/style";
 import { Color } from "../../data/color";
 import { crdtArrayInsert, crdtArrayMove, crdtArrayRemove, crdtSetAttr } from "./basic";
 import { BasicArray } from "../../data/basic";
@@ -29,6 +29,7 @@ export function setBorderStyle(border: Border, borderStyle: BorderStyle) {
 export function deleteBorderAt(borders: BasicArray<Border>, idx: number) {
     return crdtArrayRemove(borders, idx);
 }
+
 /**
  * @param idx 开始删的位置
  * @param strength 删除的个数
@@ -51,4 +52,7 @@ export function addBorderAt(borders: BasicArray<Border>, border: Border, index: 
 }
 export function moveBorder(borders: BasicArray<Border>, idx: number, idx2: number) {
     return crdtArrayMove(borders, idx, idx2);
+}
+export function setBorderFillType(border: Border, fillType: FillType) {
+    return crdtSetAttr(border, "fillType", fillType);
 }

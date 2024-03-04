@@ -14,12 +14,12 @@ import {
     CurveMode
 } from "../../data/shape";
 import { updateShapesFrame } from "./utils";
-import { Border, BorderPosition, BorderStyle, Fill, MarkerType, Shadow } from "../../data/style";
+import { Border, BorderPosition, BorderStyle, Fill, Gradient, MarkerType, Shadow } from "../../data/style";
 import { BulletNumbers, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
 import { RectShape, SymbolRefShape, TableCellType, TableShape } from "../../data/classes";
 import {
     BoolOp, BulletNumbersBehavior, BulletNumbersType, ExportFileFormat, OverrideType, Point2D,
-    StrikethroughType, TextTransformType, UnderlineType, ShadowPosition, ExportFormatNameingScheme, BlendMode,
+    StrikethroughType, TextTransformType, UnderlineType, ShadowPosition, ExportFormatNameingScheme, FillType, BlendMode
 } from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
@@ -436,6 +436,34 @@ export class Api {
         if (!fill) return;
         this.addOp(basicapi.crdtSetAttr(fill, "isEnabled", isEnable));
     }
+    setFillType(page: Page, shape: Shape | Variable, idx: number, fillType: FillType) {
+        checkShapeAtPage(page, shape);
+        const fills = shape instanceof Shape ? shape.style.fills : shape.value;
+        const fill: Fill = fills[idx];
+        if (!fill) return;
+        this.addOp(basicapi.crdtSetAttr(fill, "fillType", fillType));
+    }
+    setBorderFillType(page: Page, shape: Shape | Variable, idx: number, fillType: FillType) {
+        checkShapeAtPage(page, shape);
+        const borders = shape instanceof Shape ? shape.style.borders : shape.value;
+        const border: Fill = borders[idx];
+        if (!border) return;
+        this.addOp(basicapi.crdtSetAttr(border, "fillType", fillType));
+    }
+    setFillGradient(page: Page, shape: Shape | Variable, idx: number, gradient: Gradient) {
+        checkShapeAtPage(page, shape);
+        const fills = shape instanceof Shape ? shape.style.fills : shape.value;
+        const fill: Fill = fills[idx];
+        if (!fill) return;
+        this.addOp(basicapi.crdtSetAttr(fill, "gradient", gradient));
+    }
+    setBorderGradient(page: Page, shape: Shape | Variable, idx: number, gradient: Gradient) {
+        checkShapeAtPage(page, shape);
+        const borders = shape instanceof Shape ? shape.style.borders : shape.value;
+        const border = borders[idx];
+        if (!border) return;
+        this.addOp(basicapi.crdtSetAttr(border, "gradient", gradient));
+    }
     setBorderColor(page: Page, shape: Shape | Variable, idx: number, color: Color) {
         checkShapeAtPage(page, shape);
         const borders = shape instanceof Shape ? shape.style.borders : shape.value;
@@ -759,6 +787,12 @@ export class Api {
         if (!_text || !(_text instanceof Text)) throw Error();
         this.addOp(basicapi.textModifyItalic(shape, _text, italic, index, len));
     }
+    textModifyFillType(page: Page, shape: TextShapeLike | Variable, fillType: FillType, index: number, len: number) {
+        checkShapeAtPage(page, shape);
+        const _text = shape instanceof Shape ? shape.text : shape.value;
+        if (!_text || !(_text instanceof Text)) throw Error();
+        this.addOp(basicapi.textModifyFillType(shape, _text, index, len, fillType));
+    }
 
     private _textModifyRemoveBulletNumbers(page: Page, shape: TextShapeLike | Variable, index: number, len: number) {
         const removeIndexs: number[] = [];
@@ -899,6 +933,12 @@ export class Api {
         }
         this.addOp(basicapi.textModifySpanTransfrom(shape, _text, transform, index, len));
     }
+    setTextGradient(page: Page, shape: TextShapeLike | Variable, gradient: Gradient | undefined, index: number, len: number) {
+        checkShapeAtPage(page, shape);
+        const _text = shape instanceof Shape ? shape.text : shape.value;
+        if (!_text || !(_text instanceof Text)) throw Error();
+        this.addOp(basicapi.textModifyGradient(shape, _text, index, len, gradient));
+    }
 
     // table
     tableSetCellContentType(page: Page, table: TableShape, rowIdx: number, colIdx: number, contentType: TableCellType | undefined) {
@@ -1027,5 +1067,13 @@ export class Api {
     tableModifyTextTransform(page: Page, table: TableShape, transform: TextTransformType | undefined) {
         checkShapeAtPage(page, table);
         this.addOp(basicapi.tableModifyTextTransform(table, transform));
+    }
+    tableModifyTextFillType(page: Page, table: TableShape, fillType: FillType | undefined) {
+        checkShapeAtPage(page, table);
+        this.addOp(basicapi.tableModifyTextFillType(table, fillType));
+    }
+    tableModifyTextGradient(page: Page, table: TableShape, gradient: Gradient | undefined) {
+        checkShapeAtPage(page, table);
+        this.addOp(basicapi.tableModifyTextGradient(table, gradient));
     }
 }

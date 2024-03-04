@@ -2,14 +2,15 @@ import { TableCell, TableShape } from "../data/table";
 import { ShapeEditor } from "./shape";
 import { Page } from "../data/page";
 import { CoopRepository } from "./coop/cooprepo";
-import { BorderPosition, BorderStyle, StrikethroughType, TableCellType, TextBehaviour, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType } from "../data/baseclasses";
+import { BorderPosition, BorderStyle, StrikethroughType, TableCellType, TextBehaviour, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType, FillType, ResizeType } from "../data/baseclasses";
 import { adjColum, adjRow } from "./tableadjust";
-import { Border, Fill } from "../data/style";
+import { Border, Fill, Gradient } from "../data/style";
 import { fixTableShapeFrameByLayout } from "./utils/other";
 import { Api } from "./coop/recordapi";
-import { importBorder, importFill } from "../data/baseimport";
+import { importBorder, importFill, importGradient } from "../data/baseimport";
 import { Document, Color } from "../data/classes";
 import { newText } from "../data/textutils";
+import { AsyncGradientEditor, Status } from "./controller";
 import { TableView } from "../dataview";
 
 const MinCellSize = TableShape.MinCellSize;
@@ -1078,6 +1079,165 @@ export class TableEditor extends ShapeEditor {
         }
         return false;
     }
+    public setTextFillType(fillType: FillType, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
+        const api = this.__repo.start("setTableTextFillType");
+        try {
+            if (range) {
+                this._initCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd, api);
+                const cells = this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
+                cells.forEach((c) => {
+                    const cell = c.cell;
+                    if (cell && cell.cellType === TableCellType.Text && cell.text) {
+                        api.textModifyFillType(this.__page, cell as any, fillType, 0, cell.text.length);
+                    }
+                })
+            } else {
+                api.tableModifyTextFillType(this.__page, this.shape, fillType);
+                const cells = this.shape.datas;
+                cells.forEach((cell) => {
+                    if (cell && cell.cellType === TableCellType.Text && cell.text) {
+                        api.textModifyFillType(this.__page, cell as any, fillType, 0, cell.text.length);
+                    }
+                })
+            }
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+    public setTextGradient(gradient: Gradient | undefined, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
+        const api = this.__repo.start("setTableTextGradient");
+        try {
+            if (range) {
+                this._initCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd, api);
+                const cells = this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
+                cells.forEach((c) => {
+                    const cell = c.cell;
+                    if (cell && cell.cellType === TableCellType.Text && cell.text) {
+                        api.setTextGradient(this.__page, cell as any, gradient, 0, cell.text.length);
+                    }
+                })
+            }
+            else {
+                api.tableModifyTextGradient(this.__page, this.shape, gradient);
+                const cells = this.shape.datas;
+                cells.forEach((cell) => {
+                    if (cell && cell.cellType === TableCellType.Text && cell.text) {
+                        api.setTextGradient(this.__page, cell as any, gradient, 0, cell.text.length);
+                    }
+                })
+            }
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+
+    public asyncSetTextGradient(gradient: Gradient | undefined, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }): AsyncGradientEditor {
+        const api = this.__repo.start("asyncSetTextGradient");
+        let status: Status = Status.Pending;
+        const execute_from = (from: { x: number, y: number }) => {
+            status = Status.Pending;
+            try {
+                const new_gradient = importGradient(gradient!);
+                new_gradient.from.x = from.x;
+                new_gradient.from.y = from.y;
+                set_gradient(new_gradient);
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const execute_to = (to: { x: number, y: number }) => {
+            status = Status.Pending;
+            try {
+                const new_gradient = importGradient(gradient!);
+                new_gradient.to.x = to.x;
+                new_gradient.to.y = to.y;
+                set_gradient(new_gradient);
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const execute_elipselength = (length: number) => {
+            status = Status.Pending;
+            try {
+                const new_gradient = importGradient(gradient!);
+                new_gradient.elipseLength = length;
+                set_gradient(new_gradient);
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const execute_stop_position = (position: number, id: string) => {
+            status = Status.Pending;
+            try {
+                const new_gradient = importGradient(gradient!);
+                const i = new_gradient.stops.findIndex((item) => item.id === id);
+                new_gradient.stops[i].position = position;
+                const g_s = new_gradient.stops;
+                g_s.sort((a, b) => {
+                    if (a.position > b.position) {
+                        return 1;
+                    } else if (a.position < b.position) {
+                        return -1;
+                    } else {
+                        return 0;
+                    }
+                })
+                set_gradient(new_gradient);
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const close = () => {
+            if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
+                this.__repo.commit();
+            } else {
+                this.__repo.rollback();
+            }
+            return undefined;
+        }
+        const set_gradient = (new_gradient: Gradient) => {
+            if (range) {
+                this._initCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd, api);
+                const cells = this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
+                cells.forEach((c) => {
+                    const cell = c.cell;
+                    if (cell && cell.cellType === TableCellType.Text && cell.text) {
+                        api.setTextGradient(this.__page, cell as any, new_gradient, 0, cell.text.length);
+                    }
+                })
+            }
+            else {
+                api.tableModifyTextGradient(this.__page, this.shape, new_gradient);
+                const cells = this.shape.datas;
+                cells.forEach((cell) => {
+                    if (cell && cell.cellType === TableCellType.Text && cell.text) {
+                        api.setTextGradient(this.__page, cell as any, new_gradient, 0, cell.text.length);
+                    }
+                })
+            }
+        }
+        return { execute_from, execute_to, execute_elipselength, execute_stop_position, close }
+    }
 
     public initTextCell(rowIdx: number, colIdx: number) { // 初始化为文本单元格
         const api = this.__repo.start("initCell");
@@ -1176,6 +1336,23 @@ export class TableEditor extends ShapeEditor {
             }
             else {
                 api.setFillEnable(this.__page, this.shape, idx, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.error(error);
+            this.__repo.rollback();
+        }
+    }
+    public setFillType(idx: number, type: FillType, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
+        const api = this.__repo.start("setFillType");
+        try {
+            if (range) {
+                this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
+                    if (cell.cell) api.setFillType(this.__page, cell.cell, idx, type);
+                })
+            }
+            else {
+                api.setFillType(this.__page, this.shape, idx, type);
             }
             this.__repo.commit();
         } catch (error) {

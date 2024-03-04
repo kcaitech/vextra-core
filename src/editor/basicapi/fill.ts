@@ -1,4 +1,4 @@
-import { Fill } from "../../data/style";
+import { Fill, FillType } from "../../data/style";
 import { Color } from "../../data/color";
 import { crdtArrayInsert, crdtArrayMove, crdtArrayRemove, crdtSetAttr } from "./basic";
 import { BasicArray } from "../../data/basic";
@@ -35,4 +35,7 @@ export function setFillColor(fill: Fill, color: Color) {
 
 export function setFillEnable(fill: Fill, enable: boolean) {
     return fill && crdtSetAttr(fill, "isEnabled", enable);
+}
+export function setFillType(fill: Fill, fillType: FillType) {
+    return fill && crdtSetAttr(fill, "fillType", fillType);
 }

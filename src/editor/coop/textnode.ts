@@ -8,7 +8,7 @@ import { Cmd, OpItem } from "../../coop/common/repo";
 import { Document } from "../../data/document";
 import { SNumber } from "../../coop/client/snumber";
 import { ISave4Restore } from "./localcmd";
-import { IImportContext, importColor, importParaAttr, importSpanAttr, importText } from "../../data/baseimport";
+import { IImportContext, importColor, importGradient, importParaAttr, importSpanAttr, importText } from "../../data/baseimport";
 
 // todo 考虑text是string?
 function apply(document: Document, text: Text, op: ArrayOp) {
@@ -50,6 +50,8 @@ function apply(document: Document, text: Text, op: ArrayOp) {
             if (typeof value === 'object' && value.typeId) {
                 if (value.typeId === 'color') {
                     value = importColor(value, ctx);
+                } else if (value.typeId === "gradient") {
+                    value = importGradient(value, ctx);
                 } else {
                     throw new Error('need import ' + value.typeId)
                 }
