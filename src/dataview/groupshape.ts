@@ -106,12 +106,23 @@ function render2path(shape: ShapeView): Path {
     let fixedRadius: number | undefined;
     if (shapeIsGroup) fixedRadius = shape.m_fixedRadius;
     if (!shapeIsGroup || shape.m_children.length === 0) {
+        if (!shape.isVisible()) return new Path();
         const path = shape instanceof TextShapeView ? shape.getTextPath() : shape.getPath();
         return path.clone();
     }
 
+    let fVisibleIdx = 0;
+    for (let i = 0; i < shape.m_children.length; ++i) {
+        if ((shape.m_children[i] as ShapeView).isVisible()) {
+            fVisibleIdx = i;
+            break;
+        }
+    }
+
     const cc = shape.m_children.length;
-    const child0 = shape.m_children[0] as ShapeView;
+    if (fVisibleIdx >= cc) return new Path();
+
+    const child0 = shape.m_children[fVisibleIdx] as ShapeView;
     const frame0 = child0.frame;
     const path0 = render2path(child0).clone();
 
@@ -129,8 +140,9 @@ function render2path(shape: ShapeView): Path {
     grid.push(frame0);
 
     let joinPath: IPalPath = gPal.makePalPath(path0.toString());
-    for (let i = 1; i < cc; i++) {
+    for (let i = fVisibleIdx + 1; i < cc; i++) {
         const child1 = shape.m_children[i] as ShapeView;
+        if (!child1.isVisible()) continue;
         const frame1 = child1.frame;
         const path1 = render2path(child1).clone();
         if (child1.isNoTransform()) {
@@ -238,7 +250,12 @@ export class GroupShapeView extends ShapeView {
             this.m_pathstr = undefined;
             this.m_isboolgroup = (this.m_data as GroupShape).isBoolOpShape;
         }
-
+        else if (this.m_isboolgroup) {
+            if (args.includes('variables')) {
+                this.m_path = undefined;
+                this.m_pathstr = undefined;
+            }
+        }
         // todo boolgroup
     }
 
@@ -272,6 +289,7 @@ export class GroupShapeView extends ShapeView {
         }
         if (this.m_path) return this.m_path;
         this.m_path = render2path(this);
+        this.m_path.freeze();
         return this.m_path;
     }
 
