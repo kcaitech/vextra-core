@@ -20,13 +20,10 @@ export type ScaleUnit = {
 }
 
 export class Scaler extends AsyncApiCaller {
-    private shapes: ShapeView[];
     private recorder: SizeRecorder = new Map();
 
-    constructor(repo: CoopRepository, document: Document, desc: string, page: PageView, shapes: ShapeView[]) {
-        super(repo, document, page, desc);
-
-        this.shapes = shapes;
+    constructor(repo: CoopRepository, document: Document, page: PageView) {
+        super(repo, document, page, 'scale');
     }
 
     excute() { }
@@ -45,7 +42,14 @@ export class Scaler extends AsyncApiCaller {
                 this.api.shapeModifyX(this.page, shape, x);
                 this.api.shapeModifyY(this.page, shape, y);
                 this.api.shapeModifyWH(this.page, shape, width, height);
-                // expandTo(this.api, this.page, shape, width, height);
+
+                if (t.needFlipH) {
+                    this.api.shapeModifyHFlip(this.page, shape, !shape.isFlippedHorizontal);
+                }
+
+                if (t.needFlipV) {
+                    this.api.shapeModifyVFlip(this.page, shape, !shape.isFlippedVertical);
+                }
 
                 // todo 约束
             }

@@ -11,8 +11,8 @@ export type RotateUnit = {
 }
 
 export class Rotator extends AsyncApiCaller {
-    constructor(repo: CoopRepository, document: Document, desc: string, page: PageView) {
-        super(repo, document, page, desc);
+    constructor(repo: CoopRepository, document: Document, page: PageView) {
+        super(repo, document, page, 'rotate');
     }
 
     excute() { }
@@ -24,7 +24,7 @@ export class Rotator extends AsyncApiCaller {
                 const shape = adapt2Shape(unit.shape);
 
                 this.api.shapeModifyRotate(this.page, shape, unit.targetRotate);
-                
+
                 this.api.shapeModifyX(this.page, shape, unit.x);
                 this.api.shapeModifyY(this.page, shape, unit.y);
             }
