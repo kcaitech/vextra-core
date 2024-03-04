@@ -718,29 +718,18 @@ export class PageEditor {
                 // todo 失去变量的情况下保持当前状态
                 continue;
             }
-            const symmgr = shape.getSymbolMgr();
-            const symbol = symmgr?.getSync(shape.refId);
-            if (!symbol) {
-                return_shapes.push(shape);
-                continue;
-            }
-            const { x, y, width, height } = shape.frame;
-            const tmpFrame = new ShapeFrame(x, y, width, height);
-            const sym = shape.symData;
-            if (!sym) continue;
-            let style: any = sym.style;
+
             const _this = this;
             const ctx: IImportContext = new class implements IImportContext {
                 document: Document = _this.__document;
                 curPage: string = _this.__page.id
             };
-            if (style) {
-                style = importStyle((style), ctx);
-            }
-            const tmpArtboard: Artboard = newArtboard(shape.name, tmpFrame, style);
-            initFrame(tmpArtboard, shape.frame);
+            const { x, y, width, height } = shape.frame;
+            const tmpArtboard: Artboard = newArtboard(shape.name, new ShapeFrame(x, y, width, height));
+            // initFrame(tmpArtboard, shape.frame);
             tmpArtboard.childs = shape.naviChilds! as BasicArray<Shape>;
             tmpArtboard.varbinds = shape.varbinds;
+            tmpArtboard.style = shape.style;
             const symbolData = exportArtboard(tmpArtboard); // todo 如果symbol只有一个child时
 
             // 遍历symbolData,如有symbolref,则查找根shape是否有对应override的变量,如有则存到symbolref内

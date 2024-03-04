@@ -352,8 +352,7 @@ function _clone_value(_var: Variable, document: Document, page: Page) {
 
 export function shape4contextSettings(api: Api, _shape: ShapeView, page: Page) {
     const valuefun = (_var: Variable | undefined) => {
-        const clone: ContextSettings | undefined = _shape instanceof SymbolRefView ? _shape.symData?.style.contextSettings : _shape.style.contextSettings;
-        const contextSettings = _var?.value ?? clone;
+        const contextSettings = _var?.value ?? _shape.contextSettings;
         return contextSettings && importContextSettings(contextSettings) || new ContextSettings(BlendMode.Normal, 1);
     };
     const _var = _ov(VariableType.ContextSettings, OverrideType.ContextSettings, valuefun, _shape, page, api);
@@ -362,8 +361,7 @@ export function shape4contextSettings(api: Api, _shape: ShapeView, page: Page) {
 
 export function shape4exportOptions(api: Api, _shape: ShapeView, page: Page) {
     const valuefun = (_var: Variable | undefined) => {
-        const clone: ExportOptions | undefined = _shape.exportOptions;
-        const options = _var?.value ?? clone;
+        const options = _var?.value ?? _shape.exportOptions;
         return options && importExportOptions(options) || new ExportOptions(new BasicArray(), 0, false, false, false, false);
     };
     const _var = _ov(VariableType.ExportOptions, OverrideType.ExportOptions, valuefun, _shape, page, api);
@@ -506,7 +504,7 @@ export function modify_variable_with_api(api: Api, page: Page, shape: ShapeView,
  */
 export function shape4border(api: Api, page: Page, shape: ShapeView) {
     const _var = override_variable(page, VariableType.Borders, OverrideType.Borders, (_var) => {
-        const bordors = _var?.value ?? shape.style.borders;
+        const bordors = _var?.value ?? shape.getBorders();
         return new BasicArray(...(bordors as Array<Border>).map((v) => {
             return importBorder(v);
         }
@@ -520,7 +518,7 @@ export function shape4border(api: Api, page: Page, shape: ShapeView) {
  */
 export function shape4fill(api: Api, page: Page, shape: ShapeView) {
     const _var = override_variable(page, VariableType.Fills, OverrideType.Fills, (_var) => {
-        const fills = _var?.value ?? shape.style.fills;
+        const fills = _var?.value ?? shape.getFills();
         return new BasicArray(...(fills as Array<Fill>).map((v) => {
             const ret = importFill(v);
             const imgmgr = v.getImageMgr();
@@ -534,7 +532,7 @@ export function shape4fill(api: Api, page: Page, shape: ShapeView) {
 
 export function shape4shadow(api: Api, page: Page, shape: ShapeView) {
     const _var = override_variable(page, VariableType.Shadows, OverrideType.Shadows, (_var) => {
-        const shadows = _var?.value ?? shape.style.shadows;
+        const shadows = _var?.value ?? shape.getShadows();
         return new BasicArray(...(shadows as Array<Shadow>).map((v) => {
             return importShadow(v);
         }
