@@ -26,10 +26,10 @@ export class ContactLineView extends PathShapeView {
         return this.m_data as ContactShape;
     }
 
-    get fromOrto(): Object {
+    get fromAndto(): any {
         return { from: this.from, to: this.to }
     }
-    
+
     private wathcer_sides(t: any) {
         // todo 可以再精细点
         this.updateApex();
