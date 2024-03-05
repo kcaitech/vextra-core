@@ -485,8 +485,8 @@ export class PageEditor {
             let sym: Shape;
             if (replace) {
                 const index = (shape0.parent as GroupShape).indexOfChild(shape0);
-                api.registSymbol(document, symbolShape.id, this.__page.id);
-                sym = api.shapeInsert(this.__page, shape0.parent as GroupShape, symbolShape, index + 1);
+                // api.registSymbol(document, symbolShape.id, this.__page.id);
+                sym = api.shapeInsert(document, this.__page, shape0.parent as GroupShape, symbolShape, index + 1);
                 const children = shape0.childs;
                 for (let i = 0, len = children.length; i < len; ++i) {
                     api.shapeMove(this.__page, shape0, 0, symbolShape, i);
@@ -494,7 +494,7 @@ export class PageEditor {
                 api.shapeDelete(document, this.__page, shape0.parent as GroupShape, index);
             } else {
                 const index = (shape0.parent as GroupShape).indexOfChild(shape0);
-                api.registSymbol(document, symbolShape.id, this.__page.id);
+                // api.registSymbol(document, symbolShape.id, this.__page.id);
                 sym = group(document, this.__page, shapes, symbolShape, shape0.parent as GroupShape, index, api);
             }
             if (sym) {
@@ -528,7 +528,7 @@ export class PageEditor {
                 const _var = new Variable(uuid(), VariableType.Status, attri_name, v);
                 api.shapeAddVariable(this.__page, symbol, _var);
             } else {
-                const u = make_union(api, this.__page, symbol, attri_name);
+                const u = make_union(api, this.__document, this.__page, symbol, attri_name);
                 if (!u) {
                     throw new Error('make union failed!');
                 }
@@ -586,9 +586,9 @@ export class PageEditor {
                 curPage: string = _this.__page.id
             };
             const api = this.__repo.start("makeStateAt");
-            api.registSymbol(this.__document, source.id, this.__page.id); // 先设置上, import好加入symmgr
+            // api.registSymbol(this.__document, source.id, this.__page.id); // 先设置上, import好加入symmgr
             const copy = importSymbolShape(source, ctx); // 需要设置ctx
-            const new_state = api.shapeInsert(this.__page, union, copy, idx + 1);
+            const new_state = api.shapeInsert(this.__document, this.__page, union, copy, idx + 1);
             modify_frame_after_inset_state(this.__page, api, union);
             init_state(api, this.__page, new_state as SymbolShape, dlt);
 
@@ -745,7 +745,7 @@ export class PageEditor {
             const results: Shape[] = [];
             for (let i = 0, len = actions.length; i < len; i++) {
                 const { parent, self, insertIndex } = actions[i];
-                const ret = api.shapeInsert(this.__page, parent as GroupShape, self, insertIndex);
+                const ret = api.shapeInsert(this.__document, this.__page, parent as GroupShape, self, insertIndex);
                 api.shapeDelete(this.__document, this.__page, parent as GroupShape, insertIndex + 1);
                 results.push(ret);
             }
@@ -835,7 +835,7 @@ export class PageEditor {
             selection.restore(state);
         });
         try {
-            pathShape = api.shapeInsert(this.__page, savep, pathShape, saveidx) as PathShape | PathShape2;
+            pathShape = api.shapeInsert(this.__document, this.__page, savep, pathShape, saveidx) as PathShape | PathShape2;
 
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const s = shapes[i];
@@ -888,7 +888,7 @@ export class PageEditor {
         });
         try {
             api.shapeDelete(this.__document, this.__page, parent, index);
-            pathShape = api.shapeInsert(this.__page, parent, pathShape, index) as PathShape;
+            pathShape = api.shapeInsert(this.__document, this.__page, parent, pathShape, index) as PathShape;
 
             this.__repo.commit();
             return pathShape;
@@ -1072,7 +1072,7 @@ export class PageEditor {
             selection.restore(state);
         });
         try {
-            api.shapeInsert(this.__page, parent, shape, index);
+            api.shapeInsert(this.__document, this.__page, parent, shape, index);
             shape = parent.childs[index]; // 需要把proxy代理之后的shape返回，否则无法触发notify
             this.__repo.commit();
             return shape;
@@ -1101,7 +1101,7 @@ export class PageEditor {
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const shape = shapes[i];
                 // shape.id = uuid();
-                api.shapeInsert(this.__page, parent, shape, index);
+                api.shapeInsert(this.__document, this.__page, parent, shape, index);
                 result.push(parent.childs[index]);
                 index++;
             }
@@ -1135,7 +1135,7 @@ export class PageEditor {
                 const shape = shapes[i];
                 const { parent, index } = actions[i];
                 // shape.id = uuid();
-                api.shapeInsert(this.__page, parent, shape, index);
+                api.shapeInsert(this.__document, this.__page, parent, shape, index);
                 result.push(parent.childs[index]);
             }
             this.__repo.commit();
@@ -1167,7 +1167,7 @@ export class PageEditor {
                 const { env, shapes } = actions[i];
                 for (let j = 0; j < shapes.length; j++) {
                     let index = env.childs.length;
-                    api.shapeInsert(this.__page, env, shapes[j], index);
+                    api.shapeInsert(this.__document, this.__page, env, shapes[j], index);
                     result.push(env.childs[index]);
                 }
             }
@@ -1304,7 +1304,7 @@ export class PageEditor {
             if (rotation) {
                 new_s.rotation = rotation;
             }
-            new_s = api.shapeInsert(this.__page, parent, new_s, index);
+            new_s = api.shapeInsert(this.__document, this.__page, parent, new_s, index);
             if (target_xy) {
                 translateTo(api, page, new_s, target_xy.x, target_xy.y);
             }
@@ -1463,7 +1463,7 @@ export class PageEditor {
                     r.id = uuid();
                     r.frame.x = save_frame.x + delta_xys[r_i].x; // lt_point与s.frame的xy重合后，用delta_xys中的相对位置计算replacement中每个图形的偏移
                     r.frame.y = save_frame.y + delta_xys[r_i].y;
-                    api.shapeInsert(this.__page, p, r, save_index);
+                    api.shapeInsert(this.__document, this.__page, p, r, save_index);
                     src_replacement.push(p.childs[save_index]);
                     save_index++;
                 }
