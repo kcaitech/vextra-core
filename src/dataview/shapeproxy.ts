@@ -49,6 +49,9 @@ class StyleHdl extends HdlBase {
         if (propStr === 'shadows') {
             return this.m_view.getShadows();
         }
+        if (propStr === 'contextSettings') {
+            return this.m_view.contextSettings;
+        }
         return super.get(target, propertyKey, receiver);
     }
 }
@@ -228,21 +231,21 @@ class SymbolRefShapeHdl extends ShapeHdl {
         if (propStr === "refId") {
             return this.view.refId;
         }
-        if (propStr === "findOverride") {
-            return this.findOverride;
-        }
-        if (propStr === "findVar") {
-            return this.findVar;
-        }
-
-        if (this.m_view.isVirtualShape) return super.get(target, propertyKey, receiver);
-        if (propStr === "varsContainer") {
-            return this.m_view.varsContainer;
-        }
-        if (propStr === "__isAdapted") {
-            return true;
-        }
-        return Reflect.get(target, propertyKey, receiver);
+        // if (propStr === "findOverride") {
+        //     return this.findOverride;
+        // }
+        // if (propStr === "findVar") {
+        //     return this.findVar;
+        // }
+        // if (this.m_view.isVirtualShape) return super.get(target, propertyKey, receiver);
+        // if (propStr === "varsContainer") {
+        //     return this.m_view.varsContainer;
+        // }
+        // if (propStr === "__isAdapted") {
+        //     return true;
+        // }
+        return super.get(target, propertyKey, receiver);
+        // return Reflect.get(target, propertyKey, receiver);
     }
 
     set(target: object, propertyKey: PropertyKey, value: any, receiver?: any): boolean {
