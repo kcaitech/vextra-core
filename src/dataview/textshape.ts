@@ -86,7 +86,7 @@ export class TextShapeView extends ShapeView {
 
     renderContents(): EL[] {
         const layout = this.getLayout();
-        return renderTextLayout(elh, layout);
+        return renderTextLayout(elh, layout, this.frame);
     }
 
     updateLayoutArgs(frame: ShapeFrame, hflip: boolean | undefined, vflip: boolean | undefined, rotate: number | undefined, radius: number | undefined): void {

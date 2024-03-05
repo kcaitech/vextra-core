@@ -167,7 +167,7 @@ export class TableCellView extends ShapeView {
             //     shape.text?.updateSize(frame.width, frame.height);
             // }
             const layout = this.getLayout();
-            return renderTextLayout(elh, layout);
+            return renderTextLayout(elh, layout, frame);
         }
         return [];
     }

@@ -32,7 +32,8 @@ import { LayoutItem, TextLayout, layoutText } from "./textlayout";
 import { layoutAtDelete, layoutAtFormat, layoutAtInsert } from "./textinclayout";
 import { getSimpleText, getUsedFontNames, getTextFormat, getTextWithFmt } from "./textread";
 import { _travelTextPara } from "./texttravel";
-import { Padding } from "./baseclasses";
+import { FillType, Padding } from "./baseclasses";
+import { Gradient } from "./style"
 import { Color } from "./color";
 
 /*
@@ -71,6 +72,8 @@ export class SpanAttr extends Basic implements classes.SpanAttr {
     kerning?: number
     transform?: TextTransformType
     placeholder?: boolean
+    fillType?: FillType
+    gradient?: Gradient
     constructor(
     ) {
         super()
@@ -128,6 +131,8 @@ export class AttrGetter extends TextAttr {
     maximumLineHeightIsMulti: boolean = false;
     transformIsMulti: boolean = false;
     bulletNumbersIsMulti: boolean = false;
+    fillTypeIsMulti: boolean = false;
+    gradientIsMulti: boolean = false;
 }
 
 export class SpanAttrSetter extends SpanAttr {
@@ -141,6 +146,8 @@ export class SpanAttrSetter extends SpanAttr {
     strikethroughIsSet: boolean = false;
     kerningIsSet: boolean = false;
     transformIsSet: boolean = false;
+    fillTypeIsSet: boolean = false;
+    gradientIsSet: boolean = false;
 }
 
 export class ParaAttrSetter extends ParaAttr {
@@ -159,6 +166,8 @@ export class ParaAttrSetter extends ParaAttr {
     paraSpacingIsSet: boolean = false;
     minimumLineHeightIsSet: boolean = false;
     maximumLineHeightIsSet: boolean = false;
+    fillTypeIsSet: boolean = false;
+    gradientIsSet: boolean = false;
 }
 
 export class Span extends SpanAttr implements classes.Span {

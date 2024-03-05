@@ -119,7 +119,7 @@ export type Stop = {
     crdtidx: number[]
     id: string
     position: number
-    color?: Color
+    color: Color
 }
 /* span attr */
 export type SpanAttr = {
@@ -135,6 +135,8 @@ export type SpanAttr = {
     kerning?: number
     transform?: TextTransformType
     placeholder?: boolean
+    fillType?: FillType
+    gradient?: Gradient
 }
 /* shape */
 export type Shape = {
@@ -300,11 +302,12 @@ export type GraphicsContextSettings = {
 /* gradient */
 export type Gradient = {
     typeId: string
-    elipseLength: number
+    elipseLength?: number
     from: Point2D
     to: Point2D
     stops: Stop[]
     gradientType: GradientType
+    gradientOpacity?: number
 }
 /* gradient type */
 export enum GradientType {

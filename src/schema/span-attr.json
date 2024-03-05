@@ -37,6 +37,12 @@
         },
         "placeholder": {
             "type": "boolean"
+        },
+        "fillType": {
+            "$ref": "./fill-type.json"
+        },
+        "gradient": {
+            "$ref": "./gradient.json"
         }
     },
     "required": [],
