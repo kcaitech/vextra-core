@@ -202,7 +202,7 @@ export function newOvalShape(name: string, frame: ShapeFrame): OvalShape {
     p1.hasTo = true;
     p1.fromX = 0.775892388889507;
     p1.fromY = 1;
-    p1.toX = 0.275892388889507;
+    p1.toX = 0.224107611110493;
     p1.toY = 1;
 
     // 右
@@ -210,7 +210,7 @@ export function newOvalShape(name: string, frame: ShapeFrame): OvalShape {
     p2.hasFrom = true;
     p2.hasTo = true;
     p2.fromX = 1;
-    p2.fromY = 0.275892388889507;
+    p2.fromY = 0.224107611110493;
     p2.toX = 1;
     p2.toY = 0.775892388889507;
 
@@ -218,7 +218,7 @@ export function newOvalShape(name: string, frame: ShapeFrame): OvalShape {
     const p3 = new CurvePoint([2] as BasicArray<number>, uuid(), 0.5, 0, CurveMode.Mirrored);
     p3.hasFrom = true;
     p3.hasTo = true;
-    p3.fromX = 0.275892388889507;
+    p3.fromX = 0.224107611110493;
     p3.fromY = 0;
     p3.toX = 0.775892388889507;
     p3.toY = 0;
@@ -230,7 +230,7 @@ export function newOvalShape(name: string, frame: ShapeFrame): OvalShape {
     p4.fromX = 0;
     p4.fromY = 0.775892388889507;
     p4.toX = 0;
-    p4.toY = 0.275892388889507;
+    p4.toY = 0.224107611110493;
 
     curvePoint.push(p1, p2, p3, p4);
     const shape = new OvalShape([4] as BasicArray<number>, id, name, types.ShapeType.Oval, frame, style, curvePoint, true, ellipse);
