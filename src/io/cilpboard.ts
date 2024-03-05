@@ -31,6 +31,7 @@ import {
     importPathShape,
     importRectShape,
     importSymbolRefShape,
+    importSymbolShape,
     importSymbolUnionShape,
     importTableShape,
     importText,
@@ -217,6 +218,12 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
             let r: Shape | undefined = undefined;
 
             if (type === ShapeType.Symbol) {
+                const registed = document.symbolregist.get(_s.id);
+                if (!registed || registed === 'freesymbols') {
+                    r = importSymbolShape(_s as any as types.SymbolShape, ctx);
+                    result.push(r);
+                    continue;
+                }
                 if (!document.symbolsMgr.getSync(_s.id)) {
                     continue;
                 }
@@ -274,8 +281,17 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
                 r = importCutoutShape(_s as any as types.CutoutShape, ctx);
             } else if (type === ShapeType.SymbolUnion) {
                 const children = (_s as any as SymbolUnionShape).childs;
-                children && children.length && set_childs_id(children, matched);
-
+                if (!Array.isArray(children)) continue;
+                // check
+                let isFree = true;
+                for (let i = 0; i < children.length; ++i) {
+                    const registed = document.symbolregist.get(children[i].id);
+                    if (registed && registed !== 'freesymbols') {
+                        isFree = false;
+                        break;
+                    }
+                }
+                if (!isFree) set_childs_id(children, matched);
                 r = importSymbolUnionShape(_s as any as SymbolUnionShape, ctx);
             }
 
