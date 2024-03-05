@@ -35,6 +35,7 @@ export class TableView extends ShapeView {
         if (args.includes('text')) {
             return;
         }
+        if (args.includes('rowSpan') || args.includes('colSpan'))  this.data.reLayout();
         this.updateChildren();
         this.m_ctx.setDirty(this);
     }
