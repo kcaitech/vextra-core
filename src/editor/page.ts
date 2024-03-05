@@ -711,6 +711,9 @@ export class PageEditor {
             tmpArtboard.childs = shape.naviChilds! as BasicArray<Shape>;
             tmpArtboard.varbinds = shape.varbinds;
             tmpArtboard.style = shape.style;
+            tmpArtboard.rotation = shape.rotation;
+            tmpArtboard.isFlippedHorizontal = shape.isFlippedHorizontal;
+            tmpArtboard.isFlippedVertical = shape.isFlippedVertical;
             const symbolData = exportArtboard(tmpArtboard); // todo 如果symbol只有一个child时
 
             // 遍历symbolData,如有symbolref,则查找根shape是否有对应override的变量,如有则存到symbolref内
