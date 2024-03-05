@@ -26,7 +26,7 @@ export class ContactLineView extends PathShapeView {
         return this.m_data as ContactShape;
     }
 
-    get fromAndto(): any {
+    get fromAndto(): { from: Shape | undefined, to: Shape | undefined } {
         return { from: this.from, to: this.to }
     }
 
