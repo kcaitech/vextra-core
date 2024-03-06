@@ -36,7 +36,8 @@ export class Transporter extends AsyncApiCaller {
             }
             this.updateView();
         } catch (error) {
-            this.rollback();
+            console.log('Transporter.excute', error);
+            this.exception = true;
         }
     }
 
@@ -52,7 +53,8 @@ export class Transporter extends AsyncApiCaller {
             this.updateView();
             return result;
         } catch (error) {
-            this.rollback();
+            console.log('Transporter.shortPaste', error);
+            this.exception = true;
             return false;
         }
     }
@@ -75,8 +77,8 @@ export class Transporter extends AsyncApiCaller {
             this.setCurrentEnv(targetParent);
             this.updateView();
         } catch (e) {
-            console.error(e);
-            this.rollback();
+            console.log('Transporter.migrate', e);
+            this.exception = true;
         }
     }
     setEnv(envs: Map<string, { shape: ShapeView, index: number }[]>) {
@@ -113,7 +115,8 @@ export class Transporter extends AsyncApiCaller {
             this.__repo.transactCtx.fireNotify();
             this.setCurrentEnv(emit_by);
         } catch (error) {
-            console.error(error);
+            console.log('Transporter.migrate', error);
+            this.exception = true;
         }
     }
 

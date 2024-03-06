@@ -19,6 +19,8 @@ export class AsyncApiCaller {
     api: Api;
     page: Page;
 
+    exception: boolean = false;
+
     constructor(repo: CoopRepository, document: Document, page: PageView, desc: string) {
         this.__repo = repo;
         this.__document = document;
@@ -31,12 +33,8 @@ export class AsyncApiCaller {
         this.__repo.transactCtx.fireNotify();
     }
 
-    rollback() {
-        this.__repo.rollback();
-    }
-
-    commit() {        
-        if (this.__repo.isNeedCommit()) {
+    commit() {
+        if (this.__repo.isNeedCommit() && !this.exception) {
             this.__repo.commit();
         } else {
             this.__repo.rollback();
