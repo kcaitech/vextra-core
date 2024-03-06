@@ -361,7 +361,9 @@ export function newTable(name: string, frame: ShapeFrame, rowCount: number, colu
     addCommonAttr(table)
     const fillColor = new Color(1, 255, 255, 255);
     const fill = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, fillColor);
-    table.style.fills.push(fill);
+    const fills =  new BasicArray<Fill>();
+    fills.push(fill);
+    table.style.fills = fills;
     table.setImageMgr(mediasMgr);
     return table;
 }
