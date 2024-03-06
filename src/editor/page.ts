@@ -18,6 +18,7 @@ import {
     initFrame,
     newArrowShape,
     newArtboard,
+    newArtboard2,
     newGroupShape,
     newLineShape,
     newOvalShape,
@@ -86,6 +87,7 @@ import { modify_shapes_height, modify_shapes_width } from "./utils/common";
 import { CoopRepository } from "./coop/cooprepo";
 import { Api } from "./coop/recordapi";
 import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
+import { unable_to_migrate } from "./utils/migrate";
 import { PageView, ShapeView, SymbolView, TableCellView, TableView, TextShapeView, adapt2Shape } from "../dataview";
 
 // 用于批量操作的单个操作类型
@@ -471,7 +473,7 @@ export class PageEditor {
             !shape0.fixedRadius;
 
         const style = replace ? importStyle((shape0.style)) : undefined;
-        const symbolShape = newSymbolShape(name ?? shape0.name, frame, style);
+        const symbolShape = newSymbolShape(replace ? shape0.name : (name ?? shape0.name), frame, style);
         const api = this.__repo.start("makeSymbol", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
             const state = {} as SelectionState;
             if (!isUndo) state.shapes = [symbolShape.id];
@@ -1196,6 +1198,10 @@ export class PageEditor {
             default:
                 return newRectShape(name, frame);
         }
+    }
+
+    createArtboard(name: string, frame: ShapeFrame) { // todo 新建图层存在代码冗余
+        return newArtboard2(name, frame)
     }
 
     shapesModifyPointRadius(shapes: Shape[], indexes: number[], val: number) {
@@ -2522,19 +2528,8 @@ export class PageEditor {
                         continue;
                     }
 
-                    if (is_part_of_symbol(host) && is_exist_invalid_shape2([item])) {
+                    if (unable_to_migrate(host, item)) {
                         continue;
-                    }
-
-                    const children = item.naviChilds || (item as any).childs;
-                    if (children?.length) {
-                        const tree = item instanceof SymbolRefShape ? item.symData : item;
-                        if (!tree) {
-                            continue;
-                        }
-                        if (is_circular_ref2(tree, host.id)) {
-                            continue;
-                        }
                     }
 
                     const beforeXY = item.frame2Root();

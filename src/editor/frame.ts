@@ -34,7 +34,7 @@ export const minimum_WH = 0.01; // 用户可设置最小宽高值。以防止宽
 
 export function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape, scaleX: number, scaleY: number, originFrame: ShapeFrame, recorder?: SizeRecorder) {
     if (shape.type === ShapeType.Group) { // 有且只有编组的子元素只可为跟随缩放，应忽略constraint
-        return modifySizeIgnoreConstraint(api, page, shape, scaleX, scaleY, originFrame);
+        return modifySizeIgnoreConstraint(api, page, shape, scaleX, scaleY);
     }
 
     const childs = shape.childs;
@@ -315,7 +315,7 @@ function modifyFrameForRect(api: Api, page: Page, shape: Shape, scaleX: number, 
 /**
  * @description 忽略约束(把约束表现都认定为跟随缩放)
  */
-function modifySizeIgnoreConstraint(api: Api, page: Page, shape: GroupShape, scaleX: number, scaleY: number, originFrame: ShapeFrame) {
+function modifySizeIgnoreConstraint(api: Api, page: Page, shape: GroupShape, scaleX: number, scaleY: number) {
     const childs = shape.childs;
 
     for (let i = 0, len = childs.length; i < len; i++) {
