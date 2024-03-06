@@ -466,16 +466,12 @@ export class PageEditor {
         const shape0 = shapes[0];
         const frame = importShapeFrame(shape0.frame);
 
-<<<<<<< HEAD
-        const replace = shapes.length === 1 && (shape0 instanceof GroupShape || shape0 instanceof Artboard) && !shape0.fixedRadius;
-=======
         const replace = shapes.length === 1 &&
             ((shape0 instanceof GroupShape && !shape0.isBoolOpShape) ||
                 shape0 instanceof Artboard
             ) &&
             !shape0.fixedRadius;
 
->>>>>>> 7fc9df9b0d966c5255a94f8914c18ef0bd83deb7
         const style = replace ? importStyle((shape0.style)) : undefined;
         const symbolShape = newSymbolShape(replace ? shape0.name : (name ?? shape0.name), frame, style);
         const api = this.__repo.start("makeSymbol", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
