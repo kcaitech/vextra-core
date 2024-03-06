@@ -23,6 +23,9 @@
             "value": {
                 "$ref": "./variable.json"
             }
+        },
+        "isCustomSize": {
+            "type": "boolean"
         }
     },
     "required": [

@@ -964,6 +964,7 @@ export class SymbolRefShape extends Shape {
     refId: string
     overrides?: BasicMap<string, string>
     variables: BasicMap<string, Variable>
+    isCustomSize?: boolean
     constructor(
         crdtidx: BasicArray<number >,
         id: string,

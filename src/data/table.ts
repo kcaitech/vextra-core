@@ -287,12 +287,10 @@ export class TableShape extends Shape implements classes.TableShape {
         const path0 = path[0];
         if (path0 === "cells" && path.length > 1) {
             const cellId = path[1];
-            let cell = this.cells.get(cellId);
-            // if (!cell) {
-            //     cell = this._initCell(cellId);
-            // }
+            const cell = this.cells.get(cellId);
             return cell?.getOpTarget(path.slice(2));
         }
+        if (path0 === "textAttr" && !this.textAttr) this.textAttr = new TextAttr();
         return super.getOpTarget(path);
     }
 
