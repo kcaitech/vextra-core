@@ -125,9 +125,6 @@ class ShapeHdl extends HdlBase {
         if (propStr === "notify") {
             return this.notify;
         }
-        if (propStr === "varsContainer") {
-            return this.m_view.varsContainer;
-        }
         return super.get(target, propertyKey, receiver);
     }
 }
@@ -238,9 +235,6 @@ class SymbolRefShapeHdl extends ShapeHdl {
         //     return this.findVar;
         // }
         if (this.m_view.isVirtualShape) return super.get(target, propertyKey, receiver);
-        // if (propStr === "varsContainer") {
-        //     return this.m_view.varsContainer;
-        // }
         // if (propStr === "__isAdapted") {
         //     return true;
         // }
