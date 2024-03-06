@@ -40,6 +40,8 @@ export * from "./service/shapedirlist2"
 export * from "./service/taskmgr"
 export * from "./service/symbollist"
 
+export * from "./editor/transform"
+
 // coop
 // export * from "./coop"
 export { Cmd } from "./coop/common/repo"

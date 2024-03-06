@@ -133,4 +133,8 @@ export class Page extends GroupShape implements classes.Page {
     get cutoutList() {
         return Array.from(this.cutouts.values());
     }
+    
+    get isContainer() {
+        return true;
+    }
 }

@@ -177,6 +177,7 @@ function makeCursorLocate(layout: TextLayout, pi: number, li: number, si: number
     return ret;
 }
 
+// todo 这个方法好像存在多余的调用
 export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: boolean): CursorLocate | undefined {
     if (index < 0) return;
 
