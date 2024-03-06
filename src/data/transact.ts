@@ -429,7 +429,7 @@ export class Repository extends WatchableObject implements IDataGuard {
      */
     start(name: string) {
         if (this.__context.transact !== undefined) {
-            console.log(this.__saveStartStack);
+            console.log("save start stack:", this.__saveStartStack);
             throw new Error("has transact not commited");
         }
         this.__saveStartStack = new Error();

@@ -439,6 +439,10 @@ export class Shape extends Basic implements classes.Shape {
     get frameType() {
         return FrameType.Path;
     }
+
+    get isContainer() { // 容器类元素: 页面、容器、组件、组件Union
+        return false;
+    }
 }
 
 export class GroupShape extends Shape implements classes.GroupShape {
@@ -638,6 +642,9 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
     get isSymbolShape() {
         return true;
     }
+    get isContainer() {
+        return true;
+    }
 }
 
 export class SymbolUnionShape extends SymbolShape implements classes.SymbolUnionShape {
@@ -684,6 +691,9 @@ export class SymbolUnionShape extends SymbolShape implements classes.SymbolUnion
             ]
         }
         return new Path(path);
+    }
+    get isContainer() {
+        return true;
     }
 }
 

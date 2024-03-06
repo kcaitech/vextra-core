@@ -712,4 +712,8 @@ export class ShapeView extends DataView {
         }
         return ++this.m_render_version;
     }
+
+    get isContainer() {
+        return this.data.isContainer;
+    }
 }

@@ -25,7 +25,7 @@ export class Artboard extends GroupShape implements classes.Artboard {
             childs
         )
     }
-    
+
     getPath(): Path {
         const x = 0;
         const y = 0;
@@ -62,5 +62,8 @@ export class Artboard extends GroupShape implements classes.Artboard {
             ]
         }
         return new Path(path);
+    }
+    get isContainer() {
+        return true;
     }
 }
