@@ -9,6 +9,7 @@ import { after_migrate, unable_to_migrate } from "../../editor/utils/migrate";
 import { get_state_name, is_state } from "../../editor/symbol";
 import { Api } from "../../editor/coop/recordapi";
 import { Page } from "../../data/page";
+import { ISave4Restore, LocalCmd, SelectionState } from "editor/coop/localcmd";
 
 export type TranslateUnit = {
     shape: ShapeView;
@@ -21,8 +22,20 @@ export class Transporter extends AsyncApiCaller {
     except_envs: ShapeView[] = [];
     current_env_id: string = '';
 
-    constructor(repo: CoopRepository, document: Document, page: PageView) {
+    shapes: (Shape | ShapeView)[] = [];
+
+    constructor(repo: CoopRepository, document: Document, page: PageView, shapes: ShapeView[]) {
         super(repo, document, page, 'translate')
+        this.shapes = shapes;
+    }
+
+    start(desc: string) {
+        return this.__repo.start(desc, (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+            const state = {} as SelectionState;
+            if (!isUndo) state.shapes = this.shapes.map(i => i.id);
+            else state.shapes = cmd.saveselection?.shapes || [];
+            selection.restore(state);
+        });
     }
 
     excute(translateUnits: TranslateUnit[]) {
@@ -36,7 +49,7 @@ export class Transporter extends AsyncApiCaller {
             }
             this.updateView();
         } catch (error) {
-            console.log('Transporter.excute', error);
+            console.log('Transporter.excute:', error);
             this.exception = true;
         }
     }
@@ -51,9 +64,10 @@ export class Transporter extends AsyncApiCaller {
                 result.push(parent.childs[index]);
             }
             this.updateView();
+            this.shapes = result;
             return result;
         } catch (error) {
-            console.log('Transporter.shortPaste', error);
+            console.log('Transporter.shortPaste:', error);
             this.exception = true;
             return false;
         }
@@ -77,7 +91,7 @@ export class Transporter extends AsyncApiCaller {
             this.setCurrentEnv(targetParent);
             this.updateView();
         } catch (e) {
-            console.log('Transporter.migrate', e);
+            console.log('Transporter.migrate:', e);
             this.exception = true;
         }
     }

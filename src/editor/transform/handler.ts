@@ -3,6 +3,7 @@ import { Document } from "../../data/document";
 import { Api } from "../../editor/coop/recordapi";
 import { Page } from "../../data/page";
 import { PageView, adapt2Shape } from "../../dataview";
+import { ISave4Restore, LocalCmd } from "editor/coop/localcmd";
 
 export type FrameLike = {
     x: number;
@@ -25,8 +26,13 @@ export class AsyncApiCaller {
         this.__repo = repo;
         this.__document = document;
 
-        this.api = repo.start(desc);
         this.page = adapt2Shape(page) as Page;
+
+        this.api = this.start(desc)
+    }
+
+    start(desc: string) {
+        return this.__repo.start(desc);
     }
 
     updateView() {
