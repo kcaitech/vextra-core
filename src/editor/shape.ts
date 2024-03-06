@@ -46,6 +46,11 @@ export class ShapeEditor {
     protected __document: Document
 
     constructor(shape: ShapeView, page: Page, repo: CoopRepository, document: Document) {
+        // check
+        if (!(shape instanceof ShapeView)) throw new Error("shape wrong");
+        if (!(page instanceof Page)) throw new Error("page wrong");
+        if (!(repo instanceof CoopRepository)) throw new Error("repo wrong");
+        if (!(document instanceof Document)) throw new Error("document wrong");
         this.__shape = shape;
         this.__repo = repo;
         this.__page = page;

@@ -1,12 +1,14 @@
 import { Page } from "../../data/page";
-import { GroupShape, PathShape, PathShape2, RectShape, Shape, SymbolShape, Variable, genRefId } from "../../data/shape";
-import { ContactShape, SymbolRefShape, ContactForm, ContextSettings } from "../../data/classes";
-import { BlendMode, BoolOp, CurveMode, MarkerType, OverrideType, Point2D } from "../../data/typesdefine";
+import { GroupShape, PathShape, PathShape2, RectShape, Shape, SymbolShape, Variable } from "../../data/shape";
+import { ContactShape, SymbolRefShape, ContactForm } from "../../data/classes";
+import { BoolOp, CurveMode, MarkerType, OverrideType, Point2D } from "../../data/typesdefine";
 import { BasicMap } from "../../data/basic";
 import { crdtSetAttr } from "./basic";
 
 
 export function shapeModifyX(page: Page, shape: Shape, x: number, needUpdateFrame?: { shape: Shape, page: Page }[]) {
+    // check
+    if (Number.isNaN(x) || (!Number.isFinite(x))) throw new Error(String(x));
     const frame = shape.frame;
     if (x !== frame.x) {
         const op = crdtSetAttr(frame, 'x', x);
@@ -15,6 +17,8 @@ export function shapeModifyX(page: Page, shape: Shape, x: number, needUpdateFram
     }
 }
 export function shapeModifyY(page: Page, shape: Shape, y: number, needUpdateFrame?: { shape: Shape, page: Page }[]) {
+    // check
+    if (Number.isNaN(y) || (!Number.isFinite(y))) throw new Error(String(y));
     const frame = shape.frame;
     if (y !== frame.y) {
         const op = crdtSetAttr(frame, 'y', y);
@@ -23,6 +27,9 @@ export function shapeModifyY(page: Page, shape: Shape, y: number, needUpdateFram
     }
 }
 export function shapeModifyWH(page: Page, shape: Shape, w: number, h: number, needUpdateFrame?: { shape: Shape, page: Page }[]) {
+    // check
+    if (Number.isNaN(w) || (!Number.isFinite(w))) throw new Error(String(w));
+    if (Number.isNaN(h) || (!Number.isFinite(h))) throw new Error(String(h));
     const frame = shape.frame;
     if (w !== frame.width || h !== frame.height) {
         const op = [crdtSetAttr(frame, 'width', w), crdtSetAttr(frame, 'height', h)];
@@ -40,6 +47,8 @@ export function shapeModifyEndMarkerType(shape: Shape, mt: MarkerType) {
     if (mt !== style.endMarkerType) return crdtSetAttr(style, 'endMarkerType', mt);
 }
 export function shapeModifyWidth(page: Page, shape: Shape, w: number, needUpdateFrame?: { shape: Shape, page: Page }[]) {
+    // check
+    if (Number.isNaN(w) || (!Number.isFinite(w))) throw new Error(String(w));
     const frame = shape.frame;
     if (w !== frame.width) {
         // shape.setFrameSize(w, frame.height); // todo
@@ -49,6 +58,8 @@ export function shapeModifyWidth(page: Page, shape: Shape, w: number, needUpdate
     }
 }
 export function shapeModifyHeight(page: Page, shape: Shape, h: number, needUpdateFrame?: { shape: Shape, page: Page }[]) {
+    // check
+    if (Number.isNaN(h) || (!Number.isFinite(h))) throw new Error(String(h));
     const frame = shape.frame;
     if (h !== frame.height) {
         // shape.setFrameSize(frame.width, h);
