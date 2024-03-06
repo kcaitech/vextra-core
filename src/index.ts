@@ -1,6 +1,8 @@
+// basic
 export * from "./basic/matrix"
 export * from "./basic/objectid"
 export * from "./basic/pal"
+export * from "./basic/utils"
 
 // data
 export * from "./data/basic"
