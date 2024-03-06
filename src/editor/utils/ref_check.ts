@@ -1,6 +1,6 @@
 import { SymbolRefShape } from "../../data/symbolref";
-import {Shape, GroupShape} from "../../data/shape";
-import {ShapeType} from "../../data/typesdefine";
+import { Shape, GroupShape } from "../../data/shape";
+import { ShapeType } from "../../data/typesdefine";
 
 /**
  * @description 检查symbol与symbol2之间是否存在循环引用
@@ -9,7 +9,7 @@ import {ShapeType} from "../../data/typesdefine";
 export function is_circular_ref2(symbol: Shape, symbol2: string): boolean {
     let deps: { shape: string, ref: string }[] = [
         ...get_topology_map(symbol),
-        {shape: symbol2, ref: symbol.id}
+        { shape: symbol2, ref: symbol.id }
     ];
     while (deps.length && is_exist_single_stick(deps)) { // 剪枝
         deps = filter_deps(deps, 'shape', 'ref');

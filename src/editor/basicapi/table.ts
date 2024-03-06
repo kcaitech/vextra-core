@@ -1,7 +1,7 @@
 import { Text } from "../../data/text";
 import { TableCell, TableCellType, TableShape } from "../../data/table";
 import { Color, CrdtNumber, FillType, Gradient, Page, ShapeFrame, ShapeType, StrikethroughType, Style, TextAttr, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType } from "../../data/classes";
-import { crdtArrayInsert, crdtArrayRemove, crdtSetAttr, newText } from "./basic";
+import { crdtArrayInsert, crdtArrayRemove, crdtSetAttr, newText, otTextInsert } from "./basic";
 import { deleteText, insertComplexText } from "./text";
 import { uuid } from "../../basic/uuid";
 import { BasicArray } from "../../data/basic";
@@ -32,10 +32,17 @@ export function tableSetCellContentText(cell: TableCell, text: Text | undefined)
         const op = deleteText(cell, cell.text, 0, cell.text.length - 1);
         if (op) ops.push(op);
     }
-    if (text) {
-        const op = insertComplexText(cell, cell.text, text, 0);
-        if (op) ops.push(op);
-    }
+
+    // 多余的段落 // [code]202402261055
+    // if (text) {
+    //     const op = insertComplexText(cell, cell.text, text, 0);
+    //     if (op) ops.push(op);
+    // }
+
+    // 消失的光标
+    const op = otTextInsert(cell, cell.text, 0, "");
+    if (op) ops.push(op);
+
     return ops;
 }
 
