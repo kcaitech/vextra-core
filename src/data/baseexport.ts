@@ -1003,6 +1003,7 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
             });
             return ret;
         })(),
+        isCustomSize: source.isCustomSize,
     }
     // inject code
     if (ctx?.refsymbols) ctx.refsymbols.add(ret.refId);
