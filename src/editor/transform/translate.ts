@@ -185,12 +185,8 @@ export class Transporter extends AsyncApiCaller {
         let cosa = m.m00;
         if (shape.isFlippedVertical) sina = -sina;
         if (shape.isFlippedHorizontal) cosa = -cosa;
-        let rotate = Math.asin(sina); // 奇函数
+        let rotate = Math.asin(sina);
 
-        // 确定角度所在象限
-        // sin(π-a) = sin(a)
-        // sin(-π-a) = sin(a)
-        // asin 返回值范围 -π/2 ~ π/2, 第1、4象限
         if (cosa < 0) {
             if (sina > 0) rotate = Math.PI - rotate;
             else if (sina < 0) rotate = -Math.PI - rotate;
@@ -200,9 +196,6 @@ export class Transporter extends AsyncApiCaller {
         if (!Number.isNaN(rotate)) {
             const r = (rotate / (2 * Math.PI) * 360) % 360;
             if (r !== (shape.rotation ?? 0)) api.shapeModifyRotate(page, shape, r);
-        }
-        else {
-            console.log('rotate is NaN', rotate);
         }
 
         translateTo(api, page, shape, x, y);
