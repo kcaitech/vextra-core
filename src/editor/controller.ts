@@ -241,7 +241,7 @@ export class Controller {
 
                 modifyTransformByEnv(shape, parent);
 
-                api.shapeInsert(page, parent, shape, parent.childs.length);
+                api.shapeInsert(this.__document, page, parent, shape, parent.childs.length);
 
                 newShape = parent.childs[parent.childs.length - 1];
 
@@ -268,7 +268,7 @@ export class Controller {
 
                 modifyTransformByEnv(shape, parent);
 
-                api.shapeInsert(page, parent, shape, parent.childs.length);
+                api.shapeInsert(this.__document, page, parent, shape, parent.childs.length);
                 newShape = parent.childs[parent.childs.length - 1];
 
                 translateTo(api, savepage, newShape, frame.x, frame.y);
@@ -296,7 +296,7 @@ export class Controller {
                     const xy = parent.frame2Root();
                     shape.frame.x -= xy.x;
                     shape.frame.y -= xy.y;
-                    api.shapeInsert(page, parent, shape, parent.childs.length)
+                    api.shapeInsert(this.__document, page, parent, shape, parent.childs.length)
                     newShape = parent.childs.at(-1);
                     this.__repo.transactCtx.fireNotify();
                     status = Status.Fulfilled;
@@ -315,7 +315,7 @@ export class Controller {
                 const xy = parent.frame2Root();
                 shape.frame.x -= xy.x;
                 shape.frame.y -= xy.y;
-                api.shapeInsert(page, parent, shape, parent.childs.length);
+                api.shapeInsert(this.__document, page, parent, shape, parent.childs.length);
                 newShape = parent.childs.at(-1);
                 if (newShape?.type === ShapeType.Artboard) api.setFillColor(page, newShape, 0, new Color(0, 0, 0, 0));
                 this.__repo.transactCtx.fireNotify();
@@ -344,7 +344,7 @@ export class Controller {
                     shape.frame.width = layout.contentWidth;
                     shape.frame.height = layout.contentHeight;
 
-                    api.shapeInsert(page, parent, shape, parent.childs.length)
+                    api.shapeInsert(this.__document, page, parent, shape, parent.childs.length)
                     newShape = parent.childs[parent.childs.length - 1];
 
                     translateTo(api, page, newShape, frame.x, frame.y);
@@ -366,7 +366,7 @@ export class Controller {
                 const xy = parent.frame2Root();
                 shape.frame.x -= xy.x;
                 shape.frame.y -= xy.y;
-                api.shapeInsert(page, parent, shape, parent.childs.length);
+                api.shapeInsert(this.__document, page, parent, shape, parent.childs.length);
                 newShape = parent.childs.at(-1);
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
@@ -384,7 +384,7 @@ export class Controller {
                 const shape = newCutoutShape(name, frame);
                 modifyTransformByEnv(shape, parent);
 
-                api.shapeInsert(page, parent, shape, parent.childs.length);
+                api.shapeInsert(this.__document, page, parent, shape, parent.childs.length);
                 newShape = parent.childs[parent.childs.length - 1];
 
                 translateTo(api, page, newShape, frame.x, frame.y);
@@ -837,7 +837,7 @@ export class Controller {
                 for (let i = 0, len = actions.length; i < len; i++) {
                     const shape = _ss[i];
                     const { parent, index } = actions[i];
-                    api.shapeInsert(page, parent, shape, index);
+                    api.shapeInsert(this.__document, page, parent, shape, index);
                     result.push(parent.childs[index]);
                 }
                 this.__repo.transactCtx.fireNotify();

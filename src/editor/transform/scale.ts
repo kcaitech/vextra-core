@@ -55,7 +55,8 @@ export class Scaler extends AsyncApiCaller {
             }
             this.updateView();
         } catch (error) {
-            this.rollback();
+            console.log('error:', error);
+            this.exception = true;
         }
     }
 }

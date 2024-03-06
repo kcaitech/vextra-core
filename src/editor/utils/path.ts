@@ -646,14 +646,14 @@ function create_path_shape_by_frame(origin: PathShape, frame: ShapeFrame, slice_
     addCommonAttr(__ps)
     return __ps;
 }
-function insert_part_to_doc(page: Page, origin: PathShape, part: PathShape, api: Api) {
+function insert_part_to_doc(document: Document, page: Page, origin: PathShape, part: PathShape, api: Api) {
     const parent: GroupShape = origin.parent as GroupShape;
     if (!parent) {
         console.log('!parent');
         return;
     }
     const index = parent.indexOfChild(origin);
-    return api.shapeInsert(page, parent, part, index);
+    return api.shapeInsert(document, page, parent, part, index);
 }
 function update_points_xy(page: Page, part: PathShape, points: CurvePoint[], api: Api) {
     const __m = part.matrix2Parent();
@@ -731,8 +731,8 @@ export function apart_path_shape(document: Document, page: Page, api: Api, path_
     const __part2 = create_path_shape_by_frame(path_shape, frame2, slice_name);
 
     // 5.把生成的path对象加入文档
-    const part1 = insert_part_to_doc(page, path_shape, __part1, api) as PathShape;
-    const part2 = insert_part_to_doc(page, path_shape, __part2, api) as PathShape;
+    const part1 = insert_part_to_doc(document, page, path_shape, __part1, api) as PathShape;
+    const part2 = insert_part_to_doc(document, page, path_shape, __part2, api) as PathShape;
 
     if (!part1 || !part2) {
         console.log('!part1 || !part2');

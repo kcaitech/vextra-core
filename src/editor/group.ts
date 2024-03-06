@@ -57,7 +57,7 @@ export function group(document: Document, page: Page, shapes: Shape[], gshape: G
     gshape.frame.y = xy.y;
 
     // 4、将GroupShape加入到save parent(层级最高图形的parent)中
-    gshape = api.shapeInsert(page, savep, gshape, saveidx) as GroupShape;
+    gshape = api.shapeInsert(document, page, savep, gshape, saveidx) as GroupShape;
 
     // 2、将shapes里对象从parent中退出
     // 3、将shapes里的对象从原本parent下移入新建的GroupShape

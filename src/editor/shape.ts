@@ -1180,7 +1180,7 @@ export class ShapeEditor {
         let _var: Variable | undefined;
         sym.variables?.forEach((v) => {
             if (v.type === VariableType.Status) {
-                const overrides = findOverride(v.id, OverrideType.Variable, shape.varsContainer);
+                const overrides = findOverride(v.id, OverrideType.Variable, this.__shape.varsContainer || []);
                 const _v = overrides ? overrides[overrides.length - 1] : v;
                 curState.set(v.id, _v.value);
                 curVars.set(v.id, _v);
