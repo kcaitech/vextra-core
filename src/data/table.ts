@@ -149,12 +149,6 @@ export class TableCell extends Shape implements classes.TableCell {
         return this.__cacheData && this.__cacheData.media.base64 || "";
     }
 
-    // text
-    // setFrameSize(w: number, h: number) {
-    //     super.setFrameSize(w, h);
-    //     if (this.text) this.text.updateSize(this.frame.width, this.frame.height)
-    // }
-
     getText(): Text {
         if (!this.text) throw new Error("");
         return this.text;
@@ -231,14 +225,6 @@ export class TableCell extends Shape implements classes.TableCell {
         if (parent) (parent as TableShape).reLayout();
     }
 }
-
-// export function newCell(): TableCell {
-//     return new TableCell(uuid(), "", ShapeType.TableCell, new ShapeFrame(0, 0, 0, 0), new Style(
-//         new BasicArray<Border>(),
-//         new BasicArray<Fill>(),
-//         new BasicArray<Shadow>()
-//     ))
-// }
 
 export class TableShape extends Shape implements classes.TableShape {
 
@@ -358,50 +344,6 @@ export class TableShape extends Shape implements classes.TableShape {
         const rowHBase = this.heightTotalWeights;
         return rowHeights.map((val) => val.value / rowHBase * height);
     }
-    // insertRow(idx: number, weight: number, data: (TableCell | undefined)[]) {
-    //     tableInsertRow(this, idx, weight, data);
-    //     this.__heightTotalWeights += weight;
-    //     this.reLayout();
-    // }
-    // removeRow(idx: number): (TableCell | undefined)[] {
-    //     const weight = this.rowHeights[idx];
-    //     const ret = tableRemoveRow(this, idx);
-    //     this.__heightTotalWeights -= weight.value;
-    //     this.reLayout();
-    //     return ret;
-    // }
-    // insertCol(idx: number, weight: number, data: (TableCell | undefined)[]) {
-    //     tableInsertCol(this, idx, weight, data);
-    //     this.__widthTotalWeights += weight;
-    //     this.reLayout();
-    // }
-    // removeCol(idx: number): (TableCell | undefined)[] {
-    //     const weight = this.colWidths[idx];
-    //     const ret = tableRemoveCol(this, idx);
-    //     this.__widthTotalWeights -= weight.value;
-    //     this.reLayout();
-    //     return ret;
-    // }
-    // setColWidth(idx: number, weight: number) {
-    //     const colWidths = this.colWidths;
-    //     const origin = colWidths[idx].value;
-    //     colWidths[idx].value = weight;
-    //     this.__widthTotalWeights -= origin;
-    //     this.__widthTotalWeights += weight;
-    //     this.reLayout();
-    // }
-    // setRowHeight(idx: number, weight: number) {
-    //     const rowHeights = this.rowHeights;
-    //     const origin = rowHeights[idx].value;
-    //     rowHeights[idx].value = weight;
-    //     this.__heightTotalWeights -= origin;
-    //     this.__heightTotalWeights += weight;
-    //     this.reLayout();
-    // }
-    // setFrameSize(w: number, h: number) {
-    //     super.setFrameSize(w, h);
-    //     this.reLayout();
-    // }
 
     onRollback(from: string): void {
         if (from !== "composingInput") {
@@ -481,28 +423,12 @@ export class TableShape extends Shape implements classes.TableShape {
         return getTableCells(this, rowStart, rowEnd, colStart, colEnd);
     }
 
-    // todo 错的。不可以，除非cell是不可删除的才可以。这里也要跟shape一样的undo、redo
-    // _initCell(cellId: string) {
-    //     const cell = new TableCell(new BasicArray<number>([], 0),
-    //         cellId,
-    //         "",
-    //         ShapeType.TableCell,
-    //         new ShapeFrame(0, 0, 0, 0),
-    //         new Style(new BasicArray(), new BasicArray(), new BasicArray()));
-    //     this.cells.set(cellId, cell);
-    //     return cell;
-    // }
-
     getCellAt(rowIdx: number, colIdx: number): (TableCell | undefined) {
         if (rowIdx < 0 || colIdx < 0 || rowIdx >= this.rowCount || colIdx >= this.colCount) {
             throw new Error("cell index outof range: " + rowIdx + " " + colIdx)
         }
         const cellId = this.rowHeights[rowIdx].id + "," + this.colWidths[colIdx].id;
-        let cell = this.cells.get(cellId);
-        // if (!cell && initCell) {
-        //     cell = this._initCell(cellId);
-        // }
-        return cell;
+        return this.cells.get(cellId);
     }
 
     /**
