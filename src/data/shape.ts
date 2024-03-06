@@ -159,30 +159,6 @@ export class Shape extends Basic implements classes.Shape {
         return false;
     }
 
-    /**
-     * 不包含自己（如symbolref, symbol）
-     */
-    get varsContainer(): SymbolShape[] {
-        if (this.isVirtualShape) {
-            // 不会走到这里
-            throw new Error('');
-        }
-        // this 有可能是ref symbol呢
-        const varsContainer = [];
-        let p: Shape | undefined = this.parent;
-        while (p) {
-            if (p instanceof SymbolShape) {
-                varsContainer.push(p);
-                if (p.parent instanceof SymbolShape) {
-                    varsContainer.push(p.parent);
-                }
-                break; // 不会再有的了
-            }
-            p = p.parent;
-        }
-        return varsContainer.reverse();
-    }
-
     getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
         return new Path();
     }
