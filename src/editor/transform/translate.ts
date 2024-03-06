@@ -46,7 +46,7 @@ export class Transporter extends AsyncApiCaller {
             for (let i = 0, len = actions.length; i < len; i++) {
                 const shape = _ss[i];
                 const { parent, index } = actions[i];
-                this.api.shapeInsert(this.page, parent, shape, index);
+                this.api.shapeInsert(this.__document, this.page, parent, shape, index);
                 result.push(parent.childs[index]);
             }
             this.updateView();
