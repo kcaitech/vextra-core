@@ -13,18 +13,17 @@ import {
 } from "../data/shape";
 import { Border, BorderPosition, BorderStyle, Fill, MarkerType, Shadow } from "../data/style";
 import { expand, expandTo, translate, translateTo } from "./frame";
-import { BoolOp, ContextSettings, CurvePoint, ExportFormat } from "../data/baseclasses";
+import { BoolOp, CurvePoint, ExportFormat } from "../data/baseclasses";
 import { Artboard } from "../data/artboard";
 import { Page } from "../data/page";
 import { CoopRepository } from "./coop/cooprepo";
-import { CurveMode, OverrideType, ShadowPosition, ExportFileFormat, ExportFormatNameingScheme, BlendMode, ExportOptions } from "../data/typesdefine";
+import { CurveMode, OverrideType, ShadowPosition, ExportFileFormat, ExportFormatNameingScheme, ExportOptions } from "../data/typesdefine";
 import { Api } from "./coop/recordapi";
-import { IImportContext, importBorder, importColor, importContextSettings, importCurvePoint, importFill, importGradient, importShadow, importStyle, importTableShape, importText } from "../data/baseimport";
+import { importCurvePoint } from "../data/baseimport";
 import { v4 } from "uuid";
 import { ContactShape } from "../data/contact";
 import { Document, SymbolRefShape, Text } from "../data/classes";
 import { uuid } from "../basic/uuid";
-import { BasicArray } from "../data/basic";
 import {
     after_remove,
     clear_binds_effect,
@@ -37,7 +36,7 @@ import { newText2 } from "./creator";
 import { _clip, _typing_modify, get_points_for_init, modify_points_xy, update_frame_by_points, update_path_shape_frame } from "./utils/path";
 import { Color } from "../data/color";
 import { adapt_for_artboard } from "./utils/common";
-import { ShapeView, SymbolRefView, SymbolView, adapt2Shape, findOverride, findVar, isAdaptedShape } from "../dataview";
+import { ShapeView, SymbolView, adapt2Shape, findOverride } from "../dataview";
 import { is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union, modify_variable, modify_variable_with_api, override_variable, shape4border, shape4contextSettings, shape4exportOptions, shape4fill, shape4shadow } from "./symbol";
 
 export class ShapeEditor {

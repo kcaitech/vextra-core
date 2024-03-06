@@ -185,19 +185,17 @@ class CmdSync {
                     case OpType.CrdtTree:
                         {
                             const record = op as ArrayMoveOpRecord | TreeMoveOpRecord;
-                            const node = repotree.get2(record.path.concat(record.id));
-                            if (node) {
-                                node.roll2Version(recoveryCmd.baseVer, SNumber.MAX_SAFE_INTEGER)
-                            }
+                            const node = repotree.get3(record.path.concat(record.id));
+                            node.baseVer = recoveryCmd.baseVer;
+                            node.roll2Version(recoveryCmd.baseVer, SNumber.MAX_SAFE_INTEGER)
                         }
                         break;
                     case OpType.Idset:
                         {
                             const record = op as IdOpRecord;
-                            const node = repotree.get2(record.path);
-                            if (node) {
-                                node.roll2Version(recoveryCmd.baseVer, SNumber.MAX_SAFE_INTEGER)
-                            }
+                            const node = repotree.get3(record.path);
+                            node.baseVer = recoveryCmd.baseVer;
+                            node.roll2Version(recoveryCmd.baseVer, SNumber.MAX_SAFE_INTEGER)
                         }
                         break;
                 }

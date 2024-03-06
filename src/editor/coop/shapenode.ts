@@ -137,9 +137,10 @@ export class CrdtShapeRepoNode extends RepoNode {
                 if (idx < 0) throw new Error();
                 op.cmd.ops.splice(idx, 1, record);
             }
-            if (op.cmd.isRecovery) {
-                this.baseVer = op.cmd.baseVer;
-            }
+            // if (op.cmd.isRecovery) { // shapenode都作用于page, 这里更新baseVer只能是isRecovery了page!
+            //     // this.baseVer = op.cmd.baseVer;
+            //     // 应该更新给child node
+            // }
         }
         this.ops.push(...ops);
 

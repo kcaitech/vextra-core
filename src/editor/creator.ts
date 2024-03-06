@@ -102,7 +102,7 @@ export function newGroupShape(name: string, style?: Style): GroupShape {
  * @description 给未进入文档(guard之前)的图形设置frame
  */
 export function initFrame(shape: Shape, frame: ShapeFrame) {
-    shape.frame = importShapeFrame(exportShapeFrame(frame));
+    shape.frame = importShapeFrame((frame));
 }
 
 export function newSolidColorFill(): Fill {

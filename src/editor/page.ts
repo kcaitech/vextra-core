@@ -39,8 +39,6 @@ import {
     PathShape,
     Style,
     SymbolRefShape,
-    TableShape,
-    Text,
     Stop,
     Gradient
 } from "../data/classes";
@@ -468,7 +466,16 @@ export class PageEditor {
         const shape0 = shapes[0];
         const frame = importShapeFrame(shape0.frame);
 
+<<<<<<< HEAD
         const replace = shapes.length === 1 && (shape0 instanceof GroupShape || shape0 instanceof Artboard) && !shape0.fixedRadius;
+=======
+        const replace = shapes.length === 1 &&
+            ((shape0 instanceof GroupShape && !shape0.isBoolOpShape) ||
+                shape0 instanceof Artboard
+            ) &&
+            !shape0.fixedRadius;
+
+>>>>>>> 7fc9df9b0d966c5255a94f8914c18ef0bd83deb7
         const style = replace ? importStyle((shape0.style)) : undefined;
         const symbolShape = newSymbolShape(replace ? shape0.name : (name ?? shape0.name), frame, style);
         const api = this.__repo.start("makeSymbol", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
@@ -624,6 +631,14 @@ export class PageEditor {
             }
         }
 
+        const clearBindvars = (shape: types.Shape) => {
+            if (shape.varbinds) shape.varbinds = undefined;
+            const g = shape as types.GroupShape;
+            if (Array.isArray(g.childs)) {
+                g.childs.forEach((c) => clearBindvars(c));
+            }
+        }
+
         const transferVars = (rootRef: SymbolRefShape, g: { childs: types.Shape[] }) => {
             const overrides = rootRef.overrides;
             const vars = rootRef.variables;
@@ -690,34 +705,26 @@ export class PageEditor {
                 // todo 失去变量的情况下保持当前状态
                 continue;
             }
-            const symmgr = shape.getSymbolMgr();
-            const symbol = symmgr?.getSync(shape.refId);
-            if (!symbol) {
-                return_shapes.push(shape);
-                continue;
-            }
-            const { x, y, width, height } = shape.frame;
-            const tmpFrame = new ShapeFrame(x, y, width, height);
-            const sym = shape.symData;
-            if (!sym) continue;
-            let style: any = sym.style;
+
             const _this = this;
             const ctx: IImportContext = new class implements IImportContext {
                 document: Document = _this.__document;
                 curPage: string = _this.__page.id
             };
-            if (style) {
-                style = importStyle(exportStyle(style), ctx);
-            }
-            const tmpArtboard: Artboard = newArtboard(shape.name, tmpFrame, style);
-            initFrame(tmpArtboard, shape.frame);
+            const { x, y, width, height } = shape.frame;
+            const tmpArtboard: Artboard = newArtboard(shape.name, new ShapeFrame(x, y, width, height));
+            // initFrame(tmpArtboard, shape.frame);
             tmpArtboard.childs = shape.naviChilds! as BasicArray<Shape>;
             tmpArtboard.varbinds = shape.varbinds;
+            tmpArtboard.style = shape.style;
+            tmpArtboard.rotation = shape.rotation;
+            tmpArtboard.isFlippedHorizontal = shape.isFlippedHorizontal;
+            tmpArtboard.isFlippedVertical = shape.isFlippedVertical;
             const symbolData = exportArtboard(tmpArtboard); // todo 如果symbol只有一个child时
 
             // 遍历symbolData,如有symbolref,则查找根shape是否有对应override的变量,如有则存到symbolref内
             transferVars(shape, symbolData);
-
+            clearBindvars(symbolData);
             replaceId(symbolData);
             const parent = shape.parent;
             if (!parent) {
@@ -1721,15 +1728,15 @@ export class PageEditor {
                         return 0;
                     }
                 })
-                new_gradient.stops.forEach((v, i) => { 
+                new_gradient.stops.forEach((v, i) => {
                     const idx = new BasicArray<number>();
                     idx.push(i);
                     v.crdtidx = idx;
-                 })
+                })
                 const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
                 const shape = shape4fill(api, this.__page, target);
                 console.log('stops:', new_gradient.stops);
-                
+
                 f(this.__page, shape, index, new_gradient);
             }
             this.__repo.commit();
@@ -1784,11 +1791,11 @@ export class PageEditor {
                         elipseLength = 1;
                     }
                     const new_gradient = new Gradient(from as Point2D, to as Point2D, value, stops, elipseLength);
-                    new_gradient.stops.forEach((v, i) => { 
+                    new_gradient.stops.forEach((v, i) => {
                         const idx = new BasicArray<number>();
                         idx.push(i);
                         v.crdtidx = idx;
-                     })
+                    })
                     const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
                     f(this.__page, s, index, new_gradient);
                 }

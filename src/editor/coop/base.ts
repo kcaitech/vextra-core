@@ -5,7 +5,7 @@ import { SNumber } from "../../coop/client/snumber";
 
 export abstract class RepoNode {
 
-    baseVer: string = ""; // 些节点创建时的version: 主要是insert？
+
     type: OpType; // 一个节点仅可能接收一种类型的op
     ops: OpItem[] = []; // 与服务端保持一致的op
     localops: OpItem[] = []; // 本地op, 本地op的order一定是在ops之后的
@@ -32,6 +32,7 @@ export abstract class RepoNode {
 }
 
 export class RepoNodePath {
+    baseVer: string = ""; // 些节点创建时的version: 主要是insert？
     node: RepoNode | undefined;
     childs: Map<string, RepoNodePath> = new Map();
 
@@ -63,6 +64,16 @@ export class RepoNodePath {
         return child && child.get2(path.slice(1));
     }
 
+    get3(path: string[]): RepoNodePath {
+        if (path.length === 0) return this;
+        let child = this.childs.get(path[0]);
+        if (!child) {
+            child = new RepoNodePath();
+            this.childs.set(path[0], child);
+        }
+        return child.get3(path.slice(1));
+    }
+
     undoLocals() {
         const roll = (node: RepoNodePath) => {
             node.node?.undoLocals();
@@ -81,8 +92,8 @@ export class RepoNodePath {
     // 将数据前进到特定版本
     roll2Version(baseVer: string, version: string) {
         const roll = (node: RepoNodePath, baseVer: string) => {
+            baseVer = SNumber.comp(baseVer, node.baseVer) < 0 ? node.baseVer : baseVer;
             if (node.node) {
-                baseVer = SNumber.comp(baseVer, node.node.baseVer) < 0 ? node.node.baseVer : baseVer;
                 node.node.roll2Version(baseVer, version);
             }
             node.childs.forEach((n) => roll(n, baseVer));

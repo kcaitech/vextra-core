@@ -151,9 +151,9 @@ export class CrdtArrayReopNode extends RepoNode {
                 if (idx < 0) throw new Error();
                 op.cmd.ops.splice(idx, 1, record);
             }
-            if (op.cmd.isRecovery) {
-                this.baseVer = op.cmd.baseVer;
-            }
+            // if (op.cmd.isRecovery) {
+            //     this.baseVer = op.cmd.baseVer;
+            // }
         }
         this.ops.push(...ops);
 

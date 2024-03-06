@@ -143,12 +143,12 @@ export class CrdtIdRepoNode extends RepoNode {
         this.saveOrigin(target, ops);
         this.ops.push(...ops);
 
-        for (let i = 0; i < ops.length; ++i) {
-            const op = ops[i];
-            if (op.cmd.isRecovery) {
-                this.baseVer = op.cmd.baseVer;
-            }
-        }
+        // for (let i = 0; i < ops.length; ++i) {
+        //     const op = ops[i];
+        //     if (op.cmd.isRecovery) {
+        //         this.baseVer = op.cmd.baseVer;
+        //     }
+        // }
 
         if (!target) {
             this.undoLocals();
