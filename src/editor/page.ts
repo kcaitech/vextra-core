@@ -18,6 +18,7 @@ import {
     initFrame,
     newArrowShape,
     newArtboard,
+    newArtboard2,
     newGroupShape,
     newLineShape,
     newOvalShape,
@@ -86,6 +87,7 @@ import { modify_shapes_height, modify_shapes_width } from "./utils/common";
 import { CoopRepository } from "./coop/cooprepo";
 import { Api } from "./coop/recordapi";
 import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
+import { unable_to_migrate } from "./utils/migrate";
 import { PageView, ShapeView, SymbolView, TableCellView, TableView, TextShapeView, adapt2Shape } from "../dataview";
 
 // 用于批量操作的单个操作类型
@@ -464,10 +466,14 @@ export class PageEditor {
         const shape0 = shapes[0];
         const frame = importShapeFrame(shape0.frame);
 
-        const replace = shapes.length === 1 && (shape0 instanceof GroupShape || shape0 instanceof Artboard) && !shape0.fixedRadius;
+        const replace = shapes.length === 1 &&
+            ((shape0 instanceof GroupShape && !shape0.isBoolOpShape) ||
+                shape0 instanceof Artboard
+            ) &&
+            !shape0.fixedRadius;
 
         const style = replace ? importStyle((shape0.style)) : undefined;
-        const symbolShape = newSymbolShape(name ?? shape0.name, frame, style);
+        const symbolShape = newSymbolShape(replace ? shape0.name : (name ?? shape0.name), frame, style);
         const api = this.__repo.start("makeSymbol", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
             const state = {} as SelectionState;
             if (!isUndo) state.shapes = [symbolShape.id];
@@ -707,6 +713,9 @@ export class PageEditor {
             tmpArtboard.childs = shape.naviChilds! as BasicArray<Shape>;
             tmpArtboard.varbinds = shape.varbinds;
             tmpArtboard.style = shape.style;
+            tmpArtboard.rotation = shape.rotation;
+            tmpArtboard.isFlippedHorizontal = shape.isFlippedHorizontal;
+            tmpArtboard.isFlippedVertical = shape.isFlippedVertical;
             const symbolData = exportArtboard(tmpArtboard); // todo 如果symbol只有一个child时
 
             // 遍历symbolData,如有symbolref,则查找根shape是否有对应override的变量,如有则存到symbolref内
@@ -1189,6 +1198,10 @@ export class PageEditor {
             default:
                 return newRectShape(name, frame);
         }
+    }
+
+    createArtboard(name: string, frame: ShapeFrame) { // todo 新建图层存在代码冗余
+        return newArtboard2(name, frame)
     }
 
     shapesModifyPointRadius(shapes: Shape[], indexes: number[], val: number) {
@@ -1711,15 +1724,15 @@ export class PageEditor {
                         return 0;
                     }
                 })
-                new_gradient.stops.forEach((v, i) => { 
+                new_gradient.stops.forEach((v, i) => {
                     const idx = new BasicArray<number>();
                     idx.push(i);
                     v.crdtidx = idx;
-                 })
+                })
                 const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
                 const shape = shape4fill(api, this.__page, target);
                 console.log('stops:', new_gradient.stops);
-                
+
                 f(this.__page, shape, index, new_gradient);
             }
             this.__repo.commit();
@@ -1774,11 +1787,11 @@ export class PageEditor {
                         elipseLength = 1;
                     }
                     const new_gradient = new Gradient(from as Point2D, to as Point2D, value, stops, elipseLength);
-                    new_gradient.stops.forEach((v, i) => { 
+                    new_gradient.stops.forEach((v, i) => {
                         const idx = new BasicArray<number>();
                         idx.push(i);
                         v.crdtidx = idx;
-                     })
+                    })
                     const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
                     f(this.__page, s, index, new_gradient);
                 }
@@ -2515,19 +2528,8 @@ export class PageEditor {
                         continue;
                     }
 
-                    if (is_part_of_symbol(host) && is_exist_invalid_shape2([item])) {
+                    if (unable_to_migrate(host, item)) {
                         continue;
-                    }
-
-                    const children = item.naviChilds || (item as any).childs;
-                    if (children?.length) {
-                        const tree = item instanceof SymbolRefShape ? item.symData : item;
-                        if (!tree) {
-                            continue;
-                        }
-                        if (is_circular_ref2(tree, host.id)) {
-                            continue;
-                        }
                     }
 
                     const beforeXY = item.frame2Root();

@@ -7,44 +7,39 @@ import { is_exist_invalid_shape2, is_part_of_symbol } from "../symbol";
 import { Document } from "../../data/document";
 
 /**
- * @description 检查是否满足迁移条件
- * @param target 计划迁移到的目标
- * @param wander 迁移对象
- * @returns 0 满足迁移条件
- *          1 不满足：只有组件可以迁移到union里
- *          2 target、wonder都为组件且target不为union
- *          3 无法通过循环引用检查
- *          4 是实例组成部分
- *          5 不被允许的图形类型
- *          999 其他
+ * @description 图层迁移是一个危险程度很高的行为，很有可能造成父子循环或引用循环，从而导致应用卡死！因此函数务必要非常可靠，同时还要确保入口尽量单一，便于维护。
  */
-export function unable_to_migrate(target: Shape, wander: Shape): number {
-    if (target instanceof SymbolUnionShape) {
-        // if ((target instanceof SymbolUnionShape) && !is_symbol_but_not_union(wander)) {
+export function unable_to_migrate(targetEnv: Shape, wander: Shape) {
+    if (targetEnv.isVirtualShape) {
         return 1;
     }
-    if (is_part_of_symbol(target)) {
-        if (is_exist_invalid_shape2([wander])) return 5;
-        if (target.type === ShapeType.Symbol) {
-            const children = wander.naviChilds || (wander as GroupShape).childs;
-            if (children?.length) {
-                const tree = wander instanceof SymbolRefShape ? wander.symData : wander;
-                if (!tree) {
-                    return 999;
-                }
-                if (is_circular_ref2(tree, target.id)) {
-                    return 3;
-                }
+
+    if (targetEnv.type === ShapeType.SymbolUnion) {
+        return 2;
+    }
+
+    let p: Shape | undefined = targetEnv;
+    while (p && p.type !== ShapeType.Symbol) {
+        p = p.parent;
+    }
+
+    if (p) {
+        if (is_exist_invalid_shape2([wander])) {
+            return 3;
+        }
+
+        const children = wander.naviChilds || (wander as any).childs;
+        if (children?.length) {
+            const tree = wander instanceof SymbolRefShape ? wander.symData : wander;
+            if (!tree) {
+                return 4;
+            }
+            if (is_circular_ref2(tree, p.id)) {
+                return 5;
             }
         }
-        if (wander.type === ShapeType.Symbol) {
-            return 2;
-        }
-    } else {
-        if (target.isVirtualShape) {
-            return 4;
-        }
     }
+
     return 0;
 }
 
