@@ -406,8 +406,8 @@ export function modify_variable(document: Document, page: Page, view: ShapeView,
     if (p instanceof SymbolRefShape) { // p不可以修改
         const overrides = p.overrides;
         if (!overrides) throw new Error(); // 废var?
-        for (let k in overrides) {
-            if (overrides.get(k) === _var.id) {
+        for (let [k, v] of overrides) {
+            if (v === _var.id) {
                 override_id = k;
                 break;
             }

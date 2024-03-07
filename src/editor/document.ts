@@ -17,6 +17,10 @@ export class DocEditor {
     private __repo: CoopRepository;
     private __document: Document;
     constructor(document: Document, repo: CoopRepository) {
+        // check
+        if (!(repo instanceof CoopRepository)) throw new Error("repo wrong");
+        if (!(document instanceof Document)) throw new Error("document wrong");
+
         this.__repo = repo;
         this.__document = document;
     }

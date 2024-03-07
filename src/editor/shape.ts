@@ -60,6 +60,10 @@ export class ShapeEditor {
         this.__document = document;
     }
 
+    get view(): ShapeView {
+        return this.__shape;
+    }
+
     get shape(): Shape {
         return adapt2Shape(this.__shape);
     }
