@@ -277,6 +277,14 @@ export class PageEditor {
     private __document: Document;
 
     constructor(repo: CoopRepository, page: Page, document: Document) {
+        // check
+        if (!(page instanceof Page)) {
+            console.error("page wrong", page ? JSON.stringify(page, (k, v) => k.startsWith('__')) : page)
+            throw new Error("page wrong");
+        }
+        if (!(repo instanceof CoopRepository)) throw new Error("repo wrong");
+        if (!(document instanceof Document)) throw new Error("document wrong");
+
         this.__repo = repo;
         this.__page = page;
         this.__document = document;
