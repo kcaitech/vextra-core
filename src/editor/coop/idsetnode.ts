@@ -45,7 +45,7 @@ function apply(document: Document, target: Object, op: IdOp): IdOpRecord {
         }
     }
 
-    if (typeof value === 'object' && (!(value instanceof Basic))) throw new Error("need import: " + value.typeId);
+    if (typeof value === 'object' && (!(value instanceof Basic))) throw new Error("need import: " + value?.typeId);
     let origin;
     if (target instanceof Map) {
         origin = target.get(op.id);
