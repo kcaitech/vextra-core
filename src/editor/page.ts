@@ -2422,7 +2422,7 @@ export class PageEditor {
             for (let i = 0; i < shapes.length; i++) {
                 let shape: ShapeView = shapes[i];
                 if (!shape) continue;
-                const isVisible = !shape.data.isVisible;
+                const isVisible = !shape.isVisible();
                 if (modify_variable_with_api(api, this.__page, shape, VariableType.Visible, OverrideType.Visible, isVisible)) {
                     continue;
                 }
@@ -2444,7 +2444,7 @@ export class PageEditor {
         try {
             for (let i = 0; i < shapes.length; i++) {
                 let shape: ShapeView | undefined = shapes[i];
-                const isLocked = !shape.data.isLocked;
+                const isLocked = !shape.isLocked();
                 if (modify_variable_with_api(api, this.__page, shape, VariableType.Lock, OverrideType.Lock, isLocked)) {
                     continue;
                 }
