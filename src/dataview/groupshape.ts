@@ -124,7 +124,7 @@ function render2path(shape: ShapeView): Path {
 
     const child0 = shape.m_children[fVisibleIdx] as ShapeView;
     const frame0 = child0.frame;
-    const path0 = render2path(child0).clone();
+    const path0 = render2path(child0);
 
     if (child0.isNoTransform()) {
         path0.translate(frame0.x, frame0.y);
