@@ -335,12 +335,12 @@ export class ShapeView extends DataView {
         return this.m_data.frameType;
     }
 
-    getPage(): ShapeView {
+    getPage(): ShapeView | undefined {
         let p: ShapeView = this;
-        while (p.m_parent) {
+        while (p.type !== ShapeType.Page && p.m_parent) {
             p = p.m_parent as ShapeView;
         }
-        return p;
+        return p.type == ShapeType.Page ? p : undefined;
     }
 
     get varbinds() {
