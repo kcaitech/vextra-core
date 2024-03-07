@@ -1,6 +1,6 @@
 import { Grid } from "../basic/grid";
 import { ShapeFrame } from "./shape";
-import { TableCell, TableShape } from "./table";
+import { TableShape } from "./table";
 
 export type TableGridItem = { index: { row: number, col: number }, span: { row: number, col: number }, frame: ShapeFrame }
 
@@ -38,7 +38,7 @@ export class LayoutItem {
 export function layoutTable(table: TableShape): TableLayout {
     const frame = table.frame;
     const grid: Grid<TableGridItem> = new Grid<TableGridItem>(table.rowHeights.length, table.colWidths.length);
-    const cells = table.cells;
+    // const cells = table.cells;
 
     const width = frame.width;
     const height = frame.height;
@@ -53,8 +53,8 @@ export function layoutTable(table: TableShape): TableLayout {
         const rowHeight = rowHeights[ri].value / rowHBase * height;
 
         for (let ci = 0, colLen = colWidths.length, colX = 0; ci < colLen; ++ci, ++celli) {
-            const cellid = rowHeights[ri].id + ',' + colWidths[ci].id;
-            const cell = cells.get(cellid);
+            // const cellid = rowHeights[ri].id + ',' + colWidths[ci].id;
+            const cell = table.getCellAt(ri, ci); // cells.get(cellid);
             const visible = !grid.get(ri, ci);
 
             const colWidth = colWidths[ci].value / colWBase * width;
