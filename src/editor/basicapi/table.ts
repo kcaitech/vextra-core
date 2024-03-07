@@ -1,6 +1,21 @@
 import { Text } from "../../data/text";
 import { TableCell, TableCellType, TableShape } from "../../data/table";
-import { Color, CrdtNumber, FillType, Gradient, Page, ShapeFrame, ShapeType, StrikethroughType, Style, TextAttr, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType } from "../../data/classes";
+import {
+    Color,
+    CrdtNumber,
+    FillType,
+    Gradient,
+    Page,
+    ShapeFrame,
+    ShapeType,
+    StrikethroughType,
+    Style,
+    TextAttr,
+    TextHorAlign,
+    TextTransformType,
+    TextVerAlign,
+    UnderlineType
+} from "../../data/classes";
 import { crdtArrayInsert, crdtArrayRemove, crdtSetAttr, newText, otTextInsert } from "./basic";
 import { deleteText, insertComplexText, insertSimpleText } from "./text";
 import { uuid } from "../../basic/uuid";
@@ -27,7 +42,7 @@ export function tableSetCellContentType(cell: TableCell, contentType: TableCellT
 export function tableSetCellContentText(cell: TableCell, text: Text | undefined) {
     // 不可以重置text
     if (!cell.text) {
-        cell.text = text || newText("");
+        cell.text = newText("");
     }
     let ops = [];
     if (cell.text.length > 1) {
@@ -35,15 +50,15 @@ export function tableSetCellContentText(cell: TableCell, text: Text | undefined)
         if (op) ops.push(op);
     }
 
-    // if (text) {
-    //     const op = insertComplexText(cell, cell.text, text, 0);
-    //     if (op) ops.push(op);
-    // }
-
     if (text) {
-        const op = insertSimpleText(cell, cell.text, '', 0);
+        const op = insertComplexText(cell, cell.text, text, 0);
         if (op) ops.push(op);
     }
+
+    // if (text) {
+    //     const op = insertSimpleText(cell, cell.text, '', 0);
+    //     if (op) ops.push(op);
+    // }
 
     return ops;
 }
@@ -109,58 +124,72 @@ export function tableModifyTextColor(table: TableShape, color: Color | undefined
     if (!table.textAttr) table.textAttr = new TextAttr();
     return crdtSetAttr(table.textAttr, "color", color);
 }
+
 export function tableModifyTextHighlightColor(table: TableShape, color: Color | undefined) {
     if (!table.textAttr) table.textAttr = new TextAttr();
     return crdtSetAttr(table.textAttr, "highlight", color);
 }
+
 export function tableModifyTextFontName(table: TableShape, fontName: string | undefined) {
     if (!table.textAttr) table.textAttr = new TextAttr();
     return crdtSetAttr(table.textAttr, "fontName", fontName);
 }
+
 export function tableModifyTextFontSize(table: TableShape, fontSize: number) {
     if (!table.textAttr) table.textAttr = new TextAttr();
     return crdtSetAttr(table.textAttr, "fontSize", fontSize);
 }
+
 export function tableModifyTextVerAlign(table: TableShape, verAlign: TextVerAlign | undefined) {
     if (!table.textAttr) table.textAttr = new TextAttr();
     return crdtSetAttr(table.textAttr, "verAlign", verAlign);
 }
+
 export function tableModifyTextHorAlign(table: TableShape, horAlign: TextHorAlign) {
     if (!table.textAttr) table.textAttr = new TextAttr();
     return crdtSetAttr(table.textAttr, "alignment", horAlign);
 }
+
 export function tableModifyTextMinLineHeight(table: TableShape, lineHeight: number) {
     if (!table.textAttr) table.textAttr = new TextAttr();
     return crdtSetAttr(table.textAttr, "minimumLineHeight", lineHeight);
 }
+
 export function tableModifyTextMaxLineHeight(table: TableShape, lineHeight: number) {
     if (!table.textAttr) table.textAttr = new TextAttr();
     return crdtSetAttr(table.textAttr, "maximumLineHeight", lineHeight);
 }
+
 export function tableModifyTextKerning(table: TableShape, kerning: number) {
     if (!table.textAttr) table.textAttr = new TextAttr();
     return crdtSetAttr(table.textAttr, "kerning", kerning);
 }
+
 export function tableModifyTextParaSpacing(table: TableShape, paraSpacing: number) {
     if (!table.textAttr) table.textAttr = new TextAttr();
     return crdtSetAttr(table.textAttr, "paraSpacing", paraSpacing);
 }
+
 export function tableModifyTextUnderline(table: TableShape, underline: UnderlineType | undefined) {
     if (!table.textAttr) table.textAttr = new TextAttr();
     return crdtSetAttr(table.textAttr, "underline", underline);
 }
+
 export function tableModifyTextStrikethrough(table: TableShape, strikethrough: StrikethroughType | undefined) {
     if (!table.textAttr) table.textAttr = new TextAttr();
     return crdtSetAttr(table.textAttr, "strikethrough", strikethrough);
 }
+
 export function tableModifyTextBold(table: TableShape, bold: boolean) {
     if (!table.textAttr) table.textAttr = new TextAttr();
     return crdtSetAttr(table.textAttr, "bold", bold);
 }
+
 export function tableModifyTextItalic(table: TableShape, italic: boolean) {
     if (!table.textAttr) table.textAttr = new TextAttr();
     return crdtSetAttr(table.textAttr, "italic", italic);
 }
+
 export function tableModifyTextTransform(table: TableShape, transform: TextTransformType | undefined) {
     if (!table.textAttr) table.textAttr = new TextAttr();
     return crdtSetAttr(table.textAttr, "transform", transform);
@@ -170,6 +199,7 @@ export function tableModifyTextFillType(table: TableShape, filltype: FillType | 
     if (!table.textAttr) table.textAttr = new TextAttr();
     return crdtSetAttr(table.textAttr, "filltype", filltype);
 }
+
 export function tableModifyTextGradient(table: TableShape, gradient: Gradient | undefined) {
     if (!table.textAttr) table.textAttr = new TextAttr();
     return crdtSetAttr(table.textAttr, "gradient", gradient);
