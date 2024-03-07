@@ -125,7 +125,7 @@ export class TextShapeEditor extends ShapeEditor {
         const api = this.__repo.start("deleteText");
         try {
             const shape = this.shape4edit(api);
-            const deleted = api.deleteText(this.__page, shape, index, count);
+            api.deleteText(this.__page, shape, index, count);
             // count = deleted ? deleted.length : count;
             if (count <= 0) {
                 this.__repo.rollback();
