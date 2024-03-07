@@ -1,13 +1,13 @@
-import { CoopRepository } from "../../editor/coop/cooprepo";
+import { CoopRepository } from "../coop/cooprepo";
 import { AsyncApiCaller } from "./handler";
-import { PageView } from "../../dataview/page";
+import { PageView } from "../../dataview";
 import { Document } from "../../data/document";
 import { ShapeView, adapt2Shape } from "../../dataview";
 import { GroupShape, Shape } from "../../data/shape";
-import { translateTo } from "../../editor/frame";
-import { after_migrate, unable_to_migrate } from "../../editor/utils/migrate";
-import { get_state_name, is_state } from "../../editor/symbol";
-import { Api } from "../../editor/coop/recordapi";
+import { translateTo } from "../frame";
+import { after_migrate, unable_to_migrate } from "../utils/migrate";
+import { get_state_name, is_state } from "../symbol";
+import { Api } from "../coop/recordapi";
 import { Page } from "../../data/page";
 import { ISave4Restore, LocalCmd, SelectionState } from "editor/coop/localcmd";
 
@@ -25,12 +25,12 @@ export class Transporter extends AsyncApiCaller {
     shapes: (Shape | ShapeView)[] = [];
 
     constructor(repo: CoopRepository, document: Document, page: PageView, shapes: ShapeView[]) {
-        super(repo, document, page, 'translate')
+        super(repo, document, page)
         this.shapes = shapes;
     }
 
-    start(desc: string) {
-        return this.__repo.start(desc, (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+    start() {
+        return this.__repo.start('sync-translate', (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
             const state = {} as SelectionState;
             if (!isUndo) state.shapes = this.shapes.map(i => i.id);
             else state.shapes = cmd.saveselection?.shapes || [];
@@ -38,7 +38,7 @@ export class Transporter extends AsyncApiCaller {
         });
     }
 
-    excute(translateUnits: TranslateUnit[]) {
+    execute(translateUnits: TranslateUnit[]) {
         try {
             for (let i = 0; i < translateUnits.length; i++) {
                 const unit = translateUnits[i];
