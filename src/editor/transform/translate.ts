@@ -9,6 +9,7 @@ import { after_migrate, unable_to_migrate } from "../../editor/utils/migrate";
 import { get_state_name, is_state } from "../../editor/symbol";
 import { Api } from "../../editor/coop/recordapi";
 import { Page } from "../../data/page";
+import { ISave4Restore, LocalCmd, SelectionState } from "editor/coop/localcmd";
 
 export type TranslateUnit = {
     shape: ShapeView;
@@ -21,8 +22,20 @@ export class Transporter extends AsyncApiCaller {
     except_envs: ShapeView[] = [];
     current_env_id: string = '';
 
-    constructor(repo: CoopRepository, document: Document, page: PageView) {
+    shapes: (Shape | ShapeView)[] = [];
+
+    constructor(repo: CoopRepository, document: Document, page: PageView, shapes: ShapeView[]) {
         super(repo, document, page, 'translate')
+        this.shapes = shapes;
+    }
+
+    start(desc: string) {
+        return this.__repo.start(desc, (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+            const state = {} as SelectionState;
+            if (!isUndo) state.shapes = this.shapes.map(i => i.id);
+            else state.shapes = cmd.saveselection?.shapes || [];
+            selection.restore(state);
+        });
     }
 
     excute(translateUnits: TranslateUnit[]) {
@@ -36,7 +49,8 @@ export class Transporter extends AsyncApiCaller {
             }
             this.updateView();
         } catch (error) {
-            this.rollback();
+            console.log('Transporter.excute:', error);
+            this.exception = true;
         }
     }
 
@@ -46,13 +60,15 @@ export class Transporter extends AsyncApiCaller {
             for (let i = 0, len = actions.length; i < len; i++) {
                 const shape = _ss[i];
                 const { parent, index } = actions[i];
-                this.api.shapeInsert(this.page, parent, shape, index);
+                this.api.shapeInsert(this.__document, this.page, parent, shape, index);
                 result.push(parent.childs[index]);
             }
             this.updateView();
+            this.shapes = result;
             return result;
         } catch (error) {
-            this.rollback();
+            console.log('Transporter.shortPaste:', error);
+            this.exception = true;
             return false;
         }
     }
@@ -75,8 +91,8 @@ export class Transporter extends AsyncApiCaller {
             this.setCurrentEnv(targetParent);
             this.updateView();
         } catch (e) {
-            console.error(e);
-            this.rollback();
+            console.log('Transporter.migrate:', e);
+            this.exception = true;
         }
     }
     setEnv(envs: Map<string, { shape: ShapeView, index: number }[]>) {
@@ -113,7 +129,8 @@ export class Transporter extends AsyncApiCaller {
             this.__repo.transactCtx.fireNotify();
             this.setCurrentEnv(emit_by);
         } catch (error) {
-            console.error(error);
+            console.log('Transporter.migrate', error);
+            this.exception = true;
         }
     }
 

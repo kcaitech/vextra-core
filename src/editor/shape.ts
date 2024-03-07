@@ -46,6 +46,14 @@ export class ShapeEditor {
     protected __document: Document
 
     constructor(shape: ShapeView, page: Page, repo: CoopRepository, document: Document) {
+        // check
+        if (!(shape instanceof ShapeView)) throw new Error("shape wrong");
+        if (!(page instanceof Page)) {
+            console.error("page wrong", page ? JSON.stringify(page, (k, v) => k.startsWith('__')) : page)
+            throw new Error("page wrong");
+        }
+        if (!(repo instanceof CoopRepository)) throw new Error("repo wrong");
+        if (!(document instanceof Document)) throw new Error("document wrong");
         this.__shape = shape;
         this.__repo = repo;
         this.__page = page;
@@ -1180,7 +1188,7 @@ export class ShapeEditor {
         let _var: Variable | undefined;
         sym.variables?.forEach((v) => {
             if (v.type === VariableType.Status) {
-                const overrides = findOverride(v.id, OverrideType.Variable, shape.varsContainer);
+                const overrides = findOverride(v.id, OverrideType.Variable, this.__shape.varsContainer || []);
                 const _v = overrides ? overrides[overrides.length - 1] : v;
                 curState.set(v.id, _v.value);
                 curVars.set(v.id, _v);

@@ -269,7 +269,7 @@ function _ov(varType: VariableType, overrideType: OverrideType, valuefun: (_var:
             case OverrideType.Image:
             case OverrideType.Lock:
             case OverrideType.SymbolID:
-            case OverrideType.Table:
+            case OverrideType.TableCell:
             case OverrideType.Text:
             case OverrideType.Variable:
             case OverrideType.Visible:
@@ -337,7 +337,7 @@ function _clone_value(_var: Variable, document: Document, page: Page) {
             return importStyle(_var.value, ctx);
         case VariableType.SymbolRef:
             return _var.value;
-        case VariableType.Table:
+        case VariableType.TableCell:
             return importTableShape(_var.value, ctx);
         case VariableType.Text:
             return _var.value instanceof Text ? importText(_var.value) : _var.value;
@@ -427,7 +427,7 @@ export function modify_variable(document: Document, page: Page, view: ShapeView,
             case OverrideType.Shadows:
             case OverrideType.StartMarkerType:
             case OverrideType.SymbolID:
-            case OverrideType.Table:
+            case OverrideType.TableCell:
             case OverrideType.Text:
             case OverrideType.Visible:
             case OverrideType.ExportOptions:

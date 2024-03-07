@@ -192,7 +192,7 @@ export function gen_special_value_for_state(symbol: SymbolShape, variable: Varia
     return `${type_name}${index}`;
 }
 
-export function make_union(api: Api, page: Page, symbol: SymbolShape, attri_name: string) {
+export function make_union(api: Api, document: Document, page: Page, symbol: SymbolShape, attri_name: string) {
     const p = symbol.parent;
     if (!p || (p instanceof SymbolUnionShape)) {
         return false;
@@ -231,7 +231,7 @@ export function make_union(api: Api, page: Page, symbol: SymbolShape, attri_name
     const _var = new Variable(uuid(), VariableType.Status, attri_name, SymbolShape.Default_State); // default
     union.variables.set(_var.id, _var);
 
-    const insert_result = api.shapeInsert(page, p as GroupShape, union, symIndex);
+    const insert_result = api.shapeInsert(document, page, p as GroupShape, union, symIndex);
     if (!insert_result) {
         return false;
     }
@@ -402,7 +402,7 @@ export function adjust_selection_before_group(document: Document, page: Page, sh
             const { x, y, width, height } = shape.frame;
             const f = new ShapeFrame(x, y, width, height);
             const refShape: SymbolRefShape = newSymbolRefShape(shape.name, f, shape.id, document.symbolsMgr);
-            shapes[i] = api.shapeInsert(page, parent, refShape, insert_index) as SymbolRefShape;
+            shapes[i] = api.shapeInsert(document, page, parent, refShape, insert_index) as SymbolRefShape;
             continue;
         }
         const childs = (shape as GroupShape).childs;
@@ -424,7 +424,7 @@ function handler_childs(document: Document, page: Page, shapes: Shape[], api: Ap
             const { x, y, width, height } = shape.frame;
             const f = new ShapeFrame(x, y, width, height);
             const refShape: SymbolRefShape = newSymbolRefShape(shape.name, f, shape.id, document.symbolsMgr);
-            api.shapeInsert(page, parent, refShape, insert_index) as SymbolRefShape;
+            api.shapeInsert(document, page, parent, refShape, insert_index) as SymbolRefShape;
             continue;
         }
         const childs = (shape as GroupShape).childs;

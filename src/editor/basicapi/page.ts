@@ -45,7 +45,7 @@ export function pageModifyName(document: Document, pageId: string, name: string)
     return item && crdtSetAttr(item, "name", name);
 }
 
-export function registSymbol(document: Document, symbolId: string, pageId: string) {
+function registSymbol(document: Document, symbolId: string, pageId: string) {
     return crdtSetAttr(document.symbolregist, symbolId, pageId);
 }
 
@@ -60,11 +60,30 @@ export function pageMove(document: Document, fromIdx: number, toIdx: number) {
 }
 
 
-export function shapeInsert(page: Page, parent: GroupShape, shape: Shape, index: number, needUpdateFrame: { shape: Shape, page: Page }[]) {
+export function shapeInsert(document: Document, page: Page, parent: GroupShape, shape: Shape, index: number, needUpdateFrame: { shape: Shape, page: Page }[]) {
     const op = crdtShapeInsert(page, parent, shape, index);
     page.onAddShape(op[op.length - 1].data2 as Shape);
     needUpdateFrame.push({ shape, page });
-    return op;
+
+    const ops: Op[] = [];
+    // regist symbol
+    const registsymbol1 = (shape: Shape) => {
+        if (!(shape instanceof GroupShape)) return;
+        if (shape instanceof SymbolShape) {
+            if (shape instanceof SymbolUnionShape) {
+                shape.childs.forEach(s => {
+                    ops.push(registSymbol(document, s.id, page.id));
+                })
+            } else {
+                ops.push(registSymbol(document, shape.id, page.id));
+            }
+        } else {
+            shape.childs.forEach(c => registsymbol1(c));
+        }
+    }
+    registsymbol1(shape);
+
+    return ops.length > 0 ? ops.concat(...op) : op;
 }
 export function shapeDelete(document: Document, page: Page, parent: GroupShape, index: number, needUpdateFrame: { shape: Shape, page: Page }[]) {
     const ops = [];
