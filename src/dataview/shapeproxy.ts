@@ -235,9 +235,9 @@ class SymbolRefShapeHdl extends ShapeHdl {
         //     return this.findVar;
         // }
         if (this.m_view.isVirtualShape) return super.get(target, propertyKey, receiver);
-        // if (propStr === "__isAdapted") {
-        //     return true;
-        // }
+        if (propStr === "__isAdapted") {
+            return true;
+        }
         if (propStr === 'style') {
             return super.get(target, propertyKey, receiver);
         }
