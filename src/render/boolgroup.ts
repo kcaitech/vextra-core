@@ -111,17 +111,30 @@ class FrameGrid {
     }
 }
 
+
 export function render2path(shape: Shape): Path {
+
     const shapeIsGroup = shape instanceof GroupShape;
     let fixedRadius: number | undefined;
     if (shapeIsGroup) fixedRadius = shape.fixedRadius;
     if (!shapeIsGroup || shape.childs.length === 0) {
-        const path = shape instanceof TextShape ? renderText2Path(shape.getLayout(), 0, 0) : shape.getPath(fixedRadius);
+        if (!shape.isVisible) return new Path();
+        const path = shape instanceof TextShape ? renderText2Path(shape.getLayout(), 0, 0) : shape.getPath(fixedRadius).clone();
         return path;
     }
 
+    let fVisibleIdx = 0;
+    for (let i = 0; i < shape.childs.length; ++i) {
+        if ((shape.childs[i]).isVisible) {
+            fVisibleIdx = i;
+            break;
+        }
+    }
+
     const cc = shape.childs.length;
-    const child0 = shape.childs[0];
+    if (fVisibleIdx >= cc) return new Path();
+
+    const child0 = shape.childs[fVisibleIdx];
     const frame0 = child0.frame;
     const path0 = render2path(child0);
 
@@ -139,10 +152,11 @@ export function render2path(shape: Shape): Path {
     grid.push(frame0);
 
     let joinPath: IPalPath = gPal.makePalPath(path0.toString());
-    for (let i = 1; i < cc; i++) {
+    for (let i = fVisibleIdx + 1; i < cc; i++) {
         const child1 = shape.childs[i];
+        if (!child1.isVisible) continue;
         const frame1 = child1.frame;
-        const path1 = render2path(child1);
+        const path1 = render2path(child1).clone();
         if (child1.isNoTransform()) {
             path1.translate(frame1.x, frame1.y);
         } else {

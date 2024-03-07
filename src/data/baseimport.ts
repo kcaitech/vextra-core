@@ -1078,6 +1078,7 @@ export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImport
         });
         return ret
     })()
+    if (source.isCustomSize !== undefined) ret.isCustomSize = source.isCustomSize
     // inject code
     if (ctx?.document) {
         ret.setSymbolMgr(ctx.document.symbolsMgr);

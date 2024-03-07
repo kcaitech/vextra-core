@@ -31,6 +31,7 @@ import {
     importPathShape,
     importRectShape,
     importSymbolRefShape,
+    importSymbolShape,
     importSymbolUnionShape,
     importTableShape,
     importText,
@@ -217,7 +218,15 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
             let r: Shape | undefined = undefined;
 
             if (type === ShapeType.Symbol) {
-                if (!document.symbolsMgr.getSync(_s.id)) {
+                const registed = document.symbolregist.get(_s.id);
+                const ref = document.symbolsMgr.getSync(_s.id);
+                // 剪切的一定有'freesymbols'，但复制或者外部粘贴进来的，不一定。
+                if ((!registed && !ref) || registed === 'freesymbols') {
+                    r = importSymbolShape(_s as any as types.SymbolShape, ctx);
+                    result.push(r);
+                    continue;
+                }
+                if (!ref) {
                     continue;
                 }
                 const f = new ShapeFrame(_s.frame.x, _s.frame.y, _s.frame.width, _s.frame.height);
@@ -274,8 +283,19 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
                 r = importCutoutShape(_s as any as types.CutoutShape, ctx);
             } else if (type === ShapeType.SymbolUnion) {
                 const children = (_s as any as SymbolUnionShape).childs;
-                children && children.length && set_childs_id(children, matched);
-
+                if (!Array.isArray(children)) continue;
+                // check
+                let isFree = true;
+                for (let i = 0; i < children.length; ++i) {
+                    const cid = children[i].id;
+                    const registed = document.symbolregist.get(cid);
+                    const ref = document.symbolsMgr.getSync(cid);
+                    if (registed && registed !== 'freesymbols' || (!registed && ref)) {
+                        isFree = false;
+                        break;
+                    }
+                }
+                if (!isFree) set_childs_id(children, matched);
                 r = importSymbolUnionShape(_s as any as SymbolUnionShape, ctx);
             }
 

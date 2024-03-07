@@ -30,7 +30,7 @@ export enum VariableType {
     Shadows = 'shadows',
     Style = 'style',
     ContextSettings = 'contextSettings',
-    Table = 'table',
+    TableCell = 'tableCell',
     MarkerType = 'markerType',
     ExportOptions = 'exportOptions',
 }
@@ -267,7 +267,7 @@ export enum OverrideType {
     Variable = 'variable',
     SymbolID = 'symbolID',
     ContextSettings = 'contextSettings',
-    Table = 'table',
+    TableCell = 'tableCell',
     StartMarkerType = 'startMarkerType',
     EndMarkerType = 'endMarkerType',
     ExportOptions = 'exportOptions',
@@ -596,6 +596,7 @@ export type SymbolRefShape = Shape & {
     refId: string
     overrides?: Map<string, string>
     variables: Map<string, Variable>
+    isCustomSize?: boolean
 }
 /* span attr */
 export type Span = SpanAttr & {

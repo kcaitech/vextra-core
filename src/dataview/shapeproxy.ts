@@ -125,9 +125,6 @@ class ShapeHdl extends HdlBase {
         if (propStr === "notify") {
             return this.notify;
         }
-        if (propStr === "varsContainer") {
-            return this.m_view.varsContainer;
-        }
         return super.get(target, propertyKey, receiver);
     }
 }
@@ -237,15 +234,15 @@ class SymbolRefShapeHdl extends ShapeHdl {
         // if (propStr === "findVar") {
         //     return this.findVar;
         // }
-        // if (this.m_view.isVirtualShape) return super.get(target, propertyKey, receiver);
-        // if (propStr === "varsContainer") {
-        //     return this.m_view.varsContainer;
-        // }
-        // if (propStr === "__isAdapted") {
-        //     return true;
-        // }
-        return super.get(target, propertyKey, receiver);
-        // return Reflect.get(target, propertyKey, receiver);
+        if (this.m_view.isVirtualShape) return super.get(target, propertyKey, receiver);
+        if (propStr === "__isAdapted") {
+            return true;
+        }
+        if (propStr === 'style') {
+            return super.get(target, propertyKey, receiver);
+        }
+        // return super.get(target, propertyKey, receiver);
+        return Reflect.get(target, propertyKey, receiver);
     }
 
     set(target: object, propertyKey: PropertyKey, value: any, receiver?: any): boolean {
