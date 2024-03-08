@@ -8,11 +8,6 @@ import { SymbolRefShape } from "./symbolref";
 
 export { DocumentMeta, PageListItem } from "./baseclasses";
 
-export enum LibType {
-    Symbol = 'symbol-lib',
-    Media = 'media-lib'
-}
-
 class SpecialActionCorrespondent extends WatchableObject {
     constructor() {
         super();

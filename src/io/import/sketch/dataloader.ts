@@ -94,7 +94,7 @@ export class DataLoader {
             const page = await this.loadPage(ctx, id)
             // document.pagesMgr.add(page.id, page) // 在pagesMgr里也会add
             symbolsSet.forEach((v, k) => {
-                document.symbolregist.set(k, id);
+                // document.symbolregist.set(k, id);
                 document.symbolsMgr.add(k, v);
             })
             symbolsSet.clear();
