@@ -366,7 +366,7 @@ export function newTable(name: string, frame: ShapeFrame, rowCount: number, colu
     for (let ci = 0; ci < columCount; ci++) {
         table.colWidths.push(new CrdtNumber(uuid(), [ci] as BasicArray<number>, 1));
     }
-    table.updateTotalWeights();
+    // table.updateTotalWeights();
     table.frame = frame;
     table.style.borders.push(new Border([0] as BasicArray<number>,
         uuid(),

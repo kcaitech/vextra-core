@@ -22,19 +22,19 @@ import {
     ParaAttr,
     Span,
     ShapeType,
-    Variable, Document, TableShape, FillType, GradientType, Gradient, Point2D, Stop
+    Variable, Document, TableShape, FillType, GradientType, Gradient, Point2D, Stop, TextAttr
 } from "../data/classes";
 import { CoopRepository } from "./coop/cooprepo";
 import { Api } from "./coop/recordapi";
 import { ShapeEditor } from "./shape";
 import { fixTableShapeFrameByLayout, fixTextShapeFrameByLayout } from "./utils/other";
 import { BasicArray } from "../data/basic";
-import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "../data/textutils";
-import { importGradient, importText } from "../data/baseimport";
+import { mergeParaAttr, mergeSpanAttr, mergeTextAttr, newTableCellText, newText } from "../data/textutils";
+import { importGradient, importText, importTextAttr } from "../data/baseimport";
 import * as basicapi from "./basicapi"
 import { AsyncGradientEditor, Status } from "./controller";
 import { CmdMergeType } from "./coop/localcmd";
-import { ShapeView, TableCellView, TextShapeView, adapt2Shape } from "../dataview";
+import { ShapeView, TableCellView, TableView, TextShapeView, adapt2Shape } from "../dataview";
 
 type TextShapeLike = Shape & { text: Text }
 
@@ -63,6 +63,7 @@ interface _Api {
 export class TextShapeEditor extends ShapeEditor {
 
     private __cachedSpanAttr?: SpanAttrSetter;
+    private __textAttr?: TextAttr;
 
     constructor(shape: TextShapeView | TableCellView, page: Page, repo: CoopRepository, document: Document) {
         super(shape, page, repo, document);
@@ -86,15 +87,16 @@ export class TextShapeEditor extends ShapeEditor {
     private fixFrameByLayout(api: _Api) {
         if (this.shape.isVirtualShape) api = basicapi;
         if (this.shape instanceof TextShape) fixTextShapeFrameByLayout(api, this.__page, this.shape);
-        else if (this.shape instanceof TableCell) fixTableShapeFrameByLayout(api, this.__page, this.shape);
+        else if (this.shape instanceof TableCell) fixTableShapeFrameByLayout(api, this.__page, this.view as TableCellView);
     }
     private fixFrameByLayout2(api: _Api, shape: TextShapeLike | Variable) {
         if (this.shape.isVirtualShape) api = basicapi;
         if (shape instanceof TextShape) fixTextShapeFrameByLayout(api, this.__page, shape);
-        else if (shape instanceof TableCell) fixTableShapeFrameByLayout(api, this.__page, shape);
+        else if (shape instanceof TableCell) fixTableShapeFrameByLayout(api, this.__page, this.view as TableCellView);
     }
 
     private shape4edit(api: Api, shape?: TextShapeView | TableCellView) {
+        this.__textAttr = undefined;
         const _shape = shape ?? this.__shape as (TextShapeView | TableCellView);
         const _var = this.overrideVariable(VariableType.Text, OverrideType.Text, (_var) => {
             if (_var) {
@@ -112,8 +114,27 @@ export class TextShapeEditor extends ShapeEditor {
         }
         if (_var) {
             this.__repo.updateTextSelection(_var.value);
+            return _var;
         }
-        return _var || _shape.data as TextShapeLike;
+        if (_shape.data instanceof TableCell) {
+            if (!_shape.data.text) {
+                const save = this.__repo.transactCtx.settrap;
+                this.__repo.transactCtx.settrap = false;
+                try {
+                    const _text = newTableCellText();
+                    _shape.data.text = _text;
+                }
+                finally {
+                    this.__repo.transactCtx.settrap = save;
+                }
+            }
+            if (_shape.data.text.paras.length === 1 && _shape.data.text.paras[0].length === 1) {
+                const attr = (_shape.parent as TableView).data.textAttr;
+                this.__textAttr = attr && importTextAttr(attr);
+            }
+        }
+
+        return _shape.data as TextShapeLike;
     }
 
     public deleteText(index: number, count: number): number { // 清空后，在失去焦点时，删除shape
@@ -161,6 +182,11 @@ export class TextShapeEditor extends ShapeEditor {
         const api = this.__repo.start("insertText");
         try {
             const shape = this.shape4edit(api);
+            if (this.__textAttr) {
+                const attr1 = this.__textAttr;
+                if (attr) mergeSpanAttr(attr1, attr);
+                attr = attr1;
+            }
             if (del > 0) api.deleteText(this.__page, shape, index, del);
             api.insertSimpleText(this.__page, shape, index, text, attr);
             this.fixFrameByLayout(api);
@@ -263,6 +289,11 @@ export class TextShapeEditor extends ShapeEditor {
         const api = this.__repo.start("insertTextForNewLine");
         try {
             const shape = this.shape4edit(api);
+            if (this.__textAttr) {
+                const attr1 = this.__textAttr;
+                if (attr) mergeSpanAttr(attr1, attr);
+                attr = attr1;
+            }
             let count = text.length;
             if (del > 0) api.deleteText(this.__page, shape, index, del);
             for (; ;) {
