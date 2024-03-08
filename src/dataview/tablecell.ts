@@ -67,12 +67,12 @@ export class TableCellView extends ShapeView {
     }
 
     getText(): Text {
-        const v = this._findOV(OverrideType.Text, VariableType.Text);
-        if (v) {
-            const ret = v.value;
-            if (!ret) throw new Error('text not found');
-            return ret;
-        }
+        // const v = this._findOV(OverrideType.Text, VariableType.Text);
+        // if (v) {
+        //     const ret = v.value;
+        //     if (!ret) throw new Error('text not found');
+        //     return ret;
+        // }
         const ret = (this.m_data as TableCell).text;
         if (ret) return ret;
 

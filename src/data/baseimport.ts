@@ -68,8 +68,8 @@ export function importVariable(source: types.Variable, ctx?: IImportContext): im
             if (val.typeId == 'context-settings') {
                 return importContextSettings(val as types.ContextSettings, ctx)
             }
-            if (val.typeId == 'table-shape') {
-                return importTableShape(val as types.TableShape, ctx)
+            if (val.typeId == 'table-cell') {
+                return importTableCell(val as types.TableCell, ctx)
             }
             if (val.typeId == 'export-options') {
                 return importExportOptions(val as types.ExportOptions, ctx)

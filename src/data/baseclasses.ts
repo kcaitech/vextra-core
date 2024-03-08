@@ -80,12 +80,12 @@ export class Variable extends Basic {
     id: string
     type: VariableType
     name: string
-    value: (number | string | boolean | Color | Text | Gradient | Style | BasicArray<(Border | Fill | Shadow) > | ContextSettings | TableShape | ExportOptions)
+    value: (number | string | boolean | Color | Text | Gradient | Style | BasicArray<(Border | Fill | Shadow) > | ContextSettings | TableCell | ExportOptions)
     constructor(
         id: string,
         type: VariableType,
         name: string,
-        value: (number | string | boolean | Color | Text | Gradient | Style | BasicArray<(Border | Fill | Shadow) > | ContextSettings | TableShape | ExportOptions)
+        value: (number | string | boolean | Color | Text | Gradient | Style | BasicArray<(Border | Fill | Shadow) > | ContextSettings | TableCell | ExportOptions)
     ) {
         super()
         this.id = id
