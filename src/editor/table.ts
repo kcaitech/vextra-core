@@ -8,7 +8,7 @@ import { Border, Fill, Gradient } from "../data/style";
 import { fixTableShapeFrameByLayout } from "./utils/other";
 import { Api, TextShapeLike } from "./coop/recordapi";
 import { importBorder, importFill, importGradient } from "../data/baseimport";
-import { Document, Color } from "../data/classes";
+import { Document, Color, TextAttr } from "../data/classes";
 import { newText } from "../data/textutils";
 import { AsyncGradientEditor, Status } from "./controller";
 import { TableCellView, TableView } from "../dataview";
