@@ -6,7 +6,7 @@ import { DataView } from "./view"
 import { DViewCtx, PropsType } from "./viewctx";
 import { locateCell, locateCellIndex } from "../data/tablelocate";
 import { TableCellView } from "./tablecell";
-import { RenderTransform, findOverride } from "./basic";
+import { RenderTransform, findOverride, getShapeViewId } from "./basic";
 import { layoutTable } from "../data/tablelayout";
 import { getTableCells, getTableVisibleCells } from "../data/tableread";
 
@@ -181,7 +181,7 @@ export class TableView extends ShapeView {
 
     getVisibleCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number) {
         return this._getVisibleCells(rowStart, rowEnd, colStart, colEnd).map((v) => ({
-            cell: v.cell ? this.cells.get(v.cell.id) : undefined,
+            cell: v.cell ? this.cells.get(getShapeViewId(v.cell, this.varsContainer)) : undefined,
             rowIdx: v.rowIdx,
             colIdx: v.colIdx
         }));
@@ -193,7 +193,7 @@ export class TableView extends ShapeView {
 
     getCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number) {
         return this._getCells(rowStart, rowEnd, colStart, colEnd).map((v) => ({
-            cell: v.cell ? this.cells.get(v.cell.id) : undefined,
+            cell: v.cell ? this.cells.get(getShapeViewId(v.cell, this.varsContainer)) : undefined,
             rowIdx: v.rowIdx,
             colIdx: v.colIdx
         }));
@@ -220,7 +220,8 @@ export class TableView extends ShapeView {
     getCellAt(rowIdx: number, colIdx: number): TableCellView | undefined {
         const cell = this._getCellAt(rowIdx, colIdx);
         if (cell) {
-            return this.cells.get(cell.id);
+            const cellId = getShapeViewId(cell, this.varsContainer);
+            return this.cells.get(cellId);
         }
     }
 
