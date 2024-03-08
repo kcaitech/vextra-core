@@ -277,6 +277,14 @@ export class PageEditor {
     private __document: Document;
 
     constructor(repo: CoopRepository, page: Page, document: Document) {
+        // check
+        if (!(page instanceof Page)) {
+            console.error("page wrong", page ? JSON.stringify(page, (k, v) => k.startsWith('__')) : page)
+            throw new Error("page wrong");
+        }
+        if (!(repo instanceof CoopRepository)) throw new Error("repo wrong");
+        if (!(document instanceof Document)) throw new Error("document wrong");
+
         this.__repo = repo;
         this.__page = page;
         this.__document = document;
@@ -2414,7 +2422,7 @@ export class PageEditor {
             for (let i = 0; i < shapes.length; i++) {
                 let shape: ShapeView = shapes[i];
                 if (!shape) continue;
-                const isVisible = !shape.isVisible;
+                const isVisible = !shape.isVisible();
                 if (modify_variable_with_api(api, this.__page, shape, VariableType.Visible, OverrideType.Visible, isVisible)) {
                     continue;
                 }
@@ -2436,7 +2444,7 @@ export class PageEditor {
         try {
             for (let i = 0; i < shapes.length; i++) {
                 let shape: ShapeView | undefined = shapes[i];
-                const isLocked = !shape.isLocked;
+                const isLocked = !shape.isLocked();
                 if (modify_variable_with_api(api, this.__page, shape, VariableType.Lock, OverrideType.Lock, isLocked)) {
                     continue;
                 }

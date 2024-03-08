@@ -1,0 +1,24 @@
+import { AsyncApiCaller } from "./handler";
+import { CoopRepository } from "../coop/cooprepo";
+import { Document } from "../../data/document";
+import { PageView, ShapeView } from "../../dataview";
+
+export class ColorPicker extends AsyncApiCaller {
+    constructor(repo: CoopRepository, document: Document, page: PageView) {
+        super(repo, document, page)
+    }
+
+    start() {
+        return this.__repo.start('color-picker');
+    }
+
+    execute() {
+        try {
+
+            this.updateView();
+        } catch (e) {
+            console.log('ColorPicker.execute:', e);
+            this.exception = true;
+        }
+    }
+}

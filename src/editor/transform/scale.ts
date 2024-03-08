@@ -1,10 +1,8 @@
-import { CoopRepository } from "../../editor/coop/cooprepo";
+import { CoopRepository } from "../coop/cooprepo";
 import { AsyncApiCaller } from "./handler";
 import { Document } from "../../data/document";
 import { PageView, ShapeView, adapt2Shape } from "../../dataview";
-import { SizeRecorder, afterModifyGroupShapeWH, expandTo } from "../../editor/frame";
-import { Matrix } from "../../basic/matrix";
-import { GroupShape, ShapeFrame } from "../../data/shape";
+import { SizeRecorder, afterModifyGroupShapeWH, expandTo } from "../frame";
 
 export type ScaleUnit = {
     shape: ShapeView;
@@ -23,12 +21,16 @@ export class Scaler extends AsyncApiCaller {
     private recorder: SizeRecorder = new Map();
 
     constructor(repo: CoopRepository, document: Document, page: PageView) {
-        super(repo, document, page, 'scale');
+        super(repo, document, page);
     }
 
-    excute() { }
+    start() {
+        return this.__repo.start('sync-scale')
+    }
 
-    excute4multi(scaleX: number, scaleY: number, transformUnits: ScaleUnit[]) {
+    execute() { }
+
+    execute4multi(scaleX: number, scaleY: number, transformUnits: ScaleUnit[]) {
         try {
             for (let i = 0; i < transformUnits.length; i++) {
                 const t = transformUnits[i];
