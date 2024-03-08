@@ -12,7 +12,7 @@ const shadowOri: {
 shadowOri[ShadowPosition.Outer] = function (h: Function, shadow: Shadow, frame: ShapeFrame, id: string, i: number, path: string, fills: Fill[], borders: Border[]): any {
     const { width, height } = frame;
     // const shadow = style.shadows[i];
-    const f_props: any = { props_w: [width * 0.4], props_h: [height * 0.4], props_x: [-(width * 0.2)], props_y: [-(height * 0.2)] }
+    const f_props: any = { props_w: [width * 1.4], props_h: [height * 1.4], props_x: [-(width * 0.2)], props_y: [-(height * 0.2)] }
     getFilterPropsValue(shadow, frame, f_props);
     const { color, offsetX, offsetY, blurRadius, spread } = shadow;
     const { red, green, blue, alpha } = color;
@@ -120,7 +120,7 @@ shadowOri[ShadowPosition.Inner] = function (h: Function, shadow: Shadow, frame: 
 function shadowShape(h: Function, shadows: Shadow[], frame: ShapeFrame, id: string): any {
     shadows = shadows.filter(s => s.position === ShadowPosition.Outer);
     const { width, height } = frame;
-    const f_props: any = { props_w: [width * 0.8], props_h: [height * 0.8], props_x: [-(width * 0.4)], props_y: [-(height * 0.4)] }
+    const f_props: any = { props_w: [width * 1.8], props_h: [height * 1.8], props_x: [-(width * 0.4)], props_y: [-(height * 0.4)] }
     if (shadows.length === 0) return undefined;
     const h_nodes = [];
     for (let i = 0; i < shadows.length; i++) {
@@ -188,45 +188,6 @@ function shadowShape(h: Function, shadows: Shadow[], frame: ShapeFrame, id: stri
     return filter;
 }
 
-// function cssShadowHandle(h: Function, shadows: Shadow[], frame: ShapeFrame, id: string, path: string, borders: Border[]) {
-//     let style_shadow = [];
-//     const { width, height } = frame;
-//     const f_props: any = { props_w: [width], props_h: [height], props_x: [0], props_y: [0] }
-//     for (let i = 0; i < shadows.length; i++) {
-//         const { offsetX, offsetY, blurRadius, spread, color } = shadows[i];
-//         const { alpha, red, green, blue } = color;
-//         const s = `${offsetX}px ${offsetY}px ${blurRadius / 2}px ${spread}px rgba(${red}, ${green}, ${blue}, ${alpha})`
-//         style_shadow.push(s);
-//         const props_w = width + blurRadius + Math.max(0, spread * 2);
-//         const props_h = height + blurRadius + Math.max(0, spread * 2);
-//         const props_x = offsetX - (blurRadius / 2) - Math.max(0, spread);
-//         const props_y = offsetY - (blurRadius / 2) - Math.max(0, spread);
-//         f_props.props_h.push(props_h);
-//         f_props.props_w.push(props_w);
-//         f_props.props_x.push(props_x);
-//         f_props.props_y.push(props_y);
-//     }
-//     const mask1Id = "mask1-shadow" + objectId(shadows) + randomId();
-//     const max_w = Math.max(...f_props.props_w);
-//     const max_h = Math.max(...f_props.props_h);
-//     const min_x = Math.min(...f_props.props_x);
-//     const min_y = Math.min(...f_props.props_y);
-//     const border = borderR(h, borders, frame, path)
-
-//     const mask = h('mask', { id: mask1Id }, [
-//         h("rect", { x: min_x, y: min_y, width: max_w, height: max_h, fill: "white" }),
-//     ]);
-
-//     const div = h("foreignObject", {
-//         x: min_x,
-//         y: min_y,
-//         width: max_w,
-//         height: max_h,
-//         mask: "url(#" + mask1Id + ")"
-//     },
-//         h("div", { style: `box-shadow: ${style_shadow.join(',')}; width: ${width - 0.5}px; height: ${height - 0.5}px;transform: translate(${-min_x}px, ${-min_y}px) translateZ(0px)` }))
-//     return h("g", [mask, div]);
-// }
 export function render(h: Function, id: string, shadows: Shadow[], path: string, frame: ShapeFrame, fills: Fill[], borders: Border[], shapeType: ShapeType) {
     const elArr = [];
     // const style = shape.style;
@@ -234,19 +195,26 @@ export function render(h: Function, id: string, shadows: Shadow[], path: string,
     const inner_f = [];
     let filters: any[] = [];
     let paths: any[] = [];
-    for (let i = 0; i < shadows.length; i++) {
-        const shadow = shadows[i];
-        const position = shadow.position;
-        if (!shadow.isEnabled) continue;
-        if (position === ShadowPosition.Outer) {
-            if (shapeType === ShapeType.Rectangle || shapeType === ShapeType.Artboard || shapeType === ShapeType.Oval) {
-                const { filter, p } = shadowOri[position](h, shadow, frame, id, i, path, fills, borders);
-                filters.push(filter);
-                paths.push(p);
+    if (shapeType === ShapeType.Artboard && !isFill(fills)) {
+        const filter = shadowShape(h, shadows, frame, id);
+        if (filter) {
+            elArr.push(filter);
+        }
+    } else {
+        for (let i = 0; i < shadows.length; i++) {
+            const shadow = shadows[i];
+            const position = shadow.position;
+            if (!shadow.isEnabled) continue;
+            if (position === ShadowPosition.Outer) {
+                if (shapeType === ShapeType.Rectangle || shapeType === ShapeType.Artboard || shapeType === ShapeType.Oval) {
+                    const { filter, p } = shadowOri[position](h, shadow, frame, id, i, path, fills, borders);
+                    filters.push(filter);
+                    paths.push(p);
+                }
+            } else if (position === ShadowPosition.Inner) {
+                const filter = shadowOri[position](h, shadow, frame, id, i, path, fills, borders);
+                inner_f.push(filter);
             }
-        } else if (position === ShadowPosition.Inner) {
-            const filter = shadowOri[position](h, shadow, frame, id, i, path, fills, borders);
-            inner_f.push(filter);
         }
     }
     if (shapeType !== ShapeType.Rectangle && shapeType !== ShapeType.Artboard && shapeType !== ShapeType.Oval) {
@@ -255,12 +223,6 @@ export function render(h: Function, id: string, shadows: Shadow[], path: string,
             elArr.push(filter);
         }
     }
-    // else {
-    //     const filter = shadowHandle(h, shadows, frame, id, path, borders);
-    //     if (filter) {
-    //         elArr.push(filter);
-    //     }
-    // }
     if (filters.length) {
         elArr.push(h("g", [...filters, ...paths]));
     }
@@ -335,4 +297,14 @@ export function renderWithVars(h: Function, id: string, shape: Shape, frame: Sha
         }
     }
     return render(h, id, shadows, path, frame, fills, borders, shape.type);
+}
+
+const isFill = (fills: Fill[]) => {
+    for (let i = 0; i < fills.length; i++) {
+        const fill = fills[i];
+        if (fill.isEnabled && fill.color.alpha > 0) {
+            return true;
+        }
+    }
+    return false;
 }
