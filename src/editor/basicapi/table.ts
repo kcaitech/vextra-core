@@ -55,11 +55,6 @@ export function tableSetCellContentText(cell: TableCell, text: Text | undefined)
         if (op) ops.push(op);
     }
 
-    // if (text) {
-    //     const op = insertSimpleText(cell, cell.text, '', 0);
-    //     if (op) ops.push(op);
-    // }
-
     return ops;
 }
 
