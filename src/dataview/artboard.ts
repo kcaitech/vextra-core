@@ -97,4 +97,8 @@ export class ArtboradView extends GroupShapeView {
         this.reset("g", props, [...shadows, body, ...borders])
         return ++this.m_render_version;
     }
+
+    renderStatic() {
+
+    }
 }
