@@ -417,4 +417,8 @@ export class GroupShapeView extends ShapeView {
         if (rootView) rootView.addDelayDestory(removes);
         else removes.forEach((c => c.destory()));
     }
+
+    get isBoolOpShape() {
+        return this.data.isBoolOpShape;
+    }
 }
