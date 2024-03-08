@@ -4,12 +4,12 @@ import { uuid } from "../basic/uuid";
 import { Page } from "../data/page";
 import { Api } from "./coop/recordapi";
 import { newText2 } from "./creator";
-import { BlendMode, Border, ContextSettings, Fill, Shadow, Text } from "../data/classes";
+import { BlendMode, Border, ContextSettings, Fill, Shadow, Style, TableCell, Text } from "../data/classes";
 import { findOverride, findVar } from "../data/utils";
 import { BasicArray } from "../data/basic";
-import { IImportContext, importBorder, importColor, importContextSettings, importExportOptions, importFill, importGradient, importShadow, importStyle, importTableShape, importText } from "../data/baseimport";
-import { ShapeView, SymbolRefView, isAdaptedShape } from "../dataview";
-import { Document } from "../data/classes";
+import { IImportContext, importBorder, importColor, importContextSettings, importExportOptions, importFill, importGradient, importShadow, importStyle, importTableCell, importTableShape, importText } from "../data/baseimport";
+import { ShapeView, TableCellView, TableView, isAdaptedShape } from "../dataview";
+import { Document, ShapeFrame } from "../data/classes";
 
 /**
  * @description 图层是否为组件实例的引用部分
@@ -618,4 +618,49 @@ export function get_state_name(state: SymbolShape, dlt: string) {
         slice && name_slice.push(slice);
     })
     return name_slice.toString();
+}
+
+
+
+export function cell4edit2(page: Page, view: TableView, _cell: TableCellView, api: Api): TableCell {
+    // cell id 要重新生成
+    const index = view.indexOfCell(_cell);
+    if (!index) throw new Error();
+    const {rowIdx, colIdx} = index;
+    const cellId = view.rowHeights[rowIdx].id + "," + view.colWidths[colIdx].id;
+    const valuefun = (_var: Variable | undefined) => {
+        const cell = _var?.value ?? _cell.data;
+        if (cell) return importTableCell(cell);
+        return new TableCell(new BasicArray(),
+            cellId,
+            "",
+            ShapeType.TableCell,
+            new ShapeFrame(0, 0, 0, 0),
+            new Style(new BasicArray(), new BasicArray(), new BasicArray()));
+    };
+    const _var = override_variable2(page, VariableType.TableCell, OverrideType.TableCell, cellId, valuefun, api, view);
+    if (_var) return _var.value;
+    api.tableInitCell(page, view.data, rowIdx, colIdx);
+    return _cell.data;
+}
+
+export function cell4edit(page: Page, view: TableView, rowIdx: number, colIdx: number, api: Api): TableCell {
+    const cellId = view.rowHeights[rowIdx].id + "," + view.colWidths[colIdx].id;
+    const valuefun = (_var: Variable | undefined) => {
+        const cell = _var?.value ?? view._getCellAt(rowIdx, colIdx);
+        if (cell) return importTableCell(cell);
+        return new TableCell(new BasicArray(),
+            cellId,
+            "",
+            ShapeType.TableCell,
+            new ShapeFrame(0, 0, 0, 0),
+            new Style(new BasicArray(), new BasicArray(), new BasicArray()));
+    };
+    const _var = override_variable2(page, VariableType.TableCell, OverrideType.TableCell, cellId, valuefun, api, view);
+    if (_var) return _var.value;
+
+    api.tableInitCell(page, view.data, rowIdx, colIdx);
+    const cell = view._getCellAt(rowIdx, colIdx);
+    if (!cell) throw new Error("cell init fail?");
+    return cell;
 }

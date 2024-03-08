@@ -2,17 +2,16 @@ import { TableCell, TableShape } from "../data/table";
 import { ShapeEditor } from "./shape";
 import { Page } from "../data/page";
 import { CoopRepository } from "./coop/cooprepo";
-import { BorderPosition, BorderStyle, StrikethroughType, TableCellType, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType, FillType, ShapeType, ShapeFrame, VariableType, OverrideType } from "../data/baseclasses";
+import { BorderPosition, BorderStyle, StrikethroughType, TableCellType, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType, FillType } from "../data/baseclasses";
 import { adjColum, adjRow } from "./tableadjust";
-import { Border, Fill, Gradient, Style } from "../data/style";
+import { Border, Fill, Gradient } from "../data/style";
 import { fixTableShapeFrameByLayout } from "./utils/other";
 import { Api, TextShapeLike } from "./coop/recordapi";
-import { importBorder, importFill, importGradient, importTableCell } from "../data/baseimport";
-import { Document, Color, Variable } from "../data/classes";
+import { importBorder, importFill, importGradient } from "../data/baseimport";
+import { Document, Color } from "../data/classes";
 import { AsyncGradientEditor, Status } from "./controller";
 import { TableCellView, TableView } from "../dataview";
-import { BasicArray } from "../data/basic";
-import { override_variable, override_variable2 } from "./symbol";
+import { cell4edit } from "./symbol";
 
 const MinCellSize = TableShape.MinCellSize;
 const MaxColCount = TableShape.MaxColCount;
@@ -33,24 +32,7 @@ export class TableEditor extends ShapeEditor {
     }
 
     cell4edit(rowIdx: number, colIdx: number, api: Api): TableCell {
-        const cellId = this.view.rowHeights[rowIdx].id + "," + this.view.colWidths[colIdx].id;
-        const valuefun = (_var: Variable | undefined) => {
-            const cell = _var?.value ?? this.view._getCellAt(rowIdx, colIdx);
-            if (cell) return importTableCell(cell);
-            return new TableCell(new BasicArray(),
-                cellId,
-                "",
-                ShapeType.TableCell,
-                new ShapeFrame(0, 0, 0, 0),
-                new Style(new BasicArray(), new BasicArray(), new BasicArray()));
-        };
-        const _var = override_variable2(this.__page, VariableType.TableCell, OverrideType.TableCell, cellId, valuefun, api, this.view);
-        if (_var) return _var.value;
-
-        api.tableInitCell(this.__page, this.shape, rowIdx, colIdx);
-        const cell = this.view._getCellAt(rowIdx, colIdx);
-        if (!cell) throw new Error("cell init fail?");
-        return cell;
+        return cell4edit(this.__page, this.view, rowIdx, colIdx, api);
     }
 
     // 水平拆分单元格

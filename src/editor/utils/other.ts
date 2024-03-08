@@ -61,7 +61,7 @@ export function fixTextShapeFrameByLayout(api: _Api, page: Page, shape: TextShap
 }
 
 export function fixTableShapeFrameByLayout(api: _Api, page: Page, shape: TableCellView) {
-    if (!shape.text) return;
+    if (!shape.text || shape.isVirtualShape) return;
     const table = shape.parent as TableView;
     const indexCell = table.indexOfCell(shape);
     if (!indexCell) return;

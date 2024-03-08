@@ -34,6 +34,7 @@ import * as basicapi from "./basicapi"
 import { AsyncGradientEditor, Status } from "./controller";
 import { CmdMergeType } from "./coop/localcmd";
 import { TableCellView, TableView, TextShapeView, adapt2Shape } from "../dataview";
+import { cell4edit2 } from "./symbol";
 
 type TextShapeLike = Shape & { text: Text }
 
@@ -96,44 +97,49 @@ export class TextShapeEditor extends ShapeEditor {
 
     private shape4edit(api: Api, shape?: TextShapeView | TableCellView) {
         this.__textAttr = undefined;
-        const _shape = shape ?? this.__shape as (TextShapeView | TableCellView);
-        const _var = this.overrideVariable(VariableType.Text, OverrideType.Text, (_var) => {
-            if (_var) {
-                if (_var.value instanceof Text) return importText(_var.value);
-                if (typeof _var.value === 'string') return createTextByString(_var.value, _shape.text);
-            }
-            else {
-                return importText(_shape.text);
-            }
-            throw new Error();
-        }, api, shape);
 
-        if (_var && typeof _var.value === 'string') {
-            api.shapeModifyVariable(this.__page, _var, createTextByString(_var.value, _shape.text));
-        }
-        if (_var) {
-            this.__repo.updateTextSelection(_var.value);
-            return _var;
-        }
-        if (_shape.data instanceof TableCell) {
-            if (!_shape.data.text) {
+        const _shape = shape ?? this.__shape as (TextShapeView | TableCellView);
+
+        if (_shape instanceof TableCellView) {
+            const cell = cell4edit2(this.__page, _shape.parent as TableView, _shape, api);
+            if (!cell.text) {
                 const save = this.__repo.transactCtx.settrap;
                 this.__repo.transactCtx.settrap = false;
                 try {
                     const _text = newTableCellText();
-                    _shape.data.text = _text;
+                    cell.text = _text;
                 }
                 finally {
                     this.__repo.transactCtx.settrap = save;
                 }
             }
-            if (_shape.data.text.paras.length === 1 && _shape.data.text.paras[0].length === 1) {
+            if (cell.text.paras.length === 1 && cell.text.paras[0].length === 1) {
                 const attr = (_shape.parent as TableView).data.textAttr;
                 this.__textAttr = attr && importTextAttr(attr);
             }
+            return cell as TextShapeLike;
+        } else {
+            const _var = this.overrideVariable(VariableType.Text, OverrideType.Text, (_var) => {
+                if (_var) {
+                    if (_var.value instanceof Text) return importText(_var.value);
+                    if (typeof _var.value === 'string') return createTextByString(_var.value, _shape.text);
+                }
+                else {
+                    return importText(_shape.text);
+                }
+                throw new Error();
+            }, api, shape);
+
+            if (_var && typeof _var.value === 'string') {
+                api.shapeModifyVariable(this.__page, _var, createTextByString(_var.value, _shape.text));
+            }
+            if (_var) {
+                this.__repo.updateTextSelection(_var.value);
+                return _var;
+            }
+            return _shape.data as TextShapeLike;
         }
 
-        return _shape.data as TextShapeLike;
     }
 
     public deleteText(index: number, count: number): number { // 清空后，在失去焦点时，删除shape
