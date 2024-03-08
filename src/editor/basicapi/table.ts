@@ -19,6 +19,7 @@ export function tableInitCell(table: TableShape, rowIdx: number, colIdx: number)
 
 export function tableSetCellContentType(cell: TableCell, contentType: TableCellType | undefined) {
     contentType = contentType === TableCellType.None ? undefined : contentType;
+    if (cell.cellType === contentType) return;
     return crdtSetAttr(cell, "cellType", contentType);
 }
 

@@ -7,7 +7,6 @@ import {
     SpanAttr,
     SpanAttrSetter,
     StrikethroughType,
-
     TextBehaviour,
     TextHorAlign,
     Text, Shape,
@@ -22,19 +21,19 @@ import {
     ParaAttr,
     Span,
     ShapeType,
-    Variable, Document, TableShape, FillType, GradientType, Gradient, Point2D, Stop, TextAttr
+    Variable, Document, TableShape, FillType, Gradient, TextAttr
 } from "../data/classes";
 import { CoopRepository } from "./coop/cooprepo";
 import { Api } from "./coop/recordapi";
 import { ShapeEditor } from "./shape";
 import { fixTableShapeFrameByLayout, fixTextShapeFrameByLayout } from "./utils/other";
 import { BasicArray } from "../data/basic";
-import { mergeParaAttr, mergeSpanAttr, mergeTextAttr, newTableCellText, newText } from "../data/textutils";
+import { mergeParaAttr, mergeSpanAttr, mergeTextAttr, newTableCellText } from "../data/textutils";
 import { importGradient, importText, importTextAttr } from "../data/baseimport";
 import * as basicapi from "./basicapi"
 import { AsyncGradientEditor, Status } from "./controller";
 import { CmdMergeType } from "./coop/localcmd";
-import { ShapeView, TableCellView, TableView, TextShapeView, adapt2Shape } from "../dataview";
+import { TableCellView, TableView, TextShapeView, adapt2Shape } from "../dataview";
 
 type TextShapeLike = Shape & { text: Text }
 

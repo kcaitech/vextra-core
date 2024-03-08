@@ -89,14 +89,14 @@ function _varsContainer(view: ShapeView) {
 /**
  * 
  */
-function _ov_2(type: OverrideType, name: string, value: any, varType: VariableType, view: ShapeView, page: Page, api: Api) {
+function _ov_2(type: OverrideType, name: string, value: any, varType: VariableType, view: ShapeView, refId: string, page: Page, api: Api) {
     // const view = this.__shape;
     const varsContainer = _varsContainer(view);
     if (!varsContainer || varsContainer.length === 0) throw new Error();
     const host = varsContainer.find((v) => v instanceof SymbolRefShape);
     if (!host || !(host instanceof SymbolRefShape)) throw new Error();
 
-    let override_id: string = (view.data instanceof SymbolRefShape) ? type : (view.data.id + '/' + type);
+    let override_id: string = (refId + '/' + type);
     for (let i = varsContainer.length - 1; i >= 0; --i) {
         const c = varsContainer[i];
         if (c === host) break;
@@ -295,7 +295,33 @@ function _ov(varType: VariableType, overrideType: OverrideType, valuefun: (_var:
         }
     }
 
-    return _ov_2(overrideType, "", valuefun(undefined), varType, view, page, api);
+    return _ov_2(overrideType, "", valuefun(undefined), varType, view, refId, page, api);
+}
+
+
+export function override_variable2(page: Page, varType: VariableType, overrideType: OverrideType, refId: string, valuefun: (_var: Variable | undefined) => any, api: Api, view: ShapeView) {
+    const varsContainer = _varsContainer(view);
+    if (!varsContainer || varsContainer.length === 0) return;
+    if (!view.isVirtualShape) return;
+    // const refId = view.data instanceof SymbolRefShape ? "" : view.data.id;
+    const _vars = findOverride(refId, overrideType, varsContainer);
+    if (_vars) {
+        const _var = _vars[_vars.length - 1];
+        if (_var && _var.type === varType) {
+            // 判断是否可修改
+            const p = varParent(_var);
+            if (!p) throw new Error();
+            const pIdx = varsContainer.findIndex((v) => v.id === p.id);
+            // if (pIdx < 0) throw new Error(); // 可能的，当前view为symbolref，正在修改组件变量
+            const hostIdx = varsContainer.findIndex((v) => v instanceof SymbolRefShape);
+            // if (hostIdx < 0) throw new Error();
+            if (hostIdx < 0 || pIdx >= 0 && pIdx <= hostIdx) return _var; // 可直接修改
+            // return _ov_3(_var, _var.name, valuefun, view, page, api);
+            // 否则重新override
+        }
+    }
+
+    return _ov_2(overrideType, "", valuefun(undefined), varType, view, refId, page, api);
 }
 
 function _clone_value(_var: Variable, document: Document, page: Page) {
