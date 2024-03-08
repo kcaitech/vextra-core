@@ -4,25 +4,12 @@ import { BasicArray, BasicMap, ResourceMgr } from "./basic";
 import { ShapeType, ShapeFrame, TableCellType, CrdtNumber } from "./baseclasses"
 import { Shape } from "./shape";
 import { Path } from "./path";
-import { Para, Span, Text, TextAttr } from "./text"
-import { TextLayout } from "./textlayout";
-import { LayoutItem, TableGridItem, TableLayout, layoutTable } from "./tablelayout";
-import { locateCell, locateCellIndex } from "./tablelocate";
-import { getTableCells, getTableNotCoveredCells, getTableVisibleCells } from "./tableread";
-import { CursorLocate, TextLocate, locateCursor, locateRange, locateText } from "./textlocate";
+import { Text, TextAttr } from "./text"
 import { FrameType } from "./consts";
+import { newTableCellText } from "./textutils";
 export { TableLayout, TableGridItem } from "./tablelayout";
 export { TableCellType } from "./baseclasses";
 export { CrdtNumber } from "./baseclasses";
-
-export function newText(content: string): Text {
-    const text = new Text(new BasicArray());
-    const para = new Para(content + '\n', new BasicArray());
-    text.paras.push(para);
-    const span = new Span(para.length);
-    para.spans.push(span);
-    return text;
-}
 
 export class TableCell extends Shape implements classes.TableCell {
 
@@ -56,7 +43,7 @@ export class TableCell extends Shape implements classes.TableCell {
     getOpTarget(path: string[]) {
         if (path.length === 0) return this;
         if (path[0] === 'text') {
-            if (!this.text) this.text = newText("");
+            if (!this.text) this.text = newTableCellText();
             return this.text?.getOpTarget(path.slice(1));
         }
         return super.getOpTarget(path);
@@ -68,12 +55,12 @@ export class TableCell extends Shape implements classes.TableCell {
         return cells.getCrdtPath().concat(this.id);
     }
 
-    get shapeId(): (string | { rowIdx: number, colIdx: number })[] {
-        const table = this.parent as TableShape;
-        const indexCell = table.indexOfCell2(this);
-        if (!indexCell) throw new Error("cell has no index?")
-        return [table.id, indexCell];
-    }
+    // get shapeId(): (string | { rowIdx: number, colIdx: number })[] {
+    //     const table = this.parent as TableShape;
+    //     const indexCell = table.indexOfCell2(this);
+    //     if (!indexCell) throw new Error("cell has no index?")
+    //     return [table.id, indexCell];
+    // }
 
     /**
      * 没有实例化cell前使用来画边框
@@ -155,75 +142,75 @@ export class TableCell extends Shape implements classes.TableCell {
     }
 
     // todo
-    __layoutToken: string | undefined;
+    // __layoutToken: string | undefined;
 
-    getLayout(): TextLayout | undefined {
-        if (!this.text) return;
-        const table = this.parent as TableShape;
-        const indexCell = table.indexOfCell2(this);
-        if (!indexCell) return;
+    // getLayout(): TextLayout | undefined {
+    //     if (!this.text) return;
+    //     const table = this.parent as TableShape;
+    //     const indexCell = table.indexOfCell2(this);
+    //     if (!indexCell) return;
 
-        const rowSpan = Math.max(this.rowSpan ?? 1, 1);
-        const colSpan = Math.max(this.colSpan ?? 1, 1);
+    //     const rowSpan = Math.max(this.rowSpan ?? 1, 1);
+    //     const colSpan = Math.max(this.colSpan ?? 1, 1);
 
-        let widthWeight = table.colWidths[indexCell.colIdx].value;
-        for (let i = 1; i < colSpan; ++i) {
-            widthWeight += table.colWidths[indexCell.colIdx + i].value;
-        }
-        let heightWeight = table.rowHeights[indexCell.rowIdx].value;
-        for (let i = 1; i < rowSpan; ++i) {
-            heightWeight += table.rowHeights[indexCell.rowIdx + i].value;
-        }
+    //     let widthWeight = table.colWidths[indexCell.colIdx].value;
+    //     for (let i = 1; i < colSpan; ++i) {
+    //         widthWeight += table.colWidths[indexCell.colIdx + i].value;
+    //     }
+    //     let heightWeight = table.rowHeights[indexCell.rowIdx].value;
+    //     for (let i = 1; i < rowSpan; ++i) {
+    //         heightWeight += table.rowHeights[indexCell.rowIdx + i].value;
+    //     }
 
-        const width = widthWeight / table.widthTotalWeights * table.frame.width;
-        const height = heightWeight / table.heightTotalWeights * table.frame.height;
-        // this.text.updateSize(width, height);
+    //     const width = widthWeight / table.widthTotalWeights * table.frame.width;
+    //     const height = heightWeight / table.heightTotalWeights * table.frame.height;
+    //     // this.text.updateSize(width, height);
 
-        const layout = this.text.getLayout3(width, height, this.id, this.__layoutToken);
+    //     const layout = this.text.getLayout3(width, height, this.id, this.__layoutToken);
 
-        this.__layoutToken = layout.token;
-        return layout.layout;
-    }
+    //     this.__layoutToken = layout.token;
+    //     return layout.layout;
+    // }
 
-    locateText(x: number, y: number): TextLocate {
-        return locateText(this.getLayout()!, x, y);
-    }
-    locateCursor(index: number, cursorAtBefore: boolean): CursorLocate | undefined {
-        return locateCursor(this.getLayout()!, index, cursorAtBefore);
-    }
-    locateRange(start: number, end: number): { x: number, y: number }[] {
-        return locateRange(this.getLayout()!, start, end);
-    }
+    // locateText(x: number, y: number): TextLocate {
+    //     return locateText(this.getLayout()!, x, y);
+    // }
+    // locateCursor(index: number, cursorAtBefore: boolean): CursorLocate | undefined {
+    //     return locateCursor(this.getLayout()!, index, cursorAtBefore);
+    // }
+    // locateRange(start: number, end: number): { x: number, y: number }[] {
+    //     return locateRange(this.getLayout()!, start, end);
+    // }
 
-    setContentType(contentType: TableCellType | undefined) {
-        contentType = contentType === TableCellType.None ? undefined : contentType;
-        this.cellType = contentType;
-    }
+    // setContentType(contentType: TableCellType | undefined) {
+    //     contentType = contentType === TableCellType.None ? undefined : contentType;
+    //     this.cellType = contentType;
+    // }
 
-    setContentText(text: Text | undefined) {
-        this.text = text;
-    }
+    // setContentText(text: Text | undefined) {
+    //     this.text = text;
+    // }
 
-    setContentImage(ref: string | undefined) {
-        this.imageRef = ref;
-    }
+    // setContentImage(ref: string | undefined) {
+    //     this.imageRef = ref;
+    // }
 
     // 这个设计不太好？
-    setCellSpan(rowSpan: number | undefined, colSpan: number | undefined) {
-        rowSpan = rowSpan && rowSpan <= 1 ? undefined : rowSpan;
-        colSpan = colSpan && colSpan <= 1 ? undefined : colSpan;
-        this.rowSpan = rowSpan;
-        this.colSpan = colSpan;
-        if (this.text) this.text.reLayout();
-        const parent = this.parent;
-        if (parent) (parent as TableShape).reLayout();
-    }
+    // setCellSpan(rowSpan: number | undefined, colSpan: number | undefined) {
+    //     rowSpan = rowSpan && rowSpan <= 1 ? undefined : rowSpan;
+    //     colSpan = colSpan && colSpan <= 1 ? undefined : colSpan;
+    //     this.rowSpan = rowSpan;
+    //     this.colSpan = colSpan;
+    //     if (this.text) this.text.reLayout();
+    //     const parent = this.parent;
+    //     if (parent) (parent as TableShape).reLayout();
+    // }
 
-    onRollback(): void {
-        if (this.text) this.text.reLayout();
-        const parent = this.parent;
-        if (parent) (parent as TableShape).reLayout();
-    }
+    // onRollback(): void {
+    //     if (this.text) this.text.reLayout();
+    //     const parent = this.parent;
+    //     if (parent) (parent as TableShape).reLayout();
+    // }
 }
 
 export class TableShape extends Shape implements classes.TableShape {
@@ -239,9 +226,9 @@ export class TableShape extends Shape implements classes.TableShape {
     textAttr?: TextAttr // 文本默认属性
 
     __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
-    private __layout: LayoutItem = new LayoutItem();
-    private __heightTotalWeights: number;
-    private __widthTotalWeights: number;
+    // private __layout: LayoutItem = new LayoutItem();
+    // private __heightTotalWeights: number;
+    // private __widthTotalWeights: number;
 
     constructor(
         crdtidx: BasicArray<number>,
@@ -265,8 +252,8 @@ export class TableShape extends Shape implements classes.TableShape {
         this.rowHeights = rowHeights
         this.colWidths = colWidths
         this.cells = cells;
-        this.__heightTotalWeights = rowHeights.reduce((pre, cur) => pre + cur.value, 0);
-        this.__widthTotalWeights = colWidths.reduce((pre, cur) => pre + cur.value, 0);
+        // this.__heightTotalWeights = rowHeights.reduce((pre, cur) => pre + cur.value, 0);
+        // this.__widthTotalWeights = colWidths.reduce((pre, cur) => pre + cur.value, 0);
     }
 
     getOpTarget(path: string[]): any {
@@ -295,17 +282,17 @@ export class TableShape extends Shape implements classes.TableShape {
         return this.cells;
     }
 
-    updateTotalWeights() {
-        this.__heightTotalWeights = this.rowHeights.reduce((pre, cur) => pre + cur.value, 0);
-        this.__widthTotalWeights = this.colWidths.reduce((pre, cur) => pre + cur.value, 0);
-    }
+    // updateTotalWeights() {
+    //     this.__heightTotalWeights = this.rowHeights.reduce((pre, cur) => pre + cur.value, 0);
+    //     this.__widthTotalWeights = this.colWidths.reduce((pre, cur) => pre + cur.value, 0);
+    // }
 
-    get widthTotalWeights() {
-        return this.__widthTotalWeights;
-    }
-    get heightTotalWeights() {
-        return this.__heightTotalWeights;
-    }
+    // get widthTotalWeights() {
+    //     return this.__widthTotalWeights;
+    // }
+    // get heightTotalWeights() {
+    //     return this.__heightTotalWeights;
+    // }
     get rowCount() {
         return this.rowHeights.length;
     }
@@ -325,139 +312,139 @@ export class TableShape extends Shape implements classes.TableShape {
         ["z"]];
         return new Path(path);
     }
-    getLayout(): TableLayout {
-        this.__layout.update(this);
-        if (!this.__layout.layout) this.__layout.layout = layoutTable(this);
-        return this.__layout.layout;
-    }
-    getColWidths() {
-        const frame = this.frame;
-        const width = frame.width;
-        const colWidths = this.colWidths;
-        const colWBase = colWidths.reduce((sum, cur) => sum + cur.value, 0);
-        return colWidths.map((val) => val.value / colWBase * width);
-    }
-    getRowHeights() {
-        const frame = this.frame;
-        const height = frame.height;
-        const rowHeights = this.rowHeights;
-        const rowHBase = this.heightTotalWeights;
-        return rowHeights.map((val) => val.value / rowHBase * height);
-    }
+    // getLayout(): TableLayout {
+    //     this.__layout.update(this);
+    //     if (!this.__layout.layout) this.__layout.layout = layoutTable(this);
+    //     return this.__layout.layout;
+    // }
+    // getColWidths() {
+    //     const frame = this.frame;
+    //     const width = frame.width;
+    //     const colWidths = this.colWidths;
+    //     const colWBase = colWidths.reduce((sum, cur) => sum + cur.value, 0);
+    //     return colWidths.map((val) => val.value / colWBase * width);
+    // }
+    // getRowHeights() {
+    //     const frame = this.frame;
+    //     const height = frame.height;
+    //     const rowHeights = this.rowHeights;
+    //     const rowHBase = this.heightTotalWeights;
+    //     return rowHeights.map((val) => val.value / rowHBase * height);
+    // }
 
-    onRollback(from: string): void {
-        if (from !== "composingInput") {
-            this.reLayout();
-            return;
-        }
-        const widthTotalWeights = this.colWidths.reduce((p, c) => p + c.value, 0);
-        const heightTotalWeights = this.rowHeights.reduce((p, c) => p + c.value, 0);
-        if (this.__widthTotalWeights !== widthTotalWeights ||
-            this.__heightTotalWeights !== heightTotalWeights) {
-            this.__widthTotalWeights = widthTotalWeights;
-            this.__heightTotalWeights = heightTotalWeights;
-            this.__layout.layout = undefined;
-        }
-    }
+    // onRollback(from: string): void {
+    //     if (from !== "composingInput") {
+    //         this.reLayout();
+    //         return;
+    //     }
+    //     const widthTotalWeights = this.colWidths.reduce((p, c) => p + c.value, 0);
+    //     const heightTotalWeights = this.rowHeights.reduce((p, c) => p + c.value, 0);
+    //     if (this.__widthTotalWeights !== widthTotalWeights ||
+    //         this.__heightTotalWeights !== heightTotalWeights) {
+    //         this.__widthTotalWeights = widthTotalWeights;
+    //         this.__heightTotalWeights = heightTotalWeights;
+    //         this.__layout.layout = undefined;
+    //     }
+    // }
 
-    reLayout() {
-        this.__widthTotalWeights = this.colWidths.reduce((p, c) => p + c.value, 0);
-        this.__heightTotalWeights = this.rowHeights.reduce((p, c) => p + c.value, 0);
-        this.__layout.layout = undefined;
-    }
+    // reLayout() {
+    //     this.__widthTotalWeights = this.colWidths.reduce((p, c) => p + c.value, 0);
+    //     this.__heightTotalWeights = this.rowHeights.reduce((p, c) => p + c.value, 0);
+    //     this.__layout.layout = undefined;
+    // }
 
-    locateCell(x: number, y: number): (TableGridItem & { cell: TableCell | undefined }) | undefined {
-        const item = locateCell(this.getLayout(), x, y) as (TableGridItem & { cell: TableCell | undefined }) | undefined;
-        if (item) item.cell = this.getCellAt(item.index.row, item.index.col);
-        return item;
-    }
+    // locateCell(x: number, y: number): (TableGridItem & { cell: TableCell | undefined }) | undefined {
+    //     const item = locateCell(this.getLayout(), x, y) as (TableGridItem & { cell: TableCell | undefined }) | undefined;
+    //     if (item) item.cell = this.getCellAt(item.index.row, item.index.col);
+    //     return item;
+    // }
 
-    locateCellIndex(x: number, y: number): { row: number, col: number } | undefined {
-        return locateCellIndex(this.getLayout(), x, y);
-    }
+    // locateCellIndex(x: number, y: number): { row: number, col: number } | undefined {
+    //     return locateCellIndex(this.getLayout(), x, y);
+    // }
 
-    locateCell2(cell: TableCell): (TableGridItem & { cell: TableCell | undefined }) | undefined {
-        const index = this.indexOfCell(cell);
-        if (!index || !index.visible) return;
-        const item = this.getLayout().grid.get(index.rowIdx, index.colIdx);
-        if (!item) return;
-        return {
-            index: item.index,
-            frame: item.frame,
-            span: item.span,
-            cell
-        }
-    }
+    // locateCell2(cell: TableCell): (TableGridItem & { cell: TableCell | undefined }) | undefined {
+    //     const index = this.indexOfCell(cell);
+    //     if (!index || !index.visible) return;
+    //     const item = this.getLayout().grid.get(index.rowIdx, index.colIdx);
+    //     if (!item) return;
+    //     return {
+    //         index: item.index,
+    //         frame: item.frame,
+    //         span: item.span,
+    //         cell
+    //     }
+    // }
 
-    indexOfCell2(cell: TableCell): { rowIdx: number, colIdx: number } | undefined {
-        // cell indexs
-        const ids = cell.id.split(',');
-        if (ids.length !== 2) throw new Error("cell index error");
-        const rowIdx = this.rowHeights.findIndex(v => v.id === ids[0]);
-        const colIdx = this.colWidths.findIndex(v => v.id === ids[1]);
-        if (rowIdx < 0 || colIdx < 0) return;
-        return { rowIdx, colIdx }
-    }
+    // indexOfCell2(cell: TableCell): { rowIdx: number, colIdx: number } | undefined {
+    //     // cell indexs
+    //     const ids = cell.id.split(',');
+    //     if (ids.length !== 2) throw new Error("cell index error");
+    //     const rowIdx = this.rowHeights.findIndex(v => v.id === ids[0]);
+    //     const colIdx = this.colWidths.findIndex(v => v.id === ids[1]);
+    //     if (rowIdx < 0 || colIdx < 0) return;
+    //     return { rowIdx, colIdx }
+    // }
 
-    indexOfCell(cell: TableCell): { rowIdx: number, colIdx: number, visible: boolean } | undefined {
-        // cell indexs
-        const cellIdx = this.indexOfCell2(cell);
-        if (!cellIdx) return;
-        const { rowIdx, colIdx } = cellIdx;
-        const layout = this.getLayout();
-        const item = layout.grid.get(rowIdx, colIdx);
-        const visible = item.index.row === rowIdx && item.index.col === colIdx;
-        return { rowIdx, colIdx, visible }
-    }
+    // indexOfCell(cell: TableCell): { rowIdx: number, colIdx: number, visible: boolean } | undefined {
+    //     // cell indexs
+    //     const cellIdx = this.indexOfCell2(cell);
+    //     if (!cellIdx) return;
+    //     const { rowIdx, colIdx } = cellIdx;
+    //     const layout = this.getLayout();
+    //     const item = layout.grid.get(rowIdx, colIdx);
+    //     const visible = item.index.row === rowIdx && item.index.col === colIdx;
+    //     return { rowIdx, colIdx, visible }
+    // }
 
-    /**
-     * [rowStart, rowEnd], [colStart, colEnd] 左闭右闭区间
-     * @param rowStart 
-     * @param rowEnd 
-     * @param colStart 
-     * @param colEnd 
-     * @param visible 
-     * @returns 
-     */
-    getCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number): { cell: TableCell | undefined, rowIdx: number, colIdx: number }[] {
-        return getTableCells(this, rowStart, rowEnd, colStart, colEnd);
-    }
+    // /**
+    //  * [rowStart, rowEnd], [colStart, colEnd] 左闭右闭区间
+    //  * @param rowStart 
+    //  * @param rowEnd 
+    //  * @param colStart 
+    //  * @param colEnd 
+    //  * @param visible 
+    //  * @returns 
+    //  */
+    // getCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number): { cell: TableCell | undefined, rowIdx: number, colIdx: number }[] {
+    //     return getTableCells(this, rowStart, rowEnd, colStart, colEnd);
+    // }
 
-    getCellAt(rowIdx: number, colIdx: number): (TableCell | undefined) {
-        if (rowIdx < 0 || colIdx < 0 || rowIdx >= this.rowCount || colIdx >= this.colCount) {
-            throw new Error("cell index outof range: " + rowIdx + " " + colIdx)
-        }
-        const cellId = this.rowHeights[rowIdx].id + "," + this.colWidths[colIdx].id;
-        return this.cells.get(cellId);
-    }
+    // getCellAt(rowIdx: number, colIdx: number): (TableCell | undefined) {
+    //     if (rowIdx < 0 || colIdx < 0 || rowIdx >= this.rowCount || colIdx >= this.colCount) {
+    //         throw new Error("cell index outof range: " + rowIdx + " " + colIdx)
+    //     }
+    //     const cellId = this.rowHeights[rowIdx].id + "," + this.colWidths[colIdx].id;
+    //     return this.cells.get(cellId);
+    // }
 
-    /**
-     * 获取未被覆盖的单元格
-     * @param rowStart 
-     * @param rowEnd 
-     * @param colStart 
-     * @param colEnd 
-     * @returns 
-     */
-    getNotCoveredCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number): { cell: TableCell | undefined, rowIdx: number, colIdx: number }[] {
-        return getTableNotCoveredCells(this, this.getLayout(), rowStart, rowEnd, colStart, colEnd);
-    }
+    // /**
+    //  * 获取未被覆盖的单元格
+    //  * @param rowStart 
+    //  * @param rowEnd 
+    //  * @param colStart 
+    //  * @param colEnd 
+    //  * @returns 
+    //  */
+    // getNotCoveredCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number): { cell: TableCell | undefined, rowIdx: number, colIdx: number }[] {
+    //     return getTableNotCoveredCells(this, this.getLayout(), rowStart, rowEnd, colStart, colEnd);
+    // }
 
-    /**
-     * 获取用户可见的单元格
-     * @param rowStart 
-     * @param rowEnd 
-     * @param colStart 
-     * @param colEnd 
-     * @returns 
-     */
-    getVisibleCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number): {
-        cell: TableCell | undefined,
-        rowIdx: number,
-        colIdx: number
-    }[] {
-        return getTableVisibleCells(this, this.getLayout(), rowStart, rowEnd, colStart, colEnd);
-    }
+    // /**
+    //  * 获取用户可见的单元格
+    //  * @param rowStart 
+    //  * @param rowEnd 
+    //  * @param colStart 
+    //  * @param colEnd 
+    //  * @returns 
+    //  */
+    // getVisibleCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number): {
+    //     cell: TableCell | undefined,
+    //     rowIdx: number,
+    //     colIdx: number
+    // }[] {
+    //     return getTableVisibleCells(this, this.getLayout(), rowStart, rowEnd, colStart, colEnd);
+    // }
 
     get isNoSupportDiamondScale() {
         return true;

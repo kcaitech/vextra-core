@@ -1,10 +1,12 @@
 import { TextLayout } from "../data/textlayout";
-import { OverrideType, Path, ShapeFrame, TableCell, TableCellType, Text, VariableType } from "../data/classes";
+import { OverrideType, Path, ShapeFrame, TableCell, TableCellType, Text, TextBehaviour, VariableType } from "../data/classes";
 import { EL, elh } from "./el";
 import { ShapeView, isDiffShapeFrame } from "./shape";
 import { renderText2Path, renderTextLayout } from "../render/text";
 import { DViewCtx, PropsType } from "./viewctx";
 import { CursorLocate, TextLocate, locateCursor, locateRange, locateText } from "../data/textlocate";
+import { newTableCellText, newText } from "../data/textutils";
+import { TableView } from "./table";
 
 export class TableCellView extends ShapeView {
 
@@ -66,9 +68,16 @@ export class TableCellView extends ShapeView {
 
     getText(): Text {
         const v = this._findOV(OverrideType.Text, VariableType.Text);
-        const ret = v ? v.value : (this.m_data as TableCell).text;
-        if (!ret) throw new Error('text not found');
-        return ret;
+        if (v) {
+            const ret = v.value;
+            if (!ret) throw new Error('text not found');
+            return ret;
+        }
+        const ret = (this.m_data as TableCell).text;
+        if (ret) return ret;
+
+        const _text = newTableCellText();
+        return _text;
     }
 
     get text() {
@@ -77,6 +86,16 @@ export class TableCellView extends ShapeView {
 
     get cellType() {
         return this.data.cellType;
+    }
+
+    get rowSpan() {
+        return this.data.rowSpan;
+    }
+    get colSpan() {
+        return this.data.colSpan;
+    }
+    get imageRef() {
+        return this.data.imageRef;
     }
 
     private m_layout?: TextLayout;

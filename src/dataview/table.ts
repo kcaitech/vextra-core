@@ -1,12 +1,14 @@
 import { renderBorders } from "../render";
-import { Shape, ShapeType, SymbolRefShape, SymbolShape, TableCell, TableGridItem, TableShape } from "../data/classes";
+import { OverrideType, Shape, ShapeType, SymbolRefShape, SymbolShape, TableCell, TableGridItem, TableLayout, TableShape } from "../data/classes";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
 import { DataView } from "./view"
 import { DViewCtx, PropsType } from "./viewctx";
 import { locateCell, locateCellIndex } from "../data/tablelocate";
 import { TableCellView } from "./tablecell";
-import { RenderTransform } from "./basic";
+import { RenderTransform, findOverride } from "./basic";
+import { layoutTable } from "../data/tablelayout";
+import { getTableCells, getTableVisibleCells } from "../data/tableread";
 
 export class TableView extends ShapeView {
 
@@ -29,13 +31,10 @@ export class TableView extends ShapeView {
     }
 
     protected _bubblewatcher(...args: any[]) {
-        // // this.onChildChange(...args);
-        // if (args.includes('borders')) this.m_ctx.setDirty(this);
-
         if (args.includes('text')) {
             return;
         }
-        if (args.includes('rowSpan') || args.includes('colSpan'))  this.data.reLayout();
+        if (args.includes('rowSpan') || args.includes('colSpan')) this.m_layout = undefined;
         this.updateChildren();
         this.m_ctx.setDirty(this);
     }
@@ -58,11 +57,15 @@ export class TableView extends ShapeView {
 
     private m_need_updatechilds: boolean = false;
 
+    private m_layout: TableLayout | undefined;
+    // private __heightTotalWeights: number;
+    // private __widthTotalWeights: number;
+
     onDataChange(...args: any[]): void {
         super.onDataChange(...args);
         // if (args.includes('cells')) 
         this.m_need_updatechilds = true;
-        if (args.includes('rowHeights') || args.includes('colWidths')) this.data.reLayout();
+        if (args.includes('rowHeights') || args.includes('colWidths')) this.m_layout = undefined;
     }
 
     // 单元格不展示
@@ -78,6 +81,24 @@ export class TableView extends ShapeView {
         }
     }
 
+    _getCellAt(rowIdx: number, colIdx: number): TableCell | undefined {
+        if (rowIdx < 0 || colIdx < 0 || rowIdx >= this.rowCount || colIdx >= this.colCount) {
+            throw new Error("cell index outof range: " + rowIdx + " " + colIdx)
+        }
+        const cellId = this.rowHeights[rowIdx].id + "," + this.colWidths[colIdx].id;
+        const _vars = findOverride(cellId, OverrideType.TableCell, this.varsContainer || []);
+        if (_vars && _vars.length > 0) {
+            return _vars[_vars.length - 1].value;
+        }
+        return this.data.cells.get(cellId);
+    }
+
+    getLayout(): TableLayout {
+        if (this.m_layout) return this.m_layout;
+        this.m_layout = layoutTable(this.data, (ri: number, ci: number) => (this._getCellAt(ri, ci)));
+        return this.m_layout;
+    }
+
     // todo table支持组件，直接override shape? 或者至少要datas & rowHeights & colWidths
     protected updateChildren(): void {
 
@@ -88,13 +109,13 @@ export class TableView extends ShapeView {
 
         const shape = this.m_data as TableShape;
         const comsMap = this.m_ctx.comsMap;
-        const layout = shape.getLayout();
+        const layout = this.getLayout();
 
         let idx = 0;
         for (let i = 0, len = layout.grid.rowCount; i < len; ++i) {
             for (let j = 0, len = layout.grid.colCount; j < len; ++j) {
                 const cellLayout = layout.grid.get(i, j);
-                const cell = shape.getCellAt(cellLayout.index.row, cellLayout.index.col);
+                const cell = this._getCellAt(cellLayout.index.row, cellLayout.index.col);
                 if (cell && cellLayout.index.row === i && cellLayout.index.col === j) {
                     const cdom = reuse.get(cell.id);
                     const props = { data: cell, transx: this.m_transx, varsContainer: this.varsContainer, frame: cellLayout.frame, isVirtual: this.m_isVirtual, index: cellLayout.index };
@@ -123,14 +144,14 @@ export class TableView extends ShapeView {
 
     protected renderBorders(): EL[] {
         const shape = this.m_data as TableShape;
-        const layout = shape.getLayout();
+        const layout = this.getLayout();
         const cell_border_nodes = [];
         const nodes = renderBorders(elh, this.getBorders(), this.frame, this.getPathStr());
         for (let i = 0, len = layout.grid.rowCount; i < len; ++i) {
             for (let j = 0, len = layout.grid.colCount; j < len; ++j) {
                 const cellLayout = layout.grid.get(i, j);
                 if (cellLayout.index.row !== i || cellLayout.index.col !== j) continue;
-                const child = shape.getCellAt(cellLayout.index.row, cellLayout.index.col);// cellLayout.cell;
+                const child = this._getCellAt(cellLayout.index.row, cellLayout.index.col);// cellLayout.cell;
                 const path = TableCell.getPathOfFrame(cellLayout.frame);
                 const pathstr = path.toString();
                 if (child && child.style.borders.length > 0) {
@@ -150,39 +171,65 @@ export class TableView extends ShapeView {
         return nodes;
     }
 
+    _getVisibleCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number): {
+        cell: TableCell | undefined,
+        rowIdx: number,
+        colIdx: number
+    }[] {
+        return getTableVisibleCells(this.data, (ri: number, ci: number) => (this._getCellAt(ri, ci)), this.getLayout(), rowStart, rowEnd, colStart, colEnd);
+    }
+
     getVisibleCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number) {
-        return this.data.getVisibleCells(rowStart, rowEnd, colStart, colEnd).map((v) => ({
+        return this._getVisibleCells(rowStart, rowEnd, colStart, colEnd).map((v) => ({
             cell: v.cell ? this.cells.get(v.cell.id) : undefined,
             rowIdx: v.rowIdx,
             colIdx: v.colIdx
         }));
+    }
+
+    _getCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number): { cell: TableCell | undefined, rowIdx: number, colIdx: number }[] {
+        return getTableCells(this.data, (ri: number, ci: number) => (this._getCellAt(ri, ci)), rowStart, rowEnd, colStart, colEnd);
     }
 
     getCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number) {
-        return this.data.getCells(rowStart, rowEnd, colStart, colEnd).map((v) => ({
+        return this._getCells(rowStart, rowEnd, colStart, colEnd).map((v) => ({
             cell: v.cell ? this.cells.get(v.cell.id) : undefined,
             rowIdx: v.rowIdx,
             colIdx: v.colIdx
         }));
     }
+    get heightTotalWeights() {
+        return this.rowHeights.reduce((p, c) => (p + c.value), 0);
+    }
+    get widthTotalWeights() {
+        return this.colWidths.reduce((p, c) => (p + c.value), 0);
+    }
 
-    getCellAt(row: number, col: number) {
-        const cell = this.data.getCellAt(row, col);
+    get rowCount() {
+        return this.data.rowCount;
+    }
+    get colCount() {
+        return this.data.colCount;
+    }
+    get rowHeights() {
+        return this.data.rowHeights;
+    }
+    get colWidths() {
+        return this.data.colWidths;
+    }
+    getCellAt(rowIdx: number, colIdx: number): TableCellView | undefined {
+        const cell = this._getCellAt(rowIdx, colIdx);
         if (cell) {
             return this.cells.get(cell.id);
         }
     }
 
-    getLayout() {
-        return this.data.getLayout();
-    }
-
     locateCell(x: number, y: number): (TableGridItem & { cell: TableCellView | undefined }) | undefined {
         const item = locateCell(this.getLayout(), x, y) as (TableGridItem & { cell: TableCellView | undefined }) | undefined;
         if (item) {
-            const cell = this.data.getCellAt(item.index.row, item.index.col);
+            const cell = this.getCellAt(item.index.row, item.index.col);
             if (cell) {
-                item.cell = this.cells.get(cell.id);
+                item.cell = cell;
             }
         }
         return item;
@@ -196,7 +243,27 @@ export class TableView extends ShapeView {
     //     return this.data.locateCell2(cell);
     // }
 
+    _indexOfCell2(cell: TableCell): { rowIdx: number, colIdx: number } | undefined {
+        // cell indexs
+        const ids = cell.id.split(',');
+        if (ids.length !== 2) throw new Error("cell index error");
+        const rowIdx = this.rowHeights.findIndex(v => v.id === ids[0]);
+        const colIdx = this.colWidths.findIndex(v => v.id === ids[1]);
+        if (rowIdx < 0 || colIdx < 0) return;
+        return { rowIdx, colIdx }
+    }
+    _indexOfCell(cell: TableCell): { rowIdx: number, colIdx: number, visible: boolean } | undefined {
+        // cell indexs
+        const cellIdx = this._indexOfCell2(cell);
+        if (!cellIdx) return;
+        const { rowIdx, colIdx } = cellIdx;
+        const layout = this.getLayout();
+        const item = layout.grid.get(rowIdx, colIdx);
+        const visible = item.index.row === rowIdx && item.index.col === colIdx;
+        return { rowIdx, colIdx, visible }
+    }
+
     indexOfCell(cell: TableCell | TableCellView): { rowIdx: number, colIdx: number, visible: boolean } | undefined {
-        return cell instanceof TableCellView ? this.data.indexOfCell(cell.data) : this.data.indexOfCell(cell);
+        return cell instanceof TableCellView ? this._indexOfCell(cell.data) : this._indexOfCell(cell);
     }
 }
