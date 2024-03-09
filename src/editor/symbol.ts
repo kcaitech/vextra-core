@@ -638,7 +638,8 @@ export function cell4edit2(page: Page, view: TableView, _cell: TableCellView, ap
             new ShapeFrame(0, 0, 0, 0),
             new Style(new BasicArray(), new BasicArray(), new BasicArray()));
     };
-    const _var = override_variable2(page, VariableType.TableCell, OverrideType.TableCell, cellId, valuefun, api, view);
+    const refId = view.data.id + '/' + cellId;
+    const _var = override_variable2(page, VariableType.TableCell, OverrideType.TableCell, refId, valuefun, api, view);
     if (_var) return _var.value;
     api.tableInitCell(page, view.data, rowIdx, colIdx);
     return _cell.data;
@@ -656,7 +657,8 @@ export function cell4edit(page: Page, view: TableView, rowIdx: number, colIdx: n
             new ShapeFrame(0, 0, 0, 0),
             new Style(new BasicArray(), new BasicArray(), new BasicArray()));
     };
-    const _var = override_variable2(page, VariableType.TableCell, OverrideType.TableCell, cellId, valuefun, api, view);
+    const refId = view.data.id + '/' + cellId;
+    const _var = override_variable2(page, VariableType.TableCell, OverrideType.TableCell, refId, valuefun, api, view);
     if (_var) return _var.value;
 
     api.tableInitCell(page, view.data, rowIdx, colIdx);
