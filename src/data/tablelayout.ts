@@ -35,8 +35,8 @@ export type TableLayout = {
 //     }
 // }
 
-export function layoutTable(table: TableShape, cellGetter: (ri: number, ci: number) => TableCell | undefined): TableLayout {
-    const frame = table.frame;
+export function layoutTable(table: TableShape, frame: ShapeFrame, cellGetter: (ri: number, ci: number) => TableCell | undefined): TableLayout {
+    // const frame = table.frame;
     const grid: Grid<TableGridItem> = new Grid<TableGridItem>(table.rowHeights.length, table.colWidths.length);
     // const cells = table.cells;
 

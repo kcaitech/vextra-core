@@ -72,6 +72,9 @@ export class Basic {
                 // console.warn("not find target " + k, "path: " + path.join(','))
                 return;
             }
+            if (target instanceof Basic) {
+                return target.getOpTarget(path.slice(i + 1));
+            }
         }
         return target;
     }

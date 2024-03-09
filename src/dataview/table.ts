@@ -58,6 +58,8 @@ export class TableView extends ShapeView {
     private m_need_updatechilds: boolean = false;
 
     private m_layout: TableLayout | undefined;
+    private m_savewidth: number = 0;
+    private m_saveheight: number = 0;
     // private __heightTotalWeights: number;
     // private __widthTotalWeights: number;
 
@@ -86,7 +88,8 @@ export class TableView extends ShapeView {
             throw new Error("cell index outof range: " + rowIdx + " " + colIdx)
         }
         const cellId = this.rowHeights[rowIdx].id + "," + this.colWidths[colIdx].id;
-        const _vars = findOverride(cellId, OverrideType.TableCell, this.varsContainer || []);
+        const refId = this.data.id + '/' + cellId;
+        const _vars = findOverride(refId, OverrideType.TableCell, this.varsContainer || []);
         if (_vars && _vars.length > 0) {
             return _vars[_vars.length - 1].value;
         }
@@ -94,8 +97,9 @@ export class TableView extends ShapeView {
     }
 
     getLayout(): TableLayout {
-        if (this.m_layout) return this.m_layout;
-        this.m_layout = layoutTable(this.data, (ri: number, ci: number) => (this._getCellAt(ri, ci)));
+        const frame = this.frame;
+        if (this.m_layout && this.m_saveheight === frame.height && this.m_savewidth === frame.width) return this.m_layout;
+        this.m_layout = layoutTable(this.data, frame, (ri: number, ci: number) => (this._getCellAt(ri, ci)));
         return this.m_layout;
     }
 

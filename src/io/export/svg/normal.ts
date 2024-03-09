@@ -140,7 +140,7 @@ comsMap.set(ShapeType.Table, (data: Shape,
         }
         return _table.cells.get(cellId);
     }
-    const layout = layoutTable(data as TableShape, cellGetter);
+    const layout = layoutTable(data as TableShape,  data.frame, cellGetter);
     return table(h, data as TableShape, comsMap, varsContainer, layout, cellGetter);
 });
 

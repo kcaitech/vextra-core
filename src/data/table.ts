@@ -49,10 +49,10 @@ export class TableCell extends Shape implements classes.TableCell {
         return super.getOpTarget(path);
     }
 
-    getCrdtPath(): string[] {
-        const cells = this.__parent;
-        if (!cells) throw new Error("cell not inside table?");
-        return cells.getCrdtPath().concat(this.id);
+    getCrdtPath(): string[] { // 覆写shape.getCrdtPath
+        const p = this.__parent;
+        if (!p) throw new Error("cell not inside table?");
+        return p.getCrdtPath().concat(this.__propKey!);
     }
 
     // get shapeId(): (string | { rowIdx: number, colIdx: number })[] {
