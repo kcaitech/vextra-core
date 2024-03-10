@@ -1796,9 +1796,9 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
     // inject code
     if (ctx?.document) {
         const registed = ctx.document.symbolregist.get(ret.id);
-        if (!registed || registed === 'freesymbols' || registed === ctx.curPage) {
-            ctx.document.symbolsMgr.add(ret.id, ret);
-        }
+        // if (!registed || registed === 'freesymbols' || registed === ctx.curPage) {
+        ctx.document.symbolsMgr.add(ret.id, ret);
+        // }
     }
     return ret
 }

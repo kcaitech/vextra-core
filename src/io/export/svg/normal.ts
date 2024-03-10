@@ -12,7 +12,7 @@ import { renderTable as table } from "../../../render";
 import { renderTableCell as cell } from "../../../render";
 import { ComType, h } from "./basic";
 import { Artboard } from "../../../data/artboard";
-import { ShapeType, SymbolRefShape, TableCell, TableShape } from "../../../data/classes";
+import { ShapeType, SymbolRefShape, TableCell, TableShape, Document } from "../../../data/classes";
 import {
     ArtboradView, ContactLineView, CutoutShapeView, DViewCtx,
     GroupShapeView, ImageShapeView,
@@ -110,16 +110,37 @@ comsMap.set(ShapeType.SymbolRef, (data: Shape,
     const symMgr = shape.getSymbolMgr();
     if (!symMgr) return "";
     const refId = getRefId2(shape, varsContainer);
-    const sym0 = symMgr.getSync(refId);
-    if (!sym0) return "";
+    const val = symMgr.getSync(refId);
+    if (!val || val.length === 0) return "";
+
+    const symbolregist = (symMgr.parent as Document).symbolregist.get(refId);
+    let sym;
+    if (symbolregist) {
+        // todo val 有多个时，需要提示用户修改
+        for (let i = 0; i < val.length; ++i) {
+            const v = val[i];
+            const p = v.getPage();
+            if (!p && symbolregist === 'freesymbols') {
+                sym = v;
+                break;
+            } else if (p && p.id === symbolregist) {
+                sym = v;
+            }
+        }
+    } else {
+        sym = val[val.length - 1];
+    }
+
+    if (!sym) return "";
 
     if (shape.isVirtualShape || isAdaptedShape(shape)) {
-        symref(h, shape, sym0, comsMap, varsContainer, undefined);
+        // todo
+        symref(h, shape, sym, comsMap, varsContainer, undefined);
     }
 
     const adapt = makeAdapt(shape, varsContainer);
     adapt.ctx.layoutAll();
-    const ret = symref(h, adapt.shape, sym0, comsMap, varsContainer, undefined);
+    const ret = symref(h, adapt.shape, sym, comsMap, varsContainer, undefined);
 
     adapt.view.destory();
     return ret;
@@ -140,7 +161,7 @@ comsMap.set(ShapeType.Table, (data: Shape,
         }
         return _table.cells.get(cellId);
     }
-    const layout = layoutTable(data as TableShape,  data.frame, cellGetter);
+    const layout = layoutTable(data as TableShape, data.frame, cellGetter);
     return table(h, data as TableShape, comsMap, varsContainer, layout, cellGetter);
 });
 
