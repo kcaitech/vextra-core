@@ -334,9 +334,9 @@ class CmdSync {
         const subrepos = classifyOps([cmd]);
         for (let [k, v] of subrepos) {
             // check
-            if (v.length > 1) {
-                console.warn("op can merge?? ", v)
-            }
+            // if (v.length > 1) {
+            //     console.warn("op can merge?? ", v)
+            // }
             // 建立repotree
             const op0 = v[0].op;
             const blockId = op0.path[0];
