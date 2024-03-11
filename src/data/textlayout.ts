@@ -566,13 +566,7 @@ export function layoutPara(text: Text, para: Para, layoutWidth: number, preBulle
     return paraLayout;
 }
 
-export function layoutText(text: Text, layoutWidth: number, layoutHeight: number): {
-    xOffset: number,
-    yOffset: number,
-    paras: ParaLayout[],
-    contentHeight: number,
-    contentWidth: number,
-} {
+export function layoutText(text: Text, layoutWidth: number, layoutHeight: number): TextLayout {
     // const layoutWidth = ((b: TextBehaviour) => {
     //     switch (b) {
     //         case TextBehaviour.Flexible: return Number.MAX_VALUE;
