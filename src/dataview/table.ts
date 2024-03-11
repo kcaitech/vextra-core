@@ -63,7 +63,7 @@ export class TableView extends ShapeView {
     // private __heightTotalWeights: number;
     // private __widthTotalWeights: number;
 
-    onDataChange(...args: any[]): void {console.log(args)
+    onDataChange(...args: any[]): void {
         super.onDataChange(...args);
         // if (args.includes('cells')) 
         // this.m_need_updatechilds = true;
