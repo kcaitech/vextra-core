@@ -1,12 +1,12 @@
 import { TextLayout } from "../data/textlayout";
-import { OverrideType, Path, ShapeFrame, TableCell, TableCellType, Text, TextBehaviour, VariableType } from "../data/classes";
+import { Path, ShapeFrame, TableCell, TableCellType, Text } from "../data/classes";
 import { EL, elh } from "./el";
 import { ShapeView, isDiffShapeFrame } from "./shape";
 import { renderText2Path, renderTextLayout } from "../render/text";
 import { DViewCtx, PropsType } from "./viewctx";
 import { CursorLocate, TextLocate, locateCursor, locateRange, locateText } from "../data/textlocate";
-import { newTableCellText, newText } from "../data/textutils";
-import { TableView } from "./table";
+import { newTableCellText } from "../data/textutils";
+import { objectId } from "../basic/objectid";
 
 export class TableCellView extends ShapeView {
 
@@ -46,6 +46,13 @@ export class TableCellView extends ShapeView {
         this.m_ctx.removeReLayout(this);
 
         if (!props) return;
+
+        if (props.data.id !== this.m_data.id) throw new Error('id not match');
+        const dataChanged = objectId(props.data) !== objectId(this.m_data);
+        if (dataChanged) {
+            // data changed
+            this.setData(props.data);
+        }
 
         const frame = props.frame;
         if (isDiffShapeFrame(this.m_frame, frame)) {

@@ -55,7 +55,7 @@ export class TableView extends ShapeView {
         return [];
     }
 
-    private m_need_updatechilds: boolean = false;
+    // private m_need_updatechilds: boolean = false;
 
     private m_layout: TableLayout | undefined;
     private m_savewidth: number = 0;
@@ -63,11 +63,11 @@ export class TableView extends ShapeView {
     // private __heightTotalWeights: number;
     // private __widthTotalWeights: number;
 
-    onDataChange(...args: any[]): void {
+    onDataChange(...args: any[]): void {console.log(args)
         super.onDataChange(...args);
         // if (args.includes('cells')) 
-        this.m_need_updatechilds = true;
-        if (args.includes('rowHeights') || args.includes('colWidths')) this.m_layout = undefined;
+        // this.m_need_updatechilds = true;
+        if (args.includes('rowHeights') || args.includes('colWidths') || args.includes('variables')) this.m_layout = undefined;
     }
 
     // 单元格不展示
@@ -76,11 +76,12 @@ export class TableView extends ShapeView {
     }
 
     protected _layout(shape: Shape, transform: RenderTransform | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): void {
+
         super._layout(shape, transform, varsContainer);
-        if (this.m_need_updatechilds) {
-            this.m_need_updatechilds = false;
-            this.updateChildren();
-        }
+        // if (this.m_need_updatechilds) {
+        //     this.m_need_updatechilds = false;
+        this.updateChildren();
+        // }
     }
 
     _getCellAt(rowIdx: number, colIdx: number): TableCell | undefined {
