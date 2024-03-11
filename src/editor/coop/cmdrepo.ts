@@ -300,7 +300,14 @@ class CmdSync {
                 this._receive(pcmds);
             }
             // 2. 再处理postingcmds, 与服务端对齐
-            this._receiveLocal(this.pendingcmds.slice(index, index + this.postingcmds.length));
+            const receiveLocals = this.pendingcmds.slice(index, index + this.postingcmds.length);
+            // 更新postingcmds version
+            for (let i = 0; i < receiveLocals.length; ++i) {
+                this.postingcmds[i].version = receiveLocals[i].version;
+                this.postingcmds[i].ops.forEach((op) => { if (op instanceof ArrayOp) op.order = receiveLocals[i].version });
+            }
+            this._receiveLocal(receiveLocals);
+
             // 3. 再处理index之后的cmds
             if (this.pendingcmds.length > index + this.postingcmds.length) {
                 const pcmds = this.pendingcmds.slice(index + this.postingcmds.length);
@@ -386,6 +393,7 @@ class CmdSync {
             saveselection: cmd.saveselection && cloneSelectionState(cmd.saveselection),
             selectionupdater: cmd.selectionupdater
         } : undefined;
+        if (newCmd?.saveselection?.text) newCmd.saveselection.text.order = SNumber.MAX_SAFE_INTEGER;
 
         const subrepos = classifyOps([cmd]);
         for (let [k, v] of subrepos) {
@@ -456,6 +464,7 @@ class CmdSync {
             saveselection: cmd.saveselection && cloneSelectionState(cmd.saveselection),
             selectionupdater: cmd.selectionupdater
         } : undefined;
+        if (newCmd?.saveselection?.text) newCmd.saveselection.text.order = SNumber.MAX_SAFE_INTEGER;
 
         const subrepos = classifyOps([cmd]); // 这个得有顺序
         for (let [k, v] of subrepos) {

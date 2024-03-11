@@ -318,27 +318,40 @@ export class TextRepoNode extends RepoNode {
         // check
         if (ops.length === 0) throw new Error();
         if (ops.length > this.localops.length) throw new Error();
+        // const savelocals = this.localops.slice(0);
         for (let i = 0; i < ops.length;) {
             const op = ops[i];
-            const op2 = this.localops.shift();
-            if (!op2) throw new Error();
+
+            let count = 0;
+            while (this.localops.length > 0 && this.localops[0].cmd.id === op.cmd.id) {
+                const op2 = this.localops.shift();
+                if (!op2) throw new Error();
+
+                if ((op2.op as ArrayOp).type1 !== ArrayOpType.Selection) {
+                    ++count;
+                    this.ops.push(op2);
+                }
+            }
+
             // check
-            if (op.cmd.id !== op2?.cmd.id) {
-                console.log(ops, op2, this.localops);
+            if (count === 0) {
                 throw new Error("op not match");
             }
-            if ((op2.op as ArrayOp).type1 === ArrayOpType.Selection) continue;
-            this.ops.push(op2);
-            ++i;
-        }
-        while(this.localops.length > 0 && this.localops[0].cmd.id === ops[ops.length - 1].cmd.id) {
-            const op2 = this.localops.shift();
-            if (!op2) throw new Error();
-            if (!((op2.op as ArrayOp).type1 === ArrayOpType.Selection)) throw new Error("op not match");
+            for (let j = 1; j < count; ++j) {
+                const op1 = ops[i + j];
+                if (op1.cmd.id !== op.cmd.id) throw new Error("op not match");
+            }
+            if ((i + count) < ops.length && ops[i + count].cmd.id === op.cmd.id) throw new Error("op not match");
+
+            i += count;
         }
         // console.log("receiveLocal", ops)
     }
     commit(ops: OpItem[]) {
+        // // check
+        // ops.forEach((op) => revertOp(op.op as ArrayOp));
+        // if (ops.length === 1 && (ops[0].op as ArrayOp).type1 === ArrayOpType.Selection) throw new Error();
+
         this.localops.push(...ops);
         // console.log("commit", this.localops.slice(0))
     }
@@ -375,7 +388,7 @@ export class TextRepoNode extends RepoNode {
         if (ops.length === 0) throw new Error();
         // check 一次只有一个cmd
         let realOpCount = 0;
-        for (let i = 1; i < ops.length; i++) {
+        for (let i = 0; i < ops.length; i++) {
             if (ops[i].cmd !== ops[0].cmd) throw new Error("not single cmd");
             const type = (ops[i].op as ArrayOp).type1;
             if (type !== ArrayOpType.Selection) ++realOpCount;
@@ -408,6 +421,7 @@ export class TextRepoNode extends RepoNode {
         const cur = curops.slice(index + realOpCount).map(op => op.op) as ArrayOp[];
         if (cur.length > 0) {
             const { lhs, rhs } = transform(cur, revertops);
+            rhs.forEach((v, i) => (v as any).target = (revertops[i] as any).target);
             revertops = rhs;
         }
         const record = revertops.map((op: ArrayOp) => (op as any).target ? (apply(this.document, (op as any).target, op) || op) : op);

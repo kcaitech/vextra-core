@@ -123,8 +123,8 @@ export class TextShapeEditor extends ShapeEditor {
                 const attr = (_shape.parent as TableView).data.textAttr;
                 this.__textAttr = attr && importTextAttr(attr);
             }
+            this.__repo.updateTextSelectionPath(cell.text);
             if (_var) {
-                this.__repo.updateTextSelectionPath(cell.text);
                 _shape.setData(cell); // 手动更新下，要不光标更新不对
             }
             return cell as TextShapeLike;
