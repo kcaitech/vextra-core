@@ -101,7 +101,13 @@ export class TextShapeEditor extends ShapeEditor {
         const _shape = shape ?? this.__shape as (TextShapeView | TableCellView);
 
         if (_shape instanceof TableCellView) {
-            const cell = cell4edit2(this.__page, _shape.parent as TableView, _shape, api);
+            const _var = cell4edit2(this.__page, _shape.parent as TableView, _shape, api);
+            let cell: TableCell;
+            if (_var) {
+                cell = _var.value;
+            } else {
+                cell = _shape.data;
+            }
             if (!cell.text) {
                 const save = this.__repo.transactCtx.settrap;
                 this.__repo.transactCtx.settrap = false;
@@ -116,6 +122,10 @@ export class TextShapeEditor extends ShapeEditor {
             if (cell.text.paras.length === 1 && cell.text.paras[0].length === 1) {
                 const attr = (_shape.parent as TableView).data.textAttr;
                 this.__textAttr = attr && importTextAttr(attr);
+            }
+            if (_var) {
+                this.__repo.updateTextSelectionPath(cell.text);
+                _shape.setData(cell); // 手动更新下，要不光标更新不对
             }
             return cell as TextShapeLike;
         } else {
@@ -134,7 +144,7 @@ export class TextShapeEditor extends ShapeEditor {
                 api.shapeModifyVariable(this.__page, _var, createTextByString(_var.value, _shape.text));
             }
             if (_var) {
-                this.__repo.updateTextSelection(_var.value);
+                this.__repo.updateTextSelectionPath(_var.value);
                 return _var;
             }
             return _shape.data as TextShapeLike;

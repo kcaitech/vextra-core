@@ -622,7 +622,7 @@ export function get_state_name(state: SymbolShape, dlt: string) {
 
 
 
-export function cell4edit2(page: Page, view: TableView, _cell: TableCellView, api: Api): TableCell {
+export function cell4edit2(page: Page, view: TableView, _cell: TableCellView, api: Api): Variable | undefined {
     // cell id 要重新生成
     const index = view.indexOfCell(_cell);
     if (!index) throw new Error();
@@ -640,9 +640,10 @@ export function cell4edit2(page: Page, view: TableView, _cell: TableCellView, ap
     };
     const refId = view.data.id + '/' + cellId;
     const _var = override_variable2(page, VariableType.TableCell, OverrideType.TableCell, refId, valuefun, api, view);
-    if (_var) return _var.value;
+    if (_var) return _var;
     api.tableInitCell(page, view.data, rowIdx, colIdx);
-    return _cell.data;
+    // return _cell.data;
+    // return _var;
 }
 
 export function cell4edit(page: Page, view: TableView, rowIdx: number, colIdx: number, api: Api): TableCell {

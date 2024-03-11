@@ -102,8 +102,8 @@ export class Api {
         };
         this.needUpdateFrame.length = 0;
     }
-    updateTextSelection(op: ArrayOpSelection | undefined) {
-        if (this.cmd?.saveselection) this.cmd.saveselection.text = op;
+    updateTextSelectionPath(crdtpath: string[]) {
+        if (this.cmd?.saveselection?.text) this.cmd.saveselection.text.path = crdtpath;
     }
     isNeedCommit(): boolean {
         return this.cmd !== undefined && this.cmd.ops.length > 0;
