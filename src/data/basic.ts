@@ -254,8 +254,10 @@ export class MultiResourceMgr<T> extends WatchableObject {
         this.__guard = guard;
         this.__crdtpath = crdtpath;
     }
-
-    set parent(parent: Basic) {
+    get parent() {
+        return this.__parent;
+    }
+    set parent(parent: Basic | undefined) {
         this.__parent = parent;
     }
 

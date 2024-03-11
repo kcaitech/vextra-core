@@ -99,8 +99,9 @@ export class SymbolRefView extends ShapeView {
         this.m_refId = refId;
         const onload = (val: SymbolShape[]) => {
             if (this.m_refId !== refId) return;
-
-            const symbolregist = (symMgr.parent as Document).symbolregist.get(refId);
+            const document = symMgr.parent as Document;
+            if (!document) throw new Error("symMgr has no parent?");
+            const symbolregist = document.symbolregist.get(refId);
             let sym;
             if (symbolregist) {
                 // todo val 有多个时，需要提示用户修改
