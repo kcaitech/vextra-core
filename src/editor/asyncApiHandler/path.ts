@@ -6,7 +6,7 @@ import { CurveMode, CurvePoint, ImageShape, PathShape } from "../../data/shape";
 import { Matrix } from "../../basic/matrix";
 import { BasicArray } from "../../data/basic";
 import { uuid } from "../../basic/uuid";
-import { after_insert_point, pointsEdit, update_frame_by_points } from "../utils/path";
+import { after_insert_point, update_frame_by_points } from "../utils/path";
 
 export type ModifyUnits = {
     index: number;

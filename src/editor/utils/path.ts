@@ -287,50 +287,6 @@ export function update_frame_by_points(api: Api, page: Page, s: PathShape) {
 
         api.shapeModifyCurvPoint(page, s, i, m1.computeCoord2(p.x, p.y));
     }
-
-    console.log('new func 1701')
-}
-
-/**
- * @deprecated
- * @description 在更新frame过程中去除了transform
- */
-export function update_frame_by_points2(api: Api, page: Page, s: PathShape) {
-    const nf = s.boundingBox2();
-    const w = s.frame.width, h = s.frame.height;
-    const mp = s.matrix2Parent();
-    mp.preScale(w, h);
-    if (s.rotation) {
-        api.shapeModifyRotate(page, s, 0);
-    }
-    if (s.isFlippedHorizontal) {
-        api.shapeModifyHFlip(page, s, false);
-    }
-    if (s.isFlippedVertical) {
-        api.shapeModifyVFlip(page, s, false);
-    }
-    api.shapeModifyX(page, s, nf.x);
-    api.shapeModifyY(page, s, nf.y);
-    api.shapeModifyWH(page, s, nf.width, nf.height);
-    const mp2 = s.matrix2Parent();
-    mp2.preScale(nf.width, nf.height);
-    mp.multiAtLeft(mp2.inverse);
-    const points = s.points;
-    if (!points?.length) {
-        return false;
-    }
-    for (let i = 0, len = points.length; i < len; i++) {
-        const p = points[i];
-        if (!p) continue;
-        if (p.hasFrom && p.fromX !== undefined && p.fromY !== undefined) {
-            api.shapeModifyCurvFromPoint(page, s as PathShape, i, mp.computeCoord2(p.fromX, p.fromY));
-        }
-        if (p.hasTo && p.toX !== undefined && p.toY !== undefined) {
-            api.shapeModifyCurvToPoint(page, s as PathShape, i, mp.computeCoord2(p.toX, p.toY));
-        }
-        api.shapeModifyCurvPoint(page, s as PathShape, i, mp.computeCoord2(p.x, p.y));
-    }
-    console.log('update frame by update_frame_by_points2');
 }
 
 /**
