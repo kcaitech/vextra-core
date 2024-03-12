@@ -411,7 +411,8 @@ class CmdSync {
             } else if (cmd === this.nopostcmds[this.nopostcmdidx - 1]) {
                 node.undo(v, undefined); // 正常
             } else {
-                throw new Error();
+                // throw new Error();
+                node.redo(v, undefined);
             }
         }
 
@@ -438,7 +439,8 @@ class CmdSync {
             } else if (cmd === this.nopostcmds[this.nopostcmdidx - 1]) {
                 --this.nopostcmdidx;
             } else {
-                throw new Error();
+                // throw new Error();
+                this._commit2(cmd)
             }
             this.processCmds();
         }
