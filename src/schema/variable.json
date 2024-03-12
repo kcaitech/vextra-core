@@ -54,7 +54,7 @@
                     "$ref": "./context-settings.json"
                 },
                 {
-                    "$ref": "./table-shape.json"
+                    "$ref": "./table-cell.json"
                 },
                 {
                     "$ref": "./export-options.json"

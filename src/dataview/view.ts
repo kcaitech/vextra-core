@@ -105,8 +105,9 @@ export class DataView extends EventEL {
         this.m_ctx.setDirty(this);
     }
 
-    protected setData(data: Shape) {
+    setData(data: Shape) {
         const old = this.m_data;
+        if (data === old) return;
         old.unwatch(this._datawatcher);
         data.watch(this._datawatcher);
         this.m_data = data;

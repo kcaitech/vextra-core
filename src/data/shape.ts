@@ -24,7 +24,6 @@ import { Matrix } from "../basic/matrix";
 import { TextLayout } from "./textlayout";
 import { parsePath } from "./pathparser";
 import { FrameType, RECT_POINTS } from "./consts";
-import { uuid } from "../basic/uuid";
 import { Variable } from "./variable";
 import { TableShape } from "./table";
 import { SymbolRefShape } from "./symbolref";
@@ -115,12 +114,12 @@ export class Shape extends Basic implements classes.Shape {
         this.style = style
     }
 
-    /**
-     * for command
-     */
-    get shapeId(): (string | { rowIdx: number, colIdx: number })[] {
-        return [this.id];
-    }
+    // /**
+    //  * for command
+    //  */
+    // get shapeId(): (string | { rowIdx: number, colIdx: number })[] {
+    //     return [this.id];
+    // }
 
     // public notify(...args: any[]): void {
     //     super.notify(...args);

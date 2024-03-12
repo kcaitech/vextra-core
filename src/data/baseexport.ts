@@ -69,8 +69,8 @@ export function exportVariable(source: types.Variable, ctx?: IExportContext): ty
             if (val.typeId == 'context-settings') {
                 return exportContextSettings(val as types.ContextSettings, ctx)
             }
-            if (val.typeId == 'table-shape') {
-                return exportTableShape(val as types.TableShape, ctx)
+            if (val.typeId == 'table-cell') {
+                return exportTableCell(val as types.TableCell, ctx)
             }
             if (val.typeId == 'export-options') {
                 return exportExportOptions(val as types.ExportOptions, ctx)

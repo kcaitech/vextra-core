@@ -12,40 +12,40 @@ export type TableLayout = {
     colWidths: number[],
 }
 
-export class LayoutItem {
-    layout: TableLayout | undefined;
+// export class LayoutItem {
+//     layout: TableLayout | undefined;
 
-    width: number = 0;
-    height: number = 0;
-    tatalWidth: number = 0;
-    totalHeight: number = 0;
+//     width: number = 0;
+//     height: number = 0;
+//     tatalWidth: number = 0;
+//     totalHeight: number = 0;
 
-    update(table: TableShape) {
-        const frame = table.frame;
-        table.updateTotalWeights();
-        if (frame.width !== this.width || frame.height !== this.height) {
-            this.layout = undefined;
-        } else if (table.widthTotalWeights !== this.tatalWidth || table.heightTotalWeights !== this.totalHeight) {
-            this.layout = undefined;
-        }
-        this.width = frame.width;
-        this.height = frame.height;
-        this.tatalWidth = table.widthTotalWeights;
-        this.totalHeight = table.heightTotalWeights;
-    }
-}
+//     update(table: TableShape) {
+//         const frame = table.frame;
+//         table.updateTotalWeights();
+//         if (frame.width !== this.width || frame.height !== this.height) {
+//             this.layout = undefined;
+//         } else if (table.widthTotalWeights !== this.tatalWidth || table.heightTotalWeights !== this.totalHeight) {
+//             this.layout = undefined;
+//         }
+//         this.width = frame.width;
+//         this.height = frame.height;
+//         this.tatalWidth = table.widthTotalWeights;
+//         this.totalHeight = table.heightTotalWeights;
+//     }
+// }
 
-export function layoutTable(table: TableShape): TableLayout {
-    const frame = table.frame;
+export function layoutTable(table: TableShape, frame: ShapeFrame, cellGetter: (ri: number, ci: number) => TableCell | undefined): TableLayout {
+    // const frame = table.frame;
     const grid: Grid<TableGridItem> = new Grid<TableGridItem>(table.rowHeights.length, table.colWidths.length);
-    const cells = table.cells;
+    // const cells = table.cells;
 
     const width = frame.width;
     const height = frame.height;
     const rowHeights = table.rowHeights;
-    const rowHBase = table.heightTotalWeights;
+    const rowHBase = table.rowHeights.reduce((p, c) => p + c.value, 0);
     const colWidths = table.colWidths;
-    const colWBase = table.widthTotalWeights;
+    const colWBase = table.colWidths.reduce((p, c) => p + c.value, 0);
 
     let celli = 0;
 
@@ -53,8 +53,8 @@ export function layoutTable(table: TableShape): TableLayout {
         const rowHeight = rowHeights[ri].value / rowHBase * height;
 
         for (let ci = 0, colLen = colWidths.length, colX = 0; ci < colLen; ++ci, ++celli) {
-            const cellid = rowHeights[ri].id + ',' + colWidths[ci].id;
-            const cell = cells.get(cellid);
+            // const cellid = rowHeights[ri].id + ',' + colWidths[ci].id;
+            const cell = cellGetter(ri, ci); // cells.get(cellid);
             const visible = !grid.get(ri, ci);
 
             const colWidth = colWidths[ci].value / colWBase * width;
