@@ -151,7 +151,7 @@ export function tableModifyTextStrikethrough(table: TableShape, strikethrough: S
     if (!table.textAttr) table.textAttr = new TextAttr();
     return crdtSetAttr(table.textAttr, "strikethrough", strikethrough);
 }
-export function tableModifyTextBold(table: TableShape, bold: boolean) {
+export function tableModifyTextBold(table: TableShape, bold: number) {
     if (!table.textAttr) table.textAttr = new TextAttr();
     return crdtSetAttr(table.textAttr, "bold", bold);
 }

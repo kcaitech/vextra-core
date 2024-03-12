@@ -985,7 +985,7 @@ export class TableEditor extends ShapeEditor {
         return false;
     }
 
-    public setTextBold(bold: boolean, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
+    public setTextBold(bold: number, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
         const api = this.__repo.start("setTableTextBold");
         try {
             if (range) {
