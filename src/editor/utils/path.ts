@@ -219,74 +219,7 @@ export function before_modify_side(api: Api, page: Page, shape: ContactShape, in
 }
 
 export function update_frame_by_points(api: Api, page: Page, s: PathShape) {
-    const box = s.boundingBox3();
-    if (!box) {
-        return
-    }
 
-    const f = s.frame;
-    const originWidth = f.width;
-    const originHeight = f.height;
-    const m = new Matrix(s.matrix2Parent());
-    m.preScale(originWidth, originHeight);
-
-    const targetWidth = Math.max(box.width, minimum_WH);
-    const targetHeight = Math.max(box.height, minimum_WH);
-
-    let frameChange = false; // 只有宽高发生变化,才需要更新points
-
-    if (targetWidth !== originWidth) {
-        api.shapeModifyWidth(page, s, targetWidth);
-        frameChange = true;
-    }
-    if (targetHeight !== originHeight) {
-        api.shapeModifyHeight(page, s, targetHeight);
-        frameChange = true;
-    }
-
-    const rootXY = s.matrix2Root().computeCoord2(box.x, box.y);
-    const __targetXY = s.parent!.matrix2Root().inverseCoord(rootXY);
-
-    const m2 = s.matrix2Parent();
-    const targetXY = m2.computeCoord2(0, 0);
-
-    const dx = __targetXY.x - targetXY.x;
-    if (dx) {
-        api.shapeModifyX(page, s, f.x + dx);
-    }
-    const dy = __targetXY.y - targetXY.y;
-    if (dy) {
-        api.shapeModifyY(page, s, f.y + dy);
-    }
-
-    if (!frameChange) {
-        return;
-    }
-
-    m2.preScale(f.width, f.height);
-    m.multiAtLeft(m2.inverse);
-
-    // 更新points
-    const points = s.points;
-    if (!points || !points.length) {
-        return false;
-    }
-    for (let i = 0, len = points.length; i < len; i++) {
-        const p = points[i];
-        if (!p) {
-            continue;
-        }
-
-        if (p.hasFrom) {
-            api.shapeModifyCurvFromPoint(page, s, i, m.computeCoord2(p.fromX || 0, p.fromY || 0));
-        }
-
-        if (p.hasTo) {
-            api.shapeModifyCurvToPoint(page, s, i, m.computeCoord2(p.toX || 0, p.toY || 0));
-        }
-
-        api.shapeModifyCurvPoint(page, s, i, m.computeCoord2(p.x, p.y));
-    }
 }
 
 /**
