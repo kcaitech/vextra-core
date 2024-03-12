@@ -250,7 +250,7 @@ function insertTextParas(shapetext: Text, paras: Para[], index: number) {
 }
 
 export function insertComplexText(shapetext: Text, text: Text, index: number) {
-    if (shapetext.length === 1 && text.attr) { // empty
+    if (shapetext.paras.length === 1 && shapetext.paras[0].length === 1 && text.attr) { // empty
         mergeTextAttr(shapetext, text.attr);
     }
     insertTextParas(shapetext, text.paras, index);

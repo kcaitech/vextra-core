@@ -2,9 +2,11 @@ import { ShapeFrame, SymbolRefShape, SymbolShape, Variable } from "../data/class
 import { TableCell, TableCellType } from "../data/classes";
 import { renderTextLayout } from "./text";
 import { render as fillR } from "./fill";
+import { TextLayout } from "data/textlayout";
 
 export function render(h: Function, shape: TableCell, frame: ShapeFrame, imgPH: string, 
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, 
+    layout: TextLayout | undefined,
     reflush?: number): any {
     // const isVisible = shape.isVisible ?? true;
     // if (!isVisible) return;
@@ -31,7 +33,7 @@ export function render(h: Function, shape: TableCell, frame: ShapeFrame, imgPH: 
         });
         childs.push(img);
     } else if (cellType === TableCellType.Text) {
-        const layout = shape.getLayout();
+        // const layout = shape.getLayout();
         if (layout) childs.push(...renderTextLayout(h, layout));
     }
 

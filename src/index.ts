@@ -45,10 +45,9 @@ export { Cmd } from "./coop/common/repo"
 export * from "./coop/client/serial"
 export { ArrayOpSelection } from "./coop/client/arrayop"
 export { SNumber } from "./coop/client/snumber"
+export { RadixConvert } from "./coop/common/radix_convert"
 
 // render
 // export * from "./render"
 // export * from "./renderStatic"
 
-// utils
-export * from "./utils"

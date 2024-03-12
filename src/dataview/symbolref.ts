@@ -1,9 +1,9 @@
-import { Border, BorderOptions, ContextSettings, Fill, MarkerType, OverrideType, Shadow, Shape, ShapeFrame, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType } from "../data/classes";
+import { Border, BorderOptions, ContextSettings, Document, Fill, MarkerType, OverrideType, Shadow, Shape, ShapeFrame, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType } from "../data/classes";
 import { ShapeView } from "./shape";
 import { ShapeType } from "../data/classes";
 import { DataView, RootView } from "./view";
 import { fixFrameByConstrain, isDiffRenderTransform, isDiffVarsContainer, isNoTransform } from "./shape";
-import { RenderTransform, findOverrideAndVar, getShapeViewId } from "./basic";
+import { RenderTransform, getShapeViewId } from "./basic";
 import { DViewCtx, PropsType, VarsContainer } from "./viewctx";
 import { ResizingConstraints } from "../data/consts";
 import { Matrix } from "../basic/matrix";
@@ -17,18 +17,6 @@ export class SymbolRefView extends ShapeView {
 
         this.symwatcher = this.symwatcher.bind(this);
         this.loadsym(true);
-        // const data = this.m_data as SymbolRefShape
-        // const symMgr = data.getSymbolMgr();
-        // const refId = this.getRefId();
-        // this.m_refId = refId;
-        // symMgr?.get(refId).then((sym) => {
-        //     if (this.m_refId === refId) {
-        //         this.m_sym = sym;
-        //         this.m_ctx.setReLayout(this);
-        //     }
-        // }).catch((err) => {
-        //     console.error(err);
-        // })
         this.afterInit();
     }
 
@@ -87,76 +75,14 @@ export class SymbolRefView extends ShapeView {
         this.m_ctx.setReLayout(this);
     }
 
-    // todo
     findOverride(refId: string, type: OverrideType): Variable[] | undefined {
-        // if (this.symData) {
-        //     const override = this.symData.getOverrid(refId, type);
-        //     if (override) {
-        //         const ret = [override.v];
-        //         if (this.varsContainer) findVar(override.v.id, ret, this.varsContainer);
-        //         return ret;
-        //     }
-        // }
-        // const override = this.data.getOverrid(refId, type);
-        // if (override) {
-        //     const ret = [override.v];
-        //     // this.id
-        //     refId = override.v.id;
-        //     if (this.isVirtualShape) {
-        //         refId = (this.data).id + '/' + refId;
-        //     }
-        //     else {
-        //         refId = this.id + '/' + refId;
-        //     }
-        //     if (this.varsContainer) findVar(refId, ret, this.varsContainer);
-        //     return ret;
-        // }
-        // const thisId = this.isVirtualShape ? (this.data).id : this.id;
-        // if (refId !== thisId) refId = thisId + '/' + refId; // fix ref自己查找自己的override
-        // return this.varsContainer && findOverride(refId, type, this.varsContainer);
         const varsContainer = (this.varsContainer || []).concat(this.data);
         return findOverride(refId, type, varsContainer || []);
     }
 
-    // todo
     findVar(varId: string, ret: Variable[]) {            // todo subdata, proxy
         const varsContainer = (this.varsContainer || []).concat(this.data);
         findVar(varId, ret, varsContainer || []);
-
-        // if (this.symData) {
-        //     const override = this.symData.getOverrid(varId, OverrideType.Variable);
-        //     if (override) {
-        //         ret.push(override.v);
-        //         // scope??
-        //         varId = override.v.id;
-        //     }
-        //     else {
-        //         const _var = this.symData.getVar(varId);
-        //         if (_var) {
-        //             ret.push(_var);
-        //         }
-        //     }
-        // }
-        // const override = this.data.getOverrid(varId, OverrideType.Variable);
-        // if (override) {
-        //     ret.push(override.v);
-        //     if (this.varsContainer) findVar(override.v.id, ret, this.varsContainer);
-        //     return;
-        // }
-        // const _var = this.data.getVar(varId);
-        // if (_var) {
-        //     ret.push(_var);
-        // }
-        // // 考虑scope
-        // // varId要叠加上refid
-        // if (this.isVirtualShape) {
-        //     varId = (this.data).id + '/' + varId;
-        // }
-        // else {
-        //     varId = this.id + '/' + varId;
-        // }
-        // if (this.varsContainer) findVar(varId, ret, this.varsContainer);
-        // return;
     }
 
     // 需要自己加载symbol
@@ -171,10 +97,30 @@ export class SymbolRefView extends ShapeView {
             return;
         }
         this.m_refId = refId;
-        const onload = (val: SymbolShape) => {
+        const onload = (val: SymbolShape[]) => {
             if (this.m_refId !== refId) return;
+            const document = symMgr.parent as Document;
+            if (!document) throw new Error("symMgr has no parent?");
+            const symbolregist = document.symbolregist.get(refId);
+            let sym;
+            if (symbolregist) {
+                // todo val 有多个时，需要提示用户修改
+                for (let i = 0; i < val.length; ++i) {
+                    const v = val[i];
+                    const p = v.getPage();
+                    if (!p && symbolregist === 'freesymbols') {
+                        sym = v;
+                        break;
+                    } else if (p && p.id === symbolregist) {
+                        sym = v;
+                    }
+                }
+            } else {
+                sym = val[val.length - 1];
+            }
+
             if (this.m_sym) this.m_sym.unwatch(this.symwatcher);
-            this.m_sym = val;
+            this.m_sym = sym;
             if (this.m_sym) this.m_sym.watch(this.symwatcher);
             // union
             const union = this.m_sym?.parent instanceof SymbolUnionShape ? this.m_sym.parent : undefined;
@@ -184,16 +130,22 @@ export class SymbolRefView extends ShapeView {
                 if (this.m_union) this.m_union.watch(this.symwatcher);
             }
             this.m_ctx.setReLayout(this);
+
+            if (!sym) {
+                // todo 需要重新加载
+                this.m_refId = undefined;
+            }
         }
+        // todo 通过symbolregist判断使用哪个symbol。及symbol变化时重新更新
         if (trysync) {
             const val = symMgr.getSync(refId);
-            if (val) {
-                onload(val as SymbolShape);
+            if (val && val.length > 0) {
+                onload(val as SymbolShape[]);
                 return;
             }
         }
         symMgr.get(refId).then((val) => {
-            if (val) onload(val as SymbolShape);
+            if (val && val.length - 1) setTimeout(() => onload(val as SymbolShape[])); // 此时symbol刚加载，不一定有page
             else this.m_refId = undefined;
         }).catch((e) => {
             console.error(e);

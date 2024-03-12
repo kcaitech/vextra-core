@@ -12,3 +12,5 @@ export * from './symbolref'
 export * from './color'
 
 export { parsePath } from './pathparser'
+export { layoutTable } from './tablelayout'
+export { layoutText, TextLayout } from './textlayout'
