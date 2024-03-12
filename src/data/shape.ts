@@ -24,7 +24,6 @@ import { Matrix } from "../basic/matrix";
 import { TextLayout } from "./textlayout";
 import { parsePath } from "./pathparser";
 import { FrameType, RECT_POINTS } from "./consts";
-import { uuid } from "../basic/uuid";
 import { Variable } from "./variable";
 import { TableShape } from "./table";
 import { SymbolRefShape } from "./symbolref";
