@@ -164,6 +164,8 @@ export class TableCellView extends ShapeView {
         }
         // if (args.includes('variable')) this.m_layout = undefined; // 不确定是不是text变量？
         this.renderContents();
+
+        (this.parent as any)?.bubblewatcher(...args);
     }
 
     protected renderBorders(): EL[] {
