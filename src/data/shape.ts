@@ -297,27 +297,14 @@ export class Shape extends Basic implements classes.Shape {
         return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
     }
     /**
-     * @description 保留transform的前提下计算Bounds并返回
+     * @description 保留transform的前提下计算基于自身坐标的Bounds并返回
      */
-    boundingBox3(): ShapeFrame {
+    boundingBox3(): ShapeFrame | undefined {
         const path = this.getPath();
         if (path.length > 0) {
             const bounds = path.calcBounds();
             return new ShapeFrame(bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
         }
-
-        const frame = this.frame;
-        const m = this.matrix2Parent();
-        const corners = [{ x: 0, y: 0 }, { x: frame.width, y: 0 }, { x: frame.width, y: frame.height }, {
-            x: 0,
-            y: frame.height
-        }]
-            .map((p) => m.computeCoord(p));
-        const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
-        const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
-        const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
-        const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
-        return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
     }
 
     flipHorizontal() {
