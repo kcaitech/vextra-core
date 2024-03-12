@@ -8,17 +8,18 @@ import { v4 } from "uuid";
 import { uuid } from "../../basic/uuid";
 import { BasicArray } from "../../data/basic";
 import { Matrix } from "../../basic/matrix";
-import { group } from "../../editor/group";
-import { addCommonAttr, newGroupShape } from "../../editor/creator";
-import { getHorizontalAngle } from "../../editor/page";
+import { group } from "../group";
+import { addCommonAttr, newGroupShape } from "../creator";
+import { getHorizontalAngle } from "../page";
 import { ContactShape } from "../../data/contact";
 import { get_box_pagexy, get_nearest_border_point } from "../../data/utils";
-import { translateTo } from "../../editor/frame";
 import { Document } from "../../data/document";
+
 interface XY {
     x: number
     y: number
 }
+
 const minimum_WH = 1; // 用户可设置最小宽高值。以防止宽高在缩放后为0
 
 /**
@@ -46,10 +47,16 @@ export function pathEdit(api: Api, page: Page, s: PathShape, index: number, end:
         return;
     }
     if (p.hasFrom) {
-        api.shapeModifyCurvFromPoint(page, s as PathShape, index, { x: (p.fromX || 0) + delta.x, y: (p.fromY || 0) + delta.y });
+        api.shapeModifyCurvFromPoint(page, s as PathShape, index, {
+            x: (p.fromX || 0) + delta.x,
+            y: (p.fromY || 0) + delta.y
+        });
     }
     if (p.hasTo) {
-        api.shapeModifyCurvToPoint(page, s as PathShape, index, { x: (p.toX || 0) + delta.x, y: (p.toY || 0) + delta.y });
+        api.shapeModifyCurvToPoint(page, s as PathShape, index, {
+            x: (p.toX || 0) + delta.x,
+            y: (p.toY || 0) + delta.y
+        });
     }
 }
 
@@ -66,7 +73,10 @@ export function pointsEdit(api: Api, page: Page, s: PathShape, indexes: number[]
         }
         api.shapeModifyCurvPoint(page, s, index, { x: __p.x + dx, y: __p.y + dy });
         if (__p.hasFrom) {
-            api.shapeModifyCurvFromPoint(page, s as PathShape, index, { x: (__p.fromX || 0) + dx, y: (__p.fromY || 0) + dy });
+            api.shapeModifyCurvFromPoint(page, s as PathShape, index, {
+                x: (__p.fromX || 0) + dx,
+                y: (__p.fromY || 0) + dy
+            });
         }
         if (__p.hasTo) {
             api.shapeModifyCurvToPoint(page, s as PathShape, index, { x: (__p.toX || 0) + dx, y: (__p.toY || 0) + dy });
@@ -108,6 +118,7 @@ export function contact_edit(api: Api, page: Page, s: PathShape, index1: number,
     api.shapeModifyCurvPoint(page, s, index1, p1);
     api.shapeModifyCurvPoint(page, s, index2, p2);
 }
+
 export function get_points_for_init(page: Page, shape: ContactShape, index: number, points: CurvePoint[]) {
     let len = points.length;
     let result = [...points];
@@ -195,6 +206,7 @@ export function get_points_for_init(page: Page, shape: ContactShape, index: numb
     }
     return result;
 }
+
 export function before_modify_side(api: Api, page: Page, shape: ContactShape, index: number) {
     const points = get_points_for_init(page, shape, index, shape.getPoints());
 
@@ -206,6 +218,12 @@ export function before_modify_side(api: Api, page: Page, shape: ContactShape, in
 }
 
 export function update_frame_by_points(api: Api, page: Page, s: PathShape) {
+    const box = s.boundingBox3();
+
+    if (!box) {
+        return;
+    }
+
     const m = s.matrix2Root();
 
     const f = s.frame;
@@ -213,20 +231,39 @@ export function update_frame_by_points(api: Api, page: Page, s: PathShape) {
     const w = f.width;
     const h = f.height;
 
-    const mp = new Matrix(s.matrix2Parent());
-    mp.preScale(w, h);
+    const m1 = new Matrix(s.matrix2Parent());
+    m1.preScale(w, h);
 
-    const nf = s.boundingBox3();
+    const targetWidth = Math.max(box.width, minimum_WH);
+    const targetHeight = Math.max(box.height, minimum_WH);
 
-    api.shapeModifyWH(page, s, Math.max(nf.width, minimum_WH), Math.max(nf.height, minimum_WH));
+    let frameChange = false;
+    if (w !== targetWidth || h !== targetHeight) {
+        api.shapeModifyWH(page, s, targetWidth, targetHeight);
+        frameChange = true;
+    }
 
-    const t = m.computeCoord2(nf.x, nf.y);
+    const rootXY = m.computeCoord2(box.x, box.y);
+    const targetXY = s.parent!.matrix2Root().inverseCoord(rootXY);
+    const __targetXY = s.matrix2Parent().computeCoord2(0, 0);
 
-    translateTo(api, page, s, t.x, t.y); // todo 可优化
+    const dx = targetXY.x - __targetXY.x;
+    const dy = targetXY.y - __targetXY.y;
 
-    const mp2 = new Matrix(s.matrix2Parent());
-    mp2.preScale(f.width, f.height);
-    mp.multiAtLeft(mp2.inverse);
+    if (dx) {
+        api.shapeModifyX(page, s, f.x + dx);
+    }
+    if (dy) {
+        api.shapeModifyY(page, s, f.y + dy);
+    }
+
+    if (!frameChange) { // 只有宽高被改变，才会需要重排2D points.
+        return;
+    }
+
+    const m3 = new Matrix(s.matrix2Parent());
+    m3.preScale(f.width, f.height);
+    m1.multiAtLeft(m3.inverse);
 
     const points = s.points;
 
@@ -241,16 +278,19 @@ export function update_frame_by_points(api: Api, page: Page, s: PathShape) {
         }
 
         if (p.hasFrom) {
-            api.shapeModifyCurvFromPoint(page, s, i, mp.computeCoord2(p.fromX || 0, p.fromY || 0));
+            api.shapeModifyCurvFromPoint(page, s, i, m1.computeCoord2(p.fromX || 0, p.fromY || 0));
         }
 
         if (p.hasTo) {
-            api.shapeModifyCurvToPoint(page, s, i, mp.computeCoord2(p.toX || 0, p.toY || 0));
+            api.shapeModifyCurvToPoint(page, s, i, m1.computeCoord2(p.toX || 0, p.toY || 0));
         }
 
-        api.shapeModifyCurvPoint(page, s, i, mp.computeCoord2(p.x, p.y));
+        api.shapeModifyCurvPoint(page, s, i, m1.computeCoord2(p.x, p.y));
     }
+
+    console.log('new func 1701')
 }
+
 /**
  * @deprecated
  * @description 在更新frame过程中去除了transform
@@ -292,6 +332,7 @@ export function update_frame_by_points2(api: Api, page: Page, s: PathShape) {
     }
     console.log('update frame by update_frame_by_points2');
 }
+
 /**
  * @description 计算三次贝塞尔曲线上的点
  * @param t 0~1
@@ -307,6 +348,7 @@ export function bezierCurvePoint(t: number, p0: XY, p1: XY, p2: XY, p3: XY): XY 
         y: Math.pow(1 - t, 3) * p0.y + 3 * Math.pow(1 - t, 2) * t * p1.y + 3 * (1 - t) * Math.pow(t, 2) * p2.y + Math.pow(t, 3) * p3.y
     };
 }
+
 /**
  *  @description 计算三次贝塞尔曲线的包围盒
  *  @param p0 起点
@@ -331,6 +373,7 @@ export function bezierCurveBoundingBox(p0: XY, p1: XY, p2: XY, p3: XY, numPoints
 
     return [[minX, minY], [maxX, maxY]];
 }
+
 export function __anther_side_xy(curve_point: CurvePoint, handle_site: XY, current_side: 'from' | 'to') {
     const is_from = current_side === 'from';
     const _a_xy = { x: 0, y: 0 };
@@ -355,6 +398,7 @@ export function __anther_side_xy(curve_point: CurvePoint, handle_site: XY, curre
     _a_xy.y = is_from ? curve_point.toY || 0 : curve_point.fromY || 0;
     return _a_xy;
 }
+
 export function __round_curve_point(shape: PathShape, index: number) {
     const points = shape.points;
     const previous_index = index === 0 ? points.length - 1 : index - 1;
@@ -366,6 +410,7 @@ export function __round_curve_point(shape: PathShape, index: number) {
         next_index
     }
 }
+
 export function init_curv(shape: PathShape, page: Page, api: Api, curve_point: CurvePoint, index: number, init = 0.35) {
     const round = __round_curve_point(shape, index);
     const { previous, next } = round;
@@ -383,12 +428,14 @@ export function init_curv(shape: PathShape, page: Page, api: Api, curve_point: C
     api.modifyPointHasFrom(page, shape, index, true);
     api.modifyPointHasTo(page, shape, index, true);
 }
+
 export function init_straight(shape: PathShape, page: Page, api: Api, index: number) {
     api.shapeModifyCurvFromPoint(page, shape, index, { x: 0, y: 0 });
     api.shapeModifyCurvToPoint(page, shape, index, { x: 0, y: 0 });
     api.modifyPointHasFrom(page, shape, index, false);
     api.modifyPointHasTo(page, shape, index, false);
 }
+
 export function align_from(shape: PathShape, page: Page, api: Api, curve_point: CurvePoint, index: number) {
     if (curve_point.fromX === undefined || curve_point.fromY === undefined) {
         return;
@@ -397,6 +444,7 @@ export function align_from(shape: PathShape, page: Page, api: Api, curve_point: 
     const delta_y = 2 * curve_point.y - curve_point.fromY;
     api.shapeModifyCurvToPoint(page, shape, index, { x: delta_x, y: delta_y });
 }
+
 export function align_to(shape: PathShape, page: Page, api: Api, curve_point: CurvePoint, index: number) {
     if (curve_point.toX === undefined || curve_point.toY === undefined) {
         return;
@@ -405,6 +453,7 @@ export function align_to(shape: PathShape, page: Page, api: Api, curve_point: Cu
     const delta_y = 2 * curve_point.y - curve_point.toY;
     api.shapeModifyCurvFromPoint(page, shape, index, { x: delta_x, y: delta_y });
 }
+
 export function _typing_modify(shape: PathShape, page: Page, api: Api, index: number, to_mode: CurveMode) {
     const point = shape.points[index];
     if (!point) {
@@ -434,6 +483,7 @@ export function _typing_modify(shape: PathShape, page: Page, api: Api, index: nu
         }
     }
 }
+
 export function cubic_bezier_angle(P0: XY, P1: XY, P2: XY, P3: XY, t = 0.5) {
     const a = -3 * (1 - t) ** 2;
     const b1 = 3 * (1 - t) ** 2;
@@ -451,6 +501,7 @@ export function cubic_bezier_angle(P0: XY, P1: XY, P2: XY, P3: XY, t = 0.5) {
         d * P3.y;
     return Math.atan2(derivativeY, derivativeX);
 }
+
 export function split_cubic_bezier(p0: XY, p1: XY, p2: XY, p3: XY) {
     const p01 = { x: (p0.x + p1.x) / 2, y: (p0.y + p1.y) / 2 };
     const p12 = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
@@ -463,9 +514,11 @@ export function split_cubic_bezier(p0: XY, p1: XY, p2: XY, p3: XY) {
         [p0123, p123, p23, p3]
     ];
 }
+
 function is_curve(p: CurvePoint, n: CurvePoint) {
     return p.hasFrom || n.hasTo;
 }
+
 function get_curve(p: CurvePoint, n: CurvePoint) {
     const start = { x: p.x, y: p.y };
     const from = { x: 0, y: 0 };
@@ -487,6 +540,7 @@ function get_curve(p: CurvePoint, n: CurvePoint) {
     }
     return { start, from, to, end };
 }
+
 function get_node_xy_by_round(p: CurvePoint, n: CurvePoint) {
     if (is_curve(p, n)) {
         const { start, from, to, end } = get_curve(p, n);
@@ -498,6 +552,7 @@ function get_node_xy_by_round(p: CurvePoint, n: CurvePoint) {
         }
     }
 }
+
 function modify_previous_from_by_slice(page: Page, api: Api, path_shape: PathShape, slice: XY[], previous: CurvePoint, index: number) {
     if (previous.mode === CurveMode.Straight || !previous.hasFrom) {
         return;
@@ -507,6 +562,7 @@ function modify_previous_from_by_slice(page: Page, api: Api, path_shape: PathSha
     }
     api.shapeModifyCurvFromPoint(page, path_shape, index, slice[1]);
 }
+
 function modify_next_to_by_slice(page: Page, api: Api, path_shape: PathShape, slice: XY[], next: CurvePoint, index: number) {
     if (next.mode === CurveMode.Straight || !next.hasTo) {
         return;
@@ -516,12 +572,14 @@ function modify_next_to_by_slice(page: Page, api: Api, path_shape: PathShape, sl
     }
     api.shapeModifyCurvToPoint(page, path_shape, index, slice[2]);
 }
+
 function modify_current_handle_slices(page: Page, api: Api, path_shape: PathShape, slices: XY[][], index: number) {
     api.modifyPointHasTo(page, path_shape, index, true);
     api.modifyPointHasFrom(page, path_shape, index, true);
     api.shapeModifyCurvToPoint(page, path_shape, index, slices[0][2]);
     api.shapeModifyCurvFromPoint(page, path_shape, index, slices[1][1]);
 }
+
 export function after_insert_point(page: Page, api: Api, path_shape: PathShape, index: number) {
     const { previous, next, previous_index, next_index } = __round_curve_point(path_shape, index);
 
@@ -540,6 +598,7 @@ export function after_insert_point(page: Page, api: Api, path_shape: PathShape, 
     modify_next_to_by_slice(page, api, path_shape, slices[1], next, next_index);
     modify_current_handle_slices(page, api, path_shape, slices, index);
 }
+
 export function __pre_curve(page: Page, api: Api, path_shape: PathShape, index: number) {
     const point = path_shape.points[index];
     if (!point) {
@@ -550,6 +609,7 @@ export function __pre_curve(page: Page, api: Api, path_shape: PathShape, index: 
     }
     init_curv(path_shape, page, api, point, index, 0.01);
 }
+
 export function replace_path_shape_points(page: Page, shape: PathShape, api: Api, points: CurvePoint[]) {
     api.deletePoints(page, shape as PathShape, 0, shape.points.length);
     for (let i = 0, len = points.length; i < len; i++) {
@@ -559,6 +619,7 @@ export function replace_path_shape_points(page: Page, shape: PathShape, api: Api
     }
     api.addPoints(page, shape as PathShape, points);
 }
+
 function _sort_after_clip(path_shape: PathShape, index: number) {
     const points = path_shape.points;
     if (index === points.length - 1) {
@@ -571,6 +632,7 @@ function _sort_after_clip(path_shape: PathShape, index: number) {
     result.push(...points.slice(0, index + 1));
     return result;
 }
+
 function after_clip(document: Document, page: Page, api: Api, path_shape: PathShape): number {
     if (path_shape.points.length < 2) {
         const parent = path_shape.parent;
@@ -588,6 +650,7 @@ function after_clip(document: Document, page: Page, api: Api, path_shape: PathSh
     }
     return 0;
 }
+
 function points_mapping_to_parent(points: CurvePoint[], path_shape: PathShape) {
     const f = path_shape.frame;
     const m = path_shape.matrix2Parent();
@@ -599,12 +662,14 @@ function points_mapping_to_parent(points: CurvePoint[], path_shape: PathShape) {
         points[i].y = xy.y;
     }
 }
+
 function _apart_points(points: CurvePoint[], index: number) {
     const _idx = index + 1;
     const path1: CurvePoint[] = points.slice(0, _idx);
     const path2: CurvePoint[] = points.slice(_idx);
     return { path1, path2 }
 }
+
 function get_frame_by_points(points: CurvePoint[]) {
     const frame = new ShapeFrame(0, 0, 0, 0);
     if (points.length < 2) {
@@ -639,6 +704,7 @@ function get_frame_by_points(points: CurvePoint[]) {
     frame.height = Math.max(minimum_WH, bottom - frame.y);
     return frame;
 }
+
 function create_path_shape_by_frame(origin: PathShape, frame: ShapeFrame, slice_name: string) {
     const __style = importStyle(exportStyle(origin.style));
     const __points = new BasicArray<CurvePoint>();
@@ -646,6 +712,7 @@ function create_path_shape_by_frame(origin: PathShape, frame: ShapeFrame, slice_
     addCommonAttr(__ps)
     return __ps;
 }
+
 function insert_part_to_doc(document: Document, page: Page, origin: PathShape, part: PathShape, api: Api) {
     const parent: GroupShape = origin.parent as GroupShape;
     if (!parent) {
@@ -655,6 +722,7 @@ function insert_part_to_doc(document: Document, page: Page, origin: PathShape, p
     const index = parent.indexOfChild(origin);
     return api.shapeInsert(document, page, parent, part, index);
 }
+
 function update_points_xy(page: Page, part: PathShape, points: CurvePoint[], api: Api) {
     const __m = part.matrix2Parent();
     __m.preScale(part.frame.width, part.frame.height);
@@ -666,6 +734,7 @@ function update_points_xy(page: Page, part: PathShape, points: CurvePoint[], api
     })
     api.addPoints(page, part, points);
 }
+
 function assemble(document: Document, page: Page, parts: PathShape[], origin: PathShape, api: Api) {
     const parent = origin.parent as GroupShape;
     if (!parent) {
@@ -680,6 +749,7 @@ function assemble(document: Document, page: Page, parts: PathShape[], origin: Pa
     const gshape = newGroupShape('图形');
     return group(document, page, parts, gshape, parent, index, api);
 }
+
 function delele_origin(document: Document, page: Page, origin: PathShape, api: Api) {
     const parent = origin.parent as GroupShape;
     if (!parent) {
@@ -693,6 +763,7 @@ function delele_origin(document: Document, page: Page, origin: PathShape, api: A
     }
     api.shapeDelete(document, page, parent, index);
 }
+
 export function apart_path_shape(document: Document, page: Page, api: Api, path_shape: PathShape, index: number, slice_name: string) {
     // 将要拆分图形
 
@@ -756,6 +827,7 @@ export function apart_path_shape(document: Document, page: Page, api: Api, path_
 
     return data;
 }
+
 export function _clip(document: Document, page: Page, api: Api, path_shape: PathShape, index: number, slice_name: string) {
     let data: { code: number, ex: Shape | undefined } = { code: 0, ex: undefined };
     if (path_shape.isClosed) {
@@ -779,16 +851,19 @@ export function _clip(document: Document, page: Page, api: Api, path_shape: Path
     data = apart_path_shape(document, page, api, path_shape, index, slice_name);
     return data;
 }
+
 export function update_path_shape_frame(api: Api, page: Page, shapes: PathShape[]) {
     for (let i = 0, l = shapes.length; i < l; i++) {
         const shape = shapes[i];
         update_frame_by_points(api, page, shape);
     }
 }
+
 export function init_points(api: Api, page: Page, s: PathShape, points: CurvePoint[]) {
     api.deletePoints(page, s as PathShape, 0, s.points.length);
     api.addPoints(page, s as PathShape, points);
 }
+
 export function modify_points_xy(api: Api, page: Page, s: PathShape, actions: {
     index: number,
     x: number,
@@ -806,6 +881,7 @@ export function modify_points_xy(api: Api, page: Page, s: PathShape, actions: {
     }
     update_frame_by_points(api, page, s);
 }
+
 export function is_straight(shape: Shape) {
     if (!(shape instanceof PathShape)) {
         return false;
@@ -819,6 +895,7 @@ export function is_straight(shape: Shape) {
     }
     return !points[0].hasFrom && !points[1].hasTo;
 }
+
 export function get_rotate_for_straight(shape: PathShape, v: number) {
     const points = (shape as PathShape).points;
 
