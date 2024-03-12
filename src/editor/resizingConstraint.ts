@@ -15,7 +15,7 @@ export class resizingConstraintEditor {
         this.__document = document;
     }
 
-    resizingConstaint(shape: Shape) {
+    resizingConstraint(shape: Shape) {
         return shape.resizingConstraint === undefined
             ? ResizingConstraints2.Mask
             : shape.resizingConstraint
@@ -45,7 +45,7 @@ export class resizingConstraintEditor {
                 if (this.disabled(shape)) { // 在不影响太多性能的前提下修改数据前应该设置一些防线，尽管view层已有防线
                     continue;
                 }
-                const old_rc = this.resizingConstaint(shape);
+                const old_rc = this.resizingConstraint(shape);
                 const new_rc = ResizingConstraints2.setToFixedLeft(old_rc);
                 api.shapeModifyResizingConstraint(this.__page, shape, new_rc); // modify 修改数据
             }
@@ -65,7 +65,7 @@ export class resizingConstraintEditor {
                 if (this.disabled(shape)) {
                     continue;
                 }
-                const old_rc = this.resizingConstaint(shape);
+                const old_rc = this.resizingConstraint(shape);
                 const new_rc = ResizingConstraints2.setToFixedRight(old_rc);
                 api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
             }
@@ -85,7 +85,7 @@ export class resizingConstraintEditor {
                 if (this.disabled(shape)) {
                     continue;
                 }
-                const old_rc = this.resizingConstaint(shape);
+                const old_rc = this.resizingConstraint(shape);
                 const new_rc = ResizingConstraints2.setToFixedLeftAndRight(old_rc);
                 api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
             }
@@ -105,7 +105,7 @@ export class resizingConstraintEditor {
                 if (this.disabled(shape)) {
                     continue;
                 }
-                const old_rc = this.resizingConstaint(shape);
+                const old_rc = this.resizingConstraint(shape);
                 const new_rc = ResizingConstraints2.setToHorizontalJustifyCenter(old_rc);
                 api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
             }
@@ -126,7 +126,7 @@ export class resizingConstraintEditor {
                 if (this.disabled(shape)) {
                     continue;
                 }
-                const old_rc = this.resizingConstaint(shape);
+                const old_rc = this.resizingConstraint(shape);
                 const new_rc = ResizingConstraints2.setToScaleByWidth(old_rc);
                 api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
             }
@@ -147,7 +147,7 @@ export class resizingConstraintEditor {
                 if (this.disabled(shape)) {
                     continue;
                 }
-                const old_rc = this.resizingConstaint(shape);
+                const old_rc = this.resizingConstraint(shape);
                 const new_rc = ResizingConstraints2.setToWidthFixed(old_rc);
                 api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
             }
@@ -167,7 +167,7 @@ export class resizingConstraintEditor {
                 if (this.disabled(shape)) {
                     continue;
                 }
-                const old_rc = this.resizingConstaint(shape);
+                const old_rc = this.resizingConstraint(shape);
                 const new_rc = ResizingConstraints2.setToWidthFlex(old_rc);
                 api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
             }
@@ -188,7 +188,7 @@ export class resizingConstraintEditor {
                 if (this.disabled(shape)) {
                     continue;
                 }
-                const old_rc = this.resizingConstaint(shape);
+                const old_rc = this.resizingConstraint(shape);
                 const new_rc = ResizingConstraints2.setToFixedTop(old_rc);
                 api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
             }
@@ -208,7 +208,7 @@ export class resizingConstraintEditor {
                 if (this.disabled(shape)) {
                     continue;
                 }
-                const old_rc = this.resizingConstaint(shape);
+                const old_rc = this.resizingConstraint(shape);
                 const new_rc = ResizingConstraints2.setToFixedBottom(old_rc);
                 api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
             }
@@ -228,7 +228,7 @@ export class resizingConstraintEditor {
                 if (this.disabled(shape)) {
                     continue;
                 }
-                const old_rc = this.resizingConstaint(shape);
+                const old_rc = this.resizingConstraint(shape);
                 const new_rc = ResizingConstraints2.setToFixedTopAndBottom(old_rc);
                 api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
             }
@@ -248,7 +248,7 @@ export class resizingConstraintEditor {
                 if (this.disabled(shape)) {
                     continue;
                 }
-                const old_rc = this.resizingConstaint(shape);
+                const old_rc = this.resizingConstraint(shape);
                 const new_rc = ResizingConstraints2.setToVerticalJustifyCenter(old_rc);
                 api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
             }
@@ -268,7 +268,7 @@ export class resizingConstraintEditor {
                 if (this.disabled(shape)) {
                     continue;
                 }
-                const old_rc = this.resizingConstaint(shape);
+                const old_rc = this.resizingConstraint(shape);
                 const new_rc = ResizingConstraints2.setToScaleByHeight(old_rc);
                 api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
             }
@@ -289,7 +289,7 @@ export class resizingConstraintEditor {
                 if (this.disabled(shape)) {
                     continue;
                 }
-                const old_rc = this.resizingConstaint(shape);
+                const old_rc = this.resizingConstraint(shape);
                 const new_rc = ResizingConstraints2.setToHeightFixed(old_rc);
                 api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
             }
@@ -309,7 +309,7 @@ export class resizingConstraintEditor {
                 if (this.disabled(shape)) {
                     continue;
                 }
-                const old_rc = this.resizingConstaint(shape);
+                const old_rc = this.resizingConstraint(shape);
                 const new_rc = ResizingConstraints2.setToHeightFlex(old_rc);
                 api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
             }
