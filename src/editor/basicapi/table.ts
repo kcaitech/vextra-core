@@ -1,23 +1,6 @@
-import { Text } from "../../data/text";
 import { TableCell, TableCellType, TableShape } from "../../data/table";
-import {
-    Color,
-    CrdtNumber,
-    FillType,
-    Gradient,
-    Page,
-    ShapeFrame,
-    ShapeType,
-    StrikethroughType,
-    Style,
-    TextAttr,
-    TextHorAlign,
-    TextTransformType,
-    TextVerAlign,
-    UnderlineType
-} from "../../data/classes";
-import { crdtArrayInsert, crdtArrayRemove, crdtSetAttr, newText, otTextInsert } from "./basic";
-import { deleteText, insertComplexText, insertSimpleText } from "./text";
+import { Color, CrdtNumber, FillType, Gradient, Page, ShapeFrame, ShapeType, StrikethroughType, Style, TextAttr, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType } from "../../data/classes";
+import { crdtArrayInsert, crdtArrayRemove, crdtSetAttr } from "./basic";
 import { uuid } from "../../basic/uuid";
 import { BasicArray } from "../../data/basic";
 import { Op } from "../../coop/common/op";
@@ -36,26 +19,8 @@ export function tableInitCell(table: TableShape, rowIdx: number, colIdx: number)
 
 export function tableSetCellContentType(cell: TableCell, contentType: TableCellType | undefined) {
     contentType = contentType === TableCellType.None ? undefined : contentType;
+    if (cell.cellType === contentType) return;
     return crdtSetAttr(cell, "cellType", contentType);
-}
-
-export function tableSetCellContentText(cell: TableCell, text: Text | undefined) {
-    // 不可以重置text
-    if (!cell.text) {
-        cell.text = newText("");
-    }
-    let ops = [];
-    if (cell.text.length > 1) {
-        const op = deleteText(cell, cell.text, 0, cell.text.length - 1);
-        if (op) ops.push(op);
-    }
-
-    if (text) {
-        const op = insertComplexText(cell, cell.text, text, 0);
-        if (op) ops.push(op);
-    }
-
-    return ops;
 }
 
 export function tableSetCellContentImage(cell: TableCell, ref: string | undefined) {

@@ -69,6 +69,22 @@ function apply(document: Document, target: Object, op: IdOp): IdOpRecord {
     }
 }
 
+function simpleApply(target: Object, op: IdOp, value: any) {
+    if (typeof value === 'object' && (!(value instanceof Basic))) throw new Error("need import: " + value?.typeId);
+    let origin;
+    if (target instanceof Map) {
+        origin = target.get(op.id);
+        if (value) target.set(op.id, value);
+        else target.delete(op.id);
+    } else if (target instanceof ResourceMgr) {
+        origin = target.getSync(op.id);
+        if (value) target.add(op.id, value);
+    } else {
+        origin = (target as any)[op.id];
+        (target as any)[op.id] = value;
+    }
+}
+
 function revert(op: IdOpRecord): IdOpRecord {
     return {
         data: op.origin,
@@ -119,16 +135,16 @@ export class CrdtIdRepoNode extends RepoNode {
         const op0 = this.localops[0].op as IdOpRecord;
         const target = op0.target; // this.getOpTarget(op0.path.slice(0, op0.path.length - 1));
         const rop = revert(op0);
-        target && apply(this.document, target, rop);
+        target && simpleApply(target, rop, op0.origin);
     }
     redoLocals(): void {
         if (this.localops.length === 0) return;
         // 找到最后个有target的
         for (let i = this.localops.length - 1; i >= 0; --i) {
             const op = this.localops[i].op as IdOpRecord;
-            const target = op.target; // this.getOpTarget(op0.path.slice(0, op0.path.length - 1));
+            const target = op.target; // this.getOpTarget(op.path.slice(0, op.path.length - 1)); // 有可能在上一级的node中，对象被替换掉了，需要重新获取
             if (target) {
-                apply(this.document, target, op);
+                simpleApply(target, op, op.data2); // 还原数据
                 break;
             }
         }

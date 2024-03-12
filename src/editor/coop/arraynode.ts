@@ -51,6 +51,10 @@ function _apply(document: Document, target: Array<CrdtItem>, op: ArrayMoveOp): A
     return crdtArrayMove(target, op, data as CrdtItem);
 }
 
+function simpleApply(target: Array<CrdtItem>, op: ArrayMoveOp, data: any): ArrayMoveOpRecord | undefined {
+    return crdtArrayMove(target, op, data as CrdtItem);
+}
+
 function apply(document: Document, target: Array<CrdtItem>, op: ArrayMoveOp): ArrayMoveOpRecord | undefined {
     const retop = _apply(document, target, op);
     // 序列化
@@ -108,24 +112,19 @@ export class CrdtArrayReopNode extends RepoNode {
 
     undoLocals(): void {
         for (let i = this.localops.length - 1; i >= 0; i--) {
-            const op = this.localops[i];
-            unapply2(this.document, op.op as ArrayMoveOpRecord);
+            const op = this.localops[i].op as ArrayMoveOpRecord;
+            const target = op.target;
+            const rop = revert(op);
+            target && simpleApply(target, rop, op.origin);
         }
     }
 
     redoLocals(): void {
         if (this.localops.length === 0) return;
-        const target = this.getOpTarget(this.localops[0].op.path);
-        if (target) for (let i = 0; i < this.localops.length; i++) {
-            const op = this.localops[i];
-            _apply(this.document, target, op.op as ArrayMoveOpRecord);
-            // if (record) {
-            //     // replace op
-            //     op.op = record;
-            //     const idx = op.cmd.ops.indexOf(op.op);
-            //     if (idx < 0) throw new Error();
-            //     op.cmd.ops.splice(idx, 1, record);
-            // }
+        for (let i = 0; i < this.localops.length; i++) {
+            const op = this.localops[i].op as ArrayMoveOpRecord;
+            const target = op.target;
+            target && simpleApply(target, op, op.data2);
         }
     }
 

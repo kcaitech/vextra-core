@@ -50,7 +50,7 @@ import {
     BorderStyle,
     SymbolRefShape,
 } from "../data/classes";
-import { BasicArray, BasicMap } from "../data/basic";
+import { BasicArray, BasicMap, MultiResourceMgr } from "../data/basic";
 import { Repository } from "../data/transact";
 import { Comment } from "../data/comment";
 import { ResourceMgr } from "../data/basic";
@@ -366,7 +366,7 @@ export function newTable(name: string, frame: ShapeFrame, rowCount: number, colu
     for (let ci = 0; ci < columCount; ci++) {
         table.colWidths.push(new CrdtNumber(uuid(), [ci] as BasicArray<number>, 1));
     }
-    table.updateTotalWeights();
+    // table.updateTotalWeights();
     table.frame = frame;
     table.style.borders.push(new Border([0] as BasicArray<number>,
         uuid(),
@@ -461,7 +461,7 @@ export function newSymbolShapeUnion(name: string, frame: ShapeFrame): SymbolUnio
     return union;
 }
 
-export function newSymbolRefShape(name: string, frame: ShapeFrame, refId: string, symbol_mgr: ResourceMgr<SymbolShape>): SymbolRefShape {
+export function newSymbolRefShape(name: string, frame: ShapeFrame, refId: string, symbol_mgr: MultiResourceMgr<SymbolShape>): SymbolRefShape {
     const ref = new SymbolRefShape(new BasicArray(), uuid(), name, types.ShapeType.SymbolRef, frame, newflatStyle(), refId, new BasicMap());
     addCommonAttr(ref);
     ref.setSymbolMgr(symbol_mgr);

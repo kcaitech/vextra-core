@@ -8,12 +8,11 @@ import { v4 } from "uuid";
 import { uuid } from "../../basic/uuid";
 import { BasicArray } from "../../data/basic";
 import { Matrix } from "../../basic/matrix";
-import { group } from "../../editor/group";
-import { addCommonAttr, newGroupShape } from "../../editor/creator";
-import { getHorizontalAngle } from "../../editor/page";
+import { group } from "../group";
+import { addCommonAttr, newGroupShape } from "../creator";
+import { getHorizontalAngle } from "../page";
 import { ContactShape } from "../../data/contact";
 import { get_box_pagexy, get_nearest_border_point } from "../../data/utils";
-import { translateTo } from "../../editor/frame";
 import { Document } from "../../data/document";
 
 interface XY {
@@ -219,7 +218,77 @@ export function before_modify_side(api: Api, page: Page, shape: ContactShape, in
 }
 
 export function update_frame_by_points(api: Api, page: Page, s: PathShape) {
+    const box = s.boundingBox3();
 
+    if (!box) {
+        return;
+    }
+
+    const m = s.matrix2Root();
+
+    const f = s.frame;
+
+    const w = f.width;
+    const h = f.height;
+
+    const m1 = new Matrix(s.matrix2Parent());
+    m1.preScale(w, h);
+
+    const targetWidth = Math.max(box.width, minimum_WH);
+    const targetHeight = Math.max(box.height, minimum_WH);
+
+    let frameChange = false;
+    if (w !== targetWidth || h !== targetHeight) {
+        api.shapeModifyWH(page, s, targetWidth, targetHeight);
+        frameChange = true;
+    }
+
+    const rootXY = m.computeCoord2(box.x, box.y);
+    const targetXY = s.parent!.matrix2Root().inverseCoord(rootXY);
+    const __targetXY = s.matrix2Parent().computeCoord2(0, 0);
+
+    const dx = targetXY.x - __targetXY.x;
+    const dy = targetXY.y - __targetXY.y;
+
+    if (dx) {
+        api.shapeModifyX(page, s, f.x + dx);
+    }
+    if (dy) {
+        api.shapeModifyY(page, s, f.y + dy);
+    }
+
+    if (!frameChange) { // 只有宽高被改变，才会需要重排2D points.
+        return;
+    }
+
+    const m3 = new Matrix(s.matrix2Parent());
+    m3.preScale(f.width, f.height);
+    m1.multiAtLeft(m3.inverse);
+
+    const points = s.points;
+
+    if (!points || !points.length) {
+        return false;
+    }
+
+    for (let i = 0, len = points.length; i < len; i++) {
+        const p = points[i];
+        if (!p) {
+            continue;
+        }
+
+        if (p.hasFrom) {
+            api.shapeModifyCurvFromPoint(page, s, i, m1.computeCoord2(p.fromX || 0, p.fromY || 0));
+        }
+
+        if (p.hasTo) {
+            api.shapeModifyCurvToPoint(page, s, i, m1.computeCoord2(p.toX || 0, p.toY || 0));
+        }
+
+        api.shapeModifyCurvPoint(page, s, i, m1.computeCoord2(p.x, p.y));
+    }
+
+    console.log('new func 1701')
 }
 
 /**

@@ -4,7 +4,7 @@ import {
     BorderPosition,
     BorderStyle,
     Color,
-    Document, Fill,
+    Document, 
     GroupShape,
     OverrideType,
     Page,
@@ -24,13 +24,11 @@ import {
 } from "../../data/classes";
 import { Api } from "../coop/recordapi";
 import { BasicArray, BasicMap } from "../../data/basic";
-import { newSymbolRefShape, newSymbolShape, newSymbolShapeUnion } from "../creator";
+import { newSymbolRefShape, newSymbolShapeUnion } from "../creator";
 import { uuid } from "../../basic/uuid";
 import * as types from "../../data/typesdefine";
-import { expandTo, translateTo } from "../frame";
-import { exportStyle } from "../../data/baseexport";
-import { importStyle } from "../../data/baseimport";
-import { PageView, ShapeView } from "dataview";
+import { translateTo } from "../frame";
+import { PageView, ShapeView, TableCellView, TableView } from "../../dataview";
 
 interface _Api {
     shapeModifyWH(page: Page, shape: Shape, w: number, h: number): void;
@@ -62,10 +60,10 @@ export function fixTextShapeFrameByLayout(api: _Api, page: Page, shape: TextShap
     }
 }
 
-export function fixTableShapeFrameByLayout(api: _Api, page: Page, shape: TableCell) {
-    if (!shape.text) return;
-    const table = shape.parent as TableShape;
-    const indexCell = table.indexOfCell2(shape);
+export function fixTableShapeFrameByLayout(api: _Api, page: Page, shape: TableCellView) {
+    if (!shape.text || shape.isVirtualShape) return;
+    const table = shape.parent as TableView;
+    const indexCell = table.indexOfCell(shape);
     if (!indexCell) return;
 
     const rowSpan = Math.max(shape.rowSpan ?? 1, 1);
@@ -91,8 +89,8 @@ export function fixTableShapeFrameByLayout(api: _Api, page: Page, shape: TableCe
         const rowIdx = indexCell.rowIdx + rowSpan - 1;
         const curHeight = table.rowHeights[rowIdx].value / table.heightTotalWeights * table.frame.height;
         const weight = (curHeight + layout.contentHeight - height) / curHeight * table.rowHeights[rowIdx].value;
-        api.tableModifyRowHeight(page, table, rowIdx, weight);
-        api.shapeModifyWH(page, table, table.frame.width, table.frame.height + layout.contentHeight - height);
+        api.tableModifyRowHeight(page, table.data, rowIdx, weight);
+        api.shapeModifyWH(page, table.data, table.frame.width, table.frame.height + layout.contentHeight - height);
     }
 }
 
