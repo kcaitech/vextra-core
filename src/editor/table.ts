@@ -413,7 +413,7 @@ export class TableEditor extends ShapeEditor {
      * @param height table坐标系空间长度
      */
     adjRowHeight(fromIdx: number, toIdx: number, height: number) {
-        const api = this.__repo.start('adjColWidth');
+        const api = this.__repo.start('adjRowHeight');
         try {
             adjRow(this.__page, this.view, fromIdx, toIdx, height, api);
             this.__repo.commit();
