@@ -18,9 +18,6 @@ function _apply(document: Document, page: Page, op: TreeMoveOp) {
     }
 
     let shape = page.getShape(op.id);
-    // if (shape && shape.parent) { // 旧?
-    //     needUpdateFrame.push(shape.parent);
-    // }
 
     const ret = crdtTreeMove(page, op, data as Shape);
     if (!ret) {
@@ -34,13 +31,25 @@ function _apply(document: Document, page: Page, op: TreeMoveOp) {
         shape = ret.data2 as Shape;
         page.onAddShape(shape);
     }
+    return ret;
+}
 
-    // if (ret && shape) {
-    //     needUpdateFrame.push(shape);
-    // }
 
-    // todo 迁移notify??或者使用objectid
+function simpleApply(page: Page, op: TreeMoveOp, data: any) {
 
+    let shape = page.getShape(op.id);
+    const ret = crdtTreeMove(page, op, data as Shape);
+    if (!ret) {
+        // 
+    }
+    else if (shape && !ret.to) { // 删除
+        page.onRemoveShape(shape);
+        shape = undefined;
+    }
+    else if (!shape && ret.to && ret.data) { // 插入
+        shape = ret.data2 as Shape;
+        page.onAddShape(shape);
+    }
     return ret;
 }
 
@@ -94,24 +103,19 @@ export class CrdtShapeRepoNode extends RepoNode {
 
     undoLocals(): void {
         for (let i = this.localops.length - 1; i >= 0; i--) {
-            const op = this.localops[i];
-            unapply2(this.document, op.op as TreeMoveOpRecord);
+            const op = this.localops[i].op as TreeMoveOpRecord;
+            const target = op.target;
+            const rop = revert(op);
+            target && simpleApply(target, rop, op.origin);
         }
     }
 
     redoLocals(): void {
         if (this.localops.length === 0) return;
-        const target = this.document.pagesMgr.getSync(this.localops[0].op.path[0]);
-        if (target) for (let i = 0; i < this.localops.length; i++) {
-            const op = this.localops[i];
-            _apply(this.document, target, op.op as TreeMoveOpRecord);
-            // if (record) {
-            //     // replace op
-            //     op.op = record;
-            //     const idx = op.cmd.ops.indexOf(op.op);
-            //     if (idx < 0) throw new Error();
-            //     op.cmd.ops.splice(idx, 1, record);
-            // }
+        for (let i = 0; i < this.localops.length; i++) {
+            const op = this.localops[i].op as TreeMoveOpRecord;
+            const target = op.target;
+            target && simpleApply(target, op, op.data2);
         }
     }
 

@@ -420,9 +420,22 @@ export class TextRepoNode extends RepoNode {
         }, [] as ArrayOp[]);
         const cur = curops.slice(index + realOpCount).map(op => op.op) as ArrayOp[];
         if (cur.length > 0) {
+            // 先调整cur中"ZZZZZZZZZZZ"order的op
+            let count = 0;
+            for (let i = cur.length - 1; i >= 0; --i) {
+                if (cur[i].order !== SNumber.MAX_SAFE_INTEGER) break;
+                ++count;
+                cur[i].order = SNumber.minus(SNumber.MAX_SAFE_INTEGER, cur.length - i);
+            }
             const { lhs, rhs } = transform(cur, revertops);
             rhs.forEach((v, i) => (v as any).target = (revertops[i] as any).target);
+
             revertops = rhs;
+
+            // 还原cur order
+            for (let i = cur.length - count; i < cur.length; ++i) {
+                cur[i].order = SNumber.MAX_SAFE_INTEGER;
+            }
         }
         const record = revertops.map((op: ArrayOp) => (op as any).target ? (apply(this.document, (op as any).target, op) || op) : op);
         // update to ops
