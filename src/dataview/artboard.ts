@@ -41,7 +41,6 @@ export class ArtboradView extends GroupShapeView {
     }
 
     protected renderStaticProps(): { [key: string]: string } {
-        const shape = this.m_data;
         const props: any = {
             version: "1.1",
             xmlns: "http://www.w3.org/2000/svg",
@@ -52,19 +51,17 @@ export class ArtboradView extends GroupShapeView {
         }
 
         const frame = this.frame;
-        let x = 0;
-        let y = 0;
 
         if (frame.width > frame.height) {
-            y = (frame.width - frame.height) / 2;
+            props.transform = `translate(0, ${(frame.width - frame.height) / 2})`;
         } else {
-            x = (frame.height - frame.width) / 2;
+            props.transform = `translate(${(frame.height - frame.width) / 2}, 0)`;
         }
 
         props.width = frame.width;
         props.height = frame.height;
-        props.x = x;
-        props.y = y;
+        props.x = 0;
+        props.y = 0;
         props.viewBox = `0 0 ${frame.width} ${frame.height}`;
 
         return props;

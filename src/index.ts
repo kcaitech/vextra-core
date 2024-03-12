@@ -47,8 +47,8 @@ export { ArrayOpSelection } from "./coop/client/arrayop"
 export { SNumber } from "./coop/client/snumber"
 
 // render
-export * from "./render"
-export * from "./renderStatic"
+// export * from "./render"
+// export * from "./renderStatic"
 
 // utils
 export * from "./utils"
