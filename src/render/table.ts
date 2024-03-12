@@ -1,10 +1,12 @@
-import { ShapeType, SymbolRefShape, SymbolShape, TableCell, TableShape, Variable } from "../data/classes";
+import { ShapeType, SymbolRefShape, SymbolShape, TableCell, TableLayout, TableShape, Variable } from "../data/classes";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border";
 import { isVisible } from "./basic";
 
 export function render(h: Function, shape: TableShape, comsMap: Map<ShapeType, any>, 
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
+    layout: TableLayout,
+    cellGetter: (ri: number, ci: number) => TableCell | undefined,
     bubbleupdate?: () => void,
     reflush?: number): any {
 
@@ -12,7 +14,7 @@ export function render(h: Function, shape: TableShape, comsMap: Map<ShapeType, a
 
     const frame = shape.frame;
 
-    const layout = shape.getLayout();
+    // const layout = shape.getLayout();
 
     const nodes = [];
     const path = shape.getPath().toString();
@@ -24,7 +26,7 @@ export function render(h: Function, shape: TableShape, comsMap: Map<ShapeType, a
     for (let i = 0, len = layout.grid.rowCount; i < len; ++i) {
         for (let j = 0, len = layout.grid.colCount; j < len; ++j) {
             const cellLayout = layout.grid.get(i, j);
-            const cell = shape.getCellAt(cellLayout.index.row, cellLayout.index.col);
+            const cell = cellGetter(cellLayout.index.row, cellLayout.index.col);
             if (cell && cellLayout.index.row === i && cellLayout.index.col === j) {
                 const com = comsMap.get(cell.type) || comsMap.get(ShapeType.Rectangle);
                 const node = h(com, { data: cell, key: cell.id, frame: cellLayout.frame, varsContainer, bubbleupdate });
@@ -41,7 +43,7 @@ export function render(h: Function, shape: TableShape, comsMap: Map<ShapeType, a
             const cellLayout = layout.grid.get(i, j);
             if (cellLayout.index.row !== i || cellLayout.index.col !== j) continue;
 
-            const child = shape.getCellAt(cellLayout.index.row, cellLayout.index.col);// cellLayout.cell;
+            const child = cellGetter(cellLayout.index.row, cellLayout.index.col);// cellLayout.cell;
             const path = TableCell.getPathOfFrame(cellLayout.frame);
             const pathstr = path.toString();
             if (child && child.style.borders.length > 0) {

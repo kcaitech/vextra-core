@@ -1,6 +1,6 @@
 import { DocumentMeta, PageListItem } from "./baseclasses";
 import { Page } from "./page";
-import { BasicArray, BasicMap, IDataGuard, ResourceMgr, WatchableObject } from "./basic";
+import { BasicArray, BasicMap, IDataGuard, MultiResourceMgr, ResourceMgr, WatchableObject } from "./basic";
 import { Style } from "./style";
 import { GroupShape, SymbolShape, TextShape } from "./shape";
 import { TableShape } from "./table";
@@ -108,7 +108,7 @@ export class Document extends (DocumentMeta) {
     }
 
     private __pages: ResourceMgr<Page>;
-    private __symbols: ResourceMgr<SymbolShape>
+    private __symbols: MultiResourceMgr<SymbolShape>
     private __styles: ResourceMgr<Style>
     private __medias: ResourceMgr<{ buff: Uint8Array, base64: string }>
     private __versionId: string;
@@ -130,11 +130,12 @@ export class Document extends (DocumentMeta) {
         this.__name = name;
         this.__pages = new ResourceMgr<Page>([id, 'pages'], (data: Page) => guard.guard(data));
         // this.__artboards = new ResourceMgr<Artboard>([id, 'artboards'], (data: Artboard) => guard.guard(data));
-        this.__symbols = new ResourceMgr<SymbolShape>([id, 'symbols'],
+        this.__symbols = new MultiResourceMgr<SymbolShape>([id, 'symbols'],
             (data: SymbolShape) => {
                 // check ?
                 return guard.guard(data);
             });
+        this.__symbols.parent = this; // 要用到symbolregist
         this.__medias = new ResourceMgr<{ buff: Uint8Array, base64: string }>([id, 'medias']);
         this.__styles = new ResourceMgr<Style>([id, 'styles']);
         this.__correspondent = new SpecialActionCorrespondent();

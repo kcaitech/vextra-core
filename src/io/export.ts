@@ -51,11 +51,15 @@ export async function exportExForm(document: Document): Promise<ExFromJson> {
         ctx.refsymbols.delete(k);
     }
     const freesymbolsSet = new Set<string>();
+    const symMgr = document.symbolsMgr;
     for (let k of ctx.refsymbols) {
         if (freesymbolsSet.has(k)) continue;
         // 未导出的symbol
-        const symbol = document.symbolsMgr.getSync(k);
-        if (!symbol) continue;
+
+        const val = symMgr.getSync(k);
+        if (!val || val.length === 0) continue;
+
+        const symbol = val[0]; // 一定都没有page，要不不会遗留在refsymbols里
 
         if (symbol.parent instanceof SymbolUnionShape) {
             freesymbols.push(exportSymbolUnionShape(symbol.parent));

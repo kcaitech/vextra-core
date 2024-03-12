@@ -115,12 +115,12 @@ export class Shape extends Basic implements classes.Shape {
         this.style = style
     }
 
-    /**
-     * for command
-     */
-    get shapeId(): (string | { rowIdx: number, colIdx: number })[] {
-        return [this.id];
-    }
+    // /**
+    //  * for command
+    //  */
+    // get shapeId(): (string | { rowIdx: number, colIdx: number })[] {
+    //     return [this.id];
+    // }
 
     // public notify(...args: any[]): void {
     //     super.notify(...args);

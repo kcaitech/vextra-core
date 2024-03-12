@@ -1,4 +1,4 @@
-import { BasicArray, BasicMap, ResourceMgr } from "./basic";
+import { BasicArray, BasicMap, MultiResourceMgr, ResourceMgr } from "./basic";
 import { Style } from "./style";
 import * as classes from "./baseclasses"
 export {
@@ -18,7 +18,7 @@ function genRefId(refId: string, type: OverrideType) {
 }
 
 export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
-    __symMgr?: ResourceMgr<SymbolShape>
+    __symMgr?: MultiResourceMgr<SymbolShape>
 
     typeId = 'symbol-ref-shape'
     refId: string
@@ -73,7 +73,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         return this.__imageMgr;
     }
 
-    setSymbolMgr(mgr: ResourceMgr<SymbolShape>) {
+    setSymbolMgr(mgr: MultiResourceMgr<SymbolShape>) {
         this.__symMgr = mgr;
     }
     getSymbolMgr() {
