@@ -65,7 +65,7 @@ export class SpanAttr extends Basic implements classes.SpanAttr {
     color?: Color
     strikethrough?: StrikethroughType
     underline?: UnderlineType
-    bold?: boolean
+    bold?: number
     italic?: boolean
     bulletNumbers?: BulletNumbers
     highlight?: Color

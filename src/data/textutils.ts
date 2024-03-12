@@ -127,7 +127,7 @@ function _mergeSpanAttr(span: SpanAttr, attr: SpanAttr, attrIsSetter: boolean, i
 
     // bold
     if (attr.bold) {
-        if (!!span.bold !== attr.bold) {
+        if (!span.bold || span.bold !== attr.bold) {
             span.bold = attr.bold;
             changed = true;
         }
