@@ -1264,124 +1264,80 @@ export class TableEditor extends ShapeEditor {
     }
 
     // fill
-    public addFill(fill: Fill, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
+    public addFill4Cell(fill: Fill, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }, delOlds: boolean) {
         const api = this.__repo.start("addFill");
-        try {
-            if (range) {
-                this._initCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd, api);
-                const imageMgr = fill.getImageMgr();
-                const cells = this.view.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd);
-                cells.forEach((cell) => {
-                    const newfill = importFill(fill);
-                    if (imageMgr) newfill.setImageMgr(imageMgr);
-                    if (cell.cell) {
-                        api.addFillAt(this.__page, cell.cell.data, newfill, cell.cell.style.fills.length);
-                    }
-                    else {
-                        throw new Error("init cell fail?");
-                    }
-                })
-            }
-            else {
-                api.addFillAt(this.__page, this.shape, fill, this.shape.style.fills.length);
-            }
-            this.__repo.commit();
-        } catch (error) {
-            console.error(error);
-            this.__repo.rollback();
-        }
-    }
-    public addFill4Multi(fill: Fill, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        const api = this.__repo.start("addFill4Multi");
         try {
             this._initCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd, api);
             const imageMgr = fill.getImageMgr();
             const cells = this.view.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd);
-            for (let i = 0, len = cells.length; i < len; i++) {
-                const c = cells[i];
+            cells.forEach((cell) => {
                 const newfill = importFill(fill);
                 if (imageMgr) newfill.setImageMgr(imageMgr);
-                if (c.cell) {
-                    api.deleteFills(this.__page, c.cell.data, 0, c.cell.style.fills.length);
-                    api.addFillAt(this.__page, c.cell.data, newfill, 0);
-                } else {
-                    throw new Error("init cell fail?");
-                }
-            }
+                if (!cell.cell) throw new Error("init cell fail?");
+                const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
+                if (delOlds) api.deleteFills(this.__page, c, 0, c.style.fills.length);
+                api.addFillAt(this.__page, c, newfill, cell.cell.style.fills.length);
+            })
             this.__repo.commit();
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
         }
     }
-    public setFillColor(idx: number, color: Color, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        // const fill: Fill = this.shape.style.fills[idx];
-        // if (!fill) return;
-
+    public setFillColor4Cell(idx: number, color: Color, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
         const api = this.__repo.start("setFillColor");
         try {
-            if (range) {
-                this.view.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
-                    if (cell.cell) api.setFillColor(this.__page, cell.cell.data, idx, color)
-                })
-            }
-            else {
-                api.setFillColor(this.__page, this.shape, idx, color)
-            }
+            this.view.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
+                if (cell.cell) {
+                    const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
+                    api.setFillColor(this.__page, c, idx, color)
+                }
+            })
             this.__repo.commit();
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
         }
     }
-
-    public setFillEnable(idx: number, value: boolean, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
+    public setFillEnable4Cell(idx: number, value: boolean, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
         const api = this.__repo.start("setFillEnable");
         try {
-            if (range) {
-                this.view.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
-                    if (cell.cell) api.setFillEnable(this.__page, cell.cell.data, idx, value);
-                })
-            }
-            else {
-                api.setFillEnable(this.__page, this.shape, idx, value);
-            }
+            this.view.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
+                if (cell.cell) {
+                    const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
+                    api.setFillEnable(this.__page, c, idx, value);
+                }
+            })
             this.__repo.commit();
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
         }
     }
-    public setFillType(idx: number, type: FillType, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
+    public setFillType4Cell(idx: number, type: FillType, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
         const api = this.__repo.start("setFillType");
         try {
-            if (range) {
-                this.view.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
-                    if (cell.cell) api.setFillType(this.__page, cell.cell.data, idx, type);
-                })
-            }
-            else {
-                api.setFillType(this.__page, this.shape, idx, type);
-            }
+            this.view.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
+                if (cell.cell) {
+                    const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
+                    api.setFillType(this.__page, cell.cell.data, idx, type);
+                }
+            })
             this.__repo.commit();
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
         }
     }
-    public deleteFill(idx: number, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        // const fill = this.shape.style.fills[idx];
-        // if (!fill) return;
+    public deleteFill4Cell(idx: number, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
         const api = this.__repo.start("deleteFill");
         try {
-            if (range) {
-                this.view.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
-                    if (cell.cell) api.deleteFillAt(this.__page, cell.cell.data, idx);
-                })
-            }
-            else {
-                api.deleteFillAt(this.__page, this.shape, idx);
-            }
+            this.view.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
+                if (cell.cell) {
+                    const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
+                    api.deleteFillAt(this.__page, c, idx);
+                }
+            })
             this.__repo.commit();
         } catch (error) {
             console.error(error);
@@ -1390,96 +1346,60 @@ export class TableEditor extends ShapeEditor {
     }
 
     // border
-    public setBorderEnable(idx: number, isEnabled: boolean, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        // const border = this.shape.style.borders[idx];
-        // if (!border) return;
+    public setBorderEnable4Cell(idx: number, isEnabled: boolean, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
         const api = this.__repo.start("setBorderEnable");
         try {
-            if (range) {
-                this.view.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
-                    if (cell.cell) api.setBorderEnable(this.__page, cell.cell.data, idx, isEnabled);
-                })
-            }
-            else {
-                api.setBorderEnable(this.__page, this.shape, idx, isEnabled);
-            }
+            this.view.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
+                if (cell.cell) {
+                    const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
+                    api.setBorderEnable(this.__page, c, idx, isEnabled);
+                }
+            })
             this.__repo.commit();
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
         }
     }
-    public setBorderColor(idx: number, color: Color, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        // const border = this.shape.style.borders[idx];
-        // if (!border) return;
-
+    public setBorderColor4Cell(idx: number, color: Color, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
         const api = this.__repo.start("setBorderColor");
         try {
-            if (range) {
-                this.view.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
-                    if (cell.cell) api.setBorderColor(this.__page, cell.cell.data, idx, color);
-                })
-            }
-            else {
-                api.setBorderColor(this.__page, this.shape, idx, color);
-            }
+            this.view.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
+                if (cell.cell) {
+                    const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
+                    api.setBorderColor(this.__page, c, idx, color);
+                }
+            })
             this.__repo.commit();
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
         }
     }
-    public setBorderThickness(idx: number, thickness: number, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        // const border = this.shape.style.borders[idx];
-        // if (!border) return;
+    public setBorderThickness4Cell(idx: number, thickness: number, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
         const api = this.__repo.start("setBorderThickness");
         try {
-            if (range) {
-                this.view.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
-                    if (cell.cell) api.setBorderThickness(this.__page, cell.cell.data, idx, thickness);
-                })
-            }
-            else {
-                api.setBorderThickness(this.__page, this.shape, idx, thickness);
-            }
+            this.view.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
+                if (cell.cell) {
+                    const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
+                    api.setBorderThickness(this.__page, c, idx, thickness);
+                }
+            })
             this.__repo.commit();
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
         }
     }
-    public setBorderPosition(idx: number, position: BorderPosition, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        // const border = this.shape.style.borders[idx];
-        // if (!border) return;
-        const api = this.__repo.start("setBorderPosition");
-        try {
-            if (range) {
-                this.view.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
-                    if (cell.cell) api.setBorderPosition(this.__page, cell.cell.data, idx, position);
-                })
-            }
-            else {
-                api.setBorderPosition(this.__page, this.shape, idx, position);
-            }
-            this.__repo.commit();
-        } catch (error) {
-            console.error(error);
-            this.__repo.rollback();
-        }
-    }
-    public setBorderStyle(idx: number, borderStyle: BorderStyle, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        // const border = this.shape.style.borders[idx];
-        // if (!border) return;
+    public setBorderStyle4Cell(idx: number, borderStyle: BorderStyle, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
         const api = this.__repo.start("setBorderStyle");
         try {
-            if (range) {
-                this.view.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
-                    if (cell.cell) api.setBorderStyle(this.__page, cell.cell.data, idx, borderStyle);
-                })
-            }
-            else {
-                api.setBorderStyle(this.__page, this.shape, idx, borderStyle);
-            }
+            this.view.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
+                if (cell.cell) {
+                    const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
+                    api.setBorderStyle(this.__page, c, idx, borderStyle);
+                }
+            })
             this.__repo.commit();
         } catch (error) {
             console.error(error);
@@ -1487,67 +1407,38 @@ export class TableEditor extends ShapeEditor {
         }
     }
 
-    public deleteBorder(idx: number, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        // const border = this.shape.style.borders[idx];
-        // if (!border) return;
+    public deleteBorder4Cell(idx: number, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
         const api = this.__repo.start("deleteBorder");
         try {
-            if (range) {
-                this.view.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
-                    if (cell.cell) api.deleteBorderAt(this.__page, cell.cell.data, idx)
-                })
-            }
-            else {
-                api.deleteBorderAt(this.__page, this.shape, idx)
-            }
+            this.view.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
+                if (cell.cell) {
+                    const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
+                    api.deleteBorderAt(this.__page, c, idx)
+                }
+            })
             this.__repo.commit();
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
         }
     }
-    public addBorder(border: Border, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
+    public addBorder4Cell(border: Border, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }, delOlds: boolean) {
         border.position = BorderPosition.Center; // 只支持居中
         const api = this.__repo.start("addBorder");
         try {
-            if (range) {
-                this._initCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd, api);
-                const cells = this.view.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd);
-                cells.forEach((cell) => {
-                    const newborder = importBorder(border);
-                    if (cell.cell) {
-                        api.addBorderAt(this.__page, cell.cell.data, newborder, cell.cell.style.borders.length);
-                    }
-                    else {
-                        throw new Error("init cell fail?");
-                    }
-                })
-            }
-            else {
-                api.addBorderAt(this.__page, this.shape, border, this.shape.style.borders.length);
-            }
-            this.__repo.commit();
-        } catch (error) {
-            console.error(error);
-            this.__repo.rollback();
-        }
-    }
-    public addBorder4Multi(border: Border, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        border.position = BorderPosition.Center; // 只支持居中
-        const api = this.__repo.start("addBorder4Multi");
-        try {
             this._initCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd, api);
             const cells = this.view.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd);
-            for (let i = 0, len = cells.length; i < len; i++) {
+            cells.forEach((cell) => {
                 const newborder = importBorder(border);
-                const c = cells[i];
-                if (c.cell) {
-                    api.deleteBorders(this.__page, c.cell.data, 0, c.cell.style.borders.length);
-                    api.addBorderAt(this.__page, c.cell.data, newborder, 0);
-                } else {
+                if (cell.cell) {
+                    const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
+                    if (delOlds) api.deleteBorders(this.__page, c, 0, c.style.borders.length);
+                    api.addBorderAt(this.__page, c, newborder, c.style.borders.length);
+                }
+                else {
                     throw new Error("init cell fail?");
                 }
-            }
+            })
             this.__repo.commit();
         } catch (error) {
             console.error(error);
