@@ -4,12 +4,12 @@ import { uuid } from "../basic/uuid";
 import { Page } from "../data/page";
 import { Api } from "./coop/recordapi";
 import { newText2 } from "./creator";
-import { BlendMode, Border, ContextSettings, Fill, Shadow, Text } from "../data/classes";
+import { BlendMode, Border, ContextSettings, Fill, Shadow, Style, TableCell, Text } from "../data/classes";
 import { findOverride, findVar } from "../data/utils";
 import { BasicArray } from "../data/basic";
-import { IImportContext, importBorder, importColor, importContextSettings, importExportOptions, importFill, importGradient, importShadow, importStyle, importTableShape, importText } from "../data/baseimport";
-import { ShapeView, SymbolRefView, isAdaptedShape } from "../dataview";
-import { Document } from "../data/classes";
+import { IImportContext, importBorder, importColor, importContextSettings, importExportOptions, importFill, importGradient, importShadow, importStyle, importTableCell, importTableShape, importText } from "../data/baseimport";
+import { ShapeView, TableCellView, TableView, isAdaptedShape } from "../dataview";
+import { Document, ShapeFrame } from "../data/classes";
 
 /**
  * @description 图层是否为组件实例的引用部分
@@ -89,14 +89,14 @@ function _varsContainer(view: ShapeView) {
 /**
  * 
  */
-function _ov_2(type: OverrideType, name: string, value: any, varType: VariableType, view: ShapeView, page: Page, api: Api) {
+function _ov_2(type: OverrideType, name: string, value: any, varType: VariableType, view: ShapeView, refId: string, page: Page, api: Api) {
     // const view = this.__shape;
     const varsContainer = _varsContainer(view);
     if (!varsContainer || varsContainer.length === 0) throw new Error();
     const host = varsContainer.find((v) => v instanceof SymbolRefShape);
     if (!host || !(host instanceof SymbolRefShape)) throw new Error();
 
-    let override_id: string = (view.data instanceof SymbolRefShape) ? type : (view.data.id + '/' + type);
+    let override_id: string = (refId + '/' + type);
     for (let i = varsContainer.length - 1; i >= 0; --i) {
         const c = varsContainer[i];
         if (c === host) break;
@@ -295,7 +295,33 @@ function _ov(varType: VariableType, overrideType: OverrideType, valuefun: (_var:
         }
     }
 
-    return _ov_2(overrideType, "", valuefun(undefined), varType, view, page, api);
+    return _ov_2(overrideType, "", valuefun(undefined), varType, view, refId, page, api);
+}
+
+
+export function override_variable2(page: Page, varType: VariableType, overrideType: OverrideType, refId: string, valuefun: (_var: Variable | undefined) => any, api: Api, view: ShapeView) {
+    const varsContainer = _varsContainer(view);
+    if (!varsContainer || varsContainer.length === 0) return;
+    if (!view.isVirtualShape) return;
+    // const refId = view.data instanceof SymbolRefShape ? "" : view.data.id;
+    const _vars = findOverride(refId, overrideType, varsContainer);
+    if (_vars) {
+        const _var = _vars[_vars.length - 1];
+        if (_var && _var.type === varType) {
+            // 判断是否可修改
+            const p = varParent(_var);
+            if (!p) throw new Error();
+            const pIdx = varsContainer.findIndex((v) => v.id === p.id);
+            // if (pIdx < 0) throw new Error(); // 可能的，当前view为symbolref，正在修改组件变量
+            const hostIdx = varsContainer.findIndex((v) => v instanceof SymbolRefShape);
+            // if (hostIdx < 0) throw new Error();
+            if (hostIdx < 0 || pIdx >= 0 && pIdx <= hostIdx) return _var; // 可直接修改
+            // return _ov_3(_var, _var.name, valuefun, view, page, api);
+            // 否则重新override
+        }
+    }
+
+    return _ov_2(overrideType, "", valuefun(undefined), varType, view, refId, page, api);
 }
 
 function _clone_value(_var: Variable, document: Document, page: Page) {
@@ -592,4 +618,52 @@ export function get_state_name(state: SymbolShape, dlt: string) {
         slice && name_slice.push(slice);
     })
     return name_slice.toString();
+}
+
+
+
+export function cell4edit2(page: Page, view: TableView, _cell: TableCellView, api: Api): Variable | undefined {
+    // cell id 要重新生成
+    const index = view.indexOfCell(_cell);
+    if (!index) throw new Error();
+    const {rowIdx, colIdx} = index;
+    const cellId = view.rowHeights[rowIdx].id + "," + view.colWidths[colIdx].id;
+    const valuefun = (_var: Variable | undefined) => {
+        const cell = _var?.value ?? _cell.data;
+        if (cell) return importTableCell(cell);
+        return new TableCell(new BasicArray(),
+            cellId,
+            "",
+            ShapeType.TableCell,
+            new ShapeFrame(0, 0, 0, 0),
+            new Style(new BasicArray(), new BasicArray(), new BasicArray()));
+    };
+    const refId = view.data.id + '/' + cellId;
+    const _var = override_variable2(page, VariableType.TableCell, OverrideType.TableCell, refId, valuefun, api, view);
+    if (_var) return _var;
+    api.tableInitCell(page, view.data, rowIdx, colIdx);
+    // return _cell.data;
+    // return _var;
+}
+
+export function cell4edit(page: Page, view: TableView, rowIdx: number, colIdx: number, api: Api): TableCell {
+    const cellId = view.rowHeights[rowIdx].id + "," + view.colWidths[colIdx].id;
+    const valuefun = (_var: Variable | undefined) => {
+        const cell = _var?.value ?? view._getCellAt(rowIdx, colIdx);
+        if (cell) return importTableCell(cell);
+        return new TableCell(new BasicArray(),
+            cellId,
+            "",
+            ShapeType.TableCell,
+            new ShapeFrame(0, 0, 0, 0),
+            new Style(new BasicArray(), new BasicArray(), new BasicArray()));
+    };
+    const refId = view.data.id + '/' + cellId;
+    const _var = override_variable2(page, VariableType.TableCell, OverrideType.TableCell, refId, valuefun, api, view);
+    if (_var) return _var.value;
+
+    api.tableInitCell(page, view.data, rowIdx, colIdx);
+    const cell = view._getCellAt(rowIdx, colIdx);
+    if (!cell) throw new Error("cell init fail?");
+    return cell;
 }

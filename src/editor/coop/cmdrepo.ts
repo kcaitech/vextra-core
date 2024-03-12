@@ -300,7 +300,14 @@ class CmdSync {
                 this._receive(pcmds);
             }
             // 2. 再处理postingcmds, 与服务端对齐
-            this._receiveLocal(this.pendingcmds.slice(index, index + this.postingcmds.length));
+            const receiveLocals = this.pendingcmds.slice(index, index + this.postingcmds.length);
+            // 更新postingcmds version
+            for (let i = 0; i < receiveLocals.length; ++i) {
+                this.postingcmds[i].version = receiveLocals[i].version;
+                this.postingcmds[i].ops.forEach((op) => { if (op instanceof ArrayOp) op.order = receiveLocals[i].version });
+            }
+            this._receiveLocal(receiveLocals);
+
             // 3. 再处理index之后的cmds
             if (this.pendingcmds.length > index + this.postingcmds.length) {
                 const pcmds = this.pendingcmds.slice(index + this.postingcmds.length);
@@ -334,9 +341,9 @@ class CmdSync {
         const subrepos = classifyOps([cmd]);
         for (let [k, v] of subrepos) {
             // check
-            if (v.length > 1) {
-                console.warn("op can merge?? ", v)
-            }
+            // if (v.length > 1) {
+            //     console.warn("op can merge?? ", v)
+            // }
             // 建立repotree
             const op0 = v[0].op;
             const blockId = op0.path[0];
@@ -386,6 +393,7 @@ class CmdSync {
             saveselection: cmd.saveselection && cloneSelectionState(cmd.saveselection),
             selectionupdater: cmd.selectionupdater
         } : undefined;
+        if (newCmd?.saveselection?.text) newCmd.saveselection.text.order = SNumber.MAX_SAFE_INTEGER;
 
         const subrepos = classifyOps([cmd]);
         for (let [k, v] of subrepos) {
@@ -403,7 +411,8 @@ class CmdSync {
             } else if (cmd === this.nopostcmds[this.nopostcmdidx - 1]) {
                 node.undo(v, undefined); // 正常
             } else {
-                throw new Error();
+                // throw new Error();
+                node.redo(v, undefined);
             }
         }
 
@@ -430,7 +439,8 @@ class CmdSync {
             } else if (cmd === this.nopostcmds[this.nopostcmdidx - 1]) {
                 --this.nopostcmdidx;
             } else {
-                throw new Error();
+                // throw new Error();
+                this._commit2(cmd)
             }
             this.processCmds();
         }
@@ -456,6 +466,7 @@ class CmdSync {
             saveselection: cmd.saveselection && cloneSelectionState(cmd.saveselection),
             selectionupdater: cmd.selectionupdater
         } : undefined;
+        if (newCmd?.saveselection?.text) newCmd.saveselection.text.order = SNumber.MAX_SAFE_INTEGER;
 
         const subrepos = classifyOps([cmd]); // 这个得有顺序
         for (let [k, v] of subrepos) {

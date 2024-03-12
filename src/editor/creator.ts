@@ -1,7 +1,7 @@
-import {v4 as uuid} from "uuid";
-import {Page} from "../data/page";
-import {Artboard} from "../data/artboard";
-import {Document, PageListItem} from "../data/document";
+import { v4 as uuid } from "uuid";
+import { Page } from "../data/page";
+import { Artboard } from "../data/artboard";
+import { Document, PageListItem } from "../data/document";
 import {
     GroupShape,
     LineShape,
@@ -17,7 +17,7 @@ import {
     CutoutShape,
     SymbolUnionShape
 } from "../data/shape";
-import {ContactShape} from "../data/contact"
+import { ContactShape } from "../data/contact"
 import * as types from "../data/typesdefine"
 import {
     importArtboard,
@@ -50,18 +50,18 @@ import {
     BorderStyle,
     SymbolRefShape,
 } from "../data/classes";
-import {BasicArray, BasicMap} from "../data/basic";
-import {Repository} from "../data/transact";
-import {Comment} from "../data/comment";
-import {ResourceMgr} from "../data/basic";
-import {TableShape} from "../data/table";
+import { BasicArray, BasicMap, MultiResourceMgr } from "../data/basic";
+import { Repository } from "../data/transact";
+import { Comment } from "../data/comment";
+import { ResourceMgr } from "../data/basic";
+import { TableShape } from "../data/table";
 
-export {newText, newText2} from "../data/textutils";
-import {exportShapeFrame} from "../data/baseexport";
+export { newText, newText2 } from "../data/textutils";
+import { exportShapeFrame } from "../data/baseexport";
 // import i18n from '../../i18n' // data不能引用外面工程的内容
-import {ContactForm, CrdtNumber} from "../data/baseclasses";
-import {Matrix} from "../basic/matrix";
-import {ResizingConstraints2} from "../data/consts";
+import { ContactForm, CrdtNumber } from "../data/baseclasses";
+import { Matrix } from "../basic/matrix";
+import { ResizingConstraints2 } from "../data/consts";
 
 export function addCommonAttr(shape: Shape) {
     shape.rotation = 0;
@@ -373,7 +373,7 @@ export function newTable(name: string, frame: ShapeFrame, rowCount: number, colu
     for (let ci = 0; ci < columCount; ci++) {
         table.colWidths.push(new CrdtNumber(uuid(), [ci] as BasicArray<number>, 1));
     }
-    table.updateTotalWeights();
+    // table.updateTotalWeights();
     table.frame = frame;
     table.style.borders.push(new Border([0] as BasicArray<number>,
         uuid(),
@@ -469,7 +469,7 @@ export function newSymbolShapeUnion(name: string, frame: ShapeFrame): SymbolUnio
     return union;
 }
 
-export function newSymbolRefShape(name: string, frame: ShapeFrame, refId: string, symbol_mgr: ResourceMgr<SymbolShape>): SymbolRefShape {
+export function newSymbolRefShape(name: string, frame: ShapeFrame, refId: string, symbol_mgr: MultiResourceMgr<SymbolShape>): SymbolRefShape {
     const ref = new SymbolRefShape(new BasicArray(), uuid(), name, types.ShapeType.SymbolRef, frame, newflatStyle(), refId, new BasicMap());
     addCommonAttr(ref);
     ref.setSymbolMgr(symbol_mgr);
@@ -477,7 +477,7 @@ export function newSymbolRefShape(name: string, frame: ShapeFrame, refId: string
 }
 
 export function getTransformByEnv(env: GroupShape) {
-    const result = {flipH: false, flipV: false, rotation: 0};
+    const result = { flipH: false, flipV: false, rotation: 0 };
 
     // flip
     let ohflip = false;
