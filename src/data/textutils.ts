@@ -2,7 +2,7 @@ import { gradient_equals } from "../io/cilpboard";
 import { importParaAttr, importTextAttr } from "./baseimport";
 import { BasicArray } from "./basic";
 import { BulletNumbers, Color, Gradient } from "./classes";
-import { Para, SpanAttr, ParaAttr, Text, TextAttr, SpanAttrSetter, ParaAttrSetter, Span } from "./text";
+import { Para, SpanAttr, ParaAttr, Text, TextAttr, SpanAttrSetter, ParaAttrSetter, Span, TextBehaviour } from "./text";
 
 export function isDiffSpanAttr(span: SpanAttr, attr: SpanAttr): boolean {
     if (attr.color) {
@@ -63,7 +63,7 @@ export function isDiffSpanAttr(span: SpanAttr, attr: SpanAttr): boolean {
         return true;
     }
 
-    if(attr.fillType !== span.fillType) {
+    if (attr.fillType !== span.fillType) {
         return true;
     }
 
@@ -351,4 +351,11 @@ export function newText2(textAttr?: TextAttr, paraAttr?: ParaAttr, spanAttr?: Sp
         mergeSpanAttr(span, spanAttr);
     }
     return text;
+}
+
+export function newTableCellText() {
+    const _text = newText();
+    _text.setTextBehaviour(TextBehaviour.Fixed);
+    _text.setPadding(5, 0, 3, 0);
+    return _text;
 }

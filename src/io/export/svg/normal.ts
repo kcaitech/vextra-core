@@ -1,4 +1,4 @@
-import { GroupShape, ImageShape, OverrideType, PathShape, RectShape, Shape, SymbolShape, TextShape, VariableType } from "../../../data/shape";
+import { GroupShape, ImageShape, OverrideType, PathShape, RectShape, Shape, ShapeFrame, SymbolShape, TextShape, VariableType } from "../../../data/shape";
 import { renderArtboard as art } from "../../../render";
 import { renderGroup as group } from "../../../render";
 import { renderBoolOpShape as boolgroup } from "../../../render";
@@ -8,17 +8,22 @@ import { renderPathShape as rect } from "../../../render";
 import { renderTextShape as text } from "../../../render";
 import { renderSymbolRef as symref } from "../../../render";
 import { renderSymbol as sym } from "../../../render";
+import { renderTable as table } from "../../../render";
+import { renderTableCell as cell } from "../../../render";
 import { ComType, h } from "./basic";
 import { Artboard } from "../../../data/artboard";
-import { ShapeType, SymbolRefShape } from "../../../data/classes";
+import { ShapeType, SymbolRefShape, TableCell, TableShape, Document } from "../../../data/classes";
 import {
     ArtboradView, ContactLineView, CutoutShapeView, DViewCtx,
     GroupShapeView, ImageShapeView,
     LineView, PathShapeView, PathShapeView2,
     RectShapeView, SymbolRefView, SymbolView,
     TableCellView, TableView, TextShapeView,
-    adapt2Shape, findOverrideAndVar, isAdaptedShape
+    adapt2Shape, findOverride, findOverrideAndVar, isAdaptedShape
 } from "../../../dataview";
+import { layoutTable } from "../../../data/tablelayout";
+import { TableCellType } from "../../../data/typesdefine";
+import { layoutText } from "../../../data/textlayout";
 
 const comsMap: Map<ShapeType, ComType> = new Map();
 
@@ -105,16 +110,37 @@ comsMap.set(ShapeType.SymbolRef, (data: Shape,
     const symMgr = shape.getSymbolMgr();
     if (!symMgr) return "";
     const refId = getRefId2(shape, varsContainer);
-    const sym0 = symMgr.getSync(refId);
-    if (!sym0) return "";
+    const val = symMgr.getSync(refId);
+    if (!val || val.length === 0) return "";
+
+    const symbolregist = (symMgr.parent as Document).symbolregist.get(refId);
+    let sym;
+    if (symbolregist) {
+        // todo val 有多个时，需要提示用户修改
+        for (let i = 0; i < val.length; ++i) {
+            const v = val[i];
+            const p = v.getPage();
+            if (!p && symbolregist === 'freesymbols') {
+                sym = v;
+                break;
+            } else if (p && p.id === symbolregist) {
+                sym = v;
+            }
+        }
+    } else {
+        sym = val[val.length - 1];
+    }
+
+    if (!sym) return "";
 
     if (shape.isVirtualShape || isAdaptedShape(shape)) {
-        symref(h, shape, sym0, comsMap, varsContainer, undefined);
+        // todo
+        symref(h, shape, sym, comsMap, varsContainer, undefined);
     }
 
     const adapt = makeAdapt(shape, varsContainer);
     adapt.ctx.layoutAll();
-    const ret = symref(h, adapt.shape, sym0, comsMap, varsContainer, undefined);
+    const ret = symref(h, adapt.shape, sym, comsMap, varsContainer, undefined);
 
     adapt.view.destory();
     return ret;
@@ -122,6 +148,32 @@ comsMap.set(ShapeType.SymbolRef, (data: Shape,
 comsMap.set(ShapeType.Symbol, (data: Shape,
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
     return sym(h, data as SymbolShape, comsMap);
+});
+
+comsMap.set(ShapeType.Table, (data: Shape,
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
+    const _table = data as TableShape;
+    const cellGetter = (rowIdx: number, colIdx: number) => {
+        const cellId = _table.rowHeights[rowIdx].id + "," + _table.colWidths[colIdx].id;
+        const _vars = findOverride(cellId, OverrideType.TableCell, varsContainer || []);
+        if (_vars && _vars.length > 0) {
+            return _vars[_vars.length - 1].value;
+        }
+        return _table.cells.get(cellId);
+    }
+    const layout = layoutTable(data as TableShape, data.frame, cellGetter);
+    return table(h, data as TableShape, comsMap, varsContainer, layout, cellGetter);
+});
+
+comsMap.set(ShapeType.TableCell, (data: Shape,
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, attrs?: any) => {
+    const _cell = data as TableCell;
+    const frame = attrs.frame as ShapeFrame;
+    let layout;
+    if (_cell.cellType === TableCellType.Text && _cell.text) {
+        layout = layoutText(_cell.text, frame.width, frame.height);
+    }
+    return cell(h, _cell, frame, "", varsContainer, layout);
 });
 
 export function exportInnerSvg(shape: Shape): string {

@@ -1,10 +1,9 @@
 import { TextLayout } from "../data/textlayout";
-import { OverrideType, Path, ShapeFrame, Text, TextBehaviour, TextShape, TextVerAlign, VariableType } from "../data/classes";
+import { OverrideType, Path, ShapeFrame, Text, TextShape, VariableType } from "../data/classes";
 import { EL, elh } from "./el";
-import { ShapeView, isDiffShapeFrame } from "./shape";
+import { ShapeView } from "./shape";
 import { renderText2Path, renderTextLayout } from "../render/text";
 import { CursorLocate, TextLocate, locateCursor, locateRange, locateText } from "../data/textlocate";
-import { newText, newText2 } from "../data/textutils";
 
 export class TextShapeView extends ShapeView {
 

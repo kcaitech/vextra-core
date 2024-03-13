@@ -8,11 +8,16 @@ import { TableShape, TableCell, TableLayout } from "./table";
  * @param colEnd 
  * @param visible 
  */
-export function getTableCells(table: TableShape, rowStart: number, rowEnd: number, colStart: number, colEnd: number): { cell: TableCell | undefined, rowIdx: number, colIdx: number }[] {
+export function getTableCells(table: TableShape,
+    cellGetter: (ri: number, ci: number) => TableCell | undefined,
+    rowStart: number,
+    rowEnd: number,
+    colStart: number,
+    colEnd: number): { cell: TableCell | undefined, rowIdx: number, colIdx: number }[] {
     const rowHeights = table.rowHeights;
     const colWidths = table.colWidths;
 
-    const cells = table.cells;
+    // const cells = table.cells;
     let celli = 0;
 
     const ret: { cell: TableCell | undefined, rowIdx: number, colIdx: number }[] = [];
@@ -21,8 +26,9 @@ export function getTableCells(table: TableShape, rowStart: number, rowEnd: numbe
     for (let ri = rowStart, rowLen = rowHeights.length; ri < rowLen && ri <= rowEnd; ++ri) {
         celli += colStart;
         for (let ci = colStart, colLen = colWidths.length; ci < colLen && ci <= colEnd; ++ci, ++celli) {
-            const cellid = rowHeights[ri].id + ',' + colWidths[ci].id;
-            const c = cells.get(cellid);
+            // const cellid = rowHeights[ri].id + ',' + colWidths[ci].id;
+            // const c = cells.get(cellid);
+            const c = cellGetter(ri, ci);
             ret.push({
                 cell: c,
                 rowIdx: ri,
@@ -36,7 +42,13 @@ export function getTableCells(table: TableShape, rowStart: number, rowEnd: numbe
 }
 
 // 获取这些行列中可见的表格，用于选中行列等。
-export function getTableNotCoveredCells(table: TableShape, layout: TableLayout, rowStart: number, rowEnd: number, colStart: number, colEnd: number): { cell: TableCell | undefined, rowIdx: number, colIdx: number }[] {
+export function getTableNotCoveredCells(table: TableShape,
+    cellGetter: (ri: number, ci: number) => TableCell | undefined,
+    layout: TableLayout,
+    rowStart: number,
+    rowEnd: number,
+    colStart: number,
+    colEnd: number): { cell: TableCell | undefined, rowIdx: number, colIdx: number }[] {
 
     const ret: { cell: TableCell | undefined, rowIdx: number, colIdx: number }[] = [];
     const added: Set<string> = new Set();
@@ -47,7 +59,7 @@ export function getTableNotCoveredCells(table: TableShape, layout: TableLayout, 
             if (c.index.row !== ri || c.index.col !== ci) {
                 continue;
             }
-            const cell = table.getCellAt(ri, ci);
+            const cell = cellGetter(ri, ci);
             if (!cell) {
                 ret.push({
                     cell: undefined,
@@ -71,6 +83,7 @@ export function getTableNotCoveredCells(table: TableShape, layout: TableLayout, 
 
 // 获取用户实际看见的单元格
 export function getTableVisibleCells(table: TableShape,
+    cellGetter: (ri: number, ci: number) => TableCell | undefined,
     layout: TableLayout,
     rowStart: number,
     rowEnd: number,
@@ -90,7 +103,7 @@ export function getTableVisibleCells(table: TableShape,
     for (let ri = rowStart, rowLen = grid.rowCount; ri < rowLen && ri <= rowEnd; ++ri) {
         for (let ci = colStart, colLen = grid.colCount; ci < colLen && ci <= colEnd; ++ci) {
             const c = grid.get(ri, ci);
-            const cell = table.getCellAt(c.index.row, c.index.col);
+            const cell = cellGetter(c.index.row, c.index.col);
             if (!cell) {
                 ret.push({
                     cell: undefined,

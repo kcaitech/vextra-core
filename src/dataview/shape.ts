@@ -776,7 +776,30 @@ export class ShapeView extends DataView {
     }
 
     renderStatic() {
+        const fills = this.renderFills() || []; // cache
+        // childs
+        const childs = this.renderContents(); // VDomArray
+        // border
+        const borders = this.renderBorders() || []; // ELArray
 
+        const props = this.renderStaticProps();
+
+        const filterId = `${objectId(this)}`;
+        const shadows = this.renderShadows(filterId);
+
+        if (shadows.length > 0) { // 阴影
+            const ex_props = Object.assign({}, props);
+            delete props.style;
+            delete props.transform;
+            delete props.opacity;
+
+            const inner_url = innerShadowId(filterId, this.getShadows());
+            props.filter = `url(#pd_outer-${filterId}) ${inner_url}`;
+            const body = elh("g", props, [...fills, ...childs, ...borders]);
+            return elh("g", ex_props, [...shadows, body]);
+        } else {
+            return elh("g", props, [...fills, ...childs, ...borders])
+        }
     }
 
     get isContainer() {
