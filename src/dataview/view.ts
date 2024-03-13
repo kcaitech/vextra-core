@@ -2,6 +2,7 @@ import { DViewCtx, PropsType } from "./viewctx";
 import { Shape, SymbolRefShape, SymbolShape } from "../data/classes";
 import { RenderTransform, getShapeViewId } from "./basic";
 import { EL } from "./el";
+import { objectId } from "../basic/objectid";
 
 // EventEmitter
 
@@ -106,8 +107,8 @@ export class DataView extends EventEL {
     }
 
     setData(data: Shape) {
+        if (objectId(data) === objectId(this.m_data)) return;
         const old = this.m_data;
-        if (data === old) return;
         old.unwatch(this._datawatcher);
         data.watch(this._datawatcher);
         this.m_data = data;
@@ -137,7 +138,7 @@ export class DataView extends EventEL {
         return this.m_data;
     }
     get id() {
-        return getShapeViewId(this.m_data, this.m_varsContainer);
+        return getShapeViewId(this.m_data.id, this.m_varsContainer);
     }
     get parent() {
         return this.m_parent;

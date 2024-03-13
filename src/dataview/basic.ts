@@ -47,7 +47,7 @@ export function stringh(...args: any[]): string {
     return ret;
 }
 
-export function genid(shape: Shape,
+export function genid(shapeId: string,
     varsContainer: (SymbolRefShape | SymbolShape)[]) {
     if (varsContainer.length > 0) {
         let id = "";
@@ -59,16 +59,16 @@ export function genid(shape: Shape,
             }
         }
         if (id.length > 0) {
-            return id + '/' + shape.id;
+            return id + '/' + shapeId;
         }
     }
-    return shape.id;
+    return shapeId;
 }
 
-export function getShapeViewId(shape: Shape,
+export function getShapeViewId(shapeId: string,
     varsContainer?: (SymbolRefShape | SymbolShape)[]) {
-    if (varsContainer) return genid(shape, varsContainer);
-    return shape.id;
+    if (varsContainer) return genid(shapeId, varsContainer);
+    return shapeId;
 }
 
 

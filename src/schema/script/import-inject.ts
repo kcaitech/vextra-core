@@ -75,6 +75,7 @@ inject['TableShape']['before'] = `\
             if (ri >= rowCount) break;
             const id = source.rowHeights[ri].id + ',' + source.colWidths[ci].id;
             cells[id] = c;
+            c.id = id;
         }
         source.cells = cells as any;
     }
