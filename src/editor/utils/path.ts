@@ -1,6 +1,6 @@
 import { Api } from "../coop/recordapi";
 import { ContactForm, CurveMode, ShapeType } from "../../data/typesdefine";
-import { CurvePoint, GroupShape, PathShape, Shape, ShapeFrame } from "../../data/shape";
+import { CurvePoint, GroupShape, ImageShape, PathShape, Shape, ShapeFrame } from "../../data/shape";
 import { Page } from "../../data/page";
 import { importCurvePoint, importStyle } from "../../data/baseimport";
 import { exportCurvePoint, exportStyle } from "../../data/baseexport";
@@ -217,7 +217,7 @@ export function before_modify_side(api: Api, page: Page, shape: ContactShape, in
     api.contactModifyEditState(page, shape, true);
 }
 
-export function update_frame_by_points(api: Api, page: Page, s: PathShape) {
+export function update_frame_by_points(api: Api, page: Page, s: PathShape | ImageShape) {
     const box = s.boundingBox3();
 
     if (!box) {

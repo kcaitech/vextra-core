@@ -3,7 +3,6 @@ import { CoopRepository } from "../coop/cooprepo";
 import { Document } from "../../data/document";
 import { adapt2Shape, ImageShapeView, PageView, PathShapeView } from "../../dataview";
 import { CurveMode, CurvePoint, ImageShape, PathShape } from "../../data/shape";
-import { Matrix } from "../../basic/matrix";
 import { BasicArray } from "../../data/basic";
 import { uuid } from "../../basic/uuid";
 import { after_insert_point, update_frame_by_points } from "../utils/path";
@@ -19,8 +18,7 @@ export type ModifyUnits = {
 }[];
 
 export class PathModifier extends AsyncApiCaller {
-    private shape: PathShape | ImageShape;
-    private matrixParent2rootCache: Matrix | undefined;
+    readonly shape: PathShape | ImageShape;
 
     constructor(repo: CoopRepository, document: Document, page: PageView, shape: PathShapeView | ImageShapeView) {
         super(repo, document, page);
@@ -30,18 +28,6 @@ export class PathModifier extends AsyncApiCaller {
 
     start() {
         return this.__repo.start('path-modify');
-    }
-
-    get matrixUnit2root() {
-        const m = this.shape.matrix2Parent();
-        m.multiAtLeft(this.matrixParent2rootCache || this.shape.parent!.matrix2Root());
-        const frame = this.shape.frame;
-        m.preScale(frame.width, frame.height);
-        return m;
-    }
-
-    get matrixUnit2rootInverse() {
-        return new Matrix(this.matrixUnit2root.inverse);
     }
 
     addPoint(index: number) {
@@ -83,8 +69,7 @@ export class PathModifier extends AsyncApiCaller {
                 }
             }
 
-            update_frame_by_points(api, page, shape as PathShape);
-
+            // update_frame_by_points(api, page, shape as PathShape);
             this.updateView();
         } catch (e) {
             console.log('PathModifier.execute:', e);
@@ -92,4 +77,13 @@ export class PathModifier extends AsyncApiCaller {
         }
     }
 
+    commit() {
+        if (this.__repo.isNeedCommit() && !this.exception) {
+            update_frame_by_points(this.api, this.page, this.shape as PathShape | ImageShape);
+
+            this.__repo.commit();
+        } else {
+            this.__repo.rollback();
+        }
+    }
 }
