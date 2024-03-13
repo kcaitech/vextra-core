@@ -1250,21 +1250,21 @@ export class TableEditor extends ShapeEditor {
     }
 
     // todo 考虑去掉。
-    public initTextCell(rowIdx: number, colIdx: number) { // 初始化为文本单元格
-        const api = this.__repo.start("initCell");
-        try {
-            this.cell4edit(rowIdx, colIdx, api);
-            // const text = newText(this.shape.textAttr);
-            // text.setTextBehaviour(TextBehaviour.Fixed);
-            // text.setPadding(5, 0, 3, 0);
-            // api.tableSetCellContentType(this.__page, this.shape, this.cell4edit(rowIdx, colIdx, api), TableCellType.Text);
-            // api.tableSetCellContentText(this.__page, this.shape, this.cell4edit(rowIdx, colIdx, api), text);
-            this.__repo.commit();
-        } catch (error) {
-            console.error(error);
-            this.__repo.rollback();
-        }
-    }
+    // public initTextCell(rowIdx: number, colIdx: number) { // 初始化为文本单元格
+    //     const api = this.__repo.start("initCell");
+    //     try {
+    //         this.cell4edit(rowIdx, colIdx, api);
+    //         // const text = newText(this.shape.textAttr);
+    //         // text.setTextBehaviour(TextBehaviour.Fixed);
+    //         // text.setPadding(5, 0, 3, 0);
+    //         // api.tableSetCellContentType(this.__page, this.shape, this.cell4edit(rowIdx, colIdx, api), TableCellType.Text);
+    //         // api.tableSetCellContentText(this.__page, this.shape, this.cell4edit(rowIdx, colIdx, api), text);
+    //         this.__repo.commit();
+    //     } catch (error) {
+    //         console.error(error);
+    //         this.__repo.rollback();
+    //     }
+    // }
 
     // fill
     public addFill4Cell(fill: Fill, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }, delOlds: boolean) {
