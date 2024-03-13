@@ -87,12 +87,12 @@ export class TextShapeEditor extends ShapeEditor {
     private fixFrameByLayout(api: _Api) {
         if (this.shape.isVirtualShape) api = basicapi;
         if (this.shape instanceof TextShape) fixTextShapeFrameByLayout(api, this.__page, this.shape);
-        else if (this.shape instanceof TableCell) fixTableShapeFrameByLayout(api, this.__page, this.view as TableCellView);
+        else if (this.shape instanceof TableCell) fixTableShapeFrameByLayout(api, this.__page, this.view as TableCellView, this.view.parent as TableView);
     }
     private fixFrameByLayout2(api: _Api, shape: TextShapeLike | Variable) {
         if (this.shape.isVirtualShape) api = basicapi;
         if (shape instanceof TextShape) fixTextShapeFrameByLayout(api, this.__page, shape);
-        else if (shape instanceof TableCell) fixTableShapeFrameByLayout(api, this.__page, this.view as TableCellView);
+        else if (shape instanceof TableCell) fixTableShapeFrameByLayout(api, this.__page, this.view as TableCellView, this.view.parent as TableView);
     }
 
     private shape4edit(api: Api, shape?: TextShapeView | TableCellView) {
