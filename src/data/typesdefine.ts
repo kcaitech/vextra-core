@@ -128,7 +128,7 @@ export type SpanAttr = {
     color?: Color
     strikethrough?: StrikethroughType
     underline?: UnderlineType
-    bold?: boolean
+    bold?: number
     italic?: boolean
     bulletNumbers?: BulletNumbers
     highlight?: Color

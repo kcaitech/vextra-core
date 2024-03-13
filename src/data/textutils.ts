@@ -28,7 +28,7 @@ export function isDiffSpanAttr(span: SpanAttr, attr: SpanAttr): boolean {
         return true;
     }
 
-    if (!!attr.bold !== !!span.bold) {
+    if (attr.bold !== span.bold) {
         return true;
     }
     if (!!attr.italic !== !!span.italic) {
@@ -127,7 +127,7 @@ function _mergeSpanAttr(span: SpanAttr, attr: SpanAttr, attrIsSetter: boolean, i
 
     // bold
     if (attr.bold) {
-        if (!!span.bold !== attr.bold) {
+        if (!span.bold || span.bold !== attr.bold) {
             span.bold = attr.bold;
             changed = true;
         }

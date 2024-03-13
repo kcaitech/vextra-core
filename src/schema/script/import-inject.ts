@@ -170,3 +170,13 @@ inject['TableCell']['before'] = `\
     // 兼容旧数据
     if (!(source as any).crdtidx) (source as any).crdtidx = []
 `
+
+inject['TextAttr'] = {};
+inject['TextAttr']['before'] = `\
+    // inject code
+    // 兼容旧数据
+    const _source = source as any;
+    if (typeof _source.bold === 'boolean') {
+        _source.bold = _source.bold ? 700 : 400;
+    }
+`

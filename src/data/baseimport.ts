@@ -1303,6 +1303,12 @@ export function importParaAttr(source: types.ParaAttr, ctx?: IImportContext): im
 }
 /* text attr */
 export function importTextAttr(source: types.TextAttr, ctx?: IImportContext): impl.TextAttr {
+    // inject code
+    // 兼容旧数据
+    const _source = source as any;
+    if (typeof _source.bold === 'boolean') {
+        _source.bold = _source.bold ? 700 : 400;
+    }
     const ret: impl.TextAttr = new impl.TextAttr (
     )
     if (source.alignment !== undefined) ret.alignment = importTextHorAlign(source.alignment, ctx)

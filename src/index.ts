@@ -51,6 +51,6 @@ export { SNumber } from "./coop/client/snumber"
 export { RadixConvert } from "./coop/common/radix_convert"
 
 // render
-export * from "./render"
-export * from "./renderStatic"
+// export * from "./render"
+// export * from "./renderStatic"
 

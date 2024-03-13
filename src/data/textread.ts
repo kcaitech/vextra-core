@@ -91,7 +91,7 @@ function _getSpanFormat(attr: SpanAttr, attrGetter: AttrGetter, paraAttr: ParaAt
         attrGetter.highlightIsMulti = true;
     }
 
-    const bold = attr.bold ?? (paraAttr?.bold) ?? (textAttr?.bold) ?? false;
+    const bold = attr.bold ?? (paraAttr?.bold) ?? (textAttr?.bold) ?? 400;
     if (attrGetter.bold === undefined) {
         attrGetter.bold = bold;
     }

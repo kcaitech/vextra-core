@@ -40,6 +40,33 @@ export class ArtboradView extends GroupShapeView {
         return props;
     }
 
+    protected renderStaticProps(): { [key: string]: string } {
+        const props: any = {
+            version: "1.1",
+            xmlns: "http://www.w3.org/2000/svg",
+            "xmlns:xlink": "http://www.w3.org/1999/xlink",
+            "xmlns:xhtml": "http://www.w3.org/1999/xhtml",
+            preserveAspectRatio: "xMinYMin meet",
+            overflow: "hidden"
+        }
+
+        const frame = this.frame;
+
+        if (frame.width > frame.height) {
+            props.transform = `translate(0, ${(frame.width - frame.height) / 2})`;
+        } else {
+            props.transform = `translate(${(frame.height - frame.width) / 2}, 0)`;
+        }
+
+        props.width = frame.width;
+        props.height = frame.height;
+        props.x = 0;
+        props.y = 0;
+        props.viewBox = `0 0 ${frame.width} ${frame.height}`;
+
+        return props;
+    }
+
     render(): number {
         const isDirty = this.checkAndResetDirty();
         if (!isDirty) {
@@ -96,9 +123,5 @@ export class ArtboradView extends GroupShapeView {
 
         this.reset("g", props, [...shadows, body, ...borders])
         return ++this.m_render_version;
-    }
-
-    renderStatic() {
-
     }
 }
