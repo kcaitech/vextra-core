@@ -1253,10 +1253,11 @@ export class TableEditor extends ShapeEditor {
     public initTextCell(rowIdx: number, colIdx: number) { // 初始化为文本单元格
         const api = this.__repo.start("initCell");
         try {
+            this.cell4edit(rowIdx, colIdx, api);
             // const text = newText(this.shape.textAttr);
             // text.setTextBehaviour(TextBehaviour.Fixed);
             // text.setPadding(5, 0, 3, 0);
-            api.tableSetCellContentType(this.__page, this.shape, this.cell4edit(rowIdx, colIdx, api), TableCellType.Text);
+            // api.tableSetCellContentType(this.__page, this.shape, this.cell4edit(rowIdx, colIdx, api), TableCellType.Text);
             // api.tableSetCellContentText(this.__page, this.shape, this.cell4edit(rowIdx, colIdx, api), text);
             this.__repo.commit();
         } catch (error) {
