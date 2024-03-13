@@ -11,6 +11,9 @@ class PageCollectNotify extends WatchableObject {
     }
 }
 export class Page extends GroupShape implements classes.Page {
+
+    static defaultBGColor = new Color(1, 239, 239, 239);
+
     typeId = 'page';
     backgroundColor?: Color;
     artboards: Map<string, Artboard> = new Map();
