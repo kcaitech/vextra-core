@@ -591,8 +591,8 @@ export type TableShape = Shape & {
 }
 /* table cell */
 export type TableCell = Shape & {
-    cellType?: TableCellType
-    text?: Text
+    cellType: TableCellType
+    text: Text
     imageRef?: string
     rowSpan?: number
     colSpan?: number

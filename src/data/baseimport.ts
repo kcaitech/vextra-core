@@ -970,6 +970,40 @@ export function importTableCell(source: types.TableCell, ctx?: IImportContext): 
     // inject code
     // 兼容旧数据
     if (!(source as any).crdtidx) (source as any).crdtidx = []
+    if (!source.text) source.text = {
+        typeId: "text",
+        paras: [
+            {
+                text: "\n",
+                spans: [
+                    {
+                        fontName: "PingFangSC-Regular",
+                        fontSize: 14,
+                        length: 1,
+                        color: {
+                            typeId: "color",
+                            alpha: 0.85,
+                            red: 0,
+                            green: 0,
+                            blue: 0
+                        }
+                    }
+                ],
+                attr: {
+                    minimumLineHeight: 24
+                }
+            }
+        ],
+        attr: {
+            textBehaviour: types.TextBehaviour.Fixed,
+            padding: {
+                left: 5,
+                top: 0,
+                right: 3,
+                bottom: 0
+            }
+        }
+    }
     const ret: impl.TableCell = new impl.TableCell (
         (() => {
             const ret = new BasicArray<number>()
@@ -983,7 +1017,9 @@ export function importTableCell(source: types.TableCell, ctx?: IImportContext): 
         source.name,
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
-        importStyle(source.style, ctx)
+        importStyle(source.style, ctx),
+        importTableCellType(source.cellType, ctx),
+        importText(source.text, ctx)
     )
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
@@ -1009,8 +1045,6 @@ export function importTableCell(source: types.TableCell, ctx?: IImportContext): 
         });
         return ret
     })()
-    if (source.cellType !== undefined) ret.cellType = importTableCellType(source.cellType, ctx)
-    if (source.text !== undefined) ret.text = importText(source.text, ctx)
     if (source.imageRef !== undefined) ret.imageRef = source.imageRef
     if (source.rowSpan !== undefined) ret.rowSpan = source.rowSpan
     if (source.colSpan !== undefined) ret.colSpan = source.colSpan

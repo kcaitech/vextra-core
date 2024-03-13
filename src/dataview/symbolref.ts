@@ -169,7 +169,7 @@ export class SymbolRefView extends ShapeView {
             return changed;
         }
 
-        cdom = rView && rView.getView(getShapeViewId(child, varsContainer));
+        cdom = rView && rView.getView(getShapeViewId(child.id, varsContainer));
         if (cdom) {
             // 将cdom移除再add到当前group
             const p = cdom.parent;
