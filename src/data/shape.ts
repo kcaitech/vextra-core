@@ -7,6 +7,7 @@ import { BasicArray } from "./basic";
 export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D,
     CurvePoint, ShapeFrame, Ellipse, PathSegment, OverrideType, VariableType,
+    FillRule,
 } from "./baseclasses";
 import {
     ShapeType,

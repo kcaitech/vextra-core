@@ -485,12 +485,17 @@ export function importFill(source: types.Fill, ctx?: IImportContext): impl.Fill 
     if (source.contextSettings !== undefined) ret.contextSettings = importContextSettings(source.contextSettings, ctx)
     if (source.gradient !== undefined) ret.gradient = importGradient(source.gradient, ctx)
     if (source.imageRef !== undefined) ret.imageRef = source.imageRef
+    if (source.fillRule !== undefined) ret.fillRule = importFillRule(source.fillRule, ctx)
     // inject code
     if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
     return ret
 }
 /* fill types */
 export function importFillType(source: types.FillType, ctx?: IImportContext): impl.FillType {
+    return source
+}
+/* fill rule */
+export function importFillRule(source: types.FillRule, ctx?: IImportContext): impl.FillRule {
     return source
 }
 /* visible scale type */

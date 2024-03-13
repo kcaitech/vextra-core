@@ -475,6 +475,7 @@ export function exportFill(source: types.Fill, ctx?: IExportContext): types.Fill
         contextSettings: source.contextSettings && exportContextSettings(source.contextSettings, ctx),
         gradient: source.gradient && exportGradient(source.gradient, ctx),
         imageRef: source.imageRef,
+        fillRule: source.fillRule && exportFillRule(source.fillRule, ctx),
     }
     // inject code
     if (ctx?.medias && ret.imageRef) ctx.medias.add(ret.imageRef);
@@ -482,6 +483,10 @@ export function exportFill(source: types.Fill, ctx?: IExportContext): types.Fill
 }
 /* fill types */
 export function exportFillType(source: types.FillType, ctx?: IExportContext): types.FillType {
+    return source
+}
+/* fill rule */
+export function exportFillRule(source: types.FillRule, ctx?: IExportContext): types.FillRule {
     return source
 }
 /* visible scale type */
