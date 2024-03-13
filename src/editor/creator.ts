@@ -166,6 +166,9 @@ export function newArtboard2(name: string, frame: ShapeFrame): Artboard {
 }
 
 export function newPathShape(name: string, frame: ShapeFrame, path: Path, style?: Style): PathShape | PathShape2 {
+    frame.width = frame.width || 1;
+    frame.height = frame.height || 1;
+
     style = style || newStyle();
     const id = uuid();
     const segs = path.toCurvePoints(frame.width, frame.height);

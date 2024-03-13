@@ -4,12 +4,13 @@ import { uuid } from "../basic/uuid";
 import { Page } from "../data/page";
 import { Api } from "./coop/recordapi";
 import { newText2 } from "./creator";
-import { BlendMode, Border, ContextSettings, Fill, Shadow, Style, TableCell, Text } from "../data/classes";
+import { BlendMode, Border, ContextSettings, Fill, Shadow, Style, TableCell, TableCellType, Text } from "../data/classes";
 import { findOverride, findVar } from "../data/utils";
 import { BasicArray } from "../data/basic";
 import { IImportContext, importBorder, importColor, importContextSettings, importExportOptions, importFill, importGradient, importShadow, importStyle, importTableCell, importTableShape, importText } from "../data/baseimport";
 import { ShapeView, TableCellView, TableView, isAdaptedShape } from "../dataview";
 import { Document, ShapeFrame } from "../data/classes";
+import { newTableCellText } from "../data/textutils";
 
 /**
  * @description 图层是否为组件实例的引用部分
@@ -96,7 +97,7 @@ function _ov_2(type: OverrideType, name: string, value: any, varType: VariableTy
     const host = varsContainer.find((v) => v instanceof SymbolRefShape);
     if (!host || !(host instanceof SymbolRefShape)) throw new Error();
 
-    let override_id: string = (refId + '/' + type);
+    let override_id: string = refId.length > 0 ? (refId + '/' + type) : type;
     for (let i = varsContainer.length - 1; i >= 0; --i) {
         const c = varsContainer[i];
         if (c === host) break;
@@ -627,7 +628,7 @@ export function cell4edit2(page: Page, view: TableView, _cell: TableCellView, ap
     const index = view.indexOfCell(_cell);
     if (!index) throw new Error();
     const {rowIdx, colIdx} = index;
-    const cellId = view.rowHeights[rowIdx].id + "," + view.colWidths[colIdx].id;
+    const cellId = _cell.data.id; //view.rowHeights[rowIdx].id + "," + view.colWidths[colIdx].id;
     const valuefun = (_var: Variable | undefined) => {
         const cell = _var?.value ?? _cell.data;
         if (cell) return importTableCell(cell);
@@ -636,7 +637,9 @@ export function cell4edit2(page: Page, view: TableView, _cell: TableCellView, ap
             "",
             ShapeType.TableCell,
             new ShapeFrame(0, 0, 0, 0),
-            new Style(new BasicArray(), new BasicArray(), new BasicArray()));
+            new Style(new BasicArray(), new BasicArray(), new BasicArray()),
+            TableCellType.Text,
+            newTableCellText(view.data.textAttr));
     };
     const refId = view.data.id + '/' + cellId;
     const _var = override_variable2(page, VariableType.TableCell, OverrideType.TableCell, refId, valuefun, api, view);
@@ -656,7 +659,9 @@ export function cell4edit(page: Page, view: TableView, rowIdx: number, colIdx: n
             "",
             ShapeType.TableCell,
             new ShapeFrame(0, 0, 0, 0),
-            new Style(new BasicArray(), new BasicArray(), new BasicArray()));
+            new Style(new BasicArray(), new BasicArray(), new BasicArray()),
+            TableCellType.Text,
+            newTableCellText(view.data.textAttr));
     };
     const refId = view.data.id + '/' + cellId;
     const _var = override_variable2(page, VariableType.TableCell, OverrideType.TableCell, refId, valuefun, api, view);

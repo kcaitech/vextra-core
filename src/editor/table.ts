@@ -330,12 +330,16 @@ export class TableEditor extends ShapeEditor {
             for (let c = cs; c <= ce; c++) {
                 const cell = this.view.getCellAt(r, c);
                 if (!cell) continue;
-                // const _text = newText(this.shape.textAttr);
-                // _text.setTextBehaviour(TextBehaviour.Fixed);
-                // _text.setPadding(5, 0, 3, 0);
-                api.tableSetCellContentType(this.__page, this.shape, this.cell4edit(r, c, api), TableCellType.Text);
-                // api.tableSetCellContentText(this.__page, this.shape, this.cell4edit(r, c, api), _text);
-                // api.tableSetCellContentImage(this.__page, this.shape, r, c, undefined);
+                const _cell = this.cell4edit(r, c, api);
+                if (_cell.cellType === TableCellType.Image) {
+                    api.tableSetCellContentType(this.__page, this.shape, _cell, TableCellType.Text);
+                }
+                else if (_cell.cellType === TableCellType.Text) {
+                    const len = cell.text?.length || 0;
+                    if (len <= 1) continue;
+                    const _cell = this.cell4edit(r, c, api);
+                    api.deleteText(this.__page, _cell as TextShapeLike, 0, len - 1);
+                }
             }
         }
     }
@@ -344,13 +348,11 @@ export class TableEditor extends ShapeEditor {
         for (let r = rs; r <= re; r++) {
             for (let c = cs; c <= ce; c++) {
                 const cell = this.view.getCellAt(r, c);
-                if (!cell || cell.cellType === TableCellType.Image) continue;
-                // const _text = newText(this.shape.textAttr);
-                // _text.setTextBehaviour(TextBehaviour.Fixed);
-                // _text.setPadding(5, 0, 3, 0);
-                api.tableSetCellContentType(this.__page, this.shape, this.cell4edit(r, c, api), TableCellType.Text);
-                // api.tableSetCellContentText(this.__page, this.shape, this.cell4edit(r, c, api), _text);
-                // api.tableSetCellContentImage(this.__page, this.shape, r, c, undefined);
+                if (!cell || cell.cellType !== TableCellType.Text) continue;
+                const len = cell.text?.length || 0;
+                if (len <= 1) continue;
+                const _cell = this.cell4edit(r, c, api);
+                api.deleteText(this.__page, _cell as TextShapeLike, 0, len - 1);
             }
         }
     }
@@ -1248,20 +1250,21 @@ export class TableEditor extends ShapeEditor {
     }
 
     // todo 考虑去掉。
-    public initTextCell(rowIdx: number, colIdx: number) { // 初始化为文本单元格
-        const api = this.__repo.start("initCell");
-        try {
-            // const text = newText(this.shape.textAttr);
-            // text.setTextBehaviour(TextBehaviour.Fixed);
-            // text.setPadding(5, 0, 3, 0);
-            api.tableSetCellContentType(this.__page, this.shape, this.cell4edit(rowIdx, colIdx, api), TableCellType.Text);
-            // api.tableSetCellContentText(this.__page, this.shape, this.cell4edit(rowIdx, colIdx, api), text);
-            this.__repo.commit();
-        } catch (error) {
-            console.error(error);
-            this.__repo.rollback();
-        }
-    }
+    // public initTextCell(rowIdx: number, colIdx: number) { // 初始化为文本单元格
+    //     const api = this.__repo.start("initCell");
+    //     try {
+    //         this.cell4edit(rowIdx, colIdx, api);
+    //         // const text = newText(this.shape.textAttr);
+    //         // text.setTextBehaviour(TextBehaviour.Fixed);
+    //         // text.setPadding(5, 0, 3, 0);
+    //         // api.tableSetCellContentType(this.__page, this.shape, this.cell4edit(rowIdx, colIdx, api), TableCellType.Text);
+    //         // api.tableSetCellContentText(this.__page, this.shape, this.cell4edit(rowIdx, colIdx, api), text);
+    //         this.__repo.commit();
+    //     } catch (error) {
+    //         console.error(error);
+    //         this.__repo.rollback();
+    //     }
+    // }
 
     // fill
     public addFill4Cell(fill: Fill, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }, delOlds: boolean) {
