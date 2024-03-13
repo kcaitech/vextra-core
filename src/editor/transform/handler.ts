@@ -1,18 +1,8 @@
-import { CoopRepository } from "../../editor/coop/cooprepo";
+import { CoopRepository } from "../coop/cooprepo";
 import { Document } from "../../data/document";
-import { Api } from "../../editor/coop/recordapi";
+import { Api } from "../coop/recordapi";
 import { Page } from "../../data/page";
 import { PageView, adapt2Shape } from "../../dataview";
-import { ISave4Restore, LocalCmd } from "editor/coop/localcmd";
-
-export type FrameLike = {
-    x: number;
-    y: number;
-    right: number;
-    bottom: number;
-    width: number;
-    height: number;
-};
 
 export class AsyncApiCaller {
     __repo: CoopRepository;
@@ -22,17 +12,16 @@ export class AsyncApiCaller {
 
     exception: boolean = false;
 
-    constructor(repo: CoopRepository, document: Document, page: PageView, desc: string) {
+    constructor(repo: CoopRepository, document: Document, page: PageView) {
         this.__repo = repo;
         this.__document = document;
 
         this.page = adapt2Shape(page) as Page;
-
-        this.api = this.start(desc)
+        this.api = this.start()
     }
 
-    start(desc: string) {
-        return this.__repo.start(desc);
+    start() {
+        return this.__repo.start('');
     }
 
     updateView() {

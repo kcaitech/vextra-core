@@ -12,12 +12,16 @@ export type RotateUnit = {
 
 export class Rotator extends AsyncApiCaller {
     constructor(repo: CoopRepository, document: Document, page: PageView) {
-        super(repo, document, page, 'rotate');
+        super(repo, document, page);
     }
 
-    excute() { }
+    start() {
+        return this.__repo.start('sync-rotate')
+    }
 
-    excute4multi(rotateUnits: RotateUnit[]) {
+    execute() { }
+
+    execute4multi(rotateUnits: RotateUnit[]) {
         try {
             for (let i = 0; i < rotateUnits.length; i++) {
                 const unit = rotateUnits[i];
