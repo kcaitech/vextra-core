@@ -1,5 +1,21 @@
 import { innerShadowId, renderBorders, renderFills, renderShadows } from "../render";
-import { VariableType, OverrideType, Variable, ShapeFrame, SymbolRefShape, SymbolShape, Shape, CurvePoint, Point2D, Path, PathShape, Fill, Border, Shadow, ShapeType } from "../data/classes";
+import {
+    VariableType,
+    OverrideType,
+    Variable,
+    ShapeFrame,
+    SymbolRefShape,
+    SymbolShape,
+    Shape,
+    CurvePoint,
+    Point2D,
+    Path,
+    PathShape,
+    Fill,
+    Border,
+    Shadow,
+    ShapeType
+} from "../data/classes";
 import { findOverrideAndVar } from "./basic";
 import { RenderTransform } from "./basic";
 import { EL, elh } from "./el";
@@ -116,7 +132,10 @@ export function boundingBox(m: Matrix, frame: ShapeFrame, path: Path): ShapeFram
     }
 
     // const frame = this.frame;
-    const corners = [{ x: 0, y: 0 }, { x: frame.width, y: 0 }, { x: frame.width, y: frame.height }, { x: 0, y: frame.height }]
+    const corners = [{ x: 0, y: 0 }, { x: frame.width, y: 0 }, { x: frame.width, y: frame.height }, {
+        x: 0,
+        y: frame.height
+    }]
         .map((p) => m.computeCoord(p));
     const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
     const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
@@ -185,38 +204,49 @@ export class ShapeView extends DataView {
     get parent(): ShapeView | undefined {
         return this.m_parent as ShapeView;
     }
+
     get childs(): ShapeView[] {
         return this.m_children as ShapeView[];
     }
+
     get style() {
         return this.data.style;
     }
+
     get exportOptions() {
         const v = this._findOV(OverrideType.ExportOptions, VariableType.ExportOptions);
         return v ? v.value : this.data.exportOptions;
     }
+
     get contextSettings() {
         const v = this._findOV(OverrideType.ContextSettings, VariableType.ContextSettings);
         return v ? v.value : this.data.style.contextSettings;
     }
+
     get naviChilds(): ShapeView[] | undefined {
         return this.m_children as ShapeView[];
     }
+
     get rotation() {
         return this.m_rotate;
     }
+
     get isFlippedHorizontal() {
         return this.m_hflip;
     }
+
     get isFlippedVertical() {
         return this.m_vflip;
     }
+
     get fixedRadius() {
         return this.m_fixedRadius;
     }
+
     get resizingConstraint() {
         return this.data.resizingConstraint;
     }
+
     get constrainerProportions() {
         return this.data.constrainerProportions;
     }
@@ -245,6 +275,7 @@ export class ShapeView extends DataView {
         const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
         return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
     }
+
     /**
      * @description 无论是否transform都进行Bounds计算并返回
      */
@@ -365,6 +396,7 @@ export class ShapeView extends DataView {
         const v = this._findOV(OverrideType.StartMarkerType, VariableType.MarkerType);
         return v ? v.value : this.m_data.style.startMarkerType;
     }
+
     get endMarkerType(): MarkerType | undefined {
         const v = this._findOV(OverrideType.EndMarkerType, VariableType.MarkerType);
         return v ? v.value : this.m_data.style.endMarkerType;
@@ -380,6 +412,7 @@ export class ShapeView extends DataView {
         this.m_pathstr = this.getPath().toString(); // todo fixedRadius
         return this.m_pathstr;
     }
+
     getPath() {
         if (this.m_path) return this.m_path;
         this.m_path = this.m_data.getPathOfFrame(this.frame, this.m_fixedRadius); // todo fixedRadius
@@ -657,6 +690,36 @@ export class ShapeView extends DataView {
         return props;
     }
 
+    protected renderStaticProps() {
+        const frame = this.frame;
+        const props: any = {};
+        if (this.isNoTransform()) {
+            if (frame.width > frame.height) {
+                props.transform = `translate(0, ${(frame.width - frame.height) / 2})`;
+            } else {
+                props.transform = `translate(${(frame.height - frame.width) / 2}, 0)`;
+            }
+        } else {
+            const box = this.boundingBox();
+            let modifyX = 0;
+            let modifyY = 0;
+            if (box.width > box.height) {
+                modifyY = (box.width - box.height) / 2;
+            } else {
+                modifyX = (box.height - box.width) / 2;
+            }
+            const style: any = {};
+            style.transform = "translate(" + (modifyX + box.width / 2) + "px," + (modifyY + box.height / 2) + "px) ";
+            if (!!this.isFlippedHorizontal) style.transform += "rotateY(180deg) ";
+            if (!!this.isFlippedVertical) style.transform += "rotateX(180deg) ";
+            if (this.rotation) style.transform += "rotate(" + this.rotation + "deg) ";
+            style.transform += "translate(" + (-frame.width / 2) + "px," + (-frame.height / 2) + "px)";
+            props.style = style;
+        }
+
+        return props;
+    }
+
     protected renderContents(): EL[] {
         const childs = this.m_children;
         childs.forEach((c) => c.render())
@@ -706,11 +769,14 @@ export class ShapeView extends DataView {
             props.filter = `url(#pd_outer-${filterId}) ${inner_url}`;
             const body = elh("g", props, [...fills, ...childs, ...borders]);
             this.reset("g", ex_props, [...shadows, body])
-        }
-        else {
+        } else {
             this.reset("g", props, [...fills, ...childs, ...borders]);
         }
         return ++this.m_render_version;
+    }
+
+    renderStatic() {
+
     }
 
     get isContainer() {

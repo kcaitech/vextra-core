@@ -28,7 +28,7 @@ export function isDiffSpanAttr(span: SpanAttr, attr: SpanAttr): boolean {
         return true;
     }
 
-    if (!!attr.bold !== !!span.bold) {
+    if (attr.bold !== span.bold) {
         return true;
     }
     if (!!attr.italic !== !!span.italic) {

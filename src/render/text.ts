@@ -155,7 +155,7 @@ export function renderTextLayout(h: Function, textlayout: TextLayout, frame?: Sh
                     'alignment-baseline': 'central'
                 }
                 if (span) {
-                    if (span.bold) style['font-weight'] = "bold";
+                    style['font-weight'] = span.bold || 400;
                     if (span.italic) style['font-style'] = "italic";
                     if (span.gradient && span.fillType === FillType.Gradient && frame) {
                         const g_ = renderGradient(h, span.gradient as Gradient, frame);
