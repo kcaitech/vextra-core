@@ -2,6 +2,7 @@ import { Matrix } from "../basic/matrix";
 import { CurveMode, CurvePoint } from "./baseclasses";
 import { float_accuracy } from "../basic/consts";
 import { BasicArray } from "./basic";
+import { log } from "debug";
 
 // ----------------------------------------------------------------------------------
 // transform
@@ -96,7 +97,7 @@ transfromHandler['Z'] = function (m: Matrix, item: any[]) {
 transfromHandler['z'] = function (m: Matrix, item: any[]) {
 }
 /**
- * 
+ *
  * @param matrix
  */
 function transformPath(matrix: Matrix) {
@@ -162,6 +163,27 @@ translateHandler['C'] = function (item: any[], x: number, y: number) {
 translateHandler['c'] = function (item: any[], x: number, y: number) {
     // c dx1 dy1, dx2 dy2, dx dy
 }
+translateHandler['S'] = function (item: any[], x: number, y: number) {
+    // C x1 y1, x2 y2, x y
+    translateHandler['C'](item, x, y);
+}
+translateHandler['s'] = function (item: any[], x: number, y: number) {
+    // C x1 y1, x2 y2, x y
+}
+translateHandler['Q'] = function (item: any[], x: number, y: number) {
+    // C x1 y1, x2 y2, x y
+    translateHandler['C'](item, x, y);
+}
+translateHandler['q'] = function (item: any[], x: number, y: number) {
+    // C x1 y1, x2 y2, x y
+}
+translateHandler['T'] = function (item: any[], x: number, y: number) {
+    // C x1 y1, x2 y2, x y
+    translateHandler['C'](item, x, y);
+}
+translateHandler['t'] = function (item: any[], x: number, y: number) {
+    // C x1 y1, x2 y2, x y
+}
 translateHandler['Z'] = function (item: any[], x: number, y: number) {
 }
 translateHandler['z'] = function (item: any[], x: number, y: number) {
@@ -213,9 +235,9 @@ function calculateBezier(t: number, p0: number, p1: number, p2: number, p3: numb
  * http://pomax.nihongoresources.com/pages/bezier/
  */
 function canculateBoundingBox(x1: number, y1: number,
-    cx1: number, cy1: number,
-    cx2: number, cy2: number,
-    x2: number, y2: number) {
+                              cx1: number, cy1: number,
+                              cx2: number, cy2: number,
+                              x2: number, y2: number) {
     const bounds: Bounds = { minX: Math.min(x1, x2), minY: Math.min(y1, y2), maxX: Math.max(x1, x2), maxY: Math.max(y1, y2) };
 
     const dcx0 = cx1 - x1;
@@ -669,6 +691,10 @@ type CurvSeg = {
     beginpoint: { x: number, y: number },
     prepoint: { x: number, y: number },
     points: CurvePoint[],
+
+    preHandle: { x: number, y: number },
+    preCommand: string;
+
     isClosed?: boolean,
 }
 
@@ -692,7 +718,10 @@ function convertPath2CurvePoints(path: any[], width: number, height: number): {
     ctx.segs.push({
         beginpoint: { x: 0, y: 0 },
         prepoint: { x: 0, y: 0 },
-        points: []
+        points: [],
+
+        preHandle: {x: 0, y: 0},
+        preCommand: 'M'
     });
 
     for (let i = 0, len = path.length; i < len; i++) {
@@ -756,6 +785,9 @@ curvHandler['M'] = (ctx: CurvCtx, item: any[]) => {
         beginpoint: { x, y },
         prepoint: { x, y },
         points: [],
+
+        preHandle: { x, y },
+        preCommand: 'M'
     }
     ctx.segs.push(seg);
 }
@@ -767,6 +799,9 @@ curvHandler['m'] = (ctx: CurvCtx, item: any[]) => {
         beginpoint: { x, y },
         prepoint: { x, y },
         points: [],
+
+        preHandle: { x, y },
+        preCommand: 'm'
     }
     ctx.segs.push(seg);
 }
@@ -778,6 +813,7 @@ function curveHandleLine(seg: CurvSeg, x: number, y: number) {
     }
     const point = new CurvePoint([seg.points.length] as BasicArray<number>, "", x, y, CurveMode.Straight);
     seg.points.push(point);
+
 }
 
 curvHandler['L'] = (ctx: CurvCtx, item: any[]) => {
@@ -787,6 +823,7 @@ curvHandler['L'] = (ctx: CurvCtx, item: any[]) => {
     curveHandleLine(seg, x, y);
     seg.prepoint.x = x;
     seg.prepoint.y = y;
+    seg.preCommand = 'L';
 }
 curvHandler['l'] = (ctx: CurvCtx, item: any[]) => {
     const seg = ctx.segs[ctx.segs.length - 1];
@@ -795,6 +832,7 @@ curvHandler['l'] = (ctx: CurvCtx, item: any[]) => {
     curveHandleLine(seg, x, y);
     seg.prepoint.x = x;
     seg.prepoint.y = y;
+    seg.preCommand = 'l';
 }
 
 function curveHandleBezier(seg: CurvSeg, x1: number, y1: number, x2: number, y2: number, x: number, y: number) {
@@ -815,6 +853,9 @@ function curveHandleBezier(seg: CurvSeg, x1: number, y1: number, x2: number, y2:
     point.hasTo = true;
     point.toX = x2;
     point.toY = y2;
+
+    seg.prepoint = { x, y };
+    seg.preHandle = { x: x2, y: y2 };
     seg.points.push(point);
 }
 
@@ -837,6 +878,8 @@ curvHandler['A'] = (ctx: CurvCtx, item: any[]) => {
     }
     seg.prepoint.x = x;
     seg.prepoint.y = y;
+
+    seg.preCommand = 'C'; // 已经转成了C
 }
 curvHandler['a'] = (ctx: CurvCtx, item: any[]) => {
     // (rx ry x-axis-rotation large-arc-flag sweep-flag dx dy)
@@ -861,6 +904,8 @@ curvHandler['a'] = (ctx: CurvCtx, item: any[]) => {
     }
     seg.prepoint.x = x;
     seg.prepoint.y = y;
+
+    seg.preCommand = 'C';
 }
 
 curvHandler['H'] = (ctx: CurvCtx, item: any[]) => {
@@ -870,6 +915,8 @@ curvHandler['H'] = (ctx: CurvCtx, item: any[]) => {
     curveHandleLine(seg, x, y);
     seg.prepoint.x = x;
     seg.prepoint.y = y;
+
+    seg.preCommand = 'H';
 }
 curvHandler['h'] = (ctx: CurvCtx, item: any[]) => {
     const seg = ctx.segs[ctx.segs.length - 1];
@@ -878,6 +925,8 @@ curvHandler['h'] = (ctx: CurvCtx, item: any[]) => {
     curveHandleLine(seg, x, y);
     seg.prepoint.x = x;
     seg.prepoint.y = y;
+
+    seg.preCommand = 'h';
 }
 curvHandler['V'] = (ctx: CurvCtx, item: any[]) => {
     const seg = ctx.segs[ctx.segs.length - 1];
@@ -886,6 +935,8 @@ curvHandler['V'] = (ctx: CurvCtx, item: any[]) => {
     curveHandleLine(seg, x, y);
     seg.prepoint.x = x;
     seg.prepoint.y = y;
+
+    seg.preCommand = 'V';
 }
 curvHandler['v'] = (ctx: CurvCtx, item: any[]) => {
     const seg = ctx.segs[ctx.segs.length - 1];
@@ -894,7 +945,10 @@ curvHandler['v'] = (ctx: CurvCtx, item: any[]) => {
     curveHandleLine(seg, x, y);
     seg.prepoint.x = x;
     seg.prepoint.y = y;
+
+    seg.preCommand = 'v';
 }
+// 三次贝塞尔曲线
 curvHandler['C'] = (ctx: CurvCtx, item: any[]) => {
     const seg = ctx.segs[ctx.segs.length - 1];
     // C x1 y1, x2 y2, x y
@@ -905,8 +959,8 @@ curvHandler['C'] = (ctx: CurvCtx, item: any[]) => {
     const x2 = item[3];
     const y2 = item[4];
     curveHandleBezier(seg, x1, y1, x2, y2, x, y);
-    seg.prepoint.x = x;
-    seg.prepoint.y = y;
+
+    seg.preCommand = 'C';
 }
 curvHandler['c'] = (ctx: CurvCtx, item: any[]) => {
     const seg = ctx.segs[ctx.segs.length - 1];
@@ -918,20 +972,160 @@ curvHandler['c'] = (ctx: CurvCtx, item: any[]) => {
     const x2 = seg.prepoint.x + item[3];
     const y2 = seg.prepoint.y + item[4];
     curveHandleBezier(seg, x1, y1, x2, y2, x, y);
-    seg.prepoint.x = x;
-    seg.prepoint.y = y;
+
+    seg.preCommand = 'C';
 }
+// 平滑三次贝塞尔曲线
+curvHandler['S'] = (ctx: CurvCtx, item: any[]) => {
+    const seg = ctx.segs[ctx.segs.length - 1];
+
+    if (seg.preCommand === 'C') { // 延续三次贝塞尔曲线
+        const x1 = 2 * seg.prepoint.x - seg.preHandle.x;
+        const y1 = 2 * seg.prepoint.y - seg.preHandle.y;
+
+        const x2 = item[1];
+        const y2 = item[2];
+
+        const x = item[3];
+        const y = item[4];
+
+        curveHandleBezier(seg, x1, y1, x2, y2, x, y);
+    }
+    else { // 没有可以延续的指令，以二次贝塞尔曲线的效果转成三次贝塞尔曲线
+        const x1 = item[1];
+        const y1 = item[2];
+
+        const x2 = item[1];
+        const y2 = item[2];
+
+        const x = item[3];
+        const y = item[4];
+
+        curveHandleBezier(seg, x1, y1, x2, y2, x, y);
+    }
+
+    item[0] = 'C';
+    seg.preCommand = 'C';
+}
+curvHandler['s'] = (ctx: CurvCtx, item: any[]) => {
+    const seg = ctx.segs[ctx.segs.length - 1];
+
+    if (seg.preCommand === 'C') {
+        const x1 = 2 * seg.prepoint.x - seg.preHandle.x;
+        const y1 = 2 * seg.prepoint.y - seg.preHandle.y;
+
+        const x2 = seg.prepoint.x + item[1];
+        const y2 = seg.prepoint.y + item[2];
+
+        const x = seg.prepoint.x + item[3];
+        const y = seg.prepoint.y + item[4];
+
+        curveHandleBezier(seg, x1, y1, x2, y2, x, y);
+    }
+    else {
+        const ex = seg.prepoint.x + item[1];
+        const ey = seg.prepoint.y + item[2];
+
+        const x = seg.prepoint.x + item[3];
+        const y = seg.prepoint.y + item[4];
+
+        curveHandleBezier(seg, ex, ey, ex, ey, x, y);
+    }
+
+    item[0] = 'C';
+    seg.preCommand = 'C';
+}
+
+// 二次贝塞尔曲线
+curvHandler['Q'] = (ctx: CurvCtx, item: any[]) => {
+    const seg = ctx.segs[ctx.segs.length - 1];
+    // C x1 y1, x2 y2, x y
+    const x = item[3];
+    const y = item[4];
+    const x1 = item[1];
+    const y1 = item[2];
+
+    curveHandleBezier(seg, x1, y1, x1, y1, x, y);
+
+    item[0] = 'C';
+    seg.preCommand = 'C';
+}
+
+curvHandler['q'] = (ctx: CurvCtx, item: any[]) => {
+    const seg = ctx.segs[ctx.segs.length - 1];
+
+    const x = seg.prepoint.x + item[3];
+    const y = seg.prepoint.y + item[4];
+    const x1 = seg.prepoint.x + item[1];
+    const y1 = seg.prepoint.y + item[2];
+
+    curveHandleBezier(seg, x1, y1, x1, y1, x, y);
+
+    item[0] = 'C';
+    seg.preCommand = 'C';
+}
+
+// 平滑二次贝塞尔曲线
+curvHandler['T'] = (ctx: CurvCtx, item: any[]) => {
+    const seg = ctx.segs[ctx.segs.length - 1];
+    if (seg.preCommand === 'C') {
+        const x = 2 * seg.prepoint.x - seg.preHandle.x;
+        const y = 2 * seg.prepoint.y - seg.preHandle.y;
+
+        curveHandleBezier(seg, x, y, x, y, item[1], item[2]);
+
+        item[0] = 'C';
+        seg.preCommand = 'C';
+    }
+    else {
+        const x = item[1];
+        const y = item[2];
+
+        curveHandleLine(seg, x, y);
+        seg.prepoint.x = x;
+        seg.prepoint.y = y;
+
+        seg.preCommand = 'L';
+    }
+}
+curvHandler['t'] = (ctx: CurvCtx, item: any[]) => {
+    const seg = ctx.segs[ctx.segs.length - 1];
+    if (seg.preCommand === 'C') {
+        const x = 2 * seg.prepoint.x - seg.preHandle.x;
+        const y = 2 * seg.prepoint.y - seg.preHandle.y;
+
+        curveHandleBezier(seg, x, y, x, y, item[1] + seg.prepoint.x, item[2] + seg.prepoint.y);
+
+        item[0] = 'C';
+        seg.preCommand = 'C';
+    }
+    else {
+        const x = seg.prepoint.x + item[1];
+        const y = seg.prepoint.y + item[2];
+
+        curveHandleLine(seg, x, y);
+        seg.prepoint.x = x;
+        seg.prepoint.y = y;
+
+        seg.preCommand = 'L';
+    }
+}
+
 curvHandler['Z'] = (ctx: CurvCtx, item: any[]) => {
     const seg = ctx.segs[ctx.segs.length - 1];
     seg.isClosed = true;
     seg.prepoint.x = seg.beginpoint.x;
     seg.prepoint.y = seg.beginpoint.y;
+
+    seg.preCommand = 'Z';
 }
 curvHandler['z'] = (ctx: CurvCtx, item: any[]) => {
     const seg = ctx.segs[ctx.segs.length - 1];
     seg.isClosed = true;
     seg.prepoint.x = seg.beginpoint.x;
     seg.prepoint.y = seg.beginpoint.y;
+
+    seg.preCommand = 'z';
 }
 // -------------------------------------------------------------
 
@@ -940,8 +1134,12 @@ export class Path {
     private __bounds?: Bounds;
 
     constructor(path?: (string | number)[][] | string) {
-        if (typeof path === 'string') this.m_segs = parsePathString(path);
-        else if (path) this.m_segs = path;
+        if (typeof path === 'string') {
+            this.m_segs = parsePathString(path);
+        }
+        else if (path) {
+            this.m_segs = path;
+        }
         else this.m_segs = [];
     }
     get length() {
