@@ -169,6 +169,40 @@ inject['TableCell']['before'] = `\
     // inject code
     // 兼容旧数据
     if (!(source as any).crdtidx) (source as any).crdtidx = []
+    if (!source.text) source.text = {
+        typeId: "text",
+        paras: [
+            {
+                text: "\\n",
+                spans: [
+                    {
+                        fontName: "PingFangSC-Regular",
+                        fontSize: 14,
+                        length: 1,
+                        color: {
+                            typeId: "color",
+                            alpha: 0.85,
+                            red: 0,
+                            green: 0,
+                            blue: 0
+                        }
+                    }
+                ],
+                attr: {
+                    minimumLineHeight: 24
+                }
+            }
+        ],
+        attr: {
+            textBehaviour: types.TextBehaviour.Fixed,
+            padding: {
+                left: 5,
+                top: 0,
+                right: 3,
+                bottom: 0
+            }
+        }
+    }
 `
 
 inject['TextAttr'] = {};

@@ -7,6 +7,7 @@ import { DViewCtx, PropsType } from "./viewctx";
 import { CursorLocate, TextLocate, locateCursor, locateRange, locateText } from "../data/textlocate";
 import { newTableCellText } from "../data/textutils";
 import { objectId } from "../basic/objectid";
+import { TableView } from "./table";
 
 export class TableCellView extends ShapeView {
 
@@ -82,8 +83,8 @@ export class TableCellView extends ShapeView {
         // }
         const ret = (this.m_data as TableCell).text;
         if (ret) return ret;
-
-        const _text = newTableCellText();
+        const textAttr = (this.parent as TableView).data.textAttr;
+        const _text = newTableCellText(textAttr);
         return _text;
     }
 

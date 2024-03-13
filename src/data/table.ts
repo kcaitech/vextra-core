@@ -14,8 +14,8 @@ export { CrdtNumber } from "./baseclasses";
 export class TableCell extends Shape implements classes.TableCell {
 
     typeId = 'table-cell'
-    cellType?: TableCellType
-    text?: Text
+    cellType: TableCellType
+    text: Text
     imageRef?: string
     rowSpan?: number
     colSpan?: number
@@ -28,7 +28,9 @@ export class TableCell extends Shape implements classes.TableCell {
         name: string,
         type: ShapeType,
         frame: ShapeFrame, // cell里的frame是无用的，真实的位置大小通过行高列宽计算
-        style: Style
+        style: Style,
+        cellType: TableCellType,
+        text: Text
     ) {
         super(
             crdtidx,
@@ -38,11 +40,13 @@ export class TableCell extends Shape implements classes.TableCell {
             frame,
             style
         )
+        this.cellType = cellType
+        this.text = text
     }
 
     getOpTarget(path: string[]) {
         if (path.length === 0) return this;
-        if (path[0] === 'text') {
+        if (path[0] === 'text') { // 兼容旧数据
             if (!this.text) this.text = newTableCellText();
             return this.text?.getOpTarget(path.slice(1));
         }
