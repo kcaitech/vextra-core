@@ -775,7 +775,7 @@ export class Api {
         if (!_text || !(_text instanceof Text)) throw Error();
         this.addOp(basicapi.textModifyStrikethrough(shape, _text, strikethrough, index, len));
     }
-    textModifyBold(page: Page, shape: TextShapeLike | Variable, bold: boolean, index: number, len: number) {
+    textModifyBold(page: Page, shape: TextShapeLike | Variable, bold: number, index: number, len: number) {
         checkShapeAtPage(page, shape);
         const _text = shape instanceof Shape ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
@@ -1065,7 +1065,7 @@ export class Api {
         checkShapeAtPage(page, table);
         this.addOp(basicapi.tableModifyTextStrikethrough(table, strikethrough));
     }
-    tableModifyTextBold(page: Page, table: TableShape, bold: boolean) {
+    tableModifyTextBold(page: Page, table: TableShape, bold: number) {
         checkShapeAtPage(page, table);
         this.addOp(basicapi.tableModifyTextBold(table, bold));
     }

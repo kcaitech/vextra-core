@@ -962,7 +962,7 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
 
-    public setTextBold(bold: boolean, index: number, len: number) {
+    public setTextBold(bold: number, index: number, len: number) {
         if (len === 0) {
             if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
             this.__cachedSpanAttr.bold = bold;
@@ -1001,7 +1001,7 @@ export class TextShapeEditor extends ShapeEditor {
     /**
      * @description 多选文字对象时，给每个文字对象的全部文字设置粗体
      */
-    public setTextBoldMulti(shapes: (TextShapeView | TableCellView)[], bold: boolean) {
+    public setTextBoldMulti(shapes: (TextShapeView | TableCellView)[], bold: number) {
         const api = this.__repo.start("setTextBoldMulti");
         try {
             for (let i = 0, len = shapes.length; i < len; i++) {
