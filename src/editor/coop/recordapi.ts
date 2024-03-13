@@ -16,7 +16,7 @@ import {
 import { updateShapesFrame } from "./utils";
 import { Border, BorderPosition, BorderStyle, Fill, Gradient, MarkerType, Shadow } from "../../data/style";
 import { BulletNumbers, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
-import { RectShape, SymbolRefShape, TableCellType, TableShape } from "../../data/classes";
+import { RectShape, SymbolRefShape, TableCell, TableCellType, TableShape } from "../../data/classes";
 import {
     BoolOp, BulletNumbersBehavior, BulletNumbersType, ExportFileFormat, OverrideType, Point2D,
     StrikethroughType, TextTransformType, UnderlineType, ShadowPosition, ExportFormatNameingScheme, FillType, BlendMode
@@ -34,7 +34,7 @@ import { SNumber } from "../../coop/client/snumber";
 import { ArrayOpSelection } from "../../coop/client/arrayop";
 
 // 要支持variable的修改
-type TextShapeLike = Shape & { text: Text }
+export type TextShapeLike = Shape & { text: Text }
 
 function varParent(_var: Variable) {
     let p = _var.parent;
@@ -43,9 +43,9 @@ function varParent(_var: Variable) {
 }
 
 function checkShapeAtPage(page: Page, obj: Shape | Variable) {
-    obj = obj instanceof Shape ? obj : varParent(obj) as Shape;
-    const shapeid = obj.shapeId;
-    if (!page.getShape(shapeid[0] as string)) throw new Error("shape not inside page")
+    obj = obj instanceof Shape ? (obj instanceof TableCell ? obj.parent as TableShape : obj) : varParent(obj) as Shape;
+    const shapeid = obj.id;
+    if (!page.getShape(shapeid)) throw new Error("shape not inside page")
 }
 
 class TrapHdl { // wap api's function
@@ -102,8 +102,8 @@ export class Api {
         };
         this.needUpdateFrame.length = 0;
     }
-    updateTextSelection(op: ArrayOpSelection | undefined) {
-        if (this.cmd?.saveselection) this.cmd.saveselection.text = op;
+    updateTextSelectionPath(crdtpath: string[]) {
+        if (this.cmd?.saveselection?.text) this.cmd.saveselection.text.path = crdtpath;
     }
     isNeedCommit(): boolean {
         return this.cmd !== undefined && this.cmd.ops.length > 0;
@@ -337,7 +337,7 @@ export class Api {
         } else {
             contextSettings = shape.value;
         }
-        this.addOp(basicapi. crdtSetAttr(contextSettings, 'opacity', contextSettingsOpacity));
+        this.addOp(basicapi.crdtSetAttr(contextSettings, 'opacity', contextSettingsOpacity));
     }
     shapeModifyResizingConstraint(page: Page, shape: Shape, resizingConstraint: number) {
         this._shapeModifyAttr(page, shape, "resizingConstraint", resizingConstraint);
@@ -941,24 +941,33 @@ export class Api {
     }
 
     // table
-    tableSetCellContentType(page: Page, table: TableShape, rowIdx: number, colIdx: number, contentType: TableCellType | undefined) {
+    tableInitCell(page: Page, table: TableShape, rowIdx: number, colIdx: number) {
         checkShapeAtPage(page, table);
         this.addOp(basicapi.tableInitCell(table, rowIdx, colIdx));
-        const cell = table.getCellAt(rowIdx, colIdx);
-        if (cell) this.addOp(basicapi.tableSetCellContentType(cell, contentType));
     }
 
-    tableSetCellContentText(page: Page, table: TableShape, rowIdx: number, colIdx: number, text: Text | undefined) {
+    tableSetCellContentType(page: Page, table: TableShape, cell: TableCell, contentType: TableCellType | undefined) {
         checkShapeAtPage(page, table);
-        this.addOp(basicapi.tableInitCell(table, rowIdx, colIdx));
-        const cell = table.getCellAt(rowIdx, colIdx);
-        if (cell) this.addOp(basicapi.tableSetCellContentText(cell, text));
+        // this.addOp(basicapi.tableInitCell(table, rowIdx, colIdx));
+        // const cell = table.getCellAt(rowIdx, colIdx);
+        this.addOp(basicapi.tableSetCellContentType(cell, contentType));
+        if (contentType !== TableCellType.Text && cell.text) {
+            const len = cell.text.length;
+            if (len > 1) this.addOp(basicapi.deleteText(cell, cell.text, 0, len - 1));
+        }
     }
 
-    tableSetCellContentImage(page: Page, table: TableShape, rowIdx: number, colIdx: number, ref: string | undefined) {
+    // tableSetCellContentText(page: Page, table: TableShape, cell: TableCell, text: Text | undefined) {
+    //     checkShapeAtPage(page, table);
+    //     // this.addOp(basicapi.tableInitCell(table, rowIdx, colIdx));
+    //     // const cell = table.getCellAt(rowIdx, colIdx);
+    //     this.addOp(basicapi.tableSetCellContentText(cell, text));
+    // }
+
+    tableSetCellContentImage(page: Page, table: TableShape, cell: TableCell, ref: string | undefined) {
         checkShapeAtPage(page, table);
-        this.addOp(basicapi.tableInitCell(table, rowIdx, colIdx));
-        const cell = table.getCellAt(rowIdx, colIdx)!;
+        // this.addOp(basicapi.tableInitCell(table, rowIdx, colIdx));
+        // const cell = table.getCellAt(rowIdx, colIdx)!;
         const origin = cell.imageRef;
         if (origin !== ref) {
             this.addOp(basicapi.tableSetCellContentImage(cell, ref));
@@ -997,10 +1006,10 @@ export class Api {
         // todo 删除对应的单元格
     }
 
-    tableModifyCellSpan(page: Page, table: TableShape, rowIdx: number, colIdx: number, rowSpan: number, colSpan: number) {
+    tableModifyCellSpan(page: Page, table: TableShape, cell: TableCell, rowSpan: number, colSpan: number) {
         checkShapeAtPage(page, table);
-        this.addOp(basicapi.tableInitCell(table, rowIdx, colIdx));
-        const cell = table.getCellAt(rowIdx, colIdx)!;
+        // this.addOp(basicapi.tableInitCell(table, rowIdx, colIdx));
+        // const cell = table.getCellAt(rowIdx, colIdx)!;
         const origin = { rowSpan: cell?.rowSpan, colSpan: cell?.colSpan };
         if ((origin.rowSpan ?? 1) !== rowSpan || (origin.colSpan ?? 1) !== colSpan) {
             this.addOp(basicapi.tableModifyCellSpan(cell, rowSpan, colSpan));

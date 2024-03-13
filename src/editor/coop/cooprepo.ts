@@ -160,9 +160,9 @@ export class CoopRepository {
         this.__api.start(this.selection?.save(), selectionupdater, description);
         return this.__api;
     }
-    updateTextSelection(text: Text) {
+    updateTextSelectionPath(text: Text) {
         const path = text?.getCrdtPath() || [];
-        this.__api.updateTextSelection(this.selection?.saveText(path));
+        this.__api.updateTextSelectionPath(path);
     }
     isNeedCommit(): boolean {
         return this.__api.isNeedCommit();

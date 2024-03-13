@@ -145,7 +145,7 @@ export function crdtSetAttr(obj: Basic | BasicMap<any, any>, key: string, value:
     }
 }
 
-export function newText(content: string): Text {
+function newText(content: string): Text {
     const text = new Text(new BasicArray());
     const para = new Para(content + '\n', new BasicArray());
     text.paras.push(para);

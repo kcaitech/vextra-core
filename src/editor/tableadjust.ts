@@ -1,4 +1,5 @@
 
+import { TableView } from "dataview";
 import { Page } from "../data/page";
 import { TableShape } from "../data/table";
 import { Api } from "./coop/recordapi";
@@ -14,7 +15,7 @@ const MinCellSize = TableShape.MinCellSize;
  * @param api 
  * @returns 
  */
-export function adjColum(page: Page, table: TableShape, fromIdx: number, toIdx: number, dx: number, api: Api) {
+export function adjColum(page: Page, table: TableView, fromIdx: number, toIdx: number, dx: number, api: Api) {
     if (dx === 0 || fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) {
         return;
     }
@@ -49,12 +50,12 @@ export function adjColum(page: Page, table: TableShape, fromIdx: number, toIdx: 
     const fromWeight = fromWidth / frame.width * total;
     const toWeight = toWidth / frame.width * total;
 
-    api.tableModifyColWidth(page, table, fromIdx, fromWeight);
-    api.tableModifyColWidth(page, table, toIdx, toWeight);
+    api.tableModifyColWidth(page, table.data, fromIdx, fromWeight);
+    api.tableModifyColWidth(page, table.data, toIdx, toWeight);
 }
 
 
-export function adjRow(page: Page, table: TableShape, fromIdx: number, toIdx: number, dx: number, api: Api) {
+export function adjRow(page: Page, table: TableView, fromIdx: number, toIdx: number, dx: number, api: Api) {
     if (dx === 0 || fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) {
         return;
     }
@@ -90,6 +91,6 @@ export function adjRow(page: Page, table: TableShape, fromIdx: number, toIdx: nu
     const fromWeight = fromHeight / frame.height * total;
     const toWeight = toHeight / frame.height * total;
 
-    api.tableModifyRowHeight(page, table, fromIdx, fromWeight);
-    api.tableModifyRowHeight(page, table, toIdx, toWeight);
+    api.tableModifyRowHeight(page, table.data, fromIdx, fromWeight);
+    api.tableModifyRowHeight(page, table.data, toIdx, toWeight);
 }
