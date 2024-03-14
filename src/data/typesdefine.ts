@@ -128,7 +128,7 @@ export type SpanAttr = {
     color?: Color
     strikethrough?: StrikethroughType
     underline?: UnderlineType
-    bold?: boolean
+    bold?: number
     italic?: boolean
     bulletNumbers?: BulletNumbers
     highlight?: Color
@@ -585,8 +585,8 @@ export type TableShape = Shape & {
 }
 /* table cell */
 export type TableCell = Shape & {
-    cellType?: TableCellType
-    text?: Text
+    cellType: TableCellType
+    text: Text
     imageRef?: string
     rowSpan?: number
     colSpan?: number

@@ -75,6 +75,7 @@ inject['TableShape']['before'] = `\
             if (ri >= rowCount) break;
             const id = source.rowHeights[ri].id + ',' + source.colWidths[ci].id;
             cells[id] = c;
+            c.id = id;
         }
         source.cells = cells as any;
     }
@@ -169,4 +170,48 @@ inject['TableCell']['before'] = `\
     // inject code
     // 兼容旧数据
     if (!(source as any).crdtidx) (source as any).crdtidx = []
+    if (!source.text) source.text = {
+        typeId: "text",
+        paras: [
+            {
+                text: "\\n",
+                spans: [
+                    {
+                        fontName: "PingFangSC-Regular",
+                        fontSize: 14,
+                        length: 1,
+                        color: {
+                            typeId: "color",
+                            alpha: 0.85,
+                            red: 0,
+                            green: 0,
+                            blue: 0
+                        }
+                    }
+                ],
+                attr: {
+                    minimumLineHeight: 24
+                }
+            }
+        ],
+        attr: {
+            textBehaviour: types.TextBehaviour.Fixed,
+            padding: {
+                left: 5,
+                top: 0,
+                right: 3,
+                bottom: 0
+            }
+        }
+    }
+`
+
+inject['TextAttr'] = {};
+inject['TextAttr']['before'] = `\
+    // inject code
+    // 兼容旧数据
+    const _source = source as any;
+    if (typeof _source.bold === 'boolean') {
+        _source.bold = _source.bold ? 700 : 400;
+    }
 `

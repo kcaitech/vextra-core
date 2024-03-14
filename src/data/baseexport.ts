@@ -936,8 +936,8 @@ export function exportTableCell(source: types.TableCell, ctx?: IExportContext): 
                 });
                 return ret;
             })(),
-        cellType: source.cellType && exportTableCellType(source.cellType, ctx),
-        text: source.text && exportText(source.text, ctx),
+        cellType: exportTableCellType(source.cellType, ctx),
+        text: exportText(source.text, ctx),
         imageRef: source.imageRef,
         rowSpan: source.rowSpan,
         colSpan: source.colSpan,

@@ -1,5 +1,5 @@
 import { renderBorders } from "../render";
-import { OverrideType, Shape, ShapeType, SymbolRefShape, SymbolShape, TableCell, TableGridItem, TableLayout, TableShape } from "../data/classes";
+import { OverrideType, Shape, ShapeFrame, ShapeType, Style, SymbolRefShape, SymbolShape, TableCell, TableCellType, TableGridItem, TableLayout, TableShape } from "../data/classes";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
 import { DataView } from "./view"
@@ -9,6 +9,8 @@ import { TableCellView } from "./tablecell";
 import { RenderTransform, findOverride, getShapeViewId } from "./basic";
 import { layoutTable } from "../data/tablelayout";
 import { getTableCells, getTableVisibleCells } from "../data/tableread";
+import { BasicArray } from "../data/basic";
+import { newTableCellText } from "../data/textutils";
 
 export class TableView extends ShapeView {
 
@@ -84,7 +86,7 @@ export class TableView extends ShapeView {
         // }
     }
 
-    _getCellAt(rowIdx: number, colIdx: number): TableCell | undefined {
+    _getCellAt2(rowIdx: number, colIdx: number): TableCell | undefined {
         if (rowIdx < 0 || colIdx < 0 || rowIdx >= this.rowCount || colIdx >= this.colCount) {
             throw new Error("cell index outof range: " + rowIdx + " " + colIdx)
         }
@@ -95,6 +97,33 @@ export class TableView extends ShapeView {
             return _vars[_vars.length - 1].value;
         }
         return this.data.cells.get(cellId);
+    }
+
+    _getCellAt(rowIdx: number, colIdx: number): TableCell {
+        if (rowIdx < 0 || colIdx < 0 || rowIdx >= this.rowCount || colIdx >= this.colCount) {
+            throw new Error("cell index outof range: " + rowIdx + " " + colIdx)
+        }
+        const cellId = this.rowHeights[rowIdx].id + "," + this.colWidths[colIdx].id;
+        const refId = this.data.id + '/' + cellId;
+        const _vars = findOverride(refId, OverrideType.TableCell, this.varsContainer || []);
+        if (_vars && _vars.length > 0) {
+            return _vars[_vars.length - 1].value;
+        }
+        let cell = this.data.cells.get(cellId);
+        if (cell) return cell;
+
+        // 构造一个
+
+        cell = new TableCell(new BasicArray(),
+            cellId,
+            "",
+            ShapeType.TableCell,
+            new ShapeFrame(0, 0, 0, 0),
+            new Style(new BasicArray(), new BasicArray(), new BasicArray()),
+            TableCellType.Text,
+            newTableCellText(this.data.textAttr));
+
+        return cell;
     }
 
     getLayout(): TableLayout {
@@ -186,7 +215,7 @@ export class TableView extends ShapeView {
 
     getVisibleCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number) {
         return this._getVisibleCells(rowStart, rowEnd, colStart, colEnd).map((v) => ({
-            cell: v.cell ? this.cells.get(getShapeViewId(v.cell, this.varsContainer)) : undefined,
+            cell: v.cell ? this.cells.get(getShapeViewId(v.cell.id, this.varsContainer)) : undefined,
             rowIdx: v.rowIdx,
             colIdx: v.colIdx
         }));
@@ -198,7 +227,7 @@ export class TableView extends ShapeView {
 
     getCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number) {
         return this._getCells(rowStart, rowEnd, colStart, colEnd).map((v) => ({
-            cell: v.cell ? this.cells.get(getShapeViewId(v.cell, this.varsContainer)) : undefined,
+            cell: v.cell ? this.cells.get(getShapeViewId(v.cell.id, this.varsContainer)) : undefined,
             rowIdx: v.rowIdx,
             colIdx: v.colIdx
         }));
@@ -223,11 +252,15 @@ export class TableView extends ShapeView {
         return this.data.colWidths;
     }
     getCellAt(rowIdx: number, colIdx: number): TableCellView | undefined {
-        const cell = this._getCellAt(rowIdx, colIdx);
-        if (cell) {
-            const cellId = getShapeViewId(cell, this.varsContainer);
-            return this.cells.get(cellId);
+        if (rowIdx < 0 || colIdx < 0 || rowIdx >= this.rowCount || colIdx >= this.colCount) {
+            throw new Error("cell index outof range: " + rowIdx + " " + colIdx)
         }
+        const cellId = this.rowHeights[rowIdx].id + "," + this.colWidths[colIdx].id;
+        // const cell = this._getCellAt(rowIdx, colIdx);
+        // if (cell) {
+        const _cellId = getShapeViewId(cellId, this.varsContainer);
+        return this.cells.get(_cellId);
+        // }
     }
 
     locateCell(x: number, y: number): (TableGridItem & { cell: TableCellView | undefined }) | undefined {

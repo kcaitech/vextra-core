@@ -189,7 +189,7 @@ export class SpanAttr extends Basic {
     color?: Color
     strikethrough?: StrikethroughType
     underline?: UnderlineType
-    bold?: boolean
+    bold?: number
     italic?: boolean
     bulletNumbers?: BulletNumbers
     highlight?: Color
@@ -933,8 +933,8 @@ export class TableShape extends Shape {
  */
 export class TableCell extends Shape {
     typeId = 'table-cell'
-    cellType?: TableCellType
-    text?: Text
+    cellType: TableCellType
+    text: Text
     imageRef?: string
     rowSpan?: number
     colSpan?: number
@@ -944,7 +944,9 @@ export class TableCell extends Shape {
         name: string,
         type: ShapeType,
         frame: ShapeFrame,
-        style: Style
+        style: Style,
+        cellType: TableCellType,
+        text: Text
     ) {
         super(
             crdtidx,
@@ -954,6 +956,8 @@ export class TableCell extends Shape {
             frame,
             style
         )
+        this.cellType = cellType
+        this.text = text
     }
 }
 /**

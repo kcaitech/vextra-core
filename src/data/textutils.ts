@@ -28,7 +28,7 @@ export function isDiffSpanAttr(span: SpanAttr, attr: SpanAttr): boolean {
         return true;
     }
 
-    if (!!attr.bold !== !!span.bold) {
+    if (attr.bold !== span.bold) {
         return true;
     }
     if (!!attr.italic !== !!span.italic) {
@@ -127,7 +127,7 @@ function _mergeSpanAttr(span: SpanAttr, attr: SpanAttr, attrIsSetter: boolean, i
 
     // bold
     if (attr.bold) {
-        if (!!span.bold !== attr.bold) {
+        if (!span.bold || span.bold !== attr.bold) {
             span.bold = attr.bold;
             changed = true;
         }
@@ -322,6 +322,7 @@ export function newText(textAttr?: TextAttr): Text {
     span.color = new Color(0.85, 0, 0, 0);
     para.spans.push(span);
     if (textAttr) {
+        mergeTextAttr(text, textAttr);
         mergeParaAttr(para, textAttr);
         mergeSpanAttr(span, textAttr);
     }
@@ -353,8 +354,8 @@ export function newText2(textAttr?: TextAttr, paraAttr?: ParaAttr, spanAttr?: Sp
     return text;
 }
 
-export function newTableCellText() {
-    const _text = newText();
+export function newTableCellText(textAttr?: TextAttr) {
+    const _text = newText(textAttr);
     _text.setTextBehaviour(TextBehaviour.Fixed);
     _text.setPadding(5, 0, 3, 0);
     return _text;
