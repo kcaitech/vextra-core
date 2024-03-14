@@ -668,7 +668,7 @@ export function cell4edit(page: Page, view: TableView, rowIdx: number, colIdx: n
     if (_var) return _var.value;
 
     api.tableInitCell(page, view.data, rowIdx, colIdx);
-    const cell = view._getCellAt(rowIdx, colIdx);
+    const cell = view._getCellAt2(rowIdx, colIdx);
     if (!cell) throw new Error("cell init fail?");
     return cell;
 }
