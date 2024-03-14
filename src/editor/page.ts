@@ -1386,6 +1386,34 @@ export class PageEditor {
         }
     }
 
+    uppper_layers(shapes: Shape[], step?: number) {
+        const api = this.__repo.start("move");
+        try {
+            for (let i = 0; i < shapes.length; i++) {
+                const shape = shapes[i];
+                if (shape.isVirtualShape) continue;
+                const parent = shape.parent as GroupShape | undefined;
+                if (!parent) continue;
+                const index = parent.indexOfChild(shape);
+                const len = parent.childs.length;
+                if (index < 0 || index >= len - 1) continue;
+                if (!step) {
+                    api.shapeMove(this.__page, parent, index, parent, len - 1);
+                } else {
+                    if (step + index >= len) {
+                        api.shapeMove(this.__page, parent, index, parent, len - 1);
+                    } else {
+                        api.shapeMove(this.__page, parent, index, parent, index + step);
+                    }
+                }
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+    }
+
     /**
      * @description 调低图形shape的z-index层级
      * @param step 层级数，不传则降低到底部
@@ -1414,6 +1442,32 @@ export class PageEditor {
             console.log(error)
             this.__repo.rollback();
             return false;
+        }
+    }
+    lower_layers(shapes: Shape[], step?: number) {
+        const api = this.__repo.start("move");
+        try {
+            for (let i = 0; i < shapes.length; i++) {
+                const shape = shapes[i];
+                if (shape.isVirtualShape) continue;
+                const parent = shape.parent as GroupShape | undefined;
+                if (!parent) continue;
+                const index = parent.indexOfChild(shape);
+                if (index < 1) continue;
+                if (!step) {
+                    api.shapeMove(this.__page, parent, index, parent, 0);
+                } else {
+                    if (index - step <= 0) {
+                        api.shapeMove(this.__page, parent, index, parent, 0);
+                    } else {
+                        api.shapeMove(this.__page, parent, index, parent, index - step);
+                    }
+                }
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
         }
     }
 
