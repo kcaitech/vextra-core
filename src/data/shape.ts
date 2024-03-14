@@ -757,7 +757,7 @@ export class PathShape extends Shape implements classes.PathShape {
 }
 
 export class PathShape2 extends Shape implements classes.PathShape2 {
-    typeId = 'path-shape2'
+    typeId = 'path-shape-v2'
     pathsegs: BasicArray<PathSegment>
     fixedRadius?: number
 
