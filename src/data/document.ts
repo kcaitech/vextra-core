@@ -157,6 +157,18 @@ export class Document extends (DocumentMeta) {
     get symbolsMgr() {
         return this.__symbols;
     }
+    getSymbolSync(id: string) {
+        const syms = this.symbolsMgr.getSync(id);
+        if (!syms) return;
+        const regist = this.symbolregist.get(id);
+        if (!regist) return syms[syms.length - 1];
+        // todo val 有多个时，需要提示用户修改
+        for (let i = 0; i < syms.length; ++i) {
+            const s = syms[i];
+            const p = s.getPage();
+            if (!p && regist === 'freesymbols' || p && p.id === regist) return s;
+        }
+    }
 
     get mediasMgr() {
         return this.__medias;
