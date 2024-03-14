@@ -86,7 +86,20 @@ export class TableView extends ShapeView {
         // }
     }
 
-    _getCellAt(rowIdx: number, colIdx: number): TableCell | undefined {
+    _getCellAt2(rowIdx: number, colIdx: number): TableCell | undefined {
+        if (rowIdx < 0 || colIdx < 0 || rowIdx >= this.rowCount || colIdx >= this.colCount) {
+            throw new Error("cell index outof range: " + rowIdx + " " + colIdx)
+        }
+        const cellId = this.rowHeights[rowIdx].id + "," + this.colWidths[colIdx].id;
+        const refId = this.data.id + '/' + cellId;
+        const _vars = findOverride(refId, OverrideType.TableCell, this.varsContainer || []);
+        if (_vars && _vars.length > 0) {
+            return _vars[_vars.length - 1].value;
+        }
+        return this.data.cells.get(cellId);
+    }
+
+    _getCellAt(rowIdx: number, colIdx: number): TableCell {
         if (rowIdx < 0 || colIdx < 0 || rowIdx >= this.rowCount || colIdx >= this.colCount) {
             throw new Error("cell index outof range: " + rowIdx + " " + colIdx)
         }
