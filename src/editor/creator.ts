@@ -166,6 +166,9 @@ export function newArtboard2(name: string, frame: ShapeFrame): Artboard {
 }
 
 export function newPathShape(name: string, frame: ShapeFrame, path: Path, style?: Style): PathShape | PathShape2 {
+    frame.width = frame.width || 1;
+    frame.height = frame.height || 1;
+
     style = style || newStyle();
     const id = uuid();
     const segs = path.toCurvePoints(frame.width, frame.height);
@@ -205,43 +208,50 @@ export function newRectShape(name: string, frame: ShapeFrame): RectShape {
     return shape;
 }
 
+// 三次贝塞尔曲线绘制椭圆
+// https://juejin.cn/post/7212650952532459578
+// https://pomax.github.io/bezierinfo/#circles_cubic
 export function newOvalShape(name: string, frame: ShapeFrame): OvalShape {
     const style = newStyle();
     const curvePoint = new BasicArray<CurvePoint>();
     const id = uuid();
-    const ellipse = new Ellipse(79.5, 76, 79, 75.5);
+    const ellipse = new Ellipse(0, 0, 0, 0);
 
+    // 上
     const p1 = new CurvePoint([0] as BasicArray<number>, uuid(), 0.5, 1, CurveMode.Mirrored);
     p1.hasFrom = true;
     p1.hasTo = true;
-    p1.fromX = 0.7761423749;
+    p1.fromX = 0.775892388889507;
     p1.fromY = 1;
-    p1.toX = 0.2238576251;
+    p1.toX = 0.224107611110493;
     p1.toY = 1;
 
+    // 右
     const p2 = new CurvePoint([1] as BasicArray<number>, uuid(), 1, 0.5, CurveMode.Mirrored);
     p2.hasFrom = true;
     p2.hasTo = true;
     p2.fromX = 1;
-    p2.fromY = 0.2238576251;
+    p2.fromY = 0.224107611110493;
     p2.toX = 1;
-    p2.toY = 0.7761423749;
+    p2.toY = 0.775892388889507;
 
+    // 下
     const p3 = new CurvePoint([2] as BasicArray<number>, uuid(), 0.5, 0, CurveMode.Mirrored);
     p3.hasFrom = true;
     p3.hasTo = true;
-    p3.fromX = 0.2238576251;
+    p3.fromX = 0.224107611110493;
     p3.fromY = 0;
-    p3.toX = 0.7761423749;
+    p3.toX = 0.775892388889507;
     p3.toY = 0;
 
+    // 左
     const p4 = new CurvePoint([3] as BasicArray<number>, uuid(), 0, 0.5, CurveMode.Mirrored);
     p4.hasFrom = true;
     p4.hasTo = true;
     p4.fromX = 0;
-    p4.fromY = 0.7761423749;
+    p4.fromY = 0.775892388889507;
     p4.toX = 0;
-    p4.toY = 0.2238576251;
+    p4.toY = 0.224107611110493;
 
     curvePoint.push(p1, p2, p3, p4);
     const shape = new OvalShape([4] as BasicArray<number>, id, name, types.ShapeType.Oval, frame, style, curvePoint, true, ellipse);
@@ -438,6 +448,7 @@ export function newCutoutShape(name: string, frame: ShapeFrame): CutoutShape {
     addCommonAttr(shape);
     return shape;
 }
+
 export function newSymbolShape(name: string, frame: ShapeFrame, style?: Style): SymbolShape {
     const compo = new SymbolShape(new BasicArray(), uuid(), name, types.ShapeType.Symbol, frame, newflatStyle(), new BasicArray(), new BasicMap());
     if (style) compo.style = style;

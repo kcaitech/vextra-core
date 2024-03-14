@@ -4,6 +4,7 @@ import { crdtArrayInsert, crdtArrayRemove, crdtSetAttr } from "./basic";
 import { uuid } from "../../basic/uuid";
 import { BasicArray } from "../../data/basic";
 import { Op } from "../../coop/common/op";
+import { newTableCellText } from "../../data/textutils";
 
 export function tableInitCell(table: TableShape, rowIdx: number, colIdx: number) {
     const cellId = table.rowHeights[rowIdx].id + "," + table.colWidths[colIdx].id;
@@ -13,7 +14,9 @@ export function tableInitCell(table: TableShape, rowIdx: number, colIdx: number)
         "",
         ShapeType.TableCell,
         new ShapeFrame(0, 0, 0, 0),
-        new Style(new BasicArray(), new BasicArray(), new BasicArray()));
+        new Style(new BasicArray(), new BasicArray(), new BasicArray()),
+        TableCellType.Text,
+        newTableCellText(table.textAttr));
     return crdtSetAttr(table.cells, cellId, cell);
 }
 
