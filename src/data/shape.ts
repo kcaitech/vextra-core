@@ -410,11 +410,9 @@ export class Shape extends Basic implements classes.Shape {
 
 export class GroupShape extends Shape implements classes.GroupShape {
     typeId = 'group-shape';
-    childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | TextShape | TableShape | SymbolRefShape)>
-    wideframe: ShapeFrame
-    isBoolOpShape?: boolean
+    childs: BasicArray<(GroupShape | Shape | ImageShape | PathShape | RectShape | TextShape | TableShape | SymbolRefShape)>
+    // wideframe: ShapeFrame
     fixedRadius?: number
-
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
@@ -422,7 +420,7 @@ export class GroupShape extends Shape implements classes.GroupShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | TextShape)>
+        childs: BasicArray<(GroupShape | Shape | ImageShape | PathShape | RectShape | TextShape)>
     ) {
         super(
             crdtidx,
@@ -433,7 +431,7 @@ export class GroupShape extends Shape implements classes.GroupShape {
             style
         )
         this.childs = childs;
-        this.wideframe = new ShapeFrame(frame.x, frame.y, frame.width, frame.height);
+        // this.wideframe = new ShapeFrame(frame.x, frame.y, frame.width, frame.height);
     }
 
     get naviChilds(): Shape[] | undefined {
@@ -500,23 +498,23 @@ export class GroupShape extends Shape implements classes.GroupShape {
         return new Path(path);
     }
 
-    getBoolOp(): { op: BoolOp, isMulti?: boolean } {
-        if (!this.isBoolOpShape || this.childs.length === 0) return { op: BoolOp.None }
-        const childs = this.childs;
-        const op: BoolOp = childs[0].boolOp ?? BoolOp.None;
-        for (let i = 1, len = childs.length; i < len; i++) {
-            const op1 = childs[i].boolOp ?? BoolOp.None;
-            if (op1 !== op) {
-                return { op, isMulti: true }
-            }
-        }
-        return { op }
-    }
+    // getBoolOp(): { op: BoolOp, isMulti?: boolean } {
+    //     if (!this.isBoolOpShape || this.childs.length === 0) return { op: BoolOp.None }
+    //     const childs = this.childs;
+    //     const op: BoolOp = childs[0].boolOp ?? BoolOp.None;
+    //     for (let i = 1, len = childs.length; i < len; i++) {
+    //         const op1 = childs[i].boolOp ?? BoolOp.None;
+    //         if (op1 !== op) {
+    //             return { op, isMulti: true }
+    //         }
+    //     }
+    //     return { op }
+    // }
 
-    setWideFrameSize(w: number, h: number) {
-        this.wideframe.width = w;
-        this.wideframe.height = h;
-    }
+    // setWideFrameSize(w: number, h: number) {
+    //     this.wideframe.width = w;
+    //     this.wideframe.height = h;
+    // }
 
     get isNoSupportDiamondScale() {
         return true;
@@ -527,10 +525,40 @@ export class GroupShape extends Shape implements classes.GroupShape {
     }
 }
 
-/**
- * @deprecated
- */
-export class FlattenShape extends GroupShape implements classes.FlattenShape {
+export class BoolShape extends GroupShape implements classes.BoolShape {
+    typeId = 'bool-shape'
+    constructor(
+        crdtidx: BasicArray<number >,
+        id: string,
+        name: string,
+        type: ShapeType,
+        frame: ShapeFrame,
+        style: Style,
+        childs: BasicArray<(GroupShape | Shape) >
+    ) {
+        super(
+            crdtidx,
+            id,
+            name,
+            ShapeType.BoolShape,
+            frame,
+            style,
+            childs
+        )
+    }
+
+    getBoolOp(): { op: BoolOp, isMulti?: boolean } {
+        if (this.childs.length === 0) return { op: BoolOp.None }
+        const childs = this.childs;
+        const op: BoolOp = childs[0].boolOp ?? BoolOp.None;
+        for (let i = 1, len = childs.length; i < len; i++) {
+            const op1 = childs[i].boolOp ?? BoolOp.None;
+            if (op1 !== op) {
+                return { op, isMulti: true }
+            }
+        }
+        return { op }
+    }
 }
 
 export function genRefId(refId: string, type: OverrideType) {

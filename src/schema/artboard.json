@@ -1,7 +1,14 @@
 {
     "description": "artboard shape",
     "type": "object",
-    "properties": {},
+    "properties": {
+        "fixedRadiusEx": {
+            "type": "array",
+            "items": {
+                "type": "number"
+            }
+        }
+    },
     "required": [],
     "allOf": [
         {

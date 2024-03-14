@@ -6,6 +6,7 @@ import { Path } from "./path";
 import { _get_path } from "./utils";
 export class Artboard extends GroupShape implements classes.Artboard {
     typeId = 'artboard';
+    fixedRadiusEx?: BasicArray<number >
     constructor(
         crdtidx: BasicArray<number>,
         id: string,

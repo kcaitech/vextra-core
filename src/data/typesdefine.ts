@@ -187,7 +187,7 @@ export enum ShapeType {
     TableCell = 'table-cell',
     Contact = 'contact',
     Cutout = 'cutout',
-    OverrideShape = 'override-shape',
+    BoolShape = 'bool-shape',
 }
 /* shape frame
  * x,y为parent坐标系里的点
@@ -650,8 +650,7 @@ export type ImageShape = PathShape & {
 }
 /* group shape */
 export type GroupShape = Shape & {
-    childs: (GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape | CutoutShape)[]
-    isBoolOpShape?: boolean
+    childs: (GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape)[]
     fixedRadius?: number
 }
 /* symbol shape */
@@ -665,9 +664,6 @@ export type SymbolUnionShape = SymbolShape & {
 /* page */
 export type Page = GroupShape & {
     backgroundColor?: Color
-}
-/* flatten shape */
-export type FlattenShape = GroupShape & {
 }
 /* cutout shape */
 export type CutoutShape = PathShape & {
@@ -684,6 +680,10 @@ export type ContactShape = Shape & {
     text: Text
     fixedRadius?: number
 }
+/* bool shape */
+export type BoolShape = GroupShape & {
+}
 /* artboard shape */
 export type Artboard = GroupShape & {
+    fixedRadiusEx?: number[]
 }

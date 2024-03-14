@@ -1500,11 +1500,11 @@ export function exportGroupShape(source: types.GroupShape, ctx?: IExportContext)
                     if (val.typeId == 'shape') {
                         return exportShape(val as types.Shape, ctx)
                     }
-                    if (val.typeId == 'flatten-shape') {
-                        return exportFlattenShape(val as types.FlattenShape, ctx)
-                    }
                     if (val.typeId == 'cutout-shape') {
                         return exportCutoutShape(val as types.CutoutShape, ctx)
+                    }
+                    if (val.typeId == 'bool-shape') {
+                        return exportBoolShape(val as types.BoolShape, ctx)
                     }
                     {
                         throw new Error('unknow val: ' + val)
@@ -1514,7 +1514,6 @@ export function exportGroupShape(source: types.GroupShape, ctx?: IExportContext)
             }
             return ret
         })(),
-        isBoolOpShape: source.isBoolOpShape,
         fixedRadius: source.fixedRadius,
     }
     return ret
@@ -1586,11 +1585,11 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
                         if (val.typeId == 'shape') {
                             return exportShape(val as types.Shape, ctx)
                         }
-                        if (val.typeId == 'flatten-shape') {
-                            return exportFlattenShape(val as types.FlattenShape, ctx)
-                        }
                         if (val.typeId == 'cutout-shape') {
                             return exportCutoutShape(val as types.CutoutShape, ctx)
+                        }
+                        if (val.typeId == 'bool-shape') {
+                            return exportBoolShape(val as types.BoolShape, ctx)
                         }
                         {
                             throw new Error('unknow val: ' + val)
@@ -1600,7 +1599,6 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
                 }
                 return ret
             })(),
-        isBoolOpShape: source.isBoolOpShape,
         fixedRadius: source.fixedRadius,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
@@ -1713,11 +1711,11 @@ export function exportSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IEx
                         if (val.typeId == 'shape') {
                             return exportShape(val as types.Shape, ctx)
                         }
-                        if (val.typeId == 'flatten-shape') {
-                            return exportFlattenShape(val as types.FlattenShape, ctx)
-                        }
                         if (val.typeId == 'cutout-shape') {
                             return exportCutoutShape(val as types.CutoutShape, ctx)
+                        }
+                        if (val.typeId == 'bool-shape') {
+                            return exportBoolShape(val as types.BoolShape, ctx)
                         }
                         {
                             throw new Error('unknow val: ' + val)
@@ -1743,7 +1741,6 @@ export function exportSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IEx
                 });
                 return ret;
             })(),
-        isBoolOpShape: source.isBoolOpShape,
         fixedRadius: source.fixedRadius,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
@@ -1838,11 +1835,11 @@ export function exportPage(source: types.Page, ctx?: IExportContext): types.Page
                         if (val.typeId == 'shape') {
                             return exportShape(val as types.Shape, ctx)
                         }
-                        if (val.typeId == 'flatten-shape') {
-                            return exportFlattenShape(val as types.FlattenShape, ctx)
-                        }
                         if (val.typeId == 'cutout-shape') {
                             return exportCutoutShape(val as types.CutoutShape, ctx)
+                        }
+                        if (val.typeId == 'bool-shape') {
+                            return exportBoolShape(val as types.BoolShape, ctx)
                         }
                         {
                             throw new Error('unknow val: ' + val)
@@ -1852,7 +1849,6 @@ export function exportPage(source: types.Page, ctx?: IExportContext): types.Page
                 }
                 return ret
             })(),
-        isBoolOpShape: source.isBoolOpShape,
         fixedRadius: source.fixedRadius,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
@@ -1878,115 +1874,6 @@ export function exportPage(source: types.Page, ctx?: IExportContext): types.Page
                 return ret;
             })(),
         backgroundColor: source.backgroundColor && exportColor(source.backgroundColor, ctx),
-    }
-    return ret
-}
-/* flatten shape */
-export function exportFlattenShape(source: types.FlattenShape, ctx?: IExportContext): types.FlattenShape {
-    const ret = {
-        crdtidx: (() => {
-                const ret = []
-                for (let i = 0, len = source.crdtidx.length; i < len; i++) {
-                    const r = source.crdtidx[i]
-                    if (r) ret.push(r)
-                }
-                return ret
-            })(),
-        typeId: source.typeId,
-        id: source.id,
-        name: source.name,
-        type: exportShapeType(source.type, ctx),
-        frame: exportShapeFrame(source.frame, ctx),
-        style: exportStyle(source.style, ctx),
-        childs: (() => {
-                const ret = []
-                for (let i = 0, len = source.childs.length; i < len; i++) {
-                    const r = (() => {
-                        const val = source.childs[i];
-                        if (typeof val != 'object') {
-                            return val
-                        }
-                        if (val.typeId == 'group-shape') {
-                            return exportGroupShape(val as types.GroupShape, ctx)
-                        }
-                        if (val.typeId == 'image-shape') {
-                            return exportImageShape(val as types.ImageShape, ctx)
-                        }
-                        if (val.typeId == 'path-shape') {
-                            return exportPathShape(val as types.PathShape, ctx)
-                        }
-                        if (val.typeId == 'rect-shape') {
-                            return exportRectShape(val as types.RectShape, ctx)
-                        }
-                        if (val.typeId == 'symbol-ref-shape') {
-                            return exportSymbolRefShape(val as types.SymbolRefShape, ctx)
-                        }
-                        if (val.typeId == 'symbol-shape') {
-                            return exportSymbolShape(val as types.SymbolShape, ctx)
-                        }
-                        if (val.typeId == 'symbol-union-shape') {
-                            return exportSymbolUnionShape(val as types.SymbolUnionShape, ctx)
-                        }
-                        if (val.typeId == 'text-shape') {
-                            return exportTextShape(val as types.TextShape, ctx)
-                        }
-                        if (val.typeId == 'artboard') {
-                            return exportArtboard(val as types.Artboard, ctx)
-                        }
-                        if (val.typeId == 'line-shape') {
-                            return exportLineShape(val as types.LineShape, ctx)
-                        }
-                        if (val.typeId == 'oval-shape') {
-                            return exportOvalShape(val as types.OvalShape, ctx)
-                        }
-                        if (val.typeId == 'table-shape') {
-                            return exportTableShape(val as types.TableShape, ctx)
-                        }
-                        if (val.typeId == 'contact-shape') {
-                            return exportContactShape(val as types.ContactShape, ctx)
-                        }
-                        if (val.typeId == 'shape') {
-                            return exportShape(val as types.Shape, ctx)
-                        }
-                        if (val.typeId == 'flatten-shape') {
-                            return exportFlattenShape(val as types.FlattenShape, ctx)
-                        }
-                        if (val.typeId == 'cutout-shape') {
-                            return exportCutoutShape(val as types.CutoutShape, ctx)
-                        }
-                        {
-                            throw new Error('unknow val: ' + val)
-                        }
-                    })()
-                    if (r) ret.push(r)
-                }
-                return ret
-            })(),
-        isBoolOpShape: source.isBoolOpShape,
-        fixedRadius: source.fixedRadius,
-        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
-        isFixedToViewport: source.isFixedToViewport,
-        isFlippedHorizontal: source.isFlippedHorizontal,
-        isFlippedVertical: source.isFlippedVertical,
-        isLocked: source.isLocked,
-        isVisible: source.isVisible,
-        exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
-        nameIsFixed: source.nameIsFixed,
-        resizingConstraint: source.resizingConstraint,
-        resizingType: source.resizingType && exportResizeType(source.resizingType, ctx),
-        rotation: source.rotation,
-        constrainerProportions: source.constrainerProportions,
-        clippingMaskMode: source.clippingMaskMode,
-        hasClippingMask: source.hasClippingMask,
-        shouldBreakMaskChain: source.shouldBreakMaskChain,
-        varbinds: source.varbinds && (() => {
-                const val = source.varbinds;
-                const ret: any = {};
-                val.forEach((v, k) => {
-                    ret[k] = v
-                });
-                return ret;
-            })(),
     }
     return ret
 }
@@ -2102,6 +1989,114 @@ export function exportContactShape(source: types.ContactShape, ctx?: IExportCont
     }
     return ret
 }
+/* bool shape */
+export function exportBoolShape(source: types.BoolShape, ctx?: IExportContext): types.BoolShape {
+    const ret = {
+        crdtidx: (() => {
+                const ret = []
+                for (let i = 0, len = source.crdtidx.length; i < len; i++) {
+                    const r = source.crdtidx[i]
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
+        typeId: source.typeId,
+        id: source.id,
+        name: source.name,
+        type: exportShapeType(source.type, ctx),
+        frame: exportShapeFrame(source.frame, ctx),
+        style: exportStyle(source.style, ctx),
+        childs: (() => {
+                const ret = []
+                for (let i = 0, len = source.childs.length; i < len; i++) {
+                    const r = (() => {
+                        const val = source.childs[i];
+                        if (typeof val != 'object') {
+                            return val
+                        }
+                        if (val.typeId == 'group-shape') {
+                            return exportGroupShape(val as types.GroupShape, ctx)
+                        }
+                        if (val.typeId == 'image-shape') {
+                            return exportImageShape(val as types.ImageShape, ctx)
+                        }
+                        if (val.typeId == 'path-shape') {
+                            return exportPathShape(val as types.PathShape, ctx)
+                        }
+                        if (val.typeId == 'rect-shape') {
+                            return exportRectShape(val as types.RectShape, ctx)
+                        }
+                        if (val.typeId == 'symbol-ref-shape') {
+                            return exportSymbolRefShape(val as types.SymbolRefShape, ctx)
+                        }
+                        if (val.typeId == 'symbol-shape') {
+                            return exportSymbolShape(val as types.SymbolShape, ctx)
+                        }
+                        if (val.typeId == 'symbol-union-shape') {
+                            return exportSymbolUnionShape(val as types.SymbolUnionShape, ctx)
+                        }
+                        if (val.typeId == 'text-shape') {
+                            return exportTextShape(val as types.TextShape, ctx)
+                        }
+                        if (val.typeId == 'artboard') {
+                            return exportArtboard(val as types.Artboard, ctx)
+                        }
+                        if (val.typeId == 'line-shape') {
+                            return exportLineShape(val as types.LineShape, ctx)
+                        }
+                        if (val.typeId == 'oval-shape') {
+                            return exportOvalShape(val as types.OvalShape, ctx)
+                        }
+                        if (val.typeId == 'table-shape') {
+                            return exportTableShape(val as types.TableShape, ctx)
+                        }
+                        if (val.typeId == 'contact-shape') {
+                            return exportContactShape(val as types.ContactShape, ctx)
+                        }
+                        if (val.typeId == 'shape') {
+                            return exportShape(val as types.Shape, ctx)
+                        }
+                        if (val.typeId == 'cutout-shape') {
+                            return exportCutoutShape(val as types.CutoutShape, ctx)
+                        }
+                        if (val.typeId == 'bool-shape') {
+                            return exportBoolShape(val as types.BoolShape, ctx)
+                        }
+                        {
+                            throw new Error('unknow val: ' + val)
+                        }
+                    })()
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
+        fixedRadius: source.fixedRadius,
+        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
+        isFixedToViewport: source.isFixedToViewport,
+        isFlippedHorizontal: source.isFlippedHorizontal,
+        isFlippedVertical: source.isFlippedVertical,
+        isLocked: source.isLocked,
+        isVisible: source.isVisible,
+        exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
+        nameIsFixed: source.nameIsFixed,
+        resizingConstraint: source.resizingConstraint,
+        resizingType: source.resizingType && exportResizeType(source.resizingType, ctx),
+        rotation: source.rotation,
+        constrainerProportions: source.constrainerProportions,
+        clippingMaskMode: source.clippingMaskMode,
+        hasClippingMask: source.hasClippingMask,
+        shouldBreakMaskChain: source.shouldBreakMaskChain,
+        varbinds: source.varbinds && (() => {
+                const val = source.varbinds;
+                const ret: any = {};
+                val.forEach((v, k) => {
+                    ret[k] = v
+                });
+                return ret;
+            })(),
+    }
+    return ret
+}
 /* artboard shape */
 export function exportArtboard(source: types.Artboard, ctx?: IExportContext): types.Artboard {
     const ret = {
@@ -2169,11 +2164,11 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
                         if (val.typeId == 'shape') {
                             return exportShape(val as types.Shape, ctx)
                         }
-                        if (val.typeId == 'flatten-shape') {
-                            return exportFlattenShape(val as types.FlattenShape, ctx)
-                        }
                         if (val.typeId == 'cutout-shape') {
                             return exportCutoutShape(val as types.CutoutShape, ctx)
+                        }
+                        if (val.typeId == 'bool-shape') {
+                            return exportBoolShape(val as types.BoolShape, ctx)
                         }
                         {
                             throw new Error('unknow val: ' + val)
@@ -2183,7 +2178,6 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
                 }
                 return ret
             })(),
-        isBoolOpShape: source.isBoolOpShape,
         fixedRadius: source.fixedRadius,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
@@ -2208,6 +2202,14 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
                 });
                 return ret;
             })(),
+        fixedRadiusEx: source.fixedRadiusEx && (() => {
+            const ret = []
+            for (let i = 0, len = source.fixedRadiusEx.length; i < len; i++) {
+                const r = source.fixedRadiusEx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
     }
     return ret
 }
