@@ -1,4 +1,5 @@
 import {
+    BoolShape,
     GroupShape,
     OverrideType,
     PathShape2,
@@ -19,6 +20,7 @@ import {
     newArrowShape,
     newArtboard,
     newArtboard2,
+    newBoolShape,
     newGroupShape,
     newLineShape,
     newOvalShape,
@@ -425,7 +427,7 @@ export class PageEditor {
         }
     }
 
-    boolgroup(shapes: Shape[], groupname: string, op: BoolOp): false | GroupShape {
+    boolgroup(shapes: Shape[], groupname: string, op: BoolOp): false | BoolShape {
         if (shapes.length === 0) return false;
         if (shapes.find((v) => !v.parent)) return false;
         const fshape = shapes[0];
@@ -441,7 +443,7 @@ export class PageEditor {
             style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
         }
         // 1、新建一个GroupShape
-        let gshape = newGroupShape(groupname, style);
+        let gshape = newBoolShape(groupname, style);
 
         const api = this.__repo.start("boolgroup", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
             const state = {} as SelectionState;
@@ -452,8 +454,42 @@ export class PageEditor {
         try {
             // 0、save shapes[0].parent？最外层shape？位置？  层级最高图形的parent
             const saveidx = savep.indexOfChild(shapes[0]);
-            gshape.isBoolOpShape = true;
+            // gshape.isBoolOpShape = true;
             gshape = group(this.__document, this.__page, shapes, gshape, savep, saveidx, api);
+            shapes.forEach((shape) => api.shapeModifyBoolOp(this.__page, shape, op))
+
+            this.__repo.commit();
+            return gshape;
+        } catch (e) {
+            console.log(e)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+
+    boolgroup2(savep: GroupShape, groupname: string, op: BoolOp): false | BoolShape {
+        if (savep.childs.length === 0) return false;
+        const shapes = savep.childs.slice(0);
+        const pp = savep.parent;
+        if (!(pp instanceof GroupShape)) return false;
+        const style: Style = this.cloneStyle(savep.style);
+        if (style.fills.length === 0) {
+            style.fills.push(newSolidColorFill()); // 自动添加个填充
+        }
+        let gshape = newBoolShape(groupname, style);
+
+        const api = this.__repo.start("boolgroup2", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+            const state = {} as SelectionState;
+            if (!isUndo) state.shapes = [gshape.id];
+            else state.shapes = cmd.saveselection?.shapes || [];
+            selection.restore(state);
+        });
+        try {
+            // 0、save shapes[0].parent？最外层shape？位置？  层级最高图形的parent
+            const saveidx = pp.indexOfChild(savep);
+            // gshape.isBoolOpShape = true;
+            gshape = group(this.__document, this.__page, shapes, gshape, pp, saveidx, api);
+            api.shapeDelete(this.__document, this.__page, pp, saveidx + 1);
             shapes.forEach((shape) => api.shapeModifyBoolOp(this.__page, shape, op))
 
             this.__repo.commit();
@@ -475,7 +511,7 @@ export class PageEditor {
         const frame = importShapeFrame(shape0.frame);
 
         const replace = shapes.length === 1 &&
-            ((shape0 instanceof GroupShape && !shape0.isBoolOpShape) ||
+            ((shape0 instanceof GroupShape && !(shape0 instanceof BoolShape)) ||
                 shape0 instanceof Artboard
             ) &&
             !shape0.fixedRadius;
@@ -865,8 +901,8 @@ export class PageEditor {
         return false;
     }
 
-    flattenBoolShape(shape: GroupShape): PathShape | false {
-        if (!shape.isBoolOpShape) return false;
+    flattenBoolShape(shape: BoolShape): PathShape | false {
+        // if (!shape.isBoolOpShape) return false;
         const parent = shape.parent as GroupShape;
         if (!parent) return false;
 
