@@ -715,21 +715,6 @@ export class PathShape extends Shape implements classes.PathShape {
         this.points = points;
         this.isClosed = isClosed;
     }
-    setClosedState(state: boolean) {
-        this.isClosed = state;
-    }
-    // path shape
-    get pointsCount() {
-        return this.points.length;
-    }
-
-    getPointByIndex(idx: number) {
-        return this.points[idx];
-    }
-
-    mapPoints<T>(f: (value: CurvePoint, index: number, array: CurvePoint[]) => T): T[] {
-        return this.points.map(f);
-    }
 
     /**
      *
@@ -743,7 +728,9 @@ export class PathShape extends Shape implements classes.PathShape {
         const height = frame.height;
 
         fixedRadius = this.fixedRadius ?? fixedRadius;
+
         const path = parsePath(this.points, !!this.isClosed, offsetX, offsetY, width, height, fixedRadius);
+
         return new Path(path);
     }
 
@@ -781,11 +768,6 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
         this.pathsegs = pathsegs
     }
 
-    // path shape
-    get pointsCount() {
-        return this.pathsegs.reduce((count, seg) => (count + seg.points.length), 0);
-    }
-
     getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
         const offsetX = 0;
         const offsetY = 0;
@@ -793,10 +775,12 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
         const height = frame.height;
 
         fixedRadius = this.fixedRadius ?? fixedRadius;
+
         const path: any[] = [];
         this.pathsegs.forEach((seg) => {
-            path.push(...parsePath(seg.points, !!seg.isClosed, offsetX, offsetY, width, height, fixedRadius));
+            path.push(...parsePath(seg.points, seg.isClosed, offsetX, offsetY, width, height, fixedRadius));
         });
+
         return new Path(path);
     }
 

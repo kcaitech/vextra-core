@@ -16,6 +16,10 @@ export class PathShapeView2 extends ShapeView {
 
     m_pathsegs?: PathSegment[];
 
+    get segments() {
+        return this.m_pathsegs || (this.m_data as PathShape2).pathsegs;
+    }
+
     protected _layout(shape: Shape, transform: RenderTransform | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): void {
         this.m_pathsegs = undefined;
         super._layout(shape, transform, varsContainer);
