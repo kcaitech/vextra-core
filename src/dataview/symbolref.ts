@@ -67,7 +67,7 @@ export class SymbolRefView extends ShapeView {
     }
 
     onDataChange(...args: any[]): void {
-        this.loadsym();
+        this.loadsym(true);
     }
 
     symwatcher(...args: any[]) {
@@ -139,13 +139,13 @@ export class SymbolRefView extends ShapeView {
         // todo 通过symbolregist判断使用哪个symbol。及symbol变化时重新更新
         if (trysync) {
             const val = symMgr.getSync(refId);
-            if (val && val.length > 0) {
+            if (val && (val.length > 0)) {
                 onload(val as SymbolShape[]);
                 return;
             }
         }
         symMgr.get(refId).then((val) => {
-            if (val && val.length - 1) setTimeout(() => onload(val as SymbolShape[])); // 此时symbol刚加载，不一定有page
+            if (val && (val.length > 0)) setTimeout(() => onload(val as SymbolShape[])); // 此时symbol刚加载，不一定有page
             else this.m_refId = undefined;
         }).catch((e) => {
             console.error(e);

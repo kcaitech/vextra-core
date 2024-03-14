@@ -18,7 +18,7 @@ handler[FillType.SolidColor] = function (h: Function, frame: ShapeFrame, fill: F
         "fill-opacity": (color ? color.alpha : 1),
         stroke: 'none',
         'stroke-width': 0,
-        "fill-rule": "evenodd",
+        "fill-rule": fill.fillRule || "evenodd",
     });
 }
 
@@ -49,7 +49,7 @@ handler[FillType.Gradient] = function (h: Function, frame: ShapeFrame, fill: Fil
             "fill-opacity": opacity === undefined ? 1 : opacity,
             stroke: 'none',
             'stroke-width': 0,
-            "fill-rule": "evenodd",
+            "fill-rule": fill.fillRule || "evenodd",
         }));
     }
     // if (elArr.length == 1) {
