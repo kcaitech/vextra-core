@@ -100,7 +100,7 @@ export function textModifyUnderline(parent: Shape | Variable, shapetext: Text, u
 export function textModifyStrikethrough(parent: Shape | Variable, shapetext: Text, strikethrough: StrikethroughType | undefined, index: number, len: number) {
     return otTextSetAttr(parent, shapetext, index, len, "strikethrough", strikethrough);
 }
-export function textModifyBold(parent: Shape | Variable, shapetext: Text, bold: boolean, index: number, len: number) {
+export function textModifyBold(parent: Shape | Variable, shapetext: Text, bold: number, index: number, len: number) {
     return otTextSetAttr(parent, shapetext, index, len, "bold", bold);
 }
 export function textModifyItalic(parent: Shape | Variable, shapetext: Text, italic: boolean, index: number, len: number) {

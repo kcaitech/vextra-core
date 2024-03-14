@@ -63,7 +63,7 @@ interface _Api {
 export class TextShapeEditor extends ShapeEditor {
 
     private __cachedSpanAttr?: SpanAttrSetter;
-    private __textAttr?: TextAttr;
+    // private __textAttr?: TextAttr;
 
     constructor(shape: TextShapeView | TableCellView, page: Page, repo: CoopRepository, document: Document) {
         super(shape, page, repo, document);
@@ -87,16 +87,16 @@ export class TextShapeEditor extends ShapeEditor {
     private fixFrameByLayout(api: _Api) {
         if (this.shape.isVirtualShape) api = basicapi;
         if (this.shape instanceof TextShape) fixTextShapeFrameByLayout(api, this.__page, this.shape);
-        else if (this.shape instanceof TableCell) fixTableShapeFrameByLayout(api, this.__page, this.view as TableCellView);
+        else if (this.shape instanceof TableCell) fixTableShapeFrameByLayout(api, this.__page, this.view as TableCellView, this.view.parent as TableView);
     }
     private fixFrameByLayout2(api: _Api, shape: TextShapeLike | Variable) {
         if (this.shape.isVirtualShape) api = basicapi;
         if (shape instanceof TextShape) fixTextShapeFrameByLayout(api, this.__page, shape);
-        else if (shape instanceof TableCell) fixTableShapeFrameByLayout(api, this.__page, this.view as TableCellView);
+        else if (shape instanceof TableCell) fixTableShapeFrameByLayout(api, this.__page, this.view as TableCellView, this.view.parent as TableView);
     }
 
     private shape4edit(api: Api, shape?: TextShapeView | TableCellView) {
-        this.__textAttr = undefined;
+        // this.__textAttr = undefined;
 
         const _shape = shape ?? this.__shape as (TextShapeView | TableCellView);
 
@@ -106,25 +106,28 @@ export class TextShapeEditor extends ShapeEditor {
             if (_var) {
                 cell = _var.value;
             } else {
-                cell = _shape.data;
+                // cell可能是不存在的, 需要重新获取
+                const table = _shape.parent as TableView;
+                cell = table.data.cells.get(_shape.data.id) as TableCell;
+                if (!cell) throw new Error();
             }
-            if (!cell.text) {
-                const save = this.__repo.transactCtx.settrap;
-                this.__repo.transactCtx.settrap = false;
-                try {
-                    const _text = newTableCellText();
-                    cell.text = _text;
-                }
-                finally {
-                    this.__repo.transactCtx.settrap = save;
-                }
-            }
-            if (cell.text.paras.length === 1 && cell.text.paras[0].length === 1) {
-                const attr = (_shape.parent as TableView).data.textAttr;
-                this.__textAttr = attr && importTextAttr(attr);
-            }
+            // if (!cell.text) {
+            //     const save = this.__repo.transactCtx.settrap;
+            //     this.__repo.transactCtx.settrap = false;
+            //     try {
+            //         const _text = newTableCellText();
+            //         cell.text = _text;
+            //     }
+            //     finally {
+            //         this.__repo.transactCtx.settrap = save;
+            //     }
+            // }
+            // if (cell.text.paras.length === 1 && cell.text.paras[0].length === 1) {
+            //     const attr = (_shape.parent as TableView).data.textAttr;
+            //     this.__textAttr = attr && importTextAttr(attr);
+            // }
             this.__repo.updateTextSelectionPath(cell.text);
-            if (_var) {
+            if (_var || cell !== _shape.data) {
                 _shape.setData(cell); // 手动更新下，要不光标更新不对
             }
             return cell as TextShapeLike;
@@ -197,11 +200,11 @@ export class TextShapeEditor extends ShapeEditor {
         const api = this.__repo.start("insertText");
         try {
             const shape = this.shape4edit(api);
-            if (this.__textAttr) {
-                const attr1 = this.__textAttr;
-                if (attr) mergeSpanAttr(attr1, attr);
-                attr = attr1;
-            }
+            // if (this.__textAttr) {
+            //     const attr1 = this.__textAttr;
+            //     if (attr) mergeSpanAttr(attr1, attr);
+            //     attr = attr1;
+            // }
             if (del > 0) api.deleteText(this.__page, shape, index, del);
             api.insertSimpleText(this.__page, shape, index, text, attr);
             this.fixFrameByLayout(api);
@@ -304,11 +307,11 @@ export class TextShapeEditor extends ShapeEditor {
         const api = this.__repo.start("insertTextForNewLine");
         try {
             const shape = this.shape4edit(api);
-            if (this.__textAttr) {
-                const attr1 = this.__textAttr;
-                if (attr) mergeSpanAttr(attr1, attr);
-                attr = attr1;
-            }
+            // if (this.__textAttr) {
+            //     const attr1 = this.__textAttr;
+            //     if (attr) mergeSpanAttr(attr1, attr);
+            //     attr = attr1;
+            // }
             let count = text.length;
             if (del > 0) api.deleteText(this.__page, shape, index, del);
             for (; ;) {
@@ -962,7 +965,7 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
 
-    public setTextBold(bold: boolean, index: number, len: number) {
+    public setTextBold(bold: number, index: number, len: number) {
         if (len === 0) {
             if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
             this.__cachedSpanAttr.bold = bold;
@@ -1001,7 +1004,7 @@ export class TextShapeEditor extends ShapeEditor {
     /**
      * @description 多选文字对象时，给每个文字对象的全部文字设置粗体
      */
-    public setTextBoldMulti(shapes: (TextShapeView | TableCellView)[], bold: boolean) {
+    public setTextBoldMulti(shapes: (TextShapeView | TableCellView)[], bold: number) {
         const api = this.__repo.start("setTextBoldMulti");
         try {
             for (let i = 0, len = shapes.length; i < len; i++) {
