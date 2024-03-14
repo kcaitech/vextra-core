@@ -99,14 +99,15 @@ class FrameGrid {
 }
 
 function render2path(shape: ShapeView): Path {
-
-    // const shapeIsGroup = shape instanceof GroupShapeView;
-    let fixedRadius: number | undefined = shape.m_fixedRadius;
-    // if (shapeIsGroup) fixedRadius = shape.m_fixedRadius;
-    if (shape.m_children.length === 0) {
+    const shapeIsGroup = shape instanceof GroupShapeView;
+    let fixedRadius: number | undefined;
+    if (shapeIsGroup) fixedRadius = shape.fixedRadius;
+    if (!shapeIsGroup) {
         if (!shape.isVisible()) return new Path();
         const path = shape instanceof TextShapeView ? shape.getTextPath() : shape.getPath();
         return path.clone();
+    } else if (shape.childs.length === 0) {
+        return new Path();
     }
 
     let fVisibleIdx = 0;
