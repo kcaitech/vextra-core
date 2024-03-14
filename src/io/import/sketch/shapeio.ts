@@ -9,7 +9,8 @@ import {
     ShapeFrame,
     TextShape,
     ExportFormat,
-    SymbolShape
+    SymbolShape,
+    BoolShape
 } from "../../../data/shape";
 import { importXY, importStyle, importColor } from "./styleio";
 import { Page } from "../../../data/page";
@@ -188,8 +189,8 @@ export function importShapeGroupShape(ctx: LoadContext, data: IJSON, f: ImportFu
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON, i: number) => f(ctx, d, i));
-    const shape = new GroupShape([i] as BasicArray<number>, id, name, ShapeType.Group, frame, style, new BasicArray<Shape>(...childs));
-    shape.isBoolOpShape = true;
+    const shape = new BoolShape([i] as BasicArray<number>, id, name, ShapeType.BoolShape, frame, style, new BasicArray<Shape>(...childs));
+    // shape.isBoolOpShape = true;
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     shape.exportOptions = exportOptions;

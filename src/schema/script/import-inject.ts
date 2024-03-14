@@ -102,13 +102,14 @@ inject['SymbolRefShape']['after'] = `\
     }
 `
 
-inject['FlattenShape'] = {};
-inject['FlattenShape']['content'] = `\
+inject['GroupShape'] = {};
+inject['GroupShape']['before'] = `\
     // inject code
-    const ret = importGroupShape(source, ctx);
-    ret.isBoolOpShape = true;
-    ret.type = types.ShapeType.Group;
-    return ret;
+    if ((source as any).isBoolOpShape) {
+        source.typeId = "bool-shape";
+        source.type = types.ShapeType.BoolShape;
+        return importBoolShape(source, ctx);
+    }
 `
 
 inject['SymbolShape'] = {};

@@ -1,4 +1,4 @@
-import { GroupShape, ImageShape, OverrideType, PathShape, RectShape, Shape, ShapeFrame, SymbolShape, TextShape, VariableType } from "../../../data/shape";
+import { BoolShape, GroupShape, ImageShape, OverrideType, PathShape, RectShape, Shape, ShapeFrame, SymbolShape, TextShape, VariableType } from "../../../data/shape";
 import { renderArtboard as art } from "../../../render";
 import { renderGroup as group } from "../../../render";
 import { renderBoolOpShape as boolgroup } from "../../../render";
@@ -24,6 +24,7 @@ import {
 import { layoutTable } from "../../../data/tablelayout";
 import { TableCellType } from "../../../data/typesdefine";
 import { layoutText } from "../../../data/textlayout";
+import { BoolShapeView } from "../../../dataview/boolshape";
 
 const comsMap: Map<ShapeType, ComType> = new Map();
 
@@ -31,9 +32,12 @@ comsMap.set(ShapeType.Artboard, (data: Shape,
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
     return art(h, data as Artboard, comsMap, varsContainer, undefined);
 });
+comsMap.set(ShapeType.BoolShape, (data: Shape,
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
+    return boolgroup(h, data as BoolShape, varsContainer);
+});
 comsMap.set(ShapeType.Group, (data: Shape,
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
-    if ((data as GroupShape).isBoolOpShape) return boolgroup(h, data as GroupShape, varsContainer);
     return group(h, data as GroupShape, comsMap, varsContainer, undefined);
 });
 
@@ -63,7 +67,7 @@ function initComsMap(comsMap: Map<ShapeType, any>) {
     comsMap.set(ShapeType.Artboard, ArtboradView);
     comsMap.set(ShapeType.Group, GroupShapeView);
     comsMap.set(ShapeType.Image, ImageShapeView);
-    // comsMap.set(ShapeType.Page, ShapeGroup);
+    comsMap.set(ShapeType.BoolShape, BoolShapeView);
     comsMap.set(ShapeType.Path, PathShapeView);
     comsMap.set(ShapeType.Path2, PathShapeView2);
     // comsMap.set(ShapeType.Rectangle, PathShapeDom);

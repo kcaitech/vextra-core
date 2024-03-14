@@ -22,7 +22,7 @@
         "table-cell",
         "contact",
         "cutout",
-        "override-shape"
+        "bool-shape"
     ],
     "default": "path"
 }

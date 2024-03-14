@@ -1,76 +1,73 @@
 {
-  "description": "group shape",
-  "type": "object",
-  "properties": {
-    "childs": {
-      "type": "array",
-      "items": {
-        "oneOf": [
-          {
-            "$ref": "#"
-          },
-          {
-            "$ref": "./image-shape.json"
-          },
-          {
-            "$ref": "./path-shape.json"
-          },
-          {
-            "$ref": "./rect-shape.json"
-          },
-          {
-            "$ref": "./symbol-ref-shape.json"
-          },
-          {
-            "$ref": "./symbol-shape.json"
-          },
-          {
-            "$ref": "./symbol-union-shape.json"
-          },
-          {
-            "$ref": "./text-shape.json"
-          },
-          {
-            "$ref": "./artboard.json"
-          },
-          {
-            "$ref": "./line-shape.json"
-          },
-          {
-            "$ref": "./oval-shape.json"
-          },
-          {
-            "$ref": "./table-shape.json"
-          },
-          {
-            "$ref": "./contact-shape.json"
-          },
-          {
+    "description": "group shape",
+    "type": "object",
+    "properties": {
+        "childs": {
+            "type": "array",
+            "items": {
+                "oneOf": [
+                    {
+                        "$ref": "#"
+                    },
+                    {
+                        "$ref": "./image-shape.json"
+                    },
+                    {
+                        "$ref": "./path-shape.json"
+                    },
+                    {
+                        "$ref": "./rect-shape.json"
+                    },
+                    {
+                        "$ref": "./symbol-ref-shape.json"
+                    },
+                    {
+                        "$ref": "./symbol-shape.json"
+                    },
+                    {
+                        "$ref": "./symbol-union-shape.json"
+                    },
+                    {
+                        "$ref": "./text-shape.json"
+                    },
+                    {
+                        "$ref": "./artboard.json"
+                    },
+                    {
+                        "$ref": "./line-shape.json"
+                    },
+                    {
+                        "$ref": "./oval-shape.json"
+                    },
+                    {
+                        "$ref": "./table-shape.json"
+                    },
+                    {
+                        "$ref": "./contact-shape.json"
+                    },
+                    {
+                        "$ref": "./shape.json"
+                    },
+                    {
+                        "$ref": "./cutout-shape.json"
+                    },
+                    {
+                        "$ref": "./bool-shape.json"
+                    }
+                ]
+            }
+        },
+        "fixedRadius": {
+            "type": "number"
+        }
+    },
+    "required": [
+        "childs"
+    ],
+    "allOf": [
+        {
             "$ref": "./shape.json"
-          },
-          {
-            "$ref": "./flatten-shape.json"
-          },
-          {
-            "$ref": "./cutout-shape.json"
-          }
-        ]
-      }
-    },
-    "isBoolOpShape": {
-      "type": "boolean"
-    },
-    "fixedRadius": {
-      "type": "number"
-    }
-  },
-  "required": [
-    "childs"
-  ],
-  "allOf": [
-    {
-      "$ref": "./shape.json"
-    }
-  ],
-  "additionalProperties": false
+        }
+    ],
+    "additionalProperties": false
 }

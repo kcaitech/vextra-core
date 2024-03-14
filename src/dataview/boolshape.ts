@@ -1,24 +1,11 @@
-import { BoolOp, BoolShape, GroupShape, Path, Shape, ShapeFrame, Style, SymbolRefShape, SymbolShape, TextShape } from "../data/classes";
-import { renderWithVars as fillR } from "./fill";
-import { renderWithVars as borderR } from "./border"
-import { renderText2Path } from "./text";
+import { BoolOp, BoolShape, Path, ShapeFrame, parsePath } from "../data/classes";
+import { ShapeView } from "./shape";
+import { DViewCtx, PropsType } from "./viewctx";
 import { IPalPath, gPal } from "../basic/pal";
-import { parsePath } from "../data/pathparser";
-import { isVisible, randomId } from "./basic";
-import { innerShadowId, renderWithVars as shadowR } from "./shadow";
-
-// find first usable style
-export function findUsableFillStyle(shape: Shape): Style {
-    if (shape.style.fills.length > 0) return shape.style;
-    if (shape instanceof BoolShape && shape.childs.length > 0) return findUsableFillStyle(shape.childs[0]);
-    return shape.style;
-}
-
-export function findUsableBorderStyle(shape: Shape): Style {
-    if (shape.style.borders.length > 0) return shape.style;
-    if (shape instanceof BoolShape && shape.childs.length > 0) return findUsableBorderStyle(shape.childs[0]);
-    return shape.style;
-}
+import { TextShapeView } from "./textshape";
+import { GroupShapeView } from "./groupshape";
+import { EL, elh } from "./el";
+import { renderBorders, renderFills } from "../render";
 
 function opPath(bop: BoolOp, path0: IPalPath, path1: IPalPath, isIntersect: boolean): IPalPath {
     switch (bop) {
@@ -111,30 +98,29 @@ class FrameGrid {
     }
 }
 
+function render2path(shape: ShapeView): Path {
 
-export function render2path(shape: Shape): Path {
-
-    const shapeIsGroup = shape instanceof GroupShape;
-    let fixedRadius: number | undefined;
-    if (shapeIsGroup) fixedRadius = shape.fixedRadius;
-    if (!shapeIsGroup || shape.childs.length === 0) {
-        if (!shape.isVisible) return new Path();
-        const path = shape instanceof TextShape ? renderText2Path(shape.getLayout(), 0, 0) : shape.getPath(fixedRadius).clone();
-        return path;
+    // const shapeIsGroup = shape instanceof GroupShapeView;
+    let fixedRadius: number | undefined = shape.m_fixedRadius;
+    // if (shapeIsGroup) fixedRadius = shape.m_fixedRadius;
+    if (shape.m_children.length === 0) {
+        if (!shape.isVisible()) return new Path();
+        const path = shape instanceof TextShapeView ? shape.getTextPath() : shape.getPath();
+        return path.clone();
     }
 
     let fVisibleIdx = 0;
-    for (let i = 0; i < shape.childs.length; ++i) {
-        if ((shape.childs[i]).isVisible) {
+    for (let i = 0; i < shape.m_children.length; ++i) {
+        if ((shape.m_children[i] as ShapeView).isVisible()) {
             fVisibleIdx = i;
             break;
         }
     }
 
-    const cc = shape.childs.length;
+    const cc = shape.m_children.length;
     if (fVisibleIdx >= cc) return new Path();
 
-    const child0 = shape.childs[fVisibleIdx];
+    const child0 = shape.m_children[fVisibleIdx] as ShapeView;
     const frame0 = child0.frame;
     const path0 = render2path(child0);
 
@@ -153,8 +139,8 @@ export function render2path(shape: Shape): Path {
 
     let joinPath: IPalPath = gPal.makePalPath(path0.toString());
     for (let i = fVisibleIdx + 1; i < cc; i++) {
-        const child1 = shape.childs[i];
-        if (!child1.isVisible) continue;
+        const child1 = shape.m_children[i] as ShapeView;
+        if (!child1.isVisible()) continue;
         const frame1 = child1.frame;
         const path1 = render2path(child1).clone();
         if (child1.isNoTransform()) {
@@ -162,7 +148,7 @@ export function render2path(shape: Shape): Path {
         } else {
             path1.transform(child1.matrix2Parent())
         }
-        const pathop = child1.boolOp ?? BoolOp.None;
+        const pathop = child1.m_data.boolOp ?? BoolOp.None;
         const palpath1 = gPal.makePalPath(path1.toString());
 
         if (pathop === BoolOp.None) {
@@ -199,73 +185,54 @@ export function render2path(shape: Shape): Path {
     return resultpath;
 }
 
-export function render(h: Function, shape: BoolShape, 
-    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
-    reflush?: number): any {
-    if (!isVisible(shape, varsContainer)) return;
 
-    const path = render2path(shape);
-    const frame = shape.frame;
+export class BoolShapeView extends GroupShapeView {
 
-    // const path0 = shape.getPath();
-    // if (matrix) path0.transform(matrix);
-    const pathstr = path.toString();
-    const childs = [];
-
-    // fill
-    childs.push(...fillR(h, shape, frame, pathstr, varsContainer));
-    // border
-    childs.push(...borderR(h, shape, frame, pathstr, varsContainer));
-
-    // ----------------------------------------------------------
-    // shadows todo
-
-    const props: any = {}
-    if (reflush) props.reflush = reflush;
-
-    const contextSettings = shape.style.contextSettings;
-    if (contextSettings && (contextSettings.opacity ?? 1) !== 1) {
-        props.opacity = contextSettings.opacity;
+    get data(): BoolShape {
+        return this.m_data as BoolShape;
     }
 
-    if (shape.isFlippedHorizontal || shape.isFlippedVertical || shape.rotation) {
-        const cx = frame.x + frame.width / 2;
-        const cy = frame.y + frame.height / 2;
-        const style: any = {}
-        style.transform = "translate(" + cx + "px," + cy + "px) "
-        if (shape.isFlippedHorizontal) style.transform += "rotateY(180deg) "
-        if (shape.isFlippedVertical) style.transform += "rotateX(180deg) "
-        if (shape.rotation) style.transform += "rotate(" + shape.rotation + "deg) "
-        style.transform += "translate(" + (-cx + frame.x) + "px," + (-cy + frame.y) + "px)"
-        props.style = style;
-    }
-    else {
-        props.transform = `translate(${frame.x},${frame.y})`
+    getBoolOp() {
+        return this.data.getBoolOp();
     }
 
-    if (childs.length == 0) {
-        props["fill-opacity"] = 1;
-        props.d = path;
-        props.fill = 'none';
-        props.stroke = 'none';
-        props["stroke-width"] = 0;
-        return h('path', props);
+    constructor(ctx: DViewCtx, props: PropsType, isTopClass: boolean = true) {
+        super(ctx, props, false);
+        if (isTopClass) this.afterInit();
     }
-    else {
-        const shadows = shape.style.shadows;
-        const ex_props = Object.assign({}, props);
-        const shape_id = shape.id.slice(0, 4) + randomId();
-        const shadow = shadowR(h, shape_id, shape, frame, pathstr, varsContainer);
-        if (shadow.length) {
-            delete props.style;
-            delete props.transform;
-            delete props.opacity;
-            const inner_url = innerShadowId(shape_id, shadows);
-            if (shadows.length) props.filter = `url(#pd_outer-${shape_id}) ${inner_url}`;
-            const body = h("g", props, childs);
-            return h("g", ex_props, [...shadow, body]);
-        } else {
-            return h("g", props, childs);
+
+    protected _bubblewatcher(...args: any[]) {
+        super._bubblewatcher(...args);
+        this.m_path = undefined;
+        this.m_pathstr = undefined;
+        this.m_ctx.setDirty(this);
+    }
+
+    onDataChange(...args: any[]): void {
+        super.onDataChange(...args);
+        if (args.includes('variables')) {
+            this.m_path = undefined;
+            this.m_pathstr = undefined;
         }
+    }
+
+    protected renderFills(): EL[] {
+        return renderFills(elh, this.getFills(), this.frame, this.getPathStr());
+    }
+
+    protected renderBorders(): EL[] {
+        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr());
+    }
+
+    getPath() {
+        if (this.m_path) return this.m_path;
+        this.m_path = render2path(this);
+        this.m_path.freeze();
+        return this.m_path;
+    }
+
+    // childs
+    protected renderContents(): EL[] {
+        return [];
     }
 }

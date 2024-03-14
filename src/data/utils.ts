@@ -5,8 +5,7 @@ import { ContactType, CurveMode, OverrideType } from "./typesdefine";
 import { Api } from "../editor/coop/recordapi";
 import { Page } from "./page";
 import { importCurvePoint } from "./baseimport";
-import { exportCurvePoint } from "./baseexport";
-import { importArtboard, importContactShape, importFlattenShape, importGroupShape, importImageShape, importLineShape, importOvalShape, importPathShape, importPathShape2, importRectShape, importSymbolRefShape, importTableCell, importTableShape, importTextShape } from "./baseimport";
+import { importArtboard, importContactShape, importBoolShape, importGroupShape, importImageShape, importLineShape, importOvalShape, importPathShape, importPathShape2, importRectShape, importSymbolRefShape, importTableCell, importTableShape, importTextShape } from "./baseimport";
 import * as types from "./typesdefine"
 import { ContactShape, SymbolRefShape } from "./classes";
 import { BasicArray } from "./basic";
@@ -584,8 +583,8 @@ export function update_contact_points(api: Api, shape: ContactShape, page: Page)
 }
 
 export function copyShape(source: types.Shape) {
-    if (source.typeId == 'flatten-shape') {
-        return importFlattenShape(source as types.FlattenShape)
+    if (source.typeId == 'bool-shape') {
+        return importBoolShape(source as types.BoolShape)
     }
     if (source.typeId == 'group-shape') {
         return importGroupShape(source as types.GroupShape)
