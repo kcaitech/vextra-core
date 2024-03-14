@@ -9,7 +9,8 @@ import {
     TextShape,
     Variable,
     VariableType,
-    SymbolUnionShape
+    SymbolUnionShape,
+    BoolShape
 } from "../data/shape";
 import { Border, BorderPosition, BorderStyle, Fill, MarkerType, Shadow } from "../data/style";
 import { expand, expandTo, translate, translateTo } from "./frame";
@@ -442,7 +443,7 @@ export class ShapeEditor {
 
     public setFixedRadius(fixedRadius: number) {
         if (this.shape instanceof GroupShape) {
-            if (!this.shape.isBoolOpShape) return;
+            if (!(this.shape instanceof BoolShape)) return;
         } else if (!(this.shape instanceof PathShape || this.shape instanceof PathShape2 || this.shape instanceof TextShape)) {
             return;
         }
@@ -452,23 +453,23 @@ export class ShapeEditor {
     }
 
     public setBoolOp(op: BoolOp, name?: string) {
-        if (!(this.shape instanceof GroupShape)) return;
+        if (!(this.shape instanceof BoolShape)) return;
         this._repoWrap("setBoolOp", (api) => {
-            const shape = this.shape as GroupShape;
+            const shape = this.shape as BoolShape;
             if (name) api.shapeModifyName(this.__page, this.shape, name);
             shape.childs.forEach((child) => {
                 api.shapeModifyBoolOp(this.__page, child, op);
             })
-            api.shapeModifyBoolOpShape(this.__page, shape, op !== BoolOp.None);
+            // api.shapeModifyBoolOpShape(this.__page, shape, op !== BoolOp.None);
         });
     }
 
-    public setIsBoolOpShape(isOpShape: boolean) {
-        if (!(this.shape instanceof GroupShape)) return;
-        this._repoWrap("setIsBoolOpShape", (api) => {
-            api.shapeModifyBoolOpShape(this.__page, this.shape as GroupShape, isOpShape);
-        });
-    }
+    // public setIsBoolOpShape(isOpShape: boolean) {
+    //     if (!(this.shape instanceof GroupShape)) return;
+    //     this._repoWrap("setIsBoolOpShape", (api) => {
+    //         api.shapeModifyBoolOpShape(this.__page, this.shape as GroupShape, isOpShape);
+    //     });
+    // }
 
     /**
      * @description 已提出到 "editor/utils/symbol"

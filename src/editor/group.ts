@@ -26,7 +26,7 @@ export function deleteEmptyGroupShape(document: Document, page: Page, shape: Sha
     return true;
 }
 
-export function group(document: Document, page: Page, shapes: Shape[], gshape: GroupShape, savep: GroupShape, saveidx: number, api: Api): GroupShape {
+export function group<T extends GroupShape>(document: Document, page: Page, shapes: Shape[], gshape: T, savep: GroupShape, saveidx: number, api: Api): T {
     // 计算frame
     //   计算每个shape的绝对坐标
     const boundsArr = shapes.map((s) => {
@@ -57,7 +57,7 @@ export function group(document: Document, page: Page, shapes: Shape[], gshape: G
     gshape.frame.y = xy.y;
 
     // 4、将GroupShape加入到save parent(层级最高图形的parent)中
-    gshape = api.shapeInsert(document, page, savep, gshape, saveidx) as GroupShape;
+    gshape = api.shapeInsert(document, page, savep, gshape, saveidx) as T;
 
     // 2、将shapes里对象从parent中退出
     // 3、将shapes里的对象从原本parent下移入新建的GroupShape

@@ -15,7 +15,8 @@ import {
     PathShape2,
     PathSegment,
     CutoutShape,
-    SymbolUnionShape
+    SymbolUnionShape,
+    BoolShape
 } from "../data/shape";
 import { ContactShape } from "../data/contact"
 import * as types from "../data/typesdefine"
@@ -24,9 +25,10 @@ import {
     importGroupShape,
     importPage,
     importText,
-    importShapeFrame, importTextShape
+    importShapeFrame, importTextShape, importBoolShape
 } from "../data/baseimport";
 import template_group_shape from "./template/group-shape.json";
+import template_bool_shape from "./template/bool-shape.json";
 import templage_page from "./template/page.json";
 import template_artboard from "./template/artboard.json"
 import template_text_shape from "./template/text-shape.json"
@@ -57,7 +59,6 @@ import { ResourceMgr } from "../data/basic";
 import { TableShape } from "../data/table";
 
 export { newText, newText2 } from "../data/textutils";
-import { exportShapeFrame } from "../data/baseexport";
 // import i18n from '../../i18n' // data不能引用外面工程的内容
 import { ContactForm, CrdtNumber } from "../data/baseclasses";
 import { Matrix } from "../basic/matrix";
@@ -93,6 +94,15 @@ export function newGroupShape(name: string, style?: Style): GroupShape {
     template_group_shape.id = uuid();
     template_group_shape.name = name // i18n
     const group = importGroupShape(template_group_shape as types.GroupShape);
+    if (style) group.style = style;
+    addCommonAttr(group);
+    return group;
+}
+
+export function newBoolShape(name: string, style?: Style): BoolShape {
+    template_bool_shape.id = uuid();
+    template_bool_shape.name = name // i18n
+    const group = importBoolShape(template_bool_shape as types.BoolShape);
     if (style) group.style = style;
     addCommonAttr(group);
     return group;
