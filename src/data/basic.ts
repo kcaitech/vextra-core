@@ -187,6 +187,7 @@ export class ResourceMgr<T> extends WatchableObject {
     get resource() {
         return Array.from(this.__resource.values());
     }
+
     async get(id: string): Promise<T | undefined> {
         let r = this.__resource.get(id)
         if (r) return r;
@@ -235,6 +236,12 @@ export class ResourceMgr<T> extends WatchableObject {
         if (this.__updater) this.__updater(r);
         this.notify(id);
         return r;
+    }
+
+    forEach(callback:(v: T, k: string) => void) {
+        this.__resource.forEach((_v, _k) => {
+            callback(_v, _k)
+        })
     }
 }
 
