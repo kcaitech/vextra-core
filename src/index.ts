@@ -1,6 +1,8 @@
+// basic
 export * from "./basic/matrix"
 export * from "./basic/objectid"
 export * from "./basic/pal"
+export * from "./basic/utils"
 
 // data
 export * from "./data/basic"
@@ -31,6 +33,7 @@ export * from "./editor/shape"
 export * from "./editor/textshape"
 export * from "./editor/table"
 export * from "./editor/controller"
+export * as creator from "./editor/creator"
 
 export * from "./service/shapedirlist"
 export * from "./service/shapedirlist2"

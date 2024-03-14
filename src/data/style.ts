@@ -2,7 +2,7 @@ import * as classes from "./baseclasses"
 import {
     Blur, BorderOptions, ColorControls, ContextSettings,
     Shadow, WindingRule, FillType, BorderPosition,
-    BorderStyle, MarkerType, ContactRole, VariableType, Point2D, GradientType, Stop, BlendMode
+    BorderStyle, MarkerType, ContactRole, VariableType, Point2D, GradientType, Stop, BlendMode, FillRule
 } from "./baseclasses";
 import { Basic, BasicArray, BasicMap, ResourceMgr } from "./basic";
 import { Variable } from "./variable";
@@ -109,6 +109,7 @@ export class Fill extends Basic implements classes.Fill {
     contextSettings?: ContextSettings
     gradient?: Gradient
     imageRef?: string
+    fillRule?: FillRule
 
     private __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
     private __cacheData?: { buff: Uint8Array, base64: string };

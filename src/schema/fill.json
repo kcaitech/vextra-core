@@ -36,6 +36,9 @@
         },
         "imageRef": {
             "type": "string"
+        },
+        "fillRule": {
+            "$ref": "./fill-rule.json"
         }
     },
     "required": [

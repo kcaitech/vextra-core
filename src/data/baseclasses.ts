@@ -23,6 +23,7 @@ export {
     LineCapStyle,
     GradientType,
     FillType,
+    FillRule,
     ExportVisibleScaleType,
     ExportFormatNameingScheme,
     ExportFileFormat,
@@ -56,6 +57,7 @@ import {
     LineCapStyle,
     GradientType,
     FillType,
+    FillRule,
     ExportVisibleScaleType,
     ExportFormatNameingScheme,
     ExportFileFormat,
@@ -448,6 +450,7 @@ export class Fill extends Basic {
     contextSettings?: ContextSettings
     gradient?: Gradient
     imageRef?: string
+    fillRule?: FillRule
     constructor(
         crdtidx: BasicArray<number >,
         id: string,

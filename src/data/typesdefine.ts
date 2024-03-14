@@ -326,12 +326,18 @@ export type Fill = {
     contextSettings?: ContextSettings
     gradient?: Gradient
     imageRef?: string
+    fillRule?: FillRule
 }
 /* fill types */
 export enum FillType {
     SolidColor = 'solid-color',
     Gradient = 'gradient',
     Pattern = 'pattern',
+}
+/* fill rule */
+export enum FillRule {
+    Nonzero = 'nonzero',
+    Evenodd = 'evenodd',
 }
 /* visible scale type */
 export enum ExportVisibleScaleType {
