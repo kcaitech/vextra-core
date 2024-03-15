@@ -114,26 +114,7 @@ comsMap.set(ShapeType.SymbolRef, (data: Shape,
     const symMgr = shape.getSymbolMgr();
     if (!symMgr) return "";
     const refId = getRefId2(shape, varsContainer);
-    const val = symMgr.getSync(refId);
-    if (!val || val.length === 0) return "";
-
-    const symbolregist = (symMgr.parent as Document).symbolregist.get(refId);
-    let sym;
-    if (symbolregist) {
-        // todo val 有多个时，需要提示用户修改
-        for (let i = 0; i < val.length; ++i) {
-            const v = val[i];
-            const p = v.getPage();
-            if (!p && symbolregist === 'freesymbols') {
-                sym = v;
-                break;
-            } else if (p && p.id === symbolregist) {
-                sym = v;
-            }
-        }
-    } else {
-        sym = val[val.length - 1];
-    }
+    const sym = symMgr.getSync(refId);
 
     if (!sym) return "";
 
