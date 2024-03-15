@@ -4,7 +4,7 @@ import { TreeMoveOp, TreeMoveOpRecord, crdtTreeMove } from "../../coop/client/cr
 import { Shape } from "../../data/shape";
 import { importShape } from "./utils";
 import { Document } from "../../data/document";
-import { RepoNode } from "./base";
+import { RepoNode, RepoNodePath } from "./base";
 import { Cmd, OpItem } from "../../coop/common/repo";
 import { SNumber } from "../../coop/client/snumber";
 
@@ -95,8 +95,8 @@ export class CrdtShapeRepoNode extends RepoNode {
     private document: Document;
     // private page: Page;
 
-    constructor(document: Document) {
-        super(OpType.CrdtTree);
+    constructor(parent: RepoNodePath, document: Document) {
+        super(OpType.CrdtTree, parent);
         this.document = document;
         // this.page = page;
     }

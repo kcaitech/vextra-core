@@ -1,6 +1,6 @@
 import { Op, OpType } from "../../coop/common/op";
 import { ArrayMoveOp, ArrayMoveOpRecord, CrdtItem, crdtArrayMove } from "../../coop/client/crdt";
-import { RepoNode } from "./base";
+import { RepoNode, RepoNodePath } from "./base";
 import { Cmd, OpItem } from "../../coop/common/repo";
 import { Document } from "../../data/document";
 import {
@@ -99,8 +99,8 @@ function stringifyData(op: ArrayMoveOpRecord) {
 export class CrdtArrayReopNode extends RepoNode {
     private document: Document;
 
-    constructor(document: Document) {
-        super(OpType.CrdtArr);
+    constructor(parent: RepoNodePath, document: Document) {
+        super(OpType.CrdtArr, parent);
         this.document = document;
     }
 

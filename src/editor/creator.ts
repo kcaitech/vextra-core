@@ -52,7 +52,7 @@ import {
     BorderStyle,
     SymbolRefShape,
 } from "../data/classes";
-import { BasicArray, BasicMap, MultiResourceMgr } from "../data/basic";
+import { BasicArray, BasicMap } from "../data/basic";
 import { Repository } from "../data/transact";
 import { Comment } from "../data/comment";
 import { ResourceMgr } from "../data/basic";
@@ -63,6 +63,7 @@ export { newText, newText2 } from "../data/textutils";
 import { ContactForm, CrdtNumber } from "../data/baseclasses";
 import { Matrix } from "../basic/matrix";
 import { ResizingConstraints2 } from "../data/consts";
+import { SymbolMgr } from "../data/symbolmgr";
 
 export function addCommonAttr(shape: Shape) {
     shape.rotation = 0;
@@ -482,7 +483,7 @@ export function newSymbolShapeUnion(name: string, frame: ShapeFrame): SymbolUnio
     return union;
 }
 
-export function newSymbolRefShape(name: string, frame: ShapeFrame, refId: string, symbol_mgr: MultiResourceMgr<SymbolShape>): SymbolRefShape {
+export function newSymbolRefShape(name: string, frame: ShapeFrame, refId: string, symbol_mgr: SymbolMgr): SymbolRefShape {
     const ref = new SymbolRefShape(new BasicArray(), uuid(), name, types.ShapeType.SymbolRef, frame, newflatStyle(), refId, new BasicMap());
     addCommonAttr(ref);
     ref.setSymbolMgr(symbol_mgr);

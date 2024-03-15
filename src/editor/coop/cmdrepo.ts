@@ -81,7 +81,7 @@ class CmdSync {
     nettask: CmdNetTask;
     repo: Repository;
     // private selection: ISave4Restore | undefined;
-    private nodecreator: (op: Op) => RepoNode
+    private nodecreator: (parent: RepoNodePath, op: Op) => RepoNode
     private net: ICoopNet;
     constructor(document: Document, repo: Repository, net: ICoopNet) {
         this.document = document;
@@ -132,22 +132,29 @@ class CmdSync {
     private getRepoTree(blockId: string) { // 开始就创建，要跟踪变换op
         let repotree = this.repotrees.get(blockId);
         if (!repotree) {
-            repotree = new RepoNodePath();
+            repotree = new RepoNodePath(undefined, blockId);
             this.repotrees.set(blockId, repotree);
         }
         return repotree;
     }
 
     private __receive(cmds: Cmd[]) {
-        const subrepos = classifyOps(cmds);
-        for (let [k, v] of subrepos) {
-            // 建立repotree
-            const op0 = v[0].op;
-            const blockId = op0.path[0];
-            let repotree = this.getRepoTree(blockId);
-            const node = repotree.buildAndGet(op0, op0.path, this.nodecreator);
-            // apply op
-            node.receive(v);
+        // 一个batch一个batch的执行。否则iset的对象需要做版本对齐
+        while (cmds.length > 0) {
+            const batchid = cmds[0].batchId;
+            let i = 1;
+            while (i < cmds.length && cmds[i].batchId === batchid) ++i;
+
+            const subrepos = classifyOps(cmds.splice(0, i));
+            for (let [k, v] of subrepos) {
+                // 建立repotree
+                const op0 = v[0].op;
+                const blockId = op0.path[0];
+                let repotree = this.getRepoTree(blockId);
+                const node = repotree.buildAndGet(op0, op0.path, this.nodecreator);
+                // apply op
+                node.receive(v);
+            }
         }
     }
 
@@ -917,8 +924,12 @@ export class CmdRepo {
         // restore
 
         if (this.localcmds.length > 0 || this.cmdsync.cmds.length > 0) throw new Error();
-
         if (cmds.length === 0 && localcmds.length === 0) return;
+
+        // 拷贝一下, _receive会修改原数组
+        cmds = cmds.slice(0);
+        localcmds = localcmds.slice(0);
+
         const repo = this.cmdsync.repo;
         repo.start("init");
         try {
