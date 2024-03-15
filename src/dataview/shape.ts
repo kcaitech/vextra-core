@@ -307,7 +307,7 @@ export class ShapeView extends DataView {
     }
 
     onDataChange(...args: any[]): void {
-        if (args.includes('points') || (this.m_fixedRadius || 0) !== ((this.m_data as any).fixedRadius || 0)) {
+        if (args.includes('points') || args.includes('isClosed') || (this.m_fixedRadius || 0) !== ((this.m_data as any).fixedRadius || 0)) {
             this.m_path = undefined;
             this.m_pathstr = undefined;
         }
@@ -808,5 +808,9 @@ export class ShapeView extends DataView {
 
     get isContainer() {
         return this.data.isContainer;
+    }
+
+    get pathType() {
+        return this.data.pathType;
     }
 }

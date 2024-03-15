@@ -24,7 +24,7 @@ import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
 import { TextLayout } from "./textlayout";
 import { parsePath } from "./pathparser";
-import { FrameType, RECT_POINTS } from "./consts";
+import { FrameType, PathType, RECT_POINTS } from "./consts";
 import { Variable } from "./variable";
 import { TableShape } from "./table";
 import { SymbolRefShape } from "./symbolref";
@@ -408,6 +408,10 @@ export class Shape extends Basic implements classes.Shape {
     get isContainer() { // 容器类元素: 页面、容器、组件、组件Union
         return false;
     }
+
+    get pathType() {
+        return PathType.Editable;
+    }
 }
 
 export class GroupShape extends Shape implements classes.GroupShape {
@@ -524,6 +528,10 @@ export class GroupShape extends Shape implements classes.GroupShape {
 
     get frameType() {
         return FrameType.Flex;
+    }
+
+    get pathType() {
+        return PathType.Fixed;
     }
 }
 
@@ -795,6 +803,10 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
             radius.push(p.radius || 0);
             return radius;
         }, radius), []);
+    }
+
+    get pathType() {
+        return PathType.Multi;
     }
 }
 
@@ -1074,6 +1086,10 @@ export class TextShape extends Shape implements classes.TextShape {
     get frameType() {
         return FrameType.Rect;
     }
+
+    get pathType() {
+        return PathType.Fixed;
+    }
 }
 export class CutoutShape extends PathShape implements classes.CutoutShape {
     typeId = 'cutout-shape'
@@ -1109,5 +1125,9 @@ export class CutoutShape extends PathShape implements classes.CutoutShape {
 
     get frameType() {
         return FrameType.Rect;
+    }
+
+    get pathType() {
+        return PathType.Fixed;
     }
 }
