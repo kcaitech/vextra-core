@@ -9,13 +9,14 @@ import { fixTableShapeFrameByLayout } from "./utils/other";
 import { Api, TextShapeLike } from "./coop/recordapi";
 import { importBorder, importFill, importGradient } from "../data/baseimport";
 import { Document, Color } from "../data/classes";
-import { AsyncGradientEditor, Status } from "./controller";
+import { AsyncBorderThickness,AsyncGradientEditor, Status } from "./controller";
 import { TableCellView, TableView } from "../dataview";
 import { cell4edit } from "./symbol";
 
 const MinCellSize = TableShape.MinCellSize;
 const MaxColCount = TableShape.MaxColCount;
 const MaxRowCount = TableShape.MaxRowCount;
+
 
 export class TableEditor extends ShapeEditor {
 
@@ -1393,6 +1394,35 @@ export class TableEditor extends ShapeEditor {
             console.error(error);
             this.__repo.rollback();
         }
+    }
+    public asyncBorderThickness4Cell(range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }):AsyncBorderThickness {
+        const api = this.__repo.start("setBorderThickness");
+        let status: Status = Status.Pending
+        const execute = (contextSettingThickness: number,idx: number) => {
+            status = Status.Pending;
+            try {
+                this.view._getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
+                    if (cell.cell) {
+                        const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
+                        api.setBorderThickness(this.__page, c, idx, contextSettingThickness);
+                    }
+                })
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const close = () => {
+            if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
+                this.__repo.commit();
+            } else {
+                this.__repo.rollback();
+            }
+            return undefined;
+        }
+        return { execute, close }
     }
     public setBorderStyle4Cell(idx: number, borderStyle: BorderStyle, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
         const api = this.__repo.start("setBorderStyle");
