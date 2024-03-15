@@ -12,7 +12,7 @@ import {
 } from "../data/shape";
 import { ShapeEditor } from "./shape";
 import * as types from "../data/typesdefine";
-import { BoolOp, BorderPosition, ExportFileFormat, ExportFormatNameingScheme, FillType, GradientType, ShadowPosition, ShapeType } from "../data/typesdefine";
+import { BoolOp, BorderPosition, ExportFileFormat, ExportFormatNameingScheme, FillType, GradientType, MarkerType, ShadowPosition, ShapeType } from "../data/typesdefine";
 import { Page } from "../data/page";
 import {
     initFrame,
@@ -2168,6 +2168,45 @@ export class PageEditor {
                 const { target, value, index } = actions[i];
                 const s = shape4border(api, this.__page, target);
                 api.setBorderStyle(this.__page, s, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setShapesMarkerType(actions: BatchAction2[]) {
+        const api = this.__repo.start('setShapesMarkerType');
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                if (modify_variable_with_api(api, this.__page, target, VariableType.MarkerType, value.isEnd ? OverrideType.EndMarkerType : OverrideType.StartMarkerType, value.mt)) continue;
+                if (value.isEnd) {
+                    api.shapeModifyEndMarkerType(this.__page, adapt2Shape(target), value.mt);
+                } else {
+                    api.shapeModifyStartMarkerType(this.__page, adapt2Shape(target), value.mt);
+                }
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    exchangeShapesMarkerType(actions: BatchAction2[]) {
+        const api = this.__repo.start('exchangeShapesMarkerType');
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                const startMarkerType = target.startMarkerType;
+                const endMarkerType = target.endMarkerType;
+                if (endMarkerType === startMarkerType) continue;
+                if (modify_variable_with_api(api, this.__page, target, VariableType.MarkerType, OverrideType.EndMarkerType, startMarkerType || MarkerType.Line)) {
+                    modify_variable_with_api(api, this.__page, target, VariableType.MarkerType, OverrideType.StartMarkerType, endMarkerType || MarkerType.Line)
+                    continue;
+                };
+                api.shapeModifyEndMarkerType(this.__page, adapt2Shape(target), startMarkerType || MarkerType.Line);
+                api.shapeModifyStartMarkerType(this.__page, adapt2Shape(target), endMarkerType || MarkerType.Line);
             }
             this.__repo.commit();
         } catch (error) {
