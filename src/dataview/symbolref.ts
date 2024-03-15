@@ -1,4 +1,4 @@
-import { Border, BorderOptions, ContextSettings, Document, Fill, MarkerType, OverrideType, Shadow, Shape, ShapeFrame, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType } from "../data/classes";
+import { Border, ContextSettings, Fill, MarkerType, OverrideType, Shadow, Shape, ShapeFrame, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType } from "../data/classes";
 import { ShapeView } from "./shape";
 import { ShapeType } from "../data/classes";
 import { DataView, RootView } from "./view";
