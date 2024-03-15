@@ -135,9 +135,6 @@ export function shapeModifyBoolOp(shape: Shape, op: BoolOp | undefined) {
 export function shapeModifyPathShapeClosedStatus(shape: PathShape, is: boolean) {
     return crdtSetAttr(shape, 'isClosed', is);
 }
-export function shapeModifyBoolOpShape(shape: GroupShape, isOpShape: boolean | undefined) {
-    return crdtSetAttr(shape, 'isBoolOpShape', isOpShape ? true : undefined);
-}
 
 export function shapeModifyCurvPoint(page: Page, shape: PathShape, index: number, point: Point2D) {
     const p = shape.points[index];

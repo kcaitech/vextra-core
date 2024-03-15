@@ -364,9 +364,6 @@ export class Api {
     shapeModifyBoolOp(page: Page, shape: Shape, op: BoolOp | undefined) {
         this._shapeModifyAttr(page, shape, "boolOp", op);
     }
-    shapeModifyBoolOpShape(page: Page, shape: GroupShape, isOpShape: boolean | undefined) {
-        this._shapeModifyAttr(page, shape, "isBoolOpShape", isOpShape);
-    }
 
     // 添加一次fill
     addFillAt(page: Page, shape: Shape | Variable, fill: Fill, index: number) {

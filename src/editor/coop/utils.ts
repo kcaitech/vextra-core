@@ -6,7 +6,7 @@ import { TableCell, TableShape } from "../../data/table";
 import { ContactShape } from "../../data/contact";
 import { Page } from "../../data/page";
 import { SymbolRefShape } from "../../data/classes";
-import { IImportContext, importArtboard, importContactShape, importFlattenShape, importGroupShape, importImageShape, importLineShape, importOvalShape, importPathShape, importPathShape2, importRectShape, importSymbolUnionShape, importSymbolRefShape, importSymbolShape, importTableCell, importTableShape, importTextShape, importCutoutShape } from "../../data/baseimport";
+import { IImportContext, importArtboard, importContactShape, importGroupShape, importImageShape, importLineShape, importOvalShape, importPathShape, importPathShape2, importRectShape, importSymbolUnionShape, importSymbolRefShape, importSymbolShape, importTableCell, importTableShape, importTextShape, importCutoutShape, importBoolShape } from "../../data/baseimport";
 import { Document } from "../../data/document";
 
 interface Api {
@@ -206,7 +206,7 @@ export function updateShapesFrame(page: Page, shapes: Shape[], api: Api) {
 }
 
 const imhdl: {[key: string]: (source: any, ctx?: IImportContext) => any } = {};
-imhdl['flatten-shape'] = importFlattenShape;
+imhdl['bool-shape'] = importBoolShape;
 imhdl['group-shape'] = importGroupShape;
 imhdl['image-shape'] = importImageShape;
 imhdl['path-shape'] = importPathShape;
