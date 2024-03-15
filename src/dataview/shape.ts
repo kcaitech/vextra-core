@@ -251,6 +251,10 @@ export class ShapeView extends DataView {
         return this.data.constrainerProportions;
     }
 
+    get isClosed() {
+        return this.m_data.isClosed;
+    }
+
     // private __boundingBox?: ShapeFrame;
     boundingBox(): ShapeFrame {
         if (this.isNoTransform()) return this.frame;

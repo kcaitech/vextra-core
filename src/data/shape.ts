@@ -98,6 +98,8 @@ export class Shape extends Basic implements classes.Shape {
     shouldBreakMaskChain?: boolean
     varbinds?: BasicMap<string, string>
 
+    isClosed: boolean = true;
+
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
@@ -744,7 +746,7 @@ export class PathShape extends Shape implements classes.PathShape {
 }
 
 export class PathShape2 extends Shape implements classes.PathShape2 {
-    typeId = 'path-shape-v2'
+    typeId = 'path-shape2'
     pathsegs: BasicArray<PathSegment>
     fixedRadius?: number
 

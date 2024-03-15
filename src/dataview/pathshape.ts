@@ -5,6 +5,8 @@ import { ShapeView, matrix2parent, transformPoints } from "./shape";
 import { Matrix } from "../basic/matrix";
 import { RenderTransform } from "./basic";
 import { DViewCtx, PropsType } from "./viewctx";
+import { EL, elh } from "./el";
+import { renderBorders } from "../render";
 
 export class PathShapeView extends ShapeView {
 
@@ -45,5 +47,9 @@ export class PathShapeView extends ShapeView {
         const frame = this.frame;
         this.m_path = new Path(parsePath(points, shape.isClosed, 0, 0, frame.width, frame.height, shape.fixedRadius));
         this.m_pathstr = this.m_path.toString();
+    }
+
+    protected renderBorders(): EL[] {
+        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.isClosed);
     }
 }

@@ -6,6 +6,8 @@ import { Matrix } from "../basic/matrix";
 import { PathSegment } from "../data/typesdefine";
 import { RenderTransform } from "./basic";
 import { DViewCtx, PropsType } from "./viewctx";
+import { EL, elh } from "./el";
+import { renderBorders } from "../render";
 
 export class PathShapeView2 extends ShapeView {
 
@@ -44,5 +46,9 @@ export class PathShapeView2 extends ShapeView {
         const concat = Array.prototype.concat.apply([], parsed);
         this.m_path = new Path(concat);
         this.m_pathstr = this.m_path.toString();
+    }
+
+    protected renderBorders(): EL[] {
+        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), false);
     }
 }
