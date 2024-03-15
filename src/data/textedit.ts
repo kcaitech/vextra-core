@@ -341,12 +341,11 @@ export function formatPara(shapetext: Text, index: number, length: number, key: 
 
 function _deleteSpan(spans: Span[], index: number, count: number): BasicArray<Span> {
     const delspans: BasicArray<Span> = new BasicArray();
-    const saveCount = count;
     for (let i = 0; i < spans.length && count > 0;) {
         const span = spans[i];
         if (index < span.length) {
             if (index === 0 && count >= span.length) {
-                delspans.push(span);
+                delspans.push(span.clone());
                 spans.splice(i, 1);
                 // i,index 不变
                 count -= span.length;
@@ -448,7 +447,7 @@ function _deleteText(paraArray: Para[], paraIndex: number, para: Para, index: nu
             count -= para.length;
             len--;
             // paraIndex 不变
-            const para1 = new Para(deltext, delspans);
+            const para1 = new Para(deltext, delspans.map((span) => span.clone()) as BasicArray<Span>); // 需要clone下
             mergeParaAttr(para1, para);
             ret.paras.push(para1);
             continue;
