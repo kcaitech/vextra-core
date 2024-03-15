@@ -136,9 +136,14 @@ export function shapeModifyPathShapeClosedStatus(shape: PathShape, is: boolean) 
     return crdtSetAttr(shape, 'isClosed', is);
 }
 
-export function shapeModifyCurvPoint(page: Page, shape: PathShape, index: number, point: Point2D) {
-    const p = shape.points[index];
-    if (p) return [crdtSetAttr(p, 'x', point.x), crdtSetAttr(p, 'y', point.y)];
+export function shapeModifyCurvPoint(page: Page, shape: PathShape, index: number, point: Point2D, segment = -1) {
+    if (segment > -1) {
+
+    } else {
+        const p = shape.points[index];
+        if (p) return [crdtSetAttr(p, 'x', point.x), crdtSetAttr(p, 'y', point.y)];
+    }
+
 }
 export function shapeModifyCurvFromPoint(page: Page, shape: PathShape, index: number, point: Point2D) {
     const p = shape.points[index];

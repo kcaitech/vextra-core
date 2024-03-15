@@ -956,9 +956,6 @@ export class Controller {
             status === Status.Pending
             try {
                 pointsEdit(api, page, shape, indexes, dx, dy);
-
-                // update_frame_by_points(api, page, shape as PathShape);
-
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {

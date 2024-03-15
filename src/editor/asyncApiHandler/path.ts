@@ -2,23 +2,26 @@ import { AsyncApiCaller } from "./AsyncApiCaller";
 import { CoopRepository } from "../coop/cooprepo";
 import { Document } from "../../data/document";
 import { adapt2Shape, ImageShapeView, PageView, PathShapeView } from "../../dataview";
-import { CurveMode, CurvePoint, ImageShape, PathShape } from "../../data/shape";
+import { CurveMode, CurvePoint, ImageShape, PathShape, PathShape2 } from "../../data/shape";
 import { BasicArray } from "../../data/basic";
 import { uuid } from "../../basic/uuid";
 import { after_insert_point, update_frame_by_points } from "../utils/path";
+import { PathType } from "../../data/consts";
 
-export type ModifyUnits = {
-    index: number;
-    x: number;
-    y: number;
-    fromX: number;
-    fromY: number;
-    toX: number;
-    toY: number;
-}[];
+export type ModifyUnits = Map<number,
+    {
+        index: number;
+        x: number;
+        y: number;
+        fromX: number;
+        fromY: number;
+        toX: number;
+        toY: number;
+    }[]
+>;
 
 export class PathModifier extends AsyncApiCaller {
-    readonly shape: PathShape | ImageShape;
+    readonly shape: PathShape | PathShape2;
 
     constructor(repo: CoopRepository, document: Document, page: PageView, shape: PathShapeView | ImageShapeView) {
         super(repo, document, page);
@@ -48,25 +51,30 @@ export class PathModifier extends AsyncApiCaller {
 
     execute(units: ModifyUnits) {
         try {
-            const points = this.shape.points;
             const api = this.api;
             const page = this.page;
-            const shape = this.shape;
 
-            for (let i = 0; i < units.length; i++) {
-                const unit = units[i];
-                const point = points[unit.index];
-                if (!point) {
-                    continue;
-                }
+            if (this.shape.pathType === PathType.Editable) {
+                const shape = this.shape as PathShape;
+                const points = (this.shape as PathShape).points;
+                const actions = units.get(0) || [];
+                for (let i = 0; i < actions.length; i++) {
+                    const unit = actions[i];
+                    const point = points[unit.index];
+                    if (!point) {
+                        continue;
+                    }
 
-                this.api.shapeModifyCurvPoint(page, shape, unit.index, { x: unit.x, y: unit.y });
-                if (point.hasFrom) {
-                    api.shapeModifyCurvFromPoint(page, shape, unit.index, { x: unit.fromX, y: unit.fromY });
+                    this.api.shapeModifyCurvPoint(page, shape, unit.index, { x: unit.x, y: unit.y });
+                    if (point.hasFrom) {
+                        api.shapeModifyCurvFromPoint(page, shape, unit.index, { x: unit.fromX, y: unit.fromY });
+                    }
+                    if (point.hasTo) {
+                        api.shapeModifyCurvToPoint(page, shape, unit.index, { x: unit.toX, y: unit.toY });
+                    }
                 }
-                if (point.hasTo) {
-                    api.shapeModifyCurvToPoint(page, shape, unit.index, { x: unit.toX, y: unit.toY });
-                }
+            } else if (this.shape.pathType === PathType.Multi) {
+
             }
 
             // update_frame_by_points(api, page, shape as PathShape);
