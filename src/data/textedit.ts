@@ -1,5 +1,5 @@
 import { BasicArray } from "./basic";
-import { Para, Span, SpanAttr, ParaAttr, Text, BulletNumbersType, BulletNumbersBehavior } from "./text";
+import { Para, Span, SpanAttr, ParaAttr, Text, BulletNumbersType, BulletNumbersBehavior, SpanAttrSetter } from "./text";
 import { _travelTextPara } from "./texttravel";
 import { isDiffSpanAttr, mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "./textutils";
 
@@ -13,7 +13,7 @@ function __insertText(para: Para, text: string, index: number, attr?: SpanAttr) 
         if (idx === 0) {
             if (attr || span.placeholder) {
                 const _span = new Span(text.length);
-                mergeSpanAttr(_span, span);
+                if (attr instanceof SpanAttrSetter) mergeSpanAttr(_span, span);
                 if (attr) mergeSpanAttr(_span, attr, true);
                 if (span.placeholder || _span.placeholder || isDiffSpanAttr(span, _span)) {
                     spans.splice(i, 0, _span);
@@ -26,7 +26,7 @@ function __insertText(para: Para, text: string, index: number, attr?: SpanAttr) 
         if (idx < span.length) { // split ?
             if (attr) {
                 const _span = new Span(text.length);
-                mergeSpanAttr(_span, span);
+                if (attr instanceof SpanAttrSetter) mergeSpanAttr(_span, span);
                 mergeSpanAttr(_span, attr, true);
                 if (span.placeholder || _span.placeholder || isDiffSpanAttr(span, _span)) {
                     // split
@@ -43,7 +43,7 @@ function __insertText(para: Para, text: string, index: number, attr?: SpanAttr) 
         if (idx === span.length) { // 优先继承前一个span属性
             if (attr || span.placeholder) {
                 const _span = new Span(text.length);
-                mergeSpanAttr(_span, span);
+                if (attr instanceof SpanAttrSetter) mergeSpanAttr(_span, span);
                 if (attr) mergeSpanAttr(_span, attr, true);
                 if (span.placeholder || _span.placeholder || isDiffSpanAttr(span, _span)) {
                     spans.splice(i + 1, 0, _span);
@@ -66,7 +66,7 @@ function __insertText(para: Para, text: string, index: number, attr?: SpanAttr) 
             }
             if (attr || span.placeholder) {
                 const _span = new Span(text.length);
-                mergeSpanAttr(_span, span);
+                if (attr instanceof SpanAttrSetter) mergeSpanAttr(_span, span);
                 if (attr) mergeSpanAttr(_span, attr, true);
                 if (span.placeholder || _span.placeholder || isDiffSpanAttr(span, _span)) {
                     spans.splice(i + 1, 0, _span);
