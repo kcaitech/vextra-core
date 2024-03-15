@@ -370,10 +370,10 @@ export function __round_curve_point(shape: PathShape, index: number) {
 export function init_curv(shape: PathShape, page: Page, api: Api, curve_point: CurvePoint, index: number, init = 0.35) {
     const round = __round_curve_point(shape, index);
     const { previous, next } = round;
-    if (new Set([previous.id, next.id, curve_point.id]).size !== 3) {
-        console.log('duplicate point');
-        return;
-    }
+    // if (new Set([previous.id, next.id, curve_point.id]).size !== 3) {
+    //     console.log('duplicate point');
+    //     return;
+    // }
     const k = Math.atan2(next.x - previous.x, next.y - previous.y);
     const dx = init * Math.sin(k);
     const dy = init * Math.cos(k);
