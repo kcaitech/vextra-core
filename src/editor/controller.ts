@@ -216,9 +216,7 @@ export class Controller {
             case ShapeType.Line:
                 return newLineShape(name, frame);
             case ShapeType.Text: {
-                const shape = newTextShape(name);
-                shape.frame = frame;
-                return shape;
+                return newTextShape(name, frame);
             }
             default:
                 return newRectShape(name, frame);
