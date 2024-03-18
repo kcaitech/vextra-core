@@ -702,6 +702,9 @@ class CmdSync {
             cmd.baseVer = baseVer;
             cmd.posttime = now;
             cmd.batchId = this.postingcmds[0].id;
+            if (cmd.isRecovery) {
+                break; // receive时一次只处理一个recovery的cmd。为减少可能的bug，recovery的cmd一个一个的同步。
+            }
         }
 
         if (this.postingcmds.length > 0) {
