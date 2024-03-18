@@ -90,7 +90,16 @@ import { CoopRepository } from "./coop/cooprepo";
 import { Api } from "./coop/recordapi";
 import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
 import { unable_to_migrate } from "./utils/migrate";
-import { PageView, ShapeView, SymbolView, TableCellView, TableView, TextShapeView, adapt2Shape } from "../dataview";
+import {
+    PageView,
+    ShapeView,
+    SymbolView,
+    TableCellView,
+    TableView,
+    TextShapeView,
+    adapt2Shape,
+    GroupShapeView
+} from "../dataview";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -1396,7 +1405,10 @@ export class PageEditor {
      * @returns { boolean }
      */
     uppper_layer(shape: Shape, step?: number) {
-        if (shape.isVirtualShape) return true; // 组件实例内部图形不可以移动图层
+        if (shape.isVirtualShape) {
+            return false; // 组件实例内部图形不可以移动图层
+        }
+
         const parent = shape.parent as GroupShape | undefined;
         if (!parent) return false;
         const index = parent.indexOfChild(shape);
@@ -1417,6 +1429,68 @@ export class PageEditor {
             return true;
         } catch (error) {
             console.log(error)
+            this.__repo.rollback();
+            return false;
+        }
+    }
+
+    /**
+     * @param shapes 逆序图层
+     */
+    upperLayer(shapes: ShapeView[], step?: number) {
+        const fixUpStep = (parent: GroupShape, set: Set<string>, targetIndex: number, currentIndex: number) => {
+            const max = parent.childs.length - 1;
+            if (targetIndex > max) {
+                targetIndex = max;
+            }
+            const children = parent.childs;
+
+            let result= targetIndex;
+
+            for (let i = targetIndex; i > currentIndex; i--) {
+                if (set.has(children[i].id)) {
+                    result--;
+                } else {
+                    break;
+                }
+            }
+
+            return result;
+        }
+
+        try {
+            const api = this.__repo.start("upperLayer");
+
+            const set = new Set<string>();
+            for (let i = 0; i < shapes.length; i++) {
+                const shape = shapes[i];
+                set.add(shape.id);
+            }
+
+            let adjusted = false;
+
+            for (let i = 0; i < shapes.length; i++) {
+                const shape = adapt2Shape(shapes[i]);
+                if (shape.isVirtualShape) {
+                    continue;
+                }
+
+                const parent = shape.parent! as GroupShape;
+                const currentIndex = parent.indexOfChild(shape);
+                const __target = step ?  (currentIndex + step) : parent.childs.length - 1;
+                const targetIndex = fixUpStep(parent, set, __target, currentIndex)
+
+                if (targetIndex !== currentIndex) {
+                    adjusted = true;
+                    api.shapeMove(this.__page, parent, currentIndex, parent, targetIndex);
+                }
+            }
+
+            this.__repo.commit();
+
+            return adjusted;
+        } catch (e) {
+            console.log('upperLayer:', e);
             this.__repo.rollback();
             return false;
         }
@@ -1448,6 +1522,66 @@ export class PageEditor {
             return true;
         } catch (error) {
             console.log(error)
+            this.__repo.rollback();
+            return false;
+        }
+    }
+
+    /**
+     * @param shapes 正序图层
+     */
+    lowerLayer(shapes: ShapeView[], step?: number) {
+        const fixLowStep = (parent: GroupShape, set: Set<string>, targetIndex: number, currentIndex: number) => {
+            if (targetIndex < 0) {
+                targetIndex = 0;
+            }
+            const children = parent.childs;
+
+            let result= targetIndex;
+
+            for (let i = targetIndex; i < currentIndex; i++) {
+                if (set.has(children[i].id)) {
+                    result++;
+                } else {
+                    break;
+                }
+            }
+
+            return result;
+        }
+
+        try {
+            const api = this.__repo.start("upperLayer");
+            const set = new Set<string>();
+            for (let i = 0; i < shapes.length; i++) {
+                const shape = shapes[i];
+                set.add(shape.id);
+            }
+
+            let adjusted = false;
+
+            for (let i = 0; i < shapes.length; i++) {
+                const shape = adapt2Shape(shapes[i]);
+                if (shape.isVirtualShape) {
+                    continue;
+                }
+
+                const parent = shape.parent! as GroupShape;
+                const currentIndex = parent.indexOfChild(shape);
+                const __target = step ?  (currentIndex - step) : 0;
+                const targetIndex = fixLowStep(parent, set, __target, currentIndex)
+
+                if (targetIndex !== currentIndex) {
+                    adjusted = true;
+                    api.shapeMove(this.__page, parent, currentIndex, parent, targetIndex);
+                }
+            }
+
+            this.__repo.commit();
+
+            return adjusted;
+        } catch (e) {
+            console.log('lowerLayer:', e);
             this.__repo.rollback();
             return false;
         }
