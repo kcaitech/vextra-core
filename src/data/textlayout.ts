@@ -23,6 +23,9 @@ export class GraphArray extends Array<IGraphy> {
     get graphCount() {
         return this.length;
     }
+    get charCount() {
+        return this.reduce((c, g) => c + g.char.length, 0);
+    }
 }
 export class Line extends Array<GraphArray> {
     public maxFontSize: number = 0;
@@ -33,6 +36,7 @@ export class Line extends Array<GraphArray> {
 
     public graphWidth: number = 0; // graph+kerning的宽度
     public graphCount: number = 0;
+    public charCount: number = 0; // graph跟char数量不一定一致，如emoji用两个字符表示
 
     public alignment: TextHorAlign = TextHorAlign.Left;
     public layoutWidth: number = 0;
@@ -55,6 +59,7 @@ export class BulletNumbersLayout {
 export class ParaLayout extends Array<Line> {
     public paraHeight: number = 0;
     public graphCount: number = 0;
+    public charCount: number = 0;
     public yOffset: number = 0;
     public paraWidth: number = 0;
     public bulletNumbers?: BulletNumbersLayout;
@@ -271,6 +276,22 @@ export function isNewLineCharCode(code: number) {
     return false;
 }
 
+// https://www.jianshu.com/p/42fd6f84c27a
+export function getNextChar(text: string, index: number): string {
+    const code = text.charCodeAt(index);
+    if (!(0xD800 <= code && code <= 0xDBFF)) return text.charAt(index);
+
+    const code2 = text.charCodeAt(index + 1);
+    if (!(0xDC00 <= code2 && code2 <= 0xDFFF)) return text.charAt(index);
+
+    // 还要判断下一个
+    const code3 = text.charCodeAt(index + 2);
+    if (code3 === 0x200D) { // 零宽度连接符
+        return String.fromCharCode(code, code2, code3) + getNextChar(text, index + 3);
+    }
+    return String.fromCharCode(code, code2);
+}
+
 export function layoutLines(_text: Text, para: Para, width: number, preBulletNumbers: BulletNumbersLayout[]): LineArray {
     const measure = gPal.text.textMeasure;
     let spans = para.spans;
@@ -321,8 +342,9 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
             continue;
         }
 
-        const c = text.charCodeAt(textIdx);
-        if (isNewLineCharCode(c)) {
+        const c = getNextChar(text, textIdx); //text.charCodeAt(textIdx);
+        const code = c.charCodeAt(0);
+        if (c.length === 1 && isNewLineCharCode(code)) {
             // '\n'
             if (!graphArray) {
                 graphArray = new GraphArray();
@@ -349,7 +371,7 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
                 index: textIdx,
                 x: curX
             });
-            textIdx++;
+            textIdx += c.length;
             spanOffset++;
             if (spanOffset >= span.length) {
                 spanOffset = 0;
@@ -360,6 +382,7 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
             }
 
             line.push(graphArray);
+            line.charCount += c.length;
             line.graphCount += graphArray.length;
             graphArray = undefined; //new GraphArray();
             lineArray.push(line);
@@ -372,8 +395,9 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
         }
 
         const charSpace = span.kerning ?? paraCharSpace;
-        if (spanIdx === 0 &&
-            c === 0x2A &&
+        if (c.length === 1 &&
+            spanIdx === 0 &&
+            code === 0x2A &&
             span.placeholder &&
             span.length === 1 &&
             span.bulletNumbers) { // '*' 项目符号编号
@@ -387,7 +411,7 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
 
             graphArray.push(layout.graph);
             curX = layout.graph.x + layout.graph.cw + charSpace;
-            textIdx++;
+            textIdx += c.length;
             spanOffset++;
             if (spanOffset >= span.length) {
                 spanOffset = 0;
@@ -397,7 +421,7 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
                 graphArray = undefined;
             }
             line.maxFontSize = Math.max(line.maxFontSize, span.fontSize ?? 0)
-
+            line.charCount += c.length;
             lineArray.bulletNumbers = layout;
             continue;
         }
@@ -405,9 +429,9 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
         // todo tab 不对
         // indent 未处理
         const transformType = span.transform ?? defaultTransform;
-        const char = transformText(text.charAt(textIdx), textIdx === 0 || (textIdx === 1 && !!lineArray.bulletNumbers), transformType);
+        const char = transformText(c, textIdx === 0 || (textIdx === 1 && !!lineArray.bulletNumbers), transformType);
 
-        const m = measure(char.charCodeAt(0), font);
+        const m = measure(char, font);
         const cw = m?.width ?? 0;
         const fontSize = span.fontSize ?? 0;
         const ch = typeof fontSize !== 'number' ? Number.parseFloat(fontSize) : fontSize; // fix bug: 数据中存在字符串类型的fontsize时，后续出错
@@ -427,7 +451,7 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
             });
 
             curX += cw + charSpace;
-            textIdx++;
+            textIdx += c.length;
             spanOffset++;
             if (spanOffset >= span.length) {
                 spanOffset = 0;
@@ -438,6 +462,7 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
             }
             // if (preSpanIdx !== spanIdx || spanIdx >= spansCount) {
             line.maxFontSize = Math.max(line.maxFontSize, span.fontSize ?? 0)
+            line.charCount += c.length;
             // }
         }
         else if (line.length === 0 && (!graphArray || graphArray.length === 0)) { // 至少一个字符
@@ -457,12 +482,13 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
             line.maxFontSize = span.fontSize ?? 0;
             line.push(graphArray);
             line.graphCount += graphArray.length;
+            line.charCount += c.length;
             graphArray = undefined;
             lineArray.push(line);
             line = new Line();
 
             curX = startX;
-            textIdx++;
+            textIdx += c.length;
             spanOffset++;
             if (spanOffset >= span.length) {
                 spanOffset = 0;
@@ -484,6 +510,7 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
             lineArray.push(line);
             line = new Line();
             line.maxFontSize = span.fontSize ?? 0;
+            line.charCount += c.length;
 
             curX = startX;
             graphArray.push({
@@ -496,7 +523,7 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
             });
 
             curX += cw + charSpace;
-            textIdx++;
+            textIdx += c.length;
             spanOffset++;
             if (spanOffset >= span.length) {
                 spanOffset = 0;
@@ -525,6 +552,7 @@ export function layoutPara(text: Text, para: Para, layoutWidth: number, preBulle
     const pAttr = para.attr;
     let paraHeight = 0;
     let graphCount = 0;
+    let charCount = 0;
     const lines = layouts.map((line) => {
         let lineHeight = line.maxFontSize;
         if (pAttr && pAttr.maximumLineHeight) {
@@ -536,6 +564,7 @@ export function layoutPara(text: Text, para: Para, layoutWidth: number, preBulle
         const y = paraHeight;
         paraHeight += lineHeight;
         graphCount += line.graphCount;
+        charCount += line.charCount;
 
         line.y = y;
         line.lineHeight = lineHeight;
@@ -560,6 +589,7 @@ export function layoutPara(text: Text, para: Para, layoutWidth: number, preBulle
     const paraLayout = new ParaLayout(...lines);
     paraLayout.paraHeight = paraHeight;
     paraLayout.graphCount = graphCount;
+    paraLayout.charCount = charCount;
     paraLayout.paraWidth = paraWidth;
     paraLayout.bulletNumbers = layouts.bulletNumbers;
 

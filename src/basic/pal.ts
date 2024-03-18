@@ -1,6 +1,6 @@
 // platform abstract layer
 
-export type MeasureFun = (code: number, font: string) => TextMetrics | undefined;
+export type MeasureFun = (code: string, font: string) => TextMetrics | undefined;
 
 // export interface IZip {
 //     entryDataJson(entry: string): Promise<{ [key: string]: any }>;
@@ -39,7 +39,7 @@ export const gPal: {
     makePalPath: (path: string) => IPalPath,
 } = {
     text: {
-        textMeasure: (code: number, font: string) => undefined,
+        textMeasure: (code: string, font: string) => undefined,
         getTextPath: (font: string, fontSize: number, charCode: number) => "",
     },
     boolop: {

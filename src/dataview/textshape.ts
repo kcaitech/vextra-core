@@ -3,7 +3,7 @@ import { OverrideType, Path, ShapeFrame, Text, TextShape, VariableType } from ".
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
 import { renderText2Path, renderTextLayout } from "../render/text";
-import { CursorLocate, TextLocate, locateCursor, locateRange, locateText } from "../data/textlocate";
+import { CursorLocate, TextLocate, locateCursor, locateNextCursor, locatePrevCursor, locateRange, locateText } from "../data/textlocate";
 
 export class TextShapeView extends ShapeView {
 
@@ -61,6 +61,14 @@ export class TextShapeView extends ShapeView {
 
     locateCursor(index: number, cursorAtBefore: boolean): CursorLocate | undefined {
         return locateCursor(this.getLayout(), index, cursorAtBefore);
+    }
+
+    locatePrevCursor(index: number): number {
+        return locatePrevCursor(this.getLayout(), index);
+    }
+
+    locateNextCursor(index: number): number {
+        return locateNextCursor(this.getLayout(), index);
     }
 
     getTextPath() {

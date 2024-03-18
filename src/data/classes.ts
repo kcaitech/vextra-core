@@ -13,4 +13,4 @@ export * from './color'
 
 export { parsePath } from './pathparser'
 export { layoutTable } from './tablelayout'
-export { layoutText, TextLayout } from './textlayout'
+export { layoutText, TextLayout, getNextChar } from './textlayout'
