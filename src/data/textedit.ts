@@ -86,14 +86,30 @@ function _insertText(paraArray: Para[], paraIndex: number, para: Para, text: str
     let newParaIndex = text.indexOf('\n');
     if (newParaIndex < 0) {
         __insertText(para, text, index, propType, attr);
-        if (paraAttr) mergeParaAttr(para, paraAttr);
+        if (paraAttr) {
+            if (propType === 'simple') {
+                mergeParaAttr(para, paraAttr);
+            } else {
+                const attr = new ParaAttr();
+                mergeParaAttr(attr, paraAttr);
+                para.attr = attr;
+            }
+        }
         return;
     }
     while (newParaIndex >= 0) {
         if (newParaIndex > 0) {
             const t = text.slice(0, newParaIndex);
             __insertText(para, t, index, propType, attr);
-            if (paraAttr) mergeParaAttr(para, paraAttr);
+            if (paraAttr) {
+                if (propType === 'simple') {
+                    mergeParaAttr(para, paraAttr);
+                } else {
+                    const attr = new ParaAttr();
+                    mergeParaAttr(attr, paraAttr);
+                    para.attr = attr;
+                }
+            }
             index += newParaIndex;
         }
         text = text.slice(newParaIndex + 1)
@@ -415,13 +431,15 @@ function _deleteText(paraArray: Para[], paraIndex: number, para: Para, index: nu
         if (isDel0A) {
             // 不是最后一段
             // 合并两段
-            const nextpara = paraArray[paraIndex + 1];
+            // const nextpara = paraArray[paraIndex + 1];
             paraArray.splice(paraIndex + 1, 1);
-            mergePara(para, nextpara);
+            // mergePara(para, nextpara);
         }
         return ret;
     }
 
+    // 删除后使用第一段的段落属性
+    const saveParaProp = paraArray[paraIndex].attr;
     const ret = new Text(new BasicArray<Para>());
     // let deltext = "";
     // let delspans: Span[] = [];
@@ -490,9 +508,21 @@ function _deleteText(paraArray: Para[], paraIndex: number, para: Para, index: nu
         else {
             // 不是最后一段
             // 合并两段
-            const nextpara = paraArray[needMerge + 1];
+            // const nextpara = paraArray[needMerge + 1];
             paraArray.splice(needMerge + 1, 1);
-            mergePara(para, nextpara);
+            // mergePara(para, nextpara);
+        }
+    } else {
+        // 使用第一段的段落属性
+        para = paraArray[paraIndex];
+        if (saveParaProp !== para.attr) { // 都是undefined时是相等的
+            if (!saveParaProp) {
+                para.attr = undefined;
+            } else {
+                const attr = new ParaAttr();
+                mergeParaAttr(attr, saveParaProp);
+                para.attr = attr;
+            }
         }
     }
     return ret;
