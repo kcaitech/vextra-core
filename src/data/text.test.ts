@@ -1,5 +1,5 @@
 import * as chai from 'chai'
-import { Para, Span, SpanAttrSetter, Text } from './text';
+import { Para, Span, Text } from './text';
 import { BasicArray } from './basic';
 import { Color } from './classes';
 

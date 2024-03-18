@@ -196,4 +196,15 @@ export class Matrix {
         }
         return true;
     }
+    isValid() {
+        const m = this.m_matrix;
+        for (let i = 0, len = m.length; i < len; i++) {
+            const x = m[i];
+            if (Number.isNaN(x) || (!Number.isFinite(x))) return false;
+        }
+        return true;
+    }
+    checkValid() {
+        if (!this.isValid()) throw new Error("Wrong Matrix: " + this.m_matrix);
+    }
 }

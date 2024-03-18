@@ -1,4 +1,4 @@
-import { GroupShape, Shape, ShapeFrame, ShapeType, ImageShape, PathShape, RectShape, TextShape, SymbolShape, Variable, CutoutShape } from "./shape";
+import { GroupShape, Shape, ShapeFrame, ShapeType, ImageShape, PathShape, RectShape, TextShape, SymbolShape, CutoutShape } from "./shape";
 import { Style } from "./style";
 import * as classes from "./baseclasses"
 import { BasicArray, WatchableObject } from "./basic";

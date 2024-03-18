@@ -1,10 +1,11 @@
 import { DocumentMeta, PageListItem } from "./baseclasses";
 import { Page } from "./page";
-import { BasicArray, BasicMap, IDataGuard, MultiResourceMgr, ResourceMgr, WatchableObject } from "./basic";
+import { BasicArray, BasicMap, IDataGuard, ResourceMgr, WatchableObject } from "./basic";
 import { Style } from "./style";
 import { GroupShape, SymbolShape, TextShape } from "./shape";
 import { TableShape } from "./table";
 import { SymbolRefShape } from "./symbolref";
+import { SymbolMgr } from "./symbolmgr";
 
 export { DocumentMeta, PageListItem } from "./baseclasses";
 
@@ -103,7 +104,7 @@ export class Document extends (DocumentMeta) {
     }
 
     private __pages: ResourceMgr<Page>;
-    private __symbols: MultiResourceMgr<SymbolShape>
+    private __symbols: SymbolMgr
     private __styles: ResourceMgr<Style>
     private __medias: ResourceMgr<{ buff: Uint8Array, base64: string }>
     private __versionId: string;
@@ -124,13 +125,7 @@ export class Document extends (DocumentMeta) {
         this.__versionId = versionId;
         this.__name = name;
         this.__pages = new ResourceMgr<Page>([id, 'pages'], (data: Page) => guard.guard(data));
-        // this.__artboards = new ResourceMgr<Artboard>([id, 'artboards'], (data: Artboard) => guard.guard(data));
-        this.__symbols = new MultiResourceMgr<SymbolShape>([id, 'symbols'],
-            (data: SymbolShape) => {
-                // check ?
-                return guard.guard(data);
-            });
-        this.__symbols.parent = this; // 要用到symbolregist
+        this.__symbols = new SymbolMgr([id, 'symbols'], symbolregist, (data: SymbolShape) => guard.guard(data));
         this.__medias = new ResourceMgr<{ buff: Uint8Array, base64: string }>([id, 'medias']);
         this.__styles = new ResourceMgr<Style>([id, 'styles']);
         this.__correspondent = new SpecialActionCorrespondent();
@@ -153,16 +148,7 @@ export class Document extends (DocumentMeta) {
         return this.__symbols;
     }
     getSymbolSync(id: string) {
-        const syms = this.symbolsMgr.getSync(id);
-        if (!syms) return;
-        const regist = this.symbolregist.get(id);
-        if (!regist) return syms[syms.length - 1];
-        // todo val 有多个时，需要提示用户修改
-        for (let i = 0; i < syms.length; ++i) {
-            const s = syms[i];
-            const p = s.getPage();
-            if (!p && regist === 'freesymbols' || p && p.id === regist) return s;
-        }
+        return this.symbolsMgr.getSync(id);
     }
 
     get mediasMgr() {

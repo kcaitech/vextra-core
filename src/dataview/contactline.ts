@@ -1,5 +1,4 @@
 import { EL, elh } from "./el";
-import { ShapeView } from "./shape";
 import { render as renderBorders } from "../render/contact_borders"
 import { ContactForm, ContactShape, Page, Shape, ShapeType } from "../data/classes";
 import { DViewCtx, PropsType } from "./viewctx";

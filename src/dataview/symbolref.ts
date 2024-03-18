@@ -1,4 +1,4 @@
-import { Border, BorderOptions, ContextSettings, Document, Fill, MarkerType, OverrideType, Shadow, Shape, ShapeFrame, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType } from "../data/classes";
+import { Border, ContextSettings, Fill, MarkerType, OverrideType, Shadow, Shape, ShapeFrame, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType } from "../data/classes";
 import { ShapeView } from "./shape";
 import { ShapeType } from "../data/classes";
 import { DataView, RootView } from "./view";
@@ -97,28 +97,8 @@ export class SymbolRefView extends ShapeView {
             return;
         }
         this.m_refId = refId;
-        const onload = (val: SymbolShape[]) => {
+        const onload = (sym: SymbolShape) => {
             if (this.m_refId !== refId) return;
-            const document = symMgr.parent as Document;
-            if (!document) throw new Error("symMgr has no parent?");
-            const symbolregist = document.symbolregist.get(refId);
-            let sym;
-            if (symbolregist) {
-                // todo val 有多个时，需要提示用户修改
-                for (let i = 0; i < val.length; ++i) {
-                    const v = val[i];
-                    const p = v.getPage();
-                    if (!p && symbolregist === 'freesymbols') {
-                        sym = v;
-                        break;
-                    } else if (p && p.id === symbolregist) {
-                        sym = v;
-                    }
-                }
-            } else {
-                sym = val[val.length - 1];
-            }
-
             if (this.m_sym) this.m_sym.unwatch(this.symwatcher);
             this.m_sym = sym;
             if (this.m_sym) this.m_sym.watch(this.symwatcher);
@@ -139,13 +119,13 @@ export class SymbolRefView extends ShapeView {
         // todo 通过symbolregist判断使用哪个symbol。及symbol变化时重新更新
         if (trysync) {
             const val = symMgr.getSync(refId);
-            if (val && (val.length > 0)) {
-                onload(val as SymbolShape[]);
+            if (val) {
+                onload(val);
                 return;
             }
         }
         symMgr.get(refId).then((val) => {
-            if (val && (val.length > 0)) setTimeout(() => onload(val as SymbolShape[])); // 此时symbol刚加载，不一定有page
+            if (val) onload(val);
             else this.m_refId = undefined;
         }).catch((e) => {
             console.error(e);

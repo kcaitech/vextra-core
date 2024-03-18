@@ -216,13 +216,9 @@ export class Text extends Basic implements classes.Text {
     paras: BasicArray<Para>
     attr?: TextAttr
 
-    // private __layout?: TextLayout;
-    // private __layoutWidth: number = 0;
-    // private __frameWidth: number = 0;
-    // private __frameHeight: number = 0;
-
     // layout与显示窗口大小有关
     // 尽量复用, layout缓存排版信息，进行update
+    private __layouts: Map<string, LayoutItem> = new Map();
 
     dropLayout(token: string, owner: string) {
         let o = this.__layouts.get(token);
@@ -235,7 +231,6 @@ export class Text extends Basic implements classes.Text {
         }
     }
 
-    private __layouts: Map<string, LayoutItem> = new Map();
     getLayout3(width: number, height: number, owner: string, token: string | undefined): { token: string, layout: TextLayout } {
 
         const updateLayout = (o: LayoutItem) => {
@@ -494,35 +489,6 @@ export class Text extends Basic implements classes.Text {
         return ret;
     }
 
-    // updateSize(w: number, h: number) {
-    //     const layoutWidth = ((b: TextBehaviour) => {
-    //         switch (b) {
-    //             case TextBehaviour.Flexible: return Number.MAX_VALUE;
-    //             case TextBehaviour.Fixed: return w;
-    //             case TextBehaviour.FixWidthAndHeight: return w;
-    //         }
-    //         // return Number.MAX_VALUE
-    //     })(this.attr?.textBehaviour ?? TextBehaviour.Flexible)
-    //     if (this.__layoutWidth !== layoutWidth) {
-    //         this.__frameHeight = h;
-    //         this.__layoutWidth = layoutWidth;
-    //         this.reLayout();
-    //     }
-    //     else if (this.__frameHeight !== h && this.__layout) {
-    //         const vAlign = this.attr?.verAlign ?? TextVerAlign.Top;
-    //         const yOffset: number = ((align: TextVerAlign) => {
-    //             switch (align) {
-    //                 case TextVerAlign.Top: return 0;
-    //                 case TextVerAlign.Middle: return (h - this.__layout.contentHeight) / 2;
-    //                 case TextVerAlign.Bottom: return h - this.__layout.contentHeight;
-    //             }
-    //         })(vAlign);
-    //         this.__layout.yOffset = yOffset;
-    //     }
-    //     this.__frameWidth = w;
-    //     this.__frameHeight = h;
-    // }
-
     onRollback(from: string): void {
         if (from !== "composingInput") this.reLayout();
     }
@@ -532,78 +498,13 @@ export class Text extends Basic implements classes.Text {
         this.__layouts.forEach(l => l.layout = undefined);
     }
 
-    // 无缓存
-    // getLayout2(width: number, height: number) {
-    //     if (this.__layout && this.__frameHeight === height && this.__frameWidth === width) {
-    //         return this.__layout;
-    //     }
-
-    //     const layoutWidth = ((b: TextBehaviour) => {
-    //         switch (b) {
-    //             case TextBehaviour.Flexible: return Number.MAX_VALUE;
-    //             case TextBehaviour.Fixed: return width;
-    //             case TextBehaviour.FixWidthAndHeight: return width;
-    //         }
-    //         // return Number.MAX_VALUE
-    //     })(this.attr?.textBehaviour ?? TextBehaviour.Flexible)
-
-    //     return layoutText(this, layoutWidth, height);
-    // }
-    // getLayout() {
-    //     if (this.__layout) return this.__layout;
-    //     this.__layout = layoutText(this, this.__layoutWidth, this.__frameHeight);
-    //     return this.__layout;
-    // }
-    // locateText(x: number, y: number): TextLocate {
-    //     return locateText(this.getLayout(), x, y);
-    // }
-    // locateCursor(index: number, cursorAtBefore: boolean): CursorLocate | undefined {
-    //     return locateCursor(this.getLayout(), index, cursorAtBefore);
-    // }
-    // locateRange(start: number, end: number): { x: number, y: number }[] {
-    //     return locateRange(this.getLayout(), start, end);
-    // }
-    // getContentWidth(): number {
-    //     return this.getLayout().contentWidth;
-    // }
-    // getContentHeight(): number {
-    //     return this.getLayout().contentHeight;
-    // }
-
     setTextBehaviour(textBehaviour: TextBehaviour) {
         if (!this.attr) this.attr = new TextAttr();
         this.attr.textBehaviour = textBehaviour;
-        // 宽度变化时要重排
-        // const layoutWidth = ((b: TextBehaviour) => {
-        //     switch (b) {
-        //         case TextBehaviour.Flexible: return Number.MAX_VALUE;
-        //         case TextBehaviour.Fixed: return this.__frameWidth;
-        //         case TextBehaviour.FixWidthAndHeight: return this.__frameWidth;
-        //     }
-        //     // return Number.MAX_VALUE
-        // })(this.attr?.textBehaviour ?? TextBehaviour.Flexible)
-        // if (this.__layoutWidth !== layoutWidth) {
-        //     this.__layoutWidth = layoutWidth;
-        //     this.reLayout();
-        // }
     }
     setTextVerAlign(verAlign: TextVerAlign) {
         if (!this.attr) this.attr = new TextAttr();
         this.attr.verAlign = verAlign;
-        // if (this.__layout) {
-        //     const padding = this.attr?.padding;
-        //     const paddingTop = padding?.top ?? 0;
-        //     const paddingBottom = padding?.bottom ?? 0;
-        //     const vAlign = this.attr?.verAlign ?? TextVerAlign.Top;
-        //     const yOffset: number = ((align: TextVerAlign) => {
-        //         switch (align) {
-        //             case TextVerAlign.Top: return paddingTop;
-        //             case TextVerAlign.Middle: return (this.__frameHeight - this.__layout.contentHeight - paddingTop - paddingBottom) / 2;
-        //             case TextVerAlign.Bottom: return this.__frameHeight - this.__layout.contentHeight - paddingBottom;
-        //         }
-        //     })(vAlign);
-        //     this.__layout.yOffset = yOffset;
-        // }
     }
 
     setBulletNumbersType(type: BulletNumbersType, index: number, len: number) {
