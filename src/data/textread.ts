@@ -1,5 +1,5 @@
 import { BasicArray } from "./basic";
-import { Para, AttrGetter, Span, SpanAttr, Text, ParaAttr, UnderlineType, StrikethroughType, TextTransformType, TextAttr, TextHorAlign, SpanAttrSetter } from "./text";
+import { Para, AttrGetter, Span, SpanAttr, Text, ParaAttr, UnderlineType, StrikethroughType, TextTransformType, TextAttr, TextHorAlign } from "./text";
 import { _travelTextPara } from "./texttravel";
 import { mergeParaAttr, mergeSpanAttr } from "./textutils";
 import { Color } from "./color";
@@ -268,7 +268,7 @@ function _mergeParaAttr(from: AttrGetter, to: AttrGetter) {
     else if (from.paraSpacing !== undefined) to.paraSpacing = from.paraSpacing;
 }
 
-function coverFormat(fmt: AttrGetter, attr: SpanAttrSetter) {
+function coverFormat(fmt: AttrGetter, attr: SpanAttr) {
     // fontNameIsSet: boolean = false;
     // fontSizeIsSet: boolean = false;
     // colorIsSet: boolean = false;
@@ -279,57 +279,57 @@ function coverFormat(fmt: AttrGetter, attr: SpanAttrSetter) {
     // strikethroughIsSet: boolean = false;
     // kerningIsSet: boolean = false;
     // transformIsSet: boolean = false;
-    if (attr.fontNameIsSet) {
+    if (attr.fontName) {
         fmt.fontName = attr.fontName;
         fmt.fontNameIsMulti = false;
     }
-    if (attr.fontSizeIsSet) {
+    if (attr.fontSize !== undefined) {
         fmt.fontSize = attr.fontSize;
         fmt.fontSizeIsMulti = false;
     }
-    if (attr.colorIsSet) {
+    if (attr.color) {
         fmt.color = attr.color;
         fmt.colorIsMulti = false;
     }
-    if (attr.highlightIsSet) {
+    if (attr.highlight) {
         fmt.highlight = attr.highlight;
         fmt.highlightIsMulti = false;
     }
-    if (attr.boldIsSet) {
+    if (attr.bold !== undefined) {
         fmt.bold = attr.bold;
         fmt.boldIsMulti = false;
     }
-    if (attr.italicIsSet) {
+    if (attr.italic !== undefined) {
         fmt.italic = attr.italic;
         fmt.italicIsMulti = false;
     }
-    if (attr.underlineIsSet) {
+    if (attr.underline) {
         fmt.underline = attr.underline;
         fmt.underlineIsMulti = false;
     }
-    if (attr.strikethroughIsSet) {
+    if (attr.strikethrough) {
         fmt.strikethrough = attr.strikethrough;
         fmt.strikethroughIsMulti = false;
     }
-    if (attr.kerningIsSet) {
+    if (attr.kerning !== undefined) {
         fmt.kerning = attr.kerning;
         fmt.kerningIsMulti = false;
     }
-    if (attr.transformIsSet) {
+    if (attr.transform) {
         fmt.transform = attr.transform;
         fmt.transformIsMulti = false;
     }
-    if (attr.fillTypeIsSet) {
+    if (attr.fillType) {
         fmt.fillType = attr.fillType;
         fmt.fillTypeIsMulti = false;
     }
-    if (attr.gradientIsSet) {
+    if (attr.gradient) {
         fmt.gradient = attr.gradient;
         fmt.gradientIsMulti = false;
     }
 }
 
-export function getTextFormat(shapetext: Text, index: number, length: number, cachedAttr?: SpanAttrSetter): AttrGetter {
+export function getTextFormat(shapetext: Text, index: number, length: number, cachedAttr?: SpanAttr): AttrGetter {
     const spanfmt = new AttrGetter();
     const parafmt = new AttrGetter();
     const textfmt = new AttrGetter();

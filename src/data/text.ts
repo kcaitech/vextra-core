@@ -135,41 +135,6 @@ export class AttrGetter extends TextAttr {
     gradientIsMulti: boolean = false;
 }
 
-export class SpanAttrSetter extends SpanAttr {
-    fontNameIsSet: boolean = false;
-    fontSizeIsSet: boolean = false;
-    colorIsSet: boolean = false;
-    highlightIsSet: boolean = false;
-    boldIsSet: boolean = false;
-    italicIsSet: boolean = false;
-    underlineIsSet: boolean = false;
-    strikethroughIsSet: boolean = false;
-    kerningIsSet: boolean = false;
-    transformIsSet: boolean = false;
-    fillTypeIsSet: boolean = false;
-    gradientIsSet: boolean = false;
-}
-
-export class ParaAttrSetter extends ParaAttr {
-    fontNameIsSet: boolean = false;
-    fontSizeIsSet: boolean = false;
-    colorIsSet: boolean = false;
-    highlightIsSet: boolean = false;
-    boldIsSet: boolean = false;
-    italicIsSet: boolean = false;
-    underlineIsSet: boolean = false;
-    strikethroughIsSet: boolean = false;
-    kerningIsSet: boolean = false;
-    transformIsSet: boolean = false;
-
-    alignmentIsSet: boolean = false;
-    paraSpacingIsSet: boolean = false;
-    minimumLineHeightIsSet: boolean = false;
-    maximumLineHeightIsSet: boolean = false;
-    fillTypeIsSet: boolean = false;
-    gradientIsSet: boolean = false;
-}
-
 export class Span extends SpanAttr implements classes.Span {
     typeId = 'span'
     length: number
@@ -413,7 +378,7 @@ export class Text extends Basic implements classes.Text {
     getDefaultTextFormat(): TextAttr | undefined {
         return this.attr;
     }
-    getTextFormat(index: number, count: number, cachedAttr?: SpanAttrSetter): AttrGetter {
+    getTextFormat(index: number, count: number, cachedAttr?: SpanAttr): AttrGetter {
         if (index < 0) {
             throw new Error("index < 0");
         }
