@@ -5,7 +5,6 @@ import {
     Color,
     Page,
     SpanAttr,
-    SpanAttrSetter,
     StrikethroughType,
     TextBehaviour,
     TextHorAlign,
@@ -21,15 +20,14 @@ import {
     ParaAttr,
     Span,
     ShapeType,
-    Variable, Document, TableShape, FillType, Gradient, TextAttr
-} from "../data/classes";
+    Variable, Document, TableShape, FillType, Gradient} from "../data/classes";
 import { CoopRepository } from "./coop/cooprepo";
 import { Api } from "./coop/recordapi";
 import { ShapeEditor } from "./shape";
 import { fixTableShapeFrameByLayout, fixTextShapeFrameByLayout } from "./utils/other";
 import { BasicArray } from "../data/basic";
-import { mergeParaAttr, mergeSpanAttr, mergeTextAttr, newTableCellText } from "../data/textutils";
-import { importGradient, importText, importTextAttr } from "../data/baseimport";
+import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "../data/textutils";
+import { importGradient, importText } from "../data/baseimport";
 import * as basicapi from "./basicapi"
 import { AsyncGradientEditor, Status } from "./controller";
 import { CmdMergeType } from "./coop/localcmd";
@@ -62,7 +60,11 @@ interface _Api {
 
 export class TextShapeEditor extends ShapeEditor {
 
-    private __cachedSpanAttr?: SpanAttrSetter;
+    private _cacheAttr?: SpanAttr;
+    private get cacheAttr() {
+        if (this._cacheAttr === undefined) this._cacheAttr = new SpanAttr();
+        return this._cacheAttr;
+    }
     // private __textAttr?: TextAttr;
 
     constructor(shape: TextShapeView | TableCellView, page: Page, repo: CoopRepository, document: Document) {
@@ -73,11 +75,11 @@ export class TextShapeEditor extends ShapeEditor {
     }
 
     public resetCachedSpanAttr() {
-        this.__cachedSpanAttr = undefined;
+        this._cacheAttr = undefined;
     }
 
     public getCachedSpanAttr() {
-        return this.__cachedSpanAttr;
+        return this._cacheAttr;
     }
 
     public insertText(text: string, index: number, attr?: SpanAttr): number {
@@ -194,7 +196,7 @@ export class TextShapeEditor extends ShapeEditor {
             // 当前text是个variable,或者需要先override
 
         }
-        attr = attr ?? this.__cachedSpanAttr;
+        attr = attr ?? this._cacheAttr;
         this.resetCachedSpanAttr();
         let count = text.length; // 插入字符数
         const api = this.__repo.start("insertText");
@@ -301,7 +303,7 @@ export class TextShapeEditor extends ShapeEditor {
     }
 
     public insertTextForNewLine(index: number, del: number, attr?: SpanAttr): number {
-        attr = attr ?? this.__cachedSpanAttr;
+        attr = attr ?? this._cacheAttr;
         this.resetCachedSpanAttr();
         const text = '\n';
         const api = this.__repo.start("insertTextForNewLine");
@@ -426,9 +428,8 @@ export class TextShapeEditor extends ShapeEditor {
 
     public setTextColor(index: number, len: number, color: Color | undefined) {
         if (len === 0) {
-            if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
-            this.__cachedSpanAttr.color = color;
-            this.__cachedSpanAttr.colorIsSet = true;
+            if (this._cacheAttr === undefined) this._cacheAttr = new SpanAttr();
+            this._cacheAttr.color = color;
             return;
         }
         const api = this.__repo.start("setTextColor");
@@ -466,9 +467,7 @@ export class TextShapeEditor extends ShapeEditor {
     }
     public setTextHighlightColor(index: number, len: number, color: Color | undefined) {
         if (len === 0) {
-            if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
-            this.__cachedSpanAttr.highlight = color;
-            this.__cachedSpanAttr.highlightIsSet = true;
+            this.cacheAttr.highlight = color;
             return;
         }
         const api = this.__repo.start("setTextHighlightColor");
@@ -506,9 +505,7 @@ export class TextShapeEditor extends ShapeEditor {
     }
     public setTextFontName(index: number, len: number, fontName: string) {
         if (len === 0) {
-            if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
-            this.__cachedSpanAttr.fontName = fontName;
-            this.__cachedSpanAttr.fontNameIsSet = true;
+            this.cacheAttr.fontName = fontName;
             return;
         }
         const api = this.__repo.start("setTextFontName");
@@ -551,9 +548,7 @@ export class TextShapeEditor extends ShapeEditor {
             fontSize = Number.parseFloat(fontSize);
         }
         if (len === 0) {
-            if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
-            this.__cachedSpanAttr.fontSize = fontSize;
-            this.__cachedSpanAttr.fontSizeIsSet = true;
+            this.cacheAttr.fontSize = fontSize;
             return;
         }
 
@@ -766,9 +761,7 @@ export class TextShapeEditor extends ShapeEditor {
     // 字间距 段属性
     public setCharSpacing(kerning: number, index: number, len: number) {
         if (len === 0) {
-            if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
-            this.__cachedSpanAttr.kerning = kerning;
-            this.__cachedSpanAttr.kerningIsSet = true;
+            this.cacheAttr.kerning = kerning;
             return;
         }
         const api = this.__repo.start("setCharSpace");
@@ -842,9 +835,7 @@ export class TextShapeEditor extends ShapeEditor {
 
     public setTextUnderline(underline: boolean, index: number, len: number) {
         if (len === 0) {
-            if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
-            this.__cachedSpanAttr.underline = underline ? UnderlineType.Single : undefined;
-            this.__cachedSpanAttr.underlineIsSet = true;
+            this.cacheAttr.underline = underline ? UnderlineType.Single : UnderlineType.None;
             return;
         }
         const api = this.__repo.start("setTextUnderline");
@@ -886,9 +877,7 @@ export class TextShapeEditor extends ShapeEditor {
 
     public setTextStrikethrough(strikethrough: boolean, index: number, len: number) {
         if (len === 0) {
-            if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
-            this.__cachedSpanAttr.strikethrough = strikethrough ? StrikethroughType.Single : undefined;
-            this.__cachedSpanAttr.strikethroughIsSet = true;
+            this.cacheAttr.strikethrough = strikethrough ? StrikethroughType.Single : StrikethroughType.None;
             return;
         }
         const api = this.__repo.start("setTextStrikethrough");
@@ -927,9 +916,7 @@ export class TextShapeEditor extends ShapeEditor {
 
     public setTextFillType(fillType: FillType, index: number, len: number) {
         if (len === 0) {
-            if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
-            this.__cachedSpanAttr.fillType = fillType;
-            this.__cachedSpanAttr.fillTypeIsSet = true;
+            this.cacheAttr.fillType = fillType;
             return;
         }
         const api = this.__repo.start("setTextFillType");
@@ -967,9 +954,7 @@ export class TextShapeEditor extends ShapeEditor {
 
     public setTextBold(bold: number, index: number, len: number) {
         if (len === 0) {
-            if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
-            this.__cachedSpanAttr.bold = bold;
-            this.__cachedSpanAttr.boldIsSet = true;
+            this.cacheAttr.bold = bold;
             return;
         }
         const api = this.__repo.start("setTextBold");
@@ -1027,9 +1012,7 @@ export class TextShapeEditor extends ShapeEditor {
 
     public setTextItalic(italic: boolean, index: number, len: number) {
         if (len === 0) {
-            if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
-            this.__cachedSpanAttr.italic = italic;
-            this.__cachedSpanAttr.italicIsSet = true;
+            this.cacheAttr.italic = italic;
             return;
         }
         const api = this.__repo.start("setTextItalic");
@@ -1137,9 +1120,7 @@ export class TextShapeEditor extends ShapeEditor {
 
     public setTextTransform(transform: TextTransformType | undefined, index: number, len: number) {
         if (len === 0 && transform !== TextTransformType.UppercaseFirst) {
-            if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
-            this.__cachedSpanAttr.transform = transform;
-            this.__cachedSpanAttr.transformIsSet = true;
+            this.cacheAttr.transform = transform;
             return;
         }
         const api = this.__repo.start("setTextTransform");
@@ -1206,9 +1187,7 @@ export class TextShapeEditor extends ShapeEditor {
     }
     public setTextGradient(gradient: Gradient, index: number, len: number) {
         if (len === 0) {
-            if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
-            this.__cachedSpanAttr.gradient = gradient;
-            this.__cachedSpanAttr.gradientIsSet = true;
+            this.cacheAttr.gradient = gradient;
             return;
         }
         const api = this.__repo.start("setTextGradient");
@@ -1323,9 +1302,7 @@ export class TextShapeEditor extends ShapeEditor {
             if (shapes.length === 1) {
                 const g = importGradient(new_gradient);
                 if (len === 0) {
-                    if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
-                    this.__cachedSpanAttr.gradient = g;
-                    this.__cachedSpanAttr.gradientIsSet = true;
+                    this.cacheAttr.gradient = g;
                 }
                 const shape = this.shape4edit(api);
                 api.setTextGradient(this.__page, shape, g, index, len);

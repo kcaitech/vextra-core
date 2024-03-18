@@ -15,7 +15,7 @@ import {
 } from "../../data/shape";
 import { updateShapesFrame } from "./utils";
 import { Border, BorderPosition, BorderStyle, Fill, Gradient, MarkerType, Shadow } from "../../data/style";
-import { BulletNumbers, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
+import { BulletNumbers, SpanAttr, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
 import { RectShape, SymbolRefShape, TableCell, TableCellType, TableShape } from "../../data/classes";
 import {
     BoolOp, BulletNumbersBehavior, BulletNumbersType, ExportFileFormat, OverrideType, Point2D,
@@ -829,7 +829,7 @@ export class Api {
         });
 
         for (let i = 0, len = insertIndexs.length; i < len; i++) {
-            const attr = new SpanAttrSetter();
+            const attr = new SpanAttr();
             attr.placeholder = true;
             attr.bulletNumbers = new BulletNumbers(type);
             this.addOp(basicapi.insertSimpleText(shape, _text, '*', insertIndexs[i] + i, { attr }))
