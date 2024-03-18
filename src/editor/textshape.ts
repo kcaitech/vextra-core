@@ -329,7 +329,7 @@ export class TextShapeEditor extends ShapeEditor {
 
                     const indent = paraInfo.para.attr?.indent || 0;
                     if (indent > 0) {
-                        // todo
+                        api.textModifyParaIndent(this.__page, shape, indent - 1, index, paraText.length);
                         count = 0;
                         break;
                     }

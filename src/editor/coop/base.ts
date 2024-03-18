@@ -9,9 +9,11 @@ export abstract class RepoNode {
     type: OpType; // 一个节点仅可能接收一种类型的op
     ops: OpItem[] = []; // 与服务端保持一致的op
     localops: OpItem[] = []; // 本地op, 本地op的order一定是在ops之后的
+    parent: RepoNodePath;
 
-    constructor(type: OpType) {
+    constructor(type: OpType, parent: RepoNodePath) {
         this.type = type;
+        this.parent = parent;
     }
 
     unshift(ops: OpItem[]): void {
@@ -32,13 +34,20 @@ export abstract class RepoNode {
 }
 
 export class RepoNodePath {
+    id: string;
     baseVer: string = ""; // 些节点创建时的version: 主要是insert？
     node: RepoNode | undefined;
     childs: Map<string, RepoNodePath> = new Map();
+    parent: RepoNodePath | undefined;
 
-    buildAndGet(op: Op, path: string[], creator: (op: Op) => RepoNode): RepoNode {
+    constructor(parent: RepoNodePath | undefined, id: string) {
+        this.parent = parent;
+        this.id = id;
+    }
+
+    buildAndGet(op: Op, path: string[], creator: (parent: RepoNodePath, op: Op) => RepoNode): RepoNode {
         if (path.length === 0) {
-            if (!this.node) this.node = creator(op);
+            if (!this.node) this.node = creator(this, op);
             // check
             if (this.node.type !== op.type) throw new Error("wrong node, expect node type: " + op.type + ", but get: " + this.node.type);
             return this.node;
@@ -46,7 +55,7 @@ export class RepoNodePath {
         let child = this.childs.get(path[0]);
         if (!child) {
             // bulid
-            child = new RepoNodePath();
+            child = new RepoNodePath(this, path[0]);
             this.childs.set(path[0], child);
         }
         return child.buildAndGet(op, path.slice(1), creator);
@@ -68,7 +77,7 @@ export class RepoNodePath {
         if (path.length === 0) return this;
         let child = this.childs.get(path[0]);
         if (!child) {
-            child = new RepoNodePath();
+            child = new RepoNodePath(this, path[0]);
             this.childs.set(path[0], child);
         }
         return child.get3(path.slice(1));

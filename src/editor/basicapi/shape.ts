@@ -5,10 +5,14 @@ import { BoolOp, CurveMode, MarkerType, OverrideType, Point2D } from "../../data
 import { BasicMap } from "../../data/basic";
 import { crdtSetAttr } from "./basic";
 
+function _checkNum(x: number) {
+    // check
+    if (Number.isNaN(x) || (!Number.isFinite(x))) throw new Error(String(x));
+}
 
 export function shapeModifyX(page: Page, shape: Shape, x: number, needUpdateFrame?: { shape: Shape, page: Page }[]) {
     // check
-    if (Number.isNaN(x) || (!Number.isFinite(x))) throw new Error(String(x));
+    _checkNum(x);
     const frame = shape.frame;
     if (x !== frame.x) {
         const op = crdtSetAttr(frame, 'x', x);
@@ -18,7 +22,7 @@ export function shapeModifyX(page: Page, shape: Shape, x: number, needUpdateFram
 }
 export function shapeModifyY(page: Page, shape: Shape, y: number, needUpdateFrame?: { shape: Shape, page: Page }[]) {
     // check
-    if (Number.isNaN(y) || (!Number.isFinite(y))) throw new Error(String(y));
+    _checkNum(y);
     const frame = shape.frame;
     if (y !== frame.y) {
         const op = crdtSetAttr(frame, 'y', y);
@@ -136,20 +140,24 @@ export function shapeModifyPathShapeClosedStatus(shape: PathShape, is: boolean) 
     return crdtSetAttr(shape, 'isClosed', is);
 }
 
-export function shapeModifyCurvPoint(page: Page, shape: PathShape, index: number, point: Point2D, segment = -1) {
-    if (segment > -1) {
-
-    } else {
-        const p = shape.points[index];
-        if (p) return [crdtSetAttr(p, 'x', point.x), crdtSetAttr(p, 'y', point.y)];
-    }
-
+export function shapeModifyCurvPoint(page: Page, shape: PathShape, index: number, point: Point2D) {
+    // check
+    _checkNum(point.x);
+    _checkNum(point.y);
+    const p = shape.points[index];
+    if (p) return [crdtSetAttr(p, 'x', point.x), crdtSetAttr(p, 'y', point.y)];
 }
 export function shapeModifyCurvFromPoint(page: Page, shape: PathShape, index: number, point: Point2D) {
+    // check
+    _checkNum(point.x);
+    _checkNum(point.y);
     const p = shape.points[index];
     if (p) return [crdtSetAttr(p, 'fromX', point.x), crdtSetAttr(p, 'fromY', point.y)];
 }
 export function shapeModifyCurvToPoint(page: Page, shape: PathShape, index: number, point: Point2D) {
+    // check
+    _checkNum(point.x);
+    _checkNum(point.y);
     const p = shape.points[index];
     if (p) return [crdtSetAttr(p, 'toX', point.x), crdtSetAttr(p, 'toY', point.y)];
 }

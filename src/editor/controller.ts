@@ -48,16 +48,8 @@ import { importCurvePoint, importGradient } from "../data/baseimport";
 import { exportGradient } from "../data/baseexport";
 import { is_state } from "./utils/other";
 import { after_migrate, unable_to_migrate } from "./utils/migrate";
-import { get_state_name, shape4contextSettings, shape4fill } from "./symbol";
-import {
-    __pre_curve,
-    after_insert_point,
-    pathEdit,
-    contact_edit,
-    pointsEdit,
-    update_frame_by_points,
-    before_modify_side
-} from "./utils/path";
+import { get_state_name, shape4contextSettings, shape4fill, shape4border } from "./symbol";
+import { __pre_curve, after_insert_point, pathEdit, contact_edit, pointsEdit, update_frame_by_points, before_modify_side } from "./utils/path";
 import { Color } from "../data/color";
 import { ContactLineView, PageView, PathShapeView, ShapeView, adapt2Shape } from "../dataview";
 import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
@@ -189,6 +181,11 @@ export interface AsyncOpacityEditor {
     close: () => undefined;
 }
 
+export interface AsyncBorderThickness {
+    execute: (contextSettingThickness: number, index: number) => void;
+    close: () => undefined;
+}
+
 export interface AsyncPathHandle {
     pre: (index: number) => void;
     execute: (side: Side, from: XY, to: XY) => void;
@@ -231,9 +228,7 @@ export class Controller {
             case ShapeType.Line:
                 return newLineShape(name, frame);
             case ShapeType.Text: {
-                const shape = newTextShape(name);
-                shape.frame = frame;
-                return shape;
+                return newTextShape(name, frame);
             }
             default:
                 return newRectShape(name, frame);
@@ -1106,6 +1101,37 @@ export class Controller {
             return undefined;
         }
         return { pre, modify_contact_from, modify_contact_to, before, modify_sides, migrate, close }
+    }
+
+    public asyncBorderThickness(_shapes: ShapeView[], _page: Page | PageView): AsyncBorderThickness {
+        const shapes: ShapeView[] = _shapes;
+        const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
+
+        const api = this.__repo.start("asyncBorderThickness");
+        let status: Status = Status.Pending;
+        const execute = (contextSettingThickness: number, index: number) => {
+            status = Status.Pending;
+            try {
+                for (let i = 0, l = shapes.length; i < l; i++) {
+                    const s = shape4border(api, page, shapes[i]);
+                    api.setBorderThickness(page, s, index, contextSettingThickness);
+                }
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const close = () => {
+            if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
+                this.__repo.commit();
+            } else {
+                this.__repo.rollback();
+            }
+            return undefined;
+        }
+        return { execute, close }
     }
 
     public asyncOpacityEditor(_shapes: ShapeView[], _page: Page | PageView): AsyncOpacityEditor {

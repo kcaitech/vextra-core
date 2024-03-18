@@ -28,9 +28,10 @@ const minimum_WH = 1; // 用户可设置最小宽高值。以防止宽高在缩�
  * @param end 点的目标🎯位置（root）
  */
 export function pathEdit(api: Api, page: Page, s: PathShape, index: number, end: XY, matrix?: Matrix) {
-    const w = s.frame.width, h = s.frame.height;
     let m = matrix ? matrix : new Matrix();
     if (!matrix) {
+        const w = s.frame.width, h = s.frame.height;
+        if (w === 0 || h === 0) throw new Error(); // 不可以为0
         m.multiAtLeft(s.matrix2Root());
         m.preScale(w, h);
         m = new Matrix(m.inverse);
