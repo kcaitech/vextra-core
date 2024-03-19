@@ -702,6 +702,9 @@ class CmdSync {
             cmd.baseVer = baseVer;
             cmd.posttime = now;
             cmd.batchId = this.postingcmds[0].id;
+            if (cmd.isRecovery) {
+                break; // receive时一次只处理一个recovery的cmd。为减少可能的bug，recovery的cmd一个一个的同步。
+            }
         }
 
         if (this.postingcmds.length > 0) {
@@ -871,36 +874,17 @@ function _mergeTextInsert(last: LocalCmd, cmd: LocalCmd) {
     if (!(insertOp && insertOp2 && ((insertOp.start + insertOp.length) === insertOp2.start))) return false;
     if (isDiffStringArr(insertOp.path, insertOp2.path)) return false;
 
+    // simple 跟 simple合并，complex跟complex合并
     if (insertOp.text.type === 'simple' && insertOp2.text.type === 'simple' &&
         (!insertOp.text.props || !insertOp.text.props.attr && !insertOp.text.props.paraAttr) &&
         (!insertOp2.text.props || !insertOp2.text.props.attr && !insertOp2.text.props.paraAttr)) {
         insertOp.text.text += insertOp2.text.text;
+    } else if (insertOp.text.type === 'complex' && insertOp2.text.type === 'complex') {
+        const _text = insertOp2.text.text;
+        _text.insertFormatText(insertOp.text.text, 0);
+        insertOp.text.text = _text;
     } else {
-        let _text;
-        if (insertOp2.text.type === 'simple') {
-            _text = new Text(new BasicArray<Para>());
-            const para = new Para(insertOp2.text.text, new BasicArray<Span>());
-            _text.paras.push(para);
-            const span = new Span(para.length);
-            para.spans.push(span);
-            if (insertOp2.text.props?.attr) {
-                mergeSpanAttr(span, insertOp2.text.props.attr);
-            }
-            if (insertOp2.text.props?.paraAttr) {
-                mergeParaAttr(para, insertOp2.text.props?.paraAttr);
-            }
-        } else {
-            _text = insertOp2.text.text;
-        }
-        if (insertOp.text.type === 'simple') {
-            _text.insertText(insertOp.text.text, 0, insertOp.text.props);
-            insertOp.text = {
-                type: 'complex', text: _text
-            }
-        } else {
-            _text.insertFormatText(insertOp.text.text, 0);
-            insertOp.text.text = _text;
-        }
+        return false;
     }
     insertOp.start = Math.min(insertOp.start, insertOp2.start);
     insertOp.length = insertOp.length + insertOp2.length;

@@ -28,7 +28,7 @@ import { newSymbolRefShape, newSymbolShapeUnion } from "../creator";
 import { uuid } from "../../basic/uuid";
 import * as types from "../../data/typesdefine";
 import { translateTo } from "../frame";
-import { PageView, ShapeView, TableCellView, TableView } from "../../dataview";
+import { PageView, ShapeView, TableCellView, TableView, TextShapeView } from "../../dataview";
 
 interface _Api {
     shapeModifyWH(page: Page, shape: Shape, w: number, h: number): void;
@@ -38,7 +38,8 @@ interface _Api {
 
 // const DefaultFontSize = Text.DefaultFontSize;
 
-export function fixTextShapeFrameByLayout(api: _Api, page: Page, shape: TextShape) {
+export function fixTextShapeFrameByLayout(api: _Api, page: Page, shape: TextShapeView | TextShape) {
+    const _shape = shape instanceof TextShape ? shape : shape.data;
     const textBehaviour = shape.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
     switch (textBehaviour) {
         case TextBehaviour.FixWidthAndHeight:
@@ -47,13 +48,13 @@ export function fixTextShapeFrameByLayout(api: _Api, page: Page, shape: TextShap
             const layout = shape.getLayout();
             const fontsize = shape.text.attr?.fontSize ?? Text.DefaultFontSize;
             // expandTo(api as Api, page, shape, shape.frame.width, Math.max(fontsize, layout.contentHeight));
-            api.shapeModifyWH(page, shape, shape.frame.width, Math.max(fontsize, layout.contentHeight));
+            api.shapeModifyWH(page, _shape, shape.frame.width, Math.max(fontsize, layout.contentHeight));
             break;
         }
         case TextBehaviour.Flexible: {
             const layout = shape.getLayout();
             const fontsize = shape.text.attr?.fontSize ?? Text.DefaultFontSize;
-            api.shapeModifyWH(page, shape, Math.max(fontsize, layout.contentWidth), Math.max(fontsize, layout.contentHeight));
+            api.shapeModifyWH(page, _shape, Math.max(fontsize, layout.contentWidth), Math.max(fontsize, layout.contentHeight));
             // expandTo(api as Api, page, shape, Math.max(fontsize, layout.contentWidth), Math.max(fontsize, layout.contentHeight));
             break;
         }

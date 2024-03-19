@@ -15,7 +15,7 @@ import {
 } from "../../data/shape";
 import { updateShapesFrame } from "./utils";
 import { Border, BorderPosition, BorderStyle, Fill, Gradient, MarkerType, Shadow } from "../../data/style";
-import { BulletNumbers, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
+import { BulletNumbers, SpanAttr, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
 import { RectShape, SymbolRefShape, TableCell, TableCellType, TableShape } from "../../data/classes";
 import {
     BoolOp, BulletNumbersBehavior, BulletNumbersType, ExportFileFormat, OverrideType, Point2D,
@@ -31,11 +31,11 @@ import { LocalCmd as Cmd, CmdMergeType, ISave4Restore, LocalCmd, SelectionState 
 import { IdOpRecord } from "../../coop/client/crdt";
 import { Repository } from "../../data/transact";
 import { SNumber } from "../../coop/client/snumber";
-import { ArrayOpSelection } from "../../coop/client/arrayop";
+import { ShapeView, TableCellView, TextShapeView } from "../../dataview";
 import { deleteSegmentAt } from "../basicapi";
 
 // 要支持variable的修改
-export type TextShapeLike = Shape & { text: Text }
+export type TextShapeLike = TableCellView | TextShapeView
 
 function varParent(_var: Variable) {
     let p = _var.parent;
@@ -43,7 +43,8 @@ function varParent(_var: Variable) {
     return p;
 }
 
-function checkShapeAtPage(page: Page, obj: Shape | Variable) {
+function checkShapeAtPage(page: Page, obj: Shape | Variable | ShapeView) {
+    if (obj instanceof ShapeView) obj = obj.data;
     obj = obj instanceof Shape ? (obj instanceof TableCell ? obj.parent as TableShape : obj) : varParent(obj) as Shape;
     const shapeid = obj.id;
     if (!page.getShape(shapeid)) throw new Error("shape not inside page")
@@ -169,6 +170,8 @@ export class Api {
         if (!this.cmd) throw new Error("need start first");
         if (Array.isArray(op)) this.cmd.ops.push(...op);
         else if (op) this.cmd.ops.push(op);
+        else return false;
+        return true;
     }
 
     pageInsert(document: Document, page: Page, index: number) {
@@ -712,37 +715,37 @@ export class Api {
     // text
     insertSimpleText(page: Page, shape: TextShapeLike | Variable, idx: number, text: string, attr?: SpanAttr) {
         checkShapeAtPage(page, shape);
-        const _text = shape instanceof Shape ? shape.text : shape.value;
+        const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
         this.addOp(basicapi.insertSimpleText(shape, _text, text, idx, { attr }));
     }
     insertComplexText(page: Page, shape: TextShapeLike | Variable, idx: number, text: Text) {
         checkShapeAtPage(page, shape);
-        const _text = shape instanceof Shape ? shape.text : shape.value;
+        const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
         this.addOp(basicapi.insertComplexText(shape, _text, text, idx));
     }
     deleteText(page: Page, shape: TextShapeLike | Variable, idx: number, len: number) {
         checkShapeAtPage(page, shape);
-        const _text = shape instanceof Shape ? shape.text : shape.value;
+        const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
         this.addOp(basicapi.deleteText(shape, _text, idx, len));
     }
     textModifyColor(page: Page, shape: TextShapeLike | Variable, idx: number, len: number, color: Color | undefined) {
         checkShapeAtPage(page, shape);
-        const _text = shape instanceof Shape ? shape.text : shape.value;
+        const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
         this.addOp(basicapi.textModifyColor(shape, _text, idx, len, color));
     }
     textModifyFontName(page: Page, shape: TextShapeLike | Variable, idx: number, len: number, fontname: string) {
         checkShapeAtPage(page, shape);
-        const _text = shape instanceof Shape ? shape.text : shape.value;
+        const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
         this.addOp(basicapi.textModifyFontName(shape, _text, idx, len, fontname));
     }
     textModifyFontSize(page: Page, shape: TextShapeLike | Variable, idx: number, len: number, fontsize: number) {
         checkShapeAtPage(page, shape);
-        const _text = shape instanceof Shape ? shape.text : shape.value;
+        const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
         this.addOp(basicapi.textModifyFontSize(shape, _text, idx, len, fontsize));
     }
@@ -754,51 +757,51 @@ export class Api {
     }
     shapeModifyTextVerAlign(page: Page, shape: TextShapeLike | Variable, verAlign: TextVerAlign) {
         checkShapeAtPage(page, shape);
-        const _text = shape instanceof Shape ? shape.text : shape.value;
+        const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
         this.addOp(basicapi.shapeModifyTextVerAlign(_text, verAlign));
     }
 
     textModifyHighlightColor(page: Page, shape: TextShapeLike | Variable, idx: number, len: number, color: Color | undefined) {
         checkShapeAtPage(page, shape);
-        const _text = shape instanceof Shape ? shape.text : shape.value;
+        const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
         this.addOp(basicapi.textModifyHighlightColor(shape, _text, idx, len, color));
     }
     textModifyUnderline(page: Page, shape: TextShapeLike | Variable, underline: UnderlineType | undefined, index: number, len: number) {
         checkShapeAtPage(page, shape);
-        const _text = shape instanceof Shape ? shape.text : shape.value;
+        const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
         this.addOp(basicapi.textModifyUnderline(shape, _text, underline, index, len));
     }
     textModifyStrikethrough(page: Page, shape: TextShapeLike | Variable, strikethrough: StrikethroughType | undefined, index: number, len: number) {
         checkShapeAtPage(page, shape);
-        const _text = shape instanceof Shape ? shape.text : shape.value;
+        const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
         this.addOp(basicapi.textModifyStrikethrough(shape, _text, strikethrough, index, len));
     }
     textModifyBold(page: Page, shape: TextShapeLike | Variable, bold: number, index: number, len: number) {
         checkShapeAtPage(page, shape);
-        const _text = shape instanceof Shape ? shape.text : shape.value;
+        const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
         this.addOp(basicapi.textModifyBold(shape, _text, bold, index, len));
     }
     textModifyItalic(page: Page, shape: TextShapeLike | Variable, italic: boolean, index: number, len: number) {
         checkShapeAtPage(page, shape);
-        const _text = shape instanceof Shape ? shape.text : shape.value;
+        const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
         this.addOp(basicapi.textModifyItalic(shape, _text, italic, index, len));
     }
     textModifyFillType(page: Page, shape: TextShapeLike | Variable, fillType: FillType, index: number, len: number) {
         checkShapeAtPage(page, shape);
-        const _text = shape instanceof Shape ? shape.text : shape.value;
+        const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
         this.addOp(basicapi.textModifyFillType(shape, _text, index, len, fillType));
     }
 
     private _textModifyRemoveBulletNumbers(page: Page, shape: TextShapeLike | Variable, index: number, len: number) {
         const removeIndexs: number[] = [];
-        const _text = shape instanceof Shape ? shape.text : shape.value;
+        const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
         _travelTextPara(_text.paras, index, len, (paraArray, paraIndex, para, _index, length) => {
             index -= _index;
@@ -816,7 +819,7 @@ export class Api {
 
     private _textModifySetBulletNumbers(page: Page, shape: TextShapeLike | Variable, type: BulletNumbersType, index: number, len: number) {
 
-        const _text = shape instanceof Shape ? shape.text : shape.value;
+        const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
         this.addOp(basicapi.textModifyBulletNumbersType(shape, _text, type, index, len))
 
@@ -834,7 +837,7 @@ export class Api {
         });
 
         for (let i = 0, len = insertIndexs.length; i < len; i++) {
-            const attr = new SpanAttrSetter();
+            const attr = new SpanAttr();
             attr.placeholder = true;
             attr.bulletNumbers = new BulletNumbers(type);
             this.addOp(basicapi.insertSimpleText(shape, _text, '*', insertIndexs[i] + i, { attr }))
@@ -844,7 +847,7 @@ export class Api {
 
     textModifyBulletNumbers(page: Page, shape: TextShapeLike | Variable, type: BulletNumbersType | undefined, index: number, len: number) {
         checkShapeAtPage(page, shape);
-        const _text = shape instanceof Shape ? shape.text : shape.value;
+        const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
         const alignRange = _text.alignParaRange(index, len);
         index = alignRange.index;
@@ -860,13 +863,13 @@ export class Api {
 
     textModifyBulletNumbersStart(page: Page, shape: TextShapeLike | Variable, start: number, index: number, len: number) {
         checkShapeAtPage(page, shape);
-        const _text = shape instanceof Shape ? shape.text : shape.value;
+        const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
         this.addOp(basicapi.textModifyBulletNumbersStart(shape, _text, start, index, len))
     }
     textModifyBulletNumbersInherit(page: Page, shape: TextShapeLike | Variable, inherit: boolean, index: number, len: number) {
         checkShapeAtPage(page, shape);
-        const _text = shape instanceof Shape ? shape.text : shape.value;
+        const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
         const behavior = inherit ? BulletNumbersBehavior.Inherit : BulletNumbersBehavior.Renew;
         this.addOp(basicapi.textModifyBulletNumbersBehavior(shape, _text, behavior, index, len))
@@ -874,7 +877,7 @@ export class Api {
 
     textModifyHorAlign(page: Page, shape: TextShapeLike | Variable, horAlign: TextHorAlign, index: number, len: number) {
         checkShapeAtPage(page, shape);
-        const _text = shape instanceof Shape ? shape.text : shape.value;
+        const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
         // fix index
         const alignRange = _text.alignParaRange(index, len);
@@ -885,13 +888,13 @@ export class Api {
 
     textModifyParaIndent(page: Page, shape: TextShapeLike | Variable, indent: number | undefined, index: number, len: number) {
         checkShapeAtPage(page, shape);
-        const _text = shape instanceof Shape ? shape.text : shape.value;
+        const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
         this.addOp(basicapi.textModifyParaIndent(shape, _text, indent, index, len));
     }
     textModifyMinLineHeight(page: Page, shape: TextShapeLike | Variable, minLineheight: number, index: number, len: number) {
         checkShapeAtPage(page, shape);
-        const _text = shape instanceof Shape ? shape.text : shape.value;
+        const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
         const alignRange = _text.alignParaRange(index, len);
         index = alignRange.index;
@@ -900,7 +903,7 @@ export class Api {
     }
     textModifyMaxLineHeight(page: Page, shape: TextShapeLike | Variable, maxLineheight: number, index: number, len: number) {
         checkShapeAtPage(page, shape);
-        const _text = shape instanceof Shape ? shape.text : shape.value;
+        const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
         const alignRange = _text.alignParaRange(index, len);
         index = alignRange.index;
@@ -909,13 +912,13 @@ export class Api {
     }
     textModifyKerning(page: Page, shape: TextShapeLike | Variable, kerning: number, index: number, len: number) {
         checkShapeAtPage(page, shape);
-        const _text = shape instanceof Shape ? shape.text : shape.value;
+        const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
         this.addOp(basicapi.textModifySpanKerning(shape, _text, kerning, index, len));
     }
     textModifyParaSpacing(page: Page, shape: TextShapeLike | Variable, paraSpacing: number, index: number, len: number) {
         checkShapeAtPage(page, shape);
-        const _text = shape instanceof Shape ? shape.text : shape.value;
+        const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
 
         const alignRange = _text.alignParaRange(index, len);
@@ -925,7 +928,7 @@ export class Api {
     }
     textModifyTransform(page: Page, shape: TextShapeLike | Variable, transform: TextTransformType | undefined, index: number, len: number) {
         checkShapeAtPage(page, shape);
-        const _text = shape instanceof Shape ? shape.text : shape.value;
+        const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
 
         if (transform === TextTransformType.UppercaseFirst) {
@@ -937,7 +940,7 @@ export class Api {
     }
     setTextGradient(page: Page, shape: TextShapeLike | Variable, gradient: Gradient | undefined, index: number, len: number) {
         checkShapeAtPage(page, shape);
-        const _text = shape instanceof Shape ? shape.text : shape.value;
+        const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
         this.addOp(basicapi.textModifyGradient(shape, _text, index, len, gradient));
     }
@@ -945,17 +948,17 @@ export class Api {
     // table
     tableInitCell(page: Page, table: TableShape, rowIdx: number, colIdx: number) {
         checkShapeAtPage(page, table);
-        this.addOp(basicapi.tableInitCell(table, rowIdx, colIdx));
+        return this.addOp(basicapi.tableInitCell(table, rowIdx, colIdx));
     }
 
-    tableSetCellContentType(page: Page, table: TableShape, cell: TableCell, contentType: TableCellType | undefined) {
+    tableSetCellContentType(page: Page, table: TableShape, cell: TableCellView, contentType: TableCellType | undefined) {
         checkShapeAtPage(page, table);
         // this.addOp(basicapi.tableInitCell(table, rowIdx, colIdx));
         // const cell = table.getCellAt(rowIdx, colIdx);
-        this.addOp(basicapi.tableSetCellContentType(cell, contentType));
-        if (contentType !== TableCellType.Text && cell.text) {
-            const len = cell.text.length;
-            if (len > 1) this.addOp(basicapi.deleteText(cell, cell.text, 0, len - 1));
+        this.addOp(basicapi.tableSetCellContentType(cell.data, contentType));
+        if (contentType !== TableCellType.Text && cell.data.text) {
+            const len = cell.data.text.length;
+            if (len > 1) this.addOp(basicapi.deleteText(cell, cell.data.text, 0, len - 1));
         }
     }
 
@@ -966,13 +969,13 @@ export class Api {
     //     this.addOp(basicapi.tableSetCellContentText(cell, text));
     // }
 
-    tableSetCellContentImage(page: Page, table: TableShape, cell: TableCell, ref: string | undefined) {
+    tableSetCellContentImage(page: Page, table: TableShape, cell: TableCellView, ref: string | undefined) {
         checkShapeAtPage(page, table);
         // this.addOp(basicapi.tableInitCell(table, rowIdx, colIdx));
         // const cell = table.getCellAt(rowIdx, colIdx)!;
         const origin = cell.imageRef;
         if (origin !== ref) {
-            this.addOp(basicapi.tableSetCellContentImage(cell, ref));
+            this.addOp(basicapi.tableSetCellContentImage(cell.data, ref));
         }
     }
 
@@ -1008,13 +1011,13 @@ export class Api {
         // todo 删除对应的单元格
     }
 
-    tableModifyCellSpan(page: Page, table: TableShape, cell: TableCell, rowSpan: number, colSpan: number) {
+    tableModifyCellSpan(page: Page, table: TableShape, cell: TableCellView, rowSpan: number, colSpan: number) {
         checkShapeAtPage(page, table);
         // this.addOp(basicapi.tableInitCell(table, rowIdx, colIdx));
         // const cell = table.getCellAt(rowIdx, colIdx)!;
-        const origin = { rowSpan: cell?.rowSpan, colSpan: cell?.colSpan };
+        const origin = { rowSpan: cell.rowSpan, colSpan: cell.colSpan };
         if ((origin.rowSpan ?? 1) !== rowSpan || (origin.colSpan ?? 1) !== colSpan) {
-            this.addOp(basicapi.tableModifyCellSpan(cell, rowSpan, colSpan));
+            this.addOp(basicapi.tableModifyCellSpan(cell.data, rowSpan, colSpan));
         }
     }
 
