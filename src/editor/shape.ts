@@ -37,7 +37,7 @@ import { newText2 } from "./creator";
 import { _clip, _typing_modify, get_points_for_init, modify_points_xy, update_frame_by_points, update_path_shape_frame } from "./utils/path";
 import { Color } from "../data/color";
 import { adapt_for_artboard } from "./utils/common";
-import { ShapeView, SymbolView, adapt2Shape, findOverride } from "../dataview";
+import { GroupShapeView, ShapeView, SymbolView, TextShapeView, adapt2Shape, findOverride } from "../dataview";
 import { is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union, modify_variable, modify_variable_with_api, override_variable, shape4border, shape4contextSettings, shape4exportOptions, shape4fill, shape4shadow } from "./symbol";
 
 export class ShapeEditor {
@@ -1300,11 +1300,11 @@ export class ShapeEditor {
         if (!_var) return;
 
         // 遍历所有子对象
-        const traval = (g: GroupShape, f: (s: Shape) => void) => {
+        const traval = (g: ShapeView, f: (s: ShapeView) => void) => {
             const childs = g.childs;
             childs.forEach((s) => {
                 f(s);
-                if (s instanceof GroupShape) traval(s, f);
+                if (s.childs && s.childs.length > 0) traval(s, f);
             })
         }
 
@@ -1313,17 +1313,17 @@ export class ShapeEditor {
             // 将_var的值保存到对象中
             if (this.shape instanceof SymbolShape) switch (_var.type) {
                 case VariableType.Visible:
-                    traval(this.shape, (s: Shape) => {
+                    traval(this.view, (s: ShapeView) => {
                         const bindid = s.varbinds?.get(OverrideType.Visible);
                         if (bindid && bindid === _var.id && (!!s.isVisible !== !!_var.value)) {
-                            api.shapeModifyVisible(this.__page, s, !s.isVisible);
+                            api.shapeModifyVisible(this.__page, s.data, !s.isVisible);
                         }
                     });
                     break;
                 case VariableType.Text:
-                    traval(this.shape, (s: Shape) => {
+                    traval(this.view, (s: ShapeView) => {
                         const bindid = s.varbinds?.get(OverrideType.Text);
-                        if (bindid && bindid === _var.id && s instanceof TextShape) {
+                        if (bindid && bindid === _var.id && s instanceof TextShapeView) {
                             api.deleteText(this.__page, s, 0, s.text.length - 1);
                             if (typeof _var.value === 'string') {
                                 api.insertSimpleText(this.__page, s, 0, _var.value);
