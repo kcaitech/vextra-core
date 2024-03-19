@@ -20,13 +20,14 @@ import {
     ParaAttr,
     Span,
     ShapeType,
-    Variable, Document, TableShape, FillType, Gradient} from "../data/classes";
+    Variable, Document, TableShape, FillType, Gradient
+} from "../data/classes";
 import { CoopRepository } from "./coop/cooprepo";
 import { Api } from "./coop/recordapi";
 import { ShapeEditor } from "./shape";
 import { fixTableShapeFrameByLayout, fixTextShapeFrameByLayout } from "./utils/other";
 import { BasicArray } from "../data/basic";
-import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "../data/textutils";
+import { mergeParaAttr, mergeSpanAttr, mergeTextAttr, newText } from "../data/textutils";
 import { importGradient, importText } from "../data/baseimport";
 import * as basicapi from "./basicapi"
 import { AsyncGradientEditor, Status } from "./controller";
@@ -202,13 +203,29 @@ export class TextShapeEditor extends ShapeEditor {
         const api = this.__repo.start("insertText");
         try {
             const shape = this.shape4edit(api);
-            // if (this.__textAttr) {
-            //     const attr1 = this.__textAttr;
-            //     if (attr) mergeSpanAttr(attr1, attr);
-            //     attr = attr1;
-            // }
-            if (del > 0) api.deleteText(this.__page, shape, index, del);
-            api.insertSimpleText(this.__page, shape, index, text, attr);
+            if (del > 0 && text.length === 0) {
+                api.deleteText(this.__page, shape, index, del);
+            }
+            else if (del > 0) {
+                const _text = shape instanceof Variable ? shape.value as Text : shape.text;
+                const span = _text.spanAt(index + del - 1);
+                const para = _text.paraAt(index + del - 1);
+
+                // 构造text
+                const text1 = new Text(new BasicArray());
+                const para1 = new Para(text, new BasicArray());
+                if (para?.para) mergeParaAttr(para1, para.para);
+                text1.paras.push(para1);
+                const span1 = new Span(para1.length);
+                if (span) mergeSpanAttr(span1, span);
+                if (attr) mergeSpanAttr(span1, attr);
+                para1.spans.push(span1);
+
+                api.deleteText(this.__page, shape, index, del);
+                api.insertComplexText(this.__page, shape, index, text1)
+            } else {
+                api.insertSimpleText(this.__page, shape, index, text, attr);
+            }
             this.fixFrameByLayout(api);
             this.updateName(api);
             this.__repo.commit(CmdMergeType.TextInsert);
@@ -405,9 +422,38 @@ export class TextShapeEditor extends ShapeEditor {
         const api = this.__repo.start("composingInput");
         try {
             const shape = this.shape4edit(api);
-            if (this.__composingDel > 0) api.deleteText(this.__page, shape, this.__composingIndex, this.__composingDel);
-            if (text.length > 0) api.insertSimpleText(this.__page, shape, this.__composingIndex, text, this.__composingAttr);
-            else (shape instanceof Shape ? shape.text : shape.value as Text).composingInputUpdate(this.__composingIndex);
+            if (this.__composingDel > 0 && text.length == 0) {
+                api.deleteText(this.__page, shape, this.__composingIndex, this.__composingDel);
+                (shape instanceof Shape ? shape.text : shape.value as Text).composingInputUpdate(this.__composingIndex);
+            }
+            else if (this.__composingDel > 0) {
+                const index = this.__composingIndex;
+                const del = this.__composingDel;
+                const attr = this.__composingAttr;
+
+                const _text = shape instanceof Variable ? shape.value as Text : shape.text;
+                const span = _text.spanAt(index + del - 1);
+                const para = _text.paraAt(index + del - 1);
+
+                // 构造text
+                const text1 = new Text(new BasicArray());
+                const para1 = new Para(text, new BasicArray());
+                if (para?.para) mergeParaAttr(para1, para.para);
+                text1.paras.push(para1);
+                const span1 = new Span(para1.length);
+                if (span) mergeSpanAttr(span1, span);
+                if (attr) mergeSpanAttr(span1, attr);
+                para1.spans.push(span1);
+
+                api.deleteText(this.__page, shape, index, del);
+                api.insertComplexText(this.__page, shape, index, text1)
+            }
+            else if (text.length > 0) {
+                api.insertSimpleText(this.__page, shape, this.__composingIndex, text, this.__composingAttr);
+            }
+            else {
+                (shape instanceof Shape ? shape.text : shape.value as Text).composingInputUpdate(this.__composingIndex);
+            }
             this.fixFrameByLayout(api);
             this.__repo.transactCtx.fireNotify(); // 会导致不断排版绘制
             return true;
