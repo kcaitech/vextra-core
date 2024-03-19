@@ -4,7 +4,7 @@ import { EL, elh } from "./el";
 import { ShapeView, isDiffShapeFrame } from "./shape";
 import { renderText2Path, renderTextLayout } from "../render/text";
 import { DViewCtx, PropsType } from "./viewctx";
-import { CursorLocate, TextLocate, locateCursor, locateRange, locateText } from "../data/textlocate";
+import { CursorLocate, TextLocate, locateCursor, locateNextCursor, locatePrevCursor, locateRange, locateText } from "../data/textlocate";
 import { newTableCellText } from "../data/textutils";
 import { objectId } from "../basic/objectid";
 import { TableView } from "./table";
@@ -141,6 +141,14 @@ export class TableCellView extends ShapeView {
 
     locateCursor(index: number, cursorAtBefore: boolean): CursorLocate | undefined {
         return locateCursor(this.getLayout(), index, cursorAtBefore);
+    }
+
+    locatePrevCursor(index: number): number {
+        return locatePrevCursor(this.getLayout(), index);
+    }
+
+    locateNextCursor(index: number): number {
+        return locateNextCursor(this.getLayout(), index);
     }
 
     getTextPath() {

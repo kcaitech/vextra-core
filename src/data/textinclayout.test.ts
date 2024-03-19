@@ -13,7 +13,7 @@ const m: TextMetrics = {
     width: 1,
 }
 
-const textMeasure = (code: number, font: string): TextMetrics => {
+const textMeasure = (code: string, font: string): TextMetrics => {
     return m;
 }
 

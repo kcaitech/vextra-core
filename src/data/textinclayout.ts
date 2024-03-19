@@ -30,9 +30,9 @@ export function layoutAtInsert(text: Text,
     for (let len2 = parasLayout.length; i < parascount && i < len2; i++) {
         const para = paras[i];
         const paraLayout = parasLayout[i];
-        if (index < paraLayout.graphCount) break;
-        if (para.length !== paraLayout.graphCount) throw new Error("layout and data Not match 1")
-        index -= paraLayout.graphCount;
+        if (index < paraLayout.charCount) break;
+        if (para.length !== paraLayout.charCount) throw new Error("layout and data Not match 1") // 这是正常的，比如一个emoji占用两个字符
+        index -= paraLayout.charCount;
         if (i > 0) {
             const prePara = paras[i - 1];
             const paraSpacing = prePara.attr?.paraSpacing || 0;
@@ -67,7 +67,7 @@ export function layoutAtInsert(text: Text,
     for (let len2 = parasLayout.length; i < parascount && i < len2; i++) {
         const para = paras[i];
         const paraLayout = parasLayout[i];
-        if (para.length !== paraLayout.graphCount) throw new Error("layout and data Not match 2")
+        if (para.length !== paraLayout.charCount) throw new Error("layout and data Not match 2")
         if (i > 0) {
             const prePara = paras[i - 1];
             const paraSpacing = prePara.attr?.paraSpacing || 0;
@@ -140,9 +140,9 @@ export function layoutAtDelete(text: Text,
     for (let len2 = parasLayout.length; i < parascount && i < len2; i++) {
         const para = paras[i];
         const paraLayout = parasLayout[i];
-        if (index < paraLayout.graphCount) break;
-        if (para.length !== paraLayout.graphCount) throw new Error("layout and data Not match 4")
-        index -= paraLayout.graphCount;
+        if (index < paraLayout.charCount) break;
+        if (para.length !== paraLayout.charCount) throw new Error("layout and data Not match 4")
+        index -= paraLayout.charCount;
         if (i > 0) {
             const prePara = paras[i - 1];
             const paraSpacing = prePara.attr?.paraSpacing || 0;
@@ -177,7 +177,7 @@ export function layoutAtDelete(text: Text,
     for (let len2 = parasLayout.length; i < parascount && i < len2; i++) {
         const para = paras[i];
         const paraLayout = parasLayout[i];
-        if (para.length !== paraLayout.graphCount) throw new Error("layout and data Not match 5")
+        if (para.length !== paraLayout.charCount) throw new Error("layout and data Not match 5")
         if (i > 0) {
             const prePara = paras[i - 1];
             const paraSpacing = prePara.attr?.paraSpacing || 0;
@@ -250,9 +250,9 @@ export function layoutAtFormat(text: Text,
     for (let len2 = parasLayout.length; i < parascount && i < len2; i++) {
         const para = paras[i];
         const paraLayout = parasLayout[i];
-        if (index < paraLayout.graphCount) break;
-        if (para.length !== paraLayout.graphCount) throw new Error("layout and data Not match 7")
-        index -= paraLayout.graphCount;
+        if (index < paraLayout.charCount) break;
+        if (para.length !== paraLayout.charCount) throw new Error("layout and data Not match 7")
+        index -= paraLayout.charCount;
         if (i > 0) {
             const prePara = paras[i - 1];
             const paraSpacing = prePara.attr?.paraSpacing || 0;
@@ -285,7 +285,7 @@ export function layoutAtFormat(text: Text,
     for (let len2 = parasLayout.length; i < parascount && i < len2; i++) {
         const para = paras[i];
         const paraLayout = parasLayout[i];
-        if (para.length !== paraLayout.graphCount) throw new Error("layout and data Not match 8")
+        if (para.length !== paraLayout.charCount) throw new Error("layout and data Not match 8")
         if (i > 0) {
             const prePara = paras[i - 1];
             const paraSpacing = prePara.attr?.paraSpacing || 0;

@@ -2,7 +2,7 @@ import { gradient_equals } from "../io/cilpboard";
 import { importParaAttr, importTextAttr } from "./baseimport";
 import { BasicArray } from "./basic";
 import { BulletNumbers, Color, Gradient } from "./classes";
-import { Para, SpanAttr, ParaAttr, Text, TextAttr, SpanAttrSetter, ParaAttrSetter, Span, TextBehaviour } from "./text";
+import { Para, SpanAttr, ParaAttr, Text, TextAttr, Span, TextBehaviour, UnderlineType, StrikethroughType } from "./text";
 
 export function isDiffSpanAttr(span: SpanAttr, attr: SpanAttr): boolean {
     if (attr.color) {
@@ -79,20 +79,17 @@ export function isDiffSpanAttr(span: SpanAttr, attr: SpanAttr): boolean {
 }
 
 export function mergeSpanAttr(span: SpanAttr, attr: SpanAttr, isSetting?: boolean) {
-    const attrIsSetter = attr instanceof SpanAttrSetter || attr instanceof ParaAttrSetter;
-    _mergeSpanAttr(span, attr, attrIsSetter, isSetting);
+    // const attrIsSetter = attr instanceof SpanAttrSetter || attr instanceof ParaAttrSetter;
+    _mergeSpanAttr(span, attr, isSetting);
 }
 
-function _mergeSpanAttr(span: SpanAttr, attr: SpanAttr, attrIsSetter: boolean, isSetting?: boolean) {
+function _mergeSpanAttr(span: SpanAttr, attr: SpanAttr, isSetting?: boolean) {
     let changed = false;
     if (attr.color) {
         if (!span.color || !(attr.color.equals(span.color))) {
             span.color = new Color(attr.color.alpha, attr.color.red, attr.color.green, attr.color.blue)
             changed = true;
         }
-    } else if (attrIsSetter && (attr as SpanAttrSetter).colorIsSet && span.color) {
-        span.color = undefined;
-        changed = true;
     }
 
     if (attr.highlight) {
@@ -100,9 +97,6 @@ function _mergeSpanAttr(span: SpanAttr, attr: SpanAttr, attrIsSetter: boolean, i
             span.highlight = new Color(attr.highlight.alpha, attr.highlight.red, attr.highlight.green, attr.highlight.blue)
             changed = true;
         }
-    } else if (attrIsSetter && (attr as SpanAttrSetter).highlightIsSet && span.highlight) {
-        span.highlight = undefined;
-        changed = true;
     }
 
     if (attr.fontName) {
@@ -110,9 +104,6 @@ function _mergeSpanAttr(span: SpanAttr, attr: SpanAttr, attrIsSetter: boolean, i
             span.fontName = attr.fontName;
             changed = true;
         }
-    } else if (attrIsSetter && (attr as SpanAttrSetter).fontNameIsSet && span.fontName) {
-        span.fontName = undefined;
-        changed = true;
     }
 
     if (attr.fontSize) {
@@ -120,50 +111,37 @@ function _mergeSpanAttr(span: SpanAttr, attr: SpanAttr, attrIsSetter: boolean, i
             span.fontSize = attr.fontSize;
             changed = true;
         }
-    } else if (attrIsSetter && (attr as SpanAttrSetter).fontSizeIsSet && span.fontSize) {
-        span.fontSize = undefined;
-        changed = true;
     }
 
     // bold
-    if (attr.bold) {
+    if (attr.bold !== undefined) {
         if (!span.bold || span.bold !== attr.bold) {
             span.bold = attr.bold;
             changed = true;
         }
-    } else if (attrIsSetter && (attr as SpanAttrSetter).boldIsSet && span.bold) {
-        span.bold = undefined;
-        changed = true;
     }
     // italic
-    if (attr.italic) {
+    if (attr.italic !== undefined) {
         if (!!span.italic !== attr.italic) {
-            span.italic = attr.italic;
+            span.italic = attr.italic ? true : undefined;
             changed = true;
         }
-    } else if (attrIsSetter && (attr as SpanAttrSetter).italicIsSet && span.italic) {
-        span.italic = undefined;
-        changed = true;
     }
     // underline
     if (attr.underline) {
-        if (!span.underline || attr.underline !== span.underline) {
-            span.underline = attr.underline;
+        const underline = attr.underline === UnderlineType.None ? undefined : attr.underline;
+        if (underline !== span.underline) {
+            span.underline = underline;
             changed = true;
         }
-    } else if (attrIsSetter && (attr as SpanAttrSetter).underlineIsSet && span.underline) {
-        span.underline = undefined;
-        changed = true;
     }
     // strikethrough
     if (attr.strikethrough) {
-        if (!span.strikethrough || attr.strikethrough !== span.strikethrough) {
-            span.strikethrough = attr.strikethrough;
+        const strikethrough = attr.strikethrough === StrikethroughType.None ? undefined : attr.strikethrough;
+        if (strikethrough !== span.strikethrough) {
+            span.strikethrough = attr.strikethrough === StrikethroughType.None ? undefined : attr.strikethrough;
             changed = true;
         }
-    } else if (attrIsSetter && (attr as SpanAttrSetter).strikethroughIsSet && span.strikethrough) {
-        span.strikethrough = undefined;
-        changed = true;
     }
 
     if (attr.kerning != undefined) {
@@ -171,9 +149,6 @@ function _mergeSpanAttr(span: SpanAttr, attr: SpanAttr, attrIsSetter: boolean, i
             span.kerning = attr.kerning;
             changed = true;
         }
-    } else if (attrIsSetter && (attr as ParaAttrSetter).kerningIsSet && span.kerning) {
-        span.kerning = undefined;
-        changed = true;
     }
 
     if (attr.transform != undefined) {
@@ -181,12 +156,9 @@ function _mergeSpanAttr(span: SpanAttr, attr: SpanAttr, attrIsSetter: boolean, i
             span.transform = attr.transform;
             changed = true;
         }
-    } else if (attrIsSetter && (attr as ParaAttrSetter).transformIsSet && span.transform) {
-        span.transform = undefined;
-        changed = true;
     }
 
-    if (attr.placeholder && (attrIsSetter || isSetting)) { // placeholder属性不拷贝，仅在首次插入时设置
+    if (attr.placeholder && (isSetting)) { // placeholder属性不拷贝，仅在首次插入时设置
         if (!span.placeholder) {
             span.placeholder = true;
             changed = true;
@@ -216,9 +188,6 @@ function _mergeSpanAttr(span: SpanAttr, attr: SpanAttr, attrIsSetter: boolean, i
             span.fillType = attr.fillType;
             changed = true;
         }
-    } else if (attrIsSetter && (attr as SpanAttrSetter).fillTypeIsSet && span.fillType) {
-        span.fillType = undefined;
-        changed = true;
     }
 
     if (attr.gradient) {
@@ -226,9 +195,6 @@ function _mergeSpanAttr(span: SpanAttr, attr: SpanAttr, attrIsSetter: boolean, i
             span.gradient = new Gradient(attr.gradient.from, attr.gradient.to, attr.gradient.gradientType, attr.gradient.stops, attr.gradient.elipseLength, attr.gradient.gradientOpacity)
             changed = true;
         }
-    } else if (attrIsSetter && (attr as SpanAttrSetter).gradientIsSet && span.gradient) {
-        span.gradient = undefined;
-        changed = true;
     }
 
     return changed;
@@ -252,18 +218,15 @@ export function mergeParaAttr(para: Para | ParaAttr, attr: Para | ParaAttr): boo
 }
 
 function _mergeParaAttr(paraAttr: ParaAttr, attr: ParaAttr): boolean {
-    const attrIsSetter = attr instanceof ParaAttrSetter;
+    // const attrIsSetter = attr instanceof ParaAttrSetter;
     let changed = false;
-    changed = _mergeSpanAttr(paraAttr, attr, attrIsSetter);
+    changed = _mergeSpanAttr(paraAttr, attr);
 
     if (attr.minimumLineHeight != undefined) {
         if (paraAttr.minimumLineHeight == undefined || paraAttr.minimumLineHeight !== attr.minimumLineHeight) {
             paraAttr.minimumLineHeight = attr.minimumLineHeight;
             changed = true;
         }
-    } else if (attrIsSetter && (attr as ParaAttrSetter).minimumLineHeightIsSet && paraAttr.minimumLineHeight) {
-        paraAttr.minimumLineHeight = undefined;
-        changed = true;
     }
 
     if (attr.maximumLineHeight != undefined) {
@@ -271,9 +234,6 @@ function _mergeParaAttr(paraAttr: ParaAttr, attr: ParaAttr): boolean {
             paraAttr.maximumLineHeight = attr.maximumLineHeight;
             changed = true;
         }
-    } else if (attrIsSetter && (attr as ParaAttrSetter).maximumLineHeightIsSet && paraAttr.maximumLineHeight) {
-        paraAttr.maximumLineHeight = undefined;
-        changed = true;
     }
 
     if (attr.paraSpacing != undefined) {
@@ -281,9 +241,6 @@ function _mergeParaAttr(paraAttr: ParaAttr, attr: ParaAttr): boolean {
             paraAttr.paraSpacing = attr.paraSpacing;
             changed = true;
         }
-    } else if (attrIsSetter && (attr as ParaAttrSetter).paraSpacingIsSet && paraAttr.paraSpacing) {
-        paraAttr.paraSpacing = undefined;
-        changed = true;
     }
 
     // alignment
@@ -292,9 +249,13 @@ function _mergeParaAttr(paraAttr: ParaAttr, attr: ParaAttr): boolean {
             paraAttr.alignment = attr.alignment;
             changed = true;
         }
-    } else if (attrIsSetter && (attr as ParaAttrSetter).alignmentIsSet && paraAttr.alignment) {
-        paraAttr.alignment = undefined;
-        changed = true;
+    }
+
+    if (attr.indent != undefined) {
+        if (paraAttr.indent == undefined || paraAttr.indent !== attr.indent) {
+            paraAttr.indent = attr.indent;
+            changed = true;
+        }
     }
     return changed;
 }

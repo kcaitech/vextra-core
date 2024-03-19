@@ -78,13 +78,6 @@ export class SpanAttr extends Basic implements classes.SpanAttr {
     ) {
         super()
     }
-    clone(newSpanAttr?: SpanAttr): SpanAttr {
-        if (!newSpanAttr) newSpanAttr = new SpanAttr();
-        newSpanAttr.fontName = this.fontName;
-        newSpanAttr.fontSize = this.fontSize;
-        if (this.color) newSpanAttr.color = new Color(this.color.alpha, this.color.red, this.color.green, this.color.blue);
-        return newSpanAttr;
-    }
 }
 
 export class ParaAttr extends SpanAttr implements classes.ParaAttr {
@@ -135,41 +128,6 @@ export class AttrGetter extends TextAttr {
     gradientIsMulti: boolean = false;
 }
 
-export class SpanAttrSetter extends SpanAttr {
-    fontNameIsSet: boolean = false;
-    fontSizeIsSet: boolean = false;
-    colorIsSet: boolean = false;
-    highlightIsSet: boolean = false;
-    boldIsSet: boolean = false;
-    italicIsSet: boolean = false;
-    underlineIsSet: boolean = false;
-    strikethroughIsSet: boolean = false;
-    kerningIsSet: boolean = false;
-    transformIsSet: boolean = false;
-    fillTypeIsSet: boolean = false;
-    gradientIsSet: boolean = false;
-}
-
-export class ParaAttrSetter extends ParaAttr {
-    fontNameIsSet: boolean = false;
-    fontSizeIsSet: boolean = false;
-    colorIsSet: boolean = false;
-    highlightIsSet: boolean = false;
-    boldIsSet: boolean = false;
-    italicIsSet: boolean = false;
-    underlineIsSet: boolean = false;
-    strikethroughIsSet: boolean = false;
-    kerningIsSet: boolean = false;
-    transformIsSet: boolean = false;
-
-    alignmentIsSet: boolean = false;
-    paraSpacingIsSet: boolean = false;
-    minimumLineHeightIsSet: boolean = false;
-    maximumLineHeightIsSet: boolean = false;
-    fillTypeIsSet: boolean = false;
-    gradientIsSet: boolean = false;
-}
-
 export class Span extends SpanAttr implements classes.Span {
     typeId = 'span'
     length: number
@@ -179,11 +137,6 @@ export class Span extends SpanAttr implements classes.Span {
         super(
         )
         this.length = length
-    }
-    clone(): Span {
-        const span = new Span(this.length);
-        super.clone(span);
-        return span;
     }
 }
 
@@ -413,7 +366,7 @@ export class Text extends Basic implements classes.Text {
     getDefaultTextFormat(): TextAttr | undefined {
         return this.attr;
     }
-    getTextFormat(index: number, count: number, cachedAttr?: SpanAttrSetter): AttrGetter {
+    getTextFormat(index: number, count: number, cachedAttr?: SpanAttr): AttrGetter {
         if (index < 0) {
             throw new Error("index < 0");
         }

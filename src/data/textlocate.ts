@@ -1,5 +1,5 @@
 import { SpanAttr } from "./text";
-import { TextLayout, isNewLineCharCode } from "./textlayout";
+import { IGraphy, TextLayout, isNewLineCharCode } from "./textlayout";
 import { Point2D } from "./typesdefine";
 
 export class TextLocate {
@@ -24,13 +24,13 @@ export function locateText(layout: TextLayout, x: number, y: number): TextLocate
         if (y >= pBottomY) {
             // y -= p.paraHeight;
             if (pi >= plen - 1) {
-                index += p.graphCount;
+                index += p.charCount;
                 continue;
             }
             const nextp = paras[pi + 1];
             const netxPTopY = nextp.yOffset;
             if (y >= netxPTopY) {
-                index += p.graphCount;
+                index += p.charCount;
                 continue;
             }
             y -= netxPTopY - pBottomY;
@@ -42,7 +42,7 @@ export function locateText(layout: TextLayout, x: number, y: number): TextLocate
             const line = p[li];
             if (y >= line.y + line.lineHeight) {
                 // y -= line.lineHeight;
-                index += line.graphCount;
+                index += line.charCount;
                 continue;
             }
             // index span
@@ -54,7 +54,7 @@ export function locateText(layout: TextLayout, x: number, y: number): TextLocate
                 }
                 const lastGraph = span[span.length - 1];
                 if (x >= (lastGraph.x + lastGraph.cw)) {
-                    index += span.graphCount;
+                    index += span.charCount;
                     if (si === slen - 1) {
                         // before = true;
                         if (lastGraph.char === '\n') index--; // 忽略回车
@@ -87,7 +87,10 @@ export function locateText(layout: TextLayout, x: number, y: number): TextLocate
                 if (si === slen - 1 && end === span.length) {
                     before = true;
                 }
-                index += end;
+                // index += end;
+                for (let i = 0; i < end; ++i) {
+                    index += span[i].char.length;
+                }
 
                 if (end < span.length) {
                     if (span.attr?.placeholder) {
@@ -184,8 +187,8 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
     const paras = layout.paras;
     for (let pi = 0, plen = paras.length; pi < plen; pi++) {
         const p = paras[pi];
-        if (!(index < p.graphCount || (cursorAtBefore && index === p.graphCount))) {
-            index -= p.graphCount;
+        if (!(index < p.charCount || (cursorAtBefore && index === p.charCount))) {
+            index -= p.charCount;
             continue;
         }
 
@@ -193,7 +196,7 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
             const line = p[li];
             const lineX = layout.xOffset + line.x;
             const lineY = layout.yOffset + p.yOffset + line.y;
-            if ((cursorAtBefore && index === line.graphCount)) {
+            if ((cursorAtBefore && index === line.charCount)) {
                 if (line.length === 0) break; // error
                 const span = line[line.length - 1];
                 if (span.length === 0) break; // error
@@ -205,26 +208,44 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
                 const ret = makeCursorLocate(layout, pi, li, line.length - 1, [p0, p1])
                 return ret;
             }
-            if (index >= line.graphCount) {
-                index -= line.graphCount;
+            if (index >= line.charCount) {
+                index -= line.charCount;
                 continue;
             }
 
             for (let i = 0, len = line.length; i < len; i++) {
                 const span = line[i];
-                if (index >= span.graphCount) {
-                    index -= span.graphCount;
+                const spanCharCount = span.charCount;
+                if (index >= spanCharCount) {
+                    index -= spanCharCount;
                     continue;
                 }
                 // 光标要取前一个字符的高度
                 // 光标的大小应该与即将输入的文本大小一致
                 // x
-                let graph = span[index];
+                let graph; // 不对
+                let preGraph;
+                if (line.charCount === line.graphCount) {
+                    graph = span[index];
+                    preGraph = span[index - 1];
+                } else {
+                    for (let i = 0, c = index; i < span.length; ++i) {
+                        const g = span[i];
+                        if (c <= 0) {
+                            graph = g;
+                            break;
+                        }
+                        preGraph = g;
+                        c -= g.char.length;
+                    }
+                    if (!graph) throw new Error();
+                }
                 let x = lineX + graph.x;
                 let y = lineY + (line.lineHeight - graph.ch) / 2;
                 let ch = graph.ch;
                 if (index > 0) {
-                    const preGraph = span[index - 1];
+                    // const preGraph = span[index - 1];
+                    if (!preGraph) throw new Error();
                     if (isNewLineCharCode(graph.char.charCodeAt(0))) {
                         x = lineX + preGraph.x + preGraph.cw;
                     } else {
@@ -256,7 +277,7 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
     }
 }
 
-function _locateRange(layout: TextLayout, pi: number, li: number, si: number, gi: number, count: number): { x: number, y: number }[] {
+function _locateRange(layout: TextLayout, pi: number, li: number, si: number, start: number, count: number): { x: number, y: number }[] {
 
     const points: { x: number, y: number }[] = [];
 
@@ -265,7 +286,7 @@ function _locateRange(layout: TextLayout, pi: number, li: number, si: number, gi
         const p = paras[pi];
         const line = p[li];
 
-        if (si === 0 && gi === 0 && line.graphCount <= count) { // 整行
+        if (si === 0 && start === 0 && line.charCount <= count) { // 整行
             const y = layout.yOffset + p.yOffset + line.y;
             const h = line.lineHeight;
 
@@ -283,7 +304,7 @@ function _locateRange(layout: TextLayout, pi: number, li: number, si: number, gi
                 { x, y: y + h }, // left bottom
             );
 
-            count -= line.graphCount;
+            count -= line.charCount;
             li++;
             if (li >= p.length) {
                 pi++;
@@ -293,7 +314,23 @@ function _locateRange(layout: TextLayout, pi: number, li: number, si: number, gi
         }
 
         const span = line[si];
-        const graph = span[gi];
+        // const graph = span[gi];//todo
+        let graph; // 不对
+        let graphIndex = 0;
+        if (line.charCount === line.graphCount) {
+            graph = span[start];
+            graphIndex = start;
+        } else {
+            for (let i = 0, c = start; i < span.length; ++i) {
+                graph = span[i];
+                graphIndex = i;
+                if (c <= 0) {
+                    break;
+                }
+                c -= graph.char.length;
+            }
+            if (!graph) throw new Error();
+        }
         const lineX = layout.xOffset + line.x;
         const lineY = layout.yOffset + p.yOffset + line.y;
         const minX = lineX + graph.x;
@@ -304,16 +341,17 @@ function _locateRange(layout: TextLayout, pi: number, li: number, si: number, gi
         for (let i = si, len = line.length; i < len && count > 0; i++) {
             const span = line[i];
 
-            const last = Math.min(span.length - 1, gi + count - 1);
-            const graph = span[last]; // 同一span里的字符都有相同的大小属性,取最后一个就行
+            let graph;
+            // let charCount;
+            for (let j = graphIndex; j < span.length; ++j) {
+                graph = span[j];
+                count -= graph.char.length;
+                if (count <= 0) break;
+            }
+            if (!graph) throw new Error();
 
             maxX = lineX + graph.x + graph.cw;
-
-            // const y = line.y + (line.lineHeight - graph.ch) / 2;
-            // if (minY > y) minY = y;
-
-            count -= (last - gi + 1);
-            gi = 0;
+            graphIndex = 0;
         }
 
         points.push(
@@ -347,31 +385,102 @@ export function locateRange(layout: TextLayout, start: number, end: number): { x
     const paras = layout.paras;
     for (let pi = 0, len = paras.length; pi < len; pi++) {
         const p = paras[pi];
-        if (start >= p.graphCount) {
-            start -= p.graphCount;
+        if (start >= p.charCount) {
+            start -= p.charCount;
             continue;
         }
 
         for (let li = 0, len = p.length; li < len; li++) {
             const line = p[li];
 
-            if (start >= line.graphCount) {
-                start -= line.graphCount;
+            if (start >= line.charCount) {
+                start -= line.charCount;
                 continue;
             }
 
             for (let si = 0, len = line.length; si < len; si++) {
                 const span = line[si];
-                if (start >= span.graphCount) {
-                    start -= span.graphCount;
+                const spanCharCount = span.charCount;
+                if (start >= spanCharCount) {
+                    start -= spanCharCount;
                     continue;
                 }
-                const gi = start;
-                return _locateRange(layout, pi, li, si, gi, count);
+                // const gi = start;
+                return _locateRange(layout, pi, li, si, start, count);
             }
             break;
         }
         break;
     }
     return [];
+}
+
+function graphAt(layout: TextLayout, index: number): { graph: IGraphy, offset: number } | undefined {
+    const paras = layout.paras;
+    for (let pi = 0, plen = paras.length; pi < plen; pi++) {
+        const p = paras[pi];
+        if (!(index < p.charCount)) {
+            index -= p.charCount;
+            continue;
+        }
+
+        for (let li = 0, llen = p.length; li < llen; li++) {
+            const line = p[li];
+            if (index >= line.charCount) {
+                index -= line.charCount;
+                continue;
+            }
+
+            for (let i = 0, len = line.length; i < len; i++) {
+                const span = line[i];
+                const spanCharCount = span.charCount;
+                if (index >= spanCharCount) {
+                    index -= spanCharCount;
+                    continue;
+                }
+                // 光标要取前一个字符的高度
+                // 光标的大小应该与即将输入的文本大小一致
+                // x
+                let graph; // 不对
+                let offset = 0;
+                if (line.charCount === line.graphCount) {
+                    graph = span[index];
+                } else {
+                    for (let i = 0, c = index; i < span.length; ++i) {
+                        graph = span[i];
+                        offset = c;
+                        c -= graph.char.length;
+                        if (c < 0) {
+                            break;
+                        }
+                    }
+                    if (!graph) throw new Error();
+                }
+                return { graph, offset };
+            }
+            break;
+        }
+        break;
+    }
+}
+
+// 前向光标index
+export function locatePrevCursor(layout: TextLayout, index: number): number {
+    if (index <= 1) return 0;
+    const graph = graphAt(layout, index - 1);
+    if (!graph) {
+        return index; // ?
+    }
+
+    return Math.max(0, index - 1 - graph.offset);
+}
+
+// 后向光标index
+export function locateNextCursor(layout: TextLayout, index: number): number {
+    if (index < 0) return 0;
+    const graph = graphAt(layout, index);
+    if (!graph) {
+        return index; // ?
+    }
+    return index - graph.offset + graph.graph.char.length;
 }

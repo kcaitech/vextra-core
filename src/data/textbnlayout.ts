@@ -53,7 +53,7 @@ const luomaData = [gearr, shiarr, baiarr, qianarr];
 function measureLuomaTextWidth(text: string, font: string): number {
     const measure = gPal.text.textMeasure;
     return text.split('').reduce((sum, letter) => {
-        const m = measure(letter.charCodeAt(0), font);
+        const m = measure(letter.charAt(0), font);
         return sum + (m?.width?? 0);
     }, 0);
 }
