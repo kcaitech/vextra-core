@@ -572,7 +572,7 @@ export function is_exist_invalid_shape(selected: Shape[]) {
     let result = false;
     for (let i = 0, len = selected.length; i < len; i++) {
         const item = selected[i];
-        if ([ShapeType.Contact, ShapeType.Table].includes(item.type)) return true;
+        if ([ShapeType.Contact].includes(item.type)) return true;
         if ((item as GroupShape).childs?.length) result = is_exist_invalid_shape((item as GroupShape).childs);
         if (result) return true;
     }
@@ -582,7 +582,7 @@ export function is_exist_invalid_shape2(selected: Shape[]) {
     let result = false;
     for (let i = 0, len = selected.length; i < len; i++) {
         const item = selected[i];
-        if (ShapeType.Symbol === item.type || ShapeType.Table === item.type || ShapeType.Contact === item.type) {
+        if (ShapeType.Symbol === item.type || ShapeType.Contact === item.type) {
             return true;
         }
         if ((item as GroupShape).childs?.length) {
