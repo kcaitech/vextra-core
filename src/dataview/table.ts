@@ -141,7 +141,7 @@ export class TableView extends ShapeView {
             reuse.set(c.m_data.id, c);
         });
 
-        const shape = this.m_data as TableShape;
+        // const shape = this.m_data as TableShape;
         const comsMap = this.m_ctx.comsMap;
         const layout = this.getLayout();
 
