@@ -3,7 +3,7 @@ import { GroupShape, PathShape, PathShape2, RectShape, Shape, SymbolShape, Varia
 import { ContactShape, SymbolRefShape, ContactForm } from "../../data/classes";
 import { BoolOp, CurveMode, MarkerType, OverrideType, Point2D } from "../../data/typesdefine";
 import { BasicMap } from "../../data/basic";
-import { crdtSetAttr } from "./basic";
+import { crdtArrayRemove, crdtSetAttr } from "./basic";
 
 function _checkNum(x: number) {
     // check
@@ -136,47 +136,100 @@ export function shapeModifyFixedRadius(shape: GroupShape | PathShape | PathShape
 export function shapeModifyBoolOp(shape: Shape, op: BoolOp | undefined) {
     return crdtSetAttr(shape, 'boolOp', op);
 }
-export function shapeModifyPathShapeClosedStatus(shape: PathShape, is: boolean) {
-    return crdtSetAttr(shape, 'isClosed', is);
+export function shapeModifyPathShapeClosedStatus(shape: Shape, val: boolean, segment = -1) {
+    if (segment > -1) {
+        const seg = (shape as PathShape2).pathsegs[segment];
+        if (seg) {
+            return crdtSetAttr(seg, 'isClosed', val);
+        }
+    } else {
+        return crdtSetAttr(shape, 'isClosed', val);
+    }
 }
 
-export function shapeModifyCurvPoint(page: Page, shape: PathShape, index: number, point: Point2D) {
+export function deleteSegmentAt(shape: PathShape2, segment: number) {
+    return crdtArrayRemove(shape.pathsegs, segment)
+}
+
+// path
+export function shapeModifyCurvPoint(shape: Shape, index: number, point: Point2D, segment = -1) {
     // check
     _checkNum(point.x);
     _checkNum(point.y);
-    const p = shape.points[index];
-    if (p) return [crdtSetAttr(p, 'x', point.x), crdtSetAttr(p, 'y', point.y)];
+
+    if (segment > -1) {
+        const p = (shape as PathShape2)?.pathsegs[segment]?.points[index];
+        if (p) return [crdtSetAttr(p, 'x', point.x), crdtSetAttr(p, 'y', point.y)];
+    } else {
+        const p = (shape as PathShape).points[index];
+        if (p) return [crdtSetAttr(p, 'x', point.x), crdtSetAttr(p, 'y', point.y)];
+    }
 }
-export function shapeModifyCurvFromPoint(page: Page, shape: PathShape, index: number, point: Point2D) {
+export function shapeModifyCurvFromPoint(shape: Shape, index: number, point: Point2D, segment = -1) {
     // check
     _checkNum(point.x);
     _checkNum(point.y);
-    const p = shape.points[index];
-    if (p) return [crdtSetAttr(p, 'fromX', point.x), crdtSetAttr(p, 'fromY', point.y)];
+
+    if (segment > -1) {
+        const p = (shape as PathShape2)?.pathsegs[segment]?.points[index];
+        if (p) return [crdtSetAttr(p, 'fromX', point.x), crdtSetAttr(p, 'fromY', point.y)];
+    } else {
+        const p = (shape as PathShape).points[index];
+        if (p) return [crdtSetAttr(p, 'fromX', point.x), crdtSetAttr(p, 'fromY', point.y)];
+    }
+
 }
-export function shapeModifyCurvToPoint(page: Page, shape: PathShape, index: number, point: Point2D) {
+export function shapeModifyCurvToPoint(shape: Shape, index: number, point: Point2D, segment = -1) {
     // check
     _checkNum(point.x);
     _checkNum(point.y);
-    const p = shape.points[index];
-    if (p) return [crdtSetAttr(p, 'toX', point.x), crdtSetAttr(p, 'toY', point.y)];
+
+    if (segment > -1) {
+        const p = (shape as PathShape2)?.pathsegs[segment]?.points[index];
+        if (p) return [crdtSetAttr(p, 'toX', point.x), crdtSetAttr(p, 'toY', point.y)];
+    } else {
+        const p = (shape as PathShape).points[index];
+        if (p) return [crdtSetAttr(p, 'toX', point.x), crdtSetAttr(p, 'toY', point.y)];
+    }
 }
-export function shapeModifyCurveMode(page: Page, shape: PathShape, index: number, curveMode: CurveMode) {
-    const p = shape.points[index];
-    if (p) return crdtSetAttr(p, 'mode', curveMode);
+export function shapeModifyCurveMode(shape:Shape, index: number, curveMode: CurveMode, segment = -1) {
+    if (segment > -1) {
+        const p = (shape as PathShape2)?.pathsegs[segment]?.points[index];
+        if (p) return crdtSetAttr(p, 'mode', curveMode);
+    } else {
+        const p = (shape as PathShape).points[index];
+        if (p) return crdtSetAttr(p, 'mode', curveMode);
+    }
 }
-export function shapeModifyPointCornerRadius(page: Page, shape: PathShape, index: number, cornerRadius: number) {
-    const p = shape.points[index];
-    if (p) return crdtSetAttr(p, 'radius', cornerRadius);
+export function shapeModifyPointCornerRadius(shape: Shape, index: number, cornerRadius: number, segment = -1) {
+    if (segment > -1) {
+        const p = (shape as PathShape2)?.pathsegs[segment]?.points[index];
+        if (p) return crdtSetAttr(p, 'radius', cornerRadius);
+    } else {
+        const p = (shape as PathShape).points[index];
+        if (p) return crdtSetAttr(p, 'radius', cornerRadius);
+    }
 }
-export function shapeModifyHasFrom(page: Page, shape: PathShape, index: number, hasFrom: boolean) {
-    const p = shape.points[index];
-    if (p) return crdtSetAttr(p, 'hasFrom', hasFrom);
+export function shapeModifyHasFrom(shape: Shape, index: number, hasFrom: boolean, segment = -1) {
+    if (segment > -1) {
+        const p = (shape as PathShape2)?.pathsegs[segment]?.points[index];
+        if (p) return crdtSetAttr(p, 'hasFrom', hasFrom);
+    } else {
+        const p = (shape as PathShape).points[index];
+        if (p) return crdtSetAttr(p, 'hasFrom', hasFrom);
+    }
 }
-export function shapeModifyHasTo(page: Page, shape: PathShape, index: number, hasTo: boolean) {
-    const p = shape.points[index];
-    if (p) return crdtSetAttr(p, 'hasTo', hasTo);
+export function shapeModifyHasTo(shape: Shape, index: number, hasTo: boolean, segment = -1) {
+    if (segment > -1) {
+        const p = (shape as PathShape2)?.pathsegs[segment]?.points[index];
+        if (p) return crdtSetAttr(p, 'hasTo', hasTo);
+    } else {
+        const p = (shape as PathShape).points[index];
+        if (p) return crdtSetAttr(p, 'hasTo', hasTo);
+    }
 }
+// path end
+
 export function shapeModifyVariable(page: Page, _var: Variable, value: any) {
     return crdtSetAttr(_var, 'value', value);
 }
