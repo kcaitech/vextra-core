@@ -1400,41 +1400,6 @@ export class PageEditor {
     }
 
     /**
-     * @description 提高图形shape的z-index层级
-     * @param step 层级数，不传则提高到顶部
-     * @returns { boolean }
-     */
-    uppper_layer(shape: Shape, step?: number) {
-        if (shape.isVirtualShape) {
-            return false; // 组件实例内部图形不可以移动图层
-        }
-
-        const parent = shape.parent as GroupShape | undefined;
-        if (!parent) return false;
-        const index = parent.indexOfChild(shape);
-        const len = parent.childs.length;
-        if (index < 0 || index >= len - 1) return false;
-        const api = this.__repo.start("move");
-        try {
-            if (!step) { // 如果没有步值，则上移到最上层(index => parent.childs.length -1);
-                api.shapeMove(this.__page, parent, index, parent, len - 1);
-            } else {
-                if (step + index >= len) { // 如果没有步值已经迈出分组，则上移到最上层(index => parent.childs.length -1);
-                    api.shapeMove(this.__page, parent, index, parent, len - 1);
-                } else {
-                    api.shapeMove(this.__page, parent, index, parent, index + step);
-                }
-            }
-            this.__repo.commit();
-            return true;
-        } catch (error) {
-            console.log(error)
-            this.__repo.rollback();
-            return false;
-        }
-    }
-
-    /**
      * @param shapes 逆序图层
      */
     upperLayer(shapes: ShapeView[], step?: number) {
@@ -1491,37 +1456,6 @@ export class PageEditor {
             return adjusted;
         } catch (e) {
             console.log('upperLayer:', e);
-            this.__repo.rollback();
-            return false;
-        }
-    }
-
-    /**
-     * @description 调低图形shape的z-index层级
-     * @param step 层级数，不传则降低到底部
-     * @returns { boolean }
-     */
-    lower_layer(shape: Shape, step?: number) {
-        if (shape.isVirtualShape) return true; // 组件实例内部图形不可以移动图层
-        const parent = shape.parent as GroupShape | undefined;
-        if (!parent) return false;
-        const index = parent.indexOfChild(shape);
-        if (index < 1) return false;
-        const api = this.__repo.start("move");
-        try {
-            if (!step) { // 如果没有步值，则下移到最底层(index => 0);
-                api.shapeMove(this.__page, parent, index, parent, 0);
-            } else {
-                if (index - step <= 0) { // 如果没有步值已经迈出分组，则下移到最底层(index => 0);
-                    api.shapeMove(this.__page, parent, index, parent, 0);
-                } else {
-                    api.shapeMove(this.__page, parent, index, parent, index - step);
-                }
-            }
-            this.__repo.commit();
-            return true;
-        } catch (error) {
-            console.log(error)
             this.__repo.rollback();
             return false;
         }
