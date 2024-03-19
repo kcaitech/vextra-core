@@ -1,3 +1,4 @@
+import { importSpan } from "./baseimport";
 import { BasicArray } from "./basic";
 import { Para, Span, SpanAttr, ParaAttr, Text, BulletNumbersType, BulletNumbersBehavior } from "./text";
 import { _travelTextPara } from "./texttravel";
@@ -124,7 +125,7 @@ function _insertText(paraArray: Para[], paraIndex: number, para: Para, text: str
             if (attr) mergeSpanAttr(span, attr, true);
             const _spans = new BasicArray<Span>(span);
             const _para = new Para(_text, _spans);
-            if (propType === 'simple') mergeParaAttr(_para, para);
+            if (!paraAttr || propType === 'simple') mergeParaAttr(_para, para);
             if (paraAttr) mergeParaAttr(_para, paraAttr);
             paraArray.splice(paraIndex, 0, _para);
             paraIndex++;
@@ -170,7 +171,7 @@ function _insertText(paraArray: Para[], paraIndex: number, para: Para, text: str
             }
 
             const _para = new Para(_text, _spans);
-            if (propType === 'simple') mergeParaAttr(_para, para);
+            if (!paraAttr || propType === 'simple') mergeParaAttr(_para, para);
             if (paraAttr) mergeParaAttr(_para, paraAttr);
             paraArray.splice(paraIndex + 1, 0, _para);
             para = _para;
@@ -201,7 +202,7 @@ function _insertText(paraArray: Para[], paraIndex: number, para: Para, text: str
             // if (attr) mergeSpanAttr(span, attr);
             const _spans = new BasicArray<Span>(span);
             const _para = new Para(_text, _spans);
-            if (propType === 'simple') mergeParaAttr(_para, para);
+            if (!paraAttr || propType === 'simple') mergeParaAttr(_para, para);
 
             if (attr) { // 给para的'\n'设置上
                 mergeSpanAttr(span, attr, true);
@@ -365,7 +366,7 @@ function _deleteSpan(spans: Span[], index: number, count: number): BasicArray<Sp
         const span = spans[i];
         if (index < span.length) {
             if (index === 0 && count >= span.length) {
-                delspans.push(span.clone());
+                delspans.push(importSpan(span));
                 spans.splice(i, 1);
                 // i,index 不变
                 count -= span.length;
@@ -376,7 +377,7 @@ function _deleteSpan(spans: Span[], index: number, count: number): BasicArray<Sp
             count -= delCount;
             index = 0;
             i++;
-            const delspan = span.clone();
+            const delspan = importSpan(span);
             delspan.length = delCount;
             delspans.push(delspan);
         }
@@ -469,7 +470,7 @@ function _deleteText(paraArray: Para[], paraIndex: number, para: Para, index: nu
             count -= para.length;
             len--;
             // paraIndex 不变
-            const para1 = new Para(deltext, delspans.map((span) => span.clone()) as BasicArray<Span>); // 需要clone下
+            const para1 = new Para(deltext, delspans.map((span) => importSpan(span)) as BasicArray<Span>); // 需要clone下
             mergeParaAttr(para1, para);
             ret.paras.push(para1);
             continue;

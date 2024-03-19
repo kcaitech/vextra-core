@@ -382,8 +382,6 @@ export function locateRange(layout: TextLayout, start: number, end: number): { x
     if (end <= start) return [];
     const count = end - start;
 
-    console.log("locate ", start, end)
-
     const paras = layout.paras;
     for (let pi = 0, len = paras.length; pi < len; pi++) {
         const p = paras[pi];

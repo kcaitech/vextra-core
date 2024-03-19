@@ -78,13 +78,6 @@ export class SpanAttr extends Basic implements classes.SpanAttr {
     ) {
         super()
     }
-    clone(newSpanAttr?: SpanAttr): SpanAttr {
-        if (!newSpanAttr) newSpanAttr = new SpanAttr();
-        newSpanAttr.fontName = this.fontName;
-        newSpanAttr.fontSize = this.fontSize;
-        if (this.color) newSpanAttr.color = new Color(this.color.alpha, this.color.red, this.color.green, this.color.blue);
-        return newSpanAttr;
-    }
 }
 
 export class ParaAttr extends SpanAttr implements classes.ParaAttr {
@@ -144,11 +137,6 @@ export class Span extends SpanAttr implements classes.Span {
         super(
         )
         this.length = length
-    }
-    clone(): Span {
-        const span = new Span(this.length);
-        super.clone(span);
-        return span;
     }
 }
 
