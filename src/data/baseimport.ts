@@ -360,6 +360,7 @@ export function importPathSegment(source: types.PathSegment, ctx?: IImportContex
             }
             return ret
         })(),
+        source.id,
         (() => {
             const ret = new BasicArray<impl.CurvePoint>()
             for (let i = 0, len = source.points && source.points.length; i < len; i++) {

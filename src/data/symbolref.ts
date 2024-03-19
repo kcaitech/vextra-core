@@ -11,6 +11,7 @@ import { Shape, SymbolShape } from "./shape";
 import { Path } from "./path";
 import { Variable } from "./variable";
 import { SymbolMgr } from "./symbolmgr";
+import { PathType } from "./consts";
 // import { findOverrideAndVar } from "./utils";
 
 function genRefId(refId: string, type: OverrideType) {
@@ -249,5 +250,9 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         if (!this.variables) return false;
         // TODO 解绑
         return this.variables.delete(key);
+    }
+
+    get pathType() {
+        return PathType.Fixed;
     }
 }

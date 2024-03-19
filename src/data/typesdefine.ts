@@ -232,6 +232,7 @@ export type Point2D = {
 /* path segment */
 export type PathSegment = {
     crdtidx: number[]
+    id: string
     points: CurvePoint[]
     isClosed: boolean
 }

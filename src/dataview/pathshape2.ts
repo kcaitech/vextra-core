@@ -8,6 +8,7 @@ import { RenderTransform } from "./basic";
 import { DViewCtx, PropsType } from "./viewctx";
 import { EL, elh } from "./el";
 import { renderBorders } from "../render";
+import { uuid } from "../basic/uuid";
 
 export class PathShapeView2 extends ShapeView {
 
@@ -37,7 +38,7 @@ export class PathShapeView2 extends ShapeView {
 
         const pathsegs = shape.pathsegs;
         const newpathsegs = pathsegs.map((seg) => {
-            return { crdtidx: seg.crdtidx, points: transformPoints(seg.points, m), isClosed: seg.isClosed }
+            return { crdtidx: seg.crdtidx, id: seg.id, points: transformPoints(seg.points, m), isClosed: seg.isClosed }
         });
         this.m_pathsegs = newpathsegs;
 
