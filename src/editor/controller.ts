@@ -1207,7 +1207,7 @@ export class Controller {
             try {
                 for (let i = 0, l = shapes.length; i < l; i++) {
                     const shape = shapes[i];
-                    const grad_type = shape.style[type];
+                    const grad_type = type === 'fills' ? shape.getFills() : shape.getBorders();
                     if (!grad_type?.length) {
                         continue;
                     }
@@ -1233,7 +1233,7 @@ export class Controller {
             try {
                 for (let i = 0, l = shapes.length; i < l; i++) {
                     const shape = shapes[i];
-                    const grad_type = shape.style[type];
+                    const grad_type = type === 'fills' ? shape.getFills() : shape.getBorders();
                     if (!grad_type?.length) {
                         continue;
                     }
@@ -1259,7 +1259,7 @@ export class Controller {
             try {
                 for (let i = 0, l = shapes.length; i < l; i++) {
                     const shape = shapes[i];
-                    const grad_type = shape.style[type];
+                    const grad_type = type === 'fills' ? shape.getFills() : shape.getBorders();
                     if (!grad_type?.length) {
                         continue;
                     }
@@ -1282,12 +1282,13 @@ export class Controller {
         const execute_stop_position = (position: number, id: string) => {
             status = Status.Pending;
             try {
-                const f_stop = shapes[0].style[type][index].gradient?.stops;
-                if (f_stop) {
+                const grad_color_type = type === 'fills' ? shapes[0].getFills() : shapes[0].getBorders();
+                const f_stop = grad_color_type[index].gradient?.stops;
+                if(f_stop) {
                     const idx = f_stop.findIndex((stop) => stop.id === id);
                     for (let i = 0, l = shapes.length; i < l; i++) {
                         const shape = shapes[i];
-                        const grad_type = shape.style[type];
+                        const grad_type = type === 'fills' ? shape.getFills() : shape.getBorders();
                         if (!grad_type?.length) {
                             continue;
                         }
