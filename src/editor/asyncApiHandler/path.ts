@@ -5,7 +5,7 @@ import { adapt2Shape, PageView, ShapeView } from "../../dataview";
 import { CurveMode, CurvePoint, PathShape, PathShape2, Shape } from "../../data/shape";
 import { BasicArray } from "../../data/basic";
 import { uuid } from "../../basic/uuid";
-import { after_insert_point, update_frame_by_points } from "../utils/path";
+import { __pre_curve, after_insert_point, update_frame_by_points } from "../utils/path";
 import { PathType } from "../../data/consts";
 
 export type ModifyUnits = Map<number,
@@ -110,6 +110,45 @@ export class PathModifier extends AsyncApiCaller {
             this.updateView();
         } catch (e) {
             console.log('PathModifier.execute:', e);
+            this.exception = true;
+        }
+    }
+
+    preCurve(index: number, segment = -1) {
+        __pre_curve(this.page, this.api, this.shape, index, segment);
+    }
+
+    execute4handle(index: number, side: 'from' | 'to',
+                   from: { x: number, y: number },
+                   to: { x: number, y: number },
+                   segment = -1) {
+        try {
+            const api = this.api;
+            const page = this.page;
+            const shape = this.shape;
+
+            let mode: CurveMode | undefined = undefined;
+
+            if (shape.pathType === PathType.Editable) {
+                mode = (shape as PathShape).points[index].mode;
+            } else if (shape.pathType === PathType.Multi) {
+                mode = (shape as PathShape2)?.pathsegs[segment]?.points[index]?.mode;
+            }
+
+            if (mode === CurveMode.Mirrored || mode === CurveMode.Asymmetric) {
+                api.shapeModifyCurvFromPoint(page, shape, index, from, segment);
+                api.shapeModifyCurvToPoint(page, shape, index, to, segment);
+            } else if (mode === CurveMode.Disconnected) {
+                if (side === 'from') {
+                    api.shapeModifyCurvFromPoint(page, shape, index, from, segment);
+                } else {
+                    api.shapeModifyCurvToPoint(page, shape, index, to, segment);
+                }
+            }
+
+            this.updateView();
+        } catch (e) {
+            console.log('PathModifier.execute4handle:', e);
             this.exception = true;
         }
     }

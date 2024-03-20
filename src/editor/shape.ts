@@ -426,18 +426,19 @@ export class ShapeEditor {
     /**
      * @description 路径裁剪
      */
-    public clipPathShape(index: number, slice_name: string): { code: number, ex: Shape | undefined } {
+    public clipPathShape(index: number, segment: number) {
         const data: { code: number, ex: Shape | undefined } = { code: 0, ex: undefined };
-        if (!(this.shape instanceof PathShape)) {
-            console.log('!(this.shape instanceof PathShape)');
+
+        if (this.shape.isVirtualShape) {
+            console.log('this.shape.isVirtualShape');
             data.code = -1;
             return data;
         }
+
         try {
             const api = this.__repo.start("sortPathShapePoints");
-            const code = _clip(this.__document, this.__page, api, this.shape as PathShape, index, slice_name);
+            _clip(this.__document, this.__page, api, this.shape as PathShape, index, segment);
             this.__repo.commit();
-            return code;
         } catch (error) {
             console.log('sortPathShapePoints:', error);
             this.__repo.rollback();
@@ -610,9 +611,9 @@ export class ShapeEditor {
 
     // points
     // --m1133
-    public setPathClosedStatus(val: boolean) {
+    public setPathClosedStatus(val: boolean, segment = -1) {
         this._repoWrap("setPathClosedStatus", (api) => {
-            api.setCloseStatus(this.__page, this.shape as PathShape, val);
+            api.setCloseStatus(this.__page, this.shape, val, segment);
         });
     }
 

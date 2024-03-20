@@ -1,9 +1,18 @@
 import { Page } from "../../data/page";
-import { GroupShape, PathShape, PathShape2, RectShape, Shape, SymbolShape, Variable } from "../../data/shape";
+import {
+    GroupShape,
+    PathSegment,
+    PathShape,
+    PathShape2,
+    RectShape,
+    Shape,
+    SymbolShape,
+    Variable
+} from "../../data/shape";
 import { ContactShape, SymbolRefShape, ContactForm } from "../../data/classes";
 import { BoolOp, CurveMode, MarkerType, OverrideType, Point2D } from "../../data/typesdefine";
 import { BasicMap } from "../../data/basic";
-import { crdtArrayRemove, crdtSetAttr } from "./basic";
+import { crdtArrayInsert, crdtArrayRemove, crdtSetAttr } from "./basic";
 
 function _checkNum(x: number) {
     // check
@@ -145,6 +154,10 @@ export function shapeModifyPathShapeClosedStatus(shape: Shape, val: boolean, seg
     } else {
         return crdtSetAttr(shape, 'isClosed', val);
     }
+}
+
+export function insertSegmentAt(shape: PathShape2, index: number, segment: PathSegment) {
+    return crdtArrayInsert(shape.pathsegs, index, segment);
 }
 
 export function deleteSegmentAt(shape: PathShape2, segment: number) {

@@ -11,7 +11,7 @@ import {
     Variable,
     SymbolShape,
     VariableType,
-    CurveMode
+    CurveMode, PathSegment
 } from "../../data/shape";
 import { updateShapesFrame } from "./utils";
 import { Border, BorderPosition, BorderStyle, Fill, Gradient, MarkerType, Shadow } from "../../data/style";
@@ -544,6 +544,10 @@ export class Api {
     setCloseStatus(page: Page, shape: Shape, isClosed: boolean, segment = -1) {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.shapeModifyPathShapeClosedStatus(shape, isClosed, segment));
+    }
+    insertSegmentAt(page: Page, shape: PathShape2, index: number, segment: PathSegment) {
+        checkShapeAtPage(page, shape);
+        this.addOp(basicapi.insertSegmentAt(shape, index, segment));
     }
     deleteSegmentAt(page: Page, shape: PathShape2, segment: number) {
         checkShapeAtPage(page, shape);

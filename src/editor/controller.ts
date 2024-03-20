@@ -49,7 +49,15 @@ import { exportGradient } from "../data/baseexport";
 import { is_state } from "./utils/other";
 import { after_migrate, unable_to_migrate } from "./utils/migrate";
 import { get_state_name, shape4contextSettings, shape4fill, shape4border } from "./symbol";
-import { __pre_curve, after_insert_point, pathEdit, contact_edit, pointsEdit, update_frame_by_points, before_modify_side } from "./utils/path";
+import {
+    __pre_curve,
+    after_insert_point,
+    pathEdit,
+    contact_edit,
+    pointsEdit,
+    update_frame_by_points,
+    before_modify_side
+} from "./utils/path";
 import { Color } from "../data/color";
 import { ContactLineView, PageView, PathShapeView, ShapeView, adapt2Shape } from "../dataview";
 import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
@@ -1165,8 +1173,8 @@ export class Controller {
         return { execute, close }
     }
 
-    public asyncPathHandle(_shape: PathShape | PathShapeView, _page: Page | PageView, index: number): AsyncPathHandle {
-        const shape: PathShape = _shape instanceof ShapeView ? adapt2Shape(_shape) as PathShape : _shape as PathShape;
+    public asyncPathHandle(_shape: ShapeView, _page: Page | PageView, index: number): AsyncPathHandle {
+        const shape: PathShape = adapt2Shape(_shape) as PathShape;
         const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
 
         const curvePoint = shape.points[index];
