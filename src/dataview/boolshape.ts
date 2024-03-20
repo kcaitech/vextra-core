@@ -103,7 +103,7 @@ function render2path(shape: ShapeView): Path {
     let fixedRadius: number | undefined;
     if (shapeIsGroup) fixedRadius = shape.fixedRadius;
     if (!shapeIsGroup) {
-        if (!shape.isVisible()) return new Path();
+        if (!shape.isVisible) return new Path();
         const path = shape instanceof TextShapeView ? shape.getTextPath() : shape.getPath();
         return path.clone();
     } else if (shape.childs.length === 0) {
@@ -112,7 +112,7 @@ function render2path(shape: ShapeView): Path {
 
     let fVisibleIdx = 0;
     for (let i = 0; i < shape.m_children.length; ++i) {
-        if ((shape.m_children[i] as ShapeView).isVisible()) {
+        if ((shape.m_children[i] as ShapeView).isVisible) {
             fVisibleIdx = i;
             break;
         }
@@ -141,7 +141,7 @@ function render2path(shape: ShapeView): Path {
     let joinPath: IPalPath = gPal.makePalPath(path0.toString());
     for (let i = fVisibleIdx + 1; i < cc; i++) {
         const child1 = shape.m_children[i] as ShapeView;
-        if (!child1.isVisible()) continue;
+        if (!child1.isVisible) continue;
         const frame1 = child1.frame;
         const path1 = render2path(child1).clone();
         if (child1.isNoTransform()) {
