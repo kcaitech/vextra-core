@@ -35,11 +35,7 @@ export class PathModifier extends AsyncApiCaller {
 
     addPoint(segment: number, index: number) {
         try {
-            let __segment = segment;
-
-            if (this.shape.pathType === PathType.Editable) {
-                __segment = -1;
-            }
+            let __segment = this.shape.pathType === PathType.Editable ? -1 : segment;
 
             this.api.addPointAt(
                 this.page,
