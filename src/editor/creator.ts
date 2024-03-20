@@ -52,7 +52,7 @@ import {
     BorderStyle,
     SymbolRefShape,
 } from "../data/classes";
-import { BasicArray, BasicMap, MultiResourceMgr } from "../data/basic";
+import { BasicArray, BasicMap } from "../data/basic";
 import { Repository } from "../data/transact";
 import { Comment } from "../data/comment";
 import { ResourceMgr } from "../data/basic";
@@ -63,6 +63,7 @@ export { newText, newText2 } from "../data/textutils";
 import { ContactForm, CrdtNumber } from "../data/baseclasses";
 import { Matrix } from "../basic/matrix";
 import { ResizingConstraints2 } from "../data/consts";
+import { SymbolMgr } from "../data/symbolmgr";
 
 export function addCommonAttr(shape: Shape) {
     shape.rotation = 0;
@@ -112,6 +113,7 @@ export function newBoolShape(name: string, style?: Style): BoolShape {
  * @description 给未进入文档(guard之前)的图形设置frame
  */
 export function initFrame(shape: Shape, frame: ShapeFrame) {
+    if (frame.width === 0 || frame.height === 0) throw new Error();
     shape.frame = importShapeFrame((frame));
 }
 
@@ -140,6 +142,7 @@ export function newflatStyle(): Style {
 }
 
 export function newArtboard(name: string, frame: ShapeFrame, fill?: Fill): Artboard {
+    if (frame.width === 0 || frame.height === 0) throw new Error();
     template_artboard.id = uuid();
     template_artboard.name = name;
     template_artboard.frame = frame;
@@ -158,6 +161,7 @@ export function newArtboard(name: string, frame: ShapeFrame, fill?: Fill): Artbo
 }
 
 export function newArtboard2(name: string, frame: ShapeFrame): Artboard {
+    if (frame.width === 0 || frame.height === 0) throw new Error();
     template_artboard.id = uuid();
     template_artboard.name = name;
     template_artboard.frame = frame;
@@ -176,6 +180,7 @@ export function newArtboard2(name: string, frame: ShapeFrame): Artboard {
 }
 
 export function newPathShape(name: string, frame: ShapeFrame, path: Path, style?: Style): PathShape | PathShape2 {
+    if (frame.width === 0 || frame.height === 0) throw new Error();
     frame.width = frame.width || 1;
     frame.height = frame.height || 1;
 
@@ -205,6 +210,7 @@ export function newPathShape(name: string, frame: ShapeFrame, path: Path, style?
 }
 
 export function newRectShape(name: string, frame: ShapeFrame): RectShape {
+    if (frame.width === 0 || frame.height === 0) throw new Error();
     const style = newStyle();
     const curvePoint = new BasicArray<CurvePoint>();
     const id = uuid();
@@ -222,6 +228,7 @@ export function newRectShape(name: string, frame: ShapeFrame): RectShape {
 // https://juejin.cn/post/7212650952532459578
 // https://pomax.github.io/bezierinfo/#circles_cubic
 export function newOvalShape(name: string, frame: ShapeFrame): OvalShape {
+    if (frame.width === 0 || frame.height === 0) throw new Error();
     const style = newStyle();
     const curvePoint = new BasicArray<CurvePoint>();
     const id = uuid();
@@ -270,6 +277,7 @@ export function newOvalShape(name: string, frame: ShapeFrame): OvalShape {
 }
 
 export function newLineShape(name: string, frame: ShapeFrame): LineShape {
+    if (frame.width === 0 || frame.height === 0) throw new Error();
     const style = newflatStyle();
     const sPoint = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight);
     const ePoint = new CurvePoint([1] as BasicArray<number>, uuid(), 1, 0, CurveMode.Straight);
@@ -283,6 +291,7 @@ export function newLineShape(name: string, frame: ShapeFrame): LineShape {
 }
 
 export function newArrowShape(name: string, frame: ShapeFrame): LineShape {
+    if (frame.width === 0 || frame.height === 0) throw new Error();
     const style = newflatStyle();
     style.endMarkerType = types.MarkerType.OpenArrow;
     const sPoint = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight);
@@ -316,6 +325,7 @@ export function newArrowShape(name: string, frame: ShapeFrame): LineShape {
 
 // 后续需要传入字体、字号、颜色信息
 export function newTextShape(name: string, frame?: ShapeFrame): TextShape {
+    if (frame && (frame.x === 0 || frame.y === 0)) throw new Error();
     template_text_shape.id = uuid();
     template_text_shape.name = name;
     // 后续需要传入字体、字号、颜色信息
@@ -344,6 +354,7 @@ export function newImageShape(name: string, frame: ShapeFrame, mediasMgr: Resour
     buff: Uint8Array,
     base64: string
 }>, ref?: string): ImageShape {
+    if (frame.width === 0 || frame.height === 0) throw new Error();
     const id = uuid();
     const style = newStyle();
     const curvePoint = new BasicArray<CurvePoint>();
@@ -363,6 +374,7 @@ export function newTable(name: string, frame: ShapeFrame, rowCount: number, colu
     buff: Uint8Array,
     base64: string
 }>): TableShape {
+    if (frame.width === 0 || frame.height === 0) throw new Error();
     // template_table_shape.id = uuid();
     // template_table_shape.name = name // i18n
     // template_table_shape.rowHeights.length = 0;
@@ -399,7 +411,7 @@ export function newTable(name: string, frame: ShapeFrame, rowCount: number, colu
     addCommonAttr(table)
     const fillColor = new Color(1, 255, 255, 255);
     const fill = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, fillColor);
-    const fills =  new BasicArray<Fill>();
+    const fills = new BasicArray<Fill>();
     fills.push(fill);
     table.style.fills = fills;
     table.setImageMgr(mediasMgr);
@@ -407,6 +419,7 @@ export function newTable(name: string, frame: ShapeFrame, rowCount: number, colu
 }
 
 export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm): ContactShape {
+    if (frame.width === 0 || frame.height === 0) throw new Error();
     const style = newflatStyle();
 
     style.endMarkerType = types.MarkerType.OpenArrow;
@@ -443,6 +456,7 @@ export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm):
 }
 
 export function newCutoutShape(name: string, frame: ShapeFrame): CutoutShape {
+    if (frame.width === 0 || frame.height === 0) throw new Error();
     const borders = new BasicArray<Border>();
     const fills = new BasicArray<Fill>();
     const style = new Style(borders, fills, new BasicArray<Shadow>());
@@ -460,6 +474,7 @@ export function newCutoutShape(name: string, frame: ShapeFrame): CutoutShape {
 }
 
 export function newSymbolShape(name: string, frame: ShapeFrame, style?: Style): SymbolShape {
+    if (frame.width === 0 || frame.height === 0) throw new Error();
     const compo = new SymbolShape(new BasicArray(), uuid(), name, types.ShapeType.Symbol, frame, newflatStyle(), new BasicArray(), new BasicMap());
     if (style) compo.style = style;
     addCommonAttr(compo);
@@ -467,6 +482,7 @@ export function newSymbolShape(name: string, frame: ShapeFrame, style?: Style): 
 }
 
 export function newSymbolShapeUnion(name: string, frame: ShapeFrame): SymbolUnionShape {
+    if (frame.width === 0 || frame.height === 0) throw new Error();
     const style = newflatStyle();
     const union = new SymbolUnionShape(
         new BasicArray(),
@@ -482,7 +498,8 @@ export function newSymbolShapeUnion(name: string, frame: ShapeFrame): SymbolUnio
     return union;
 }
 
-export function newSymbolRefShape(name: string, frame: ShapeFrame, refId: string, symbol_mgr: MultiResourceMgr<SymbolShape>): SymbolRefShape {
+export function newSymbolRefShape(name: string, frame: ShapeFrame, refId: string, symbol_mgr: SymbolMgr): SymbolRefShape {
+    if (frame.width === 0 || frame.height === 0) throw new Error();
     const ref = new SymbolRefShape(new BasicArray(), uuid(), name, types.ShapeType.SymbolRef, frame, newflatStyle(), refId, new BasicMap());
     addCommonAttr(ref);
     ref.setSymbolMgr(symbol_mgr);

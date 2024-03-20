@@ -1,4 +1,4 @@
-import { RepoNode } from "./base";
+import { RepoNode, RepoNodePath } from "./base";
 import { OpType } from "../../coop/common/op";
 import { Text } from "../../data/text";
 import { transform } from "../../coop/client/arrayoptransform";
@@ -170,8 +170,8 @@ export class TextRepoNode extends RepoNode {
     // undo时缓存的本地未上传的op
     popedOps: { cmd: Cmd, ops: ArrayOp[], otpath: OpItem[], refIdx: number }[] = [];
 
-    constructor(document: Document, selection: ISave4Restore | undefined) {
-        super(OpType.Array);
+    constructor(parent: RepoNodePath, document: Document, selection: ISave4Restore | undefined) {
+        super(OpType.Array, parent);
         this.document = document;
         this.selection = selection;
     }

@@ -572,7 +572,7 @@ export function is_exist_invalid_shape(selected: Shape[]) {
     let result = false;
     for (let i = 0, len = selected.length; i < len; i++) {
         const item = selected[i];
-        if ([ShapeType.Contact, ShapeType.Table].includes(item.type)) return true;
+        if ([ShapeType.Contact].includes(item.type)) return true;
         if ((item as GroupShape).childs?.length) result = is_exist_invalid_shape((item as GroupShape).childs);
         if (result) return true;
     }
@@ -582,7 +582,7 @@ export function is_exist_invalid_shape2(selected: Shape[]) {
     let result = false;
     for (let i = 0, len = selected.length; i < len; i++) {
         const item = selected[i];
-        if (ShapeType.Symbol === item.type || ShapeType.Table === item.type || ShapeType.Contact === item.type) {
+        if (ShapeType.Symbol === item.type || ShapeType.Contact === item.type) {
             return true;
         }
         if ((item as GroupShape).childs?.length) {
@@ -649,7 +649,10 @@ export function cell4edit2(page: Page, view: TableView, _cell: TableCellView, ap
     // return _var;
 }
 
-export function cell4edit(page: Page, view: TableView, rowIdx: number, colIdx: number, api: Api): TableCell {
+export function cell4edit(page: Page, view: TableView, rowIdx: number, colIdx: number, api: Api): TableCellView {
+    const cell = view.getCellAt(rowIdx, colIdx);
+    if (!cell) throw new Error("cell init fail?");
+
     const cellId = view.rowHeights[rowIdx].id + "," + view.colWidths[colIdx].id;
     const valuefun = (_var: Variable | undefined) => {
         const cell = _var?.value ?? view._getCellAt(rowIdx, colIdx);
@@ -665,10 +668,18 @@ export function cell4edit(page: Page, view: TableView, rowIdx: number, colIdx: n
     };
     const refId = view.data.id + '/' + cellId;
     const _var = override_variable2(page, VariableType.TableCell, OverrideType.TableCell, refId, valuefun, api, view);
-    if (_var) return _var.value;
+    if (_var) {
+        cell.setData(_var.value);
+        // return _var;
+        return cell;
+    }
 
-    api.tableInitCell(page, view.data, rowIdx, colIdx);
-    const cell = view._getCellAt2(rowIdx, colIdx);
-    if (!cell) throw new Error("cell init fail?");
+
+    if (api.tableInitCell(page, view.data, rowIdx, colIdx)) {
+        // 更新下data
+        const _cell = view._getCellAt2(rowIdx, colIdx);
+        if (!_cell) throw new Error();
+        cell.setData(_cell);
+    }
     return cell;
 }

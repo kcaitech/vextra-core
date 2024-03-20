@@ -81,7 +81,7 @@ class CmdSync {
     nettask: CmdNetTask;
     repo: Repository;
     // private selection: ISave4Restore | undefined;
-    private nodecreator: (op: Op) => RepoNode
+    private nodecreator: (parent: RepoNodePath, op: Op) => RepoNode
     private net: ICoopNet;
     constructor(document: Document, repo: Repository, net: ICoopNet) {
         this.document = document;
@@ -132,22 +132,29 @@ class CmdSync {
     private getRepoTree(blockId: string) { // 开始就创建，要跟踪变换op
         let repotree = this.repotrees.get(blockId);
         if (!repotree) {
-            repotree = new RepoNodePath();
+            repotree = new RepoNodePath(undefined, blockId);
             this.repotrees.set(blockId, repotree);
         }
         return repotree;
     }
 
     private __receive(cmds: Cmd[]) {
-        const subrepos = classifyOps(cmds);
-        for (let [k, v] of subrepos) {
-            // 建立repotree
-            const op0 = v[0].op;
-            const blockId = op0.path[0];
-            let repotree = this.getRepoTree(blockId);
-            const node = repotree.buildAndGet(op0, op0.path, this.nodecreator);
-            // apply op
-            node.receive(v);
+        // 一个batch一个batch的执行。否则iset的对象需要做版本对齐
+        while (cmds.length > 0) {
+            const batchid = cmds[0].batchId;
+            let i = 1;
+            while (i < cmds.length && cmds[i].batchId === batchid) ++i;
+
+            const subrepos = classifyOps(cmds.splice(0, i));
+            for (let [k, v] of subrepos) {
+                // 建立repotree
+                const op0 = v[0].op;
+                const blockId = op0.path[0];
+                let repotree = this.getRepoTree(blockId);
+                const node = repotree.buildAndGet(op0, op0.path, this.nodecreator);
+                // apply op
+                node.receive(v);
+            }
         }
     }
 
@@ -695,6 +702,9 @@ class CmdSync {
             cmd.baseVer = baseVer;
             cmd.posttime = now;
             cmd.batchId = this.postingcmds[0].id;
+            if (cmd.isRecovery) {
+                break; // receive时一次只处理一个recovery的cmd。为减少可能的bug，recovery的cmd一个一个的同步。
+            }
         }
 
         if (this.postingcmds.length > 0) {
@@ -864,36 +874,17 @@ function _mergeTextInsert(last: LocalCmd, cmd: LocalCmd) {
     if (!(insertOp && insertOp2 && ((insertOp.start + insertOp.length) === insertOp2.start))) return false;
     if (isDiffStringArr(insertOp.path, insertOp2.path)) return false;
 
+    // simple 跟 simple合并，complex跟complex合并
     if (insertOp.text.type === 'simple' && insertOp2.text.type === 'simple' &&
         (!insertOp.text.props || !insertOp.text.props.attr && !insertOp.text.props.paraAttr) &&
         (!insertOp2.text.props || !insertOp2.text.props.attr && !insertOp2.text.props.paraAttr)) {
         insertOp.text.text += insertOp2.text.text;
+    } else if (insertOp.text.type === 'complex' && insertOp2.text.type === 'complex') {
+        const _text = insertOp2.text.text;
+        _text.insertFormatText(insertOp.text.text, 0);
+        insertOp.text.text = _text;
     } else {
-        let _text;
-        if (insertOp2.text.type === 'simple') {
-            _text = new Text(new BasicArray<Para>());
-            const para = new Para(insertOp2.text.text, new BasicArray<Span>());
-            _text.paras.push(para);
-            const span = new Span(para.length);
-            para.spans.push(span);
-            if (insertOp2.text.props?.attr) {
-                mergeSpanAttr(span, insertOp2.text.props.attr);
-            }
-            if (insertOp2.text.props?.paraAttr) {
-                mergeParaAttr(para, insertOp2.text.props?.paraAttr);
-            }
-        } else {
-            _text = insertOp2.text.text;
-        }
-        if (insertOp.text.type === 'simple') {
-            _text.insertText(insertOp.text.text, 0, insertOp.text.props);
-            insertOp.text = {
-                type: 'complex', text: _text
-            }
-        } else {
-            _text.insertFormatText(insertOp.text.text, 0);
-            insertOp.text.text = _text;
-        }
+        return false;
     }
     insertOp.start = Math.min(insertOp.start, insertOp2.start);
     insertOp.length = insertOp.length + insertOp2.length;
@@ -917,8 +908,12 @@ export class CmdRepo {
         // restore
 
         if (this.localcmds.length > 0 || this.cmdsync.cmds.length > 0) throw new Error();
-
         if (cmds.length === 0 && localcmds.length === 0) return;
+
+        // 拷贝一下, _receive会修改原数组
+        cmds = cmds.slice(0);
+        localcmds = localcmds.slice(0);
+
         const repo = this.cmdsync.repo;
         repo.start("init");
         try {

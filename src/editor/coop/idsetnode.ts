@@ -1,7 +1,7 @@
 import { OpType } from "../../coop/common/op";
 import { Basic, ResourceMgr } from "../../data/basic";
 import { IdOp, IdOpRecord } from "../../coop/client/crdt";
-import { RepoNode } from "./base";
+import { RepoNode, RepoNodePath } from "./base";
 import { Cmd, OpItem } from "../../coop/common/repo";
 import { Document } from "../../data/document";
 import {
@@ -108,8 +108,8 @@ export class CrdtIdRepoNode extends RepoNode {
     private document: Document;
     private savedOrigin: boolean = false;
     private origin: any; // baseVer的状态
-    constructor(document: Document) {
-        super(OpType.Idset);
+    constructor(parent: RepoNodePath, document: Document) {
+        super(OpType.Idset, parent);
         this.document = document;
     }
 
