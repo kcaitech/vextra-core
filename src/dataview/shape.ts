@@ -424,12 +424,12 @@ export class ShapeView extends DataView {
         return this.m_path;
     }
 
-    isVisible(): boolean {
+    get isVisible(): boolean {
         const v = this._findOV(OverrideType.Visible, VariableType.Visible);
         return v ? v.value : !!this.m_data.isVisible;
     }
 
-    isLocked(): boolean {
+    get isLocked(): boolean {
         const v = this._findOV(OverrideType.Lock, VariableType.Lock);
         return v ? v.value : !!this.m_data.isLocked;
     }
@@ -746,7 +746,7 @@ export class ShapeView extends DataView {
             return this.m_render_version;
         }
 
-        if (!this.isVisible()) {
+        if (!this.isVisible) {
             this.reset("g"); // 还是要给个节点，不然后后面可见了挂不上dom
             return ++this.m_render_version;
         }

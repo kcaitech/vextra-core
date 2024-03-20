@@ -158,7 +158,7 @@ export class TableCellView extends ShapeView {
         return this.m_textpath;
     }
 
-    isVisible(): boolean {
+    get isVisible(): boolean {
         return true;
     }
 

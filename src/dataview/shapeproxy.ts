@@ -64,8 +64,8 @@ shandler['parent'] = shandler['__parent'] = (view: ShapeView) => {
     if (!parent) return undefined;
     return adapt2Shape(parent);
 };
-shandler['isVisible'] = (view: ShapeView) => view.isVisible();
-shandler['isLocked'] = (view: ShapeView) => view.isLocked();
+shandler['isVisible'] = (view: ShapeView) => view.isVisible;
+shandler['isLocked'] = (view: ShapeView) => view.isLocked;
 shandler['frame'] = (view: ShapeView) => view.frame;
 shandler['isFlippedVertical'] = (view: ShapeView) => view.isFlippedVertical;
 shandler['isFlippedHorizontal'] = (view: ShapeView) => view.isFlippedHorizontal;

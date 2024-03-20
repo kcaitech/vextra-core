@@ -73,7 +73,7 @@ export class ArtboradView extends GroupShapeView {
             return this.m_render_version;
         }
 
-        if (!this.isVisible()) {
+        if (!this.isVisible) {
             this.reset("g");
             return ++this.m_render_version;
         }
