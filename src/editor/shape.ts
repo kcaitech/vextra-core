@@ -328,7 +328,7 @@ export class ShapeEditor {
     public toggleVisible() {
         // 实例图层
         this._repoWrap('toggleVisible', (api) => {
-            const isVisible = !this.shape.isVisible;
+            const isVisible = !this.view.isVisible;
             if (this.modifyVariable(VariableType.Visible, OverrideType.Visible, isVisible, api)) return;
             api.shapeModifyVisible(this.__page, this.shape, isVisible);
         })
@@ -336,7 +336,7 @@ export class ShapeEditor {
 
     public toggleLock() {
         this._repoWrap('toggleLock', (api) => {
-            const isLocked = !this.shape.isLocked;
+            const isLocked = !this.view.isLocked;
             if (this.modifyVariable(VariableType.Lock, OverrideType.Lock, isLocked, api)) return;
             api.shapeModifyLock(this.__page, this.shape, isLocked);
         });
