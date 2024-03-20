@@ -702,6 +702,8 @@ export class ShapeEditor {
                 if (needRecovery) {
                     this.__delete(shape, api);
                     result = 0;
+                } else {
+                    update_frame_by_points(api, this.__page, shape);
                 }
             }
 
