@@ -127,8 +127,9 @@ function _insertText(paraArray: Para[], paraIndex: number, para: Para, text: str
             const _para = new Para(_text, _spans);
             if (!paraAttr || propType === 'simple') mergeParaAttr(_para, para);
             if (paraAttr) mergeParaAttr(_para, paraAttr);
-            paraArray.splice(paraIndex, 0, _para);
+            paraArray.splice(paraIndex, 0, _para); // 前插入
             paraIndex++;
+            // para 保持
             // index 继续0
         }
         else if (index < para.length - 1) { // 分裂并插入'\n'
@@ -174,7 +175,8 @@ function _insertText(paraArray: Para[], paraIndex: number, para: Para, text: str
             if (!paraAttr || propType === 'simple') mergeParaAttr(_para, para);
             if (paraAttr) mergeParaAttr(_para, paraAttr);
             paraArray.splice(paraIndex + 1, 0, _para);
-            para = _para;
+            paraIndex++;
+            para = _para; // 后插入，更换para
             index = 0;
         }
         else { // 回车前插入回车
