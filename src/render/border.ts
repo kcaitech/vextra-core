@@ -1,17 +1,7 @@
 import { render as renderGradient } from "./gradient";
 import { objectId } from '../basic/objectid';
-import {
-    Border,
-    BorderPosition,
-    FillType,
-    Gradient,
-    GradientType,
-    OverrideType,
-    Shape,
-    ShapeFrame,
-    SymbolRefShape,
-    SymbolShape,
-    VariableType
+import { Border, BorderPosition, FillType, Gradient, GradientType, OverrideType, Shape, ShapeFrame, SymbolRefShape,
+    SymbolShape, VariableType
 } from "../data/classes";
 import { findOverrideAndVar, randomId } from "./basic";
 
