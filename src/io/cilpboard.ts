@@ -16,7 +16,7 @@ import {
     exportSymbolUnionShape,
     exportTableShape,
     exportText,
-    exportTextShape
+    exportTextShape, exportPathShape2
 } from "../data/baseexport";
 import {
     IImportContext,
@@ -28,7 +28,7 @@ import {
     importImageShape,
     importLineShape,
     importOvalShape,
-    importPathShape,
+    importPathShape, importPathShape2,
     importRectShape,
     importSymbolRefShape,
     importSymbolShape,
@@ -93,6 +93,8 @@ export function export_shape(shapes: Shape[]) {
             content = exportTextShape(shape as unknown as types.TextShape, ctx);
         } else if (type === ShapeType.Path) {
             content = exportPathShape(shape as unknown as types.PathShape, ctx);
+        } else if (type === ShapeType.Path2) {
+            content = exportPathShape2(shape as unknown as types.PathShape2, ctx);
         } else if (type === ShapeType.Artboard) {
             content = exportArtboard(shape as unknown as types.Artboard, ctx);
         } else if (type === ShapeType.Group) {
@@ -257,6 +259,8 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
                 r = importTextShape(_s as any as types.TextShape, ctx);
             } else if (type === ShapeType.Path) {
                 r = importPathShape(_s as any as types.PathShape);
+            } else if (type === ShapeType.Path2) {
+                r = importPathShape2(_s as any as types.PathShape2);
             } else if (type === ShapeType.Artboard) {
                 const children = (_s as any).childs;
                 children && children.length && set_childs_id(children, matched);

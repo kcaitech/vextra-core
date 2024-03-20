@@ -651,7 +651,7 @@ export type ImageShape = PathShape & {
 }
 /* group shape */
 export type GroupShape = Shape & {
-    childs: (GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape)[]
+    childs: (GroupShape | ImageShape | PathShape | PathShape2 | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape)[]
     fixedRadius?: number
 }
 /* symbol shape */
