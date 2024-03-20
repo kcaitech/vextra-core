@@ -1598,7 +1598,7 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape)>()
+            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.PathShape2 | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape)>()
             for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
                     const val = source.childs[i]
@@ -1613,6 +1613,9 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
                     if (val.typeId == 'path-shape') {
                         if (!val.crdtidx) val.crdtidx = [i]
                         return importPathShape(val as types.PathShape, ctx)
+                    }
+                    if (val.typeId == 'path-shape2') {
+                        return importPathShape2(val as types.PathShape2, ctx)
                     }
                     if (val.typeId == 'rect-shape') {
                         if (!val.crdtidx) val.crdtidx = [i]
@@ -1722,7 +1725,7 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape)>()
+            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.PathShape2 | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape)>()
             for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
                     const val = source.childs[i]
@@ -1737,6 +1740,9 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
                     if (val.typeId == 'path-shape') {
                         if (!val.crdtidx) val.crdtidx = [i]
                         return importPathShape(val as types.PathShape, ctx)
+                    }
+                    if (val.typeId == 'path-shape2') {
+                        return importPathShape2(val as types.PathShape2, ctx)
                     }
                     if (val.typeId == 'rect-shape') {
                         if (!val.crdtidx) val.crdtidx = [i]
@@ -1867,7 +1873,7 @@ export function importSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IIm
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape)>()
+            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.PathShape2 | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape)>()
             for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
                     const val = source.childs[i]
@@ -1882,6 +1888,9 @@ export function importSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IIm
                     if (val.typeId == 'path-shape') {
                         if (!val.crdtidx) val.crdtidx = [i]
                         return importPathShape(val as types.PathShape, ctx)
+                    }
+                    if (val.typeId == 'path-shape2') {
+                        return importPathShape2(val as types.PathShape2, ctx)
                     }
                     if (val.typeId == 'rect-shape') {
                         if (!val.crdtidx) val.crdtidx = [i]
@@ -2008,7 +2017,7 @@ export function importPage(source: types.Page, ctx?: IImportContext): impl.Page 
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape)>()
+            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.PathShape2 | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape)>()
             for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
                     const val = source.childs[i]
@@ -2023,6 +2032,9 @@ export function importPage(source: types.Page, ctx?: IImportContext): impl.Page 
                     if (val.typeId == 'path-shape') {
                         if (!val.crdtidx) val.crdtidx = [i]
                         return importPathShape(val as types.PathShape, ctx)
+                    }
+                    if (val.typeId == 'path-shape2') {
+                        return importPathShape2(val as types.PathShape2, ctx)
                     }
                     if (val.typeId == 'rect-shape') {
                         if (!val.crdtidx) val.crdtidx = [i]
@@ -2245,7 +2257,7 @@ export function importBoolShape(source: types.BoolShape, ctx?: IImportContext): 
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape)>()
+            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.PathShape2 | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape)>()
             for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
                     const val = source.childs[i]
@@ -2260,6 +2272,9 @@ export function importBoolShape(source: types.BoolShape, ctx?: IImportContext): 
                     if (val.typeId == 'path-shape') {
                         if (!val.crdtidx) val.crdtidx = [i]
                         return importPathShape(val as types.PathShape, ctx)
+                    }
+                    if (val.typeId == 'path-shape2') {
+                        return importPathShape2(val as types.PathShape2, ctx)
                     }
                     if (val.typeId == 'rect-shape') {
                         if (!val.crdtidx) val.crdtidx = [i]
@@ -2365,7 +2380,7 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape)>()
+            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.PathShape2 | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape)>()
             for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
                     const val = source.childs[i]
@@ -2380,6 +2395,9 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
                     if (val.typeId == 'path-shape') {
                         if (!val.crdtidx) val.crdtidx = [i]
                         return importPathShape(val as types.PathShape, ctx)
+                    }
+                    if (val.typeId == 'path-shape2') {
+                        return importPathShape2(val as types.PathShape2, ctx)
                     }
                     if (val.typeId == 'rect-shape') {
                         if (!val.crdtidx) val.crdtidx = [i]

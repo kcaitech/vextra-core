@@ -1467,6 +1467,9 @@ export function exportGroupShape(source: types.GroupShape, ctx?: IExportContext)
                     if (val.typeId == 'path-shape') {
                         return exportPathShape(val as types.PathShape, ctx)
                     }
+                    if (val.typeId == 'path-shape2') {
+                        return exportPathShape2(val as types.PathShape2, ctx)
+                    }
                     if (val.typeId == 'rect-shape') {
                         return exportRectShape(val as types.RectShape, ctx)
                     }
@@ -1551,6 +1554,9 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
                         }
                         if (val.typeId == 'path-shape') {
                             return exportPathShape(val as types.PathShape, ctx)
+                        }
+                        if (val.typeId == 'path-shape2') {
+                            return exportPathShape2(val as types.PathShape2, ctx)
                         }
                         if (val.typeId == 'rect-shape') {
                             return exportRectShape(val as types.RectShape, ctx)
@@ -1678,6 +1684,9 @@ export function exportSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IEx
                         if (val.typeId == 'path-shape') {
                             return exportPathShape(val as types.PathShape, ctx)
                         }
+                        if (val.typeId == 'path-shape2') {
+                            return exportPathShape2(val as types.PathShape2, ctx)
+                        }
                         if (val.typeId == 'rect-shape') {
                             return exportRectShape(val as types.RectShape, ctx)
                         }
@@ -1801,6 +1810,9 @@ export function exportPage(source: types.Page, ctx?: IExportContext): types.Page
                         }
                         if (val.typeId == 'path-shape') {
                             return exportPathShape(val as types.PathShape, ctx)
+                        }
+                        if (val.typeId == 'path-shape2') {
+                            return exportPathShape2(val as types.PathShape2, ctx)
                         }
                         if (val.typeId == 'rect-shape') {
                             return exportRectShape(val as types.RectShape, ctx)
@@ -2023,6 +2035,9 @@ export function exportBoolShape(source: types.BoolShape, ctx?: IExportContext): 
                         if (val.typeId == 'path-shape') {
                             return exportPathShape(val as types.PathShape, ctx)
                         }
+                        if (val.typeId == 'path-shape2') {
+                            return exportPathShape2(val as types.PathShape2, ctx)
+                        }
                         if (val.typeId == 'rect-shape') {
                             return exportRectShape(val as types.RectShape, ctx)
                         }
@@ -2130,6 +2145,9 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
                         }
                         if (val.typeId == 'path-shape') {
                             return exportPathShape(val as types.PathShape, ctx)
+                        }
+                        if (val.typeId == 'path-shape2') {
+                            return exportPathShape2(val as types.PathShape2, ctx)
                         }
                         if (val.typeId == 'rect-shape') {
                             return exportRectShape(val as types.RectShape, ctx)
