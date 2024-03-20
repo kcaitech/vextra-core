@@ -42,7 +42,8 @@ import {
     Style,
     SymbolRefShape,
     Stop,
-    Gradient
+    Gradient,
+    Fill
 } from "../data/classes";
 import { TextShapeEditor } from "./textshape";
 import { modify_frame_after_insert, set_childs_id, transform_data } from "../io/cilpboard";
@@ -1244,8 +1245,8 @@ export class PageEditor {
         }
     }
 
-    createArtboard(name: string, frame: ShapeFrame) { // todo 新建图层存在代码冗余
-        return newArtboard2(name, frame)
+    createArtboard(name: string, frame: ShapeFrame, fill: Fill) { // todo 新建图层存在代码冗余
+        return newArtboard(name, frame, fill);
     }
 
     shapesModifyPointRadius(shapes: Shape[], indexes: number[], val: number) {
@@ -1422,34 +1423,6 @@ export class PageEditor {
         }
     }
 
-    uppper_layers(shapes: Shape[], step?: number) {
-        const api = this.__repo.start("move");
-        try {
-            for (let i = 0; i < shapes.length; i++) {
-                const shape = shapes[i];
-                if (shape.isVirtualShape) continue;
-                const parent = shape.parent as GroupShape | undefined;
-                if (!parent) continue;
-                const index = parent.indexOfChild(shape);
-                const len = parent.childs.length;
-                if (index < 0 || index >= len - 1) continue;
-                if (!step) {
-                    api.shapeMove(this.__page, parent, index, parent, len - 1);
-                } else {
-                    if (step + index >= len) {
-                        api.shapeMove(this.__page, parent, index, parent, len - 1);
-                    } else {
-                        api.shapeMove(this.__page, parent, index, parent, index + step);
-                    }
-                }
-            }
-            this.__repo.commit();
-        } catch (error) {
-            console.log(error)
-            this.__repo.rollback();
-        }
-    }
-
     /**
      * @description 调低图形shape的z-index层级
      * @param step 层级数，不传则降低到底部
@@ -1478,32 +1451,6 @@ export class PageEditor {
             console.log(error)
             this.__repo.rollback();
             return false;
-        }
-    }
-    lower_layers(shapes: Shape[], step?: number) {
-        const api = this.__repo.start("move");
-        try {
-            for (let i = 0; i < shapes.length; i++) {
-                const shape = shapes[i];
-                if (shape.isVirtualShape) continue;
-                const parent = shape.parent as GroupShape | undefined;
-                if (!parent) continue;
-                const index = parent.indexOfChild(shape);
-                if (index < 1) continue;
-                if (!step) {
-                    api.shapeMove(this.__page, parent, index, parent, 0);
-                } else {
-                    if (index - step <= 0) {
-                        api.shapeMove(this.__page, parent, index, parent, 0);
-                    } else {
-                        api.shapeMove(this.__page, parent, index, parent, index - step);
-                    }
-                }
-            }
-            this.__repo.commit();
-        } catch (error) {
-            console.log(error)
-            this.__repo.rollback();
         }
     }
 
@@ -1713,7 +1660,7 @@ export class PageEditor {
             const api = this.__repo.start('reverseShapesGradient');
             for (let i = 0, l = actions.length; i < l; i++) {
                 const { target, index, type } = actions[i];
-                const arr = target.style[type];
+                const arr = type === 'fills' ? target.getFills() : target.getBorders();
                 if (!arr?.length) {
                     continue;
                 }
@@ -1755,7 +1702,7 @@ export class PageEditor {
             const api = this.__repo.start('rotateShapesGradient');
             for (let i = 0, l = actions.length; i < l; i++) {
                 const { target, index, type } = actions[i];
-                const arr = target.style[type];
+                const arr = type === 'fills' ? target.getFills() : target.getBorders();
                 if (!arr?.length) {
                     continue;
                 }
@@ -1798,7 +1745,7 @@ export class PageEditor {
             const api = this.__repo.start('addShapesGradientStop');
             for (let i = 0, l = actions.length; i < l; i++) {
                 const { target, index, type, value } = actions[i];
-                const grad_type = target.style[type];
+                const grad_type = type === 'fills' ? target.getFills() : target.getBorders();
                 if (!grad_type?.length) {
                     continue;
                 }
@@ -1829,8 +1776,6 @@ export class PageEditor {
                 })
                 const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
                 const shape = shape4fill(api, this.__page, target);
-                console.log('stops:', new_gradient.stops);
-
                 f(this.__page, shape, index, new_gradient);
             }
             this.__repo.commit();
@@ -1844,7 +1789,7 @@ export class PageEditor {
             const api = this.__repo.start('toggerShapeGradientType');
             for (let i = 0, l = actions.length; i < l; i++) {
                 const { target, index, type, value } = actions[i];
-                const grad_type = target.style[type];
+                const grad_type = type === 'fills' ? target.getFills() : target.getBorders();
                 if (!grad_type?.length) {
                     continue;
                 }
@@ -1905,7 +1850,7 @@ export class PageEditor {
             const api = this.__repo.start('setShapesGradientStopColor');
             for (let i = 0, l = actions.length; i < l; i++) {
                 const { target, index, type, value } = actions[i];
-                const grad_type = target.style[type];
+                const grad_type = type === 'fills' ? target.getFills() : target.getBorders();
                 if (!grad_type?.length) {
                     continue;
                 }
@@ -1941,7 +1886,7 @@ export class PageEditor {
             const api = this.__repo.start('setShapesGradientStopColor');
             for (let i = 0, l = actions.length; i < l; i++) {
                 const { target, index, type, value } = actions[i];
-                const grad_type = target.style[type];
+                const grad_type = type === 'fills' ? target.getFills() : target.getBorders();
                 if (!grad_type?.length) {
                     continue;
                 }
@@ -1971,7 +1916,7 @@ export class PageEditor {
             const api = this.__repo.start('setGradientOpacity');
             for (let i = 0, l = actions.length; i < l; i++) {
                 const { target, index, type, value } = actions[i];
-                const grad_type = target.style[type];
+                const grad_type = type === 'fills' ? target.getFills() : target.getBorders();
                 if (!grad_type?.length) {
                     continue;
                 }
