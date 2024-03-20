@@ -180,7 +180,6 @@ export function newArtboard2(name: string, frame: ShapeFrame): Artboard {
 }
 
 export function newPathShape(name: string, frame: ShapeFrame, path: Path, style?: Style): PathShape | PathShape2 {
-    if (frame.width === 0 || frame.height === 0) throw new Error();
     frame.width = frame.width || 1;
     frame.height = frame.height || 1;
 
