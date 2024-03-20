@@ -813,4 +813,8 @@ export class ShapeView extends DataView {
     get pathType() {
         return this.data.pathType;
     }
+
+    get isPathIcon() {
+        return this.data.isPathIcon;
+    }
 }

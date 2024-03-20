@@ -255,4 +255,8 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     get pathType() {
         return PathType.Fixed;
     }
+
+    get isPathIcon() {
+        return false;
+    }
 }

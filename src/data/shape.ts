@@ -412,6 +412,10 @@ export class Shape extends Basic implements classes.Shape {
     get pathType() {
         return PathType.Editable;
     }
+
+    get isPathIcon() { // 根据路径绘制图标
+        return true;
+    }
 }
 
 export class GroupShape extends Shape implements classes.GroupShape {
@@ -533,6 +537,10 @@ export class GroupShape extends Shape implements classes.GroupShape {
     get pathType() {
         return PathType.Fixed;
     }
+
+    get isPathIcon() {
+        return false;
+    }
 }
 
 export class BoolShape extends GroupShape implements classes.BoolShape {
@@ -568,6 +576,10 @@ export class BoolShape extends GroupShape implements classes.BoolShape {
             }
         }
         return { op }
+    }
+
+    get isPathIcon() {
+        return true;
     }
 }
 
@@ -931,6 +943,10 @@ export class ImageShape extends RectShape implements classes.ImageShape {
     get frameType() {
         return FrameType.Rect;
     }
+
+    get isPathIcon() {
+        return false;
+    }
 }
 
 export class OvalShape extends PathShape implements classes.OvalShape {
@@ -1090,6 +1106,10 @@ export class TextShape extends Shape implements classes.TextShape {
     get pathType() {
         return PathType.Fixed;
     }
+
+    get isPathIcon() {
+        return false;
+    }
 }
 export class CutoutShape extends PathShape implements classes.CutoutShape {
     typeId = 'cutout-shape'
@@ -1129,5 +1149,9 @@ export class CutoutShape extends PathShape implements classes.CutoutShape {
 
     get pathType() {
         return PathType.Fixed;
+    }
+
+    get isPathIcon() {
+        return false;
     }
 }

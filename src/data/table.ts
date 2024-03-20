@@ -461,4 +461,8 @@ export class TableShape extends Shape implements classes.TableShape {
     get pathType() {
         return PathType.Fixed;
     }
+
+    get isPathIcon() {
+        return false;
+    }
 }
