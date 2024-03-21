@@ -1,6 +1,6 @@
 // 文本编辑时的增量排版
 
-import { Text } from "./classes";
+import { Text } from "./text";
 import { BulletNumbersLayout, TextLayout, fixLineHorAlign, layoutPara } from "./textlayout";
 import { TextBehaviour, TextHorAlign, TextVerAlign } from "./typesdefine";
 

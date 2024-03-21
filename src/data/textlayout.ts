@@ -4,7 +4,7 @@ import { BasicArray } from "./basic"
 import { layoutBulletNumber } from "./textbnlayout";
 import { transformText } from "./textlayouttransform";
 import { gPal } from "../basic/pal";
-import { TextAttr } from "./typesdefine";
+import { ShapeFrame, TextAttr } from "./typesdefine";
 
 const TAB_WIDTH = 28;
 const INDENT_WIDTH = TAB_WIDTH;
@@ -596,15 +596,15 @@ export function layoutPara(text: Text, para: Para, layoutWidth: number, preBulle
     return paraLayout;
 }
 
-export function layoutText(text: Text, layoutWidth: number, layoutHeight: number): TextLayout {
-    // const layoutWidth = ((b: TextBehaviour) => {
-    //     switch (b) {
-    //         case TextBehaviour.Flexible: return Number.MAX_VALUE;
-    //         case TextBehaviour.Fixed: return frame.width;
-    //         case TextBehaviour.FixWidthAndHeight: return frame.width;
-    //     }
-    //     // return Number.MAX_VALUE
-    // })(text.attr?.textBehaviour ?? TextBehaviour.Flexible)
+export function layoutText(text: Text, frame: ShapeFrame): TextLayout {
+    const layoutWidth = ((b: TextBehaviour) => {
+        switch (b) {
+            case TextBehaviour.Flexible: return Number.MAX_VALUE;
+            case TextBehaviour.Fixed: return frame.width;
+            case TextBehaviour.FixWidthAndHeight: return frame.width;
+        }
+        // return Number.MAX_VALUE
+    })(text.attr?.textBehaviour ?? TextBehaviour.Flexible)
 
     const padding = text.attr?.padding;
     const paddingLeft = padding?.left ?? 0;
@@ -632,15 +632,15 @@ export function layoutText(text: Text, layoutWidth: number, layoutHeight: number
     }
 
     // hor align
-    const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
-    const alignWidth = textBehaviour === TextBehaviour.Flexible ? contentWidth : coreLayoutWidth;
+    // const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
+    // const alignWidth = textBehaviour === TextBehaviour.Flexible ? contentWidth : coreLayoutWidth;
     for (let i = 0, pc = text.paras.length; i < pc; i++) {
         const para = text.paras[i];
         const paraLayout = paras[i];
         const alignment = para.attr?.alignment ?? TextHorAlign.Left;
         for (let li = 0, llen = paraLayout.length; li < llen; li++) {
             const line = paraLayout[li];
-            adjustLineHorAlign(line, alignment, alignWidth);
+            adjustLineHorAlign(line, alignment, frame.width);
         }
     }
 
@@ -648,8 +648,8 @@ export function layoutText(text: Text, layoutWidth: number, layoutHeight: number
     const yOffset: number = ((align: TextVerAlign) => {
         switch (align) {
             case TextVerAlign.Top: return paddingTop;
-            case TextVerAlign.Middle: return (layoutHeight - contentHeight - paddingTop - paddingBottom) / 2;
-            case TextVerAlign.Bottom: return layoutHeight - contentHeight - paddingBottom;
+            case TextVerAlign.Middle: return (frame.height - contentHeight - paddingTop - paddingBottom) / 2;
+            case TextVerAlign.Bottom: return frame.height - contentHeight - paddingBottom;
         }
     })(vAlign);
     return { xOffset: paddingLeft, yOffset, paras, contentHeight, contentWidth }

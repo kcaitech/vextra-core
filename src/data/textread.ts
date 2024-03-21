@@ -4,7 +4,7 @@ import { _travelTextPara } from "./texttravel";
 import { mergeParaAttr, mergeSpanAttr } from "./textutils";
 import { Color } from "./color";
 import { FillType } from "./style";
-import { gradient_equals } from "../io/cilpboard";
+import { gradient_equals } from "./textutils";
 export function getSimpleText(shapetext: Text, index: number, length: number): string {
     let text = '';
     _travelTextPara(shapetext.paras, index, length, (paraArray, paraIndex, para, index, length) => {
