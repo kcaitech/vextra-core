@@ -67,7 +67,6 @@ export class TextShapeEditor extends ShapeEditor {
         if (this._cacheAttr === undefined) this._cacheAttr = new SpanAttr();
         return this._cacheAttr;
     }
-    // private __textAttr?: TextAttr;
 
     constructor(shape: TextShapeView | TableCellView, page: Page, repo: CoopRepository, document: Document) {
         super(shape, page, repo, document);
@@ -101,8 +100,6 @@ export class TextShapeEditor extends ShapeEditor {
     }
 
     private shape4edit(api: Api, shape?: TextShapeView | TableCellView): Variable | TableCellView | TextShapeView {
-        // this.__textAttr = undefined;
-
         const _shape = shape ?? this.__shape as (TextShapeView | TableCellView);
 
         if (_shape instanceof TableCellView) {
@@ -116,21 +113,6 @@ export class TextShapeEditor extends ShapeEditor {
                 cell = table.data.cells.get(_shape.data.id) as TableCell;
                 if (!cell) throw new Error();
             }
-            // if (!cell.text) {
-            //     const save = this.__repo.transactCtx.settrap;
-            //     this.__repo.transactCtx.settrap = false;
-            //     try {
-            //         const _text = newTableCellText();
-            //         cell.text = _text;
-            //     }
-            //     finally {
-            //         this.__repo.transactCtx.settrap = save;
-            //     }
-            // }
-            // if (cell.text.paras.length === 1 && cell.text.paras[0].length === 1) {
-            //     const attr = (_shape.parent as TableView).data.textAttr;
-            //     this.__textAttr = attr && importTextAttr(attr);
-            // }
             this.__repo.updateTextSelectionPath(cell.text);
             if (_var || cell !== _shape.data) {
                 _shape.setData(cell); // 手动更新下，要不光标更新不对
@@ -153,12 +135,10 @@ export class TextShapeEditor extends ShapeEditor {
                 const textVar = new Variable(uuid(), VariableType.Text, _var.name, importText(_shape.text));
                 if (host instanceof SymbolShape) {
                     // sketch不会走到这
-
                     // 更换var
                     // 更换bindvar
                     api.shapeRemoveVariable(this.__page, host, _var.id);
                     api.shapeAddVariable(this.__page, host, textVar);
-
                     const bindid = _var.id;
                     const rebind = (shape: Shape) => {
                         if (shape.varbinds?.get(OverrideType.Text) === bindid) {
@@ -169,9 +149,7 @@ export class TextShapeEditor extends ShapeEditor {
                             shape.childs.forEach(c => rebind(c));
                         }
                     }
-
                     rebind(host);
-
                 } else {
                     let override_id: string | undefined;
                     for (let [k, v] of host.overrides!) {
@@ -184,13 +162,9 @@ export class TextShapeEditor extends ShapeEditor {
                     // 不可以直接修改，需要删除后重新override到一个text
                     api.shapeRemoveOverride(this.__page, host, override_id, _var.id, VariableType.Text);
                     api.shapeRemoveVariable(this.__page, host, _var.id);
-    
-                    
-    
                     api.shapeAddVariable(this.__page, host, textVar);
                     api.shapeAddOverride(this.__page, host, override_id, textVar.id);
                 }
-
                 _var = textVar;
             }
             if (_var) {
@@ -199,7 +173,6 @@ export class TextShapeEditor extends ShapeEditor {
             }
             return _shape;
         }
-
     }
 
     public deleteText(index: number, count: number): number { // 清空后，在失去焦点时，删除shape
@@ -370,11 +343,6 @@ export class TextShapeEditor extends ShapeEditor {
         const api = this.__repo.start("insertTextForNewLine");
         try {
             const shape = this.shape4edit(api);
-            // if (this.__textAttr) {
-            //     const attr1 = this.__textAttr;
-            //     if (attr) mergeSpanAttr(attr1, attr);
-            //     attr = attr1;
-            // }
             let count = text.length;
             if (del > 0) api.deleteText(this.__page, shape, index, del);
             for (; ;) {
