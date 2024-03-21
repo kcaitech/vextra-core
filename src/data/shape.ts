@@ -1063,37 +1063,37 @@ export class TextShape extends Shape implements classes.TextShape {
     //     this.text.updateSize(this.frame.width, this.frame.height)
     // }
 
-    dropLayout(token: string, owner: string) {
-        this.text.dropLayout(token, owner);
-    }
+    // dropLayout(token: string, owner: string) {
+    //     this.text.dropLayout(token, owner);
+    // }
 
-    getLayout3(width: number, height: number, owner: string, token: string | undefined): { token: string, layout: TextLayout } {
-        return this.text.getLayout3(width, height, owner, token);
-    }
+    // getLayout3(frame: ShapeFrame, owner: string, token: string | undefined): { token: string, layout: TextLayout } {
+    //     return this.text.getLayout3(frame, owner, token);
+    // }
 
     getLayout(): TextLayout {
         const frame = this.frame;
-        const layout = this.getLayout3(frame.width, frame.height, this.id, undefined);
-        this.dropLayout(layout.token, this.id);
+        const layout = this.text.getLayout3(frame, this.id, undefined);
+        this.text.dropLayout(layout.token, this.id);
         return layout.layout;
     }
 
-    getText(): Text {
-        if (this.isVirtualShape) return this.text; // 走proxy
-        if (!this.varbinds) return this.text;
+    // getText(): Text {
+    //     if (this.isVirtualShape) return this.text; // 走proxy
+    //     if (!this.varbinds) return this.text;
 
-        const textVar = this.varbinds.get(OverrideType.Text);
-        if (!textVar) return this.text;
+    //     const textVar = this.varbinds.get(OverrideType.Text);
+    //     if (!textVar) return this.text;
 
-        const _vars: Variable[] = [];
-        this.findVar(textVar, _vars);
-        // watch vars
-        const _var = _vars[_vars.length - 1];
-        if (_var && _var.type === VariableType.Text) {
-            return _var.value as Text; // 这要是string?
-        }
-        return this.text;
-    }
+    //     const _vars: Variable[] = [];
+    //     this.findVar(textVar, _vars);
+    //     // watch vars
+    //     const _var = _vars[_vars.length - 1];
+    //     if (_var && _var.type === VariableType.Text) {
+    //         return _var.value as Text; // 这要是string?
+    //     }
+    //     return this.text;
+    // }
 
     get isNoSupportDiamondScale() {
         return true;

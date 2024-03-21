@@ -1,5 +1,5 @@
 import { objectId } from "../basic/objectid";
-import { ShapeFrame, Color, Gradient, GradientType, Stop } from "../data/classes";
+import { ShapeFrame, Gradient, GradientType, Stop, Color } from "../data/classes";
 
 const defaultColor = Color.DefaultColor;
 

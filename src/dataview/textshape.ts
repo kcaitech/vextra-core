@@ -1,9 +1,11 @@
 import { TextLayout } from "../data/textlayout";
-import { OverrideType, Path, ShapeFrame, Text, TextShape, VariableType } from "../data/classes";
+import { OverrideType, Para, Path, ShapeFrame, Span, Text, TextShape, VariableType } from "../data/classes";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
 import { renderText2Path, renderTextLayout } from "../render/text";
 import { CursorLocate, TextLocate, locateCursor, locateNextCursor, locatePrevCursor, locateRange, locateText } from "../data/textlocate";
+import { BasicArray } from "../data/basic";
+import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "../data/textutils";
 
 export class TextShapeView extends ShapeView {
 
@@ -11,9 +13,31 @@ export class TextShapeView extends ShapeView {
     protected isNoSupportDiamondScale(): boolean {
         return this.m_data.isNoSupportDiamondScale;
     }
-
+    __str: string | undefined;
+    __strText: Text | undefined;
     getText(): Text {
         const v = this._findOV(OverrideType.Text, VariableType.Text);
+        if (v && typeof v.value === 'string') {
+            if (this.__str === v.value) {
+                return this.__strText!;
+            }
+            this.__str = v.value;
+            const str = v.value.split('\n');
+            const origin = (this.m_data as TextShape).text;
+            this.__strText = new Text(new BasicArray<Para>());
+            if (origin.attr) mergeTextAttr(this.__strText, origin.attr);
+            const originp = origin.paras[0];
+            const originspan = originp.spans[0];
+            for (let i = 0; i < str.length; ++i) {
+                const p = new Para(str[i], new BasicArray<Span>());
+                p.spans.push(new Span(p.length));
+                mergeParaAttr(p, originp);
+                mergeSpanAttr(p.spans[0], originspan);
+                this.__strText.paras.push(p);
+            }
+            return this.__strText;
+        }
+
         const text = v ? v.value : (this.m_data as TextShape).text;
         if (typeof text === 'string') throw new Error("");
         return text;
@@ -33,9 +57,9 @@ export class TextShapeView extends ShapeView {
     __preText: Text | undefined;
     getLayout() {
         const text = this.getText();
-        if (this.__preText !== text && this.__layoutToken && this.__preText) this.__preText.dropLayout(this.__layoutToken, this.id); 
+        if (this.__preText !== text && this.__layoutToken && this.__preText) this.__preText.dropLayout(this.__layoutToken, this.id);
         const frame = this.frame;
-        const layout = text.getLayout3(frame.width, frame.height, this.id, this.__layoutToken);
+        const layout = text.getLayout3(frame, this.id, this.__layoutToken);
         this.__layoutToken = layout.token;
         this.__preText = text;
 
@@ -136,6 +160,6 @@ export class TextShapeView extends ShapeView {
 
     onDestory(): void {
         super.onDestory();
-        if (this.__layoutToken && this.__preText) this.__preText.dropLayout(this.__layoutToken, this.id); 
+        if (this.__layoutToken && this.__preText) this.__preText.dropLayout(this.__layoutToken, this.id);
     }
 }

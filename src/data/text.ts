@@ -35,6 +35,7 @@ import { _travelTextPara } from "./texttravel";
 import { FillType, Padding } from "./baseclasses";
 import { Gradient } from "./style"
 import { Color } from "./color";
+import { ShapeFrame } from "./typesdefine";
 
 /*
  文本框属性
@@ -184,18 +185,20 @@ export class Text extends Basic implements classes.Text {
         }
     }
 
-    getLayout3(width: number, height: number, owner: string, token: string | undefined): { token: string, layout: TextLayout } {
+    getLayout3(frame: ShapeFrame, owner: string, token: string | undefined): { token: string, layout: TextLayout } {
 
+        const width = frame.width;
+        const height = frame.height;
         const updateLayout = (o: LayoutItem) => {
             if (!o.layout) {
-                const layoutWidth = ((b: TextBehaviour): number => {
-                    switch (b) {
-                        case TextBehaviour.Flexible: return Number.MAX_VALUE;
-                        case TextBehaviour.Fixed: return width;
-                        case TextBehaviour.FixWidthAndHeight: return width;
-                    }
-                })(this.attr?.textBehaviour ?? TextBehaviour.Flexible)
-                o.layout = layoutText(this, layoutWidth, height);
+                // const layoutWidth = ((b: TextBehaviour): number => {
+                //     switch (b) {
+                //         case TextBehaviour.Flexible: return Number.MAX_VALUE;
+                //         case TextBehaviour.Fixed: return width;
+                //         case TextBehaviour.FixWidthAndHeight: return width;
+                //     }
+                // })(this.attr?.textBehaviour ?? TextBehaviour.Flexible)
+                o.layout = layoutText(this, frame);
             }
         }
 
@@ -235,8 +238,8 @@ export class Text extends Basic implements classes.Text {
         return { token: cur, layout: o.layout! }
     }
 
-    getLayout2(width: number, height: number, id: string): TextLayout {
-        const layout = this.getLayout3(width, height, id, undefined);
+    getLayout2(frame: ShapeFrame, id: string): TextLayout {
+        const layout = this.getLayout3(frame, id, undefined);
         this.dropLayout(layout.token, id);
         return layout.layout;
     }

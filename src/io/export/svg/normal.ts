@@ -156,7 +156,7 @@ comsMap.set(ShapeType.TableCell, (data: Shape,
     const frame = attrs.frame as ShapeFrame;
     let layout;
     if (_cell.cellType === TableCellType.Text && _cell.text) {
-        layout = layoutText(_cell.text, frame.width, frame.height);
+        layout = layoutText(_cell.text, frame);
     }
     return cell(h, _cell, frame, "", varsContainer, layout);
 });

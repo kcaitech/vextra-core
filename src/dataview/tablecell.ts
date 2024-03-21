@@ -115,7 +115,7 @@ export class TableCellView extends ShapeView {
         const text = this.getText();
         if (this.__preText !== text && this.__layoutToken && this.__preText) this.__preText.dropLayout(this.__layoutToken, this.id);
         const frame = this.frame;
-        const layout = text.getLayout3(frame.width, frame.height, this.id, this.__layoutToken);
+        const layout = text.getLayout3(frame, this.id, this.__layoutToken);
         this.__layoutToken = layout.token;
         this.__preText = text;
 
