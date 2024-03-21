@@ -427,23 +427,20 @@ export class ShapeEditor {
      * @description 路径裁剪
      */
     public clipPathShape(index: number, segment: number) {
-        const data: { code: number, ex: Shape | undefined } = { code: 0, ex: undefined };
-
         if (this.shape.isVirtualShape) {
             console.log('this.shape.isVirtualShape');
-            data.code = -1;
-            return data;
+            return this.__shape;
         }
 
         try {
             const api = this.__repo.start("sortPathShapePoints");
-            _clip(this.__document, this.__page, api, this.shape as PathShape, index, segment);
+            const shape = _clip(this.__document, this.__page, api, this.shape as PathShape, index, segment);
             this.__repo.commit();
+            return shape;
         } catch (error) {
             console.log('sortPathShapePoints:', error);
             this.__repo.rollback();
-            data.code = -1;
-            return data;
+            return this.__shape;
         }
     }
 

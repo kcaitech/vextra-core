@@ -17,7 +17,7 @@ import {
     translate,
     translateTo,
 } from "./frame";
-import { CurvePoint, GroupShape, PathShape, Shape, ShapeFrame, TextShape } from "../data/shape";
+import { CurvePoint, GroupShape, PathShape, PathShape2, Shape, ShapeFrame, TextShape } from "../data/shape";
 import { getFormatFromBase64 } from "../basic/utils";
 import { ContactRoleType, CurveMode, FillType, OverrideType, ShapeType, VariableType } from "../data/typesdefine";
 import {
@@ -63,7 +63,7 @@ import { ContactLineView, PageView, PathShapeView, ShapeView, adapt2Shape } from
 import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
 import { BasicArray } from "../data/basic";
 import { Fill } from "../data/style";
-import { FrameType } from "../data/consts";
+import { FrameType, PathType } from "../data/consts";
 
 interface PageXY { // 页面坐标系的xy
     x: number
@@ -153,7 +153,7 @@ export interface AsyncLineAction {
 export interface AsyncPathEditor {
     addNode: (index: number) => void;
     execute: (index: number, end: PageXY) => void;
-    execute2: (indexes: number[], dx: number, dy: number) => void;
+    execute2: (range: Map<number, number[]>, dx: number, dy: number) => void;
     close: () => undefined;
     abort: () => void;
 }
@@ -955,10 +955,23 @@ export class Controller {
                 status = Status.Exception;
             }
         }
-        const execute2 = (indexes: number[], dx: number, dy: number) => {
+        const execute2 = (range: Map<number, number[]>, dx: number, dy: number) => {
             status === Status.Pending
             try {
-                pointsEdit(api, page, shape, indexes, dx, dy);
+                if (shape.pathType === PathType.Editable) {
+                    const  indexes = range.get(0) || [];
+                    pointsEdit(api, page, shape, (shape as PathShape).points, indexes, dx, dy);
+                } else if (shape.pathType === PathType.Multi) {
+                    const pathsegs = (shape as any as PathShape2).pathsegs;
+                    range.forEach((indexes, segment) => {
+                        const points = pathsegs[segment].points;
+                        if (!points?.length) {
+                            return;
+                        }
+                        pointsEdit(api, page, shape, points, indexes, dx, dy, segment);
+                    });
+
+                }
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {

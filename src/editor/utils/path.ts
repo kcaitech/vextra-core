@@ -4,7 +4,7 @@ import { ContactForm, CurveMode, ShapeType } from "../../data/typesdefine";
 import { CurvePoint, GroupShape, PathSegment, PathShape, PathShape2, Shape, ShapeFrame } from "../../data/shape";
 import { Page } from "../../data/page";
 import { importCurvePoint, importShapeFrame, importStyle } from "../../data/baseimport";
-import { exportShapeFrame, exportStyle } from "../../data/baseexport";
+import { exportCurvePoint, exportShapeFrame, exportStyle } from "../../data/baseexport";
 import { v4 } from "uuid";
 import { uuid } from "../../basic/uuid";
 import { BasicArray } from "../../data/basic";
@@ -66,23 +66,31 @@ export function pathEdit(api: Api, page: Page, s: PathShape, index: number, end:
 /**
  * @description 多点编辑
  */
-export function pointsEdit(api: Api, page: Page, s: PathShape, indexes: number[], dx: number, dy: number) {
-    const points = s.points;
+export function pointsEdit(api: Api, page: Page, s: Shape, points: CurvePoint[], indexes: number[], dx: number, dy: number, segment = -1) {
     for (let i = 0, l = indexes.length; i < l; i++) {
         const index = indexes[i];
         const __p = points[index];
         if (!__p) {
             continue;
         }
-        api.shapeModifyCurvPoint(page, s, index, { x: __p.x + dx, y: __p.y + dy });
+        api.shapeModifyCurvPoint(page, s, index, { x: __p.x + dx, y: __p.y + dy }, segment);
         if (__p.hasFrom) {
-            api.shapeModifyCurvFromPoint(page, s as PathShape, index, {
-                x: (__p.fromX || 0) + dx,
-                y: (__p.fromY || 0) + dy
-            });
+            api.shapeModifyCurvFromPoint(page, s as PathShape, index,
+                {
+                    x: (__p.fromX || 0) + dx,
+                    y: (__p.fromY || 0) + dy
+                },
+                segment
+            );
         }
         if (__p.hasTo) {
-            api.shapeModifyCurvToPoint(page, s as PathShape, index, { x: (__p.toX || 0) + dx, y: (__p.toY || 0) + dy });
+            api.shapeModifyCurvToPoint(page, s as PathShape, index,
+                {
+                    x: (__p.toX || 0) + dx,
+                    y: (__p.toY || 0) + dy
+                },
+                segment
+            );
         }
     }
 }
@@ -383,7 +391,6 @@ export function init_curv(shape: Shape, page: Page, api: Api, curve_point: Curve
 
         return { from, to };
     }
-
 }
 
 export function init_straight(shape: Shape, page: Page, api: Api, index: number, segment = -1) {
@@ -633,9 +640,16 @@ function _apart_points(points: CurvePoint[], index: number) {
 function apartPathShape(document: Document, page: Page, api: Api, shape: Shape, index: number, segment = -1) {
     if (shape.pathType === PathType.Editable) {
         const _idx = index + 1;
-        const points = (shape as PathShape).points;
+        const points = (shape as PathShape).points.map(i => importCurvePoint(exportCurvePoint(i)));
+
         const __points1 = new BasicArray<CurvePoint>(...points.slice(0, _idx));
         const __points2 = new BasicArray<CurvePoint>(...points.slice(_idx));
+
+        __points1[0].hasTo = false;
+        __points2[0].hasTo = false;
+
+        __points1[__points1.length - 1].hasTo = false;
+        __points2[__points2.length - 1].hasTo = false;
 
         const segments = new BasicArray<PathSegment>();
         segments.push(new PathSegment([0] as BasicArray<number>, uuid(), __points1, false));
@@ -666,10 +680,16 @@ function apartPathShape(document: Document, page: Page, api: Api, shape: Shape, 
             return __shape;
         }
 
-        const points = __seg.points;
+        const points = __seg.points.map(i => importCurvePoint(exportCurvePoint(i)));
         const _idx = index + 1;
         const __points1 = new BasicArray<CurvePoint>(...points.slice(0, _idx));
         const __points2 = new BasicArray<CurvePoint>(...points.slice(_idx));
+
+        __points1[0].hasTo = false;
+        __points2[0].hasTo = false;
+
+        __points1[__points1.length - 1].hasTo = false;
+        __points2[__points2.length - 1].hasTo = false;
 
         let i = __seg.crdtidx[0];
         let si = segment;
@@ -858,36 +878,36 @@ export function _clip(document: Document, page: Page, api: Api, path_shape: Shap
             api.setCloseStatus(page, path_shape, false);
             const points = _sort_after_clip(shape.points, index);
             replace_path_shape_points(page, shape, api, points);
-            return;
+            return path_shape;
         }
         const points = shape.points;
 
         if (points.length < 3) {
-            return;
+            return shape;
         }
 
         if (index === 0) {
             api.deletePoint(page, shape, index);
             after_clip(document, page, api, shape);
-            return;
+            return shape;
         }
         if (index === points.length - 2) {
             api.deletePoint(page, shape, points.length - 1);
             after_clip(document, page, api, shape);
-            return;
+            return shape;
         }
 
         if (shape.type === ShapeType.Image) {
-            return;
+            return shape;
         }
 
-        apartPathShape(document, page, api, shape, index, segment);
+        return apartPathShape(document, page, api, shape, index, segment);
     } else if (path_shape.pathType === PathType.Multi) {
         const shape = path_shape as PathShape2
         const __segment = shape.pathsegs[segment];
 
         if (!__segment) {
-            return;
+            return shape;
         }
 
         if (__segment.isClosed) {
@@ -896,18 +916,18 @@ export function _clip(document: Document, page: Page, api: Api, path_shape: Shap
             const s = new PathSegment(crdtidx, uuid(), points, false);
             api.insertSegmentAt(page, shape, segment, s);
             api.deleteSegmentAt(page, shape, segment + 1);
-            return;
+            return shape;
         }
 
         const points = __segment.points;
 
         if (points.length < 3) {
-            return;
+            return shape;
         }
 
         if (index === 0) {
             api.deletePoint(page, shape, index, segment);
-            return;
+            return shape;
         }
 
         if (index === points.length - 2) {
@@ -916,11 +936,12 @@ export function _clip(document: Document, page: Page, api: Api, path_shape: Shap
             if (__segment.points.length < 2) {
                 api.deleteSegmentAt(page, shape, segment);
             }
-            return;
+            return shape;
         }
 
-        apartPathShape(document, page, api, shape, index, segment);
+        return apartPathShape(document, page, api, shape, index, segment);
     }
+    return path_shape;
 }
 
 export function update_path_shape_frame(api: Api, page: Page, shapes: PathShape[]) {
