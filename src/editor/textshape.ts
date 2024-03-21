@@ -29,11 +29,12 @@ import { fixTableShapeFrameByLayout, fixTextShapeFrameByLayout } from "./utils/o
 import { BasicArray } from "../data/basic";
 import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "../data/textutils";
 import { importGradient, importText } from "../data/baseimport";
-import * as basicapi from "./basicapi"
 import { AsyncGradientEditor, Status } from "./controller";
 import { CmdMergeType } from "./coop/localcmd";
 import { ShapeView, TableCellView, TableView, TextShapeView, adapt2Shape } from "../dataview";
-import { cell4edit2 } from "./symbol";
+import { cell4edit2, varParent } from "./symbol";
+import { uuid } from "../basic/uuid";
+import { SymbolRefShape, SymbolShape, GroupShape } from "../data/classes";
 
 type TextShapeLike = Shape & { text: Text }
 
@@ -88,13 +89,13 @@ export class TextShapeEditor extends ShapeEditor {
     }
 
     private fixFrameByLayout(api: _Api) {
-        if (this.shape.isVirtualShape) api = basicapi;
+        if (this.shape.isVirtualShape) return; // api = basicapi;
         if (this.view instanceof TextShapeView) fixTextShapeFrameByLayout(api, this.__page, this.view);
         else if (this.view instanceof TableCellView) fixTableShapeFrameByLayout(api, this.__page, this.view, this.view.parent as TableView);
     }
     private fixFrameByLayout2(api: _Api, shape: TextShapeView | TableCellView | Variable) {
         if (shape instanceof Variable) return;
-        if (shape.isVirtualShape) api = basicapi;
+        if (shape.isVirtualShape) return; // api = basicapi;
         if (shape instanceof TextShapeView) fixTextShapeFrameByLayout(api, this.__page, shape);
         else if (shape instanceof TableCellView) fixTableShapeFrameByLayout(api, this.__page, shape, this.view.parent as TableView);
     }
@@ -136,10 +137,10 @@ export class TextShapeEditor extends ShapeEditor {
             }
             return _shape;
         } else {
-            const _var = this.overrideVariable(VariableType.Text, OverrideType.Text, (_var) => {
+            let _var = this.overrideVariable(VariableType.Text, OverrideType.Text, (_var) => {
                 if (_var) {
                     if (_var.value instanceof Text) return importText(_var.value);
-                    if (typeof _var.value === 'string') return createTextByString(_var.value, _shape.text);
+                    if (typeof _var.value === 'string') return importText(_shape.text);
                 }
                 else {
                     return importText(_shape.text);
@@ -147,8 +148,50 @@ export class TextShapeEditor extends ShapeEditor {
                 throw new Error();
             }, api, shape);
 
-            if (_var && typeof _var.value === 'string') {
-                api.shapeModifyVariable(this.__page, _var, createTextByString(_var.value, _shape.text));
+            if (_var && typeof _var.value === 'string') { // 这有问题！
+                const host = varParent(_var)! as SymbolRefShape | SymbolShape;
+                const textVar = new Variable(uuid(), VariableType.Text, _var.name, importText(_shape.text));
+                if (host instanceof SymbolShape) {
+                    // sketch不会走到这
+
+                    // 更换var
+                    // 更换bindvar
+                    api.shapeRemoveVariable(this.__page, host, _var.id);
+                    api.shapeAddVariable(this.__page, host, textVar);
+
+                    const bindid = _var.id;
+                    const rebind = (shape: Shape) => {
+                        if (shape.varbinds?.get(OverrideType.Text) === bindid) {
+                            api.shapeUnbinVar(this.__page, shape, OverrideType.Text);
+                            api.shapeBindVar(this.__page, shape, OverrideType.Text, textVar.id);
+                        }
+                        if (shape instanceof GroupShape) {
+                            shape.childs.forEach(c => rebind(c));
+                        }
+                    }
+
+                    rebind(host);
+
+                } else {
+                    let override_id: string | undefined;
+                    for (let [k, v] of host.overrides!) {
+                        if (v === _var.id) {
+                            override_id = k;
+                            break;
+                        }
+                    }
+                    if (!override_id) throw new Error();
+                    // 不可以直接修改，需要删除后重新override到一个text
+                    api.shapeRemoveOverride(this.__page, host, override_id, _var.id, VariableType.Text);
+                    api.shapeRemoveVariable(this.__page, host, _var.id);
+    
+                    
+    
+                    api.shapeAddVariable(this.__page, host, textVar);
+                    api.shapeAddOverride(this.__page, host, override_id, textVar.id);
+                }
+
+                _var = textVar;
             }
             if (_var) {
                 this.__repo.updateTextSelectionPath(_var.value);
