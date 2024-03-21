@@ -335,8 +335,8 @@ export enum FrameType {
 }
 
 export enum PathType {
-    Fixed = 0,
-    Editable = 1,
-    Multi = 2
+    Fixed = 0, // 不可编辑路径
+    Editable = 1, // 可编辑路径
+    Multi = 2 // 多条可编辑路径
 }
 
