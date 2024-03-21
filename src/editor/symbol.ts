@@ -56,7 +56,7 @@ export function get_symbol_by_layer(layer: Shape): SymbolShape | undefined {
     if (s) return is_state(s) ? s.parent as SymbolShape : s as SymbolShape;
 }
 
-function varParent(_var: Variable) {
+export function varParent(_var: Variable) {
     let p = _var.parent;
     while (p && !(p instanceof Shape)) {
         p = p.parent;
