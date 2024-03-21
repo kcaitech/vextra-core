@@ -31,6 +31,7 @@ import { translateTo } from "../frame";
 import { PageView, ShapeView, TableCellView, TableView, TextShapeView, adapt2Shape } from "../../dataview";
 
 interface _Api {
+    shapeModifyX(page: Page, shape: Shape, x: number): void;
     shapeModifyWH(page: Page, shape: Shape, w: number, h: number): void;
 
     tableModifyRowHeight(page: Page, table: TableShape, idx: number, height: number): void;
@@ -54,6 +55,8 @@ export function fixTextShapeFrameByLayout(api: _Api, page: Page, shape: TextShap
         }
         case TextBehaviour.Flexible: {
             const layout = shape.getLayout();
+            // const xOffset = layout.xOffset;
+            // if (xOffset < 0) api.shapeModifyX(page, _shape, _shape.frame.x + xOffset);
             const fontsize = shape.text.attr?.fontSize ?? Text.DefaultFontSize;
             api.shapeModifyWH(page, _shape, Math.max(fontsize, layout.contentWidth), Math.max(fontsize, layout.contentHeight));
             // expandTo(api as Api, page, shape, Math.max(fontsize, layout.contentWidth), Math.max(fontsize, layout.contentHeight));
@@ -83,7 +86,7 @@ export function fixTableShapeFrameByLayout(api: _Api, page: Page, shape: TableCe
     const width = widthWeight / table.widthTotalWeights * table.frame.width;
     const height = heightWeight / table.heightTotalWeights * table.frame.height;
     // shape.text.updateSize(width, height);
-    const layout = shape.text.getLayout2(new ShapeFrame(0, 0, width, height), shape.id); // 按理这里应该取的是个已有的layout
+    const layout = shape.text.getLayout2(new ShapeFrame(0, 0, width, height)); // 按理这里应该取的是个已有的layout
     if (layout.contentHeight > (height + float_accuracy)) {
         // set row height
         const rowIdx = indexCell.rowIdx + rowSpan - 1;
