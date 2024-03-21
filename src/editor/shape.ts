@@ -922,7 +922,8 @@ export class ShapeEditor {
     public setExportTrimTransparent(trim: boolean) {
         const api = this.__repo.start("setExportTrimTransparent");
         try {
-            api.setExportTrimTransparent(this.__page, this.shape, trim);
+            const shape = shape4exportOptions(api, this.__shape, this.__page);
+            api.setExportTrimTransparent(this.__page, shape, trim);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -932,7 +933,8 @@ export class ShapeEditor {
     public setExportCanvasBackground(background: boolean) {
         const api = this.__repo.start("setExportTrimTransparent");
         try {
-            api.setExportCanvasBackground(this.__page, this.shape, background);
+            const shape = shape4exportOptions(api, this.__shape, this.__page);
+            api.setExportCanvasBackground(this.__page, shape, background);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -942,7 +944,8 @@ export class ShapeEditor {
     public setExportPreviewUnfold(unfold: boolean) {
         const api = this.__repo.start("setExportTrimTransparent");
         try {
-            api.setExportPreviewUnfold(this.__page, this.shape, unfold);
+            const shape = shape4exportOptions(api, this.__shape, this.__page);
+            api.setExportPreviewUnfold(this.__page, shape, unfold);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
