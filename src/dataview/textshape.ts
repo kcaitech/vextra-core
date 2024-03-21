@@ -6,9 +6,15 @@ import { renderText2Path, renderTextLayout } from "../render/text";
 import { CursorLocate, TextLocate, locateCursor, locateNextCursor, locatePrevCursor, locateRange, locateText } from "../data/textlocate";
 import { BasicArray } from "../data/basic";
 import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "../data/textutils";
+import { DViewCtx, PropsType } from "./viewctx";
+import { objectId } from "../basic/objectid";
 
 export class TextShapeView extends ShapeView {
 
+    constructor(ctx: DViewCtx, props: PropsType, isTopClass: boolean = true) {
+        super(ctx, props, false);
+        if (isTopClass) this.afterInit();
+    }
 
     protected isNoSupportDiamondScale(): boolean {
         return this.m_data.isNoSupportDiamondScale;
@@ -29,7 +35,9 @@ export class TextShapeView extends ShapeView {
             const originp = origin.paras[0];
             const originspan = originp.spans[0];
             for (let i = 0; i < str.length; ++i) {
-                const p = new Para(str[i], new BasicArray<Span>());
+                let _str = str[i];
+                if (!_str.endsWith('\n')) _str += '\n';
+                const p = new Para(_str, new BasicArray<Span>());
                 p.spans.push(new Span(p.length));
                 mergeParaAttr(p, originp);
                 mergeSpanAttr(p.spans[0], originspan);
@@ -57,7 +65,9 @@ export class TextShapeView extends ShapeView {
     __preText: Text | undefined;
     getLayout() {
         const text = this.getText();
-        if (this.__preText !== text && this.__layoutToken && this.__preText) this.__preText.dropLayout(this.__layoutToken, this.id);
+        if (this.__preText && this.__layoutToken && objectId(this.__preText) !== objectId(text)) {
+            this.__preText.dropLayout(this.__layoutToken, this.id);
+        }
         const frame = this.frame;
         const layout = text.getLayout3(frame, this.id, this.__layoutToken);
         this.__layoutToken = layout.token;
@@ -102,19 +112,6 @@ export class TextShapeView extends ShapeView {
         return this.m_textpath;
     }
 
-
-    onDataChange(...args: any[]): void {
-        super.onDataChange(...args);
-        // if (args.includes('variable')) this.m_layout = undefined; // 不确定是不是text变量？
-
-        // if (args.includes('text')) { // todo 文本要支持局部重排
-        //     this.clearCache();
-        // }
-        // else if (args.includes('shape-frame')) {
-        //     this.clearCache();
-        // }
-    }
-
     renderContents(): EL[] {
         const layout = this.getLayout();
         return renderTextLayout(elh, layout, this.frame);
@@ -151,12 +148,6 @@ export class TextShapeView extends ShapeView {
             this.notify("shape-frame");
         }
     }
-
-    // clearCache() {
-    //     this.m_layout = undefined;
-    //     // this.m_layoutText = undefined;
-    //     this.m_textpath = undefined;
-    // }
 
     onDestory(): void {
         super.onDestory();

@@ -2,15 +2,23 @@
 
 import { Text } from "./text";
 import { BulletNumbersLayout, TextLayout, fixLineHorAlign, layoutPara } from "./textlayout";
-import { TextBehaviour, TextHorAlign, TextVerAlign } from "./typesdefine";
+import { ShapeFrame, TextBehaviour, TextHorAlign, TextVerAlign } from "./typesdefine";
 
 export function layoutAtInsert(text: Text,
-    layoutWidth: number,
-    layoutHeight: number,
+    frame: ShapeFrame,
     index: number,
     len: number,
     layout: TextLayout): TextLayout {
     if (len <= 0) return layout;
+
+    const layoutWidth = ((b: TextBehaviour) => {
+        switch (b) {
+            case TextBehaviour.Flexible: return Number.MAX_VALUE;
+            case TextBehaviour.Fixed: return frame.width;
+            case TextBehaviour.FixWidthAndHeight: return frame.width;
+        }
+        // return Number.MAX_VALUE
+    })(text.attr?.textBehaviour ?? TextBehaviour.Flexible)
 
     const padding = text.attr?.padding;
     const paddingLeft = padding?.left ?? 0;
@@ -83,25 +91,38 @@ export function layoutAtInsert(text: Text,
     // hor align
     const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
     const alignWidth = textBehaviour === TextBehaviour.Flexible ? contentWidth : coreLayoutWidth;
+    let paraMinX = 0;
     for (let i = 0, pc = text.paras.length; i < pc; i++) {
         const para = text.paras[i];
         const paraLayout = parasLayout[i];
         const alignment = para.attr?.alignment ?? TextHorAlign.Left;
+        let minX = 0;
         for (let li = 0, llen = paraLayout.length; li < llen; li++) {
             const line = paraLayout[li];
-            fixLineHorAlign(line, alignment, alignWidth);
+            fixLineHorAlign(line, alignment, alignWidth); // frame.width);
+            minX = Math.min(line.x, minX);
         }
+        if (minX < 0) for (let li = 0, llen = paraLayout.length; li < llen; li++) {
+            const line = paraLayout[li];
+            line.x -= minX;
+        }
+        paraLayout.xOffset += minX;
+        paraMinX = Math.min(paraMinX, paraLayout.xOffset);
+    }
+    if (paraMinX < 0) for (let i = 0; i < paras.length; ++i) {
+        const paraLayout = parasLayout[i];
+        paraLayout.xOffset -= paraMinX;
     }
 
     const vAlign = text.attr?.verAlign ?? TextVerAlign.Top;
     const yOffset: number = ((align: TextVerAlign) => {
         switch (align) {
             case TextVerAlign.Top: return paddingTop;
-            case TextVerAlign.Middle: return (layoutHeight - contentHeight - paddingTop - paddingBottom) / 2;
-            case TextVerAlign.Bottom: return layoutHeight - contentHeight - paddingBottom;
+            case TextVerAlign.Middle: return (frame.height - contentHeight - paddingTop - paddingBottom) / 2;
+            case TextVerAlign.Bottom: return frame.height - contentHeight - paddingBottom;
         }
     })(vAlign);
-    layout.xOffset = paddingLeft;
+    layout.xOffset = paraMinX + paddingLeft;
     layout.yOffset = yOffset;
     layout.contentHeight = contentHeight;
     layout.contentWidth = contentWidth;
@@ -115,12 +136,20 @@ export function layoutAtInsert(text: Text,
 }
 
 export function layoutAtDelete(text: Text,
-    layoutWidth: number,
-    layoutHeight: number,
+    frame: ShapeFrame,
     index: number,
     len: number,
     layout: TextLayout): TextLayout {
     if (len <= 0) return layout;
+
+    const layoutWidth = ((b: TextBehaviour) => {
+        switch (b) {
+            case TextBehaviour.Flexible: return Number.MAX_VALUE;
+            case TextBehaviour.Fixed: return frame.width;
+            case TextBehaviour.FixWidthAndHeight: return frame.width;
+        }
+        // return Number.MAX_VALUE
+    })(text.attr?.textBehaviour ?? TextBehaviour.Flexible)
 
     const padding = text.attr?.padding;
     const paddingLeft = padding?.left ?? 0;
@@ -193,25 +222,38 @@ export function layoutAtDelete(text: Text,
     // hor align
     const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
     const alignWidth = textBehaviour === TextBehaviour.Flexible ? contentWidth : coreLayoutWidth;
+    let paraMinX = 0;
     for (let i = 0, pc = text.paras.length; i < pc; i++) {
         const para = text.paras[i];
         const paraLayout = parasLayout[i];
         const alignment = para.attr?.alignment ?? TextHorAlign.Left;
+        let minX = 0;
         for (let li = 0, llen = paraLayout.length; li < llen; li++) {
             const line = paraLayout[li];
-            fixLineHorAlign(line, alignment, alignWidth);
+            fixLineHorAlign(line, alignment, alignWidth); // frame.width);
+            minX = Math.min(line.x, minX);
         }
+        if (minX < 0) for (let li = 0, llen = paraLayout.length; li < llen; li++) {
+            const line = paraLayout[li];
+            line.x -= minX;
+        }
+        paraLayout.xOffset += minX;
+        paraMinX = Math.min(paraMinX, paraLayout.xOffset);
+    }
+    if (paraMinX < 0) for (let i = 0; i < paras.length; ++i) {
+        const paraLayout = parasLayout[i];
+        paraLayout.xOffset -= paraMinX;
     }
 
     const vAlign = text.attr?.verAlign ?? TextVerAlign.Top;
     const yOffset: number = ((align: TextVerAlign) => {
         switch (align) {
             case TextVerAlign.Top: return paddingTop;
-            case TextVerAlign.Middle: return (layoutHeight - contentHeight - paddingTop - paddingBottom) / 2;
-            case TextVerAlign.Bottom: return layoutHeight - contentHeight - paddingBottom;
+            case TextVerAlign.Middle: return (frame.height - contentHeight - paddingTop - paddingBottom) / 2;
+            case TextVerAlign.Bottom: return frame.height - contentHeight - paddingBottom;
         }
     })(vAlign);
-    layout.xOffset = paddingLeft;
+    layout.xOffset = paraMinX + paddingLeft;
     layout.yOffset = yOffset;
     layout.contentHeight = contentHeight;
     layout.contentWidth = contentWidth;
@@ -225,12 +267,20 @@ export function layoutAtDelete(text: Text,
 }
 
 export function layoutAtFormat(text: Text,
-    layoutWidth: number,
-    layoutHeight: number,
+    frame: ShapeFrame,
     index: number,
     len: number,
     layout: TextLayout): TextLayout {
     if (len <= 0) return layout;
+
+    const layoutWidth = ((b: TextBehaviour) => {
+        switch (b) {
+            case TextBehaviour.Flexible: return Number.MAX_VALUE;
+            case TextBehaviour.Fixed: return frame.width;
+            case TextBehaviour.FixWidthAndHeight: return frame.width;
+        }
+        // return Number.MAX_VALUE
+    })(text.attr?.textBehaviour ?? TextBehaviour.Flexible)
 
     const padding = text.attr?.padding;
     const paddingLeft = padding?.left ?? 0;
@@ -301,25 +351,38 @@ export function layoutAtFormat(text: Text,
     // hor align
     const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
     const alignWidth = textBehaviour === TextBehaviour.Flexible ? contentWidth : coreLayoutWidth;
+    let paraMinX = 0;
     for (let i = 0, pc = text.paras.length; i < pc; i++) {
         const para = text.paras[i];
         const paraLayout = parasLayout[i];
         const alignment = para.attr?.alignment ?? TextHorAlign.Left;
+        let minX = 0;
         for (let li = 0, llen = paraLayout.length; li < llen; li++) {
             const line = paraLayout[li];
-            fixLineHorAlign(line, alignment, alignWidth);
+            fixLineHorAlign(line, alignment, alignWidth); // frame.width);
+            minX = Math.min(line.x, minX);
         }
+        if (minX < 0) for (let li = 0, llen = paraLayout.length; li < llen; li++) {
+            const line = paraLayout[li];
+            line.x -= minX;
+        }
+        paraLayout.xOffset += minX;
+        paraMinX = Math.min(paraMinX, paraLayout.xOffset);
+    }
+    if (paraMinX < 0) for (let i = 0; i < paras.length; ++i) {
+        const paraLayout = parasLayout[i];
+        paraLayout.xOffset -= paraMinX;
     }
 
     const vAlign = text.attr?.verAlign ?? TextVerAlign.Top;
     const yOffset: number = ((align: TextVerAlign) => {
         switch (align) {
             case TextVerAlign.Top: return paddingTop;
-            case TextVerAlign.Middle: return (layoutHeight - contentHeight - paddingTop - paddingBottom) / 2;
-            case TextVerAlign.Bottom: return layoutHeight - contentHeight - paddingBottom;
+            case TextVerAlign.Middle: return (frame.height - contentHeight - paddingTop - paddingBottom) / 2;
+            case TextVerAlign.Bottom: return frame.height - contentHeight - paddingBottom;
         }
     })(vAlign);
-    layout.xOffset = paddingLeft;
+    layout.xOffset = paraMinX + paddingLeft;
     layout.yOffset = yOffset;
     layout.contentHeight = contentHeight;
     layout.contentWidth = contentWidth;

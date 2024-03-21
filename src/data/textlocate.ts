@@ -37,6 +37,7 @@ export function locateText(layout: TextLayout, x: number, y: number): TextLocate
         }
         y -= p.yOffset;
 
+        x -= p.xOffset;
         // index line
         for (let li = 0, llen = p.length; li < llen; li++) {
             const line = p[li];
@@ -194,7 +195,7 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
 
         for (let li = 0, llen = p.length; li < llen; li++) {
             const line = p[li];
-            const lineX = layout.xOffset + line.x;
+            const lineX = layout.xOffset + p.xOffset + line.x;
             const lineY = layout.yOffset + p.yOffset + line.y;
             if ((cursorAtBefore && index === line.charCount)) {
                 if (line.length === 0) break; // error
@@ -294,7 +295,7 @@ function _locateRange(layout: TextLayout, pi: number, li: number, si: number, st
             const span1 = line[line.length - 1];
             const graph0 = span0[0];
             const graph1 = span1[span1.length - 1];
-            const x = layout.xOffset + graph0.x + line.x;
+            const x = layout.xOffset + graph0.x + line.x + p.xOffset;
             const w = graph1.x + graph1.cw - graph0.x;
 
             points.push(
@@ -331,7 +332,7 @@ function _locateRange(layout: TextLayout, pi: number, li: number, si: number, st
             }
             if (!graph) throw new Error();
         }
-        const lineX = layout.xOffset + line.x;
+        const lineX = layout.xOffset + p.xOffset + line.x;
         const lineY = layout.yOffset + p.yOffset + line.y;
         const minX = lineX + graph.x;
         const minY = lineY; // + (line.lineHeight - graph.ch) / 2;

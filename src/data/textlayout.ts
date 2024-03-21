@@ -40,6 +40,27 @@ export class Line extends Array<GraphArray> {
 
     public alignment: TextHorAlign = TextHorAlign.Left;
     public layoutWidth: number = 0;
+
+    toJSON() {
+        const graphs: GraphArray[] = [];
+        for (let i = 0; i < this.length; ++i) {
+            graphs.push(this[i]);
+        }
+        return {
+            maxFontSize: this.maxFontSize,
+            x: this.x,
+            y: this.y,
+            lineHeight: this.lineHeight,
+            lineWidth: this.lineWidth,
+            graphWidth: this.graphWidth,
+            graphCount: this.graphCount,
+            charCount: this.charCount,
+            alignment: this.alignment,
+            layoutWidth: this.layoutWidth,
+
+            graphs
+        }
+    }
 }
 export class LineArray extends Array<Line> {
     public bulletNumbers?: BulletNumbersLayout;
@@ -61,8 +82,26 @@ export class ParaLayout extends Array<Line> {
     public graphCount: number = 0;
     public charCount: number = 0;
     public yOffset: number = 0;
+    public xOffset: number = 0;
     public paraWidth: number = 0;
     public bulletNumbers?: BulletNumbersLayout;
+
+    toJSON() {
+        const lines: Line[] = [];
+        for (let i = 0; i < this.length; ++i) {
+            lines.push(this[i]);
+        }
+        return {
+            paraHeight: this.paraHeight,
+            graphCount: this.graphCount,
+            charCount: this.charCount,
+            yOffset: this.yOffset,
+            xOffset: this.xOffset,
+            paraWidth: this.paraWidth,
+            bulletNumbers: this.bulletNumbers,
+            lines
+        }
+    }
 }
 
 export class TextLayout {
@@ -79,50 +118,46 @@ export class LayoutItem {
 
     // save infos
     __layoutWidth: number = 0;
-    __frameWidth: number = 0;
-    __frameHeight: number = 0;
+    // __frameWidth: number = 0;
+    // __frameHeight: number = 0;
     __textBehaviour: TextBehaviour | undefined;
     __verAlign: TextVerAlign | undefined;
+    __frame: ShapeFrame = { x: 0, y: 0, width: 0, height: 0 }
 
-    update(w: number, h: number, attr: TextAttr | undefined) {
-
-        if (!this.layout) {
-            this.__frameHeight = h;
-            this.__frameWidth = w;
-            this.__layoutWidth = 0;
-            this.__textBehaviour = attr?.textBehaviour;
-            this.__verAlign = attr?.verAlign;
-            return;
-        }
+    update(frame: ShapeFrame, attr: TextAttr | undefined) {
 
         const layoutWidth = ((b: TextBehaviour) => {
             switch (b) {
                 case TextBehaviour.Flexible: return Number.MAX_VALUE;
-                case TextBehaviour.Fixed: return w;
-                case TextBehaviour.FixWidthAndHeight: return w;
+                case TextBehaviour.Fixed: return frame.width;
+                case TextBehaviour.FixWidthAndHeight: return frame.width;
             }
             // return Number.MAX_VALUE
         })(attr?.textBehaviour ?? TextBehaviour.Flexible)
 
         if (this.__layoutWidth !== layoutWidth) {
-            this.__frameHeight = h;
             this.__layoutWidth = layoutWidth;
             // this.reLayout();
             this.layout = undefined;
         }
-        else if (this.__frameHeight !== h || this.__verAlign !== (attr?.verAlign ?? TextVerAlign.Top)) {
+        else if (this.layout && (this.__frame.height !== frame.height || this.__verAlign !== (attr?.verAlign ?? TextVerAlign.Top))) {
             const vAlign = attr?.verAlign ?? TextVerAlign.Top;
             const yOffset: number = ((align: TextVerAlign) => {
                 switch (align) {
                     case TextVerAlign.Top: return 0;
-                    case TextVerAlign.Middle: return (h - this.layout.contentHeight) / 2;
-                    case TextVerAlign.Bottom: return h - this.layout.contentHeight;
+                    case TextVerAlign.Middle: return (frame.height - this.layout.contentHeight) / 2;
+                    case TextVerAlign.Bottom: return frame.height - this.layout.contentHeight;
                 }
             })(vAlign);
             this.layout.yOffset = yOffset;
         }
-        this.__frameWidth = w;
-        this.__frameHeight = h;
+        // this.__frameWidth = w;
+        // this.__frameHeight = h;
+        this.__frame.x = frame.x;
+        this.__frame.y = frame.y;
+        this.__frame.width = frame.width;
+        this.__frame.height = frame.height;
+
         this.__textBehaviour = attr?.textBehaviour;
         this.__verAlign = attr?.verAlign;
     }
@@ -632,16 +667,29 @@ export function layoutText(text: Text, frame: ShapeFrame): TextLayout {
     }
 
     // hor align
-    // const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
-    // const alignWidth = textBehaviour === TextBehaviour.Flexible ? contentWidth : coreLayoutWidth;
+    const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
+    const alignWidth = textBehaviour === TextBehaviour.Flexible ? contentWidth : coreLayoutWidth;
+    let paraMinX = 0;
     for (let i = 0, pc = text.paras.length; i < pc; i++) {
         const para = text.paras[i];
         const paraLayout = paras[i];
         const alignment = para.attr?.alignment ?? TextHorAlign.Left;
+        let minX = 0;
         for (let li = 0, llen = paraLayout.length; li < llen; li++) {
             const line = paraLayout[li];
-            adjustLineHorAlign(line, alignment, frame.width);
+            adjustLineHorAlign(line, alignment, alignWidth); // frame.width);
+            minX = Math.min(line.x, minX);
         }
+        if (minX < 0) for (let li = 0, llen = paraLayout.length; li < llen; li++) {
+            const line = paraLayout[li];
+            line.x -= minX;
+        }
+        paraLayout.xOffset += minX;
+        paraMinX = Math.min(paraMinX, paraLayout.xOffset);
+    }
+    if (paraMinX < 0) for (let i = 0; i < paras.length; ++i) {
+        const paraLayout = paras[i];
+        paraLayout.xOffset -= paraMinX;
     }
 
     const vAlign = text.attr?.verAlign ?? TextVerAlign.Top;
@@ -652,5 +700,5 @@ export function layoutText(text: Text, frame: ShapeFrame): TextLayout {
             case TextVerAlign.Bottom: return frame.height - contentHeight - paddingBottom;
         }
     })(vAlign);
-    return { xOffset: paddingLeft, yOffset, paras, contentHeight, contentWidth }
+    return { xOffset: paraMinX + paddingLeft, yOffset, paras, contentHeight, contentWidth }
 }

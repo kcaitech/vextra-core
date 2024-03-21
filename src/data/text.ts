@@ -189,59 +189,54 @@ export class Text extends Basic implements classes.Text {
 
         const width = frame.width;
         const height = frame.height;
-        const updateLayout = (o: LayoutItem) => {
-            if (!o.layout) {
-                // const layoutWidth = ((b: TextBehaviour): number => {
-                //     switch (b) {
-                //         case TextBehaviour.Flexible: return Number.MAX_VALUE;
-                //         case TextBehaviour.Fixed: return width;
-                //         case TextBehaviour.FixWidthAndHeight: return width;
-                //     }
-                // })(this.attr?.textBehaviour ?? TextBehaviour.Flexible)
-                o.layout = layoutText(this, frame);
-            }
-        }
 
         const cur = [width, height].join(',');
         if (cur !== token) {
             let o = token && this.__layouts.get(token);
             if (o) {
                 if (o.owners.length === 1 && o.owners[0] === owner) {
-                    o.update(width, height, this.attr);
+                    o.update(frame, this.attr);
+                    if (!o.layout) o.layout = layoutText(this, frame);
                     this.__layouts.delete(token!);
                     this.__layouts.set(cur, o);
-
-                    updateLayout(o);
-            
                     return { token: cur, layout: o.layout! }
-                } else {
-                    const i = o.owners.indexOf(owner);
-                    if (i >= 0) {
-                        o.owners.splice(i, 1);
-                        if (o.owners.length === 0) this.__layouts.delete(token!);
-                    }
+                }
+                const i = o.owners.indexOf(owner);
+                if (i >= 0) {
+                    o.owners.splice(i, 1);
+                    if (o.owners.length === 0) this.__layouts.delete(token!);
                 }
             }
         }
 
         let o = this.__layouts.get(cur);
         if (o) {
-            if (cur !== token) o.owners.push(owner); // 不一定唯一
-            o.update(width, height, this.attr);
+            if (o.owners.indexOf(owner) < 0) o.owners.push(owner);
         } else {
             o = new LayoutItem();
+            o.owners.push(owner);
             this.__layouts.set(cur, o)
         }
 
-        updateLayout(o);
+        o.update(frame, this.attr);
+        if (!o.layout) o.layout = layoutText(this, frame);
 
         return { token: cur, layout: o.layout! }
     }
 
-    getLayout2(frame: ShapeFrame, id: string): TextLayout {
-        const layout = this.getLayout3(frame, id, undefined);
-        this.dropLayout(layout.token, id);
-        return layout.layout;
+    getLayout2(frame: ShapeFrame): TextLayout {
+
+        const width = frame.width;
+        const height = frame.height;
+
+        const cur = [width, height].join(',');
+
+        let o = this.__layouts.get(cur);
+        if (o) {
+            return o.layout!;
+        }
+
+        return layoutText(this, frame);
     }
 
     /**
@@ -384,28 +379,28 @@ export class Text extends Basic implements classes.Text {
             throw new Error("index < 0");
         }
         insertSimpleText(this, text, index, props);
-        this.__layouts.forEach(l => l.layout = l.layout && layoutAtInsert(this, l.__layoutWidth, l.__frameHeight, index, text.length, l.layout));
+        this.__layouts.forEach(l => l.layout = l.layout && layoutAtInsert(this, l.__frame, index, text.length, l.layout));
     }
     // 这个没走api,纯是用于更新排版
     composingInputUpdate(index: number) {
         if (index < 0) {
             throw new Error("index < 0");
         }
-        this.__layouts.forEach(l => l.layout = l.layout && layoutAtDelete(this, l.__layoutWidth, l.__frameHeight, index, 1, l.layout));
+        this.__layouts.forEach(l => l.layout = l.layout && layoutAtDelete(this, l.__frame, index, 1, l.layout));
     }
     insertFormatText(text: Text, index: number) {
         if (index < 0) {
             throw new Error("index < 0");
         }
         insertComplexText(this, text, index);
-        this.__layouts.forEach(l => l.layout = l.layout && layoutAtInsert(this, l.__layoutWidth, l.__frameHeight, index, text.length, l.layout));
+        this.__layouts.forEach(l => l.layout = l.layout && layoutAtInsert(this, l.__frame, index, text.length, l.layout));
     }
     formatText(index: number, length: number, key: string, value: any): { index: number, len: number, value: any }[] {
         if (index < 0) {
             throw new Error("index < 0");
         }
         const ret = formatText(this, index, length, key, value);
-        this.__layouts.forEach(l => l.layout = l.layout && layoutAtFormat(this, l.__layoutWidth, l.__frameHeight, index, length, l.layout));
+        this.__layouts.forEach(l => l.layout = l.layout && layoutAtFormat(this, l.__frame, index, length, l.layout));
         return ret;
     }
     formatPara(index: number, length: number, key: string, value: any): { index: number, len: number, value: any }[] {
@@ -413,7 +408,7 @@ export class Text extends Basic implements classes.Text {
             throw new Error("index < 0");
         }
         const ret = formatPara(this, index, length, key, value)
-        this.__layouts.forEach(l => l.layout = l.layout && layoutAtFormat(this, l.__layoutWidth, l.__frameHeight, index, length, l.layout));
+        this.__layouts.forEach(l => l.layout = l.layout && layoutAtFormat(this, l.__frame, index, length, l.layout));
         return ret;
     }
     deleteText(index: number, count: number): Text | undefined {
@@ -439,7 +434,7 @@ export class Text extends Basic implements classes.Text {
                 this.reLayout();
             }
             else {
-                this.__layouts.forEach(l => l.layout = l.layout && layoutAtDelete(this, l.__layoutWidth, l.__frameHeight, index, count, l.layout));
+                this.__layouts.forEach(l => l.layout = l.layout && layoutAtDelete(this, l.__frame, index, count, l.layout));
             }
         }
         return ret;

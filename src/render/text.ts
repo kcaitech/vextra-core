@@ -28,7 +28,7 @@ function isBlankChar(charCode: number) {
 
 export function renderText2Path(layout: TextLayout, offsetX: number, offsetY: number): Path {
     const getTextPath = gPal.text.getTextPath;
-    const { yOffset, paras } = layout;
+    const { yOffset, xOffset, paras } = layout;
     const pc = paras.length;
 
     const paths = new Path();
@@ -37,19 +37,20 @@ export function renderText2Path(layout: TextLayout, offsetX: number, offsetY: nu
 
         for (let lineIndex = 0, lineCount = lines.length; lineIndex < lineCount; lineIndex++) {
             const line = lines[lineIndex];
-
+            const lineX = offsetX + xOffset + lines.xOffset + line.x;
+            const lineY = offsetY + yOffset + lines.yOffset + line.y;
             for (let garrIdx = 0, garrCount = line.length; garrIdx < garrCount; garrIdx++) {
                 const garr = line[garrIdx];
                 const span = garr.attr;
                 const font = span?.fontName || '';
                 const fontSize = span?.fontSize || 0;
-                const y = lines.yOffset + line.y + (line.lineHeight - fontSize) / 2 + yOffset; // top
+                const y = lineY + (line.lineHeight - fontSize) / 2; // top
 
                 paths.push(...garr.map((g) => {
                     if (isBlankChar(g.char.charCodeAt(0))) return new Path();
                     const pathstr = getTextPath(font, fontSize, g.char.charCodeAt(0))
                     const path = new Path(pathstr)
-                    path.translate(g.x + offsetX + line.x, y + offsetY);
+                    path.translate(g.x + lineX, y);
                     return path;
                 }))
             }
@@ -117,7 +118,7 @@ export function renderTextLayout(h: Function, textlayout: TextLayout, frame?: Sh
 
         for (let lineIndex = 0, lineCount = lines.length; lineIndex < lineCount; lineIndex++) {
             const line = lines[lineIndex];
-            const lineX = line.x + xOffset;
+            const lineX = line.x + xOffset + lines.xOffset;
             const lineY = yOffset + lines.yOffset + line.y;
             // 收集下划线、删除线、高亮
             let preUnderlineGIdx = Number.NEGATIVE_INFINITY;
@@ -287,7 +288,7 @@ export function render(h: Function, shape: TextShape,
         }
     }
 
-    const layout = text.getLayout2(frame, shape.id);
+    const layout = text.getLayout2(frame);
     childs.push(...renderTextLayout(h, layout, frame));
     // border
     childs.push(...borderR(h, shape, frame, path, varsContainer));

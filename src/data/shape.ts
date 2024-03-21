@@ -1054,42 +1054,9 @@ export class TextShape extends Shape implements classes.TextShape {
         return new Path(path);
     }
 
-    // setFrameSize(w: number, h: number) {
-    //     super.setFrameSize(w, h);
-    //     this.text.updateSize(this.frame.width, this.frame.height)
-    // }
-
-    // dropLayout(token: string, owner: string) {
-    //     this.text.dropLayout(token, owner);
-    // }
-
-    // getLayout3(frame: ShapeFrame, owner: string, token: string | undefined): { token: string, layout: TextLayout } {
-    //     return this.text.getLayout3(frame, owner, token);
-    // }
-
     getLayout(): TextLayout {
-        const frame = this.frame;
-        const layout = this.text.getLayout3(frame, this.id, undefined);
-        this.text.dropLayout(layout.token, this.id);
-        return layout.layout;
+        return this.text.getLayout2(this.frame);
     }
-
-    // getText(): Text {
-    //     if (this.isVirtualShape) return this.text; // 走proxy
-    //     if (!this.varbinds) return this.text;
-
-    //     const textVar = this.varbinds.get(OverrideType.Text);
-    //     if (!textVar) return this.text;
-
-    //     const _vars: Variable[] = [];
-    //     this.findVar(textVar, _vars);
-    //     // watch vars
-    //     const _var = _vars[_vars.length - 1];
-    //     if (_var && _var.type === VariableType.Text) {
-    //         return _var.value as Text; // 这要是string?
-    //     }
-    //     return this.text;
-    // }
 
     get isNoSupportDiamondScale() {
         return true;
