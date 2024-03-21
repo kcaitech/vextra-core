@@ -1,14 +1,14 @@
-import { CoopRepository } from "../coop/cooprepo";
-import { AsyncApiCaller } from "./handler";
-import { PageView } from "../../dataview";
-import { Document } from "../../data/document";
-import { ShapeView, adapt2Shape } from "../../dataview";
-import { GroupShape, Shape } from "../../data/shape";
-import { translateTo } from "../frame";
-import { after_migrate, unable_to_migrate } from "../utils/migrate";
-import { get_state_name, is_state } from "../symbol";
-import { Api } from "../coop/recordapi";
-import { Page } from "../../data/page";
+import { CoopRepository } from "../../coop/cooprepo";
+import { AsyncApiCaller } from "../AsyncApiCaller";
+import { PageView } from "../../../dataview";
+import { Document } from "../../../data/document";
+import { ShapeView, adapt2Shape } from "../../../dataview";
+import { GroupShape, Shape } from "../../../data/shape";
+import { translateTo } from "../../frame";
+import { after_migrate, unable_to_migrate } from "../../utils/migrate";
+import { get_state_name, is_state } from "../../symbol";
+import { Api } from "../../coop/recordapi";
+import { Page } from "../../../data/page";
 import { ISave4Restore, LocalCmd, SelectionState } from "editor/coop/localcmd";
 
 export type TranslateUnit = {

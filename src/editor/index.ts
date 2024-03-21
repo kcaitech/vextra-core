@@ -8,7 +8,6 @@ import { TextShapeEditor } from "./textshape";
 import { TableEditor } from "./table";
 import { resizingConstraintEditor } from "./resizingConstraint";
 import { ISave4Restore } from "./coop/localcmd";
-import { AsyncApiCaller } from "./transform/handler";
 import { PageView, ShapeView, TableCellView, TableView, TextShapeView } from "../dataview";
 import { Page } from "../data/page";
 

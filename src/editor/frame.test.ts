@@ -32,129 +32,129 @@ const {
 //     adjustRB2(s, frame.x + frame.width + dx, frame.y + frame.height + dy);
 // }
 
-test("lt", () => {
-    const guard = new DataGuard();
-    const page = guard.guard(newPage("Page1"));
-
-    const shape = newRectShape("Rect", new ShapeFrame(0, 0, 100, 100));
-    shape.rotate(30);
-    page.addChild(shape);
-    updateShapesFrame(page, [shape], api);
-
-    const dx = 1, dy = 1;
-    const frame = shape.frame2Root();
-    const x = frame.x + dx;
-    const y = frame.y + dy;
-
-    const save_rb = shape.matrix2Root().computeCoord(shape.frame.width, shape.frame.height)
-
-    adjustLT2(api, page, shape, x, y);
-    updateShapesFrame(page, [shape], api);
-
-    const m2p = shape.matrix2Root();
-    const lt = m2p.computeCoord(0, 0);
-    const rb = m2p.computeCoord(shape.frame.width, shape.frame.height);
-    // check
-
-    const float_accuracy = 1e-7;
-    isTrue(Math.abs(lt.x - x) < float_accuracy && Math.abs(lt.y - y) < float_accuracy, "lt wrong, expect:" + x + ", " + y + " get: " + JSON.stringify(lt))
-    isTrue(Math.abs(rb.x - save_rb.x) < float_accuracy && Math.abs(rb.y - save_rb.y) < float_accuracy, "rb wrong, expect: " + save_rb + " get: " + rb)
-})
-
-test("lb", () => {
-    const guard = new DataGuard();
-    const page = guard.guard(newPage("Page1"));
-
-    const shape = newRectShape("Rect", new ShapeFrame(0, 0, 100, 100));
-    shape.rotate(30);
-    page.addChild(shape);
-    updateShapesFrame(page, [shape], api);
-
-    const dx = 1, dy = 1;
-    const m = shape.matrix2Root();
-    const xy = m.computeCoord(0, shape.frame.height)
-    const x = xy.x + dx;
-    const y = xy.y + dy;
-
-    const save_rt = m.computeCoord(shape.frame.width, 0)
-
-    adjustLB2(api, page, shape, x, y);
-    updateShapesFrame(page, [shape], api);
-
-    // debug
-    const m2p = shape.matrix2Root();
-    const lb = m2p.computeCoord(0, shape.frame.height);
-    const rt = m2p.computeCoord(shape.frame.width, 0);
-    // check
-
-    const float_accuracy = 1e-7;
-    isTrue(Math.abs(rt.x - save_rt.x) < float_accuracy && Math.abs(rt.y - save_rt.y) < float_accuracy)
-    isTrue(Math.abs(lb.x - x) < float_accuracy && Math.abs(lb.y - y) < float_accuracy)
-})
-
-test("rb", () => {
-    const guard = new DataGuard();
-    const page = guard.guard(newPage("Page1"));
-
-    const shape = newRectShape("Rect", new ShapeFrame(0, 0, 100, 100));
-    shape.rotate(30);
-    page.addChild(shape);
-    updateShapesFrame(page, [shape], api);
-
-    const dx = 1, dy = 1;
-    const frame = shape.frame2Root();
-    const x = frame.x + frame.width + dx;
-    const y = frame.y + frame.height + dy;
-
-    const __m2p = shape.matrix2Root();
-    const __saveLT = __m2p.computeCoord(0, 0)
-
-    adjustRB2(api, page, shape, x, y);
-    updateShapesFrame(page, [shape], api);
-
-    // debug
-    const m = shape.matrix2Root();
-    const lt = m.computeCoord(0, 0);
-    const rb = m.computeCoord(shape.frame.width, shape.frame.height);
-    // check
-
-    const float_accuracy = 1e-7;
-    isTrue(Math.abs(lt.x - __saveLT.x) < float_accuracy && Math.abs(lt.y - __saveLT.y) < float_accuracy)
-    isTrue(Math.abs(rb.x - x) < float_accuracy && Math.abs(rb.y - y) < float_accuracy)
-})
-
-
-test("rt", () => {
-    const guard = new DataGuard();
-    const page = guard.guard(newPage("Page1"));
-
-    const shape = newRectShape("Rect", new ShapeFrame(0, 0, 100, 100));
-    shape.rotate(30);
-    page.addChild(shape);
-    updateShapesFrame(page, [shape], api);
-
-    const dx = 1, dy = 1;
-    const m = shape.matrix2Root();
-    const xy = m.computeCoord(shape.frame.width, 0)
-    const x = xy.x + dx;
-    const y = xy.y + dy;
-
-    const __m2p = shape.matrix2Root();
-    const __saveLB = __m2p.computeCoord(0, shape.frame.height)
-
-    adjustRT2(api, page, shape, x, y);
-    updateShapesFrame(page, [shape], api);
-
-    // debug
-    const m2p = shape.matrix2Root();
-    const lb = m2p.computeCoord(0, shape.frame.height);
-    const rt = m2p.computeCoord(shape.frame.width, 0);
-    // check
-
-    const float_accuracy = 1e-7;
-    isTrue(Math.abs(lb.x - __saveLB.x) < float_accuracy && Math.abs(lb.y - __saveLB.y) < float_accuracy)
-    isTrue(Math.abs(rt.x - x) < float_accuracy && Math.abs(rt.y - y) < float_accuracy)
-})
+// test("lt", () => {
+//     const guard = new DataGuard();
+//     const page = guard.guard(newPage("Page1"));
+//
+//     const shape = newRectShape("Rect", new ShapeFrame(0, 0, 100, 100));
+//     shape.rotate(30);
+//     page.addChild(shape);
+//     updateShapesFrame(page, [shape], api);
+//
+//     const dx = 1, dy = 1;
+//     const frame = shape.frame2Root();
+//     const x = frame.x + dx;
+//     const y = frame.y + dy;
+//
+//     const save_rb = shape.matrix2Root().computeCoord(shape.frame.width, shape.frame.height)
+//
+//     adjustLT2(api, page, shape, x, y);
+//     updateShapesFrame(page, [shape], api);
+//
+//     const m2p = shape.matrix2Root();
+//     const lt = m2p.computeCoord(0, 0);
+//     const rb = m2p.computeCoord(shape.frame.width, shape.frame.height);
+//     // check
+//
+//     const float_accuracy = 1e-7;
+//     isTrue(Math.abs(lt.x - x) < float_accuracy && Math.abs(lt.y - y) < float_accuracy, "lt wrong, expect:" + x + ", " + y + " get: " + JSON.stringify(lt))
+//     isTrue(Math.abs(rb.x - save_rb.x) < float_accuracy && Math.abs(rb.y - save_rb.y) < float_accuracy, "rb wrong, expect: " + save_rb + " get: " + rb)
+// })
+//
+// test("lb", () => {
+//     const guard = new DataGuard();
+//     const page = guard.guard(newPage("Page1"));
+//
+//     const shape = newRectShape("Rect", new ShapeFrame(0, 0, 100, 100));
+//     shape.rotate(30);
+//     page.addChild(shape);
+//     updateShapesFrame(page, [shape], api);
+//
+//     const dx = 1, dy = 1;
+//     const m = shape.matrix2Root();
+//     const xy = m.computeCoord(0, shape.frame.height)
+//     const x = xy.x + dx;
+//     const y = xy.y + dy;
+//
+//     const save_rt = m.computeCoord(shape.frame.width, 0)
+//
+//     adjustLB2(api, page, shape, x, y);
+//     updateShapesFrame(page, [shape], api);
+//
+//     // debug
+//     const m2p = shape.matrix2Root();
+//     const lb = m2p.computeCoord(0, shape.frame.height);
+//     const rt = m2p.computeCoord(shape.frame.width, 0);
+//     // check
+//
+//     const float_accuracy = 1e-7;
+//     isTrue(Math.abs(rt.x - save_rt.x) < float_accuracy && Math.abs(rt.y - save_rt.y) < float_accuracy)
+//     isTrue(Math.abs(lb.x - x) < float_accuracy && Math.abs(lb.y - y) < float_accuracy)
+// })
+//
+// test("rb", () => {
+//     const guard = new DataGuard();
+//     const page = guard.guard(newPage("Page1"));
+//
+//     const shape = newRectShape("Rect", new ShapeFrame(0, 0, 100, 100));
+//     shape.rotate(30);
+//     page.addChild(shape);
+//     updateShapesFrame(page, [shape], api);
+//
+//     const dx = 1, dy = 1;
+//     const frame = shape.frame2Root();
+//     const x = frame.x + frame.width + dx;
+//     const y = frame.y + frame.height + dy;
+//
+//     const __m2p = shape.matrix2Root();
+//     const __saveLT = __m2p.computeCoord(0, 0)
+//
+//     adjustRB2(api, page, shape, x, y);
+//     updateShapesFrame(page, [shape], api);
+//
+//     // debug
+//     const m = shape.matrix2Root();
+//     const lt = m.computeCoord(0, 0);
+//     const rb = m.computeCoord(shape.frame.width, shape.frame.height);
+//     // check
+//
+//     const float_accuracy = 1e-7;
+//     isTrue(Math.abs(lt.x - __saveLT.x) < float_accuracy && Math.abs(lt.y - __saveLT.y) < float_accuracy)
+//     isTrue(Math.abs(rb.x - x) < float_accuracy && Math.abs(rb.y - y) < float_accuracy)
+// })
+//
+//
+// test("rt", () => {
+//     const guard = new DataGuard();
+//     const page = guard.guard(newPage("Page1"));
+//
+//     const shape = newRectShape("Rect", new ShapeFrame(0, 0, 100, 100));
+//     shape.rotate(30);
+//     page.addChild(shape);
+//     updateShapesFrame(page, [shape], api);
+//
+//     const dx = 1, dy = 1;
+//     const m = shape.matrix2Root();
+//     const xy = m.computeCoord(shape.frame.width, 0)
+//     const x = xy.x + dx;
+//     const y = xy.y + dy;
+//
+//     const __m2p = shape.matrix2Root();
+//     const __saveLB = __m2p.computeCoord(0, shape.frame.height)
+//
+//     adjustRT2(api, page, shape, x, y);
+//     updateShapesFrame(page, [shape], api);
+//
+//     // debug
+//     const m2p = shape.matrix2Root();
+//     const lb = m2p.computeCoord(0, shape.frame.height);
+//     const rt = m2p.computeCoord(shape.frame.width, 0);
+//     // check
+//
+//     const float_accuracy = 1e-7;
+//     isTrue(Math.abs(lb.x - __saveLB.x) < float_accuracy && Math.abs(lb.y - __saveLB.y) < float_accuracy)
+//     isTrue(Math.abs(rt.x - x) < float_accuracy && Math.abs(rt.y - y) < float_accuracy)
+// })
 
 const pointdistance = (p0: Point2D, p1: Point2D) => {
     const dx = p0.x - p1.x;

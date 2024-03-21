@@ -180,7 +180,6 @@ export function newArtboard2(name: string, frame: ShapeFrame): Artboard {
 }
 
 export function newPathShape(name: string, frame: ShapeFrame, path: Path, style?: Style): PathShape | PathShape2 {
-    if (frame.width === 0 || frame.height === 0) throw new Error();
     frame.width = frame.width || 1;
     frame.height = frame.height || 1;
 
@@ -201,7 +200,7 @@ export function newPathShape(name: string, frame: ShapeFrame, path: Path, style?
             const points = seg.points;
             const isClosed = seg.isClosed || false;
             const curvePoint = new BasicArray<CurvePoint>(...points);
-            pathsegs.push(new PathSegment([i] as BasicArray<number>, curvePoint, isClosed))
+            pathsegs.push(new PathSegment([i] as BasicArray<number>, uuid(), curvePoint, isClosed))
         })
         const shape = new PathShape2(new BasicArray(), id, name, types.ShapeType.Path2, frame, style, pathsegs);
         addCommonAttr(shape);

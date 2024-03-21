@@ -91,16 +91,7 @@ import { CoopRepository } from "./coop/cooprepo";
 import { Api } from "./coop/recordapi";
 import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
 import { unable_to_migrate } from "./utils/migrate";
-import {
-    PageView,
-    ShapeView,
-    SymbolView,
-    TableCellView,
-    TableView,
-    TextShapeView,
-    adapt2Shape,
-    GroupShapeView
-} from "../dataview";
+import { PageView, ShapeView, SymbolView, TableCellView, TableView, TextShapeView, adapt2Shape } from "../dataview";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y

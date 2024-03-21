@@ -1,7 +1,7 @@
-import { AsyncApiCaller } from "./handler";
+import { AsyncApiCaller } from "./AsyncApiCaller";
 import { CoopRepository } from "../coop/cooprepo";
 import { Document } from "../../data/document";
-import { PageView, ShapeView } from "../../dataview";
+import { PageView } from "../../dataview";
 
 export class ColorPicker extends AsyncApiCaller {
     constructor(repo: CoopRepository, document: Document, page: PageView) {

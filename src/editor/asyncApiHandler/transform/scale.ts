@@ -1,8 +1,8 @@
-import { CoopRepository } from "../coop/cooprepo";
-import { AsyncApiCaller } from "./handler";
-import { Document } from "../../data/document";
-import { PageView, ShapeView, adapt2Shape } from "../../dataview";
-import { SizeRecorder, afterModifyGroupShapeWH, expandTo } from "../frame";
+import { CoopRepository } from "../../coop/cooprepo";
+import { AsyncApiCaller } from "../AsyncApiCaller";
+import { Document } from "../../../data/document";
+import { PageView, ShapeView, adapt2Shape } from "../../../dataview";
+import { SizeRecorder, afterModifyGroupShapeWH, expandTo } from "../../frame";
 
 export type ScaleUnit = {
     shape: ShapeView;

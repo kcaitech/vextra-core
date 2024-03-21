@@ -17,10 +17,22 @@ import {
     translate,
     translateTo,
 } from "./frame";
-import { CurvePoint, GroupShape, PathShape, Shape, ShapeFrame, TextShape } from "../data/shape";
+import { CurvePoint, GroupShape, PathShape, PathShape2, Shape, ShapeFrame, TextShape } from "../data/shape";
 import { getFormatFromBase64 } from "../basic/utils";
 import { ContactRoleType, CurveMode, FillType, OverrideType, ShapeType, VariableType } from "../data/typesdefine";
-import { newArrowShape, newArtboard, newContact, newImageShape, newLineShape, newOvalShape, newRectShape, newTable, newTextShape, newCutoutShape, getTransformByEnv, modifyTransformByEnv } from "./creator";
+import {
+    newArrowShape,
+    newArtboard,
+    newContact,
+    newImageShape,
+    newLineShape,
+    newOvalShape,
+    newRectShape,
+    newTable,
+    newTextShape,
+    newCutoutShape,
+    modifyTransformByEnv
+} from "./creator";
 
 import { Page } from "../data/page";
 import { CoopRepository } from "./coop/cooprepo";
@@ -32,18 +44,26 @@ import { Artboard } from "../data/artboard";
 import { uuid } from "../basic/uuid";
 import { ContactForm, ContactRole } from "../data/baseclasses";
 import { ContactShape } from "../data/contact";
-import { importCurvePoint, importGradient, importContextSettings } from "../data/baseimport";
-import { exportCurvePoint, exportGradient } from "../data/baseexport";
+import { importCurvePoint, importGradient } from "../data/baseimport";
+import { exportGradient } from "../data/baseexport";
 import { is_state } from "./utils/other";
 import { after_migrate, unable_to_migrate } from "./utils/migrate";
 import { get_state_name, shape4contextSettings, shape4fill, shape4border } from "./symbol";
-import { __pre_curve, after_insert_point, pathEdit, contact_edit, pointsEdit, update_frame_by_points, before_modify_side } from "./utils/path";
+import {
+    __pre_curve,
+    after_insert_point,
+    pathEdit,
+    contact_edit,
+    pointsEdit,
+    update_frame_by_points,
+    before_modify_side
+} from "./utils/path";
 import { Color } from "../data/color";
 import { ContactLineView, PageView, PathShapeView, ShapeView, adapt2Shape } from "../dataview";
 import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
 import { BasicArray } from "../data/basic";
 import { Fill } from "../data/style";
-import { FrameType } from "../data/consts";
+import { FrameType, PathType } from "../data/consts";
 
 interface PageXY { // 页面坐标系的xy
     x: number
@@ -133,7 +153,7 @@ export interface AsyncLineAction {
 export interface AsyncPathEditor {
     addNode: (index: number) => void;
     execute: (index: number, end: PageXY) => void;
-    execute2: (indexes: number[], dx: number, dy: number) => void;
+    execute2: (range: Map<number, number[]>, dx: number, dy: number) => void;
     close: () => undefined;
     abort: () => void;
 }
@@ -529,8 +549,7 @@ export class Controller {
                         update_frame_by_points(api, savepage, newShape as PathShape)
                     }
                     this.__repo.commit();
-                }
-                catch (e) {
+                } catch (e) {
                     console.error(e);
                     this.__repo.rollback();
                 }
@@ -539,7 +558,21 @@ export class Controller {
             }
             return undefined;
         }
-        return { init, init_media, init_text, init_arrow, init_contact, setFrame, setFrameByWheel, collect, init_table, contact_to, migrate, close, init_cutout }
+        return {
+            init,
+            init_media,
+            init_text,
+            init_arrow,
+            init_contact,
+            setFrame,
+            setFrameByWheel,
+            collect,
+            init_table,
+            contact_to,
+            migrate,
+            close,
+            init_cutout
+        }
     }
 
     // 单个图形异步编辑
@@ -663,8 +696,7 @@ export class Controller {
                     }
                     if (!s.rotation) {
                         set_shape_frame(api, s, page, pMap, origin1, origin2, sx, sy, recorder);
-                    }
-                    else {
+                    } else {
                         if (ft === FrameType.Path) {
                             adjust_pathshape_rotate_frame(api, page, s as PathShape);
                             set_shape_frame(api, s, page, pMap, origin1, origin2, sx, sy, recorder);
@@ -923,10 +955,23 @@ export class Controller {
                 status = Status.Exception;
             }
         }
-        const execute2 = (indexes: number[], dx: number, dy: number) => {
+        const execute2 = (range: Map<number, number[]>, dx: number, dy: number) => {
             status === Status.Pending
             try {
-                pointsEdit(api, page, shape, indexes, dx, dy);
+                if (shape.pathType === PathType.Editable) {
+                    const  indexes = range.get(0) || [];
+                    pointsEdit(api, page, shape, (shape as PathShape).points, indexes, dx, dy);
+                } else if (shape.pathType === PathType.Multi) {
+                    const pathsegs = (shape as any as PathShape2).pathsegs;
+                    range.forEach((indexes, segment) => {
+                        const points = pathsegs[segment].points;
+                        if (!points?.length) {
+                            return;
+                        }
+                        pointsEdit(api, page, shape, points, indexes, dx, dy, segment);
+                    });
+
+                }
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
@@ -1141,8 +1186,8 @@ export class Controller {
         return { execute, close }
     }
 
-    public asyncPathHandle(_shape: PathShape | PathShapeView, _page: Page | PageView, index: number): AsyncPathHandle {
-        const shape: PathShape = _shape instanceof ShapeView ? adapt2Shape(_shape) as PathShape : _shape as PathShape;
+    public asyncPathHandle(_shape: ShapeView, _page: Page | PageView, index: number): AsyncPathHandle {
+        const shape: PathShape = adapt2Shape(_shape) as PathShape;
         const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
 
         const curvePoint = shape.points[index];
@@ -1190,14 +1235,14 @@ export class Controller {
             }
             if (status !== Status.Exception) {
                 this.__repo.commit();
-            }
-            else {
+            } else {
                 this.__repo.rollback();
             }
             return undefined;
         }
         return { pre, execute, abort, close };
     }
+
     public asyncGradientEditor(shapes: ShapeView[], _page: Page | PageView, index: number, type: 'fills' | 'borders'): AsyncGradientEditor {
         const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
         const api = this.__repo.start("asyncGradientEditor");
@@ -1409,9 +1454,9 @@ function adjust_pathshape_rotate_frame(api: Api, page: Page, s: PathShape) {
 }
 
 function set_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, Matrix>,
-    origin1: { x: number, y: number },
-    origin2: { x: number, y: number },
-    sx: number, sy: number, recorder?: SizeRecorder) {
+                         origin1: { x: number, y: number },
+                         origin2: { x: number, y: number },
+                         sx: number, sy: number, recorder?: SizeRecorder) {
     const p = s.parent;
     if (!p) {
         return;
@@ -1427,8 +1472,7 @@ function set_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, Matri
     const ex = pMap.get(p.id);
     if (ex) {
         np = ex;
-    }
-    else {
+    } else {
         np = new Matrix(p.matrix2Root().inverse);
         pMap.set(p.id, np);
     }
@@ -1463,10 +1507,11 @@ function set_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, Matri
         afterModifyGroupShapeWH(api, page, s, sx, sy, new ShapeFrame(s.frame.x, s.frame.y, saveW, saveH), recorder);
     }
 }
+
 function set_rect_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, Matrix>,
-    origin1: { x: number, y: number },
-    origin2: { x: number, y: number },
-    sx: number, sy: number, recorder?: SizeRecorder) {
+                              origin1: { x: number, y: number },
+                              origin2: { x: number, y: number },
+                              sx: number, sy: number, recorder?: SizeRecorder) {
     const p = s.parent;
     if (!p) {
         return;
@@ -1482,8 +1527,7 @@ function set_rect_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, 
     const ex = pMap.get(p.id);
     if (ex) {
         np = ex;
-    }
-    else {
+    } else {
         np = new Matrix(p.matrix2Root().inverse);
         pMap.set(p.id, np);
     }
@@ -1521,8 +1565,8 @@ function set_rect_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, 
 
 
 function __migrate(document: Document,
-    api: Api, page: Page, targetParent: GroupShape, shape: Shape, dlt: string, index: number,
-    transform: { ohflip: boolean, ovflip: boolean, pminverse: number[] }
+                   api: Api, page: Page, targetParent: GroupShape, shape: Shape, dlt: string, index: number,
+                   transform: { ohflip: boolean, ovflip: boolean, pminverse: number[] }
 ) {
     const error = unable_to_migrate(targetParent, shape);
     if (error) {
@@ -1582,14 +1626,14 @@ function __migrate(document: Document,
     if (!Number.isNaN(rotate)) {
         const r = (rotate / (2 * Math.PI) * 360) % 360;
         if (r !== (shape.rotation ?? 0)) api.shapeModifyRotate(page, shape, r);
-    }
-    else {
+    } else {
         console.log('rotate is NaN', rotate);
     }
 
     translateTo(api, page, shape, x, y);
     after_migrate(document, page, api, origin);
 }
+
 function __get_env_transform_for_migrate(target_env: GroupShape) {
     let ohflip = false;
     let ovflip = false;
