@@ -49,7 +49,9 @@ export class RepoNodePath {
         if (path.length === 0) {
             if (!this.node) this.node = creator(this, op);
             // check
-            if (this.node.type !== op.type) throw new Error("wrong node, expect node type: " + op.type + ", but get: " + this.node.type);
+            if (this.node.type !== op.type) {
+                throw new Error("wrong node, expect node type: " + op.type + ", but get: " + this.node.type);
+            }
             return this.node;
         }
         let child = this.childs.get(path[0]);

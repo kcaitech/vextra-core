@@ -9,7 +9,6 @@ import {
     OverrideType,
     Page,
     Shape,
-    ShapeFrame,
     ShapeType,
     SymbolUnionShape,
     SymbolRefShape,
@@ -21,6 +20,7 @@ import {
     TextShape,
     Variable,
     VariableType,
+    ShapeFrame,
 } from "../../data/classes";
 import { Api } from "../coop/recordapi";
 import { BasicArray, BasicMap } from "../../data/basic";
@@ -28,7 +28,7 @@ import { newSymbolRefShape, newSymbolShapeUnion } from "../creator";
 import { uuid } from "../../basic/uuid";
 import * as types from "../../data/typesdefine";
 import { translateTo } from "../frame";
-import { PageView, ShapeView, TableCellView, TableView, TextShapeView } from "../../dataview";
+import { PageView, ShapeView, TableCellView, TableView, TextShapeView, adapt2Shape } from "../../dataview";
 
 interface _Api {
     shapeModifyWH(page: Page, shape: Shape, w: number, h: number): void;
@@ -39,7 +39,8 @@ interface _Api {
 // const DefaultFontSize = Text.DefaultFontSize;
 
 export function fixTextShapeFrameByLayout(api: _Api, page: Page, shape: TextShapeView | TextShape) {
-    const _shape = shape instanceof TextShape ? shape : shape.data;
+    if (!shape.text || shape.isVirtualShape) return;
+    const _shape = shape instanceof TextShape ? shape : adapt2Shape(shape);
     const textBehaviour = shape.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
     switch (textBehaviour) {
         case TextBehaviour.FixWidthAndHeight:
@@ -82,9 +83,7 @@ export function fixTableShapeFrameByLayout(api: _Api, page: Page, shape: TableCe
     const width = widthWeight / table.widthTotalWeights * table.frame.width;
     const height = heightWeight / table.heightTotalWeights * table.frame.height;
     // shape.text.updateSize(width, height);
-    const layout1 = shape.text.getLayout3(width, height, shape.id, undefined); // 按理这里应该取的是个已有的layout
-    shape.text.dropLayout(layout1.token, shape.id);
-    const layout = layout1.layout;
+    const layout = shape.text.getLayout2(new ShapeFrame(0, 0, width, height), shape.id); // 按理这里应该取的是个已有的layout
     if (layout.contentHeight > (height + float_accuracy)) {
         // set row height
         const rowIdx = indexCell.rowIdx + rowSpan - 1;

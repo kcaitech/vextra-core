@@ -141,7 +141,7 @@ export function newflatStyle(): Style {
     return style;
 }
 
-export function newArtboard(name: string, frame: ShapeFrame, style?: Style): Artboard {
+export function newArtboard(name: string, frame: ShapeFrame, fill?: Fill): Artboard {
     if (frame.width === 0 || frame.height === 0) throw new Error();
     template_artboard.id = uuid();
     template_artboard.name = name;
@@ -149,8 +149,8 @@ export function newArtboard(name: string, frame: ShapeFrame, style?: Style): Art
 
     const artboard = importArtboard(template_artboard as types.Artboard);
 
-    if (style) {
-        artboard.style = style;
+    if (fill) {
+        artboard.style.fills.push(fill);
     }
 
     addCommonAttr(artboard);

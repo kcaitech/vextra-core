@@ -13,7 +13,7 @@ import {
 } from "../data/shape";
 import { ShapeEditor } from "./shape";
 import * as types from "../data/typesdefine";
-import { BoolOp, BorderPosition, ExportFileFormat, ExportFormatNameingScheme, FillType, GradientType, ShadowPosition, ShapeType } from "../data/typesdefine";
+import { BoolOp, BorderPosition, ExportFileFormat, ExportFormatNameingScheme, FillType, GradientType, MarkerType, ShadowPosition, ShapeType } from "../data/typesdefine";
 import { Page } from "../data/page";
 import {
     initFrame,
@@ -42,7 +42,8 @@ import {
     Style,
     SymbolRefShape,
     Stop,
-    Gradient
+    Gradient,
+    Fill
 } from "../data/classes";
 import { TextShapeEditor } from "./textshape";
 import { modify_frame_after_insert, set_childs_id, transform_data } from "../io/cilpboard";
@@ -1244,8 +1245,8 @@ export class PageEditor {
         }
     }
 
-    createArtboard(name: string, frame: ShapeFrame) { // todo 新建图层存在代码冗余
-        return newArtboard2(name, frame)
+    createArtboard(name: string, frame: ShapeFrame, fill: Fill) { // todo 新建图层存在代码冗余
+        return newArtboard(name, frame, fill);
     }
 
     shapesModifyPointRadius(shapes: Shape[], indexes: number[], val: number) {
@@ -1718,7 +1719,7 @@ export class PageEditor {
             const api = this.__repo.start('reverseShapesGradient');
             for (let i = 0, l = actions.length; i < l; i++) {
                 const { target, index, type } = actions[i];
-                const arr = target.style[type];
+                const arr = type === 'fills' ? target.getFills() : target.getBorders();
                 if (!arr?.length) {
                     continue;
                 }
@@ -1760,7 +1761,7 @@ export class PageEditor {
             const api = this.__repo.start('rotateShapesGradient');
             for (let i = 0, l = actions.length; i < l; i++) {
                 const { target, index, type } = actions[i];
-                const arr = target.style[type];
+                const arr = type === 'fills' ? target.getFills() : target.getBorders();
                 if (!arr?.length) {
                     continue;
                 }
@@ -1803,7 +1804,7 @@ export class PageEditor {
             const api = this.__repo.start('addShapesGradientStop');
             for (let i = 0, l = actions.length; i < l; i++) {
                 const { target, index, type, value } = actions[i];
-                const grad_type = target.style[type];
+                const grad_type = type === 'fills' ? target.getFills() : target.getBorders();
                 if (!grad_type?.length) {
                     continue;
                 }
@@ -1834,8 +1835,6 @@ export class PageEditor {
                 })
                 const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
                 const shape = shape4fill(api, this.__page, target);
-                console.log('stops:', new_gradient.stops);
-
                 f(this.__page, shape, index, new_gradient);
             }
             this.__repo.commit();
@@ -1849,7 +1848,7 @@ export class PageEditor {
             const api = this.__repo.start('toggerShapeGradientType');
             for (let i = 0, l = actions.length; i < l; i++) {
                 const { target, index, type, value } = actions[i];
-                const grad_type = target.style[type];
+                const grad_type = type === 'fills' ? target.getFills() : target.getBorders();
                 if (!grad_type?.length) {
                     continue;
                 }
@@ -1910,7 +1909,7 @@ export class PageEditor {
             const api = this.__repo.start('setShapesGradientStopColor');
             for (let i = 0, l = actions.length; i < l; i++) {
                 const { target, index, type, value } = actions[i];
-                const grad_type = target.style[type];
+                const grad_type = type === 'fills' ? target.getFills() : target.getBorders();
                 if (!grad_type?.length) {
                     continue;
                 }
@@ -1946,7 +1945,7 @@ export class PageEditor {
             const api = this.__repo.start('setShapesGradientStopColor');
             for (let i = 0, l = actions.length; i < l; i++) {
                 const { target, index, type, value } = actions[i];
-                const grad_type = target.style[type];
+                const grad_type = type === 'fills' ? target.getFills() : target.getBorders();
                 if (!grad_type?.length) {
                     continue;
                 }
@@ -1976,7 +1975,7 @@ export class PageEditor {
             const api = this.__repo.start('setGradientOpacity');
             for (let i = 0, l = actions.length; i < l; i++) {
                 const { target, index, type, value } = actions[i];
-                const grad_type = target.style[type];
+                const grad_type = type === 'fills' ? target.getFills() : target.getBorders();
                 if (!grad_type?.length) {
                     continue;
                 }
@@ -2209,6 +2208,45 @@ export class PageEditor {
                 const { target, value, index } = actions[i];
                 const s = shape4border(api, this.__page, target);
                 api.setBorderStyle(this.__page, s, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setShapesMarkerType(actions: BatchAction2[]) {
+        const api = this.__repo.start('setShapesMarkerType');
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                if (modify_variable_with_api(api, this.__page, target, VariableType.MarkerType, value.isEnd ? OverrideType.EndMarkerType : OverrideType.StartMarkerType, value.mt)) continue;
+                if (value.isEnd) {
+                    api.shapeModifyEndMarkerType(this.__page, adapt2Shape(target), value.mt);
+                } else {
+                    api.shapeModifyStartMarkerType(this.__page, adapt2Shape(target), value.mt);
+                }
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    exchangeShapesMarkerType(actions: BatchAction2[]) {
+        const api = this.__repo.start('exchangeShapesMarkerType');
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                const startMarkerType = target.startMarkerType;
+                const endMarkerType = target.endMarkerType;
+                if (endMarkerType === startMarkerType) continue;
+                if (modify_variable_with_api(api, this.__page, target, VariableType.MarkerType, OverrideType.EndMarkerType, startMarkerType || MarkerType.Line)) {
+                    modify_variable_with_api(api, this.__page, target, VariableType.MarkerType, OverrideType.StartMarkerType, endMarkerType || MarkerType.Line)
+                    continue;
+                };
+                api.shapeModifyEndMarkerType(this.__page, adapt2Shape(target), startMarkerType || MarkerType.Line);
+                api.shapeModifyStartMarkerType(this.__page, adapt2Shape(target), endMarkerType || MarkerType.Line);
             }
             this.__repo.commit();
         } catch (error) {
