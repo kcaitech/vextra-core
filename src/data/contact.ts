@@ -242,4 +242,8 @@ export class ContactShape extends PathShape implements classes.ContactShape {
     get frameType() {
         return FrameType.None;
     }
+
+    get isPathIcon() {
+        return false;
+    }
 }

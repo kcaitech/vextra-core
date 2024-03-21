@@ -353,6 +353,7 @@ export function exportPathSegment(source: types.PathSegment, ctx?: IExportContex
             }
             return ret
         })(),
+        id: source.id,
         points: (() => {
             const ret = []
             for (let i = 0, len = source.points.length; i < len; i++) {

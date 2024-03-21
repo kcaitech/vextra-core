@@ -36,4 +36,8 @@ export class ImageShapeView extends ShapeView {
         });
         return [cp, img];
     }
+
+    get points() {
+        return (this.m_data as ImageShape).points;
+    }
 }

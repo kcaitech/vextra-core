@@ -6,6 +6,9 @@ import { Matrix } from "../basic/matrix";
 import { PathSegment } from "../data/typesdefine";
 import { RenderTransform } from "./basic";
 import { DViewCtx, PropsType } from "./viewctx";
+import { EL, elh } from "./el";
+import { renderBorders } from "../render";
+import { uuid } from "../basic/uuid";
 
 export class PathShapeView2 extends ShapeView {
 
@@ -15,6 +18,10 @@ export class PathShapeView2 extends ShapeView {
     }
 
     m_pathsegs?: PathSegment[];
+
+    get segments() {
+        return this.m_pathsegs || (this.m_data as PathShape2).pathsegs;
+    }
 
     protected _layout(shape: Shape, transform: RenderTransform | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): void {
         this.m_pathsegs = undefined;
@@ -31,7 +38,7 @@ export class PathShapeView2 extends ShapeView {
 
         const pathsegs = shape.pathsegs;
         const newpathsegs = pathsegs.map((seg) => {
-            return { crdtidx: seg.crdtidx, points: transformPoints(seg.points, m), isClosed: seg.isClosed }
+            return { crdtidx: seg.crdtidx, id: seg.id, points: transformPoints(seg.points, m), isClosed: seg.isClosed }
         });
         this.m_pathsegs = newpathsegs;
 
@@ -40,5 +47,9 @@ export class PathShapeView2 extends ShapeView {
         const concat = Array.prototype.concat.apply([], parsed);
         this.m_path = new Path(concat);
         this.m_pathstr = this.m_path.toString();
+    }
+
+    protected renderBorders(): EL[] {
+        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), false);
     }
 }

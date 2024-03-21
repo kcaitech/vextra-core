@@ -251,6 +251,10 @@ export class ShapeView extends DataView {
         return this.data.constrainerProportions;
     }
 
+    get isClosed() {
+        return this.m_data.isClosed;
+    }
+
     // private __boundingBox?: ShapeFrame;
     boundingBox(): ShapeFrame {
         if (this.isNoTransform()) return this.frame;
@@ -303,7 +307,7 @@ export class ShapeView extends DataView {
     }
 
     onDataChange(...args: any[]): void {
-        if (args.includes('points') || (this.m_fixedRadius || 0) !== ((this.m_data as any).fixedRadius || 0)) {
+        if (args.includes('points') || args.includes('isClosed') || (this.m_fixedRadius || 0) !== ((this.m_data as any).fixedRadius || 0)) {
             this.m_path = undefined;
             this.m_pathstr = undefined;
         }
@@ -804,5 +808,13 @@ export class ShapeView extends DataView {
 
     get isContainer() {
         return this.data.isContainer;
+    }
+
+    get pathType() {
+        return this.data.pathType;
+    }
+
+    get isPathIcon() {
+        return this.data.isPathIcon;
     }
 }

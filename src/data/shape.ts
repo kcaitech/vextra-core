@@ -24,7 +24,7 @@ import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
 import { TextLayout } from "./textlayout";
 import { parsePath } from "./pathparser";
-import { FrameType, RECT_POINTS } from "./consts";
+import { FrameType, PathType, RECT_POINTS } from "./consts";
 import { Variable } from "./variable";
 import { TableShape } from "./table";
 import { SymbolRefShape } from "./symbolref";
@@ -97,6 +97,8 @@ export class Shape extends Basic implements classes.Shape {
     hasClippingMask?: boolean
     shouldBreakMaskChain?: boolean
     varbinds?: BasicMap<string, string>
+
+    isClosed: boolean = true;
 
     constructor(
         crdtidx: BasicArray<number>,
@@ -298,27 +300,14 @@ export class Shape extends Basic implements classes.Shape {
         return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
     }
     /**
-     * @description 保留transform的前提下计算Bounds并返回
+     * @description 保留transform的前提下计算基于自身坐标的Bounds并返回
      */
-    boundingBox3(): ShapeFrame {
+    boundingBox3(): ShapeFrame | undefined {
         const path = this.getPath();
         if (path.length > 0) {
             const bounds = path.calcBounds();
             return new ShapeFrame(bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
         }
-
-        const frame = this.frame;
-        const m = this.matrix2Parent();
-        const corners = [{ x: 0, y: 0 }, { x: frame.width, y: 0 }, { x: frame.width, y: frame.height }, {
-            x: 0,
-            y: frame.height
-        }]
-            .map((p) => m.computeCoord(p));
-        const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
-        const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
-        const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
-        const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
-        return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
     }
 
     flipHorizontal() {
@@ -418,6 +407,14 @@ export class Shape extends Basic implements classes.Shape {
 
     get isContainer() { // 容器类元素: 页面、容器、组件、组件Union
         return false;
+    }
+
+    get pathType() {
+        return PathType.Editable;
+    }
+
+    get isPathIcon() { // 根据路径绘制图标
+        return true;
     }
 }
 
@@ -536,6 +533,14 @@ export class GroupShape extends Shape implements classes.GroupShape {
     get frameType() {
         return FrameType.Flex;
     }
+
+    get pathType() {
+        return PathType.Fixed;
+    }
+
+    get isPathIcon() {
+        return false;
+    }
 }
 
 export class BoolShape extends GroupShape implements classes.BoolShape {
@@ -571,6 +576,10 @@ export class BoolShape extends GroupShape implements classes.BoolShape {
             }
         }
         return { op }
+    }
+
+    get isPathIcon() {
+        return true;
     }
 }
 
@@ -728,21 +737,6 @@ export class PathShape extends Shape implements classes.PathShape {
         this.points = points;
         this.isClosed = isClosed;
     }
-    setClosedState(state: boolean) {
-        this.isClosed = state;
-    }
-    // path shape
-    get pointsCount() {
-        return this.points.length;
-    }
-
-    getPointByIndex(idx: number) {
-        return this.points[idx];
-    }
-
-    mapPoints<T>(f: (value: CurvePoint, index: number, array: CurvePoint[]) => T): T[] {
-        return this.points.map(f);
-    }
 
     /**
      *
@@ -756,7 +750,9 @@ export class PathShape extends Shape implements classes.PathShape {
         const height = frame.height;
 
         fixedRadius = this.fixedRadius ?? fixedRadius;
+
         const path = parsePath(this.points, !!this.isClosed, offsetX, offsetY, width, height, fixedRadius);
+
         return new Path(path);
     }
 
@@ -794,11 +790,6 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
         this.pathsegs = pathsegs
     }
 
-    // path shape
-    get pointsCount() {
-        return this.pathsegs.reduce((count, seg) => (count + seg.points.length), 0);
-    }
-
     getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
         const offsetX = 0;
         const offsetY = 0;
@@ -806,10 +797,12 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
         const height = frame.height;
 
         fixedRadius = this.fixedRadius ?? fixedRadius;
+
         const path: any[] = [];
         this.pathsegs.forEach((seg) => {
-            path.push(...parsePath(seg.points, !!seg.isClosed, offsetX, offsetY, width, height, fixedRadius));
+            path.push(...parsePath(seg.points, seg.isClosed, offsetX, offsetY, width, height, fixedRadius));
         });
+
         return new Path(path);
     }
 
@@ -822,6 +815,10 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
             radius.push(p.radius || 0);
             return radius;
         }, radius), []);
+    }
+
+    get pathType() {
+        return PathType.Multi;
     }
 }
 
@@ -877,6 +874,7 @@ export class RectShape extends PathShape implements classes.RectShape {
 export class ImageShape extends RectShape implements classes.ImageShape {
     typeId = 'image-shape'
     imageRef: string;
+    points: BasicArray<CurvePoint>;
 
     private __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
     private __cacheData?: { buff: Uint8Array, base64: string };
@@ -902,8 +900,10 @@ export class ImageShape extends RectShape implements classes.ImageShape {
             points,
             isClosed
         )
+
+        this.points = points;
         this.imageRef = imageRef
-        this.isClosed = true;
+        this.isClosed = isClosed;
     }
 
     setImageMgr(imageMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>) {
@@ -942,6 +942,10 @@ export class ImageShape extends RectShape implements classes.ImageShape {
 
     get frameType() {
         return FrameType.Rect;
+    }
+
+    get isPathIcon() {
+        return false;
     }
 }
 
@@ -1065,6 +1069,14 @@ export class TextShape extends Shape implements classes.TextShape {
     get frameType() {
         return FrameType.Rect;
     }
+
+    get pathType() {
+        return PathType.Fixed;
+    }
+
+    get isPathIcon() {
+        return false;
+    }
 }
 export class CutoutShape extends PathShape implements classes.CutoutShape {
     typeId = 'cutout-shape'
@@ -1100,5 +1112,13 @@ export class CutoutShape extends PathShape implements classes.CutoutShape {
 
     get frameType() {
         return FrameType.Rect;
+    }
+
+    get pathType() {
+        return PathType.Fixed;
+    }
+
+    get isPathIcon() {
+        return false;
     }
 }

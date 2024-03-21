@@ -333,15 +333,18 @@ export class Point2D extends Basic {
 export class PathSegment extends Basic {
     typeId = 'path-segment'
     crdtidx: BasicArray<number >
+    id: string
     points: BasicArray<CurvePoint >
     isClosed: boolean
     constructor(
         crdtidx: BasicArray<number >,
+        id: string,
         points: BasicArray<CurvePoint >,
         isClosed: boolean
     ) {
         super()
         this.crdtidx = crdtidx
+        this.id = id
         this.points = points
         this.isClosed = isClosed
     }

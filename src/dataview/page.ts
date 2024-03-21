@@ -55,6 +55,7 @@ export class PageView extends GroupShapeView implements RootView {
         if (Array.isArray(view)) view.forEach(add);
         else add(view);
     }
+
     onRemoveView(parent: ShapeView, view: ShapeView | ShapeView[]): void {
         const remove = (v: ShapeView) => {
             const cur = this.m_views.get(v.id);
@@ -67,9 +68,11 @@ export class PageView extends GroupShapeView implements RootView {
         if (Array.isArray(view)) view.forEach(remove);
         else remove(view);
     }
+
     getView(id: string) {
         return this.m_views.get(id) || this.m_delaydestorys.get(id);
     }
+
     addDelayDestory(view: ShapeView | ShapeView[]): void {
         const add = (v: ShapeView) => {
             if (v.parent) throw new Error("view has parent, not removed?");
@@ -138,7 +141,12 @@ export class PageView extends GroupShapeView implements RootView {
     dbgCheckFrame() {
         checkFrame(this);
     }
+
     dbgCheckPath() {
         checkPath(this);
+    }
+
+    get backgroundColor() {
+        return this.data.backgroundColor;
     }
 }

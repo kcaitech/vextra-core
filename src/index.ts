@@ -40,7 +40,7 @@ export * from "./service/shapedirlist2"
 export * from "./service/taskmgr"
 export * from "./service/symbollist"
 
-export * from "./editor/transform"
+export * from "./editor/asyncApiHandler"
 
 // coop
 // export * from "./coop"

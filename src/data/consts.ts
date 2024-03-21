@@ -4,6 +4,7 @@ import { BasicArray } from "./basic";
 function hasSetBit(val: number, mask: number): boolean {
     return !(val & mask);
 }
+
 function setBit(val: number, mask: number, b: boolean): number {
     return b ? (val ^ mask) : (val ^ (~~mask));
 }
@@ -265,8 +266,8 @@ export const ResizingConstraints2 = {
     },
 
     /**
-    * @description 5. 设置为水平跟随缩放
-    */
+     * @description 5. 设置为水平跟随缩放
+     */
     setToScaleByHeight(status: number) {
         return status & ~this.Top & ~this.VCenter & ~this.Bottom & ~this.Height;
     },
@@ -332,3 +333,10 @@ export enum FrameType {
     Flex = 3, // 父级矩形：容器、实例、组件、组件集合。含有子元素的标准矩形，在约束中的表现同上。
     Comp = 4  // 任意矩形：编组，在约束中的表现为 —— 需要摆正，并把约束行为传递都子元素 --先不摆正
 }
+
+export enum PathType {
+    Fixed = 0, // 不可编辑路径
+    Editable = 1, // 可编辑路径
+    Multi = 2 // 多条可编辑路径
+}
+

@@ -5,7 +5,7 @@ import { ShapeType, ShapeFrame, TableCellType, CrdtNumber } from "./baseclasses"
 import { Shape } from "./shape";
 import { Path } from "./path";
 import { Text, TextAttr } from "./text"
-import { FrameType } from "./consts";
+import { FrameType, PathType } from "./consts";
 import { newTableCellText } from "./textutils";
 export { TableLayout, TableGridItem } from "./tablelayout";
 export { TableCellType } from "./baseclasses";
@@ -456,5 +456,13 @@ export class TableShape extends Shape implements classes.TableShape {
 
     get frameType() {
         return FrameType.Rect;
+    }
+
+    get pathType() {
+        return PathType.Fixed;
+    }
+
+    get isPathIcon() {
+        return false;
     }
 }

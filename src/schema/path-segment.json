@@ -8,6 +8,12 @@
                 "type": "number"
             }
         },
+        "id": {
+            "type": "string",
+            "minLength": 32,
+            "maxLength": 36,
+            "default": "$uuid"
+        },
         "points": {
             "type": "array",
             "items": {
@@ -20,6 +26,7 @@
     },
     "required": [
         "crdtidx",
+        "id",
         "points",
         "isClosed"
     ],

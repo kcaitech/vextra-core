@@ -1,8 +1,8 @@
-
-
 import { render as renderGradient } from "./gradient";
 import { objectId } from '../basic/objectid';
-import { Border, Gradient, BorderPosition, FillType, GradientType, ShapeFrame, Shape, SymbolRefShape, SymbolShape, Variable, OverrideType, VariableType } from "../data/classes";
+import { Border, BorderPosition, FillType, Gradient, GradientType, OverrideType, Shape, ShapeFrame, SymbolRefShape,
+    SymbolShape, VariableType
+} from "../data/classes";
 import { findOverrideAndVar, randomId } from "./basic";
 
 
@@ -273,7 +273,7 @@ handler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame, border
     return (h("g", elArr));
 }
 
-export function render(h: Function, borders: Border[], frame: ShapeFrame, path: string): Array<any> {
+export function render(h: Function, borders: Border[], frame: ShapeFrame, path: string, isClosed = true): Array<any> {
     const bc = borders.length;
     const elArr = [];
     for (let i = 0; i < bc; i++) {
@@ -281,7 +281,10 @@ export function render(h: Function, borders: Border[], frame: ShapeFrame, path: 
         if (!border.isEnabled) {
             continue;
         }
-        const position = border.position;
+
+        // 不闭合的图层的边框默认以居中效果来渲染
+        const position = isClosed ? border.position : BorderPosition.Center;
+
         const fillType = border.fillType;
         const gradientType = border.gradient && border.gradient.gradientType;
 
@@ -310,5 +313,5 @@ export function renderWithVars(h: Function, shape: Shape, frame: ShapeFrame, pat
             }
         }
     }
-    return render(h, borders, frame, path);
+    return render(h, borders, frame, path, shape.isClosed);
 }
