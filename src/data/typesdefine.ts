@@ -658,6 +658,7 @@ export type GroupShape = Shape & {
 export type SymbolShape = GroupShape & {
     variables: Map<string, Variable>
     symtags?: Map<string, string>
+    points: CurvePoint[]
 }
 /* symbol union shape */
 export type SymbolUnionShape = SymbolShape & {
@@ -686,5 +687,5 @@ export type BoolShape = GroupShape & {
 }
 /* artboard shape */
 export type Artboard = GroupShape & {
-    fixedRadiusEx?: number[]
+    points: CurvePoint[]
 }

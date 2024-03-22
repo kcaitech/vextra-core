@@ -3,6 +3,7 @@ import { GroupShapeView } from "./groupshape";
 import { innerShadowId, renderBorders, renderFills } from "../render";
 import { objectId } from "../basic/objectid";
 import { render as clippathR } from "../render/clippath"
+import { Artboard } from "../data/artboard";
 
 
 export class ArtboradView extends GroupShapeView {
@@ -123,5 +124,9 @@ export class ArtboradView extends GroupShapeView {
 
         this.reset("g", props, [...shadows, body, ...borders])
         return ++this.m_render_version;
+    }
+
+    get points() {
+        return (this.m_data as Artboard).points;
     }
 }

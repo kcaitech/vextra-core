@@ -596,6 +596,8 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
     variables: BasicMap<string, Variable> // 怎么做关联
     symtags?: BasicMap<string, string>
 
+    points: BasicArray<CurvePoint>;
+
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
@@ -604,7 +606,8 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         frame: ShapeFrame,
         style: Style,
         childs: BasicArray<Shape>,
-        variables: BasicMap<string, Variable>
+        variables: BasicMap<string, Variable>,
+        points: BasicArray<CurvePoint>
     ) {
         super(
             crdtidx,
@@ -616,6 +619,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
             childs
         )
         this.variables = variables;
+        this.points = points;
     }
 
     getOpTarget(path: string[]): any {
@@ -658,10 +662,35 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
     get isContainer() {
         return true;
     }
+
+    setRectRadius(lt: number, rt: number, rb: number, lb: number): void {
+        const ps = this.points;
+        if (ps.length === 4) {
+            ps[0].radius = lt;
+            ps[1].radius = rt;
+            ps[2].radius = rb;
+            ps[3].radius = lb;
+        }
+    }
+
+    getRectRadius(): { lt: number, rt: number, rb: number, lb: number } {
+        const ret = { lt: 0, rt: 0, rb: 0, lb: 0 };
+        const ps = this.points;
+        if (ps.length === 4) {
+            ret.lt = ps[0].radius || 0;
+            ret.rt = ps[1].radius || 0;
+            ret.rb = ps[2].radius || 0;
+            ret.lb = ps[3].radius || 0;
+        }
+        return ret;
+    }
 }
 
 export class SymbolUnionShape extends SymbolShape implements classes.SymbolUnionShape {
     typeId = 'symbol-union-shape'
+
+    points: BasicArray<CurvePoint>;
+
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
@@ -670,7 +699,8 @@ export class SymbolUnionShape extends SymbolShape implements classes.SymbolUnion
         frame: ShapeFrame,
         style: Style,
         childs: BasicArray<Shape>,
-        variables: BasicMap<string, Variable>
+        variables: BasicMap<string, Variable>,
+        points: BasicArray<CurvePoint>
     ) {
         super(
             crdtidx,
@@ -680,8 +710,11 @@ export class SymbolUnionShape extends SymbolShape implements classes.SymbolUnion
             frame,
             style,
             childs,
-            variables
+            variables,
+            points
         )
+
+        this.points = points;
     }
 
     get isSymbolUnionShape() {
@@ -845,7 +878,7 @@ export class RectShape extends PathShape implements classes.RectShape {
             points,
             isClosed
         )
-        this.isClosed = true;
+        this.isClosed = isClosed;
     }
 
     setRectRadius(lt: number, rt: number, rb: number, lb: number): void {
@@ -975,7 +1008,7 @@ export class OvalShape extends PathShape implements classes.OvalShape {
             isClosed
         )
         this.ellipse = ellipse;
-        this.isClosed = true;
+        this.isClosed = isClosed;
     }
 }
 
@@ -1002,6 +1035,7 @@ export class LineShape extends PathShape implements classes.LineShape {
             points,
             isClosed
         )
+        this.isClosed = isClosed;
     }
 }
 
@@ -1103,7 +1137,7 @@ export class CutoutShape extends PathShape implements classes.CutoutShape {
             isClosed
         )
         this.scalingStroke = scalingStroke;
-        this.isClosed = isClosed;
+        this.isClosed = false;
     }
 
     get isNoSupportDiamondScale() {

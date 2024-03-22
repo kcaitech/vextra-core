@@ -1646,6 +1646,14 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
             });
             return ret;
         })(),
+        points: (() => {
+            const ret = []
+            for (let i = 0, len = source.points.length; i < len; i++) {
+                const r = exportCurvePoint(source.points[i], ctx)
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
     }
     // inject code
     if (ctx?.symbols) ctx.symbols.add(ret.id);
@@ -1742,6 +1750,14 @@ export function exportSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IEx
                     ret[k] = exportVariable(v, ctx)
                 });
                 return ret;
+            })(),
+        points: (() => {
+                const ret = []
+                for (let i = 0, len = source.points.length; i < len; i++) {
+                    const r = exportCurvePoint(source.points[i], ctx)
+                    if (r) ret.push(r)
+                }
+                return ret
             })(),
         symtags: source.symtags && (() => {
                 const val = source.symtags;
@@ -2221,10 +2237,10 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
                 });
                 return ret;
             })(),
-        fixedRadiusEx: source.fixedRadiusEx && (() => {
+        points: (() => {
             const ret = []
-            for (let i = 0, len = source.fixedRadiusEx.length; i < len; i++) {
-                const r = source.fixedRadiusEx[i]
+            for (let i = 0, len = source.points.length; i < len; i++) {
+                const r = exportCurvePoint(source.points[i], ctx)
                 if (r) ret.push(r)
             }
             return ret

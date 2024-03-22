@@ -58,4 +58,8 @@ export class SymbolView extends GroupShapeView {
         cdom = new Com(this.m_ctx, props) as DataView;
         this.addChild(cdom, idx);
     }
+
+    get points() {
+        return (this.m_data as SymbolShape).points;
+    }
 }

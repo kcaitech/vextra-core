@@ -19,10 +19,17 @@
             "value": {
                 "type": "string"
             }
+        },
+        "points": {
+            "type": "array",
+            "items": {
+                "$ref": "./curve-point.json"
+            }
         }
     },
     "required": [
-        "variables"
+        "variables",
+        "points"
     ],
     "allOf": [
         {
