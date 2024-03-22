@@ -117,6 +117,14 @@ export class TextShapeView extends ShapeView {
 
     __origin_frame: ShapeFrame = new ShapeFrame(0, 0, 0, 0);
 
+    forceUpdateOriginFrame() {
+        const frame = this.data.frame;
+        this.__origin_frame.x = frame.x;
+        this.__origin_frame.y = frame.y;
+        this.__origin_frame.width = frame.width;
+        this.__origin_frame.height = frame.height;
+    }
+
     updateLayoutArgs(frame: ShapeFrame, hflip: boolean | undefined, vflip: boolean | undefined, rotate: number | undefined, radius: number | undefined): void {
         // if (this.isVirtualShape && isDiffShapeFrame(this.m_frame, frame)) {
         //     this.updateSize(frame.width, frame.height);

@@ -195,7 +195,7 @@ export class Text extends Basic implements classes.Text {
             let o = token && this.__layouts.get(token);
             if (o) {
                 if (o.owners.length === 1 && o.owners[0] === owner) {
-                    o.update(frame, this.attr);
+                    o.update(frame, this);
                     if (!o.layout) o.layout = layoutText(this, frame);
                     this.__layouts.delete(token!);
                     this.__layouts.set(cur, o);
@@ -218,7 +218,7 @@ export class Text extends Basic implements classes.Text {
             this.__layouts.set(cur, o)
         }
 
-        o.update(frame, this.attr);
+        o.update(frame, this);
         if (!o.layout) o.layout = layoutText(this, frame);
 
         return { token: cur, layout: o.layout! }
