@@ -474,7 +474,17 @@ export function newCutoutShape(name: string, frame: ShapeFrame): CutoutShape {
 
 export function newSymbolShape(name: string, frame: ShapeFrame, style?: Style): SymbolShape {
     if (frame.width === 0 || frame.height === 0) throw new Error();
-    const compo = new SymbolShape(new BasicArray(), uuid(), name, types.ShapeType.Symbol, frame, newflatStyle(), new BasicArray(), new BasicMap());
+    const compo = new SymbolShape(
+        new BasicArray(),
+        uuid(),
+        name,
+        types.ShapeType.Symbol,
+        frame,
+        newflatStyle(),
+        new BasicArray(),
+        new BasicMap(),
+        createNormalPoints()
+    );
     if (style) compo.style = style;
     addCommonAttr(compo);
     return compo;
@@ -491,7 +501,8 @@ export function newSymbolShapeUnion(name: string, frame: ShapeFrame): SymbolUnio
         frame,
         style,
         new BasicArray(),
-        new BasicMap()
+        new BasicMap(),
+        createNormalPoints()
     );
     addCommonAttr(union);
     return union;
@@ -569,4 +580,13 @@ export function modifyTransformByEnv(shape: Shape, env: GroupShape) {
     }
 
     shape.rotation = r % 360;
+}
+
+export function createNormalPoints() {
+    const p1 = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight); // lt
+    const p2 = new CurvePoint([1] as BasicArray<number>, uuid(), 1, 0, CurveMode.Straight); // rt
+    const p3 = new CurvePoint([2] as BasicArray<number>, uuid(), 1, 1, CurveMode.Straight); // rb
+    const p4 = new CurvePoint([3] as BasicArray<number>, uuid(), 0, 1, CurveMode.Straight); // lb
+
+    return new BasicArray<CurvePoint>(p1, p2, p3, p4);
 }

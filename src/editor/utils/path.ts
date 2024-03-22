@@ -658,7 +658,7 @@ function apartPathShape(document: Document, page: Page, api: Api, shape: Shape, 
         const frame = importShapeFrame(exportShapeFrame(shape.frame));
         const style = importStyle(exportStyle(shape.style));
 
-        const __shape = new PathShape2(new BasicArray(), uuid(), Shape.name, types.ShapeType.Path2, frame, style, segments);
+        const __shape = new PathShape2(new BasicArray(), uuid(), shape.name, types.ShapeType.Path2, frame, style, segments);
         addCommonAttr(__shape);
 
         const index2 = (shape.parent as GroupShape).indexOfChild(shape);
