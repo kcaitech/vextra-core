@@ -247,7 +247,7 @@ export class Api {
     }
     shapeModifyRotate(page: Page, shape: Shape, rotate: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyRotate(page, shape, rotate));
+        this.addOp(basicapi.shapeModifyRotate(page, shape, rotate, this.needUpdateFrame));
     }
     shapeModifyConstrainerProportions(page: Page, shape: Shape, prop: boolean) {
         checkShapeAtPage(page, shape);

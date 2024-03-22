@@ -447,9 +447,8 @@ export class ShapeEditor {
     // radius
     public setRectRadius(lt: number, rt: number, rb: number, lb: number) {
         const shape = this.shape;
-        if (!(shape instanceof RectShape)) return;
         this._repoWrap("setRectRadius", (api) => {
-            api.shapeModifyRadius(this.__page, shape, lt, rt, rb, lb);
+            api.shapeModifyRadius(this.__page, (shape as RectShape), lt, rt, rb, lb);
         });
     }
 
