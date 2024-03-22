@@ -1247,6 +1247,7 @@ export class SymbolShape extends GroupShape {
     typeId = 'symbol-shape'
     variables: BasicMap<string, Variable>
     symtags?: BasicMap<string, string>
+    points: BasicArray<CurvePoint >
     constructor(
         crdtidx: BasicArray<number >,
         id: string,
@@ -1255,7 +1256,8 @@ export class SymbolShape extends GroupShape {
         frame: ShapeFrame,
         style: Style,
         childs: BasicArray<(GroupShape | ImageShape | PathShape | PathShape2 | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape) >,
-        variables: BasicMap<string, Variable>
+        variables: BasicMap<string, Variable>,
+        points: BasicArray<CurvePoint >
     ) {
         super(
             crdtidx,
@@ -1267,6 +1269,7 @@ export class SymbolShape extends GroupShape {
             childs
         )
         this.variables = variables
+        this.points = points
     }
 }
 /**
@@ -1282,7 +1285,8 @@ export class SymbolUnionShape extends SymbolShape {
         frame: ShapeFrame,
         style: Style,
         childs: BasicArray<(GroupShape | ImageShape | PathShape | PathShape2 | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape) >,
-        variables: BasicMap<string, Variable>
+        variables: BasicMap<string, Variable>,
+        points: BasicArray<CurvePoint >
     ) {
         super(
             crdtidx,
@@ -1292,7 +1296,8 @@ export class SymbolUnionShape extends SymbolShape {
             frame,
             style,
             childs,
-            variables
+            variables,
+            points
         )
     }
 }
@@ -1423,7 +1428,7 @@ export class BoolShape extends GroupShape {
  */
 export class Artboard extends GroupShape {
     typeId = 'artboard'
-    fixedRadiusEx?: BasicArray<number >
+    points: BasicArray<CurvePoint >
     constructor(
         crdtidx: BasicArray<number >,
         id: string,
@@ -1431,7 +1436,8 @@ export class Artboard extends GroupShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(GroupShape | ImageShape | PathShape | PathShape2 | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape) >
+        childs: BasicArray<(GroupShape | ImageShape | PathShape | PathShape2 | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape) >,
+        points: BasicArray<CurvePoint >
     ) {
         super(
             crdtidx,
@@ -1442,5 +1448,6 @@ export class Artboard extends GroupShape {
             style,
             childs
         )
+        this.points = points
     }
 }

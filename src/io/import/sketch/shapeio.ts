@@ -23,6 +23,7 @@ import { IJSON, ImportFun, LoadContext } from "./basic";
 import { uuid } from "../../../basic/uuid";
 import { Fill, FillType } from "../../../data/classes";
 import { ResizingConstraints, ResizingConstraints2 } from "../../../data/consts";
+import { createNormalPoints } from "../../../editor/creator";
 
 function uniqueId(ctx: LoadContext, id: string): string {
     // if (ctx.shapeIds.has(id)) id = uuid();
@@ -139,7 +140,10 @@ export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun, i: n
         style.fills.push(fill);
     }
     const childs = (data['layers'] || []).map((d: IJSON, i: number) => f(ctx, d, i));
-    const shape = new Artboard([i] as BasicArray<number>, id, name, ShapeType.Artboard, frame, style, new BasicArray<Shape>(...childs));
+
+    const points = createNormalPoints();
+
+    const shape = new Artboard([i] as BasicArray<number>, id, name, ShapeType.Artboard, frame, style, new BasicArray<Shape>(...childs), points);
 
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
@@ -343,7 +347,8 @@ export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun, i: num
     // const isClosed = data['isClosed'];
     const id = uniqueId(ctx, data['symbolID']);
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON, i: number) => f(ctx, d, i));
-    const shape = new SymbolShape([i] as BasicArray<number>, id, name, ShapeType.Symbol, frame, style, new BasicArray<Shape>(...childs), new BasicMap());
+    const points = createNormalPoints();
+    const shape = new SymbolShape([i] as BasicArray<number>, id, name, ShapeType.Symbol, frame, style, new BasicArray<Shape>(...childs), new BasicMap(), points);
 
     // env.symbolManager.addSymbol(id, name, env.pageId, shape);
     // shape.appendChilds(childs);

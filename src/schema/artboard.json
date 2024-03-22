@@ -2,14 +2,16 @@
     "description": "artboard shape",
     "type": "object",
     "properties": {
-        "fixedRadiusEx": {
+        "points": {
             "type": "array",
             "items": {
-                "type": "number"
+                "$ref": "./curve-point.json"
             }
         }
     },
-    "required": [],
+    "required": [
+        "points"
+    ],
     "allOf": [
         {
             "$ref": "./group-shape.json"
