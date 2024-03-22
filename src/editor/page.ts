@@ -91,16 +91,7 @@ import { CoopRepository } from "./coop/cooprepo";
 import { Api } from "./coop/recordapi";
 import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
 import { unable_to_migrate } from "./utils/migrate";
-import {
-    PageView,
-    ShapeView,
-    SymbolView,
-    TableCellView,
-    TableView,
-    TextShapeView,
-    adapt2Shape,
-    GroupShapeView
-} from "../dataview";
+import { PageView, ShapeView, SymbolView, TableCellView, TableView, TextShapeView, adapt2Shape } from "../dataview";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -1263,10 +1254,8 @@ export class PageEditor {
             const api = this.__repo.start("shapesModifyPointRadius");
             for (let i = 0, l = shapes.length; i < l; i++) {
                 const shape = shapes[i];
-                if (!(shape instanceof PathShape)) {
-                    continue;
-                }
-                const points = shape.points;
+                const points = (shape as PathShape).points;
+
                 for (let _i = 0, l = indexes.length; _i < l; _i++) {
                     const index = indexes[_i];
                     const point = points[index];
@@ -1290,19 +1279,15 @@ export class PageEditor {
             for (let i = 0, l = shapes.length; i < l; i++) {
                 const shape = shapes[i];
 
-                if (shape.type === ShapeType.Artboard || shape.type === ShapeType.Group) {
+                if (shape.type === ShapeType.Group) {
                     api.shapeModifyFixedRadius(this.__page, shape as GroupShape, val);
                     continue;
                 }
 
-                if (!(shape instanceof PathShape)) {
-                    continue;
-                }
-
-                const is_rect = [ShapeType.Rectangle, ShapeType.Image]
+                const is_rect = [ShapeType.Rectangle, ShapeType.Image, ShapeType.Artboard]
                     .includes(shape.type) && shape.isClosed;
 
-                const points = shape.points;
+                const points = (shape as PathShape).points;
 
                 if (is_rect) {
                     for (let i = 0, l = points.length; i < l; i++) {
@@ -1313,7 +1298,7 @@ export class PageEditor {
                         api.modifyPointCornerRadius(this.__page, shape, i, 0);
                     }
 
-                    api.shapeModifyFixedRadius(this.__page, shape, val);
+                    api.shapeModifyFixedRadius(this.__page, shape as PathShape, val);
                 }
 
                 update_frame_by_points(api, this.__page, shape);
@@ -2619,7 +2604,7 @@ export class PageEditor {
         try {
             for (let i = 0; i < shapes.length; i++) {
                 const s = shapes[i];
-                if (s instanceof RectShape) api.shapeModifyRadius(this.__page, s, lt, rt, rb, lb);
+                api.shapeModifyRadius(this.__page, s as RectShape, lt, rt, rb, lb);
             }
             this.__repo.commit();
         } catch (error) {

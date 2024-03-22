@@ -1,4 +1,5 @@
 import {
+    BoolShape,
     GroupShape,
     PathShape,
     PathShape2,
@@ -6,11 +7,10 @@ import {
     Shape,
     ShapeType,
     SymbolShape,
+    SymbolUnionShape,
     TextShape,
     Variable,
-    VariableType,
-    SymbolUnionShape,
-    BoolShape
+    VariableType
 } from "../data/shape";
 import { Border, BorderPosition, BorderStyle, Fill, MarkerType, Shadow } from "../data/style";
 import { expand, expandTo, translate, translateTo } from "./frame";
@@ -18,7 +18,14 @@ import { BoolOp, CurvePoint, ExportFormat } from "../data/baseclasses";
 import { Artboard } from "../data/artboard";
 import { Page } from "../data/page";
 import { CoopRepository } from "./coop/cooprepo";
-import { CurveMode, OverrideType, ShadowPosition, ExportFileFormat, ExportFormatNameingScheme, ExportOptions } from "../data/typesdefine";
+import {
+    CurveMode,
+    ExportFileFormat,
+    ExportFormatNameingScheme,
+    ExportOptions,
+    OverrideType,
+    ShadowPosition
+} from "../data/typesdefine";
 import { Api } from "./coop/recordapi";
 import { importCurvePoint } from "../data/baseimport";
 import { v4 } from "uuid";
@@ -34,11 +41,18 @@ import {
 } from "./utils/other";
 // import { _override_variable_for_symbolref, is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union, modify_variable, shape4shadow } from "./utils/symbol";
 import { newText2 } from "./creator";
-import { _clip, _typing_modify, get_points_for_init, modify_points_xy, update_frame_by_points, update_path_shape_frame } from "./utils/path";
+import {
+    _clip,
+    _typing_modify,
+    get_points_for_init,
+    modify_points_xy,
+    update_frame_by_points
+} from "./utils/path";
 import { Color } from "../data/color";
 import { adapt_for_artboard } from "./utils/common";
-import { GroupShapeView, ShapeView, SymbolView, TextShapeView, adapt2Shape, findOverride } from "../dataview";
+import { ShapeView, SymbolView, TextShapeView, adapt2Shape, findOverride } from "../dataview";
 import { is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union, modify_variable, modify_variable_with_api, override_variable, shape4border, shape4contextSettings, shape4exportOptions, shape4fill, shape4shadow } from "./symbol";
+import { PathType } from "../data/consts";
 
 export class ShapeEditor {
     protected __shape: ShapeView;
@@ -412,32 +426,29 @@ export class ShapeEditor {
     /**
      * @description 路径裁剪
      */
-    public clipPathShape(index: number, slice_name: string): { code: number, ex: Shape | undefined } {
-        const data: { code: number, ex: Shape | undefined } = { code: 0, ex: undefined };
-        if (!(this.shape instanceof PathShape)) {
-            console.log('!(this.shape instanceof PathShape)');
-            data.code = -1;
-            return data;
+    public clipPathShape(index: number, segment: number) {
+        if (this.shape.isVirtualShape) {
+            console.log('this.shape.isVirtualShape');
+            return this.__shape;
         }
+
         try {
             const api = this.__repo.start("sortPathShapePoints");
-            const code = _clip(this.__document, this.__page, api, this.shape as PathShape, index, slice_name);
+            const shape = _clip(this.__document, this.__page, api, this.shape as PathShape, index, segment);
             this.__repo.commit();
-            return code;
+            return shape;
         } catch (error) {
             console.log('sortPathShapePoints:', error);
             this.__repo.rollback();
-            data.code = -1;
-            return data;
+            return this.__shape;
         }
     }
 
     // radius
     public setRectRadius(lt: number, rt: number, rb: number, lb: number) {
         const shape = this.shape;
-        if (!(shape instanceof RectShape)) return;
         this._repoWrap("setRectRadius", (api) => {
-            api.shapeModifyRadius(this.__page, shape, lt, rt, rb, lb);
+            api.shapeModifyRadius(this.__page, (shape as RectShape), lt, rt, rb, lb);
         });
     }
 
@@ -595,88 +606,152 @@ export class ShapeEditor {
     }
 
     // points
-    public setPathClosedStatus(val: boolean) {
+    // --m1133
+    public setPathClosedStatus(val: boolean, segment = -1) {
         this._repoWrap("setPathClosedStatus", (api) => {
-            api.setCloseStatus(this.__page, this.shape as PathShape, val);
+            api.setCloseStatus(this.__page, this.shape, val, segment);
         });
     }
 
-    public addPointAt(point: CurvePoint, idx: number) {
+    public addPointAt(point: CurvePoint, idx: number, segment = -1) {
         this._repoWrap("addPointAt", (api) => {
-            api.addPointAt(this.__page, this.shape as PathShape, idx, point);
+            api.addPointAt(this.__page, this.shape, idx, point, segment);
         });
     }
 
-    /**
-     * @description 删除编辑点，从后面往前面删
-     * @param indexes 需要转化成有序索引
-     */
-    public removePoints(indexes: number[]) {
-        let result = -1;
-        if (!(this.shape instanceof PathShape)) {
-            console.log('!(this.shape instanceof PathShape)');
-            return result;
-        }
-
-        // 排序 
-        indexes = indexes.sort((a, b) => {
-            if (a > b) {
-                return 1;
-            } else {
-                return -1;
-            }
-        });
-
-        if (!indexes.length) {
-            console.log('!indexes.length');
-            return result;
-        }
-
+    public removePoints(map: Map<number, number[]>) {
         try {
-            const api = this.__repo.start("deleteShape");
+            let result = -1;
 
-            for (let i = indexes.length - 1; i > -1; i--) {
-                api.deletePoint(this.__page, this.shape as PathShape, indexes[i]);
-            }
+            const api = this.__repo.start("removePoints");
 
-            const p = this.shape.parent as GroupShape;
+            if (this.shape.pathType === PathType.Editable) {
+                const shape = this.shape as PathShape;
+                let indexes = map.get(0) || [];
 
-            result = 1;
+                indexes = indexes.sort((a, b) => {
+                    if (a > b) {
+                        return 1;
+                    } else {
+                        return -1;
+                    }
+                });
 
-            if (this.shape.points.length === 2) {
-                api.setCloseStatus(this.__page, this.shape, false);
-            }
+                if (!indexes.length) {
+                    console.log('removePoints: !indexes.length');
+                    return result;
+                }
 
-            if (this.shape.points.length < 2 && p) {
-                const index = p.indexOfChild(this.shape);
-                api.shapeDelete(this.__document, this.__page, p, index)
-                result = 0;
-            } else {
-                update_path_shape_frame(api, this.__page, [this.shape as PathShape]);
+                result = 1;
+
+                for (let i = indexes.length - 1; i > -1; i--) {
+                    api.deletePoint(this.__page, this.shape, indexes[i]);
+                }
+
+                if (shape.points.length === 2) {
+                    api.setCloseStatus(this.__page, this.shape, false);
+                }
+
+                if (shape.points.length < 2) {
+                    this.__delete(shape, api);
+                    result = 0;
+                } else {
+                    update_frame_by_points(api, this.__page, shape);
+                }
+            } else if (this.shape.pathType === PathType.Multi) {
+                const shape = this.shape as PathShape2;
+                map.forEach((indexes, segment) => {
+                    indexes = indexes.sort((a, b) => {
+                        if (a > b) {
+                            return 1;
+                        } else {
+                            return -1;
+                        }
+                    });
+                    if (!indexes.length) {
+                        console.log('removePoints: !indexes.length');
+                        return;
+                    }
+                    for (let i = indexes.length - 1; i > -1; i--) {
+                        api.deletePoint(this.__page, shape, indexes[i], segment);
+                    }
+                    const seg = shape.pathsegs[segment];
+                    if (seg.points.length === 2) {
+                        api.setCloseStatus(this.__page, shape, false, segment);
+                    }
+
+                    if (seg.points.length < 2) {
+                        api.deleteSegmentAt(this.__page, shape, segment);
+                    }
+                });
+
+                result = 1;
+
+                let needRecovery = true;
+
+                for (let i = 0; i < shape.pathsegs.length; i++) {
+                    if (shape.pathsegs[i].points.length > 1) {
+                        needRecovery = false;
+                        break;
+                    }
+                }
+
+                if (needRecovery) {
+                    this.__delete(shape, api);
+                    result = 0;
+                } else {
+                    update_frame_by_points(api, this.__page, shape);
+                }
             }
 
             this.__repo.commit();
+
             return result;
         } catch (e) {
-            console.log("removePoints:", e);
             this.__repo.rollback();
-            return 0;
+            console.log('removePoints:', e);
+            return -1;
+        }
+
+    }
+
+    __delete(shape: Shape, api: Api) {
+        const parent = shape.parent as GroupShape;
+        const index = parent.indexOfChild(shape);
+
+        if (index < 0) {
+            return;
+        }
+
+        api.shapeDelete(this.__document, this.__page, parent, index);
+
+        if (!parent.childs.length) {
+            this.__delete(parent, api);
         }
     }
 
-    public modifyPointsCurveMode(indexes: number[], curve_mode: CurveMode) {
-        if (!indexes.length) {
-            console.log('!indexes.length');
-            return false;
-        }
+    public modifyPointsCurveMode(range: Map<number, number[]>, curve_mode: CurveMode) {
         try {
             const api = this.__repo.start("modifyPointsCurveMode");
-            for (let i = indexes.length - 1; i > -1; i--) {
-                const index = indexes[i];
-                _typing_modify(this.shape as PathShape, this.__page, api, index, curve_mode);
-                api.modifyPointCurveMode(this.__page, this.shape as PathShape, index, curve_mode);
+
+            if (this.shape.pathType === PathType.Editable) {
+                const indexes = range.get(0) || [];
+                for (let i = indexes.length - 1; i > -1; i--) {
+                    const index = indexes[i];
+                    _typing_modify(this.shape, this.__page, api, index, curve_mode);
+                    api.modifyPointCurveMode(this.__page, this.shape, index, curve_mode);
+                }
+            } else if (this.shape.pathType === PathType.Multi) {
+                range.forEach((indexes, segment) => {
+                    for (let i = indexes.length - 1; i > -1; i--) {
+                        const index = indexes[i];
+                        _typing_modify(this.shape, this.__page, api, index, curve_mode, segment);
+                        api.modifyPointCurveMode(this.__page, this.shape, index, curve_mode, segment);
+                    }
+                })
             }
-            update_path_shape_frame(api, this.__page, [this.shape as PathShape]);
+
+            update_frame_by_points(api, this.__page, this.shape);
             this.__repo.commit();
             return true;
         } catch (e) {
@@ -685,15 +760,21 @@ export class ShapeEditor {
             return false;
         }
     }
-    public modifyPointsCornerRadius(indexes: number[], cornerRadius: number) {
-        if (!indexes.length) {
-            console.log('!indexes.length');
-            return false;
-        }
+    public modifyPointsCornerRadius(range: Map<number, number[]>, cornerRadius: number) {
         try {
             const api = this.__repo.start("modifyPointsCornerRadius");
-            for (let i = indexes.length - 1; i > -1; i--) {
-                api.modifyPointCornerRadius(this.__page, this.shape as PathShape, indexes[i], cornerRadius);
+
+            if (this.shape.pathType === PathType.Editable) {
+                const indexes = range.get(0) || [];
+                for (let i = indexes.length - 1; i > -1; i--) {
+                    api.modifyPointCornerRadius(this.__page, this.shape, indexes[i], cornerRadius);
+                }
+            } else if (this.shape.pathType === PathType.Multi) {
+                range.forEach((indexes, segment) => {
+                    for (let i = indexes.length - 1; i > -1; i--) {
+                        api.modifyPointCornerRadius(this.__page, this.shape, indexes[i], cornerRadius, segment);
+                    }
+                })
             }
             this.__repo.commit();
             return true;
@@ -704,10 +785,13 @@ export class ShapeEditor {
         }
     }
 
-    public modifyPointsXY(actions: { x: number, y: number, index: number }[]) {
+    public modifyPointsXY(actions: { x: number, y: number, segment: number, index: number }[]) {
         try {
-            if (!(this.shape instanceof PathShape)) return;
-            const api = this.__repo.start("deleteShape");
+            if (!this.shape.pathType) {
+                return;
+            }
+
+            const api = this.__repo.start("modifyPointsXY");
             modify_points_xy(api, this.__page, this.shape, actions);
             this.__repo.commit();
             return true;

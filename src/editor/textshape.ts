@@ -17,7 +17,6 @@ import {
     VariableType,
     OverrideType,
     Para,
-    ParaAttr,
     Span,
     ShapeType,
     Variable, Document, TableShape, FillType, Gradient
@@ -27,7 +26,7 @@ import { Api } from "./coop/recordapi";
 import { ShapeEditor } from "./shape";
 import { fixTableShapeFrameByLayout, fixTextShapeFrameByLayout } from "./utils/other";
 import { BasicArray } from "../data/basic";
-import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "../data/textutils";
+import { mergeParaAttr, mergeSpanAttr } from "../data/textutils";
 import { importGradient, importText } from "../data/baseimport";
 import { AsyncGradientEditor, Status } from "./controller";
 import { CmdMergeType } from "./coop/localcmd";
@@ -38,23 +37,8 @@ import { SymbolRefShape, SymbolShape, GroupShape } from "../data/classes";
 
 type TextShapeLike = Shape & { text: Text }
 
-function createTextByString(stringValue: string, refText: Text) {
-    const text = new Text(new BasicArray());
-    if (refText.attr) {
-        mergeTextAttr(text, refText.attr);
-    }
-    const para = new Para('\n', new BasicArray());
-    para.attr = new ParaAttr();
-    text.paras.push(para);
-    const span = new Span(para.length);
-    para.spans.push(span);
-    mergeParaAttr(para, refText.paras[0]);
-    mergeSpanAttr(span, refText.paras[0].spans[0]);
-    text.insertText(stringValue, 0);
-    return text;
-}
-
 interface _Api {
+    shapeModifyX(page: Page, shape: Shape, x: number): void;
     shapeModifyWH(page: Page, shape: Shape, w: number, h: number): void;
 
     tableModifyRowHeight(page: Page, table: TableShape, idx: number, height: number): void;

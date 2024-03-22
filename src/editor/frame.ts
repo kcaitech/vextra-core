@@ -1,11 +1,11 @@
 import { Page } from "../data/page";
 import { Matrix } from "../basic/matrix";
-import { GroupShape, ImageShape, PathShape, Shape, ShapeFrame, TextShape } from "../data/shape";
+import { CurvePoint, GroupShape, PathShape, PathShape2, Shape, ShapeFrame, ShapeType, TextShape } from "../data/shape";
 import { Text } from "../data/text";
-import { Point2D, ShapeType, TextBehaviour } from "../data/typesdefine";
+import { Point2D, TextBehaviour } from "../data/typesdefine";
 import { fixTextShapeFrameByLayout } from "./utils/other";
 import { TableShape } from "../data/table";
-import { FrameType, ResizingConstraints2 } from "../data/consts";
+import { FrameType, PathType, ResizingConstraints2 } from "../data/consts";
 
 type TextShapeLike = Shape & { text: Text }
 
@@ -21,10 +21,10 @@ export interface Api {
     shapeModifyHFlip(page: Page, shape: Shape, hflip: boolean | undefined): void;
     shapeModifyVFlip(page: Page, shape: Shape, vflip: boolean | undefined): void;
     shapeModifyTextBehaviour(page: Page, shapetext: Text, textBehaviour: TextBehaviour): void;
-    shapeModifyCurvPoint(page: Page, shape: PathShape, index: number, point: Point2D): void;
-    shapeModifyCurvFromPoint(page: Page, shape: PathShape, index: number, point: Point2D): void;
-    shapeModifyCurvToPoint(page: Page, shape: PathShape, index: number, point: Point2D): void;
-    tableModifyRowHeight(page: Page, table: TableShape, idx: number, height: number): void;
+    shapeModifyCurvPoint(page: Page, shape: Shape, index: number, point: Point2D, segment?: number): void;
+    shapeModifyCurvFromPoint(page: Page, shape: Shape, index: number, point: Point2D, segment?: number): void;
+    shapeModifyCurvToPoint(page: Page, shape: Shape, index: number, point: Point2D, segment?: number): void;
+    tableModifyRowHeight(page: Page, table: Shape, idx: number, height: number): void;
 }
 
 
@@ -42,7 +42,7 @@ export function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape,
         const c = childs[i];
         const ft = c.frameType;
         if (!ft) {
-            continue;
+
         } else if (ft === FrameType.Path) { // Path
             modifyFrameForPath(api, page, c, scaleX, scaleY, shape.frame, originFrame, recorder);
         } else {
@@ -361,7 +361,7 @@ function modifySizeIgnoreConstraint(api: Api, page: Page, shape: GroupShape, sca
             const cH = cFrame.height * scaleY;
             setFrame(page, c, cX, cY, cW, cH, api);
         }
-        else if (c instanceof PathShape && !(c instanceof ImageShape)) {
+        else if (c.pathType && c.type !== ShapeType.Image) {
             // 摆正并处理points
             const matrix = c.matrix2Parent();
             const cFrame = c.frame;
@@ -379,21 +379,13 @@ function modifySizeIgnoreConstraint(api: Api, page: Page, shape: GroupShape, sca
             const matrix2 = c.matrix2Parent();
             matrix2.preScale(boundingBox.width, boundingBox.height); // 当对象太小时，求逆矩阵会infinity
             matrix.multiAtLeft(matrix2.inverse);
-            const points = c.points;
-            for (let i = 0, len = points.length; i < len; i++) {
-                const p = points[i];
-                if (p.hasFrom) {
-                    const curveFrom = matrix.computeCoord(p.fromX || 0, p.fromY || 0);
-                    api.shapeModifyCurvFromPoint(page, c, i, curveFrom);
-                }
-                if (p.hasTo) {
-                    const curveTo = matrix.computeCoord(p.toX || 0, p.toY || 0);
-                    api.shapeModifyCurvToPoint(page, c, i, curveTo);
-                }
-                const point = matrix.computeCoord(p.x, p.y);
-                api.shapeModifyCurvPoint(page, c, i, point);
+            if (c.pathType === PathType.Editable) {
+                reLayoutPath(api, page, c, (c as PathShape).points, matrix);
+            } else if (c.pathType === PathType.Multi) {
+                (c as PathShape2).pathsegs.forEach((segment, index) => {
+                    reLayoutPath(api, page, c, segment.points, matrix, index);
+                })
             }
-
             const width = boundingBox.width * scaleX;
             const height = boundingBox.height * scaleY;
             setFrame(page, c, boundingBox.x * scaleX, boundingBox.y * scaleY, width, height, api);
@@ -439,6 +431,23 @@ function modifySizeIgnoreConstraint(api: Api, page: Page, shape: GroupShape, sca
         }
     }
 }
+
+function reLayoutPath(api: Api, page: Page, shape: Shape,points: CurvePoint[], matrix: Matrix, segment = -1) {
+    for (let i = 0, len = points.length; i < len; i++) {
+        const p = points[i];
+        if (p.hasFrom) {
+            const curveFrom = matrix.computeCoord(p.fromX || 0, p.fromY || 0);
+            api.shapeModifyCurvFromPoint(page, shape, i, curveFrom, segment);
+        }
+        if (p.hasTo) {
+            const curveTo = matrix.computeCoord(p.toX || 0, p.toY || 0);
+            api.shapeModifyCurvToPoint(page, shape, i, curveTo, segment);
+        }
+        const point = matrix.computeCoord(p.x, p.y);
+        api.shapeModifyCurvPoint(page, shape, i, point, segment);
+    }
+}
+
 export function fixConstrainFrame(shape: Shape, resizingConstraint: number, x: number, y: number, width: number, height: number, scaleX: number, scaleY: number, currentEnvFrame: ShapeFrame, originEnvFrame: ShapeFrame, recorder?: SizeRecorder) {
     // 水平 HORIZONTAL
     if (ResizingConstraints2.isHorizontalScale(resizingConstraint)) { // 跟随缩放。一旦跟随缩放，则不需要考虑其他约束场景了
