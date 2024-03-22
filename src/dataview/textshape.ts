@@ -1,5 +1,5 @@
 import { TextLayout } from "../data/textlayout";
-import { OverrideType, Para, Path, ShapeFrame, Span, Text, TextShape, VariableType } from "../data/classes";
+import { OverrideType, Para, Path, ShapeFrame, Span, Text, TextBehaviour, TextShape, VariableType } from "../data/classes";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
 import { renderText2Path, renderTextLayout } from "../render/text";
@@ -68,19 +68,17 @@ export class TextShapeView extends ShapeView {
         if (this.__preText && this.__layoutToken && objectId(this.__preText) !== objectId(text)) {
             this.__preText.dropLayout(this.__layoutToken, this.id);
         }
-        const frame = this.frame;
+        const frame = this.__origin_frame;
         const layout = text.getLayout3(frame, this.id, this.__layoutToken);
         this.__layoutToken = layout.token;
-        this.__preText = text;
-
         if (this.m_layout !== layout.layout) {
             this.m_textpath = undefined;
         }
-
         this.m_layout = layout.layout;
-        if (this.isVirtualShape) {
-            this.updateFrameByLayout();
+        if (this.isVirtualShape && this.__preText !== text) {
+            this.updateFrameByLayout(frame);
         }
+        this.__preText = text;
         return layout.layout;
     }
 
@@ -117,27 +115,40 @@ export class TextShapeView extends ShapeView {
         return renderTextLayout(elh, layout, this.frame);
     }
 
+    __origin_frame: ShapeFrame = new ShapeFrame(0, 0, 0, 0);
+
     updateLayoutArgs(frame: ShapeFrame, hflip: boolean | undefined, vflip: boolean | undefined, rotate: number | undefined, radius: number | undefined): void {
         // if (this.isVirtualShape && isDiffShapeFrame(this.m_frame, frame)) {
         //     this.updateSize(frame.width, frame.height);
         // }
         super.updateLayoutArgs(frame, hflip, vflip, rotate, radius);
+        this.__origin_frame.x = frame.x;
+        this.__origin_frame.y = frame.y;
+        this.__origin_frame.width = frame.width;
+        this.__origin_frame.height = frame.height;
         // update frame by layout
-        // this.updateFrameByLayout();
         this.getLayout(); // 要提前排版，不然frame不对，填充不对。也可以考虑先renderContents，再renderFills。
+        this.updateFrameByLayout(frame);
     }
 
-    private updateFrameByLayout() {
+    private updateFrameByLayout(origin: ShapeFrame) {
         if (!this.isVirtualShape || !this.m_layout) return;
-
+        const text = this.getText();
+        const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
+        if (textBehaviour !== TextBehaviour.Flexible) return;
+        let notify = false;
         const width = this.m_layout.contentWidth;
         const height = this.m_layout.contentHeight;
-        let notify = false;
-        if (width > this.m_frame.width) {
+        const adjX = this.m_layout.alignX;
+        if (adjX !== 0) {
+            this.m_frame.x = origin.x + adjX;
+            notify = true;
+        }
+        if (width !== this.m_frame.width) {
             this.m_frame.width = width;
             notify = true;
         }
-        if (height > this.m_frame.height) {
+        if (height !== this.m_frame.height) {
             this.m_frame.height = height;
             notify = true;
         }

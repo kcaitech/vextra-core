@@ -49,6 +49,7 @@ export function layoutAtInsert(text: Text,
         contentHeight += paraLayout.paraHeight;
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
         if (paraLayout.bulletNumbers) preBulletNumbers.push(paraLayout.bulletNumbers);
+        paraLayout.xOffset = 0;
     }
 
     // todo 先做到段落重排
@@ -84,6 +85,7 @@ export function layoutAtInsert(text: Text,
         paraLayout.yOffset = contentHeight;
         contentHeight += paraLayout.paraHeight;
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
+        paraLayout.xOffset = 0;
     }
 
     if (parascount !== parasLayout.length) throw new Error("layout and data Not match 3")
@@ -91,27 +93,28 @@ export function layoutAtInsert(text: Text,
     // hor align
     const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
     const alignWidth = textBehaviour === TextBehaviour.Flexible ? contentWidth : coreLayoutWidth;
-    let paraMinX = 0;
+    let alignX = Number.MAX_SAFE_INTEGER;
     for (let i = 0, pc = text.paras.length; i < pc; i++) {
         const para = text.paras[i];
         const paraLayout = parasLayout[i];
         const alignment = para.attr?.alignment ?? TextHorAlign.Left;
-        let minX = 0;
         for (let li = 0, llen = paraLayout.length; li < llen; li++) {
             const line = paraLayout[li];
-            fixLineHorAlign(line, alignment, alignWidth); // frame.width);
-            minX = Math.min(line.x, minX);
+            fixLineHorAlign(line, alignment, alignWidth);
         }
-        if (minX < 0) for (let li = 0, llen = paraLayout.length; li < llen; li++) {
-            const line = paraLayout[li];
-            line.x -= minX;
+        if (textBehaviour === TextBehaviour.Flexible) switch (alignment) {
+            case TextHorAlign.Centered:
+                alignX = Math.min(alignX, -(paraLayout.paraWidth - frame.width) / 2);
+                break;
+            case TextHorAlign.Left:
+            case TextHorAlign.Natural:
+                alignX = Math.min(alignX, 0);
+                break;
+            case TextHorAlign.Justified:
+            case TextHorAlign.Right:
+                alignX = Math.min(alignX, -(paraLayout.paraWidth - frame.width));
+                break;
         }
-        paraLayout.xOffset += minX;
-        paraMinX = Math.min(paraMinX, paraLayout.xOffset);
-    }
-    if (paraMinX < 0) for (let i = 0; i < paras.length; ++i) {
-        const paraLayout = parasLayout[i];
-        paraLayout.xOffset -= paraMinX;
     }
 
     const vAlign = text.attr?.verAlign ?? TextVerAlign.Top;
@@ -122,7 +125,8 @@ export function layoutAtInsert(text: Text,
             case TextVerAlign.Bottom: return frame.height - contentHeight - paddingBottom;
         }
     })(vAlign);
-    layout.xOffset = paraMinX + paddingLeft;
+    layout.alignX = alignX === Number.MAX_SAFE_INTEGER ? 0 : alignX;
+    layout.xOffset = paddingLeft;
     layout.yOffset = yOffset;
     layout.contentHeight = contentHeight;
     layout.contentWidth = contentWidth;
@@ -180,6 +184,7 @@ export function layoutAtDelete(text: Text,
         contentHeight += paraLayout.paraHeight;
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
         if (paraLayout.bulletNumbers) preBulletNumbers.push(paraLayout.bulletNumbers);
+        paraLayout.xOffset = 0;
     }
 
     // todo 先做到段落重排
@@ -215,6 +220,7 @@ export function layoutAtDelete(text: Text,
         paraLayout.yOffset = contentHeight;
         contentHeight += paraLayout.paraHeight;
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
+        paraLayout.xOffset = 0;
     }
 
     if (parascount !== parasLayout.length) throw new Error("layout and data Not match 6")
@@ -222,27 +228,28 @@ export function layoutAtDelete(text: Text,
     // hor align
     const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
     const alignWidth = textBehaviour === TextBehaviour.Flexible ? contentWidth : coreLayoutWidth;
-    let paraMinX = 0;
+    let alignX = Number.MAX_SAFE_INTEGER;
     for (let i = 0, pc = text.paras.length; i < pc; i++) {
         const para = text.paras[i];
         const paraLayout = parasLayout[i];
         const alignment = para.attr?.alignment ?? TextHorAlign.Left;
-        let minX = 0;
         for (let li = 0, llen = paraLayout.length; li < llen; li++) {
             const line = paraLayout[li];
-            fixLineHorAlign(line, alignment, alignWidth); // frame.width);
-            minX = Math.min(line.x, minX);
+            fixLineHorAlign(line, alignment, alignWidth);
         }
-        if (minX < 0) for (let li = 0, llen = paraLayout.length; li < llen; li++) {
-            const line = paraLayout[li];
-            line.x -= minX;
+        if (textBehaviour === TextBehaviour.Flexible) switch (alignment) {
+            case TextHorAlign.Centered:
+                alignX = Math.min(alignX, -(paraLayout.paraWidth - frame.width) / 2);
+                break;
+            case TextHorAlign.Left:
+            case TextHorAlign.Natural:
+                alignX = Math.min(alignX, 0);
+                break;
+            case TextHorAlign.Justified:
+            case TextHorAlign.Right:
+                alignX = Math.min(alignX, -(paraLayout.paraWidth - frame.width));
+                break;
         }
-        paraLayout.xOffset += minX;
-        paraMinX = Math.min(paraMinX, paraLayout.xOffset);
-    }
-    if (paraMinX < 0) for (let i = 0; i < paras.length; ++i) {
-        const paraLayout = parasLayout[i];
-        paraLayout.xOffset -= paraMinX;
     }
 
     const vAlign = text.attr?.verAlign ?? TextVerAlign.Top;
@@ -253,7 +260,8 @@ export function layoutAtDelete(text: Text,
             case TextVerAlign.Bottom: return frame.height - contentHeight - paddingBottom;
         }
     })(vAlign);
-    layout.xOffset = paraMinX + paddingLeft;
+    layout.alignX = alignX === Number.MAX_SAFE_INTEGER ? 0 : alignX;
+    layout.xOffset = paddingLeft;
     layout.yOffset = yOffset;
     layout.contentHeight = contentHeight;
     layout.contentWidth = contentWidth;
@@ -311,6 +319,7 @@ export function layoutAtFormat(text: Text,
         contentHeight += paraLayout.paraHeight;
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
         if (paraLayout.bulletNumbers) preBulletNumbers.push(paraLayout.bulletNumbers);
+        paraLayout.xOffset = 0;
     }
 
     // todo 先做到段落重排
@@ -344,6 +353,7 @@ export function layoutAtFormat(text: Text,
         paraLayout.yOffset = contentHeight;
         contentHeight += paraLayout.paraHeight;
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
+        paraLayout.xOffset = 0;
     }
 
     if (parascount !== parasLayout.length) throw new Error("layout and data Not match 9")
@@ -351,27 +361,28 @@ export function layoutAtFormat(text: Text,
     // hor align
     const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
     const alignWidth = textBehaviour === TextBehaviour.Flexible ? contentWidth : coreLayoutWidth;
-    let paraMinX = 0;
+    let alignX = Number.MAX_SAFE_INTEGER;
     for (let i = 0, pc = text.paras.length; i < pc; i++) {
         const para = text.paras[i];
         const paraLayout = parasLayout[i];
         const alignment = para.attr?.alignment ?? TextHorAlign.Left;
-        let minX = 0;
         for (let li = 0, llen = paraLayout.length; li < llen; li++) {
             const line = paraLayout[li];
-            fixLineHorAlign(line, alignment, alignWidth); // frame.width);
-            minX = Math.min(line.x, minX);
+            fixLineHorAlign(line, alignment, alignWidth);
         }
-        if (minX < 0) for (let li = 0, llen = paraLayout.length; li < llen; li++) {
-            const line = paraLayout[li];
-            line.x -= minX;
+        if (textBehaviour === TextBehaviour.Flexible) switch (alignment) {
+            case TextHorAlign.Centered:
+                alignX = Math.min(alignX, -(paraLayout.paraWidth - frame.width) / 2);
+                break;
+            case TextHorAlign.Left:
+            case TextHorAlign.Natural:
+                alignX = Math.min(alignX, 0);
+                break;
+            case TextHorAlign.Justified:
+            case TextHorAlign.Right:
+                alignX = Math.min(alignX, -(paraLayout.paraWidth - frame.width));
+                break;
         }
-        paraLayout.xOffset += minX;
-        paraMinX = Math.min(paraMinX, paraLayout.xOffset);
-    }
-    if (paraMinX < 0) for (let i = 0; i < paras.length; ++i) {
-        const paraLayout = parasLayout[i];
-        paraLayout.xOffset -= paraMinX;
     }
 
     const vAlign = text.attr?.verAlign ?? TextVerAlign.Top;
@@ -382,7 +393,8 @@ export function layoutAtFormat(text: Text,
             case TextVerAlign.Bottom: return frame.height - contentHeight - paddingBottom;
         }
     })(vAlign);
-    layout.xOffset = paraMinX + paddingLeft;
+    layout.alignX = alignX === Number.MAX_SAFE_INTEGER ? 0 : alignX;
+    layout.xOffset = paddingLeft;
     layout.yOffset = yOffset;
     layout.contentHeight = contentHeight;
     layout.contentWidth = contentWidth;
