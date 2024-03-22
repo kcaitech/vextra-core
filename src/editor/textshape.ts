@@ -34,6 +34,7 @@ import { ShapeView, TableCellView, TableView, TextShapeView, adapt2Shape } from 
 import { cell4edit2, varParent } from "./symbol";
 import { uuid } from "../basic/uuid";
 import { SymbolRefShape, SymbolShape, GroupShape } from "../data/classes";
+import { ParaAttr } from "../data/classes";
 
 type TextShapeLike = Shape & { text: Text }
 
@@ -401,55 +402,87 @@ export class TextShapeEditor extends ShapeEditor {
     private __composingDel: number = 0;
     private __composingAttr?: SpanAttr;
     public composingInputStart(index: number, del: number, attr?: SpanAttr) {
+        this.__preInputText = undefined;
         this.__composingStarted = true;
         this.__composingIndex = index;
         this.__composingDel = del;
         this.__composingAttr = attr;
         const api = this.__repo.start("composingInput");
-        const shape = this.shape4edit(api);
+        this.__composingApi = api;
         try {
-            if (del > 0) api.deleteText(this.__page, shape, index, del);
+            const shape = this.shape4edit(api);
+            if (del > 0) {
+                const _text = shape instanceof Variable ? shape.value as Text : shape.text;
+                const span = _text.spanAt(index + del - 1);
+                const para = _text.paraAt(index + del - 1);
+                this.__composdelSpan = span;
+                this.__composdelpara = para?.para.attr;
+                api.deleteText(this.__page, shape, index, del);
+                this.fixFrameByLayout(api);
+            }
         } catch (e) {
             console.error(e);
         }
     }
-    public composingInputUpdate(text: string): boolean {
-        this.__repo.rollback("composingInput");
-        const api = this.__repo.start("composingInput");
-        try {
-            const shape = this.shape4edit(api);
-            if (this.__composingDel > 0 && text.length == 0) {
-                api.deleteText(this.__page, shape, this.__composingIndex, this.__composingDel);
-                (shape instanceof ShapeView ? shape.text : shape.value as Text).composingInputUpdate(this.__composingIndex);
-            }
-            else if (this.__composingDel > 0) {
-                const index = this.__composingIndex;
-                const del = this.__composingDel;
-                const attr = this.__composingAttr;
 
-                const _text = shape instanceof Variable ? shape.value as Text : shape.text;
-                const span = _text.spanAt(index + del - 1);
-                const para = _text.paraAt(index + del - 1);
+    private __composdelSpan: SpanAttr | undefined;
+    private __composdelpara: ParaAttr | undefined;
+    private __composingApi: Api | undefined;
+    private __preInputText: string | undefined;
+    public composingInputUpdate(text: string): boolean {
+        const api = this.__composingApi;
+        if (!api) throw new Error();
+        try {
+            const savetext = text;
+            const shape = this.shape4edit(api);
+            let index = this.__composingIndex;
+            if (this.__preInputText && this.__preInputText.length > 0) { // 删除之前的
+                const prelen = this.__preInputText.length;
+                const preText = this.__preInputText;
+                // const min = Math.min(text.length, len);
+                const min = text.length;
+                let del = preText.length;
+                let delindex = index;
+                if (min <= prelen) { // 变短了，删除
+                    if (preText.startsWith(text)) {
+                        text = '';
+                        del = preText.length - min;
+                        delindex += min;
+                    }
+                } else { // 变长了，输入
+                    if (text.startsWith(preText)) {
+                        text = text.slice(prelen);
+                        del = 0;
+                        index += prelen;
+                    }
+                }
+
+                if (del > 0) api.deleteText(this.__page, shape, delindex, del);
+                this.__preInputText = undefined;
+            }
+            if (this.__composingDel > 0 && text.length > 0) { // 继承属性
+
+                const attr = this.__composingAttr;
+                const span = this.__composdelSpan;
+                const para = this.__composdelpara;
 
                 // 构造text
                 const text1 = new Text(new BasicArray());
                 const para1 = new Para(text, new BasicArray());
-                if (para?.para) mergeParaAttr(para1, para.para);
+                if (para) mergeParaAttr(para1, para);
                 text1.paras.push(para1);
                 const span1 = new Span(para1.length);
                 if (span) mergeSpanAttr(span1, span);
                 if (attr) mergeSpanAttr(span1, attr);
                 para1.spans.push(span1);
 
-                api.deleteText(this.__page, shape, index, del);
-                api.insertComplexText(this.__page, shape, index, text1)
+                api.insertComplexText(this.__page, shape, index, text1);
             }
             else if (text.length > 0) {
-                api.insertSimpleText(this.__page, shape, this.__composingIndex, text, this.__composingAttr);
+                api.insertSimpleText(this.__page, shape, index, text, this.__composingAttr);
             }
-            else {
-                (shape instanceof ShapeView ? shape.text : shape.value as Text).composingInputUpdate(this.__composingIndex);
-            }
+
+            this.__preInputText = savetext;
             this.fixFrameByLayout(api);
             this.__repo.transactCtx.fireNotify(); // 会导致不断排版绘制
             return true;
@@ -459,8 +492,9 @@ export class TextShapeEditor extends ShapeEditor {
         }
     }
     public composingInputEnd(text: string): boolean {
-        this.__repo.rollback("composingInput");
         this.__composingStarted = false;
+        this.__repo.rollback("composingInput");
+        if (!this.view.isVirtualShape && this.view instanceof TextShapeView) this.view.forceUpdateOriginFrame();
         return !!this.insertText2(text, this.__composingIndex, this.__composingDel, this.__composingAttr);
     }
 

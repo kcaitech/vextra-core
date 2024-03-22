@@ -153,12 +153,14 @@ export class Api {
                 }
             }
             if (idsetops.size > 0) for (let [_, v] of idsetops) {
-                ops.push(v);
+                const op = v as IdOpRecord;
+                if (op.data !== op.origin) ops.push(v);
             }
             if (ops.length < cmd.ops.length) {
                 // has merge
                 cmd.ops = ops;
             }
+            if (cmd.ops.length === 0) return undefined;
         }
         if (cmd.saveselection?.text) { // 文本选区需要加入到op参与变换
             cmd.ops.unshift(cmd.saveselection.text);
