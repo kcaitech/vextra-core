@@ -247,15 +247,6 @@ function _ov(varType: VariableType, overrideType: OverrideType, valuefun: (_var:
     const varsContainer = _varsContainer(view);
     if (!varsContainer || varsContainer.length === 0) return;
 
-    if (view.varbinds && view.varbinds.has(overrideType)) { // 走var
-        const _vars: Variable[] = [];
-        findVar(view.varbinds.get(overrideType)!, _vars, varsContainer);
-        const _var = _vars[_vars.length - 1];
-        if (_var && _var.type === varType) {
-            return _ov_3(_vars, _var.name, valuefun, view, page, api);
-        }
-    }
-
     if (!view.isVirtualShape) {
         if (!(view.data instanceof SymbolRefShape)) return;
         switch (overrideType) {
@@ -293,6 +284,15 @@ function _ov(varType: VariableType, overrideType: OverrideType, valuefun: (_var:
             if (hostIdx < 0 || pIdx >= 0 && pIdx <= hostIdx) return _var; // 可直接修改
             // return _ov_3(_var, _var.name, valuefun, view, page, api);
             // 否则重新override
+        }
+    }
+
+    if (view.varbinds && view.varbinds.has(overrideType)) { // 走var
+        const _vars: Variable[] = [];
+        findVar(view.varbinds.get(overrideType)!, _vars, varsContainer);
+        const _var = _vars[_vars.length - 1];
+        if (_var && _var.type === varType) {
+            return _ov_3(_vars, _var.name, valuefun, view, page, api);
         }
     }
 
