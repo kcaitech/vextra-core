@@ -1,8 +1,10 @@
 import { CoopRepository } from "../../coop/cooprepo";
 import { AsyncApiCaller } from "../AsyncApiCaller";
 import { Document } from "../../../data/document";
-import { PageView, ShapeView, adapt2Shape } from "../../../dataview";
-import { SizeRecorder, afterModifyGroupShapeWH, expandTo } from "../../frame";
+import { adapt2Shape, PageView, ShapeView } from "../../../dataview";
+import { afterModifyGroupShapeWH, Api, SizeRecorder } from "../../frame";
+import { Page } from "../../../data/page";
+import { GroupShape, ShapeFrame, ShapeType } from "../../../data/shape";
 
 export type ScaleUnit = {
     shape: ShapeView;
@@ -28,10 +30,15 @@ export class Scaler extends AsyncApiCaller {
         return this.__repo.start('sync-scale')
     }
 
-    execute() { }
+    execute() {
+    }
 
-    execute4multi(scaleX: number, scaleY: number, transformUnits: ScaleUnit[]) {
+    execute4multi(transformUnits: ScaleUnit[]) {
         try {
+            const api = this.api;
+            const page = this.page;
+
+
             for (let i = 0; i < transformUnits.length; i++) {
                 const t = transformUnits[i];
                 const shape = adapt2Shape(t.shape);
@@ -41,19 +48,27 @@ export class Scaler extends AsyncApiCaller {
                 const width = t.targetWidth;
                 const height = t.targetHeight;
 
-                this.api.shapeModifyX(this.page, shape, x);
-                this.api.shapeModifyY(this.page, shape, y);
-                this.api.shapeModifyWH(this.page, shape, width, height);
+                api.shapeModifyX(page, shape, x);
+                api.shapeModifyY(page, shape, y);
+
+                const saveWidth = shape.frame.width;
+                const saveHeight = shape.frame.height;
+
+                api.shapeModifyWH(page, shape, width, height);
 
                 if (t.needFlipH) {
-                    this.api.shapeModifyHFlip(this.page, shape, !shape.isFlippedHorizontal);
+                    api.shapeModifyHFlip(page, shape, !shape.isFlippedHorizontal);
                 }
 
                 if (t.needFlipV) {
-                    this.api.shapeModifyVFlip(this.page, shape, !shape.isFlippedVertical);
+                    api.shapeModifyVFlip(page, shape, !shape.isFlippedVertical);
                 }
 
-                // todo 约束
+                if (shape instanceof GroupShape) {
+                    const scaleX = shape.frame.width / saveWidth;
+                    const scaleY = shape.frame.height / saveHeight;
+                    afterModifyGroupShapeWH(api, page, shape, scaleX, scaleY, new ShapeFrame(0, 0, saveWidth, saveHeight), this.recorder);
+                }
             }
             this.updateView();
         } catch (error) {
