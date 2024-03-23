@@ -57,8 +57,9 @@ export function fixTextShapeFrameByLayout(api: _Api, page: Page, shape: TextShap
             const layout = shape.getLayout();
             const xOffset = layout.alignX;
             if (xOffset !== 0) api.shapeModifyX(page, _shape, _shape.frame.x + xOffset);
-            const fontsize = shape.text.attr?.fontSize ?? Text.DefaultFontSize;
-            api.shapeModifyWH(page, _shape, Math.max(fontsize, layout.contentWidth), Math.max(fontsize, layout.contentHeight));
+            // const fontsize = shape.text.attr?.fontSize ?? Text.DefaultFontSize;
+            // api.shapeModifyWH(page, _shape, Math.max(fontsize, layout.contentWidth), Math.max(fontsize, layout.contentHeight));
+            api.shapeModifyWH(page, _shape, layout.contentWidth, layout.contentHeight);
             // expandTo(api as Api, page, shape, Math.max(fontsize, layout.contentWidth), Math.max(fontsize, layout.contentHeight));
             break;
         }

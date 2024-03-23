@@ -194,11 +194,6 @@ export class TextShapeEditor extends ShapeEditor {
         api.shapeModifyName(this.__page, shape, name.slice(0, i));
     }
     public insertText2(text: string, index: number, del: number, attr?: SpanAttr): number {
-        //
-        if (this.__shape.isVirtualShape) {
-            // 当前text是个variable,或者需要先override
-
-        }
         attr = attr ?? this._cacheAttr;
         this.resetCachedSpanAttr();
         let count = text.length; // 插入字符数
@@ -483,6 +478,7 @@ export class TextShapeEditor extends ShapeEditor {
             }
 
             this.__preInputText = savetext;
+            if (!this.view.isVirtualShape && this.view instanceof TextShapeView) this.view.forceUpdateOriginFrame();
             this.fixFrameByLayout(api);
             this.__repo.transactCtx.fireNotify(); // 会导致不断排版绘制
             return true;
