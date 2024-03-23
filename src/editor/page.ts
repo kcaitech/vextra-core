@@ -78,7 +78,7 @@ import {
 import { v4 } from "uuid";
 import {
     is_exist_invalid_shape2, is_part_of_symbol,
-    is_part_of_symbolref,
+    is_part_of_symbolref, is_state,
     modify_variable_with_api,
     shape4border,
     shape4fill
@@ -1548,6 +1548,11 @@ export class PageEditor {
             // 开始替换
             for (let i = 0; i < src.length; i++) {
                 const s = src[i];
+
+                if (is_state(s)) {
+                    continue;
+                }
+
                 const p = s.parent as GroupShape;
                 if (!p) throw new Error('invalid root');
                 let save_index = p.indexOfChild(s);
