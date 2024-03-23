@@ -125,8 +125,7 @@ export class LayoutItem {
     __verAlign: TextVerAlign | undefined;
     __frame: ShapeFrame = { x: 0, y: 0, width: 0, height: 0 }
 
-    update(frame: ShapeFrame, attr: TextAttr | undefined) {
-
+    update(frame: ShapeFrame, text: Text) {
         const layoutWidth = ((b: TextBehaviour) => {
             switch (b) {
                 case TextBehaviour.Flexible: return Number.MAX_VALUE;
@@ -134,7 +133,7 @@ export class LayoutItem {
                 case TextBehaviour.FixWidthAndHeight: return frame.width;
             }
             // return Number.MAX_VALUE
-        })(attr?.textBehaviour ?? TextBehaviour.Flexible)
+        })(text.attr?.textBehaviour ?? TextBehaviour.Flexible)
 
         if (this.__layoutWidth !== layoutWidth) {
             this.__layoutWidth = layoutWidth;
@@ -142,8 +141,9 @@ export class LayoutItem {
             this.layout = undefined;
         }
         else if (this.layout) {
-            if ((this.__frame.height !== frame.height || this.__verAlign !== (attr?.verAlign ?? TextVerAlign.Top))) {
-                const vAlign = attr?.verAlign ?? TextVerAlign.Top;
+            const layout = this.layout;
+            if ((this.__frame.height !== frame.height || this.__verAlign !== (text.attr?.verAlign ?? TextVerAlign.Top))) {
+                const vAlign = text.attr?.verAlign ?? TextVerAlign.Top;
                 const yOffset: number = ((align: TextVerAlign) => {
                     switch (align) {
                         case TextVerAlign.Top: return 0;
@@ -152,6 +152,30 @@ export class LayoutItem {
                     }
                 })(vAlign);
                 this.layout.yOffset = yOffset;
+            }
+            // hor align
+            const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
+            if (this.__frame.width !== frame.width && textBehaviour === TextBehaviour.Flexible) {
+                let alignX = Number.MAX_SAFE_INTEGER;
+                for (let i = 0, pc = text.paras.length; i < pc; i++) {
+                    const para = text.paras[i];
+                    const paraLayout = layout.paras[i];
+                    const alignment = para.attr?.alignment ?? TextHorAlign.Left;
+                    switch (alignment) {
+                        case TextHorAlign.Centered:
+                            alignX = Math.min(alignX, -(paraLayout.paraWidth - frame.width) / 2);
+                            break;
+                        case TextHorAlign.Left:
+                        case TextHorAlign.Natural:
+                            alignX = Math.min(alignX, 0);
+                            break;
+                        case TextHorAlign.Justified:
+                        case TextHorAlign.Right:
+                            alignX = Math.min(alignX, -(paraLayout.paraWidth - frame.width));
+                            break;
+                    }
+                }
+                layout.alignX = alignX === Number.MAX_SAFE_INTEGER ? 0 : alignX;
             }
         }
 
@@ -162,8 +186,8 @@ export class LayoutItem {
         this.__frame.width = frame.width;
         this.__frame.height = frame.height;
 
-        this.__textBehaviour = attr?.textBehaviour;
-        this.__verAlign = attr?.verAlign;
+        this.__textBehaviour = text.attr?.textBehaviour;
+        this.__verAlign = text.attr?.verAlign;
     }
 }
 

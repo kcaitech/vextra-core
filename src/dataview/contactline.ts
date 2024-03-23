@@ -76,17 +76,17 @@ export class ContactLineView extends PathShapeView {
         const nf = page.getShape(f.shapeId);
 
         if (nf) {
-            if (this.from && this.from.id === nf.id) {
-                // do nothing
-            }
-            else if (this.from) {
+            // if (this.from && this.from.id === nf.id) {
+            //     // do nothing
+            // }
+            // else
+            if (this.from) {
                 this.unwatchApex(this.from, this.fromparents);
 
                 this.from = nf;
 
                 this.watchApex(this.from, this.fromparents);
-            }
-            else {
+            } else {
                 this.from = nf;
                 this.watchApex(this.from, this.fromparents);
             }
@@ -115,17 +115,17 @@ export class ContactLineView extends PathShapeView {
         const nt = page.getShape(t.shapeId);
 
         if (nt) {
-            if (this.to && this.to.id === nt.id) {
-                // do nothing
-            }
-            else if (this.to) {
+            // if (this.to && this.to.id === nt.id) {
+            //     // do nothing
+            // }
+            // else
+            if (this.to) {
                 this.unwatchApex(this.to, this.toparents);
 
                 this.to = nt;
 
                 this.watchApex(this.to, this.toparents);
-            }
-            else {
+            } else {
                 this.to = nt;
                 this.watchApex(this.to, this.toparents);
             }
@@ -138,10 +138,11 @@ export class ContactLineView extends PathShapeView {
             this.to = undefined;
         }
     }
+
     onDataChange(...args: any[]): void {
         super.onDataChange(...args);
 
-        if (args.includes('points') || args.includes('shape-frame')) {
+        if (args.includes('points') || args.includes('shape-frame') || args.includes('to') || args.includes('from')) {
             return;
         }
 

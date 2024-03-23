@@ -395,7 +395,7 @@ function mergePara(para: Para, nextpara: Para) {
     para.text += nextpara.text;
     const spans = para.spans;
     const lastspanIdx = spans.length - 1;
-    spans.push(...nextpara.spans);
+    spans.push(...nextpara.spans.map((s) => importSpan(s)));
 
     if (lastspanIdx >= 0 && (spans.length - 1 > lastspanIdx)) {
         const span1 = spans[lastspanIdx];
@@ -434,9 +434,9 @@ function _deleteText(paraArray: Para[], paraIndex: number, para: Para, index: nu
         if (isDel0A) {
             // 不是最后一段
             // 合并两段
-            // const nextpara = paraArray[paraIndex + 1];
+            const nextpara = paraArray[paraIndex + 1];
             paraArray.splice(paraIndex + 1, 1);
-            // mergePara(para, nextpara);
+            mergePara(para, nextpara);
         }
         return ret;
     }
@@ -511,9 +511,9 @@ function _deleteText(paraArray: Para[], paraIndex: number, para: Para, index: nu
         else {
             // 不是最后一段
             // 合并两段
-            // const nextpara = paraArray[needMerge + 1];
+            const nextpara = paraArray[needMerge + 1];
             paraArray.splice(needMerge + 1, 1);
-            // mergePara(para, nextpara);
+            mergePara(para, nextpara);
         }
     } else {
         // 使用第一段的段落属性

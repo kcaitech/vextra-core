@@ -239,7 +239,13 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
                     f.height = dlt.frame.height;
                 }
                 r = newSymbolRefShape(_s.name, f, _s.id, document.symbolsMgr);
-                r && result.push(r);
+                // rotate & flip
+                if (r) {
+                    r.rotation = _s.rotation;
+                    r.isFlippedHorizontal = _s.isFlippedHorizontal;
+                    r.isFlippedVertical = _s.isFlippedVertical;
+                    result.push(r);
+                }
                 continue;
             }
 
