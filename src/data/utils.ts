@@ -863,6 +863,12 @@ export function findOverrideAndVar(
     shape: Shape, // not proxyed
     overType: OverrideType,
     varsContainer: (SymbolRefShape | SymbolShape)[]) {
+    // override优先
+    // find override
+    // id: xxx/xxx/xxx
+    const id = shape.id;
+    const _vars = findOverride(id, overType, varsContainer);
+    if (_vars) return _vars;
 
     const varbinds = shape.varbinds;
     const varId = varbinds?.get(overType);
@@ -871,12 +877,6 @@ export function findOverrideAndVar(
         findVar(varId, _vars, varsContainer);
         if (_vars && _vars.length > 0) return _vars;
     }
-
-    // find override
-    // id: xxx/xxx/xxx
-    const id = shape.id;
-    const _vars = findOverride(id, overType, varsContainer);
-    return _vars;
 }
 
 function distanceTo(p0: XY, p1: XY) {
