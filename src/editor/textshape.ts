@@ -211,7 +211,7 @@ export class TextShapeEditor extends ShapeEditor {
             else if (del > 0) {
                 const _text = shape instanceof Variable ? shape.value as Text : shape.text;
                 const span = _text.spanAt(index + del - 1);
-                const para = _text.paraAt(index + del - 1);
+                const para = _text.paraAt(index); // 用第一段的段属性
 
                 // 构造text
                 const text1 = new Text(new BasicArray());
@@ -414,7 +414,7 @@ export class TextShapeEditor extends ShapeEditor {
             if (del > 0) {
                 const _text = shape instanceof Variable ? shape.value as Text : shape.text;
                 const span = _text.spanAt(index + del - 1);
-                const para = _text.paraAt(index + del - 1);
+                const para = _text.paraAt(index); // 用第一段的段属性
                 this.__composdelSpan = span;
                 this.__composdelpara = para?.para.attr;
                 api.deleteText(this.__page, shape, index, del);
