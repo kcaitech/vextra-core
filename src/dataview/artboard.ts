@@ -112,7 +112,7 @@ export class ArtboradView extends GroupShapeView {
 
         if (shadows.length > 0) { // 阴影
             const inner_url = innerShadowId(filterId, this.getShadows());
-            svgprops.filter = `url(#pd_outer-${filterId}) ${inner_url}`;
+            svgprops.filter = inner_url;
         }
 
         const id = "clippath-artboard-" + objectId(this);

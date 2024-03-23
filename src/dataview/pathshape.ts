@@ -1,4 +1,4 @@
-import { CurvePoint, PathShape, Shape, ShapeFrame, SymbolRefShape, SymbolShape } from "../data/classes";
+import { CurvePoint, PathShape, Shape, ShapeFrame, ShapeType, SymbolRefShape, SymbolShape } from "../data/classes";
 import { Path } from "../data/path";
 import { parsePath } from "../data/pathparser";
 import { ShapeView, matrix2parent, transformPoints } from "./shape";
@@ -6,7 +6,8 @@ import { Matrix } from "../basic/matrix";
 import { RenderTransform } from "./basic";
 import { DViewCtx, PropsType } from "./viewctx";
 import { EL, elh } from "./el";
-import { renderBorders } from "../render";
+import { innerShadowId, renderBorders } from "../render";
+import { objectId } from "../basic/objectid";
 
 export class PathShapeView extends ShapeView {
 
@@ -51,5 +52,77 @@ export class PathShapeView extends ShapeView {
 
     protected renderBorders(): EL[] {
         return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.isClosed);
+    }
+    render(): number {
+
+        // const tid = this.id;
+        const isDirty = this.checkAndResetDirty();
+        if (!isDirty) {
+            return this.m_render_version;
+        }
+
+        if (!this.isVisible) {
+            this.reset("g"); // 还是要给个节点，不然后后面可见了挂不上dom
+            return ++this.m_render_version;
+        }
+
+        // fill
+        const fills = this.renderFills() || []; // cache
+        // childs
+        const childs = this.renderContents(); // VDomArray
+        // border
+        const borders = this.renderBorders() || []; // ELArray
+
+        const props = this.renderProps();
+        const filterId = `${objectId(this)}`;
+        const shadows = this.renderShadows(filterId);
+
+        if (shadows.length > 0) { // 阴影
+            const ex_props = Object.assign({}, props);
+            delete props.style;
+            delete props.transform;
+            delete props.opacity;
+            const inner_url = innerShadowId(filterId, this.getShadows());
+            if (this.type === ShapeType.Rectangle || this.type === ShapeType.Oval) {
+                if (inner_url.length) props.filter = inner_url;
+            } else {
+                props.filter = `url(#pd_outer-${filterId}) ${inner_url}`;
+            }
+            const body = elh("g", props, [...fills, ...childs, ...borders]);
+            this.reset("g", ex_props, [...shadows, body])
+        } else {
+            this.reset("g", props, [...fills, ...childs, ...borders]);
+        }
+        return ++this.m_render_version;
+    }
+
+    renderStatic() {
+        const fills = this.renderFills() || []; // cache
+        // childs
+        const childs = this.renderContents(); // VDomArray
+        // border
+        const borders = this.renderBorders() || []; // ELArray
+
+        const props = this.renderStaticProps();
+
+        const filterId = `${objectId(this)}`;
+        const shadows = this.renderShadows(filterId);
+
+        if (shadows.length > 0) { // 阴影
+            const ex_props = Object.assign({}, props);
+            delete props.style;
+            delete props.transform;
+            delete props.opacity;
+            const inner_url = innerShadowId(filterId, this.getShadows());
+            if (this.type === ShapeType.Rectangle || this.type === ShapeType.Oval) {
+                if (inner_url.length) props.filter = inner_url;
+            } else {
+                props.filter = `url(#pd_outer-${filterId}) ${inner_url}`;
+            }
+            const body = elh("g", props, [...fills, ...childs, ...borders]);
+            return elh("g", ex_props, [...shadows, body]);
+        } else {
+            return elh("g", props, [...fills, ...childs, ...borders])
+        }
     }
 }
