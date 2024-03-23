@@ -1041,12 +1041,23 @@ export class Controller {
                 if (clear_target) {
                     if (!shape.from) {
                         api.shapeModifyContactFrom(page, shape as ContactShape, clear_target.apex);
+                        const shape1 = page.getShape(clear_target.apex.shapeId);
+                        if (shape1) {
+                            api.addContactAt(page, shape1, new ContactRole(new BasicArray<number>(), v4(), ContactRoleType.From, shape.id), shape1.style.contacts?.length || 0);
+                        }
                     }
+
                     pathEdit(api, page, shape as PathShape, 0, clear_target.p);
                 } else {
                     if (shape.from) {
+                        const shape2 = page.getShape(shape.from.shapeId);
+                        const index = shape2?.style?.contacts?.findIndex(i => i.shapeId === shape.id);
+                        if (shape2 && index !== undefined && index > -1) {
+                            api.removeContactRoleAt(page, shape2, index);
+                        }
                         api.shapeModifyContactFrom(page, shape as ContactShape, undefined);
                     }
+
                     pathEdit(api, page, shape as PathShape, 0, m_target);
                 }
                 this.__repo.transactCtx.fireNotify();
@@ -1064,10 +1075,20 @@ export class Controller {
                 if (clear_target) {
                     if (!shape.to) {
                         api.shapeModifyContactTo(page, shape as ContactShape, clear_target.apex);
+                        const shape1 = page.getShape(clear_target.apex.shapeId);
+                        if (shape1) {
+                            api.addContactAt(page, shape1, new ContactRole(new BasicArray<number>(), v4(), ContactRoleType.To, shape.id), shape1.style.contacts?.length || 0);
+                        }
                     }
                     pathEdit(api, page, shape as PathShape, idx - 1, clear_target.p);
                 } else {
                     if (shape.to) {
+                        const shape2 = page.getShape(shape.to.shapeId);
+                        const index = shape2?.style?.contacts?.findIndex(i => i.shapeId === shape.id);
+                        if (shape2 && index !== undefined && index > -1) {
+                            api.removeContactRoleAt(page, shape2, index);
+                        }
+
                         api.shapeModifyContactTo(page, shape as ContactShape, undefined);
                     }
                     pathEdit(api, page, shape as PathShape, idx - 1, m_target);
