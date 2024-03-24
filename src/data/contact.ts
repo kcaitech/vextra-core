@@ -193,7 +193,7 @@ export class ContactShape extends PathShape implements classes.ContactShape {
         }
 
         if (!fromShape && !toShape) {
-            path_for_free_contact(points);
+            path_for_free_contact(points, this.frame.width, this.frame.height);
         }
 
         if (fromShape && !toShape) {
@@ -201,7 +201,7 @@ export class ContactShape extends PathShape implements classes.ContactShape {
         }
 
         if (!fromShape && toShape) {
-            path_for_free_start_contact(points, s2);
+            path_for_free_start_contact(points, end_point, this.frame.width, this.frame.height);
         }
 
         return slice_invalid_point(points);
