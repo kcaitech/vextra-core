@@ -15,7 +15,7 @@ import {
     scaleByR,
     scaleByT,
     translate,
-    translateTo,
+    translateTo, minimum_WH,
 } from "./frame";
 import { CurvePoint, GroupShape, PathShape, PathShape2, Shape, ShapeFrame, TextShape } from "../data/shape";
 import { getFormatFromBase64 } from "../basic/utils";
