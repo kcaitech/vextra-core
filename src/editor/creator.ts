@@ -51,6 +51,7 @@ import {
     Shadow,
     BorderStyle,
     SymbolRefShape,
+    TextAttr,
 } from "../data/classes";
 import { BasicArray, BasicMap } from "../data/basic";
 import { Repository } from "../data/transact";
@@ -64,6 +65,7 @@ import { ContactForm, CrdtNumber } from "../data/baseclasses";
 import { Matrix } from "../basic/matrix";
 import { ResizingConstraints2 } from "../data/consts";
 import { SymbolMgr } from "../data/symbolmgr";
+import { mergeParaAttr, mergeSpanAttr, newText } from "../data/textutils";
 
 export function addCommonAttr(shape: Shape) {
     shape.rotation = 0;
@@ -304,25 +306,19 @@ export function newArrowShape(name: string, frame: ShapeFrame): LineShape {
     return shape;
 }
 
-// export function newText(textAttr?: TextAttr): Text {
-//     const text = new Text(new BasicArray());
-//     const para = new Para('\n', new BasicArray());
-//     para.attr = new ParaAttr();
-//     para.attr.minimumLineHeight = 24;
-//     text.paras.push(para);
-//     const span = new Span(para.length);
-//     span.fontName = "PingFangSC-Regular";
-//     span.fontSize = 14;
-//     span.color = new Color(0.85, 0, 0, 0);
-//     para.spans.push(span);
-//     if (textAttr) {
-//         mergeParaAttr(para, textAttr);
-//         mergeSpanAttr(span, textAttr);
-//     }
-//     return text;
-// }
-
 // 后续需要传入字体、字号、颜色信息
+export function newDefaultTextShape(name: string, attr: TextAttr, frame?: ShapeFrame): TextShape {
+    if (frame && (frame.x === 0 || frame.y === 0)) throw new Error();
+    template_text_shape.id = uuid();
+    template_text_shape.name = name;
+    // 后续需要传入字体、字号、颜色信息
+    const textshape: TextShape = importTextShape(template_text_shape as types.TextShape);
+    if (frame) textshape.frame = frame;
+    textshape.text = newText(attr);
+    addCommonAttr(textshape);
+    return textshape;
+}
+
 export function newTextShape(name: string, frame?: ShapeFrame): TextShape {
     if (frame && (frame.x === 0 || frame.y === 0)) throw new Error();
     template_text_shape.id = uuid();

@@ -31,7 +31,8 @@ import {
     newTable,
     newTextShape,
     newCutoutShape,
-    modifyTransformByEnv
+    modifyTransformByEnv,
+    newDefaultTextShape
 } from "./creator";
 
 import { Page } from "../data/page";
@@ -64,6 +65,7 @@ import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
 import { BasicArray } from "../data/basic";
 import { Fill } from "../data/style";
 import { FrameType, PathType } from "../data/consts";
+import { TextAttr } from "data/classes";
 
 interface PageXY { // 页面坐标系的xy
     x: number
@@ -110,12 +112,12 @@ export enum CtrlElementType { // 控制元素类型
 }
 
 export interface AsyncCreator {
-    init: (page: Page, parent: GroupShape, type: ShapeType, name: string, frame: ShapeFrame) => Shape | undefined;
+    init: (page: Page, parent: GroupShape, type: ShapeType, name: string, frame: ShapeFrame, attr?: TextAttr) => Shape | undefined;
     init_media: (page: Page, parent: GroupShape, name: string, frame: ShapeFrame, media: {
         buff: Uint8Array,
         base64: string
     }) => Shape | undefined;
-    init_text: (page: Page, parent: GroupShape, frame: ShapeFrame, content: string) => Shape | undefined;
+    init_text: (page: Page, parent: GroupShape, frame: ShapeFrame, content: string, attr?: TextAttr) => Shape | undefined;
     init_arrow: (page: Page, parent: GroupShape, name: string, frame: ShapeFrame) => Shape | undefined;
     init_contact: (page: Page, parent: GroupShape, frame: ShapeFrame, name: string, apex?: ContactForm) => Shape | undefined;
     setFrame: (point: PageXY) => void;
@@ -225,7 +227,7 @@ export class Controller {
         this.__document = document;
     }
 
-    create(type: ShapeType, name: string, frame: ShapeFrame): Shape {
+    create(type: ShapeType, name: string, frame: ShapeFrame, attr?: TextAttr): Shape {
         switch (type) {
             case ShapeType.Artboard:
                 return newArtboard(name, frame);
@@ -236,6 +238,7 @@ export class Controller {
             case ShapeType.Line:
                 return newLineShape(name, frame);
             case ShapeType.Text: {
+                if (attr) return newDefaultTextShape(name, attr, frame);
                 return newTextShape(name, frame);
             }
             default:
@@ -255,12 +258,12 @@ export class Controller {
             else state.shapes = cmd.saveselection?.shapes || [];
             selection.restore(state);
         });
-        const init = (page: Page, parent: GroupShape, type: ShapeType, name: string, frame: ShapeFrame): Shape | undefined => {
+        const init = (page: Page, parent: GroupShape, type: ShapeType, name: string, frame: ShapeFrame, attr?: TextAttr): Shape | undefined => {
             try {
                 savepage = page;
                 status = Status.Pending;
 
-                const shape = this.create(type, name, frame);
+                const shape = this.create(type, name, frame, attr);
 
                 modifyTransformByEnv(shape, parent);
 
@@ -349,7 +352,7 @@ export class Controller {
                 status = Status.Exception;
             }
         }
-        const init_text = (page: Page, parent: GroupShape, frame: ShapeFrame, content: string): Shape | undefined => {
+        const init_text = (page: Page, parent: GroupShape, frame: ShapeFrame, content: string, attr?: TextAttr): Shape | undefined => {
             status = Status.Pending;
             if (this.__document) {
                 try {
@@ -357,7 +360,7 @@ export class Controller {
                     if (content.length > 19) {
                         name = name.slice(0, 19) + '...';
                     }
-                    const shape = newTextShape(name);
+                    const shape = attr ? newDefaultTextShape(name, attr) : newTextShape(name);
 
                     modifyTransformByEnv(shape, parent);
 
@@ -959,7 +962,7 @@ export class Controller {
             status === Status.Pending
             try {
                 if (shape.pathType === PathType.Editable) {
-                    const  indexes = range.get(0) || [];
+                    const indexes = range.get(0) || [];
                     pointsEdit(api, page, shape, (shape as PathShape).points, indexes, dx, dy);
                 } else if (shape.pathType === PathType.Multi) {
                     const pathsegs = (shape as any as PathShape2).pathsegs;
@@ -1350,7 +1353,7 @@ export class Controller {
             try {
                 const grad_color_type = type === 'fills' ? shapes[0].getFills() : shapes[0].getBorders();
                 const f_stop = grad_color_type[index].gradient?.stops;
-                if(f_stop) {
+                if (f_stop) {
                     const idx = f_stop.findIndex((stop) => stop.id === id);
                     for (let i = 0, l = shapes.length; i < l; i++) {
                         const shape = shapes[i];
@@ -1475,9 +1478,9 @@ function adjust_pathshape_rotate_frame(api: Api, page: Page, s: PathShape) {
 }
 
 function set_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, Matrix>,
-                         origin1: { x: number, y: number },
-                         origin2: { x: number, y: number },
-                         sx: number, sy: number, recorder?: SizeRecorder) {
+    origin1: { x: number, y: number },
+    origin2: { x: number, y: number },
+    sx: number, sy: number, recorder?: SizeRecorder) {
     const p = s.parent;
     if (!p) {
         return;
@@ -1530,9 +1533,9 @@ function set_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, Matri
 }
 
 function set_rect_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, Matrix>,
-                              origin1: { x: number, y: number },
-                              origin2: { x: number, y: number },
-                              sx: number, sy: number, recorder?: SizeRecorder) {
+    origin1: { x: number, y: number },
+    origin2: { x: number, y: number },
+    sx: number, sy: number, recorder?: SizeRecorder) {
     const p = s.parent;
     if (!p) {
         return;
@@ -1586,8 +1589,8 @@ function set_rect_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, 
 
 
 function __migrate(document: Document,
-                   api: Api, page: Page, targetParent: GroupShape, shape: Shape, dlt: string, index: number,
-                   transform: { ohflip: boolean, ovflip: boolean, pminverse: number[] }
+    api: Api, page: Page, targetParent: GroupShape, shape: Shape, dlt: string, index: number,
+    transform: { ohflip: boolean, ovflip: boolean, pminverse: number[] }
 ) {
     const error = unable_to_migrate(targetParent, shape);
     if (error) {

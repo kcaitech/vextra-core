@@ -46,7 +46,7 @@ function varParent(_var: Variable) {
 function checkShapeAtPage(page: Page, obj: Shape | Variable | ShapeView) {
     if (obj instanceof ShapeView) obj = obj.data;
     obj = obj instanceof Shape ? (obj instanceof TableCell ? obj.parent as TableShape : obj) : varParent(obj) as Shape;
-    const shapeid = obj.id;
+        const shapeid = obj.id;
     if (!page.getShape(shapeid)) throw new Error("shape not inside page")
 }
 
