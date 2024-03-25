@@ -727,39 +727,47 @@ export function path_for_edited(points: CurvePoint[], start_point: PageXY, end_p
 
     { // 在第一个点后面再寻找一个新的活点
         const flex_point1 = start_point;
-        const flex_point2 = result[1] ? { x: result[1].x, y: result[1].y } : undefined;
-        if (flex_point1 && flex_point2) {
-            let p: undefined | CurvePoint;
+        let p: undefined | CurvePoint;
 
-            const _d = d(flex_point1, s1 as PageXY);
+        const _d = d(flex_point1, s1 as PageXY);
 
-            if (_d === 'hor') {
-                p = new CurvePoint([1] as BasicArray<number>, v4(), flex_point2.x, flex_point1.y, CurveMode.Straight);
-            } else if (_d === 'ver') {
-                p = new CurvePoint([1] as BasicArray<number>, v4(), flex_point1.x, flex_point2.y, CurveMode.Straight);
+        if (_d === 'hor') {
+            const f2 = result[1];
+            if (f2) {
+                p = new CurvePoint([] as any, '--', f2.x, flex_point1.y, CurveMode.Straight);
             }
-            if (p) {
-                result.splice(1, 1, p);
+        } else if (_d === 'ver') {
+            const f3 = result[2];
+            if (f3) {
+                p = new CurvePoint([] as any, '--', flex_point1.x, f3.y, CurveMode.Straight);
             }
+        }
+
+        if (p) {
+            result.splice(1, 1, p);
         }
     }
 
     {
         const len = result.length;
         const flex_point1 = end_point;
-        const flex_point2 = result[len - 2] ? { x: result[len - 2].x, y: result[len - 2].y } : undefined;
-        if (flex_point1 && flex_point2) {
-            const _d = d(flex_point1, s2 as PageXY);
-
-            if (_d === 'hor') {
-                const p = new CurvePoint(([len - 2] as BasicArray<number>), v4(), flex_point2.x, flex_point1.y, CurveMode.Straight);
+        const _d = d(flex_point1, s2 as PageXY);
+        if (_d === 'hor') {
+            const last2 = result[len - 2];
+            if (last2) {
+                const p = new CurvePoint([] as any, '--', last2.x, flex_point1.y, CurveMode.Straight);
                 result.splice(len - 2, 1, p);
-            } else if (_d === 'ver') {
-                const p = new CurvePoint(([len - 2] as BasicArray<number>), v4(), flex_point1.x, flex_point2.y, CurveMode.Straight);
+            }
+        } else if (_d === 'ver') {
+            const last3 = result[len - 3];
+            if (last3) {
+                const p = new CurvePoint([] as any, '--', flex_point1.x, last3.y, CurveMode.Straight);
                 result.splice(len - 2, 1, p);
             }
         }
+        result[result.length - 1] = new CurvePoint([] as any, '--', flex_point1.x, flex_point1.y, CurveMode.Straight);
     }
+
     return slice_invalid_point(result); // 最后削减无效点
 }
 
@@ -769,28 +777,28 @@ function get_direction_for_free_contact(start: CurvePoint, end: CurvePoint) {
 
     return dx > dy ? 'horizontal' : 'vertical';
 }
-const __handle: { [key: string]: (points: CurvePoint[], start: CurvePoint, end: CurvePoint) => CurvePoint[] } = {};
+const __handle: { [key: string]: (points: CurvePoint[], start: CurvePoint, end: CurvePoint) => void } = {};
 __handle['horizontal'] = function (points: CurvePoint[], start: CurvePoint, end: CurvePoint) {
+    points.length = 0;
+
     const mid = (end.x + start.x) / 2;
 
     const _p1 = new CurvePoint([1] as BasicArray<number>, v4(), mid, start.y, CurveMode.Straight);
     const _p2 = new CurvePoint(([2] as BasicArray<number>), v4(), mid, end.y, CurveMode.Straight);
 
-    points.splice(1, 0, _p1, _p2);
-
-    return points;
+    points.push(start, _p1, _p2, end);
 }
 __handle['vertical'] = function (points: CurvePoint[], start: CurvePoint, end: CurvePoint) {
+    points.length = 0;
+
     const mid = (end.y + start.y) / 2;
 
     const _p1 = new CurvePoint([1] as BasicArray<number>, v4(), start.x, mid, CurveMode.Straight);
     const _p2 = new CurvePoint(([2] as BasicArray<number>), v4(), end.x, mid, CurveMode.Straight);
 
-    points.splice(1, 0, _p1, _p2);
-
-    return points;
+    points.push(start, _p1, _p2, end);
 }
-export function path_for_free_contact(points: CurvePoint[]) {
+export function path_for_free_contact(points: CurvePoint[], width: number, height: number) {
     const start = points[0];
     const end = points[points.length - 1];
 
@@ -798,7 +806,9 @@ export function path_for_free_contact(points: CurvePoint[]) {
         return;
     }
 
-    const direction = get_direction_for_free_contact(start, end);
+    const _start = {x: start.x * width, y: start.y * height};
+    const _end = {x: end.x * width, y: end.y * height};
+    const direction = get_direction_for_free_contact(_start as CurvePoint, _end as CurvePoint);
 
     __handle[direction](points, start, end);
 }
@@ -807,11 +817,7 @@ export function path_for_free_end_contact(shape: ContactShape, points: CurvePoin
         const _s = points[0];
         start = { x: _s.x, y: _s.y };
     }
-    const end = points.pop();
-
-    if (!end) {
-        return;
-    }
+    const end = points.pop()!;
 
     if (Math.abs(start.y - end.y) * shape.frame.height < 5) {
         points.push(new CurvePoint(([points.length] as BasicArray<number>), v4(), end.x, start.y, CurveMode.Straight));
@@ -819,14 +825,17 @@ export function path_for_free_end_contact(shape: ContactShape, points: CurvePoin
         points.push(new CurvePoint(([points.length] as BasicArray<number>), v4(), end.x, start.y, CurveMode.Straight), end);
     }
 }
-export function path_for_free_start_contact(points: CurvePoint[], end: PageXY | undefined) {
+export function path_for_free_start_contact(points: CurvePoint[], end: PageXY | undefined, width: number, height: number) {
     if (!end) {
-        return path_for_free_contact(points);
+        return path_for_free_contact(points, width, height);
     }
     const start = points[0];
     const _end = new CurvePoint(([points.length - 1] as BasicArray<number>), v4(), end.x, end.y, CurveMode.Straight);
 
-    const direction = get_direction_for_free_contact(start, _end);
+    const _start = {x: start.x * width, y: start.y * height};
+    const __end = {x: end.x * width, y: end.y * height};
+
+    const direction = get_direction_for_free_contact(_start as CurvePoint, __end as CurvePoint);
 
     __handle[direction](points, start, _end);
 }

@@ -65,6 +65,12 @@ export class SymbolRefView extends ShapeView {
     get variables() {
         return this.data.variables;
     }
+    get overrides() {
+        return this.data.overrides;
+    }
+    get isCustomSize() {
+        return this.data.isCustomSize;
+    }
 
     onDataChange(...args: any[]): void {
         this.loadsym(true);

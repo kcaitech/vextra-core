@@ -14,7 +14,7 @@ export class ContactLineView extends PathShapeView {
 
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props, false);
-        this.wathcer_sides = this.wathcer_sides.bind(this);
+        this.watcher_sides = this.watcher_sides.bind(this);
 
         this.updateApex();
 
@@ -29,7 +29,7 @@ export class ContactLineView extends PathShapeView {
         return { from: this.from, to: this.to }
     }
 
-    private wathcer_sides(t: any) {
+    private watcher_sides(...args: any) {
         // todo 可以再精细点
         this.updateApex();
         this.m_path = undefined;
@@ -38,18 +38,18 @@ export class ContactLineView extends PathShapeView {
     }
 
     private unwatchApex(shape: Shape, parents: Shape[]) {
-        shape.unwatch(this.wathcer_sides);
+        shape.unwatch(this.watcher_sides);
         parents.forEach(p => {
-            p.unwatch(this.wathcer_sides);
+            p.unwatch(this.watcher_sides);
         });
         parents.length = 0;
     }
 
     private watchApex(shape: Shape, parents: Shape[]) {
-        shape.watch(this.wathcer_sides);
+        shape.watch(this.watcher_sides);
         let p = shape.parent;
         while (p && p.type !== ShapeType.Page) {
-            p.watch(this.wathcer_sides);
+            p.watch(this.watcher_sides);
             parents.push(p);
             p = p.parent;
         }
@@ -76,10 +76,6 @@ export class ContactLineView extends PathShapeView {
         const nf = page.getShape(f.shapeId);
 
         if (nf) {
-            // if (this.from && this.from.id === nf.id) {
-            //     // do nothing
-            // }
-            // else
             if (this.from) {
                 this.unwatchApex(this.from, this.fromparents);
 
@@ -115,10 +111,6 @@ export class ContactLineView extends PathShapeView {
         const nt = page.getShape(t.shapeId);
 
         if (nt) {
-            // if (this.to && this.to.id === nt.id) {
-            //     // do nothing
-            // }
-            // else
             if (this.to) {
                 this.unwatchApex(this.to, this.toparents);
 
@@ -142,7 +134,7 @@ export class ContactLineView extends PathShapeView {
     onDataChange(...args: any[]): void {
         super.onDataChange(...args);
 
-        if (args.includes('points') || args.includes('shape-frame') || args.includes('to') || args.includes('from')) {
+        if (args.includes('points') || args.includes('shape-frame')) {
             return;
         }
 
