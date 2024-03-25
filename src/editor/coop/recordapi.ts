@@ -287,7 +287,7 @@ export class Api {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.shapeRemoveVariable(page, shape, key));
     }
-    shapeRemoveOverride(page: Page, shape: SymbolRefShape, key: string, varId: string, type: VariableType) {
+    shapeRemoveOverride(page: Page, shape: SymbolRefShape, key: string) {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.shapeRemoveOverride(shape, key));
     }
@@ -369,6 +369,10 @@ export class Api {
     }
     shapeModifyBoolOp(page: Page, shape: Shape, op: BoolOp | undefined) {
         this._shapeModifyAttr(page, shape, "boolOp", op);
+    }
+    shapeModifyIsCustomSize(page: Page, shape: Shape, isCustomSize: boolean) {
+        if (!(shape instanceof SymbolRefShape)) return;
+        this._shapeModifyAttr(page, shape, "isCustomSize", isCustomSize ? true : undefined);
     }
 
     // 添加一次fill

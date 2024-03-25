@@ -5,23 +5,24 @@ import { Text } from "../data/text";
 import { Point2D, TextBehaviour } from "../data/typesdefine";
 import { fixTextShapeFrameByLayout } from "./utils/other";
 import { FrameType, PathType, ResizingConstraints2 } from "../data/consts";
+import { Api } from "./coop/recordapi";
 interface PageXY {
     x: number
     y: number
 }
-export interface Api {
-    shapeModifyX(page: Page, shape: Shape, x: number): void;
-    shapeModifyY(page: Page, shape: Shape, y: number): void;
-    shapeModifyWH(page: Page, shape: Shape, w: number, h: number): void;
-    shapeModifyRotate(page: Page, shape: Shape, rotate: number): void;
-    shapeModifyHFlip(page: Page, shape: Shape, hflip: boolean | undefined): void;
-    shapeModifyVFlip(page: Page, shape: Shape, vflip: boolean | undefined): void;
-    shapeModifyTextBehaviour(page: Page, shapetext: Text, textBehaviour: TextBehaviour): void;
-    shapeModifyCurvPoint(page: Page, shape: Shape, index: number, point: Point2D, segment?: number): void;
-    shapeModifyCurvFromPoint(page: Page, shape: Shape, index: number, point: Point2D, segment?: number): void;
-    shapeModifyCurvToPoint(page: Page, shape: Shape, index: number, point: Point2D, segment?: number): void;
-    tableModifyRowHeight(page: Page, table: Shape, idx: number, height: number): void;
-}
+// export interface Api {
+//     shapeModifyX(page: Page, shape: Shape, x: number): void;
+//     shapeModifyY(page: Page, shape: Shape, y: number): void;
+//     shapeModifyWH(page: Page, shape: Shape, w: number, h: number): void;
+//     shapeModifyRotate(page: Page, shape: Shape, rotate: number): void;
+//     shapeModifyHFlip(page: Page, shape: Shape, hflip: boolean | undefined): void;
+//     shapeModifyVFlip(page: Page, shape: Shape, vflip: boolean | undefined): void;
+//     shapeModifyTextBehaviour(page: Page, shapetext: Text, textBehaviour: TextBehaviour): void;
+//     shapeModifyCurvPoint(page: Page, shape: Shape, index: number, point: Point2D, segment?: number): void;
+//     shapeModifyCurvFromPoint(page: Page, shape: Shape, index: number, point: Point2D, segment?: number): void;
+//     shapeModifyCurvToPoint(page: Page, shape: Shape, index: number, point: Point2D, segment?: number): void;
+//     tableModifyRowHeight(page: Page, table: Shape, idx: number, height: number): void;
+// }
 
 
 export type SizeRecorder = Map<string, { toRight: number, exceededX: boolean, toBottom: number, exceededY: boolean }>;
@@ -696,6 +697,7 @@ export function expandTo(api: Api, page: Page, shape: Shape, w: number, h: numbe
     }
 
     // if (changed) updateFrame(shape);
+    if (changed) api.shapeModifyIsCustomSize(page, shape, true);
 }
 
 export function expand(api: Api, page: Page, shape: Shape, dw: number, dh: number, round: boolean = true) {
@@ -780,6 +782,7 @@ export function adjustLT2(api: Api, page: Page, shape: Shape, x: number, y: numb
     dy = target.y - xy1.y;
 
     setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api, recorder);
+    api.shapeModifyIsCustomSize(page, shape, true);
 }
 export function adjustLB2(api: Api, page: Page, shape: Shape, x: number, y: number, recorder?: SizeRecorder) { // 左下角    
     const p = shape.parent;
@@ -834,6 +837,7 @@ export function adjustLB2(api: Api, page: Page, shape: Shape, x: number, y: numb
     dx = target.x - xy1.x;
     dy = target.y - xy1.y;
     setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api, recorder);
+    api.shapeModifyIsCustomSize(page, shape, true);
 }
 export function adjustRT2(api: Api, page: Page, shape: Shape, x: number, y: number, recorder?: SizeRecorder) { // 右上角
     const p = shape.parent;
@@ -889,6 +893,7 @@ export function adjustRT2(api: Api, page: Page, shape: Shape, x: number, y: numb
     dy = target.y - xy1.y;
 
     setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api, recorder);
+    api.shapeModifyIsCustomSize(page, shape, true);
 }
 export function adjustRB2(api: Api, page: Page, shape: Shape, x: number, y: number, recorder?: SizeRecorder) {
     const p = shape.parent;
@@ -940,6 +945,7 @@ export function adjustRB2(api: Api, page: Page, shape: Shape, x: number, y: numb
     dx = target.x - xy1.x;
     dy = target.y - xy1.y;
     setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api, recorder);
+    api.shapeModifyIsCustomSize(page, shape, true);
 }
 /**
  * @description 自由缩放
@@ -1009,6 +1015,7 @@ export function scaleByT(api: Api, page: Page, s: Shape, p: PageXY, recorder?: S
     dy = target.y - xy1.y;
 
     setFrame(page, s, f.x + dx, f.y + dy, w, h, api, recorder);
+    api.shapeModifyIsCustomSize(page, s, true);
 }
 export function scaleByR(api: Api, page: Page, s: Shape, p: PageXY, recorder?: SizeRecorder) {
     const parent = s.parent;
@@ -1064,6 +1071,7 @@ export function scaleByR(api: Api, page: Page, s: Shape, p: PageXY, recorder?: S
     dy = target.y - xy1.y;
 
     setFrame(page, s, f.x + dx, f.y + dy, w, h, api, recorder);
+    api.shapeModifyIsCustomSize(page, s, true);
 }
 export function scaleByB(api: Api, page: Page, s: Shape, p: PageXY, recorder?: SizeRecorder) {
     const parent = s.parent;
@@ -1122,6 +1130,7 @@ export function scaleByB(api: Api, page: Page, s: Shape, p: PageXY, recorder?: S
     dy = target.y - xy1.y;
 
     setFrame(page, s, f.x + dx, f.y + dy, w, h, api, recorder);
+    api.shapeModifyIsCustomSize(page, s, true);
 }
 export function scaleByL(api: Api, page: Page, s: Shape, p: PageXY, recorder?: SizeRecorder) {
     const parent = s.parent;
@@ -1176,6 +1185,7 @@ export function scaleByL(api: Api, page: Page, s: Shape, p: PageXY, recorder?: S
     dy = target.y - xy1.y;
 
     setFrame(page, s, f.x + dx, f.y + dy, w, h, api, recorder);
+    api.shapeModifyIsCustomSize(page, s, true);
 }
 /**
  * @description 等比缩放
@@ -1206,6 +1216,7 @@ export function erScaleByT(api: Api, page: Page, s: Shape, scale: number, record
     api.shapeModifyX(page, s, f.x + delta.x);
     api.shapeModifyY(page, s, f.y + delta.y);
     if (s instanceof GroupShape) afterModifyGroupShapeWH(api, page, s, scale, scale, new ShapeFrame(f.x, f.y, saveW, saveH), recorder);
+    api.shapeModifyIsCustomSize(page, s, true);
 }
 // 拖拽右边
 export function erScaleByR(api: Api, page: Page, s: Shape, scale: number, recorder?: SizeRecorder) {
@@ -1231,6 +1242,7 @@ export function erScaleByR(api: Api, page: Page, s: Shape, scale: number, record
     api.shapeModifyX(page, s, f.x + delta.x);
     api.shapeModifyY(page, s, f.y + delta.y);
     if (s instanceof GroupShape) afterModifyGroupShapeWH(api, page, s, scale, scale, new ShapeFrame(f.x, f.y, saveW, saveH), recorder);
+    api.shapeModifyIsCustomSize(page, s, true);
 }
 // 拖拽底部
 export function erScaleByB(api: Api, page: Page, s: Shape, scale: number, recorder?: SizeRecorder) {
@@ -1256,6 +1268,7 @@ export function erScaleByB(api: Api, page: Page, s: Shape, scale: number, record
     api.shapeModifyX(page, s, f.x + delta.x);
     api.shapeModifyY(page, s, f.y + delta.y);
     if (s instanceof GroupShape) afterModifyGroupShapeWH(api, page, s, scale, scale, new ShapeFrame(f.x, f.y, saveW, saveH), recorder);
+    api.shapeModifyIsCustomSize(page, s, true);
 }
 // 拖拽左边
 export function erScaleByL(api: Api, page: Page, s: Shape, scale: number, recorder?: SizeRecorder) {
@@ -1281,4 +1294,5 @@ export function erScaleByL(api: Api, page: Page, s: Shape, scale: number, record
     api.shapeModifyX(page, s, f.x + delta.x);
     api.shapeModifyY(page, s, f.y + delta.y);
     if (s instanceof GroupShape) afterModifyGroupShapeWH(api, page, s, scale, scale, new ShapeFrame(f.x, f.y, saveW, saveH), recorder);
+    api.shapeModifyIsCustomSize(page, s, true);
 }

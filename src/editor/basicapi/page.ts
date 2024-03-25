@@ -61,56 +61,65 @@ export function pageMove(document: Document, fromIdx: number, toIdx: number) {
 
 
 export function shapeInsert(document: Document, page: Page, parent: GroupShape, shape: Shape, index: number, needUpdateFrame: { shape: Shape, page: Page }[]) {
-    const op = crdtShapeInsert(page, parent, shape, index);
-    page.onAddShape(op[op.length - 1].data2 as Shape);
-    needUpdateFrame.push({ shape, page });
+    // shape不可以一次性插入多个对象，需要分开插入
+    // 从根开始插入
 
     const ops: Op[] = [];
-    // regist symbol
-    const registsymbol1 = (shape: Shape) => {
-        if (!(shape instanceof GroupShape)) return;
-        if (shape instanceof SymbolShape) {
-            if (shape instanceof SymbolUnionShape) {
-                shape.childs.forEach(s => {
-                    ops.push(registSymbol(document, s.id, page.id));
-                })
-            } else {
-                ops.push(registSymbol(document, shape.id, page.id));
-            }
-        } else {
-            shape.childs.forEach(c => registsymbol1(c));
+
+    const recursive = (p: GroupShape, shape: Shape, index: number) => {
+
+        let childs: Shape[] | undefined = undefined;
+        if (shape instanceof GroupShape) {
+            childs = shape.childs.slice(0);
+            (shape).childs.length = 0;
+        }
+        const op = crdtShapeInsert(page, p, shape, index);
+        page.onAddShape(op[op.length - 1].data2 as Shape, false);
+        ops.push(...op);
+
+        if (childs) for (let i = 0; i < childs.length; ++i) {
+            recursive(shape as GroupShape, childs[i], i);
+        }
+
+        if (shape instanceof SymbolShape && (!(shape instanceof SymbolUnionShape))) {
+            ops.push(registSymbol(document, shape.id, page.id));
         }
     }
-    registsymbol1(shape);
+    recursive(parent, shape, index);
 
-    return ops.length > 0 ? ops.concat(...op) : op;
+    needUpdateFrame.push({ shape, page });
+
+    return ops;
 }
 export function shapeDelete(document: Document, page: Page, parent: GroupShape, index: number, needUpdateFrame: { shape: Shape, page: Page }[]) {
-    const ops = [];
-    const op = crdtShapeRemove(page, parent, index);
-    if (op) {
-        ops.push(op);
-        const setfreesymbols = (shape: Shape) => {
-            if (!(shape instanceof GroupShape)) return;
-            if (shape instanceof SymbolShape) {
-                if (shape instanceof SymbolUnionShape) {
-                    shape.childs.forEach(s => {
-                        ops.push(registSymbol(document, s.id, "freesymbols"));
-                    })
-                } else {
-                    ops.push(registSymbol(document, shape.id, "freesymbols"));
-                }
-            } else {
-                shape.childs.forEach(c => setfreesymbols(c));
+
+    // shape不可以一次删除多个对象，要分开删除
+    // 从叶子开始删除
+    const ops: Op[] = [];
+    const recursive = (parent: GroupShape, shape: Shape, index: number) => {
+        if (shape instanceof GroupShape) {
+            const childs = shape.childs;
+            for (let i = childs.length - 1; i >= 0; --i) {
+                const c = childs[i];
+                recursive(shape, c, i);
             }
         }
-        setfreesymbols(op.origin as Shape)
-
-        page.onRemoveShape(op.origin as Shape);
-        if (parent.childs.length > 0) {
-            needUpdateFrame.push({ shape: parent.childs[0], page })
+        const op = crdtShapeRemove(page, parent, index);
+        if (op) {
+            ops.push(op);
+            if (shape instanceof SymbolShape && (!(shape instanceof SymbolUnionShape))) {
+                ops.push(registSymbol(document, shape.id, "freesymbols"));
+            }
+            page.onRemoveShape(op.origin as Shape, false);
         }
     }
+    const shape = parent.childs[index];
+    recursive(parent, shape, index);
+
+    if (ops.length > 0 && parent.childs.length > 0) {
+        needUpdateFrame.push({ shape: parent.childs[0], page })
+    }
+
     return ops;
 }
 /**

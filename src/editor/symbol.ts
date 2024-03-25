@@ -247,8 +247,20 @@ function _ov(varType: VariableType, overrideType: OverrideType, valuefun: (_var:
     const varsContainer = _varsContainer(view);
     if (!varsContainer || varsContainer.length === 0) return;
 
+    if (!view.isVirtualShape && !(view.data instanceof SymbolRefShape)) {
+        if (view.varbinds && view.varbinds.has(overrideType)) { // 走var
+            const _vars: Variable[] = [];
+            findVar(view.varbinds.get(overrideType)!, _vars, varsContainer);
+            const _var = _vars[_vars.length - 1];
+            if (_var && _var.type === varType) {
+                return _ov_3(_vars, _var.name, valuefun, view, page, api);
+            }
+        }
+        return;
+    }
+
     if (!view.isVirtualShape) {
-        if (!(view.data instanceof SymbolRefShape)) return;
+        // if (!(view.data instanceof SymbolRefShape)) return;
         switch (overrideType) {
             case OverrideType.Borders:
             case OverrideType.ContextSettings:
