@@ -70,7 +70,7 @@ export function shapeInsert(document: Document, page: Page, parent: GroupShape, 
 
         let childs: Shape[] | undefined = undefined;
         if (shape instanceof GroupShape) {
-            childs = shape.childs;
+            childs = shape.childs.slice(0);
             (shape).childs.length = 0;
         }
         const op = crdtShapeInsert(page, p, shape, index);
