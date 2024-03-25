@@ -11,10 +11,9 @@ import { SNumber } from "../../coop/client/snumber";
 import { Repository } from "../../data/transact";
 import { ArrayOp, ArrayOpSelection } from "../../coop/client/arrayop";
 import { TextOpInsertRecord, TextOpRemoveRecord } from "../../coop/client/textop";
-import { BasicArray } from "../../data/basic";
-import { Para, Span, Text } from "../../data/text";
-import { mergeParaAttr, mergeSpanAttr } from "../../data/textutils";
 import { CmdNetTask } from "./cmdnettask";
+import { stringifyShape } from "../basicapi";
+import { Shape } from "../../data/shape";
 
 const NET_TIMEOUT = 5000; // 5s
 
@@ -23,8 +22,9 @@ const NET_TIMEOUT = 5000; // 5s
  * @param cmds
  * @returns 
  */
-function classifyOps(cmds: Cmd[]) {
-    const subrepos: Map<string, OpItem[]> = new Map();
+function classifyOps(cmds: Cmd[]): { k: string, v: OpItem[] }[] {
+    const pathArray: string[] = [];
+    const subrepos: Map<string, (OpItem)[]> = new Map();
     for (let i = 0; i < cmds.length; i++) {
         const cmd = cmds[i];
         for (let j = 0; j < cmd.ops.length; ++j) {
@@ -35,12 +35,14 @@ function classifyOps(cmds: Cmd[]) {
             if (!arr) {
                 arr = [];
                 subrepos.set(oppath, arr);
+                pathArray.push(oppath);
             }
             arr.push({ op, cmd });
         }
     }
-    // sort: 按路径长度从短的开始，即从对象树的根往下更新
-    return Array.from(subrepos.entries()).sort((a, b) => a[0].length - b[0].length);
+    // sort: 按路径长度从短的开始，即从对象树的根往下更新；且原来在前的op也要在前
+    // return Array.from(subrepos.entries()).sort((a, b) => a[0].length - b[0].length);
+    return pathArray.map((path) => ({ k: path, v: subrepos.get(path)! }));
 }
 
 // 不是Recovery
@@ -146,12 +148,12 @@ class CmdSync {
             while (i < cmds.length && cmds[i].batchId === batchid) ++i;
 
             const subrepos = classifyOps(cmds.splice(0, i));
-            for (let [k, v] of subrepos) {
+            for (let {k, v} of subrepos) {
                 // 建立repotree
                 const op0 = v[0].op;
                 const blockId = op0.path[0];
                 let repotree = this.getRepoTree(blockId);
-                const node = repotree.buildAndGet(op0, op0.path, this.nodecreator);
+                const node = repotree.buildAndGet(op0, op0.path.slice(1), this.nodecreator);
                 // apply op
                 node.receive(v);
             }
@@ -174,12 +176,12 @@ class CmdSync {
             cmds.splice(0, idx + 1);
 
             const subrepos = classifyOps([recoveryCmd]);
-            for (let [k, v] of subrepos) {
+            for (let {k, v} of subrepos) {
                 // 建立repotree
                 const op0 = v[0].op;
                 const blockId = op0.path[0];
                 let repotree = this.getRepoTree(blockId);
-                const node = repotree.buildAndGet(op0, op0.path, this.nodecreator);
+                const node = repotree.buildAndGet(op0, op0.path.slice(1), this.nodecreator);
                 // apply op
                 node.receive(v);
 
@@ -192,7 +194,7 @@ class CmdSync {
                     case OpType.CrdtTree:
                         {
                             const record = op as ArrayMoveOpRecord | TreeMoveOpRecord;
-                            const node = repotree.get3(record.path.concat(record.id));
+                            const node = repotree.get3(record.path.slice(1).concat(record.id));
                             node.baseVer = recoveryCmd.baseVer;
                             node.roll2Version(recoveryCmd.baseVer, SNumber.MAX_SAFE_INTEGER)
                         }
@@ -200,7 +202,7 @@ class CmdSync {
                     case OpType.Idset:
                         {
                             const record = op as IdOpRecord;
-                            const node = repotree.get3(record.path);
+                            const node = repotree.get3(record.path.slice(1));
                             node.baseVer = recoveryCmd.baseVer;
                             node.roll2Version(recoveryCmd.baseVer, SNumber.MAX_SAFE_INTEGER)
                         }
@@ -214,12 +216,12 @@ class CmdSync {
         // 处理本地提交后返回的cmds
         // 1. 分类op
         const subrepos = classifyOps(cmds);
-        for (let [k, v] of subrepos) {
+        for (let {k, v} of subrepos) {
             // 建立repotree
             const op0 = v[0].op;
             const blockId = op0.path[0];
             const repotree = this.getRepoTree(blockId);
-            const node = repotree.buildAndGet(op0, op0.path, this.nodecreator);
+            const node = repotree.buildAndGet(op0, op0.path.slice(1), this.nodecreator);
             // apply op
             node.receiveLocal(v);
         }
@@ -346,7 +348,7 @@ class CmdSync {
         // 处理本地提交后返回的cmds
         // 1. 分类op
         const subrepos = classifyOps([cmd]);
-        for (let [k, v] of subrepos) {
+        for (let {k, v} of subrepos) {
             // check
             // if (v.length > 1) {
             //     console.warn("op can merge?? ", v)
@@ -355,7 +357,7 @@ class CmdSync {
             const op0 = v[0].op;
             const blockId = op0.path[0];
             const repotree = this.getRepoTree(blockId);
-            const node = repotree.buildAndGet(op0, op0.path, this.nodecreator);
+            const node = repotree.buildAndGet(op0, op0.path.slice(1), this.nodecreator);
             // apply op
             node.commit(v);
         }
@@ -403,12 +405,12 @@ class CmdSync {
         if (newCmd?.saveselection?.text) newCmd.saveselection.text.order = SNumber.MAX_SAFE_INTEGER;
 
         const subrepos = classifyOps([cmd]);
-        for (let [k, v] of subrepos) {
+        for (let {k, v} of subrepos) {
             // 建立repotree
             const op0 = v[0].op;
             const blockId = op0.path[0];
             const repotree = this.repotrees.get(blockId);
-            const node = repotree && repotree.get(op0.path);
+            const node = repotree && repotree.get(op0.path.slice(1));
             if (!node) throw new Error("cmd"); // 本地cmd 不应该没有
             // apply op
             if (newCmd) {
@@ -476,12 +478,12 @@ class CmdSync {
         if (newCmd?.saveselection?.text) newCmd.saveselection.text.order = SNumber.MAX_SAFE_INTEGER;
 
         const subrepos = classifyOps([cmd]); // 这个得有顺序
-        for (let [k, v] of subrepos) {
+        for (let {k, v} of subrepos) {
             // 建立repotree
             const op0 = v[0].op;
             const blockId = op0.path[0];
             const repotree = this.repotrees.get(blockId);
-            const node = repotree && repotree.get(op0.path);
+            const node = repotree && repotree.get(op0.path.slice(1));
             if (!node) throw new Error("cmd"); // 本地cmd 不应该没有
             // apply op
             if (newCmd) {
@@ -583,12 +585,12 @@ class CmdSync {
                 this.baseVer = headcmds[0].previousVersion;
                 this.cmds.unshift(...headcmds);
                 const subrepos = classifyOps(headcmds);
-                for (let [k, v] of subrepos) {
+                for (let {k, v} of subrepos) {
                     // 建立repotree
                     const op0 = v[0].op;
                     const blockId = op0.path[0];
                     let repotree = this.getRepoTree(blockId);
-                    const node = repotree.buildAndGet(op0, op0.path, this.nodecreator);
+                    const node = repotree.buildAndGet(op0, op0.path.slice(1), this.nodecreator);
                     // apply op
                     node.unshift(v);
                 }
@@ -738,6 +740,21 @@ class CmdSync {
                 case OpType.Array:
                     break;
                 case OpType.CrdtArr:
+                    {
+                        const record = op as ArrayMoveOpRecord | TreeMoveOpRecord;
+                        if (!record.from && record.to && (typeof record.data === 'string') && (record.data[0] === '{' || record.data[0] === '[')) {
+                            if (!record.data2) throw new Error();
+                            const blockId = record.path[0];
+                            const repotree = this.repotrees.get(blockId);
+                            const node = repotree && repotree.get2(record.path.slice(1).concat(record.id));
+                            if (node) {
+                                node.undoLocals();
+                                record.data = JSON.stringify(record.data2, (k, v) => k.startsWith('__') ? undefined : v)
+                                node.redoLocals();
+                            }
+                        }
+                    }
+                    break;
                 case OpType.CrdtTree:
                     {
                         const record = op as ArrayMoveOpRecord | TreeMoveOpRecord;
@@ -745,10 +762,11 @@ class CmdSync {
                             if (!record.data2) throw new Error();
                             const blockId = record.path[0];
                             const repotree = this.repotrees.get(blockId);
-                            const node = repotree && repotree.get2(record.path.concat(record.id));
-                            if (node) {
+                            const node = repotree && repotree.get2(record.path.slice(1).concat(record.id));
+                            if (node) { // group对象的子对象并不能undo掉
                                 node.undoLocals();
-                                record.data = JSON.stringify(record.data2, (k, v) => k.startsWith('__') ? undefined : v)
+                                // 对象数据不可以序列化childs。
+                                record.data = stringifyShape(record.data2 as Shape);
                                 node.redoLocals();
                             }
                         }
@@ -762,7 +780,7 @@ class CmdSync {
                             if (!record.data2) throw new Error();
                             const blockId = record.path[0];
                             const repotree = this.repotrees.get(blockId);
-                            const node = repotree && repotree.get2(record.path);
+                            const node = repotree && repotree.get2(record.path.slice(1));
                             if (node) {
                                 node.undoLocals();
                                 record.data = JSON.stringify(record.data2, (k, v) => k.startsWith('__') ? undefined : v)
@@ -940,12 +958,12 @@ export class CmdRepo {
         if (this.localcmds.length > this.localindex) {
             const droped = this.localcmds.splice(this.localindex); // 这里的有些cmd也是要提交的
             const subrepos = classifyOps(droped);
-            for (let [k, v] of subrepos) {
+            for (let {k, v} of subrepos) {
                 // 建立repotree
                 const op0 = v[0].op;
                 const blockId = op0.path[0];
                 const repotree = this.cmdsync.repotrees.get(blockId);
-                const node = repotree && repotree.get(op0.path);
+                const node = repotree && repotree.get(op0.path.slice(1));
                 if (!node) throw new Error("op not found");
                 node.dropOps(v);
             }

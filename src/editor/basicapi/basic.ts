@@ -7,6 +7,16 @@ import { Para, ParaAttr, Span, SpanAttr, Text } from "../../data/text";
 import { Page } from "../../data/page";
 import { SNumber } from "../../coop/client/snumber";
 import { ShapeView } from "../../dataview";
+
+export function stringifyShape(shape: Shape) {
+    return JSON.stringify(shape, (k, v) => {
+        // k.startsWith('__') ? undefined : v;
+        if (k.startsWith('__')) return undefined;
+        if (k === 'childs' && Array.isArray(v) && v.length > 0 && v[0] instanceof Shape) return [];
+        return v;
+    });
+}
+
 // 对象树操作
 export function crdtShapeInsert(page: Page, parent: GroupShape, shape: Shape, index: number): TreeMoveOpRecord[] {
     const ops: TreeMoveOpRecord[] = [];
@@ -24,7 +34,7 @@ export function crdtShapeInsert(page: Page, parent: GroupShape, shape: Shape, in
         id: shape.id,
         type: OpType.CrdtTree,
         path: page.getCrdtPath(), // shape 操作统一到page
-        data: JSON.stringify(shape, (k, v) => k.startsWith('__') ? undefined : v),
+        data: stringifyShape(shape),
         from: undefined,
         to: { id: parent.id, index: shape.crdtidx },
         origin: undefined,
