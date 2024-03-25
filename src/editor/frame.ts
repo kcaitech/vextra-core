@@ -4,11 +4,7 @@ import { CurvePoint, GroupShape, PathShape, PathShape2, Shape, ShapeFrame, Shape
 import { Text } from "../data/text";
 import { Point2D, TextBehaviour } from "../data/typesdefine";
 import { fixTextShapeFrameByLayout } from "./utils/other";
-import { TableShape } from "../data/table";
 import { FrameType, PathType, ResizingConstraints2 } from "../data/consts";
-
-type TextShapeLike = Shape & { text: Text }
-
 interface PageXY {
     x: number
     y: number
@@ -310,7 +306,7 @@ function modifyFrameForRect(api: Api, page: Page, shape: Shape, scaleX: number, 
     // 即使有transform也不用特别处理，应直接忽略transform，因为这类场景不可以摆正
     const { x, y, width, height } = fixConstrainFrame(shape, resizingConstraint, f.x, f.y, f.width, f.height, scaleX, scaleY, currentEnvFrame, originEnvFrame, recorder);
 
-    setFrame(page, shape, x, y, width, height, api);
+    setFrame(page, shape, x, y, width, height, api, recorder);
 }
 /**
  * @description 忽略约束(把约束表现都认定为跟随缩放)

@@ -177,7 +177,11 @@ export class CoopRepository {
             throw new Error("not inside transact!");
         }
         const cmd = this.__api.commit(mergetype);
-        if (!cmd) throw new Error("no cmd to commit")
+        // if (!cmd) throw new Error("no cmd to commit")
+        if (!cmd) {
+            this.rollback("commit");
+            return;
+        }
         this.__repo.commit();
         if (!this.__initingDoc) this.__cmdrepo.commit(cmd);
         if (this.selection) cmd.selectionupdater(this.selection, false, cmd);
