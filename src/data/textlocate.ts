@@ -362,6 +362,7 @@ function _locateRange(layout: TextLayout, pi: number, li: number, si: number, st
             { x: minX, y: maxY }, // left bottom
         )
 
+        start = 0;
         si = 0;
         li++;
         if (li >= p.length) {

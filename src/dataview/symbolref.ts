@@ -102,6 +102,7 @@ export class SymbolRefView extends ShapeView {
         if (this.m_refId === refId) {
             return;
         }
+        if (this.m_refId && !this.isVirtualShape) symMgr.removeRef(this.m_refId, this.data);
         this.m_refId = refId;
         const onload = (sym: SymbolShape) => {
             if (this.m_refId !== refId) return;
@@ -120,6 +121,9 @@ export class SymbolRefView extends ShapeView {
             if (!sym) {
                 // todo 需要重新加载
                 this.m_refId = undefined;
+            }
+            if (sym && !this.isVirtualShape) {
+                symMgr.addRef(sym.id, this.data);
             }
         }
         // todo 通过symbolregist判断使用哪个symbol。及symbol变化时重新更新

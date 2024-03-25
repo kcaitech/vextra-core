@@ -1,8 +1,9 @@
 import { WatchableObject } from "./basic";
 import { SymbolShape } from "./classes";
+import { SymbolRefShape } from "./classes";
 
 export class SymbolMgr extends WatchableObject {
-    private __resource = new Map<string, Array<SymbolShape>>()
+    private __resource = new Map<string, { symbols: Array<SymbolShape>, refs: Map<string, SymbolRefShape> }>()
     private __guard?: (data: SymbolShape) => SymbolShape;
     private __updater?: (data: SymbolShape) => void;
     private __loading: Map<string, {
@@ -36,9 +37,9 @@ export class SymbolMgr extends WatchableObject {
     get keys() {
         return Array.from(this.__resource.keys());
     }
-    get resource() {
-        return Array.from(this.__resource.values());
-    }
+    // get resource() {
+    //     return Array.from(this.__resource.values()).map((v) => v.symbols);
+    // }
     async get(id: string): Promise<SymbolShape | undefined> {
         let r = this._get(id)
         if (r) return r;
@@ -65,16 +66,16 @@ export class SymbolMgr extends WatchableObject {
         return this._get(id)
     }
     getSync2(id: string): SymbolShape[] | undefined {
-        return this.__resource.get(id);
+        return this.__resource.get(id)?.symbols;
     }
     add(id: string, r: SymbolShape) {
         r = this.__guard && this.__guard(r) || r
         let arr = this.__resource.get(id)
         if (!arr) {
-            arr = [];
+            arr = { symbols: [], refs: new Map() };
             this.__resource.set(id, arr);
         }
-        arr.push(r);
+        arr.symbols.push(r);
         if (this.__updater) this.__updater(r);
 
         // 这时symbolshape可能还没有parent
@@ -89,7 +90,7 @@ export class SymbolMgr extends WatchableObject {
     }
 
     private _get(id: string) {
-        const val = this.__resource.get(id)
+        const val = this.__resource.get(id)?.symbols
         // if (r && r.length > 0) return r;
         if (!val) return undefined;
 
@@ -120,5 +121,19 @@ export class SymbolMgr extends WatchableObject {
             this.notify(id);
         }
         setTimeout(run);
+    }
+
+    getRefs(id: string): Map<string, SymbolRefShape> | undefined {
+        return this.__resource.get(id)?.refs;
+    }
+    removeRef(id: string, ref: SymbolRefShape) {
+        const item = this.__resource.get(id);
+        if (!item) return;
+        item.refs.delete(ref.id);
+    }
+    addRef(id: string, ref: SymbolRefShape) {
+        const item = this.__resource.get(id);
+        if (!item) return;
+        item.refs.set(ref.id, ref);
     }
 }
