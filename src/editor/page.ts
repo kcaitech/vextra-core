@@ -92,6 +92,7 @@ import { Api } from "./coop/recordapi";
 import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
 import { unable_to_migrate } from "./utils/migrate";
 import { PageView, ShapeView, SymbolView, TableCellView, TableView, TextShapeView, adapt2Shape } from "../dataview";
+import { ResizingConstraints2 } from "../data/consts";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -514,8 +515,7 @@ export class PageEditor {
         const replace = shapes.length === 1 &&
             ((shape0 instanceof GroupShape && !(shape0 instanceof BoolShape)) ||
                 shape0 instanceof Artboard
-            ) &&
-            !shape0.fixedRadius;
+            );
 
         const style = replace ? importStyle((shape0.style)) : undefined;
         const symbolShape = newSymbolShape(replace ? shape0.name : (name ?? shape0.name), frame, style);
@@ -543,6 +543,17 @@ export class PageEditor {
                 const index = (shape0.parent as GroupShape).indexOfChild(shape0);
                 // api.registSymbol(document, symbolShape.id, this.__page.id);
                 sym = group(document, this.__page, shapes, symbolShape, shape0.parent as GroupShape, index, api);
+
+                for (let i = 0; i < shapes.length; i++) {
+                    const __shape = shapes[i];
+                    const old_rc =  __shape.resizingConstraint === undefined
+                        ? ResizingConstraints2.Mask
+                        : __shape.resizingConstraint;
+
+                    let new_rc = ResizingConstraints2.setToScaleByHeight(ResizingConstraints2.setToScaleByWidth(old_rc));
+
+                    api.shapeModifyResizingConstraint(this.__page, __shape, new_rc);
+                }
             }
             if (sym) {
                 document.symbolsMgr.add(sym.id, sym as SymbolShape);
