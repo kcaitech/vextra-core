@@ -61,7 +61,7 @@ export function render(h: Function,
                 delete props.style;
                 delete props.transform;
                 delete ab_props.opacity;
-                const inner_url = innerShadowId(shape_id, shadows);
+                const inner_url = innerShadowId(shape_id, shadows); 
                 if (shadows.length) props.filter = `${inner_url} url(#dorp-shadow-${shape_id})`;
                 const body = h("g", props, [h('svg', ab_props, childs), ...borderR(h, shape.style.borders, frame, path)]);
                 return h("g", ex_props, [...shadow, body]);

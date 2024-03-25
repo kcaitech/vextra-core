@@ -1,7 +1,7 @@
 
 
 import { DefaultColor, findOverrideAndVar, isColorEqual, isVisible, randomId } from "./basic";
-import { TextShape, Path, Color, SymbolShape, SymbolRefShape, OverrideType, VariableType, Para, ParaAttr, Text, Span, FillType, Gradient, ShapeFrame } from '../data/classes';
+import { TextShape, Path, Color, SymbolShape, SymbolRefShape, OverrideType, VariableType, Para, ParaAttr, Text, Span, FillType, Gradient, ShapeFrame, UnderlineType, StrikethroughType } from '../data/classes';
 import { GraphArray, TextLayout } from "../data/textlayout";
 import { gPal } from "../basic/pal";
 import { renderWithVars as fillR } from "./fill";
@@ -195,11 +195,11 @@ export function renderTextLayout(h: Function, textlayout: TextLayout, frame?: Sh
                 // 下划线、删除线、高亮
                 if (span) {
                     const color = span.color ?? DefaultColor;
-                    if (span.underline) {
+                    if (span.underline && span.underline !== UnderlineType.None) {
                         collectDecorateRange(garr, underlines, preUnderlineGIdx, garrIdx, color);
                         preUnderlineGIdx = garrIdx;
                     }
-                    if (span.strikethrough) {
+                    if (span.strikethrough && span.strikethrough !== StrikethroughType.None) {
                         collectDecorateRange(garr, strikethrouths, preStrikethrouthGIdx, garrIdx, color);
                         preStrikethrouthGIdx = garrIdx;
                     }
