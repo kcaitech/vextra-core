@@ -939,16 +939,16 @@ export class TableEditor extends ShapeEditor {
                 cells.forEach((c) => {
                     const cell = c.cell;
                     if (cell && cell.cellType === TableCellType.Text && cell.data.parent) {
-                        api.textModifyUnderline(this.__page, cell as TextShapeLike, underline ? UnderlineType.Single : undefined, 0, cell.text.length);
+                        api.textModifyUnderline(this.__page, cell as TextShapeLike, underline ? UnderlineType.Single : UnderlineType.None, 0, cell.text.length);
                     }
                 })
             }
             else {
-                api.tableModifyTextUnderline(this.__page, this.shape, underline ? UnderlineType.Single : undefined);
+                api.tableModifyTextUnderline(this.__page, this.shape, underline ? UnderlineType.Single : UnderlineType.None);
                 const cells = this.view.childs as TableCellView[];
                 cells.forEach((cell) => {
                     if (cell && cell.cellType === TableCellType.Text && cell.data.parent) {
-                        api.textModifyUnderline(this.__page, cell as TextShapeLike, underline ? UnderlineType.Single : undefined, 0, cell.text.length);
+                        api.textModifyUnderline(this.__page, cell as TextShapeLike, underline ? UnderlineType.Single : UnderlineType.None, 0, cell.text.length);
                     }
                 })
             }
@@ -970,16 +970,16 @@ export class TableEditor extends ShapeEditor {
                 cells.forEach((c) => {
                     const cell = c.cell;
                     if (cell && cell.cellType === TableCellType.Text && cell.data.parent) {
-                        api.textModifyStrikethrough(this.__page, cell as TextShapeLike, strikethrough ? StrikethroughType.Single : undefined, 0, cell.text.length);
+                        api.textModifyStrikethrough(this.__page, cell as TextShapeLike, strikethrough ? StrikethroughType.Single : StrikethroughType.None, 0, cell.text.length);
                     }
                 })
             }
             else {
-                api.tableModifyTextStrikethrough(this.__page, this.shape, strikethrough ? StrikethroughType.Single : undefined);
+                api.tableModifyTextStrikethrough(this.__page, this.shape, strikethrough ? StrikethroughType.Single : StrikethroughType.None);
                 const cells = this.view.childs as TableCellView[];
                 cells.forEach((cell) => {
                     if (cell && cell.cellType === TableCellType.Text && cell.data.parent) {
-                        api.textModifyStrikethrough(this.__page, cell as TextShapeLike, strikethrough ? StrikethroughType.Single : undefined, 0, cell.text.length);
+                        api.textModifyStrikethrough(this.__page, cell as TextShapeLike, strikethrough ? StrikethroughType.Single : StrikethroughType.None, 0, cell.text.length);
                     }
                 })
             }

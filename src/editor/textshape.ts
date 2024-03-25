@@ -913,7 +913,7 @@ export class TextShapeEditor extends ShapeEditor {
         const api = this.__repo.start("setTextUnderline");
         try {
             const shape = this.shape4edit(api);
-            api.textModifyUnderline(this.__page, shape, underline ? UnderlineType.Single : undefined, index, len)
+            api.textModifyUnderline(this.__page, shape, underline ? UnderlineType.Single : UnderlineType.None, index, len)
             this.__repo.commit();
             return true;
         } catch (error) {
@@ -936,7 +936,7 @@ export class TextShapeEditor extends ShapeEditor {
                 const text = shape instanceof ShapeView ? shape.text : shape.value as Text;
                 const text_length = text.length;
                 if (text_length === 0) continue;
-                api.textModifyUnderline(this.__page, shape, underline ? UnderlineType.Single : undefined, 0, text_length);
+                api.textModifyUnderline(this.__page, shape, underline ? UnderlineType.Single : UnderlineType.None, 0, text_length);
             }
             this.__repo.commit();
             return true;
@@ -955,7 +955,7 @@ export class TextShapeEditor extends ShapeEditor {
         const api = this.__repo.start("setTextStrikethrough");
         try {
             const shape = this.shape4edit(api);
-            api.textModifyStrikethrough(this.__page, shape, strikethrough ? StrikethroughType.Single : undefined, index, len)
+            api.textModifyStrikethrough(this.__page, shape, strikethrough ? StrikethroughType.Single : StrikethroughType.None, index, len)
             this.__repo.commit();
             return true;
         } catch (error) {
@@ -975,7 +975,7 @@ export class TextShapeEditor extends ShapeEditor {
                 const text = shape instanceof ShapeView ? shape.text : shape.value as Text;
                 const text_length = text.length;
                 if (text_length === 0) continue;
-                api.textModifyStrikethrough(this.__page, shape, strikethrough ? StrikethroughType.Single : undefined, 0, text_length);
+                api.textModifyStrikethrough(this.__page, shape, strikethrough ? StrikethroughType.Single : StrikethroughType.None, 0, text_length);
             }
             this.__repo.commit();
             return true;
