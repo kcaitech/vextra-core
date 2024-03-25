@@ -299,7 +299,7 @@ export function renderWithVars(h: Function, id: string, shape: Shape, frame: Sha
     return render(h, id, shadows, path, frame, fills, borders, shape.type);
 }
 
-const isFill = (fills: Fill[]) => {
+export const isFill = (fills: Fill[]) => {
     for (let i = 0; i < fills.length; i++) {
         const fill = fills[i];
         if (fill.isEnabled && fill.color.alpha > 0) {
