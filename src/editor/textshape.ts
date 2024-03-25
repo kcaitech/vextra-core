@@ -145,7 +145,7 @@ export class TextShapeEditor extends ShapeEditor {
                     }
                     if (!override_id) throw new Error();
                     // 不可以直接修改，需要删除后重新override到一个text
-                    api.shapeRemoveOverride(this.__page, host, override_id, _var.id, VariableType.Text);
+                    api.shapeRemoveOverride(this.__page, host, override_id);
                     api.shapeRemoveVariable(this.__page, host, _var.id);
                     api.shapeAddVariable(this.__page, host, textVar);
                     api.shapeAddOverride(this.__page, host, override_id, textVar.id);
