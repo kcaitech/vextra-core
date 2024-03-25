@@ -50,7 +50,7 @@ import {
 } from "./utils/path";
 import { Color } from "../data/color";
 import { adapt_for_artboard } from "./utils/common";
-import { ShapeView, SymbolView, TextShapeView, adapt2Shape, findOverride } from "../dataview";
+import { ShapeView, SymbolRefView, SymbolView, TextShapeView, adapt2Shape, findOverride } from "../dataview";
 import { is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union, modify_variable, modify_variable_with_api, override_variable, shape4border, shape4contextSettings, shape4exportOptions, shape4fill, shape4shadow } from "./symbol";
 import { PathType } from "../data/consts";
 
@@ -165,50 +165,49 @@ export class ShapeEditor {
      * @description 重置实例属性
      */
     resetSymbolRefVariable() {
-        let shape = this.shape as SymbolRefShape;
+        // 仅重置当前ref
 
-        let p: Shape | undefined = shape;
-        while (p) {
-            if (p instanceof SymbolRefShape) {
-                shape = p;
-            }
+        let view = this.view as SymbolRefView;
+
+        let p: ShapeView | undefined = view;
+        while (p && p.isVirtualShape) {
             p = p.parent;
         }
+        if (!(p instanceof SymbolRefView)) throw new Error();
 
-        const variables = (shape as SymbolRefShape).variables;
-        const overrides = (shape as SymbolRefShape).overrides;
-        const symData = (shape as SymbolRefShape).symData;
-        // const symParent = symData?.parent;
-        // const root_data = (symParent instanceof SymbolUnionShape ? symParent : symData);
-
-        const root_data = symData;
-
-        if (variables.size === 0 || !overrides || !root_data) {
-            console.log('!variables || !overrides || !root_data');
-            return false;
-        }
-        const root_variables = root_data?.variables;
+        const api = this.__repo.start('resetSymbolRefVariable');
         try {
-            const api = this.__repo.start('resetSymbolRefVariable');
-            if (!root_variables) {
+            if (p === view) {
+                // 清空当前view的variables,overrides,isCustomSize
+                const variables = (view).variables;
+                const overrides = (view).overrides;
                 overrides && overrides.forEach((v, k) => {
-                    const variable = variables.get(v);
-                    if (!variable) return;
-                    api.shapeRemoveOverride(this.__page, shape as SymbolRefShape, k, variable.id, variable.type);
+                    api.shapeRemoveOverride(this.__page, view.data, k);
                 })
                 variables.forEach((_, k) => {
-                    api.shapeRemoveVariable(this.__page, shape as SymbolRefShape, k);
+                    api.shapeRemoveVariable(this.__page, view.data, k);
                 });
+                if (view.isCustomSize) {
+                    api.shapeModifyIsCustomSize(this.__page, view.data, false);
+                }
             } else {
-                variables.forEach((v, k) => {
-                    if (v.type === VariableType.Status) return;
-                    api.shapeRemoveVariable(this.__page, shape as SymbolRefShape, k);
-                });
-                root_variables.forEach((v, k) => {
-                    if (v.type === VariableType.Status || !overrides?.has(k)) return;
-                    api.shapeRemoveOverride(this.__page, shape as SymbolRefShape, k, v.id, v.type);
+                // 清空p中与当前view相关的variables,overrides
+                const variables = (p).variables;
+                const overrides = (p).overrides;
+
+                const _p = p;
+                const refId = view.id.split('/').slice(1).join('/'); // 去掉首个
+
+                overrides && overrides.forEach((v, k) => {
+
+                    if (!(k.startsWith(refId))) return;
+                    api.shapeRemoveOverride(this.__page, _p.data, k);
+
+                    const variable = variables.get(v);
+                    if (variable) api.shapeRemoveVariable(this.__page, _p.data, k);
                 })
             }
+
             this.__repo.commit();
             return true;
         } catch (e) {
@@ -1202,13 +1201,19 @@ export class ShapeEditor {
 
     // symbolref
     switchSymRef(refId: string) {
-        if (!(this.shape instanceof SymbolRefShape)) return;
-        // check？
-
+        // check
+        if (!(this.view instanceof SymbolRefView)) return;
         const api = this.__repo.start("switchSymRef");
         try {
             if (!this.modifyVariable(VariableType.SymbolRef, OverrideType.SymbolID, refId, api)) {
-                api.shapeModifySymRef(this.__page, this.shape, refId);
+                api.shapeModifySymRef(this.__page, this.view.data, refId);
+                const view = this.view as SymbolRefView;
+                if (!view.data.isCustomSize) {
+                    const sym = this.__document.symbolsMgr.getSync(refId);
+                    if (sym) {
+                        api.shapeModifyWH(this.__page, view.data, sym.frame.width, sym.frame.height);
+                    }
+                }
             }
             this.__repo.commit();
         } catch (e) {
