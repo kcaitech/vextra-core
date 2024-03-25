@@ -816,7 +816,14 @@ export class PageEditor {
     }
 
     refSymbol(document: Document, name: string, frame: ShapeFrame, refId: string) {
-        return newSymbolRefShape(name, frame, refId, document.symbolsMgr);
+        const ref = newSymbolRefShape(name, frame, refId, document.symbolsMgr);
+        const sym = document.symbolsMgr.getSync(refId);
+        if (sym) {
+            ref.rotation = sym.rotation;
+            ref.isFlippedHorizontal = sym.isFlippedHorizontal;
+            ref.isFlippedVertical = sym.isFlippedVertical;
+        }
+        return ref;
     }
 
     private cloneStyle(style: Style): Style {
