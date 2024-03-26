@@ -350,9 +350,10 @@ export class Api {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.shapeModifyRadius(shape, lt, rt, rb, lb));
     }
-    shapeModifyRadius2(page: Page, shape: Artboard | SymbolShape | SymbolRefShape, lt: number, rt: number, rb: number, lb: number) {
+    shapeModifyRadius2(page: Page, shape: Artboard | SymbolShape | Variable, lt: number, rt: number, rb: number, lb: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyRadius2(shape, lt, rt, rb, lb));
+        const cornerRadius = shape instanceof Variable ? shape.value : shape.cornerRadius;
+        this.addOp(basicapi.shapeModifyRadius2(shape, cornerRadius, lt, rt, rb, lb));
     }
     shapeModifyFixedRadius(page: Page, shape: GroupShape | PathShape | PathShape2 | TextShape, fixedRadius: number | undefined) {
         this._shapeModifyAttr(page, shape, "fixedRadius", fixedRadius);

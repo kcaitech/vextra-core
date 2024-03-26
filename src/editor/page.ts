@@ -80,7 +80,7 @@ import {
     is_exist_invalid_shape2, is_part_of_symbol,
     is_part_of_symbolref, is_state,
     modify_variable_with_api,
-    shape4border,
+    shape4border, shape4cornerRadius,
     shape4fill
 } from "./symbol";
 import { is_circular_ref2 } from "./utils/ref_check";
@@ -91,7 +91,16 @@ import { CoopRepository } from "./coop/cooprepo";
 import { Api } from "./coop/recordapi";
 import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
 import { unable_to_migrate } from "./utils/migrate";
-import { PageView, ShapeView, SymbolView, TableCellView, TableView, TextShapeView, adapt2Shape } from "../dataview";
+import {
+    PageView,
+    ShapeView,
+    SymbolView,
+    TableCellView,
+    TableView,
+    TextShapeView,
+    adapt2Shape,
+    SymbolRefView
+} from "../dataview";
 import { ResizingConstraints2 } from "../data/consts";
 
 // 用于批量操作的单个操作类型
@@ -1345,24 +1354,35 @@ export class PageEditor {
 
                     const [lt, rt, rb, lb] = values;
 
+                    if (shape instanceof  SymbolRefShape) {
+                        const _shape = shape4cornerRadius(api, page, shapes[i] as SymbolRefView);
+                        api.shapeModifyRadius2(page, _shape, lt, rt, rb, lb);
+                    }
+
+                    if (shape.isVirtualShape) {
+                        continue;
+                    }
+
                     if (shape instanceof PathShape) {
                         const points = shape.points;
                         for (let _i = 0; _i < 4; _i++) {
-                            if (points[_i].radius === values[_i]) {
+                            const val = values[_i];
+                            if (points[_i].radius === val || val < 0) {
                                 continue;
                             }
 
-                            api.modifyPointCornerRadius(page, shape, _i, values[_i]);
+                            api.modifyPointCornerRadius(page, shape, _i, val);
                         }
                     }
                     else if (shape instanceof PathShape2) {
                         const points = shape.pathsegs[0].points;
                         for (let _i = 0; _i < 4; _i++) {
-                            if (points[_i].radius === values[_i]) {
+                            const val = values[_i];
+                            if (points[_i].radius === val || val < 0) {
                                 continue;
                             }
 
-                            api.modifyPointCornerRadius(page, shape, _i, values[_i], 0);
+                            api.modifyPointCornerRadius(page, shape, _i, val, 0);
                         }
                     }
                     else {
@@ -1371,6 +1391,10 @@ export class PageEditor {
                     }
                 }
                 else {
+                    if (shape.isVirtualShape) {
+                        continue;
+                    }
+
                     if (shape instanceof PathShape) {
                         const points = shape.points;
                         for (let _i = 0; _i < points.length; _i++) {
@@ -1395,7 +1419,6 @@ export class PageEditor {
                     else {
                         api.shapeModifyFixedRadius(page, shape as GroupShape | TextShape, values[0]);
                     }
-
                 }
             }
             this.__repo.commit();

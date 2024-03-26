@@ -140,11 +140,14 @@ export function shapeModifyRadius(shape: RectShape, lt: number, rt: number, rb: 
         return [crdtSetAttr(ps[0], 'radius', lt), crdtSetAttr(ps[1], 'radius', rt), crdtSetAttr(ps[2], 'radius', rb), crdtSetAttr(ps[3], 'radius', lb)];
     }
 }
-export function shapeModifyRadius2(shape: Artboard | SymbolShape | SymbolRefShape, lt: number, rt: number, rb: number, lb: number) {
-    let cornerRadius = shape.cornerRadius;
+export function shapeModifyRadius2(parent: Artboard | SymbolShape | Variable, cornerRadius: CornerRadius | undefined, lt: number, rt: number, rb: number, lb: number) {
+    // let cornerRadius = shape.cornerRadius;
     if (!cornerRadius) {
-        shape.cornerRadius = new CornerRadius(0, 0, 0, 0);
-        cornerRadius = shape.cornerRadius;
+        if (parent instanceof Variable) {
+            throw new Error();
+        }
+        parent.cornerRadius = new CornerRadius(0, 0, 0, 0);
+        cornerRadius = parent.cornerRadius;
     }
     const ops = [];
     if (cornerRadius.lt !== lt) ops.push(crdtSetAttr(cornerRadius, 'lt', lt));

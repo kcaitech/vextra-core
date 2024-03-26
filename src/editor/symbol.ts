@@ -1,4 +1,4 @@
-import { OverrideType, Shape, ShapeType, SymbolShape, Variable, VariableType, SymbolUnionShape, GroupShape } from "../data/shape";
+import { OverrideType, Shape, ShapeType, SymbolShape, Variable, VariableType, SymbolUnionShape, GroupShape, CornerRadius } from "../data/shape";
 import { ExportOptions, SymbolRefShape } from "../data/symbolref";
 import { uuid } from "../basic/uuid";
 import { Page } from "../data/page";
@@ -7,8 +7,8 @@ import { newText2 } from "./creator";
 import { BlendMode, Border, ContextSettings, Fill, Shadow, Style, TableCell, TableCellType, Text } from "../data/classes";
 import { findOverride, findVar } from "../data/utils";
 import { BasicArray } from "../data/basic";
-import { IImportContext, importBorder, importColor, importContextSettings, importExportOptions, importFill, importGradient, importShadow, importStyle, importTableCell, importTableShape, importText } from "../data/baseimport";
-import { ShapeView, TableCellView, TableView, isAdaptedShape } from "../dataview";
+import { IImportContext, importBorder, importColor, importContextSettings, importCornerRadius, importExportOptions, importFill, importGradient, importShadow, importStyle, importTableCell, importTableShape, importText } from "../data/baseimport";
+import { ArtboradView, ShapeView, SymbolRefView, SymbolView, TableCellView, TableView, isAdaptedShape } from "../dataview";
 import { Document, ShapeFrame } from "../data/classes";
 import { newTableCellText } from "../data/textutils";
 
@@ -268,6 +268,7 @@ function _ov(varType: VariableType, overrideType: OverrideType, valuefun: (_var:
             case OverrideType.Fills:
             case OverrideType.Shadows:
             case OverrideType.StartMarkerType:
+            case OverrideType.CornerRadius:
                 break;
             case OverrideType.ExportOptions:
             case OverrideType.Image:
@@ -470,6 +471,7 @@ export function modify_variable(document: Document, page: Page, view: ShapeView,
             case OverrideType.Text:
             case OverrideType.Visible:
             case OverrideType.ExportOptions:
+            case OverrideType.CornerRadius:
                 ot = _overrideType as OverrideType;
                 break;
             default:
@@ -580,6 +582,16 @@ export function shape4shadow(api: Api, page: Page, shape: ShapeView) {
     return _var || shape.data;
 }
 
+export function shape4cornerRadius(api: Api, page: Page, shape: ArtboradView | SymbolView | SymbolRefView) {
+    const _var = override_variable(page, VariableType.CornerRadius, OverrideType.CornerRadius, (_var) => {
+        const cornerRadius = _var?.value ?? shape.cornerRadius;
+        return cornerRadius ? importCornerRadius(cornerRadius) : new CornerRadius(0, 0, 0, 0);
+    }, api, shape)
+    const ret = _var || shape.data;
+    if (ret instanceof SymbolRefShape) throw new Error();
+    return ret;
+}
+
 export function is_exist_invalid_shape(selected: Shape[]) {
     let result = false;
     for (let i = 0, len = selected.length; i < len; i++) {
@@ -639,7 +651,7 @@ export function cell4edit2(page: Page, view: TableView, _cell: TableCellView, ap
     // cell id 要重新生成
     const index = view.indexOfCell(_cell);
     if (!index) throw new Error();
-    const {rowIdx, colIdx} = index;
+    const { rowIdx, colIdx } = index;
     const cellId = _cell.data.id; //view.rowHeights[rowIdx].id + "," + view.colWidths[colIdx].id;
     const valuefun = (_var: Variable | undefined) => {
         const cell = _var?.value ?? _cell.data;
