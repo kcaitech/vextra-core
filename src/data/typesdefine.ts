@@ -33,6 +33,7 @@ export enum VariableType {
     TableCell = 'tableCell',
     MarkerType = 'markerType',
     ExportOptions = 'exportOptions',
+    CornerRadius = 'cornerRadius',
 }
 /* user infomation */
 export type UserInfo = {
@@ -272,6 +273,7 @@ export enum OverrideType {
     StartMarkerType = 'startMarkerType',
     EndMarkerType = 'endMarkerType',
     ExportOptions = 'exportOptions',
+    CornerRadius = 'cornerRadius',
 }
 /* marker type */
 export enum MarkerType {
@@ -426,6 +428,14 @@ export type CrdtNumber = {
     id: string
     crdtidx: number[]
     value: number
+}
+/* couner radius */
+export type CornerRadius = {
+    typeId: string
+    lt: number
+    rt: number
+    lb: number
+    rb: number
 }
 /* context settings */
 export type ContextSettings = {
@@ -604,6 +614,7 @@ export type SymbolRefShape = Shape & {
     overrides?: Map<string, string>
     variables: Map<string, Variable>
     isCustomSize?: boolean
+    cornerRadius?: CornerRadius
 }
 /* span attr */
 export type Span = SpanAttr & {
@@ -658,7 +669,7 @@ export type GroupShape = Shape & {
 export type SymbolShape = GroupShape & {
     variables: Map<string, Variable>
     symtags?: Map<string, string>
-    points: CurvePoint[]
+    cornerRadius?: CornerRadius
 }
 /* symbol union shape */
 export type SymbolUnionShape = SymbolShape & {
@@ -687,5 +698,5 @@ export type BoolShape = GroupShape & {
 }
 /* artboard shape */
 export type Artboard = GroupShape & {
-    points: CurvePoint[]
+    cornerRadius?: CornerRadius
 }

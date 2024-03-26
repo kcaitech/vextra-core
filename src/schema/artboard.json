@@ -2,16 +2,11 @@
     "description": "artboard shape",
     "type": "object",
     "properties": {
-        "points": {
-            "type": "array",
-            "items": {
-                "$ref": "./curve-point.json"
-            }
+        "cornerRadius": {
+            "$ref": "./corner-radius.json"
         }
     },
-    "required": [
-        "points"
-    ],
+    "required": [],
     "allOf": [
         {
             "$ref": "./group-shape.json"

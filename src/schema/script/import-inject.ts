@@ -41,44 +41,7 @@ inject['ImageShape']['after'] = `\
     // inject code
     if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
 `
-inject['Artboard'] = {} as any;
-inject['Artboard']['before'] = `\
-    // inject code
-    if (!source.points || source.points.length === 0) { // 兼容旧数据
-        if (!source.points) source.points = [];
-        // 需要用固定的，这样如果不同用户同时打开此文档，对points做的操作，对应的point id也是对的
-        const id1 = "3be37f40-7e80-4921-8191-3aa215d5f037"
-        const id2 = "eb7938cf-6084-46fc-813b-ec25d03bd071"
-        const id3 = "1eb6cd29-125c-4e42-af59-b92fd3d31ab9"
-        const id4 = "85465bad-0633-4c2f-880a-a3dbd22674af"
-        const p1: types.CurvePoint = {
-            crdtidx: [0],
-            id: id1,
-            mode: types.CurveMode.Straight,
-            x: 0, y: 0
-        }; // lt
-        const p2: types.CurvePoint =
-        {
-            crdtidx: [1],
-            id: id2,
-            mode: types.CurveMode.Straight,
-            x: 1, y: 0
-        }; // rt
-        const p3: types.CurvePoint = {
-            crdtidx: [2],
-            id: id3,
-            mode: types.CurveMode.Straight,
-            x: 1, y: 1
-        }; // rb
-        const p4: types.CurvePoint = {
-            crdtidx: [3],
-            id: id4,
-            mode: types.CurveMode.Straight,
-            x: 0, y: 1
-        }; // lb
-        source.points.push(p1, p2, p3, p4);
-    }
-`
+
 inject['Fill'] = {};
 inject['Fill']['after'] = `\
     // inject code
@@ -150,86 +113,6 @@ inject['GroupShape']['before'] = `\
 `
 
 inject['SymbolShape'] = {};
-inject['SymbolShape']['before'] = `\
-    // inject code
-    if (!source.variables) {
-        source.variables = {} as any
-    }
-    if (!source.points || source.points.length === 0) { // 兼容旧数据
-        if (!source.points) source.points = [];
-        // 需要用固定的，这样如果不同用户同时打开此文档，对points做的操作，对应的point id也是对的
-        const id1 = "5b0a3535-78e4-470c-a9ee-2d71f5018ed1"
-        const id2 = "704b561c-0416-47bb-929f-36a0a0e578b1"
-        const id3 = "cc561e4b-0a03-4b77-9f83-882b988cb5d3"
-        const id4 = "6b0599e9-8738-48a5-90bd-c681cf0ef021"
-        const p1: types.CurvePoint = {
-            crdtidx: [0],
-            id: id1,
-            mode: types.CurveMode.Straight,
-            x: 0, y: 0
-        }; // lt
-        const p2: types.CurvePoint =
-        {
-            crdtidx: [1],
-            id: id2,
-            mode: types.CurveMode.Straight,
-            x: 1, y: 0
-        }; // rt
-        const p3: types.CurvePoint = {
-            crdtidx: [2],
-            id: id3,
-            mode: types.CurveMode.Straight,
-            x: 1, y: 1
-        }; // rb
-        const p4: types.CurvePoint = {
-            crdtidx: [3],
-            id: id4,
-            mode: types.CurveMode.Straight,
-            x: 0, y: 1
-        }; // lb
-        source.points.push(p1, p2, p3, p4);
-    }
-`
-
-inject['SymbolUnionShape'] = {};
-inject['SymbolUnionShape']['before'] = `\
-    // inject code
-    if (!source.points || source.points.length === 0) { // 兼容旧数据
-        if (!source.points) source.points = [];
-        // 需要用固定的，这样如果不同用户同时打开此文档，对points做的操作，对应的point id也是对的
-        const id1 = "75ce3f2a-dd1f-4eab-a989-9cf2f9a3e0df"
-        const id2 = "aa088ba0-8fa6-47cd-8b1d-5badb9e8395d"
-        const id3 = "24fdb5e2-95e9-4252-a28e-8cb37af36df7"
-        const id4 = "e9293b8c-c915-4a48-a338-97a60006e39e"
-        const p1: types.CurvePoint = {
-            crdtidx: [0],
-            id: id1,
-            mode: types.CurveMode.Straight,
-            x: 0, y: 0
-        }; // lt
-        const p2: types.CurvePoint =
-        {
-            crdtidx: [1],
-            id: id2,
-            mode: types.CurveMode.Straight,
-            x: 1, y: 0
-        }; // rt
-        const p3: types.CurvePoint = {
-            crdtidx: [2],
-            id: id3,
-            mode: types.CurveMode.Straight,
-            x: 1, y: 1
-        }; // rb
-        const p4: types.CurvePoint = {
-            crdtidx: [3],
-            id: id4,
-            mode: types.CurveMode.Straight,
-            x: 0, y: 1
-        }; // lb
-        source.points.push(p1, p2, p3, p4);
-    }
-`
-
 inject['SymbolShape']['after'] = `\
     // inject code
     if (ctx?.document) {

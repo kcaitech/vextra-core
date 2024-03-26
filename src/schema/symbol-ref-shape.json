@@ -26,6 +26,9 @@
         },
         "isCustomSize": {
             "type": "boolean"
+        },
+        "cornerRadius": {
+            "$ref": "./corner-radius.json"
         }
     },
     "required": [

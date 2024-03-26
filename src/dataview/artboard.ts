@@ -134,7 +134,7 @@ export class ArtboradView extends GroupShapeView {
         return ++this.m_render_version;
     }
 
-    get points() {
-        return (this.m_data as Artboard).points;
-    }
+    // get points() {
+    //     return (this.m_data as Artboard).points;
+    // }
 }

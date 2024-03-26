@@ -631,6 +631,28 @@ export class CrdtNumber extends Basic {
     }
 }
 /**
+ * couner radius 
+ */
+export class CornerRadius extends Basic {
+    typeId = 'corner-radius'
+    lt: number
+    rt: number
+    lb: number
+    rb: number
+    constructor(
+        lt: number,
+        rt: number,
+        lb: number,
+        rb: number
+    ) {
+        super()
+        this.lt = lt
+        this.rt = rt
+        this.lb = lb
+        this.rb = rb
+    }
+}
+/**
  * context settings 
  */
 export class ContextSettings extends Basic {
@@ -975,6 +997,7 @@ export class SymbolRefShape extends Shape {
     overrides?: BasicMap<string, string>
     variables: BasicMap<string, Variable>
     isCustomSize?: boolean
+    cornerRadius?: CornerRadius
     constructor(
         crdtidx: BasicArray<number >,
         id: string,
@@ -1247,7 +1270,7 @@ export class SymbolShape extends GroupShape {
     typeId = 'symbol-shape'
     variables: BasicMap<string, Variable>
     symtags?: BasicMap<string, string>
-    points: BasicArray<CurvePoint >
+    cornerRadius?: CornerRadius
     constructor(
         crdtidx: BasicArray<number >,
         id: string,
@@ -1256,8 +1279,7 @@ export class SymbolShape extends GroupShape {
         frame: ShapeFrame,
         style: Style,
         childs: BasicArray<(GroupShape | ImageShape | PathShape | PathShape2 | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape) >,
-        variables: BasicMap<string, Variable>,
-        points: BasicArray<CurvePoint >
+        variables: BasicMap<string, Variable>
     ) {
         super(
             crdtidx,
@@ -1269,7 +1291,6 @@ export class SymbolShape extends GroupShape {
             childs
         )
         this.variables = variables
-        this.points = points
     }
 }
 /**
@@ -1285,8 +1306,7 @@ export class SymbolUnionShape extends SymbolShape {
         frame: ShapeFrame,
         style: Style,
         childs: BasicArray<(GroupShape | ImageShape | PathShape | PathShape2 | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape) >,
-        variables: BasicMap<string, Variable>,
-        points: BasicArray<CurvePoint >
+        variables: BasicMap<string, Variable>
     ) {
         super(
             crdtidx,
@@ -1296,8 +1316,7 @@ export class SymbolUnionShape extends SymbolShape {
             frame,
             style,
             childs,
-            variables,
-            points
+            variables
         )
     }
 }
@@ -1428,7 +1447,7 @@ export class BoolShape extends GroupShape {
  */
 export class Artboard extends GroupShape {
     typeId = 'artboard'
-    points: BasicArray<CurvePoint >
+    cornerRadius?: CornerRadius
     constructor(
         crdtidx: BasicArray<number >,
         id: string,
@@ -1436,8 +1455,7 @@ export class Artboard extends GroupShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(GroupShape | ImageShape | PathShape | PathShape2 | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape) >,
-        points: BasicArray<CurvePoint >
+        childs: BasicArray<(GroupShape | ImageShape | PathShape | PathShape2 | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape) >
     ) {
         super(
             crdtidx,
@@ -1448,6 +1466,5 @@ export class Artboard extends GroupShape {
             style,
             childs
         )
-        this.points = points
     }
 }

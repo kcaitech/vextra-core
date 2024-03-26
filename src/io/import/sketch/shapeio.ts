@@ -10,7 +10,10 @@ import {
     TextShape,
     ExportFormat,
     SymbolShape,
-    BoolShape
+    BoolShape,
+    OverrideType,
+    Variable,
+    VariableType
 } from "../../../data/shape";
 import { importXY, importStyle, importColor } from "./styleio";
 import { Page } from "../../../data/page";
@@ -22,8 +25,7 @@ import { BasicArray, BasicMap } from "../../../data/basic";
 import { IJSON, ImportFun, LoadContext } from "./basic";
 import { uuid } from "../../../basic/uuid";
 import { Fill, FillType } from "../../../data/classes";
-import { ResizingConstraints, ResizingConstraints2 } from "../../../data/consts";
-import { createNormalPoints } from "../../../editor/creator";
+import { ResizingConstraints2 } from "../../../data/consts";
 
 function uniqueId(ctx: LoadContext, id: string): string {
     // if (ctx.shapeIds.has(id)) id = uuid();
@@ -81,6 +83,50 @@ function importPoints(data: IJSON): CurvePoint[] {
     });
 }
 
+function _createVar4Override(type: OverrideType, value: any) {
+    switch (type) {
+        case OverrideType.Borders:
+            return new Variable(uuid(), VariableType.Borders, "", value);
+        case OverrideType.Fills:
+            return new Variable(uuid(), VariableType.Fills, "", value);
+        case OverrideType.Image:
+            return new Variable(uuid(), VariableType.ImageRef, "", value);
+        case OverrideType.Text:
+            return new Variable(uuid(), VariableType.Text, "", value);
+        case OverrideType.Visible:
+            return new Variable(uuid(), VariableType.Visible, "", value);
+        case OverrideType.Lock:
+            return new Variable(uuid(), VariableType.Lock, "", value);
+        case OverrideType.SymbolID:
+            return new Variable(uuid(), VariableType.SymbolRef, "", value);
+        case OverrideType.EndMarkerType:
+            return new Variable(uuid(), VariableType.MarkerType, "", value);
+        case OverrideType.StartMarkerType:
+            return new Variable(uuid(), VariableType.MarkerType, "", value);
+        case OverrideType.ContextSettings:
+            return new Variable(uuid(), VariableType.ContextSettings, "", value);
+        case OverrideType.Shadows:
+            return new Variable(uuid(), VariableType.Shadows, "", value);
+        default:
+            // throw new Error("unknow override type: " + type)
+            console.error("unknow override: " + type, value)
+    }
+}
+
+function _importOverrides(shape: SymbolRefShape, refId: string, type: OverrideType, value: any) {
+
+    refId = refId + '/' + type; // genRefId(refId, type); // id+type->var
+
+    const v = _createVar4Override(type, value);
+    if (!v) return;
+
+    if (!shape.variables) shape.variables = new BasicMap<string, Variable>();
+    shape.variables.set(v.id, v);
+
+    if (!shape.overrides) shape.overrides = new BasicMap<string, string>();
+    shape.overrides.set(refId, v.id);
+}
+
 function importOverrides(shape: SymbolRefShape, data: IJSON[]) {
     // console.log(data)
     for (let i = 0, len = data.length; i < len; i++) {
@@ -94,7 +140,7 @@ function importOverrides(shape: SymbolRefShape, data: IJSON[]) {
         const id = name.substring(0, _idx);
         let attr = name.substring(_idx + 1);
         if (attr === 'stringValue') attr = 'text'
-        shape.addOverrid(id, attr, value);
+        _importOverrides(shape, id, attr, value);
     }
 }
 
@@ -141,9 +187,9 @@ export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun, i: n
     }
     const childs = (data['layers'] || []).map((d: IJSON, i: number) => f(ctx, d, i));
 
-    const points = createNormalPoints();
+    // const points = createNormalPoints();
 
-    const shape = new Artboard([i] as BasicArray<number>, id, name, ShapeType.Artboard, frame, style, new BasicArray<Shape>(...childs), points);
+    const shape = new Artboard([i] as BasicArray<number>, id, name, ShapeType.Artboard, frame, style, new BasicArray<Shape>(...childs));
 
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
@@ -347,8 +393,8 @@ export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun, i: num
     // const isClosed = data['isClosed'];
     const id = uniqueId(ctx, data['symbolID']);
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON, i: number) => f(ctx, d, i));
-    const points = createNormalPoints();
-    const shape = new SymbolShape([i] as BasicArray<number>, id, name, ShapeType.Symbol, frame, style, new BasicArray<Shape>(...childs), new BasicMap(), points);
+    // const points = createNormalPoints();
+    const shape = new SymbolShape([i] as BasicArray<number>, id, name, ShapeType.Symbol, frame, style, new BasicArray<Shape>(...childs), new BasicMap());
 
     // env.symbolManager.addSymbol(id, name, env.pageId, shape);
     // shape.appendChilds(childs);
@@ -380,35 +426,3 @@ export function importSymbolRef(ctx: LoadContext, data: IJSON, f: ImportFun, i: 
     importBoolOp(shape, data);
     return shape;
 }
-
-// export function importShape(data: IJSON): Shape {
-//     switch ((data['_class'])) {
-//         case 'rectangle':
-//             return importRectShape(data); // ShapeType.Rectangle;
-//         case 'shapeGroup':
-//             return importShapeGroupShape(data); // ShapeType.ShapeGroup;
-//         case 'group':
-//             return importGroupShape(data); // ShapeType.Group;
-//         case 'shapePath':
-//             return importPathShape(data); // ShapeType.Path;
-//         case 'artboard':
-//             return importArtboard(data); // ShapeType.Artboard;
-//         case 'bitmap':
-//             return importImage(data); // ShapeType.Image;
-//         case 'page':
-//             return importPage(data); // ShapeType.Page;
-//         case 'text':
-//             return importTextShape(data); // ShapeType.Text;
-//         case 'oval':
-//         case 'star':
-//         case 'triangle':
-//         case 'polygon':
-//             return importPathShape(data); // ShapeType.Path;
-//         case 'symbolMaster':
-//             return importSymbol(data); // ShapeType.Symbol;
-//         case 'symbolInstance':
-//             return importSymbolRef(data); // ShapeType.SymbolRef;
-//         default:
-//             return importRectShape(data); // ShapeType.Rectangle;
-//     }
-// }

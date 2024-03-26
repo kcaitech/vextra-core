@@ -1,9 +1,10 @@
+import { objectId } from "../basic/objectid";
 import { WatchableObject } from "./basic";
 import { Shape, SymbolShape } from "./shape";
 import { SymbolRefShape } from "./symbolref";
 
 export class SymbolMgr extends WatchableObject {
-    private __resource = new Map<string, { symbols: Array<SymbolShape>, refs: Map<string, SymbolRefShape> }>()
+    private __resource = new Map<string, { symbols: Array<SymbolShape>, refs: Map<number, SymbolRefShape> }>()
     private __guard?: (data: Shape) => Shape;
     // private __updater?: (data: SymbolShape) => void;
     // private __loading: Map<string, {
@@ -126,13 +127,13 @@ export class SymbolMgr extends WatchableObject {
         setTimeout(run);
     }
 
-    getRefs(id: string): Map<string, SymbolRefShape> | undefined {
+    getRefs(id: string): Map<number, SymbolRefShape> | undefined {
         return this.__resource.get(id)?.refs;
     }
     removeRef(id: string, ref: SymbolRefShape) {
         const item = this.__resource.get(id);
         if (!item) return;
-        item.refs.delete(ref.id);
+        item.refs.delete(objectId(ref)); // 使用objectId，以防止全局id重复
     }
     addRef(id: string, ref: SymbolRefShape) {
         ref = this.__guard && this.__guard(ref) as SymbolRefShape || ref
@@ -141,6 +142,6 @@ export class SymbolMgr extends WatchableObject {
             item = { symbols: [], refs: new Map() };
             this.__resource.set(id, item);
         }
-        item.refs.set(ref.id, ref);
+        item.refs.set(objectId(ref), ref);
     }
 }

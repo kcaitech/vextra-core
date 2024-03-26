@@ -20,16 +20,12 @@
                 "type": "string"
             }
         },
-        "points": {
-            "type": "array",
-            "items": {
-                "$ref": "./curve-point.json"
-            }
+        "cornerRadius": {
+            "$ref": "./corner-radius.json"
         }
     },
     "required": [
-        "variables",
-        "points"
+        "variables"
     ],
     "allOf": [
         {

@@ -624,6 +624,17 @@ export function exportCrdtNumber(source: types.CrdtNumber, ctx?: IExportContext)
     }
     return ret
 }
+/* couner radius */
+export function exportCornerRadius(source: types.CornerRadius, ctx?: IExportContext): types.CornerRadius {
+    const ret = {
+        typeId: source.typeId,
+        lt: source.lt,
+        rt: source.rt,
+        lb: source.lb,
+        rb: source.rb,
+    }
+    return ret
+}
 /* context settings */
 export function exportContextSettings(source: types.ContextSettings, ctx?: IExportContext): types.ContextSettings {
     const ret = {
@@ -1010,6 +1021,7 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
             return ret;
         })(),
         isCustomSize: source.isCustomSize,
+        cornerRadius: source.cornerRadius && exportCornerRadius(source.cornerRadius, ctx),
     }
     // inject code
     if (ctx?.refsymbols) ctx.refsymbols.add(ret.refId);
@@ -1646,14 +1658,7 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
             });
             return ret;
         })(),
-        points: (() => {
-            const ret = []
-            for (let i = 0, len = source.points.length; i < len; i++) {
-                const r = exportCurvePoint(source.points[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
+        cornerRadius: source.cornerRadius && exportCornerRadius(source.cornerRadius, ctx),
     }
     // inject code
     if (ctx?.symbols) ctx.symbols.add(ret.id);
@@ -1751,14 +1756,6 @@ export function exportSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IEx
                 });
                 return ret;
             })(),
-        points: (() => {
-                const ret = []
-                for (let i = 0, len = source.points.length; i < len; i++) {
-                    const r = exportCurvePoint(source.points[i], ctx)
-                    if (r) ret.push(r)
-                }
-                return ret
-            })(),
         symtags: source.symtags && (() => {
                 const val = source.symtags;
                 const ret: any = {};
@@ -1767,6 +1764,7 @@ export function exportSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IEx
                 });
                 return ret;
             })(),
+        cornerRadius: source.cornerRadius && exportCornerRadius(source.cornerRadius, ctx),
         fixedRadius: source.fixedRadius,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
@@ -2237,14 +2235,7 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
                 });
                 return ret;
             })(),
-        points: (() => {
-            const ret = []
-            for (let i = 0, len = source.points.length; i < len; i++) {
-                const r = exportCurvePoint(source.points[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
+        cornerRadius: source.cornerRadius && exportCornerRadius(source.cornerRadius, ctx),
     }
     return ret
 }

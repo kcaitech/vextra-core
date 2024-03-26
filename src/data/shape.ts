@@ -7,7 +7,7 @@ import { BasicArray } from "./basic";
 export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D,
     CurvePoint, ShapeFrame, Ellipse, PathSegment, OverrideType, VariableType,
-    FillRule,
+    FillRule, CornerRadius,
 } from "./baseclasses";
 import {
     ShapeType,
@@ -18,7 +18,8 @@ import {
     ResizeType,
     PathSegment,
     OverrideType,
-    VariableType
+    VariableType,
+    CornerRadius
 } from "./baseclasses"
 import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
@@ -382,7 +383,7 @@ export class Shape extends Basic implements classes.Shape {
         return !!this.isVisible;
     }
 
-    onAdded() {}
+    onAdded() { }
 
     onRemoved() {
     }
@@ -510,24 +511,6 @@ export class GroupShape extends Shape implements classes.GroupShape {
         return new Path(path);
     }
 
-    // getBoolOp(): { op: BoolOp, isMulti?: boolean } {
-    //     if (!this.isBoolOpShape || this.childs.length === 0) return { op: BoolOp.None }
-    //     const childs = this.childs;
-    //     const op: BoolOp = childs[0].boolOp ?? BoolOp.None;
-    //     for (let i = 1, len = childs.length; i < len; i++) {
-    //         const op1 = childs[i].boolOp ?? BoolOp.None;
-    //         if (op1 !== op) {
-    //             return { op, isMulti: true }
-    //         }
-    //     }
-    //     return { op }
-    // }
-
-    // setWideFrameSize(w: number, h: number) {
-    //     this.wideframe.width = w;
-    //     this.wideframe.height = h;
-    // }
-
     get isNoSupportDiamondScale() {
         return true;
     }
@@ -548,13 +531,13 @@ export class GroupShape extends Shape implements classes.GroupShape {
 export class BoolShape extends GroupShape implements classes.BoolShape {
     typeId = 'bool-shape'
     constructor(
-        crdtidx: BasicArray<number >,
+        crdtidx: BasicArray<number>,
         id: string,
         name: string,
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(GroupShape | Shape) >
+        childs: BasicArray<(GroupShape | Shape)>
     ) {
         super(
             crdtidx,
@@ -585,9 +568,71 @@ export class BoolShape extends GroupShape implements classes.BoolShape {
     }
 }
 
-export function genRefId(refId: string, type: OverrideType) {
-    if (type === OverrideType.Variable) return refId;
-    return refId + '/' + type;
+// export function genRefId(refId: string, type: OverrideType) {
+//     if (type === OverrideType.Variable) return refId;
+//     return refId + '/' + type;
+// }
+
+export function getPathOfRadius(frame: ShapeFrame, cornerRadius?: CornerRadius, fixedRadius?: number): Path {
+    const w = frame.width;
+    const h = frame.height;
+
+    const haRadius = fixedRadius ||
+        (cornerRadius &&
+            (cornerRadius.lt > 0 ||
+                cornerRadius.lb > 0 ||
+                cornerRadius.rb > 0 ||
+                cornerRadius.rt > 0))
+
+    if (!haRadius) {
+        const path = [
+            ["M", 0, 0],
+            ["l", w, 0],
+            ["l", 0, h],
+            ["l", -w, 0],
+            ["z"]
+        ]
+        return new Path(path);
+    }
+
+    const maxRadius = Math.min(w / 2, h / 2);
+    let lt, lb, rt, rb;
+    if (fixedRadius) {
+        fixedRadius = Math.min(fixedRadius, maxRadius);
+        fixedRadius = Math.max(0, fixedRadius);
+        lt = lb = rt = rb = fixedRadius;
+    } else {
+        lt = cornerRadius!.lt;
+        lb = cornerRadius!.lb;
+        rt = cornerRadius!.rt;
+        rb = cornerRadius!.rb;
+        lt = Math.max(0, Math.min(lt, maxRadius));
+        lb = Math.max(0, Math.min(lb, maxRadius));
+        rt = Math.max(0, Math.min(rt, maxRadius));
+        rb = Math.max(0, Math.min(rb, maxRadius));
+    }
+    const path = [];
+    path.push(["M", lt, 0]);
+    path.push(["l", w - lt - rt, 0]);
+    if (rt > 0) {
+        path.push(["c", rt, 0, 0, 0, 0, rt]);
+    }
+    path.push(["l", 0, h - rt - rb]);
+    if (rb > 0) {
+        path.push(["c", 0, rb, 0, 0, -rb, 0]);
+    }
+    path.push(["l", -w + lb + rb, 0]);
+    if (lb > 0) {
+        path.push(["c", -lb, 0, 0, 0, 0, -lb]);
+    }
+
+    if (lt > 0) {
+        path.push(["l", 0, -h + lt + lb]);
+        path.push(["c", 0, -lt, 0, 0, lt, 0]);
+    }
+
+    path.push(["z"]);
+    return new Path(path);
 }
 
 export class SymbolShape extends GroupShape implements classes.SymbolShape {
@@ -597,9 +642,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
     typeId = 'symbol-shape'
     variables: BasicMap<string, Variable> // 怎么做关联
     symtags?: BasicMap<string, string>
-
-    points: BasicArray<CurvePoint>;
-
+    cornerRadius?: CornerRadius
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
@@ -608,8 +651,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         frame: ShapeFrame,
         style: Style,
         childs: BasicArray<Shape>,
-        variables: BasicMap<string, Variable>,
-        points: BasicArray<CurvePoint>
+        variables: BasicMap<string, Variable>
     ) {
         super(
             crdtidx,
@@ -621,11 +663,11 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
             childs
         )
         this.variables = variables;
-        this.points = points;
     }
 
     getOpTarget(path: string[]): any {
         if (path[0] === 'symtags' && !this.symtags) this.symtags = new BasicMap<string, string>();
+        if (path[0] === 'cornerRadius' && !this.cornerRadius) this.cornerRadius = new CornerRadius(0, 0, 0, 0);
         return super.getOpTarget(path);
     }
 
@@ -665,33 +707,13 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         return true;
     }
 
-    setRectRadius(lt: number, rt: number, rb: number, lb: number): void {
-        const ps = this.points;
-        if (ps.length === 4) {
-            ps[0].radius = lt;
-            ps[1].radius = rt;
-            ps[2].radius = rb;
-            ps[3].radius = lb;
-        }
-    }
-
-    getRectRadius(): { lt: number, rt: number, rb: number, lb: number } {
-        const ret = { lt: 0, rt: 0, rb: 0, lb: 0 };
-        const ps = this.points;
-        if (ps.length === 4) {
-            ret.lt = ps[0].radius || 0;
-            ret.rt = ps[1].radius || 0;
-            ret.rb = ps[2].radius || 0;
-            ret.lb = ps[3].radius || 0;
-        }
-        return ret;
+    getPathOfFrame(frame: classes.ShapeFrame, fixedRadius?: number | undefined): Path {
+        return getPathOfRadius(frame, this.cornerRadius, fixedRadius);
     }
 }
 
 export class SymbolUnionShape extends SymbolShape implements classes.SymbolUnionShape {
     typeId = 'symbol-union-shape'
-
-    points: BasicArray<CurvePoint>;
 
     constructor(
         crdtidx: BasicArray<number>,
@@ -701,8 +723,7 @@ export class SymbolUnionShape extends SymbolShape implements classes.SymbolUnion
         frame: ShapeFrame,
         style: Style,
         childs: BasicArray<Shape>,
-        variables: BasicMap<string, Variable>,
-        points: BasicArray<CurvePoint>
+        variables: BasicMap<string, Variable>
     ) {
         super(
             crdtidx,
@@ -712,11 +733,8 @@ export class SymbolUnionShape extends SymbolShape implements classes.SymbolUnion
             frame,
             style,
             childs,
-            variables,
-            points
+            variables
         )
-
-        this.points = points;
     }
 
     get isSymbolUnionShape() {
@@ -883,15 +901,15 @@ export class RectShape extends PathShape implements classes.RectShape {
         this.isClosed = isClosed;
     }
 
-    setRectRadius(lt: number, rt: number, rb: number, lb: number): void {
-        const ps = this.points;
-        if (ps.length === 4) {
-            ps[0].radius = lt;
-            ps[1].radius = rt;
-            ps[2].radius = rb;
-            ps[3].radius = lb;
-        }
-    }
+    // setRectRadius(lt: number, rt: number, rb: number, lb: number): void {
+    //     const ps = this.points;
+    //     if (ps.length === 4) {
+    //         ps[0].radius = lt;
+    //         ps[1].radius = rt;
+    //         ps[2].radius = rb;
+    //         ps[3].radius = lb;
+    //     }
+    // }
 
     getRectRadius(): { lt: number, rt: number, rb: number, lb: number } {
         const ret = { lt: 0, rt: 0, rb: 0, lb: 0 };

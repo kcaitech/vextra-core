@@ -59,7 +59,7 @@ export class SymbolView extends GroupShapeView {
         this.addChild(cdom, idx);
     }
 
-    get points() {
-        return (this.m_data as SymbolShape).points;
-    }
+    // get points() {
+    //     return (this.m_data as SymbolShape).points;
+    // }
 }
