@@ -28,6 +28,11 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     isCustomSize?: boolean
     cornerRadius?: CornerRadius
 
+    leftTopRadius: number = 0;
+    rightTopRadius: number = 0;
+    rightBottomRadius: number = 0;
+    leftBottomRadius: number = 0;
+
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
@@ -139,5 +144,13 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
 
     get isPathIcon() {
         return false;
+    }
+
+    get radius(): number[] {
+        return [0];
+    }
+
+    get isRectFrame() {
+        return true;
     }
 }

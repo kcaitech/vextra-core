@@ -29,7 +29,7 @@ import { FrameType, PathType, RECT_POINTS } from "./consts";
 import { Variable } from "./variable";
 import { TableShape } from "./table";
 import { SymbolRefShape } from "./symbolref";
-import { _get_path } from "./utils";
+
 export { Variable } from "./variable";
 
 // todo
@@ -42,15 +42,18 @@ export class Shape extends Basic implements classes.Shape {
 
     // watchable, 使用Watchable会导致语法检查失效
     public __watcher: Set<((...args: any[]) => void)> = new Set();
+
     public watch(watcher: ((...args: any[]) => void)): (() => void) {
         this.__watcher.add(watcher);
         return () => {
             this.__watcher.delete(watcher);
         };
     }
+
     public unwatch(watcher: ((...args: any[]) => void)): boolean {
         return this.__watcher.delete(watcher);
     }
+
     public notify(...args: any[]) {
         if (this.__watcher.size > 0) {
             // 在set的foreach内部修改set会导致无限循环
@@ -60,6 +63,7 @@ export class Shape extends Basic implements classes.Shape {
         }
         this.parent?.bubblenotify(...args);
     }
+
     getCrdtPath(): string[] {
         const page = this.getPage();
         if (page && page !== this) return [page.id, this.id];
@@ -131,15 +135,18 @@ export class Shape extends Basic implements classes.Shape {
     // }
 
     private __bubblewatcher: Set<((...args: any[]) => void)> = new Set();
+
     public bubblewatch(watcher: ((...args: any[]) => void)): (() => void) {
         this.__bubblewatcher.add(watcher);
         return () => {
             this.__bubblewatcher.delete(watcher);
         };
     }
+
     public bubbleunwatch(watcher: ((...args: any[]) => void)): boolean {
         return this.__bubblewatcher.delete(watcher);
     }
+
     public bubblenotify(...args: any[]) {
         if (this.__bubblewatcher.size > 0) {
             // 在set的foreach内部修改set会导致无限循环
@@ -275,6 +282,7 @@ export class Shape extends Basic implements classes.Shape {
         const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
         return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
     }
+
     /**
      * @description 无论是否transform都进行Bounds计算并返回
      */
@@ -300,6 +308,7 @@ export class Shape extends Basic implements classes.Shape {
         const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
         return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
     }
+
     /**
      * @description 保留transform的前提下计算基于自身坐标的Bounds并返回
      */
@@ -327,12 +336,14 @@ export class Shape extends Basic implements classes.Shape {
     setResizingConstraint(value: number) {
         this.resizingConstraint = value;
     }
+
     setContextSettingsOpacity(value: number) {
         if (!this.style.contextSettings) {
             this.style.contextSettings = new ContextSettings(BlendMode.Normal, 1);
         }
         this.style.contextSettings.opacity = value;
     }
+
     getBorderIndex(border: Border): number {
         return this.style.borders.findIndex(i => i === border);
     }
@@ -383,7 +394,8 @@ export class Shape extends Basic implements classes.Shape {
         return !!this.isVisible;
     }
 
-    onAdded() { }
+    onAdded() {
+    }
 
     onRemoved() {
     }
@@ -419,6 +431,14 @@ export class Shape extends Basic implements classes.Shape {
     get isPathIcon() { // 根据路径绘制图标
         return true;
     }
+
+    get radius(): number[] {
+        return [0];
+    }
+
+    get isRectFrame() {
+        return false;
+    }
 }
 
 export class GroupShape extends Shape implements classes.GroupShape {
@@ -426,6 +446,7 @@ export class GroupShape extends Shape implements classes.GroupShape {
     childs: BasicArray<(GroupShape | Shape | ImageShape | PathShape | RectShape | TextShape | TableShape | SymbolRefShape)>
     // wideframe: ShapeFrame
     fixedRadius?: number
+
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
@@ -504,10 +525,10 @@ export class GroupShape extends Shape implements classes.GroupShape {
         const w = frame.width;
         const h = frame.height;
         let path = [["M", x, y],
-        ["l", w, 0],
-        ["l", 0, h],
-        ["l", -w, 0],
-        ["z"]];
+            ["l", w, 0],
+            ["l", 0, h],
+            ["l", -w, 0],
+            ["z"]];
         return new Path(path);
     }
 
@@ -530,6 +551,7 @@ export class GroupShape extends Shape implements classes.GroupShape {
 
 export class BoolShape extends GroupShape implements classes.BoolShape {
     typeId = 'bool-shape'
+
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
@@ -682,6 +704,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         // TODO 解绑
         return this.variables.delete(key);
     }
+
     deleteVar(varId: string) {
         if (this.variables) {
             this.variables.delete(varId);
@@ -700,15 +723,29 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
     get isSymbolUnionShape() {
         return false;
     }
+
     get isSymbolShape() {
         return true;
     }
+
     get isContainer() {
         return true;
     }
 
     getPathOfFrame(frame: classes.ShapeFrame, fixedRadius?: number | undefined): Path {
         return getPathOfRadius(frame, this.cornerRadius, fixedRadius);
+    }
+    get radius(): number[] {
+        return [
+            this.cornerRadius?.lt || 0,
+            this.cornerRadius?.rt || 0,
+            this.cornerRadius?.rb || 0,
+            this.cornerRadius?.lb || 0,
+        ];
+    }
+
+    get isRectFrame() {
+        return true;
     }
 }
 
@@ -741,23 +778,6 @@ export class SymbolUnionShape extends SymbolShape implements classes.SymbolUnion
         return true;
     }
 
-    getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
-        const w = frame.width;
-        const h = frame.height;
-        let path = [];
-        if (fixedRadius) {
-            path = _get_path(this);
-        } else {
-            path = [
-                ["M", 0, 0],
-                ["l", w, 0],
-                ["l", 0, h],
-                ["l", -w, 0],
-                ["z"]
-            ]
-        }
-        return new Path(path);
-    }
     get isContainer() {
         return true;
     }
@@ -813,7 +833,7 @@ export class PathShape extends Shape implements classes.PathShape {
         this.points.forEach((p) => p.radius = radius);
     }
 
-    getRadius(): number[] {
+    get radius(): number[] {
         return this.points.map((p) => p.radius || 0);
     }
 }
@@ -859,11 +879,7 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
         return new Path(path);
     }
 
-    setRadius(radius: number): void {
-        this.pathsegs.forEach((seg) => seg.points.forEach((p) => (p.radius = radius)));
-    }
-
-    getRadius(): number[] {
+    get radius(): number[] {
         return this.pathsegs.reduce((radius: number[], seg) => seg.points.reduce((radius, p) => {
             radius.push(p.radius || 0);
             return radius;
@@ -872,6 +888,10 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
 
     get pathType() {
         return PathType.Multi;
+    }
+
+    get isRectFrame() {
+        return this.pathsegs.length === 1 && this.pathsegs[0].points.length === 4 && this.pathsegs[0].isClosed;
     }
 }
 
@@ -921,6 +941,9 @@ export class RectShape extends PathShape implements classes.RectShape {
             ret.lb = ps[3].radius || 0;
         }
         return ret;
+    }
+    get isRectFrame() {
+        return  this.points.length === 4 && this.isClosed;
     }
 }
 
@@ -1105,10 +1128,10 @@ export class TextShape extends Shape implements classes.TextShape {
         const x = 0;
         const y = 0;
         const path = [["M", x, y],
-        ["l", w, 0],
-        ["l", 0, h],
-        ["l", -w, 0],
-        ["z"]];
+            ["l", w, 0],
+            ["l", 0, h],
+            ["l", -w, 0],
+            ["z"]];
         return new Path(path);
     }
 
@@ -1132,9 +1155,11 @@ export class TextShape extends Shape implements classes.TextShape {
         return false;
     }
 }
+
 export class CutoutShape extends PathShape implements classes.CutoutShape {
     typeId = 'cutout-shape'
     scalingStroke: boolean;
+
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
@@ -1174,5 +1199,9 @@ export class CutoutShape extends PathShape implements classes.CutoutShape {
 
     get isPathIcon() {
         return false;
+    }
+
+    get radius(): number[] {
+        return [0];
     }
 }

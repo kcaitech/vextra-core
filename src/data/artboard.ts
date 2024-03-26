@@ -1,11 +1,11 @@
 import {
     GroupShape,
-    Shape,
-    ShapeFrame,
-    ShapeType,
     ImageShape,
     PathShape,
     RectShape,
+    Shape,
+    ShapeFrame,
+    ShapeType,
     TextShape,
     CornerRadius,
     getPathOfRadius
@@ -51,6 +51,19 @@ export class Artboard extends GroupShape implements classes.Artboard {
     }
 
     get isContainer() {
+        return true;
+    }
+
+    get radius(): number[] {
+        return [
+            this.cornerRadius?.lt || 0,
+            this.cornerRadius?.rt || 0,
+            this.cornerRadius?.rb || 0,
+            this.cornerRadius?.lb || 0,
+        ];
+    }
+
+    get isRectFrame() {
         return true;
     }
 }

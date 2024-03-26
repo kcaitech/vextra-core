@@ -817,4 +817,12 @@ export class ShapeView extends DataView {
     get isPathIcon() {
         return this.data.isPathIcon;
     }
+
+    get radius() {
+        return this.m_data.radius;
+    }
+
+    get isRectFrame() {
+        return this.m_data.isRectFrame;
+    }
 }
