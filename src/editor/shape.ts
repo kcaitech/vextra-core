@@ -1392,12 +1392,12 @@ export class ShapeEditor {
         if (!_var) return;
 
         // 遍历所有子对象
-        const traval = (g: ShapeView, varId: string, ot: OverrideType, f: (s: ShapeView) => void) => {
+        const traval = (g: GroupShape, varId: string, ot: OverrideType, f: (s: Shape) => void) => {
             const childs = g.childs;
             childs.forEach((s) => {
-                const bindid = s.varbinds?.get(OverrideType.Visible);
+                const bindid = s.varbinds?.get(ot);
                 if (bindid === varId) f(s);
-                if (s.childs && s.childs.length > 0) traval(s, varId, ot, f);
+                if (s instanceof GroupShape) traval(s, varId, ot, f);
             })
         }
         const api = this.__repo.start("removeVar");
@@ -1405,20 +1405,20 @@ export class ShapeEditor {
             // 将_var的值保存到对象中
             switch (_var.type) {
                 case VariableType.Visible:
-                    traval(this.view, _var.id, OverrideType.Visible, (s: ShapeView) => {
+                    traval(shape, _var.id, OverrideType.Visible, (s: Shape) => {
                         if ((!!s.isVisible !== !!_var.value)) {
-                            api.shapeModifyVisible(this.__page, s.data, !s.isVisible);
+                            api.shapeModifyVisible(this.__page, s, !s.isVisible);
                         }
                     });
                     break;
                 case VariableType.Text:
-                    traval(this.view, _var.id, OverrideType.Text, (s: ShapeView) => {
-                        if (s instanceof TextShapeView) {
-                            api.deleteText(this.__page, s, 0, s.text.length - 1);
+                    traval(shape, _var.id, OverrideType.Text, (s: Shape) => {
+                        if (s instanceof TextShape) {
+                            api.deleteText2(this.__page, s, 0, s.text.length - 1);
                             if (typeof _var.value === 'string') {
-                                api.insertSimpleText(this.__page, s, 0, _var.value);
+                                api.insertSimpleText2(this.__page, s, 0, _var.value);
                             } else {
-                                api.insertComplexText(this.__page, s, 0, _var.value);
+                                api.insertComplexText2(this.__page, s, 0, _var.value);
                             }
                         }
                     });

@@ -166,7 +166,7 @@ function newText(content: string): Text {
 }
 
 // 文本操作
-export function otTextInsert(parent: ShapeView | Variable, text: Text | string, index: number, str: Text | string, props?: { attr?: SpanAttr, paraAttr?: ParaAttr }): TextOpInsertRecord {
+export function otTextInsert(parent: ShapeView | Shape | Variable, text: Text | string, index: number, str: Text | string, props?: { attr?: SpanAttr, paraAttr?: ParaAttr }): TextOpInsertRecord {
     if (typeof text === "string") {
         if (!(parent instanceof Variable)) throw new Error("something wrong"); // 目前仅variable会是string
         text = newText(text);
@@ -199,7 +199,7 @@ export function otTextRemove(parent: ShapeView | Shape | Variable, text: Text | 
     const del = text.deleteText(index, length);
     return del && new TextOpRemoveRecord("", text.getCrdtPath(), SNumber.MAX_SAFE_INTEGER, index, del.length, del, text);
 }
-export function otTextSetAttr(parent: ShapeView | Variable, text: Text | string, index: number, length: number, key: string, value: any): TextOpAttrRecord {
+export function otTextSetAttr(parent: ShapeView | Shape | Variable, text: Text | string, index: number, length: number, key: string, value: any): TextOpAttrRecord {
     if (typeof text === "string") {
         if (!(parent instanceof Variable)) throw new Error("something wrong"); // 目前仅variable会是string
         text = newText(text);
@@ -210,7 +210,7 @@ export function otTextSetAttr(parent: ShapeView | Variable, text: Text | string,
     return new TextOpAttrRecord("", text.getCrdtPath(), SNumber.MAX_SAFE_INTEGER, index, length, { target: "span", key, value }, ret, text);
 }
 
-export function otTextSetParaAttr(parent: ShapeView | Variable, text: Text | string, index: number, length: number, key: string, value: any): TextOpAttrRecord {
+export function otTextSetParaAttr(parent: ShapeView | Shape | Variable, text: Text | string, index: number, length: number, key: string, value: any): TextOpAttrRecord {
     length = Math.min(text.length, length);
     if (typeof text === "string") {
         if (!(parent instanceof Variable)) throw new Error("something wrong"); // 目前仅variable会是string

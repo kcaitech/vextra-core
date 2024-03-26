@@ -735,9 +735,27 @@ export class Api {
         if (!_text || !(_text instanceof Text)) throw Error();
         this.addOp(basicapi.insertComplexText(shape, _text, text, idx));
     }
+    insertSimpleText2(page: Page, shape: TextShape, idx: number, text: string, attr?: SpanAttr) {
+        checkShapeAtPage(page, shape);
+        const _text = shape.text;
+        if (!_text || !(_text instanceof Text)) throw Error();
+        this.addOp(basicapi.insertSimpleText(shape, _text, text, idx, { attr }));
+    }
+    insertComplexText2(page: Page, shape: TextShape, idx: number, text: Text) {
+        checkShapeAtPage(page, shape);
+        const _text = shape.text;
+        if (!_text || !(_text instanceof Text)) throw Error();
+        this.addOp(basicapi.insertComplexText(shape, _text, text, idx));
+    }
     deleteText(page: Page, shape: TextShapeLike | Variable, idx: number, len: number) {
         checkShapeAtPage(page, shape);
         const _text = shape instanceof ShapeView ? shape.text : shape.value;
+        if (!_text || !(_text instanceof Text)) throw Error();
+        this.addOp(basicapi.deleteText(shape, _text, idx, len));
+    }
+    deleteText2(page: Page, shape: TextShape, idx: number, len: number) {
+        checkShapeAtPage(page, shape);
+        const _text = shape.text;
         if (!_text || !(_text instanceof Text)) throw Error();
         this.addOp(basicapi.deleteText(shape, _text, idx, len));
     }

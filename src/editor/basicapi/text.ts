@@ -6,13 +6,10 @@ import { crdtSetAttr, otTextInsert, otTextRemove, otTextSetAttr, otTextSetParaAt
 import { Gradient } from "../../data/baseclasses";
 import { ShapeView } from "../../dataview";
 
-export function insertSimpleText(parent: ShapeView | Variable, shapetext: Text, text: string, index: number, props?: { attr?: SpanAttr, paraAttr?: ParaAttr }) {
+export function insertSimpleText(parent: ShapeView | Shape | Variable, shapetext: Text, text: string, index: number, props?: { attr?: SpanAttr, paraAttr?: ParaAttr }) {
     return otTextInsert(parent, shapetext, index, text, props);
 }
-export function insertComplexText2(parent: ShapeView | Variable, shapetext: Text, text: string, index: number, props?: { attr?: SpanAttr, paraAttr?: ParaAttr }) {
-    return otTextInsert(parent, shapetext, index, text, props);
-}
-export function insertComplexText(parent: ShapeView | Variable, shapetext: Text, text: Text, index: number) {
+export function insertComplexText(parent: ShapeView | Shape | Variable, shapetext: Text, text: Text, index: number) {
     return otTextInsert(parent, shapetext, index, text);
 }
 export function deleteText(parent: ShapeView | Shape | Variable, shapetext: Text, index: number, count: number) {
