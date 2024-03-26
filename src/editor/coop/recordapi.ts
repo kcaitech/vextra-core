@@ -10,16 +10,15 @@ import {
     TextShape,
     Variable,
     SymbolShape,
-    VariableType,
     CurveMode, PathSegment
 } from "../../data/shape";
 import { updateShapesFrame } from "./utils";
 import { Border, BorderPosition, BorderStyle, Fill, Gradient, MarkerType, Shadow } from "../../data/style";
 import { BulletNumbers, SpanAttr, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
-import { RectShape, SymbolRefShape, TableCell, TableCellType, TableShape } from "../../data/classes";
+import { RectShape, SymbolRefShape, TableCell, TableCellType, TableShape, Artboard } from "../../data/classes";
 import {
     BoolOp, BulletNumbersBehavior, BulletNumbersType, ExportFileFormat, OverrideType, Point2D,
-    StrikethroughType, TextTransformType, UnderlineType, ShadowPosition, ExportFormatNameingScheme, FillType, BlendMode
+    StrikethroughType, TextTransformType, UnderlineType, ShadowPosition, ExportFormatNameingScheme, FillType, BlendMode, 
 } from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
@@ -32,7 +31,6 @@ import { IdOpRecord } from "../../coop/client/crdt";
 import { Repository } from "../../data/transact";
 import { SNumber } from "../../coop/client/snumber";
 import { ShapeView, TableCellView, TextShapeView } from "../../dataview";
-import { deleteSegmentAt } from "../basicapi";
 
 // 要支持variable的修改
 export type TextShapeLike = TableCellView | TextShapeView
@@ -351,6 +349,10 @@ export class Api {
     shapeModifyRadius(page: Page, shape: RectShape, lt: number, rt: number, rb: number, lb: number) {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.shapeModifyRadius(shape, lt, rt, rb, lb));
+    }
+    shapeModifyRadius2(page: Page, shape: Artboard | SymbolShape | SymbolRefShape, lt: number, rt: number, rb: number, lb: number) {
+        checkShapeAtPage(page, shape);
+        this.addOp(basicapi.shapeModifyRadius2(shape, lt, rt, rb, lb));
     }
     shapeModifyFixedRadius(page: Page, shape: GroupShape | PathShape | PathShape2 | TextShape, fixedRadius: number | undefined) {
         this._shapeModifyAttr(page, shape, "fixedRadius", fixedRadius);

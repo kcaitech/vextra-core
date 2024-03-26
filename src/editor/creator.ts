@@ -479,7 +479,7 @@ export function newSymbolShape(name: string, frame: ShapeFrame, style?: Style): 
         newflatStyle(),
         new BasicArray(),
         new BasicMap(),
-        createNormalPoints()
+        // createNormalPoints()
     );
     if (style) compo.style = style;
     addCommonAttr(compo);
@@ -498,7 +498,7 @@ export function newSymbolShapeUnion(name: string, frame: ShapeFrame): SymbolUnio
         style,
         new BasicArray(),
         new BasicMap(),
-        createNormalPoints()
+        // createNormalPoints()
     );
     addCommonAttr(union);
     return union;

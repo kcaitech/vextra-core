@@ -1,5 +1,6 @@
 import { Page } from "../../data/page";
 import {
+    CornerRadius,
     GroupShape,
     PathSegment,
     PathShape,
@@ -9,7 +10,7 @@ import {
     SymbolShape,
     Variable
 } from "../../data/shape";
-import { ContactShape, SymbolRefShape, ContactForm } from "../../data/classes";
+import { ContactShape, SymbolRefShape, ContactForm, Artboard } from "../../data/classes";
 import { BoolOp, CurveMode, MarkerType, OverrideType, Point2D } from "../../data/typesdefine";
 import { BasicMap } from "../../data/basic";
 import { crdtArrayInsert, crdtArrayRemove, crdtSetAttr } from "./basic";
@@ -139,6 +140,19 @@ export function shapeModifyRadius(shape: RectShape, lt: number, rt: number, rb: 
         return [crdtSetAttr(ps[0], 'radius', lt), crdtSetAttr(ps[1], 'radius', rt), crdtSetAttr(ps[2], 'radius', rb), crdtSetAttr(ps[3], 'radius', lb)];
     }
 }
+export function shapeModifyRadius2(shape: Artboard | SymbolShape | SymbolRefShape, lt: number, rt: number, rb: number, lb: number) {
+    let cornerRadius = shape.cornerRadius;
+    if (!cornerRadius) {
+        shape.cornerRadius = new CornerRadius(0, 0, 0, 0);
+        cornerRadius = shape.cornerRadius;
+    }
+    const ops = [];
+    if (cornerRadius.lt !== lt) ops.push(crdtSetAttr(cornerRadius, 'lt', lt));
+    if (cornerRadius.rt !== rt) ops.push(crdtSetAttr(cornerRadius, 'rt', rt));
+    if (cornerRadius.lb !== lb) ops.push(crdtSetAttr(cornerRadius, 'lb', lb));
+    if (cornerRadius.rb !== rb) ops.push(crdtSetAttr(cornerRadius, 'rb', rb));
+    return ops;
+}
 export function shapeModifyFixedRadius(shape: GroupShape | PathShape | PathShape2, fixedRadius: number | undefined) {
     return crdtSetAttr(shape, 'fixedRadius', fixedRadius);
 }
@@ -205,7 +219,7 @@ export function shapeModifyCurvToPoint(shape: Shape, index: number, point: Point
         if (p) return [crdtSetAttr(p, 'toX', point.x), crdtSetAttr(p, 'toY', point.y)];
     }
 }
-export function shapeModifyCurveMode(shape:Shape, index: number, curveMode: CurveMode, segment = -1) {
+export function shapeModifyCurveMode(shape: Shape, index: number, curveMode: CurveMode, segment = -1) {
     if (segment > -1) {
         const p = (shape as PathShape2)?.pathsegs[segment]?.points[index];
         if (p) return crdtSetAttr(p, 'mode', curveMode);
