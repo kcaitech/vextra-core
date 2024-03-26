@@ -1209,7 +1209,7 @@ export class ShapeEditor {
                 api.shapeModifySymRef(this.__page, this.view.data, refId);
                 const view = this.view as SymbolRefView;
                 if (!view.data.isCustomSize) {
-                    const sym = this.__document.symbolsMgr.getSync(refId);
+                    const sym = this.__document.symbolsMgr.get(refId);
                     if (sym) {
                         api.shapeModifyWH(this.__page, view.data, sym.frame.width, sym.frame.height);
                     }
@@ -1384,38 +1384,36 @@ export class ShapeEditor {
      * @description 给组件移除一个变量
      */
     removeVar(key: string) {
-        if (!(this.shape instanceof SymbolShape) && !(this.shape instanceof SymbolRefShape)) return;
-        if (this.shape.isVirtualShape) return;
-
+        const shape = this.shape;
+        if (!(shape instanceof SymbolShape)) return;
         // virtual? no
-        const _var = this.shape.getVar(key);
+        if (shape.isVirtualShape) return;
+        const _var = shape.getVar(key);
         if (!_var) return;
 
         // 遍历所有子对象
-        const traval = (g: ShapeView, f: (s: ShapeView) => void) => {
+        const traval = (g: ShapeView, varId: string, ot: OverrideType, f: (s: ShapeView) => void) => {
             const childs = g.childs;
             childs.forEach((s) => {
-                f(s);
-                if (s.childs && s.childs.length > 0) traval(s, f);
+                const bindid = s.varbinds?.get(OverrideType.Visible);
+                if (bindid === varId) f(s);
+                if (s.childs && s.childs.length > 0) traval(s, varId, ot, f);
             })
         }
-
         const api = this.__repo.start("removeVar");
         try {
             // 将_var的值保存到对象中
-            if (this.shape instanceof SymbolShape) switch (_var.type) {
+            switch (_var.type) {
                 case VariableType.Visible:
-                    traval(this.view, (s: ShapeView) => {
-                        const bindid = s.varbinds?.get(OverrideType.Visible);
-                        if (bindid && bindid === _var.id && (!!s.isVisible !== !!_var.value)) {
+                    traval(this.view, _var.id, OverrideType.Visible, (s: ShapeView) => {
+                        if ((!!s.isVisible !== !!_var.value)) {
                             api.shapeModifyVisible(this.__page, s.data, !s.isVisible);
                         }
                     });
                     break;
                 case VariableType.Text:
-                    traval(this.view, (s: ShapeView) => {
-                        const bindid = s.varbinds?.get(OverrideType.Text);
-                        if (bindid && bindid === _var.id && s instanceof TextShapeView) {
+                    traval(this.view, _var.id, OverrideType.Text, (s: ShapeView) => {
+                        if (s instanceof TextShapeView) {
                             api.deleteText(this.__page, s, 0, s.text.length - 1);
                             if (typeof _var.value === 'string') {
                                 api.insertSimpleText(this.__page, s, 0, _var.value);
@@ -1426,7 +1424,7 @@ export class ShapeEditor {
                     });
                     break;
             }
-            api.shapeRemoveVariable(this.__page, this.shape, key);
+            api.shapeRemoveVariable(this.__page, shape, key);
             this.__repo.commit();
         } catch (e) {
             console.error(e);

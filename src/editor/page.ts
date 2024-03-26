@@ -817,7 +817,7 @@ export class PageEditor {
 
     refSymbol(document: Document, name: string, frame: ShapeFrame, refId: string) {
         const ref = newSymbolRefShape(name, frame, refId, document.symbolsMgr);
-        const sym = document.symbolsMgr.getSync(refId);
+        const sym = document.symbolsMgr.get(refId);
         if (sym) {
             ref.rotation = sym.rotation;
             ref.isFlippedHorizontal = sym.isFlippedHorizontal;
