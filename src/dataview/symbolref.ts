@@ -1,4 +1,4 @@
-import { Border, ContextSettings, Fill, MarkerType, OverrideType, Shadow, Shape, ShapeFrame, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType } from "../data/classes";
+import { Border, ContextSettings, CornerRadius, Fill, MarkerType, OverrideType, Shadow, Shape, ShapeFrame, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType } from "../data/classes";
 import { ShapeView } from "./shape";
 import { ShapeType } from "../data/classes";
 import { DataView, RootView } from "./view";
@@ -389,5 +389,10 @@ export class SymbolRefView extends ShapeView {
         const v = this._findOV2(OverrideType.Shadows, VariableType.Shadows);
         if (v) return v.value;
         return this.m_sym?.style.shadows || [];
+    }
+    get cornerRadius(): CornerRadius | undefined {
+        const v = this._findOV2(OverrideType.CornerRadius, VariableType.CornerRadius);
+        if (v) return v.value;
+        return this.m_sym?.cornerRadius;
     }
 }

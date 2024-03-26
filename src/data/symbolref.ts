@@ -6,7 +6,7 @@ export {
     ShapeFrame, Ellipse, PathSegment, OverrideType,
 } from "./baseclasses"
 import { ShapeType, ShapeFrame, OverrideType } from "./baseclasses"
-import { Shape, SymbolShape, CornerRadius, getPathOfRadius } from "./shape";
+import { Shape, SymbolShape, CornerRadius } from "./shape";
 import { Path } from "./path";
 import { Variable } from "./variable";
 import { SymbolMgr } from "./symbolmgr";
@@ -27,12 +27,6 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     variables: BasicMap<string, Variable>
     isCustomSize?: boolean
     cornerRadius?: CornerRadius
-
-    leftTopRadius: number = 0;
-    rightTopRadius: number = 0;
-    rightBottomRadius: number = 0;
-    leftBottomRadius: number = 0;
-
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
@@ -57,7 +51,6 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
 
     getOpTarget(path: string[]): any {
         if (path[0] === 'overrides' && !this.overrides) this.overrides = new BasicMap<string, string>();
-        if (path[0] === 'cornerRadius' && !this.cornerRadius) this.cornerRadius = new CornerRadius(0, 0, 0, 0);
         return super.getOpTarget(path);
     }
 
@@ -118,7 +111,16 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     }
 
     getPathOfFrame(frame: classes.ShapeFrame, fixedRadius?: number | undefined): Path {
-        return getPathOfRadius(frame, this.cornerRadius, fixedRadius);
+        const w = frame.width;
+        const h = frame.height;
+        const path = [
+            ["M", 0, 0],
+            ["l", w, 0],
+            ["l", 0, h],
+            ["l", -w, 0],
+            ["z"]
+        ]
+        return new Path(path);
     }
 
     getOverrid(refId: string, type: OverrideType): { refId: string, v: Variable } | undefined {
