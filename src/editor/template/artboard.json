@@ -18,5 +18,8 @@
         "shadows": []
     },
     "childs": [],
-    "points": []
+    "leftTopRadius": 0,
+    "rightTopRadius": 0,
+    "rightBottomRadius": 0,
+    "leftBottomRadius": 0
 }

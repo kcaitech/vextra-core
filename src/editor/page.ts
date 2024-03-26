@@ -7,7 +7,7 @@ import {
     Shape,
     ShapeFrame,
     SymbolShape,
-    SymbolUnionShape,
+    SymbolUnionShape, TextShape,
     Variable,
     VariableType
 } from "../data/shape";
@@ -1282,8 +1282,9 @@ export class PageEditor {
                     }
                     api.modifyPointCornerRadius(this.__page, shape, index, val);
                 }
-                this.__repo.commit();
+                // this.__repo.commit();
             }
+            this.__repo.commit();
         } catch (error) {
             console.log('shapesModifyPointRadius', error);
             this.__repo.rollback();
@@ -1324,6 +1325,82 @@ export class PageEditor {
             this.__repo.commit();
         } catch (error) {
             console.log('shapesModifyFixedRadius', error);
+            this.__repo.rollback();
+        }
+    }
+
+    shapesModifyRadius(shapes: ShapeView[], values: number[]) {
+        try {
+            const api = this.__repo.start("shapesModifyRadius");
+            const page = this.__page;
+
+            for (let i = 0; i < shapes.length; i++) {
+                const shape = adapt2Shape(shapes[i]);
+                const isRect = shape.isRectFrame;
+
+                if (isRect) {
+                    if (values.length !== 4) {
+                        values = [values[0], values[0], values[0], values[0]];
+                    }
+
+                    const [lt, rt, rb, lb] = values;
+
+                    if (shape instanceof PathShape) {
+                        const points = shape.points;
+                        for (let _i = 0; _i < 4; _i++) {
+                            if (points[_i].radius === values[_i]) {
+                                continue;
+                            }
+
+                            api.modifyPointCornerRadius(page, shape, _i, values[_i]);
+                        }
+                    }
+                    else if (shape instanceof PathShape2) {
+                        const points = shape.pathsegs[0].points;
+                        for (let _i = 0; _i < 4; _i++) {
+                            if (points[_i].radius === values[_i]) {
+                                continue;
+                            }
+
+                            api.modifyPointCornerRadius(page, shape, _i, values[_i], 0);
+                        }
+                    }
+                    else {
+                        const __shape = shape as Artboard | SymbolShape;
+                        api.shapeModifyRadius2(page, __shape, lt, rt, rb, lb)
+                    }
+                }
+                else {
+                    if (shape instanceof PathShape) {
+                        const points = shape.points;
+                        for (let _i = 0; _i < points.length; _i++) {
+                            if (points[_i].radius === values[0]) {
+                                continue;
+                            }
+
+                            api.modifyPointCornerRadius(page, shape, _i, values[_i]);
+                        }
+                    }
+                    else if (shape instanceof PathShape2) {
+                        shape.pathsegs.forEach((seg, index) => {
+                            for (let _i = 0; _i < seg.points.length; _i++) {
+                                if (seg.points[_i].radius === values[0]) {
+                                    continue;
+                                }
+
+                                api.modifyPointCornerRadius(page, shape, _i, values[_i], index);
+                            }
+                        })
+                    }
+                    else {
+                        api.shapeModifyFixedRadius(page, shape as GroupShape | TextShape, values[0]);
+                    }
+
+                }
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.log('shapesModifyRadius', error);
             this.__repo.rollback();
         }
     }
