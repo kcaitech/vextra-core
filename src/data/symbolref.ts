@@ -82,7 +82,12 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
             if (mgr) mgr.addRef(id, this);
         }
     }
-
+    onAdded(): void {
+        const mgr = this.__symMgr;
+        if (mgr) {
+            mgr.addRef(this.refId, this);
+        }
+    }
     onRemoved(): void {
         const mgr = this.__symMgr;
         if (mgr) {

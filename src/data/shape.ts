@@ -382,6 +382,8 @@ export class Shape extends Basic implements classes.Shape {
         return !!this.isVisible;
     }
 
+    onAdded() {}
+
     onRemoved() {
     }
 

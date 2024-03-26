@@ -74,6 +74,7 @@ export class Page extends GroupShape implements classes.Page {
         if (shape.type === ShapeType.Cutout) {
             this.cutouts.set(shape.id, shape as CutoutShape);
         }
+        shape.onAdded();
         if (recursive && (shape instanceof GroupShape)) {
             const childs = shape.childs;
             childs.forEach((c) => this.onAddShape(c))
