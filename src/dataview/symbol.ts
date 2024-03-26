@@ -1,7 +1,7 @@
 import { GroupShapeView } from "./groupshape";
 import { renderBorders, renderFills } from "../render";
 import { EL, elh } from "./el";
-import { Shape, ShapeType, SymbolShape } from "../data/shape";
+import { CornerRadius, Shape, ShapeType, SymbolShape } from "../data/shape";
 import { VarsContainer } from "./viewctx";
 import { DataView, RootView } from "./view"
 import { RenderTransform, getShapeViewId } from "./basic";
@@ -9,6 +9,9 @@ import { RenderTransform, getShapeViewId } from "./basic";
 export class SymbolView extends GroupShapeView {
     get data() {
         return this.m_data as SymbolShape;
+    }
+    get cornerRadius(): CornerRadius | undefined {
+        return (this.data).cornerRadius;
     }
 
     get variables() {

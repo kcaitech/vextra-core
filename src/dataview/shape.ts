@@ -14,7 +14,8 @@ import {
     Fill,
     Border,
     Shadow,
-    ShapeType
+    ShapeType,
+    CornerRadius
 } from "../data/classes";
 import { findOverrideAndVar } from "./basic";
 import { RenderTransform } from "./basic";
@@ -394,6 +395,10 @@ export class ShapeView extends DataView {
     getBorders(): Border[] {
         const v = this._findOV(OverrideType.Borders, VariableType.Borders);
         return v ? v.value : this.m_data.style.borders;
+    }
+
+    get cornerRadius(): CornerRadius | undefined {
+        return undefined;
     }
 
     get startMarkerType(): MarkerType | undefined {

@@ -5,9 +5,18 @@ import { objectId } from "../basic/objectid";
 import { render as clippathR } from "../render/clippath"
 import { Artboard } from "../data/artboard";
 import { isFill } from "../render/shadow";
+import { CornerRadius } from "../data/classes";
 
 
 export class ArtboradView extends GroupShapeView {
+
+    get data() {
+        return this.m_data as Artboard;
+    }
+
+    get cornerRadius(): CornerRadius | undefined {
+        return (this.data).cornerRadius;
+    }
 
     protected renderFills(): EL[] {
         return renderFills(elh, this.getFills(), this.frame, this.getPathStr());
@@ -117,10 +126,10 @@ export class ArtboradView extends GroupShapeView {
         const content_container = elh("g", { "clip-path": "url(#" + id + ")" }, [...fills, ...childs]);
         if (shadows.length > 0) { // 阴影
             const inner_url = innerShadowId(filterId, this.getShadows());
-            
+
             if (!isFill(this.style.fills)) {
                 const body = elh("svg", svgprops, [cp, content_container]);
-                const merge = elh("g", { filter: `url(#pd_outer-${filterId}) ${inner_url}`}, [body, ...borders]);
+                const merge = elh("g", { filter: `url(#pd_outer-${filterId}) ${inner_url}` }, [body, ...borders]);
                 this.reset("g", props, [...shadows, merge])
             } else {
                 if (inner_url.length) svgprops.filter = inner_url;
