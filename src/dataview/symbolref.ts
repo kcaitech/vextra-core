@@ -16,7 +16,7 @@ export class SymbolRefView extends ShapeView {
         super(ctx, props, false);
 
         this.symwatcher = this.symwatcher.bind(this);
-        this.loadsym(true);
+        this.loadsym();
         this.afterInit();
     }
 
@@ -73,7 +73,7 @@ export class SymbolRefView extends ShapeView {
     }
 
     onDataChange(...args: any[]): void {
-        this.loadsym(true);
+        this.loadsym();
     }
 
     symwatcher(...args: any[]) {
@@ -91,56 +91,28 @@ export class SymbolRefView extends ShapeView {
         findVar(varId, ret, varsContainer || []);
     }
 
-    // 需要自己加载symbol
-    // private __data: SymbolShape | undefined;
-    // private __union: SymbolShape | undefined;
-    // private __startLoad: string = "";
-    loadsym(trysync: boolean = false) {
+    loadsym() {
         const symMgr = (this.m_data as SymbolRefShape).getSymbolMgr();
         if (!symMgr) return;
         const refId = this.getRefId();
         if (this.m_refId === refId) {
             return;
         }
-        if (this.m_refId && !this.isVirtualShape) symMgr.removeRef(this.m_refId, this.data);
-        this.m_refId = refId;
-        const onload = (sym: SymbolShape) => {
-            if (this.m_refId !== refId) return;
-            if (this.m_sym) this.m_sym.unwatch(this.symwatcher);
-            this.m_sym = sym;
-            if (this.m_sym) this.m_sym.watch(this.symwatcher);
-            // union
-            const union = this.m_sym?.parent instanceof SymbolUnionShape ? this.m_sym.parent : undefined;
-            if (this.m_union?.id !== union?.id) {
-                if (this.m_union) this.m_union.unwatch(this.symwatcher);
-                this.m_union = union;
-                if (this.m_union) this.m_union.watch(this.symwatcher);
-            }
-            this.m_ctx.setReLayout(this);
+        const sym = symMgr.get(refId);
+        if (!sym) return;
 
-            if (!sym) {
-                // todo 需要重新加载
-                this.m_refId = undefined;
-            }
-            if (sym && !this.isVirtualShape) {
-                symMgr.addRef(sym.id, this.data);
-            }
+        this.m_refId = refId;
+        if (this.m_sym) this.m_sym.unwatch(this.symwatcher);
+        this.m_sym = sym;
+        if (this.m_sym) this.m_sym.watch(this.symwatcher);
+        // union
+        const union = this.m_sym?.parent instanceof SymbolUnionShape ? this.m_sym.parent : undefined;
+        if (this.m_union?.id !== union?.id) {
+            if (this.m_union) this.m_union.unwatch(this.symwatcher);
+            this.m_union = union;
+            if (this.m_union) this.m_union.watch(this.symwatcher);
         }
-        // todo 通过symbolregist判断使用哪个symbol。及symbol变化时重新更新
-        if (trysync) {
-            const val = symMgr.getSync(refId);
-            if (val) {
-                onload(val);
-                return;
-            }
-        }
-        symMgr.get(refId).then((val) => {
-            if (val) onload(val);
-            else this.m_refId = undefined;
-        }).catch((e) => {
-            console.error(e);
-            this.m_refId = undefined;
-        })
+        this.m_ctx.setReLayout(this);
     }
 
     onDestory(): void {

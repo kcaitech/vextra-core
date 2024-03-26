@@ -114,7 +114,7 @@ comsMap.set(ShapeType.SymbolRef, (data: Shape,
     const symMgr = shape.getSymbolMgr();
     if (!symMgr) return "";
     const refId = getRefId2(shape, varsContainer);
-    const sym = symMgr.getSync(refId);
+    const sym = symMgr.get(refId);
 
     if (!sym) return "";
 

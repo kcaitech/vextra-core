@@ -23,7 +23,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     __symMgr?: SymbolMgr
 
     typeId = 'symbol-ref-shape'
-    refId: string
+    private __refId: string // set 方法会进事务
 
     overrides?: BasicMap<string, string> // 同varbinds，只是作用域为引用的symbol对象
     variables: BasicMap<string, Variable>
@@ -48,7 +48,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
             frame,
             style
         )
-        this.refId = refId
+        this.__refId = refId
         this.variables = variables;
     }
 
@@ -67,6 +67,29 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         return undefined;
     }
 
+    onSymbolReady() {
+        this.notify('symbol-ready');
+    }
+
+    get refId() {
+        return this.__refId;
+    }
+    set refId(id: string) {
+        const mgr = this.__symMgr;
+        if (id !== this.__refId) {
+            if (mgr) mgr.removeRef(this.__refId, this);
+            this.__refId = id;
+            if (mgr) mgr.addRef(id, this);
+        }
+    }
+
+    onRemoved(): void {
+        const mgr = this.__symMgr;
+        if (mgr) {
+            mgr.removeRef(this.refId, this);
+        }
+    }
+
     private __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
     setImageMgr(imageMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>) {
         this.__imageMgr = imageMgr;
@@ -77,6 +100,9 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
 
     setSymbolMgr(mgr: SymbolMgr) {
         this.__symMgr = mgr;
+        if (mgr) {
+            mgr.addRef(this.refId, this);
+        }
     }
     getSymbolMgr() {
         return this.__symMgr;

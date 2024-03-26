@@ -840,13 +840,24 @@ export function path_for_free_start_contact(points: CurvePoint[], end: PageXY | 
     __handle[direction](points, start, _end);
 }
 
-export function findVar(varId: string, ret: Variable[], varsContainer: (SymbolRefShape | SymbolShape)[], _i: number | undefined = undefined) {
-    let i = _i === undefined ? varsContainer.length - 1 : _i;
+export function findVar(varId: string, ret: Variable[], varsContainer: (SymbolRefShape | SymbolShape)[], revertStart: number | undefined = undefined, fOverride: boolean = false) {
+    let i = revertStart === undefined ? varsContainer.length - 1 : revertStart;
     for (; i >= 0; --i) {
         const container = varsContainer[i];
-        const _var = container.getVar(varId);
+        const _var = (container instanceof SymbolShape) && container.getVar(varId);
         if (!_var) continue;
         ret.push(_var);
+        const ov = findOverride(varId, OverrideType.Variable, varsContainer.slice(0, i));
+        if (ov) ret.push(...ov);
+        return ret;
+    }
+    if (!fOverride) return; // 查找被删除掉的变量
+    i = revertStart === undefined ? varsContainer.length - 1 : revertStart;
+    for (; i >= 0; --i) {
+        const container = varsContainer[i];
+        const _var = (container instanceof SymbolRefShape) && container.getOverrid(varId, OverrideType.Variable);
+        if (!_var) continue;
+        ret.push(_var.v);
         const ov = findOverride(varId, OverrideType.Variable, varsContainer.slice(0, i));
         if (ov) ret.push(...ov);
         return ret;
@@ -871,7 +882,8 @@ export function findOverride(refId: string, type: OverrideType, varsContainer: (
 export function findOverrideAndVar(
     shape: Shape, // not proxyed
     overType: OverrideType,
-    varsContainer: (SymbolRefShape | SymbolShape)[]) {
+    varsContainer: (SymbolRefShape | SymbolShape)[],
+    fOverride: boolean = false) {
     // override优先
     // find override
     // id: xxx/xxx/xxx
@@ -883,7 +895,7 @@ export function findOverrideAndVar(
     const varId = varbinds?.get(overType);
     if (varId) {
         const _vars: Variable[] = [];
-        findVar(varId, _vars, varsContainer);
+        findVar(varId, _vars, varsContainer, undefined, fOverride);
         if (_vars && _vars.length > 0) return _vars;
     }
 }

@@ -221,7 +221,7 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
 
             if (type === ShapeType.Symbol) {
                 const registed = document.symbolregist.get(_s.id);
-                const ref = document.symbolsMgr.getSync(_s.id);
+                const ref = document.symbolsMgr.get(_s.id);
                 // 剪切的一定有'freesymbols'，但复制或者外部粘贴进来的，不一定。
                 if ((!registed && !ref) || registed === 'freesymbols') {
                     r = importSymbolShape(_s as any as types.SymbolShape, ctx);
@@ -283,7 +283,7 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
 
                 r = importTableShape(_s as any as types.TableShape, ctx);
             } else if (type === ShapeType.SymbolRef) {
-                if (!document.symbolsMgr.getSync((_s as any as types.SymbolRefShape).refId)) {
+                if (!document.symbolsMgr.get((_s as any as types.SymbolRefShape).refId)) {
                     continue;
                 }
                 r = importSymbolRefShape(_s as any as types.SymbolRefShape, ctx);
@@ -299,7 +299,7 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
                 for (let i = 0; i < children.length; ++i) {
                     const cid = children[i].id;
                     const registed = document.symbolregist.get(cid);
-                    const ref = document.symbolsMgr.getSync(cid);
+                    const ref = document.symbolsMgr.get(cid);
                     if (registed && registed !== 'freesymbols' || (!registed && ref)) {
                         isFree = false;
                         break;

@@ -1,21 +1,21 @@
 import { WatchableObject } from "./basic";
-import { SymbolShape } from "./classes";
-import { SymbolRefShape } from "./classes";
+import { Shape, SymbolShape } from "./shape";
+import { SymbolRefShape } from "./symbolref";
 
 export class SymbolMgr extends WatchableObject {
     private __resource = new Map<string, { symbols: Array<SymbolShape>, refs: Map<string, SymbolRefShape> }>()
-    private __guard?: (data: SymbolShape) => SymbolShape;
-    private __updater?: (data: SymbolShape) => void;
-    private __loading: Map<string, {
-        id: string,
-        resolves: ((v: SymbolShape | undefined) => void)[],
-        rejects: ((e?: any) => void)[]
-    }> = new Map();
+    private __guard?: (data: Shape) => Shape;
+    // private __updater?: (data: SymbolShape) => void;
+    // private __loading: Map<string, {
+    //     id: string,
+    //     resolves: ((v: SymbolShape | undefined) => void)[],
+    //     rejects: ((e?: any) => void)[]
+    // }> = new Map();
     private __crdtpath: string[];
 
     private __regist: Map<string, string>;
 
-    constructor(crdtpath: string[], regist: Map<string, string>, guard?: (data: SymbolShape) => SymbolShape) {
+    constructor(crdtpath: string[], regist: Map<string, string>, guard?: (data: Shape) => Shape) {
         super();
         this.__regist = regist;
         this.__guard = guard;
@@ -40,43 +40,43 @@ export class SymbolMgr extends WatchableObject {
     // get resource() {
     //     return Array.from(this.__resource.values()).map((v) => v.symbols);
     // }
-    async get(id: string): Promise<SymbolShape | undefined> {
-        let r = this._get(id)
-        if (r) return r;
-        // 等通知
-        let loading = this.__loading.get(id);
-        if (!loading) {
-            loading = {
-                id,
-                resolves: [],
-                rejects: []
-            }
-            this.__loading.set(id, loading);
-        }
-        const _loading = loading;
-        return new Promise<SymbolShape | undefined>((resolve, reject) => {
-            _loading.resolves.push(resolve)
-            _loading.rejects.push(reject)
-        })
-    }
-    setUpdater(updater: (data: SymbolShape) => void) {
-        this.__updater = updater;
-    }
-    getSync(id: string): SymbolShape | undefined {
+    get(id: string): SymbolShape | undefined {
         return this._get(id)
+        // if (r) return r;
+        // // 等通知
+        // let loading = this.__loading.get(id);
+        // if (!loading) {
+        //     loading = {
+        //         id,
+        //         resolves: [],
+        //         rejects: []
+        //     }
+        //     this.__loading.set(id, loading);
+        // }
+        // const _loading = loading;
+        // return new Promise<SymbolShape | undefined>((resolve, reject) => {
+        //     _loading.resolves.push(resolve)
+        //     _loading.rejects.push(reject)
+        // })
     }
-    getSync2(id: string): SymbolShape[] | undefined {
-        return this.__resource.get(id)?.symbols;
-    }
+    // setUpdater(updater: (data: SymbolShape) => void) {
+    //     this.__updater = updater;
+    // }
+    // getSync(id: string): SymbolShape | undefined {
+    //     return this._get(id)
+    // }
+    // getSync2(id: string): SymbolShape[] | undefined {
+    //     return this.__resource.get(id)?.symbols;
+    // }
     add(id: string, r: SymbolShape) {
-        r = this.__guard && this.__guard(r) || r
+        r = this.__guard && this.__guard(r) as SymbolShape || r
         let arr = this.__resource.get(id)
         if (!arr) {
             arr = { symbols: [], refs: new Map() };
             this.__resource.set(id, arr);
         }
         arr.symbols.push(r);
-        if (this.__updater) this.__updater(r);
+        // if (this.__updater) this.__updater(r);
 
         // 这时symbolshape可能还没有parent
         // resolve loading
@@ -84,7 +84,7 @@ export class SymbolMgr extends WatchableObject {
         // if (loading) loading.resolves.forEach(r => r(arr));
         // this.notify(id);
 
-        this.postNotify(id);
+        this._notify(id);
 
         return r;
     }
@@ -112,13 +112,16 @@ export class SymbolMgr extends WatchableObject {
         return sym;
     }
 
-    private postNotify(id: string) {
+    private _notify(id: string) {
         const run = () => {
             const sym = this._get(id);
             if (!sym) return;
-            const loading = this.__loading.get(id);
-            if (loading) loading.resolves.forEach(r => r(sym));
-            this.notify(id);
+            // const loading = this.__loading.get(id);
+            // if (loading) loading.resolves.forEach(r => r(sym));
+            // this.notify(id);
+
+            const item = this.__resource.get(id)!;
+            item.refs.forEach(ref => ref.onSymbolReady());
         }
         setTimeout(run);
     }
@@ -132,8 +135,12 @@ export class SymbolMgr extends WatchableObject {
         item.refs.delete(ref.id);
     }
     addRef(id: string, ref: SymbolRefShape) {
-        const item = this.__resource.get(id);
-        if (!item) return;
+        ref = this.__guard && this.__guard(ref) as SymbolRefShape || ref
+        let item = this.__resource.get(id);
+        if (!item) {
+            item = { symbols: [], refs: new Map() };
+            this.__resource.set(id, item);
+        }
         item.refs.set(ref.id, ref);
     }
 }

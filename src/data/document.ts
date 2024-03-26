@@ -2,7 +2,7 @@ import { DocumentMeta, PageListItem } from "./baseclasses";
 import { Page } from "./page";
 import { BasicArray, BasicMap, IDataGuard, ResourceMgr, WatchableObject } from "./basic";
 import { Style } from "./style";
-import { GroupShape, SymbolShape, TextShape } from "./shape";
+import { GroupShape, Shape, TextShape } from "./shape";
 import { TableShape } from "./table";
 import { SymbolRefShape } from "./symbolref";
 import { SymbolMgr } from "./symbolmgr";
@@ -125,7 +125,7 @@ export class Document extends (DocumentMeta) {
         this.__versionId = versionId;
         this.__name = name;
         this.__pages = new ResourceMgr<Page>([id, 'pages'], (data: Page) => guard.guard(data));
-        this.__symbols = new SymbolMgr([id, 'symbols'], symbolregist, (data: SymbolShape) => guard.guard(data));
+        this.__symbols = new SymbolMgr([id, 'symbols'], symbolregist, (data: Shape) => guard.guard(data));
         this.__medias = new ResourceMgr<{ buff: Uint8Array, base64: string }>([id, 'medias']);
         this.__styles = new ResourceMgr<Style>([id, 'styles']);
         this.__correspondent = new SpecialActionCorrespondent();
@@ -148,7 +148,7 @@ export class Document extends (DocumentMeta) {
         return this.__symbols;
     }
     getSymbolSync(id: string) {
-        return this.symbolsMgr.getSync(id);
+        return this.symbolsMgr.get(id);
     }
 
     get mediasMgr() {

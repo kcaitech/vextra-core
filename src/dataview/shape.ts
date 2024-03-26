@@ -318,7 +318,7 @@ export class ShapeView extends DataView {
 
     protected _findOV(ot: OverrideType, vt: VariableType): Variable | undefined {
         if (!this.varsContainer) return;
-        const _vars = findOverrideAndVar(this.m_data, ot, this.varsContainer);
+        const _vars = findOverrideAndVar(this.m_data, ot, this.varsContainer, true);
         if (!_vars) return;
         const _var = _vars[_vars.length - 1];
         if (_var && _var.type === vt) {

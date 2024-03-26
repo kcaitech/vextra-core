@@ -56,7 +56,7 @@ export async function exportExForm(document: Document): Promise<ExFromJson> {
         if (freesymbolsSet.has(k)) continue;
         // 未导出的symbol
 
-        const symbol = symMgr.getSync(k);
+        const symbol = symMgr.get(k);
         if (!symbol) continue;
 
         if (symbol.parent instanceof SymbolUnionShape) {
