@@ -51,8 +51,8 @@ export class GroupShapeView extends ShapeView {
         }
     }
 
-    protected _layout(shape: Shape, transform: RenderTransform | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): void {
-        super._layout(shape, transform, varsContainer);
+    protected _layout(frame: ShapeFrame, shape: Shape, transform: RenderTransform | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): void {
+        super._layout(frame, shape, transform, varsContainer);
         if (this.m_need_updatechilds) {
             this.notify("childs"); // notify childs change
             this.m_need_updatechilds = false;

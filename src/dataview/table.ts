@@ -77,9 +77,9 @@ export class TableView extends ShapeView {
         return undefined;
     }
 
-    protected _layout(shape: Shape, transform: RenderTransform | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): void {
+    protected _layout(frame: ShapeFrame, shape: Shape, transform: RenderTransform | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): void {
 
-        super._layout(shape, transform, varsContainer);
+        super._layout(frame, shape, transform, varsContainer);
         // if (this.m_need_updatechilds) {
         //     this.m_need_updatechilds = false;
         this.updateChildren();

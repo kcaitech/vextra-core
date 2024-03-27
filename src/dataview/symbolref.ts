@@ -30,7 +30,12 @@ export class SymbolRefView extends ShapeView {
             varsContainer.push(this.m_sym.parent);
         }
         varsContainer.push(this.m_sym);
-        this._layout(this.m_data, this.m_transx, varsContainer);
+        let refframe = this.m_data.frame;
+        const symframe = this.m_sym.frame;
+        if (this.isVirtualShape && !(this.m_data as SymbolRefShape).isCustomSize) {
+            refframe = new ShapeFrame(refframe.x, refframe.y, symframe.width, symframe.height);
+        }
+        this._layout(refframe, this.m_data, this.m_transx, varsContainer);
     }
 
     protected isNoSupportDiamondScale(): boolean {
@@ -204,11 +209,14 @@ export class SymbolRefView extends ShapeView {
         varsContainer.push(this.m_sym);
 
         // let transx: RenderTransform | undefined;
-        const refframe = this.m_data.frame;
+        let refframe = this.m_data.frame;
         const symframe = this.m_sym.frame;
+        if (this.isVirtualShape && !(this.m_data as SymbolRefShape).isCustomSize) {
+            refframe = new ShapeFrame(refframe.x, refframe.y, symframe.width, symframe.height);
+        }
         const noTrans = isNoTransform(this.m_transx);
         if (noTrans && refframe.width === symframe.width && refframe.height === symframe.height) {
-            this._layout(this.m_data, undefined, varsContainer); // 普通更新
+            this._layout(refframe, this.m_data, undefined, varsContainer); // 普通更新
             this.notify("layout");
             return;
         }
@@ -219,13 +227,13 @@ export class SymbolRefView extends ShapeView {
             const saveLayoutOnRectShape = this.layoutOnRectShape;
             this.layoutOnNormal = () => { };
             this.layoutOnRectShape = () => { };
-            this._layout(this.m_data, this.m_transx, varsContainer);
+            this._layout(refframe, this.m_data, this.m_transx, varsContainer);
             this.layoutOnNormal = saveLayoutNormal;
             this.layoutOnRectShape = saveLayoutOnRectShape;
         }
         else { // 第一个
             const shape = this.m_data;
-            this.updateLayoutArgs(shape.frame, shape.isFlippedHorizontal, shape.isFlippedVertical, shape.rotation, (shape as any).fixedRadius);
+            this.updateLayoutArgs(refframe, shape.isFlippedHorizontal, shape.isFlippedVertical, shape.rotation, (shape as any).fixedRadius);
         }
         // 
         // todo

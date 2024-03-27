@@ -200,7 +200,7 @@ export class ShapeView extends DataView {
     }
 
     protected afterInit() {
-        this._layout(this.m_data, this.m_transx, this.varsContainer);
+        this._layout(this.m_data.frame, this.m_data, this.m_transx, this.varsContainer);
     }
 
     get parent(): ShapeView | undefined {
@@ -499,11 +499,11 @@ export class ShapeView extends DataView {
         return this.m_data.isNoSupportDiamondScale;
     }
 
-    protected _layout(shape: Shape, transform: RenderTransform | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
+    protected _layout(_frame: ShapeFrame, shape: Shape, transform: RenderTransform | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
         // const shape = this.m_data;
         // const transform = this.m_transx;
 
-        const _frame = shape.frame;
+        // const _frame = shape.frame;
         let x = _frame.x;
         let y = _frame.y;
         let width = _frame.width;
@@ -650,7 +650,7 @@ export class ShapeView extends DataView {
         }
 
         this.m_ctx.setDirty(this);
-        this._layout(this.m_data, this.m_transx, this.varsContainer);
+        this._layout(this.m_data.frame, this.m_data, this.m_transx, this.varsContainer);
         this.notify("layout");
         this.emit("layout");
     }

@@ -30,9 +30,9 @@ export class PathShapeView extends ShapeView {
 
     m_points?: CurvePoint[];
 
-    protected _layout(shape: Shape, transform: RenderTransform | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): void {
+    protected _layout(frame: ShapeFrame, shape: Shape, transform: RenderTransform | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): void {
         this.m_points = undefined;
-        super._layout(shape, transform, varsContainer);
+        super._layout(frame, shape, transform, varsContainer);
     }
 
     layoutOnDiamondShape(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scaleX: number, scaleY: number, rotate: number, vflip: boolean, hflip: boolean, bbox: ShapeFrame, m: Matrix): void {
