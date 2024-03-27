@@ -463,7 +463,7 @@ export class Controller {
                 if (newShape.type === ShapeType.Line) {
                     pathEdit(api, savepage, newShape as PathShape, 1, point); // 线条的创建过程由路径编辑来完成
                 } else {
-                    adjustRB2(api, savepage, newShape, point.x, point.y);
+                    adjustRB2(api, this.__document, savepage, newShape, point.x, point.y);
                 }
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
@@ -482,7 +482,7 @@ export class Controller {
                 const x2 = { x: Math.max(sx, px), y: Math.max(sy, py) };
                 const height = x2.y - x1.y;
                 const width = x2.x - x1.x;
-                expandTo(api, savepage, newShape, width, height);
+                expandTo(api, this.__document, savepage, newShape, width, height);
                 translateTo(api, savepage, newShape, x1.x, x1.y);
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
@@ -603,21 +603,21 @@ export class Controller {
             status = Status.Pending;
             try {
                 if (type === CtrlElementType.RectLT) {
-                    adjustLT2(api, page, shape, end.x, end.y, size_recorder);
+                    adjustLT2(api, this.__document, page, shape, end.x, end.y, size_recorder);
                 } else if (type === CtrlElementType.RectRT) {
-                    adjustRT2(api, page, shape, end.x, end.y, size_recorder);
+                    adjustRT2(api, this.__document, page, shape, end.x, end.y, size_recorder);
                 } else if (type === CtrlElementType.RectRB) {
-                    adjustRB2(api, page, shape, end.x, end.y, size_recorder);
+                    adjustRB2(api, this.__document, page, shape, end.x, end.y, size_recorder);
                 } else if (type === CtrlElementType.RectLB) {
-                    adjustLB2(api, page, shape, end.x, end.y, size_recorder);
+                    adjustLB2(api, this.__document, page, shape, end.x, end.y, size_recorder);
                 } else if (type === CtrlElementType.RectTop) {
-                    scaleByT(api, page, shape, end, size_recorder);
+                    scaleByT(api, this.__document, page, shape, end, size_recorder);
                 } else if (type === CtrlElementType.RectRight) {
-                    scaleByR(api, page, shape, end, size_recorder);
+                    scaleByR(api, this.__document, page, shape, end, size_recorder);
                 } else if (type === CtrlElementType.RectBottom) {
-                    scaleByB(api, page, shape, end, size_recorder);
+                    scaleByB(api, this.__document, page, shape, end, size_recorder);
                 } else if (type === CtrlElementType.RectLeft) {
-                    scaleByL(api, page, shape, end, size_recorder);
+                    scaleByL(api, this.__document, page, shape, end, size_recorder);
                 }
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
@@ -630,13 +630,13 @@ export class Controller {
             status = Status.Pending;
             try {
                 if (type === CtrlElementType.RectTop) {
-                    erScaleByT(api, page, shape, scale, size_recorder);
+                    erScaleByT(api, this.__document, page, shape, scale, size_recorder);
                 } else if (type === CtrlElementType.RectRight) {
-                    erScaleByR(api, page, shape, scale, size_recorder);
+                    erScaleByR(api, this.__document, page, shape, scale, size_recorder);
                 } else if (type === CtrlElementType.RectBottom) {
-                    erScaleByB(api, page, shape, scale, size_recorder);
+                    erScaleByB(api, this.__document, page, shape, scale, size_recorder);
                 } else if (type === CtrlElementType.RectLeft) {
-                    erScaleByL(api, page, shape, scale, size_recorder);
+                    erScaleByL(api, this.__document, page, shape, scale, size_recorder);
                 }
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;

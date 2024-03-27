@@ -1764,7 +1764,7 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const { target, widthExtend, heightExtend } = actions[i];
-                expand(api, this.__page, target, widthExtend, heightExtend);
+                expand(api, this.__document, this.__page, target, widthExtend, heightExtend);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1775,7 +1775,7 @@ export class PageEditor {
     modifyShapesWidth(shapes: Shape[], val: number) {
         try {
             const api = this.__repo.start('modifyShapesWidth');
-            modify_shapes_width(api, this.__page, shapes, val)
+            modify_shapes_width(api, this.__document, this.__page, shapes, val)
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
@@ -1785,7 +1785,7 @@ export class PageEditor {
     modifyShapesHeight(shapes: Shape[], val: number) {
         try {
             const api = this.__repo.start('modifyShapesHeight');
-            modify_shapes_height(api, this.__page, shapes, val)
+            modify_shapes_height(api, this.__document, this.__page, shapes, val)
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();

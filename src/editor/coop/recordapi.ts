@@ -373,8 +373,8 @@ export class Api {
     shapeModifyBoolOp(page: Page, shape: Shape, op: BoolOp | undefined) {
         this._shapeModifyAttr(page, shape, "boolOp", op);
     }
-    shapeModifyIsCustomSize(page: Page, shape: Shape, isCustomSize: boolean) {
-        if (!(shape instanceof SymbolRefShape)) return;
+    shapeModifyIsCustomSize(page: Page, shape: SymbolRefShape, isCustomSize: boolean) {
+        // if (!(shape instanceof SymbolRefShape)) return;
         this._shapeModifyAttr(page, shape, "isCustomSize", isCustomSize ? true : undefined);
     }
 
