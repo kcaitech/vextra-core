@@ -53,7 +53,7 @@ import { Matrix } from "../basic/matrix";
 import {
     IImportContext,
     importArtboard,
-    importBorder, importGradient, importShapeFrame,
+    importBorder, importCornerRadius, importGradient, importShapeFrame,
     importStop,
     importStyle,
     importSymbolShape
@@ -528,6 +528,9 @@ export class PageEditor {
 
         const style = replace ? importStyle((shape0.style)) : undefined;
         const symbolShape = newSymbolShape(replace ? shape0.name : (name ?? shape0.name), frame, style);
+        if (replace && shape0 instanceof Artboard && shape0.cornerRadius) {
+            symbolShape.cornerRadius = importCornerRadius(shape0.cornerRadius);
+        }
         const api = this.__repo.start("makeSymbol", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
             const state = {} as SelectionState;
             if (!isUndo) state.shapes = [symbolShape.id];

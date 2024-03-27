@@ -4,10 +4,11 @@ import { PageListItem } from "../data/typesdefine";
 import { newPage } from "./creator";
 import { v4 as uuid } from "uuid";
 import { exportPage } from "../data/baseexport";
-import { importPage } from "../data/baseimport";
+import { IImportContext, importPage } from "../data/baseimport";
 import { newDocument } from "./creator";
 import { CoopRepository } from "./coop/cooprepo";
 import { Repository } from "../data/transact";
+import * as types from "../data/typesdefine";
 
 export function createDocument(documentName: string, repo: Repository): Document {
     return newDocument(documentName, repo);
@@ -59,9 +60,36 @@ export class DocEditor {
     // 新建副本
     copy(page: Page, name: string): Page {
         const np = exportPage(page);
-        const p: Page = importPage(np);
-        p.name = name;
-        p.id = uuid();
+        np.name = name;
+
+        const symbols = new Map<string, string>();
+        const refs: types.SymbolRefShape[] = [];
+        const replaceId = (shape: types.Shape) => {
+            const id = uuid();
+            if (shape.typeId === 'symbol-shape') {
+                symbols.set(shape.id, id);
+            } else if (shape.typeId === 'symbol-ref-shape') {
+                refs.push(shape as types.SymbolRefShape);
+            }
+            shape.id = id;
+            const g = shape as types.GroupShape;
+            if (Array.isArray(g.childs)) {
+                g.childs.forEach(c => replaceId(c));
+            }
+        }
+        replaceId(np);
+        refs.forEach(ref => {
+            const refId = ref.refId;
+            const newId = symbols.get(refId);
+            if (newId) ref.refId = newId;
+        })
+
+        // 更换所有对象的id
+        const document = this.__document;
+        const ctx: IImportContext = new class implements IImportContext { document: Document = document; curPage: string = np.id };
+        const p: Page = importPage(np, ctx);
+        // p.name = name;
+        // p.id = uuid();
         return p;
     }
     // 移动页面
