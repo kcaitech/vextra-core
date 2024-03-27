@@ -1,7 +1,6 @@
-import { GroupShape, ImageShape, Shape, ShapeFrame, ShapeType, SymbolUnionShape, TextShape } from "../data/shape";
+import { GroupShape, Shape, ShapeFrame, ShapeType, SymbolUnionShape, TextShape } from "../data/shape";
 import {
-    IExportContext,
-    exportArtboard,
+    exportArtboard, exportBoolShape,
     exportContactShape,
     exportCutoutShape,
     exportGradient,
@@ -10,17 +9,20 @@ import {
     exportLineShape,
     exportOvalShape,
     exportPathShape,
+    exportPathShape2,
     exportRectShape,
     exportSymbolRefShape,
     exportSymbolShape,
     exportSymbolUnionShape,
     exportTableShape,
     exportText,
-    exportTextShape, exportPathShape2
+    exportTextShape,
+    IExportContext
 } from "../data/baseexport";
 import {
     IImportContext,
     importArtboard,
+    importBoolShape,
     importContactShape,
     importCutoutShape,
     importGradient,
@@ -28,7 +30,8 @@ import {
     importImageShape,
     importLineShape,
     importOvalShape,
-    importPathShape, importPathShape2,
+    importPathShape,
+    importPathShape2,
     importRectShape,
     importSymbolRefShape,
     importSymbolShape,
@@ -44,8 +47,6 @@ import { newSymbolRefShape, newTextShape, newTextShapeByText } from "../editor/c
 import { Api } from "../editor/coop/recordapi";
 import { translateTo } from "../editor/frame";
 import { Page } from "../data/page";
-import { Gradient } from "data/style";
-import { Color } from "data/color";
 
 export function set_childs_id(shapes: Shape[], matched?: Set<string>) {
     for (let i = 0, len = shapes.length; i < len; i++) {
@@ -111,6 +112,8 @@ export function export_shape(shapes: Shape[]) {
             content = exportCutoutShape(shape as unknown as types.CutoutShape, ctx);
         } else if (type === ShapeType.SymbolUnion) {
             content = exportSymbolUnionShape(shape as unknown as types.SymbolUnionShape, ctx);
+        } else if (type === ShapeType.BoolShape) {
+            content = exportBoolShape(shape as unknown as types.BoolShape, ctx);
         }
         if (content) {
             result.push(content);
@@ -307,6 +310,8 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
                 }
                 if (!isFree) set_childs_id(children, matched);
                 r = importSymbolUnionShape(_s as any as SymbolUnionShape, ctx);
+            } else if (type === ShapeType.BoolShape) {
+                r = importBoolShape(_s as any as types.BoolShape, ctx);
             }
 
             if (r) {
