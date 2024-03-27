@@ -7,6 +7,7 @@ import { getHorizontalRadians } from "../../editor/page";
 import { Artboard } from "../../data/artboard";
 import { Point2D } from "../../data/typesdefine";
 import { float_accuracy } from "../../basic/consts";
+import { Document } from "../../data/document";
 
 function equal_with_mean(a: number, b: number) {
     return Math.abs(a - b) < float_accuracy;
@@ -41,7 +42,7 @@ function modify_straight_length(api: Api, page: Page, shape: PathShape, val: num
 /**
  * @description 主动修改图形的宽度为指定宽度val，这个函数因直线段而存在🤯
  */
-export function modify_shapes_width(api: Api, page: Page, shapes: Shape[], val: number) {
+export function modify_shapes_width(api: Api, document: Document, page: Page, shapes: Shape[], val: number) {
     for (let i = 0, l = shapes.length; i < l; i++) {
         const shape = shapes[i];
 
@@ -59,11 +60,11 @@ export function modify_shapes_width(api: Api, page: Page, shapes: Shape[], val: 
             h = h / rate;
         }
 
-        expandTo(api, page, shape, val, h);
+        expandTo(api, document, page, shape, val, h);
     }
 }
 
-export function modify_shapes_height(api: Api, page: Page, shapes: Shape[], val: number) {
+export function modify_shapes_height(api: Api, document: Document, page: Page, shapes: Shape[], val: number) {
     for (let i = 0, l = shapes.length; i < l; i++) {
         const shape = shapes[i];
 
@@ -80,7 +81,7 @@ export function modify_shapes_height(api: Api, page: Page, shapes: Shape[], val:
             w = w / rate;
         }
 
-        expandTo(api, page, shape, w, val);
+        expandTo(api, document, page, shape, w, val);
     }
 }
 /**

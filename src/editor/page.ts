@@ -53,7 +53,7 @@ import { Matrix } from "../basic/matrix";
 import {
     IImportContext,
     importArtboard,
-    importBorder, importGradient, importShapeFrame,
+    importBorder, importCornerRadius, importGradient, importShapeFrame,
     importStop,
     importStyle,
     importSymbolShape
@@ -529,6 +529,9 @@ export class PageEditor {
 
         const style = replace ? importStyle((shape0.style)) : undefined;
         const symbolShape = newSymbolShape(replace ? shape0.name : (name ?? shape0.name), frame, style);
+        if (replace && shape0 instanceof Artboard && shape0.cornerRadius) {
+            symbolShape.cornerRadius = importCornerRadius(shape0.cornerRadius);
+        }
         const api = this.__repo.start("makeSymbol", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
             const state = {} as SelectionState;
             if (!isUndo) state.shapes = [symbolShape.id];
@@ -1762,7 +1765,7 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const { target, widthExtend, heightExtend } = actions[i];
-                expand(api, this.__page, target, widthExtend, heightExtend);
+                expand(api, this.__document, this.__page, target, widthExtend, heightExtend);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1773,7 +1776,7 @@ export class PageEditor {
     modifyShapesWidth(shapes: Shape[], val: number) {
         try {
             const api = this.__repo.start('modifyShapesWidth');
-            modify_shapes_width(api, this.__page, shapes, val)
+            modify_shapes_width(api, this.__document, this.__page, shapes, val)
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
@@ -1783,7 +1786,7 @@ export class PageEditor {
     modifyShapesHeight(shapes: Shape[], val: number) {
         try {
             const api = this.__repo.start('modifyShapesHeight');
-            modify_shapes_height(api, this.__page, shapes, val)
+            modify_shapes_height(api, this.__document, this.__page, shapes, val)
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();

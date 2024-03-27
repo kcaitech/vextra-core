@@ -189,6 +189,8 @@ export class ShapeEditor {
                 });
                 if (view.isCustomSize) {
                     api.shapeModifyIsCustomSize(this.__page, view.data, false);
+                    const sym = view.symData;
+                    if (sym) api.shapeModifyWH(this.__page, view.data, sym.frame.width, sym.frame.height);
                 }
             } else {
                 // 清空p中与当前view相关的variables,overrides
@@ -369,13 +371,13 @@ export class ShapeEditor {
 
     public expand(dw: number, dh: number) {
         this._repoWrap("expand", (api) => {
-            expand(api, this.__page, this.shape, dw, dh);
+            expand(api, this.__document, this.__page, this.shape, dw, dh);
         });
     }
 
     public expandTo(w: number, h: number) {
         this._repoWrap("expandTo", (api) => {
-            expandTo(api, this.__page, this.shape, w, h);
+            expandTo(api, this.__document, this.__page, this.shape, w, h);
         });
     }
 
