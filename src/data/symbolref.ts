@@ -12,7 +12,6 @@ import { Variable } from "./variable";
 import { SymbolMgr } from "./symbolmgr";
 import { PathType, RadiusType } from "./consts";
 import { exportSymbolRefShape } from "./baseexport";
-// import { findOverrideAndVar } from "./utils";
 
 function genRefId(refId: string, type: OverrideType) {
     if (type === OverrideType.Variable) return refId;
@@ -85,13 +84,17 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
             if (mgr) mgr.addRef(id, this);
         }
     }
+
+    __isAdded: boolean = false;
     onAdded(): void {
+        this.__isAdded = true;
         const mgr = this.__symMgr;
         if (mgr) {
             mgr.addRef(this.refId, this);
         }
     }
     onRemoved(): void {
+        this.__isAdded = false;
         const mgr = this.__symMgr;
         if (mgr) {
             mgr.removeRef(this.refId, this);
@@ -108,7 +111,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
 
     setSymbolMgr(mgr: SymbolMgr) {
         this.__symMgr = mgr;
-        if (mgr) {
+        if (mgr && this.__isAdded) {
             mgr.addRef(this.refId, this);
         }
     }
