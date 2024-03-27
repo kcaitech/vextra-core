@@ -10,7 +10,7 @@ import { Shape, SymbolShape, CornerRadius } from "./shape";
 import { Path } from "./path";
 import { Variable } from "./variable";
 import { SymbolMgr } from "./symbolmgr";
-import { PathType, RadiusType } from "./consts";
+import { FrameType, PathType, RadiusType } from "./consts";
 import { exportSymbolRefShape } from "./baseexport";
 
 function genRefId(refId: string, type: OverrideType) {
@@ -163,5 +163,9 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
 
     get radiusType() {
         return RadiusType.Rect;
+    }
+
+    get frameType() {
+        return FrameType.Flex;
     }
 }
