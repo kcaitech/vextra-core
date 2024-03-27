@@ -1,4 +1,4 @@
-import { Border, ContextSettings, CornerRadius, Fill, MarkerType, OverrideType, Shadow, Shape, ShapeFrame, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType } from "../data/classes";
+import { Border, ContextSettings, CornerRadius, Fill, MarkerType, OverrideType, Shadow, Shape, ShapeFrame, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType, getPathOfRadius } from "../data/classes";
 import { ShapeView } from "./shape";
 import { ShapeType } from "../data/classes";
 import { DataView, RootView } from "./view";
@@ -70,6 +70,13 @@ export class SymbolRefView extends ShapeView {
     }
     get isCustomSize() {
         return this.data.isCustomSize;
+    }
+
+    getPath() {
+        if (this.m_path) return this.m_path;
+        this.m_path = getPathOfRadius(this.frame, this.cornerRadius, this.m_fixedRadius);
+        this.m_path.freeze();
+        return this.m_path;
     }
 
     onDataChange(...args: any[]): void {
