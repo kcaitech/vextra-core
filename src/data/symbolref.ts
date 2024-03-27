@@ -12,6 +12,7 @@ import { Path } from "./path";
 import { Variable } from "./variable";
 import { SymbolMgr } from "./symbolmgr";
 import { PathType } from "./consts";
+import { exportSymbolRefShape } from "./baseexport";
 // import { findOverrideAndVar } from "./utils";
 
 function genRefId(refId: string, type: OverrideType) {
@@ -50,6 +51,10 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         )
         this.__refId = refId
         this.variables = variables;
+    }
+
+    toJSON() { // 直接json导出没有导出refId
+        return exportSymbolRefShape(this);
     }
 
     getOpTarget(path: string[]): any {
