@@ -308,7 +308,11 @@ export class ShapeView extends DataView {
     }
 
     onDataChange(...args: any[]): void {
-        if (args.includes('points') || args.includes('isClosed') || (this.m_fixedRadius || 0) !== ((this.m_data as any).fixedRadius || 0)) {
+        if (args.includes('points')
+            || args.includes('isClosed')
+            || (this.m_fixedRadius || 0) !== ((this.m_data as any).fixedRadius || 0)
+            || args.includes('cornerRadius')
+        ) {
             this.m_path = undefined;
             this.m_pathstr = undefined;
         }
@@ -827,7 +831,7 @@ export class ShapeView extends DataView {
         return this.m_data.radius;
     }
 
-    get isRectFrame() {
-        return this.m_data.isRectFrame;
+    get radiusType() {
+        return this.m_data.radiusType;
     }
 }

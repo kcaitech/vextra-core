@@ -10,7 +10,7 @@ import { Shape, SymbolShape, CornerRadius } from "./shape";
 import { Path } from "./path";
 import { Variable } from "./variable";
 import { SymbolMgr } from "./symbolmgr";
-import { PathType } from "./consts";
+import { PathType, RadiusType } from "./consts";
 
 function genRefId(refId: string, type: OverrideType) {
     if (type === OverrideType.Variable) return refId;
@@ -152,7 +152,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         return [0];
     }
 
-    get isRectFrame() {
-        return true;
+    get radiusType() {
+        return RadiusType.Rect;
     }
 }

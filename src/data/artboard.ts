@@ -14,6 +14,7 @@ import { Style } from "./style";
 import * as classes from "./baseclasses";
 import { BasicArray } from "./basic";
 import { Path } from "./path";
+import { RadiusType } from "./consts";
 export class Artboard extends GroupShape implements classes.Artboard {
     typeId = 'artboard';
     cornerRadius?: CornerRadius
@@ -63,7 +64,7 @@ export class Artboard extends GroupShape implements classes.Artboard {
         ];
     }
 
-    get isRectFrame() {
-        return true;
+    get radiusType() {
+        return RadiusType.Rect;
     }
 }

@@ -340,3 +340,8 @@ export enum PathType {
     Multi = 2 // 多条可编辑路径
 }
 
+export enum RadiusType {
+    None = 0,
+    Fixed = 1,
+    Rect = 2
+}

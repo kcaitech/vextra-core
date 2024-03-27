@@ -171,7 +171,6 @@ export class DataView extends EventEL {
     }
 
     onDataChange(...args: any[]) {
-
     }
 
     layout(props?: PropsType) {

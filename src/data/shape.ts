@@ -1,34 +1,34 @@
-import { Basic, BasicMap, ResourceMgr } from "./basic";
-import { Style, Border, ContextSettings, BlendMode } from "./style";
+import { Basic, BasicArray, BasicMap, ResourceMgr } from "./basic";
+import { BlendMode, Border, ContextSettings, Style } from "./style";
 import { Text } from "./text";
 import * as classes from "./baseclasses"
-import { BasicArray } from "./basic";
+import {
+    BoolOp,
+    CornerRadius,
+    CurveMode,
+    CurvePoint,
+    ExportOptions,
+    OverrideType,
+    PathSegment,
+    ResizeType,
+    ShapeFrame,
+    ShapeType,
+    VariableType
+} from "./baseclasses"
+import { Path } from "./path";
+import { Matrix } from "../basic/matrix";
+import { TextLayout } from "./textlayout";
+import { parsePath } from "./pathparser";
+import { FrameType, PathType, RadiusType, RECT_POINTS } from "./consts";
+import { Variable } from "./variable";
+import { TableShape } from "./table";
+import { SymbolRefShape } from "./symbolref";
 
 export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D,
     CurvePoint, ShapeFrame, Ellipse, PathSegment, OverrideType, VariableType,
     FillRule, CornerRadius,
 } from "./baseclasses";
-import {
-    ShapeType,
-    CurvePoint,
-    ShapeFrame,
-    BoolOp,
-    ExportOptions,
-    ResizeType,
-    PathSegment,
-    OverrideType,
-    VariableType,
-    CornerRadius
-} from "./baseclasses"
-import { Path } from "./path";
-import { Matrix } from "../basic/matrix";
-import { TextLayout } from "./textlayout";
-import { parsePath } from "./pathparser";
-import { FrameType, PathType, RECT_POINTS } from "./consts";
-import { Variable } from "./variable";
-import { TableShape } from "./table";
-import { SymbolRefShape } from "./symbolref";
 
 export { Variable } from "./variable";
 
@@ -436,8 +436,8 @@ export class Shape extends Basic implements classes.Shape {
         return [0];
     }
 
-    get isRectFrame() {
-        return false;
+    get radiusType() {
+        return RadiusType.None;
     }
 }
 
@@ -547,6 +547,10 @@ export class GroupShape extends Shape implements classes.GroupShape {
     get isPathIcon() {
         return false;
     }
+
+    get radiusType() {
+        return RadiusType.Fixed;
+    }
 }
 
 export class BoolShape extends GroupShape implements classes.BoolShape {
@@ -633,28 +637,48 @@ export function getPathOfRadius(frame: ShapeFrame, cornerRadius?: CornerRadius, 
         rt = Math.max(0, Math.min(rt, maxRadius));
         rb = Math.max(0, Math.min(rb, maxRadius));
     }
-    const path = [];
-    path.push(["M", lt, 0]);
-    path.push(["l", w - lt - rt, 0]);
-    if (rt > 0) {
-        path.push(["c", rt, 0, 0, 0, 0, rt]);
-    }
-    path.push(["l", 0, h - rt - rb]);
-    if (rb > 0) {
-        path.push(["c", 0, rb, 0, 0, -rb, 0]);
-    }
-    path.push(["l", -w + lb + rb, 0]);
-    if (lb > 0) {
-        path.push(["c", -lb, 0, 0, 0, 0, -lb]);
-    }
+
+    // const path = [];
+    // path.push(["M", lt, 0]);
+    // path.push(["l", w - lt - rt, 0]);
+    // if (rt > 0) {
+    //     path.push(["c", rt, 0, 0, 0, 0, rt]);
+    // }
+    // path.push(["l", 0, h - rt - rb]);
+    // if (rb > 0) {
+    //     path.push(["c", 0, rb, 0, 0, -rb, 0]);
+    // }
+    // path.push(["l", -w + lb + rb, 0]);
+    // if (lb > 0) {
+    //     path.push(["c", -lb, 0, 0, 0, 0, -lb]);
+    // }
+    //
+    // if (lt > 0) {
+    //     path.push(["l", 0, -h + lt + lb]);
+    //     path.push(["c", 0, -lt, 0, 0, lt, 0]);
+    // }
+    //
+    // path.push(["z"]);
+
+    const p1 = new CurvePoint([] as any, '', 0, 0, CurveMode.Straight);
+    const p2 = new CurvePoint([] as any, '', 1, 0, CurveMode.Straight);
+    const p3 = new CurvePoint([] as any, '', 1, 1, CurveMode.Straight);
+    const p4 = new CurvePoint([] as any, '', 0, 1, CurveMode.Straight);
 
     if (lt > 0) {
-        path.push(["l", 0, -h + lt + lb]);
-        path.push(["c", 0, -lt, 0, 0, lt, 0]);
+        p1.radius = lt;
+    }
+    if (rt > 0) {
+        p2.radius = rt;
+    }
+    if (rb > 0) {
+        p3.radius = rb;
+    }
+    if (lb > 0) {
+        p4.radius = lb;
     }
 
-    path.push(["z"]);
-    return new Path(path);
+    return new Path(parsePath(new BasicArray<CurvePoint>(p1, p2, p3, p4), true, 0, 0, w, h, fixedRadius));
 }
 
 export class SymbolShape extends GroupShape implements classes.SymbolShape {
@@ -744,8 +768,8 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         ];
     }
 
-    get isRectFrame() {
-        return true;
+    get radiusType() {
+        return RadiusType.Rect;
     }
 }
 
@@ -890,8 +914,10 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
         return PathType.Multi;
     }
 
-    get isRectFrame() {
-        return this.pathsegs.length === 1 && this.pathsegs[0].points.length === 4 && this.pathsegs[0].isClosed;
+    get radiusType() {
+        return (this.pathsegs.length === 1 && this.pathsegs[0].points.length === 4 && this.pathsegs[0].isClosed)
+            ? RadiusType.Rect
+            : RadiusType.Fixed;
     }
 }
 
@@ -942,8 +968,8 @@ export class RectShape extends PathShape implements classes.RectShape {
         }
         return ret;
     }
-    get isRectFrame() {
-        return  this.points.length === 4 && this.isClosed;
+    get radiusType() {
+        return (this.points.length === 4 && this.isClosed) ? RadiusType.Rect : RadiusType.Fixed;
     }
 }
 
