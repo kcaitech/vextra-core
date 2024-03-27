@@ -30,7 +30,7 @@ export type SizeRecorder = Map<string, { toRight: number, exceededX: boolean, to
 export const minimum_WH = 0.01; // 用户可设置最小宽高值。以防止宽高在缩放后为0
 
 export function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape, scaleX: number, scaleY: number, originFrame: ShapeFrame, recorder?: SizeRecorder) {
-    if (shape.type === ShapeType.Group) { // 有且只有编组的子元素只可为跟随缩放，应忽略constraint
+    if (shape.type === ShapeType.Group || shape.type === ShapeType.BoolShape) { // 有且只有编组的子元素只可为跟随缩放，应忽略constraint
         return modifySizeIgnoreConstraint(api, page, shape, scaleX, scaleY);
     }
 
