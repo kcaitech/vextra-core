@@ -150,10 +150,10 @@ export function shapeModifyRadius2(parent: Artboard | SymbolShape | Variable, co
         cornerRadius = parent.cornerRadius;
     }
     const ops = [];
-    if (cornerRadius.lt !== lt) ops.push(crdtSetAttr(cornerRadius, 'lt', lt));
-    if (cornerRadius.rt !== rt) ops.push(crdtSetAttr(cornerRadius, 'rt', rt));
-    if (cornerRadius.lb !== lb) ops.push(crdtSetAttr(cornerRadius, 'lb', lb));
-    if (cornerRadius.rb !== rb) ops.push(crdtSetAttr(cornerRadius, 'rb', rb));
+    if (cornerRadius.lt !== lt && lt >= 0) ops.push(crdtSetAttr(cornerRadius, 'lt', lt));
+    if (cornerRadius.rt !== rt && rt >= 0) ops.push(crdtSetAttr(cornerRadius, 'rt', rt));
+    if (cornerRadius.lb !== lb && lb >= 0) ops.push(crdtSetAttr(cornerRadius, 'lb', lb));
+    if (cornerRadius.rb !== rb && rb >= 0) ops.push(crdtSetAttr(cornerRadius, 'rb', rb));
     return ops;
 }
 export function shapeModifyFixedRadius(shape: GroupShape | PathShape | PathShape2, fixedRadius: number | undefined) {

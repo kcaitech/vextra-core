@@ -101,7 +101,7 @@ import {
     adapt2Shape,
     SymbolRefView
 } from "../dataview";
-import { ResizingConstraints2 } from "../data/consts";
+import { RadiusType, ResizingConstraints2 } from "../data/consts";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -1345,7 +1345,7 @@ export class PageEditor {
 
             for (let i = 0; i < shapes.length; i++) {
                 const shape = adapt2Shape(shapes[i]);
-                const isRect = shape.isRectFrame;
+                const isRect = shape.radiusType === RadiusType.Rect;
 
                 if (isRect) {
                     if (values.length !== 4) {
