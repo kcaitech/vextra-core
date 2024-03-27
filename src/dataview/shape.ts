@@ -165,6 +165,7 @@ export function transformPoints(points: CurvePoint[], matrix: Matrix) {
             transp.toX = top.x;
             transp.toY = top.y;
         }
+        transp.radius = p.radius;
 
         ret.push(transp);
     }
