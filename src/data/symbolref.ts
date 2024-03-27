@@ -108,9 +108,9 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
 
     setSymbolMgr(mgr: SymbolMgr) {
         this.__symMgr = mgr;
-        if (mgr) {
-            mgr.addRef(this.refId, this);
-        }
+        // if (mgr) {
+        //     mgr.addRef(this.refId, this);
+        // }
     }
     getSymbolMgr() {
         return this.__symMgr;
