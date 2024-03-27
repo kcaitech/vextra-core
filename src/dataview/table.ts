@@ -130,6 +130,8 @@ export class TableView extends ShapeView {
         const frame = this.frame;
         if (this.m_layout && this.m_saveheight === frame.height && this.m_savewidth === frame.width) return this.m_layout;
         this.m_layout = layoutTable(this.data, frame, (ri: number, ci: number) => (this._getCellAt(ri, ci)));
+        this.m_saveheight = frame.height;
+        this.m_savewidth = frame.width;
         return this.m_layout;
     }
 
@@ -149,23 +151,30 @@ export class TableView extends ShapeView {
         for (let i = 0, len = layout.grid.rowCount; i < len; ++i) {
             for (let j = 0, len = layout.grid.colCount; j < len; ++j) {
                 const cellLayout = layout.grid.get(i, j);
-                const cell = this._getCellAt(cellLayout.index.row, cellLayout.index.col);
-                if (cell && cellLayout.index.row === i && cellLayout.index.col === j) {
-                    const cdom = reuse.get(cell.id);
-                    const props = { data: cell, transx: this.m_transx, varsContainer: this.varsContainer, frame: cellLayout.frame, isVirtual: this.m_isVirtual, index: cellLayout.index };
-                    if (cdom) {
-                        reuse.delete(cell.id);
-                        this.moveChild(cdom, idx);
-                        cdom.layout(props);
-                    } else {
-                        // const comsMap = this.m_ctx.comsMap;
-                        const Com = comsMap.get(cell.type) || comsMap.get(ShapeType.Rectangle)!;
-                        const ins = new Com(this.m_ctx, props) as DataView;
-                        this.addChild(ins, idx);
-                        this.m_cells.set(ins.id, ins as TableCellView);
-                    }
-                    ++idx;
+                const rowIdx = cellLayout.index.row;
+                const colIdx = cellLayout.index.col;
+                if (rowIdx !== i || colIdx !== j) continue;
+                // if (cellLayout.index.row === i && cellLayout.index.col === j) {
+                const cellId = this.rowHeights[rowIdx].id + "," + this.colWidths[colIdx].id;
+                const cdom = reuse.get(cellId) as TableCellView | undefined;
+                const props = { data: cdom?.data as TableCell, transx: this.m_transx, varsContainer: this.varsContainer, frame: cellLayout.frame, isVirtual: this.m_isVirtual, index: cellLayout.index };
+                if (cdom) {
+                    const cell = this._getCellAt2(rowIdx, colIdx);
+                    if (cell) props.data = cell;
+                    reuse.delete(cellId);
+                    this.moveChild(cdom, idx);
+                    cdom.layout(props);
+                } else {
+                    const cell = this._getCellAt(rowIdx, colIdx);
+                    props.data = cell;
+                    // const comsMap = this.m_ctx.comsMap;
+                    const Com = comsMap.get(cell.type) || comsMap.get(ShapeType.Rectangle)!;
+                    const ins = new Com(this.m_ctx, props) as DataView;
+                    this.addChild(ins, idx);
+                    this.m_cells.set(ins.id, ins as TableCellView);
                 }
+                ++idx;
+                // }
             }
         }
         if (this.m_children.length > idx) {
