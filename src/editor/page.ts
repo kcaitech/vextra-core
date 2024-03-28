@@ -785,6 +785,7 @@ export class PageEditor {
             tmpArtboard.rotation = shape.rotation;
             tmpArtboard.isFlippedHorizontal = shape.isFlippedHorizontal;
             tmpArtboard.isFlippedVertical = shape.isFlippedVertical;
+            tmpArtboard.cornerRadius = shape.cornerRadius;
             const symbolData = exportArtboard(tmpArtboard); // todo 如果symbol只有一个child时
 
             // 遍历symbolData,如有symbolref,则查找根shape是否有对应override的变量,如有则存到symbolref内
