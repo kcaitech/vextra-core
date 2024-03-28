@@ -320,7 +320,15 @@ export class TextRepoNode extends RepoNode {
         if (ops.length > this.localops.length) throw new Error();
         // const savelocals = this.localops.slice(0);
         for (let i = 0; i < ops.length;) {
-            const op = ops[i];
+            const op = ops[i]; // 可能有selectionop
+            if ((op.op as ArrayOp).type1 === ArrayOpType.Selection) {
+                const op0 = this.localops[0];
+                if (op0 && op0.cmd.id === op.cmd.id && (op0.op as ArrayOp).type1 === ArrayOpType.Selection) {
+                    this.localops.shift();
+                }
+                ++i;
+                continue;
+            }
 
             let count = 0;
             while (this.localops.length > 0 && this.localops[0].cmd.id === op.cmd.id) {
