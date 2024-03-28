@@ -55,15 +55,15 @@ export class CoopRepository {
     private __api: Api;
     private selection?: ISave4Restore;
 
-    constructor(document: Document, repo: Repository, cmds: Cmd[] = [], localcmds: LocalCmd[] = []) {
+    constructor(document: Document, repo: Repository, /*cmds: Cmd[] = [], localcmds: LocalCmd[] = []*/) {
         this.__repo = repo;
         this.__api = Api.create(repo);
         this.__cmdrepo = new CmdRepo(document, repo, new MockNet())
-        this.__cmdrepo.restore(cmds, localcmds);
 
-        if (cmds.length > 0 || localcmds.length > 0) {
-            this.__cmdrepo.roll2NewVersion([document.id]);
-        }
+        // this.__cmdrepo.restore(cmds, localcmds);
+        // if (cmds.length > 0 || localcmds.length > 0) {
+        //     this.__cmdrepo.roll2NewVersion([document.id]);
+        // }
 
         document.pagesMgr.setUpdater((data: Page) => {
             this.__cmdrepo.roll2NewVersion([data.id]);

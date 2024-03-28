@@ -542,6 +542,11 @@ class CmdSync {
         } else if (this.cmds.length > 0) {
             lastVer = this.cmds[this.cmds.length - 1].version;
         }
+        // fix preversion
+        if (cmds.length > 0) {
+            const cmd = cmds[0];
+            if (SNumber.comp(cmd.previousVersion, cmd.baseVer) < 0) cmd.previousVersion = cmd.baseVer;
+        }
         // check
         const abortshead: Cmd[] = [];
         const aborts: Cmd[] = [];
@@ -920,36 +925,36 @@ export class CmdRepo {
     constructor(document: Document, repo: Repository, net: ICoopNet) {
         this.cmdsync = new CmdSync(document, repo, net);
     }
-    restore(cmds: Cmd[], localcmds: LocalCmd[]) {
-        // todo 只有本地编辑undo时，需要往回回退版本。初始化时的cmd是不能回退回去的。可以考虑不以undo-do-redo的方式来restore!
-        // 比如离线编辑，有比较多的本地cmd需要同步时，太多的undo比较费时。
-        // restore
+    // restore(cmds: Cmd[], localcmds: LocalCmd[]) {
+    //     // todo 只有本地编辑undo时，需要往回回退版本。初始化时的cmd是不能回退回去的。可以考虑不以undo-do-redo的方式来restore!
+    //     // 比如离线编辑，有比较多的本地cmd需要同步时，太多的undo比较费时。
+    //     // restore
 
-        if (this.localcmds.length > 0 || this.cmdsync.cmds.length > 0) throw new Error();
-        if (cmds.length === 0 && localcmds.length === 0) return;
+    //     if (this.localcmds.length > 0 || this.cmdsync.cmds.length > 0) throw new Error();
+    //     if (cmds.length === 0 && localcmds.length === 0) return;
 
-        // 拷贝一下, _receive会修改原数组
-        cmds = cmds.slice(0);
-        localcmds = localcmds.slice(0);
+    //     // 拷贝一下, _receive会修改原数组
+    //     cmds = cmds.slice(0);
+    //     localcmds = localcmds.slice(0);
 
-        const repo = this.cmdsync.repo;
-        repo.start("init");
-        try {
-            if (cmds.length > 0) {
-                if (cmds[0].previousVersion !== this.cmdsync.baseVer) throw new Error();
-                this.cmdsync._receive(cmds);
-                this.cmdsync.cmds.push(...cmds);
-                this.cmdsync.nettask.updateVer(this.cmdsync.baseVer, cmds[cmds.length - 1].version);
-            }
-            if (localcmds.length > 0) {
-                localcmds.forEach(item => this.cmdsync.commit(item));
-                this.localcmds.push(...localcmds);
-            }
-            repo.commit();
-        } catch (e) {
-            repo.rollback();
-        }
-    }
+    //     const repo = this.cmdsync.repo;
+    //     repo.start("init");
+    //     try {
+    //         if (cmds.length > 0) {
+    //             if (cmds[0].previousVersion !== this.cmdsync.baseVer) throw new Error();
+    //             this.cmdsync._receive(cmds);
+    //             this.cmdsync.cmds.push(...cmds);
+    //             this.cmdsync.nettask.updateVer(this.cmdsync.baseVer, cmds[cmds.length - 1].version);
+    //         }
+    //         if (localcmds.length > 0) {
+    //             localcmds.forEach(item => this.cmdsync.commit(item));
+    //             this.localcmds.push(...localcmds);
+    //         }
+    //         repo.commit();
+    //     } catch (e) {
+    //         repo.rollback();
+    //     }
+    // }
 
     // 本地cmd
     // 区分需要应用的与不需要应用的
