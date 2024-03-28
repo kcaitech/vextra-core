@@ -1,15 +1,16 @@
-import { OverrideType, Shadow, ShadowPosition, ShapeType, VariableType } from "../data/baseclasses";
+import { BorderPosition, OverrideType, Shadow, ShadowPosition, ShapeType, VariableType } from "../data/baseclasses";
 import { Border, Fill, Style } from "../data/style";
 import { Shape, ShapeFrame, SymbolRefShape, SymbolShape } from "../data/classes";
 import { render as borderR } from "./border";
 import { findOverrideAndVar } from "../data/utils";
 import { objectId } from "../basic/objectid";
 import { randomId } from "./basic";
+import { log } from "console";
 
 const shadowOri: {
-    [key: string]: (h: Function, shadow: Shadow, frame: ShapeFrame, id: string, i: number, path: string, fills: Fill[], borders: Border[]) => any
+    [key: string]: (h: Function, shadow: Shadow, frame: ShapeFrame, id: string, i: number, path: string, fills: Fill[], borders: Border[], shapeType: ShapeType) => any
 } = {};
-shadowOri[ShadowPosition.Outer] = function (h: Function, shadow: Shadow, frame: ShapeFrame, id: string, i: number, path: string, fills: Fill[], borders: Border[]): any {
+shadowOri[ShadowPosition.Outer] = function (h: Function, shadow: Shadow, frame: ShapeFrame, id: string, i: number, path: string, fills: Fill[], borders: Border[], shapeType: ShapeType): any {
     const { width, height } = frame;
     // const shadow = style.shadows[i];
     const f_props: any = { props_w: [width * 1.4], props_h: [height * 1.4], props_x: [-(width * 0.2)], props_y: [-(height * 0.2)] }
@@ -61,9 +62,10 @@ shadowOri[ShadowPosition.Outer] = function (h: Function, shadow: Shadow, frame: 
     const p = h('g', g_props, [h('path', body_props), ...border]);
     return { filter, p }
 }
-shadowOri[ShadowPosition.Inner] = function (h: Function, shadow: Shadow, frame: ShapeFrame, id: string, i: number, path: string, fills: Fill[], borders: Border[]): any {
+shadowOri[ShadowPosition.Inner] = function (h: Function, shadow: Shadow, frame: ShapeFrame, id: string, i: number, path: string, fills: Fill[], borders: Border[], shapeType: ShapeType): any {
     const f_id = `inner-shadow-${id + i}`;
     // const shadow = style.shadows[i];
+    const { width, height } = frame;
     const { color, offsetX, offsetY, blurRadius, spread } = shadow;
     const fe_offset_props = {
         dx: offsetX,
@@ -104,7 +106,14 @@ shadowOri[ShadowPosition.Inner] = function (h: Function, shadow: Shadow, frame: 
         result: 'spread'
     }
 
-    const filter_props = { id: f_id, x: '-20%', y: '-20%', height: '140%', width: '140%' };
+    const filter_props = { id: f_id, x: -width * 0.2, y: -height * 0.2, height: height * 1.4, width: width * 1.4, 'color-interpolation-filters': "sRGB", filterUnits: 'userSpaceOnUse' };
+    if (shapeType === ShapeType.Line) {
+        const m_border = max_border(borders) * 9;
+        filter_props.x = -(width * 0.2) - m_border;
+        filter_props.y = -(height * 0.2) - m_border;
+        filter_props.width = (width * 1.4) + (m_border * 2);
+        filter_props.height = (height * 1.4) + (m_border * 2);
+    }
     const h_node = [
         h('feOffset', fe_offset_props),
         h('feMorphology', fe_morphology),
@@ -117,7 +126,7 @@ shadowOri[ShadowPosition.Inner] = function (h: Function, shadow: Shadow, frame: 
     return h('filter', filter_props, h_node);
 }
 
-function shadowShape(h: Function, shadows: Shadow[], frame: ShapeFrame, id: string): any {
+function shadowShape(h: Function, shadows: Shadow[], frame: ShapeFrame, id: string, borders: Border[], shapeType: ShapeType): any {
     shadows = shadows.filter(s => s.position === ShadowPosition.Outer);
     const { width, height } = frame;
     const f_props: any = { props_w: [width * 1.8], props_h: [height * 1.8], props_x: [-(width * 0.4)], props_y: [-(height * 0.4)] }
@@ -165,11 +174,12 @@ function shadowShape(h: Function, shadows: Shadow[], frame: ShapeFrame, id: stri
             h_nodes.push(...h_node);
         }
     }
-    const filter_props: any = { id: 'pd_outer-' + id, x: '-20%', y: '-20%', height: '140%', width: '140%', filterUnits: 'userSpaceOnUse' };
-    filter_props.width = Math.max(...f_props.props_w) + Math.max(...f_props.props_w);
-    filter_props.height = Math.max(...f_props.props_h) + Math.max(...f_props.props_h);
-    filter_props.x = Math.min(...f_props.props_x) + Math.min(...f_props.props_x);
-    filter_props.y = Math.min(...f_props.props_y) + Math.min(...f_props.props_y);
+    const filter_props: any = { id: 'pd_outer-' + id, x: '-20%', y: '-20%', height: '140%', width: '140%', filterUnits: 'objectBoundingBox' };
+    const m_border = shapeType === ShapeType.Line ? max_border(borders) * 9 : max_border(borders);
+    filter_props.width = Math.max(...f_props.props_w) + Math.max(...f_props.props_w) + (m_border * 2);
+    filter_props.height = Math.max(...f_props.props_h) + Math.max(...f_props.props_h) + (m_border * 2);
+    filter_props.x = Math.min(...f_props.props_x) + Math.min(...f_props.props_x) - m_border;
+    filter_props.y = Math.min(...f_props.props_y) + Math.min(...f_props.props_y) - m_border;
     const fe_flood = {
         'flood-opacity': `0`,
         result: `BackgroundImageFix`
@@ -196,7 +206,7 @@ export function render(h: Function, id: string, shadows: Shadow[], path: string,
     let filters: any[] = [];
     let paths: any[] = [];
     if (shapeType === ShapeType.Artboard && !isFill(fills)) {
-        const filter = shadowShape(h, shadows, frame, id);
+        const filter = shadowShape(h, shadows, frame, id, borders, shapeType);
         if (filter) {
             elArr.push(filter);
         }
@@ -207,18 +217,18 @@ export function render(h: Function, id: string, shadows: Shadow[], path: string,
             if (!shadow.isEnabled) continue;
             if (position === ShadowPosition.Outer) {
                 if (shapeType === ShapeType.Rectangle || shapeType === ShapeType.Artboard || shapeType === ShapeType.Oval) {
-                    const { filter, p } = shadowOri[position](h, shadow, frame, id, i, path, fills, borders);
+                    const { filter, p } = shadowOri[position](h, shadow, frame, id, i, path, fills, borders, shapeType);
                     filters.push(filter);
                     paths.push(p);
                 }
             } else if (position === ShadowPosition.Inner) {
-                const filter = shadowOri[position](h, shadow, frame, id, i, path, fills, borders);
+                const filter = shadowOri[position](h, shadow, frame, id, i, path, fills, borders, shapeType);
                 inner_f.push(filter);
             }
         }
     }
     if (shapeType !== ShapeType.Rectangle && shapeType !== ShapeType.Artboard && shapeType !== ShapeType.Oval) {
-        const filter = shadowShape(h, shadows, frame, id);
+        const filter = shadowShape(h, shadows, frame, id, borders, shapeType);
         if (filter) {
             elArr.push(filter);
         }
@@ -307,4 +317,17 @@ export const isFill = (fills: Fill[]) => {
         }
     }
     return false;
+}
+
+const max_border = (borders: Border[]) => {
+    if (!borders.length) return 0;
+    let max = 0;
+    for (let i = 0; i < borders.length; i++) {
+        const border = borders[i];
+        if (!border.isEnabled || border.position === BorderPosition.Inner) continue;
+        if (border.thickness > max) {
+            max = border.position === BorderPosition.Center ? border.thickness / 2 : border.thickness;
+        }
+    }
+    return max;
 }
