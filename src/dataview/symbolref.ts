@@ -85,6 +85,7 @@ export class SymbolRefView extends ShapeView {
     }
 
     onDataChange(...args: any[]): void {
+        super.onDataChange(...args);
         this.loadsym();
     }
 
