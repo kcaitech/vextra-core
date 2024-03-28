@@ -3,9 +3,6 @@ import { Border, Fill, Style } from "../data/style";
 import { Shape, ShapeFrame, SymbolRefShape, SymbolShape } from "../data/classes";
 import { render as borderR } from "./border";
 import { findOverrideAndVar } from "../data/utils";
-import { objectId } from "../basic/objectid";
-import { randomId } from "./basic";
-import { log } from "console";
 
 const shadowOri: {
     [key: string]: (h: Function, shadow: Shadow, frame: ShapeFrame, id: string, i: number, path: string, fills: Fill[], borders: Border[], shapeType: ShapeType) => any
