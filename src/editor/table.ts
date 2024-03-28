@@ -293,15 +293,10 @@ export class TableEditor extends ShapeEditor {
     private _initCells(rs: number, re: number, cs: number, ce: number, api: Api) {
         for (let r = rs; r <= re; r++) {
             for (let c = cs; c <= ce; c++) {
-                const cell = this.view.getCellAt(r, c);
+                const cell = this.view._getCellAt2(r, c);
                 if (cell && cell.cellType && cell.cellType !== TableCellType.None) continue;
-                // const _text = newText(this.shape.textAttr);
-                // _text.setTextBehaviour(TextBehaviour.Fixed);
-                // _text.setPadding(5, 0, 3, 0);
                 const cellview = this.cell4edit(r, c, api);
                 api.tableSetCellContentType(this.__page, this.shape, cellview, TableCellType.Text);
-                // api.tableSetCellContentText(this.__page, this.shape, this.cell4edit(r, c, api), _text);
-                // api.tableSetCellContentImage(this.__page, this.shape, r, c, undefined);
             }
         }
     }
