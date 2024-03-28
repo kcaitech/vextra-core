@@ -79,6 +79,7 @@ function importPoints(data: IJSON): CurvePoint[] {
             p.toX = curveTo.x;
             p.toY = curveTo.y;
         }
+        p.radius = cornerRadius;
         return p;
     });
 }
