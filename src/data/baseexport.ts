@@ -75,6 +75,9 @@ export function exportVariable(source: types.Variable, ctx?: IExportContext): ty
             if (val.typeId == 'export-options') {
                 return exportExportOptions(val as types.ExportOptions, ctx)
             }
+            if (val.typeId == 'corner-radius') {
+                return exportCornerRadius(val as types.CornerRadius, ctx)
+            }
             {
                 throw new Error('unknow val: ' + val)
             }
