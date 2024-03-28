@@ -315,7 +315,7 @@ class CmdSync {
                 this.postingcmds[i].version = receiveLocals[i].version;
                 this.postingcmds[i].ops.forEach((op) => { if (op instanceof ArrayOp) op.order = receiveLocals[i].version });
             }
-            this._receiveLocal(receiveLocals);
+            this._receiveLocal(this.postingcmds.slice(0, receiveLocals.length));
 
             // 3. 再处理index之后的cmds
             if (this.pendingcmds.length > index + this.postingcmds.length) {
