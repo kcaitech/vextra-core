@@ -1281,6 +1281,9 @@ export class PageEditor {
         return newArtboard(name, frame, fill);
     }
 
+    /**
+     * @deprecated 合入shapesModifyRadius
+     */
     shapesModifyPointRadius(shapes: Shape[], indexes: number[], val: number) {
         try {
             const api = this.__repo.start("shapesModifyPointRadius");
@@ -1306,6 +1309,9 @@ export class PageEditor {
 
     }
 
+    /**
+     * @deprecated 合入shapesModifyRadius
+     */
     shapesModifyFixedRadius(shapes: Shape[], val: number) {
         try {
             const api = this.__repo.start("shapesModifyFixedRadius");
@@ -1352,6 +1358,8 @@ export class PageEditor {
                 const shape = adapt2Shape(shapes[i]);
                 const isRect = shape.radiusType === RadiusType.Rect;
 
+                let needUpdateFrame = false;
+
                 if (isRect) {
                     if (values.length !== 4) {
                         values = [values[0], values[0], values[0], values[0]];
@@ -1378,6 +1386,7 @@ export class PageEditor {
 
                             api.modifyPointCornerRadius(page, shape, _i, val);
                         }
+                        needUpdateFrame = true;
                     }
                     else if (shape instanceof PathShape2) {
                         const points = shape.pathsegs[0].points;
@@ -1389,6 +1398,7 @@ export class PageEditor {
 
                             api.modifyPointCornerRadius(page, shape, _i, val, 0);
                         }
+                        needUpdateFrame = true;
                     }
                     else {
                         const __shape = shape as Artboard | SymbolShape;
@@ -1407,8 +1417,9 @@ export class PageEditor {
                                 continue;
                             }
 
-                            api.modifyPointCornerRadius(page, shape, _i, values[_i]);
+                            api.modifyPointCornerRadius(page, shape, _i, values[0]);
                         }
+                        needUpdateFrame = true;
                     }
                     else if (shape instanceof PathShape2) {
                         shape.pathsegs.forEach((seg, index) => {
@@ -1417,13 +1428,18 @@ export class PageEditor {
                                     continue;
                                 }
 
-                                api.modifyPointCornerRadius(page, shape, _i, values[_i], index);
+                                api.modifyPointCornerRadius(page, shape, _i, values[0], index);
                             }
-                        })
+                        });
+                        needUpdateFrame = true;
                     }
                     else {
                         api.shapeModifyFixedRadius(page, shape as GroupShape | TextShape, values[0]);
                     }
+                }
+
+                if (needUpdateFrame) {
+                    update_frame_by_points(api, this.__page, shape);
                 }
             }
             this.__repo.commit();
