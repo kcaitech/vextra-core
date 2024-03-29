@@ -25,6 +25,10 @@ class MockNet implements ICoopNet {
     watchCmds(watcher: (cmds: Cmd[]) => void): void {
 
     }
+
+    watchError(watcher: (errorInfo: any) => void): void {
+
+    }
 }
 
 function defaultSU(selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd): void {

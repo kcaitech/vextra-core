@@ -29,4 +29,15 @@ export interface ICoopNet {
      */
     watchCmds(watcher: (cmds: Cmd[]) => void): void;
 
+    /**
+     * 监听错误信息
+     * errorInfo的几种类型：
+     * {
+     *   type: "duplicate",
+     *   duplicateCmd: Cmd,
+     * }
+     */
+    watchError(watcher: (errorInfo: any) => void): void;
+
+
 }
