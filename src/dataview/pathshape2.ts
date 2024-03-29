@@ -43,7 +43,7 @@ export class PathShapeView2 extends ShapeView {
         this.m_pathsegs = newpathsegs;
 
         const frame = this.frame;
-        const parsed = newpathsegs.map((seg) => parsePath(seg.points, !!seg.isClosed, 0, 0, frame.width, frame.height, this.fixedRadius));
+        const parsed = newpathsegs.map((seg) => parsePath(seg.points, !!seg.isClosed, frame.width, frame.height, this.fixedRadius));
         const concat = Array.prototype.concat.apply([], parsed);
         this.m_path = new Path(concat);
         this.m_pathstr = this.m_path.toString();

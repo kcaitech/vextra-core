@@ -120,7 +120,7 @@ function add(p: Point2D, pt: Point2D) {
  * curveMode 4, disconnected, control point 位置随意
  * curveMode 3, 也是对称，长度可以不一样
  */
-export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: number, offsetY: number, width: number, height: number, fixedRadius: number = 0): (string | number)[][] {
+export function parsePath(points: CurvePoint[], isClosed: boolean, width: number, height: number, fixedRadius: number = 0): (string | number)[][] {
     let hasBegin = false;
 
 
@@ -144,11 +144,11 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
         path.push(["Z"]);
     }
 
-    const transformPoint = (x: number, y: number): Point2D => {
-        return { x: offsetX + x * width, y: offsetY + y * height };
-    }
+    // const transformPoint = (x: number, y: number): Point2D => {
+    //     return { x: offsetX + x * width, y: offsetY + y * height };
+    // }
 
-    const transformedPoints = points.map((p) => transformPoint(p.x, p.y));
+    // const transformedPoints = points; //.map((p) => transformPoint(p.x, p.y));
 
     for (let i = 0; i < len - 1; i++) {
         _connectTwo(i, i + 1);
@@ -195,21 +195,21 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
         const next = points[nextIndex];
         // if (next.hasTo && !pointEquals(next.x, next.y, next.toX || 0, next.toY || 0)) return;
         // 拿到三个点
-        const prePoint = transformedPoints[preIndex]; //pre.point; // A
-        const curPoint = transformedPoints[idx]; //cur.point; // B
-        const nextPoint = transformedPoints[nextIndex] //next.point; // C
+        // const prePoint = transformedPoints[preIndex]; //pre.point; // A
+        // const curPoint = transformedPoints[idx]; //cur.point; // B
+        // const nextPoint = transformedPoints[nextIndex] //next.point; // C
 
-        const lenAB = distanceTo(curPoint, prePoint);
-        const lenBC = distanceTo(curPoint, nextPoint);
+        const lenAB = distanceTo(cur, pre);
+        const lenBC = distanceTo(cur, next);
 
         // 三点之间的夹角
-        const radian = calcAngleABC(prePoint, curPoint, nextPoint);
+        const radian = calcAngleABC(pre, cur, next);
         if (Number.isNaN(radian)) {
             return;
         }
 
         let radius = cur.radius || fixedRadius;
-        // 计算相切的点距离 curPoint 的距离， 在 radian 为 90 deg 的时候和 radius 相等。
+        // 计算相切的点距离 cur 的距离， 在 radian 为 90 deg 的时候和 radius 相等。
         const tangent = Math.tan(radian / 2);
         let dist = radius / tangent;
 
@@ -226,46 +226,46 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
         }
 
         // 方向向量
-        const vPre = norm(minus(prePoint, curPoint));
-        const vNext = norm(minus(nextPoint, curPoint));
+        const vPre = norm(minus(pre, cur));
+        const vNext = norm(minus(next, cur));
 
         // 相切的点
-        let preTangent = add(multiply(vPre, dist), curPoint);
-        let nextTangent = add(multiply(vNext, dist), curPoint);
+        let preTangent = add(multiply(vPre, dist), cur);
+        let nextTangent = add(multiply(vNext, dist), cur);
 
         // 计算 cubic handler 位置
         const kappa = (4 / 3) * Math.tan((Math.PI - radian) / 4);
 
         let preHandle = add(multiply(vPre, -radius * kappa), preTangent);
         let nextHandle = add(multiply(vNext, -radius * kappa), nextTangent);
-        
+
         let preSlices: Point2D[][] = [];
         let nextSlices: Point2D[][] = [];
 
         if (pre.hasFrom) {
-            const _p2 = transformPoint(pre.fromX || 0, pre.fromY || 0);
-            const t = findTForLength(curPoint, curPoint, _p2, prePoint, dist);
+            const _p2 = { x: pre.fromX || 0, y: pre.fromY || 0 };
+            const t = findTForLength(cur, cur, _p2, pre, dist);
             if (t !== null) {
-                const nt = bezierCurvePoint(t, curPoint, curPoint, _p2, prePoint);
+                const nt = bezierCurvePoint(t, cur, cur, _p2, pre);
                 preTangent = nt ? nt : preTangent;
-                preSlices = splitCubicBezierAtT(curPoint, curPoint, _p2, prePoint, t);
+                preSlices = splitCubicBezierAtT(cur, cur, _p2, pre, t);
                 preHandle = preSlices[0][2];
             }
         }
 
         if (next.hasTo) {
-            const _p2 = transformPoint(next.toX || 0, next.toY || 0);
-            const t = findTForLength(curPoint, curPoint, _p2, nextPoint, dist);
+            const _p2 = { x: next.toX || 0, y: next.toY || 0 };
+            const t = findTForLength(cur, cur, _p2, next, dist);
             if (t !== null) {
-                const nt = bezierCurvePoint(t, curPoint, curPoint, _p2, nextPoint);
+                const nt = bezierCurvePoint(t, cur, cur, _p2, next);
                 nextTangent = nt ? nt : nextTangent;
-                nextSlices = splitCubicBezierAtT(curPoint, curPoint, _p2, nextPoint, t);
+                nextSlices = splitCubicBezierAtT(cur, cur, _p2, next, t);
                 nextHandle = nextSlices[0][2];
             }
         }
 
         cacheCornerCalcInfo[idx] = {
-            curPoint,
+            curPoint: cur,
             preTangent,
             nextTangent,
             preHandle,
@@ -303,8 +303,8 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
             nee_update_end_handle = false;
         } else {
             const fromCurvePoint = points[fromIdx];
-            startPt = transformedPoints[fromIdx]
-            startHandle = fromCurvePoint.hasFrom ? transformPoint(fromCurvePoint.fromX || 0, fromCurvePoint.fromY || 0) : undefined;
+            startPt = fromCurvePoint; // transformedPoints[fromIdx]
+            startHandle = fromCurvePoint.hasFrom ? { x: fromCurvePoint.fromX || 0, y: fromCurvePoint.fromY || 0 } : undefined;
         }
 
         if (!hasBegin) {
@@ -322,9 +322,9 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
             }
         } else {
             const toCurvePoint = points[toIdx];
-            endPt = transformedPoints[toIdx];
+            endPt = toCurvePoint; //transformedPoints[toIdx];
             if (nee_update_end_handle) {
-                endHandle = toCurvePoint.hasTo ? transformPoint(toCurvePoint.toX || 0, toCurvePoint.toY || 0) : undefined;
+                endHandle = toCurvePoint.hasTo ? { x: toCurvePoint.toX || 0, y: toCurvePoint.toY || 0 } : undefined;
             }
         }
 

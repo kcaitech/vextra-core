@@ -14,7 +14,7 @@ test("path", () => {
     const curves = path.toCurvePoints(width, height);
     assert.equal(curves.length, 1);
 
-    const part1 = parsePath(curves[0].points, !!curves[0].isClosed, 0, 0, width, height);
+    const part1 = parsePath(curves[0].points, !!curves[0].isClosed, width, height);
     const path1 = new Path(part1);
 
     assert.equal(pathstr, path1.toString());
@@ -29,8 +29,8 @@ test("path1", () => {
     const curves = path.toCurvePoints(width, height);
     assert.equal(curves.length, 2);
 
-    const part1 = parsePath(curves[0].points, !!curves[0].isClosed, 0, 0, width, height);
-    const part2 = parsePath(curves[1].points, !!curves[1].isClosed, 0, 0, width, height);
+    const part1 = parsePath(curves[0].points, !!curves[0].isClosed, width, height);
+    const part2 = parsePath(curves[1].points, !!curves[1].isClosed, width, height);
 
     const path1 = new Path(part1);
     const path2 = new Path(part2);
