@@ -202,26 +202,20 @@ export function render(h: Function, id: string, shadows: Shadow[], path: string,
     const inner_f = [];
     let filters: any[] = [];
     let paths: any[] = [];
-    if (shapeType === ShapeType.Artboard && !isFill(fills)) {
-        const filter = shadowShape(h, shadows, frame, id, borders, shapeType);
-        if (filter) {
-            elArr.push(filter);
-        }
-    } else {
-        for (let i = 0; i < shadows.length; i++) {
-            const shadow = shadows[i];
-            const position = shadow.position;
-            if (!shadow.isEnabled) continue;
-            if (position === ShadowPosition.Outer) {
-                if (shapeType === ShapeType.Rectangle || shapeType === ShapeType.Artboard || shapeType === ShapeType.Oval) {
-                    const { filter, p } = shadowOri[position](h, shadow, frame, id, i, path, fills, borders, shapeType);
-                    filters.push(filter);
-                    paths.push(p);
-                }
-            } else if (position === ShadowPosition.Inner) {
-                const filter = shadowOri[position](h, shadow, frame, id, i, path, fills, borders, shapeType);
-                inner_f.push(filter);
+
+    for (let i = 0; i < shadows.length; i++) {
+        const shadow = shadows[i];
+        const position = shadow.position;
+        if (!shadow.isEnabled) continue;
+        if (position === ShadowPosition.Outer) {
+            if (shapeType === ShapeType.Rectangle || shapeType === ShapeType.Artboard || shapeType === ShapeType.Oval) {
+                const { filter, p } = shadowOri[position](h, shadow, frame, id, i, path, fills, borders, shapeType);
+                filters.push(filter);
+                paths.push(p);
             }
+        } else if (position === ShadowPosition.Inner) {
+            const filter = shadowOri[position](h, shadow, frame, id, i, path, fills, borders, shapeType);
+            inner_f.push(filter);
         }
     }
     if (shapeType !== ShapeType.Rectangle && shapeType !== ShapeType.Artboard && shapeType !== ShapeType.Oval) {
@@ -304,16 +298,6 @@ export function renderWithVars(h: Function, id: string, shape: Shape, frame: Sha
         }
     }
     return render(h, id, shadows, path, frame, fills, borders, shape.type);
-}
-
-export const isFill = (fills: Fill[]) => {
-    for (let i = 0; i < fills.length; i++) {
-        const fill = fills[i];
-        if (fill.isEnabled && fill.color.alpha > 0) {
-            return true;
-        }
-    }
-    return false;
 }
 
 const max_border = (borders: Border[]) => {

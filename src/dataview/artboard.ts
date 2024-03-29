@@ -4,7 +4,6 @@ import { innerShadowId, renderBorders, renderFills } from "../render";
 import { objectId } from "../basic/objectid";
 import { render as clippathR } from "../render/clippath"
 import { Artboard } from "../data/artboard";
-import { isFill } from "../render/shadow";
 import { CornerRadius } from "../data/classes";
 
 
@@ -126,16 +125,9 @@ export class ArtboradView extends GroupShapeView {
         const content_container = elh("g", { "clip-path": "url(#" + id + ")" }, [...fills, ...childs]);
         if (shadows.length > 0) { // 阴影
             const inner_url = innerShadowId(filterId, this.getShadows());
-
-            if (!isFill(this.style.fills)) {
-                const body = elh("svg", svgprops, [cp, content_container]);
-                const merge = elh("g", { filter: `url(#pd_outer-${filterId}) ${inner_url}` }, [body, ...borders]);
-                this.reset("g", props, [...shadows, merge])
-            } else {
-                if (inner_url.length) svgprops.filter = inner_url;
-                const body = elh("svg", svgprops, [cp, content_container]);
-                this.reset("g", props, [...shadows, body, ...borders])
-            }
+            if (inner_url.length) svgprops.filter = inner_url;
+            const body = elh("svg", svgprops, [cp, content_container]);
+            this.reset("g", props, [...shadows, body, ...borders])
         } else {
             const body = elh("svg", svgprops, [cp, content_container]);
             this.reset("g", props, [body, ...borders])
