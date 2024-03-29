@@ -321,37 +321,26 @@ export class TextRepoNode extends RepoNode {
         // const savelocals = this.localops.slice(0);
         for (let i = 0; i < ops.length;) {
             const op = ops[i]; // 可能有selectionop
-            if ((op.op as ArrayOp).type1 === ArrayOpType.Selection) {
-                const op0 = this.localops[0];
-                if (op0 && op0.cmd.id === op.cmd.id && (op0.op as ArrayOp).type1 === ArrayOpType.Selection) {
-                    this.localops.shift();
-                }
-                ++i;
-                continue;
+
+            let opcount = 1;
+            let localcount = 0;
+            for (let j = i + 1; j < ops.length; ++j) {
+                const opj = ops[j];
+                if (opj.cmd.id !== op.cmd.id) break;
+                ++opcount;
             }
 
-            let count = 0;
             while (this.localops.length > 0 && this.localops[0].cmd.id === op.cmd.id) {
-                const op2 = this.localops.shift();
-                if (!op2) throw new Error();
-
+                const op2 = this.localops.shift()!;
+                ++localcount;
                 if ((op2.op as ArrayOp).type1 !== ArrayOpType.Selection) {
-                    ++count;
                     this.ops.push(op2);
                 }
             }
 
-            // check
-            if (count === 0) {
-                throw new Error("op not match");
-            }
-            for (let j = 1; j < count; ++j) {
-                const op1 = ops[i + j];
-                if (op1.cmd.id !== op.cmd.id) throw new Error("op not match");
-            }
-            if ((i + count) < ops.length && ops[i + count].cmd.id === op.cmd.id) throw new Error("op not match");
+            if (opcount !== localcount) throw new Error("op not match")
 
-            i += count;
+            i += opcount;
         }
         // console.log("receiveLocal", ops)
     }
