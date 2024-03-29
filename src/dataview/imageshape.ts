@@ -1,10 +1,10 @@
 import { objectId } from "../basic/objectid";
 import { EL, elh } from "./el";
-import { ShapeView } from "./shape";
 import {render as clippathR} from "../render/clippath"
 import { DViewCtx, PropsType } from "./viewctx";
 import { ImageShape } from "../data/shape";
-export class ImageShapeView extends ShapeView {
+import { RectShapeView } from "./rect";
+export class ImageShapeView extends RectShapeView {
 
     private m_imgPH: string;
 
