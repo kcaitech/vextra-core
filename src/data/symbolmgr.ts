@@ -100,7 +100,7 @@ export class SymbolMgr extends WatchableObject {
 
         let sym;
         // todo val 有多个时，需要提示用户修改
-        for (let i = 0; i < val.length; ++i) {
+        for (let i = val.length - 1; i >= 0; --i) {
             const v = val[i];
             const p = v.getPage();
             if (!p && reg === 'freesymbols') {
@@ -108,6 +108,7 @@ export class SymbolMgr extends WatchableObject {
                 break;
             } else if (p && p.id === reg) {
                 sym = v;
+                break;
             }
         }
         return sym;
