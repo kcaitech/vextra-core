@@ -74,6 +74,9 @@ export function importVariable(source: types.Variable, ctx?: IImportContext): im
             if (val.typeId == 'export-options') {
                 return importExportOptions(val as types.ExportOptions, ctx)
             }
+            if (val.typeId == 'corner-radius') {
+                return importCornerRadius(val as types.CornerRadius, ctx)
+            }
             {
                 throw new Error('unknow val: ' + val)
             }

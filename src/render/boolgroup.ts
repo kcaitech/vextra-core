@@ -189,7 +189,7 @@ export function render2path(shape: Shape): Path {
         const segs = path.toCurvePoints(frame.width, frame.height);
         const ps: any[] = [];
         segs.forEach((seg) => {
-            ps.push(...parsePath(seg.points, !!seg.isClosed, 0, 0, frame.width, frame.height, fixedRadius));
+            ps.push(...parsePath(seg.points, !!seg.isClosed, frame.width, frame.height, fixedRadius));
         })
         resultpath = new Path(ps);
     }

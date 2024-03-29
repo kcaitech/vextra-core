@@ -678,7 +678,7 @@ export function getPathOfRadius(frame: ShapeFrame, cornerRadius?: CornerRadius, 
         p4.radius = lb;
     }
 
-    return new Path(parsePath(new BasicArray<CurvePoint>(p1, p2, p3, p4), true, 0, 0, w, h, fixedRadius));
+    return new Path(parsePath(new BasicArray<CurvePoint>(p1, p2, p3, p4), true, w, h, fixedRadius));
 }
 
 export class SymbolShape extends GroupShape implements classes.SymbolShape {
@@ -841,14 +841,14 @@ export class PathShape extends Shape implements classes.PathShape {
      * @returns
      */
     getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
-        const offsetX = 0;
-        const offsetY = 0;
+        // const offsetX = 0;
+        // const offsetY = 0;
         const width = frame.width;
         const height = frame.height;
 
         fixedRadius = this.fixedRadius ?? fixedRadius;
 
-        const path = parsePath(this.points, !!this.isClosed, offsetX, offsetY, width, height, fixedRadius);
+        const path = parsePath(this.points, !!this.isClosed, width, height, fixedRadius);
 
         return new Path(path);
     }
@@ -888,8 +888,8 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
     }
 
     getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
-        const offsetX = 0;
-        const offsetY = 0;
+        // const offsetX = 0;
+        // const offsetY = 0;
         const width = frame.width;
         const height = frame.height;
 
@@ -897,7 +897,7 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
 
         const path: any[] = [];
         this.pathsegs.forEach((seg) => {
-            path.push(...parsePath(seg.points, seg.isClosed, offsetX, offsetY, width, height, fixedRadius));
+            path.push(...parsePath(seg.points, seg.isClosed, width, height, fixedRadius));
         });
 
         return new Path(path);
@@ -1147,7 +1147,7 @@ export class TextShape extends Shape implements classes.TextShape {
 
         fixedRadius = this.fixedRadius ?? fixedRadius;
         if (fixedRadius) {
-            const path = parsePath(RECT_POINTS, true, 0, 0, w, h, fixedRadius);
+            const path = parsePath(RECT_POINTS, true, w, h, fixedRadius);
             return new Path(path);
         }
 

@@ -58,6 +58,9 @@
                 },
                 {
                     "$ref": "./export-options.json"
+                },
+                {
+                    "$ref": "./corner-radius.json"
                 }
             ]
         }

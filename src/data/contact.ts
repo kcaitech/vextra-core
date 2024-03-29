@@ -217,12 +217,12 @@ export class ContactShape extends PathShape implements classes.ContactShape {
     }
 
     getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
-        const offsetX = 0;
-        const offsetY = 0;
+        // const offsetX = 0;
+        // const offsetY = 0;
         const width = frame.width;
         const height = frame.height;
         const points = this.getPoints();
-        const path = parsePath(points, !!this.isClosed, offsetX, offsetY, width, height, fixedRadius);
+        const path = parsePath(points, !!this.isClosed, width, height, fixedRadius);
         this.__pathCache = new Path(path);
         return this.__pathCache;
     }

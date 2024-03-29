@@ -51,7 +51,7 @@ export class SymbolRefView extends ShapeView {
         return v ? v.value : (this.m_data as SymbolRefShape).refId;
     }
 
-    private m_refId: string | undefined;
+    // private m_refId: string | undefined;
     private m_sym: SymbolShape | undefined;
     private m_union: SymbolShape | undefined;
 
@@ -85,6 +85,7 @@ export class SymbolRefView extends ShapeView {
     }
 
     onDataChange(...args: any[]): void {
+        super.onDataChange(...args);
         this.loadsym();
     }
 
@@ -107,13 +108,15 @@ export class SymbolRefView extends ShapeView {
         const symMgr = (this.m_data as SymbolRefShape).getSymbolMgr();
         if (!symMgr) return;
         const refId = this.getRefId();
-        if (this.m_refId === refId) {
-            return;
-        }
         const sym = symMgr.get(refId);
         if (!sym) return;
+        // if (this.m_refId === refId) {
+        //     return;
+        // }
 
-        this.m_refId = refId;
+        if (this.m_sym && objectId(this.m_sym) === objectId(sym)) return;
+
+        // this.m_refId = refId;
         if (this.m_sym) this.m_sym.unwatch(this.symwatcher);
         this.m_sym = sym;
         if (this.m_sym) this.m_sym.watch(this.symwatcher);

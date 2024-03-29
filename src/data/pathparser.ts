@@ -120,7 +120,7 @@ function add(p: Point2D, pt: Point2D) {
  * curveMode 4, disconnected, control point 位置随意
  * curveMode 3, 也是对称，长度可以不一样
  */
-export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: number, offsetY: number, width: number, height: number, fixedRadius: number = 0): (string | number)[][] {
+export function parsePath(points: CurvePoint[], isClosed: boolean, width: number, height: number, fixedRadius: number = 0): (string | number)[][] {
     let hasBegin = false;
 
 
@@ -144,9 +144,7 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
         path.push(["Z"]);
     }
 
-    const transformPoint = (x: number, y: number): Point2D => {
-        return { x: offsetX + x * width, y: offsetY + y * height };
-    }
+    const transformPoint = (x: number, y: number): Point2D => ({ x: x * width, y: y * height });
 
     const transformedPoints = points.map((p) => transformPoint(p.x, p.y));
 
@@ -238,7 +236,7 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
 
         let preHandle = add(multiply(vPre, -radius * kappa), preTangent);
         let nextHandle = add(multiply(vNext, -radius * kappa), nextTangent);
-        
+
         let preSlices: Point2D[][] = [];
         let nextSlices: Point2D[][] = [];
 
@@ -348,6 +346,7 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
             bezierCurveTo(preHandle.x, preHandle.y, nextHandle.x, nextHandle.y, nextTangent.x, nextTangent.y);
         }
     }
+
     return path;
 }
 
