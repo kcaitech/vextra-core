@@ -1,31 +1,41 @@
 import {
+    BoolShape,
+    CurveMode,
+    CurvePoint,
+    ExportFormat,
     ExportOptions,
     GroupShape,
     ImageShape,
+    OverrideType,
     PathShape,
-    CurvePoint,
     RectShape,
     Shape,
     ShapeFrame,
-    TextShape,
-    ExportFormat,
     SymbolShape,
-    BoolShape,
-    OverrideType,
+    TextShape,
     Variable,
     VariableType
 } from "../../../data/shape";
-import { importXY, importStyle, importColor } from "./styleio";
+import { importColor, importStyle, importXY } from "./styleio";
 import { Page } from "../../../data/page";
 import { importText } from "./textio";
 import { Artboard } from "../../../data/artboard";
 import { Text } from "../../../data/text";
-import { ShapeType, TextBehaviour, BoolOp, CurveMode, Point2D, SymbolRefShape, Color } from "../../../data/classes"
+import {
+    BoolOp,
+    Color,
+    Fill,
+    FillType,
+    Point2D,
+    ShapeType,
+    SymbolRefShape,
+    TextBehaviour
+} from "../../../data/classes"
 import { BasicArray, BasicMap } from "../../../data/basic";
 import { IJSON, ImportFun, LoadContext } from "./basic";
 import { uuid } from "../../../basic/uuid";
-import { Fill, FillType } from "../../../data/classes";
 import { ResizingConstraints2 } from "../../../data/consts";
+import { float_accuracy } from "../../../basic/consts";
 
 function uniqueId(ctx: LoadContext, id: string): string {
     // if (ctx.shapeIds.has(id)) id = uuid();
@@ -70,14 +80,21 @@ function importPoints(data: IJSON): CurvePoint[] {
         const point: Point2D = importXY(d['point']);
         const p = new CurvePoint([i] as BasicArray<number>, uuid(), point.x, point.y, curveMode);
         if (hasCurveFrom) {
-            p.hasFrom = true;
-            p.fromX = curveFrom.x;
-            p.fromY = curveFrom.y;
+            if (Math.abs(curveFrom.x - p.x) > float_accuracy || Math.abs(curveFrom.y - p.y) > float_accuracy) {
+                p.hasFrom = true;
+                p.fromX = curveFrom.x;
+                p.fromY = curveFrom.y;
+            }
         }
         if (hasCurveTo) {
-            p.hasTo = true;
-            p.toX = curveTo.x;
-            p.toY = curveTo.y;
+            if (Math.abs(curveTo.x - p.x) > float_accuracy || Math.abs(curveTo.y - p.y) > float_accuracy) {
+                p.hasTo = true;
+                p.toX = curveTo.x;
+                p.toY = curveTo.y;
+            }
+        }
+        if (!p.hasTo && !p.hasFrom) {
+            p.mode = CurveMode.Straight;
         }
         p.radius = cornerRadius;
         return p;
