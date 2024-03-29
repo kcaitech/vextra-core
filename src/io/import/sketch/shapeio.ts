@@ -93,9 +93,13 @@ function importPoints(data: IJSON): CurvePoint[] {
                 p.toY = curveTo.y;
             }
         }
+
         if (!p.hasTo && !p.hasFrom) {
             p.mode = CurveMode.Straight;
+        } else  if (!p.hasTo || !p.hasFrom) {
+            p.mode = CurveMode.Disconnected;
         }
+
         p.radius = cornerRadius;
         return p;
     });
