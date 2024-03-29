@@ -155,7 +155,60 @@ class CmdSync {
                 let repotree = this.getRepoTree(blockId);
                 const node = repotree.buildAndGet(op0, op0.path.slice(1), this.nodecreator);
                 // apply op
+                try {
+                    node.receive(v);
+                } catch (e) {
+                    console.error(e);
+                }
+            }
+        }
+    }
+
+    __receiveRecovery(cmd: Cmd) {
+        const subrepos = classifyOps([cmd]);
+        for (let {k, v} of subrepos) {
+            // 建立repotree
+            const op0 = v[0].op;
+            const blockId = op0.path[0];
+            let repotree = this.getRepoTree(blockId);
+            const node = repotree.buildAndGet(op0, op0.path.slice(1), this.nodecreator);
+            // apply op
+            try {
                 node.receive(v);
+            } catch (e) {
+                console.error(e);
+            }
+            const op = v[0].op; // 需要重新获取
+            switch (op.type) {
+                case OpType.None:
+                case OpType.Array:
+                    break;
+                case OpType.CrdtArr:
+                case OpType.CrdtTree:
+                    {
+                        const record = op as ArrayMoveOpRecord | TreeMoveOpRecord;
+                        const node = repotree.get3(record.path.slice(1).concat(record.id));
+                        node.baseVer = cmd.baseVer;
+                        try {
+                            node.roll2Version(cmd.baseVer, SNumber.MAX_SAFE_INTEGER)
+
+                        } catch (e) {
+                            console.error(e);
+                        }
+                    }
+                    break;
+                case OpType.Idset:
+                    {
+                        const record = op as IdOpRecord;
+                        const node = repotree.get3(record.path.slice(1));
+                        node.baseVer = cmd.baseVer;
+                        try {
+                            node.roll2Version(cmd.baseVer, SNumber.MAX_SAFE_INTEGER)
+                        } catch (e) {
+                            console.error(e);
+                        }
+                    }
+                    break;
             }
         }
     }
@@ -175,40 +228,7 @@ class CmdSync {
             const recoveryCmd = cmds[idx];
             cmds.splice(0, idx + 1);
 
-            const subrepos = classifyOps([recoveryCmd]);
-            for (let {k, v} of subrepos) {
-                // 建立repotree
-                const op0 = v[0].op;
-                const blockId = op0.path[0];
-                let repotree = this.getRepoTree(blockId);
-                const node = repotree.buildAndGet(op0, op0.path.slice(1), this.nodecreator);
-                // apply op
-                node.receive(v);
-
-                const op = v[0].op; // 需要重新获取
-                switch (op.type) {
-                    case OpType.None:
-                    case OpType.Array:
-                        break;
-                    case OpType.CrdtArr:
-                    case OpType.CrdtTree:
-                        {
-                            const record = op as ArrayMoveOpRecord | TreeMoveOpRecord;
-                            const node = repotree.get3(record.path.slice(1).concat(record.id));
-                            node.baseVer = recoveryCmd.baseVer;
-                            node.roll2Version(recoveryCmd.baseVer, SNumber.MAX_SAFE_INTEGER)
-                        }
-                        break;
-                    case OpType.Idset:
-                        {
-                            const record = op as IdOpRecord;
-                            const node = repotree.get3(record.path.slice(1));
-                            node.baseVer = recoveryCmd.baseVer;
-                            node.roll2Version(recoveryCmd.baseVer, SNumber.MAX_SAFE_INTEGER)
-                        }
-                        break;
-                }
-            }
+            this.__receiveRecovery(recoveryCmd);
         }
     }
 
@@ -223,7 +243,11 @@ class CmdSync {
             const repotree = this.getRepoTree(blockId);
             const node = repotree.buildAndGet(op0, op0.path.slice(1), this.nodecreator);
             // apply op
-            node.receiveLocal(v);
+            try {
+                node.receiveLocal(v);
+            } catch (e) {
+                console.error(e);
+            }
         }
     }
 
@@ -293,15 +317,16 @@ class CmdSync {
         if (index >= 0) {
             // 已返回
             // check: 应该是一起返回的
-            if (this.pendingcmds.length < index + this.postingcmds.length) throw new Error("something wrong 0");
-            for (let i = 0; i < this.postingcmds.length; i++) {
-                const cmd = this.postingcmds[i];
-                const receive = this.pendingcmds[index + i];
-                if (cmd.id !== receive.id) throw new Error("something wrong 1");
-                // 给pendingcmds更新order,
-                // cmd.version = receive.version;
-                // cmd.ops.forEach((op) => op.order = receive.version);
-            }
+            // 容错，在网络错误等导致重复提交时，有可能重复提交。在重复提交时仅返回第一个id重复的cmd
+            // if (this.pendingcmds.length < index + this.postingcmds.length) throw new Error("something wrong 0");
+            // for (let i = 0; i < this.postingcmds.length; i++) {
+            //     const cmd = this.postingcmds[i];
+            //     const receive = this.pendingcmds[index + i];
+            //     if (cmd.id !== receive.id) throw new Error("something wrong 1");
+            //     // 给pendingcmds更新order,
+            //     // cmd.version = receive.version;
+            //     // cmd.ops.forEach((op) => op.order = receive.version);
+            // }
             // 分3步
             // 1. 先处理index之前的cmds
             if (index > 0) {
@@ -312,19 +337,26 @@ class CmdSync {
             const receiveLocals = this.pendingcmds.slice(index, index + this.postingcmds.length);
             // 更新postingcmds version
             for (let i = 0; i < receiveLocals.length; ++i) {
+                this.postingcmds[i].batchId = receiveLocals[i].batchId;
                 this.postingcmds[i].version = receiveLocals[i].version;
                 this.postingcmds[i].ops.forEach((op) => { if (op instanceof ArrayOp) op.order = receiveLocals[i].version });
             }
-            this._receiveLocal(this.postingcmds.slice(0, receiveLocals.length));
+            this._receiveLocal(this.postingcmds.splice(0, receiveLocals.length));
 
             // 3. 再处理index之后的cmds
-            if (this.pendingcmds.length > index + this.postingcmds.length) {
-                const pcmds = this.pendingcmds.slice(index + this.postingcmds.length);
+            if (this.pendingcmds.length > index + receiveLocals.length) {
+                const pcmds = this.pendingcmds.slice(index + receiveLocals.length);
                 this._receive(pcmds);
             }
             this.cmds.push(...this.pendingcmds);
-            this.postingcmds.length = 0;
+            // this.postingcmds.length = 0;
             this.pendingcmds.length = 0;
+
+            if (this.postingcmds.length > 0) {
+                for (let i = 0; i < this.postingcmds.length; ++i) {
+                    this.postingcmds[i].batchId = this.postingcmds[0].id;
+                }
+            }
         }
 
         // 未返回也可以应用连续的cmds
