@@ -247,7 +247,7 @@ export class Controller {
     }
 
     // 创建自定义frame的图形
-    public asyncCreator(mousedownOnPage: PageXY): AsyncCreator {
+    public asyncCreator(mousedownOnPage: PageXY, isLockSizeRatio?: boolean): AsyncCreator {
         const anchor: PageXY = mousedownOnPage;
         let status: Status = Status.Pending;
         let newShape: Shape | undefined;
@@ -264,6 +264,8 @@ export class Controller {
                 status = Status.Pending;
 
                 const shape = this.create(type, name, frame, attr);
+
+                shape.constrainerProportions = !!isLockSizeRatio;
 
                 modifyTransformByEnv(shape, parent);
 
@@ -362,6 +364,8 @@ export class Controller {
                     }
                     const shape = attr ? newDefaultTextShape(name, attr) : newTextShape(name);
 
+                    shape.constrainerProportions = !!isLockSizeRatio;
+
                     modifyTransformByEnv(shape, parent);
 
                     shape.text.insertText(content, 0);
@@ -408,6 +412,9 @@ export class Controller {
                 status = Status.Pending;
 
                 const shape = newCutoutShape(name, frame);
+
+                shape.constrainerProportions = !!isLockSizeRatio;
+
                 modifyTransformByEnv(shape, parent);
 
                 api.shapeInsert(this.__document, page, parent, shape, parent.childs.length);
