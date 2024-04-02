@@ -18,7 +18,7 @@ import { BulletNumbers, SpanAttr, Text, TextBehaviour, TextHorAlign, TextVerAlig
 import { RectShape, SymbolRefShape, TableCell, TableCellType, TableShape, Artboard } from "../../data/classes";
 import {
     BoolOp, BulletNumbersBehavior, BulletNumbersType, ExportFileFormat, OverrideType, Point2D,
-    StrikethroughType, TextTransformType, UnderlineType, ShadowPosition, ExportFormatNameingScheme, FillType, BlendMode, 
+    StrikethroughType, TextTransformType, UnderlineType, ShadowPosition, ExportFormatNameingScheme, FillType, BlendMode, CornerType, SideType, 
 } from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
@@ -513,6 +513,18 @@ export class Api {
         checkShapeAtPage(page, shape);
         const borders = shape instanceof Shape ? shape.style.borders : shape.value;
         this.addOp(basicapi.moveBorder(borders, idx, idx2));
+    }
+    setBorderCornerType(page: Page, shape: Shape | Variable, idx: number, cornerType: CornerType) {
+        checkShapeAtPage(page, shape);
+        const borders = shape instanceof Shape ? shape.style.borders : shape.value;
+        if (!borders[idx]) return;
+        this.addOp(basicapi.crdtSetAttr(borders[idx], "cornerType", cornerType));
+    }
+    setBorderSideType(pege: Page, shape: Shape | Variable, idx: number, sideType: SideType) {
+        checkShapeAtPage(pege, shape);
+        const borders = shape instanceof Shape ? shape.style.borders : shape.value;
+        if(!borders[idx]) return;
+        this.addOp(basicapi.crdtSetAttr(borders[idx].sideSetting, "sideType", sideType))
     }
     // points
     addPointAt(page: Page, shape: Shape, idx: number, point: CurvePoint, segment = -1) {

@@ -559,7 +559,7 @@ export class PageEditor {
 
                 for (let i = 0; i < shapes.length; i++) {
                     const __shape = shapes[i];
-                    const old_rc =  __shape.resizingConstraint === undefined
+                    const old_rc = __shape.resizingConstraint === undefined
                         ? ResizingConstraints2.Mask
                         : __shape.resizingConstraint;
 
@@ -1367,7 +1367,7 @@ export class PageEditor {
 
                     const [lt, rt, rb, lb] = values;
 
-                    if (shape instanceof  SymbolRefShape) {
+                    if (shape instanceof SymbolRefShape) {
                         const _shape = shape4cornerRadius(api, page, shapes[i] as SymbolRefView);
                         api.shapeModifyRadius2(page, _shape, lt, rt, rb, lb);
                     }
@@ -1535,7 +1535,7 @@ export class PageEditor {
             }
             const children = parent.childs;
 
-            let result= targetIndex;
+            let result = targetIndex;
 
             for (let i = targetIndex; i > currentIndex; i--) {
                 if (set.has(children[i].id)) {
@@ -1567,7 +1567,7 @@ export class PageEditor {
 
                 const parent = shape.parent! as GroupShape;
                 const currentIndex = parent.indexOfChild(shape);
-                const __target = step ?  (currentIndex + step) : parent.childs.length - 1;
+                const __target = step ? (currentIndex + step) : parent.childs.length - 1;
                 const targetIndex = fixUpStep(parent, set, __target, currentIndex)
 
                 if (targetIndex !== currentIndex) {
@@ -1596,7 +1596,7 @@ export class PageEditor {
             }
             const children = parent.childs;
 
-            let result= targetIndex;
+            let result = targetIndex;
 
             for (let i = targetIndex; i < currentIndex; i++) {
                 if (set.has(children[i].id)) {
@@ -1627,7 +1627,7 @@ export class PageEditor {
 
                 const parent = shape.parent! as GroupShape;
                 const currentIndex = parent.indexOfChild(shape);
-                const __target = step ?  (currentIndex - step) : 0;
+                const __target = step ? (currentIndex - step) : 0;
                 const targetIndex = fixLowStep(parent, set, __target, currentIndex)
 
                 if (targetIndex !== currentIndex) {
@@ -2346,6 +2346,34 @@ export class PageEditor {
                 const { target, value, index } = actions[i];
                 const s = shape4border(api, this.__page, target);
                 api.setBorderStyle(this.__page, s, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setShapesBorderCornerType(actions: BatchAction[]) {
+        const api = this.__repo.start('setShapesBorderCornerType');
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value, index } = actions[i];
+                const s = shape4border(api, this.__page, target);
+                api.setBorderCornerType(this.__page, s, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setShapesBorderSideType(actions: BatchAction[]) {
+        const api = this.__repo.start('setShapesBorderSideType');
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value, index } = actions[i];
+                const s = shape4border(api, this.__page, target);
+                api.setBorderSideType(this.__page, s, index, value);
             }
             this.__repo.commit();
         } catch (error) {
