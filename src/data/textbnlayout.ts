@@ -54,7 +54,7 @@ function measureLuomaTextWidth(text: string, font: string): number {
     const measure = gPal.text.textMeasure;
     return text.split('').reduce((sum, letter) => {
         const m = measure(letter.charAt(0), font);
-        return sum + (m?.width?? 0);
+        return sum + (m?.width ?? 0);
     }, 0);
 }
 
@@ -144,7 +144,8 @@ export function layoutBulletNumber(para: Para, span: Span, bulletNumbers: Bullet
             cw: cw * 2 - padding, // 2个字符宽度
             ch,
             index: 0,
-            x: padding
+            x: padding,
+            cc: 1
         }
     }
     else if (bulletNumbers.type === BulletNumbersType.Ordered1Ai) {
@@ -191,7 +192,8 @@ export function layoutBulletNumber(para: Para, span: Span, bulletNumbers: Bullet
             cw,
             ch,
             index: 0,
-            x: 0
+            x: 0,
+            cc: 1
         }
 
         if (bntype === BNType.Number && index === 0) {

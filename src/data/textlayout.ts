@@ -15,7 +15,8 @@ export interface IGraphy {
     cw: number,
     ch: number,
     index: number,
-    x: number
+    x: number,
+    cc: number // char count
 }
 
 export class GraphArray extends Array<IGraphy> {
@@ -24,7 +25,7 @@ export class GraphArray extends Array<IGraphy> {
         return this.length;
     }
     get charCount() {
-        return this.reduce((c, g) => c + g.char.length, 0);
+        return this.reduce((c, g) => c + g.cc, 0);
     }
 }
 export class Line extends Array<GraphArray> {
@@ -432,7 +433,8 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
                 cw: 0, // ?
                 ch: span.fontSize ?? 0,
                 index: textIdx,
-                x: curX
+                x: curX,
+                cc: 1
             });
             textIdx += c.length;
             spanOffset++;
@@ -510,7 +512,8 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
                 cw,
                 ch,
                 index: textIdx,
-                x: curX
+                x: curX,
+                cc: c.length
             });
 
             curX += cw + charSpace;
@@ -539,7 +542,8 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
                 cw,
                 ch,
                 index: textIdx,
-                x: Math.max(0, endX - cw) // 挤进一个
+                x: Math.max(0, endX - cw), // 挤进一个
+                cc: c.length
             });
 
             line.maxFontSize = span.fontSize ?? 0;
@@ -582,7 +586,8 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
                 cw,
                 ch,
                 index: textIdx,
-                x: curX
+                x: curX,
+                cc: c.length
             });
 
             curX += cw + charSpace;
