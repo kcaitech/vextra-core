@@ -1,0 +1,12 @@
+{
+    "description": "side type",
+    "enum": [
+        "normal",
+        "top",
+        "bottom",
+        "left",
+        "right",
+        "custom"
+    ],
+    "default": "normal"
+}

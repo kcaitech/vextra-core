@@ -246,6 +246,10 @@ export function exportSpanAttr(source: types.SpanAttr, ctx?: IExportContext): ty
     }
     return ret
 }
+/* side type */
+export function exportSideType(source: types.SideType, ctx?: IExportContext): types.SideType {
+    return source
+}
 /* shape */
 export function exportShape(source: types.Shape, ctx?: IExportContext): types.Shape {
     const ret = {
@@ -627,6 +631,10 @@ export function exportCrdtNumber(source: types.CrdtNumber, ctx?: IExportContext)
     }
     return ret
 }
+/* corner type */
+export function exportCornerType(source: types.CornerType, ctx?: IExportContext): types.CornerType {
+    return source
+}
 /* couner radius */
 export function exportCornerRadius(source: types.CornerRadius, ctx?: IExportContext): types.CornerRadius {
     const ret = {
@@ -755,6 +763,8 @@ export function exportBorder(source: types.Border, ctx?: IExportContext): types.
         thickness: source.thickness,
         gradient: source.gradient && exportGradient(source.gradient, ctx),
         borderStyle: exportBorderStyle(source.borderStyle, ctx),
+        cornerType: exportCornerType(source.cornerType, ctx),
+        sideSetting: exportBorderSideSetting(source.sideSetting, ctx),
     }
     return ret
 }
@@ -763,6 +773,17 @@ export function exportBorderStyle(source: types.BorderStyle, ctx?: IExportContex
     const ret = {
         length: source.length,
         gap: source.gap,
+    }
+    return ret
+}
+/* border side setting */
+export function exportBorderSideSetting(source: types.BorderSideSetting, ctx?: IExportContext): types.BorderSideSetting {
+    const ret = {
+        sideType: exportSideType(source.sideType, ctx),
+        thicknessTop: source.thicknessTop,
+        thicknessLeft: source.thicknessLeft,
+        thicknessBottom: source.thicknessBottom,
+        thicknessRight: source.thicknessRight,
     }
     return ret
 }

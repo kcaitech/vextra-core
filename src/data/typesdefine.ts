@@ -139,6 +139,15 @@ export type SpanAttr = {
     fillType?: FillType
     gradient?: Gradient
 }
+/* side type */
+export enum SideType {
+    Normal = 'normal',
+    Top = 'top',
+    Bottom = 'bottom',
+    Left = 'left',
+    Right = 'right',
+    Custom = 'custom',
+}
 /* shape */
 export type Shape = {
     crdtidx: number[]
@@ -429,6 +438,12 @@ export type CrdtNumber = {
     crdtidx: number[]
     value: number
 }
+/* corner type */
+export enum CornerType {
+    Miter = 'miter',
+    Bevel = 'bevel',
+    Round = 'round',
+}
 /* couner radius */
 export type CornerRadius = {
     typeId: string
@@ -525,11 +540,21 @@ export type Border = {
     thickness: number
     gradient?: Gradient
     borderStyle: BorderStyle
+    cornerType: CornerType
+    sideSetting: BorderSideSetting
 }
 /* border style */
 export type BorderStyle = {
     length: number
     gap: number
+}
+/* border side setting */
+export type BorderSideSetting = {
+    sideType: SideType
+    thicknessTop: number
+    thicknessLeft: number
+    thicknessBottom: number
+    thicknessRight: number
 }
 /* border position */
 export enum BorderPosition {

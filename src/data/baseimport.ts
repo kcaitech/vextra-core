@@ -254,6 +254,10 @@ export function importSpanAttr(source: types.SpanAttr, ctx?: IImportContext): im
     if (source.gradient !== undefined) ret.gradient = importGradient(source.gradient, ctx)
     return ret
 }
+/* side type */
+export function importSideType(source: types.SideType, ctx?: IImportContext): impl.SideType {
+    return source
+}
 /* shape */
 export function importShape(source: types.Shape, ctx?: IImportContext): impl.Shape {
     const ret: impl.Shape = new impl.Shape (
@@ -662,6 +666,10 @@ export function importCrdtNumber(source: types.CrdtNumber, ctx?: IImportContext)
     )
     return ret
 }
+/* corner type */
+export function importCornerType(source: types.CornerType, ctx?: IImportContext): impl.CornerType {
+    return source
+}
 /* couner radius */
 export function importCornerRadius(source: types.CornerRadius, ctx?: IImportContext): impl.CornerRadius {
     const ret: impl.CornerRadius = new impl.CornerRadius (
@@ -783,7 +791,9 @@ export function importBorder(source: types.Border, ctx?: IImportContext): impl.B
         importColor(source.color, ctx),
         importBorderPosition(source.position, ctx),
         source.thickness,
-        importBorderStyle(source.borderStyle, ctx)
+        importBorderStyle(source.borderStyle, ctx),
+        importCornerType(source.cornerType, ctx),
+        importBorderSideSetting(source.sideSetting, ctx)
     )
     if (source.contextSettings !== undefined) ret.contextSettings = importContextSettings(source.contextSettings, ctx)
     if (source.gradient !== undefined) ret.gradient = importGradient(source.gradient, ctx)
@@ -794,6 +804,17 @@ export function importBorderStyle(source: types.BorderStyle, ctx?: IImportContex
     const ret: impl.BorderStyle = new impl.BorderStyle (
         source.length,
         source.gap
+    )
+    return ret
+}
+/* border side setting */
+export function importBorderSideSetting(source: types.BorderSideSetting, ctx?: IImportContext): impl.BorderSideSetting {
+    const ret: impl.BorderSideSetting = new impl.BorderSideSetting (
+        importSideType(source.sideType, ctx),
+        source.thicknessTop,
+        source.thicknessLeft,
+        source.thicknessBottom,
+        source.thicknessRight
     )
     return ret
 }

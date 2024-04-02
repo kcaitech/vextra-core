@@ -14,6 +14,7 @@ export {
     TextBehaviour,
     TableCellType,
     StrikethroughType,
+    SideType,
     ShapeType,
     ShadowPosition,
     ResizeType,
@@ -28,6 +29,7 @@ export {
     ExportFormatNameingScheme,
     ExportFileFormat,
     CurveMode,
+    CornerType,
     ContactType,
     ContactRoleType,
     BulletNumbersType,
@@ -48,6 +50,7 @@ import {
     TextBehaviour,
     TableCellType,
     StrikethroughType,
+    SideType,
     ShapeType,
     ShadowPosition,
     ResizeType,
@@ -62,6 +65,7 @@ import {
     ExportFormatNameingScheme,
     ExportFileFormat,
     CurveMode,
+    CornerType,
     ContactType,
     ContactRoleType,
     BulletNumbersType,
@@ -816,6 +820,8 @@ export class Border extends Basic {
     thickness: number
     gradient?: Gradient
     borderStyle: BorderStyle
+    cornerType: CornerType
+    sideSetting: BorderSideSetting
     constructor(
         crdtidx: BasicArray<number >,
         id: string,
@@ -824,7 +830,9 @@ export class Border extends Basic {
         color: Color,
         position: BorderPosition,
         thickness: number,
-        borderStyle: BorderStyle
+        borderStyle: BorderStyle,
+        cornerType: CornerType,
+        sideSetting: BorderSideSetting
     ) {
         super()
         this.crdtidx = crdtidx
@@ -835,6 +843,8 @@ export class Border extends Basic {
         this.position = position
         this.thickness = thickness
         this.borderStyle = borderStyle
+        this.cornerType = cornerType
+        this.sideSetting = sideSetting
     }
 }
 /**
@@ -851,6 +861,31 @@ export class BorderStyle extends Basic {
         super()
         this.length = length
         this.gap = gap
+    }
+}
+/**
+ * border side setting 
+ */
+export class BorderSideSetting extends Basic {
+    typeId = 'border-side-setting'
+    sideType: SideType
+    thicknessTop: number
+    thicknessLeft: number
+    thicknessBottom: number
+    thicknessRight: number
+    constructor(
+        sideType: SideType,
+        thicknessTop: number,
+        thicknessLeft: number,
+        thicknessBottom: number,
+        thicknessRight: number
+    ) {
+        super()
+        this.sideType = sideType
+        this.thicknessTop = thicknessTop
+        this.thicknessLeft = thicknessLeft
+        this.thicknessBottom = thicknessBottom
+        this.thicknessRight = thicknessRight
     }
 }
 /**

@@ -42,6 +42,7 @@ angularHandler[BorderPosition.Inner] = function (h: Function, frame: ShapeFrame,
                 stroke: "white",
                 'stroke-width': 2 * thickness,
                 "clip-path": "url(#" + clipId + ")",
+                "stroke-linejoin": border.cornerType,
                 opacity: opacity === undefined ? 1 : opacity
             })
         ]),
@@ -84,6 +85,7 @@ angularHandler[BorderPosition.Center] = function (h: Function, frame: ShapeFrame
                 d: path,
                 stroke: "white",
                 'stroke-width': thickness,
+                "stroke-linejoin": border.cornerType,
                 opacity: opacity === undefined ? 1 : opacity
             })
         ]),
@@ -133,6 +135,7 @@ angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame,
                 stroke: "white",
                 'stroke-width': 2 * thickness,
                 mask: "url(#" + mask1Id + ")",
+                "stroke-linejoin": border.cornerType,
                 opacity: opacity === undefined ? 1 : opacity
             })
         ]),
@@ -159,6 +162,7 @@ handler[BorderPosition.Inner] = function (h: Function, frame: ShapeFrame, border
         fill: "none",
         stroke: '',
         'stroke-width': 2 * thickness,
+        "stroke-linejoin": border.cornerType,
         'clip-path': "url(#" + clipId + ")"
     }
     const { length, gap } = border.borderStyle;
@@ -198,6 +202,7 @@ handler[BorderPosition.Center] = function (h: Function, frame: ShapeFrame, borde
         d: path,
         fill: "none",
         stroke: '',
+        "stroke-linejoin": border.cornerType,
         'stroke-width': thickness
     }
     const { length, gap } = border.borderStyle;
@@ -232,6 +237,7 @@ handler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame, border
         d: path,
         fill: "none",
         stroke: '',
+        "stroke-linejoin": border.cornerType,
         'stroke-width': 2 * thickness,
     }
     const { length, gap } = border.borderStyle;
