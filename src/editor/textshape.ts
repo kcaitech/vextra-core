@@ -200,6 +200,7 @@ export class TextShapeEditor extends ShapeEditor {
         const api = this.__repo.start("insertText");
         try {
             const shape = this.shape4edit(api);
+            this.__repo.updateTextSelectionRange(index, del);
             if (del > 0 && text.length === 0) {
                 api.deleteText(this.__page, shape, index, del);
             }
@@ -490,7 +491,7 @@ export class TextShapeEditor extends ShapeEditor {
     public composingInputEnd(text: string): boolean {
         this.__composingStarted = false;
         this.__repo.rollback("composingInput");
-        if (!this.view.isVirtualShape && this.view instanceof TextShapeView) this.view.forceUpdateOriginFrame();
+        if (!this.view.isVirtualShape && this.view instanceof TextShapeView) this.view.forceUpdateOriginFrame(); // 需要更新，否则一会updateFrame时不对
         return !!this.insertText2(text, this.__composingIndex, this.__composingDel, this.__composingAttr);
     }
 
