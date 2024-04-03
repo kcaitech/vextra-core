@@ -251,9 +251,9 @@ class CmdSync {
         }
     }
 
-    private processCmdsTrigger: () => void = () => { };
-    public setProcessCmdsTrigger(trigger: () => void) {
-        this.processCmdsTrigger = trigger;
+    private onProcessCmdsEnd: () => void = () => { };
+    public watchProcessCmdsEnd(onEnd: () => void) {
+        this.onProcessCmdsEnd = onEnd;
     }
 
     __processTimeToken: any;
@@ -292,21 +292,22 @@ class CmdSync {
             this.__processTimeToken = undefined;
         }
 
-        this.repo.start("processCmds"); // todo 需要更细粒度的事务？
-        const savetrap = this.repo.transactCtx.settrap;
-        try {
-            this.repo.transactCtx.settrap = false;
-            this._processCmds();
-            this.repo.commit();
-        } catch (e) {
-            console.error(e);
-            this.repo.rollback();
-        } finally {
-            this.repo.transactCtx.settrap = savetrap;
+        if (this.pendingcmds.length > 0) {
+            this.repo.start("processCmds"); // todo 需要更细粒度的事务？
+            const savetrap = this.repo.transactCtx.settrap;
+            try {
+                this.repo.transactCtx.settrap = false;
+                this._processCmds();
+                this.repo.commit();
+            } catch (e) {
+                console.error(e);
+                this.repo.rollback();
+            } finally {
+                this.repo.transactCtx.settrap = savetrap;
+            }
+            this.onProcessCmdsEnd();
         }
-
-        this.processCmdsTrigger();
-        this._postcmds();
+        this._postcmds(delayProcess);
     }
 
     // debounce or add to render loop
@@ -660,15 +661,15 @@ class CmdSync {
     }
 
     // ================ cmd 上传、下拉 ==========================
-    private __postTimeToken: any;
-    private _postcmds() {
+    // private __postTimeToken: any; // 这个要与process一起处理
+    private _postcmds(delayPost: (delay: number) => void) {
 
-        const delayPost = (delay: number) => {
-            if (!this.__postTimeToken) this.__postTimeToken = setTimeout(() => {
-                this.__postTimeToken = undefined;
-                this._postcmds();
-            }, delay);
-        }
+        // const delayPost = (delay: number) => {
+        //     if (!this.__postTimeToken) this.__postTimeToken = setTimeout(() => {
+        //         this.__postTimeToken = undefined;
+        //         this._postcmds();
+        //     }, delay);
+        // }
 
         if (this.postingcmds.length > 0) {
             const now = Date.now();
@@ -697,10 +698,10 @@ class CmdSync {
             return;
         }
 
-        if (this.__postTimeToken) {
-            clearTimeout(this.__postTimeToken);
-            this.__postTimeToken = undefined;
-        }
+        // if (this.__postTimeToken) {
+        //     clearTimeout(this.__postTimeToken);
+        //     this.__postTimeToken = undefined;
+        // }
 
         if (this.nopostcmdidx === 0) return;
         const baseVer = this.cmds.length > 0 ? this.cmds[this.cmds.length - 1].version : this.baseVer;
@@ -1069,9 +1070,9 @@ export class CmdRepo {
     setBaseVer(baseVer: string) {
         return this.cmdsync.setBaseVer(baseVer);
     }
-    setProcessCmdsTrigger(trigger: () => void) {
-        return this.cmdsync.setProcessCmdsTrigger(trigger);
-    }
+    // watchProcessCmdsEnd(onEnd: () => void) {
+    //     return this.cmdsync.watchProcessCmdsEnd(onEnd);
+    // }
     receive(cmds: Cmd[]) {
         return this.cmdsync.receive(cmds);
     }
