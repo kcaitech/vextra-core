@@ -218,6 +218,82 @@ export class LockMouseHandler extends AsyncApiCaller {
         }
     }
 
+    executeShadowX(shapes: ShapeView[], idx: number, val: number) {
+        try {
+            const api = this.api;
+            const page = this.page;
+            for (let i = 0; i < shapes.length; i++) {
+                const shape = adapt2Shape(shapes[i]);
+                if (shape.isVirtualShape) {
+                    continue;
+                }
+                api.setShadowOffsetX(page, shape, idx, val);
+            }
+
+            this.updateView();
+        } catch (e) {
+            this.exception = true;
+            console.log('LockMouseHandler.executeShadowX');
+        }
+    }
+
+    executeShadowY(shapes: ShapeView[], idx: number, val: number) {
+        try {
+            const api = this.api;
+            const page = this.page;
+            for (let i = 0; i < shapes.length; i++) {
+                const shape = adapt2Shape(shapes[i]);
+                if (shape.isVirtualShape) {
+                    continue;
+                }
+                api.setShadowOffsetY(page, shape, idx, val);
+            }
+
+            this.updateView();
+        } catch (e) {
+            this.exception = true;
+            console.log('LockMouseHandler.executeShadowY');
+        }
+    }
+
+    executeShadowB(shapes: ShapeView[], idx: number, val: number) {
+        try {
+            const api = this.api;
+            const page = this.page;
+            for (let i = 0; i < shapes.length; i++) {
+                const shape = adapt2Shape(shapes[i]);
+                if (shape.isVirtualShape) {
+                    continue;
+                }
+                api.setShadowBlur(page, shape, idx, val);
+            }
+
+            this.updateView();
+        } catch (e) {
+            this.exception = true;
+            console.log('LockMouseHandler.executeShadowB');
+        }
+    }
+
+    executeShadowS(shapes: ShapeView[], idx: number, val: number) {
+        try {
+            const api = this.api;
+            const page = this.page;
+            for (let i = 0; i < shapes.length; i++) {
+                const shape = adapt2Shape(shapes[i]);
+                if (shape.isVirtualShape) {
+                    continue;
+                }
+                api.setShadowSpread(page, shape, idx, val);
+            }
+
+            this.updateView();
+        } catch (e) {
+            this.exception = true;
+            console.log('LockMouseHandler.executeShadowS');
+        }
+    }
+
     commit() {
         if (this.__repo.isNeedCommit() && !this.exception) {
             if (this.updateFrameTargets.size) {
