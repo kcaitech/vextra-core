@@ -38,7 +38,9 @@ function defaultSU(selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd): vo
         // 需要变换
         const selectTextOp = saveselection.text;
         const idx = cmd.ops.indexOf(selectTextOp);
-        if (idx < 0) throw new Error();
+        if (idx < 0) {
+            throw new Error(); // 出现了
+        }
         const rhs = cmd.ops.slice(idx + 1).reduce((rhs, op) => {
             if (!isDiffStringArr(op.path, selectTextOp.path)) rhs.push(op as ArrayOp);
             return rhs;
@@ -91,9 +93,9 @@ export class CoopRepository {
         this.__cmdrepo.setBaseVer(baseVer);
     }
 
-    public setProcessCmdsTrigger(trigger: () => void) {
-        this.__cmdrepo.setProcessCmdsTrigger(trigger);
-    }
+    // public setProcessCmdsTrigger(trigger: () => void) {
+    //     this.__cmdrepo.watchProcessCmdsEnd(trigger);
+    // }
 
     public receive(cmds: Cmd[]) {
         this.__cmdrepo.receive(cmds);
@@ -130,7 +132,7 @@ export class CoopRepository {
             const cmd = this.__cmdrepo.undo();
             if (cmd && this.selection) cmd.selectionupdater(this.selection, true, cmd);
             this.__repo.commit();
-        } catch(e) {
+        } catch (e) {
             this.__repo.rollback();
             throw e;
         } finally {
@@ -146,7 +148,7 @@ export class CoopRepository {
             const cmd = this.__cmdrepo.redo();
             if (cmd && this.selection) cmd.selectionupdater(this.selection, false, cmd);
             this.__repo.commit();
-        } catch(e) {
+        } catch (e) {
             this.__repo.rollback();
             throw e;
         } finally {
@@ -167,6 +169,9 @@ export class CoopRepository {
     updateTextSelectionPath(text: Text) {
         const path = text?.getCrdtPath() || [];
         this.__api.updateTextSelectionPath(path);
+    }
+    updateTextSelectionRange(start: number, length: number) {
+        this.__api.updateTextSelectionRange(start, length);
     }
     isNeedCommit(): boolean {
         return this.__api.isNeedCommit();

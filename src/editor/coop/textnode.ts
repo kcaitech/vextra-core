@@ -182,6 +182,7 @@ export class TextRepoNode extends RepoNode {
     }
 
     // 与ops变换
+    // todo 异常情况，同一batch的cmd没有同时回来
     private _otreceive(ops: OpItem[]) {
         // 相同版本的进行分段
         const segs: OpItem[][] = []; // 一个批次一个批次的变换
