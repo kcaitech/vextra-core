@@ -14,7 +14,7 @@ export class ColorPicker extends AsyncApiCaller {
 
     execute() {
         try {
-
+            // todo ColorPicker的异步操作
             this.updateView();
         } catch (e) {
             console.log('ColorPicker.execute:', e);
