@@ -257,7 +257,7 @@ class CmdSync {
     }
 
     __processTimeToken: any;
-    processCmds() {
+    processCmds(delay: boolean = true) {
 
         const delayProcess = (timeout: number) => {
             if (!this.__processTimeToken) this.__processTimeToken = setTimeout(() => {
@@ -274,6 +274,11 @@ class CmdSync {
 
         if (this.repo.isInTransact()) {
             delayProcess(1000); // 1s
+            return;
+        }
+
+        if (delay) {
+            delayProcess(1);
             return;
         }
 
@@ -657,7 +662,7 @@ class CmdSync {
         this.pendingcmds.push(...cmds);
         this.nettask.updateVer(this.baseVer, (cmds[cmds.length - 1]?.version) ?? lastVer);
         // need process
-        this.processCmds();
+        this.processCmds(false);
     }
 
     // ================ cmd 上传、下拉 ==========================
@@ -1015,8 +1020,8 @@ export class CmdRepo {
             last.time + last.delay > Date.now()) {
             // 考虑合并
             // 需要个cmdtype
-            if (last.mergetype === CmdMergeType.TextDelete && _mergeTextDelete(last, cmd)) return;
-            if (last.mergetype === CmdMergeType.TextInsert && _mergeTextInsert(last, cmd)) return;
+            if (last.mergetype === CmdMergeType.TextDelete && _mergeTextDelete(last, cmd)) return last;
+            if (last.mergetype === CmdMergeType.TextInsert && _mergeTextInsert(last, cmd)) return last;
         }
 
         console.log("commit localcmd: ", cmd);
@@ -1024,6 +1029,7 @@ export class CmdRepo {
         ++this.localindex;
 
         this.cmdsync.commit(cmd);
+        return cmd;
     }
 
     canUndo() {
