@@ -6,7 +6,7 @@ import { ICoopNet } from "./net";
 import { uuid } from "../../basic/uuid";
 import { RepoNode, RepoNodePath } from "./base";
 import { nodecreator } from "./creator";
-import { ArrayMoveOpRecord, IdOp, IdOpRecord, TreeMoveOpRecord } from "coop/client/crdt";
+import { ArrayMoveOpRecord, IdOp, IdOpRecord, TreeMoveOpRecord } from "../../coop/client/crdt";
 import { SNumber } from "../../coop/client/snumber";
 import { Repository } from "../../data/transact";
 import { ArrayOp, ArrayOpSelection } from "../../coop/client/arrayop";
