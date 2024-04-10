@@ -51,7 +51,7 @@ export class PathShapeView extends ShapeView {
     }
 
     protected renderBorders(): EL[] {
-        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.isClosed);
+        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.isClosed, this.m_data);
     }
     render(): number {
 

@@ -1,12 +1,14 @@
 import { render as renderGradient } from "./gradient";
 import { objectId } from '../basic/objectid';
-import { Border, BorderPosition, FillType, Gradient, GradientType, OverrideType, Shape, ShapeFrame, SymbolRefShape,
+import {
+    Border, BorderPosition, FillType, Gradient, GradientType, OverrideType, Shape, ShapeFrame, ShapeType, SideType, SymbolRefShape,
     SymbolShape, VariableType
 } from "../data/classes";
 import { findOverrideAndVar, randomId } from "./basic";
+import { renderCustomBorder } from "./border_custom";
 
 
-const handler: { [key: string]: (h: Function, frame: ShapeFrame, border: Border, path: string) => any } = {};
+const handler: { [key: string]: (h: Function, frame: ShapeFrame, border: Border, path: string, shape?: Shape) => any } = {};
 const angularHandler: { [key: string]: (h: Function, frame: ShapeFrame, border: Border, path: string) => any } = {};
 
 angularHandler[BorderPosition.Inner] = function (h: Function, frame: ShapeFrame, border: Border, path: string): any {
@@ -150,7 +152,8 @@ angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame,
     ]);
 }
 
-handler[BorderPosition.Inner] = function (h: Function, frame: ShapeFrame, border: Border, path: string): any {
+handler[BorderPosition.Inner] = function (h: Function, frame: ShapeFrame, border: Border, path: string, shape?: Shape): any {
+    if (shape && is_side_custom(border.sideSetting.sideType, shape)) return;
     const rId = randomId();
     const clipId = "clippath-border" + objectId(border) + rId;
     // const frame = shape.frame;
@@ -194,8 +197,9 @@ handler[BorderPosition.Inner] = function (h: Function, frame: ShapeFrame, border
     return h("g", elArr);
 }
 
-handler[BorderPosition.Center] = function (h: Function, frame: ShapeFrame, border: Border, path: string): any {
+handler[BorderPosition.Center] = function (h: Function, frame: ShapeFrame, border: Border, path: string, shape?: Shape): any {
     // const frame = shape.frame;
+    if (shape && is_side_custom(border.sideSetting.sideType, shape)) return;
     const thickness = border.thickness;
     let g_;
     const body_props: any = {
@@ -228,8 +232,11 @@ handler[BorderPosition.Center] = function (h: Function, frame: ShapeFrame, borde
     }
 }
 
-handler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame, border: Border, path: string): any {
+handler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame, border: Border, path: string, shape?: Shape): any {
     // const frame = shape.frame;
+    if (shape && is_side_custom(border.sideSetting.sideType, shape)) {
+        return renderCustomBorder(h, frame, border, path, shape);
+    }
     const thickness = border.thickness;
 
     let g_;
@@ -279,7 +286,7 @@ handler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame, border
     return (h("g", elArr));
 }
 
-export function render(h: Function, borders: Border[], frame: ShapeFrame, path: string, isClosed = true): Array<any> {
+export function render(h: Function, borders: Border[], frame: ShapeFrame, path: string, isClosed = true, shape?: Shape): Array<any> {
     const bc = borders.length;
     const elArr = [];
     for (let i = 0; i < bc; i++) {
@@ -297,7 +304,7 @@ export function render(h: Function, borders: Border[], frame: ShapeFrame, path: 
         fillType == FillType.Gradient && gradientType == GradientType.Angular && (() => {
             elArr.push(angularHandler[position](h, frame, border, path));
         })() || (fillType == FillType.SolidColor || fillType == FillType.Gradient) && (() => {
-            elArr.push(handler[position](h, frame, border, path));
+            elArr.push(handler[position](h, frame, border, path, shape));
         })() || fillType == FillType.Pattern && (() => {
             return true; // todo
         })
@@ -319,5 +326,11 @@ export function renderWithVars(h: Function, shape: Shape, frame: ShapeFrame, pat
             }
         }
     }
-    return render(h, borders, frame, path, shape.isClosed);
+    return render(h, borders, frame, path, shape.isClosed, shape);
+}
+
+function is_side_custom(sideType: SideType, shape: Shape) {
+    if (sideType === SideType.Normal) return false;
+    if (shape.type === (ShapeType.Rectangle || ShapeType.Artboard || ShapeType.Image || ShapeType.Symbol || ShapeType.SymbolRef || ShapeType.SymbolUnion)) return true;
+    else return false;
 }
