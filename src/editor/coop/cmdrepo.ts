@@ -310,8 +310,8 @@ class CmdSync {
             } finally {
                 this.repo.transactCtx.settrap = savetrap;
             }
-            this.onProcessCmdsEnd();
         }
+        this.onProcessCmdsEnd();
         this._postcmds(delayProcess);
     }
 
