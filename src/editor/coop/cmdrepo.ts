@@ -1076,9 +1076,9 @@ export class CmdRepo {
     setBaseVer(baseVer: string) {
         return this.cmdsync.setBaseVer(baseVer);
     }
-    // watchProcessCmdsEnd(onEnd: () => void) {
-    //     return this.cmdsync.watchProcessCmdsEnd(onEnd);
-    // }
+    watchProcessCmdsEnd(onEnd: () => void) {
+        return this.cmdsync.watchProcessCmdsEnd(onEnd);
+    }
     receive(cmds: Cmd[]) {
         return this.cmdsync.receive(cmds);
     }
