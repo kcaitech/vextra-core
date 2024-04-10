@@ -18,7 +18,7 @@ import { BulletNumbers, SpanAttr, Text, TextBehaviour, TextHorAlign, TextVerAlig
 import { RectShape, SymbolRefShape, TableCell, TableCellType, TableShape, Artboard } from "../../data/classes";
 import {
     BoolOp, BulletNumbersBehavior, BulletNumbersType, ExportFileFormat, OverrideType, Point2D,
-    StrikethroughType, TextTransformType, UnderlineType, ShadowPosition, ExportFormatNameingScheme, FillType, BlendMode, CornerType, SideType, 
+    StrikethroughType, TextTransformType, UnderlineType, ShadowPosition, ExportFormatNameingScheme, FillType, BlendMode, CornerType, SideType, BorderSideSetting, 
 } from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
@@ -520,11 +520,31 @@ export class Api {
         if (!borders[idx]) return;
         this.addOp(basicapi.crdtSetAttr(borders[idx], "cornerType", cornerType));
     }
-    setBorderSideType(pege: Page, shape: Shape | Variable, idx: number, sideType: SideType) {
+    setBorderSide(pege: Page, shape: Shape | Variable, idx: number, sideSetting: BorderSideSetting) {
         checkShapeAtPage(pege, shape);
         const borders = shape instanceof Shape ? shape.style.borders : shape.value;
         if(!borders[idx]) return;
-        this.addOp(basicapi.crdtSetAttr(borders[idx].sideSetting, "sideType", sideType))
+        this.addOp(basicapi.crdtSetAttr(borders[idx], "sideSetting", sideSetting))
+    }
+    setBorderThicknessTop(page: Page, shape: Shape | Variable, idx:number, thickness: number) {
+        checkShapeAtPage(page, shape);
+        const borders = shape instanceof Shape ? shape.style.borders : shape.value;
+        this.addOp(basicapi.crdtSetAttr(borders[idx].sideSetting, "thicknessTop", thickness))
+    }
+    setBorderThicknessLeft(page: Page, shape: Shape | Variable, idx: number, thickness: number) {
+        checkShapeAtPage(page, shape);
+        const borders = shape instanceof Shape? shape.style.borders : shape.value;
+        this.addOp(basicapi.crdtSetAttr(borders[idx].sideSetting, "thicknessLeft", thickness));
+    }
+    setBorderThicknessBottom(page: Page, shape: Shape|Variable, idx: number, thickness: number) {
+        checkShapeAtPage(page, shape);
+        const borders = shape instanceof Shape ? shape.style.borders : shape.value;
+        this.addOp(basicapi.crdtSetAttr(borders[idx].sideSetting, "thicknessBottom", thickness));
+    }
+    setBorderThicknessRight(page: Page, shape: Shape | Variable, idx: number, thickness: number) {
+        checkShapeAtPage(page, shape);
+        const borders = shape instanceof Shape ? shape.style.borders : shape.value;
+        this.addOp(basicapi.crdtSetAttr(borders[idx].sideSetting, "thicknessRight", thickness));
     }
     // points
     addPointAt(page: Page, shape: Shape, idx: number, point: CurvePoint, segment = -1) {

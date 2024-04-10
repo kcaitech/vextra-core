@@ -2367,13 +2367,69 @@ export class PageEditor {
         }
     }
 
-    setShapesBorderSideType(actions: BatchAction[]) {
-        const api = this.__repo.start('setShapesBorderSideType');
+    setShapesBorderSide(actions: BatchAction[]) {
+        const api = this.__repo.start('setShapesBorderSide');
         try {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value, index } = actions[i];
                 const s = shape4border(api, this.__page, target);
-                api.setBorderSideType(this.__page, s, index, value);
+                api.setBorderSide(this.__page, s, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setShapeBorderThicknessTop(actions: BatchAction[]) {
+        const api = this.__repo.start('setShapeBorderThicknessTop');
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value, index } = actions[i];
+                const s = shape4border(api, this.__page, target);
+                api.setBorderThicknessTop(this.__page, s, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setShapeBorderThicknessRight(actions: BatchAction[]) {
+        const api = this.__repo.start('setShapeBorderThicknessRight');
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value, index } = actions[i];
+                const s = shape4border(api, this.__page, target);
+                api.setBorderThicknessRight(this.__page, s, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setShapeBorderThicknessBottom(actions: BatchAction[]) {
+        const api = this.__repo.start('setShapeBorderThicknessBottom');
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value, index } = actions[i];
+                const s = shape4border(api, this.__page, target);
+                api.setBorderThicknessBottom(this.__page, s, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setShapeBorderThicknessLeft(action: BatchAction[]) {
+        const api = this.__repo.start('setShapeBorderThicknessLeft');
+        try {
+            for (let i = 0; i < action.length; i++) {
+                const { target, value, index } = action[i];
+                const s = shape4border(api, this.__page, target);
+                api.setBorderThicknessLeft(this.__page, s, index, value);
             }
             this.__repo.commit();
         } catch (error) {
