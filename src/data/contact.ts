@@ -172,13 +172,15 @@ export class ContactShape extends PathShape implements classes.ContactShape {
             }
 
             if (!start_point) {
-                const _p0 = points[0];
-                start_point = self_matrix.computeCoord2(_p0.x, _p0.y);
+                // const _p0 = points[0];
+                // start_point = self_matrix.computeCoord2(_p0.x, _p0.y);
+                start_point = points[0];
             }
 
             if (!end_point) {
-                const _p_end = points[points.length - 1];
-                end_point = self_matrix.computeCoord2(_p_end.x, _p_end.y);
+                // const _p_end = points[points.length - 1];
+                // end_point = self_matrix.computeCoord2(_p_end.x, _p_end.y);
+                end_point = points[points.length - 1];
             }
 
             return path_for_edited(points, start_point, end_point, s1, s2); // 最后削减无效点
