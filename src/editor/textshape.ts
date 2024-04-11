@@ -194,6 +194,7 @@ export class TextShapeEditor extends ShapeEditor {
         api.shapeModifyName(this.__page, shape, name.slice(0, i));
     }
     public insertText2(text: string, index: number, del: number, attr?: SpanAttr): number {
+        if (text.length === 0 && del === 0) return 0;
         attr = attr ?? this._cacheAttr;
         this.resetCachedSpanAttr();
         let count = text.length; // 插入字符数
@@ -378,6 +379,7 @@ export class TextShapeEditor extends ShapeEditor {
     }
 
     public insertFormatText(text: Text, index: number, del: number): boolean {
+        if (text.length === 0 && del === 0) return true;
         const api = this.__repo.start("insertText");
         try {
             const shape = this.shape4edit(api);
