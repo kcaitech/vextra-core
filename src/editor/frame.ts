@@ -503,6 +503,9 @@ export function expand(api: Api, document: Document, page: Page, shape: Shape, d
     expandTo(api, document, page, shape, frame.width + dw, frame.height + dh);
 }
 
+/**
+ * @deprecated 相关运算需要加入对齐像素、动态辅助对齐的参数，适合放在前端进行运算
+ */
 export function adjustLT2(api: Api, document: Document, page: Page, shape: Shape, x: number, y: number, recorder?: SizeRecorder) {
     const p = shape.parent;
     if (!p) return;
@@ -576,6 +579,10 @@ export function adjustLT2(api: Api, document: Document, page: Page, shape: Shape
     setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api, recorder);
     afterShapeSizeChange(api, document, page, shape);
 }
+
+/**
+ * @deprecated
+ */
 export function adjustLB2(api: Api, document: Document, page: Page, shape: Shape, x: number, y: number, recorder?: SizeRecorder) { // 左下角    
     const p = shape.parent;
     if (!p) return;
@@ -631,6 +638,9 @@ export function adjustLB2(api: Api, document: Document, page: Page, shape: Shape
     setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api, recorder);
     afterShapeSizeChange(api, document, page, shape);
 }
+/**
+ * @deprecated
+ */
 export function adjustRT2(api: Api, document: Document, page: Page, shape: Shape, x: number, y: number, recorder?: SizeRecorder) { // 右上角
     const p = shape.parent;
     if (!p) return;
@@ -687,6 +697,9 @@ export function adjustRT2(api: Api, document: Document, page: Page, shape: Shape
     setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api, recorder);
     afterShapeSizeChange(api, document, page, shape);
 }
+/**
+ * @deprecated
+ */
 export function adjustRB2(api: Api, document: Document, page: Page, shape: Shape, x: number, y: number, recorder?: SizeRecorder) {
     const p = shape.parent;
     if (!p) return;

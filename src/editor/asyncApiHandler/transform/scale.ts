@@ -11,6 +11,7 @@ export type ScaleUnit = {
     targetXY: { x: number, y: number };
     targetWidth: number;
     targetHeight: number;
+    targetRotation: number;
 
     baseWidth: number;
     baseHeight: number;
@@ -61,6 +62,10 @@ export class Scaler extends AsyncApiCaller {
 
                 if (t.needFlipV) {
                     api.shapeModifyVFlip(page, shape, !shape.isFlippedVertical);
+                }
+
+                if (t.targetRotation !== shape.rotation) {
+                    api.shapeModifyRotate(page, shape, t.targetRotation);
                 }
 
                 if (shape instanceof GroupShape) {
