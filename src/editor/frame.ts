@@ -504,7 +504,7 @@ export function expand(api: Api, document: Document, page: Page, shape: Shape, d
 }
 
 /**
- * @deprecated 相关运算需要加入对齐像素、动态辅助对齐的参数，适合放在前端进行运算
+ * @deprecated 这个函数的相关运算需要加入对齐像素、固定比例、动态辅助对齐的参数，适合放在前端上具有各项参数环境的运算器(scale.ts)里，将不再引用这个函数
  */
 export function adjustLT2(api: Api, document: Document, page: Page, shape: Shape, x: number, y: number, recorder?: SizeRecorder) {
     const p = shape.parent;
@@ -581,7 +581,7 @@ export function adjustLT2(api: Api, document: Document, page: Page, shape: Shape
 }
 
 /**
- * @deprecated
+ * @deprecated 这个函数的相关运算需要加入对齐像素、固定比例、动态辅助对齐的参数，适合放在前端上具有各项参数环境的运算器(scale.ts)里，将不再引用这个函数
  */
 export function adjustLB2(api: Api, document: Document, page: Page, shape: Shape, x: number, y: number, recorder?: SizeRecorder) { // 左下角    
     const p = shape.parent;
@@ -639,7 +639,7 @@ export function adjustLB2(api: Api, document: Document, page: Page, shape: Shape
     afterShapeSizeChange(api, document, page, shape);
 }
 /**
- * @deprecated
+ * @deprecated 这个函数的相关运算需要加入对齐像素、固定比例、动态辅助对齐的参数，适合放在前端上具有各项参数环境的运算器(scale.ts)里，将不再引用这个函数
  */
 export function adjustRT2(api: Api, document: Document, page: Page, shape: Shape, x: number, y: number, recorder?: SizeRecorder) { // 右上角
     const p = shape.parent;
@@ -698,7 +698,7 @@ export function adjustRT2(api: Api, document: Document, page: Page, shape: Shape
     afterShapeSizeChange(api, document, page, shape);
 }
 /**
- * @deprecated
+ * @deprecated 这个函数的相关运算需要加入对齐像素、固定比例、动态辅助对齐的参数，适合放在前端上具有各项参数环境的运算器(scale.ts)里，将不再引用这个函数
  */
 export function adjustRB2(api: Api, document: Document, page: Page, shape: Shape, x: number, y: number, recorder?: SizeRecorder) {
     const p = shape.parent;
