@@ -1,6 +1,7 @@
 {
     "description": "variable types",
     "enum": [
+        "name",
         "color",
         "gradient",
         "text",

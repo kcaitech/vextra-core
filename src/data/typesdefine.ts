@@ -17,6 +17,7 @@ export type Variable = {
 }
 /* variable types */
 export enum VariableType {
+    Name = 'name',
     Color = 'color',
     Gradient = 'gradient',
     Text = 'text',
@@ -268,6 +269,7 @@ export type Padding = {
 }
 /* override types */
 export enum OverrideType {
+    Name = 'name',
     Text = 'text',
     Image = 'image',
     Fills = 'fills',

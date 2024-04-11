@@ -1,6 +1,7 @@
 {
     "description": "override types",
     "enum": [
+        "name",
         "text",
         "image",
         "fills",

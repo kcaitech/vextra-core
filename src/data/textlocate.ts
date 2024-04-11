@@ -90,7 +90,7 @@ export function locateText(layout: TextLayout, x: number, y: number): TextLocate
                 }
                 // index += end;
                 for (let i = 0; i < end; ++i) {
-                    index += span[i].char.length;
+                    index += span[i].cc;
                 }
 
                 if (end < span.length) {
@@ -237,7 +237,7 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
                             break;
                         }
                         preGraph = g;
-                        c -= g.char.length;
+                        c -= g.cc;
                     }
                     if (!graph) throw new Error();
                 }
@@ -328,7 +328,7 @@ function _locateRange(layout: TextLayout, pi: number, li: number, si: number, st
                 if (c <= 0) {
                     break;
                 }
-                c -= graph.char.length;
+                c -= graph.cc;
             }
             if (!graph) throw new Error();
         }
@@ -346,7 +346,7 @@ function _locateRange(layout: TextLayout, pi: number, li: number, si: number, st
             // let charCount;
             for (let j = graphIndex; j < span.length; ++j) {
                 graph = span[j];
-                count -= graph.char.length;
+                count -= graph.cc;
                 if (count <= 0) break;
             }
             if (!graph) throw new Error();
@@ -451,7 +451,7 @@ function graphAt(layout: TextLayout, index: number): { graph: IGraphy, offset: n
                     for (let i = 0, c = index; i < span.length; ++i) {
                         graph = span[i];
                         offset = c;
-                        c -= graph.char.length;
+                        c -= graph.cc;
                         if (c < 0) {
                             break;
                         }
@@ -484,5 +484,5 @@ export function locateNextCursor(layout: TextLayout, index: number): number {
     if (!graph) {
         return index; // ?
     }
-    return index - graph.offset + graph.graph.char.length;
+    return index - graph.offset + graph.graph.cc;
 }
