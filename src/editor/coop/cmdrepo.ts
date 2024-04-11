@@ -262,7 +262,7 @@ class CmdSync {
         const delayProcess = (timeout: number) => {
             if (!this.__processTimeToken) this.__processTimeToken = setTimeout(() => {
                 this.__processTimeToken = undefined;
-                this.processCmds();
+                this.processCmds(false);
             }, timeout);
         }
 
