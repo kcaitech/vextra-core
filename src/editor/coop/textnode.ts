@@ -182,6 +182,7 @@ export class TextRepoNode extends RepoNode {
     }
 
     // 与ops变换
+    // todo 异常情况，同一batch的cmd没有同时回来
     private _otreceive(ops: OpItem[]) {
         // 相同版本的进行分段
         const segs: OpItem[][] = []; // 一个批次一个批次的变换
@@ -277,6 +278,13 @@ export class TextRepoNode extends RepoNode {
             const item = this.localops[i];
             const cmd = item.cmd;
             const origin = item.op;
+            if ((origin as ArrayOp).type1 === ArrayOpType.Selection) { // 原位替换
+                const t0 = origin as ArrayOp;
+                const t1 = rhs[i] as ArrayOp;
+                t0.start = t1.start;
+                t0.length = t1.length;
+                continue;
+            }
             item.op = rhs[i];
             const index = cmd.ops.indexOf(origin);
             cmd.ops.splice(index, 1, item.op); // replace

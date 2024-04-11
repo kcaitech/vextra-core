@@ -194,12 +194,14 @@ export class TextShapeEditor extends ShapeEditor {
         api.shapeModifyName(this.__page, shape, name.slice(0, i));
     }
     public insertText2(text: string, index: number, del: number, attr?: SpanAttr): number {
+        if (text.length === 0 && del === 0) return 0;
         attr = attr ?? this._cacheAttr;
         this.resetCachedSpanAttr();
         let count = text.length; // 插入字符数
         const api = this.__repo.start("insertText");
         try {
             const shape = this.shape4edit(api);
+            this.__repo.updateTextSelectionRange(index, del);
             if (del > 0 && text.length === 0) {
                 api.deleteText(this.__page, shape, index, del);
             }
@@ -377,6 +379,7 @@ export class TextShapeEditor extends ShapeEditor {
     }
 
     public insertFormatText(text: Text, index: number, del: number): boolean {
+        if (text.length === 0 && del === 0) return true;
         const api = this.__repo.start("insertText");
         try {
             const shape = this.shape4edit(api);
@@ -392,11 +395,16 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
 
+    private __composingEnding: any;
     private __composingStarted: boolean = false;
     private __composingIndex: number = 0;
     private __composingDel: number = 0;
     private __composingAttr?: SpanAttr;
     public composingInputStart(index: number, del: number, attr?: SpanAttr) {
+        if (this.__composingEnding) {
+            clearTimeout(this.__composingEnding);
+            this.__composingEnding = undefined;
+        }
         this.__preInputText = undefined;
         this.__composingStarted = true;
         this.__composingIndex = index;
@@ -488,9 +496,13 @@ export class TextShapeEditor extends ShapeEditor {
         }
     }
     public composingInputEnd(text: string): boolean {
-        this.__composingStarted = false;
         this.__repo.rollback("composingInput");
-        if (!this.view.isVirtualShape && this.view instanceof TextShapeView) this.view.forceUpdateOriginFrame();
+        // safari在删除预输入的内容后，还会再派发一个backspace事件，需要过滤掉
+        this.__composingEnding = setTimeout(() => {
+            this.__composingStarted = false;
+        }, 50);
+        if (text.length === 0 && this.__composingDel === 0) return true;
+        if (!this.view.isVirtualShape && this.view instanceof TextShapeView) this.view.forceUpdateOriginFrame(); // 需要更新，否则一会updateFrame时不对
         return !!this.insertText2(text, this.__composingIndex, this.__composingDel, this.__composingAttr);
     }
 

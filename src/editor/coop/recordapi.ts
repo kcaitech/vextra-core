@@ -105,6 +105,13 @@ export class Api {
     updateTextSelectionPath(crdtpath: string[]) {
         if (this.cmd?.saveselection?.text) this.cmd.saveselection.text.path = crdtpath;
     }
+    updateTextSelectionRange(start: number, length: number) {
+        if (this.cmd?.saveselection?.text) {
+            const selection = this.cmd.saveselection.text;
+            selection.start = start;
+            selection.length = length;
+        }
+    }
     isNeedCommit(): boolean {
         return this.cmd !== undefined && this.cmd.ops.length > 0;
     }

@@ -334,10 +334,11 @@ export class ShapeEditor {
     }
 
     public setName(name: string) {
-        const api = this.__repo.start('setName');
-        api.shapeModifyName(this.__page, this.shape, name)
-        api.shapeModifyNameFixed(this.__page, this.shape, true);
-        this.__repo.commit();
+        this._repoWrap('setName', (api) => {
+            if (this.modifyVariable(VariableType.Name, OverrideType.Name, name, api)) return;
+            api.shapeModifyName(this.__page, this.shape, name)
+            api.shapeModifyNameFixed(this.__page, this.shape, true);
+        })
     }
 
     public toggleVisible() {
