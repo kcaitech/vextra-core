@@ -4,6 +4,7 @@ import { float_accuracy } from "../basic/consts";
 import { BasicArray } from "./basic";
 import { log } from "debug";
 import { uuid } from "../basic/uuid";
+import { pathwrap } from "./pathwrap";
 
 // ----------------------------------------------------------------------------------
 // transform
@@ -1206,5 +1207,10 @@ export class Path {
     freeze() {
         this.m_segs.forEach(seg => Object.freeze(seg));
         Object.freeze(this.m_segs);
+    }
+
+    wrap(thickness: number, endstyle: any) {
+        const segs = pathwrap(this.m_segs, thickness, endstyle);
+        return new Path(segs);
     }
 }
