@@ -1,4 +1,4 @@
-import { BoolOp, BoolShape, Path, ShapeFrame, parsePath } from "../data/classes";
+import { BoolOp, BoolShape, Border, Path, PathShape, ShapeFrame, parsePath } from "../data/classes";
 import { ShapeView } from "./shape";
 import { DViewCtx, PropsType } from "./viewctx";
 import { IPalPath, gPal } from "../basic/pal";
@@ -98,14 +98,32 @@ class FrameGrid {
     }
 }
 
+function hasFill(shape: ShapeView) {
+    const fills = shape.getFills();
+    if (fills.length === 0) return false;
+    for (let i = 0, len = fills.length; i < len; ++i) {
+        if (fills[i].isEnabled) return true;
+    }
+    return false;
+}
+
 function render2path(shape: ShapeView): Path {
     const shapeIsGroup = shape instanceof GroupShapeView;
     let fixedRadius: number | undefined;
     if (shapeIsGroup) fixedRadius = shape.fixedRadius;
     if (!shapeIsGroup) {
         if (!shape.isVisible) return new Path();
-        const path = shape instanceof TextShapeView ? shape.getTextPath() : shape.getPath();
-        return path.clone();
+        if (shape instanceof TextShapeView) return shape.getTextPath().clone();
+
+        if (shape.data instanceof PathShape && (!shape.data.isClosed || !hasFill(shape))) {
+            const thickness = shape.getBorders().reduce((w: number, b: Border) => {
+                return Math.max(w, b.thickness);
+            }, 0);
+            if (thickness === 0) return new Path();
+            return shape.getPath().wrap(thickness, 0);
+        }
+
+        return shape.getPath().clone();
     } else if (shape.childs.length === 0) {
         return new Path();
     }
@@ -143,7 +161,7 @@ function render2path(shape: ShapeView): Path {
         const child1 = shape.m_children[i] as ShapeView;
         if (!child1.isVisible) continue;
         const frame1 = child1.frame;
-        const path1 = render2path(child1).clone();
+        const path1 = render2path(child1);
         if (child1.isNoTransform()) {
             path1.translate(frame1.x, frame1.y);
         } else {
