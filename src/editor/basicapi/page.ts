@@ -3,7 +3,7 @@ import { Page } from "../../data/page";
 import { Op } from "../../coop/common/op";
 import { crdtArrayInsert, crdtArrayMove, crdtArrayRemove, crdtSetAttr, crdtShapeInsert, crdtShapeMove, crdtShapeRemove } from "./basic";
 import { GroupShape, Shape, SymbolShape } from "../../data/shape";
-import { SymbolUnionShape } from "../../data/baseclasses";
+import { ShapeFrame, SymbolUnionShape } from "../../data/baseclasses";
 import { BasicArray } from "../../data/basic";
 
 export function pageInsert(document: Document, page: Page, index: number) {
@@ -59,10 +59,23 @@ export function pageMove(document: Document, fromIdx: number, toIdx: number) {
     return crdtArrayMove(document.pagesList, fromIdx, toIdx);
 }
 
+function _checkNum(x: number) {
+    // check
+    if (Number.isNaN(x) || (!Number.isFinite(x))) throw new Error(String(x));
+}
+function _checkFrame(frame: ShapeFrame) {
+    if (frame.width === 0 || frame.height === 0) throw new Error();
+    _checkNum(frame.x);
+    _checkNum(frame.y);
+    _checkNum(frame.width);
+    _checkNum(frame.height);
+}
 
 export function shapeInsert(document: Document, page: Page, parent: GroupShape, shape: Shape, index: number, needUpdateFrame: { shape: Shape, page: Page }[]) {
     // shape不可以一次性插入多个对象，需要分开插入
     // 从根开始插入
+
+    _checkFrame(shape.frame);
 
     const ops: Op[] = [];
 
