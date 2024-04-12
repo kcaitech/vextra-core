@@ -1118,6 +1118,9 @@ export function erScaleByL(api: Api, document: Document, page: Page, s: Shape, s
     afterShapeSizeChange(api, document, page, s);
 }
 
+/**
+ *@description 只有scale操作需要调用该函数，将移入./src/editor/asyncApiHandler/transform/scale.ts运算器里
+ */
 function afterShapeSizeChange(api: Api, document: Document, page: Page, shape: Shape) {
     if (shape instanceof SymbolShape && !(shape instanceof SymbolUnionShape)) {
         const symId = shape.id;
