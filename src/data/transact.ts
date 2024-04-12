@@ -485,7 +485,7 @@ export class Repository extends WatchableObject implements IDataGuard {
 }
 
 function deepProxy(data: any, h: ProxyHandler): any {
-    if (typeof data !== 'object' || isProxy(data) || data === null) {
+    if (typeof data !== 'object' || isProxy(data)) {
         return data;
     }
     const stack: any[] = [data];
@@ -500,7 +500,7 @@ function deepProxy(data: any, h: ProxyHandler): any {
                 if (k.toString().startsWith("__")) {
                     // donothing
                 }
-                else if (typeof (v) === 'object' && v !== null) { // 还有array set map
+                else if (typeof (v) === 'object') { // 还有array set map
                     if (parent) {
                         v.__parent = parent;
                         v.__propKey = k;
@@ -518,7 +518,7 @@ function deepProxy(data: any, h: ProxyHandler): any {
                 if (k.toString().startsWith("__")) {
                     // donothing
                 }
-                else if (typeof (v) === 'object' && v !== null) { // 还有array set map
+                else if (typeof (v) === 'object') { // 还有array set map
                     if (parent) {
                         v.__parent = parent;
                         v.__propKey = k;
