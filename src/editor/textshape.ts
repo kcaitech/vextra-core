@@ -393,11 +393,16 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
 
+    private __composingEnding: any;
     private __composingStarted: boolean = false;
     private __composingIndex: number = 0;
     private __composingDel: number = 0;
     private __composingAttr?: SpanAttr;
     public composingInputStart(index: number, del: number, attr?: SpanAttr) {
+        if (this.__composingEnding) {
+            clearTimeout(this.__composingEnding);
+            this.__composingEnding = undefined;
+        }
         this.__preInputText = undefined;
         this.__composingStarted = true;
         this.__composingIndex = index;
@@ -489,8 +494,12 @@ export class TextShapeEditor extends ShapeEditor {
         }
     }
     public composingInputEnd(text: string): boolean {
-        this.__composingStarted = false;
         this.__repo.rollback("composingInput");
+        // safari在删除预输入的内容后，还会再派发一个backspace事件，需要过滤掉
+        this.__composingEnding = setTimeout(() => {
+            this.__composingStarted = false;
+        }, 50);
+        if (text.length === 0 && this.__composingDel === 0) return true;
         if (!this.view.isVirtualShape && this.view instanceof TextShapeView) this.view.forceUpdateOriginFrame(); // 需要更新，否则一会updateFrame时不对
         return !!this.insertText2(text, this.__composingIndex, this.__composingDel, this.__composingAttr);
     }

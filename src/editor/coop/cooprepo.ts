@@ -8,7 +8,7 @@ import { CmdRepo } from "./cmdrepo";
 import { Cmd } from "../../coop/common/repo";
 import { ICoopNet } from "./net";
 import { transform } from "../../coop/client/arrayoptransform";
-import { ArrayOp, ArrayOpSelection } from "coop/client/arrayop";
+import { ArrayOp, ArrayOpSelection, ArrayOpType } from "../../coop/client/arrayop";
 import { Text } from "../../data/text";
 
 
@@ -93,9 +93,9 @@ export class CoopRepository {
         this.__cmdrepo.setBaseVer(baseVer);
     }
 
-    // public setProcessCmdsTrigger(trigger: () => void) {
-    //     this.__cmdrepo.watchProcessCmdsEnd(trigger);
-    // }
+    public setProcessCmdsTrigger(trigger: () => void) {
+        this.__cmdrepo.watchProcessCmdsEnd(trigger);
+    }
 
     public receive(cmds: Cmd[]) {
         this.__cmdrepo.receive(cmds);
@@ -185,14 +185,14 @@ export class CoopRepository {
         if (transact === undefined) {
             throw new Error("not inside transact!");
         }
-        const cmd = this.__api.commit(mergetype);
+        let cmd = this.__api.commit(mergetype); // 这里selection是对的
         // if (!cmd) throw new Error("no cmd to commit")
         if (!cmd) {
             this.rollback("commit");
             return;
         }
         this.__repo.commit();
-        if (!this.__initingDoc) this.__cmdrepo.commit(cmd);
+        if (!this.__initingDoc) cmd = this.__cmdrepo.commit(cmd);
         if (this.selection) cmd.selectionupdater(this.selection, false, cmd);
     }
     rollback(from: string = "") {
