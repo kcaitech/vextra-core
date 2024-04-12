@@ -1210,7 +1210,20 @@ export class Path {
     }
 
     wrap(thickness: number, endstyle: any) {
-        const segs = pathwrap(this.m_segs, thickness, endstyle);
+        let next = this.m_segs.findIndex((v, index) => index !== 0 && v[0] === 'M');
+        if (next < 0) {
+            const segs = pathwrap(this.m_segs, thickness, endstyle);
+            return new Path(segs);
+        }
+        const segs: (string | number)[][] = [];
+        let pre = 0;
+        const len = this.m_segs.length;
+        while (pre < len) {
+            segs.push(...pathwrap(this.m_segs.slice(pre, next), thickness, endstyle));
+            pre = next;
+            ++next;
+            while(next < len && this.m_segs[next][0] !== 'M') ++next;
+        }
         return new Path(segs);
     }
 }
