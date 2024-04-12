@@ -14,11 +14,16 @@ function equal(p0: Point2D, p1: Point2D) {
     return p0.x === p1.x && p0.y === p1.y;
 }
 
+function isline(p0: Point2D, p1: Point2D, p2: Point2D) {
+    return ((p1.y - p0.y) * (p2.x - p0.x)) === ((p2.y - p0.y) * (p1.x - p0.x));
+}
+
 // 计算两条线段中线距离交点特定距离的线段前进方向的左右两点
 function calccenterp(p0: Point2D, p1: Point2D, p2: Point2D, delta: number): Point2D[] {
 
     if (equal(p0, p1)) return calcleftp(p1, p2, delta);
-    if (equal(p1, p2)) return calcrightp(p0, p1, delta);
+    // if (equal(p1, p2)) return calcrightp(p0, p1, delta);
+    if (isline(p0, p1, p2)) return calcrightp(p0, p1, delta);
 
     const d = (p0.x + p2.x - 2 * p1.x);
     const a = d === 0 ? 0 : (p0.y + p2.y - 2 * p1.y) / d;
@@ -85,43 +90,22 @@ function close(points: (string | number)[][], width: number, endstyle: any) {
     points.push(['Z']);
 }
 
+function getlastp(item: (string | number)[]): Point2D {
+    switch (item[0]) {
+        case 'M':
+            return { x: item[1] as number, y: item[2] as number }
+        case 'L':
+            return { x: item[1] as number, y: item[2] as number }
+        case 'C':
+            return { x: item[5] as number, y: item[6] as number }
+        case 'Z':
+        default:
+            throw new Error();
+    }
+}
+
 // 反转路径
 function revert(points: (string | number)[][]) {
-    // points.reverse().forEach(p => {
-    //     const fromX = p.fromX;
-    //     const fromY = p.fromY;
-    //     const toX = p.toX;
-    //     const toY = p.toY;
-    //     const hasFrom = p.hasFrom;
-    //     const hasTo = p.hasTo;
-    //     p.hasFrom = undefined;
-    //     p.hasTo = undefined;
-    //     if (hasFrom) {
-    //         p.hasTo = true;
-    //         p.toY = fromY;
-    //         p.toX = fromX;
-    //     }
-    //     if (hasTo) {
-    //         p.hasFrom = true;
-    //         p.fromY = toY;
-    //         p.fromX = toX;
-    //     }
-    // })
-
-    const getlastp = (item: (string | number)[]) => {
-        switch (item[0]) {
-            case 'M':
-                return { x: item[1], y: item[2] }
-            case 'L':
-                return { x: item[1], y: item[2] }
-            case 'C':
-                return { x: item[5], y: item[6] }
-            case 'Z':
-            default:
-                throw new Error();
-        }
-    }
-
     const ret: (string | number)[][] = [];
     // let isClosed = false;
     for (let i = points.length - 1; i >= 0; --i) {
@@ -198,23 +182,27 @@ class Ctx {
     ret: Point2D[][] = []
     prep?: Point2D
 }
-const handler: { [key: string]: (ctx: Ctx, item: (string | number)[], delta: number, nexitem: (string | number)[] | undefined) => void } = {}
-handler['M'] = (ctx: Ctx, item: (string | number)[], delta: number, nexitem: (string | number)[] | undefined) => {
+const handler: { [key: string]: (ctx: Ctx, item: (string | number)[], delta: number, nextp: Point2D | undefined) => void } = {}
+handler['M'] = (ctx: Ctx, item: (string | number)[], delta: number, nextp: Point2D | undefined) => {
     const cur = { x: item[1] as number, y: item[2] as number }
-    if (!nexitem) {
+    if (!nextp) {
         ctx.ret.push([cur, cur]);
     } else {
-        const nextp = { x: nexitem[1] as number, y: nexitem[2] as number }
-        ctx.ret.push(calcleftp(cur, nextp, delta));
+        // const nextp = { x: nexitem[1] as number, y: nexitem[2] as number }
+        if (ctx.prep) {
+            ctx.ret.push(calccenterp(ctx.prep, cur, nextp, delta));
+        } else {
+            ctx.ret.push(calcleftp(cur, nextp, delta)); // todo
+        }
     }
     ctx.prep = cur;
 }
-handler['L'] = (ctx: Ctx, item: (string | number)[], delta: number, nexitem: (string | number)[] | undefined) => {
+handler['L'] = (ctx: Ctx, item: (string | number)[], delta: number, nextp: Point2D | undefined) => {
     const cur = { x: item[1] as number, y: item[2] as number }
     if (!ctx.prep) throw new Error();
     const prep = ctx.prep;
-    if (nexitem) {
-        const nextp = { x: nexitem[1] as number, y: nexitem[2] as number }
+    if (nextp) {
+        // const nextp = { x: nexitem[1] as number, y: nexitem[2] as number }
         ctx.ret.push(calccenterp(prep, cur, nextp, delta));
     } else {
         ctx.ret.push(calcrightp(prep, cur, delta));
@@ -222,7 +210,7 @@ handler['L'] = (ctx: Ctx, item: (string | number)[], delta: number, nexitem: (st
     ctx.prep = cur;
 }
 
-handler['C'] = (ctx: Ctx, item: (string | number)[], delta: number, nexitem: (string | number)[] | undefined) => {
+handler['C'] = (ctx: Ctx, item: (string | number)[], delta: number, nextp: Point2D | undefined) => {
     const p1 = { x: item[1] as number, y: item[2] as number }
     const p2 = { x: item[3] as number, y: item[4] as number }
     const p3 = { x: item[5] as number, y: item[6] as number }
@@ -233,8 +221,8 @@ handler['C'] = (ctx: Ctx, item: (string | number)[], delta: number, nexitem: (st
     ctx.ret.push(calccenterp(p0, p1, p2, delta));
     ctx.ret.push(calccenterp(p1, p2, p3, delta));
 
-    if (nexitem) {
-        const nextp = { x: nexitem[1] as number, y: nexitem[2] as number }
+    if (nextp) {
+        // const nextp = { x: nexitem[1] as number, y: nexitem[2] as number }
         ctx.ret.push(calccenterp(p2, p3, nextp, delta));
     } else {
         ctx.ret.push(calcrightp(p2, p3, delta));
@@ -249,54 +237,75 @@ handler['Z'] = () => {
 
 export function pathwrap(path: (string | number)[][], thickness: number, endstyle: any): (string | number)[][] {
 
+    if (path.length === 0) return [];
     // 只处理 MLCZ
     // todo 仅一条路径，多条时外面再分割一下
 
     const delta = thickness / 2;
     const hctx = new Ctx();
+
+    // find last p
+    let isClosed = false;
+    const p0 = { x: path[0][1] as number, y: path[0][2] as number };
+    for (let i = path.length - 1; i >= 0; --i) {
+        const item = path[i];
+        if (item[0] === 'Z') {
+            isClosed = true;
+            continue;
+        }
+        const p = getlastp(item);
+        if (!equal(p, p0)) {
+            if (isClosed) {
+                hctx.prep = p;
+            }
+            break;
+        }
+        isClosed = true;
+        if (item[0] === 'L') continue;
+        if (item[0] === 'C') {
+            hctx.prep = { x: item[3] as number, y: item[4] as number };
+            break;
+        }
+        if (item[0] === 'M') break;
+        throw new Error("no support : " + item[0]);
+    }
+
+    const getfirstnoequalp = (p: Point2D) => {
+        for (let i = 0, len = path.length; i < len; ++i) {
+            const item = path[i];
+            if (item[0] === 'Z') {
+                break;
+            }
+            const p0 = { x: item[1] as number, y: item[2] as number };
+            if (!equal(p, p0)) {
+                return p0;
+            }
+            if (item[0] === 'L') continue;
+            if (item[0] === 'M') continue;
+            if (item[0] === 'C') {
+                return { x: item[3] as number, y: item[4] as number };
+            }
+            throw new Error("no support : " + item[0]);
+        }
+    }
+
     for (let i = 0, len = path.length; i < len; ++i) {
         const item = path[i];
         const h = handler[item[0]];
         if (!h) throw new Error('no support pathwrap: ' + item[0]); // todo
-
-        let nextitem;
-        if (i < len - 1) {
-            nextitem = path[i + 1]; // 可能是Z
-            if (nextitem[0] === 'Z') {
-                nextitem = path[0];
+        if (item[0] === 'Z') continue;
+        let nextp;
+        if (i === len - 1 || path[i + 1][0] === 'Z') {
+            if (isClosed) {
+                nextp = getfirstnoequalp(getlastp(item));
             }
         }
-        h(hctx, item, delta, nextitem);
+        else if (i < len - 1) {
+            const nextitem = path[i + 1];
+            nextp = { x: nextitem[1] as number, y: nextitem[2] as number };
+        }
+        h(hctx, item, delta, nextp);
     }
-
-    // const wrappoints = path.reduce((wrappoints: Point2D[][], p: CurvePoint, index: number) => {
-    //     const pre = index === 0 ? (isClosed ? points[points.length - 1] : undefined) : points[index - 1];
-    //     const _prep = pre ? (pre.hasTo ? { x: pre.toX || 0, y: pre.toY || 0 } : pre) : undefined;
-    //     const prep = _prep ? transp(_prep) : undefined;
-    //     const from = transp({ x: p.fromX || 0, y: p.fromY || 0 });
-    //     const to = transp({ x: p.toX || 0, y: p.toY || 0 });
-    //     const cur = transp(p);
-    //     if (p.hasFrom) {
-    //         if (prep) wrappoints.push(calcp1(prep, from, cur, delta))
-    //         else wrappoints.push(calcp2(from, cur, delta))
-    //     }
-    //     const prep1 = p.hasFrom ? from : prep;
-    //     const next = index === points.length - 1 ? (isClosed ? points[0] : undefined) : points[index + 1];
-    //     const _nextp = next ? (next.hasFrom ? { x: next.fromX || 0, y: next.fromY || 0 } : next) : undefined;
-    //     const nextp = _nextp ? transp(_nextp) : undefined;
-    //     const nextp1 = p.hasTo ? to : nextp;
-
-    //     if (prep1 && nextp1) wrappoints.push(calcp1(prep1, cur, nextp1, delta));
-    //     else if (prep1) wrappoints.push(calcp3(prep1, cur, delta));
-    //     else if (nextp1) wrappoints.push(calcp2(cur, nextp1, delta));
-    //     // else throw new Error(); // 只有一个点的路径？？
-
-    //     if (p.hasTo) {
-    //         if (nextp) wrappoints.push(calcp1(cur, to, nextp, delta));
-    //         else wrappoints.push(calcp3(cur, to, delta));
-    //     }
-    //     return wrappoints;
-    // }, [])
 
     const wrappoints = hctx.ret.reduce((wps: { lhs: Point2D[], rhs: Point2D[] }, p: Point2D[]) => {
         if (p.length !== 2) throw new Error();
@@ -314,6 +323,4 @@ export function pathwrap(path: (string | number)[][], thickness: number, endstyl
     close(lhs, thickness, endstyle);
 
     return lhs;
-
-    // throw new Error();
 }
