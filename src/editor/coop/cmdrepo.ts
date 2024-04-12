@@ -110,9 +110,11 @@ class CmdSync {
     document: Document;
 
     baseVer: string = "";
+    dataVer: string = "";
 
     public setBaseVer(baseVer: string) {
         this.baseVer = baseVer;
+        this.dataVer = baseVer;
     }
 
     cmds: Cmd[] = [];
@@ -851,7 +853,7 @@ class CmdSync {
             const repotree = this.repotrees.get(_blockId);
             if (!repotree) return; // 无需更新
 
-            repotree.roll2Version(this.baseVer, SNumber.MAX_SAFE_INTEGER)
+            repotree.roll2Version(this.dataVer, SNumber.MAX_SAFE_INTEGER)
         }
     }
 
