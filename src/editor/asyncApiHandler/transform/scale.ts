@@ -3,8 +3,7 @@ import { AsyncApiCaller } from "../AsyncApiCaller";
 import { Document } from "../../../data/document";
 import { adapt2Shape, PageView, ShapeView } from "../../../dataview";
 import { afterModifyGroupShapeWH, SizeRecorder } from "../../frame";
-import { GroupShape, Shape, ShapeFrame, SymbolShape, SymbolUnionShape } from "../../../data/shape";
-import { Api } from "../../coop/recordapi";
+import { GroupShape, Shape, ShapeFrame, ShapeType, SymbolShape, SymbolUnionShape } from "../../../data/shape";
 import { Page } from "../../../data/page";
 import { SymbolRefShape } from "../../../data/symbolref";
 
@@ -34,10 +33,11 @@ export class Scaler extends AsyncApiCaller {
         return this.__repo.start('sync-scale')
     }
 
-    private afterShapeSizeChange(shape: Shape) {
+    private afterShapeSizeChange() {
         if (!this.needUpdateCustomSizeStatus.size) {
             return;
         }
+
         const document = this.__document;
         const api = this.api;
         const page = this.page;
@@ -99,11 +99,23 @@ export class Scaler extends AsyncApiCaller {
                     afterModifyGroupShapeWH(api, page, shape, scaleX, scaleY, new ShapeFrame(0, 0, saveWidth, saveHeight), this.recorder);
                 }
 
+                // 实例或者组件的宽高改变需要执行副作用函数
+                if (shape.type === ShapeType.SymbolRef || shape.type === ShapeType.Symbol) {
+                    this.needUpdateCustomSizeStatus.add(shape);
+                }
             }
+
+            this.afterShapeSizeChange(); // 需要同步更新吗？
+
             this.updateView();
         } catch (error) {
             console.log('error:', error);
             this.exception = true;
         }
+    }
+
+    commit() {
+        // this.afterShapeSizeChange();
+        super.commit();
     }
 }
