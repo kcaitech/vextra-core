@@ -242,8 +242,9 @@ function _insertPropText(shapetext: Text, text: string, index: number, propType:
         }
         else if (i === len - 1) { // 不兼容，方便与排版同步。由外面判断好index再插入
             // _insertText(paras, i, p, text, p.length - 1, props);
-            console.error("index outside text's range")
-            break;
+            // console.error("index outside text's range")
+            // break;
+            throw new Error("index outside text's range");
         }
         else {
             index -= p.length;
