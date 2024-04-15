@@ -120,7 +120,12 @@ function render2path(shape: ShapeView): Path {
                 return Math.max(w, b.thickness);
             }, 0);
             if (thickness === 0) return new Path();
-            return shape.getPath().wrap(thickness, 0);
+            // return shape.getPath().wrap(thickness, 0);
+            const path = shape.getPath();
+            const p0 = gPal.makePalPath(path.toString());
+            const newpath = p0.stroke({width: thickness});
+            p0.delete();
+            return new Path(newpath);
         }
 
         return shape.getPath().clone();
