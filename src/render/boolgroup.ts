@@ -1,4 +1,4 @@
-import { BoolOp, BoolShape, GroupShape, Path, Shape, ShapeFrame, Style, SymbolRefShape, SymbolShape, TextShape } from "../data/classes";
+import { BoolOp, BoolShape, Border, GroupShape, Path, PathShape, Shape, ShapeFrame, Style, SymbolRefShape, SymbolShape, TextShape } from "../data/classes";
 import { renderWithVars as fillR } from "./fill";
 import { renderWithVars as borderR } from "./border"
 import { renderText2Path } from "./text";
@@ -111,6 +111,14 @@ class FrameGrid {
     }
 }
 
+function hasFill(shape: Shape) {
+    const fills = shape.getFills();
+    if (fills.length === 0) return false;
+    for (let i = 0, len = fills.length; i < len; ++i) {
+        if (fills[i].isEnabled) return true;
+    }
+    return false;
+}
 
 export function render2path(shape: Shape): Path {
 
@@ -119,8 +127,20 @@ export function render2path(shape: Shape): Path {
     if (shapeIsGroup) fixedRadius = shape.fixedRadius;
     if (!shapeIsGroup || shape.childs.length === 0) {
         if (!shape.isVisible) return new Path();
-        const path = shape instanceof TextShape ? renderText2Path(shape.getLayout(), 0, 0) : shape.getPath(fixedRadius).clone();
-        return path;
+        if (shape instanceof TextShape) return renderText2Path(shape.getLayout(), 0, 0);
+        if (shape instanceof PathShape && (!shape.isClosed || !hasFill(shape))) {
+            const thickness = shape.getBorders().reduce((w: number, b: Border) => {
+                return Math.max(w, b.thickness);
+            }, 0);
+            if (thickness === 0) return new Path();
+            // return shape.getPath().wrap(thickness, 0);
+            const path = shape.getPath(fixedRadius);
+            const p0 = gPal.makePalPath(path.toString());
+            const newpath = p0.stroke({width: thickness});
+            p0.delete();
+            return new Path(newpath);
+        }
+        return shape.getPath(fixedRadius).clone();
     }
 
     let fVisibleIdx = 0;
@@ -156,7 +176,7 @@ export function render2path(shape: Shape): Path {
         const child1 = shape.childs[i];
         if (!child1.isVisible) continue;
         const frame1 = child1.frame;
-        const path1 = render2path(child1).clone();
+        const path1 = render2path(child1);
         if (child1.isNoTransform()) {
             path1.translate(frame1.x, frame1.y);
         } else {
