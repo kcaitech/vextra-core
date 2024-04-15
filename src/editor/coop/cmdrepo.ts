@@ -110,9 +110,11 @@ class CmdSync {
     document: Document;
 
     baseVer: string = "";
+    dataVer: string = "";
 
     public setBaseVer(baseVer: string) {
         this.baseVer = baseVer;
+        this.dataVer = baseVer;
     }
 
     cmds: Cmd[] = [];
@@ -257,12 +259,12 @@ class CmdSync {
     }
 
     __processTimeToken: any;
-    processCmds() {
+    processCmds(delay: boolean = true) {
 
         const delayProcess = (timeout: number) => {
             if (!this.__processTimeToken) this.__processTimeToken = setTimeout(() => {
                 this.__processTimeToken = undefined;
-                this.processCmds();
+                this.processCmds(false);
             }, timeout);
         }
 
@@ -274,6 +276,11 @@ class CmdSync {
 
         if (this.repo.isInTransact()) {
             delayProcess(1000); // 1s
+            return;
+        }
+
+        if (delay) {
+            delayProcess(1);
             return;
         }
 
@@ -305,8 +312,8 @@ class CmdSync {
             } finally {
                 this.repo.transactCtx.settrap = savetrap;
             }
-            this.onProcessCmdsEnd();
         }
+        this.onProcessCmdsEnd();
         this._postcmds(delayProcess);
     }
 
@@ -657,7 +664,7 @@ class CmdSync {
         this.pendingcmds.push(...cmds);
         this.nettask.updateVer(this.baseVer, (cmds[cmds.length - 1]?.version) ?? lastVer);
         // need process
-        this.processCmds();
+        this.processCmds(false);
     }
 
     // ================ cmd 上传、下拉 ==========================
@@ -846,7 +853,7 @@ class CmdSync {
             const repotree = this.repotrees.get(_blockId);
             if (!repotree) return; // 无需更新
 
-            repotree.roll2Version(this.baseVer, SNumber.MAX_SAFE_INTEGER)
+            repotree.roll2Version(this.dataVer, SNumber.MAX_SAFE_INTEGER)
         }
     }
 
@@ -1015,8 +1022,8 @@ export class CmdRepo {
             last.time + last.delay > Date.now()) {
             // 考虑合并
             // 需要个cmdtype
-            if (last.mergetype === CmdMergeType.TextDelete && _mergeTextDelete(last, cmd)) return;
-            if (last.mergetype === CmdMergeType.TextInsert && _mergeTextInsert(last, cmd)) return;
+            if (last.mergetype === CmdMergeType.TextDelete && _mergeTextDelete(last, cmd)) return last;
+            if (last.mergetype === CmdMergeType.TextInsert && _mergeTextInsert(last, cmd)) return last;
         }
 
         console.log("commit localcmd: ", cmd);
@@ -1024,6 +1031,7 @@ export class CmdRepo {
         ++this.localindex;
 
         this.cmdsync.commit(cmd);
+        return cmd;
     }
 
     canUndo() {
@@ -1070,9 +1078,9 @@ export class CmdRepo {
     setBaseVer(baseVer: string) {
         return this.cmdsync.setBaseVer(baseVer);
     }
-    // watchProcessCmdsEnd(onEnd: () => void) {
-    //     return this.cmdsync.watchProcessCmdsEnd(onEnd);
-    // }
+    watchProcessCmdsEnd(onEnd: () => void) {
+        return this.cmdsync.watchProcessCmdsEnd(onEnd);
+    }
     receive(cmds: Cmd[]) {
         return this.cmdsync.receive(cmds);
     }

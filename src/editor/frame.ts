@@ -503,6 +503,10 @@ export function expand(api: Api, document: Document, page: Page, shape: Shape, d
     expandTo(api, document, page, shape, frame.width + dw, frame.height + dh);
 }
 
+/**
+ * @deprecated 这个函数的相关运算需要加入对齐像素、固定比例、动态辅助对齐、缩放原点等用户设定的参数，
+ * 因此适合放在前端上具有各项参数环境的运算器(./src/transform/scale.ts)里，将不再引用这个函数
+ */
 export function adjustLT2(api: Api, document: Document, page: Page, shape: Shape, x: number, y: number, recorder?: SizeRecorder) {
     const p = shape.parent;
     if (!p) return;
@@ -576,6 +580,9 @@ export function adjustLT2(api: Api, document: Document, page: Page, shape: Shape
     setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api, recorder);
     afterShapeSizeChange(api, document, page, shape);
 }
+/**
+ * @deprecated
+ */
 export function adjustLB2(api: Api, document: Document, page: Page, shape: Shape, x: number, y: number, recorder?: SizeRecorder) { // 左下角    
     const p = shape.parent;
     if (!p) return;
@@ -631,6 +638,9 @@ export function adjustLB2(api: Api, document: Document, page: Page, shape: Shape
     setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api, recorder);
     afterShapeSizeChange(api, document, page, shape);
 }
+/**
+ * @deprecated
+ */
 export function adjustRT2(api: Api, document: Document, page: Page, shape: Shape, x: number, y: number, recorder?: SizeRecorder) { // 右上角
     const p = shape.parent;
     if (!p) return;
@@ -687,6 +697,9 @@ export function adjustRT2(api: Api, document: Document, page: Page, shape: Shape
     setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api, recorder);
     afterShapeSizeChange(api, document, page, shape);
 }
+/**
+ * @deprecated
+ */
 export function adjustRB2(api: Api, document: Document, page: Page, shape: Shape, x: number, y: number, recorder?: SizeRecorder) {
     const p = shape.parent;
     if (!p) return;
@@ -740,6 +753,7 @@ export function adjustRB2(api: Api, document: Document, page: Page, shape: Shape
     afterShapeSizeChange(api, document, page, shape);
 }
 /**
+ * @deprecated
  * @description 自由缩放
  */
 export function scaleByT(api: Api, document: Document, page: Page, s: Shape, p: PageXY, recorder?: SizeRecorder) {
@@ -809,6 +823,9 @@ export function scaleByT(api: Api, document: Document, page: Page, s: Shape, p: 
     setFrame(page, s, f.x + dx, f.y + dy, w, h, api, recorder);
     afterShapeSizeChange(api, document, page, s);
 }
+/**
+ * @deprecated
+ */
 export function scaleByR(api: Api, document: Document, page: Page, s: Shape, p: PageXY, recorder?: SizeRecorder) {
     const parent = s.parent;
     if (!parent) {
@@ -865,6 +882,9 @@ export function scaleByR(api: Api, document: Document, page: Page, s: Shape, p: 
     setFrame(page, s, f.x + dx, f.y + dy, w, h, api, recorder);
     afterShapeSizeChange(api, document, page, s);
 }
+/**
+ * @deprecated
+ */
 export function scaleByB(api: Api, document: Document, page: Page, s: Shape, p: PageXY, recorder?: SizeRecorder) {
     const parent = s.parent;
     if (!parent) {
@@ -924,6 +944,9 @@ export function scaleByB(api: Api, document: Document, page: Page, s: Shape, p: 
     setFrame(page, s, f.x + dx, f.y + dy, w, h, api, recorder);
     afterShapeSizeChange(api, document, page, s);
 }
+/**
+ * @deprecated
+ */
 export function scaleByL(api: Api, document: Document, page: Page, s: Shape, p: PageXY, recorder?: SizeRecorder) {
     const parent = s.parent;
     if (!parent) {
@@ -980,10 +1003,10 @@ export function scaleByL(api: Api, document: Document, page: Page, s: Shape, p: 
     afterShapeSizeChange(api, document, page, s);
 }
 /**
+ * @deprecated
  * @description 等比缩放
  * @param { number } scale 缩放比例
  */
-// 拖拽顶部
 export function erScaleByT(api: Api, document: Document, page: Page, s: Shape, scale: number, recorder?: SizeRecorder) {
     const p = s.parent;
     if (!p) return;
@@ -1010,7 +1033,9 @@ export function erScaleByT(api: Api, document: Document, page: Page, s: Shape, s
     if (s instanceof GroupShape) afterModifyGroupShapeWH(api, page, s, scale, scale, new ShapeFrame(f.x, f.y, saveW, saveH), recorder);
     afterShapeSizeChange(api, document, page, s);
 }
-// 拖拽右边
+/**
+ * @deprecated
+ */
 export function erScaleByR(api: Api, document: Document, page: Page, s: Shape, scale: number, recorder?: SizeRecorder) {
     const p = s.parent;
     if (!p) return;
@@ -1036,7 +1061,9 @@ export function erScaleByR(api: Api, document: Document, page: Page, s: Shape, s
     if (s instanceof GroupShape) afterModifyGroupShapeWH(api, page, s, scale, scale, new ShapeFrame(f.x, f.y, saveW, saveH), recorder);
     afterShapeSizeChange(api, document, page, s);
 }
-// 拖拽底部
+/**
+ * @deprecated
+ */
 export function erScaleByB(api: Api, document: Document, page: Page, s: Shape, scale: number, recorder?: SizeRecorder) {
     const p = s.parent;
     if (!p) return;
@@ -1062,7 +1089,9 @@ export function erScaleByB(api: Api, document: Document, page: Page, s: Shape, s
     if (s instanceof GroupShape) afterModifyGroupShapeWH(api, page, s, scale, scale, new ShapeFrame(f.x, f.y, saveW, saveH), recorder);
     afterShapeSizeChange(api, document, page, s);
 }
-// 拖拽左边
+/**
+ * @deprecated
+ */
 export function erScaleByL(api: Api, document: Document, page: Page, s: Shape, scale: number, recorder?: SizeRecorder) {
     const p = s.parent;
     if (!p) return;

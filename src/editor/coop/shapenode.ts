@@ -10,14 +10,13 @@ import { SNumber } from "../../coop/client/snumber";
 
 function _apply(document: Document, page: Page, op: TreeMoveOp) {
 
-    let data = op.data;
+    const shape = page.getShape(op.id);
+    let data = shape || op.data;
     if (typeof data === 'string') {
         // import data
         const _data = JSON.parse(data);
         data = importShape(_data, document, page);
     }
-
-    let shape = page.getShape(op.id);
 
     const ret = crdtTreeMove(page, op, data as Shape);
     if (!ret) {
@@ -25,11 +24,11 @@ function _apply(document: Document, page: Page, op: TreeMoveOp) {
     }
     else if (shape && !ret.to) { // 删除
         page.onRemoveShape(shape);
-        shape = undefined;
+        // shape = undefined;
     }
     else if (!shape && ret.to && ret.data) { // 插入
-        shape = ret.data2 as Shape;
-        page.onAddShape(shape);
+        // shape = ret.data2 as Shape;
+        page.onAddShape(ret.data2 as Shape);
     }
     return ret;
 }
@@ -37,18 +36,18 @@ function _apply(document: Document, page: Page, op: TreeMoveOp) {
 
 function simpleApply(page: Page, op: TreeMoveOp, data: any) {
 
-    let shape = page.getShape(op.id);
-    const ret = crdtTreeMove(page, op, data as Shape);
+    const shape = page.getShape(op.id);
+    const ret = crdtTreeMove(page, op, shape || data as Shape);
     if (!ret) {
         // 
     }
     else if (shape && !ret.to) { // 删除
         page.onRemoveShape(shape);
-        shape = undefined;
+        // shape = undefined;
     }
     else if (!shape && ret.to && ret.data) { // 插入
-        shape = ret.data2 as Shape;
-        page.onAddShape(shape);
+        // shape = ret.data2 as Shape;
+        page.onAddShape(ret.data2 as Shape);
     }
     return ret;
 }
