@@ -2,9 +2,7 @@ import { Matrix } from "../basic/matrix";
 import { CurveMode, CurvePoint } from "./baseclasses";
 import { float_accuracy } from "../basic/consts";
 import { BasicArray } from "./basic";
-import { log } from "debug";
 import { uuid } from "../basic/uuid";
-import { pathwrap } from "./pathwrap";
 
 // ----------------------------------------------------------------------------------
 // transform
@@ -94,6 +92,26 @@ transfromHandler['c'] = function (m: Matrix, item: any[]) {
     item[5] = xy.x;
     item[6] = xy.y;
 }
+transfromHandler['Q'] = function (m: Matrix, item: any[]) {
+    // C x1 y1, x2 y2, x y
+    let xy;
+    xy = transformAbsPoint(m, item[1], item[2])
+    item[1] = xy.x;
+    item[2] = xy.y;
+    xy = transformAbsPoint(m, item[3], item[4])
+    item[3] = xy.x;
+    item[4] = xy.y;
+}
+transfromHandler['q'] = function (m: Matrix, item: any[]) {
+    // c dx1 dy1, dx2 dy2, dx dy
+    let xy;
+    xy = transfromRefPoint(m, item[1], item[2])
+    item[1] = xy.x;
+    item[2] = xy.y;
+    xy = transfromRefPoint(m, item[3], item[4])
+    item[3] = xy.x;
+    item[4] = xy.y;
+}
 transfromHandler['Z'] = function (m: Matrix, item: any[]) {
 }
 transfromHandler['z'] = function (m: Matrix, item: any[]) {
@@ -167,21 +185,31 @@ translateHandler['c'] = function (item: any[], x: number, y: number) {
 }
 translateHandler['S'] = function (item: any[], x: number, y: number) {
     // C x1 y1, x2 y2, x y
-    translateHandler['C'](item, x, y);
+    // translateHandler['C'](item, x, y);
+    item[1] += x;
+    item[2] += y;
+    item[3] += x;
+    item[4] += y;
 }
 translateHandler['s'] = function (item: any[], x: number, y: number) {
     // C x1 y1, x2 y2, x y
 }
 translateHandler['Q'] = function (item: any[], x: number, y: number) {
     // C x1 y1, x2 y2, x y
-    translateHandler['C'](item, x, y);
+    // translateHandler['C'](item, x, y);
+    item[1] += x;
+    item[2] += y;
+    item[3] += x;
+    item[4] += y;
 }
 translateHandler['q'] = function (item: any[], x: number, y: number) {
     // C x1 y1, x2 y2, x y
 }
 translateHandler['T'] = function (item: any[], x: number, y: number) {
     // C x1 y1, x2 y2, x y
-    translateHandler['C'](item, x, y);
+    // translateHandler['C'](item, x, y);
+    item[1] += x;
+    item[2] += y;
 }
 translateHandler['t'] = function (item: any[], x: number, y: number) {
     // C x1 y1, x2 y2, x y
@@ -1207,23 +1235,5 @@ export class Path {
     freeze() {
         this.m_segs.forEach(seg => Object.freeze(seg));
         Object.freeze(this.m_segs);
-    }
-
-    wrap(thickness: number, endstyle: any) {
-        let next = this.m_segs.findIndex((v, index) => index !== 0 && v[0] === 'M');
-        if (next < 0) {
-            const segs = pathwrap(this.m_segs, thickness, endstyle);
-            return new Path(segs);
-        }
-        const segs: (string | number)[][] = [];
-        let pre = 0;
-        const len = this.m_segs.length;
-        while (pre < len) {
-            segs.push(...pathwrap(this.m_segs.slice(pre, next), thickness, endstyle));
-            pre = next;
-            ++next;
-            while(next < len && this.m_segs[next][0] !== 'M') ++next;
-        }
-        return new Path(segs);
     }
 }
