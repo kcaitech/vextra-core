@@ -368,6 +368,11 @@ export class ShapeView extends DataView {
         return new ShapeFrame(lt.x, lt.y, rb.x - lt.x, rb.y - lt.y);
     }
 
+    get name() {
+        const v = this._findOV(OverrideType.Name, VariableType.Name);
+        return v ? v.value : this.m_data.name;
+    }
+
     get frame(): ShapeFrame {
         return this.m_frame;
     }

@@ -15,10 +15,11 @@ shadowOri[ShadowPosition.Outer] = function (h: Function, shadow: Shadow, frame: 
     const { color, offsetX, offsetY, blurRadius, spread } = shadow;
     const { red, green, blue, alpha } = color;
     const filter_props: any = { id: 'spread' + id + i, x: '-20%', y: '-20%', height: '140%', width: '140%' };
-    filter_props.width = Math.max(...f_props.props_w);
-    filter_props.height = Math.max(...f_props.props_h);
-    filter_props.x = Math.min(...f_props.props_x);
-    filter_props.y = Math.min(...f_props.props_y);
+    const m_border = max_border(borders);
+    filter_props.width = ((Math.max(...f_props.props_w) + (m_border * 2)) / width) * 100 + '%';
+    filter_props.height = ((Math.max(...f_props.props_h) + (m_border * 2)) / height) * 100 + '%';
+    filter_props.x = ((Math.min(...f_props.props_x) - m_border) / width) * 100 + '%';
+    filter_props.y = ((Math.min(...f_props.props_y) - m_border) / height) * 100 + '%';
     const s = (spread / 10000)
     const multix = +((((spread * 2) + width) - (spread / 100)) / width - s).toFixed(3);
     const multiy = +((((spread * 2) + height) - (spread / 100)) / height - s).toFixed(3);
@@ -171,12 +172,12 @@ function shadowShape(h: Function, shadows: Shadow[], frame: ShapeFrame, id: stri
             h_nodes.push(...h_node);
         }
     }
-    const filter_props: any = { id: 'pd_outer-' + id, x: '-20%', y: '-20%', height: '140%', width: '140%', filterUnits: 'objectBoundingBox' };
+    const filter_props: any = { id: 'pd_outer-' + id, x: '-20%', y: '-20%', height: '140%', width: '140%' };
     const m_border = shapeType === ShapeType.Line ? max_border(borders) * 9 : max_border(borders);
-    filter_props.width = Math.max(...f_props.props_w) + Math.max(...f_props.props_w) + (m_border * 2);
-    filter_props.height = Math.max(...f_props.props_h) + Math.max(...f_props.props_h) + (m_border * 2);
-    filter_props.x = Math.min(...f_props.props_x) + Math.min(...f_props.props_x) - m_border;
-    filter_props.y = Math.min(...f_props.props_y) + Math.min(...f_props.props_y) - m_border;
+    filter_props.width = ((Math.max(...f_props.props_w) + Math.max(...f_props.props_w) + (m_border * 2)) / width) * 100 + '%';
+    filter_props.height = ((Math.max(...f_props.props_h) + Math.max(...f_props.props_h) + (m_border * 2)) / height) * 100 + '%';
+    filter_props.x = ((Math.min(...f_props.props_x) + Math.min(...f_props.props_x) - m_border) / width) * 100 + '%';
+    filter_props.y = ((Math.min(...f_props.props_y) + Math.min(...f_props.props_y) - m_border) / height) * 100 + '%';
     const fe_flood = {
         'flood-opacity': `0`,
         result: `BackgroundImageFix`
