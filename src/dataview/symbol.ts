@@ -32,7 +32,7 @@ export class SymbolView extends GroupShapeView {
     }
     // borders
     protected renderBorders(): EL[] {
-        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr());
+        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.data);
     }
 
     protected layoutChild(child: Shape, idx: number, transx: RenderTransform | undefined, varsContainer: VarsContainer | undefined, resue: Map<string, DataView>, rView: RootView | undefined) {

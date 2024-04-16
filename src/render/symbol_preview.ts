@@ -33,7 +33,7 @@ export function render(h: Function, shape: SymbolShape, comsMap: Map<ShapeType, 
     // childs
     childs.push(...renderSym(h, shape, comsMap));
     // border
-    childs.push(...borderR(h, shape.style.borders, frame, path));
+    childs.push(...borderR(h, shape.style.borders, frame, path, shape));
 
     const props: any = {}
     if (reflush) props.reflush = reflush;

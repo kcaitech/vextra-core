@@ -189,7 +189,7 @@ export class TableView extends ShapeView {
         const shape = this.m_data as TableShape;
         const layout = this.getLayout();
         const cell_border_nodes = [];
-        const nodes = renderBorders(elh, this.getBorders(), this.frame, this.getPathStr());
+        const nodes = renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), shape);
         for (let i = 0, len = layout.grid.rowCount; i < len; ++i) {
             for (let j = 0, len = layout.grid.colCount; j < len; ++j) {
                 const cellLayout = layout.grid.get(i, j);
@@ -199,12 +199,12 @@ export class TableView extends ShapeView {
                 const pathstr = path.toString();
                 if (child && child.style.borders.length > 0) {
                     const style = child.style
-                    const border = renderBorders(elh, style.borders, cellLayout.frame, pathstr)
+                    const border = renderBorders(elh, style.borders, cellLayout.frame, pathstr, shape)
                     cell_border_nodes.push(elh("g", { transform: `translate(${cellLayout.frame.x},${cellLayout.frame.y})` }, border));
                 }
                 else {
                     const style = shape.style;
-                    const border = renderBorders(elh, style.borders, cellLayout.frame, pathstr)
+                    const border = renderBorders(elh, style.borders, cellLayout.frame, pathstr, shape)
                     nodes.push(elh("g", { transform: `translate(${cellLayout.frame.x},${cellLayout.frame.y})` }, border));
                 }
             }

@@ -26,7 +26,6 @@ angularHandler[BorderPosition.Inner] = function (h: Function, frame: ShapeFrame,
         "stroke-linejoin": border.cornerType,
         opacity: opacity === undefined ? 1 : opacity
     }
-    if (Math.max(...shape.radius) > 0 || border.sideSetting.sideType !== SideType.Custom) path_props['stroke-linejoin'] = 'miter';
     const { length, gap } = border.borderStyle;
     if (length || gap) {
         path_props['stroke-dasharray'] = `${length}, ${gap}`
@@ -42,36 +41,24 @@ angularHandler[BorderPosition.Inner] = function (h: Function, frame: ShapeFrame,
             h("path", { d: mask_path, fill: "black" }),
         ]
     )
+    const elArr = [];
+    if (Math.max(...shape.radius) === 0 && (length || gap)) {
+        const props: any = { fill: "none", stroke: 'white', 'stroke-dasharray': length, gap, 'stroke-dashoffset': length / 2 }
+        const rect = h("rect", { x: 0, y: 0, width, height, fill: "black" })
+        const el = sidePath(h, frame, border, props, false);
+        const clip = h("clipPath", { id: clipId }, h("path", { d: path, "clip-rule": "evenodd", }))
+        const g = h('g', { 'clip-path': "url(#" + clipId + ")" }, el)
+        elArr.push(rect, clip, g);
+    } else {
+        const rect = h("rect", { x: 0, y: 0, width, height, fill: "black" })
+        const clip = h("clipPath", { id: clipId }, h("path", { d: path, "clip-rule": "evenodd", }))
+        elArr.push(rect, clip, h('path', path_props), mask);
+    }
     return h("g", [
-
-        h("mask", {
-            id: mask1Id,
-            width,
-            height
-        }, [
-            h("rect", {
-                x: 0,
-                y: 0,
-                width,
-                height,
-                fill: "black"
-            }),
-            mask,
-            h("clipPath", { id: clipId }, h("path", {
-                d: path,
-                "clip-rule": "evenodd",
-            })),
-            h('path', path_props)
-        ]),
-
-        h("foreignObject", {
-            x: 0,
-            y: 0,
-            width,
-            height,
-            mask: "url(#" + mask1Id + ")"
-        },
-            h("div", { width: "100%", height: "100%", style: g_.style }))
+        h("mask", { id: mask1Id, width, height }, elArr),
+        h("foreignObject", { x: 0, y: 0, width, height, mask: "url(#" + mask1Id + ")" }, [
+            h("div", { width: "100%", height: "100%", style: g_.style })
+        ])
     ]);
 }
 
@@ -112,6 +99,16 @@ angularHandler[BorderPosition.Center] = function (h: Function, frame: ShapeFrame
             h("path", { d: mask_inner_path, fill: "black" }),
         ]
     )
+    const elArr = [mask, h("rect", { x, y, width, height, fill: "black" })];
+    if (Math.max(...shape.radius) === 0 && (length || gap)) {
+        const props: any = { fill: "none", stroke: 'white', 'stroke-dasharray': length, gap, 'stroke-dashoffset': length / 2 }
+        const corner = cornerFill(h, frame, border.sideSetting, 'white');
+        const el = sidePath(h, frame, border, props, true);
+        const body = h('g', { mask: "url(#" + mask2Id + ")" }, [...el, corner]);
+        elArr.push(body);
+    } else {
+        elArr.push(h("path", path_props));
+    }
     return h("g", [
         h("mask", {
             id: mask1Id,
@@ -120,11 +117,7 @@ angularHandler[BorderPosition.Center] = function (h: Function, frame: ShapeFrame
             y,
             width,
             height
-        }, [
-            mask,
-            h("rect", { x, y, width, height, fill: "black" }),
-            h("path", path_props)
-        ]),
+        }, elArr),
         h("foreignObject", {
             width,
             height,
@@ -422,43 +415,11 @@ const outer_radius_border_path = (radius: number[], frame: ShapeFrame, side: Bor
         const lb = l === 0 ? b : b === 0 ? l : Math.min(l, b);
         const rt = r === 0 ? t : t === 0 ? r : Math.min(r, t);
         const rb = r === 0 ? b : b === 0 ? r : Math.min(r, b);
-        const min_side = Math.min(width, height);
-        if (radius[0] > min_side / 2) {
-            if (radius[1] > 0 || radius[3] > 0) {
-                radius[1] > 0 && radius[3] > 0 ? p1.radius = (min_side / 2) + lt : radius[1] > 0 ? p1.radius = Math.min(radius[0], width / 2, height) + lt : p1.radius = Math.min(radius[0], width, height / 2) + lt;
-            } else {
-                radius[0] > min_side ? p1.radius = min_side + lt : p1.radius = radius[0] + lt;
-            }
-        } else if (radius[0] > 0) {
-            p1.radius = radius[0] + lt
-        }
-        if (radius[1] > min_side / 2) {
-            if (radius[0] > 0 || radius[2] > 0) {
-                radius[0] > 0 && radius[2] > 0 ? p2.radius = (min_side / 2) + rt : radius[0] > 0 ? p2.radius = Math.min(radius[1], width / 2, height) + rt : p2.radius = Math.min(radius[1], width, height / 2) + rt;
-            } else {
-                radius[1] > min_side ? p2.radius = min_side + rt : p2.radius = radius[1] + rt;
-            }
-        } else if (radius[1] > 0) {
-            p2.radius = radius[1] + rt;
-        }
-        if (radius[2] > min_side / 2) {
-            if (radius[3] > 0 || radius[1] > 0) {
-                radius[3] > 0 && radius[1] > 0 ? p3.radius = (min_side / 2) + rb : radius[3] > 0 ? p3.radius = Math.min(radius[2], width / 2, height) + rb : p3.radius = Math.min(radius[2], width, height / 2) + rb;
-            } else {
-                radius[2] > min_side ? p3.radius = min_side + rb : p3.radius = radius[2] + rb;
-            }
-        } else if (radius[2] > 0) {
-            p3.radius = radius[2] + rb;
-        }
-        if (radius[3] > min_side / 2) {
-            if (radius[2] > 0 || radius[0] > 0) {
-                radius[2] > 0 && radius[0] > 0 ? p4.radius = (min_side / 2) + lb : radius[2] > 0 ? p4.radius = Math.min(radius[3], width / 2, height) + lb : p4.radius = Math.min(radius[3], width, height / 2) + lb;
-            } else {
-                radius[3] > min_side ? p4.radius = min_side + lb : p4.radius = radius[3] + lb;
-            }
-        } else if (radius[3] > 0) {
-            p4.radius = radius[3] + lb;
-        }
+        const _r = getCornerSize(radius, frame);
+        p1.radius = _r[0] > 0 ? _r[0] + lt : 0
+        p2.radius = _r[1] > 0 ? _r[1] + rt : 0;
+        p3.radius = _r[2] > 0 ? _r[2] + rb : 0;
+        p4.radius = _r[3] > 0 ? _r[3] + lb : 0;
     } else if (cornerType === CornerType.Round && sideType === SideType.Custom) {
         const lt = l > 0 && t > 0 ? Math.min(l, t) : 0;
         const rt = r > 0 && t > 0 ? Math.min(r, t) : 0;
@@ -469,26 +430,7 @@ const outer_radius_border_path = (radius: number[], frame: ShapeFrame, side: Bor
         p3.radius = rb;
         p4.radius = lb;
     }
-    let w = width, h = height
-    switch (sideType) {
-        case SideType.Top:
-            w = width; h = height + t;
-            break;
-        case SideType.Bottom:
-            w = width; h = height + b;
-            break;
-        case SideType.Left:
-            w = width + l; h = height;
-            break;
-        case SideType.Right:
-            w = width + r; h = height;
-            break;
-        case SideType.Custom:
-            w = width + r + l; h = height + t + b;
-            break;
-        default:
-            w = width; h = height;
-    }
+    let w = width + r + l, h = height + t + b
 
     const path = new Path(parsePath(new BasicArray<CurvePoint>(p1, p2, p3, p4), true, w, h, undefined));
     path.translate(-l, -t);
@@ -500,37 +442,7 @@ const mask_surplus_path = (frame: ShapeFrame, r: number[], side: BorderSideSetti
     const { sideType, thicknessBottom, thicknessTop, thicknessLeft, thicknessRight } = side;
     let w = frame.width, h = frame.height;
     let _p1 = { x: 0, y: 0 }, _p2 = { x: w, y: 0 }, _p3 = { x: w, y: h }, _p4 = { x: 0, y: h };
-    let radius = [...r];
-    const min_side = Math.min(w, h);
-    if (r[0] > min_side / 2) {
-        if (r[1] > 0 || r[3] > 0) {
-            r[1] > 0 && r[3] > 0 ? radius[0] = min_side / 2 : r[1] > 0 ? radius[0] = Math.min(r[0], w / 2, h) : radius[0] = Math.min(r[0], w, h / 2);
-        } else {
-            r[0] > min_side ? radius[0] = min_side : radius[0] = r[0];
-        }
-    }
-    if (r[1] > min_side / 2) {
-        if (r[0] > 0 || r[2] > 0) {
-            r[0] > 0 && r[2] > 0 ? radius[1] = min_side / 2 : r[0] > 0 ? radius[1] = Math.min(r[1], w / 2, h) : radius[1] = Math.min(r[1], w, h / 2);
-        } else {
-            r[1] > min_side ? radius[1] = min_side : radius[1] = r[1];
-        }
-    }
-    if (r[2] > min_side / 2) {
-        if (r[3] > 0 || r[1] > 0) {
-            r[3] > 0 && r[1] > 0 ? radius[2] = min_side / 2 : r[3] > 0 ? radius[2] = Math.min(r[2], w / 2, h) : radius[2] = Math.min(r[2], w, h / 2);
-        } else {
-            r[2] > min_side ? radius[2] = min_side : radius[2] = r[2];
-        }
-    }
-    if (r[3] > min_side / 2) {
-        if (r[2] > 0 || r[0] > 0) {
-            r[2] > 0 && r[0] > 0 ? radius[3] = min_side / 2 : r[2] > 0 ? radius[3] = Math.min(r[3], w / 2, h) : radius[3] = Math.min(r[3], w, h / 2);
-        } else {
-            r[3] > min_side ? radius[3] = min_side : radius[3] = r[3];
-        }
-    }
-
+    const radius = getCornerSize(r, frame);
     if (thicknessTop === 0) {
         if (thicknessLeft > 0) {
             radius[0] > 0 ? _p1.x = radius[0] : _p1.x = 0;
@@ -601,54 +513,38 @@ const mask_surplus_path = (frame: ShapeFrame, r: number[], side: BorderSideSetti
 
 const inner_mask_path = (shape: Shape, border: Border, iscenter: boolean) => {
     const { width, height } = shape.frame;
-    const radius = shape.radius;
+    const r = shape.radius;
     const { sideType, thicknessBottom, thicknessTop, thicknessLeft, thicknessRight } = border.sideSetting;
-    const t = iscenter ? thicknessTop / 2 : thicknessTop;
-    const b = iscenter ? thicknessBottom / 2 : thicknessBottom;
-    const l = iscenter ? thicknessLeft / 2 : thicknessLeft;
-    const r = iscenter ? thicknessRight / 2 : thicknessRight;
+    const tt = iscenter ? thicknessTop / 2 : thicknessTop;
+    const tb = iscenter ? thicknessBottom / 2 : thicknessBottom;
+    const tl = iscenter ? thicknessLeft / 2 : thicknessLeft;
+    const tr = iscenter ? thicknessRight / 2 : thicknessRight;
     const p1 = new CurvePoint([] as any, '', 0, 0, CurveMode.Straight);
     const p2 = new CurvePoint([] as any, '', 1, 0, CurveMode.Straight);
     const p3 = new CurvePoint([] as any, '', 1, 1, CurveMode.Straight);
     const p4 = new CurvePoint([] as any, '', 0, 1, CurveMode.Straight);
+    const radius = getCornerSize(r, shape.frame);
+
     if (radius[0] > 0) {
-        const side = Math.max(l, t);
+        const side = Math.max(tl, tt);
         side > radius[0] ? p1.radius = 0 : p1.radius = radius[0] - side;
     }
     if (radius[1] > 0) {
-        const side = Math.max(r, t);
+        const side = Math.max(tr, tt);
         side > radius[1] ? p2.radius = 0 : p2.radius = radius[1] - side;
     }
     if (radius[2] > 0) {
-        const side = Math.max(r, b);
+        const side = Math.max(tr, tb);
         side > radius[2] ? p3.radius = 0 : p3.radius = radius[2] - side;
     }
     if (radius[3] > 0) {
-        const side = Math.max(l, b);
+        const side = Math.max(tl, tb);
         side > radius[3] ? p4.radius = 0 : p4.radius = radius[3] - side;
     }
-    let w = width, h = height
-    switch (sideType) {
-        case SideType.Top:
-            w = width; h = t > height ? 0 : height - t;
-            break;
-        case SideType.Bottom:
-            w = width; h = b > height ? 0 : height - b;
-            break;
-        case SideType.Left:
-            w = l > width ? 0 : width - l; h = height;
-            break;
-        case SideType.Right:
-            w = r > width ? 0 : width - r; h = height;
-            break;
-        case SideType.Custom:
-            w = (r + l) > width ? 0 : width - (r + l); h = (t + b) > height ? 0 : height - (t + b);
-            break;
-        default:
-            w = width; h = height;
-    }
+    let w = (tr + tl) > width ? 0 : width - (tr + tl), h = (tt + tb) > height ? 0 : height - (tt + tb)
+
     const path = new Path(parsePath(new BasicArray<CurvePoint>(p1, p2, p3, p4), true, w, h, undefined));
-    path.translate(l, t);
+    path.translate(tl, tt);
     return path.toString();
 }
 
@@ -749,13 +645,12 @@ const get_center_border_path = (h: Function, frame: ShapeFrame, border: Border, 
         body_props.stroke = "url(#" + g_.id + ")";
     }
     const mask_outer_path = outer_mask_path(shape, border, true);
-    const mask_inner_path = inner_mask_path(shape, border, true);
     const mask = h(
         "mask",
         { id: maskId, x: -thickness / 2, y: -thickness / 2, width, height },
         [
+            h("path", { d: path, fill: "black" }),
             h("path", { d: mask_outer_path, fill: "white" }),
-            h("path", { d: mask_inner_path, fill: "black" }),
         ]
     )
     const corner = cornerFill(h, frame, border.sideSetting, body_props.stroke);
@@ -776,4 +671,40 @@ const cornerFill = (h: Function, frame: ShapeFrame, side: BorderSideSetting, str
     const d3 = `M ${width} ${height} L ${width + thicknessRight} ${height} L ${width + thicknessRight} ${height + thicknessBottom} L ${width} ${height + thicknessBottom} Z `;
     const d4 = `M ${-thicknessLeft} ${height} L 0 ${height} L 0 ${height + thicknessBottom} L ${-thicknessLeft} ${height + thicknessBottom} Z`;
     return h('path', { d: d1 + d2 + d3 + d4, fill: stroke, stroke: 'none' })
+}
+
+const getCornerSize = (r: number[], frame: ShapeFrame) => {
+    const { width, height } = frame;
+    let radius = [...r];
+    const min_side = Math.min(width, height);
+
+    if (r[0] > min_side / 2) {
+        if (r[1] > 0 || r[3] > 0) {
+            r[1] > 0 && r[3] > 0 ? radius[0] = min_side / 2 : r[1] > 0 ? radius[0] = Math.min(r[0], width / 2, height) : radius[0] = Math.min(r[0], width, height / 2);
+        } else {
+            r[0] > min_side ? radius[0] = min_side : radius[0] = r[0];
+        }
+    }
+    if (r[1] > min_side / 2) {
+        if (r[0] > 0 || r[2] > 0) {
+            r[0] > 0 && r[2] > 0 ? radius[1] = min_side / 2 : r[0] > 0 ? radius[1] = Math.min(r[1], width / 2, height) : radius[1] = Math.min(r[1], width, height / 2);
+        } else {
+            r[1] > min_side ? radius[1] = min_side : radius[1] = r[1];
+        }
+    }
+    if (r[2] > min_side / 2) {
+        if (r[3] > 0 || r[1] > 0) {
+            r[3] > 0 && r[1] > 0 ? radius[2] = min_side / 2 : r[3] > 0 ? radius[2] = Math.min(r[2], width / 2, height) : radius[2] = Math.min(r[2], width, height / 2);
+        } else {
+            r[2] > min_side ? radius[2] = min_side : radius[2] = r[2];
+        }
+    }
+    if (r[3] > min_side / 2) {
+        if (r[2] > 0 || r[0] > 0) {
+            r[2] > 0 && r[0] > 0 ? radius[3] = min_side / 2 : r[2] > 0 ? radius[3] = Math.min(r[3], width / 2, height) : radius[3] = Math.min(r[3], width, height / 2);
+        } else {
+            r[3] > min_side ? radius[3] = min_side : radius[3] = r[3];
+        }
+    }
+    return radius;
 }

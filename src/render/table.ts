@@ -37,7 +37,7 @@ export function render(h: Function, shape: TableShape, comsMap: Map<ShapeType, a
 
     // border
     const cell_border_nodes = [];
-    nodes.push(...borderR(h, shape.style.borders, frame, path));
+    nodes.push(...borderR(h, shape.style.borders, frame, path, undefined));
     for (let i = 0, len = layout.grid.rowCount; i < len; ++i) {
         for (let j = 0, len = layout.grid.colCount; j < len; ++j) {
             const cellLayout = layout.grid.get(i, j);
@@ -48,12 +48,12 @@ export function render(h: Function, shape: TableShape, comsMap: Map<ShapeType, a
             const pathstr = path.toString();
             if (child && child.style.borders.length > 0) {
                 const style = child.style
-                const border = borderR(h, style.borders, cellLayout.frame, pathstr)
+                const border = borderR(h, style.borders, cellLayout.frame, pathstr, undefined)
                 cell_border_nodes.push(h("g", { transform: `translate(${cellLayout.frame.x},${cellLayout.frame.y})` }, border));
             }
             else {
                 const style = shape.style;
-                const border = borderR(h, style.borders, cellLayout.frame, pathstr)
+                const border = borderR(h, style.borders, cellLayout.frame, pathstr, undefined)
                 nodes.push(h("g", { transform: `translate(${cellLayout.frame.x},${cellLayout.frame.y})` }, border));
             }
         }

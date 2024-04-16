@@ -1,6 +1,6 @@
 import { renderGroupChilds as gR } from "./group";
 import { render as borderR } from "./border";
-import { Artboard, ShapeType, SymbolShape, SymbolRefShape } from '../data/classes';
+import { Artboard, ShapeType, SymbolShape, SymbolRefShape, Shape } from '../data/classes';
 import { isVisible, randomId } from "./basic";
 import { innerShadowId, renderWithVars as shadowR } from "./shadow";
 import { Color } from "../data/color";
@@ -63,10 +63,10 @@ export function render(h: Function,
                 delete ab_props.opacity;
                 const inner_url = innerShadowId(shape_id, shadows); 
                 if (shadows.length) props.filter = `${inner_url} url(#dorp-shadow-${shape_id})`;
-                const body = h("g", props, [h('svg', ab_props, childs), ...borderR(h, shape.style.borders, frame, path)]);
+                const body = h("g", props, [h('svg', ab_props, childs), ...borderR(h, shape.style.borders, frame, path, shape)]);
                 return h("g", ex_props, [...shadow, body]);
             } else {
-                return h("g", props, [h('svg', ab_props, childs), ...borderR(h, shape.style.borders, frame, path)]);
+                return h("g", props, [h('svg', ab_props, childs), ...borderR(h, shape.style.borders, frame, path, shape)]);
             }
         } else {
             ab_props.x = frame.x, ab_props.y = frame.y;
@@ -113,10 +113,10 @@ export function render(h: Function,
                 delete ab_props.opacity;
                 const inner_url = innerShadowId(shape_id, shadows);
                 if (shadows.length) props.filter = `${inner_url} url(#dorp-shadow-${shape_id})`;
-                const body = h("g", props, [h('svg', ab_props, childs), ...borderR(h, shape.style.borders, frame, path)]);
+                const body = h("g", props, [h('svg', ab_props, childs), ...borderR(h, shape.style.borders, frame, path, shape)]);
                 return h("g", ex_props, [...shadow, body]);
             } else {
-                return h("g", props, [h('svg', ab_props, childs), ...borderR(h, shape.style.borders, frame, path)]);
+                return h("g", props, [h('svg', ab_props, childs), ...borderR(h, shape.style.borders, frame, path, shape)]);
             }
         } else {
             if (shadow.length) {

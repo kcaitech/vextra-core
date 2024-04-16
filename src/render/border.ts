@@ -316,7 +316,7 @@ handler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame, border
     return (h("g", elArr));
 }
 
-export function render(h: Function, borders: Border[], frame: ShapeFrame, path: string, isClosed = true, shape?: Shape): Array<any> {
+export function render(h: Function, borders: Border[], frame: ShapeFrame, path: string, shape: Shape | undefined, isClosed = true): Array<any> {
     const bc = borders.length;
     const elArr = [];
     for (let i = 0; i < bc; i++) {
@@ -356,11 +356,12 @@ export function renderWithVars(h: Function, shape: Shape, frame: ShapeFrame, pat
             }
         }
     }
-    return render(h, borders, frame, path, shape.isClosed, shape);
+    return render(h, borders, frame, path, shape, shape.isClosed);
 }
 
 function is_side_custom(sideType: SideType, shape: Shape) {
     if (sideType === SideType.Normal) return false;
-    if (shape.type === (ShapeType.Rectangle || ShapeType.Artboard || ShapeType.Image || ShapeType.Symbol || ShapeType.SymbolRef || ShapeType.SymbolUnion)) return true;
+    const type = [ShapeType.Rectangle, ShapeType.Artboard, ShapeType.Image, ShapeType.Symbol, ShapeType.SymbolRef, ShapeType.Text, ShapeType.SymbolUnion];
+    if (type.includes(shape.type)) return true;
     else return false;
 }

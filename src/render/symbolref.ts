@@ -32,7 +32,7 @@ export function render(h: Function,
     // childs.push(...renderSym(h, shape, frame, sym as SymbolShape, comsMap, varsContainer));
     childs.push(...renderGroupChilds2(h, shape.naviChilds || [], comsMap, undefined));
     // border
-    childs.push(...borderR(h, shape.getBorders(), frame, path));
+    childs.push(...borderR(h, shape.getBorders(), frame, path, shape));
 
     const props: any = {}
     if (reflush) props.reflush = reflush;
