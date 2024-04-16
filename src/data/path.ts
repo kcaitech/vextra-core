@@ -2,7 +2,6 @@ import { Matrix } from "../basic/matrix";
 import { CurveMode, CurvePoint } from "./baseclasses";
 import { float_accuracy } from "../basic/consts";
 import { BasicArray } from "./basic";
-import { log } from "debug";
 import { uuid } from "../basic/uuid";
 
 // ----------------------------------------------------------------------------------
@@ -93,6 +92,26 @@ transfromHandler['c'] = function (m: Matrix, item: any[]) {
     item[5] = xy.x;
     item[6] = xy.y;
 }
+transfromHandler['Q'] = function (m: Matrix, item: any[]) {
+    // C x1 y1, x2 y2, x y
+    let xy;
+    xy = transformAbsPoint(m, item[1], item[2])
+    item[1] = xy.x;
+    item[2] = xy.y;
+    xy = transformAbsPoint(m, item[3], item[4])
+    item[3] = xy.x;
+    item[4] = xy.y;
+}
+transfromHandler['q'] = function (m: Matrix, item: any[]) {
+    // c dx1 dy1, dx2 dy2, dx dy
+    let xy;
+    xy = transfromRefPoint(m, item[1], item[2])
+    item[1] = xy.x;
+    item[2] = xy.y;
+    xy = transfromRefPoint(m, item[3], item[4])
+    item[3] = xy.x;
+    item[4] = xy.y;
+}
 transfromHandler['Z'] = function (m: Matrix, item: any[]) {
 }
 transfromHandler['z'] = function (m: Matrix, item: any[]) {
@@ -166,21 +185,31 @@ translateHandler['c'] = function (item: any[], x: number, y: number) {
 }
 translateHandler['S'] = function (item: any[], x: number, y: number) {
     // C x1 y1, x2 y2, x y
-    translateHandler['C'](item, x, y);
+    // translateHandler['C'](item, x, y);
+    item[1] += x;
+    item[2] += y;
+    item[3] += x;
+    item[4] += y;
 }
 translateHandler['s'] = function (item: any[], x: number, y: number) {
     // C x1 y1, x2 y2, x y
 }
 translateHandler['Q'] = function (item: any[], x: number, y: number) {
     // C x1 y1, x2 y2, x y
-    translateHandler['C'](item, x, y);
+    // translateHandler['C'](item, x, y);
+    item[1] += x;
+    item[2] += y;
+    item[3] += x;
+    item[4] += y;
 }
 translateHandler['q'] = function (item: any[], x: number, y: number) {
     // C x1 y1, x2 y2, x y
 }
 translateHandler['T'] = function (item: any[], x: number, y: number) {
     // C x1 y1, x2 y2, x y
-    translateHandler['C'](item, x, y);
+    // translateHandler['C'](item, x, y);
+    item[1] += x;
+    item[2] += y;
 }
 translateHandler['t'] = function (item: any[], x: number, y: number) {
     // C x1 y1, x2 y2, x y

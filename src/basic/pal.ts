@@ -15,10 +15,34 @@ export type BoolOpFuns = {
     difference: BOPFun,
     intersection: BOPFun,
     subtract: BOPFun,
-    union: BOPFun
+    union: BOPFun,
+    stroke(ops?: StrokeOpts): string;
 }
 
 export type TextPathFun = (font: string, fontSize: number, charCode: number) => string;
+
+enum Join {
+    "MITER",
+    "ROUND",
+    "BEVEL"
+}
+
+enum Cap {
+    "BUTT",
+    "ROUND",
+    "SQUARE",
+}
+
+export interface StrokeOpts {
+    // Default values are set in chaining.js which allows clients
+    // to set any number of them. Otherwise, the binding code complains if
+    // any are omitted.
+    width?: number;
+    miter_limit?: number;
+    res_scale?: number;
+    join?: Join;
+    cap?: Cap;
+};
 
 export interface IPalPath {
     difference(path: IPalPath): boolean,
@@ -28,6 +52,7 @@ export interface IPalPath {
     addPath(path: IPalPath): boolean
     toSVGString(): string;
     delete(): void;
+    stroke(ops?: StrokeOpts): string;
 }
 
 export const gPal: {
@@ -46,7 +71,8 @@ export const gPal: {
         difference: (path0: string, path1: string) => "",
         intersection: (path0: string, path1: string) => "",
         subtract: (path0: string, path1: string) => "",
-        union: (path0: string, path1: string) => ""
+        union: (path0: string, path1: string) => "",
+        stroke: () => ""
     },
     makePalPath: (path: string): IPalPath => {
         throw new Error("not implemented")
