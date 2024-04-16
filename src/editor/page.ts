@@ -13,7 +13,7 @@ import {
 } from "../data/shape";
 import { ShapeEditor } from "./shape";
 import * as types from "../data/typesdefine";
-import { BoolOp, BorderPosition, ExportFileFormat, ExportFormatNameingScheme, FillType, GradientType, MarkerType, ShadowPosition, ShapeType } from "../data/typesdefine";
+import { BoolOp, BorderPosition, ExportFileFormat, ExportFormatNameingScheme, FillType, GradientType, MarkerType, ShadowPosition, ShapeType, SideType } from "../data/typesdefine";
 import { Page } from "../data/page";
 import {
     initFrame,
@@ -84,7 +84,7 @@ import {
     shape4fill
 } from "./symbol";
 import { is_circular_ref2 } from "./utils/ref_check";
-import { BorderStyle, ExportFormat, Point2D, Shadow } from "../data/baseclasses";
+import { BorderSideSetting, BorderStyle, ExportFormat, Point2D, Shadow } from "../data/baseclasses";
 import { get_rotate_for_straight, is_straight, update_frame_by_points } from "./utils/path";
 import { modify_shapes_height, modify_shapes_width } from "./utils/common";
 import { CoopRepository } from "./coop/cooprepo";
@@ -2331,7 +2331,28 @@ export class PageEditor {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value, index } = actions[i];
                 const s = shape4border(api, this.__page, target);
-                api.setBorderThickness(this.__page, s, index, value);
+                const borders = target.getBorders();
+                const sideType = borders[index].sideSetting.sideType;
+                switch (sideType) {
+                    case SideType.Normal:
+                        api.setBorderSide(this.__page, s, index, new BorderSideSetting(sideType, value, value, value, value));
+                        break;
+                    case SideType.Top:
+                        api.setBorderThicknessTop(this.__page, s, index, value);
+                        break
+                    case SideType.Right:
+                        api.setBorderThicknessRight(this.__page, s, index, value);
+                        break
+                    case SideType.Bottom:
+                        api.setBorderThicknessBottom(this.__page, s, index, value);
+                        break
+                    case SideType.Left:
+                        api.setBorderThicknessLeft(this.__page, s, index, value);
+                        break
+                    default:
+                        api.setBorderSide(this.__page, s, index, new BorderSideSetting(sideType, value, value, value, value));
+                        break;
+                }
             }
             this.__repo.commit();
         } catch (error) {

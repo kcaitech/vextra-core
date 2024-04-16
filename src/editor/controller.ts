@@ -19,7 +19,7 @@ import {
 } from "./frame";
 import { CurvePoint, GroupShape, PathShape, PathShape2, Shape, ShapeFrame, TextShape } from "../data/shape";
 import { getFormatFromBase64 } from "../basic/utils";
-import { ContactRoleType, CurveMode, FillType, OverrideType, ShapeType, VariableType } from "../data/typesdefine";
+import { ContactRoleType, CurveMode, FillType, OverrideType, ShapeType, SideType, VariableType } from "../data/typesdefine";
 import {
     newArrowShape,
     newArtboard,
@@ -43,7 +43,7 @@ import { Api } from "./coop/recordapi";
 import { Matrix } from "../basic/matrix";
 import { Artboard } from "../data/artboard";
 import { uuid } from "../basic/uuid";
-import { ContactForm, ContactRole } from "../data/baseclasses";
+import { BorderSideSetting, ContactForm, ContactRole } from "../data/baseclasses";
 import { ContactShape } from "../data/contact";
 import { importCurvePoint, importGradient } from "../data/baseimport";
 import { exportGradient } from "../data/baseexport";
@@ -1161,12 +1161,78 @@ export class Controller {
 
         const api = this.__repo.start("asyncBorderThickness");
         let status: Status = Status.Pending;
-        const execute = (contextSettingThickness: number, index: number) => {
+        const execute = (thickness: number, index: number) => {
             status = Status.Pending;
             try {
                 for (let i = 0, l = shapes.length; i < l; i++) {
                     const s = shape4border(api, page, shapes[i]);
-                    api.setBorderThickness(page, s, index, contextSettingThickness);
+                    const borders = shapes[i].getBorders();
+                    const sideType = borders[index].sideSetting.sideType;
+                    switch (sideType) {
+                        case SideType.Normal:
+                            api.setBorderSide(page, s, index, new BorderSideSetting(sideType, thickness, thickness, thickness, thickness));
+                            break;
+                        case SideType.Top:
+                            api.setBorderThicknessTop(page, s, index, thickness);
+                            break
+                        case SideType.Right:
+                            api.setBorderThicknessRight(page, s, index, thickness);
+                            break
+                        case SideType.Bottom:
+                            api.setBorderThicknessBottom(page, s, index, thickness);
+                            break
+                        case SideType.Left:
+                            api.setBorderThicknessLeft(page, s, index, thickness);
+                            break
+                        default:
+                            api.setBorderSide(page, s, index, new BorderSideSetting(sideType, thickness, thickness, thickness, thickness));
+                            break;
+                    }
+                }
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const close = () => {
+            if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
+                this.__repo.commit();
+            } else {
+                this.__repo.rollback();
+            }
+            return undefined;
+        }
+        return { execute, close }
+    }
+    public asyncBorderSideThickness(_shapes: ShapeView[], _page: Page | PageView, type: SideType): AsyncBorderThickness {
+        const shapes: ShapeView[] = _shapes;
+        const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
+
+        const api = this.__repo.start("asyncBorderSideThickness");
+        let status: Status = Status.Pending;
+        const execute = (thickness: number, index: number) => {
+            status = Status.Pending;
+            try {
+                for (let i = 0, l = shapes.length; i < l; i++) {
+                    const s = shape4border(api, page, shapes[i]);
+                    switch (type) {
+                        case SideType.Top:
+                            api.setBorderThicknessTop(page, s, index, thickness);
+                            break
+                        case SideType.Right:
+                            api.setBorderThicknessRight(page, s, index, thickness);
+                            break
+                        case SideType.Bottom:
+                            api.setBorderThicknessBottom(page, s, index, thickness);
+                            break
+                        case SideType.Left:
+                            api.setBorderThicknessLeft(page, s, index, thickness);
+                            break
+                        default:
+                            break;
+                    }
                 }
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
