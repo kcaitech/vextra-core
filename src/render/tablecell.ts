@@ -1,4 +1,4 @@
-import { ShapeFrame, SymbolRefShape, SymbolShape, Variable } from "../data/classes";
+import { ShapeFrame, SymbolRefShape, SymbolShape } from "../data/classes";
 import { TableCell, TableCellType } from "../data/classes";
 import { renderTextLayout } from "./text";
 import { render as fillR } from "./fill";
