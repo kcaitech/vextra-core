@@ -145,8 +145,8 @@ export class TextShapeView extends ShapeView {
         const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
         if (textBehaviour !== TextBehaviour.Flexible) return;
         let notify = false;
-        const width = this.m_layout.contentWidth;
-        const height = this.m_layout.contentHeight;
+        const width = Math.ceil(this.m_layout.contentWidth);
+        const height = Math.ceil(this.m_layout.contentHeight);
         const adjX = this.m_layout.alignX;
         if (adjX !== 0) {
             this.m_frame.x = origin.x + adjX;
