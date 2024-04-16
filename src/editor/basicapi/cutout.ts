@@ -4,7 +4,7 @@ import { ExportFormat, ExportOptions, Shape } from "../../data/shape";
 import { ExportFileFormat, ExportFormatNameingScheme } from "../../data/style";
 import { crdtArrayInsert, crdtArrayRemove, crdtSetAttr } from "./basic";
 import { ArrayMoveOpRecord } from "../../coop/client/crdt";
-import { Variable } from "data/typesdefine";
+import { Variable } from "../../data/typesdefine";
 
 export function addExportFormat(shape: Shape | Variable, format: ExportFormat, index: number) {
     let options;

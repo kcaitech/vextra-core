@@ -65,7 +65,7 @@ import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
 import { BasicArray } from "../data/basic";
 import { Fill } from "../data/style";
 import { FrameType, PathType } from "../data/consts";
-import { TextAttr } from "data/classes";
+import { TextAttr } from "../data/classes";
 
 interface PageXY { // 页面坐标系的xy
     x: number
