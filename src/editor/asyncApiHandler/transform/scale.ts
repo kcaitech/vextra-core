@@ -3,7 +3,9 @@ import { AsyncApiCaller } from "../AsyncApiCaller";
 import { Document } from "../../../data/document";
 import { adapt2Shape, PageView, ShapeView } from "../../../dataview";
 import { afterModifyGroupShapeWH, SizeRecorder } from "../../frame";
-import { GroupShape, ShapeFrame } from "../../../data/shape";
+import { GroupShape, Shape, ShapeFrame, ShapeType, SymbolShape, SymbolUnionShape } from "../../../data/shape";
+import { Page } from "../../../data/page";
+import { SymbolRefShape } from "../../../data/symbolref";
 
 export type ScaleUnit = {
     shape: ShapeView;
@@ -11,6 +13,7 @@ export type ScaleUnit = {
     targetXY: { x: number, y: number };
     targetWidth: number;
     targetHeight: number;
+    targetRotation: number;
 
     baseWidth: number;
     baseHeight: number;
@@ -20,6 +23,7 @@ export type ScaleUnit = {
 
 export class Scaler extends AsyncApiCaller {
     private recorder: SizeRecorder = new Map();
+    private needUpdateCustomSizeStatus: Set<Shape> = new Set();
 
     constructor(repo: CoopRepository, document: Document, page: PageView) {
         super(repo, document, page);
@@ -29,10 +33,32 @@ export class Scaler extends AsyncApiCaller {
         return this.__repo.start('sync-scale')
     }
 
-    execute() {
+    private afterShapeSizeChange() {
+        if (!this.needUpdateCustomSizeStatus.size) {
+            return;
+        }
+
+        const document = this.__document;
+        const api = this.api;
+        const page = this.page;
+        this.needUpdateCustomSizeStatus.forEach(shape => {
+            if (shape instanceof SymbolShape && !(shape instanceof SymbolUnionShape)) {
+                const symId = shape.id;
+                const refs = document.symbolsMgr.getRefs(symId);
+                if (!refs) return;
+                for (let [k, v] of refs) {
+                    if (v.isCustomSize) continue;
+                    const page = v.getPage();
+                    if (!page) throw new Error();
+                    api.shapeModifyWH(page as Page, v, shape.frame.width, shape.frame.height);
+                }
+            } else if (shape instanceof SymbolRefShape) {
+                api.shapeModifyIsCustomSize(page, shape, true);
+            }
+        })
     }
 
-    execute4multi(transformUnits: ScaleUnit[]) {
+    execute(transformUnits: ScaleUnit[]) {
         try {
             const api = this.api;
             const page = this.page;
@@ -63,16 +89,33 @@ export class Scaler extends AsyncApiCaller {
                     api.shapeModifyVFlip(page, shape, !shape.isFlippedVertical);
                 }
 
+                if (t.targetRotation !== shape.rotation) {
+                    api.shapeModifyRotate(page, shape, t.targetRotation);
+                }
+
                 if (shape instanceof GroupShape) {
                     const scaleX = shape.frame.width / saveWidth;
                     const scaleY = shape.frame.height / saveHeight;
                     afterModifyGroupShapeWH(api, page, shape, scaleX, scaleY, new ShapeFrame(0, 0, saveWidth, saveHeight), this.recorder);
                 }
+
+                // 实例或者组件的宽高改变需要执行副作用函数
+                if (shape.type === ShapeType.SymbolRef || shape.type === ShapeType.Symbol) {
+                    this.needUpdateCustomSizeStatus.add(shape);
+                }
             }
+
+            this.afterShapeSizeChange(); // 需要同步更新吗？
+
             this.updateView();
         } catch (error) {
             console.log('error:', error);
             this.exception = true;
         }
+    }
+
+    commit() {
+        // this.afterShapeSizeChange();
+        super.commit();
     }
 }
