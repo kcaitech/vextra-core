@@ -2,7 +2,7 @@ import { ShapeFrame, SymbolRefShape, SymbolShape, Variable } from "../data/class
 import { TableCell, TableCellType } from "../data/classes";
 import { renderTextLayout } from "./text";
 import { render as fillR } from "./fill";
-import { TextLayout } from "data/textlayout";
+import { TextLayout } from "../data/textlayout";
 
 export function render(h: Function, shape: TableCell, frame: ShapeFrame, imgPH: string, 
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, 
