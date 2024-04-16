@@ -19,7 +19,7 @@ import { render as marker } from "./marker";
 import { render as renderGradient } from "./gradient";
 import { render as lineGradient } from "./line_gradient";
 function handler(h: Function, style: Style, border: Border, path: string, shape: Shape, startMarkerType?: MarkerType, endMarkerType?: MarkerType): any {
-    const thickness = border.thickness;
+    const thickness = border.sideSetting.thicknessTop;
     const body_props: any = {
         d: path,
         fill: "none",
@@ -93,7 +93,7 @@ function handler(h: Function, style: Style, border: Border, path: string, shape:
 
 
 function angular_handler(h: Function, style: Style, border: Border, path: string, shape: Shape, startMarkerType?: MarkerType, endMarkerType?: MarkerType): any {
-    const thickness = border.thickness;
+    const thickness = border.sideSetting.thicknessTop;
     const opacity = border.gradient?.gradientOpacity;
     let line_g = lineGradient(h, border.gradient as Gradient, shape.frame, thickness);
     const id = "mask-line-" + objectId(border) + randomId();

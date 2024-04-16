@@ -5,7 +5,7 @@ import { Border, FillType, MarkerType, Shape, Style } from "../data/classes";
 import { render as rm } from "./marker";
 
 function handler(h: Function, style: Style, border: Border, path: string, shape: Shape,  startMarkerType?: MarkerType, endMarkerType?: MarkerType): any {
-    const thickness = border.thickness;
+    const thickness = border.sideSetting.thicknessTop;
     const body_props: any = {
         d: path,
         fill: "none",
