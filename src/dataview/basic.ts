@@ -34,12 +34,12 @@ export function stringh(...args: any[]): string {
         if (a === 'style') {
             let style = ""
             for (let b in attr) {
-                style += b + ':' + attr[b] + ';';
+                if (attr[b] !== undefined) style += b + ':' + attr[b] + ';';
             }
             ret += ' ' + a + '="' + style + '"';
         }
         else {
-            ret += ' ' + a + '="' + attr + '"';
+            if (attr !== undefined) ret += ' ' + a + '="' + attr + '"';
         }
     }
     ret += '>';

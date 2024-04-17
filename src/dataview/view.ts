@@ -319,7 +319,7 @@ export class DataView extends EventEL {
         attrs['preserveAspectRatio'] = "xMinYMin meet";
         attrs.width = frame.width;
         attrs.height = frame.height;
-        attrs.viewBox = `${frame.x} ${frame.y} ${frame.width} ${frame.height}`;
+        // attrs.viewBox = `${frame.x} ${frame.y} ${frame.width} ${frame.height}`;
         attrs.overflow = "visible";
         return stringh('svg', attrs, super.toSVGString());
     }
