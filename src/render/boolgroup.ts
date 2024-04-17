@@ -1,4 +1,4 @@
-import { BoolOp, BoolShape, GroupShape, Path, Shape, ShapeFrame, Style, SymbolRefShape, SymbolShape, TextShape } from "../data/classes";
+import { BoolOp, BoolShape, Border, GroupShape, Path, PathShape, Shape, ShapeFrame, Style, SymbolRefShape, SymbolShape, TextShape } from "../data/classes";
 import { renderWithVars as fillR } from "./fill";
 import { renderWithVars as borderR } from "./border"
 import { renderText2Path } from "./text";
@@ -111,6 +111,14 @@ class FrameGrid {
     }
 }
 
+function hasFill(shape: Shape) {
+    const fills = shape.getFills();
+    if (fills.length === 0) return false;
+    for (let i = 0, len = fills.length; i < len; ++i) {
+        if (fills[i].isEnabled) return true;
+    }
+    return false;
+}
 
 export function render2path(shape: Shape): Path {
 
@@ -119,8 +127,20 @@ export function render2path(shape: Shape): Path {
     if (shapeIsGroup) fixedRadius = shape.fixedRadius;
     if (!shapeIsGroup || shape.childs.length === 0) {
         if (!shape.isVisible) return new Path();
-        const path = shape instanceof TextShape ? renderText2Path(shape.getLayout(), 0, 0) : shape.getPath(fixedRadius).clone();
-        return path;
+        if (shape instanceof TextShape) return renderText2Path(shape.getLayout(), 0, 0);
+        if (shape instanceof PathShape && (!shape.isClosed || !hasFill(shape))) {
+            const thickness = shape.getBorders().reduce((w: number, b: Border) => {
+                return Math.max(w, b.thickness);
+            }, 0);
+            if (thickness === 0) return new Path();
+            // return shape.getPath().wrap(thickness, 0);
+            const path = shape.getPath(fixedRadius);
+            const p0 = gPal.makePalPath(path.toString());
+            const newpath = p0.stroke({width: thickness});
+            p0.delete();
+            return new Path(newpath);
+        }
+        return shape.getPath(fixedRadius).clone();
     }
 
     let fVisibleIdx = 0;
@@ -156,7 +176,7 @@ export function render2path(shape: Shape): Path {
         const child1 = shape.childs[i];
         if (!child1.isVisible) continue;
         const frame1 = child1.frame;
-        const path1 = render2path(child1).clone();
+        const path1 = render2path(child1);
         if (child1.isNoTransform()) {
             path1.translate(frame1.x, frame1.y);
         } else {
@@ -197,75 +217,4 @@ export function render2path(shape: Shape): Path {
         resultpath = new Path(pathstr);
     }
     return resultpath;
-}
-
-export function render(h: Function, shape: BoolShape, 
-    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
-    reflush?: number): any {
-    if (!isVisible(shape, varsContainer)) return;
-
-    const path = render2path(shape);
-    const frame = shape.frame;
-
-    // const path0 = shape.getPath();
-    // if (matrix) path0.transform(matrix);
-    const pathstr = path.toString();
-    const childs = [];
-
-    // fill
-    childs.push(...fillR(h, shape, frame, pathstr, varsContainer));
-    // border
-    childs.push(...borderR(h, shape, frame, pathstr, varsContainer));
-
-    // ----------------------------------------------------------
-    // shadows todo
-
-    const props: any = {}
-    if (reflush) props.reflush = reflush;
-
-    const contextSettings = shape.style.contextSettings;
-    if (contextSettings && (contextSettings.opacity ?? 1) !== 1) {
-        props.opacity = contextSettings.opacity;
-    }
-
-    if (shape.isFlippedHorizontal || shape.isFlippedVertical || shape.rotation) {
-        const cx = frame.x + frame.width / 2;
-        const cy = frame.y + frame.height / 2;
-        const style: any = {}
-        style.transform = "translate(" + cx + "px," + cy + "px) "
-        if (shape.isFlippedHorizontal) style.transform += "rotateY(180deg) "
-        if (shape.isFlippedVertical) style.transform += "rotateX(180deg) "
-        if (shape.rotation) style.transform += "rotate(" + shape.rotation + "deg) "
-        style.transform += "translate(" + (-cx + frame.x) + "px," + (-cy + frame.y) + "px)"
-        props.style = style;
-    }
-    else {
-        props.transform = `translate(${frame.x},${frame.y})`
-    }
-
-    if (childs.length == 0) {
-        props["fill-opacity"] = 1;
-        props.d = path;
-        props.fill = 'none';
-        props.stroke = 'none';
-        props["stroke-width"] = 0;
-        return h('path', props);
-    }
-    else {
-        const shadows = shape.style.shadows;
-        const ex_props = Object.assign({}, props);
-        const shape_id = shape.id.slice(0, 4) + randomId();
-        const shadow = shadowR(h, shape_id, shape, frame, pathstr, varsContainer);
-        if (shadow.length) {
-            delete props.style;
-            delete props.transform;
-            delete props.opacity;
-            const inner_url = innerShadowId(shape_id, shadows);
-            if (shadows.length) props.filter = `url(#pd_outer-${shape_id}) ${inner_url}`;
-            const body = h("g", props, childs);
-            return h("g", ex_props, [...shadow, body]);
-        } else {
-            return h("g", props, childs);
-        }
-    }
 }
