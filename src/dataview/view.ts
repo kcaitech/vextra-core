@@ -244,7 +244,7 @@ export class DataView extends EventEL {
     }
 
     removeChild(idx: number | DataView) {
-        if (typeof idx !==  'number') {
+        if (typeof idx !== 'number') {
             idx = this.m_children.findIndex(c => c.id === (idx as DataView).id);
         }
         const dom = this.m_children.splice(idx, 1)[0];
@@ -312,6 +312,7 @@ export class DataView extends EventEL {
     toSVGString(): string {
         const frame = this.m_data.frame;
         const attrs: { [kye: string]: string | number } = {};
+        attrs['version'] = "1.1";
         attrs['xmlns'] = "http://www.w3.org/2000/svg";
         attrs['xmlns:xlink'] = "http://www.w3.org/1999/xlink";
         attrs['xmlns:xhtml'] = "http://www.w3.org/1999/xhtml";

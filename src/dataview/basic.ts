@@ -24,6 +24,9 @@ export function stringh(...args: any[]): string {
     if (typeof tag !== 'string') {
         throw new Error("not support:" + tag);
     }
+    else if (tag.length === 0) {
+        throw new Error("tag is empty");
+    }
 
     let ret = '<' + tag;
     if (attrs) for (let a in attrs) {
