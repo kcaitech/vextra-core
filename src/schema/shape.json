@@ -84,6 +84,9 @@
             "value": {
                 "type": "string"
             }
+        },
+        "haveEdit": {
+            "type": "boolean"
         }
     },
     "required": [

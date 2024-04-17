@@ -437,7 +437,6 @@ const outer_radius_border_path = (radius: number[], frame: ShapeFrame, side: Bor
     return path.toString();
 }
 
-//  某条边没有厚度时，遮罩盖不全会溢出一点像素显示？，多加一层遮盖
 const mask_surplus_path = (frame: ShapeFrame, r: number[], side: BorderSideSetting) => {
     const { sideType, thicknessBottom, thicknessTop, thicknessLeft, thicknessRight } = side;
     let w = frame.width, h = frame.height;

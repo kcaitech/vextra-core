@@ -174,6 +174,7 @@ export type Shape = {
     hasClippingMask?: boolean
     shouldBreakMaskChain?: boolean
     varbinds?: Map<string, string>
+    haveEdit?: boolean
 }
 /* shape types */
 export enum ShapeType {

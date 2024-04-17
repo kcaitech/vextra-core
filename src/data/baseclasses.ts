@@ -236,6 +236,7 @@ export class Shape extends Basic {
     hasClippingMask?: boolean
     shouldBreakMaskChain?: boolean
     varbinds?: BasicMap<string, string>
+    haveEdit?: boolean
     constructor(
         crdtidx: BasicArray<number >,
         id: string,

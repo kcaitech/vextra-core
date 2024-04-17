@@ -299,6 +299,7 @@ export function importShape(source: types.Shape, ctx?: IImportContext): impl.Sha
         });
         return ret
     })()
+    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
     return ret
 }
 /* shape types */
@@ -776,6 +777,16 @@ export function importBulletNumbersBehavior(source: types.BulletNumbersBehavior,
 }
 /* border */
 export function importBorder(source: types.Border, ctx?: IImportContext): impl.Border {
+    // inject code
+    if (!(source as any).sideSetting) {
+        source.sideSetting = {
+            sideType: types.SideType.Normal,
+            thicknessTop: source.thickness,
+            thicknessLeft: source.thickness,
+            thicknessBottom: source.thickness,
+            thicknessRight: source.thickness,
+        }
+    }
     const ret: impl.Border = new impl.Border (
         (() => {
             const ret = new BasicArray<number>()
@@ -897,6 +908,7 @@ export function importTextShape(source: types.TextShape, ctx?: IImportContext): 
         });
         return ret
     })()
+    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     return ret
 }
@@ -996,6 +1008,7 @@ export function importTableShape(source: types.TableShape, ctx?: IImportContext)
         });
         return ret
     })()
+    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
     if (source.textAttr !== undefined) ret.textAttr = importTextAttr(source.textAttr, ctx)
     // inject code
     if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
@@ -1081,6 +1094,7 @@ export function importTableCell(source: types.TableCell, ctx?: IImportContext): 
         });
         return ret
     })()
+    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
     if (source.imageRef !== undefined) ret.imageRef = source.imageRef
     if (source.rowSpan !== undefined) ret.rowSpan = source.rowSpan
     if (source.colSpan !== undefined) ret.colSpan = source.colSpan
@@ -1144,6 +1158,7 @@ export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImport
         });
         return ret
     })()
+    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
     if (source.overrides !== undefined) ret.overrides = (() => {
         const ret = new BasicMap<string, string>()
         const val = source.overrides as any; // json没有map对象,导入导出的是{[key: string]: value}对象
@@ -1234,6 +1249,7 @@ export function importPathShape2(source: types.PathShape2, ctx?: IImportContext)
         });
         return ret
     })()
+    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     return ret
 }
@@ -1289,6 +1305,7 @@ export function importPathShape(source: types.PathShape, ctx?: IImportContext): 
         });
         return ret
     })()
+    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     return ret
 }
@@ -1345,6 +1362,7 @@ export function importRectShape(source: types.RectShape, ctx?: IImportContext): 
         });
         return ret
     })()
+    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
     return ret
 }
 /* span attr */
@@ -1461,6 +1479,7 @@ export function importOvalShape(source: types.OvalShape, ctx?: IImportContext): 
         });
         return ret
     })()
+    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
     return ret
 }
 /* line shape */
@@ -1516,6 +1535,7 @@ export function importLineShape(source: types.LineShape, ctx?: IImportContext): 
         });
         return ret
     })()
+    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
     return ret
 }
 /* image shape */
@@ -1607,6 +1627,7 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
         });
         return ret
     })()
+    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
     // inject code
     if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
     return ret
@@ -1737,6 +1758,7 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
         });
         return ret
     })()
+    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     return ret
 }
@@ -1870,6 +1892,7 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
         });
         return ret
     })()
+    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
     if (source.symtags !== undefined) ret.symtags = (() => {
         const ret = new BasicMap<string, string>()
         const val = source.symtags as any; // json没有map对象,导入导出的是{[key: string]: value}对象
@@ -2029,6 +2052,7 @@ export function importSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IIm
         });
         return ret
     })()
+    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
     return ret
 }
 /* page */
@@ -2155,6 +2179,7 @@ export function importPage(source: types.Page, ctx?: IImportContext): impl.Page 
         });
         return ret
     })()
+    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
     if (source.backgroundColor !== undefined) ret.backgroundColor = importColor(source.backgroundColor, ctx)
     return ret
 }
@@ -2212,6 +2237,7 @@ export function importCutoutShape(source: types.CutoutShape, ctx?: IImportContex
         });
         return ret
     })()
+    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
     return ret
 }
 /* contact shape */
@@ -2269,6 +2295,7 @@ export function importContactShape(source: types.ContactShape, ctx?: IImportCont
         });
         return ret
     })()
+    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
     if (source.from !== undefined) ret.from = importContactForm(source.from, ctx)
     if (source.to !== undefined) ret.to = importContactForm(source.to, ctx)
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
@@ -2395,6 +2422,7 @@ export function importBoolShape(source: types.BoolShape, ctx?: IImportContext): 
         });
         return ret
     })()
+    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
     return ret
 }
 /* artboard shape */
@@ -2518,6 +2546,7 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
         });
         return ret
     })()
+    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
     if (source.cornerRadius !== undefined) ret.cornerRadius = importCornerRadius(source.cornerRadius, ctx)
     return ret
 }

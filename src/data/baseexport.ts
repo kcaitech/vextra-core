@@ -290,6 +290,7 @@ export function exportShape(source: types.Shape, ctx?: IExportContext): types.Sh
             });
             return ret;
         })(),
+        haveEdit: source.haveEdit,
     }
     return ret
 }
@@ -864,6 +865,7 @@ export function exportTextShape(source: types.TextShape, ctx?: IExportContext): 
                 });
                 return ret;
             })(),
+        haveEdit: source.haveEdit,
         text: exportText(source.text, ctx),
         fixedRadius: source.fixedRadius,
     }
@@ -909,6 +911,7 @@ export function exportTableShape(source: types.TableShape, ctx?: IExportContext)
                 });
                 return ret;
             })(),
+        haveEdit: source.haveEdit,
         cells: (() => {
             const val = source.cells;
             const ret: any = {};
@@ -977,6 +980,7 @@ export function exportTableCell(source: types.TableCell, ctx?: IExportContext): 
                 });
                 return ret;
             })(),
+        haveEdit: source.haveEdit,
         cellType: exportTableCellType(source.cellType, ctx),
         text: exportText(source.text, ctx),
         imageRef: source.imageRef,
@@ -1027,6 +1031,7 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
                 });
                 return ret;
             })(),
+        haveEdit: source.haveEdit,
         refId: source.refId,
         overrides: source.overrides && (() => {
             const val = source.overrides;
@@ -1112,6 +1117,7 @@ export function exportPathShape2(source: types.PathShape2, ctx?: IExportContext)
                 });
                 return ret;
             })(),
+        haveEdit: source.haveEdit,
         pathsegs: (() => {
             const ret = []
             for (let i = 0, len = source.pathsegs.length; i < len; i++) {
@@ -1164,6 +1170,7 @@ export function exportPathShape(source: types.PathShape, ctx?: IExportContext): 
                 });
                 return ret;
             })(),
+        haveEdit: source.haveEdit,
         points: (() => {
             const ret = []
             for (let i = 0, len = source.points.length; i < len; i++) {
@@ -1227,6 +1234,7 @@ export function exportRectShape(source: types.RectShape, ctx?: IExportContext): 
                 });
                 return ret;
             })(),
+        haveEdit: source.haveEdit,
     }
     return ret
 }
@@ -1334,6 +1342,7 @@ export function exportOvalShape(source: types.OvalShape, ctx?: IExportContext): 
                 });
                 return ret;
             })(),
+        haveEdit: source.haveEdit,
         ellipse: exportEllipse(source.ellipse, ctx),
     }
     return ret
@@ -1388,6 +1397,7 @@ export function exportLineShape(source: types.LineShape, ctx?: IExportContext): 
                 });
                 return ret;
             })(),
+        haveEdit: source.haveEdit,
     }
     return ret
 }
@@ -1441,6 +1451,7 @@ export function exportImageShape(source: types.ImageShape, ctx?: IExportContext)
                 });
                 return ret;
             })(),
+        haveEdit: source.haveEdit,
         imageRef: source.imageRef,
     }
     // inject code
@@ -1487,6 +1498,7 @@ export function exportGroupShape(source: types.GroupShape, ctx?: IExportContext)
                 });
                 return ret;
             })(),
+        haveEdit: source.haveEdit,
         childs: (() => {
             const ret = []
             for (let i = 0, len = source.childs.length; i < len; i++) {
@@ -1666,6 +1678,7 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
                 });
                 return ret;
             })(),
+        haveEdit: source.haveEdit,
         variables: (() => {
             const val = source.variables;
             const ret: any = {};
@@ -1813,6 +1826,7 @@ export function exportSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IEx
                 });
                 return ret;
             })(),
+        haveEdit: source.haveEdit,
     }
     return ret
 }
@@ -1924,6 +1938,7 @@ export function exportPage(source: types.Page, ctx?: IExportContext): types.Page
                 });
                 return ret;
             })(),
+        haveEdit: source.haveEdit,
         backgroundColor: source.backgroundColor && exportColor(source.backgroundColor, ctx),
     }
     return ret
@@ -1978,6 +1993,7 @@ export function exportCutoutShape(source: types.CutoutShape, ctx?: IExportContex
                 });
                 return ret;
             })(),
+        haveEdit: source.haveEdit,
         scalingStroke: source.scalingStroke,
     }
     return ret
@@ -2022,6 +2038,7 @@ export function exportContactShape(source: types.ContactShape, ctx?: IExportCont
                 });
                 return ret;
             })(),
+        haveEdit: source.haveEdit,
         points: (() => {
             const ret = []
             for (let i = 0, len = source.points.length; i < len; i++) {
@@ -2148,6 +2165,7 @@ export function exportBoolShape(source: types.BoolShape, ctx?: IExportContext): 
                 });
                 return ret;
             })(),
+        haveEdit: source.haveEdit,
     }
     return ret
 }
@@ -2259,6 +2277,7 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
                 });
                 return ret;
             })(),
+        haveEdit: source.haveEdit,
         cornerRadius: source.cornerRadius && exportCornerRadius(source.cornerRadius, ctx),
     }
     return ret

@@ -1,7 +1,8 @@
 import { render as renderGradient } from "./gradient";
 import { objectId } from '../basic/objectid';
 import {
-    Border, BorderPosition, FillType, Gradient, GradientType, OverrideType, Shape, ShapeFrame, ShapeType, SideType, SymbolRefShape,
+    Artboard,
+    Border, BorderPosition, FillType, Gradient, GradientType, ImageShape, OverrideType, RectShape, Shape, ShapeFrame, ShapeType, SideType, SymbolRefShape,
     SymbolShape, VariableType
 } from "../data/classes";
 import { findOverrideAndVar, randomId } from "./basic";
@@ -360,8 +361,8 @@ export function renderWithVars(h: Function, shape: Shape, frame: ShapeFrame, pat
 }
 
 function is_side_custom(sideType: SideType, shape: Shape) {
-    if (sideType === SideType.Normal) return false;
-    const type = [ShapeType.Rectangle, ShapeType.Artboard, ShapeType.Image, ShapeType.Symbol, ShapeType.SymbolRef, ShapeType.Text, ShapeType.SymbolUnion];
+    if (sideType === SideType.Normal || shape.haveEdit) return false;
+    const type = [ShapeType.Rectangle, ShapeType.Artboard, ShapeType.Image, ShapeType.Symbol, ShapeType.SymbolRef, ShapeType.SymbolUnion];
     if (type.includes(shape.type)) return true;
     else return false;
 }
