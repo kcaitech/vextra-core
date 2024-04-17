@@ -2,6 +2,8 @@
 // const _el_instance: EL[] = [];
 // let _el_id: number = 0;
 
+import { stringh } from "./basic";
+
 // function recycleEL(el: EL) {
 //     // el.el = undefined;
 //     el.childs.length = 0;
@@ -90,6 +92,16 @@ export class EL {
         // recycleFun(this);
         // this.childs.length = 0;
         // _el_instance.push(this);
+    }
+
+    toSVGString(): string {
+        const toSVGString = (el: EL): string => {
+            const childs = Array.isArray(el.elchilds) ? el.elchilds.map((c: EL) => {
+                return toSVGString(c);
+            }) : (el.elchilds);
+            return stringh(el.eltag, el.elattr, childs)
+        }
+        return toSVGString(this);
     }
 }
 
