@@ -2406,8 +2406,6 @@ export class PageEditor {
         const api = this.__repo.start('setShapeBorderThicknessTop');
         try {
             for (let i = 0; i < actions.length; i++) {
-                console.log('setShapeBorderThicknessTop', actions[i]);
-                
                 const { target, value, index } = actions[i];
                 const s = shape4border(api, this.__page, target);
                 api.setBorderThicknessTop(this.__page, s, index, value);
