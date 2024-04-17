@@ -573,6 +573,10 @@ export class Api {
             this.addOp(basicapi.addPointAt(shape, point, i));
         }
     }
+    shapeEditPoints(page: Page, shape: Shape, haveEdit: boolean) {
+        this._shapeModifyAttr(page, shape, "haveEdit", haveEdit);
+    }
+
     modifyPointCurveMode(page: Page, shape: Shape, index: number, curveMode: CurveMode, segment = -1) {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.shapeModifyCurveMode(shape, index, curveMode, segment))

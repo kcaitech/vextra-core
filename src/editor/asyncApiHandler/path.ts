@@ -2,11 +2,12 @@ import { AsyncApiCaller } from "./AsyncApiCaller";
 import { CoopRepository } from "../coop/cooprepo";
 import { Document } from "../../data/document";
 import { adapt2Shape, PageView, ShapeView } from "../../dataview";
-import { CurveMode, CurvePoint, PathShape, PathShape2, Shape } from "../../data/shape";
+import { CurveMode, CurvePoint, PathShape, PathShape2, Shape, ShapeType } from "../../data/shape";
 import { BasicArray } from "../../data/basic";
 import { uuid } from "../../basic/uuid";
 import { __pre_curve, after_insert_point, update_frame_by_points } from "../utils/path";
 import { PathType } from "../../data/consts";
+import { BorderSideSetting, SideType } from "../../data/classes";
 
 export type ModifyUnits = Map<number,
     {
@@ -32,11 +33,30 @@ export class PathModifier extends AsyncApiCaller {
     start() {
         return this.__repo.start('path-modify');
     }
+    modifyBorderSetting() {
+        if (this.haveEdit) return;
+        const borders = this.shape.getBorders() || [];
+        for (let i = 0; i < borders.length; i++) {
+            const border = borders[i];
+            const { thicknessBottom, thicknessTop, thicknessLeft, thicknessRight } = border.sideSetting;
+            const thickness = Math.max(thicknessBottom, thicknessTop, thicknessLeft, thicknessRight);
+            this.api.setBorderSide(this.page, this.shape, i, new BorderSideSetting(SideType.Normal, thickness, thickness, thickness, thickness));
+        }
+        this.api.shapeEditPoints(this.page, this.shape, true);
+    }
+
+    get haveEdit() {
+        if ([ShapeType.Artboard, ShapeType.Rectangle, ShapeType.Image].includes(this.shape.type) && !this.shape.haveEdit) {
+            return false;
+        } else {
+            return true;
+        }
+    }
 
     addPoint(segment: number, index: number) {
         try {
             let __segment = this.shape.pathType === PathType.Editable ? -1 : segment;
-
+            this.modifyBorderSetting();
             this.api.addPointAt(
                 this.page,
                 this.shape,
@@ -60,7 +80,7 @@ export class PathModifier extends AsyncApiCaller {
             const api = this.api;
             const page = this.page;
             const shape = this.shape;
-
+            this.modifyBorderSetting();
             if (shape.pathType === PathType.Editable) {
                 const points = (this.shape as PathShape).points;
                 const actions = units.get(0) || [];
@@ -115,20 +135,21 @@ export class PathModifier extends AsyncApiCaller {
     }
 
     preCurve(index: number, segment = -1) {
+        this.modifyBorderSetting();
         __pre_curve(this.page, this.api, this.shape, index, segment);
     }
 
     execute4handle(index: number, side: 'from' | 'to',
-                   from: { x: number, y: number },
-                   to: { x: number, y: number },
-                   segment = -1) {
+        from: { x: number, y: number },
+        to: { x: number, y: number },
+        segment = -1) {
         try {
             const api = this.api;
             const page = this.page;
             const shape = this.shape;
 
             let mode: CurveMode | undefined = undefined;
-
+            this.modifyBorderSetting();
             if (shape.pathType === PathType.Editable) {
                 mode = (shape as PathShape).points[index].mode;
             } else if (shape.pathType === PathType.Multi) {
