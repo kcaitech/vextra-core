@@ -42,8 +42,12 @@ angularHandler[BorderPosition.Inner] = function (h: Function, frame: ShapeFrame,
         ]
     )
     const elArr = [];
-    if (Math.max(...shape.radius) === 0 && (length || gap)) {
-        const props: any = { fill: "none", stroke: 'white', 'stroke-dasharray': length, gap, 'stroke-dashoffset': length / 2 }
+    if (Math.max(...shape.radius) === 0) {
+        const props: any = { fill: "none", stroke: 'white' }
+        if (length || gap) {
+            props['stroke-dasharray'] = `${length}, ${gap}`
+            props['stroke-dashoffset'] = length / 2;
+        }
         const rect = h("rect", { x: 0, y: 0, width, height, fill: "black" })
         const el = sidePath(h, frame, border, props, false);
         const clip = h("clipPath", { id: clipId }, h("path", { d: path, "clip-rule": "evenodd", }))
@@ -190,7 +194,7 @@ angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame,
 
 handler[BorderPosition.Inner] = function (h: Function, frame: ShapeFrame, border: Border, path: string, shape: Shape): any {
     const { length, gap } = border.borderStyle;
-    if (Math.max(...shape.radius) === 0 && (length || gap)) {
+    if (Math.max(...shape.radius) === 0) {
         return get_inner_border_path(h, frame, border, path);
     }
     const rId = randomId();
@@ -588,13 +592,13 @@ const get_inner_border_path = (h: Function, frame: ShapeFrame, border: Border, p
 }
 
 const sidePath = (h: Function, frame: ShapeFrame, border: Border, props: any, iscenter: boolean) => {
-    const { sideType, thicknessBottom, thicknessTop, thicknessLeft, thicknessRight } = border.sideSetting;
+    const { sideType, thicknessTop, thicknessLeft, thicknessBottom, thicknessRight } = border.sideSetting;
     const { width, height } = frame;
     const elArr = [];
     const p1 = h('path', { d: `M 0 0 L ${width} 0`, ...props, 'stroke-width': iscenter ? thicknessTop : thicknessTop * 2 });
-    const p2 = h('path', { d: `M 0 ${height} L ${width} ${height}`, ...props, 'stroke-width': iscenter ? thicknessBottom : thicknessBottom * 2 });
+    const p2 = h('path', { d: `M ${width} 0 L ${width} ${height}`, ...props, 'stroke-width': iscenter ? thicknessRight : thicknessRight * 2 });
     const p3 = h('path', { d: `M 0 0 L 0 ${height}`, ...props, 'stroke-width': iscenter ? thicknessLeft : thicknessLeft * 2 });
-    const p4 = h('path', { d: `M ${width} 0 L ${width} ${height}`, ...props, 'stroke-width': iscenter ? thicknessRight : thicknessRight * 2 });
+    const p4 = h('path', { d: `M 0 ${height} L ${width} ${height}`, ...props, 'stroke-width': iscenter ? thicknessBottom : thicknessBottom * 2 });
     switch (sideType) {
         case SideType.Top:
             elArr.push(p1);
@@ -603,10 +607,10 @@ const sidePath = (h: Function, frame: ShapeFrame, border: Border, props: any, is
             elArr.push(p3);
             break;
         case SideType.Right:
-            elArr.push(p4);
+            elArr.push(p2);
             break;
         case SideType.Bottom:
-            elArr.push(p2);
+            elArr.push(p4);
             break;
         case SideType.Custom:
             elArr.push(p1, p2, p3, p4);
