@@ -1,4 +1,3 @@
-import { renderBorders } from "../render";
 import { OverrideType, Shape, ShapeFrame, ShapeType, Style, SymbolRefShape, SymbolShape, TableCell, TableCellType, TableGridItem, TableLayout, TableShape } from "../data/classes";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
@@ -11,6 +10,8 @@ import { layoutTable } from "../data/tablelayout";
 import { getTableCells, getTableVisibleCells } from "../data/tableread";
 import { BasicArray } from "../data/basic";
 import { newTableCellText } from "../data/textutils";
+import { Point2D } from "../data/typesdefine";
+import { render as renderLine } from "../render/line_borders";
 
 export class TableView extends ShapeView {
 
@@ -188,29 +189,176 @@ export class TableView extends ShapeView {
     protected renderBorders(): EL[] {
         const shape = this.m_data as TableShape;
         const layout = this.getLayout();
-        const cell_border_nodes = [];
-        const nodes = renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), shape);
+
+        type PathSeg = { from: Point2D, to: Point2D, style: Style }[];
+        const rows = new Map<number, PathSeg>();
+        const cols = new Map<number, PathSeg>();
+
+        const _merge = (from: Point2D, to: Point2D, style: Style, seg: PathSeg, x: 'x' | 'y') => {
+            if (seg.length == 0) {
+                seg.push({ from, to, style })
+                return;
+            }
+            for (let i = 0; i < seg.length && from[x] < to[x]; ++i) { // 有序
+                const s = seg[i];
+                const intersect = from[x] < s.to[x] && to[x] > s.from[x];
+                if (!intersect) {
+                    if (from[x] < s.from[x]) {
+                        seg.splice(i, 0, { from, to, style })
+                        return; // done
+                    }
+                    continue;
+                }
+                // x 相交
+                // 前面要处理
+                if (from[x] < s.from[x]) {
+                    seg.splice(i, 0, { from: { x: from.x, y: from.y }, to: { x: s.from.x, y: s.from.y }, style })
+                    from[x] = s.from[x];
+                    continue;
+                }
+                if (from[x] === s.from[x]) {
+                    if (to[x] >= s.to[x]) {
+                        s.style = style;
+                        from[x] = s.to[x];
+                        continue;
+                    }
+                    else {
+                        s.from[x] = to[x];
+                        seg.splice(i, 0, { from, to, style })
+                        return; // done
+                    }
+                }
+                else {
+                    if (to[x] >= s.to[x]) {
+                        seg.splice(i + 1, 0, { from: { x: from.x, y: from.y }, to: { x: s.to.x, y: s.to.y }, style })
+                        s.to[x] = from[x];
+                        continue;
+                    }
+                    else {
+                        seg.splice(i + 1, 0, { from: { x: to.x, y: to.y }, to: { x: s.to.x, y: s.to.y }, style: s.style })
+                        seg.splice(i + 1, 0, { from, to, style })
+                        s.to[x] = from[x];
+                        return; // done
+                    }
+                }
+            }
+            if (from[x] < to[x]) {
+                seg.push({ from, to, style })
+            }
+        }
+
+        const mergerow = (from: Point2D, to: Point2D, style: Style, seg: PathSeg) => {
+            // y 相同
+            // x 相交
+            _merge(from, to, style, seg, 'x');
+        }
+
+        const mergecol = (from: Point2D, to: Point2D, style: Style, seg: PathSeg) => {
+            // x 相同
+            _merge(from, to, style, seg, 'y');
+        }
+
+        const rendercell = (frame: ShapeFrame, style: Style) => {
+            // l
+            {
+                const from = { x: frame.x, y: frame.y }
+                const to = { x: frame.x, y: frame.y + frame.height }
+
+                let seg = cols.get(from.x);
+                if (!seg) {
+                    seg = [];
+                    cols.set(from.x, seg);
+                }
+                mergecol(from, to, style, seg);
+            }
+            // t
+            {
+                const from = { x: frame.x, y: frame.y }
+                const to = { x: frame.x + frame.width, y: frame.y }
+                let seg = rows.get(from.y);
+                if (!seg) {
+                    seg = [];
+                    rows.set(from.y, seg);
+                }
+                mergerow(from, to, style, seg);
+            }
+            // r
+            {
+                const from = { x: frame.x + frame.width, y: frame.y }
+                const to = { x: from.x, y: frame.y + frame.height }
+                let seg = cols.get(from.x);
+                if (!seg) {
+                    seg = [];
+                    cols.set(from.x, seg);
+                }
+                mergecol(from, to, style, seg);
+            }
+            // b
+            {
+                const from = { x: frame.x, y: frame.y + frame.height };
+                const to = { x: frame.x + frame.width, y: from.y }
+                let seg = rows.get(from.y);
+                if (!seg) {
+                    seg = [];
+                    rows.set(from.y, seg);
+                }
+                mergerow(from, to, style, seg);
+            }
+        }
+
+        // 收集边框信息
+        // 单元格的要后画一次
+        const cellsinfos: { frame: ShapeFrame, style: Style }[] = [];
         for (let i = 0, len = layout.grid.rowCount; i < len; ++i) {
             for (let j = 0, len = layout.grid.colCount; j < len; ++j) {
                 const cellLayout = layout.grid.get(i, j);
-                if (cellLayout.index.row !== i || cellLayout.index.col !== j) continue;
-                const child = this._getCellAt(cellLayout.index.row, cellLayout.index.col);// cellLayout.cell;
-                const path = TableCell.getPathOfFrame(cellLayout.frame);
-                const pathstr = path.toString();
+                if (cellLayout.index.row !== i || cellLayout.index.col !== j) {
+                    continue;
+                }
+                const child = this._getCellAt2(cellLayout.index.row, cellLayout.index.col);
+
+                const frame = cellLayout.frame;
                 if (child && child.style.borders.length > 0) {
-                    const style = child.style
-                    const border = renderBorders(elh, style.borders, cellLayout.frame, pathstr, shape)
-                    cell_border_nodes.push(elh("g", { transform: `translate(${cellLayout.frame.x},${cellLayout.frame.y})` }, border));
+                    cellsinfos.push({ frame, style: child.style });
+                    continue;
                 }
-                else {
-                    const style = shape.style;
-                    const border = renderBorders(elh, style.borders, cellLayout.frame, pathstr, shape)
-                    nodes.push(elh("g", { transform: `translate(${cellLayout.frame.x},${cellLayout.frame.y})` }, border));
-                }
+
+                rendercell(frame, shape.style);
             }
         }
-        // 单元格的边框要后画
-        nodes.push(...cell_border_nodes);
+
+        cellsinfos.forEach((c) => rendercell(c.frame, c.style));
+
+        // render
+        const nodes: EL[] = [];
+        const render2el = (v: PathSeg, x: 'x' | 'y') => {
+            for (let i = 0, len = v.length; i < len; ++i) {
+                const item = v[i];
+                const from = item.from;
+                const to = item.to;
+                const style = item.style;
+                while (i < len - 1) {
+                    const n = v[i + 1];
+                    if (n.style !== style) break;
+                    if (to[x] !== n.from[x]) break;
+                    to.x = n.to.x;
+                    to.y = n.to.y;
+                    ++i;
+                }
+
+                const path = 'M' + from.x + ' ' + from.y + ' L' + to.x + ' ' + to.y;
+                nodes.push(...renderLine(elh, style, style.borders, undefined, undefined, path, shape));
+            }
+        }
+        // cols
+        for (let [k, v] of cols) {
+            render2el(v, 'y');
+        }
+        // rows
+        for (let [k, v] of rows) {
+            render2el(v, 'x');
+        }
+
         return nodes;
     }
 
