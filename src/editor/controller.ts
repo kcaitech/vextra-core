@@ -1,5 +1,4 @@
 import {
-    SizeRecorder,
     adjustLB2,
     adjustLT2,
     adjustRB2,
@@ -14,25 +13,26 @@ import {
     scaleByL,
     scaleByR,
     scaleByT,
+    SizeRecorder,
     translate,
     translateTo,
 } from "./frame";
-import { CurvePoint, GroupShape, PathShape, PathShape2, Shape, ShapeFrame, TextShape } from "../data/shape";
+import { CurvePoint, GroupShape, PathShape, PathShape2, Shape, ShapeFrame, ShapeType } from "../data/shape";
 import { getFormatFromBase64 } from "../basic/utils";
-import { ContactRoleType, CurveMode, FillType, OverrideType, ShapeType, VariableType } from "../data/typesdefine";
+import { ContactRoleType, CurveMode, FillType } from "../data/typesdefine";
 import {
+    modifyTransformByEnv,
     newArrowShape,
     newArtboard,
     newContact,
+    newCutoutShape,
+    newDefaultTextShape,
     newImageShape,
     newLineShape,
     newOvalShape,
     newRectShape,
     newTable,
-    newTextShape,
-    newCutoutShape,
-    modifyTransformByEnv,
-    newDefaultTextShape
+    newTextShape
 } from "./creator";
 
 import { Page } from "../data/page";
@@ -49,18 +49,18 @@ import { importCurvePoint, importGradient } from "../data/baseimport";
 import { exportGradient } from "../data/baseexport";
 import { is_state } from "./utils/other";
 import { after_migrate, unable_to_migrate } from "./utils/migrate";
-import { get_state_name, shape4contextSettings, shape4fill, shape4border } from "./symbol";
+import { get_state_name, shape4border, shape4contextSettings, shape4fill } from "./symbol";
 import {
     __pre_curve,
     after_insert_point,
-    pathEdit,
+    before_modify_side,
     contact_edit,
+    pathEdit,
     pointsEdit,
-    update_frame_by_points,
-    before_modify_side
+    update_frame_by_points
 } from "./utils/path";
 import { Color } from "../data/color";
-import { ContactLineView, PageView, PathShapeView, ShapeView, adapt2Shape } from "../dataview";
+import { adapt2Shape, ContactLineView, PageView, PathShapeView, ShapeView } from "../dataview";
 import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
 import { BasicArray } from "../data/basic";
 import { Fill } from "../data/style";
@@ -265,7 +265,9 @@ export class Controller {
 
                 const shape = this.create(type, name, frame, attr);
 
-                shape.constrainerProportions = !!isLockSizeRatio;
+                if (shape.type !== ShapeType.Line) {
+                    shape.constrainerProportions = !!isLockSizeRatio;
+                }
 
                 modifyTransformByEnv(shape, parent);
 
@@ -685,6 +687,9 @@ export class Controller {
     }
 
     // 多对象的异步编辑
+    /**
+     * @deprecated
+     */
     public asyncMultiEditor(_shapes: Shape[] | ShapeView[], _page: Page | PageView): AsyncMultiAction {
         const shapes: Shape[] = _shapes[0] instanceof ShapeView ? _shapes.map((s) => adapt2Shape(s as ShapeView)) : _shapes as Shape[];
         const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
@@ -773,6 +778,9 @@ export class Controller {
     }
 
     // 图形位置移动
+    /**
+     * @deprecated
+     */
     public asyncTransfer(_shapes: Shape[] | ShapeView[], _page: Page | PageView): AsyncTransfer {
         const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
         let shapes: Shape[] = _shapes[0] instanceof ShapeView ? _shapes.map((s) => adapt2Shape(s as ShapeView)) : _shapes as Shape[];
@@ -931,6 +939,9 @@ export class Controller {
         }
     }
 
+    /**
+     * @deprecated
+     */
     public asyncPathEditor(_shape: PathShape | PathShapeView, _page: Page | PageView): AsyncPathEditor {
         const shape: PathShape = _shape instanceof ShapeView ? adapt2Shape(_shape) as PathShape : _shape as PathShape;
         const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
