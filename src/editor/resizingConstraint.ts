@@ -1,4 +1,4 @@
-import { Page } from "data/page";
+import { Page } from "../data/page";
 import { CoopRepository } from "./coop/cooprepo";
 import { ResizingConstraints2 } from "../data/consts";
 import { ShapeType } from "../data/baseclasses";

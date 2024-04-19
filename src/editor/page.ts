@@ -7,7 +7,8 @@ import {
     Shape,
     ShapeFrame,
     SymbolShape,
-    SymbolUnionShape, TextShape,
+    SymbolUnionShape,
+    TextShape,
     Variable,
     VariableType
 } from "../data/shape";
@@ -16,10 +17,8 @@ import * as types from "../data/typesdefine";
 import { BoolOp, BorderPosition, ExportFileFormat, ExportFormatNameingScheme, FillType, GradientType, MarkerType, ShadowPosition, ShapeType, SideType } from "../data/typesdefine";
 import { Page } from "../data/page";
 import {
-    initFrame,
     newArrowShape,
     newArtboard,
-    newArtboard2,
     newBoolShape,
     newGroupShape,
     newLineShape,
@@ -33,18 +32,7 @@ import {
 import { Document } from "../data/document";
 import { expand, translate, translateTo } from "./frame";
 import { uuid } from "../basic/uuid";
-import {
-    Artboard,
-    Border,
-    Color,
-    Path,
-    PathShape,
-    Style,
-    SymbolRefShape,
-    Stop,
-    Gradient,
-    Fill
-} from "../data/classes";
+import { Artboard, Border, Color, Fill, Gradient, Path, PathShape, Stop, Style, SymbolRefShape } from "../data/classes";
 import { TextShapeEditor } from "./textshape";
 import { modify_frame_after_insert, set_childs_id, transform_data } from "../io/cilpboard";
 import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
@@ -53,7 +41,10 @@ import { Matrix } from "../basic/matrix";
 import {
     IImportContext,
     importArtboard,
-    importBorder, importCornerRadius, importGradient, importShapeFrame,
+    importBorder,
+    importCornerRadius,
+    importGradient,
+    importShapeFrame,
     importStop,
     importStyle,
     importSymbolShape
@@ -62,7 +53,7 @@ import { gPal } from "../basic/pal";
 import { findUsableBorderStyle, findUsableFillStyle } from "../render/boolgroup";
 import { BasicArray } from "../data/basic";
 import { TableEditor } from "./table";
-import { exportArtboard, exportGradient, exportShapeFrame, exportStop, exportStyle, exportSymbolShape, exportVariable } from "../data/baseexport";
+import { exportArtboard, exportGradient, exportStop, exportSymbolShape, exportVariable } from "../data/baseexport";
 import {
     adjust_selection_before_group,
     after_remove,
@@ -77,10 +68,13 @@ import {
 } from "./utils/other";
 import { v4 } from "uuid";
 import {
-    is_exist_invalid_shape2, is_part_of_symbol,
-    is_part_of_symbolref, is_state,
+    is_exist_invalid_shape2,
+    is_part_of_symbol,
+    is_part_of_symbolref,
+    is_state,
     modify_variable_with_api,
-    shape4border, shape4cornerRadius,
+    shape4border,
+    shape4cornerRadius,
     shape4fill
 } from "./symbol";
 import { is_circular_ref2 } from "./utils/ref_check";
@@ -88,18 +82,18 @@ import { BorderSideSetting, BorderStyle, ExportFormat, Point2D, Shadow } from ".
 import { get_rotate_for_straight, is_straight, update_frame_by_points } from "./utils/path";
 import { modify_shapes_height, modify_shapes_width } from "./utils/common";
 import { CoopRepository } from "./coop/cooprepo";
-import { Api } from "./coop/recordapi";
+import { Api, TextShapeLike } from "./coop/recordapi";
 import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
 import { unable_to_migrate } from "./utils/migrate";
 import {
+    adapt2Shape,
     PageView,
     ShapeView,
+    SymbolRefView,
     SymbolView,
     TableCellView,
     TableView,
-    TextShapeView,
-    adapt2Shape,
-    SymbolRefView
+    TextShapeView
 } from "../dataview";
 import { RadiusType, ResizingConstraints2 } from "../data/consts";
 
@@ -3017,6 +3011,49 @@ export class PageEditor {
             this.__repo.commit();
         } catch (error) {
             console.log(error);
+            this.__repo.rollback();
+        }
+    }
+
+    /**
+     * @description 通过快捷取色器EyeDropper为多个图层按规则给定给一个颜色；
+     * 规则：如果图层只存在填充，则将颜色给第一个填充，如果只存在边框，则将颜色给第一个边框，
+     * 若同时有填充和边框，则将颜色给第一个填充，若填充和边框都没有，则创建一个填充，然后将颜色给第一个填充；
+     * 另外如果是文字图层，则给文字颜色
+     */
+    modifyStyleByEyeDropper(shapes: ShapeView[], color: Color) {
+        try {
+            const api = this.__repo.start('setLinesLength');
+            const page = this.__page;
+            for (let i = 0; i < shapes.length; i++) {
+                const shape = adapt2Shape(shapes[i]);
+                if (shape.isVirtualShape) {
+                    continue;
+                }
+                const _color = new Color(color.alpha, color.red, color.green, color.blue);
+                if (shape.type === ShapeType.Text) {
+                    const __textShape = shapes[i] as any as TextShapeLike;
+                    api.textModifyColor(page, __textShape, 0, __textShape.text.length, _color);
+                    continue;
+                }
+                const style = shape.style;
+                if (style.fills.length) {
+                    const s = shape4fill(api, page, shapes[i]);
+                    api.setFillColor(page, s, style.fills.length - 1, _color);
+                    continue;
+                }
+                if (style.borders.length) {
+                    const s = shape4border(api, page, shapes[i]);
+                    api.setBorderColor(page, s, style.borders.length - 1, _color);
+                    continue;
+                }
+                const s = shape4fill(api, page, shapes[i]);
+                const fill = new Fill(new BasicArray(), uuid(), true, FillType.SolidColor, _color)
+                api.addFillAt(page, s, fill, 0);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.error('modifyStyleByEyeDropper:', error);
             this.__repo.rollback();
         }
     }

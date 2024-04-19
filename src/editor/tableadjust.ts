@@ -1,5 +1,4 @@
-
-import { TableView } from "dataview";
+import { TableView } from "../dataview";
 import { Page } from "../data/page";
 import { TableShape } from "../data/table";
 import { Api } from "./coop/recordapi";
