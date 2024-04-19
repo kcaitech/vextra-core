@@ -301,7 +301,7 @@ export function newText(textAttr?: TextAttr): Text {
     const span = new Span(para.length);
     span.fontName = "PingFangSC-Regular";
     span.fontSize = 14;
-    span.color = new Color(0.85, 0, 0, 0);
+    span.color = new Color(1, 51, 51, 51);
     para.spans.push(span);
     if (textAttr) {
         mergeTextAttr(text, textAttr);
