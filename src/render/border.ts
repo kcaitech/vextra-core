@@ -1,24 +1,42 @@
 import { render as renderGradient } from "./gradient";
 import { objectId } from '../basic/objectid';
-import { Border, BorderPosition, FillType, Gradient, GradientType, OverrideType, Shape, ShapeFrame, SymbolRefShape,
+import {
+    Artboard,
+    Border, BorderPosition, FillType, Gradient, GradientType, ImageShape, OverrideType, RectShape, Shape, ShapeFrame, ShapeType, SideType, SymbolRefShape,
     SymbolShape, VariableType
 } from "../data/classes";
 import { findOverrideAndVar, randomId } from "./basic";
+import { renderCustomBorder } from "./border_custom";
 
 
-const handler: { [key: string]: (h: Function, frame: ShapeFrame, border: Border, path: string) => any } = {};
-const angularHandler: { [key: string]: (h: Function, frame: ShapeFrame, border: Border, path: string) => any } = {};
+const handler: { [key: string]: (h: Function, frame: ShapeFrame, border: Border, path: string, shape?: Shape) => any } = {};
+const angularHandler: { [key: string]: (h: Function, frame: ShapeFrame, border: Border, path: string, shape?: Shape) => any } = {};
 
-angularHandler[BorderPosition.Inner] = function (h: Function, frame: ShapeFrame, border: Border, path: string): any {
+angularHandler[BorderPosition.Inner] = function (h: Function, frame: ShapeFrame, border: Border, path: string, shape?: Shape): any {
+    if (shape && is_side_custom(border.sideSetting.sideType, shape)) {
+        return renderCustomBorder(h, frame, border, path, shape);
+    }
     const rId = randomId();
     const clipId = "clippath-border" + objectId(border) + rId;
     const maskId = "mask-border" + objectId(border) + rId;
     // const frame = shape.frame;
-    const thickness = border.thickness;
+    const thickness = border.sideSetting.thicknessTop;
     const width = frame.width;
     const height = frame.height;
     const g_ = renderGradient(h, border.gradient as Gradient, frame);
     const opacity = border.gradient?.gradientOpacity;
+    const path_props: any = {
+        d: path,
+        stroke: "white",
+        'stroke-width': 2 * thickness,
+        "clip-path": "url(#" + clipId + ")",
+        "stroke-linejoin": border.cornerType,
+        opacity: opacity === undefined ? 1 : opacity
+    }
+    const { length, gap } = border.borderStyle;
+    if (length || gap) {
+        path_props['stroke-dasharray'] = `${length}, ${gap}`
+    }
     return h("g", [
 
         h("mask", {
@@ -37,13 +55,7 @@ angularHandler[BorderPosition.Inner] = function (h: Function, frame: ShapeFrame,
                 d: path,
                 "clip-rule": "evenodd",
             })),
-            h('path', {
-                d: path,
-                stroke: "white",
-                'stroke-width': 2 * thickness,
-                "clip-path": "url(#" + clipId + ")",
-                opacity: opacity === undefined ? 1 : opacity
-            })
+            h('path', path_props)
         ]),
 
         h("foreignObject", {
@@ -57,11 +69,14 @@ angularHandler[BorderPosition.Inner] = function (h: Function, frame: ShapeFrame,
     ]);
 }
 
-angularHandler[BorderPosition.Center] = function (h: Function, frame: ShapeFrame, border: Border, path: string): any {
+angularHandler[BorderPosition.Center] = function (h: Function, frame: ShapeFrame, border: Border, path: string, shape?: Shape): any {
+    if (shape && is_side_custom(border.sideSetting.sideType, shape)) {
+        return renderCustomBorder(h, frame, border, path, shape);
+    }
     const rId = randomId();
     const maskId = "mask-border" + objectId(border) + rId;
     // const frame = shape.frame;
-    const thickness = border.thickness;
+    const thickness = border.sideSetting.thicknessTop;
 
     const g_ = renderGradient(h, border.gradient as Gradient, frame);
 
@@ -70,6 +85,17 @@ angularHandler[BorderPosition.Center] = function (h: Function, frame: ShapeFrame
     const width = frame.width + thickness;
     const height = frame.height + thickness;
     const opacity = border.gradient?.gradientOpacity;
+    const path_props: any = {
+        d: path,
+        stroke: "white",
+        'stroke-width': thickness,
+        "stroke-linejoin": border.cornerType,
+        opacity: opacity === undefined ? 1 : opacity
+    }
+    const { length, gap } = border.borderStyle;
+    if (length || gap) {
+        path_props['stroke-dasharray'] = `${length}, ${gap}`
+    }
     return h("g", [
         h("mask", {
             id: maskId,
@@ -80,12 +106,7 @@ angularHandler[BorderPosition.Center] = function (h: Function, frame: ShapeFrame
             height
         }, [
             h("rect", { x, y, width, height, fill: "black" }),
-            h("path", {
-                d: path,
-                stroke: "white",
-                'stroke-width': thickness,
-                opacity: opacity === undefined ? 1 : opacity
-            })
+            h("path", path_props)
         ]),
         h("foreignObject", {
             width,
@@ -98,10 +119,12 @@ angularHandler[BorderPosition.Center] = function (h: Function, frame: ShapeFrame
     ])
 }
 
-angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame, border: Border, path: string): any {
+angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame, border: Border, path: string, shape?: Shape): any {
     // const frame = shape.frame;
-    const thickness = border.thickness;
-
+    const thickness = border.sideSetting.thicknessTop;
+    if (shape && is_side_custom(border.sideSetting.sideType, shape)) {
+        return renderCustomBorder(h, frame, border, path, shape);
+    }
     const g_ = renderGradient(h, border.gradient as Gradient, frame);
     const width = frame.width + 2 * thickness;
     const height = frame.height + 2 * thickness;
@@ -111,6 +134,18 @@ angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame,
     const mask1Id = "mask1-border" + objectId(border) + rId;
     const mask2Id = "mask2-border" + objectId(border) + rId;
     const opacity = border.gradient?.gradientOpacity;
+    const path_props: any = {
+        d: path,
+        stroke: "white",
+        'stroke-width': 2 * thickness,
+        mask: "url(#" + mask1Id + ")",
+        "stroke-linejoin": border.cornerType,
+        opacity: opacity === undefined ? 1 : opacity
+    }
+    const { length, gap } = border.borderStyle;
+    if (length || gap) {
+        path_props['stroke-dasharray'] = `${length}, ${gap}`
+    }
     return h("g", [
         h("mask", {
             id: mask2Id,
@@ -128,13 +163,7 @@ angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame,
                 h("path", { d: path, fill: "black" })
             ]),
             h("rect", { x, y, width, height, fill: "black" }),
-            h('path', {
-                d: path,
-                stroke: "white",
-                'stroke-width': 2 * thickness,
-                mask: "url(#" + mask1Id + ")",
-                opacity: opacity === undefined ? 1 : opacity
-            })
+            h('path', path_props)
         ]),
         h("foreignObject", {
             width,
@@ -147,11 +176,14 @@ angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame,
     ]);
 }
 
-handler[BorderPosition.Inner] = function (h: Function, frame: ShapeFrame, border: Border, path: string): any {
+handler[BorderPosition.Inner] = function (h: Function, frame: ShapeFrame, border: Border, path: string, shape?: Shape): any {
+    if (shape && is_side_custom(border.sideSetting.sideType, shape)) {
+        return renderCustomBorder(h, frame, border, path, shape);
+    }
     const rId = randomId();
     const clipId = "clippath-border" + objectId(border) + rId;
     // const frame = shape.frame;
-    const thickness = border.thickness;
+    const thickness = border.sideSetting.thicknessTop;
 
     let g_;
     const body_props: any = {
@@ -159,8 +191,10 @@ handler[BorderPosition.Inner] = function (h: Function, frame: ShapeFrame, border
         fill: "none",
         stroke: '',
         'stroke-width': 2 * thickness,
+        "stroke-linejoin": border.cornerType,
         'clip-path': "url(#" + clipId + ")"
     }
+    if (shape && Math.max(...shape.radius) > 0) body_props['stroke-linejoin'] = 'miter';
     const { length, gap } = border.borderStyle;
     if (length || gap) {
         body_props['stroke-dasharray'] = `${length}, ${gap}`
@@ -190,16 +224,21 @@ handler[BorderPosition.Inner] = function (h: Function, frame: ShapeFrame, border
     return h("g", elArr);
 }
 
-handler[BorderPosition.Center] = function (h: Function, frame: ShapeFrame, border: Border, path: string): any {
+handler[BorderPosition.Center] = function (h: Function, frame: ShapeFrame, border: Border, path: string, shape?: Shape): any {
     // const frame = shape.frame;
-    const thickness = border.thickness;
+    if (shape && is_side_custom(border.sideSetting.sideType, shape)) {
+        return renderCustomBorder(h, frame, border, path, shape);
+    }
+    const thickness = border.sideSetting.thicknessTop;
     let g_;
     const body_props: any = {
         d: path,
         fill: "none",
         stroke: '',
+        "stroke-linejoin": border.cornerType,
         'stroke-width': thickness
     }
+    if (shape && Math.max(...shape.radius) > 0) body_props['stroke-linejoin'] = 'miter';
     const { length, gap } = border.borderStyle;
     if (length || gap) {
         body_props['stroke-dasharray'] = `${length}, ${gap}`
@@ -223,17 +262,22 @@ handler[BorderPosition.Center] = function (h: Function, frame: ShapeFrame, borde
     }
 }
 
-handler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame, border: Border, path: string): any {
+handler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame, border: Border, path: string, shape?: Shape): any {
     // const frame = shape.frame;
-    const thickness = border.thickness;
+    if (shape && is_side_custom(border.sideSetting.sideType, shape)) {
+        return renderCustomBorder(h, frame, border, path, shape);
+    }
+    const thickness = border.sideSetting.thicknessTop;
 
     let g_;
     const body_props: any = {
         d: path,
         fill: "none",
         stroke: '',
+        "stroke-linejoin": border.cornerType,
         'stroke-width': 2 * thickness,
     }
+    if (shape && Math.max(...shape.radius) > 0) body_props['stroke-linejoin'] = 'miter';
     const { length, gap } = border.borderStyle;
     if (length || gap) {
         body_props['stroke-dasharray'] = `${length}, ${gap}`;
@@ -273,7 +317,7 @@ handler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame, border
     return (h("g", elArr));
 }
 
-export function render(h: Function, borders: Border[], frame: ShapeFrame, path: string, isClosed = true): Array<any> {
+export function render(h: Function, borders: Border[], frame: ShapeFrame, path: string, shape: Shape | undefined, isClosed = true): Array<any> {
     const bc = borders.length;
     const elArr = [];
     for (let i = 0; i < bc; i++) {
@@ -289,9 +333,9 @@ export function render(h: Function, borders: Border[], frame: ShapeFrame, path: 
         const gradientType = border.gradient && border.gradient.gradientType;
 
         fillType == FillType.Gradient && gradientType == GradientType.Angular && (() => {
-            elArr.push(angularHandler[position](h, frame, border, path));
+            elArr.push(angularHandler[position](h, frame, border, path, shape));
         })() || (fillType == FillType.SolidColor || fillType == FillType.Gradient) && (() => {
-            elArr.push(handler[position](h, frame, border, path));
+            elArr.push(handler[position](h, frame, border, path, shape));
         })() || fillType == FillType.Pattern && (() => {
             return true; // todo
         })
@@ -313,5 +357,12 @@ export function renderWithVars(h: Function, shape: Shape, frame: ShapeFrame, pat
             }
         }
     }
-    return render(h, borders, frame, path, shape.isClosed);
+    return render(h, borders, frame, path, shape, shape.isClosed);
+}
+
+function is_side_custom(sideType: SideType, shape: Shape) {
+    if (sideType === SideType.Normal || shape.haveEdit) return false;
+    const type = [ShapeType.Rectangle, ShapeType.Artboard, ShapeType.Image, ShapeType.Symbol, ShapeType.SymbolRef, ShapeType.SymbolUnion];
+    if (type.includes(shape.type)) return true;
+    else return false;
 }

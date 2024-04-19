@@ -1,1 +1,1 @@
-export { exportInnerSvg, exportSvg } from "./normal";
+export { exportSvg } from "./normal";

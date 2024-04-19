@@ -311,6 +311,8 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
                 if (!isFree) set_childs_id(children, matched);
                 r = importSymbolUnionShape(_s as any as SymbolUnionShape, ctx);
             } else if (type === ShapeType.BoolShape) {
+                const children = (_s as any).childs;
+                children && children.length && set_childs_id(children, matched);
                 r = importBoolShape(_s as any as types.BoolShape, ctx);
             }
 

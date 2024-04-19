@@ -210,3 +210,17 @@ inject['TextAttr']['before'] = `\
         _source.bold = _source.bold ? 700 : 400;
     }
 `
+
+inject['Border'] = {};
+inject['Border']['before'] = `\
+    // inject code
+    if (!(source as any).sideSetting) {
+        source.sideSetting = {
+            sideType: types.SideType.Normal,
+            thicknessTop: source.thickness,
+            thicknessLeft: source.thickness,
+            thicknessBottom: source.thickness,
+            thicknessRight: source.thickness,
+        }
+    }
+`

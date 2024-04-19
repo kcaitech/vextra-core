@@ -14,7 +14,7 @@ import { BlendMode, GradientType, MarkerType, WindingRule, BlurType, LineCapStyl
 import { BasicArray } from "../../../data/basic";
 import { uuid } from "../../../basic/uuid";
 import { IJSON, LoadContext } from "./basic";
-import { ShadowPosition } from "../../../data/baseclasses";
+import { BorderSideSetting, CornerType, ShadowPosition, SideType } from "../../../data/baseclasses";
 
 export function importColor(data: IJSON): Color {
     // if (!data)
@@ -77,6 +77,29 @@ function importGradient(data: IJSON): Gradient {
     stops.sort((a, b) => a.position == b.position ? -1 : a.position - b.position);
     stops.forEach((v, i) => { v.crdtidx.push(i); });
     return new Gradient(from, to, gradientType, new BasicArray<Stop>(...stops), elipseLength);
+}
+
+export function importBorderSideSetting(data: IJSON): BorderSideSetting {
+    const sideType: SideType = ((t) => {
+        switch (t) {
+            case 0: return SideType.Normal;
+            case 1: return SideType.Top;
+            case 2: return SideType.Bottom;
+            case 3: return SideType.Left;
+            case 4: return SideType.Right;
+            case 5: return SideType.Custom;
+            default: return SideType.Normal;
+        }
+    })(data['sideType']);
+    let top: number = data['thicknessTop'];
+    let left: number = data['thicknessLeft'];
+    let bottom: number = data['thicknessBottom'];
+    let right: number = data['thicknessRight'];
+    top = Math.min(Math.max(0, top), 300);
+    left = Math.min(Math.max(0, left), 300);
+    bottom = Math.min(Math.max(0, bottom), 300);
+    right = Math.min(Math.max(0, right), 300);
+    return new BorderSideSetting(sideType, top, left, bottom, right);
 }
 
 export function importStyle(ctx: LoadContext, data: IJSON): Style {
@@ -148,6 +171,15 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
             }
         })(d['position']);
 
+        const corner: CornerType = ((p: number) => {
+            switch (p) {
+                case 0: return CornerType.Miter;
+                case 1: return CornerType.Bevel;
+                case 2: return CornerType.Round;
+                default: return CornerType.Miter;
+            }
+        })(d['cornerType']);
+
         const thickness: number = d['thickness'];
 
         const borderStyle: BorderStyle = ((dashPattern: number[] | undefined) => {
@@ -164,8 +196,9 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
             }
             return bs
         })(data['borderOptions'] ? data['borderOptions'].dashPattern : undefined);
-
-        const border = new Border([i] as BasicArray<number>, uuid(), isEnabled, fillType, color, position, thickness, borderStyle);
+        const side: BorderSideSetting = importBorderSideSetting(d['sideSetting']);
+        // const side = new BorderSideSetting(SideType.Normal, thickness, thickness, thickness, thickness);
+        const border = new Border([i] as BasicArray<number>, uuid(), isEnabled, fillType, color, position, thickness, borderStyle, corner, side);
         border.gradient = gradient;
         border.contextSettings = contextSettings;
         return border;

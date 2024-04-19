@@ -2,8 +2,8 @@ import { Shape, ShapeFrame, SymbolRefShape, SymbolShape } from "../data/classes"
 
 export { findVar, findOverride, findOverrideAndVar } from "../data/utils"
 
-export function stringh(tag: string, attrs?: any, childs?: Array<string>): string;
-export function stringh(tag: string, childs?: Array<string>): string;
+export function stringh(tag: string, attrs?: any, childs?: Array<string> | string): string;
+export function stringh(tag: string, childs?: Array<string> | string): string;
 export function stringh(...args: any[]): string {
     const tag = args[0];
     let attrs = args[1];
@@ -24,6 +24,9 @@ export function stringh(...args: any[]): string {
     if (typeof tag !== 'string') {
         throw new Error("not support:" + tag);
     }
+    else if (tag.length === 0) {
+        throw new Error("tag is empty");
+    }
 
     let ret = '<' + tag;
     if (attrs) for (let a in attrs) {
@@ -31,17 +34,26 @@ export function stringh(...args: any[]): string {
         if (a === 'style') {
             let style = ""
             for (let b in attr) {
-                style += b + ':' + attr[b] + ';';
+                if (attr[b] !== undefined) style += b + ':' + attr[b] + ';';
             }
             ret += ' ' + a + '="' + style + '"';
         }
         else {
-            ret += ' ' + a + '="' + attr + '"';
+            if (attr !== undefined) ret += ' ' + a + '="' + attr + '"';
         }
     }
     ret += '>';
-    if (childs) for (let i = 0, len = childs.length; i < len; i++) {
+    if (!childs) {
+        // 
+    }
+    else if (Array.isArray(childs)) for (let i = 0, len = childs.length; i < len; i++) {
         ret += childs[i];
+    }
+    else if (typeof childs === 'string') {
+        ret += childs;
+    }
+    else {
+        throw new Error("unknow childs:" + childs);
     }
     ret += '</' + tag + '>';
     return ret;

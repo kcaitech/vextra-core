@@ -2,6 +2,7 @@ import { RenderTransform } from "./basic";
 import { Shape, ShapeType, SymbolShape } from "../data/shape";
 import { SymbolRefShape } from "../data/classes";
 import { EventEmitter } from "../basic/event";
+import { objectId } from "../basic/objectid";
 
 
 export type VarsContainer = (SymbolRefShape | SymbolShape)[];
@@ -15,7 +16,7 @@ export interface PropsType {
 }
 
 interface DataView {
-    id: string;
+    // id: string;
     layout(props?: PropsType): void;
     render(): number;
     parent?: DataView;
@@ -34,21 +35,21 @@ export class DViewCtx extends EventEmitter {
     // 缩放监听
 
     // 先更新数据再绘制
-    protected relayoutset: Map<string, DataView> = new Map();
+    protected relayoutset: Map<number, DataView> = new Map();
     // 要由上往下更新
-    protected dirtyset: Map<string, DataView> = new Map();
+    protected dirtyset: Map<number, DataView> = new Map();
 
     setReLayout(v: DataView) {
-        this.relayoutset.set(v.id, v);
+        this.relayoutset.set(objectId(v), v);
         this._continueLoop();
     }
     setDirty(v: DataView) {
-        this.dirtyset.set(v.id, v);
+        this.dirtyset.set(objectId(v), v);
         this._continueLoop();
     }
 
     removeReLayout(v: DataView) {
-        const vid = v.id;
+        const vid = objectId(v);
         const ov = this.relayoutset.get(vid);
         if (ov !== v) {
             return false;
@@ -56,7 +57,7 @@ export class DViewCtx extends EventEmitter {
         return this.relayoutset.delete(vid);
     }
     removeDirty(v: DataView) {
-        const vid = v.id;
+        const vid = objectId(v);
         const ov = this.dirtyset.get(vid);
         if (ov !== v) {
             return false;
@@ -97,7 +98,7 @@ export class DViewCtx extends EventEmitter {
 
         for (let i = 0; i < update.length; i++) {
             const d = update[i].data;
-            if (this.relayoutset.has(d.id)) { // 再次判断，可能已经更新过了
+            if (this.relayoutset.has(objectId(d))) { // 再次判断，可能已经更新过了
                 d.layout();
             }
         }
@@ -119,10 +120,10 @@ export class DViewCtx extends EventEmitter {
         // 优先更新选中对象
         if (this.focusshape) {
 
-            const focusdepends: string[] = [];
+            const focusdepends: number[] = [];
             let p: Shape | undefined = this.focusshape;
             while (p) {
-                focusdepends.push(p.id);
+                focusdepends.push(objectId(p));
                 p = p.parent;
             }
 
