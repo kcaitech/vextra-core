@@ -25,7 +25,7 @@
                 "spans": [
                     {
                         "length": 1,
-                        "fontName": "PingFangSC-Regular",
+                        "fontName": "PingFangSC",
                         "fontSize": 14,
                         "color": {
                             "typeId": "color",
