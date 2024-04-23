@@ -15,6 +15,7 @@ export class TContext {
     public optiNotify: boolean = true;
     settrap: boolean = true;
     addNotify(target: Notifiable | undefined, key: PropertyKey) {
+        console.log('-add-',key)
         if (!target) {
             //
         }
@@ -32,6 +33,7 @@ export class TContext {
         }
     }
     fireNotify() {
+        console.log('__notifys:', this.__notifys);
         this.__notifys.forEach((n) => {
             n.target.notify(...n.keys);
         })
