@@ -1,5 +1,4 @@
 import {
-    SizeRecorder,
     adjustLB2,
     adjustLT2,
     adjustRB2,
@@ -14,25 +13,26 @@ import {
     scaleByL,
     scaleByR,
     scaleByT,
+    SizeRecorder,
     translate,
     translateTo,
 } from "./frame";
-import { CurvePoint, GroupShape, PathShape, PathShape2, Shape, ShapeFrame, TextShape } from "../data/shape";
+import { CurvePoint, GroupShape, PathShape, PathShape2, Shape, ShapeFrame, ShapeType } from "../data/shape";
 import { getFormatFromBase64 } from "../basic/utils";
-import { ContactRoleType, CurveMode, FillType, OverrideType, ShapeType, VariableType } from "../data/typesdefine";
+import { ContactRoleType, CurveMode, FillType, SideType } from "../data/typesdefine";
 import {
+    modifyTransformByEnv,
     newArrowShape,
     newArtboard,
     newContact,
+    newCutoutShape,
+    newDefaultTextShape,
     newImageShape,
     newLineShape,
     newOvalShape,
     newRectShape,
     newTable,
-    newTextShape,
-    newCutoutShape,
-    modifyTransformByEnv,
-    newDefaultTextShape
+    newTextShape
 } from "./creator";
 
 import { Page } from "../data/page";
@@ -43,24 +43,24 @@ import { Api } from "./coop/recordapi";
 import { Matrix } from "../basic/matrix";
 import { Artboard } from "../data/artboard";
 import { uuid } from "../basic/uuid";
-import { ContactForm, ContactRole } from "../data/baseclasses";
+import { BorderSideSetting, ContactForm, ContactRole } from "../data/baseclasses";
 import { ContactShape } from "../data/contact";
 import { importCurvePoint, importGradient } from "../data/baseimport";
 import { exportGradient } from "../data/baseexport";
 import { is_state } from "./utils/other";
 import { after_migrate, unable_to_migrate } from "./utils/migrate";
-import { get_state_name, shape4contextSettings, shape4fill, shape4border } from "./symbol";
+import { get_state_name, shape4border, shape4contextSettings, shape4fill } from "./symbol";
 import {
     __pre_curve,
     after_insert_point,
-    pathEdit,
+    before_modify_side,
     contact_edit,
+    pathEdit,
     pointsEdit,
-    update_frame_by_points,
-    before_modify_side
+    update_frame_by_points
 } from "./utils/path";
 import { Color } from "../data/color";
-import { ContactLineView, PageView, PathShapeView, ShapeView, adapt2Shape } from "../dataview";
+import { adapt2Shape, ContactLineView, PageView, PathShapeView, ShapeView } from "../dataview";
 import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
 import { BasicArray } from "../data/basic";
 import { Fill } from "../data/style";
@@ -265,7 +265,9 @@ export class Controller {
 
                 const shape = this.create(type, name, frame, attr);
 
-                shape.constrainerProportions = !!isLockSizeRatio;
+                if (shape.type !== ShapeType.Line) {
+                    shape.constrainerProportions = !!isLockSizeRatio;
+                }
 
                 modifyTransformByEnv(shape, parent);
 
@@ -685,6 +687,9 @@ export class Controller {
     }
 
     // 多对象的异步编辑
+    /**
+     * @deprecated
+     */
     public asyncMultiEditor(_shapes: Shape[] | ShapeView[], _page: Page | PageView): AsyncMultiAction {
         const shapes: Shape[] = _shapes[0] instanceof ShapeView ? _shapes.map((s) => adapt2Shape(s as ShapeView)) : _shapes as Shape[];
         const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
@@ -773,6 +778,9 @@ export class Controller {
     }
 
     // 图形位置移动
+    /**
+     * @deprecated
+     */
     public asyncTransfer(_shapes: Shape[] | ShapeView[], _page: Page | PageView): AsyncTransfer {
         const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
         let shapes: Shape[] = _shapes[0] instanceof ShapeView ? _shapes.map((s) => adapt2Shape(s as ShapeView)) : _shapes as Shape[];
@@ -931,6 +939,9 @@ export class Controller {
         }
     }
 
+    /**
+     * @deprecated
+     */
     public asyncPathEditor(_shape: PathShape | PathShapeView, _page: Page | PageView): AsyncPathEditor {
         const shape: PathShape = _shape instanceof ShapeView ? adapt2Shape(_shape) as PathShape : _shape as PathShape;
         const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
@@ -1161,12 +1172,78 @@ export class Controller {
 
         const api = this.__repo.start("asyncBorderThickness");
         let status: Status = Status.Pending;
-        const execute = (contextSettingThickness: number, index: number) => {
+        const execute = (thickness: number, index: number) => {
             status = Status.Pending;
             try {
                 for (let i = 0, l = shapes.length; i < l; i++) {
                     const s = shape4border(api, page, shapes[i]);
-                    api.setBorderThickness(page, s, index, contextSettingThickness);
+                    const borders = shapes[i].getBorders();
+                    const sideType = borders[index].sideSetting.sideType;
+                    switch (sideType) {
+                        case SideType.Normal:
+                            api.setBorderSide(page, s, index, new BorderSideSetting(sideType, thickness, thickness, thickness, thickness));
+                            break;
+                        case SideType.Top:
+                            api.setBorderThicknessTop(page, s, index, thickness);
+                            break
+                        case SideType.Right:
+                            api.setBorderThicknessRight(page, s, index, thickness);
+                            break
+                        case SideType.Bottom:
+                            api.setBorderThicknessBottom(page, s, index, thickness);
+                            break
+                        case SideType.Left:
+                            api.setBorderThicknessLeft(page, s, index, thickness);
+                            break
+                        default:
+                            api.setBorderSide(page, s, index, new BorderSideSetting(sideType, thickness, thickness, thickness, thickness));
+                            break;
+                    }
+                }
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const close = () => {
+            if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
+                this.__repo.commit();
+            } else {
+                this.__repo.rollback();
+            }
+            return undefined;
+        }
+        return { execute, close }
+    }
+    public asyncBorderSideThickness(_shapes: ShapeView[], _page: Page | PageView, type: SideType): AsyncBorderThickness {
+        const shapes: ShapeView[] = _shapes;
+        const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
+
+        const api = this.__repo.start("asyncBorderSideThickness");
+        let status: Status = Status.Pending;
+        const execute = (thickness: number, index: number) => {
+            status = Status.Pending;
+            try {
+                for (let i = 0, l = shapes.length; i < l; i++) {
+                    const s = shape4border(api, page, shapes[i]);
+                    switch (type) {
+                        case SideType.Top:
+                            api.setBorderThicknessTop(page, s, index, thickness);
+                            break
+                        case SideType.Right:
+                            api.setBorderThicknessRight(page, s, index, thickness);
+                            break
+                        case SideType.Bottom:
+                            api.setBorderThicknessBottom(page, s, index, thickness);
+                            break
+                        case SideType.Left:
+                            api.setBorderThicknessLeft(page, s, index, thickness);
+                            break
+                        default:
+                            break;
+                    }
                 }
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;

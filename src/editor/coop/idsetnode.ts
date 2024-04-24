@@ -6,6 +6,7 @@ import { Cmd, OpItem } from "../../coop/common/repo";
 import { Document } from "../../data/document";
 import {
     IImportContext,
+    importBorderSideSetting,
     importBorderStyle,
     importColor,
     importContactForm,
@@ -40,6 +41,8 @@ function apply(document: Document, target: Object, op: IdOp): IdOpRecord {
             value = importBorderStyle(data, ctx);
         } else if (typeId === 'gradient') {
             value = importGradient(data, ctx);
+        } else if (typeId === 'border-side-setting') {
+            value = importBorderSideSetting(data, ctx);
         } else {
             throw new Error('need import ' + typeId)
         }

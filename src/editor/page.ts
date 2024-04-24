@@ -14,17 +14,7 @@ import {
 } from "../data/shape";
 import { ShapeEditor } from "./shape";
 import * as types from "../data/typesdefine";
-import {
-    BoolOp,
-    BorderPosition,
-    ExportFileFormat,
-    ExportFormatNameingScheme,
-    FillType,
-    GradientType,
-    MarkerType,
-    ShadowPosition,
-    ShapeType
-} from "../data/typesdefine";
+import { BoolOp, BorderPosition, ExportFileFormat, ExportFormatNameingScheme, FillType, GradientType, MarkerType, ShadowPosition, ShapeType, SideType } from "../data/typesdefine";
 import { Page } from "../data/page";
 import {
     newArrowShape,
@@ -88,7 +78,7 @@ import {
     shape4fill
 } from "./symbol";
 import { is_circular_ref2 } from "./utils/ref_check";
-import { BorderStyle, ExportFormat, Point2D, Shadow } from "../data/baseclasses";
+import { BorderSideSetting, BorderStyle, ExportFormat, Point2D, Shadow } from "../data/baseclasses";
 import { get_rotate_for_straight, is_straight, update_frame_by_points } from "./utils/path";
 import { modify_shapes_height, modify_shapes_width } from "./utils/common";
 import { CoopRepository } from "./coop/cooprepo";
@@ -485,7 +475,7 @@ export class PageEditor {
 
     boolgroup2(savep: GroupShape, groupname: string, op: BoolOp): false | BoolShape {
         if (savep.childs.length === 0) return false;
-        const shapes = savep.childs.slice(0);
+        const shapes = savep.childs.slice(0).reverse(); // group内部是反过来的
         const pp = savep.parent;
         if (!(pp instanceof GroupShape)) return false;
         const style: Style = this.cloneStyle(savep.style);
@@ -502,10 +492,12 @@ export class PageEditor {
         });
         try {
             // 0、save shapes[0].parent？最外层shape？位置？  层级最高图形的parent
-            const saveidx = pp.indexOfChild(savep);
+            let saveidx = pp.indexOfChild(savep);
             // gshape.isBoolOpShape = true;
             gshape = group(this.__document, this.__page, shapes, gshape, pp, saveidx, api);
-            api.shapeDelete(this.__document, this.__page, pp, saveidx + 1);
+            // 上面group会删除空的编组对象，需要再判断下对象是否还在
+            saveidx = pp.indexOfChild(savep);
+            if (saveidx >= 0) api.shapeDelete(this.__document, this.__page, pp, saveidx);
             shapes.forEach((shape) => api.shapeModifyBoolOp(this.__page, shape, op))
 
             this.__repo.commit();
@@ -2335,7 +2327,28 @@ export class PageEditor {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value, index } = actions[i];
                 const s = shape4border(api, this.__page, target);
-                api.setBorderThickness(this.__page, s, index, value);
+                const borders = target.getBorders();
+                const sideType = borders[index].sideSetting.sideType;
+                switch (sideType) {
+                    case SideType.Normal:
+                        api.setBorderSide(this.__page, s, index, new BorderSideSetting(sideType, value, value, value, value));
+                        break;
+                    case SideType.Top:
+                        api.setBorderThicknessTop(this.__page, s, index, value);
+                        break
+                    case SideType.Right:
+                        api.setBorderThicknessRight(this.__page, s, index, value);
+                        break
+                    case SideType.Bottom:
+                        api.setBorderThicknessBottom(this.__page, s, index, value);
+                        break
+                    case SideType.Left:
+                        api.setBorderThicknessLeft(this.__page, s, index, value);
+                        break
+                    default:
+                        api.setBorderSide(this.__page, s, index, new BorderSideSetting(sideType, value, value, value, value));
+                        break;
+                }
             }
             this.__repo.commit();
         } catch (error) {
@@ -2381,12 +2394,13 @@ export class PageEditor {
                     const { isEnabled, color, fillType, gradient, contextSettings } = f[f_i];
                     let border: Border;
                     if (b.length > f_i) {
-                        const { position, borderStyle, thickness } = b[f_i];
-                        border = new Border([i] as BasicArray<number>, uuid(), isEnabled, fillType, color, position, thickness, borderStyle);
+                        const { position, borderStyle, thickness, cornerType, sideSetting } = b[f_i];
+                        border = new Border([i] as BasicArray<number>, uuid(), isEnabled, fillType, color, position, thickness, borderStyle, cornerType, sideSetting);
                         border.gradient = gradient;
                         border.contextSettings = contextSettings;
                     } else {
-                        border = new Border([i] as BasicArray<number>, uuid(), isEnabled, fillType, color, BorderPosition.Inner, 1, new BorderStyle(0, 0));
+                        const sideSetting = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+                        border = new Border([i] as BasicArray<number>, uuid(), isEnabled, fillType, color, BorderPosition.Inner, 1, new BorderStyle(0, 0), types.CornerType.Miter, sideSetting);
                         border.gradient = gradient;
                         border.contextSettings = contextSettings;
                     }
@@ -2402,6 +2416,89 @@ export class PageEditor {
             this.__repo.commit();
         } catch (error) {
             console.log(error, 'error');
+            this.__repo.rollback();
+        }
+    }
+    setShapesBorderCornerType(actions: BatchAction[]) {
+        const api = this.__repo.start('setShapesBorderCornerType');
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value, index } = actions[i];
+                const s = shape4border(api, this.__page, target);
+                api.setBorderCornerType(this.__page, s, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setShapesBorderSide(actions: BatchAction[]) {
+        const api = this.__repo.start('setShapesBorderSide');
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value, index } = actions[i];
+                const s = shape4border(api, this.__page, target);
+                api.setBorderSide(this.__page, s, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setShapeBorderThicknessTop(actions: BatchAction[]) {
+        const api = this.__repo.start('setShapeBorderThicknessTop');
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value, index } = actions[i];
+                const s = shape4border(api, this.__page, target);
+                api.setBorderThicknessTop(this.__page, s, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setShapeBorderThicknessRight(actions: BatchAction[]) {
+        const api = this.__repo.start('setShapeBorderThicknessRight');
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value, index } = actions[i];
+                const s = shape4border(api, this.__page, target);
+                api.setBorderThicknessRight(this.__page, s, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setShapeBorderThicknessBottom(actions: BatchAction[]) {
+        const api = this.__repo.start('setShapeBorderThicknessBottom');
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value, index } = actions[i];
+                const s = shape4border(api, this.__page, target);
+                api.setBorderThicknessBottom(this.__page, s, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setShapeBorderThicknessLeft(action: BatchAction[]) {
+        const api = this.__repo.start('setShapeBorderThicknessLeft');
+        try {
+            for (let i = 0; i < action.length; i++) {
+                const { target, value, index } = action[i];
+                const s = shape4border(api, this.__page, target);
+                api.setBorderThicknessLeft(this.__page, s, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
             this.__repo.rollback();
         }
     }

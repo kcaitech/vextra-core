@@ -21,6 +21,8 @@ import {
     Variable,
     VariableType,
     ShapeFrame,
+    SideType,
+    BorderSideSetting,
 } from "../../data/classes";
 import { Api } from "../coop/recordapi";
 import { BasicArray, BasicMap } from "../../data/basic";
@@ -223,7 +225,7 @@ export function make_union(api: Api, document: Document, page: Page, symbol: Sym
     });
 
     union.fixedRadius = 4;
-
+    const side = new BorderSideSetting(SideType.Normal, 2, 2, 2, 2);
     const border_style = new BorderStyle(5, 5);
     const border = new Border(
         ([union.style.borders.length] as BasicArray<number>),
@@ -233,7 +235,9 @@ export function make_union(api: Api, document: Document, page: Page, symbol: Sym
         new Color(1, 127, 88, 249),
         BorderPosition.Inner,
         2,
-        border_style
+        border_style,
+        types.CornerType.Miter,
+        side
     );
     union.style.borders.push(border);
 
