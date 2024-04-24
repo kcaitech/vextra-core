@@ -7,7 +7,7 @@ import { ShapeType, CurvePoint, ShapeFrame } from "./baseclasses"
 import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
 import { parsePath } from "./pathparser";
-import { ContactForm, ContactType } from "./baseclasses";
+import { ContactForm, ContactType, PathSegment } from "./baseclasses";
 import { gen_matrix1, gen_path, handle_contact_from, handle_contact_to, path_for_edited, path_for_free_contact, path_for_free_end_contact, path_for_free_start_contact, slice_invalid_point } from "./utils";
 import { PathShape, Shape } from "./shape";
 import { Page } from "./page";
@@ -18,11 +18,13 @@ interface PageXY {
 }
 export class ContactShape extends PathShape implements classes.ContactShape {
     typeId = 'contact-shape'
-    from?: ContactForm
-    to?: ContactForm
+
     isEdited: boolean
     mark: boolean
     text: Text
+
+    from?: ContactForm
+    to?: ContactForm
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
@@ -30,8 +32,7 @@ export class ContactShape extends PathShape implements classes.ContactShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        points: BasicArray<CurvePoint>,
-        isClosed: boolean,
+        pathsegs: BasicArray<PathSegment>,
         isEdited: boolean,
         text: Text,
         mark: boolean
@@ -43,14 +44,27 @@ export class ContactShape extends PathShape implements classes.ContactShape {
             type,
             frame,
             style,
-            points,
-            isClosed
+            pathsegs
         )
+
         this.crdtidx = crdtidx;
         this.isEdited = isEdited; // 路径是否已被编辑
         this.text = text;
         this.mark = mark;
     }
+
+    get points() {
+        if (!this.pathsegs.length) {
+            return new BasicArray<CurvePoint>();
+        } else {
+            return this.pathsegs[0].points;
+        }
+    }
+
+    get isClosed() {
+        return !!this.pathsegs[0]?.isClosed;
+    }
+
     /**
      * @description 根据连接类型，在图形身上找一个点。该点的坐标系为页面坐标系
      */

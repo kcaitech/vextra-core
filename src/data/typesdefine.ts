@@ -629,8 +629,7 @@ export type PathShape2 = Shape & {
 }
 /* path shape */
 export type PathShape = Shape & {
-    points: CurvePoint[]
-    isClosed: boolean
+    pathsegs: PathSegment[]
     fixedRadius?: number
 }
 /* rect shape */
@@ -685,15 +684,12 @@ export type CutoutShape = PathShape & {
     scalingStroke: boolean
 }
 /* contact shape */
-export type ContactShape = Shape & {
-    points: CurvePoint[]
+export type ContactShape = PathShape & {
     from?: ContactForm
     to?: ContactForm
     isEdited: boolean
-    isClosed: boolean
     mark: boolean
     text: Text
-    fixedRadius?: number
 }
 /* bool shape */
 export type BoolShape = GroupShape & {

@@ -1233,16 +1233,15 @@ export function importPathShape(source: types.PathShape, ctx?: IImportContext): 
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<impl.CurvePoint>()
-            for (let i = 0, len = source.points && source.points.length; i < len; i++) {
-                const val = source.points[i]
+            const ret = new BasicArray<impl.PathSegment>()
+            for (let i = 0, len = source.pathsegs && source.pathsegs.length; i < len; i++) {
+                const val = source.pathsegs[i]
                 if (!val.crdtidx) val.crdtidx = [i]
-                const r = importCurvePoint(source.points[i], ctx)
+                const r = importPathSegment(source.pathsegs[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
-        })(),
-        source.isClosed
+        })()
     )
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
@@ -1288,16 +1287,15 @@ export function importRectShape(source: types.RectShape, ctx?: IImportContext): 
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<impl.CurvePoint>()
-            for (let i = 0, len = source.points && source.points.length; i < len; i++) {
-                const val = source.points[i]
+            const ret = new BasicArray<impl.PathSegment>()
+            for (let i = 0, len = source.pathsegs && source.pathsegs.length; i < len; i++) {
+                const val = source.pathsegs[i]
                 if (!val.crdtidx) val.crdtidx = [i]
-                const r = importCurvePoint(source.points[i], ctx)
+                const r = importPathSegment(source.pathsegs[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
-        })(),
-        source.isClosed
+        })()
     )
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
@@ -1403,16 +1401,15 @@ export function importOvalShape(source: types.OvalShape, ctx?: IImportContext): 
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<impl.CurvePoint>()
-            for (let i = 0, len = source.points && source.points.length; i < len; i++) {
-                const val = source.points[i]
+            const ret = new BasicArray<impl.PathSegment>()
+            for (let i = 0, len = source.pathsegs && source.pathsegs.length; i < len; i++) {
+                const val = source.pathsegs[i]
                 if (!val.crdtidx) val.crdtidx = [i]
-                const r = importCurvePoint(source.points[i], ctx)
+                const r = importPathSegment(source.pathsegs[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
         })(),
-        source.isClosed,
         importEllipse(source.ellipse, ctx)
     )
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
@@ -1459,16 +1456,15 @@ export function importLineShape(source: types.LineShape, ctx?: IImportContext): 
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<impl.CurvePoint>()
-            for (let i = 0, len = source.points && source.points.length; i < len; i++) {
-                const val = source.points[i]
+            const ret = new BasicArray<impl.PathSegment>()
+            for (let i = 0, len = source.pathsegs && source.pathsegs.length; i < len; i++) {
+                const val = source.pathsegs[i]
                 if (!val.crdtidx) val.crdtidx = [i]
-                const r = importCurvePoint(source.points[i], ctx)
+                const r = importPathSegment(source.pathsegs[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
-        })(),
-        source.isClosed
+        })()
     )
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
@@ -1500,8 +1496,14 @@ export function importLineShape(source: types.LineShape, ctx?: IImportContext): 
 /* image shape */
 export function importImageShape(source: types.ImageShape, ctx?: IImportContext): impl.ImageShape {
     // inject code
-    if (!source.points || source.points.length === 0) { // 兼容旧数据
-        if (!source.points) source.points = [];
+    if (!source.pathsegs) { // 兼容旧数据
+        const seg: types.PathSegment = {
+            crdtidx: [0],
+            id: '39e508e8-a1bb-4b55-ad68-aa2a9b3b447a',
+            points:[],
+            isClosed: true
+        }
+                
         // 需要用固定的，这样如果不同用户同时打开此文档，对points做的操作，对应的point id也是对的
         const id1 = "b259921b-4eba-461d-afc3-c4c58c1fa337"
         const id2 = "62ea3ee3-3378-4602-a918-7e05f426bb8e"
@@ -1532,7 +1534,10 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
             mode: types.CurveMode.Straight,
             x: 0, y: 1
         }; // lb
-        source.points.push(p1, p2, p3, p4);
+        
+        seg.points.push(p1, p2, p3, p4);
+        
+        source.pathsegs = [seg];
     }
     const ret: impl.ImageShape = new impl.ImageShape (
         (() => {
@@ -1549,16 +1554,15 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<impl.CurvePoint>()
-            for (let i = 0, len = source.points && source.points.length; i < len; i++) {
-                const val = source.points[i]
+            const ret = new BasicArray<impl.PathSegment>()
+            for (let i = 0, len = source.pathsegs && source.pathsegs.length; i < len; i++) {
+                const val = source.pathsegs[i]
                 if (!val.crdtidx) val.crdtidx = [i]
-                const r = importCurvePoint(source.points[i], ctx)
+                const r = importPathSegment(source.pathsegs[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
         })(),
-        source.isClosed,
         source.imageRef
     )
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
@@ -2154,16 +2158,15 @@ export function importCutoutShape(source: types.CutoutShape, ctx?: IImportContex
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<impl.CurvePoint>()
-            for (let i = 0, len = source.points && source.points.length; i < len; i++) {
-                const val = source.points[i]
+            const ret = new BasicArray<impl.PathSegment>()
+            for (let i = 0, len = source.pathsegs && source.pathsegs.length; i < len; i++) {
+                const val = source.pathsegs[i]
                 if (!val.crdtidx) val.crdtidx = [i]
-                const r = importCurvePoint(source.points[i], ctx)
+                const r = importPathSegment(source.pathsegs[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
         })(),
-        source.isClosed,
         source.scalingStroke
     )
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
@@ -2210,20 +2213,20 @@ export function importContactShape(source: types.ContactShape, ctx?: IImportCont
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<impl.CurvePoint>()
-            for (let i = 0, len = source.points && source.points.length; i < len; i++) {
-                const val = source.points[i]
+            const ret = new BasicArray<impl.PathSegment>()
+            for (let i = 0, len = source.pathsegs && source.pathsegs.length; i < len; i++) {
+                const val = source.pathsegs[i]
                 if (!val.crdtidx) val.crdtidx = [i]
-                const r = importCurvePoint(source.points[i], ctx)
+                const r = importPathSegment(source.pathsegs[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
         })(),
-        source.isClosed,
         source.isEdited,
         importText(source.text, ctx),
         source.mark
     )
+    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
@@ -2250,7 +2253,6 @@ export function importContactShape(source: types.ContactShape, ctx?: IImportCont
     })()
     if (source.from !== undefined) ret.from = importContactForm(source.from, ctx)
     if (source.to !== undefined) ret.to = importContactForm(source.to, ctx)
-    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     return ret
 }
 /* bool shape */

@@ -2,8 +2,9 @@ import { objectId } from "../basic/objectid";
 import { EL, elh } from "./el";
 import {render as clippathR} from "../render/clippath"
 import { DViewCtx, PropsType } from "./viewctx";
-import { ImageShape } from "../data/shape";
+import { CurvePoint, ImageShape } from "../data/shape";
 import { RectShapeView } from "./rect";
+import { BasicArray } from "../data/basic";
 export class ImageShapeView extends RectShapeView {
 
     private m_imgPH: string;
@@ -38,6 +39,7 @@ export class ImageShapeView extends RectShapeView {
     }
 
     get points() {
-        return (this.m_data as ImageShape).points;
+        const pathsegs = (this.m_data as ImageShape).pathsegs
+        return pathsegs.length ? pathsegs[0].points : new BasicArray<CurvePoint>();
     }
 }

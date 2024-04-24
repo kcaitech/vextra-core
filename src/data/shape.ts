@@ -103,7 +103,7 @@ export class Shape extends Basic implements classes.Shape {
     shouldBreakMaskChain?: boolean
     varbinds?: BasicMap<string, string>
 
-    isClosed: boolean = true;
+    // isClosed: boolean = true;
 
     constructor(
         crdtidx: BasicArray<number>,
@@ -439,6 +439,10 @@ export class Shape extends Basic implements classes.Shape {
     get radiusType() {
         return RadiusType.None;
     }
+
+    get isClosed() {
+        return true;
+    }
 }
 
 export class GroupShape extends Shape implements classes.GroupShape {
@@ -689,6 +693,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
     variables: BasicMap<string, Variable> // 怎么做关联
     symtags?: BasicMap<string, string>
     cornerRadius?: CornerRadius
+
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
@@ -759,6 +764,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
     getPathOfFrame(frame: classes.ShapeFrame, fixedRadius?: number | undefined): Path {
         return getPathOfRadius(frame, this.cornerRadius, fixedRadius);
     }
+
     get radius(): number[] {
         return [
             this.cornerRadius?.lt || 0,
@@ -809,8 +815,7 @@ export class SymbolUnionShape extends SymbolShape implements classes.SymbolUnion
 
 export class PathShape extends Shape implements classes.PathShape {
     typeId = 'path-shape'
-    points: BasicArray<CurvePoint>
-    isClosed: boolean
+    pathsegs: BasicArray<PathSegment>
     fixedRadius?: number
 
     constructor(
@@ -820,8 +825,7 @@ export class PathShape extends Shape implements classes.PathShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        points: BasicArray<CurvePoint>,
-        isClosed: boolean
+        pathsegs: BasicArray<PathSegment>
     ) {
         super(
             crdtidx,
@@ -830,16 +834,11 @@ export class PathShape extends Shape implements classes.PathShape {
             type,
             frame,
             style
-        )
-        this.points = points;
-        this.isClosed = isClosed;
+        );
+
+        this.pathsegs = pathsegs;
     }
 
-    /**
-     *
-     * @param fixedRadius shape自身的fixedRadius优先
-     * @returns
-     */
     getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
         // const offsetX = 0;
         // const offsetY = 0;
@@ -848,17 +847,35 @@ export class PathShape extends Shape implements classes.PathShape {
 
         fixedRadius = this.fixedRadius ?? fixedRadius;
 
-        const path = parsePath(this.points, !!this.isClosed, width, height, fixedRadius);
+        const path: any[] = [];
+        this.pathsegs.forEach((seg) => {
+            path.push(...parsePath(seg.points, seg.isClosed, width, height, fixedRadius));
+        });
 
         return new Path(path);
     }
 
-    setRadius(radius: number): void {
-        this.points.forEach((p) => p.radius = radius);
-    }
+    // setRadius(radius: number): void {
+    //     this.points.forEach((p) => p.radius = radius);
+    // }
+
+    // get radius(): number[] {
+    //     return this.points.map((p) => p.radius || 0);
+    // }
 
     get radius(): number[] {
-        return this.points.map((p) => p.radius || 0);
+        return this.pathsegs.reduce((radius: number[], seg) => seg.points.reduce((radius, p) => {
+            radius.push(p.radius || 0);
+            return radius;
+        }, radius), []);
+    }
+
+    get radiusType(): RadiusType {
+        const path1 = this.pathsegs[0];
+
+        return (this.pathsegs.length === 1 && path1.points.length === 4 && path1.isClosed)
+            ? RadiusType.Rect
+            : RadiusType.Fixed;
     }
 }
 
@@ -911,7 +928,7 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
     }
 
     get pathType() {
-        return PathType.Multi;
+        return PathType.Editable;
     }
 
     get radiusType() {
@@ -931,8 +948,7 @@ export class RectShape extends PathShape implements classes.RectShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        points: BasicArray<CurvePoint>,
-        isClosed: boolean
+        pathsegs: BasicArray<PathSegment>
     ) {
         super(
             crdtidx,
@@ -941,42 +957,14 @@ export class RectShape extends PathShape implements classes.RectShape {
             type,
             frame,
             style,
-            points,
-            isClosed
+            pathsegs
         )
-        this.isClosed = isClosed;
-    }
-
-    // setRectRadius(lt: number, rt: number, rb: number, lb: number): void {
-    //     const ps = this.points;
-    //     if (ps.length === 4) {
-    //         ps[0].radius = lt;
-    //         ps[1].radius = rt;
-    //         ps[2].radius = rb;
-    //         ps[3].radius = lb;
-    //     }
-    // }
-
-    getRectRadius(): { lt: number, rt: number, rb: number, lb: number } {
-        const ret = { lt: 0, rt: 0, rb: 0, lb: 0 };
-        const ps = this.points;
-        if (ps.length === 4) {
-            ret.lt = ps[0].radius || 0;
-            ret.rt = ps[1].radius || 0;
-            ret.rb = ps[2].radius || 0;
-            ret.lb = ps[3].radius || 0;
-        }
-        return ret;
-    }
-    get radiusType() {
-        return (this.points.length === 4 && this.isClosed) ? RadiusType.Rect : RadiusType.Fixed;
     }
 }
 
 export class ImageShape extends RectShape implements classes.ImageShape {
     typeId = 'image-shape'
     imageRef: string;
-    points: BasicArray<CurvePoint>;
 
     private __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
     private __cacheData?: { buff: Uint8Array, base64: string };
@@ -988,8 +976,7 @@ export class ImageShape extends RectShape implements classes.ImageShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        points: BasicArray<CurvePoint>,
-        isClosed: boolean,
+        pathsegs: BasicArray<PathSegment>,
         imageRef: string
     ) {
         super(
@@ -999,13 +986,10 @@ export class ImageShape extends RectShape implements classes.ImageShape {
             type,
             frame,
             style,
-            points,
-            isClosed
+            pathsegs
         )
 
-        this.points = points;
         this.imageRef = imageRef
-        this.isClosed = isClosed;
     }
 
     setImageMgr(imageMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>) {
@@ -1062,8 +1046,7 @@ export class OvalShape extends PathShape implements classes.OvalShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        points: BasicArray<CurvePoint>,
-        isClosed: boolean,
+        pathsegs: BasicArray<PathSegment>,
         ellipse: classes.Ellipse
     ) {
         super(
@@ -1073,11 +1056,9 @@ export class OvalShape extends PathShape implements classes.OvalShape {
             type,
             frame,
             style,
-            points,
-            isClosed
+            pathsegs
         )
         this.ellipse = ellipse;
-        this.isClosed = isClosed;
     }
 }
 
@@ -1091,8 +1072,7 @@ export class LineShape extends PathShape implements classes.LineShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        points: BasicArray<CurvePoint>,
-        isClosed: boolean
+        pathsegs: BasicArray<PathSegment>
     ) {
         super(
             crdtidx,
@@ -1101,10 +1081,8 @@ export class LineShape extends PathShape implements classes.LineShape {
             type,
             frame,
             style,
-            points,
-            isClosed
-        )
-        this.isClosed = isClosed;
+            pathsegs
+        );
     }
 }
 
@@ -1193,8 +1171,7 @@ export class CutoutShape extends PathShape implements classes.CutoutShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        points: BasicArray<CurvePoint>,
-        isClosed: boolean,
+        pathsegs: BasicArray<PathSegment>,
         scalingStroke: boolean
     ) {
         super(
@@ -1204,11 +1181,9 @@ export class CutoutShape extends PathShape implements classes.CutoutShape {
             type,
             frame,
             style,
-            points,
-            isClosed
+            pathsegs
         )
         this.scalingStroke = scalingStroke;
-        this.isClosed = false;
     }
 
     get isNoSupportDiamondScale() {

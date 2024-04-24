@@ -8,7 +8,6 @@ import { RenderTransform } from "./basic";
 import { DViewCtx, PropsType } from "./viewctx";
 import { EL, elh } from "./el";
 import { renderBorders } from "../render";
-import { uuid } from "../basic/uuid";
 
 export class PathShapeView2 extends ShapeView {
 

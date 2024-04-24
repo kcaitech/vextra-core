@@ -1143,15 +1143,14 @@ export function exportPathShape(source: types.PathShape, ctx?: IExportContext): 
                 });
                 return ret;
             })(),
-        points: (() => {
+        pathsegs: (() => {
             const ret = []
-            for (let i = 0, len = source.points.length; i < len; i++) {
-                const r = exportCurvePoint(source.points[i], ctx)
+            for (let i = 0, len = source.pathsegs.length; i < len; i++) {
+                const r = exportPathSegment(source.pathsegs[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
         })(),
-        isClosed: source.isClosed,
         fixedRadius: source.fixedRadius,
     }
     return ret
@@ -1173,15 +1172,14 @@ export function exportRectShape(source: types.RectShape, ctx?: IExportContext): 
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        points: (() => {
+        pathsegs: (() => {
                 const ret = []
-                for (let i = 0, len = source.points.length; i < len; i++) {
-                    const r = exportCurvePoint(source.points[i], ctx)
+                for (let i = 0, len = source.pathsegs.length; i < len; i++) {
+                    const r = exportPathSegment(source.pathsegs[i], ctx)
                     if (r) ret.push(r)
                 }
                 return ret
             })(),
-        isClosed: source.isClosed,
         fixedRadius: source.fixedRadius,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
@@ -1280,15 +1278,14 @@ export function exportOvalShape(source: types.OvalShape, ctx?: IExportContext): 
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        points: (() => {
+        pathsegs: (() => {
                 const ret = []
-                for (let i = 0, len = source.points.length; i < len; i++) {
-                    const r = exportCurvePoint(source.points[i], ctx)
+                for (let i = 0, len = source.pathsegs.length; i < len; i++) {
+                    const r = exportPathSegment(source.pathsegs[i], ctx)
                     if (r) ret.push(r)
                 }
                 return ret
             })(),
-        isClosed: source.isClosed,
         fixedRadius: source.fixedRadius,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
@@ -1334,15 +1331,14 @@ export function exportLineShape(source: types.LineShape, ctx?: IExportContext): 
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        points: (() => {
+        pathsegs: (() => {
                 const ret = []
-                for (let i = 0, len = source.points.length; i < len; i++) {
-                    const r = exportCurvePoint(source.points[i], ctx)
+                for (let i = 0, len = source.pathsegs.length; i < len; i++) {
+                    const r = exportPathSegment(source.pathsegs[i], ctx)
                     if (r) ret.push(r)
                 }
                 return ret
             })(),
-        isClosed: source.isClosed,
         fixedRadius: source.fixedRadius,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
@@ -1387,15 +1383,14 @@ export function exportImageShape(source: types.ImageShape, ctx?: IExportContext)
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        points: (() => {
+        pathsegs: (() => {
                 const ret = []
-                for (let i = 0, len = source.points.length; i < len; i++) {
-                    const r = exportCurvePoint(source.points[i], ctx)
+                for (let i = 0, len = source.pathsegs.length; i < len; i++) {
+                    const r = exportPathSegment(source.pathsegs[i], ctx)
                     if (r) ret.push(r)
                 }
                 return ret
             })(),
-        isClosed: source.isClosed,
         fixedRadius: source.fixedRadius,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
@@ -1924,15 +1919,14 @@ export function exportCutoutShape(source: types.CutoutShape, ctx?: IExportContex
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        points: (() => {
+        pathsegs: (() => {
                 const ret = []
-                for (let i = 0, len = source.points.length; i < len; i++) {
-                    const r = exportCurvePoint(source.points[i], ctx)
+                for (let i = 0, len = source.pathsegs.length; i < len; i++) {
+                    const r = exportPathSegment(source.pathsegs[i], ctx)
                     if (r) ret.push(r)
                 }
                 return ret
             })(),
-        isClosed: source.isClosed,
         fixedRadius: source.fixedRadius,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
@@ -1978,6 +1972,15 @@ export function exportContactShape(source: types.ContactShape, ctx?: IExportCont
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
+        pathsegs: (() => {
+                const ret = []
+                for (let i = 0, len = source.pathsegs.length; i < len; i++) {
+                    const r = exportPathSegment(source.pathsegs[i], ctx)
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
+        fixedRadius: source.fixedRadius,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
@@ -2001,21 +2004,11 @@ export function exportContactShape(source: types.ContactShape, ctx?: IExportCont
                 });
                 return ret;
             })(),
-        points: (() => {
-            const ret = []
-            for (let i = 0, len = source.points.length; i < len; i++) {
-                const r = exportCurvePoint(source.points[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
         from: source.from && exportContactForm(source.from, ctx),
         to: source.to && exportContactForm(source.to, ctx),
         isEdited: source.isEdited,
-        isClosed: source.isClosed,
         mark: source.mark,
         text: exportText(source.text, ctx),
-        fixedRadius: source.fixedRadius,
     }
     return ret
 }

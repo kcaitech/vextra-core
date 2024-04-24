@@ -1,4 +1,12 @@
-import { CurvePoint, PathShape, Shape, ShapeFrame, ShapeType, SymbolRefShape, SymbolShape } from "../data/classes";
+import {
+    PathShape,
+    PathShape2,
+    Shape,
+    ShapeFrame,
+    ShapeType,
+    SymbolRefShape,
+    SymbolShape
+} from "../data/classes";
 import { Path } from "../data/path";
 import { parsePath } from "../data/pathparser";
 import { ShapeView, matrix2parent, transformPoints } from "./shape";
@@ -8,12 +16,19 @@ import { DViewCtx, PropsType } from "./viewctx";
 import { EL, elh } from "./el";
 import { innerShadowId, renderBorders } from "../render";
 import { objectId } from "../basic/objectid";
+import { PathSegment } from "../data/typesdefine";
 
 export class PathShapeView extends ShapeView {
 
     constructor(ctx: DViewCtx, props: PropsType, isTopClass: boolean = true) {
         super(ctx, props, isTopClass);
         this.afterInit();
+    }
+
+    m_pathsegs?: PathSegment[];
+
+    get segments() {
+        return this.m_pathsegs || (this.m_data as PathShape2).pathsegs;
     }
 
     get data(): PathShape {
@@ -24,35 +39,36 @@ export class PathShapeView extends ShapeView {
         return this.data.isClosed;
     }
 
-    get points() {
-        return this.m_points || this.data.points;
-    }
-
-    m_points?: CurvePoint[];
-
     protected _layout(frame: ShapeFrame, shape: Shape, transform: RenderTransform | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): void {
-        this.m_points = undefined;
+        this.m_pathsegs = undefined;
         super._layout(frame, shape, transform, varsContainer);
     }
 
     layoutOnDiamondShape(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scaleX: number, scaleY: number, rotate: number, vflip: boolean, hflip: boolean, bbox: ShapeFrame, m: Matrix): void {
-        const shape = this.m_data as PathShape;
+        const shape = this.m_data as PathShape2;
         m.preScale(shape.frame.width, shape.frame.height); // points投影到parent坐标系的矩阵
 
         const matrix2 = matrix2parent(bbox.x, bbox.y, bbox.width, bbox.height, 0, false, false);
         matrix2.preScale(bbox.width, bbox.height); // 当对象太小时，求逆矩阵会infinity
         m.multiAtLeft(matrix2.inverse); // 反向投影到新的坐标系
 
-        const points = transformPoints(shape.points, m); // 新的points
-        this.m_points = points;
+        const pathsegs = shape.pathsegs;
+        const newpathsegs = pathsegs.map((seg) => {
+            return { crdtidx: seg.crdtidx, id: seg.id, points: transformPoints(seg.points, m), isClosed: seg.isClosed }
+        });
+        this.m_pathsegs = newpathsegs;
+
         const frame = this.frame;
-        this.m_path = new Path(parsePath(points, shape.isClosed, frame.width, frame.height, shape.fixedRadius));
+        const parsed = newpathsegs.map((seg) => parsePath(seg.points, !!seg.isClosed, frame.width, frame.height, this.fixedRadius));
+        const concat = Array.prototype.concat.apply([], parsed);
+        this.m_path = new Path(concat);
         this.m_pathstr = this.m_path.toString();
     }
 
     protected renderBorders(): EL[] {
-        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.isClosed);
+        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr());
     }
+
     render(): number {
 
         // const tid = this.id;

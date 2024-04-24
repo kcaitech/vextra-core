@@ -1066,8 +1066,7 @@ export class PathShape2 extends Shape {
  */
 export class PathShape extends Shape {
     typeId = 'path-shape'
-    points: BasicArray<CurvePoint >
-    isClosed: boolean
+    pathsegs: BasicArray<PathSegment >
     fixedRadius?: number
     constructor(
         crdtidx: BasicArray<number >,
@@ -1076,8 +1075,7 @@ export class PathShape extends Shape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        points: BasicArray<CurvePoint >,
-        isClosed: boolean
+        pathsegs: BasicArray<PathSegment >
     ) {
         super(
             crdtidx,
@@ -1087,8 +1085,7 @@ export class PathShape extends Shape {
             frame,
             style
         )
-        this.points = points
-        this.isClosed = isClosed
+        this.pathsegs = pathsegs
     }
 }
 /**
@@ -1103,8 +1100,7 @@ export class RectShape extends PathShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        points: BasicArray<CurvePoint >,
-        isClosed: boolean
+        pathsegs: BasicArray<PathSegment >
     ) {
         super(
             crdtidx,
@@ -1113,8 +1109,7 @@ export class RectShape extends PathShape {
             type,
             frame,
             style,
-            points,
-            isClosed
+            pathsegs
         )
     }
 }
@@ -1162,8 +1157,7 @@ export class OvalShape extends PathShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        points: BasicArray<CurvePoint >,
-        isClosed: boolean,
+        pathsegs: BasicArray<PathSegment >,
         ellipse: Ellipse
     ) {
         super(
@@ -1173,8 +1167,7 @@ export class OvalShape extends PathShape {
             type,
             frame,
             style,
-            points,
-            isClosed
+            pathsegs
         )
         this.ellipse = ellipse
     }
@@ -1191,8 +1184,7 @@ export class LineShape extends PathShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        points: BasicArray<CurvePoint >,
-        isClosed: boolean
+        pathsegs: BasicArray<PathSegment >
     ) {
         super(
             crdtidx,
@@ -1201,8 +1193,7 @@ export class LineShape extends PathShape {
             type,
             frame,
             style,
-            points,
-            isClosed
+            pathsegs
         )
     }
 }
@@ -1219,8 +1210,7 @@ export class ImageShape extends PathShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        points: BasicArray<CurvePoint >,
-        isClosed: boolean,
+        pathsegs: BasicArray<PathSegment >,
         imageRef: string
     ) {
         super(
@@ -1230,8 +1220,7 @@ export class ImageShape extends PathShape {
             type,
             frame,
             style,
-            points,
-            isClosed
+            pathsegs
         )
         this.imageRef = imageRef
     }
@@ -1359,8 +1348,7 @@ export class CutoutShape extends PathShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        points: BasicArray<CurvePoint >,
-        isClosed: boolean,
+        pathsegs: BasicArray<PathSegment >,
         scalingStroke: boolean
     ) {
         super(
@@ -1370,8 +1358,7 @@ export class CutoutShape extends PathShape {
             type,
             frame,
             style,
-            points,
-            isClosed
+            pathsegs
         )
         this.scalingStroke = scalingStroke
     }
@@ -1379,16 +1366,13 @@ export class CutoutShape extends PathShape {
 /**
  * contact shape 
  */
-export class ContactShape extends Shape {
+export class ContactShape extends PathShape {
     typeId = 'contact-shape'
-    points: BasicArray<CurvePoint >
     from?: ContactForm
     to?: ContactForm
     isEdited: boolean
-    isClosed: boolean
     mark: boolean
     text: Text
-    fixedRadius?: number
     constructor(
         crdtidx: BasicArray<number >,
         id: string,
@@ -1396,8 +1380,7 @@ export class ContactShape extends Shape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        points: BasicArray<CurvePoint >,
-        isClosed: boolean,
+        pathsegs: BasicArray<PathSegment >,
         isEdited: boolean,
         text: Text,
         mark: boolean
@@ -1408,10 +1391,9 @@ export class ContactShape extends Shape {
             name,
             type,
             frame,
-            style
+            style,
+            pathsegs
         )
-        this.points = points
-        this.isClosed = isClosed
         this.isEdited = isEdited
         this.text = text
         this.mark = mark

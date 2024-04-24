@@ -2,8 +2,14 @@ export const inject: any = {};
 inject['ImageShape'] = {} as any;
 inject['ImageShape']['before'] = `\
     // inject code
-    if (!source.points || source.points.length === 0) { // 兼容旧数据
-        if (!source.points) source.points = [];
+    if (!source.pathsegs) { // 兼容旧数据
+        const seg: types.PathSegment = {
+            crdtidx: [0],
+            id: '39e508e8-a1bb-4b55-ad68-aa2a9b3b447a',
+            points:[],
+            isClosed: true
+        }
+                
         // 需要用固定的，这样如果不同用户同时打开此文档，对points做的操作，对应的point id也是对的
         const id1 = "b259921b-4eba-461d-afc3-c4c58c1fa337"
         const id2 = "62ea3ee3-3378-4602-a918-7e05f426bb8e"
@@ -34,7 +40,10 @@ inject['ImageShape']['before'] = `\
             mode: types.CurveMode.Straight,
             x: 0, y: 1
         }; // lb
-        source.points.push(p1, p2, p3, p4);
+        
+        seg.points.push(p1, p2, p3, p4);
+        
+        source.pathsegs = [seg];
     }
 `
 inject['ImageShape']['after'] = `\
