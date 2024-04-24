@@ -20,6 +20,9 @@ export type ModifyUnits = Map<number,
     }[]
 >;
 
+/**
+ * @description 路径处理器
+ */
 export class PathModifier extends AsyncApiCaller {
     readonly shape: Shape;
 
@@ -61,32 +64,35 @@ export class PathModifier extends AsyncApiCaller {
             const page = this.page;
             const shape = this.shape;
 
-            if (shape.pathType === PathType.Editable) {
-                units.forEach((actions, segment) => {
-                    const points = (shape as PathShape).pathsegs[segment].points;
-
-                    for (let i = 0; i < actions.length; i++) {
-                        const unit = actions[i];
-                        const point = points[unit.index];
-                        if (!point) {
-                            continue;
-                        }
-
-                        this.api.shapeModifyCurvPoint(page, shape, unit.index, { x: unit.x, y: unit.y }, segment);
-
-                        if (point.hasFrom) {
-                            api.shapeModifyCurvFromPoint(page, shape, unit.index, {
-                                x: unit.fromX,
-                                y: unit.fromY
-                            }, segment);
-                        }
-
-                        if (point.hasTo) {
-                            api.shapeModifyCurvToPoint(page, shape, unit.index, { x: unit.toX, y: unit.toY }, segment);
-                        }
-                    }
-                })
+            if (shape.pathType !== PathType.Editable) {
+               return;
             }
+
+            units.forEach((actions, segment) => {
+                const points = (shape as PathShape).pathsegs[segment].points;
+
+                for (let i = 0; i < actions.length; i++) {
+                    const unit = actions[i];
+                    const point = points[unit.index];
+                    if (!point) {
+                        continue;
+                    }
+
+                    this.api.shapeModifyCurvPoint(page, shape, unit.index, { x: unit.x, y: unit.y }, segment);
+
+                    if (point.hasFrom) {
+                        api.shapeModifyCurvFromPoint(page, shape, unit.index, {
+                            x: unit.fromX,
+                            y: unit.fromY
+                        }, segment);
+                    }
+
+                    if (point.hasTo) {
+                        api.shapeModifyCurvToPoint(page, shape, unit.index, { x: unit.toX, y: unit.toY }, segment);
+                    }
+                }
+            })
+
 
             // update_frame_by_points(api, page, shape as PathShape);
             this.updateView();
