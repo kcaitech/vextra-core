@@ -475,7 +475,7 @@ export class PageEditor {
 
     boolgroup2(savep: GroupShape, groupname: string, op: BoolOp): false | BoolShape {
         if (savep.childs.length === 0) return false;
-        const shapes = savep.childs.slice(0);
+        const shapes = savep.childs.slice(0).reverse(); // group内部是反过来的
         const pp = savep.parent;
         if (!(pp instanceof GroupShape)) return false;
         const style: Style = this.cloneStyle(savep.style);
@@ -492,10 +492,12 @@ export class PageEditor {
         });
         try {
             // 0、save shapes[0].parent？最外层shape？位置？  层级最高图形的parent
-            const saveidx = pp.indexOfChild(savep);
+            let saveidx = pp.indexOfChild(savep);
             // gshape.isBoolOpShape = true;
             gshape = group(this.__document, this.__page, shapes, gshape, pp, saveidx, api);
-            api.shapeDelete(this.__document, this.__page, pp, saveidx + 1);
+            // 上面group会删除空的编组对象，需要再判断下对象是否还在
+            saveidx = pp.indexOfChild(savep);
+            if (saveidx >= 0) api.shapeDelete(this.__document, this.__page, pp, saveidx);
             shapes.forEach((shape) => api.shapeModifyBoolOp(this.__page, shape, op))
 
             this.__repo.commit();
