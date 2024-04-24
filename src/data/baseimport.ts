@@ -1026,7 +1026,7 @@ export function importTableCell(source: types.TableCell, ctx?: IImportContext): 
                 text: "\n",
                 spans: [
                     {
-                        fontName: "PingFangSC-Regular",
+                        fontName: "PingFangSC",
                         fontSize: 14,
                         length: 1,
                         color: {
