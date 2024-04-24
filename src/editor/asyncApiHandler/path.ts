@@ -2,7 +2,7 @@ import { AsyncApiCaller } from "./AsyncApiCaller";
 import { CoopRepository } from "../coop/cooprepo";
 import { Document } from "../../data/document";
 import { adapt2Shape, PageView, ShapeView } from "../../dataview";
-import { CurveMode, CurvePoint, PathShape, PathShape2, Shape } from "../../data/shape";
+import { CurveMode, CurvePoint, PathShape, Shape } from "../../data/shape";
 import { BasicArray } from "../../data/basic";
 import { uuid } from "../../basic/uuid";
 import { __pre_curve, after_insert_point, update_frame_by_points } from "../utils/path";
@@ -63,7 +63,7 @@ export class PathModifier extends AsyncApiCaller {
 
             if (shape.pathType === PathType.Editable) {
                 units.forEach((actions, segment) => {
-                    const points = (shape as PathShape2).pathsegs[segment].points;
+                    const points = (shape as PathShape).pathsegs[segment].points;
 
                     for (let i = 0; i < actions.length; i++) {
                         const unit = actions[i];
@@ -112,7 +112,7 @@ export class PathModifier extends AsyncApiCaller {
             let mode: CurveMode | undefined = undefined;
 
             if (shape.pathType === PathType.Editable) {
-                mode = (shape as PathShape2)?.pathsegs[segment]?.points[index]?.mode;
+                mode = (shape as PathShape)?.pathsegs[segment]?.points[index]?.mode;
             }
 
             if (mode === CurveMode.Mirrored || mode === CurveMode.Asymmetric) {
