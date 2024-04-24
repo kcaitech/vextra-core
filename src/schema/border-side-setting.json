@@ -1,0 +1,33 @@
+{
+    "description": "border side setting",
+    "type": "object",
+    "properties": {
+        "sideType": {
+            "$ref": "./side-type.json"
+        },
+        "thicknessTop": {
+            "type": "number",
+            "default": 1
+        },
+        "thicknessLeft": {
+            "type": "number",
+            "default": 1
+        },
+        "thicknessBottom": {
+            "type": "number",
+            "default": 1
+        },
+        "thicknessRight": {
+            "type": "number",
+            "default": 1
+        }
+    },
+    "required": [
+        "sideType",
+        "thicknessTop",
+        "thicknessLeft",
+        "thicknessBottom",
+        "thicknessRight"
+    ],
+    "additionalProperties": false
+}

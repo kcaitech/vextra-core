@@ -676,7 +676,7 @@ export class ShapeView extends DataView {
         //     this.m_borders = renderBorders(elh, this.getBorders(), this.frame, this.getPathStr());
         // }
         // return this.m_borders;
-        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr());
+        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.m_data);
     }
 
     protected renderShadows(filterId: string): EL[] {

@@ -2,7 +2,7 @@ import * as classes from "./baseclasses"
 import {
     Blur, BorderOptions, ColorControls, ContextSettings,
     Shadow, WindingRule, FillType, BorderPosition,
-    BorderStyle, MarkerType, ContactRole, VariableType, Point2D, GradientType, Stop, BlendMode, FillRule
+    BorderStyle, MarkerType, ContactRole, VariableType, Point2D, GradientType, Stop, BlendMode, FillRule, CornerType, BorderSideSetting
 } from "./baseclasses";
 import { Basic, BasicArray, BasicMap, ResourceMgr } from "./basic";
 import { Variable } from "./variable";
@@ -32,7 +32,10 @@ export {
     ContactType,
     ContactRole,
     ContactRoleType,
-    ShadowPosition
+    ShadowPosition,
+    CornerType,
+    BorderSideSetting,
+    SideType
 } from "./baseclasses"
 
 /**
@@ -76,6 +79,8 @@ export class Border extends Basic implements classes.Border {
     thickness: number
     gradient?: Gradient
     borderStyle: BorderStyle
+    cornerType: CornerType
+    sideSetting: BorderSideSetting
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
@@ -85,6 +90,8 @@ export class Border extends Basic implements classes.Border {
         position: BorderPosition,
         thickness: number,
         borderStyle: BorderStyle,
+        cornerType: CornerType,
+        sideSetting: BorderSideSetting
     ) {
         super()
         this.crdtidx = crdtidx
@@ -95,6 +102,8 @@ export class Border extends Basic implements classes.Border {
         this.position = position
         this.thickness = thickness
         this.borderStyle = borderStyle
+        this.cornerType = cornerType
+        this.sideSetting = sideSetting
     }
 }
 
