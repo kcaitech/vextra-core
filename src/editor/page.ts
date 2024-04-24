@@ -1285,74 +1285,6 @@ export class PageEditor {
         return newArtboard(name, frame, fill);
     }
 
-    /**
-     * @deprecated 合入shapesModifyRadius
-     */
-    shapesModifyPointRadius(shapes: Shape[], indexes: number[], val: number) {
-        try {
-            const api = this.__repo.start("shapesModifyPointRadius");
-            for (let i = 0, l = shapes.length; i < l; i++) {
-                const shape = shapes[i];
-                const points = (shape as PathShape).points;
-
-                for (let _i = 0, l = indexes.length; _i < l; _i++) {
-                    const index = indexes[_i];
-                    const point = points[index];
-                    if (!point) {
-                        continue;
-                    }
-                    api.modifyPointCornerRadius(this.__page, shape, index, val);
-                }
-                // this.__repo.commit();
-            }
-            this.__repo.commit();
-        } catch (error) {
-            console.log('shapesModifyPointRadius', error);
-            this.__repo.rollback();
-        }
-
-    }
-
-    /**
-     * @deprecated 合入shapesModifyRadius
-     */
-    shapesModifyFixedRadius(shapes: Shape[], val: number) {
-        try {
-            const api = this.__repo.start("shapesModifyFixedRadius");
-            for (let i = 0, l = shapes.length; i < l; i++) {
-                const shape = shapes[i];
-
-                if (shape.type === ShapeType.Group) {
-                    api.shapeModifyFixedRadius(this.__page, shape as GroupShape, val);
-                    continue;
-                }
-
-                const is_rect = [ShapeType.Rectangle, ShapeType.Image, ShapeType.Artboard]
-                    .includes(shape.type) && shape.isClosed;
-
-                const points = (shape as PathShape).points;
-
-                if (is_rect) {
-                    for (let i = 0, l = points.length; i < l; i++) {
-                        api.modifyPointCornerRadius(this.__page, shape, i, val);
-                    }
-                } else {
-                    for (let i = 0, l = points.length; i < l; i++) {
-                        api.modifyPointCornerRadius(this.__page, shape, i, 0);
-                    }
-
-                    api.shapeModifyFixedRadius(this.__page, shape as PathShape, val);
-                }
-
-                update_frame_by_points(api, this.__page, shape);
-            }
-            this.__repo.commit();
-        } catch (error) {
-            console.log('shapesModifyFixedRadius', error);
-            this.__repo.rollback();
-        }
-    }
-
     shapesModifyRadius(shapes: ShapeView[], values: number[]) {
         try {
             const api = this.__repo.start("shapesModifyRadius");
@@ -1381,14 +1313,14 @@ export class PageEditor {
                     }
 
                     if (shape instanceof PathShape) {
-                        const points = shape.points;
+                        const points = shape.pathsegs[0].points;
                         for (let _i = 0; _i < 4; _i++) {
                             const val = values[_i];
                             if (points[_i].radius === val || val < 0) {
                                 continue;
                             }
 
-                            api.modifyPointCornerRadius(page, shape, _i, val);
+                            api.modifyPointCornerRadius(page, shape, _i, val, 0);
                         }
                         needUpdateFrame = true;
                     }
@@ -1415,14 +1347,15 @@ export class PageEditor {
                     }
 
                     if (shape instanceof PathShape) {
-                        const points = shape.points;
-                        for (let _i = 0; _i < points.length; _i++) {
-                            if (points[_i].radius === values[0]) {
-                                continue;
-                            }
+                        shape.pathsegs.forEach((seg, index) => {
+                            for (let _i = 0; _i < seg.points.length; _i++) {
+                                if (seg.points[_i].radius === values[0]) {
+                                    continue;
+                                }
 
-                            api.modifyPointCornerRadius(page, shape, _i, values[0]);
-                        }
+                                api.modifyPointCornerRadius(page, shape, _i, values[0], index);
+                            }
+                        });
                         needUpdateFrame = true;
                     }
                     else if (shape instanceof PathShape2) {

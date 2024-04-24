@@ -156,17 +156,6 @@ export class LockMouseHandler extends AsyncApiCaller {
                     }
 
                     if (shape instanceof PathShape) {
-                        const points = shape.points;
-                        for (let _i = 0; _i < 4; _i++) {
-                            const val = values[_i];
-                            if (points[_i].radius === val || val < 0) {
-                                continue;
-                            }
-
-                            api.modifyPointCornerRadius(page, shape, _i, val);
-                        }
-                        updateFrameTargets.add(shape);
-                    } else if (shape instanceof PathShape2) {
                         const points = shape.pathsegs[0].points;
                         for (let _i = 0; _i < 4; _i++) {
                             const val = values[_i];
@@ -184,16 +173,6 @@ export class LockMouseHandler extends AsyncApiCaller {
                 } else {
 
                     if (shape instanceof PathShape) {
-                        const points = shape.points;
-                        for (let _i = 0; _i < points.length; _i++) {
-                            if (points[_i].radius === values[0]) {
-                                continue;
-                            }
-
-                            api.modifyPointCornerRadius(page, shape, _i, values[0]);
-                        }
-                        updateFrameTargets.add(shape);
-                    } else if (shape instanceof PathShape2) {
                         shape.pathsegs.forEach((seg, index) => {
                             for (let _i = 0; _i < seg.points.length; _i++) {
                                 if (seg.points[_i].radius === values[0]) {

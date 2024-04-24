@@ -30,37 +30,38 @@ const minimum_WH = 1; // 用户可设置最小宽高值。以防止宽高在缩�
  * @param end 点的目标🎯位置（root）
  */
 export function pathEdit(api: Api, page: Page, s: PathShape, index: number, end: XY, matrix?: Matrix) {
-    let m = matrix ? matrix : new Matrix();
-    if (!matrix) {
-        const w = s.frame.width, h = s.frame.height;
-        if (w === 0 || h === 0) throw new Error(); // 不可以为0
-        m.multiAtLeft(s.matrix2Root());
-        m.preScale(w, h);
-        m = new Matrix(m.inverse);
-    }
-    const p = s.points[index];
-    if (!p) {
-        return false;
-    }
-    const save = { x: p.x, y: p.y };
-    const _val = m.computeCoord3(end);
-    api.shapeModifyCurvPoint(page, s as PathShape, index, _val);
-    const delta = { x: _val.x - save.x, y: _val.y - save.y };
-    if (!delta.x && !delta.y) {
-        return;
-    }
-    if (p.hasFrom) {
-        api.shapeModifyCurvFromPoint(page, s as PathShape, index, {
-            x: (p.fromX || 0) + delta.x,
-            y: (p.fromY || 0) + delta.y
-        });
-    }
-    if (p.hasTo) {
-        api.shapeModifyCurvToPoint(page, s as PathShape, index, {
-            x: (p.toX || 0) + delta.x,
-            y: (p.toY || 0) + delta.y
-        });
-    }
+    // let m = matrix ? matrix : new Matrix();
+    // if (!matrix) {
+    //     const w = s.frame.width, h = s.frame.height;
+    //     if (w === 0 || h === 0) throw new Error(); // 不可以为0
+    //     m.multiAtLeft(s.matrix2Root());
+    //     m.preScale(w, h);
+    //     m = new Matrix(m.inverse);
+    // }
+    // const p = s.points[index];
+    // if (!p) {
+    //     return false;
+    // }
+    // const save = { x: p.x, y: p.y };
+    // const _val = m.computeCoord3(end);
+    // api.shapeModifyCurvPoint(page, s as PathShape, index, _val);
+    // const delta = { x: _val.x - save.x, y: _val.y - save.y };
+    // if (!delta.x && !delta.y) {
+    //     return;
+    // }
+    // if (p.hasFrom) {
+    //     api.shapeModifyCurvFromPoint(page, s as PathShape, index, {
+    //         x: (p.fromX || 0) + delta.x,
+    //         y: (p.fromY || 0) + delta.y
+    //     });
+    // }
+    // if (p.hasTo) {
+    //     api.shapeModifyCurvToPoint(page, s as PathShape, index, {
+    //         x: (p.toX || 0) + delta.x,
+    //         y: (p.toY || 0) + delta.y
+    //     });
+    // }
+    // todo
 }
 
 /**
@@ -98,7 +99,7 @@ export function pointsEdit(api: Api, page: Page, s: Shape, points: CurvePoint[],
 /**
  * @description 连接线编辑
  */
-export function contact_edit(api: Api, page: Page, s: PathShape, index1: number, index2: number, dx: number, dy: number) { // 以边为操作目标编辑路径
+export function contact_edit(api: Api, page: Page, s: ContactShape, index1: number, index2: number, dx: number, dy: number) { // 以边为操作目标编辑路径
     const m = new Matrix(s.matrix2Root());
     const w = s.frame.width, h = s.frame.height;
 
@@ -275,13 +276,9 @@ export function update_frame_by_points(api: Api, page: Page, s: Shape) {
     m3.preScale(f.width, f.height);
     m1.multiAtLeft(m3.inverse);
 
-    if (s.pathType === 1) {
-        exe(-1, m1, (s as PathShape).points);
-    } else if (s.pathType === 2) {
-        (s as PathShape2).pathsegs.forEach((segment, index) => {
-            exe(index, m1, segment.points);
-        });
-    }
+    (s as PathShape).pathsegs.forEach((segment, index) => {
+        exe(index, m1, segment.points);
+    });
 
     function exe(segment: number, m: Matrix, points: CurvePoint[]) {
         if (!points || !points.length) {
@@ -357,20 +354,6 @@ export function init_curv(shape: Shape, page: Page, api: Api, curve_point: Curve
         api.modifyPointHasFrom(page, __shape, index, true, segment);
         api.modifyPointHasTo(page, __shape, index, true, segment);
 
-    } else {
-        const __shape = shape as PathShape;
-        const apex = getApex(__shape.points, index);
-
-        if (!apex) {
-            return;
-        }
-
-        const { from, to } = apex;
-
-        api.shapeModifyCurvFromPoint(page, __shape, index, from);
-        api.shapeModifyCurvToPoint(page, __shape, index, to);
-        api.modifyPointHasFrom(page, __shape, index, true);
-        api.modifyPointHasTo(page, __shape, index, true);
     }
 
     function getApex(points: CurvePoint[], index: number) {
@@ -410,12 +393,10 @@ export function align_from(shape: Shape, page: Page, api: Api, curve_point: Curv
 }
 
 export function _typing_modify(shape: Shape, page: Page, api: Api, index: number, to_mode: CurveMode, segment = -1) {
-    let point: CurvePoint;
+    let point: CurvePoint | undefined;
 
     if (segment > -1) {
-        point = (shape as PathShape2)?.pathsegs[segment]?.points[index];
-    } else {
-        point = (shape as PathShape).points[index];
+        point = (shape as PathShape).pathsegs[segment]?.points[index];
     }
 
     if (!point) {
@@ -531,15 +512,9 @@ function modify_current_handle_slices(page: Page, api: Api, path_shape: Shape, s
 
 export function after_insert_point(page: Page, api: Api, path_shape: Shape, index: number, segment = -1) {
     let __segment = segment;
-    if (path_shape.pathType === PathType.Editable) {
-        __segment = -1;
-    }
-    let points: CurvePoint[] = [];
-    if (__segment < 0) {
-        points = (path_shape as PathShape).points;
-    } else {
-        points = (path_shape as PathShape2)?.pathsegs[segment]?.points;
-    }
+
+    let points: CurvePoint[] = (path_shape as PathShape)?.pathsegs[segment]?.points;
+
 
     const { previous, next, previous_index, next_index } = __round_curve_point(points, index);
 
@@ -564,8 +539,6 @@ export function __pre_curve(page: Page, api: Api, path_shape: Shape, index: numb
 
     if (segment > -1) {
         point = (path_shape as PathShape2)?.pathsegs[segment].points[index];
-    } else {
-        point = (path_shape as PathShape).points[index];
     }
 
     if (!point) {
@@ -579,13 +552,14 @@ export function __pre_curve(page: Page, api: Api, path_shape: Shape, index: numb
 }
 
 export function replace_path_shape_points(page: Page, shape: PathShape, api: Api, points: CurvePoint[]) {
-    api.deletePoints(page, shape as PathShape, 0, shape.points.length);
-    for (let i = 0, len = points.length; i < len; i++) {
-        const p = importCurvePoint((points[i]));
-        p.id = v4();
-        points[i] = p;
-    }
-    api.addPoints(page, shape as PathShape, points);
+    // todo
+    // api.deletePoints(page, shape as PathShape, 0, shape.points.length);
+    // for (let i = 0, len = points.length; i < len; i++) {
+    //     const p = importCurvePoint((points[i]));
+    //     p.id = v4();
+    //     points[i] = p;
+    // }
+    // api.addPoints(page, shape as PathShape, points);
 }
 
 function _sort_after_clip(points: CurvePoint[], index: number) {
@@ -601,20 +575,20 @@ function _sort_after_clip(points: CurvePoint[], index: number) {
 }
 
 function after_clip(document: Document, page: Page, api: Api, path_shape: PathShape): number {
-    if (path_shape.points.length < 2) {
-        const parent = path_shape.parent;
-        if (!parent) {
-            console.log('!parent');
-            return 0;
-        }
-        const index = (parent as GroupShape).indexOfChild(path_shape);
-        if (index < 0) {
-            console.log('index < 0');
-            return 0;
-        }
-        api.shapeDelete(document, page, parent as GroupShape, index);
-        return 1;
-    }
+    // if (path_shape.points.length < 2) {
+    //     const parent = path_shape.parent;
+    //     if (!parent) {
+    //         console.log('!parent');
+    //         return 0;
+    //     }
+    //     const index = (parent as GroupShape).indexOfChild(path_shape);
+    //     if (index < 0) {
+    //         console.log('index < 0');
+    //         return 0;
+    //     }
+    //     api.shapeDelete(document, page, parent as GroupShape, index);
+    //     return 1;
+    // }
     return 0;
 }
 
@@ -638,309 +612,118 @@ function _apart_points(points: CurvePoint[], index: number) {
 }
 
 function apartPathShape(document: Document, page: Page, api: Api, shape: Shape, index: number, segment = -1) {
-    if (shape.pathType === PathType.Editable) {
-        const _idx = index + 1;
-        const points = (shape as PathShape).points.map(i => importCurvePoint(exportCurvePoint(i)));
+    const __shape = shape as PathShape2;
 
-        const __points1 = new BasicArray<CurvePoint>(...points.slice(0, _idx));
-        const __points2 = new BasicArray<CurvePoint>(...points.slice(_idx));
-
-        __points1[0].hasTo = false;
-        __points2[0].hasTo = false;
-
-        __points1[__points1.length - 1].hasTo = false;
-        __points2[__points2.length - 1].hasTo = false;
-
-        const segments = new BasicArray<PathSegment>();
-        segments.push(new PathSegment([0] as BasicArray<number>, uuid(), __points1, false));
-        segments.push(new PathSegment([1] as BasicArray<number>, uuid(), __points2, false))
-
-        const frame = importShapeFrame(exportShapeFrame(shape.frame));
-        const style = importStyle(exportStyle(shape.style));
-
-        const __shape = new PathShape2(new BasicArray(), uuid(), shape.name, types.ShapeType.Path2, frame, style, segments);
-        addCommonAttr(__shape);
-
-        const index2 = (shape.parent as GroupShape).indexOfChild(shape);
-        api.shapeDelete(document, page, shape.parent as GroupShape, index2);
-        api.shapeInsert(document, page, shape.parent as GroupShape, __shape, index2)
-
-        return __shape;
-    } else if (shape.pathType === PathType.Multi) {
-        const __shape = shape as PathShape2;
-
-        if (segment < 0) {
-            return __shape;
-        }
-
-        const segments = __shape.pathsegs;
-        const __seg = segments[segment];
-
-        if (!__seg) {
-            return __shape;
-        }
-
-        const points = __seg.points.map(i => importCurvePoint(exportCurvePoint(i)));
-        const _idx = index + 1;
-        const __points1 = new BasicArray<CurvePoint>(...points.slice(0, _idx));
-        const __points2 = new BasicArray<CurvePoint>(...points.slice(_idx));
-
-        __points1[0].hasTo = false;
-        __points2[0].hasTo = false;
-
-        __points1[__points1.length - 1].hasTo = false;
-        __points2[__points2.length - 1].hasTo = false;
-
-        let i = __seg.crdtidx[0];
-        let si = segment;
-
-        if (__points1.length > 1) {
-            const s1 = new PathSegment([++i] as BasicArray<number>, uuid(), __points1, false);
-            api.insertSegmentAt(page, __shape, ++si, s1);
-        }
-        if (__points2.length > 1) {
-            const s2 = new PathSegment([++i] as BasicArray<number>, uuid(), __points2, false);
-            api.insertSegmentAt(page, __shape, ++si, s2);
-        }
-
-        api.deleteSegmentAt(page, __shape, segment);
-
+    if (segment < 0) {
         return __shape;
     }
 
-    return shape;
-}
+    const segments = __shape.pathsegs;
+    const __seg = segments[segment];
 
-function get_frame_by_points(points: CurvePoint[]) {
-    const frame = new ShapeFrame(0, 0, 0, 0);
-    if (points.length < 2) {
-        console.log('points.length < 2');
-        return frame;
+    if (!__seg) {
+        return __shape;
     }
-    const first = points[0];
-    frame.x = first.x;
-    frame.y = first.y;
-    let right = frame.x;
-    let bottom = frame.y;
-    for (let i = 1, l = points.length; i < l; i++) {
-        const p = points[i];
-        if (!p) {
-            console.log('get_frame_by_points: !p');
-            break;
-        }
-        if (p.x < frame.x) {
-            frame.x = p.x;
-        }
-        if (p.y < frame.y) {
-            frame.y = p.y;
-        }
-        if (p.x > right) {
-            right = p.x;
-        }
-        if (p.y > bottom) {
-            bottom = p.y;
-        }
+
+    const points = __seg.points.map(i => importCurvePoint(exportCurvePoint(i)));
+    const _idx = index + 1;
+    const __points1 = new BasicArray<CurvePoint>(...points.slice(0, _idx));
+    const __points2 = new BasicArray<CurvePoint>(...points.slice(_idx));
+
+    __points1[0].hasTo = false;
+    __points2[0].hasTo = false;
+
+    __points1[__points1.length - 1].hasTo = false;
+    __points2[__points2.length - 1].hasTo = false;
+
+    let i = __seg.crdtidx[0];
+    let si = segment;
+
+    if (__points1.length > 1) {
+        const s1 = new PathSegment([++i] as BasicArray<number>, uuid(), __points1, false);
+        api.insertSegmentAt(page, __shape, ++si, s1);
     }
-    frame.width = Math.max(minimum_WH, right - frame.x);
-    frame.height = Math.max(minimum_WH, bottom - frame.y);
-    return frame;
-}
-
-function create_path_shape_by_frame(origin: PathShape, frame: ShapeFrame, slice_name: string) {
-    const __style = importStyle(exportStyle(origin.style));
-    const __points = new BasicArray<CurvePoint>();
-    const __ps = new PathShape(new BasicArray(), uuid(), slice_name, ShapeType.Path, frame, __style, __points, false);
-    addCommonAttr(__ps)
-    return __ps;
-}
-
-function insert_part_to_doc(document: Document, page: Page, origin: PathShape, part: PathShape, api: Api) {
-    const parent: GroupShape = origin.parent as GroupShape;
-    if (!parent) {
-        console.log('!parent');
-        return;
+    if (__points2.length > 1) {
+        const s2 = new PathSegment([++i] as BasicArray<number>, uuid(), __points2, false);
+        api.insertSegmentAt(page, __shape, ++si, s2);
     }
-    const index = parent.indexOfChild(origin);
-    return api.shapeInsert(document, page, parent, part, index);
-}
 
-function update_points_xy(page: Page, part: PathShape, points: CurvePoint[], api: Api) {
-    const __m = part.matrix2Parent();
-    __m.preScale(part.frame.width, part.frame.height);
-    const m = new Matrix(__m.inverse);
-    points.forEach(p => {
-        const _p = m.computeCoord2(p.x, p.y);
-        p.x = _p.x;
-        p.y = _p.y;
-    })
-    api.addPoints(page, part, points);
-}
+    api.deleteSegmentAt(page, __shape, segment);
 
-function assemble(document: Document, page: Page, parts: PathShape[], origin: PathShape, api: Api) {
-    const parent = origin.parent as GroupShape;
-    if (!parent) {
-        console.log('assemble: !parent');
-        return;
-    }
-    const index = parent.indexOfChild(origin);
-    if (index < 0) {
-        console.log('assemble: index < 0');
-        return;
-    }
-    const gshape = newGroupShape('图形');
-    return group(document, page, parts, gshape, parent, index, api);
-}
-
-function delele_origin(document: Document, page: Page, origin: PathShape, api: Api) {
-    const parent = origin.parent as GroupShape;
-    if (!parent) {
-        console.log('delele_origin: !parent');
-        return;
-    }
-    const index = parent.indexOfChild(origin);
-    if (index < 0) {
-        console.log('delele_origin: index < 0');
-        return;
-    }
-    api.shapeDelete(document, page, parent, index);
-}
-
-export function apart_path_shape(document: Document, page: Page, api: Api, path_shape: PathShape, index: number) {
-    // 将要拆分图形
-
-    // 拆分结果
-    const data: { code: number, ex: Shape | undefined } = { code: 0, ex: undefined };
-
-    // 闭合路径不存在拆分
-    // if (path_shape.isClosed) {
-    //     console.log('path_shape.isClosed');
-    //     data.code = -1;
-    //     return data;
-    // }
-    //
-    // // 拷贝points数据
-    // const points = path_shape.points.map(i => importCurvePoint(exportCurvePoint(i)));
-    //
-    // if (index === 0 || index === points.length - 2) {
-    //     console.log('index === 0 || index === points.length - 2');
-    //     data.code = -1;
-    //     return data;
-    // }
-    //
-    // // 数据验证、验证完成，开始拆分
-    //
-    // // 1.把点映射到原先图形的父亲坐标系上
-    // points_mapping_to_parent(points, path_shape);
-    // // 2.根据裁剪位置拆分点
-    // const apart = _apart_points(points, index);
-    //
-    // // 3.根据各部分点计算各部分的frame
-    // const frame1 = get_frame_by_points(apart.path1);
-    // const frame2 = get_frame_by_points(apart.path2);
-    //
-    // // 4.根据计算的frame，按照原有图形的样式来生成两个path对象
-    // const __part1 = create_path_shape_by_frame(path_shape, frame1, slice_name);
-    // const __part2 = create_path_shape_by_frame(path_shape, frame2, slice_name);
-    //
-    // // 5.把生成的path对象加入文档
-    // const part1 = insert_part_to_doc(document, page, path_shape, __part1, api) as PathShape;
-    // const part2 = insert_part_to_doc(document, page, path_shape, __part2, api) as PathShape;
-    //
-    // if (!part1 || !part2) {
-    //     console.log('!part1 || !part2');
-    //     data.code = -1;
-    //     return data;
-    // }
-
-    // 6.把1中生成的点映射到生成的path对象上
-    // update_points_xy(page, part1, apart.path1, api);
-    // update_points_xy(page, part2, apart.path2, api);
-    //
-    // // 7.更新frame
-    // update_path_shape_frame(api, page, [part1, part2]);
-    //
-    // // 8.把生成的path组合
-    // const g = assemble(document, page, [part1, part2], path_shape, api);
-    // data.ex = g;
-
-    // const __shape = apartPathShape(page, api, path_shape, index)
-
-    // 9.删除原先图形 done
-    delele_origin(document, page, path_shape, api);
-
-    return data;
+    return __shape;
 }
 
 export function _clip(document: Document, page: Page, api: Api, path_shape: Shape, index: number, segment: number) {
-    if (path_shape.pathType === PathType.Editable) {
-        const shape = path_shape as PathShape
-        if (shape.isClosed) {
-            api.setCloseStatus(page, path_shape, false);
-            const points = _sort_after_clip(shape.points, index);
-            replace_path_shape_points(page, shape, api, points);
-            return path_shape;
-        }
-        const points = shape.points;
-
-        if (points.length < 3) {
-            return shape;
-        }
-
-        if (index === 0) {
-            api.deletePoint(page, shape, index);
-            after_clip(document, page, api, shape);
-            return shape;
-        }
-        if (index === points.length - 2) {
-            api.deletePoint(page, shape, points.length - 1);
-            after_clip(document, page, api, shape);
-            return shape;
-        }
-
-        if (shape.type === ShapeType.Image) {
-            return shape;
-        }
-
-        return apartPathShape(document, page, api, shape, index, segment);
-    } else if (path_shape.pathType === PathType.Multi) {
-        const shape = path_shape as PathShape2
-        const __segment = shape.pathsegs[segment];
-
-        if (!__segment) {
-            return shape;
-        }
-
-        if (__segment.isClosed) {
-            const crdtidx = __segment.crdtidx;
-            const points = new BasicArray<CurvePoint>(..._sort_after_clip(__segment.points, index));
-            const s = new PathSegment(crdtidx, uuid(), points, false);
-            api.insertSegmentAt(page, shape, segment, s);
-            api.deleteSegmentAt(page, shape, segment + 1);
-            return shape;
-        }
-
-        const points = __segment.points;
-
-        if (points.length < 3) {
-            return shape;
-        }
-
-        if (index === 0) {
-            api.deletePoint(page, shape, index, segment);
-            return shape;
-        }
-
-        if (index === points.length - 2) {
-            api.deletePoint(page, shape, points.length - 1, segment);
-
-            if (__segment.points.length < 2) {
-                api.deleteSegmentAt(page, shape, segment);
-            }
-            return shape;
-        }
-
-        return apartPathShape(document, page, api, shape, index, segment);
-    }
+    // todo
+    // if (path_shape.pathType === PathType.Editable) {
+    //     const shape = path_shape as PathShape
+    //     if (shape.isClosed) {
+    //         api.setCloseStatus(page, path_shape, false);
+    //         const points = _sort_after_clip(shape.points, index);
+    //         replace_path_shape_points(page, shape, api, points);
+    //         return path_shape;
+    //     }
+    //     const points = shape.points;
+    //
+    //     if (points.length < 3) {
+    //         return shape;
+    //     }
+    //
+    //     if (index === 0) {
+    //         api.deletePoint(page, shape, index);
+    //         after_clip(document, page, api, shape);
+    //         return shape;
+    //     }
+    //     if (index === points.length - 2) {
+    //         api.deletePoint(page, shape, points.length - 1);
+    //         after_clip(document, page, api, shape);
+    //         return shape;
+    //     }
+    //
+    //     if (shape.type === ShapeType.Image) {
+    //         return shape;
+    //     }
+    //
+    //     return apartPathShape(document, page, api, shape, index, segment);
+    // } else if (path_shape.pathType === PathType.Multi) {
+    //     const shape = path_shape as PathShape2
+    //     const __segment = shape.pathsegs[segment];
+    //
+    //     if (!__segment) {
+    //         return shape;
+    //     }
+    //
+    //     if (__segment.isClosed) {
+    //         const crdtidx = __segment.crdtidx;
+    //         const points = new BasicArray<CurvePoint>(..._sort_after_clip(__segment.points, index));
+    //         const s = new PathSegment(crdtidx, uuid(), points, false);
+    //         api.insertSegmentAt(page, shape, segment, s);
+    //         api.deleteSegmentAt(page, shape, segment + 1);
+    //         return shape;
+    //     }
+    //
+    //     const points = __segment.points;
+    //
+    //     if (points.length < 3) {
+    //         return shape;
+    //     }
+    //
+    //     if (index === 0) {
+    //         api.deletePoint(page, shape, index, segment);
+    //         return shape;
+    //     }
+    //
+    //     if (index === points.length - 2) {
+    //         api.deletePoint(page, shape, points.length - 1, segment);
+    //
+    //         if (__segment.points.length < 2) {
+    //             api.deleteSegmentAt(page, shape, segment);
+    //         }
+    //         return shape;
+    //     }
+    //
+    //     return apartPathShape(document, page, api, shape, index, segment);
+    // }
     return path_shape;
 }
 
@@ -952,8 +735,9 @@ export function update_path_shape_frame(api: Api, page: Page, shapes: PathShape[
 }
 
 export function init_points(api: Api, page: Page, s: PathShape, points: CurvePoint[]) {
-    api.deletePoints(page, s as PathShape, 0, s.points.length);
-    api.addPoints(page, s as PathShape, points);
+    // todo
+    // api.deletePoints(page, s as PathShape, 0, s.points.length);
+    // api.addPoints(page, s as PathShape, points);
 }
 
 export function modify_points_xy(api: Api, page: Page, s: Shape, actions: {
@@ -968,39 +752,31 @@ export function modify_points_xy(api: Api, page: Page, s: Shape, actions: {
 
     m = new Matrix(m.inverse);
 
-    if (s.pathType === PathType.Editable) {
-        for (let i = 0, l = actions.length; i < l; i++) {
-            const action = actions[i];
-            const new_xy = m.computeCoord2(action.x, action.y);
-            api.shapeModifyCurvPoint(page, s, action.index, new_xy);
-        }
-    } else if (s.pathType === PathType.Multi) {
-        for (let i = 0, l = actions.length; i < l; i++) {
-            const action = actions[i];
-            const new_xy = m.computeCoord2(action.x, action.y);
-            api.shapeModifyCurvPoint(page, s, action.index, new_xy, action.segment);
-        }
+    if (s.pathType !== PathType.Editable) {
+        return;
+    }
+
+    for (let i = 0, l = actions.length; i < l; i++) {
+        const action = actions[i];
+        const new_xy = m.computeCoord2(action.x, action.y);
+        api.shapeModifyCurvPoint(page, s, action.index, new_xy, action.segment);
     }
 
     update_frame_by_points(api, page, s);
 }
 
 export function is_straight(shape: Shape) {
-    if (!(shape instanceof PathShape)) {
+    if (!(shape instanceof PathShape || shape.type === ShapeType.Contact)) {
         return false;
     }
-    if (shape.type === ShapeType.Contact) {
-        return false;
-    }
-    const points = shape.points;
-    if (points.length !== 2) {
-        return false;
-    }
-    return !points[0].hasFrom && !points[1].hasTo;
+
+    const points = (shape as PathShape).pathsegs[0].points;
+
+    return points.length === 2 && !points[0].hasFrom && !points[1].hasTo; // 两个点的，那就是直线
 }
 
 export function get_rotate_for_straight(shape: PathShape, v: number) {
-    const points = (shape as PathShape).points;
+    const points = (shape as PathShape)?.pathsegs[0]?.points;
 
     const f = shape.frame, m = shape.matrix2Root();
     m.preScale(f.width, f.height);

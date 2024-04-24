@@ -561,11 +561,11 @@ export class Api {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.shapeModifyPathShapeClosedStatus(shape, isClosed, segment));
     }
-    insertSegmentAt(page: Page, shape: PathShape2, index: number, segment: PathSegment) {
+    insertSegmentAt(page: Page, shape: PathShape, index: number, segment: PathSegment) {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.insertSegmentAt(shape, index, segment));
     }
-    deleteSegmentAt(page: Page, shape: PathShape2, segment: number) {
+    deleteSegmentAt(page: Page, shape: PathShape, segment: number) {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.deleteSegmentAt(shape, segment));
     }

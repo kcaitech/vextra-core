@@ -16,7 +16,7 @@ function equal_with_mean(a: number, b: number) {
  * @description 修改直线的width，操作的是直线段的第二个CurvePoint
  */
 function modify_straight_length(api: Api, page: Page, shape: PathShape, val: number) {
-    const points = shape.points;
+    const points = shape.pathsegs[0].points;
     const p1 = points[0];
     const p2 = points[1];
 

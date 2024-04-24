@@ -62,24 +62,6 @@ export class PathModifier extends AsyncApiCaller {
             const shape = this.shape;
 
             if (shape.pathType === PathType.Editable) {
-                const points = (this.shape as PathShape).points;
-                const actions = units.get(0) || [];
-                for (let i = 0; i < actions.length; i++) {
-                    const unit = actions[i];
-                    const point = points[unit.index];
-                    if (!point) {
-                        continue;
-                    }
-
-                    this.api.shapeModifyCurvPoint(page, shape, unit.index, { x: unit.x, y: unit.y });
-                    if (point.hasFrom) {
-                        api.shapeModifyCurvFromPoint(page, shape, unit.index, { x: unit.fromX, y: unit.fromY });
-                    }
-                    if (point.hasTo) {
-                        api.shapeModifyCurvToPoint(page, shape, unit.index, { x: unit.toX, y: unit.toY });
-                    }
-                }
-            } else if (shape.pathType === PathType.Multi) {
                 units.forEach((actions, segment) => {
                     const points = (shape as PathShape2).pathsegs[segment].points;
 
@@ -130,8 +112,6 @@ export class PathModifier extends AsyncApiCaller {
             let mode: CurveMode | undefined = undefined;
 
             if (shape.pathType === PathType.Editable) {
-                mode = (shape as PathShape).points[index].mode;
-            } else if (shape.pathType === PathType.Multi) {
                 mode = (shape as PathShape2)?.pathsegs[segment]?.points[index]?.mode;
             }
 
