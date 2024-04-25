@@ -130,25 +130,6 @@ inject['LineShape']['before'] = `\
     }
 `
 
-// inject['TextShape'] = {} as any;
-// inject['TextShape']['before'] = `\
-//     // inject code
-//     if (!source.pathsegs?.length) { // 兼容旧数据
-//         const seg: types.PathSegment = {
-//             crdtidx: [0],
-//             id: '39e508e8-a1bb-4b55-ad68-aa2a9b3b447a',
-//             points:[],
-//             isClosed: true
-//         }
-//
-//         if ((source as any)?.points?.length) {
-//             seg.points.push(...(source as any)?.points);
-//         }
-//
-//         source.pathsegs = [seg];
-//     }
-// `
-
 inject['CutoutShape'] = {} as any;
 inject['CutoutShape']['before'] = `\
     // inject code
