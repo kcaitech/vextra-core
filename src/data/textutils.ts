@@ -299,7 +299,7 @@ export function newText(textAttr?: TextAttr): Text {
     para.attr.minimumLineHeight = 24;
     text.paras.push(para);
     const span = new Span(para.length);
-    span.fontName = "PingFangSC-Regular";
+    span.fontName = "PingFang SC";
     span.fontSize = 14;
     span.color = new Color(1, 51, 51, 51);
     para.spans.push(span);
@@ -318,7 +318,7 @@ export function newText2(textAttr?: TextAttr, paraAttr?: ParaAttr, spanAttr?: Sp
     para.attr.minimumLineHeight = 24;
     text.paras.push(para);
     const span = new Span(para.length);
-    span.fontName = "PingFangSC-Regular";
+    span.fontName = "PingFang SC";
     span.fontSize = 14;
     span.color = new Color(0.85, 0, 0, 0);
     para.spans.push(span);

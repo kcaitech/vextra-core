@@ -1,4 +1,4 @@
-import { BoolOp, BoolShape, Border, Path, PathShape, ShapeFrame, parsePath } from "../data/classes";
+import { BoolOp, BoolShape, Border, BorderPosition, Path, PathShape, ShapeFrame, parsePath } from "../data/classes";
 import { ShapeView } from "./shape";
 import { DViewCtx, PropsType } from "./viewctx";
 import { IPalPath, gPal } from "../basic/pal";
@@ -107,6 +107,78 @@ function hasFill(shape: ShapeView) {
     return false;
 }
 
+function border2path(shape: ShapeView, borders: Border[]): Path {
+    // 还要判断边框的位置
+    let insidewidth = 0;
+    let outsidewidth = 0;
+
+    borders.forEach((b) => {
+        if (!b.isEnabled) return;
+        const sideSetting = b.sideSetting;
+        // todo
+        const thickness = (sideSetting.thicknessBottom + sideSetting.thicknessLeft + sideSetting.thicknessTop + sideSetting.thicknessRight) / 4;
+        if (b.position === BorderPosition.Center) {
+            insidewidth = Math.max(insidewidth, thickness / 2);
+            outsidewidth = Math.max(outsidewidth, thickness / 2);
+        } else if (b.position === BorderPosition.Inner) {
+            insidewidth = Math.max(insidewidth, thickness);
+        } else if (b.position === BorderPosition.Outer) {
+            outsidewidth = Math.max(outsidewidth, thickness);
+        }
+    })
+
+    if (insidewidth === 0 && outsidewidth === 0) return new Path();
+    if (insidewidth === outsidewidth) {
+        const path = shape.getPath();
+        const p0 = gPal.makePalPath(path.toString());
+        const newpath = p0.stroke({ width: (insidewidth + outsidewidth) });
+        p0.delete();
+        return new Path(newpath);
+    }
+    if (insidewidth === 0) {
+        const path = shape.getPathStr();
+        const p0 = gPal.makePalPath(path);
+        const p1 = gPal.makePalPath(path);
+        p0.stroke({ width: outsidewidth * 2 });
+        p0.subtract(p1);
+        const newpath = p0.toSVGString();
+        p0.delete();
+        p1.delete();
+        return new Path(newpath);
+    }
+    else if (outsidewidth === 0) {
+        const path = shape.getPathStr();
+        const p0 = gPal.makePalPath(path);
+        const p1 = gPal.makePalPath(path);
+        p0.stroke({ width: insidewidth * 2 });
+        p0.intersection(p1);
+        const newpath = p0.toSVGString();
+        p0.delete();
+        p1.delete();
+        return new Path(newpath);
+    }
+    else {
+        const path = shape.getPathStr();
+        const p0 = gPal.makePalPath(path);
+        const p1 = gPal.makePalPath(path);
+        const p2 = gPal.makePalPath(path);
+        p0.stroke({ width: insidewidth * 2 });
+        p1.stroke({ width: outsidewidth * 2 });
+
+        if (insidewidth > outsidewidth) {
+            p0.intersection(p2);
+        } else {
+            p1.subtract(p2);
+        }
+        p0.union(p1);
+        const newpath = p0.toSVGString();
+        p0.delete();
+        p1.delete();
+        p2.delete();
+        return new Path(newpath);
+    }
+}
+
 function render2path(shape: ShapeView): Path {
     const shapeIsGroup = shape instanceof GroupShapeView;
     let fixedRadius: number | undefined;
@@ -114,20 +186,10 @@ function render2path(shape: ShapeView): Path {
     if (!shapeIsGroup) {
         if (!shape.isVisible) return new Path();
         if (shape instanceof TextShapeView) return shape.getTextPath().clone();
-
+        // todo pathshape2
         if (shape.data instanceof PathShape && (!shape.data.isClosed || !hasFill(shape))) {
-            const thickness = shape.getBorders().reduce((w: number, b: Border) => {
-                return Math.max(w, b.thickness);
-            }, 0);
-            if (thickness === 0) return new Path();
-            // return shape.getPath().wrap(thickness, 0);
-            const path = shape.getPath();
-            const p0 = gPal.makePalPath(path.toString());
-            const newpath = p0.stroke({width: thickness});
-            p0.delete();
-            return new Path(newpath);
+            return border2path(shape, shape.getBorders());
         }
-
         return shape.getPath().clone();
     } else if (shape.childs.length === 0) {
         return new Path();
@@ -245,7 +307,7 @@ export class BoolShapeView extends GroupShapeView {
     }
 
     protected renderBorders(): EL[] {
-        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr());
+        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.data);
     }
 
     getPath() {

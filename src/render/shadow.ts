@@ -47,7 +47,7 @@ shadowOri[ShadowPosition.Outer] = function (h: Function, shadow: Shadow, frame: 
             }
         }
     }
-    const border = borderR(h, borders, frame, path)
+    const border = borderR(h, borders, frame, path, undefined)
 
     const body_props: any = {
         d: path,

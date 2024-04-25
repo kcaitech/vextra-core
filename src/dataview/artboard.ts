@@ -22,7 +22,7 @@ export class ArtboradView extends GroupShapeView {
     }
 
     protected renderBorders(): EL[] {
-        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr());
+        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.data);
     }
 
     protected renderProps(): { [key: string]: string } {

@@ -43,6 +43,12 @@
         },
         "borderStyle": {
             "$ref": "./border-style.json"
+        },
+        "cornerType": {
+            "$ref": "./corner-type.json"
+        },
+        "sideSetting": {
+            "$ref": "./border-side-setting.json"
         }
     },
     "required": [
@@ -54,7 +60,9 @@
         "color",
         "position",
         "thickness",
-        "borderStyle"
+        "borderStyle",
+        "cornerType",
+        "sideSetting"
     ],
     "additionalProperties": false
 }
