@@ -1,12 +1,25 @@
 import { AsyncApiCaller } from "./AsyncApiCaller";
 import { CoopRepository } from "../coop/cooprepo";
 import { Document } from "../../data/document";
-import { adapt2Shape, PageView, ShapeView } from "../../dataview";
-import { CurveMode, CurvePoint, PathShape, Shape } from "../../data/shape";
+import { adapt2Shape, GroupShapeView, PageView, ShapeView } from "../../dataview";
+import {
+    CurveMode,
+    CurvePoint,
+    GroupShape,
+    PathSegment,
+    PathShape,
+    Shape,
+    ShapeFrame,
+    ShapeType
+} from "../../data/shape";
 import { BasicArray } from "../../data/basic";
 import { uuid } from "../../basic/uuid";
 import { __pre_curve, after_insert_point, update_frame_by_points } from "../utils/path";
 import { PathType } from "../../data/consts";
+import { addCommonAttr, newflatStyle, newStyle } from "../creator";
+import { Border, BorderStyle, FillType } from "../../data/style";
+import { Color } from "../../data/color";
+import * as types from "../../data/typesdefine";
 
 export type ModifyUnits = Map<number,
     {
@@ -24,31 +37,60 @@ export type ModifyUnits = Map<number,
  * @description 路径处理器
  */
 export class PathModifier extends AsyncApiCaller {
-    readonly shape: Shape;
+    shape: Shape | undefined;
 
-    constructor(repo: CoopRepository, document: Document, page: PageView, shape: ShapeView) {
+    constructor(repo: CoopRepository, document: Document, page: PageView) {
         super(repo, document, page);
-
-        this.shape = adapt2Shape(shape);
     }
 
     start() {
         return this.__repo.start('path-modify');
     }
 
-    addPoint(segment: number, index: number) {
+    createVec(name: string, frame: ShapeFrame, parent: GroupShapeView) {
         try {
-            let __segment = this.shape.pathType === PathType.Editable ? -1 : segment;
+            const style = newflatStyle();
+
+            const border = new Border([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), types.BorderPosition.Center, 1, new BorderStyle(0, 0));
+            style.borders.push(border);
+
+            const p1 = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight);
+            const segment = new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(p1), true);
+            const vec = new PathShape(new BasicArray(), uuid(), name, ShapeType.Path, frame, style, new BasicArray<PathSegment>(segment));
+
+            addCommonAttr(vec);
+
+            const env = adapt2Shape(parent) as GroupShape;
+
+            this.api.shapeInsert(this.__document, this.page, env, vec, env.childs.length);
+
+            this.shape = env.childs[env.childs.length - 1];
+
+            this.updateView();
+
+            return this.shape;
+        } catch (e) {
+            console.error('PathModifier.createVec', e);
+            this.exception = true;
+            return false;
+        }
+    }
+
+    addPoint(shape: ShapeView, segment: number, index: number) {
+        try {
+            const _shape = adapt2Shape(shape);
+            this.shape = _shape;
+            let __segment = _shape.pathType === PathType.Editable ? -1 : segment;
 
             this.api.addPointAt(
                 this.page,
-                this.shape,
+                _shape,
                 index,
                 new CurvePoint(new BasicArray<number>(), uuid(), 0, 0, CurveMode.Straight),
                 __segment
             );
 
-            after_insert_point(this.page, this.api, this.shape, index, __segment);
+            after_insert_point(this.page, this.api, _shape, index, __segment);
 
             this.updateView();
             return true;
@@ -58,14 +100,15 @@ export class PathModifier extends AsyncApiCaller {
         }
     }
 
-    execute(units: ModifyUnits) {
+    execute(_shape: ShapeView, units: ModifyUnits) {
         try {
             const api = this.api;
             const page = this.page;
-            const shape = this.shape;
+            const shape = adapt2Shape(_shape);
+            this.shape = shape;
 
             if (shape.pathType !== PathType.Editable) {
-               return;
+                return;
             }
 
             units.forEach((actions, segment) => {
@@ -102,19 +145,20 @@ export class PathModifier extends AsyncApiCaller {
         }
     }
 
-    preCurve(index: number, segment = -1) {
+    preCurve(shape: ShapeView, index: number, segment = -1) {
+        this.shape = adapt2Shape(shape);
         __pre_curve(this.page, this.api, this.shape, index, segment);
     }
 
-    execute4handle(index: number, side: 'from' | 'to',
+    execute4handle(_shape: ShapeView, index: number, side: 'from' | 'to',
                    from: { x: number, y: number },
                    to: { x: number, y: number },
                    segment = -1) {
         try {
             const api = this.api;
             const page = this.page;
+            this.shape = adapt2Shape(_shape);
             const shape = this.shape;
-
             let mode: CurveMode | undefined = undefined;
 
             if (shape.pathType === PathType.Editable) {
@@ -141,7 +185,7 @@ export class PathModifier extends AsyncApiCaller {
 
     commit() {
         if (this.__repo.isNeedCommit() && !this.exception) {
-            update_frame_by_points(this.api, this.page, this.shape);
+            update_frame_by_points(this.api, this.page, this.shape!);
 
             this.__repo.commit();
         } else {
