@@ -12,7 +12,6 @@ import {
     Shape,
     TextShape,
     ImageShape,
-    PathShape2,
     PathSegment,
     CutoutShape,
     SymbolUnionShape,
