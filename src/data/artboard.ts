@@ -18,6 +18,7 @@ import { RadiusType } from "./consts";
 export class Artboard extends GroupShape implements classes.Artboard {
     typeId = 'artboard';
     cornerRadius?: CornerRadius
+    haveEdit?: boolean | undefined;
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
@@ -25,7 +26,8 @@ export class Artboard extends GroupShape implements classes.Artboard {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(GroupShape | Shape | ImageShape | PathShape | RectShape | TextShape)>
+        childs: BasicArray<(GroupShape | Shape | ImageShape | PathShape | RectShape | TextShape)>,
+        haveEdit?: boolean
     ) {
         super(
             crdtidx,
@@ -36,6 +38,7 @@ export class Artboard extends GroupShape implements classes.Artboard {
             style,
             childs
         )
+        this.haveEdit = haveEdit;
     }
 
     getOpTarget(path: string[]) {

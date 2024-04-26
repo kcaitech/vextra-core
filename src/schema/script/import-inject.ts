@@ -298,7 +298,7 @@ inject['TableCell']['before'] = `\
                 text: "\\n",
                 spans: [
                     {
-                        fontName: "PingFangSC-Regular",
+                        fontName: "PingFang SC",
                         fontSize: 14,
                         length: 1,
                         color: {
@@ -334,5 +334,19 @@ inject['TextAttr']['before'] = `\
     const _source = source as any;
     if (typeof _source.bold === 'boolean') {
         _source.bold = _source.bold ? 700 : 400;
+    }
+`
+
+inject['Border'] = {};
+inject['Border']['before'] = `\
+    // inject code
+    if (!(source as any).sideSetting) {
+        source.sideSetting = {
+            sideType: types.SideType.Normal,
+            thicknessTop: source.thickness,
+            thicknessLeft: source.thickness,
+            thicknessBottom: source.thickness,
+            thicknessRight: source.thickness,
+        }
     }
 `

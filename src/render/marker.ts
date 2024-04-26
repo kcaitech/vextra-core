@@ -3,7 +3,7 @@ import { Border, FillType, MarkerType, Style } from "../data/style";
 const marker: { [key: string]: (h: Function, style: Style, border: Border, id: number | string) => any } = {};
 marker[MarkerType.FilledArrow] = function (h: Function, style: Style, border: Border, id: number | string) {
     const color = border.color;
-    const range = border.thickness;
+    const range = border.sideSetting.thicknessTop;
     const marker_props: any = {
         id: "arrow-" + id,
         viewBox: `0 0 ${range * 6} ${range * 6}`,
@@ -13,10 +13,10 @@ marker[MarkerType.FilledArrow] = function (h: Function, style: Style, border: Bo
         markerHeight: range * 6,
         orient: "auto-start-reverse"
     }
-    if (range === 1) {
+    if (range <= 1) {
         delete marker_props.viewBox;
-        marker_props.markerWidth = range * 12;
-        marker_props.markerHeight = range * 12
+        marker_props.markerWidth = 12;
+        marker_props.markerHeight = 12
     }
     const fill_color = border.fillType === FillType.Gradient ? 'white' : "rgb(" + color.red + "," + color.green + "," + color.blue + ")"
     const marker_content_props: any = {
@@ -28,7 +28,7 @@ marker[MarkerType.FilledArrow] = function (h: Function, style: Style, border: Bo
 }
 marker[MarkerType.OpenArrow] = function (h: Function, style: Style, border: Border, id: number | string) {
     const color = border.color;
-    const range = border.thickness;
+    const range = border.sideSetting.thicknessTop;
     let marker_props: any = {
         id: "arrow-" + id,
         viewBox: `0 0 ${range * 3} ${range * 6}`,
@@ -38,10 +38,10 @@ marker[MarkerType.OpenArrow] = function (h: Function, style: Style, border: Bord
         markerHeight: range * 6,
         orient: "auto-start-reverse"
     }
-    if (range === 1) {
+    if (range <= 1) {
         delete marker_props.viewBox;
-        marker_props.markerWidth = range * 12;
-        marker_props.markerHeight = range * 12
+        marker_props.markerWidth = 12;
+        marker_props.markerHeight = 12
     }
     const fill_color = border.fillType === FillType.Gradient ? 'white' : "rgb(" + color.red + "," + color.green + "," + color.blue + ")"
     const marker_content_props: any = {
@@ -55,7 +55,7 @@ marker[MarkerType.OpenArrow] = function (h: Function, style: Style, border: Bord
 }
 marker[MarkerType.FilledCircle] = function (h: Function, style: Style, border: Border, id: number | string) {
     const color = border.color;
-    const range = border.thickness;
+    const range = border.sideSetting.thicknessTop;
     const marker_props: any = {
         id: "arrow-" + id,
         viewBox: `0 0 ${range * 6} ${range * 6}`,
@@ -65,10 +65,10 @@ marker[MarkerType.FilledCircle] = function (h: Function, style: Style, border: B
         markerHeight: range * 6,
         orient: "auto-start-reverse"
     }
-    if (range === 1) {
+    if (range <= 1) {
         delete marker_props.viewBox;
-        marker_props.markerWidth = range * 12;
-        marker_props.markerHeight = range * 12
+        marker_props.markerWidth = 12;
+        marker_props.markerHeight = 12
     }
     const fill_color = border.fillType === FillType.Gradient ? 'white' : "rgb(" + color.red + "," + color.green + "," + color.blue + ")"
     const marker_content_props: any = {
@@ -80,7 +80,7 @@ marker[MarkerType.FilledCircle] = function (h: Function, style: Style, border: B
 }
 marker[MarkerType.FilledSquare] = function (h: Function, style: Style, border: Border, id: number | string) {
     const color = border.color;
-    const range = border.thickness;
+    const range = border.sideSetting.thicknessTop;
     const marker_props: any = {
         id: "arrow-" + id,
         viewBox: `0 0 ${range * 6} ${range * 6}`,
@@ -90,10 +90,10 @@ marker[MarkerType.FilledSquare] = function (h: Function, style: Style, border: B
         markerHeight: range * 6,
         orient: "auto-start-reverse"
     }
-    if (range === 1) {
+    if (range <= 1) {
         delete marker_props.viewBox;
-        marker_props.markerWidth = range * 12;
-        marker_props.markerHeight = range * 12
+        marker_props.markerWidth = 12;
+        marker_props.markerHeight = 12
     }
     const fill_color = border.fillType === FillType.Gradient ? 'white' : "rgb(" + color.red + "," + color.green + "," + color.blue + ")"
     const marker_content_props: any = {
@@ -105,7 +105,7 @@ marker[MarkerType.FilledSquare] = function (h: Function, style: Style, border: B
 }
 marker[MarkerType.Square] = function (h: Function, style: Style, border: Border, id: number | string) {
     const color = border.color;
-    const range = border.thickness;
+    const range = border.sideSetting.thicknessTop;
     const marker_props: any = {
         id: "arrow-" + id,
         viewBox: "0 0 10 10",
@@ -125,7 +125,7 @@ marker[MarkerType.Square] = function (h: Function, style: Style, border: Border,
 }
 marker[MarkerType.Round] = function (h: Function, style: Style, border: Border, id: number | string) {
     const color = border.color;
-    const range = border.thickness;
+    const range = border.sideSetting.thicknessTop;
     const marker_props: any = {
         id: "arrow-" + id,
         viewBox: `0 0 ${range * 6} ${range * 6}`,
@@ -135,10 +135,10 @@ marker[MarkerType.Round] = function (h: Function, style: Style, border: Border, 
         markerHeight: range,
         orient: "auto-start-reverse"
     }
-    if (range === 1) {
-        marker_props.markerWidth = range * 2;
-        marker_props.markerHeight = range * 2
-        marker_props.viewBox = `0 0 ${range * 12} ${range * 12}` ;
+    if (range <= 1) {
+        marker_props.markerWidth = 2;
+        marker_props.markerHeight = 2
+        marker_props.viewBox = `0 0 ${12} ${12}` ;
     }
     const fill_color = border.fillType === FillType.Gradient ? 'white' : "rgb(" + color.red + "," + color.green + "," + color.blue + ")"
     const marker_content_props: any = {

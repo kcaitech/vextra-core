@@ -103,7 +103,7 @@ export class Shape extends Basic implements classes.Shape {
     shouldBreakMaskChain?: boolean
     varbinds?: BasicMap<string, string>
 
-    // isClosed: boolean = true;
+    haveEdit?: boolean | undefined;
 
     constructor(
         crdtidx: BasicArray<number>,
@@ -111,7 +111,7 @@ export class Shape extends Basic implements classes.Shape {
         name: string,
         type: ShapeType,
         frame: ShapeFrame,
-        style: Style
+        style: Style,
     ) {
         super()
         this.crdtidx = crdtidx
@@ -940,7 +940,6 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
 
 export class RectShape extends PathShape implements classes.RectShape {
     typeId = 'rect-shape'
-
     constructor(
         crdtidx: BasicArray<number>,
         id: string,

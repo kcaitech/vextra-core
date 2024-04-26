@@ -51,6 +51,10 @@ export class DataLoader implements IDataLoader {
         this.documentPath = documentPath;
     }
 
+    public setStorage(storage: storage.IStorage) {
+        this.remoteLoader = new RemoteLoader(storage);
+    }
+
     async loadDocumentMeta(versionId?: string): Promise<DocumentMeta> {
         const json: IJSON = await this.remoteLoader.loadJson(`${this.documentPath}/document-meta.json`, versionId)
         return importDocumentMeta(json as types.DocumentMeta, undefined)
@@ -131,5 +135,8 @@ export async function importDocument(storage: storage.IStorage, documentPath: st
         }
     })();
 
-    return document;
+    return {
+        document: document,
+        loader: loader,
+    };
 }
