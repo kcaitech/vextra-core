@@ -12,6 +12,7 @@ import { Document, Color } from "../data/classes";
 import { AsyncBorderThickness, AsyncGradientEditor, Status } from "./controller";
 import { TableCellView, TableView } from "../dataview";
 import { cell4edit } from "./symbol";
+import { AsyncTextAttrEditor } from "./textshape";
 
 const MinCellSize = TableShape.MinCellSize;
 const MaxColCount = TableShape.MaxColCount;
@@ -1468,5 +1469,85 @@ export class TableEditor extends ShapeEditor {
             console.error(error);
             this.__repo.rollback();
         }
+    }
+    public asyncSetTableAttr(range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }): AsyncTextAttrEditor {
+        const api = this.__repo.start("asyncSetTableAttr");
+        let status: Status = Status.Pending;
+        const execute_char_spacing = (kerning: number) => {
+            status = Status.Pending;
+            try {
+                if (range) {
+                    this._initCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd, api);
+                    const cells = this.view.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
+                    cells.forEach((c) => {
+                        const cell = c.cell;
+                        if (cell && cell.cellType === TableCellType.Text && cell.data.parent) {
+                            api.textModifyKerning(this.__page, cell as TextShapeLike, kerning, 0, cell.text.length);
+                            this.fixFrameByLayout(cell, this.view, api);
+                        }
+                    })
+                }
+                else {
+                    api.tableModifyTextKerning(this.__page, this.shape, kerning);
+                    const cells = this.view.childs as TableCellView[];
+                    cells.forEach((cell) => {
+                        if (cell && cell.cellType === TableCellType.Text && cell.data.parent) {
+                            api.textModifyKerning(this.__page, cell as TextShapeLike, kerning, 0, cell.text.length);
+                            this.fixFrameByLayout(cell, this.view, api);
+                        }
+                    })
+                }
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const execute_line_height = (lineHeight: number) => {
+            status = Status.Pending;
+            try {
+                if (range) {
+                    this._initCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd, api);
+                    const cells = this.view.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
+                    cells.forEach((c) => {
+                        const cell = c.cell;
+                        if (cell && cell.cellType === TableCellType.Text && cell.data.parent) {
+                            const length = cell.text.length;
+                            api.textModifyMinLineHeight(this.__page, cell as TextShapeLike, lineHeight, 0, length);
+                            api.textModifyMaxLineHeight(this.__page, cell as TextShapeLike, lineHeight, 0, length);
+                            this.fixFrameByLayout(cell, this.view, api);
+                        }
+                    })
+                }
+                else {
+                    api.tableModifyTextMinLineHeight(this.__page, this.shape, lineHeight);
+                    api.tableModifyTextMaxLineHeight(this.__page, this.shape, lineHeight);
+                    const cells = this.view.childs as TableCellView[];
+                    cells.forEach((cell) => {
+                        if (cell && cell.cellType === TableCellType.Text && cell.data.parent) {
+                            const length = cell.text.length;
+                            api.textModifyMinLineHeight(this.__page, cell as TextShapeLike, lineHeight, 0, length);
+                            api.textModifyMaxLineHeight(this.__page, cell as TextShapeLike, lineHeight, 0, length);
+                            this.fixFrameByLayout(cell, this.view, api);
+                        }
+                    })
+                }
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const close = () => {
+            if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
+                this.__repo.commit();
+            } else {
+                this.__repo.rollback();
+            }
+            return undefined;
+        }
+        return { execute_char_spacing, execute_line_height, close }
     }
 }

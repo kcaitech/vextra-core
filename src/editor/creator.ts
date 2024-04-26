@@ -61,7 +61,7 @@ import { TableShape } from "../data/table";
 
 export { newText, newText2 } from "../data/textutils";
 // import i18n from '../../i18n' // data不能引用外面工程的内容
-import { ContactForm, CrdtNumber } from "../data/baseclasses";
+import { BorderSideSetting, ContactForm, CrdtNumber, SideType } from "../data/baseclasses";
 import { Matrix } from "../basic/matrix";
 import { ResizingConstraints2 } from "../data/consts";
 import { SymbolMgr } from "../data/symbolmgr";
@@ -294,7 +294,8 @@ export function newLineShape(name: string, frame: ShapeFrame): LineShape {
     const ePoint = new CurvePoint([1] as BasicArray<number>, uuid(), 1, 0, CurveMode.Straight);
     frame.height = 1;
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
-    const border = new Border([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), types.BorderPosition.Center, 1, new BorderStyle(0, 0));
+    const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+    const border = new Border([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), types.BorderPosition.Center, 1, new BorderStyle(0, 0), types.CornerType.Miter, side);
     style.borders.push(border);
     const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, false);
     const shape = new LineShape(new BasicArray(), uuid(), name, types.ShapeType.Line, frame, style, new BasicArray<PathSegment>(segment));
@@ -310,7 +311,8 @@ export function newArrowShape(name: string, frame: ShapeFrame): LineShape {
     const ePoint = new CurvePoint([1] as BasicArray<number>, uuid(), 1, 0, CurveMode.Straight);
     frame.height = 1;
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
-    const border = new Border([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), types.BorderPosition.Center, 1, new BorderStyle(0, 0));
+    const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+    const border = new Border([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), types.BorderPosition.Center, 1, new BorderStyle(0, 0), types.CornerType.Miter, side);
     style.borders.push(border);
     const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, false);
 
@@ -416,7 +418,7 @@ export function newTable(name: string, frame: ShapeFrame, rowCount: number, colu
         new Color(0.5, 0, 0, 0),
         types.BorderPosition.Center,
         1,
-        new BorderStyle(0, 0)));
+        new BorderStyle(0, 0), types.CornerType.Miter, new BorderSideSetting(SideType.Normal, 1, 1, 1, 1)));
     addCommonAttr(table)
     const fillColor = new Color(1, 255, 255, 255);
     const fill = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, fillColor);
@@ -436,8 +438,8 @@ export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm):
     const sPoint = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight);
     const ePoint = new CurvePoint([1] as BasicArray<number>, uuid(), 1, 1, CurveMode.Straight);
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
-
-    const border = new Border([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 128, 128, 128), types.BorderPosition.Center, 2, new BorderStyle(0, 0));
+    const side = new BorderSideSetting(SideType.Normal, 2, 2, 2, 2);
+    const border = new Border([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 128, 128, 128), types.BorderPosition.Center, 2, new BorderStyle(0, 0), types.CornerType.Miter, side);
 
     style.borders.push(border);
 
@@ -447,7 +449,7 @@ export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm):
     para.attr.minimumLineHeight = 24;
     text.paras.push(para);
     const span = new Span(para.length);
-    span.fontName = "PingFangSC-Regular";
+    span.fontName = "PingFang SC";
     span.fontSize = 14;
     span.color = new Color(0.85, 0, 0, 0);
     para.spans.push(span);
