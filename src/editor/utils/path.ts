@@ -353,7 +353,6 @@ export function init_curv(shape: Shape, page: Page, api: Api, curve_point: Curve
         api.shapeModifyCurvToPoint(page, __shape, index, to, segment);
         api.modifyPointHasFrom(page, __shape, index, true, segment);
         api.modifyPointHasTo(page, __shape, index, true, segment);
-
     }
 
     function getApex(points: CurvePoint[], index: number) {
@@ -538,7 +537,7 @@ export function __pre_curve(page: Page, api: Api, path_shape: Shape, index: numb
     let point: CurvePoint | undefined = undefined;
 
     if (segment > -1) {
-        point = (path_shape as PathShape2)?.pathsegs[segment].points[index];
+        point = (path_shape as PathShape)?.pathsegs[segment].points[index];
     }
 
     if (!point) {

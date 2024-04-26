@@ -20,6 +20,7 @@ import { addCommonAttr, newflatStyle, newStyle } from "../creator";
 import { Border, BorderStyle, FillType } from "../../data/style";
 import { Color } from "../../data/color";
 import * as types from "../../data/typesdefine";
+import { ISave4Restore, LocalCmd, SelectionState } from "../coop/localcmd";
 
 export type ModifyUnits = Map<number,
     {
@@ -39,8 +40,18 @@ export type ModifyUnits = Map<number,
 export class PathModifier extends AsyncApiCaller {
     shape: Shape | undefined;
 
-    constructor(repo: CoopRepository, document: Document, page: PageView) {
+    constructor(repo: CoopRepository, document: Document, page: PageView, needStoreSelection = false) {
         super(repo, document, page);
+
+        if (needStoreSelection) {
+            this.__repo.rollback();
+            this.api = this.__repo.start('path-modify', (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+                const state = {} as SelectionState;
+                if (!isUndo) state.shapes = this.shape ? [this.shape.id] : [];
+                else state.shapes = cmd.saveselection?.shapes || [];
+                selection.restore(state);
+            });
+        }
     }
 
     start() {
@@ -148,6 +159,43 @@ export class PathModifier extends AsyncApiCaller {
     preCurve(shape: ShapeView, index: number, segment = -1) {
         this.shape = adapt2Shape(shape);
         __pre_curve(this.page, this.api, this.shape, index, segment);
+    }
+
+    preCurve2(shape: ShapeView, index: number, segment = -1) {
+        try {
+            this.shape = adapt2Shape(shape);
+
+            if (segment < 0) {
+                return;
+            }
+
+            let point: CurvePoint | undefined = undefined;
+
+            if (segment > -1) {
+                point = (this.shape as PathShape)?.pathsegs[segment].points[index];
+            }
+
+            if (!point) {
+                return;
+            }
+
+            const api = this.api;
+            const page = this.page;
+            const __shape = this.shape;
+            if (point.mode !== CurveMode.Mirrored) {
+                api.modifyPointCurveMode(page, __shape, index, CurveMode.Mirrored, segment);
+            }
+
+            api.shapeModifyCurvFromPoint(page, __shape, index, { x: point.x, y: point.y }, segment);
+            api.shapeModifyCurvToPoint(page, __shape, index, { x: point.x, y: point.y }, segment);
+            api.modifyPointHasFrom(page, __shape, index, true, segment);
+            api.modifyPointHasTo(page, __shape, index, true, segment);
+
+            this.updateView();
+        } catch (e) {
+            console.error('PathModifier.preCurve2', e);
+            this.exception = true;
+        }
     }
 
     execute4handle(_shape: ShapeView, index: number, side: 'from' | 'to',
