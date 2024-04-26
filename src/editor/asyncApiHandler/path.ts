@@ -135,6 +135,28 @@ export class PathModifier extends AsyncApiCaller {
             return false
         }
     }
+    addPointForPen(shape: ShapeView, segment: number, index: number, xy: {x: number, y: number}) {
+        try {
+            const _shape = adapt2Shape(shape);
+            this.shape = _shape;
+            let __segment = _shape.pathType === PathType.Editable ? -1 : segment;
+            this.modifyBorderSetting();
+
+            this.api.addPointAt(
+                this.page,
+                _shape,
+                index,
+                new CurvePoint(new BasicArray<number>(), uuid(), xy.x, xy.y, CurveMode.Straight),
+                __segment
+            );
+
+            this.updateView();
+            return true;
+        } catch (e) {
+            console.log('PathModifier.addPointForPen:', e);
+            return false
+        }
+    }
 
     execute(_shape: ShapeView, units: ModifyUnits) {
         try {
