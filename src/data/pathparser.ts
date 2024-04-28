@@ -311,8 +311,13 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, width: number
         }
 
         // 获取终点信息
-        if (_isCornerRadius(toIdx) && (cornerInfo = _getCornerInfo(toIdx))) {
-            const { preTangent, preSlices } = cornerInfo;
+        const isCorEnd = _isCornerRadius(toIdx);
+        if (isCorEnd) {
+            cornerInfo = _getCornerInfo(toIdx);
+        }
+
+        if (isCorEnd) {
+            const { preTangent, preSlices } = cornerInfo as any;
             endPt = preTangent;
             if (preSlices.length) {
                 startHandle = preSlices[1][2];
@@ -341,8 +346,8 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, width: number
         }
 
         // 如果 end 的时候是 corner，绘制圆角
-        if (_isCornerRadius(toIdx) && (cornerInfo = _getCornerInfo(toIdx))) {
-            const { nextTangent, preHandle, nextHandle } = cornerInfo;
+        if (isCorEnd) {
+            const { nextTangent, preHandle, nextHandle } = cornerInfo as any;
             bezierCurveTo(preHandle.x, preHandle.y, nextHandle.x, nextHandle.y, nextTangent.x, nextTangent.y);
         }
     }
