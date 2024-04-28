@@ -79,29 +79,6 @@ function importGradient(data: IJSON): Gradient {
     return new Gradient(from, to, gradientType, new BasicArray<Stop>(...stops), elipseLength);
 }
 
-export function importBorderSideSetting(data: IJSON): BorderSideSetting {
-    const sideType: SideType = ((t) => {
-        switch (t) {
-            case 0: return SideType.Normal;
-            case 1: return SideType.Top;
-            case 2: return SideType.Bottom;
-            case 3: return SideType.Left;
-            case 4: return SideType.Right;
-            case 5: return SideType.Custom;
-            default: return SideType.Normal;
-        }
-    })(data['sideType']);
-    let top: number = data['thicknessTop'];
-    let left: number = data['thicknessLeft'];
-    let bottom: number = data['thicknessBottom'];
-    let right: number = data['thicknessRight'];
-    top = Math.min(Math.max(0, top), 300);
-    left = Math.min(Math.max(0, left), 300);
-    bottom = Math.min(Math.max(0, bottom), 300);
-    right = Math.min(Math.max(0, right), 300);
-    return new BorderSideSetting(sideType, top, left, bottom, right);
-}
-
 export function importStyle(ctx: LoadContext, data: IJSON): Style {
 
     if (!data) { // 存在数据没有style
@@ -196,8 +173,7 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
             }
             return bs
         })(data['borderOptions'] ? data['borderOptions'].dashPattern : undefined);
-        const side: BorderSideSetting = importBorderSideSetting(d['sideSetting']);
-        // const side = new BorderSideSetting(SideType.Normal, thickness, thickness, thickness, thickness);
+        const side = new BorderSideSetting(SideType.Normal, thickness, thickness, thickness, thickness);
         const border = new Border([i] as BasicArray<number>, uuid(), isEnabled, fillType, color, position, thickness, borderStyle, corner, side);
         border.gradient = gradient;
         border.contextSettings = contextSettings;

@@ -172,7 +172,7 @@ inject['TableCell']['before'] = `\
                 text: "\\n",
                 spans: [
                     {
-                        fontName: "PingFangSC",
+                        fontName: "PingFang SC",
                         fontSize: 14,
                         length: 1,
                         color: {
