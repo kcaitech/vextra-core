@@ -3,9 +3,11 @@ import { AsyncApiCaller } from "../AsyncApiCaller";
 import { Document } from "../../../data/document";
 import { adapt2Shape, PageView, ShapeView } from "../../../dataview";
 import { afterModifyGroupShapeWH, SizeRecorder } from "../../frame";
-import { GroupShape, Shape, ShapeFrame, ShapeType, SymbolShape, SymbolUnionShape } from "../../../data/shape";
+import { GroupShape, Shape, ShapeFrame, ShapeType, SymbolShape, SymbolUnionShape, TextShape } from "../../../data/shape";
 import { Page } from "../../../data/page";
 import { SymbolRefShape } from "../../../data/symbolref";
+import { fixTextShapeFrameByLayout } from "../../../editor/utils/other";
+import { TextBehaviour } from "../../../data/classes";
 
 export type ScaleUnit = {
     shape: ShapeView;
@@ -98,7 +100,20 @@ export class Scaler extends AsyncApiCaller {
                     const scaleY = shape.frame.height / saveHeight;
                     afterModifyGroupShapeWH(api, page, shape, scaleX, scaleY, new ShapeFrame(0, 0, saveWidth, saveHeight), this.recorder);
                 }
-
+                if (shape instanceof TextShape && (width !== saveWidth || height !== saveHeight)) {
+                    const textBehaviour = shape.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
+                    if (height !== saveHeight) {
+                        if (textBehaviour !== TextBehaviour.FixWidthAndHeight) {
+                            api.shapeModifyTextBehaviour(page, shape.text, TextBehaviour.FixWidthAndHeight);
+                        }
+                    }
+                    else {
+                        if (textBehaviour === TextBehaviour.Flexible) {
+                            api.shapeModifyTextBehaviour(page, shape.text, TextBehaviour.Fixed);
+                        }
+                    }
+                    fixTextShapeFrameByLayout(api, page, shape);
+                }
                 // 实例或者组件的宽高改变需要执行副作用函数
                 if (shape.type === ShapeType.SymbolRef || shape.type === ShapeType.Symbol) {
                     this.needUpdateCustomSizeStatus.add(shape);

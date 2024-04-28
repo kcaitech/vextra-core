@@ -447,7 +447,7 @@ export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm):
     para.attr.minimumLineHeight = 24;
     text.paras.push(para);
     const span = new Span(para.length);
-    span.fontName = "PingFangSC";
+    span.fontName = "PingFang SC";
     span.fontSize = 14;
     span.color = new Color(0.85, 0, 0, 0);
     para.spans.push(span);

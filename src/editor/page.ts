@@ -2370,6 +2370,55 @@ export class PageEditor {
         }
     }
 
+    setShapeBorderFillExchange(shapes: ShapeView[]) {
+        try {
+            const api = this.__repo.start('setShapeBorderFillExchange');
+            for (let i = 0; i < shapes.length; i++) {
+                const shape = shapes[i];
+                const b = shape.getBorders();
+                const f = shape.getFills();
+                let borders: BasicArray<Border> = new BasicArray<Border>();
+                let fills: BasicArray<Fill> = new BasicArray<Fill>();
+                for (let b_i = 0; b_i < b.length; b_i++) {
+                    const { isEnabled, color, fillType, gradient, contextSettings } = b[b_i];
+                    const fill = new Fill([i] as BasicArray<number>, uuid(), isEnabled, fillType, color);
+                    fill.gradient = gradient;
+                    fill.contextSettings = contextSettings;
+                    if (f.length > b_i) {
+                        fill.fillRule = f[b_i].fillRule;
+                        fill.imageRef = f[b_i].imageRef;
+                    }
+                    fills.unshift(fill);
+                }
+                for (let f_i = 0; f_i < f.length; f_i++) {
+                    const { isEnabled, color, fillType, gradient, contextSettings } = f[f_i];
+                    let border: Border;
+                    if (b.length > f_i) {
+                        const { position, borderStyle, thickness, cornerType, sideSetting } = b[f_i];
+                        border = new Border([i] as BasicArray<number>, uuid(), isEnabled, fillType, color, position, thickness, borderStyle, cornerType, sideSetting);
+                        border.gradient = gradient;
+                        border.contextSettings = contextSettings;
+                    } else {
+                        const sideSetting = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+                        border = new Border([i] as BasicArray<number>, uuid(), isEnabled, fillType, color, BorderPosition.Inner, 1, new BorderStyle(0, 0), types.CornerType.Miter, sideSetting);
+                        border.gradient = gradient;
+                        border.contextSettings = contextSettings;
+                    }
+                    borders.unshift(border);
+                }
+                const f_s = shape4fill(api, this.__page, shape);
+                api.deleteFills(this.__page, f_s, 0, shape.style.fills.length);
+                api.addFills(this.__page, f_s, fills);
+                const b_s = shape4border(api, this.__page, shape);
+                api.deleteBorders(this.__page, b_s, 0, shape.style.borders.length);
+                api.addBorders(this.__page, b_s, borders);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error, 'error');
+            this.__repo.rollback();
+        }
+    }
     setShapesBorderCornerType(actions: BatchAction[]) {
         const api = this.__repo.start('setShapesBorderCornerType');
         try {

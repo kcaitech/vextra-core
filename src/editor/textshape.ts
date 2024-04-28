@@ -45,6 +45,12 @@ interface _Api {
     tableModifyRowHeight(page: Page, table: TableShape, idx: number, height: number): void;
 }
 
+export interface AsyncTextAttrEditor {
+    execute_char_spacing: (kerning: number) => void;
+    execute_line_height: (lineHeight: number) => void;
+    close: () => undefined;
+}
+
 export class TextShapeEditor extends ShapeEditor {
 
     private _cacheAttr?: SpanAttr;
@@ -1404,5 +1410,76 @@ export class TextShapeEditor extends ShapeEditor {
             }
         }
         return { execute_from, execute_to, execute_elipselength, execute_stop_position, close }
+    }
+    public asyncSetTextAttr(shapes: (TextShapeView | TableCellView)[], index: number, len: number): AsyncTextAttrEditor {
+        const api = this.__repo.start("asyncSetTextAttr");
+        let status: Status = Status.Pending;
+        const execute_char_spacing = (kerning: number) => {
+            status = Status.Pending;
+            try {
+                if (shapes.length === 1) {
+                    if (len === 0) {
+                        this.cacheAttr.kerning = kerning;
+                    } else {
+                        const shape = this.shape4edit(api);
+                        api.textModifyKerning(this.__page, shape, kerning, index, len)
+                        this.fixFrameByLayout(api);
+                    }
+                } else if (shapes.length > 1) {
+                    for (let i = 0, l = shapes.length; i < l; i++) {
+                        const text_shape = shapes[i];
+                        if (text_shape.type !== ShapeType.Text) continue;
+                        const shape = this.shape4edit(api, text_shape);
+                        const text = shape instanceof ShapeView ? shape.text : shape.value as Text;
+                        const text_length = text.length;
+                        if (text_length === 0) continue;
+                        api.textModifyKerning(this.__page, shape, kerning, 0, text_length);
+                        this.fixFrameByLayout2(api, shape);
+                    }
+                }
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const execute_line_height = (lineHeight: number) => {
+            status = Status.Pending;
+            try {
+                if (shapes.length === 1) {
+                    const shape = this.shape4edit(api);
+                    api.textModifyMinLineHeight(this.__page, shape, lineHeight, index, len)
+                    api.textModifyMaxLineHeight(this.__page, shape, lineHeight, index, len)
+                    this.fixFrameByLayout(api);
+                } else if (shapes.length > 1) {
+                    for (let i = 0, l = shapes.length; i < l; i++) {
+                        const text_shape = shapes[i];
+                        if (text_shape.type !== ShapeType.Text) continue;
+                        const shape = this.shape4edit(api, text_shape);
+                        const text = shape instanceof ShapeView ? shape.text : shape.value as Text;
+                        const text_length = text.length;
+                        if (text_length === 0) continue;
+                        api.textModifyMinLineHeight(this.__page, shape, lineHeight, 0, text_length)
+                        api.textModifyMaxLineHeight(this.__page, shape, lineHeight, 0, text_length)
+                        this.fixFrameByLayout2(api, shape);
+                    }
+                }
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const close = () => {
+            if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
+                this.__repo.commit();
+            } else {
+                this.__repo.rollback();
+            }
+            return undefined;
+        }
+        return { execute_char_spacing, execute_line_height, close }
     }
 }
