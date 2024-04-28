@@ -332,7 +332,7 @@ export function __round_curve_point(points: CurvePoint[], index: number) {
     }
 }
 
-export function init_curv(shape: Shape, page: Page, api: Api, curve_point: CurvePoint, index: number, init = 0.35, segment = -1) {
+export function init_curv(shape: Shape, page: Page, api: Api, curve_point: CurvePoint, index: number, init = (Math.sqrt(2) / 4), segment = -1) {
     if (segment > -1) {
         const __shape = shape as PathShape2;
         const points = __shape.pathsegs[segment]?.points;
@@ -403,7 +403,7 @@ export function _typing_modify(shape: Shape, page: Page, api: Api, index: number
     }
 
     if (point.mode === CurveMode.Straight && to_mode !== CurveMode.Straight) {
-        init_curv(shape, page, api, point, index, 0.35, segment);
+        init_curv(shape, page, api, point, index, (Math.sqrt(2) / 4), segment);
         return;
     }
 

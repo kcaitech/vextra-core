@@ -90,7 +90,7 @@ export class PathModifier extends AsyncApiCaller {
             style.borders.push(border);
 
             const p1 = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight);
-            const segment = new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(p1), true);
+            const segment = new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(p1), false);
             const vec = new PathShape(new BasicArray(), uuid(), name, ShapeType.Path, frame, style, new BasicArray<PathSegment>(segment));
 
             addCommonAttr(vec);
@@ -137,19 +137,20 @@ export class PathModifier extends AsyncApiCaller {
     }
     addPointForPen(shape: ShapeView, segment: number, index: number, xy: {x: number, y: number}) {
         try {
+            if (segment < 0 || index < 0) {
+                return false;
+            }
             const _shape = adapt2Shape(shape);
             this.shape = _shape;
-            let __segment = _shape.pathType === PathType.Editable ? -1 : segment;
-            this.modifyBorderSetting();
-
             this.api.addPointAt(
                 this.page,
                 _shape,
                 index,
                 new CurvePoint(new BasicArray<number>(), uuid(), xy.x, xy.y, CurveMode.Straight),
-                __segment
+                segment
             );
 
+            this.modifyBorderSetting();
             this.updateView();
             return true;
         } catch (e) {
