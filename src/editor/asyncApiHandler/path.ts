@@ -17,11 +17,13 @@ import { uuid } from "../../basic/uuid";
 import { __pre_curve, after_insert_point, update_frame_by_points } from "../utils/path";
 import { PathType } from "../../data/consts";
 import { addCommonAttr, newflatStyle } from "../creator";
-import { Border, BorderStyle, CornerType, FillType } from "../../data/style";
+import { Border, BorderStyle, CornerType, FillType, Style } from "../../data/style";
 import { Color } from "../../data/color";
 import * as types from "../../data/typesdefine";
 import { ISave4Restore, LocalCmd, SelectionState } from "../coop/localcmd";
 import { BorderSideSetting, SideType } from "../../data/classes";
+import { importStyle } from "../../data/baseimport";
+import { exportStyle } from "../../data/baseexport";
 
 export type ModifyUnits = Map<number,
     {
@@ -58,6 +60,7 @@ export class PathModifier extends AsyncApiCaller {
     start() {
         return this.__repo.start('path-modify');
     }
+
     modifyBorderSetting() {
         if (this.haveEdit || !this.shape) return;
         const borders = this.shape.getBorders() || [];
@@ -81,13 +84,16 @@ export class PathModifier extends AsyncApiCaller {
         }
     }
 
-    createVec(name: string, frame: ShapeFrame, parent: GroupShapeView) {
+    createVec(name: string, frame: ShapeFrame, parent: GroupShapeView, _style?: Style) {
         try {
-            const style = newflatStyle();
-            const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
 
-            const border = new Border([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), types.BorderPosition.Center, 1, new BorderStyle(0, 0), CornerType.Miter, side);
-            style.borders.push(border);
+            const style = _style ? importStyle(exportStyle(_style)) : newflatStyle();
+
+            if (!_style) {
+                const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+                const border = new Border([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), types.BorderPosition.Center, 1, new BorderStyle(0, 0), CornerType.Miter, side);
+                style.borders.push(border);
+            }
 
             const p1 = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight);
             const segment = new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(p1), false);
@@ -135,7 +141,8 @@ export class PathModifier extends AsyncApiCaller {
             return false
         }
     }
-    addPointForPen(shape: ShapeView, segment: number, index: number, xy: {x: number, y: number}) {
+
+    addPointForPen(shape: ShapeView, segment: number, index: number, xy: { x: number, y: number }) {
         try {
             if (segment < 0 || index < 0) {
                 return false;
@@ -150,12 +157,29 @@ export class PathModifier extends AsyncApiCaller {
                 segment
             );
 
-            this.modifyBorderSetting();
             this.updateView();
             return true;
         } catch (e) {
             console.log('PathModifier.addPointForPen:', e);
             return false
+        }
+    }
+
+    addSegmentForPen(shape: ShapeView, xy: { x: number, y: number }) {
+        try {
+            const _shape = adapt2Shape(shape);
+            this.shape = _shape;
+            const index = (this.shape as PathShape).pathsegs.length;
+            const point = new CurvePoint([0] as BasicArray<number>, uuid(), xy.x, xy.y, CurveMode.Straight);
+            const segment = new PathSegment([index] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(point), false);
+            this.api.addSegmentAt(this.page, _shape, index, segment);
+
+            this.updateView();
+
+            return true;
+        } catch (e) {
+            console.log('PathModifier.addSegmentForPen:', e);
+            return false;
         }
     }
 
@@ -204,13 +228,13 @@ export class PathModifier extends AsyncApiCaller {
         }
     }
 
-    preCurve(shape: ShapeView, index: number, segment = -1) {
+    preCurve(order: 2 | 3, shape: ShapeView, index: number, segment = -1) {
         this.modifyBorderSetting();
         this.shape = adapt2Shape(shape);
-        __pre_curve(this.page, this.api, this.shape, index, segment);
+        __pre_curve(order, this.page, this.api, this.shape, index, segment);
     }
 
-    preCurve2(shape: ShapeView, index: number, segment = -1) {
+    preCurve2(order: 2 | 3, shape: ShapeView, index: number, segment = -1) {
         try {
             this.shape = adapt2Shape(shape);
 
@@ -231,14 +255,24 @@ export class PathModifier extends AsyncApiCaller {
             const api = this.api;
             const page = this.page;
             const __shape = this.shape;
-            if (point.mode !== CurveMode.Mirrored) {
-                api.modifyPointCurveMode(page, __shape, index, CurveMode.Mirrored, segment);
+            if (order === 2) { // 二次曲线
+                if (point.mode !== CurveMode.Disconnected) {
+                    api.modifyPointCurveMode(page, __shape, index, CurveMode.Disconnected, segment);
+                }
+
+                api.shapeModifyCurvFromPoint(page, __shape, index, { x: point.x, y: point.y }, segment);
+                api.modifyPointHasFrom(page, __shape, index, true, segment);
+            } else { // 三次曲线
+                if (point.mode !== CurveMode.Mirrored) {
+                    api.modifyPointCurveMode(page, __shape, index, CurveMode.Mirrored, segment);
+                }
+
+                api.shapeModifyCurvFromPoint(page, __shape, index, { x: point.x, y: point.y }, segment);
+                api.shapeModifyCurvToPoint(page, __shape, index, { x: point.x, y: point.y }, segment);
+                api.modifyPointHasFrom(page, __shape, index, true, segment);
+                api.modifyPointHasTo(page, __shape, index, true, segment);
             }
 
-            api.shapeModifyCurvFromPoint(page, __shape, index, { x: point.x, y: point.y }, segment);
-            api.shapeModifyCurvToPoint(page, __shape, index, { x: point.x, y: point.y }, segment);
-            api.modifyPointHasFrom(page, __shape, index, true, segment);
-            api.modifyPointHasTo(page, __shape, index, true, segment);
 
             this.updateView();
         } catch (e) {

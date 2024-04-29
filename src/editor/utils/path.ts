@@ -332,7 +332,7 @@ export function __round_curve_point(points: CurvePoint[], index: number) {
     }
 }
 
-export function init_curv(shape: Shape, page: Page, api: Api, curve_point: CurvePoint, index: number, init = (Math.sqrt(2) / 4), segment = -1) {
+export function init_curv(order: 2 | 3, shape: Shape, page: Page, api: Api, curve_point: CurvePoint, index: number, init = (Math.sqrt(2) / 4), segment = -1) {
     if (segment > -1) {
         const __shape = shape as PathShape2;
         const points = __shape.pathsegs[segment]?.points;
@@ -349,10 +349,15 @@ export function init_curv(shape: Shape, page: Page, api: Api, curve_point: Curve
 
         const { from, to } = apex;
 
-        api.shapeModifyCurvFromPoint(page, __shape, index, from, segment);
-        api.shapeModifyCurvToPoint(page, __shape, index, to, segment);
-        api.modifyPointHasFrom(page, __shape, index, true, segment);
-        api.modifyPointHasTo(page, __shape, index, true, segment);
+        if (order === 3) {
+            api.shapeModifyCurvFromPoint(page, __shape, index, from, segment);
+            api.shapeModifyCurvToPoint(page, __shape, index, to, segment);
+            api.modifyPointHasFrom(page, __shape, index, true, segment);
+            api.modifyPointHasTo(page, __shape, index, true, segment);
+        } else {
+            api.shapeModifyCurvFromPoint(page, __shape, index, from, segment);
+            api.modifyPointHasFrom(page, __shape, index, true, segment);
+        }
     }
 
     function getApex(points: CurvePoint[], index: number) {
@@ -403,7 +408,7 @@ export function _typing_modify(shape: Shape, page: Page, api: Api, index: number
     }
 
     if (point.mode === CurveMode.Straight && to_mode !== CurveMode.Straight) {
-        init_curv(shape, page, api, point, index, (Math.sqrt(2) / 4), segment);
+        init_curv(3, shape, page, api, point, index, (Math.sqrt(2) / 4), segment);
         return;
     }
 
@@ -533,7 +538,7 @@ export function after_insert_point(page: Page, api: Api, path_shape: Shape, inde
     modify_current_handle_slices(page, api, path_shape, slices, index, __segment);
 }
 
-export function __pre_curve(page: Page, api: Api, path_shape: Shape, index: number, segment = -1) {
+export function __pre_curve(order: 2 | 3, page: Page, api: Api, path_shape: Shape, index: number, segment = -1) {
     let point: CurvePoint | undefined = undefined;
 
     if (segment > -1) {
@@ -543,11 +548,17 @@ export function __pre_curve(page: Page, api: Api, path_shape: Shape, index: numb
     if (!point) {
         return;
     }
-
-    if (point.mode !== CurveMode.Mirrored) {
-        api.modifyPointCurveMode(page, path_shape, index, CurveMode.Mirrored, segment);
+    if (order === 3) {
+        if (point.mode !== CurveMode.Mirrored) {
+            api.modifyPointCurveMode(page, path_shape, index, CurveMode.Mirrored, segment);
+        }
+    } else {
+        if (point.mode !== CurveMode.Disconnected) {
+            api.modifyPointCurveMode(page, path_shape, index, CurveMode.Disconnected, segment);
+        }
     }
-    init_curv(path_shape, page, api, point, index, 0.01, segment);
+
+    init_curv(order, path_shape, page, api, point, index, 0.01, segment);
 }
 
 export function replace_path_shape_points(page: Page, shape: PathShape, api: Api, points: CurvePoint[]) {

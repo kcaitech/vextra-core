@@ -18,7 +18,7 @@ import { BulletNumbers, SpanAttr, Text, TextBehaviour, TextHorAlign, TextVerAlig
 import { RectShape, SymbolRefShape, TableCell, TableCellType, TableShape, Artboard } from "../../data/classes";
 import {
     BoolOp, BulletNumbersBehavior, BulletNumbersType, ExportFileFormat, OverrideType, Point2D,
-    StrikethroughType, TextTransformType, UnderlineType, ShadowPosition, ExportFormatNameingScheme, FillType, BlendMode, CornerType, SideType, BorderSideSetting, 
+    StrikethroughType, TextTransformType, UnderlineType, ShadowPosition, ExportFormatNameingScheme, FillType, BlendMode, CornerType, SideType, BorderSideSetting,
 } from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
@@ -31,6 +31,7 @@ import { IdOpRecord } from "../../coop/client/crdt";
 import { Repository } from "../../data/transact";
 import { SNumber } from "../../coop/client/snumber";
 import { ShapeView, TableCellView, TextShapeView } from "../../dataview";
+import { addSegmentAt } from "../basicapi";
 
 // 要支持variable的修改
 export type TextShapeLike = TableCellView | TextShapeView
@@ -557,6 +558,10 @@ export class Api {
     addPointAt(page: Page, shape: Shape, idx: number, point: CurvePoint, segment = -1) {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.addPointAt(shape, point, idx, segment));
+    }
+    addSegmentAt(page: Page, shape: Shape, idx: number, segment: PathSegment) {
+        checkShapeAtPage(page, shape);
+        this.addOp(basicapi.addSegmentAt(shape, segment, idx));
     }
     deletePoints(page: Page, shape: PathShape, index: number, strength: number) {
         checkShapeAtPage(page, shape);
