@@ -77,11 +77,8 @@ export class PathModifier extends AsyncApiCaller {
         if (!this.shape) {
             return false;
         }
-        if ([ShapeType.Artboard, ShapeType.Rectangle, ShapeType.Image].includes(this.shape.type) && !this.shape.haveEdit) {
-            return false;
-        } else {
-            return true;
-        }
+
+        return !([ShapeType.Artboard, ShapeType.Rectangle, ShapeType.Image].includes(this.shape.type) && !this.shape.haveEdit);
     }
 
     createVec(name: string, frame: ShapeFrame, parent: GroupShapeView, _style?: Style) {
@@ -313,6 +310,86 @@ export class PathModifier extends AsyncApiCaller {
             this.exception = true;
         }
     }
+
+    closeSegmentAt(_shape: ShapeView, segmentIndex: number) {
+        const shape = adapt2Shape(_shape) as PathShape;
+
+        this.shape = shape;
+
+        const segment = shape.pathsegs[segmentIndex];
+
+        if (!segment) {
+            return false;
+        }
+
+        this.api.setCloseStatus(this.page, shape, true, segmentIndex);
+
+        return true;
+    }
+
+    mergeSegment(_shape: ShapeView, segmentIndex: number, toSegmentIndex: number, at: 'start' | 'end') {
+        try {
+            const shape = adapt2Shape(_shape) as PathShape;
+
+            this.shape = shape;
+
+            const segment = shape.pathsegs[segmentIndex];
+            const toSegment = shape.pathsegs[toSegmentIndex];
+
+            // 两条线段都需要是未闭合的线段才可以进行合并
+            if (!segment || !toSegment || segment.isClosed || toSegment.isClosed) {
+                return false;
+            }
+
+            const pointsContainer = new BasicArray<CurvePoint>();
+
+            let __points: CurvePoint[] = [];
+            let activeIndex = 0;
+            if (at === 'start') {
+                __points = [...segment.points, ...toSegment.points];
+                activeIndex = segment.points.length;
+            } else {
+                __points = [...toSegment.points];
+                for (let i = segment.points.length - 1; i > -1; i--) {
+                    __points.push(segment.points[i]);
+                }
+                activeIndex = toSegment.points.length - 1;
+            }
+
+
+            for (let i = 0; i < __points.length; i++) {
+                const p = __points[i];
+                const point = new CurvePoint([i] as BasicArray<number>, uuid(), p.x, p.y, p.mode);
+                point.radius = p.radius;
+                point.hasFrom = p.hasFrom;
+                point.hasTo = p.hasTo;
+                point.fromX = p.fromX;
+                point.fromY = p.fromY;
+                point.toX = p.toX;
+                point.toY = p.toY;
+
+                pointsContainer.push(point);
+            }
+            const api = this.api;
+            const page = this.page;
+
+            // 删除原有的线条
+            api.deleteSegmentAt(page, shape, segmentIndex);
+            api.deleteSegmentAt(page, shape, toSegmentIndex);
+
+            // 生成合并过后的线条
+            const newSegment = new PathSegment([shape.pathsegs.length] as BasicArray<number>, uuid(), pointsContainer, false);
+            api.addSegmentAt(page, shape, shape.pathsegs.length, newSegment);
+
+            return { segment: shape.pathsegs.length - 1, activeIndex };
+        } catch (e) {
+            console.error('PathModifier.mergeSegmentFromStart:', e);
+            this.exception = true;
+            return false;
+        }
+    }
+
+
 
     commit() {
         if (this.__repo.isNeedCommit() && !this.exception) {
