@@ -10,7 +10,9 @@ import {
     TextShape,
     Variable,
     SymbolShape,
-    CurveMode, PathSegment
+    CurveMode, PathSegment,
+    PolygonShape,
+    StarShape
 } from "../../data/shape";
 import { updateShapesFrame } from "./utils";
 import { Border, BorderPosition, BorderStyle, Fill, Gradient, MarkerType, Shadow } from "../../data/style";
@@ -230,6 +232,14 @@ export class Api {
     shapeModifyHeight(page: Page, shape: Shape, h: number) {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.shapeModifyHeight(page, shape, h, this.needUpdateFrame));
+    }
+    shapeModifyCounts(page: Page, shape: (PolygonShape | StarShape), counts: number) {
+        checkShapeAtPage(page, shape);
+        this.addOp(basicapi.shapeModifyCounts(shape, counts));
+    }
+    shapeModifyInnerAngle(page: Page, shape: StarShape, offset: number) {
+        checkShapeAtPage(page, shape);
+        this.addOp(basicapi.shapeModifyInnerAngle(shape, offset));
     }
     shapeModifyStartMarkerType(page: Page, shape: Shape, mt: MarkerType) {
         checkShapeAtPage(page, shape);

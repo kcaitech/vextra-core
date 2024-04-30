@@ -3,9 +3,11 @@ import {
     GroupShape,
     OverrideType,
     PathShape2,
+    PolygonShape,
     RectShape,
     Shape,
     ShapeFrame,
+    StarShape,
     SymbolShape,
     SymbolUnionShape,
     TextShape,
@@ -78,8 +80,8 @@ import {
     shape4fill
 } from "./symbol";
 import { is_circular_ref2 } from "./utils/ref_check";
-import { BorderSideSetting, BorderStyle, ExportFormat, Point2D, Shadow } from "../data/baseclasses";
-import { get_rotate_for_straight, is_straight, update_frame_by_points } from "./utils/path";
+import { BorderSideSetting, BorderStyle, CurvePoint, ExportFormat, Point2D, Shadow } from "../data/baseclasses";
+import { calculateInnerAnglePosition, getPolygonPoints, getPolygonVertices, get_rotate_for_straight, is_straight, update_frame_by_points } from "./utils/path";
 import { modify_shapes_height, modify_shapes_width } from "./utils/common";
 import { CoopRepository } from "./coop/cooprepo";
 import { Api, TextShapeLike } from "./coop/recordapi";
@@ -1753,6 +1755,44 @@ export class PageEditor {
             for (let i = 0; i < actions.length; i++) {
                 const action = actions[i];
                 api.shapeModifyY(this.__page, action.target, action.y);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    modifyShapesAngleCount(actions: { target: (PolygonShape | StarShape), count: number }[]) {
+        const api = this.__repo.start('modifyShapesAngleCount');
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, count } = actions[i];
+                if (target.haveEdit) continue;
+                const offset = target.type === ShapeType.Star ? (target as StarShape).innerAngle : undefined;
+                const counts = getPolygonVertices(target.type === ShapeType.Star ? count * 2 : count, offset);
+                const points = getPolygonPoints(counts, target.radius[0]);
+                api.deletePoints(this.__page, target, 0, target.type === ShapeType.Star ? target.counts * 2 : target.counts);
+                api.addPoints(this.__page, target, points);
+                api.shapeModifyCounts(this.__page, target, count);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    modifyShapesInnerAngle(actions: { target: StarShape, offset: number }[]) {
+        const api = this.__repo.start('modifyShapesInnerAngle');
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, offset } = actions[i];
+                if (target.haveEdit) continue;
+                for (let index = 0; index < target.points.length; index++) {
+                    if (index % 2 === 0) continue;
+                    const angle = ((2 * Math.PI) / target.points.length) * index;
+                    const p = calculateInnerAnglePosition(offset, angle);
+                    api.shapeModifyCurvPoint(this.__page, target, index, p , -1);
+                }
+                api.shapeModifyInnerAngle(this.__page, target, offset);
             }
             this.__repo.commit();
         } catch (error) {
