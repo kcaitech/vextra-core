@@ -391,74 +391,9 @@ export class PathModifier extends AsyncApiCaller {
         }
     }
 
-    switchCurveMode(_shape: ShapeView, segmentIndex: number, index: number, targetMode: CurveMode, active = 'from') {
-        try {
-            const shape = adapt2Shape(_shape) as PathShape;
-            this.shape = shape;
-
-            const segment = shape.pathsegs[segmentIndex];
-            if (!segment) {
-                return false;
-            }
-
-            const point = segment.points[index];
-            if (!point) {
-                return false;
-            }
-
-            if (targetMode === point.mode) {
-                return true;
-            }
-
-            const page = this.page;
-            const api = this.api;
-
-            api.modifyPointCurveMode(page, shape, index, targetMode, segmentIndex);
-
-            if (targetMode === CurveMode.Mirrored || targetMode === CurveMode.Asymmetric) {
-                if (!point.hasTo) {
-                    api.modifyPointHasTo(page, shape, index, true, segmentIndex);
-                }
-                if (!point.hasFrom) {
-                    api.modifyPointHasFrom(page, shape, index, true, segmentIndex);
-                }
-            }
-
-            // 镜像点需要控制点的位置
-            if (targetMode === CurveMode.Mirrored) {
-                if (active === 'from') {
-                    const deltaX = (point.fromX || 0) - point.x;
-                    const deltaY = (point.fromY || 0) - point.y;
-
-                    const _tx = point.x - deltaX;
-                    const _ty = point.y - deltaY;
-
-                    if (point.toX !== _tx || point.toY !== _ty) {
-                        api.shapeModifyCurvToPoint(page, shape, index, { x: _tx, y: _ty }, segmentIndex);
-                    }
-                } else {
-                    const deltaX = (point.toX || 0) - point.x;
-                    const deltaY = (point.toY || 0) - point.y;
-
-                    const _tx = point.x - deltaX;
-                    const _ty = point.y - deltaY;
-
-                    if (point.fromX !== _tx || point.fromY !== _ty) {
-                        api.shapeModifyCurvFromPoint(page, shape, index, { x: _tx, y: _ty }, segmentIndex);
-                    }
-                }
-            }
-
-            this.updateView();
-
-            return true;
-        } catch (e) {
-            console.error('PathModifier.switchCurveMode:', e);
-            this.exception = true;
-            return false;
-        }
-    }
-
+    /**
+     * @description 折断handle
+     */
     breakOffHandle(_shape: ShapeView, segmentIndex: number, index: number) {
         try {
             const shape = adapt2Shape(_shape) as PathShape;
@@ -483,6 +418,9 @@ export class PathModifier extends AsyncApiCaller {
         }
     }
 
+    /**
+     * @description 恢复handle
+     */
     recoveryHandle(_shape: ShapeView, segmentIndex: number, index: number, recoverTo: CurveMode, activeSide: 'from' | 'to') {
         try {
             const shape = adapt2Shape(_shape) as PathShape;
