@@ -659,8 +659,17 @@ export type PathShape = Shape & {
     isClosed: boolean
     fixedRadius?: number
 }
+/* star shape */
+export type StarShape = PathShape & {
+    counts: number
+    innerAngle: number
+}
 /* rect shape */
 export type RectShape = PathShape & {
+}
+/* polygon shape */
+export type PolygonShape = PathShape & {
+    counts: number
 }
 /* span attr */
 export type ParaAttr = SpanAttr & {
@@ -690,7 +699,7 @@ export type ImageShape = PathShape & {
 }
 /* group shape */
 export type GroupShape = Shape & {
-    childs: (GroupShape | ImageShape | PathShape | PathShape2 | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape)[]
+    childs: (GroupShape | ImageShape | PathShape | PathShape2 | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape | PolygonShape | StarShape)[]
     fixedRadius?: number
 }
 /* symbol shape */

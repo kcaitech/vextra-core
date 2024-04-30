@@ -1,0 +1,19 @@
+{
+    "description": "polygon shape",
+    "type": "object",
+    "properties": {
+        "counts": {
+            "type": "number",
+            "default": 3
+        }
+    },
+    "required": [
+        "counts"
+    ],
+    "allOf": [
+        {
+            "$ref": "./path-shape.json"
+        }
+    ],
+    "additionalProperties": false
+}

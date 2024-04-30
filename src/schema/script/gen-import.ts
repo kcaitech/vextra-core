@@ -38,6 +38,8 @@ const needCompatibleSet = new Set([
     'shape',
     'flatten-shape',
     'cutout-shape',
+    'polygon-shape',
+    'star-shape',
 ]);
 
 
