@@ -41,7 +41,7 @@ export type ModifyUnits = Map<number,
  * @description 路径处理器
  */
 export class PathModifier extends AsyncApiCaller {
-    shape: Shape | undefined;
+    private shape: Shape | undefined;
 
     constructor(repo: CoopRepository, document: Document, page: PageView, needStoreSelection = false) {
         super(repo, document, page);
@@ -61,7 +61,7 @@ export class PathModifier extends AsyncApiCaller {
         return this.__repo.start('path-modify');
     }
 
-    modifyBorderSetting() {
+    private modifyBorderSetting() {
         if (this.haveEdit || !this.shape) return;
         const borders = this.shape.getBorders() || [];
         for (let i = 0; i < borders.length; i++) {
@@ -381,6 +381,8 @@ export class PathModifier extends AsyncApiCaller {
             const newSegment = new PathSegment([shape.pathsegs.length] as BasicArray<number>, uuid(), pointsContainer, false);
             api.addSegmentAt(page, shape, shape.pathsegs.length, newSegment);
 
+            this.updateView();
+
             return { segment: shape.pathsegs.length - 1, activeIndex };
         } catch (e) {
             console.error('PathModifier.mergeSegmentFromStart:', e);
@@ -389,7 +391,181 @@ export class PathModifier extends AsyncApiCaller {
         }
     }
 
+    switchCurveMode(_shape: ShapeView, segmentIndex: number, index: number, targetMode: CurveMode, active = 'from') {
+        try {
+            const shape = adapt2Shape(_shape) as PathShape;
+            this.shape = shape;
 
+            const segment = shape.pathsegs[segmentIndex];
+            if (!segment) {
+                return false;
+            }
+
+            const point = segment.points[index];
+            if (!point) {
+                return false;
+            }
+
+            if (targetMode === point.mode) {
+                return true;
+            }
+
+            const page = this.page;
+            const api = this.api;
+
+            api.modifyPointCurveMode(page, shape, index, targetMode, segmentIndex);
+
+            if (targetMode === CurveMode.Mirrored || targetMode === CurveMode.Asymmetric) {
+                if (!point.hasTo) {
+                    api.modifyPointHasTo(page, shape, index, true, segmentIndex);
+                }
+                if (!point.hasFrom) {
+                    api.modifyPointHasFrom(page, shape, index, true, segmentIndex);
+                }
+            }
+
+            // 镜像点需要控制点的位置
+            if (targetMode === CurveMode.Mirrored) {
+                if (active === 'from') {
+                    const deltaX = (point.fromX || 0) - point.x;
+                    const deltaY = (point.fromY || 0) - point.y;
+
+                    const _tx = point.x - deltaX;
+                    const _ty = point.y - deltaY;
+
+                    if (point.toX !== _tx || point.toY !== _ty) {
+                        api.shapeModifyCurvToPoint(page, shape, index, { x: _tx, y: _ty }, segmentIndex);
+                    }
+                } else {
+                    const deltaX = (point.toX || 0) - point.x;
+                    const deltaY = (point.toY || 0) - point.y;
+
+                    const _tx = point.x - deltaX;
+                    const _ty = point.y - deltaY;
+
+                    if (point.fromX !== _tx || point.fromY !== _ty) {
+                        api.shapeModifyCurvFromPoint(page, shape, index, { x: _tx, y: _ty }, segmentIndex);
+                    }
+                }
+            }
+
+            this.updateView();
+
+            return true;
+        } catch (e) {
+            console.error('PathModifier.switchCurveMode:', e);
+            this.exception = true;
+            return false;
+        }
+    }
+
+    breakOffHandle(_shape: ShapeView, segmentIndex: number, index: number) {
+        try {
+            const shape = adapt2Shape(_shape) as PathShape;
+
+            this.shape = shape;
+
+            const point = (shape as PathShape).pathsegs[segmentIndex].points[index];
+
+            if (point.mode === CurveMode.Disconnected) {
+                return true;
+            }
+
+            this.api.modifyPointCurveMode(this.page, shape, index, CurveMode.Disconnected, segmentIndex);
+
+            this.updateView();
+
+            return true;
+        } catch (e) {
+            console.error('PathModifier.breakOffHandle:', e);
+            this.exception = true;
+            return false;
+        }
+    }
+
+    recoveryHandle(_shape: ShapeView, segmentIndex: number, index: number, recoverTo: CurveMode, activeSide: 'from' | 'to') {
+        try {
+            const shape = adapt2Shape(_shape) as PathShape;
+
+            this.shape = shape;
+
+            const point = (shape as PathShape).pathsegs[segmentIndex].points[index];
+
+            if (point.mode !== CurveMode.Disconnected) {
+                return true;
+            }
+
+            const api = this.api;
+            const page = this.page;
+
+            api.modifyPointCurveMode(page, shape, index, recoverTo, segmentIndex);
+
+
+            if (activeSide === 'from') {
+                if (recoverTo === CurveMode.Mirrored) {
+                    const deltaX = (point.fromX || 0) - point.x;
+                    const deltaY = (point.fromY || 0) - point.y;
+
+                    const _tx = point.x - deltaX;
+                    const _ty = point.y - deltaY;
+
+                    if (point.toX !== _tx || point.toY !== _ty) {
+                        api.shapeModifyCurvToPoint(page, shape, index, { x: _tx, y: _ty }, segmentIndex);
+                    }
+                } else if (recoverTo === CurveMode.Asymmetric) {
+                    const l = Math.hypot(point.x - (point.toX || 0), point.y - (point.toY || 0));
+                    const angle = Math.atan2((point.fromX || 0) - point.x, (point.fromY || 0) - point.y);
+                    const _l_x = Math.abs(Math.sin(angle) * l);
+                    const _l_y = Math.abs(Math.cos(angle) * l);
+
+                    const dx = (point.fromX || 0) - point.x;
+                    const dy = (point.fromY || 0) - point.y;
+
+                    const x = point.x - (dx / Math.abs(dx)) * _l_x;
+                    const y = point.y - (dy / Math.abs(dy)) * _l_y;
+
+                    if (point.toX !== x || point.toY !== x) {
+                        api.shapeModifyCurvToPoint(page, shape, index, { x, y }, segmentIndex);
+                    }
+                }
+            } else {
+                if (recoverTo === CurveMode.Mirrored) {
+                    const deltaX = (point.toX || 0) - point.x;
+                    const deltaY = (point.toY || 0) - point.y;
+
+                    const _tx = point.x - deltaX;
+                    const _ty = point.y - deltaY;
+
+                    if (point.fromX !== _tx || point.fromY !== _ty) {
+                        api.shapeModifyCurvFromPoint(page, shape, index, { x: _tx, y: _ty }, segmentIndex);
+                    }
+                } else if (recoverTo === CurveMode.Asymmetric) {
+                    const l = Math.hypot(point.x - (point.fromX || 0), point.y - (point.fromY || 0));
+                    const angle = Math.atan2((point.toX || 0) - point.x, (point.toY || 0) - point.y);
+                    const _l_x = Math.abs(Math.sin(angle) * l);
+                    const _l_y = Math.abs(Math.cos(angle) * l);
+
+                    const dx = (point.toX || 0) - point.x;
+                    const dy = (point.toY || 0) - point.y;
+
+                    const x = point.x - (dx / Math.abs(dx)) * _l_x;
+                    const y = point.y - (dy / Math.abs(dy)) * _l_y;
+
+                    if (point.fromX !== x || point.fromY !== x) {
+                        api.shapeModifyCurvFromPoint(page, shape, index, { x, y }, segmentIndex);
+                    }
+                }
+            }
+
+            this.updateView();
+
+            return true;
+        } catch (e) {
+            console.error('PathModifier.recoveryHandle:', e);
+            this.exception = true;
+            return false;
+        }
+    }
 
     commit() {
         if (this.__repo.isNeedCommit() && !this.exception) {
