@@ -505,6 +505,43 @@ export class PathModifier extends AsyncApiCaller {
         }
     }
 
+    reversePointsAt(_shape: ShapeView, segmentIndex: number) {
+        try {
+            const shape = adapt2Shape(_shape) as PathShape;
+
+            this.shape = shape;
+
+            const segment = (shape as PathShape).pathsegs[segmentIndex];
+
+            if (!segment) {
+                return false;
+            }
+            const points = segment.points;
+
+            const container: BasicArray<CurvePoint> = new BasicArray<CurvePoint>();
+
+            for (let i = points.length - 1; i > -1; i--) {
+                container.push(points[i]);
+            }
+            const api = this.api;
+            const page = this.page;
+
+            api.deleteSegmentAt(page, shape, segmentIndex);
+            const l = shape.pathsegs.length;
+            const newSegment = new PathSegment([l] as BasicArray<number>, uuid(), container, segment.isClosed);
+
+            api.addSegmentAt(page, shape, l, newSegment);
+
+            this.updateView();
+
+            return true;
+        } catch (e) {
+            console.error('PathModifier.reversePointsAt:', e);
+            this.exception = true;
+            return false;
+        }
+    }
+
     commit() {
         if (this.__repo.isNeedCommit() && !this.exception) {
             update_frame_by_points(this.api, this.page, this.shape!);
