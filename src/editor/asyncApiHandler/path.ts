@@ -534,7 +534,7 @@ export class PathModifier extends AsyncApiCaller {
 
             this.updateView();
 
-            return true;
+            return { segment: l, activeIndex: newSegment.points.length - 1 };
         } catch (e) {
             console.error('PathModifier.reversePointsAt:', e);
             this.exception = true;
