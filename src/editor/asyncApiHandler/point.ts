@@ -29,7 +29,7 @@ export class PointModifyHandler extends AsyncApiCaller {
             for (let i = 0; i < shapes.length; i++) {
                 if (shapes[i].type !== ShapeType.Polygon && shapes[i].type !== ShapeType.Star) continue;
                 const shape = adapt2Shape(shapes[i]) as PolygonShape | StarShape;
-                if (shape.isVirtualShape || shape.haveEdit) {
+                if (shape.isVirtualShape || shape.haveEdit || shape.counts === count) {
                     continue;
                 }
                 const offset = shape.type === ShapeType.Star ? (shape as StarShape).innerAngle : undefined;
@@ -54,7 +54,7 @@ export class PointModifyHandler extends AsyncApiCaller {
             for (let i = 0; i < shapes.length; i++) {
                 if (shapes[i].type !== ShapeType.Star) continue;
                 const shape = adapt2Shape(shapes[i]) as StarShape;
-                if (shape.haveEdit) continue;
+                if (shape.haveEdit || offset === shape.innerAngle) continue;
                 for (let index = 0; index < shape.points.length; index++) {
                     if (index % 2 === 0) continue;
                     const angle = ((2 * Math.PI) / shape.points.length) * index;

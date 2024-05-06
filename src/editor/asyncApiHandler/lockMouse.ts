@@ -110,7 +110,7 @@ export class LockMouseHandler extends AsyncApiCaller {
             for (let i = 0; i < shapes.length; i++) {
                 if (shapes[i].type !== ShapeType.Polygon && shapes[i].type !== ShapeType.Star) continue;
                 const shape = adapt2Shape(shapes[i]) as PolygonShape | StarShape;
-                if (shape.isVirtualShape || shape.haveEdit) {
+                if (shape.isVirtualShape || shape.haveEdit || shape.counts === count) {
                     continue;
                 }
                 const offset = shape.type === ShapeType.Star ? (shape as StarShape).innerAngle : undefined;
@@ -126,7 +126,7 @@ export class LockMouseHandler extends AsyncApiCaller {
             console.log('LockMouseHandler.executeCounts', e);
         }
     }
-    executeInnerAngle(shapes: ShapeView[], offset: number) {
+    executeInnerAngle(shapes: ShapeView[], value: number) {
         try {
             const api = this.api;
             const page = this.page;
@@ -134,7 +134,10 @@ export class LockMouseHandler extends AsyncApiCaller {
             for (let i = 0; i < shapes.length; i++) {
                 if (shapes[i].type !== ShapeType.Star) continue;
                 const shape = adapt2Shape(shapes[i]) as StarShape;
+                let offset = shape.innerAngle + value;
                 if (shape.haveEdit) continue;
+                if (offset < 0.001) offset = 0.001;
+                if (offset > 1) offset = 1;
                 for (let index = 0; index < shape.points.length; index++) {
                     if (index % 2 === 0) continue;
                     const angle = ((2 * Math.PI) / shape.points.length) * index;
