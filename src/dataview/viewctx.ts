@@ -50,18 +50,18 @@ export class DViewCtx extends EventEmitter {
 
     removeReLayout(v: DataView) {
         const vid = objectId(v);
-        const ov = this.relayoutset.get(vid);
-        if (ov !== v) {
-            return false;
-        }
+        // const ov = this.relayoutset.get(vid);
+        // if (ov !== v) {
+        //     return false;
+        // }
         return this.relayoutset.delete(vid);
     }
     removeDirty(v: DataView) {
         const vid = objectId(v);
-        const ov = this.dirtyset.get(vid);
-        if (ov !== v) {
-            return false;
-        }
+        // const ov = this.dirtyset.get(vid);
+        // if (ov !== v) {
+        //     return false;
+        // }
         return this.dirtyset.delete(vid);
     }
 
