@@ -17,7 +17,7 @@ import { uuid } from "../../basic/uuid";
 import { __pre_curve, after_insert_point, update_frame_by_points } from "../utils/path";
 import { PathType } from "../../data/consts";
 import { addCommonAttr, newflatStyle } from "../creator";
-import { Border, BorderStyle, CornerType, FillType, Style } from "../../data/style";
+import { Border, BorderStyle, CornerType, Fill, FillType, Shadow, Style } from "../../data/style";
 import { Color } from "../../data/color";
 import * as types from "../../data/typesdefine";
 import { ISave4Restore, LocalCmd, SelectionState } from "../coop/localcmd";
@@ -90,6 +90,9 @@ export class PathModifier extends AsyncApiCaller {
                 const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
                 const border = new Border([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), types.BorderPosition.Center, 1, new BorderStyle(0, 0), CornerType.Miter, side);
                 style.borders.push(border);
+            } else {
+                style.fills = new BasicArray<Fill>();
+                style.shadows = new BasicArray<Shadow>();
             }
 
             const p1 = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight);
@@ -118,7 +121,6 @@ export class PathModifier extends AsyncApiCaller {
         try {
             const _shape = adapt2Shape(shape);
             this.shape = _shape;
-            let __segment = _shape.pathType === PathType.Editable ? -1 : segment;
             this.modifyBorderSetting();
 
             this.api.addPointAt(
@@ -126,10 +128,10 @@ export class PathModifier extends AsyncApiCaller {
                 _shape,
                 index,
                 new CurvePoint(new BasicArray<number>(), uuid(), 0, 0, CurveMode.Straight),
-                __segment
+                segment
             );
 
-            after_insert_point(this.page, this.api, _shape, index, __segment);
+            after_insert_point(this.page, this.api, _shape, index, segment);
 
             this.updateView();
             return true;
