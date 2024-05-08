@@ -163,11 +163,11 @@ export class PointModifyHandler extends AsyncApiCaller {
 
     commit() {
         if (this.__repo.isNeedCommit() && !this.exception) {
-            if (this.updateFrameTargets.size) {
-                this.updateFrameTargets.forEach(shape => {
-                    update_frame_by_points(this.api, this.page, shape);
-                })
-            }
+            // if (this.updateFrameTargets.size) {
+            //     this.updateFrameTargets.forEach(shape => {
+            //         update_frame_by_points(this.api, this.page, shape);
+            //     })
+            // }
             this.__repo.commit();
         } else {
             this.__repo.rollback();
