@@ -572,6 +572,88 @@ export class PathModifier extends AsyncApiCaller {
         }
     }
 
+    /**
+     * @description 剪刀
+     */
+    clip(_shape: ShapeView, segmentIndex: number, index: number) {
+        try {
+            const shape = adapt2Shape(_shape) as PathShape;
+
+            this.shape = shape;
+
+            const segment = shape?.pathsegs[segmentIndex];
+            if (!segment) {
+                throw new Error('wrong segment');
+            }
+
+            const { points, isClosed } = segment;
+
+            if (!points[index]) {
+                throw new Error('wrong index');
+            }
+
+            const len = points.length;
+
+            if (len < 2) {
+                throw new Error('wrong length');
+            }
+
+            const page = this.page;
+            const api = this.api;
+
+            if (!isClosed) {
+                if (len === 2) {
+                    //  直接删除线段
+                    api.deleteSegmentAt(page, shape, segmentIndex);
+                } else {
+                    if (index === 0) {
+                        //  删除第0个点
+                        api.deletePoint(page, shape, 0, segmentIndex);
+                    } else if (index === len - 2) {
+                        // 删除最后一个点
+                        api.deletePoint(page, shape, len - 1, segmentIndex);
+                    } else {
+                        //  以index为中间节点，将segment分为A，B两条，index处的点分给A线段
+                        const pointsA = new BasicArray<CurvePoint>();
+                        const pointsB = new BasicArray<CurvePoint>();
+
+                        for (let i = 0; i <= index; i++) {
+                            pointsA.push(points[i]);
+                        }
+                        for (let i = index + 1; i < len; i++) {
+                            pointsB.push(points[i]);
+                        }
+
+                        api.deleteSegmentAt(page, shape, segmentIndex);
+
+                        const segmentA = new PathSegment([shape.pathsegs.length] as BasicArray<number>, uuid(), pointsA, false);
+                        api.addSegmentAt(page, shape, shape.pathsegs.length, segmentA);
+                        const segmentB = new PathSegment([shape.pathsegs.length] as BasicArray<number>, uuid(), pointsB, false);
+                        api.addSegmentAt(page, shape, shape.pathsegs.length, segmentB);
+                    }
+                }
+            } else {
+                //  打开线段，并将index处的点变成最后一个点
+                const newPoints = new BasicArray<CurvePoint>();
+                for (let i = index + 1; i < len; i++) {
+                    newPoints.push(points[i]);
+                }
+                for (let i = 0; i <= index; i++) {
+                    newPoints.push(points[i]);
+                }
+
+                api.deleteSegmentAt(page, shape, segmentIndex);
+                const newSegment = new PathSegment([shape.pathsegs.length] as BasicArray<number>, uuid(), newPoints, false);
+                api.addSegmentAt(page, shape, shape.pathsegs.length, newSegment);
+            }
+            return true;
+        } catch (e) {
+            console.error('PathModifier.clip:', e);
+            this.exception = true;
+            return false;
+        }
+    }
+
     commit() {
         if (this.__repo.isNeedCommit() && !this.exception) {
             update_frame_by_points(this.api, this.page, this.shape!);
