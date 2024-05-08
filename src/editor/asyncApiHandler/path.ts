@@ -352,9 +352,24 @@ export class PathModifier extends AsyncApiCaller {
                 activeIndex = segment.points.length;
             } else {
                 __points = [...toSegment.points];
+                // 在目标线段的末尾处进行拼接，需要把当前线段的点位反置顺序
                 for (let i = segment.points.length - 1; i > -1; i--) {
-                    __points.push(segment.points[i]);
+
+                    const op = segment.points[i];
+                    const np = new CurvePoint(op.crdtidx, op.id, op.x, op.y, op.mode);
+                    np.radius = op.radius;
+                    np.hasTo = op.hasFrom;
+                    np.hasFrom = op.hasTo;
+
+                    np.fromX = op.toX;
+                    np.fromY = op.toY;
+
+                    np.toX = op.fromX;
+                    np.toY = op.fromY;
+
+                    __points.push(np);
                 }
+
                 activeIndex = toSegment.points.length - 1;
             }
 
@@ -522,8 +537,21 @@ export class PathModifier extends AsyncApiCaller {
 
             const container: BasicArray<CurvePoint> = new BasicArray<CurvePoint>();
 
+            // 反置点的顺序时，需要把from和to的相关值也一并反置
             for (let i = points.length - 1; i > -1; i--) {
-                container.push(points[i]);
+                const op = points[i];
+                const np = new CurvePoint([i] as BasicArray<number>, uuid(), op.x, op.y, op.mode);
+                np.radius = op.radius;
+                np.hasTo = op.hasFrom;
+                np.hasFrom = op.hasTo;
+
+                np.fromX = op.toX;
+                np.fromY = op.toY;
+
+                np.toX = op.fromX;
+                np.toY = op.fromY;
+
+                container.push(np);
             }
             const api = this.api;
             const page = this.page;
