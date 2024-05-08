@@ -309,10 +309,11 @@ export class ShapeView extends DataView {
     }
 
     onDataChange(...args: any[]): void {
-        if (args.includes('points')
-            || args.includes('isClosed')
-            || (this.m_fixedRadius || 0) !== ((this.m_data as any).fixedRadius || 0)
-            || args.includes('cornerRadius')
+        if (args.includes('points') // 点
+            || args.includes('pathsegs') // 线
+            || args.includes('isClosed') // 闭合状态
+            || (this.m_fixedRadius || 0) !== ((this.m_data as any).fixedRadius || 0) // 固定圆角
+            || args.includes('cornerRadius') // 圆角
         ) {
             this.m_path = undefined;
             this.m_pathstr = undefined;
@@ -782,7 +783,7 @@ export class ShapeView extends DataView {
             const ex_props = Object.assign({}, props);
             delete props.style;
             delete props.transform;
-            delete props.opacity;            
+            delete props.opacity;
 
             const inner_url = innerShadowId(filterId, this.getShadows());
             props.filter = `url(#pd_outer-${filterId}) ${inner_url}`;
