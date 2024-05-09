@@ -5,8 +5,10 @@ import {
     PathSegment,
     PathShape,
     PathShape2,
+    PolygonShape,
     RectShape,
     Shape,
+    StarShape,
     SymbolShape,
     Variable
 } from "../../data/shape";
@@ -87,6 +89,21 @@ export function shapeModifyRotate(page: Page, shape: Shape, rotate: number, need
     if (rotate !== shape.rotation) {
         const op = crdtSetAttr(shape, 'rotation', rotate);
         if (needUpdateFrame) needUpdateFrame.push({ shape, page });
+        return op;
+    }
+}
+export function shapeModifyCounts(shape: (PolygonShape | StarShape), counts: number) {
+    if (Number.isNaN(counts) || (!Number.isFinite(counts))) throw new Error(String(counts));
+    if (counts !== shape.counts) {
+        const op = crdtSetAttr(shape, 'counts', counts);
+        return op;
+    }
+}
+export function shapeModifyInnerAngle(shape: StarShape, offset: number) {
+    if (Number.isNaN(offset)) throw new Error(String(offset));
+    offset = Math.min(Math.max(offset, 0.001), 1);
+    if (offset !== shape.innerAngle) {
+        const op = crdtSetAttr(shape, 'innerAngle', offset);
         return op;
     }
 }

@@ -15,7 +15,9 @@ import {
     PathSegment,
     CutoutShape,
     SymbolUnionShape,
-    BoolShape
+    BoolShape,
+    PolygonShape,
+    StarShape
 } from "../data/shape";
 import { ContactShape } from "../data/contact"
 import * as types from "../data/typesdefine"
@@ -65,6 +67,7 @@ import { Matrix } from "../basic/matrix";
 import { ResizingConstraints2 } from "../data/consts";
 import { SymbolMgr } from "../data/symbolmgr";
 import { newText } from "../data/textutils";
+import { getPolygonPoints, getPolygonVertices } from "./utils/path";
 
 function _checkNum(x: number) {
     // check
@@ -282,6 +285,33 @@ export function newOvalShape(name: string, frame: ShapeFrame): OvalShape {
 
     const shape = new OvalShape([4] as BasicArray<number>, id, name, types.ShapeType.Oval, frame, style, new BasicArray<PathSegment>(segment), ellipse);
 
+    addCommonAttr(shape);
+    return shape;
+}
+
+// 多边形--默认三条边
+export function newPolygonShape(name: string, frame: ShapeFrame): PolygonShape {
+    _checkFrame(frame);
+    const style = newStyle();
+    const id = uuid();
+    const vertices = getPolygonVertices(3);
+    const curvePoint = getPolygonPoints(vertices);
+    const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, true);
+    const shape = new PolygonShape(new BasicArray(), id, name, types.ShapeType.Polygon, frame, style, new BasicArray<PathSegment>(segment), 3);
+    addCommonAttr(shape);
+    return shape;
+}
+
+// 五角星
+export function newStellateShape(name: string, frame: ShapeFrame): StarShape {
+    _checkFrame(frame);
+    const style = newStyle();
+    const vertices = getPolygonVertices(10, 0.382);
+    const id = uuid();
+    const curvePoint = getPolygonPoints(vertices);
+    const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, true);
+
+    const shape = new StarShape(new BasicArray(), id, name, types.ShapeType.Star, frame, style, new BasicArray<PathSegment>(segment), 5, 0.382);
     addCommonAttr(shape);
     return shape;
 }

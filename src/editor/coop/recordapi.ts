@@ -10,7 +10,9 @@ import {
     TextShape,
     Variable,
     SymbolShape,
-    CurveMode, PathSegment
+    CurveMode, PathSegment,
+    PolygonShape,
+    StarShape
 } from "../../data/shape";
 import { updateShapesFrame } from "./utils";
 import { Border, BorderPosition, BorderStyle, Fill, Gradient, MarkerType, Shadow } from "../../data/style";
@@ -231,6 +233,14 @@ export class Api {
     shapeModifyHeight(page: Page, shape: Shape, h: number) {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.shapeModifyHeight(page, shape, h, this.needUpdateFrame));
+    }
+    shapeModifyCounts(page: Page, shape: (PolygonShape | StarShape), counts: number) {
+        checkShapeAtPage(page, shape);
+        this.addOp(basicapi.shapeModifyCounts(shape, counts));
+    }
+    shapeModifyInnerAngle(page: Page, shape: StarShape, offset: number) {
+        checkShapeAtPage(page, shape);
+        this.addOp(basicapi.shapeModifyInnerAngle(shape, offset));
     }
     shapeModifyStartMarkerType(page: Page, shape: Shape, mt: MarkerType) {
         checkShapeAtPage(page, shape);
@@ -565,7 +575,7 @@ export class Api {
     }
     deletePoints(page: Page, shape: PathShape, index: number, strength: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.deletePoints(shape, index, strength));
+        this.addOp(basicapi.deletePoints(shape, index, strength, 0));
     }
     deletePoint(page: Page, shape: Shape, index: number, segment = -1) {
         checkShapeAtPage(page, shape);
@@ -575,7 +585,7 @@ export class Api {
         checkShapeAtPage(page, shape);
         for (let i = 0; i < points.length; i++) {
             const point = points[i];
-            this.addOp(basicapi.addPointAt(shape, point, i));
+            this.addOp(basicapi.addPointAt(shape, point, i, 0));
         }
     }
     shapeEditPoints(page: Page, shape: Shape, haveEdit: boolean) {

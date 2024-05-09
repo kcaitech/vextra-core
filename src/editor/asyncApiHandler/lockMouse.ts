@@ -4,11 +4,25 @@ import { Document } from "../../data/document";
 import { adapt2Shape, PageView, ShapeView, SymbolRefView } from "../../dataview";
 import { expand, translate } from "../frame";
 import { RadiusType } from "../../data/consts";
-import { SymbolRefShape } from "../../data/symbolref";
+import { ShapeType, SymbolRefShape } from "../../data/symbolref";
 import { shape4cornerRadius } from "../symbol";
-import { GroupShape, PathShape, PathShape2, Shape, SymbolShape, TextShape } from "../../data/shape";
+import {
+    GroupShape,
+    PathShape,
+    PathShape2,
+    PolygonShape,
+    Shape,
+    StarShape,
+    SymbolShape,
+    TextShape
+} from "../../data/shape";
 import { Artboard } from "../../data/artboard";
-import { update_frame_by_points } from "../utils/path";
+import {
+    calculateInnerAnglePosition,
+    getPolygonPoints,
+    getPolygonVertices,
+    update_frame_by_points
+} from "../utils/path";
 
 export class LockMouseHandler extends AsyncApiCaller {
     updateFrameTargets: Set<Shape> = new Set();
@@ -100,6 +114,62 @@ export class LockMouseHandler extends AsyncApiCaller {
         } catch (e) {
             this.exception = true;
             console.log('LockMouseHandler.executeH', e);
+        }
+    }
+
+    executeCounts(shapes: ShapeView[], count: number) {
+        try {
+            const api = this.api;
+            const page = this.page;
+
+            for (let i = 0; i < shapes.length; i++) {
+                if (shapes[i].type !== ShapeType.Polygon && shapes[i].type !== ShapeType.Star) continue;
+                const shape = adapt2Shape(shapes[i]) as PolygonShape | StarShape;
+                if (shape.isVirtualShape || shape.haveEdit || shape.counts === count) {
+                    continue;
+                }
+                const offset = shape.type === ShapeType.Star ? (shape as StarShape).innerAngle : undefined;
+                const counts = getPolygonVertices(shape.type === ShapeType.Star ? count * 2 : count, offset);
+                const points = getPolygonPoints(counts, shape.radius[0]);
+                api.deletePoints(page, shape, 0, shape.type === ShapeType.Star ? shape.counts * 2 : shape.counts);
+                api.addPoints(page, shape, points);
+                api.shapeModifyCounts(page, shape, count);
+            }
+            this.updateView();
+        } catch (e) {
+            this.exception = true;
+            console.log('LockMouseHandler.executeCounts', e);
+        }
+    }
+
+    executeInnerAngle(shapes: ShapeView[], value: number) {
+        try {
+            const api = this.api;
+            const page = this.page;
+
+            for (let i = 0; i < shapes.length; i++) {
+                if (shapes[i].type !== ShapeType.Star) continue;
+                const shape = adapt2Shape(shapes[i]) as StarShape;
+                let offset = shape.innerAngle + value;
+                if (shape.haveEdit) continue;
+                if (offset < 0.001) offset = 0.001;
+                if (offset > 1) offset = 1;
+                const segment = shape?.pathsegs[0];
+                if (!segment) continue;
+                const points = segment?.points;
+                if (!points?.length) continue;
+                for (let index = 0; index < points.length; index++) {
+                    if (index % 2 === 0) continue;
+                    const angle = ((2 * Math.PI) / points.length) * index;
+                    const p = calculateInnerAnglePosition(offset, angle);
+                    api.shapeModifyCurvPoint(page, shape, index, p, -1);
+                }
+                api.shapeModifyInnerAngle(page, shape, offset);
+            }
+            this.updateView();
+        } catch (e) {
+            this.exception = true;
+            console.log('LockMouseHandler.executeCounts', e);
         }
     }
 
@@ -275,11 +345,11 @@ export class LockMouseHandler extends AsyncApiCaller {
 
     commit() {
         if (this.__repo.isNeedCommit() && !this.exception) {
-            if (this.updateFrameTargets.size) {
-                this.updateFrameTargets.forEach(shape => {
-                    update_frame_by_points(this.api, this.page, shape);
-                })
-            }
+            // if (this.updateFrameTargets.size) {
+            //     this.updateFrameTargets.forEach(shape => {
+            //         update_frame_by_points(this.api, this.page, shape);
+            //     })
+            // }
             this.__repo.commit();
         } else {
             this.__repo.rollback();

@@ -66,7 +66,8 @@ export class PathModifier extends AsyncApiCaller {
         const borders = this.shape.getBorders() || [];
         for (let i = 0; i < borders.length; i++) {
             const border = borders[i];
-            const { thicknessBottom, thicknessTop, thicknessLeft, thicknessRight } = border.sideSetting;
+            const { thicknessBottom, thicknessTop, thicknessLeft, thicknessRight, sideType } = border.sideSetting;
+            if (sideType === SideType.Normal) continue;
             const thickness = Math.max(thicknessBottom, thicknessTop, thicknessLeft, thicknessRight);
             this.api.setBorderSide(this.page, this.shape, i, new BorderSideSetting(SideType.Normal, thickness, thickness, thickness, thickness));
         }
@@ -74,11 +75,7 @@ export class PathModifier extends AsyncApiCaller {
     }
 
     get haveEdit() {
-        if (!this.shape) {
-            return false;
-        }
-
-        return !([ShapeType.Artboard, ShapeType.Rectangle, ShapeType.Image].includes(this.shape.type) && !this.shape.haveEdit);
+        return !!this.shape?.haveEdit;
     }
 
     createVec(name: string, frame: ShapeFrame, parent: GroupShapeView, _style?: Style) {

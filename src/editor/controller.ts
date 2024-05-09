@@ -30,7 +30,9 @@ import {
     newImageShape,
     newLineShape,
     newOvalShape,
+    newPolygonShape,
     newRectShape,
+    newStellateShape,
     newTable,
     newTextShape
 } from "./creator";
@@ -237,6 +239,10 @@ export class Controller {
                 return newOvalShape(name, frame);
             case ShapeType.Line:
                 return newLineShape(name, frame);
+            case ShapeType.Polygon:
+                return newPolygonShape(name, frame);
+            case ShapeType.Star:
+                return newStellateShape(name, frame);
             case ShapeType.Text: {
                 if (attr) return newDefaultTextShape(name, attr, frame);
                 return newTextShape(name, frame);
