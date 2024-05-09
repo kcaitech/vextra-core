@@ -18,7 +18,7 @@ export function deletePoints(shape: Shape, index: number, strength: number, segm
     const ops: ArrayMoveOpRecord[] = [];
     for (let i = index + strength - 1; i >= index; i--) {
         const __points = (shape as PathShape2)?.pathsegs[segmentIndex]?.points;
-        if (__points) continue;
+        if (!__points) continue;
         const op = crdtArrayRemove(__points, i);
         if (op) ops.push(op);
     }
