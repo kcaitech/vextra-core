@@ -220,7 +220,7 @@ function modifySizeIgnoreConstraint(api: Api, page: Page, shape: GroupShape, sca
     }
 }
 
-function reLayoutPath(api: Api, page: Page, shape: Shape, points: CurvePoint[], matrix: Matrix, segment = -1) {
+function reLayoutPath(api: Api, page: Page, shape: Shape, points: CurvePoint[], matrix: Matrix, segment: number) {
     for (let i = 0, len = points.length; i < len; i++) {
         const p = points[i];
         if (p.hasFrom) {

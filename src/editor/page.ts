@@ -1704,8 +1704,8 @@ export class PageEditor {
                 const offset = target.type === ShapeType.Star ? (target as StarShape).innerAngle : undefined;
                 const counts = getPolygonVertices(target.type === ShapeType.Star ? count * 2 : count, offset);
                 const points = getPolygonPoints(counts, target.radius[0]);
-                api.deletePoints(this.__page, target, 0, target.type === ShapeType.Star ? target.counts * 2 : target.counts);
-                api.addPoints(this.__page, target, points);
+                api.deletePoints(this.__page, target, 0, target.type === ShapeType.Star ? target.counts * 2 : target.counts, 0);
+                api.addPoints(this.__page, target, points, 0);
                 api.shapeModifyCounts(this.__page, target, count);
             }
             this.__repo.commit();

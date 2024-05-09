@@ -39,10 +39,8 @@ import {
     get_symbol_by_layer,
     is_default_state
 } from "./utils/other";
-// import { _override_variable_for_symbolref, is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union, modify_variable, shape4shadow } from "./utils/symbol";
 import { newText2 } from "./creator";
 import {
-    _clip,
     _typing_modify,
     get_points_for_init,
     modify_points_xy,
@@ -439,27 +437,6 @@ export class ShapeEditor {
         });
     }
 
-    /**
-     * @description 路径裁剪
-     */
-    public clipPathShape(index: number, segment: number) {
-        if (this.shape.isVirtualShape) {
-            console.log('this.shape.isVirtualShape');
-            return this.__shape;
-        }
-
-        try {
-            const api = this.__repo.start("sortPathShapePoints");
-            const shape = _clip(this.__document, this.__page, api, this.shape as PathShape, index, segment);
-            this.__repo.commit();
-            return shape;
-        } catch (error) {
-            console.log('sortPathShapePoints:', error);
-            this.__repo.rollback();
-            return this.__shape;
-        }
-    }
-
     // radius
     public setRectRadius(lt: number, rt: number, rb: number, lb: number) {
         const shape = this.shape;
@@ -622,16 +599,15 @@ export class ShapeEditor {
     }
 
     // points
-    // --m1133
-    public setPathClosedStatus(val: boolean, segment = -1) {
+    public setPathClosedStatus(val: boolean, segmentIndex: number) {
         this._repoWrap("setPathClosedStatus", (api) => {
-            api.setCloseStatus(this.__page, this.shape, val, segment);
+            api.setCloseStatus(this.__page, this.shape, val, segmentIndex);
         });
     }
 
-    public addPointAt(point: CurvePoint, idx: number, segment = -1) {
+    public addPointAt(point: CurvePoint, idx: number, segmentIndex: number) {
         this._repoWrap("addPointAt", (api) => {
-            api.addPointAt(this.__page, this.shape, idx, point, segment);
+            api.addPointAt(this.__page, this.shape, idx, point, segmentIndex);
         });
     }
 
@@ -1171,7 +1147,7 @@ export class ShapeEditor {
 
             const len = shape.points.length;
 
-            api.deletePoints(this.__page, shape, 0, len);
+            api.deletePoints(this.__page, shape, 0, len, 0);
 
             for (let i = 0, len = points.length; i < len; i++) {
                 const p = importCurvePoint((points[i]));
@@ -1179,7 +1155,7 @@ export class ShapeEditor {
                 points[i] = p;
             }
 
-            api.addPoints(this.__page, shape, points);
+            api.addPoints(this.__page, shape, points, 0);
             update_frame_by_points(api, this.__page, shape);
             console.log('reset path');
         });

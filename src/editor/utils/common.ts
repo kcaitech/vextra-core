@@ -35,7 +35,7 @@ function modify_straight_length(api: Api, page: Page, shape: PathShape, val: num
 
     const new_rb = m.inverseCoord({ x, y });
 
-    api.shapeModifyCurvPoint(page, shape, 1, new_rb);
+    api.shapeModifyCurvPoint(page, shape, 1, new_rb, 0);
 
     update_frame_by_points(api, page, shape);
 }

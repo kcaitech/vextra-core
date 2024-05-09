@@ -121,8 +121,8 @@ export function contact_edit(api: Api, page: Page, s: ContactShape, index1: numb
     p1 = m_in.computeCoord3(p1);
     p2 = m_in.computeCoord3(p2);
 
-    api.shapeModifyCurvPoint(page, s, index1, p1);
-    api.shapeModifyCurvPoint(page, s, index2, p2);
+    api.shapeModifyCurvPoint(page, s, index1, p1, 0);
+    api.shapeModifyCurvPoint(page, s, index2, p2, 0);
 }
 
 export function get_points_for_init(page: Page, shape: ContactShape, index: number, points: CurvePoint[]) {
@@ -326,32 +326,30 @@ export function __round_curve_point(points: CurvePoint[], index: number) {
     }
 }
 
-export function init_curv(order: 2 | 3, shape: Shape, page: Page, api: Api, curve_point: CurvePoint, index: number, init = (Math.sqrt(2) / 4), segment = -1) {
-    if (segment > -1) {
-        const __shape = shape as PathShape2;
-        const points = __shape.pathsegs[segment]?.points;
+export function init_curv(order: 2 | 3, shape: Shape, page: Page, api: Api, curve_point: CurvePoint, index: number, segmentIndex: number, init = (Math.sqrt(2) / 4)) {
+    const __shape = shape as PathShape2;
+    const points = __shape.pathsegs[segmentIndex]?.points;
 
-        if (!points?.length) {
-            return;
-        }
+    if (!points?.length) {
+        return;
+    }
 
-        const apex = getApex(points, index);
+    const apex = getApex(points, index);
 
-        if (!apex) {
-            return;
-        }
+    if (!apex) {
+        return;
+    }
 
-        const { from, to } = apex;
+    const { from, to } = apex;
 
-        if (order === 3) {
-            api.shapeModifyCurvFromPoint(page, __shape, index, from, segment);
-            api.shapeModifyCurvToPoint(page, __shape, index, to, segment);
-            api.modifyPointHasFrom(page, __shape, index, true, segment);
-            api.modifyPointHasTo(page, __shape, index, true, segment);
-        } else {
-            api.shapeModifyCurvFromPoint(page, __shape, index, from, segment);
-            api.modifyPointHasFrom(page, __shape, index, true, segment);
-        }
+    if (order === 3) {
+        api.shapeModifyCurvFromPoint(page, __shape, index, from, segmentIndex);
+        api.shapeModifyCurvToPoint(page, __shape, index, to, segmentIndex);
+        api.modifyPointHasFrom(page, __shape, index, true, segmentIndex);
+        api.modifyPointHasTo(page, __shape, index, true, segmentIndex);
+    } else {
+        api.shapeModifyCurvFromPoint(page, __shape, index, from, segmentIndex);
+        api.modifyPointHasFrom(page, __shape, index, true, segmentIndex);
     }
 
     function getApex(points: CurvePoint[], index: number) {
@@ -374,57 +372,55 @@ export function init_curv(order: 2 | 3, shape: Shape, page: Page, api: Api, curv
     }
 }
 
-export function init_straight(shape: Shape, page: Page, api: Api, index: number, segment = -1) {
-    api.shapeModifyCurvFromPoint(page, shape, index, { x: 0, y: 0 }, segment);
-    api.shapeModifyCurvToPoint(page, shape, index, { x: 0, y: 0 }, segment);
-    api.modifyPointHasFrom(page, shape, index, false, segment);
-    api.modifyPointHasTo(page, shape, index, false, segment);
+export function init_straight(shape: Shape, page: Page, api: Api, index: number, segmentIndex: number) {
+    api.shapeModifyCurvFromPoint(page, shape, index, { x: 0, y: 0 }, segmentIndex);
+    api.shapeModifyCurvToPoint(page, shape, index, { x: 0, y: 0 }, segmentIndex);
+    api.modifyPointHasFrom(page, shape, index, false, segmentIndex);
+    api.modifyPointHasTo(page, shape, index, false, segmentIndex);
 }
 
-export function align_from(shape: Shape, page: Page, api: Api, curve_point: CurvePoint, index: number, segment = -1) {
+export function align_from(shape: Shape, page: Page, api: Api, curve_point: CurvePoint, index: number,segmentIndex: number) {
     if (curve_point.fromX === undefined || curve_point.fromY === undefined) {
         return;
     }
     const delta_x = 2 * curve_point.x - curve_point.fromX;
     const delta_y = 2 * curve_point.y - curve_point.fromY;
-    api.shapeModifyCurvToPoint(page, shape, index, { x: delta_x, y: delta_y }, segment);
+    api.shapeModifyCurvToPoint(page, shape, index, { x: delta_x, y: delta_y }, segmentIndex);
 }
 
-export function _typing_modify(shape: Shape, page: Page, api: Api, index: number, to_mode: CurveMode, segment = -1) {
+export function _typing_modify(shape: Shape, page: Page, api: Api, index: number, to_mode: CurveMode, segmentIndex: number) {
     let point: CurvePoint | undefined;
 
-    if (segment > -1) {
-        point = (shape as PathShape).pathsegs[segment]?.points[index];
-    }
+    point = (shape as PathShape)?.pathsegs[segmentIndex]?.points[index];
 
     if (!point) {
         return;
     }
 
     if (point.mode === CurveMode.Straight && to_mode !== CurveMode.Straight) {
-        init_curv(3, shape, page, api, point, index, (Math.sqrt(2) / 4), segment);
+        init_curv(3, shape, page, api, point, index, (Math.sqrt(2) / 4), segmentIndex);
         return;
     }
 
     if (point.mode === CurveMode.Mirrored && to_mode === CurveMode.Straight) {
-        init_straight(shape, page, api, index, segment);
+        init_straight(shape, page, api, index, segmentIndex);
         return;
     }
 
     if (point.mode === CurveMode.Disconnected) {
         if (to_mode === CurveMode.Straight) {
-            init_straight(shape, page, api, index, segment);
+            init_straight(shape, page, api, index, segmentIndex);
         } else if (to_mode === CurveMode.Mirrored || to_mode === CurveMode.Asymmetric) {
-            align_from(shape, page, api, point, index, segment);
+            align_from(shape, page, api, point, index, segmentIndex);
         }
         return;
     }
 
     if (point.mode === CurveMode.Asymmetric) {
         if (to_mode === CurveMode.Straight) {
-            init_straight(shape, page, api, index, segment);
+            init_straight(shape, page, api, index, segmentIndex);
         } else if (to_mode === CurveMode.Mirrored) {
-            align_from(shape, page, api, point, index, segment);
+            align_from(shape, page, api, point, index, segmentIndex);
         }
     }
 }
@@ -480,39 +476,40 @@ function get_node_xy_by_round(p: CurvePoint, n: CurvePoint) {
     }
 }
 
-function modify_previous_from_by_slice(page: Page, api: Api, path_shape: Shape, slice: XY[], previous: CurvePoint, index: number, segment = -1) {
+function modify_previous_from_by_slice(page: Page, api: Api, path_shape: Shape, slice: XY[], previous: CurvePoint, index: number, segmentIndex: number) {
     if (previous.mode === CurveMode.Straight || !previous.hasFrom) {
         return;
     }
     if (previous.mode === CurveMode.Mirrored) {
-        api.modifyPointCurveMode(page, path_shape, index, CurveMode.Asymmetric, segment);
+        api.modifyPointCurveMode(page, path_shape, index, CurveMode.Asymmetric, segmentIndex);
     }
-    api.shapeModifyCurvFromPoint(page, path_shape, index, slice[1], segment);
+    api.shapeModifyCurvFromPoint(page, path_shape, index, slice[1], segmentIndex);
 }
 
-function modify_next_to_by_slice(page: Page, api: Api, path_shape: Shape, slice: XY[], next: CurvePoint, index: number, segment = -1) {
+function modify_next_to_by_slice(page: Page, api: Api, path_shape: Shape, slice: XY[], next: CurvePoint, index: number, segmentIndex: number) {
     if (next.mode === CurveMode.Straight || !next.hasTo) {
         return;
     }
     if (next.mode === CurveMode.Mirrored) {
-        api.modifyPointCurveMode(page, path_shape, index, CurveMode.Asymmetric, segment);
+        api.modifyPointCurveMode(page, path_shape, index, CurveMode.Asymmetric, segmentIndex);
     }
 
-    api.shapeModifyCurvToPoint(page, path_shape, index, slice[2], segment);
+    api.shapeModifyCurvToPoint(page, path_shape, index, slice[2], segmentIndex);
 }
 
-function modify_current_handle_slices(page: Page, api: Api, path_shape: Shape, slices: XY[][], index: number, segment = -1) {
-    api.modifyPointHasTo(page, path_shape, index, true, segment);
-    api.modifyPointHasFrom(page, path_shape, index, true, segment);
-    api.shapeModifyCurvToPoint(page, path_shape, index, slices[0][2], segment);
-    api.shapeModifyCurvFromPoint(page, path_shape, index, slices[1][1], segment);
+function modify_current_handle_slices(page: Page, api: Api, path_shape: Shape, slices: XY[][], index: number, segmentIndex: number) {
+    api.modifyPointHasTo(page, path_shape, index, true, segmentIndex);
+    api.modifyPointHasFrom(page, path_shape, index, true, segmentIndex);
+    api.shapeModifyCurvToPoint(page, path_shape, index, slices[0][2], segmentIndex);
+    api.shapeModifyCurvFromPoint(page, path_shape, index, slices[1][1], segmentIndex);
 }
 
-export function after_insert_point(page: Page, api: Api, path_shape: Shape, index: number, segment = -1) {
-    let __segment = segment;
+export function after_insert_point(page: Page, api: Api, path_shape: Shape, index: number, segmentIndex: number) {
+    let __segment = segmentIndex;
 
-    let points: CurvePoint[] = (path_shape as PathShape)?.pathsegs[segment]?.points;
+    let points: CurvePoint[] = (path_shape as PathShape)?.pathsegs[segmentIndex]?.points;
 
+    if (!points) return;
 
     const { previous, next, previous_index, next_index } = __round_curve_point(points, index);
 
@@ -532,27 +529,25 @@ export function after_insert_point(page: Page, api: Api, path_shape: Shape, inde
     modify_current_handle_slices(page, api, path_shape, slices, index, __segment);
 }
 
-export function __pre_curve(order: 2 | 3, page: Page, api: Api, path_shape: Shape, index: number, segment = -1) {
+export function __pre_curve(order: 2 | 3, page: Page, api: Api, path_shape: Shape, index: number, segmentIndex: number) {
     let point: CurvePoint | undefined = undefined;
 
-    if (segment > -1) {
-        point = (path_shape as PathShape)?.pathsegs[segment].points[index];
-    }
+    point = (path_shape as PathShape)?.pathsegs[segmentIndex]?.points[index];
 
     if (!point) {
         return;
     }
     if (order === 3) {
         if (point.mode !== CurveMode.Mirrored) {
-            api.modifyPointCurveMode(page, path_shape, index, CurveMode.Mirrored, segment);
+            api.modifyPointCurveMode(page, path_shape, index, CurveMode.Mirrored, segmentIndex);
         }
     } else {
         if (point.mode !== CurveMode.Disconnected) {
-            api.modifyPointCurveMode(page, path_shape, index, CurveMode.Disconnected, segment);
+            api.modifyPointCurveMode(page, path_shape, index, CurveMode.Disconnected, segmentIndex);
         }
     }
 
-    init_curv(order, path_shape, page, api, point, index, 0.01, segment);
+    init_curv(order, path_shape, page, api, point, index, 0.01, segmentIndex);
 }
 
 export function replace_path_shape_points(page: Page, shape: PathShape, api: Api, points: CurvePoint[]) {

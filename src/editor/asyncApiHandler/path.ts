@@ -224,25 +224,23 @@ export class PathModifier extends AsyncApiCaller {
         }
     }
 
-    preCurve(order: 2 | 3, shape: ShapeView, index: number, segment = -1) {
+    preCurve(order: 2 | 3, shape: ShapeView, index: number, segmentIndex: number) {
         this.modifyBorderSetting();
         this.shape = adapt2Shape(shape);
-        __pre_curve(order, this.page, this.api, this.shape, index, segment);
+        __pre_curve(order, this.page, this.api, this.shape, index, segmentIndex);
     }
 
-    preCurve2(order: 2 | 3, shape: ShapeView, index: number, segment = -1) {
+    preCurve2(order: 2 | 3, shape: ShapeView, index: number,segmentIndex: number) {
         try {
             this.shape = adapt2Shape(shape);
 
-            if (segment < 0) {
+            if (segmentIndex < 0) {
                 return;
             }
 
             let point: CurvePoint | undefined = undefined;
 
-            if (segment > -1) {
-                point = (this.shape as PathShape)?.pathsegs[segment].points[index];
-            }
+            point = (this.shape as PathShape)?.pathsegs[segmentIndex]?.points[index];
 
             if (!point) {
                 return;
@@ -253,20 +251,20 @@ export class PathModifier extends AsyncApiCaller {
             const __shape = this.shape;
             if (order === 2) { // 二次曲线
                 if (point.mode !== CurveMode.Disconnected) {
-                    api.modifyPointCurveMode(page, __shape, index, CurveMode.Disconnected, segment);
+                    api.modifyPointCurveMode(page, __shape, index, CurveMode.Disconnected, segmentIndex);
                 }
 
-                api.shapeModifyCurvFromPoint(page, __shape, index, { x: point.x, y: point.y }, segment);
-                api.modifyPointHasFrom(page, __shape, index, true, segment);
+                api.shapeModifyCurvFromPoint(page, __shape, index, { x: point.x, y: point.y }, segmentIndex);
+                api.modifyPointHasFrom(page, __shape, index, true, segmentIndex);
             } else { // 三次曲线
                 if (point.mode !== CurveMode.Mirrored) {
-                    api.modifyPointCurveMode(page, __shape, index, CurveMode.Mirrored, segment);
+                    api.modifyPointCurveMode(page, __shape, index, CurveMode.Mirrored, segmentIndex);
                 }
 
-                api.shapeModifyCurvFromPoint(page, __shape, index, { x: point.x, y: point.y }, segment);
-                api.shapeModifyCurvToPoint(page, __shape, index, { x: point.x, y: point.y }, segment);
-                api.modifyPointHasFrom(page, __shape, index, true, segment);
-                api.modifyPointHasTo(page, __shape, index, true, segment);
+                api.shapeModifyCurvFromPoint(page, __shape, index, { x: point.x, y: point.y }, segmentIndex);
+                api.shapeModifyCurvToPoint(page, __shape, index, { x: point.x, y: point.y }, segmentIndex);
+                api.modifyPointHasFrom(page, __shape, index, true, segmentIndex);
+                api.modifyPointHasTo(page, __shape, index, true, segmentIndex);
             }
 
 
@@ -280,7 +278,7 @@ export class PathModifier extends AsyncApiCaller {
     execute4handle(_shape: ShapeView, index: number, side: 'from' | 'to',
                    from: { x: number, y: number },
                    to: { x: number, y: number },
-                   segment = -1) {
+                   segmentIndex: number) {
         try {
             const api = this.api;
             const page = this.page;
@@ -289,17 +287,17 @@ export class PathModifier extends AsyncApiCaller {
             let mode: CurveMode | undefined = undefined;
             this.modifyBorderSetting();
             if (shape.pathType === PathType.Editable) {
-                mode = (shape as PathShape)?.pathsegs[segment]?.points[index]?.mode;
+                mode = (shape as PathShape)?.pathsegs[segmentIndex]?.points[index]?.mode;
             }
 
             if (mode === CurveMode.Mirrored || mode === CurveMode.Asymmetric) {
-                api.shapeModifyCurvFromPoint(page, shape, index, from, segment);
-                api.shapeModifyCurvToPoint(page, shape, index, to, segment);
+                api.shapeModifyCurvFromPoint(page, shape, index, from, segmentIndex);
+                api.shapeModifyCurvToPoint(page, shape, index, to, segmentIndex);
             } else if (mode === CurveMode.Disconnected) {
                 if (side === 'from') {
-                    api.shapeModifyCurvFromPoint(page, shape, index, from, segment);
+                    api.shapeModifyCurvFromPoint(page, shape, index, from, segmentIndex);
                 } else {
-                    api.shapeModifyCurvToPoint(page, shape, index, to, segment);
+                    api.shapeModifyCurvToPoint(page, shape, index, to, segmentIndex);
                 }
             }
 

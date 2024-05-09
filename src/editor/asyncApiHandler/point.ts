@@ -49,8 +49,8 @@ export class PointModifyHandler extends AsyncApiCaller {
                 const offset = shape.type === ShapeType.Star ? (shape as StarShape).innerAngle : undefined;
                 const counts = getPolygonVertices(shape.type === ShapeType.Star ? count * 2 : count, offset);
                 const points = getPolygonPoints(counts, shape.radius[0]);
-                api.deletePoints(page, shape, 0, shape.type === ShapeType.Star ? shape.counts * 2 : shape.counts);
-                api.addPoints(page, shape, points);
+                api.deletePoints(page, shape, 0, shape.type === ShapeType.Star ? shape.counts * 2 : shape.counts, 0);
+                api.addPoints(page, shape, points, 0);
                 api.shapeModifyCounts(page, shape, count);
             }
             this.updateView();

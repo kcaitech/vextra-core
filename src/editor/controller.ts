@@ -871,8 +871,8 @@ export class Controller {
             status === Status.Pending
             try {
                 const p = new CurvePoint(new BasicArray<number>(), uuid(), 0, 0, CurveMode.Straight);
-                api.addPointAt(page, shape as PathShape, index, p);
-                after_insert_point(page, api, shape, index);
+                api.addPointAt(page, shape as PathShape, index, p, 0);
+                after_insert_point(page, api, shape, index, 0);
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
@@ -953,11 +953,11 @@ export class Controller {
                 }
 
                 const len = shape.points.length;
-                api.deletePoints(page, shape as PathShape, 0, len);
+                api.deletePoints(page, shape as PathShape, 0, len, 0);
 
                 api.contactModifyEditState(page, shape, false);
 
-                api.addPoints(page, shape, points);
+                api.addPoints(page, shape, points, 0);
 
                 status = Status.Fulfilled;
             } catch (e) {
