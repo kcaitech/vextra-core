@@ -121,7 +121,7 @@ export class ShapeEditor {
     }
 
     /**
-     * 检查当前shape的overrideType对应的属性值是否由变量起作用，如果是则判断var是否可以修改，如可以则「修改」var，否则先override再「修改」新的var zrx?是否用于修改组件身上的变量
+     * 检查当前shape的overrideType对应的属性值是否由变量起作用，如果是则判断var是否可以修改，如可以则「修改」var，否则先override再「修改」新的var
      * @param varType
      * @param overrideType
      * @param valuefun
@@ -1128,13 +1128,6 @@ export class ShapeEditor {
             api.contactModifyEditState(this.__page, this.shape as ContactShape, state);
         });
     }
-
-    public modify_frame_by_points() {
-        this._repoWrap("modify_frame_by_points", (api) => {
-            update_frame_by_points(api, this.__page, this.shape as PathShape);
-        });
-    }
-
     public reset_contact_path() {
         if (!(this.shape instanceof ContactShape)) {
             return false;
@@ -1157,7 +1150,6 @@ export class ShapeEditor {
 
             api.addPoints(this.__page, shape, points, 0);
             update_frame_by_points(api, this.__page, shape);
-            console.log('reset path');
         });
     }
 
@@ -1302,7 +1294,7 @@ export class ShapeEditor {
     }
 
     /**
-     * @description 修改可变组件的某一个属性var的属性值 --776a0ac3351f
+     * @description 修改可变组件的某一个属性var的属性值
      */
     modifyStateSymTagValue(varId: string, tag: string) {
         if (!this.shape.parent || !(this.shape.parent instanceof SymbolUnionShape)) return;

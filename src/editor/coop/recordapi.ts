@@ -33,7 +33,6 @@ import { IdOpRecord } from "../../coop/client/crdt";
 import { Repository } from "../../data/transact";
 import { SNumber } from "../../coop/client/snumber";
 import { ShapeView, TableCellView, TextShapeView } from "../../dataview";
-import { addSegmentAt } from "../basicapi";
 
 // 要支持variable的修改
 export type TextShapeLike = TableCellView | TextShapeView
