@@ -1,0 +1,24 @@
+{
+    "description": "star shape",
+    "type": "object",
+    "properties": {
+        "counts": {
+            "type": "number",
+            "default": 5
+        },
+        "innerAngle": {
+            "type": "number",
+            "default": 0.382
+        }
+    },
+    "required": [
+        "counts",
+        "innerAngle"
+    ],
+    "allOf": [
+        {
+            "$ref": "./path-shape.json"
+        }
+    ],
+    "additionalProperties": false
+}

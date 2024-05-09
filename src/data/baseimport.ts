@@ -1323,6 +1323,63 @@ export function importPathShape(source: types.PathShape, ctx?: IImportContext): 
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     return ret
 }
+/* star shape */
+export function importStarShape(source: types.StarShape, ctx?: IImportContext): impl.StarShape {
+    const ret: impl.StarShape = new impl.StarShape (
+        (() => {
+            const ret = new BasicArray<number>()
+            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
+        source.id,
+        source.name,
+        importShapeType(source.type, ctx),
+        importShapeFrame(source.frame, ctx),
+        importStyle(source.style, ctx),
+        (() => {
+            const ret = new BasicArray<impl.PathSegment>()
+            for (let i = 0, len = source.pathsegs && source.pathsegs.length; i < len; i++) {
+                const val = source.pathsegs[i]
+                if (!val.crdtidx) val.crdtidx = [i]
+                const r = importPathSegment(source.pathsegs[i], ctx)
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
+        source.counts,
+        source.innerAngle
+    )
+    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
+    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
+    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
+    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
+    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
+    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
+    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
+    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
+    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
+    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
+    if (source.rotation !== undefined) ret.rotation = source.rotation
+    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
+    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
+    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
+    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
+        return ret
+    })()
+    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
+    return ret
+}
 /* rect shape */
 export function importRectShape(source: types.RectShape, ctx?: IImportContext): impl.RectShape {
     // inject code
@@ -1364,6 +1421,62 @@ export function importRectShape(source: types.RectShape, ctx?: IImportContext): 
             }
             return ret
         })()
+    )
+    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
+    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
+    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
+    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
+    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
+    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
+    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
+    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
+    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
+    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
+    if (source.rotation !== undefined) ret.rotation = source.rotation
+    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
+    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
+    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
+    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
+        return ret
+    })()
+    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
+    return ret
+}
+/* polygon shape */
+export function importPolygonShape(source: types.PolygonShape, ctx?: IImportContext): impl.PolygonShape {
+    const ret: impl.PolygonShape = new impl.PolygonShape (
+        (() => {
+            const ret = new BasicArray<number>()
+            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
+        source.id,
+        source.name,
+        importShapeType(source.type, ctx),
+        importShapeFrame(source.frame, ctx),
+        importStyle(source.style, ctx),
+        (() => {
+            const ret = new BasicArray<impl.PathSegment>()
+            for (let i = 0, len = source.pathsegs && source.pathsegs.length; i < len; i++) {
+                const val = source.pathsegs[i]
+                if (!val.crdtidx) val.crdtidx = [i]
+                const r = importPathSegment(source.pathsegs[i], ctx)
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
+        source.counts
     )
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
@@ -1723,7 +1836,7 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.PathShape2 | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape)>()
+            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.PathShape2 | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape | impl.PolygonShape | impl.StarShape)>()
             for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
                     const val = source.childs[i]
@@ -1792,6 +1905,14 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
                     }
                     if (val.typeId == 'bool-shape') {
                         return importBoolShape(val as types.BoolShape, ctx)
+                    }
+                    if (val.typeId == 'polygon-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
+                        return importPolygonShape(val as types.PolygonShape, ctx)
+                    }
+                    if (val.typeId == 'star-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
+                        return importStarShape(val as types.StarShape, ctx)
                     }
                     {
                         throw new Error('unknow val: ' + val)
@@ -1847,7 +1968,7 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.PathShape2 | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape)>()
+            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.PathShape2 | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape | impl.PolygonShape | impl.StarShape)>()
             for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
                     const val = source.childs[i]
@@ -1916,6 +2037,14 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
                     }
                     if (val.typeId == 'bool-shape') {
                         return importBoolShape(val as types.BoolShape, ctx)
+                    }
+                    if (val.typeId == 'polygon-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
+                        return importPolygonShape(val as types.PolygonShape, ctx)
+                    }
+                    if (val.typeId == 'star-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
+                        return importStarShape(val as types.StarShape, ctx)
                     }
                     {
                         throw new Error('unknow val: ' + val)
@@ -1997,7 +2126,7 @@ export function importSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IIm
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.PathShape2 | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape)>()
+            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.PathShape2 | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape | impl.PolygonShape | impl.StarShape)>()
             for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
                     const val = source.childs[i]
@@ -2066,6 +2195,14 @@ export function importSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IIm
                     }
                     if (val.typeId == 'bool-shape') {
                         return importBoolShape(val as types.BoolShape, ctx)
+                    }
+                    if (val.typeId == 'polygon-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
+                        return importPolygonShape(val as types.PolygonShape, ctx)
+                    }
+                    if (val.typeId == 'star-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
+                        return importStarShape(val as types.StarShape, ctx)
                     }
                     {
                         throw new Error('unknow val: ' + val)
@@ -2143,7 +2280,7 @@ export function importPage(source: types.Page, ctx?: IImportContext): impl.Page 
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.PathShape2 | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape)>()
+            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.PathShape2 | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape | impl.PolygonShape | impl.StarShape)>()
             for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
                     const val = source.childs[i]
@@ -2212,6 +2349,14 @@ export function importPage(source: types.Page, ctx?: IImportContext): impl.Page 
                     }
                     if (val.typeId == 'bool-shape') {
                         return importBoolShape(val as types.BoolShape, ctx)
+                    }
+                    if (val.typeId == 'polygon-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
+                        return importPolygonShape(val as types.PolygonShape, ctx)
+                    }
+                    if (val.typeId == 'star-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
+                        return importStarShape(val as types.StarShape, ctx)
                     }
                     {
                         throw new Error('unknow val: ' + val)
@@ -2414,7 +2559,7 @@ export function importBoolShape(source: types.BoolShape, ctx?: IImportContext): 
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.PathShape2 | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape)>()
+            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.PathShape2 | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape | impl.PolygonShape | impl.StarShape)>()
             for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
                     const val = source.childs[i]
@@ -2483,6 +2628,14 @@ export function importBoolShape(source: types.BoolShape, ctx?: IImportContext): 
                     }
                     if (val.typeId == 'bool-shape') {
                         return importBoolShape(val as types.BoolShape, ctx)
+                    }
+                    if (val.typeId == 'polygon-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
+                        return importPolygonShape(val as types.PolygonShape, ctx)
+                    }
+                    if (val.typeId == 'star-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
+                        return importStarShape(val as types.StarShape, ctx)
                     }
                     {
                         throw new Error('unknow val: ' + val)
@@ -2538,7 +2691,7 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.PathShape2 | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape)>()
+            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.PathShape2 | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape | impl.PolygonShape | impl.StarShape)>()
             for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
                     const val = source.childs[i]
@@ -2607,6 +2760,14 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
                     }
                     if (val.typeId == 'bool-shape') {
                         return importBoolShape(val as types.BoolShape, ctx)
+                    }
+                    if (val.typeId == 'polygon-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
+                        return importPolygonShape(val as types.PolygonShape, ctx)
+                    }
+                    if (val.typeId == 'star-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
+                        return importStarShape(val as types.StarShape, ctx)
                     }
                     {
                         throw new Error('unknow val: ' + val)

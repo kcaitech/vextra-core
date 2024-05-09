@@ -940,6 +940,7 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
 
 export class RectShape extends PathShape implements classes.RectShape {
     typeId = 'rect-shape'
+
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
@@ -1203,5 +1204,70 @@ export class CutoutShape extends PathShape implements classes.CutoutShape {
 
     get radius(): number[] {
         return [0];
+    }
+}
+
+export class PolygonShape extends PathShape implements classes.PolygonShape {
+    typeId = 'polygon-shape'
+    counts: number
+
+    constructor(
+        crdtidx: BasicArray<number>,
+        id: string,
+        name: string,
+        type: ShapeType,
+        frame: ShapeFrame,
+        style: Style,
+        pathsegs: BasicArray<PathSegment>,
+        counts: number
+    ) {
+        super(
+            crdtidx,
+            id,
+            name,
+            type,
+            frame,
+            style,
+            pathsegs
+        )
+        this.counts = counts
+    }
+
+    get radiusType() {
+        return RadiusType.Fixed;
+    }
+}
+
+export class StarShape extends PathShape implements classes.StarShape {
+    typeId = 'star-shape'
+    counts: number
+    innerAngle: number;
+
+    constructor(
+        crdtidx: BasicArray<number>,
+        id: string,
+        name: string,
+        type: ShapeType,
+        frame: ShapeFrame,
+        style: Style,
+        pathsegs: BasicArray<PathSegment>,
+        counts: number,
+        innerAngle: number
+    ) {
+        super(
+            crdtidx,
+            id,
+            name,
+            type,
+            frame,
+            style,
+            pathsegs
+        )
+        this.counts = counts;
+        this.innerAngle = innerAngle;
+    }
+
+    get radiusType() {
+        return RadiusType.Fixed;
     }
 }

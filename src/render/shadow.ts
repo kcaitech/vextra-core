@@ -247,12 +247,12 @@ export function innerShadowId(id: string, shadows?: Shadow[]) {
 }
 
 const getFilterPropsValue = (shadow: Shadow, frame: ShapeFrame, f_props: any) => {
-    const { color, offsetX, offsetY, blurRadius, spread } = shadow;
+    const { offsetX, offsetY, blurRadius, spread } = shadow;
     const { width, height } = frame;
-    const props_w = width + Math.max(0, offsetX) + blurRadius + Math.max(0, spread) + (width * 0.2);
-    const props_h = height + Math.max(0, offsetY) + blurRadius + Math.max(0, spread) + (height * 0.2);
-    const props_x = -((props_w - width) / 2);
-    const props_y = -((props_h - height) / 2);
+    const props_w = width + Math.abs(offsetX) + (blurRadius * 2) + Math.abs(spread * 2) + (width * 0.4);
+    const props_h = height + Math.abs(offsetY) + (blurRadius * 2) + Math.abs(spread * 2) + (height * 0.4);
+    const props_x = Math.min(0, offsetX) - blurRadius - Math.min(0, spread) - (width * 0.2);
+    const props_y = Math.min(0, offsetY) - blurRadius - Math.min(0, spread) - (height * 0.2);
     f_props.props_h.push(props_h);
     f_props.props_w.push(props_w);
     f_props.props_x.push(props_x);
