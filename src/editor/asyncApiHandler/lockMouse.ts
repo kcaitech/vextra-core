@@ -9,7 +9,6 @@ import { shape4cornerRadius } from "../symbol";
 import {
     GroupShape,
     PathShape,
-    PathShape2,
     PolygonShape,
     Shape,
     StarShape,
@@ -21,7 +20,6 @@ import {
     calculateInnerAnglePosition,
     getPolygonPoints,
     getPolygonVertices,
-    update_frame_by_points
 } from "../utils/path";
 
 export class LockMouseHandler extends AsyncApiCaller {
@@ -345,11 +343,6 @@ export class LockMouseHandler extends AsyncApiCaller {
 
     commit() {
         if (this.__repo.isNeedCommit() && !this.exception) {
-            // if (this.updateFrameTargets.size) {
-            //     this.updateFrameTargets.forEach(shape => {
-            //         update_frame_by_points(this.api, this.page, shape);
-            //     })
-            // }
             this.__repo.commit();
         } else {
             this.__repo.rollback();
