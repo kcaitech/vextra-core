@@ -482,7 +482,7 @@ export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm):
     span.fontSize = 14;
     span.color = new Color(0.85, 0, 0, 0);
     para.spans.push(span);
-    const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, true);
+    const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, false);
 
     const shape = new ContactShape(new BasicArray(), uuid(), name, types.ShapeType.Contact, frame, style, new BasicArray<PathSegment>(segment), false, text, false);
 
@@ -624,13 +624,4 @@ export function modifyTransformByEnv(shape: Shape, env: GroupShape) {
     }
 
     shape.rotation = r % 360;
-}
-
-export function createNormalPoints() {
-    const p1 = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight); // lt
-    const p2 = new CurvePoint([1] as BasicArray<number>, uuid(), 1, 0, CurveMode.Straight); // rt
-    const p3 = new CurvePoint([2] as BasicArray<number>, uuid(), 1, 1, CurveMode.Straight); // rb
-    const p4 = new CurvePoint([3] as BasicArray<number>, uuid(), 0, 1, CurveMode.Straight); // lb
-
-    return new BasicArray<CurvePoint>(p1, p2, p3, p4);
 }

@@ -10,6 +10,7 @@ import { getHorizontalAngle } from "../page";
 import { ContactShape } from "../../data/contact";
 import { get_box_pagexy, get_nearest_border_point } from "../../data/utils";
 import { PathType } from "../../data/consts";
+import { importCurvePoint } from "../../data/baseimport";
 
 interface XY {
     x: number
@@ -24,38 +25,39 @@ const minimum_WH = 1; // 用户可设置最小宽高值。以防止宽高在缩�
  * @param end 点的目标🎯位置（root）
  */
 export function pathEdit(api: Api, page: Page, s: PathShape, index: number, end: XY, matrix?: Matrix) {
-    // let m = matrix ? matrix : new Matrix();
-    // if (!matrix) {
-    //     const w = s.frame.width, h = s.frame.height;
-    //     if (w === 0 || h === 0) throw new Error(); // 不可以为0
-    //     m.multiAtLeft(s.matrix2Root());
-    //     m.preScale(w, h);
-    //     m = new Matrix(m.inverse);
-    // }
-    // const p = s.points[index];
-    // if (!p) {
-    //     return false;
-    // }
-    // const save = { x: p.x, y: p.y };
-    // const _val = m.computeCoord3(end);
-    // api.shapeModifyCurvPoint(page, s as PathShape, index, _val);
-    // const delta = { x: _val.x - save.x, y: _val.y - save.y };
-    // if (!delta.x && !delta.y) {
-    //     return;
-    // }
-    // if (p.hasFrom) {
-    //     api.shapeModifyCurvFromPoint(page, s as PathShape, index, {
-    //         x: (p.fromX || 0) + delta.x,
-    //         y: (p.fromY || 0) + delta.y
-    //     });
-    // }
-    // if (p.hasTo) {
-    //     api.shapeModifyCurvToPoint(page, s as PathShape, index, {
-    //         x: (p.toX || 0) + delta.x,
-    //         y: (p.toY || 0) + delta.y
-    //     });
-    // }
-    // todo
+    // todo 连接线相关操作
+    let m = matrix ? matrix : new Matrix();
+    if (!matrix) {
+        const w = s.frame.width, h = s.frame.height;
+        if (w === 0 || h === 0) throw new Error(); // 不可以为0
+        m.multiAtLeft(s.matrix2Root());
+        m.preScale(w, h);
+        m = new Matrix(m.inverse);
+    }
+
+    const p = (s as PathShape).pathsegs[0].points[index];
+    if (!p) {
+        return false;
+    }
+    const save = { x: p.x, y: p.y };
+    const _val = m.computeCoord3(end);
+    api.shapeModifyCurvPoint(page, s as PathShape, index, _val, 0);
+    const delta = { x: _val.x - save.x, y: _val.y - save.y };
+    if (!delta.x && !delta.y) {
+        return;
+    }
+    if (p.hasFrom) {
+        api.shapeModifyCurvFromPoint(page, s as PathShape, index, {
+            x: (p.fromX || 0) + delta.x,
+            y: (p.fromY || 0) + delta.y
+        }, 0);
+    }
+    if (p.hasTo) {
+        api.shapeModifyCurvToPoint(page, s as PathShape, index, {
+            x: (p.toX || 0) + delta.x,
+            y: (p.toY || 0) + delta.y
+        }, 0);
+    }
 }
 
 /**
@@ -94,6 +96,7 @@ export function pointsEdit(api: Api, page: Page, s: Shape, points: CurvePoint[],
  * @description 连接线编辑
  */
 export function contact_edit(api: Api, page: Page, s: ContactShape, index1: number, index2: number, dx: number, dy: number) { // 以边为操作目标编辑路径
+    // todo 连接线相关操作
     const m = new Matrix(s.matrix2Root());
     const w = s.frame.width, h = s.frame.height;
 
@@ -379,7 +382,7 @@ export function init_straight(shape: Shape, page: Page, api: Api, index: number,
     api.modifyPointHasTo(page, shape, index, false, segmentIndex);
 }
 
-export function align_from(shape: Shape, page: Page, api: Api, curve_point: CurvePoint, index: number,segmentIndex: number) {
+export function align_from(shape: Shape, page: Page, api: Api, curve_point: CurvePoint, index: number, segmentIndex: number) {
     if (curve_point.fromX === undefined || curve_point.fromY === undefined) {
         return;
     }
@@ -551,14 +554,14 @@ export function __pre_curve(order: 2 | 3, page: Page, api: Api, path_shape: Shap
 }
 
 export function replace_path_shape_points(page: Page, shape: PathShape, api: Api, points: CurvePoint[]) {
-    // todo 路径相关
-    // api.deletePoints(page, shape as PathShape, 0, shape.points.length);
-    // for (let i = 0, len = points.length; i < len; i++) {
-    //     const p = importCurvePoint((points[i]));
-    //     p.id = v4();
-    //     points[i] = p;
-    // }
-    // api.addPoints(page, shape as PathShape, points);
+    // todo 连接线相关操作
+    api.deletePoints(page, shape as PathShape, 0, shape.pathsegs[0].points.length, 0);
+    for (let i = 0, len = points.length; i < len; i++) {
+        const p = importCurvePoint((points[i]));
+        p.id = v4();
+        points[i] = p;
+    }
+    api.addPoints(page, shape as PathShape, points, 0);
 }
 
 export function modify_points_xy(api: Api, page: Page, s: Shape, actions: {
