@@ -540,6 +540,7 @@ export function __pre_curve(order: 2 | 3, page: Page, api: Api, path_shape: Shap
     if (!point) {
         return;
     }
+
     if (order === 3) {
         if (point.mode !== CurveMode.Mirrored) {
             api.modifyPointCurveMode(page, path_shape, index, CurveMode.Mirrored, segmentIndex);
@@ -550,7 +551,7 @@ export function __pre_curve(order: 2 | 3, page: Page, api: Api, path_shape: Shap
         }
     }
 
-    init_curv(order, path_shape, page, api, point, index, 0.01, segmentIndex);
+    init_curv(order, path_shape, page, api, point, index, segmentIndex, 0.01);
 }
 
 export function replace_path_shape_points(page: Page, shape: PathShape, api: Api, points: CurvePoint[]) {

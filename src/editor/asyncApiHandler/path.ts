@@ -230,7 +230,7 @@ export class PathModifier extends AsyncApiCaller {
         __pre_curve(order, this.page, this.api, this.shape, index, segmentIndex);
     }
 
-    preCurve2(order: 2 | 3, shape: ShapeView, index: number,segmentIndex: number) {
+    preCurve2(order: 2 | 3, shape: ShapeView, index: number, segmentIndex: number) {
         try {
             this.shape = adapt2Shape(shape);
 
@@ -649,10 +649,37 @@ export class PathModifier extends AsyncApiCaller {
         }
     }
 
+    sortSegment(_shape: ShapeView) {
+        try {
+            const shape = adapt2Shape(_shape) as PathShape;
+
+            this.shape = shape;
+
+            const api = this.api;
+            const page = this.page;
+
+            const segments = shape.pathsegs;
+            if (!segments.length) {
+                return;
+            }
+
+            for (let i = segments.length - 1; i > -1; i--) {
+                const segment = segments[i];
+                if (segment.points.length < 2) {
+                    api.deleteSegmentAt(page, shape, i);
+                }
+            }
+
+        } catch (e) {
+            console.error('PathModifier.sortSegment:', e);
+            this.exception = true;
+            return false;
+        }
+    }
+
     commit() {
         if (this.__repo.isNeedCommit() && !this.exception) {
             update_frame_by_points(this.api, this.page, this.shape!);
-
             this.__repo.commit();
         } else {
             this.__repo.rollback();
