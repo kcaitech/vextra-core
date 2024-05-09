@@ -1,20 +1,14 @@
 import { Api } from "../coop/recordapi";
-import * as types from "../../data/typesdefine";
 import { ContactForm, CurveMode, ShapeType } from "../../data/typesdefine";
-import { CurvePoint, GroupShape, PathSegment, PathShape, PathShape2, Shape, ShapeFrame } from "../../data/shape";
+import { CurvePoint, PathShape, PathShape2, Shape } from "../../data/shape";
 import { Page } from "../../data/page";
-import { importCurvePoint, importShapeFrame, importStyle } from "../../data/baseimport";
-import { exportCurvePoint, exportShapeFrame, exportStyle } from "../../data/baseexport";
 import { v4 } from "uuid";
 import { uuid } from "../../basic/uuid";
 import { BasicArray } from "../../data/basic";
 import { Matrix } from "../../basic/matrix";
-import { group } from "../group";
-import { addCommonAttr, newGroupShape } from "../creator";
 import { getHorizontalAngle } from "../page";
 import { ContactShape } from "../../data/contact";
 import { get_box_pagexy, get_nearest_border_point } from "../../data/utils";
-import { Document } from "../../data/document";
 import { PathType } from "../../data/consts";
 
 interface XY {
@@ -562,7 +556,7 @@ export function __pre_curve(order: 2 | 3, page: Page, api: Api, path_shape: Shap
 }
 
 export function replace_path_shape_points(page: Page, shape: PathShape, api: Api, points: CurvePoint[]) {
-    // todo
+    // todo 路径相关
     // api.deletePoints(page, shape as PathShape, 0, shape.points.length);
     // for (let i = 0, len = points.length; i < len; i++) {
     //     const p = importCurvePoint((points[i]));
@@ -570,184 +564,6 @@ export function replace_path_shape_points(page: Page, shape: PathShape, api: Api
     //     points[i] = p;
     // }
     // api.addPoints(page, shape as PathShape, points);
-}
-
-function _sort_after_clip(points: CurvePoint[], index: number) {
-    if (index === points.length - 1) {
-        return points.map(i => i);
-    }
-    const result: CurvePoint[] = [];
-    for (let i = index + 1, l = points.length; i < l; i++) {
-        result.push(points[i]);
-    }
-    result.push(...points.slice(0, index + 1));
-    return result;
-}
-
-function after_clip(document: Document, page: Page, api: Api, path_shape: PathShape): number {
-    // if (path_shape.points.length < 2) {
-    //     const parent = path_shape.parent;
-    //     if (!parent) {
-    //         console.log('!parent');
-    //         return 0;
-    //     }
-    //     const index = (parent as GroupShape).indexOfChild(path_shape);
-    //     if (index < 0) {
-    //         console.log('index < 0');
-    //         return 0;
-    //     }
-    //     api.shapeDelete(document, page, parent as GroupShape, index);
-    //     return 1;
-    // }
-    return 0;
-}
-
-function points_mapping_to_parent(points: CurvePoint[], path_shape: PathShape) {
-    const f = path_shape.frame;
-    const m = path_shape.matrix2Parent();
-    m.preScale(f.width, f.height);
-    for (let i = 0, l = points.length; i < l; i++) {
-        const _p = points[i];
-        const xy = m.computeCoord2(_p.x, _p.y);
-        points[i].x = xy.x;
-        points[i].y = xy.y;
-    }
-}
-
-function _apart_points(points: CurvePoint[], index: number) {
-    const _idx = index + 1;
-    const path1: CurvePoint[] = points.slice(0, _idx);
-    const path2: CurvePoint[] = points.slice(_idx);
-    return { path1, path2 }
-}
-
-function apartPathShape(document: Document, page: Page, api: Api, shape: Shape, index: number, segment = -1) {
-    const __shape = shape as PathShape2;
-
-    if (segment < 0) {
-        return __shape;
-    }
-
-    const segments = __shape.pathsegs;
-    const __seg = segments[segment];
-
-    if (!__seg) {
-        return __shape;
-    }
-
-    const points = __seg.points.map(i => importCurvePoint(exportCurvePoint(i)));
-    const _idx = index + 1;
-    const __points1 = new BasicArray<CurvePoint>(...points.slice(0, _idx));
-    const __points2 = new BasicArray<CurvePoint>(...points.slice(_idx));
-
-    __points1[0].hasTo = false;
-    __points2[0].hasTo = false;
-
-    __points1[__points1.length - 1].hasTo = false;
-    __points2[__points2.length - 1].hasTo = false;
-
-    let i = __seg.crdtidx[0];
-    let si = segment;
-
-    if (__points1.length > 1) {
-        const s1 = new PathSegment([++i] as BasicArray<number>, uuid(), __points1, false);
-        api.insertSegmentAt(page, __shape, ++si, s1);
-    }
-    if (__points2.length > 1) {
-        const s2 = new PathSegment([++i] as BasicArray<number>, uuid(), __points2, false);
-        api.insertSegmentAt(page, __shape, ++si, s2);
-    }
-
-    api.deleteSegmentAt(page, __shape, segment);
-
-    return __shape;
-}
-
-export function _clip(document: Document, page: Page, api: Api, path_shape: Shape, index: number, segment: number) {
-    // todo
-    // if (path_shape.pathType === PathType.Editable) {
-    //     const shape = path_shape as PathShape
-    //     if (shape.isClosed) {
-    //         api.setCloseStatus(page, path_shape, false);
-    //         const points = _sort_after_clip(shape.points, index);
-    //         replace_path_shape_points(page, shape, api, points);
-    //         return path_shape;
-    //     }
-    //     const points = shape.points;
-    //
-    //     if (points.length < 3) {
-    //         return shape;
-    //     }
-    //
-    //     if (index === 0) {
-    //         api.deletePoint(page, shape, index);
-    //         after_clip(document, page, api, shape);
-    //         return shape;
-    //     }
-    //     if (index === points.length - 2) {
-    //         api.deletePoint(page, shape, points.length - 1);
-    //         after_clip(document, page, api, shape);
-    //         return shape;
-    //     }
-    //
-    //     if (shape.type === ShapeType.Image) {
-    //         return shape;
-    //     }
-    //
-    //     return apartPathShape(document, page, api, shape, index, segment);
-    // } else if (path_shape.pathType === PathType.Multi) {
-    //     const shape = path_shape as PathShape2
-    //     const __segment = shape.pathsegs[segment];
-    //
-    //     if (!__segment) {
-    //         return shape;
-    //     }
-    //
-    //     if (__segment.isClosed) {
-    //         const crdtidx = __segment.crdtidx;
-    //         const points = new BasicArray<CurvePoint>(..._sort_after_clip(__segment.points, index));
-    //         const s = new PathSegment(crdtidx, uuid(), points, false);
-    //         api.insertSegmentAt(page, shape, segment, s);
-    //         api.deleteSegmentAt(page, shape, segment + 1);
-    //         return shape;
-    //     }
-    //
-    //     const points = __segment.points;
-    //
-    //     if (points.length < 3) {
-    //         return shape;
-    //     }
-    //
-    //     if (index === 0) {
-    //         api.deletePoint(page, shape, index, segment);
-    //         return shape;
-    //     }
-    //
-    //     if (index === points.length - 2) {
-    //         api.deletePoint(page, shape, points.length - 1, segment);
-    //
-    //         if (__segment.points.length < 2) {
-    //             api.deleteSegmentAt(page, shape, segment);
-    //         }
-    //         return shape;
-    //     }
-    //
-    //     return apartPathShape(document, page, api, shape, index, segment);
-    // }
-    return path_shape;
-}
-
-export function update_path_shape_frame(api: Api, page: Page, shapes: PathShape[]) {
-    for (let i = 0, l = shapes.length; i < l; i++) {
-        const shape = shapes[i];
-        update_frame_by_points(api, page, shape);
-    }
-}
-
-export function init_points(api: Api, page: Page, s: PathShape, points: CurvePoint[]) {
-    // todo
-    // api.deletePoints(page, s as PathShape, 0, s.points.length);
-    // api.addPoints(page, s as PathShape, points);
 }
 
 export function modify_points_xy(api: Api, page: Page, s: Shape, actions: {
