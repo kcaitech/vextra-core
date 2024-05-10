@@ -617,6 +617,8 @@ export class ShapeEditor {
 
             const api = this.__repo.start("removePoints");
 
+            const page = this.__page;
+
             const shape = this.shape as PathShape;
 
             map.forEach((indexes, segment) => {
@@ -632,15 +634,15 @@ export class ShapeEditor {
                     return;
                 }
                 for (let i = indexes.length - 1; i > -1; i--) {
-                    api.deletePoint(this.__page, shape, indexes[i], segment);
+                    api.deletePoint(page, shape, indexes[i], segment);
                 }
                 const seg = shape.pathsegs[segment];
                 if (seg.points.length === 2) {
-                    api.setCloseStatus(this.__page, shape, false, segment);
+                    api.setCloseStatus(page, shape, false, segment);
                 }
 
                 if (seg.points.length < 2) {
-                    api.deleteSegmentAt(this.__page, shape, segment);
+                    api.deleteSegmentAt(page, shape, segment);
                 }
             });
 
@@ -659,7 +661,8 @@ export class ShapeEditor {
                 this.__delete(shape, api);
                 result = 0;
             } else {
-                update_frame_by_points(api, this.__page, shape);
+                api.shapeEditPoints(page, shape, true);
+                update_frame_by_points(api, page, shape);
             }
 
             this.__repo.commit();
