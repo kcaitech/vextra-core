@@ -169,6 +169,7 @@ export class PathModifier extends AsyncApiCaller {
             const point = new CurvePoint([0] as BasicArray<number>, uuid(), xy.x, xy.y, CurveMode.Straight);
             const segment = new PathSegment([index] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(point), false);
             this.api.addSegmentAt(this.page, _shape, index, segment);
+            this.api.shapeEditPoints(this.page, _shape, true);
 
             this.updateView();
 
@@ -641,6 +642,9 @@ export class PathModifier extends AsyncApiCaller {
                 const newSegment = new PathSegment([shape.pathsegs.length] as BasicArray<number>, uuid(), newPoints, false);
                 api.addSegmentAt(page, shape, shape.pathsegs.length, newSegment);
             }
+
+            this.api.shapeEditPoints(this.page, shape, true);
+
             return true;
         } catch (e) {
             console.error('PathModifier.clip:', e);
