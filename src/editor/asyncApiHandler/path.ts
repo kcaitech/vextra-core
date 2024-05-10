@@ -660,6 +660,9 @@ export class PathModifier extends AsyncApiCaller {
 
             const segments = shape.pathsegs;
             if (!segments.length) {
+                const parent = shape.parent as GroupShape;
+                const index = parent.indexOfChild(shape);
+                api.shapeDelete(this.__document, page, parent, index);
                 return;
             }
 
