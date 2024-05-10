@@ -401,7 +401,7 @@ export function _typing_modify(shape: Shape, page: Page, api: Api, index: number
     }
 
     if (point.mode === CurveMode.Straight && to_mode !== CurveMode.Straight) {
-        init_curv(3, shape, page, api, point, index, (Math.sqrt(2) / 4), segmentIndex);
+        init_curv(3, shape, page, api, point, index, segmentIndex, (Math.sqrt(2) / 4));
         return;
     }
 
