@@ -502,10 +502,13 @@ function expandBounds(ctx: BoundsCtx, x: number, y: number) {
 boundsHandler['M'] = (ctx: BoundsCtx, item: any[]) => {
     const x = item[1];
     const y = item[2];
+
     ctx.beginpoint.x = x;
     ctx.beginpoint.y = y;
     ctx.prepoint.x = x;
     ctx.prepoint.y = y;
+
+    expandBounds(ctx, ctx.prepoint.x, ctx.prepoint.y);
 }
 boundsHandler['m'] = (ctx: BoundsCtx, item: any[]) => {
     const x = ctx.prepoint.x + item[1];
@@ -514,18 +517,20 @@ boundsHandler['m'] = (ctx: BoundsCtx, item: any[]) => {
     ctx.beginpoint.y = y;
     ctx.prepoint.x = x;
     ctx.prepoint.y = y;
+
+    expandBounds(ctx, ctx.prepoint.x, ctx.prepoint.y);
 }
 boundsHandler['L'] = (ctx: BoundsCtx, item: any[]) => {
     const x = item[1];
     const y = item[2];
-    expandBounds(ctx, ctx.prepoint.x, ctx.prepoint.y);
+    expandBounds(ctx, x, y);
     ctx.prepoint.x = x;
     ctx.prepoint.y = y;
 }
 boundsHandler['l'] = (ctx: BoundsCtx, item: any[]) => {
     const x = ctx.prepoint.x + item[1];
     const y = ctx.prepoint.y + item[2];
-    expandBounds(ctx, ctx.prepoint.x, ctx.prepoint.y);
+    expandBounds(ctx, x, y);
     ctx.prepoint.x = x;
     ctx.prepoint.y = y;
 }
