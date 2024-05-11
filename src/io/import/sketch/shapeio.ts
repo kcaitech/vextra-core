@@ -6,7 +6,7 @@ import {
     ExportOptions,
     GroupShape,
     ImageShape,
-    OverrideType,
+    OverrideType, PathSegment,
     PathShape,
     RectShape,
     Shape,
@@ -45,11 +45,11 @@ function uniqueId(ctx: LoadContext, id: string): string {
 
 function importExportOptions(data: IJSON): ExportOptions {
     return ((d) => {
-        return new ExportOptions(
-            new BasicArray<ExportFormat>(),
-            0,
-            false, false, false, false)
-    }
+            return new ExportOptions(
+                new BasicArray<ExportFormat>(),
+                0,
+                false, false, false, false)
+        }
     )(data['exportOptions']);
 }
 
@@ -96,7 +96,7 @@ function importPoints(data: IJSON): CurvePoint[] {
 
         if (!p.hasTo && !p.hasFrom) {
             p.mode = CurveMode.Straight;
-        } else  if (!p.hasTo || !p.hasFrom) {
+        } else if (!p.hasTo || !p.hasFrom) {
             p.mode = CurveMode.Disconnected;
         }
 
@@ -292,7 +292,10 @@ export function importImage(ctx: LoadContext, data: IJSON, f: ImportFun, i: numb
     const p3 = new CurvePoint([2] as BasicArray<number>, uuid(), 1, 1, CurveMode.Straight); // rb
     const p4 = new CurvePoint([3] as BasicArray<number>, uuid(), 0, 1, CurveMode.Straight); // lb
     curvePoint.push(p1, p2, p3, p4);
-    const shape = new ImageShape([i] as BasicArray<number>, id, name, ShapeType.Image, frame, style, curvePoint, true, imageRef);
+
+    const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, true);
+    const shape = new ImageShape([i] as BasicArray<number>, id, name, ShapeType.Image, frame, style, new BasicArray<PathSegment>(segment), imageRef);
+
     // shape.setImageMgr(env.mediaMgr);
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
@@ -339,9 +342,10 @@ export function importPathShape(ctx: LoadContext, data: IJSON, f: ImportFun, i: 
         // env.styleMgr.addShared(data['sharedStyleID'], style);
     }
     // const text = data['attributedString'] && importText(data['attributedString']);
-    const isClosed = data['isClosed'];
 
-    const shape = new PathShape([i] as BasicArray<number>, id, name, ShapeType.Path, frame, style, new BasicArray<CurvePoint>(...points), isClosed);
+    const segment = new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...points), data['isClosed'])
+
+    const shape = new PathShape([i] as BasicArray<number>, id, name, ShapeType.Path, frame, style, new BasicArray<PathSegment>(segment));
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     shape.exportOptions = exportOptions;
@@ -366,7 +370,10 @@ export function importRectShape(ctx: LoadContext, data: IJSON, f: ImportFun, i: 
     // const isClosed = data['isClosed'];
     // const r = data['fixedRadius'] || 0;
     // const radius = new RectRadius(r, r, r, r);
-    const shape = new RectShape([i] as BasicArray<number>, id, name, ShapeType.Rectangle, frame, style, new BasicArray<CurvePoint>(...points), true);
+
+    const segment: PathSegment = new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...points), data['isClosed']);
+    const shape = new RectShape([i] as BasicArray<number>, id, name, ShapeType.Rectangle, frame, style, new BasicArray<PathSegment>(segment));
+
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     shape.exportOptions = exportOptions;

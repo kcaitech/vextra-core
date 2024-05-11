@@ -134,14 +134,14 @@ class PathShapeHdl extends ShapeHdl {
         return this.m_view as PathShapeView;
     }
     get(target: object, propertyKey: PropertyKey, receiver?: any) {
-        const propStr = propertyKey.toString();
-        if (propStr === 'points') {
-            const points = this.view.m_points;
-            if (points) {
-                return points;
-            }
-            return (this.view.data as PathShape).points;
-        }
+        // const propStr = propertyKey.toString();
+        // if (propStr === 'points') {
+        //     const points = this.view.m_points;
+        //     if (points) {
+        //         return points;
+        //     }
+        //     return (this.view.data as PathShape).points;
+        // }
         return super.get(target, propertyKey, receiver);
     }
 }

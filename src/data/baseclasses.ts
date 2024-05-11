@@ -1102,8 +1102,7 @@ export class PathShape2 extends Shape {
  */
 export class PathShape extends Shape {
     typeId = 'path-shape'
-    points: BasicArray<CurvePoint >
-    isClosed: boolean
+    pathsegs: BasicArray<PathSegment >
     fixedRadius?: number
     constructor(
         crdtidx: BasicArray<number >,
@@ -1112,8 +1111,7 @@ export class PathShape extends Shape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        points: BasicArray<CurvePoint >,
-        isClosed: boolean
+        pathsegs: BasicArray<PathSegment >
     ) {
         super(
             crdtidx,
@@ -1123,8 +1121,38 @@ export class PathShape extends Shape {
             frame,
             style
         )
-        this.points = points
-        this.isClosed = isClosed
+        this.pathsegs = pathsegs
+    }
+}
+/**
+ * star shape 
+ */
+export class StarShape extends PathShape {
+    typeId = 'star-shape'
+    counts: number
+    innerAngle: number
+    constructor(
+        crdtidx: BasicArray<number >,
+        id: string,
+        name: string,
+        type: ShapeType,
+        frame: ShapeFrame,
+        style: Style,
+        pathsegs: BasicArray<PathSegment >,
+        counts: number,
+        innerAngle: number
+    ) {
+        super(
+            crdtidx,
+            id,
+            name,
+            type,
+            frame,
+            style,
+            pathsegs
+        )
+        this.counts = counts
+        this.innerAngle = innerAngle
     }
 }
 /**
@@ -1139,8 +1167,7 @@ export class RectShape extends PathShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        points: BasicArray<CurvePoint >,
-        isClosed: boolean
+        pathsegs: BasicArray<PathSegment >
     ) {
         super(
             crdtidx,
@@ -1149,9 +1176,36 @@ export class RectShape extends PathShape {
             type,
             frame,
             style,
-            points,
-            isClosed
+            pathsegs
         )
+    }
+}
+/**
+ * polygon shape 
+ */
+export class PolygonShape extends PathShape {
+    typeId = 'polygon-shape'
+    counts: number
+    constructor(
+        crdtidx: BasicArray<number >,
+        id: string,
+        name: string,
+        type: ShapeType,
+        frame: ShapeFrame,
+        style: Style,
+        pathsegs: BasicArray<PathSegment >,
+        counts: number
+    ) {
+        super(
+            crdtidx,
+            id,
+            name,
+            type,
+            frame,
+            style,
+            pathsegs
+        )
+        this.counts = counts
     }
 }
 /**
@@ -1198,8 +1252,7 @@ export class OvalShape extends PathShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        points: BasicArray<CurvePoint >,
-        isClosed: boolean,
+        pathsegs: BasicArray<PathSegment >,
         ellipse: Ellipse
     ) {
         super(
@@ -1209,8 +1262,7 @@ export class OvalShape extends PathShape {
             type,
             frame,
             style,
-            points,
-            isClosed
+            pathsegs
         )
         this.ellipse = ellipse
     }
@@ -1227,8 +1279,7 @@ export class LineShape extends PathShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        points: BasicArray<CurvePoint >,
-        isClosed: boolean
+        pathsegs: BasicArray<PathSegment >
     ) {
         super(
             crdtidx,
@@ -1237,8 +1288,7 @@ export class LineShape extends PathShape {
             type,
             frame,
             style,
-            points,
-            isClosed
+            pathsegs
         )
     }
 }
@@ -1255,8 +1305,7 @@ export class ImageShape extends PathShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        points: BasicArray<CurvePoint >,
-        isClosed: boolean,
+        pathsegs: BasicArray<PathSegment >,
         imageRef: string
     ) {
         super(
@@ -1266,8 +1315,7 @@ export class ImageShape extends PathShape {
             type,
             frame,
             style,
-            points,
-            isClosed
+            pathsegs
         )
         this.imageRef = imageRef
     }
@@ -1277,7 +1325,7 @@ export class ImageShape extends PathShape {
  */
 export class GroupShape extends Shape {
     typeId = 'group-shape'
-    childs: BasicArray<(GroupShape | ImageShape | PathShape | PathShape2 | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape) >
+    childs: BasicArray<(GroupShape | ImageShape | PathShape | PathShape2 | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape | PolygonShape | StarShape) >
     fixedRadius?: number
     constructor(
         crdtidx: BasicArray<number >,
@@ -1286,7 +1334,7 @@ export class GroupShape extends Shape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(GroupShape | ImageShape | PathShape | PathShape2 | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape) >
+        childs: BasicArray<(GroupShape | ImageShape | PathShape | PathShape2 | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape | PolygonShape | StarShape) >
     ) {
         super(
             crdtidx,
@@ -1314,7 +1362,7 @@ export class SymbolShape extends GroupShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(GroupShape | ImageShape | PathShape | PathShape2 | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape) >,
+        childs: BasicArray<(GroupShape | ImageShape | PathShape | PathShape2 | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape | PolygonShape | StarShape) >,
         variables: BasicMap<string, Variable>
     ) {
         super(
@@ -1341,7 +1389,7 @@ export class SymbolUnionShape extends SymbolShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(GroupShape | ImageShape | PathShape | PathShape2 | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape) >,
+        childs: BasicArray<(GroupShape | ImageShape | PathShape | PathShape2 | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape | PolygonShape | StarShape) >,
         variables: BasicMap<string, Variable>
     ) {
         super(
@@ -1369,7 +1417,7 @@ export class Page extends GroupShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(GroupShape | ImageShape | PathShape | PathShape2 | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape) >
+        childs: BasicArray<(GroupShape | ImageShape | PathShape | PathShape2 | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape | PolygonShape | StarShape) >
     ) {
         super(
             crdtidx,
@@ -1395,8 +1443,7 @@ export class CutoutShape extends PathShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        points: BasicArray<CurvePoint >,
-        isClosed: boolean,
+        pathsegs: BasicArray<PathSegment >,
         scalingStroke: boolean
     ) {
         super(
@@ -1406,8 +1453,7 @@ export class CutoutShape extends PathShape {
             type,
             frame,
             style,
-            points,
-            isClosed
+            pathsegs
         )
         this.scalingStroke = scalingStroke
     }
@@ -1415,16 +1461,13 @@ export class CutoutShape extends PathShape {
 /**
  * contact shape 
  */
-export class ContactShape extends Shape {
+export class ContactShape extends PathShape {
     typeId = 'contact-shape'
-    points: BasicArray<CurvePoint >
     from?: ContactForm
     to?: ContactForm
     isEdited: boolean
-    isClosed: boolean
     mark: boolean
     text: Text
-    fixedRadius?: number
     constructor(
         crdtidx: BasicArray<number >,
         id: string,
@@ -1432,8 +1475,7 @@ export class ContactShape extends Shape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        points: BasicArray<CurvePoint >,
-        isClosed: boolean,
+        pathsegs: BasicArray<PathSegment >,
         isEdited: boolean,
         text: Text,
         mark: boolean
@@ -1444,10 +1486,9 @@ export class ContactShape extends Shape {
             name,
             type,
             frame,
-            style
+            style,
+            pathsegs
         )
-        this.points = points
-        this.isClosed = isClosed
         this.isEdited = isEdited
         this.text = text
         this.mark = mark
@@ -1465,7 +1506,7 @@ export class BoolShape extends GroupShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(GroupShape | ImageShape | PathShape | PathShape2 | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape) >
+        childs: BasicArray<(GroupShape | ImageShape | PathShape | PathShape2 | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape | PolygonShape | StarShape) >
     ) {
         super(
             crdtidx,
@@ -1491,7 +1532,7 @@ export class Artboard extends GroupShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(GroupShape | ImageShape | PathShape | PathShape2 | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape) >
+        childs: BasicArray<(GroupShape | ImageShape | PathShape | PathShape2 | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape | PolygonShape | StarShape) >
     ) {
         super(
             crdtidx,

@@ -4,7 +4,7 @@ import { CurvePoint, PathShape, Shape, SymbolShape, Variable } from "./shape";
 import { ContactType, CurveMode, OverrideType } from "./typesdefine";
 import { Api } from "../editor/coop/recordapi";
 import { Page } from "./page";
-import { importCurvePoint } from "./baseimport";
+import { importCurvePoint, importPolygonShape, importStarShape } from "./baseimport";
 import { importArtboard, importContactShape, importBoolShape, importGroupShape, importImageShape, importLineShape, importOvalShape, importPathShape, importPathShape2, importRectShape, importSymbolRefShape, importTableCell, importTableShape, importTextShape } from "./baseimport";
 import * as types from "./typesdefine"
 import { ContactShape, SymbolRefShape } from "./classes";
@@ -573,13 +573,13 @@ export function d(a: PageXY, b: XY): 'ver' | 'hor' | false {
 export function update_contact_points(api: Api, shape: ContactShape, page: Page) {
     const _p = shape.getPoints();
     const len = shape.points.length;
-    api.deletePoints(page, shape as PathShape, 0, len);
+    api.deletePoints(page, shape as PathShape, 0, len, 0);
     for (let i = 0, len2 = _p.length; i < len2; i++) {
         const p = importCurvePoint((_p[i]));
         p.id = v4();
         _p[i] = p;
     }
-    api.addPoints(page, shape as PathShape, _p);
+    api.addPoints(page, shape as PathShape, _p, 0);
 }
 
 export function copyShape(source: types.Shape) {
@@ -624,6 +624,12 @@ export function copyShape(source: types.Shape) {
     }
     if (source.typeId == 'contact-shape') {
         return importContactShape(source as types.ContactShape)
+    }
+    if (source.typeId == 'polygon-shape') {
+        return importPolygonShape(source as types.PolygonShape)
+    }
+    if (source.typeId == 'star-shape') {
+        return importStarShape(source as types.StarShape)
     }
     throw new Error("unknow shape type: " + source.typeId)
 }

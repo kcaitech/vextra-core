@@ -16,7 +16,8 @@ function initComsMap(comsMap: Map<ShapeType, any>) {
     comsMap.set(ShapeType.Image, ImageShapeView);
     comsMap.set(ShapeType.BoolShape, BoolShapeView);
     comsMap.set(ShapeType.Path, PathShapeView);
-    comsMap.set(ShapeType.Path2, PathShapeView2);
+    // comsMap.set(ShapeType.Path2, PathShapeView2);
+    // comsMap.set(ShapeType.Rectangle, PathShapeDom);
     comsMap.set(ShapeType.Oval, PathShapeView);
     comsMap.set(ShapeType.Text, TextShapeView);
     comsMap.set(ShapeType.Symbol, SymbolView);

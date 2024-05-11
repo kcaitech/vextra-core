@@ -1171,21 +1171,20 @@ export function exportPathShape(source: types.PathShape, ctx?: IExportContext): 
                 return ret;
             })(),
         haveEdit: source.haveEdit,
-        points: (() => {
+        pathsegs: (() => {
             const ret = []
-            for (let i = 0, len = source.points.length; i < len; i++) {
-                const r = exportCurvePoint(source.points[i], ctx)
+            for (let i = 0, len = source.pathsegs.length; i < len; i++) {
+                const r = exportPathSegment(source.pathsegs[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
         })(),
-        isClosed: source.isClosed,
         fixedRadius: source.fixedRadius,
     }
     return ret
 }
-/* rect shape */
-export function exportRectShape(source: types.RectShape, ctx?: IExportContext): types.RectShape {
+/* star shape */
+export function exportStarShape(source: types.StarShape, ctx?: IExportContext): types.StarShape {
     const ret = {
         crdtidx: (() => {
                 const ret = []
@@ -1201,15 +1200,14 @@ export function exportRectShape(source: types.RectShape, ctx?: IExportContext): 
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        points: (() => {
+        pathsegs: (() => {
                 const ret = []
-                for (let i = 0, len = source.points.length; i < len; i++) {
-                    const r = exportCurvePoint(source.points[i], ctx)
+                for (let i = 0, len = source.pathsegs.length; i < len; i++) {
+                    const r = exportPathSegment(source.pathsegs[i], ctx)
                     if (r) ret.push(r)
                 }
                 return ret
             })(),
-        isClosed: source.isClosed,
         fixedRadius: source.fixedRadius,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
@@ -1235,6 +1233,115 @@ export function exportRectShape(source: types.RectShape, ctx?: IExportContext): 
                 return ret;
             })(),
         haveEdit: source.haveEdit,
+        counts: source.counts,
+        innerAngle: source.innerAngle,
+    }
+    return ret
+}
+/* rect shape */
+export function exportRectShape(source: types.RectShape, ctx?: IExportContext): types.RectShape {
+    const ret = {
+        crdtidx: (() => {
+                const ret = []
+                for (let i = 0, len = source.crdtidx.length; i < len; i++) {
+                    const r = source.crdtidx[i]
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
+        typeId: source.typeId,
+        id: source.id,
+        name: source.name,
+        type: exportShapeType(source.type, ctx),
+        frame: exportShapeFrame(source.frame, ctx),
+        style: exportStyle(source.style, ctx),
+        pathsegs: (() => {
+                const ret = []
+                for (let i = 0, len = source.pathsegs.length; i < len; i++) {
+                    const r = exportPathSegment(source.pathsegs[i], ctx)
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
+        fixedRadius: source.fixedRadius,
+        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
+        isFixedToViewport: source.isFixedToViewport,
+        isFlippedHorizontal: source.isFlippedHorizontal,
+        isFlippedVertical: source.isFlippedVertical,
+        isLocked: source.isLocked,
+        isVisible: source.isVisible,
+        exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
+        nameIsFixed: source.nameIsFixed,
+        resizingConstraint: source.resizingConstraint,
+        resizingType: source.resizingType && exportResizeType(source.resizingType, ctx),
+        rotation: source.rotation,
+        constrainerProportions: source.constrainerProportions,
+        clippingMaskMode: source.clippingMaskMode,
+        hasClippingMask: source.hasClippingMask,
+        shouldBreakMaskChain: source.shouldBreakMaskChain,
+        varbinds: source.varbinds && (() => {
+                const val = source.varbinds;
+                const ret: any = {};
+                val.forEach((v, k) => {
+                    ret[k] = v
+                });
+                return ret;
+            })(),
+        haveEdit: source.haveEdit,
+    }
+    return ret
+}
+/* polygon shape */
+export function exportPolygonShape(source: types.PolygonShape, ctx?: IExportContext): types.PolygonShape {
+    const ret = {
+        crdtidx: (() => {
+                const ret = []
+                for (let i = 0, len = source.crdtidx.length; i < len; i++) {
+                    const r = source.crdtidx[i]
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
+        typeId: source.typeId,
+        id: source.id,
+        name: source.name,
+        type: exportShapeType(source.type, ctx),
+        frame: exportShapeFrame(source.frame, ctx),
+        style: exportStyle(source.style, ctx),
+        pathsegs: (() => {
+                const ret = []
+                for (let i = 0, len = source.pathsegs.length; i < len; i++) {
+                    const r = exportPathSegment(source.pathsegs[i], ctx)
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
+        fixedRadius: source.fixedRadius,
+        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
+        isFixedToViewport: source.isFixedToViewport,
+        isFlippedHorizontal: source.isFlippedHorizontal,
+        isFlippedVertical: source.isFlippedVertical,
+        isLocked: source.isLocked,
+        isVisible: source.isVisible,
+        exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
+        nameIsFixed: source.nameIsFixed,
+        resizingConstraint: source.resizingConstraint,
+        resizingType: source.resizingType && exportResizeType(source.resizingType, ctx),
+        rotation: source.rotation,
+        constrainerProportions: source.constrainerProportions,
+        clippingMaskMode: source.clippingMaskMode,
+        hasClippingMask: source.hasClippingMask,
+        shouldBreakMaskChain: source.shouldBreakMaskChain,
+        varbinds: source.varbinds && (() => {
+                const val = source.varbinds;
+                const ret: any = {};
+                val.forEach((v, k) => {
+                    ret[k] = v
+                });
+                return ret;
+            })(),
+        haveEdit: source.haveEdit,
+        counts: source.counts,
     }
     return ret
 }
@@ -1309,15 +1416,14 @@ export function exportOvalShape(source: types.OvalShape, ctx?: IExportContext): 
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        points: (() => {
+        pathsegs: (() => {
                 const ret = []
-                for (let i = 0, len = source.points.length; i < len; i++) {
-                    const r = exportCurvePoint(source.points[i], ctx)
+                for (let i = 0, len = source.pathsegs.length; i < len; i++) {
+                    const r = exportPathSegment(source.pathsegs[i], ctx)
                     if (r) ret.push(r)
                 }
                 return ret
             })(),
-        isClosed: source.isClosed,
         fixedRadius: source.fixedRadius,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
@@ -1364,15 +1470,14 @@ export function exportLineShape(source: types.LineShape, ctx?: IExportContext): 
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        points: (() => {
+        pathsegs: (() => {
                 const ret = []
-                for (let i = 0, len = source.points.length; i < len; i++) {
-                    const r = exportCurvePoint(source.points[i], ctx)
+                for (let i = 0, len = source.pathsegs.length; i < len; i++) {
+                    const r = exportPathSegment(source.pathsegs[i], ctx)
                     if (r) ret.push(r)
                 }
                 return ret
             })(),
-        isClosed: source.isClosed,
         fixedRadius: source.fixedRadius,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
@@ -1418,15 +1523,14 @@ export function exportImageShape(source: types.ImageShape, ctx?: IExportContext)
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        points: (() => {
+        pathsegs: (() => {
                 const ret = []
-                for (let i = 0, len = source.points.length; i < len; i++) {
-                    const r = exportCurvePoint(source.points[i], ctx)
+                for (let i = 0, len = source.pathsegs.length; i < len; i++) {
+                    const r = exportPathSegment(source.pathsegs[i], ctx)
                     if (r) ret.push(r)
                 }
                 return ret
             })(),
-        isClosed: source.isClosed,
         fixedRadius: source.fixedRadius,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
@@ -1558,6 +1662,12 @@ export function exportGroupShape(source: types.GroupShape, ctx?: IExportContext)
                     if (val.typeId == 'bool-shape') {
                         return exportBoolShape(val as types.BoolShape, ctx)
                     }
+                    if (val.typeId == 'polygon-shape') {
+                        return exportPolygonShape(val as types.PolygonShape, ctx)
+                    }
+                    if (val.typeId == 'star-shape') {
+                        return exportStarShape(val as types.StarShape, ctx)
+                    }
                     {
                         throw new Error('unknow val: ' + val)
                     }
@@ -1645,6 +1755,12 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
                         }
                         if (val.typeId == 'bool-shape') {
                             return exportBoolShape(val as types.BoolShape, ctx)
+                        }
+                        if (val.typeId == 'polygon-shape') {
+                            return exportPolygonShape(val as types.PolygonShape, ctx)
+                        }
+                        if (val.typeId == 'star-shape') {
+                            return exportStarShape(val as types.StarShape, ctx)
                         }
                         {
                             throw new Error('unknow val: ' + val)
@@ -1777,6 +1893,12 @@ export function exportSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IEx
                         if (val.typeId == 'bool-shape') {
                             return exportBoolShape(val as types.BoolShape, ctx)
                         }
+                        if (val.typeId == 'polygon-shape') {
+                            return exportPolygonShape(val as types.PolygonShape, ctx)
+                        }
+                        if (val.typeId == 'star-shape') {
+                            return exportStarShape(val as types.StarShape, ctx)
+                        }
                         {
                             throw new Error('unknow val: ' + val)
                         }
@@ -1906,6 +2028,12 @@ export function exportPage(source: types.Page, ctx?: IExportContext): types.Page
                         if (val.typeId == 'bool-shape') {
                             return exportBoolShape(val as types.BoolShape, ctx)
                         }
+                        if (val.typeId == 'polygon-shape') {
+                            return exportPolygonShape(val as types.PolygonShape, ctx)
+                        }
+                        if (val.typeId == 'star-shape') {
+                            return exportStarShape(val as types.StarShape, ctx)
+                        }
                         {
                             throw new Error('unknow val: ' + val)
                         }
@@ -1960,15 +2088,14 @@ export function exportCutoutShape(source: types.CutoutShape, ctx?: IExportContex
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        points: (() => {
+        pathsegs: (() => {
                 const ret = []
-                for (let i = 0, len = source.points.length; i < len; i++) {
-                    const r = exportCurvePoint(source.points[i], ctx)
+                for (let i = 0, len = source.pathsegs.length; i < len; i++) {
+                    const r = exportPathSegment(source.pathsegs[i], ctx)
                     if (r) ret.push(r)
                 }
                 return ret
             })(),
-        isClosed: source.isClosed,
         fixedRadius: source.fixedRadius,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
@@ -2015,6 +2142,15 @@ export function exportContactShape(source: types.ContactShape, ctx?: IExportCont
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
+        pathsegs: (() => {
+                const ret = []
+                for (let i = 0, len = source.pathsegs.length; i < len; i++) {
+                    const r = exportPathSegment(source.pathsegs[i], ctx)
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
+        fixedRadius: source.fixedRadius,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
@@ -2039,21 +2175,11 @@ export function exportContactShape(source: types.ContactShape, ctx?: IExportCont
                 return ret;
             })(),
         haveEdit: source.haveEdit,
-        points: (() => {
-            const ret = []
-            for (let i = 0, len = source.points.length; i < len; i++) {
-                const r = exportCurvePoint(source.points[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
         from: source.from && exportContactForm(source.from, ctx),
         to: source.to && exportContactForm(source.to, ctx),
         isEdited: source.isEdited,
-        isClosed: source.isClosed,
         mark: source.mark,
         text: exportText(source.text, ctx),
-        fixedRadius: source.fixedRadius,
     }
     return ret
 }
@@ -2132,6 +2258,12 @@ export function exportBoolShape(source: types.BoolShape, ctx?: IExportContext): 
                         }
                         if (val.typeId == 'bool-shape') {
                             return exportBoolShape(val as types.BoolShape, ctx)
+                        }
+                        if (val.typeId == 'polygon-shape') {
+                            return exportPolygonShape(val as types.PolygonShape, ctx)
+                        }
+                        if (val.typeId == 'star-shape') {
+                            return exportStarShape(val as types.StarShape, ctx)
                         }
                         {
                             throw new Error('unknow val: ' + val)
@@ -2244,6 +2376,12 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
                         }
                         if (val.typeId == 'bool-shape') {
                             return exportBoolShape(val as types.BoolShape, ctx)
+                        }
+                        if (val.typeId == 'polygon-shape') {
+                            return exportPolygonShape(val as types.PolygonShape, ctx)
+                        }
+                        if (val.typeId == 'star-shape') {
+                            return exportStarShape(val as types.StarShape, ctx)
                         }
                         {
                             throw new Error('unknow val: ' + val)
