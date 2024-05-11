@@ -39,33 +39,34 @@ function resetTransformForPath(api: Api, page: Page, shape: PathShape) {
     const matrix = shape.matrix2Parent();
     const cFrame = shape.frame;
     const boundingBox = shape.boundingBox();
-    matrix.preScale(cFrame.width, cFrame.height);
-    if (shape.rotation) api.shapeModifyRotate(page, shape, 0);
-    if (shape.isFlippedHorizontal) api.shapeModifyHFlip(page, shape, !shape.isFlippedHorizontal);
-    if (shape.isFlippedVertical) api.shapeModifyVFlip(page, shape, !shape.isFlippedVertical);
-
-    api.shapeModifyX(page, shape, boundingBox.x);
-    api.shapeModifyY(page, shape, boundingBox.y);
-    api.shapeModifyWH(page, shape, boundingBox.width, boundingBox.height);
-
-    const matrix2 = shape.matrix2Parent();
-    matrix2.preScale(boundingBox.width, boundingBox.height); // 当对象太小时，求逆矩阵会infinity
-    matrix.multiAtLeft(matrix2.inverse);
-    const points = (shape as PathShape).points;
-    for (let i = 0, len = points.length; i < len; i++) {
-        const p = points[i];
-        if (p.hasFrom) {
-            const curveFrom = matrix.computeCoord(p.fromX || 0, p.fromY || 0);
-            api.shapeModifyCurvFromPoint(page, shape as PathShape, i, curveFrom);
-        }
-        if (p.hasTo) {
-            const curveTo = matrix.computeCoord(p.toX || 0, p.toY || 0);
-            api.shapeModifyCurvToPoint(page, shape as PathShape, i, curveTo);
-        }
-        const point = matrix.computeCoord(p.x, p.y);
-        api.shapeModifyCurvPoint(page, shape as PathShape, i, point);
-    }
-
+    // todo path refactor
+    // matrix.preScale(cFrame.width, cFrame.height);
+    // if (shape.rotation) api.shapeModifyRotate(page, shape, 0);
+    // if (shape.isFlippedHorizontal) api.shapeModifyHFlip(page, shape, !shape.isFlippedHorizontal);
+    // if (shape.isFlippedVertical) api.shapeModifyVFlip(page, shape, !shape.isFlippedVertical);
+    //
+    // api.shapeModifyX(page, shape, boundingBox.x);
+    // api.shapeModifyY(page, shape, boundingBox.y);
+    // api.shapeModifyWH(page, shape, boundingBox.width, boundingBox.height);
+    //
+    // const matrix2 = shape.matrix2Parent();
+    // matrix2.preScale(boundingBox.width, boundingBox.height); // 当对象太小时，求逆矩阵会infinity
+    // matrix.multiAtLeft(matrix2.inverse);
+    // const points = (shape as PathShape).points;
+    // for (let i = 0, len = points.length; i < len; i++) {
+    //     const p = points[i];
+    //     if (p.hasFrom) {
+    //         const curveFrom = matrix.computeCoord(p.fromX || 0, p.fromY || 0);
+    //         api.shapeModifyCurvFromPoint(page, shape as PathShape, i, curveFrom);
+    //     }
+    //     if (p.hasTo) {
+    //         const curveTo = matrix.computeCoord(p.toX || 0, p.toY || 0);
+    //         api.shapeModifyCurvToPoint(page, shape as PathShape, i, curveTo);
+    //     }
+    //     const point = matrix.computeCoord(p.x, p.y);
+    //     api.shapeModifyCurvPoint(page, shape as PathShape, i, point);
+    // }
+    //
     return boundingBox;
 }
 /**
@@ -169,8 +170,6 @@ function modifySizeIgnoreConstraint(api: Api, page: Page, shape: GroupShape, sca
             matrix2.preScale(boundingBox.width, boundingBox.height); // 当对象太小时，求逆矩阵会infinity
             matrix.multiAtLeft(matrix2.inverse);
             if (c.pathType === PathType.Editable) {
-                reLayoutPath(api, page, c, (c as PathShape).points, matrix);
-            } else if (c.pathType === PathType.Multi) {
                 (c as PathShape2).pathsegs.forEach((segment, index) => {
                     reLayoutPath(api, page, c, segment.points, matrix, index);
                 })
@@ -221,7 +220,7 @@ function modifySizeIgnoreConstraint(api: Api, page: Page, shape: GroupShape, sca
     }
 }
 
-function reLayoutPath(api: Api, page: Page, shape: Shape, points: CurvePoint[], matrix: Matrix, segment = -1) {
+function reLayoutPath(api: Api, page: Page, shape: Shape, points: CurvePoint[], matrix: Matrix, segment: number) {
     for (let i = 0, len = points.length; i < len; i++) {
         const p = points[i];
         if (p.hasFrom) {

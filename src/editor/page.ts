@@ -3,9 +3,11 @@ import {
     GroupShape,
     OverrideType,
     PathShape2,
+    PolygonShape,
     RectShape,
     Shape,
     ShapeFrame,
+    StarShape,
     SymbolShape,
     SymbolUnionShape,
     TextShape,
@@ -78,8 +80,8 @@ import {
     shape4fill
 } from "./symbol";
 import { is_circular_ref2 } from "./utils/ref_check";
-import { BorderSideSetting, BorderStyle, ExportFormat, Point2D, Shadow } from "../data/baseclasses";
-import { get_rotate_for_straight, is_straight, update_frame_by_points } from "./utils/path";
+import { BorderSideSetting, BorderStyle, CurvePoint, ExportFormat, Point2D, Shadow } from "../data/baseclasses";
+import { calculateInnerAnglePosition, getPolygonPoints, getPolygonVertices, get_rotate_for_straight, is_straight, update_frame_by_points } from "./utils/path";
 import { modify_shapes_height, modify_shapes_width } from "./utils/common";
 import { CoopRepository } from "./coop/cooprepo";
 import { Api, TextShapeLike } from "./coop/recordapi";
@@ -1277,74 +1279,6 @@ export class PageEditor {
         return newArtboard(name, frame, fill);
     }
 
-    /**
-     * @deprecated 合入shapesModifyRadius
-     */
-    shapesModifyPointRadius(shapes: Shape[], indexes: number[], val: number) {
-        try {
-            const api = this.__repo.start("shapesModifyPointRadius");
-            for (let i = 0, l = shapes.length; i < l; i++) {
-                const shape = shapes[i];
-                const points = (shape as PathShape).points;
-
-                for (let _i = 0, l = indexes.length; _i < l; _i++) {
-                    const index = indexes[_i];
-                    const point = points[index];
-                    if (!point) {
-                        continue;
-                    }
-                    api.modifyPointCornerRadius(this.__page, shape, index, val);
-                }
-                // this.__repo.commit();
-            }
-            this.__repo.commit();
-        } catch (error) {
-            console.log('shapesModifyPointRadius', error);
-            this.__repo.rollback();
-        }
-
-    }
-
-    /**
-     * @deprecated 合入shapesModifyRadius
-     */
-    shapesModifyFixedRadius(shapes: Shape[], val: number) {
-        try {
-            const api = this.__repo.start("shapesModifyFixedRadius");
-            for (let i = 0, l = shapes.length; i < l; i++) {
-                const shape = shapes[i];
-
-                if (shape.type === ShapeType.Group) {
-                    api.shapeModifyFixedRadius(this.__page, shape as GroupShape, val);
-                    continue;
-                }
-
-                const is_rect = [ShapeType.Rectangle, ShapeType.Image, ShapeType.Artboard]
-                    .includes(shape.type) && shape.isClosed;
-
-                const points = (shape as PathShape).points;
-
-                if (is_rect) {
-                    for (let i = 0, l = points.length; i < l; i++) {
-                        api.modifyPointCornerRadius(this.__page, shape, i, val);
-                    }
-                } else {
-                    for (let i = 0, l = points.length; i < l; i++) {
-                        api.modifyPointCornerRadius(this.__page, shape, i, 0);
-                    }
-
-                    api.shapeModifyFixedRadius(this.__page, shape as PathShape, val);
-                }
-
-                update_frame_by_points(api, this.__page, shape);
-            }
-            this.__repo.commit();
-        } catch (error) {
-            console.log('shapesModifyFixedRadius', error);
-            this.__repo.rollback();
-        }
-    }
-
     shapesModifyRadius(shapes: ShapeView[], values: number[]) {
         try {
             const api = this.__repo.start("shapesModifyRadius");
@@ -1373,14 +1307,14 @@ export class PageEditor {
                     }
 
                     if (shape instanceof PathShape) {
-                        const points = shape.points;
+                        const points = shape.pathsegs[0].points;
                         for (let _i = 0; _i < 4; _i++) {
                             const val = values[_i];
                             if (points[_i].radius === val || val < 0) {
                                 continue;
                             }
 
-                            api.modifyPointCornerRadius(page, shape, _i, val);
+                            api.modifyPointCornerRadius(page, shape, _i, val, 0);
                         }
                         needUpdateFrame = true;
                     }
@@ -1407,14 +1341,15 @@ export class PageEditor {
                     }
 
                     if (shape instanceof PathShape) {
-                        const points = shape.points;
-                        for (let _i = 0; _i < points.length; _i++) {
-                            if (points[_i].radius === values[0]) {
-                                continue;
-                            }
+                        shape.pathsegs.forEach((seg, index) => {
+                            for (let _i = 0; _i < seg.points.length; _i++) {
+                                if (seg.points[_i].radius === values[0]) {
+                                    continue;
+                                }
 
-                            api.modifyPointCornerRadius(page, shape, _i, values[0]);
-                        }
+                                api.modifyPointCornerRadius(page, shape, _i, values[0], index);
+                            }
+                        });
                         needUpdateFrame = true;
                     }
                     else if (shape instanceof PathShape2) {
@@ -1753,6 +1688,48 @@ export class PageEditor {
             for (let i = 0; i < actions.length; i++) {
                 const action = actions[i];
                 api.shapeModifyY(this.__page, action.target, action.y);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    modifyShapesAngleCount(actions: { target: (PolygonShape | StarShape), count: number }[]) {
+        const api = this.__repo.start('modifyShapesAngleCount');
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, count } = actions[i];
+                if (target.haveEdit) continue;
+                const offset = target.type === ShapeType.Star ? (target as StarShape).innerAngle : undefined;
+                const counts = getPolygonVertices(target.type === ShapeType.Star ? count * 2 : count, offset);
+                const points = getPolygonPoints(counts, target.radius[0]);
+                api.deletePoints(this.__page, target, 0, target.type === ShapeType.Star ? target.counts * 2 : target.counts, 0);
+                api.addPoints(this.__page, target, points, 0);
+                api.shapeModifyCounts(this.__page, target, count);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    modifyShapesInnerAngle(actions: { target: StarShape, offset: number }[]) {
+        const api = this.__repo.start('modifyShapesInnerAngle');
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, offset } = actions[i];
+                if (target.haveEdit) continue;
+                const segment = target?.pathsegs[0];
+                if (!segment) continue;
+                const points = segment?.points;
+                if (!points?.length) continue;
+                for (let index = 0; index < points.length; index++) {
+                    if (index % 2 === 0) continue;
+                    const angle = ((2 * Math.PI) / points.length) * index;
+                    const p = calculateInnerAnglePosition(offset, angle);
+                    api.shapeModifyCurvPoint(this.__page, target, index, p , 0);
+                }
+                api.shapeModifyInnerAngle(this.__page, target, offset);
             }
             this.__repo.commit();
         } catch (error) {

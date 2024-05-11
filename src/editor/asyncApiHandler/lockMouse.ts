@@ -4,11 +4,23 @@ import { Document } from "../../data/document";
 import { adapt2Shape, PageView, ShapeView, SymbolRefView } from "../../dataview";
 import { expand, translate } from "../frame";
 import { RadiusType } from "../../data/consts";
-import { SymbolRefShape } from "../../data/symbolref";
+import { ShapeType, SymbolRefShape } from "../../data/symbolref";
 import { shape4cornerRadius } from "../symbol";
-import { GroupShape, PathShape, PathShape2, Shape, SymbolShape, TextShape } from "../../data/shape";
+import {
+    GroupShape,
+    PathShape,
+    PolygonShape,
+    Shape,
+    StarShape,
+    SymbolShape,
+    TextShape
+} from "../../data/shape";
 import { Artboard } from "../../data/artboard";
-import { update_frame_by_points } from "../utils/path";
+import {
+    calculateInnerAnglePosition,
+    getPolygonPoints,
+    getPolygonVertices,
+} from "../utils/path";
 
 export class LockMouseHandler extends AsyncApiCaller {
     updateFrameTargets: Set<Shape> = new Set();
@@ -103,6 +115,62 @@ export class LockMouseHandler extends AsyncApiCaller {
         }
     }
 
+    executeCounts(shapes: ShapeView[], count: number) {
+        try {
+            const api = this.api;
+            const page = this.page;
+
+            for (let i = 0; i < shapes.length; i++) {
+                if (shapes[i].type !== ShapeType.Polygon && shapes[i].type !== ShapeType.Star) continue;
+                const shape = adapt2Shape(shapes[i]) as PolygonShape | StarShape;
+                if (shape.isVirtualShape || shape.haveEdit || shape.counts === count) {
+                    continue;
+                }
+                const offset = shape.type === ShapeType.Star ? (shape as StarShape).innerAngle : undefined;
+                const counts = getPolygonVertices(shape.type === ShapeType.Star ? count * 2 : count, offset);
+                const points = getPolygonPoints(counts, shape.radius[0]);
+                api.deletePoints(page, shape, 0, shape.type === ShapeType.Star ? shape.counts * 2 : shape.counts, 0);
+                api.addPoints(page, shape, points, 0);
+                api.shapeModifyCounts(page, shape, count);
+            }
+            this.updateView();
+        } catch (e) {
+            this.exception = true;
+            console.log('LockMouseHandler.executeCounts', e);
+        }
+    }
+
+    executeInnerAngle(shapes: ShapeView[], value: number) {
+        try {
+            const api = this.api;
+            const page = this.page;
+
+            for (let i = 0; i < shapes.length; i++) {
+                if (shapes[i].type !== ShapeType.Star) continue;
+                const shape = adapt2Shape(shapes[i]) as StarShape;
+                let offset = shape.innerAngle + value;
+                if (shape.haveEdit) continue;
+                if (offset < 0.001) offset = 0.001;
+                if (offset > 1) offset = 1;
+                const segment = shape?.pathsegs[0];
+                if (!segment) continue;
+                const points = segment?.points;
+                if (!points?.length) continue;
+                for (let index = 0; index < points.length; index++) {
+                    if (index % 2 === 0) continue;
+                    const angle = ((2 * Math.PI) / points.length) * index;
+                    const p = calculateInnerAnglePosition(offset, angle);
+                    api.shapeModifyCurvPoint(page, shape, index, p, -1);
+                }
+                api.shapeModifyInnerAngle(page, shape, offset);
+            }
+            this.updateView();
+        } catch (e) {
+            this.exception = true;
+            console.log('LockMouseHandler.executeCounts', e);
+        }
+    }
+
     executeRotate(shapes: ShapeView[], deg: number) {
         try {
             const api = this.api;
@@ -156,17 +224,6 @@ export class LockMouseHandler extends AsyncApiCaller {
                     }
 
                     if (shape instanceof PathShape) {
-                        const points = shape.points;
-                        for (let _i = 0; _i < 4; _i++) {
-                            const val = values[_i];
-                            if (points[_i].radius === val || val < 0) {
-                                continue;
-                            }
-
-                            api.modifyPointCornerRadius(page, shape, _i, val);
-                        }
-                        updateFrameTargets.add(shape);
-                    } else if (shape instanceof PathShape2) {
                         const points = shape.pathsegs[0].points;
                         for (let _i = 0; _i < 4; _i++) {
                             const val = values[_i];
@@ -184,16 +241,6 @@ export class LockMouseHandler extends AsyncApiCaller {
                 } else {
 
                     if (shape instanceof PathShape) {
-                        const points = shape.points;
-                        for (let _i = 0; _i < points.length; _i++) {
-                            if (points[_i].radius === values[0]) {
-                                continue;
-                            }
-
-                            api.modifyPointCornerRadius(page, shape, _i, values[0]);
-                        }
-                        updateFrameTargets.add(shape);
-                    } else if (shape instanceof PathShape2) {
                         shape.pathsegs.forEach((seg, index) => {
                             for (let _i = 0; _i < seg.points.length; _i++) {
                                 if (seg.points[_i].radius === values[0]) {
@@ -296,11 +343,6 @@ export class LockMouseHandler extends AsyncApiCaller {
 
     commit() {
         if (this.__repo.isNeedCommit() && !this.exception) {
-            if (this.updateFrameTargets.size) {
-                this.updateFrameTargets.forEach(shape => {
-                    update_frame_by_points(this.api, this.page, shape);
-                })
-            }
             this.__repo.commit();
         } else {
             this.__repo.rollback();

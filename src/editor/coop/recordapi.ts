@@ -10,7 +10,9 @@ import {
     TextShape,
     Variable,
     SymbolShape,
-    CurveMode, PathSegment
+    CurveMode, PathSegment,
+    PolygonShape,
+    StarShape
 } from "../../data/shape";
 import { updateShapesFrame } from "./utils";
 import { Border, BorderPosition, BorderStyle, Fill, Gradient, MarkerType, Shadow } from "../../data/style";
@@ -18,7 +20,7 @@ import { BulletNumbers, SpanAttr, Text, TextBehaviour, TextHorAlign, TextVerAlig
 import { RectShape, SymbolRefShape, TableCell, TableCellType, TableShape, Artboard } from "../../data/classes";
 import {
     BoolOp, BulletNumbersBehavior, BulletNumbersType, ExportFileFormat, OverrideType, Point2D,
-    StrikethroughType, TextTransformType, UnderlineType, ShadowPosition, ExportFormatNameingScheme, FillType, BlendMode, CornerType, SideType, BorderSideSetting, 
+    StrikethroughType, TextTransformType, UnderlineType, ShadowPosition, ExportFormatNameingScheme, FillType, BlendMode, CornerType, SideType, BorderSideSetting,
 } from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
@@ -231,6 +233,14 @@ export class Api {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.shapeModifyHeight(page, shape, h, this.needUpdateFrame));
     }
+    shapeModifyCounts(page: Page, shape: (PolygonShape | StarShape), counts: number) {
+        checkShapeAtPage(page, shape);
+        this.addOp(basicapi.shapeModifyCounts(shape, counts));
+    }
+    shapeModifyInnerAngle(page: Page, shape: StarShape, offset: number) {
+        checkShapeAtPage(page, shape);
+        this.addOp(basicapi.shapeModifyInnerAngle(shape, offset));
+    }
     shapeModifyStartMarkerType(page: Page, shape: Shape, mt: MarkerType) {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.shapeModifyStartMarkerType(shape, mt));
@@ -365,17 +375,17 @@ export class Api {
     shapeModifyFixedRadius(page: Page, shape: GroupShape | PathShape | PathShape2 | TextShape, fixedRadius: number | undefined) {
         this._shapeModifyAttr(page, shape, "fixedRadius", fixedRadius);
     }
-    shapeModifyCurvPoint(page: Page, shape: Shape, index: number, point: Point2D, segment = -1) {
+    shapeModifyCurvPoint(page: Page, shape: Shape, index: number, point: Point2D, segmentIndex: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyCurvPoint(shape, index, point, segment));
+        this.addOp(basicapi.shapeModifyCurvPoint(shape, index, point, segmentIndex));
     }
-    shapeModifyCurvFromPoint(page: Page, shape: Shape, index: number, point: Point2D, segment = -1) {
+    shapeModifyCurvFromPoint(page: Page, shape: Shape, index: number, point: Point2D, segmentIndex: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyCurvFromPoint(shape, index, point, segment));
+        this.addOp(basicapi.shapeModifyCurvFromPoint(shape, index, point, segmentIndex));
     }
-    shapeModifyCurvToPoint(page: Page, shape: Shape, index: number, point: Point2D, segment = -1) {
+    shapeModifyCurvToPoint(page: Page, shape: Shape, index: number, point: Point2D, segmentIndex: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyCurvToPoint(shape, index, point, segment));
+        this.addOp(basicapi.shapeModifyCurvToPoint(shape, index, point, segmentIndex));
     }
     shapeModifyBoolOp(page: Page, shape: Shape, op: BoolOp | undefined) {
         this._shapeModifyAttr(page, shape, "boolOp", op);
@@ -554,54 +564,58 @@ export class Api {
         this.addOp(basicapi.crdtSetAttr(borders[idx].sideSetting, "thicknessRight", thickness));
     }
     // points
-    addPointAt(page: Page, shape: Shape, idx: number, point: CurvePoint, segment = -1) {
+    addPointAt(page: Page, shape: Shape, idx: number, point: CurvePoint, segmentIndex: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.addPointAt(shape, point, idx, segment));
+        this.addOp(basicapi.addPointAt(shape, point, idx, segmentIndex));
     }
-    deletePoints(page: Page, shape: PathShape, index: number, strength: number) {
+    addSegmentAt(page: Page, shape: Shape, idx: number, segment: PathSegment) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.deletePoints(shape, index, strength));
+        this.addOp(basicapi.addSegmentAt(shape, segment, idx));
     }
-    deletePoint(page: Page, shape: Shape, index: number, segment = -1) {
+    deletePoints(page: Page, shape: PathShape, index: number, strength: number, segmentIndex: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.deletePointAt(shape, index, segment));
+        this.addOp(basicapi.deletePoints(shape, index, strength, segmentIndex));
     }
-    addPoints(page: Page, shape: PathShape, points: CurvePoint[]) {
+    deletePoint(page: Page, shape: Shape, index: number, segmentIndex: number) {
+        checkShapeAtPage(page, shape);
+        this.addOp(basicapi.deletePointAt(shape, index, segmentIndex));
+    }
+    addPoints(page: Page, shape: PathShape, points: CurvePoint[], segmentIndex: number) {
         checkShapeAtPage(page, shape);
         for (let i = 0; i < points.length; i++) {
             const point = points[i];
-            this.addOp(basicapi.addPointAt(shape, point, i));
+            this.addOp(basicapi.addPointAt(shape, point, i, segmentIndex));
         }
     }
     shapeEditPoints(page: Page, shape: Shape, haveEdit: boolean) {
         this._shapeModifyAttr(page, shape, "haveEdit", haveEdit);
     }
 
-    modifyPointCurveMode(page: Page, shape: Shape, index: number, curveMode: CurveMode, segment = -1) {
+    modifyPointCurveMode(page: Page, shape: Shape, index: number, curveMode: CurveMode, segmentIndex: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyCurveMode(shape, index, curveMode, segment))
+        this.addOp(basicapi.shapeModifyCurveMode(shape, index, curveMode, segmentIndex))
     }
-    modifyPointHasFrom(page: Page, shape: Shape, index: number, hasFrom: boolean, segment = -1) {
+    modifyPointHasFrom(page: Page, shape: Shape, index: number, hasFrom: boolean, segmentIndex: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyHasFrom(shape, index, hasFrom, segment));
+        this.addOp(basicapi.shapeModifyHasFrom(shape, index, hasFrom, segmentIndex));
     }
-    modifyPointHasTo(page: Page, shape: Shape, index: number, hasTo: boolean, segment = -1) {
+    modifyPointHasTo(page: Page, shape: Shape, index: number, hasTo: boolean, segmentIndex: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyHasTo(shape, index, hasTo, segment));
+        this.addOp(basicapi.shapeModifyHasTo(shape, index, hasTo, segmentIndex));
     }
-    modifyPointCornerRadius(page: Page, shape: Shape, index: number, cornerRadius: number, segment = -1) {
+    modifyPointCornerRadius(page: Page, shape: Shape, index: number, cornerRadius: number, segmentIndex: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyPointCornerRadius(shape, index, cornerRadius, segment));
+        this.addOp(basicapi.shapeModifyPointCornerRadius(shape, index, cornerRadius, segmentIndex));
     }
-    setCloseStatus(page: Page, shape: Shape, isClosed: boolean, segment = -1) {
+    setCloseStatus(page: Page, shape: Shape, isClosed: boolean, segmentIndex: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyPathShapeClosedStatus(shape, isClosed, segment));
+        this.addOp(basicapi.shapeModifyPathShapeClosedStatus(shape, isClosed, segmentIndex));
     }
-    insertSegmentAt(page: Page, shape: PathShape2, index: number, segment: PathSegment) {
+    insertSegmentAt(page: Page, shape: PathShape, index: number, segment: PathSegment) {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.insertSegmentAt(shape, index, segment));
     }
-    deleteSegmentAt(page: Page, shape: PathShape2, segment: number) {
+    deleteSegmentAt(page: Page, shape: PathShape, segment: number) {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.deleteSegmentAt(shape, segment));
     }

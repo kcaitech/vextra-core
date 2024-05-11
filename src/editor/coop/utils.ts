@@ -1,12 +1,12 @@
-import { exportArtboard, exportGroupShape, exportImageShape, exportLineShape, exportOvalShape, exportPathShape, exportRectShape, exportSymbolRefShape, exportTextShape, exportTableShape, exportPathShape2, exportTableCell, exportContactShape, exportSymbolShape, exportSymbolUnionShape, exportCutoutShape } from "../../data/baseexport";
+import { exportArtboard, exportGroupShape, exportImageShape, exportLineShape, exportOvalShape, exportPathShape, exportRectShape, exportSymbolRefShape, exportTextShape, exportTableShape, exportPathShape2, exportTableCell, exportContactShape, exportSymbolShape, exportSymbolUnionShape, exportCutoutShape, exportPolygonShape, exportStarShape } from "../../data/baseexport";
 import { Matrix } from "../../basic/matrix";
 import { Artboard } from "../../data/artboard";
-import { GroupShape, ImageShape, LineShape, OvalShape, PathShape, PathShape2, RectShape, Shape, ShapeType, SymbolUnionShape, SymbolShape, TextShape, CutoutShape } from "../../data/shape";
+import { GroupShape, ImageShape, LineShape, OvalShape, PathShape, PathShape2, RectShape, Shape, ShapeType, SymbolUnionShape, SymbolShape, TextShape, CutoutShape, PolygonShape, StarShape } from "../../data/shape";
 import { TableCell, TableShape } from "../../data/table";
 import { ContactShape } from "../../data/contact";
 import { Page } from "../../data/page";
 import { SymbolRefShape } from "../../data/classes";
-import { IImportContext, importArtboard, importContactShape, importGroupShape, importImageShape, importLineShape, importOvalShape, importPathShape, importPathShape2, importRectShape, importSymbolUnionShape, importSymbolRefShape, importSymbolShape, importTableCell, importTableShape, importTextShape, importCutoutShape, importBoolShape } from "../../data/baseimport";
+import { IImportContext, importArtboard, importContactShape, importGroupShape, importImageShape, importLineShape, importOvalShape, importPathShape, importPathShape2, importRectShape, importSymbolUnionShape, importSymbolRefShape, importSymbolShape, importTableCell, importTableShape, importTextShape, importCutoutShape, importBoolShape, importPolygonShape, importStarShape } from "../../data/baseimport";
 import { Document } from "../../data/document";
 
 interface Api {
@@ -223,6 +223,8 @@ imhdl['contact-shape'] = importContactShape;
 imhdl['symbol-shape'] = importSymbolShape;
 imhdl['symbol-union-shape'] = importSymbolUnionShape;
 imhdl['cutout-shape'] = importCutoutShape;
+imhdl['polygon-shape'] = importPolygonShape;
+imhdl['star-shape'] = importStarShape;
 export function importShape(data: string | Object , document: Document, page: Page) {
     const source: { [key: string]: any } = typeof data === 'string' ? JSON.parse(data) : data;
     const ctx: IImportContext = new class implements IImportContext { document: Document = document; curPage: string = page.id };
@@ -250,6 +252,8 @@ export function exportShape(shape: Shape): Object {
         case ShapeType.Cutout: return exportCutoutShape(shape as CutoutShape);
         case ShapeType.Symbol: return exportSymbolShape(shape as SymbolShape);
         case ShapeType.SymbolUnion: return exportSymbolUnionShape(shape as SymbolUnionShape);
+        case ShapeType.Polygon: return exportPolygonShape(shape as PolygonShape);
+        case ShapeType.Star: return exportStarShape(shape as StarShape);
         default: throw new Error("unknow shape type: " + shape.type)
     }
 }

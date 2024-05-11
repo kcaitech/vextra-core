@@ -12,11 +12,12 @@ import {
     Shape,
     TextShape,
     ImageShape,
-    PathShape2,
     PathSegment,
     CutoutShape,
     SymbolUnionShape,
-    BoolShape
+    BoolShape,
+    PolygonShape,
+    StarShape
 } from "../data/shape";
 import { ContactShape } from "../data/contact"
 import * as types from "../data/typesdefine"
@@ -66,11 +67,13 @@ import { Matrix } from "../basic/matrix";
 import { ResizingConstraints2 } from "../data/consts";
 import { SymbolMgr } from "../data/symbolmgr";
 import { newText } from "../data/textutils";
+import { getPolygonPoints, getPolygonVertices } from "./utils/path";
 
 function _checkNum(x: number) {
     // check
     if (Number.isNaN(x) || (!Number.isFinite(x))) throw new Error(String(x));
 }
+
 function _checkFrame(frame: ShapeFrame) {
     if (frame.width === 0 || frame.height === 0) throw new Error();
     _checkNum(frame.x);
@@ -193,33 +196,24 @@ export function newArtboard2(name: string, frame: ShapeFrame): Artboard {
     return artboard
 }
 
-export function newPathShape(name: string, frame: ShapeFrame, path: Path, style?: Style): PathShape | PathShape2 {
+export function newPathShape(name: string, frame: ShapeFrame, path: Path, style?: Style): PathShape {
     frame.width = frame.width || 1;
     frame.height = frame.height || 1;
 
     style = style || newStyle();
     const id = uuid();
     const segs = path.toCurvePoints(frame.width, frame.height);
-    if (segs.length <= 1) {
-        const seg = segs[0];
-        const points = seg?.points || [];
-        const isClosed = seg?.isClosed || false;
+    const pathsegs = new BasicArray<PathSegment>();
+    segs.forEach((seg, i) => {
+        const points = seg.points;
+        const isClosed = seg.isClosed || false;
         const curvePoint = new BasicArray<CurvePoint>(...points);
-        const shape = new PathShape(new BasicArray(), id, name, types.ShapeType.Path, frame, style, curvePoint, !!isClosed);
-        addCommonAttr(shape);
-        return shape;
-    } else {
-        const pathsegs = new BasicArray<PathSegment>();
-        segs.forEach((seg, i) => {
-            const points = seg.points;
-            const isClosed = seg.isClosed || false;
-            const curvePoint = new BasicArray<CurvePoint>(...points);
-            pathsegs.push(new PathSegment([i] as BasicArray<number>, uuid(), curvePoint, isClosed))
-        })
-        const shape = new PathShape2(new BasicArray(), id, name, types.ShapeType.Path2, frame, style, pathsegs);
-        addCommonAttr(shape);
-        return shape;
-    }
+        pathsegs.push(new PathSegment([i] as BasicArray<number>, uuid(), curvePoint, isClosed))
+    })
+
+    const shape = new PathShape(new BasicArray(), id, name, types.ShapeType.Path, frame, style, pathsegs);
+    addCommonAttr(shape);
+    return shape;
 }
 
 export function newRectShape(name: string, frame: ShapeFrame): RectShape {
@@ -232,7 +226,9 @@ export function newRectShape(name: string, frame: ShapeFrame): RectShape {
     const p3 = new CurvePoint([2] as BasicArray<number>, uuid(), 1, 1, CurveMode.Straight); // rb
     const p4 = new CurvePoint([3] as BasicArray<number>, uuid(), 0, 1, CurveMode.Straight); // lb
     curvePoint.push(p1, p2, p3, p4);
-    const shape = new RectShape(new BasicArray(), id, name, types.ShapeType.Rectangle, frame, style, curvePoint, true);
+
+    const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, true);
+    const shape = new RectShape(new BasicArray(), id, name, types.ShapeType.Rectangle, frame, style, new BasicArray<PathSegment>(segment));
     addCommonAttr(shape);
     return shape;
 }
@@ -284,7 +280,38 @@ export function newOvalShape(name: string, frame: ShapeFrame): OvalShape {
     p4.toY = 0.224107611110493;
 
     curvePoint.push(p1, p2, p3, p4);
-    const shape = new OvalShape([4] as BasicArray<number>, id, name, types.ShapeType.Oval, frame, style, curvePoint, true, ellipse);
+
+    const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, true);
+
+    const shape = new OvalShape([4] as BasicArray<number>, id, name, types.ShapeType.Oval, frame, style, new BasicArray<PathSegment>(segment), ellipse);
+
+    addCommonAttr(shape);
+    return shape;
+}
+
+// 多边形--默认三条边
+export function newPolygonShape(name: string, frame: ShapeFrame): PolygonShape {
+    _checkFrame(frame);
+    const style = newStyle();
+    const id = uuid();
+    const vertices = getPolygonVertices(3);
+    const curvePoint = getPolygonPoints(vertices);
+    const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, true);
+    const shape = new PolygonShape(new BasicArray(), id, name, types.ShapeType.Polygon, frame, style, new BasicArray<PathSegment>(segment), 3);
+    addCommonAttr(shape);
+    return shape;
+}
+
+// 五角星
+export function newStellateShape(name: string, frame: ShapeFrame): StarShape {
+    _checkFrame(frame);
+    const style = newStyle();
+    const vertices = getPolygonVertices(10, 0.382);
+    const id = uuid();
+    const curvePoint = getPolygonPoints(vertices);
+    const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, true);
+
+    const shape = new StarShape(new BasicArray(), id, name, types.ShapeType.Star, frame, style, new BasicArray<PathSegment>(segment), 5, 0.382);
     addCommonAttr(shape);
     return shape;
 }
@@ -299,7 +326,8 @@ export function newLineShape(name: string, frame: ShapeFrame): LineShape {
     const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
     const border = new Border([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), types.BorderPosition.Center, 1, new BorderStyle(0, 0), types.CornerType.Miter, side);
     style.borders.push(border);
-    const shape = new LineShape(new BasicArray(), uuid(), name, types.ShapeType.Line, frame, style, curvePoint, false);
+    const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, false);
+    const shape = new LineShape(new BasicArray(), uuid(), name, types.ShapeType.Line, frame, style, new BasicArray<PathSegment>(segment));
     addCommonAttr(shape);
     return shape;
 }
@@ -315,14 +343,16 @@ export function newArrowShape(name: string, frame: ShapeFrame): LineShape {
     const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
     const border = new Border([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), types.BorderPosition.Center, 1, new BorderStyle(0, 0), types.CornerType.Miter, side);
     style.borders.push(border);
-    const shape = new LineShape(new BasicArray(), uuid(), name, types.ShapeType.Line, frame, style, curvePoint, false);
+    const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, false);
+
+    const shape = new LineShape(new BasicArray(), uuid(), name, types.ShapeType.Line, frame, style, new BasicArray<PathSegment>(segment));
     addCommonAttr(shape);
     return shape;
 }
 
 // 后续需要传入字体、字号、颜色信息
 export function newDefaultTextShape(name: string, attr: TextAttr, frame?: ShapeFrame): TextShape {
-    if (frame && (frame.x === 0 || frame.y === 0)) throw new Error();
+    frame && _checkFrame(frame);
     template_text_shape.id = uuid();
     template_text_shape.name = name;
     // 后续需要传入字体、字号、颜色信息
@@ -334,7 +364,7 @@ export function newDefaultTextShape(name: string, attr: TextAttr, frame?: ShapeF
 }
 
 export function newTextShape(name: string, frame?: ShapeFrame): TextShape {
-    if (frame && (frame.x === 0 || frame.y === 0)) throw new Error();
+    frame && _checkFrame(frame);
     template_text_shape.id = uuid();
     template_text_shape.name = name;
     // 后续需要传入字体、字号、颜色信息
@@ -372,7 +402,8 @@ export function newImageShape(name: string, frame: ShapeFrame, mediasMgr: Resour
     const p3 = new CurvePoint([2] as BasicArray<number>, uuid(), 1, 1, CurveMode.Straight); // rb
     const p4 = new CurvePoint([3] as BasicArray<number>, uuid(), 0, 1, CurveMode.Straight); // lb
     curvePoint.push(p1, p2, p3, p4);
-    const img = new ImageShape(new BasicArray(), id, name, types.ShapeType.Image, frame, style, curvePoint, true, ref || '');
+    const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, true);
+    const img = new ImageShape(new BasicArray(), id, name, types.ShapeType.Image, frame, style, new BasicArray<PathSegment>(segment), ref || '');
     img.setImageMgr(mediasMgr);
     addCommonAttr(img);
     img.style.fills.length = 0;
@@ -451,8 +482,9 @@ export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm):
     span.fontSize = 14;
     span.color = new Color(0.85, 0, 0, 0);
     para.spans.push(span);
+    const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, false);
 
-    const shape = new ContactShape(new BasicArray(), uuid(), name, types.ShapeType.Contact, frame, style, curvePoint, false, false, text, false);
+    const shape = new ContactShape(new BasicArray(), uuid(), name, types.ShapeType.Contact, frame, style, new BasicArray<PathSegment>(segment), false, text, false);
 
     shape.from = apex;
     shape.to = undefined;
@@ -477,7 +509,9 @@ export function newCutoutShape(name: string, frame: ShapeFrame): CutoutShape {
     const p4 = new CurvePoint([3] as BasicArray<number>, uuid(), 0, 1, CurveMode.Straight); // lb
     const p5 = new CurvePoint([4] as BasicArray<number>, uuid(), 0, 0.00001, CurveMode.Straight); // lt
     curvePoint.push(p1, p2, p3, p4, p5);
-    const shape = new CutoutShape(new BasicArray(), id, name, types.ShapeType.Cutout, frame, style, curvePoint, false, true);
+    const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, true);
+
+    const shape = new CutoutShape(new BasicArray(), id, name, types.ShapeType.Cutout, frame, style, new BasicArray<PathSegment>(segment), false);
     addCommonAttr(shape);
     return shape;
 }
@@ -590,13 +624,4 @@ export function modifyTransformByEnv(shape: Shape, env: GroupShape) {
     }
 
     shape.rotation = r % 360;
-}
-
-export function createNormalPoints() {
-    const p1 = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight); // lt
-    const p2 = new CurvePoint([1] as BasicArray<number>, uuid(), 1, 0, CurveMode.Straight); // rt
-    const p3 = new CurvePoint([2] as BasicArray<number>, uuid(), 1, 1, CurveMode.Straight); // rb
-    const p4 = new CurvePoint([3] as BasicArray<number>, uuid(), 0, 1, CurveMode.Straight); // lb
-
-    return new BasicArray<CurvePoint>(p1, p2, p3, p4);
 }
