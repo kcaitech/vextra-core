@@ -157,7 +157,7 @@ inject['ContactShape']['before'] = `\
             crdtidx: [0],
             id: '39e508e8-a1bb-4b55-ad68-aa2a9b3b447a',
             points:[],
-            isClosed: true
+            isClosed: false
         }
         
         if ((source as any)?.points?.length) {
