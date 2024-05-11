@@ -684,6 +684,36 @@ export class PathModifier extends AsyncApiCaller {
         }
     }
 
+    modifyClosedStatus(_shape: ShapeView, val: boolean) {
+        try {
+            const shape = adapt2Shape(_shape) as PathShape;
+
+            this.shape = shape;
+
+            const segments = shape?.pathsegs;
+
+            if (!segments?.length) {
+                return false;
+            }
+
+            const page = this.page;
+            const api = this.api;
+
+            for (let i = 0; i < segments.length; i++) {
+                const segment = segments[i];
+                const points = segment.points;
+                if (points.length < 3) continue;
+                api.setCloseStatus(page, shape, val, i);
+            }
+
+            return true;
+        } catch (e) {
+            console.error('PathModifier.modifyClosedStatus:', e);
+            this.exception = true;
+            return false;
+        }
+    }
+
     commit() {
         if (this.__repo.isNeedCommit() && !this.exception) {
             update_frame_by_points(this.api, this.page, this.shape!);
