@@ -1,8 +1,9 @@
 import { BasicArray } from "../../../data/basic";
-import { CurveMode, CurvePoint, RectShape, Shape, ShapeFrame, ShapeType } from "../../../data/shape";
+import {CurveMode, CurvePoint, PathSegment, RectShape, Shape, ShapeFrame, ShapeType} from "../../../data/shape";
 import { uuid } from "../../../basic/uuid";
 import { IJSON, ImportFun, LoadContext } from "./basic";
 import { Color, Fill, FillType, Page, Style } from "../../../data/classes";
+import * as types from "../../../data/typesdefine";
 
 function importColor(color: IJSON) {
     const round = (c: number) => Math.round(c * 255);
@@ -64,14 +65,16 @@ export function importRectShape(ctx: LoadContext, data: IJSON, f: ImportFun, ind
     const visible = data['visible'];
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
     importStyle(style, data);
-    const points = new BasicArray<CurvePoint>();
+    const curvePoint = new BasicArray<CurvePoint>();
+    const id = uuid();
     const p1 = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight); // lt
     const p2 = new CurvePoint([1] as BasicArray<number>, uuid(), 1, 0, CurveMode.Straight); // rt
     const p3 = new CurvePoint([2] as BasicArray<number>, uuid(), 1, 1, CurveMode.Straight); // rb
     const p4 = new CurvePoint([3] as BasicArray<number>, uuid(), 0, 1, CurveMode.Straight); // lb
-    points.push(p1, p2, p3, p4);
-    const isClosed = true;
-    const shape = new RectShape([index] as BasicArray<number>, uuid(), data['name'], ShapeType.Rectangle, frame, style, points, isClosed);
+    curvePoint.push(p1, p2, p3, p4);
+
+    const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, true);
+    const shape = new RectShape(new BasicArray(), id, data['name'], types.ShapeType.Rectangle, frame, style, new BasicArray<PathSegment>(segment));
     shape.isVisible = visible;
     return shape;
 }
