@@ -335,6 +335,9 @@ inject['TextAttr']['before'] = `\
     if (typeof _source.bold === 'boolean') {
         _source.bold = _source.bold ? 700 : 400;
     }
+    if (_source.bold) {
+        _source.weight = _source.bold;
+    }
 `
 
 inject['Border'] = {};

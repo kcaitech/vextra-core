@@ -19,7 +19,7 @@ export type BoolOpFuns = {
     stroke(ops?: StrokeOpts): string;
 }
 
-export type TextPathFun = (font: string, fontSize: number, charCode: number) => string;
+export type TextPathFun = (font: string, fontSize: number, italic: boolean, weight: number, charCode: number) => string;
 
 enum Join {
     "MITER",
@@ -65,7 +65,7 @@ export const gPal: {
 } = {
     text: {
         textMeasure: (code: string, font: string) => undefined,
-        getTextPath: (font: string, fontSize: number, charCode: number) => "",
+        getTextPath: (font: string, fontSize: number, italic: boolean, weight: number, charCode: number) => "",
     },
     boolop: {
         difference: (path0: string, path1: string) => "",

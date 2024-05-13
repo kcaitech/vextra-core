@@ -9,7 +9,7 @@ import {
     TextTransformType,
     TextVerAlign,
     UnderlineType
-} from "./classes";
+} from "./baseclasses";
 
 import { Basic, BasicArray } from "./basic";
 
@@ -66,7 +66,7 @@ export class SpanAttr extends Basic implements classes.SpanAttr {
     color?: Color
     strikethrough?: StrikethroughType
     underline?: UnderlineType
-    bold?: number
+    weight?: number
     italic?: boolean
     bulletNumbers?: BulletNumbers
     highlight?: Color
@@ -113,7 +113,7 @@ export class AttrGetter extends TextAttr {
     fontSizeIsMulti: boolean = false;
     colorIsMulti: boolean = false;
     highlightIsMulti: boolean = false;
-    boldIsMulti: boolean = false;
+    weightIsMulti: boolean = false;
     italicIsMulti: boolean = false;
     underlineIsMulti: boolean = false;
     strikethroughIsMulti: boolean = false;
