@@ -869,11 +869,7 @@ export class PathShape extends Shape implements classes.PathShape {
     }
 
     get radiusType(): RadiusType {
-        const path1 = this.pathsegs[0];
-
-        return (this.pathsegs.length === 1 && path1.points.length === 4 && path1.isClosed)
-            ? RadiusType.Rect
-            : RadiusType.Fixed;
+        return RadiusType.Fixed;
     }
 }
 
@@ -957,6 +953,10 @@ export class RectShape extends PathShape implements classes.RectShape {
             style,
             pathsegs
         )
+    }
+
+    get radiusType() {
+        return this.haveEdit ? RadiusType.Fixed : RadiusType.Rect;
     }
 }
 
@@ -1230,10 +1230,6 @@ export class PolygonShape extends PathShape implements classes.PolygonShape {
         )
         this.counts = counts
     }
-
-    get radiusType() {
-        return RadiusType.Fixed;
-    }
 }
 
 export class StarShape extends PathShape implements classes.StarShape {
@@ -1263,9 +1259,5 @@ export class StarShape extends PathShape implements classes.StarShape {
         )
         this.counts = counts;
         this.innerAngle = innerAngle;
-    }
-
-    get radiusType() {
-        return RadiusType.Fixed;
     }
 }

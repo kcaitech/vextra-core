@@ -344,6 +344,7 @@ export class DataView extends EventEL {
         // remove first?
         this.onDestory();
         this.m_isdistroyed = true;
+        this.notify('destroy');
         // destroy childs
         // destroy dom
         // recycle?
