@@ -352,7 +352,7 @@ export function newArrowShape(name: string, frame: ShapeFrame): LineShape {
 
 // 后续需要传入字体、字号、颜色信息
 export function newDefaultTextShape(name: string, attr: TextAttr, frame?: ShapeFrame): TextShape {
-    if (frame && (frame.x === 0 || frame.y === 0)) throw new Error();
+    frame && _checkFrame(frame);
     template_text_shape.id = uuid();
     template_text_shape.name = name;
     // 后续需要传入字体、字号、颜色信息
@@ -364,7 +364,7 @@ export function newDefaultTextShape(name: string, attr: TextAttr, frame?: ShapeF
 }
 
 export function newTextShape(name: string, frame?: ShapeFrame): TextShape {
-    if (frame && (frame.x === 0 || frame.y === 0)) throw new Error();
+    frame && _checkFrame(frame);
     template_text_shape.id = uuid();
     template_text_shape.name = name;
     // 后续需要传入字体、字号、颜色信息

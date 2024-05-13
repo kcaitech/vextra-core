@@ -359,11 +359,11 @@ export function init_curv(order: 2 | 3, shape: Shape, page: Page, api: Api, curv
         const round = __round_curve_point(points, index);
 
         const { previous, next } = round;
-
-        if (new Set([previous.id, next.id, curve_point.id]).size !== 3) {
-            console.log('duplicate point');
-            return;
-        }
+        //
+        // if (new Set([previous.id, next.id, curve_point.id]).size !== 3) {
+        //     console.log('duplicate point');
+        //     return;
+        // }
 
         const k = Math.atan2(next.x - previous.x, next.y - previous.y);
         const dx = init * Math.sin(k);
