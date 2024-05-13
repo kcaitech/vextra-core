@@ -36,9 +36,7 @@
 //     });
 // }
 
-import { ResizingConstraints } from "../data/consts";
-import { Color, CurvePoint, OverrideType, Path, Point2D, Shape, ShapeFrame, SymbolRefShape, SymbolShape, Variable, VariableType } from "../data/classes";
-import { Matrix } from "../basic/matrix";
+import { Color, OverrideType, Shape, SymbolRefShape, SymbolShape, VariableType } from "../data/classes";
 import { findOverrideAndVar } from "../data/utils";
 export { findOverrideAndVar } from "../data/utils";
 

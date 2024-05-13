@@ -49,7 +49,7 @@ export function isDiffSpanAttr(span: SpanAttr, attr: SpanAttr): boolean {
         return true;
     }
 
-    if (attr.bold !== span.bold) {
+    if (attr.weight !== span.weight) {
         return true;
     }
     if (!!attr.italic !== !!span.italic) {
@@ -134,10 +134,10 @@ function _mergeSpanAttr(span: SpanAttr, attr: SpanAttr, isSetting?: boolean) {
         }
     }
 
-    // bold
-    if (attr.bold !== undefined) {
-        if (!span.bold || span.bold !== attr.bold) {
-            span.bold = attr.bold;
+    // weight
+    if (attr.weight !== undefined) {
+        if (!span.weight || span.weight !== attr.weight) {
+            span.weight = attr.weight;
             changed = true;
         }
     }
