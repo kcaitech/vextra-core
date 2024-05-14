@@ -165,6 +165,10 @@ inject['ContactShape']['before'] = `\
         } 
         
         source.pathsegs = [seg];
+    } else {
+        if (source?.pathsegs[0]?.isClosed) {
+            source.pathsegs[0].isClosed = false;
+        }
     }
 `
 
