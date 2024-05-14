@@ -41,7 +41,9 @@ export function renderText2Path(layout: TextLayout, offsetX: number, offsetY: nu
                 const span = garr.attr;
                 const font = span?.fontName || '';
                 const fontSize = span?.fontSize || 0;
-                const _y = lineY + line.lineHeight - (line.lineHeight - line.maxFontSize) / 2;
+                const metrics = garr[0]?.metrics;
+                const bottom =  lineY + line.lineHeight - (line.lineHeight - line.maxFontSize) / 2;
+                const baseY = metrics ? (bottom - (fontSize - (metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent )) / 2 - (metrics.actualBoundingBoxDescent)) : bottom ; // baseline
 
                 const weight = (span?.weight) || 400;
                 const italic = !!(span?.italic);
@@ -49,7 +51,7 @@ export function renderText2Path(layout: TextLayout, offsetX: number, offsetY: nu
                     if (isBlankChar(g.char.charCodeAt(0))) return new Path();
                     const pathstr = getTextPath(font, fontSize, italic, weight, g.char.charCodeAt(0))
                     const path = new Path(pathstr)
-                    path.translate(g.x + lineX, _y - (g.metrics?.actualBoundingBoxDescent || 0));
+                    path.translate(g.x + lineX, baseY);
                     return path;
                 }))
             }
@@ -133,11 +135,14 @@ export function renderTextLayout(h: Function, textlayout: TextLayout, frame?: Sh
             for (let garrIdx = 0, garrCount = line.length; garrIdx < garrCount; garrIdx++) {
                 const gText: string[] = []
                 const gX = []
-                const gY = []
+                // const gY = []
                 const garr = line[garrIdx];
                 const span = garr.attr;
                 const fontSize = span?.fontSize || 0;
-                const _y = lineY + line.lineHeight - (line.lineHeight - line.maxFontSize) / 2;
+                const metrics = garr[0]?.metrics;
+                const bottom =  lineY + line.lineHeight - (line.lineHeight - line.maxFontSize) / 2;
+                const baseY = metrics ? (bottom - (fontSize - (metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent )) / 2 - (metrics.actualBoundingBoxDescent)) : bottom ; // baseline
+
                 for (let gIdx = 0, gCount = garr.length; gIdx < gCount; gIdx++) {
                     const graph = garr[gIdx];
                     if (isBlankChar(graph.char.charCodeAt(0))) { // 两个连续的空格或者首个空格，svg显示有问题
@@ -145,7 +150,7 @@ export function renderTextLayout(h: Function, textlayout: TextLayout, frame?: Sh
                     }
                     gText.push(graph.char);
                     gX.push(graph.x + lineX);
-                    gY.push(_y - (graph.metrics?.actualBoundingBoxDescent || 0));
+                    // gY.push(_y - (graph.metrics?.actualBoundingBoxDescent || 0));
                 }
 
                 const fontName = span?.fontName;
@@ -176,7 +181,7 @@ export function renderTextLayout(h: Function, textlayout: TextLayout, frame?: Sh
                         if (g_.style) {
                             const opacity = span.gradient.gradientOpacity;
                             const id = "clippath-fill-" + objectId(span.gradient) + randomId();
-                            const cp = h("clipPath", { id }, [h('text', { x: gX.join(' '), y: gY.join(' '), style, "clip-rule": "evenodd" }, gText.join(''))]);
+                            const cp = h("clipPath", { id }, [h('text', { x: gX.join(' '), y: baseY, style, "clip-rule": "evenodd" }, gText.join(''))]);
                             linechilds.push(cp);
                             linechilds.push(h("foreignObject", {
                                 width: textlayout.contentWidth, height: textlayout.contentHeight, x: xOffset, y: yOffset,
@@ -185,10 +190,10 @@ export function renderTextLayout(h: Function, textlayout: TextLayout, frame?: Sh
                             },
                                 h("div", { width: "100%", height: "100%", style: g_.style })));
                         } else {
-                            linechilds.push(h('text', { x: gX.join(' '), y: gY.join(' '), style }, gText.join(''),));
+                            linechilds.push(h('text', { x: gX.join(' '), y: baseY, style }, gText.join(''),));
                         }
                     } else {
-                        linechilds.push(h('text', { x: gX.join(' '), y: gY.join(' '), style }, gText.join(''),));
+                        linechilds.push(h('text', { x: gX.join(' '), y: baseY, style }, gText.join(''),));
                     }
                 }
 
