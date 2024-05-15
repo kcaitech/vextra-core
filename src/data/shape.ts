@@ -443,6 +443,10 @@ export class Shape extends Basic implements classes.Shape {
     get isClosed() {
         return true;
     }
+
+    get isStraight() {
+        return false;
+    }
 }
 
 export class GroupShape extends Shape implements classes.GroupShape {
@@ -873,6 +877,16 @@ export class PathShape extends Shape implements classes.PathShape {
     get radiusType(): RadiusType {
         return RadiusType.Fixed;
     }
+
+    get isStraight(): boolean {
+        if (this.pathsegs.length !== 1) return false;
+        const points = this.pathsegs[0].points;
+        if (points.length !== 2) return false;
+        const start = points[0];
+        const end = points[1];
+
+        return !start.hasFrom && !end.hasTo;
+    }
 }
 
 export class PathShape2 extends Shape implements classes.PathShape2 {
@@ -1083,6 +1097,10 @@ export class LineShape extends PathShape implements classes.LineShape {
             style,
             pathsegs
         );
+    }
+
+    get isStraight() {
+        return !this.haveEdit; // 直线没有编辑过就肯定是直线
     }
 }
 

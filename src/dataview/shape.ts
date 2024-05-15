@@ -823,15 +823,15 @@ export class ShapeView extends DataView {
     }
 
     get isContainer() {
-        return this.data.isContainer;
+        return this.m_data.isContainer;
     }
 
     get pathType() {
-        return this.data.pathType;
+        return this.m_data.pathType;
     }
 
     get isPathIcon() {
-        return this.data.isPathIcon;
+        return this.m_data.isPathIcon;
     }
 
     get radius() {
@@ -840,5 +840,9 @@ export class ShapeView extends DataView {
 
     get radiusType() {
         return this.m_data.radiusType;
+    }
+
+    get isStraight() {
+        return this.m_data.isStraight;
     }
 }
