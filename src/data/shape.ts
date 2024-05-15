@@ -1162,7 +1162,7 @@ export class TextShape extends Shape implements classes.TextShape {
 
 export class CutoutShape extends PathShape implements classes.CutoutShape {
     typeId = 'cutout-shape'
-    scalingStroke: boolean;
+    exportOptions?: ExportOptions
 
     constructor(
         crdtidx: BasicArray<number>,
@@ -1172,7 +1172,7 @@ export class CutoutShape extends PathShape implements classes.CutoutShape {
         frame: ShapeFrame,
         style: Style,
         pathsegs: BasicArray<PathSegment>,
-        scalingStroke: boolean
+        exportOptions?: ExportOptions
     ) {
         super(
             crdtidx,
@@ -1183,7 +1183,7 @@ export class CutoutShape extends PathShape implements classes.CutoutShape {
             style,
             pathsegs
         )
-        this.scalingStroke = scalingStroke;
+        this.exportOptions = exportOptions;
     }
 
     get isNoSupportDiamondScale() {
@@ -1201,9 +1201,8 @@ export class CutoutShape extends PathShape implements classes.CutoutShape {
     get isPathIcon() {
         return false;
     }
-
-    get radius(): number[] {
-        return [0];
+    get radiusType() {
+        return RadiusType.None;
     }
 }
 

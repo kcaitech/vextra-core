@@ -2121,7 +2121,6 @@ export function exportCutoutShape(source: types.CutoutShape, ctx?: IExportContex
                 return ret;
             })(),
         haveEdit: source.haveEdit,
-        scalingStroke: source.scalingStroke,
     }
     return ret
 }

@@ -1435,7 +1435,6 @@ export class Page extends GroupShape {
  */
 export class CutoutShape extends PathShape {
     typeId = 'cutout-shape'
-    scalingStroke: boolean
     constructor(
         crdtidx: BasicArray<number >,
         id: string,
@@ -1443,8 +1442,7 @@ export class CutoutShape extends PathShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        pathsegs: BasicArray<PathSegment >,
-        scalingStroke: boolean
+        pathsegs: BasicArray<PathSegment >
     ) {
         super(
             crdtidx,
@@ -1455,7 +1453,6 @@ export class CutoutShape extends PathShape {
             style,
             pathsegs
         )
-        this.scalingStroke = scalingStroke
     }
 }
 /**

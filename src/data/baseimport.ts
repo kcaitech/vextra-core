@@ -2436,8 +2436,7 @@ export function importCutoutShape(source: types.CutoutShape, ctx?: IImportContex
                 if (r) ret.push(r)
             }
             return ret
-        })(),
-        source.scalingStroke
+        })()
     )
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)

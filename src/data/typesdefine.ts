@@ -716,7 +716,6 @@ export type Page = GroupShape & {
 }
 /* cutout shape */
 export type CutoutShape = PathShape & {
-    scalingStroke: boolean
 }
 /* contact shape */
 export type ContactShape = PathShape & {
