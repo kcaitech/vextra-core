@@ -6,8 +6,9 @@ import { adapt2Shape, GroupShapeView, PageView, ShapeView } from "../../dataview
 import { FillType, ShapeFrame, ShapeType, TextBehaviour } from "../../data/baseclasses";
 import { GroupShape, Shape, TextShape } from "../../data/shape";
 import {
+    newArrowShape,
     newArtboard,
-    newCutoutShape,
+    newCutoutShape, newLineShape,
     newOvalShape,
     newPolygonShape,
     newRectShape,
@@ -37,6 +38,7 @@ export interface GeneratorParams {
     shape: ShapeView | undefined;
 
     fill?: Fill;
+    mark?: boolean;
 }
 
 export class CreatorApiCaller extends AsyncApiCaller {
@@ -124,6 +126,19 @@ export class CreatorApiCaller extends AsyncApiCaller {
             text.constrainerProportions = isFixedRatio;
 
             return text;
+        } else if (type === ShapeType.Line) {
+            const count = this.getCount(type);
+
+            let line;
+            if (params.mark) {
+                line = newArrowShape(`${namePrefix} ${count}`, frame);
+            } else {
+                line = newLineShape(`${namePrefix} ${count}`, frame);
+            }
+
+            this.setTransform(line, transform);
+
+            return line;
         }
     }
 

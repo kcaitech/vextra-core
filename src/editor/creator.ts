@@ -319,8 +319,8 @@ export function newStellateShape(name: string, frame: ShapeFrame): StarShape {
 export function newLineShape(name: string, frame: ShapeFrame): LineShape {
     _checkFrame(frame);
     const style = newflatStyle();
-    const sPoint = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight);
-    const ePoint = new CurvePoint([1] as BasicArray<number>, uuid(), 1, 0, CurveMode.Straight);
+    const sPoint = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0.5, CurveMode.Straight);
+    const ePoint = new CurvePoint([1] as BasicArray<number>, uuid(), 1, 0.5, CurveMode.Straight);
     frame.height = 1;
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
     const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
@@ -336,8 +336,8 @@ export function newArrowShape(name: string, frame: ShapeFrame): LineShape {
     _checkFrame(frame);
     const style = newflatStyle();
     style.endMarkerType = types.MarkerType.OpenArrow;
-    const sPoint = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight);
-    const ePoint = new CurvePoint([1] as BasicArray<number>, uuid(), 1, 0, CurveMode.Straight);
+    const sPoint = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0.5, CurveMode.Straight);
+    const ePoint = new CurvePoint([1] as BasicArray<number>, uuid(), 1, 0.5, CurveMode.Straight);
     frame.height = 1;
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
     const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
