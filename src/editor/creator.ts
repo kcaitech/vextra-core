@@ -62,7 +62,7 @@ import { TableShape } from "../data/table";
 
 export { newText, newText2 } from "../data/textutils";
 // import i18n from '../../i18n' // data不能引用外面工程的内容
-import { BorderSideSetting, ContactForm, CrdtNumber, SideType } from "../data/baseclasses";
+import { BorderSideSetting, ContactForm, CrdtNumber, ExportFileFormat, ExportFormat, ExportFormatNameingScheme, ExportOptions, ExportVisibleScaleType, SideType } from "../data/baseclasses";
 import { Matrix } from "../basic/matrix";
 import { ResizingConstraints2 } from "../data/consts";
 import { SymbolMgr } from "../data/symbolmgr";
@@ -510,8 +510,10 @@ export function newCutoutShape(name: string, frame: ShapeFrame): CutoutShape {
     const p5 = new CurvePoint([4] as BasicArray<number>, uuid(), 0, 0.00001, CurveMode.Straight); // lt
     curvePoint.push(p1, p2, p3, p4, p5);
     const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, true);
-
-    const shape = new CutoutShape(new BasicArray(), id, name, types.ShapeType.Cutout, frame, style, new BasicArray<PathSegment>(segment), false);
+    const exportOptions = new ExportOptions(new BasicArray(), 0, false, false, false, false);
+    const exportFormat = new ExportFormat(new BasicArray(), uuid(), 0, ExportFileFormat.Png, '', ExportFormatNameingScheme.Prefix, 1, ExportVisibleScaleType.Scale)
+    exportOptions.exportFormats.push(exportFormat);
+    const shape = new CutoutShape(new BasicArray(), id, name, types.ShapeType.Cutout, frame, style, new BasicArray<PathSegment>(segment), exportOptions);
     addCommonAttr(shape);
     return shape;
 }
