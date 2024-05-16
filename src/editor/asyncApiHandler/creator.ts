@@ -227,7 +227,7 @@ export class CreatorApiCaller extends AsyncApiCaller {
     collect(shapes: ShapeView[]) {
         try {
             const shape = this.shape as GroupShape;
-            if (!shape) {
+            if (!shape || !shapes.length) {
                 return;
             }
             const api = this.api;
