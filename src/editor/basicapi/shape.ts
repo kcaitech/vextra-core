@@ -28,7 +28,6 @@ export function shapeModifyX(page: Page, shape: Shape, x: number, needUpdateFram
     _checkNum(x);
     const frame = shape.frame;
     if (x !== frame.x) {
-        shape.__transform.setTranslate({vector: new ColVector3D([x, shape.__transform.m13, shape.__transform.m23])});
         const op = crdtSetAttr(frame, 'x', x);
         if (needUpdateFrame) needUpdateFrame.push({ shape, page });
         return op;
@@ -39,7 +38,6 @@ export function shapeModifyY(page: Page, shape: Shape, y: number, needUpdateFram
     _checkNum(y);
     const frame = shape.frame;
     if (y !== frame.y) {
-        shape.__transform.setTranslate({vector: new ColVector3D([shape.__transform.m03, y, shape.__transform.m23])});
         const op = crdtSetAttr(frame, 'y', y);
         if (needUpdateFrame) needUpdateFrame.push({ shape, page });
         return op;
@@ -90,7 +88,6 @@ export function shapeModifyHeight(page: Page, shape: Shape, h: number, needUpdat
 export function shapeModifyRotate(page: Page, shape: Shape, rotate: number, needUpdateFrame?: { shape: Shape, page: Page }[]) {
     rotate = rotate % 360;
     if (rotate !== shape.rotation) {
-        shape.__transform.setRotateZ(rotate / 180 * Math.PI);
         const op = crdtSetAttr(shape, 'rotation', rotate);
         if (needUpdateFrame) needUpdateFrame.push({ shape, page });
         return op;
@@ -137,13 +134,11 @@ export function shapeModifyLock(shape: Shape, isLocked: boolean) {
     return crdtSetAttr(shape, 'isLocked', isLocked);
 }
 export function shapeModifyHFlip(page: Page, shape: Shape, hflip: boolean | undefined, needUpdateFrame?: { shape: Shape, page: Page }[]) {
-    shape.__transform.setFlipH(!!hflip);
     const op = crdtSetAttr(shape, 'isFlippedHorizontal', hflip);
     if (needUpdateFrame) needUpdateFrame.push({ shape, page });
     return op;
 }
 export function shapeModifyVFlip(page: Page, shape: Shape, vflip: boolean | undefined, needUpdateFrame?: { shape: Shape, page: Page }[]) {
-    shape.__transform.setFlipV(!!vflip);
     const op = crdtSetAttr(shape, 'isFlippedVertical', vflip);
     if (needUpdateFrame) needUpdateFrame.push({ shape, page });
     return op;
