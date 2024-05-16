@@ -1,4 +1,4 @@
-import {ColVector, ColVector2D, ColVector3D, isZero, Matrix, Point3D, Vector} from "./matrix2"
+import {ColVector, ColVector2D, ColVector3D, isZero, Matrix, Matrix3DKeysType, Point3D, Vector} from "./matrix2"
 import {NumberArray2D} from "./number_array"
 
 function hasSkewZ(matrix: Matrix) { // 验证矩阵是否存在Z轴斜切
@@ -9,6 +9,8 @@ export enum TransformMode { // 变换模式
     Local, // 局部模式，不同变换（缩放、斜切、旋转、平移）之间互不影响
     Global, // 全局模式，不同变换之间相互影响
 }
+
+// 重写子变换矩阵的部分方法，优化性能
 
 export class TranslateMatrix extends Matrix { // 平移矩阵
     getInverse(): Matrix | undefined {
@@ -29,8 +31,6 @@ export class TranslateMatrix extends Matrix { // 平移矩阵
         return new TranslateMatrix(matrix.data)
     }
 }
-
-// 重写几个变换矩阵的部分方法，优化性能
 
 export class RotateMatrix extends Matrix { // 旋转矩阵
     getInverse(): Matrix | undefined {
@@ -176,8 +176,7 @@ export class Transform { // 变换
             const xDotY = matrix3x3.col(0).dot(matrix3x3.col(1)) // x轴与y轴的点积
             const norm_xCrossY = (matrix3x3.col(0).cross(matrix3x3.col(1)) as Vector).norm // x轴与y轴叉积的模
             let angle = Math.atan2(norm_xCrossY, xDotY) // y轴相对x轴的夹角（逆时针为正）
-            // Y轴发生了翻转
-            let isYFlipped = false
+            let isYFlipped = false // Y轴是否反向
             if (angle < 0) {
                 isYFlipped = true
                 angle += Math.PI
@@ -249,6 +248,145 @@ export class Transform { // 变换
                 scale: this.scaleMatrix.clone(),
             },
         })
+    }
+
+    private _getMatrixEl(key: Matrix3DKeysType) {
+        if (!this.isMatrixLatest) this.updateMatrix();
+        return this.matrix[key]
+    }
+
+    private _setMatrixEl(key: Matrix3DKeysType, value: number) {
+        if (!this.isMatrixLatest) this.updateMatrix();
+        this.matrix[key] = value
+        this.isSubMatrixLatest = false
+    }
+
+    get m00() {
+        return this._getMatrixEl("m00")
+    }
+
+    set m00(value) {
+        this._setMatrixEl("m00", value)
+    }
+
+    get m01() {
+        return this._getMatrixEl("m01")
+    }
+
+    set m01(value) {
+        this._setMatrixEl("m01", value)
+    }
+
+    get m02() {
+        return this._getMatrixEl("m02")
+    }
+
+    set m02(value) {
+        this._setMatrixEl("m02", value)
+    }
+
+    get m03() {
+        return this._getMatrixEl("m03")
+    }
+
+    set m03(value) {
+        this._setMatrixEl("m03", value)
+    }
+
+    get m10() {
+        return this._getMatrixEl("m10")
+    }
+
+    set m10(value) {
+        this._setMatrixEl("m10", value)
+    }
+
+    get m11() {
+        return this._getMatrixEl("m11")
+    }
+
+    set m11(value) {
+        this._setMatrixEl("m11", value)
+    }
+
+    get m12() {
+        return this._getMatrixEl("m12")
+    }
+
+    set m12(value) {
+        this._setMatrixEl("m12", value)
+    }
+
+    get m13() {
+        return this._getMatrixEl("m13")
+    }
+
+    set m13(value) {
+        this._setMatrixEl("m13", value)
+    }
+
+    get m20() {
+        return this._getMatrixEl("m20")
+    }
+
+    set m20(value) {
+        this._setMatrixEl("m20", value)
+    }
+
+    get m21() {
+        return this._getMatrixEl("m21")
+    }
+
+    set m21(value) {
+        this._setMatrixEl("m21", value)
+    }
+
+    get m22() {
+        return this._getMatrixEl("m22")
+    }
+
+    set m22(value) {
+        this._setMatrixEl("m22", value)
+    }
+
+    get m23() {
+        return this._getMatrixEl("m23")
+    }
+
+    set m23(value) {
+        this._setMatrixEl("m23", value)
+    }
+
+    get m30() {
+        return this._getMatrixEl("m30")
+    }
+
+    set m30(value) {
+        this._setMatrixEl("m30", value)
+    }
+
+    get m31() {
+        return this._getMatrixEl("m31")
+    }
+
+    set m31(value) {
+        this._setMatrixEl("m31", value)
+    }
+
+    get m32() {
+        return this._getMatrixEl("m32")
+    }
+
+    set m32(value) {
+        this._setMatrixEl("m32", value)
+    }
+
+    get m33() {
+        return this._getMatrixEl("m33")
+    }
+
+    set m33(value) {
+        this._setMatrixEl("m33", value)
     }
 
     transform(cols: Matrix | ColVector3D[] | Point3D[]) { // 对多个三维列向量（三维点）进行变换

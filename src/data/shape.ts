@@ -13,7 +13,8 @@ import {
     ResizeType,
     ShapeFrame,
     ShapeType,
-    VariableType
+    VariableType,
+    ShapeTransform,
 } from "./baseclasses"
 import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
@@ -23,11 +24,13 @@ import { FrameType, PathType, RadiusType, RECT_POINTS } from "./consts";
 import { Variable } from "./variable";
 import { TableShape } from "./table";
 import { SymbolRefShape } from "./symbolref";
+import {Transform} from "../basic/transform";
+import {Matrix3DKeysType} from "../basic/matrix2";
 
 export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D,
     CurvePoint, ShapeFrame, Ellipse, PathSegment, OverrideType, VariableType,
-    FillRule, CornerRadius,
+    FillRule, CornerRadius, ShapeTransform,
 } from "./baseclasses";
 
 export { Variable } from "./variable";
@@ -103,7 +106,13 @@ export class Shape extends Basic implements classes.Shape {
     shouldBreakMaskChain?: boolean
     varbinds?: BasicMap<string, string>
 
-    haveEdit?: boolean | undefined;
+    haveEdit?: boolean | undefined
+
+    transform: ShapeTransform
+    __transform: Transform
+    skewX?: number
+    scaleX?: number
+    scaleY?: number
 
     constructor(
         crdtidx: BasicArray<number>,
@@ -120,6 +129,19 @@ export class Shape extends Basic implements classes.Shape {
         this.type = type
         this.frame = frame
         this.style = style
+
+        const that = this
+        this.__transform = new Transform()
+        this.transform = new Proxy(new ShapeTransform(), {
+            get: (target, prop) => {
+                return that.__transform[prop as Matrix3DKeysType]
+            },
+            set: (target, prop, value) => {
+                that.__transform[prop as Matrix3DKeysType] = value
+                return true
+            },
+        })
+
     }
 
     // /**

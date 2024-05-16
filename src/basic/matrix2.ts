@@ -14,6 +14,8 @@ export function isOne(value: number) { // 判断是否为1，差值小于EPSILON
     return isEqual(value, 1)
 }
 
+export type Matrix3DKeysType = "m00" | "m01" | "m02" | "m03" | "m10" | "m11" | "m12" | "m13" | "m20" | "m21" | "m22" | "m23" | "m30" | "m31" | "m32" | "m33"
+
 export class Matrix { // 矩阵
     data: NumberArray2D
 

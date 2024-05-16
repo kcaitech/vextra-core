@@ -24,6 +24,18 @@
         "frame": {
             "$ref": "./shape-frame.json"
         },
+        "transform": {
+            "$ref": "./shape-transform.json"
+        },
+        "skewX": {
+            "type": "number"
+        },
+        "scaleX": {
+            "type": "number"
+        },
+        "scaleY": {
+            "type": "number"
+        },
         "style": {
             "$ref": "./style.json"
         },

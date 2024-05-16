@@ -62,6 +62,15 @@ export class Matrix {
     preScale(sx: number, sy?: number) {
         this.multi([sx, 0, 0, sy ?? sx, 0, 0]);
     }
+    skewX(radians: number) {
+        this.multiAtLeft([1, 0, Math.tan(radians), 1, 0, 0]);
+    }
+    scaleX(sx: number) {
+        this.multiAtLeft([sx, 0, 0, 1, 0, 0]);
+    }
+    scaleY(sy: number) {
+        this.multiAtLeft([1, 0, 0, sy, 0, 0]);
+    }
     /** 
      * @radians x轴向右，y轴坐标向下，顺时针方向，0-2pi 
      * @x @y 旋转中心点
