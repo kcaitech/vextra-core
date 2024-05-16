@@ -14,7 +14,6 @@ import {
     ShapeFrame,
     ShapeType,
     VariableType,
-    ShapeTransform,
 } from "./baseclasses"
 import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
@@ -30,7 +29,7 @@ import {Matrix3DKeysType} from "../basic/matrix2";
 export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D,
     CurvePoint, ShapeFrame, Ellipse, PathSegment, OverrideType, VariableType,
-    FillRule, CornerRadius, ShapeTransform,
+    FillRule, CornerRadius,
 } from "./baseclasses";
 
 export { Variable } from "./variable";
@@ -108,8 +107,6 @@ export class Shape extends Basic implements classes.Shape {
 
     haveEdit?: boolean | undefined
 
-    transform: ShapeTransform
-    __transform: Transform
     skewX?: number
     scaleX?: number
     scaleY?: number
@@ -129,19 +126,6 @@ export class Shape extends Basic implements classes.Shape {
         this.type = type
         this.frame = frame
         this.style = style
-
-        const that = this
-        this.__transform = new Transform()
-        this.transform = new Proxy(new ShapeTransform(), {
-            get: (target, prop) => {
-                return that.__transform[prop as Matrix3DKeysType]
-            },
-            set: (target, prop, value) => {
-                that.__transform[prop as Matrix3DKeysType] = value
-                return true
-            },
-        })
-
     }
 
     // /**

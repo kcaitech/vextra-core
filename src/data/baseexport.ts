@@ -265,7 +265,6 @@ export function exportShape(source: types.Shape, ctx?: IExportContext): types.Sh
         id: source.id,
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
-        transform: source.transform && exportShapeTransform(source.transform, ctx),
         skewX: source.skewX,
         scaleX: source.scaleX,
         scaleY: source.scaleY,
@@ -301,20 +300,6 @@ export function exportShape(source: types.Shape, ctx?: IExportContext): types.Sh
 /* shape types */
 export function exportShapeType(source: types.ShapeType, ctx?: IExportContext): types.ShapeType {
     return source
-}
-/* shape frame
- * x,y为parent坐标系里的点
- * width,height为当前shape的坐标空间大小 */
-export function exportShapeTransform(source: types.ShapeTransform, ctx?: IExportContext): types.ShapeTransform {
-    const ret = {
-        m00: source.m00,
-        m10: source.m10,
-        m01: source.m01,
-        m11: source.m11,
-        m02: source.m02,
-        m12: source.m12,
-    }
-    return ret
 }
 /* shape frame
  * x,y为parent坐标系里的点
@@ -860,7 +845,6 @@ export function exportTextShape(source: types.TextShape, ctx?: IExportContext): 
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        transform: source.transform && exportShapeTransform(source.transform, ctx),
         skewX: source.skewX,
         scaleX: source.scaleX,
         scaleY: source.scaleY,
@@ -910,7 +894,6 @@ export function exportTableShape(source: types.TableShape, ctx?: IExportContext)
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        transform: source.transform && exportShapeTransform(source.transform, ctx),
         skewX: source.skewX,
         scaleX: source.scaleX,
         scaleY: source.scaleY,
@@ -983,7 +966,6 @@ export function exportTableCell(source: types.TableCell, ctx?: IExportContext): 
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        transform: source.transform && exportShapeTransform(source.transform, ctx),
         skewX: source.skewX,
         scaleX: source.scaleX,
         scaleY: source.scaleY,
@@ -1038,7 +1020,6 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        transform: source.transform && exportShapeTransform(source.transform, ctx),
         skewX: source.skewX,
         scaleX: source.scaleX,
         scaleY: source.scaleY,
@@ -1128,7 +1109,6 @@ export function exportPathShape2(source: types.PathShape2, ctx?: IExportContext)
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        transform: source.transform && exportShapeTransform(source.transform, ctx),
         skewX: source.skewX,
         scaleX: source.scaleX,
         scaleY: source.scaleY,
@@ -1185,7 +1165,6 @@ export function exportPathShape(source: types.PathShape, ctx?: IExportContext): 
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        transform: source.transform && exportShapeTransform(source.transform, ctx),
         skewX: source.skewX,
         scaleX: source.scaleX,
         scaleY: source.scaleY,
@@ -1251,7 +1230,6 @@ export function exportStarShape(source: types.StarShape, ctx?: IExportContext): 
                 return ret
             })(),
         fixedRadius: source.fixedRadius,
-        transform: source.transform && exportShapeTransform(source.transform, ctx),
         skewX: source.skewX,
         scaleX: source.scaleX,
         scaleY: source.scaleY,
@@ -1310,7 +1288,6 @@ export function exportRectShape(source: types.RectShape, ctx?: IExportContext): 
                 return ret
             })(),
         fixedRadius: source.fixedRadius,
-        transform: source.transform && exportShapeTransform(source.transform, ctx),
         skewX: source.skewX,
         scaleX: source.scaleX,
         scaleY: source.scaleY,
@@ -1367,7 +1344,6 @@ export function exportPolygonShape(source: types.PolygonShape, ctx?: IExportCont
                 return ret
             })(),
         fixedRadius: source.fixedRadius,
-        transform: source.transform && exportShapeTransform(source.transform, ctx),
         skewX: source.skewX,
         scaleX: source.scaleX,
         scaleY: source.scaleY,
@@ -1479,7 +1455,6 @@ export function exportOvalShape(source: types.OvalShape, ctx?: IExportContext): 
                 return ret
             })(),
         fixedRadius: source.fixedRadius,
-        transform: source.transform && exportShapeTransform(source.transform, ctx),
         skewX: source.skewX,
         scaleX: source.scaleX,
         scaleY: source.scaleY,
@@ -1537,7 +1512,6 @@ export function exportLineShape(source: types.LineShape, ctx?: IExportContext): 
                 return ret
             })(),
         fixedRadius: source.fixedRadius,
-        transform: source.transform && exportShapeTransform(source.transform, ctx),
         skewX: source.skewX,
         scaleX: source.scaleX,
         scaleY: source.scaleY,
@@ -1594,7 +1568,6 @@ export function exportImageShape(source: types.ImageShape, ctx?: IExportContext)
                 return ret
             })(),
         fixedRadius: source.fixedRadius,
-        transform: source.transform && exportShapeTransform(source.transform, ctx),
         skewX: source.skewX,
         scaleX: source.scaleX,
         scaleY: source.scaleY,
@@ -1645,7 +1618,6 @@ export function exportGroupShape(source: types.GroupShape, ctx?: IExportContext)
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        transform: source.transform && exportShapeTransform(source.transform, ctx),
         skewX: source.skewX,
         scaleX: source.scaleX,
         scaleY: source.scaleY,
@@ -1841,7 +1813,6 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
                 return ret
             })(),
         fixedRadius: source.fixedRadius,
-        transform: source.transform && exportShapeTransform(source.transform, ctx),
         skewX: source.skewX,
         scaleX: source.scaleX,
         scaleY: source.scaleY,
@@ -1999,7 +1970,6 @@ export function exportSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IEx
             })(),
         cornerRadius: source.cornerRadius && exportCornerRadius(source.cornerRadius, ctx),
         fixedRadius: source.fixedRadius,
-        transform: source.transform && exportShapeTransform(source.transform, ctx),
         skewX: source.skewX,
         scaleX: source.scaleX,
         scaleY: source.scaleY,
@@ -2121,7 +2091,6 @@ export function exportPage(source: types.Page, ctx?: IExportContext): types.Page
                 return ret
             })(),
         fixedRadius: source.fixedRadius,
-        transform: source.transform && exportShapeTransform(source.transform, ctx),
         skewX: source.skewX,
         scaleX: source.scaleX,
         scaleY: source.scaleY,
@@ -2179,7 +2148,6 @@ export function exportCutoutShape(source: types.CutoutShape, ctx?: IExportContex
                 return ret
             })(),
         fixedRadius: source.fixedRadius,
-        transform: source.transform && exportShapeTransform(source.transform, ctx),
         skewX: source.skewX,
         scaleX: source.scaleX,
         scaleY: source.scaleY,
@@ -2237,7 +2205,6 @@ export function exportContactShape(source: types.ContactShape, ctx?: IExportCont
                 return ret
             })(),
         fixedRadius: source.fixedRadius,
-        transform: source.transform && exportShapeTransform(source.transform, ctx),
         skewX: source.skewX,
         scaleX: source.scaleX,
         scaleY: source.scaleY,
@@ -2364,7 +2331,6 @@ export function exportBoolShape(source: types.BoolShape, ctx?: IExportContext): 
                 return ret
             })(),
         fixedRadius: source.fixedRadius,
-        transform: source.transform && exportShapeTransform(source.transform, ctx),
         skewX: source.skewX,
         scaleX: source.scaleX,
         scaleY: source.scaleY,
@@ -2486,7 +2452,6 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
                 return ret
             })(),
         fixedRadius: source.fixedRadius,
-        transform: source.transform && exportShapeTransform(source.transform, ctx),
         skewX: source.skewX,
         scaleX: source.scaleX,
         scaleY: source.scaleY,
