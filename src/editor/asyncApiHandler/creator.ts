@@ -4,7 +4,7 @@ import { CoopRepository } from "../coop/cooprepo";
 import { Document } from "../../data/document";
 import { adapt2Shape, GroupShapeView, PageView, ShapeView } from "../../dataview";
 import { FillType, ShapeFrame, ShapeType, TextBehaviour } from "../../data/baseclasses";
-import { GroupShape, Shape, TextShape } from "../../data/shape";
+import { GroupShape, LineShape, PathShape, Shape, TextShape } from "../../data/shape";
 import {
     newArrowShape,
     newArtboard,
@@ -23,6 +23,8 @@ import { Color } from "../../data/color";
 import { Matrix } from "../../basic/matrix";
 import { Page } from "../../data/page";
 import { Api } from "../coop/recordapi";
+import { Point2D } from "../../data/typesdefine";
+import { update_frame_by_points } from "../utils/path";
 
 export interface GeneratorParams {
     parent: GroupShapeView;
@@ -224,12 +226,48 @@ export class CreatorApiCaller extends AsyncApiCaller {
         }
     }
 
+    extendLine(start: Point2D, end: Point2D) {
+        try {
+            if (!(this.shape instanceof PathShape)) {
+                return;
+            }
+
+            const [baseStart, baseEnd] = this.shape.pathsegs[0].points;
+            if (!baseStart || !baseEnd) return;
+
+            const page = this.page;
+            const api = this.api;
+            const shape = this.shape;
+
+            if (baseStart.x !== start.x || baseStart.y !== start.y) {
+                api.shapeModifyCurvPoint(page, shape, 0, start, 0);
+            }
+
+            if (baseEnd.x !== end.x || baseEnd.y !== end.y) {
+                api.shapeModifyCurvPoint(page, shape, 1, end, 0);
+            }
+
+            this.updateView();
+        } catch (e) {
+            console.log('CreatorApiCaller.extendLine:', e);
+            this.exception = true;
+        }
+    }
+
     collect(shapes: ShapeView[]) {
         try {
             const shape = this.shape as GroupShape;
+
+            if (this.__params?.parent.type === ShapeType.Page) {
+                const color = new Color(1, 255, 255, 255);
+                const fill = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, color);
+                this.api.addFillAt(this.page, shape, fill, 0);
+            }
+
             if (!shape || !shapes.length) {
                 return;
             }
+
             const api = this.api;
             const page = this.page;
 
@@ -255,12 +293,6 @@ export class CreatorApiCaller extends AsyncApiCaller {
                 api.shapeModifyY(page, c, c.frame.y + target.y - cur.y - t_xy.y);
             }
 
-            if (this.__params?.parent.type === ShapeType.Page) {
-                const color = new Color(1, 255, 255, 255);
-                const fill = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, color);
-                this.api.addFillAt(this.page, shape, fill, 0);
-            }
-
             function deleteEmptyGroupShape(document: Document, page: Page, shape: Shape, api: Api): boolean {
                 const p = shape.parent as GroupShape;
                 if (!p) return false;
@@ -278,6 +310,11 @@ export class CreatorApiCaller extends AsyncApiCaller {
 
     commit() {
         if (this.__repo.isNeedCommit() && !this.exception) {
+
+            if (this.shape instanceof LineShape) { // 线条的宽高最后根据两个点的位置计算
+                update_frame_by_points(this.api, this.page, this.shape, true);
+            }
+
             this.__repo.commit();
         } else {
             this.__repo.rollback();
