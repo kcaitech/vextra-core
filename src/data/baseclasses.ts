@@ -219,9 +219,6 @@ export class Shape extends Basic {
     type: ShapeType
     frame: ShapeFrame
     transform?: ShapeTransform
-    skewX?: number
-    scaleX?: number
-    scaleY?: number
     style: Style
     boolOp?: BoolOp
     isFixedToViewport?: boolean

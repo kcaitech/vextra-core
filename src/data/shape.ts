@@ -41,6 +41,15 @@ export { Variable } from "./variable";
 // 在symbol，这是个普通shape, 绘制由绘制处理？（怎么处理的？监听所有的变量容器）
 //   试图层可以获取，但更新呢？监听所有的变量容器
 
+const transform3Dto2DKeyMap = {
+    "m00": "m00",
+    "m10": "m10",
+    "m01": "m01",
+    "m11": "m11",
+    "m02": "m03",
+    "m12": "m13",
+}
+
 export class Shape extends Basic implements classes.Shape {
 
     // watchable, 使用Watchable会导致语法检查失效
@@ -110,9 +119,6 @@ export class Shape extends Basic implements classes.Shape {
 
     transform: ShapeTransform
     __transform: Transform
-    skewX?: number
-    scaleX?: number
-    scaleY?: number
 
     constructor(
         crdtidx: BasicArray<number>,
@@ -134,10 +140,10 @@ export class Shape extends Basic implements classes.Shape {
         this.__transform = new Transform()
         this.transform = new Proxy(new ShapeTransform(), {
             get: (target, prop) => {
-                return that.__transform[prop as Matrix3DKeysType]
+                return that.__transform[transform3Dto2DKeyMap[prop as keyof typeof transform3Dto2DKeyMap] as Matrix3DKeysType]
             },
             set: (target, prop, value) => {
-                that.__transform[prop as Matrix3DKeysType] = value
+                that.__transform[transform3Dto2DKeyMap[prop as keyof typeof transform3Dto2DKeyMap] as Matrix3DKeysType] = value
                 return true
             },
         })
