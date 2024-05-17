@@ -3,12 +3,13 @@ import { AsyncApiCaller } from "./AsyncApiCaller";
 import { CoopRepository } from "../coop/cooprepo";
 import { Document } from "../../data/document";
 import { adapt2Shape, GroupShapeView, PageView, ShapeView } from "../../dataview";
-import { FillType, ShapeFrame, ShapeType, TextBehaviour } from "../../data/baseclasses";
+import { ContactForm, FillType, ShapeFrame, ShapeType, TextBehaviour } from "../../data/baseclasses";
 import { GroupShape, LineShape, PathShape, Shape, TextShape } from "../../data/shape";
 import {
     newArrowShape,
-    newArtboard,
-    newCutoutShape, newLineShape,
+    newArtboard, newContact,
+    newCutoutShape,
+    newLineShape,
     newOvalShape,
     newPolygonShape,
     newRectShape,
@@ -25,6 +26,8 @@ import { Page } from "../../data/page";
 import { Api } from "../coop/recordapi";
 import { Point2D } from "../../data/typesdefine";
 import { update_frame_by_points } from "../utils/path";
+import { ContactShape } from "../../data/contact";
+import { translateTo } from "../frame";
 
 export interface GeneratorParams {
     parent: GroupShapeView;
@@ -41,6 +44,7 @@ export interface GeneratorParams {
 
     fill?: Fill;
     mark?: boolean;
+    apex?: ContactForm;
 }
 
 export class CreatorApiCaller extends AsyncApiCaller {
@@ -141,6 +145,14 @@ export class CreatorApiCaller extends AsyncApiCaller {
             this.setTransform(line, transform);
 
             return line;
+        } else if (type === ShapeType.Contact) {
+            const count = this.getCount(type);
+
+            const contact = newContact(`${namePrefix} ${count}`, frame, params.apex);
+
+            this.setTransform(contact, transform);
+
+            return contact;
         }
     }
 
@@ -222,6 +234,64 @@ export class CreatorApiCaller extends AsyncApiCaller {
             }
         } catch (e) {
             console.log('CreatorApiCaller.generator:', e);
+            this.exception = true;
+        }
+    }
+
+    contactTo(end: { x: number, y: number }, to?: ContactForm) {
+        try {
+            if (!(this.shape instanceof ContactShape)) {
+                return;
+            }
+            const api = this.api;
+            const page = this.page;
+            const shape = this.shape;
+
+            api.shapeModifyCurvPoint(page, shape, 1, end, 0);
+
+            const _to = this.shape.to;
+
+            if ((_to && !to) || (to && !_to)) {
+                api.shapeModifyContactTo(page, shape, to);
+            }
+
+            this.updateView();
+        } catch (e) {
+            console.log('CreatorApiCaller.contactTo:', e);
+            this.exception = true;
+        }
+    }
+
+    private __contactXY: { x: number, y: number } | undefined;
+
+    migrate(targetEnv: GroupShapeView) {
+        try {
+            const target = adapt2Shape(targetEnv);
+            const shape = this.shape;
+            if (!(target instanceof GroupShape) || !shape) {
+                return;
+            }
+
+            const origin: GroupShape = shape.parent as GroupShape;
+
+            if (!this.__contactXY) {
+                this.__contactXY = shape.matrix2Root().computeCoord2(0, 0);
+            }
+
+            let toIdx = target.childs.length;
+            if (origin.id === target.id) --toIdx;
+
+            const api = this.api;
+            const page = this.page;
+
+            api.shapeMove(page, origin, origin.indexOfChild(shape), target, toIdx);
+
+            const { x, y } = this.__contactXY!;
+            translateTo(api, page, shape, x, y);
+
+            this.updateView();
+        } catch (e) {
+            console.log('CreatorApiCaller.migrate:', e);
             this.exception = true;
         }
     }

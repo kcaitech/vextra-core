@@ -465,7 +465,7 @@ export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm):
     style.endMarkerType = types.MarkerType.OpenArrow;
 
     const sPoint = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight);
-    const ePoint = new CurvePoint([1] as BasicArray<number>, uuid(), 1, 1, CurveMode.Straight);
+    const ePoint = new CurvePoint([1] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight);
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
     const side = new BorderSideSetting(SideType.Normal, 2, 2, 2, 2);
     const border = new Border([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 128, 128, 128), types.BorderPosition.Center, 2, new BorderStyle(0, 0), types.CornerType.Miter, side);
