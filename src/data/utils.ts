@@ -2,7 +2,7 @@ import { v4 } from "uuid";
 import { Matrix } from "../basic/matrix";
 import { CurvePoint, PathShape, Shape, SymbolShape, Variable } from "./shape";
 import { ContactType, CurveMode, OverrideType } from "./typesdefine";
-import { Api } from "../editor/coop/recordapi";
+// import { Api } from "../editor/coop/recordapi";
 import { Page } from "./page";
 import { importCurvePoint, importPolygonShape, importStarShape } from "./baseimport";
 import { importArtboard, importContactShape, importBoolShape, importGroupShape, importImageShape, importLineShape, importOvalShape, importPathShape, importPathShape2, importRectShape, importSymbolRefShape, importTableCell, importTableShape, importTextShape } from "./baseimport";
@@ -570,17 +570,17 @@ export function d(a: PageXY, b: XY): 'ver' | 'hor' | false {
     if (Math.abs(a.y - b.y) < 0.0001) return 'hor';
     return false;
 }
-export function update_contact_points(api: Api, shape: ContactShape, page: Page) {
-    const _p = shape.getPoints();
-    const len = shape.points.length;
-    api.deletePoints(page, shape as PathShape, 0, len, 0);
-    for (let i = 0, len2 = _p.length; i < len2; i++) {
-        const p = importCurvePoint((_p[i]));
-        p.id = v4();
-        _p[i] = p;
-    }
-    api.addPoints(page, shape as PathShape, _p, 0);
-}
+// export function update_contact_points(api: Api, shape: ContactShape, page: Page) {
+//     const _p = shape.getPoints();
+//     const len = shape.points.length;
+//     api.deletePoints(page, shape as PathShape, 0, len, 0);
+//     for (let i = 0, len2 = _p.length; i < len2; i++) {
+//         const p = importCurvePoint((_p[i]));
+//         p.id = v4();
+//         _p[i] = p;
+//     }
+//     api.addPoints(page, shape as PathShape, _p, 0);
+// }
 
 export function copyShape(source: types.Shape) {
     if (source.typeId == 'bool-shape') {

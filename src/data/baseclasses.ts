@@ -195,7 +195,7 @@ export class SpanAttr extends Basic {
     color?: Color
     strikethrough?: StrikethroughType
     underline?: UnderlineType
-    bold?: number
+    weight?: number
     italic?: boolean
     bulletNumbers?: BulletNumbers
     highlight?: Color
