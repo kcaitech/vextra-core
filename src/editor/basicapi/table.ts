@@ -142,9 +142,9 @@ export function tableModifyTextStrikethrough(table: TableShape, strikethrough: S
     if (!table.textAttr) table.textAttr = new TextAttr();
     return crdtSetAttr(table.textAttr, "strikethrough", strikethrough);
 }
-export function tableModifyTextBold(table: TableShape, bold: number) {
+export function tableModifyTextWeight(table: TableShape, weight: number) {
     if (!table.textAttr) table.textAttr = new TextAttr();
-    return crdtSetAttr(table.textAttr, "bold", bold);
+    return crdtSetAttr(table.textAttr, "weight", weight);
 }
 
 export function tableModifyTextItalic(table: TableShape, italic: boolean) {

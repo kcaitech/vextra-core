@@ -868,11 +868,11 @@ export class Api {
         if (!_text || !(_text instanceof Text)) throw Error();
         this.addOp(basicapi.textModifyStrikethrough(shape, _text, strikethrough, index, len));
     }
-    textModifyBold(page: Page, shape: TextShapeLike | Variable, bold: number, index: number, len: number) {
+    textModifyWeight(page: Page, shape: TextShapeLike | Variable, weight: number, index: number, len: number) {
         checkShapeAtPage(page, shape);
         const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
-        this.addOp(basicapi.textModifyBold(shape, _text, bold, index, len));
+        this.addOp(basicapi.textModifyWeight(shape, _text, weight, index, len));
     }
     textModifyItalic(page: Page, shape: TextShapeLike | Variable, italic: boolean, index: number, len: number) {
         checkShapeAtPage(page, shape);
@@ -1158,9 +1158,9 @@ export class Api {
         checkShapeAtPage(page, table);
         this.addOp(basicapi.tableModifyTextStrikethrough(table, strikethrough));
     }
-    tableModifyTextBold(page: Page, table: TableShape, bold: number) {
+    tableModifyTextWeight(page: Page, table: TableShape, weight: number) {
         checkShapeAtPage(page, table);
-        this.addOp(basicapi.tableModifyTextBold(table, bold));
+        this.addOp(basicapi.tableModifyTextWeight(table, weight));
     }
     tableModifyTextItalic(page: Page, table: TableShape, italic: boolean) {
         checkShapeAtPage(page, table);

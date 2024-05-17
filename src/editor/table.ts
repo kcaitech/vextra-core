@@ -988,8 +988,8 @@ export class TableEditor extends ShapeEditor {
         return false;
     }
 
-    public setTextBold(bold: number, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        const api = this.__repo.start("setTableTextBold");
+    public setTextWeight(weight: number, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
+        const api = this.__repo.start("setTableTextWeight");
         try {
             if (range) {
                 this._initCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd, api);
@@ -997,16 +997,16 @@ export class TableEditor extends ShapeEditor {
                 cells.forEach((c) => {
                     const cell = c.cell;
                     if (cell && cell.cellType === TableCellType.Text && cell.data.parent) {
-                        api.textModifyBold(this.__page, cell as TextShapeLike, bold, 0, cell.text.length);
+                        api.textModifyWeight(this.__page, cell as TextShapeLike, weight, 0, cell.text.length);
                     }
                 })
             }
             else {
-                api.tableModifyTextBold(this.__page, this.shape, bold);
+                api.tableModifyTextWeight(this.__page, this.shape, weight);
                 const cells = this.view.childs as TableCellView[];
                 cells.forEach((cell) => {
                     if (cell && cell.cellType === TableCellType.Text && cell.data.parent) {
-                        api.textModifyBold(this.__page, cell as TextShapeLike, bold, 0, cell.text.length);
+                        api.textModifyWeight(this.__page, cell as TextShapeLike, weight, 0, cell.text.length);
                     }
                 })
             }

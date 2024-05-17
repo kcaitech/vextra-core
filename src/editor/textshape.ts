@@ -1042,15 +1042,15 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
 
-    public setTextBold(bold: number, index: number, len: number) {
+    public setTextWeight(weight: number, index: number, len: number) {
         if (len === 0) {
-            this.cacheAttr.bold = bold;
+            this.cacheAttr.weight = weight;
             return;
         }
-        const api = this.__repo.start("setTextBold");
+        const api = this.__repo.start("setTextWeight");
         try {
             const shape = this.shape4edit(api);
-            api.textModifyBold(this.__page, shape, bold, index, len)
+            api.textModifyWeight(this.__page, shape, weight, index, len)
             this.__repo.commit();
             return true;
         } catch (error) {
@@ -1059,28 +1059,28 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
-    public template(shapes: Shape[]) {
-        const api = this.__repo.start("setTextsBold");
-        try {
-            for (let i = 0, len = shapes.length; i < len; i++) {
-                const text_shape: TextShape = shapes[i] as TextShape;
-                if (text_shape.type !== ShapeType.Text) continue;
-                const text_length = text_shape.text.length;
-                if (text_length === 0) continue;
-            }
-            this.__repo.commit();
-            return true;
-        } catch (error) {
-            console.log(error)
-            this.__repo.rollback();
-        }
-        return false;
-    }
+    // public template(shapes: Shape[]) {
+    //     const api = this.__repo.start("setTexts");
+    //     try {
+    //         for (let i = 0, len = shapes.length; i < len; i++) {
+    //             const text_shape: TextShape = shapes[i] as TextShape;
+    //             if (text_shape.type !== ShapeType.Text) continue;
+    //             const text_length = text_shape.text.length;
+    //             if (text_length === 0) continue;
+    //         }
+    //         this.__repo.commit();
+    //         return true;
+    //     } catch (error) {
+    //         console.log(error)
+    //         this.__repo.rollback();
+    //     }
+    //     return false;
+    // }
     /**
      * @description 多选文字对象时，给每个文字对象的全部文字设置粗体
      */
-    public setTextBoldMulti(shapes: (TextShapeView | TableCellView)[], bold: number) {
-        const api = this.__repo.start("setTextBoldMulti");
+    public setTextWeightMulti(shapes: (TextShapeView | TableCellView)[], weight: number) {
+        const api = this.__repo.start("setTextWeightMulti");
         try {
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const text_shape = shapes[i];
@@ -1089,7 +1089,7 @@ export class TextShapeEditor extends ShapeEditor {
                 const text = shape instanceof ShapeView ? shape.text : shape.value as Text;
                 const text_length = text.length;
                 if (text_length === 0) continue;
-                api.textModifyBold(this.__page, shape, bold, 0, text_length)
+                api.textModifyWeight(this.__page, shape, weight, 0, text_length)
             }
             this.__repo.commit();
             return true;
