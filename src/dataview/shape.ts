@@ -694,23 +694,20 @@ export class ShapeView extends DataView {
             props.opacity = contextSettings.opacity;
         }
 
-        // if (this.isNoTransform()) {
-        //     if (frame.x !== 0 || frame.y !== 0) props.transform = `translate(${frame.x},${frame.y})`
-        // } else {
-        //     const cx = frame.x + frame.width / 2;
-        //     const cy = frame.y + frame.height / 2;
-        //     const style: any = {}
-        //     style.transform = "translate(" + cx + "px," + cy + "px) "
-        //     // style.transform = "translate(" +frame.x + "px," + frame.y + "px) " // dev code
-        //     if (this.m_hflip) style.transform += "rotateY(180deg) "
-        //     if (this.m_vflip) style.transform += "rotateX(180deg) "
-        //     if (this.m_rotate) style.transform += "rotate(" + this.m_rotate + "deg) "
-        //     style.transform += "translate(" + (-cx + frame.x) + "px," + (-cy + frame.y) + "px)"
-        //     props.style = style;
-        // }
-
-        const shape = this.m_data;
-        props.transform = `matrix(${shape.transform.m00},${shape.transform.m10},${shape.transform.m01},${shape.transform.m11},${shape.transform.m02},${shape.transform.m12})`;
+        if (this.isNoTransform()) {
+            if (frame.x !== 0 || frame.y !== 0) props.transform = `translate(${frame.x},${frame.y})`
+        } else {
+            const cx = frame.x + frame.width / 2;
+            const cy = frame.y + frame.height / 2;
+            const style: any = {}
+            style.transform = "translate(" + cx + "px," + cy + "px) "
+            // style.transform = "translate(" +frame.x + "px," + frame.y + "px) " // dev code
+            if (this.m_hflip) style.transform += "rotateY(180deg) "
+            if (this.m_vflip) style.transform += "rotateX(180deg) "
+            if (this.m_rotate) style.transform += "rotate(" + this.m_rotate + "deg) "
+            style.transform += "translate(" + (-cx + frame.x) + "px," + (-cy + frame.y) + "px)"
+            props.style = style;
+        }
 
         return props;
     }

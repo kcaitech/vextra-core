@@ -275,7 +275,6 @@ export function importShape(source: types.Shape, ctx?: IImportContext): impl.Sha
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx)
     )
-    if (source.transform !== undefined) ret.transform = importShapeTransform(source.transform, ctx)
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
@@ -306,20 +305,6 @@ export function importShape(source: types.Shape, ctx?: IImportContext): impl.Sha
 /* shape types */
 export function importShapeType(source: types.ShapeType, ctx?: IImportContext): impl.ShapeType {
     return source
-}
-/* shape frame
- * x,y为parent坐标系里的点
- * width,height为当前shape的坐标空间大小 */
-export function importShapeTransform(source: types.ShapeTransform, ctx?: IImportContext): impl.ShapeTransform {
-    const ret: impl.ShapeTransform = new impl.ShapeTransform (
-    )
-    if (source.m00 !== undefined) ret.m00 = source.m00
-    if (source.m10 !== undefined) ret.m10 = source.m10
-    if (source.m01 !== undefined) ret.m01 = source.m01
-    if (source.m11 !== undefined) ret.m11 = source.m11
-    if (source.m02 !== undefined) ret.m02 = source.m02
-    if (source.m12 !== undefined) ret.m12 = source.m12
-    return ret
 }
 /* shape frame
  * x,y为parent坐标系里的点
@@ -899,7 +884,6 @@ export function importTextShape(source: types.TextShape, ctx?: IImportContext): 
         importStyle(source.style, ctx),
         importText(source.text, ctx)
     )
-    if (source.transform !== undefined) ret.transform = importShapeTransform(source.transform, ctx)
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
@@ -1000,7 +984,6 @@ export function importTableShape(source: types.TableShape, ctx?: IImportContext)
             return ret
         })()
     )
-    if (source.transform !== undefined) ret.transform = importShapeTransform(source.transform, ctx)
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
@@ -1087,7 +1070,6 @@ export function importTableCell(source: types.TableCell, ctx?: IImportContext): 
         importTableCellType(source.cellType, ctx),
         importText(source.text, ctx)
     )
-    if (source.transform !== undefined) ret.transform = importShapeTransform(source.transform, ctx)
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
@@ -1152,7 +1134,6 @@ export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImport
             return ret
         })()
     )
-    if (source.transform !== undefined) ret.transform = importShapeTransform(source.transform, ctx)
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
@@ -1244,7 +1225,6 @@ export function importPathShape2(source: types.PathShape2, ctx?: IImportContext)
             return ret
         })()
     )
-    if (source.transform !== undefined) ret.transform = importShapeTransform(source.transform, ctx)
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
@@ -1315,7 +1295,6 @@ export function importPathShape(source: types.PathShape, ctx?: IImportContext): 
             return ret
         })()
     )
-    if (source.transform !== undefined) ret.transform = importShapeTransform(source.transform, ctx)
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
@@ -1374,7 +1353,6 @@ export function importStarShape(source: types.StarShape, ctx?: IImportContext): 
         source.innerAngle
     )
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
-    if (source.transform !== undefined) ret.transform = importShapeTransform(source.transform, ctx)
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
@@ -1445,7 +1423,6 @@ export function importRectShape(source: types.RectShape, ctx?: IImportContext): 
         })()
     )
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
-    if (source.transform !== undefined) ret.transform = importShapeTransform(source.transform, ctx)
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
@@ -1502,7 +1479,6 @@ export function importPolygonShape(source: types.PolygonShape, ctx?: IImportCont
         source.counts
     )
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
-    if (source.transform !== undefined) ret.transform = importShapeTransform(source.transform, ctx)
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
@@ -1634,7 +1610,6 @@ export function importOvalShape(source: types.OvalShape, ctx?: IImportContext): 
         importEllipse(source.ellipse, ctx)
     )
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
-    if (source.transform !== undefined) ret.transform = importShapeTransform(source.transform, ctx)
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
@@ -1705,7 +1680,6 @@ export function importLineShape(source: types.LineShape, ctx?: IImportContext): 
         })()
     )
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
-    if (source.transform !== undefined) ret.transform = importShapeTransform(source.transform, ctx)
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
@@ -1810,7 +1784,6 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
         source.imageRef
     )
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
-    if (source.transform !== undefined) ret.transform = importShapeTransform(source.transform, ctx)
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
@@ -1950,7 +1923,6 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
             return ret
         })()
     )
-    if (source.transform !== undefined) ret.transform = importShapeTransform(source.transform, ctx)
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
@@ -2093,7 +2065,6 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
         })()
     )
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
-    if (source.transform !== undefined) ret.transform = importShapeTransform(source.transform, ctx)
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
@@ -2262,7 +2233,6 @@ export function importSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IIm
     })()
     if (source.cornerRadius !== undefined) ret.cornerRadius = importCornerRadius(source.cornerRadius, ctx)
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
-    if (source.transform !== undefined) ret.transform = importShapeTransform(source.transform, ctx)
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
@@ -2398,7 +2368,6 @@ export function importPage(source: types.Page, ctx?: IImportContext): impl.Page 
         })()
     )
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
-    if (source.transform !== undefined) ret.transform = importShapeTransform(source.transform, ctx)
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
@@ -2471,7 +2440,6 @@ export function importCutoutShape(source: types.CutoutShape, ctx?: IImportContex
         source.scalingStroke
     )
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
-    if (source.transform !== undefined) ret.transform = importShapeTransform(source.transform, ctx)
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
@@ -2545,7 +2513,6 @@ export function importContactShape(source: types.ContactShape, ctx?: IImportCont
         source.mark
     )
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
-    if (source.transform !== undefined) ret.transform = importShapeTransform(source.transform, ctx)
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
@@ -2680,7 +2647,6 @@ export function importBoolShape(source: types.BoolShape, ctx?: IImportContext): 
         })()
     )
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
-    if (source.transform !== undefined) ret.transform = importShapeTransform(source.transform, ctx)
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
@@ -2813,7 +2779,6 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
         })()
     )
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
-    if (source.transform !== undefined) ret.transform = importShapeTransform(source.transform, ctx)
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal

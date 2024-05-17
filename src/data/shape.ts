@@ -14,7 +14,6 @@ import {
     ShapeFrame,
     ShapeType,
     VariableType,
-    ShapeTransform,
 } from "./baseclasses"
 import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
@@ -24,13 +23,11 @@ import { FrameType, PathType, RadiusType, RECT_POINTS } from "./consts";
 import { Variable } from "./variable";
 import { TableShape } from "./table";
 import { SymbolRefShape } from "./symbolref";
-import {Transform} from "../basic/transform";
-import {Matrix3DKeysType} from "../basic/matrix2";
 
 export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D,
     CurvePoint, ShapeFrame, Ellipse, PathSegment, OverrideType, VariableType,
-    FillRule, CornerRadius, ShapeTransform,
+    FillRule, CornerRadius,
 } from "./baseclasses";
 
 export { Variable } from "./variable";
@@ -40,15 +37,6 @@ export { Variable } from "./variable";
 // 在ref里，由proxy处理（监听所有变量的容器（ref, symbol））
 // 在symbol，这是个普通shape, 绘制由绘制处理？（怎么处理的？监听所有的变量容器）
 //   试图层可以获取，但更新呢？监听所有的变量容器
-
-const transform3Dto2DKeyMap = {
-    "m00": "m00",
-    "m10": "m10",
-    "m01": "m01",
-    "m11": "m11",
-    "m02": "m03",
-    "m12": "m13",
-}
 
 export class Shape extends Basic implements classes.Shape {
 
@@ -117,9 +105,6 @@ export class Shape extends Basic implements classes.Shape {
 
     haveEdit?: boolean | undefined
 
-    transform: ShapeTransform
-    __transform: Transform
-
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
@@ -135,19 +120,6 @@ export class Shape extends Basic implements classes.Shape {
         this.type = type
         this.frame = frame
         this.style = style
-
-        const that = this
-        this.__transform = new Transform()
-        this.transform = new Proxy(new ShapeTransform(), {
-            get: (target, prop) => {
-                return that.__transform[transform3Dto2DKeyMap[prop as keyof typeof transform3Dto2DKeyMap] as Matrix3DKeysType]
-            },
-            set: (target, prop, value) => {
-                that.__transform[transform3Dto2DKeyMap[prop as keyof typeof transform3Dto2DKeyMap] as Matrix3DKeysType] = value
-                return true
-            },
-        })
-
     }
 
     // /**

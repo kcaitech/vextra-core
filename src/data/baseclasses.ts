@@ -218,7 +218,6 @@ export class Shape extends Basic {
     id: string
     type: ShapeType
     frame: ShapeFrame
-    transform?: ShapeTransform
     style: Style
     boolOp?: BoolOp
     isFixedToViewport?: boolean
@@ -253,24 +252,6 @@ export class Shape extends Basic {
         this.type = type
         this.frame = frame
         this.style = style
-    }
-}
-/**
- * shape frame
- * x,y为parent坐标系里的点
- * width,height为当前shape的坐标空间大小 
- */
-export class ShapeTransform extends Basic {
-    typeId = 'shape-transform'
-    m00?: number
-    m10?: number
-    m01?: number
-    m11?: number
-    m02?: number
-    m12?: number
-    constructor(
-    ) {
-        super()
     }
 }
 /**
