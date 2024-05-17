@@ -115,14 +115,17 @@ export function getOrderedChars(indent: number, index: number): string {
     return '';
 }
 
-const metrics = new class implements TextMetrics {
-    actualBoundingBoxAscent: number = 0;
-    actualBoundingBoxDescent: number = 0;
-    actualBoundingBoxLeft: number = 0;
-    actualBoundingBoxRight: number = 0;
-    fontBoundingBoxAscent: number = 0;
-    fontBoundingBoxDescent: number = 0;
-    width: number = 0;
+const bnMetricsCache = new Map<string, TextMetrics | undefined>();
+function getBNMetrics(char: string, fontSize: number, span: Span) {
+    const weight = span.weight || 400;
+    const italic = span.italic;
+    const font = (italic ? 'italic ' : 'normal ') + weight + ' ' + fontSize + 'px ' + span.fontName;
+    const id = char[0] + '#' + font;
+    if (bnMetricsCache.has(id)) return bnMetricsCache.get(id)!;
+    const measure = gPal.text.textMeasure;
+    const metrics = measure(char[0], font);
+    bnMetricsCache.set(id, metrics);
+    return metrics;
 }
 
 export function layoutBulletNumber(para: Para, span: Span, bulletNumbers: BulletNumbers, preBulletNumbers: BulletNumbersLayout[]): BulletNumbersLayout {
@@ -131,16 +134,17 @@ export function layoutBulletNumber(para: Para, span: Span, bulletNumbers: Bullet
 
     let index = 0;
     let graph: IGraphy | undefined;
+    const fontSize = span.fontSize || 0;
 
     if (bulletNumbers.type === BulletNumbersType.Disorded) {
         text = getDisordedChars(indent);
 
         const padding = 2;
-        const ch = span.fontSize || 0;
+        const ch = fontSize;
         const cw = span.fontSize ? span.fontSize * 0.6 : 10;
         graph = {
             char: text,
-            metrics: metrics,
+            metrics: getBNMetrics(text, fontSize, span),
             cw: cw * 2 - padding, // 2个字符宽度
             ch,
             index: 0,
@@ -167,7 +171,7 @@ export function layoutBulletNumber(para: Para, span: Span, bulletNumbers: Bullet
         text = getOrderedChars(indent, index);
 
         const transformType = span.transform;
-        const ch = span.fontSize || 0;
+        const ch = fontSize;
         const charWidth = span.fontSize ? span.fontSize * 0.6 : 10;
         let cw = 0;
         if (transformType && transformType === TextTransformType.Uppercase) {
@@ -188,7 +192,7 @@ export function layoutBulletNumber(para: Para, span: Span, bulletNumbers: Bullet
 
         graph = {
             char: text,
-            metrics: metrics,
+            metrics: getBNMetrics(text, fontSize, span),
             cw,
             ch,
             index: 0,
