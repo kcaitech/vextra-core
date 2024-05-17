@@ -1,12 +1,12 @@
 
 import { uuid } from "../../../basic/uuid";
 import { BasicArray, BasicMap, IDataGuard } from "../../../data/basic";
-import {Document, PageListItem} from "../../../data/document";
+import { Document, PageListItem } from "../../../data/document";
 import { LzData } from "./lzdata";
 import { IJSON } from "./basic";
-import { DataLoader } from "./dataloader";
+import { startLoader } from "./loader";
 
-async function importPageList(lzData: LzData, pageIds: string[]): Promise<BasicArray<PageListItem> > {
+async function importPageList(lzData: LzData, pageIds: string[]): Promise<BasicArray<PageListItem>> {
     const metaJson: IJSON = await lzData.loadJson('meta.json');
     // const metaJson: IJSON = JSON.parse(buffer.toString());
     const pagesAndArtboards: IJSON = metaJson['pagesAndArtboards'];
@@ -40,8 +40,8 @@ export async function importDocument(name: string, lzData: LzData, gurad: IDataG
     let id = data["do_objectID"];
     if (!id || id.length === 0) id = uuid();
     const document = new Document(id, "", "", new BasicMap(), name, pageList, gurad);
-    
-    new DataLoader(lzData, document);
+
+    startLoader(lzData, document);
 
     return document;
 }
