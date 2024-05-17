@@ -229,19 +229,3 @@ export function renderTextLayout(h: Function, textlayout: TextLayout, frame?: Sh
     return childs;
 }
 
-
-function createTextByString(stringValue: string, refShape: TextShape) {
-    const text = new Text(new BasicArray());
-    if (refShape.text.attr) {
-        mergeTextAttr(text, refShape.text.attr);
-    }
-    const para = new Para('\n', new BasicArray());
-    para.attr = new ParaAttr();
-    text.paras.push(para);
-    const span = new Span(para.length);
-    para.spans.push(span);
-    mergeParaAttr(para, refShape.text.paras[0]);
-    mergeSpanAttr(span, refShape.text.paras[0].spans[0]);
-    text.insertText(stringValue, 0);
-    return text;
-}
