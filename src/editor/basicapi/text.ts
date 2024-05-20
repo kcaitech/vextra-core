@@ -101,8 +101,8 @@ export function textModifyUnderline(parent: ShapeView | Variable, shapetext: Tex
 export function textModifyStrikethrough(parent: ShapeView | Variable, shapetext: Text, strikethrough: StrikethroughType | undefined, index: number, len: number) {
     return otTextSetAttr(parent, shapetext, index, len, "strikethrough", strikethrough);
 }
-export function textModifyBold(parent: ShapeView | Variable, shapetext: Text, bold: number, index: number, len: number) {
-    return otTextSetAttr(parent, shapetext, index, len, "bold", bold);
+export function textModifyWeight(parent: ShapeView | Variable, shapetext: Text, weight: number, index: number, len: number) {
+    return otTextSetAttr(parent, shapetext, index, len, "weight", weight);
 }
 export function textModifyItalic(parent: ShapeView | Variable, shapetext: Text, italic: boolean, index: number, len: number) {
     return otTextSetAttr(parent, shapetext, index, len, "italic", italic);
