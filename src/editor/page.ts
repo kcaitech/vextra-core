@@ -435,7 +435,7 @@ export class PageEditor {
     }
 
     boolgroup(shapes: Shape[], groupname: string, op: BoolOp): false | BoolShape {
-        shapes = shapes.filter(i => i instanceof PathShape || i instanceof PathShape2 || i instanceof BoolShape);
+        // shapes = shapes.filter(i => i instanceof PathShape || i instanceof PathShape2 || i instanceof BoolShape); // 不需要过滤
         if (shapes.length === 0) return false;
         if (shapes.find((v) => !v.parent)) return false;
         const fshape = shapes[0];
