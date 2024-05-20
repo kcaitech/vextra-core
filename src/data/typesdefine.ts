@@ -241,6 +241,16 @@ export type Point2D = {
     x: number
     y: number
 }
+/* pattern frame */
+export type PatternFrame = {
+    x: number
+    y: number
+    width: number
+    height: number
+    rotation: number
+    isFlippedVertical: boolean
+    isFlippedHorizontal: boolean
+}
 /* path segment */
 export type PathSegment = {
     crdtidx: number[]
@@ -695,6 +705,8 @@ export type LineShape = PathShape & {
 /* image shape */
 export type ImageShape = PathShape & {
     imageRef: string
+    patternFrame?: PatternFrame
+    isClip?: boolean
 }
 /* group shape */
 export type GroupShape = Shape & {

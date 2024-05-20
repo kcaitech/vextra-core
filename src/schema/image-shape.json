@@ -5,6 +5,12 @@
         "imageRef": {
             "type": "string",
             "default": "$uuid"
+        },
+        "patternFrame": {
+            "$ref": "./pattern-frame.json"
+        },
+        "isClip": {
+            "type": "boolean"
         }
     },
     "required": [

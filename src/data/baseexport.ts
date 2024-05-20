@@ -350,6 +350,19 @@ export function exportPoint2D(source: types.Point2D, ctx?: IExportContext): type
     }
     return ret
 }
+/* pattern frame */
+export function exportPatternFrame(source: types.PatternFrame, ctx?: IExportContext): types.PatternFrame {
+    const ret = {
+        x: source.x,
+        y: source.y,
+        width: source.width,
+        height: source.height,
+        rotation: source.rotation,
+        isFlippedVertical: source.isFlippedVertical,
+        isFlippedHorizontal: source.isFlippedHorizontal,
+    }
+    return ret
+}
 /* path segment */
 export function exportPathSegment(source: types.PathSegment, ctx?: IExportContext): types.PathSegment {
     const ret = {
@@ -1557,6 +1570,8 @@ export function exportImageShape(source: types.ImageShape, ctx?: IExportContext)
             })(),
         haveEdit: source.haveEdit,
         imageRef: source.imageRef,
+        patternFrame: source.patternFrame && exportPatternFrame(source.patternFrame, ctx),
+        isClip: source.isClip,
     }
     // inject code
     if (ctx?.medias) ctx.medias.add(ret.imageRef);

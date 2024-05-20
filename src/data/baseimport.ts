@@ -357,6 +357,19 @@ export function importPoint2D(source: types.Point2D, ctx?: IImportContext): impl
     )
     return ret
 }
+/* pattern frame */
+export function importPatternFrame(source: types.PatternFrame, ctx?: IImportContext): impl.PatternFrame {
+    const ret: impl.PatternFrame = new impl.PatternFrame (
+        source.x,
+        source.y,
+        source.width,
+        source.height,
+        source.rotation,
+        source.isFlippedVertical,
+        source.isFlippedHorizontal
+    )
+    return ret
+}
 /* path segment */
 export function importPathSegment(source: types.PathSegment, ctx?: IImportContext): impl.PathSegment {
     const ret: impl.PathSegment = new impl.PathSegment (
@@ -1809,6 +1822,8 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
         return ret
     })()
     if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
+    if (source.patternFrame !== undefined) ret.patternFrame = importPatternFrame(source.patternFrame, ctx)
+    if (source.isClip !== undefined) ret.isClip = source.isClip
     // inject code
     if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
     return ret

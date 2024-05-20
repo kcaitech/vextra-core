@@ -333,6 +333,37 @@ export class Point2D extends Basic {
     }
 }
 /**
+ * pattern frame 
+ */
+export class PatternFrame extends Basic {
+    typeId = 'pattern-frame'
+    x: number
+    y: number
+    width: number
+    height: number
+    rotation: number
+    isFlippedVertical: boolean
+    isFlippedHorizontal: boolean
+    constructor(
+        x: number,
+        y: number,
+        width: number,
+        height: number,
+        rotation: number,
+        isFlippedVertical: boolean,
+        isFlippedHorizontal: boolean
+    ) {
+        super()
+        this.x = x
+        this.y = y
+        this.width = width
+        this.height = height
+        this.rotation = rotation
+        this.isFlippedVertical = isFlippedVertical
+        this.isFlippedHorizontal = isFlippedHorizontal
+    }
+}
+/**
  * path segment 
  */
 export class PathSegment extends Basic {
@@ -1298,6 +1329,8 @@ export class LineShape extends PathShape {
 export class ImageShape extends PathShape {
     typeId = 'image-shape'
     imageRef: string
+    patternFrame?: PatternFrame
+    isClip?: boolean
     constructor(
         crdtidx: BasicArray<number >,
         id: string,
