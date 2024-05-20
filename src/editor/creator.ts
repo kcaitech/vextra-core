@@ -566,8 +566,9 @@ export function newSymbolRefShape(name: string, frame: ShapeFrame, refId: string
  * @param frame
  * @param pointsString <polygon />、<polyline />中的points属性值
  * @param isLine 元素为<polyline />，否则为<polygon />
+ * @param style
  */
-export function newPathFromPloy(name: string, frame: ShapeFrame, pointsString: string, isLine: boolean) {
+export function newPathFromPloy(name: string, frame: ShapeFrame, pointsString: string, isLine: boolean, style?: Style) {
     const regex = /(-?\d*\.?\d+)[,\s]+(-?\d*\.?\d+)/g;
     const points = [];
     let match;
@@ -593,7 +594,7 @@ export function newPathFromPloy(name: string, frame: ShapeFrame, pointsString: s
         pathD += ' Z';
     }
 
-    return newPathShape(name, frame, new Path(pathD));
+    return newPathShape(name, frame, new Path(pathD), style);
 }
 
 export function getTransformByEnv(env: GroupShape) {
