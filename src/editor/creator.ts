@@ -560,6 +560,43 @@ export function newSymbolRefShape(name: string, frame: ShapeFrame, refId: string
     return ref;
 }
 
+/**
+ * @description 将SVG中的<polygon />、<polyline />解析为PathShape
+ * @param name
+ * @param frame
+ * @param pointsString <polygon />、<polyline />中的points属性值
+ * @param isLine 元素为<polyline />，否则为<polygon />
+ * @param style
+ */
+export function newPathFromPloy(name: string, frame: ShapeFrame, pointsString: string, isLine: boolean, style?: Style) {
+    const regex = /(-?\d*\.?\d+)[,\s]+(-?\d*\.?\d+)/g;
+    const points = [];
+    let match;
+    while ((match = regex.exec(pointsString)) !== null) {
+        points.push([parseFloat(match[1]), parseFloat(match[2])]);
+    }
+
+    let pathD;
+
+    // 两点成线，三点成面，所以当为多边形时，points长度一定要大于2，为折线时，一定要大于1
+    if (!Array.isArray(points) || (!isLine && points.length < 3) || (points.length < 2)) {
+        pathD = '';
+        return newPathShape(name, frame, new Path(pathD)); // 不满足条件暂定生成空白图层;
+    }
+
+    pathD = 'M' + points[0][0] + ',' + points[0][1];
+
+    for (let i = 1; i < points.length; i++) {
+        pathD += ' L' + points[i][0] + ',' + points[i][1];
+    }
+
+    if (!isLine) {
+        pathD += ' Z';
+    }
+
+    return newPathShape(name, frame, new Path(pathD), style);
+}
+
 export function getTransformByEnv(env: GroupShape) {
     const result = { flipH: false, flipV: false, rotation: 0 };
 
