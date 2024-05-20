@@ -35,7 +35,7 @@ export {
     ShadowPosition,
     CornerType,
     BorderSideSetting,
-    SideType
+    SideType,
 } from "./baseclasses"
 
 /**

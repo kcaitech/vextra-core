@@ -33,7 +33,7 @@ export class ArtboradView extends GroupShapeView {
             "xmlns:xlink": "http://www.w3.org/1999/xlink",
             "xmlns:xhtml": "http://www.w3.org/1999/xhtml",
             preserveAspectRatio: "xMinYMin meet",
-            overflow: "hidden"
+            overflow: "hidden",
         }
         const contextSettings = shape.style.contextSettings;
         if (contextSettings && (contextSettings.opacity ?? 1) !== 1) {
@@ -59,7 +59,13 @@ export class ArtboradView extends GroupShapeView {
             preserveAspectRatio: "xMinYMin meet",
             overflow: "hidden"
         }
-
+        const contextSettings = this.style.contextSettings;
+        if (contextSettings) {
+            const style: any = {
+                'mix-blend-mode': contextSettings.blenMode
+            }
+            props.style = style;
+        }
         const frame = this.frame;
 
         if (frame.width > frame.height) {
@@ -118,7 +124,17 @@ export class ArtboradView extends GroupShapeView {
         } else {
             props.transform = `translate(${frame.x},${frame.y})`;
         }
-
+        const contextSettings = this.style.contextSettings;
+        if (contextSettings) {
+            if (props.style) {
+                props.style['mix-blend-mode'] = contextSettings.blenMode;
+            } else {
+                const style: any = {
+                    'mix-blend-mode': contextSettings.blenMode
+                }
+                props.style = style;
+            }
+        }
         const id = "clippath-artboard-" + objectId(this);
         const cp = clippathR(elh, id, this.getPathStr());
 

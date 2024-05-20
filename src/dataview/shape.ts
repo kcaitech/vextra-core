@@ -707,6 +707,16 @@ export class ShapeView extends DataView {
             style.transform += "translate(" + (-cx + frame.x) + "px," + (-cy + frame.y) + "px)"
             props.style = style;
         }
+        if (contextSettings) {
+            if (props.style) {
+                props.style['mix-blend-mode'] = contextSettings.blenMode;
+            } else {
+                const style: any = {
+                    'mix-blend-mode': contextSettings.blenMode
+                }
+                props.style = style;
+            }
+        }
         return props;
     }
 
@@ -735,6 +745,17 @@ export class ShapeView extends DataView {
             if (this.rotation) style.transform += "rotate(" + this.rotation + "deg) ";
             style.transform += "translate(" + (-frame.width / 2) + "px," + (-frame.height / 2) + "px)";
             props.style = style;
+        }
+        const contextSettings = this.style.contextSettings;
+        if (contextSettings) {
+            if (props.style) {
+                props.style['mix-blend-mode'] = contextSettings.blenMode;
+            } else {
+                const style: any = {
+                    'mix-blend-mode': contextSettings.blenMode
+                }
+                props.style = style;
+            }
         }
 
         return props;
