@@ -12,7 +12,8 @@ import {
     SymbolShape,
     CurveMode, PathSegment,
     PolygonShape,
-    StarShape
+    StarShape,
+    ImageShape
 } from "../../data/shape";
 import { updateShapesFrame } from "./utils";
 import { Border, BorderPosition, BorderStyle, Fill, Gradient, MarkerType, Shadow } from "../../data/style";
@@ -21,6 +22,7 @@ import { RectShape, SymbolRefShape, TableCell, TableCellType, TableShape, Artboa
 import {
     BoolOp, BulletNumbersBehavior, BulletNumbersType, ExportFileFormat, OverrideType, Point2D,
     StrikethroughType, TextTransformType, UnderlineType, ShadowPosition, ExportFormatNameingScheme, FillType, BlendMode, CornerType, SideType, BorderSideSetting,
+    PatternFrame,
 } from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
@@ -393,6 +395,13 @@ export class Api {
     shapeModifyIsCustomSize(page: Page, shape: SymbolRefShape, isCustomSize: boolean) {
         // if (!(shape instanceof SymbolRefShape)) return;
         this._shapeModifyAttr(page, shape, "isCustomSize", isCustomSize ? true : undefined);
+    }
+
+    imageClip(page: Page, shape: Shape, isClip: boolean) {
+        this._shapeModifyAttr(page, shape, "isClip", isClip);
+    }
+    imagePatternFrame(page: Page, shape: Shape, patternFrame: PatternFrame) {
+        this._shapeModifyAttr(page, shape, "patternFrame", patternFrame);
     }
 
     // 添加一次fill

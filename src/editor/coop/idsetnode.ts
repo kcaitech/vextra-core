@@ -12,6 +12,7 @@ import {
     importContactForm,
     importGradient,
     importPage,
+    importPatternFrame,
     importTableCell,
     importVariable
 } from "../../data/baseimport";
@@ -43,6 +44,8 @@ function apply(document: Document, target: Object, op: IdOp): IdOpRecord {
             value = importGradient(data, ctx);
         } else if (typeId === 'border-side-setting') {
             value = importBorderSideSetting(data, ctx);
+        } else if (typeId === 'pattern-frame') {
+            value = importPatternFrame(data, ctx);
         } else {
             throw new Error('need import ' + typeId)
         }
