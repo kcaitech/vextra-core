@@ -377,7 +377,12 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
 
     let spanIdx = 0, spanOffset = 0
     let span = spans[spanIdx];
-    let font = "normal " + span.fontSize + "px " + span.fontName;
+    const italic = span.italic;
+    const weight = span.weight || 400;
+    const fontSize = span.fontSize;
+    // font = "normal " + span.fontSize + "px " + span.fontName;
+    let font = (italic ? 'italic ' : 'normal ') + weight + ' ' + fontSize + 'px ' + span.fontName;
+    // let font = "normal " + span.fontSize + "px " + span.fontName;
 
     const indent = (para.attr?.indent || 0) * INDENT_WIDTH;
     const startX = Math.min(indent, width), endX = width;
@@ -398,7 +403,11 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
         if (preSpanIdx !== spanIdx) {
             preSpanIdx = spanIdx;
             span = spans[spanIdx];
-            font = "normal " + span.fontSize + "px " + span.fontName;
+            const italic = span.italic;
+            const weight = span.weight || 400;
+            const fontSize = span.fontSize;
+            // font = "normal " + span.fontSize + "px " + span.fontName;
+            font = (italic ? 'italic ' : 'normal ') + weight + ' ' + fontSize + 'px ' + span.fontName;
         }
 
         if (span.length === 0 && spanIdx < spansCount - 1) { // 不是最后一个空的span

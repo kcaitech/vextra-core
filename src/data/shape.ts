@@ -21,8 +21,6 @@ import { TextLayout } from "./textlayout";
 import { parsePath } from "./pathparser";
 import { FrameType, PathType, RadiusType, RECT_POINTS } from "./consts";
 import { Variable } from "./variable";
-import { TableShape } from "./table";
-import { SymbolRefShape } from "./symbolref";
 
 export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D,
@@ -447,7 +445,7 @@ export class Shape extends Basic implements classes.Shape {
 
 export class GroupShape extends Shape implements classes.GroupShape {
     typeId = 'group-shape';
-    childs: BasicArray<(GroupShape | Shape | ImageShape | PathShape | RectShape | TextShape | TableShape | SymbolRefShape)>
+    childs: BasicArray<(GroupShape | Shape | ImageShape | PathShape | RectShape | TextShape)>
     // wideframe: ShapeFrame
     fixedRadius?: number
 

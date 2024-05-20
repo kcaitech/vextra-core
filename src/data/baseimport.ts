@@ -243,7 +243,7 @@ export function importSpanAttr(source: types.SpanAttr, ctx?: IImportContext): im
     if (source.color !== undefined) ret.color = importColor(source.color, ctx)
     if (source.strikethrough !== undefined) ret.strikethrough = importStrikethroughType(source.strikethrough, ctx)
     if (source.underline !== undefined) ret.underline = importUnderlineType(source.underline, ctx)
-    if (source.bold !== undefined) ret.bold = source.bold
+    if (source.weight !== undefined) ret.weight = source.weight
     if (source.italic !== undefined) ret.italic = source.italic
     if (source.bulletNumbers !== undefined) ret.bulletNumbers = importBulletNumbers(source.bulletNumbers, ctx)
     if (source.highlight !== undefined) ret.highlight = importColor(source.highlight, ctx)
@@ -1187,7 +1187,7 @@ export function importSpan(source: types.Span, ctx?: IImportContext): impl.Span 
     if (source.color !== undefined) ret.color = importColor(source.color, ctx)
     if (source.strikethrough !== undefined) ret.strikethrough = importStrikethroughType(source.strikethrough, ctx)
     if (source.underline !== undefined) ret.underline = importUnderlineType(source.underline, ctx)
-    if (source.bold !== undefined) ret.bold = source.bold
+    if (source.weight !== undefined) ret.weight = source.weight
     if (source.italic !== undefined) ret.italic = source.italic
     if (source.bulletNumbers !== undefined) ret.bulletNumbers = importBulletNumbers(source.bulletNumbers, ctx)
     if (source.highlight !== undefined) ret.highlight = importColor(source.highlight, ctx)
@@ -1515,7 +1515,7 @@ export function importParaAttr(source: types.ParaAttr, ctx?: IImportContext): im
     if (source.color !== undefined) ret.color = importColor(source.color, ctx)
     if (source.strikethrough !== undefined) ret.strikethrough = importStrikethroughType(source.strikethrough, ctx)
     if (source.underline !== undefined) ret.underline = importUnderlineType(source.underline, ctx)
-    if (source.bold !== undefined) ret.bold = source.bold
+    if (source.weight !== undefined) ret.weight = source.weight
     if (source.italic !== undefined) ret.italic = source.italic
     if (source.bulletNumbers !== undefined) ret.bulletNumbers = importBulletNumbers(source.bulletNumbers, ctx)
     if (source.highlight !== undefined) ret.highlight = importColor(source.highlight, ctx)
@@ -1539,6 +1539,9 @@ export function importTextAttr(source: types.TextAttr, ctx?: IImportContext): im
     if (typeof _source.bold === 'boolean') {
         _source.bold = _source.bold ? 700 : 400;
     }
+    if (_source.bold) {
+        _source.weight = _source.bold;
+    }
     const ret: impl.TextAttr = new impl.TextAttr (
     )
     if (source.alignment !== undefined) ret.alignment = importTextHorAlign(source.alignment, ctx)
@@ -1551,7 +1554,7 @@ export function importTextAttr(source: types.TextAttr, ctx?: IImportContext): im
     if (source.color !== undefined) ret.color = importColor(source.color, ctx)
     if (source.strikethrough !== undefined) ret.strikethrough = importStrikethroughType(source.strikethrough, ctx)
     if (source.underline !== undefined) ret.underline = importUnderlineType(source.underline, ctx)
-    if (source.bold !== undefined) ret.bold = source.bold
+    if (source.weight !== undefined) ret.weight = source.weight
     if (source.italic !== undefined) ret.italic = source.italic
     if (source.bulletNumbers !== undefined) ret.bulletNumbers = importBulletNumbers(source.bulletNumbers, ctx)
     if (source.highlight !== undefined) ret.highlight = importColor(source.highlight, ctx)

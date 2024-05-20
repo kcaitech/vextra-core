@@ -1,4 +1,4 @@
-import { CurvePoint } from "./shape";
+import { CurvePoint } from "./baseclasses";
 import { Point2D } from "./typesdefine"
 
 type CornerCalcInfo = {

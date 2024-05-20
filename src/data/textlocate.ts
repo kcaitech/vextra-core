@@ -202,10 +202,10 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
                 const span = line[line.length - 1];
                 if (span.length === 0) break; // error
                 const graph = span[span.length - 1];
-                const y = lineY + (line.lineHeight - graph.ch) / 2;
+                const y = lineY + line.lineHeight - (line.lineHeight - (line.maxFontSize)) / 2; // bottom
                 const x = lineX + graph.x + graph.cw;
-                const p0 = { x, y };
-                const p1 = { x, y: y + graph.ch };
+                const p0 = { x, y: y - graph.ch };
+                const p1 = { x, y };
                 const ret = makeCursorLocate(layout, pi, li, line.length - 1, [p0, p1])
                 return ret;
             }
@@ -242,7 +242,7 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
                     if (!graph) throw new Error();
                 }
                 let x = lineX + graph.x;
-                let y = lineY + (line.lineHeight - graph.ch) / 2;
+                const y = lineY + line.lineHeight - (line.lineHeight - (line.maxFontSize)) / 2; // bottom
                 let ch = graph.ch;
                 if (index > 0) {
                     // const preGraph = span[index - 1];
@@ -252,7 +252,6 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
                     } else {
                         x = lineX + (preGraph.x + preGraph.cw + graph.x) / 2;
                     }
-                    y = lineY + (line.lineHeight - preGraph.ch) / 2;
                     ch = preGraph.ch;
                 }
                 else if (i > 0) {
@@ -263,12 +262,11 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
                     } else {
                         x = lineX + (preGraph.x + preGraph.cw + graph.x) / 2;
                     }
-                    y = lineY + (line.lineHeight - preGraph.ch) / 2;
                     ch = preGraph.ch;
                 }
 
-                const p0 = { x, y };
-                const p1 = { x, y: y + ch };
+                const p0 = { x, y: y - ch };
+                const p1 = { x, y };
                 const ret = makeCursorLocate(layout, pi, li, i, [p0, p1])
                 return ret;
             }

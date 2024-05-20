@@ -91,12 +91,12 @@ function _getSpanFormat(attr: SpanAttr, attrGetter: AttrGetter, paraAttr: ParaAt
         attrGetter.highlightIsMulti = true;
     }
 
-    const bold = attr.bold ?? (paraAttr?.bold) ?? (textAttr?.bold) ?? 400;
-    if (attrGetter.bold === undefined) {
-        attrGetter.bold = bold;
+    const weight = attr.weight ?? (paraAttr?.weight) ?? (textAttr?.weight) ?? 400;
+    if (attrGetter.weight === undefined) {
+        attrGetter.weight = weight;
     }
-    else if (bold === undefined || attrGetter.bold !== bold) {
-        attrGetter.boldIsMulti = true;
+    else if (weight === undefined || attrGetter.weight !== weight) {
+        attrGetter.weightIsMulti = true;
     }
 
     const italic = attr.italic ?? (paraAttr?.italic) ?? (textAttr?.italic) ?? false;
@@ -170,9 +170,9 @@ function _mergeSpanFormat(from: AttrGetter, to: AttrGetter) {
     if (from.highlightIsMulti) to.highlightIsMulti = true;
     else if (from.highlight) to.highlight = from.highlight;
 
-    // bold
-    if (from.boldIsMulti) to.boldIsMulti = true;
-    else if (from.bold !== undefined) to.bold = from.bold;
+    // weight
+    if (from.weightIsMulti) to.weightIsMulti = true;
+    else if (from.weight !== undefined) to.weight = from.weight;
 
     // italic
     if (from.italicIsMulti) to.italicIsMulti = true;
@@ -273,7 +273,7 @@ function coverFormat(fmt: AttrGetter, attr: SpanAttr) {
     // fontSizeIsSet: boolean = false;
     // colorIsSet: boolean = false;
     // highlightIsSet: boolean = false;
-    // boldIsSet: boolean = false;
+    // weightIsSet: boolean = false;
     // italicIsSet: boolean = false;
     // underlineIsSet: boolean = false;
     // strikethroughIsSet: boolean = false;
@@ -295,9 +295,9 @@ function coverFormat(fmt: AttrGetter, attr: SpanAttr) {
         fmt.highlight = attr.highlight;
         fmt.highlightIsMulti = false;
     }
-    if (attr.bold !== undefined) {
-        fmt.bold = attr.bold;
-        fmt.boldIsMulti = false;
+    if (attr.weight !== undefined) {
+        fmt.weight = attr.weight;
+        fmt.weightIsMulti = false;
     }
     if (attr.italic !== undefined) {
         fmt.italic = attr.italic;
