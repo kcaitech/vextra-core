@@ -434,6 +434,23 @@ export class PageEditor {
         }
     }
 
+    modifyShapesContextSettingBlendMode(shapes: Shape[], blendMode: types.BlendMode) {
+        if (!shapes.length) return console.log('invalid data');
+        try {
+            const api = this.__repo.start("modifyShapesContextSettingBlendMode");
+            for (let i = 0, l = shapes.length; i < l; i++) {
+                const item = shapes[i];
+                api.shapeModifyContextSettingsBlendMode(this.__page, item, blendMode);
+            }
+            this.__repo.commit();
+            return true;
+        } catch (e) {
+            console.log(e);
+            this.__repo.rollback();
+            return false;
+        }
+    }
+
     boolgroup(shapes: Shape[], groupname: string, op: BoolOp): false | BoolShape {
         // shapes = shapes.filter(i => i instanceof PathShape || i instanceof PathShape2 || i instanceof BoolShape); // 不需要过滤
         if (shapes.length === 0) return false;

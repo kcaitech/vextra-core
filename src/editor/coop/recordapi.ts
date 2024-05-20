@@ -360,6 +360,17 @@ export class Api {
         }
         this.addOp(basicapi.crdtSetAttr(contextSettings, 'opacity', contextSettingsOpacity));
     }
+    shapeModifyContextSettingsBlendMode(page: Page, shape: Shape | Variable, blendMode: BlendMode) {
+        checkShapeAtPage(page, shape);
+        let contextSettings;
+        if (shape instanceof Shape) {
+            if (!shape.style.contextSettings) shape.style.contextSettings = new ContextSettings(BlendMode.Normal, 1);
+            contextSettings = shape.style.contextSettings;
+        } else {
+            contextSettings = shape.value;
+        }
+        this.addOp(basicapi.crdtSetAttr(contextSettings, 'blenMode', blendMode));
+    }
     shapeModifyResizingConstraint(page: Page, shape: Shape, resizingConstraint: number) {
         this._shapeModifyAttr(page, shape, "resizingConstraint", resizingConstraint);
     }
