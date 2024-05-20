@@ -110,6 +110,11 @@ export class TextShapeView extends ShapeView {
         return this.m_textpath;
     }
 
+    onDataChange(...args: any[]): void {
+        super.onDataChange();
+        this.m_textpath = undefined;
+    }
+
     renderContents(): EL[] {
         const layout = this.getLayout();
         return renderTextLayout(elh, layout, this.frame);
