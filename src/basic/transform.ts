@@ -495,6 +495,25 @@ export class Transform { // 变换
         return this
     }
 
+    // 在本变换之前缩放
+    preScale(params: {
+        vector: ColVector3D,
+    }) {
+        if (!this.isMatrixLatest) this.updateMatrix();
+
+        const matrix = new Matrix(new NumberArray2D([4, 4], [
+            params.vector.x, 0, 0, 0,
+            0, params.vector.y, 0, 0,
+            0, 0, params.vector.z, 0,
+            0, 0, 0, 1,
+        ], true))
+
+        this.matrix.multiply(matrix)
+        this.isSubMatrixLatest = false
+
+        return this
+    }
+
     // 设置缩放参数
     setScale(params: {
         vector: ColVector3D,
@@ -542,6 +561,27 @@ export class Transform { // 变换
         return this
     }
 
+    // 在本变换之前绕x轴旋转
+    preRotateX(params: {
+        angle: number,
+    }) {
+        if (!this.isMatrixLatest) this.updateMatrix();
+
+        const sin = Math.sin(params.angle)
+        const cos = Math.cos(params.angle)
+        const matrix = new Matrix(new NumberArray2D([4, 4], [
+            1, 0, 0, 0,
+            0, cos, -sin, 0,
+            0, sin, cos, 0,
+            0, 0, 0, 1,
+        ], true))
+
+        this.matrix.multiply(matrix)
+        this.isSubMatrixLatest = false
+
+        return this
+    }
+
     // 绕y轴旋转
     rotateY(params: {
         angle: number,
@@ -570,6 +610,27 @@ export class Transform { // 变换
             this.matrix = matrix.multiply(this.matrix)
             this.isSubMatrixLatest = false
         }
+
+        return this
+    }
+
+    // 在本变换之前绕y轴旋转
+    preRotateY(params: {
+        angle: number,
+    }) {
+        if (!this.isMatrixLatest) this.updateMatrix();
+
+        const sin = Math.sin(params.angle)
+        const cos = Math.cos(params.angle)
+        const matrix = new Matrix(new NumberArray2D([4, 4], [
+            cos, 0, sin, 0,
+            0, 1, 0, 0,
+            -sin, 0, cos, 0,
+            0, 0, 0, 1,
+        ], true))
+
+        this.matrix.multiply(matrix)
+        this.isSubMatrixLatest = false
 
         return this
     }
@@ -606,6 +667,27 @@ export class Transform { // 变换
         return this
     }
 
+    // 在本变换之前绕z轴旋转
+    preRotateZ(params: {
+        angle: number,
+    }) {
+        if (!this.isMatrixLatest) this.updateMatrix();
+
+        const sin = Math.sin(params.angle)
+        const cos = Math.cos(params.angle)
+        const matrix = new Matrix(new NumberArray2D([4, 4], [
+            cos, -sin, 0, 0,
+            sin, cos, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1,
+        ], true))
+
+        this.matrix.multiply(matrix)
+        this.isSubMatrixLatest = false
+
+        return this
+    }
+
     // 绕任意轴旋转，axis为旋转轴
     rotate(params: {
         axis?: ColVector3D,
@@ -614,13 +696,13 @@ export class Transform { // 变换
     }) {
         if (params.mode === undefined) params.mode = TransformMode.Global;
 
-        if (params.axis === undefined) params.axis = new ColVector([0, 0, 1]);
-        params.axis = params.axis.normalize() // axis化为单位向量
-
         if ((params.mode === TransformMode.Local && !this.isSubMatrixLatest)
             || (params.mode === TransformMode.Global && !this.isMatrixLatest)) {
             this.updateMatrix()
         }
+
+        if (params.axis === undefined) params.axis = new ColVector([0, 0, 1]);
+        params.axis = params.axis.normalize() // axis化为单位向量
 
         let [x, y, z] = params.axis.rawData
         z = -z // z轴方向定义相反
@@ -642,6 +724,35 @@ export class Transform { // 变换
             this.matrix = matrix.multiply(this.matrix)
             this.isSubMatrixLatest = false
         }
+
+        return this
+    }
+
+    // 在本变换之前绕任意轴旋转，axis为旋转轴
+    preRotate(params: {
+        axis?: ColVector3D,
+        angle: number,
+    }) {
+        if (!this.isMatrixLatest) this.updateMatrix();
+
+        if (params.axis === undefined) params.axis = new ColVector([0, 0, 1]);
+        params.axis = params.axis.normalize() // axis化为单位向量
+
+        let [x, y, z] = params.axis.rawData
+        z = -z // z轴方向定义相反
+        const c = Math.cos(params.angle)
+        const s = Math.sin(params.angle)
+        const t = 1 - c
+        // https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/rotate3d#syntax
+        const matrix = new Matrix(new NumberArray2D([4, 4], [
+            1 + t * (x ** 2 - 1), z * s + x * y * t, -y * s + x * z * t, 0,
+            -z * s + x * y * t, 1 + t * (y ** 2 - 1), x * s + y * z * t, 0,
+            y * s + x * z * t, -x * s + y * z * t, 1 + t * (z ** 2 - 1), 0,
+            0, 0, 0, 1,
+        ], true))
+
+        this.matrix.multiply(matrix)
+        this.isSubMatrixLatest = false
 
         return this
     }
@@ -673,21 +784,37 @@ export class Transform { // 变换
                 vector: diffTranslate,
             })
         } else {
-            this.updateMatrix()
             this.translate({
                 vector: params.point.getNegate() as ColVector3D,
                 mode: TransformMode.Local,
             })
-            this.updateMatrix()
             this.rotate(params)
-            this.updateMatrix()
             this.translate({
                 vector: params.point,
                 mode: TransformMode.Local,
             })
-            this.updateMatrix()
         }
 
+        return this
+    }
+
+    // 在本变换之前绕任意不过原点的轴旋转，axis为旋转轴，point为旋转轴上的一点
+    preRotateAt(params: {
+        axis?: ColVector3D,
+        point?: Point3D,
+        angle: number,
+    }) {
+        if (!this.isMatrixLatest) this.updateMatrix();
+
+        if (params.point === undefined) params.point = new Point3D([0, 0, 0]);
+
+        this.preTranslate({
+            vector: params.point,
+        })
+        this.preRotate(params)
+        this.preTranslate({
+            vector: params.point.getNegate() as ColVector3D,
+        })
 
         return this
     }
@@ -754,6 +881,26 @@ export class Transform { // 变换
         return this
     }
 
+    // 在本变换之前斜切
+    preSkew(params: {
+        skewAngle: ColVector2D,
+    }) {
+        if (!this.isMatrixLatest) this.updateMatrix();
+
+        // https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/skew#syntax
+        const matrix = new Matrix(new NumberArray2D([4, 4], [
+            1, Math.tan(params.skewAngle.x), 0, 0,
+            Math.tan(params.skewAngle.y), 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1,
+        ], true))
+
+        this.matrix.multiply(matrix)
+        this.isSubMatrixLatest = false
+
+        return this
+    }
+
     // 设置斜切参数
     setSkew(params: {
         skewAngle: ColVector2D,
@@ -798,6 +945,12 @@ export class Transform { // 变换
         })
     }
 
+    preFlipH() { // 在本变换之前水平翻转
+        return this.preScale({
+            vector: new ColVector3D([-1, 1, 1]),
+        })
+    }
+
     setFlipH(value: boolean) { // 设置水平翻转
         if (!this.isSubMatrixLatest) this.updateMatrix();
         const isFlipH = this.scaleMatrix.m00 < 0
@@ -814,6 +967,12 @@ export class Transform { // 变换
         return this.scale({
             vector: new ColVector3D([1, -1, 1]),
             mode: TransformMode.Local,
+        })
+    }
+
+    preFlipV() { // 在本变换之前垂直翻转
+        return this.preScale({
+            vector: new ColVector3D([1, -1, 1]),
         })
     }
 
