@@ -15,12 +15,13 @@ import {
     StarShape
 } from "../../data/shape";
 import { updateShapesFrame } from "./utils";
-import { Border, BorderPosition, BorderStyle, Fill, Gradient, MarkerType, Shadow } from "../../data/style";
+import { Blur, Border, BorderPosition, BorderStyle, Fill, Gradient, MarkerType, Shadow } from "../../data/style";
 import { BulletNumbers, SpanAttr, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
 import { RectShape, SymbolRefShape, TableCell, TableCellType, TableShape, Artboard } from "../../data/classes";
 import {
     BoolOp, BulletNumbersBehavior, BulletNumbersType, ExportFileFormat, OverrideType, Point2D,
     StrikethroughType, TextTransformType, UnderlineType, ShadowPosition, ExportFormatNameingScheme, FillType, BlendMode, CornerType, SideType, BorderSideSetting,
+    BlurType,
 } from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
@@ -46,7 +47,7 @@ function varParent(_var: Variable) {
 function checkShapeAtPage(page: Page, obj: Shape | Variable | ShapeView) {
     if (obj instanceof ShapeView) obj = obj.data;
     obj = obj instanceof Shape ? (obj instanceof TableCell ? obj.parent as TableShape : obj) : varParent(obj) as Shape;
-        const shapeid = obj.id;
+    const shapeid = obj.id;
     if (!page.getShape(shapeid)) throw new Error("shape not inside page")
 }
 
@@ -551,20 +552,20 @@ export class Api {
     setBorderSide(pege: Page, shape: Shape | Variable, idx: number, sideSetting: BorderSideSetting) {
         checkShapeAtPage(pege, shape);
         const borders = shape instanceof Shape ? shape.style.borders : shape.value;
-        if(!borders[idx]) return;
+        if (!borders[idx]) return;
         this.addOp(basicapi.crdtSetAttr(borders[idx], "sideSetting", sideSetting))
     }
-    setBorderThicknessTop(page: Page, shape: Shape | Variable, idx:number, thickness: number) {
+    setBorderThicknessTop(page: Page, shape: Shape | Variable, idx: number, thickness: number) {
         checkShapeAtPage(page, shape);
         const borders = shape instanceof Shape ? shape.style.borders : shape.value;
         this.addOp(basicapi.crdtSetAttr(borders[idx].sideSetting, "thicknessTop", thickness))
     }
     setBorderThicknessLeft(page: Page, shape: Shape | Variable, idx: number, thickness: number) {
         checkShapeAtPage(page, shape);
-        const borders = shape instanceof Shape? shape.style.borders : shape.value;
+        const borders = shape instanceof Shape ? shape.style.borders : shape.value;
         this.addOp(basicapi.crdtSetAttr(borders[idx].sideSetting, "thicknessLeft", thickness));
     }
-    setBorderThicknessBottom(page: Page, shape: Shape|Variable, idx: number, thickness: number) {
+    setBorderThicknessBottom(page: Page, shape: Shape | Variable, idx: number, thickness: number) {
         checkShapeAtPage(page, shape);
         const borders = shape instanceof Shape ? shape.style.borders : shape.value;
         this.addOp(basicapi.crdtSetAttr(borders[idx].sideSetting, "thicknessBottom", thickness));
@@ -698,6 +699,60 @@ export class Api {
         const shadows = shape instanceof Shape ? shape.style.shadows : shape.value;
         this.addOp(basicapi.setShadowPosition(shadows, idx, position));
     }
+    //blur
+    shapeModifyBlur(page: Page, shape: Shape | Variable, blendMode: BlendMode) {
+        checkShapeAtPage(page, shape);
+        let contextSettings;
+        if (shape instanceof Shape) {
+            if (!shape.style.contextSettings) shape.style.contextSettings = new ContextSettings(BlendMode.Normal, 1);
+            contextSettings = shape.style.contextSettings;
+        } else {
+            contextSettings = shape.value;
+        }
+        this.addOp(basicapi.crdtSetAttr(contextSettings, 'blenMode', blendMode));
+    }
+    addBlur(page: Page, shape: Shape | Variable, blur: Blur) {
+        checkShapeAtPage(page, shape);
+        const style = shape instanceof Shape ? shape.style : shape.value;
+        this.addOp(basicapi.crdtSetAttr(style, 'blur', blur));
+    }
+
+    deleteBlur(page: Page, shape: Shape | Variable) {
+        checkShapeAtPage(page, shape);
+        const style = shape instanceof Shape ? shape.style : shape.value;
+        this.addOp(basicapi.crdtSetAttr(style, 'blur', undefined));
+    }
+
+    shapeModifyBlurSaturation(page: Page, shape: Shape | Variable, saturation: number) {
+        checkShapeAtPage(page, shape);
+        const blur = shape instanceof Shape ? shape.style.blur : shape.value;
+        this.addOp(basicapi.crdtSetAttr(blur, 'saturation', saturation));
+    }
+
+    shapeModifyBlurType(page: Page, shape: Shape | Variable, type: BlurType) {
+        checkShapeAtPage(page, shape);
+        const blur = shape instanceof Shape ? shape.style.blur : shape.value;
+        this.addOp(basicapi.crdtSetAttr(blur, 'type', type));
+    }
+
+    shapeModifyBlurMotionAngle(page: Page, shape: Shape | Variable, motionAngle: number) {
+        checkShapeAtPage(page, shape);
+        const blur = shape instanceof Shape ? shape.style.blur : shape.value;
+        this.addOp(basicapi.crdtSetAttr(blur, 'motionAngle', motionAngle));
+    }
+
+    shapeModifyBlurRadius(page: Page, shape: Shape | Variable, radius: number) {
+        checkShapeAtPage(page, shape);
+        const blur = shape instanceof Shape ? shape.style.blur : shape.value;
+        this.addOp(basicapi.crdtSetAttr(blur, 'radius', radius));
+    }
+
+    shapeModifyBlurEdabled(page: Page, shape: Shape | Variable, isEnabled: boolean) {
+        checkShapeAtPage(page, shape);
+        const blur = shape instanceof Shape ? shape.style.blur : shape.value;
+        this.addOp(basicapi.crdtSetAttr(blur, 'isEnabled', isEnabled));
+    }
+
     // cutout
     deleteExportFormatAt(page: Page, shape: Shape | Variable, idx: number) {
         checkShapeAtPage(page, shape);

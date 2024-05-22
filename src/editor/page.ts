@@ -2667,6 +2667,82 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+    // shape blur
+    shapesAddBlur(actions: BatchAction2[]) {
+        try {
+            const api = this.__repo.start('shapesAddBlur');
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                api.addBlur(this.__page, adapt2Shape(target), value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    shapesBlurUnify(actions: BatchAction2[]) {
+        try {
+            const api = this.__repo.start('shapesBlurUnify');
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                api.deleteBlur(this.__page, adapt2Shape(target));
+                api.addBlur(this.__page, adapt2Shape(target), value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    shapeDeleteBlur(shapes: ShapeView[]) {
+        try {
+            const api = this.__repo.start('shapeDeleteBlur');
+            for (let i = 0; i < shapes.length; i++) {
+                const shape = shapes[i];
+                api.deleteBlur(this.__page, adapt2Shape(shape));
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapeBlurEnabled(actions: BatchAction2[]) {
+        try {
+            const api = this.__repo.start('setShapeBlurEnabled');
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                api.shapeModifyBlurEdabled(this.__page, adapt2Shape(target), value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapeBlurSaturation(actions: BatchAction2[]) {
+        try {
+            const api = this.__repo.start('setShapeBlurSaturation');
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                api.shapeModifyBlurSaturation(this.__page, adapt2Shape(target), value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setShapeBlurType(actions: BatchAction2[]) {
+        try {
+            const api = this.__repo.start('setShapeBlurType');
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                api.shapeModifyBlurType(this.__page, adapt2Shape(target), value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
 
     //export cutout
     shapesExportFormatUnify(actions: ExportFormatReplaceAction[]) {

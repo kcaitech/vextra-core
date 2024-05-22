@@ -6,6 +6,7 @@ import { Cmd, OpItem } from "../../coop/common/repo";
 import { Document } from "../../data/document";
 import {
     IImportContext,
+    importBlur,
     importBorderSideSetting,
     importBorderStyle,
     importColor,
@@ -43,6 +44,8 @@ function apply(document: Document, target: Object, op: IdOp): IdOpRecord {
             value = importGradient(data, ctx);
         } else if (typeId === 'border-side-setting') {
             value = importBorderSideSetting(data, ctx);
+        } else if (typeId === 'blur') {
+            value = importBlur(data, ctx);
         } else {
             throw new Error('need import ' + typeId)
         }
