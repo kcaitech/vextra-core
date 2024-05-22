@@ -77,6 +77,9 @@ export function importVariable(source: types.Variable, ctx?: IImportContext): im
             if (val.typeId == 'corner-radius') {
                 return importCornerRadius(val as types.CornerRadius, ctx)
             }
+            if (val.typeId == 'blur') {
+                return importBlur(val as types.Blur, ctx)
+            }
             {
                 throw new Error('unknow val: ' + val)
             }

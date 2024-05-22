@@ -13,7 +13,7 @@ export type Variable = {
     id: string
     type: VariableType
     name: string
-    value: (number | string | boolean | Color | Text | Gradient | Style | (Border | Fill | Shadow)[] | ContextSettings | TableCell | ExportOptions | CornerRadius)
+    value: (number | string | boolean | Color | Text | Gradient | Style | (Border | Fill | Shadow)[] | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur)
 }
 /* variable types */
 export enum VariableType {
@@ -35,6 +35,7 @@ export enum VariableType {
     MarkerType = 'markerType',
     ExportOptions = 'exportOptions',
     CornerRadius = 'cornerRadius',
+    Blur = 'blur',
 }
 /* user infomation */
 export type UserInfo = {
@@ -286,6 +287,7 @@ export enum OverrideType {
     EndMarkerType = 'endMarkerType',
     ExportOptions = 'exportOptions',
     CornerRadius = 'cornerRadius',
+    Blur = 'blur',
 }
 /* marker type */
 export enum MarkerType {
@@ -581,6 +583,7 @@ export enum BoolOp {
 }
 /* blur */
 export type Blur = {
+    typeId: string
     isEnabled: boolean
     center: Point2D
     motionAngle?: number

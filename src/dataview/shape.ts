@@ -1,4 +1,4 @@
-import { innerShadowId, renderBorders, renderFills, renderShadows } from "../render";
+import { innerShadowId, renderBorders, renderFills, renderShadows, renderBlur } from "../render";
 import {
     VariableType,
     OverrideType,
@@ -15,7 +15,8 @@ import {
     Border,
     Shadow,
     ShapeType,
-    CornerRadius
+    CornerRadius,
+    Blur
 } from "../data/classes";
 import { findOverrideAndVar } from "./basic";
 import { RenderTransform } from "./basic";
@@ -427,6 +428,11 @@ export class ShapeView extends DataView {
         return v ? v.value : this.m_data.style.shadows;
     }
 
+    get blur(): Blur | undefined {
+        const v = this._findOV(OverrideType.Blur, VariableType.Blur);
+        return v ? v.value : this.data.style.blur;
+    }
+
     getPathStr() {
         if (this.m_pathstr) return this.m_pathstr;
         this.m_pathstr = this.getPath().toString(); // todo fixedRadius
@@ -681,7 +687,12 @@ export class ShapeView extends DataView {
     }
 
     protected renderShadows(filterId: string): EL[] {
-        return renderShadows(elh, filterId, this.getShadows(), this.getPathStr(), this.frame, this.getFills(), this.getBorders(), this.m_data.type);
+        return renderShadows(elh, filterId, this.getShadows(), this.getPathStr(), this.frame, this.getFills(), this.getBorders(), this.m_data.type, this.blur);
+    }
+
+    protected renderBlur(blurId: string): EL[] {
+        if (!this.blur) return [];
+        return renderBlur(elh, this.blur, blurId, this.frame);
     }
 
     protected renderProps(): { [key: string]: string } {
@@ -799,6 +810,8 @@ export class ShapeView extends DataView {
 
         const filterId = `${objectId(this)}`;
         const shadows = this.renderShadows(filterId);
+        const blurId = `blur_${objectId(this)}`;
+        const blur = this.renderBlur(blurId);
 
         if (shadows.length > 0) { // 阴影
             const ex_props = Object.assign({}, props);
@@ -807,11 +820,14 @@ export class ShapeView extends DataView {
             delete props.opacity;
 
             const inner_url = innerShadowId(filterId, this.getShadows());
-            props.filter = `url(#pd_outer-${filterId}) ${inner_url}`;
+            props.filter = `url(#pd_outer-${filterId}) `;
+            if (blur.length) props.filter += `url(#${blurId}) `;
+            if (inner_url.length) props.filter += inner_url.join(' ');
             const body = elh("g", props, [...fills, ...childs, ...borders]);
-            this.reset("g", ex_props, [...shadows, body])
+            this.reset("g", ex_props, [...shadows, ...blur, body])
         } else {
-            this.reset("g", props, [...fills, ...childs, ...borders]);
+            if (blur.length) props.filter = `url(#${blurId})`;
+            this.reset("g", props, [...blur, ...fills, ...childs, ...borders]);
         }
         return ++this.m_render_version;
     }
@@ -827,6 +843,8 @@ export class ShapeView extends DataView {
 
         const filterId = `${objectId(this)}`;
         const shadows = this.renderShadows(filterId);
+        const blurId = `blur_${objectId(this)}`;
+        const blur = this.renderBlur(blurId);
 
         if (shadows.length > 0) { // 阴影
             const ex_props = Object.assign({}, props);
@@ -835,11 +853,14 @@ export class ShapeView extends DataView {
             delete props.opacity;
 
             const inner_url = innerShadowId(filterId, this.getShadows());
-            props.filter = `url(#pd_outer-${filterId}) ${inner_url}`;
+            props.filter = `url(#pd_outer-${filterId}) `;
+            if (blur.length) props.filter += `url(#${blurId}) `;
+            if (inner_url.length) props.filter += inner_url.join(' ');
             const body = elh("g", props, [...fills, ...childs, ...borders]);
-            return elh("g", ex_props, [...shadows, body]);
+            return elh("g", ex_props, [...shadows, ...blur, body]);
         } else {
-            return elh("g", props, [...fills, ...childs, ...borders])
+            if (blur.length) props.filter = `url(#${blurId})`;
+            return elh("g", props, [...blur, ...fills, ...childs, ...borders])
         }
     }
 

@@ -78,6 +78,9 @@ export function exportVariable(source: types.Variable, ctx?: IExportContext): ty
             if (val.typeId == 'corner-radius') {
                 return exportCornerRadius(val as types.CornerRadius, ctx)
             }
+            if (val.typeId == 'blur') {
+                return exportBlur(val as types.Blur, ctx)
+            }
             {
                 throw new Error('unknow val: ' + val)
             }
@@ -808,6 +811,7 @@ export function exportBoolOp(source: types.BoolOp, ctx?: IExportContext): types.
 /* blur */
 export function exportBlur(source: types.Blur, ctx?: IExportContext): types.Blur {
     const ret = {
+        typeId: source.typeId,
         isEnabled: source.isEnabled,
         center: exportPoint2D(source.center, ctx),
         motionAngle: source.motionAngle,

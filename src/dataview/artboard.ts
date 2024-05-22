@@ -105,6 +105,8 @@ export class ArtboradView extends GroupShapeView {
 
         const filterId = `${objectId(this)}`;
         const shadows = this.renderShadows(filterId);
+        const blurId = `blur_${objectId(this)}`;
+        const blur = this.renderBlur(blurId);
 
         const props: any = {};
         props.opacity = svgprops.opacity;
@@ -137,16 +139,18 @@ export class ArtboradView extends GroupShapeView {
         }
         const id = "clippath-artboard-" + objectId(this);
         const cp = clippathR(elh, id, this.getPathStr());
-
+        if(blur.length) {
+            props.filter = `url(#${blurId})`;
+        }
         const content_container = elh("g", { "clip-path": "url(#" + id + ")" }, [...fills, ...childs]);
         if (shadows.length > 0) { // 阴影
             const inner_url = innerShadowId(filterId, this.getShadows());
-            if (inner_url.length) svgprops.filter = inner_url;
+            if (inner_url.length) svgprops.filter = inner_url.join(' ');
             const body = elh("svg", svgprops, [cp, content_container]);
-            this.reset("g", props, [...shadows, body, ...borders])
+            this.reset("g", props, [...shadows, ...blur,  body, ...borders])
         } else {
             const body = elh("svg", svgprops, [cp, content_container]);
-            this.reset("g", props, [body, ...borders])
+            this.reset("g", props, [...blur, body, ...borders])
         }
         return ++this.m_render_version;
     }

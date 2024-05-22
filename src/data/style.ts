@@ -1,8 +1,9 @@
 import * as classes from "./baseclasses"
 import {
-    Blur, BorderOptions, ColorControls, ContextSettings,
+    BorderOptions, ColorControls, ContextSettings,
     Shadow, WindingRule, FillType, BorderPosition,
-    BorderStyle, MarkerType, ContactRole, VariableType, Point2D, GradientType, Stop, BlendMode, FillRule, CornerType, BorderSideSetting
+    BorderStyle, MarkerType, ContactRole, VariableType, Point2D, GradientType, Stop, BlendMode, FillRule, CornerType, BorderSideSetting,
+    BlurType
 } from "./baseclasses";
 import { Basic, BasicArray, BasicMap, ResourceMgr } from "./basic";
 import { Variable } from "./variable";
@@ -13,7 +14,6 @@ export {
     FillType,
     BorderPosition,
     BlurType,
-    Blur,
     BorderOptions,
     MarkerType,
     WindingRule,
@@ -238,5 +238,31 @@ export class Style extends Basic implements classes.Style {
             return _var.value;
         }
         return this.borders;
+    }
+}
+
+export class Blur extends Basic implements classes.Blur {
+    typeId = 'blur'
+    isEnabled: boolean
+    center: Point2D
+    motionAngle?: number
+    radius?: number
+    saturation: number
+    type: BlurType
+    constructor(
+        isEnabled: boolean,
+        center: Point2D,
+        saturation: number,
+        type: BlurType,
+        motionAngle?: number,
+        radius?: number
+    ) {
+        super()
+        this.isEnabled = isEnabled
+        this.center = center
+        this.saturation = saturation
+        this.type = type
+        this.motionAngle = motionAngle
+        this.radius = radius
     }
 }

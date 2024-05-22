@@ -92,6 +92,8 @@ export class PathShapeView extends ShapeView {
         const props = this.renderProps();
         const filterId = `${objectId(this)}`;
         const shadows = this.renderShadows(filterId);
+        const blurId = `blur_${objectId(this)}`;
+        const blur = this.renderBlur(blurId);
 
         if (shadows.length > 0) { // 阴影
             const ex_props = Object.assign({}, props);
@@ -100,14 +102,22 @@ export class PathShapeView extends ShapeView {
             delete props.opacity;
             const inner_url = innerShadowId(filterId, this.getShadows());
             if (this.type === ShapeType.Rectangle || this.type === ShapeType.Oval) {
-                if (inner_url.length) props.filter = inner_url;
+                if (blur.length && inner_url.length) {
+                    props.filter = `url(#${blurId}) ${inner_url.join(' ')}`
+                } else {
+                    if (inner_url.length) props.filter = inner_url.join(' ');
+                    if (blur.length) props.filter = `url(#${blurId})`;
+                }
             } else {
-                props.filter = `url(#pd_outer-${filterId}) ${inner_url}`;
+                props.filter = `url(#pd_outer-${filterId}) `;
+                if (blur.length) props.filter += `url(#${blurId}) `;
+                if (inner_url.length) props.filter += inner_url.join(' ');
             }
             const body = elh("g", props, [...fills, ...childs, ...borders]);
-            this.reset("g", ex_props, [...shadows, body])
+            this.reset("g", ex_props, [...shadows, ...blur, body])
         } else {
-            this.reset("g", props, [...fills, ...childs, ...borders]);
+            if (blur.length) props.filter = `url(#${blurId})`;
+            this.reset("g", props, [...blur, ...fills, ...childs, ...borders]);
         }
         return ++this.m_render_version;
     }
@@ -123,6 +133,8 @@ export class PathShapeView extends ShapeView {
 
         const filterId = `${objectId(this)}`;
         const shadows = this.renderShadows(filterId);
+        const blurId = `blur_${objectId(this)}`;
+        const blur = this.renderBlur(blurId);
 
         if (shadows.length > 0) { // 阴影
             const ex_props = Object.assign({}, props);
@@ -131,14 +143,22 @@ export class PathShapeView extends ShapeView {
             delete props.opacity;
             const inner_url = innerShadowId(filterId, this.getShadows());
             if (this.type === ShapeType.Rectangle || this.type === ShapeType.Oval) {
-                if (inner_url.length) props.filter = inner_url;
+                if (blur.length && inner_url.length) {
+                    props.filter = `url(#${blurId}) ${inner_url.join(' ')}`
+                } else {
+                    if (inner_url.length) props.filter = inner_url.join(' ');
+                    if (blur.length) props.filter = `url(#${blurId})`;
+                }
             } else {
-                props.filter = `url(#pd_outer-${filterId}) ${inner_url}`;
+                props.filter = `url(#pd_outer-${filterId}) `;
+                if (blur.length) props.filter += `url(#${blurId}) `;
+                if (inner_url.length) props.filter += inner_url.join(' ');
             }
             const body = elh("g", props, [...fills, ...childs, ...borders]);
-            return elh("g", ex_props, [...shadows, body]);
+            return elh("g", ex_props, [...shadows, ...blur, body]);
         } else {
-            return elh("g", props, [...fills, ...childs, ...borders])
+            if (blur.length) props.filter = `url(#${blurId})`;
+            return elh("g", props, [...blur, ...fills, ...childs, ...borders])
         }
     }
 }
