@@ -4,7 +4,7 @@ import { innerShadowId, renderBorders, renderFills } from "../render";
 import { objectId } from "../basic/objectid";
 import { render as clippathR } from "../render/clippath"
 import { Artboard } from "../data/artboard";
-import { CornerRadius } from "../data/classes";
+import { BlurType, CornerRadius } from "../data/classes";
 
 
 export class ArtboradView extends GroupShapeView {
@@ -139,7 +139,7 @@ export class ArtboradView extends GroupShapeView {
         }
         const id = "clippath-artboard-" + objectId(this);
         const cp = clippathR(elh, id, this.getPathStr());
-        if(blur.length) {
+        if(blur.length && this.blur?.type === BlurType.Gaussian) {
             props.filter = `url(#${blurId})`;
         }
         const content_container = elh("g", { "clip-path": "url(#" + id + ")" }, [...fills, ...childs]);

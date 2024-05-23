@@ -28,7 +28,7 @@ import { DViewCtx, PropsType } from "./viewctx";
 import { objectId } from "../basic/objectid";
 import { fixConstrainFrame } from "../editor/frame";
 import { BasicArray } from "../data/basic";
-import { MarkerType } from "../data/typesdefine";
+import { BlurType, MarkerType } from "../data/typesdefine";
 
 export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     return (
@@ -692,7 +692,7 @@ export class ShapeView extends DataView {
 
     protected renderBlur(blurId: string): EL[] {
         if (!this.blur) return [];
-        return renderBlur(elh, this.blur, blurId, this.frame);
+        return renderBlur(elh, this.blur, blurId, this.frame, this.getBorders(), this.getFills(), this.getPathStr(), this.m_data.type, this.radius);
     }
 
     protected renderProps(): { [key: string]: string } {
@@ -821,12 +821,12 @@ export class ShapeView extends DataView {
 
             const inner_url = innerShadowId(filterId, this.getShadows());
             props.filter = `url(#pd_outer-${filterId}) `;
-            if (blur.length) props.filter += `url(#${blurId}) `;
+            if (blur.length && this.blur?.type === BlurType.Gaussian) props.filter += `url(#${blurId}) `;
             if (inner_url.length) props.filter += inner_url.join(' ');
             const body = elh("g", props, [...fills, ...childs, ...borders]);
             this.reset("g", ex_props, [...shadows, ...blur, body])
         } else {
-            if (blur.length) props.filter = `url(#${blurId})`;
+            if (blur.length && this.blur?.type === BlurType.Gaussian) props.filter = `url(#${blurId})`;
             this.reset("g", props, [...blur, ...fills, ...childs, ...borders]);
         }
         return ++this.m_render_version;
@@ -854,12 +854,12 @@ export class ShapeView extends DataView {
 
             const inner_url = innerShadowId(filterId, this.getShadows());
             props.filter = `url(#pd_outer-${filterId}) `;
-            if (blur.length) props.filter += `url(#${blurId}) `;
+            if (blur.length && this.blur?.type === BlurType.Gaussian) props.filter += `url(#${blurId}) `;
             if (inner_url.length) props.filter += inner_url.join(' ');
             const body = elh("g", props, [...fills, ...childs, ...borders]);
             return elh("g", ex_props, [...shadows, ...blur, body]);
         } else {
-            if (blur.length) props.filter = `url(#${blurId})`;
+            if (blur.length && this.blur?.type === BlurType.Gaussian) props.filter = `url(#${blurId})`;
             return elh("g", props, [...blur, ...fills, ...childs, ...borders])
         }
     }
