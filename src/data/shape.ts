@@ -13,7 +13,7 @@ import {
     ResizeType,
     ShapeFrame,
     ShapeType,
-    VariableType
+    VariableType,
 } from "./baseclasses"
 import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
@@ -101,7 +101,7 @@ export class Shape extends Basic implements classes.Shape {
     shouldBreakMaskChain?: boolean
     varbinds?: BasicMap<string, string>
 
-    haveEdit?: boolean | undefined;
+    haveEdit?: boolean | undefined
 
     constructor(
         crdtidx: BasicArray<number>,
