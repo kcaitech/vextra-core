@@ -8,7 +8,7 @@ import { GroupShape, LineShape, PathShape, Shape, TextShape } from "../../data/s
 import {
     newArrowShape,
     newArtboard, newContact,
-    newCutoutShape,
+    newCutoutShape, newDefaultTextShape,
     newLineShape,
     newOvalShape,
     newPolygonShape,
@@ -28,6 +28,7 @@ import { Point2D } from "../../data/typesdefine";
 import { update_frame_by_points } from "../utils/path";
 import { ContactShape } from "../../data/contact";
 import { translateTo } from "../frame";
+import { TextAttr } from "../../data/text";
 
 export interface GeneratorParams {
     parent: GroupShapeView;
@@ -45,6 +46,7 @@ export interface GeneratorParams {
     fill?: Fill;
     mark?: boolean;
     apex?: ContactForm;
+    textFormat?: TextAttr;
 }
 
 export class CreatorApiCaller extends AsyncApiCaller {
@@ -125,7 +127,12 @@ export class CreatorApiCaller extends AsyncApiCaller {
 
             return artboard;
         } else if (type === ShapeType.Text) {
-            const text = newTextShape(namePrefix, frame);
+            let text;
+            if (params.textFormat) {
+                text = newDefaultTextShape(namePrefix, params.textFormat, frame);
+            } else {
+                text = newTextShape(namePrefix, frame);
+            }
 
             this.setTransform(text, transform);
 
