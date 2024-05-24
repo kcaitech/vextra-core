@@ -7,25 +7,30 @@ import { uuid } from "../basic/uuid";
 // ----------------------------------------------------------------------------------
 // transform
 const transfromHandler: { [key: string]: (m: Matrix, item: any[]) => void } = {}
+
 function transformAbsPoint(m: Matrix, x: number, y: number): { x: number, y: number } {
     return m.computeCoord(x, y)
 }
-function transfromRefPoint(m: Matrix, dx: number, dy: number): { x: number, y: number } {
+
+function transformRefPoint(m: Matrix, dx: number, dy: number): { x: number, y: number } {
     const xy = m.computeCoord(dx, dy)
     xy.x -= m.m02;
     xy.y -= m.m12;
     return xy;
 }
+
 function transformPoint(m: Matrix, item: any[]) {
     const xy = transformAbsPoint(m, item[1], item[2])
     item[1] = xy.x;
     item[2] = xy.y;
 }
+
 function transformRef(m: Matrix, item: any[]) {
-    const xy = transfromRefPoint(m, item[1], item[2])
+    const xy = transformRefPoint(m, item[1], item[2])
     item[1] = xy.x;
     item[2] = xy.y;
 }
+
 transfromHandler['M'] = transformPoint;
 transfromHandler['m'] = transformRef;
 transfromHandler['L'] = transformPoint;
@@ -33,7 +38,7 @@ transfromHandler['l'] = transformRef;
 transfromHandler['A'] = function (m: Matrix, item: any[]) {
     // todo
     // (rx ry x-axis-rotation large-arc-flag sweep-flag x y)
-    let xy = transfromRefPoint(m, item[1], item[2])
+    let xy = transformRefPoint(m, item[1], item[2])
     item[1] = xy.x;
     item[2] = xy.y;
     xy = transformAbsPoint(m, item[6], item[7])
@@ -42,10 +47,10 @@ transfromHandler['A'] = function (m: Matrix, item: any[]) {
 }
 transfromHandler['a'] = function (m: Matrix, item: any[]) {
     // todo
-    let xy = transfromRefPoint(m, item[1], item[2])
+    let xy = transformRefPoint(m, item[1], item[2])
     item[1] = xy.x;
     item[2] = xy.y;
-    xy = transfromRefPoint(m, item[6], item[7])
+    xy = transformRefPoint(m, item[6], item[7])
     item[6] = xy.x;
     item[7] = xy.y;
 }
@@ -55,7 +60,7 @@ transfromHandler['H'] = function (m: Matrix, item: any[]) {
     item[1] = xy.x;
 }
 transfromHandler['h'] = function (m: Matrix, item: any[]) {
-    const xy = transfromRefPoint(m, item[1], 0)
+    const xy = transformRefPoint(m, item[1], 0)
     item[1] = xy.x;
 }
 transfromHandler['V'] = function (m: Matrix, item: any[]) {
@@ -63,7 +68,7 @@ transfromHandler['V'] = function (m: Matrix, item: any[]) {
     item[1] = xy.y;
 }
 transfromHandler['v'] = function (m: Matrix, item: any[]) {
-    const xy = transfromRefPoint(m, 0, item[1])
+    const xy = transformRefPoint(m, 0, item[1])
     item[1] = xy.y;
 }
 transfromHandler['C'] = function (m: Matrix, item: any[]) {
@@ -82,13 +87,13 @@ transfromHandler['C'] = function (m: Matrix, item: any[]) {
 transfromHandler['c'] = function (m: Matrix, item: any[]) {
     // c dx1 dy1, dx2 dy2, dx dy
     let xy;
-    xy = transfromRefPoint(m, item[1], item[2])
+    xy = transformRefPoint(m, item[1], item[2])
     item[1] = xy.x;
     item[2] = xy.y;
-    xy = transfromRefPoint(m, item[3], item[4])
+    xy = transformRefPoint(m, item[3], item[4])
     item[3] = xy.x;
     item[4] = xy.y;
-    xy = transfromRefPoint(m, item[5], item[6])
+    xy = transformRefPoint(m, item[5], item[6])
     item[5] = xy.x;
     item[6] = xy.y;
 }
@@ -105,10 +110,10 @@ transfromHandler['Q'] = function (m: Matrix, item: any[]) {
 transfromHandler['q'] = function (m: Matrix, item: any[]) {
     // c dx1 dy1, dx2 dy2, dx dy
     let xy;
-    xy = transfromRefPoint(m, item[1], item[2])
+    xy = transformRefPoint(m, item[1], item[2])
     item[1] = xy.x;
     item[2] = xy.y;
-    xy = transfromRefPoint(m, item[3], item[4])
+    xy = transformRefPoint(m, item[3], item[4])
     item[3] = xy.x;
     item[4] = xy.y;
 }
@@ -116,6 +121,7 @@ transfromHandler['Z'] = function (m: Matrix, item: any[]) {
 }
 transfromHandler['z'] = function (m: Matrix, item: any[]) {
 }
+
 /**
  *
  * @param matrix
@@ -264,11 +270,16 @@ function calculateBezier(t: number, p0: number, p1: number, p2: number, p3: numb
  * Calculate the bounding box for this bezier curve.
  * http://pomax.nihongoresources.com/pages/bezier/
  */
-function canculateBoundingBox(x1: number, y1: number,
+function calculateBoundingBox(x1: number, y1: number,
                               cx1: number, cy1: number,
                               cx2: number, cy2: number,
                               x2: number, y2: number) {
-    const bounds: Bounds = { minX: Math.min(x1, x2), minY: Math.min(y1, y2), maxX: Math.max(x1, x2), maxY: Math.max(y1, y2) };
+    const bounds: Bounds = {
+        minX: Math.min(x1, x2),
+        minY: Math.min(y1, y2),
+        maxX: Math.max(x1, x2),
+        maxY: Math.max(y1, y2)
+    };
 
     const dcx0 = cx1 - x1;
     const dcy0 = cy1 - y1;
@@ -485,7 +496,12 @@ function arcToBezier(lastPoint: { x: number, y: number }, arcParams: number[]) {
 
 // ----------------------------------------------------------------------------------
 // 将路径中的相对值转换为绝对坐标
-type BoundsCtx = { beginpoint: { x: number, y: number }, prepoint: { x: number, y: number }, bounds: Bounds, boundsinited: boolean }
+type BoundsCtx = {
+    beginpoint: { x: number, y: number },
+    prepoint: { x: number, y: number },
+    bounds: Bounds,
+    boundsinited: boolean
+}
 
 const boundsHandler: { [key: string]: (ctx: BoundsCtx, item: any[]) => void } = {}
 
@@ -549,7 +565,7 @@ boundsHandler['A'] = (ctx: BoundsCtx, item: any[]) => {
         const y1 = item[2];
         const x2 = item[3];
         const y2 = item[4];
-        const bounds = canculateBoundingBox(ctx.prepoint.x, ctx.prepoint.y, x1, y1, x2, y2, x, y);
+        const bounds = calculateBoundingBox(ctx.prepoint.x, ctx.prepoint.y, x1, y1, x2, y2, x, y);
         expandBounds(ctx, bounds.minX, bounds.minY)
         expandBounds(ctx, bounds.maxX, bounds.maxY)
     }
@@ -576,7 +592,7 @@ boundsHandler['a'] = (ctx: BoundsCtx, item: any[]) => {
         const y1 = item[2];
         const x2 = item[3];
         const y2 = item[4];
-        const bounds = canculateBoundingBox(ctx.prepoint.x, ctx.prepoint.y, x1, y1, x2, y2, x, y);
+        const bounds = calculateBoundingBox(ctx.prepoint.x, ctx.prepoint.y, x1, y1, x2, y2, x, y);
         expandBounds(ctx, bounds.minX, bounds.minY)
         expandBounds(ctx, bounds.maxX, bounds.maxY)
     }
@@ -621,7 +637,7 @@ boundsHandler['C'] = (ctx: BoundsCtx, item: any[]) => {
     const y1 = item[2];
     const x2 = item[3];
     const y2 = item[4];
-    const bounds = canculateBoundingBox(ctx.prepoint.x, ctx.prepoint.y, x1, y1, x2, y2, x, y);
+    const bounds = calculateBoundingBox(ctx.prepoint.x, ctx.prepoint.y, x1, y1, x2, y2, x, y);
     expandBounds(ctx, bounds.minX, bounds.minY)
     expandBounds(ctx, bounds.maxX, bounds.maxY)
     ctx.prepoint.x = x;
@@ -635,7 +651,7 @@ boundsHandler['c'] = (ctx: BoundsCtx, item: any[]) => {
     const y1 = ctx.prepoint.y + item[2];
     const x2 = ctx.prepoint.x + item[3];
     const y2 = ctx.prepoint.y + item[4];
-    const bounds = canculateBoundingBox(ctx.prepoint.x, ctx.prepoint.y, x1, y1, x2, y2, x, y);
+    const bounds = calculateBoundingBox(ctx.prepoint.x, ctx.prepoint.y, x1, y1, x2, y2, x, y);
     expandBounds(ctx, bounds.minX, bounds.minY)
     expandBounds(ctx, bounds.maxX, bounds.maxY)
     ctx.prepoint.x = x;
@@ -654,9 +670,9 @@ boundsHandler['z'] = (ctx: BoundsCtx, item: any[]) => {
 
 function calcPathBounds(path: any[]): Bounds {
     const ctx: BoundsCtx = {
-        beginpoint: { x: 0, y: 0 },
-        prepoint: { x: 0, y: 0 },
-        bounds: { minX: 0, minY: 0, maxX: 0, maxY: 0 },
+        beginpoint: {x: 0, y: 0},
+        prepoint: {x: 0, y: 0},
+        bounds: {minX: 0, minY: 0, maxX: 0, maxY: 0},
         boundsinited: false
     }
 
@@ -684,7 +700,7 @@ export function parsePathString(pathString: string): (string | number)[][] {
     //     return pathClone(pth.arr);
     // }
 
-    const paramCounts: any = { a: 7, c: 6, h: 1, l: 2, m: 2, r: 4, q: 4, s: 4, t: 2, v: 1, z: 0 };
+    const paramCounts: any = {a: 7, c: 6, h: 1, l: 2, m: 2, r: 4, q: 4, s: 4, t: 2, v: 1, z: 0};
     const data: (string | number)[][] = [];
     // if (R.is(pathString, array) && R.is(pathString[0], array)) { // rough assumption
     //     data = pathClone(pathString);
@@ -751,11 +767,11 @@ function convertPath2CurvePoints(path: any[], width: number, height: number): {
         segs: []
     };
     ctx.segs.push({
-        beginpoint: { x: 0, y: 0 },
-        prepoint: { x: 0, y: 0 },
+        beginpoint: {x: 0, y: 0},
+        prepoint: {x: 0, y: 0},
         points: [],
 
-        preHandle: { x: 0, y: 0 },
+        preHandle: {x: 0, y: 0},
         lastCommand: 'M'
     });
 
@@ -800,7 +816,7 @@ function convertPath2CurvePoints(path: any[], width: number, height: number): {
             continue;
         }
 
-        ret.push({ points: seg.points, isClosed: !!seg.isClosed })
+        ret.push({points: seg.points, isClosed: !!seg.isClosed})
     }
 
     ret.forEach((seg) => {
@@ -826,26 +842,30 @@ curvHandler['M'] = (ctx: CurvCtx, item: any[]) => {
     const x = item[1];
     const y = item[2];
     const seg = {
-        beginpoint: { x, y },
-        prepoint: { x, y },
+        beginpoint: {x, y},
+        prepoint: {x, y},
         points: [],
 
-        preHandle: { x, y },
+        preHandle: {x, y},
         lastCommand: 'M'
     }
 
     ctx.segs.push(seg);
 }
 curvHandler['m'] = (ctx: CurvCtx, item: any[]) => {
+    if (ctx.segs.length === 1) {
+        return curvHandler['M'](ctx, item);
+    }
+
     const preseg = ctx.segs[ctx.segs.length - 1];
     const x = (preseg.prepoint.x || 0) + item[1];
     const y = (preseg.prepoint.y || 0) + item[2];
     const seg = {
-        beginpoint: { x, y },
-        prepoint: { x, y },
+        beginpoint: {x, y},
+        prepoint: {x, y},
         points: [],
 
-        preHandle: { x, y },
+        preHandle: {x, y},
         lastCommand: 'M'
     }
 
@@ -891,8 +911,7 @@ function curveHandleBezier(seg: CurvSeg, x1: number, y1: number, x2: number, y2:
         prePoint.hasFrom = true;
         prePoint.fromX = x1;
         prePoint.fromY = y1;
-    }
-    else {
+    } else {
         const point = new CurvePoint([0] as BasicArray<number>, uuid(), seg.beginpoint.x, seg.beginpoint.y, CurveMode.Asymmetric);
         point.hasFrom = true;
         point.fromX = x1;
@@ -905,8 +924,8 @@ function curveHandleBezier(seg: CurvSeg, x1: number, y1: number, x2: number, y2:
     point.toX = x2;
     point.toY = y2;
 
-    seg.prepoint = { x, y };
-    seg.preHandle = { x: x2, y: y2 };
+    seg.prepoint = {x, y};
+    seg.preHandle = {x: x2, y: y2};
 
     seg.points.push(point);
 }
@@ -1040,8 +1059,7 @@ curvHandler['S'] = (ctx: CurvCtx, item: any[]) => {
         const y = item[4];
 
         curveHandleBezier(seg, x1, y1, x2, y2, x, y);
-    }
-    else { // 没有可以延续的指令，以二次贝塞尔曲线的效果转成三次贝塞尔曲线
+    } else { // 没有可以延续的指令，以二次贝塞尔曲线的效果转成三次贝塞尔曲线
         const x1 = item[1];
         const y1 = item[2];
 
@@ -1071,8 +1089,7 @@ curvHandler['s'] = (ctx: CurvCtx, item: any[]) => {
         const y = seg.prepoint.y + item[4];
 
         curveHandleBezier(seg, x1, y1, x2, y2, x, y);
-    }
-    else {
+    } else {
         const ex = seg.prepoint.x + item[1];
         const ey = seg.prepoint.y + item[2];
 
@@ -1126,8 +1143,7 @@ curvHandler['T'] = (ctx: CurvCtx, item: any[]) => {
 
         item[0] = 'C';
         seg.lastCommand = 'C';
-    }
-    else {
+    } else {
         const x = item[1];
         const y = item[2];
 
@@ -1146,8 +1162,7 @@ curvHandler['t'] = (ctx: CurvCtx, item: any[]) => {
 
         item[0] = 'C';
         seg.lastCommand = 'C';
-    }
-    else {
+    } else {
         const x = seg.prepoint.x + item[1];
         const y = seg.prepoint.y + item[2];
 
@@ -1177,6 +1192,7 @@ curvHandler['z'] = (ctx: CurvCtx, item: any[]) => {
 
     seg.lastCommand = 'Z';
 }
+
 // -------------------------------------------------------------
 
 export class Path {
@@ -1186,21 +1202,22 @@ export class Path {
     constructor(path?: (string | number)[][] | string) {
         if (typeof path === 'string') {
             this.m_segs = parsePathString(path);
-        }
-        else if (path) {
+        } else if (path) {
             this.m_segs = path;
-        }
-        else this.m_segs = [];
+        } else this.m_segs = [];
     }
+
     get length() {
         return this.m_segs.length;
     }
+
     push(...paths: Path[]) {
         paths.forEach((p) => {
             if (p) this.m_segs.push(...p.m_segs);
         })
         this.__bounds = undefined; // todo
     }
+
     clone(): Path {
         const segs: (string | number)[][] = [];
         this.m_segs.forEach((v) => {
@@ -1210,8 +1227,12 @@ export class Path {
         path.__bounds = this.__bounds;
         return path;
     }
+
     // 提供个比transform更高效点的方法
     translate(x: number, y: number) {
+        if (this.m_segs[0]?.[0] === 'm') {
+            this.m_segs[0][0] = 'M';
+        }
         this.m_segs = this.m_segs.map(translatePath(x, y));
         if (this.__bounds) {
             this.__bounds.maxX += x;
@@ -1220,19 +1241,23 @@ export class Path {
             this.__bounds.minY += y;
         }
     }
+
     transform(m: Matrix) {
         this.m_segs = this.m_segs.map(transformPath(m));
         this.__bounds = undefined;
     }
+
     toString() {
         return this.m_segs.map((v) => v.join(" ")).join(" ");
     }
+
     calcBounds() {
         if (this.__bounds) return this.__bounds;
         this.__bounds = calcPathBounds(this.m_segs);
         // Object.freeze(this.__bounds);
         return this.__bounds;
     }
+
     toCurvePoints(width: number, height: number): { points: CurvePoint[], isClosed?: boolean }[] {
         return convertPath2CurvePoints(this.m_segs, width, height);
     }

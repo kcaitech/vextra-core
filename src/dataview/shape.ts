@@ -712,6 +712,7 @@ export class ShapeView extends DataView {
             const cy = frame.y + frame.height / 2;
             const style: any = {}
             style.transform = "translate(" + cx + "px," + cy + "px) "
+            // style.transform = "translate(" +frame.x + "px," + frame.y + "px) " // dev code
             if (this.m_hflip) style.transform += "rotateY(180deg) "
             if (this.m_vflip) style.transform += "rotateX(180deg) "
             if (this.m_rotate) style.transform += "rotate(" + this.m_rotate + "deg) "
@@ -865,15 +866,15 @@ export class ShapeView extends DataView {
     }
 
     get isContainer() {
-        return this.data.isContainer;
+        return this.m_data.isContainer;
     }
 
     get pathType() {
-        return this.data.pathType;
+        return this.m_data.pathType;
     }
 
     get isPathIcon() {
-        return this.data.isPathIcon;
+        return this.m_data.isPathIcon;
     }
 
     get radius() {
@@ -882,5 +883,9 @@ export class ShapeView extends DataView {
 
     get radiusType() {
         return this.m_data.radiusType;
+    }
+
+    get isStraight() {
+        return this.m_data.isStraight;
     }
 }
