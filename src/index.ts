@@ -3,6 +3,9 @@ export * from "./basic/matrix"
 export * from "./basic/objectid"
 export * from "./basic/pal"
 export * from "./basic/utils"
+export { Transform, TransformMode } from './basic/transform'
+export { ColVector3D, Matrix as Matrix2, Point3D } from "./basic/matrix2"
+export { NumberArray2D } from "./basic/number_array"
 
 // data
 export * from "./data/basic"
