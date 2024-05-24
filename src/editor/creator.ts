@@ -319,8 +319,8 @@ export function newStellateShape(name: string, frame: ShapeFrame): StarShape {
 export function newLineShape(name: string, frame: ShapeFrame): LineShape {
     _checkFrame(frame);
     const style = newflatStyle();
-    const sPoint = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight);
-    const ePoint = new CurvePoint([1] as BasicArray<number>, uuid(), 1, 0, CurveMode.Straight);
+    const sPoint = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0.5, CurveMode.Straight);
+    const ePoint = new CurvePoint([1] as BasicArray<number>, uuid(), 1, 0.5, CurveMode.Straight);
     frame.height = 1;
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
     const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
@@ -336,8 +336,8 @@ export function newArrowShape(name: string, frame: ShapeFrame): LineShape {
     _checkFrame(frame);
     const style = newflatStyle();
     style.endMarkerType = types.MarkerType.OpenArrow;
-    const sPoint = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight);
-    const ePoint = new CurvePoint([1] as BasicArray<number>, uuid(), 1, 0, CurveMode.Straight);
+    const sPoint = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0.5, CurveMode.Straight);
+    const ePoint = new CurvePoint([1] as BasicArray<number>, uuid(), 1, 0.5, CurveMode.Straight);
     frame.height = 1;
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
     const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
@@ -465,7 +465,7 @@ export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm):
     style.endMarkerType = types.MarkerType.OpenArrow;
 
     const sPoint = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight);
-    const ePoint = new CurvePoint([1] as BasicArray<number>, uuid(), 1, 1, CurveMode.Straight);
+    const ePoint = new CurvePoint([1] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight);
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
     const side = new BorderSideSetting(SideType.Normal, 2, 2, 2, 2);
     const border = new Border([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 128, 128, 128), types.BorderPosition.Center, 2, new BorderStyle(0, 0), types.CornerType.Miter, side);
@@ -558,6 +558,38 @@ export function newSymbolRefShape(name: string, frame: ShapeFrame, refId: string
     addCommonAttr(ref);
     ref.setSymbolMgr(symbol_mgr);
     return ref;
+}
+
+/**
+ * @description 将SVG中的<polygon />、<polyline />中的points属性值转换为Path的d属性值
+ * @param pointsString <polygon />、<polyline />中的points属性值
+ * @param isLine 元素为<polyline />，否则为<polygon />
+ * @param style
+ */
+export function polylinePointsToPathD(pointsString: string, isLine: boolean) {
+    const regex = /(-?\d*\.?\d+)[,\s]+(-?\d*\.?\d+)/g;
+    const points = [];
+    let match;
+    while ((match = regex.exec(pointsString)) !== null) {
+        points.push([parseFloat(match[1]), parseFloat(match[2])]);
+    }
+
+    // 两点成线，三点成面，所以当为多边形时，points长度一定要大于2，为折线时，一定要大于1
+    if (!Array.isArray(points) || (!isLine && points.length < 3) || (points.length < 2)) {
+        return '';
+    }
+
+    let pathD = 'M' + points[0][0] + ',' + points[0][1];
+
+    for (let i = 1; i < points.length; i++) {
+        pathD += ' L' + points[i][0] + ',' + points[i][1];
+    }
+
+    if (!isLine) {
+        pathD += ' Z';
+    }
+
+    return pathD;
 }
 
 export function getTransformByEnv(env: GroupShape) {

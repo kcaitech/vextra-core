@@ -16,6 +16,7 @@ import { ContactShape, SymbolRefShape, ContactForm, Artboard } from "../../data/
 import { BoolOp, CurveMode, MarkerType, OverrideType, Point2D } from "../../data/typesdefine";
 import { BasicMap } from "../../data/basic";
 import { crdtArrayInsert, crdtArrayRemove, crdtSetAttr } from "./basic";
+import {ColVector3D} from "../../basic/matrix2";
 
 function _checkNum(x: number) {
     // check
