@@ -692,7 +692,7 @@ export class ShapeView extends DataView {
 
     protected renderBlur(blurId: string): EL[] {
         if (!this.blur) return [];
-        return renderBlur(elh, this.blur, blurId, this.frame, this.getBorders(), this.getFills(), this.getPathStr(), this.m_data.type, this.radius);
+        return renderBlur(elh, this.blur, blurId, this.frame, this.getFills(), this.getPathStr());
     }
 
     protected renderProps(): { [key: string]: string } {

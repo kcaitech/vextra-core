@@ -1,7 +1,7 @@
 
 
 import { DefaultColor, isColorEqual, randomId } from "./basic";
-import { TextShape, Path, Color, Para, ParaAttr, Text, Span, FillType, Gradient, ShapeFrame, UnderlineType, StrikethroughType } from '../data/classes';
+import { TextShape, Path, Color, Para, ParaAttr, Text, Span, FillType, Gradient, ShapeFrame, UnderlineType, StrikethroughType, Blur, BlurType, SpanAttr } from '../data/classes';
 import { GraphArray, TextLayout } from "../data/textlayout";
 import { gPal } from "../basic/pal";
 import { BasicArray } from "../data/basic";
@@ -42,8 +42,8 @@ export function renderText2Path(layout: TextLayout, offsetX: number, offsetY: nu
                 const font = span?.fontName || '';
                 const fontSize = span?.fontSize || 0;
                 const metrics = garr[0]?.metrics;
-                const bottom =  lineY + line.lineHeight - (line.lineHeight - line.maxFontSize) / 2;
-                const baseY = metrics ? (bottom - (fontSize - (metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent )) / 2 - (metrics.actualBoundingBoxDescent)) : bottom ; // baseline
+                const bottom = lineY + line.lineHeight - (line.lineHeight - line.maxFontSize) / 2;
+                const baseY = metrics ? (bottom - (fontSize - (metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent)) / 2 - (metrics.actualBoundingBoxDescent)) : bottom; // baseline
 
                 const weight = (span?.weight) || 400;
                 const italic = !!(span?.italic);
@@ -109,7 +109,7 @@ function renderDecorateRects(h: Function, x: number, y: number, hight: number, d
     }
 }
 
-export function renderTextLayout(h: Function, textlayout: TextLayout, frame?: ShapeFrame) {
+export function renderTextLayout(h: Function, textlayout: TextLayout, frame?: ShapeFrame, blur?: Blur) {
     const childs = [];
 
     const { xOffset, yOffset, paras } = textlayout;
@@ -140,8 +140,8 @@ export function renderTextLayout(h: Function, textlayout: TextLayout, frame?: Sh
                 const span = garr.attr;
                 const fontSize = span?.fontSize || 0;
                 const metrics = garr[0]?.metrics;
-                const bottom =  lineY + line.lineHeight - (line.lineHeight - line.maxFontSize) / 2;
-                const baseY = metrics ? (bottom - (fontSize - (metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent )) / 2 - (metrics.actualBoundingBoxDescent)) : bottom ; // baseline
+                const bottom = lineY + line.lineHeight - (line.lineHeight - line.maxFontSize) / 2;
+                const baseY = metrics ? (bottom - (fontSize - (metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent)) / 2 - (metrics.actualBoundingBoxDescent)) : bottom; // baseline
 
                 for (let gIdx = 0, gCount = garr.length; gIdx < gCount; gIdx++) {
                     const graph = garr[gIdx];
@@ -195,6 +195,16 @@ export function renderTextLayout(h: Function, textlayout: TextLayout, frame?: Sh
                     } else {
                         linechilds.push(h('text', { x: gX.join(' '), y: baseY, style }, gText.join(''),));
                     }
+                    if (blur && blur.isEnabled && blur.type === BlurType.Background && span && is_alpha(span)) {
+                        const id = "clip-blur-" + objectId(blur) + randomId();
+                        const cp = h("clipPath", { id }, [h('text', { x: gX.join(' '), y: baseY, style, "clip-rule": "evenodd" }, gText.join(''))]);
+                        linechilds.push(cp);
+                        linechilds.push(h("foreignObject",
+                            {
+                                width: textlayout.contentWidth, height: textlayout.contentHeight, x: xOffset, y: yOffset
+                            },
+                            h("div", { style: { width: "100%", height: "100%", 'backdrop-filter': `blur(${blur.saturation / 2}px)`, "clip-path": "url(#" + id + ")" } })));
+                    }
                 }
 
                 // 下划线、删除线、高亮
@@ -229,6 +239,14 @@ export function renderTextLayout(h: Function, textlayout: TextLayout, frame?: Sh
     return childs;
 }
 
+const is_alpha = (span: SpanAttr) => {
+    if(span.highlight && span.highlight.alpha === 1) return false;
+    if(span.color && span.color.alpha > 0 && span.color.alpha < 1) {
+        return true;
+    }else {
+        return false;
+    }
+};
 
 function createTextByString(stringValue: string, refShape: TextShape) {
     const text = new Text(new BasicArray());
