@@ -669,6 +669,7 @@ export class Matrix { // 矩阵
                     data.set([j, k], temp)
                     temp = result.get([i, k])
                     result.set([i, k], result.get([j, k]))
+                    result.set([j, k], temp)
                 }
             }
             const factor = data.get([i, i]) // 主元
@@ -687,7 +688,7 @@ export class Matrix { // 矩阵
                 const factor = data.get([j, i])
                 if (isZero(factor)) continue; // 本身为0，不需要处理
                 data.set([j, i], 0)
-                result.set([j, i], -factor)
+                result.set([j, i], result.get([j, i]) - result.get([i, i]) * factor)
                 for (let k = i + 1; k < m; k++) {
                     data.set([j, k], data.get([j, k]) - data.get([i, k]) * factor)
                     result.set([j, k], result.get([j, k]) - result.get([i, k]) * factor)
@@ -753,8 +754,7 @@ export class Matrix { // 矩阵
         for (let i = 0; i < n; i++) {
             const factor = this.get([0, i]) // 第0行第i列的元素
             if (isZero(factor)) continue; // 该元素为0，跳过
-            const subMatrixData = this.data.clone().deleteRow(0).deleteCol(i) // 去掉第0行和第i列的子矩阵
-            const subMatrix = new Matrix(subMatrixData) // 子矩阵
+            const subMatrix = this.clone().deleteRow(0).deleteCol(i) // 去掉第0行和第i列后的子矩阵
             const subDeterminant = subMatrix.determinant() // 子矩阵的行列式
             result += (i % 2 === 0 ? 1 : -1) * factor * subDeterminant // 递归计算行列式
         }
@@ -768,8 +768,7 @@ export class Matrix { // 矩阵
         const result = new NumberArray2D([m, n])
         for (let i = 0; i < m; i++) {
             for (let j = 0; j < n; j++) {
-                const subMatrixData = this.data.clone().deleteRow(i).deleteCol(j) // 去掉第i行第j列的子矩阵
-                const subMatrix = new Matrix(subMatrixData) // 子矩阵
+                const subMatrix = this.clone().deleteRow(i).deleteCol(j) // 去掉第i行和第j列后的子矩阵
                 const subDeterminant = subMatrix.determinant() // 子矩阵的行列式
                 result.set([i, j], (i + j) % 2 === 0 ? subDeterminant : -subDeterminant) // 伴随矩阵的元素
             }
