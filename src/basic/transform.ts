@@ -175,11 +175,11 @@ export class Transform { // 变换
             const matrix3x3 = this.matrix.clone().resize([3, 3])
             const xDotY = matrix3x3.col(0).dot(matrix3x3.col(1)) // x轴与y轴的点积
             const norm_xCrossY = (matrix3x3.col(0).cross(matrix3x3.col(1)) as Vector).norm // x轴与y轴叉积的模
-            let angle = Math.atan2(norm_xCrossY, xDotY) // y轴相对x轴的夹角（逆时针为正）
+            let angle = Math.atan2(norm_xCrossY, xDotY) // y轴相对x轴的夹角（逆时针为正）（-π ~ π）
             let isYFlipped = false // Y轴是否反向
             if (angle < 0) {
                 isYFlipped = true
-                angle += Math.PI
+                angle += Math.PI // （0 ~ 2π）
             }
             const skewXAngle = 0.5 * Math.PI - angle;
             const tanSkewX = Math.tan(skewXAngle)
@@ -846,7 +846,12 @@ export class Transform { // 变换
         })
     }
 
-    hasRotation() { // 判断是否有旋转
+    // 判断是否有旋转
+    // 当同时支持x、y、z轴斜切时，不能仅根据旋转子矩阵rotateMatrix是否为单位矩阵来判断是否有旋转
+    // 因为当rotateMatrix表示存在旋转时，x、y、z轴斜切可能会刚好抵消旋转的效果，从而使得主矩阵matrix中并不存在旋转
+    // 所以当同时支持x、y、z轴斜切时，还需做更多处理才能判断是否有旋转
+    // 目前仅支持x、y轴斜切，解析时x轴斜切参数恒为0，相当于仅存在y轴斜切，所以暂不需要考虑上述情况
+    hasRotation() {
         if (!this.isSubMatrixLatest) this.updateMatrix();
         return !this.rotateMatrix.isIdentity
     }
@@ -917,7 +922,9 @@ export class Transform { // 变换
         return this
     }
 
-    hasSkew() { // 判断是否有斜切
+    // 判断是否有斜切
+    // 情况同上（hasRotation函数）
+    hasSkew() {
         if (!this.isSubMatrixLatest) this.updateMatrix();
         return !this.skewMatrix.isIdentity
     }
