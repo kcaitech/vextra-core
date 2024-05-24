@@ -7,7 +7,7 @@ export default {
     output: {
         dir: 'dist',
         format: 'es',
-        entryFileNames: 'index.mjs'
+        entryFileNames: 'index.js'
     },
     plugins: [terser(), babel({ babelHelpers: 'bundled' }), typescript(), json()],
     external: ['uuid', 'kiwi-schema', 'uzip']

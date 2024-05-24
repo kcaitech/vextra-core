@@ -6,6 +6,11 @@ import { Color } from './classes';
 const assert = chai.assert;
 
 const metrics = new class implements TextMetrics {
+    alphabeticBaseline: number = 0;
+    emHeightAscent: number = 0;
+    emHeightDescent: number = 0;
+    hangingBaseline: number = 0;
+    ideographicBaseline: number = 0;
     actualBoundingBoxAscent: number = 0;
     actualBoundingBoxDescent: number = 0;
     actualBoundingBoxLeft: number = 0;
