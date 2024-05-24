@@ -240,10 +240,10 @@ export function renderTextLayout(h: Function, textlayout: TextLayout, frame?: Sh
 }
 
 const is_alpha = (span: SpanAttr) => {
-    if(span.highlight && span.highlight.alpha === 1) return false;
-    if(span.color && span.color.alpha > 0 && span.color.alpha < 1) {
+    if (span.highlight && span.highlight.alpha === 1) return false;
+    if (span.color && span.color.alpha > 0 && span.color.alpha < 1) {
         return true;
-    }else {
+    } else {
         return false;
     }
 };
