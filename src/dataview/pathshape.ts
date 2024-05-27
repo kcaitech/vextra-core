@@ -94,7 +94,24 @@ export class PathShapeView extends ShapeView {
         const shadows = this.renderShadows(filterId);
         const blurId = `blur_${objectId(this)}`;
         const blur = this.renderBlur(blurId);
-
+        const g_props: any = {}
+        const contextSettings = this.style.contextSettings;
+        if (contextSettings) {
+            const style: any = {
+                'mix-blend-mode': contextSettings.blenMode
+            }
+            if (blur.length) {
+                g_props.style = style;
+                g_props.opacity = props.opacity;
+                delete props.opacity;
+            } else {
+                if (props.style) {
+                    (props.style as any)['mix-blend-mode'] = contextSettings.blenMode;
+                } else {
+                    props.style = style;
+                }
+            }
+        }
         if (shadows.length > 0) { // 阴影
             const ex_props = Object.assign({}, props);
             delete props.style;
@@ -104,7 +121,7 @@ export class PathShapeView extends ShapeView {
             if (this.type === ShapeType.Rectangle || this.type === ShapeType.Oval) {
                 if (blur.length && inner_url.length) {
                     props.filter = `${inner_url.join(' ')}`
-                    if(this.blur?.type === BlurType.Gaussian) props.filter += ` url(#${blurId})`
+                    if (this.blur?.type === BlurType.Gaussian) props.filter += ` url(#${blurId})`
                 } else {
                     if (inner_url.length) props.filter = inner_url.join(' ');
                     if (blur.length && this.blur?.type === BlurType.Gaussian) props.filter = `url(#${blurId})`;
@@ -115,10 +132,20 @@ export class PathShapeView extends ShapeView {
                 if (inner_url.length) props.filter += inner_url.join(' ');
             }
             const body = elh("g", props, [...fills, ...childs, ...borders]);
-            this.reset("g", ex_props, [...shadows, ...blur, body])
+            if (blur.length) {
+                const g = elh('g', g_props, [...shadows, body]);
+                this.reset("g", ex_props, [...blur, g])
+            } else {
+                this.reset("g", ex_props, [...shadows, body])
+            }
         } else {
             if (blur.length && this.blur?.type === BlurType.Gaussian) props.filter = `url(#${blurId})`;
-            this.reset("g", props, [...blur, ...fills, ...childs, ...borders]);
+            if (blur.length) {
+                const g = elh('g', g_props, [...fills, ...childs, ...borders]);
+                this.reset("g", props, [...blur, g]);
+            } else {
+                this.reset("g", props, [...blur, ...fills, ...childs, ...borders]);
+            }
         }
         return ++this.m_render_version;
     }
@@ -136,7 +163,24 @@ export class PathShapeView extends ShapeView {
         const shadows = this.renderShadows(filterId);
         const blurId = `blur_${objectId(this)}`;
         const blur = this.renderBlur(blurId);
-
+        const g_props: any = {}
+        const contextSettings = this.style.contextSettings;
+        if (contextSettings) {
+            const style: any = {
+                'mix-blend-mode': contextSettings.blenMode
+            }
+            if (blur.length) {
+                g_props.style = style;
+                g_props.opacity = props.opacity;
+                delete props.opacity;
+            } else {
+                if (props.style) {
+                    (props.style as any)['mix-blend-mode'] = contextSettings.blenMode;
+                } else {
+                    props.style = style;
+                }
+            }
+        }
         if (shadows.length > 0) { // 阴影
             const ex_props = Object.assign({}, props);
             delete props.style;
@@ -146,7 +190,7 @@ export class PathShapeView extends ShapeView {
             if (this.type === ShapeType.Rectangle || this.type === ShapeType.Oval) {
                 if (blur.length && inner_url.length) {
                     props.filter = `${inner_url.join(' ')}`
-                    if(this.blur?.type === BlurType.Gaussian) props.filter += ` url(#${blurId})`
+                    if (this.blur?.type === BlurType.Gaussian) props.filter += ` url(#${blurId})`
                 } else {
                     if (inner_url.length) props.filter = inner_url.join(' ');
                     if (blur.length && this.blur?.type === BlurType.Gaussian) props.filter = `url(#${blurId})`;
@@ -157,10 +201,20 @@ export class PathShapeView extends ShapeView {
                 if (inner_url.length) props.filter += inner_url.join(' ');
             }
             const body = elh("g", props, [...fills, ...childs, ...borders]);
-            return elh("g", ex_props, [...shadows, ...blur, body]);
+            if (blur.length) {
+                const g = elh("g", g_props, [...shadows, body]);
+                return elh("g", ex_props, [...blur, g]);
+            } else {
+                return elh("g", ex_props, [...shadows, ...blur, body]);
+            }
         } else {
             if (blur.length && this.blur?.type === BlurType.Gaussian) props.filter = `url(#${blurId})`;
-            return elh("g", props, [...blur, ...fills, ...childs, ...borders])
+            if (blur.length) {
+                const g = elh("g", g_props, [...fills, ...childs, ...borders]);
+                return elh("g", props, [...blur, g]);
+            } else {
+                return elh("g", props, [...blur, ...fills, ...childs, ...borders]);
+            }
         }
     }
 }

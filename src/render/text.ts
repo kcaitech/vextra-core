@@ -198,12 +198,13 @@ export function renderTextLayout(h: Function, textlayout: TextLayout, frame?: Sh
                     if (blur && blur.isEnabled && blur.type === BlurType.Background && span && is_alpha(span)) {
                         const id = "clip-blur-" + objectId(blur) + randomId();
                         const cp = h("clipPath", { id }, [h('text', { x: gX.join(' '), y: baseY, style, "clip-rule": "evenodd" }, gText.join(''))]);
-                        linechilds.push(cp);
-                        linechilds.push(h("foreignObject",
+                        const foreignObject = h("foreignObject",
                             {
                                 width: textlayout.contentWidth, height: textlayout.contentHeight, x: xOffset, y: yOffset
                             },
-                            h("div", { style: { width: "100%", height: "100%", 'backdrop-filter': `blur(${blur.saturation / 2}px)`, "clip-path": "url(#" + id + ")" } })));
+                            h("div", { style: { width: "100%", height: "100%", 'backdrop-filter': `blur(${blur.saturation / 2}px)`, "clip-path": "url(#" + id + ")" } }))
+                        const backgroundBlur = h("g", [cp,foreignObject])
+                        linechilds.push(backgroundBlur);
                     }
                 }
 

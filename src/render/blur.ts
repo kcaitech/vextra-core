@@ -64,9 +64,9 @@ handler[BlurType.Background] = (h: Function, blur: Blur, id: string, frame: Shap
         ]
     )
     elArr.push(clipPath);
-    style['clip-path'] = "url(#" + clipId + ")"
+    props['clip-path'] = "url(#" + clipId + ")"
     style['backdrop-filter'] = `blur(${blur.saturation / 2}px)`;
-    const div = h('div', { style: style })
+    const div = h('div', { style: style }, [h('div', { style: style })])
     const foreignObject = h("foreignObject", props, [div]);
     elArr.push(foreignObject);
     return h('g', elArr);
