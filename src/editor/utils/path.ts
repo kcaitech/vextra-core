@@ -226,7 +226,7 @@ export function before_modify_side(api: Api, page: Page, shape: ContactShape, in
     api.contactModifyEditState(page, shape, true);
 }
 
-export function update_frame_by_points(api: Api, page: Page, s: Shape) {
+export function update_frame_by_points(api: Api, page: Page, s: Shape, reLayout = false) {
     const box = s.boundingBox3();
 
     if (!box) {
@@ -265,7 +265,7 @@ export function update_frame_by_points(api: Api, page: Page, s: Shape) {
         api.shapeModifyY(page, s, f.y + dy);
     }
 
-    if (!frameChange) { // 只有宽高被改变，才会需要重排2D points.
+    if (!(frameChange || reLayout)) { // 只有宽高被改变，才会需要重排2D points.
         return;
     }
 
