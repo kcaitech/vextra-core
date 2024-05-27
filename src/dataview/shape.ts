@@ -719,6 +719,16 @@ export class ShapeView extends DataView {
             style.transform += "translate(" + (-cx + frame.x) + "px," + (-cy + frame.y) + "px)"
             props.style = style;
         }
+        if (contextSettings) {
+            if (props.style) {
+                props.style['mix-blend-mode'] = contextSettings.blenMode;
+            } else {
+                const style: any = {
+                    'mix-blend-mode': contextSettings.blenMode
+                }
+                props.style = style;
+            }
+        }
         return props;
     }
 
@@ -803,24 +813,6 @@ export class ShapeView extends DataView {
         const shadows = this.renderShadows(filterId);
         const blurId = `blur_${objectId(this)}`;
         const blur = this.renderBlur(blurId);
-        const g_props: any = {}
-        const contextSettings = this.style.contextSettings;
-        if (contextSettings) {
-            const style: any = {
-                'mix-blend-mode': contextSettings.blenMode
-            }
-            if (blur.length) {
-                g_props.style = style;
-                g_props.opacity = props.opacity;
-                delete props.opacity;
-            } else {
-                if (props.style) {
-                    (props.style as any)['mix-blend-mode'] = contextSettings.blenMode;
-                } else {
-                    props.style = style;
-                }
-            }
-        }
 
         if (shadows.length > 0) { // 阴影
             const ex_props = Object.assign({}, props);
@@ -833,20 +825,10 @@ export class ShapeView extends DataView {
             if (blur.length && this.blur?.type === BlurType.Gaussian) props.filter += `url(#${blurId}) `;
             if (inner_url.length) props.filter += inner_url.join(' ');
             const body = elh("g", props, [...fills, ...childs, ...borders]);
-            if (blur.length) {
-                const g = elh('g', g_props, [...shadows, body])
-                this.reset("g", ex_props, [...blur, g])
-            } else {
-                this.reset("g", ex_props, [...shadows, ...blur, body])
-            }
+            this.reset("g", ex_props, [...shadows, ...blur, body])
         } else {
             if (blur.length && this.blur?.type === BlurType.Gaussian) props.filter = `url(#${blurId})`;
-            if (blur.length) {
-                const g = elh('g', g_props, [...fills, ...childs, ...borders])
-                this.reset("g", props, [...blur, g]);
-            } else {
-                this.reset("g", props, [...blur, ...fills, ...childs, ...borders]);
-            }
+            this.reset("g", props, [...blur, ...fills, ...childs, ...borders]);
         }
         return ++this.m_render_version;
     }

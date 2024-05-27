@@ -109,7 +109,6 @@ export class ArtboradView extends GroupShapeView {
         const blur = this.renderBlur(blurId);
 
         const props: any = {};
-        const g_props: any = {};
         props.opacity = svgprops.opacity;
         delete svgprops.opacity;
 
@@ -129,22 +128,13 @@ export class ArtboradView extends GroupShapeView {
         }
         const contextSettings = this.style.contextSettings;
         if (contextSettings) {
-            if (blur.length) {
-                g_props.opacity = props.opacity;
-                delete props.opacity;
+            if (props.style) {
+                props.style['mix-blend-mode'] = contextSettings.blenMode;
+            } else {
                 const style: any = {
                     'mix-blend-mode': contextSettings.blenMode
                 }
-                g_props.style = style;
-            } else {
-                if (props.style) {
-                    props.style['mix-blend-mode'] = contextSettings.blenMode;
-                } else {
-                    const style: any = {
-                        'mix-blend-mode': contextSettings.blenMode
-                    }
-                    props.style = style;
-                }
+                props.style = style;
             }
         }
         const id = "clippath-artboard-" + objectId(this);
@@ -157,21 +147,10 @@ export class ArtboradView extends GroupShapeView {
             const inner_url = innerShadowId(filterId, this.getShadows());
             if (inner_url.length) svgprops.filter = inner_url.join(' ');
             const body = elh("svg", svgprops, [cp, content_container]);
-            if (blur.length) {
-                const g = elh('g', g_props, [...shadows, body, ...borders]);
-                this.reset("g", props, [...blur, g])
-            } else {
-                this.reset("g", props, [...shadows, ...blur, body, ...borders])
-            }
+            this.reset("g", props, [...shadows, ...blur, body, ...borders])
         } else {
-            if (blur.length) {
-                const body = elh("svg", svgprops, [cp, content_container]);
-                const g = elh('g', g_props, [body, ...borders])
-                this.reset("g", props, [...blur, g])
-            } else {
-                const body = elh("svg", svgprops, [cp, content_container]);
-                this.reset("g", props, [...blur, body, ...borders])
-            }
+            const body = elh("svg", svgprops, [cp, content_container]);
+            this.reset("g", props, [...blur, body, ...borders])
         }
         return ++this.m_render_version;
     }
