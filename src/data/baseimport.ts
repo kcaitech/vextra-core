@@ -630,8 +630,10 @@ export function importDocumentMeta(source: types.DocumentMeta, ctx?: IImportCont
         source.lastCmdId,
         (() => {
             const ret = new BasicMap<string, string>()
-            source.symbolregist.forEach((source, k) => {
-                ret.set(k, source)
+            const _val = source.symbolregist as any
+            Object.keys(source.symbolregist).forEach((k) => {
+                const val = _val[k]
+                ret.set(k, val)
             })
             return ret
         })())
@@ -752,7 +754,9 @@ export function importFill(source: types.Fill, ctx?: IImportContext): impl.Fill 
         importFillType(source.fillType, ctx),
         importColor(source.color, ctx))
     importFillOptional(ret, source, ctx)
-    
+        // inject code
+    if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
+
     return ret
 }
 /* span attr */
@@ -794,8 +798,10 @@ function importStyleOptional(tar: impl.Style, source: types.Style, ctx?: IImport
     if (source.endMarkerType) tar.endMarkerType = importMarkerType(source.endMarkerType, ctx)
     if (source.varbinds) tar.varbinds = (() => {
         const ret = new BasicMap<string, string>()
-        source.varbinds.forEach((source, k) => {
-            ret.set(k, source)
+        const _val = source.varbinds as any
+        Object.keys(source.varbinds).forEach((k) => {
+            const val = _val[k]
+            ret.set(k, val)
         })
         return ret
     })()
@@ -860,8 +866,10 @@ function importShapeOptional(tar: impl.Shape, source: types.Shape, ctx?: IImport
     if (source.shouldBreakMaskChain) tar.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (source.varbinds) tar.varbinds = (() => {
         const ret = new BasicMap<string, string>()
-        source.varbinds.forEach((source, k) => {
-            ret.set(k, source)
+        const _val = source.varbinds as any
+        Object.keys(source.varbinds).forEach((k) => {
+            const val = _val[k]
+            ret.set(k, val)
         })
         return ret
     })()
@@ -982,8 +990,10 @@ export function importTableShape(source: types.TableShape, ctx?: IImportContext)
         importStyle(source.style, ctx),
         (() => {
             const ret = new BasicMap<string, impl.TableCell>()
-            source.cells.forEach((source, k) => {
-                ret.set(k, importTableCell(source, ctx))
+            const _val = source.cells as any
+            Object.keys(source.cells).forEach((k) => {
+                const val = _val[k]
+                ret.set(k, importTableCell(val, ctx))
             })
             return ret
         })(),
@@ -991,35 +1001,7 @@ export function importTableShape(source: types.TableShape, ctx?: IImportContext)
         importTableShape_colWidths(source.colWidths, ctx))
     importTableShapeOptional(ret, source, ctx)
         // inject code
-    // 兼容旧数据
-    if ((source as any).datas || (source as any).childs) {
-        source.colWidths = ((source as any).colWidths as number[]).map((v, i) => ({
-            id: uuid(),
-            crdtidx: [i],
-            value: v
-        } as types.CrdtNumber));
-        source.rowHeights = ((source as any).rowHeights as number[]).map((v, i) => ({
-            id: uuid(),
-            crdtidx: [i],
-            value: v
-        } as types.CrdtNumber));
-
-        const colCount = source.colWidths.length;
-        const rowCount = source.rowHeights.length;
-        const datas: types.TableCell[] = (source as any).datas || (source as any).childs;
-        const cells: {[key: string]: types.TableCell} = {};
-        for (let i = 0; i < datas.length; ++i) {
-            const c = datas[i];
-            if (!c) continue;
-            const ri = Math.floor(i / colCount);
-            const ci = i % colCount;
-            if (ri >= rowCount) break;
-            const id = source.rowHeights[ri].id + ',' + source.colWidths[ci].id;
-            cells[id] = c;
-            c.id = id;
-        }
-        source.cells = cells as any;
-    }
+    if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
 
     return ret
 }
@@ -1214,8 +1196,10 @@ function importSymbolRefShapeOptional(tar: impl.SymbolRefShape, source: types.Sy
     importShapeOptional(tar, source)
     if (source.overrides) tar.overrides = (() => {
         const ret = new BasicMap<string, string>()
-        source.overrides.forEach((source, k) => {
-            ret.set(k, source)
+        const _val = source.overrides as any
+        Object.keys(source.overrides).forEach((k) => {
+            const val = _val[k]
+            ret.set(k, val)
         })
         return ret
     })()
@@ -1241,18 +1225,18 @@ export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImport
         source.refId,
         (() => {
             const ret = new BasicMap<string, impl.Variable>()
-            source.variables.forEach((source, k) => {
-                ret.set(k, importVariable(source, ctx))
+            const _val = source.variables as any
+            Object.keys(source.variables).forEach((k) => {
+                const val = _val[k]
+                ret.set(k, importVariable(val, ctx))
             })
             return ret
         })())
     importSymbolRefShapeOptional(ret, source, ctx)
         // inject code
-    if (!source.variables) {
-        source.variables = {} as any
-    }
-    if ((source as any).virbindsEx) {
-        source.overrides = (source as any).virbindsEx
+    if (ctx?.document) {
+        ret.setSymbolMgr(ctx.document.symbolsMgr);
+        ret.setImageMgr(ctx.document.mediasMgr);
     }
 
     return ret
@@ -1392,53 +1376,7 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
         source.imageRef)
     importImageShapeOptional(ret, source, ctx)
         // inject code
-    if (!source.pathsegs) { // 兼容旧数据
-        const seg: types.PathSegment = {
-            crdtidx: [0],
-            id: '39e508e8-a1bb-4b55-ad68-aa2a9b3b447a',
-            points:[],
-            isClosed: true
-        }
-        
-        if ((source as any)?.points.length) {
-            seg.points.push(...(source as any)?.points);
-        } else {
-            // 需要用固定的，这样如果不同用户同时打开此文档，对points做的操作，对应的point id也是对的
-            const id1 = "b259921b-4eba-461d-afc3-c4c58c1fa337"
-            const id2 = "62ea3ee3-3378-4602-a918-7e05f426bb8e"
-            const id3 = "1519da3c-c692-4e1d-beb4-01a85cc56738"
-            const id4 = "e857f541-4e7f-491b-96e6-2ca38f1d4c09"
-            const p1: types.CurvePoint = {
-                crdtidx: [0],
-                id: id1,
-                mode: types.CurveMode.Straight,
-                x: 0, y: 0
-            }; // lt
-            const p2: types.CurvePoint =
-            {
-                crdtidx: [1],
-                id: id2,
-                mode: types.CurveMode.Straight,
-                x: 1, y: 0
-            }; // rt
-            const p3: types.CurvePoint = {
-                crdtidx: [2],
-                id: id3,
-                mode: types.CurveMode.Straight,
-                x: 1, y: 1
-            }; // rb
-            const p4: types.CurvePoint = {
-                crdtidx: [3],
-                id: id4,
-                mode: types.CurveMode.Straight,
-                x: 0, y: 1
-            }; // lb
-        
-            seg.points.push(p1, p2, p3, p4);
-        }
-     
-        source.pathsegs = [seg];
-    }
+    if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
 
     return ret
 }
@@ -1584,8 +1522,10 @@ function importSymbolShapeOptional(tar: impl.SymbolShape, source: types.SymbolSh
     importGroupShapeOptional(tar, source)
     if (source.symtags) tar.symtags = (() => {
         const ret = new BasicMap<string, string>()
-        source.symtags.forEach((source, k) => {
-            ret.set(k, source)
+        const _val = source.symtags as any
+        Object.keys(source.symtags).forEach((k) => {
+            const val = _val[k]
+            ret.set(k, val)
         })
         return ret
     })()
@@ -1602,13 +1542,22 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
         importGroupShape_childs(source.childs, ctx),
         (() => {
             const ret = new BasicMap<string, impl.Variable>()
-            source.variables.forEach((source, k) => {
-                ret.set(k, importVariable(source, ctx))
+            const _val = source.variables as any
+            Object.keys(source.variables).forEach((k) => {
+                const val = _val[k]
+                ret.set(k, importVariable(val, ctx))
             })
             return ret
         })())
     importSymbolShapeOptional(ret, source, ctx)
-    
+        // inject code
+    if (ctx?.document) {
+        const registed = ctx.document.symbolregist.get(ret.id);
+        // if (!registed || registed === 'freesymbols' || registed === ctx.curPage) {
+        ctx.document.symbolsMgr.add(ret.id, ret);
+        // }
+    }
+
     return ret
 }
 /* symbol union shape */
@@ -1624,8 +1573,10 @@ export function importSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IIm
         importGroupShape_childs(source.childs, ctx),
         (() => {
             const ret = new BasicMap<string, impl.Variable>()
-            source.variables.forEach((source, k) => {
-                ret.set(k, importVariable(source, ctx))
+            const _val = source.variables as any
+            Object.keys(source.variables).forEach((k) => {
+                const val = _val[k]
+                ret.set(k, importVariable(val, ctx))
             })
             return ret
         })())

@@ -10,4 +10,5 @@ npm run dev<br>
 
 
 ## schema生成代码
-npm run schema
+npm run schema<br>
+// 如出现奇怪运行错误，更新node版本

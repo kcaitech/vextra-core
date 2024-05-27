@@ -20,9 +20,11 @@ function exportBaseProp(p: BaseProp, source: string, $: Writer) {
                 $.nl('const ret = new BasicMap<', keyType, ', ')
                 exportBasePropType(valType, $)
                 $.append('>()')
-                $.nl(source, '.forEach((source, k) => ').sub(() => {
+                $.nl('const _val = ', source, ' as any')
+                $.nl('Object.keys(', source, ').forEach((k) => ').sub(() => {
+                    $.nl('const val = _val[k]')
                     $.nl('ret.set(k, ')
-                    exportBaseProp(p.val, 'source', $)
+                    exportBaseProp(p.val, 'val', $)
                     $.append(')')
                 }).append(')')
                 $.nl('return ret')
@@ -152,7 +154,7 @@ function exportObject(n: Node, $: Writer) {
         }
 
         if (inject[n.name] && inject[n.name]['after']) {
-            $.nl(inject[n.name]['before'])
+            $.nl(inject[n.name]['after'])
         }
 
         $.nl('return ret')
