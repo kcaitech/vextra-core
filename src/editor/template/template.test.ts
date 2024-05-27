@@ -7,7 +7,7 @@ const {
     fail,
 } = chai.assert
 
-import { Validator } from "../../script/schema/validate"
+import { Validator } from "../../schema/script/validate"
 
 const schemadir = path.resolve("./src/", "schema")
 const validate = new Validator(schemadir);
