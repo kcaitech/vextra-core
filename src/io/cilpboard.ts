@@ -1,6 +1,7 @@
 import { GroupShape, Shape, ShapeFrame, ShapeType, SymbolUnionShape, TextShape } from "../data/shape";
 import {
-    exportArtboard, exportBoolShape,
+    exportArtboard,
+    exportBoolShape,
     exportContactShape,
     exportCutoutShape,
     exportGradient,
@@ -9,8 +10,9 @@ import {
     exportLineShape,
     exportOvalShape,
     exportPathShape,
-    exportPathShape2,
+    exportPathShape2, exportPolygonShape,
     exportRectShape,
+    exportStarShape,
     exportSymbolRefShape,
     exportSymbolShape,
     exportSymbolUnionShape,
@@ -32,7 +34,9 @@ import {
     importOvalShape,
     importPathShape,
     importPathShape2,
+    importPolygonShape,
     importRectShape,
+    importStarShape,
     importSymbolRefShape,
     importSymbolShape,
     importSymbolUnionShape,
@@ -114,6 +118,10 @@ export function export_shape(shapes: Shape[]) {
             content = exportSymbolUnionShape(shape as unknown as types.SymbolUnionShape, ctx);
         } else if (type === ShapeType.BoolShape) {
             content = exportBoolShape(shape as unknown as types.BoolShape, ctx);
+        } else if (type === ShapeType.Star) {
+            content = exportStarShape(shape as unknown as types.StarShape, ctx);
+        } else if (type === ShapeType.Polygon) {
+            content = exportPolygonShape(shape as unknown as types.PolygonShape, ctx)
         }
         if (content) {
             result.push(content);
@@ -314,6 +322,10 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
                 const children = (_s as any).childs;
                 children && children.length && set_childs_id(children, matched);
                 r = importBoolShape(_s as any as types.BoolShape, ctx);
+            } else if (type === ShapeType.Star) {
+                r = importStarShape(_s as any as types.StarShape, ctx)
+            } else if (type === ShapeType.Polygon) {
+                r = importPolygonShape(_s as any as types.PolygonShape, ctx)
             }
 
             if (r) {

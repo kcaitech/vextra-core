@@ -1661,7 +1661,7 @@ export function importLineShape(source: types.LineShape, ctx?: IImportContext): 
             crdtidx: [0],
             id: '39e508e8-a1bb-4b55-ad68-aa2a9b3b447a',
             points:[],
-            isClosed: true
+            isClosed: false
         }
         
         if ((source as any)?.points?.length) {
@@ -2487,12 +2487,13 @@ export function importCutoutShape(source: types.CutoutShape, ctx?: IImportContex
 /* contact shape */
 export function importContactShape(source: types.ContactShape, ctx?: IImportContext): impl.ContactShape {
     // inject code
+    
     if (!source.pathsegs?.length) { // 兼容旧数据
         const seg: types.PathSegment = {
             crdtidx: [0],
             id: '39e508e8-a1bb-4b55-ad68-aa2a9b3b447a',
             points:[],
-            isClosed: true
+            isClosed: false
         }
         
         if ((source as any)?.points?.length) {
@@ -2500,6 +2501,10 @@ export function importContactShape(source: types.ContactShape, ctx?: IImportCont
         } 
         
         source.pathsegs = [seg];
+    } else {
+        if (source?.pathsegs[0]?.isClosed) {
+            source.pathsegs[0].isClosed = false;
+        }
     }
     const ret: impl.ContactShape = new impl.ContactShape (
         (() => {
