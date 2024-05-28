@@ -17,6 +17,7 @@ import {
     importStop
 } from "../../data/baseimport";
 import { SNumber } from "../../coop/client/snumber";
+import { FMT_VER_latest } from "../../data/fmtver";
 
 const importh: { [key: string]: (data: any, ctx: IImportContext) => any } = {};
 importh['fill'] = importFill;
@@ -36,7 +37,8 @@ function _apply(document: Document, target: Array<CrdtItem>, op: ArrayMoveOp): A
     if (typeof data === 'string') {
         const ctx: IImportContext = new class implements IImportContext {
             document: Document = document;
-            curPage: string = "" // 这个用于判断symbol 可以不设置
+            curPage: string = ""; // 这个用于判断symbol 可以不设置
+            fmtVer: number = FMT_VER_latest
         };
 
         const _data = JSON.parse(data);

@@ -9,6 +9,7 @@ import { newDocument } from "./creator";
 import { CoopRepository } from "./coop/cooprepo";
 import { Repository } from "../data/transact";
 import * as types from "../data/typesdefine";
+import { FMT_VER_latest } from "../data/fmtver";
 
 export function createDocument(documentName: string, repo: Repository): Document {
     return newDocument(documentName, repo);
@@ -86,7 +87,7 @@ export class DocEditor {
 
         // 更换所有对象的id
         const document = this.__document;
-        const ctx: IImportContext = new class implements IImportContext { document: Document = document; curPage: string = np.id };
+        const ctx: IImportContext = new class implements IImportContext { document: Document = document; curPage: string = np.id; fmtVer: number = FMT_VER_latest };
         const p: Page = importPage(np, ctx);
         // p.name = name;
         // p.id = uuid();

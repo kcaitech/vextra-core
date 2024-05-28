@@ -9,6 +9,7 @@ import { Document } from "../../data/document";
 import { SNumber } from "../../coop/client/snumber";
 import { ISave4Restore } from "./localcmd";
 import { IImportContext, importColor, importGradient, importParaAttr, importSpanAttr, importText } from "../../data/baseimport";
+import { FMT_VER_latest } from "../../data/fmtver";
 
 // todo 考虑text是string?
 function apply(document: Document, text: Text, op: ArrayOp) {
@@ -18,7 +19,8 @@ function apply(document: Document, text: Text, op: ArrayOp) {
     }
     const ctx: IImportContext = new class implements IImportContext {
         document: Document = document;
-        curPage: string = "" // 这个用于判断symbol 可以不设置
+        curPage: string = ""; // 这个用于判断symbol 可以不设置
+        fmtVer: number = FMT_VER_latest
     };
     // const op = _op as ArrayOp;
     switch (op.type1) {

@@ -16,6 +16,7 @@ import {
     importVariable
 } from "../../data/baseimport";
 import { SNumber } from "../../coop/client/snumber";
+import { FMT_VER_latest } from "../../data/fmtver";
 
 function apply(document: Document, target: Object, op: IdOp): IdOpRecord {
     let value = op.data;
@@ -23,7 +24,8 @@ function apply(document: Document, target: Object, op: IdOp): IdOpRecord {
         // import data
         const ctx: IImportContext = new class implements IImportContext {
             document: Document = document;
-            curPage: string = "" // 这个用于判断symbol 可以不设置
+            curPage: string = ""; // 这个用于判断symbol 可以不设置
+            fmtVer: number = FMT_VER_latest
         };
         const data = JSON.parse(op.data);
         const typeId = data.typeId;
