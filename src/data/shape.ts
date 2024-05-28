@@ -112,8 +112,6 @@ export class Shape extends Basic implements classes.Shape {
     size: ShapeSize
     boolOp?: BoolOp
     isFixedToViewport?: boolean
-    isFlippedHorizontal?: boolean
-    isFlippedVertical?: boolean
     isLocked?: boolean
     isVisible?: boolean
     exportOptions?: ExportOptions
@@ -121,7 +119,6 @@ export class Shape extends Basic implements classes.Shape {
     nameIsFixed?: boolean
     resizingConstraint?: number
     resizingType?: ResizeType
-    rotation?: number
     constrainerProportions?: boolean
     clippingMaskMode?: number
     hasClippingMask?: boolean
@@ -160,6 +157,22 @@ export class Shape extends Basic implements classes.Shape {
     get isSymbolShape() {
         return false;
     }
+
+    // get frame(): ShapeFrame {
+    //     // todo
+    //     return new ShapeFrame(0, 0, 0, 0)
+    // }
+    // get rotation(): number {
+    //     // todo
+    // }
+    // get isFlippedHorizontal(): boolean {
+    // }
+    // get isFlippedVertical(): boolean {
+    // }
+    // get skewX(): number {
+    // }
+    // get skewY(): number {
+    // }
 
     getPathOfFrame(frame: ShapeSize, fixedRadius?: number): Path {
         return new Path();
@@ -231,7 +244,8 @@ export class Shape extends Basic implements classes.Shape {
     }
 
     isNoTransform() {
-        return !(this.rotation || this.isFlippedHorizontal || this.isFlippedVertical)
+        const t = this.transform;
+        return t.m00 == 1 && t.m01 === 0 && t.m10 === 0 && t.m11 === 1;
     }
 
     matrix2Parent(matrix?: Matrix) {
@@ -304,18 +318,16 @@ export class Shape extends Basic implements classes.Shape {
         }
     }
 
-    flipHorizontal() {
-        this.isFlippedHorizontal = !this.isFlippedHorizontal;
-    }
-
-    flipVertical() {
-        this.isFlippedVertical = !this.isFlippedVertical;
-    }
-
-    rotate(deg: number) {
-        deg = deg % 360;
-        this.rotation = deg;
-    }
+    // flipHorizontal() {
+    //     this.isFlippedHorizontal = !this.isFlippedHorizontal;
+    // }
+    // flipVertical() {
+    //     this.isFlippedVertical = !this.isFlippedVertical;
+    // }
+    // rotate(deg: number) {
+    //     deg = deg % 360;
+    //     this.rotation = deg;
+    // }
 
     setResizingConstraint(value: number) {
         this.resizingConstraint = value;
@@ -436,7 +448,6 @@ export class Shape extends Basic implements classes.Shape {
 export class GroupShape extends Shape implements classes.GroupShape {
     typeId = 'group-shape';
     childs: BasicArray<(GroupShape | Shape | ImageShape | PathShape | RectShape | TextShape)>
-    // wideframe: ShapeFrame
     fixedRadius?: number
 
     constructor(
@@ -459,7 +470,6 @@ export class GroupShape extends Shape implements classes.GroupShape {
             style
         )
         this.childs = childs;
-        // this.wideframe = new ShapeFrame(frame.x, frame.y, frame.width, frame.height);
     }
 
     get naviChilds(): Shape[] | undefined {
