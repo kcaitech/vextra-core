@@ -8,10 +8,7 @@ export { ColVector3D, Matrix as Matrix2, Point3D } from "./basic/matrix2"
 export { NumberArray2D } from "./basic/number_array"
 
 // data
-export * from "./data/basic"
-export * from "./data/classes"
-export * from "./data/transact"
-export * from "./data/consts"
+export * from "./data"
 
 // data view
 export * from "./dataview"

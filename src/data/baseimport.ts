@@ -1,610 +1,142 @@
-/**
- * 代码生成，勿手动修改
- * 可修改schema后在schema目录运行node script生成
- */
-
+/* 代码生成，勿手动修改 */
 import * as impl from "./classes"
 import * as types from "./typesdefine"
 import { BasicArray, BasicMap } from "./basic"
-
 import { uuid } from "../basic/uuid"
-
 export interface IImportContext {
     document: impl.Document
     curPage: string
 }
-/* winding rule */
-export function importWindingRule(source: types.WindingRule, ctx?: IImportContext): impl.WindingRule {
+type DocumentMeta_pagesList = BasicArray<impl.PageListItem>
+type ExportOptions_exportFormats = BasicArray<impl.ExportFormat>
+type Gradient_stops = BasicArray<impl.Stop>
+type GroupShape_childs = BasicArray<impl.GroupShape | impl.ImageShape | impl.PathShape | impl.PathShape2 | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape | impl.PolygonShape | impl.StarShape>
+type Para_spans = BasicArray<impl.Span>
+type PathSegment_points = BasicArray<impl.CurvePoint>
+type PathShape_pathsegs = BasicArray<impl.PathSegment>
+type PathShape2_pathsegs = BasicArray<impl.PathSegment>
+type Style_borders = BasicArray<impl.Border>
+type Style_fills = BasicArray<impl.Fill>
+type Style_shadows = BasicArray<impl.Shadow>
+type Style_innerShadows = BasicArray<impl.Shadow>
+type Style_contacts = BasicArray<impl.ContactRole>
+type TableShape_rowHeights = BasicArray<impl.CrdtNumber>
+type TableShape_colWidths = BasicArray<impl.CrdtNumber>
+type Text_paras = BasicArray<impl.Para>
+type Variable_0 = BasicArray<impl.Border | impl.Fill | impl.Shadow>
+/* blend mode */
+export function importBlendMode(source: types.BlendMode, ctx?: IImportContext): impl.BlendMode {
     return source
+}
+/* blur types */
+export function importBlurType(source: types.BlurType, ctx?: IImportContext): impl.BlurType {
+    return source
+}
+/* bool op types */
+export function importBoolOp(source: types.BoolOp, ctx?: IImportContext): impl.BoolOp {
+    return source
+}
+/* border position */
+export function importBorderPosition(source: types.BorderPosition, ctx?: IImportContext): impl.BorderPosition {
+    return source
+}
+/* border style */
+export function importBorderStyle(source: types.BorderStyle, ctx?: IImportContext): impl.BorderStyle {
+    const ret: impl.BorderStyle = new impl.BorderStyle (
+        source.length,
+        source.gap)
+    return ret
+}
+/* bullet & item number behavior */
+export function importBulletNumbersBehavior(source: types.BulletNumbersBehavior, ctx?: IImportContext): impl.BulletNumbersBehavior {
+    return source
+}
+/* bullet & item number types */
+export function importBulletNumbersType(source: types.BulletNumbersType, ctx?: IImportContext): impl.BulletNumbersType {
+    return source
+}
+/* bullet numbers */
+function importBulletNumbersOptional(tar: impl.BulletNumbers, source: types.BulletNumbers, ctx?: IImportContext) {
+    if (source.behavior) tar.behavior = importBulletNumbersBehavior(source.behavior, ctx)
+    if (source.offset) tar.offset = source.offset
+}
+export function importBulletNumbers(source: types.BulletNumbers, ctx?: IImportContext): impl.BulletNumbers {
+    const ret: impl.BulletNumbers = new impl.BulletNumbers (
+        importBulletNumbersType(source.type, ctx))
+    importBulletNumbersOptional(ret, source, ctx)
+    return ret
+}
+/* color controls */
+export function importColorControls(source: types.ColorControls, ctx?: IImportContext): impl.ColorControls {
+    const ret: impl.ColorControls = new impl.ColorControls (
+        source.isEnabled,
+        source.brightness,
+        source.contrast,
+        source.hue,
+        source.saturation)
+    return ret
 }
 /* color */
-export function importVariable(source: types.Variable, ctx?: IImportContext): impl.Variable {
-    const ret: impl.Variable = new impl.Variable (
-        source.id,
-        importVariableType(source.type, ctx),
-        source.name,
-        (() => {
-            const val = source.value
-            if (typeof val !== 'object') {
-                return val
-            }
-            if (val instanceof Array) {
-                const _val = val;
-                return (() => {
-                    const ret = new BasicArray<(impl.Border | impl.Fill | impl.Shadow)>()
-                    for (let i = 0, len = _val && _val.length; i < len; i++) {
-                        const r = (() => {
-                            const val = _val[i]
-                            if (val.typeId == 'border') {
-                                return importBorder(val as types.Border, ctx)
-                            }
-                            if (val.typeId == 'fill') {
-                                return importFill(val as types.Fill, ctx)
-                            }
-                            if (val.typeId == 'shadow') {
-                                return importShadow(val as types.Shadow, ctx)
-                            }
-                            {
-                                throw new Error('unknow val: ' + val)
-                            }
-                        })()
-                        if (r) ret.push(r)
-                    }
-                    return ret
-                })()
-            }
-            if (val.typeId == 'color') {
-                return importColor(val as types.Color, ctx)
-            }
-            if (val.typeId == 'text') {
-                return importText(val as types.Text, ctx)
-            }
-            if (val.typeId == 'gradient') {
-                return importGradient(val as types.Gradient, ctx)
-            }
-            if (val.typeId == 'style') {
-                return importStyle(val as types.Style, ctx)
-            }
-            if (val.typeId == 'context-settings') {
-                return importContextSettings(val as types.ContextSettings, ctx)
-            }
-            if (val.typeId == 'table-cell') {
-                return importTableCell(val as types.TableCell, ctx)
-            }
-            if (val.typeId == 'export-options') {
-                return importExportOptions(val as types.ExportOptions, ctx)
-            }
-            if (val.typeId == 'corner-radius') {
-                return importCornerRadius(val as types.CornerRadius, ctx)
-            }
-            {
-                throw new Error('unknow val: ' + val)
-            }
-        })()
-    )
+export function importColor(source: types.Color, ctx?: IImportContext): impl.Color {
+    const ret: impl.Color = new impl.Color (
+        source.alpha,
+        source.red,
+        source.green,
+        source.blue)
     return ret
 }
-/* variable types */
-export function importVariableType(source: types.VariableType, ctx?: IImportContext): impl.VariableType {
+/* contact role type */
+export function importContactRoleType(source: types.ContactRoleType, ctx?: IImportContext): impl.ContactRoleType {
     return source
 }
-/* user infomation */
-export function importUserInfo(source: types.UserInfo, ctx?: IImportContext): impl.UserInfo {
-    const ret: impl.UserInfo = new impl.UserInfo (
-        source.userId,
-        source.userNickname,
-        source.avatar
-    )
+/* contact type */
+export function importContactType(source: types.ContactType, ctx?: IImportContext): impl.ContactType {
+    return source
+}
+/* context settings */
+export function importContextSettings(source: types.ContextSettings, ctx?: IImportContext): impl.ContextSettings {
+    const ret: impl.ContextSettings = new impl.ContextSettings (
+        importBlendMode(source.blenMode, ctx),
+        source.opacity)
     return ret
 }
-/* underline types */
-export function importUnderlineType(source: types.UnderlineType, ctx?: IImportContext): impl.UnderlineType {
-    return source
-}
-/* text */
-export function importText(source: types.Text, ctx?: IImportContext): impl.Text {
-    const ret: impl.Text = new impl.Text (
-        (() => {
-            const ret = new BasicArray<impl.Para>()
-            for (let i = 0, len = source.paras && source.paras.length; i < len; i++) {
-                const r = importPara(source.paras[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
-        })()
-    )
-    if (source.attr !== undefined) ret.attr = importTextAttr(source.attr, ctx)
+/* couner radius */
+export function importCornerRadius(source: types.CornerRadius, ctx?: IImportContext): impl.CornerRadius {
+    const ret: impl.CornerRadius = new impl.CornerRadius (
+        source.lt,
+        source.rt,
+        source.lb,
+        source.rb)
     return ret
 }
-/* text vertical alignment */
-export function importTextVerAlign(source: types.TextVerAlign, ctx?: IImportContext): impl.TextVerAlign {
+/* corner type */
+export function importCornerType(source: types.CornerType, ctx?: IImportContext): impl.CornerType {
     return source
 }
-/* text transform types */
-export function importTextTransformType(source: types.TextTransformType, ctx?: IImportContext): impl.TextTransformType {
-    return source
-}
-/* text orientation */
-export function importTextOrientation(source: types.TextOrientation, ctx?: IImportContext): impl.TextOrientation {
-    return source
-}
-/* text horizontal alignment */
-export function importTextHorAlign(source: types.TextHorAlign, ctx?: IImportContext): impl.TextHorAlign {
-    return source
-}
-/* text behaviour */
-export function importTextBehaviour(source: types.TextBehaviour, ctx?: IImportContext): impl.TextBehaviour {
-    return source
-}
-/* table cell types */
-export function importTableCellType(source: types.TableCellType, ctx?: IImportContext): impl.TableCellType {
-    return source
-}
-/* style */
-export function importStyle(source: types.Style, ctx?: IImportContext): impl.Style {
-    const ret: impl.Style = new impl.Style (
-        (() => {
-            const ret = new BasicArray<impl.Border>()
-            for (let i = 0, len = source.borders && source.borders.length; i < len; i++) {
-                const val = source.borders[i]
-                if (!val.crdtidx) val.crdtidx = [i]
-                const r = importBorder(source.borders[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
-        (() => {
-            const ret = new BasicArray<impl.Fill>()
-            for (let i = 0, len = source.fills && source.fills.length; i < len; i++) {
-                const val = source.fills[i]
-                if (!val.crdtidx) val.crdtidx = [i]
-                const r = importFill(source.fills[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
-        (() => {
-            const ret = new BasicArray<impl.Shadow>()
-            for (let i = 0, len = source.shadows && source.shadows.length; i < len; i++) {
-                const val = source.shadows[i]
-                if (!val.crdtidx) val.crdtidx = [i]
-                const r = importShadow(source.shadows[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
-        })()
-    )
-    if (source.miterLimit !== undefined) ret.miterLimit = source.miterLimit
-    if (source.windingRule !== undefined) ret.windingRule = importWindingRule(source.windingRule, ctx)
-    if (source.blur !== undefined) ret.blur = importBlur(source.blur, ctx)
-    if (source.borderOptions !== undefined) ret.borderOptions = importBorderOptions(source.borderOptions, ctx)
-    if (source.colorControls !== undefined) ret.colorControls = importColorControls(source.colorControls, ctx)
-    if (source.contextSettings !== undefined) ret.contextSettings = importContextSettings(source.contextSettings, ctx)
-    if (source.innerShadows !== undefined) ret.innerShadows = (() => {
-        const ret = new BasicArray<impl.Shadow>()
-        for (let i = 0, len = source.innerShadows && source.innerShadows.length; i < len; i++) {
-            const val = source.innerShadows[i]
-            if (!val.crdtidx) val.crdtidx = [i]
-            const r = importShadow(source.innerShadows[i], ctx)
-            if (r) ret.push(r)
-        }
-        return ret
-    })()
-    if (source.contacts !== undefined) ret.contacts = (() => {
-        const ret = new BasicArray<impl.ContactRole>()
-        for (let i = 0, len = source.contacts && source.contacts.length; i < len; i++) {
-            const val = source.contacts[i]
-            if (!val.crdtidx) val.crdtidx = [i]
-            const r = importContactRole(source.contacts[i], ctx)
-            if (r) ret.push(r)
-        }
-        return ret
-    })()
-    if (source.startMarkerType !== undefined) ret.startMarkerType = importMarkerType(source.startMarkerType, ctx)
-    if (source.endMarkerType !== undefined) ret.endMarkerType = importMarkerType(source.endMarkerType, ctx)
-    if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicMap<string, string>()
-        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-        Object.keys(val).forEach((k) => {
-            const v = val[k];
-            ret.set(k, v)
-        });
-        return ret
-    })()
+/* crdtidx */
+export function importCrdtidx(source: types.Crdtidx, ctx?: IImportContext): impl.Crdtidx {
+    const ret: impl.Crdtidx = new BasicArray()
+    source.forEach((source) => {
+        ret.push(source)
+    })
     return ret
 }
-/* strikethrough types */
-export function importStrikethroughType(source: types.StrikethroughType, ctx?: IImportContext): impl.StrikethroughType {
+/* curve mode */
+export function importCurveMode(source: types.CurveMode, ctx?: IImportContext): impl.CurveMode {
     return source
-}
-/* stop */
-export function importStop(source: types.Stop, ctx?: IImportContext): impl.Stop {
-    const ret: impl.Stop = new impl.Stop (
-        (() => {
-            const ret = new BasicArray<number>()
-            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
-                const r = source.crdtidx[i]
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
-        source.id,
-        source.position,
-        importColor(source.color, ctx)
-    )
-    return ret
-}
-/* span attr */
-export function importSpanAttr(source: types.SpanAttr, ctx?: IImportContext): impl.SpanAttr {
-    const ret: impl.SpanAttr = new impl.SpanAttr (
-    )
-    if (source.fontName !== undefined) ret.fontName = source.fontName
-    if (source.fontSize !== undefined) ret.fontSize = source.fontSize
-    if (source.color !== undefined) ret.color = importColor(source.color, ctx)
-    if (source.strikethrough !== undefined) ret.strikethrough = importStrikethroughType(source.strikethrough, ctx)
-    if (source.underline !== undefined) ret.underline = importUnderlineType(source.underline, ctx)
-    if (source.weight !== undefined) ret.weight = source.weight
-    if (source.italic !== undefined) ret.italic = source.italic
-    if (source.bulletNumbers !== undefined) ret.bulletNumbers = importBulletNumbers(source.bulletNumbers, ctx)
-    if (source.highlight !== undefined) ret.highlight = importColor(source.highlight, ctx)
-    if (source.kerning !== undefined) ret.kerning = source.kerning
-    if (source.transform !== undefined) ret.transform = importTextTransformType(source.transform, ctx)
-    if (source.placeholder !== undefined) ret.placeholder = source.placeholder
-    if (source.fillType !== undefined) ret.fillType = importFillType(source.fillType, ctx)
-    if (source.gradient !== undefined) ret.gradient = importGradient(source.gradient, ctx)
-    return ret
-}
-/* side type */
-export function importSideType(source: types.SideType, ctx?: IImportContext): impl.SideType {
-    return source
-}
-/* shape */
-export function importShape(source: types.Shape, ctx?: IImportContext): impl.Shape {
-    const ret: impl.Shape = new impl.Shape (
-        (() => {
-            const ret = new BasicArray<number>()
-            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
-                const r = source.crdtidx[i]
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
-        source.id,
-        source.name,
-        importShapeType(source.type, ctx),
-        importShapeFrame(source.frame, ctx),
-        importStyle(source.style, ctx)
-    )
-    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
-    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
-    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
-    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
-    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
-    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
-    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
-    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
-    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
-    if (source.rotation !== undefined) ret.rotation = source.rotation
-    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
-    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
-    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
-    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicMap<string, string>()
-        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-        Object.keys(val).forEach((k) => {
-            const v = val[k];
-            ret.set(k, v)
-        });
-        return ret
-    })()
-    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
-    return ret
-}
-/* shape types */
-export function importShapeType(source: types.ShapeType, ctx?: IImportContext): impl.ShapeType {
-    return source
-}
-/* shape frame
- * x,y为parent坐标系里的点
- * width,height为当前shape的坐标空间大小 */
-export function importShapeFrame(source: types.ShapeFrame, ctx?: IImportContext): impl.ShapeFrame {
-    const ret: impl.ShapeFrame = new impl.ShapeFrame (
-        source.x,
-        source.y,
-        source.width,
-        source.height
-    )
-    return ret
-}
-/* shadow */
-export function importShadow(source: types.Shadow, ctx?: IImportContext): impl.Shadow {
-    const ret: impl.Shadow = new impl.Shadow (
-        (() => {
-            const ret = new BasicArray<number>()
-            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
-                const r = source.crdtidx[i]
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
-        source.id,
-        source.isEnabled,
-        source.blurRadius,
-        importColor(source.color, ctx),
-        source.offsetX,
-        source.offsetY,
-        source.spread,
-        importShadowPosition(source.position, ctx)
-    )
-    if (source.contextSettings !== undefined) ret.contextSettings = importGraphicsContextSettings(source.contextSettings, ctx)
-    return ret
-}
-/* shadow position */
-export function importShadowPosition(source: types.ShadowPosition, ctx?: IImportContext): impl.ShadowPosition {
-    return source
-}
-/* resize type */
-export function importResizeType(source: types.ResizeType, ctx?: IImportContext): impl.ResizeType {
-    return source
-}
-/* point 2d */
-export function importPoint2D(source: types.Point2D, ctx?: IImportContext): impl.Point2D {
-    const ret: impl.Point2D = new impl.Point2D (
-        source.x,
-        source.y
-    )
-    return ret
-}
-/* path segment */
-export function importPathSegment(source: types.PathSegment, ctx?: IImportContext): impl.PathSegment {
-    const ret: impl.PathSegment = new impl.PathSegment (
-        (() => {
-            const ret = new BasicArray<number>()
-            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
-                const r = source.crdtidx[i]
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
-        source.id,
-        (() => {
-            const ret = new BasicArray<impl.CurvePoint>()
-            for (let i = 0, len = source.points && source.points.length; i < len; i++) {
-                const val = source.points[i]
-                if (!val.crdtidx) val.crdtidx = [i]
-                const r = importCurvePoint(source.points[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
-        source.isClosed
-    )
-    return ret
-}
-/* para */
-export function importPara(source: types.Para, ctx?: IImportContext): impl.Para {
-    const ret: impl.Para = new impl.Para (
-        source.text,
-        (() => {
-            const ret = new BasicArray<impl.Span>()
-            for (let i = 0, len = source.spans && source.spans.length; i < len; i++) {
-                const r = importSpan(source.spans[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
-        })()
-    )
-    if (source.attr !== undefined) ret.attr = importParaAttr(source.attr, ctx)
-    return ret
-}
-/* page list item */
-export function importPageListItem(source: types.PageListItem, ctx?: IImportContext): impl.PageListItem {
-    const ret: impl.PageListItem = new impl.PageListItem (
-        (() => {
-            const ret = new BasicArray<number>()
-            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
-                const r = source.crdtidx[i]
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
-        source.id,
-        source.name
-    )
-    if (source.versionId !== undefined) ret.versionId = source.versionId
-    return ret
-}
-/* padding */
-export function importPadding(source: types.Padding, ctx?: IImportContext): impl.Padding {
-    const ret: impl.Padding = new impl.Padding (
-    )
-    if (source.left !== undefined) ret.left = source.left
-    if (source.top !== undefined) ret.top = source.top
-    if (source.right !== undefined) ret.right = source.right
-    if (source.bottom !== undefined) ret.bottom = source.bottom
-    return ret
-}
-/* override types */
-export function importOverrideType(source: types.OverrideType, ctx?: IImportContext): impl.OverrideType {
-    return source
-}
-/* marker type */
-export function importMarkerType(source: types.MarkerType, ctx?: IImportContext): impl.MarkerType {
-    return source
-}
-/* line join style */
-export function importLineJoinStyle(source: types.LineJoinStyle, ctx?: IImportContext): impl.LineJoinStyle {
-    return source
-}
-/* line cap style */
-export function importLineCapStyle(source: types.LineCapStyle, ctx?: IImportContext): impl.LineCapStyle {
-    return source
-}
-/* graphics contex settings */
-export function importGraphicsContextSettings(source: types.GraphicsContextSettings, ctx?: IImportContext): impl.GraphicsContextSettings {
-    const ret: impl.GraphicsContextSettings = new impl.GraphicsContextSettings (
-        importBlendMode(source.blendMode, ctx),
-        source.opacity
-    )
-    return ret
-}
-/* gradient */
-export function importGradient(source: types.Gradient, ctx?: IImportContext): impl.Gradient {
-    const ret: impl.Gradient = new impl.Gradient (
-        importPoint2D(source.from, ctx),
-        importPoint2D(source.to, ctx),
-        importGradientType(source.gradientType, ctx),
-        (() => {
-            const ret = new BasicArray<impl.Stop>()
-            for (let i = 0, len = source.stops && source.stops.length; i < len; i++) {
-                const val = source.stops[i]
-                if (!val.crdtidx) val.crdtidx = [i]
-                const r = importStop(source.stops[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
-        })()
-    )
-    if (source.elipseLength !== undefined) ret.elipseLength = source.elipseLength
-    if (source.gradientOpacity !== undefined) ret.gradientOpacity = source.gradientOpacity
-    return ret
-}
-/* gradient type */
-export function importGradientType(source: types.GradientType, ctx?: IImportContext): impl.GradientType {
-    return source
-}
-/* fill */
-export function importFill(source: types.Fill, ctx?: IImportContext): impl.Fill {
-    const ret: impl.Fill = new impl.Fill (
-        (() => {
-            const ret = new BasicArray<number>()
-            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
-                const r = source.crdtidx[i]
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
-        source.id,
-        source.isEnabled,
-        importFillType(source.fillType, ctx),
-        importColor(source.color, ctx)
-    )
-    if (source.contextSettings !== undefined) ret.contextSettings = importContextSettings(source.contextSettings, ctx)
-    if (source.gradient !== undefined) ret.gradient = importGradient(source.gradient, ctx)
-    if (source.imageRef !== undefined) ret.imageRef = source.imageRef
-    if (source.fillRule !== undefined) ret.fillRule = importFillRule(source.fillRule, ctx)
-    // inject code
-    if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
-    return ret
-}
-/* fill types */
-export function importFillType(source: types.FillType, ctx?: IImportContext): impl.FillType {
-    return source
-}
-/* fill rule */
-export function importFillRule(source: types.FillRule, ctx?: IImportContext): impl.FillRule {
-    return source
-}
-/* visible scale type */
-export function importExportVisibleScaleType(source: types.ExportVisibleScaleType, ctx?: IImportContext): impl.ExportVisibleScaleType {
-    return source
-}
-/* export options */
-export function importExportOptions(source: types.ExportOptions, ctx?: IImportContext): impl.ExportOptions {
-    const ret: impl.ExportOptions = new impl.ExportOptions (
-        (() => {
-            const ret = new BasicArray<impl.ExportFormat>()
-            for (let i = 0, len = source.exportFormats && source.exportFormats.length; i < len; i++) {
-                const val = source.exportFormats[i]
-                if (!val.crdtidx) val.crdtidx = [i]
-                const r = importExportFormat(source.exportFormats[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
-        source.childOptions,
-        source.shouldTrim,
-        source.trimTransparent,
-        source.canvasBackground,
-        source.unfold
-    )
-    return ret
-}
-/* export format */
-export function importExportFormat(source: types.ExportFormat, ctx?: IImportContext): impl.ExportFormat {
-    const ret: impl.ExportFormat = new impl.ExportFormat (
-        (() => {
-            const ret = new BasicArray<number>()
-            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
-                const r = source.crdtidx[i]
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
-        source.id,
-        source.absoluteSize,
-        importExportFileFormat(source.fileFormat, ctx),
-        source.name,
-        importExportFormatNameingScheme(source.namingScheme, ctx),
-        source.scale,
-        importExportVisibleScaleType(source.visibleScaleType, ctx)
-    )
-    return ret
-}
-/* export format nameing scheme */
-export function importExportFormatNameingScheme(source: types.ExportFormatNameingScheme, ctx?: IImportContext): impl.ExportFormatNameingScheme {
-    return source
-}
-/* export file format */
-export function importExportFileFormat(source: types.ExportFileFormat, ctx?: IImportContext): impl.ExportFileFormat {
-    return source
-}
-/* ellipse attributes */
-export function importEllipse(source: types.Ellipse, ctx?: IImportContext): impl.Ellipse {
-    const ret: impl.Ellipse = new impl.Ellipse (
-        source.cx,
-        source.cy,
-        source.rx,
-        source.ry
-    )
-    return ret
-}
-/* document meta */
-export function importDocumentMeta(source: types.DocumentMeta, ctx?: IImportContext): impl.DocumentMeta {
-    // inject code
-    if (!(source as any).symbolregist) (source as any).symbolregist = {};
-    const ret: impl.DocumentMeta = new impl.DocumentMeta (
-        source.id,
-        source.name,
-        (() => {
-            const ret = new BasicArray<impl.PageListItem>()
-            for (let i = 0, len = source.pagesList && source.pagesList.length; i < len; i++) {
-                const val = source.pagesList[i]
-                if (!val.crdtidx) val.crdtidx = [i]
-                const r = importPageListItem(source.pagesList[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
-        source.lastCmdId,
-        (() => {
-            const ret = new BasicMap<string, string>()
-            const val = source.symbolregist as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-            Object.keys(val).forEach((k) => {
-                const v = val[k];
-                ret.set(k, v)
-            });
-            return ret
-        })()
-    )
-    if (source.freesymbolsVersionId !== undefined) ret.freesymbolsVersionId = source.freesymbolsVersionId
-    return ret
 }
 /* curve point */
+function importCurvePointOptional(tar: impl.CurvePoint, source: types.CurvePoint, ctx?: IImportContext) {
+    if (source.radius) tar.radius = source.radius
+    if (source.fromX) tar.fromX = source.fromX
+    if (source.fromY) tar.fromY = source.fromY
+    if (source.toX) tar.toX = source.toX
+    if (source.toY) tar.toY = source.toY
+    if (source.hasFrom) tar.hasFrom = source.hasFrom
+    if (source.hasTo) tar.hasTo = source.hasTo
+}
 export function importCurvePoint(source: types.CurvePoint, ctx?: IImportContext): impl.CurvePoint {
-    // inject code
+        // inject code
     const _source = source as any;
     if (_source.cornerRadius) _source.radius = _source.cornerRadius;
     if (_source.hasCurveFrom) {
@@ -624,198 +156,429 @@ export function importCurvePoint(source: types.CurvePoint, ctx?: IImportContext)
     if (_source.curveMode) {
         _source.mode = _source.curveMode;
     }
+
     const ret: impl.CurvePoint = new impl.CurvePoint (
-        (() => {
-            const ret = new BasicArray<number>()
-            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
-                const r = source.crdtidx[i]
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
+        importCrdtidx(source.crdtidx, ctx),
         source.id,
         source.x,
         source.y,
-        importCurveMode(source.mode, ctx)
-    )
-    if (source.radius !== undefined) ret.radius = source.radius
-    if (source.fromX !== undefined) ret.fromX = source.fromX
-    if (source.fromY !== undefined) ret.fromY = source.fromY
-    if (source.toX !== undefined) ret.toX = source.toX
-    if (source.toY !== undefined) ret.toY = source.toY
-    if (source.hasFrom !== undefined) ret.hasFrom = source.hasFrom
-    if (source.hasTo !== undefined) ret.hasTo = source.hasTo
+        importCurveMode(source.mode, ctx))
+    importCurvePointOptional(ret, source, ctx)
     return ret
 }
-/* curve mode */
-export function importCurveMode(source: types.CurveMode, ctx?: IImportContext): impl.CurveMode {
+export function importDocumentMeta_pagesList(source: types.DocumentMeta_pagesList, ctx?: IImportContext): DocumentMeta_pagesList {
+    const ret: DocumentMeta_pagesList = new BasicArray()
+    source.forEach((source) => {
+        ret.push(importPageListItem(source, ctx))
+    })
+    return ret
+}
+/* ellipse attributes */
+export function importEllipse(source: types.Ellipse, ctx?: IImportContext): impl.Ellipse {
+    const ret: impl.Ellipse = new impl.Ellipse (
+        source.cx,
+        source.cy,
+        source.rx,
+        source.ry)
+    return ret
+}
+/* export file format */
+export function importExportFileFormat(source: types.ExportFileFormat, ctx?: IImportContext): impl.ExportFileFormat {
     return source
 }
-/* crdt number */
-export function importCrdtNumber(source: types.CrdtNumber, ctx?: IImportContext): impl.CrdtNumber {
-    const ret: impl.CrdtNumber = new impl.CrdtNumber (
-        source.id,
-        (() => {
-            const ret = new BasicArray<number>()
-            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
-                const r = source.crdtidx[i]
-                if (r) ret.push(r)
+/* export format nameing scheme */
+export function importExportFormatNameingScheme(source: types.ExportFormatNameingScheme, ctx?: IImportContext): impl.ExportFormatNameingScheme {
+    return source
+}
+export function importExportOptions_exportFormats(source: types.ExportOptions_exportFormats, ctx?: IImportContext): ExportOptions_exportFormats {
+    const ret: ExportOptions_exportFormats = new BasicArray()
+    source.forEach((source) => {
+        ret.push(importExportFormat(source, ctx))
+    })
+    return ret
+}
+/* visible scale type */
+export function importExportVisibleScaleType(source: types.ExportVisibleScaleType, ctx?: IImportContext): impl.ExportVisibleScaleType {
+    return source
+}
+/* fill rule */
+export function importFillRule(source: types.FillRule, ctx?: IImportContext): impl.FillRule {
+    return source
+}
+/* fill types */
+export function importFillType(source: types.FillType, ctx?: IImportContext): impl.FillType {
+    return source
+}
+/* gradient type */
+export function importGradientType(source: types.GradientType, ctx?: IImportContext): impl.GradientType {
+    return source
+}
+export function importGradient_stops(source: types.Gradient_stops, ctx?: IImportContext): Gradient_stops {
+    const ret: Gradient_stops = new BasicArray()
+    source.forEach((source) => {
+        ret.push(importStop(source, ctx))
+    })
+    return ret
+}
+/* graphics contex settings */
+export function importGraphicsContextSettings(source: types.GraphicsContextSettings, ctx?: IImportContext): impl.GraphicsContextSettings {
+    const ret: impl.GraphicsContextSettings = new impl.GraphicsContextSettings (
+        importBlendMode(source.blendMode, ctx),
+        source.opacity)
+    return ret
+}
+export function importGroupShape_childs(source: types.GroupShape_childs, ctx?: IImportContext): GroupShape_childs {
+    const ret: GroupShape_childs = new BasicArray()
+    source.forEach((source) => {
+        ret.push((() => {
+            if (typeof source !== "object") {
+                return source
             }
-            return ret
-        })(),
-        source.value
-    )
-    return ret
-}
-/* corner type */
-export function importCornerType(source: types.CornerType, ctx?: IImportContext): impl.CornerType {
-    return source
-}
-/* couner radius */
-export function importCornerRadius(source: types.CornerRadius, ctx?: IImportContext): impl.CornerRadius {
-    const ret: impl.CornerRadius = new impl.CornerRadius (
-        source.lt,
-        source.rt,
-        source.lb,
-        source.rb
-    )
-    return ret
-}
-/* context settings */
-export function importContextSettings(source: types.ContextSettings, ctx?: IImportContext): impl.ContextSettings {
-    const ret: impl.ContextSettings = new impl.ContextSettings (
-        importBlendMode(source.blenMode, ctx),
-        source.opacity
-    )
-    return ret
-}
-/* contact type */
-export function importContactType(source: types.ContactType, ctx?: IImportContext): impl.ContactType {
-    return source
-}
-/* contactstyle */
-export function importContactRole(source: types.ContactRole, ctx?: IImportContext): impl.ContactRole {
-    const ret: impl.ContactRole = new impl.ContactRole (
-        (() => {
-            const ret = new BasicArray<number>()
-            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
-                const r = source.crdtidx[i]
-                if (r) ret.push(r)
+            if (source.typeId === "group-shape") {
+                return importGroupShape(source as types.GroupShape, ctx)
             }
-            return ret
-        })(),
-        source.id,
-        importContactRoleType(source.roleType, ctx),
-        source.shapeId
-    )
+            if (source.typeId === "image-shape") {
+                return importImageShape(source as types.ImageShape, ctx)
+            }
+            if (source.typeId === "path-shape") {
+                return importPathShape(source as types.PathShape, ctx)
+            }
+            if (source.typeId === "path-shape2") {
+                return importPathShape2(source as types.PathShape2, ctx)
+            }
+            if (source.typeId === "rect-shape") {
+                return importRectShape(source as types.RectShape, ctx)
+            }
+            if (source.typeId === "symbol-ref-shape") {
+                return importSymbolRefShape(source as types.SymbolRefShape, ctx)
+            }
+            if (source.typeId === "symbol-shape") {
+                return importSymbolShape(source as types.SymbolShape, ctx)
+            }
+            if (source.typeId === "symbol-union-shape") {
+                return importSymbolUnionShape(source as types.SymbolUnionShape, ctx)
+            }
+            if (source.typeId === "text-shape") {
+                return importTextShape(source as types.TextShape, ctx)
+            }
+            if (source.typeId === "artboard") {
+                return importArtboard(source as types.Artboard, ctx)
+            }
+            if (source.typeId === "line-shape") {
+                return importLineShape(source as types.LineShape, ctx)
+            }
+            if (source.typeId === "oval-shape") {
+                return importOvalShape(source as types.OvalShape, ctx)
+            }
+            if (source.typeId === "table-shape") {
+                return importTableShape(source as types.TableShape, ctx)
+            }
+            if (source.typeId === "contact-shape") {
+                return importContactShape(source as types.ContactShape, ctx)
+            }
+            if (source.typeId === "shape") {
+                return importShape(source as types.Shape, ctx)
+            }
+            if (source.typeId === "cutout-shape") {
+                return importCutoutShape(source as types.CutoutShape, ctx)
+            }
+            if (source.typeId === "bool-shape") {
+                return importBoolShape(source as types.BoolShape, ctx)
+            }
+            if (source.typeId === "polygon-shape") {
+                return importPolygonShape(source as types.PolygonShape, ctx)
+            }
+            if (source.typeId === "star-shape") {
+                return importStarShape(source as types.StarShape, ctx)
+            }
+            throw new Error("unknow typeId: " + source.typeId)
+        })())
+    })
     return ret
 }
-/* contact role type */
-export function importContactRoleType(source: types.ContactRoleType, ctx?: IImportContext): impl.ContactRoleType {
+/* line cap style */
+export function importLineCapStyle(source: types.LineCapStyle, ctx?: IImportContext): impl.LineCapStyle {
     return source
 }
-/* contact form */
-export function importContactForm(source: types.ContactForm, ctx?: IImportContext): impl.ContactForm {
-    const ret: impl.ContactForm = new impl.ContactForm (
-        importContactType(source.contactType, ctx),
-        source.shapeId
-    )
+/* line join style */
+export function importLineJoinStyle(source: types.LineJoinStyle, ctx?: IImportContext): impl.LineJoinStyle {
+    return source
+}
+/* marker type */
+export function importMarkerType(source: types.MarkerType, ctx?: IImportContext): impl.MarkerType {
+    return source
+}
+/* override types */
+export function importOverrideType(source: types.OverrideType, ctx?: IImportContext): impl.OverrideType {
+    return source
+}
+/* padding */
+function importPaddingOptional(tar: impl.Padding, source: types.Padding, ctx?: IImportContext) {
+    if (source.left) tar.left = source.left
+    if (source.top) tar.top = source.top
+    if (source.right) tar.right = source.right
+    if (source.bottom) tar.bottom = source.bottom
+}
+export function importPadding(source: types.Padding, ctx?: IImportContext): impl.Padding {
+    const ret: impl.Padding = new impl.Padding ()
+    importPaddingOptional(ret, source, ctx)
     return ret
 }
-/* comment */
-export function importComment(source: types.Comment, ctx?: IImportContext): impl.Comment {
-    const ret: impl.Comment = new impl.Comment (
-        source.pageId,
+/* page list item */
+function importPageListItemOptional(tar: impl.PageListItem, source: types.PageListItem, ctx?: IImportContext) {
+    if (source.versionId) tar.versionId = source.versionId
+}
+export function importPageListItem(source: types.PageListItem, ctx?: IImportContext): impl.PageListItem {
+    const ret: impl.PageListItem = new impl.PageListItem (
+        importCrdtidx(source.crdtidx, ctx),
         source.id,
-        importShapeFrame(source.frame, ctx),
-        importUserInfo(source.user, ctx),
-        source.createAt,
-        source.content,
-        importShape(source.parasiticBody, ctx)
-    )
-    if (source.parentId !== undefined) ret.parentId = source.parentId
-    if (source.rootId !== undefined) ret.rootId = source.rootId
+        source.name)
+    importPageListItemOptional(ret, source, ctx)
     return ret
 }
-/* color */
-export function importColor(source: types.Color, ctx?: IImportContext): impl.Color {
-    const ret: impl.Color = new impl.Color (
-        source.alpha,
-        source.red,
-        source.green,
-        source.blue
-    )
+export function importPara_spans(source: types.Para_spans, ctx?: IImportContext): Para_spans {
+    const ret: Para_spans = new BasicArray()
+    source.forEach((source) => {
+        ret.push(importSpan(source, ctx))
+    })
     return ret
 }
-/* color controls */
-export function importColorControls(source: types.ColorControls, ctx?: IImportContext): impl.ColorControls {
-    const ret: impl.ColorControls = new impl.ColorControls (
+export function importPathSegment_points(source: types.PathSegment_points, ctx?: IImportContext): PathSegment_points {
+    const ret: PathSegment_points = new BasicArray()
+    source.forEach((source) => {
+        ret.push(importCurvePoint(source, ctx))
+    })
+    return ret
+}
+/* path segment */
+export function importPathSegment(source: types.PathSegment, ctx?: IImportContext): impl.PathSegment {
+    const ret: impl.PathSegment = new impl.PathSegment (
+        importCrdtidx(source.crdtidx, ctx),
+        source.id,
+        importPathSegment_points(source.points, ctx),
+        source.isClosed)
+    return ret
+}
+export function importPathShape_pathsegs(source: types.PathShape_pathsegs, ctx?: IImportContext): PathShape_pathsegs {
+    const ret: PathShape_pathsegs = new BasicArray()
+    source.forEach((source) => {
+        ret.push(importPathSegment(source, ctx))
+    })
+    return ret
+}
+export function importPathShape2_pathsegs(source: types.PathShape2_pathsegs, ctx?: IImportContext): PathShape2_pathsegs {
+    const ret: PathShape2_pathsegs = new BasicArray()
+    source.forEach((source) => {
+        ret.push(importPathSegment(source, ctx))
+    })
+    return ret
+}
+/* point 2d */
+export function importPoint2D(source: types.Point2D, ctx?: IImportContext): impl.Point2D {
+    const ret: impl.Point2D = new impl.Point2D (
+        source.x,
+        source.y)
+    return ret
+}
+/* resize type */
+export function importResizeType(source: types.ResizeType, ctx?: IImportContext): impl.ResizeType {
+    return source
+}
+/* shadow position */
+export function importShadowPosition(source: types.ShadowPosition, ctx?: IImportContext): impl.ShadowPosition {
+    return source
+}
+/* shadow */
+function importShadowOptional(tar: impl.Shadow, source: types.Shadow, ctx?: IImportContext) {
+    if (source.contextSettings) tar.contextSettings = importGraphicsContextSettings(source.contextSettings, ctx)
+}
+export function importShadow(source: types.Shadow, ctx?: IImportContext): impl.Shadow {
+    const ret: impl.Shadow = new impl.Shadow (
+        importCrdtidx(source.crdtidx, ctx),
+        source.id,
         source.isEnabled,
-        source.brightness,
-        source.contrast,
-        source.hue,
-        source.saturation
-    )
-    return ret
-}
-/* bullet numbers */
-export function importBulletNumbers(source: types.BulletNumbers, ctx?: IImportContext): impl.BulletNumbers {
-    const ret: impl.BulletNumbers = new impl.BulletNumbers (
-        importBulletNumbersType(source.type, ctx)
-    )
-    if (source.behavior !== undefined) ret.behavior = importBulletNumbersBehavior(source.behavior, ctx)
-    if (source.offset !== undefined) ret.offset = source.offset
-    return ret
-}
-/* bullet & item number types */
-export function importBulletNumbersType(source: types.BulletNumbersType, ctx?: IImportContext): impl.BulletNumbersType {
-    return source
-}
-/* bullet & item number behavior */
-export function importBulletNumbersBehavior(source: types.BulletNumbersBehavior, ctx?: IImportContext): impl.BulletNumbersBehavior {
-    return source
-}
-/* border */
-export function importBorder(source: types.Border, ctx?: IImportContext): impl.Border {
-    // inject code
-    if (!(source as any).sideSetting) {
-        source.sideSetting = {
-            sideType: types.SideType.Normal,
-            thicknessTop: source.thickness,
-            thicknessLeft: source.thickness,
-            thicknessBottom: source.thickness,
-            thicknessRight: source.thickness,
-        }
-    }
-    const ret: impl.Border = new impl.Border (
-        (() => {
-            const ret = new BasicArray<number>()
-            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
-                const r = source.crdtidx[i]
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
-        source.id,
-        source.isEnabled,
-        importFillType(source.fillType, ctx),
+        source.blurRadius,
         importColor(source.color, ctx),
-        importBorderPosition(source.position, ctx),
-        source.thickness,
-        importBorderStyle(source.borderStyle, ctx),
-        importCornerType(source.cornerType, ctx),
-        importBorderSideSetting(source.sideSetting, ctx)
-    )
-    if (source.contextSettings !== undefined) ret.contextSettings = importContextSettings(source.contextSettings, ctx)
-    if (source.gradient !== undefined) ret.gradient = importGradient(source.gradient, ctx)
+        source.offsetX,
+        source.offsetY,
+        source.spread,
+        importShadowPosition(source.position, ctx))
+    importShadowOptional(ret, source, ctx)
     return ret
 }
-/* border style */
-export function importBorderStyle(source: types.BorderStyle, ctx?: IImportContext): impl.BorderStyle {
-    const ret: impl.BorderStyle = new impl.BorderStyle (
-        source.length,
-        source.gap
-    )
+/* shape frame
+ * x,y为parent坐标系里的点
+ * width,height为当前shape的坐标空间大小 */
+export function importShapeFrame(source: types.ShapeFrame, ctx?: IImportContext): impl.ShapeFrame {
+    const ret: impl.ShapeFrame = new impl.ShapeFrame (
+        source.x,
+        source.y,
+        source.width,
+        source.height)
+    return ret
+}
+/* shape types */
+export function importShapeType(source: types.ShapeType, ctx?: IImportContext): impl.ShapeType {
+    return source
+}
+/* side type */
+export function importSideType(source: types.SideType, ctx?: IImportContext): impl.SideType {
+    return source
+}
+/* stop */
+export function importStop(source: types.Stop, ctx?: IImportContext): impl.Stop {
+    const ret: impl.Stop = new impl.Stop (
+        importCrdtidx(source.crdtidx, ctx),
+        source.id,
+        source.position,
+        importColor(source.color, ctx))
+    return ret
+}
+/* strikethrough types */
+export function importStrikethroughType(source: types.StrikethroughType, ctx?: IImportContext): impl.StrikethroughType {
+    return source
+}
+export function importStyle_borders(source: types.Style_borders, ctx?: IImportContext): Style_borders {
+    const ret: Style_borders = new BasicArray()
+    source.forEach((source) => {
+        ret.push(importBorder(source, ctx))
+    })
+    return ret
+}
+export function importStyle_fills(source: types.Style_fills, ctx?: IImportContext): Style_fills {
+    const ret: Style_fills = new BasicArray()
+    source.forEach((source) => {
+        ret.push(importFill(source, ctx))
+    })
+    return ret
+}
+export function importStyle_shadows(source: types.Style_shadows, ctx?: IImportContext): Style_shadows {
+    const ret: Style_shadows = new BasicArray()
+    source.forEach((source) => {
+        ret.push(importShadow(source, ctx))
+    })
+    return ret
+}
+export function importStyle_innerShadows(source: types.Style_innerShadows, ctx?: IImportContext): Style_innerShadows {
+    const ret: Style_innerShadows = new BasicArray()
+    source.forEach((source) => {
+        ret.push(importShadow(source, ctx))
+    })
+    return ret
+}
+export function importStyle_contacts(source: types.Style_contacts, ctx?: IImportContext): Style_contacts {
+    const ret: Style_contacts = new BasicArray()
+    source.forEach((source) => {
+        ret.push(importContactRole(source, ctx))
+    })
+    return ret
+}
+/* table cell types */
+export function importTableCellType(source: types.TableCellType, ctx?: IImportContext): impl.TableCellType {
+    return source
+}
+export function importTableShape_rowHeights(source: types.TableShape_rowHeights, ctx?: IImportContext): TableShape_rowHeights {
+    const ret: TableShape_rowHeights = new BasicArray()
+    source.forEach((source) => {
+        ret.push(importCrdtNumber(source, ctx))
+    })
+    return ret
+}
+export function importTableShape_colWidths(source: types.TableShape_colWidths, ctx?: IImportContext): TableShape_colWidths {
+    const ret: TableShape_colWidths = new BasicArray()
+    source.forEach((source) => {
+        ret.push(importCrdtNumber(source, ctx))
+    })
+    return ret
+}
+/* text behaviour */
+export function importTextBehaviour(source: types.TextBehaviour, ctx?: IImportContext): impl.TextBehaviour {
+    return source
+}
+/* text horizontal alignment */
+export function importTextHorAlign(source: types.TextHorAlign, ctx?: IImportContext): impl.TextHorAlign {
+    return source
+}
+/* text orientation */
+export function importTextOrientation(source: types.TextOrientation, ctx?: IImportContext): impl.TextOrientation {
+    return source
+}
+/* text transform types */
+export function importTextTransformType(source: types.TextTransformType, ctx?: IImportContext): impl.TextTransformType {
+    return source
+}
+/* text vertical alignment */
+export function importTextVerAlign(source: types.TextVerAlign, ctx?: IImportContext): impl.TextVerAlign {
+    return source
+}
+export function importText_paras(source: types.Text_paras, ctx?: IImportContext): Text_paras {
+    const ret: Text_paras = new BasicArray()
+    source.forEach((source) => {
+        ret.push(importPara(source, ctx))
+    })
+    return ret
+}
+/* underline types */
+export function importUnderlineType(source: types.UnderlineType, ctx?: IImportContext): impl.UnderlineType {
+    return source
+}
+/* user infomation */
+export function importUserInfo(source: types.UserInfo, ctx?: IImportContext): impl.UserInfo {
+    const ret: impl.UserInfo = new impl.UserInfo (
+        source.userId,
+        source.userNickname,
+        source.avatar)
+    return ret
+}
+/* variable types */
+export function importVariableType(source: types.VariableType, ctx?: IImportContext): impl.VariableType {
+    return source
+}
+export function importVariable_0(source: types.Variable_0, ctx?: IImportContext): Variable_0 {
+    const ret: Variable_0 = new BasicArray()
+    source.forEach((source) => {
+        ret.push((() => {
+            if (typeof source !== "object") {
+                return source
+            }
+            if (source.typeId === "border") {
+                return importBorder(source as types.Border, ctx)
+            }
+            if (source.typeId === "fill") {
+                return importFill(source as types.Fill, ctx)
+            }
+            if (source.typeId === "shadow") {
+                return importShadow(source as types.Shadow, ctx)
+            }
+            throw new Error("unknow typeId: " + source.typeId)
+        })())
+    })
+    return ret
+}
+/* winding rule */
+export function importWindingRule(source: types.WindingRule, ctx?: IImportContext): impl.WindingRule {
+    return source
+}
+/* blur */
+function importBlurOptional(tar: impl.Blur, source: types.Blur, ctx?: IImportContext) {
+    if (source.motionAngle) tar.motionAngle = source.motionAngle
+    if (source.radius) tar.radius = source.radius
+}
+export function importBlur(source: types.Blur, ctx?: IImportContext): impl.Blur {
+    const ret: impl.Blur = new impl.Blur (
+        source.isEnabled,
+        importPoint2D(source.center, ctx),
+        source.saturation,
+        importBlurType(source.type, ctx))
+    importBlurOptional(ret, source, ctx)
+    return ret
+}
+/* border options */
+export function importBorderOptions(source: types.BorderOptions, ctx?: IImportContext): impl.BorderOptions {
+    const ret: impl.BorderOptions = new impl.BorderOptions (
+        source.isEnabled,
+        importLineCapStyle(source.lineCapStyle, ctx),
+        importLineJoinStyle(source.lineJoinStyle, ctx))
     return ret
 }
 /* border side setting */
@@ -825,198 +588,313 @@ export function importBorderSideSetting(source: types.BorderSideSetting, ctx?: I
         source.thicknessTop,
         source.thicknessLeft,
         source.thicknessBottom,
-        source.thicknessRight
-    )
+        source.thicknessRight)
     return ret
 }
-/* border position */
-export function importBorderPosition(source: types.BorderPosition, ctx?: IImportContext): impl.BorderPosition {
-    return source
-}
-/* border options */
-export function importBorderOptions(source: types.BorderOptions, ctx?: IImportContext): impl.BorderOptions {
-    const ret: impl.BorderOptions = new impl.BorderOptions (
-        source.isEnabled,
-        importLineCapStyle(source.lineCapStyle, ctx),
-        importLineJoinStyle(source.lineJoinStyle, ctx)
-    )
+/* contact form */
+export function importContactForm(source: types.ContactForm, ctx?: IImportContext): impl.ContactForm {
+    const ret: impl.ContactForm = new impl.ContactForm (
+        importContactType(source.contactType, ctx),
+        source.shapeId)
     return ret
 }
-/* bool op types */
-export function importBoolOp(source: types.BoolOp, ctx?: IImportContext): impl.BoolOp {
-    return source
-}
-/* blur */
-export function importBlur(source: types.Blur, ctx?: IImportContext): impl.Blur {
-    const ret: impl.Blur = new impl.Blur (
-        source.isEnabled,
-        importPoint2D(source.center, ctx),
-        source.saturation,
-        importBlurType(source.type, ctx)
-    )
-    if (source.motionAngle !== undefined) ret.motionAngle = source.motionAngle
-    if (source.radius !== undefined) ret.radius = source.radius
-    return ret
-}
-/* blur types */
-export function importBlurType(source: types.BlurType, ctx?: IImportContext): impl.BlurType {
-    return source
-}
-/* blend mode */
-export function importBlendMode(source: types.BlendMode, ctx?: IImportContext): impl.BlendMode {
-    return source
-}
-/* text shape */
-export function importTextShape(source: types.TextShape, ctx?: IImportContext): impl.TextShape {
-    const ret: impl.TextShape = new impl.TextShape (
-        (() => {
-            const ret = new BasicArray<number>()
-            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
-                const r = source.crdtidx[i]
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
+/* contactstyle */
+export function importContactRole(source: types.ContactRole, ctx?: IImportContext): impl.ContactRole {
+    const ret: impl.ContactRole = new impl.ContactRole (
+        importCrdtidx(source.crdtidx, ctx),
         source.id,
-        source.name,
-        importShapeType(source.type, ctx),
-        importShapeFrame(source.frame, ctx),
-        importStyle(source.style, ctx),
-        importText(source.text, ctx)
-    )
-    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
-    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
-    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
-    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
-    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
-    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
-    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
-    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
-    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
-    if (source.rotation !== undefined) ret.rotation = source.rotation
-    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
-    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
-    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
-    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicMap<string, string>()
-        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-        Object.keys(val).forEach((k) => {
-            const v = val[k];
-            ret.set(k, v)
-        });
-        return ret
-    })()
-    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
-    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
+        importContactRoleType(source.roleType, ctx),
+        source.shapeId)
     return ret
 }
-/* table shape */
-export function importTableShape(source: types.TableShape, ctx?: IImportContext): impl.TableShape {
-    // inject code
-    // 兼容旧数据
-    if ((source as any).datas || (source as any).childs) {
-        source.colWidths = ((source as any).colWidths as number[]).map((v, i) => ({
-            id: uuid(),
-            crdtidx: [i],
-            value: v
-        } as types.CrdtNumber));
-        source.rowHeights = ((source as any).rowHeights as number[]).map((v, i) => ({
-            id: uuid(),
-            crdtidx: [i],
-            value: v
-        } as types.CrdtNumber));
+/* crdt number */
+export function importCrdtNumber(source: types.CrdtNumber, ctx?: IImportContext): impl.CrdtNumber {
+    const ret: impl.CrdtNumber = new impl.CrdtNumber (
+        source.id,
+        importCrdtidx(source.crdtidx, ctx),
+        source.value)
+    return ret
+}
+/* document meta */
+function importDocumentMetaOptional(tar: impl.DocumentMeta, source: types.DocumentMeta, ctx?: IImportContext) {
+    if (source.freesymbolsVersionId) tar.freesymbolsVersionId = source.freesymbolsVersionId
+}
+export function importDocumentMeta(source: types.DocumentMeta, ctx?: IImportContext): impl.DocumentMeta {
+        // inject code
+    if (!(source as any).symbolregist) (source as any).symbolregist = {};
 
-        const colCount = source.colWidths.length;
-        const rowCount = source.rowHeights.length;
-        const datas: types.TableCell[] = (source as any).datas || (source as any).childs;
-        const cells: {[key: string]: types.TableCell} = {};
-        for (let i = 0; i < datas.length; ++i) {
-            const c = datas[i];
-            if (!c) continue;
-            const ri = Math.floor(i / colCount);
-            const ci = i % colCount;
-            if (ri >= rowCount) break;
-            const id = source.rowHeights[ri].id + ',' + source.colWidths[ci].id;
-            cells[id] = c;
-            c.id = id;
-        }
-        source.cells = cells as any;
-    }
-    const ret: impl.TableShape = new impl.TableShape (
+    const ret: impl.DocumentMeta = new impl.DocumentMeta (
+        source.id,
+        source.name,
+        importDocumentMeta_pagesList(source.pagesList, ctx),
+        source.lastCmdId,
         (() => {
-            const ret = new BasicArray<number>()
-            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
-                const r = source.crdtidx[i]
-                if (r) ret.push(r)
-            }
+            const ret = new BasicMap<string, string>()
+            const _val = source.symbolregist as any
+            Object.keys(source.symbolregist).forEach((k) => {
+                const val = _val[k]
+                ret.set(k, val)
+            })
             return ret
-        })(),
+        })())
+    importDocumentMetaOptional(ret, source, ctx)
+    return ret
+}
+/* export format */
+export function importExportFormat(source: types.ExportFormat, ctx?: IImportContext): impl.ExportFormat {
+    const ret: impl.ExportFormat = new impl.ExportFormat (
+        importCrdtidx(source.crdtidx, ctx),
+        source.id,
+        source.absoluteSize,
+        importExportFileFormat(source.fileFormat, ctx),
+        source.name,
+        importExportFormatNameingScheme(source.namingScheme, ctx),
+        source.scale,
+        importExportVisibleScaleType(source.visibleScaleType, ctx))
+    return ret
+}
+/* export options */
+export function importExportOptions(source: types.ExportOptions, ctx?: IImportContext): impl.ExportOptions {
+    const ret: impl.ExportOptions = new impl.ExportOptions (
+        importExportOptions_exportFormats(source.exportFormats, ctx),
+        source.childOptions,
+        source.shouldTrim,
+        source.trimTransparent,
+        source.canvasBackground,
+        source.unfold)
+    return ret
+}
+/* gradient */
+function importGradientOptional(tar: impl.Gradient, source: types.Gradient, ctx?: IImportContext) {
+    if (source.elipseLength) tar.elipseLength = source.elipseLength
+    if (source.gradientOpacity) tar.gradientOpacity = source.gradientOpacity
+}
+export function importGradient(source: types.Gradient, ctx?: IImportContext): impl.Gradient {
+    const ret: impl.Gradient = new impl.Gradient (
+        importPoint2D(source.from, ctx),
+        importPoint2D(source.to, ctx),
+        importGradientType(source.gradientType, ctx),
+        importGradient_stops(source.stops, ctx))
+    importGradientOptional(ret, source, ctx)
+    return ret
+}
+/* span attr */
+function importSpanAttrOptional(tar: impl.SpanAttr, source: types.SpanAttr, ctx?: IImportContext) {
+    if (source.fontName) tar.fontName = source.fontName
+    if (source.fontSize) tar.fontSize = source.fontSize
+    if (source.color) tar.color = importColor(source.color, ctx)
+    if (source.strikethrough) tar.strikethrough = importStrikethroughType(source.strikethrough, ctx)
+    if (source.underline) tar.underline = importUnderlineType(source.underline, ctx)
+    if (source.weight) tar.weight = source.weight
+    if (source.italic) tar.italic = source.italic
+    if (source.bulletNumbers) tar.bulletNumbers = importBulletNumbers(source.bulletNumbers, ctx)
+    if (source.highlight) tar.highlight = importColor(source.highlight, ctx)
+    if (source.kerning) tar.kerning = source.kerning
+    if (source.transform) tar.transform = importTextTransformType(source.transform, ctx)
+    if (source.placeholder) tar.placeholder = source.placeholder
+    if (source.fillType) tar.fillType = importFillType(source.fillType, ctx)
+    if (source.gradient) tar.gradient = importGradient(source.gradient, ctx)
+}
+export function importSpanAttr(source: types.SpanAttr, ctx?: IImportContext): impl.SpanAttr {
+    const ret: impl.SpanAttr = new impl.SpanAttr ()
+    importSpanAttrOptional(ret, source, ctx)
+    return ret
+}
+/* span attr */
+const importSpanOptional = importSpanAttrOptional
+export function importSpan(source: types.Span, ctx?: IImportContext): impl.Span {
+    const ret: impl.Span = new impl.Span (
+        source.length)
+    importSpanOptional(ret, source, ctx)
+    return ret
+}
+/* border */
+function importBorderOptional(tar: impl.Border, source: types.Border, ctx?: IImportContext) {
+    if (source.contextSettings) tar.contextSettings = importContextSettings(source.contextSettings, ctx)
+    if (source.gradient) tar.gradient = importGradient(source.gradient, ctx)
+}
+export function importBorder(source: types.Border, ctx?: IImportContext): impl.Border {
+        // inject code
+    if (!(source as any).sideSetting) {
+        source.sideSetting = {
+            sideType: types.SideType.Normal,
+            thicknessTop: source.thickness,
+            thicknessLeft: source.thickness,
+            thicknessBottom: source.thickness,
+            thicknessRight: source.thickness,
+        }
+    }
+
+    const ret: impl.Border = new impl.Border (
+        importCrdtidx(source.crdtidx, ctx),
+        source.id,
+        source.isEnabled,
+        importFillType(source.fillType, ctx),
+        importColor(source.color, ctx),
+        importBorderPosition(source.position, ctx),
+        source.thickness,
+        importBorderStyle(source.borderStyle, ctx),
+        importCornerType(source.cornerType, ctx),
+        importBorderSideSetting(source.sideSetting, ctx))
+    importBorderOptional(ret, source, ctx)
+    return ret
+}
+/* fill */
+function importFillOptional(tar: impl.Fill, source: types.Fill, ctx?: IImportContext) {
+    if (source.contextSettings) tar.contextSettings = importContextSettings(source.contextSettings, ctx)
+    if (source.gradient) tar.gradient = importGradient(source.gradient, ctx)
+    if (source.imageRef) tar.imageRef = source.imageRef
+    if (source.fillRule) tar.fillRule = importFillRule(source.fillRule, ctx)
+}
+export function importFill(source: types.Fill, ctx?: IImportContext): impl.Fill {
+    const ret: impl.Fill = new impl.Fill (
+        importCrdtidx(source.crdtidx, ctx),
+        source.id,
+        source.isEnabled,
+        importFillType(source.fillType, ctx),
+        importColor(source.color, ctx))
+    importFillOptional(ret, source, ctx)
+        // inject code
+    if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
+
+    return ret
+}
+/* span attr */
+function importParaAttrOptional(tar: impl.ParaAttr, source: types.ParaAttr, ctx?: IImportContext) {
+    importSpanAttrOptional(tar, source)
+    if (source.alignment) tar.alignment = importTextHorAlign(source.alignment, ctx)
+    if (source.paraSpacing) tar.paraSpacing = source.paraSpacing
+    if (source.minimumLineHeight) tar.minimumLineHeight = source.minimumLineHeight
+    if (source.maximumLineHeight) tar.maximumLineHeight = source.maximumLineHeight
+    if (source.indent) tar.indent = source.indent
+}
+export function importParaAttr(source: types.ParaAttr, ctx?: IImportContext): impl.ParaAttr {
+    const ret: impl.ParaAttr = new impl.ParaAttr ()
+    importParaAttrOptional(ret, source, ctx)
+    return ret
+}
+/* para */
+function importParaOptional(tar: impl.Para, source: types.Para, ctx?: IImportContext) {
+    if (source.attr) tar.attr = importParaAttr(source.attr, ctx)
+}
+export function importPara(source: types.Para, ctx?: IImportContext): impl.Para {
+    const ret: impl.Para = new impl.Para (
+        source.text,
+        importPara_spans(source.spans, ctx))
+    importParaOptional(ret, source, ctx)
+    return ret
+}
+/* style */
+function importStyleOptional(tar: impl.Style, source: types.Style, ctx?: IImportContext) {
+    if (source.miterLimit) tar.miterLimit = source.miterLimit
+    if (source.windingRule) tar.windingRule = importWindingRule(source.windingRule, ctx)
+    if (source.blur) tar.blur = importBlur(source.blur, ctx)
+    if (source.borderOptions) tar.borderOptions = importBorderOptions(source.borderOptions, ctx)
+    if (source.colorControls) tar.colorControls = importColorControls(source.colorControls, ctx)
+    if (source.contextSettings) tar.contextSettings = importContextSettings(source.contextSettings, ctx)
+    if (source.innerShadows) tar.innerShadows = importStyle_innerShadows(source.innerShadows, ctx)
+    if (source.contacts) tar.contacts = importStyle_contacts(source.contacts, ctx)
+    if (source.startMarkerType) tar.startMarkerType = importMarkerType(source.startMarkerType, ctx)
+    if (source.endMarkerType) tar.endMarkerType = importMarkerType(source.endMarkerType, ctx)
+    if (source.varbinds) tar.varbinds = (() => {
+        const ret = new BasicMap<string, string>()
+        const _val = source.varbinds as any
+        Object.keys(source.varbinds).forEach((k) => {
+            const val = _val[k]
+            ret.set(k, val)
+        })
+        return ret
+    })()
+}
+export function importStyle(source: types.Style, ctx?: IImportContext): impl.Style {
+    const ret: impl.Style = new impl.Style (
+        importStyle_borders(source.borders, ctx),
+        importStyle_fills(source.fills, ctx),
+        importStyle_shadows(source.shadows, ctx))
+    importStyleOptional(ret, source, ctx)
+    return ret
+}
+/* text attr */
+function importTextAttrOptional(tar: impl.TextAttr, source: types.TextAttr, ctx?: IImportContext) {
+    importParaAttrOptional(tar, source)
+    if (source.verAlign) tar.verAlign = importTextVerAlign(source.verAlign, ctx)
+    if (source.orientation) tar.orientation = importTextOrientation(source.orientation, ctx)
+    if (source.textBehaviour) tar.textBehaviour = importTextBehaviour(source.textBehaviour, ctx)
+    if (source.padding) tar.padding = importPadding(source.padding, ctx)
+}
+export function importTextAttr(source: types.TextAttr, ctx?: IImportContext): impl.TextAttr {
+        // inject code
+    // 兼容旧数据
+    const _source = source as any;
+    if (typeof _source.bold === 'boolean') {
+        _source.bold = _source.bold ? 700 : 400;
+    }
+    if (_source.bold) {
+        _source.weight = _source.bold;
+    }
+
+    const ret: impl.TextAttr = new impl.TextAttr ()
+    importTextAttrOptional(ret, source, ctx)
+    return ret
+}
+/* text */
+function importTextOptional(tar: impl.Text, source: types.Text, ctx?: IImportContext) {
+    if (source.attr) tar.attr = importTextAttr(source.attr, ctx)
+}
+export function importText(source: types.Text, ctx?: IImportContext): impl.Text {
+    const ret: impl.Text = new impl.Text (
+        importText_paras(source.paras, ctx))
+    importTextOptional(ret, source, ctx)
+    return ret
+}
+/* shape */
+function importShapeOptional(tar: impl.Shape, source: types.Shape, ctx?: IImportContext) {
+    if (source.boolOp) tar.boolOp = importBoolOp(source.boolOp, ctx)
+    if (source.isFixedToViewport) tar.isFixedToViewport = source.isFixedToViewport
+    if (source.isFlippedHorizontal) tar.isFlippedHorizontal = source.isFlippedHorizontal
+    if (source.isFlippedVertical) tar.isFlippedVertical = source.isFlippedVertical
+    if (source.isLocked) tar.isLocked = source.isLocked
+    if (source.isVisible) tar.isVisible = source.isVisible
+    if (source.exportOptions) tar.exportOptions = importExportOptions(source.exportOptions, ctx)
+    if (source.nameIsFixed) tar.nameIsFixed = source.nameIsFixed
+    if (source.resizingConstraint) tar.resizingConstraint = source.resizingConstraint
+    if (source.resizingType) tar.resizingType = importResizeType(source.resizingType, ctx)
+    if (source.rotation) tar.rotation = source.rotation
+    if (source.constrainerProportions) tar.constrainerProportions = source.constrainerProportions
+    if (source.clippingMaskMode) tar.clippingMaskMode = source.clippingMaskMode
+    if (source.hasClippingMask) tar.hasClippingMask = source.hasClippingMask
+    if (source.shouldBreakMaskChain) tar.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds) tar.varbinds = (() => {
+        const ret = new BasicMap<string, string>()
+        const _val = source.varbinds as any
+        Object.keys(source.varbinds).forEach((k) => {
+            const val = _val[k]
+            ret.set(k, val)
+        })
+        return ret
+    })()
+    if (source.haveEdit) tar.haveEdit = source.haveEdit
+}
+export function importShape(source: types.Shape, ctx?: IImportContext): impl.Shape {
+    const ret: impl.Shape = new impl.Shape (
+        importCrdtidx(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
-        importStyle(source.style, ctx),
-        (() => {
-            const ret = new BasicMap<string, impl.TableCell>()
-            const val = source.cells as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-            Object.keys(val).forEach((k) => {
-                const v = val[k];
-                ret.set(k, importTableCell(v, ctx))
-            });
-            return ret
-        })(),
-        (() => {
-            const ret = new BasicArray<impl.CrdtNumber>()
-            for (let i = 0, len = source.rowHeights && source.rowHeights.length; i < len; i++) {
-                const r = importCrdtNumber(source.rowHeights[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
-        (() => {
-            const ret = new BasicArray<impl.CrdtNumber>()
-            for (let i = 0, len = source.colWidths && source.colWidths.length; i < len; i++) {
-                const r = importCrdtNumber(source.colWidths[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
-        })()
-    )
-    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
-    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
-    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
-    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
-    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
-    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
-    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
-    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
-    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
-    if (source.rotation !== undefined) ret.rotation = source.rotation
-    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
-    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
-    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
-    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicMap<string, string>()
-        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-        Object.keys(val).forEach((k) => {
-            const v = val[k];
-            ret.set(k, v)
-        });
-        return ret
-    })()
-    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
-    if (source.textAttr !== undefined) ret.textAttr = importTextAttr(source.textAttr, ctx)
-    // inject code
-    if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
+        importStyle(source.style, ctx))
+    importShapeOptional(ret, source, ctx)
     return ret
 }
 /* table cell */
+function importTableCellOptional(tar: impl.TableCell, source: types.TableCell, ctx?: IImportContext) {
+    importShapeOptional(tar, source)
+    if (source.imageRef) tar.imageRef = source.imageRef
+    if (source.rowSpan) tar.rowSpan = source.rowSpan
+    if (source.colSpan) tar.colSpan = source.colSpan
+}
 export function importTableCell(source: types.TableCell, ctx?: IImportContext): impl.TableCell {
-    // inject code
+        // inject code
     // 兼容旧数据
     if (!(source as any).crdtidx) (source as any).crdtidx = []
     if (!source.text) source.text = {
@@ -1053,209 +931,162 @@ export function importTableCell(source: types.TableCell, ctx?: IImportContext): 
             }
         }
     }
+
     const ret: impl.TableCell = new impl.TableCell (
-        (() => {
-            const ret = new BasicArray<number>()
-            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
-                const r = source.crdtidx[i]
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
+        importCrdtidx(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         importTableCellType(source.cellType, ctx),
-        importText(source.text, ctx)
-    )
-    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
-    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
-    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
-    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
-    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
-    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
-    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
-    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
-    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
-    if (source.rotation !== undefined) ret.rotation = source.rotation
-    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
-    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
-    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
-    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicMap<string, string>()
-        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-        Object.keys(val).forEach((k) => {
-            const v = val[k];
-            ret.set(k, v)
-        });
-        return ret
-    })()
-    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
-    if (source.imageRef !== undefined) ret.imageRef = source.imageRef
-    if (source.rowSpan !== undefined) ret.rowSpan = source.rowSpan
-    if (source.colSpan !== undefined) ret.colSpan = source.colSpan
+        importText(source.text, ctx))
+    importTableCellOptional(ret, source, ctx)
     return ret
 }
-/* symbol ref shape */
-export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImportContext): impl.SymbolRefShape {
-    // inject code
-    if (!source.variables) {
-        source.variables = {} as any
-    }
-    if ((source as any).virbindsEx) {
-        source.overrides = (source as any).virbindsEx
-    }
-    const ret: impl.SymbolRefShape = new impl.SymbolRefShape (
-        (() => {
-            const ret = new BasicArray<number>()
-            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
-                const r = source.crdtidx[i]
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
-        source.id,
-        source.name,
-        importShapeType(source.type, ctx),
-        importShapeFrame(source.frame, ctx),
-        importStyle(source.style, ctx),
-        source.refId,
-        (() => {
-            const ret = new BasicMap<string, impl.Variable>()
-            const val = source.variables as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-            Object.keys(val).forEach((k) => {
-                const v = val[k];
-                ret.set(k, importVariable(v, ctx))
-            });
-            return ret
-        })()
-    )
-    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
-    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
-    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
-    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
-    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
-    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
-    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
-    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
-    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
-    if (source.rotation !== undefined) ret.rotation = source.rotation
-    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
-    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
-    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
-    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicMap<string, string>()
-        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-        Object.keys(val).forEach((k) => {
-            const v = val[k];
-            ret.set(k, v)
-        });
-        return ret
-    })()
-    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
-    if (source.overrides !== undefined) ret.overrides = (() => {
-        const ret = new BasicMap<string, string>()
-        const val = source.overrides as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-        Object.keys(val).forEach((k) => {
-            const v = val[k];
-            ret.set(k, v)
-        });
-        return ret
-    })()
-    if (source.isCustomSize !== undefined) ret.isCustomSize = source.isCustomSize
-    if (source.cornerRadius !== undefined) ret.cornerRadius = importCornerRadius(source.cornerRadius, ctx)
-    // inject code
-    if (ctx?.document) {
-        ret.setSymbolMgr(ctx.document.symbolsMgr);
-        ret.setImageMgr(ctx.document.mediasMgr);
-    }
-    return ret
+/* table shape */
+function importTableShapeOptional(tar: impl.TableShape, source: types.TableShape, ctx?: IImportContext) {
+    importShapeOptional(tar, source)
+    if (source.textAttr) tar.textAttr = importTextAttr(source.textAttr, ctx)
 }
-/* span attr */
-export function importSpan(source: types.Span, ctx?: IImportContext): impl.Span {
-    const ret: impl.Span = new impl.Span (
-        source.length
-    )
-    if (source.fontName !== undefined) ret.fontName = source.fontName
-    if (source.fontSize !== undefined) ret.fontSize = source.fontSize
-    if (source.color !== undefined) ret.color = importColor(source.color, ctx)
-    if (source.strikethrough !== undefined) ret.strikethrough = importStrikethroughType(source.strikethrough, ctx)
-    if (source.underline !== undefined) ret.underline = importUnderlineType(source.underline, ctx)
-    if (source.weight !== undefined) ret.weight = source.weight
-    if (source.italic !== undefined) ret.italic = source.italic
-    if (source.bulletNumbers !== undefined) ret.bulletNumbers = importBulletNumbers(source.bulletNumbers, ctx)
-    if (source.highlight !== undefined) ret.highlight = importColor(source.highlight, ctx)
-    if (source.kerning !== undefined) ret.kerning = source.kerning
-    if (source.transform !== undefined) ret.transform = importTextTransformType(source.transform, ctx)
-    if (source.placeholder !== undefined) ret.placeholder = source.placeholder
-    if (source.fillType !== undefined) ret.fillType = importFillType(source.fillType, ctx)
-    if (source.gradient !== undefined) ret.gradient = importGradient(source.gradient, ctx)
-    return ret
-}
-/* path shape */
-export function importPathShape2(source: types.PathShape2, ctx?: IImportContext): impl.PathShape2 {
-    const ret: impl.PathShape2 = new impl.PathShape2 (
-        (() => {
-            const ret = new BasicArray<number>()
-            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
-                const r = source.crdtidx[i]
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
+export function importTableShape(source: types.TableShape, ctx?: IImportContext): impl.TableShape {
+        // inject code
+    // 兼容旧数据
+    if ((source as any).datas || (source as any).childs) {
+        source.colWidths = ((source as any).colWidths as number[]).map((v, i) => ({
+            id: uuid(),
+            crdtidx: [i],
+            value: v
+        } as types.CrdtNumber));
+        source.rowHeights = ((source as any).rowHeights as number[]).map((v, i) => ({
+            id: uuid(),
+            crdtidx: [i],
+            value: v
+        } as types.CrdtNumber));
+
+        const colCount = source.colWidths.length;
+        const rowCount = source.rowHeights.length;
+        const datas: types.TableCell[] = (source as any).datas || (source as any).childs;
+        const cells: {[key: string]: types.TableCell} = {};
+        for (let i = 0; i < datas.length; ++i) {
+            const c = datas[i];
+            if (!c) continue;
+            const ri = Math.floor(i / colCount);
+            const ci = i % colCount;
+            if (ri >= rowCount) break;
+            const id = source.rowHeights[ri].id + ',' + source.colWidths[ci].id;
+            cells[id] = c;
+            c.id = id;
+        }
+        source.cells = cells as any;
+    }
+
+    const ret: impl.TableShape = new impl.TableShape (
+        importCrdtidx(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<impl.PathSegment>()
-            for (let i = 0, len = source.pathsegs && source.pathsegs.length; i < len; i++) {
-                const val = source.pathsegs[i]
-                if (!val.crdtidx) val.crdtidx = [i]
-                const r = importPathSegment(source.pathsegs[i], ctx)
-                if (r) ret.push(r)
-            }
+            const ret = new BasicMap<string, impl.TableCell>()
+            const _val = source.cells as any
+            Object.keys(source.cells).forEach((k) => {
+                const val = _val[k]
+                ret.set(k, importTableCell(val, ctx))
+            })
             return ret
-        })()
-    )
-    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
-    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
-    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
-    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
-    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
-    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
-    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
-    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
-    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
-    if (source.rotation !== undefined) ret.rotation = source.rotation
-    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
-    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
-    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
-    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicMap<string, string>()
-        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-        Object.keys(val).forEach((k) => {
-            const v = val[k];
-            ret.set(k, v)
-        });
-        return ret
-    })()
-    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
-    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
+        })(),
+        importTableShape_rowHeights(source.rowHeights, ctx),
+        importTableShape_colWidths(source.colWidths, ctx))
+    importTableShapeOptional(ret, source, ctx)
+        // inject code
+    if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
+
+    return ret
+}
+/* text shape */
+function importTextShapeOptional(tar: impl.TextShape, source: types.TextShape, ctx?: IImportContext) {
+    importShapeOptional(tar, source)
+    if (source.fixedRadius) tar.fixedRadius = source.fixedRadius
+}
+export function importTextShape(source: types.TextShape, ctx?: IImportContext): impl.TextShape {
+    const ret: impl.TextShape = new impl.TextShape (
+        importCrdtidx(source.crdtidx, ctx),
+        source.id,
+        source.name,
+        importShapeType(source.type, ctx),
+        importShapeFrame(source.frame, ctx),
+        importStyle(source.style, ctx),
+        importText(source.text, ctx))
+    importTextShapeOptional(ret, source, ctx)
+    return ret
+}
+/* color */
+export function importVariable(source: types.Variable, ctx?: IImportContext): impl.Variable {
+    const ret: impl.Variable = new impl.Variable (
+        source.id,
+        importVariableType(source.type, ctx),
+        source.name,
+        (() => {
+            if (typeof source.value !== "object") {
+                return source.value
+            }
+            if (Array.isArray(source.value)) {
+                return importVariable_0(source.value, ctx)
+            }
+            if (source.value.typeId === "color") {
+                return importColor(source.value as types.Color, ctx)
+            }
+            if (source.value.typeId === "text") {
+                return importText(source.value as types.Text, ctx)
+            }
+            if (source.value.typeId === "gradient") {
+                return importGradient(source.value as types.Gradient, ctx)
+            }
+            if (source.value.typeId === "style") {
+                return importStyle(source.value as types.Style, ctx)
+            }
+            if (source.value.typeId === "context-settings") {
+                return importContextSettings(source.value as types.ContextSettings, ctx)
+            }
+            if (source.value.typeId === "table-cell") {
+                return importTableCell(source.value as types.TableCell, ctx)
+            }
+            if (source.value.typeId === "export-options") {
+                return importExportOptions(source.value as types.ExportOptions, ctx)
+            }
+            if (source.value.typeId === "corner-radius") {
+                return importCornerRadius(source.value as types.CornerRadius, ctx)
+            }
+            throw new Error("unknow typeId: " + source.value.typeId)
+        })())
+    return ret
+}
+/* comment */
+function importCommentOptional(tar: impl.Comment, source: types.Comment, ctx?: IImportContext) {
+    if (source.parentId) tar.parentId = source.parentId
+    if (source.rootId) tar.rootId = source.rootId
+}
+export function importComment(source: types.Comment, ctx?: IImportContext): impl.Comment {
+    const ret: impl.Comment = new impl.Comment (
+        source.pageId,
+        source.id,
+        importShapeFrame(source.frame, ctx),
+        importUserInfo(source.user, ctx),
+        source.createAt,
+        source.content,
+        importShape(source.parasiticBody, ctx))
+    importCommentOptional(ret, source, ctx)
     return ret
 }
 /* path shape */
+function importPathShapeOptional(tar: impl.PathShape, source: types.PathShape, ctx?: IImportContext) {
+    importShapeOptional(tar, source)
+    if (source.fixedRadius) tar.fixedRadius = source.fixedRadius
+}
 export function importPathShape(source: types.PathShape, ctx?: IImportContext): impl.PathShape {
-    // inject code
+        // inject code
      if (!source.pathsegs?.length) { // 兼容旧数据
         const seg: types.PathSegment = {
             crdtidx: [0],
@@ -1270,308 +1101,54 @@ export function importPathShape(source: types.PathShape, ctx?: IImportContext): 
         
         source.pathsegs = [seg];
     }
+
     const ret: impl.PathShape = new impl.PathShape (
-        (() => {
-            const ret = new BasicArray<number>()
-            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
-                const r = source.crdtidx[i]
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
+        importCrdtidx(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
-        (() => {
-            const ret = new BasicArray<impl.PathSegment>()
-            for (let i = 0, len = source.pathsegs && source.pathsegs.length; i < len; i++) {
-                const val = source.pathsegs[i]
-                if (!val.crdtidx) val.crdtidx = [i]
-                const r = importPathSegment(source.pathsegs[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
-        })()
-    )
-    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
-    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
-    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
-    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
-    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
-    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
-    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
-    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
-    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
-    if (source.rotation !== undefined) ret.rotation = source.rotation
-    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
-    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
-    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
-    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicMap<string, string>()
-        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-        Object.keys(val).forEach((k) => {
-            const v = val[k];
-            ret.set(k, v)
-        });
-        return ret
-    })()
-    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
-    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
+        importPathShape_pathsegs(source.pathsegs, ctx))
+    importPathShapeOptional(ret, source, ctx)
     return ret
 }
-/* star shape */
-export function importStarShape(source: types.StarShape, ctx?: IImportContext): impl.StarShape {
-    const ret: impl.StarShape = new impl.StarShape (
-        (() => {
-            const ret = new BasicArray<number>()
-            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
-                const r = source.crdtidx[i]
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
-        source.id,
-        source.name,
-        importShapeType(source.type, ctx),
-        importShapeFrame(source.frame, ctx),
-        importStyle(source.style, ctx),
-        (() => {
-            const ret = new BasicArray<impl.PathSegment>()
-            for (let i = 0, len = source.pathsegs && source.pathsegs.length; i < len; i++) {
-                const val = source.pathsegs[i]
-                if (!val.crdtidx) val.crdtidx = [i]
-                const r = importPathSegment(source.pathsegs[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
-        source.counts,
-        source.innerAngle
-    )
-    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
-    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
-    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
-    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
-    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
-    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
-    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
-    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
-    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
-    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
-    if (source.rotation !== undefined) ret.rotation = source.rotation
-    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
-    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
-    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
-    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicMap<string, string>()
-        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-        Object.keys(val).forEach((k) => {
-            const v = val[k];
-            ret.set(k, v)
-        });
-        return ret
-    })()
-    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
-    return ret
+/* path shape */
+function importPathShape2Optional(tar: impl.PathShape2, source: types.PathShape2, ctx?: IImportContext) {
+    importShapeOptional(tar, source)
+    if (source.fixedRadius) tar.fixedRadius = source.fixedRadius
 }
-/* rect shape */
-export function importRectShape(source: types.RectShape, ctx?: IImportContext): impl.RectShape {
-    // inject code
-    if (!source.pathsegs?.length) { // 兼容旧数据
-        const seg: types.PathSegment = {
-            crdtidx: [0],
-            id: '39e508e8-a1bb-4b55-ad68-aa2a9b3b447a',
-            points:[],
-            isClosed: true
-        }
-        
-        if ((source as any)?.points?.length) {
-            seg.points.push(...(source as any)?.points);
-        } 
-        
-        source.pathsegs = [seg];
-    }
-    const ret: impl.RectShape = new impl.RectShape (
-        (() => {
-            const ret = new BasicArray<number>()
-            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
-                const r = source.crdtidx[i]
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
+export function importPathShape2(source: types.PathShape2, ctx?: IImportContext): impl.PathShape2 {
+    const ret: impl.PathShape2 = new impl.PathShape2 (
+        importCrdtidx(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
-        (() => {
-            const ret = new BasicArray<impl.PathSegment>()
-            for (let i = 0, len = source.pathsegs && source.pathsegs.length; i < len; i++) {
-                const val = source.pathsegs[i]
-                if (!val.crdtidx) val.crdtidx = [i]
-                const r = importPathSegment(source.pathsegs[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
-        })()
-    )
-    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
-    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
-    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
-    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
-    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
-    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
-    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
-    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
-    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
-    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
-    if (source.rotation !== undefined) ret.rotation = source.rotation
-    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
-    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
-    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
-    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicMap<string, string>()
-        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-        Object.keys(val).forEach((k) => {
-            const v = val[k];
-            ret.set(k, v)
-        });
-        return ret
-    })()
-    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
+        importPathShape2_pathsegs(source.pathsegs, ctx))
+    importPathShape2Optional(ret, source, ctx)
     return ret
 }
 /* polygon shape */
+const importPolygonShapeOptional = importPathShapeOptional
 export function importPolygonShape(source: types.PolygonShape, ctx?: IImportContext): impl.PolygonShape {
     const ret: impl.PolygonShape = new impl.PolygonShape (
-        (() => {
-            const ret = new BasicArray<number>()
-            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
-                const r = source.crdtidx[i]
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
+        importCrdtidx(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
-        (() => {
-            const ret = new BasicArray<impl.PathSegment>()
-            for (let i = 0, len = source.pathsegs && source.pathsegs.length; i < len; i++) {
-                const val = source.pathsegs[i]
-                if (!val.crdtidx) val.crdtidx = [i]
-                const r = importPathSegment(source.pathsegs[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
-        source.counts
-    )
-    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
-    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
-    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
-    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
-    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
-    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
-    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
-    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
-    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
-    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
-    if (source.rotation !== undefined) ret.rotation = source.rotation
-    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
-    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
-    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
-    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicMap<string, string>()
-        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-        Object.keys(val).forEach((k) => {
-            const v = val[k];
-            ret.set(k, v)
-        });
-        return ret
-    })()
-    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
+        importPathShape_pathsegs(source.pathsegs, ctx),
+        source.counts)
+    importPolygonShapeOptional(ret, source, ctx)
     return ret
 }
-/* span attr */
-export function importParaAttr(source: types.ParaAttr, ctx?: IImportContext): impl.ParaAttr {
-    const ret: impl.ParaAttr = new impl.ParaAttr (
-    )
-    if (source.fontName !== undefined) ret.fontName = source.fontName
-    if (source.fontSize !== undefined) ret.fontSize = source.fontSize
-    if (source.color !== undefined) ret.color = importColor(source.color, ctx)
-    if (source.strikethrough !== undefined) ret.strikethrough = importStrikethroughType(source.strikethrough, ctx)
-    if (source.underline !== undefined) ret.underline = importUnderlineType(source.underline, ctx)
-    if (source.weight !== undefined) ret.weight = source.weight
-    if (source.italic !== undefined) ret.italic = source.italic
-    if (source.bulletNumbers !== undefined) ret.bulletNumbers = importBulletNumbers(source.bulletNumbers, ctx)
-    if (source.highlight !== undefined) ret.highlight = importColor(source.highlight, ctx)
-    if (source.kerning !== undefined) ret.kerning = source.kerning
-    if (source.transform !== undefined) ret.transform = importTextTransformType(source.transform, ctx)
-    if (source.placeholder !== undefined) ret.placeholder = source.placeholder
-    if (source.fillType !== undefined) ret.fillType = importFillType(source.fillType, ctx)
-    if (source.gradient !== undefined) ret.gradient = importGradient(source.gradient, ctx)
-    if (source.alignment !== undefined) ret.alignment = importTextHorAlign(source.alignment, ctx)
-    if (source.paraSpacing !== undefined) ret.paraSpacing = source.paraSpacing
-    if (source.minimumLineHeight !== undefined) ret.minimumLineHeight = source.minimumLineHeight
-    if (source.maximumLineHeight !== undefined) ret.maximumLineHeight = source.maximumLineHeight
-    if (source.indent !== undefined) ret.indent = source.indent
-    return ret
-}
-/* text attr */
-export function importTextAttr(source: types.TextAttr, ctx?: IImportContext): impl.TextAttr {
-    // inject code
-    // 兼容旧数据
-    const _source = source as any;
-    if (typeof _source.bold === 'boolean') {
-        _source.bold = _source.bold ? 700 : 400;
-    }
-    if (_source.bold) {
-        _source.weight = _source.bold;
-    }
-    const ret: impl.TextAttr = new impl.TextAttr (
-    )
-    if (source.alignment !== undefined) ret.alignment = importTextHorAlign(source.alignment, ctx)
-    if (source.paraSpacing !== undefined) ret.paraSpacing = source.paraSpacing
-    if (source.minimumLineHeight !== undefined) ret.minimumLineHeight = source.minimumLineHeight
-    if (source.maximumLineHeight !== undefined) ret.maximumLineHeight = source.maximumLineHeight
-    if (source.indent !== undefined) ret.indent = source.indent
-    if (source.fontName !== undefined) ret.fontName = source.fontName
-    if (source.fontSize !== undefined) ret.fontSize = source.fontSize
-    if (source.color !== undefined) ret.color = importColor(source.color, ctx)
-    if (source.strikethrough !== undefined) ret.strikethrough = importStrikethroughType(source.strikethrough, ctx)
-    if (source.underline !== undefined) ret.underline = importUnderlineType(source.underline, ctx)
-    if (source.weight !== undefined) ret.weight = source.weight
-    if (source.italic !== undefined) ret.italic = source.italic
-    if (source.bulletNumbers !== undefined) ret.bulletNumbers = importBulletNumbers(source.bulletNumbers, ctx)
-    if (source.highlight !== undefined) ret.highlight = importColor(source.highlight, ctx)
-    if (source.kerning !== undefined) ret.kerning = source.kerning
-    if (source.transform !== undefined) ret.transform = importTextTransformType(source.transform, ctx)
-    if (source.placeholder !== undefined) ret.placeholder = source.placeholder
-    if (source.fillType !== undefined) ret.fillType = importFillType(source.fillType, ctx)
-    if (source.gradient !== undefined) ret.gradient = importGradient(source.gradient, ctx)
-    if (source.verAlign !== undefined) ret.verAlign = importTextVerAlign(source.verAlign, ctx)
-    if (source.orientation !== undefined) ret.orientation = importTextOrientation(source.orientation, ctx)
-    if (source.textBehaviour !== undefined) ret.textBehaviour = importTextBehaviour(source.textBehaviour, ctx)
-    if (source.padding !== undefined) ret.padding = importPadding(source.padding, ctx)
-    return ret
-}
-/* oval shape */
-export function importOvalShape(source: types.OvalShape, ctx?: IImportContext): impl.OvalShape {
-    // inject code
+/* rect shape */
+const importRectShapeOptional = importPathShapeOptional
+export function importRectShape(source: types.RectShape, ctx?: IImportContext): impl.RectShape {
+        // inject code
     if (!source.pathsegs?.length) { // 兼容旧数据
         const seg: types.PathSegment = {
             crdtidx: [0],
@@ -1586,63 +1163,92 @@ export function importOvalShape(source: types.OvalShape, ctx?: IImportContext): 
         
         source.pathsegs = [seg];
     }
-    const ret: impl.OvalShape = new impl.OvalShape (
-        (() => {
-            const ret = new BasicArray<number>()
-            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
-                const r = source.crdtidx[i]
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
+
+    const ret: impl.RectShape = new impl.RectShape (
+        importCrdtidx(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
-        (() => {
-            const ret = new BasicArray<impl.PathSegment>()
-            for (let i = 0, len = source.pathsegs && source.pathsegs.length; i < len; i++) {
-                const val = source.pathsegs[i]
-                if (!val.crdtidx) val.crdtidx = [i]
-                const r = importPathSegment(source.pathsegs[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
-        importEllipse(source.ellipse, ctx)
-    )
-    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
-    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
-    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
-    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
-    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
-    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
-    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
-    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
-    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
-    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
-    if (source.rotation !== undefined) ret.rotation = source.rotation
-    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
-    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
-    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
-    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicMap<string, string>()
-        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-        Object.keys(val).forEach((k) => {
-            const v = val[k];
-            ret.set(k, v)
-        });
-        return ret
-    })()
-    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
+        importPathShape_pathsegs(source.pathsegs, ctx))
+    importRectShapeOptional(ret, source, ctx)
     return ret
 }
-/* line shape */
-export function importLineShape(source: types.LineShape, ctx?: IImportContext): impl.LineShape {
-    // inject code
+/* star shape */
+const importStarShapeOptional = importPathShapeOptional
+export function importStarShape(source: types.StarShape, ctx?: IImportContext): impl.StarShape {
+    const ret: impl.StarShape = new impl.StarShape (
+        importCrdtidx(source.crdtidx, ctx),
+        source.id,
+        source.name,
+        importShapeType(source.type, ctx),
+        importShapeFrame(source.frame, ctx),
+        importStyle(source.style, ctx),
+        importPathShape_pathsegs(source.pathsegs, ctx),
+        source.counts,
+        source.innerAngle)
+    importStarShapeOptional(ret, source, ctx)
+    return ret
+}
+/* symbol ref shape */
+function importSymbolRefShapeOptional(tar: impl.SymbolRefShape, source: types.SymbolRefShape, ctx?: IImportContext) {
+    importShapeOptional(tar, source)
+    if (source.overrides) tar.overrides = (() => {
+        const ret = new BasicMap<string, string>()
+        const _val = source.overrides as any
+        Object.keys(source.overrides).forEach((k) => {
+            const val = _val[k]
+            ret.set(k, val)
+        })
+        return ret
+    })()
+    if (source.isCustomSize) tar.isCustomSize = source.isCustomSize
+    if (source.cornerRadius) tar.cornerRadius = importCornerRadius(source.cornerRadius, ctx)
+}
+export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImportContext): impl.SymbolRefShape {
+        // inject code
+    if (!source.variables) {
+        source.variables = {} as any
+    }
+    if ((source as any).virbindsEx) {
+        source.overrides = (source as any).virbindsEx
+    }
+
+    const ret: impl.SymbolRefShape = new impl.SymbolRefShape (
+        importCrdtidx(source.crdtidx, ctx),
+        source.id,
+        source.name,
+        importShapeType(source.type, ctx),
+        importShapeFrame(source.frame, ctx),
+        importStyle(source.style, ctx),
+        source.refId,
+        (() => {
+            const ret = new BasicMap<string, impl.Variable>()
+            const _val = source.variables as any
+            Object.keys(source.variables).forEach((k) => {
+                const val = _val[k]
+                ret.set(k, importVariable(val, ctx))
+            })
+            return ret
+        })())
+    importSymbolRefShapeOptional(ret, source, ctx)
+        // inject code
+    if (ctx?.document) {
+        ret.setSymbolMgr(ctx.document.symbolsMgr);
+        ret.setImageMgr(ctx.document.mediasMgr);
+    }
+
+    return ret
+}
+/* contact shape */
+function importContactShapeOptional(tar: impl.ContactShape, source: types.ContactShape, ctx?: IImportContext) {
+    importPathShapeOptional(tar, source)
+    if (source.from) tar.from = importContactForm(source.from, ctx)
+    if (source.to) tar.to = importContactForm(source.to, ctx)
+}
+export function importContactShape(source: types.ContactShape, ctx?: IImportContext): impl.ContactShape {
+        // inject code
     if (!source.pathsegs?.length) { // 兼容旧数据
         const seg: types.PathSegment = {
             crdtidx: [0],
@@ -1656,63 +1262,61 @@ export function importLineShape(source: types.LineShape, ctx?: IImportContext): 
         } 
         
         source.pathsegs = [seg];
+    } else {
+        if (source?.pathsegs[0]?.isClosed) {
+            source.pathsegs[0].isClosed = false;
+        }
     }
-    const ret: impl.LineShape = new impl.LineShape (
-        (() => {
-            const ret = new BasicArray<number>()
-            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
-                const r = source.crdtidx[i]
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
+
+    const ret: impl.ContactShape = new impl.ContactShape (
+        importCrdtidx(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
-        (() => {
-            const ret = new BasicArray<impl.PathSegment>()
-            for (let i = 0, len = source.pathsegs && source.pathsegs.length; i < len; i++) {
-                const val = source.pathsegs[i]
-                if (!val.crdtidx) val.crdtidx = [i]
-                const r = importPathSegment(source.pathsegs[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
-        })()
-    )
-    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
-    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
-    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
-    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
-    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
-    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
-    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
-    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
-    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
-    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
-    if (source.rotation !== undefined) ret.rotation = source.rotation
-    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
-    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
-    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
-    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicMap<string, string>()
-        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-        Object.keys(val).forEach((k) => {
-            const v = val[k];
-            ret.set(k, v)
-        });
-        return ret
-    })()
-    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
+        importPathShape_pathsegs(source.pathsegs, ctx),
+        source.isEdited,
+        importText(source.text, ctx),
+        source.mark)
+    importContactShapeOptional(ret, source, ctx)
+    return ret
+}
+/* cutout shape */
+const importCutoutShapeOptional = importPathShapeOptional
+export function importCutoutShape(source: types.CutoutShape, ctx?: IImportContext): impl.CutoutShape {
+        // inject code
+    if (!source.pathsegs?.length) { // 兼容旧数据
+        const seg: types.PathSegment = {
+            crdtidx: [0],
+            id: '39e508e8-a1bb-4b55-ad68-aa2a9b3b447a',
+            points:[],
+            isClosed: true
+        }
+        
+        if ((source as any)?.points?.length) {
+            seg.points.push(...(source as any)?.points);
+        } 
+        
+        source.pathsegs = [seg];
+    }
+
+    const ret: impl.CutoutShape = new impl.CutoutShape (
+        importCrdtidx(source.crdtidx, ctx),
+        source.id,
+        source.name,
+        importShapeType(source.type, ctx),
+        importShapeFrame(source.frame, ctx),
+        importStyle(source.style, ctx),
+        importPathShape_pathsegs(source.pathsegs, ctx),
+        source.scalingStroke)
+    importCutoutShapeOptional(ret, source, ctx)
     return ret
 }
 /* image shape */
+const importImageShapeOptional = importPathShapeOptional
 export function importImageShape(source: types.ImageShape, ctx?: IImportContext): impl.ImageShape {
-    // inject code
+        // inject code
     if (!source.pathsegs) { // 兼容旧数据
         const seg: types.PathSegment = {
             crdtidx: [0],
@@ -1760,648 +1364,56 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
      
         source.pathsegs = [seg];
     }
+
     const ret: impl.ImageShape = new impl.ImageShape (
-        (() => {
-            const ret = new BasicArray<number>()
-            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
-                const r = source.crdtidx[i]
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
+        importCrdtidx(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
-        (() => {
-            const ret = new BasicArray<impl.PathSegment>()
-            for (let i = 0, len = source.pathsegs && source.pathsegs.length; i < len; i++) {
-                const val = source.pathsegs[i]
-                if (!val.crdtidx) val.crdtidx = [i]
-                const r = importPathSegment(source.pathsegs[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
-        source.imageRef
-    )
-    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
-    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
-    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
-    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
-    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
-    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
-    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
-    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
-    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
-    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
-    if (source.rotation !== undefined) ret.rotation = source.rotation
-    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
-    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
-    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
-    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicMap<string, string>()
-        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-        Object.keys(val).forEach((k) => {
-            const v = val[k];
-            ret.set(k, v)
-        });
-        return ret
-    })()
-    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
-    // inject code
+        importPathShape_pathsegs(source.pathsegs, ctx),
+        source.imageRef)
+    importImageShapeOptional(ret, source, ctx)
+        // inject code
     if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
+
     return ret
 }
-/* group shape */
-export function importGroupShape(source: types.GroupShape, ctx?: IImportContext): impl.GroupShape {
-    // inject code
-    if ((source as any).isBoolOpShape) {
-        source.typeId = "bool-shape";
-        source.type = types.ShapeType.BoolShape;
-        return importBoolShape(source, ctx);
+/* line shape */
+const importLineShapeOptional = importPathShapeOptional
+export function importLineShape(source: types.LineShape, ctx?: IImportContext): impl.LineShape {
+        // inject code
+    if (!source.pathsegs?.length) { // 兼容旧数据
+        const seg: types.PathSegment = {
+            crdtidx: [0],
+            id: '39e508e8-a1bb-4b55-ad68-aa2a9b3b447a',
+            points:[],
+            isClosed: false
+        }
+        
+        if ((source as any)?.points?.length) {
+            seg.points.push(...(source as any)?.points);
+        } 
+        
+        source.pathsegs = [seg];
     }
-    const ret: impl.GroupShape = new impl.GroupShape (
-        (() => {
-            const ret = new BasicArray<number>()
-            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
-                const r = source.crdtidx[i]
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
+
+    const ret: impl.LineShape = new impl.LineShape (
+        importCrdtidx(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
-        (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.PathShape2 | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape | impl.PolygonShape | impl.StarShape)>()
-            for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
-                const r = (() => {
-                    const val = source.childs[i]
-                    if (val.typeId == 'group-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importGroupShape(val as types.GroupShape, ctx)
-                    }
-                    if (val.typeId == 'image-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importImageShape(val as types.ImageShape, ctx)
-                    }
-                    if (val.typeId == 'path-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importPathShape(val as types.PathShape, ctx)
-                    }
-                    if (val.typeId == 'path-shape2') {
-                        return importPathShape2(val as types.PathShape2, ctx)
-                    }
-                    if (val.typeId == 'rect-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importRectShape(val as types.RectShape, ctx)
-                    }
-                    if (val.typeId == 'symbol-ref-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importSymbolRefShape(val as types.SymbolRefShape, ctx)
-                    }
-                    if (val.typeId == 'symbol-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importSymbolShape(val as types.SymbolShape, ctx)
-                    }
-                    if (val.typeId == 'symbol-union-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importSymbolUnionShape(val as types.SymbolUnionShape, ctx)
-                    }
-                    if (val.typeId == 'text-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importTextShape(val as types.TextShape, ctx)
-                    }
-                    if (val.typeId == 'artboard') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importArtboard(val as types.Artboard, ctx)
-                    }
-                    if (val.typeId == 'line-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importLineShape(val as types.LineShape, ctx)
-                    }
-                    if (val.typeId == 'oval-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importOvalShape(val as types.OvalShape, ctx)
-                    }
-                    if (val.typeId == 'table-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importTableShape(val as types.TableShape, ctx)
-                    }
-                    if (val.typeId == 'contact-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importContactShape(val as types.ContactShape, ctx)
-                    }
-                    if (val.typeId == 'shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importShape(val as types.Shape, ctx)
-                    }
-                    if (val.typeId == 'cutout-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importCutoutShape(val as types.CutoutShape, ctx)
-                    }
-                    if (val.typeId == 'bool-shape') {
-                        return importBoolShape(val as types.BoolShape, ctx)
-                    }
-                    if (val.typeId == 'polygon-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importPolygonShape(val as types.PolygonShape, ctx)
-                    }
-                    if (val.typeId == 'star-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importStarShape(val as types.StarShape, ctx)
-                    }
-                    {
-                        throw new Error('unknow val: ' + val)
-                    }
-                })()
-                if (r) ret.push(r)
-            }
-            return ret
-        })()
-    )
-    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
-    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
-    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
-    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
-    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
-    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
-    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
-    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
-    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
-    if (source.rotation !== undefined) ret.rotation = source.rotation
-    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
-    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
-    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
-    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicMap<string, string>()
-        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-        Object.keys(val).forEach((k) => {
-            const v = val[k];
-            ret.set(k, v)
-        });
-        return ret
-    })()
-    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
-    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
+        importPathShape_pathsegs(source.pathsegs, ctx))
+    importLineShapeOptional(ret, source, ctx)
     return ret
 }
-/* symbol shape */
-export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContext): impl.SymbolShape {
-    const ret: impl.SymbolShape = new impl.SymbolShape (
-        (() => {
-            const ret = new BasicArray<number>()
-            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
-                const r = source.crdtidx[i]
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
-        source.id,
-        source.name,
-        importShapeType(source.type, ctx),
-        importShapeFrame(source.frame, ctx),
-        importStyle(source.style, ctx),
-        (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.PathShape2 | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape | impl.PolygonShape | impl.StarShape)>()
-            for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
-                const r = (() => {
-                    const val = source.childs[i]
-                    if (val.typeId == 'group-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importGroupShape(val as types.GroupShape, ctx)
-                    }
-                    if (val.typeId == 'image-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importImageShape(val as types.ImageShape, ctx)
-                    }
-                    if (val.typeId == 'path-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importPathShape(val as types.PathShape, ctx)
-                    }
-                    if (val.typeId == 'path-shape2') {
-                        return importPathShape2(val as types.PathShape2, ctx)
-                    }
-                    if (val.typeId == 'rect-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importRectShape(val as types.RectShape, ctx)
-                    }
-                    if (val.typeId == 'symbol-ref-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importSymbolRefShape(val as types.SymbolRefShape, ctx)
-                    }
-                    if (val.typeId == 'symbol-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importSymbolShape(val as types.SymbolShape, ctx)
-                    }
-                    if (val.typeId == 'symbol-union-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importSymbolUnionShape(val as types.SymbolUnionShape, ctx)
-                    }
-                    if (val.typeId == 'text-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importTextShape(val as types.TextShape, ctx)
-                    }
-                    if (val.typeId == 'artboard') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importArtboard(val as types.Artboard, ctx)
-                    }
-                    if (val.typeId == 'line-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importLineShape(val as types.LineShape, ctx)
-                    }
-                    if (val.typeId == 'oval-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importOvalShape(val as types.OvalShape, ctx)
-                    }
-                    if (val.typeId == 'table-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importTableShape(val as types.TableShape, ctx)
-                    }
-                    if (val.typeId == 'contact-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importContactShape(val as types.ContactShape, ctx)
-                    }
-                    if (val.typeId == 'shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importShape(val as types.Shape, ctx)
-                    }
-                    if (val.typeId == 'cutout-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importCutoutShape(val as types.CutoutShape, ctx)
-                    }
-                    if (val.typeId == 'bool-shape') {
-                        return importBoolShape(val as types.BoolShape, ctx)
-                    }
-                    if (val.typeId == 'polygon-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importPolygonShape(val as types.PolygonShape, ctx)
-                    }
-                    if (val.typeId == 'star-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importStarShape(val as types.StarShape, ctx)
-                    }
-                    {
-                        throw new Error('unknow val: ' + val)
-                    }
-                })()
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
-        (() => {
-            const ret = new BasicMap<string, impl.Variable>()
-            const val = source.variables as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-            Object.keys(val).forEach((k) => {
-                const v = val[k];
-                ret.set(k, importVariable(v, ctx))
-            });
-            return ret
-        })()
-    )
-    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
-    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
-    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
-    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
-    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
-    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
-    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
-    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
-    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
-    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
-    if (source.rotation !== undefined) ret.rotation = source.rotation
-    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
-    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
-    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
-    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicMap<string, string>()
-        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-        Object.keys(val).forEach((k) => {
-            const v = val[k];
-            ret.set(k, v)
-        });
-        return ret
-    })()
-    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
-    if (source.symtags !== undefined) ret.symtags = (() => {
-        const ret = new BasicMap<string, string>()
-        const val = source.symtags as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-        Object.keys(val).forEach((k) => {
-            const v = val[k];
-            ret.set(k, v)
-        });
-        return ret
-    })()
-    if (source.cornerRadius !== undefined) ret.cornerRadius = importCornerRadius(source.cornerRadius, ctx)
-    // inject code
-    if (ctx?.document) {
-        const registed = ctx.document.symbolregist.get(ret.id);
-        // if (!registed || registed === 'freesymbols' || registed === ctx.curPage) {
-        ctx.document.symbolsMgr.add(ret.id, ret);
-        // }
-    }
-    return ret
-}
-/* symbol union shape */
-export function importSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IImportContext): impl.SymbolUnionShape {
-    const ret: impl.SymbolUnionShape = new impl.SymbolUnionShape (
-        (() => {
-            const ret = new BasicArray<number>()
-            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
-                const r = source.crdtidx[i]
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
-        source.id,
-        source.name,
-        importShapeType(source.type, ctx),
-        importShapeFrame(source.frame, ctx),
-        importStyle(source.style, ctx),
-        (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.PathShape2 | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape | impl.PolygonShape | impl.StarShape)>()
-            for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
-                const r = (() => {
-                    const val = source.childs[i]
-                    if (val.typeId == 'group-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importGroupShape(val as types.GroupShape, ctx)
-                    }
-                    if (val.typeId == 'image-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importImageShape(val as types.ImageShape, ctx)
-                    }
-                    if (val.typeId == 'path-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importPathShape(val as types.PathShape, ctx)
-                    }
-                    if (val.typeId == 'path-shape2') {
-                        return importPathShape2(val as types.PathShape2, ctx)
-                    }
-                    if (val.typeId == 'rect-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importRectShape(val as types.RectShape, ctx)
-                    }
-                    if (val.typeId == 'symbol-ref-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importSymbolRefShape(val as types.SymbolRefShape, ctx)
-                    }
-                    if (val.typeId == 'symbol-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importSymbolShape(val as types.SymbolShape, ctx)
-                    }
-                    if (val.typeId == 'symbol-union-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importSymbolUnionShape(val as types.SymbolUnionShape, ctx)
-                    }
-                    if (val.typeId == 'text-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importTextShape(val as types.TextShape, ctx)
-                    }
-                    if (val.typeId == 'artboard') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importArtboard(val as types.Artboard, ctx)
-                    }
-                    if (val.typeId == 'line-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importLineShape(val as types.LineShape, ctx)
-                    }
-                    if (val.typeId == 'oval-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importOvalShape(val as types.OvalShape, ctx)
-                    }
-                    if (val.typeId == 'table-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importTableShape(val as types.TableShape, ctx)
-                    }
-                    if (val.typeId == 'contact-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importContactShape(val as types.ContactShape, ctx)
-                    }
-                    if (val.typeId == 'shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importShape(val as types.Shape, ctx)
-                    }
-                    if (val.typeId == 'cutout-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importCutoutShape(val as types.CutoutShape, ctx)
-                    }
-                    if (val.typeId == 'bool-shape') {
-                        return importBoolShape(val as types.BoolShape, ctx)
-                    }
-                    if (val.typeId == 'polygon-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importPolygonShape(val as types.PolygonShape, ctx)
-                    }
-                    if (val.typeId == 'star-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importStarShape(val as types.StarShape, ctx)
-                    }
-                    {
-                        throw new Error('unknow val: ' + val)
-                    }
-                })()
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
-        (() => {
-            const ret = new BasicMap<string, impl.Variable>()
-            const val = source.variables as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-            Object.keys(val).forEach((k) => {
-                const v = val[k];
-                ret.set(k, importVariable(v, ctx))
-            });
-            return ret
-        })()
-    )
-    if (source.symtags !== undefined) ret.symtags = (() => {
-        const ret = new BasicMap<string, string>()
-        const val = source.symtags as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-        Object.keys(val).forEach((k) => {
-            const v = val[k];
-            ret.set(k, v)
-        });
-        return ret
-    })()
-    if (source.cornerRadius !== undefined) ret.cornerRadius = importCornerRadius(source.cornerRadius, ctx)
-    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
-    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
-    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
-    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
-    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
-    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
-    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
-    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
-    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
-    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
-    if (source.rotation !== undefined) ret.rotation = source.rotation
-    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
-    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
-    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
-    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicMap<string, string>()
-        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-        Object.keys(val).forEach((k) => {
-            const v = val[k];
-            ret.set(k, v)
-        });
-        return ret
-    })()
-    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
-    return ret
-}
-/* page */
-export function importPage(source: types.Page, ctx?: IImportContext): impl.Page {
-    // inject code
-    // 兼容旧数据
-    if (!(source as any).crdtidx) (source as any).crdtidx = []
-    const ret: impl.Page = new impl.Page (
-        (() => {
-            const ret = new BasicArray<number>()
-            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
-                const r = source.crdtidx[i]
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
-        source.id,
-        source.name,
-        importShapeType(source.type, ctx),
-        importShapeFrame(source.frame, ctx),
-        importStyle(source.style, ctx),
-        (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.PathShape2 | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape | impl.PolygonShape | impl.StarShape)>()
-            for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
-                const r = (() => {
-                    const val = source.childs[i]
-                    if (val.typeId == 'group-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importGroupShape(val as types.GroupShape, ctx)
-                    }
-                    if (val.typeId == 'image-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importImageShape(val as types.ImageShape, ctx)
-                    }
-                    if (val.typeId == 'path-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importPathShape(val as types.PathShape, ctx)
-                    }
-                    if (val.typeId == 'path-shape2') {
-                        return importPathShape2(val as types.PathShape2, ctx)
-                    }
-                    if (val.typeId == 'rect-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importRectShape(val as types.RectShape, ctx)
-                    }
-                    if (val.typeId == 'symbol-ref-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importSymbolRefShape(val as types.SymbolRefShape, ctx)
-                    }
-                    if (val.typeId == 'symbol-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importSymbolShape(val as types.SymbolShape, ctx)
-                    }
-                    if (val.typeId == 'symbol-union-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importSymbolUnionShape(val as types.SymbolUnionShape, ctx)
-                    }
-                    if (val.typeId == 'text-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importTextShape(val as types.TextShape, ctx)
-                    }
-                    if (val.typeId == 'artboard') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importArtboard(val as types.Artboard, ctx)
-                    }
-                    if (val.typeId == 'line-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importLineShape(val as types.LineShape, ctx)
-                    }
-                    if (val.typeId == 'oval-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importOvalShape(val as types.OvalShape, ctx)
-                    }
-                    if (val.typeId == 'table-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importTableShape(val as types.TableShape, ctx)
-                    }
-                    if (val.typeId == 'contact-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importContactShape(val as types.ContactShape, ctx)
-                    }
-                    if (val.typeId == 'shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importShape(val as types.Shape, ctx)
-                    }
-                    if (val.typeId == 'cutout-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importCutoutShape(val as types.CutoutShape, ctx)
-                    }
-                    if (val.typeId == 'bool-shape') {
-                        return importBoolShape(val as types.BoolShape, ctx)
-                    }
-                    if (val.typeId == 'polygon-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importPolygonShape(val as types.PolygonShape, ctx)
-                    }
-                    if (val.typeId == 'star-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importStarShape(val as types.StarShape, ctx)
-                    }
-                    {
-                        throw new Error('unknow val: ' + val)
-                    }
-                })()
-                if (r) ret.push(r)
-            }
-            return ret
-        })()
-    )
-    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
-    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
-    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
-    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
-    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
-    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
-    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
-    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
-    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
-    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
-    if (source.rotation !== undefined) ret.rotation = source.rotation
-    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
-    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
-    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
-    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicMap<string, string>()
-        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-        Object.keys(val).forEach((k) => {
-            const v = val[k];
-            ret.set(k, v)
-        });
-        return ret
-    })()
-    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
-    if (source.backgroundColor !== undefined) ret.backgroundColor = importColor(source.backgroundColor, ctx)
-    return ret
-}
-/* cutout shape */
-export function importCutoutShape(source: types.CutoutShape, ctx?: IImportContext): impl.CutoutShape {
-    // inject code
+/* oval shape */
+const importOvalShapeOptional = importPathShapeOptional
+export function importOvalShape(source: types.OvalShape, ctx?: IImportContext): impl.OvalShape {
+        // inject code
     if (!source.pathsegs?.length) { // 兼容旧数据
         const seg: types.PathSegment = {
             crdtidx: [0],
@@ -2416,402 +1428,158 @@ export function importCutoutShape(source: types.CutoutShape, ctx?: IImportContex
         
         source.pathsegs = [seg];
     }
-    const ret: impl.CutoutShape = new impl.CutoutShape (
-        (() => {
-            const ret = new BasicArray<number>()
-            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
-                const r = source.crdtidx[i]
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
+
+    const ret: impl.OvalShape = new impl.OvalShape (
+        importCrdtidx(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
-        (() => {
-            const ret = new BasicArray<impl.PathSegment>()
-            for (let i = 0, len = source.pathsegs && source.pathsegs.length; i < len; i++) {
-                const val = source.pathsegs[i]
-                if (!val.crdtidx) val.crdtidx = [i]
-                const r = importPathSegment(source.pathsegs[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
-        source.scalingStroke
-    )
-    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
-    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
-    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
-    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
-    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
-    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
-    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
-    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
-    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
-    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
-    if (source.rotation !== undefined) ret.rotation = source.rotation
-    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
-    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
-    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
-    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicMap<string, string>()
-        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-        Object.keys(val).forEach((k) => {
-            const v = val[k];
-            ret.set(k, v)
-        });
-        return ret
-    })()
-    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
-    return ret
-}
-/* contact shape */
-export function importContactShape(source: types.ContactShape, ctx?: IImportContext): impl.ContactShape {
-    // inject code
-    
-    if (!source.pathsegs?.length) { // 兼容旧数据
-        const seg: types.PathSegment = {
-            crdtidx: [0],
-            id: '39e508e8-a1bb-4b55-ad68-aa2a9b3b447a',
-            points:[],
-            isClosed: false
-        }
-        
-        if ((source as any)?.points?.length) {
-            seg.points.push(...(source as any)?.points);
-        } 
-        
-        source.pathsegs = [seg];
-    } else {
-        if (source?.pathsegs[0]?.isClosed) {
-            source.pathsegs[0].isClosed = false;
-        }
-    }
-    const ret: impl.ContactShape = new impl.ContactShape (
-        (() => {
-            const ret = new BasicArray<number>()
-            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
-                const r = source.crdtidx[i]
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
-        source.id,
-        source.name,
-        importShapeType(source.type, ctx),
-        importShapeFrame(source.frame, ctx),
-        importStyle(source.style, ctx),
-        (() => {
-            const ret = new BasicArray<impl.PathSegment>()
-            for (let i = 0, len = source.pathsegs && source.pathsegs.length; i < len; i++) {
-                const val = source.pathsegs[i]
-                if (!val.crdtidx) val.crdtidx = [i]
-                const r = importPathSegment(source.pathsegs[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
-        source.isEdited,
-        importText(source.text, ctx),
-        source.mark
-    )
-    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
-    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
-    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
-    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
-    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
-    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
-    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
-    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
-    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
-    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
-    if (source.rotation !== undefined) ret.rotation = source.rotation
-    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
-    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
-    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
-    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicMap<string, string>()
-        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-        Object.keys(val).forEach((k) => {
-            const v = val[k];
-            ret.set(k, v)
-        });
-        return ret
-    })()
-    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
-    if (source.from !== undefined) ret.from = importContactForm(source.from, ctx)
-    if (source.to !== undefined) ret.to = importContactForm(source.to, ctx)
-    return ret
-}
-/* bool shape */
-export function importBoolShape(source: types.BoolShape, ctx?: IImportContext): impl.BoolShape {
-    const ret: impl.BoolShape = new impl.BoolShape (
-        (() => {
-            const ret = new BasicArray<number>()
-            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
-                const r = source.crdtidx[i]
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
-        source.id,
-        source.name,
-        importShapeType(source.type, ctx),
-        importShapeFrame(source.frame, ctx),
-        importStyle(source.style, ctx),
-        (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.PathShape2 | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape | impl.PolygonShape | impl.StarShape)>()
-            for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
-                const r = (() => {
-                    const val = source.childs[i]
-                    if (val.typeId == 'group-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importGroupShape(val as types.GroupShape, ctx)
-                    }
-                    if (val.typeId == 'image-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importImageShape(val as types.ImageShape, ctx)
-                    }
-                    if (val.typeId == 'path-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importPathShape(val as types.PathShape, ctx)
-                    }
-                    if (val.typeId == 'path-shape2') {
-                        return importPathShape2(val as types.PathShape2, ctx)
-                    }
-                    if (val.typeId == 'rect-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importRectShape(val as types.RectShape, ctx)
-                    }
-                    if (val.typeId == 'symbol-ref-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importSymbolRefShape(val as types.SymbolRefShape, ctx)
-                    }
-                    if (val.typeId == 'symbol-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importSymbolShape(val as types.SymbolShape, ctx)
-                    }
-                    if (val.typeId == 'symbol-union-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importSymbolUnionShape(val as types.SymbolUnionShape, ctx)
-                    }
-                    if (val.typeId == 'text-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importTextShape(val as types.TextShape, ctx)
-                    }
-                    if (val.typeId == 'artboard') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importArtboard(val as types.Artboard, ctx)
-                    }
-                    if (val.typeId == 'line-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importLineShape(val as types.LineShape, ctx)
-                    }
-                    if (val.typeId == 'oval-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importOvalShape(val as types.OvalShape, ctx)
-                    }
-                    if (val.typeId == 'table-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importTableShape(val as types.TableShape, ctx)
-                    }
-                    if (val.typeId == 'contact-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importContactShape(val as types.ContactShape, ctx)
-                    }
-                    if (val.typeId == 'shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importShape(val as types.Shape, ctx)
-                    }
-                    if (val.typeId == 'cutout-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importCutoutShape(val as types.CutoutShape, ctx)
-                    }
-                    if (val.typeId == 'bool-shape') {
-                        return importBoolShape(val as types.BoolShape, ctx)
-                    }
-                    if (val.typeId == 'polygon-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importPolygonShape(val as types.PolygonShape, ctx)
-                    }
-                    if (val.typeId == 'star-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importStarShape(val as types.StarShape, ctx)
-                    }
-                    {
-                        throw new Error('unknow val: ' + val)
-                    }
-                })()
-                if (r) ret.push(r)
-            }
-            return ret
-        })()
-    )
-    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
-    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
-    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
-    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
-    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
-    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
-    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
-    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
-    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
-    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
-    if (source.rotation !== undefined) ret.rotation = source.rotation
-    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
-    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
-    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
-    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicMap<string, string>()
-        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-        Object.keys(val).forEach((k) => {
-            const v = val[k];
-            ret.set(k, v)
-        });
-        return ret
-    })()
-    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
+        importPathShape_pathsegs(source.pathsegs, ctx),
+        importEllipse(source.ellipse, ctx))
+    importOvalShapeOptional(ret, source, ctx)
     return ret
 }
 /* artboard shape */
+function importArtboardOptional(tar: impl.Artboard, source: types.Artboard, ctx?: IImportContext) {
+    importGroupShapeOptional(tar, source)
+    if (source.cornerRadius) tar.cornerRadius = importCornerRadius(source.cornerRadius, ctx)
+}
 export function importArtboard(source: types.Artboard, ctx?: IImportContext): impl.Artboard {
     const ret: impl.Artboard = new impl.Artboard (
-        (() => {
-            const ret = new BasicArray<number>()
-            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
-                const r = source.crdtidx[i]
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
+        importCrdtidx(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
-        (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.PathShape2 | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape | impl.PolygonShape | impl.StarShape)>()
-            for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
-                const r = (() => {
-                    const val = source.childs[i]
-                    if (val.typeId == 'group-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importGroupShape(val as types.GroupShape, ctx)
-                    }
-                    if (val.typeId == 'image-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importImageShape(val as types.ImageShape, ctx)
-                    }
-                    if (val.typeId == 'path-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importPathShape(val as types.PathShape, ctx)
-                    }
-                    if (val.typeId == 'path-shape2') {
-                        return importPathShape2(val as types.PathShape2, ctx)
-                    }
-                    if (val.typeId == 'rect-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importRectShape(val as types.RectShape, ctx)
-                    }
-                    if (val.typeId == 'symbol-ref-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importSymbolRefShape(val as types.SymbolRefShape, ctx)
-                    }
-                    if (val.typeId == 'symbol-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importSymbolShape(val as types.SymbolShape, ctx)
-                    }
-                    if (val.typeId == 'symbol-union-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importSymbolUnionShape(val as types.SymbolUnionShape, ctx)
-                    }
-                    if (val.typeId == 'text-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importTextShape(val as types.TextShape, ctx)
-                    }
-                    if (val.typeId == 'artboard') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importArtboard(val as types.Artboard, ctx)
-                    }
-                    if (val.typeId == 'line-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importLineShape(val as types.LineShape, ctx)
-                    }
-                    if (val.typeId == 'oval-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importOvalShape(val as types.OvalShape, ctx)
-                    }
-                    if (val.typeId == 'table-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importTableShape(val as types.TableShape, ctx)
-                    }
-                    if (val.typeId == 'contact-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importContactShape(val as types.ContactShape, ctx)
-                    }
-                    if (val.typeId == 'shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importShape(val as types.Shape, ctx)
-                    }
-                    if (val.typeId == 'cutout-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importCutoutShape(val as types.CutoutShape, ctx)
-                    }
-                    if (val.typeId == 'bool-shape') {
-                        return importBoolShape(val as types.BoolShape, ctx)
-                    }
-                    if (val.typeId == 'polygon-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importPolygonShape(val as types.PolygonShape, ctx)
-                    }
-                    if (val.typeId == 'star-shape') {
-                        if (!val.crdtidx) val.crdtidx = [i]
-                        return importStarShape(val as types.StarShape, ctx)
-                    }
-                    {
-                        throw new Error('unknow val: ' + val)
-                    }
-                })()
-                if (r) ret.push(r)
-            }
-            return ret
-        })()
-    )
-    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
-    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
-    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
-    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
-    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
-    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
-    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
-    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
-    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
-    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
-    if (source.rotation !== undefined) ret.rotation = source.rotation
-    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
-    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
-    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
-    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        importGroupShape_childs(source.childs, ctx))
+    importArtboardOptional(ret, source, ctx)
+    return ret
+}
+/* bool shape */
+const importBoolShapeOptional = importGroupShapeOptional
+export function importBoolShape(source: types.BoolShape, ctx?: IImportContext): impl.BoolShape {
+    const ret: impl.BoolShape = new impl.BoolShape (
+        importCrdtidx(source.crdtidx, ctx),
+        source.id,
+        source.name,
+        importShapeType(source.type, ctx),
+        importShapeFrame(source.frame, ctx),
+        importStyle(source.style, ctx),
+        importGroupShape_childs(source.childs, ctx))
+    importBoolShapeOptional(ret, source, ctx)
+    return ret
+}
+/* group shape */
+function importGroupShapeOptional(tar: impl.GroupShape, source: types.GroupShape, ctx?: IImportContext) {
+    importShapeOptional(tar, source)
+    if (source.fixedRadius) tar.fixedRadius = source.fixedRadius
+}
+export function importGroupShape(source: types.GroupShape, ctx?: IImportContext): impl.GroupShape {
+        // inject code
+    if ((source as any).isBoolOpShape) {
+        source.typeId = "bool-shape";
+        source.type = types.ShapeType.BoolShape;
+        return importBoolShape(source, ctx);
+    }
+
+    const ret: impl.GroupShape = new impl.GroupShape (
+        importCrdtidx(source.crdtidx, ctx),
+        source.id,
+        source.name,
+        importShapeType(source.type, ctx),
+        importShapeFrame(source.frame, ctx),
+        importStyle(source.style, ctx),
+        importGroupShape_childs(source.childs, ctx))
+    importGroupShapeOptional(ret, source, ctx)
+    return ret
+}
+/* page */
+function importPageOptional(tar: impl.Page, source: types.Page, ctx?: IImportContext) {
+    importGroupShapeOptional(tar, source)
+    if (source.backgroundColor) tar.backgroundColor = importColor(source.backgroundColor, ctx)
+}
+export function importPage(source: types.Page, ctx?: IImportContext): impl.Page {
+        // inject code
+    // 兼容旧数据
+    if (!(source as any).crdtidx) (source as any).crdtidx = []
+
+    const ret: impl.Page = new impl.Page (
+        importCrdtidx(source.crdtidx, ctx),
+        source.id,
+        source.name,
+        importShapeType(source.type, ctx),
+        importShapeFrame(source.frame, ctx),
+        importStyle(source.style, ctx),
+        importGroupShape_childs(source.childs, ctx))
+    importPageOptional(ret, source, ctx)
+    return ret
+}
+/* symbol shape */
+function importSymbolShapeOptional(tar: impl.SymbolShape, source: types.SymbolShape, ctx?: IImportContext) {
+    importGroupShapeOptional(tar, source)
+    if (source.symtags) tar.symtags = (() => {
         const ret = new BasicMap<string, string>()
-        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-        Object.keys(val).forEach((k) => {
-            const v = val[k];
-            ret.set(k, v)
-        });
+        const _val = source.symtags as any
+        Object.keys(source.symtags).forEach((k) => {
+            const val = _val[k]
+            ret.set(k, val)
+        })
         return ret
     })()
-    if (source.haveEdit !== undefined) ret.haveEdit = source.haveEdit
-    if (source.cornerRadius !== undefined) ret.cornerRadius = importCornerRadius(source.cornerRadius, ctx)
+    if (source.cornerRadius) tar.cornerRadius = importCornerRadius(source.cornerRadius, ctx)
+}
+export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContext): impl.SymbolShape {
+    const ret: impl.SymbolShape = new impl.SymbolShape (
+        importCrdtidx(source.crdtidx, ctx),
+        source.id,
+        source.name,
+        importShapeType(source.type, ctx),
+        importShapeFrame(source.frame, ctx),
+        importStyle(source.style, ctx),
+        importGroupShape_childs(source.childs, ctx),
+        (() => {
+            const ret = new BasicMap<string, impl.Variable>()
+            const _val = source.variables as any
+            Object.keys(source.variables).forEach((k) => {
+                const val = _val[k]
+                ret.set(k, importVariable(val, ctx))
+            })
+            return ret
+        })())
+    importSymbolShapeOptional(ret, source, ctx)
+        // inject code
+    if (ctx?.document) {
+        const registed = ctx.document.symbolregist.get(ret.id);
+        // if (!registed || registed === 'freesymbols' || registed === ctx.curPage) {
+        ctx.document.symbolsMgr.add(ret.id, ret);
+        // }
+    }
+
+    return ret
+}
+/* symbol union shape */
+const importSymbolUnionShapeOptional = importSymbolShapeOptional
+export function importSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IImportContext): impl.SymbolUnionShape {
+    const ret: impl.SymbolUnionShape = new impl.SymbolUnionShape (
+        importCrdtidx(source.crdtidx, ctx),
+        source.id,
+        source.name,
+        importShapeType(source.type, ctx),
+        importShapeFrame(source.frame, ctx),
+        importStyle(source.style, ctx),
+        importGroupShape_childs(source.childs, ctx),
+        (() => {
+            const ret = new BasicMap<string, impl.Variable>()
+            const _val = source.variables as any
+            Object.keys(source.variables).forEach((k) => {
+                const val = _val[k]
+                ret.set(k, importVariable(val, ctx))
+            })
+            return ret
+        })())
+    importSymbolUnionShapeOptional(ret, source, ctx)
     return ret
 }

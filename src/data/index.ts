@@ -1,3 +1,6 @@
+export * from "./basic"
+export * from "./transact"
+export * from "./consts"
 
 export * from './artboard'
 export * from './document'
@@ -16,5 +19,3 @@ export { parsePath } from './pathparser'
 export { layoutTable } from './tablelayout'
 export { layoutText, TextLayout, getNextChar } from './textlayout'
 export { importGradient } from './baseimport'
-
-export { Crdtidx } from './baseclasses'
