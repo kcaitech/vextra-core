@@ -6,7 +6,7 @@ export {
     ShapeFrame, Ellipse, PathSegment, OverrideType,
 } from "./baseclasses"
 import { ShapeType, ShapeFrame, OverrideType } from "./baseclasses"
-import { Shape, SymbolShape, CornerRadius } from "./shape";
+import { Shape, SymbolShape, CornerRadius, Transform, ShapeSize } from "./shape";
 import { Path } from "./path";
 import { Variable } from "./variable";
 import { SymbolMgr } from "./symbolmgr";
@@ -33,7 +33,8 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         id: string,
         name: string,
         type: ShapeType,
-        frame: ShapeFrame,
+        transform: Transform,
+        size: ShapeSize,
         style: Style,
         refId: string,
         variables: BasicMap<string, Variable>
@@ -43,7 +44,8 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
             id,
             name,
             type,
-            frame,
+            transform,
+            size,
             style
         )
         this.__refId = refId

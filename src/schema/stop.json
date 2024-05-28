@@ -9,8 +9,7 @@
             "type": "string"
         },
         "position": {
-            "type": "number",
-            "default": 0
+            "type": "number"
         },
         "color": {
             "$ref": "./color.json"

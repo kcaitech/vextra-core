@@ -3,8 +3,7 @@
     "type": "object",
     "properties": {
         "imageRef": {
-            "type": "string",
-            "default": "$uuid"
+            "type": "string"
         }
     },
     "required": [

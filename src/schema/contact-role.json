@@ -6,10 +6,7 @@
             "$ref": "./crdtidx.json"
         },
         "id": {
-            "type": "string",
-            "minLength": 32,
-            "maxLength": 36,
-            "default": "$uuid"
+            "type": "string"
         },
         "roleType": {
             "$ref": "./contact-role-type.json"

@@ -370,6 +370,13 @@ export function exportShapeFrame(source: types.ShapeFrame, ctx?: IExportContext)
     ret.height = source.height
     return ret
 }
+/* shape size */
+export function exportShapeSize(source: types.ShapeSize, ctx?: IExportContext): types.ShapeSize {
+    const ret: types.ShapeSize = {} as types.ShapeSize
+    ret.width = source.width
+    ret.height = source.height
+    return ret
+}
 /* shape types */
 export function exportShapeType(source: types.ShapeType, ctx?: IExportContext): types.ShapeType {
     return source
@@ -471,6 +478,17 @@ export function exportText_paras(source: types.Text_paras, ctx?: IExportContext)
     })
     return ret
 }
+/* transform */
+export function exportTransform(source: types.Transform, ctx?: IExportContext): types.Transform {
+    const ret: types.Transform = {} as types.Transform
+    ret.m00 = source.m00
+    ret.m01 = source.m01
+    ret.m02 = source.m02
+    ret.m10 = source.m10
+    ret.m11 = source.m11
+    ret.m12 = source.m12
+    return ret
+}
 /* underline types */
 export function exportUnderlineType(source: types.UnderlineType, ctx?: IExportContext): types.UnderlineType {
     return source
@@ -570,6 +588,7 @@ export function exportDocumentMeta(source: types.DocumentMeta, ctx?: IExportCont
     const ret: types.DocumentMeta = {} as types.DocumentMeta
     ret.id = source.id
     ret.name = source.name
+    ret.version = source.version
     ret.pagesList = exportDocumentMeta_pagesList(source.pagesList, ctx)
     ret.lastCmdId = source.lastCmdId
     ret.symbolregist = (() => {
@@ -756,19 +775,17 @@ export function exportShape(source: types.Shape, ctx?: IExportContext): types.Sh
     ret.id = source.id
     ret.name = source.name
     ret.type = exportShapeType(source.type, ctx)
-    ret.frame = exportShapeFrame(source.frame, ctx)
+    ret.transform = exportTransform(source.transform, ctx)
+    ret.size = exportShapeSize(source.size, ctx)
     ret.style = exportStyle(source.style, ctx)
     if (source.boolOp) ret.boolOp = exportBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport) ret.isFixedToViewport = source.isFixedToViewport
-    if (source.isFlippedHorizontal) ret.isFlippedHorizontal = source.isFlippedHorizontal
-    if (source.isFlippedVertical) ret.isFlippedVertical = source.isFlippedVertical
     if (source.isLocked) ret.isLocked = source.isLocked
     if (source.isVisible) ret.isVisible = source.isVisible
     if (source.exportOptions) ret.exportOptions = exportExportOptions(source.exportOptions, ctx)
     if (source.nameIsFixed) ret.nameIsFixed = source.nameIsFixed
     if (source.resizingConstraint) ret.resizingConstraint = source.resizingConstraint
     if (source.resizingType) ret.resizingType = exportResizeType(source.resizingType, ctx)
-    if (source.rotation) ret.rotation = source.rotation
     if (source.constrainerProportions) ret.constrainerProportions = source.constrainerProportions
     if (source.clippingMaskMode) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask) ret.hasClippingMask = source.hasClippingMask

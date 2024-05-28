@@ -4,7 +4,7 @@ import { BasicArray } from "./basic"
 import { layoutBulletNumber } from "./textbnlayout";
 import { transformText } from "./textlayouttransform";
 import { gPal } from "../basic/pal";
-import { ShapeFrame, TextAttr } from "./typesdefine";
+import { ShapeFrame, ShapeSize, TextAttr } from "./typesdefine";
 
 const TAB_WIDTH = 28;
 const INDENT_WIDTH = TAB_WIDTH;
@@ -673,7 +673,7 @@ export function layoutPara(text: Text, para: Para, layoutWidth: number, preBulle
     return paraLayout;
 }
 
-export function layoutText(text: Text, frame: ShapeFrame, behavior?: TextBehaviour): TextLayout {
+export function layoutText(text: Text, frame: ShapeSize, behavior?: TextBehaviour): TextLayout {
     const layoutWidth = ((b: TextBehaviour) => {
         switch (b) {
             case TextBehaviour.Flexible: return Number.MAX_VALUE;

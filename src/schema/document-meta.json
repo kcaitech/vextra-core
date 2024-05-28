@@ -3,14 +3,10 @@
     "type": "object",
     "properties": {
         "id": {
-            "type": "string",
-            "minLength": 32,
-            "maxLength": 36,
-            "default": "$uuid"
+            "type": "string"
         },
         "name": {
-            "type": "string",
-            "default": "Page"
+            "type": "string"
         },
         "pagesList": {
             "type": "array",
@@ -19,8 +15,7 @@
             }
         },
         "lastCmdId": {
-            "type": "string",
-            "default": ""
+            "type": "string"
         },
         "symbolregist": {
             "type": "map",
@@ -32,13 +27,16 @@
             }
         },
         "freesymbolsVersionId": {
-            "type": "string",
-            "default": ""
+            "type": "string"
+        },
+        "version": {
+            "type": "number"
         }
     },
     "required": [
         "id",
         "name",
+        "version",
         "pagesList",
         "lastCmdId",
         "symbolregist"

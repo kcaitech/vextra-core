@@ -6,18 +6,13 @@
             "$ref": "./crdtidx.json"
         },
         "typeId": {
-            "type": "string",
-            "default": "shape"
+            "type": "string"
         },
         "id": {
-            "type": "string",
-            "minLength": 32,
-            "maxLength": 36,
-            "default": "$uuid"
+            "type": "string"
         },
         "isEnabled": {
-            "type": "boolean",
-            "default": false
+            "type": "boolean"
         },
         "fillType": {
             "$ref": "./fill-type.json"
@@ -32,8 +27,7 @@
             "$ref": "./border-position.json"
         },
         "thickness": {
-            "type": "number",
-            "default": 1
+            "type": "number"
         },
         "gradient": {
             "$ref": "./gradient.json"

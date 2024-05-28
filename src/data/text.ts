@@ -35,7 +35,7 @@ import { _travelTextPara } from "./texttravel";
 import { FillType, Padding } from "./baseclasses";
 import { Gradient } from "./style"
 import { Color } from "./color";
-import { ShapeFrame } from "./typesdefine";
+import { ShapeFrame, ShapeSize } from "./typesdefine";
 
 /*
  文本框属性
@@ -224,7 +224,7 @@ export class Text extends Basic implements classes.Text {
         return { token: cur, layout: o.layout! }
     }
 
-    getLayout2(frame: ShapeFrame): TextLayout {
+    getLayout2(frame: ShapeSize): TextLayout {
 
         const width = frame.width;
         const height = frame.height;

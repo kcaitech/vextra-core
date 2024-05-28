@@ -13,7 +13,9 @@ import {
     ResizeType,
     ShapeFrame,
     ShapeType,
+    Transform,
     VariableType,
+    ShapeSize,
 } from "./baseclasses"
 import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
@@ -25,7 +27,7 @@ import { Variable } from "./variable";
 export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D,
     CurvePoint, ShapeFrame, Ellipse, PathSegment, OverrideType, VariableType,
-    FillRule, CornerRadius,
+    FillRule, CornerRadius, Transform, ShapeSize
 } from "./baseclasses";
 
 export { Variable } from "./variable";
@@ -62,6 +64,29 @@ export class Shape extends Basic implements classes.Shape {
         this.parent?.bubblenotify(...args);
     }
 
+    private __bubblewatcher: Set<((...args: any[]) => void)> = new Set();
+
+    public bubblewatch(watcher: ((...args: any[]) => void)): (() => void) {
+        this.__bubblewatcher.add(watcher);
+        return () => {
+            this.__bubblewatcher.delete(watcher);
+        };
+    }
+
+    public bubbleunwatch(watcher: ((...args: any[]) => void)): boolean {
+        return this.__bubblewatcher.delete(watcher);
+    }
+
+    public bubblenotify(...args: any[]) {
+        if (this.__bubblewatcher.size > 0) {
+            // 在set的foreach内部修改set会导致无限循环
+            Array.from(this.__bubblewatcher).forEach(w => {
+                w(...args);
+            });
+        }
+        this.parent?.bubblenotify(...args);
+    }
+
     getCrdtPath(): string[] {
         const page = this.getPage();
         if (page && page !== this) return [page.id, this.id];
@@ -81,8 +106,10 @@ export class Shape extends Basic implements classes.Shape {
     crdtidx: BasicArray<number>
     id: string
     type: ShapeType
-    frame: ShapeFrame
+    // frame: ShapeFrame
     style: Style
+    transform: Transform
+    size: ShapeSize
     boolOp?: BoolOp
     isFixedToViewport?: boolean
     isFlippedHorizontal?: boolean
@@ -108,7 +135,8 @@ export class Shape extends Basic implements classes.Shape {
         id: string,
         name: string,
         type: ShapeType,
-        frame: ShapeFrame,
+        transform: Transform,
+        size: ShapeSize,
         style: Style,
     ) {
         super()
@@ -116,43 +144,9 @@ export class Shape extends Basic implements classes.Shape {
         this.id = id
         this.name = name
         this.type = type
-        this.frame = frame
+        this.transform = transform
+        this.size = size
         this.style = style
-    }
-
-    // /**
-    //  * for command
-    //  */
-    // get shapeId(): (string | { rowIdx: number, colIdx: number })[] {
-    //     return [this.id];
-    // }
-
-    // public notify(...args: any[]): void {
-    //     super.notify(...args);
-    //     this.parent?.bubblenotify(...args);
-    // }
-
-    private __bubblewatcher: Set<((...args: any[]) => void)> = new Set();
-
-    public bubblewatch(watcher: ((...args: any[]) => void)): (() => void) {
-        this.__bubblewatcher.add(watcher);
-        return () => {
-            this.__bubblewatcher.delete(watcher);
-        };
-    }
-
-    public bubbleunwatch(watcher: ((...args: any[]) => void)): boolean {
-        return this.__bubblewatcher.delete(watcher);
-    }
-
-    public bubblenotify(...args: any[]) {
-        if (this.__bubblewatcher.size > 0) {
-            // 在set的foreach内部修改set会导致无限循环
-            Array.from(this.__bubblewatcher).forEach(w => {
-                w(...args);
-            });
-        }
-        this.parent?.bubblenotify(...args);
     }
 
     get naviChilds(): Shape[] | undefined {
@@ -167,12 +161,12 @@ export class Shape extends Basic implements classes.Shape {
         return false;
     }
 
-    getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
+    getPathOfFrame(frame: ShapeSize, fixedRadius?: number): Path {
         return new Path();
     }
 
     getPath(fixedRadius?: number): Path {
-        return this.getPathOfFrame(this.frame, fixedRadius);
+        return this.getPathOfFrame(this.size, fixedRadius);
     }
 
     getPathStr(fixedRadius?: number): string {
@@ -204,7 +198,7 @@ export class Shape extends Basic implements classes.Shape {
      * @returns
      */
     frame2Root(): ShapeFrame {
-        const frame = this.frame;
+        const frame = this.size;
         const m = this.matrix2Root();
         const lt = m.computeCoord(0, 0);
         const rb = m.computeCoord(frame.width, frame.height);
@@ -212,8 +206,10 @@ export class Shape extends Basic implements classes.Shape {
     }
 
     frame2Parent(): ShapeFrame {
-        if (this.isNoTransform()) return this.frame;
-        const frame = this.frame;
+        if (this.isNoTransform()) {
+            return new ShapeFrame(0, 0, this.size.width, this.size.height);
+        }
+        const frame = this.size;
         const m = this.matrix2Parent();
         const lt = m.computeCoord(0, 0);
         const rb = m.computeCoord(frame.width, frame.height);
@@ -239,26 +235,16 @@ export class Shape extends Basic implements classes.Shape {
     }
 
     matrix2Parent(matrix?: Matrix) {
-        const m = matrix || new Matrix();
-        const frame = this.frame;
-        if (this.isNoTransform()) {
-            m.trans(frame.x, frame.y);
-            return m;
-        }
-        const cx = frame.width / 2;
-        const cy = frame.height / 2;
-        m.trans(-cx, -cy);
-        if (this.rotation) m.rotate(this.rotation / 360 * 2 * Math.PI);
-        if (this.isFlippedHorizontal) m.flipHoriz();
-        if (this.isFlippedVertical) m.flipVert();
-        m.trans(cx, cy);
-        m.trans(frame.x, frame.y);
-        return m;
+        const t = this.transform;
+        const m = new Matrix(t.m00, t.m10, t.m01, t.m11, t.m02, t.m12);
+        if (!matrix) return m;
+        matrix.multiAtLeft(m);
+        return matrix;
     }
 
     // private __boundingBox?: ShapeFrame;
     boundingBox(): ShapeFrame {
-        if (this.isNoTransform()) return this.frame;
+        if (this.isNoTransform()) return new ShapeFrame(0, 0, this.size.width, this.size.height);
         const path = this.getPath();
         if (path.length > 0) {
             const m = this.matrix2Parent();
@@ -267,7 +253,7 @@ export class Shape extends Basic implements classes.Shape {
             return new ShapeFrame(bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
         }
 
-        const frame = this.frame;
+        const frame = this.size;
         const m = this.matrix2Parent();
         const corners = [{ x: 0, y: 0 }, { x: frame.width, y: 0 }, { x: frame.width, y: frame.height }, {
             x: 0,
@@ -293,7 +279,7 @@ export class Shape extends Basic implements classes.Shape {
             return new ShapeFrame(bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
         }
 
-        const frame = this.frame;
+        const frame = this.size;
         const m = this.matrix2Parent();
         const corners = [{ x: 0, y: 0 }, { x: frame.width, y: 0 }, { x: frame.width, y: frame.height }, {
             x: 0,
@@ -363,8 +349,8 @@ export class Shape extends Basic implements classes.Shape {
     }
 
     setFrameSize(w: number, h: number) {
-        this.frame.width = w;
-        this.frame.height = h;
+        this.size.width = w;
+        this.size.height = h;
     }
 
     setVisible(isVisible: boolean | undefined) {
@@ -458,7 +444,8 @@ export class GroupShape extends Shape implements classes.GroupShape {
         id: string,
         name: string,
         type: ShapeType,
-        frame: ShapeFrame,
+        transform: Transform,
+        size: ShapeSize,
         style: Style,
         childs: BasicArray<(GroupShape | Shape | ImageShape | PathShape | RectShape | TextShape)>
     ) {
@@ -467,7 +454,8 @@ export class GroupShape extends Shape implements classes.GroupShape {
             id,
             name,
             type,
-            frame,
+            transform,
+            size,
             style
         )
         this.childs = childs;
@@ -525,16 +513,16 @@ export class GroupShape extends Shape implements classes.GroupShape {
         })
     }
 
-    getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
+    getPathOfFrame(frame: ShapeSize, fixedRadius?: number): Path {
         const x = 0;
         const y = 0;
         const w = frame.width;
         const h = frame.height;
         let path = [["M", x, y],
-            ["l", w, 0],
-            ["l", 0, h],
-            ["l", -w, 0],
-            ["z"]];
+        ["l", w, 0],
+        ["l", 0, h],
+        ["l", -w, 0],
+        ["z"]];
         return new Path(path);
     }
 
@@ -567,7 +555,8 @@ export class BoolShape extends GroupShape implements classes.BoolShape {
         id: string,
         name: string,
         type: ShapeType,
-        frame: ShapeFrame,
+        transform: Transform,
+        size: ShapeSize,
         style: Style,
         childs: BasicArray<(GroupShape | Shape)>
     ) {
@@ -576,7 +565,8 @@ export class BoolShape extends GroupShape implements classes.BoolShape {
             id,
             name,
             ShapeType.BoolShape,
-            frame,
+            transform,
+            size,
             style,
             childs
         )
@@ -605,7 +595,7 @@ export class BoolShape extends GroupShape implements classes.BoolShape {
 //     return refId + '/' + type;
 // }
 
-export function getPathOfRadius(frame: ShapeFrame, cornerRadius?: CornerRadius, fixedRadius?: number): Path {
+export function getPathOfRadius(frame: ShapeSize, cornerRadius?: CornerRadius, fixedRadius?: number): Path {
     const w = frame.width;
     const h = frame.height;
 
@@ -701,7 +691,8 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         id: string,
         name: string,
         type: ShapeType,
-        frame: ShapeFrame,
+        transform: Transform,
+        size: ShapeSize,
         style: Style,
         childs: BasicArray<Shape>,
         variables: BasicMap<string, Variable>
@@ -711,7 +702,8 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
             id,
             name,
             type,
-            frame,
+            transform,
+            size,
             style,
             childs
         )
@@ -763,7 +755,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         return true;
     }
 
-    getPathOfFrame(frame: classes.ShapeFrame, fixedRadius?: number | undefined): Path {
+    getPathOfFrame(frame: ShapeSize, fixedRadius?: number | undefined): Path {
         return getPathOfRadius(frame, this.cornerRadius, fixedRadius);
     }
 
@@ -789,7 +781,8 @@ export class SymbolUnionShape extends SymbolShape implements classes.SymbolUnion
         id: string,
         name: string,
         type: ShapeType,
-        frame: ShapeFrame,
+        transform: Transform,
+        size: ShapeSize,
         style: Style,
         childs: BasicArray<Shape>,
         variables: BasicMap<string, Variable>
@@ -799,7 +792,8 @@ export class SymbolUnionShape extends SymbolShape implements classes.SymbolUnion
             id,
             name,
             type,
-            frame,
+            transform,
+            size,
             style,
             childs,
             variables
@@ -825,7 +819,8 @@ export class PathShape extends Shape implements classes.PathShape {
         id: string,
         name: string,
         type: ShapeType,
-        frame: ShapeFrame,
+        transform: Transform,
+        size: ShapeSize,
         style: Style,
         pathsegs: BasicArray<PathSegment>
     ) {
@@ -834,14 +829,15 @@ export class PathShape extends Shape implements classes.PathShape {
             id,
             name,
             type,
-            frame,
+            transform,
+            size,
             style
         );
 
         this.pathsegs = pathsegs;
     }
 
-    getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
+    getPathOfFrame(frame: ShapeSize, fixedRadius?: number): Path {
         // const offsetX = 0;
         // const offsetY = 0;
         const width = frame.width;
@@ -897,7 +893,8 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
         id: string,
         name: string,
         type: ShapeType,
-        frame: ShapeFrame,
+        transform: Transform,
+        size: ShapeSize,
         style: Style,
         pathsegs: BasicArray<PathSegment>
     ) {
@@ -906,13 +903,14 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
             id,
             name,
             type,
-            frame,
+            transform,
+            size,
             style
         )
         this.pathsegs = pathsegs
     }
 
-    getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
+    getPathOfFrame(frame: ShapeSize, fixedRadius?: number): Path {
         // const offsetX = 0;
         // const offsetY = 0;
         const width = frame.width;
@@ -954,7 +952,8 @@ export class RectShape extends PathShape implements classes.RectShape {
         id: string,
         name: string,
         type: ShapeType,
-        frame: ShapeFrame,
+        transform: Transform,
+        size: ShapeSize,
         style: Style,
         pathsegs: BasicArray<PathSegment>
     ) {
@@ -963,7 +962,8 @@ export class RectShape extends PathShape implements classes.RectShape {
             id,
             name,
             type,
-            frame,
+            transform,
+            size,
             style,
             pathsegs
         )
@@ -986,7 +986,8 @@ export class ImageShape extends RectShape implements classes.ImageShape {
         id: string,
         name: string,
         type: ShapeType,
-        frame: ShapeFrame,
+        transform: Transform,
+        size: ShapeSize,
         style: Style,
         pathsegs: BasicArray<PathSegment>,
         imageRef: string
@@ -996,7 +997,8 @@ export class ImageShape extends RectShape implements classes.ImageShape {
             id,
             name,
             type,
-            frame,
+            transform,
+            size,
             style,
             pathsegs
         )
@@ -1056,7 +1058,8 @@ export class OvalShape extends PathShape implements classes.OvalShape {
         id: string,
         name: string,
         type: ShapeType,
-        frame: ShapeFrame,
+        transform: Transform,
+        size: ShapeSize,
         style: Style,
         pathsegs: BasicArray<PathSegment>,
         ellipse: classes.Ellipse
@@ -1066,7 +1069,8 @@ export class OvalShape extends PathShape implements classes.OvalShape {
             id,
             name,
             type,
-            frame,
+            transform,
+            size,
             style,
             pathsegs
         )
@@ -1082,7 +1086,8 @@ export class LineShape extends PathShape implements classes.LineShape {
         id: string,
         name: string,
         type: ShapeType,
-        frame: ShapeFrame,
+        transform: Transform,
+        size: ShapeSize,
         style: Style,
         pathsegs: BasicArray<PathSegment>
     ) {
@@ -1091,7 +1096,8 @@ export class LineShape extends PathShape implements classes.LineShape {
             id,
             name,
             type,
-            frame,
+            transform,
+            size,
             style,
             pathsegs
         );
@@ -1112,7 +1118,8 @@ export class TextShape extends Shape implements classes.TextShape {
         id: string,
         name: string,
         type: ShapeType,
-        frame: ShapeFrame,
+        transform: Transform,
+        size: ShapeSize,
         style: Style,
         text: Text
     ) {
@@ -1121,7 +1128,8 @@ export class TextShape extends Shape implements classes.TextShape {
             id,
             name,
             type,
-            frame,
+            transform,
+            size,
             style
         )
         this.text = text
@@ -1134,7 +1142,7 @@ export class TextShape extends Shape implements classes.TextShape {
         return super.getOpTarget(path);
     }
 
-    getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
+    getPathOfFrame(frame: ShapeSize, fixedRadius?: number): Path {
 
         const w = frame.width;
         const h = frame.height;
@@ -1148,15 +1156,15 @@ export class TextShape extends Shape implements classes.TextShape {
         const x = 0;
         const y = 0;
         const path = [["M", x, y],
-            ["l", w, 0],
-            ["l", 0, h],
-            ["l", -w, 0],
-            ["z"]];
+        ["l", w, 0],
+        ["l", 0, h],
+        ["l", -w, 0],
+        ["z"]];
         return new Path(path);
     }
 
     getLayout(): TextLayout {
-        return this.text.getLayout2(this.frame);
+        return this.text.getLayout2(this.size);
     }
 
     get isNoSupportDiamondScale() {
@@ -1185,7 +1193,8 @@ export class CutoutShape extends PathShape implements classes.CutoutShape {
         id: string,
         name: string,
         type: ShapeType,
-        frame: ShapeFrame,
+        transform: Transform,
+        size: ShapeSize,
         style: Style,
         pathsegs: BasicArray<PathSegment>,
         scalingStroke: boolean
@@ -1195,7 +1204,8 @@ export class CutoutShape extends PathShape implements classes.CutoutShape {
             id,
             name,
             type,
-            frame,
+            transform,
+            size,
             style,
             pathsegs
         )
@@ -1232,7 +1242,8 @@ export class PolygonShape extends PathShape implements classes.PolygonShape {
         id: string,
         name: string,
         type: ShapeType,
-        frame: ShapeFrame,
+        transform: Transform,
+        size: ShapeSize,
         style: Style,
         pathsegs: BasicArray<PathSegment>,
         counts: number
@@ -1242,7 +1253,8 @@ export class PolygonShape extends PathShape implements classes.PolygonShape {
             id,
             name,
             type,
-            frame,
+            transform,
+            size,
             style,
             pathsegs
         )
@@ -1260,7 +1272,8 @@ export class StarShape extends PathShape implements classes.StarShape {
         id: string,
         name: string,
         type: ShapeType,
-        frame: ShapeFrame,
+        transform: Transform,
+        size: ShapeSize,
         style: Style,
         pathsegs: BasicArray<PathSegment>,
         counts: number,
@@ -1271,7 +1284,8 @@ export class StarShape extends PathShape implements classes.StarShape {
             id,
             name,
             type,
-            frame,
+            transform,
+            size,
             style,
             pathsegs
         )

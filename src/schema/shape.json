@@ -6,20 +6,19 @@
             "$ref": "./crdtidx.json"
         },
         "typeId": {
-            "type": "string",
-            "default": "shape"
+            "type": "string"
         },
         "id": {
-            "type": "string",
-            "minLength": 32,
-            "maxLength": 36,
-            "default": "$uuid"
+            "type": "string"
         },
         "type": {
             "$ref": "./shape-type.json"
         },
-        "frame": {
-            "$ref": "./shape-frame.json"
+        "transform": {
+            "$ref": "./transform.json"
+        },
+        "size": {
+            "$ref": "./shape-size.json"
         },
         "style": {
             "$ref": "./style.json"
@@ -28,12 +27,6 @@
             "$ref": "./bool-op.json"
         },
         "isFixedToViewport": {
-            "type": "boolean"
-        },
-        "isFlippedHorizontal": {
-            "type": "boolean"
-        },
-        "isFlippedVertical": {
             "type": "boolean"
         },
         "isLocked": {
@@ -46,8 +39,7 @@
             "$ref": "./export-options.json"
         },
         "name": {
-            "type": "string",
-            "default": "Shape"
+            "type": "string"
         },
         "nameIsFixed": {
             "type": "boolean"
@@ -57,9 +49,6 @@
         },
         "resizingType": {
             "$ref": "./resize-type.json"
-        },
-        "rotation": {
-            "type": "number"
         },
         "constrainerProportions": {
             "type": "boolean"
@@ -92,7 +81,8 @@
         "id",
         "name",
         "type",
-        "frame",
+        "transform",
+        "size",
         "style"
     ],
     "additionalProperties": false

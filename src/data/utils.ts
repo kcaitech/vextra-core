@@ -14,7 +14,7 @@ import { BasicArray } from "./basic";
  * @description root -> 图形自身上且单位为比例系数的矩阵
  */
 export function gen_matrix1(shape: Shape, prem?: Matrix) {
-    const f = shape.frame;
+    const f = shape.size;
     let m = prem || shape.matrix2Root();
     m.preScale(f.width, f.height);
     m = new Matrix(m.inverse);
@@ -32,7 +32,7 @@ interface XY {
  * @description 根据连接类型获取页面坐标系上的连接点
  */
 function get_pagexy(shape: Shape, type: ContactType, m2r: Matrix) {
-    const f = shape.frame;
+    const f = shape.size;
     switch (type) {
         case ContactType.Top: return m2r.computeCoord2(f.width / 2, 0);
         case ContactType.Right: return m2r.computeCoord2(f.width, f.height / 2);
@@ -825,7 +825,7 @@ export function path_for_free_end_contact(shape: ContactShape, points: CurvePoin
     }
     const end = points.pop()!;
 
-    if (Math.abs(start.y - end.y) * shape.frame.height < 5) {
+    if (Math.abs(start.y - end.y) * shape.size.height < 5) {
         points.push(new CurvePoint(([points.length] as BasicArray<number>), v4(), end.x, start.y, CurveMode.Straight));
     } else {
         points.push(new CurvePoint(([points.length] as BasicArray<number>), v4(), end.x, start.y, CurveMode.Straight), end);
@@ -966,7 +966,7 @@ function get_bezier_c(pre: XY, cur: XY, next: XY, radius: number, minDist: numbe
 }
 
 export function _get_path(shape: types.Artboard) {
-    const f = shape.frame;
+    const f = shape.size;
 
     const min = Math.min(f.width, f.height) / 2;
 

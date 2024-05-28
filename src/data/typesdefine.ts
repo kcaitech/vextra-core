@@ -296,6 +296,11 @@ export type ShapeFrame = {
     width: number,
     height: number,
 }
+/* shape size */
+export type ShapeSize = {
+    width: number,
+    height: number,
+}
 /* shape types */
 export enum ShapeType {
     Path = "path",
@@ -389,6 +394,15 @@ export enum TextVerAlign {
     Bottom = "bottom",
 }
 export type Text_paras = Array<Para>
+/* transform */
+export type Transform = {
+    m00: number,
+    m01: number,
+    m02: number,
+    m10: number,
+    m11: number,
+    m12: number,
+}
 /* underline types */
 export enum UnderlineType {
     None = "none",
@@ -473,6 +487,7 @@ export type CrdtNumber = {
 export type DocumentMeta = {
     id: string,
     name: string,
+    version: number,
     pagesList: DocumentMeta_pagesList,
     lastCmdId: string,
     symbolregist: Map<string, string>,
@@ -611,19 +626,17 @@ export type Shape = {
     id: string,
     name: string,
     type: ShapeType,
-    frame: ShapeFrame,
+    transform: Transform,
+    size: ShapeSize,
     style: Style,
     boolOp?: BoolOp,
     isFixedToViewport?: boolean,
-    isFlippedHorizontal?: boolean,
-    isFlippedVertical?: boolean,
     isLocked?: boolean,
     isVisible?: boolean,
     exportOptions?: ExportOptions,
     nameIsFixed?: boolean,
     resizingConstraint?: number,
     resizingType?: ResizeType,
-    rotation?: number,
     constrainerProportions?: boolean,
     clippingMaskMode?: number,
     hasClippingMask?: boolean,

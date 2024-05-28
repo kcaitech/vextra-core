@@ -1,11 +1,8 @@
 {
-    "description": "context settings",
+    "description": "graphics contex settings",
     "type": "object",
     "properties": {
-        "typeId": {
-            "type": "string"
-        },
-        "blenMode": {
+        "blendMode": {
             "$ref": "./blend-mode.json"
         },
         "opacity": {
@@ -14,8 +11,7 @@
         }
     },
     "required": [
-        "typeId",
-        "blenMode",
+        "blendMode",
         "opacity"
     ],
     "additionalProperties": false
