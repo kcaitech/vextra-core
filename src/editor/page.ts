@@ -645,9 +645,9 @@ export class PageEditor {
             if (index === undefined) {
                 const space = find_state_space(union);
                 if (!space) throw new Error('failed');
-                source.frame.y = space.y + 20;
+                source.transform.m12 = space.y + 20;
             } else {
-                source.frame.x = hor_align || source.frame.x + 20;
+                source.transform.m02 = hor_align || source.transform.m02 + 20;
             }
             const _this = this;
             const ctx: IImportContext = new class implements IImportContext {
@@ -780,9 +780,10 @@ export class PageEditor {
             tmpArtboard.childs = shape.naviChilds! as BasicArray<Shape>;
             tmpArtboard.varbinds = shape.varbinds;
             tmpArtboard.style = shape.style;
-            tmpArtboard.rotation = shape.rotation;
-            tmpArtboard.isFlippedHorizontal = shape.isFlippedHorizontal;
-            tmpArtboard.isFlippedVertical = shape.isFlippedVertical;
+            tmpArtboard.transform.m00 = shape.transform.m00;
+            tmpArtboard.transform.m01 = shape.transform.m01;
+            tmpArtboard.transform.m10 = shape.transform.m10;
+            tmpArtboard.transform.m11 = shape.transform.m11;
             tmpArtboard.cornerRadius = shape.cornerRadius;
             const symbolData = exportArtboard(tmpArtboard); // todo 如果symbol只有一个child时
 
@@ -831,9 +832,10 @@ export class PageEditor {
         const ref = newSymbolRefShape(name, frame, refId, document.symbolsMgr);
         const sym = document.symbolsMgr.get(refId);
         if (sym) {
-            ref.rotation = sym.rotation;
-            ref.isFlippedHorizontal = sym.isFlippedHorizontal;
-            ref.isFlippedVertical = sym.isFlippedVertical;
+            ref.transform.m00 = sym.transform.m00;
+            ref.transform.m01 = sym.transform.m01;
+            ref.transform.m10 = sym.transform.m10;
+            ref.transform.m11 = sym.transform.m11;
         }
         return ref;
     }
@@ -1417,7 +1419,7 @@ export class PageEditor {
             const xy = m_p2r.computeCoord2(0, 0);
             new_s.frame.x -= xy.x, new_s.frame.y -= xy.y;
             if (rotation) {
-                new_s.rotation = rotation;
+                new_s.transform2.setRotateZ((rotation % 360) / 180 * Math.PI);
             }
             new_s = api.shapeInsert(this.__document, this.__page, parent, new_s, index);
             if (target_xy) {
