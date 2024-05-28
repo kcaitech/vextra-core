@@ -51,6 +51,7 @@ import { newSymbolRefShape, newTextShape, newTextShapeByText } from "../editor/c
 import { Api } from "../editor/coop/recordapi";
 import { translateTo } from "../editor/frame";
 import { Page } from "../data/page";
+import { FMT_VER_latest } from "../data/fmtver";
 
 export function set_childs_id(shapes: Shape[], matched?: Set<string>) {
     for (let i = 0, len = shapes.length; i < len; i++) {
@@ -219,6 +220,7 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
     const ctx: IImportContext = new class implements IImportContext {
         document: Document = document;
         curPage: string = page.id;
+        fmtVer: number = FMT_VER_latest
     };
     const result: Shape[] = [];
 

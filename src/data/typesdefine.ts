@@ -313,7 +313,6 @@ export enum ShapeType {
     SymbolRef = "symbol-ref",
     Symbol = "symbol",
     SymbolUnion = "symbol-union",
-    ArtboardRef = "artboard-ref",
     Rectangle = "rectangle",
     Triangle = "triangle",
     Star = "star",
@@ -487,7 +486,7 @@ export type CrdtNumber = {
 export type DocumentMeta = {
     id: string,
     name: string,
-    version: number,
+    fmtVer: number,
     pagesList: DocumentMeta_pagesList,
     lastCmdId: string,
     symbolregist: Map<string, string>,

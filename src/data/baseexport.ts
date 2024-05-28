@@ -588,7 +588,7 @@ export function exportDocumentMeta(source: types.DocumentMeta, ctx?: IExportCont
     const ret: types.DocumentMeta = {} as types.DocumentMeta
     ret.id = source.id
     ret.name = source.name
-    ret.version = source.version
+    ret.fmtVer = source.fmtVer
     ret.pagesList = exportDocumentMeta_pagesList(source.pagesList, ctx)
     ret.lastCmdId = source.lastCmdId
     ret.symbolregist = (() => {

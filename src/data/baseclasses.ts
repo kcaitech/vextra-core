@@ -439,16 +439,16 @@ export class CrdtNumber extends Basic {
 export class DocumentMeta extends Basic {
     id: string
     name: string
-    version: number
+    fmtVer: number
     pagesList: DocumentMeta_pagesList
     lastCmdId: string
     symbolregist: BasicMap<string, string>
     freesymbolsVersionId?: string
-    constructor(id: string, name: string, version: number, pagesList: DocumentMeta_pagesList, lastCmdId: string, symbolregist: BasicMap<string, string>) {
+    constructor(id: string, name: string, fmtVer: number, pagesList: DocumentMeta_pagesList, lastCmdId: string, symbolregist: BasicMap<string, string>) {
         super()
         this.id = id
         this.name = name
-        this.version = version
+        this.fmtVer = fmtVer
         this.pagesList = pagesList
         this.lastCmdId = lastCmdId
         this.symbolregist = symbolregist
