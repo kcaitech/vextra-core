@@ -158,21 +158,30 @@ export class Shape extends Basic implements classes.Shape {
         return false;
     }
 
-    // get frame(): ShapeFrame {
-    //     // todo
-    //     return new ShapeFrame(0, 0, 0, 0)
-    // }
-    // get rotation(): number {
-    //     // todo
-    // }
-    // get isFlippedHorizontal(): boolean {
-    // }
-    // get isFlippedVertical(): boolean {
-    // }
-    // get skewX(): number {
-    // }
-    // get skewY(): number {
-    // }
+    get frame(): ShapeFrame {
+        // todo
+        return new ShapeFrame(0, 0, this.size.width, this.size.height)
+    }
+    get rotation(): number {
+        // todo
+        return 0;
+    }
+    get isFlippedHorizontal(): boolean {
+        // todo
+        return false;
+    }
+    get isFlippedVertical(): boolean {
+        // todo
+        return false;
+    }
+    get skewX(): number {
+        // todo
+        return 0;
+    }
+    get skewY(): number {
+        // todo
+        return 0;
+    }
 
     getPathOfFrame(frame: ShapeSize, fixedRadius?: number): Path {
         return new Path();

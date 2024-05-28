@@ -110,20 +110,20 @@ export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeFrame, frame
     }
 }
 
-// export function matrix2parent(x: number, y: number, width: number, height: number, rotate: number, hflip: boolean, vflip: boolean, matrix?: Matrix) {
-//     const m = matrix || new Matrix();
-//     if (rotate || hflip || vflip) {
-//         const cx = width / 2;
-//         const cy = height / 2;
-//         m.trans(-cx, -cy);
-//         if (rotate) m.rotate(rotate / 360 * 2 * Math.PI);
-//         if (hflip) m.flipHoriz();
-//         if (vflip) m.flipVert();
-//         m.trans(cx, cy);
-//     }
-//     m.trans(x, y);
-//     return m;
-// }
+export function matrix2parent(x: number, y: number, width: number, height: number, rotate: number, hflip: boolean, vflip: boolean, matrix?: Matrix) {
+    const m = matrix || new Matrix();
+    if (rotate || hflip || vflip) {
+        const cx = width / 2;
+        const cy = height / 2;
+        m.trans(-cx, -cy);
+        if (rotate) m.rotate(rotate / 360 * 2 * Math.PI);
+        if (hflip) m.flipHoriz();
+        if (vflip) m.flipVert();
+        m.trans(cx, cy);
+    }
+    m.trans(x, y);
+    return m;
+}
 
 export function boundingBox(m: Matrix, frame: ShapeSize, path: Path): ShapeFrame {
     // const path = this.getPath();
