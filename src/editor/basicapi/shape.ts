@@ -17,30 +17,29 @@ import { BoolOp, CurveMode, MarkerType, OverrideType, Point2D } from "../../data
 import { BasicMap } from "../../data/basic";
 import { crdtArrayInsert, crdtArrayRemove, crdtSetAttr } from "./basic";
 import {ColVector3D} from "../../basic/matrix2";
+import {getShapeTransform2, updateShapeTransformBy2} from "../../data/shape_transform2";
 
 function _checkNum(x: number) {
     // check
     if (Number.isNaN(x) || (!Number.isFinite(x))) throw new Error(String(x));
 }
 
-// todo transform
 export function shapeModifyX(page: Page, shape: Shape, x: number, needUpdateFrame?: { shape: Shape, page: Page }[]) {
     // check
     _checkNum(x);
     const frame = shape.frame;
     if (x !== frame.x) {
-        const op = crdtSetAttr(frame, 'x', x);
+        const op = crdtSetAttr(shape.transform, 'm02', x);
         if (needUpdateFrame) needUpdateFrame.push({ shape, page });
         return op;
     }
 }
-// todo transform
 export function shapeModifyY(page: Page, shape: Shape, y: number, needUpdateFrame?: { shape: Shape, page: Page }[]) {
     // check
     _checkNum(y);
     const frame = shape.frame;
     if (y !== frame.y) {
-        const op = crdtSetAttr(frame, 'y', y);
+        const op = crdtSetAttr(shape.transform, 'm12', y);
         if (needUpdateFrame) needUpdateFrame.push({ shape, page });
         return op;
     }
@@ -87,13 +86,20 @@ export function shapeModifyHeight(page: Page, shape: Shape, h: number, needUpdat
         return op;
     }
 }
-// todo transform
 export function shapeModifyRotate(page: Page, shape: Shape, rotate: number, needUpdateFrame?: { shape: Shape, page: Page }[]) {
-    rotate = rotate % 360;
+    rotate = rotate % 360; // 0-360
     if (rotate !== shape.rotation) {
-        const op = crdtSetAttr(shape, 'rotation', rotate);
+        rotate = rotate * Math.PI / 180; // 0-2PI
+        const transform2 = getShapeTransform2(shape);
+        transform2.setRotateZ(rotate);
+        updateShapeTransformBy2(shape, transform2);
+        const ops = [];
+        ops.push(crdtSetAttr(shape.transform, 'm00', transform2.m00));
+        ops.push(crdtSetAttr(shape.transform, 'm10', transform2.m10));
+        ops.push(crdtSetAttr(shape.transform, 'm01', transform2.m01));
+        ops.push(crdtSetAttr(shape.transform, 'm11', transform2.m11));
         if (needUpdateFrame) needUpdateFrame.push({ shape, page });
-        return op;
+        return ops;
     }
 }
 export function shapeModifyCounts(shape: (PolygonShape | StarShape), counts: number) {
@@ -136,17 +142,25 @@ export function shapeModifyVisible(shape: Shape | Variable, isVisible: boolean) 
 export function shapeModifyLock(shape: Shape, isLocked: boolean) {
     return crdtSetAttr(shape, 'isLocked', isLocked);
 }
-// todo transform
 export function shapeModifyHFlip(page: Page, shape: Shape, hflip: boolean | undefined, needUpdateFrame?: { shape: Shape, page: Page }[]) {
-    const op = crdtSetAttr(shape, 'isFlippedHorizontal', hflip);
+    const transform2 = getShapeTransform2(shape);
+    transform2.setFlipH(!!hflip);
+    updateShapeTransformBy2(shape, transform2);
+    const ops = [];
+    ops.push(crdtSetAttr(shape.transform, 'm00', transform2.m00));
+    ops.push(crdtSetAttr(shape.transform, 'm10', transform2.m10));
     if (needUpdateFrame) needUpdateFrame.push({ shape, page });
-    return op;
+    return ops;
 }
-// todo transform
 export function shapeModifyVFlip(page: Page, shape: Shape, vflip: boolean | undefined, needUpdateFrame?: { shape: Shape, page: Page }[]) {
-    const op = crdtSetAttr(shape, 'isFlippedVertical', vflip);
+    const transform2 = getShapeTransform2(shape);
+    transform2.setFlipH(!!vflip);
+    updateShapeTransformBy2(shape, transform2);
+    const ops = [];
+    ops.push(crdtSetAttr(shape.transform, 'm01', transform2.m01));
+    ops.push(crdtSetAttr(shape.transform, 'm11', transform2.m11));
     if (needUpdateFrame) needUpdateFrame.push({ shape, page });
-    return op;
+    return ops;
 }
 export function shapeModifyResizingConstraint(shape: Shape, resizingConstraint: number) {
     return crdtSetAttr(shape, 'resizingConstraint', resizingConstraint);

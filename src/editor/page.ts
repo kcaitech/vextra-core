@@ -99,6 +99,7 @@ import {
 } from "../dataview";
 import { RadiusType, ResizingConstraints2 } from "../data/consts";
 import { FMT_VER_latest } from "../data/fmtver";
+import {getShapeTransform2, updateShapeTransformBy2} from "../data/shape_transform2";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -1423,7 +1424,9 @@ export class PageEditor {
             const xy = m_p2r.computeCoord2(0, 0);
             new_s.frame.x -= xy.x, new_s.frame.y -= xy.y;
             if (rotation) {
-                new_s.transform2.setRotateZ((rotation % 360) / 180 * Math.PI);
+                const transform2 = getShapeTransform2(new_s);
+                transform2.setRotateZ((rotation % 360) / 180 * Math.PI);
+                updateShapeTransformBy2(new_s, transform2);
             }
             new_s = api.shapeInsert(this.__document, this.__page, parent, new_s, index);
             if (target_xy) {
