@@ -23,6 +23,8 @@ import { TextLayout } from "./textlayout";
 import { parsePath } from "./pathparser";
 import { FrameType, PathType, RadiusType, RECT_POINTS } from "./consts";
 import { Variable } from "./variable";
+import { Transform as Transform2 } from "../basic/transform";
+import {Matrix2, ColVector3D} from "../index";
 
 export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D,
@@ -158,29 +160,54 @@ export class Shape extends Basic implements classes.Shape {
         return false;
     }
 
+    get transform2() {
+        const trans = new Transform2({
+            matrix: new Matrix2([4, 4], [
+                this.transform.m00, this.transform.m01, 0, this.transform.m02,
+                this.transform.m10, this.transform.m11, 0, this.transform.m12,
+                0, 0, 1, 0,
+                0, 0, 0, 1,
+            ], true),
+        });
+        trans.onChange = (trans) => {
+            if (!trans.isMatrixLatest) trans.updateMatrix();
+            this.transform.m00 = trans.m00;
+            this.transform.m10 = trans.m10;
+            this.transform.m01 = trans.m01;
+            this.transform.m11 = trans.m11;
+            this.transform.m02 = trans.m03;
+            this.transform.m12 = trans.m13;
+        }
+        return trans;
+    }
+
     get frame(): ShapeFrame {
-        // todo
-        return new ShapeFrame(0, 0, this.size.width, this.size.height)
+        const transform2 = this.transform2;
+        const trans = transform2.decomposeTranslate();
+        const scale = transform2.decomposeScale();
+        const width = Math.abs(this.size.width * scale.x);
+        const height = Math.abs(this.size.height * scale.y);
+        return new ShapeFrame(trans.x, trans.y, width, height);
     }
+
     get rotation(): number {
-        // todo
-        return 0;
+        return this.transform2.decomposeEuler().z;
     }
+
     get isFlippedHorizontal(): boolean {
-        // todo
-        return false;
+        return this.transform2.isFlipH;
     }
+
     get isFlippedVertical(): boolean {
-        // todo
-        return false;
+        return this.transform2.isFlipV
     }
+
     get skewX(): number {
-        // todo
-        return 0;
+        return this.transform2.decomposeSkew().x;
     }
+
     get skewY(): number {
-        // todo
-        return 0;
+        return this.transform2.decomposeSkew().y;
     }
 
     getPathOfFrame(frame: ShapeSize, fixedRadius?: number): Path {

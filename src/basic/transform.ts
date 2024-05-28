@@ -126,6 +126,9 @@ export class Transform { // 变换
     skewMatrix: SkewMatrix // 斜切矩阵 K
     scaleMatrix: ScaleMatrix // 缩放矩阵 S
 
+    // 修改回调
+    onChange: (transform: Transform) => void = () => {}
+
     // 分解操作的缓存
     decomposeTranslateCache: ColVector3D | undefined = undefined
     decomposeEulerCache: ColVector3D | undefined = undefined
@@ -259,6 +262,7 @@ export class Transform { // 变换
         if (!this.isMatrixLatest) this.updateMatrix();
         this.matrix[key] = value
         this.isSubMatrixLatest = false
+        this.onChange(this)
     }
 
     get m00() {
@@ -428,6 +432,8 @@ export class Transform { // 变换
             this.isSubMatrixLatest = false
         }
 
+        this.onChange(this)
+
         return this
     }
 
@@ -447,6 +453,8 @@ export class Transform { // 变换
         this.matrix.multiply(matrix)
         this.isSubMatrixLatest = false
 
+        this.onChange(this)
+
         return this
     }
 
@@ -462,6 +470,9 @@ export class Transform { // 变换
             0, 0, 0, 1,
         ], true)))
         this.isMatrixLatest = false
+
+        this.onChange(this)
+
         return this
     }
 
@@ -492,6 +503,8 @@ export class Transform { // 变换
             this.isSubMatrixLatest = false
         }
 
+        this.onChange(this)
+
         return this
     }
 
@@ -511,6 +524,8 @@ export class Transform { // 变换
         this.matrix.multiply(matrix)
         this.isSubMatrixLatest = false
 
+        this.onChange(this)
+
         return this
     }
 
@@ -526,6 +541,9 @@ export class Transform { // 变换
             0, 0, 0, 1,
         ], true)))
         this.isMatrixLatest = false
+
+        this.onChange(this)
+
         return this
     }
 
@@ -558,6 +576,8 @@ export class Transform { // 变换
             this.isSubMatrixLatest = false
         }
 
+        this.onChange(this)
+
         return this
     }
 
@@ -578,6 +598,8 @@ export class Transform { // 变换
 
         this.matrix.multiply(matrix)
         this.isSubMatrixLatest = false
+
+        this.onChange(this)
 
         return this
     }
@@ -611,6 +633,8 @@ export class Transform { // 变换
             this.isSubMatrixLatest = false
         }
 
+        this.onChange(this)
+
         return this
     }
 
@@ -631,6 +655,8 @@ export class Transform { // 变换
 
         this.matrix.multiply(matrix)
         this.isSubMatrixLatest = false
+
+        this.onChange(this)
 
         return this
     }
@@ -664,6 +690,8 @@ export class Transform { // 变换
             this.isSubMatrixLatest = false
         }
 
+        this.onChange(this)
+
         return this
     }
 
@@ -684,6 +712,8 @@ export class Transform { // 变换
 
         this.matrix.multiply(matrix)
         this.isSubMatrixLatest = false
+
+        this.onChange(this)
 
         return this
     }
@@ -725,6 +755,8 @@ export class Transform { // 变换
             this.isSubMatrixLatest = false
         }
 
+        this.onChange(this)
+
         return this
     }
 
@@ -753,6 +785,8 @@ export class Transform { // 变换
 
         this.matrix.multiply(matrix)
         this.isSubMatrixLatest = false
+
+        this.onChange(this)
 
         return this
     }
@@ -795,6 +829,8 @@ export class Transform { // 变换
             })
         }
 
+        this.onChange(this)
+
         return this
     }
 
@@ -815,6 +851,8 @@ export class Transform { // 变换
         this.preTranslate({
             vector: params.point.getNegate() as ColVector3D,
         })
+
+        this.onChange(this)
 
         return this
     }
@@ -837,6 +875,9 @@ export class Transform { // 变换
             0, 0, 0, 1,
         ], true)))
         this.isMatrixLatest = false
+
+        this.onChange(this)
+
         return this
     }
 
@@ -883,6 +924,8 @@ export class Transform { // 变换
             this.isSubMatrixLatest = false
         }
 
+        this.onChange(this)
+
         return this
     }
 
@@ -903,6 +946,8 @@ export class Transform { // 变换
         this.matrix.multiply(matrix)
         this.isSubMatrixLatest = false
 
+        this.onChange(this)
+
         return this
     }
 
@@ -919,6 +964,9 @@ export class Transform { // 变换
             0, 0, 0, 1,
         ], true)))
         this.isMatrixLatest = false
+
+        this.onChange(this)
+
         return this
     }
 
@@ -934,6 +982,9 @@ export class Transform { // 变换
         if (!this.isMatrixLatest) this.updateMatrix();
         this.matrix = transform.matrix.clone().multiply(this.matrix)
         this.isSubMatrixLatest = false
+
+        this.onChange(this)
+
         return this
     }
 
@@ -942,6 +993,9 @@ export class Transform { // 变换
         if (!this.isMatrixLatest) this.updateMatrix();
         this.matrix = this.matrix.clone().multiply(transform.matrix)
         this.isSubMatrixLatest = false
+
+        this.onChange(this)
+
         return this
     }
 
@@ -1055,6 +1109,9 @@ export class Transform { // 变换
         if (!this.isSubMatrixLatest) this.updateMatrix();
         this.rotateMatrix = RotateMatrix.FromMatrix(Matrix.BuildIdentity([4, 4]))
         this.isMatrixLatest = false
+
+        this.onChange(this)
+
         return this
     }
 
@@ -1062,6 +1119,9 @@ export class Transform { // 变换
         if (!this.isSubMatrixLatest) this.updateMatrix();
         this.skewMatrix = SkewMatrix.FromMatrix(Matrix.BuildIdentity([4, 4]))
         this.isMatrixLatest = false
+
+        this.onChange(this)
+
         return this
     }
 
@@ -1069,6 +1129,9 @@ export class Transform { // 变换
         if (!this.isSubMatrixLatest) this.updateMatrix();
         this.scaleMatrix = ScaleMatrix.FromMatrix(Matrix.BuildIdentity([4, 4]))
         this.isMatrixLatest = false
+
+        this.onChange(this)
+
         return this
     }
 
@@ -1078,6 +1141,9 @@ export class Transform { // 变换
         this.skewMatrix = SkewMatrix.FromMatrix(Matrix.BuildIdentity([4, 4]))
         this.scaleMatrix = ScaleMatrix.FromMatrix(Matrix.BuildIdentity([4, 4]))
         this.isMatrixLatest = false
+
+        this.onChange(this)
+
         return this
     }
 
@@ -1085,6 +1151,9 @@ export class Transform { // 变换
         if (!this.isSubMatrixLatest) this.updateMatrix();
         this.translateMatrix = TranslateMatrix.FromMatrix(Matrix.BuildIdentity([4, 4]))
         this.isMatrixLatest = false
+
+        this.onChange(this)
+
         return this
     }
 
