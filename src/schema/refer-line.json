@@ -33,7 +33,6 @@
         "crdtidx",
         "typeId",
         "id",
-        "referId",
         "offset"
     ],
     "additionalProperties": false

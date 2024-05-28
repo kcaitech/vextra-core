@@ -222,6 +222,8 @@ export class PageListItem extends Basic {
         this.name = name
     }
 }
+type Page_horReferLines = BasicArray<ReferLine>
+type Page_verReferLines = BasicArray<ReferLine>
 type Para_spans = BasicArray<Span>
 type PathSegment_points = BasicArray<CurvePoint>
 /* path segment */
@@ -248,6 +250,21 @@ export class Point2D extends Basic {
         super()
         this.x = x
         this.y = y
+    }
+}
+type ReferLine_crdtidx = BasicArray<number>
+/* refer line */
+export class ReferLine extends Basic {
+    typeId = "refer-line"
+    crdtidx: ReferLine_crdtidx
+    id: string
+    offset: number
+    referId?: string
+    constructor(crdtidx: ReferLine_crdtidx, id: string, offset: number) {
+        super()
+        this.crdtidx = crdtidx
+        this.id = id
+        this.offset = offset
     }
 }
 /* shadow */
@@ -845,6 +862,8 @@ export class GroupShape extends Shape {
 export class Page extends GroupShape {
     typeId = "page"
     backgroundColor?: Color
+    horReferLines?: Page_horReferLines
+    verReferLines?: Page_verReferLines
 }
 /* symbol shape */
 export class SymbolShape extends GroupShape {

@@ -290,6 +290,20 @@ export function exportPageListItem(source: types.PageListItem, ctx?: IExportCont
     if (source.versionId) ret.versionId = source.versionId
     return ret
 }
+export function exportPage_horReferLines(source: types.Page_horReferLines, ctx?: IExportContext): types.Page_horReferLines {
+    const ret: types.Page_horReferLines = []
+    source.forEach((source) => {
+        ret.push(exportReferLine(source, ctx))
+    })
+    return ret
+}
+export function exportPage_verReferLines(source: types.Page_verReferLines, ctx?: IExportContext): types.Page_verReferLines {
+    const ret: types.Page_verReferLines = []
+    source.forEach((source) => {
+        ret.push(exportReferLine(source, ctx))
+    })
+    return ret
+}
 export function exportPara_spans(source: types.Para_spans, ctx?: IExportContext): types.Para_spans {
     const ret: types.Para_spans = []
     source.forEach((source) => {
@@ -332,6 +346,24 @@ export function exportPoint2D(source: types.Point2D, ctx?: IExportContext): type
     const ret: types.Point2D = {} as types.Point2D
     ret.x = source.x
     ret.y = source.y
+    return ret
+}
+export function exportReferLine_crdtidx(source: types.ReferLine_crdtidx, ctx?: IExportContext): types.ReferLine_crdtidx {
+    const ret: types.ReferLine_crdtidx = []
+    source.forEach((source) => {
+        ret.push(source)
+    })
+    return ret
+}
+/* refer line */
+export function exportReferLine(source: types.ReferLine, ctx?: IExportContext): types.ReferLine {
+    const ret: types.ReferLine = {} as types.ReferLine
+    ret.typeId = "refer-line"
+    ret.crdtidx = exportReferLine_crdtidx(source.crdtidx, ctx)
+    ret.typeId = source.typeId
+    ret.id = source.id
+    ret.offset = source.offset
+    if (source.referId) ret.referId = source.referId
     return ret
 }
 /* resize type */
@@ -1006,6 +1038,8 @@ export function exportPage(source: types.Page, ctx?: IExportContext): types.Page
     const ret: types.Page = exportGroupShape(source, ctx) as types.Page
     ret.typeId = "page"
     if (source.backgroundColor) ret.backgroundColor = exportColor(source.backgroundColor, ctx)
+    if (source.horReferLines) ret.horReferLines = exportPage_horReferLines(source.horReferLines, ctx)
+    if (source.verReferLines) ret.verReferLines = exportPage_verReferLines(source.verReferLines, ctx)
     return ret
 }
 /* symbol shape */

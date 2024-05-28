@@ -1,15 +1,29 @@
-import { GroupShape, Shape, ShapeFrame, ShapeType, ImageShape, PathShape, RectShape, TextShape, SymbolShape, CutoutShape } from "./shape";
+import {
+    GroupShape,
+    Shape,
+    ShapeFrame,
+    ShapeType,
+    ImageShape,
+    PathShape,
+    RectShape,
+    TextShape,
+    SymbolShape,
+    CutoutShape
+} from "./shape";
 import { Style } from "./style";
 import * as classes from "./baseclasses"
 import { BasicArray, WatchableObject } from "./basic";
 import { Artboard } from "./artboard";
 import { Color } from "./color";
 import { TableCell } from "./table";
+import { ReferLine } from "./baseclasses";
+
 class PageCollectNotify extends WatchableObject {
     constructor() {
         super();
     }
 }
+
 export class Page extends GroupShape implements classes.Page {
 
     static defaultBGColor = new Color(1, 239, 239, 239);
@@ -23,6 +37,10 @@ export class Page extends GroupShape implements classes.Page {
     __symbolshapes: Map<string, SymbolShape> = new Map();
     isReserveLib: boolean;
     cutouts: Map<string, CutoutShape> = new Map();
+
+    horReferLines?: BasicArray<ReferLine>;  // 参考线
+    verReferLines?: BasicArray<ReferLine>;
+
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
@@ -31,7 +49,9 @@ export class Page extends GroupShape implements classes.Page {
         frame: ShapeFrame,
         style: Style,
         childs: BasicArray<(GroupShape | Shape | ImageShape | PathShape | RectShape | TextShape)>,
-        isReserveLib?: boolean
+        isReserveLib?: boolean,
+        horReferLines?: BasicArray<ReferLine>,
+        verReferLines?: BasicArray<ReferLine>,
     ) {
         super(
             crdtidx,
@@ -45,6 +65,8 @@ export class Page extends GroupShape implements classes.Page {
         // this.onAddShape(this); // 不能add 自己
         childs.forEach((c) => this.onAddShape(c));
         this.isReserveLib = !!isReserveLib;
+        this.horReferLines = horReferLines;
+        this.verReferLines = verReferLines;
     }
 
     getOpTarget(path: string[]): any {
@@ -57,6 +79,8 @@ export class Page extends GroupShape implements classes.Page {
         const path1 = path[1];
         const shape = this.getShape(path1, true); // 由于op是批量按path路径排序执行的，就有可能要修改的shape被提前delete掉了
         if (shape) return shape.getOpTarget(path.slice(2));
+        if (path1 === 'horReferLines') this.horReferLines = new BasicArray();
+        if (path1 === 'verReferLines') this.verReferLines = new BasicArray();
         return super.getOpTarget(path.slice(1));
     }
 
@@ -80,6 +104,7 @@ export class Page extends GroupShape implements classes.Page {
             childs.forEach((c) => this.onAddShape(c))
         }
     }
+
     onRemoveShape(shape: Shape, recursive: boolean = true) { // ot上要求被删除的对象也要能查找到
         this.shapes.delete(shape.id);
         if (shape.type === ShapeType.Artboard) {
@@ -97,6 +122,7 @@ export class Page extends GroupShape implements classes.Page {
             childs.forEach((c) => this.onRemoveShape(c))
         }
     }
+
     getShape(shapeId: string, containsDeleted?: boolean): Shape | undefined {
         let shape;
         if (containsDeleted) {
@@ -105,8 +131,7 @@ export class Page extends GroupShape implements classes.Page {
                 const ref = this.__allshapes.get(shapeId);
                 shape = ref?.deref();
             }
-        }
-        else {
+        } else {
             shape = this.shapes.get(shapeId);
         }
         if (!shape && shapeId === this.id) {
@@ -114,6 +139,7 @@ export class Page extends GroupShape implements classes.Page {
         }
         return shape;
     }
+
     get artboardList() {
         return Array.from(this.artboards.values());
     }
@@ -126,18 +152,18 @@ export class Page extends GroupShape implements classes.Page {
             const shape = stack.pop();
             if (shape instanceof GroupShape) {
                 stack.push(...shape.childs);
-            }
-            else if (shape instanceof TextShape || shape instanceof TableCell) {
+            } else if (shape instanceof TextShape || shape instanceof TableCell) {
                 if (shape.text) shape.text.getUsedFontNames(ret);
             }
         }
 
         return ret;
     }
+
     get cutoutList() {
         return Array.from(this.cutouts.values());
     }
-    
+
     get isContainer() {
         return true;
     }

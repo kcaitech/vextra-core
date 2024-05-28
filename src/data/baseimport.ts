@@ -11,10 +11,13 @@ type DocumentMeta_pagesList = BasicArray<impl.PageListItem>
 type ExportOptions_exportFormats = BasicArray<impl.ExportFormat>
 type Gradient_stops = BasicArray<impl.Stop>
 type GroupShape_childs = BasicArray<impl.GroupShape | impl.ImageShape | impl.PathShape | impl.PathShape2 | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape | impl.PolygonShape | impl.StarShape>
+type Page_horReferLines = BasicArray<impl.ReferLine>
+type Page_verReferLines = BasicArray<impl.ReferLine>
 type Para_spans = BasicArray<impl.Span>
 type PathSegment_points = BasicArray<impl.CurvePoint>
 type PathShape_pathsegs = BasicArray<impl.PathSegment>
 type PathShape2_pathsegs = BasicArray<impl.PathSegment>
+type ReferLine_crdtidx = BasicArray<number>
 type Style_borders = BasicArray<impl.Border>
 type Style_fills = BasicArray<impl.Fill>
 type Style_shadows = BasicArray<impl.Shadow>
@@ -336,6 +339,20 @@ export function importPageListItem(source: types.PageListItem, ctx?: IImportCont
     importPageListItemOptional(ret, source, ctx)
     return ret
 }
+export function importPage_horReferLines(source: types.Page_horReferLines, ctx?: IImportContext): Page_horReferLines {
+    const ret: Page_horReferLines = new BasicArray()
+    source.forEach((source) => {
+        ret.push(importReferLine(source, ctx))
+    })
+    return ret
+}
+export function importPage_verReferLines(source: types.Page_verReferLines, ctx?: IImportContext): Page_verReferLines {
+    const ret: Page_verReferLines = new BasicArray()
+    source.forEach((source) => {
+        ret.push(importReferLine(source, ctx))
+    })
+    return ret
+}
 export function importPara_spans(source: types.Para_spans, ctx?: IImportContext): Para_spans {
     const ret: Para_spans = new BasicArray()
     source.forEach((source) => {
@@ -378,6 +395,25 @@ export function importPoint2D(source: types.Point2D, ctx?: IImportContext): impl
     const ret: impl.Point2D = new impl.Point2D (
         source.x,
         source.y)
+    return ret
+}
+export function importReferLine_crdtidx(source: types.ReferLine_crdtidx, ctx?: IImportContext): ReferLine_crdtidx {
+    const ret: ReferLine_crdtidx = new BasicArray()
+    source.forEach((source) => {
+        ret.push(source)
+    })
+    return ret
+}
+/* refer line */
+function importReferLineOptional(tar: impl.ReferLine, source: types.ReferLine, ctx?: IImportContext) {
+    if (source.referId) tar.referId = source.referId
+}
+export function importReferLine(source: types.ReferLine, ctx?: IImportContext): impl.ReferLine {
+    const ret: impl.ReferLine = new impl.ReferLine (
+        importReferLine_crdtidx(source.crdtidx, ctx),
+        source.id,
+        source.offset)
+    importReferLineOptional(ret, source, ctx)
     return ret
 }
 /* resize type */
@@ -1500,6 +1536,8 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
 function importPageOptional(tar: impl.Page, source: types.Page, ctx?: IImportContext) {
     importGroupShapeOptional(tar, source)
     if (source.backgroundColor) tar.backgroundColor = importColor(source.backgroundColor, ctx)
+    if (source.horReferLines) tar.horReferLines = importPage_horReferLines(source.horReferLines, ctx)
+    if (source.verReferLines) tar.verReferLines = importPage_verReferLines(source.verReferLines, ctx)
 }
 export function importPage(source: types.Page, ctx?: IImportContext): impl.Page {
         // inject code

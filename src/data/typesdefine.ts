@@ -245,6 +245,8 @@ export type PageListItem = {
     name: string,
     versionId?: string,
 }
+export type Page_horReferLines = Array<ReferLine>
+export type Page_verReferLines = Array<ReferLine>
 export type Para_spans = Array<Span>
 export type PathSegment_points = Array<CurvePoint>
 /* path segment */
@@ -260,6 +262,15 @@ export type PathShape2_pathsegs = Array<PathSegment>
 export type Point2D = {
     x: number,
     y: number,
+}
+export type ReferLine_crdtidx = Array<number>
+/* refer line */
+export type ReferLine = {
+    crdtidx: ReferLine_crdtidx,
+    typeId: string,
+    id: string,
+    offset: number,
+    referId?: string,
 }
 /* resize type */
 export enum ResizeType {
@@ -735,6 +746,8 @@ export type GroupShape = Shape & {
 /* page */
 export type Page = GroupShape & {
     backgroundColor?: Color,
+    horReferLines?: Page_horReferLines,
+    verReferLines?: Page_verReferLines,
 }
 /* symbol shape */
 export type SymbolShape = GroupShape & {
