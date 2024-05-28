@@ -1,10 +1,10 @@
 // 创建一个没有痛苦的Creator
-import { AsyncApiCaller } from "./AsyncApiCaller";
-import { CoopRepository } from "../coop/cooprepo";
-import { Document } from "../../data/document";
-import { adapt2Shape, GroupShapeView, PageView, ShapeView } from "../../dataview";
-import { ContactForm, FillType, ShapeFrame, ShapeType, TextBehaviour } from "../../data/baseclasses";
-import { GroupShape, LineShape, PathShape, Shape, TextShape } from "../../data/shape";
+import {AsyncApiCaller} from "./AsyncApiCaller";
+import {CoopRepository} from "../coop/cooprepo";
+import {Document} from "../../data/document";
+import {adapt2Shape, GroupShapeView, PageView, ShapeView} from "../../dataview";
+import {ContactForm, FillType, ShapeFrame, ShapeType, TextBehaviour} from "../../data/baseclasses";
+import {GroupShape, LineShape, PathShape, Shape, TextShape} from "../../data/shape";
 import {
     newArrowShape,
     newArtboard, newContact,
@@ -16,19 +16,19 @@ import {
     newStellateShape,
     newTextShape
 } from "../creator";
-import { ISave4Restore, LocalCmd, SelectionState } from "../coop/localcmd";
-import { Fill } from "../../data/style";
-import { BasicArray } from "../../data/basic";
-import { uuid } from "../../basic/uuid";
-import { Color } from "../../data/color";
-import { Matrix } from "../../basic/matrix";
-import { Page } from "../../data/page";
-import { Api } from "../coop/recordapi";
-import { Point2D } from "../../data/typesdefine";
-import { update_frame_by_points } from "../utils/path";
-import { ContactShape } from "../../data/contact";
-import { translateTo } from "../frame";
-import { TextAttr } from "../../data/text";
+import {ISave4Restore, LocalCmd, SelectionState} from "../coop/localcmd";
+import {Fill} from "../../data/style";
+import {BasicArray} from "../../data/basic";
+import {uuid} from "../../basic/uuid";
+import {Color} from "../../data/color";
+import {Matrix} from "../../basic/matrix";
+import {Page} from "../../data/page";
+import {Api} from "../coop/recordapi";
+import {Point2D} from "../../data/typesdefine";
+import {update_frame_by_points} from "../utils/path";
+import {ContactShape} from "../../data/contact";
+import {translateTo} from "../frame";
+import {TextAttr} from "../../data/text";
 
 export interface GeneratorParams {
     parent: GroupShapeView;
@@ -165,9 +165,10 @@ export class CreatorApiCaller extends AsyncApiCaller {
 
     // 初始化图层的transform
     private setTransform(shape: Shape, trans: { rotation: number, flipH: boolean, flipV: boolean }) {
-        shape.rotation = trans.rotation;
-        shape.isFlippedHorizontal = trans.flipH;
-        shape.isFlippedVertical = trans.flipV;
+        const transform2 = shape.transform2;
+        transform2.setRotateZ((shape.rotation % 360) / 180 * Math.PI);
+        transform2.setFlipH(shape.isFlippedHorizontal);
+        transform2.setFlipV(shape.isFlippedVertical);
     }
 
     private insert(params: GeneratorParams, shape: Shape) {
@@ -293,7 +294,7 @@ export class CreatorApiCaller extends AsyncApiCaller {
 
             api.shapeMove(page, origin, origin.indexOfChild(shape), target, toIdx);
 
-            const { x, y } = this.__contactXY!;
+            const {x, y} = this.__contactXY!;
             translateTo(api, page, shape, x, y);
 
             this.updateView();
