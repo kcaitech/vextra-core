@@ -254,10 +254,12 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
                 r = newSymbolRefShape(_s.name, f, _s.id, document.symbolsMgr);
                 // rotate & flip
                 if (r) {
-                    const transform2 = r.transform2;
-                    transform2.setRotateZ((_s.rotation % 360) / 180 * Math.PI);
-                    transform2.setFlipH(_s.isFlippedHorizontal);
-                    transform2.setFlipV(_s.isFlippedVertical);
+                    const rt = r.transform;
+                    const st = _s.transform;
+                    rt.m00 = st.m00;
+                    rt.m01 = st.m01;
+                    rt.m10 = st.m10;
+                    rt.m11 = st.m11;
                     result.push(r);
                 }
                 continue;
