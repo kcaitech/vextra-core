@@ -1,7 +1,6 @@
 import { CoopRepository } from "../coop/cooprepo";
-import { Document } from "../../data/document";
+import { Document, Page } from "../../data";
 import { Api } from "../coop/recordapi";
-import { Page } from "../../data/page";
 import { PageView, adapt2Shape } from "../../dataview";
 
 export class AsyncApiCaller {

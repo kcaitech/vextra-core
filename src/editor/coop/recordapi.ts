@@ -17,7 +17,15 @@ import {
 import { updateShapesFrame } from "./utils";
 import { Border, BorderPosition, BorderStyle, Fill, Gradient, MarkerType, Shadow } from "../../data/style";
 import { BulletNumbers, SpanAttr, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
-import { RectShape, SymbolRefShape, TableCell, TableCellType, TableShape, Artboard } from "../../data/classes";
+import {
+    RectShape,
+    SymbolRefShape,
+    TableCell,
+    TableCellType,
+    TableShape,
+    Artboard,
+    ReferLine
+} from "../../data/classes";
 import {
     BoolOp, BulletNumbersBehavior, BulletNumbersType, ExportFileFormat, OverrideType, Point2D,
     StrikethroughType, TextTransformType, UnderlineType, ShadowPosition, ExportFormatNameingScheme, FillType, BlendMode, CornerType, SideType, BorderSideSetting,
@@ -33,6 +41,7 @@ import { IdOpRecord } from "../../coop/client/crdt";
 import { Repository } from "../../data/transact";
 import { SNumber } from "../../coop/client/snumber";
 import { ShapeView, TableCellView, TextShapeView } from "../../dataview";
+import { BasicArray } from "../../data";
 
 // 要支持variable的修改
 export type TextShapeLike = TableCellView | TextShapeView
@@ -199,6 +208,58 @@ export class Api {
     }
     pageMove(document: Document, pageId: string, fromIdx: number, toIdx: number) {
         this.addOp(basicapi.pageMove(document, fromIdx, toIdx));
+    }
+    insertReferLine(page: Page, refer: ReferLine, direction: "hor" | "ver") {
+        if (direction === "hor") {
+            if (!page.horReferLines) {
+                page.horReferLines = new BasicArray<ReferLine>();
+            }
+            this.addOp(basicapi.crdtArrayInsert(page.horReferLines, page.horReferLines.length, refer));
+        } else {
+            if (!page.verReferLines) {
+                page.verReferLines = new BasicArray<ReferLine>();
+            }
+            this.addOp(basicapi.crdtArrayInsert(page.verReferLines, page.verReferLines.length, refer));
+        }
+    }
+    deleteReferLine(page: Page, direction: "hor" | "ver", index: number) {
+        if (direction === "hor") {
+            if (!page.horReferLines || !page.horReferLines[index]) {
+               return;
+            }
+            this.addOp(basicapi.crdtArrayRemove(page.horReferLines, index));
+        } else {
+            if (!page.verReferLines || !page.verReferLines[index]) {
+                return;
+            }
+            this.addOp(basicapi.crdtArrayRemove(page.verReferLines, index));
+        }
+    }
+    modifyReferLineOffset(page: Page, direction: "hor" | "ver", index: number, offset: number) {
+        if (direction === "hor") {
+            if (!page.horReferLines || !page.horReferLines[index]) {
+                return;
+            }
+            this.addOp(basicapi.crdtSetAttr(page.horReferLines[index], 'offset', offset));
+        } else {
+            if (!page.verReferLines || !page.verReferLines[index]) {
+                return;
+            }
+            this.addOp(basicapi.crdtSetAttr(page.verReferLines[index], 'offset', offset));
+        }
+    }
+    modifyReferLineReferId(page: Page, direction: "hor" | "ver", index: number, referId: string) {
+        if (direction === "hor") {
+            if (!page.horReferLines || !page.horReferLines[index]) {
+                return;
+            }
+            this.addOp(basicapi.crdtSetAttr(page.horReferLines[index], 'referId', referId));
+        } else {
+            if (!page.verReferLines || !page.verReferLines[index]) {
+                return;
+            }
+            this.addOp(basicapi.crdtSetAttr(page.verReferLines[index], 'referId', referId));
+        }
     }
     // registSymbol(document: Document, symbolId: string, pageId: string) {
     //     this.addOp(basicapi.registSymbol(document, symbolId, pageId));

@@ -3,7 +3,7 @@ import { Page } from "../../data/page";
 import { Op } from "../../coop/common/op";
 import { crdtArrayInsert, crdtArrayMove, crdtArrayRemove, crdtSetAttr, crdtShapeInsert, crdtShapeMove, crdtShapeRemove } from "./basic";
 import { GroupShape, Shape, SymbolShape } from "../../data/shape";
-import { ShapeFrame, SymbolUnionShape } from "../../data/baseclasses";
+import { ReferLine, ShapeFrame, SymbolUnionShape } from "../../data/baseclasses";
 import { BasicArray } from "../../data/basic";
 
 export function pageInsert(document: Document, page: Page, index: number) {
