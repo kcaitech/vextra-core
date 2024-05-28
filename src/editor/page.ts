@@ -98,6 +98,7 @@ import {
     TextShapeView
 } from "../dataview";
 import { RadiusType, ResizingConstraints2 } from "../data/consts";
+import { FMT_VER_latest } from "../data/fmtver";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -652,7 +653,8 @@ export class PageEditor {
             const _this = this;
             const ctx: IImportContext = new class implements IImportContext {
                 document: Document = _this.__document;
-                curPage: string = _this.__page.id
+                curPage: string = _this.__page.id;
+                fmtVer: number = FMT_VER_latest
             };
             const api = this.__repo.start("makeStateAt");
             // api.registSymbol(this.__document, source.id, this.__page.id); // 先设置上, import好加入symmgr
@@ -772,7 +774,8 @@ export class PageEditor {
             const _this = this;
             const ctx: IImportContext = new class implements IImportContext {
                 document: Document = _this.__document;
-                curPage: string = _this.__page.id
+                curPage: string = _this.__page.id;
+                fmtVer: number = FMT_VER_latest
             };
             const { x, y, width, height } = shape.frame;
             const tmpArtboard: Artboard = newArtboard(shape.name, new ShapeFrame(x, y, width, height));
@@ -844,7 +847,8 @@ export class PageEditor {
         const _this = this;
         const ctx: IImportContext = new class implements IImportContext {
             document: Document = _this.__document;
-            curPage: string = _this.__page.id
+            curPage: string = _this.__page.id;
+            fmtVer: number = FMT_VER_latest
         };
         return importStyle(style, ctx);
     }
