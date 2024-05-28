@@ -4,6 +4,18 @@
     "properties": {
         "backgroundColor": {
             "$ref": "./color.json"
+        },
+        "horReferLines": {
+            "type": "array",
+            "items": {
+                "$ref": "./refer-line.json"
+            }
+        },
+        "verReferLines": {
+            "type": "array",
+            "items": {
+                "$ref": "./refer-line.json"
+            }
         }
     },
     "required": [],
