@@ -11,6 +11,11 @@ const m: TextMetrics = {
     fontBoundingBoxAscent: 1,
     fontBoundingBoxDescent: 1,
     width: 1,
+    alphabeticBaseline: 0,
+    emHeightAscent: 0,
+    emHeightDescent: 0,
+    hangingBaseline: 0,
+    ideographicBaseline: 0
 }
 
 const textMeasure = (code: string, font: string): TextMetrics => {

@@ -1,22 +1,22 @@
 {
   "name": "@kcdesign/data",
-  "version": "1.0.20",
+  "version": "1.0.30",
   "private": false,
+  "type": "module",
   "description": "kcdesign core module",
   "author": "kcaisoft.com",
-  "license": "ISC",
   "main": "dist/index.js",
+  "types": "dist/types/index.d.ts",
   "publishConfig": {
     "registry": "https://packages.aliyun.com/6393d698d690c872dceedcc0/npm/npm-registry/"
   },
   "scripts": {
-    "start": "webpack-dev-server --config ./webpack.config.js",
-    "dev": "webpack --config ./webpack.config.js",
-    "build": "cross-env NODE_ENV='production' webpack --config ./webpack.config.js",
-    "lint": "vue-cli-service lint",
+    "dev": "tsc",
+    "build": "rollup --config",
     "test": "jest",
     "eslint": "eslint --ext .js,.ts,.vue src",
-    "madge": "madge --extensions ts --circular --image graph.svg src"
+    "madge": "madge --extensions ts --circular --image graph.svg src",
+    "schema": "tsx src/schema/script"
   },
   "dependencies": {
     "kiwi-schema": "^0.5.0",
@@ -24,6 +24,10 @@
     "uzip": "^0.20201231.0"
   },
   "devDependencies": {
+    "@rollup/plugin-babel": "^6.0.4",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^11.1.6",
     "@types/chai": "^4.3.1",
     "@types/debug": "^4.1.7",
     "@types/jest": "^28.1.3",
@@ -32,17 +36,16 @@
     "@typescript-eslint/eslint-plugin": "^5.4.0",
     "@typescript-eslint/parser": "^5.4.0",
     "chai": "^4.3.6",
-    "cross-env": "^7.0.3",
     "eslint": "^7.32.0",
     "eslint-import-resolver-typescript": "^3.6.0",
     "eslint-plugin-import": "^2.27.5",
     "jest": "^29.5.0",
+    "rollup": "^4.18.0",
     "ts-jest": "^29.0.5",
-    "ts-loader": "~8.2.0",
     "tslib": "^2.6.2",
-    "typedoc": "^0.22.17",
-    "typescript": "~4.5.5",
-    "webpack-cli": "^5.0.1"
+    "tsx": "^4.11.0",
+    "typedoc": "^0.25.13",
+    "typescript": "^5.4.5"
   },
   "browserslist": [
     "> 1%",

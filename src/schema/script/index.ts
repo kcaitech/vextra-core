@@ -1,37 +1,18 @@
-import { gentypes } from "../../script/schema/gen-types";
-import { genclass } from "./gen-class";
-import { genexport } from "./gen-export";
-import { genimport } from "./gen-import";
-const path = require("path")
+import path from 'path';
+import { loadSchemas } from "./basic"
+import { gen as genTypes } from "./types";
+import { gen as genClass } from "./class";
+import { gen as genExp } from "./export";
+import { gen as genImp} from "./import";
 
-// const typesext = '.ts'
-// const schemadir = path.resolve('./')
-// const outdir = path.resolve('../data/')
-// const outfile = path.join(outdir, 'typesdefine' + typesext)
+const scriptdir = './src/schema/script2'
 
+loadSchemas(path.join(scriptdir, '../'));
 
-const typesext = '.ts'
-const schemadir = path.resolve('./')
-// const outdir = path.resolve('../data/')
-// const outfile = path.join(outdir, 'baseclasses' + typesext)
+genTypes(path.join(scriptdir, '../../data/typesdefine.ts'));
 
-gentypes(schemadir, path.join(path.resolve('../data/'), 'typesdefine' + typesext))
-const basicpath = "./basic";
-genclass(schemadir, path.join(path.resolve('../data/'), 'baseclasses' + typesext), basicpath)
+genClass(path.join(scriptdir, '../../data/baseclasses.ts'));
 
-const implpath = "./classes"
-const typedefs = "./typesdefine"
-const arrayimpl = "./basic"
-// const typesext = '.ts'
-// const schemadir = path.resolve('./')
-// const outdir = path.resolve('../io/')
-// const outfile = path.join(outdir, 'baseexport' + typesext)
-// const exportadaptor = "./exportadaptor"
-genexport(schemadir, path.join(path.resolve('../data/'), 'baseexport' + typesext), typedefs)
+genExp(path.join(scriptdir, '../../data/baseexport.ts'));
 
-// const typesext = '.ts'
-// const schemadir = path.resolve('./')
-// const outdir = path.resolve('../io/')
-// const outfile = path.join(outdir, 'baseimport' + typesext)
-// const importadaptor = "./importadaptor"
-genimport(schemadir, path.join(path.resolve('../data/'), 'baseimport' + typesext), implpath, typedefs, arrayimpl)
+genImp(path.join(scriptdir, '../../data/baseimport.ts'))

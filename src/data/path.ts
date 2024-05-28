@@ -1230,7 +1230,7 @@ export class Path {
 
     // 提供个比transform更高效点的方法
     translate(x: number, y: number) {
-        if (this.m_segs[0][0] === 'm') {
+        if (this.m_segs[0]?.[0] === 'm') {
             this.m_segs[0][0] = 'M';
         }
         this.m_segs = this.m_segs.map(translatePath(x, y));
