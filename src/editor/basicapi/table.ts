@@ -1,5 +1,5 @@
 import { TableCell, TableCellType, TableShape } from "../../data/table";
-import { Color, CrdtNumber, FillType, Gradient, Page, ShapeFrame, ShapeType, StrikethroughType, Style, TextAttr, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType } from "../../data/classes";
+import { Color, CrdtNumber, FillType, Gradient, Page, ShapeFrame, ShapeSize, ShapeType, StrikethroughType, Style, TextAttr, TextHorAlign, TextTransformType, TextVerAlign, Transform, UnderlineType } from "../../data/classes";
 import { crdtArrayInsert, crdtArrayRemove, crdtSetAttr } from "./basic";
 import { uuid } from "../../basic/uuid";
 import { BasicArray } from "../../data/basic";
@@ -9,11 +9,14 @@ import { newTableCellText } from "../../data/textutils";
 export function tableInitCell(table: TableShape, rowIdx: number, colIdx: number) {
     const cellId = table.rowHeights[rowIdx].id + "," + table.colWidths[colIdx].id;
     if (table.cells.has(cellId)) return;
+    const size = new ShapeSize();
+    const trans = new Transform();
     const cell = new TableCell(new BasicArray(),
         cellId,
         "",
         ShapeType.TableCell,
-        new ShapeFrame(0, 0, 0, 0),
+        trans,
+        size,
         new Style(new BasicArray(), new BasicArray(), new BasicArray()),
         TableCellType.Text,
         newTableCellText(table.textAttr));

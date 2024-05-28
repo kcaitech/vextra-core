@@ -4,7 +4,7 @@ import { uuid } from "../basic/uuid";
 import { Page } from "../data/page";
 import { Api } from "./coop/recordapi";
 import { newText2 } from "./creator";
-import { BlendMode, Border, ContextSettings, Fill, Shadow, Style, TableCell, TableCellType, Text } from "../data/classes";
+import { BlendMode, Border, ContextSettings, Fill, Shadow, ShapeSize, Style, TableCell, TableCellType, Text, Transform } from "../data/classes";
 import { findOverride, findVar } from "../data/utils";
 import { BasicArray } from "../data/basic";
 import { IImportContext, importBorder, importColor, importContextSettings, importCornerRadius, importExportOptions, importFill, importGradient, importShadow, importStyle, importTableCell, importTableShape, importText } from "../data/baseimport";
@@ -656,11 +656,14 @@ export function cell4edit2(page: Page, view: TableView, _cell: TableCellView, ap
     const valuefun = (_var: Variable | undefined) => {
         const cell = _var?.value ?? _cell.data;
         if (cell) return importTableCell(cell);
+        const size = new ShapeSize();
+        const trans = new Transform();
         return new TableCell(new BasicArray(),
             cellId,
             "",
             ShapeType.TableCell,
-            new ShapeFrame(0, 0, 0, 0),
+            trans,
+            size,
             new Style(new BasicArray(), new BasicArray(), new BasicArray()),
             TableCellType.Text,
             newTableCellText(view.data.textAttr));
@@ -681,11 +684,14 @@ export function cell4edit(page: Page, view: TableView, rowIdx: number, colIdx: n
     const valuefun = (_var: Variable | undefined) => {
         const cell = _var?.value ?? view._getCellAt(rowIdx, colIdx);
         if (cell) return importTableCell(cell);
+        const size = new ShapeSize();
+        const trans = new Transform();
         return new TableCell(new BasicArray(),
             cellId,
             "",
             ShapeType.TableCell,
-            new ShapeFrame(0, 0, 0, 0),
+            trans,
+            size,
             new Style(new BasicArray(), new BasicArray(), new BasicArray()),
             TableCellType.Text,
             newTableCellText(view.data.textAttr));

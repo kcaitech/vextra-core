@@ -23,6 +23,7 @@ function _checkNum(x: number) {
     if (Number.isNaN(x) || (!Number.isFinite(x))) throw new Error(String(x));
 }
 
+// todo transform
 export function shapeModifyX(page: Page, shape: Shape, x: number, needUpdateFrame?: { shape: Shape, page: Page }[]) {
     // check
     _checkNum(x);
@@ -33,6 +34,7 @@ export function shapeModifyX(page: Page, shape: Shape, x: number, needUpdateFram
         return op;
     }
 }
+// todo transform
 export function shapeModifyY(page: Page, shape: Shape, y: number, needUpdateFrame?: { shape: Shape, page: Page }[]) {
     // check
     _checkNum(y);
@@ -47,7 +49,7 @@ export function shapeModifyWH(page: Page, shape: Shape, w: number, h: number, ne
     // check
     if (Number.isNaN(w) || (!Number.isFinite(w))) throw new Error(String(w));
     if (Number.isNaN(h) || (!Number.isFinite(h))) throw new Error(String(h));
-    const frame = shape.frame;
+    const frame = shape.size;
     if (w !== frame.width || h !== frame.height) {
         const op = [crdtSetAttr(frame, 'width', w), crdtSetAttr(frame, 'height', h)];
         // shape.setFrameSize(w, h); // todo
@@ -66,7 +68,7 @@ export function shapeModifyEndMarkerType(shape: Shape, mt: MarkerType) {
 export function shapeModifyWidth(page: Page, shape: Shape, w: number, needUpdateFrame?: { shape: Shape, page: Page }[]) {
     // check
     if (Number.isNaN(w) || (!Number.isFinite(w))) throw new Error(String(w));
-    const frame = shape.frame;
+    const frame = shape.size;
     if (w !== frame.width) {
         // shape.setFrameSize(w, frame.height); // todo
         const op = crdtSetAttr(frame, 'width', w);
@@ -77,7 +79,7 @@ export function shapeModifyWidth(page: Page, shape: Shape, w: number, needUpdate
 export function shapeModifyHeight(page: Page, shape: Shape, h: number, needUpdateFrame?: { shape: Shape, page: Page }[]) {
     // check
     if (Number.isNaN(h) || (!Number.isFinite(h))) throw new Error(String(h));
-    const frame = shape.frame;
+    const frame = shape.size;
     if (h !== frame.height) {
         // shape.setFrameSize(frame.width, h);
         const op = crdtSetAttr(frame, 'height', h);
@@ -85,6 +87,7 @@ export function shapeModifyHeight(page: Page, shape: Shape, h: number, needUpdat
         return op;
     }
 }
+// todo transform
 export function shapeModifyRotate(page: Page, shape: Shape, rotate: number, needUpdateFrame?: { shape: Shape, page: Page }[]) {
     rotate = rotate % 360;
     if (rotate !== shape.rotation) {
@@ -133,11 +136,13 @@ export function shapeModifyVisible(shape: Shape | Variable, isVisible: boolean) 
 export function shapeModifyLock(shape: Shape, isLocked: boolean) {
     return crdtSetAttr(shape, 'isLocked', isLocked);
 }
+// todo transform
 export function shapeModifyHFlip(page: Page, shape: Shape, hflip: boolean | undefined, needUpdateFrame?: { shape: Shape, page: Page }[]) {
     const op = crdtSetAttr(shape, 'isFlippedHorizontal', hflip);
     if (needUpdateFrame) needUpdateFrame.push({ shape, page });
     return op;
 }
+// todo transform
 export function shapeModifyVFlip(page: Page, shape: Shape, vflip: boolean | undefined, needUpdateFrame?: { shape: Shape, page: Page }[]) {
     const op = crdtSetAttr(shape, 'isFlippedVertical', vflip);
     if (needUpdateFrame) needUpdateFrame.push({ shape, page });
