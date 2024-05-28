@@ -44,9 +44,9 @@ export class ReferHandleApiCaller extends AsyncApiCaller {
 
     modifyOffset(direction: 'hor' | 'ver', index: number, offset: number, recovery: boolean) {
         try {
-            if (!this.referLine) return;
             this.__recovery = recovery;
             this.api.modifyReferLineOffset(this.page, direction, index, offset);
+
             this.updateView();
         } catch (e) {
             console.error('ReferHandleApiCaller.modifyOffset');
@@ -56,7 +56,7 @@ export class ReferHandleApiCaller extends AsyncApiCaller {
 
     modifyReferId(direction: 'hor' | 'ver', index: number, referId: string) {
         try {
-            if (!this.referLine || this.referId === referId) return;
+            if (this.referId === referId) return;
 
             this.referId = referId;
             this.api.modifyReferLineReferId(this.page, direction, index, referId);
