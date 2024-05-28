@@ -39,6 +39,27 @@ export { Variable } from "./variable";
 // 在symbol，这是个普通shape, 绘制由绘制处理？（怎么处理的？监听所有的变量容器）
 //   试图层可以获取，但更新呢？监听所有的变量容器
 
+export class ShapeFrame2 {
+    constructor(
+        private _x: number,
+        private _y: number,
+        private _width: number,
+        private _height: number,
+    ) {}
+    get x() {
+        return this._x;
+    }
+    get y() {
+        return this._y;
+    }
+    get width() {
+        return this._width;
+    }
+    get height() {
+        return this._height;
+    }
+}
+
 export class Shape extends Basic implements classes.Shape {
 
     // watchable, 使用Watchable会导致语法检查失效
@@ -159,13 +180,13 @@ export class Shape extends Basic implements classes.Shape {
         return false;
     }
 
-    get frame(): ShapeFrame {
+    get frame(): ShapeFrame2 {
         const transform2 = getShapeTransform2(this);
         const trans = transform2.decomposeTranslate();
         const scale = transform2.decomposeScale();
         const width = Math.abs(this.size.width * scale.x);
         const height = Math.abs(this.size.height * scale.y);
-        return new ShapeFrame(trans.x, trans.y, width, height);
+        return new ShapeFrame2(trans.x, trans.y, width, height);
     }
 
     get rotation(): number {

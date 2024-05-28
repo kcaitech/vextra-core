@@ -19,3 +19,5 @@ export { parsePath } from './pathparser'
 export { layoutTable } from './tablelayout'
 export { layoutText, TextLayout, getNextChar } from './textlayout'
 export { importGradient } from './baseimport'
+
+export * from './shape_transform2'
