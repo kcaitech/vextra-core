@@ -224,10 +224,8 @@ export function gen(out: string) {
 
     $.nl('import * as impl from "./classes"');
     $.nl('import * as types from "./typesdefine"')
-    $.nl('import { Basic, BasicArray, BasicMap } from "./basic"')
+    $.nl('import { BasicArray, BasicMap } from "./basic"')
     $.nl('import { uuid } from "../basic/uuid"')
-    $.nl('import { FMT_VER_transfrom } from "./fmtver"')
-    $.nl('import { Matrix } from "../basic/matrix"')
     $.nl('import { compatibleOldData } from "./basecompatible"')
 
     $.nl('export interface IImportContext ').sub(() => {
