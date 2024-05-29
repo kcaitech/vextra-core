@@ -330,8 +330,8 @@ export class Controller {
                     this.__document.mediasMgr.add(ref, media);
                     const shape = newImageShape(name, frame, this.__document.mediasMgr, ref);
                     const xy = parent.frame2Root();
-                    shape.frame.x -= xy.x;
-                    shape.frame.y -= xy.y;
+                    shape.transform.translateX -= xy.x;
+                    shape.transform.translateY -= xy.y;
                     api.shapeInsert(this.__document, page, parent, shape, parent.childs.length)
                     newShape = parent.childs.at(-1);
                     this.__repo.transactCtx.fireNotify();
@@ -349,8 +349,8 @@ export class Controller {
                 status = Status.Pending;
                 const shape = newTable(name, frame, row, col, this.__document.mediasMgr);
                 const xy = parent.frame2Root();
-                shape.frame.x -= xy.x;
-                shape.frame.y -= xy.y;
+                shape.transform.translateX -= xy.x;
+                shape.transform.translateY -= xy.y;
                 api.shapeInsert(this.__document, page, parent, shape, parent.childs.length);
                 newShape = parent.childs.at(-1);
                 if (newShape?.type === ShapeType.Artboard) api.setFillColor(page, newShape, 0, new Color(0, 0, 0, 0));
@@ -379,8 +379,8 @@ export class Controller {
                     shape.text.insertText(content, 0);
 
                     const layout = shape.getLayout();
-                    shape.frame.width = layout.contentWidth;
-                    shape.frame.height = layout.contentHeight;
+                    shape.size.width = layout.contentWidth;
+                    shape.size.height = layout.contentHeight;
 
                     api.shapeInsert(this.__document, page, parent, shape, parent.childs.length)
                     newShape = parent.childs[parent.childs.length - 1];
@@ -402,8 +402,8 @@ export class Controller {
                 status = Status.Pending;
                 const shape = newContact(name, frame, apex);
                 const xy = parent.frame2Root();
-                shape.frame.x -= xy.x;
-                shape.frame.y -= xy.y;
+                shape.transform.translateX -= xy.x;
+                shape.transform.translateY -= xy.y;
                 api.shapeInsert(this.__document, page, parent, shape, parent.childs.length);
                 newShape = parent.childs.at(-1);
                 this.__repo.transactCtx.fireNotify();

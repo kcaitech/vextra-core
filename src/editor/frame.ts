@@ -1,6 +1,16 @@
 import { Page } from "../data/page";
 import { Matrix } from "../basic/matrix";
-import { CurvePoint, GroupShape, PathShape, PathShape2, Shape, ShapeFrame, ShapeType, SymbolShape, TextShape } from "../data/shape";
+import {
+    CurvePoint,
+    GroupShape,
+    PathShape,
+    PathShape2,
+    Shape,
+    ShapeFrame,
+    ShapeType,
+    SymbolShape,
+    TextShape
+} from "../data/shape";
 import { TextBehaviour } from "../data/typesdefine";
 import { fixTextShapeFrameByLayout } from "./utils/other";
 import { FrameType, PathType, ResizingConstraints2 } from "../data/consts";

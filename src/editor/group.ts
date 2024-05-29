@@ -51,10 +51,10 @@ export function group<T extends GroupShape>(document: Document, page: Page, shap
     const m = new Matrix(savep.matrix2Root().inverse)
     const xy = m.computeCoord(bounds.left, bounds.top)
 
-    gshape.frame.width = bounds.right - bounds.left;
-    gshape.frame.height = bounds.bottom - bounds.top;
-    gshape.frame.x = xy.x;
-    gshape.frame.y = xy.y;
+    gshape.size.width = bounds.right - bounds.left;
+    gshape.size.height = bounds.bottom - bounds.top;
+    gshape.transform.translateX = xy.x;
+    gshape.transform.translateY = xy.y;
 
     // 4、将GroupShape加入到save parent(层级最高图形的parent)中
     gshape = api.shapeInsert(document, page, savep, gshape, saveidx) as T;

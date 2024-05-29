@@ -99,7 +99,9 @@ import {
 } from "../dataview";
 import { RadiusType, ResizingConstraints2 } from "../data/consts";
 import { FMT_VER_latest } from "../data/fmtver";
-import {getShapeTransform2, updateShapeTransformBy2} from "../data/shape_transform2";
+import {getShapeTransform2, updateShapeTransformBy2} from "../data/shape_transform2_util";
+import {ColVector3D} from "../basic/matrix2";
+import {TransformMode} from "../basic/transform";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -1145,8 +1147,12 @@ export class PageEditor {
         // adjust shape frame refer to parent
         if (!adjusted) {
             const xy = parent.frame2Root();
-            shape.frame.x -= xy.x;
-            shape.frame.y -= xy.y;
+            const transform2 = getShapeTransform2(shape);
+            transform2.translate({
+                vector: new ColVector3D([-xy.x, -xy.y, 0]),
+                mode: TransformMode.Local,
+            })
+            updateShapeTransformBy2(shape, transform2);
         }
         shape.id = uuid(); // 凡插入对象，不管是复制剪切的，都需要新id。要保持同一id，使用move!
         const api = this.__repo.start("insertshape", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
@@ -1422,7 +1428,12 @@ export class PageEditor {
         try {
             const index = parent.childs.length;
             const xy = m_p2r.computeCoord2(0, 0);
-            new_s.frame.x -= xy.x, new_s.frame.y -= xy.y;
+            const transform2 = getShapeTransform2(new_s);
+            transform2.translate({
+                vector: new ColVector3D([-xy.x, -xy.y, 0]),
+                mode: TransformMode.Local,
+            })
+            updateShapeTransformBy2(new_s, transform2);
             if (rotation) {
                 const transform2 = getShapeTransform2(new_s);
                 transform2.setRotateZ((rotation % 360) / 180 * Math.PI);
@@ -1649,8 +1660,16 @@ export class PageEditor {
                 for (let r_i = 0; r_i < len; r_i++) { // 逐个插入replacement中的图形
                     let r = copy[r_i];
                     r.id = uuid();
-                    r.frame.x = save_frame.x + delta_xys[r_i].x; // lt_point与s.frame的xy重合后，用delta_xys中的相对位置计算replacement中每个图形的偏移
-                    r.frame.y = save_frame.y + delta_xys[r_i].y;
+                    // lt_point与s.frame的xy重合后，用delta_xys中的相对位置计算replacement中每个图形的偏移
+                    const transform2 = getShapeTransform2(r);
+                    transform2.setTranslate({
+                        vector: new ColVector3D([
+                            save_frame.x + delta_xys[r_i].x,
+                            save_frame.y + delta_xys[r_i].y,
+                            0,
+                        ]),
+                    })
+                    updateShapeTransformBy2(r, transform2);
                     api.shapeInsert(this.__document, this.__page, p, r, save_index);
                     src_replacement.push(p.childs[save_index]);
                     save_index++;

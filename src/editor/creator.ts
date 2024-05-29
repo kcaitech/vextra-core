@@ -70,7 +70,7 @@ import {ResizingConstraints2} from "../data/consts";
 import {SymbolMgr} from "../data/symbolmgr";
 import {newText} from "../data/textutils";
 import {getPolygonPoints, getPolygonVertices} from "./utils/path";
-import {getShapeTransform2, updateShapeTransformBy2} from "../data/shape_transform2";
+import {getShapeTransform2, updateShapeTransformBy2} from "../data/shape_transform2_util";
 
 function _checkNum(x: number) {
     // check

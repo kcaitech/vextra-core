@@ -29,7 +29,7 @@ import {update_frame_by_points} from "../utils/path";
 import {ContactShape} from "../../data/contact";
 import {translateTo} from "../frame";
 import {TextAttr} from "../../data/text";
-import {getShapeTransform2, updateShapeTransformBy2} from "../../data/shape_transform2";
+import {getShapeTransform2, updateShapeTransformBy2} from "../../data/shape_transform2_util";
 
 export interface GeneratorParams {
     parent: GroupShapeView;
