@@ -23,7 +23,7 @@ import { TextLayout } from "./textlayout";
 import { parsePath } from "./pathparser";
 import { FrameType, PathType, RadiusType, RECT_POINTS } from "./consts";
 import { Variable } from "./variable";
-import {getShapeTransform2} from "./shape_transform2_util";
+import {makeShapeTransform2By1} from "./shape_transform_util";
 
 export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D,
@@ -178,7 +178,7 @@ export class Shape extends Basic implements classes.Shape {
     }
 
     get transform2() {
-        return getShapeTransform2(this.transform);
+        return makeShapeTransform2By1(this.transform);
     }
 
     get frame(): ShapeFrame {

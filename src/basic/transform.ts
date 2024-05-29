@@ -227,10 +227,20 @@ export class Transform { // 变换
         },
     }) {
         this.matrix = params?.matrix || Matrix.BuildIdentity([4, 4])
+        if (this.matrix.rowCount !== 4 || this.matrix.colCount !== 4) throw new Error("矩阵数据错误：matrix不是4x4矩阵")
+
         this.translateMatrix = TranslateMatrix.FromMatrix(params?.subMatrix?.translate || Matrix.BuildIdentity([4, 4]))
+        if (this.translateMatrix.rowCount !== 4 || this.translateMatrix.colCount !== 4) throw new Error("矩阵数据错误：translateMatrix必须为4x4矩阵")
+
         this.rotateMatrix = RotateMatrix.FromMatrix(params?.subMatrix?.rotate || Matrix.BuildIdentity([4, 4]))
+        if (this.rotateMatrix.rowCount !== 4 || this.rotateMatrix.colCount !== 4) throw new Error("矩阵数据错误：rotateMatrix必须为4x4矩阵")
+
         this.skewMatrix = SkewMatrix.FromMatrix(params?.subMatrix?.skew || Matrix.BuildIdentity([4, 4]))
+        if (this.skewMatrix.rowCount !== 4 || this.skewMatrix.colCount !== 4) throw new Error("矩阵数据错误：skewMatrix必须为4x4矩阵")
+
         this.scaleMatrix = ScaleMatrix.FromMatrix(params?.subMatrix?.scale || Matrix.BuildIdentity([4, 4]))
+        if (this.scaleMatrix.rowCount !== 4 || this.scaleMatrix.colCount !== 4) throw new Error("矩阵数据错误：scaleMatrix必须为4x4矩阵")
+
         if (params?.matrix || params?.subMatrix) {
             this.isMatrixLatest = !!params?.matrix
             if (this.isMatrixLatest && hasSkewZ(this.matrix)) throw new Error("矩阵数据错误：matrix存在Z轴斜切");
@@ -251,6 +261,72 @@ export class Transform { // 变换
                 scale: this.scaleMatrix.clone(),
             },
         })
+    }
+
+    equals(transform: Transform) {
+        let matrixLatestMask = this.isMatrixLatest && transform.isMatrixLatest
+        let subMatrixLatestMask = this.isSubMatrixLatest && transform.isSubMatrixLatest
+
+        if (!matrixLatestMask && !subMatrixLatestMask) this.updateMatrix();
+
+        matrixLatestMask = this.isMatrixLatest && transform.isMatrixLatest
+        subMatrixLatestMask = this.isSubMatrixLatest && transform.isSubMatrixLatest
+
+        if (matrixLatestMask) {
+            return this.matrix.equals(transform.matrix)
+        } else {
+            return this.translateMatrix.equals(transform.translateMatrix)
+            && this.rotateMatrix.equals(transform.rotateMatrix)
+            && this.skewMatrix.equals(transform.skewMatrix)
+            && this.scaleMatrix.equals(transform.scaleMatrix)
+        }
+    }
+
+    reset() {
+        this.matrix = Matrix.BuildIdentity([4, 4])
+        this.translateMatrix = TranslateMatrix.FromMatrix(Matrix.BuildIdentity([4, 4]))
+        this.rotateMatrix = RotateMatrix.FromMatrix(Matrix.BuildIdentity([4, 4]))
+        this.skewMatrix = SkewMatrix.FromMatrix(Matrix.BuildIdentity([4, 4]))
+        this.scaleMatrix = ScaleMatrix.FromMatrix(Matrix.BuildIdentity([4, 4]))
+        this.isMatrixLatest = true
+        this.isSubMatrixLatest = true
+        this.onChange(this)
+    }
+
+    setMatrix(matrix: Matrix) {
+        if (matrix.rowCount !== 4 || matrix.colCount !== 4) throw new Error("矩阵数据错误：matrix不是4x4矩阵")
+        this.matrix = matrix
+        this.isMatrixLatest = true
+        this.isSubMatrixLatest = false
+        this.onChange(this)
+    }
+
+    setSubMatrix(params: {
+        translate?: Matrix,
+        rotate?: Matrix,
+        skew?: Matrix,
+        scale?: Matrix,
+    }) {
+        if (!this.isSubMatrixLatest) this.updateMatrix();
+        if (params.translate) {
+            if (params.translate.rowCount !== 4 || params.translate.colCount !== 4) throw new Error("矩阵数据错误：translate必须为4x4矩阵");
+            this.translateMatrix = TranslateMatrix.FromMatrix(params.translate)
+        }
+        if (params.rotate) {
+            if (params.rotate.rowCount !== 4 || params.rotate.colCount !== 4) throw new Error("矩阵数据错误：rotate必须为4x4矩阵");
+            this.rotateMatrix = RotateMatrix.FromMatrix(params.rotate)
+        }
+        if (params.skew) {
+            if (params.skew.rowCount !== 4 || params.skew.colCount !== 4) throw new Error("矩阵数据错误：skew必须为4x4矩阵");
+            this.skewMatrix = SkewMatrix.FromMatrix(params.skew)
+        }
+        if (params.scale) {
+            if (params.scale.rowCount !== 4 || params.scale.colCount !== 4) throw new Error("矩阵数据错误：scale必须为4x4矩阵");
+            this.scaleMatrix = ScaleMatrix.FromMatrix(params.scale)
+        }
+        this.isMatrixLatest = false
+        this.isSubMatrixLatest = true
+        this.onChange(this)
     }
 
     private _getMatrixEl(key: Matrix3DKeysType) {

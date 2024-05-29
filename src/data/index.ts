@@ -20,4 +20,4 @@ export { layoutTable } from './tablelayout'
 export { layoutText, TextLayout, getNextChar } from './textlayout'
 export { importGradient } from './baseimport'
 
-export * from './shape_transform2_util'
+export * from './shape_transform_util'

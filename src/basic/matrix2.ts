@@ -51,6 +51,10 @@ export class Matrix { // 矩阵
         return new (this.constructor as any)(this.data.clone())
     }
 
+    equals(matrix: Matrix) { // 判断是否相等
+        return this.data.equals(matrix.data)
+    }
+
     get rawData() {
         return this.data.data
     }

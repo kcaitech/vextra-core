@@ -30,7 +30,9 @@ import { objectId } from "../basic/objectid";
 import { fixConstrainFrame } from "../editor/frame";
 import { BasicArray } from "../data/basic";
 import { MarkerType } from "../data/typesdefine";
-import { getShapeTransform2 } from "../data/shape_transform2_util";
+import {makeShapeTransform2By1, makeShapeTransformBy2, transformEquals} from "../data/shape_transform_util";
+import { Transform as Transform2 } from "../basic/transform";
+import {Matrix2} from "../index";
 
 export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     return (
@@ -191,6 +193,8 @@ export class ShapeView extends DataView {
     m_path?: Path;
     m_pathstr?: string;
 
+    m_transform2: Transform2;
+
     constructor(ctx: DViewCtx, props: PropsType, isTopClass: boolean = true) {
         super(ctx, props);
         const shape = props.data;
@@ -204,6 +208,8 @@ export class ShapeView extends DataView {
         this.m_transform = new Transform(t.m00, t.m01, t.m02, t.m10, t.m11, t.m12)
         this.m_size = new ShapeSize(shape.size.width, shape.size.height);
         this.m_fixedRadius = (shape as PathShape).fixedRadius; // rectangle
+
+        this.m_transform2 = makeShapeTransform2By1(this.m_transform);
 
         if (isTopClass) this.afterInit();
     }
@@ -241,12 +247,25 @@ export class ShapeView extends DataView {
     get transform() {
         return this.m_transform
     }
+
+    get transform2() {
+        if (!transformEquals(makeShapeTransformBy2(this.m_transform2), this.transform)) {
+            this.m_transform2.setMatrix(new Matrix2([4, 4], [
+                this.transform.m00, this.transform.m01, 0, this.transform.m02,
+                this.transform.m10, this.transform.m11, 0, this.transform.m12,
+                0, 0, 1, 0,
+                0, 0, 0, 1,
+            ], true))
+        }
+        return this.m_transform2;
+    }
+
     get size() {
         return this.m_size;
     }
 
     get frame(): ShapeFrame {
-        const transform2 = getShapeTransform2(this.transform);
+        const transform2 = makeShapeTransform2By1(this.transform);
         const trans = transform2.decomposeTranslate();
         const scale = transform2.decomposeScale();
         const width = Math.abs(this.size.width * scale.x);
@@ -257,23 +276,23 @@ export class ShapeView extends DataView {
     }
 
     get rotation(): number {
-        return getShapeTransform2(this.transform).decomposeEuler().z * 180 / Math.PI;
+        return makeShapeTransform2By1(this.transform).decomposeEuler().z * 180 / Math.PI;
     }
 
     get isFlippedHorizontal(): boolean {
-        return getShapeTransform2(this.transform).isFlipH;
+        return makeShapeTransform2By1(this.transform).isFlipH;
     }
 
     get isFlippedVertical(): boolean {
-        return getShapeTransform2(this.transform).isFlipV
+        return makeShapeTransform2By1(this.transform).isFlipV
     }
 
     get skewX(): number {
-        return getShapeTransform2(this.transform).decomposeSkew().x * 180 / Math.PI;
+        return makeShapeTransform2By1(this.transform).decomposeSkew().x * 180 / Math.PI;
     }
 
     get skewY(): number {
-        return getShapeTransform2(this.transform).decomposeSkew().y * 180 / Math.PI;
+        return makeShapeTransform2By1(this.transform).decomposeSkew().y * 180 / Math.PI;
     }
 
     get fixedRadius() {
