@@ -1147,12 +1147,12 @@ export class PageEditor {
         // adjust shape frame refer to parent
         if (!adjusted) {
             const xy = parent.frame2Root();
-            const transform2 = getShapeTransform2(shape);
+            const transform2 = getShapeTransform2(shape.transform);
             transform2.translate({
                 vector: new ColVector3D([-xy.x, -xy.y, 0]),
                 mode: TransformMode.Local,
             })
-            updateShapeTransformBy2(shape, transform2);
+            updateShapeTransformBy2(shape.transform, transform2);
         }
         shape.id = uuid(); // 凡插入对象，不管是复制剪切的，都需要新id。要保持同一id，使用move!
         const api = this.__repo.start("insertshape", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
@@ -1428,16 +1428,16 @@ export class PageEditor {
         try {
             const index = parent.childs.length;
             const xy = m_p2r.computeCoord2(0, 0);
-            const transform2 = getShapeTransform2(new_s);
+            const transform2 = getShapeTransform2(new_s.transform);
             transform2.translate({
                 vector: new ColVector3D([-xy.x, -xy.y, 0]),
                 mode: TransformMode.Local,
             })
-            updateShapeTransformBy2(new_s, transform2);
+            updateShapeTransformBy2(new_s.transform, transform2);
             if (rotation) {
-                const transform2 = getShapeTransform2(new_s);
+                const transform2 = getShapeTransform2(new_s.transform);
                 transform2.setRotateZ((rotation % 360) / 180 * Math.PI);
-                updateShapeTransformBy2(new_s, transform2);
+                updateShapeTransformBy2(new_s.transform, transform2);
             }
             new_s = api.shapeInsert(this.__document, this.__page, parent, new_s, index);
             if (target_xy) {
@@ -1661,7 +1661,7 @@ export class PageEditor {
                     let r = copy[r_i];
                     r.id = uuid();
                     // lt_point与s.frame的xy重合后，用delta_xys中的相对位置计算replacement中每个图形的偏移
-                    const transform2 = getShapeTransform2(r);
+                    const transform2 = getShapeTransform2(r.transform);
                     transform2.setTranslate({
                         vector: new ColVector3D([
                             save_frame.x + delta_xys[r_i].x,
@@ -1669,7 +1669,7 @@ export class PageEditor {
                             0,
                         ]),
                     })
-                    updateShapeTransformBy2(r, transform2);
+                    updateShapeTransformBy2(r.transform, transform2);
                     api.shapeInsert(this.__document, this.__page, p, r, save_index);
                     src_replacement.push(p.childs[save_index]);
                     save_index++;

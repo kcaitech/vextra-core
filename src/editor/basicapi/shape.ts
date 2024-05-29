@@ -90,9 +90,9 @@ export function shapeModifyRotate(page: Page, shape: Shape, rotate: number, need
     rotate = rotate % 360; // 0-360
     if (rotate !== shape.rotation) {
         rotate = rotate * Math.PI / 180; // 0-2PI
-        const transform2 = getShapeTransform2(shape);
+        const transform2 = getShapeTransform2(shape.transform);
         transform2.setRotateZ(rotate);
-        updateShapeTransformBy2(shape, transform2);
+        updateShapeTransformBy2(shape.transform, transform2);
         const ops = [];
         ops.push(crdtSetAttr(shape.transform, 'm00', transform2.m00));
         ops.push(crdtSetAttr(shape.transform, 'm10', transform2.m10));
@@ -143,9 +143,9 @@ export function shapeModifyLock(shape: Shape, isLocked: boolean) {
     return crdtSetAttr(shape, 'isLocked', isLocked);
 }
 export function shapeModifyHFlip(page: Page, shape: Shape, hflip: boolean | undefined, needUpdateFrame?: { shape: Shape, page: Page }[]) {
-    const transform2 = getShapeTransform2(shape);
+    const transform2 = getShapeTransform2(shape.transform);
     transform2.setFlipH(!!hflip);
-    updateShapeTransformBy2(shape, transform2);
+    updateShapeTransformBy2(shape.transform, transform2);
     const ops = [];
     ops.push(crdtSetAttr(shape.transform, 'm00', transform2.m00));
     ops.push(crdtSetAttr(shape.transform, 'm10', transform2.m10));
@@ -153,9 +153,9 @@ export function shapeModifyHFlip(page: Page, shape: Shape, hflip: boolean | unde
     return ops;
 }
 export function shapeModifyVFlip(page: Page, shape: Shape, vflip: boolean | undefined, needUpdateFrame?: { shape: Shape, page: Page }[]) {
-    const transform2 = getShapeTransform2(shape);
+    const transform2 = getShapeTransform2(shape.transform);
     transform2.setFlipH(!!vflip);
-    updateShapeTransformBy2(shape, transform2);
+    updateShapeTransformBy2(shape.transform, transform2);
     const ops = [];
     ops.push(crdtSetAttr(shape.transform, 'm01', transform2.m01));
     ops.push(crdtSetAttr(shape.transform, 'm11', transform2.m11));

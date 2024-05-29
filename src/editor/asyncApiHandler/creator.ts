@@ -166,11 +166,11 @@ export class CreatorApiCaller extends AsyncApiCaller {
 
     // 初始化图层的transform
     private setTransform(shape: Shape, trans: { rotation: number, flipH: boolean, flipV: boolean }) {
-        const transform2 = getShapeTransform2(shape);
+        const transform2 = getShapeTransform2(shape.transform);
         transform2.setRotateZ((shape.rotation % 360) / 180 * Math.PI);
         transform2.setFlipH(shape.isFlippedHorizontal);
         transform2.setFlipV(shape.isFlippedVertical);
-        updateShapeTransformBy2(shape, transform2);
+        updateShapeTransformBy2(shape.transform, transform2);
     }
 
     private insert(params: GeneratorParams, shape: Shape) {

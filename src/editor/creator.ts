@@ -86,9 +86,9 @@ function _checkFrame(frame: ShapeFrame) {
 }
 
 export function addCommonAttr(shape: Shape) {
-    const transform2 = getShapeTransform2(shape);
+    const transform2 = getShapeTransform2(shape.transform);
     transform2.setRotateZ(0);
-    updateShapeTransformBy2(shape, transform2);
+    updateShapeTransformBy2(shape.transform, transform2);
     shape.isVisible = true;
     shape.isLocked = false;
     shape.constrainerProportions = false;
@@ -755,7 +755,7 @@ export function getTransformByEnv(env: GroupShape) {
 export function modifyTransformByEnv(shape: Shape, env: GroupShape) {
     const transform = getTransformByEnv(env);
 
-    const transform2 = getShapeTransform2(shape);
+    const transform2 = getShapeTransform2(shape.transform);
     transform2.setFlipH(transform.flipH);
     transform2.setFlipV(transform.flipV);
 
@@ -770,5 +770,5 @@ export function modifyTransformByEnv(shape: Shape, env: GroupShape) {
 
     transform2.setRotateZ((r % 360) / 180 * Math.PI);
 
-    updateShapeTransformBy2(shape, transform2);
+    updateShapeTransformBy2(shape.transform, transform2);
 }
