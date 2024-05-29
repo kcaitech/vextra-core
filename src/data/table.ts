@@ -2,7 +2,7 @@ import { Style } from "./style";
 import * as classes from "./baseclasses"
 import { BasicArray, BasicMap, ResourceMgr } from "./basic";
 import { ShapeType, TableCellType, CrdtNumber } from "./baseclasses"
-import { Shape, Transform, ShapeSize } from "./shape";
+import {Shape, Transform, ShapeSize} from "./shape";
 import { Path } from "./path";
 import { Text, TextAttr } from "./text"
 import { FrameType, PathType } from "./consts";

@@ -437,6 +437,30 @@ export class Transform { // 变换
         return this
     }
 
+    // X轴平移
+    translateX(params: {
+        value: number,
+        mode?: TransformMode,
+    }) {
+        this.translate({vector: new ColVector3D([params.value, 0, 0]), mode: params.mode})
+    }
+
+    // Y轴平移
+    translateY(params: {
+        value: number,
+        mode?: TransformMode,
+    }) {
+        this.translate({vector: new ColVector3D([0, params.value, 0]), mode: params.mode})
+    }
+
+    // Z轴平移
+    translateZ(params: {
+        value: number,
+        mode?: TransformMode,
+    }) {
+        this.translate({vector: new ColVector3D([0, 0, params.value]), mode: params.mode})
+    }
+
     // 在本变换之前平移
     preTranslate(params: {
         vector: ColVector3D,
@@ -458,6 +482,27 @@ export class Transform { // 变换
         return this
     }
 
+    // 在本变换之前进行X轴平移
+    preTranslateX(params: {
+        value: number,
+    }) {
+        this.preTranslate({vector: new ColVector3D([params.value, 0, 0])})
+    }
+
+    // 在本变换之前进行Y轴平移
+    preTranslateY(params: {
+        value: number,
+    }) {
+        this.preTranslate({vector: new ColVector3D([0, params.value, 0])})
+    }
+
+    // 在本变换之前进行Z轴平移
+    preTranslateZ(params: {
+        value: number,
+    }) {
+        this.preTranslate({vector: new ColVector3D([0, 0, params.value])})
+    }
+
     // 设置平移参数
     setTranslate(params: {
         vector: ColVector3D,
@@ -474,6 +519,30 @@ export class Transform { // 变换
         this.onChange(this)
 
         return this
+    }
+
+    // 设置X轴平移参数
+    setTranslateX(params: {
+        value: number,
+    }) {
+        const translateNow = this.decomposeTranslate()
+        this.setTranslate({vector: new ColVector3D([params.value, translateNow.y, translateNow.z])})
+    }
+
+    // 设置Y轴平移参数
+    setTranslateY(params: {
+        value: number,
+    }) {
+        const translateNow = this.decomposeTranslate()
+        this.setTranslate({vector: new ColVector3D([translateNow.x, params.value, translateNow.z])})
+    }
+
+    // 设置Z轴平移参数
+    setTranslateZ(params: {
+        value: number,
+    }) {
+        const translateNow = this.decomposeTranslate()
+        this.setTranslate({vector: new ColVector3D([translateNow.x, translateNow.y, params.value])})
     }
 
     // 缩放
@@ -508,6 +577,30 @@ export class Transform { // 变换
         return this
     }
 
+    // X轴缩放
+    scaleX(params: {
+        value: number,
+        mode?: TransformMode,
+    }) {
+        this.scale({vector: new ColVector3D([params.value, 1, 1]), mode: params.mode})
+    }
+
+    // Y轴缩放
+    scaleY(params: {
+        value: number,
+        mode?: TransformMode,
+    }) {
+        this.scale({vector: new ColVector3D([1, params.value, 1]), mode: params.mode})
+    }
+
+    // Z轴缩放
+    scaleZ(params: {
+        value: number,
+        mode?: TransformMode,
+    }) {
+        this.scale({vector: new ColVector3D([1, 1, params.value]), mode: params.mode})
+    }
+
     // 在本变换之前缩放
     preScale(params: {
         vector: ColVector3D,
@@ -529,6 +622,27 @@ export class Transform { // 变换
         return this
     }
 
+    // 在本变换之前进行X轴缩放
+    preScaleX(params: {
+        value: number,
+    }) {
+        this.preScale({vector: new ColVector3D([params.value, 1, 1])})
+    }
+
+    // 在本变换之前进行Y轴缩放
+    preScaleY(params: {
+        value: number,
+    }) {
+        this.preScale({vector: new ColVector3D([1, params.value, 1])})
+    }
+
+    // 在本变换之前进行Z轴缩放
+    preScaleZ(params: {
+        value: number,
+    }) {
+        this.preScale({vector: new ColVector3D([1, 1, params.value])})
+    }
+
     // 设置缩放参数
     setScale(params: {
         vector: ColVector3D,
@@ -545,6 +659,30 @@ export class Transform { // 变换
         this.onChange(this)
 
         return this
+    }
+
+    // 设置X轴缩放参数
+    setScaleX(params: {
+        value: number,
+    }) {
+        const scaleNow = this.decomposeScale()
+        this.setScale({vector: new ColVector3D([params.value, scaleNow.y, scaleNow.z])})
+    }
+
+    // 设置Y轴缩放参数
+    setScaleY(params: {
+        value: number,
+    }) {
+        const scaleNow = this.decomposeScale()
+        this.setScale({vector: new ColVector3D([scaleNow.x, params.value, scaleNow.z])})
+    }
+
+    // 设置Z轴缩放参数
+    setScaleZ(params: {
+        value: number,
+    }) {
+        const scaleNow = this.decomposeScale()
+        this.setScale({vector: new ColVector3D([scaleNow.x, scaleNow.y, params.value])})
     }
 
     // 绕x轴旋转
@@ -881,7 +1019,22 @@ export class Transform { // 变换
         return this
     }
 
-    setRotateZ(angle: number) { // 仅绕z轴旋转
+    // 设置绕x轴旋转参数
+    setRotateX(angle: number) {
+        return this.setRotate({
+            euler: new ColVector3D([angle, 0, 0]),
+        })
+    }
+
+    // 设置绕y轴旋转参数
+    setRotateY(angle: number) {
+        return this.setRotate({
+            euler: new ColVector3D([0, angle, 0]),
+        })
+    }
+
+    // 设置绕z轴旋转参数
+    setRotateZ(angle: number) {
         return this.setRotate({
             euler: new ColVector3D([0, 0, angle]),
         })
@@ -929,6 +1082,22 @@ export class Transform { // 变换
         return this
     }
 
+    // X轴斜切
+    skewX(params: {
+        angle: number,
+        mode?: TransformMode,
+    }) {
+        this.skew({skewAngle: new ColVector2D([params.angle, 0]), mode: params.mode})
+    }
+
+    // Y轴斜切
+    skewY(params: {
+        angle: number,
+        mode?: TransformMode,
+    }) {
+        this.skew({skewAngle: new ColVector2D([0, params.angle]), mode: params.mode})
+    }
+
     // 在本变换之前斜切
     preSkew(params: {
         skewAngle: ColVector2D,
@@ -949,6 +1118,20 @@ export class Transform { // 变换
         this.onChange(this)
 
         return this
+    }
+
+    // 在本变换之前进行X轴斜切
+    preSkewX(params: {
+        angle: number,
+    }) {
+        this.preSkew({skewAngle: new ColVector2D([params.angle, 0])})
+    }
+
+    // 在本变换之前进行Y轴斜切
+    preSkewY(params: {
+        angle: number,
+    }) {
+        this.preSkew({skewAngle: new ColVector2D([0, params.angle])})
     }
 
     // 设置斜切参数

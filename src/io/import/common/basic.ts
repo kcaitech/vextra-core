@@ -20,10 +20,10 @@ export function updatePageFrame(p: Page) {
     const pf = p.frame;
     const cc = p.childs.length;
     if (cc === 0) {
-        p.frame.x = 0
-        p.frame.y = 0
-        p.frame.width = 0
-        p.frame.height = 0
+        p.transform.translateX = 0;
+        p.transform.translateY = 0;
+        p.size.width = 0
+        p.size.height = 0
         return;
     }
     const c = p.childs[0];
@@ -42,17 +42,16 @@ export function updatePageFrame(p: Page) {
     // console.log("pf", pf)
     // console.log(l, t, r, b)
     // pf.set(pf.x + l, pf.y + t, r - l, b - t);
-    pf.x = pf.x + l
-    pf.y = pf.y + t
-    pf.width = r - l
-    pf.height = b - t
+    p.transform.translateX = pf.x + l;
+    p.transform.translateY = pf.y + t;
+    p.size.width = r - l
+    p.size.height = b - t
     // console.log(pf)
 
     for (let i = 0; i < cc; i++) {
         const c = p.childs[i];
-        const cf = c.frame;
-        cf.x = cf.x - l;
-        cf.y = cf.y - t;
+        c.transform.translateX = cf.x - l;
+        c.transform.translateY = cf.y - t;
         // cf.width = cf.width;
         // cf.height = cf.height;
         // console.log("c", i, cf)

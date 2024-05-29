@@ -23,7 +23,7 @@ import { TextLayout } from "./textlayout";
 import { parsePath } from "./pathparser";
 import { FrameType, PathType, RadiusType, RECT_POINTS } from "./consts";
 import { Variable } from "./variable";
-import {getShapeTransform2} from "./shape_transform2";
+import {getShapeTransform2} from "./shape_transform2_util";
 
 export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D,
@@ -39,24 +39,27 @@ export { Variable } from "./variable";
 // 在symbol，这是个普通shape, 绘制由绘制处理？（怎么处理的？监听所有的变量容器）
 //   试图层可以获取，但更新呢？监听所有的变量容器
 
-export class ShapeFrame2 {
-    constructor(
-        private _x: number,
-        private _y: number,
-        private _width: number,
-        private _height: number,
-    ) {}
-    get x() {
-        return this._x;
+export class MyTransform extends Transform {
+    get translateX() {
+        return this.m02;
     }
-    get y() {
-        return this._y;
+
+    set translateX(x: number) {
+        this.m02 = x;
     }
-    get width() {
-        return this._width;
+
+    get translateY() {
+        return this.m12;
     }
-    get height() {
-        return this._height;
+
+    set translateY(y: number) {
+        this.m12 = y;
+    }
+}
+
+export class MyShapeSize extends ShapeSize {
+    makeShapeSizeReadonly() {
+        return new ShapeSize(this.width, this.height)
     }
 }
 
@@ -130,8 +133,8 @@ export class Shape extends Basic implements classes.Shape {
     type: ShapeType
     // frame: ShapeFrame
     style: Style
-    transform: Transform
-    size: ShapeSize
+    transform: MyTransform
+    size: MyShapeSize
     boolOp?: BoolOp
     isFixedToViewport?: boolean
     isLocked?: boolean
@@ -163,8 +166,8 @@ export class Shape extends Basic implements classes.Shape {
         this.id = id
         this.name = name
         this.type = type
-        this.transform = transform
-        this.size = size
+        this.transform = new MyTransform(transform.m00, transform.m01, transform.m02, transform.m10, transform.m11, transform.m12)
+        this.size = new MyShapeSize(size.width, size.height)
         this.style = style
     }
 
@@ -180,13 +183,14 @@ export class Shape extends Basic implements classes.Shape {
         return false;
     }
 
-    get frame(): ShapeFrame2 {
+    get frame(): ShapeFrame {
         const transform2 = getShapeTransform2(this);
         const trans = transform2.decomposeTranslate();
         const scale = transform2.decomposeScale();
         const width = Math.abs(this.size.width * scale.x);
         const height = Math.abs(this.size.height * scale.y);
-        return new ShapeFrame2(trans.x, trans.y, width, height);
+        // Object.freeze()
+        return new ShapeFrame(trans.x, trans.y, width, height);
     }
 
     get rotation(): number {
@@ -214,7 +218,7 @@ export class Shape extends Basic implements classes.Shape {
     }
 
     getPath(fixedRadius?: number): Path {
-        return this.getPathOfFrame(this.size, fixedRadius);
+        return this.getPathOfFrame(this.size.makeShapeSizeReadonly(), fixedRadius);
     }
 
     getPathStr(fixedRadius?: number): string {

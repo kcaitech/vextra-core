@@ -10,7 +10,7 @@ import {
     CornerRadius,
     getPathOfRadius,
     Transform,
-    ShapeSize
+    ShapeSize,
 } from "./shape";
 import { Style } from "./style";
 import * as classes from "./baseclasses";
@@ -51,7 +51,7 @@ export class Artboard extends GroupShape implements classes.Artboard {
     }
 
     getPath(fixedRadius?: number): Path {
-        return this.getPathOfFrame(this.size, fixedRadius);
+        return this.getPathOfFrame(this.size.makeShapeSizeReadonly(), fixedRadius);
     }
 
     getPathOfFrame(frame: ShapeSize, fixedRadius?: number | undefined): Path {
