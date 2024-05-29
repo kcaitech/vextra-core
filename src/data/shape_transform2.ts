@@ -1,6 +1,6 @@
-import {Shape} from "./index";
-import {Transform as Transform2} from "../basic/transform";
-import {Matrix2} from "../index";
+import { Shape } from "./typesdefine";
+import { Transform as Transform2 } from "../basic/transform";
+import { Matrix as Matrix2 } from "../basic/matrix2";
 
 export function getShapeTransform2(shape: Shape): Transform2 {
     return new Transform2({
