@@ -352,55 +352,8 @@ export class Shape extends Basic implements classes.Shape {
         }
     }
 
-    // flipHorizontal() {
-    //     this.isFlippedHorizontal = !this.isFlippedHorizontal;
-    // }
-    // flipVertical() {
-    //     this.isFlippedVertical = !this.isFlippedVertical;
-    // }
-    // rotate(deg: number) {
-    //     deg = deg % 360;
-    //     this.rotation = deg;
-    // }
-
-    setResizingConstraint(value: number) {
-        this.resizingConstraint = value;
-    }
-
-    setContextSettingsOpacity(value: number) {
-        if (!this.style.contextSettings) {
-            this.style.contextSettings = new ContextSettings(BlendMode.Normal, 1);
-        }
-        this.style.contextSettings.opacity = value;
-    }
-
     getBorderIndex(border: Border): number {
         return this.style.borders.findIndex(i => i === border);
-    }
-
-    setName(name: string) {
-        this.name = name;
-    }
-
-    toggleVisible() {
-        this.isVisible = !this.isVisible;
-    }
-
-    toggleLock() {
-        this.isLocked = !this.isLocked;
-    }
-
-    setShapesConstrainerProportions(val: boolean) {
-        this.constrainerProportions = val;
-    }
-
-    setFrameSize(w: number, h: number) {
-        this.size.width = w;
-        this.size.height = h;
-    }
-
-    setVisible(isVisible: boolean | undefined) {
-        this.isVisible = isVisible;
     }
 
     findVar(varId: string, ret: Variable[]) {

@@ -94,19 +94,19 @@ export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeFrame, frame
     const isGroupChild = shape.parent?.type === ShapeType.Group;
 
     if (isGroupChild) { // 编组的子元素当忽略约束并跟随编组缩放
-        shape.transform.translateX *= scaleX;
-        shape.transform.translateY *= scaleY;
-        shape.size.width *= scaleX;
-        shape.size.height *= scaleY;
+        frame.x *= scaleX;
+        frame.y *= scaleY;
+        frame.width *= scaleX;
+        frame.height *= scaleY;
     } else {
         const resizingConstraint = shape.resizingConstraint!; // 默认值为靠左、靠顶、宽高固定
         // const recorder = (window as any).__size_recorder;
         const __f = fixConstrainFrame(shape, resizingConstraint, frame.x, frame.y, frame.width, frame.height, scaleX, scaleY, parentFrame, originParentFrame);
 
-        shape.transform.translateX = __f.x;
-        shape.transform.translateY = __f.y;
-        shape.size.width = __f.width;
-        shape.size.height = __f.height;
+        frame.x = __f.x;
+        frame.y = __f.y;
+        frame.width = __f.width;
+        frame.height = __f.height;
     }
 }
 
