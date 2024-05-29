@@ -1189,7 +1189,7 @@ export class Transform { // 变换
         })
     }
 
-    preFlipH() { // 在本变换之前水平翻转
+    preFlipH() { // 在本变换之前进行水平翻转
         return this.preScale({
             vector: new ColVector3D([-1, 1, 1]),
         })
@@ -1214,7 +1214,7 @@ export class Transform { // 变换
         })
     }
 
-    preFlipV() { // 在本变换之前垂直翻转
+    preFlipV() { // 在本变换之前进行垂直翻转
         return this.preScale({
             vector: new ColVector3D([1, -1, 1]),
         })
@@ -1234,7 +1234,6 @@ export class Transform { // 变换
 
     decomposeTranslate() { // 分解平移参数
         if (this.decomposeTranslateCache !== undefined) return this.decomposeTranslateCache;
-        if (!this.isSubMatrixLatest) this.updateMatrix();
         const matrix = this.isMatrixLatest ? this.matrix : this.translateMatrix
         this.decomposeTranslateCache = matrix.col3.deleteRow()
         return this.decomposeTranslateCache
