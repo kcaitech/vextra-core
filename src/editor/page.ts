@@ -99,7 +99,7 @@ import {
 } from "../dataview";
 import { RadiusType, ResizingConstraints2 } from "../data/consts";
 import { FMT_VER_latest } from "../data/fmtver";
-import {getShapeTransform2, updateShapeTransformBy2} from "../data/shape_transform2_util";
+import {makeShapeTransform2By1, updateShapeTransformBy2} from "../data/shape_transform_util";
 import {ColVector3D} from "../basic/matrix2";
 import {TransformMode} from "../basic/transform";
 
@@ -1147,7 +1147,7 @@ export class PageEditor {
         // adjust shape frame refer to parent
         if (!adjusted) {
             const xy = parent.frame2Root();
-            const transform2 = getShapeTransform2(shape.transform);
+            const transform2 = makeShapeTransform2By1(shape.transform);
             transform2.translate({
                 vector: new ColVector3D([-xy.x, -xy.y, 0]),
                 mode: TransformMode.Local,
@@ -1428,14 +1428,14 @@ export class PageEditor {
         try {
             const index = parent.childs.length;
             const xy = m_p2r.computeCoord2(0, 0);
-            const transform2 = getShapeTransform2(new_s.transform);
+            const transform2 = makeShapeTransform2By1(new_s.transform);
             transform2.translate({
                 vector: new ColVector3D([-xy.x, -xy.y, 0]),
                 mode: TransformMode.Local,
             })
             updateShapeTransformBy2(new_s.transform, transform2);
             if (rotation) {
-                const transform2 = getShapeTransform2(new_s.transform);
+                const transform2 = makeShapeTransform2By1(new_s.transform);
                 transform2.setRotateZ((rotation % 360) / 180 * Math.PI);
                 updateShapeTransformBy2(new_s.transform, transform2);
             }
@@ -1661,7 +1661,7 @@ export class PageEditor {
                     let r = copy[r_i];
                     r.id = uuid();
                     // lt_point与s.frame的xy重合后，用delta_xys中的相对位置计算replacement中每个图形的偏移
-                    const transform2 = getShapeTransform2(r.transform);
+                    const transform2 = makeShapeTransform2By1(r.transform);
                     transform2.setTranslate({
                         vector: new ColVector3D([
                             save_frame.x + delta_xys[r_i].x,

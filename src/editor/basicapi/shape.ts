@@ -17,7 +17,7 @@ import { BoolOp, CurveMode, MarkerType, OverrideType, Point2D } from "../../data
 import { BasicMap } from "../../data/basic";
 import { crdtArrayInsert, crdtArrayRemove, crdtSetAttr } from "./basic";
 import {ColVector3D} from "../../basic/matrix2";
-import {getShapeTransform2, updateShapeTransformBy2} from "../../data/shape_transform2_util";
+import {makeShapeTransform2By1, updateShapeTransformBy2} from "../../data/shape_transform_util";
 
 function _checkNum(x: number) {
     // check
@@ -90,7 +90,7 @@ export function shapeModifyRotate(page: Page, shape: Shape, rotate: number, need
     rotate = rotate % 360; // 0-360
     if (rotate !== shape.rotation) {
         rotate = rotate * Math.PI / 180; // 0-2PI
-        const transform2 = getShapeTransform2(shape.transform);
+        const transform2 = makeShapeTransform2By1(shape.transform);
         transform2.setRotateZ(rotate);
         updateShapeTransformBy2(shape.transform, transform2);
         const ops = [];
@@ -143,7 +143,7 @@ export function shapeModifyLock(shape: Shape, isLocked: boolean) {
     return crdtSetAttr(shape, 'isLocked', isLocked);
 }
 export function shapeModifyHFlip(page: Page, shape: Shape, hflip: boolean | undefined, needUpdateFrame?: { shape: Shape, page: Page }[]) {
-    const transform2 = getShapeTransform2(shape.transform);
+    const transform2 = makeShapeTransform2By1(shape.transform);
     transform2.setFlipH(!!hflip);
     updateShapeTransformBy2(shape.transform, transform2);
     const ops = [];
@@ -153,7 +153,7 @@ export function shapeModifyHFlip(page: Page, shape: Shape, hflip: boolean | unde
     return ops;
 }
 export function shapeModifyVFlip(page: Page, shape: Shape, vflip: boolean | undefined, needUpdateFrame?: { shape: Shape, page: Page }[]) {
-    const transform2 = getShapeTransform2(shape.transform);
+    const transform2 = makeShapeTransform2By1(shape.transform);
     transform2.setFlipH(!!vflip);
     updateShapeTransformBy2(shape.transform, transform2);
     const ops = [];
