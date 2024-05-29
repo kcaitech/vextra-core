@@ -16,7 +16,8 @@ import {
     Shadow,
     ShapeType,
     CornerRadius,
-    ShapeSize
+    ShapeSize,
+    Transform
 } from "../data/classes";
 import { findOverrideAndVar } from "./basic";
 import { RenderTransform } from "./basic";
@@ -29,6 +30,7 @@ import { objectId } from "../basic/objectid";
 import { fixConstrainFrame } from "../editor/frame";
 import { BasicArray } from "../data/basic";
 import { MarkerType } from "../data/typesdefine";
+import { getShapeTransform2 } from "../data/shape_transform2_util";
 
 export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     return (
@@ -113,13 +115,13 @@ export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeFrame, frame
 export function matrix2parent(x: number, y: number, width: number, height: number, rotate: number, hflip: boolean, vflip: boolean, matrix?: Matrix) {
     const m = matrix || new Matrix();
     if (rotate || hflip || vflip) {
-        const cx = width / 2;
-        const cy = height / 2;
-        m.trans(-cx, -cy);
+        // const cx = width / 2;
+        // const cy = height / 2;
+        // m.trans(-cx, -cy);
         if (rotate) m.rotate(rotate / 360 * 2 * Math.PI);
         if (hflip) m.flipHoriz();
         if (vflip) m.flipVert();
-        m.trans(cx, cy);
+        // m.trans(cx, cy);
     }
     m.trans(x, y);
     return m;
@@ -175,12 +177,14 @@ export function transformPoints(points: CurvePoint[], matrix: Matrix) {
 
 export class ShapeView extends DataView {
     // layout & render args
-    m_frame: ShapeFrame;
-    m_hflip?: boolean;
-    m_vflip?: boolean;
-    m_rotate?: number;
-    m_fixedRadius?: number;
+    // m_frame: ShapeFrame;
+    // m_hflip?: boolean;
+    // m_vflip?: boolean;
+    // m_rotate?: number;
+    m_transform: Transform;
+    m_size: ShapeSize;
 
+    m_fixedRadius?: number;
     // cache
     // m_fills?: EL[]; // 不缓存,可回收
     // m_borders?: EL[];
@@ -190,11 +194,15 @@ export class ShapeView extends DataView {
     constructor(ctx: DViewCtx, props: PropsType, isTopClass: boolean = true) {
         super(ctx, props);
         const shape = props.data;
-        const frame = shape.frame;
-        this.m_frame = new ShapeFrame(frame.x, frame.y, frame.width, frame.height);
-        this.m_hflip = shape.isFlippedHorizontal;
-        this.m_vflip = shape.isFlippedVertical;
-        this.m_rotate = shape.rotation;
+        // const frame = shape.frame;
+        // this.m_frame = new ShapeFrame(frame.x, frame.y, frame.width, frame.height);
+        // this.m_hflip = shape.isFlippedHorizontal;
+        // this.m_vflip = shape.isFlippedVertical;
+        // this.m_rotate = shape.rotation;
+
+        const t = shape.transform;
+        this.m_transform = new Transform(t.m00, t.m01, t.m02, t.m10, t.m11, t.m12)
+        this.m_size = new ShapeSize(shape.size.width, shape.size.height);
         this.m_fixedRadius = (shape as PathShape).fixedRadius; // rectangle
 
         if (isTopClass) this.afterInit();
@@ -230,16 +238,42 @@ export class ShapeView extends DataView {
         return this.m_children as ShapeView[];
     }
 
-    get rotation() {
-        return this.m_rotate;
+    get transform() {
+        return this.m_transform
+    }
+    get size() {
+        return this.m_size;
     }
 
-    get isFlippedHorizontal() {
-        return this.m_hflip;
+    get frame(): ShapeFrame {
+        const transform2 = getShapeTransform2(this.transform);
+        const trans = transform2.decomposeTranslate();
+        const scale = transform2.decomposeScale();
+        const width = Math.abs(this.size.width * scale.x);
+        const height = Math.abs(this.size.height * scale.y);
+        const frame = new ShapeFrame(trans.x, trans.y, width, height);
+        // Object.freeze(frame);
+        return frame;
     }
 
-    get isFlippedVertical() {
-        return this.m_vflip;
+    get rotation(): number {
+        return getShapeTransform2(this.transform).decomposeEuler().z * 180 / Math.PI;
+    }
+
+    get isFlippedHorizontal(): boolean {
+        return getShapeTransform2(this.transform).isFlipH;
+    }
+
+    get isFlippedVertical(): boolean {
+        return getShapeTransform2(this.transform).isFlipV
+    }
+
+    get skewX(): number {
+        return getShapeTransform2(this.transform).decomposeSkew().x * 180 / Math.PI;
+    }
+
+    get skewY(): number {
+        return getShapeTransform2(this.transform).decomposeSkew().y * 180 / Math.PI;
     }
 
     get fixedRadius() {
@@ -334,11 +368,6 @@ export class ShapeView extends DataView {
         }
     }
 
-    matrix2Parent(matrix?: Matrix): Matrix {
-        const frame = this.frame;
-        return matrix2parent(frame.x, frame.y, frame.width, frame.height, this.m_rotate || 0, !!this.m_hflip, !!this.m_vflip, matrix);
-    }
-
     matrix2Root() {
         let s: ShapeView | undefined = this;
         const m = new Matrix();
@@ -375,10 +404,6 @@ export class ShapeView extends DataView {
         return v ? v.value : this.m_data.name;
     }
 
-    get frame(): ShapeFrame {
-        return this.m_frame;
-    }
-
     get frameType() {
         return this.m_data.frameType;
     }
@@ -396,7 +421,16 @@ export class ShapeView extends DataView {
     }
 
     isNoTransform() {
-        return !this.m_hflip && !this.m_vflip && !this.m_rotate;
+        const t = this.transform;
+        return t.m00 == 1 && t.m01 === 0 && t.m10 === 0 && t.m11 === 1;
+    }
+
+    matrix2Parent(matrix?: Matrix) {
+        const t = this.transform;
+        const m = new Matrix(t.m00, t.m10, t.m01, t.m11, t.m02, t.m12);
+        if (!matrix) return m;
+        matrix.multiAtLeft(m);
+        return matrix;
     }
 
     getFills(): Fill[] {
@@ -458,26 +492,34 @@ export class ShapeView extends DataView {
 
     // =================== update ========================
     updateLayoutArgs(frame: ShapeFrame, hflip: boolean | undefined, vflip: boolean | undefined, rotate: number | undefined, radius: number | undefined) {
-        const _frame = this.frame;
-        if (isDiffShapeFrame(_frame, frame)) {
-            _frame.x = frame.x;
-            _frame.y = frame.y;
-            _frame.width = frame.width;
-            _frame.height = frame.height;
+
+        if (frame.width !== this.size.width || frame.height !== this.size.height) {
             this.m_pathstr = undefined; // need update
             this.m_path = undefined;
-            // if (this.m_borders) {
-            //     // recycleELArr(this.m_borders);
-            //     this.m_borders = undefined;
-            // }
-            // if (this.m_fills) {
-            //     // recycleELArr(this.m_fills);
-            //     this.m_fills = undefined;
-            // }
+            this.size.width = frame.width;
+            this.size.height = frame.height;
         }
-        this.m_hflip = hflip;
-        this.m_vflip = vflip;
-        this.m_rotate = rotate;
+
+        // const _frame = this.frame;
+        // if (isDiffShapeFrame(_frame, frame)) {
+        //     _frame.x = frame.x;
+        //     _frame.y = frame.y;
+        //     _frame.width = frame.width;
+        //     _frame.height = frame.height;
+        //     this.m_pathstr = undefined; // need update
+        //     this.m_path = undefined;
+        //     // if (this.m_borders) {
+        //     //     // recycleELArr(this.m_borders);
+        //     //     this.m_borders = undefined;
+        //     // }
+        //     // if (this.m_fills) {
+        //     //     // recycleELArr(this.m_fills);
+        //     //     this.m_fills = undefined;
+        //     // }
+        // }
+        // this.m_hflip = hflip;
+        // this.m_vflip = vflip;
+        // this.m_rotate = rotate;
         if ((this.m_fixedRadius || 0) !== (radius || 0)) {
             this.m_fixedRadius = radius;
             this.m_pathstr = undefined; // need update
@@ -491,6 +533,14 @@ export class ShapeView extends DataView {
             //     this.m_fills = undefined;
             // }
         }
+
+        // todo
+        this.m_transform.m00 = this.data.transform.m00;
+        this.m_transform.m01 = this.data.transform.m01;
+        this.m_transform.m02 = this.data.transform.m02;
+        this.m_transform.m10 = this.data.transform.m10;
+        this.m_transform.m11 = this.data.transform.m11;
+        this.m_transform.m12 = this.data.transform.m12;
     }
 
     protected layoutOnNormal(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
@@ -698,15 +748,16 @@ export class ShapeView extends DataView {
         if (this.isNoTransform()) {
             if (frame.x !== 0 || frame.y !== 0) props.transform = `translate(${frame.x},${frame.y})`
         } else {
-            const cx = frame.x + frame.width / 2;
-            const cy = frame.y + frame.height / 2;
-            const style: any = {}
-            style.transform = "translate(" + cx + "px," + cy + "px) "
+            // const cx = frame.x + frame.width / 2;
+            // const cy = frame.y + frame.height / 2;
+            const style: any = { transform: this.matrix2Parent().toString() }
+            // style.transform = ''
+            // style.transform = "translate(" + cx + "px," + cy + "px) "
             // style.transform = "translate(" +frame.x + "px," + frame.y + "px) " // dev code
-            if (this.m_hflip) style.transform += "rotateY(180deg) "
-            if (this.m_vflip) style.transform += "rotateX(180deg) "
-            if (this.m_rotate) style.transform += "rotate(" + this.m_rotate + "deg) "
-            style.transform += "translate(" + (-cx + frame.x) + "px," + (-cy + frame.y) + "px)"
+            // if (this.m_hflip) style.transform += "rotateY(180deg) "
+            // if (this.m_vflip) style.transform += "rotateX(180deg) "
+            // if (this.m_rotate) style.transform += "rotate(" + this.m_rotate + "deg) "
+            // style.transform += "translate(" + (frame.x) + "px," + (frame.y) + "px)"
             props.style = style;
         }
 

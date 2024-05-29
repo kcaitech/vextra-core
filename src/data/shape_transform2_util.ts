@@ -1,23 +1,23 @@
-import { Shape } from "./typesdefine";
+import { Transform } from "./typesdefine";
 import { Transform as Transform2 } from "../basic/transform";
 import { Matrix as Matrix2 } from "../basic/matrix2";
 
-export function getShapeTransform2(shape: Shape): Transform2 {
+export function getShapeTransform2(transform: Transform): Transform2 {
     return new Transform2({
         matrix: new Matrix2([4, 4], [
-            shape.transform.m00, shape.transform.m01, 0, shape.transform.m02,
-            shape.transform.m10, shape.transform.m11, 0, shape.transform.m12,
+            transform.m00, transform.m01, 0, transform.m02,
+            transform.m10, transform.m11, 0, transform.m12,
             0, 0, 1, 0,
             0, 0, 0, 1,
         ], true),
     });
 }
 
-export function updateShapeTransformBy2(shape: Shape, transform: Transform2) {
-    shape.transform.m00 = transform.m00;
-    shape.transform.m10 = transform.m10;
-    shape.transform.m01 = transform.m01;
-    shape.transform.m11 = transform.m11;
-    shape.transform.m02 = transform.m03;
-    shape.transform.m12 = transform.m13;
+export function updateShapeTransformBy2(transform0: Transform, transform: Transform2) {
+    transform0.m00 = transform.m00;
+    transform0.m10 = transform.m10;
+    transform0.m01 = transform.m01;
+    transform0.m11 = transform.m11;
+    transform0.m02 = transform.m03;
+    transform0.m12 = transform.m13;
 }

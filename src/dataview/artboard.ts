@@ -109,11 +109,11 @@ export class ArtboradView extends GroupShapeView {
             const cx = frame.x + frame.width / 2;
             const cy = frame.y + frame.height / 2;
             const style: any = {}
-            style.transform = "translate(" + cx + "px," + cy + "px) "
-            if (this.m_hflip) style.transform += "rotateY(180deg) "
-            if (this.m_vflip) style.transform += "rotateX(180deg) "
-            if (this.m_rotate) style.transform += "rotate(" + this.m_rotate + "deg) "
-            style.transform += "translate(" + (-cx + frame.x) + "px," + (-cy + frame.y) + "px)"
+            // style.transform = "translate(" + cx + "px," + cy + "px) "
+            // if (this.m_hflip) style.transform += "rotateY(180deg) "
+            // if (this.m_vflip) style.transform += "rotateX(180deg) "
+            // if (this.m_rotate) style.transform += "rotate(" + this.m_rotate + "deg) "
+            // style.transform += "translate(" + (-cx + frame.x) + "px," + (-cy + frame.y) + "px)"
             props.style = style;
         } else {
             props.transform = `translate(${frame.x},${frame.y})`;

@@ -178,7 +178,7 @@ export class Shape extends Basic implements classes.Shape {
     }
 
     get frame(): ShapeFrame {
-        const transform2 = getShapeTransform2(this);
+        const transform2 = getShapeTransform2(this.transform);
         const trans = transform2.decomposeTranslate();
         const scale = transform2.decomposeScale();
         const width = Math.abs(this.size.width * scale.x);
@@ -189,23 +189,23 @@ export class Shape extends Basic implements classes.Shape {
     }
 
     get rotation(): number {
-        return getShapeTransform2(this).decomposeEuler().z * 180 / Math.PI;
+        return getShapeTransform2(this.transform).decomposeEuler().z * 180 / Math.PI;
     }
 
     get isFlippedHorizontal(): boolean {
-        return getShapeTransform2(this).isFlipH;
+        return getShapeTransform2(this.transform).isFlipH;
     }
 
     get isFlippedVertical(): boolean {
-        return getShapeTransform2(this).isFlipV
+        return getShapeTransform2(this.transform).isFlipV
     }
 
     get skewX(): number {
-        return getShapeTransform2(this).decomposeSkew().x * 180 / Math.PI;
+        return getShapeTransform2(this.transform).decomposeSkew().x * 180 / Math.PI;
     }
 
     get skewY(): number {
-        return getShapeTransform2(this).decomposeSkew().y * 180 / Math.PI;
+        return getShapeTransform2(this.transform).decomposeSkew().y * 180 / Math.PI;
     }
 
     getPathOfFrame(frame: ShapeSize, fixedRadius?: number): Path {

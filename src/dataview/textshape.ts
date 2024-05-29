@@ -153,18 +153,18 @@ export class TextShapeView extends ShapeView {
         const width = Math.ceil(this.m_layout.contentWidth);
         const height = Math.ceil(this.m_layout.contentHeight);
         const adjX = this.m_layout.alignX;
-        if (adjX !== 0) {
-            this.m_frame.x = origin.x + adjX;
-            notify = true;
-        }
-        if (width !== this.m_frame.width) {
-            this.m_frame.width = width;
-            notify = true;
-        }
-        if (height !== this.m_frame.height) {
-            this.m_frame.height = height;
-            notify = true;
-        }
+        // if (adjX !== 0) {
+        //     this.m_frame.x = origin.x + adjX;
+        //     notify = true;
+        // }
+        // if (width !== this.m_frame.width) {
+        //     this.m_frame.width = width;
+        //     notify = true;
+        // }
+        // if (height !== this.m_frame.height) {
+        //     this.m_frame.height = height;
+        //     notify = true;
+        // }
         // notify?
         if (notify) {
             this.m_pathstr = undefined; // need update

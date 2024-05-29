@@ -242,7 +242,7 @@ export class SymbolRefView extends ShapeView {
         // todo
         {
 
-            const refframe = this.m_frame;
+            const refframe = this.frame;
             const scaleX = refframe.width / symframe.width;
             const scaleY = refframe.height / symframe.height;
 
