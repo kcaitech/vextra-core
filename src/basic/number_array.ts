@@ -1,3 +1,5 @@
+import {isEqual} from "./number_utils"
+
 export class NumberArray { // 任意维数的Number数组
     dimension: number // 维数
     sizeForDimension: number[] // 各维度的大小
@@ -89,7 +91,7 @@ export class NumberArray2D extends NumberArray { // 二维Number数组
         for (let i = 0; i < this.sizeForDimension.length; i++) if (this.sizeForDimension[i] !== array.sizeForDimension[i]) return false;
         // 判断数据是否相等
         if (this.data.length !== array.data.length) return false;
-        for (let i = 0; i < this.data.length; i++) if (this.data[i] !== array.data[i]) return false;
+        for (let i = 0; i < this.data.length; i++) if (!isEqual(this.data[i], array.data[i])) return false;
         return true;
     }
 

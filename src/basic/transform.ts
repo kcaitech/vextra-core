@@ -1,5 +1,6 @@
-import {ColVector, ColVector2D, ColVector3D, isZero, Matrix, Matrix3DKeysType, Point3D, Vector} from "./matrix2"
+import {ColVector, ColVector2D, ColVector3D, Matrix, Matrix3DKeysType, Point3D, Vector} from "./matrix2"
 import {NumberArray2D} from "./number_array"
+import {isZero} from "./number_utils"
 
 function hasSkewZ(matrix: Matrix) { // 验证矩阵是否存在Z轴斜切
     return matrix.col(0).dot(matrix.col(2)) !== 0 || matrix.col(1).dot(matrix.col(2)) !== 0
