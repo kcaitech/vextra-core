@@ -1662,13 +1662,11 @@ export class PageEditor {
                     r.id = uuid();
                     // lt_point与s.frame的xy重合后，用delta_xys中的相对位置计算replacement中每个图形的偏移
                     const transform2 = makeShapeTransform2By1(r.transform);
-                    transform2.setTranslate({
-                        vector: new ColVector3D([
-                            save_frame.x + delta_xys[r_i].x,
-                            save_frame.y + delta_xys[r_i].y,
-                            0,
-                        ]),
-                    })
+                    transform2.setTranslate(new ColVector3D([
+                        save_frame.x + delta_xys[r_i].x,
+                        save_frame.y + delta_xys[r_i].y,
+                        0,
+                    ]))
                     updateShapeTransformBy2(r.transform, transform2);
                     api.shapeInsert(this.__document, this.__page, p, r, save_index);
                     src_replacement.push(p.childs[save_index]);
