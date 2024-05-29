@@ -1,10 +1,8 @@
 /* 代码生成，勿手动修改 */
 import * as impl from "./classes"
 import * as types from "./typesdefine"
-import { Basic, BasicArray, BasicMap } from "./basic"
+import { BasicArray, BasicMap } from "./basic"
 import { uuid } from "../basic/uuid"
-import { FMT_VER_transfrom } from "./fmtver"
-import { Matrix } from "../basic/matrix"
 import { compatibleOldData } from "./basecompatible"
 export interface IImportContext {
     document: impl.Document
