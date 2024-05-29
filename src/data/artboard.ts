@@ -51,7 +51,7 @@ export class Artboard extends GroupShape implements classes.Artboard {
     }
 
     getPath(fixedRadius?: number): Path {
-        return this.getPathOfFrame(this.size.makeShapeSizeReadonly(), fixedRadius);
+        return this.getPathOfFrame(this.size, fixedRadius);
     }
 
     getPathOfFrame(frame: ShapeSize, fixedRadius?: number | undefined): Path {

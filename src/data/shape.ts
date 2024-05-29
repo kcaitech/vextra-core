@@ -57,12 +57,6 @@ export class MyTransform extends Transform {
     }
 }
 
-export class MyShapeSize extends ShapeSize {
-    makeShapeSizeReadonly() {
-        return new ShapeSize(this.width, this.height)
-    }
-}
-
 export class Shape extends Basic implements classes.Shape {
 
     // watchable, 使用Watchable会导致语法检查失效
@@ -134,7 +128,7 @@ export class Shape extends Basic implements classes.Shape {
     // frame: ShapeFrame
     style: Style
     transform: MyTransform
-    size: MyShapeSize
+    size: ShapeSize
     boolOp?: BoolOp
     isFixedToViewport?: boolean
     isLocked?: boolean
@@ -167,7 +161,7 @@ export class Shape extends Basic implements classes.Shape {
         this.name = name
         this.type = type
         this.transform = new MyTransform(transform.m00, transform.m01, transform.m02, transform.m10, transform.m11, transform.m12)
-        this.size = new MyShapeSize(size.width, size.height)
+        this.size = size
         this.style = style
     }
 
@@ -189,8 +183,9 @@ export class Shape extends Basic implements classes.Shape {
         const scale = transform2.decomposeScale();
         const width = Math.abs(this.size.width * scale.x);
         const height = Math.abs(this.size.height * scale.y);
-        // Object.freeze()
-        return new ShapeFrame(trans.x, trans.y, width, height);
+        const frame = new ShapeFrame(trans.x, trans.y, width, height);
+        Object.freeze(frame);
+        return frame;
     }
 
     get rotation(): number {
@@ -218,7 +213,7 @@ export class Shape extends Basic implements classes.Shape {
     }
 
     getPath(fixedRadius?: number): Path {
-        return this.getPathOfFrame(this.size.makeShapeSizeReadonly(), fixedRadius);
+        return this.getPathOfFrame(this.size, fixedRadius);
     }
 
     getPathStr(fixedRadius?: number): string {
