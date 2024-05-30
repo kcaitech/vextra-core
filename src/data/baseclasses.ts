@@ -74,6 +74,7 @@ import {
 import { Basic, BasicArray, BasicMap } from "./basic"
 /* border style */
 export class BorderStyle extends Basic {
+    typeId = "border-style"
     length: number
     gap: number
     constructor(length: number, gap: number) {
@@ -84,6 +85,7 @@ export class BorderStyle extends Basic {
 }
 /* bullet numbers */
 export class BulletNumbers extends Basic {
+    typeId = "bullet-numbers"
     type: BulletNumbersType
     behavior?: BulletNumbersBehavior
     offset?: number
@@ -94,6 +96,7 @@ export class BulletNumbers extends Basic {
 }
 /* color controls */
 export class ColorControls extends Basic {
+    typeId = "color-controls"
     isEnabled: boolean
     brightness: number
     contrast: number
@@ -153,6 +156,7 @@ export class CornerRadius extends Basic {
 export type Crdtidx = BasicArray<number>
 /* curve point */
 export class CurvePoint extends Basic {
+    typeId = "curve-point"
     crdtidx: Crdtidx
     id: string
     x: number
@@ -177,6 +181,7 @@ export class CurvePoint extends Basic {
 type DocumentMeta_pagesList = BasicArray<PageListItem>
 /* ellipse attributes */
 export class Ellipse extends Basic {
+    typeId = "ellipse"
     cx: number
     cy: number
     rx: number
@@ -193,6 +198,7 @@ type ExportOptions_exportFormats = BasicArray<ExportFormat>
 type Gradient_stops = BasicArray<Stop>
 /* graphics contex settings */
 export class GraphicsContextSettings extends Basic {
+    typeId = "graphics-context-settings"
     blendMode: BlendMode
     opacity: number
     constructor(blendMode: BlendMode, opacity: number) {
@@ -204,6 +210,7 @@ export class GraphicsContextSettings extends Basic {
 type GroupShape_childs = BasicArray<GroupShape | ImageShape | PathShape | PathShape2 | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape | PolygonShape | StarShape>
 /* padding */
 export class Padding extends Basic {
+    typeId = "padding"
     left?: number
     top?: number
     right?: number
@@ -211,6 +218,7 @@ export class Padding extends Basic {
 }
 /* page list item */
 export class PageListItem extends Basic {
+    typeId = "page-list-item"
     crdtidx: Crdtidx
     id: string
     name: string
@@ -226,6 +234,7 @@ type Para_spans = BasicArray<Span>
 type PathSegment_points = BasicArray<CurvePoint>
 /* path segment */
 export class PathSegment extends Basic {
+    typeId = "path-segment"
     crdtidx: Crdtidx
     id: string
     points: PathSegment_points
@@ -242,6 +251,7 @@ type PathShape_pathsegs = BasicArray<PathSegment>
 type PathShape2_pathsegs = BasicArray<PathSegment>
 /* point 2d */
 export class Point2D extends Basic {
+    typeId = "point-2d"
     x: number
     y: number
     constructor(x: number, y: number) {
@@ -280,6 +290,7 @@ export class Shadow extends Basic {
  * x,y为parent坐标系里的点
  * width,height为当前shape的坐标空间大小 */
 export class ShapeFrame extends Basic {
+    typeId = "shape-frame"
     x: number
     y: number
     width: number
@@ -294,6 +305,7 @@ export class ShapeFrame extends Basic {
 }
 /* stop */
 export class Stop extends Basic {
+    typeId = "stop"
     crdtidx: Crdtidx
     id: string
     position: number
@@ -316,6 +328,7 @@ type TableShape_colWidths = BasicArray<CrdtNumber>
 type Text_paras = BasicArray<Para>
 /* user infomation */
 export class UserInfo extends Basic {
+    typeId = "user-info"
     userId: string
     userNickname: string
     avatar: string
@@ -329,6 +342,7 @@ export class UserInfo extends Basic {
 type Variable_0 = BasicArray<Border | Fill | Shadow>
 /* blur */
 export class Blur extends Basic {
+    typeId = "blur"
     isEnabled: boolean
     center: Point2D
     saturation: number
@@ -345,6 +359,7 @@ export class Blur extends Basic {
 }
 /* border options */
 export class BorderOptions extends Basic {
+    typeId = "border-options"
     isEnabled: boolean
     lineCapStyle: LineCapStyle
     lineJoinStyle: LineJoinStyle
@@ -357,6 +372,7 @@ export class BorderOptions extends Basic {
 }
 /* border side setting */
 export class BorderSideSetting extends Basic {
+    typeId = "border-side-setting"
     sideType: SideType
     thicknessTop: number
     thicknessLeft: number
@@ -373,6 +389,7 @@ export class BorderSideSetting extends Basic {
 }
 /* contact form */
 export class ContactForm extends Basic {
+    typeId = "contact-form"
     contactType: ContactType
     shapeId: string
     constructor(contactType: ContactType, shapeId: string) {
@@ -383,6 +400,7 @@ export class ContactForm extends Basic {
 }
 /* contactstyle */
 export class ContactRole extends Basic {
+    typeId = "contact-role"
     crdtidx: Crdtidx
     id: string
     roleType: ContactRoleType
@@ -397,6 +415,7 @@ export class ContactRole extends Basic {
 }
 /* crdt number */
 export class CrdtNumber extends Basic {
+    typeId = "crdt-number"
     id: string
     crdtidx: Crdtidx
     value: number
@@ -409,6 +428,7 @@ export class CrdtNumber extends Basic {
 }
 /* document meta */
 export class DocumentMeta extends Basic {
+    typeId = "document-meta"
     id: string
     name: string
     pagesList: DocumentMeta_pagesList
@@ -426,6 +446,7 @@ export class DocumentMeta extends Basic {
 }
 /* export format */
 export class ExportFormat extends Basic {
+    typeId = "export-format"
     crdtidx: Crdtidx
     id: string
     absoluteSize: number
@@ -484,6 +505,7 @@ export class Gradient extends Basic {
 }
 /* span attr */
 export class SpanAttr extends Basic {
+    typeId = "span-attr"
     fontName?: string
     fontSize?: number
     color?: Color
@@ -501,6 +523,7 @@ export class SpanAttr extends Basic {
 }
 /* span attr */
 export class Span extends SpanAttr {
+    typeId = "span"
     length: number
     constructor(length: number) {
         super()
@@ -559,6 +582,7 @@ export class Fill extends Basic {
 }
 /* span attr */
 export class ParaAttr extends SpanAttr {
+    typeId = "para-attr"
     alignment?: TextHorAlign
     paraSpacing?: number
     minimumLineHeight?: number
@@ -567,6 +591,7 @@ export class ParaAttr extends SpanAttr {
 }
 /* para */
 export class Para extends Basic {
+    typeId = "para"
     text: string
     spans: Para_spans
     attr?: ParaAttr
@@ -602,6 +627,7 @@ export class Style extends Basic {
 }
 /* text attr */
 export class TextAttr extends ParaAttr {
+    typeId = "text-attr"
     verAlign?: TextVerAlign
     orientation?: TextOrientation
     textBehaviour?: TextBehaviour
@@ -693,6 +719,7 @@ export class TextShape extends Shape {
 }
 /* color */
 export class Variable extends Basic {
+    typeId = "variable"
     id: string
     type: VariableType
     name: string
@@ -707,6 +734,7 @@ export class Variable extends Basic {
 }
 /* comment */
 export class Comment extends Basic {
+    typeId = "comment"
     pageId: string
     id: string
     frame: ShapeFrame
