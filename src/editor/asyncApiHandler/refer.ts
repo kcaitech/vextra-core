@@ -3,7 +3,6 @@ import { CoopRepository } from "../coop/cooprepo";
 import { Artboard, BasicArray, Document, Guide, GuideAxis, Page, Shape, ShapeType } from "../../data";
 import { adapt2Shape, PageView, ShapeView } from "../../dataview";
 import { uuid } from "../../basic/uuid";
-import { log } from "debug";
 
 export class ReferHandleApiCaller extends AsyncApiCaller {
     private __recovery: boolean = true;
@@ -30,7 +29,7 @@ export class ReferHandleApiCaller extends AsyncApiCaller {
 
             this.updateView();
             this.__recovery = false;
-            console.log("CREATE SUCCESS");
+            console.log("CREATE SUCCESS：", index);
             return index;
         } catch (e) {
             console.error('ReferHandleApiCaller.create');
@@ -93,7 +92,6 @@ export class ReferHandleApiCaller extends AsyncApiCaller {
             }
 
             api.modifyGuideOffset(env2, __index, targetOffset);
-            console.log('__targetOffset__', afterGui.offset, afterGui)
             result.env = __env2;
             result.index = __index;
 
@@ -106,7 +104,7 @@ export class ReferHandleApiCaller extends AsyncApiCaller {
     }
 
     commit() {
-        console.log('=RECOVERY=', this.__recovery);
+        console.log('=NEED RECOVERY=', this.__recovery);
         if (this.__repo.isNeedCommit() && !this.exception && !this.__recovery) {
             this.__repo.commit();
         } else {
