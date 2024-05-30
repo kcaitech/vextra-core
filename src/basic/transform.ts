@@ -1,4 +1,4 @@
-import {ColVector, ColVector2D, ColVector3D, Matrix, Matrix3DKeysType, Point3D, Vector} from "./matrix2"
+import {ColVector, ColVector2D, ColVector3D, Matrix, Matrix3DKeysType, Point2D, Point3D, Vector} from "./matrix2"
 import {NumberArray2D} from "./number_array"
 import {isZero} from "./number_utils"
 
@@ -1028,6 +1028,35 @@ export class Transform { // 变换
         this.onChange(this)
 
         return this
+    }
+
+    // 绕任意与Z轴平行的轴旋转，point为旋转轴上的一点
+    rotateZAt(params: {
+        point?: Point2D, // (x, y)
+        angle: number,
+        mode?: TransformMode,
+    }) {
+        let point3D
+        if (params.point) {
+            point3D = new Point3D([params.point.x, params.point.y, 0])
+        } else {
+            point3D = new Point3D([0, 0, 0])
+        }
+        return this.rotateAt({axis: new ColVector3D([0, 0, 1]), point: point3D, angle: params.angle, mode: params.mode})
+    }
+
+    // 在本变换之前绕任意与Z轴平行的轴旋转，point为旋转轴上的一点
+    preRotateZAt(params: {
+        point?: Point2D, // (x, y)
+        angle: number,
+    }) {
+        let point3D
+        if (params.point) {
+            point3D = new Point3D([params.point.x, params.point.y, 0])
+        } else {
+            point3D = new Point3D([0, 0, 0])
+        }
+        return this.preRotateAt({axis: new ColVector3D([0, 0, 1]), point: point3D, angle: params.angle})
     }
 
     // 设置旋转参数（欧拉角（ZXY序）：先绕y轴旋转，再绕x轴旋转，最后绕z轴旋转）
