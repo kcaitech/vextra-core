@@ -213,6 +213,7 @@ export class Api {
             page.guides = new BasicArray<Guide>();
         }
         this.addOp(basicapi.crdtArrayInsert(page.guides, page.guides.length, guide));
+        return page.guides.length;
     }
     deleteGuideFromPage(page: Page, index: number) {
         if (!page.guides) {
@@ -227,7 +228,7 @@ export class Api {
     }
     insertGuide(shape: Shape, guide: Guide) {
         if (!shape.isContainer) {
-            return;
+            return -1;
         }
         let guides = (shape as Artboard).guides;
         if (!guides) {
@@ -236,6 +237,7 @@ export class Api {
         }
 
         this.addOp(basicapi.crdtArrayInsert(guides, guides.length, guide));
+        return guides.length;
     }
     deleteGuide(shape: Shape, index: number) {
         if (!shape.isContainer) {

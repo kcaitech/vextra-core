@@ -1,8 +1,9 @@
 import { AsyncApiCaller } from "./AsyncApiCaller";
 import { CoopRepository } from "../coop/cooprepo";
 import { Artboard, BasicArray, Document, Guide, GuideAxis, Page, Shape, ShapeType } from "../../data";
-import { PageView } from "../../dataview";
+import { adapt2Shape, PageView, ShapeView } from "../../dataview";
 import { uuid } from "../../basic/uuid";
+import { log } from "debug";
 
 export class ReferHandleApiCaller extends AsyncApiCaller {
     private __recovery: boolean = true;
@@ -43,49 +44,64 @@ export class ReferHandleApiCaller extends AsyncApiCaller {
             this.api.modifyGuideOffset(env, index, offset);
             this.__recovery = recovery;
             this.updateView();
-            console.log('modifyOffset');
         } catch (e) {
             console.error('ReferHandleApiCaller.modifyOffset');
             this.exception = true;
         }
     }
 
-    migrate(env1: Shape, index1: number, env2: Shape, index2: number) {
+    migrate(__env1: ShapeView, index: number, __env2: ShapeView, targetOffset: number) {
+        const result = { env: __env2, index: index }
         try {
+
+            const env1 = adapt2Shape(__env1);
+            const env2 = adapt2Shape(__env2);
+
             if (!env1.isContainer || !env2.isContainer || (env1.id === env2.id)) {
-                return;
+                return result;
             }
             const guides1 = (env1 as Artboard).guides || [];
-            const guides2 = (env2 as Artboard).guides || [];
-            const guide1 = guides1[index1];
-            const guide2 = guides2[index2];
+            const guide1 = guides1[index];
 
-            if (!guide1 || !guide2) {
-                return;
+            if (!guide1) {
+                return result;
             }
 
             const api = this.api;
+
             let gui;
             if (env1.type === ShapeType.Page) {
-                gui = api.deleteGuideFromPage(env1 as Page, index1);
+                gui = api.deleteGuideFromPage(env1 as Page, index);
             } else {
-                gui = api.deleteGuide(env1, index1);
+                gui = api.deleteGuide(env1, index);
             }
 
             if (!gui) {
                 this.exception = true;
-                return;
+                return result;
             }
 
+            let __index;
             if (env2.type === ShapeType.Page) {
-                api.insertGuideToPage(env2 as Page, gui);
+                __index = api.insertGuideToPage(env2 as Page, gui);
             } else {
-                api.insertGuide(env2, gui);
+                __index = api.insertGuide(env2, gui);
+            }
+            const afterGui = (env2 as Artboard).guides?.[__index];
+            if (!afterGui) {
+                return result;
             }
 
+            api.modifyGuideOffset(env2, __index, targetOffset);
+            console.log('__targetOffset__', afterGui.offset, afterGui)
+            result.env = __env2;
+            result.index = __index;
+
+            return result;
         } catch (e) {
             console.error('ReferHandleApiCaller.migrate');
             this.exception = true;
+            return result;
         }
     }
 
