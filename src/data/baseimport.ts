@@ -1084,6 +1084,9 @@ export function importVariable(source: types.Variable, ctx?: IImportContext): im
             if (source.value.typeId === "corner-radius") {
                 return importCornerRadius(source.value as types.CornerRadius, ctx)
             }
+            if (source.value.typeId === "blur") {
+                return importBlur(source.value as types.Blur, ctx)
+            }
             throw new Error("unknow typeId: " + source.value.typeId)
         })())
     return ret

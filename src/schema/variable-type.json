@@ -18,6 +18,7 @@
         "tableCell",
         "markerType",
         "exportOptions",
-        "cornerRadius"
+        "cornerRadius",
+        "blur"
     ]
 }

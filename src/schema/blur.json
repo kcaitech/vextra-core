@@ -2,6 +2,10 @@
     "description": "blur",
     "type": "object",
     "properties": {
+        "typeId": {
+            "type": "string",
+            "default": "shape"
+        },
         "isEnabled": {
             "type": "boolean"
         },
@@ -22,6 +26,7 @@
         }
     },
     "required": [
+        "typeId",
         "isEnabled",
         "center",
         "saturation",

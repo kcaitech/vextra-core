@@ -357,6 +357,7 @@ export class UserInfo extends Basic {
 type Variable_0 = BasicArray<Border | Fill | Shadow>
 /* blur */
 export class Blur extends Basic {
+    typeId = "blur"
     isEnabled: boolean
     center: Point2D
     saturation: number
@@ -725,8 +726,8 @@ export class Variable extends Basic {
     id: string
     type: VariableType
     name: string
-    value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | ContextSettings | TableCell | ExportOptions | CornerRadius
-    constructor(id: string, type: VariableType, name: string, value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | ContextSettings | TableCell | ExportOptions | CornerRadius) {
+    value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur
+    constructor(id: string, type: VariableType, name: string, value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur) {
         super()
         this.id = id
         this.type = type

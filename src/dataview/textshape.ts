@@ -117,7 +117,7 @@ export class TextShapeView extends ShapeView {
 
     renderContents(): EL[] {
         const layout = this.getLayout();
-        return renderTextLayout(elh, layout, this.frame);
+        return renderTextLayout(elh, layout, this.frame, this.blur);
     }
 
     __origin_frame: ShapeFrame = new ShapeFrame(0, 0, 0, 0);
