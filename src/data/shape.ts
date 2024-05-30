@@ -21,6 +21,7 @@ import { TextLayout } from "./textlayout";
 import { parsePath } from "./pathparser";
 import { FrameType, PathType, RadiusType, RECT_POINTS } from "./consts";
 import { Variable } from "./variable";
+import { Artboard } from "./artboard";
 
 export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D,
@@ -73,6 +74,9 @@ export class Shape extends Basic implements classes.Shape {
         if (id0 === 'style') return this.style.getOpTarget(path.slice(1));
         if (id0 === 'varbinds' && !this.varbinds) this.varbinds = new BasicMap();
         if (id0 === "exportOptions" && !this.exportOptions) this.exportOptions = new ExportOptions(new BasicArray(), 0, false, false, false, false);
+        if (id0 === "guides" && !(this as unknown as Artboard).guides) {
+            (this as unknown as Artboard).guides = new BasicArray<Guide>();
+        }
         return super.getOpTarget(path);
     }
 

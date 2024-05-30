@@ -78,7 +78,7 @@ export class Page extends GroupShape implements classes.Page {
         const path1 = path[1];
         const shape = this.getShape(path1, true); // 由于op是批量按path路径排序执行的，就有可能要修改的shape被提前delete掉了
         if (shape) return shape.getOpTarget(path.slice(2));
-        if (path1 === 'guides') this.guides = new BasicArray();
+        if (path1 === 'guides' && !this.guides) this.guides = new BasicArray();
         return super.getOpTarget(path.slice(1));
     }
 
