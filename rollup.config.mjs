@@ -8,8 +8,8 @@ export default [
         input: 'src/index.ts',
         output: {
             dir: 'dist/browser',
-            exports: 'auto', // 根据代码中的导出自动推断导出方式
             format: 'es',
+            exports: 'auto', // 根据代码中的导出自动推断导出方式
             entryFileNames: 'index.js'
         },
         plugins: [
@@ -29,8 +29,8 @@ export default [
         output: {
             dir: 'dist/node',
             format: 'cjs',
-            exports: 'auto',
-            entryFileNames: 'index.js'
+            exports: 'auto', // 根据代码中的导出自动推断导出方式
+            entryFileNames: 'index.cjs'
         },
         plugins: [
             terser(),
