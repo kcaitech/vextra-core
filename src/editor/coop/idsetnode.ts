@@ -11,7 +11,7 @@ import {
     importColor,
     importContactForm,
     importGradient,
-    importPage, importReferLine,
+    importPage,
     importTableCell,
     importVariable
 } from "../../data/baseimport";
@@ -43,9 +43,7 @@ function apply(document: Document, target: Object, op: IdOp): IdOpRecord {
             value = importGradient(data, ctx);
         } else if (typeId === 'border-side-setting') {
             value = importBorderSideSetting(data, ctx);
-        }else if (typeId === 'refer-line') {
-            value = importReferLine(data, ctx);
-        }else {
+        } else {
             throw new Error('need import ' + typeId)
         }
     }

@@ -12,7 +12,7 @@ import {
     importExportFormat,
     importFill,
     importPageListItem,
-    importPathSegment, importReferLine,
+    importPathSegment,
     importShadow,
     importStop
 } from "../../data/baseimport";
@@ -29,7 +29,6 @@ importh['contact-role'] = importContactRole;
 importh['crdt-number'] = importCrdtNumber;
 importh['path-segment'] = importPathSegment;
 importh['page-list-item'] = importPageListItem;
-importh['refer-line'] = importReferLine;
 function _apply(document: Document, target: Array<CrdtItem>, op: ArrayMoveOp): ArrayMoveOpRecord | undefined {
     // import op.data
     let data = op.data;

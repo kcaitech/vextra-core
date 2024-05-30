@@ -2,7 +2,6 @@ import { AsyncApiCaller } from "./AsyncApiCaller";
 import { CoopRepository } from "../coop/cooprepo";
 import { BasicArray, Document } from "../../data";
 import { PageView } from "../../dataview";
-import { ReferLine } from "../../data/baseclasses";
 import { uuid } from "../../basic/uuid";
 
 export class ReferHandleApiCaller extends AsyncApiCaller {
@@ -18,25 +17,25 @@ export class ReferHandleApiCaller extends AsyncApiCaller {
     }
 
     create(direction: 'hor' | 'ver', offset: number) {
-        try {
-            const page = this.page;
-            let cid = 0;
-            if (direction === "hor" && page.horReferLines) {
-                cid = page.horReferLines.length;
-            }
-            if (direction === "ver" && page.verReferLines) {
-                cid = page.verReferLines.length;
-            }
-
-            this.api.insertReferLine(this.page, new ReferLine([cid] as BasicArray<number>, uuid(), offset), direction);
-
-            this.updateView();
-
-            return cid;
-        } catch (e) {
-            console.error('ReferHandleApiCaller.create');
-            this.exception = true;
-        }
+        // try {
+        //     const page = this.page;
+        //     let cid = 0;
+        //     if (direction === "hor" && page.horReferLines) {
+        //         cid = page.horReferLines.length;
+        //     }
+        //     if (direction === "ver" && page.verReferLines) {
+        //         cid = page.verReferLines.length;
+        //     }
+        //
+        //     this.api.insertReferLine(this.page, new ReferLine([cid] as BasicArray<number>, uuid(), offset), direction);
+        //
+        //     this.updateView();
+        //
+        //     return cid;
+        // } catch (e) {
+        //     console.error('ReferHandleApiCaller.create');
+        //     this.exception = true;
+        // }
     }
 
     private __recovery: boolean = true;

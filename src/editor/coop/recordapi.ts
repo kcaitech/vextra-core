@@ -23,8 +23,7 @@ import {
     TableCell,
     TableCellType,
     TableShape,
-    Artboard,
-    ReferLine
+    Artboard
 } from "../../data/classes";
 import {
     BoolOp, BulletNumbersBehavior, BulletNumbersType, ExportFileFormat, OverrideType, Point2D,
@@ -209,57 +208,57 @@ export class Api {
     pageMove(document: Document, pageId: string, fromIdx: number, toIdx: number) {
         this.addOp(basicapi.pageMove(document, fromIdx, toIdx));
     }
-    insertReferLine(page: Page, refer: ReferLine, direction: "hor" | "ver") {
-        if (direction === "hor") {
-            if (!page.horReferLines) {
-                page.horReferLines = new BasicArray<ReferLine>();
-            }
-            this.addOp(basicapi.crdtArrayInsert(page.horReferLines, page.horReferLines.length, refer));
-        } else {
-            if (!page.verReferLines) {
-                page.verReferLines = new BasicArray<ReferLine>();
-            }
-            this.addOp(basicapi.crdtArrayInsert(page.verReferLines, page.verReferLines.length, refer));
-        }
-    }
+    // insertReferLine(page: Page, refer: ReferLine, direction: "hor" | "ver") {
+        // if (direction === "hor") {
+        //     if (!page.horReferLines) {
+        //         page.horReferLines = new BasicArray<ReferLine>();
+        //     }
+        //     this.addOp(basicapi.crdtArrayInsert(page.horReferLines, page.horReferLines.length, refer));
+        // } else {
+        //     if (!page.verReferLines) {
+        //         page.verReferLines = new BasicArray<ReferLine>();
+        //     }
+        //     this.addOp(basicapi.crdtArrayInsert(page.verReferLines, page.verReferLines.length, refer));
+        // }
+    // }
     deleteReferLine(page: Page, direction: "hor" | "ver", index: number) {
-        if (direction === "hor") {
-            if (!page.horReferLines || !page.horReferLines[index]) {
-               return;
-            }
-            this.addOp(basicapi.crdtArrayRemove(page.horReferLines, index));
-        } else {
-            if (!page.verReferLines || !page.verReferLines[index]) {
-                return;
-            }
-            this.addOp(basicapi.crdtArrayRemove(page.verReferLines, index));
-        }
+        // if (direction === "hor") {
+        //     if (!page.horReferLines || !page.horReferLines[index]) {
+        //        return;
+        //     }
+        //     this.addOp(basicapi.crdtArrayRemove(page.horReferLines, index));
+        // } else {
+        //     if (!page.verReferLines || !page.verReferLines[index]) {
+        //         return;
+        //     }
+        //     this.addOp(basicapi.crdtArrayRemove(page.verReferLines, index));
+        // }
     }
     modifyReferLineOffset(page: Page, direction: "hor" | "ver", index: number, offset: number) {
-        if (direction === "hor") {
-            if (!page.horReferLines || !page.horReferLines[index]) {
-                return;
-            }
-            this.addOp(basicapi.crdtSetAttr(page.horReferLines[index], 'offset', offset));
-        } else {
-            if (!page.verReferLines || !page.verReferLines[index]) {
-                return;
-            }
-            this.addOp(basicapi.crdtSetAttr(page.verReferLines[index], 'offset', offset));
-        }
+        // if (direction === "hor") {
+        //     if (!page.horReferLines || !page.horReferLines[index]) {
+        //         return;
+        //     }
+        //     this.addOp(basicapi.crdtSetAttr(page.horReferLines[index], 'offset', offset));
+        // } else {
+        //     if (!page.verReferLines || !page.verReferLines[index]) {
+        //         return;
+        //     }
+        //     this.addOp(basicapi.crdtSetAttr(page.verReferLines[index], 'offset', offset));
+        // }
     }
     modifyReferLineReferId(page: Page, direction: "hor" | "ver", index: number, referId: string) {
-        if (direction === "hor") {
-            if (!page.horReferLines || !page.horReferLines[index]) {
-                return;
-            }
-            this.addOp(basicapi.crdtSetAttr(page.horReferLines[index], 'referId', referId));
-        } else {
-            if (!page.verReferLines || !page.verReferLines[index]) {
-                return;
-            }
-            this.addOp(basicapi.crdtSetAttr(page.verReferLines[index], 'referId', referId));
-        }
+        // if (direction === "hor") {
+        //     if (!page.horReferLines || !page.horReferLines[index]) {
+        //         return;
+        //     }
+        //     this.addOp(basicapi.crdtSetAttr(page.horReferLines[index], 'referId', referId));
+        // } else {
+        //     if (!page.verReferLines || !page.verReferLines[index]) {
+        //         return;
+        //     }
+        //     this.addOp(basicapi.crdtSetAttr(page.verReferLines[index], 'referId', referId));
+        // }
     }
     // registSymbol(document: Document, symbolId: string, pageId: string) {
     //     this.addOp(basicapi.registSymbol(document, symbolId, pageId));
