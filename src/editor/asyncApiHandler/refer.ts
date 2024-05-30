@@ -6,8 +6,7 @@ import { ReferLine } from "../../data/baseclasses";
 import { uuid } from "../../basic/uuid";
 
 export class ReferHandleApiCaller extends AsyncApiCaller {
-    private referLine: ReferLine | undefined;
-    private referId: string = '';
+    referId: string = '';
 
     constructor(repo: CoopRepository, document: Document, page: PageView) {
         super(repo, document, page)
@@ -18,7 +17,7 @@ export class ReferHandleApiCaller extends AsyncApiCaller {
         return this.__repo.start('refer-line-action');
     }
 
-    create(direction: 'hor' | 'ver') {
+    create(direction: 'hor' | 'ver', offset: number) {
         try {
             const page = this.page;
             let cid = 0;
@@ -29,7 +28,7 @@ export class ReferHandleApiCaller extends AsyncApiCaller {
                 cid = page.verReferLines.length;
             }
 
-            this.api.insertReferLine(this.page, new ReferLine([cid] as BasicArray<number>, uuid(), 0), direction);
+            this.api.insertReferLine(this.page, new ReferLine([cid] as BasicArray<number>, uuid(), offset), direction);
 
             this.updateView();
 
