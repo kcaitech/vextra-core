@@ -16,7 +16,7 @@ import { BasicArray, WatchableObject } from "./basic";
 import { Artboard } from "./artboard";
 import { Color } from "./color";
 import { TableCell } from "./table";
-import { ReferLine } from "./baseclasses";
+import { Guide } from "./baseclasses";
 
 class PageCollectNotify extends WatchableObject {
     constructor() {
@@ -37,10 +37,7 @@ export class Page extends GroupShape implements classes.Page {
     __symbolshapes: Map<string, SymbolShape> = new Map();
     isReserveLib: boolean;
     cutouts: Map<string, CutoutShape> = new Map();
-
-    horReferLines?: BasicArray<ReferLine>;  // 参考线
-    verReferLines?: BasicArray<ReferLine>;
-
+    guides?: BasicArray<Guide>;
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
@@ -50,8 +47,9 @@ export class Page extends GroupShape implements classes.Page {
         style: Style,
         childs: BasicArray<(GroupShape | Shape | ImageShape | PathShape | RectShape | TextShape)>,
         isReserveLib?: boolean,
-        horReferLines?: BasicArray<ReferLine>,
-        verReferLines?: BasicArray<ReferLine>,
+        // horReferLines?: BasicArray<ReferLine>,
+        // verReferLines?: BasicArray<ReferLine>,
+        guides?: BasicArray<Guide>
     ) {
         super(
             crdtidx,
@@ -65,8 +63,9 @@ export class Page extends GroupShape implements classes.Page {
         // this.onAddShape(this); // 不能add 自己
         childs.forEach((c) => this.onAddShape(c));
         this.isReserveLib = !!isReserveLib;
-        this.horReferLines = horReferLines;
-        this.verReferLines = verReferLines;
+        // this.horReferLines = horReferLines;
+        // this.verReferLines = verReferLines;
+        this.guides = guides;
     }
 
     getOpTarget(path: string[]): any {
@@ -79,8 +78,7 @@ export class Page extends GroupShape implements classes.Page {
         const path1 = path[1];
         const shape = this.getShape(path1, true); // 由于op是批量按path路径排序执行的，就有可能要修改的shape被提前delete掉了
         if (shape) return shape.getOpTarget(path.slice(2));
-        if (path1 === 'horReferLines') this.horReferLines = new BasicArray();
-        if (path1 === 'verReferLines') this.verReferLines = new BasicArray();
+        if (path1 === 'guides') this.guides = new BasicArray();
         return super.getOpTarget(path.slice(1));
     }
 

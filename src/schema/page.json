@@ -5,16 +5,10 @@
         "backgroundColor": {
             "$ref": "./color.json"
         },
-        "horReferLines": {
+        "guides": {
             "type": "array",
             "items": {
-                "$ref": "./refer-line.json"
-            }
-        },
-        "verReferLines": {
-            "type": "array",
-            "items": {
-                "$ref": "./refer-line.json"
+                "$ref": "./guide.json"
             }
         }
     },

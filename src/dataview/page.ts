@@ -106,13 +106,10 @@ export class PageView extends GroupShapeView implements RootView {
         return this.m_views.get(id);
     }
 
-    get horReferLines() {
-        return (this.m_data as Page).horReferLines;
+    get guides() {
+        return (this.m_data as Page).guides;
     }
 
-    get verReferLines() {
-        return (this.m_data as Page).verReferLines;
-    }
 
     protected renderProps() {
         // let width = Math.ceil(Math.max(100, this.m_data.frame.width));

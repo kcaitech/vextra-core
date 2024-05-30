@@ -16,6 +16,7 @@ export {
     FillRule,
     FillType,
     GradientType,
+    GuideAxis,
     LineCapStyle,
     LineJoinStyle,
     MarkerType,
@@ -52,6 +53,7 @@ import {
     FillRule,
     FillType,
     GradientType,
+    GuideAxis,
     LineCapStyle,
     LineJoinStyle,
     MarkerType,
@@ -72,6 +74,7 @@ import {
     WindingRule
 } from "./typesdefine"
 import { Basic, BasicArray, BasicMap } from "./basic"
+type Artboard_guides = BasicArray<Guide>
 /* border style */
 export class BorderStyle extends Basic {
     length: number
@@ -202,6 +205,22 @@ export class GraphicsContextSettings extends Basic {
     }
 }
 type GroupShape_childs = BasicArray<GroupShape | ImageShape | PathShape | PathShape2 | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape | PolygonShape | StarShape>
+type Guide_crdtidx = BasicArray<number>
+/* guide */
+export class Guide extends Basic {
+    typeId = "guide"
+    crdtidx: Guide_crdtidx
+    id: string
+    axis: GuideAxis
+    offset: number
+    constructor(crdtidx: Guide_crdtidx, id: string, axis: GuideAxis, offset: number) {
+        super()
+        this.crdtidx = crdtidx
+        this.id = id
+        this.axis = axis
+        this.offset = offset
+    }
+}
 /* padding */
 export class Padding extends Basic {
     left?: number
@@ -222,8 +241,7 @@ export class PageListItem extends Basic {
         this.name = name
     }
 }
-type Page_horReferLines = BasicArray<ReferLine>
-type Page_verReferLines = BasicArray<ReferLine>
+type Page_guides = BasicArray<Guide>
 type Para_spans = BasicArray<Span>
 type PathSegment_points = BasicArray<CurvePoint>
 /* path segment */
@@ -250,21 +268,6 @@ export class Point2D extends Basic {
         super()
         this.x = x
         this.y = y
-    }
-}
-type ReferLine_crdtidx = BasicArray<number>
-/* refer line */
-export class ReferLine extends Basic {
-    typeId = "refer-line"
-    crdtidx: ReferLine_crdtidx
-    id: string
-    offset: number
-    referId?: string
-    constructor(crdtidx: ReferLine_crdtidx, id: string, offset: number) {
-        super()
-        this.crdtidx = crdtidx
-        this.id = id
-        this.offset = offset
     }
 }
 /* shadow */
@@ -328,6 +331,7 @@ type Style_fills = BasicArray<Fill>
 type Style_shadows = BasicArray<Shadow>
 type Style_innerShadows = BasicArray<Shadow>
 type Style_contacts = BasicArray<ContactRole>
+type SymbolShape_guides = BasicArray<Guide>
 type TableShape_rowHeights = BasicArray<CrdtNumber>
 type TableShape_colWidths = BasicArray<CrdtNumber>
 type Text_paras = BasicArray<Para>
@@ -862,8 +866,7 @@ export class GroupShape extends Shape {
 export class Page extends GroupShape {
     typeId = "page"
     backgroundColor?: Color
-    horReferLines?: Page_horReferLines
-    verReferLines?: Page_verReferLines
+    guides?: Page_guides
 }
 /* symbol shape */
 export class SymbolShape extends GroupShape {
@@ -871,6 +874,7 @@ export class SymbolShape extends GroupShape {
     variables: BasicMap<string, Variable>
     symtags?: BasicMap<string, string>
     cornerRadius?: CornerRadius
+    guides?: SymbolShape_guides
     constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, frame: ShapeFrame, style: Style, childs: GroupShape_childs, variables: BasicMap<string, Variable>) {
         super(crdtidx, id, name, type, frame, style, childs)
         this.variables = variables
@@ -884,6 +888,7 @@ export class SymbolUnionShape extends SymbolShape {
 export class Artboard extends GroupShape {
     typeId = "artboard"
     cornerRadius?: CornerRadius
+    guides?: Artboard_guides
 }
 /* bool shape */
 export class BoolShape extends GroupShape {

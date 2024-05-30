@@ -7,7 +7,7 @@ import {
     CornerRadius,
     CurveMode,
     CurvePoint,
-    ExportOptions,
+    ExportOptions, Guide,
     OverrideType,
     PathSegment,
     ResizeType,
@@ -695,6 +695,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
     variables: BasicMap<string, Variable> // 怎么做关联
     symtags?: BasicMap<string, string>
     cornerRadius?: CornerRadius
+    guides?: BasicArray<Guide>;
 
     constructor(
         crdtidx: BasicArray<number>,
@@ -704,7 +705,8 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         frame: ShapeFrame,
         style: Style,
         childs: BasicArray<Shape>,
-        variables: BasicMap<string, Variable>
+        variables: BasicMap<string, Variable>,
+        guides?: BasicArray<Guide>
     ) {
         super(
             crdtidx,
@@ -716,6 +718,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
             childs
         )
         this.variables = variables;
+        this.guides = guides;
     }
 
     getOpTarget(path: string[]): any {

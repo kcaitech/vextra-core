@@ -5,6 +5,7 @@ import { CornerRadius, Shape, ShapeType, SymbolShape } from "../data/shape";
 import { VarsContainer } from "./viewctx";
 import { DataView, RootView } from "./view"
 import { RenderTransform, getShapeViewId } from "./basic";
+import { Page } from "../data";
 
 export class SymbolView extends GroupShapeView {
     get data() {
@@ -65,4 +66,7 @@ export class SymbolView extends GroupShapeView {
     // get points() {
     //     return (this.m_data as SymbolShape).points;
     // }
+    get guides() {
+        return (this.m_data as Page).guides;
+    }
 }

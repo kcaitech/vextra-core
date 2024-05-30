@@ -4,6 +4,12 @@
     "properties": {
         "cornerRadius": {
             "$ref": "./corner-radius.json"
+        },
+        "guides": {
+            "type": "array",
+            "items": {
+                "$ref": "./guide.json"
+            }
         }
     },
     "required": [],

@@ -1,4 +1,5 @@
 /* 代码生成，勿手动修改 */
+export type Artboard_guides = Array<Guide>
 /* blend mode */
 export enum BlendMode {
     Normal = "normal",
@@ -190,6 +191,20 @@ export type GraphicsContextSettings = {
     opacity: number,
 }
 export type GroupShape_childs = Array<GroupShape | ImageShape | PathShape | PathShape2 | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape | PolygonShape | StarShape>
+/* guide axis */
+export enum GuideAxis {
+    X = "X",
+    Y = "Y",
+}
+export type Guide_crdtidx = Array<number>
+/* guide */
+export type Guide = {
+    crdtidx: Guide_crdtidx,
+    typeId: string,
+    id: string,
+    axis: GuideAxis,
+    offset: number,
+}
 /* line cap style */
 export enum LineCapStyle {
     Butt = "butt",
@@ -245,8 +260,7 @@ export type PageListItem = {
     name: string,
     versionId?: string,
 }
-export type Page_horReferLines = Array<ReferLine>
-export type Page_verReferLines = Array<ReferLine>
+export type Page_guides = Array<Guide>
 export type Para_spans = Array<Span>
 export type PathSegment_points = Array<CurvePoint>
 /* path segment */
@@ -262,15 +276,6 @@ export type PathShape2_pathsegs = Array<PathSegment>
 export type Point2D = {
     x: number,
     y: number,
-}
-export type ReferLine_crdtidx = Array<number>
-/* refer line */
-export type ReferLine = {
-    crdtidx: ReferLine_crdtidx,
-    typeId: string,
-    id: string,
-    offset: number,
-    referId?: string,
 }
 /* resize type */
 export enum ResizeType {
@@ -359,6 +364,7 @@ export type Style_fills = Array<Fill>
 export type Style_shadows = Array<Shadow>
 export type Style_innerShadows = Array<Shadow>
 export type Style_contacts = Array<ContactRole>
+export type SymbolShape_guides = Array<Guide>
 /* table cell types */
 export enum TableCellType {
     None = "none",
@@ -735,6 +741,7 @@ export type OvalShape = PathShape & {
 /* artboard shape */
 export type Artboard = GroupShape & {
     cornerRadius?: CornerRadius,
+    guides?: Artboard_guides,
 }
 /* bool shape */
 export type BoolShape = GroupShape
@@ -746,14 +753,14 @@ export type GroupShape = Shape & {
 /* page */
 export type Page = GroupShape & {
     backgroundColor?: Color,
-    horReferLines?: Page_horReferLines,
-    verReferLines?: Page_verReferLines,
+    guides?: Page_guides,
 }
 /* symbol shape */
 export type SymbolShape = GroupShape & {
     variables: Map<string, Variable>,
     symtags?: Map<string, string>,
     cornerRadius?: CornerRadius,
+    guides?: SymbolShape_guides,
 }
 /* symbol union shape */
 export type SymbolUnionShape = SymbolShape
