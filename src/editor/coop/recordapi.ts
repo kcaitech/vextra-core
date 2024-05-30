@@ -12,7 +12,7 @@ import {
     SymbolShape,
     CurveMode, PathSegment,
     PolygonShape,
-    StarShape
+    StarShape, ShapeType
 } from "../../data/shape";
 import { updateShapesFrame } from "./utils";
 import { Border, BorderPosition, BorderStyle, Fill, Gradient, MarkerType, Shadow } from "../../data/style";
@@ -23,7 +23,7 @@ import {
     TableCell,
     TableCellType,
     TableShape,
-    Artboard
+    Artboard, Guide
 } from "../../data/classes";
 import {
     BoolOp, BulletNumbersBehavior, BulletNumbersType, ExportFileFormat, OverrideType, Point2D,
@@ -208,57 +208,58 @@ export class Api {
     pageMove(document: Document, pageId: string, fromIdx: number, toIdx: number) {
         this.addOp(basicapi.pageMove(document, fromIdx, toIdx));
     }
-    // insertReferLine(page: Page, refer: ReferLine, direction: "hor" | "ver") {
-        // if (direction === "hor") {
-        //     if (!page.horReferLines) {
-        //         page.horReferLines = new BasicArray<ReferLine>();
-        //     }
-        //     this.addOp(basicapi.crdtArrayInsert(page.horReferLines, page.horReferLines.length, refer));
-        // } else {
-        //     if (!page.verReferLines) {
-        //         page.verReferLines = new BasicArray<ReferLine>();
-        //     }
-        //     this.addOp(basicapi.crdtArrayInsert(page.verReferLines, page.verReferLines.length, refer));
-        // }
-    // }
-    deleteReferLine(page: Page, direction: "hor" | "ver", index: number) {
-        // if (direction === "hor") {
-        //     if (!page.horReferLines || !page.horReferLines[index]) {
-        //        return;
-        //     }
-        //     this.addOp(basicapi.crdtArrayRemove(page.horReferLines, index));
-        // } else {
-        //     if (!page.verReferLines || !page.verReferLines[index]) {
-        //         return;
-        //     }
-        //     this.addOp(basicapi.crdtArrayRemove(page.verReferLines, index));
-        // }
+    insertGuideToPage(page: Page, guide: Guide) {
+        if (!page.guides) {
+            page.guides = new BasicArray<Guide>();
+        }
+        this.addOp(basicapi.crdtArrayInsert(page.guides, page.guides.length, guide));
     }
-    modifyReferLineOffset(page: Page, direction: "hor" | "ver", index: number, offset: number) {
-        // if (direction === "hor") {
-        //     if (!page.horReferLines || !page.horReferLines[index]) {
-        //         return;
-        //     }
-        //     this.addOp(basicapi.crdtSetAttr(page.horReferLines[index], 'offset', offset));
-        // } else {
-        //     if (!page.verReferLines || !page.verReferLines[index]) {
-        //         return;
-        //     }
-        //     this.addOp(basicapi.crdtSetAttr(page.verReferLines[index], 'offset', offset));
-        // }
+    deleteGuideFromPage(page: Page, index: number) {
+        if (!page.guides) {
+            return;
+        }
+        const g = page.guides[index];
+        if (!g) {
+            return;
+        }
+        this.addOp(basicapi.crdtArrayRemove(page.guides, index));
+        return g;
     }
-    modifyReferLineReferId(page: Page, direction: "hor" | "ver", index: number, referId: string) {
-        // if (direction === "hor") {
-        //     if (!page.horReferLines || !page.horReferLines[index]) {
-        //         return;
-        //     }
-        //     this.addOp(basicapi.crdtSetAttr(page.horReferLines[index], 'referId', referId));
-        // } else {
-        //     if (!page.verReferLines || !page.verReferLines[index]) {
-        //         return;
-        //     }
-        //     this.addOp(basicapi.crdtSetAttr(page.verReferLines[index], 'referId', referId));
-        // }
+    insertGuide(shape: Shape, guide: Guide) {
+        if (!shape.isContainer) {
+            return;
+        }
+        let guides = (shape as Artboard).guides;
+        if (!guides) {
+            guides = new BasicArray<Guide>();
+            (shape as Artboard).guides = guides;
+        }
+
+        this.addOp(basicapi.crdtArrayInsert(guides, guides.length, guide));
+    }
+    deleteGuide(shape: Shape, index: number) {
+        if (!shape.isContainer) {
+            return;
+        }
+        let guides = (shape as Artboard).guides;
+        const guide = guides?.[index];
+        if (!guide) {
+            return;
+        }
+        this.addOp(basicapi.crdtArrayRemove(guides, index));
+        return guide;
+    }
+    modifyGuideOffset(shape: Shape, index: number, offset: number) {
+        if (!shape.isContainer) {
+            return;
+        }
+        let guides = (shape as Artboard).guides;
+        const guide = guides?.[index];
+        if (!guide) {
+            return;
+        }
+
+        this.addOp(basicapi.crdtSetAttr(guide, 'offset', offset));
     }
     // registSymbol(document: Document, symbolId: string, pageId: string) {
     //     this.addOp(basicapi.registSymbol(document, symbolId, pageId));
