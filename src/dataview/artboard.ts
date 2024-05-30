@@ -4,7 +4,7 @@ import { innerShadowId, renderBorders, renderFills } from "../render";
 import { objectId } from "../basic/objectid";
 import { render as clippathR } from "../render/clippath"
 import { Artboard } from "../data/artboard";
-import { CornerRadius } from "../data/classes";
+import { BlurType, CornerRadius } from "../data/classes";
 
 
 export class ArtboradView extends GroupShapeView {
@@ -33,7 +33,7 @@ export class ArtboradView extends GroupShapeView {
             "xmlns:xlink": "http://www.w3.org/1999/xlink",
             "xmlns:xhtml": "http://www.w3.org/1999/xhtml",
             preserveAspectRatio: "xMinYMin meet",
-            overflow: "hidden"
+            overflow: "hidden",
         }
         const contextSettings = shape.style.contextSettings;
         if (contextSettings && (contextSettings.opacity ?? 1) !== 1) {
@@ -59,7 +59,13 @@ export class ArtboradView extends GroupShapeView {
             preserveAspectRatio: "xMinYMin meet",
             overflow: "hidden"
         }
-
+        const contextSettings = this.style.contextSettings;
+        if (contextSettings) {
+            const style: any = {
+                'mix-blend-mode': contextSettings.blenMode
+            }
+            props.style = style;
+        }
         const frame = this.frame;
 
         if (frame.width > frame.height) {
@@ -99,6 +105,8 @@ export class ArtboradView extends GroupShapeView {
 
         const filterId = `${objectId(this)}`;
         const shadows = this.renderShadows(filterId);
+        const blurId = `blur_${objectId(this)}`;
+        const blur = this.renderBlur(blurId);
 
         const props: any = {};
         props.opacity = svgprops.opacity;
@@ -118,19 +126,31 @@ export class ArtboradView extends GroupShapeView {
         } else {
             props.transform = `translate(${frame.x},${frame.y})`;
         }
-
+        const contextSettings = this.style.contextSettings;
+        if (contextSettings) {
+            if (props.style) {
+                props.style['mix-blend-mode'] = contextSettings.blenMode;
+            } else {
+                const style: any = {
+                    'mix-blend-mode': contextSettings.blenMode
+                }
+                props.style = style;
+            }
+        }
         const id = "clippath-artboard-" + objectId(this);
         const cp = clippathR(elh, id, this.getPathStr());
-
+        if (blur.length && this.blur?.type === BlurType.Gaussian) {
+            props.filter = `url(#${blurId})`;
+        }
         const content_container = elh("g", { "clip-path": "url(#" + id + ")" }, [...fills, ...childs]);
         if (shadows.length > 0) { // 阴影
             const inner_url = innerShadowId(filterId, this.getShadows());
-            if (inner_url.length) svgprops.filter = inner_url;
+            if (inner_url.length) svgprops.filter = inner_url.join(' ');
             const body = elh("svg", svgprops, [cp, content_container]);
-            this.reset("g", props, [...shadows, body, ...borders])
+            this.reset("g", props, [...shadows, ...blur, body, ...borders])
         } else {
             const body = elh("svg", svgprops, [cp, content_container]);
-            this.reset("g", props, [body, ...borders])
+            this.reset("g", props, [...blur, body, ...borders])
         }
         return ++this.m_render_version;
     }
