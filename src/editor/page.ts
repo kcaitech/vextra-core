@@ -99,7 +99,7 @@ import {
 } from "../dataview";
 import { RadiusType, ResizingConstraints2 } from "../data/consts";
 import { FMT_VER_latest } from "../data/fmtver";
-import {getShapeTransform2, updateShapeTransformBy2} from "../data/shape_transform2_util";
+import {makeShapeTransform2By1, updateShapeTransformBy2} from "../data/shape_transform_util";
 import {ColVector3D} from "../basic/matrix2";
 import {TransformMode} from "../basic/transform";
 
@@ -428,6 +428,23 @@ export class PageEditor {
             for (let i = 0, l = shapes.length; i < l; i++) {
                 const item = shapes[i];
                 api.shapeModifyContextSettingsOpacity(this.__page, item, value);
+            }
+            this.__repo.commit();
+            return true;
+        } catch (e) {
+            console.log(e);
+            this.__repo.rollback();
+            return false;
+        }
+    }
+
+    modifyShapesContextSettingBlendMode(shapes: Shape[], blendMode: types.BlendMode) {
+        if (!shapes.length) return console.log('invalid data');
+        try {
+            const api = this.__repo.start("modifyShapesContextSettingBlendMode");
+            for (let i = 0, l = shapes.length; i < l; i++) {
+                const item = shapes[i];
+                api.shapeModifyContextSettingsBlendMode(this.__page, item, blendMode);
             }
             this.__repo.commit();
             return true;
@@ -1147,11 +1164,8 @@ export class PageEditor {
         // adjust shape frame refer to parent
         if (!adjusted) {
             const xy = parent.frame2Root();
-            const transform2 = getShapeTransform2(shape.transform);
-            transform2.translate({
-                vector: new ColVector3D([-xy.x, -xy.y, 0]),
-                mode: TransformMode.Local,
-            })
+            const transform2 = makeShapeTransform2By1(shape.transform);
+            transform2.translate(new ColVector3D([-xy.x, -xy.y, 0]))
             updateShapeTransformBy2(shape.transform, transform2);
         }
         shape.id = uuid(); // 凡插入对象，不管是复制剪切的，都需要新id。要保持同一id，使用move!
@@ -1428,14 +1442,11 @@ export class PageEditor {
         try {
             const index = parent.childs.length;
             const xy = m_p2r.computeCoord2(0, 0);
-            const transform2 = getShapeTransform2(new_s.transform);
-            transform2.translate({
-                vector: new ColVector3D([-xy.x, -xy.y, 0]),
-                mode: TransformMode.Local,
-            })
+            const transform2 = makeShapeTransform2By1(new_s.transform);
+            transform2.translate(new ColVector3D([-xy.x, -xy.y, 0]))
             updateShapeTransformBy2(new_s.transform, transform2);
             if (rotation) {
-                const transform2 = getShapeTransform2(new_s.transform);
+                const transform2 = makeShapeTransform2By1(new_s.transform);
                 transform2.setRotateZ((rotation % 360) / 180 * Math.PI);
                 updateShapeTransformBy2(new_s.transform, transform2);
             }
@@ -1661,14 +1672,12 @@ export class PageEditor {
                     let r = copy[r_i];
                     r.id = uuid();
                     // lt_point与s.frame的xy重合后，用delta_xys中的相对位置计算replacement中每个图形的偏移
-                    const transform2 = getShapeTransform2(r.transform);
-                    transform2.setTranslate({
-                        vector: new ColVector3D([
-                            save_frame.x + delta_xys[r_i].x,
-                            save_frame.y + delta_xys[r_i].y,
-                            0,
-                        ]),
-                    })
+                    const transform2 = makeShapeTransform2By1(r.transform);
+                    transform2.setTranslate(new ColVector3D([
+                        save_frame.x + delta_xys[r_i].x,
+                        save_frame.y + delta_xys[r_i].y,
+                        0,
+                    ]))
                     updateShapeTransformBy2(r.transform, transform2);
                     api.shapeInsert(this.__document, this.__page, p, r, save_index);
                     src_replacement.push(p.childs[save_index]);
@@ -2678,6 +2687,82 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+    // shape blur
+    shapesAddBlur(actions: BatchAction2[]) {
+        try {
+            const api = this.__repo.start('shapesAddBlur');
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                api.addBlur(this.__page, adapt2Shape(target), value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    shapesBlurUnify(actions: BatchAction2[]) {
+        try {
+            const api = this.__repo.start('shapesBlurUnify');
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                api.deleteBlur(this.__page, adapt2Shape(target));
+                api.addBlur(this.__page, adapt2Shape(target), value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    shapeDeleteBlur(shapes: ShapeView[]) {
+        try {
+            const api = this.__repo.start('shapeDeleteBlur');
+            for (let i = 0; i < shapes.length; i++) {
+                const shape = shapes[i];
+                api.deleteBlur(this.__page, adapt2Shape(shape));
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapeBlurEnabled(actions: BatchAction2[]) {
+        try {
+            const api = this.__repo.start('setShapeBlurEnabled');
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                api.shapeModifyBlurEdabled(this.__page, adapt2Shape(target), value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapeBlurSaturation(actions: BatchAction2[]) {
+        try {
+            const api = this.__repo.start('setShapeBlurSaturation');
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                api.shapeModifyBlurSaturation(this.__page, adapt2Shape(target), value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setShapeBlurType(actions: BatchAction2[]) {
+        try {
+            const api = this.__repo.start('setShapeBlurType');
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                api.shapeModifyBlurType(this.__page, adapt2Shape(target), value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
 
     //export cutout
     shapesExportFormatUnify(actions: ExportFormatReplaceAction[]) {

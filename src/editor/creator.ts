@@ -70,7 +70,7 @@ import {ResizingConstraints2} from "../data/consts";
 import {SymbolMgr} from "../data/symbolmgr";
 import {newText} from "../data/textutils";
 import {getPolygonPoints, getPolygonVertices} from "./utils/path";
-import {getShapeTransform2, updateShapeTransformBy2} from "../data/shape_transform2_util";
+import {makeShapeTransform2By1, updateShapeTransformBy2} from "../data/shape_transform_util";
 
 function _checkNum(x: number) {
     // check
@@ -86,7 +86,7 @@ function _checkFrame(frame: ShapeFrame) {
 }
 
 export function addCommonAttr(shape: Shape) {
-    const transform2 = getShapeTransform2(shape.transform);
+    const transform2 = makeShapeTransform2By1(shape.transform);
     transform2.setRotateZ(0);
     updateShapeTransformBy2(shape.transform, transform2);
     shape.isVisible = true;
@@ -755,7 +755,7 @@ export function getTransformByEnv(env: GroupShape) {
 export function modifyTransformByEnv(shape: Shape, env: GroupShape) {
     const transform = getTransformByEnv(env);
 
-    const transform2 = getShapeTransform2(shape.transform);
+    const transform2 = makeShapeTransform2By1(shape.transform);
     transform2.setFlipH(transform.flipH);
     transform2.setFlipV(transform.flipV);
 
