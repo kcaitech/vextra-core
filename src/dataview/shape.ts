@@ -1,4 +1,4 @@
-import { innerShadowId, renderBorders, renderFills, renderShadows } from "../render";
+import { innerShadowId, renderBorders, renderFills, renderShadows, renderBlur } from "../render";
 import {
     VariableType,
     OverrideType,
@@ -16,6 +16,7 @@ import {
     Shadow,
     ShapeType,
     CornerRadius,
+    Blur,
     ShapeSize,
     Transform
 } from "../data/classes";
@@ -28,9 +29,11 @@ import { DataView } from "./view"
 import { DViewCtx, PropsType } from "./viewctx";
 import { objectId } from "../basic/objectid";
 import { BasicArray } from "../data/basic";
-import { MarkerType } from "../data/typesdefine";
-import { getShapeTransform2 } from "../data/shape_transform2_util";
 import { fixConstrainFrame } from "../data/constrain";
+import { BlurType, MarkerType } from "../data/typesdefine";
+import {makeShapeTransform2By1, makeShapeTransformBy2, transformEquals} from "../data/shape_transform_util";
+import { Transform as Transform2 } from "../basic/transform";
+import {Matrix2} from "../index";
 
 export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     return (
@@ -172,6 +175,8 @@ export class ShapeView extends DataView {
     m_path?: Path;
     m_pathstr?: string;
 
+    m_transform2: Transform2;
+
     constructor(ctx: DViewCtx, props: PropsType, isTopClass: boolean = true) {
         super(ctx, props);
         const shape = props.data;
@@ -185,6 +190,8 @@ export class ShapeView extends DataView {
         this.m_transform = new Transform(t.m00, t.m01, t.m02, t.m10, t.m11, t.m12)
         this.m_size = new ShapeSize(shape.size.width, shape.size.height);
         this.m_fixedRadius = (shape as PathShape).fixedRadius; // rectangle
+
+        this.m_transform2 = makeShapeTransform2By1(this.m_transform);
 
         if (isTopClass) this.afterInit();
     }
@@ -222,12 +229,25 @@ export class ShapeView extends DataView {
     get transform() {
         return this.m_transform
     }
+
+    get transform2() {
+        if (!transformEquals(makeShapeTransformBy2(this.m_transform2), this.transform)) {
+            this.m_transform2.setMatrix(new Matrix2([4, 4], [
+                this.transform.m00, this.transform.m01, 0, this.transform.m02,
+                this.transform.m10, this.transform.m11, 0, this.transform.m12,
+                0, 0, 1, 0,
+                0, 0, 0, 1,
+            ], true))
+        }
+        return this.m_transform2;
+    }
+
     get size() {
         return this.m_size;
     }
 
     get frame(): ShapeFrame {
-        const transform2 = getShapeTransform2(this.transform);
+        const transform2 = makeShapeTransform2By1(this.transform);
         const trans = transform2.decomposeTranslate();
         const scale = transform2.decomposeScale();
         const width = Math.abs(this.size.width * scale.x);
@@ -238,23 +258,23 @@ export class ShapeView extends DataView {
     }
 
     get rotation(): number {
-        return getShapeTransform2(this.transform).decomposeEuler().z * 180 / Math.PI;
+        return makeShapeTransform2By1(this.transform).decomposeEuler().z * 180 / Math.PI;
     }
 
     get isFlippedHorizontal(): boolean {
-        return getShapeTransform2(this.transform).isFlipH;
+        return makeShapeTransform2By1(this.transform).isFlipH;
     }
 
     get isFlippedVertical(): boolean {
-        return getShapeTransform2(this.transform).isFlipV
+        return makeShapeTransform2By1(this.transform).isFlipV
     }
 
     get skewX(): number {
-        return getShapeTransform2(this.transform).decomposeSkew().x * 180 / Math.PI;
+        return makeShapeTransform2By1(this.transform).decomposeSkew().x * 180 / Math.PI;
     }
 
     get skewY(): number {
-        return getShapeTransform2(this.transform).decomposeSkew().y * 180 / Math.PI;
+        return makeShapeTransform2By1(this.transform).decomposeSkew().y * 180 / Math.PI;
     }
 
     get fixedRadius() {
@@ -437,6 +457,11 @@ export class ShapeView extends DataView {
     getShadows(): Shadow[] {
         const v = this._findOV(OverrideType.Shadows, VariableType.Shadows);
         return v ? v.value : this.m_data.style.shadows;
+    }
+
+    get blur(): Blur | undefined {
+        const v = this._findOV(OverrideType.Blur, VariableType.Blur);
+        return v ? v.value : this.data.style.blur;
     }
 
     getPathStr() {
@@ -632,7 +657,12 @@ export class ShapeView extends DataView {
     }
 
     protected renderShadows(filterId: string): EL[] {
-        return renderShadows(elh, filterId, this.getShadows(), this.getPathStr(), this.frame, this.getFills(), this.getBorders(), this.m_data.type);
+        return renderShadows(elh, filterId, this.getShadows(), this.getPathStr(), this.frame, this.getFills(), this.getBorders(), this.m_data.type, this.blur);
+    }
+
+    protected renderBlur(blurId: string): EL[] {
+        if (!this.blur) return [];
+        return renderBlur(elh, this.blur, blurId, this.frame, this.getFills(), this.getPathStr());
     }
 
     protected renderProps(): { [key: string]: string } {
@@ -660,7 +690,16 @@ export class ShapeView extends DataView {
             // style.transform += "translate(" + (frame.x) + "px," + (frame.y) + "px)"
             props.style = style;
         }
-
+        if (contextSettings) {
+            if (props.style) {
+                props.style['mix-blend-mode'] = contextSettings.blenMode;
+            } else {
+                const style: any = {
+                    'mix-blend-mode': contextSettings.blenMode
+                }
+                props.style = style;
+            }
+        }
         return props;
     }
 
@@ -689,6 +728,17 @@ export class ShapeView extends DataView {
             if (this.rotation) style.transform += "rotate(" + this.rotation + "deg) ";
             style.transform += "translate(" + (-frame.width / 2) + "px," + (-frame.height / 2) + "px)";
             props.style = style;
+        }
+        const contextSettings = this.style.contextSettings;
+        if (contextSettings) {
+            if (props.style) {
+                props.style['mix-blend-mode'] = contextSettings.blenMode;
+            } else {
+                const style: any = {
+                    'mix-blend-mode': contextSettings.blenMode
+                }
+                props.style = style;
+            }
         }
 
         return props;
@@ -732,6 +782,8 @@ export class ShapeView extends DataView {
 
         const filterId = `${objectId(this)}`;
         const shadows = this.renderShadows(filterId);
+        const blurId = `blur_${objectId(this)}`;
+        const blur = this.renderBlur(blurId);
 
         if (shadows.length > 0) { // 阴影
             const ex_props = Object.assign({}, props);
@@ -740,11 +792,14 @@ export class ShapeView extends DataView {
             delete props.opacity;
 
             const inner_url = innerShadowId(filterId, this.getShadows());
-            props.filter = `url(#pd_outer-${filterId}) ${inner_url}`;
+            props.filter = `url(#pd_outer-${filterId}) `;
+            if (blur.length && this.blur?.type === BlurType.Gaussian) props.filter += `url(#${blurId}) `;
+            if (inner_url.length) props.filter += inner_url.join(' ');
             const body = elh("g", props, [...fills, ...childs, ...borders]);
-            this.reset("g", ex_props, [...shadows, body])
+            this.reset("g", ex_props, [...shadows, ...blur, body])
         } else {
-            this.reset("g", props, [...fills, ...childs, ...borders]);
+            if (blur.length && this.blur?.type === BlurType.Gaussian) props.filter = `url(#${blurId})`;
+            this.reset("g", props, [...blur, ...fills, ...childs, ...borders]);
         }
         return ++this.m_render_version;
     }
@@ -760,6 +815,26 @@ export class ShapeView extends DataView {
 
         const filterId = `${objectId(this)}`;
         const shadows = this.renderShadows(filterId);
+        const blurId = `blur_${objectId(this)}`;
+        const blur = this.renderBlur(blurId);
+        const g_props: any = {}
+        const contextSettings = this.style.contextSettings;
+        if (contextSettings) {
+            const style: any = {
+                'mix-blend-mode': contextSettings.blenMode
+            }
+            if (blur.length) {
+                g_props.style = style;
+                g_props.opacity = props.opacity;
+                delete props.opacity;
+            } else {
+                if (props.style) {
+                    (props.style as any)['mix-blend-mode'] = contextSettings.blenMode;
+                } else {
+                    props.style = style;
+                }
+            }
+        }
 
         if (shadows.length > 0) { // 阴影
             const ex_props = Object.assign({}, props);
@@ -768,11 +843,24 @@ export class ShapeView extends DataView {
             delete props.opacity;
 
             const inner_url = innerShadowId(filterId, this.getShadows());
-            props.filter = `url(#pd_outer-${filterId}) ${inner_url}`;
+            props.filter = `url(#pd_outer-${filterId}) `;
+            if (blur.length && this.blur?.type === BlurType.Gaussian) props.filter += `url(#${blurId}) `;
+            if (inner_url.length) props.filter += inner_url.join(' ');
             const body = elh("g", props, [...fills, ...childs, ...borders]);
-            return elh("g", ex_props, [...shadows, body]);
+            if (blur.length) {
+                const g = elh('g', g_props, [...shadows, body])
+                return elh("g", ex_props, [...blur, g]);
+            } else {
+                return elh("g", ex_props, [...shadows, ...blur, body]);
+            }
         } else {
-            return elh("g", props, [...fills, ...childs, ...borders])
+            if (blur.length && this.blur?.type === BlurType.Gaussian) props.filter = `url(#${blurId})`;
+            if (blur.length) {
+                const g = elh('g', g_props, [...fills, ...childs, ...borders])
+                return elh("g", props, [...blur, g])
+            } else {
+                return elh("g", props, [...blur, ...fills, ...childs, ...borders])
+            }
         }
     }
 

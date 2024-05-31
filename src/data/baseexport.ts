@@ -533,6 +533,8 @@ export function exportWindingRule(source: types.WindingRule, ctx?: IExportContex
 /* blur */
 export function exportBlur(source: types.Blur, ctx?: IExportContext): types.Blur {
     const ret: types.Blur = {} as types.Blur
+    ret.typeId = "blur"
+    ret.typeId = source.typeId
     ret.isEnabled = source.isEnabled
     ret.center = exportPoint2D(source.center, ctx)
     ret.saturation = source.saturation
@@ -874,6 +876,9 @@ export function exportVariable(source: types.Variable, ctx?: IExportContext): ty
         }
         if (source.value.typeId === "corner-radius") {
             return exportCornerRadius(source.value as types.CornerRadius, ctx)
+        }
+        if (source.value.typeId === "blur") {
+            return exportBlur(source.value as types.Blur, ctx)
         }
         throw new Error("unknow typeId: " + source.value.typeId)
     })()

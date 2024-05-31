@@ -5,8 +5,10 @@
   "type": "module",
   "description": "kcdesign core module",
   "author": "kcaisoft.com",
-  "main": "dist/index.js",
-  "types": "dist/types/index.d.ts",
+  "main": "./dist/node/index.cjs",
+  "module": "./dist/browser/index.js",
+  "browser": "./dist/browser/index.js",
+  "types": "./dist/browser/types/index.d.ts",
   "publishConfig": {
     "registry": "https://packages.aliyun.com/6393d698d690c872dceedcc0/npm/npm-registry/"
   },

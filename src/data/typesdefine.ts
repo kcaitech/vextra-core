@@ -230,6 +230,7 @@ export enum OverrideType {
     EndMarkerType = "endMarkerType",
     ExportOptions = "exportOptions",
     CornerRadius = "cornerRadius",
+    Blur = "blur",
 }
 /* padding */
 export type Padding = {
@@ -434,6 +435,7 @@ export enum VariableType {
     MarkerType = "markerType",
     ExportOptions = "exportOptions",
     CornerRadius = "cornerRadius",
+    Blur = "blur",
 }
 export type Variable_0 = Array<Border | Fill | Shadow>
 /* winding rule */
@@ -443,6 +445,7 @@ export enum WindingRule {
 }
 /* blur */
 export type Blur = {
+    typeId: string,
     isEnabled: boolean,
     center: Point2D,
     saturation: number,
@@ -668,7 +671,7 @@ export type Variable = {
     id: string,
     type: VariableType,
     name: string,
-    value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | ContextSettings | TableCell | ExportOptions | CornerRadius,
+    value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur,
 }
 /* comment */
 export type Comment = {
