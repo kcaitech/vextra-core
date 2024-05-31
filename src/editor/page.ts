@@ -1165,10 +1165,7 @@ export class PageEditor {
         if (!adjusted) {
             const xy = parent.frame2Root();
             const transform2 = makeShapeTransform2By1(shape.transform);
-            transform2.translate({
-                vector: new ColVector3D([-xy.x, -xy.y, 0]),
-                mode: TransformMode.Local,
-            })
+            transform2.translate(new ColVector3D([-xy.x, -xy.y, 0]))
             updateShapeTransformBy2(shape.transform, transform2);
         }
         shape.id = uuid(); // 凡插入对象，不管是复制剪切的，都需要新id。要保持同一id，使用move!
@@ -1446,10 +1443,7 @@ export class PageEditor {
             const index = parent.childs.length;
             const xy = m_p2r.computeCoord2(0, 0);
             const transform2 = makeShapeTransform2By1(new_s.transform);
-            transform2.translate({
-                vector: new ColVector3D([-xy.x, -xy.y, 0]),
-                mode: TransformMode.Local,
-            })
+            transform2.translate(new ColVector3D([-xy.x, -xy.y, 0]))
             updateShapeTransformBy2(new_s.transform, transform2);
             if (rotation) {
                 const transform2 = makeShapeTransform2By1(new_s.transform);
