@@ -101,15 +101,6 @@ export class GroupShapeView extends ShapeView {
         this.addChild(cdom, idx);
     }
 
-    updateLayoutArgs(frame: ShapeFrame, hflip: boolean | undefined, vflip: boolean | undefined, rotate: number | undefined, radius?: number | undefined): void {
-        super.updateLayoutArgs(frame, hflip, vflip, rotate, radius);
-        // todo
-        // if (this.m_need_updatechilds) {
-        //     // this.updateChildren();
-        //     this.m_need_updatechilds = false;
-        // }
-    }
-
     protected layoutOnNormal(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): void {
         const childs = this.getDataChilds();
         const resue: Map<string, DataView> = new Map();
@@ -126,7 +117,7 @@ export class GroupShapeView extends ShapeView {
         else removes.forEach((c => c.destory()));
     }
 
-    layoutOnRectShape(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, parentFrame: ShapeFrame, scaleX: number, scaleY: number): void {
+    layoutOnRectShape(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, renderTrans: RenderTransform): void {
         const childs = this.getDataChilds();
         const resue: Map<string, DataView> = new Map();
         this.m_children.forEach((c) => resue.set(c.data.id, c));
@@ -136,12 +127,9 @@ export class GroupShapeView extends ShapeView {
             const transform = {
                 dx: 0,
                 dy: 0,
-                scaleX,
-                scaleY,
+                scaleX: renderTrans.scaleX,
+                scaleY: renderTrans.scaleY,
                 parentFrame: this.frame,
-                vflip: false,
-                hflip: false,
-                rotate: 0
             }
             // update childs
             this.layoutChild(cc, i, transform, varsContainer!, resue, rootView);
@@ -152,35 +140,19 @@ export class GroupShapeView extends ShapeView {
         else removes.forEach((c => c.destory()));
     }
 
-    layoutOnDiamondShape(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scaleX: number, scaleY: number, rotate: number, vflip: boolean, hflip: boolean, bbox: ShapeFrame, m: Matrix): void {
+    layoutOnDiamondShape(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, renderTrans: RenderTransform): void {
         const childs = this.getDataChilds();
         const resue: Map<string, DataView> = new Map();
         this.m_children.forEach((c) => resue.set(c.data.id, c));
         const rootView = this.getRootView();
-        for (let i = 0, len = childs.length; i < len; i++) { //摆正： 将旋转、翻转放入到子对象
+        for (let i = 0, len = childs.length; i < len; i++) {
             const cc = childs[i]
-            const m1 = cc.matrix2Parent();
-            m1.multiAtLeft(m);
-            const target = m1.computeCoord(0, 0);
-            const c_rotate = rotate + (cc.rotation || 0);
-            const c_hflip = hflip ? !cc.isFlippedHorizontal : !!cc.isFlippedHorizontal;
-            const c_vflip = vflip ? !cc.isFlippedVertical : !!cc.isFlippedVertical;
-            const c_frame = cc.frame;
-            // cc matrix2Parent
-            const m2 = matrix2parent(c_frame.x, c_frame.y, c_frame.width, c_frame.height, c_rotate, c_hflip, c_vflip);
-            m2.trans(bbox.x, bbox.y); // todo 使用parentFrame.x y会与rect对不齐，待研究
-            const cur = m2.computeCoord(0, 0);
-            const dx = target.x - cur.x;
-            const dy = target.y - cur.y;
             const transform = {
-                dx,
-                dy,
-                scaleX,
-                scaleY,
+                dx: 0,
+                dy: 0,
+                scaleX: renderTrans.scaleX,
+                scaleY: renderTrans.scaleY,
                 parentFrame: this.frame,
-                vflip,
-                hflip,
-                rotate
             }
             // update childs
             this.layoutChild(cc, i, transform, varsContainer!, resue, rootView);

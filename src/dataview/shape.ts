@@ -27,10 +27,10 @@ import { Matrix } from "../basic/matrix";
 import { DataView } from "./view"
 import { DViewCtx, PropsType } from "./viewctx";
 import { objectId } from "../basic/objectid";
-import { fixConstrainFrame } from "../editor/frame";
 import { BasicArray } from "../data/basic";
 import { MarkerType } from "../data/typesdefine";
 import { getShapeTransform2 } from "../data/shape_transform2_util";
+import { fixConstrainFrame } from "../data/constrain";
 
 export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     return (
@@ -48,16 +48,10 @@ export function isDiffRenderTransform(lhs: RenderTransform | undefined, rhs: Ren
     if (lhs === undefined || rhs === undefined) {
         return true;
     }
-    return (
-        lhs.dx !== rhs.dx ||
-        lhs.dy !== rhs.dy ||
-        lhs.scaleX !== rhs.scaleX ||
-        lhs.scaleY !== rhs.scaleY ||
-        lhs.rotate !== rhs.rotate ||
-        lhs.scaleX !== rhs.scaleX ||
-        lhs.scaleY !== rhs.scaleY ||
-        isDiffShapeFrame(lhs.parentFrame, rhs.parentFrame)
-    )
+    // return (!lhs.matrix.equals(rhs.matrix) ||
+    //     isDiffShapeFrame(lhs.parentFrame, rhs.parentFrame)
+    // )
+    return lhs.scaleX !== rhs.scaleX || lhs.scaleY !== rhs.scaleY;
 }
 
 export function isDiffVarsContainer(lhs: (SymbolRefShape | SymbolShape)[] | undefined, rhs: (SymbolRefShape | SymbolShape)[] | undefined): boolean {
@@ -79,18 +73,12 @@ export function isDiffVarsContainer(lhs: (SymbolRefShape | SymbolShape)[] | unde
 }
 
 export function isNoTransform(trans: RenderTransform | undefined): boolean {
-    return !trans ||
-        trans.dx === 0 &&
-        trans.dy === 0 &&
-        trans.scaleX === 1 &&
-        trans.scaleY === 1 &&
-        trans.rotate === 0 &&
-        !trans.hflip &&
-        !trans.vflip;
+    // return !trans || trans.matrix.isIdentity()
+    return !trans || trans.scaleX === 1 && trans.scaleY === 1;
 }
 
-export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeFrame, frame: ShapeFrame, scaleX: number, scaleY: number) {
-    const originParentFrame = shape.parent?.frame; // 至少有page!
+export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeSize, frame: ShapeFrame, scaleX: number, scaleY: number) {
+    const originParentFrame = shape.parent?.size; // 至少有page!
     if (!originParentFrame) return;
 
     const isGroupChild = shape.parent?.type === ShapeType.Group;
@@ -103,7 +91,7 @@ export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeFrame, frame
     } else {
         const resizingConstraint = shape.resizingConstraint!; // 默认值为靠左、靠顶、宽高固定
         // const recorder = (window as any).__size_recorder;
-        const __f = fixConstrainFrame(shape, resizingConstraint, frame.x, frame.y, frame.width, frame.height, scaleX, scaleY, parentFrame, originParentFrame);
+        const __f = fixConstrainFrame(resizingConstraint, frame.x, frame.y, frame.width, frame.height, scaleX, scaleY, parentFrame, originParentFrame);
 
         frame.x = __f.x;
         frame.y = __f.y;
@@ -112,40 +100,33 @@ export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeFrame, frame
     }
 }
 
-export function matrix2parent(x: number, y: number, width: number, height: number, rotate: number, hflip: boolean, vflip: boolean, matrix?: Matrix) {
-    const m = matrix || new Matrix();
-    if (rotate || hflip || vflip) {
-        // const cx = width / 2;
-        // const cy = height / 2;
-        // m.trans(-cx, -cy);
-        if (rotate) m.rotate(rotate / 360 * 2 * Math.PI);
-        if (hflip) m.flipHoriz();
-        if (vflip) m.flipVert();
-        // m.trans(cx, cy);
-    }
-    m.trans(x, y);
-    return m;
+export function matrix2parent(t: Transform, matrix?: Matrix) {
+    // const t = this.transform;
+    const m = new Matrix(t.m00, t.m10, t.m01, t.m11, t.m02, t.m12);
+    if (!matrix) return m;
+    matrix.multiAtLeft(m);
+    return matrix;
 }
 
-export function boundingBox(m: Matrix, frame: ShapeSize, path: Path): ShapeFrame {
+export function boundingBox(frame: ShapeSize, shape: Shape): ShapeFrame {
     // const path = this.getPath();
+    const path = shape.getPathOfFrame(frame);
     if (path.length > 0) {
-        path.transform(m);
+        // path.transform(m);
         const bounds = path.calcBounds();
         return new ShapeFrame(bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
     }
-
-    // const frame = this.frame;
-    const corners = [{ x: 0, y: 0 }, { x: frame.width, y: 0 }, { x: frame.width, y: frame.height }, {
-        x: 0,
-        y: frame.height
-    }]
-        .map((p) => m.computeCoord(p));
-    const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
-    const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
-    const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
-    const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
-    return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
+    // // const frame = this.frame;
+    // const corners = [{ x: 0, y: 0 }, { x: frame.width, y: 0 }, { x: frame.width, y: frame.height }, {
+    //     x: 0,
+    //     y: frame.height
+    // }]
+    //     .map((p) => m.computeCoord(p));
+    // const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
+    // const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
+    // const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
+    // const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
+    return new ShapeFrame(0, 0, frame.width, frame.height);
 }
 
 
@@ -209,7 +190,7 @@ export class ShapeView extends DataView {
     }
 
     protected afterInit() {
-        this._layout(this.m_data.frame, this.m_data, this.m_transx, this.varsContainer);
+        this._layout(this.m_size, this.m_data, this.m_transx, this.varsContainer);
     }
 
     get parent(): ShapeView | undefined {
@@ -426,11 +407,7 @@ export class ShapeView extends DataView {
     }
 
     matrix2Parent(matrix?: Matrix) {
-        const t = this.transform;
-        const m = new Matrix(t.m00, t.m10, t.m01, t.m11, t.m02, t.m12);
-        if (!matrix) return m;
-        matrix.multiAtLeft(m);
-        return matrix;
+        return matrix2parent(this.transform, matrix);
     }
 
     getFills(): Fill[] {
@@ -491,178 +468,101 @@ export class ShapeView extends DataView {
     // }
 
     // =================== update ========================
-    updateLayoutArgs(frame: ShapeFrame, hflip: boolean | undefined, vflip: boolean | undefined, rotate: number | undefined, radius: number | undefined) {
+    updateLayoutArgs(trans: Transform, size: ShapeSize, radius: number | undefined) {
 
-        if (frame.width !== this.size.width || frame.height !== this.size.height) {
+        if (size.width !== this.size.width || size.height !== this.size.height) {
             this.m_pathstr = undefined; // need update
             this.m_path = undefined;
-            this.size.width = frame.width;
-            this.size.height = frame.height;
+            this.size.width = size.width;
+            this.size.height = size.height;
         }
 
-        // const _frame = this.frame;
-        // if (isDiffShapeFrame(_frame, frame)) {
-        //     _frame.x = frame.x;
-        //     _frame.y = frame.y;
-        //     _frame.width = frame.width;
-        //     _frame.height = frame.height;
-        //     this.m_pathstr = undefined; // need update
-        //     this.m_path = undefined;
-        //     // if (this.m_borders) {
-        //     //     // recycleELArr(this.m_borders);
-        //     //     this.m_borders = undefined;
-        //     // }
-        //     // if (this.m_fills) {
-        //     //     // recycleELArr(this.m_fills);
-        //     //     this.m_fills = undefined;
-        //     // }
-        // }
-        // this.m_hflip = hflip;
-        // this.m_vflip = vflip;
-        // this.m_rotate = rotate;
         if ((this.m_fixedRadius || 0) !== (radius || 0)) {
             this.m_fixedRadius = radius;
             this.m_pathstr = undefined; // need update
             this.m_path = undefined;
-            // if (this.m_borders) {
-            //     // recycleELArr(this.m_borders);
-            //     this.m_borders = undefined;
-            // }
-            // if (this.m_fills) {
-            //     // recycleELArr(this.m_fills);
-            //     this.m_fills = undefined;
-            // }
         }
 
-        // todo
-        this.m_transform.m00 = this.data.transform.m00;
-        this.m_transform.m01 = this.data.transform.m01;
-        this.m_transform.m02 = this.data.transform.m02;
-        this.m_transform.m10 = this.data.transform.m10;
-        this.m_transform.m11 = this.data.transform.m11;
-        this.m_transform.m12 = this.data.transform.m12;
+        if (!this.m_transform.equals(trans)) {
+            this.m_transform.reset(trans);
+            this.m_pathstr = undefined; // need update
+            this.m_path = undefined;
+        }
     }
 
     protected layoutOnNormal(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
     }
 
-    protected layoutOnRectShape(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, parentFrame: ShapeFrame, scaleX: number, scaleY: number) {
+    protected layoutOnRectShape(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, renderTrans: RenderTransform) {
     }
 
-    protected layoutOnDiamondShape(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scaleX: number, scaleY: number, rotate: number, vflip: boolean, hflip: boolean, bbox: ShapeFrame, m: Matrix) {
+    protected layoutOnDiamondShape(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, renderTrans: RenderTransform) {
     }
 
     protected isNoSupportDiamondScale(): boolean {
         return this.m_data.isNoSupportDiamondScale;
     }
 
-    protected _layout(_frame: ShapeFrame, shape: Shape, transform: RenderTransform | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
-        // const shape = this.m_data;
-        // const transform = this.m_transx;
-
-        // const _frame = shape.frame;
-        let x = _frame.x;
-        let y = _frame.y;
-        let width = _frame.width;
-        let height = _frame.height;
-        let rotate = (shape.rotation ?? 0);
-        let hflip = !!shape.isFlippedHorizontal;
-        let vflip = !!shape.isFlippedVertical;
-        let frame = _frame;
-
-        let notTrans = isNoTransform(transform);
-
+    protected _layout(size: ShapeSize, shape: Shape, renderTrans: RenderTransform | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
+        let notTrans = isNoTransform(renderTrans);
+        const trans = shape.transform;
         // case 1 不需要变形
-        if (!transform || notTrans) {
+        if (!renderTrans || notTrans) {
             // update frame, hflip, vflip, rotate
-            this.updateLayoutArgs(frame, hflip, vflip, rotate, (shape as PathShape).fixedRadius);
-            // todo 需要继续update childs
+            this.updateLayoutArgs(trans, size, (shape as PathShape).fixedRadius);
             this.layoutOnNormal(varsContainer);
             return;
         }
 
-        // 这些是parent的属性！
-        x += transform.dx;
-        y += transform.dy;
-        rotate += transform.rotate;
-        hflip = transform.hflip ? !hflip : hflip;
-        vflip = transform.vflip ? !vflip : vflip;
-        const scaleX = transform.scaleX;
-        const scaleY = transform.scaleY;
-
         const frameType = shape.frameType;
         if (!frameType) { // 无实体frame
             return;
-        } else {
-            if (frameType === FrameType.Path && !shape.isNoTransform()) { // 菱形
-                const m = matrix2parent(x, y, width, height, rotate, hflip, vflip);
-                const bbox = boundingBox(m, frame, shape.getPathOfFrame(frame));
-                const saveW = bbox.width;
-                const saveH = bbox.height;
-                const parentFrame = new ShapeFrame(bbox.x, bbox.y, bbox.width, bbox.height);
-
-                fixFrameByConstrain(shape, transform.parentFrame, parentFrame, scaleX, scaleY);
-
-                const cscaleX = parentFrame.width / saveW;
-                const cscaleY = parentFrame.height / saveH;
-
-                this.updateLayoutArgs(parentFrame, undefined, undefined, undefined, (shape as PathShape).fixedRadius);
-                this.layoutOnDiamondShape(varsContainer, cscaleX, cscaleY, rotate, vflip, hflip, bbox, m);
-            } else { // 其他
-                const saveW = width;
-                const saveH = height;
-
-                const parentFrame = new ShapeFrame(x, y, width, height);
-
-                fixFrameByConstrain(shape, transform.parentFrame, parentFrame, scaleX, scaleY);
-
-                const cscaleX = parentFrame.width / saveW;
-                const cscaleY = parentFrame.height / saveH;
-                this.updateLayoutArgs(parentFrame, hflip, vflip, rotate, (shape as PathShape).fixedRadius);
-                this.layoutOnRectShape(varsContainer, parentFrame, cscaleX, cscaleY);
-            }
         }
 
-        // // case 3 不支持菱形变形
-        // if (this.isNoSupportDiamondScale()) {
+        const canSkew = frameType === FrameType.Path && !shape.isNoTransform();
+        const pScaleX = renderTrans.scaleX;
+        const pScaleY = renderTrans.scaleY;
 
-        //     const m = new Matrix();
-        //     m.rotate(rotate / 360 * 2 * Math.PI);
-        //     m.scale(scaleX, scaleY);
-        //     const _newscale = m.computeRef(1, 1);
-        //     m.scale(1 / scaleX, 1 / scaleY);
-        //     const newscale = m.inverseRef(_newscale.x, _newscale.y);
-        //     x *= scaleX;
-        //     y *= scaleY;
-        //     width *= newscale.x;
-        //     height *= newscale.y;
+        const bbox = boundingBox(size, shape);
+        const saveW = bbox.width;
+        const saveH = bbox.height;
+        const frame = new ShapeFrame(bbox.x, bbox.y, bbox.width, bbox.height);
 
-        //     const frame = new ShapeFrame(x, y, width, height);
-        //     fixFrameByConstrain(shape, transform.parentFrame, frame);
+        fixFrameByConstrain(shape, renderTrans.parentFrame, frame, pScaleX, pScaleY);
 
-        //     this.updateLayoutArgs(frame, hflip, vflip, rotate, (shape as PathShape).fixedRadius);
-        //     this.layoutOnRectShape(varsContainer, frame, scaleX, scaleY);
-        //     return;
-        // }
+        let scaleX = frame.width / saveW;
+        let scaleY = frame.height / saveH;
+        if (!canSkew && scaleX !== scaleY) {
+            scaleX = Math.min(scaleX, scaleY);
+            scaleY = scaleX;
+            frame.width = saveW * scaleX;
+            frame.height = saveH * scaleY;
+        }
 
-        // // case 4 菱形变形
-        // // cur frame
-        // frame = new ShapeFrame(x, y, width, height);
-        // // matrix2parent
-        // const m = matrix2parent(x, y, width, height, rotate, hflip, vflip);
-        // // bounds
-        // const bbox = boundingBox(m, frame, shape.getPathOfFrame(frame));
-        // // todo 要变换points
+        const transform = shape.transform.clone();
+        const lt = transform.inverseCoord(frame.x, frame.y);
+        transform.scale(scaleX, scaleY);
+        const lt2 = transform.computeCoord(lt.x, lt.y);
+        const dx = lt2.x - lt.x;
+        const dy = lt2.y - lt.y;
+        transform.trans(dx, dy);
 
-        // const parentFrame = new ShapeFrame(bbox.x * scaleX, bbox.y * scaleY, bbox.width * scaleX, bbox.height * scaleY);
-        // fixFrameByConstrain(shape, transform.parentFrame, parentFrame); // 左上右下
-        // const cscaleX = parentFrame.width / bbox.width;
-        // const cscaleY = parentFrame.height / bbox.height;
+        this.updateLayoutArgs(transform, frame, (shape as PathShape).fixedRadius);
 
-        // // update frame, rotate, hflip...
-        // this.updateLayoutArgs(parentFrame, undefined, undefined, undefined, (shape as PathShape).fixedRadius);
+        const chilsTrans = {
+            // dx,
+            // dy,
+            scaleX: scaleX,
+            scaleY: scaleY,
+            parentFrame: frame
+        }
 
-        // this.layoutOnDiamondShape(varsContainer, cscaleX, cscaleY, rotate, vflip, hflip, bbox, m); // 最终目的是执行这两行？
+        if (canSkew && scaleX !== scaleY) {
+            this.layoutOnDiamondShape(varsContainer, chilsTrans);
+        }
+        else {
+            this.layoutOnRectShape(varsContainer, chilsTrans);
+        }
     }
 
     // 更新frame, vflip, hflip, rotate, fixedRadius, 及对应的cache数据，如path
@@ -707,7 +607,7 @@ export class ShapeView extends DataView {
         }
 
         this.m_ctx.setDirty(this);
-        this._layout(this.m_data.frame, this.m_data, this.m_transx, this.varsContainer);
+        this._layout(this.m_data.size, this.m_data, this.m_transx, this.varsContainer);
         this.notify("layout");
         this.emit("layout");
     }

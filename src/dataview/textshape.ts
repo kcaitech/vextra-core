@@ -1,5 +1,5 @@
 import { TextLayout } from "../data/textlayout";
-import { OverrideType, Para, Path, ShapeFrame, Span, Text, TextBehaviour, TextShape, VariableType } from "../data/classes";
+import { OverrideType, Para, Path, ShapeFrame, ShapeSize, Span, Text, TextBehaviour, TextShape, Transform, VariableType } from "../data/classes";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
 import { renderText2Path, renderTextLayout } from "../render/text";
@@ -120,31 +120,31 @@ export class TextShapeView extends ShapeView {
         return renderTextLayout(elh, layout, this.frame);
     }
 
-    __origin_frame: ShapeFrame = new ShapeFrame(0, 0, 0, 0);
+    __origin_frame: ShapeSize = new ShapeSize();
 
     forceUpdateOriginFrame() {
         const frame = this.data.frame;
-        this.__origin_frame.x = frame.x;
-        this.__origin_frame.y = frame.y;
+        // this.__origin_frame.x = frame.x;
+        // this.__origin_frame.y = frame.y;
         this.__origin_frame.width = frame.width;
         this.__origin_frame.height = frame.height;
     }
 
-    updateLayoutArgs(frame: ShapeFrame, hflip: boolean | undefined, vflip: boolean | undefined, rotate: number | undefined, radius: number | undefined): void {
+    updateLayoutArgs(trans: Transform, size: ShapeSize, radius: number | undefined): void {
         // if (this.isVirtualShape && isDiffShapeFrame(this.m_frame, frame)) {
         //     this.updateSize(frame.width, frame.height);
         // }
-        super.updateLayoutArgs(frame, hflip, vflip, rotate, radius);
-        this.__origin_frame.x = frame.x;
-        this.__origin_frame.y = frame.y;
-        this.__origin_frame.width = frame.width;
-        this.__origin_frame.height = frame.height;
+        super.updateLayoutArgs(trans, size, radius);
+        // this.__origin_frame.x = frame.x;
+        // this.__origin_frame.y = frame.y;
+        this.__origin_frame.width = size.width;
+        this.__origin_frame.height = size.height;
         // update frame by layout
         this.getLayout(); // 要提前排版，不然frame不对，填充不对。也可以考虑先renderContents，再renderFills。
-        this.updateFrameByLayout(frame);
+        this.updateFrameByLayout(size);
     }
 
-    private updateFrameByLayout(origin: ShapeFrame) {
+    private updateFrameByLayout(origin: ShapeSize) {
         if (!this.isVirtualShape || !this.m_layout) return;
         const text = this.getText();
         const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;

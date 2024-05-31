@@ -234,9 +234,9 @@ export class SymbolRefView extends ShapeView {
             this.layoutOnNormal = saveLayoutNormal;
             this.layoutOnRectShape = saveLayoutOnRectShape;
         }
-        else { // 第一个
+        else { // 第一个 noTrans
             const shape = this.m_data;
-            this.updateLayoutArgs(refframe, shape.isFlippedHorizontal, shape.isFlippedVertical, shape.rotation, (shape as any).fixedRadius);
+            this.updateLayoutArgs(shape.transform, refframe, (shape as any).fixedRadius);
         }
         // 
         // todo
@@ -291,7 +291,15 @@ export class SymbolRefView extends ShapeView {
 
             const cscaleX = parentFrame.width / saveW;
             const cscaleY = parentFrame.height / saveH;
-            this.layoutOnRectShape(varsContainer, parentFrame, cscaleX, cscaleY);
+
+            const chilsTrans = {
+                // dx,
+                // dy,
+                scaleX: cscaleX,
+                scaleY: cscaleY,
+                parentFrame: frame
+            }
+            this.layoutOnRectShape(varsContainer, chilsTrans);
         }
 
         this.notify("layout");
@@ -324,7 +332,7 @@ export class SymbolRefView extends ShapeView {
         }
     }
 
-    layoutOnRectShape(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, parentFrame: ShapeFrame, scaleX: number, scaleY: number): void {
+    layoutOnRectShape(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, renderTrans: RenderTransform): void {
         const childs = this.getDataChilds();
         const resue: Map<string, DataView> = new Map();
         this.m_children.forEach((c) => resue.set(c.data.id, c));
@@ -335,12 +343,9 @@ export class SymbolRefView extends ShapeView {
             const transform = {
                 dx: 0,
                 dy: 0,
-                scaleX,
-                scaleY,
+                scaleX: renderTrans.scaleX,
+                scaleY: renderTrans.scaleY,
                 parentFrame: this.frame,
-                vflip: false,
-                hflip: false,
-                rotate: 0
             }
             // update childs
             if (this.layoutChild(cc, i, transform, varsContainer!, resue, rootView)) {
@@ -360,7 +365,7 @@ export class SymbolRefView extends ShapeView {
         }
     }
 
-    layoutOnDiamondShape(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scaleX: number, scaleY: number, rotate: number, vflip: boolean, hflip: boolean, bbox: ShapeFrame, m: Matrix): void {
+    layoutOnDiamondShape(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, renderTrans: RenderTransform): void {
         throw new Error("Method not implemented.");
     }
 

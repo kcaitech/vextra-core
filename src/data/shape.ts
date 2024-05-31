@@ -13,7 +13,6 @@ import {
     ResizeType,
     ShapeFrame,
     ShapeType,
-    Transform,
     VariableType,
     ShapeSize,
 } from "./baseclasses"
@@ -23,12 +22,13 @@ import { TextLayout } from "./textlayout";
 import { parsePath } from "./pathparser";
 import { FrameType, PathType, RadiusType, RECT_POINTS } from "./consts";
 import { Variable } from "./variable";
-import {getShapeTransform2} from "./shape_transform2_util";
-
+import { getShapeTransform2 } from "./shape_transform2_util";
+import { Transform } from "./transform";
+export { Transform } from "./transform";
 export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D,
     CurvePoint, ShapeFrame, Ellipse, PathSegment, OverrideType, VariableType,
-    FillRule, CornerRadius, Transform, ShapeSize
+    FillRule, CornerRadius, ShapeSize
 } from "./baseclasses";
 
 export { Variable } from "./variable";
@@ -38,24 +38,6 @@ export { Variable } from "./variable";
 // 在ref里，由proxy处理（监听所有变量的容器（ref, symbol））
 // 在symbol，这是个普通shape, 绘制由绘制处理？（怎么处理的？监听所有的变量容器）
 //   试图层可以获取，但更新呢？监听所有的变量容器
-
-export class MyTransform extends Transform {
-    get translateX() {
-        return this.m02;
-    }
-
-    set translateX(x: number) {
-        this.m02 = x;
-    }
-
-    get translateY() {
-        return this.m12;
-    }
-
-    set translateY(y: number) {
-        this.m12 = y;
-    }
-}
 
 export class Shape extends Basic implements classes.Shape {
 
@@ -127,7 +109,7 @@ export class Shape extends Basic implements classes.Shape {
     type: ShapeType
     // frame: ShapeFrame
     style: Style
-    transform: MyTransform
+    transform: Transform
     size: ShapeSize
     boolOp?: BoolOp
     isFixedToViewport?: boolean
@@ -160,7 +142,7 @@ export class Shape extends Basic implements classes.Shape {
         this.id = id
         this.name = name
         this.type = type
-        this.transform = new MyTransform(transform.m00, transform.m01, transform.m02, transform.m10, transform.m11, transform.m12)
+        this.transform = transform
         this.size = size
         this.style = style
     }

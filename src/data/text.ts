@@ -185,7 +185,7 @@ export class Text extends Basic implements classes.Text {
         }
     }
 
-    getLayout3(frame: ShapeFrame, owner: string, token: string | undefined): { token: string, layout: TextLayout } {
+    getLayout3(frame: ShapeSize, owner: string, token: string | undefined): { token: string, layout: TextLayout } {
 
         const width = frame.width;
         const height = frame.height;
