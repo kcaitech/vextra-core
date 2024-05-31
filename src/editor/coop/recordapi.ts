@@ -235,9 +235,8 @@ export class Api {
             guides = new BasicArray<Guide>();
             (shape as Artboard).guides = guides;
         }
-
         this.addOp(basicapi.crdtArrayInsert(guides, guides.length, guide));
-        return guides.length;
+        return guides.length - 1;
     }
     deleteGuide(shape: Shape, index: number) {
         if (!shape.isContainer) {

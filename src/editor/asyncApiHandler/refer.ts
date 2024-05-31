@@ -38,8 +38,9 @@ export class ReferHandleApiCaller extends AsyncApiCaller {
         }
     }
 
-    modifyOffset(env: Shape, index: number, offset: number, recovery: boolean) {
+    modifyOffset(_env: ShapeView, index: number, offset: number, recovery: boolean) {
         try {
+            const env = adapt2Shape(_env);
             this.api.modifyGuideOffset(env, index, offset);
             this.__recovery = recovery;
             this.updateView();
@@ -50,7 +51,7 @@ export class ReferHandleApiCaller extends AsyncApiCaller {
     }
 
     migrate(__env1: ShapeView, index: number, __env2: ShapeView, targetOffset: number) {
-        const result = { env: __env2, index: index }
+        const result = { env: __env1, index: index }
         try {
 
             const env1 = adapt2Shape(__env1);
@@ -92,6 +93,7 @@ export class ReferHandleApiCaller extends AsyncApiCaller {
             }
 
             api.modifyGuideOffset(env2, __index, targetOffset);
+
             result.env = __env2;
             result.index = __index;
 
