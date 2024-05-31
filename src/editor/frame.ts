@@ -11,7 +11,7 @@ import {
     SymbolShape,
     TextShape
 } from "../data/shape";
-import { TextBehaviour } from "../data/typesdefine";
+import { ShapeSize, TextBehaviour } from "../data/typesdefine";
 import { fixTextShapeFrameByLayout } from "./utils/other";
 import { FrameType, PathType, ResizingConstraints2 } from "../data/consts";
 import { Api } from "./coop/recordapi";
@@ -246,7 +246,7 @@ function reLayoutPath(api: Api, page: Page, shape: Shape, points: CurvePoint[], 
     }
 }
 
-export function fixConstrainFrame(shape: Shape, resizingConstraint: number, x: number, y: number, width: number, height: number, scaleX: number, scaleY: number, currentEnvFrame: ShapeFrame, originEnvFrame: ShapeFrame, recorder?: SizeRecorder) {
+export function fixConstrainFrame(shape: Shape, resizingConstraint: number, x: number, y: number, width: number, height: number, scaleX: number, scaleY: number, currentEnvFrame: ShapeSize, originEnvFrame: ShapeSize, recorder?: SizeRecorder) {
     // 水平 HORIZONTAL
     if (ResizingConstraints2.isHorizontalScale(resizingConstraint)) { // 跟随缩放。一旦跟随缩放，则不需要考虑其他约束场景了
         x *= scaleX;
