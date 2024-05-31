@@ -31,6 +31,15 @@ export class TranslateMatrix extends Matrix { // 平移矩阵
         if (matrix instanceof TranslateMatrix) return matrix;
         return new TranslateMatrix(matrix.data)
     }
+    
+    buildMatrix() {
+        return new Matrix(new NumberArray2D([4, 4], [
+            1, 0, 0, this.m03,
+            0, 1, 0, this.m13,
+            0, 0, 1, this.m23,
+            0, 0, 0, 1,
+        ], true))
+    }
 }
 
 export class RotateMatrix extends Matrix { // 旋转矩阵
@@ -60,6 +69,16 @@ export class RotateMatrix extends Matrix { // 旋转矩阵
         if (matrix instanceof RotateMatrix) return matrix;
         return new RotateMatrix(matrix.data)
     }
+    
+    buildMatrix() {
+        return new Matrix(new NumberArray2D([4, 4], [
+            this.m00, this.m01, this.m02, 0,
+            this.m10, this.m11, this.m12, 0,
+            this.m20, this.m21, this.m22, 0,
+            0, 0, 0, 1,
+        ], true))
+    
+    }
 }
 
 export class SkewMatrix extends Matrix { // 斜切矩阵
@@ -83,6 +102,15 @@ export class SkewMatrix extends Matrix { // 斜切矩阵
     static FromMatrix(matrix: Matrix) {
         if (matrix instanceof SkewMatrix) return matrix;
         return new SkewMatrix(matrix.data)
+    }
+    
+    buildMatrix() {
+        return new Matrix(new NumberArray2D([4, 4], [
+            1, this.m01, 0, 0,
+            this.m10, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1,
+        ], true))
     }
 }
 
@@ -109,6 +137,15 @@ export class ScaleMatrix extends Matrix { // 缩放矩阵
     static FromMatrix(matrix: Matrix) {
         if (matrix instanceof ScaleMatrix) return matrix;
         return new ScaleMatrix(matrix.data)
+    }
+    
+    buildMatrix() {
+        return new Matrix(new NumberArray2D([4, 4], [
+            this.m00, 0, 0, 0,
+            0, this.m11, 0, 0,
+            0, 0, this.m22, 0,
+            0, 0, 0, 1,
+        ], true))
     }
 }
 
@@ -975,12 +1012,19 @@ export class Transform { // 变换
         if (params.point === undefined) params.point = new Point3D([0, 0, 0]);
 
         if (params.mode === TransformMode.Local) {
-            this.rotateMatrix.col3 = this.rotateMatrix.col3.subtract(params.point)
-            this.rotate(params)
-            this.rotateMatrix.col3 = this.rotateMatrix.col3.add(params.point)
+            let point: Matrix = params.point.clone()
+            const isIdentityForScaleMatrix = this.scaleMatrix.isIdentity
+            const isIdentityForSkewMatrix = this.skewMatrix.isIdentity
+            if (!isIdentityForScaleMatrix || !isIdentityForSkewMatrix) {
+                if (!isIdentityForScaleMatrix) point = this.scaleMatrix.clone().multiply(point);
+                if (!isIdentityForSkewMatrix) point = this.skewMatrix.clone().multiply(point);
+            }
 
-            const diffTranslate = this.rotateMatrix.col3
-            this.rotateMatrix.col3 = new ColVector([0, 0, 0, 1])
+            // diffTranslate = (R1 - R0) * (-P) // P为旋转中心
+            const r0 = this.rotateMatrix.buildMatrix().resize([3, 3])
+            this.rotate(params)
+            const r1 = this.rotateMatrix.buildMatrix().resize([3, 3])
+            const diffTranslate = r1.subtract(r0).multiply(point.negate()).col0
 
             this.translate(diffTranslate)
         } else {
