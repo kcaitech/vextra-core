@@ -1,6 +1,6 @@
 import { AsyncApiCaller } from "./AsyncApiCaller";
 import { CoopRepository } from "../coop/cooprepo";
-import { Artboard, BasicArray, Document, Guide, GuideAxis, Page, Shape, ShapeType } from "../../data";
+import { Artboard, BasicArray, Document, Guide, GuideAxis, Page, ShapeType } from "../../data";
 import { adapt2Shape, PageView, ShapeView } from "../../dataview";
 import { uuid } from "../../basic/uuid";
 
@@ -47,6 +47,29 @@ export class ReferHandleApiCaller extends AsyncApiCaller {
         } catch (e) {
             console.error('ReferHandleApiCaller.modifyOffset');
             this.exception = true;
+        }
+    }
+
+    delete(_env: ShapeView, index: number) {
+        try {
+            const env = adapt2Shape(_env);
+
+            const gui = (env as Artboard)?.guides?.[index];
+            if (!gui) return false;
+
+            if (env.type === ShapeType.Page) {
+                this.api.deleteGuideFromPage(env as Page, index);
+            } else {
+                this.api.deleteGuide(env, index);
+            }
+
+            this.updateView();
+
+            return true;
+        } catch (e) {
+            console.error('ReferHandleApiCaller.delete');
+            this.exception = true;
+            return false;
         }
     }
 
@@ -107,7 +130,7 @@ export class ReferHandleApiCaller extends AsyncApiCaller {
 
     commit() {
         console.log('=NEED RECOVERY=', this.__recovery);
-        if (this.__repo.isNeedCommit() && !this.exception && !this.__recovery) {
+        if (this.__repo.isNeedCommit() && !this.exception) {
             this.__repo.commit();
         } else {
             this.__repo.rollback();
