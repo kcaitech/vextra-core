@@ -1,15 +1,29 @@
 import fs from 'fs';
 
-function space(level: number) {
+function space4(level: number) {
     let ret = ''
     while ((level--) > 0) ret += '    '
     return ret
 }
+const charlevel: { [key: string]: number } = {
+    '{': 1,
+    '[': 1,
+    '(': 1,
+    '}': -1,
+    ']': -1,
+    ')': -1
+}
+function calclevel(str: string) {
+    return str.split('').reduce((l, c) => l += (charlevel[c] || 0), 0)
+}
+function decfirst(str: string) {
+    return charlevel[str[0]] < 0
+}
 const tips = `/* 代码生成，勿手动修改 */`
 export class Writer {
-    space: number = 0
-    file: string
-    isNewLine: boolean = true;
+    private level: number = 0
+    private file: string
+    private isNewLine: boolean = true;
     constructor(file: string) {
         if (fs.existsSync(file)) fs.rmSync(file)
         this.file = file;
@@ -31,25 +45,77 @@ export class Writer {
     }
     sub(sub: (w: Writer) => void) {
         this.append('{');
-        ++this.space;
+        ++this.level;
         sub(this);
-        --this.space;
-        this.newline().append(space(this.space)).append('}');
+        --this.level;
+        this.newline().indent().append('}');
         return this;
     }
     nl(...strs: string[]) {
         this.newline();
-        if (strs.length > 0) this.append(space(this.space)).append(strs.join(''));
+        if (strs.length > 0) this.indent().append(strs.join(''));
         return this;
     }
     indent(indent: number = 0, sub?: (w: Writer) => void) {
         if (sub) {
-            this.space += indent;
+            this.level += indent;
             sub(this);
-            this.space -= indent;
+            this.level -= indent;
         } else {
-            this.append(space(this.space + indent));
+            this.append(space4(this.level + indent));
         }
         return this;
+    }
+
+    fmt(str: string, append: boolean = false) {
+        const baselevel = this.level;
+        let level = 0;
+        const aligns = [];
+        const lines = str.split('\n');
+        for (let i = 0, len = lines.length; i < len; ++i) {
+            const l = lines[i].trim();
+            if (l.length === 0) continue;
+            const savelevel = level;
+            if (decfirst(l)) {
+                --level;
+                if (level < 0) level = 0;
+                else if (level < aligns.length - 1) level = aligns.length - 1;
+            }
+            if (!append || i > 0) {
+                this.newline()
+                this.append(space4(level + baselevel))
+            }
+            this.append(l)
+
+            const ll = calclevel(l)
+            if (ll === 0) {
+                level = savelevel
+                continue
+            }
+            if (ll > 0) {
+                if (level === aligns.length) {
+                    aligns.push(ll)
+                    ++level
+                } else if (level === aligns.length - 1) {
+                    aligns[aligns.length - 1] += ll
+                    ++level
+                } else {
+                    throw new Error('fmt error');
+                }
+            } else {
+                let i = 0
+                for (; aligns.length > 0 && i < 0;) {
+                    if (aligns[aligns.length - 1] + i <= 0) {
+                        i += aligns[aligns.length - 1]
+                        aligns.pop()
+                    } else {
+                        aligns[aligns.length - 1] += i
+                        i = 0
+                    }
+                }
+                if (i < 0) throw new Error('fmt error')
+                if (level > aligns.length) level = aligns.length
+            }
+        }
     }
 }
