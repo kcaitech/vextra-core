@@ -245,12 +245,10 @@ export class Transform { // 变换
 
             // 旋转
             // R = (T^-1)·Transform·(S^-1)·(K^-1)
-            this.rotateMatrix = RotateMatrix.FromMatrix(
-                this.translateMatrix.getInverse()!
-                    .multiply(this.matrix)
-                    .multiply(this.scaleMatrix.getInverse()!)
-                    .multiply(this.skewMatrix.getInverse()!)
-            )
+            const temp = this.translateMatrix.isIdentity ? this.matrix.clone() : this.translateMatrix.getInverse()!.multiply(this.matrix)
+            if (!this.scaleMatrix.isIdentity) temp.multiply(this.scaleMatrix.getInverse()!);
+            if (!this.skewMatrix.isIdentity) temp.multiply(this.skewMatrix.getInverse()!);
+            this.rotateMatrix = RotateMatrix.FromMatrix(temp)
         }
         this.isMatrixLatest = true
         this.isSubMatrixLatest = true
@@ -1253,50 +1251,102 @@ export class Transform { // 变换
         return this
     }
 
-    flipH() { // 水平翻转
-        return this.scale({
-            vector: new ColVector3D([-1, 1, 1]),
-            mode: TransformMode.Local,
+    // 绕任意轴翻转
+    flip(params: {
+        axis?: ColVector3D,     // 旋转轴方向向量
+        point?: Point3D,        // 旋转轴上的一点
+        mode?: TransformMode,   // 变换模式，默认为Local模式，使用相对坐标去表示point
+    }) {
+        if (params.mode === undefined) params.mode = TransformMode.Local;
+        return this.rotateAt({
+            axis: params.axis,
+            point: params.point,
+            angle: Math.PI,
+            mode: params.mode,
         })
     }
 
-    preFlipH() { // 在本变换之前进行水平翻转
-        return this.preScale(new ColVector3D([-1, 1, 1]))
+    // 在本变换之前绕任意轴翻转
+    preFlip(params: {
+        axis?: ColVector3D, // 旋转轴方向向量
+        point?: Point3D,    // 旋转轴上的一点
+    }) {
+        return this.preRotateAt({
+            axis: params.axis,
+            point: params.point,
+            angle: Math.PI,
+        })
     }
 
-    setFlipH(value: boolean) { // 设置水平翻转
-        if (!this.isSubMatrixLatest) this.updateMatrix();
-        const isFlipH = this.scaleMatrix.m00 < 0
-        if (value === isFlipH) return this;
-        return this.flipH()
+    // 水平翻转
+    flipH(params: {
+        point?: Point3D,        // 旋转轴上的一点
+        mode?: TransformMode,   // 变换模式，默认为Local模式，使用相对坐标去表示point
+    }) {
+        return this.flip({axis: new ColVector3D([0, 1, 0]), point: params.point, mode: params.mode})
     }
 
-    get isFlipH() { // 是否水平翻转
+    // 在本变换之前进行水平翻转，point为旋转轴上的一点
+    preFlipH(point?: Point3D) {
+        return this.preFlip({axis: new ColVector3D([0, 1, 0]), point: point})
+    }
+
+    // 二维水平翻转
+    flipH2D(params: {
+        point?: Point2D,        // 旋转轴上的一点
+        mode?: TransformMode,   // 变换模式，默认为Local模式，使用相对坐标去表示point
+    }) {
+        const point3D = params.point ? new Point3D([params.point.x, params.point.y, 0]) : undefined
+        return this.flipH({point: point3D, mode: params.mode})
+    }
+
+    // 在本变换之前进行二维水平翻转，point为旋转轴上的一点
+    preFlipH2D(point?: Point2D) {
+        const point3D = point ? new Point3D([point.x, point.y, 0]) : undefined
+        return this.preFlipH(point3D)
+    }
+
+    // 垂直翻转
+    flipV(params: {
+        point?: Point3D,    // 旋转轴上的一点
+        mode?: TransformMode,   // 变换模式，默认为Local模式，使用相对坐标去表示point
+    }) {
+        return this.flip({axis: new ColVector3D([1, 0, 0]), point: params.point, mode: params.mode})
+    }
+
+    // 在本变换之前进行垂直翻转，point为旋转轴上的一点
+    preFlipV(point?: Point3D) {
+        return this.preFlip({axis: new ColVector3D([1, 0, 0]), point: point})
+    }
+
+    // 二维垂直翻转
+    flipV2D(params: {
+        point?: Point2D,        // 旋转轴上的一点
+        mode?: TransformMode,   // 变换模式，默认为Local模式，使用相对坐标去表示point
+    }) {
+        const point3D = params.point ? new Point3D([params.point.x, params.point.y, 0]) : undefined
+        return this.flipV({point: point3D, mode: params.mode})
+    }
+
+    // 在本变换之前进行二维垂直翻转，point为旋转轴上的一点
+    preFlipV2D(point?: Point2D) {
+        const point3D = point ? new Point3D([point.x, point.y, 0]) : undefined
+        return this.preFlipV(point3D)
+    }
+
+    get isScaleXNegative() { // 判断X轴缩放是否为负
         if (!this.isSubMatrixLatest) this.updateMatrix();
         return this.scaleMatrix.m00 < 0
     }
 
-    flipV() { // 垂直翻转
-        return this.scale({
-            vector: new ColVector3D([1, -1, 1]),
-            mode: TransformMode.Local,
-        })
-    }
-
-    preFlipV() { // 在本变换之前进行垂直翻转
-        return this.preScale(new ColVector3D([1, -1, 1]))
-    }
-
-    setFlipV(value: boolean) { // 设置垂直翻转
-        if (!this.isSubMatrixLatest) this.updateMatrix();
-        const isFlipV = this.scaleMatrix.m11 < 0
-        if (value === isFlipV) return this;
-        return this.flipV()
-    }
-
-    get isFlipV() { // 是否垂直翻转
+    get isScaleYNegative() { // 判断Y轴缩放是否为负
         if (!this.isSubMatrixLatest) this.updateMatrix();
         return this.scaleMatrix.m11 < 0
+    }
+
+    get isScaleZNegative() { // 判断Z轴缩放是否为负
+        if (!this.isSubMatrixLatest) this.updateMatrix();
+        return this.scaleMatrix.m22 < 0
     }
 
     decomposeTranslate() { // 分解平移参数

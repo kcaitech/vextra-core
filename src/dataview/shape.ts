@@ -262,11 +262,11 @@ export class ShapeView extends DataView {
     }
 
     get isFlippedHorizontal(): boolean {
-        return makeShapeTransform2By1(this.transform).isFlipH;
+        return makeShapeTransform2By1(this.transform).isScaleXNegative;
     }
 
     get isFlippedVertical(): boolean {
-        return makeShapeTransform2By1(this.transform).isFlipV
+        return makeShapeTransform2By1(this.transform).isScaleYNegative
     }
 
     get skewX(): number {

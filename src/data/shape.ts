@@ -174,11 +174,11 @@ export class Shape extends Basic implements classes.Shape {
     }
 
     get isFlippedHorizontal(): boolean {
-        return this.transform2.isFlipH;
+        return this.transform2.isScaleXNegative;
     }
 
     get isFlippedVertical(): boolean {
-        return this.transform2.isFlipV
+        return this.transform2.isScaleYNegative
     }
 
     get skewX(): number {
