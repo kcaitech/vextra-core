@@ -342,10 +342,12 @@ export class Api {
         this._shapeModifyAttr(page, shape, "isLocked", isLocked);
     }
     shapeModifyHFlip(page: Page, shape: Shape, hflip: boolean | undefined) {
-        this._shapeModifyAttr(page, shape, "isFlippedHorizontal", hflip);
+        checkShapeAtPage(page, shape);
+        this.addOp(basicapi.shapeModifyHFlip(page, shape, hflip, this.needUpdateFrame));
     }
     shapeModifyVFlip(page: Page, shape: Shape, vflip: boolean | undefined) {
-        this._shapeModifyAttr(page, shape, "isFlippedVertical", vflip);
+        checkShapeAtPage(page, shape);
+        this.addOp(basicapi.shapeModifyVFlip(page, shape, vflip, this.needUpdateFrame));
     }
     shapeModifyContextSettingsOpacity(page: Page, shape: Shape | Variable, contextSettingsOpacity: number) {
         // if (shape.isVirtualShape) {

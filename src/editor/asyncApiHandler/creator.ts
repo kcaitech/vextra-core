@@ -30,6 +30,7 @@ import {ContactShape} from "../../data/contact";
 import {translateTo} from "../frame";
 import {TextAttr} from "../../data/text";
 import {makeShapeTransform2By1, updateShapeTransformBy2} from "../../data/shape_transform_util";
+import {Point2D2} from "../../index";
 
 export interface GeneratorParams {
     parent: GroupShapeView;
@@ -167,9 +168,13 @@ export class CreatorApiCaller extends AsyncApiCaller {
     // 初始化图层的transform
     private setTransform(shape: Shape, trans: { rotation: number, flipH: boolean, flipV: boolean }) {
         const transform2 = makeShapeTransform2By1(shape.transform);
+        if (trans.flipH)  transform2.flipH2D({
+            point: new Point2D2([shape.size.width / 2, shape.size.height / 2]),
+        });
+        if (trans.flipV)  transform2.flipV2D({
+            point: new Point2D2([shape.size.width / 2, shape.size.height / 2]),
+        });
         transform2.setRotateZ((shape.rotation % 360) / 180 * Math.PI);
-        transform2.setFlipH(shape.isFlippedHorizontal);
-        transform2.setFlipV(shape.isFlippedVertical);
         updateShapeTransformBy2(shape.transform, transform2);
     }
 

@@ -71,6 +71,7 @@ import {SymbolMgr} from "../data/symbolmgr";
 import {newText} from "../data/textutils";
 import {getPolygonPoints, getPolygonVertices} from "./utils/path";
 import {makeShapeTransform2By1, updateShapeTransformBy2} from "../data/shape_transform_util";
+import {Point2D2} from "../index";
 
 function _checkNum(x: number) {
     // check
@@ -756,8 +757,12 @@ export function modifyTransformByEnv(shape: Shape, env: GroupShape) {
     const transform = getTransformByEnv(env);
 
     const transform2 = makeShapeTransform2By1(shape.transform);
-    transform2.setFlipH(transform.flipH);
-    transform2.setFlipV(transform.flipV);
+    if (transform.flipH) transform2.flipH2D({
+        point: new Point2D2([shape.size.width / 2, shape.size.height / 2]),
+    });
+    if (transform.flipV) transform2.flipV2D({
+        point: new Point2D2([shape.size.width / 2, shape.size.height / 2]),
+    });
 
     let r = transform.rotation;
 
