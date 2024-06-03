@@ -1013,12 +1013,8 @@ export class Transform { // 变换
 
         if (params.mode === TransformMode.Local) {
             let point: Matrix = params.point.clone()
-            const isIdentityForScaleMatrix = this.scaleMatrix.isIdentity
-            const isIdentityForSkewMatrix = this.skewMatrix.isIdentity
-            if (!isIdentityForScaleMatrix || !isIdentityForSkewMatrix) {
-                if (!isIdentityForScaleMatrix) point = this.scaleMatrix.clone().multiply(point);
-                if (!isIdentityForSkewMatrix) point = this.skewMatrix.clone().multiply(point);
-            }
+            if (!this.scaleMatrix.isIdentity) point = this.scaleMatrix.clone().multiply(point);
+            if (!this.skewMatrix.isIdentity) point = this.skewMatrix.clone().multiply(point);
 
             // diffTranslate = (R1 - R0) * (-P) // P为旋转中心
             const r0 = this.rotateMatrix.buildMatrix().resize([3, 3])
