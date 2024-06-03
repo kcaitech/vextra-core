@@ -213,7 +213,7 @@ export class Api {
             page.guides = new BasicArray<Guide>();
         }
         this.addOp(basicapi.crdtArrayInsert(page.guides, page.guides.length, guide));
-        return page.guides.length;
+        return page.guides.length - 1;
     }
     deleteGuideFromPage(page: Page, index: number) {
         if (!page.guides) {
