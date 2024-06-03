@@ -1,5 +1,5 @@
 import { Basic, BasicArray, BasicMap, ResourceMgr } from "./basic";
-import { BlendMode, Border, ContextSettings, Style } from "./style";
+import { Border, Style } from "./style";
 import { Text } from "./text";
 import * as classes from "./baseclasses"
 import {
@@ -33,11 +33,6 @@ export {
 
 export { Variable } from "./variable";
 
-// todo
-// 存在变量的地方：ref, symbol
-// 在ref里，由proxy处理（监听所有变量的容器（ref, symbol））
-// 在symbol，这是个普通shape, 绘制由绘制处理？（怎么处理的？监听所有的变量容器）
-//   试图层可以获取，但更新呢？监听所有的变量容器
 
 export class Shape extends Basic implements classes.Shape {
 
@@ -269,8 +264,7 @@ export class Shape extends Basic implements classes.Shape {
     }
 
     matrix2Parent(matrix?: Matrix) {
-        const t = this.transform;
-        const m = new Matrix(t.m00, t.m10, t.m01, t.m11, t.m02, t.m12);
+        const m = this.transform.toMatrix();
         if (!matrix) return m;
         matrix.multiAtLeft(m);
         return matrix;

@@ -185,13 +185,14 @@ export class Validator {
             const k = keys[i]
             const v = val[k]
 
-            const sk = schema.mergedprops.get(k)
-            if (!sk) throw new Error("not find schema <" + k + "> at " + filename)
-            // console.log(k, v, sk)
-            if (!this.validate_type(v, sk.schema, sk.filename, validated)) {
-                console.log(v, sk, sk.filename)
-                return false
-            }
+            // todo
+            // const sk = schema.mergedprops.get(k)
+            // if (!sk) throw new Error("not find schema <" + k + "> at " + filename)
+            // // console.log(k, v, sk)
+            // if (!this.validate_type(v, sk.schema, sk.filename, validated)) {
+            //     console.log(v, sk, sk.filename)
+            //     return false
+            // }
         }
 
         const required = schema.mergedrequired;
