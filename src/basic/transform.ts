@@ -35,7 +35,7 @@ export class TranslateMatrix extends Matrix { // 平移矩阵
         if (matrix instanceof TranslateMatrix) return matrix;
         return new TranslateMatrix(matrix.data)
     }
-    
+
     buildMatrix() {
         return new Matrix(new NumberArray2D([4, 4], [
             1, 0, 0, this.m03,
@@ -77,7 +77,7 @@ export class RotateMatrix extends Matrix { // 旋转矩阵
         if (matrix instanceof RotateMatrix) return matrix;
         return new RotateMatrix(matrix.data)
     }
-    
+
     buildMatrix() {
         return new Matrix(new NumberArray2D([4, 4], [
             this.m00, this.m01, this.m02, 0,
@@ -85,7 +85,7 @@ export class RotateMatrix extends Matrix { // 旋转矩阵
             this.m20, this.m21, this.m22, 0,
             0, 0, 0, 1,
         ], true))
-    
+
     }
 }
 
@@ -115,7 +115,7 @@ export class SkewMatrix extends Matrix { // 斜切矩阵
         if (matrix instanceof SkewMatrix) return matrix;
         return new SkewMatrix(matrix.data)
     }
-    
+
     buildMatrix() {
         return new Matrix(new NumberArray2D([4, 4], [
             1, this.m01, 0, 0,
@@ -154,7 +154,7 @@ export class ScaleMatrix extends Matrix { // 缩放矩阵
         if (matrix instanceof ScaleMatrix) return matrix;
         return new ScaleMatrix(matrix.data)
     }
-    
+
     buildMatrix() {
         return new Matrix(new NumberArray2D([4, 4], [
             this.m00, 0, 0, 0,
@@ -1019,7 +1019,7 @@ export class Transform { // 变换
     // 绕任意不过原点的轴旋转
     rotateAt(params: {
         axis?: ColVector3D, // 旋转轴方向向量
-        point?: Point3D, // 旋转轴上的一点
+        point?: Point3D,    // 旋转轴上的一点
         angle: number,
         mode?: TransformMode,
     }) {
@@ -1308,12 +1308,12 @@ export class Transform { // 变换
         return this.preFlip({axis: new ColVector3D([0, 1, 0]), point: point})
     }
 
-    // 二维水平翻转
+    // 二维水平翻转，x为旋转轴的x坐标
     flipH2D(x: number = 0) {
         return this.flipH(x ? new Point3D([x, 0, 0]) : undefined)
     }
 
-    // 在本变换之前进行二维水平翻转，point为旋转轴上的一点
+    // 在本变换之前进行二维水平翻转，x为旋转轴的x坐标
     preFlipH2D(x: number = 0) {
         return this.preFlipH(x ? new Point3D([x, 0, 0]) : undefined)
     }
@@ -1328,12 +1328,12 @@ export class Transform { // 变换
         return this.preFlip({axis: new ColVector3D([1, 0, 0]), point: point})
     }
 
-    // 二维垂直翻转
+    // 二维垂直翻转，y为旋转轴的y坐标
     flipV2D(y: number = 0) {
         return this.flipV(y ? new Point3D([0, y, 0]) : undefined)
     }
 
-    // 在本变换之前进行二维垂直翻转，point为旋转轴上的一点
+    // 在本变换之前进行二维垂直翻转，y为旋转轴的y坐标
     preFlipV2D(y: number = 0) {
         const point3D = y ? new Point3D([0, y, 0]) : undefined
         return this.preFlipV(point3D)

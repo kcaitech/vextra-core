@@ -67,8 +67,8 @@ shandler['parent'] = shandler['__parent'] = (view: ShapeView) => {
 shandler['isVisible'] = (view: ShapeView) => view.isVisible;
 shandler['isLocked'] = (view: ShapeView) => view.isLocked;
 shandler['frame'] = (view: ShapeView) => view.frame;
-shandler['isFlippedVertical'] = (view: ShapeView) => view.isFlippedVertical;
-shandler['isFlippedHorizontal'] = (view: ShapeView) => view.isFlippedHorizontal;
+// shandler['isFlippedVertical'] = (view: ShapeView) => view.isFlippedVertical;
+// shandler['isFlippedHorizontal'] = (view: ShapeView) => view.isFlippedHorizontal;
 shandler['rotation'] = (view: ShapeView) => view.rotation;
 shandler['isNoTransform'] = (view: ShapeView) => { return () => view.isNoTransform(); }
 shandler['getPath'] = (view: ShapeView) => { return () => view.getPath(); }

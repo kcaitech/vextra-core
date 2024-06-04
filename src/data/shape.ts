@@ -173,14 +173,6 @@ export class Shape extends Basic implements classes.Shape {
         return this.transform2.decomposeEuler().z * 180 / Math.PI;
     }
 
-    get isFlippedHorizontal(): boolean {
-        return this.transform2.isScaleXNegative;
-    }
-
-    get isFlippedVertical(): boolean {
-        return this.transform2.isScaleYNegative
-    }
-
     get skewX(): number {
         return this.transform2.decomposeSkew().x * 180 / Math.PI;
     }

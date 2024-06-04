@@ -261,14 +261,6 @@ export class ShapeView extends DataView {
         return makeShapeTransform2By1(this.transform).decomposeEuler().z * 180 / Math.PI;
     }
 
-    get isFlippedHorizontal(): boolean {
-        return makeShapeTransform2By1(this.transform).isScaleXNegative;
-    }
-
-    get isFlippedVertical(): boolean {
-        return makeShapeTransform2By1(this.transform).isScaleYNegative
-    }
-
     get skewX(): number {
         return makeShapeTransform2By1(this.transform).decomposeSkew().x * 180 / Math.PI;
     }
