@@ -341,13 +341,13 @@ export class Api {
     shapeModifyLock(page: Page, shape: Shape, isLocked: boolean) {
         this._shapeModifyAttr(page, shape, "isLocked", isLocked);
     }
-    shapeModifyHFlip(page: Page, shape: Shape, hflip: boolean | undefined) {
+    shapeModifyHFlip(page: Page, shape: Shape) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyHFlip(page, shape, hflip, this.needUpdateFrame));
+        this.addOp(basicapi.shapeModifyHFlip(page, shape, this.needUpdateFrame));
     }
-    shapeModifyVFlip(page: Page, shape: Shape, vflip: boolean | undefined) {
+    shapeModifyVFlip(page: Page, shape: Shape,) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyVFlip(page, shape, vflip, this.needUpdateFrame));
+        this.addOp(basicapi.shapeModifyVFlip(page, shape, this.needUpdateFrame));
     }
     shapeModifyContextSettingsOpacity(page: Page, shape: Shape | Variable, contextSettingsOpacity: number) {
         // if (shape.isVirtualShape) {

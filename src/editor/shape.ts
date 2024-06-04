@@ -401,13 +401,13 @@ export class ShapeEditor {
     // flip
     public flipH() {
         this._repoWrap("flipHorizontal", (api) => {
-            api.shapeModifyHFlip(this.__page, this.shape, !this.shape.isFlippedHorizontal)
+            api.shapeModifyHFlip(this.__page, this.shape)
         });
     }
 
     public flipV() {
         this._repoWrap("flipVertical", (api) => {
-            api.shapeModifyVFlip(this.__page, this.shape, !this.shape.isFlippedVertical)
+            api.shapeModifyVFlip(this.__page, this.shape)
         });
     }
 

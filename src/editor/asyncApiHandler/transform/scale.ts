@@ -83,13 +83,14 @@ export class Scaler extends AsyncApiCaller {
 
                 api.shapeModifyWH(page, shape, width, height);
 
-                if (t.needFlipH) {
-                    api.shapeModifyHFlip(page, shape, !shape.isFlippedHorizontal);
-                }
-
-                if (t.needFlipV) {
-                    api.shapeModifyVFlip(page, shape, !shape.isFlippedVertical);
-                }
+                // todo flip
+                // if (t.needFlipH) {
+                //     api.shapeModifyHFlip(page, shape, !shape.isFlippedHorizontal);
+                // }
+                //
+                // if (t.needFlipV) {
+                //     api.shapeModifyVFlip(page, shape, !shape.isFlippedVertical);
+                // }
 
                 if (t.targetRotation !== shape.rotation) {
                     api.shapeModifyRotate(page, shape, t.targetRotation);

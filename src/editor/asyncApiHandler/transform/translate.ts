@@ -139,15 +139,16 @@ export class Transporter extends AsyncApiCaller {
         let ovflip = false;
         let p: Shape | undefined = target_env;
 
-        while (p) {
-            if (p.isFlippedHorizontal) {
-                ohflip = !ohflip;
-            }
-            if (p.isFlippedVertical) {
-                ovflip = !ovflip;
-            }
-            p = p.parent;
-        }
+        // todo flip
+        // while (p) {
+        //     if (p.isFlippedHorizontal) {
+        //         ohflip = !ohflip;
+        //     }
+        //     if (p.isFlippedVertical) {
+        //         ovflip = !ovflip;
+        //     }
+        //     p = p.parent;
+        // }
 
         const pm = target_env.matrix2Root();
         const pminverse = pm.inverse;
@@ -180,28 +181,31 @@ export class Transporter extends AsyncApiCaller {
         let hflip = false;
         let vflip = false;
         let p0: Shape | undefined = shape.parent;
-        while (p0) {
-            if (p0.isFlippedHorizontal) {
-                hflip = !hflip;
-            }
-            if (p0.isFlippedVertical) {
-                vflip = !vflip;
-            }
-            p0 = p0.parent;
-        }
+        // todo flip
+        // while (p0) {
+        //     if (p0.isFlippedHorizontal) {
+        //         hflip = !hflip;
+        //     }
+        //     if (p0.isFlippedVertical) {
+        //         vflip = !vflip;
+        //     }
+        //     p0 = p0.parent;
+        // }
 
         const m = shape.matrix2Root();
         const { x, y } = m.computeCoord(0, 0);
         api.shapeMove(page, origin, origin.indexOfChild(shape), targetParent, index++);
 
-        if (hflip !== transform.ohflip) api.shapeModifyHFlip(page, shape, !shape.isFlippedHorizontal);
-        if (vflip !== transform.ovflip) api.shapeModifyVFlip(page, shape, !shape.isFlippedVertical);
+        // todo flip
+        // if (hflip !== transform.ohflip) api.shapeModifyHFlip(page, shape, !shape.isFlippedHorizontal);
+        // if (vflip !== transform.ovflip) api.shapeModifyVFlip(page, shape, !shape.isFlippedVertical);
 
         m.multiAtLeft(transform.pminverse);
         let sina = m.m10;
         let cosa = m.m00;
-        if (shape.isFlippedVertical) sina = -sina;
-        if (shape.isFlippedHorizontal) cosa = -cosa;
+        // todo flip
+        // if (shape.isFlippedVertical) sina = -sina;
+        // if (shape.isFlippedHorizontal) cosa = -cosa;
         let rotate = Math.asin(sina);
 
         if (cosa < 0) {

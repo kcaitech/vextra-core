@@ -102,12 +102,13 @@ export function ungroup(document: Document, page: Page, shape: GroupShape, api: 
         if (shape.rotation) {
             api.shapeModifyRotate(page, c, (c.rotation || 0) + shape.rotation)
         }
-        if (shape.isFlippedHorizontal) {
-            api.shapeModifyHFlip(page, c, !c.isFlippedHorizontal)
-        }
-        if (shape.isFlippedVertical) {
-            api.shapeModifyVFlip(page, c, !c.isFlippedVertical)
-        }
+        // todo flip
+        // if (shape.isFlippedHorizontal) {
+        //     api.shapeModifyHFlip(page, c, !c.isFlippedHorizontal)
+        // }
+        // if (shape.isFlippedVertical) {
+        //     api.shapeModifyVFlip(page, c, !c.isFlippedVertical)
+        // }
         const m2 = c.matrix2Parent();
         const cur = m2.computeCoord(0, 0);
 

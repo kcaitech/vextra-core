@@ -617,12 +617,13 @@ export function get_rotate_for_straight(shape: PathShape, v: number) {
     const real_r = Number(getHorizontalAngle(lt, rb).toFixed(2));
 
     let dr = v - real_r;
-    if (shape.isFlippedHorizontal) {
-        dr = -dr;
-    }
-    if (shape.isFlippedVertical) {
-        dr = -dr;
-    }
+    // todo flip
+    // if (shape.isFlippedHorizontal) {
+    //     dr = -dr;
+    // }
+    // if (shape.isFlippedVertical) {
+    //     dr = -dr;
+    // }
 
     return (shape.rotation || 0) + dr;
 }

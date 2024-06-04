@@ -110,8 +110,9 @@ function __updateShapeFrame(page: Page, shape: Shape, api: Api): boolean {
             const m1 = new Matrix();
             m1.trans(-cx1, -cy1);
             if (p.rotation) m1.rotate(p.rotation / 360 * 2 * Math.PI);
-            if (p.isFlippedHorizontal) m1.flipHoriz();
-            if (p.isFlippedVertical) m1.flipVert();
+            // todo flip
+            // if (p.isFlippedHorizontal) m1.flipHoriz();
+            // if (p.isFlippedVertical) m1.flipVert();
             m1.trans(cx1, cy1);
             m1.trans(pf.x, pf.y);
 

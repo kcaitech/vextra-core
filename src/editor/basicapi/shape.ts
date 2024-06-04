@@ -141,7 +141,7 @@ export function shapeModifyVisible(shape: Shape | Variable, isVisible: boolean) 
 export function shapeModifyLock(shape: Shape, isLocked: boolean) {
     return crdtSetAttr(shape, 'isLocked', isLocked);
 }
-export function shapeModifyHFlip(page: Page, shape: Shape, hflip: boolean | undefined, needUpdateFrame?: { shape: Shape, page: Page }[]) {
+export function shapeModifyHFlip(page: Page, shape: Shape, needUpdateFrame?: { shape: Shape, page: Page }[]) {
     const transform2 = makeShapeTransform2By1(shape.transform);
     const center = shape.matrix2Parent().computeCoord2(shape.size.width / 2, shape.size.height / 2);
     transform2.flipH2D(center.x);
@@ -156,7 +156,7 @@ export function shapeModifyHFlip(page: Page, shape: Shape, hflip: boolean | unde
     if (needUpdateFrame) needUpdateFrame.push({ shape, page });
     return ops;
 }
-export function shapeModifyVFlip(page: Page, shape: Shape, vflip: boolean | undefined, needUpdateFrame?: { shape: Shape, page: Page }[]) {
+export function shapeModifyVFlip(page: Page, shape: Shape, needUpdateFrame?: { shape: Shape, page: Page }[]) {
     const transform2 = makeShapeTransform2By1(shape.transform);
     const center = shape.matrix2Parent().computeCoord2(shape.size.width / 2, shape.size.height / 2);
     transform2.flipV2D(center.y);

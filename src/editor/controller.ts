@@ -1360,8 +1360,8 @@ function adjust_group_rotate_frame(api: Api, page: Page, s: GroupShape, sx: numb
         const target = m1.computeCoord(0, 0);
 
         if (s.rotation) api.shapeModifyRotate(page, cc, (cc.rotation || 0) + s.rotation);
-        if (s.isFlippedHorizontal) api.shapeModifyHFlip(page, cc, !cc.isFlippedHorizontal);
-        if (s.isFlippedVertical) api.shapeModifyVFlip(page, cc, !cc.isFlippedVertical);
+        // if (s.isFlippedHorizontal) api.shapeModifyHFlip(page, cc, !cc.isFlippedHorizontal);
+        // if (s.isFlippedVertical) api.shapeModifyVFlip(page, cc, !cc.isFlippedVertical);
 
         const m2 = cc.matrix2Parent();
         m2.trans(boundingBox.x, boundingBox.y);
@@ -1372,8 +1372,8 @@ function adjust_group_rotate_frame(api: Api, page: Page, s: GroupShape, sx: numb
     }
 
     if (s.rotation) api.shapeModifyRotate(page, s, 0);
-    if (s.isFlippedHorizontal) api.shapeModifyHFlip(page, s, !s.isFlippedHorizontal);
-    if (s.isFlippedVertical) api.shapeModifyVFlip(page, s, !s.isFlippedVertical);
+    // if (s.isFlippedHorizontal) api.shapeModifyHFlip(page, s, !s.isFlippedHorizontal);
+    // if (s.isFlippedVertical) api.shapeModifyVFlip(page, s, !s.isFlippedVertical);
 
     api.shapeModifyX(page, s, boundingBox.x * sx);
     api.shapeModifyY(page, s, boundingBox.y * sy);
@@ -1408,30 +1408,30 @@ function set_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, Matri
     }
     const xy = np.computeCoord3(target_xy);
     if (sx < 0) {
-        api.shapeModifyHFlip(page, s, !s.isFlippedHorizontal);
+        // api.shapeModifyHFlip(page, s, !s.isFlippedHorizontal);
         sx = -sx;
     }
     if (sy < 0) {
-        api.shapeModifyVFlip(page, s, !s.isFlippedVertical);
+        // api.shapeModifyVFlip(page, s, !s.isFlippedVertical);
         sy = -sy;
     }
     const saveW = s.frame.width;
     const saveH = s.frame.height;
 
-    if (s.isFlippedHorizontal || s.isFlippedVertical) {
-        api.shapeModifyWH(page, s, s.frame.width * sx, s.frame.height * sy);
-        const self = s
-            .matrix2Parent()
-            .computeCoord2(0, 0);
-
-        const delta = { x: xy.x - self.x, y: xy.y - self.y };
-        api.shapeModifyX(page, s, s.frame.x + delta.x);
-        api.shapeModifyY(page, s, s.frame.y + delta.y);
-    } else {
-        api.shapeModifyX(page, s, xy.x);
-        api.shapeModifyY(page, s, xy.y);
-        api.shapeModifyWH(page, s, s.frame.width * sx, s.frame.height * sy);
-    }
+    // if (s.isFlippedHorizontal || s.isFlippedVertical) {
+    //     api.shapeModifyWH(page, s, s.frame.width * sx, s.frame.height * sy);
+    //     const self = s
+    //         .matrix2Parent()
+    //         .computeCoord2(0, 0);
+    //
+    //     const delta = { x: xy.x - self.x, y: xy.y - self.y };
+    //     api.shapeModifyX(page, s, s.frame.x + delta.x);
+    //     api.shapeModifyY(page, s, s.frame.y + delta.y);
+    // } else {
+    //     api.shapeModifyX(page, s, xy.x);
+    //     api.shapeModifyY(page, s, xy.y);
+    //     api.shapeModifyWH(page, s, s.frame.width * sx, s.frame.height * sy);
+    // }
 
     if (s instanceof GroupShape) {
         afterModifyGroupShapeWH(api, page, s, sx, sy, new ShapeFrame(s.frame.x, s.frame.y, saveW, saveH), recorder);
@@ -1463,28 +1463,28 @@ function __migrate(document: Document,
     let hflip = false;
     let vflip = false;
     let p0: Shape | undefined = shape.parent;
-    while (p0) {
-        if (p0.isFlippedHorizontal) {
-            hflip = !hflip;
-        }
-        if (p0.isFlippedVertical) {
-            vflip = !vflip;
-        }
-        p0 = p0.parent;
-    }
+    // while (p0) {
+    //     if (p0.isFlippedHorizontal) {
+    //         hflip = !hflip;
+    //     }
+    //     if (p0.isFlippedVertical) {
+    //         vflip = !vflip;
+    //     }
+    //     p0 = p0.parent;
+    // }
 
     const m = shape.matrix2Root();
     const { x, y } = m.computeCoord(0, 0);
     api.shapeMove(page, origin, origin.indexOfChild(shape), targetParent, index++);
 
-    if (hflip !== transform.ohflip) api.shapeModifyHFlip(page, shape, !shape.isFlippedHorizontal);
-    if (vflip !== transform.ovflip) api.shapeModifyVFlip(page, shape, !shape.isFlippedVertical);
+    // if (hflip !== transform.ohflip) api.shapeModifyHFlip(page, shape, !shape.isFlippedHorizontal);
+    // if (vflip !== transform.ovflip) api.shapeModifyVFlip(page, shape, !shape.isFlippedVertical);
 
     m.multiAtLeft(transform.pminverse);
     let sina = m.m10;
     let cosa = m.m00;
-    if (shape.isFlippedVertical) sina = -sina;
-    if (shape.isFlippedHorizontal) cosa = -cosa;
+    // if (shape.isFlippedVertical) sina = -sina;
+    // if (shape.isFlippedHorizontal) cosa = -cosa;
     let rotate = Math.asin(sina); // 奇函数
 
     // 确定角度所在象限
@@ -1513,15 +1513,15 @@ function __get_env_transform_for_migrate(target_env: GroupShape) {
     let ovflip = false;
     let p: Shape | undefined = target_env;
 
-    while (p) {
-        if (p.isFlippedHorizontal) {
-            ohflip = !ohflip;
-        }
-        if (p.isFlippedVertical) {
-            ovflip = !ovflip;
-        }
-        p = p.parent;
-    }
+    // while (p) {
+    //     if (p.isFlippedHorizontal) {
+    //         ohflip = !ohflip;
+    //     }
+    //     if (p.isFlippedVertical) {
+    //         ovflip = !ovflip;
+    //     }
+    //     p = p.parent;
+    // }
 
     const pm = target_env.matrix2Root();
     const pminverse = pm.inverse;
