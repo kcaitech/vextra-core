@@ -70,8 +70,7 @@ import {ResizingConstraints2} from "../data/consts";
 import {SymbolMgr} from "../data/symbolmgr";
 import {newText} from "../data/textutils";
 import {getPolygonPoints, getPolygonVertices} from "./utils/path";
-import {makeShapeTransform2By1, updateShapeTransformBy2} from "../data/shape_transform_util";
-import {Point2D2} from "../index";
+import {makeShapeTransform2By1, updateShapeTransform1By2} from "../data/shape_transform_util";
 
 function _checkNum(x: number) {
     // check
@@ -89,7 +88,7 @@ function _checkFrame(frame: ShapeFrame) {
 export function addCommonAttr(shape: Shape) {
     const transform2 = makeShapeTransform2By1(shape.transform);
     transform2.setRotateZ(0);
-    updateShapeTransformBy2(shape.transform, transform2);
+    updateShapeTransform1By2(shape.transform, transform2);
     shape.isVisible = true;
     shape.isLocked = false;
     shape.constrainerProportions = false;
@@ -757,12 +756,9 @@ export function modifyTransformByEnv(shape: Shape, env: GroupShape) {
     const transform = getTransformByEnv(env);
 
     const transform2 = makeShapeTransform2By1(shape.transform);
-    if (transform.flipH) transform2.flipH2D({
-        point: new Point2D2([shape.size.width / 2, shape.size.height / 2]),
-    });
-    if (transform.flipV) transform2.flipV2D({
-        point: new Point2D2([shape.size.width / 2, shape.size.height / 2]),
-    });
+    const center = shape.matrix2Parent().computeCoord2(shape.size.width / 2, shape.size.height / 2);
+    if (transform.flipH) transform2.flipH2D(center.x);
+    if (transform.flipV) transform2.flipV2D(center.y);
 
     let r = transform.rotation;
 
@@ -775,5 +771,5 @@ export function modifyTransformByEnv(shape: Shape, env: GroupShape) {
 
     transform2.setRotateZ((r % 360) / 180 * Math.PI);
 
-    updateShapeTransformBy2(shape.transform, transform2);
+    updateShapeTransform1By2(shape.transform, transform2);
 }

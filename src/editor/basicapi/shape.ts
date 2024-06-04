@@ -16,8 +16,7 @@ import { ContactShape, SymbolRefShape, ContactForm, Artboard } from "../../data/
 import { BoolOp, CurveMode, MarkerType, OverrideType, Point2D } from "../../data/typesdefine";
 import { BasicMap } from "../../data/basic";
 import { crdtArrayInsert, crdtArrayRemove, crdtSetAttr } from "./basic";
-import {makeShapeTransform2By1, updateShapeTransformBy2} from "../../data/shape_transform_util";
-import {Point2D2} from "../../index";
+import {makeShapeTransform2By1, updateShapeTransform1By2} from "../../data/shape_transform_util";
 
 function _checkNum(x: number) {
     // check
@@ -92,7 +91,7 @@ export function shapeModifyRotate(page: Page, shape: Shape, rotate: number, need
         rotate = rotate * Math.PI / 180; // 0-2PI
         const transform2 = makeShapeTransform2By1(shape.transform);
         transform2.setRotateZ(rotate);
-        updateShapeTransformBy2(shape.transform, transform2);
+        updateShapeTransform1By2(shape.transform, transform2);
         const ops = [];
         ops.push(crdtSetAttr(shape.transform, 'm00', transform2.m00));
         ops.push(crdtSetAttr(shape.transform, 'm10', transform2.m10));
@@ -144,33 +143,31 @@ export function shapeModifyLock(shape: Shape, isLocked: boolean) {
 }
 export function shapeModifyHFlip(page: Page, shape: Shape, hflip: boolean | undefined, needUpdateFrame?: { shape: Shape, page: Page }[]) {
     const transform2 = makeShapeTransform2By1(shape.transform);
-    transform2.flipH2D({
-        point: new Point2D2([shape.size.width / 2, shape.size.height / 2]),
-    });
-    updateShapeTransformBy2(shape.transform, transform2);
+    const center = shape.matrix2Parent().computeCoord2(shape.size.width / 2, shape.size.height / 2);
+    transform2.flipH2D(center.x);
+    updateShapeTransform1By2(shape.transform, transform2);
     const ops = [];
     ops.push(crdtSetAttr(shape.transform, 'm00', transform2.m00));
     ops.push(crdtSetAttr(shape.transform, 'm10', transform2.m10));
     ops.push(crdtSetAttr(shape.transform, 'm01', transform2.m01));
     ops.push(crdtSetAttr(shape.transform, 'm11', transform2.m11));
-    ops.push(crdtSetAttr(shape.transform, 'm02', transform2.m02));
-    ops.push(crdtSetAttr(shape.transform, 'm12', transform2.m12));
+    ops.push(crdtSetAttr(shape.transform, 'm02', transform2.m03));
+    ops.push(crdtSetAttr(shape.transform, 'm12', transform2.m13));
     if (needUpdateFrame) needUpdateFrame.push({ shape, page });
     return ops;
 }
 export function shapeModifyVFlip(page: Page, shape: Shape, vflip: boolean | undefined, needUpdateFrame?: { shape: Shape, page: Page }[]) {
     const transform2 = makeShapeTransform2By1(shape.transform);
-    transform2.flipV2D({
-        point: new Point2D2([shape.size.width / 2, shape.size.height / 2]),
-    });
-    updateShapeTransformBy2(shape.transform, transform2);
+    const center = shape.matrix2Parent().computeCoord2(shape.size.width / 2, shape.size.height / 2);
+    transform2.flipV2D(center.y);
+    updateShapeTransform1By2(shape.transform, transform2);
     const ops = [];
     ops.push(crdtSetAttr(shape.transform, 'm00', transform2.m00));
     ops.push(crdtSetAttr(shape.transform, 'm10', transform2.m10));
     ops.push(crdtSetAttr(shape.transform, 'm01', transform2.m01));
     ops.push(crdtSetAttr(shape.transform, 'm11', transform2.m11));
-    ops.push(crdtSetAttr(shape.transform, 'm02', transform2.m02));
-    ops.push(crdtSetAttr(shape.transform, 'm12', transform2.m12));
+    ops.push(crdtSetAttr(shape.transform, 'm02', transform2.m03));
+    ops.push(crdtSetAttr(shape.transform, 'm12', transform2.m13));
     if (needUpdateFrame) needUpdateFrame.push({ shape, page });
     return ops;
 }

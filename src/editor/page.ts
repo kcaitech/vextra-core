@@ -99,7 +99,7 @@ import {
 } from "../dataview";
 import { RadiusType, ResizingConstraints2 } from "../data/consts";
 import { FMT_VER_latest } from "../data/fmtver";
-import {makeShapeTransform2By1, updateShapeTransformBy2} from "../data/shape_transform_util";
+import {makeShapeTransform2By1, updateShapeTransform1By2} from "../data/shape_transform_util";
 import {ColVector3D} from "../basic/matrix2";
 import {TransformMode} from "../basic/transform";
 
@@ -1166,7 +1166,7 @@ export class PageEditor {
             const xy = parent.frame2Root();
             const transform2 = makeShapeTransform2By1(shape.transform);
             transform2.translate(new ColVector3D([-xy.x, -xy.y, 0]))
-            updateShapeTransformBy2(shape.transform, transform2);
+            updateShapeTransform1By2(shape.transform, transform2);
         }
         shape.id = uuid(); // 凡插入对象，不管是复制剪切的，都需要新id。要保持同一id，使用move!
         const api = this.__repo.start("insertshape", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
@@ -1444,11 +1444,11 @@ export class PageEditor {
             const xy = m_p2r.computeCoord2(0, 0);
             const transform2 = makeShapeTransform2By1(new_s.transform);
             transform2.translate(new ColVector3D([-xy.x, -xy.y, 0]))
-            updateShapeTransformBy2(new_s.transform, transform2);
+            updateShapeTransform1By2(new_s.transform, transform2);
             if (rotation) {
                 const transform2 = makeShapeTransform2By1(new_s.transform);
                 transform2.setRotateZ((rotation % 360) / 180 * Math.PI);
-                updateShapeTransformBy2(new_s.transform, transform2);
+                updateShapeTransform1By2(new_s.transform, transform2);
             }
             new_s = api.shapeInsert(this.__document, this.__page, parent, new_s, index);
             if (target_xy) {
@@ -1678,7 +1678,7 @@ export class PageEditor {
                         save_frame.y + delta_xys[r_i].y,
                         0,
                     ]))
-                    updateShapeTransformBy2(r.transform, transform2);
+                    updateShapeTransform1By2(r.transform, transform2);
                     api.shapeInsert(this.__document, this.__page, p, r, save_index);
                     src_replacement.push(p.childs[save_index]);
                     save_index++;

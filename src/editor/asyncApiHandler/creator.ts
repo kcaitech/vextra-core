@@ -29,8 +29,7 @@ import {update_frame_by_points} from "../utils/path";
 import {ContactShape} from "../../data/contact";
 import {translateTo} from "../frame";
 import {TextAttr} from "../../data/text";
-import {makeShapeTransform2By1, updateShapeTransformBy2} from "../../data/shape_transform_util";
-import {Point2D2} from "../../index";
+import {makeShapeTransform2By1, updateShapeTransform1By2} from "../../data/shape_transform_util";
 
 export interface GeneratorParams {
     parent: GroupShapeView;
@@ -168,14 +167,11 @@ export class CreatorApiCaller extends AsyncApiCaller {
     // 初始化图层的transform
     private setTransform(shape: Shape, trans: { rotation: number, flipH: boolean, flipV: boolean }) {
         const transform2 = makeShapeTransform2By1(shape.transform);
-        if (trans.flipH)  transform2.flipH2D({
-            point: new Point2D2([shape.size.width / 2, shape.size.height / 2]),
-        });
-        if (trans.flipV)  transform2.flipV2D({
-            point: new Point2D2([shape.size.width / 2, shape.size.height / 2]),
-        });
+        const center = shape.matrix2Parent().computeCoord2(shape.size.width / 2, shape.size.height / 2);
+        if (trans.flipH)  transform2.flipH2D(center.x);
+        if (trans.flipV)  transform2.flipV2D(center.y);
         transform2.setRotateZ((shape.rotation % 360) / 180 * Math.PI);
-        updateShapeTransformBy2(shape.transform, transform2);
+        updateShapeTransform1By2(shape.transform, transform2);
     }
 
     private insert(params: GeneratorParams, shape: Shape) {
