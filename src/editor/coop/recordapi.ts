@@ -259,7 +259,6 @@ export class Api {
         if (!guide) {
             return;
         }
-
         this.addOp(basicapi.crdtSetAttr(guide, 'offset', offset));
     }
     // registSymbol(document: Document, symbolId: string, pageId: string) {

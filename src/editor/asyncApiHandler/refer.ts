@@ -3,6 +3,8 @@ import { CoopRepository } from "../coop/cooprepo";
 import { Artboard, BasicArray, Document, Guide, GuideAxis, Page, ShapeType } from "../../data";
 import { adapt2Shape, PageView, ShapeView } from "../../dataview";
 import { uuid } from "../../basic/uuid";
+import { importGuide } from "../../data/baseimport";
+import { exportGuide } from "../../data/baseexport";
 
 export class ReferHandleApiCaller extends AsyncApiCaller {
     private __recovery: boolean = true;
@@ -103,6 +105,8 @@ export class ReferHandleApiCaller extends AsyncApiCaller {
                 this.exception = true;
                 return result;
             }
+            gui = importGuide(exportGuide(gui));
+            gui.id = uuid();
 
             let __index;
             if (env2.type === ShapeType.Page) {
@@ -119,6 +123,8 @@ export class ReferHandleApiCaller extends AsyncApiCaller {
 
             result.env = __env2;
             result.index = __index;
+
+            this.updateView();
 
             return result;
         } catch (e) {
