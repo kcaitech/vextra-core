@@ -13,31 +13,31 @@ export function makeShapeTransform2By1(transform: Transform): Transform2 {
     });
 }
 
-export function makeShapeTransformBy2(transform: Transform2): Transform {
+export function makeShapeTransform1By2(transform2: Transform2): Transform {
     return {
-        m00: transform.m00,
-        m01: transform.m01,
-        m02: transform.m03,
-        m10: transform.m10,
-        m11: transform.m11,
-        m12: transform.m13,
+        m00: transform2.m00,
+        m01: transform2.m01,
+        m02: transform2.m03,
+        m10: transform2.m10,
+        m11: transform2.m11,
+        m12: transform2.m13,
     };
 }
 
-export function transformEquals(transform0: Transform, transform: Transform) {
-    return transform0.m00 === transform.m00
-        && transform0.m10 === transform.m10
-        && transform0.m01 === transform.m01
-        && transform0.m11 === transform.m11
-        && transform0.m02 === transform.m02
-        && transform0.m12 === transform.m12;
+export function transform1Equals2(transform: Transform, transform2: Transform) {
+    return transform.m00 === transform2.m00
+        && transform.m10 === transform2.m10
+        && transform.m01 === transform2.m01
+        && transform.m11 === transform2.m11
+        && transform.m02 === transform2.m02
+        && transform.m12 === transform2.m12;
 }
 
-export function updateShapeTransformBy2(transform0: Transform, transform: Transform2) {
-    transform0.m00 = transform.m00;
-    transform0.m10 = transform.m10;
-    transform0.m01 = transform.m01;
-    transform0.m11 = transform.m11;
-    transform0.m02 = transform.m03;
-    transform0.m12 = transform.m13;
+export function updateShapeTransform1By2(transform: Transform, transform2: Transform2) {
+    transform.m00 = transform2.m00;
+    transform.m10 = transform2.m10;
+    transform.m01 = transform2.m01;
+    transform.m11 = transform2.m11;
+    transform.m02 = transform2.m03;
+    transform.m12 = transform2.m13;
 }

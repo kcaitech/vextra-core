@@ -31,7 +31,7 @@ import { objectId } from "../basic/objectid";
 import { BasicArray } from "../data/basic";
 import { fixConstrainFrame } from "../data/constrain";
 import { BlurType, MarkerType } from "../data/typesdefine";
-import {makeShapeTransform2By1, makeShapeTransformBy2, transformEquals} from "../data/shape_transform_util";
+import {makeShapeTransform2By1, makeShapeTransform1By2, transform1Equals2} from "../data/shape_transform_util";
 import { Transform as Transform2 } from "../basic/transform";
 import {Matrix2} from "../index";
 
@@ -231,7 +231,7 @@ export class ShapeView extends DataView {
     }
 
     get transform2() {
-        if (!transformEquals(makeShapeTransformBy2(this.m_transform2), this.transform)) {
+        if (!transform1Equals2(makeShapeTransform1By2(this.m_transform2), this.transform)) {
             this.m_transform2.setMatrix(new Matrix2([4, 4], [
                 this.transform.m00, this.transform.m01, 0, this.transform.m02,
                 this.transform.m10, this.transform.m11, 0, this.transform.m12,
@@ -680,7 +680,7 @@ export class ShapeView extends DataView {
         } else {
             // const cx = frame.x + frame.width / 2;
             // const cy = frame.y + frame.height / 2;
-            const style: any = { transform: this.matrix2Parent().toString() }
+            const style: any = { transform: this.transform.toString() }
             // style.transform = ''
             // style.transform = "translate(" + cx + "px," + cy + "px) "
             // style.transform = "translate(" +frame.x + "px," + frame.y + "px) " // dev code
@@ -721,12 +721,13 @@ export class ShapeView extends DataView {
             } else {
                 modifyX = (box.height - box.width) / 2;
             }
-            const style: any = {};
-            style.transform = "translate(" + (modifyX + box.width / 2) + "px," + (modifyY + box.height / 2) + "px) ";
-            if (!!this.isFlippedHorizontal) style.transform += "rotateY(180deg) ";
-            if (!!this.isFlippedVertical) style.transform += "rotateX(180deg) ";
-            if (this.rotation) style.transform += "rotate(" + this.rotation + "deg) ";
-            style.transform += "translate(" + (-frame.width / 2) + "px," + (-frame.height / 2) + "px)";
+            // const style: any = {};
+            // style.transform = "translate(" + (modifyX + box.width / 2) + "px," + (modifyY + box.height / 2) + "px) ";
+            // if (!!this.isFlippedHorizontal) style.transform += "rotateY(180deg) ";
+            // if (!!this.isFlippedVertical) style.transform += "rotateX(180deg) ";
+            // if (this.rotation) style.transform += "rotate(" + this.rotation + "deg) ";
+            // style.transform += "translate(" + (-frame.width / 2) + "px," + (-frame.height / 2) + "px)";
+            const style: any = { transform: this.transform.toString() }
             props.style = style;
         }
         const contextSettings = this.style.contextSettings;

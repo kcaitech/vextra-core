@@ -24,6 +24,10 @@ export class TranslateMatrix extends Matrix { // 平移矩阵
     }
 
     multiply(matrix: Matrix) {
+        const [m0, n0] = this.size
+        const [m1, n1] = matrix.size
+        if (n0 !== m1) throw new Error("矩阵阶数不匹配，无法相乘");
+
         return Matrix.FromMatrix(matrix.add(this.col3.deleteRow(3), [0, 3]))
     }
 
@@ -58,6 +62,10 @@ export class RotateMatrix extends Matrix { // 旋转矩阵
     }
 
     multiply(matrix: Matrix) {
+        const [m0, n0] = this.size
+        const [m1, n1] = matrix.size
+        if (n0 !== m1) throw new Error("矩阵阶数不匹配，无法相乘");
+
         // 分块矩阵相乘
         const R0 = this.subMatrix([3, 3])
         matrix.multiplyLeftSubMatrix(R0)
@@ -94,6 +102,10 @@ export class SkewMatrix extends Matrix { // 斜切矩阵
     }
 
     multiply(matrix: Matrix) {
+        const [m0, n0] = this.size
+        const [m1, n1] = matrix.size
+        if (n0 !== m1) throw new Error("矩阵阶数不匹配，无法相乘");
+
         const result = matrix.add(matrix.row1.multiplyByNumber(this.m01), [0, 0])
         if (!isZero(this.m10)) result.add(matrix.row0.multiplyByNumber(this.m10), [1, 0]);
         return Matrix.FromMatrix(result)
@@ -125,6 +137,10 @@ export class ScaleMatrix extends Matrix { // 缩放矩阵
     }
 
     multiply(matrix: Matrix) {
+        const [m0, n0] = this.size
+        const [m1, n1] = matrix.size
+        if (n0 !== m1) throw new Error("矩阵阶数不匹配，无法相乘");
+
         const sX = this.m00, sY = this.m11, sZ = this.m11
         return new Matrix(new NumberArray2D([4, 4], [
             sX * matrix.m00, sX * matrix.m01, sX * matrix.m02, sX * matrix.m03,
@@ -213,17 +229,23 @@ export class Transform { // 变换
             // 平移
             this.translateMatrix = TranslateMatrix.FromMatrix(Matrix.BuildIdentity([4, 3]).insertCols(this.matrix.col3))
 
-            // 斜切
             const matrix3x3 = this.matrix.clone().resize([3, 3])
             const xDotY = matrix3x3.col0.dot(matrix3x3.col1) // x轴与y轴的点积
             const norm_xCrossY = (matrix3x3.col0.cross(matrix3x3.col1) as Vector).norm // x轴与y轴叉积的模
-            let angle = Math.atan2(norm_xCrossY, xDotY) // y轴相对x轴的夹角（逆时针为正）（-π ~ π）
+            let angleXY = Math.atan2(norm_xCrossY, xDotY) // y轴相对x轴的夹角（逆时针为正）（-π ~ π）
             let isYFlipped = false // Y轴是否反向
-            if (angle < 0) {
+            if (angleXY < 0) {
                 isYFlipped = true
-                angle += Math.PI // （0 ~ 2π）
+                angleXY += Math.PI // （0 ~ 2π）
             }
-            const skewXAngle = 0.5 * Math.PI - angle;
+
+            const xDotZ = matrix3x3.col0.dot(matrix3x3.col2) // x轴与z轴的点积
+            const norm_xCrossZ = (matrix3x3.col0.cross(matrix3x3.col2) as Vector).norm // x轴与z轴叉积的模
+            let angleXZ = Math.atan2(norm_xCrossZ, xDotZ) // z轴相对x轴的夹角（逆时针为正）（-π ~ π）
+            let isZFlipped = angleXZ < 0 // Z轴是否反向
+
+            // 斜切
+            const skewXAngle = 0.5 * Math.PI - angleXY;
             const tanSkewX = Math.tan(skewXAngle)
             this.skewMatrix = SkewMatrix.FromMatrix(new Matrix(new NumberArray2D([4, 4], [
                 1, tanSkewX, 0, 0,
@@ -235,7 +257,7 @@ export class Transform { // 变换
             // 缩放
             const xNorm = this.matrix.col0.norm
             const yNorm = this.matrix.col1.norm * (isYFlipped ? -1 : 1)
-            const zNorm = this.matrix.col2.norm
+            const zNorm = this.matrix.col2.norm * (isZFlipped ? -1 : 1)
             this.scaleMatrix = ScaleMatrix.FromMatrix(new Matrix(new NumberArray2D([4, 4], [
                 xNorm, 0, 0, 0,
                 0, yNorm / Math.sqrt(tanSkewX ** 2 + 1), 0, 0,
@@ -1011,8 +1033,8 @@ export class Transform { // 变换
 
         if (params.mode === TransformMode.Local) {
             let point: Matrix = params.point.clone()
-            if (!this.scaleMatrix.isIdentity) point = this.scaleMatrix.clone().multiply(point);
-            if (!this.skewMatrix.isIdentity) point = this.skewMatrix.clone().multiply(point);
+            if (!this.scaleMatrix.isIdentity) point = this.scaleMatrix.buildMatrix().resize([3, 3]).multiply(point);
+            if (!this.skewMatrix.isIdentity) point = this.skewMatrix.buildMatrix().resize([3, 3]).multiply(point);
 
             // diffTranslate = (R1 - R0) * (-P) // P为旋转中心
             const r0 = this.rotateMatrix.buildMatrix().resize([3, 3])
@@ -1253,16 +1275,14 @@ export class Transform { // 变换
 
     // 绕任意轴翻转
     flip(params: {
-        axis?: ColVector3D,     // 旋转轴方向向量
-        point?: Point3D,        // 旋转轴上的一点
-        mode?: TransformMode,   // 变换模式，默认为Local模式，使用相对坐标去表示point
+        axis?: ColVector3D, // 旋转轴方向向量
+        point?: Point3D,    // 旋转轴上的一点
     }) {
-        if (params.mode === undefined) params.mode = TransformMode.Local;
         return this.rotateAt({
             axis: params.axis,
             point: params.point,
             angle: Math.PI,
-            mode: params.mode,
+            mode: TransformMode.Global,
         })
     }
 
@@ -1279,11 +1299,8 @@ export class Transform { // 变换
     }
 
     // 水平翻转
-    flipH(params: {
-        point?: Point3D,        // 旋转轴上的一点
-        mode?: TransformMode,   // 变换模式，默认为Local模式，使用相对坐标去表示point
-    }) {
-        return this.flip({axis: new ColVector3D([0, 1, 0]), point: params.point, mode: params.mode})
+    flipH(point?: Point3D) {
+        return this.flip({axis: new ColVector3D([0, 1, 0]), point: point})
     }
 
     // 在本变换之前进行水平翻转，point为旋转轴上的一点
@@ -1292,26 +1309,18 @@ export class Transform { // 变换
     }
 
     // 二维水平翻转
-    flipH2D(params: {
-        point?: Point2D,        // 旋转轴上的一点
-        mode?: TransformMode,   // 变换模式，默认为Local模式，使用相对坐标去表示point
-    }) {
-        const point3D = params.point ? new Point3D([params.point.x, params.point.y, 0]) : undefined
-        return this.flipH({point: point3D, mode: params.mode})
+    flipH2D(x: number = 0) {
+        return this.flipH(x ? new Point3D([x, 0, 0]) : undefined)
     }
 
     // 在本变换之前进行二维水平翻转，point为旋转轴上的一点
-    preFlipH2D(point?: Point2D) {
-        const point3D = point ? new Point3D([point.x, point.y, 0]) : undefined
-        return this.preFlipH(point3D)
+    preFlipH2D(x: number = 0) {
+        return this.preFlipH(x ? new Point3D([x, 0, 0]) : undefined)
     }
 
     // 垂直翻转
-    flipV(params: {
-        point?: Point3D,    // 旋转轴上的一点
-        mode?: TransformMode,   // 变换模式，默认为Local模式，使用相对坐标去表示point
-    }) {
-        return this.flip({axis: new ColVector3D([1, 0, 0]), point: params.point, mode: params.mode})
+    flipV(point?: Point3D) {
+        return this.flip({axis: new ColVector3D([1, 0, 0]), point: point})
     }
 
     // 在本变换之前进行垂直翻转，point为旋转轴上的一点
@@ -1320,33 +1329,14 @@ export class Transform { // 变换
     }
 
     // 二维垂直翻转
-    flipV2D(params: {
-        point?: Point2D,        // 旋转轴上的一点
-        mode?: TransformMode,   // 变换模式，默认为Local模式，使用相对坐标去表示point
-    }) {
-        const point3D = params.point ? new Point3D([params.point.x, params.point.y, 0]) : undefined
-        return this.flipV({point: point3D, mode: params.mode})
+    flipV2D(y: number = 0) {
+        return this.flipV(y ? new Point3D([0, y, 0]) : undefined)
     }
 
     // 在本变换之前进行二维垂直翻转，point为旋转轴上的一点
-    preFlipV2D(point?: Point2D) {
-        const point3D = point ? new Point3D([point.x, point.y, 0]) : undefined
+    preFlipV2D(y: number = 0) {
+        const point3D = y ? new Point3D([0, y, 0]) : undefined
         return this.preFlipV(point3D)
-    }
-
-    get isScaleXNegative() { // 判断X轴缩放是否为负
-        if (!this.isSubMatrixLatest) this.updateMatrix();
-        return this.scaleMatrix.m00 < 0
-    }
-
-    get isScaleYNegative() { // 判断Y轴缩放是否为负
-        if (!this.isSubMatrixLatest) this.updateMatrix();
-        return this.scaleMatrix.m11 < 0
-    }
-
-    get isScaleZNegative() { // 判断Z轴缩放是否为负
-        if (!this.isSubMatrixLatest) this.updateMatrix();
-        return this.scaleMatrix.m22 < 0
     }
 
     decomposeTranslate() { // 分解平移参数
