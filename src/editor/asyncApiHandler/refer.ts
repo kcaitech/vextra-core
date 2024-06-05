@@ -31,7 +31,7 @@ export class ReferHandleApiCaller extends AsyncApiCaller {
 
             this.updateView();
             this.__recovery = false;
-            console.log("CREATE SUCCESS：", this.page.name, this.page.guides);
+            // console.log("CREATE SUCCESS：", this.page.name, this.page.guides);
             return index;
         } catch (e) {
             console.error('ReferHandleApiCaller.create');
