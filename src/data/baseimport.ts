@@ -7,10 +7,13 @@ export interface IImportContext {
     document: impl.Document
     curPage: string
 }
+type Artboard_guides = BasicArray<impl.Guide>
 type DocumentMeta_pagesList = BasicArray<impl.PageListItem>
 type ExportOptions_exportFormats = BasicArray<impl.ExportFormat>
 type Gradient_stops = BasicArray<impl.Stop>
 type GroupShape_childs = BasicArray<impl.GroupShape | impl.ImageShape | impl.PathShape | impl.PathShape2 | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape | impl.PolygonShape | impl.StarShape>
+type Guide_crdtidx = BasicArray<number>
+type Page_guides = BasicArray<impl.Guide>
 type Para_spans = BasicArray<impl.Span>
 type PathSegment_points = BasicArray<impl.CurvePoint>
 type PathShape_pathsegs = BasicArray<impl.PathSegment>
@@ -20,10 +23,18 @@ type Style_fills = BasicArray<impl.Fill>
 type Style_shadows = BasicArray<impl.Shadow>
 type Style_innerShadows = BasicArray<impl.Shadow>
 type Style_contacts = BasicArray<impl.ContactRole>
+type SymbolShape_guides = BasicArray<impl.Guide>
 type TableShape_rowHeights = BasicArray<impl.CrdtNumber>
 type TableShape_colWidths = BasicArray<impl.CrdtNumber>
 type Text_paras = BasicArray<impl.Para>
 type Variable_0 = BasicArray<impl.Border | impl.Fill | impl.Shadow>
+export function importArtboard_guides(source: types.Artboard_guides, ctx?: IImportContext): Artboard_guides {
+    const ret: Artboard_guides = new BasicArray()
+    source.forEach((source) => {
+        ret.push(importGuide(source, ctx))
+    })
+    return ret
+}
 /* blend mode */
 export function importBlendMode(source: types.BlendMode, ctx?: IImportContext): impl.BlendMode {
     return source
@@ -296,6 +307,26 @@ export function importGroupShape_childs(source: types.GroupShape_childs, ctx?: I
     })
     return ret
 }
+/* guide axis */
+export function importGuideAxis(source: types.GuideAxis, ctx?: IImportContext): impl.GuideAxis {
+    return source
+}
+export function importGuide_crdtidx(source: types.Guide_crdtidx, ctx?: IImportContext): Guide_crdtidx {
+    const ret: Guide_crdtidx = new BasicArray()
+    source.forEach((source) => {
+        ret.push(source)
+    })
+    return ret
+}
+/* guide */
+export function importGuide(source: types.Guide, ctx?: IImportContext): impl.Guide {
+    const ret: impl.Guide = new impl.Guide (
+        importGuide_crdtidx(source.crdtidx, ctx),
+        source.id,
+        importGuideAxis(source.axis, ctx),
+        source.offset)
+    return ret
+}
 /* line cap style */
 export function importLineCapStyle(source: types.LineCapStyle, ctx?: IImportContext): impl.LineCapStyle {
     return source
@@ -334,6 +365,13 @@ export function importPageListItem(source: types.PageListItem, ctx?: IImportCont
         source.id,
         source.name)
     importPageListItemOptional(ret, source, ctx)
+    return ret
+}
+export function importPage_guides(source: types.Page_guides, ctx?: IImportContext): Page_guides {
+    const ret: Page_guides = new BasicArray()
+    source.forEach((source) => {
+        ret.push(importGuide(source, ctx))
+    })
     return ret
 }
 export function importPara_spans(source: types.Para_spans, ctx?: IImportContext): Para_spans {
@@ -470,6 +508,13 @@ export function importStyle_contacts(source: types.Style_contacts, ctx?: IImport
     const ret: Style_contacts = new BasicArray()
     source.forEach((source) => {
         ret.push(importContactRole(source, ctx))
+    })
+    return ret
+}
+export function importSymbolShape_guides(source: types.SymbolShape_guides, ctx?: IImportContext): SymbolShape_guides {
+    const ret: SymbolShape_guides = new BasicArray()
+    source.forEach((source) => {
+        ret.push(importGuide(source, ctx))
     })
     return ret
 }
@@ -1448,6 +1493,7 @@ export function importOvalShape(source: types.OvalShape, ctx?: IImportContext): 
 function importArtboardOptional(tar: impl.Artboard, source: types.Artboard, ctx?: IImportContext) {
     importGroupShapeOptional(tar, source)
     if (source.cornerRadius) tar.cornerRadius = importCornerRadius(source.cornerRadius, ctx)
+    if (source.guides) tar.guides = importArtboard_guides(source.guides, ctx)
 }
 export function importArtboard(source: types.Artboard, ctx?: IImportContext): impl.Artboard {
     const ret: impl.Artboard = new impl.Artboard (
@@ -1503,6 +1549,7 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
 function importPageOptional(tar: impl.Page, source: types.Page, ctx?: IImportContext) {
     importGroupShapeOptional(tar, source)
     if (source.backgroundColor) tar.backgroundColor = importColor(source.backgroundColor, ctx)
+    if (source.guides) tar.guides = importPage_guides(source.guides, ctx)
 }
 export function importPage(source: types.Page, ctx?: IImportContext): impl.Page {
         // inject code
@@ -1533,6 +1580,7 @@ function importSymbolShapeOptional(tar: impl.SymbolShape, source: types.SymbolSh
         return ret
     })()
     if (source.cornerRadius) tar.cornerRadius = importCornerRadius(source.cornerRadius, ctx)
+    if (source.guides) tar.guides = importSymbolShape_guides(source.guides, ctx)
 }
 export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContext): impl.SymbolShape {
     const ret: impl.SymbolShape = new impl.SymbolShape (

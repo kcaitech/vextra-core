@@ -11,6 +11,7 @@ export * from './table'
 export * from './contact'
 export * from './symbolref'
 export * from './color'
+export * from './guide'
 
 export { parsePath } from './pathparser'
 export { layoutTable } from './tablelayout'

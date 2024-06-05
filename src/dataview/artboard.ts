@@ -4,7 +4,7 @@ import { innerShadowId, renderBorders, renderFills } from "../render";
 import { objectId } from "../basic/objectid";
 import { render as clippathR } from "../render/clippath"
 import { Artboard } from "../data/artboard";
-import { BlurType, CornerRadius } from "../data/classes";
+import { BlurType, CornerRadius, Page } from "../data/classes";
 
 
 export class ArtboradView extends GroupShapeView {
@@ -158,4 +158,7 @@ export class ArtboradView extends GroupShapeView {
     // get points() {
     //     return (this.m_data as Artboard).points;
     // }
+    get guides() {
+        return (this.m_data as Page).guides;
+    }
 }
