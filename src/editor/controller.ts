@@ -1360,6 +1360,7 @@ function adjust_group_rotate_frame(api: Api, page: Page, s: GroupShape, sx: numb
         const target = m1.computeCoord(0, 0);
 
         if (s.rotation) api.shapeModifyRotate(page, cc, (cc.rotation || 0) + s.rotation);
+        // todo flip
         // if (s.isFlippedHorizontal) api.shapeModifyHFlip(page, cc, !cc.isFlippedHorizontal);
         // if (s.isFlippedVertical) api.shapeModifyVFlip(page, cc, !cc.isFlippedVertical);
 
@@ -1372,6 +1373,7 @@ function adjust_group_rotate_frame(api: Api, page: Page, s: GroupShape, sx: numb
     }
 
     if (s.rotation) api.shapeModifyRotate(page, s, 0);
+    // todo flip
     // if (s.isFlippedHorizontal) api.shapeModifyHFlip(page, s, !s.isFlippedHorizontal);
     // if (s.isFlippedVertical) api.shapeModifyVFlip(page, s, !s.isFlippedVertical);
 
@@ -1408,11 +1410,11 @@ function set_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, Matri
     }
     const xy = np.computeCoord3(target_xy);
     if (sx < 0) {
-        // api.shapeModifyHFlip(page, s, !s.isFlippedHorizontal);
+        api.shapeModifyHFlip(page, s);
         sx = -sx;
     }
     if (sy < 0) {
-        // api.shapeModifyVFlip(page, s, !s.isFlippedVertical);
+        api.shapeModifyVFlip(page, s);
         sy = -sy;
     }
     const saveW = s.frame.width;
@@ -1477,8 +1479,8 @@ function __migrate(document: Document,
     const { x, y } = m.computeCoord(0, 0);
     api.shapeMove(page, origin, origin.indexOfChild(shape), targetParent, index++);
 
-    // if (hflip !== transform.ohflip) api.shapeModifyHFlip(page, shape, !shape.isFlippedHorizontal);
-    // if (vflip !== transform.ovflip) api.shapeModifyVFlip(page, shape, !shape.isFlippedVertical);
+    if (hflip !== transform.ohflip) api.shapeModifyHFlip(page, shape);
+    if (vflip !== transform.ovflip) api.shapeModifyVFlip(page, shape);
 
     m.multiAtLeft(transform.pminverse);
     let sina = m.m10;

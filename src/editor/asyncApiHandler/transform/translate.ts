@@ -196,9 +196,8 @@ export class Transporter extends AsyncApiCaller {
         const { x, y } = m.computeCoord(0, 0);
         api.shapeMove(page, origin, origin.indexOfChild(shape), targetParent, index++);
 
-        // todo flip
-        // if (hflip !== transform.ohflip) api.shapeModifyHFlip(page, shape, !shape.isFlippedHorizontal);
-        // if (vflip !== transform.ovflip) api.shapeModifyVFlip(page, shape, !shape.isFlippedVertical);
+        if (hflip !== transform.ohflip) api.shapeModifyHFlip(page, shape);
+        if (vflip !== transform.ovflip) api.shapeModifyVFlip(page, shape);
 
         m.multiAtLeft(transform.pminverse);
         let sina = m.m10;

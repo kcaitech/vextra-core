@@ -1848,12 +1848,11 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                // todo flip
-                // if (value === 'horizontal') {
-                //     api.shapeModifyHFlip(this.__page, adapt2Shape(target), !target.isFlippedHorizontal);
-                // } else if (value === 'vertical') {
-                //     api.shapeModifyVFlip(this.__page, adapt2Shape(target), !target.isFlippedVertical);
-                // }
+                if (value === 'horizontal') {
+                    api.shapeModifyHFlip(this.__page, adapt2Shape(target));
+                } else if (value === 'vertical') {
+                    api.shapeModifyVFlip(this.__page, adapt2Shape(target));
+                }
             }
             this.__repo.commit();
         } catch (error) {
