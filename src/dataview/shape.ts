@@ -242,6 +242,12 @@ export class ShapeView extends DataView {
         return this.m_transform2;
     }
 
+    get transform2FromRoot(): Transform2 {
+        const t = this.transform2.clone();
+        if (!this.parent) return t;
+        return t.addTransform(this.parent!.transform2FromRoot);
+    }
+
     get size() {
         return this.m_size;
     }
