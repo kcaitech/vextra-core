@@ -31,7 +31,7 @@ export class ReferHandleApiCaller extends AsyncApiCaller {
 
             this.updateView();
             this.__recovery = false;
-            console.log("CREATE SUCCESS：", index);
+            console.log("CREATE SUCCESS：", this.page.name, this.page.guides);
             return index;
         } catch (e) {
             console.error('ReferHandleApiCaller.create');
@@ -135,7 +135,7 @@ export class ReferHandleApiCaller extends AsyncApiCaller {
     }
 
     commit() {
-        console.log('=NEED RECOVERY=', this.__recovery);
+        // console.log('=NEED RECOVERY=', this.__recovery);
         if (this.__repo.isNeedCommit() && !this.exception) {
             this.__repo.commit();
         } else {

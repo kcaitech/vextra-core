@@ -39,5 +39,6 @@
         "fills": [],
         "shadows": []
     },
-    "childs": []
+    "childs": [],
+    "guides": []
 }
