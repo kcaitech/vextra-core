@@ -19,9 +19,23 @@ import { Blur, Border, BorderPosition, BorderStyle, Fill, Gradient, MarkerType, 
 import { BulletNumbers, SpanAttr, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
 import { RectShape, SymbolRefShape, TableCell, TableCellType, TableShape, Artboard } from "../../data/classes";
 import {
-    BoolOp, BulletNumbersBehavior, BulletNumbersType, ExportFileFormat, OverrideType, Point2D,
-    StrikethroughType, TextTransformType, UnderlineType, ShadowPosition, ExportFormatNameingScheme, FillType, BlendMode, CornerType, SideType, BorderSideSetting,
+    BoolOp,
+    BulletNumbersBehavior,
+    BulletNumbersType,
+    ExportFileFormat,
+    OverrideType,
+    Point2D,
+    StrikethroughType,
+    TextTransformType,
+    UnderlineType,
+    ShadowPosition,
+    ExportFormatNameingScheme,
+    FillType,
+    BlendMode,
+    CornerType,
+    BorderSideSetting,
     BlurType,
+    Transform,
 } from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
@@ -34,6 +48,7 @@ import { IdOpRecord } from "../../coop/client/crdt";
 import { Repository } from "../../data/transact";
 import { SNumber } from "../../coop/client/snumber";
 import { ShapeView, TableCellView, TextShapeView } from "../../dataview";
+import {shapeModifyByTransform} from "../basicapi";
 
 // 要支持variable的修改
 export type TextShapeLike = TableCellView | TextShapeView
@@ -348,6 +363,10 @@ export class Api {
     shapeModifyVFlip(page: Page, shape: Shape,) {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.shapeModifyVFlip(page, shape, this.needUpdateFrame));
+    }
+    shapeModifyByTransform(page: Page, shape: Shape, transform: Transform) {
+        checkShapeAtPage(page, shape);
+        this.addOp(shapeModifyByTransform(page, shape, transform));
     }
     shapeModifyContextSettingsOpacity(page: Page, shape: Shape | Variable, contextSettingsOpacity: number) {
         // if (shape.isVirtualShape) {

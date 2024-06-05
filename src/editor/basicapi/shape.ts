@@ -13,7 +13,7 @@ import {
     Variable
 } from "../../data/shape";
 import { ContactShape, SymbolRefShape, ContactForm, Artboard } from "../../data/classes";
-import { BoolOp, CurveMode, MarkerType, OverrideType, Point2D } from "../../data/typesdefine";
+import {BoolOp, CurveMode, MarkerType, OverrideType, Point2D, Transform} from "../../data/typesdefine";
 import { BasicMap } from "../../data/basic";
 import { crdtArrayInsert, crdtArrayRemove, crdtSetAttr } from "./basic";
 import {makeShapeTransform2By1, updateShapeTransform1By2} from "../../data/shape_transform_util";
@@ -168,6 +168,17 @@ export function shapeModifyVFlip(page: Page, shape: Shape, needUpdateFrame?: { s
     ops.push(crdtSetAttr(shape.transform, 'm11', transform2.m11));
     ops.push(crdtSetAttr(shape.transform, 'm02', transform2.m03));
     ops.push(crdtSetAttr(shape.transform, 'm12', transform2.m13));
+    if (needUpdateFrame) needUpdateFrame.push({ shape, page });
+    return ops;
+}
+export function shapeModifyByTransform(page: Page, shape: Shape, transform: Transform, needUpdateFrame?: { shape: Shape, page: Page }[]) {
+    const ops = [];
+    ops.push(crdtSetAttr(shape.transform, 'm00', transform.m00));
+    ops.push(crdtSetAttr(shape.transform, 'm10', transform.m10));
+    ops.push(crdtSetAttr(shape.transform, 'm01', transform.m01));
+    ops.push(crdtSetAttr(shape.transform, 'm11', transform.m11));
+    ops.push(crdtSetAttr(shape.transform, 'm02', transform.m02));
+    ops.push(crdtSetAttr(shape.transform, 'm12', transform.m12));
     if (needUpdateFrame) needUpdateFrame.push({ shape, page });
     return ops;
 }
