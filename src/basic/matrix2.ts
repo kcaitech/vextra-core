@@ -672,7 +672,7 @@ export class Matrix { // 矩阵
                     result.set([j, k], temp)
                 }
                 if (__matrix_getInverse_dev_code) {
-                    console.log("h swap")
+                    console.log("row swap")
                     console.log("m", data.toString())
                     console.log("r", result.toString())
                 }
