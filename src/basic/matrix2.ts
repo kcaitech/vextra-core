@@ -853,6 +853,20 @@ export class Vector extends Matrix { // 向量
     get norm() { // 模
         return Math.sqrt(this.dot(this))
     }
+
+    angleTo(vector: Vector) { // 本向量到目标向量的夹角（目标向量相对本向量的夹角）（-π ~ π）
+        const [m, n] = this.size
+        const [m1, n1] = vector.size
+        if (m !== m1 || n !== n1) throw new Error("向量维度不匹配");
+        const dim = m !== 1 ? m : n
+        if (dim !== 2 && dim !== 3) throw new Error("只能计算二维向量或三维向量之间的夹角");
+
+        const dot = this.dot(vector) // 本向量与目标向量的点积
+        const cross = this.cross(vector) // 本向量与目标向量的叉积
+        const sign = (cross instanceof Vector ? cross.m20 : cross) > 0 ? 1 : -1 // 本向量与目标向量叉积的符号
+        const norm_xCrossCursor = cross instanceof Vector ? cross.norm : Math.abs(cross) // 本向量与目标向量叉积的模
+        return sign * Math.atan2(norm_xCrossCursor, dot) // 本向量到目标向量的夹角（目标向量相对本向量的夹角）（-π ~ π）
+    }
 }
 
 export class ColVector extends Vector { // 列向量

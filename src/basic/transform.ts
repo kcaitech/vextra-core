@@ -243,18 +243,14 @@ export class Transform { // 变换
             this.translateMatrix = TranslateMatrix.FromMatrix(Matrix.BuildIdentity([4, 3]).insertCols(this.matrix.col3))
 
             const matrix3x3 = this.matrix.clone().resize([3, 3])
-            const xDotY = matrix3x3.col0.dot(matrix3x3.col1) // x轴与y轴的点积
-            const norm_xCrossY = (matrix3x3.col0.cross(matrix3x3.col1) as Vector).norm // x轴与y轴叉积的模
-            let angleXY = Math.atan2(norm_xCrossY, xDotY) // y轴相对x轴的夹角（逆时针为正）（-π ~ π）
+            let angleXY = matrix3x3.col0.angleTo(matrix3x3.col1) // y轴相对x轴的夹角（逆时针为正）（-π ~ π）
             let isYFlipped = false // Y轴是否反向
             if (angleXY < 0) {
                 isYFlipped = true
                 angleXY += Math.PI // （0 ~ 2π）
             }
 
-            const xDotZ = matrix3x3.col0.dot(matrix3x3.col2) // x轴与z轴的点积
-            const norm_xCrossZ = (matrix3x3.col0.cross(matrix3x3.col2) as Vector).norm // x轴与z轴叉积的模
-            let angleXZ = Math.atan2(norm_xCrossZ, xDotZ) // z轴相对x轴的夹角（逆时针为正）（-π ~ π）
+            let angleXZ = matrix3x3.col0.angleTo(matrix3x3.col2) // z轴相对x轴的夹角（逆时针为正）（-π ~ π）
             let isZFlipped = angleXZ < 0 // Z轴是否反向
 
             // 斜切
