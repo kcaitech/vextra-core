@@ -649,7 +649,16 @@ export class Matrix { // 矩阵
         const result = NumberArray2D.BuildIdentity([m, m]) // 单位矩阵数组
         const data = this.data.clone() // 原矩阵的副本
 
+        const __matrix_getInverse_dev_code = false
+        if (__matrix_getInverse_dev_code) {
+            console.log("start")
+            console.log("m", data.toString())
+            console.log("r", result.toString())
+            console.log()
+        }
+
         for (let i = 0; i < m; i++) {
+            if (__matrix_getInverse_dev_code) console.log("pos " + (i + 1));
             if (isZero(data.get([i, i]))) { // 行首为0，要进行行交换
                 let j = i + 1 // 从下一行开始找到行首不为0的行
                 for (; j < m; j++) if (!isZero(data.get([j, i]))) break;
@@ -662,16 +671,23 @@ export class Matrix { // 矩阵
                     result.set([i, k], result.get([j, k]))
                     result.set([j, k], temp)
                 }
+                if (__matrix_getInverse_dev_code) {
+                    console.log("h swap")
+                    console.log("m", data.toString())
+                    console.log("r", result.toString())
+                }
             }
             const factor = data.get([i, i]) // 主元
             // 第i行除以factor，使主元为1
             if (!isOne(factor)) {
                 data.set([i, i], 1)
-                result.set([i, i], result.get([i, i]) / factor)
-                for (let j = i + 1; j < m; j++) {
-                    data.set([i, j], data.get([i, j]) / factor)
-                    result.set([i, j], result.get([i, j]) / factor)
-                }
+                for (let j = i + 1; j < m; j++) data.set([i, j], data.get([i, j]) / factor);
+                for (let j = 0; j < m; j++) result.set([i, j], result.get([i, j]) / factor);
+            }
+            if (__matrix_getInverse_dev_code) {
+                console.log("set main 1")
+                console.log("m", data.toString())
+                console.log("r", result.toString())
             }
             // 其余行减去对应倍数的第i行，使第i列除了主元外全为0
             for (let j = 0; j < m; j++) {
@@ -679,11 +695,14 @@ export class Matrix { // 矩阵
                 const factor = data.get([j, i])
                 if (isZero(factor)) continue; // 本身为0，不需要处理
                 data.set([j, i], 0)
-                result.set([j, i], result.get([j, i]) - result.get([i, i]) * factor)
-                for (let k = i + 1; k < m; k++) {
-                    data.set([j, k], data.get([j, k]) - data.get([i, k]) * factor)
-                    result.set([j, k], result.get([j, k]) - result.get([i, k]) * factor)
-                }
+                for (let k = i + 1; k < m; k++) data.set([j, k], data.get([j, k]) - data.get([i, k]) * factor);
+                for (let k = 0; k < m; k++) result.set([j, k], result.get([j, k]) - result.get([i, k]) * factor);
+            }
+            if (__matrix_getInverse_dev_code) {
+                console.log("set col 0")
+                console.log("m", data.toString())
+                console.log("r", result.toString())
+                console.log()
             }
         }
         return new Matrix(result)
@@ -916,7 +935,7 @@ export class ColVector2D extends ColVector { // 二维列向量
         return new ColVector2D(matrix.data.resize([2, 1]))
     }
 
-    static BuildFromXY(x: number, y: number) {
+    static FromXY(x: number, y: number) {
         return new ColVector2D([x, y])
     }
 }
@@ -932,7 +951,11 @@ export class ColVector3D extends ColVector { // 三维列向量
         return new ColVector3D(matrix.data.resize([3, 1]))
     }
 
-    static BuildFromXYZ(x: number, y: number, z: number) {
+    static FromXY(x: number, y: number) {
+        return new ColVector3D([x, y, 0])
+    }
+
+    static FromXYZ(x: number, y: number, z: number) {
         return new ColVector3D([x, y, z])
     }
 }
@@ -946,6 +969,14 @@ export class ColVector4D extends ColVector { // 四维列向量
     static FromMatrix(matrix: Matrix) {
         if (matrix instanceof ColVector4D) return matrix;
         return new ColVector4D(matrix.data.resize([4, 1]))
+    }
+
+    static FromXY(x: number, y: number) {
+        return new ColVector4D([x, y, 0, 0])
+    }
+
+    static FromXYZ(x: number, y: number, z: number) {
+        return new ColVector4D([x, y, z, 0])
     }
 }
 
@@ -1029,7 +1060,7 @@ export class RowVector2D extends RowVector { // 二维行向量
         return new RowVector2D(matrix.data.resize([1, 2]))
     }
 
-    static BuildFromXY(x: number, y: number) {
+    static FromXY(x: number, y: number) {
         return new RowVector2D([x, y])
     }
 }
@@ -1045,7 +1076,11 @@ export class RowVector3D extends RowVector { // 三维行向量
         return new RowVector3D(matrix.data.resize([1, 3]))
     }
 
-    static BuildFromXYZ(x: number, y: number, z: number) {
+    static FromXY(x: number, y: number) {
+        return new RowVector3D([x, y, 0])
+    }
+
+    static FromXYZ(x: number, y: number, z: number) {
         return new RowVector3D([x, y, z])
     }
 }
@@ -1059,6 +1094,14 @@ export class RowVector4D extends RowVector { // 四维行向量
     static FromMatrix(matrix: Matrix) {
         if (matrix instanceof RowVector4D) return matrix;
         return new RowVector4D(matrix.data.resize([1, 4]))
+    }
+
+    static FromXY(x: number, y: number) {
+        return new RowVector4D([x, y, 0, 0])
+    }
+
+    static FromXYZ(x: number, y: number, z: number) {
+        return new RowVector4D([x, y, z, 0])
     }
 }
 
@@ -1079,8 +1122,13 @@ export class Point2D extends Point { // 二维点
         if (this.size[0] !== 2) throw new Error("二维点必须是2 * 1的列向量");
     }
 
-    static BuildFromXY(x: number, y: number) {
+    static FromXY(x: number, y: number) {
         return new Point2D([x, y])
+    }
+
+    static FromMatrix(matrix: Matrix) {
+        if (matrix instanceof Point2D) return matrix;
+        return new Point2D(matrix.data.resize([2, 1]))
     }
 }
 
@@ -1090,7 +1138,16 @@ export class Point3D extends Point { // 三维点
         if (this.size[0] !== 3) throw new Error("三维点必须是3 * 1的列向量");
     }
 
-    static BuildFromXYZ(x: number, y: number, z: number) {
+    static FromXY(x: number, y: number) {
+        return new Point3D([x, y, 0])
+    }
+
+    static FromXYZ(x: number, y: number, z: number) {
         return new Point3D([x, y, z])
+    }
+
+    static FromMatrix(matrix: Matrix) {
+        if (matrix instanceof Point3D) return matrix;
+        return new Point3D(matrix.data.resize([3, 1]))
     }
 }
