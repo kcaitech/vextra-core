@@ -210,7 +210,7 @@ export class Transform { // 变换
     }
 
     // 借助set isMatrixLatest=false和set isSubMatrixLatest=false来清除缓存
-    // 所以isMatrixLatest和isSubMatrixLatest不能同时设为true，当矩阵更新时，必须将其中一个设为false
+    // 当矩阵更新时，必须将其中一个设为false
     _isMatrixLatest: boolean = true // matrix为最新
     _isSubMatrixLatest: boolean = true // T、R、K、S子矩阵是否为最新
 
@@ -315,10 +315,9 @@ export class Transform { // 变换
 
         if (params?.matrix || params?.subMatrix) {
             this.isMatrixLatest = !!params?.matrix
-            if (this.isMatrixLatest && hasSkewZ(this.matrix)) throw new Error("矩阵数据错误：matrix存在Z轴斜切");
-
             this.isSubMatrixLatest = !!params?.subMatrix
-            if (this.isSubMatrixLatest && hasSkewZ(this.skewMatrix)) throw new Error("矩阵数据错误：skewMatrix存在Z轴斜切");
+            // if (this.isMatrixLatest && hasSkewZ(this.matrix)) throw new Error("矩阵数据错误：matrix存在Z轴斜切");
+            // if (this.isSubMatrixLatest && hasSkewZ(this.skewMatrix)) throw new Error("矩阵数据错误：skewMatrix存在Z轴斜切");
         }
     }
 
@@ -791,6 +790,11 @@ export class Transform { // 变换
     setScaleZ(value: number) {
         const scaleNow = this.decomposeScale()
         this.setScale(new ColVector3D([scaleNow.x, scaleNow.y, value]))
+    }
+
+    hasScale() {
+        if (!this.isSubMatrixLatest) this.updateMatrix();
+        return !this.scaleMatrix.isIdentity
     }
 
     // 绕x轴旋转
