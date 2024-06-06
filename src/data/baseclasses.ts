@@ -249,6 +249,27 @@ export class PathSegment extends Basic {
 }
 type PathShape_pathsegs = BasicArray<PathSegment>
 type PathShape2_pathsegs = BasicArray<PathSegment>
+/* pattern frame */
+export class PatternFrame extends Basic {
+    typeId = "pattern-frame"
+    x: number
+    y: number
+    width: number
+    height: number
+    rotation: number
+    isFlippedVertical: boolean
+    isFlippedHorizontal: boolean
+    constructor(x: number, y: number, width: number, height: number, rotation: number, isFlippedVertical: boolean, isFlippedHorizontal: boolean) {
+        super()
+        this.x = x
+        this.y = y
+        this.width = width
+        this.height = height
+        this.rotation = rotation
+        this.isFlippedVertical = isFlippedVertical
+        this.isFlippedHorizontal = isFlippedHorizontal
+    }
+}
 /* point 2d */
 export class Point2D extends Basic {
     typeId = "point-2d"
@@ -831,16 +852,13 @@ export class ContactShape extends PathShape {
 /* cutout shape */
 export class CutoutShape extends PathShape {
     typeId = "cutout-shape"
-    scalingStroke: boolean
-    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, frame: ShapeFrame, style: Style, pathsegs: PathShape_pathsegs, scalingStroke: boolean) {
-        super(crdtidx, id, name, type, frame, style, pathsegs)
-        this.scalingStroke = scalingStroke
-    }
 }
 /* image shape */
 export class ImageShape extends PathShape {
     typeId = "image-shape"
     imageRef: string
+    patternFrame?: PatternFrame
+    isClip?: boolean
     constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, frame: ShapeFrame, style: Style, pathsegs: PathShape_pathsegs, imageRef: string) {
         super(crdtidx, id, name, type, frame, style, pathsegs)
         this.imageRef = imageRef

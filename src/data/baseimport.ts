@@ -373,6 +373,18 @@ export function importPathShape2_pathsegs(source: types.PathShape2_pathsegs, ctx
     })
     return ret
 }
+/* pattern frame */
+export function importPatternFrame(source: types.PatternFrame, ctx?: IImportContext): impl.PatternFrame {
+    const ret: impl.PatternFrame = new impl.PatternFrame (
+        source.x,
+        source.y,
+        source.width,
+        source.height,
+        source.rotation,
+        source.isFlippedVertical,
+        source.isFlippedHorizontal)
+    return ret
+}
 /* point 2d */
 export function importPoint2D(source: types.Point2D, ctx?: IImportContext): impl.Point2D {
     const ret: impl.Point2D = new impl.Point2D (
@@ -1311,13 +1323,16 @@ export function importCutoutShape(source: types.CutoutShape, ctx?: IImportContex
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
-        importPathShape_pathsegs(source.pathsegs, ctx),
-        source.scalingStroke)
+        importPathShape_pathsegs(source.pathsegs, ctx))
     importCutoutShapeOptional(ret, source, ctx)
     return ret
 }
 /* image shape */
-const importImageShapeOptional = importPathShapeOptional
+function importImageShapeOptional(tar: impl.ImageShape, source: types.ImageShape, ctx?: IImportContext) {
+    importPathShapeOptional(tar, source)
+    if (source.patternFrame) tar.patternFrame = importPatternFrame(source.patternFrame, ctx)
+    if (source.isClip) tar.isClip = source.isClip
+}
 export function importImageShape(source: types.ImageShape, ctx?: IImportContext): impl.ImageShape {
         // inject code
     if (!source.pathsegs) { // 兼容旧数据

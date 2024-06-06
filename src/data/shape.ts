@@ -23,7 +23,7 @@ import { FrameType, PathType, RadiusType, RECT_POINTS } from "./consts";
 import { Variable } from "./variable";
 
 export {
-    CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D,
+    CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, PatternFrame,
     CurvePoint, ShapeFrame, Ellipse, PathSegment, OverrideType, VariableType,
     FillRule, CornerRadius,
 } from "./baseclasses";
@@ -531,10 +531,10 @@ export class GroupShape extends Shape implements classes.GroupShape {
         const w = frame.width;
         const h = frame.height;
         let path = [["M", x, y],
-            ["l", w, 0],
-            ["l", 0, h],
-            ["l", -w, 0],
-            ["z"]];
+        ["l", w, 0],
+        ["l", 0, h],
+        ["l", -w, 0],
+        ["z"]];
         return new Path(path);
     }
 
@@ -977,7 +977,8 @@ export class RectShape extends PathShape implements classes.RectShape {
 export class ImageShape extends RectShape implements classes.ImageShape {
     typeId = 'image-shape'
     imageRef: string;
-
+    patternFrame?: classes.PatternFrame;
+    isClip?: boolean;
     private __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
     private __cacheData?: { buff: Uint8Array, base64: string };
 
@@ -989,7 +990,7 @@ export class ImageShape extends RectShape implements classes.ImageShape {
         frame: ShapeFrame,
         style: Style,
         pathsegs: BasicArray<PathSegment>,
-        imageRef: string
+        imageRef: string,
     ) {
         super(
             crdtidx,
@@ -998,9 +999,8 @@ export class ImageShape extends RectShape implements classes.ImageShape {
             type,
             frame,
             style,
-            pathsegs
+            pathsegs,
         )
-
         this.imageRef = imageRef
     }
 
@@ -1148,10 +1148,10 @@ export class TextShape extends Shape implements classes.TextShape {
         const x = 0;
         const y = 0;
         const path = [["M", x, y],
-            ["l", w, 0],
-            ["l", 0, h],
-            ["l", -w, 0],
-            ["z"]];
+        ["l", w, 0],
+        ["l", 0, h],
+        ["l", -w, 0],
+        ["z"]];
         return new Path(path);
     }
 
@@ -1178,7 +1178,7 @@ export class TextShape extends Shape implements classes.TextShape {
 
 export class CutoutShape extends PathShape implements classes.CutoutShape {
     typeId = 'cutout-shape'
-    scalingStroke: boolean;
+    exportOptions?: ExportOptions
 
     constructor(
         crdtidx: BasicArray<number>,
@@ -1188,7 +1188,7 @@ export class CutoutShape extends PathShape implements classes.CutoutShape {
         frame: ShapeFrame,
         style: Style,
         pathsegs: BasicArray<PathSegment>,
-        scalingStroke: boolean
+        exportOptions?: ExportOptions
     ) {
         super(
             crdtidx,
@@ -1199,7 +1199,7 @@ export class CutoutShape extends PathShape implements classes.CutoutShape {
             style,
             pathsegs
         )
-        this.scalingStroke = scalingStroke;
+        this.exportOptions = exportOptions;
     }
 
     get isNoSupportDiamondScale() {
@@ -1217,9 +1217,8 @@ export class CutoutShape extends PathShape implements classes.CutoutShape {
     get isPathIcon() {
         return false;
     }
-
-    get radius(): number[] {
-        return [0];
+    get radiusType() {
+        return RadiusType.None;
     }
 }
 

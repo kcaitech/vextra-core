@@ -327,6 +327,18 @@ export function exportPathShape2_pathsegs(source: types.PathShape2_pathsegs, ctx
     })
     return ret
 }
+/* pattern frame */
+export function exportPatternFrame(source: types.PatternFrame, ctx?: IExportContext): types.PatternFrame {
+    const ret: types.PatternFrame = {} as types.PatternFrame
+    ret.x = source.x
+    ret.y = source.y
+    ret.width = source.width
+    ret.height = source.height
+    ret.rotation = source.rotation
+    ret.isFlippedVertical = source.isFlippedVertical
+    ret.isFlippedHorizontal = source.isFlippedHorizontal
+    return ret
+}
 /* point 2d */
 export function exportPoint2D(source: types.Point2D, ctx?: IExportContext): types.Point2D {
     const ret: types.Point2D = {} as types.Point2D
@@ -959,7 +971,6 @@ export function exportContactShape(source: types.ContactShape, ctx?: IExportCont
 export function exportCutoutShape(source: types.CutoutShape, ctx?: IExportContext): types.CutoutShape {
     const ret: types.CutoutShape = exportPathShape(source, ctx) as types.CutoutShape
     ret.typeId = "cutout-shape"
-    ret.scalingStroke = source.scalingStroke
     return ret
 }
 /* image shape */
@@ -967,6 +978,8 @@ export function exportImageShape(source: types.ImageShape, ctx?: IExportContext)
     const ret: types.ImageShape = exportPathShape(source, ctx) as types.ImageShape
     ret.typeId = "image-shape"
     ret.imageRef = source.imageRef
+    if (source.patternFrame) ret.patternFrame = exportPatternFrame(source.patternFrame, ctx)
+    if (source.isClip) ret.isClip = source.isClip
         // inject code
     if (ctx?.medias) ctx.medias.add(ret.imageRef);
 

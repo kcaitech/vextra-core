@@ -257,6 +257,16 @@ export type PathSegment = {
 }
 export type PathShape_pathsegs = Array<PathSegment>
 export type PathShape2_pathsegs = Array<PathSegment>
+/* pattern frame */
+export type PatternFrame = {
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    rotation: number,
+    isFlippedVertical: boolean,
+    isFlippedHorizontal: boolean,
+}
 /* point 2d */
 export type Point2D = {
     x: number,
@@ -711,12 +721,12 @@ export type ContactShape = PathShape & {
     to?: ContactForm,
 }
 /* cutout shape */
-export type CutoutShape = PathShape & {
-    scalingStroke: boolean,
-}
+export type CutoutShape = PathShape
 /* image shape */
 export type ImageShape = PathShape & {
     imageRef: string,
+    patternFrame?: PatternFrame,
+    isClip?: boolean,
 }
 /* line shape */
 export type LineShape = PathShape

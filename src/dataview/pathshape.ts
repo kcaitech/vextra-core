@@ -1,4 +1,5 @@
 import {
+    ImageShape,
     PathShape,
     PathShape2,
     Shape,
