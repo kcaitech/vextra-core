@@ -1,6 +1,7 @@
 import {
     BoolShape,
     GroupShape,
+    ImageShape,
     PathShape,
     PathShape2,
     RectShape,
@@ -14,7 +15,7 @@ import {
 } from "../data/shape";
 import { Border, BorderPosition, BorderStyle, Fill, MarkerType, Shadow } from "../data/style";
 import { expand, expandTo, translate, translateTo } from "./frame";
-import { BoolOp, CurvePoint, ExportFormat } from "../data/baseclasses";
+import { BoolOp, CurvePoint, ExportFormat, PatternFrame } from "../data/baseclasses";
 import { Artboard } from "../data/artboard";
 import { Page } from "../data/page";
 import { CoopRepository } from "./coop/cooprepo";
@@ -465,6 +466,21 @@ export class ShapeEditor {
                 api.shapeModifyBoolOp(this.__page, child, op);
             })
             // api.shapeModifyBoolOpShape(this.__page, shape, op !== BoolOp.None);
+        });
+    }
+
+    public setImageClip(isClip: boolean) {
+        if (!(this.shape instanceof ImageShape)) return;
+        this._repoWrap("setImageClip", (api) => {
+            const shape = this.shape as ImageShape;
+            api.imageClip(this.__page, this.shape, isClip);
+            if(!shape.patternFrame) {
+                const ver = shape.isFlippedVertical || false;
+                const hor = shape.isFlippedHorizontal || false;
+                const rotation = shape.rotation || 0;
+                const patternFrame = new PatternFrame(0, 0, 1, 1, rotation || 0, ver, hor);
+                api.imagePatternFrame(this.__page, shape, patternFrame);
+            }
         });
     }
 
