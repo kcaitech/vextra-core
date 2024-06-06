@@ -1,13 +1,13 @@
-import { CoopRepository } from "../../coop/cooprepo";
-import { AsyncApiCaller } from "../AsyncApiCaller";
-import { Document } from "../../../data/document";
-import { adapt2Shape, PageView, ShapeView } from "../../../dataview";
-import { afterModifyGroupShapeWH, SizeRecorder } from "../../frame";
-import { GroupShape, Shape, ShapeFrame, ShapeType, SymbolShape, SymbolUnionShape, TextShape } from "../../../data/shape";
-import { Page } from "../../../data/page";
-import { SymbolRefShape } from "../../../data/symbolref";
-import { fixTextShapeFrameByLayout } from "../../../editor/utils/other";
-import { TextBehaviour } from "../../../data/classes";
+import {CoopRepository} from "../../coop/cooprepo";
+import {AsyncApiCaller} from "../AsyncApiCaller";
+import {Document} from "../../../data/document";
+import {adapt2Shape, PageView, ShapeView} from "../../../dataview";
+import {afterModifyGroupShapeWH, SizeRecorder} from "../../frame";
+import {GroupShape, Shape, ShapeFrame, ShapeType, SymbolShape, SymbolUnionShape, TextShape} from "../../../data/shape";
+import {Page} from "../../../data/page";
+import {SymbolRefShape} from "../../../data/symbolref";
+import {fixTextShapeFrameByLayout} from "../../../editor/utils/other";
+import {TextBehaviour} from "../../../data/classes";
 import {makeShapeTransform1By2, Transform as Transform2} from "../../../index";
 
 export type ScaleUnit = {
@@ -132,11 +132,16 @@ export class Scaler extends AsyncApiCaller {
 
     execute(params: {
         shape: ShapeView;
+        size: { width: number, height: number },
         transform2: Transform2,
     }[]) {
         try {
             for (let i = 0; i < params.length; i++) {
-                this.api.shapeModifyByTransform(this.page, params[i].shape.data, makeShapeTransform1By2(params[i].transform2));
+                const item = params[i];
+                const shape = adapt2Shape(item.shape);
+                const size = item.size;
+                this.api.shapeModifyWH(this.page, shape, size.width, size.height);
+                this.api.shapeModifyByTransform(this.page, shape, makeShapeTransform1By2(params[i].transform2));
             }
 
             this.afterShapeSizeChange();

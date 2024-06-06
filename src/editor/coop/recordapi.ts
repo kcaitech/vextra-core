@@ -48,7 +48,6 @@ import { IdOpRecord } from "../../coop/client/crdt";
 import { Repository } from "../../data/transact";
 import { SNumber } from "../../coop/client/snumber";
 import { ShapeView, TableCellView, TextShapeView } from "../../dataview";
-import {shapeModifyByTransform} from "../basicapi";
 
 // 要支持variable的修改
 export type TextShapeLike = TableCellView | TextShapeView
@@ -366,7 +365,7 @@ export class Api {
     }
     shapeModifyByTransform(page: Page, shape: Shape, transform: Transform) {
         checkShapeAtPage(page, shape);
-        this.addOp(shapeModifyByTransform(page, shape, transform));
+        this.addOp(basicapi.shapeModifyByTransform(page, shape, transform));
     }
     shapeModifyContextSettingsOpacity(page: Page, shape: Shape | Variable, contextSettingsOpacity: number) {
         // if (shape.isVirtualShape) {
