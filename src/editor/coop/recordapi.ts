@@ -23,7 +23,6 @@ import {
     BoolOp, BulletNumbersBehavior, BulletNumbersType, ExportFileFormat, OverrideType, Point2D,
     StrikethroughType, TextTransformType, UnderlineType, ShadowPosition, ExportFormatNameingScheme, FillType, BlendMode, CornerType, SideType, BorderSideSetting,
     BlurType,
-    PatternFrame,
 } from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
@@ -408,14 +407,6 @@ export class Api {
         // if (!(shape instanceof SymbolRefShape)) return;
         this._shapeModifyAttr(page, shape, "isCustomSize", isCustomSize ? true : undefined);
     }
-
-    imageClip(page: Page, shape: Shape, isClip: boolean) {
-        this._shapeModifyAttr(page, shape, "isClip", isClip);
-    }
-    imagePatternFrame(page: Page, shape: Shape, patternFrame: PatternFrame) {
-        this._shapeModifyAttr(page, shape, "patternFrame", patternFrame);
-    }
-
     // 添加一次fill
     addFillAt(page: Page, shape: Shape | Variable, fill: Fill, index: number) {
         checkShapeAtPage(page, shape);
