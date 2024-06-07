@@ -835,18 +835,18 @@ export class Vector extends Matrix { // 向量
         const isCol = n === 1
         if (isCol) {
             if (dim === 2) return this.m00 * vector.m10 - vector.m00 * this.m10; // x1 * y2 - x2 * y1
-            else return new Vector(new NumberArray2D([3, 1], [
+            else return new ColVector3D([
                 this.m10 * vector.m20 - vector.m10 * this.m20, // y1 * z2 - y2 * z1
                 this.m20 * vector.m00 - vector.m20 * this.m00, // z1 * x2 - z2 * x1
                 this.m00 * vector.m10 - vector.m00 * this.m10, // x1 * y2 - x2 * y1
-            ], true));
+            ]);
         } else {
             if (dim === 2) return this.m00 * vector.m01 - vector.m00 * this.m01; // x1 * y2 - x2 * y1
-            else return new Vector(new NumberArray2D([3, 1], [
+            else return new ColVector3D([
                 this.m01 * vector.m02 - vector.m01 * this.m02, // y1 * z2 - y2 * z1
                 this.m02 * vector.m00 - vector.m02 * this.m00, // z1 * x2 - z2 * x1
                 this.m00 * vector.m01 - vector.m00 * this.m01, // x1 * y2 - x2 * y1
-            ], true));
+            ]);
         }
     }
 
@@ -854,18 +854,13 @@ export class Vector extends Matrix { // 向量
         return Math.sqrt(this.dot(this))
     }
 
-    angleTo(vector: Vector) { // 本向量到目标向量的夹角（目标向量相对本向量的夹角）（-π ~ π）
+    angleTo(vector: Vector) { // 本向量与目标向量的夹角（0 ~ π）
         const [m, n] = this.size
         const [m1, n1] = vector.size
         if (m !== m1 || n !== n1) throw new Error("向量维度不匹配");
-        const dim = m !== 1 ? m : n
-        if (dim !== 2 && dim !== 3) throw new Error("只能计算二维向量或三维向量之间的夹角");
 
         const dot = this.dot(vector) // 本向量与目标向量的点积
-        const cross = this.cross(vector) // 本向量与目标向量的叉积
-        const sign = (cross instanceof Vector ? cross.m20 : cross) > 0 ? 1 : -1 // 夹角的方向
-        const norm_xCrossCursor = cross instanceof Vector ? cross.norm : Math.abs(cross) // 本向量与目标向量叉积的模
-        return sign * Math.atan2(norm_xCrossCursor, dot) // 本向量到目标向量的夹角（目标向量相对本向量的夹角）（-π ~ π）
+        return Math.acos(dot / (this.norm * vector.norm))
     }
 }
 

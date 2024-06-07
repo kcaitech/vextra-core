@@ -28,7 +28,7 @@ export class TranslateMatrix extends Matrix { // 平移矩阵
         const [m1, n1] = matrix.size
         if (n0 !== m1) throw new Error("矩阵阶数不匹配，无法相乘");
 
-        return Matrix.FromMatrix(matrix.add(this.col3.deleteRow(3), [0, 3]))
+        return Matrix.FromMatrix(matrix.clone().add(this.col3.deleteRow(3), [0, 3]))
     }
 
     static FromMatrix(matrix: Matrix) {
@@ -68,7 +68,7 @@ export class RotateMatrix extends Matrix { // 旋转矩阵
 
         // 分块矩阵相乘
         const R0 = this.subMatrix([3, 3])
-        matrix.multiplyLeftSubMatrix(R0)
+        matrix.clone().multiplyLeftSubMatrix(R0)
             .multiplyLeftSubMatrix(R0, [3, 1], [0, 3])
         return Matrix.FromMatrix(matrix)
     }
@@ -106,7 +106,7 @@ export class SkewMatrix extends Matrix { // 斜切矩阵
         const [m1, n1] = matrix.size
         if (n0 !== m1) throw new Error("矩阵阶数不匹配，无法相乘");
 
-        const result = matrix.add(matrix.row1.multiplyByNumber(this.m01), [0, 0])
+        const result = matrix.clone().add(matrix.row1.multiplyByNumber(this.m01), [0, 0])
         if (!isZero(this.m10)) result.add(matrix.row0.multiplyByNumber(this.m10), [1, 0]);
         return Matrix.FromMatrix(result)
     }
@@ -243,15 +243,16 @@ export class Transform { // 变换
             this.translateMatrix = TranslateMatrix.FromMatrix(Matrix.BuildIdentity([4, 3]).insertCols(this.matrix.col3))
 
             const matrix3x3 = this.matrix.clone().resize([3, 3])
-            let angleXY = matrix3x3.col0.angleTo(matrix3x3.col1) // y轴相对x轴的夹角（逆时针为正）（-π ~ π）
-            let isYFlipped = false // Y轴是否反向
-            if (angleXY < 0) {
-                isYFlipped = true
-                angleXY += Math.PI // （0 ~ 2π）
-            }
-
-            let angleXZ = matrix3x3.col0.angleTo(matrix3x3.col2) // z轴相对x轴的夹角（逆时针为正）（-π ~ π）
-            let isZFlipped = angleXZ < 0 // Z轴是否反向
+            // x轴与y轴的叉积（xoy平面的法向量，方向与z轴预期方向一致）
+            const normalVectorForXOY = matrix3x3.col0.cross(matrix3x3.col1) as ColVector3D
+            // z轴与xoy平面法向量的点积
+            const zDot = normalVectorForXOY.dot(matrix3x3.col2)
+            // z轴与预期方向相反，说明有一个或有三个坐标轴反向，这里认为是y轴反向，后续通过旋转来对齐
+            // 反向会在后续被算入缩放矩阵中
+            const isYFlipped = zDot < 0
+            // x轴与y轴的夹角（0 ~ π）
+            let angleXY = matrix3x3.col0.angleTo(matrix3x3.col1)
+            if (isYFlipped) angleXY = Math.PI - angleXY; // 反向前的夹角
 
             // 斜切
             const skewXAngle = 0.5 * Math.PI - angleXY;
@@ -266,7 +267,7 @@ export class Transform { // 变换
             // 缩放
             const xNorm = this.matrix.col0.norm
             const yNorm = this.matrix.col1.norm * (isYFlipped ? -1 : 1)
-            const zNorm = this.matrix.col2.norm * (isZFlipped ? -1 : 1)
+            const zNorm = this.matrix.col2.norm
             this.scaleMatrix = ScaleMatrix.FromMatrix(new Matrix(new NumberArray2D([4, 4], [
                 xNorm, 0, 0, 0,
                 0, yNorm / Math.sqrt(tanSkewX ** 2 + 1), 0, 0,
@@ -1436,6 +1437,16 @@ export class Transform { // 变换
 
         this.onChange(this)
 
+        return this
+    }
+
+    clearScaleSize() { // 清除缩放大小，但保留缩放方向
+        const scale = this.decomposeScale()
+        this.setScale(ColVector3D.FromXYZ(
+            scale.x < 0 ? -1 : 1,
+            scale.y < 0 ? -1 : 1,
+            scale.z < 0 ? -1 : 1,
+        ))
         return this
     }
 
