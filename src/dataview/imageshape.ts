@@ -38,7 +38,4 @@ export class ImageShapeView extends RectShapeView {
         const pathsegs = (this.m_data as ImageShape).pathsegs
         return pathsegs.length ? pathsegs[0].points : new BasicArray<CurvePoint>();
     }
-    get isClip() {
-        return  (this.m_data as ImageShape).isClip;
-    }
 }

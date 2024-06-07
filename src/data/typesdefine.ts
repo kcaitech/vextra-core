@@ -190,6 +190,14 @@ export type GraphicsContextSettings = {
     opacity: number,
 }
 export type GroupShape_childs = Array<GroupShape | ImageShape | PathShape | PathShape2 | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape | PolygonShape | StarShape>
+/* image scale mode */
+export enum ImageScaleMode {
+    Fill = "fill",
+    Stretch = "stretch",
+    Fit = "fit",
+    Crop = "crop",
+    Tile = "tile",
+}
 /* line cap style */
 export enum LineCapStyle {
     Butt = "butt",
@@ -246,6 +254,15 @@ export type PageListItem = {
     name: string,
     versionId?: string,
 }
+/* paint filter */
+export type PaintFilter = {
+    exposure?: number,
+    contrast?: number,
+    saturation?: number,
+    temperature?: number,
+    tint?: number,
+    hue?: number,
+}
 export type Para_spans = Array<Span>
 export type PathSegment_points = Array<CurvePoint>
 /* path segment */
@@ -257,16 +274,6 @@ export type PathSegment = {
 }
 export type PathShape_pathsegs = Array<PathSegment>
 export type PathShape2_pathsegs = Array<PathSegment>
-/* pattern frame */
-export type PatternFrame = {
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    rotation: number,
-    isFlippedVertical: boolean,
-    isFlippedHorizontal: boolean,
-}
 /* point 2d */
 export type Point2D = {
     x: number,
@@ -400,6 +407,15 @@ export enum TextVerAlign {
     Bottom = "bottom",
 }
 export type Text_paras = Array<Para>
+/* transform */
+export type Transform = {
+    m00: number,
+    m01: number,
+    m02: number,
+    m10: number,
+    m11: number,
+    m12: number,
+}
 /* underline types */
 export enum UnderlineType {
     None = "none",
@@ -571,6 +587,13 @@ export type Fill = {
     gradient?: Gradient,
     imageRef?: string,
     fillRule?: FillRule,
+    imageScaleMode?: ImageScaleMode,
+    rotation?: number,
+    scale?: number,
+    originalImageWidth?: number,
+    originalImageHeight?: number,
+    paintFilter?: PaintFilter,
+    transform?: Transform,
 }
 /* span attr */
 export type ParaAttr = SpanAttr & {
@@ -725,8 +748,6 @@ export type CutoutShape = PathShape
 /* image shape */
 export type ImageShape = PathShape & {
     imageRef: string,
-    patternFrame?: PatternFrame,
-    isClip?: boolean,
 }
 /* line shape */
 export type LineShape = PathShape

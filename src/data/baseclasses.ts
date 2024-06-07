@@ -16,6 +16,7 @@ export {
     FillRule,
     FillType,
     GradientType,
+    ImageScaleMode,
     LineCapStyle,
     LineJoinStyle,
     MarkerType,
@@ -52,6 +53,7 @@ import {
     FillRule,
     FillType,
     GradientType,
+    ImageScaleMode,
     LineCapStyle,
     LineJoinStyle,
     MarkerType,
@@ -230,6 +232,16 @@ export class PageListItem extends Basic {
         this.name = name
     }
 }
+/* paint filter */
+export class PaintFilter extends Basic {
+    typeId = "paint-filter"
+    exposure?: number
+    contrast?: number
+    saturation?: number
+    temperature?: number
+    tint?: number
+    hue?: number
+}
 type Para_spans = BasicArray<Span>
 type PathSegment_points = BasicArray<CurvePoint>
 /* path segment */
@@ -249,27 +261,6 @@ export class PathSegment extends Basic {
 }
 type PathShape_pathsegs = BasicArray<PathSegment>
 type PathShape2_pathsegs = BasicArray<PathSegment>
-/* pattern frame */
-export class PatternFrame extends Basic {
-    typeId = "pattern-frame"
-    x: number
-    y: number
-    width: number
-    height: number
-    rotation: number
-    isFlippedVertical: boolean
-    isFlippedHorizontal: boolean
-    constructor(x: number, y: number, width: number, height: number, rotation: number, isFlippedVertical: boolean, isFlippedHorizontal: boolean) {
-        super()
-        this.x = x
-        this.y = y
-        this.width = width
-        this.height = height
-        this.rotation = rotation
-        this.isFlippedVertical = isFlippedVertical
-        this.isFlippedHorizontal = isFlippedHorizontal
-    }
-}
 /* point 2d */
 export class Point2D extends Basic {
     typeId = "point-2d"
@@ -347,6 +338,25 @@ type Style_contacts = BasicArray<ContactRole>
 type TableShape_rowHeights = BasicArray<CrdtNumber>
 type TableShape_colWidths = BasicArray<CrdtNumber>
 type Text_paras = BasicArray<Para>
+/* transform */
+export class Transform extends Basic {
+    typeId = "transform"
+    m00: number
+    m01: number
+    m02: number
+    m10: number
+    m11: number
+    m12: number
+    constructor(m00: number, m01: number, m02: number, m10: number, m11: number, m12: number) {
+        super()
+        this.m00 = m00
+        this.m01 = m01
+        this.m02 = m02
+        this.m10 = m10
+        this.m11 = m11
+        this.m12 = m12
+    }
+}
 /* user infomation */
 export class UserInfo extends Basic {
     typeId = "user-info"
@@ -592,6 +602,13 @@ export class Fill extends Basic {
     gradient?: Gradient
     imageRef?: string
     fillRule?: FillRule
+    imageScaleMode?: ImageScaleMode
+    rotation?: number
+    scale?: number
+    originalImageWidth?: number
+    originalImageHeight?: number
+    paintFilter?: PaintFilter
+    transform?: Transform
     constructor(crdtidx: Crdtidx, id: string, isEnabled: boolean, fillType: FillType, color: Color) {
         super()
         this.crdtidx = crdtidx
@@ -857,8 +874,6 @@ export class CutoutShape extends PathShape {
 export class ImageShape extends PathShape {
     typeId = "image-shape"
     imageRef: string
-    patternFrame?: PatternFrame
-    isClip?: boolean
     constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, frame: ShapeFrame, style: Style, pathsegs: PathShape_pathsegs, imageRef: string) {
         super(crdtidx, id, name, type, frame, style, pathsegs)
         this.imageRef = imageRef

@@ -256,6 +256,10 @@ export function exportGroupShape_childs(source: types.GroupShape_childs, ctx?: I
     })
     return ret
 }
+/* image scale mode */
+export function exportImageScaleMode(source: types.ImageScaleMode, ctx?: IExportContext): types.ImageScaleMode {
+    return source
+}
 /* line cap style */
 export function exportLineCapStyle(source: types.LineCapStyle, ctx?: IExportContext): types.LineCapStyle {
     return source
@@ -288,6 +292,17 @@ export function exportPageListItem(source: types.PageListItem, ctx?: IExportCont
     ret.id = source.id
     ret.name = source.name
     if (source.versionId) ret.versionId = source.versionId
+    return ret
+}
+/* paint filter */
+export function exportPaintFilter(source: types.PaintFilter, ctx?: IExportContext): types.PaintFilter {
+    const ret: types.PaintFilter = {} as types.PaintFilter
+    if (source.exposure) ret.exposure = source.exposure
+    if (source.contrast) ret.contrast = source.contrast
+    if (source.saturation) ret.saturation = source.saturation
+    if (source.temperature) ret.temperature = source.temperature
+    if (source.tint) ret.tint = source.tint
+    if (source.hue) ret.hue = source.hue
     return ret
 }
 export function exportPara_spans(source: types.Para_spans, ctx?: IExportContext): types.Para_spans {
@@ -325,18 +340,6 @@ export function exportPathShape2_pathsegs(source: types.PathShape2_pathsegs, ctx
     source.forEach((source) => {
         ret.push(exportPathSegment(source, ctx))
     })
-    return ret
-}
-/* pattern frame */
-export function exportPatternFrame(source: types.PatternFrame, ctx?: IExportContext): types.PatternFrame {
-    const ret: types.PatternFrame = {} as types.PatternFrame
-    ret.x = source.x
-    ret.y = source.y
-    ret.width = source.width
-    ret.height = source.height
-    ret.rotation = source.rotation
-    ret.isFlippedVertical = source.isFlippedVertical
-    ret.isFlippedHorizontal = source.isFlippedHorizontal
     return ret
 }
 /* point 2d */
@@ -481,6 +484,17 @@ export function exportText_paras(source: types.Text_paras, ctx?: IExportContext)
     source.forEach((source) => {
         ret.push(exportPara(source, ctx))
     })
+    return ret
+}
+/* transform */
+export function exportTransform(source: types.Transform, ctx?: IExportContext): types.Transform {
+    const ret: types.Transform = {} as types.Transform
+    ret.m00 = source.m00
+    ret.m01 = source.m01
+    ret.m02 = source.m02
+    ret.m10 = source.m10
+    ret.m11 = source.m11
+    ret.m12 = source.m12
     return ret
 }
 /* underline types */
@@ -693,6 +707,13 @@ export function exportFill(source: types.Fill, ctx?: IExportContext): types.Fill
     if (source.gradient) ret.gradient = exportGradient(source.gradient, ctx)
     if (source.imageRef) ret.imageRef = source.imageRef
     if (source.fillRule) ret.fillRule = exportFillRule(source.fillRule, ctx)
+    if (source.imageScaleMode) ret.imageScaleMode = exportImageScaleMode(source.imageScaleMode, ctx)
+    if (source.rotation) ret.rotation = source.rotation
+    if (source.scale) ret.scale = source.scale
+    if (source.originalImageWidth) ret.originalImageWidth = source.originalImageWidth
+    if (source.originalImageHeight) ret.originalImageHeight = source.originalImageHeight
+    if (source.paintFilter) ret.paintFilter = exportPaintFilter(source.paintFilter, ctx)
+    if (source.transform) ret.transform = exportTransform(source.transform, ctx)
         // inject code
     if (ctx?.medias && ret.imageRef) ctx.medias.add(ret.imageRef);
 
@@ -978,8 +999,6 @@ export function exportImageShape(source: types.ImageShape, ctx?: IExportContext)
     const ret: types.ImageShape = exportPathShape(source, ctx) as types.ImageShape
     ret.typeId = "image-shape"
     ret.imageRef = source.imageRef
-    if (source.patternFrame) ret.patternFrame = exportPatternFrame(source.patternFrame, ctx)
-    if (source.isClip) ret.isClip = source.isClip
         // inject code
     if (ctx?.medias) ctx.medias.add(ret.imageRef);
 

@@ -1,0 +1,11 @@
+{
+    "description": "image scale mode",
+    "enum": [
+        "fill",
+        "stretch",
+        "fit",
+        "crop",
+        "tile"
+    ],
+    "default": "fill"
+}

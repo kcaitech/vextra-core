@@ -296,6 +296,10 @@ export function importGroupShape_childs(source: types.GroupShape_childs, ctx?: I
     })
     return ret
 }
+/* image scale mode */
+export function importImageScaleMode(source: types.ImageScaleMode, ctx?: IImportContext): impl.ImageScaleMode {
+    return source
+}
 /* line cap style */
 export function importLineCapStyle(source: types.LineCapStyle, ctx?: IImportContext): impl.LineCapStyle {
     return source
@@ -336,6 +340,20 @@ export function importPageListItem(source: types.PageListItem, ctx?: IImportCont
     importPageListItemOptional(ret, source, ctx)
     return ret
 }
+/* paint filter */
+function importPaintFilterOptional(tar: impl.PaintFilter, source: types.PaintFilter, ctx?: IImportContext) {
+    if (source.exposure) tar.exposure = source.exposure
+    if (source.contrast) tar.contrast = source.contrast
+    if (source.saturation) tar.saturation = source.saturation
+    if (source.temperature) tar.temperature = source.temperature
+    if (source.tint) tar.tint = source.tint
+    if (source.hue) tar.hue = source.hue
+}
+export function importPaintFilter(source: types.PaintFilter, ctx?: IImportContext): impl.PaintFilter {
+    const ret: impl.PaintFilter = new impl.PaintFilter ()
+    importPaintFilterOptional(ret, source, ctx)
+    return ret
+}
 export function importPara_spans(source: types.Para_spans, ctx?: IImportContext): Para_spans {
     const ret: Para_spans = new BasicArray()
     source.forEach((source) => {
@@ -371,18 +389,6 @@ export function importPathShape2_pathsegs(source: types.PathShape2_pathsegs, ctx
     source.forEach((source) => {
         ret.push(importPathSegment(source, ctx))
     })
-    return ret
-}
-/* pattern frame */
-export function importPatternFrame(source: types.PatternFrame, ctx?: IImportContext): impl.PatternFrame {
-    const ret: impl.PatternFrame = new impl.PatternFrame (
-        source.x,
-        source.y,
-        source.width,
-        source.height,
-        source.rotation,
-        source.isFlippedVertical,
-        source.isFlippedHorizontal)
     return ret
 }
 /* point 2d */
@@ -528,6 +534,17 @@ export function importText_paras(source: types.Text_paras, ctx?: IImportContext)
     source.forEach((source) => {
         ret.push(importPara(source, ctx))
     })
+    return ret
+}
+/* transform */
+export function importTransform(source: types.Transform, ctx?: IImportContext): impl.Transform {
+    const ret: impl.Transform = new impl.Transform (
+        source.m00,
+        source.m01,
+        source.m02,
+        source.m10,
+        source.m11,
+        source.m12)
     return ret
 }
 /* underline types */
@@ -757,6 +774,13 @@ function importFillOptional(tar: impl.Fill, source: types.Fill, ctx?: IImportCon
     if (source.gradient) tar.gradient = importGradient(source.gradient, ctx)
     if (source.imageRef) tar.imageRef = source.imageRef
     if (source.fillRule) tar.fillRule = importFillRule(source.fillRule, ctx)
+    if (source.imageScaleMode) tar.imageScaleMode = importImageScaleMode(source.imageScaleMode, ctx)
+    if (source.rotation) tar.rotation = source.rotation
+    if (source.scale) tar.scale = source.scale
+    if (source.originalImageWidth) tar.originalImageWidth = source.originalImageWidth
+    if (source.originalImageHeight) tar.originalImageHeight = source.originalImageHeight
+    if (source.paintFilter) tar.paintFilter = importPaintFilter(source.paintFilter, ctx)
+    if (source.transform) tar.transform = importTransform(source.transform, ctx)
 }
 export function importFill(source: types.Fill, ctx?: IImportContext): impl.Fill {
     const ret: impl.Fill = new impl.Fill (
@@ -1328,11 +1352,7 @@ export function importCutoutShape(source: types.CutoutShape, ctx?: IImportContex
     return ret
 }
 /* image shape */
-function importImageShapeOptional(tar: impl.ImageShape, source: types.ImageShape, ctx?: IImportContext) {
-    importPathShapeOptional(tar, source)
-    if (source.patternFrame) tar.patternFrame = importPatternFrame(source.patternFrame, ctx)
-    if (source.isClip) tar.isClip = source.isClip
-}
+const importImageShapeOptional = importPathShapeOptional
 export function importImageShape(source: types.ImageShape, ctx?: IImportContext): impl.ImageShape {
         // inject code
     if (!source.pathsegs) { // 兼容旧数据

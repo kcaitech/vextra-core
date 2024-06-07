@@ -23,7 +23,7 @@ import { FrameType, PathType, RadiusType, RECT_POINTS } from "./consts";
 import { Variable } from "./variable";
 
 export {
-    CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, PatternFrame,
+    CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D,
     CurvePoint, ShapeFrame, Ellipse, PathSegment, OverrideType, VariableType,
     FillRule, CornerRadius,
 } from "./baseclasses";
@@ -977,8 +977,6 @@ export class RectShape extends PathShape implements classes.RectShape {
 export class ImageShape extends RectShape implements classes.ImageShape {
     typeId = 'image-shape'
     imageRef: string;
-    patternFrame?: classes.PatternFrame;
-    isClip?: boolean;
     private __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
     private __cacheData?: { buff: Uint8Array, base64: string };
 
