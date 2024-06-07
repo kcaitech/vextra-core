@@ -36,6 +36,9 @@ export {
     CornerType,
     BorderSideSetting,
     SideType,
+    Transform,
+    ImageScaleMode,
+    PaintFilter
 } from "./baseclasses"
 
 /**
@@ -119,6 +122,13 @@ export class Fill extends Basic implements classes.Fill {
     gradient?: Gradient
     imageRef?: string
     fillRule?: FillRule
+    imageScaleMode?: classes.ImageScaleMode
+    rotation?: number
+    scale?: number
+    originalImageWidth?: number
+    originalImageHeight?: number
+    paintFilter?: classes.PaintFilter
+    transform?: classes.Transform
 
     private __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
     private __cacheData?: { buff: Uint8Array, base64: string };
