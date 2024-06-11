@@ -1,4 +1,5 @@
 export const EPSILON = 1e-7 // 浮点计算误差最大允许值
+
 export function isEqual(a: number, b: number) { // 判断是否相等，差值小于EPSILON视为相等
     return a === b || Math.abs(a - b) < EPSILON
 }
