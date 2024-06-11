@@ -16,7 +16,18 @@ import {
 } from "../data/shape";
 import { ShapeEditor } from "./shape";
 import * as types from "../data/typesdefine";
-import { BoolOp, BorderPosition, ExportFileFormat, ExportFormatNameingScheme, FillType, GradientType, MarkerType, ShadowPosition, ShapeType, SideType } from "../data/typesdefine";
+import {
+    BoolOp,
+    BorderPosition,
+    ExportFileFormat,
+    ExportFormatNameingScheme,
+    FillType,
+    GradientType,
+    MarkerType,
+    ShadowPosition,
+    ShapeType,
+    SideType
+} from "../data/typesdefine";
 import { Page } from "../data/page";
 import {
     newArrowShape,
@@ -81,7 +92,14 @@ import {
 } from "./symbol";
 import { is_circular_ref2 } from "./utils/ref_check";
 import { BorderSideSetting, BorderStyle, CurvePoint, ExportFormat, Point2D, Shadow } from "../data/baseclasses";
-import { calculateInnerAnglePosition, getPolygonPoints, getPolygonVertices, get_rotate_for_straight, is_straight, update_frame_by_points } from "./utils/path";
+import {
+    calculateInnerAnglePosition,
+    getPolygonPoints,
+    getPolygonVertices,
+    get_rotate_for_straight,
+    is_straight,
+    update_frame_by_points
+} from "./utils/path";
 import { modify_shapes_height, modify_shapes_width } from "./utils/common";
 import { CoopRepository } from "./coop/cooprepo";
 import { Api, TextShapeLike } from "./coop/recordapi";
@@ -99,9 +117,10 @@ import {
 } from "../dataview";
 import { RadiusType, ResizingConstraints2 } from "../data/consts";
 import { FMT_VER_latest } from "../data/fmtver";
-import {makeShapeTransform2By1, updateShapeTransform1By2} from "../data/shape_transform_util";
-import {ColVector3D} from "../basic/matrix2";
-import {TransformMode} from "../basic/transform";
+import { makeShapeTransform1By2, makeShapeTransform2By1, updateShapeTransform1By2 } from "../data/shape_transform_util";
+import { ColVector3D } from "../basic/matrix2";
+import {Transform as Transform2} from "../basic/transform";
+
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -109,6 +128,7 @@ export interface PositonAdjust { // 涉及属性：frame.x、frame.y
     transX: number
     transY: number
 }
+
 export interface FrameAdjust { // frame.width、frame.height
     target: Shape
     widthExtend: number
@@ -120,19 +140,23 @@ export interface BatchAction { // targer、index、value
     index: number
     value: any
 }
+
 export interface BatchAction2 { // targer、value
     target: ShapeView
     value: any
 }
+
 export interface BatchAction3 { // targer、index
     target: ShapeView
     index: number
 }
+
 export interface BatchAction4 { // targer、value、type
     target: ShapeView
     index: number
     type: 'fills' | 'borders'
 }
+
 export interface BatchAction5 { // targer、value、type
     target: ShapeView
     index: number
@@ -256,16 +280,19 @@ export interface ExportFormatScaleAction {
     index: number
     value: number
 }
+
 export interface ExportFormatNameAction {
     target: Shape
     index: number
     value: string
 }
+
 export interface ExportFormatPerfixAction {
     target: Shape
     index: number
     value: ExportFormatNameingScheme
 }
+
 export interface ExportFormatFileFormatAction {
     target: Shape
     index: number
@@ -1253,8 +1280,8 @@ export class PageEditor {
 
     /**
      * @description 批量的图层集体进入不同容器 (与2有区别)
-     * @param actions 
-     * @returns 
+     * @param actions
+     * @returns
      */
     pasteShapes3(actions: { env: GroupShape, shapes: Shape[] }[]): Shape[] | false {
         const api = this.__repo.start("pasteShapes3", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
@@ -1344,8 +1371,7 @@ export class PageEditor {
                             api.modifyPointCornerRadius(page, shape, _i, val, 0);
                         }
                         needUpdateFrame = true;
-                    }
-                    else if (shape instanceof PathShape2) {
+                    } else if (shape instanceof PathShape2) {
                         const points = shape.pathsegs[0].points;
                         for (let _i = 0; _i < 4; _i++) {
                             const val = values[_i];
@@ -1356,13 +1382,11 @@ export class PageEditor {
                             api.modifyPointCornerRadius(page, shape, _i, val, 0);
                         }
                         needUpdateFrame = true;
-                    }
-                    else {
+                    } else {
                         const __shape = shape as Artboard | SymbolShape;
                         api.shapeModifyRadius2(page, __shape, lt, rt, rb, lb)
                     }
-                }
-                else {
+                } else {
                     if (shape.isVirtualShape) {
                         continue;
                     }
@@ -1378,8 +1402,7 @@ export class PageEditor {
                             }
                         });
                         needUpdateFrame = true;
-                    }
-                    else if (shape instanceof PathShape2) {
+                    } else if (shape instanceof PathShape2) {
                         shape.pathsegs.forEach((seg, index) => {
                             for (let _i = 0; _i < seg.points.length; _i++) {
                                 if (seg.points[_i].radius === values[0]) {
@@ -1390,8 +1413,7 @@ export class PageEditor {
                             }
                         });
                         needUpdateFrame = true;
-                    }
-                    else {
+                    } else {
                         api.shapeModifyFixedRadius(page, shape as GroupShape | TextShape, values[0]);
                     }
                 }
@@ -1750,6 +1772,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     modifyShapesInnerAngle(actions: { target: StarShape, offset: number }[]) {
         const api = this.__repo.start('modifyShapesInnerAngle');
         try {
@@ -1764,7 +1787,7 @@ export class PageEditor {
                     if (index % 2 === 0) continue;
                     const angle = ((2 * Math.PI) / points.length) * index;
                     const p = calculateInnerAnglePosition(offset, angle);
-                    api.shapeModifyCurvPoint(this.__page, target, index, p , 0);
+                    api.shapeModifyCurvPoint(this.__page, target, index, p, 0);
                 }
                 api.shapeModifyInnerAngle(this.__page, target, offset);
             }
@@ -1843,22 +1866,20 @@ export class PageEditor {
         }
     }
 
-    shapesFlip(actions: BatchAction2[]) {
-        const api = this.__repo.start('shapesFlip');
+    shapesFlip(params: { shape: ShapeView, transform2: Transform2 }[]) {
         try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                if (value === 'horizontal') {
-                    api.shapeModifyHFlip(this.__page, adapt2Shape(target));
-                } else if (value === 'vertical') {
-                    api.shapeModifyVFlip(this.__page, adapt2Shape(target));
-                }
+            const api = this.__repo.start('shapesFlip');
+            const page = this.__page;
+            for (let i = 0; i < params.length; i++) {
+                const { shape, transform2 } = params[i];
+                api.shapeModifyByTransform(page, adapt2Shape(shape), makeShapeTransform1By2(transform2 as Transform2));
             }
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
         }
     }
+
 
     // 渐变
     //翻转
@@ -1903,6 +1924,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     //旋转90度
     rotateShapesGradient(actions: BatchAction4[]) {
         try {
@@ -1946,6 +1968,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     // 添加节点
     addShapesGradientStop(actions: BatchAction5[]) {
         try {
@@ -1991,6 +2014,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     toggerShapeGradientType(actions: BatchAction5[]) {
         try {
             const api = this.__repo.start('toggerShapeGradientType');
@@ -2052,6 +2076,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesGradientStopColor(actions: BatchAction5[]) {
         try {
             const api = this.__repo.start('setShapesGradientStopColor');
@@ -2088,6 +2113,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     deleteShapesGradientStop(actions: BatchAction5[]) {
         try {
             const api = this.__repo.start('setShapesGradientStopColor');
@@ -2118,6 +2144,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setGradientOpacity(actions: BatchAction5[]) {
         try {
             const api = this.__repo.start('setGradientOpacity');
@@ -2144,6 +2171,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     // 填充
     setShapesFillColor(actions: BatchAction[]) {
         const api = this.__repo.start('setShapesFillColor');
@@ -2172,6 +2200,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesFillType(actions: BatchAction[]) {
         const api = this.__repo.start('setShapesFillType');
         try {
@@ -2433,6 +2462,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesBorderCornerType(actions: BatchAction[]) {
         const api = this.__repo.start('setShapesBorderCornerType');
         try {
@@ -2546,7 +2576,8 @@ export class PageEditor {
                 if (modify_variable_with_api(api, this.__page, target, VariableType.MarkerType, OverrideType.EndMarkerType, startMarkerType || MarkerType.Line)) {
                     modify_variable_with_api(api, this.__page, target, VariableType.MarkerType, OverrideType.StartMarkerType, endMarkerType || MarkerType.Line)
                     continue;
-                };
+                }
+                ;
                 api.shapeModifyEndMarkerType(this.__page, adapt2Shape(target), startMarkerType || MarkerType.Line);
                 api.shapeModifyStartMarkerType(this.__page, adapt2Shape(target), endMarkerType || MarkerType.Line);
             }
@@ -2687,6 +2718,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     // shape blur
     shapesAddBlur(actions: BatchAction2[]) {
         try {
@@ -2700,6 +2732,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     shapesBlurUnify(actions: BatchAction2[]) {
         try {
             const api = this.__repo.start('shapesBlurUnify');
@@ -2713,6 +2746,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     shapeDeleteBlur(shapes: ShapeView[]) {
         try {
             const api = this.__repo.start('shapeDeleteBlur');
@@ -2725,6 +2759,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapeBlurEnabled(actions: BatchAction2[]) {
         try {
             const api = this.__repo.start('setShapeBlurEnabled');
@@ -2737,6 +2772,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapeBlurSaturation(actions: BatchAction2[]) {
         try {
             const api = this.__repo.start('setShapeBlurSaturation');
@@ -2780,6 +2816,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     shapesAddExportFormat(actions: ExportFormatAddAction[]) {
         try {
             const api = this.__repo.start('shapesAddExportFormat');
@@ -2796,6 +2833,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     pageAddExportFormat(formats: ExportFormat[]) {
         try {
             const api = this.__repo.start('pageAddExportFormat');
@@ -2809,6 +2847,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setPageExportPreviewUnfold(unfold: boolean) {
         try {
             const api = this.__repo.start('setPageExportPreviewUnfold');
@@ -2818,6 +2857,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     shapesDeleteExportFormat(actions: ExportFormatDeleteAction[]) {
         try {
             const api = this.__repo.start('shapesDeleteExportFormat');
@@ -2830,6 +2870,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     pageDeleteExportFormat(idx: number) {
         try {
             const format = this.__page.exportOptions?.exportFormats[idx];
@@ -2842,6 +2883,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesExportFormatScale(actions: ExportFormatScaleAction[]) {
         try {
             const api = this.__repo.start('setShapesExportFormatScale');
@@ -2854,6 +2896,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setPageExportFormatScale(idx: number, scale: number) {
         try {
             const api = this.__repo.start('setPageExportFormatScale');
@@ -2863,6 +2906,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesExportFormatName(actions: ExportFormatNameAction[]) {
         try {
             const api = this.__repo.start('setShapesExportFormatName');
@@ -2875,6 +2919,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setPageExportFormatName(idx: number, name: string) {
         try {
             const api = this.__repo.start('setPageExportFormatName');
@@ -2884,6 +2929,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesExportFormatPerfix(actions: ExportFormatPerfixAction[]) {
         try {
             const api = this.__repo.start('setShapesExportFormatPerfix');
@@ -2896,6 +2942,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setPageExportFormatPerfix(idx: number, name: ExportFormatNameingScheme) {
         try {
             const api = this.__repo.start('setPageExportFormatPerfix');
@@ -2905,6 +2952,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesExportFormatFileFormat(actions: ExportFormatFileFormatAction[]) {
         try {
             const api = this.__repo.start('setShapesExportFormatFileFormat');
@@ -2917,6 +2965,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setPageExportFormatFileFormat(idx: number, name: ExportFileFormat) {
         try {
             const api = this.__repo.start('setPageExportFormatFileFormat');
@@ -2995,6 +3044,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     /**
      * @description 图层拖动调整
      */
