@@ -23,6 +23,7 @@ import {
     BoolOp, BulletNumbersBehavior, BulletNumbersType, ExportFileFormat, OverrideType, Point2D,
     StrikethroughType, TextTransformType, UnderlineType, ShadowPosition, ExportFormatNameingScheme, FillType, BlendMode, CornerType, SideType, BorderSideSetting,
     BlurType,
+    ImageScaleMode,
 } from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
@@ -482,6 +483,35 @@ export class Api {
         if (!fill) return;
         this.addOp(basicapi.crdtSetAttr(fill, "fillType", fillType));
     }
+    setFillScaleMode(page: Page, shape: Shape | Variable, idx: number, mode: ImageScaleMode) {
+        checkShapeAtPage(page, shape);
+        const fills = shape instanceof Shape ? shape.style.fills : shape.value;
+        const fill: Fill = fills[idx];
+        if (!fill) return;
+        this.addOp(basicapi.crdtSetAttr(fill, "imageScaleMode", mode));
+    }
+    setFillImageRef(page: Page, shape: Shape | Variable, idx: number, urlRef: string) {
+        checkShapeAtPage(page, shape);
+        const fills = shape instanceof Shape ? shape.style.fills : shape.value;
+        const fill: Fill = fills[idx];
+        if (!fill) return;
+        this.addOp(basicapi.crdtSetAttr(fill, "imageRef", urlRef));
+    }
+    setFillImageOriginWidth(page: Page, shape: Shape | Variable, idx: number, width: number) {
+        checkShapeAtPage(page, shape);
+        const fills = shape instanceof Shape ? shape.style.fills : shape.value;
+        const fill: Fill = fills[idx];
+        if (!fill) return;
+        this.addOp(basicapi.crdtSetAttr(fill, "originalImageWidth", width));
+    }
+    setFillImageOriginHeight(page: Page, shape: Shape | Variable, idx: number, height: number) {
+        checkShapeAtPage(page, shape);
+        const fills = shape instanceof Shape ? shape.style.fills : shape.value;
+        const fill: Fill = fills[idx];
+        if (!fill) return;
+        this.addOp(basicapi.crdtSetAttr(fill, "originalImageHeight", height));
+    }
+
     setBorderFillType(page: Page, shape: Shape | Variable, idx: number, fillType: FillType) {
         checkShapeAtPage(page, shape);
         const borders = shape instanceof Shape ? shape.style.borders : shape.value;

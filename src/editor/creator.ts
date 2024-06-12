@@ -410,6 +410,37 @@ export function newImageShape(name: string, frame: ShapeFrame, mediasMgr: Resour
     return img;
 }
 
+export function newImageFillShape(name: string, frame: ShapeFrame, mediasMgr: ResourceMgr<{
+    buff: Uint8Array,
+    base64: string
+}>, originFrame: {width: number, height: number}, ref?: string): RectShape {
+    _checkFrame(frame);
+    const style = newStyle();
+    const curvePoint = new BasicArray<CurvePoint>();
+    const id = uuid();
+    const p1 = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight); // lt
+    const p2 = new CurvePoint([1] as BasicArray<number>, uuid(), 1, 0, CurveMode.Straight); // rt
+    const p3 = new CurvePoint([2] as BasicArray<number>, uuid(), 1, 1, CurveMode.Straight); // rb
+    const p4 = new CurvePoint([3] as BasicArray<number>, uuid(), 0, 1, CurveMode.Straight); // lb
+    curvePoint.push(p1, p2, p3, p4);
+
+    const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, true);
+    const shape = new RectShape(new BasicArray(), id, name, types.ShapeType.Rectangle, frame, style, new BasicArray<PathSegment>(segment));
+    addCommonAttr(shape);
+    const fillColor = new Color(1, 216, 216, 216);
+    const fill = new Fill(new BasicArray(), uuid(), true, FillType.Pattern, fillColor);
+    fill.imageRef = ref;
+    fill.originalImageWidth = originFrame.width;
+    fill.originalImageHeight = originFrame.height;
+    fill.imageScaleMode = types.ImageScaleMode.Fill;
+    fill.setImageMgr(mediasMgr);
+    const fills = new BasicArray<Fill>();
+    fills.push(fill);
+
+    shape.style.fills = fills;
+    return shape;
+}
+
 export function newTable(name: string, frame: ShapeFrame, rowCount: number, columCount: number, mediasMgr: ResourceMgr<{
     buff: Uint8Array,
     base64: string

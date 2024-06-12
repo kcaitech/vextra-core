@@ -2,7 +2,7 @@ import { TableCell, TableShape } from "../data/table";
 import { ShapeEditor } from "./shape";
 import { Page } from "../data/page";
 import { CoopRepository } from "./coop/cooprepo";
-import { BorderPosition, BorderStyle, StrikethroughType, TableCellType, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType, FillType } from "../data/baseclasses";
+import { BorderPosition, BorderStyle, StrikethroughType, TableCellType, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType, FillType, ImageScaleMode } from "../data/baseclasses";
 import { adjColum, adjRow } from "./tableadjust";
 import { Border, Fill, Gradient } from "../data/style";
 import { fixTableShapeFrameByLayout } from "./utils/other";
@@ -1317,6 +1317,41 @@ export class TableEditor extends ShapeEditor {
                 if (cell.cell) {
                     const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
                     api.setFillType(this.__page, c.data, idx, type);
+                    if (!c.data.style.fills[idx].imageScaleMode) {
+                        api.setFillScaleMode(this.__page, c.data, idx, ImageScaleMode.Fill);
+                    }
+                }
+            })
+            this.__repo.commit();
+        } catch (error) {
+            console.error(error);
+            this.__repo.rollback();
+        }
+    }
+    public setFillImageScaleMode4Cell(idx: number, type: ImageScaleMode, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
+        const api = this.__repo.start("setFillImageScaleMode");
+        try {
+            this.view._getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
+                if (cell.cell) {
+                    const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
+                    api.setFillScaleMode(this.__page, c.data, idx, type);
+                }
+            })
+            this.__repo.commit();
+        } catch (error) {
+            console.error(error);
+            this.__repo.rollback();
+        }
+    }
+    public setFillImageRef4Cell(idx: number, urlRef: string, origin: { width: number, height: number }, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
+        const api = this.__repo.start("setFillImageRef4Cell");
+        try {
+            this.view._getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
+                if (cell.cell) {
+                    const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
+                    api.setFillImageRef(this.__page, c.data, idx, urlRef);
+                    api.setFillImageOriginWidth(this.__page, c.data, idx, origin.width);
+                    api.setFillImageOriginHeight(this.__page, c.data, idx, origin.height);
                 }
             })
             this.__repo.commit();

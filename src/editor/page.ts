@@ -1744,7 +1744,7 @@ export class PageEditor {
                     if (index % 2 === 0) continue;
                     const angle = ((2 * Math.PI) / points.length) * index;
                     const p = calculateInnerAnglePosition(offset, angle);
-                    api.shapeModifyCurvPoint(this.__page, target, index, p , 0);
+                    api.shapeModifyCurvPoint(this.__page, target, index, p, 0);
                 }
                 api.shapeModifyInnerAngle(this.__page, target, offset);
             }
@@ -2159,6 +2159,38 @@ export class PageEditor {
                 const { target, index, value } = actions[i];
                 const s = shape4fill(api, this.__page, target);
                 api.setFillType(this.__page, s, index, value);
+                if (!target.style.fills[index].imageScaleMode) {
+                    api.setFillScaleMode(this.__page, s, index, types.ImageScaleMode.Fill);
+                }
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setShapesFillImageScaleMode(actions: BatchAction[]) {
+        const api = this.__repo.start('setShapesFillImageScaleMode');
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index, value } = actions[i];
+                const s = shape4fill(api, this.__page, target);
+                api.setFillScaleMode(this.__page, s, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapesFillImageRef(actions: BatchAction[]) {
+        const api = this.__repo.start('setShapesFillImageRef');
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index, value } = actions[i];
+                const s = shape4fill(api, this.__page, target);
+                api.setFillImageRef(this.__page, s, index, value.urlRef);
+                api.setFillImageOriginWidth(this.__page, s, index, value.origin.width);
+                api.setFillImageOriginHeight(this.__page, s, index, value.origin.height);
             }
             this.__repo.commit();
         } catch (error) {
