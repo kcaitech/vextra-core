@@ -41,9 +41,11 @@ export function renderText2Path(layout: TextLayout, offsetX: number, offsetY: nu
                 const span = garr.attr;
                 const font = span?.fontName || '';
                 const fontSize = span?.fontSize || 0;
-                const metrics = garr[0]?.metrics;
                 const bottom = lineY + line.lineHeight - (line.lineHeight - line.maxFontSize) / 2;
-                const baseY = metrics ? (bottom - (fontSize - (metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent)) / 2 - (metrics.actualBoundingBoxDescent)) : bottom; // baseline
+
+                // 以bottom对齐，然后再根据最大actualBoundingBoxDescent进行偏移
+                const offsetY = garr.reduce((y, g) => Math.max(y, g.metrics?.actualBoundingBoxDescent || 0), 0)
+                const baseY = bottom - offsetY;
 
                 const weight = (span?.weight) || 400;
                 const italic = !!(span?.italic);
@@ -139,22 +141,22 @@ export function renderTextLayout(h: Function, textlayout: TextLayout, frame?: Sh
                 const garr = line[garrIdx];
                 const span = garr.attr;
                 const fontSize = span?.fontSize || 0;
-                const metrics = garr[0]?.metrics;
                 const bottom = lineY + line.lineHeight - (line.lineHeight - line.maxFontSize) / 2;
-                const baseY = metrics ? (bottom - (fontSize - (metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent)) / 2 - (metrics.actualBoundingBoxDescent)) : bottom; // baseline
 
+                let offsetY = 0;
                 for (let gIdx = 0, gCount = garr.length; gIdx < gCount; gIdx++) {
                     const graph = garr[gIdx];
+                    offsetY = Math.max(offsetY, graph.metrics?.actualBoundingBoxDescent || 0)
                     if (isBlankChar(graph.char.charCodeAt(0))) { // 两个连续的空格或者首个空格，svg显示有问题
                         continue;
                     }
                     gText.push(graph.char);
                     gX.push(graph.x + lineX);
-                    // gY.push(_y - (graph.metrics?.actualBoundingBoxDescent || 0));
                 }
 
-                const fontName = span?.fontName;
+                const baseY = bottom - offsetY;
 
+                const fontName = span?.fontName;
                 const font = "normal " + fontSize + "px " + fontName;
                 const style: any = {
                     font,
