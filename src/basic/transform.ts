@@ -709,8 +709,12 @@ export class Transform { // 变换
             this.isMatrixLatest = false
 
         } else {
+            if (params.point) this.translate(params.point.getNegate() as ColVector3D);
+
             this.matrix = matrix.multiply(this.matrix)
             this.isSubMatrixLatest = false
+
+            if (params.point) this.translate(params.point);
         }
 
         this.onChange(this)
@@ -720,41 +724,51 @@ export class Transform { // 变换
 
     // X轴缩放
     scaleX(params: {
+        point?: ColVector3D, // 缩放的中心点
         value: number,
         mode?: TransformMode,
     }) {
-        this.scale({vector: new ColVector3D([params.value, 1, 1]), mode: params.mode})
+        return this.scale({point: params.point, vector: new ColVector3D([params.value, 1, 1]), mode: params.mode})
     }
 
     // Y轴缩放
     scaleY(params: {
+        point?: ColVector3D, // 缩放的中心点
         value: number,
         mode?: TransformMode,
     }) {
-        this.scale({vector: new ColVector3D([1, params.value, 1]), mode: params.mode})
+        return this.scale({point: params.point, vector: new ColVector3D([1, params.value, 1]), mode: params.mode})
     }
 
     // Z轴缩放
     scaleZ(params: {
+        point?: ColVector3D, // 缩放的中心点
         value: number,
         mode?: TransformMode,
     }) {
-        this.scale({vector: new ColVector3D([1, 1, params.value]), mode: params.mode})
+        return this.scale({point: params.point, vector: new ColVector3D([1, 1, params.value]), mode: params.mode})
     }
 
     // 在本变换之前缩放
-    preScale(vector: ColVector3D) {
+    preScale(params: {
+        point?: ColVector3D, // 缩放的中心点
+        vector: ColVector3D,
+    }) {
         if (!this.isMatrixLatest) this.updateMatrix();
 
         const matrix = new Matrix(new NumberArray2D([4, 4], [
-            vector.x, 0, 0, 0,
-            0, vector.y, 0, 0,
-            0, 0, vector.z, 0,
+            params.vector.x, 0, 0, 0,
+            0, params.vector.y, 0, 0,
+            0, 0, params.vector.z, 0,
             0, 0, 0, 1,
         ], true))
 
+        if (params.point) this.translate(params.point.getNegate() as ColVector3D);
+
         this.matrix.multiply(matrix)
         this.isSubMatrixLatest = false
+
+        if (params.point) this.translate(params.point);
 
         this.onChange(this)
 
@@ -762,18 +776,27 @@ export class Transform { // 变换
     }
 
     // 在本变换之前进行X轴缩放
-    preScaleX(value: number) {
-        this.preScale(new ColVector3D([value, 1, 1]))
+    preScaleX(params: {
+        point?: ColVector3D, // 缩放的中心点
+        value: number,
+    }) {
+        return this.preScale({vector: new ColVector3D([params.value, 1, 1])})
     }
 
     // 在本变换之前进行Y轴缩放
-    preScaleY(value: number) {
-        this.preScale(new ColVector3D([1, value, 1]))
+    preScaleY(params: {
+        point?: ColVector3D, // 缩放的中心点
+        value: number,
+    }) {
+        return this.preScale({vector: new ColVector3D([1, params.value, 1])})
     }
 
     // 在本变换之前进行Z轴缩放
-    preScaleZ(value: number) {
-        this.preScale(new ColVector3D([1, 1, value]))
+    preScaleZ(params: {
+        point?: ColVector3D, // 缩放的中心点
+        value: number,
+    }) {
+        return this.preScale({vector: new ColVector3D([1, 1, params.value])})
     }
 
     // 设置缩放参数
