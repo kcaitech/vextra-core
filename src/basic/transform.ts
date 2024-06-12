@@ -187,8 +187,8 @@ export class Transform { // 变换
     // 分解操作的缓存
     decomposeTranslateCache: ColVector3D | undefined = undefined
     decomposeEulerCache: ColVector3D | undefined = undefined
-    decomposeScaleCache: ColVector3D | undefined = undefined
     decomposeSkewCache: ColVector2D | undefined = undefined
+    decomposeScaleCache: ColVector3D | undefined = undefined
 
     // 逆矩阵的缓存
     inverseCache: Transform | undefined = undefined
@@ -196,8 +196,8 @@ export class Transform { // 变换
     clearDecomposeCache() {
         this.decomposeTranslateCache = undefined
         this.decomposeEulerCache = undefined
-        this.decomposeScaleCache = undefined
         this.decomposeSkewCache = undefined
+        this.decomposeScaleCache = undefined
     }
 
     clearInverseCache() {
@@ -320,7 +320,7 @@ export class Transform { // 变换
 
     clone(): this {
         this.updateMatrix()
-        return new (this.constructor as any)({
+        const transform = new (this.constructor as any)({
             matrix: this.matrix.clone(),
             subMatrix: {
                 translate: this.translateMatrix.clone(),
@@ -329,6 +329,12 @@ export class Transform { // 变换
                 scale: this.scaleMatrix.clone(),
             },
         })
+        transform.decomposeTranslateCache = this.decomposeTranslateCache?.clone()
+        transform.decomposeEulerCache = this.decomposeEulerCache?.clone()
+        transform.decomposeSkewCache = this.decomposeSkewCache?.clone()
+        transform.decomposeScaleCache = this.decomposeScaleCache?.clone()
+        transform.inverseCache = this.inverseCache?.clone()
+        return transform
     }
 
     equals(transform: Transform) {
@@ -667,6 +673,7 @@ export class Transform { // 变换
 
     // 缩放
     scale(params: {
+        point?: ColVector3D, // 缩放的中心点
         vector: ColVector3D,
         mode?: TransformMode,
     }) {
@@ -685,8 +692,22 @@ export class Transform { // 变换
         ], true))
 
         if (params.mode === TransformMode.Local) {
-            this.scaleMatrix = ScaleMatrix.FromMatrix(matrix.multiply(this.scaleMatrix))
+            if (params.point) {
+                // diffTranslate = (S1 - S0) * (-P) // P为缩放中心
+                const s0 = this.scaleMatrix.buildMatrix().resize([3, 3])
+
+                this.scaleMatrix = ScaleMatrix.FromMatrix(matrix.multiply(this.scaleMatrix))
+
+                const s1 = this.scaleMatrix.buildMatrix().resize([3, 3])
+                const diffTranslate = s1.subtract(s0).multiply(params.point.clone().negate()).col0
+
+                this.translate(diffTranslate)
+            } else {
+                this.scaleMatrix = ScaleMatrix.FromMatrix(matrix.multiply(this.scaleMatrix))
+            }
+
             this.isMatrixLatest = false
+
         } else {
             this.matrix = matrix.multiply(this.matrix)
             this.isSubMatrixLatest = false
@@ -1045,24 +1066,26 @@ export class Transform { // 变换
             this.updateMatrix()
         }
 
-        if (params.point === undefined) params.point = new Point3D([0, 0, 0]);
-
         if (params.mode === TransformMode.Local) {
-            let point: Matrix = params.point.clone()
-            if (!this.scaleMatrix.isIdentity) point = this.scaleMatrix.buildMatrix().resize([3, 3]).multiply(point);
-            if (!this.skewMatrix.isIdentity) point = this.skewMatrix.buildMatrix().resize([3, 3]).multiply(point);
+            if (params.point) {
+                let point: Matrix = params.point.clone()
+                if (!this.scaleMatrix.isIdentity) point = this.scaleMatrix.buildMatrix().resize([3, 3]).multiply(point);
+                if (!this.skewMatrix.isIdentity) point = this.skewMatrix.buildMatrix().resize([3, 3]).multiply(point);
 
-            // diffTranslate = (R1 - R0) * (-P) // P为旋转中心
-            const r0 = this.rotateMatrix.buildMatrix().resize([3, 3])
-            this.rotate(params)
-            const r1 = this.rotateMatrix.buildMatrix().resize([3, 3])
-            const diffTranslate = r1.subtract(r0).multiply(point.negate()).col0
+                // diffTranslate = (R1 - R0) * (-P) // P为旋转中心
+                const r0 = this.rotateMatrix.buildMatrix().resize([3, 3])
+                this.rotate(params)
+                const r1 = this.rotateMatrix.buildMatrix().resize([3, 3])
+                const diffTranslate = r1.subtract(r0).multiply(point.negate()).col0
 
-            this.translate(diffTranslate)
+                this.translate(diffTranslate)
+            } else {
+                this.rotate(params)
+            }
         } else {
-            this.translate(params.point.getNegate() as ColVector3D)
+            if (params.point) this.translate(params.point.getNegate() as ColVector3D);
             this.rotate(params)
-            this.translate(params.point)
+            if (params.point) this.translate(params.point);
         }
 
         this.onChange(this)
