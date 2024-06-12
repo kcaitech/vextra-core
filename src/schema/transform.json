@@ -4,7 +4,7 @@
     "properties": {
         "m00": {
             "type": "number",
-            "default": 0
+            "default": 1
         },
         "m01": {
             "type": "number",
@@ -16,7 +16,7 @@
         },
         "m10": {
             "type": "number",
-            "default": 0
+            "default": 1
         },
         "m11": {
             "type": "number",

@@ -131,7 +131,7 @@ export class Fill extends Basic implements classes.Fill {
     transform?: classes.Transform
 
     private __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
-    private __cacheData?: { buff: Uint8Array, base64: string };
+    private __cacheData?: { media: { buff: Uint8Array, base64: string }, ref: string };
 
     constructor(
         crdtidx: BasicArray<number>,
@@ -156,27 +156,51 @@ export class Fill extends Basic implements classes.Fill {
 
     private __startLoad: boolean = false;
     peekImage(startLoad: boolean = false) {
-        const ret = this.__cacheData?.base64;
-        if (ret) return ret;
+        // const ret = this.__cacheData?.base64;
+        // if (ret) return ret;
+        // if (!this.imageRef) return "";
+        // if (startLoad && !this.__startLoad) {
+        //     this.__startLoad = true;
+        //     this.__imageMgr && this.__imageMgr.get(this.imageRef).then((val) => {
+        //         if (!this.__cacheData) {
+        //             this.__cacheData = val;
+        //             if (val) this.notify();
+        //         }
+        //     })
+        // }
+        // return ret;
+
+        if (this.__cacheData?.ref === this.imageRef) {
+            return this.__cacheData?.media.base64;
+        }
         if (!this.imageRef) return "";
         if (startLoad && !this.__startLoad) {
             this.__startLoad = true;
-            this.__imageMgr && this.__imageMgr.get(this.imageRef).then((val) => {
-                if (!this.__cacheData) {
-                    this.__cacheData = val;
-                    if (val) this.notify();
-                }
-            })
+            const mediaMgr = this.__imageMgr;
+            mediaMgr && mediaMgr
+                .get(this.imageRef)
+                .then((val) => {
+                    if (val) {
+                        this.__cacheData = { media: val, ref: this.imageRef! };
+                    }
+                }).finally(() => {
+                    this.__startLoad = false;
+                    this.notify('image-reload');
+                    return this.__cacheData?.media.base64;
+                })
         }
-        return ret;
     }
     // image fill
     async loadImage(): Promise<string> {
+        if (this.__cacheData) return this.__cacheData.media.base64;
         if (!this.imageRef) return "";
-        if (this.__cacheData) return this.__cacheData.base64;
-        this.__cacheData = this.__imageMgr && await this.__imageMgr.get(this.imageRef)
-        if (this.__cacheData) this.notify();
-        return this.__cacheData && this.__cacheData.base64 || "";
+        const mediaMgr = this.__imageMgr;
+        const val = mediaMgr && await mediaMgr.get(this.imageRef);
+        if (val) {
+            this.__cacheData = { media: val, ref: this.imageRef }
+            this.notify();
+        }
+        return this.__cacheData && this.__cacheData.media.base64 || "";
     }
 }
 
