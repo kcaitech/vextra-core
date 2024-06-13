@@ -1,4 +1,4 @@
-import {ColVector, ColVector2D, ColVector3D, Matrix, Matrix3DKeysType, Point2D, Point3D, Vector} from "./matrix2"
+import {ColVector, ColVector2D, ColVector3D, Matrix, Matrix3DKeysType} from "./matrix2"
 import {NumberArray2D} from "./number_array"
 import {isZero} from "./number_utils"
 
@@ -187,8 +187,8 @@ export class Transform { // 变换
     // 分解操作的缓存
     decomposeTranslateCache: ColVector3D | undefined = undefined
     decomposeEulerCache: ColVector3D | undefined = undefined
-    decomposeScaleCache: ColVector3D | undefined = undefined
     decomposeSkewCache: ColVector2D | undefined = undefined
+    decomposeScaleCache: ColVector3D | undefined = undefined
 
     // 逆矩阵的缓存
     inverseCache: Transform | undefined = undefined
@@ -196,8 +196,8 @@ export class Transform { // 变换
     clearDecomposeCache() {
         this.decomposeTranslateCache = undefined
         this.decomposeEulerCache = undefined
-        this.decomposeScaleCache = undefined
         this.decomposeSkewCache = undefined
+        this.decomposeScaleCache = undefined
     }
 
     clearInverseCache() {
@@ -320,7 +320,7 @@ export class Transform { // 变换
 
     clone(): this {
         this.updateMatrix()
-        return new (this.constructor as any)({
+        const transform = new (this.constructor as any)({
             matrix: this.matrix.clone(),
             subMatrix: {
                 translate: this.translateMatrix.clone(),
@@ -329,6 +329,12 @@ export class Transform { // 变换
                 scale: this.scaleMatrix.clone(),
             },
         })
+        transform.decomposeTranslateCache = this.decomposeTranslateCache?.clone()
+        transform.decomposeEulerCache = this.decomposeEulerCache?.clone()
+        transform.decomposeSkewCache = this.decomposeSkewCache?.clone()
+        transform.decomposeScaleCache = this.decomposeScaleCache?.clone()
+        transform.inverseCache = this.inverseCache?.clone()
+        return transform
     }
 
     equals(transform: Transform) {
@@ -548,7 +554,7 @@ export class Transform { // 变换
         this._setMatrixEl("m33", value)
     }
 
-    transform(cols: Matrix | ColVector3D[] | Point3D[]) { // 对多个三维列向量（三维点）进行变换
+    transform(cols: Matrix | ColVector3D[]) { // 对多个三维列向量（三维点）进行变换
         if (Array.isArray(cols)) cols = Matrix.FromCols(cols);
         const [m, n] = cols.size
         if (m !== 3) throw new Error("点必须是3维列向量");
@@ -667,6 +673,7 @@ export class Transform { // 变换
 
     // 缩放
     scale(params: {
+        point?: ColVector3D, // 缩放的中心点
         vector: ColVector3D,
         mode?: TransformMode,
     }) {
@@ -685,11 +692,29 @@ export class Transform { // 变换
         ], true))
 
         if (params.mode === TransformMode.Local) {
-            this.scaleMatrix = ScaleMatrix.FromMatrix(matrix.multiply(this.scaleMatrix))
+            if (params.point) {
+                // diffTranslate = (S1 - S0) * (-P) // P为缩放中心
+                const s0 = this.scaleMatrix.buildMatrix().resize([3, 3])
+
+                this.scaleMatrix = ScaleMatrix.FromMatrix(matrix.multiply(this.scaleMatrix))
+
+                const s1 = this.scaleMatrix.buildMatrix().resize([3, 3])
+                const diffTranslate = s1.subtract(s0).multiply(params.point.clone().negate()).col0
+
+                this.translate(diffTranslate)
+            } else {
+                this.scaleMatrix = ScaleMatrix.FromMatrix(matrix.multiply(this.scaleMatrix))
+            }
+
             this.isMatrixLatest = false
+
         } else {
+            if (params.point) this.translate(params.point.getNegate() as ColVector3D);
+
             this.matrix = matrix.multiply(this.matrix)
             this.isSubMatrixLatest = false
+
+            if (params.point) this.translate(params.point);
         }
 
         this.onChange(this)
@@ -699,41 +724,99 @@ export class Transform { // 变换
 
     // X轴缩放
     scaleX(params: {
+        point?: ColVector3D, // 缩放的中心点
         value: number,
         mode?: TransformMode,
     }) {
-        this.scale({vector: new ColVector3D([params.value, 1, 1]), mode: params.mode})
+        return this.scale({point: params.point, vector: new ColVector3D([params.value, 1, 1]), mode: params.mode})
     }
 
     // Y轴缩放
     scaleY(params: {
+        point?: ColVector3D, // 缩放的中心点
         value: number,
         mode?: TransformMode,
     }) {
-        this.scale({vector: new ColVector3D([1, params.value, 1]), mode: params.mode})
+        return this.scale({point: params.point, vector: new ColVector3D([1, params.value, 1]), mode: params.mode})
     }
 
     // Z轴缩放
     scaleZ(params: {
+        point?: ColVector3D, // 缩放的中心点
         value: number,
         mode?: TransformMode,
     }) {
-        this.scale({vector: new ColVector3D([1, 1, params.value]), mode: params.mode})
+        return this.scale({point: params.point, vector: new ColVector3D([1, 1, params.value]), mode: params.mode})
     }
 
-    // 在本变换之前缩放
-    preScale(vector: ColVector3D) {
-        if (!this.isMatrixLatest) this.updateMatrix();
+    // 在xoy平面上基于任意轴缩放
+    scale2DAt(params: {
+        axis: ColVector3D,      // 缩放的中心轴
+        point?: ColVector3D,    // 轴上的一点
+        value: number,
+        mode?: TransformMode,
+    }) {
+        if (params.mode === undefined) params.mode = TransformMode.Global;
+
+        if ((params.mode === TransformMode.Local && !this.isSubMatrixLatest)
+            || (params.mode === TransformMode.Global && !this.isMatrixLatest)) {
+            this.updateMatrix()
+        }
 
         const matrix = new Matrix(new NumberArray2D([4, 4], [
-            vector.x, 0, 0, 0,
-            0, vector.y, 0, 0,
-            0, 0, vector.z, 0,
+            1 + (params.value - 1) * params.axis.x ** 2, (params.value - 1) * params.axis.x * params.axis.y, (params.value - 1) * params.axis.x * params.axis.z, 0,
+            (params.value - 1) * params.axis.y * params.axis.x, 1 + (params.value - 1) * params.axis.y ** 2, (params.value - 1) * params.axis.y * params.axis.z, 0,
+            (params.value - 1) * params.axis.z * params.axis.x, (params.value - 1) * params.axis.z * params.axis.y, 1 + (params.value - 1) * params.axis.z ** 2, 0,
             0, 0, 0, 1,
         ], true))
 
+        if (params.mode === TransformMode.Local) {
+            this.scaleMatrix = ScaleMatrix.FromMatrix(matrix.multiply(this.scaleMatrix))
+            this.isMatrixLatest = false
+        } else {
+            if (params.axis.equals(new ColVector3D([1, 0, 0]))) {
+                this.m00 *= params.value
+                this.m10 *= params.value
+                this.m20 *= params.value
+            } else if (params.axis.equals(new ColVector3D([0, 1, 0]))) {
+                this.m01 *= params.value
+                this.m11 *= params.value
+                this.m21 *= params.value
+            } else if (params.axis.equals(new ColVector3D([0, 0, 1]))) {
+                this.m02 *= params.value
+                this.m12 *= params.value
+                this.m22 *= params.value
+            } else {
+                throw new Error("缩放轴不合法")
+            }
+            this.isSubMatrixLatest = false
+        }
+
+        this.onChange(this)
+
+        return this
+    }
+
+    // 在本变换之前缩放
+    preScale(params: {
+        point?: ColVector3D, // 缩放的中心点
+        vector: ColVector3D,
+    }) {
+        if (!this.isMatrixLatest) this.updateMatrix();
+
+        const matrix = new Matrix(new NumberArray2D([4, 4], [
+            params.vector.x, 0, 0, 0,
+            0, params.vector.y, 0, 0,
+            0, 0, params.vector.z, 0,
+            0, 0, 0, 1,
+        ], true))
+
+        if (params.point) this.translate(params.point.getNegate() as ColVector3D);
+
         this.matrix.multiply(matrix)
         this.isSubMatrixLatest = false
+
+        if (params.point) this.translate(params.point);
 
         this.onChange(this)
 
@@ -741,18 +824,27 @@ export class Transform { // 变换
     }
 
     // 在本变换之前进行X轴缩放
-    preScaleX(value: number) {
-        this.preScale(new ColVector3D([value, 1, 1]))
+    preScaleX(params: {
+        point?: ColVector3D, // 缩放的中心点
+        value: number,
+    }) {
+        return this.preScale({vector: new ColVector3D([params.value, 1, 1])})
     }
 
     // 在本变换之前进行Y轴缩放
-    preScaleY(value: number) {
-        this.preScale(new ColVector3D([1, value, 1]))
+    preScaleY(params: {
+        point?: ColVector3D, // 缩放的中心点
+        value: number,
+    }) {
+        return this.preScale({vector: new ColVector3D([1, params.value, 1])})
     }
 
     // 在本变换之前进行Z轴缩放
-    preScaleZ(value: number) {
-        this.preScale(new ColVector3D([1, 1, value]))
+    preScaleZ(params: {
+        point?: ColVector3D, // 缩放的中心点
+        value: number,
+    }) {
+        return this.preScale({vector: new ColVector3D([1, 1, params.value])})
     }
 
     // 设置缩放参数
@@ -1035,7 +1127,7 @@ export class Transform { // 变换
     // 绕任意不过原点的轴旋转
     rotateAt(params: {
         axis?: ColVector3D, // 旋转轴方向向量
-        point?: Point3D,    // 旋转轴上的一点
+        point?: ColVector3D,    // 旋转轴上的一点
         angle: number,
         mode?: TransformMode,
     }) {
@@ -1045,24 +1137,26 @@ export class Transform { // 变换
             this.updateMatrix()
         }
 
-        if (params.point === undefined) params.point = new Point3D([0, 0, 0]);
-
         if (params.mode === TransformMode.Local) {
-            let point: Matrix = params.point.clone()
-            if (!this.scaleMatrix.isIdentity) point = this.scaleMatrix.buildMatrix().resize([3, 3]).multiply(point);
-            if (!this.skewMatrix.isIdentity) point = this.skewMatrix.buildMatrix().resize([3, 3]).multiply(point);
+            if (params.point) {
+                let point: Matrix = params.point.clone()
+                if (!this.scaleMatrix.isIdentity) point = this.scaleMatrix.buildMatrix().resize([3, 3]).multiply(point);
+                if (!this.skewMatrix.isIdentity) point = this.skewMatrix.buildMatrix().resize([3, 3]).multiply(point);
 
-            // diffTranslate = (R1 - R0) * (-P) // P为旋转中心
-            const r0 = this.rotateMatrix.buildMatrix().resize([3, 3])
-            this.rotate(params)
-            const r1 = this.rotateMatrix.buildMatrix().resize([3, 3])
-            const diffTranslate = r1.subtract(r0).multiply(point.negate()).col0
+                // diffTranslate = (R1 - R0) * (-P) // P为旋转中心
+                const r0 = this.rotateMatrix.buildMatrix().resize([3, 3])
+                this.rotate(params)
+                const r1 = this.rotateMatrix.buildMatrix().resize([3, 3])
+                const diffTranslate = r1.subtract(r0).multiply(point.negate()).col0
 
-            this.translate(diffTranslate)
+                this.translate(diffTranslate)
+            } else {
+                this.rotate(params)
+            }
         } else {
-            this.translate(params.point.getNegate() as ColVector3D)
+            if (params.point) this.translate(params.point.getNegate() as ColVector3D);
             this.rotate(params)
-            this.translate(params.point)
+            if (params.point) this.translate(params.point);
         }
 
         this.onChange(this)
@@ -1073,12 +1167,12 @@ export class Transform { // 变换
     // 在本变换之前绕任意不过原点的轴旋转
     preRotateAt(params: {
         axis?: ColVector3D, // 旋转轴方向向量
-        point?: Point3D, // 旋转轴上的一点
+        point?: ColVector3D, // 旋转轴上的一点
         angle: number,
     }) {
         if (!this.isMatrixLatest) this.updateMatrix();
 
-        if (params.point === undefined) params.point = new Point3D([0, 0, 0]);
+        if (params.point === undefined) params.point = new ColVector3D([0, 0, 0]);
 
         this.preTranslate(params.point)
         this.preRotate(params)
@@ -1091,29 +1185,29 @@ export class Transform { // 变换
 
     // 绕任意与Z轴平行的轴旋转，point为旋转轴上的一点
     rotateZAt(params: {
-        point?: Point2D, // (x, y)
+        point?: ColVector2D, // (x, y)
         angle: number,
         mode?: TransformMode,
     }) {
         let point3D
         if (params.point) {
-            point3D = new Point3D([params.point.x, params.point.y, 0])
+            point3D = new ColVector3D([params.point.x, params.point.y, 0])
         } else {
-            point3D = new Point3D([0, 0, 0])
+            point3D = new ColVector3D([0, 0, 0])
         }
         return this.rotateAt({axis: new ColVector3D([0, 0, 1]), point: point3D, angle: params.angle, mode: params.mode})
     }
 
     // 在本变换之前绕任意与Z轴平行的轴旋转，point为旋转轴上的一点
     preRotateZAt(params: {
-        point?: Point2D, // (x, y)
+        point?: ColVector2D, // (x, y)
         angle: number,
     }) {
         let point3D
         if (params.point) {
-            point3D = new Point3D([params.point.x, params.point.y, 0])
+            point3D = new ColVector3D([params.point.x, params.point.y, 0])
         } else {
-            point3D = new Point3D([0, 0, 0])
+            point3D = new ColVector3D([0, 0, 0])
         }
         return this.preRotateAt({axis: new ColVector3D([0, 0, 1]), point: point3D, angle: params.angle})
     }
@@ -1292,7 +1386,7 @@ export class Transform { // 变换
     // 绕任意轴翻转
     flip(params: {
         axis?: ColVector3D, // 旋转轴方向向量
-        point?: Point3D,    // 旋转轴上的一点
+        point?: ColVector3D,    // 旋转轴上的一点
     }) {
         return this.rotateAt({
             axis: params.axis,
@@ -1305,7 +1399,7 @@ export class Transform { // 变换
     // 在本变换之前绕任意轴翻转
     preFlip(params: {
         axis?: ColVector3D, // 旋转轴方向向量
-        point?: Point3D,    // 旋转轴上的一点
+        point?: ColVector3D,    // 旋转轴上的一点
     }) {
         return this.preRotateAt({
             axis: params.axis,
@@ -1315,43 +1409,43 @@ export class Transform { // 变换
     }
 
     // 水平翻转
-    flipH(point?: Point3D) {
+    flipH(point?: ColVector3D) {
         return this.flip({axis: new ColVector3D([0, 1, 0]), point: point})
     }
 
     // 在本变换之前进行水平翻转，point为旋转轴上的一点
-    preFlipH(point?: Point3D) {
+    preFlipH(point?: ColVector3D) {
         return this.preFlip({axis: new ColVector3D([0, 1, 0]), point: point})
     }
 
     // 二维水平翻转，x为旋转轴的x坐标
     flipH2D(x: number = 0) {
-        return this.flipH(x ? new Point3D([x, 0, 0]) : undefined)
+        return this.flipH(x ? new ColVector3D([x, 0, 0]) : undefined)
     }
 
     // 在本变换之前进行二维水平翻转，x为旋转轴的x坐标
     preFlipH2D(x: number = 0) {
-        return this.preFlipH(x ? new Point3D([x, 0, 0]) : undefined)
+        return this.preFlipH(x ? new ColVector3D([x, 0, 0]) : undefined)
     }
 
     // 垂直翻转
-    flipV(point?: Point3D) {
+    flipV(point?: ColVector3D) {
         return this.flip({axis: new ColVector3D([1, 0, 0]), point: point})
     }
 
     // 在本变换之前进行垂直翻转，point为旋转轴上的一点
-    preFlipV(point?: Point3D) {
+    preFlipV(point?: ColVector3D) {
         return this.preFlip({axis: new ColVector3D([1, 0, 0]), point: point})
     }
 
     // 二维垂直翻转，y为旋转轴的y坐标
     flipV2D(y: number = 0) {
-        return this.flipV(y ? new Point3D([0, y, 0]) : undefined)
+        return this.flipV(y ? new ColVector3D([0, y, 0]) : undefined)
     }
 
     // 在本变换之前进行二维垂直翻转，y为旋转轴的y坐标
     preFlipV2D(y: number = 0) {
-        const point3D = y ? new Point3D([0, y, 0]) : undefined
+        const point3D = y ? new ColVector3D([0, y, 0]) : undefined
         return this.preFlipV(point3D)
     }
 
