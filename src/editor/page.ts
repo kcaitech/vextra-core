@@ -2197,6 +2197,32 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+    setShapesFillImageRotate(actions: BatchAction[]) {
+        const api = this.__repo.start('setShapesFillImageRotate');
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index, value } = actions[i];
+                const s = shape4fill(api, this.__page, target);
+                api.setFillImageRotate(this.__page, s, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapesFillImageScale(actions: BatchAction[]) {
+        const api = this.__repo.start('setShapesFillImageScale');
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index, value } = actions[i];
+                const s = shape4fill(api, this.__page, target);
+                api.setFillImageScale(this.__page, s, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
 
     shapesAddFill(actions: BatchAction2[]) {
         const api = this.__repo.start('shapesAddFill');

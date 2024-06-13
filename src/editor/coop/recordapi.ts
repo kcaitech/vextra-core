@@ -511,6 +511,21 @@ export class Api {
         if (!fill) return;
         this.addOp(basicapi.crdtSetAttr(fill, "originalImageHeight", height));
     }
+    setFillImageScale(page: Page, shape: Shape | Variable, idx: number, scale: number) {
+        checkShapeAtPage(page, shape);
+        const fills = shape instanceof Shape ? shape.style.fills : shape.value;
+        const fill: Fill = fills[idx];
+        if (!fill) return;
+        this.addOp(basicapi.crdtSetAttr(fill, "scale", scale));
+    }
+
+    setFillImageRotate(page: Page, shape: Shape | Variable, idx: number, rotate: number) {
+        checkShapeAtPage(page, shape);
+        const fills = shape instanceof Shape ? shape.style.fills : shape.value;
+        const fill: Fill = fills[idx];
+        if (!fill) return;
+        this.addOp(basicapi.crdtSetAttr(fill, "rotation", rotate));
+    }
 
     setBorderFillType(page: Page, shape: Shape | Variable, idx: number, fillType: FillType) {
         checkShapeAtPage(page, shape);
