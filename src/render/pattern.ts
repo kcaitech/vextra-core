@@ -7,8 +7,9 @@ const handler: { [key: string]: (h: Function, frame: ShapeFrame, id: string, pat
 
 handler[ImageScaleMode.Fill] = function (h: Function, frame: ShapeFrame, id: string, path: string, fill: Fill): any {
     const url = fill.peekImage(true) || default_url;
-    const image_w = fill.originalImageWidth || 64;
-    const image_h = fill.originalImageHeight || 64;
+    let image_w = fill.originalImageWidth || 64;
+    let image_h = fill.originalImageHeight || 64;
+
     const img_props: any = {
         'xlink:href': url,
         x: 0,
@@ -25,7 +26,6 @@ handler[ImageScaleMode.Fill] = function (h: Function, frame: ShapeFrame, id: str
         patternUnits: 'userSpaceOnUse',
         id: id,
     };
-
     const proportion_w = frame.width / image_w;
     const proportion_h = frame.height / image_h;
     if (frame.width > frame.height) {
@@ -55,6 +55,49 @@ handler[ImageScaleMode.Fill] = function (h: Function, frame: ShapeFrame, id: str
             img_props.x = -offset;
         }
     }
+    if (fill.rotation && fill.rotation > 0) {
+        if (fill.rotation === 90 || fill.rotation === 270) {
+            const style: any = {};
+            if (img_props.width > 0) {
+                img_props.height = img_props.width;
+                delete img_props.width;
+                if (fill.rotation === 270) {
+                    style.transform = `translate(${0}px ,${(frame.height / 2) + ((image_w * (frame.width / image_h)) / 2)}px) rotate(${fill.rotation}deg)`
+                    img_props.y = 0;
+                } else {
+                    style.transform = `translate(${frame.width}px, ${(frame.height / 2) - ((image_w * (frame.width / image_h)) / 2)}px) rotate(${fill.rotation}deg)`;
+                    img_props.y = 0;
+                }
+            } else {
+                img_props.width = img_props.height;
+                delete img_props.height;
+                if (fill.rotation === 270) {
+                    if((frame.height / image_w) * image_h > frame.width) {
+                        const offsetx = (((frame.height / image_w) * image_h) - frame.width) / 2;
+                        style.transform = `translate(${-offsetx}px ,${frame.height}px) rotate(${fill.rotation}deg)`;
+                    } else {
+                        img_props.height = frame.width;
+                        delete img_props.width;
+                        style.transform = `translate(${0}px ,${(frame.height / 2) + ((image_w * (frame.width / image_h)) / 2)}px) rotate(${fill.rotation}deg)`;
+                    }
+                    img_props.x = 0;
+                } else {
+                    if((frame.height / image_w) * image_h > frame.width) {
+                        const offsetx = (((frame.height / image_w) * image_h) - frame.width) / 2;
+                        style.transform = `translate(${frame.width + offsetx}px, ${0}px) rotate(${fill.rotation}deg)`;
+                    } else {
+                        img_props.height = frame.width;
+                        delete img_props.width;
+                        style.transform = `translate(${frame.width}px ,${(frame.height / 2) - ((image_w * (frame.width / image_h)) / 2)}px) rotate(${fill.rotation}deg)`;
+                    }
+                    img_props.x = 0;
+                }
+            }
+            img_props.style = style;
+        } else {
+            img_props.style = transformRotate(fill.rotation, frame);
+        }
+    }
     const img = h("image", img_props);
     const pattern = h('pattern', props, [img]);
     return pattern;
@@ -62,8 +105,9 @@ handler[ImageScaleMode.Fill] = function (h: Function, frame: ShapeFrame, id: str
 
 handler[ImageScaleMode.Fit] = function (h: Function, frame: ShapeFrame, id: string, path: string, fill: Fill): any {
     const url = fill.peekImage(true) || default_url;
-    const image_w = fill.originalImageWidth || 64;
-    const image_h = fill.originalImageHeight || 64;
+    let image_w = fill.originalImageWidth || 64;
+    let image_h = fill.originalImageHeight || 64;
+
     const img_props: any = {
         'xlink:href': url,
         x: 0,
@@ -80,7 +124,15 @@ handler[ImageScaleMode.Fit] = function (h: Function, frame: ShapeFrame, id: stri
         patternUnits: 'userSpaceOnUse',
         id: id,
     };
-
+    if (fill.rotation && fill.rotation > 0) {
+        if (fill.rotation === 90 || fill.rotation === 270) {
+            const w = image_w;
+            image_w = image_h;
+            image_h = w;
+        } else {
+            img_props.style = transformRotate(fill.rotation, frame);
+        }
+    }
     const proportion_w = frame.width / image_w;
     const proportion_h = frame.height / image_h;
     if (frame.width > frame.height) {
@@ -110,6 +162,33 @@ handler[ImageScaleMode.Fit] = function (h: Function, frame: ShapeFrame, id: stri
             img_props.x = offset;
         }
     }
+
+    if (fill.rotation && fill.rotation > 0) {
+        if (fill.rotation === 90 || fill.rotation === 270) {
+            const style: any = {};
+            if (img_props.width > 0) {
+                img_props.height = img_props.width;
+                delete img_props.width;
+                if (fill.rotation === 270) {
+                    style.transform = `translate(${0}px ,${frame.height - img_props.y}px) rotate(${fill.rotation}deg)`
+                } else {
+                    style.transform = `translate(${frame.width}px, 0) rotate(${fill.rotation}deg)`;
+                    img_props.x = img_props.y;
+                }
+                img_props.y = 0;
+            } else {
+                img_props.width = img_props.height;
+                delete img_props.height;
+                if (fill.rotation === 270) {
+                    style.transform = `translate(${(frame.width / 2) - ((image_w * proportion_h) / 2)}px ,${frame.height}px) rotate(${fill.rotation}deg)`
+                } else {
+                    style.transform = `translate(${frame.width - img_props.x}px, 0) rotate(${fill.rotation}deg)`
+                }
+                img_props.x = 0;
+            }
+            img_props.style = style;
+        }
+    }
     const img = h("image", img_props);
     const pattern = h('pattern', props, [img]);
     return pattern;
@@ -125,7 +204,17 @@ handler[ImageScaleMode.Stretch] = function (h: Function, frame: ShapeFrame, id: 
         y: 0,
         'preserveAspectRatio': 'none meet',
     };
-
+    if (fill.rotation && fill.rotation > 0) {
+        if (fill.rotation === 90 || fill.rotation === 270) {
+            props.width = frame.height;
+            props.height = frame.width;
+            props.style = {
+                transform: `translate(${fill.rotation === 90 ? frame.width : 0}px, ${fill.rotation === 270 ? frame.height : 0}px) rotate(${fill.rotation}deg)`
+            };
+        } else {
+            props.style = transformRotate(fill.rotation, frame);
+        }
+    }
     const img = h("image", props);
     const pattern = h('pattern', {
         width: frame.width + 1,
@@ -143,7 +232,39 @@ handler[ImageScaleMode.Crop] = function (h: Function, frame: ShapeFrame, id: str
 }
 
 handler[ImageScaleMode.Tile] = function (h: Function, frame: ShapeFrame, id: string, path: string, fill: Fill): any {
-
+    let image_w = fill.originalImageWidth || 64;
+    let image_h = fill.originalImageHeight || 64;
+    let scale = typeof fill.scale === 'number' ? fill.scale : 0.5;
+    const url = fill.peekImage(true) || default_url;
+    const props: any = {
+        'xlink:href': url,
+        width: image_w * scale,
+        height: image_h * scale,
+        x: 0,
+        y: 0,
+        'object-fit': "contain",
+        'preserveAspectRatio': 'none meet',
+    };
+    const pattern_props: any = {
+        width: image_w * scale,
+        height: image_h * scale,
+        x: 0,
+        y: 0,
+        patternUnits: 'userSpaceOnUse',
+        id: id,
+    }
+    if (fill.rotation && fill.rotation > 0) {
+        if (fill.rotation === 90 || fill.rotation === 270) {
+            pattern_props.style = {
+                transform: `translate(${pattern_props.height / 2}px, ${pattern_props.width / 2}px) rotate(${fill.rotation}deg) translate(${-pattern_props.width / 2}px, ${-pattern_props.height / 2}px)`
+            };
+        } else {
+            pattern_props.style = transformRotate(fill.rotation, { width: pattern_props.width, height: pattern_props.height });
+        }
+    }
+    const img = h("image", props);
+    const pattern = h('pattern', pattern_props, [img]);
+    return pattern;
 }
 
 export function patternRender(h: Function, frame: ShapeFrame, id: string, path: string, fill: Fill): any {
@@ -153,4 +274,13 @@ export function patternRender(h: Function, frame: ShapeFrame, id: string, path: 
 
 export function renderMaskPattern(h: Function, path: string, shape: ImageShape, url: string): any {
 
+}
+
+const transformRotate = (rotation: number, frame: { width: number, height: number }) => {
+    if (!rotation) return;
+    const { width, height } = frame;
+    const style: any = {}
+    let transform = `translate(${width / 2}px, ${height / 2}px) rotate(${rotation}deg) translate(${-width / 2}px, ${-height / 2}px)`
+    style.transform = transform;
+    return style;
 }
