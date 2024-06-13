@@ -5,6 +5,7 @@ import { layoutBulletNumber } from "./textbnlayout";
 import { transformText } from "./textlayouttransform";
 import { gPal } from "../basic/pal";
 import { ShapeFrame, TextAttr } from "./typesdefine";
+import { TEXT_BASELINE_RATIO } from "./consts";
 
 const TAB_WIDTH = 28;
 const INDENT_WIDTH = TAB_WIDTH;
@@ -21,7 +22,7 @@ export interface IGraphy {
 
 export class GraphArray extends Array<IGraphy> {
     public attr: SpanAttr | undefined;
-    public actualBoundingBoxDescent: number = 0;
+    // public actualBoundingBoxDescent: number = 0;
     get graphCount() {
         return this.length;
     }
@@ -32,10 +33,10 @@ export class GraphArray extends Array<IGraphy> {
 
     push(...items: IGraphy[]): number {
         if (items.length === 1) {
-            this.actualBoundingBoxDescent = Math.max(this.actualBoundingBoxDescent, items[0].metrics?.actualBoundingBoxDescent || 0);
+            // this.actualBoundingBoxDescent = Math.max(this.actualBoundingBoxDescent, items[0].metrics?.actualBoundingBoxDescent || 0);
             this.charCount += items[0].cc;
         } else {
-            this.actualBoundingBoxDescent = items.reduce((p, c) => Math.max(p, c.metrics?.actualBoundingBoxDescent || 0), this.actualBoundingBoxDescent);
+            // this.actualBoundingBoxDescent = items.reduce((p, c) => Math.max(p, c.metrics?.actualBoundingBoxDescent || 0), this.actualBoundingBoxDescent);
             this.charCount += items.reduce((c, g) => c + g.cc, 0);
         }
         return super.push(...items);
@@ -43,7 +44,11 @@ export class GraphArray extends Array<IGraphy> {
 }
 export class Line extends Array<GraphArray> {
     public maxFontSize: number = 0;
-    public actualBoundingBoxDescent: number = 0;
+    // public actualBoundingBoxDescent: number = 0;
+
+    get actualBoundingBoxDescent() {
+        return (this.maxFontSize * TEXT_BASELINE_RATIO);
+    }
     public x: number = 0;
     public y: number = 0;
     public lineHeight: number = 0;
@@ -58,12 +63,12 @@ export class Line extends Array<GraphArray> {
 
     push(...items: GraphArray[]): number {
         if (items.length === 1) {
-            this.actualBoundingBoxDescent = Math.max(this.actualBoundingBoxDescent, items[0].actualBoundingBoxDescent || 0);
+            // this.actualBoundingBoxDescent = Math.max(this.actualBoundingBoxDescent, items[0].actualBoundingBoxDescent || 0);
             this.maxFontSize = Math.max(this.maxFontSize, items[0].attr?.fontSize || 0);
             this.charCount += items[0].charCount;
             ++this.graphCount;
         } else {
-            this.actualBoundingBoxDescent = items.reduce((p, c) => Math.max(p, c.actualBoundingBoxDescent || 0), this.actualBoundingBoxDescent);
+            // this.actualBoundingBoxDescent = items.reduce((p, c) => Math.max(p, c.actualBoundingBoxDescent || 0), this.actualBoundingBoxDescent);
             this.maxFontSize = items.reduce((p, c) => Math.max(p, c.attr?.fontSize || 0), this.maxFontSize);
             this.charCount += items.reduce((p, c) => p + c.charCount, 0);
             this.graphCount += items.length;
