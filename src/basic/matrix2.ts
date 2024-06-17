@@ -862,6 +862,10 @@ export class Vector extends Matrix { // 向量
         const dot = this.dot(vector) // 本向量与目标向量的点积
         return Math.acos(dot / (this.norm * vector.norm))
     }
+
+    get isZero() { // 是否为零向量
+        return this.data.data.every(isZero)
+    }
 }
 
 export class ColVector extends Vector { // 列向量
