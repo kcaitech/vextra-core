@@ -1498,7 +1498,7 @@ export class Transform { // 变换
 }
 
 // 直线
-class Line {
+export class Line {
     // 直线方程
     // x = x0 + at
     // y = y0 + bt
@@ -1602,7 +1602,7 @@ class Line {
 }
 
 // 过原点的直线
-class LineThrough0 extends Line {
+export class LineThrough0 extends Line {
     constructor(direction: ColVector3D) {
         super(direction, ColVector3D.FromXYZ(0, 0, 0))
     }
@@ -1613,7 +1613,7 @@ class LineThrough0 extends Line {
 }
 
 // 平面
-class Plane {
+export class Plane {
     // 平面方程
     // Ax + By + Cz + D = 0
     // A(x - x0) + B(y - y0) + C(z - z0) = 0
@@ -1712,7 +1712,7 @@ class Plane {
 }
 
 // 过原点的平面
-class PlaneThrough0 extends Plane {
+export class PlaneThrough0 extends Plane {
     constructor(normal: ColVector3D) {
         super(normal, 0)
     }

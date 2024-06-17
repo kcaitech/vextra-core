@@ -3,7 +3,7 @@ export * from "./basic/matrix"
 export * from "./basic/objectid"
 export * from "./basic/pal"
 export * from "./basic/utils"
-export { Transform, TransformMode } from './basic/transform'
+export { Transform, TransformMode, Line, LineThrough0, Plane, PlaneThrough0 } from './basic/transform'
 export { Vector, ColVector2D, ColVector3D, Matrix as Matrix2 } from "./basic/matrix2"
 export { NumberArray2D } from "./basic/number_array"
 
