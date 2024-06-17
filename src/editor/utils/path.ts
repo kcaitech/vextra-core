@@ -269,13 +269,13 @@ export function update_frame_by_points(api: Api, page: Page, s: Shape, reLayout 
         return;
     }
 
-    const m3 = new Matrix(s.matrix2Parent());
-    m3.preScale(f.width, f.height);
-    m1.multiAtLeft(m3.inverse);
-
-    (s as PathShape).pathsegs.forEach((segment, index) => {
-        exe(index, m1, segment.points);
-    });
+    // const m3 = new Matrix(s.matrix2Parent());
+    // m3.preScale(f.width, f.height);
+    // m1.multiAtLeft(m3.inverse);
+    //
+    // (s as PathShape).pathsegs.forEach((segment, index) => {
+    //     exe(index, m1, segment.points);
+    // });
 
     function exe(segment: number, m: Matrix, points: CurvePoint[]) {
         if (!points || !points.length) {

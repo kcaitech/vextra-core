@@ -564,66 +564,76 @@ export class PageEditor {
      * symbolref引用的symbol可能被其他人取消，那么symbolref应该能引用普通的对象！
      */
     makeSymbol(document: Document, shapes: Shape[], name?: string) {
-        if (shapes.length === 0) return;
-        const shape0 = shapes[0];
-        const frame = importShapeFrame(shape0.frame);
-
-        const replace = shapes.length === 1 &&
-            ((shape0 instanceof GroupShape && !(shape0 instanceof BoolShape)) ||
-                shape0 instanceof Artboard
-            );
-
-        const style = replace ? importStyle((shape0.style)) : undefined;
-        const symbolShape = newSymbolShape(replace ? shape0.name : (name ?? shape0.name), frame, style);
-        if (replace && shape0 instanceof Artboard && shape0.cornerRadius) {
-            symbolShape.cornerRadius = importCornerRadius(shape0.cornerRadius);
-        }
-        const api = this.__repo.start("makeSymbol", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-            const state = {} as SelectionState;
-            if (!isUndo) state.shapes = [symbolShape.id];
-            else state.shapes = cmd.saveselection?.shapes || [];
-            selection.restore(state);
-        });
-
         try {
+            if (!shapes.length) return;
+
+            const shape0 = shapes[0];
+            const frame = importShapeFrame(shape0.frame);
+
+            const replace = shapes.length === 1
+                && ((shape0 instanceof GroupShape && !(shape0 instanceof BoolShape)) || shape0 instanceof Artboard);
+
+            const style = replace ? importStyle((shape0.style)) : undefined;
+
+            const symbolShape = newSymbolShape(replace ? shape0.name : (name ?? shape0.name), frame, style);
+
+            if (replace && shape0 instanceof Artboard && shape0.cornerRadius) {
+                symbolShape.cornerRadius = importCornerRadius(shape0.cornerRadius);
+            }
+
+            const page = this.__page;
+            const api = this.__repo.start("makeSymbol", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+                const state = {} as SelectionState;
+                if (!isUndo) state.shapes = [symbolShape.id];
+                else state.shapes = cmd.saveselection?.shapes || [];
+                selection.restore(state);
+            });
+
             const need_trans_data: Shape[] = [];
-            adjust_selection_before_group(document, this.__page, shapes, api, need_trans_data);
-            let sym: Shape;
+            adjust_selection_before_group(document, page, shapes, api, need_trans_data);
+
+            let sym: SymbolShape;
             if (replace) {
                 const index = (shape0.parent as GroupShape).indexOfChild(shape0);
-                // api.registSymbol(document, symbolShape.id, this.__page.id);
-                sym = api.shapeInsert(document, this.__page, shape0.parent as GroupShape, symbolShape, index + 1);
+                sym = api.shapeInsert(document, page, shape0.parent as GroupShape, symbolShape, index + 1) as SymbolShape;
                 const children = shape0.childs;
                 for (let i = 0, len = children.length; i < len; ++i) {
-                    api.shapeMove(this.__page, shape0, 0, symbolShape, i);
+                    api.shapeMove(page, shape0, 0, symbolShape, i);
                 }
-                api.shapeDelete(document, this.__page, shape0.parent as GroupShape, index);
+                api.shapeDelete(document, page, shape0.parent as GroupShape, index);
             } else {
                 const index = (shape0.parent as GroupShape).indexOfChild(shape0);
-                // api.registSymbol(document, symbolShape.id, this.__page.id);
-                sym = group(document, this.__page, shapes, symbolShape, shape0.parent as GroupShape, index, api);
+
+                sym = group(document, page, shapes, symbolShape, shape0.parent as GroupShape, index, api);
 
                 for (let i = 0; i < shapes.length; i++) {
                     const __shape = shapes[i];
+
                     const old_rc = __shape.resizingConstraint === undefined
                         ? ResizingConstraints2.Mask
                         : __shape.resizingConstraint;
 
-                    let new_rc = ResizingConstraints2.setToScaleByHeight(ResizingConstraints2.setToScaleByWidth(old_rc));
+                    const new_rc = ResizingConstraints2.setToScaleByHeight(ResizingConstraints2.setToScaleByWidth(old_rc));
 
-                    api.shapeModifyResizingConstraint(this.__page, __shape, new_rc);
+                    api.shapeModifyResizingConstraint(page, __shape, new_rc);
                 }
             }
+
             if (sym) {
-                document.symbolsMgr.add(sym.id, sym as SymbolShape);
+                const result= sym;
+
+                document.symbolsMgr.add(result.id, result);
+
                 if (need_trans_data.length) {
-                    trans_after_make_symbol(this.__page, sym as SymbolShape, need_trans_data, api);
+                    trans_after_make_symbol(page,result, need_trans_data, api);
                 }
+
                 this.__repo.commit();
-                return sym as any as SymbolShape;
+                return result;
             } else {
                 throw new Error('failed')
             }
+
         } catch (e) {
             console.log(e)
             this.__repo.rollback();
