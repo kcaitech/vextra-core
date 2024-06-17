@@ -144,7 +144,7 @@ export function shapeModifyLock(shape: Shape, isLocked: boolean) {
 export function shapeModifyHFlip(page: Page, shape: Shape, needUpdateFrame?: { shape: Shape, page: Page }[]) {
     const transform2 = makeShapeTransform2By1(shape.transform);
     const center = shape.matrix2Parent().computeCoord2(shape.size.width / 2, shape.size.height / 2);
-    transform2.flipH2D(center.x);
+    transform2.flipH(center.x);
     updateShapeTransform1By2(shape.transform, transform2);
     const ops = [];
     ops.push(crdtSetAttr(shape.transform, 'm00', transform2.m00));
@@ -159,7 +159,7 @@ export function shapeModifyHFlip(page: Page, shape: Shape, needUpdateFrame?: { s
 export function shapeModifyVFlip(page: Page, shape: Shape, needUpdateFrame?: { shape: Shape, page: Page }[]) {
     const transform2 = makeShapeTransform2By1(shape.transform);
     const center = shape.matrix2Parent().computeCoord2(shape.size.width / 2, shape.size.height / 2);
-    transform2.flipV2D(center.y);
+    transform2.flipV(center.y);
     updateShapeTransform1By2(shape.transform, transform2);
     const ops = [];
     ops.push(crdtSetAttr(shape.transform, 'm00', transform2.m00));

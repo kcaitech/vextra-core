@@ -758,8 +758,8 @@ export function modifyTransformByEnv(shape: Shape, env: GroupShape) {
 
     const transform2 = makeShapeTransform2By1(shape.transform);
     const center = shape.matrix2Parent().computeCoord2(shape.size.width / 2, shape.size.height / 2);
-    if (transform.flipH) transform2.flipH2D(center.x);
-    if (transform.flipV) transform2.flipV2D(center.y);
+    if (transform.flipH) transform2.flipH(center.x);
+    if (transform.flipV) transform2.flipV(center.y);
 
     let r = transform.rotation;
 

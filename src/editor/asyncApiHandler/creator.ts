@@ -168,8 +168,8 @@ export class CreatorApiCaller extends AsyncApiCaller {
     private setTransform(shape: Shape, trans: { rotation: number, flipH: boolean, flipV: boolean }) {
         const transform2 = makeShapeTransform2By1(shape.transform);
         const center = shape.matrix2Parent().computeCoord2(shape.size.width / 2, shape.size.height / 2);
-        if (trans.flipH)  transform2.flipH2D(center.x);
-        if (trans.flipV)  transform2.flipV2D(center.y);
+        if (trans.flipH)  transform2.flipH(center.x);
+        if (trans.flipV)  transform2.flipV(center.y);
         transform2.setRotateZ((shape.rotation % 360) / 180 * Math.PI);
         updateShapeTransform1By2(shape.transform, transform2);
     }
