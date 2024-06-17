@@ -414,6 +414,39 @@ export class Transform { // 变换
         return this.inverseCache.clone()
     }
 
+    // 从一个向量到另一个向量的变换矩阵
+    static FromVectorToVector(from: ColVector3D, to: ColVector3D): Transform {
+        if (from.isZero || to.isZero) throw new Error("不能为零向量");
+
+        const fromUnit = from.clone().normalize()
+        const toUnit = to.clone().normalize()
+
+        const transform = new Transform()
+        if (from.equals(to)) transform;
+
+        const axis = fromUnit.cross(toUnit) as ColVector3D
+        const angle = fromUnit.angleTo(toUnit)
+        if (!isZero(angle)) transform.rotateAt({
+            axis: new Line(axis),
+            angle: angle,
+        });
+
+        return transform
+    }
+
+    // 从一条直线到另一条直线的变换矩阵
+    static FromLineToLine(from: Line, to: Line): Transform {
+        return Transform.FromVectorToVector(from.direction, to.direction).translate(to.point.clone().subtract(from.point))
+    }
+
+    // 从一个平面到另一个平面的变换矩阵
+    static FromPlaneToPlane(from: Plane, to: Plane): Transform {
+        return Transform.FromVectorToVector(from.normal, to.normal).translateAt({
+            axis: to.normal,
+            distance: to.d - from.d,
+        })
+    }
+
     private _getMatrixEl(key: Matrix3DKeysType) {
         if (!this.isMatrixLatest) this.updateMatrix();
         return this.matrix[key]
@@ -596,19 +629,27 @@ export class Transform { // 变换
         return this
     }
 
+    // 朝向平移
+    translateAt(params: {
+        axis: ColVector3D,
+        distance: number,
+    }) {
+        return this.translate(params.axis.multiplyByNumber(params.distance))
+    }
+
     // X轴平移
     translateX(value: number) {
-        this.translate(new ColVector3D([value, 0, 0]))
+        this.translate(ColVector3D.FromXYZ(value, 0, 0))
     }
 
     // Y轴平移
     translateY(value: number) {
-        this.translate(new ColVector3D([0, value, 0]))
+        this.translate(ColVector3D.FromXYZ(0, value, 0))
     }
 
     // Z轴平移
     translateZ(value: number) {
-        this.translate(new ColVector3D([0, 0, value]))
+        this.translate(ColVector3D.FromXYZ(0, 0, value))
     }
 
     // 在本变换之前平移
@@ -1309,45 +1350,48 @@ export class Transform { // 变换
         return this
     }
 
-    // 绕任意轴翻转
-    flip(params: {
-        axis?: Line, // 旋转轴
-    }) {
-        return this.rotateAt({
-            axis: params.axis,
-            angle: Math.PI,
-            mode: TransformMode.Global,
-        })
+    mirrorX(x?: number) { // 基于x=a平面镜像
+        return this.scaleX({point: ColVector3D.FromXYZ(x || 0, 0, 0), value: -1})
     }
 
-    // 在本变换之前绕任意轴翻转
-    preFlip(params: {
-        axis?: Line, // 旋转轴方向向量
-    }) {
-        return this.preRotateAt({
-            axis: params.axis,
-            angle: Math.PI,
-        })
+    mirrorY(y?: number) { // 基于y=a平面镜像
+        return this.scaleY({point: ColVector3D.FromXYZ(0, y || 0, 0), value: -1})
+    }
+
+    mirrorZ(z?: number) { // 基于z=a平面镜像
+        return this.scaleZ({point: ColVector3D.FromXYZ(0, 0, z || 0), value: -1})
+    }
+
+    // 基于任意平面镜像
+    flip(plane: Plane) {
+        const transform = Transform.FromPlaneToPlane(plane, Plane.FromVerticalX())
+        return this.addTransform(transform).mirrorX().addTransform(transform.getInverse())
+    }
+
+    // 在本变换之前基于任意平面镜像
+    preFlip(plane: Plane) {
+        const transform = Transform.FromPlaneToPlane(plane, Plane.FromVerticalX())
+        return this.addPreTransform(transform.clone().mirrorX().addTransform(transform.getInverse()))
     }
 
     // 水平翻转
     flipH(x?: number) {
-        return this.flip({axis: Line.FromYAxis(ColVector3D.FromXYZ(x || 0, 0, 0))})
+        return this.flip(new Plane(ColVector3D.FromXYZ(1, 0, 0), x || 0))
     }
 
     // 在本变换之前进行水平翻转
     preFlipH(x?: number) {
-        return this.preFlip({axis: Line.FromYAxis(ColVector3D.FromXYZ(x || 0, 0, 0))})
+        return this.preFlip(new Plane(ColVector3D.FromXYZ(1, 0, 0), x || 0))
     }
 
     // 垂直翻转
     flipV(y?: number) {
-        return this.flip({axis: Line.FromYAxis(ColVector3D.FromXYZ(0, y || 0, 0))})
+        return this.flip(new Plane(ColVector3D.FromXYZ(0, 1, 0), y || 0))
     }
 
     // 在本变换之前进行垂直翻转，point为旋转轴上的一点
     preFlipV(y?: number) {
-        return this.preFlip({axis: Line.FromYAxis(ColVector3D.FromXYZ(0, y || 0, 0))})
+        return this.preFlip(new Plane(ColVector3D.FromXYZ(0, 1, 0), y || 0))
     }
 
     decomposeTranslate() { // 分解平移参数
@@ -1518,17 +1562,17 @@ export class Line {
         return new Line(p2.subtract(p1), p2)
     }
 
-    static FromXAxis(point?: ColVector3D) { // 与x轴平行的直线
+    static FromParallelX(point?: ColVector3D) { // 与x轴平行的直线
         if (point) point.x = 0;
         return new Line(ColVector3D.FromXYZ(1, 0, 0), point)
     }
 
-    static FromYAxis(point?: ColVector3D) { // 与y轴平行的直线
+    static FromParallelY(point?: ColVector3D) { // 与y轴平行的直线
         if (point) point.y = 0;
         return new Line(ColVector3D.FromXYZ(0, 1, 0), point)
     }
 
-    static FromZAxis(point?: ColVector3D) { // 与z轴平行的直线
+    static FromParallelZ(point?: ColVector3D) { // 与z轴平行的直线
         if (point) point.z = 0;
         return new Line(ColVector3D.FromXYZ(0, 0, 1), point)
     }
@@ -1607,8 +1651,20 @@ export class LineThrough0 extends Line {
         super(direction, ColVector3D.FromXYZ(0, 0, 0))
     }
 
-    static FromPoints(p1: ColVector3D) {
-        return new Line(p1)
+    static FromPoints(p: ColVector3D) {
+        return new Line(p)
+    }
+
+    static FromXAxis() {
+        return new Line(ColVector3D.FromXYZ(1, 0, 0))
+    }
+
+    static FromYAxis() {
+        return new Line(ColVector3D.FromXYZ(0, 1, 0))
+    }
+
+    static FromZAxis() {
+        return new Line(ColVector3D.FromXYZ(0, 0, 1))
     }
 }
 
@@ -1640,6 +1696,21 @@ export class Plane {
         const normal = v1.cross(v2) as ColVector3D
         if (normal.norm === 0) throw new Error('三点共线');
         return new Plane(normal.normalize(), -normal.dot(p1))
+    }
+
+    // 与x轴垂直的平面
+    static FromVerticalX(d: number = 0) {
+        return new Plane(ColVector3D.FromXYZ(1, 0, 0), d)
+    }
+
+    // 与y轴垂直的平面
+    static FromVerticalY(d: number = 0) {
+        return new Plane(ColVector3D.FromXYZ(0, 1, 0), d)
+    }
+
+    // 与z轴垂直的平面
+    static FromVerticalZ(d: number = 0) {
+        return new Plane(ColVector3D.FromXYZ(0, 0, 1), d)
     }
 
     clone() {
@@ -1715,6 +1786,10 @@ export class Plane {
 export class PlaneThrough0 extends Plane {
     constructor(normal: ColVector3D) {
         super(normal, 0)
+    }
+
+    static FromPointAndNormal(normal: ColVector3D) {
+        return new PlaneThrough0(normal)
     }
 
     static FromPoints(p1: ColVector3D, p2: ColVector3D) {
