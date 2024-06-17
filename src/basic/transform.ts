@@ -634,7 +634,7 @@ export class Transform { // 变换
         axis: ColVector3D,
         distance: number,
     }) {
-        return this.translate(params.axis.multiplyByNumber(params.distance))
+        return this.translate(params.axis.clone().normalize().multiplyByNumber(params.distance))
     }
 
     // X轴平移
@@ -1068,9 +1068,8 @@ export class Transform { // 变换
         if (params.axis === undefined) params.axis = LineThrough0.FromPoints(ColVector3D.FromXYZ(0, 0, 1));
 
         let [x, y, z] = params.axis.direction.rawData
-        z = -z // z轴方向定义相反
-        const c = Math.cos(params.angle)
-        const s = Math.sin(params.angle)
+        const c = Math.cos(-params.angle) // 旋转方向定义相反
+        const s = Math.sin(-params.angle) // 旋转方向定义相反
         const t = 1 - c
         // https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/rotate3d#syntax
         const matrix = new Matrix(new NumberArray2D([4, 4], [
@@ -1632,7 +1631,7 @@ export class Line {
     }
 
     isLineIntersect(line: Line) { // 两直线是否相交
-        return !this.isLineParallel(line)
+        return !!this.intersectionWithLine(line)
     }
 
     equals(line: Line) { // 判断是否相等
