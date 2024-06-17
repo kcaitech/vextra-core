@@ -562,6 +562,14 @@ export class Transform { // 变换
         return this.matrix.clone().multiply(cols.clone().insertRows(new NumberArray2D([1, n], 1))).deleteRow()
     }
 
+    transformLine(line: Line) {
+        return line.clone().transform(this)
+    }
+
+    transformPlane(plane: Plane) {
+        return plane.clone().transform(this)
+    }
+
     transformCol(col: ColVector3D) { // 对一个三维列向量（三维点）进行变换
         return ColVector3D.FromMatrix(this.transform(col))
     }
@@ -674,7 +682,7 @@ export class Transform { // 变换
     // 缩放
     scale(params: {
         point?: ColVector3D, // 缩放的中心点
-        vector: ColVector3D,
+        vector: ColVector3D, // 缩放值的向量
         mode?: TransformMode,
     }) {
         if (params.mode === undefined) params.mode = TransformMode.Global;
@@ -747,54 +755,6 @@ export class Transform { // 变换
         mode?: TransformMode,
     }) {
         return this.scale({point: params.point, vector: new ColVector3D([1, 1, params.value]), mode: params.mode})
-    }
-
-    // 在xoy平面上基于任意轴缩放
-    scale2DAt(params: {
-        axis: ColVector3D,      // 缩放的中心轴
-        point?: ColVector3D,    // 轴上的一点
-        value: number,
-        mode?: TransformMode,
-    }) {
-        if (params.mode === undefined) params.mode = TransformMode.Global;
-
-        if ((params.mode === TransformMode.Local && !this.isSubMatrixLatest)
-            || (params.mode === TransformMode.Global && !this.isMatrixLatest)) {
-            this.updateMatrix()
-        }
-
-        const matrix = new Matrix(new NumberArray2D([4, 4], [
-            1 + (params.value - 1) * params.axis.x ** 2, (params.value - 1) * params.axis.x * params.axis.y, (params.value - 1) * params.axis.x * params.axis.z, 0,
-            (params.value - 1) * params.axis.y * params.axis.x, 1 + (params.value - 1) * params.axis.y ** 2, (params.value - 1) * params.axis.y * params.axis.z, 0,
-            (params.value - 1) * params.axis.z * params.axis.x, (params.value - 1) * params.axis.z * params.axis.y, 1 + (params.value - 1) * params.axis.z ** 2, 0,
-            0, 0, 0, 1,
-        ], true))
-
-        if (params.mode === TransformMode.Local) {
-            this.scaleMatrix = ScaleMatrix.FromMatrix(matrix.multiply(this.scaleMatrix))
-            this.isMatrixLatest = false
-        } else {
-            if (params.axis.equals(new ColVector3D([1, 0, 0]))) {
-                this.m00 *= params.value
-                this.m10 *= params.value
-                this.m20 *= params.value
-            } else if (params.axis.equals(new ColVector3D([0, 1, 0]))) {
-                this.m01 *= params.value
-                this.m11 *= params.value
-                this.m21 *= params.value
-            } else if (params.axis.equals(new ColVector3D([0, 0, 1]))) {
-                this.m02 *= params.value
-                this.m12 *= params.value
-                this.m22 *= params.value
-            } else {
-                throw new Error("缩放轴不合法")
-            }
-            this.isSubMatrixLatest = false
-        }
-
-        this.onChange(this)
-
-        return this
     }
 
     // 在本变换之前缩放
@@ -1053,7 +1013,7 @@ export class Transform { // 变换
 
     // 绕任意轴旋转
     rotate(params: {
-        axis?: ColVector3D, // 旋转轴方向向量，默认为z轴方向
+        axis?: LineThrough0, // 旋转轴方向向量，默认为z轴方向
         angle: number,
         mode?: TransformMode,
     }) {
@@ -1064,10 +1024,9 @@ export class Transform { // 变换
             this.updateMatrix()
         }
 
-        if (params.axis === undefined) params.axis = new ColVector([0, 0, 1]);
-        params.axis = params.axis.normalize() // axis化为单位向量
+        if (params.axis === undefined) params.axis = LineThrough0.FromPoints(ColVector3D.FromXYZ(0, 0, 1));
 
-        let [x, y, z] = params.axis.rawData
+        let [x, y, z] = params.axis.direction.rawData
         z = -z // z轴方向定义相反
         const c = Math.cos(params.angle)
         const s = Math.sin(params.angle)
@@ -1095,15 +1054,14 @@ export class Transform { // 变换
 
     // 在本变换之前绕任意轴旋转
     preRotate(params: {
-        axis?: ColVector3D, // 旋转轴方向向量
+        axis?: LineThrough0, // 旋转轴方向向量
         angle: number,
     }) {
         if (!this.isMatrixLatest) this.updateMatrix();
 
-        if (params.axis === undefined) params.axis = new ColVector([0, 0, 1]);
-        params.axis = params.axis.normalize() // axis化为单位向量
+        if (params.axis === undefined) params.axis = LineThrough0.FromPoints(ColVector3D.FromXYZ(0, 0, 1));
 
-        let [x, y, z] = params.axis.rawData
+        let [x, y, z] = params.axis.direction.rawData
         z = -z // z轴方向定义相反
         const c = Math.cos(params.angle)
         const s = Math.sin(params.angle)
@@ -1126,8 +1084,7 @@ export class Transform { // 变换
 
     // 绕任意不过原点的轴旋转
     rotateAt(params: {
-        axis?: ColVector3D, // 旋转轴方向向量
-        point?: ColVector3D,    // 旋转轴上的一点
+        axis?: Line, // 旋转轴
         angle: number,
         mode?: TransformMode,
     }) {
@@ -1137,9 +1094,10 @@ export class Transform { // 变换
             this.updateMatrix()
         }
 
+        const linePoint = params.axis?.point
         if (params.mode === TransformMode.Local) {
-            if (params.point) {
-                let point: Matrix = params.point.clone()
+            if (linePoint) {
+                let point: Matrix = linePoint.clone()
                 if (!this.scaleMatrix.isIdentity) point = this.scaleMatrix.buildMatrix().resize([3, 3]).multiply(point);
                 if (!this.skewMatrix.isIdentity) point = this.skewMatrix.buildMatrix().resize([3, 3]).multiply(point);
 
@@ -1154,9 +1112,9 @@ export class Transform { // 变换
                 this.rotate(params)
             }
         } else {
-            if (params.point) this.translate(params.point.getNegate() as ColVector3D);
+            if (linePoint) this.translate(linePoint.getNegate() as ColVector3D);
             this.rotate(params)
-            if (params.point) this.translate(params.point);
+            if (linePoint) this.translate(linePoint);
         }
 
         this.onChange(this)
@@ -1166,50 +1124,18 @@ export class Transform { // 变换
 
     // 在本变换之前绕任意不过原点的轴旋转
     preRotateAt(params: {
-        axis?: ColVector3D, // 旋转轴方向向量
-        point?: ColVector3D, // 旋转轴上的一点
+        axis?: Line, // 旋转轴
         angle: number,
     }) {
         if (!this.isMatrixLatest) this.updateMatrix();
 
-        if (params.point === undefined) params.point = new ColVector3D([0, 0, 0]);
-
-        this.preTranslate(params.point)
+        if (params.axis) this.preTranslate(params.axis.point);
         this.preRotate(params)
-        this.preTranslate(params.point.getNegate() as ColVector3D)
+        if (params.axis) this.preTranslate(params.axis.point.clone().getNegate())
 
         this.onChange(this)
 
         return this
-    }
-
-    // 绕任意与Z轴平行的轴旋转，point为旋转轴上的一点
-    rotateZAt(params: {
-        point?: ColVector2D, // (x, y)
-        angle: number,
-        mode?: TransformMode,
-    }) {
-        let point3D
-        if (params.point) {
-            point3D = new ColVector3D([params.point.x, params.point.y, 0])
-        } else {
-            point3D = new ColVector3D([0, 0, 0])
-        }
-        return this.rotateAt({axis: new ColVector3D([0, 0, 1]), point: point3D, angle: params.angle, mode: params.mode})
-    }
-
-    // 在本变换之前绕任意与Z轴平行的轴旋转，point为旋转轴上的一点
-    preRotateZAt(params: {
-        point?: ColVector2D, // (x, y)
-        angle: number,
-    }) {
-        let point3D
-        if (params.point) {
-            point3D = new ColVector3D([params.point.x, params.point.y, 0])
-        } else {
-            point3D = new ColVector3D([0, 0, 0])
-        }
-        return this.preRotateAt({axis: new ColVector3D([0, 0, 1]), point: point3D, angle: params.angle})
     }
 
     // 设置旋转参数（欧拉角（ZXY序）：先绕y轴旋转，再绕x轴旋转，最后绕z轴旋转）
@@ -1385,12 +1311,10 @@ export class Transform { // 变换
 
     // 绕任意轴翻转
     flip(params: {
-        axis?: ColVector3D, // 旋转轴方向向量
-        point?: ColVector3D,    // 旋转轴上的一点
+        axis?: Line, // 旋转轴
     }) {
         return this.rotateAt({
             axis: params.axis,
-            point: params.point,
             angle: Math.PI,
             mode: TransformMode.Global,
         })
@@ -1398,55 +1322,32 @@ export class Transform { // 变换
 
     // 在本变换之前绕任意轴翻转
     preFlip(params: {
-        axis?: ColVector3D, // 旋转轴方向向量
-        point?: ColVector3D,    // 旋转轴上的一点
+        axis?: Line, // 旋转轴方向向量
     }) {
         return this.preRotateAt({
             axis: params.axis,
-            point: params.point,
             angle: Math.PI,
         })
     }
 
     // 水平翻转
-    flipH(point?: ColVector3D) {
-        return this.flip({axis: new ColVector3D([0, 1, 0]), point: point})
+    flipH(x?: number) {
+        return this.flip({axis: Line.FromYAxis(ColVector3D.FromXYZ(x || 0, 0, 0))})
     }
 
-    // 在本变换之前进行水平翻转，point为旋转轴上的一点
-    preFlipH(point?: ColVector3D) {
-        return this.preFlip({axis: new ColVector3D([0, 1, 0]), point: point})
-    }
-
-    // 二维水平翻转，x为旋转轴的x坐标
-    flipH2D(x: number = 0) {
-        return this.flipH(x ? new ColVector3D([x, 0, 0]) : undefined)
-    }
-
-    // 在本变换之前进行二维水平翻转，x为旋转轴的x坐标
-    preFlipH2D(x: number = 0) {
-        return this.preFlipH(x ? new ColVector3D([x, 0, 0]) : undefined)
+    // 在本变换之前进行水平翻转
+    preFlipH(x?: number) {
+        return this.preFlip({axis: Line.FromYAxis(ColVector3D.FromXYZ(x || 0, 0, 0))})
     }
 
     // 垂直翻转
-    flipV(point?: ColVector3D) {
-        return this.flip({axis: new ColVector3D([1, 0, 0]), point: point})
+    flipV(y?: number) {
+        return this.flip({axis: Line.FromYAxis(ColVector3D.FromXYZ(0, y || 0, 0))})
     }
 
     // 在本变换之前进行垂直翻转，point为旋转轴上的一点
-    preFlipV(point?: ColVector3D) {
-        return this.preFlip({axis: new ColVector3D([1, 0, 0]), point: point})
-    }
-
-    // 二维垂直翻转，y为旋转轴的y坐标
-    flipV2D(y: number = 0) {
-        return this.flipV(y ? new ColVector3D([0, y, 0]) : undefined)
-    }
-
-    // 在本变换之前进行二维垂直翻转，y为旋转轴的y坐标
-    preFlipV2D(y: number = 0) {
-        const point3D = y ? new ColVector3D([0, y, 0]) : undefined
-        return this.preFlipV(point3D)
+    preFlipV(y?: number) {
+        return this.preFlip({axis: Line.FromYAxis(ColVector3D.FromXYZ(0, y || 0, 0))})
     }
 
     decomposeTranslate() { // 分解平移参数
@@ -1593,5 +1494,230 @@ export class Transform { // 变换
     toString() {
         if (!this.isMatrixLatest) this.updateMatrix();
         return this.matrix.toString()
+    }
+}
+
+// 直线
+class Line {
+    // 直线方程
+    // x = x0 + at
+    // y = y0 + bt
+    // z = z0 + ct
+    // 其中(x0, y0, z0)为直线上一点，(a, b, c)为方向向量
+
+    direction: ColVector3D // 方向向量
+    point: ColVector3D // 直线上一点
+
+    constructor(direction: ColVector3D, point?: ColVector3D) {
+        this.direction = direction.clone().normalize()
+        this.point = point ? point.clone() : ColVector3D.FromXYZ(0, 0, 0)
+    }
+
+    static FromPoints(p1: ColVector3D, p2?: ColVector3D) { // 两点式
+        if (p2 === undefined) [p1, p2] = [ColVector3D.FromXYZ(0, 0, 0), p1];
+        return new Line(p2.subtract(p1), p2)
+    }
+
+    static FromXAxis(point?: ColVector3D) { // 与x轴平行的直线
+        if (point) point.x = 0;
+        return new Line(ColVector3D.FromXYZ(1, 0, 0), point)
+    }
+
+    static FromYAxis(point?: ColVector3D) { // 与y轴平行的直线
+        if (point) point.y = 0;
+        return new Line(ColVector3D.FromXYZ(0, 1, 0), point)
+    }
+
+    static FromZAxis(point?: ColVector3D) { // 与z轴平行的直线
+        if (point) point.z = 0;
+        return new Line(ColVector3D.FromXYZ(0, 0, 1), point)
+    }
+
+    clone() {
+        return new Line(this.direction.clone(), this.point.clone())
+    }
+
+    transform(transform: Transform) { // 变换
+        this.direction = transform.transform(this.direction).col0
+        this.point = transform.transform(this.point).col0
+        return this
+    }
+
+    distanceToPoint(point: ColVector3D) { // 点到直线的距离
+        return (this.direction.cross(point.subtract(this.point)) as ColVector3D).norm
+    }
+
+    projectionPoint(point: ColVector3D) { // 点在直线上的投影点
+        const t = this.direction.dot(point.subtract(this.point))
+        return this.point.add(this.direction.clone().multiplyByNumber(t))
+    }
+
+    isPointOnLine(point: ColVector3D) { // 判断点是否在直线上
+        return isZero((this.direction.cross(point.subtract(this.point)) as ColVector3D).norm)
+    }
+
+    isLineParallel(line: Line) { // 判断直线是否平行
+        return isZero((this.direction.cross(line.direction) as ColVector3D).norm)
+    }
+
+    isLineVertical(line: Line) { // 判断直线是否垂直
+        return isZero(this.direction.dot(line.direction))
+    }
+
+    /* 求两直线交点
+     * 两直线的参数方程：
+     * r0 = p0 + d0 * t
+     * r1 = p1 + d1 * s
+     * 两直线交点满足：
+     * p0 + d0 * t = p1 + d1 * s
+     * d0 * t - d1 * s = p1 - p0
+     * 用矩阵表示：
+     * [d0, -d1] * [t, s]^T = [p1 - p0]
+     * Ax = b
+     * x = A^(-1) * b
+     */
+    intersectionWithLine(line: Line) {
+        const d0 = this.direction, d1 = line.direction
+        const p0 = this.point, p1 = line.point
+        const A = Matrix.FromCols([d0, d1.clone().negate()])
+        const b = p1.clone().subtract(p0)
+        const AInverse = A.getInverse()
+        if (AInverse === undefined) return undefined;
+        const {x: t, y: s} = AInverse.multiply(b).col0
+        return p0.clone().add(d0.clone().multiplyByNumber(t))
+    }
+
+    isLineIntersect(line: Line) { // 两直线是否相交
+        return !this.isLineParallel(line)
+    }
+
+    equals(line: Line) { // 判断是否相等
+        return this.isLineParallel(line) && this.isPointOnLine(line.point)
+    }
+
+    toString() {
+        return `x = ${this.point.m0} + ${this.direction.m0}t, y = ${this.point.m1} + ${this.direction.m1}t, z = ${this.point.m2} + ${this.direction.m2}t`
+    }
+
+}
+
+// 过原点的直线
+class LineThrough0 extends Line {
+    constructor(direction: ColVector3D) {
+        super(direction, ColVector3D.FromXYZ(0, 0, 0))
+    }
+
+    static FromPoints(p1: ColVector3D) {
+        return new Line(p1)
+    }
+}
+
+// 平面
+class Plane {
+    // 平面方程
+    // Ax + By + Cz + D = 0
+    // A(x - x0) + B(y - y0) + C(z - z0) = 0
+
+    normal: ColVector3D // 法向量
+
+    // 常数项
+    // 平面上任意一点与法向量的点积的负数
+    // 其绝对值为平面到原点的距离与法向量模的乘积
+    d: number
+
+    constructor(normal: ColVector3D, d: number) {
+        this.normal = normal.clone().normalize()
+        this.d = d
+    }
+
+    static FromPointAndNormal(point: ColVector3D, normal: ColVector3D) { // 点法式
+        return new Plane(normal, -normal.dot(point))
+    }
+
+    static FromPoints(p1: ColVector3D, p2: ColVector3D, p3: ColVector3D) { // 三点式
+        const v1 = p2.subtract(p1)
+        const v2 = p3.subtract(p1)
+        const normal = v1.cross(v2) as ColVector3D
+        if (normal.norm === 0) throw new Error('三点共线');
+        return new Plane(normal.normalize(), -normal.dot(p1))
+    }
+
+    clone() {
+        return new Plane(this.normal.clone(), this.d)
+    }
+
+    transform(transform: Transform) { // 变换
+        this.normal = transform.transform(this.normal).col0
+        this.d = transform.transform(this.normal.clone().multiplyByNumber(this.d)).col0.norm
+        return this
+    }
+
+    // 点到平面的有向距离
+    // 若点到平面的垂线方向与法向量同向，则返回正值，否则返回负值
+    distanceToPointDirect(point: ColVector3D) {
+        return this.normal.dot(point) + this.d
+    }
+
+    // 点到平面的距离
+    distanceToPoint(point: ColVector3D) {
+        return Math.abs(this.distanceToPointDirect(point))
+    }
+
+    projectionPoint(point: ColVector3D) { // 点在平面上的投影点
+        const distance = this.distanceToPointDirect(point)
+        return point.subtract(this.normal.clone().multiplyByNumber(distance))
+    }
+
+    intersectionWithLine(line: Line) { // 平面与直线的交点
+        const t = (this.d + this.normal.dot(this.normal)) / this.normal.dot(line.direction)
+        return line.point.add(line.direction.clone().multiplyByNumber(t))
+    }
+
+    intersectionWithPlane(plane: Plane) { // 平面与平面的相交线
+        const direction = this.normal.cross(plane.normal) as ColVector3D
+        return new Line(direction, this.intersectionWithLine(new Line(direction, this.normal.multiplyByNumber(this.d))))
+    }
+
+    isPointOnPlane(point: ColVector3D) { // 判断点是否在平面上
+        return isZero(this.distanceToPoint(point))
+    }
+
+    isLineOnPlane(line: Line) { // 判断直线是否在平面上
+        return this.isPointOnPlane(line.point) && isZero(this.normal.dot(line.direction))
+    }
+
+    isLineParallel(line: Line) { // 判断平面是否与直线平行
+        return isZero(this.normal.dot(line.direction))
+    }
+
+    isLineVertical(line: Line) { // 判断平面是否与直线垂直
+        return line.isLineParallel(new Line(this.normal))
+    }
+
+    isPlaneParallel(plane: Plane) { // 判断平面是否与平面平行
+        return isZero((this.normal.cross(plane.normal) as ColVector3D).norm)
+    }
+
+    isPlaneVertical(plane: Plane) { // 判断平面是否与平面垂直
+        return isZero(this.normal.dot(plane.normal))
+    }
+
+    equals(plane: Plane) { // 判断是否相等
+        return this.isPlaneParallel(plane) && this.isPointOnPlane(plane.normal.multiplyByNumber(plane.d))
+    }
+
+    toString() {
+        return `${this.normal.m0}x + ${this.normal.m1}y + ${this.normal.m2}z + ${this.d} = 0`
+    }
+}
+
+// 过原点的平面
+class PlaneThrough0 extends Plane {
+    constructor(normal: ColVector3D) {
+        super(normal, 0)
+    }
+
+    static FromPoints(p1: ColVector3D, p2: ColVector3D) {
+        return new PlaneThrough0(p1.clone().cross(p2) as ColVector3D)
     }
 }

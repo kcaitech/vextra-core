@@ -790,9 +790,9 @@ export class Matrix { // 矩阵
         const [m, n] = this.size
         for (let i = 0; i < n; i++) {
             let sum = 0
-            for (let j = 0; j < m; j++) sum += this.get([i, j]) ** 2;
+            for (let j = 0; j < m; j++) sum += this.get([j, i]) ** 2;
             sum = Math.sqrt(sum)
-            for (let j = 0; j < m; j++) this.set([i, j], this.get([i, j]) / sum);
+            if (!isZero(sum)) for (let j = 0; j < m; j++) this.set([j, i], this.get([j, i]) / sum);
         }
         return this
     }
