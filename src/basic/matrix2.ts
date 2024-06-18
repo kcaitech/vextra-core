@@ -1,7 +1,23 @@
 import {NumberArray2D} from "./number_array"
 import {isEqual, isOne, isZero} from "./number_utils"
 
-export type Matrix3DKeysType = "m00" | "m01" | "m02" | "m03" | "m10" | "m11" | "m12" | "m13" | "m20" | "m21" | "m22" | "m23" | "m30" | "m31" | "m32" | "m33"
+export type Matrix3DKeysType =
+    "m00"
+    | "m01"
+    | "m02"
+    | "m03"
+    | "m10"
+    | "m11"
+    | "m12"
+    | "m13"
+    | "m20"
+    | "m21"
+    | "m22"
+    | "m23"
+    | "m30"
+    | "m31"
+    | "m32"
+    | "m33"
 
 export class Matrix { // 矩阵
     data: NumberArray2D
@@ -291,6 +307,13 @@ export class Matrix { // 矩阵
         return this.cols(0)
     }
 
+    mapCol<T>(callback: (col: ColVector, colIndex: number) => T) {
+        const [_, n] = this.size
+        const result: T[] = []
+        for (let i = 0; i < n; i++) result.push(callback(this.col(i), i));
+        return result
+    }
+
     row(m: number) { // 获取第n行行向量
         if (m < 0 || m >= this.size[0]) throw new Error("行数越界");
         return new RowVector(this.data.row(m))
@@ -308,6 +331,13 @@ export class Matrix { // 矩阵
 
     allRow() { // 获取所有行向量
         return this.rows(0)
+    }
+
+    mapRow<T>(callback: (row: RowVector, rowIndex: number) => T) {
+        const [m, _] = this.size
+        const result: T[] = []
+        for (let i = 0; i < m; i++) result.push(callback(this.row(i), i));
+        return result
     }
 
     subMatrix(size: [number, number], start: [number, number] = [0, 0]) { // 获取子矩阵

@@ -637,6 +637,14 @@ export class Transform { // 变换
         return this.translate(params.axis.clone().normalize().multiplyByNumber(params.distance))
     }
 
+    // 在当前坐标系的方向下平移，但平移的大小不受当前坐标系影响
+    translateInLocal(vector: ColVector3D) {
+        if (!this.isMatrixLatest) this.updateMatrix();
+
+        const m = this.matrix.clone().resize([3, 3]).normalize()
+        return this.translate(m.multiply(vector).col0)
+    }
+
     // X轴平移
     translateX(value: number) {
         this.translate(ColVector3D.FromXYZ(value, 0, 0))
