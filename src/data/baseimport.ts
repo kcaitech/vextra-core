@@ -819,6 +819,14 @@ export function importSpan(source: types.Span, ctx?: IImportContext): impl.Span 
 function importBorderOptional(tar: impl.Border, source: types.Border, ctx?: IImportContext) {
     if (source.contextSettings) tar.contextSettings = importContextSettings(source.contextSettings, ctx)
     if (source.gradient) tar.gradient = importGradient(source.gradient, ctx)
+    if (source.imageRef) tar.imageRef = source.imageRef
+    if (source.imageScaleMode) tar.imageScaleMode = importImageScaleMode(source.imageScaleMode, ctx)
+    if (source.rotation) tar.rotation = source.rotation
+    if (source.scale) tar.scale = source.scale
+    if (source.originalImageWidth) tar.originalImageWidth = source.originalImageWidth
+    if (source.originalImageHeight) tar.originalImageHeight = source.originalImageHeight
+    if (source.paintFilter) tar.paintFilter = importPaintFilter(source.paintFilter, ctx)
+    if (source.transform) tar.transform = importPatternTransform(source.transform, ctx)
 }
 export function importBorder(source: types.Border, ctx?: IImportContext): impl.Border {
         // inject code

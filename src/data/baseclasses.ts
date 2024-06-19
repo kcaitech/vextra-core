@@ -610,6 +610,14 @@ export class Border extends Basic {
     sideSetting: BorderSideSetting
     contextSettings?: ContextSettings
     gradient?: Gradient
+    imageRef?: string
+    imageScaleMode?: ImageScaleMode
+    rotation?: number
+    scale?: number
+    originalImageWidth?: number
+    originalImageHeight?: number
+    paintFilter?: PaintFilter
+    transform?: PatternTransform
     constructor(crdtidx: Crdtidx, id: string, isEnabled: boolean, fillType: FillType, color: Color, position: BorderPosition, thickness: number, borderStyle: BorderStyle, cornerType: CornerType, sideSetting: BorderSideSetting) {
         super()
         this.crdtidx = crdtidx

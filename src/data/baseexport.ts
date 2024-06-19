@@ -739,6 +739,14 @@ export function exportBorder(source: types.Border, ctx?: IExportContext): types.
     ret.sideSetting = exportBorderSideSetting(source.sideSetting, ctx)
     if (source.contextSettings) ret.contextSettings = exportContextSettings(source.contextSettings, ctx)
     if (source.gradient) ret.gradient = exportGradient(source.gradient, ctx)
+    if (source.imageRef) ret.imageRef = source.imageRef
+    if (source.imageScaleMode) ret.imageScaleMode = exportImageScaleMode(source.imageScaleMode, ctx)
+    if (source.rotation) ret.rotation = source.rotation
+    if (source.scale) ret.scale = source.scale
+    if (source.originalImageWidth) ret.originalImageWidth = source.originalImageWidth
+    if (source.originalImageHeight) ret.originalImageHeight = source.originalImageHeight
+    if (source.paintFilter) ret.paintFilter = exportPaintFilter(source.paintFilter, ctx)
+    if (source.transform) ret.transform = exportPatternTransform(source.transform, ctx)
     return ret
 }
 /* fill */

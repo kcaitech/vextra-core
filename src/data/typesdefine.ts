@@ -602,6 +602,14 @@ export type Border = {
     sideSetting: BorderSideSetting,
     contextSettings?: ContextSettings,
     gradient?: Gradient,
+    imageRef?: string,
+    imageScaleMode?: ImageScaleMode,
+    rotation?: number,
+    scale?: number,
+    originalImageWidth?: number,
+    originalImageHeight?: number,
+    paintFilter?: PaintFilter,
+    transform?: PatternTransform,
 }
 /* fill */
 export type Fill = {
