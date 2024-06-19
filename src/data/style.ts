@@ -36,7 +36,7 @@ export {
     CornerType,
     BorderSideSetting,
     SideType,
-    Transform,
+    PatternTransform,
     ImageScaleMode,
     PaintFilter,
     PaintFilterType
@@ -129,7 +129,7 @@ export class Fill extends Basic implements classes.Fill {
     originalImageWidth?: number
     originalImageHeight?: number
     paintFilter?: classes.PaintFilter
-    transform?: classes.Transform
+    transform?: classes.PatternTransform
 
     private __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
     private __cacheData?: { media: { buff: Uint8Array, base64: string }, ref: string };

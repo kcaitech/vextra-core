@@ -285,6 +285,15 @@ export type PathSegment = {
 }
 export type PathShape_pathsegs = Array<PathSegment>
 export type PathShape2_pathsegs = Array<PathSegment>
+/* pattern transform */
+export type PatternTransform = {
+    m00: number,
+    m01: number,
+    m02: number,
+    m10: number,
+    m11: number,
+    m12: number,
+}
 /* point 2d */
 export type Point2D = {
     x: number,
@@ -418,15 +427,6 @@ export enum TextVerAlign {
     Bottom = "bottom",
 }
 export type Text_paras = Array<Para>
-/* transform */
-export type Transform = {
-    m00: number,
-    m01: number,
-    m02: number,
-    m10: number,
-    m11: number,
-    m12: number,
-}
 /* underline types */
 export enum UnderlineType {
     None = "none",
@@ -604,7 +604,7 @@ export type Fill = {
     originalImageWidth?: number,
     originalImageHeight?: number,
     paintFilter?: PaintFilter,
-    transform?: Transform,
+    transform?: PatternTransform,
 }
 /* span attr */
 export type ParaAttr = SpanAttr & {

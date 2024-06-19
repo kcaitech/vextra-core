@@ -1,5 +1,5 @@
 {
-    "description": "transform",
+    "description": "pattern transform",
     "type": "object",
     "properties": {
         "m00": {

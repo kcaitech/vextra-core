@@ -347,6 +347,17 @@ export function exportPathShape2_pathsegs(source: types.PathShape2_pathsegs, ctx
     })
     return ret
 }
+/* pattern transform */
+export function exportPatternTransform(source: types.PatternTransform, ctx?: IExportContext): types.PatternTransform {
+    const ret: types.PatternTransform = {} as types.PatternTransform
+    ret.m00 = source.m00
+    ret.m01 = source.m01
+    ret.m02 = source.m02
+    ret.m10 = source.m10
+    ret.m11 = source.m11
+    ret.m12 = source.m12
+    return ret
+}
 /* point 2d */
 export function exportPoint2D(source: types.Point2D, ctx?: IExportContext): types.Point2D {
     const ret: types.Point2D = {} as types.Point2D
@@ -489,17 +500,6 @@ export function exportText_paras(source: types.Text_paras, ctx?: IExportContext)
     source.forEach((source) => {
         ret.push(exportPara(source, ctx))
     })
-    return ret
-}
-/* transform */
-export function exportTransform(source: types.Transform, ctx?: IExportContext): types.Transform {
-    const ret: types.Transform = {} as types.Transform
-    ret.m00 = source.m00
-    ret.m01 = source.m01
-    ret.m02 = source.m02
-    ret.m10 = source.m10
-    ret.m11 = source.m11
-    ret.m12 = source.m12
     return ret
 }
 /* underline types */
@@ -718,7 +718,7 @@ export function exportFill(source: types.Fill, ctx?: IExportContext): types.Fill
     if (source.originalImageWidth) ret.originalImageWidth = source.originalImageWidth
     if (source.originalImageHeight) ret.originalImageHeight = source.originalImageHeight
     if (source.paintFilter) ret.paintFilter = exportPaintFilter(source.paintFilter, ctx)
-    if (source.transform) ret.transform = exportTransform(source.transform, ctx)
+    if (source.transform) ret.transform = exportPatternTransform(source.transform, ctx)
         // inject code
     if (ctx?.medias && ret.imageRef) ctx.medias.add(ret.imageRef);
 

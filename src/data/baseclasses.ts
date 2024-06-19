@@ -274,6 +274,25 @@ export class PathSegment extends Basic {
 }
 type PathShape_pathsegs = BasicArray<PathSegment>
 type PathShape2_pathsegs = BasicArray<PathSegment>
+/* pattern transform */
+export class PatternTransform extends Basic {
+    typeId = "pattern-transform"
+    m00: number
+    m01: number
+    m02: number
+    m10: number
+    m11: number
+    m12: number
+    constructor(m00: number, m01: number, m02: number, m10: number, m11: number, m12: number) {
+        super()
+        this.m00 = m00
+        this.m01 = m01
+        this.m02 = m02
+        this.m10 = m10
+        this.m11 = m11
+        this.m12 = m12
+    }
+}
 /* point 2d */
 export class Point2D extends Basic {
     typeId = "point-2d"
@@ -351,25 +370,6 @@ type Style_contacts = BasicArray<ContactRole>
 type TableShape_rowHeights = BasicArray<CrdtNumber>
 type TableShape_colWidths = BasicArray<CrdtNumber>
 type Text_paras = BasicArray<Para>
-/* transform */
-export class Transform extends Basic {
-    typeId = "transform"
-    m00: number
-    m01: number
-    m02: number
-    m10: number
-    m11: number
-    m12: number
-    constructor(m00: number, m01: number, m02: number, m10: number, m11: number, m12: number) {
-        super()
-        this.m00 = m00
-        this.m01 = m01
-        this.m02 = m02
-        this.m10 = m10
-        this.m11 = m11
-        this.m12 = m12
-    }
-}
 /* user infomation */
 export class UserInfo extends Basic {
     typeId = "user-info"
@@ -621,7 +621,7 @@ export class Fill extends Basic {
     originalImageWidth?: number
     originalImageHeight?: number
     paintFilter?: PaintFilter
-    transform?: Transform
+    transform?: PatternTransform
     constructor(crdtidx: Crdtidx, id: string, isEnabled: boolean, fillType: FillType, color: Color) {
         super()
         this.crdtidx = crdtidx

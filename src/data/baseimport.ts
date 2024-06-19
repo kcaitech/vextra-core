@@ -393,6 +393,17 @@ export function importPathShape2_pathsegs(source: types.PathShape2_pathsegs, ctx
     })
     return ret
 }
+/* pattern transform */
+export function importPatternTransform(source: types.PatternTransform, ctx?: IImportContext): impl.PatternTransform {
+    const ret: impl.PatternTransform = new impl.PatternTransform (
+        source.m00,
+        source.m01,
+        source.m02,
+        source.m10,
+        source.m11,
+        source.m12)
+    return ret
+}
 /* point 2d */
 export function importPoint2D(source: types.Point2D, ctx?: IImportContext): impl.Point2D {
     const ret: impl.Point2D = new impl.Point2D (
@@ -536,17 +547,6 @@ export function importText_paras(source: types.Text_paras, ctx?: IImportContext)
     source.forEach((source) => {
         ret.push(importPara(source, ctx))
     })
-    return ret
-}
-/* transform */
-export function importTransform(source: types.Transform, ctx?: IImportContext): impl.Transform {
-    const ret: impl.Transform = new impl.Transform (
-        source.m00,
-        source.m01,
-        source.m02,
-        source.m10,
-        source.m11,
-        source.m12)
     return ret
 }
 /* underline types */
@@ -782,7 +782,7 @@ function importFillOptional(tar: impl.Fill, source: types.Fill, ctx?: IImportCon
     if (source.originalImageWidth) tar.originalImageWidth = source.originalImageWidth
     if (source.originalImageHeight) tar.originalImageHeight = source.originalImageHeight
     if (source.paintFilter) tar.paintFilter = importPaintFilter(source.paintFilter, ctx)
-    if (source.transform) tar.transform = importTransform(source.transform, ctx)
+    if (source.transform) tar.transform = importPatternTransform(source.transform, ctx)
 }
 export function importFill(source: types.Fill, ctx?: IImportContext): impl.Fill {
     const ret: impl.Fill = new impl.Fill (

@@ -60,7 +60,7 @@
             "$ref": "./paint-filter.json"
         },
         "transform": {
-            "$ref": "./transform.json"
+            "$ref": "./pattern-transform.json"
         }
     },
     "required": [
