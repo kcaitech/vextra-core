@@ -3,7 +3,7 @@ import { CoopRepository } from "../coop/cooprepo";
 import { Document } from "../../data/document";
 import { PageView, ShapeView, adapt2Shape } from "../../dataview";
 import { shape4fill } from "../../editor/symbol";
-import { PaintFilterType } from "data";
+import { PaintFilterType } from "../../data";
 
 export class ColorPicker extends AsyncApiCaller {
     constructor(repo: CoopRepository, document: Document, page: PageView) {
