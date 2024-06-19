@@ -344,3 +344,6 @@ export enum RadiusType {
     Fixed = 1,
     Rect = 2
 }
+
+
+export const TEXT_BASELINE_RATIO = 0.2;

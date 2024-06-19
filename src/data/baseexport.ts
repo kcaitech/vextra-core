@@ -5,6 +5,13 @@ export interface IExportContext {
     medias?: Set<string>
     refsymbols?: Set<string>
 }
+export function exportArtboard_guides(source: types.Artboard_guides, ctx?: IExportContext): types.Artboard_guides {
+    const ret: types.Artboard_guides = []
+    source.forEach((source) => {
+        ret.push(exportGuide(source, ctx))
+    })
+    return ret
+}
 /* blend mode */
 export function exportBlendMode(source: types.BlendMode, ctx?: IExportContext): types.BlendMode {
     return source
@@ -256,6 +263,28 @@ export function exportGroupShape_childs(source: types.GroupShape_childs, ctx?: I
     })
     return ret
 }
+/* guide axis */
+export function exportGuideAxis(source: types.GuideAxis, ctx?: IExportContext): types.GuideAxis {
+    return source
+}
+export function exportGuide_crdtidx(source: types.Guide_crdtidx, ctx?: IExportContext): types.Guide_crdtidx {
+    const ret: types.Guide_crdtidx = []
+    source.forEach((source) => {
+        ret.push(source)
+    })
+    return ret
+}
+/* guide */
+export function exportGuide(source: types.Guide, ctx?: IExportContext): types.Guide {
+    const ret: types.Guide = {} as types.Guide
+    ret.typeId = "guide"
+    ret.crdtidx = exportGuide_crdtidx(source.crdtidx, ctx)
+    ret.typeId = source.typeId
+    ret.id = source.id
+    ret.axis = exportGuideAxis(source.axis, ctx)
+    ret.offset = source.offset
+    return ret
+}
 /* image scale mode */
 export function exportImageScaleMode(source: types.ImageScaleMode, ctx?: IExportContext): types.ImageScaleMode {
     return source
@@ -292,6 +321,13 @@ export function exportPageListItem(source: types.PageListItem, ctx?: IExportCont
     ret.id = source.id
     ret.name = source.name
     if (source.versionId) ret.versionId = source.versionId
+    return ret
+}
+export function exportPage_guides(source: types.Page_guides, ctx?: IExportContext): types.Page_guides {
+    const ret: types.Page_guides = []
+    source.forEach((source) => {
+        ret.push(exportGuide(source, ctx))
+    })
     return ret
 }
 /* paint filter */
@@ -454,6 +490,13 @@ export function exportStyle_contacts(source: types.Style_contacts, ctx?: IExport
     const ret: types.Style_contacts = []
     source.forEach((source) => {
         ret.push(exportContactRole(source, ctx))
+    })
+    return ret
+}
+export function exportSymbolShape_guides(source: types.SymbolShape_guides, ctx?: IExportContext): types.SymbolShape_guides {
+    const ret: types.SymbolShape_guides = []
+    source.forEach((source) => {
+        ret.push(exportGuide(source, ctx))
     })
     return ret
 }
@@ -1027,6 +1070,7 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
     const ret: types.Artboard = exportGroupShape(source, ctx) as types.Artboard
     ret.typeId = "artboard"
     if (source.cornerRadius) ret.cornerRadius = exportCornerRadius(source.cornerRadius, ctx)
+    if (source.guides) ret.guides = exportArtboard_guides(source.guides, ctx)
     return ret
 }
 /* bool shape */
@@ -1048,6 +1092,7 @@ export function exportPage(source: types.Page, ctx?: IExportContext): types.Page
     const ret: types.Page = exportGroupShape(source, ctx) as types.Page
     ret.typeId = "page"
     if (source.backgroundColor) ret.backgroundColor = exportColor(source.backgroundColor, ctx)
+    if (source.guides) ret.guides = exportPage_guides(source.guides, ctx)
     return ret
 }
 /* symbol shape */
@@ -1069,6 +1114,7 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
         return ret
     })()
     if (source.cornerRadius) ret.cornerRadius = exportCornerRadius(source.cornerRadius, ctx)
+    if (source.guides) ret.guides = exportSymbolShape_guides(source.guides, ctx)
         // inject code
     if (ctx?.symbols) ctx.symbols.add(ret.id);
 

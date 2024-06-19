@@ -41,9 +41,11 @@ export function renderText2Path(layout: TextLayout, offsetX: number, offsetY: nu
                 const span = garr.attr;
                 const font = span?.fontName || '';
                 const fontSize = span?.fontSize || 0;
-                const metrics = garr[0]?.metrics;
                 const bottom = lineY + line.lineHeight - (line.lineHeight - line.maxFontSize) / 2;
-                const baseY = metrics ? (bottom - (fontSize - (metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent)) / 2 - (metrics.actualBoundingBoxDescent)) : bottom; // baseline
+
+                // 以bottom对齐，然后再根据最大actualBoundingBoxDescent进行偏移
+                const offsetY = line.actualBoundingBoxDescent;
+                const baseY = bottom - offsetY;
 
                 const weight = (span?.weight) || 400;
                 const italic = !!(span?.italic);
@@ -139,9 +141,9 @@ export function renderTextLayout(h: Function, textlayout: TextLayout, frame?: Sh
                 const garr = line[garrIdx];
                 const span = garr.attr;
                 const fontSize = span?.fontSize || 0;
-                const metrics = garr[0]?.metrics;
                 const bottom = lineY + line.lineHeight - (line.lineHeight - line.maxFontSize) / 2;
-                const baseY = metrics ? (bottom - (fontSize - (metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent)) / 2 - (metrics.actualBoundingBoxDescent)) : bottom; // baseline
+                const offsetY = line.actualBoundingBoxDescent;
+                const baseY = bottom - offsetY;
 
                 for (let gIdx = 0, gCount = garr.length; gIdx < gCount; gIdx++) {
                     const graph = garr[gIdx];
@@ -150,11 +152,10 @@ export function renderTextLayout(h: Function, textlayout: TextLayout, frame?: Sh
                     }
                     gText.push(graph.char);
                     gX.push(graph.x + lineX);
-                    // gY.push(_y - (graph.metrics?.actualBoundingBoxDescent || 0));
                 }
 
-                const fontName = span?.fontName;
 
+                const fontName = span?.fontName;
                 const font = "normal " + fontSize + "px " + fontName;
                 const style: any = {
                     font,
@@ -203,7 +204,7 @@ export function renderTextLayout(h: Function, textlayout: TextLayout, frame?: Sh
                                 width: textlayout.contentWidth, height: textlayout.contentHeight, x: xOffset, y: yOffset
                             },
                             h("div", { style: { width: "100%", height: "100%", 'backdrop-filter': `blur(${blur.saturation / 2}px)`, "clip-path": "url(#" + id + ")" } }))
-                        const backgroundBlur = h("g", [cp,foreignObject])
+                        const backgroundBlur = h("g", [cp, foreignObject])
                         linechilds.push(backgroundBlur);
                     }
                 }
