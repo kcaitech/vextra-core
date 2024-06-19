@@ -37,7 +37,10 @@ export interface ICoopNet {
      *   duplicateCmd: Cmd,
      * }
      */
-    watchError(watcher: (errorInfo: any) => void): void;
+    watchError(watcher: (errorInfo: {
+        type: "duplicate",
+        duplicateCmd: Cmd,
+    }) => void): void;
 
 
 }

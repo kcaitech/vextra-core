@@ -94,6 +94,7 @@ class CmdSync {
         this.nodecreator = nodecreator(document, undefined);
         this.net = net;
         this.net.watchCmds(this.receive.bind(this));
+        this.net.watchError(this.receiveErr.bind(this));
         this.nettask = new CmdNetTask(net, this.baseVer, this.baseVer, this.receive.bind(this));
     }
 
@@ -105,6 +106,7 @@ class CmdSync {
         this.net = net;
         this.nettask.setNet(net);
         this.net.watchCmds(this.receive.bind(this));
+        this.net.watchError(this.receiveErr.bind(this));
     }
 
     document: Document;
@@ -570,6 +572,13 @@ class CmdSync {
         }
 
         return newCmd ?? cmd;
+    }
+
+    private receiveErr(errorInfo: {
+        type: "duplicate",
+        duplicateCmd: Cmd,
+    }) {
+        this.receive([errorInfo.duplicateCmd])
     }
 
     // 收到远程cmd
