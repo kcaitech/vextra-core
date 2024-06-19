@@ -2176,12 +2176,18 @@ export class PageEditor {
                 const { target, index, value } = actions[i];
                 const s = shape4fill(api, this.__page, target);
                 api.setFillScaleMode(this.__page, s, index, value);
+                if (value === types.ImageScaleMode.Tile) {
+                    if (!target.style.fills[index].scale) {
+                        api.setFillImageScale(this.__page, s, index, 0.5);
+                    }
+                }
             }
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
         }
     }
+
     setShapesFillImageRef(actions: BatchAction[]) {
         const api = this.__repo.start('setShapesFillImageRef');
         try {
@@ -2217,6 +2223,30 @@ export class PageEditor {
                 const { target, index, value } = actions[i];
                 const s = shape4fill(api, this.__page, target);
                 api.setFillImageScale(this.__page, s, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapesFillEdit(shape: ShapeView, idx: number, edit: boolean) {
+        const api = this.__repo.start('setShapesFillEdit');
+        try {
+            const s = shape4fill(api, this.__page, shape);
+            api.setFillEdit(this.__page, s, idx, edit);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setShapesFillFilter(actions: BatchAction[]) {
+        const api = this.__repo.start('setShapesFillFilter');
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index, value } = actions[i];
+                const s = shape4fill(api, this.__page, target);
+                api.setFillImageFilter(this.__page, s, index, value.key, value.value);
             }
             this.__repo.commit();
         } catch (error) {

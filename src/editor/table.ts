@@ -1328,68 +1328,7 @@ export class TableEditor extends ShapeEditor {
             this.__repo.rollback();
         }
     }
-    public setFillImageScaleMode4Cell(idx: number, type: ImageScaleMode, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        const api = this.__repo.start("setFillImageScaleMode");
-        try {
-            this.view._getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
-                if (cell.cell) {
-                    const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
-                    api.setFillScaleMode(this.__page, c.data, idx, type);
-                }
-            })
-            this.__repo.commit();
-        } catch (error) {
-            console.error(error);
-            this.__repo.rollback();
-        }
-    }
-    public setFillImageRef4Cell(idx: number, urlRef: string, origin: { width: number, height: number }, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        const api = this.__repo.start("setFillImageRef4Cell");
-        try {
-            this.view._getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
-                if (cell.cell) {
-                    const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
-                    api.setFillImageRef(this.__page, c.data, idx, urlRef);
-                    api.setFillImageOriginWidth(this.__page, c.data, idx, origin.width);
-                    api.setFillImageOriginHeight(this.__page, c.data, idx, origin.height);
-                }
-            })
-            this.__repo.commit();
-        } catch (error) {
-            console.error(error);
-            this.__repo.rollback();
-        }
-    }
-    public setFillImageRotate4Cell(idx: number, rotate: number, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        const api = this.__repo.start("setFillImageRotate4Cell");
-        try {
-            this.view._getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
-                if (cell.cell) {
-                    const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
-                    api.setFillImageRotate(this.__page, c.data, idx, rotate);
-                }
-            })
-            this.__repo.commit();
-        } catch (error) {
-            console.error(error);
-            this.__repo.rollback();
-        }
-    }
-    public setFillImageScale4Cell(idx: number, scale: number, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        const api = this.__repo.start("setFillImageScale4Cell");
-        try {
-            this.view._getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
-                if (cell.cell) {
-                    const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
-                    api.setFillImageScale(this.__page, c.data, idx, scale);
-                }
-            })
-            this.__repo.commit();
-        } catch (error) {
-            console.error(error);
-            this.__repo.rollback();
-        }
-    }
+
     public deleteFill4Cell(idx: number, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
         const api = this.__repo.start("deleteFill");
         try {
