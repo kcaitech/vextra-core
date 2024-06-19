@@ -297,13 +297,18 @@ export function exportPageListItem(source: types.PageListItem, ctx?: IExportCont
 /* paint filter */
 export function exportPaintFilter(source: types.PaintFilter, ctx?: IExportContext): types.PaintFilter {
     const ret: types.PaintFilter = {} as types.PaintFilter
-    if (source.exposure) ret.exposure = source.exposure
-    if (source.contrast) ret.contrast = source.contrast
-    if (source.saturation) ret.saturation = source.saturation
-    if (source.temperature) ret.temperature = source.temperature
-    if (source.tint) ret.tint = source.tint
-    if (source.hue) ret.hue = source.hue
+    ret.exposure = source.exposure
+    ret.contrast = source.contrast
+    ret.saturation = source.saturation
+    ret.temperature = source.temperature
+    ret.tint = source.tint
+    ret.shadow = source.shadow
+    ret.hue = source.hue
     return ret
+}
+/* paint filter type */
+export function exportPaintFilterType(source: types.PaintFilterType, ctx?: IExportContext): types.PaintFilterType {
+    return source
 }
 export function exportPara_spans(source: types.Para_spans, ctx?: IExportContext): types.Para_spans {
     const ret: types.Para_spans = []

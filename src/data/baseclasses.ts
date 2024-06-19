@@ -21,6 +21,7 @@ export {
     LineJoinStyle,
     MarkerType,
     OverrideType,
+    PaintFilterType,
     ResizeType,
     ShadowPosition,
     ShapeType,
@@ -58,6 +59,7 @@ import {
     LineJoinStyle,
     MarkerType,
     OverrideType,
+    PaintFilterType,
     ResizeType,
     ShadowPosition,
     ShapeType,
@@ -235,12 +237,23 @@ export class PageListItem extends Basic {
 /* paint filter */
 export class PaintFilter extends Basic {
     typeId = "paint-filter"
-    exposure?: number
-    contrast?: number
-    saturation?: number
-    temperature?: number
-    tint?: number
-    hue?: number
+    exposure: number
+    contrast: number
+    saturation: number
+    temperature: number
+    tint: number
+    shadow: number
+    hue: number
+    constructor(exposure: number, contrast: number, saturation: number, temperature: number, tint: number, shadow: number, hue: number) {
+        super()
+        this.exposure = exposure
+        this.contrast = contrast
+        this.saturation = saturation
+        this.temperature = temperature
+        this.tint = tint
+        this.shadow = shadow
+        this.hue = hue
+    }
 }
 type Para_spans = BasicArray<Span>
 type PathSegment_points = BasicArray<CurvePoint>

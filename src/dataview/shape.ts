@@ -917,4 +917,8 @@ export class ShapeView extends DataView {
     get isStraight() {
         return this.m_data.isStraight;
     }
+
+    get isImageFill() {
+        return this.m_data.getImageFill();
+    }
 }

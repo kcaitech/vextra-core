@@ -341,18 +341,20 @@ export function importPageListItem(source: types.PageListItem, ctx?: IImportCont
     return ret
 }
 /* paint filter */
-function importPaintFilterOptional(tar: impl.PaintFilter, source: types.PaintFilter, ctx?: IImportContext) {
-    if (source.exposure) tar.exposure = source.exposure
-    if (source.contrast) tar.contrast = source.contrast
-    if (source.saturation) tar.saturation = source.saturation
-    if (source.temperature) tar.temperature = source.temperature
-    if (source.tint) tar.tint = source.tint
-    if (source.hue) tar.hue = source.hue
-}
 export function importPaintFilter(source: types.PaintFilter, ctx?: IImportContext): impl.PaintFilter {
-    const ret: impl.PaintFilter = new impl.PaintFilter ()
-    importPaintFilterOptional(ret, source, ctx)
+    const ret: impl.PaintFilter = new impl.PaintFilter (
+        source.exposure,
+        source.contrast,
+        source.saturation,
+        source.temperature,
+        source.tint,
+        source.shadow,
+        source.hue)
     return ret
+}
+/* paint filter type */
+export function importPaintFilterType(source: types.PaintFilterType, ctx?: IImportContext): impl.PaintFilterType {
+    return source
 }
 export function importPara_spans(source: types.Para_spans, ctx?: IImportContext): Para_spans {
     const ret: Para_spans = new BasicArray()

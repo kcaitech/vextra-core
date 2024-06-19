@@ -1,0 +1,13 @@
+{
+    "description": "paint filter type",
+    "enum": [
+        "exposure",
+        "contrast",
+        "saturation",
+        "temperature",
+        "tint",
+        "shadow",
+        "hue"
+    ],
+    "default": "solid-color"
+}

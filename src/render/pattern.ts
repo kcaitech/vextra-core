@@ -1,3 +1,4 @@
+import { objectId } from "../basic/objectid";
 import { Fill, ImageScaleMode } from "../data/classes";
 import { ImageShape, ShapeFrame } from "../data/shape";
 import { randomId } from "./basic";
@@ -72,7 +73,7 @@ handler[ImageScaleMode.Fill] = function (h: Function, frame: ShapeFrame, id: str
                 img_props.width = img_props.height;
                 delete img_props.height;
                 if (fill.rotation === 270) {
-                    if((frame.height / image_w) * image_h > frame.width) {
+                    if ((frame.height / image_w) * image_h > frame.width) {
                         const offsetx = (((frame.height / image_w) * image_h) - frame.width) / 2;
                         style.transform = `translate(${-offsetx}px ,${frame.height}px) rotate(${fill.rotation}deg)`;
                     } else {
@@ -82,7 +83,7 @@ handler[ImageScaleMode.Fill] = function (h: Function, frame: ShapeFrame, id: str
                     }
                     img_props.x = 0;
                 } else {
-                    if((frame.height / image_w) * image_h > frame.width) {
+                    if ((frame.height / image_w) * image_h > frame.width) {
                         const offsetx = (((frame.height / image_w) * image_h) - frame.width) / 2;
                         style.transform = `translate(${frame.width + offsetx}px, ${0}px) rotate(${fill.rotation}deg)`;
                     } else {
@@ -98,8 +99,22 @@ handler[ImageScaleMode.Fill] = function (h: Function, frame: ShapeFrame, id: str
             img_props.style = transformRotate(fill.rotation, frame);
         }
     }
+    const paint_filter = paintFilter(h, fill);
     const img = h("image", img_props);
     const pattern = h('pattern', props, [img]);
+    if (paint_filter) {
+        if (img_props.style) {
+            img_props.style.filter = paint_filter.filter;
+        } else {
+            img_props.style = {
+                filter: paint_filter.filter
+            }
+        }
+        if (paint_filter.node.length) {
+            const defs = h('defs', paint_filter.node);
+            return h('g', [defs, pattern])
+        }
+    }
     return pattern;
 }
 
@@ -189,8 +204,22 @@ handler[ImageScaleMode.Fit] = function (h: Function, frame: ShapeFrame, id: stri
             img_props.style = style;
         }
     }
+    const paint_filter = paintFilter(h, fill);
     const img = h("image", img_props);
     const pattern = h('pattern', props, [img]);
+    if (paint_filter) {
+        if (img_props.style) {
+            img_props.style.filter = paint_filter.filter;
+        } else {
+            img_props.style = {
+                filter: paint_filter.filter
+            }
+        }
+        if (paint_filter.node.length) {
+            const defs = h('defs', paint_filter.node);
+            return h('g', [defs, pattern])
+        }
+    }
     return pattern;
 }
 
@@ -215,6 +244,7 @@ handler[ImageScaleMode.Stretch] = function (h: Function, frame: ShapeFrame, id: 
             props.style = transformRotate(fill.rotation, frame);
         }
     }
+    const paint_filter = paintFilter(h, fill);
     const img = h("image", props);
     const pattern = h('pattern', {
         width: frame.width + 1,
@@ -224,6 +254,19 @@ handler[ImageScaleMode.Stretch] = function (h: Function, frame: ShapeFrame, id: 
         patternUnits: 'userSpaceOnUse',
         id: id,
     }, [img]);
+    if (paint_filter) {
+        if (props.style) {
+            props.style.filter = paint_filter.filter;
+        } else {
+            props.style = {
+                filter: paint_filter.filter
+            }
+        }
+        if (paint_filter.node.length) {
+            const defs = h('defs', paint_filter.node);
+            return h('g', [defs, pattern])
+        }
+    }
     return pattern;
 }
 
@@ -236,6 +279,7 @@ handler[ImageScaleMode.Tile] = function (h: Function, frame: ShapeFrame, id: str
     let image_h = fill.originalImageHeight || 64;
     let scale = typeof fill.scale === 'number' ? fill.scale : 0.5;
     const url = fill.peekImage(true) || default_url;
+    const maskId = "mask-" + objectId(fill) + randomId();
     const props: any = {
         'xlink:href': url,
         width: image_w * scale,
@@ -262,9 +306,53 @@ handler[ImageScaleMode.Tile] = function (h: Function, frame: ShapeFrame, id: str
             pattern_props.style = transformRotate(fill.rotation, { width: pattern_props.width, height: pattern_props.height });
         }
     }
+    const paint_filter = paintFilter(h, fill);
     const img = h("image", props);
     const pattern = h('pattern', pattern_props, [img]);
-    return pattern;
+    const mask = h('mask', {
+        id: maskId,
+        width: image_w * scale,
+        height: image_h * scale
+    }, [
+        h('rect', { width: image_w * scale, height: image_h * scale, fill: "white", 'fill-opacity': "0.5" }),
+        h('path', { d: path, fill: "white" }),
+    ])
+    if (fill.isEditingImage && image_w * scale > frame.width) {
+        let style: any = {}
+        if (fill.rotation && fill.rotation > 0) {
+            if (fill.rotation === 90 || fill.rotation === 270) {
+                style = {
+                    transform: `translate(${(image_h * scale) / 2}px, ${(image_w * scale) / 2}px) rotate(${fill.rotation}deg) translate(${-(image_w * scale) / 2}px, ${-(image_h * scale) / 2}px)`
+                };
+            } else {
+                style = transformRotate(fill.rotation, { width: image_w * scale, height: image_h * scale });
+            }
+        }
+        const node = [
+            pattern, mask, h("image", { ...props, style, mask: 'url(#' + maskId + ')' })
+        ]
+        if (paint_filter) {
+            if (paint_filter.node.length) {
+                const defs = h('defs', paint_filter.node);
+                node.unshift(defs);
+            }
+            props.style = {
+                filter: paint_filter.filter
+            }
+        }
+        return h('g', node);
+    } else {
+        if (paint_filter) {
+            props.style = {
+                filter: paint_filter.filter
+            }
+            if (paint_filter.node.length) {
+                const defs = h('defs', paint_filter.node);
+                return h('g', [defs, pattern])
+            }
+        }
+        return pattern;
+    }
 }
 
 export function patternRender(h: Function, frame: ShapeFrame, id: string, path: string, fill: Fill): any {
@@ -283,4 +371,120 @@ const transformRotate = (rotation: number, frame: { width: number, height: numbe
     let transform = `translate(${width / 2}px, ${height / 2}px) rotate(${rotation}deg) translate(${-width / 2}px, ${-height / 2}px)`
     style.transform = transform;
     return style;
+}
+
+const paintFilter = (h: Function, fill: Fill) => {
+    let filters: any = [];
+    let filter = ''
+    const paintFilter = fill.paintFilter;
+    if (!paintFilter) return;
+    if (paintFilter.exposure) {
+        const exposure = (paintFilter.exposure / 200);
+        const filterId = "exposureFilter-" + objectId(fill) + randomId();
+        const fe_func = {
+            type: 'linear',
+            slope: '1',
+            intercept: exposure
+        }
+        const feComponentTransfer = h('feComponentTransfer', [
+            h('feFuncR', fe_func),
+            h('feFuncG', fe_func),
+            h('feFuncB', fe_func),
+        ])
+        const filter_node = h('filter', { id: filterId }, [feComponentTransfer]);
+        filters.push(filter_node);
+        filter += `url(#${filterId}) `
+    }
+    if (paintFilter.contrast) {
+        const contrast = 1 + (paintFilter.contrast / 200);
+        filter += `contrast(${contrast}) `
+    }
+    if (paintFilter.saturation) {
+        const saturation = 1 + (paintFilter.saturation / 100);
+        const fe_color_matrix = {
+            type: 'saturate',
+            values: saturation
+        }
+        const feColorMatrix = h('feColorMatrix', fe_color_matrix);
+        const filterId = "shadowFilter-" + objectId(fill) + randomId();
+        const filter_node = h('filter', { id: filterId }, [feColorMatrix]);
+        filters.push(filter_node);
+        filter += `url(#${filterId}) `
+    }
+    if (paintFilter.temperature) {
+        let redMultiplier = 1
+        let blueMultiplier = 1
+        if (paintFilter.temperature < 0) {
+            redMultiplier = 1 + (paintFilter.temperature / 200);
+            blueMultiplier = 1 - (paintFilter.temperature / 25);
+        } else {
+            redMultiplier = 1 + (paintFilter.temperature / 200);
+            blueMultiplier = 1 - (paintFilter.temperature / 100);
+        }
+        const fe_color_matrix = {
+            type: 'matrix',
+            values: `${redMultiplier} 0 0 0 0
+                     0 1 0 0 0
+                     0 0 ${blueMultiplier} 0 0
+                     0 0 0 1 0`
+        }
+        const feColorMatrix = h('feColorMatrix', fe_color_matrix);
+        const filterId = "shadowFilter-" + objectId(fill) + randomId();
+        const filter_node = h('filter', { id: filterId }, [feColorMatrix]);
+        filters.push(filter_node);
+        filter += `url(#${filterId}) `
+    }
+    if (paintFilter.tint) {
+        let redMultiplier = 1
+        let greenMultiplier = 1
+        if (paintFilter.tint < 0) {
+            redMultiplier = 1 + (paintFilter.tint / 200);
+            greenMultiplier = 1 - (paintFilter.tint / 200);
+        } else {
+            redMultiplier = 1 + (paintFilter.tint / 200);
+            greenMultiplier = 1 - (paintFilter.tint / 200);
+        }
+        const filterId = "shadowFilter-" + objectId(fill) + randomId();
+        const fe_color_matrix = {
+            type: 'matrix',
+            values: `${redMultiplier} 0 0 0 0
+                     0 ${greenMultiplier} 0 0 0
+                     0 0 1 0 0
+                     0 0 0 1 0`
+        }
+        const feColorMatrix = h('feColorMatrix', fe_color_matrix);
+        const filter_node = h('filter', { id: filterId }, [feColorMatrix]);
+        filters.push(filter_node);
+        filter += `url(#${filterId}) `
+    }
+    if (paintFilter.shadow) {
+        const shadow = (paintFilter.shadow / 1000);
+        const filterId = "shadowFilter-" + objectId(fill) + randomId();
+        const fe_func = {
+            type: 'linear',
+            slope: '1',
+            intercept: shadow
+        }
+        const feComponentTransfer = h('feComponentTransfer', [
+            h('feFuncR', fe_func),
+            h('feFuncG', fe_func),
+            h('feFuncB', fe_func),
+        ])
+        const filter_node = h('filter', { id: filterId }, [feComponentTransfer]);
+        filters.push(filter_node);
+        filter += `url(#${filterId}) `
+    }
+    if (paintFilter.hue) {
+        const filterId = "hueFilter-" + objectId(fill) + randomId();
+        const fe_color_matrix = {
+            type: 'hueRotate',
+            values: paintFilter.hue
+        }
+        const feColorMatrix = h('feColorMatrix', fe_color_matrix);
+        const filter_node = h('filter', { id: filterId }, [feColorMatrix]);
+        filters.push(filter_node);
+        filter += `url(#${filterId}) `
+    }
+    if (!filter.length) return;
+    return { node: filters, filter: filter }
 }

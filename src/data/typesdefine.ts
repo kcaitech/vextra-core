@@ -256,12 +256,23 @@ export type PageListItem = {
 }
 /* paint filter */
 export type PaintFilter = {
-    exposure?: number,
-    contrast?: number,
-    saturation?: number,
-    temperature?: number,
-    tint?: number,
-    hue?: number,
+    exposure: number,
+    contrast: number,
+    saturation: number,
+    temperature: number,
+    tint: number,
+    shadow: number,
+    hue: number,
+}
+/* paint filter type */
+export enum PaintFilterType {
+    Exposure = "exposure",
+    Contrast = "contrast",
+    Saturation = "saturation",
+    Temperature = "temperature",
+    Tint = "tint",
+    Shadow = "shadow",
+    Hue = "hue",
 }
 export type Para_spans = Array<Span>
 export type PathSegment_points = Array<CurvePoint>

@@ -266,4 +266,7 @@ export class ContactShape extends PathShape implements classes.ContactShape {
     get radiusType() {
         return RadiusType.Fixed;
     }
+    getImageFill() {
+        return false;
+    }
 }

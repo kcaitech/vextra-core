@@ -445,6 +445,12 @@ export class Shape extends Basic implements classes.Shape {
     get isStraight() {
         return false;
     }
+    getImageFill() {
+        const fills = this.getFills();
+        if (!fills.length) return false;
+        const result = fills.some(fill => fill.fillType === classes.FillType.Pattern);
+        return result;
+    }
 }
 
 export class GroupShape extends Shape implements classes.GroupShape {
@@ -557,6 +563,10 @@ export class GroupShape extends Shape implements classes.GroupShape {
     get radiusType() {
         return RadiusType.Fixed;
     }
+
+    getImageFill() {
+        return false;
+    }
 }
 
 export class BoolShape extends GroupShape implements classes.BoolShape {
@@ -597,6 +607,12 @@ export class BoolShape extends GroupShape implements classes.BoolShape {
 
     get isPathIcon() {
         return true;
+    }
+    getImageFill() {
+        const fills = this.style.getFills();
+        if (!fills.length) return false;
+        const result = fills.some(fill => fill.fillType === classes.FillType.Pattern);
+        return result;
     }
 }
 
@@ -1043,6 +1059,9 @@ export class ImageShape extends RectShape implements classes.ImageShape {
     get isPathIcon() {
         return false;
     }
+    getImageFill() {
+        return false;
+    }
 }
 
 export class OvalShape extends PathShape implements classes.OvalShape {
@@ -1172,6 +1191,13 @@ export class TextShape extends Shape implements classes.TextShape {
     get isPathIcon() {
         return false;
     }
+    getImageFill() {
+        // const fills = this.style.getFills();
+        // if (!fills.length) return false;
+        // const result = fills.some(fill => fill.fillType === classes.FillType.Pattern);
+        // return result;
+        return false;
+    }
 }
 
 export class CutoutShape extends PathShape implements classes.CutoutShape {
@@ -1217,6 +1243,9 @@ export class CutoutShape extends PathShape implements classes.CutoutShape {
     }
     get radiusType() {
         return RadiusType.None;
+    }
+    getImageFill() {
+        return false;
     }
 }
 

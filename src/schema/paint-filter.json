@@ -22,12 +22,23 @@
             "type": "number",
             "default": 0
         },
+        "shadow": {
+            "type": "number",
+            "default": 0
+        },
         "hue": {
             "type": "number",
             "default": 0
         }
     },
     "required": [
+        "exposure",
+        "contrast",
+        "saturation",
+        "temperature",
+        "tint",
+        "shadow",
+        "hue"
     ],
     "additionalProperties": false
 }

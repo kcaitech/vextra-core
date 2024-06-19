@@ -38,7 +38,8 @@ export {
     SideType,
     Transform,
     ImageScaleMode,
-    PaintFilter
+    PaintFilter,
+    PaintFilterType
 } from "./baseclasses"
 
 /**
@@ -201,6 +202,17 @@ export class Fill extends Basic implements classes.Fill {
             this.notify();
         }
         return this.__cacheData && this.__cacheData.media.base64 || "";
+    }
+
+    private __is_editing_image: boolean = false;
+
+    startEditImage(v: boolean) {
+        this.__is_editing_image = v;
+        this.notify();
+    }
+
+    get isEditingImage() {
+        return this.__is_editing_image;
     }
 }
 
