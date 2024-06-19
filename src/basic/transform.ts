@@ -1,4 +1,4 @@
-import {ColVector, ColVector2D, ColVector3D, Matrix, Matrix3DKeysType} from "./matrix2"
+import {ColVector3D, Matrix, Matrix3DKeysType} from "./matrix2"
 import {NumberArray2D} from "./number_array"
 import {isZero} from "./number_utils"
 
@@ -219,7 +219,7 @@ export class Transform { // 变换
             this.translateMatrix = TranslateMatrix.FromMatrix(Matrix.BuildIdentity([4, 3]).insertCols(this.matrix.col3))
 
             const matrix3x3 = this.matrix.clone().resize([3, 3])
-            // z轴预期方向（x轴与y轴的叉积，xoy平面的法向量，方向与z轴预期方向一致）
+            // z轴预期方向（x轴与y轴的叉积，为xoy平面的法向量，其方向与z轴预期方向一致）
             let expectedZ = matrix3x3.col0.cross(matrix3x3.col1) as ColVector3D
             // z轴与z轴预期方向的点积
             const zDot = expectedZ.dot(matrix3x3.col2)
@@ -239,6 +239,7 @@ export class Transform { // 变换
             const zAngle = expectedZ.angleTo(matrix3x3.col2) // z轴旋转角度（-π ~ π）
             const zS = Math.sin(zAngle)
             const zT = 1 - Math.cos(zAngle)
+            // https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/rotate3d#syntax
             this.skewMatrix = new Matrix(new NumberArray2D([4, 4], [
                 1, -Math.sin(yAngle), -zY * zS + zX * zZ * zT, 0,
                 0, Math.cos(yAngle), zX + zY * zZ * zT, 0,
@@ -1627,6 +1628,15 @@ export class Transform { // 变换
         return this
     }
 
+    // 清除斜切，同时清除斜切带来的缩放
+    clearSkewAndResetScale() {
+        this.updateMatrix()
+        this.scaleMatrix
+            .multiplyByNumberSubMatrix(this.skewMatrix.m00, [3, 1], [0, 0])
+            .multiplyByNumberSubMatrix(this.skewMatrix.m11, [3, 1], [0, 1])
+            .multiplyByNumberSubMatrix(this.skewMatrix.m22, [3, 1], [0, 2])
+    }
+
     clearScale() { // 清除缩放操作
         if (!this.isSubMatrixLatest) this.updateMatrix();
         this.scaleMatrix = ScaleMatrix.FromMatrix(Matrix.BuildIdentity([4, 4]))
@@ -1635,6 +1645,19 @@ export class Transform { // 变换
         this.onChange(this)
 
         return this
+    }
+
+    // 清除缩放，但保留斜切带来的缩放
+    clearScaleAndKeepSkew() {
+        const xLength = 1 / this.skewMatrix.m00
+        const yLength = 1 / this.skewMatrix.m11
+        const zLength = 1 / this.skewMatrix.m22
+        this.scaleMatrix = ScaleMatrix.FromMatrix(new Matrix(new NumberArray2D([4, 4], [
+            xLength, 0, 0, 0,
+            0, yLength, 0, 0,
+            0, 0, zLength, 0,
+            0, 0, 0, 1,
+        ], true)))
     }
 
     clearScaleSize() { // 清除缩放大小，但保留缩放方向
