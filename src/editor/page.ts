@@ -2462,30 +2462,53 @@ export class PageEditor {
                 let borders: BasicArray<Border> = new BasicArray<Border>();
                 let fills: BasicArray<Fill> = new BasicArray<Fill>();
                 for (let b_i = 0; b_i < b.length; b_i++) {
-                    const { isEnabled, color, fillType, gradient, contextSettings } = b[b_i];
+                    const { isEnabled, color, fillType, gradient, contextSettings, imageRef, transform, paintFilter, imageScaleMode, scale, rotation, originalImageHeight, originalImageWidth } = b[b_i];
                     const fill = new Fill([i] as BasicArray<number>, uuid(), isEnabled, fillType, color);
                     fill.gradient = gradient;
                     fill.contextSettings = contextSettings;
                     if (f.length > b_i) {
                         fill.fillRule = f[b_i].fillRule;
-                        fill.imageRef = f[b_i].imageRef;
                     }
+                    fill.imageRef = imageRef;
+                    fill.transform = transform;
+                    fill.paintFilter = paintFilter;
+                    fill.imageScaleMode = imageScaleMode;
+                    fill.scale = scale;
+                    fill.rotation = rotation;
+                    fill.originalImageHeight = originalImageHeight;
+                    fill.originalImageWidth = originalImageWidth;
+                    const imageMgr = b[b_i].getImageMgr();
+                    imageMgr && fill.setImageMgr(imageMgr);
                     fills.unshift(fill);
                 }
                 for (let f_i = 0; f_i < f.length; f_i++) {
-                    const { isEnabled, color, fillType, gradient, contextSettings } = f[f_i];
+                    const { isEnabled, color, fillType, gradient, contextSettings, imageRef, transform, paintFilter, imageScaleMode, scale, rotation, originalImageHeight, originalImageWidth } = f[f_i];
                     let border: Border;
+                    let fill_type = fillType;
+                    if (fillType === FillType.Pattern) {
+                        fill_type = FillType.SolidColor
+                    }
                     if (b.length > f_i) {
                         const { position, borderStyle, thickness, cornerType, sideSetting } = b[f_i];
-                        border = new Border([i] as BasicArray<number>, uuid(), isEnabled, fillType, color, position, thickness, borderStyle, cornerType, sideSetting);
+                        border = new Border([i] as BasicArray<number>, uuid(), isEnabled, fill_type, color, position, thickness, borderStyle, cornerType, sideSetting);
                         border.gradient = gradient;
                         border.contextSettings = contextSettings;
                     } else {
                         const sideSetting = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
-                        border = new Border([i] as BasicArray<number>, uuid(), isEnabled, fillType, color, BorderPosition.Inner, 1, new BorderStyle(0, 0), types.CornerType.Miter, sideSetting);
+                        border = new Border([i] as BasicArray<number>, uuid(), isEnabled, fill_type, color, BorderPosition.Inner, 1, new BorderStyle(0, 0), types.CornerType.Miter, sideSetting);
                         border.gradient = gradient;
                         border.contextSettings = contextSettings;
                     }
+                    border.imageRef = imageRef;
+                    border.transform = transform;
+                    border.paintFilter = paintFilter;
+                    border.imageScaleMode = imageScaleMode;
+                    border.scale = scale;
+                    border.rotation = rotation;
+                    border.originalImageHeight = originalImageHeight;
+                    border.originalImageWidth = originalImageWidth;
+                    const imageMgr = f[f_i].getImageMgr();
+                    imageMgr && border.setImageMgr(imageMgr);
                     borders.unshift(border);
                 }
                 const f_s = shape4fill(api, this.__page, shape);
