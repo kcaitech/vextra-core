@@ -480,7 +480,7 @@ export class Matrix { // 矩阵
                 this.set([j, i], temp)
             }
         }
-        return this
+        return new Matrix(this.data)
     }
 
     transposeSubMatrix(size: number, start: [number, number] = [0, 0]) { // 将矩阵的一部分转置

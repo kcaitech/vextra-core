@@ -267,14 +267,6 @@ export class ShapeView extends DataView {
         return makeShapeTransform2By1(this.transform).decomposeEuler().z * 180 / Math.PI;
     }
 
-    get skewX(): number {
-        return makeShapeTransform2By1(this.transform).decomposeSkew().x * 180 / Math.PI;
-    }
-
-    get skewY(): number {
-        return makeShapeTransform2By1(this.transform).decomposeSkew().y * 180 / Math.PI;
-    }
-
     get fixedRadius() {
         return this.m_fixedRadius;
     }

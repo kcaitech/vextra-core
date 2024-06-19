@@ -89,43 +89,6 @@ export class RotateMatrix extends Matrix { // 旋转矩阵
     }
 }
 
-export class SkewMatrix extends Matrix { // 斜切矩阵
-    getInverse(): Matrix | undefined {
-        const kX = this.m01, kY = this.m10
-        const t = 1 - kX * kY
-        return new Matrix(new NumberArray2D([4, 4], [
-            1 / t, -kX / t, 0, 0,
-            -kY / t, 1 / t, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1,
-        ], true))
-    }
-
-    multiply(matrix: Matrix) {
-        const [m0, n0] = this.size
-        const [m1, n1] = matrix.size
-        if (n0 !== m1) throw new Error("矩阵阶数不匹配，无法相乘");
-
-        const result = matrix.clone().add(matrix.row1.multiplyByNumber(this.m01), [0, 0])
-        if (!isZero(this.m10)) result.add(matrix.row0.multiplyByNumber(this.m10), [1, 0]);
-        return Matrix.FromMatrix(result)
-    }
-
-    static FromMatrix(matrix: Matrix) {
-        if (matrix instanceof SkewMatrix) return matrix;
-        return new SkewMatrix(matrix.data)
-    }
-
-    buildMatrix() {
-        return new Matrix(new NumberArray2D([4, 4], [
-            1, this.m01, 0, 0,
-            this.m10, 1, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1,
-        ], true))
-    }
-}
-
 export class ScaleMatrix extends Matrix { // 缩放矩阵
     getInverse(): Matrix | undefined {
         return new Matrix(new NumberArray2D([4, 4], [
@@ -177,7 +140,7 @@ export class Transform { // 变换
     // 变换顺序：缩放、斜切、旋转、平移 -> Transform = T·R·K·S
     translateMatrix: TranslateMatrix // 平移矩阵 T
     rotateMatrix: RotateMatrix // 旋转矩阵 R
-    skewMatrix: SkewMatrix // 斜切矩阵 K
+    skewMatrix: Matrix // 斜切矩阵 K
     scaleMatrix: ScaleMatrix // 缩放矩阵 S
 
     // 修改回调
@@ -187,7 +150,20 @@ export class Transform { // 变换
     // 分解操作的缓存
     decomposeTranslateCache: ColVector3D | undefined = undefined
     decomposeEulerCache: ColVector3D | undefined = undefined
-    decomposeSkewCache: ColVector2D | undefined = undefined
+    decomposeSkewCache: {
+        x: {
+            axis: ColVector3D,
+            angle: number,
+        },
+        y: {
+            axis: ColVector3D,
+            angle: number,
+        },
+        z: {
+            axis: ColVector3D,
+            angle: number,
+        },
+    } | undefined = undefined
     decomposeScaleCache: ColVector3D | undefined = undefined
 
     // 逆矩阵的缓存
@@ -243,26 +219,32 @@ export class Transform { // 变换
             this.translateMatrix = TranslateMatrix.FromMatrix(Matrix.BuildIdentity([4, 3]).insertCols(this.matrix.col3))
 
             const matrix3x3 = this.matrix.clone().resize([3, 3])
-            // x轴与y轴的叉积（xoy平面的法向量，方向与z轴预期方向一致）
-            const normalVectorForXOY = matrix3x3.col0.cross(matrix3x3.col1) as ColVector3D
-            // z轴与xoy平面法向量的点积
-            const zDot = normalVectorForXOY.dot(matrix3x3.col2)
+            // z轴预期方向（x轴与y轴的叉积，xoy平面的法向量，方向与z轴预期方向一致）
+            let expectedZ = matrix3x3.col0.cross(matrix3x3.col1) as ColVector3D
+            // z轴与z轴预期方向的点积
+            const zDot = expectedZ.dot(matrix3x3.col2)
             // z轴与预期方向相反，说明有一个或有三个坐标轴反向，这里认为是y轴反向，后续通过旋转来对齐
             // 反向会在后续被算入缩放矩阵中
             const isYFlipped = zDot < 0
             // x轴与y轴的夹角（0 ~ π）
             let angleXY = matrix3x3.col0.angleTo(matrix3x3.col1)
-            if (isYFlipped) angleXY = Math.PI - angleXY; // 反向前的夹角
+            if (isYFlipped) {
+                angleXY = Math.PI - angleXY // 反向前的夹角
+                expectedZ.negate()
+            }
 
             // 斜切
-            const skewXAngle = 0.5 * Math.PI - angleXY;
-            const tanSkewX = Math.tan(skewXAngle)
-            this.skewMatrix = SkewMatrix.FromMatrix(new Matrix(new NumberArray2D([4, 4], [
-                1, tanSkewX, 0, 0,
-                0, 1, 0, 0,
-                0, 0, 1, 0,
+            const yAngle = angleXY - 0.5 * Math.PI // y轴（绕z轴预期方向）旋转角度（-π/2 ~ π/2）
+            const {x: zX, y: zY, z: zZ} = expectedZ.cross(matrix3x3.col2) as ColVector3D // z轴的旋转轴
+            const zAngle = expectedZ.angleTo(matrix3x3.col2) // z轴旋转角度（-π ~ π）
+            const zS = Math.sin(zAngle)
+            const zT = 1 - Math.cos(zAngle)
+            this.skewMatrix = new Matrix(new NumberArray2D([4, 4], [
+                1, -Math.sin(yAngle), -zY * zS + zX * zZ * zT, 0,
+                0, Math.cos(yAngle), zX + zY * zZ * zT, 0,
+                0, 0, 1 + zT * (zZ ** 2 - 1), 0,
                 0, 0, 0, 1,
-            ], true)))
+            ], true))
 
             // 缩放
             const xNorm = this.matrix.col0.norm
@@ -270,16 +252,16 @@ export class Transform { // 变换
             const zNorm = this.matrix.col2.norm
             this.scaleMatrix = ScaleMatrix.FromMatrix(new Matrix(new NumberArray2D([4, 4], [
                 xNorm, 0, 0, 0,
-                0, yNorm / Math.sqrt(tanSkewX ** 2 + 1), 0, 0,
+                0, yNorm, 0, 0,
                 0, 0, zNorm, 0,
                 0, 0, 0, 1,
             ], true)))
 
             // 旋转
             // R = (T^-1)·Transform·(S^-1)·(K^-1)
-            const temp = this.translateMatrix.isIdentity ? this.matrix.clone() : this.translateMatrix.getInverse()!.multiply(this.matrix)
-            if (!this.scaleMatrix.isIdentity) temp.multiply(this.scaleMatrix.getInverse()!);
-            if (!this.skewMatrix.isIdentity) temp.multiply(this.skewMatrix.getInverse()!);
+            const temp = this.translateMatrix.isIdentity ? this.matrix.clone() : this.translateMatrix.getInverse()!.multiply(this.matrix) // (T^-1)·Transform
+            if (!this.scaleMatrix.isIdentity) temp.multiply(this.scaleMatrix.getInverse()!);    // ·(S^-1)
+            if (!this.skewMatrix.isIdentity) temp.multiply(this.skewMatrix.getInverse()!);      // ·(K^-1)
             this.rotateMatrix = RotateMatrix.FromMatrix(temp)
         }
         this.isMatrixLatest = true
@@ -304,7 +286,7 @@ export class Transform { // 变换
         this.rotateMatrix = RotateMatrix.FromMatrix(params?.subMatrix?.rotate || Matrix.BuildIdentity([4, 4]))
         if (this.rotateMatrix.rowCount !== 4 || this.rotateMatrix.colCount !== 4) throw new Error("矩阵数据错误：rotateMatrix必须为4x4矩阵")
 
-        this.skewMatrix = SkewMatrix.FromMatrix(params?.subMatrix?.skew || Matrix.BuildIdentity([4, 4]))
+        this.skewMatrix = params?.subMatrix?.skew || Matrix.BuildIdentity([4, 4])
         if (this.skewMatrix.rowCount !== 4 || this.skewMatrix.colCount !== 4) throw new Error("矩阵数据错误：skewMatrix必须为4x4矩阵")
 
         this.scaleMatrix = ScaleMatrix.FromMatrix(params?.subMatrix?.scale || Matrix.BuildIdentity([4, 4]))
@@ -320,6 +302,7 @@ export class Transform { // 变换
 
     clone(): this {
         this.updateMatrix()
+
         const transform = new (this.constructor as any)({
             matrix: this.matrix.clone(),
             subMatrix: {
@@ -329,11 +312,29 @@ export class Transform { // 变换
                 scale: this.scaleMatrix.clone(),
             },
         })
+
         transform.decomposeTranslateCache = this.decomposeTranslateCache?.clone()
         transform.decomposeEulerCache = this.decomposeEulerCache?.clone()
-        transform.decomposeSkewCache = this.decomposeSkewCache?.clone()
         transform.decomposeScaleCache = this.decomposeScaleCache?.clone()
         transform.inverseCache = this.inverseCache?.clone()
+
+        if (this.decomposeSkewCache) {
+            transform.decomposeSkewCache = {
+                x: {
+                    axis: this.decomposeSkewCache.x.axis.clone(),
+                    angle: this.decomposeSkewCache.x.angle,
+                },
+                y: {
+                    axis: this.decomposeSkewCache.y.axis.clone(),
+                    angle: this.decomposeSkewCache.y.angle,
+                },
+                z: {
+                    axis: this.decomposeSkewCache.z.axis.clone(),
+                    angle: this.decomposeSkewCache.z.angle,
+                },
+            }
+        }
+
         return transform
     }
 
@@ -360,7 +361,7 @@ export class Transform { // 变换
         this.matrix = Matrix.BuildIdentity([4, 4])
         this.translateMatrix = TranslateMatrix.FromMatrix(Matrix.BuildIdentity([4, 4]))
         this.rotateMatrix = RotateMatrix.FromMatrix(Matrix.BuildIdentity([4, 4]))
-        this.skewMatrix = SkewMatrix.FromMatrix(Matrix.BuildIdentity([4, 4]))
+        this.skewMatrix = Matrix.BuildIdentity([4, 4])
         this.scaleMatrix = ScaleMatrix.FromMatrix(Matrix.BuildIdentity([4, 4]))
         this.isMatrixLatest = true
         this.isSubMatrixLatest = true
@@ -392,7 +393,7 @@ export class Transform { // 变换
         }
         if (params.skew) {
             if (params.skew.rowCount !== 4 || params.skew.colCount !== 4) throw new Error("矩阵数据错误：skew必须为4x4矩阵");
-            this.skewMatrix = SkewMatrix.FromMatrix(params.skew)
+            this.skewMatrix = params.skew
         }
         if (params.scale) {
             if (params.scale.rowCount !== 4 || params.scale.colCount !== 4) throw new Error("矩阵数据错误：scale必须为4x4矩阵");
@@ -1076,8 +1077,10 @@ export class Transform { // 变换
         if (params.axis === undefined) params.axis = LineThrough0.FromPoints(ColVector3D.FromXYZ(0, 0, 1));
 
         let [x, y, z] = params.axis.direction.rawData
-        const c = Math.cos(-params.angle) // 旋转方向定义相反
-        const s = Math.sin(-params.angle) // 旋转方向定义相反
+        // matrix中定义的旋转正方向为顺时针，与本模块相反，所以取负值
+        const angle = -params.angle
+        const c = Math.cos(angle)
+        const s = Math.sin(angle)
         const t = 1 - c
         // https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/rotate3d#syntax
         const matrix = new Matrix(new NumberArray2D([4, 4], [
@@ -1147,7 +1150,7 @@ export class Transform { // 变换
             if (linePoint) {
                 let point: Matrix = linePoint.clone()
                 if (!this.scaleMatrix.isIdentity) point = this.scaleMatrix.buildMatrix().resize([3, 3]).multiply(point);
-                if (!this.skewMatrix.isIdentity) point = this.skewMatrix.buildMatrix().resize([3, 3]).multiply(point);
+                if (!this.skewMatrix.isIdentity) point = this.skewMatrix.clone().resize([3, 3]).multiply(point);
 
                 // diffTranslate = (R1 - R0) * (-P) // P为旋转中心
                 const r0 = this.rotateMatrix.buildMatrix().resize([3, 3])
@@ -1233,9 +1236,85 @@ export class Transform { // 变换
         return !this.rotateMatrix.isIdentity
     }
 
+    // 要确保调用前已调用 this.updateMatrix()
+    _getSkewMatrix(skew: {
+        x?: {
+            axis: ColVector3D, // 旋转轴
+            angle: number, // 旋转角度
+        },
+        y?: {
+            axis: ColVector3D,
+            angle: number,
+        },
+        z?: {
+            axis: ColVector3D,
+            angle: number,
+        }
+    }) {
+        function getAxis(skewItem: {
+            axis: ColVector3D,
+            angle: number,
+        }, calcIndex: number) {
+            const angle = -skewItem.angle
+            const c = Math.cos(angle)
+            const s = Math.sin(angle)
+            const t = 1 - c
+            const [x, y, z] = skewItem.axis!.rawData
+            // https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/skew#syntax
+            const calcList = [
+                () => ColVector3D.FromXYZ(
+                    1 + t * (x ** 2 - 1),
+                    -z * s + x * y * t,
+                    y * s + x * z * t,
+                ),
+                () => ColVector3D.FromXYZ(
+                    z * s + x * y * t,
+                    1 + t * (y ** 2 - 1),
+                    -x * s + y * z * t,
+                ),
+                () => ColVector3D.FromXYZ(
+                    -y * s + x * z * t,
+                    x * s + y * z * t,
+                    1 + t * (z ** 2 - 1),
+                ),
+            ]
+            return calcList[calcIndex]()
+        }
+
+        const xAxis = (skew.x === undefined || skew.x.angle === 0)
+            ? ColVector3D.FromXYZ(1, 0, 0)
+            : getAxis(skew.x, 0)
+        const yAxis = (skew.y === undefined || skew.y.angle === 0)
+            ? ColVector3D.FromXYZ(0, 1, 0)
+            : getAxis(skew.y, 1)
+        const zAxis = (skew.z === undefined || skew.z.angle === 0)
+            ? ColVector3D.FromXYZ(0, 0, 1)
+            : getAxis(skew.z, 2)
+
+        return Matrix.FromCols([xAxis, yAxis, zAxis]).insertCols([0, 0, 0]).insertRows([0, 0, 0, 1])
+    }
+
     // 斜切
     skew(params: {
-        skewAngle: ColVector2D,
+        skew?: {
+            x?: {
+                axis: ColVector3D, // 旋转轴
+                angle: number, // 旋转角度
+            },
+            y?: {
+                axis: ColVector3D,
+                angle: number,
+            },
+            z?: {
+                axis: ColVector3D,
+                angle: number,
+            }
+        },
+        skewAxis?: {
+            x?: ColVector3D,
+            y?: ColVector3D,
+            z?: ColVector3D,
+        },
         mode?: TransformMode,
     }) {
         if (params.mode === undefined) params.mode = TransformMode.Global;
@@ -1244,16 +1323,17 @@ export class Transform { // 变换
             this.updateMatrix()
         }
 
-        // https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/skew#syntax
-        const matrix = new Matrix(new NumberArray2D([4, 4], [
-            1, Math.tan(params.skewAngle.x), 0, 0,
-            Math.tan(params.skewAngle.y), 1, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1,
-        ], true))
+        let matrix = Matrix.BuildIdentity([4, 4])
+        if (params.skew !== undefined) {
+            matrix = this._getSkewMatrix(params.skew)
+        } else if (params.skewAxis !== undefined) {
+            if (params.skewAxis.x !== undefined) matrix.setSubMatrix(params.skewAxis.x, [0, 0]);
+            if (params.skewAxis.y !== undefined) matrix.setSubMatrix(params.skewAxis.y, [0, 1]);
+            if (params.skewAxis.z !== undefined) matrix.setSubMatrix(params.skewAxis.z, [0, 2]);
+        }
 
         if (params.mode === TransformMode.Local) {
-            this.skewMatrix = SkewMatrix.FromMatrix(matrix.multiply(this.skewMatrix))
+            this.skewMatrix = matrix.multiply(this.skewMatrix)
             this.isMatrixLatest = false
         } else {
             this.matrix = matrix.multiply(this.matrix)
@@ -1265,33 +1345,38 @@ export class Transform { // 变换
         return this
     }
 
-    // X轴斜切
-    skewX(params: {
-        angle: number,
-        mode?: TransformMode,
-    }) {
-        this.skew({skewAngle: new ColVector2D([params.angle, 0]), mode: params.mode})
-    }
-
-    // Y轴斜切
-    skewY(params: {
-        angle: number,
-        mode?: TransformMode,
-    }) {
-        this.skew({skewAngle: new ColVector2D([0, params.angle]), mode: params.mode})
-    }
-
     // 在本变换之前斜切
-    preSkew(skewAngle: ColVector2D) {
+    preSkew(params: {
+        skew?: {
+            x?: {
+                axis: ColVector3D,  // 旋转轴
+                angle: number,      // 旋转角度
+            },
+            y?: {
+                axis: ColVector3D,
+                angle: number,
+            },
+            z?: {
+                axis: ColVector3D,
+                angle: number,
+            }
+        },
+        skewAxis?: {
+            x?: ColVector3D,
+            y?: ColVector3D,
+            z?: ColVector3D,
+        },
+    }) {
         if (!this.isMatrixLatest) this.updateMatrix();
 
-        // https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/skew#syntax
-        const matrix = new Matrix(new NumberArray2D([4, 4], [
-            1, Math.tan(skewAngle.x), 0, 0,
-            Math.tan(skewAngle.y), 1, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1,
-        ], true))
+        let matrix = Matrix.BuildIdentity([4, 4])
+        if (params.skew !== undefined) {
+            matrix = this._getSkewMatrix(params.skew)
+        } else if (params.skewAxis !== undefined) {
+            if (params.skewAxis.x !== undefined) matrix.setSubMatrix(params.skewAxis.x, [0, 0]);
+            if (params.skewAxis.y !== undefined) matrix.setSubMatrix(params.skewAxis.y, [0, 1]);
+            if (params.skewAxis.z !== undefined) matrix.setSubMatrix(params.skewAxis.z, [0, 2]);
+        }
 
         this.matrix.multiply(matrix)
         this.isSubMatrixLatest = false
@@ -1301,26 +1386,40 @@ export class Transform { // 变换
         return this
     }
 
-    // 在本变换之前进行X轴斜切
-    preSkewX(skewAngle: number) {
-        this.preSkew(new ColVector2D([skewAngle, 0]))
-    }
-
-    // 在本变换之前进行Y轴斜切
-    preSkewY(skewAngle: number) {
-        this.preSkew(new ColVector2D([0, skewAngle]))
-    }
-
     // 设置斜切参数
-    setSkew(skewAngle: ColVector2D) {
+    setSkew(params: {
+        skew?: {
+            x?: {
+                axis: ColVector3D,  // 旋转轴
+                angle: number,      // 旋转角度
+            },
+            y?: {
+                axis: ColVector3D,
+                angle: number,
+            },
+            z?: {
+                axis: ColVector3D,
+                angle: number,
+            }
+        },
+        skewAxis?: {
+            x?: ColVector3D,
+            y?: ColVector3D,
+            z?: ColVector3D,
+        },
+    }) {
         if (!this.isSubMatrixLatest) this.updateMatrix();
-        // https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/skew#syntax
-        this.skewMatrix = SkewMatrix.FromMatrix(new Matrix(new NumberArray2D([4, 4], [
-            1, Math.tan(skewAngle.x), 0, 0,
-            Math.tan(skewAngle.y), 1, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1,
-        ], true)))
+
+        let matrix = Matrix.BuildIdentity([4, 4])
+        if (params.skew !== undefined) {
+            matrix = this._getSkewMatrix(params.skew)
+        } else if (params.skewAxis !== undefined) {
+            if (params.skewAxis.x !== undefined) matrix.setSubMatrix(params.skewAxis.x, [0, 0]);
+            if (params.skewAxis.y !== undefined) matrix.setSubMatrix(params.skewAxis.y, [0, 1]);
+            if (params.skewAxis.z !== undefined) matrix.setSubMatrix(params.skewAxis.z, [0, 2]);
+        }
+
+        this.skewMatrix = matrix
         this.isMatrixLatest = false
 
         this.onChange(this)
@@ -1423,10 +1522,62 @@ export class Transform { // 变换
     }
 
     decomposeSkew() { // 分解斜切参数
-        if (this.decomposeSkewCache !== undefined) return this.decomposeSkewCache.clone();
-        if (!this.isSubMatrixLatest) this.updateMatrix();
-        this.decomposeSkewCache = new ColVector2D([Math.atan(this.skewMatrix.m01), Math.atan(this.skewMatrix.m10)])
-        return this.decomposeSkewCache.clone()
+        if (this.decomposeSkewCache === undefined) {
+            if (!this.isSubMatrixLatest) this.updateMatrix();
+
+            const xAxis = this.skewMatrix.col0.deleteRow()
+            const yAxis = this.skewMatrix.col1.deleteRow()
+            const zAxis = this.skewMatrix.col2.deleteRow()
+
+            // 标准轴
+            const normalXAxis = ColVector3D.FromXYZ(1, 0, 0)
+            const normalYAxis = ColVector3D.FromXYZ(0, 1, 0)
+            const normalZAxis = ColVector3D.FromXYZ(0, 0, 1)
+
+            const yAngle = Math.asin(-this.skewMatrix.m01)
+            const decomposeSkewCache = {
+                x: {
+                    axis: normalZAxis.clone(),
+                    angle: 0,
+                },
+                y: {
+                    axis: normalZAxis.clone(),
+                    angle: yAngle,
+                },
+                z: {
+                    axis: normalZAxis.cross(zAxis) as ColVector3D,
+                    angle: normalZAxis.angleTo(zAxis),
+                },
+            }
+            if (!xAxis.equals(normalXAxis)) {
+                decomposeSkewCache.x = {
+                    axis: normalXAxis.cross(xAxis) as ColVector3D,
+                    angle: normalXAxis.angleTo(xAxis),
+                }
+            }
+            if (!yAxis.equals(normalYAxis)) {
+                decomposeSkewCache.y = {
+                    axis: normalYAxis.cross(yAxis) as ColVector3D,
+                    angle: normalYAxis.angleTo(yAxis),
+                }
+            }
+            this.decomposeSkewCache = decomposeSkewCache
+        }
+
+        return {
+            x: {
+                axis: this.decomposeSkewCache.x.axis.clone(),
+                angle: this.decomposeSkewCache.x.angle,
+            },
+            y: {
+                axis: this.decomposeSkewCache.y.axis.clone(),
+                angle: this.decomposeSkewCache.y.angle,
+            },
+            z: {
+                axis: this.decomposeSkewCache.z.axis.clone(),
+                angle: this.decomposeSkewCache.z.angle,
+            },
+        }
     }
 
     // 旋转矩阵转欧拉角
@@ -1468,7 +1619,7 @@ export class Transform { // 变换
 
     clearSkew() { // 清除斜切操作
         if (!this.isSubMatrixLatest) this.updateMatrix();
-        this.skewMatrix = SkewMatrix.FromMatrix(Matrix.BuildIdentity([4, 4]))
+        this.skewMatrix = Matrix.BuildIdentity([4, 4])
         this.isMatrixLatest = false
 
         this.onChange(this)
@@ -1499,7 +1650,7 @@ export class Transform { // 变换
     clearRKS() { // 清除旋转、斜切、缩放操作
         if (!this.isSubMatrixLatest) this.updateMatrix();
         this.rotateMatrix = RotateMatrix.FromMatrix(Matrix.BuildIdentity([4, 4]))
-        this.skewMatrix = SkewMatrix.FromMatrix(Matrix.BuildIdentity([4, 4]))
+        this.skewMatrix = Matrix.BuildIdentity([4, 4])
         this.scaleMatrix = ScaleMatrix.FromMatrix(Matrix.BuildIdentity([4, 4]))
         this.isMatrixLatest = false
 
@@ -1540,6 +1691,16 @@ export class Transform { // 变换
         return new Transform({
             matrix: this.scaleMatrix.clone(),
         })
+    }
+
+    getMatrix() { // 获取矩阵
+        if (!this.isMatrixLatest) this.updateMatrix();
+        return this.matrix.clone()
+    }
+
+    getCoordinateSystemMatrix() { // 获取坐标系矩阵（3x4矩阵）
+        if (!this.isMatrixLatest) this.updateMatrix();
+        return this.matrix.clone().resize([3, 4])
     }
 
     toString() {

@@ -173,14 +173,6 @@ export class Shape extends Basic implements classes.Shape {
         return this.transform2.decomposeEuler().z * 180 / Math.PI;
     }
 
-    get skewX(): number {
-        return this.transform2.decomposeSkew().x * 180 / Math.PI;
-    }
-
-    get skewY(): number {
-        return this.transform2.decomposeSkew().y * 180 / Math.PI;
-    }
-
     getPathOfFrame(frame: ShapeSize, fixedRadius?: number): Path {
         return new Path();
     }
