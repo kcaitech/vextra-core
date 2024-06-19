@@ -1630,11 +1630,17 @@ export class Transform { // 变换
 
     // 清除斜切，同时清除斜切带来的缩放
     clearSkewAndResetScale() {
-        this.updateMatrix()
+        if (!this.isSubMatrixLatest) this.updateMatrix();
+
         this.scaleMatrix
             .multiplyByNumberSubMatrix(this.skewMatrix.m00, [3, 1], [0, 0])
             .multiplyByNumberSubMatrix(this.skewMatrix.m11, [3, 1], [0, 1])
             .multiplyByNumberSubMatrix(this.skewMatrix.m22, [3, 1], [0, 2])
+        this.isMatrixLatest = false
+
+        this.onChange(this)
+
+        return this
     }
 
     clearScale() { // 清除缩放操作
@@ -1649,6 +1655,8 @@ export class Transform { // 变换
 
     // 清除缩放，但保留斜切带来的缩放
     clearScaleAndKeepSkew() {
+        if (!this.isSubMatrixLatest) this.updateMatrix();
+
         const xLength = 1 / this.skewMatrix.m00
         const yLength = 1 / this.skewMatrix.m11
         const zLength = 1 / this.skewMatrix.m22
@@ -1658,6 +1666,11 @@ export class Transform { // 变换
             0, 0, zLength, 0,
             0, 0, 0, 1,
         ], true)))
+        this.isMatrixLatest = false
+
+        this.onChange(this)
+
+        return this
     }
 
     clearScaleSize() { // 清除缩放大小，但保留缩放方向
