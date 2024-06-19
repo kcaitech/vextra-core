@@ -2194,7 +2194,7 @@ export class PageEditor {
             for (let i = 0; i < actions.length; i++) {
                 const { target, index, value } = actions[i];
                 const s = shape4fill(api, this.__page, target);
-                api.setFillImageRef(this.__page, s, index, value.urlRef);
+                api.setFillImageRef(this.__document, this.__page, s, index, value.urlRef, value.imageMgr);
                 api.setFillImageOriginWidth(this.__page, s, index, value.origin.width);
                 api.setFillImageOriginHeight(this.__page, s, index, value.origin.height);
             }

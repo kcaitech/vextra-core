@@ -491,12 +491,13 @@ export class Api {
         if (!fill) return;
         this.addOp(basicapi.crdtSetAttr(fill, "imageScaleMode", mode));
     }
-    setFillImageRef(page: Page, shape: Shape | Variable, idx: number, urlRef: string) {
+    setFillImageRef(document: Document, page: Page, shape: Shape | Variable, idx: number, urlRef: string, imageMgr: { buff: Uint8Array, base64: string }) {
         checkShapeAtPage(page, shape);
         const fills = shape instanceof Shape ? shape.style.fills : shape.value;
         const fill: Fill = fills[idx];
         if (!fill) return;
-        fill.notify();
+        document.mediasMgr.add(urlRef, imageMgr);
+        fill.setImageMgr(document.mediasMgr);
         this.addOp(basicapi.crdtSetAttr(fill, "imageRef", urlRef));
     }
     setFillImageOriginWidth(page: Page, shape: Shape | Variable, idx: number, width: number) {
