@@ -7,7 +7,7 @@ interface KeyFns {
 export interface IEventEmitter {
     on(name: string, cb: Function): { remove: () => void }
     once(name: string, cb: Function): { remove: () => void }
-    // emit(name: string, ...args: any[]): void;
+    emit(name: string, ...args: any[]): void;
     remove(name: string, fn: Function, channel?: 'on' | 'once' | 'all'): void;
 }
 
