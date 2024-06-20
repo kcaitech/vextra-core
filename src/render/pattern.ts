@@ -329,7 +329,7 @@ handler[ImageScaleMode.Tile] = function (h: Function, frame: ShapeFrame, id: str
             }
         }
         const node = [
-            pattern, mask, h("image", { ...props, style, mask: 'url(#' + maskId + ')' })
+            pattern, mask, h("image", { ...props, style, opacity: fill.color.alpha, mask: 'url(#' + maskId + ')' })
         ]
         if (paint_filter) {
             if (paint_filter.node.length) {
