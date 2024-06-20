@@ -2,6 +2,28 @@ export const inject: any = {};
 inject['ImageShape'] = {} as any;
 inject['ImageShape']['before'] = `\
     // inject code
+    const color: types.Color = {
+        typeId: "color",
+        alpha: 1,
+        blue: 216,
+        green: 216,
+        red: 216
+    }
+    const fill: types.Fill = {
+        typeId: "fill",
+        color: color,
+        crdtidx: [0],
+        fillType: types.FillType.Pattern,
+        id: "bdcd3743-fb61-4aeb-8864-b95d47b84a90",
+        imageRef: source.imageRef,
+        isEnabled: true,
+        imageScaleMode: types.ImageScaleMode.Fill,
+        originalImageHeight: source.frame.height,
+        originalImageWidth: source.frame.width
+    }
+    const fills = new BasicArray<types.Fill>();
+    fills.push(fill);
+    source.style.fills = fills;
     if (!source.pathsegs) { // 兼容旧数据
         const seg: types.PathSegment = {
             crdtidx: [0],
@@ -49,10 +71,6 @@ inject['ImageShape']['before'] = `\
      
         source.pathsegs = [seg];
     }
-`
-inject['ImageShape']['after'] = `\
-    // inject code
-    if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
 `
 inject['PathShape'] = {} as any;
 inject['PathShape']['before'] = `\
