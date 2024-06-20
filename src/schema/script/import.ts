@@ -3,6 +3,37 @@ import { Writer } from "./writer";
 import { exportBaseProp as exportBasePropType, exportNode as exportNodeClass } from "./import_class"
 import { inject } from "./import-inject"
 
+// 兼容非crdt数据
+const needCompatibleSet = new Set([
+    "stop",
+    "shadow",
+    "path-segment",
+    "page-list-item",
+    "fill",
+    "export-format",
+    "curve-point",
+    "contact-role",
+    "border",
+    'group-shape',
+    'image-shape',
+    'path-shape',
+    'rect-shape',
+    'symbol-ref-shape',
+    'symbol-shape',
+    'symbol-union-shape',
+    'text-shape',
+    'artboard',
+    'line-shape',
+    'oval-shape',
+    'table-shape',
+    'contact-shape',
+    'shape',
+    'flatten-shape',
+    'cutout-shape',
+    'polygon-shape',
+    'star-shape',
+]);
+
 function exportBaseProp(p: BaseProp, source: string, $: Writer) {
     switch (p.type) {
         case 'string':
@@ -32,9 +63,9 @@ function exportBaseProp(p: BaseProp, source: string, $: Writer) {
             break;
         case 'oneOf':
             $.append('(() => ').sub(() => {
-                $.nl('if (typeof ', source, ' !== "object") ').sub(() => {
-                    $.nl('return ', source)
-                })
+                $.fmt(`if (typeof ${source} !== "object") {
+                    return ${source}
+                }`)
                 const prop = Array.from(p.val);
                 // 特定类型先处理
                 for (let i = 0, usedArray = false; i < prop.length;) {
@@ -67,9 +98,10 @@ function exportBaseProp(p: BaseProp, source: string, $: Writer) {
                         const n = allNodes.get(v.val);
                         if (!n) throw new Error('not find node ' + v.val);
                         if (n.schemaId) {
-                            $.nl('if (', source, '.typeId === "', n.schemaId, '") ').sub(() => {
-                                $.nl('return import', v.val, '(', source, ' as types.', v.val, ', ctx)');
-                            })
+                            $.fmt(`if (${source}.typeId === "${n.schemaId}") {
+                                ${n && n.schemaId && needCompatibleSet.has(n.schemaId) ? `if (!${source}.crdtidx) ${source}.crdtidx = [i]` : ''}
+                                return import${v.val}(${source} as types.${v.val}, ctx)
+                            }`)
                         } else {
                             throw new Error('oneOf elements need typeId or unique type ' + JSON.stringify(n));
                         }
@@ -80,7 +112,6 @@ function exportBaseProp(p: BaseProp, source: string, $: Writer) {
             break;
     }
 }
-
 
 function exportObject(n: Node, $: Writer) {
     if (n.value.type !== 'object') throw new Error();
@@ -115,7 +146,6 @@ function exportObject(n: Node, $: Writer) {
         }
     }
     const required = superrequired.concat(...localrequired);
-    const optional = superoptional.concat(...localoptional);
     const extend = n.extend;
     if (localoptional.length > 0) {
         $.nl('function import', n.name, 'Optional(tar: ', (n.inner ? '' : 'impl.'), n.name, ', source: types.', n.name, ', ctx?: IImportContext) ').sub(() => {
@@ -179,7 +209,13 @@ function exportNode(n: Node, $: Writer) {
         const item = n.value.item;
         $.nl('export function import', n.name, '(source: types.', n.name, ', ctx?: IImportContext): ', (n.inner ? '' : 'impl.'), n.name, ' ').sub(() => {
             $.nl('const ret: ', (n.inner ? '' : 'impl.'), n.name, ' = new BasicArray()')
-            $.nl('source.forEach((source) => ').sub(() => {
+            $.nl('source.forEach((source, i) => ').sub(() => {
+                if (item.type === 'node') {
+                    const n = allNodes.get(item.val);
+                    if (n && n.schemaId && needCompatibleSet.has(n.schemaId)) {
+                        $.nl('if (!source.crdtidx) source.crdtidx = [i]')
+                    }
+                }
                 $.nl('ret.push(')
                 exportBaseProp(item, 'source', $)
                 $.append(')')

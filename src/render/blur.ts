@@ -2,7 +2,7 @@ import { Blur, BlurType, BorderPosition, ShapeType, SideType } from "../data/bas
 import { render as borderR } from "./border";
 import { Shape, ShapeFrame } from "../data/classes";
 import { randomId } from "./basic";
-import { Border, Fill } from "data/style";
+import { Border, Fill } from "../data/style";
 import { objectId } from '../basic/objectid';
 const handler: { [key: string]: (h: Function, blur: Blur, id: string, frame: ShapeFrame, fills: Fill[], path: string) => any } = {};
 

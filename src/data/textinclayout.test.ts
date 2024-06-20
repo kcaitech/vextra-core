@@ -16,7 +16,7 @@ const m: TextMetrics = {
     emHeightDescent: 0,
     hangingBaseline: 0,
     ideographicBaseline: 0
-}
+} as TextMetrics;
 
 const textMeasure = (code: string, font: string): TextMetrics => {
     return m;

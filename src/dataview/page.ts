@@ -106,6 +106,11 @@ export class PageView extends GroupShapeView implements RootView {
         return this.m_views.get(id);
     }
 
+    get guides() {
+        return (this.m_data as Page).guides;
+    }
+
+
     protected renderProps() {
         // let width = Math.ceil(Math.max(100, this.m_data.frame.width));
         // let height = Math.ceil(Math.max(100, this.m_data.frame.height));

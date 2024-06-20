@@ -60,12 +60,16 @@ function exportObject(n: Node, $: Writer) {
         }
     }
     required.push(...localrequired);
-    const needTypeId = (() => {
-        for (let i = 0; i < required.length; ++i) {
-            if (required[i].required && required[i].name === 'typeId') return true;
-        }
-        return false;
-    })()
+    // const needTypeId = (() => {
+    //     for (let i = 0; i < required.length; ++i) {
+    //         if (required[i].required && required[i].name === 'typeId') return true;
+    //     }
+    //     return false;
+    // })()
+    // 这里有个很隐晦的情况：
+    // 协作走的是JSON.stringnify，所以class里带的typeId也序列化出去了，回来的时候可以用typeId.
+    // 而正常的export不会给没有声明typeId的class导出typeId的，所以正常文档数据里这些数据是没typeId.
+    const needTypeId = true;
 
     if (props.length > 0) $.nl(exp + 'class ' + n.name + ' extends ' + extend + ' ').sub(() => {
         if (needTypeId && n.schemaId) $.nl('typeId = "', n.schemaId, '"')

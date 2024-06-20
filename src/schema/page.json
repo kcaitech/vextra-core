@@ -4,6 +4,12 @@
     "properties": {
         "backgroundColor": {
             "$ref": "./color.json"
+        },
+        "guides": {
+            "type": "array",
+            "items": {
+                "$ref": "./guide.json"
+            }
         }
     },
     "required": [],

@@ -6,12 +6,12 @@
     "strict": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "outDir": "dist/browser",
+    "outDir": "dist",
     "declaration": true,
-    "declarationDir": "dist/browser/types",
+    "declarationDir": "dist/types",
     "declarationMap": false,
     "sourceMap": false,
-    "baseUrl": "src",
+    "baseUrl": "./",
     "types": [
       "jest",
       "node"
