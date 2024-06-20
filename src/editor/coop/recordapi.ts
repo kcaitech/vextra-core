@@ -12,12 +12,19 @@ import {
     SymbolShape,
     CurveMode, PathSegment,
     PolygonShape,
-    StarShape
+    StarShape, ShapeType
 } from "../../data/shape";
 import { updateShapesFrame } from "./utils";
 import { Blur, Border, BorderPosition, BorderStyle, Fill, Gradient, MarkerType, Shadow } from "../../data/style";
 import { BulletNumbers, SpanAttr, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
-import { RectShape, SymbolRefShape, TableCell, TableCellType, TableShape, Artboard } from "../../data/classes";
+import {
+    RectShape,
+    SymbolRefShape,
+    TableCell,
+    TableCellType,
+    TableShape,
+    Artboard, Guide
+} from "../../data/classes";
 import {
     BoolOp,
     BulletNumbersBehavior,
@@ -48,6 +55,7 @@ import { IdOpRecord } from "../../coop/client/crdt";
 import { Repository } from "../../data/transact";
 import { SNumber } from "../../coop/client/snumber";
 import { ShapeView, TableCellView, TextShapeView } from "../../dataview";
+import { BasicArray } from "../../data";
 
 // 要支持variable的修改
 export type TextShapeLike = TableCellView | TextShapeView
@@ -214,6 +222,59 @@ export class Api {
     }
     pageMove(document: Document, pageId: string, fromIdx: number, toIdx: number) {
         this.addOp(basicapi.pageMove(document, fromIdx, toIdx));
+    }
+    insertGuideToPage(page: Page, guide: Guide) {
+        if (!page.guides) {
+            page.guides = new BasicArray<Guide>();
+        }
+        this.addOp(basicapi.crdtArrayInsert(page.guides, page.guides.length, guide));
+        return page.guides.length - 1;
+    }
+    deleteGuideFromPage(page: Page, index: number) {
+        if (!page.guides) {
+            return;
+        }
+        const g = page.guides[index];
+        if (!g) {
+            return;
+        }
+        this.addOp(basicapi.crdtArrayRemove(page.guides, index));
+        return g;
+    }
+    insertGuide(shape: Shape, guide: Guide) {
+        if (!shape.isContainer) {
+            return -1;
+        }
+        let guides = (shape as Artboard).guides;
+        if (!guides) {
+            (shape as Artboard).guides = new BasicArray<Guide>();
+            guides = (shape as Artboard).guides!;
+        }
+        this.addOp(basicapi.crdtArrayInsert(guides, guides.length, guide));
+        return guides.length - 1;
+    }
+    deleteGuide(shape: Shape, index: number) {
+        if (!shape.isContainer) {
+            return;
+        }
+        let guides = (shape as Artboard).guides;
+        const guide = guides?.[index];
+        if (!guide) {
+            return;
+        }
+        this.addOp(basicapi.crdtArrayRemove(guides, index));
+        return guide;
+    }
+    modifyGuideOffset(shape: Shape, index: number, offset: number) {
+        if (!shape.isContainer) {
+            return;
+        }
+        let guides = (shape as Artboard).guides;
+        const guide = guides?.[index];
+        if (!guide) {
+            return;
+        }
+        this.addOp(basicapi.crdtSetAttr(guide, 'offset', offset));
     }
     // registSymbol(document: Document, symbolId: string, pageId: string) {
     //     this.addOp(basicapi.registSymbol(document, symbolId, pageId));

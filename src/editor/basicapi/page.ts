@@ -18,7 +18,6 @@ export function pageInsert(document: Document, page: Page, index: number) {
     op = crdtArrayInsert(pagesList, index, item);
     if (Array.isArray(op)) ops.push(...op);
     else if (op) ops.push(op);
-
     op = crdtSetAttr(document.pagesMgr, page.id, page);
     if (op) ops.push(op);
 
