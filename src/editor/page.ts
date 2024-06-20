@@ -2158,8 +2158,9 @@ export class PageEditor {
             for (let i = 0; i < actions.length; i++) {
                 const { target, index, value } = actions[i];
                 const s = shape4fill(api, this.__page, target);
+                const fills = s instanceof Shape ? s.style.fills : s.value;
                 api.setFillType(this.__page, s, index, value);
-                if (!target.style.fills[index].imageScaleMode) {
+                if (!fills[index].imageScaleMode) {
                     api.setFillScaleMode(this.__page, s, index, types.ImageScaleMode.Fill);
                 }
             }
@@ -2177,7 +2178,8 @@ export class PageEditor {
                 const s = shape4fill(api, this.__page, target);
                 api.setFillScaleMode(this.__page, s, index, value);
                 if (value === types.ImageScaleMode.Tile) {
-                    if (!target.style.fills[index].scale) {
+                    const fills = s instanceof Shape ? s.style.fills : s.value;
+                    if (!fills[index].scale) {
                         api.setFillImageScale(this.__page, s, index, 0.5);
                     }
                 }
