@@ -50,6 +50,8 @@ export { ArrayOpSelection } from "./coop/client/arrayop"
 export { SNumber } from "./coop/client/snumber"
 export { RadixConvert } from "./coop/common/radix_convert"
 
+export { Transform as TransformRaw } from "./data/transform"
+
 // render
 // export * from "./render"
 // export * from "./renderStatic"
