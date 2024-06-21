@@ -1,4 +1,4 @@
-import { GroupShape, Shape, ShapeFrame, ShapeType, SymbolUnionShape, TextShape } from "../data/shape";
+import {GroupShape, Shape, ShapeFrame, ShapeType, SymbolUnionShape, TextShape} from "../data/shape";
 import {
     exportArtboard,
     exportBoolShape,
@@ -51,6 +51,7 @@ import { newSymbolRefShape, newTextShape, newTextShapeByText } from "../editor/c
 import { Api } from "../editor/coop/recordapi";
 import { translateTo } from "../editor/frame";
 import { Page } from "../data/page";
+import { FMT_VER_latest } from "../data/fmtver";
 
 export function set_childs_id(shapes: Shape[], matched?: Set<string>) {
     for (let i = 0, len = shapes.length; i < len; i++) {
@@ -127,7 +128,7 @@ export function export_shape(shapes: Shape[]) {
             result.push(content);
         }
     }
-    return { shapes: result, ctx }
+    return {shapes: result, ctx}
 }
 
 /**
@@ -153,13 +154,13 @@ function match_for_contact(source: Shape[]) {
         const from = all.get(c.from?.shapeId || '') || undefined;
         const to = all.get(c.to?.shapeId || '') || undefined;
 
-        units.push({ contact: c as unknown as Shape, from, to });
+        units.push({contact: c as unknown as Shape, from, to});
     }
 
     const modified = new Set<Shape>();
 
     for (let i = 0, l = units.length; i < l; i++) {
-        const { contact, from, to } = units[i];
+        const {contact, from, to} = units[i];
 
         if (!from) {
             (contact as unknown as types.ContactShape).from = undefined;
@@ -219,6 +220,7 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
     const ctx: IImportContext = new class implements IImportContext {
         document: Document = document;
         curPage: string = page.id;
+        fmtVer: number = FMT_VER_latest
     };
     const result: Shape[] = [];
 
@@ -252,9 +254,12 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
                 r = newSymbolRefShape(_s.name, f, _s.id, document.symbolsMgr);
                 // rotate & flip
                 if (r) {
-                    r.rotation = _s.rotation;
-                    r.isFlippedHorizontal = _s.isFlippedHorizontal;
-                    r.isFlippedVertical = _s.isFlippedVertical;
+                    const rt = r.transform;
+                    const st = _s.transform;
+                    rt.m00 = st.m00;
+                    rt.m01 = st.m01;
+                    rt.m10 = st.m10;
+                    rt.m11 = st.m11;
                     result.push(r);
                 }
                 continue;
@@ -403,7 +408,7 @@ export function XYsBounding(points: { x: number, y: number }[]) {
     const bottom = Math.max(...ys);
     const left = Math.min(...xs);
     const right = Math.max(...xs);
-    return { top, bottom, left, right };
+    return {top, bottom, left, right};
 }
 
 export function get_frame(shapes: Shape[]): { x: number, y: number }[] {
@@ -413,15 +418,15 @@ export function get_frame(shapes: Shape[]): { x: number, y: number }[] {
         const m = s.matrix2Root();
         const f = s.frame;
         const ps: { x: number, y: number }[] = [
-            { x: 0, y: 0 },
-            { x: f.width, y: 0 },
-            { x: f.width, y: f.height },
-            { x: 0, y: f.height }
+            {x: 0, y: 0},
+            {x: f.width, y: 0},
+            {x: f.width, y: f.height},
+            {x: 0, y: f.height}
         ];
         for (let i = 0; i < 4; i++) points.push(m.computeCoord3(ps[i]));
     }
     const b = XYsBounding(points);
-    return [{ x: b.left, y: b.top }, { x: b.right, y: b.top }, { x: b.right, y: b.bottom }, { x: b.left, y: b.bottom }];
+    return [{x: b.left, y: b.top}, {x: b.right, y: b.top}, {x: b.right, y: b.bottom}, {x: b.left, y: b.bottom}];
 }
 
 export function after_paster(document: Document, media: any) {
@@ -448,7 +453,7 @@ export function after_paster(document: Document, media: any) {
             buff[i] = base64.charCodeAt(i);
         }
 
-        const _media = { base64: m, buff };
+        const _media = {base64: m, buff};
 
         media[ref] = _media;
 

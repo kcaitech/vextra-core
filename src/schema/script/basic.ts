@@ -304,7 +304,7 @@ function extractObjectValue(schema: any, required: string[], props: NamedProp[],
         const p = extractBaseProp(v, k, n) as NamedProp;
         p.name = k;
         p.required = true;
-        if (v.default) p.default = v.default;
+        if (v.default !== undefined) p.default = v.default;
         props.push(p);
     }
 
@@ -314,7 +314,7 @@ function extractObjectValue(schema: any, required: string[], props: NamedProp[],
         const v = schema[k];
         const p = extractBaseProp(v, k, n) as NamedProp;
         p.name = k;
-        if (v.default) p.default = v.default;
+        if (v.default !== undefined) p.default = v.default;
         props.push(p);
     }
 }

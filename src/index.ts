@@ -4,8 +4,8 @@ export * from "./basic/objectid"
 export * from "./basic/pal"
 export * from "./basic/utils"
 export { IEventEmitter, EventEmitter } from "./basic/event"
-export { Transform, TransformMode } from './basic/transform'
-export { ColVector3D, Matrix as Matrix2, Point3D } from "./basic/matrix2"
+export { Transform, TransformMode, Line, LineThrough0, Plane, PlaneThrough0 } from './basic/transform'
+export { Vector, ColVector2D, ColVector3D, Matrix as Matrix2 } from "./basic/matrix2"
 export { NumberArray2D } from "./basic/number_array"
 
 // data
@@ -50,6 +50,8 @@ export * from "./coop/client/serial"
 export { ArrayOpSelection } from "./coop/client/arrayop"
 export { SNumber } from "./coop/client/snumber"
 export { RadixConvert } from "./coop/common/radix_convert"
+
+export { Transform as TransformRaw } from "./data/transform"
 
 // render
 // export * from "./render"

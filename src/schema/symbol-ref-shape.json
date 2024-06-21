@@ -3,8 +3,7 @@
     "type": "object",
     "properties": {
         "refId": {
-            "type": "string",
-            "default": "$uuid"
+            "type": "string"
         },
         "overrides": {
             "type": "map",

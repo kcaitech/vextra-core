@@ -8,7 +8,9 @@ import {
     RectShape,
     TextShape,
     SymbolShape,
-    CutoutShape
+    CutoutShape,
+    Transform,
+    ShapeSize
 } from "./shape";
 import { Style } from "./style";
 import * as classes from "./baseclasses"
@@ -43,7 +45,8 @@ export class Page extends GroupShape implements classes.Page {
         id: string,
         name: string,
         type: ShapeType,
-        frame: ShapeFrame,
+        transform: Transform,
+        size: ShapeSize,
         style: Style,
         childs: BasicArray<(GroupShape | Shape | ImageShape | PathShape | RectShape | TextShape)>,
         isReserveLib?: boolean,
@@ -56,7 +59,8 @@ export class Page extends GroupShape implements classes.Page {
             id,
             name,
             ShapeType.Page,
-            frame,
+            transform,
+            size,
             style,
             childs
         )

@@ -7,8 +7,7 @@
             "default": "shape"
         },
         "isEnabled": {
-            "type": "boolean",
-            "default": false
+            "type": "boolean"
         },
         "center": {
             "$ref": "./point-2d.json"
@@ -20,8 +19,7 @@
             "type": "number"
         },
         "saturation": {
-            "type": "number",
-            "default": 0
+            "type": "number"
         },
         "type": {
             "$ref": "./blur-type.json"

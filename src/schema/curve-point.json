@@ -6,14 +6,10 @@
             "$ref": "./crdtidx.json"
         },
         "id": {
-            "type": "string",
-            "minLength": 32,
-            "maxLength": 36,
-            "default": "$uuid"
+            "type": "string"
         },
         "radius": {
-            "type": "number",
-            "default": 0
+            "type": "number"
         },
         "fromX": {
             "type": "number"
@@ -28,12 +24,10 @@
             "type": "number"
         },
         "hasFrom": {
-            "type": "boolean",
-            "default": false
+            "type": "boolean"
         },
         "hasTo": {
-            "type": "boolean",
-            "default": false
+            "type": "boolean"
         },
         "mode": {
             "$ref": "./curve-mode.json"

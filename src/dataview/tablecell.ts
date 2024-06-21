@@ -19,10 +19,10 @@ export class TableCellView extends ShapeView {
         this.m_imgPH = imgPH;
 
         const frame = props.frame;
-        this.m_frame.x = frame.x;
-        this.m_frame.y = frame.y;
-        this.m_frame.width = frame.width;
-        this.m_frame.height = frame.height;
+        // this.m_frame.x = frame.x;
+        // this.m_frame.y = frame.y;
+        // this.m_frame.width = frame.width;
+        // this.m_frame.height = frame.height;
         this.m_index = props.index;
         this.afterInit();
     }
@@ -56,16 +56,16 @@ export class TableCellView extends ShapeView {
         }
 
         const frame = props.frame;
-        if (isDiffShapeFrame(this.m_frame, frame)) {
-            this.updateLayoutArgs(frame, undefined, undefined, undefined, undefined);
-            this.m_textpath = undefined;
-            this.m_layout = undefined; // todo
-            // if (!this.m_isVirtual) {
-            //     const shape = this.m_data as TableCell;
-            //     shape.text?.updateSize(frame.width, frame.height);
-            // }
-            this.m_ctx.setDirty(this);
-        }
+        // if (isDiffShapeFrame(this.m_frame, frame)) {
+        //     this.updateLayoutArgs(frame, undefined, undefined, undefined, undefined);
+        //     this.m_textpath = undefined;
+        //     this.m_layout = undefined; // todo
+        //     // if (!this.m_isVirtual) {
+        //     //     const shape = this.m_data as TableCell;
+        //     //     shape.text?.updateSize(frame.width, frame.height);
+        //     // }
+        //     this.m_ctx.setDirty(this);
+        // }
 
         const index = props.index;
         if (index.col !== this.m_index.col || index.row !== this.m_index.row) {

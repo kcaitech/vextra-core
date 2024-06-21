@@ -1,0 +1,19 @@
+{
+    "description": "shape size",
+    "type": "object",
+    "properties": {
+        "width": {
+            "type": "number",
+            "default": 0
+        },
+        "height": {
+            "type": "number",
+            "default": 0
+        }
+    },
+    "required": [
+        "width",
+        "height"
+    ],
+    "additionalProperties": false
+}

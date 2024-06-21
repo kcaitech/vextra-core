@@ -9,7 +9,7 @@ import { Matrix } from "../basic/matrix";
 import { parsePath } from "./pathparser";
 import { ContactForm, ContactType, PathSegment } from "./baseclasses";
 import { gen_matrix1, gen_path, handle_contact_from, handle_contact_to, path_for_edited, path_for_free_contact, path_for_free_end_contact, path_for_free_start_contact, slice_invalid_point } from "./utils";
-import { PathShape, Shape } from "./shape";
+import {PathShape, Shape, Transform, ShapeSize} from "./shape";
 import { Page } from "./page";
 import { FrameType, RadiusType } from "./consts";
 interface PageXY {
@@ -30,7 +30,8 @@ export class ContactShape extends PathShape implements classes.ContactShape {
         id: string,
         name: string,
         type: ShapeType,
-        frame: ShapeFrame,
+        transform: Transform,
+        size: ShapeSize,
         style: Style,
         pathsegs: BasicArray<PathSegment>,
         isEdited: boolean,
@@ -42,7 +43,8 @@ export class ContactShape extends PathShape implements classes.ContactShape {
             id,
             name,
             type,
-            frame,
+            transform,
+            size,
             style,
             pathsegs
         )
@@ -232,7 +234,7 @@ export class ContactShape extends PathShape implements classes.ContactShape {
         return this.getPath();
     }
 
-    getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
+    getPathOfFrame(frame: ShapeSize, fixedRadius?: number): Path {
         // const offsetX = 0;
         // const offsetY = 0;
         const width = frame.width;

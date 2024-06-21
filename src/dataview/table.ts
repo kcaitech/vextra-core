@@ -1,4 +1,18 @@
-import { OverrideType, Shape, ShapeFrame, ShapeType, Style, SymbolRefShape, SymbolShape, TableCell, TableCellType, TableGridItem, TableLayout, TableShape } from "../data/classes";
+import {
+    OverrideType,
+    Shape,
+    ShapeFrame, ShapeSize,
+    ShapeType,
+    Style,
+    SymbolRefShape,
+    SymbolShape,
+    TableCell,
+    TableCellType,
+    TableGridItem,
+    TableLayout,
+    TableShape,
+    Transform
+} from "../data/classes";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
 import { DataView } from "./view"
@@ -119,7 +133,8 @@ export class TableView extends ShapeView {
             cellId,
             "",
             ShapeType.TableCell,
-            new ShapeFrame(0, 0, 0, 0),
+            new Transform(),
+            new ShapeSize(0, 0),
             new Style(new BasicArray(), new BasicArray(), new BasicArray()),
             TableCellType.Text,
             newTableCellText(this.data.textAttr));

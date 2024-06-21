@@ -3,12 +3,10 @@
     "type": "object",
     "properties": {
         "pageId": {
-            "type": "string",
-            "default": ""
+            "type": "string"
         },
         "id": {
-            "type": "string",
-            "default": "uuid"
+            "type": "string"
         },
         "frame": {
             "$ref": "./shape-frame.json"
@@ -17,23 +15,19 @@
             "$ref": "./user-info.json"
         },
         "createAt": {
-            "type": "string",
-            "default": ""
+            "type": "string"
         },
         "content": {
-            "type": "string",
-            "default": ""
+            "type": "string"
         },
         "parasiticBody": {
             "$ref": "./shape.json"
         },
         "parentId": {
-            "type": "string",
-            "default": ""
+            "type": "string"
         },
         "rootId": {
-            "type": "string",
-            "default": ""
+            "type": "string"
         }
     },
     "required": [

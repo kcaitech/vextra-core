@@ -1,5 +1,5 @@
 import { BasicArray } from "../../../data/basic";
-import { Document, Page, Shape, ShapeFrame, ShapeType, Style, SymbolShape } from "../../../data/classes";
+import { Document, Page, Shape, ShapeFrame, ShapeSize, ShapeType, Style, SymbolShape, Transform } from "../../../data/classes";
 import { updatePageFrame } from "../common/basic";
 import { IJSON, LoadContext } from "./basic";
 import { importPage, importRectShape } from "./shapeio";
@@ -22,7 +22,11 @@ export function startLoader(file: IJSON, pages: IJSON[], document: Document) {
     const loadPage = async (ctx: LoadContext, id: string): Promise<Page> => {
         // ctx.shapeIds.clear();
         const json: IJSON | undefined = pages.find(p => p.id === id);
-        if (!json) return new Page(new BasicArray(), id, "", ShapeType.Page, new ShapeFrame(0, 0, 100, 100), new Style(new BasicArray(), new BasicArray(), new BasicArray()), new BasicArray());
+        if (!json) {
+            const size = new ShapeSize(100, 100);
+            const trans = new Transform();
+            return new Page(new BasicArray(), id, "", ShapeType.Page, trans, size, new Style(new BasicArray(), new BasicArray(), new BasicArray()), new BasicArray());
+        }
         const page = importPage(ctx, json, importer);
         updatePageFrame(page);
         return page;

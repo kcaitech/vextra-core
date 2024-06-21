@@ -90,6 +90,11 @@ function exportObject(n: Node, $: Writer) {
                 if (j > 0) $.append(', ');
                 $.append(prop.name + ': ');
                 exportBaseProp(prop, $);
+                if (prop.default !== undefined) {
+                    if (prop.type === 'boolean' || prop.type === 'number') $.append(' = ' + prop.default);
+                    else if (prop.type === 'string') $.append(' = "' + prop.default + '"');
+                    else throw new Error("not supported default type " + prop.type)
+                }
                 ++j;
             }
 

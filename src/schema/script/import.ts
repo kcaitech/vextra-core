@@ -164,6 +164,10 @@ function exportObject(n: Node, $: Writer) {
             $.nl(inject[n.name]['before'])
         }
 
+        if (compatibleList.has(n.name)) {
+            $.nl('compatibleOldData(source, ctx)')
+        }
+
         $.nl('const ret: ', (n.inner ? '' : 'impl.'), n.name, ' = new ', (n.inner ? '' : 'impl.'), n.name, ' (')
         const hasArgs = required.length > 0 && (!(required.length === 1 && required[0].name === 'typeId'));
         if (hasArgs) $.indent(1, () => {
@@ -227,6 +231,29 @@ function exportNode(n: Node, $: Writer) {
     }
 }
 
+const compatibleList = new Set([
+    "PathShape",
+    "PathShape2",
+    "GroupShape",
+    "Artboard",
+    "ImageShape",
+    "Page",
+    "TextShape",
+    "SymbolRefShape",
+    "SymbolShape",
+    "SymbolUnionShape",
+    "RectShape",
+    "StarShape",
+    "PolygonShape",
+    "OvalShape",
+    "LineShape",
+    "TableShape",
+    "TableCell",
+    "ContactShape",
+    "CutoutShape",
+    "BoolShape"
+])
+
 export function gen(out: string) {
     const $ = new Writer(out);
     const nodes = Array.from(allNodes.values());
@@ -235,10 +262,12 @@ export function gen(out: string) {
     $.nl('import * as types from "./typesdefine"')
     $.nl('import { BasicArray, BasicMap } from "./basic"')
     $.nl('import { uuid } from "../basic/uuid"')
+    $.nl('import { compatibleOldData } from "./basecompatible"')
 
     $.nl('export interface IImportContext ').sub(() => {
         $.nl('document: impl.Document')
         $.nl('curPage: string')
+        $.nl('fmtVer: number')
     })
 
     // 先将inner类型声明一下

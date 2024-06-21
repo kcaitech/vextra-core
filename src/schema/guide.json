@@ -12,10 +12,7 @@
       "type": "string"
     },
     "id": {
-      "type": "string",
-      "minLength": 32,
-      "maxLength": 36,
-      "default": "$uuid"
+      "type": "string"
     },
     "axis": {
       "$ref": "./guide-axis.json"

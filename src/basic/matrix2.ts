@@ -1,20 +1,23 @@
 import {NumberArray2D} from "./number_array"
+import {isEqual, isOne, isZero} from "./number_utils"
 
-export const EPSILON = 1e-7 // 浮点计算误差最大允许值
-
-function isEqual(a: number, b: number) { // 判断是否相等，差值小于EPSILON视为相等
-    return a === b || Math.abs(a - b) < EPSILON
-}
-
-export function isZero(value: number) { // 判断是否为0，小于EPSILON的值视为0
-    return isEqual(value, 0)
-}
-
-export function isOne(value: number) { // 判断是否为1，差值小于EPSILON视为1
-    return isEqual(value, 1)
-}
-
-export type Matrix3DKeysType = "m00" | "m01" | "m02" | "m03" | "m10" | "m11" | "m12" | "m13" | "m20" | "m21" | "m22" | "m23" | "m30" | "m31" | "m32" | "m33"
+export type Matrix3DKeysType =
+    "m00"
+    | "m01"
+    | "m02"
+    | "m03"
+    | "m10"
+    | "m11"
+    | "m12"
+    | "m13"
+    | "m20"
+    | "m21"
+    | "m22"
+    | "m23"
+    | "m30"
+    | "m31"
+    | "m32"
+    | "m33"
 
 export class Matrix { // 矩阵
     data: NumberArray2D
@@ -49,6 +52,10 @@ export class Matrix { // 矩阵
 
     clone(): this {
         return new (this.constructor as any)(this.data.clone())
+    }
+
+    equals(matrix: Matrix) { // 判断是否相等
+        return this.data.equals(matrix.data)
     }
 
     get rawData() {
@@ -300,6 +307,13 @@ export class Matrix { // 矩阵
         return this.cols(0)
     }
 
+    mapCol<T>(callback: (col: ColVector, colIndex: number) => T) {
+        const [_, n] = this.size
+        const result: T[] = []
+        for (let i = 0; i < n; i++) result.push(callback(this.col(i), i));
+        return result
+    }
+
     row(m: number) { // 获取第n行行向量
         if (m < 0 || m >= this.size[0]) throw new Error("行数越界");
         return new RowVector(this.data.row(m))
@@ -317,6 +331,13 @@ export class Matrix { // 矩阵
 
     allRow() { // 获取所有行向量
         return this.rows(0)
+    }
+
+    mapRow<T>(callback: (row: RowVector, rowIndex: number) => T) {
+        const [m, _] = this.size
+        const result: T[] = []
+        for (let i = 0; i < m; i++) result.push(callback(this.row(i), i));
+        return result
     }
 
     subMatrix(size: [number, number], start: [number, number] = [0, 0]) { // 获取子矩阵
@@ -459,7 +480,7 @@ export class Matrix { // 矩阵
                 this.set([j, i], temp)
             }
         }
-        return this
+        return new Matrix(this.data)
     }
 
     transposeSubMatrix(size: number, start: [number, number] = [0, 0]) { // 将矩阵的一部分转置
@@ -658,7 +679,16 @@ export class Matrix { // 矩阵
         const result = NumberArray2D.BuildIdentity([m, m]) // 单位矩阵数组
         const data = this.data.clone() // 原矩阵的副本
 
+        const __matrix_getInverse_dev_code = false
+        if (__matrix_getInverse_dev_code) {
+            console.log("start")
+            console.log("m", data.toString())
+            console.log("r", result.toString())
+            console.log()
+        }
+
         for (let i = 0; i < m; i++) {
+            if (__matrix_getInverse_dev_code) console.log("pos " + (i + 1));
             if (isZero(data.get([i, i]))) { // 行首为0，要进行行交换
                 let j = i + 1 // 从下一行开始找到行首不为0的行
                 for (; j < m; j++) if (!isZero(data.get([j, i]))) break;
@@ -669,17 +699,25 @@ export class Matrix { // 矩阵
                     data.set([j, k], temp)
                     temp = result.get([i, k])
                     result.set([i, k], result.get([j, k]))
+                    result.set([j, k], temp)
+                }
+                if (__matrix_getInverse_dev_code) {
+                    console.log("row swap")
+                    console.log("m", data.toString())
+                    console.log("r", result.toString())
                 }
             }
             const factor = data.get([i, i]) // 主元
             // 第i行除以factor，使主元为1
             if (!isOne(factor)) {
                 data.set([i, i], 1)
-                result.set([i, i], result.get([i, i]) / factor)
-                for (let j = i + 1; j < m; j++) {
-                    data.set([i, j], data.get([i, j]) / factor)
-                    result.set([i, j], result.get([i, j]) / factor)
-                }
+                for (let j = i + 1; j < m; j++) data.set([i, j], data.get([i, j]) / factor);
+                for (let j = 0; j < m; j++) result.set([i, j], result.get([i, j]) / factor);
+            }
+            if (__matrix_getInverse_dev_code) {
+                console.log("set main 1")
+                console.log("m", data.toString())
+                console.log("r", result.toString())
             }
             // 其余行减去对应倍数的第i行，使第i列除了主元外全为0
             for (let j = 0; j < m; j++) {
@@ -687,11 +725,14 @@ export class Matrix { // 矩阵
                 const factor = data.get([j, i])
                 if (isZero(factor)) continue; // 本身为0，不需要处理
                 data.set([j, i], 0)
-                result.set([j, i], -factor)
-                for (let k = i + 1; k < m; k++) {
-                    data.set([j, k], data.get([j, k]) - data.get([i, k]) * factor)
-                    result.set([j, k], result.get([j, k]) - result.get([i, k]) * factor)
-                }
+                for (let k = i + 1; k < m; k++) data.set([j, k], data.get([j, k]) - data.get([i, k]) * factor);
+                for (let k = 0; k < m; k++) result.set([j, k], result.get([j, k]) - result.get([i, k]) * factor);
+            }
+            if (__matrix_getInverse_dev_code) {
+                console.log("set col 0")
+                console.log("m", data.toString())
+                console.log("r", result.toString())
+                console.log()
             }
         }
         return new Matrix(result)
@@ -753,8 +794,7 @@ export class Matrix { // 矩阵
         for (let i = 0; i < n; i++) {
             const factor = this.get([0, i]) // 第0行第i列的元素
             if (isZero(factor)) continue; // 该元素为0，跳过
-            const subMatrixData = this.data.clone().deleteRow(0).deleteCol(i) // 去掉第0行和第i列的子矩阵
-            const subMatrix = new Matrix(subMatrixData) // 子矩阵
+            const subMatrix = this.clone().deleteRow(0).deleteCol(i) // 去掉第0行和第i列后的子矩阵
             const subDeterminant = subMatrix.determinant() // 子矩阵的行列式
             result += (i % 2 === 0 ? 1 : -1) * factor * subDeterminant // 递归计算行列式
         }
@@ -768,8 +808,7 @@ export class Matrix { // 矩阵
         const result = new NumberArray2D([m, n])
         for (let i = 0; i < m; i++) {
             for (let j = 0; j < n; j++) {
-                const subMatrixData = this.data.clone().deleteRow(i).deleteCol(j) // 去掉第i行第j列的子矩阵
-                const subMatrix = new Matrix(subMatrixData) // 子矩阵
+                const subMatrix = this.clone().deleteRow(i).deleteCol(j) // 去掉第i行和第j列后的子矩阵
                 const subDeterminant = subMatrix.determinant() // 子矩阵的行列式
                 result.set([i, j], (i + j) % 2 === 0 ? subDeterminant : -subDeterminant) // 伴随矩阵的元素
             }
@@ -781,9 +820,9 @@ export class Matrix { // 矩阵
         const [m, n] = this.size
         for (let i = 0; i < n; i++) {
             let sum = 0
-            for (let j = 0; j < m; j++) sum += this.get([i, j]) ** 2;
+            for (let j = 0; j < m; j++) sum += this.get([j, i]) ** 2;
             sum = Math.sqrt(sum)
-            for (let j = 0; j < m; j++) this.set([i, j], this.get([i, j]) / sum);
+            if (!isZero(sum)) for (let j = 0; j < m; j++) this.set([j, i], this.get([j, i]) / sum);
         }
         return this
     }
@@ -826,23 +865,36 @@ export class Vector extends Matrix { // 向量
         const isCol = n === 1
         if (isCol) {
             if (dim === 2) return this.m00 * vector.m10 - vector.m00 * this.m10; // x1 * y2 - x2 * y1
-            else return new Vector(new NumberArray2D([3, 1], [
+            else return new ColVector3D([
                 this.m10 * vector.m20 - vector.m10 * this.m20, // y1 * z2 - y2 * z1
                 this.m20 * vector.m00 - vector.m20 * this.m00, // z1 * x2 - z2 * x1
                 this.m00 * vector.m10 - vector.m00 * this.m10, // x1 * y2 - x2 * y1
-            ], true));
+            ]);
         } else {
             if (dim === 2) return this.m00 * vector.m01 - vector.m00 * this.m01; // x1 * y2 - x2 * y1
-            else return new Vector(new NumberArray2D([3, 1], [
+            else return new ColVector3D([
                 this.m01 * vector.m02 - vector.m01 * this.m02, // y1 * z2 - y2 * z1
                 this.m02 * vector.m00 - vector.m02 * this.m00, // z1 * x2 - z2 * x1
                 this.m00 * vector.m01 - vector.m00 * this.m01, // x1 * y2 - x2 * y1
-            ], true));
+            ]);
         }
     }
 
     get norm() { // 模
         return Math.sqrt(this.dot(this))
+    }
+
+    angleTo(vector: Vector) { // 本向量与目标向量的夹角（0 ~ π）
+        const [m, n] = this.size
+        const [m1, n1] = vector.size
+        if (m !== m1 || n !== n1) throw new Error("向量维度不匹配");
+
+        const dot = this.dot(vector) // 本向量与目标向量的点积
+        return Math.acos(dot / (this.norm * vector.norm))
+    }
+
+    get isZero() { // 是否为零向量
+        return this.data.data.every(isZero)
     }
 }
 
@@ -926,7 +978,7 @@ export class ColVector2D extends ColVector { // 二维列向量
         return new ColVector2D(matrix.data.resize([2, 1]))
     }
 
-    static BuildFromXY(x: number, y: number) {
+    static FromXY(x: number, y: number) {
         return new ColVector2D([x, y])
     }
 }
@@ -942,7 +994,11 @@ export class ColVector3D extends ColVector { // 三维列向量
         return new ColVector3D(matrix.data.resize([3, 1]))
     }
 
-    static BuildFromXYZ(x: number, y: number, z: number) {
+    static FromXY(x: number, y: number) {
+        return new ColVector3D([x, y, 0])
+    }
+
+    static FromXYZ(x: number, y: number, z: number) {
         return new ColVector3D([x, y, z])
     }
 }
@@ -956,6 +1012,14 @@ export class ColVector4D extends ColVector { // 四维列向量
     static FromMatrix(matrix: Matrix) {
         if (matrix instanceof ColVector4D) return matrix;
         return new ColVector4D(matrix.data.resize([4, 1]))
+    }
+
+    static FromXY(x: number, y: number) {
+        return new ColVector4D([x, y, 0, 0])
+    }
+
+    static FromXYZ(x: number, y: number, z: number) {
+        return new ColVector4D([x, y, z, 0])
     }
 }
 
@@ -1039,7 +1103,7 @@ export class RowVector2D extends RowVector { // 二维行向量
         return new RowVector2D(matrix.data.resize([1, 2]))
     }
 
-    static BuildFromXY(x: number, y: number) {
+    static FromXY(x: number, y: number) {
         return new RowVector2D([x, y])
     }
 }
@@ -1055,7 +1119,11 @@ export class RowVector3D extends RowVector { // 三维行向量
         return new RowVector3D(matrix.data.resize([1, 3]))
     }
 
-    static BuildFromXYZ(x: number, y: number, z: number) {
+    static FromXY(x: number, y: number) {
+        return new RowVector3D([x, y, 0])
+    }
+
+    static FromXYZ(x: number, y: number, z: number) {
         return new RowVector3D([x, y, z])
     }
 }
@@ -1070,37 +1138,12 @@ export class RowVector4D extends RowVector { // 四维行向量
         if (matrix instanceof RowVector4D) return matrix;
         return new RowVector4D(matrix.data.resize([1, 4]))
     }
-}
 
-export class Point extends ColVector { // 点
-    constructor(data: number[] | NumberArray2D) {
-        super(data)
+    static FromXY(x: number, y: number) {
+        return new RowVector4D([x, y, 0, 0])
     }
 
-    static FromMatrix(matrix: Matrix) {
-        if (matrix instanceof Point) return matrix;
-        return new Point(matrix.data.resize([matrix.data.data.length, 1]))
-    }
-}
-
-export class Point2D extends Point { // 二维点
-    constructor(data: number[] | NumberArray2D) {
-        super(data)
-        if (this.size[0] !== 2) throw new Error("二维点必须是2 * 1的列向量");
-    }
-
-    static BuildFromXY(x: number, y: number) {
-        return new Point2D([x, y])
-    }
-}
-
-export class Point3D extends Point { // 三维点
-    constructor(data: number[] | NumberArray2D) {
-        super(data)
-        if (this.size[0] !== 3) throw new Error("三维点必须是3 * 1的列向量");
-    }
-
-    static BuildFromXYZ(x: number, y: number, z: number) {
-        return new Point3D([x, y, z])
+    static FromXYZ(x: number, y: number, z: number) {
+        return new RowVector4D([x, y, z, 0])
     }
 }

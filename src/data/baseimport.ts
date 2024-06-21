@@ -3,9 +3,11 @@ import * as impl from "./classes"
 import * as types from "./typesdefine"
 import { BasicArray, BasicMap } from "./basic"
 import { uuid } from "../basic/uuid"
+import { compatibleOldData } from "./basecompatible"
 export interface IImportContext {
     document: impl.Document
     curPage: string
+    fmtVer: number
 }
 type Artboard_guides = BasicArray<impl.Guide>
 type DocumentMeta_pagesList = BasicArray<impl.PageListItem>
@@ -30,7 +32,7 @@ type Text_paras = BasicArray<impl.Para>
 type Variable_0 = BasicArray<impl.Border | impl.Fill | impl.Shadow>
 export function importArtboard_guides(source: types.Artboard_guides, ctx?: IImportContext): Artboard_guides {
     const ret: Artboard_guides = new BasicArray()
-    source.forEach((source) => {
+    source.forEach((source, i) => {
         ret.push(importGuide(source, ctx))
     })
     return ret
@@ -333,7 +335,7 @@ export function importGuideAxis(source: types.GuideAxis, ctx?: IImportContext): 
 }
 export function importGuide_crdtidx(source: types.Guide_crdtidx, ctx?: IImportContext): Guide_crdtidx {
     const ret: Guide_crdtidx = new BasicArray()
-    source.forEach((source) => {
+    source.forEach((source, i) => {
         ret.push(source)
     })
     return ret
@@ -389,7 +391,7 @@ export function importPageListItem(source: types.PageListItem, ctx?: IImportCont
 }
 export function importPage_guides(source: types.Page_guides, ctx?: IImportContext): Page_guides {
     const ret: Page_guides = new BasicArray()
-    source.forEach((source) => {
+    source.forEach((source, i) => {
         ret.push(importGuide(source, ctx))
     })
     return ret
@@ -478,6 +480,13 @@ export function importShapeFrame(source: types.ShapeFrame, ctx?: IImportContext)
         source.height)
     return ret
 }
+/* shape size */
+export function importShapeSize(source: types.ShapeSize, ctx?: IImportContext): impl.ShapeSize {
+    const ret: impl.ShapeSize = new impl.ShapeSize (
+        source.width,
+        source.height)
+    return ret
+}
 /* shape types */
 export function importShapeType(source: types.ShapeType, ctx?: IImportContext): impl.ShapeType {
     return source
@@ -541,7 +550,7 @@ export function importStyle_contacts(source: types.Style_contacts, ctx?: IImport
 }
 export function importSymbolShape_guides(source: types.SymbolShape_guides, ctx?: IImportContext): SymbolShape_guides {
     const ret: SymbolShape_guides = new BasicArray()
-    source.forEach((source) => {
+    source.forEach((source, i) => {
         ret.push(importGuide(source, ctx))
     })
     return ret
@@ -589,6 +598,17 @@ export function importText_paras(source: types.Text_paras, ctx?: IImportContext)
     source.forEach((source, i) => {
         ret.push(importPara(source, ctx))
     })
+    return ret
+}
+/* transform */
+export function importTransform(source: types.Transform, ctx?: IImportContext): impl.Transform {
+    const ret: impl.Transform = new impl.Transform (
+        source.m00,
+        source.m01,
+        source.m02,
+        source.m10,
+        source.m11,
+        source.m12)
     return ret
 }
 /* underline types */
@@ -702,6 +722,7 @@ export function importDocumentMeta(source: types.DocumentMeta, ctx?: IImportCont
     const ret: impl.DocumentMeta = new impl.DocumentMeta (
         source.id,
         source.name,
+        source.fmtVer,
         importDocumentMeta_pagesList(source.pagesList, ctx),
         source.lastCmdId,
         (() => {
@@ -927,15 +948,12 @@ export function importText(source: types.Text, ctx?: IImportContext): impl.Text 
 function importShapeOptional(tar: impl.Shape, source: types.Shape, ctx?: IImportContext) {
     if (source.boolOp) tar.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport) tar.isFixedToViewport = source.isFixedToViewport
-    if (source.isFlippedHorizontal) tar.isFlippedHorizontal = source.isFlippedHorizontal
-    if (source.isFlippedVertical) tar.isFlippedVertical = source.isFlippedVertical
     if (source.isLocked) tar.isLocked = source.isLocked
     if (source.isVisible) tar.isVisible = source.isVisible
     if (source.exportOptions) tar.exportOptions = importExportOptions(source.exportOptions, ctx)
     if (source.nameIsFixed) tar.nameIsFixed = source.nameIsFixed
     if (source.resizingConstraint) tar.resizingConstraint = source.resizingConstraint
     if (source.resizingType) tar.resizingType = importResizeType(source.resizingType, ctx)
-    if (source.rotation) tar.rotation = source.rotation
     if (source.constrainerProportions) tar.constrainerProportions = source.constrainerProportions
     if (source.clippingMaskMode) tar.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask) tar.hasClippingMask = source.hasClippingMask
@@ -957,7 +975,8 @@ export function importShape(source: types.Shape, ctx?: IImportContext): impl.Sha
         source.id,
         source.name,
         importShapeType(source.type, ctx),
-        importShapeFrame(source.frame, ctx),
+        importTransform(source.transform, ctx),
+        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx))
     importShapeOptional(ret, source, ctx)
     return ret
@@ -1008,12 +1027,14 @@ export function importTableCell(source: types.TableCell, ctx?: IImportContext): 
         }
     }
 
+    compatibleOldData(source, ctx)
     const ret: impl.TableCell = new impl.TableCell (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
-        importShapeFrame(source.frame, ctx),
+        importTransform(source.transform, ctx),
+        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
         importTableCellType(source.cellType, ctx),
         importText(source.text, ctx))
@@ -1057,12 +1078,14 @@ export function importTableShape(source: types.TableShape, ctx?: IImportContext)
         source.cells = cells as any;
     }
 
+    compatibleOldData(source, ctx)
     const ret: impl.TableShape = new impl.TableShape (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
-        importShapeFrame(source.frame, ctx),
+        importTransform(source.transform, ctx),
+        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
         (() => {
             const ret = new BasicMap<string, impl.TableCell>()
@@ -1087,12 +1110,14 @@ function importTextShapeOptional(tar: impl.TextShape, source: types.TextShape, c
     if (source.fixedRadius) tar.fixedRadius = source.fixedRadius
 }
 export function importTextShape(source: types.TextShape, ctx?: IImportContext): impl.TextShape {
+    compatibleOldData(source, ctx)
     const ret: impl.TextShape = new impl.TextShape (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
-        importShapeFrame(source.frame, ctx),
+        importTransform(source.transform, ctx),
+        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
         importText(source.text, ctx))
     importTextShapeOptional(ret, source, ctx)
@@ -1181,12 +1206,14 @@ export function importPathShape(source: types.PathShape, ctx?: IImportContext): 
         source.pathsegs = [seg];
     }
 
+    compatibleOldData(source, ctx)
     const ret: impl.PathShape = new impl.PathShape (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
-        importShapeFrame(source.frame, ctx),
+        importTransform(source.transform, ctx),
+        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
         importPathShape_pathsegs(source.pathsegs, ctx))
     importPathShapeOptional(ret, source, ctx)
@@ -1198,12 +1225,14 @@ function importPathShape2Optional(tar: impl.PathShape2, source: types.PathShape2
     if (source.fixedRadius) tar.fixedRadius = source.fixedRadius
 }
 export function importPathShape2(source: types.PathShape2, ctx?: IImportContext): impl.PathShape2 {
+    compatibleOldData(source, ctx)
     const ret: impl.PathShape2 = new impl.PathShape2 (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
-        importShapeFrame(source.frame, ctx),
+        importTransform(source.transform, ctx),
+        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
         importPathShape2_pathsegs(source.pathsegs, ctx))
     importPathShape2Optional(ret, source, ctx)
@@ -1212,12 +1241,14 @@ export function importPathShape2(source: types.PathShape2, ctx?: IImportContext)
 /* polygon shape */
 const importPolygonShapeOptional = importPathShapeOptional
 export function importPolygonShape(source: types.PolygonShape, ctx?: IImportContext): impl.PolygonShape {
+    compatibleOldData(source, ctx)
     const ret: impl.PolygonShape = new impl.PolygonShape (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
-        importShapeFrame(source.frame, ctx),
+        importTransform(source.transform, ctx),
+        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
         importPathShape_pathsegs(source.pathsegs, ctx),
         source.counts)
@@ -1243,12 +1274,14 @@ export function importRectShape(source: types.RectShape, ctx?: IImportContext): 
         source.pathsegs = [seg];
     }
 
+    compatibleOldData(source, ctx)
     const ret: impl.RectShape = new impl.RectShape (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
-        importShapeFrame(source.frame, ctx),
+        importTransform(source.transform, ctx),
+        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
         importPathShape_pathsegs(source.pathsegs, ctx))
     importRectShapeOptional(ret, source, ctx)
@@ -1257,12 +1290,14 @@ export function importRectShape(source: types.RectShape, ctx?: IImportContext): 
 /* star shape */
 const importStarShapeOptional = importPathShapeOptional
 export function importStarShape(source: types.StarShape, ctx?: IImportContext): impl.StarShape {
+    compatibleOldData(source, ctx)
     const ret: impl.StarShape = new impl.StarShape (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
-        importShapeFrame(source.frame, ctx),
+        importTransform(source.transform, ctx),
+        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
         importPathShape_pathsegs(source.pathsegs, ctx),
         source.counts,
@@ -1294,12 +1329,14 @@ export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImport
         source.overrides = (source as any).virbindsEx
     }
 
+    compatibleOldData(source, ctx)
     const ret: impl.SymbolRefShape = new impl.SymbolRefShape (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
-        importShapeFrame(source.frame, ctx),
+        importTransform(source.transform, ctx),
+        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
         source.refId,
         (() => {
@@ -1347,12 +1384,14 @@ export function importContactShape(source: types.ContactShape, ctx?: IImportCont
         }
     }
 
+    compatibleOldData(source, ctx)
     const ret: impl.ContactShape = new impl.ContactShape (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
-        importShapeFrame(source.frame, ctx),
+        importTransform(source.transform, ctx),
+        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
         importPathShape_pathsegs(source.pathsegs, ctx),
         source.isEdited,
@@ -1380,12 +1419,14 @@ export function importCutoutShape(source: types.CutoutShape, ctx?: IImportContex
         source.pathsegs = [seg];
     }
 
+    compatibleOldData(source, ctx)
     const ret: impl.CutoutShape = new impl.CutoutShape (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
-        importShapeFrame(source.frame, ctx),
+        importTransform(source.transform, ctx),
+        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
         importPathShape_pathsegs(source.pathsegs, ctx),
         source.scalingStroke)
@@ -1444,12 +1485,14 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
         source.pathsegs = [seg];
     }
 
+    compatibleOldData(source, ctx)
     const ret: impl.ImageShape = new impl.ImageShape (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
-        importShapeFrame(source.frame, ctx),
+        importTransform(source.transform, ctx),
+        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
         importPathShape_pathsegs(source.pathsegs, ctx),
         source.imageRef)
@@ -1478,12 +1521,14 @@ export function importLineShape(source: types.LineShape, ctx?: IImportContext): 
         source.pathsegs = [seg];
     }
 
+    compatibleOldData(source, ctx)
     const ret: impl.LineShape = new impl.LineShape (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
-        importShapeFrame(source.frame, ctx),
+        importTransform(source.transform, ctx),
+        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
         importPathShape_pathsegs(source.pathsegs, ctx))
     importLineShapeOptional(ret, source, ctx)
@@ -1508,12 +1553,14 @@ export function importOvalShape(source: types.OvalShape, ctx?: IImportContext): 
         source.pathsegs = [seg];
     }
 
+    compatibleOldData(source, ctx)
     const ret: impl.OvalShape = new impl.OvalShape (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
-        importShapeFrame(source.frame, ctx),
+        importTransform(source.transform, ctx),
+        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
         importPathShape_pathsegs(source.pathsegs, ctx),
         importEllipse(source.ellipse, ctx))
@@ -1527,12 +1574,14 @@ function importArtboardOptional(tar: impl.Artboard, source: types.Artboard, ctx?
     if (source.guides) tar.guides = importArtboard_guides(source.guides, ctx)
 }
 export function importArtboard(source: types.Artboard, ctx?: IImportContext): impl.Artboard {
+    compatibleOldData(source, ctx)
     const ret: impl.Artboard = new impl.Artboard (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
-        importShapeFrame(source.frame, ctx),
+        importTransform(source.transform, ctx),
+        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
         importGroupShape_childs(source.childs, ctx))
     importArtboardOptional(ret, source, ctx)
@@ -1541,12 +1590,14 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
 /* bool shape */
 const importBoolShapeOptional = importGroupShapeOptional
 export function importBoolShape(source: types.BoolShape, ctx?: IImportContext): impl.BoolShape {
+    compatibleOldData(source, ctx)
     const ret: impl.BoolShape = new impl.BoolShape (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
-        importShapeFrame(source.frame, ctx),
+        importTransform(source.transform, ctx),
+        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
         importGroupShape_childs(source.childs, ctx))
     importBoolShapeOptional(ret, source, ctx)
@@ -1565,12 +1616,14 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
         return importBoolShape(source, ctx);
     }
 
+    compatibleOldData(source, ctx)
     const ret: impl.GroupShape = new impl.GroupShape (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
-        importShapeFrame(source.frame, ctx),
+        importTransform(source.transform, ctx),
+        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
         importGroupShape_childs(source.childs, ctx))
     importGroupShapeOptional(ret, source, ctx)
@@ -1587,12 +1640,14 @@ export function importPage(source: types.Page, ctx?: IImportContext): impl.Page 
     // 兼容旧数据
     if (!(source as any).crdtidx) (source as any).crdtidx = []
 
+    compatibleOldData(source, ctx)
     const ret: impl.Page = new impl.Page (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
-        importShapeFrame(source.frame, ctx),
+        importTransform(source.transform, ctx),
+        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
         importGroupShape_childs(source.childs, ctx))
     importPageOptional(ret, source, ctx)
@@ -1614,12 +1669,14 @@ function importSymbolShapeOptional(tar: impl.SymbolShape, source: types.SymbolSh
     if (source.guides) tar.guides = importSymbolShape_guides(source.guides, ctx)
 }
 export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContext): impl.SymbolShape {
+    compatibleOldData(source, ctx)
     const ret: impl.SymbolShape = new impl.SymbolShape (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
-        importShapeFrame(source.frame, ctx),
+        importTransform(source.transform, ctx),
+        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
         importGroupShape_childs(source.childs, ctx),
         (() => {
@@ -1645,12 +1702,14 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
 /* symbol union shape */
 const importSymbolUnionShapeOptional = importSymbolShapeOptional
 export function importSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IImportContext): impl.SymbolUnionShape {
+    compatibleOldData(source, ctx)
     const ret: impl.SymbolUnionShape = new impl.SymbolUnionShape (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
-        importShapeFrame(source.frame, ctx),
+        importTransform(source.transform, ctx),
+        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
         importGroupShape_childs(source.childs, ctx),
         (() => {

@@ -3,8 +3,7 @@
     "type": "object",
     "properties": {
         "typeId": {
-            "type": "string",
-            "default": "shape"
+            "type": "string"
         },
         "alpha": {
             "type": "integer",

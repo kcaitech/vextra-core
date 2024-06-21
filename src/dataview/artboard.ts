@@ -28,7 +28,6 @@ export class ArtboradView extends GroupShapeView {
     protected renderProps(): { [key: string]: string } {
         const shape = this.m_data;
         const props: any = {
-            version: "1.1",
             xmlns: "http://www.w3.org/2000/svg",
             "xmlns:xlink": "http://www.w3.org/1999/xlink",
             "xmlns:xhtml": "http://www.w3.org/1999/xhtml",
@@ -36,6 +35,7 @@ export class ArtboradView extends GroupShapeView {
             overflow: "hidden",
         }
         const contextSettings = shape.style.contextSettings;
+
         if (contextSettings && (contextSettings.opacity ?? 1) !== 1) {
             props.opacity = contextSettings.opacity;
         }
@@ -61,10 +61,9 @@ export class ArtboradView extends GroupShapeView {
         }
         const contextSettings = this.style.contextSettings;
         if (contextSettings) {
-            const style: any = {
+            props.style = {
                 'mix-blend-mode': contextSettings.blenMode
-            }
-            props.style = style;
+            };
         }
         const frame = this.frame;
 
@@ -112,46 +111,43 @@ export class ArtboradView extends GroupShapeView {
         props.opacity = svgprops.opacity;
         delete svgprops.opacity;
 
-        const frame = this.frame;
         if (!this.isNoTransform()) {
-            const cx = frame.x + frame.width / 2;
-            const cy = frame.y + frame.height / 2;
-            const style: any = {}
-            style.transform = "translate(" + cx + "px," + cy + "px) "
-            if (this.m_hflip) style.transform += "rotateY(180deg) "
-            if (this.m_vflip) style.transform += "rotateX(180deg) "
-            if (this.m_rotate) style.transform += "rotate(" + this.m_rotate + "deg) "
-            style.transform += "translate(" + (-cx + frame.x) + "px," + (-cy + frame.y) + "px)"
-            props.style = style;
+            props.style = { transform: this.transform.toString() };
         } else {
+            const frame = this.frame;
             props.transform = `translate(${frame.x},${frame.y})`;
         }
+
         const contextSettings = this.style.contextSettings;
         if (contextSettings) {
             if (props.style) {
                 props.style['mix-blend-mode'] = contextSettings.blenMode;
             } else {
-                const style: any = {
+                props.style = {
                     'mix-blend-mode': contextSettings.blenMode
-                }
-                props.style = style;
+                };
             }
         }
+
         const id = "clippath-artboard-" + objectId(this);
-        const cp = clippathR(elh, id, this.getPathStr());
         if (blur.length && this.blur?.type === BlurType.Gaussian) {
             props.filter = `url(#${blurId})`;
         }
+
         const content_container = elh("g", { "clip-path": "url(#" + id + ")" }, [...fills, ...childs]);
+
         if (shadows.length > 0) { // 阴影
             const inner_url = innerShadowId(filterId, this.getShadows());
             if (inner_url.length) svgprops.filter = inner_url.join(' ');
+            const cp = clippathR(elh, id, this.getPathStr());
             const body = elh("svg", svgprops, [cp, content_container]);
             this.reset("g", props, [...shadows, ...blur, body, ...borders])
         } else {
+            const cp = clippathR(elh, id, this.getPathStr());
             const body = elh("svg", svgprops, [cp, content_container]);
             this.reset("g", props, [...blur, body, ...borders])
         }
+
         return ++this.m_render_version;
     }
 

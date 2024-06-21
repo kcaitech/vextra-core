@@ -6,6 +6,7 @@ import { GroupShape, Shape, TextShape } from "./shape";
 import { TableShape } from "./table";
 import { SymbolRefShape } from "./symbolref";
 import { SymbolMgr } from "./symbolmgr";
+import { FMT_VER_latest } from "./fmtver";
 
 export { DocumentMeta, PageListItem } from "./baseclasses";
 
@@ -121,7 +122,7 @@ export class Document extends (DocumentMeta) {
         pagesList: BasicArray<PageListItem>,
         guard: IDataGuard
     ) {
-        super(id, name, pagesList ?? new BasicArray(), lastCmdId, symbolregist)
+        super(id, name, FMT_VER_latest, pagesList ?? new BasicArray(), lastCmdId, symbolregist)
         this.__versionId = versionId;
         this.__name = name;
         this.__pages = new ResourceMgr<Page>([id, 'pages'], (data: Page) => guard.guard(data));

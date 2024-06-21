@@ -4,7 +4,7 @@ import { BasicArray } from "./basic"
 import { layoutBulletNumber } from "./textbnlayout";
 import { transformText } from "./textlayouttransform";
 import { gPal } from "../basic/pal";
-import { ShapeFrame, TextAttr } from "./typesdefine";
+import { ShapeSize } from "./typesdefine";
 import { TEXT_BASELINE_RATIO } from "./consts";
 
 const TAB_WIDTH = 28;
@@ -159,9 +159,9 @@ export class LayoutItem {
     // __frameHeight: number = 0;
     __textBehaviour: TextBehaviour | undefined;
     __verAlign: TextVerAlign | undefined;
-    __frame: ShapeFrame = { x: 0, y: 0, width: 0, height: 0 }
+    __frame: ShapeSize = { width: 0, height: 0 }
 
-    update(frame: ShapeFrame, text: Text) {
+    update(frame: ShapeSize, text: Text) {
         const layoutWidth = ((b: TextBehaviour) => {
             switch (b) {
                 case TextBehaviour.Flexible: return Number.MAX_VALUE;
@@ -217,8 +217,8 @@ export class LayoutItem {
 
         // this.__frameWidth = w;
         // this.__frameHeight = h;
-        this.__frame.x = frame.x;
-        this.__frame.y = frame.y;
+        // this.__frame.x = frame.x;
+        // this.__frame.y = frame.y;
         this.__frame.width = frame.width;
         this.__frame.height = frame.height;
 
@@ -679,7 +679,7 @@ export function layoutPara(text: Text, para: Para, layoutWidth: number, preBulle
     return paraLayout;
 }
 
-export function layoutText(text: Text, frame: ShapeFrame, behavior?: TextBehaviour): TextLayout {
+export function layoutText(text: Text, frame: ShapeSize, behavior?: TextBehaviour): TextLayout {
     const layoutWidth = ((b: TextBehaviour) => {
         switch (b) {
             case TextBehaviour.Flexible: return Number.MAX_VALUE;
