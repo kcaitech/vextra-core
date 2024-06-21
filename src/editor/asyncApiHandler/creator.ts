@@ -1,14 +1,33 @@
-// 创建一个没有痛苦的Creator
 import { AsyncApiCaller } from "./AsyncApiCaller";
 import { CoopRepository } from "../coop/cooprepo";
-import { Document } from "../../data/document";
+import {
+    Document,
+    ContactForm,
+    FillType,
+    ShapeFrame,
+    ShapeType,
+    TextBehaviour,
+    GroupShape,
+    LineShape,
+    PathShape,
+    Shape,
+    TextShape,
+    Fill,
+    BasicArray,
+    Color,
+    Page,
+    ContactShape,
+    TextAttr,
+    makeShapeTransform1By2,
+    updateShapeTransform1By2
+} from "../../data";
 import { adapt2Shape, GroupShapeView, PageView, ShapeView } from "../../dataview";
-import { ContactForm, FillType, ShapeFrame, ShapeType, TextBehaviour } from "../../data/baseclasses";
-import { GroupShape, LineShape, PathShape, Shape, TextShape } from "../../data/shape";
 import {
     newArrowShape,
-    newArtboard, newContact,
-    newCutoutShape, newDefaultTextShape,
+    newArtboard,
+    newContact,
+    newCutoutShape,
+    newDefaultTextShape,
     newLineShape,
     newOvalShape,
     newPolygonShape,
@@ -17,31 +36,24 @@ import {
     newTextShape
 } from "../creator";
 import { ISave4Restore, LocalCmd, SelectionState } from "../coop/localcmd";
-import { Fill } from "../../data/style";
-import { BasicArray } from "../../data/basic";
 import { uuid } from "../../basic/uuid";
-import { Color } from "../../data/color";
 import { Matrix } from "../../basic/matrix";
-import { Page } from "../../data/page";
 import { Api } from "../coop/recordapi";
 import { Point2D } from "../../data/typesdefine";
 import { update_frame_by_points } from "../utils/path";
-import { ContactShape } from "../../data/contact";
 import { translateTo } from "../frame";
-import { TextAttr } from "../../data/text";
+import { Transform as Transform2 } from "../../basic/transform";
 
 export interface GeneratorParams {
     parent: GroupShapeView;
     frame: ShapeFrame;
-    transform: {
-        rotation: number;
-        flipH: boolean;
-        flipV: boolean;
-    }
+
     type: ShapeType;
     isFixedRatio: boolean;
     namePrefix: string;
     shape: ShapeView | undefined;
+
+    transform2: Transform2;
 
     fill?: Fill;
     mark?: boolean;
@@ -51,151 +63,12 @@ export interface GeneratorParams {
 
 export class CreatorApiCaller extends AsyncApiCaller {
     private shape: Shape | undefined;
+    private __await = false;
+    private __params: GeneratorParams | undefined;
+    private __contactXY: { x: number, y: number } | undefined;
 
     constructor(repo: CoopRepository, document: Document, page: PageView) {
         super(repo, document, page);
-    }
-
-    private __await = false;
-    private __params: GeneratorParams | undefined;
-
-    private gen(params: GeneratorParams) {
-        const {
-            type,
-            namePrefix,
-            transform,
-            frame,
-            isFixedRatio
-        } = params;
-
-        if (type === ShapeType.Rectangle) {
-            const count = this.getCount(type);
-
-            const rect = newRectShape(`${namePrefix} ${count}`, frame);
-            this.setTransform(rect, transform);
-
-            rect.constrainerProportions = isFixedRatio;
-
-            return rect;
-        } else if (type === ShapeType.Oval) {
-            const count = this.getCount(type);
-
-            const oval = newOvalShape(`${namePrefix} ${count}`, frame);
-            this.setTransform(oval, transform);
-
-            oval.constrainerProportions = isFixedRatio;
-
-            return oval;
-        } else if (type === ShapeType.Polygon) {
-            const count = this.getCount(type);
-
-            const polygon = newPolygonShape(`${namePrefix} ${count}`, frame);
-            this.setTransform(polygon, transform);
-
-            polygon.constrainerProportions = isFixedRatio;
-
-            return polygon;
-        } else if (type === ShapeType.Star) {
-            const count = this.getCount(type);
-
-            const star = newStellateShape(`${namePrefix} ${count}`, frame);
-            this.setTransform(star, transform);
-
-            star.constrainerProportions = isFixedRatio;
-
-            return star;
-        } else if (type === ShapeType.Cutout) {
-            const count = this.getCount(type);
-
-            const cut = newCutoutShape(`${namePrefix} ${count}`, frame);
-            this.setTransform(cut, transform);
-
-            cut.constrainerProportions = isFixedRatio;
-
-            return cut;
-        } else if (type === ShapeType.Artboard) {
-            const count = this.getCount(type);
-
-            const artboard = newArtboard(`${namePrefix} ${count}`, frame);
-            this.setTransform(artboard, transform);
-
-            artboard.constrainerProportions = isFixedRatio;
-
-            if (params.fill) {
-                artboard.style.fills.push(params.fill);
-            }
-
-            return artboard;
-        } else if (type === ShapeType.Text) {
-            let text;
-            if (params.textFormat) {
-                text = newDefaultTextShape(namePrefix, params.textFormat, frame);
-            } else {
-                text = newTextShape(namePrefix, frame);
-            }
-
-            this.setTransform(text, transform);
-
-            text.constrainerProportions = isFixedRatio;
-
-            return text;
-        } else if (type === ShapeType.Line) {
-            const count = this.getCount(type);
-
-            let line;
-            if (params.mark) {
-                line = newArrowShape(`${namePrefix} ${count}`, frame);
-            } else {
-                line = newLineShape(`${namePrefix} ${count}`, frame);
-            }
-
-            this.setTransform(line, transform);
-
-            return line;
-        } else if (type === ShapeType.Contact) {
-            const count = this.getCount(type);
-
-            const contact = newContact(`${namePrefix} ${count}`, frame, params.apex);
-
-            this.setTransform(contact, transform);
-
-            return contact;
-        }
-    }
-
-    // 初始化图层的transform
-    private setTransform(shape: Shape, trans: { rotation: number, flipH: boolean, flipV: boolean }) {
-        shape.rotation = trans.rotation;
-        shape.isFlippedHorizontal = trans.flipH;
-        shape.isFlippedVertical = trans.flipV;
-    }
-
-    private insert(params: GeneratorParams, shape: Shape) {
-        const parent = adapt2Shape(params.parent) as GroupShape;
-
-        this.api.shapeInsert(this.__document, this.page, parent, shape, parent.childs.length);
-
-        this.shape = parent.childs[parent.childs.length - 1];
-    }
-
-    private getCount(type: ShapeType) {
-        let count = 1;
-        this.page.shapes.forEach(v => {
-            if (v.type === type) {
-                count++;
-            }
-        });
-
-        return count;
-    }
-
-    start() {
-        return this.__repo.start('create-shape', (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-            const state = {} as SelectionState;
-            if (!isUndo) state.shapes = this.shape ? [this.shape.id] : [];
-            else state.shapes = cmd.saveselection?.shapes || [];
-            selection.restore(state);
-        });
     }
 
     generator(params: GeneratorParams) {
@@ -224,9 +97,8 @@ export class CreatorApiCaller extends AsyncApiCaller {
                 const page = this.page;
                 const f = params.frame;
 
-                api.shapeModifyX(page, shape, f.x);
-                api.shapeModifyY(page, shape, f.y);
                 api.shapeModifyWH(page, shape, f.width, f.height);
+                this.api.shapeModifyByTransform(this.page, shape, makeShapeTransform1By2(params.transform2));
 
                 api.shapeModifyConstrainerProportions(page, shape, params.isFixedRatio);
 
@@ -244,32 +116,6 @@ export class CreatorApiCaller extends AsyncApiCaller {
             this.exception = true;
         }
     }
-
-    contactTo(end: { x: number, y: number }, to?: ContactForm) {
-        try {
-            if (!(this.shape instanceof ContactShape)) {
-                return;
-            }
-            const api = this.api;
-            const page = this.page;
-            const shape = this.shape;
-
-            api.shapeModifyCurvPoint(page, shape, 1, end, 0);
-
-            const _to = this.shape.to;
-
-            if ((_to && !to) || (to && !_to)) {
-                api.shapeModifyContactTo(page, shape, to);
-            }
-
-            this.updateView();
-        } catch (e) {
-            console.log('CreatorApiCaller.contactTo:', e);
-            this.exception = true;
-        }
-    }
-
-    private __contactXY: { x: number, y: number } | undefined;
 
     migrate(targetEnv: GroupShapeView) {
         try {
@@ -299,6 +145,39 @@ export class CreatorApiCaller extends AsyncApiCaller {
             this.updateView();
         } catch (e) {
             console.log('CreatorApiCaller.migrate:', e);
+            this.exception = true;
+        }
+    }
+
+    start() {
+        return this.__repo.start('create-shape', (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+            const state = {} as SelectionState;
+            if (!isUndo) state.shapes = this.shape ? [this.shape.id] : [];
+            else state.shapes = cmd.saveselection?.shapes || [];
+            selection.restore(state);
+        });
+    }
+
+    contactTo(end: { x: number, y: number }, to?: ContactForm) {
+        try {
+            if (!(this.shape instanceof ContactShape)) {
+                return;
+            }
+            const api = this.api;
+            const page = this.page;
+            const shape = this.shape;
+
+            api.shapeModifyCurvPoint(page, shape, 1, end, 0);
+
+            const _to = this.shape.to;
+
+            if ((_to && !to) || (to && !_to)) {
+                api.shapeModifyContactTo(page, shape, to);
+            }
+
+            this.updateView();
+        } catch (e) {
+            console.log('CreatorApiCaller.contactTo:', e);
             this.exception = true;
         }
     }
@@ -396,5 +275,139 @@ export class CreatorApiCaller extends AsyncApiCaller {
         } else {
             this.__repo.rollback();
         }
+    }
+
+    private insert(params: GeneratorParams, shape: Shape) {
+        const parent = adapt2Shape(params.parent) as GroupShape;
+
+        this.api.shapeInsert(this.__document, this.page, parent, shape, parent.childs.length);
+
+        this.shape = parent.childs[parent.childs.length - 1];
+    }
+
+    private getCount(type: ShapeType) {
+        let count = 1;
+        this.page.shapes.forEach(v => {
+            if (v.type === type) {
+                count++;
+            }
+        });
+
+        return count;
+    }
+
+    private gen(params: GeneratorParams) {
+        const {
+            type,
+            namePrefix,
+            frame,
+            isFixedRatio,
+            transform2
+        } = params;
+
+        if (type === ShapeType.Rectangle) {
+            const count = this.getCount(type);
+
+            const rect = newRectShape(`${namePrefix} ${count}`, frame);
+            this.setTransform(rect, transform2, frame);
+
+            rect.constrainerProportions = isFixedRatio;
+
+            return rect;
+        } else if (type === ShapeType.Oval) {
+            const count = this.getCount(type);
+
+            const oval = newOvalShape(`${namePrefix} ${count}`, frame);
+            this.setTransform(oval, transform2, frame);
+
+            oval.constrainerProportions = isFixedRatio;
+
+            return oval;
+        } else if (type === ShapeType.Polygon) {
+            const count = this.getCount(type);
+
+            const polygon = newPolygonShape(`${namePrefix} ${count}`, frame);
+            this.setTransform(polygon, transform2, frame);
+
+            polygon.constrainerProportions = isFixedRatio;
+
+            return polygon;
+        } else if (type === ShapeType.Star) {
+            const count = this.getCount(type);
+
+            const star = newStellateShape(`${namePrefix} ${count}`, frame);
+            this.setTransform(star, transform2, frame);
+
+            star.constrainerProportions = isFixedRatio;
+
+            return star;
+        } else if (type === ShapeType.Cutout) {
+            const count = this.getCount(type);
+
+            const cut = newCutoutShape(`${namePrefix} ${count}`, frame);
+            this.setTransform(cut, transform2, frame);
+
+            cut.constrainerProportions = isFixedRatio;
+
+            return cut;
+        } else if (type === ShapeType.Artboard) {
+            const count = this.getCount(type);
+
+            const artboard = newArtboard(`${namePrefix} ${count}`, frame);
+            this.setTransform(artboard, transform2, frame);
+
+            artboard.constrainerProportions = isFixedRatio;
+
+            if (params.fill) {
+                artboard.style.fills.push(params.fill);
+            }
+
+            return artboard;
+        } else if (type === ShapeType.Text) {
+            let text;
+            if (params.textFormat) {
+                text = newDefaultTextShape(namePrefix, params.textFormat, frame);
+            } else {
+                text = newTextShape(namePrefix, frame);
+            }
+
+            this.setTransform(text, transform2, frame);
+
+            text.constrainerProportions = isFixedRatio;
+
+            return text;
+        } else if (type === ShapeType.Line) {
+            const count = this.getCount(type);
+
+            let line;
+            if (params.mark) {
+                line = newArrowShape(`${namePrefix} ${count}`, frame);
+            } else {
+                line = newLineShape(`${namePrefix} ${count}`, frame);
+            }
+
+            this.setTransform(line, transform2, frame);
+
+            return line;
+        } else if (type === ShapeType.Contact) {
+            const count = this.getCount(type);
+
+            const contact = newContact(`${namePrefix} ${count}`, frame, params.apex);
+
+            this.setTransform(contact, transform2, frame);
+
+            return contact;
+        }
+    }
+
+    // 初始化图层的transform
+    private setTransform(
+        shape: Shape,
+        transform: Transform2,
+        frame: ShapeFrame
+    ) {
+        updateShapeTransform1By2(shape.transform, transform);
+        shape.size.width = frame.width;
+        shape.size.height = frame.height;
     }
 }

@@ -28,6 +28,7 @@ export function deleteEmptyGroupShape(document: Document, page: Page, shape: Sha
 
 export function group<T extends GroupShape>(document: Document, page: Page, shapes: Shape[], gshape: T, savep: GroupShape, saveidx: number, api: Api): T {
     // 计算frame
+
     //   计算每个shape的绝对坐标
     const boundsArr = shapes.map((s) => {
         const box = s.boundingBox()
@@ -37,6 +38,7 @@ export function group<T extends GroupShape>(document: Document, page: Page, shap
         const rb = m.computeCoord(box.x + box.width, box.y + box.height);
         return { x: lt.x, y: lt.y, width: rb.x - lt.x, height: rb.y - lt.y }
     })
+
     const firstXY = boundsArr[0]
     const bounds = { left: firstXY.x, top: firstXY.y, right: firstXY.x, bottom: firstXY.y };
 
@@ -51,16 +53,17 @@ export function group<T extends GroupShape>(document: Document, page: Page, shap
     const m = new Matrix(savep.matrix2Root().inverse)
     const xy = m.computeCoord(bounds.left, bounds.top)
 
-    gshape.frame.width = bounds.right - bounds.left;
-    gshape.frame.height = bounds.bottom - bounds.top;
-    gshape.frame.x = xy.x;
-    gshape.frame.y = xy.y;
+    gshape.size.width = bounds.right - bounds.left;
+    gshape.size.height = bounds.bottom - bounds.top;
+    gshape.transform.translateX = xy.x;
+    gshape.transform.translateY = xy.y;
 
-    // 4、将GroupShape加入到save parent(层级最高图形的parent)中
+    // 将GroupShape加入到save parent(层级最高图形的parent)中
     gshape = api.shapeInsert(document, page, savep, gshape, saveidx) as T;
 
-    // 2、将shapes里对象从parent中退出
-    // 3、将shapes里的对象从原本parent下移入新建的GroupShape
+    // 将shapes里对象从parent中退出
+
+    // 将shapes里的对象从原本parent下移入新建的GroupShape
     for (let i = 0, len = shapes.length; i < len; i++) {
         const s = shapes[i];
         const p = s.parent as GroupShape;
@@ -73,6 +76,7 @@ export function group<T extends GroupShape>(document: Document, page: Page, shap
     }
 
     // 往上调整width & height
+
     // update childs frame
     for (let i = 0, len = shapes.length; i < len; i++) {
         const c = shapes[i]
@@ -102,12 +106,13 @@ export function ungroup(document: Document, page: Page, shape: GroupShape, api: 
         if (shape.rotation) {
             api.shapeModifyRotate(page, c, (c.rotation || 0) + shape.rotation)
         }
-        if (shape.isFlippedHorizontal) {
-            api.shapeModifyHFlip(page, c, !c.isFlippedHorizontal)
-        }
-        if (shape.isFlippedVertical) {
-            api.shapeModifyVFlip(page, c, !c.isFlippedVertical)
-        }
+        // todo flip
+        // if (shape.isFlippedHorizontal) {
+        //     api.shapeModifyHFlip(page, c, !c.isFlippedHorizontal)
+        // }
+        // if (shape.isFlippedVertical) {
+        //     api.shapeModifyVFlip(page, c, !c.isFlippedVertical)
+        // }
         const m2 = c.matrix2Parent();
         const cur = m2.computeCoord(0, 0);
 

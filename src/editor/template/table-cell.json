@@ -4,9 +4,15 @@
     "crdtidx": [],
     "name": "TableCell",
     "type": "table-cell",
-    "frame": {
-        "x": 0,
-        "y": 0,
+    "transform": {
+        "m00": 1,
+        "m01": 0,
+        "m02": 0,
+        "m10": 0,
+        "m11": 1,
+        "m12": 0
+    },
+    "size": {
         "width": 0,
         "height": 0
     },
@@ -15,5 +21,31 @@
         "borders": [],
         "fills": [],
         "shadows": []
+    },
+    "cellType": "none",
+    "text": {
+        "typeId": "text",
+        "paras": [
+            {
+                "text": "\n",
+                "spans": [
+                    {
+                        "length": 1,
+                        "fontName": "PingFang SC",
+                        "fontSize": 14,
+                        "color": {
+                            "typeId": "color",
+                            "alpha": 1,
+                            "red": 51,
+                            "green": 51,
+                            "blue": 51
+                        }
+                    }
+                ],
+                "attr": {
+                    "minimumLineHeight": 24
+                }
+            }
+        ]
     }
 }

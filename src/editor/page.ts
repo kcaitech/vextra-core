@@ -16,7 +16,18 @@ import {
 } from "../data/shape";
 import { ShapeEditor } from "./shape";
 import * as types from "../data/typesdefine";
-import { BoolOp, BorderPosition, ExportFileFormat, ExportFormatNameingScheme, FillType, GradientType, MarkerType, ShadowPosition, ShapeType, SideType } from "../data/typesdefine";
+import {
+    BoolOp,
+    BorderPosition,
+    ExportFileFormat,
+    ExportFormatNameingScheme,
+    FillType,
+    GradientType,
+    MarkerType,
+    ShadowPosition,
+    ShapeType,
+    SideType
+} from "../data/typesdefine";
 import { Page } from "../data/page";
 import {
     newArrowShape,
@@ -81,7 +92,14 @@ import {
 } from "./symbol";
 import { is_circular_ref2 } from "./utils/ref_check";
 import { BorderSideSetting, BorderStyle, CurvePoint, ExportFormat, Point2D, Shadow } from "../data/baseclasses";
-import { calculateInnerAnglePosition, getPolygonPoints, getPolygonVertices, get_rotate_for_straight, is_straight, update_frame_by_points } from "./utils/path";
+import {
+    calculateInnerAnglePosition,
+    getPolygonPoints,
+    getPolygonVertices,
+    get_rotate_for_straight,
+    is_straight,
+    update_frame_by_points
+} from "./utils/path";
 import { modify_shapes_height, modify_shapes_width } from "./utils/common";
 import { CoopRepository } from "./coop/cooprepo";
 import { Api, TextShapeLike } from "./coop/recordapi";
@@ -98,6 +116,11 @@ import {
     TextShapeView
 } from "../dataview";
 import { RadiusType, ResizingConstraints2 } from "../data/consts";
+import { FMT_VER_latest } from "../data/fmtver";
+import { makeShapeTransform1By2, makeShapeTransform2By1, updateShapeTransform1By2 } from "../data/shape_transform_util";
+import { ColVector3D } from "../basic/matrix2";
+import {Transform as Transform2} from "../basic/transform";
+
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -105,6 +128,7 @@ export interface PositonAdjust { // 涉及属性：frame.x、frame.y
     transX: number
     transY: number
 }
+
 export interface FrameAdjust { // frame.width、frame.height
     target: Shape
     widthExtend: number
@@ -116,19 +140,23 @@ export interface BatchAction { // targer、index、value
     index: number
     value: any
 }
+
 export interface BatchAction2 { // targer、value
     target: ShapeView
     value: any
 }
+
 export interface BatchAction3 { // targer、index
     target: ShapeView
     index: number
 }
+
 export interface BatchAction4 { // targer、value、type
     target: ShapeView
     index: number
     type: 'fills' | 'borders'
 }
+
 export interface BatchAction5 { // targer、value、type
     target: ShapeView
     index: number
@@ -252,16 +280,19 @@ export interface ExportFormatScaleAction {
     index: number
     value: number
 }
+
 export interface ExportFormatNameAction {
     target: Shape
     index: number
     value: string
 }
+
 export interface ExportFormatPerfixAction {
     target: Shape
     index: number
     value: ExportFormatNameingScheme
 }
+
 export interface ExportFormatFileFormatAction {
     target: Shape
     index: number
@@ -533,66 +564,76 @@ export class PageEditor {
      * symbolref引用的symbol可能被其他人取消，那么symbolref应该能引用普通的对象！
      */
     makeSymbol(document: Document, shapes: Shape[], name?: string) {
-        if (shapes.length === 0) return;
-        const shape0 = shapes[0];
-        const frame = importShapeFrame(shape0.frame);
-
-        const replace = shapes.length === 1 &&
-            ((shape0 instanceof GroupShape && !(shape0 instanceof BoolShape)) ||
-                shape0 instanceof Artboard
-            );
-
-        const style = replace ? importStyle((shape0.style)) : undefined;
-        const symbolShape = newSymbolShape(replace ? shape0.name : (name ?? shape0.name), frame, style);
-        if (replace && shape0 instanceof Artboard && shape0.cornerRadius) {
-            symbolShape.cornerRadius = importCornerRadius(shape0.cornerRadius);
-        }
-        const api = this.__repo.start("makeSymbol", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-            const state = {} as SelectionState;
-            if (!isUndo) state.shapes = [symbolShape.id];
-            else state.shapes = cmd.saveselection?.shapes || [];
-            selection.restore(state);
-        });
-
         try {
+            if (!shapes.length) return;
+
+            const shape0 = shapes[0];
+            const frame = importShapeFrame(shape0.frame);
+
+            const replace = shapes.length === 1
+                && ((shape0 instanceof GroupShape && !(shape0 instanceof BoolShape)) || shape0 instanceof Artboard);
+
+            const style = replace ? importStyle((shape0.style)) : undefined;
+
+            const symbolShape = newSymbolShape(replace ? shape0.name : (name ?? shape0.name), frame, style);
+
+            if (replace && shape0 instanceof Artboard && shape0.cornerRadius) {
+                symbolShape.cornerRadius = importCornerRadius(shape0.cornerRadius);
+            }
+
+            const page = this.__page;
+            const api = this.__repo.start("makeSymbol", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+                const state = {} as SelectionState;
+                if (!isUndo) state.shapes = [symbolShape.id];
+                else state.shapes = cmd.saveselection?.shapes || [];
+                selection.restore(state);
+            });
+
             const need_trans_data: Shape[] = [];
-            adjust_selection_before_group(document, this.__page, shapes, api, need_trans_data);
-            let sym: Shape;
+            adjust_selection_before_group(document, page, shapes, api, need_trans_data);
+
+            let sym: SymbolShape;
             if (replace) {
                 const index = (shape0.parent as GroupShape).indexOfChild(shape0);
-                // api.registSymbol(document, symbolShape.id, this.__page.id);
-                sym = api.shapeInsert(document, this.__page, shape0.parent as GroupShape, symbolShape, index + 1);
+                sym = api.shapeInsert(document, page, shape0.parent as GroupShape, symbolShape, index + 1) as SymbolShape;
                 const children = shape0.childs;
                 for (let i = 0, len = children.length; i < len; ++i) {
-                    api.shapeMove(this.__page, shape0, 0, symbolShape, i);
+                    api.shapeMove(page, shape0, 0, symbolShape, i);
                 }
-                api.shapeDelete(document, this.__page, shape0.parent as GroupShape, index);
+                api.shapeDelete(document, page, shape0.parent as GroupShape, index);
             } else {
                 const index = (shape0.parent as GroupShape).indexOfChild(shape0);
-                // api.registSymbol(document, symbolShape.id, this.__page.id);
-                sym = group(document, this.__page, shapes, symbolShape, shape0.parent as GroupShape, index, api);
+
+                sym = group(document, page, shapes, symbolShape, shape0.parent as GroupShape, index, api);
 
                 for (let i = 0; i < shapes.length; i++) {
                     const __shape = shapes[i];
+
                     const old_rc = __shape.resizingConstraint === undefined
                         ? ResizingConstraints2.Mask
                         : __shape.resizingConstraint;
 
-                    let new_rc = ResizingConstraints2.setToScaleByHeight(ResizingConstraints2.setToScaleByWidth(old_rc));
+                    const new_rc = ResizingConstraints2.setToScaleByHeight(ResizingConstraints2.setToScaleByWidth(old_rc));
 
-                    api.shapeModifyResizingConstraint(this.__page, __shape, new_rc);
+                    api.shapeModifyResizingConstraint(page, __shape, new_rc);
                 }
             }
+
             if (sym) {
-                document.symbolsMgr.add(sym.id, sym as SymbolShape);
+                const result= sym;
+
+                document.symbolsMgr.add(result.id, result);
+
                 if (need_trans_data.length) {
-                    trans_after_make_symbol(this.__page, sym as SymbolShape, need_trans_data, api);
+                    trans_after_make_symbol(page,result, need_trans_data, api);
                 }
+
                 this.__repo.commit();
-                return sym as any as SymbolShape;
+                return result;
             } else {
                 throw new Error('failed')
             }
+
         } catch (e) {
             console.log(e)
             this.__repo.rollback();
@@ -662,14 +703,15 @@ export class PageEditor {
             if (index === undefined) {
                 const space = find_state_space(union);
                 if (!space) throw new Error('failed');
-                source.frame.y = space.y + 20;
+                source.transform.m12 = space.y + 20;
             } else {
-                source.frame.x = hor_align || source.frame.x + 20;
+                source.transform.m02 = hor_align || source.transform.m02 + 20;
             }
             const _this = this;
             const ctx: IImportContext = new class implements IImportContext {
                 document: Document = _this.__document;
-                curPage: string = _this.__page.id
+                curPage: string = _this.__page.id;
+                fmtVer: number = FMT_VER_latest
             };
             const api = this.__repo.start("makeStateAt");
             // api.registSymbol(this.__document, source.id, this.__page.id); // 先设置上, import好加入symmgr
@@ -789,7 +831,8 @@ export class PageEditor {
             const _this = this;
             const ctx: IImportContext = new class implements IImportContext {
                 document: Document = _this.__document;
-                curPage: string = _this.__page.id
+                curPage: string = _this.__page.id;
+                fmtVer: number = FMT_VER_latest
             };
             const { x, y, width, height } = shape.frame;
             const tmpArtboard: Artboard = newArtboard(shape.name, new ShapeFrame(x, y, width, height));
@@ -797,9 +840,10 @@ export class PageEditor {
             tmpArtboard.childs = shape.naviChilds! as BasicArray<Shape>;
             tmpArtboard.varbinds = shape.varbinds;
             tmpArtboard.style = shape.style;
-            tmpArtboard.rotation = shape.rotation;
-            tmpArtboard.isFlippedHorizontal = shape.isFlippedHorizontal;
-            tmpArtboard.isFlippedVertical = shape.isFlippedVertical;
+            tmpArtboard.transform.m00 = shape.transform.m00;
+            tmpArtboard.transform.m01 = shape.transform.m01;
+            tmpArtboard.transform.m10 = shape.transform.m10;
+            tmpArtboard.transform.m11 = shape.transform.m11;
             tmpArtboard.cornerRadius = shape.cornerRadius;
             const symbolData = exportArtboard(tmpArtboard); // todo 如果symbol只有一个child时
 
@@ -848,9 +892,10 @@ export class PageEditor {
         const ref = newSymbolRefShape(name, frame, refId, document.symbolsMgr);
         const sym = document.symbolsMgr.get(refId);
         if (sym) {
-            ref.rotation = sym.rotation;
-            ref.isFlippedHorizontal = sym.isFlippedHorizontal;
-            ref.isFlippedVertical = sym.isFlippedVertical;
+            ref.transform.m00 = sym.transform.m00;
+            ref.transform.m01 = sym.transform.m01;
+            ref.transform.m10 = sym.transform.m10;
+            ref.transform.m11 = sym.transform.m11;
         }
         return ref;
     }
@@ -859,7 +904,8 @@ export class PageEditor {
         const _this = this;
         const ctx: IImportContext = new class implements IImportContext {
             document: Document = _this.__document;
-            curPage: string = _this.__page.id
+            curPage: string = _this.__page.id;
+            fmtVer: number = FMT_VER_latest
         };
         return importStyle(style, ctx);
     }
@@ -1155,8 +1201,9 @@ export class PageEditor {
         // adjust shape frame refer to parent
         if (!adjusted) {
             const xy = parent.frame2Root();
-            shape.frame.x -= xy.x;
-            shape.frame.y -= xy.y;
+            const transform2 = makeShapeTransform2By1(shape.transform);
+            transform2.translate(new ColVector3D([-xy.x, -xy.y, 0]))
+            updateShapeTransform1By2(shape.transform, transform2);
         }
         shape.id = uuid(); // 凡插入对象，不管是复制剪切的，都需要新id。要保持同一id，使用move!
         const api = this.__repo.start("insertshape", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
@@ -1243,8 +1290,8 @@ export class PageEditor {
 
     /**
      * @description 批量的图层集体进入不同容器 (与2有区别)
-     * @param actions 
-     * @returns 
+     * @param actions
+     * @returns
      */
     pasteShapes3(actions: { env: GroupShape, shapes: Shape[] }[]): Shape[] | false {
         const api = this.__repo.start("pasteShapes3", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
@@ -1334,8 +1381,7 @@ export class PageEditor {
                             api.modifyPointCornerRadius(page, shape, _i, val, 0);
                         }
                         needUpdateFrame = true;
-                    }
-                    else if (shape instanceof PathShape2) {
+                    } else if (shape instanceof PathShape2) {
                         const points = shape.pathsegs[0].points;
                         for (let _i = 0; _i < 4; _i++) {
                             const val = values[_i];
@@ -1346,13 +1392,11 @@ export class PageEditor {
                             api.modifyPointCornerRadius(page, shape, _i, val, 0);
                         }
                         needUpdateFrame = true;
-                    }
-                    else {
+                    } else {
                         const __shape = shape as Artboard | SymbolShape;
                         api.shapeModifyRadius2(page, __shape, lt, rt, rb, lb)
                     }
-                }
-                else {
+                } else {
                     if (shape.isVirtualShape) {
                         continue;
                     }
@@ -1368,8 +1412,7 @@ export class PageEditor {
                             }
                         });
                         needUpdateFrame = true;
-                    }
-                    else if (shape instanceof PathShape2) {
+                    } else if (shape instanceof PathShape2) {
                         shape.pathsegs.forEach((seg, index) => {
                             for (let _i = 0; _i < seg.points.length; _i++) {
                                 if (seg.points[_i].radius === values[0]) {
@@ -1380,8 +1423,7 @@ export class PageEditor {
                             }
                         });
                         needUpdateFrame = true;
-                    }
-                    else {
+                    } else {
                         api.shapeModifyFixedRadius(page, shape as GroupShape | TextShape, values[0]);
                     }
                 }
@@ -1432,9 +1474,13 @@ export class PageEditor {
         try {
             const index = parent.childs.length;
             const xy = m_p2r.computeCoord2(0, 0);
-            new_s.frame.x -= xy.x, new_s.frame.y -= xy.y;
+            const transform2 = makeShapeTransform2By1(new_s.transform);
+            transform2.translate(new ColVector3D([-xy.x, -xy.y, 0]))
+            updateShapeTransform1By2(new_s.transform, transform2);
             if (rotation) {
-                new_s.rotation = rotation;
+                const transform2 = makeShapeTransform2By1(new_s.transform);
+                transform2.setRotateZ((rotation % 360) / 180 * Math.PI);
+                updateShapeTransform1By2(new_s.transform, transform2);
             }
             new_s = api.shapeInsert(this.__document, this.__page, parent, new_s, index);
             if (target_xy) {
@@ -1657,8 +1703,14 @@ export class PageEditor {
                 for (let r_i = 0; r_i < len; r_i++) { // 逐个插入replacement中的图形
                     let r = copy[r_i];
                     r.id = uuid();
-                    r.frame.x = save_frame.x + delta_xys[r_i].x; // lt_point与s.frame的xy重合后，用delta_xys中的相对位置计算replacement中每个图形的偏移
-                    r.frame.y = save_frame.y + delta_xys[r_i].y;
+                    // lt_point与s.frame的xy重合后，用delta_xys中的相对位置计算replacement中每个图形的偏移
+                    const transform2 = makeShapeTransform2By1(r.transform);
+                    transform2.setTranslate(new ColVector3D([
+                        save_frame.x + delta_xys[r_i].x,
+                        save_frame.y + delta_xys[r_i].y,
+                        0,
+                    ]))
+                    updateShapeTransform1By2(r.transform, transform2);
                     api.shapeInsert(this.__document, this.__page, p, r, save_index);
                     src_replacement.push(p.childs[save_index]);
                     save_index++;
@@ -1730,6 +1782,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     modifyShapesInnerAngle(actions: { target: StarShape, offset: number }[]) {
         const api = this.__repo.start('modifyShapesInnerAngle');
         try {
@@ -1744,7 +1797,7 @@ export class PageEditor {
                     if (index % 2 === 0) continue;
                     const angle = ((2 * Math.PI) / points.length) * index;
                     const p = calculateInnerAnglePosition(offset, angle);
-                    api.shapeModifyCurvPoint(this.__page, target, index, p , 0);
+                    api.shapeModifyCurvPoint(this.__page, target, index, p, 0);
                 }
                 api.shapeModifyInnerAngle(this.__page, target, offset);
             }
@@ -1823,22 +1876,20 @@ export class PageEditor {
         }
     }
 
-    shapesFlip(actions: BatchAction2[]) {
-        const api = this.__repo.start('shapesFlip');
+    shapesFlip(params: { shape: ShapeView, transform2: Transform2 }[]) {
         try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                if (value === 'horizontal') {
-                    api.shapeModifyHFlip(this.__page, adapt2Shape(target), !target.isFlippedHorizontal);
-                } else if (value === 'vertical') {
-                    api.shapeModifyVFlip(this.__page, adapt2Shape(target), !target.isFlippedVertical);
-                }
+            const api = this.__repo.start('shapesFlip');
+            const page = this.__page;
+            for (let i = 0; i < params.length; i++) {
+                const { shape, transform2 } = params[i];
+                api.shapeModifyByTransform(page, adapt2Shape(shape), makeShapeTransform1By2(transform2 as Transform2));
             }
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
         }
     }
+
 
     // 渐变
     //翻转
@@ -1883,6 +1934,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     //旋转90度
     rotateShapesGradient(actions: BatchAction4[]) {
         try {
@@ -1926,6 +1978,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     // 添加节点
     addShapesGradientStop(actions: BatchAction5[]) {
         try {
@@ -1971,6 +2024,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     toggerShapeGradientType(actions: BatchAction5[]) {
         try {
             const api = this.__repo.start('toggerShapeGradientType');
@@ -2032,6 +2086,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesGradientStopColor(actions: BatchAction5[]) {
         try {
             const api = this.__repo.start('setShapesGradientStopColor');
@@ -2068,6 +2123,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     deleteShapesGradientStop(actions: BatchAction5[]) {
         try {
             const api = this.__repo.start('setShapesGradientStopColor');
@@ -2098,6 +2154,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setGradientOpacity(actions: BatchAction5[]) {
         try {
             const api = this.__repo.start('setGradientOpacity');
@@ -2124,6 +2181,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     // 填充
     setShapesFillColor(actions: BatchAction[]) {
         const api = this.__repo.start('setShapesFillColor');
@@ -2152,6 +2210,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesFillType(actions: BatchAction[]) {
         const api = this.__repo.start('setShapesFillType');
         try {
@@ -2413,6 +2472,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesBorderCornerType(actions: BatchAction[]) {
         const api = this.__repo.start('setShapesBorderCornerType');
         try {
@@ -2526,7 +2586,8 @@ export class PageEditor {
                 if (modify_variable_with_api(api, this.__page, target, VariableType.MarkerType, OverrideType.EndMarkerType, startMarkerType || MarkerType.Line)) {
                     modify_variable_with_api(api, this.__page, target, VariableType.MarkerType, OverrideType.StartMarkerType, endMarkerType || MarkerType.Line)
                     continue;
-                };
+                }
+                ;
                 api.shapeModifyEndMarkerType(this.__page, adapt2Shape(target), startMarkerType || MarkerType.Line);
                 api.shapeModifyStartMarkerType(this.__page, adapt2Shape(target), endMarkerType || MarkerType.Line);
             }
@@ -2667,6 +2728,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     // shape blur
     shapesAddBlur(actions: BatchAction2[]) {
         try {
@@ -2680,6 +2742,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     shapesBlurUnify(actions: BatchAction2[]) {
         try {
             const api = this.__repo.start('shapesBlurUnify');
@@ -2693,6 +2756,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     shapeDeleteBlur(shapes: ShapeView[]) {
         try {
             const api = this.__repo.start('shapeDeleteBlur');
@@ -2705,6 +2769,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapeBlurEnabled(actions: BatchAction2[]) {
         try {
             const api = this.__repo.start('setShapeBlurEnabled');
@@ -2717,6 +2782,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapeBlurSaturation(actions: BatchAction2[]) {
         try {
             const api = this.__repo.start('setShapeBlurSaturation');
@@ -2760,6 +2826,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     shapesAddExportFormat(actions: ExportFormatAddAction[]) {
         try {
             const api = this.__repo.start('shapesAddExportFormat');
@@ -2776,6 +2843,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     pageAddExportFormat(formats: ExportFormat[]) {
         try {
             const api = this.__repo.start('pageAddExportFormat');
@@ -2789,6 +2857,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setPageExportPreviewUnfold(unfold: boolean) {
         try {
             const api = this.__repo.start('setPageExportPreviewUnfold');
@@ -2798,6 +2867,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     shapesDeleteExportFormat(actions: ExportFormatDeleteAction[]) {
         try {
             const api = this.__repo.start('shapesDeleteExportFormat');
@@ -2810,6 +2880,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     pageDeleteExportFormat(idx: number) {
         try {
             const format = this.__page.exportOptions?.exportFormats[idx];
@@ -2822,6 +2893,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesExportFormatScale(actions: ExportFormatScaleAction[]) {
         try {
             const api = this.__repo.start('setShapesExportFormatScale');
@@ -2834,6 +2906,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setPageExportFormatScale(idx: number, scale: number) {
         try {
             const api = this.__repo.start('setPageExportFormatScale');
@@ -2843,6 +2916,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesExportFormatName(actions: ExportFormatNameAction[]) {
         try {
             const api = this.__repo.start('setShapesExportFormatName');
@@ -2855,6 +2929,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setPageExportFormatName(idx: number, name: string) {
         try {
             const api = this.__repo.start('setPageExportFormatName');
@@ -2864,6 +2939,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesExportFormatPerfix(actions: ExportFormatPerfixAction[]) {
         try {
             const api = this.__repo.start('setShapesExportFormatPerfix');
@@ -2876,6 +2952,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setPageExportFormatPerfix(idx: number, name: ExportFormatNameingScheme) {
         try {
             const api = this.__repo.start('setPageExportFormatPerfix');
@@ -2885,6 +2962,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesExportFormatFileFormat(actions: ExportFormatFileFormatAction[]) {
         try {
             const api = this.__repo.start('setShapesExportFormatFileFormat');
@@ -2897,6 +2975,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setPageExportFormatFileFormat(idx: number, name: ExportFileFormat) {
         try {
             const api = this.__repo.start('setPageExportFormatFileFormat');
@@ -2975,6 +3054,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     /**
      * @description 图层拖动调整
      */

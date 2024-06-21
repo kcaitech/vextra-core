@@ -1,7 +1,7 @@
-import { v4 as uuid } from "uuid";
-import { Page } from "../data/page";
-import { Artboard } from "../data/artboard";
-import { Document, PageListItem } from "../data/document";
+import {v4 as uuid} from "uuid";
+import {Page} from "../data/page";
+import {Artboard} from "../data/artboard";
+import {Document, PageListItem} from "../data/document";
 import {
     GroupShape,
     LineShape,
@@ -17,9 +17,11 @@ import {
     SymbolUnionShape,
     BoolShape,
     PolygonShape,
-    StarShape
+    StarShape,
+    ShapeSize,
+    Transform
 } from "../data/shape";
-import { ContactShape } from "../data/contact"
+import {ContactShape} from "../data/contact"
 import * as types from "../data/typesdefine"
 import {
     importArtboard,
@@ -54,20 +56,21 @@ import {
     SymbolRefShape,
     TextAttr,
 } from "../data/classes";
-import { BasicArray, BasicMap } from "../data/basic";
-import { Repository } from "../data/transact";
-import { Comment } from "../data/comment";
-import { ResourceMgr } from "../data/basic";
-import { TableShape } from "../data/table";
+import {BasicArray, BasicMap} from "../data/basic";
+import {Repository} from "../data/transact";
+import {Comment} from "../data/comment";
+import {ResourceMgr} from "../data/basic";
+import {TableShape} from "../data/table";
 
-export { newText, newText2 } from "../data/textutils";
+export {newText, newText2} from "../data/textutils";
 // import i18n from '../../i18n' // data不能引用外面工程的内容
-import { BorderSideSetting, ContactForm, CrdtNumber, SideType } from "../data/baseclasses";
-import { Matrix } from "../basic/matrix";
-import { ResizingConstraints2 } from "../data/consts";
-import { SymbolMgr } from "../data/symbolmgr";
-import { newText } from "../data/textutils";
-import { getPolygonPoints, getPolygonVertices } from "./utils/path";
+import {BorderSideSetting, ContactForm, CrdtNumber, SideType} from "../data/baseclasses";
+import {Matrix} from "../basic/matrix";
+import {ResizingConstraints2} from "../data/consts";
+import {SymbolMgr} from "../data/symbolmgr";
+import {newText} from "../data/textutils";
+import {getPolygonPoints, getPolygonVertices} from "./utils/path";
+import {makeShapeTransform2By1, updateShapeTransform1By2} from "../data/shape_transform_util";
 
 function _checkNum(x: number) {
     // check
@@ -83,7 +86,9 @@ function _checkFrame(frame: ShapeFrame) {
 }
 
 export function addCommonAttr(shape: Shape) {
-    shape.rotation = 0;
+    const transform2 = makeShapeTransform2By1(shape.transform);
+    transform2.setRotateZ(0);
+    updateShapeTransform1By2(shape.transform, transform2);
     shape.isVisible = true;
     shape.isLocked = false;
     shape.constrainerProportions = false;
@@ -131,7 +136,10 @@ export function newBoolShape(name: string, style?: Style): BoolShape {
  */
 export function initFrame(shape: Shape, frame: ShapeFrame) {
     _checkFrame(frame);
-    shape.frame = importShapeFrame((frame));
+    shape.transform.m02 = frame.x;
+    shape.transform.m12 = frame.y;
+    shape.size.width = frame.width;
+    shape.size.height = frame.height;
 }
 
 export function newSolidColorFill(): Fill {
@@ -162,7 +170,12 @@ export function newArtboard(name: string, frame: ShapeFrame, fill?: Fill): Artbo
     _checkFrame(frame);
     template_artboard.id = uuid();
     template_artboard.name = name;
-    template_artboard.frame = frame;
+    const size = new ShapeSize(frame.width, frame.height);
+    const trans = new Transform();
+    trans.m02 = frame.x;
+    trans.m12 = frame.y;
+    template_artboard.size = size;
+    template_artboard.transform = trans;
 
     const artboard = importArtboard(template_artboard as types.Artboard);
 
@@ -181,7 +194,11 @@ export function newArtboard2(name: string, frame: ShapeFrame): Artboard {
     _checkFrame(frame);
     template_artboard.id = uuid();
     template_artboard.name = name;
-    template_artboard.frame = frame;
+
+    template_artboard.transform.m02 = frame.x;
+    template_artboard.transform.m12 = frame.y;
+    template_artboard.size.width = frame.width;
+    template_artboard.size.height = frame.height;
 
     const artboard = importArtboard(template_artboard as types.Artboard);
 
@@ -211,7 +228,12 @@ export function newPathShape(name: string, frame: ShapeFrame, path: Path, style?
         pathsegs.push(new PathSegment([i] as BasicArray<number>, uuid(), curvePoint, isClosed))
     })
 
-    const shape = new PathShape(new BasicArray(), id, name, types.ShapeType.Path, frame, style, pathsegs);
+    const transform = new Transform();
+    transform.m02 = frame.x;
+    transform.m12 = frame.y;
+    const size = new ShapeSize(frame.width, frame.height);
+
+    const shape = new PathShape(new BasicArray(), id, name, types.ShapeType.Path, transform, size, style, pathsegs);
     addCommonAttr(shape);
     return shape;
 }
@@ -228,7 +250,13 @@ export function newRectShape(name: string, frame: ShapeFrame): RectShape {
     curvePoint.push(p1, p2, p3, p4);
 
     const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, true);
-    const shape = new RectShape(new BasicArray(), id, name, types.ShapeType.Rectangle, frame, style, new BasicArray<PathSegment>(segment));
+
+    const transform = new Transform();
+    transform.m02 = frame.x;
+    transform.m12 = frame.y;
+    const size = new ShapeSize(frame.width, frame.height);
+
+    const shape = new RectShape(new BasicArray(), id, name, types.ShapeType.Rectangle, transform, size, style, new BasicArray<PathSegment>(segment));
     addCommonAttr(shape);
     return shape;
 }
@@ -283,7 +311,12 @@ export function newOvalShape(name: string, frame: ShapeFrame): OvalShape {
 
     const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, true);
 
-    const shape = new OvalShape([4] as BasicArray<number>, id, name, types.ShapeType.Oval, frame, style, new BasicArray<PathSegment>(segment), ellipse);
+    const transform = new Transform();
+    transform.m02 = frame.x;
+    transform.m12 = frame.y;
+    const size = new ShapeSize(frame.width, frame.height);
+
+    const shape = new OvalShape([4] as BasicArray<number>, id, name, types.ShapeType.Oval, transform, size, style, new BasicArray<PathSegment>(segment), ellipse);
 
     addCommonAttr(shape);
     return shape;
@@ -297,7 +330,13 @@ export function newPolygonShape(name: string, frame: ShapeFrame): PolygonShape {
     const vertices = getPolygonVertices(3);
     const curvePoint = getPolygonPoints(vertices);
     const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, true);
-    const shape = new PolygonShape(new BasicArray(), id, name, types.ShapeType.Polygon, frame, style, new BasicArray<PathSegment>(segment), 3);
+
+    const transform = new Transform();
+    transform.m02 = frame.x;
+    transform.m12 = frame.y;
+    const size = new ShapeSize(frame.width, frame.height);
+
+    const shape = new PolygonShape(new BasicArray(), id, name, types.ShapeType.Polygon, transform, size, style, new BasicArray<PathSegment>(segment), 3);
     addCommonAttr(shape);
     return shape;
 }
@@ -311,7 +350,12 @@ export function newStellateShape(name: string, frame: ShapeFrame): StarShape {
     const curvePoint = getPolygonPoints(vertices);
     const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, true);
 
-    const shape = new StarShape(new BasicArray(), id, name, types.ShapeType.Star, frame, style, new BasicArray<PathSegment>(segment), 5, 0.382);
+    const transform = new Transform();
+    transform.m02 = frame.x;
+    transform.m12 = frame.y;
+    const size = new ShapeSize(frame.width, frame.height);
+
+    const shape = new StarShape(new BasicArray(), id, name, types.ShapeType.Star, transform, size, style, new BasicArray<PathSegment>(segment), 5, 0.382);
     addCommonAttr(shape);
     return shape;
 }
@@ -327,7 +371,13 @@ export function newLineShape(name: string, frame: ShapeFrame): LineShape {
     const border = new Border([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), types.BorderPosition.Center, 1, new BorderStyle(0, 0), types.CornerType.Miter, side);
     style.borders.push(border);
     const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, false);
-    const shape = new LineShape(new BasicArray(), uuid(), name, types.ShapeType.Line, frame, style, new BasicArray<PathSegment>(segment));
+
+    const transform = new Transform();
+    transform.m02 = frame.x;
+    transform.m12 = frame.y;
+    const size = new ShapeSize(frame.width, frame.height);
+
+    const shape = new LineShape(new BasicArray(), uuid(), name, types.ShapeType.Line, transform, size, style, new BasicArray<PathSegment>(segment));
     addCommonAttr(shape);
     return shape;
 }
@@ -345,7 +395,12 @@ export function newArrowShape(name: string, frame: ShapeFrame): LineShape {
     style.borders.push(border);
     const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, false);
 
-    const shape = new LineShape(new BasicArray(), uuid(), name, types.ShapeType.Line, frame, style, new BasicArray<PathSegment>(segment));
+    const transform = new Transform();
+    transform.m02 = frame.x;
+    transform.m12 = frame.y;
+    const size = new ShapeSize(frame.width, frame.height);
+
+    const shape = new LineShape(new BasicArray(), uuid(), name, types.ShapeType.Line, transform, size, style, new BasicArray<PathSegment>(segment));
     addCommonAttr(shape);
     return shape;
 }
@@ -357,7 +412,12 @@ export function newDefaultTextShape(name: string, attr: TextAttr, frame?: ShapeF
     template_text_shape.name = name;
     // 后续需要传入字体、字号、颜色信息
     const textshape: TextShape = importTextShape(template_text_shape as types.TextShape);
-    if (frame) textshape.frame = frame;
+    if (frame) {
+        textshape.transform.m02 = frame.x;
+        textshape.transform.m12 = frame.y;
+        textshape.size.width = frame.width;
+        textshape.size.height = frame.height;
+    }
     textshape.text = newText(attr);
     addCommonAttr(textshape);
     return textshape;
@@ -369,7 +429,12 @@ export function newTextShape(name: string, frame?: ShapeFrame): TextShape {
     template_text_shape.name = name;
     // 后续需要传入字体、字号、颜色信息
     const textshape: TextShape = importTextShape(template_text_shape as types.TextShape);
-    if (frame) textshape.frame = frame;
+    if (frame) {
+        textshape.transform.m02 = frame.x;
+        textshape.transform.m12 = frame.y;
+        textshape.size.width = frame.width;
+        textshape.size.height = frame.height;
+    }
     addCommonAttr(textshape);
     return textshape;
 }
@@ -403,7 +468,13 @@ export function newImageShape(name: string, frame: ShapeFrame, mediasMgr: Resour
     const p4 = new CurvePoint([3] as BasicArray<number>, uuid(), 0, 1, CurveMode.Straight); // lb
     curvePoint.push(p1, p2, p3, p4);
     const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, true);
-    const img = new ImageShape(new BasicArray(), id, name, types.ShapeType.Image, frame, style, new BasicArray<PathSegment>(segment), ref || '');
+
+    const transform = new Transform();
+    transform.m02 = frame.x;
+    transform.m12 = frame.y;
+    const size = new ShapeSize(frame.width, frame.height);
+
+    const img = new ImageShape(new BasicArray(), id, name, types.ShapeType.Image, transform, size, style, new BasicArray<PathSegment>(segment), ref || '');
     img.setImageMgr(mediasMgr);
     addCommonAttr(img);
     img.style.fills.length = 0;
@@ -420,12 +491,18 @@ export function newTable(name: string, frame: ShapeFrame, rowCount: number, colu
     // template_table_shape.rowHeights.length = 0;
     // template_table_shape.colWidths.length = 0;
 
+    const transform = new Transform();
+    transform.m02 = frame.x;
+    transform.m12 = frame.y;
+    const size = new ShapeSize(frame.width, frame.height);
+
     const table = new TableShape(
         new BasicArray(),
         uuid(),
         name,
         types.ShapeType.Table,
-        frame,
+        transform,
+        size,
         newStyle(),
         new BasicMap(),
         new BasicArray(),
@@ -439,7 +516,12 @@ export function newTable(name: string, frame: ShapeFrame, rowCount: number, colu
         table.colWidths.push(new CrdtNumber(uuid(), [ci] as BasicArray<number>, 1));
     }
     // table.updateTotalWeights();
-    table.frame = frame;
+
+    table.transform.m02 = frame.x;
+    table.transform.m12 = frame.y;
+    table.size.width = frame.width;
+    table.size.height = frame.height;
+
     table.style.borders.push(new Border([0] as BasicArray<number>,
         uuid(),
         true,
@@ -484,7 +566,12 @@ export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm):
     para.spans.push(span);
     const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, false);
 
-    const shape = new ContactShape(new BasicArray(), uuid(), name, types.ShapeType.Contact, frame, style, new BasicArray<PathSegment>(segment), false, text, false);
+    const transform = new Transform();
+    transform.m02 = frame.x;
+    transform.m12 = frame.y;
+    const size = new ShapeSize(frame.width, frame.height);
+
+    const shape = new ContactShape(new BasicArray(), uuid(), name, types.ShapeType.Contact, transform, size, style, new BasicArray<PathSegment>(segment), false, text, false);
 
     shape.from = apex;
     shape.to = undefined;
@@ -511,19 +598,31 @@ export function newCutoutShape(name: string, frame: ShapeFrame): CutoutShape {
     curvePoint.push(p1, p2, p3, p4, p5);
     const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, true);
 
-    const shape = new CutoutShape(new BasicArray(), id, name, types.ShapeType.Cutout, frame, style, new BasicArray<PathSegment>(segment), false);
+    const transform = new Transform();
+    transform.m02 = frame.x;
+    transform.m12 = frame.y;
+    const size = new ShapeSize(frame.width, frame.height);
+
+    const shape = new CutoutShape(new BasicArray(), id, name, types.ShapeType.Cutout, transform, size, style, new BasicArray<PathSegment>(segment), false);
     addCommonAttr(shape);
     return shape;
 }
 
 export function newSymbolShape(name: string, frame: ShapeFrame, style?: Style): SymbolShape {
     _checkFrame(frame);
+
+    const transform = new Transform();
+    transform.m02 = frame.x;
+    transform.m12 = frame.y;
+    const size = new ShapeSize(frame.width, frame.height);
+
     const compo = new SymbolShape(
         new BasicArray(),
         uuid(),
         name,
         types.ShapeType.Symbol,
-        frame,
+        transform,
+        size,
         newflatStyle(),
         new BasicArray(),
         new BasicMap(),
@@ -537,12 +636,19 @@ export function newSymbolShape(name: string, frame: ShapeFrame, style?: Style): 
 export function newSymbolShapeUnion(name: string, frame: ShapeFrame): SymbolUnionShape {
     _checkFrame(frame);
     const style = newflatStyle();
+
+    const transform = new Transform();
+    transform.m02 = frame.x;
+    transform.m12 = frame.y;
+    const size = new ShapeSize(frame.width, frame.height);
+
     const union = new SymbolUnionShape(
         new BasicArray(),
         uuid(),
         name,
         types.ShapeType.SymbolUnion,
-        frame,
+        transform,
+        size,
         style,
         new BasicArray(),
         new BasicMap(),
@@ -554,7 +660,13 @@ export function newSymbolShapeUnion(name: string, frame: ShapeFrame): SymbolUnio
 
 export function newSymbolRefShape(name: string, frame: ShapeFrame, refId: string, symbol_mgr: SymbolMgr): SymbolRefShape {
     _checkFrame(frame);
-    const ref = new SymbolRefShape(new BasicArray(), uuid(), name, types.ShapeType.SymbolRef, frame, newflatStyle(), refId, new BasicMap());
+
+    const transform = new Transform();
+    transform.m02 = frame.x;
+    transform.m12 = frame.y;
+    const size = new ShapeSize(frame.width, frame.height);
+
+    const ref = new SymbolRefShape(new BasicArray(), uuid(), name, types.ShapeType.SymbolRef, transform, size, newflatStyle(), refId, new BasicMap());
     addCommonAttr(ref);
     ref.setSymbolMgr(symbol_mgr);
     return ref;
@@ -593,22 +705,23 @@ export function polylinePointsToPathD(pointsString: string, isLine: boolean) {
 }
 
 export function getTransformByEnv(env: GroupShape) {
-    const result = { flipH: false, flipV: false, rotation: 0 };
+    const result = {flipH: false, flipV: false, rotation: 0};
 
     // flip
     let ohflip = false;
     let ovflip = false;
 
-    let p: Shape | undefined = env;
-    while (p) {
-        if (p.isFlippedHorizontal) {
-            ohflip = !ohflip;
-        }
-        if (p.isFlippedVertical) {
-            ovflip = !ovflip;
-        }
-        p = p.parent;
-    }
+    // todo flip
+    // let p: Shape | undefined = env;
+    // while (p) {
+    //     if (p.isFlippedHorizontal) {
+    //         ohflip = !ohflip;
+    //     }
+    //     if (p.isFlippedVertical) {
+    //         ovflip = !ovflip;
+    //     }
+    //     p = p.parent;
+    // }
 
     result.flipH = ohflip;
     result.flipV = ovflip;
@@ -643,8 +756,10 @@ export function getTransformByEnv(env: GroupShape) {
 export function modifyTransformByEnv(shape: Shape, env: GroupShape) {
     const transform = getTransformByEnv(env);
 
-    shape.isFlippedHorizontal = transform.flipH;
-    shape.isFlippedVertical = transform.flipV;
+    const transform2 = makeShapeTransform2By1(shape.transform);
+    const center = shape.matrix2Parent().computeCoord2(shape.size.width / 2, shape.size.height / 2);
+    if (transform.flipH) transform2.flipH(center.x);
+    if (transform.flipV) transform2.flipV(center.y);
 
     let r = transform.rotation;
 
@@ -655,5 +770,7 @@ export function modifyTransformByEnv(shape: Shape, env: GroupShape) {
         r = r - 180;
     }
 
-    shape.rotation = r % 360;
+    transform2.setRotateZ((r % 360) / 180 * Math.PI);
+
+    updateShapeTransform1By2(shape.transform, transform2);
 }

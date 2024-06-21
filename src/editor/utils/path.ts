@@ -268,9 +268,8 @@ export function update_frame_by_points(api: Api, page: Page, s: Shape, reLayout 
     if (!(frameChange || reLayout)) { // 只有宽高被改变，才会需要重排2D points.
         return;
     }
-
     const m3 = new Matrix(s.matrix2Parent());
-    m3.preScale(f.width, f.height);
+    m3.preScale(s.frame.width, s.frame.height);
     m1.multiAtLeft(m3.inverse);
 
     (s as PathShape).pathsegs.forEach((segment, index) => {
@@ -617,12 +616,13 @@ export function get_rotate_for_straight(shape: PathShape, v: number) {
     const real_r = Number(getHorizontalAngle(lt, rb).toFixed(2));
 
     let dr = v - real_r;
-    if (shape.isFlippedHorizontal) {
-        dr = -dr;
-    }
-    if (shape.isFlippedVertical) {
-        dr = -dr;
-    }
+    // todo flip
+    // if (shape.isFlippedHorizontal) {
+    //     dr = -dr;
+    // }
+    // if (shape.isFlippedVertical) {
+    //     dr = -dr;
+    // }
 
     return (shape.rotation || 0) + dr;
 }

@@ -21,7 +21,7 @@ import { Border, BorderStyle, CornerType, Fill, FillType, Shadow, Style } from "
 import { Color } from "../../data/color";
 import * as types from "../../data/typesdefine";
 import { ISave4Restore, LocalCmd, SelectionState } from "../coop/localcmd";
-import { BorderSideSetting, SideType } from "../../data/classes";
+import { BorderSideSetting, ShapeSize, SideType, Transform } from "../../data/classes";
 import { importStyle } from "../../data/baseimport";
 import { exportStyle } from "../../data/baseexport";
 
@@ -94,7 +94,12 @@ export class PathModifier extends AsyncApiCaller {
 
             const p1 = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight);
             const segment = new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(p1), false);
-            const vec = new PathShape(new BasicArray(), uuid(), name, ShapeType.Path, frame, style, new BasicArray<PathSegment>(segment));
+
+            const size = new ShapeSize(frame.width, frame.height);
+            const trans = new Transform();
+            trans.m02 = frame.x;
+            trans.m12 = frame.y;
+            const vec = new PathShape(new BasicArray(), uuid(), name, ShapeType.Path, trans, size, style, new BasicArray<PathSegment>(segment));
 
             addCommonAttr(vec);
 
