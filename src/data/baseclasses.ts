@@ -219,7 +219,7 @@ export class Guide extends Basic {
     id: string
     axis: GuideAxis
     offset: number
-    constructor(crdtidx: Guide_crdtidx, id: string, axis: GuideAxis, offset: number) {
+    constructor(crdtidx: Guide_crdtidx, id: string = "$uuid", axis: GuideAxis, offset: number = 0) {
         super()
         this.crdtidx = crdtidx
         this.id = id
@@ -325,6 +325,7 @@ export class ShapeFrame extends Basic {
 }
 /* shape size */
 export class ShapeSize extends Basic {
+    typeId = "shape-size"
     width: number
     height: number
     constructor(width: number = 0, height: number = 0) {
@@ -359,6 +360,7 @@ type TableShape_colWidths = BasicArray<CrdtNumber>
 type Text_paras = BasicArray<Para>
 /* transform */
 export class Transform extends Basic {
+    typeId = "transform"
     m00: number
     m01: number
     m02: number
@@ -932,7 +934,7 @@ export class SymbolShape extends GroupShape {
     symtags?: BasicMap<string, string>
     cornerRadius?: CornerRadius
     guides?: SymbolShape_guides
-    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType,transform: Transform, size: ShapeSize, style: Style, childs: GroupShape_childs, variables: BasicMap<string, Variable>) {
+    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, size: ShapeSize, style: Style, childs: GroupShape_childs, variables: BasicMap<string, Variable>) {
         super(crdtidx, id, name, type, transform, size, style, childs)
         this.variables = variables
     }
