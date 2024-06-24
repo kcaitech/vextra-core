@@ -253,7 +253,7 @@ export class ShapeView extends DataView {
     }
 
     get frame(): ShapeFrame {
-        const transform2 = makeShapeTransform2By1(this.transform);
+        const transform2 = this.transform2;
         const trans = transform2.decomposeTranslate();
         const scale = transform2.decomposeScale();
         const width = Math.abs(this.size.width * scale.x);
