@@ -1246,7 +1246,7 @@ export class PageEditor {
                 result.push(parent.childs[index]);
                 index++;
             }
-            modify_frame_after_insert(api, this.__page, result);
+            // modify_frame_after_insert(api, this.__page, result);
             // const frame = get_frame(result);
             this.__repo.commit();
             // return { shapes: result, frame };
