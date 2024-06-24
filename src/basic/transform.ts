@@ -1683,6 +1683,26 @@ export class Transform { // 变换
         return this
     }
 
+    clearScaleSizeAndKeepSkew() { // 清除缩放大小，但保留缩放方向和斜切带来的缩放
+        if (!this.isSubMatrixLatest) this.updateMatrix();
+
+        const scale = this.decomposeScale()
+        const xLength = (scale.x < 0 ? -1 : 1) / this.skewMatrix.m00
+        const yLength = (scale.y < 0 ? -1 : 1) / this.skewMatrix.m11
+        const zLength = (scale.z < 0 ? -1 : 1) / this.skewMatrix.m22
+        this.scaleMatrix = ScaleMatrix.FromMatrix(new Matrix(new NumberArray2D([4, 4], [
+            xLength, 0, 0, 0,
+            0, yLength, 0, 0,
+            0, 0, zLength, 0,
+            0, 0, 0, 1,
+        ], true)))
+        this.isMatrixLatest = false
+
+        this.onChange(this)
+
+        return this
+    }
+
     clearRKS() { // 清除旋转、斜切、缩放操作
         if (!this.isSubMatrixLatest) this.updateMatrix();
         this.rotateMatrix = RotateMatrix.FromMatrix(Matrix.BuildIdentity([4, 4]))

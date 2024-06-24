@@ -219,7 +219,7 @@ export class Guide extends Basic {
     id: string
     axis: GuideAxis
     offset: number
-    constructor(crdtidx: Guide_crdtidx, id: string, axis: GuideAxis, offset: number = 0) {
+    constructor(crdtidx: Guide_crdtidx, id: string = "$uuid", axis: GuideAxis, offset: number = 0) {
         super()
         this.crdtidx = crdtidx
         this.id = id
