@@ -1294,25 +1294,28 @@ export class PageEditor {
      * @returns
      */
     pasteShapes3(actions: { env: GroupShape, shapes: Shape[] }[]): Shape[] | false {
-        const api = this.__repo.start("pasteShapes3", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-            const state = {} as SelectionState;
-            if (!isUndo) state.shapes = actions.reduce((p, c) => {
-                return [...p, ...c.shapes.map(s => s.id)]
-            }, [] as string[]);
-            else state.shapes = cmd.saveselection?.shapes || [];
-            selection.restore(state);
-        });
         try {
+            const api = this.__repo.start("pasteShapes3", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+                const state = {} as SelectionState;
+                if (!isUndo) state.shapes = actions.reduce((p, c) => {
+                    return [...p, ...c.shapes.map(s => s.id)]
+                }, [] as string[]);
+                else state.shapes = cmd.saveselection?.shapes || [];
+                selection.restore(state);
+            });
+
             const result: Shape[] = [];
+
             for (let i = 0, len = actions.length; i < len; i++) {
                 const { env, shapes } = actions[i];
                 for (let j = 0; j < shapes.length; j++) {
                     let index = env.childs.length;
+
                     api.shapeInsert(this.__document, this.__page, env, shapes[j], index);
+
                     result.push(env.childs[index]);
                 }
             }
-            modify_frame_after_insert(api, this.__page, result);
             this.__repo.commit();
             return result;
         } catch (error) {
