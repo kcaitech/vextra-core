@@ -258,9 +258,8 @@ export class ShapeView extends DataView {
         const scale = transform2.decomposeScale();
         const width = Math.abs(this.size.width * scale.x);
         const height = Math.abs(this.size.height * scale.y);
-        const frame = new ShapeFrame(trans.x, trans.y, width, height);
+        return new ShapeFrame(trans.x, trans.y, width, height);
         // Object.freeze(frame);
-        return frame;
     }
 
     get rotation(): number {
