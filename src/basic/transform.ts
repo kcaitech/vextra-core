@@ -1148,7 +1148,6 @@ export class Transform { // 变换
 
         const linePoint = params.axis?.point
         if (params.mode === TransformMode.Local) {
-            console.log('linePoint')
             if (linePoint) {
                 let point: Matrix = linePoint.clone()
                 if (!this.scaleMatrix.isIdentity) point = this.scaleMatrix.buildMatrix().resize([3, 3]).multiply(point);
