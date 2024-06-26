@@ -1,11 +1,7 @@
 import { BoolOp, BoolShape, Border, GroupShape, Path, PathShape, Shape, ShapeFrame, Style, SymbolRefShape, SymbolShape, TextShape } from "../data/classes";
-import { renderWithVars as fillR } from "./fill";
-import { renderWithVars as borderR } from "./border"
 import { renderText2Path } from "./text";
 import { IPalPath, gPal } from "../basic/pal";
 import { parsePath } from "../data/pathparser";
-import { isVisible, randomId } from "./basic";
-import { innerShadowId, renderWithVars as shadowR } from "./shadow";
 
 // find first usable style
 export function findUsableFillStyle(shape: Shape): Style {

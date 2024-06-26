@@ -31,9 +31,9 @@ import { objectId } from "../basic/objectid";
 import { BasicArray } from "../data/basic";
 import { fixConstrainFrame } from "../data/constrain";
 import { BlurType, MarkerType } from "../data/typesdefine";
-import {makeShapeTransform2By1, makeShapeTransform1By2, transform1Equals2} from "../data/shape_transform_util";
+import { makeShapeTransform2By1, makeShapeTransform1By2, transform1Equals2 } from "../data/shape_transform_util";
 import { Transform as Transform2 } from "../basic/transform";
-import {Matrix2} from "../index";
+import { Matrix2 } from "../index";
 
 export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     return (
@@ -105,7 +105,7 @@ export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeSize, frame:
 
 export function matrix2parent(t: Transform, matrix?: Matrix) {
     // const t = this.transform;
-    const m = new Matrix(t.m00, t.m10, t.m01, t.m11, t.m02, t.m12);
+    const m = t.toMatrix();
     if (!matrix) return m;
     matrix.multiAtLeft(m);
     return matrix;
@@ -359,11 +359,10 @@ export class ShapeView extends DataView {
     }
 
     matrix2Root() {
-        let s: ShapeView | undefined = this;
-        const m = new Matrix();
-        while (s) {
-            s.matrix2Parent(m);
-            s = s.parent;
+        const m = this.transform.toMatrix();
+        const p = this.parent;
+        if (p) {
+            m.multiAtLeft(p.matrix2Root())
         }
         return m;
     }
@@ -664,20 +663,11 @@ export class ShapeView extends DataView {
             props.opacity = contextSettings.opacity;
         }
 
+        // 填充需要应用transform，边框不用，直接变换path
         if (this.isNoTransform()) {
             if (frame.x !== 0 || frame.y !== 0) props.transform = `translate(${frame.x},${frame.y})`
         } else {
-            // const cx = frame.x + frame.width / 2;
-            // const cy = frame.y + frame.height / 2;
-            const style: any = { transform: this.transform.toString() }
-            // style.transform = ''
-            // style.transform = "translate(" + cx + "px," + cy + "px) "
-            // style.transform = "translate(" +frame.x + "px," + frame.y + "px) " // dev code
-            // if (this.m_hflip) style.transform += "rotateY(180deg) "
-            // if (this.m_vflip) style.transform += "rotateX(180deg) "
-            // if (this.m_rotate) style.transform += "rotate(" + this.m_rotate + "deg) "
-            // style.transform += "translate(" + (frame.x) + "px," + (frame.y) + "px)"
-            props.style = style;
+            props.style = { transform: this.transform.toString() };
         }
         if (contextSettings) {
             if (props.style) {

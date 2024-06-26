@@ -216,4 +216,8 @@ export class Matrix {
     checkValid() {
         if (!this.isValid()) throw new Error("Wrong Matrix: " + this.m_matrix);
     }
+
+    clone() {
+        return new Matrix(this)
+    }
 }
