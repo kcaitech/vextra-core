@@ -173,7 +173,7 @@ export class Api {
             for (let i = 0; i < cmd.ops.length; i++) {
                 const op = cmd.ops[i];
                 if (op.type === OpType.Idset) {
-                    const path = op.path.join(',');
+                    const path = op.path.join(','); // 是否要包含id？path包含id
                     const pre = idsetops.get(path) as IdOpRecord;
                     if (pre) {
                         pre.data = (op as IdOpRecord).data;

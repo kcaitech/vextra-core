@@ -9,25 +9,27 @@ export function convertCmds(cmds: Cmd[]) {
                 if (op.type === OpType.Idset) {
                     switch (op.id) {
                         case 'x':
-                            if (op.path[op.path.length - 1] === 'frame') {
-                                op.path[op.path.length - 1] = 'transform'
+                            if (op.path[op.path.length - 2] === 'frame') { // idset中,path最后一个是id
+                                op.path[op.path.length - 2] = 'transform'
                                 op.id = 'm02'
+                                op.path[op.path.length - 1] = 'm02'
                             }
                             break;
                         case 'y':
-                            if (op.path[op.path.length - 1] === 'frame') {
-                                op.path[op.path.length - 1] = 'transform'
+                            if (op.path[op.path.length - 2] === 'frame') {
+                                op.path[op.path.length - 2] = 'transform'
                                 op.id = 'm12'
+                                op.path[op.path.length - 1] = 'm12'
                             }
                             break;
                         case 'width':
-                            if (op.path[op.path.length - 1] === 'frame') {
-                                op.path[op.path.length - 1] = 'size'
+                            if (op.path[op.path.length - 2] === 'frame') {
+                                op.path[op.path.length - 2] = 'size'
                             }
                             break;
                         case 'height':
-                            if (op.path[op.path.length - 1] === 'frame') {
-                                op.path[op.path.length - 1] = 'size'
+                            if (op.path[op.path.length - 2] === 'frame') {
+                                op.path[op.path.length - 2] = 'size'
                             }
                             break;
                         case 'rotation':
