@@ -57,6 +57,7 @@ import { SNumber } from "../../coop/client/snumber";
 import { ShapeView, TableCellView, TextShapeView } from "../../dataview";
 import { BasicArray } from "../../data";
 import { TransformRaw } from "../../index";
+import { FMT_VER_latest } from "../../data/fmtver";
 
 // 要支持variable的修改
 export type TextShapeLike = TableCellView | TextShapeView
@@ -124,7 +125,8 @@ export class Api {
             time: 0,
             posttime: 0,
             saveselection,
-            selectionupdater
+            selectionupdater,
+            dataFmtVer: FMT_VER_latest,
         };
         this.needUpdateFrame.length = 0;
     }
@@ -172,7 +174,7 @@ export class Api {
             for (let i = 0; i < cmd.ops.length; i++) {
                 const op = cmd.ops[i];
                 if (op.type === OpType.Idset) {
-                    const path = op.path.join(',');
+                    const path = op.path.join(','); // 是否要包含id？path包含id
                     const pre = idsetops.get(path) as IdOpRecord;
                     if (pre) {
                         pre.data = (op as IdOpRecord).data;

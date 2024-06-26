@@ -14,6 +14,8 @@ import { TextOpInsertRecord, TextOpRemoveRecord } from "../../coop/client/textop
 import { CmdNetTask } from "./cmdnettask";
 import { stringifyShape } from "../basicapi";
 import { Shape } from "../../data/shape";
+import { FMT_VER_latest } from "../../data/fmtver";
+import { convertCmds } from "./compatible";
 
 const NET_TIMEOUT = 5000; // 5s
 
@@ -152,7 +154,7 @@ class CmdSync {
             while (i < cmds.length && cmds[i].batchId === batchid) ++i;
 
             const subrepos = classifyOps(cmds.splice(0, i));
-            for (let {k, v} of subrepos) {
+            for (let { k, v } of subrepos) {
                 // 建立repotree
                 const op0 = v[0].op;
                 const blockId = op0.path[0];
@@ -170,7 +172,7 @@ class CmdSync {
 
     __receiveRecovery(cmd: Cmd) {
         const subrepos = classifyOps([cmd]);
-        for (let {k, v} of subrepos) {
+        for (let { k, v } of subrepos) {
             // 建立repotree
             const op0 = v[0].op;
             const blockId = op0.path[0];
@@ -240,7 +242,7 @@ class CmdSync {
         // 处理本地提交后返回的cmds
         // 1. 分类op
         const subrepos = classifyOps(cmds);
-        for (let {k, v} of subrepos) {
+        for (let { k, v } of subrepos) {
             // 建立repotree
             const op0 = v[0].op;
             const blockId = op0.path[0];
@@ -390,7 +392,7 @@ class CmdSync {
         // 处理本地提交后返回的cmds
         // 1. 分类op
         const subrepos = classifyOps([cmd]);
-        for (let {k, v} of subrepos) {
+        for (let { k, v } of subrepos) {
             // check
             // if (v.length > 1) {
             //     console.warn("op can merge?? ", v)
@@ -442,12 +444,13 @@ class CmdSync {
             time: Date.now(),
             posttime: 0,
             saveselection: cmd.saveselection && cloneSelectionState(cmd.saveselection),
-            selectionupdater: cmd.selectionupdater
+            selectionupdater: cmd.selectionupdater,
+            dataFmtVer: FMT_VER_latest,
         } : undefined;
         if (newCmd?.saveselection?.text) newCmd.saveselection.text.order = SNumber.MAX_SAFE_INTEGER;
 
         const subrepos = classifyOps([cmd]);
-        for (let {k, v} of subrepos) {
+        for (let { k, v } of subrepos) {
             // 建立repotree
             const op0 = v[0].op;
             const blockId = op0.path[0];
@@ -515,12 +518,13 @@ class CmdSync {
             time: Date.now(),
             posttime: 0,
             saveselection: cmd.saveselection && cloneSelectionState(cmd.saveselection),
-            selectionupdater: cmd.selectionupdater
+            selectionupdater: cmd.selectionupdater,
+            dataFmtVer: FMT_VER_latest,
         } : undefined;
         if (newCmd?.saveselection?.text) newCmd.saveselection.text.order = SNumber.MAX_SAFE_INTEGER;
 
         const subrepos = classifyOps([cmd]); // 这个得有顺序
-        for (let {k, v} of subrepos) {
+        for (let { k, v } of subrepos) {
             // 建立repotree
             const op0 = v[0].op;
             const blockId = op0.path[0];
@@ -639,7 +643,7 @@ class CmdSync {
                 this.baseVer = headcmds[0].previousVersion;
                 this.cmds.unshift(...headcmds);
                 const subrepos = classifyOps(headcmds);
-                for (let {k, v} of subrepos) {
+                for (let { k, v } of subrepos) {
                     // 建立repotree
                     const op0 = v[0].op;
                     const blockId = op0.path[0];
@@ -670,6 +674,7 @@ class CmdSync {
         cmds.forEach(cmd => {
             cmd.ops.forEach((op) => { if (op instanceof ArrayOp) op.order = cmd.version });
         })
+        convertCmds(cmds);
         this.pendingcmds.push(...cmds);
         this.nettask.updateVer(this.baseVer, (cmds[cmds.length - 1]?.version) ?? lastVer);
         // need process
@@ -887,6 +892,30 @@ class CmdSync {
     }
 }
 
+function __mergeIdset(last: LocalCmd, cmd: LocalCmd) {
+    const idsetops = new Map<string, Op>();
+    for (let i = 0; i < last.ops.length; i++) {
+        const op = last.ops[i];
+        if (op.type === OpType.Idset) {
+            const path = op.path.join(','); // 是否要包含id？path包含id
+            idsetops.set(path, op);
+        }
+    }
+    for (let i = 0; i < cmd.ops.length; i++) {
+        const op = cmd.ops[i];
+        if (op.type === OpType.Idset) {
+            const path = op.path.join(',');
+            const pre = idsetops.get(path) as IdOpRecord;
+            if (pre) {
+                pre.data = (op as IdOpRecord).data;
+            } else {
+                idsetops.set(path, op);
+                last.ops.push(op);
+            }
+        }
+    }
+}
+
 function _mergeTextDelete(last: LocalCmd, cmd: LocalCmd) {
     // 处理只有deleteop跟selectionop的情况
     const canMerge1 = (ops: Op[]) => {
@@ -908,7 +937,7 @@ function _mergeTextDelete(last: LocalCmd, cmd: LocalCmd) {
     if (!(delOp && delOp2 && (delOp.start === (delOp2.start + delOp2.length) || (delOp.start + delOp.length) === delOp2.start))) return false;
     if (isDiffStringArr(delOp.path, delOp2.path)) return false;
 
-
+    // merge text delete
     if (delOp.start === (delOp2.start + delOp2.length)) {
         delOp.text.insertFormatText(delOp2.text, 0);
     } else {
@@ -917,6 +946,10 @@ function _mergeTextDelete(last: LocalCmd, cmd: LocalCmd) {
     }
     delOp.start = Math.min(delOp.start, delOp2.start);
     delOp.length = delOp.length + delOp2.length;
+
+    // mrege idset ops
+    __mergeIdset(last, cmd);
+
     last.time = cmd.time;
     console.log("merge localcmd: ", last);
     return true;
@@ -960,6 +993,10 @@ function _mergeTextInsert(last: LocalCmd, cmd: LocalCmd) {
     }
     insertOp.start = Math.min(insertOp.start, insertOp2.start);
     insertOp.length = insertOp.length + insertOp2.length;
+
+    // mrege idset ops
+    __mergeIdset(last, cmd);
+
     last.time = cmd.time;
     console.log("merge localcmd: ", last);
     return true;
@@ -1012,7 +1049,7 @@ export class CmdRepo {
         if (this.localcmds.length > this.localindex) {
             const droped = this.localcmds.splice(this.localindex); // 这里的有些cmd也是要提交的
             const subrepos = classifyOps(droped);
-            for (let {k, v} of subrepos) {
+            for (let { k, v } of subrepos) {
                 // 建立repotree
                 const op0 = v[0].op;
                 const blockId = op0.path[0];

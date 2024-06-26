@@ -227,9 +227,9 @@ imhdl['symbol-union-shape'] = importSymbolUnionShape;
 imhdl['cutout-shape'] = importCutoutShape;
 imhdl['polygon-shape'] = importPolygonShape;
 imhdl['star-shape'] = importStarShape;
-export function importShape(data: string | Object , document: Document, page: Page) {
+export function importShape(data: string | Object , document: Document, page: Page, fmtVer: number = FMT_VER_latest) {
     const source: { [key: string]: any } = typeof data === 'string' ? JSON.parse(data) : data;
-    const ctx: IImportContext = new class implements IImportContext { document: Document = document; curPage: string = page.id; fmtVer: number = FMT_VER_latest };
+    const ctx: IImportContext = new class implements IImportContext { document: Document = document; curPage: string = page.id; fmtVer: number = fmtVer };
     const h = imhdl[source.typeId];
     if (h) return h(source, ctx);
     throw new Error("unknow shape type: " + source.typeId)
