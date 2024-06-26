@@ -104,7 +104,7 @@ export function ungroup(document: Document, page: Page, shape: GroupShape, api: 
         const target = m1.computeCoord(0, 0);
 
         if (shape.rotation) {
-            api.shapeModifyRotate(page, c, (c.rotation || 0) + shape.rotation)
+            // api.shapeModifyRotate(page, c, (c.rotation || 0) + shape.rotation)
         }
         // todo flip
         // if (shape.isFlippedHorizontal) {

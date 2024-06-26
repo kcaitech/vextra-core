@@ -433,7 +433,7 @@ export class ShapeEditor {
     public rotate(deg: number) {
         this._repoWrap("rotate", (api) => {
             deg = deg % 360;
-            api.shapeModifyRotate(this.__page, this.shape, deg)
+            // api.shapeModifyRotate(this.__page, this.shape, deg)
         });
     }
 

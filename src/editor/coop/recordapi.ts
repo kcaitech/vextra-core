@@ -56,6 +56,7 @@ import { Repository } from "../../data/transact";
 import { SNumber } from "../../coop/client/snumber";
 import { ShapeView, TableCellView, TextShapeView } from "../../dataview";
 import { BasicArray } from "../../data";
+import { TransformRaw } from "../../index";
 
 // 要支持variable的修改
 export type TextShapeLike = TableCellView | TextShapeView
@@ -338,7 +339,7 @@ export class Api {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.crdtSetAttr(shape, "isEdited", state));
     }
-    shapeModifyRotate(page: Page, shape: Shape, rotate: number) {
+    shapeModifyRotate(page: Page, shape: Shape, rotate: TransformRaw) {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.shapeModifyRotate(page, shape, rotate, this.needUpdateFrame));
     }

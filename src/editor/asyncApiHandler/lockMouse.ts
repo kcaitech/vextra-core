@@ -185,7 +185,7 @@ export class LockMouseHandler extends AsyncApiCaller {
 
                 const d = (shape.rotation || 0) + deg;
 
-                api.shapeModifyRotate(page, shape, d)
+                // api.shapeModifyRotate(page, shape, d)
             }
 
             this.updateView();

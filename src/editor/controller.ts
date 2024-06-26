@@ -606,7 +606,7 @@ export class Controller {
             status = Status.Pending;
             try {
                 const newDeg = (shape.rotation || 0) + (deg || 0);
-                api.shapeModifyRotate(page, shape, newDeg);
+                // api.shapeModifyRotate(page, shape, newDeg);
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
@@ -1359,7 +1359,7 @@ function adjust_group_rotate_frame(api: Api, page: Page, s: GroupShape, sx: numb
         m1.multiAtLeft(matrix);
         const target = m1.computeCoord(0, 0);
 
-        if (s.rotation) api.shapeModifyRotate(page, cc, (cc.rotation || 0) + s.rotation);
+        // if (s.rotation) api.shapeModifyRotate(page, cc, (cc.rotation || 0) + s.rotation);
         // todo flip
         // if (s.isFlippedHorizontal) api.shapeModifyHFlip(page, cc, !cc.isFlippedHorizontal);
         // if (s.isFlippedVertical) api.shapeModifyVFlip(page, cc, !cc.isFlippedVertical);
@@ -1372,7 +1372,7 @@ function adjust_group_rotate_frame(api: Api, page: Page, s: GroupShape, sx: numb
         api.shapeModifyY(page, cc, cc.frame.y + target.y - cur.y);
     }
 
-    if (s.rotation) api.shapeModifyRotate(page, s, 0);
+    // if (s.rotation) api.shapeModifyRotate(page, s, 0);
     // todo flip
     // if (s.isFlippedHorizontal) api.shapeModifyHFlip(page, s, !s.isFlippedHorizontal);
     // if (s.isFlippedVertical) api.shapeModifyVFlip(page, s, !s.isFlippedVertical);
@@ -1501,7 +1501,7 @@ function __migrate(document: Document,
 
     if (!Number.isNaN(rotate)) {
         const r = (rotate / (2 * Math.PI) * 360) % 360;
-        if (r !== (shape.rotation ?? 0)) api.shapeModifyRotate(page, shape, r);
+        // if (r !== (shape.rotation ?? 0)) api.shapeModifyRotate(page, shape, r);
     } else {
         console.log('rotate is NaN', rotate);
     }

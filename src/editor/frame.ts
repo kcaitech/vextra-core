@@ -131,7 +131,7 @@ function modifySizeIgnoreConstraint(api: Api, page: Page, shape: GroupShape, sca
                 m1.multiAtLeft(matrix);
                 const target = m1.computeCoord(0, 0);
 
-                if (c.rotation) api.shapeModifyRotate(page, cc, (cc.rotation || 0) + c.rotation);
+                // if (c.rotation) api.shapeModifyRotate(page, cc, (cc.rotation || 0) + c.rotation);
                 // if (c.isFlippedHorizontal) api.shapeModifyHFlip(page, cc, !cc.isFlippedHorizontal);
                 // if (c.isFlippedVertical) api.shapeModifyVFlip(page, cc, !cc.isFlippedVertical);
 
@@ -143,7 +143,7 @@ function modifySizeIgnoreConstraint(api: Api, page: Page, shape: GroupShape, sca
                 api.shapeModifyY(page, cc, cc.frame.y + target.y - cur.y);
             }
 
-            if (c.rotation) api.shapeModifyRotate(page, c, 0);
+            // if (c.rotation) api.shapeModifyRotate(page, c, 0);
             // if (c.isFlippedHorizontal) api.shapeModifyHFlip(page, c, !c.isFlippedHorizontal);
             // if (c.isFlippedVertical) api.shapeModifyVFlip(page, c, !c.isFlippedVertical);
 
@@ -168,7 +168,7 @@ function modifySizeIgnoreConstraint(api: Api, page: Page, shape: GroupShape, sca
             const boundingBox = c.boundingBox();
 
             matrix.preScale(cFrame.width, cFrame.height);
-            if (c.rotation) api.shapeModifyRotate(page, c, 0);
+            // if (c.rotation) api.shapeModifyRotate(page, c, 0);
             // if (c.isFlippedHorizontal) api.shapeModifyHFlip(page, c, !c.isFlippedHorizontal);
             // if (c.isFlippedVertical) api.shapeModifyVFlip(page, c, !c.isFlippedVertical);
 
@@ -559,7 +559,7 @@ export function adjustLT2(api: Api, document: Document, page: Page, shape: Shape
         // todo flip
         // api.shapeModifyHFlip(page, shape, !shape.isFlippedHorizontal)
         if (shape.rotation) {
-            api.shapeModifyRotate(page, shape, 360 - shape.rotation);
+            // api.shapeModifyRotate(page, shape, 360 - shape.rotation);
         }
         w = -w;
     }
@@ -567,7 +567,7 @@ export function adjustLT2(api: Api, document: Document, page: Page, shape: Shape
         // todo flip
         // api.shapeModifyVFlip(page, shape, !shape.isFlippedVertical)
         if (shape.rotation) {
-            api.shapeModifyRotate(page, shape, 360 - shape.rotation);
+            // api.shapeModifyRotate(page, shape, 360 - shape.rotation);
         }
         h = -h;
     }
@@ -620,7 +620,7 @@ export function adjustLB2(api: Api, document: Document, page: Page, shape: Shape
         // todo flip
         // api.shapeModifyHFlip(page, shape, !shape.isFlippedHorizontal)
         if (shape.rotation) {
-            api.shapeModifyRotate(page, shape, 360 - shape.rotation);
+            // api.shapeModifyRotate(page, shape, 360 - shape.rotation);
         }
         w = -w;
     }
@@ -628,7 +628,7 @@ export function adjustLB2(api: Api, document: Document, page: Page, shape: Shape
         // todo flip
         // api.shapeModifyVFlip(page, shape, !shape.isFlippedVertical)
         if (shape.rotation) {
-            api.shapeModifyRotate(page, shape, 360 - shape.rotation);
+            // api.shapeModifyRotate(page, shape, 360 - shape.rotation);
         }
         h = -h;
     }
@@ -681,7 +681,7 @@ export function adjustRT2(api: Api, document: Document, page: Page, shape: Shape
         // todo flip
         // api.shapeModifyHFlip(page, shape, !shape.isFlippedHorizontal)
         if (shape.rotation) {
-            api.shapeModifyRotate(page, shape, 360 - shape.rotation);
+            // api.shapeModifyRotate(page, shape, 360 - shape.rotation);
         }
         w = -w;
     }
@@ -689,7 +689,7 @@ export function adjustRT2(api: Api, document: Document, page: Page, shape: Shape
         // todo flip
         // api.shapeModifyVFlip(page, shape, !shape.isFlippedVertical)
         if (shape.rotation) {
-            api.shapeModifyRotate(page, shape, 360 - shape.rotation);
+            // api.shapeModifyRotate(page, shape, 360 - shape.rotation);
         }
         h = -h;
     }
@@ -742,7 +742,7 @@ export function adjustRB2(api: Api, document: Document, page: Page, shape: Shape
         // todo flip
         // api.shapeModifyHFlip(page, shape, !shape.isFlippedHorizontal);
         if (shape.rotation) {
-            api.shapeModifyRotate(page, shape, 360 - shape.rotation);
+            // api.shapeModifyRotate(page, shape, 360 - shape.rotation);
         }
         w = -w;
     }
@@ -750,7 +750,7 @@ export function adjustRB2(api: Api, document: Document, page: Page, shape: Shape
         // todo flip
         // api.shapeModifyVFlip(page, shape, !shape.isFlippedVertical);
         if (shape.rotation) {
-            api.shapeModifyRotate(page, shape, 360 - shape.rotation);
+            // api.shapeModifyRotate(page, shape, 360 - shape.rotation);
         }
         h = -h;
     }
@@ -818,7 +818,7 @@ export function scaleByT(api: Api, document: Document, page: Page, s: Shape, p: 
         // todo flip
         // api.shapeModifyVFlip(page, s, !s.isFlippedVertical)
         if (s.rotation) {
-            api.shapeModifyRotate(page, s, 360 - s.rotation);
+            // api.shapeModifyRotate(page, s, 360 - s.rotation);
         }
         h = -h;
     }
@@ -879,7 +879,7 @@ export function scaleByR(api: Api, document: Document, page: Page, s: Shape, p: 
         // todo flip
         // api.shapeModifyHFlip(page, s, !s.isFlippedHorizontal)
         if (s.rotation) {
-            api.shapeModifyRotate(page, s, 360 - s.rotation);
+            // api.shapeModifyRotate(page, s, 360 - s.rotation);
         }
         w = -w;
     }
@@ -943,7 +943,7 @@ export function scaleByB(api: Api, document: Document, page: Page, s: Shape, p: 
         // todo flip
         // api.shapeModifyVFlip(page, s, !s.isFlippedVertical);
         if (s.rotation) {
-            api.shapeModifyRotate(page, s, 360 - s.rotation);
+            // api.shapeModifyRotate(page, s, 360 - s.rotation);
         }
         h = -h;
     }
@@ -1003,7 +1003,7 @@ export function scaleByL(api: Api, document: Document, page: Page, s: Shape, p: 
         // todo flip
         // api.shapeModifyHFlip(page, s, !s.isFlippedHorizontal)
         if (s.rotation) {
-            api.shapeModifyRotate(page, s, 360 - s.rotation);
+            // api.shapeModifyRotate(page, s, 360 - s.rotation);
         }
         w = -w;
     }
@@ -1046,7 +1046,7 @@ export function erScaleByT(api: Api, document: Document, page: Page, s: Shape, s
     if (scale < 0) {
         // todo flip
         // api.shapeModifyVFlip(page, s, !s.isFlippedVertical);
-        if (s.rotation) api.shapeModifyRotate(page, s, 360 - s.rotation);
+        // if (s.rotation) api.shapeModifyRotate(page, s, 360 - s.rotation);
         scale = -scale;
     }
     const m2p = s.matrix2Parent();
@@ -1076,7 +1076,7 @@ export function erScaleByR(api: Api, document: Document, page: Page, s: Shape, s
     if (scale < 0) {
         // todo flip
         // api.shapeModifyHFlip(page, s, !s.isFlippedVertical);
-        if (s.rotation) api.shapeModifyRotate(page, s, 360 - s.rotation);
+        // if (s.rotation) api.shapeModifyRotate(page, s, 360 - s.rotation);
         scale = -scale;
     }
     const m2p = s.matrix2Parent();
@@ -1105,7 +1105,7 @@ export function erScaleByB(api: Api, document: Document, page: Page, s: Shape, s
     if (scale < 0) {
         // todo flip
         // api.shapeModifyVFlip(page, s, !s.isFlippedVertical);
-        if (s.rotation) api.shapeModifyRotate(page, s, 360 - s.rotation);
+        // if (s.rotation) api.shapeModifyRotate(page, s, 360 - s.rotation);
         scale = -scale;
     }
     const m2p = s.matrix2Parent();
@@ -1134,7 +1134,7 @@ export function erScaleByL(api: Api, document: Document, page: Page, s: Shape, s
     if (scale < 0) {
         // todo flip
         // api.shapeModifyHFlip(page, s, !s.isFlippedHorizontal);
-        if (s.rotation) api.shapeModifyRotate(page, s, 360 - s.rotation);
+        // if (s.rotation) api.shapeModifyRotate(page, s, 360 - s.rotation);
         scale = -scale;
     }
     const m2p = s.matrix2Parent();
