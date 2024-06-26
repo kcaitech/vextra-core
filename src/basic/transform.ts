@@ -730,6 +730,16 @@ export class Transform { // 变换
         this.setTranslate(new ColVector3D([translateNow.x, translateNow.y, value]))
     }
 
+    hasTranslate() {
+        if (!this.isSubMatrixLatest) this.updateMatrix();
+        return isZero(this.translateMatrix.m03) && isZero(this.translateMatrix.m13) && isZero(this.translateMatrix.m23)
+    }
+
+    onlyTranslate() {
+        if (!this.isMatrixLatest) this.updateMatrix();
+        return this.matrix.clone().resize([3, 3]).isIdentity
+    }
+
     // 缩放
     scale(params: {
         point?: ColVector3D, // 缩放的中心点
@@ -895,6 +905,10 @@ export class Transform { // 变换
     hasScale() {
         if (!this.isSubMatrixLatest) this.updateMatrix();
         return !this.scaleMatrix.isIdentity
+    }
+
+    onlyScale() {
+        return !this.hasTranslate() && !this.hasSkew() && !this.hasRotation()
     }
 
     // 绕x轴旋转
@@ -1237,6 +1251,10 @@ export class Transform { // 变换
         return !this.rotateMatrix.isIdentity
     }
 
+    onlyRotation() {
+        return !this.hasTranslate() && !this.hasSkew() && !this.hasScale()
+    }
+
     // 要确保调用前已调用 this.updateMatrix()
     _getSkewMatrix(skew: {
         x?: {
@@ -1433,6 +1451,10 @@ export class Transform { // 变换
     hasSkew() {
         if (!this.isSubMatrixLatest) this.updateMatrix();
         return !this.skewMatrix.isIdentity
+    }
+
+    onlySkew() {
+        return !this.hasTranslate() && !this.hasRotation() && !this.hasScale()
     }
 
     addTransform(transform: Transform) { // 叠加另一个变换（先执行本变换，再执行另一个变换）
