@@ -56,6 +56,7 @@ import { Repository } from "../../data/transact";
 import { SNumber } from "../../coop/client/snumber";
 import { ShapeView, TableCellView, TextShapeView } from "../../dataview";
 import { BasicArray } from "../../data";
+import { FMT_VER_latest } from "../../data/fmtver";
 
 // 要支持variable的修改
 export type TextShapeLike = TableCellView | TextShapeView
@@ -123,7 +124,8 @@ export class Api {
             time: 0,
             posttime: 0,
             saveselection,
-            selectionupdater
+            selectionupdater,
+            dataFmtVer: FMT_VER_latest,
         };
         this.needUpdateFrame.length = 0;
     }

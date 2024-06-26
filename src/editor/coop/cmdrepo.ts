@@ -14,6 +14,8 @@ import { TextOpInsertRecord, TextOpRemoveRecord } from "../../coop/client/textop
 import { CmdNetTask } from "./cmdnettask";
 import { stringifyShape } from "../basicapi";
 import { Shape } from "../../data/shape";
+import { FMT_VER_latest } from "../../data/fmtver";
+import { convertCmds } from "./compatible";
 
 const NET_TIMEOUT = 5000; // 5s
 
@@ -442,7 +444,8 @@ class CmdSync {
             time: Date.now(),
             posttime: 0,
             saveselection: cmd.saveselection && cloneSelectionState(cmd.saveselection),
-            selectionupdater: cmd.selectionupdater
+            selectionupdater: cmd.selectionupdater,
+            dataFmtVer: FMT_VER_latest,
         } : undefined;
         if (newCmd?.saveselection?.text) newCmd.saveselection.text.order = SNumber.MAX_SAFE_INTEGER;
 
@@ -515,7 +518,8 @@ class CmdSync {
             time: Date.now(),
             posttime: 0,
             saveselection: cmd.saveselection && cloneSelectionState(cmd.saveselection),
-            selectionupdater: cmd.selectionupdater
+            selectionupdater: cmd.selectionupdater,
+            dataFmtVer: FMT_VER_latest,
         } : undefined;
         if (newCmd?.saveselection?.text) newCmd.saveselection.text.order = SNumber.MAX_SAFE_INTEGER;
 
@@ -670,6 +674,7 @@ class CmdSync {
         cmds.forEach(cmd => {
             cmd.ops.forEach((op) => { if (op instanceof ArrayOp) op.order = cmd.version });
         })
+        convertCmds(cmds);
         this.pendingcmds.push(...cmds);
         this.nettask.updateVer(this.baseVer, (cmds[cmds.length - 1]?.version) ?? lastVer);
         // need process

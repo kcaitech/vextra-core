@@ -8,14 +8,14 @@ import { RepoNode, RepoNodePath } from "./base";
 import { Cmd, OpItem } from "../../coop/common/repo";
 import { SNumber } from "../../coop/client/snumber";
 
-function _apply(document: Document, page: Page, op: TreeMoveOp) {
+function _apply(document: Document, page: Page, op: TreeMoveOp, fmtVer: number = 0) {
 
     const shape = page.getShape(op.id);
     let data = shape || op.data;
     if (typeof data === 'string') {
         // import data
         const _data = JSON.parse(data);
-        data = importShape(_data, document, page);
+        data = importShape(_data, document, page, fmtVer);
     }
 
     const ret = crdtTreeMove(page, op, data as Shape);
@@ -52,8 +52,8 @@ function simpleApply(page: Page, op: TreeMoveOp, data: any) {
     return ret;
 }
 
-function apply(document: Document, page: Page, op: TreeMoveOp) {
-    const ret = _apply(document, page, op);
+function apply(document: Document, page: Page, op: TreeMoveOp, fmtVer: number = 0) {
+    const ret = _apply(document, page, op, fmtVer);
     // 序列化
     if (ret?.data) {
         const value = ret.data;
@@ -62,13 +62,13 @@ function apply(document: Document, page: Page, op: TreeMoveOp) {
     return ret;
 }
 
-function unapply(document: Document, op: TreeMoveOpRecord) {
-    return op.target && apply(document, op.target, revert(op));
+function unapply(document: Document, op: TreeMoveOpRecord, fmtVer: number = 0) {
+    return op.target && apply(document, op.target, revert(op), fmtVer);
 }
 
 // 不序列化化op
-function unapply2(document: Document, op: TreeMoveOpRecord) {
-    return op.target && _apply(document, op.target, revert(op));
+function unapply2(document: Document, op: TreeMoveOpRecord, fmtVer: number = 0) {
+    return op.target && _apply(document, op.target, revert(op), fmtVer);
 }
 
 function revert(op: TreeMoveOpRecord): TreeMoveOpRecord {
@@ -125,14 +125,14 @@ export class CrdtShapeRepoNode extends RepoNode {
         // undo
         for (let i = this.localops.length - 1; i >= 0; i--) {
             const op = this.localops[i];
-            unapply2(this.document, op.op as TreeMoveOpRecord);
+            unapply2(this.document, op.op as TreeMoveOpRecord, op.cmd.dataFmtVer);
         }
 
         const target = this.document.pagesMgr.getSync(ops[0].op.path[0]);
         // do
         for (let i = 0; i < ops.length; i++) {
             const op = ops[i];
-            const record = target && apply(this.document, target, op.op as TreeMoveOp);
+            const record = target && apply(this.document, target, op.op as TreeMoveOp, op.cmd.dataFmtVer);
             if (record) {
                 // replace op
                 const idx = op.cmd.ops.indexOf(op.op);
@@ -151,7 +151,7 @@ export class CrdtShapeRepoNode extends RepoNode {
         if (target) {
             for (let i = 0; i < this.localops.length; i++) {
                 const op = this.localops[i];
-                const record = apply(this.document, target, op.op as TreeMoveOpRecord);
+                const record = apply(this.document, target, op.op as TreeMoveOpRecord, op.cmd.dataFmtVer);
                 if (record) {
                     // replace op
                     const idx = op.cmd.ops.indexOf(op.op);
@@ -209,7 +209,7 @@ export class CrdtShapeRepoNode extends RepoNode {
         ops.reverse();
         for (let i = 0; i < ops.length; ++i) {
             if (ops[i].cmd !== ops[0].cmd) throw new Error("not single cmd");
-            const record = unapply(this.document, ops[i].op as TreeMoveOpRecord);
+            const record = unapply(this.document, ops[i].op as TreeMoveOpRecord, ops[i].cmd.dataFmtVer);
             if (record) ops[i].op = record;
             else ops[i].op = stringifyData(revert(ops[i].op as TreeMoveOpRecord));
         }
@@ -242,7 +242,7 @@ export class CrdtShapeRepoNode extends RepoNode {
         for (let i = 0; i < ops.length; ++i) {
             if (ops[i].cmd !== ops[0].cmd) throw new Error("not single cmd");
             const rop = revert(ops[i].op as TreeMoveOpRecord);
-            const record = target && apply(this.document, target, rop);
+            const record = target && apply(this.document, target, rop, ops[i].cmd.dataFmtVer);
             if (record) ops[i].op = record;
             else ops[i].op = stringifyData(rop);
         }
@@ -281,7 +281,7 @@ export class CrdtShapeRepoNode extends RepoNode {
         if (verIdx < 0) verIdx = ops.length;
         for (let i = baseIdx; i < verIdx; i++) {
             const op = ops[i];
-            const record = apply(this.document, target, op.op as TreeMoveOp);
+            const record = apply(this.document, target, op.op as TreeMoveOp, op.cmd.dataFmtVer);
             if (record) {
                 // replace op
                 const idx = op.cmd.ops.indexOf(op.op);
