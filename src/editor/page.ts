@@ -119,7 +119,8 @@ import { RadiusType, ResizingConstraints2 } from "../data/consts";
 import { FMT_VER_latest } from "../data/fmtver";
 import { makeShapeTransform1By2, makeShapeTransform2By1, updateShapeTransform1By2 } from "../data/shape_transform_util";
 import { ColVector3D } from "../basic/matrix2";
-import {Transform as Transform2} from "../basic/transform";
+import { Transform as Transform2 } from "../basic/transform";
+import { TransformRaw } from "../index";
 
 
 // 用于批量操作的单个操作类型
@@ -620,12 +621,12 @@ export class PageEditor {
             }
 
             if (sym) {
-                const result= sym;
+                const result = sym;
 
                 document.symbolsMgr.add(result.id, result);
 
                 if (need_trans_data.length) {
-                    trans_after_make_symbol(page,result, need_trans_data, api);
+                    trans_after_make_symbol(page, result, need_trans_data, api);
                 }
 
                 this.__repo.commit();
@@ -1856,22 +1857,16 @@ export class PageEditor {
         }
     }
 
-    setShapesRotate(shapes: Shape[], v: number) {
+    setShapesRotate(actions: { shape: ShapeView, transform: TransformRaw }[]) {
         try {
             const api = this.__repo.start('setShapesRotate');
-            for (let i = 0, len = shapes.length; i < len; i++) {
-                const s = shapes[i];
+            for (const action of actions) {
+                const { shape: shapeView, transform } = action;
 
-                if (is_straight(s)) {
-                    const r = get_rotate_for_straight(s as PathShape, v);
-
-                    api.shapeModifyRotate(this.__page, s, r);
-
-                    update_frame_by_points(api, this.__page, s as PathShape);
-                } else {
-                    api.shapeModifyRotate(this.__page, s, v);
-                }
+                const s = adapt2Shape(shapeView);
+                api.shapeModifyRotate(this.__page, s, transform);
             }
+
             this.__repo.commit();
         } catch (error) {
             console.log(error);

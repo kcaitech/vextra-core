@@ -215,7 +215,7 @@ export class Transporter extends AsyncApiCaller {
 
         if (!Number.isNaN(rotate)) {
             const r = (rotate / (2 * Math.PI) * 360) % 360;
-            if (r !== (shape.rotation ?? 0)) api.shapeModifyRotate(page, shape, r);
+            // if (r !== (shape.rotation ?? 0)) api.shapeModifyRotate(page, shape, r);
         }
 
         translateTo(api, page, shape, x, y);

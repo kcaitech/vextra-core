@@ -17,6 +17,7 @@ import {BoolOp, CurveMode, MarkerType, OverrideType, Point2D, Transform} from ".
 import { BasicMap } from "../../data/basic";
 import { crdtArrayInsert, crdtArrayRemove, crdtSetAttr } from "./basic";
 import {makeShapeTransform2By1, updateShapeTransform1By2} from "../../data/shape_transform_util";
+import { TransformRaw } from "../../index";
 
 function _checkNum(x: number) {
     // check
@@ -85,21 +86,37 @@ export function shapeModifyHeight(page: Page, shape: Shape, h: number, needUpdat
         return op;
     }
 }
-export function shapeModifyRotate(page: Page, shape: Shape, rotate: number, needUpdateFrame?: { shape: Shape, page: Page }[]) {
-    rotate = rotate % 360; // 0-360
-    if (rotate !== shape.rotation) {
-        rotate = rotate * Math.PI / 180; // 0-2PI
-        const transform2 = makeShapeTransform2By1(shape.transform);
-        transform2.setRotateZ(rotate);
-        updateShapeTransform1By2(shape.transform, transform2);
-        const ops = [];
-        ops.push(crdtSetAttr(shape.transform, 'm00', transform2.m00));
-        ops.push(crdtSetAttr(shape.transform, 'm10', transform2.m10));
-        ops.push(crdtSetAttr(shape.transform, 'm01', transform2.m01));
-        ops.push(crdtSetAttr(shape.transform, 'm11', transform2.m11));
-        if (needUpdateFrame) needUpdateFrame.push({ shape, page });
-        return ops;
-    }
+export function shapeModifyRotate(page: Page, shape: Shape, rotateTransform: TransformRaw, needUpdateFrame?: { shape: Shape, page: Page }[]) {
+    // rotate = rotate % 360; // 0-360
+    // if (rotate !== shape.rotation) {
+    //     rotate = rotate * Math.PI / 180; // 0-2PI
+    //     const transform2 = makeShapeTransform2By1(shape.transform);
+    //     transform2.setRotateZ(rotate);
+    //     updateShapeTransform1By2(shape.transform, transform2);
+    //     const ops = [];
+    //     ops.push(crdtSetAttr(shape.transform, 'm00', transform2.m00));
+    //     ops.push(crdtSetAttr(shape.transform, 'm10', transform2.m10));
+    //     ops.push(crdtSetAttr(shape.transform, 'm01', transform2.m01));
+    //     ops.push(crdtSetAttr(shape.transform, 'm11', transform2.m11));
+    //     if (needUpdateFrame) needUpdateFrame.push({ shape, page });
+    //     return ops;
+    // }
+    // const transform = shape.transform;
+    // transform.m00 = rotateTransform.m00;
+    // transform.m10 = rotateTransform.m10;
+    // transform.m01 = rotateTransform.m01;
+    // transform.m11 = rotateTransform.m11;
+
+    const ops = [];
+    ops.push(crdtSetAttr(shape.transform, 'm00', rotateTransform.m00));
+    ops.push(crdtSetAttr(shape.transform, 'm10', rotateTransform.m10));
+    ops.push(crdtSetAttr(shape.transform, 'm01', rotateTransform.m01));
+    ops.push(crdtSetAttr(shape.transform, 'm11', rotateTransform.m11));
+    ops.push(crdtSetAttr(shape.transform, 'm02', rotateTransform.m02));
+    ops.push(crdtSetAttr(shape.transform, 'm12', rotateTransform.m12));
+
+    if (needUpdateFrame) needUpdateFrame.push({ shape, page });
+    return ops;
 }
 export function shapeModifyCounts(shape: (PolygonShape | StarShape), counts: number) {
     if (Number.isNaN(counts) || (!Number.isFinite(counts))) throw new Error(String(counts));
