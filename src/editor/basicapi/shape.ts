@@ -26,8 +26,8 @@ function _checkNum(x: number) {
 export function shapeModifyX(page: Page, shape: Shape, x: number, needUpdateFrame?: { shape: Shape, page: Page }[]) {
     // check
     _checkNum(x);
-    const frame = shape.frame;
-    if (x !== frame.x) {
+    const frame = shape.transform;
+    if (x !== frame.m02) {
         const op = crdtSetAttr(shape.transform, 'm02', x);
         if (needUpdateFrame) needUpdateFrame.push({ shape, page });
         return op;
@@ -36,8 +36,8 @@ export function shapeModifyX(page: Page, shape: Shape, x: number, needUpdateFram
 export function shapeModifyY(page: Page, shape: Shape, y: number, needUpdateFrame?: { shape: Shape, page: Page }[]) {
     // check
     _checkNum(y);
-    const frame = shape.frame;
-    if (y !== frame.y) {
+    const frame = shape.transform;
+    if (y !== frame.m12) {
         const op = crdtSetAttr(shape.transform, 'm12', y);
         if (needUpdateFrame) needUpdateFrame.push({ shape, page });
         return op;

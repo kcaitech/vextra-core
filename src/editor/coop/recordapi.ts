@@ -428,7 +428,7 @@ export class Api {
     }
     shapeModifyByTransform(page: Page, shape: Shape, transform: Transform) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyByTransform(page, shape, transform));
+        this.addOp(basicapi.shapeModifyByTransform(page, shape, transform, this.needUpdateFrame));
     }
     shapeModifyContextSettingsOpacity(page: Page, shape: Shape | Variable, contextSettingsOpacity: number) {
         // if (shape.isVirtualShape) {
