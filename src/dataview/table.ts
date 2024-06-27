@@ -19,7 +19,7 @@ import { DataView } from "./view"
 import { DViewCtx, PropsType } from "./viewctx";
 import { locateCell, locateCellIndex } from "../data/tablelocate";
 import { TableCellView } from "./tablecell";
-import { RenderTransform, findOverride, getShapeViewId } from "./basic";
+import { findOverride, getShapeViewId } from "./basic";
 import { layoutTable } from "../data/tablelayout";
 import { getTableCells, getTableVisibleCells } from "../data/tableread";
 import { BasicArray } from "../data/basic";
@@ -32,11 +32,11 @@ export class TableView extends ShapeView {
     private m_cells: Map<string, TableCellView> = new Map();
 
     constructor(ctx: DViewCtx, props: PropsType) {
-        super(ctx, props, false);
+        super(ctx, props);
         this.updateChildren();
         // this._bubblewatcher = this._bubblewatcher.bind(this);
         // this.m_data.bubblewatch(this._bubblewatcher);
-        this.afterInit();
+        // this.afterInit();
     }
 
     get data(): TableShape {
@@ -64,9 +64,9 @@ export class TableView extends ShapeView {
     // protected onChildChange(...args: any[]) {
     // }
 
-    protected isNoSupportDiamondScale(): boolean {
-        return this.m_data.isNoSupportDiamondScale;
-    }
+    // protected isNoSupportDiamondScale(): boolean {
+    //     return this.m_data.isNoSupportDiamondScale;
+    // }
 
     getDataChilds(): Shape[] {
         return [];
@@ -92,9 +92,9 @@ export class TableView extends ShapeView {
         return undefined;
     }
 
-    protected _layout(frame: ShapeFrame, shape: Shape, transform: RenderTransform | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): void {
+    protected _layout(size: ShapeSize, shape: Shape, parentFrame: ShapeSize | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scale: { x: number, y: number } | undefined): void {
 
-        super._layout(frame, shape, transform, varsContainer);
+        super._layout(size, shape, parentFrame, varsContainer, scale);
         // if (this.m_need_updatechilds) {
         //     this.m_need_updatechilds = false;
         this.updateChildren();

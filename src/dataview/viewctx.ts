@@ -1,8 +1,9 @@
-import { RenderTransform } from "./basic";
+
 import { Shape, ShapeType, SymbolShape } from "../data/shape";
 import { SymbolRefShape } from "../data/classes";
 import { EventEmitter } from "../basic/event";
 import { objectId } from "../basic/objectid";
+import { ShapeFrame } from "src/data/typesdefine";
 
 
 export type VarsContainer = (SymbolRefShape | SymbolShape)[];
@@ -10,7 +11,7 @@ export type VarsContainer = (SymbolRefShape | SymbolShape)[];
 
 export interface PropsType {
     data: Shape;
-    transx?: RenderTransform;
+    transx?: { x: number, y: number };
     varsContainer?: VarsContainer;
     isVirtual?: boolean;
 }

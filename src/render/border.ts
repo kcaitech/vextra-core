@@ -2,17 +2,17 @@ import { render as renderGradient } from "./gradient";
 import { objectId } from '../basic/objectid';
 import {
     Artboard,
-    Border, BorderPosition, FillType, Gradient, GradientType, ImageShape, OverrideType, RectShape, Shape, ShapeFrame, ShapeType, SideType, SymbolRefShape,
+    Border, BorderPosition, FillType, Gradient, GradientType, ImageShape, OverrideType, RectShape, Shape, ShapeSize, ShapeType, SideType, SymbolRefShape,
     SymbolShape, VariableType
 } from "../data/classes";
 import { findOverrideAndVar, randomId } from "./basic";
 import { renderCustomBorder } from "./border_custom";
 
 
-const handler: { [key: string]: (h: Function, frame: ShapeFrame, border: Border, path: string, shape?: Shape) => any } = {};
-const angularHandler: { [key: string]: (h: Function, frame: ShapeFrame, border: Border, path: string, shape?: Shape) => any } = {};
+const handler: { [key: string]: (h: Function, frame: ShapeSize, border: Border, path: string, shape?: Shape) => any } = {};
+const angularHandler: { [key: string]: (h: Function, frame: ShapeSize, border: Border, path: string, shape?: Shape) => any } = {};
 
-angularHandler[BorderPosition.Inner] = function (h: Function, frame: ShapeFrame, border: Border, path: string, shape?: Shape): any {
+angularHandler[BorderPosition.Inner] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape?: Shape): any {
     if (shape && is_side_custom(border.sideSetting.sideType, shape)) {
         return renderCustomBorder(h, frame, border, path, shape);
     }
@@ -69,7 +69,7 @@ angularHandler[BorderPosition.Inner] = function (h: Function, frame: ShapeFrame,
     ]);
 }
 
-angularHandler[BorderPosition.Center] = function (h: Function, frame: ShapeFrame, border: Border, path: string, shape?: Shape): any {
+angularHandler[BorderPosition.Center] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape?: Shape): any {
     if (shape && is_side_custom(border.sideSetting.sideType, shape)) {
         return renderCustomBorder(h, frame, border, path, shape);
     }
@@ -119,7 +119,7 @@ angularHandler[BorderPosition.Center] = function (h: Function, frame: ShapeFrame
     ])
 }
 
-angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame, border: Border, path: string, shape?: Shape): any {
+angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape?: Shape): any {
     // const frame = shape.frame;
     const thickness = border.sideSetting.thicknessTop;
     if (shape && is_side_custom(border.sideSetting.sideType, shape)) {
@@ -176,7 +176,7 @@ angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame,
     ]);
 }
 
-handler[BorderPosition.Inner] = function (h: Function, frame: ShapeFrame, border: Border, path: string, shape?: Shape): any {
+handler[BorderPosition.Inner] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape?: Shape): any {
     if (shape && is_side_custom(border.sideSetting.sideType, shape)) {
         return renderCustomBorder(h, frame, border, path, shape);
     }
@@ -224,7 +224,7 @@ handler[BorderPosition.Inner] = function (h: Function, frame: ShapeFrame, border
     return h("g", elArr);
 }
 
-handler[BorderPosition.Center] = function (h: Function, frame: ShapeFrame, border: Border, path: string, shape?: Shape): any {
+handler[BorderPosition.Center] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape?: Shape): any {
     // const frame = shape.frame;
     if (shape && is_side_custom(border.sideSetting.sideType, shape)) {
         return renderCustomBorder(h, frame, border, path, shape);
@@ -262,7 +262,7 @@ handler[BorderPosition.Center] = function (h: Function, frame: ShapeFrame, borde
     }
 }
 
-handler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame, border: Border, path: string, shape?: Shape): any {
+handler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape?: Shape): any {
     // const frame = shape.frame;
     if (shape && is_side_custom(border.sideSetting.sideType, shape)) {
         return renderCustomBorder(h, frame, border, path, shape);
@@ -317,7 +317,7 @@ handler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame, border
     return (h("g", elArr));
 }
 
-export function render(h: Function, borders: Border[], frame: ShapeFrame, path: string, shape: Shape | undefined, isClosed = true): Array<any> {
+export function render(h: Function, borders: Border[], frame: ShapeSize, path: string, shape: Shape | undefined, isClosed = true): Array<any> {
     const bc = borders.length;
     const elArr = [];
     for (let i = 0; i < bc; i++) {
@@ -343,7 +343,7 @@ export function render(h: Function, borders: Border[], frame: ShapeFrame, path: 
     return elArr;
 }
 
-export function renderWithVars(h: Function, shape: Shape, frame: ShapeFrame, path: string,
+export function renderWithVars(h: Function, shape: Shape, frame: ShapeSize, path: string,
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
     let borders = shape.style.borders;
     if (varsContainer) {

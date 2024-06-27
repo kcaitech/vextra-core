@@ -10,14 +10,14 @@ export class ImageShapeView extends RectShapeView {
     private m_imgPH: string;
 
     constructor(ctx: DViewCtx, props: PropsType, imgPH: string) {
-        super(ctx, props, false);
+        super(ctx, props);
         this.m_imgPH = imgPH;
-        this.afterInit();
+        // this.afterInit();
     }
 
-    protected isNoSupportDiamondScale(): boolean {
-        return this.m_data.isNoSupportDiamondScale;
-    }
+    // protected isNoSupportDiamondScale(): boolean {
+    //     return this.m_data.isNoSupportDiamondScale;
+    // }
 
     renderContents(): EL[] {
         const shape = this.m_data as ImageShape;

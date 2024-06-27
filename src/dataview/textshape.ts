@@ -11,14 +11,9 @@ import { objectId } from "../basic/objectid";
 
 export class TextShapeView extends ShapeView {
 
-    constructor(ctx: DViewCtx, props: PropsType, isTopClass: boolean = true) {
-        super(ctx, props, false);
-        if (isTopClass) this.afterInit();
-    }
-
-    protected isNoSupportDiamondScale(): boolean {
-        return this.m_data.isNoSupportDiamondScale;
-    }
+    // protected isNoSupportDiamondScale(): boolean {
+    //     return this.m_data.isNoSupportDiamondScale;
+    // }
     __str: string | undefined;
     __strText: Text | undefined;
     getText(): Text {

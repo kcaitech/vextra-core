@@ -1,4 +1,4 @@
-import { ShapeFrame, Fill, FillType, Gradient, Shape, SymbolRefShape, SymbolShape, Variable, OverrideType, VariableType } from "../data/classes";
+import { ShapeSize, Fill, FillType, Gradient, Shape, SymbolRefShape, SymbolShape, Variable, OverrideType, VariableType } from "../data/classes";
 // import { ELArray, EL, h } from "./basic";
 import { render as renderGradient } from "./gradient";
 import { render as clippathR } from "./clippath"
@@ -9,8 +9,8 @@ function randomId() {
     return Math.floor((Math.random() * 10000) + 1);
 }
 
-const handler: { [key: string]: (h: Function, frame: ShapeFrame, fill: Fill, path: string) => any } = {};
-handler[FillType.SolidColor] = function (h: Function, frame: ShapeFrame, fill: Fill, path: string): any {
+const handler: { [key: string]: (h: Function, frame: ShapeSize, fill: Fill, path: string) => any } = {};
+handler[FillType.SolidColor] = function (h: Function, frame: ShapeSize, fill: Fill, path: string): any {
     const color = fill.color;
     return h("path", {
         d: path,
@@ -22,7 +22,7 @@ handler[FillType.SolidColor] = function (h: Function, frame: ShapeFrame, fill: F
     });
 }
 
-handler[FillType.Gradient] = function (h: Function, frame: ShapeFrame, fill: Fill, path: string): any {
+handler[FillType.Gradient] = function (h: Function, frame: ShapeSize, fill: Fill, path: string): any {
     const opacity = fill.gradient?.gradientOpacity;
     const elArr = new Array();
     const g_ = renderGradient(h, fill.gradient as Gradient, frame);
@@ -58,7 +58,7 @@ handler[FillType.Gradient] = function (h: Function, frame: ShapeFrame, fill: Fil
     return h("g", elArr);
 }
 
-handler[FillType.Pattern] = function (h: Function, frame: ShapeFrame, fill: Fill, path: string): any {
+handler[FillType.Pattern] = function (h: Function, frame: ShapeSize, fill: Fill, path: string): any {
     const id = "clippath-fill-" + objectId(fill) + randomId();
     const cp = clippathR(h, id, path);
 
@@ -75,7 +75,7 @@ handler[FillType.Pattern] = function (h: Function, frame: ShapeFrame, fill: Fill
     return h("g", [cp, img]);
 }
 
-export function render(h: Function, fills: Fill[], frame: ShapeFrame, path: string): Array<any> {
+export function render(h: Function, fills: Fill[], frame: ShapeSize, path: string): Array<any> {
     const fillsCount = fills.length;
     const elArr = new Array();
     for (let i = 0; i < fillsCount; i++) {
@@ -89,7 +89,7 @@ export function render(h: Function, fills: Fill[], frame: ShapeFrame, path: stri
     return elArr;
 }
 
-export function renderWithVars(h: Function, shape: Shape, frame: ShapeFrame, path: string,
+export function renderWithVars(h: Function, shape: Shape, frame: ShapeSize, path: string,
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
     let fills = shape.style.fills;
     if (varsContainer) {

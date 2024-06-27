@@ -1,12 +1,12 @@
 import { Blur, BlurType, BorderPosition, ShapeType, SideType } from "../data/baseclasses";
 import { render as borderR } from "./border";
-import { Shape, ShapeFrame } from "../data/classes";
+import { Shape, ShapeSize } from "../data/classes";
 import { randomId } from "./basic";
 import { Border, Fill } from "../data/style";
 import { objectId } from '../basic/objectid';
-const handler: { [key: string]: (h: Function, blur: Blur, id: string, frame: ShapeFrame, fills: Fill[], path: string) => any } = {};
+const handler: { [key: string]: (h: Function, blur: Blur, id: string, frame: ShapeSize, fills: Fill[], path: string) => any } = {};
 
-handler[BlurType.Gaussian] = (h: Function, blur: Blur, id: string, frame: ShapeFrame) => {
+handler[BlurType.Gaussian] = (h: Function, blur: Blur, id: string, frame: ShapeSize) => {
     const props: any = {
         id: id,
         x: '-20%',
@@ -43,7 +43,7 @@ handler[BlurType.Gaussian] = (h: Function, blur: Blur, id: string, frame: ShapeF
     ]);
 }
 
-handler[BlurType.Background] = (h: Function, blur: Blur, id: string, frame: ShapeFrame, fills: Fill[], path: string) => {
+handler[BlurType.Background] = (h: Function, blur: Blur, id: string, frame: ShapeSize, fills: Fill[], path: string) => {
     if (!fillOpacity(fills)) return;
     const clipId = "clip-blur" + objectId(blur) + randomId();
     const width = frame.width;
@@ -72,7 +72,7 @@ handler[BlurType.Background] = (h: Function, blur: Blur, id: string, frame: Shap
     return h('g', elArr);
 }
 
-export function render(h: Function, blur: Blur, id: string, frame: ShapeFrame, fills: Fill[], path: string) {
+export function render(h: Function, blur: Blur, id: string, frame: ShapeSize, fills: Fill[], path: string) {
     if (!blur || !blur.isEnabled) return [];
     if (blur.type !== BlurType.Gaussian) return [];
     const el = handler[blur.type](h, blur, id, frame, fills, path);

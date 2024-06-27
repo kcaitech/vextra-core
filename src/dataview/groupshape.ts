@@ -1,8 +1,6 @@
-import { GroupShape, Shape, ShapeFrame, ShapeType, SymbolRefShape, SymbolShape } from "../data/classes";
+import { GroupShape, Shape, ShapeFrame, ShapeSize, ShapeType, SymbolRefShape, SymbolShape } from "../data/classes";
 import { ShapeView } from "./shape";
-import { matrix2parent } from "./shape";
-import { RenderTransform, getShapeViewId } from "./basic";
-import { Matrix } from "../basic/matrix";
+import { getShapeViewId } from "./basic";
 import { EL } from "./el";
 import { DataView, RootView } from "./view";
 import { DViewCtx, PropsType, VarsContainer } from "./viewctx";
@@ -13,13 +11,11 @@ export class GroupShapeView extends ShapeView {
         return this.m_data as GroupShape;
     }
 
-    constructor(ctx: DViewCtx, props: PropsType, isTopClass: boolean = true) {
-        super(ctx, props, false);
+    constructor(ctx: DViewCtx, props: PropsType) {
+        super(ctx, props);
 
         this._bubblewatcher = this._bubblewatcher.bind(this);
         this.m_data.bubblewatch(this._bubblewatcher);
-
-        if (isTopClass) this.afterInit();
     }
 
     protected _bubblewatcher(...args: any[]) {
@@ -51,8 +47,8 @@ export class GroupShapeView extends ShapeView {
         }
     }
 
-    protected _layout(frame: ShapeFrame, shape: Shape, transform: RenderTransform | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): void {
-        super._layout(frame, shape, transform, varsContainer);
+    protected _layout(size: ShapeSize, shape: Shape, parentFrame: ShapeSize | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scale: { x: number, y: number } | undefined): void {
+        super._layout(size, shape, parentFrame, varsContainer, scale);
         if (this.m_need_updatechilds) {
             this.notify("childs"); // notify childs change
             this.m_need_updatechilds = false;
@@ -76,7 +72,7 @@ export class GroupShapeView extends ShapeView {
         return childs;
     }
 
-    protected layoutChild(child: Shape, idx: number, transx: RenderTransform | undefined, varsContainer: VarsContainer | undefined, resue: Map<string, DataView>, rView: RootView | undefined) {
+    protected layoutChild(child: Shape, idx: number, transx: { x: number, y: number } | undefined, varsContainer: VarsContainer | undefined, resue: Map<string, DataView>, rView: RootView | undefined) {
         let cdom: DataView | undefined = resue.get(child.id);
         const props = { data: child, transx, varsContainer, isVirtual: this.m_isVirtual };
         if (cdom) {
@@ -101,7 +97,7 @@ export class GroupShapeView extends ShapeView {
         this.addChild(cdom, idx);
     }
 
-    protected layoutOnNormal(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): void {
+    protected layoutChilds(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, parentFrame: ShapeSize, scale?: { x: number, y: number }): void {
         const childs = this.getDataChilds();
         const resue: Map<string, DataView> = new Map();
         this.m_children.forEach((c) => resue.set(c.data.id, c));
@@ -109,7 +105,7 @@ export class GroupShapeView extends ShapeView {
         for (let i = 0, len = childs.length; i < len; i++) {
             const cc = childs[i]
             // update childs
-            this.layoutChild(cc, i, undefined, varsContainer, resue, rootView);
+            this.layoutChild(cc, i, scale, varsContainer, resue, rootView);
         }
         // 删除多余的
         const removes = this.removeChilds(childs.length, Number.MAX_VALUE);
@@ -117,49 +113,4 @@ export class GroupShapeView extends ShapeView {
         else removes.forEach((c => c.destory()));
     }
 
-    layoutOnRectShape(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, renderTrans: RenderTransform): void {
-        const childs = this.getDataChilds();
-        const resue: Map<string, DataView> = new Map();
-        this.m_children.forEach((c) => resue.set(c.data.id, c));
-        const rootView = this.getRootView();
-        for (let i = 0, len = childs.length; i < len; i++) {
-            const cc = childs[i]
-            const transform = {
-                dx: 0,
-                dy: 0,
-                scaleX: renderTrans.scaleX,
-                scaleY: renderTrans.scaleY,
-                parentFrame: this.frame,
-            }
-            // update childs
-            this.layoutChild(cc, i, transform, varsContainer!, resue, rootView);
-        }
-        // 删除多余的
-        const removes = this.removeChilds(childs.length, Number.MAX_VALUE);
-        if (rootView) rootView.addDelayDestory(removes);
-        else removes.forEach((c => c.destory()));
-    }
-
-    layoutOnDiamondShape(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, renderTrans: RenderTransform): void {
-        const childs = this.getDataChilds();
-        const resue: Map<string, DataView> = new Map();
-        this.m_children.forEach((c) => resue.set(c.data.id, c));
-        const rootView = this.getRootView();
-        for (let i = 0, len = childs.length; i < len; i++) {
-            const cc = childs[i]
-            const transform = {
-                dx: 0,
-                dy: 0,
-                scaleX: renderTrans.scaleX,
-                scaleY: renderTrans.scaleY,
-                parentFrame: this.frame,
-            }
-            // update childs
-            this.layoutChild(cc, i, transform, varsContainer!, resue, rootView);
-        }
-        // 删除多余的
-        const removes = this.removeChilds(childs.length, Number.MAX_VALUE);
-        if (rootView) rootView.addDelayDestory(removes);
-        else removes.forEach((c => c.destory()));
-    }
 }

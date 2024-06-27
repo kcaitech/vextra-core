@@ -1,14 +1,14 @@
-import { Border, BorderPosition, BorderSideSetting, CornerType, CurveMode, CurvePoint, FillType, Gradient, GradientType, Path, Shape, ShapeFrame, SideType, parsePath } from "../data/classes";
+import { Border, BorderPosition, BorderSideSetting, CornerType, CurveMode, CurvePoint, FillType, Gradient, GradientType, Path, Shape, ShapeSize, SideType, parsePath } from "../data/classes";
 import { render as renderGradient } from "./gradient";
 import { objectId } from '../basic/objectid';
 import { randomId } from "./basic";
 import { BasicArray } from "../data/basic";
 import { Matrix } from "../basic/matrix";
 
-const handler: { [key: string]: (h: Function, frame: ShapeFrame, border: Border, path: string, shape: Shape) => any } = {};
-const angularHandler: { [key: string]: (h: Function, frame: ShapeFrame, border: Border, path: string, shape: Shape) => any } = {};
+const handler: { [key: string]: (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape) => any } = {};
+const angularHandler: { [key: string]: (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape) => any } = {};
 
-angularHandler[BorderPosition.Inner] = function (h: Function, frame: ShapeFrame, border: Border, path: string, shape: Shape): any {
+angularHandler[BorderPosition.Inner] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape): any {
     const rId = randomId();
     const clipId = "clippath-border" + objectId(border) + rId;
     const mask1Id = "mask1-border" + objectId(border) + rId;
@@ -67,7 +67,7 @@ angularHandler[BorderPosition.Inner] = function (h: Function, frame: ShapeFrame,
 }
 
 
-angularHandler[BorderPosition.Center] = function (h: Function, frame: ShapeFrame, border: Border, path: string, shape: Shape): any {
+angularHandler[BorderPosition.Center] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape): any {
     const rId = randomId();
     const mask1Id = "mask1-border" + objectId(border) + rId;
     const mask2Id = "mask2-border" + objectId(border) + rId;
@@ -133,7 +133,7 @@ angularHandler[BorderPosition.Center] = function (h: Function, frame: ShapeFrame
     ])
 }
 
-angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame, border: Border, path: string, shape: Shape): any {
+angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape): any {
     const thickness = get_thickness(border.sideSetting);
     const g_ = renderGradient(h, border.gradient as Gradient, frame);
     const width = frame.width + 2 * thickness;
@@ -192,7 +192,7 @@ angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame,
     ]);
 }
 
-handler[BorderPosition.Inner] = function (h: Function, frame: ShapeFrame, border: Border, path: string, shape: Shape): any {
+handler[BorderPosition.Inner] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape): any {
     const { length, gap } = border.borderStyle;
     if (Math.max(...shape.radius) === 0) {
         return get_inner_border_path(h, frame, border, path);
@@ -249,7 +249,7 @@ handler[BorderPosition.Inner] = function (h: Function, frame: ShapeFrame, border
     return h("g", elArr);
 }
 
-handler[BorderPosition.Center] = function (h: Function, frame: ShapeFrame, border: Border, path: string, shape: Shape): any {
+handler[BorderPosition.Center] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape): any {
     const { length, gap } = border.borderStyle;
     if (Math.max(...shape.radius) === 0 && (length || gap)) {
         return get_center_border_path(h, frame, border, path, shape);
@@ -302,7 +302,7 @@ handler[BorderPosition.Center] = function (h: Function, frame: ShapeFrame, borde
     }
 }
 
-handler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame, border: Border, path: string, shape: Shape): any {
+handler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape): any {
     // const frame = shape.frame;
     const thickness = get_thickness(border.sideSetting);
     let g_;
@@ -358,7 +358,7 @@ handler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame, border
     return (h("g", elArr));
 }
 
-export const renderCustomBorder = (h: Function, frame: ShapeFrame, border: Border, path: string, shape: Shape) => {
+export const renderCustomBorder = (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape) => {
     const fillType = border.fillType;
     const gradientType = border.gradient && border.gradient.gradientType;
     if (fillType == FillType.Gradient && gradientType == GradientType.Angular) {
@@ -403,7 +403,7 @@ const get_thickness = (side: BorderSideSetting) => {
     return Math.max(thicknessBottom, thicknessTop, thicknessLeft, thicknessRight);
 }
 
-const outer_radius_border_path = (radius: number[], frame: ShapeFrame, side: BorderSideSetting, cornerType: CornerType, iscenter: boolean) => {
+const outer_radius_border_path = (radius: number[], frame: ShapeSize, side: BorderSideSetting, cornerType: CornerType, iscenter: boolean) => {
     const { width, height } = frame
     const { sideType, thicknessBottom, thicknessTop, thicknessLeft, thicknessRight } = side;
     const p1 = new CurvePoint([] as any, '', 0, 0, CurveMode.Straight);
@@ -441,7 +441,7 @@ const outer_radius_border_path = (radius: number[], frame: ShapeFrame, side: Bor
     return path.toString();
 }
 
-const mask_surplus_path = (frame: ShapeFrame, r: number[], side: BorderSideSetting) => {
+const mask_surplus_path = (frame: ShapeSize, r: number[], side: BorderSideSetting) => {
     const { sideType, thicknessBottom, thicknessTop, thicknessLeft, thicknessRight } = side;
     let w = frame.width, h = frame.height;
     let _p1 = { x: 0, y: 0 }, _p2 = { x: w, y: 0 }, _p3 = { x: w, y: h }, _p4 = { x: 0, y: h };
@@ -552,7 +552,7 @@ const inner_mask_path = (shape: Shape, border: Border, iscenter: boolean) => {
 }
 
 
-const get_inner_border_path = (h: Function, frame: ShapeFrame, border: Border, path: string) => {
+const get_inner_border_path = (h: Function, frame: ShapeSize, border: Border, path: string) => {
     const rId = randomId();
     const clipId = "clippath-border" + objectId(border) + rId;
     let g_;
@@ -591,7 +591,7 @@ const get_inner_border_path = (h: Function, frame: ShapeFrame, border: Border, p
     return h("g", elArr);
 }
 
-const sidePath = (h: Function, frame: ShapeFrame, border: Border, props: any, iscenter: boolean) => {
+const sidePath = (h: Function, frame: ShapeSize, border: Border, props: any, iscenter: boolean) => {
     const { sideType, thicknessTop, thicknessLeft, thicknessBottom, thicknessRight } = border.sideSetting;
     const { width, height } = frame;
     const elArr = [];
@@ -621,7 +621,7 @@ const sidePath = (h: Function, frame: ShapeFrame, border: Border, props: any, is
     return elArr;
 }
 
-const get_center_border_path = (h: Function, frame: ShapeFrame, border: Border, path: string, shape: Shape) => {
+const get_center_border_path = (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape) => {
     const thickness = get_thickness(border.sideSetting);
     const rId = randomId();
     const maskId = "mask-border" + objectId(border) + rId;
@@ -666,7 +666,7 @@ const get_center_border_path = (h: Function, frame: ShapeFrame, border: Border, 
     }
 }
 
-const cornerFill = (h: Function, frame: ShapeFrame, side: BorderSideSetting, stroke: string) => {
+const cornerFill = (h: Function, frame: ShapeSize, side: BorderSideSetting, stroke: string) => {
     const { width, height } = frame;
     const { thicknessBottom, thicknessLeft, thicknessRight, thicknessTop } = side;
     const d1 = `M ${-thicknessLeft} ${-thicknessTop} L 0 ${-thicknessTop} L 0 0 L ${-thicknessLeft} 0 Z `;
@@ -676,7 +676,7 @@ const cornerFill = (h: Function, frame: ShapeFrame, side: BorderSideSetting, str
     return h('path', { d: d1 + d2 + d3 + d4, fill: stroke, stroke: 'none' })
 }
 
-const getCornerSize = (r: number[], frame: ShapeFrame) => {
+const getCornerSize = (r: number[], frame: ShapeSize) => {
     const { width, height } = frame;
     let radius = [...r];
     const min_side = Math.min(width, height);

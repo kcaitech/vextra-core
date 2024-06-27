@@ -282,11 +282,6 @@ export class BoolShapeView extends GroupShapeView {
         return this.data.getBoolOp();
     }
 
-    constructor(ctx: DViewCtx, props: PropsType, isTopClass: boolean = true) {
-        super(ctx, props, false);
-        if (isTopClass) this.afterInit();
-    }
-
     protected _bubblewatcher(...args: any[]) {
         super._bubblewatcher(...args);
         this.m_path = undefined;

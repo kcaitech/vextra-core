@@ -2,16 +2,12 @@ import {
     PathShape,
     PathShape2,
     Shape,
-    ShapeFrame,
+    ShapeSize,
     ShapeType,
     SymbolRefShape,
     SymbolShape
 } from "../data/classes";
-import { Path } from "../data/path";
-import { parsePath } from "../data/pathparser";
-import { ShapeView, matrix2parent, transformPoints } from "./shape";
-import { Matrix } from "../basic/matrix";
-import { RenderTransform } from "./basic";
+import { ShapeView } from "./shape";
 import { DViewCtx, PropsType } from "./viewctx";
 import { EL, elh } from "./el";
 import { innerShadowId, renderBorders } from "../render";
@@ -19,11 +15,6 @@ import { objectId } from "../basic/objectid";
 import { BlurType, PathSegment } from "../data/typesdefine";
 
 export class PathShapeView extends ShapeView {
-
-    constructor(ctx: DViewCtx, props: PropsType, isTopClass: boolean = true) {
-        super(ctx, props, isTopClass);
-        this.afterInit();
-    }
 
     m_pathsegs?: PathSegment[];
 
@@ -39,9 +30,9 @@ export class PathShapeView extends ShapeView {
         return this.data.isClosed;
     }
 
-    protected _layout(frame: ShapeFrame, shape: Shape, transform: RenderTransform | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): void {
+    protected _layout(size: ShapeSize, shape: Shape, parentFrame: ShapeSize | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scale: { x: number, y: number } | undefined): void {
         this.m_pathsegs = undefined;
-        super._layout(frame, shape, transform, varsContainer);
+        super._layout(size, shape, parentFrame, varsContainer, scale);
     }
 
     // layoutOnDiamondShape(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scaleX: number, scaleY: number, rotate: number, vflip: boolean, hflip: boolean, bbox: ShapeFrame, m: Matrix): void {

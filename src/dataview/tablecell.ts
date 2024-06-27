@@ -15,7 +15,7 @@ export class TableCellView extends ShapeView {
     private m_index: { row: number, col: number };
 
     constructor(ctx: DViewCtx, props: PropsType & { frame: ShapeFrame } & { index: { row: number, col: number } }, imgPH: string) {
-        super(ctx, props, false);
+        super(ctx, props);
         this.m_imgPH = imgPH;
 
         const frame = props.frame;
@@ -24,10 +24,10 @@ export class TableCellView extends ShapeView {
         // this.m_frame.width = frame.width;
         // this.m_frame.height = frame.height;
         this.m_index = props.index;
-        this.afterInit();
+        // this.afterInit();
     }
 
-    protected afterInit(): void {
+    protected onMounted(): void {
         // const frame = this.frame;
         // if (!this.isVirtualShape && this.cellType === TableCellType.Text) {
         //     const text = this.getText();

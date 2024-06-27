@@ -1,13 +1,13 @@
 import { BlurType, BorderPosition, OverrideType, Shadow, ShadowPosition, ShapeType, VariableType } from "../data/baseclasses";
 import { Blur, Border, Fill, Style } from "../data/style";
-import { Shape, ShapeFrame, SymbolRefShape, SymbolShape } from "../data/classes";
+import { Shape, ShapeSize, SymbolRefShape, SymbolShape } from "../data/classes";
 import { render as borderR } from "./border";
 import { findOverrideAndVar } from "../data/utils";
 
 const shadowOri: {
-    [key: string]: (h: Function, shadow: Shadow, frame: ShapeFrame, id: string, i: number, path: string, fills: Fill[], borders: Border[], shapeType: ShapeType, blur?: Blur) => any
+    [key: string]: (h: Function, shadow: Shadow, frame: ShapeSize, id: string, i: number, path: string, fills: Fill[], borders: Border[], shapeType: ShapeType, blur?: Blur) => any
 } = {};
-shadowOri[ShadowPosition.Outer] = function (h: Function, shadow: Shadow, frame: ShapeFrame, id: string, i: number, path: string, fills: Fill[], borders: Border[], shapeType: ShapeType, blur?: Blur): any {
+shadowOri[ShadowPosition.Outer] = function (h: Function, shadow: Shadow, frame: ShapeSize, id: string, i: number, path: string, fills: Fill[], borders: Border[], shapeType: ShapeType, blur?: Blur): any {
     const { width, height } = frame;
     // const shadow = style.shadows[i];
     const f_props: any = { props_w: [width * 1.4], props_h: [height * 1.4], props_x: [-(width * 0.2)], props_y: [-(height * 0.2)] }
@@ -90,7 +90,7 @@ shadowOri[ShadowPosition.Outer] = function (h: Function, shadow: Shadow, frame: 
     const p = h('g', g_props, [h('path', body_props), ...border]);
     return { filter, p }
 }
-shadowOri[ShadowPosition.Inner] = function (h: Function, shadow: Shadow, frame: ShapeFrame, id: string, i: number, path: string, fills: Fill[], borders: Border[], shapeType: ShapeType): any {
+shadowOri[ShadowPosition.Inner] = function (h: Function, shadow: Shadow, frame: ShapeSize, id: string, i: number, path: string, fills: Fill[], borders: Border[], shapeType: ShapeType): any {
     const f_id = `inner-shadow-${id + i}`;
     // const shadow = style.shadows[i];
     const { width, height } = frame;
@@ -154,7 +154,7 @@ shadowOri[ShadowPosition.Inner] = function (h: Function, shadow: Shadow, frame: 
     return h('filter', filter_props, h_node);
 }
 
-function shadowShape(h: Function, shadows: Shadow[], frame: ShapeFrame, id: string, borders: Border[], shapeType: ShapeType): any {
+function shadowShape(h: Function, shadows: Shadow[], frame: ShapeSize, id: string, borders: Border[], shapeType: ShapeType): any {
     shadows = shadows.filter(s => s.position === ShadowPosition.Outer);
     const { width, height } = frame;
     const f_props: any = { props_w: [width * 1.8], props_h: [height * 1.8], props_x: [-(width * 0.4)], props_y: [-(height * 0.4)] }
@@ -226,7 +226,7 @@ function shadowShape(h: Function, shadows: Shadow[], frame: ShapeFrame, id: stri
     return filter;
 }
 
-export function render(h: Function, id: string, shadows: Shadow[], path: string, frame: ShapeFrame, fills: Fill[], borders: Border[], shapeType: ShapeType, blur?: Blur) {
+export function render(h: Function, id: string, shadows: Shadow[], path: string, frame: ShapeSize, fills: Fill[], borders: Border[], shapeType: ShapeType, blur?: Blur) {
     const elArr = [];
     // const style = shape.style;
     // const frame = shape.frame;
@@ -276,7 +276,7 @@ export function innerShadowId(id: string, shadows?: Shadow[]) {
     return ids;
 }
 
-const getFilterPropsValue = (shadow: Shadow, frame: ShapeFrame, f_props: any) => {
+const getFilterPropsValue = (shadow: Shadow, frame: ShapeSize, f_props: any) => {
     const { offsetX, offsetY, blurRadius, spread } = shadow;
     const { width, height } = frame;
     const props_w = width + Math.abs(offsetX) + (blurRadius * 2) + Math.abs(spread * 2) + (width * 0.4);
@@ -289,7 +289,7 @@ const getFilterPropsValue = (shadow: Shadow, frame: ShapeFrame, f_props: any) =>
     f_props.props_y.push(props_y);
 }
 
-export function renderWithVars(h: Function, id: string, shape: Shape, frame: ShapeFrame, path: string,
+export function renderWithVars(h: Function, id: string, shape: Shape, frame: ShapeSize, path: string,
     varsContainer?: (SymbolRefShape | SymbolShape)[] | undefined
 ) {
     let shadows = shape.style.shadows;

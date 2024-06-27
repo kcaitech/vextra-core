@@ -254,7 +254,6 @@ export class Shape extends Basic implements classes.Shape {
         return matrix;
     }
 
-    // private __boundingBox?: ShapeFrame;
     boundingBox(): ShapeFrame {
         if (this.isNoTransform()) {
             const transform = this.transform;
@@ -368,9 +367,9 @@ export class Shape extends Basic implements classes.Shape {
         return this.style.shadows;
     }
 
-    get isNoSupportDiamondScale() {  // 默认都支持压扁缩放
-        return false;
-    }
+    // get isNoSupportDiamondScale() {  // 默认都支持压扁缩放
+    //     return false;
+    // }
 
     get frameType() {
         return FrameType.Path;
@@ -496,9 +495,9 @@ export class GroupShape extends Shape implements classes.GroupShape {
         return new Path(path);
     }
 
-    get isNoSupportDiamondScale() {
-        return true;
-    }
+    // get isNoSupportDiamondScale() {
+    //     return true;
+    // }
 
     get frameType() {
         return FrameType.Flex;
@@ -1013,9 +1012,9 @@ export class ImageShape extends RectShape implements classes.ImageShape {
         return this.__cacheData && this.__cacheData.base64 || "";
     }
 
-    get isNoSupportDiamondScale() {
-        return true;
-    }
+    // get isNoSupportDiamondScale() {
+    //     return true;
+    // }
 
     get frameType() {
         return FrameType.Rect;
@@ -1144,9 +1143,9 @@ export class TextShape extends Shape implements classes.TextShape {
         return this.text.getLayout2(this.size);
     }
 
-    get isNoSupportDiamondScale() {
-        return true;
-    }
+    // get isNoSupportDiamondScale() {
+    //     return true;
+    // }
 
     get frameType() {
         return FrameType.Rect;
@@ -1189,9 +1188,9 @@ export class CutoutShape extends PathShape implements classes.CutoutShape {
         this.scalingStroke = scalingStroke;
     }
 
-    get isNoSupportDiamondScale() {
-        return true;
-    }
+    // get isNoSupportDiamondScale() {
+    //     return true;
+    // }
 
     get frameType() {
         return FrameType.Rect;

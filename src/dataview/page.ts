@@ -32,8 +32,8 @@ export class PageView extends GroupShapeView implements RootView {
     private m_delaydestorys: Map<string, ShapeView> = new Map();
 
     constructor(ctx: DViewCtx, props: PropsType) {
-        super(ctx, props, false);
-        this.afterInit();
+        super(ctx, props);
+        this.onMounted();
 
         const destoryDelayDestorys = () => {
             this.m_delaydestorys.forEach((v) => {

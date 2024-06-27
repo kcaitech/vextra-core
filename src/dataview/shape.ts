@@ -21,7 +21,6 @@ import {
     Transform
 } from "../data/classes";
 import { findOverrideAndVar } from "./basic";
-import { RenderTransform } from "./basic";
 import { EL, elh } from "./el";
 import { FrameType } from "../data/consts";
 import { Matrix } from "../basic/matrix";
@@ -44,7 +43,7 @@ export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     );
 }
 
-export function isDiffRenderTransform(lhs: RenderTransform | undefined, rhs: RenderTransform | undefined) {
+export function isDiffRenderTransform(lhs: { x: number, y: number } | undefined, rhs: { x: number, y: number } | undefined) {
     if (lhs === rhs) { // both undefined
         return false;
     }
@@ -54,7 +53,7 @@ export function isDiffRenderTransform(lhs: RenderTransform | undefined, rhs: Ren
     // return (!lhs.matrix.equals(rhs.matrix) ||
     //     isDiffShapeFrame(lhs.parentFrame, rhs.parentFrame)
     // )
-    return lhs.scaleX !== rhs.scaleX || lhs.scaleY !== rhs.scaleY;
+    return lhs.x !== rhs.x || lhs.y !== rhs.y;
 }
 
 export function isDiffVarsContainer(lhs: (SymbolRefShape | SymbolShape)[] | undefined, rhs: (SymbolRefShape | SymbolShape)[] | undefined): boolean {
@@ -75,9 +74,9 @@ export function isDiffVarsContainer(lhs: (SymbolRefShape | SymbolShape)[] | unde
     return false;
 }
 
-export function isNoTransform(trans: RenderTransform | undefined): boolean {
+export function isNoTransform(trans: { x: number, y: number } | undefined): boolean {
     // return !trans || trans.matrix.isIdentity()
-    return !trans || trans.scaleX === 1 && trans.scaleY === 1;
+    return !trans || trans.x === 1 && trans.y === 1;
 }
 
 export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeSize, frame: ShapeFrame, scaleX: number, scaleY: number) {
@@ -112,24 +111,28 @@ export function matrix2parent(t: Transform, matrix?: Matrix) {
 }
 
 export function boundingBox(frame: ShapeSize, shape: Shape): ShapeFrame {
-    // const path = this.getPath();
     const path = shape.getPathOfFrame(frame);
     if (path.length > 0) {
-        // path.transform(m);
         const bounds = path.calcBounds();
         return new ShapeFrame(bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
     }
-    // // const frame = this.frame;
-    // const corners = [{ x: 0, y: 0 }, { x: frame.width, y: 0 }, { x: frame.width, y: frame.height }, {
-    //     x: 0,
-    //     y: frame.height
-    // }]
-    //     .map((p) => m.computeCoord(p));
-    // const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
-    // const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
-    // const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
-    // const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
-    return new ShapeFrame(0, 0, frame.width, frame.height);
+
+    if (shape.isNoTransform()) {
+        return new ShapeFrame(0, 0, frame.width, frame.height);
+    }
+
+    const m = shape.matrix2Parent();
+    const corners = [{ x: 0, y: 0 }, { x: frame.width, y: 0 }, { x: frame.width, y: frame.height }, {
+        x: 0,
+        y: frame.height
+    }]
+        .map((p) => m.computeCoord(p));
+    const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
+    const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
+    const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
+    const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
+
+    return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
 }
 
 
@@ -175,29 +178,22 @@ export class ShapeView extends DataView {
     m_path?: Path;
     m_pathstr?: string;
 
-    m_transform2: Transform2;
+    m_transform2: Transform2 | undefined;
 
-    constructor(ctx: DViewCtx, props: PropsType, isTopClass: boolean = true) {
+    constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
         const shape = props.data;
-        // const frame = shape.frame;
-        // this.m_frame = new ShapeFrame(frame.x, frame.y, frame.width, frame.height);
-        // this.m_hflip = shape.isFlippedHorizontal;
-        // this.m_vflip = shape.isFlippedVertical;
-        // this.m_rotate = shape.rotation;
 
         const t = shape.transform;
         this.m_transform = new Transform(t.m00, t.m01, t.m02, t.m10, t.m11, t.m12)
         this.m_size = new ShapeSize(shape.size.width, shape.size.height);
         this.m_fixedRadius = (shape as PathShape).fixedRadius; // rectangle
-
-        this.m_transform2 = makeShapeTransform2By1(this.m_transform);
-
-        if (isTopClass) this.afterInit();
     }
 
-    protected afterInit() {
-        this._layout(this.m_size, this.m_data, this.m_transx, this.varsContainer);
+    protected onMounted() {
+        const parentFrame = this.parent?.size;
+
+        this._layout(this.m_size, this.m_data, parentFrame, this.varsContainer, this.m_transx);
     }
 
     get parent(): ShapeView | undefined {
@@ -231,14 +227,15 @@ export class ShapeView extends DataView {
     }
 
     get transform2() {
-        if (!transform1Equals2(makeShapeTransform1By2(this.m_transform2), this.transform)) {
-            this.m_transform2.setMatrix(new Matrix2([4, 4], [
-                this.transform.m00, this.transform.m01, 0, this.transform.m02,
-                this.transform.m10, this.transform.m11, 0, this.transform.m12,
-                0, 0, 1, 0,
-                0, 0, 0, 1,
-            ], true))
-        }
+        if (!this.m_transform2) this.m_transform2 = makeShapeTransform2By1(this.m_transform);
+        // if (!transform1Equals2(makeShapeTransform1By2(this.m_transform2), this.transform)) {
+        //     this.m_transform2.setMatrix(new Matrix2([4, 4], [
+        //         this.transform.m00, this.transform.m01, 0, this.transform.m02,
+        //         this.transform.m10, this.transform.m11, 0, this.transform.m12,
+        //         0, 0, 1, 0,
+        //         0, 0, 0, 1,
+        //     ], true))
+        // }
         return this.m_transform2;
     }
 
@@ -253,13 +250,10 @@ export class ShapeView extends DataView {
     }
 
     get frame(): ShapeFrame {
-        const transform2 = makeShapeTransform2By1(this.transform);
+        if (this.isNoTransform()) return new ShapeFrame(this.transform.m02, this.transform.m12, this.size.width, this.size.height);
+        const transform2 = this.transform2;
         const trans = transform2.decomposeTranslate();
-        const scale = transform2.decomposeScale();
-        const width = Math.abs(this.size.width * scale.x);
-        const height = Math.abs(this.size.height * scale.y);
-        return new ShapeFrame(trans.x, trans.y, width, height);
-        // Object.freeze(frame);
+        return new ShapeFrame(trans.x, trans.y, this.size.width, this.size.height);
     }
 
     get rotation(): number {
@@ -460,7 +454,7 @@ export class ShapeView extends DataView {
 
     getPath() {
         if (this.m_path) return this.m_path;
-        this.m_path = this.m_data.getPathOfFrame(this.frame, this.m_fixedRadius); // todo fixedRadius
+        this.m_path = this.m_data.getPathOfFrame(this.data.size, this.m_fixedRadius); // todo fixedRadius
         this.m_path.freeze();
         return this.m_path;
     }
@@ -500,30 +494,21 @@ export class ShapeView extends DataView {
             this.m_transform.reset(trans);
             this.m_pathstr = undefined; // need update
             this.m_path = undefined;
+            this.m_transform2 = undefined;
         }
     }
 
-    protected layoutOnNormal(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
+    protected layoutChilds(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, parentFrame: ShapeSize, scale?: { x: number, y: number }) {
     }
 
-    protected layoutOnRectShape(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, renderTrans: RenderTransform) {
-    }
-
-    protected layoutOnDiamondShape(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, renderTrans: RenderTransform) {
-    }
-
-    protected isNoSupportDiamondScale(): boolean {
-        return this.m_data.isNoSupportDiamondScale;
-    }
-
-    protected _layout(size: ShapeSize, shape: Shape, renderTrans: RenderTransform | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
-        let notTrans = isNoTransform(renderTrans);
+    protected _layout(size: ShapeSize, shape: Shape, parentFrame: ShapeSize | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scale: { x: number, y: number } | undefined) {
+        let notTrans = isNoTransform(scale);
         const trans = shape.transform;
         // case 1 不需要变形
-        if (!renderTrans || notTrans) {
+        if (!scale || notTrans) {
             // update frame, hflip, vflip, rotate
             this.updateLayoutArgs(trans, size, (shape as PathShape).fixedRadius);
-            this.layoutOnNormal(varsContainer);
+            this.layoutChilds(varsContainer, this.size);
             return;
         }
 
@@ -532,50 +517,38 @@ export class ShapeView extends DataView {
             return;
         }
 
-        const canSkew = frameType === FrameType.Path && !shape.isNoTransform();
-        const pScaleX = renderTrans.scaleX;
-        const pScaleY = renderTrans.scaleY;
+        // const canSkew = frameType === FrameType.Path && !shape.isNoTransform();
+        const pScaleX = scale.x;
+        const pScaleY = scale.y;
 
         const bbox = boundingBox(size, shape);
         const saveW = bbox.width;
         const saveH = bbox.height;
         const frame = new ShapeFrame(bbox.x, bbox.y, bbox.width, bbox.height);
 
-        fixFrameByConstrain(shape, renderTrans.parentFrame, frame, pScaleX, pScaleY);
+        if (parentFrame) fixFrameByConstrain(shape, parentFrame, frame, pScaleX, pScaleY);
 
+        // 调整x,y,width,height
         let scaleX = frame.width / saveW;
         let scaleY = frame.height / saveH;
-        if (!canSkew && scaleX !== scaleY) {
-            scaleX = Math.min(scaleX, scaleY);
-            scaleY = scaleX;
-            frame.width = saveW * scaleX;
-            frame.height = saveH * scaleY;
-        }
+        // if (!canSkew && scaleX !== scaleY) {
+        //     scaleX = Math.min(scaleX, scaleY);
+        //     scaleY = scaleX;
+        //     frame.width = saveW * scaleX;
+        //     frame.height = saveH * scaleY;
+        // }
 
         const transform = shape.transform.clone();
         const lt = transform.inverseCoord(frame.x, frame.y);
         transform.scale(scaleX, scaleY);
         const lt2 = transform.computeCoord(lt.x, lt.y);
-        const dx = lt2.x - lt.x;
-        const dy = lt2.y - lt.y;
+        const dx = lt2.x - frame.x;
+        const dy = lt2.y - frame.y;
         transform.trans(dx, dy);
 
         this.updateLayoutArgs(transform, frame, (shape as PathShape).fixedRadius);
 
-        const chilsTrans = {
-            // dx,
-            // dy,
-            scaleX: scaleX,
-            scaleY: scaleY,
-            parentFrame: frame
-        }
-
-        if (canSkew && scaleX !== scaleY) {
-            this.layoutOnDiamondShape(varsContainer, chilsTrans);
-        }
-        else {
-            this.layoutOnRectShape(varsContainer, chilsTrans);
-        }
+        this.layoutChilds(varsContainer, this.frame, { x: scaleX, y: scaleY });
     }
 
     // 更新frame, vflip, hflip, rotate, fixedRadius, 及对应的cache数据，如path
@@ -619,8 +592,11 @@ export class ShapeView extends DataView {
             }
         }
 
+        // todo
+        const parentFrame = this.parent?.size;
+
         this.m_ctx.setDirty(this);
-        this._layout(this.m_data.size, this.m_data, this.m_transx, this.varsContainer);
+        this._layout(this.m_data.size, this.m_data, parentFrame, this.varsContainer, this.m_transx);
         this.notify("layout");
         this.emit("layout");
     }
@@ -633,7 +609,7 @@ export class ShapeView extends DataView {
         //     this.m_fills = renderFills(elh, this.getFills(), this.frame, this.getPathStr());
         // }
         // return this.m_fills;
-        return renderFills(elh, this.getFills(), this.frame, this.getPathStr());
+        return renderFills(elh, this.getFills(), this.data.size, this.getPathStr());
     }
 
     protected renderBorders(): EL[] {
@@ -641,16 +617,16 @@ export class ShapeView extends DataView {
         //     this.m_borders = renderBorders(elh, this.getBorders(), this.frame, this.getPathStr());
         // }
         // return this.m_borders;
-        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.m_data);
+        return renderBorders(elh, this.getBorders(), this.data.size, this.getPathStr(), this.m_data);
     }
 
     protected renderShadows(filterId: string): EL[] {
-        return renderShadows(elh, filterId, this.getShadows(), this.getPathStr(), this.frame, this.getFills(), this.getBorders(), this.m_data.type, this.blur);
+        return renderShadows(elh, filterId, this.getShadows(), this.getPathStr(), this.data.size, this.getFills(), this.getBorders(), this.m_data.type, this.blur);
     }
 
     protected renderBlur(blurId: string): EL[] {
         if (!this.blur) return [];
-        return renderBlur(elh, this.blur, blurId, this.frame, this.getFills(), this.getPathStr());
+        return renderBlur(elh, this.blur, blurId, this.data.size, this.getFills(), this.getPathStr());
     }
 
     protected renderProps(): { [key: string]: string } {

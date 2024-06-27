@@ -4,7 +4,7 @@ import { EL, elh } from "./el";
 import { CornerRadius, Shape, ShapeType, SymbolShape } from "../data/shape";
 import { VarsContainer } from "./viewctx";
 import { DataView, RootView } from "./view"
-import { RenderTransform, getShapeViewId } from "./basic";
+import { getShapeViewId } from "./basic";
 import { Page } from "../data";
 
 export class SymbolView extends GroupShapeView {
@@ -36,7 +36,7 @@ export class SymbolView extends GroupShapeView {
         return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.data);
     }
 
-    protected layoutChild(child: Shape, idx: number, transx: RenderTransform | undefined, varsContainer: VarsContainer | undefined, resue: Map<string, DataView>, rView: RootView | undefined) {
+    protected layoutChild(child: Shape, idx: number, transx: {x: number, y: number} | undefined, varsContainer: VarsContainer | undefined, resue: Map<string, DataView>, rView: RootView | undefined) {
         let cdom: DataView | undefined = resue.get(child.id);
         varsContainer = [...(varsContainer || []), this.data as SymbolShape];
         const props = { data: child, transx, varsContainer, isVirtual: this.m_isVirtual };

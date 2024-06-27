@@ -1,6 +1,6 @@
 import { DViewCtx, PropsType } from "./viewctx";
 import { Shape, SymbolRefShape, SymbolShape } from "../data/classes";
-import { RenderTransform, getShapeViewId, stringh } from "./basic";
+import { getShapeViewId, stringh } from "./basic";
 import { EL } from "./el";
 import { objectId } from "../basic/objectid";
 
@@ -83,7 +83,7 @@ export class DataView extends EventEL {
     m_data: Shape;
     m_children: DataView[] = [];
     m_parent: DataView | undefined;
-    m_transx?: RenderTransform;
+    m_transx?: {x: number, y: number};
     private m_varsContainer?: (SymbolRefShape | SymbolShape)[];
     m_isVirtual?: boolean;
 
@@ -190,6 +190,9 @@ export class DataView extends EventEL {
         }
     }
 
+    protected onMounted() {}
+    protected onUnmounted() {}
+
     addChild(child: DataView, idx?: number) {
         if (child.m_parent) throw new Error('child already added');
         if (idx !== undefined) {
@@ -211,6 +214,7 @@ export class DataView extends EventEL {
         if ((root as any).isRootView) {
             (root as any as RootView).onAddView(child);
         }
+        child.onMounted();
     }
 
     addChilds(childs: DataView[], idx?: number) {
@@ -241,6 +245,9 @@ export class DataView extends EventEL {
         if ((root as any).isRootView) {
             (root as any as RootView).onAddView(childs);
         }
+        childs.forEach(c => {
+            c.onMounted();
+        })
     }
 
     removeChild(idx: number | DataView) {
@@ -261,6 +268,7 @@ export class DataView extends EventEL {
                 (root as any as RootView).onRemoveView(this, dom);
             }
             dom.m_parent = undefined;
+            dom.onUnmounted();
         }
         return dom;
     }
@@ -304,7 +312,10 @@ export class DataView extends EventEL {
             if ((root as any).isRootView) {
                 (root as any as RootView).onRemoveView(this, dom);
             }
-            dom.forEach(d => d.m_parent = undefined);
+            dom.forEach(d => {
+                d.m_parent = undefined
+                d.onUnmounted();
+            });
         }
         return dom;
     }
