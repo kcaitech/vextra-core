@@ -169,6 +169,22 @@ export class Shape extends Basic implements classes.Shape {
         return frame;
     }
 
+    get x(): number {
+        return this.transform.m02
+    }
+
+    set x(v: number) {
+        this.transform.m02 = v
+    }
+
+    get y(): number {
+        return this.transform.m12
+    }
+
+    set y(v: number) {
+        this.transform.m12 = v
+    }
+
     get rotation(): number {
         return this.transform2.decomposeEuler().z * 180 / Math.PI;
     }
