@@ -1,5 +1,4 @@
 import { exportArtboard, exportGroupShape, exportImageShape, exportLineShape, exportOvalShape, exportPathShape, exportRectShape, exportSymbolRefShape, exportTextShape, exportTableShape, exportPathShape2, exportTableCell, exportContactShape, exportSymbolShape, exportSymbolUnionShape, exportCutoutShape, exportPolygonShape, exportStarShape } from "../../data/baseexport";
-import { Matrix } from "../../basic/matrix";
 import { Artboard } from "../../data/artboard";
 import { GroupShape, ImageShape, LineShape, OvalShape, PathShape, PathShape2, RectShape, Shape, ShapeType, SymbolUnionShape, SymbolShape, TextShape, CutoutShape, PolygonShape, StarShape } from "../../data/shape";
 import { TableCell, TableShape } from "../../data/table";
