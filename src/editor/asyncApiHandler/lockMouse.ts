@@ -160,7 +160,7 @@ export class LockMouseHandler extends AsyncApiCaller {
                     if (index % 2 === 0) continue;
                     const angle = ((2 * Math.PI) / points.length) * index;
                     const p = calculateInnerAnglePosition(offset, angle);
-                    api.shapeModifyCurvPoint(page, shape, index, p, -1);
+                    api.shapeModifyCurvPoint(page, shape, index, p, 0);
                 }
                 api.shapeModifyInnerAngle(page, shape, offset);
             }

@@ -1,20 +1,19 @@
 import { CoopRepository } from "../../coop/cooprepo";
 import { AsyncApiCaller } from "../AsyncApiCaller";
-import { PageView } from "../../../dataview";
-import { Document } from "../../../data/document";
-import { ShapeView, adapt2Shape } from "../../../dataview";
-import { GroupShape, Shape } from "../../../data/shape";
+import { ShapeView, adapt2Shape, PageView } from "../../../dataview";
+import { GroupShape, Shape, Page, Document, makeShapeTransform1By2 } from "../../../data";
 import { translateTo } from "../../frame";
 import { after_migrate, unable_to_migrate } from "../../utils/migrate";
 import { get_state_name, is_state } from "../../symbol";
 import { Api } from "../../coop/recordapi";
-import { Page } from "../../../data/page";
 import { ISave4Restore, LocalCmd, SelectionState } from "../../coop/localcmd";
+import { TransformRaw } from "../../../index";
 
 export type TranslateUnit = {
     shape: ShapeView;
-    x: number;
-    y: number;
+    // x: number;
+    // y: number;
+    transform: TransformRaw
 }
 
 export class Transporter extends AsyncApiCaller {
@@ -40,16 +39,18 @@ export class Transporter extends AsyncApiCaller {
 
     execute(translateUnits: TranslateUnit[]) {
         try {
+            const api = this.api;
             for (let i = 0; i < translateUnits.length; i++) {
                 const unit = translateUnits[i];
                 const shape = adapt2Shape(unit.shape);
+                api.shapeModifyByTransform(this.page, shape, unit.transform);
 
-                this.api.shapeModifyX(this.page, shape, unit.x);
-                this.api.shapeModifyY(this.page, shape, unit.y);
+                // this.api.shapeModifyX(this.page, shape, unit.x);
+                // this.api.shapeModifyY(this.page, shape, unit.y);
             }
             this.updateView();
         } catch (error) {
-            console.log('Transporter.excute:', error);
+            console.log('Transporter.execute:', error);
             this.exception = true;
         }
     }
