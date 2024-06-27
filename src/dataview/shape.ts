@@ -555,9 +555,16 @@ export class ShapeView extends DataView {
         // 保持frame.{x, y}不变
         const sizeXY = shape.transform.inverseRef(frame.width, frame.height);
         const size2 = new ShapeSize(sizeXY.x, sizeXY.y);
-        const frame2 = frame2Parent(shape.transform, size2);
 
-        const transform = shape.transform.clone();
+        let transform = shape.transform.clone();
+        if (scaleX !== scaleY) {
+            transform.scale(scaleX, scaleY);
+            // 保留skew去除scale
+            const t2 = makeShapeTransform2By1(transform);
+            t2.clearScaleSize();
+            transform = makeShapeTransform1By2(t2);
+        }
+        const frame2 = frame2Parent(transform, size2);
         const dx = frame.x - frame2.x;
         const dy = frame.y - frame2.y;
         transform.trans(dx, dy);

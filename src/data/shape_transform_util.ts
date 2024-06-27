@@ -1,4 +1,4 @@
-import { Transform } from "./typesdefine";
+import { Transform } from "./transform";
 import { Transform as Transform2 } from "../basic/transform";
 import { Matrix as Matrix2 } from "../basic/matrix2";
 import { Matrix } from "../basic/matrix";
@@ -15,14 +15,7 @@ export function makeShapeTransform2By1(transform: Transform): Transform2 {
 }
 
 export function makeShapeTransform1By2(transform2: Transform2): Transform {
-    return {
-        m00: transform2.m00,
-        m01: transform2.m01,
-        m02: transform2.m03,
-        m10: transform2.m10,
-        m11: transform2.m11,
-        m12: transform2.m13,
-    };
+    return new Transform(transform2.m00, transform2.m01, transform2.m03, transform2.m10, transform2.m11, transform2.m13);
 }
 
 export function makeMatrixByTransform2(transform2: Transform2) {
