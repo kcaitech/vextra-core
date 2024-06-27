@@ -111,21 +111,22 @@ export function matrix2parent(t: Transform, matrix?: Matrix) {
 }
 
 export function boundingBox(frame: ShapeSize, shape: Shape): ShapeFrame {
+    let _minx = 0, _maxx = frame.width, _miny = 0, _maxy = frame.height;
+    if (shape.isNoTransform()) {
+        return new ShapeFrame(_minx, _miny, _maxx, _maxy);
+    }
+
     const path = shape.getPathOfFrame(frame);
     if (path.length > 0) {
         const bounds = path.calcBounds();
-        return new ShapeFrame(bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
-    }
-
-    if (shape.isNoTransform()) {
-        return new ShapeFrame(0, 0, frame.width, frame.height);
+        _minx = bounds.minX;
+        _maxx = bounds.maxX;
+        _miny = bounds.minY;
+        _maxy = bounds.maxY;
     }
 
     const m = shape.matrix2Parent();
-    const corners = [{ x: 0, y: 0 }, { x: frame.width, y: 0 }, { x: frame.width, y: frame.height }, {
-        x: 0,
-        y: frame.height
-    }]
+    const corners = [{ x: _minx, y: _miny }, { x: _maxx, y: _miny }, { x: _maxx, y: _maxy }, { x: _minx, y: _maxy }]
         .map((p) => m.computeCoord(p));
     const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
     const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
@@ -160,6 +161,13 @@ export function transformPoints(points: CurvePoint[], matrix: Matrix) {
         ret.push(transp);
     }
     return ret;
+}
+
+function frame2Parent(t: Transform, size: ShapeSize): ShapeFrame {
+    if (t.m00 == 1 && t.m01 === 0 && t.m10 === 0 && t.m11 === 1) return new ShapeFrame(t.m02, t.m12, size.width, size.height)
+    const lt = t.computeCoord(0, 0);
+    const rb = t.computeCoord(size.width, size.height);
+    return new ShapeFrame(lt.x, lt.y, rb.x - lt.x, rb.y - lt.y);
 }
 
 export class ShapeView extends DataView {
@@ -366,7 +374,7 @@ export class ShapeView extends DataView {
      * @returns
      */
     frame2Root(): ShapeFrame {
-        const frame = this.frame;
+        const frame = this.size;
         const m = this.matrix2Root();
         const lt = m.computeCoord(0, 0);
         const rb = m.computeCoord(frame.width, frame.height);
@@ -375,7 +383,7 @@ export class ShapeView extends DataView {
 
     frame2Parent(): ShapeFrame {
         if (this.isNoTransform()) return this.frame;
-        const frame = this.frame;
+        const frame = this.size;
         const m = this.matrix2Parent();
         const lt = m.computeCoord(0, 0);
         const rb = m.computeCoord(frame.width, frame.height);
@@ -454,7 +462,7 @@ export class ShapeView extends DataView {
 
     getPath() {
         if (this.m_path) return this.m_path;
-        this.m_path = this.m_data.getPathOfFrame(this.data.size, this.m_fixedRadius); // todo fixedRadius
+        this.m_path = this.m_data.getPathOfFrame(this.size, this.m_fixedRadius); // todo fixedRadius
         this.m_path.freeze();
         return this.m_path;
     }
@@ -518,19 +526,25 @@ export class ShapeView extends DataView {
         }
 
         // const canSkew = frameType === FrameType.Path && !shape.isNoTransform();
-        const pScaleX = scale.x;
-        const pScaleY = scale.y;
 
-        const bbox = boundingBox(size, shape);
-        const saveW = bbox.width;
-        const saveH = bbox.height;
-        const frame = new ShapeFrame(bbox.x, bbox.y, bbox.width, bbox.height);
+        const frame = frame2Parent(shape.transform, size);
+        const saveW = frame.width;
+        const saveH = frame.height;
 
-        if (parentFrame) fixFrameByConstrain(shape, parentFrame, frame, pScaleX, pScaleY);
+        let scaleX = scale.x;
+        let scaleY = scale.y;
 
-        // 调整x,y,width,height
-        let scaleX = frame.width / saveW;
-        let scaleY = frame.height / saveH;
+        if (parentFrame) {
+            fixFrameByConstrain(shape, parentFrame, frame, scaleX, scaleY);
+            scaleX = (frame.width / saveW);
+            scaleY = (frame.height / saveH);
+        } else {
+            frame.x *= scaleX;
+            frame.y *= scaleY;
+            frame.width *= scaleX;
+            frame.height *= scaleY;
+        }
+
         // if (!canSkew && scaleX !== scaleY) {
         //     scaleX = Math.min(scaleX, scaleY);
         //     scaleY = scaleX;
@@ -538,17 +552,19 @@ export class ShapeView extends DataView {
         //     frame.height = saveH * scaleY;
         // }
 
+        // 保持frame.{x, y}不变
+        const sizeXY = shape.transform.inverseRef(frame.width, frame.height);
+        const size2 = new ShapeSize(sizeXY.x, sizeXY.y);
+        const frame2 = frame2Parent(shape.transform, size2);
+
         const transform = shape.transform.clone();
-        const lt = transform.inverseCoord(frame.x, frame.y);
-        transform.scale(scaleX, scaleY);
-        const lt2 = transform.computeCoord(lt.x, lt.y);
-        const dx = lt2.x - frame.x;
-        const dy = lt2.y - frame.y;
+        const dx = frame.x - frame2.x;
+        const dy = frame.y - frame2.y;
         transform.trans(dx, dy);
 
-        this.updateLayoutArgs(transform, frame, (shape as PathShape).fixedRadius);
+        this.updateLayoutArgs(transform, size2, (shape as PathShape).fixedRadius);
 
-        this.layoutChilds(varsContainer, this.frame, { x: scaleX, y: scaleY });
+        this.layoutChilds(varsContainer, this.size, { x: scaleX, y: scaleY });
     }
 
     // 更新frame, vflip, hflip, rotate, fixedRadius, 及对应的cache数据，如path
@@ -609,7 +625,7 @@ export class ShapeView extends DataView {
         //     this.m_fills = renderFills(elh, this.getFills(), this.frame, this.getPathStr());
         // }
         // return this.m_fills;
-        return renderFills(elh, this.getFills(), this.data.size, this.getPathStr());
+        return renderFills(elh, this.getFills(), this.size, this.getPathStr());
     }
 
     protected renderBorders(): EL[] {
@@ -617,16 +633,16 @@ export class ShapeView extends DataView {
         //     this.m_borders = renderBorders(elh, this.getBorders(), this.frame, this.getPathStr());
         // }
         // return this.m_borders;
-        return renderBorders(elh, this.getBorders(), this.data.size, this.getPathStr(), this.m_data);
+        return renderBorders(elh, this.getBorders(), this.size, this.getPathStr(), this.m_data);
     }
 
     protected renderShadows(filterId: string): EL[] {
-        return renderShadows(elh, filterId, this.getShadows(), this.getPathStr(), this.data.size, this.getFills(), this.getBorders(), this.m_data.type, this.blur);
+        return renderShadows(elh, filterId, this.getShadows(), this.getPathStr(), this.size, this.getFills(), this.getBorders(), this.m_data.type, this.blur);
     }
 
     protected renderBlur(blurId: string): EL[] {
         if (!this.blur) return [];
-        return renderBlur(elh, this.blur, blurId, this.data.size, this.getFills(), this.getPathStr());
+        return renderBlur(elh, this.blur, blurId, this.size, this.getFills(), this.getPathStr());
     }
 
     protected renderProps(): { [key: string]: string } {
