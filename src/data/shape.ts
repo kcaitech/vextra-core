@@ -235,7 +235,7 @@ export class Shape extends Basic implements classes.Shape {
 
     frame2Parent(): ShapeFrame {
         if (this.isNoTransform()) {
-            return new ShapeFrame(0, 0, this.size.width, this.size.height);
+            return new ShapeFrame(this.transform.m02, this.transform.m12, this.size.width, this.size.height);
         }
         const frame = this.size;
         const m = this.matrix2Parent();
