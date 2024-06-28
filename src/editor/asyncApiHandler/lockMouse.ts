@@ -13,7 +13,8 @@ import {
     Shape,
     StarShape,
     SymbolShape,
-    TextShape
+    TextShape,
+    Transform
 } from "../../data/shape";
 import { Artboard } from "../../data/artboard";
 import {
@@ -21,6 +22,9 @@ import {
     getPolygonPoints,
     getPolygonVertices,
 } from "../utils/path";
+import { makeShapeTransform1By2, makeShapeTransform2By1 } from "../../data";
+import { ColVector3D } from "../../basic/matrix2";
+import { Line, TransformMode } from "../../basic/transform";
 
 export class LockMouseHandler extends AsyncApiCaller {
     updateFrameTargets: Set<Shape> = new Set();
@@ -177,7 +181,7 @@ export class LockMouseHandler extends AsyncApiCaller {
             const page = this.page;
 
             for (let i = 0; i < shapes.length; i++) {
-                const shape = adapt2Shape(shapes[i]);
+                const shape = shapes[i];
 
                 if (shape.isVirtualShape) {
                     continue;
@@ -185,7 +189,20 @@ export class LockMouseHandler extends AsyncApiCaller {
 
                 const d = (shape.rotation || 0) + deg;
 
-                // api.shapeModifyRotate(page, shape, d)
+                const t = makeShapeTransform2By1(shape.transform);
+                const { width, height } = shape.size;
+
+                const angle = d % 360 * Math.PI / 180;
+                const os = t.decomposeEuler().z;
+
+                t.rotateAt({
+                    axis: Line.FromParallelZ(ColVector3D.FromXYZ(width / 2, height / 2, 0)),
+                    angle: angle - os,
+                    mode: TransformMode.Local,
+                });
+
+                const transform = makeShapeTransform1By2(t) as Transform;
+                api.shapeModifyRotate(page, adapt2Shape(shape), transform)
             }
 
             this.updateView();
