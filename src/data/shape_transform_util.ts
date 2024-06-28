@@ -3,7 +3,7 @@ import { Transform as Transform2 } from "../basic/transform";
 import { Matrix as Matrix2 } from "../basic/matrix2";
 import { Matrix } from "../basic/matrix";
 
-export function makeShapeTransform2By1(transform: Transform): Transform2 {
+export function makeShapeTransform2By1(transform: Transform | Matrix): Transform2 {
     return new Transform2({
         matrix: new Matrix2([4, 4], [
             transform.m00, transform.m01, 0, transform.m02,
