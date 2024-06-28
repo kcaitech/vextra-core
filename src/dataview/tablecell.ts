@@ -56,16 +56,20 @@ export class TableCellView extends ShapeView {
         }
 
         const frame = props.frame;
-        // if (isDiffShapeFrame(this.m_frame, frame)) {
-        //     this.updateLayoutArgs(frame, undefined, undefined, undefined, undefined);
-        //     this.m_textpath = undefined;
-        //     this.m_layout = undefined; // todo
-        //     // if (!this.m_isVirtual) {
-        //     //     const shape = this.m_data as TableCell;
-        //     //     shape.text?.updateSize(frame.width, frame.height);
-        //     // }
-        //     this.m_ctx.setDirty(this);
-        // }
+        if (this.m_transform.m02 !== frame.x || this.m_transform.m12 !== frame.y || this.m_size.width !== frame.width || this.m_size.height !== frame.height) {
+            // this.updateLayoutArgs(frame, undefined, undefined, undefined, undefined);
+            this.m_transform.m02 = frame.x;
+            this.m_transform.m12 = frame.y;
+            this.m_size.width = frame.width;
+            this.m_size.height = frame.height;
+            this.m_textpath = undefined;
+            this.m_layout = undefined; // todo
+            // if (!this.m_isVirtual) {
+            //     const shape = this.m_data as TableCell;
+            //     shape.text?.updateSize(frame.width, frame.height);
+            // }
+            this.m_ctx.setDirty(this);
+        }
 
         const index = props.index;
         if (index.col !== this.m_index.col || index.row !== this.m_index.row) {
