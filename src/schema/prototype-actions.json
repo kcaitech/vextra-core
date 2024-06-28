@@ -1,0 +1,38 @@
+{
+    "description": "actions",
+    "type": "object",
+    "properties": {
+        "targetNodeID": {
+            "type": "string"
+        },
+        "transitionType": {
+            "$ref": "./prototype-transition-type.json"
+        },
+        "transitionDuration": {
+            "type": "number",
+            "default": 0.3
+        },
+        "easingType": {
+            "$ref": "./prototype-easing-type.json"
+        },
+        "connectionType": {
+            "$ref": "./prototype-connection-type.json",
+            "default": "NONE"
+        },
+        "connectionURL": {
+            "type": "string"
+        },
+        "openUrlInNewTab": {
+            "type": "boolean"
+        },
+        "navigationType": {
+            "$ref": "./prototype-navigation-type.json"
+        },
+        "easingFunction": {
+            "$ref": "./prototype-easingfunction.json"
+        }
+    },
+    "required": [
+        "connectionType"
+    ]
+}

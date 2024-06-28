@@ -8,6 +8,7 @@ export interface IImportContext {
     curPage: string
 }
 type Artboard_guides = BasicArray<impl.Guide>
+type Artboard_prototypeInteractions = BasicArray<impl.PrototypeInterAction>
 type DocumentMeta_pagesList = BasicArray<impl.PageListItem>
 type ExportOptions_exportFormats = BasicArray<impl.ExportFormat>
 type Gradient_stops = BasicArray<impl.Stop>
@@ -18,20 +19,31 @@ type Para_spans = BasicArray<impl.Span>
 type PathSegment_points = BasicArray<impl.CurvePoint>
 type PathShape_pathsegs = BasicArray<impl.PathSegment>
 type PathShape2_pathsegs = BasicArray<impl.PathSegment>
+type PrototypeInterAction_crdtidx = BasicArray<number>
+type PrototypeInterAction_actions = BasicArray<impl.PrototypeActions>
 type Style_borders = BasicArray<impl.Border>
 type Style_fills = BasicArray<impl.Fill>
 type Style_shadows = BasicArray<impl.Shadow>
 type Style_innerShadows = BasicArray<impl.Shadow>
 type Style_contacts = BasicArray<impl.ContactRole>
+type SymbolRefShape_prototypeInteractions = BasicArray<impl.PrototypeInterAction>
 type SymbolShape_guides = BasicArray<impl.Guide>
+type SymbolShape_prototypeInteractions = BasicArray<impl.PrototypeInterAction>
 type TableShape_rowHeights = BasicArray<impl.CrdtNumber>
 type TableShape_colWidths = BasicArray<impl.CrdtNumber>
 type Text_paras = BasicArray<impl.Para>
 type Variable_0 = BasicArray<impl.Border | impl.Fill | impl.Shadow>
 export function importArtboard_guides(source: types.Artboard_guides, ctx?: IImportContext): Artboard_guides {
     const ret: Artboard_guides = new BasicArray()
-    source.forEach((source) => {
+    source.forEach((source, i) => {
         ret.push(importGuide(source, ctx))
+    })
+    return ret
+}
+export function importArtboard_prototypeInteractions(source: types.Artboard_prototypeInteractions, ctx?: IImportContext): Artboard_prototypeInteractions {
+    const ret: Artboard_prototypeInteractions = new BasicArray()
+    source.forEach((source, i) => {
+        ret.push(importPrototypeInterAction(source, ctx))
     })
     return ret
 }
@@ -333,7 +345,7 @@ export function importGuideAxis(source: types.GuideAxis, ctx?: IImportContext): 
 }
 export function importGuide_crdtidx(source: types.Guide_crdtidx, ctx?: IImportContext): Guide_crdtidx {
     const ret: Guide_crdtidx = new BasicArray()
-    source.forEach((source) => {
+    source.forEach((source, i) => {
         ret.push(source)
     })
     return ret
@@ -389,7 +401,7 @@ export function importPageListItem(source: types.PageListItem, ctx?: IImportCont
 }
 export function importPage_guides(source: types.Page_guides, ctx?: IImportContext): Page_guides {
     const ret: Page_guides = new BasicArray()
-    source.forEach((source) => {
+    source.forEach((source, i) => {
         ret.push(importGuide(source, ctx))
     })
     return ret
@@ -440,6 +452,55 @@ export function importPoint2D(source: types.Point2D, ctx?: IImportContext): impl
         source.x,
         source.y)
     return ret
+}
+/* connectionType */
+export function importPrototypeConnectionType(source: types.PrototypeConnectionType, ctx?: IImportContext): impl.PrototypeConnectionType {
+    return source
+}
+/* easingType */
+export function importPrototypeEasingType(source: types.PrototypeEasingType, ctx?: IImportContext): impl.PrototypeEasingType {
+    return source
+}
+/* easingfunction */
+export function importPrototypeEasingfunction(source: types.PrototypeEasingfunction, ctx?: IImportContext): impl.PrototypeEasingfunction {
+    const ret: impl.PrototypeEasingfunction = new BasicArray()
+    source.forEach((source, i) => {
+        ret.push(source)
+    })
+    return ret
+}
+/* interactionType */
+export function importPrototypeEvents(source: types.PrototypeEvents, ctx?: IImportContext): impl.PrototypeEvents {
+    return source
+}
+export function importPrototypeInterAction_crdtidx(source: types.PrototypeInterAction_crdtidx, ctx?: IImportContext): PrototypeInterAction_crdtidx {
+    const ret: PrototypeInterAction_crdtidx = new BasicArray()
+    source.forEach((source, i) => {
+        ret.push(source)
+    })
+    return ret
+}
+export function importPrototypeInterAction_actions(source: types.PrototypeInterAction_actions, ctx?: IImportContext): PrototypeInterAction_actions {
+    const ret: PrototypeInterAction_actions = new BasicArray()
+    source.forEach((source, i) => {
+        ret.push(importPrototypeActions(source, ctx))
+    })
+    return ret
+}
+/* navigationType */
+export function importPrototypeNavigationType(source: types.PrototypeNavigationType, ctx?: IImportContext): impl.PrototypeNavigationType {
+    return source
+}
+/* prototypeStartingPoint */
+export function importPrototypeStartingPoint(source: types.PrototypeStartingPoint, ctx?: IImportContext): impl.PrototypeStartingPoint {
+    const ret: impl.PrototypeStartingPoint = new impl.PrototypeStartingPoint (
+        source.name,
+        source.desc)
+    return ret
+}
+/* transitionType */
+export function importPrototypeTransitionType(source: types.PrototypeTransitionType, ctx?: IImportContext): impl.PrototypeTransitionType {
+    return source
 }
 /* resize type */
 export function importResizeType(source: types.ResizeType, ctx?: IImportContext): impl.ResizeType {
@@ -539,10 +600,24 @@ export function importStyle_contacts(source: types.Style_contacts, ctx?: IImport
     })
     return ret
 }
+export function importSymbolRefShape_prototypeInteractions(source: types.SymbolRefShape_prototypeInteractions, ctx?: IImportContext): SymbolRefShape_prototypeInteractions {
+    const ret: SymbolRefShape_prototypeInteractions = new BasicArray()
+    source.forEach((source, i) => {
+        ret.push(importPrototypeInterAction(source, ctx))
+    })
+    return ret
+}
 export function importSymbolShape_guides(source: types.SymbolShape_guides, ctx?: IImportContext): SymbolShape_guides {
     const ret: SymbolShape_guides = new BasicArray()
-    source.forEach((source) => {
+    source.forEach((source, i) => {
         ret.push(importGuide(source, ctx))
+    })
+    return ret
+}
+export function importSymbolShape_prototypeInteractions(source: types.SymbolShape_prototypeInteractions, ctx?: IImportContext): SymbolShape_prototypeInteractions {
+    const ret: SymbolShape_prototypeInteractions = new BasicArray()
+    source.forEach((source, i) => {
+        ret.push(importPrototypeInterAction(source, ctx))
     })
     return ret
 }
@@ -752,6 +827,46 @@ export function importGradient(source: types.Gradient, ctx?: IImportContext): im
         importGradientType(source.gradientType, ctx),
         importGradient_stops(source.stops, ctx))
     importGradientOptional(ret, source, ctx)
+    return ret
+}
+/* actions */
+function importPrototypeActionsOptional(tar: impl.PrototypeActions, source: types.PrototypeActions, ctx?: IImportContext) {
+    if (source.targetNodeID) tar.targetNodeID = source.targetNodeID
+    if (source.transitionType) tar.transitionType = importPrototypeTransitionType(source.transitionType, ctx)
+    if (source.transitionDuration) tar.transitionDuration = source.transitionDuration
+    if (source.easingType) tar.easingType = importPrototypeEasingType(source.easingType, ctx)
+    if (source.connectionURL) tar.connectionURL = source.connectionURL
+    if (source.openUrlInNewTab) tar.openUrlInNewTab = source.openUrlInNewTab
+    if (source.navigationType) tar.navigationType = importPrototypeNavigationType(source.navigationType, ctx)
+    if (source.easingFunction) tar.easingFunction = importPrototypeEasingfunction(source.easingFunction, ctx)
+}
+export function importPrototypeActions(source: types.PrototypeActions, ctx?: IImportContext): impl.PrototypeActions {
+    const ret: impl.PrototypeActions = new impl.PrototypeActions (
+        importPrototypeConnectionType(source.connectionType, ctx))
+    importPrototypeActionsOptional(ret, source, ctx)
+    return ret
+}
+/* event */
+function importPrototypeEventOptional(tar: impl.PrototypeEvent, source: types.PrototypeEvent, ctx?: IImportContext) {
+    if (source.transitionTimeout) tar.transitionTimeout = source.transitionTimeout
+}
+export function importPrototypeEvent(source: types.PrototypeEvent, ctx?: IImportContext): impl.PrototypeEvent {
+    const ret: impl.PrototypeEvent = new impl.PrototypeEvent (
+        importPrototypeEvents(source.interactionType, ctx))
+    importPrototypeEventOptional(ret, source, ctx)
+    return ret
+}
+/* prototypeInteraction */
+function importPrototypeInterActionOptional(tar: impl.PrototypeInterAction, source: types.PrototypeInterAction, ctx?: IImportContext) {
+    if (source.typeId) tar.typeId = source.typeId
+}
+export function importPrototypeInterAction(source: types.PrototypeInterAction, ctx?: IImportContext): impl.PrototypeInterAction {
+    const ret: impl.PrototypeInterAction = new impl.PrototypeInterAction (
+        importPrototypeInterAction_crdtidx(source.crdtidx, ctx),
+        source.id,
+        importPrototypeEvent(source.event, ctx),
+        importPrototypeInterAction_actions(source.actions, ctx))
+    importPrototypeInterActionOptional(ret, source, ctx)
     return ret
 }
 /* span attr */
@@ -1284,6 +1399,8 @@ function importSymbolRefShapeOptional(tar: impl.SymbolRefShape, source: types.Sy
     })()
     if (source.isCustomSize) tar.isCustomSize = source.isCustomSize
     if (source.cornerRadius) tar.cornerRadius = importCornerRadius(source.cornerRadius, ctx)
+    if (source.prototypeStartingPoint) tar.prototypeStartingPoint = importPrototypeStartingPoint(source.prototypeStartingPoint, ctx)
+    if (source.prototypeInteractions) tar.prototypeInteractions = importSymbolRefShape_prototypeInteractions(source.prototypeInteractions, ctx)
 }
 export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImportContext): impl.SymbolRefShape {
         // inject code
@@ -1525,6 +1642,8 @@ function importArtboardOptional(tar: impl.Artboard, source: types.Artboard, ctx?
     importGroupShapeOptional(tar, source)
     if (source.cornerRadius) tar.cornerRadius = importCornerRadius(source.cornerRadius, ctx)
     if (source.guides) tar.guides = importArtboard_guides(source.guides, ctx)
+    if (source.prototypeStartingPoint) tar.prototypeStartingPoint = importPrototypeStartingPoint(source.prototypeStartingPoint, ctx)
+    if (source.prototypeInteractions) tar.prototypeInteractions = importArtboard_prototypeInteractions(source.prototypeInteractions, ctx)
 }
 export function importArtboard(source: types.Artboard, ctx?: IImportContext): impl.Artboard {
     const ret: impl.Artboard = new impl.Artboard (
@@ -1612,6 +1731,8 @@ function importSymbolShapeOptional(tar: impl.SymbolShape, source: types.SymbolSh
     })()
     if (source.cornerRadius) tar.cornerRadius = importCornerRadius(source.cornerRadius, ctx)
     if (source.guides) tar.guides = importSymbolShape_guides(source.guides, ctx)
+    if (source.prototypeStartingPoint) tar.prototypeStartingPoint = importPrototypeStartingPoint(source.prototypeStartingPoint, ctx)
+    if (source.prototypeInteractions) tar.prototypeInteractions = importSymbolShape_prototypeInteractions(source.prototypeInteractions, ctx)
 }
 export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContext): impl.SymbolShape {
     const ret: impl.SymbolShape = new impl.SymbolShape (

@@ -15,7 +15,7 @@ export * from './contact'
 export * from './symbolref'
 export * from './color'
 export * from './guide'
-
+export * from './prototype'
 export { parsePath } from './pathparser'
 export { layoutTable } from './tablelayout'
 export { layoutText, TextLayout, getNextChar } from './textlayout'

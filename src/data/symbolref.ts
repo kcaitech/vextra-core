@@ -28,6 +28,8 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     variables: BasicMap<string, Variable>
     isCustomSize?: boolean
     cornerRadius?: CornerRadius
+    prototypeStartingPoint?: classes.PrototypeStartingPoint;
+    prototypeInteractions?: BasicArray<classes.PrototypeInterAction>;
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
@@ -36,7 +38,9 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         frame: ShapeFrame,
         style: Style,
         refId: string,
-        variables: BasicMap<string, Variable>
+        variables: BasicMap<string, Variable>,
+        prototypeStartingPoint?: classes.PrototypeStartingPoint,
+        prototypeInteractions?: BasicArray<classes.PrototypeInterAction>
     ) {
         super(
             crdtidx,
@@ -48,6 +52,8 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         )
         this.__refId = refId
         this.variables = variables;
+        this.prototypeStartingPoint = prototypeStartingPoint
+        this.prototypeInteractions = prototypeInteractions
     }
 
     toJSON() { // 直接json导出没有导出refId

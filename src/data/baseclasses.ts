@@ -21,6 +21,11 @@ export {
     LineJoinStyle,
     MarkerType,
     OverrideType,
+    PrototypeConnectionType,
+    PrototypeEasingType,
+    PrototypeEvents,
+    PrototypeNavigationType,
+    PrototypeTransitionType,
     ResizeType,
     ShadowPosition,
     ShapeType,
@@ -58,6 +63,11 @@ import {
     LineJoinStyle,
     MarkerType,
     OverrideType,
+    PrototypeConnectionType,
+    PrototypeEasingType,
+    PrototypeEvents,
+    PrototypeNavigationType,
+    PrototypeTransitionType,
     ResizeType,
     ShadowPosition,
     ShapeType,
@@ -75,6 +85,7 @@ import {
 } from "./typesdefine"
 import { Basic, BasicArray, BasicMap } from "./basic"
 type Artboard_guides = BasicArray<Guide>
+type Artboard_prototypeInteractions = BasicArray<PrototypeInterAction>
 /* border style */
 export class BorderStyle extends Basic {
     typeId = "border-style"
@@ -280,6 +291,21 @@ export class Point2D extends Basic {
         this.y = y
     }
 }
+/* easingfunction */
+export type PrototypeEasingfunction = BasicArray<number>
+type PrototypeInterAction_crdtidx = BasicArray<number>
+type PrototypeInterAction_actions = BasicArray<PrototypeActions>
+/* prototypeStartingPoint */
+export class PrototypeStartingPoint extends Basic {
+    typeId = "prototype-starting-point"
+    name: string
+    desc: string
+    constructor(name: string, desc: string) {
+        super()
+        this.name = name
+        this.desc = desc
+    }
+}
 /* shadow */
 export class Shadow extends Basic {
     typeId = "shadow"
@@ -343,7 +369,9 @@ type Style_fills = BasicArray<Fill>
 type Style_shadows = BasicArray<Shadow>
 type Style_innerShadows = BasicArray<Shadow>
 type Style_contacts = BasicArray<ContactRole>
+type SymbolRefShape_prototypeInteractions = BasicArray<PrototypeInterAction>
 type SymbolShape_guides = BasicArray<Guide>
+type SymbolShape_prototypeInteractions = BasicArray<PrototypeInterAction>
 type TableShape_rowHeights = BasicArray<CrdtNumber>
 type TableShape_colWidths = BasicArray<CrdtNumber>
 type Text_paras = BasicArray<Para>
@@ -522,6 +550,48 @@ export class Gradient extends Basic {
         this.to = to
         this.gradientType = gradientType
         this.stops = stops
+    }
+}
+/* actions */
+export class PrototypeActions extends Basic {
+    typeId = "prototype-actions"
+    connectionType: PrototypeConnectionType
+    targetNodeID?: string
+    transitionType?: PrototypeTransitionType
+    transitionDuration?: number
+    easingType?: PrototypeEasingType
+    connectionURL?: string
+    openUrlInNewTab?: boolean
+    navigationType?: PrototypeNavigationType
+    easingFunction?: PrototypeEasingfunction
+    constructor(connectionType: PrototypeConnectionType) {
+        super()
+        this.connectionType = connectionType
+    }
+}
+/* event */
+export class PrototypeEvent extends Basic {
+    typeId = "prototype-event"
+    interactionType: PrototypeEvents
+    transitionTimeout?: number
+    constructor(interactionType: PrototypeEvents) {
+        super()
+        this.interactionType = interactionType
+    }
+}
+/* prototypeInteraction */
+export class PrototypeInterAction extends Basic {
+    typeId = "prototype-inter-action"
+    crdtidx: PrototypeInterAction_crdtidx
+    id: string
+    event: PrototypeEvent
+    actions: PrototypeInterAction_actions
+    constructor(crdtidx: PrototypeInterAction_crdtidx, id: string, event: PrototypeEvent, actions: PrototypeInterAction_actions) {
+        super()
+        this.crdtidx = crdtidx
+        this.id = id
+        this.event = event
+        this.actions = actions
     }
 }
 /* span attr */
@@ -828,6 +898,8 @@ export class SymbolRefShape extends Shape {
     overrides?: BasicMap<string, string>
     isCustomSize?: boolean
     cornerRadius?: CornerRadius
+    prototypeStartingPoint?: PrototypeStartingPoint
+    prototypeInteractions?: SymbolRefShape_prototypeInteractions
     constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, frame: ShapeFrame, style: Style, refId: string, variables: BasicMap<string, Variable>) {
         super(crdtidx, id, name, type, frame, style)
         this.refId = refId
@@ -903,6 +975,8 @@ export class SymbolShape extends GroupShape {
     symtags?: BasicMap<string, string>
     cornerRadius?: CornerRadius
     guides?: SymbolShape_guides
+    prototypeStartingPoint?: PrototypeStartingPoint
+    prototypeInteractions?: SymbolShape_prototypeInteractions
     constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, frame: ShapeFrame, style: Style, childs: GroupShape_childs, variables: BasicMap<string, Variable>) {
         super(crdtidx, id, name, type, frame, style, childs)
         this.variables = variables
@@ -917,6 +991,8 @@ export class Artboard extends GroupShape {
     typeId = "artboard"
     cornerRadius?: CornerRadius
     guides?: Artboard_guides
+    prototypeStartingPoint?: PrototypeStartingPoint
+    prototypeInteractions?: Artboard_prototypeInteractions
 }
 /* bool shape */
 export class BoolShape extends GroupShape {

@@ -1,5 +1,6 @@
 /* 代码生成，勿手动修改 */
 export type Artboard_guides = Array<Guide>
+export type Artboard_prototypeInteractions = Array<PrototypeInterAction>
 /* blend mode */
 export enum BlendMode {
     Normal = "normal",
@@ -278,6 +279,80 @@ export type Point2D = {
     x: number,
     y: number,
 }
+/* connectionType */
+export enum PrototypeConnectionType {
+    NONE = "NONE",
+    INTERNALNODE = "INTERNAL_NODE",
+    BACK = "BACK",
+    URL = "URL",
+    CLOSE = "CLOSE",
+}
+/* easingType */
+export enum PrototypeEasingType {
+    LINEAR = "LINEAR",
+    INCUBIC = "IN_CUBIC",
+    OUTCUBIC = "OUT_CUBIC",
+    INOUTCUBIC = "INOUT_CUBIC",
+    INBACKCUBIC = "IN_BACK_CUBIC",
+    OUTBACKCUBIC = "OUT_BACK_CUBIC",
+    INOUTBACKCUBIC = "INOUT_BACK_CUBIC",
+}
+/* easingfunction */
+export type PrototypeEasingfunction = Array<number>
+/* interactionType */
+export enum PrototypeEvents {
+    ONCLICK = "ON_CLICK",
+    DBCLICK = "DB_CLICK",
+    RIGHTCLICK = "RIGHT_CLICK",
+    DRAG = "DRAG",
+    HOVER = "HOVER",
+    MOUSEENTER = "MOUSE_ENTER",
+    MOUSELEAVE = "MOUSE_LEAVE",
+    MOUSEDOWN = "MOUSE_DOWN",
+    MOUSEUP = "MOUSE_UP",
+    AFTERTIMEOUT = "AFTER_TIMEOUT",
+}
+export type PrototypeInterAction_crdtidx = Array<number>
+export type PrototypeInterAction_actions = Array<PrototypeActions>
+/* navigationType */
+export enum PrototypeNavigationType {
+    NAVIGATE = "NAVIGATE",
+    SWAPSTATE = "SWAP_STATE",
+    SCROLLTO = "SCROLL_TO",
+    OVERLAY = "OVERLAY",
+    SWAP = "SWAP",
+}
+/* prototypeStartingPoint */
+export type PrototypeStartingPoint = {
+    name: string,
+    desc: string,
+}
+/* transitionType */
+export enum PrototypeTransitionType {
+    INSTANTTRANSITION = "INSTANT_TRANSITION",
+    DISSOLVE = "DISSOLVE",
+    MOVEFROMRIGHT = "MOVE_FROM_RIGHT",
+    MOVEFROMLEFT = "MOVE_FROM_LEFT",
+    MOVEFROMTOP = "MOVE_FROM_TOP",
+    MOVEFROMBOTTOM = "MOVE_FROM_BOTTOM",
+    MOVEOUTTORIGHT = "MOVE_OUT_TO_RIGHT",
+    MOVEOUTTOLEFT = "MOVE_OUT_TO_LEFT",
+    MOVEOUTTOTOP = "MOVE_OUT_TO_TOP",
+    MOVEOUTTOBOTTOM = "MOVE_OUT_TO_BOTTOM",
+    SLIDEFROMRIGHT = "SLIDE_FROM_RIGHT",
+    SLIDEFROMLEFT = "SLIDE_FROM_LEFT",
+    SLIDEFROMTOP = "SLIDE_FROM_TOP",
+    SLIDEFROMBOTTOM = "SLIDE_FROM_BOTTOM",
+    SLIDEOUTTORIGHT = "SLIDE_OUT_TO_RIGHT",
+    SLIDEOUTTOLEFT = "SLIDE_OUT_TO_LEFT",
+    SLIDEOUTTOTOP = "SLIDE_OUT_TO_TOP",
+    SLIDEOUTTOBOTTOM = "SLIDE_OUT_TO_BOTTOM",
+    PUSHFROMRIGHT = "PUSH_FROM_RIGHT",
+    PUSHFROMLEFT = "PUSH_FROM_LEFT",
+    PUSHFROMTOP = "PUSH_FROM_TOP",
+    PUSHFROMBOTTOM = "PUSH_FROM_BOTTOM",
+    SCROLLANIMATE = "SCROLL_ANIMATE",
+}
 /* resize type */
 export enum ResizeType {
     Stretch = "stretch",
@@ -365,7 +440,9 @@ export type Style_fills = Array<Fill>
 export type Style_shadows = Array<Shadow>
 export type Style_innerShadows = Array<Shadow>
 export type Style_contacts = Array<ContactRole>
+export type SymbolRefShape_prototypeInteractions = Array<PrototypeInterAction>
 export type SymbolShape_guides = Array<Guide>
+export type SymbolShape_prototypeInteractions = Array<PrototypeInterAction>
 /* table cell types */
 export enum TableCellType {
     None = "none",
@@ -528,6 +605,31 @@ export type Gradient = {
     stops: Gradient_stops,
     elipseLength?: number,
     gradientOpacity?: number,
+}
+/* actions */
+export type PrototypeActions = {
+    connectionType: PrototypeConnectionType,
+    targetNodeID?: string,
+    transitionType?: PrototypeTransitionType,
+    transitionDuration?: number,
+    easingType?: PrototypeEasingType,
+    connectionURL?: string,
+    openUrlInNewTab?: boolean,
+    navigationType?: PrototypeNavigationType,
+    easingFunction?: PrototypeEasingfunction,
+}
+/* event */
+export type PrototypeEvent = {
+    interactionType: PrototypeEvents,
+    transitionTimeout?: number,
+}
+/* prototypeInteraction */
+export type PrototypeInterAction = {
+    crdtidx: PrototypeInterAction_crdtidx,
+    id: string,
+    event: PrototypeEvent,
+    actions: PrototypeInterAction_actions,
+    typeId?: string,
 }
 /* span attr */
 export type SpanAttr = {
@@ -718,6 +820,8 @@ export type SymbolRefShape = Shape & {
     overrides?: Map<string, string>,
     isCustomSize?: boolean,
     cornerRadius?: CornerRadius,
+    prototypeStartingPoint?: PrototypeStartingPoint,
+    prototypeInteractions?: SymbolRefShape_prototypeInteractions,
 }
 /* contact shape */
 export type ContactShape = PathShape & {
@@ -745,6 +849,8 @@ export type OvalShape = PathShape & {
 export type Artboard = GroupShape & {
     cornerRadius?: CornerRadius,
     guides?: Artboard_guides,
+    prototypeStartingPoint?: PrototypeStartingPoint,
+    prototypeInteractions?: Artboard_prototypeInteractions,
 }
 /* bool shape */
 export type BoolShape = GroupShape
@@ -764,6 +870,8 @@ export type SymbolShape = GroupShape & {
     symtags?: Map<string, string>,
     cornerRadius?: CornerRadius,
     guides?: SymbolShape_guides,
+    prototypeStartingPoint?: PrototypeStartingPoint,
+    prototypeInteractions?: SymbolShape_prototypeInteractions,
 }
 /* symbol union shape */
 export type SymbolUnionShape = SymbolShape
