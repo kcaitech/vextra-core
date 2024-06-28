@@ -13,6 +13,7 @@ import {
     importContactForm,
     importGradient,
     importPage,
+    importPrototypeStartingPoint,
     importTableCell,
     importVariable
 } from "../../data/baseimport";
@@ -46,6 +47,8 @@ function apply(document: Document, target: Object, op: IdOp): IdOpRecord {
             value = importBorderSideSetting(data, ctx);
         } else if (typeId === 'blur') {
             value = importBlur(data, ctx);
+        } else if (typeId === 'prototype-starting-point') {
+            value = importPrototypeStartingPoint(data, ctx);
         } else {
             throw new Error('need import ' + typeId)
         }

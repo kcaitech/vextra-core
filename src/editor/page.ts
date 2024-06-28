@@ -80,7 +80,7 @@ import {
     shape4fill
 } from "./symbol";
 import { is_circular_ref2 } from "./utils/ref_check";
-import { BorderSideSetting, BorderStyle, CurvePoint, ExportFormat, Point2D, Shadow } from "../data/baseclasses";
+import { BorderSideSetting, BorderStyle, CurvePoint, ExportFormat, Point2D, PrototypeInterAction, PrototypeStartingPoint, Shadow } from "../data/baseclasses";
 import { calculateInnerAnglePosition, getPolygonPoints, getPolygonVertices, get_rotate_for_straight, is_straight, update_frame_by_points } from "./utils/path";
 import { modify_shapes_height, modify_shapes_width } from "./utils/common";
 import { CoopRepository } from "./coop/cooprepo";
@@ -2901,6 +2901,39 @@ export class PageEditor {
         try {
             const api = this.__repo.start('setPageExportFormatFileFormat');
             api.setPageExportFormatFileFormat(this.__page, idx, name);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setPrototypeStart(shape: ShapeView, PSName: PrototypeStartingPoint) {
+        try {
+            const api = this.__repo.start('setPrototypeStart');
+            const __shape = adapt2Shape(shape);
+            api.setShapeProtoStart(this.__page, __shape, PSName);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    delPrototypeStart(shape:ShapeView){
+        try {
+            const api = this.__repo.start('delPrototypeStart');
+            const __shape = adapt2Shape(shape);
+            api.setShapeProtoStart(this.__page, __shape, undefined);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    insertPrototypeAction(shape:ShapeView,action:PrototypeInterAction){
+        try {
+            const api = this.__repo.start('delPrototypeStart');
+            const __shape = adapt2Shape(shape);
+            api.insertShapeprototypeInteractions(this.__page, __shape, action);
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();

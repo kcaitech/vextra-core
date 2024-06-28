@@ -23,7 +23,8 @@ import {
     TableCell,
     TableCellType,
     TableShape,
-    Artboard, Guide
+    Artboard, Guide,
+    PrototypeStartingPoint
 } from "../../data/classes";
 import {
     BoolOp, BulletNumbersBehavior, BulletNumbersType, ExportFileFormat, OverrideType, Point2D,
@@ -32,7 +33,7 @@ import {
 } from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
-import { ContactForm, ContactRole, ContextSettings, CurvePoint, ExportFormat, ExportOptions } from "../../data/baseclasses";
+import { ContactForm, ContactRole, ContextSettings, CurvePoint, ExportFormat, ExportOptions, PrototypeInterAction } from "../../data/baseclasses";
 import { ContactShape } from "../../data/contact"
 import { Color } from "../../data/classes";
 import { Op, OpType } from "../../coop/common/op";
@@ -433,6 +434,27 @@ export class Api {
         }
         this.addOp(basicapi.crdtSetAttr(contextSettings, 'blenMode', blendMode));
     }
+    setShapeProtoStart(page: Page, shape: Shape, PSPoint: PrototypeStartingPoint | undefined) {
+        checkShapeAtPage(page, shape);
+        this.addOp(basicapi.crdtSetAttr(shape, "prototypeStartingPoint", PSPoint));
+    }
+
+    delShapeProtoStart(page: Page, shape: Shape) {
+        checkShapeAtPage(page, shape);
+        this.addOp(basicapi.crdtSetAttr(shape, "prototypeStartingPoint", undefined));
+    }
+
+    insertShapeprototypeInteractions(page: Page, shape: Shape, action: PrototypeInterAction) {
+        checkShapeAtPage(page, shape)
+        let prototypeInteractions = (shape as Artboard).prototypeInteractions;
+        if (!prototypeInteractions) {
+            (shape as Artboard).prototypeInteractions = new BasicArray<PrototypeInterAction>();
+            prototypeInteractions = (shape as Artboard).prototypeInteractions!;
+        }
+        this.addOp(basicapi.crdtArrayInsert(prototypeInteractions, prototypeInteractions.length, action))
+    }
+
+
     shapeModifyResizingConstraint(page: Page, shape: Shape, resizingConstraint: number) {
         this._shapeModifyAttr(page, shape, "resizingConstraint", resizingConstraint);
     }
