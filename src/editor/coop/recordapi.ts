@@ -23,7 +23,8 @@ import {
     TableCell,
     TableCellType,
     TableShape,
-    Artboard, Guide
+    Artboard, Guide,
+    Transform
 } from "../../data/classes";
 import {
     BoolOp,
@@ -42,7 +43,6 @@ import {
     CornerType,
     BorderSideSetting,
     BlurType,
-    Transform,
 } from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
@@ -56,8 +56,8 @@ import { Repository } from "../../data/transact";
 import { SNumber } from "../../coop/client/snumber";
 import { ShapeView, TableCellView, TextShapeView } from "../../dataview";
 import { BasicArray } from "../../data";
-import { TransformRaw } from "../../index";
 import { FMT_VER_latest } from "../../data/fmtver";
+import { objectId } from "../../basic/objectid";
 
 // 要支持variable的修改
 export type TextShapeLike = TableCellView | TextShapeView
@@ -96,6 +96,24 @@ class TrapHdl { // wap api's function
     }
 }
 
+class FrameUpdateArr extends Array<{ shape: Shape, page: Page }> {
+    private __set = new Set<number>();
+    push(...items: { shape: Shape; page: Page; }[]): number {
+        for (let i = 0, len = items.length; i < len; ++i) {
+            const item = items[i];
+            const id = objectId(item.shape);
+            if (this.__set.has(id)) continue;
+            this.__set.add(id);
+            super.push(item);
+        }
+        return this.length;
+    }
+    clear() {
+        this.__set.clear();
+        this.length = 0;
+    }
+}
+
 export class Api {
     private constructor() { // 仅能从createApi创建
     }
@@ -104,7 +122,7 @@ export class Api {
     }
 
     private cmd: Cmd | undefined;
-    private needUpdateFrame: { shape: Shape, page: Page }[] = [];
+    private needUpdateFrame = new FrameUpdateArr();
 
     start(saveselection: SelectionState | undefined,
         selectionupdater: (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => void,
@@ -128,7 +146,7 @@ export class Api {
             selectionupdater,
             dataFmtVer: FMT_VER_latest,
         };
-        this.needUpdateFrame.length = 0;
+        this.needUpdateFrame.clear();
     }
     updateTextSelectionPath(crdtpath: string[]) {
         if (this.cmd?.saveselection?.text) this.cmd.saveselection.text.path = crdtpath;
@@ -145,7 +163,7 @@ export class Api {
     }
     rollback() {
         this.cmd = undefined;
-        this.needUpdateFrame.length = 0;
+        this.needUpdateFrame.clear();
     }
     commit(mergetype: CmdMergeType = CmdMergeType.None): Cmd | undefined {
         const cmd = this.cmd;
@@ -160,7 +178,7 @@ export class Api {
             const shapes = update.map((v) => v.shape);
             updateShapesFrame(page, shapes, this);
         }
-        this.needUpdateFrame.length = 0;
+        this.needUpdateFrame.clear();
         this.cmd = undefined;
         // merge op
         if (cmd.ops.length > 1) {
@@ -341,7 +359,7 @@ export class Api {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.crdtSetAttr(shape, "isEdited", state));
     }
-    shapeModifyRotate(page: Page, shape: Shape, rotate: TransformRaw) {
+    shapeModifyRotate(page: Page, shape: Shape, rotate: Transform) {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.shapeModifyRotate(page, shape, rotate, this.needUpdateFrame));
     }

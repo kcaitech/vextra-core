@@ -45,7 +45,7 @@ import {
 import { Document } from "../data/document";
 import { expand, translate, translateTo } from "./frame";
 import { uuid } from "../basic/uuid";
-import { Artboard, Border, Color, Fill, Gradient, Path, PathShape, Stop, Style, SymbolRefShape } from "../data/classes";
+import { Artboard, Border, Color, Fill, Gradient, Path, PathShape, Stop, Style, SymbolRefShape, Transform } from "../data/classes";
 import { TextShapeEditor } from "./textshape";
 import { modify_frame_after_insert, set_childs_id, transform_data } from "../io/cilpboard";
 import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
@@ -120,7 +120,6 @@ import { FMT_VER_latest } from "../data/fmtver";
 import { makeShapeTransform1By2, makeShapeTransform2By1, updateShapeTransform1By2 } from "../data/shape_transform_util";
 import { ColVector3D } from "../basic/matrix2";
 import { Transform as Transform2 } from "../basic/transform";
-import { TransformRaw } from "../index";
 
 
 // 用于批量操作的单个操作类型
@@ -1857,7 +1856,7 @@ export class PageEditor {
         }
     }
 
-    setShapesRotate(actions: { shape: ShapeView, transform: TransformRaw }[]) {
+    setShapesRotate(actions: { shape: ShapeView, transform: Transform }[]) {
         try {
             const api = this.__repo.start('setShapesRotate');
             for (const action of actions) {

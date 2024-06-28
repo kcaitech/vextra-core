@@ -17,7 +17,6 @@ import {BoolOp, CurveMode, MarkerType, OverrideType, Point2D, Transform} from ".
 import { BasicMap } from "../../data/basic";
 import { crdtArrayInsert, crdtArrayRemove, crdtSetAttr } from "./basic";
 import {makeShapeTransform2By1, updateShapeTransform1By2} from "../../data/shape_transform_util";
-import { TransformRaw } from "../../index";
 
 function _checkNum(x: number) {
     // check
@@ -86,7 +85,7 @@ export function shapeModifyHeight(page: Page, shape: Shape, h: number, needUpdat
         return op;
     }
 }
-export function shapeModifyRotate(page: Page, shape: Shape, rotateTransform: TransformRaw, needUpdateFrame?: { shape: Shape, page: Page }[]) {
+export function shapeModifyRotate(page: Page, shape: Shape, rotateTransform: Transform, needUpdateFrame?: { shape: Shape, page: Page }[]) {
     // rotate = rotate % 360; // 0-360
     // if (rotate !== shape.rotation) {
     //     rotate = rotate * Math.PI / 180; // 0-2PI

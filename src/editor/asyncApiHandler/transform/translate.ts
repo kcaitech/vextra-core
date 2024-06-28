@@ -1,19 +1,18 @@
 import { CoopRepository } from "../../coop/cooprepo";
 import { AsyncApiCaller } from "../AsyncApiCaller";
 import { ShapeView, adapt2Shape, PageView } from "../../../dataview";
-import { GroupShape, Shape, Page, Document, makeShapeTransform1By2 } from "../../../data";
+import { GroupShape, Shape, Page, Document, makeShapeTransform1By2, Transform } from "../../../data";
 import { translateTo } from "../../frame";
 import { after_migrate, unable_to_migrate } from "../../utils/migrate";
 import { get_state_name, is_state } from "../../symbol";
 import { Api } from "../../coop/recordapi";
 import { ISave4Restore, LocalCmd, SelectionState } from "../../coop/localcmd";
-import { TransformRaw } from "../../../index";
 
 export type TranslateUnit = {
     shape: ShapeView;
     // x: number;
     // y: number;
-    transform: TransformRaw
+    transform: Transform
 }
 
 export class Transporter extends AsyncApiCaller {
