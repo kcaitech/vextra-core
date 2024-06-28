@@ -1,14 +1,22 @@
-import {CoopRepository} from "../../coop/cooprepo";
-import {AsyncApiCaller} from "../AsyncApiCaller";
-import {Document} from "../../../data/document";
-import {adapt2Shape, PageView, ShapeView} from "../../../dataview";
-import {afterModifyGroupShapeWH, SizeRecorder} from "../../frame";
-import {GroupShape, Shape, ShapeFrame, ShapeType, SymbolShape, SymbolUnionShape, TextShape} from "../../../data/shape";
-import {Page} from "../../../data/page";
-import {SymbolRefShape} from "../../../data/symbolref";
-import {fixTextShapeFrameByLayout} from "../../../editor/utils/other";
-import {TextBehaviour} from "../../../data/classes";
-import {makeShapeTransform1By2, Transform as Transform2} from "../../../index";
+import { CoopRepository } from "../../coop/cooprepo";
+import { AsyncApiCaller } from "../AsyncApiCaller";
+import { Document } from "../../../data/document";
+import { adapt2Shape, PageView, ShapeView } from "../../../dataview";
+import { afterModifyGroupShapeWH, SizeRecorder } from "../../frame";
+import {
+    GroupShape,
+    Shape,
+    ShapeFrame,
+    ShapeType,
+    SymbolShape,
+    SymbolUnionShape,
+    TextShape
+} from "../../../data/shape";
+import { Page } from "../../../data/page";
+import { SymbolRefShape } from "../../../data/symbolref";
+import { fixTextShapeFrameByLayout } from "../../../editor/utils/other";
+import { TextBehaviour } from "../../../data/classes";
+import { makeShapeTransform1By2, Transform as Transform2 } from "../../../index";
 
 export type ScaleUnit = {
     shape: ShapeView;
@@ -61,75 +69,6 @@ export class Scaler extends AsyncApiCaller {
         })
     }
 
-    // execute(transformUnits: ScaleUnit[]) {
-    //     try {
-    //         const api = this.api;
-    //         const page = this.page;
-    //
-    //
-    //         for (let i = 0; i < transformUnits.length; i++) {
-    //             const t = transformUnits[i];
-    //             const shape = adapt2Shape(t.shape);
-    //
-    //             const x = t.targetXY.x;
-    //             const y = t.targetXY.y;
-    //             const width = t.targetWidth;
-    //             const height = t.targetHeight;
-    //
-    //             api.shapeModifyX(page, shape, x);
-    //             api.shapeModifyY(page, shape, y);
-    //
-    //             const saveWidth = shape.frame.width;
-    //             const saveHeight = shape.frame.height;
-    //
-    //             api.shapeModifyWH(page, shape, width, height);
-    //
-    //             if (t.needFlipH) {
-    //                 api.shapeModifyHFlip(page, shape);
-    //             }
-    //
-    //             if (t.needFlipV) {
-    //                 api.shapeModifyVFlip(page, shape);
-    //             }
-    //
-    //             if (t.targetRotation !== shape.rotation) {
-    //                 api.shapeModifyRotate(page, shape, t.targetRotation);
-    //             }
-    //
-    //             if (shape instanceof GroupShape) {
-    //                 const scaleX = shape.frame.width / saveWidth;
-    //                 const scaleY = shape.frame.height / saveHeight;
-    //                 afterModifyGroupShapeWH(api, page, shape, scaleX, scaleY, new ShapeFrame(0, 0, saveWidth, saveHeight), this.recorder);
-    //             }
-    //             if (shape instanceof TextShape && (width !== saveWidth || height !== saveHeight)) {
-    //                 const textBehaviour = shape.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
-    //                 if (height !== saveHeight) {
-    //                     if (textBehaviour !== TextBehaviour.FixWidthAndHeight) {
-    //                         api.shapeModifyTextBehaviour(page, shape.text, TextBehaviour.FixWidthAndHeight);
-    //                     }
-    //                 }
-    //                 else {
-    //                     if (textBehaviour === TextBehaviour.Flexible) {
-    //                         api.shapeModifyTextBehaviour(page, shape.text, TextBehaviour.Fixed);
-    //                     }
-    //                 }
-    //                 fixTextShapeFrameByLayout(api, page, shape);
-    //             }
-    //             // 实例或者组件的宽高改变需要执行副作用函数
-    //             if (shape.type === ShapeType.SymbolRef || shape.type === ShapeType.Symbol) {
-    //                 this.needUpdateCustomSizeStatus.add(shape);
-    //             }
-    //         }
-    //
-    //         this.afterShapeSizeChange(); // 需要同步更新吗？
-    //
-    //         this.updateView();
-    //     } catch (error) {
-    //         console.log('error:', error);
-    //         this.exception = true;
-    //     }
-    // }
-
     execute(params: {
         shape: ShapeView;
         size: { width: number, height: number },
@@ -140,8 +79,12 @@ export class Scaler extends AsyncApiCaller {
                 const item = params[i];
                 const shape = adapt2Shape(item.shape);
                 const size = item.size;
+
+                // const decomposeScale = item.transform2.decomposeScale();
+                // item.transform2.clearScaleSize()
+
                 this.api.shapeModifyWH(this.page, shape, size.width, size.height);
-                this.api.shapeModifyByTransform(this.page, shape, makeShapeTransform1By2(params[i].transform2));
+                this.api.shapeModifyByTransform(this.page, shape, makeShapeTransform1By2(item.transform2));
             }
 
             this.afterShapeSizeChange();
