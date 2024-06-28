@@ -15,7 +15,7 @@ import {
 import { Page } from "../../../data/page";
 import { SymbolRefShape } from "../../../data/symbolref";
 import { fixTextShapeFrameByLayout } from "../../../editor/utils/other";
-import { TextBehaviour } from "../../../data/classes";
+import { ShapeSize, TextBehaviour } from "../../../data/classes";
 import { makeShapeTransform1By2, Transform as Transform2 } from "../../../index";
 
 export type ScaleUnit = {
@@ -80,11 +80,17 @@ export class Scaler extends AsyncApiCaller {
                 const shape = adapt2Shape(item.shape);
                 const size = item.size;
 
-                // const decomposeScale = item.transform2.decomposeScale();
-                // item.transform2.clearScaleSize()
+                const isgroup = shape instanceof GroupShape;
+
+                const frame = isgroup ? new ShapeSize(shape.size.width, shape.size.height) : undefined;
+
+                const scaleX = size.width / shape.size.width;
+                const scaleY = size.height / shape.size.height;
 
                 this.api.shapeModifyWH(this.page, shape, size.width, size.height);
-                this.api.shapeModifyByTransform(this.page, shape, makeShapeTransform1By2(item.transform2));
+                this.api.shapeModifyTransform(this.page, shape, makeShapeTransform1By2(item.transform2));
+
+                if (isgroup) afterModifyGroupShapeWH(this.api, this.page, shape, scaleX, scaleY, frame!)
             }
 
             this.afterShapeSizeChange();

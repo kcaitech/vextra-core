@@ -85,7 +85,7 @@ export function shapeModifyHeight(page: Page, shape: Shape, h: number, needUpdat
         return op;
     }
 }
-export function shapeModifyRotate(page: Page, shape: Shape, rotateTransform: Transform, needUpdateFrame?: { shape: Shape, page: Page }[]) {
+export function shapeModifyTransform(page: Page, shape: Shape, transform: Transform, needUpdateFrame?: { shape: Shape, page: Page }[]) {
     // rotate = rotate % 360; // 0-360
     // if (rotate !== shape.rotation) {
     //     rotate = rotate * Math.PI / 180; // 0-2PI
@@ -107,12 +107,44 @@ export function shapeModifyRotate(page: Page, shape: Shape, rotateTransform: Tra
     // transform.m11 = rotateTransform.m11;
 
     const ops = [];
-    ops.push(crdtSetAttr(shape.transform, 'm00', rotateTransform.m00));
-    ops.push(crdtSetAttr(shape.transform, 'm10', rotateTransform.m10));
-    ops.push(crdtSetAttr(shape.transform, 'm01', rotateTransform.m01));
-    ops.push(crdtSetAttr(shape.transform, 'm11', rotateTransform.m11));
-    ops.push(crdtSetAttr(shape.transform, 'm02', rotateTransform.m02));
-    ops.push(crdtSetAttr(shape.transform, 'm12', rotateTransform.m12));
+    ops.push(crdtSetAttr(shape.transform, 'm00', transform.m00));
+    ops.push(crdtSetAttr(shape.transform, 'm10', transform.m10));
+    ops.push(crdtSetAttr(shape.transform, 'm01', transform.m01));
+    ops.push(crdtSetAttr(shape.transform, 'm11', transform.m11));
+    ops.push(crdtSetAttr(shape.transform, 'm02', transform.m02));
+    ops.push(crdtSetAttr(shape.transform, 'm12', transform.m12));
+
+    if (needUpdateFrame) needUpdateFrame.push({ shape, page });
+    return ops;
+}
+export function shapeModifyTransformNoTranslage(page: Page, shape: Shape, transform: Transform, needUpdateFrame?: { shape: Shape, page: Page }[]) {
+    // rotate = rotate % 360; // 0-360
+    // if (rotate !== shape.rotation) {
+    //     rotate = rotate * Math.PI / 180; // 0-2PI
+    //     const transform2 = makeShapeTransform2By1(shape.transform);
+    //     transform2.setRotateZ(rotate);
+    //     updateShapeTransform1By2(shape.transform, transform2);
+    //     const ops = [];
+    //     ops.push(crdtSetAttr(shape.transform, 'm00', transform2.m00));
+    //     ops.push(crdtSetAttr(shape.transform, 'm10', transform2.m10));
+    //     ops.push(crdtSetAttr(shape.transform, 'm01', transform2.m01));
+    //     ops.push(crdtSetAttr(shape.transform, 'm11', transform2.m11));
+    //     if (needUpdateFrame) needUpdateFrame.push({ shape, page });
+    //     return ops;
+    // }
+    // const transform = shape.transform;
+    // transform.m00 = rotateTransform.m00;
+    // transform.m10 = rotateTransform.m10;
+    // transform.m01 = rotateTransform.m01;
+    // transform.m11 = rotateTransform.m11;
+
+    const ops = [];
+    ops.push(crdtSetAttr(shape.transform, 'm00', transform.m00));
+    ops.push(crdtSetAttr(shape.transform, 'm10', transform.m10));
+    ops.push(crdtSetAttr(shape.transform, 'm01', transform.m01));
+    ops.push(crdtSetAttr(shape.transform, 'm11', transform.m11));
+    // ops.push(crdtSetAttr(shape.transform, 'm02', transform.m02));
+    // ops.push(crdtSetAttr(shape.transform, 'm12', transform.m12));
 
     if (needUpdateFrame) needUpdateFrame.push({ shape, page });
     return ops;
@@ -187,17 +219,7 @@ export function shapeModifyVFlip(page: Page, shape: Shape, needUpdateFrame?: { s
     if (needUpdateFrame) needUpdateFrame.push({ shape, page });
     return ops;
 }
-export function shapeModifyByTransform(page: Page, shape: Shape, transform: Transform, needUpdateFrame?: { shape: Shape, page: Page }[]) {
-    const ops = [];
-    ops.push(crdtSetAttr(shape.transform, 'm00', transform.m00));
-    ops.push(crdtSetAttr(shape.transform, 'm10', transform.m10));
-    ops.push(crdtSetAttr(shape.transform, 'm01', transform.m01));
-    ops.push(crdtSetAttr(shape.transform, 'm11', transform.m11));
-    ops.push(crdtSetAttr(shape.transform, 'm02', transform.m02));
-    ops.push(crdtSetAttr(shape.transform, 'm12', transform.m12));
-    if (needUpdateFrame) needUpdateFrame.push({ shape, page });
-    return ops;
-}
+
 export function shapeModifyResizingConstraint(shape: Shape, resizingConstraint: number) {
     return crdtSetAttr(shape, 'resizingConstraint', resizingConstraint);
 }

@@ -29,7 +29,7 @@ export class Rotator extends AsyncApiCaller {
             for (let i = 0; i < params.length; i++) {
                 const item = params[i];
                 const shape = adapt2Shape(item.shape);
-                this.api.shapeModifyByTransform(this.page, shape, makeShapeTransform1By2(params[i].transform2));
+                this.api.shapeModifyTransform(this.page, shape, makeShapeTransform1By2(params[i].transform2));
             }
 
             this.updateView();

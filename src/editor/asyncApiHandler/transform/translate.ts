@@ -42,7 +42,7 @@ export class Transporter extends AsyncApiCaller {
             for (let i = 0; i < translateUnits.length; i++) {
                 const unit = translateUnits[i];
                 const shape = adapt2Shape(unit.shape);
-                api.shapeModifyByTransform(this.page, shape, unit.transform);
+                api.shapeModifyTransform(this.page, shape, unit.transform);
 
                 // this.api.shapeModifyX(this.page, shape, unit.x);
                 // this.api.shapeModifyY(this.page, shape, unit.y);

@@ -1879,7 +1879,7 @@ export class PageEditor {
             const page = this.__page;
             for (let i = 0; i < params.length; i++) {
                 const { shape, transform2 } = params[i];
-                api.shapeModifyByTransform(page, adapt2Shape(shape), makeShapeTransform1By2(transform2 as Transform2));
+                api.shapeModifyTransform(page, adapt2Shape(shape), makeShapeTransform1By2(transform2 as Transform2));
             }
             this.__repo.commit();
         } catch (error) {

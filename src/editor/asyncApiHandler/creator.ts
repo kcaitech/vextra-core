@@ -98,7 +98,7 @@ export class CreatorApiCaller extends AsyncApiCaller {
                 const f = params.frame;
 
                 api.shapeModifyWH(page, shape, f.width, f.height);
-                this.api.shapeModifyByTransform(this.page, shape, makeShapeTransform1By2(params.transform2));
+                this.api.shapeModifyTransform(this.page, shape, makeShapeTransform1By2(params.transform2));
 
                 api.shapeModifyConstrainerProportions(page, shape, params.isFixedRatio);
 

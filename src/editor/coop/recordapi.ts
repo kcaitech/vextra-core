@@ -359,9 +359,13 @@ export class Api {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.crdtSetAttr(shape, "isEdited", state));
     }
+    shapeModifyTransform(page: Page, shape: Shape, transform: Transform) {
+        checkShapeAtPage(page, shape);
+        this.addOp(basicapi.shapeModifyTransform(page, shape, transform, this.needUpdateFrame));
+    }
     shapeModifyRotate(page: Page, shape: Shape, rotate: Transform) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyRotate(page, shape, rotate, this.needUpdateFrame));
+        this.addOp(basicapi.shapeModifyTransform(page, shape, rotate, this.needUpdateFrame));
     }
     shapeModifyConstrainerProportions(page: Page, shape: Shape, prop: boolean) {
         checkShapeAtPage(page, shape);
@@ -445,10 +449,7 @@ export class Api {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.shapeModifyVFlip(page, shape, this.needUpdateFrame));
     }
-    shapeModifyByTransform(page: Page, shape: Shape, transform: Transform) {
-        checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyByTransform(page, shape, transform, this.needUpdateFrame));
-    }
+
     shapeModifyContextSettingsOpacity(page: Page, shape: Shape | Variable, contextSettingsOpacity: number) {
         // if (shape.isVirtualShape) {
         //     return; // todo

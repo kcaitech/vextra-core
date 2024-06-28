@@ -11,13 +11,14 @@ import {
     SymbolShape,
     TextShape
 } from "../data/shape";
-import { ShapeSize, TextBehaviour } from "../data/typesdefine";
+import { TextBehaviour } from "../data/typesdefine";
 import { fixTextShapeFrameByLayout } from "./utils/other";
-import { FrameType, PathType, ResizingConstraints2 } from "../data/consts";
+import { FrameType, PathType, ResizingConstraints, ResizingConstraints2 } from "../data/consts";
 import { Api } from "./coop/recordapi";
 import { Document } from "../data/document";
-import { SymbolUnionShape } from "../data/classes";
+import { ShapeSize, SymbolUnionShape } from "../data/classes";
 import { SymbolRefShape } from "../data/symbolref";
+import { makeShapeTransform1By2, makeShapeTransform2By1 } from "../data";
 interface PageXY {
     x: number
     y: number
@@ -27,21 +28,40 @@ export type SizeRecorder = Map<string, { toRight: number, exceededX: boolean, to
 
 export const minimum_WH = 0.01; // 用户可设置最小宽高值。以防止宽高在缩放后为0
 
-export function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape, scaleX: number, scaleY: number, originFrame: ShapeFrame, recorder?: SizeRecorder) {
-    if (shape.type === ShapeType.Group || shape.type === ShapeType.BoolShape) { // 有且只有编组的子元素只可为跟随缩放，应忽略constraint
-        return modifySizeIgnoreConstraint(api, page, shape, scaleX, scaleY);
-    }
-
+export function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape, scaleX: number, scaleY: number, originFrame: ShapeSize, recorder?: SizeRecorder) {
     const childs = shape.childs;
+
+    const noconstrain = shape.type === ShapeType.Group || shape.type === ShapeType.BoolShape; // 有且只有编组的子元素只可为跟随缩放，应忽略constraint
+
     for (let i = 0, len = childs.length; i < len; i++) {
         const c = childs[i];
-        const ft = c.frameType;
-        if (!ft) {
 
-        } else if (ft === FrameType.Path) { // Path
-            modifyFrameForPath(api, page, c, scaleX, scaleY, shape.frame, originFrame, recorder);
+        let sx = scaleX, sy = scaleY;
+        const frame = c.frame2Parent();
+        let ox = frame.x, oy = frame.y;
+        if (!noconstrain) {
+            const frame2 = fixConstrainFrame(c, c.resizingConstraint ?? ResizingConstraints2.Default, frame.x, frame.y, frame.width, frame.height, scaleX, scaleY, shape.size, originFrame);
+            sx = frame2.width / frame.width;
+            sy = frame2.height / frame.height;
+            ox = frame2.x;
+            oy = frame2.y;
         } else {
-            modifyFrameForRect(api, page, c, scaleX, scaleY, shape.frame, originFrame, recorder);
+            ox *= scaleX;
+            oy *= scaleY;
+        }
+
+        const ow = c.size.width;
+        const oh = c.size.height;
+
+        api.shapeModifyWH(page, c, c.size.width * sx, c.size.height * sy);
+        const origin2 = c.transform.computeCoord(0, 0);
+        const dx = ox - origin2.x;
+        const dy = oy - origin2.y;
+        api.shapeModifyX(page, c, c.transform.m02 + dx);
+        api.shapeModifyY(page, c, c.transform.m12 + dy);
+
+        if (c instanceof GroupShape) {
+            afterModifyGroupShapeWH(api, page, c, sx, sy, new ShapeSize(ow, oh))
         }
     }
 }
@@ -79,172 +99,81 @@ function resetTransformForPath(api: Api, page: Page, shape: PathShape) {
     //
     return boundingBox;
 }
-/**
- * @description 处理的场景特征为没有子元素，需要考虑transform，当存在transform时，需要取外切盒子，根据外切盒子摆正再根据约束值实现约束效果；
- */
-function modifyFrameForPath(api: Api, page: Page, shape: Shape, scaleX: number, scaleY: number, currentEnvFrame: ShapeFrame, originEnvFrame: ShapeFrame, recorder?: SizeRecorder) {
-    // 根据transform得到约束前的frame
-    let x = shape.frame.x;
-    let y = shape.frame.y;
-    let width = shape.frame.width;
-    let height = shape.frame.height;
-    const resizingConstraint = shape.resizingConstraint!;
+// /**
+//  * @description 处理的场景特征为没有子元素，需要考虑transform，当存在transform时，需要取外切盒子，根据外切盒子摆正再根据约束值实现约束效果；
+//  */
+// function modifyFrameForPath(api: Api, page: Page, shape: Shape, scaleX: number, scaleY: number, currentEnvFrame: ShapeFrame, originEnvFrame: ShapeSize, recorder?: SizeRecorder) {
+//     // 根据transform得到约束前的frame
+//     let x = shape.frame.x;
+//     let y = shape.frame.y;
+//     let width = shape.frame.width;
+//     let height = shape.frame.height;
+//     const resizingConstraint = shape.resizingConstraint ?? ResizingConstraints2.Default;
 
-    if (!shape.isNoTransform() && resizingConstraint !== ResizingConstraints2.Default) {
-        const boundingBox = resetTransformForPath(api, page, shape as PathShape);
-        x = boundingBox.x;
-        y = boundingBox.y;
-        width = boundingBox.width;
-        height = boundingBox.height;
-    }
+//     if (!shape.isNoTransform() && resizingConstraint !== ResizingConstraints2.Default) {
+//         const boundingBox = resetTransformForPath(api, page, shape as PathShape);
+//         x = boundingBox.x;
+//         y = boundingBox.y;
+//         width = boundingBox.width;
+//         height = boundingBox.height;
+//     }
 
-    const _f = fixConstrainFrame(shape, resizingConstraint, x, y, width, height, scaleX, scaleY, currentEnvFrame, originEnvFrame, recorder);
+//     const _f = fixConstrainFrame(shape, resizingConstraint, x, y, width, height, scaleX, scaleY, currentEnvFrame, originEnvFrame, recorder);
 
-    setFrame(page, shape, _f.x, _f.y, _f.width, _f.height, api);
-}
+//     setFrame(page, shape, _f.x, _f.y, _f.width, _f.height, api);
+// }
 
-function modifyFrameForRect(api: Api, page: Page, shape: Shape, scaleX: number, scaleY: number, currentEnvFrame: ShapeFrame, originEnvFrame: ShapeFrame, recorder?: SizeRecorder) {
-    const f = shape.frame;
-    const resizingConstraint = shape.resizingConstraint!;
+// function modifyFrameForRect(api: Api, page: Page, shape: Shape, scaleX: number, scaleY: number, currentEnvFrame: ShapeFrame, originEnvFrame: ShapeSize, recorder?: SizeRecorder) {
+//     const f = shape.frame;
+//     const resizingConstraint = shape.resizingConstraint!;
 
-    // 即使有transform也不用特别处理，应直接忽略transform，因为这类场景不可以摆正
-    const { x, y, width, height } = fixConstrainFrame(shape, resizingConstraint, f.x, f.y, f.width, f.height, scaleX, scaleY, currentEnvFrame, originEnvFrame, recorder);
+//     // 即使有transform也不用特别处理，应直接忽略transform，因为这类场景不可以摆正
+//     const { x, y, width, height } = fixConstrainFrame(shape, resizingConstraint, f.x, f.y, f.width, f.height, scaleX, scaleY, currentEnvFrame, originEnvFrame, recorder);
 
-    setFrame(page, shape, x, y, width, height, api, recorder);
-}
-/**
- * @description 忽略约束(把约束表现都认定为跟随缩放)
- */
-function modifySizeIgnoreConstraint(api: Api, page: Page, shape: GroupShape, scaleX: number, scaleY: number) {
-    const childs = shape.childs;
+//     setFrame(page, shape, x, y, width, height, api, recorder);
+// }
+// /**
+//  * @description 忽略约束(把约束表现都认定为跟随缩放)
+//  */
+// function modifySizeIgnoreConstraint(api: Api, page: Page, shape: GroupShape, scaleX: number, scaleY: number) {
+//     const childs = shape.childs;
 
-    for (let i = 0, len = childs.length; i < len; i++) {
-        const c = childs[i];
+//     for (let i = 0, len = childs.length; i < len; i++) {
+//         const c = childs[i];
 
-        if (c instanceof GroupShape) {
-            const boundingBox = c.boundingBox();
-            const matrix = c.matrix2Parent();
+//         // xy
+//         const origin = c.transform.computeCoord(0, 0);
+//         origin.x *= scaleX;
+//         origin.y *= scaleY;
+//         // wh
+//         api.shapeModifyWH(page, c, c.size.width * scaleX, c.size.height * scaleY);
+//         const origin2 = c.transform.computeCoord(0, 0);
+//         const dx = origin.x - origin2.x;
+//         const dy = origin.y - origin2.y;
+//         api.shapeModifyX(page, c, c.transform.m02 + dx);
+//         api.shapeModifyY(page, c, c.transform.m12 + dy);
 
-            for (let i = 0, len = c.childs.length; i < len; i++) { // 将旋转、翻转放入到子对象
-                const cc = (c as GroupShape).childs[i]
-                const m1 = cc.matrix2Parent();
-                m1.multiAtLeft(matrix);
-                const target = m1.computeCoord(0, 0);
+//         if (c instanceof GroupShape) {
+//             modifySizeIgnoreConstraint(api, page, c, scaleX, scaleY);
+//         }
+//     }
+// }
 
-                // if (c.rotation) api.shapeModifyRotate(page, cc, (cc.rotation || 0) + c.rotation);
-                // if (c.isFlippedHorizontal) api.shapeModifyHFlip(page, cc, !cc.isFlippedHorizontal);
-                // if (c.isFlippedVertical) api.shapeModifyVFlip(page, cc, !cc.isFlippedVertical);
-
-                const m2 = cc.matrix2Parent();
-                m2.trans(boundingBox.x, boundingBox.y);
-                const cur = m2.computeCoord(0, 0);
-
-                api.shapeModifyX(page, cc, cc.frame.x + target.x - cur.x);
-                api.shapeModifyY(page, cc, cc.frame.y + target.y - cur.y);
-            }
-
-            // if (c.rotation) api.shapeModifyRotate(page, c, 0);
-            // if (c.isFlippedHorizontal) api.shapeModifyHFlip(page, c, !c.isFlippedHorizontal);
-            // if (c.isFlippedVertical) api.shapeModifyVFlip(page, c, !c.isFlippedVertical);
-
-            api.shapeModifyX(page, c, boundingBox.x * scaleX);
-            api.shapeModifyY(page, c, boundingBox.y * scaleY);
-            api.shapeModifyWH(page, c, boundingBox.width * scaleX, boundingBox.height * scaleY);
-
-            afterModifyGroupShapeWH(api, page, c, scaleX, scaleY, boundingBox);
-        }
-        else if (!c.rotation) {
-            const cFrame = c.frame;
-            const cX = cFrame.x * scaleX;
-            const cY = cFrame.y * scaleY;
-            const cW = cFrame.width * scaleX;
-            const cH = cFrame.height * scaleY;
-            setFrame(page, c, cX, cY, cW, cH, api);
-        }
-        else if (c.pathType && c.type !== ShapeType.Image) {
-            // 摆正并处理points
-            const matrix = c.matrix2Parent();
-            const cFrame = c.frame;
-            const boundingBox = c.boundingBox();
-
-            matrix.preScale(cFrame.width, cFrame.height);
-            // if (c.rotation) api.shapeModifyRotate(page, c, 0);
-            // if (c.isFlippedHorizontal) api.shapeModifyHFlip(page, c, !c.isFlippedHorizontal);
-            // if (c.isFlippedVertical) api.shapeModifyVFlip(page, c, !c.isFlippedVertical);
-
-            api.shapeModifyX(page, c, boundingBox.x);
-            api.shapeModifyY(page, c, boundingBox.y);
-            api.shapeModifyWH(page, c, boundingBox.width, boundingBox.height);
-
-            const matrix2 = c.matrix2Parent();
-            matrix2.preScale(boundingBox.width, boundingBox.height); // 当对象太小时，求逆矩阵会infinity
-            matrix.multiAtLeft(matrix2.inverse);
-            if (c.pathType === PathType.Editable) {
-                (c as PathShape2).pathsegs.forEach((segment, index) => {
-                    reLayoutPath(api, page, c, segment.points, matrix, index);
-                })
-            }
-            const width = boundingBox.width * scaleX;
-            const height = boundingBox.height * scaleY;
-            setFrame(page, c, boundingBox.x * scaleX, boundingBox.y * scaleY, width, height, api);
-        }
-        else { // textshape imageshape symbolrefshape
-            // // 需要调整位置跟大小
-            const cFrame = c.frame;
-            const matrix = c.matrix2Parent();
-            const current = [{ x: 0, y: 0 }, { x: cFrame.width, y: cFrame.height }]
-                .map((p) => matrix.computeCoord(p));
-
-            const target = current.map((p) => {
-                return { x: p.x * scaleX, y: p.y * scaleY }
-            })
-            const matrixarr = matrix.toArray();
-            matrixarr[4] = target[0].x;
-            matrixarr[5] = target[0].y;
-            const m2 = new Matrix(matrixarr);
-            const m2inverse = new Matrix(m2.inverse)
-
-            const invertTarget = target.map((p) => m2inverse.computeCoord(p))
-
-            const wh = { x: invertTarget[1].x - invertTarget[0].x, y: invertTarget[1].y - invertTarget[0].y }
-
-            // 计算新的matrix 2 parent
-            const matrix2 = new Matrix();
-            {
-                const cx = wh.x / 2;
-                const cy = wh.y / 2;
-                matrix2.trans(-cx, -cy);
-                if (c.rotation) matrix2.rotate(c.rotation / 180 * Math.PI);
-                // if (c.isFlippedHorizontal) matrix2.flipHoriz();
-                // if (c.isFlippedVertical) matrix2.flipVert();
-                matrix2.trans(cx, cy);
-                matrix2.trans(cFrame.x, cFrame.y);
-            }
-            const xy = matrix2.computeCoord(0, 0);
-
-            const dx = target[0].x - xy.x;
-            const dy = target[0].y - xy.y;
-
-            setFrame(page, c, cFrame.x + dx, cFrame.y + dy, wh.x, wh.y, api);
-        }
-    }
-}
-
-function reLayoutPath(api: Api, page: Page, shape: Shape, points: CurvePoint[], matrix: Matrix, segment: number) {
-    for (let i = 0, len = points.length; i < len; i++) {
-        const p = points[i];
-        if (p.hasFrom) {
-            const curveFrom = matrix.computeCoord(p.fromX || 0, p.fromY || 0);
-            api.shapeModifyCurvFromPoint(page, shape, i, curveFrom, segment);
-        }
-        if (p.hasTo) {
-            const curveTo = matrix.computeCoord(p.toX || 0, p.toY || 0);
-            api.shapeModifyCurvToPoint(page, shape, i, curveTo, segment);
-        }
-        const point = matrix.computeCoord(p.x, p.y);
-        api.shapeModifyCurvPoint(page, shape, i, point, segment);
-    }
-}
+// function reLayoutPath(api: Api, page: Page, shape: Shape, points: CurvePoint[], matrix: Matrix, segment: number) {
+//     for (let i = 0, len = points.length; i < len; i++) {
+//         const p = points[i];
+//         if (p.hasFrom) {
+//             const curveFrom = matrix.computeCoord(p.fromX || 0, p.fromY || 0);
+//             api.shapeModifyCurvFromPoint(page, shape, i, curveFrom, segment);
+//         }
+//         if (p.hasTo) {
+//             const curveTo = matrix.computeCoord(p.toX || 0, p.toY || 0);
+//             api.shapeModifyCurvToPoint(page, shape, i, curveTo, segment);
+//         }
+//         const point = matrix.computeCoord(p.x, p.y);
+//         api.shapeModifyCurvPoint(page, shape, i, point, segment);
+//     }
+// }
 
 export function fixConstrainFrame(shape: Shape, resizingConstraint: number, x: number, y: number, width: number, height: number, scaleX: number, scaleY: number, currentEnvFrame: ShapeSize, originEnvFrame: ShapeSize, recorder?: SizeRecorder) {
     // 水平 HORIZONTAL
