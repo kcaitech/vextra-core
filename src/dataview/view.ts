@@ -190,7 +190,7 @@ export class DataView extends EventEL {
         }
     }
 
-    protected onMounted() {}
+    onMounted() {}
     protected onUnmounted() {}
 
     addChild(child: DataView, idx?: number) {

@@ -27,7 +27,7 @@ export class TableCellView extends ShapeView {
         // this.afterInit();
     }
 
-    protected onMounted(): void {
+    onMounted(): void {
         // const frame = this.frame;
         // if (!this.isVirtualShape && this.cellType === TableCellType.Text) {
         //     const text = this.getText();

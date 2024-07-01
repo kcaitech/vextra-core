@@ -43,7 +43,10 @@ export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     );
 }
 
-export function isDiffRenderTransform(lhs: { x: number, y: number } | undefined, rhs: { x: number, y: number } | undefined) {
+export function isDiffRenderTransform(lhs: { x: number, y: number } | undefined, rhs: {
+    x: number,
+    y: number
+} | undefined) {
     if (lhs === rhs) { // both undefined
         return false;
     }
@@ -198,7 +201,7 @@ export class ShapeView extends DataView {
         this.m_fixedRadius = (shape as PathShape).fixedRadius; // rectangle
     }
 
-    protected onMounted() {
+    onMounted() {
         const parentFrame = this.parent?.size;
 
         this._layout(this.m_size, this.m_data, parentFrame, this.varsContainer, this.m_transx);
@@ -506,10 +509,16 @@ export class ShapeView extends DataView {
         }
     }
 
-    protected layoutChilds(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, parentFrame: ShapeSize, scale?: { x: number, y: number }) {
+    protected layoutChilds(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, parentFrame: ShapeSize, scale?: {
+        x: number,
+        y: number
+    }) {
     }
 
-    protected _layout(size: ShapeSize, shape: Shape, parentFrame: ShapeSize | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scale: { x: number, y: number } | undefined) {
+    protected _layout(size: ShapeSize, shape: Shape, parentFrame: ShapeSize | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scale: {
+        x: number,
+        y: number
+    } | undefined) {
         let notTrans = isNoTransform(scale);
         const trans = shape.transform;
         // case 1 不需要变形

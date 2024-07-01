@@ -19,7 +19,7 @@ export class SymbolRefView extends ShapeView {
         // this.afterInit();
     }
 
-    protected onMounted(): void {
+    onMounted(): void {
         if (!this.m_sym) {
             super.onMounted();
             return;
