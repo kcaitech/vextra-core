@@ -1,19 +1,6 @@
 import {
-    adjustLB2,
-    adjustLT2,
     adjustRB2,
-    adjustRT2,
-    afterModifyGroupShapeWH,
-    erScaleByB,
-    erScaleByL,
-    erScaleByR,
-    erScaleByT,
     expandTo,
-    scaleByB,
-    scaleByL,
-    scaleByR,
-    scaleByT,
-    SizeRecorder,
     translate,
     translateTo,
 } from "./frame";
@@ -53,7 +40,6 @@ import { is_state } from "./utils/other";
 import { after_migrate, unable_to_migrate } from "./utils/migrate";
 import { get_state_name, shape4border, shape4contextSettings, shape4fill } from "./symbol";
 import {
-    __pre_curve,
     after_insert_point,
     before_modify_side,
     contact_edit,
@@ -66,7 +52,6 @@ import { adapt2Shape, ContactLineView, PageView, PathShapeView, ShapeView } from
 import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
 import { BasicArray } from "../data/basic";
 import { Fill } from "../data/style";
-import { FrameType, PathType } from "../data/consts";
 import { TextAttr } from "../data/classes";
 
 interface PageXY { // 页面坐标系的xy
@@ -80,18 +65,6 @@ interface XY {
 }
 
 type Side = 'from' | 'to'
-
-export interface ControllerOrigin { // 页面坐标系的xy
-    x: number
-    y: number
-}
-
-export interface ControllerFrame {// 页面坐标系
-    x: number
-    y: number
-    width: number
-    height: number
-}
 
 export enum CtrlElementType { // 控制元素类型
     RectLeft = 'rect-left',
@@ -591,105 +564,6 @@ export class Controller {
             close,
             init_cutout
         }
-    }
-
-    // 单个图形异步编辑
-    public asyncRectEditor(_shape: Shape | ShapeView, _page: Page | PageView): AsyncBaseAction {
-        const shape = _shape instanceof ShapeView ? adapt2Shape(_shape) : _shape;
-        const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
-        const size_recorder: SizeRecorder = new Map(); // 当约束使得图层尺寸触发极值表现时，记录触发前的图层尺寸，用于摆脱极值表现后回到触发前的状态
-        // (window as any).__size_recorder = size_recorder; // 是否可以在不使用全局变量的情况下，实例内部的虚拟图层约束表现可以跟普通图层同步？
-        const api = this.__repo.start("action");
-        let status: Status = Status.Pending;
-        let need_update_frame = false;
-        const executeRotate = (deg: number) => {
-            status = Status.Pending;
-            try {
-                const newDeg = (shape.rotation || 0) + (deg || 0);
-                // api.shapeModifyRotate(page, shape, newDeg);
-                this.__repo.transactCtx.fireNotify();
-                status = Status.Fulfilled;
-            } catch (e) {
-                console.error(e);
-                status = Status.Exception;
-            }
-        }
-        const executeScale = (type: CtrlElementType, end: PageXY) => {
-            status = Status.Pending;
-            try {
-                if (type === CtrlElementType.RectLT) {
-                    adjustLT2(api, this.__document, page, shape, end.x, end.y, size_recorder);
-                } else if (type === CtrlElementType.RectRT) {
-                    adjustRT2(api, this.__document, page, shape, end.x, end.y, size_recorder);
-                } else if (type === CtrlElementType.RectRB) {
-                    adjustRB2(api, this.__document, page, shape, end.x, end.y, size_recorder);
-                } else if (type === CtrlElementType.RectLB) {
-                    adjustLB2(api, this.__document, page, shape, end.x, end.y, size_recorder);
-                } else if (type === CtrlElementType.RectTop) {
-                    scaleByT(api, this.__document, page, shape, end, size_recorder);
-                } else if (type === CtrlElementType.RectRight) {
-                    scaleByR(api, this.__document, page, shape, end, size_recorder);
-                } else if (type === CtrlElementType.RectBottom) {
-                    scaleByB(api, this.__document, page, shape, end, size_recorder);
-                } else if (type === CtrlElementType.RectLeft) {
-                    scaleByL(api, this.__document, page, shape, end, size_recorder);
-                }
-                this.__repo.transactCtx.fireNotify();
-                status = Status.Fulfilled;
-            } catch (e) {
-                console.error(e);
-                status = Status.Exception;
-            }
-        }
-        const executeErScale = (type: CtrlElementType, scale: number) => {
-            status = Status.Pending;
-            try {
-                if (type === CtrlElementType.RectTop) {
-                    erScaleByT(api, this.__document, page, shape, scale, size_recorder);
-                } else if (type === CtrlElementType.RectRight) {
-                    erScaleByR(api, this.__document, page, shape, scale, size_recorder);
-                } else if (type === CtrlElementType.RectBottom) {
-                    erScaleByB(api, this.__document, page, shape, scale, size_recorder);
-                } else if (type === CtrlElementType.RectLeft) {
-                    erScaleByL(api, this.__document, page, shape, scale, size_recorder);
-                }
-                this.__repo.transactCtx.fireNotify();
-                status = Status.Fulfilled;
-            } catch (e) {
-                console.error(e);
-                status = Status.Exception;
-            }
-        }
-        const executeForLine = (index: number, end: PageXY) => {
-            status = Status.Pending;
-            try {
-                need_update_frame = true;
-                pathEdit(api, page, shape as PathShape, index, end);
-                this.__repo.transactCtx.fireNotify();
-                status = Status.Fulfilled;
-            } catch (e) {
-                console.error(e);
-                status = Status.Exception;
-            }
-        }
-        const close = () => {
-            try {
-                if (need_update_frame) {
-                    update_frame_by_points(api, page, shape as PathShape);
-                }
-            } catch (e) {
-                console.error(e);
-                status = Status.Exception;
-            }
-            if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
-                this.__repo.commit();
-            } else {
-                this.__repo.rollback();
-            }
-            // (window as any).__size_recorder = undefined;
-            return undefined;
-        }
-        return { executeRotate, executeScale, executeErScale, executeForLine, close };
     }
 
     // 图形位置移动
@@ -1348,96 +1222,6 @@ function deleteEmptyGroupShape(document: Document, page: Page, shape: Shape, api
         deleteEmptyGroupShape(document, page, p, api)
     }
     return true;
-}
-
-function adjust_group_rotate_frame(api: Api, page: Page, s: GroupShape, sx: number, sy: number) {
-    const boundingBox = s.boundingBox();
-    const matrix = s.matrix2Parent();
-    for (let i = 0, len = s.childs.length; i < len; i++) { // 将旋转、翻转放入到子对象
-        const cc = s.childs[i]
-        const m1 = cc.matrix2Parent();
-        m1.multiAtLeft(matrix);
-        const target = m1.computeCoord(0, 0);
-
-        // if (s.rotation) api.shapeModifyRotate(page, cc, (cc.rotation || 0) + s.rotation);
-        // todo flip
-        // if (s.isFlippedHorizontal) api.shapeModifyHFlip(page, cc, !cc.isFlippedHorizontal);
-        // if (s.isFlippedVertical) api.shapeModifyVFlip(page, cc, !cc.isFlippedVertical);
-
-        const m2 = cc.matrix2Parent();
-        m2.trans(boundingBox.x, boundingBox.y);
-        const cur = m2.computeCoord(0, 0);
-
-        api.shapeModifyX(page, cc, cc.frame.x + target.x - cur.x);
-        api.shapeModifyY(page, cc, cc.frame.y + target.y - cur.y);
-    }
-
-    // if (s.rotation) api.shapeModifyRotate(page, s, 0);
-    // todo flip
-    // if (s.isFlippedHorizontal) api.shapeModifyHFlip(page, s, !s.isFlippedHorizontal);
-    // if (s.isFlippedVertical) api.shapeModifyVFlip(page, s, !s.isFlippedVertical);
-
-    api.shapeModifyX(page, s, boundingBox.x * sx);
-    api.shapeModifyY(page, s, boundingBox.y * sy);
-    const width = boundingBox.width * sx;
-    const height = boundingBox.height * sy;
-    api.shapeModifyWH(page, s, width, height);
-    afterModifyGroupShapeWH(api, page, s, sx, sy, boundingBox);
-}
-
-function set_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, Matrix>,
-                         origin1: { x: number, y: number },
-                         origin2: { x: number, y: number },
-                         sx: number, sy: number, recorder?: SizeRecorder) {
-    const p = s.parent;
-    if (!p) {
-        return;
-    }
-    const m = s.matrix2Root();
-    const lt = m.computeCoord2(0, 0);
-
-    const r_o_lt = { x: lt.x - origin1.x, y: lt.y - origin1.y };
-    const target_xy = { x: origin2.x + sx * r_o_lt.x, y: origin2.y + sy * r_o_lt.y };
-
-    let np = new Matrix();
-
-    const ex = pMap.get(p.id);
-    if (ex) {
-        np = ex;
-    } else {
-        np = new Matrix(p.matrix2Root().inverse);
-        pMap.set(p.id, np);
-    }
-    const xy = np.computeCoord3(target_xy);
-    if (sx < 0) {
-        api.shapeModifyHFlip(page, s);
-        sx = -sx;
-    }
-    if (sy < 0) {
-        api.shapeModifyVFlip(page, s);
-        sy = -sy;
-    }
-    const saveW = s.frame.width;
-    const saveH = s.frame.height;
-
-    // if (s.isFlippedHorizontal || s.isFlippedVertical) {
-    //     api.shapeModifyWH(page, s, s.frame.width * sx, s.frame.height * sy);
-    //     const self = s
-    //         .matrix2Parent()
-    //         .computeCoord2(0, 0);
-    //
-    //     const delta = { x: xy.x - self.x, y: xy.y - self.y };
-    //     api.shapeModifyX(page, s, s.frame.x + delta.x);
-    //     api.shapeModifyY(page, s, s.frame.y + delta.y);
-    // } else {
-    //     api.shapeModifyX(page, s, xy.x);
-    //     api.shapeModifyY(page, s, xy.y);
-    //     api.shapeModifyWH(page, s, s.frame.width * sx, s.frame.height * sy);
-    // }
-
-    if (s instanceof GroupShape) {
-        afterModifyGroupShapeWH(api, page, s, sx, sy, new ShapeFrame(s.frame.x, s.frame.y, saveW, saveH), recorder);
-    }
 }
 
 function __migrate(document: Document,

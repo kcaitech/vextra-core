@@ -1,39 +1,102 @@
 import { CoopRepository } from "../../coop/cooprepo";
 import { AsyncApiCaller } from "../AsyncApiCaller";
-import { Document } from "../../../data/document";
-import { adapt2Shape, PageView, ShapeView } from "../../../dataview";
-import { afterModifyGroupShapeWH, SizeRecorder } from "../../frame";
 import {
-    GroupShape,
+    Document, GroupShape,
     Shape,
-    ShapeFrame,
-    ShapeType,
     SymbolShape,
-    SymbolUnionShape,
-    TextShape
-} from "../../../data/shape";
-import { Page } from "../../../data/page";
-import { SymbolRefShape } from "../../../data/symbolref";
-import { fixTextShapeFrameByLayout } from "../../../editor/utils/other";
-import { ShapeSize, TextBehaviour } from "../../../data/classes";
-import { makeShapeTransform1By2, Transform as Transform2 } from "../../../index";
+    SymbolUnionShape, Page, SymbolRefShape, ShapeSize, ShapeType, makeShapeTransform2By1
+} from "../../../data";
+import { adapt2Shape, PageView, ShapeView } from "../../../dataview";
 
-export type ScaleUnit = {
-    shape: ShapeView;
+import { ColVector3D, makeShapeTransform1By2, Transform as Transform2 } from "../../../index";
+import { Api } from "../../coop/recordapi";
 
-    targetXY: { x: number, y: number };
-    targetWidth: number;
-    targetHeight: number;
-    targetRotation: number;
+export type RangeRecorder = Map<string, {
+    toRight?: number,
+    toBottom?: number,
+    centerOffsetLeft?: number,
+    centerOffsetTop?: number
+}>;
 
-    baseWidth: number;
-    baseHeight: number;
-    needFlipH: boolean;
-    needFlipV: boolean;
+export type SizeRecorder = Map<string, {
+    width: number;
+    height: number;
+}>;
+
+export type TransformRecorder = Map<string, Transform2>;
+
+
+/**
+ * 1. 靠右边、底边固定的需要记录外接盒子距离对应边的偏移；
+ * 2. 水平居中、垂直居中的需要记录外接盒子对应中点的偏移；
+ * 3. 确定入口：Scaler的执行函数、宽高属性设置执行函数；
+ * 4. 每次都把缩放比例传进来，每次都是基于第一帧的值做变换，不再需要每次计算当前帧并基于当前帧做变换
+ */
+
+export function scale() {
+
+}
+
+export function reLayoutBySizeChanged(
+    api: Api,
+    page: Page,
+    shape: GroupShape,
+    scale: {
+        x: number,
+        y: number
+    },
+    rangeRecorder: RangeRecorder,
+    sizeRecorder: SizeRecorder,
+    transformRecorder: TransformRecorder
+) {
+    const children = shape.childs;
+    const { x: sx, y: sy } = scale;
+
+    if (shape.type === ShapeType.Group || shape.type === ShapeType.BoolShape) {
+        const __p_transform = new Transform2().setScale(ColVector3D.FromXYZ(sx, sy, 1));
+
+        for (const child of children) {
+            const size = getSize(child);
+            api.shapeModifyWH(page, child, size.width * sx, size.height * sy);
+
+            const transform = getTransform(child).clone();
+            console.log('__TRANSFORM__', child.name, transform.toString());
+            transform.addTransform(__p_transform);
+            console.log(transform.toString());
+            transform.clearScaleSize();
+            console.log(transform.toString());
+            api.shapeModifyTransform(page, child, makeShapeTransform1By2(transform));
+        }
+    } else {
+
+    }
+
+    function getSize(s: Shape) {
+        let size = sizeRecorder.get(s.id);
+        if (!size) {
+            size = {
+                width: s.size.width,
+                height: s.size.height
+            };
+            sizeRecorder.set(s.id, size);
+        }
+        return size;
+    }
+
+    function getTransform(s: Shape) {
+        let transform = transformRecorder.get(s.id);
+        if (!transform) {
+            transform = makeShapeTransform2By1(s.transform);
+            transformRecorder.set(s.id, transform);
+        }
+        return transform;
+    }
 }
 
 export class Scaler extends AsyncApiCaller {
-    private recorder: SizeRecorder = new Map();
+    private recorder: RangeRecorder = new Map();
+    private sizeRecorder: SizeRecorder = new Map();
+    private transformRecorder: TransformRecorder = new Map;
     private needUpdateCustomSizeStatus: Set<Shape> = new Set();
 
     constructor(repo: CoopRepository, document: Document, page: PageView) {
@@ -71,26 +134,40 @@ export class Scaler extends AsyncApiCaller {
 
     execute(params: {
         shape: ShapeView;
+        oSize: ShapeSize,
         size: { width: number, height: number },
+        scale: { x: number, y: number },
         transform2: Transform2,
     }[]) {
         try {
+            const api = this.api;
+            const page = this.page;
+
+            const recorder = this.recorder;
+            const sizeRecorder = this.sizeRecorder;
+            const transformRecorder = this.transformRecorder;
             for (let i = 0; i < params.length; i++) {
                 const item = params[i];
+
                 const shape = adapt2Shape(item.shape);
                 const size = item.size;
+                const scale = item.scale;
 
-                const isgroup = shape instanceof GroupShape;
+                // const isgroup = shape instanceof GroupShape;
+                //
+                // const frame = isgroup ? new ShapeSize(shape.size.width, shape.size.height) : undefined;
+                //
+                // const scaleX = size.width / shape.size.width;
+                // const scaleY = size.height / shape.size.height;
 
-                const frame = isgroup ? new ShapeSize(shape.size.width, shape.size.height) : undefined;
+                api.shapeModifyWH(page, shape, size.width, size.height);
+                api.shapeModifyTransform(page, shape, makeShapeTransform1By2(item.transform2));
 
-                const scaleX = size.width / shape.size.width;
-                const scaleY = size.height / shape.size.height;
+                // if (shape instanceof GroupShape) afterModifyGroupShapeWH(api, page, shape, scaleX, scaleY, frame!);
 
-                this.api.shapeModifyWH(this.page, shape, size.width, size.height);
-                this.api.shapeModifyTransform(this.page, shape, makeShapeTransform1By2(item.transform2));
-
-                if (isgroup) afterModifyGroupShapeWH(this.api, this.page, shape, scaleX, scaleY, frame!)
+                if (shape instanceof GroupShape) {
+                    reLayoutBySizeChanged(api, page, shape as GroupShape, scale, recorder, sizeRecorder, transformRecorder);
+                }
             }
 
             this.afterShapeSizeChange();

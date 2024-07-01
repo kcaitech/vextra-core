@@ -1,6 +1,6 @@
 import { expandTo, translate, translateTo } from "../../editor/frame";
 import { Page } from "../../data/page";
-import { PathShape, Shape, ShapeFrame } from "../../data/shape";
+import { GroupShape, PathShape, Shape, ShapeFrame } from "../../data/shape";
 import { Api } from "../coop/recordapi";
 import { is_straight, update_frame_by_points } from "./path";
 import { getHorizontalRadians } from "../../editor/page";
@@ -8,10 +8,12 @@ import { Artboard } from "../../data/artboard";
 import { Point2D } from "../../data/typesdefine";
 import { float_accuracy } from "../../basic/consts";
 import { Document } from "../../data/document";
+import { reLayoutBySizeChanged } from "../asyncApiHandler";
 
 function equal_with_mean(a: number, b: number) {
     return Math.abs(a - b) < float_accuracy;
 }
+
 /**
  * @description 修改直线的width，操作的是直线段的第二个CurvePoint
  */
@@ -39,6 +41,7 @@ function modify_straight_length(api: Api, page: Page, shape: PathShape, val: num
 
     update_frame_by_points(api, page, shape);
 }
+
 /**
  * @description 主动修改图形的宽度为指定宽度val，这个函数因直线段而存在🤯
  */
@@ -61,6 +64,13 @@ export function modify_shapes_width(api: Api, document: Document, page: Page, sh
         }
 
         expandTo(api, document, page, shape, val, h);
+
+        if (shape instanceof GroupShape) {
+            reLayoutBySizeChanged(api, page, shape, {
+                x: val / w,
+                y: h / shape.frame.height
+            }, new Map(), new Map(), new Map());
+        }
     }
 }
 
@@ -82,8 +92,16 @@ export function modify_shapes_height(api: Api, document: Document, page: Page, s
         }
 
         expandTo(api, document, page, shape, w, val);
+
+        if (shape instanceof GroupShape) {
+            reLayoutBySizeChanged(api, page, shape, {
+                x: val / shape.frame.width,
+                y: val / shape.frame.height
+            }, new Map(), new Map(), new Map());
+        }
     }
 }
+
 /**
  * @description 裁剪容器空白区域(保留自身transform)
  */
@@ -95,9 +113,9 @@ export function adapt_for_artboard(api: Api, page: Page, artboard: Artboard) {
         return;
     }
 
-    
+
     const m_artboard_to_root = artboard.matrix2Root();
-    
+
     const f = artboard.frame;
     const box = get_new_box();
 
@@ -137,12 +155,14 @@ export function adapt_for_artboard(api: Api, page: Page, artboard: Artboard) {
 
         return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
     }
+
     function no_need_to_adapt() {
         return equal_with_mean(0, box.x)
             && equal_with_mean(0, box.y)
             && equal_with_mean(f.width, box.width)
             && equal_with_mean(f.height, box.height)
     }
+
     function re_children_layout() {
         children.forEach(c => {
             api.shapeModifyX(page, c, c.frame.x - box.x);

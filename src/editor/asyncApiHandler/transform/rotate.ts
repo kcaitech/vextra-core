@@ -38,22 +38,4 @@ export class Rotator extends AsyncApiCaller {
             this.exception = true;
         }
     }
-
-    // execute4multi(rotateUnits: RotateUnit[]) {
-    //     try {
-    //         for (let i = 0; i < rotateUnits.length; i++) {
-    //             const unit = rotateUnits[i];
-    //             const shape = adapt2Shape(unit.shape);
-    //
-    //             this.api.shapeModifyRotate(this.page, shape, unit.targetRotate);
-    //
-    //             this.api.shapeModifyX(this.page, shape, unit.x);
-    //             this.api.shapeModifyY(this.page, shape, unit.y);
-    //         }
-    //         this.updateView();
-    //     } catch (error) {
-    //         console.log('error:', error);
-    //         this.exception = true;
-    //     }
-    // }
 }

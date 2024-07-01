@@ -1,8 +1,5 @@
-import { Page } from "../data/page";
 import { CoopRepository } from "./coop/cooprepo";
-import { ResizingConstraints2 } from "../data/consts";
-import { ShapeType } from "../data/baseclasses";
-import { Document, Shape } from "../data/classes";
+import { Document, Shape, ShapeType, Page, ResizingConstraints2 } from "../data";
 
 export class resizingConstraintEditor {
     protected __repo: CoopRepository;
@@ -320,6 +317,4 @@ export class resizingConstraintEditor {
             this.__repo.rollback();
         }
     }
-
-    // todo...
 }

@@ -126,7 +126,7 @@ export class Transporter extends AsyncApiCaller {
                     this.__migrate(this.__document, this.api, this.page, op as GroupShape, adapt2Shape(_v.shape), dlt, _v.index, env_transform);
                 }
             });
-            this.__repo.transactCtx.fireNotify();
+            this.updateView();
             this.setCurrentEnv(emit_by);
         } catch (error) {
             console.log('Transporter.migrate', error);
@@ -168,7 +168,6 @@ export class Transporter extends AsyncApiCaller {
         const origin: GroupShape = shape.parent as GroupShape;
 
         if (origin.id === targetParent.id) {
-            // console.log('origin.id === targetParent.id');
             return;
         }
 
@@ -177,48 +176,8 @@ export class Transporter extends AsyncApiCaller {
             api.shapeModifyName(page, shape, `${origin.name}/${name}`);
         }
 
-        // origin
-        let hflip = false;
-        let vflip = false;
-        let p0: Shape | undefined = shape.parent;
-        // todo flip
-        // while (p0) {
-        //     if (p0.isFlippedHorizontal) {
-        //         hflip = !hflip;
-        //     }
-        //     if (p0.isFlippedVertical) {
-        //         vflip = !vflip;
-        //     }
-        //     p0 = p0.parent;
-        // }
-
-        const m = shape.matrix2Root();
-        const { x, y } = m.computeCoord(0, 0);
         api.shapeMove(page, origin, origin.indexOfChild(shape), targetParent, index++);
 
-        if (hflip !== transform.ohflip) api.shapeModifyHFlip(page, shape);
-        if (vflip !== transform.ovflip) api.shapeModifyVFlip(page, shape);
-
-        m.multiAtLeft(transform.pminverse);
-        let sina = m.m10;
-        let cosa = m.m00;
-        // todo flip
-        // if (shape.isFlippedVertical) sina = -sina;
-        // if (shape.isFlippedHorizontal) cosa = -cosa;
-        let rotate = Math.asin(sina);
-
-        if (cosa < 0) {
-            if (sina > 0) rotate = Math.PI - rotate;
-            else if (sina < 0) rotate = -Math.PI - rotate;
-            else rotate = Math.PI;
-        }
-
-        if (!Number.isNaN(rotate)) {
-            const r = (rotate / (2 * Math.PI) * 360) % 360;
-            // if (r !== (shape.rotation ?? 0)) api.shapeModifyRotate(page, shape, r);
-        }
-
-        translateTo(api, page, shape, x, y);
         after_migrate(document, page, api, origin);
     }
 }
