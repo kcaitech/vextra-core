@@ -4,18 +4,19 @@ import {
     Document, GroupShape,
     Shape,
     SymbolShape,
-    SymbolUnionShape, Page, SymbolRefShape, ShapeType, makeShapeTransform2By1, ResizingConstraints2
+    SymbolUnionShape, Page, SymbolRefShape, ShapeType, makeShapeTransform2By1, ResizingConstraints2, ShapeFrame
 } from "../../../data";
 import { adapt2Shape, PageView, ShapeView } from "../../../dataview";
 
-import { ColVector3D, makeShapeTransform1By2, Transform as Transform2 } from "../../../index";
+import { ColVector3D, makeShapeTransform1By2, Transform as Transform2, XYsBounding } from "../../../index";
 import { Api } from "../../coop/recordapi";
 
 export type RangeRecorder = Map<string, {
     toRight?: number,
     toBottom?: number,
     centerOffsetLeft?: number,
-    centerOffsetTop?: number
+    centerOffsetTop?: number,
+    box?: ShapeFrame
 }>;
 
 export type SizeRecorder = Map<string, {
@@ -80,35 +81,81 @@ export function reLayoutBySizeChanged(
 
             let targetWidth: number = oSize.width;
             let targetHeight: number = oSize.height;
+            const __scale = { x: 1, y: 1 };
 
             if (ResizingConstraints2.isHorizontalScale(resizingConstraint)) {
-                const __p_transform_hor_scale = new Transform2().setScale(ColVector3D.FromXYZ(sx, 1, 1));
+                // 跟随缩放
+                const __p_transform_hor_scale = new Transform2().setScale(ColVector3D.FromXYZ(sx, sy, 1));
 
                 transform.addTransform(__p_transform_hor_scale);
 
-                targetWidth = oSize.width * Math.abs(transform.decomposeScale().x);
+                const _s = transform.decomposeScale();
+                __scale.x = Math.abs(_s.x);
+                __scale.y = Math.abs(_s.y);
 
+                targetWidth = oSize.width * __scale.x;
+                targetHeight = oSize.height * __scale.y;
                 transform.clearScaleSize();
-            } else {
+            } else if (ResizingConstraints2.isFixedLeftAndRight(resizingConstraint)) {
+                // 两边固定，两边固定最难搞了
+                // todo 调整水平缩放就好了
 
+            } else {
+                // 剩下靠左、靠右、居中，这三个场景都需要分别考虑宽度是否固定
+                if (ResizingConstraints2.isFlexWidth(resizingConstraint)) {
+                    // 宽度不固定
+                    const __p_transform_hor_scale = new Transform2().setScale(ColVector3D.FromXYZ(sx, sy, 1));
+
+                    transform.addTransform(__p_transform_hor_scale);
+
+                    const _s = transform.decomposeScale();
+                    __scale.x = Math.abs(_s.x);
+                    __scale.y = Math.abs(_s.y);
+
+                    targetWidth = oSize.width * __scale.x;
+                    targetHeight = oSize.height * __scale.y;
+
+                    transform.clearScaleSize();
+
+                    if (ResizingConstraints2.isFixedToLeft(resizingConstraint)) {
+                        const bounding = box(child);
+                        transform.translate(ColVector3D.FromXY(-(bounding.x * sx - bounding.x), 0));
+                    } else if (ResizingConstraints2.isFixedToRight(resizingConstraint)) {
+                        const __to_right = toRight(child);
+                        transform.translate(ColVector3D.FromXY(__to_right * sx - __to_right, 0));
+                    } else if (ResizingConstraints2.isHorizontalJustifyCenter(resizingConstraint)) {
+                        const __center_offset_left = centerOffsetLeft(child);
+                        transform.translate(ColVector3D.FromXY(-(__center_offset_left * sx - __center_offset_left), 0));
+                    }
+                } else {
+                    // 宽度固定
+                    if (ResizingConstraints2.isFixedToLeft(resizingConstraint)) {
+                        // 靠左固定
+                        const __p_transform_hor_scale = new Transform2().setScale(ColVector3D.FromXYZ(sx, sy, 1));
+
+                        transform.addTransform(__p_transform_hor_scale);
+                        transform.clearScaleSize();
+
+                        const bounding = box(child);
+
+                        transform.translate(ColVector3D.FromXY(-(bounding.x * sx - bounding.x), 0));
+                    } else if (ResizingConstraints2.isFixedToRight(resizingConstraint)) {
+                        // 靠右固定
+                        transform.translate(ColVector3D.FromXY((sx - 1) * (shape.size.width / sx), 0));
+                    } else if (ResizingConstraints2.isHorizontalJustifyCenter(resizingConstraint)) {
+                        // todo 宽度固定并居中
+                        const __center_offset_left = centerOffsetLeft(child);
+                        transform.translate(ColVector3D.FromXY(-(__center_offset_left * sx - __center_offset_left), 0));
+                    }
+                }
             }
 
-            // 垂直
-            if (ResizingConstraints2.isVerticalScale(resizingConstraint)) {
-                const __p_transform_ver_scale = new Transform2().setScale(ColVector3D.FromXYZ(1, sy, 1));
-
-                transform.addTransform(__p_transform_ver_scale);
-
-                targetHeight = oSize.height * Math.abs(transform.decomposeScale().y);
-
-                transform.clearScaleSize();
-            } else {
-
-            }
-
-            // 垂直
             api.shapeModifyWH(page, child, targetWidth, targetHeight);
             api.shapeModifyTransform(page, child, makeShapeTransform1By2(transform));
+
+            if (child instanceof GroupShape) {
+                reLayoutBySizeChanged(api, page, child, __scale, rangeRecorder, sizeRecorder, transformRecorder);
+            }
         }
     }
 
@@ -131,6 +178,66 @@ export function reLayoutBySizeChanged(
             transformRecorder.set(s.id, transform);
         }
         return transform;
+    }
+
+    function centerOffsetLeft(s: Shape) {
+        let RR = rangeRecorder.get(s.id);
+        if (!RR) {
+            RR = {};
+            rangeRecorder.set(s.id, RR);
+        }
+        if (RR.centerOffsetLeft === undefined) {
+            const bounding = box(s);
+            RR.centerOffsetLeft = (bounding.x + bounding.width / 2) - (s.parent!.size.width / sx) / 2;
+        }
+
+        return RR.centerOffsetLeft;
+    }
+
+    function toRight(s: Shape) {
+        let RR = rangeRecorder.get(s.id);
+        if (!RR) {
+            RR = {};
+            rangeRecorder.set(s.id, RR);
+        }
+        if (RR.toRight === undefined) {
+            const bounding = box(s);
+            RR.toRight = s.parent!.size.width / sx - bounding.x - bounding.width;
+        }
+
+        return RR.toRight;
+    }
+
+    function box(s: Shape) {
+        let RR = rangeRecorder.get(s.id);
+
+        if (!RR) {
+            RR = {};
+            rangeRecorder.set(s.id, RR);
+        }
+
+        if (RR.box === undefined) {
+            const transform = getTransform(s);
+
+            const size = getSize(s);
+
+            const cols = transform.transform([
+                ColVector3D.FromXY(0, 0),
+                ColVector3D.FromXY(size.width, 0),
+                ColVector3D.FromXY(size.width, size.height),
+                ColVector3D.FromXY(0, size.height)
+            ]);
+
+            const box = XYsBounding([cols.col0, cols.col1, cols.col2, cols.col3]);
+            RR.box = {
+                x: box.left,
+                y: box.top,
+                width: box.right - box.left,
+                height: box.bottom - box.top
+            } as ShapeFrame;
+        }
+
+        return RR.box;
     }
 }
 
@@ -195,6 +302,7 @@ export class Scaler extends AsyncApiCaller {
 
                 api.shapeModifyWH(page, shape, size.width, size.height);
                 api.shapeModifyTransform(page, shape, makeShapeTransform1By2(item.transform2));
+
 
                 if (shape instanceof GroupShape) {
                     reLayoutBySizeChanged(api, page, shape as GroupShape, scale, recorder, sizeRecorder, transformRecorder);

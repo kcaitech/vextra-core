@@ -30,41 +30,41 @@ export type SizeRecorder = Map<string, { toRight: number, exceededX: boolean, to
 export const minimum_WH = 0.01; // 用户可设置最小宽高值。以防止宽高在缩放后为0
 
 export function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape, scaleX: number, scaleY: number, originFrame: ShapeSize, recorder?: SizeRecorder) {
-    const childs = shape.childs;
-
-    const noconstrain = shape.type === ShapeType.Group || shape.type === ShapeType.BoolShape; // 有且只有编组的子元素只可为跟随缩放，应忽略constraint
-
-    for (let i = 0, len = childs.length; i < len; i++) {
-        const c = childs[i];
-
-        let sx = scaleX, sy = scaleY;
-        const frame = c.frame2Parent();
-        let ox = frame.x, oy = frame.y;
-        if (!noconstrain) {
-            const frame2 = fixConstrainFrame(c, c.resizingConstraint ?? ResizingConstraints2.Default, frame.x, frame.y, frame.width, frame.height, scaleX, scaleY, shape.size, originFrame);
-            sx = frame2.width / frame.width;
-            sy = frame2.height / frame.height;
-            ox = frame2.x;
-            oy = frame2.y;
-        } else {
-            ox *= scaleX;
-            oy *= scaleY;
-        }
-
-        const ow = c.size.width;
-        const oh = c.size.height;
-
-        api.shapeModifyWH(page, c, c.size.width * sx, c.size.height * sy);
-        const origin2 = c.transform.computeCoord(0, 0);
-        const dx = ox - origin2.x;
-        const dy = oy - origin2.y;
-        api.shapeModifyX(page, c, c.transform.m02 + dx);
-        api.shapeModifyY(page, c, c.transform.m12 + dy);
-
-        if (c instanceof GroupShape) {
-            afterModifyGroupShapeWH(api, page, c, sx, sy, new ShapeSize(ow, oh))
-        }
-    }
+    // const childs = shape.childs;
+    //
+    // const noconstrain = shape.type === ShapeType.Group || shape.type === ShapeType.BoolShape; // 有且只有编组的子元素只可为跟随缩放，应忽略constraint
+    //
+    // for (let i = 0, len = childs.length; i < len; i++) {
+    //     const c = childs[i];
+    //
+    //     let sx = scaleX, sy = scaleY;
+    //     const frame = c.frame2Parent();
+    //     let ox = frame.x, oy = frame.y;
+    //     if (!noconstrain) {
+    //         const frame2 = fixConstrainFrame(c, c.resizingConstraint ?? ResizingConstraints2.Default, frame.x, frame.y, frame.width, frame.height, scaleX, scaleY, shape.size, originFrame);
+    //         sx = frame2.width / frame.width;
+    //         sy = frame2.height / frame.height;
+    //         ox = frame2.x;
+    //         oy = frame2.y;
+    //     } else {
+    //         ox *= scaleX;
+    //         oy *= scaleY;
+    //     }
+    //
+    //     const ow = c.size.width;
+    //     const oh = c.size.height;
+    //
+    //     api.shapeModifyWH(page, c, c.size.width * sx, c.size.height * sy);
+    //     const origin2 = c.transform.computeCoord(0, 0);
+    //     const dx = ox - origin2.x;
+    //     const dy = oy - origin2.y;
+    //     api.shapeModifyX(page, c, c.transform.m02 + dx);
+    //     api.shapeModifyY(page, c, c.transform.m12 + dy);
+    //
+    //     if (c instanceof GroupShape) {
+    //         afterModifyGroupShapeWH(api, page, c, sx, sy, new ShapeSize(ow, oh))
+    //     }
+    // }
 }
 
 export function fixConstrainFrame(shape: Shape, resizingConstraint: number, x: number, y: number, width: number, height: number, scaleX: number, scaleY: number, currentEnvFrame: ShapeSize, originEnvFrame: ShapeSize, recorder?: SizeRecorder) {
