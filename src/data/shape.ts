@@ -307,14 +307,6 @@ export class Shape extends Basic implements classes.Shape {
      * @description 无论是否transform都进行Bounds计算并返回
      */
     boundingBox2(): ShapeFrame {
-        const path = this.getPath();
-        if (path.length > 0) {
-            const m = this.matrix2Parent();
-            path.transform(m);
-            const bounds = path.calcBounds();
-            return new ShapeFrame(bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
-        }
-
         const frame = this.size;
         const m = this.matrix2Parent();
         const corners = [{ x: 0, y: 0 }, { x: frame.width, y: 0 }, { x: frame.width, y: frame.height }, {
