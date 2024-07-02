@@ -4,7 +4,7 @@ import {
     Document, GroupShape,
     Shape,
     SymbolShape,
-    SymbolUnionShape, Page, SymbolRefShape, ShapeType, makeShapeTransform2By1
+    SymbolUnionShape, Page, SymbolRefShape, ShapeType, makeShapeTransform2By1, ResizingConstraints2
 } from "../../../data";
 import { adapt2Shape, PageView, ShapeView } from "../../../dataview";
 
@@ -27,11 +27,12 @@ export type TransformRecorder = Map<string, Transform2>;
 
 
 /**
- * 1. 靠右边、底边固定的需要记录外接盒子距离对应边的偏移；
- * 2. 水平居中、垂直居中的需要记录外接盒子对应中点的偏移；
- * 3. 确定入口：Scaler的执行函数、宽高属性设置执行函数；
- * 4. 每次都把缩放比例传进来，每次都是基于第一帧的值做变换，不再需要每次计算当前帧并基于当前帧做变换；
- * 5. 编组，按跟随缩放处理；
+ * · 入口：Scaler的执行函数、宽高属性设置执行函数；
+ *
+ * · 都把缩放比例传进来，后续都是基于第一帧的值做变换，不再需要计算当前帧状态；
+ * · 编组，按跟随缩放处理；
+ * · 靠右边、底边固定的需要记录外接盒子距离对应边的偏移；
+ * · 水平居中、垂直居中的需要记录外接盒子对应中点的偏移；
  */
 
 export function reLayoutBySizeChanged(
@@ -42,7 +43,7 @@ export function reLayoutBySizeChanged(
         x: number,
         y: number
     },
-    rangeRecorder: RangeRecorder,
+    rangeRecorder: RangeRecorder, // 三个Recorder记录的都为起始帧状态
     sizeRecorder: SizeRecorder,
     transformRecorder: TransformRecorder
 ) {
@@ -71,7 +72,44 @@ export function reLayoutBySizeChanged(
             }
         }
     } else {
+        for (const child of children) {
+            // 水平
+            const resizingConstraint = child.resizingConstraint ?? ResizingConstraints2.Default;
+            const transform = getTransform(child).clone();
+            const oSize = getSize(child);
 
+            let targetWidth: number = oSize.width;
+            let targetHeight: number = oSize.height;
+
+            if (ResizingConstraints2.isHorizontalScale(resizingConstraint)) {
+                const __p_transform_hor_scale = new Transform2().setScale(ColVector3D.FromXYZ(sx, 1, 1));
+
+                transform.addTransform(__p_transform_hor_scale);
+
+                targetWidth = oSize.width * Math.abs(transform.decomposeScale().x);
+
+                transform.clearScaleSize();
+            } else {
+
+            }
+
+            // 垂直
+            if (ResizingConstraints2.isVerticalScale(resizingConstraint)) {
+                const __p_transform_ver_scale = new Transform2().setScale(ColVector3D.FromXYZ(1, sy, 1));
+
+                transform.addTransform(__p_transform_ver_scale);
+
+                targetHeight = oSize.height * Math.abs(transform.decomposeScale().y);
+
+                transform.clearScaleSize();
+            } else {
+
+            }
+
+            // 垂直
+            api.shapeModifyWH(page, child, targetWidth, targetHeight);
+            api.shapeModifyTransform(page, child, makeShapeTransform1By2(transform));
+        }
     }
 
     function getSize(s: Shape) {
