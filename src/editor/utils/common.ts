@@ -95,8 +95,8 @@ export function modify_shapes_height(api: Api, document: Document, page: Page, s
 
         if (shape instanceof GroupShape) {
             reLayoutBySizeChanged(api, page, shape, {
-                x: val / shape.frame.width,
-                y: val / shape.frame.height
+                x: w / shape.frame.width,
+                y: val / h
             }, new Map(), new Map(), new Map());
         }
     }

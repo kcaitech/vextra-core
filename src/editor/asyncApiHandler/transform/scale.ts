@@ -4,7 +4,7 @@ import {
     Document, GroupShape,
     Shape,
     SymbolShape,
-    SymbolUnionShape, Page, SymbolRefShape, ShapeSize, ShapeType, makeShapeTransform2By1
+    SymbolUnionShape, Page, SymbolRefShape, ShapeType, makeShapeTransform2By1
 } from "../../../data";
 import { adapt2Shape, PageView, ShapeView } from "../../../dataview";
 
@@ -30,12 +30,9 @@ export type TransformRecorder = Map<string, Transform2>;
  * 1. 靠右边、底边固定的需要记录外接盒子距离对应边的偏移；
  * 2. 水平居中、垂直居中的需要记录外接盒子对应中点的偏移；
  * 3. 确定入口：Scaler的执行函数、宽高属性设置执行函数；
- * 4. 每次都把缩放比例传进来，每次都是基于第一帧的值做变换，不再需要每次计算当前帧并基于当前帧做变换
+ * 4. 每次都把缩放比例传进来，每次都是基于第一帧的值做变换，不再需要每次计算当前帧并基于当前帧做变换；
+ * 5. 编组，按跟随缩放处理；
  */
-
-export function scale() {
-
-}
 
 export function reLayoutBySizeChanged(
     api: Api,
@@ -52,20 +49,26 @@ export function reLayoutBySizeChanged(
     const children = shape.childs;
     const { x: sx, y: sy } = scale;
 
+    // 编组
     if (shape.type === ShapeType.Group || shape.type === ShapeType.BoolShape) {
         const __p_transform = new Transform2().setScale(ColVector3D.FromXYZ(sx, sy, 1));
 
         for (const child of children) {
-            const size = getSize(child);
-            api.shapeModifyWH(page, child, size.width * sx, size.height * sy);
-
             const transform = getTransform(child).clone();
-            console.log('__TRANSFORM__', child.name, transform.toString());
             transform.addTransform(__p_transform);
-            console.log(transform.toString());
+
+            const _s = transform.decomposeScale();
+            const _scale = { x: _s.x, y: _s.y };
+
+            const size = getSize(child);
+            api.shapeModifyWH(page, child, size.width * Math.abs(_scale.x), size.height * Math.abs(_scale.y));
+
             transform.clearScaleSize();
-            console.log(transform.toString());
             api.shapeModifyTransform(page, child, makeShapeTransform1By2(transform));
+
+            if (child instanceof GroupShape) {
+                reLayoutBySizeChanged(api, page, child, _scale, rangeRecorder, sizeRecorder, transformRecorder);
+            }
         }
     } else {
 
@@ -134,7 +137,6 @@ export class Scaler extends AsyncApiCaller {
 
     execute(params: {
         shape: ShapeView;
-        oSize: ShapeSize,
         size: { width: number, height: number },
         scale: { x: number, y: number },
         transform2: Transform2,
@@ -153,17 +155,8 @@ export class Scaler extends AsyncApiCaller {
                 const size = item.size;
                 const scale = item.scale;
 
-                // const isgroup = shape instanceof GroupShape;
-                //
-                // const frame = isgroup ? new ShapeSize(shape.size.width, shape.size.height) : undefined;
-                //
-                // const scaleX = size.width / shape.size.width;
-                // const scaleY = size.height / shape.size.height;
-
                 api.shapeModifyWH(page, shape, size.width, size.height);
                 api.shapeModifyTransform(page, shape, makeShapeTransform1By2(item.transform2));
-
-                // if (shape instanceof GroupShape) afterModifyGroupShapeWH(api, page, shape, scaleX, scaleY, frame!);
 
                 if (shape instanceof GroupShape) {
                     reLayoutBySizeChanged(api, page, shape as GroupShape, scale, recorder, sizeRecorder, transformRecorder);
