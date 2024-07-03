@@ -30,7 +30,7 @@ export type SizeRecorder = Map<string, { toRight: number, exceededX: boolean, to
 export const minimum_WH = 0.01; // 用户可设置最小宽高值。以防止宽高在缩放后为0
 
 /**
- * @deprecated 请使用 reLayoutBySizeChanged (/src/editor/asyncApiHandler/transform/scale.ts)
+ * @deprecated 请使用 reLayoutBySizeChanged (src/editor/asyncApiHandler/transform/scale.ts)
  */
 export function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape, scaleX: number, scaleY: number, originFrame: ShapeSize, recorder?: SizeRecorder) {
     // const childs = shape.childs;
@@ -240,14 +240,14 @@ function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: 
             api.shapeModifyWH(page, shape, w, h)
             fixTextShapeFrameByLayout(api, page, shape);
         } else if (shape instanceof GroupShape) {
-            const saveW = frame.width;
-            const saveH = frame.height;
+            // const saveW = frame.width;
+            // const saveH = frame.height;
             api.shapeModifyWH(page, shape, w, h)
-            const scaleX = frame.width / saveW;
-            const scaleY = frame.height / saveH;
+            // const scaleX = frame.width / saveW;
+            // const scaleY = frame.height / saveH;
 
             // 这个scaleX, scaleY 不对
-            afterModifyGroupShapeWH(api, page, shape, scaleX, scaleY, new ShapeFrame(frame.x, frame.y, saveW, saveH), recorder);
+            // afterModifyGroupShapeWH(api, page, shape, scaleX, scaleY, new ShapeFrame(frame.x, frame.y, saveW, saveH), recorder);
         } else {
             api.shapeModifyWH(page, shape, w, h)
         }
