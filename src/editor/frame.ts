@@ -29,6 +29,9 @@ export type SizeRecorder = Map<string, { toRight: number, exceededX: boolean, to
 
 export const minimum_WH = 0.01; // 用户可设置最小宽高值。以防止宽高在缩放后为0
 
+/**
+ * @deprecated 请使用 reLayoutBySizeChanged (/src/editor/asyncApiHandler/transform/scale.ts)
+ */
 export function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape, scaleX: number, scaleY: number, originFrame: ShapeSize, recorder?: SizeRecorder) {
     // const childs = shape.childs;
     //

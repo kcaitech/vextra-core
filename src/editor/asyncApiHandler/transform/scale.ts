@@ -4,7 +4,13 @@ import {
     Document, GroupShape,
     Shape,
     SymbolShape,
-    SymbolUnionShape, Page, SymbolRefShape, ShapeType, makeShapeTransform2By1, ResizingConstraints2, ShapeFrame
+    SymbolUnionShape,
+    Page,
+    SymbolRefShape,
+    ShapeType,
+    ShapeFrame,
+    makeShapeTransform2By1,
+    ResizingConstraints2
 } from "../../../data";
 import { adapt2Shape, PageView, ShapeView } from "../../../dataview";
 
@@ -26,16 +32,23 @@ export type SizeRecorder = Map<string, {
 
 export type TransformRecorder = Map<string, Transform2>;
 
-
 /**
- * · 入口：Scaler的执行函数、宽高属性设置执行函数；
+ * @description shape为父级图层，size发生变化后，子元素需要根据约束条件重新布局(先父级变化再子级重排)
  *
+ * · 入口：Scaler的执行函数、宽高属性设置执行函数；
  * · 都把缩放比例传进来，后续都是基于第一帧的值做变换，不再需要计算当前帧状态；
  * · 编组，按跟随缩放处理；
  * · 靠右边、底边固定的需要记录外接盒子距离对应边的偏移；
  * · 水平居中、垂直居中的需要记录外接盒子对应中点的偏移；
+ *
+ * @param api
+ * @param page
+ * @param shape
+ * @param scale X、Y轴缩放值
+ * @param _rangeRecorder 三个Recorder记录的都是起始帧下child的部分属性状态
+ * @param _sizeRecorder
+ * @param _transformRecorder
  */
-
 export function reLayoutBySizeChanged(
     api: Api,
     page: Page,
@@ -44,16 +57,21 @@ export function reLayoutBySizeChanged(
         x: number,
         y: number
     },
-    rangeRecorder: RangeRecorder, // 三个Recorder记录的都为起始帧状态
-    sizeRecorder: SizeRecorder,
-    transformRecorder: TransformRecorder
+    _rangeRecorder?: RangeRecorder,
+    _sizeRecorder?: SizeRecorder,
+    _transformRecorder?: TransformRecorder
 ) {
-    const children = shape.childs;
-    const { x: sx, y: sy } = scale;
+    const rangeRecorder: RangeRecorder = _rangeRecorder ?? new Map();
+    const sizeRecorder: SizeRecorder = _sizeRecorder ?? new Map();
+    const transformRecorder: TransformRecorder = _transformRecorder ?? new Map();
 
-    // 编组
+    const children = shape.childs;
+    // shape收到的两轴缩放值
+    const { x: SX, y: SY } = scale;
+
     if (shape.type === ShapeType.Group || shape.type === ShapeType.BoolShape) {
-        const __p_transform = new Transform2().setScale(ColVector3D.FromXYZ(sx, sy, 1));
+        // 编组
+        const __p_transform = new Transform2().setScale(ColVector3D.FromXYZ(SX, SY, 1));
 
         for (const child of children) {
             const transform = getTransform(child).clone();
@@ -62,8 +80,8 @@ export function reLayoutBySizeChanged(
             const _s = transform.decomposeScale();
             const _scale = { x: _s.x, y: _s.y };
 
-            const size = getSize(child);
-            api.shapeModifyWH(page, child, size.width * Math.abs(_scale.x), size.height * Math.abs(_scale.y));
+            const oSize = getSize(child);
+            api.shapeModifyWH(page, child, oSize.width * Math.abs(_scale.x), oSize.height * Math.abs(_scale.y));
 
             transform.clearScaleSize();
             api.shapeModifyTransform(page, child, makeShapeTransform1By2(transform));
@@ -73,25 +91,29 @@ export function reLayoutBySizeChanged(
             }
         }
     } else {
+        // 除去编组，其他容器级别的图层需要根据具体是约束状态进行重新布局
         for (const child of children) {
-            // 水平
             const resizingConstraint = child.resizingConstraint ?? ResizingConstraints2.Default;
-            const transform = getTransform(child).clone();
+
             const oSize = getSize(child);
 
-            let targetWidth: number = oSize.width;
-            let targetHeight: number = oSize.height;
             const __scale = { x: 1, y: 1 };
 
+            // 预备修改的值
+            let targetWidth: number = oSize.width;
+            let targetHeight: number = oSize.height;
+            const transform = getTransform(child).clone();
+
+            // 水平
             if (ResizingConstraints2.isHorizontalScale(resizingConstraint)) {
                 // 跟随缩放
-                const __p_transform_hor_scale = new Transform2().setScale(ColVector3D.FromXYZ(sx, 1, 1));
+                const __p_transform_hor_scale = new Transform2().setScale(ColVector3D.FromXYZ(SX, 1, 1));
 
                 transform.addTransform(__p_transform_hor_scale);
 
                 const _s = transform.decomposeScale();
-                __scale.x = Math.abs(_s.x);
-                __scale.y = Math.abs(_s.y);
+                __scale.x *= Math.abs(_s.x);
+                __scale.y *= Math.abs(_s.y);
 
                 targetWidth = oSize.width * __scale.x;
                 targetHeight = oSize.height * __scale.y;
@@ -100,15 +122,16 @@ export function reLayoutBySizeChanged(
                 // 两边固定，两边固定最难搞了
 
                 // · 保持距离两边的数值不变的情况下，shape宽变化，将对child的width造成影响(注意bounding位置是不受影响的)
-                // 前后比对child的width得到ScaleX，根据该值调整水平缩放，实现两边的固定
+                // 比对前后child的width得到ScaleX，根据该值调整水平缩放，实现两边的固定
                 const bounding = box(child);
                 const __to_right = toRight(child);
 
-                const _target_width = shape.size.width - bounding.x - __to_right;
-                const __target_sx = _target_width / bounding.width;
+                const __target_width = shape.size.width - bounding.x - __to_right;
+                const __target_sx = __target_width / bounding.width;
 
                 // 确定一个缩放区域(BSS)：以bounding左上角为原点的一个坐标系
-                const __sec_transform = new Transform2().setTranslate(ColVector3D.FromXY(bounding.x, bounding.y));
+                const __sec_transform = new Transform2()
+                    .setTranslate(ColVector3D.FromXY(bounding.x, bounding.y));
 
                 // 让图层进入缩放区域(BSS)
                 transform.addTransform(__sec_transform.getInverse());
@@ -121,24 +144,24 @@ export function reLayoutBySizeChanged(
 
                 // 结算到size上
                 const _s = transform.decomposeScale();
-                __scale.x = Math.abs(_s.x);
-                __scale.y = Math.abs(_s.y);
+                __scale.x *= Math.abs(_s.x);
+                __scale.y *= Math.abs(_s.y);
 
                 targetWidth = oSize.width * __scale.x;
                 targetHeight = oSize.height * __scale.y;
 
                 transform.clearScaleSize();
             } else {
-                // 剩下靠左、靠右、居中，这三个场景都需要分别考虑宽度是否固定
+                // 剩下靠左、靠右、居中，这三个场景都需要分别考虑宽度是否固定，其中如果满足靠左固定并且宽度固定，则不需要重新布局
                 if (ResizingConstraints2.isFlexWidth(resizingConstraint)) {
                     // 宽度不固定
-                    const __p_transform_hor_scale = new Transform2().setScale(ColVector3D.FromXYZ(sx, sy, 1));
+                    const __p_transform_hor_scale = new Transform2().setScale(ColVector3D.FromXYZ(SX, 1, 1));
 
                     transform.addTransform(__p_transform_hor_scale);
 
                     const _s = transform.decomposeScale();
-                    __scale.x = Math.abs(_s.x);
-                    __scale.y = Math.abs(_s.y);
+                    __scale.x *= Math.abs(_s.x);
+                    __scale.y *= Math.abs(_s.y);
 
                     targetWidth = oSize.width * __scale.x;
                     targetHeight = oSize.height * __scale.y;
@@ -146,42 +169,116 @@ export function reLayoutBySizeChanged(
                     transform.clearScaleSize();
 
                     if (ResizingConstraints2.isFixedToLeft(resizingConstraint)) {
+                        // 靠左固定
                         const bounding = box(child);
-                        transform.translate(ColVector3D.FromXY(-(bounding.x * sx - bounding.x), 0));
+                        transform.translate(ColVector3D.FromXY(-(bounding.x * SX - bounding.x), 0));
                     } else if (ResizingConstraints2.isFixedToRight(resizingConstraint)) {
+                        // 靠右固定
                         const __to_right = toRight(child);
-                        transform.translate(ColVector3D.FromXY(__to_right * sx - __to_right, 0));
+                        transform.translate(ColVector3D.FromXY(__to_right * SX - __to_right, 0));
                     } else if (ResizingConstraints2.isHorizontalJustifyCenter(resizingConstraint)) {
+                        // 居中
                         const __center_offset_left = centerOffsetLeft(child);
-                        transform.translate(ColVector3D.FromXY(-(__center_offset_left * sx - __center_offset_left), 0));
+                        transform.translate(ColVector3D.FromXY(-(__center_offset_left * SX - __center_offset_left), 0));
                     }
                 } else {
                     // 宽度固定
-                    if (ResizingConstraints2.isFixedToLeft(resizingConstraint)) {
-                        // 靠左固定
-                        const __p_transform_hor_scale = new Transform2().setScale(ColVector3D.FromXYZ(sx, sy, 1));
-
-                        transform.addTransform(__p_transform_hor_scale);
-                        transform.clearScaleSize();
-
-                        const bounding = box(child);
-
-                        transform.translate(ColVector3D.FromXY(-(bounding.x * sx - bounding.x), 0));
-                    } else if (ResizingConstraints2.isFixedToRight(resizingConstraint)) {
+                    if (ResizingConstraints2.isFixedToRight(resizingConstraint)) {
                         // 靠右固定
-                        transform.translate(ColVector3D.FromXY((sx - 1) * (shape.size.width / sx), 0));
+                        transform.translate(ColVector3D.FromXY((SX - 1) * (shape.size.width / SX), 0));
                     } else if (ResizingConstraints2.isHorizontalJustifyCenter(resizingConstraint)) {
-                        // 宽度固定并居中
-                        const delta = shape.size.width / 2 - (shape.size.width / sx) / 2;
+                        // 居中
+                        const delta = shape.size.width / 2 - (shape.size.width / SX) / 2;
                         transform.translate(ColVector3D.FromXY(delta, 0));
                     }
                 }
             }
 
+            // 垂直
+            if (ResizingConstraints2.isVerticalScale(resizingConstraint)) {
+                // 跟随缩放
+                const __p_transform_ver_scale = new Transform2().setScale(ColVector3D.FromXYZ(1, SY, 1));
+                transform.addTransform(__p_transform_ver_scale);
+
+                const _s = transform.decomposeScale();
+                __scale.x *= Math.abs(_s.x);
+                __scale.y *= Math.abs(_s.y);
+
+                targetWidth = oSize.width * __scale.x;
+                targetHeight = oSize.height * __scale.y;
+                transform.clearScaleSize();
+            } else if (ResizingConstraints2.isFixedTopAndBottom(resizingConstraint)) {
+                // 上下固定
+                const bounding = box(child);
+                const __to_bottom = toBottom(child);
+
+                const __target_height = shape.size.height - bounding.y - __to_bottom;
+                const __target_sy = __target_height / bounding.height;
+
+                const __sec_transform = new Transform2().setTranslate(ColVector3D.FromXY(bounding.x, bounding.y));
+
+                transform.addTransform(__sec_transform.getInverse());
+
+                const __scale_trans = __sec_transform.setScale(ColVector3D.FromXYZ(1, __target_sy, 1));
+
+                transform.addTransform(__scale_trans);
+
+                const _s = transform.decomposeScale();
+                __scale.x *= Math.abs(_s.x);
+                __scale.y *= Math.abs(_s.y);
+
+                targetWidth = oSize.width * __scale.x;
+                targetHeight = oSize.height * __scale.y;
+
+                transform.clearScaleSize();
+            } else {
+                if (ResizingConstraints2.isFlexHeight(resizingConstraint)) {
+                    // 高度不固定
+                    const __p_transform_ver_scale = new Transform2().setScale(ColVector3D.FromXYZ(1, SY, 1));
+
+                    transform.addTransform(__p_transform_ver_scale);
+
+                    const _s = transform.decomposeScale();
+                    __scale.x *= Math.abs(_s.x);
+                    __scale.y *= Math.abs(_s.y);
+
+                    targetWidth = oSize.width * __scale.x;
+                    targetHeight = oSize.height * __scale.y;
+
+                    transform.clearScaleSize();
+
+                    if (ResizingConstraints2.isFixedToTop(resizingConstraint)) {
+                        // 靠顶部固定
+                        const bounding = box(child);
+                        transform.translate(ColVector3D.FromXY(0, -(bounding.y * SY - bounding.y)));
+                    } else if (ResizingConstraints2.isFixedToBottom(resizingConstraint)) {
+                        // 靠底边固定
+                        const __to_bottom = toBottom(child);
+                        transform.translate(ColVector3D.FromXY(0, __to_bottom * SY - __to_bottom));
+                    } else if (ResizingConstraints2.isVerticalJustifyCenter(resizingConstraint)) {
+                        // 居中
+                        const __center_offset_top = centerOffsetTop(child);
+                        transform.translate(ColVector3D.FromXY(0, -(__center_offset_top * SY - __center_offset_top)));
+                    }
+                } else {
+                    // 高度固定
+                    if (ResizingConstraints2.isFixedToBottom(resizingConstraint)) {
+                        // 靠底边固定
+                        transform.translate(ColVector3D.FromXY(0, (SY - 1) * (shape.size.height / SY)));
+                    } else if (ResizingConstraints2.isVerticalJustifyCenter(resizingConstraint)) {
+                        // 居中
+                        const delta = shape.size.height / 2 - (shape.size.height / SY) / 2;
+                        transform.translate(ColVector3D.FromXY(0, delta));
+                    }
+                }
+            }
+
+            // 执行计算结果
             api.shapeModifyWH(page, child, targetWidth, targetHeight);
             api.shapeModifyTransform(page, child, makeShapeTransform1By2(transform));
 
-            if (child instanceof GroupShape) {
+            if ((oSize.width !== targetWidth || oSize.height !== targetHeight) && (child instanceof GroupShape)) {
+                // 向下传递
                 reLayoutBySizeChanged(api, page, child, __scale, rangeRecorder, sizeRecorder, transformRecorder);
             }
         }
@@ -249,7 +346,7 @@ export function reLayoutBySizeChanged(
         }
         if (RR.centerOffsetLeft === undefined) {
             const bounding = box(s);
-            RR.centerOffsetLeft = (bounding.x + bounding.width / 2) - (shape.size.width / sx) / 2;
+            RR.centerOffsetLeft = (bounding.x + bounding.width / 2) - (shape.size.width / SX) / 2;
         }
 
         return RR.centerOffsetLeft;
@@ -263,10 +360,38 @@ export function reLayoutBySizeChanged(
         }
         if (RR.toRight === undefined) {
             const bounding = box(s);
-            RR.toRight = s.parent!.size.width / sx - bounding.x - bounding.width;
+            RR.toRight = s.parent!.size.width / SX - bounding.x - bounding.width;
         }
 
         return RR.toRight;
+    }
+
+    function toBottom(s: Shape) {
+        let RR = rangeRecorder.get(s.id);
+        if (!RR) {
+            RR = {};
+            rangeRecorder.set(s.id, RR);
+        }
+        if (RR.toBottom === undefined) {
+            const bounding = box(s);
+            RR.toBottom = s.parent!.size.height / SY - bounding.y - bounding.height;
+        }
+
+        return RR.toBottom;
+    }
+
+    function centerOffsetTop(s: Shape) {
+        let RR = rangeRecorder.get(s.id);
+        if (!RR) {
+            RR = {};
+            rangeRecorder.set(s.id, RR);
+        }
+        if (RR.centerOffsetTop === undefined) {
+            const bounding = box(s);
+            RR.centerOffsetTop = (bounding.y + bounding.height / 2) - (shape.size.height / SY) / 2;
+        }
+
+        return RR.centerOffsetTop;
     }
 }
 
@@ -322,6 +447,7 @@ export class Scaler extends AsyncApiCaller {
             const recorder = this.recorder;
             const sizeRecorder = this.sizeRecorder;
             const transformRecorder = this.transformRecorder;
+
             for (let i = 0; i < params.length; i++) {
                 const item = params[i];
 

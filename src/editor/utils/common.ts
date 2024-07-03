@@ -69,7 +69,7 @@ export function modify_shapes_width(api: Api, document: Document, page: Page, sh
             reLayoutBySizeChanged(api, page, shape, {
                 x: val / w,
                 y: h / shape.frame.height
-            }, new Map(), new Map(), new Map());
+            });
         }
     }
 }
@@ -97,7 +97,7 @@ export function modify_shapes_height(api: Api, document: Document, page: Page, s
             reLayoutBySizeChanged(api, page, shape, {
                 x: w / shape.frame.width,
                 y: val / h
-            }, new Map(), new Map(), new Map());
+            });
         }
     }
 }
