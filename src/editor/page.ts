@@ -2628,6 +2628,24 @@ export class PageEditor {
         }
     }
 
+    setShapesEndpoint(actions: BatchAction2[]) {
+        const api = this.__repo.start('setShapesEndpoint');
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                if (modify_variable_with_api(api, this.__page, target, VariableType.MarkerType, OverrideType.StartMarkerType, value.mt)) {
+                    modify_variable_with_api(api, this.__page, target, VariableType.MarkerType, OverrideType.EndMarkerType, value.mt)
+                    continue;
+                }
+                api.shapeModifyEndMarkerType(this.__page, adapt2Shape(target), value);
+                api.shapeModifyStartMarkerType(this.__page, adapt2Shape(target), value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
     exchangeShapesMarkerType(actions: BatchAction2[]) {
         const api = this.__repo.start('exchangeShapesMarkerType');
         try {
