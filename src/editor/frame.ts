@@ -316,7 +316,7 @@ export function expandTo(api: Api, document: Document, page: Page, shape: Shape,
 }
 
 export function expand(api: Api, document: Document, page: Page, shape: Shape, dw: number, dh: number, round: boolean = true) {
-    const frame = shape.frame;
+    const frame = shape.size;
     let w = frame.width + dw;
     let h = frame.height + dh;
     if (round) {

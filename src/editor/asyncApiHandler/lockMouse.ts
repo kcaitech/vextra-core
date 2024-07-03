@@ -25,6 +25,7 @@ import {
 import { makeShapeTransform1By2, makeShapeTransform2By1 } from "../../data";
 import { ColVector3D } from "../../basic/matrix2";
 import { Line, TransformMode } from "../../basic/transform";
+import { RangeRecorder, reLayoutBySizeChanged, SizeRecorder, TransformRecorder } from "./transform";
 
 export class LockMouseHandler extends AsyncApiCaller {
     updateFrameTargets: Set<Shape> = new Set();
@@ -85,11 +86,18 @@ export class LockMouseHandler extends AsyncApiCaller {
 
             for (let i = 0; i < shapes.length; i++) {
                 const shape = adapt2Shape(shapes[i]);
-                if (shape.isVirtualShape) {
-                    continue;
-                }
+                if (shape.isVirtualShape) continue;
 
-                expand(api, document, page, shape, dw, 0);
+                const size = shape.size;
+
+                api.shapeModifyWH(page, shape, size.width + dw, size.height);
+
+                if (shape instanceof GroupShape) {
+                    reLayoutBySizeChanged(api, page, shape, {
+                        x: Math.abs(size.width / (size.width - dw)),
+                        y: 1
+                    }, new Map(), new Map(), new Map());
+                }
             }
             this.updateView();
         } catch (e) {
@@ -106,11 +114,18 @@ export class LockMouseHandler extends AsyncApiCaller {
 
             for (let i = 0; i < shapes.length; i++) {
                 const shape = adapt2Shape(shapes[i]);
-                if (shape.isVirtualShape) {
-                    continue;
-                }
+                if (shape.isVirtualShape) continue;
 
-                expand(api, document, page, shape, 0, dh);
+                const size = shape.size;
+
+                api.shapeModifyWH(page, shape, size.width, size.height + dh);
+
+                if (shape instanceof GroupShape) {
+                    reLayoutBySizeChanged(api, page, shape, {
+                        x: 1,
+                        y: Math.abs(size.height / (size.height - dh))
+                    }, new Map(), new Map(), new Map());
+                }
             }
             this.updateView();
         } catch (e) {
