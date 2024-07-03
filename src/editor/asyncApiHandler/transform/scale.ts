@@ -85,7 +85,7 @@ export function reLayoutBySizeChanged(
 
             if (ResizingConstraints2.isHorizontalScale(resizingConstraint)) {
                 // 跟随缩放
-                const __p_transform_hor_scale = new Transform2().setScale(ColVector3D.FromXYZ(sx, sy, 1));
+                const __p_transform_hor_scale = new Transform2().setScale(ColVector3D.FromXYZ(sx, 1, 1));
 
                 transform.addTransform(__p_transform_hor_scale);
 
@@ -98,8 +98,36 @@ export function reLayoutBySizeChanged(
                 transform.clearScaleSize();
             } else if (ResizingConstraints2.isFixedLeftAndRight(resizingConstraint)) {
                 // 两边固定，两边固定最难搞了
-                // todo 调整水平缩放就好了
 
+                // · 保持距离两边的数值不变的情况下，shape宽变化，将对child的width造成影响(注意bounding位置是不受影响的)
+                // 前后比对child的width得到ScaleX，根据该值调整水平缩放，实现两边的固定
+                const bounding = box(child);
+                const __to_right = toRight(child);
+
+                const _target_width = shape.size.width - bounding.x - __to_right;
+                const __target_sx = _target_width / bounding.width;
+
+                // 确定一个缩放区域(BSS)：以bounding左上角为原点的一个坐标系
+                const __sec_transform = new Transform2().setTranslate(ColVector3D.FromXY(bounding.x, bounding.y));
+
+                // 让图层进入缩放区域(BSS)
+                transform.addTransform(__sec_transform.getInverse());
+
+                // 缩放区域(BSS)进行缩放
+                const __scale_trans = __sec_transform.setScale(ColVector3D.FromXYZ(__target_sx, 1, 1));
+
+                // 将缩放结果传递到图层身上
+                transform.addTransform(__scale_trans);
+
+                // 结算到size上
+                const _s = transform.decomposeScale();
+                __scale.x = Math.abs(_s.x);
+                __scale.y = Math.abs(_s.y);
+
+                targetWidth = oSize.width * __scale.x;
+                targetHeight = oSize.height * __scale.y;
+
+                transform.clearScaleSize();
             } else {
                 // 剩下靠左、靠右、居中，这三个场景都需要分别考虑宽度是否固定
                 if (ResizingConstraints2.isFlexWidth(resizingConstraint)) {
@@ -143,9 +171,9 @@ export function reLayoutBySizeChanged(
                         // 靠右固定
                         transform.translate(ColVector3D.FromXY((sx - 1) * (shape.size.width / sx), 0));
                     } else if (ResizingConstraints2.isHorizontalJustifyCenter(resizingConstraint)) {
-                        // todo 宽度固定并居中
-                        const __center_offset_left = centerOffsetLeft(child);
-                        transform.translate(ColVector3D.FromXY(-(__center_offset_left * sx - __center_offset_left), 0));
+                        // 宽度固定并居中
+                        const delta = shape.size.width / 2 - (shape.size.width / sx) / 2;
+                        transform.translate(ColVector3D.FromXY(delta, 0));
                     }
                 }
             }
@@ -157,6 +185,39 @@ export function reLayoutBySizeChanged(
                 reLayoutBySizeChanged(api, page, child, __scale, rangeRecorder, sizeRecorder, transformRecorder);
             }
         }
+    }
+
+    // utils
+    function box(s: Shape) {
+        let RR = rangeRecorder.get(s.id);
+
+        if (!RR) {
+            RR = {};
+            rangeRecorder.set(s.id, RR);
+        }
+
+        if (RR.box === undefined) {
+            const transform = getTransform(s);
+
+            const size = getSize(s);
+
+            const cols = transform.transform([
+                ColVector3D.FromXY(0, 0),
+                ColVector3D.FromXY(size.width, 0),
+                ColVector3D.FromXY(size.width, size.height),
+                ColVector3D.FromXY(0, size.height)
+            ]);
+
+            const box = XYsBounding([cols.col0, cols.col1, cols.col2, cols.col3]);
+            RR.box = {
+                x: box.left,
+                y: box.top,
+                width: box.right - box.left,
+                height: box.bottom - box.top
+            } as ShapeFrame;
+        }
+
+        return RR.box;
     }
 
     function getSize(s: Shape) {
@@ -188,7 +249,7 @@ export function reLayoutBySizeChanged(
         }
         if (RR.centerOffsetLeft === undefined) {
             const bounding = box(s);
-            RR.centerOffsetLeft = (bounding.x + bounding.width / 2) - (s.parent!.size.width / sx) / 2;
+            RR.centerOffsetLeft = (bounding.x + bounding.width / 2) - (shape.size.width / sx) / 2;
         }
 
         return RR.centerOffsetLeft;
@@ -206,38 +267,6 @@ export function reLayoutBySizeChanged(
         }
 
         return RR.toRight;
-    }
-
-    function box(s: Shape) {
-        let RR = rangeRecorder.get(s.id);
-
-        if (!RR) {
-            RR = {};
-            rangeRecorder.set(s.id, RR);
-        }
-
-        if (RR.box === undefined) {
-            const transform = getTransform(s);
-
-            const size = getSize(s);
-
-            const cols = transform.transform([
-                ColVector3D.FromXY(0, 0),
-                ColVector3D.FromXY(size.width, 0),
-                ColVector3D.FromXY(size.width, size.height),
-                ColVector3D.FromXY(0, size.height)
-            ]);
-
-            const box = XYsBounding([cols.col0, cols.col1, cols.col2, cols.col3]);
-            RR.box = {
-                x: box.left,
-                y: box.top,
-                width: box.right - box.left,
-                height: box.bottom - box.top
-            } as ShapeFrame;
-        }
-
-        return RR.box;
     }
 }
 
