@@ -1400,7 +1400,7 @@ export class PageEditor {
                         api.shapeModifyRadius2(page, __shape, lt, rt, rb, lb)
                     }
                 } else {
-                    if (shape.isVirtualShape) {
+                    if (shape.isVirtualShape || shape.radiusType === RadiusType.None) {
                         continue;
                     }
 
