@@ -1,7 +1,15 @@
 import { CoopRepository } from "../../coop/cooprepo";
 import { AsyncApiCaller } from "../AsyncApiCaller";
 import { ShapeView, adapt2Shape, PageView } from "../../../dataview";
-import { GroupShape, Shape, Page, Document, Transform } from "../../../data";
+import {
+    GroupShape,
+    Shape,
+    Page,
+    Document,
+    Transform,
+    makeShapeTransform2By1,
+    makeShapeTransform1By2
+} from "../../../data";
 import { after_migrate, unable_to_migrate } from "../../utils/migrate";
 import { get_state_name, is_state } from "../../symbol";
 import { Api } from "../../coop/recordapi";
@@ -173,7 +181,12 @@ export class Transporter extends AsyncApiCaller {
             const name = get_state_name(shape as any, dlt);
             api.shapeModifyName(page, shape, `${origin.name}/${name}`);
         }
+        const transform = makeShapeTransform2By1(shape.matrix2Root());
+        const __t = makeShapeTransform2By1(targetParent.matrix2Root());
 
+        transform.addTransform(__t.getInverse());
+
+        api.shapeModifyTransform(page, shape, makeShapeTransform1By2(transform));
         api.shapeMove(page, origin, origin.indexOfChild(shape), targetParent, index++);
 
         after_migrate(document, page, api, origin);
