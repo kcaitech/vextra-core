@@ -244,15 +244,15 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
                 if (!ref) {
                     continue;
                 }
-                const f = new ShapeFrame(_s.frame.x, _s.frame.y, _s.frame.width, _s.frame.height);
+
+                const f = new ShapeFrame(_s.transform.m02, _s.transform.m12, _s.size.width, _s.size.height);
                 if ((_s instanceof SymbolUnionShape)) {
                     const dlt = (_s as any).childs[0];
                     if (!dlt) continue;
-                    f.width = dlt.frame.width;
-                    f.height = dlt.frame.height;
+                    f.width = dlt.size.width;
+                    f.height = dlt.size.height;
                 }
                 r = newSymbolRefShape(_s.name, f, _s.id, document.symbolsMgr);
-                // rotate & flip
                 if (r) {
                     const rt = r.transform;
                     const st = _s.transform;
