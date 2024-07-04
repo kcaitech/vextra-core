@@ -1211,9 +1211,8 @@ export class CutoutShape extends PathShape implements classes.CutoutShape {
     get isPathIcon() {
         return false;
     }
-
-    get radius(): number[] {
-        return [0];
+    get radiusType() {
+        return RadiusType.None;
     }
 }
 
