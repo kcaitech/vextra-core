@@ -64,7 +64,7 @@ import {TableShape} from "../data/table";
 
 export {newText, newText2} from "../data/textutils";
 // import i18n from '../../i18n' // data不能引用外面工程的内容
-import {BorderSideSetting, ContactForm, CrdtNumber, SideType} from "../data/baseclasses";
+import {BorderSideSetting, ContactForm, CrdtNumber, ExportFileFormat, ExportFormat, ExportFormatNameingScheme, ExportOptions, ExportVisibleScaleType, SideType} from "../data/baseclasses";
 import {Matrix} from "../basic/matrix";
 import {ResizingConstraints2} from "../data/consts";
 import {SymbolMgr} from "../data/symbolmgr";
@@ -602,8 +602,11 @@ export function newCutoutShape(name: string, frame: ShapeFrame): CutoutShape {
     transform.m02 = frame.x;
     transform.m12 = frame.y;
     const size = new ShapeSize(frame.width, frame.height);
-
+    const exportOptions = new ExportOptions(new BasicArray(), 0, false, false, false, false);
+    const exportFormat = new ExportFormat(new BasicArray(), uuid(), 0, ExportFileFormat.Png, '', ExportFormatNameingScheme.Prefix, 1, ExportVisibleScaleType.Scale)
+    exportOptions.exportFormats.push(exportFormat);
     const shape = new CutoutShape(new BasicArray(), id, name, types.ShapeType.Cutout, transform, size, style, new BasicArray<PathSegment>(segment), false);
+    shape.exportOptions = exportOptions;
     addCommonAttr(shape);
     return shape;
 }
