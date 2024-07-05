@@ -708,14 +708,10 @@ export class ShapeView extends DataView {
             } else {
                 modifyX = (box.height - box.width) / 2;
             }
-            // const style: any = {};
-            // style.transform = "translate(" + (modifyX + box.width / 2) + "px," + (modifyY + box.height / 2) + "px) ";
-            // if (!!this.isFlippedHorizontal) style.transform += "rotateY(180deg) ";
-            // if (!!this.isFlippedVertical) style.transform += "rotateX(180deg) ";
-            // if (this.rotation) style.transform += "rotate(" + this.rotation + "deg) ";
-            // style.transform += "translate(" + (-frame.width / 2) + "px," + (-frame.height / 2) + "px)";
-            const style: any = { transform: this.transform.toString() }
-            props.style = style;
+            const __t = this.transform.clone();
+            __t.m02 = modifyX;
+            __t.m12 = modifyY;
+            props.style = { transform: __t.toString() };
         }
         const contextSettings = this.style.contextSettings;
         if (contextSettings) {
