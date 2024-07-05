@@ -22,10 +22,11 @@ import {
     getPolygonPoints,
     getPolygonVertices,
 } from "../utils/path";
-import { makeShapeTransform1By2, makeShapeTransform2By1 } from "../../data";
+import { makeShapeTransform1By2, makeShapeTransform2By1, TextBehaviour } from "../../data";
 import { ColVector3D } from "../../basic/matrix2";
 import { Line, TransformMode } from "../../basic/transform";
 import { RangeRecorder, reLayoutBySizeChanged, SizeRecorder, TransformRecorder } from "./transform";
+import { fixTextShapeFrameByLayout } from "../utils/other";
 
 export class LockMouseHandler extends AsyncApiCaller {
     updateFrameTargets: Set<Shape> = new Set();
@@ -89,8 +90,16 @@ export class LockMouseHandler extends AsyncApiCaller {
                 if (shape.isVirtualShape) continue;
 
                 const size = shape.size;
-
-                api.shapeModifyWH(page, shape, size.width + dw, size.height);
+                if (shape instanceof TextShape) {
+                    const textBehaviour = shape.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
+                    if (textBehaviour === TextBehaviour.Flexible) {
+                        api.shapeModifyTextBehaviour(page, shape.text, TextBehaviour.Fixed);
+                    }
+                    api.shapeModifyWidth(page, shape, size.width + dw)
+                    fixTextShapeFrameByLayout(api, page, shape);
+                } else {
+                    api.shapeModifyWidth(page, shape, size.width + dw);
+                }
 
                 if (shape instanceof GroupShape) {
                     reLayoutBySizeChanged(api, page, shape, {
@@ -117,8 +126,16 @@ export class LockMouseHandler extends AsyncApiCaller {
                 if (shape.isVirtualShape) continue;
 
                 const size = shape.size;
-
-                api.shapeModifyWH(page, shape, size.width, size.height + dh);
+                if (shape instanceof TextShape) {
+                    const textBehaviour = shape.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
+                    if (textBehaviour !== TextBehaviour.FixWidthAndHeight) {
+                        api.shapeModifyTextBehaviour(page, shape.text, TextBehaviour.FixWidthAndHeight);
+                    }
+                    api.shapeModifyHeight(page, shape, size.height + dh)
+                    fixTextShapeFrameByLayout(api, page, shape);
+                } else {
+                    api.shapeModifyHeight(page, shape, size.height + dh);
+                }
 
                 if (shape instanceof GroupShape) {
                     reLayoutBySizeChanged(api, page, shape, {
