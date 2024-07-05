@@ -14,7 +14,9 @@ import {
     importPageListItem,
     importPathSegment,
     importShadow,
-    importStop
+    importStop,
+    importPrototypeInterAction,
+    importPrototypeActions
 } from "../../data/baseimport";
 import { SNumber } from "../../coop/client/snumber";
 
@@ -30,6 +32,8 @@ importh['crdt-number'] = importCrdtNumber;
 importh['path-segment'] = importPathSegment;
 importh['page-list-item'] = importPageListItem;
 importh['guide'] = importGuide;
+importh['prototype-inter-action']=importPrototypeInterAction;
+importh['prototype-actions']=importPrototypeActions
 
 function _apply(document: Document, target: Array<CrdtItem>, op: ArrayMoveOp): ArrayMoveOpRecord | undefined {
     // import op.data
