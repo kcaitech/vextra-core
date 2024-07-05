@@ -2,6 +2,9 @@
     "description": "actions",
     "type": "object",
     "properties": {
+        "id": {
+            "type": "string"
+        },
         "targetNodeID": {
             "type": "string"
         },
@@ -33,6 +36,7 @@
         }
     },
     "required": [
+        "id",
         "connectionType"
     ]
 }

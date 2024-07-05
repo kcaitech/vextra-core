@@ -555,6 +555,7 @@ export class Gradient extends Basic {
 /* actions */
 export class PrototypeActions extends Basic {
     typeId = "prototype-actions"
+    id: string
     connectionType: PrototypeConnectionType
     targetNodeID?: string
     transitionType?: PrototypeTransitionType
@@ -564,8 +565,9 @@ export class PrototypeActions extends Basic {
     openUrlInNewTab?: boolean
     navigationType?: PrototypeNavigationType
     easingFunction?: PrototypeEasingfunction
-    constructor(connectionType: PrototypeConnectionType) {
+    constructor(id: string, connectionType: PrototypeConnectionType) {
         super()
+        this.id = id
         this.connectionType = connectionType
     }
 }

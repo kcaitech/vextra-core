@@ -739,6 +739,7 @@ export function exportGradient(source: types.Gradient, ctx?: IExportContext): ty
 /* actions */
 export function exportPrototypeActions(source: types.PrototypeActions, ctx?: IExportContext): types.PrototypeActions {
     const ret: types.PrototypeActions = {} as types.PrototypeActions
+    ret.id = source.id
     ret.connectionType = exportPrototypeConnectionType(source.connectionType, ctx)
     if (source.targetNodeID) ret.targetNodeID = source.targetNodeID
     if (source.transitionType) ret.transitionType = exportPrototypeTransitionType(source.transitionType, ctx)

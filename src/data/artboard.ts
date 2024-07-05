@@ -60,6 +60,9 @@ export class Artboard extends GroupShape implements classes.Artboard {
         if (id0 === "guides" && !this.guides) {
             this.guides = new BasicArray<Guide>();
         }
+        if (id0 === "prototypeInteractions" && !this.prototypeInteractions) {
+            this.prototypeInteractions = new BasicArray<PrototypeInterAction>();
+        }
         return super.getOpTarget(path);
     }
 

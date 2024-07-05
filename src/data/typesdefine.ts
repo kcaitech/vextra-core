@@ -608,6 +608,7 @@ export type Gradient = {
 }
 /* actions */
 export type PrototypeActions = {
+    id: string,
     connectionType: PrototypeConnectionType,
     targetNodeID?: string,
     transitionType?: PrototypeTransitionType,
