@@ -64,6 +64,8 @@ export class TableCellView extends ShapeView {
             this.m_size.height = frame.height;
             this.m_textpath = undefined;
             this.m_layout = undefined; // todo
+            this.m_path = undefined;
+            this.m_pathstr = undefined;
             // if (!this.m_isVirtual) {
             //     const shape = this.m_data as TableCell;
             //     shape.text?.updateSize(frame.width, frame.height);
