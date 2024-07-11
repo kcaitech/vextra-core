@@ -901,6 +901,16 @@ function __mergeIdset(last: LocalCmd, cmd: LocalCmd) {
             idsetops.set(path, op);
         }
     }
+    // check first
+    for (let i = 0; i < cmd.ops.length; i++) {
+        const op = cmd.ops[i];
+        if (op.type === OpType.Idset) {
+            const path = op.path.join(',');
+            const pre = idsetops.get(path) as IdOpRecord;
+            if (!pre) return false;
+        }
+    }
+
     for (let i = 0; i < cmd.ops.length; i++) {
         const op = cmd.ops[i];
         if (op.type === OpType.Idset) {
@@ -909,11 +919,11 @@ function __mergeIdset(last: LocalCmd, cmd: LocalCmd) {
             if (pre) {
                 pre.data = (op as IdOpRecord).data;
             } else {
-                idsetops.set(path, op);
-                last.ops.push(op);
+                throw new Error();
             }
         }
     }
+    return true;
 }
 
 function _mergeTextDelete(last: LocalCmd, cmd: LocalCmd) {
@@ -937,6 +947,9 @@ function _mergeTextDelete(last: LocalCmd, cmd: LocalCmd) {
     if (!(delOp && delOp2 && (delOp.start === (delOp2.start + delOp2.length) || (delOp.start + delOp.length) === delOp2.start))) return false;
     if (isDiffStringArr(delOp.path, delOp2.path)) return false;
 
+    // mrege idset ops
+    if (!__mergeIdset(last, cmd)) return false;
+
     // merge text delete
     if (delOp.start === (delOp2.start + delOp2.length)) {
         delOp.text.insertFormatText(delOp2.text, 0);
@@ -946,9 +959,6 @@ function _mergeTextDelete(last: LocalCmd, cmd: LocalCmd) {
     }
     delOp.start = Math.min(delOp.start, delOp2.start);
     delOp.length = delOp.length + delOp2.length;
-
-    // mrege idset ops
-    __mergeIdset(last, cmd);
 
     last.time = cmd.time;
     console.log("merge localcmd: ", last);
@@ -979,6 +989,10 @@ function _mergeTextInsert(last: LocalCmd, cmd: LocalCmd) {
     if (!(insertOp && insertOp2 && ((insertOp.start + insertOp.length) === insertOp2.start))) return false;
     if (isDiffStringArr(insertOp.path, insertOp2.path)) return false;
 
+
+    // mrege idset ops
+    if (!__mergeIdset(last, cmd)) return false;
+
     // simple 跟 simple合并，complex跟complex合并
     if (insertOp.text.type === 'simple' && insertOp2.text.type === 'simple' &&
         (!insertOp.text.props || !insertOp.text.props.attr && !insertOp.text.props.paraAttr) &&
@@ -994,8 +1008,6 @@ function _mergeTextInsert(last: LocalCmd, cmd: LocalCmd) {
     insertOp.start = Math.min(insertOp.start, insertOp2.start);
     insertOp.length = insertOp.length + insertOp2.length;
 
-    // mrege idset ops
-    __mergeIdset(last, cmd);
 
     last.time = cmd.time;
     console.log("merge localcmd: ", last);
