@@ -1,7 +1,7 @@
-import {v4 as uuid} from "uuid";
-import {Page} from "../data/page";
-import {Artboard} from "../data/artboard";
-import {Document, PageListItem} from "../data/document";
+import { v4 as uuid } from "uuid";
+import { Page } from "../data/page";
+import { Artboard } from "../data/artboard";
+import { Document, PageListItem } from "../data/document";
 import {
     GroupShape,
     LineShape,
@@ -21,7 +21,7 @@ import {
     ShapeSize,
     Transform
 } from "../data/shape";
-import {ContactShape} from "../data/contact"
+import { ContactShape } from "../data/contact"
 import * as types from "../data/typesdefine"
 import {
     importArtboard,
@@ -56,21 +56,21 @@ import {
     SymbolRefShape,
     TextAttr,
 } from "../data/classes";
-import {BasicArray, BasicMap} from "../data/basic";
-import {Repository} from "../data/transact";
-import {Comment} from "../data/comment";
-import {ResourceMgr} from "../data/basic";
-import {TableShape} from "../data/table";
+import { BasicArray, BasicMap } from "../data/basic";
+import { Repository } from "../data/transact";
+import { Comment } from "../data/comment";
+import { ResourceMgr } from "../data/basic";
+import { TableShape } from "../data/table";
 
-export {newText, newText2} from "../data/textutils";
+export { newText, newText2 } from "../data/textutils";
 // import i18n from '../../i18n' // data不能引用外面工程的内容
-import {BorderSideSetting, ContactForm, CrdtNumber, ExportFileFormat, ExportFormat, ExportFormatNameingScheme, ExportOptions, ExportVisibleScaleType, SideType} from "../data/baseclasses";
-import {Matrix} from "../basic/matrix";
-import {ResizingConstraints2} from "../data/consts";
-import {SymbolMgr} from "../data/symbolmgr";
-import {newText} from "../data/textutils";
-import {getPolygonPoints, getPolygonVertices} from "./utils/path";
-import {makeShapeTransform2By1, updateShapeTransform1By2} from "../data/shape_transform_util";
+import { BorderSideSetting, ContactForm, CrdtNumber, ExportFileFormat, ExportFormat, ExportFormatNameingScheme, ExportOptions, ExportVisibleScaleType, SideType } from "../data/baseclasses";
+import { Matrix } from "../basic/matrix";
+import { ResizingConstraints2 } from "../data/consts";
+import { SymbolMgr } from "../data/symbolmgr";
+import { newText } from "../data/textutils";
+import { getPolygonPoints, getPolygonVertices } from "./utils/path";
+import { makeShapeTransform2By1, updateShapeTransform1By2 } from "../data/shape_transform_util";
 
 function _checkNum(x: number) {
     // check
@@ -99,7 +99,7 @@ export function addCommonAttr(shape: Shape) {
 export function newDocument(documentName: string, repo: Repository): Document {
     const dId = uuid();
     const pageList = new BasicArray<PageListItem>();
-    return new Document(dId, "", "", new BasicMap(), documentName, pageList, repo);
+    return new Document(dId, documentName, "", "", pageList, new BasicMap(), repo);
 }
 
 export function newPage(name: string): Page {
@@ -708,7 +708,7 @@ export function polylinePointsToPathD(pointsString: string, isLine: boolean) {
 }
 
 export function getTransformByEnv(env: GroupShape) {
-    const result = {flipH: false, flipV: false, rotation: 0};
+    const result = { flipH: false, flipV: false, rotation: 0 };
 
     // flip
     let ohflip = false;
