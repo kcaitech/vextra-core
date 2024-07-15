@@ -1456,6 +1456,28 @@ export function importCutoutShape(source: types.CutoutShape, ctx?: IImportContex
 const importImageShapeOptional = importPathShapeOptional
 export function importImageShape(source: types.ImageShape, ctx?: IImportContext): impl.ImageShape {
         // inject code
+    const color: types.Color = {
+        typeId: "color",
+        alpha: 1,
+        blue: 216,
+        green: 216,
+        red: 216
+    }
+    const fill: types.Fill = {
+        typeId: "fill",
+        color: color,
+        crdtidx: [0],
+        fillType: types.FillType.Pattern,
+        id: "bdcd3743-fb61-4aeb-8864-b95d47b84a90",
+        imageRef: source.imageRef,
+        isEnabled: true,
+        imageScaleMode: types.ImageScaleMode.Fill,
+        originalImageHeight: source.frame.height,
+        originalImageWidth: source.frame.width
+    }
+    const fills = new BasicArray<types.Fill>();
+    fills.push(fill);
+    source.style.fills = fills;
     if (!source.pathsegs) { // 兼容旧数据
         const seg: types.PathSegment = {
             crdtidx: [0],
@@ -1516,9 +1538,6 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
         importPathShape_pathsegs(source.pathsegs, ctx),
         source.imageRef)
     importImageShapeOptional(ret, source, ctx)
-        // inject code
-    if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
-
     return ret
 }
 /* line shape */

@@ -26,6 +26,7 @@ import {
     Color,
     Fill,
     FillType,
+    ImageScaleMode,
     Point2D,
     ShapeSize,
     ShapeType,
@@ -290,7 +291,7 @@ export function importShapeGroupShape(ctx: LoadContext, data: IJSON, f: ImportFu
     return shape;
 }
 
-export function importImage(ctx: LoadContext, data: IJSON, f: ImportFun, i: number): ImageShape {
+export function importImage(ctx: LoadContext, data: IJSON, f: ImportFun, i: number): PathShape {
     // const type = importShapeType(data);
     const id: string = uniqueId(ctx, data['do_objectID']);
     const exportOptions = importExportOptions(data);
@@ -315,9 +316,19 @@ export function importImage(ctx: LoadContext, data: IJSON, f: ImportFun, i: numb
     curvePoint.push(p1, p2, p3, p4);
 
     const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, true);
-    const shape = new ImageShape([i] as BasicArray<number>, id, name, ShapeType.Image, frame.trans, frame.size, style, new BasicArray<PathSegment>(segment), imageRef);
-
     // shape.setImageMgr(env.mediaMgr);
+    // const shape = new ImageShape([i] as BasicArray<number>, id, name, ShapeType.Image, frame, style, new BasicArray<PathSegment>(segment), imageRef);
+    const shape = new PathShape([i] as BasicArray<number>, id, name, ShapeType.Path, frame.trans, frame.size, style, new BasicArray<PathSegment>(segment));
+    const fillColor = new Color(1, 216, 216, 216);
+    const fill = new Fill(new BasicArray(), uuid(), true, FillType.Pattern, fillColor);
+    fill.imageRef = imageRef;
+    fill.originalImageWidth = frame.size.width;
+    fill.originalImageHeight = frame.size.height;
+    fill.imageScaleMode = ImageScaleMode.Fill;
+    fill.setImageMgr(ctx.mediasMgr);
+    const fills = new BasicArray<Fill>();
+    fills.push(fill);
+    shape.style.fills = fills;
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     shape.exportOptions = exportOptions;
