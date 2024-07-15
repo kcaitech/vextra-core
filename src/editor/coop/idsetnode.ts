@@ -13,6 +13,7 @@ import {
     importContactForm,
     importGradient,
     importPage,
+    importPaintFilter,
     importTableCell,
     importVariable
 } from "../../data/baseimport";
@@ -48,6 +49,8 @@ function apply(document: Document, target: Object, op: IdOp): IdOpRecord {
             value = importBorderSideSetting(data, ctx);
         } else if (typeId === 'blur') {
             value = importBlur(data, ctx);
+        }  else if (typeId === 'paint-filter') {
+            value = importPaintFilter(data, ctx);
         } else {
             throw new Error('need import ' + typeId)
         }

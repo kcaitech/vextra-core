@@ -1,7 +1,7 @@
-import {v4 as uuid} from "uuid";
-import {Page} from "../data/page";
-import {Artboard} from "../data/artboard";
-import {Document, PageListItem} from "../data/document";
+import { v4 as uuid } from "uuid";
+import { Page } from "../data/page";
+import { Artboard } from "../data/artboard";
+import { Document, PageListItem } from "../data/document";
 import {
     GroupShape,
     LineShape,
@@ -21,7 +21,7 @@ import {
     ShapeSize,
     Transform
 } from "../data/shape";
-import {ContactShape} from "../data/contact"
+import { ContactShape } from "../data/contact"
 import * as types from "../data/typesdefine"
 import {
     importArtboard,
@@ -56,21 +56,21 @@ import {
     SymbolRefShape,
     TextAttr,
 } from "../data/classes";
-import {BasicArray, BasicMap} from "../data/basic";
-import {Repository} from "../data/transact";
-import {Comment} from "../data/comment";
-import {ResourceMgr} from "../data/basic";
-import {TableShape} from "../data/table";
+import { BasicArray, BasicMap } from "../data/basic";
+import { Repository } from "../data/transact";
+import { Comment } from "../data/comment";
+import { ResourceMgr } from "../data/basic";
+import { TableShape } from "../data/table";
 
-export {newText, newText2} from "../data/textutils";
+export { newText, newText2 } from "../data/textutils";
 // import i18n from '../../i18n' // data不能引用外面工程的内容
-import {BorderSideSetting, ContactForm, CrdtNumber, ExportFileFormat, ExportFormat, ExportFormatNameingScheme, ExportOptions, ExportVisibleScaleType, SideType} from "../data/baseclasses";
-import {Matrix} from "../basic/matrix";
-import {ResizingConstraints2} from "../data/consts";
-import {SymbolMgr} from "../data/symbolmgr";
-import {newText} from "../data/textutils";
-import {getPolygonPoints, getPolygonVertices} from "./utils/path";
-import {makeShapeTransform2By1, updateShapeTransform1By2} from "../data/shape_transform_util";
+import { BorderSideSetting, ContactForm, CrdtNumber, ExportFileFormat, ExportFormat, ExportFormatNameingScheme, ExportOptions, ExportVisibleScaleType, SideType } from "../data/baseclasses";
+import { Matrix } from "../basic/matrix";
+import { ResizingConstraints2 } from "../data/consts";
+import { SymbolMgr } from "../data/symbolmgr";
+import { newText } from "../data/textutils";
+import { getPolygonPoints, getPolygonVertices } from "./utils/path";
+import { makeShapeTransform2By1, updateShapeTransform1By2 } from "../data/shape_transform_util";
 
 function _checkNum(x: number) {
     // check
@@ -481,6 +481,43 @@ export function newImageShape(name: string, frame: ShapeFrame, mediasMgr: Resour
     return img;
 }
 
+export function newImageFillShape(name: string, frame: ShapeFrame, mediasMgr: ResourceMgr<{
+    buff: Uint8Array,
+    base64: string
+}>, originFrame: { width: number, height: number }, ref?: string): RectShape {
+    _checkFrame(frame);
+    const style = newStyle();
+    const curvePoint = new BasicArray<CurvePoint>();
+    const id = uuid();
+    const p1 = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight); // lt
+    const p2 = new CurvePoint([1] as BasicArray<number>, uuid(), 1, 0, CurveMode.Straight); // rt
+    const p3 = new CurvePoint([2] as BasicArray<number>, uuid(), 1, 1, CurveMode.Straight); // rb
+    const p4 = new CurvePoint([3] as BasicArray<number>, uuid(), 0, 1, CurveMode.Straight); // lb
+    curvePoint.push(p1, p2, p3, p4);
+
+    const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, true);
+
+    const transform = new Transform();
+    transform.m02 = frame.x;
+    transform.m12 = frame.y;
+    const size = new ShapeSize(frame.width, frame.height);
+
+    const shape = new RectShape(new BasicArray(), id, name, types.ShapeType.Rectangle, transform, size, style, new BasicArray<PathSegment>(segment));
+    addCommonAttr(shape);
+    const fillColor = new Color(1, 216, 216, 216);
+    const fill = new Fill(new BasicArray(), uuid(), true, FillType.Pattern, fillColor);
+    fill.imageRef = ref;
+    fill.originalImageWidth = originFrame.width;
+    fill.originalImageHeight = originFrame.height;
+    fill.imageScaleMode = types.ImageScaleMode.Fill;
+    fill.setImageMgr(mediasMgr);
+    const fills = new BasicArray<Fill>();
+    fills.push(fill);
+
+    shape.style.fills = fills;
+    return shape;
+}
+
 export function newTable(name: string, frame: ShapeFrame, rowCount: number, columCount: number, mediasMgr: ResourceMgr<{
     buff: Uint8Array,
     base64: string
@@ -605,7 +642,7 @@ export function newCutoutShape(name: string, frame: ShapeFrame): CutoutShape {
     const exportOptions = new ExportOptions(new BasicArray(), 0, false, false, false, false);
     const exportFormat = new ExportFormat(new BasicArray(), uuid(), 0, ExportFileFormat.Png, '', ExportFormatNameingScheme.Prefix, 1, ExportVisibleScaleType.Scale)
     exportOptions.exportFormats.push(exportFormat);
-    const shape = new CutoutShape(new BasicArray(), id, name, types.ShapeType.Cutout, transform, size, style, new BasicArray<PathSegment>(segment), false);
+    const shape = new CutoutShape(new BasicArray(), id, name, types.ShapeType.Cutout, transform, size, style, new BasicArray<PathSegment>(segment));
     shape.exportOptions = exportOptions;
     addCommonAttr(shape);
     return shape;
@@ -708,7 +745,7 @@ export function polylinePointsToPathD(pointsString: string, isLine: boolean) {
 }
 
 export function getTransformByEnv(env: GroupShape) {
-    const result = {flipH: false, flipV: false, rotation: 0};
+    const result = { flipH: false, flipV: false, rotation: 0 };
 
     // flip
     let ohflip = false;

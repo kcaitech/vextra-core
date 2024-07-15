@@ -12,7 +12,9 @@ import {
     SymbolShape,
     CurveMode, PathSegment,
     PolygonShape,
-    StarShape, ShapeType
+    StarShape,
+    ImageShape,
+    ShapeType
 } from "../../data/shape";
 import { updateShapesFrame } from "./utils";
 import { Blur, Border, BorderPosition, BorderStyle, Fill, Gradient, MarkerType, Shadow } from "../../data/style";
@@ -43,10 +45,12 @@ import {
     CornerType,
     BorderSideSetting,
     BlurType,
+    ImageScaleMode,
+    PaintFilterType,
 } from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
-import { ContactForm, ContactRole, ContextSettings, CurvePoint, ExportFormat, ExportOptions } from "../../data/baseclasses";
+import { ContactForm, ContactRole, ContextSettings, CurvePoint, ExportFormat, ExportOptions, PaintFilter } from "../../data/baseclasses";
 import { ContactShape } from "../../data/contact"
 import { Color } from "../../data/classes";
 import { Op, OpType } from "../../coop/common/op";
@@ -509,7 +513,6 @@ export class Api {
         // if (!(shape instanceof SymbolRefShape)) return;
         this._shapeModifyAttr(page, shape, "isCustomSize", isCustomSize ? true : undefined);
     }
-
     // 添加一次fill
     addFillAt(page: Page, shape: Shape | Variable, fill: Fill, index: number) {
         checkShapeAtPage(page, shape);
@@ -585,6 +588,73 @@ export class Api {
         if (!fill) return;
         this.addOp(basicapi.crdtSetAttr(fill, "fillType", fillType));
     }
+    setFillScaleMode(page: Page, shape: Shape | Variable, idx: number, mode: ImageScaleMode) {
+        checkShapeAtPage(page, shape);
+        const fills = shape instanceof Shape ? shape.style.fills : shape.value;
+        const fill: Fill = fills[idx];
+        if (!fill) return;
+        this.addOp(basicapi.crdtSetAttr(fill, "imageScaleMode", mode));
+    }
+    setFillImageRef(document: Document, page: Page, shape: Shape | Variable, idx: number, urlRef: string, imageMgr: { buff: Uint8Array, base64: string }) {
+        checkShapeAtPage(page, shape);
+        const fills = shape instanceof Shape ? shape.style.fills : shape.value;
+        const fill: Fill = fills[idx];
+        if (!fill) return;
+        document.mediasMgr.add(urlRef, imageMgr);
+        fill.setImageMgr(document.mediasMgr);
+        this.addOp(basicapi.crdtSetAttr(fill, "imageRef", urlRef));
+    }
+    setFillImageOriginWidth(page: Page, shape: Shape | Variable, idx: number, width: number) {
+        checkShapeAtPage(page, shape);
+        const fills = shape instanceof Shape ? shape.style.fills : shape.value;
+        const fill: Fill = fills[idx];
+        if (!fill) return;
+        this.addOp(basicapi.crdtSetAttr(fill, "originalImageWidth", width));
+    }
+    setFillImageOriginHeight(page: Page, shape: Shape | Variable, idx: number, height: number) {
+        checkShapeAtPage(page, shape);
+        const fills = shape instanceof Shape ? shape.style.fills : shape.value;
+        const fill: Fill = fills[idx];
+        if (!fill) return;
+        this.addOp(basicapi.crdtSetAttr(fill, "originalImageHeight", height));
+    }
+    setFillImageScale(page: Page, shape: Shape | Variable, idx: number, scale: number) {
+        checkShapeAtPage(page, shape);
+        const fills = shape instanceof Shape ? shape.style.fills : shape.value;
+        const fill: Fill = fills[idx];
+        if (!fill) return;
+        this.addOp(basicapi.crdtSetAttr(fill, "scale", scale));
+    }
+    setFillEdit(page: Page, shape: Shape | Variable, idx: number, edit: boolean) {
+        checkShapeAtPage(page, shape);
+        const fills = shape instanceof Shape ? shape.style.fills : shape.value;
+        const fill: Fill = fills[idx];
+        if (!fill) return;
+        fill.startEditImage(edit);
+    }
+
+    setFillImageRotate(page: Page, shape: Shape | Variable, idx: number, rotate: number) {
+        checkShapeAtPage(page, shape);
+        const fills = shape instanceof Shape ? shape.style.fills : shape.value;
+        const fill: Fill = fills[idx];
+        if (!fill) return;
+        this.addOp(basicapi.crdtSetAttr(fill, "rotation", rotate));
+    }
+
+    setFillImageFilter(page: Page, shape: Shape | Variable, idx: number, key: PaintFilterType, value: number) {
+        checkShapeAtPage(page, shape);
+        const fills = shape instanceof Shape ? shape.style.fills : shape.value;
+        const fill: Fill = fills[idx];
+        if (!fill) return;
+        if (fill.paintFilter) {
+            this.addOp(basicapi.crdtSetAttr(fill.paintFilter, key, value));
+        } else {
+            const paintFilter = new PaintFilter(0, 0, 0, 0, 0, 0, 0);
+            paintFilter[key] = value;
+            this.addOp(basicapi.crdtSetAttr(fill, "paintFilter", paintFilter));
+        }
+    }
+
     setBorderFillType(page: Page, shape: Shape | Variable, idx: number, fillType: FillType) {
         checkShapeAtPage(page, shape);
         const borders = shape instanceof Shape ? shape.style.borders : shape.value;
