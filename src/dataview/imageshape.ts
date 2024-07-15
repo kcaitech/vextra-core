@@ -1,6 +1,6 @@
 import { objectId } from "../basic/objectid";
 import { EL, elh } from "./el";
-import {render as clippathR} from "../render/clippath"
+import { patternRender, renderMaskPattern } from "../render/pattern"
 import { DViewCtx, PropsType } from "./viewctx";
 import { CurvePoint, ImageShape } from "../data/shape";
 import { RectShapeView } from "./rect";
@@ -22,20 +22,16 @@ export class ImageShapeView extends RectShapeView {
     renderContents(): EL[] {
         const shape = this.m_data as ImageShape;
         const path = this.getPathStr();
-        const frame = this.frame;
-        const id = "clippath-image-" + objectId(this);
-        const cp = clippathR(elh, id, path);
-        const url = shape.peekImage(true);
-        const img = elh("image", {
-            'xlink:href': url ?? this.m_imgPH,
-            width: frame.width,
-            height: frame.height,
-            x: 0,
-            y: 0,
-            'preserveAspectRatio': 'none meet',
-            "clip-path": "url(#" + id + ")"
-        });
-        return [cp, img];
+        const id = "pattern-clip-" + objectId(this);
+        const url = shape.peekImage(true) ?? this.m_imgPH;
+        const pattern = patternRender(elh, shape.frame, id, path, url as any);
+      
+        const _path = elh('path', {
+            d: path,
+            fill: 'url(#' + id + ')',
+            "fill-opacity": "1"
+        })
+        return [pattern, _path];
     }
 
     get points() {
