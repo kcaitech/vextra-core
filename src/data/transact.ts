@@ -331,6 +331,9 @@ class Transact extends Array<Rec> {
         super();
         this.__name = name;
     }
+    get name () {
+        return this.__name;
+    }
     exec(ctx: TContext, ph: ProxyHandler): void {
         for (let i = 0, len = this.length; i < len; i++) {
             const r = this[i];
@@ -429,8 +432,7 @@ export class Repository extends WatchableObject implements IDataGuard {
      */
     start(name: string) {
         if (this.__context.transact !== undefined) {
-            console.log("save start stack:", this.__saveStartStack);
-            throw new Error("has transact not commited");
+            throw new Error(`has transact not committed：${this.__context.transact.name}`);
         }
         this.__saveStartStack = new Error();
         this.__context.optiNotify = true;
