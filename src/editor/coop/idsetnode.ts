@@ -14,11 +14,27 @@ import {
     importGradient,
     importPage,
     importPaintFilter,
+    importSymbolShape,
+    importSymbolUnionShape,
     importTableCell,
     importVariable
 } from "../../data/baseimport";
 import { SNumber } from "../../coop/client/snumber";
 import { FMT_VER_latest } from "../../data/fmtver";
+
+const importh: { [key: string]: (data: any, ctx: IImportContext) => any } = {};
+importh['table-cell'] = importTableCell;
+importh['variable'] = importVariable;
+importh['page'] = importPage;
+importh['color'] = importColor;
+importh['contact-form'] = importContactForm;
+importh['border-style'] = importBorderStyle;
+importh['gradient'] = importGradient;
+importh['border-side-setting'] = importBorderSideSetting;
+importh['blur'] = importBlur;
+importh['symbol-shape'] = importSymbolShape;
+importh['symbol-union-shape'] = importSymbolUnionShape;
+importh['paint-filter'] = importPaintFilter;
 
 function apply(document: Document, target: Object, op: IdOp): IdOpRecord {
     let value = op.data;
@@ -31,26 +47,9 @@ function apply(document: Document, target: Object, op: IdOp): IdOpRecord {
         };
         const data = JSON.parse(op.data);
         const typeId = data.typeId;
-        if (typeId === 'table-cell') {
-            value = importTableCell(data, ctx);
-        } else if (typeId === 'variable') {
-            value = importVariable(data, ctx);
-        } else if (typeId === 'page') {
-            value = importPage(data, ctx);
-        } else if (typeId === 'color') {
-            value = importColor(data, ctx);
-        } else if (typeId === 'contact-form') {
-            value = importContactForm(data, ctx);
-        } else if (typeId === 'border-style') {
-            value = importBorderStyle(data, ctx);
-        } else if (typeId === 'gradient') {
-            value = importGradient(data, ctx);
-        } else if (typeId === 'border-side-setting') {
-            value = importBorderSideSetting(data, ctx);
-        } else if (typeId === 'blur') {
-            value = importBlur(data, ctx);
-        }  else if (typeId === 'paint-filter') {
-            value = importPaintFilter(data, ctx);
+        const h = importh[typeId];
+        if (h) {
+            value = h(data, ctx);
         } else {
             throw new Error('need import ' + typeId)
         }
