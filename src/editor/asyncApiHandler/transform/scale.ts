@@ -18,7 +18,7 @@ import { adapt2Shape, PageView, ShapeView } from "../../../dataview";
 
 import { ColVector3D, makeShapeTransform1By2, Transform as Transform2, XYsBounding } from "../../../index";
 import { Api } from "../../coop/recordapi";
-import { fixTextShapeFrameByLayout } from "../../../editor/utils/other";
+import { fixTextShapeFrameByLayout } from "../../utils/other";
 
 export type RangeRecorder = Map<string, {
     toRight?: number,
