@@ -8,8 +8,16 @@ import { Matrix } from "../basic/matrix";
 import { GroupShape, Shape } from "../data/shape";
 import { Api } from "./coop/recordapi";
 import { Document } from "../data/document"
+import { makeShapeTransform1By2, makeShapeTransform2By1 } from "../data";
+import { ColVector3D } from "../basic/matrix2";
+import { log } from "debug";
 
-export function expandBounds(bounds: { left: number, top: number, right: number, bottom: number }, x: number, y: number) {
+export function expandBounds(bounds: {
+    left: number,
+    top: number,
+    right: number,
+    bottom: number
+}, x: number, y: number) {
     if (x < bounds.left) bounds.left = x;
     else if (x > bounds.right) bounds.right = x;
     if (y < bounds.top) bounds.top = y;
@@ -27,41 +35,90 @@ export function deleteEmptyGroupShape(document: Document, page: Page, shape: Sha
 }
 
 export function group<T extends GroupShape>(document: Document, page: Page, shapes: Shape[], gshape: T, savep: GroupShape, saveidx: number, api: Api): T {
-    // 计算frame
+    // 图层在root上的transform
+    const shapes2rootTransform = shapes.map(s => makeShapeTransform2By1(s.matrix2Root()));
 
-    //   计算每个shape的绝对坐标
-    const boundsArr = shapes.map((s) => {
-        const box = s.boundingBox()
-        const p = s.parent!;
-        const m = p.matrix2Root();
-        const lt = m.computeCoord(box.x, box.y);
-        const rb = m.computeCoord(box.x + box.width, box.y + box.height);
-        return { x: lt.x, y: lt.y, width: rb.x - lt.x, height: rb.y - lt.y }
-    })
+    // gshape在root上的transform
+    const groupTransform = makeShapeTransform2By1(gshape.transform);
+    const groupInverseTransform = groupTransform.getInverse();
 
-    const firstXY = boundsArr[0]
-    const bounds = { left: firstXY.x, top: firstXY.y, right: firstXY.x, bottom: firstXY.y };
+    const shapes2groupTransform = shapes2rootTransform.map(t => t.clone().addTransform(groupInverseTransform));
 
-    boundsArr.reduce((pre, cur) => {
-        expandBounds(pre, cur.x, cur.y);
-        expandBounds(pre, cur.x + cur.width, cur.y + cur.height);
-        return pre;
-    }, bounds)
+    shapes2groupTransform.forEach((t, i) => console.log(shapes[i].name, t.toString()));
 
-    const realXY = shapes.map((s) => s.frame2Root())
+    let left = Infinity;
+    let right = -Infinity;
+    let top = Infinity;
+    let bottom = -Infinity;
 
-    const m = new Matrix(savep.matrix2Root().inverse)
-    const xy = m.computeCoord(bounds.left, bounds.top)
+    shapes2groupTransform.forEach((t, index) => {
+        const shape = shapes[index];
+        const size = shape.size;
 
-    gshape.size.width = bounds.right - bounds.left;
-    gshape.size.height = bounds.bottom - bounds.top;
-    gshape.transform.translateX = xy.x;
-    gshape.transform.translateY = xy.y;
+        const { col0, col1, col2, col3 } = t.transform([
+            ColVector3D.FromXY(0, 0),
+            ColVector3D.FromXY(size.width, 0),
+            ColVector3D.FromXY(size.width, size.height),
+            ColVector3D.FromXY(0, size.height)
+        ]);
+
+        if (col0.x < left) {
+            left = col0.x;
+        } else if (col0.x > right) {
+            right = col0.x;
+        }
+        if (col0.y < top) {
+            top = col0.y;
+        } else if (col0.y > bottom) {
+            bottom = col0.y;
+        }
+
+        if (col1.x < left) {
+            left = col1.x;
+        } else if (col1.x > right) {
+            right = col1.x;
+        }
+        if (col1.y < top) {
+            top = col1.y;
+        } else if (col1.y > bottom) {
+            bottom = col1.y;
+        }
+
+        if (col2.x < left) {
+            left = col2.x;
+        } else if (col2.x > right) {
+            right = col2.x;
+        }
+        if (col2.y < top) {
+            top = col2.y;
+        } else if (col2.y > bottom) {
+            bottom = col2.y;
+        }
+
+        if (col3.x < left) {
+            left = col3.x;
+        } else if (col3.x > right) {
+            right = col3.x;
+        }
+        if (col3.y < top) {
+            top = col3.y;
+        } else if (col3.y > bottom) {
+            bottom = col3.y;
+        }
+    });
+
+    const __bounds = { left, top, right, bottom };
+
+    groupTransform
+        .translate(ColVector3D.FromXY(__bounds.left, __bounds.top))
+        .addTransform((makeShapeTransform2By1(savep.matrix2Root()).getInverse()));
+
+    gshape.size.width = __bounds.right - __bounds.left;
+    gshape.size.height = __bounds.bottom - __bounds.top;
+    gshape.transform = makeShapeTransform1By2(groupTransform);
 
     // 将GroupShape加入到save parent(层级最高图形的parent)中
     gshape = api.shapeInsert(document, page, savep, gshape, saveidx) as T;
-
-    // 将shapes里对象从parent中退出
 
     // 将shapes里的对象从原本parent下移入新建的GroupShape
     for (let i = 0, len = shapes.length; i < len; i++) {
@@ -75,21 +132,15 @@ export function group<T extends GroupShape>(document: Document, page: Page, shap
         }
     }
 
-    // 往上调整width & height
-
-    // update childs frame
+    const inverse2 = makeShapeTransform2By1(gshape.matrix2Root()).getInverse();
     for (let i = 0, len = shapes.length; i < len; i++) {
         const c = shapes[i]
-
-        const r = realXY[i]
-        const target = m.computeCoord(r.x, r.y);
-        const cur = c.matrix2Parent().computeCoord(0, 0);
-
-        api.shapeModifyX(page, c, c.frame.x + target.x - cur.x - xy.x);
-        api.shapeModifyY(page, c, c.frame.y + target.y - cur.y - xy.y)
+        api.shapeModifyTransform(page, c, makeShapeTransform1By2(shapes2rootTransform[i].addTransform(inverse2)));
     }
+
     return gshape;
 }
+
 export function ungroup(document: Document, page: Page, shape: GroupShape, api: Api): Shape[] {
     const savep = shape.parent as GroupShape;
     let idx = savep.indexOfChild(shape);

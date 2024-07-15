@@ -45,7 +45,19 @@ import {
 import { Document } from "../data/document";
 import { expand, translate, translateTo } from "./frame";
 import { uuid } from "../basic/uuid";
-import { Artboard, Border, Color, Fill, Gradient, Path, PathShape, Stop, Style, SymbolRefShape, Transform } from "../data/classes";
+import {
+    Artboard,
+    Border,
+    Color,
+    Fill,
+    Gradient,
+    Path,
+    PathShape,
+    Stop,
+    Style,
+    SymbolRefShape,
+    Transform
+} from "../data/classes";
 import { TextShapeEditor } from "./textshape";
 import { modify_frame_after_insert, set_childs_id, transform_data } from "../io/cilpboard";
 import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
@@ -524,23 +536,26 @@ export class PageEditor {
     }
 
     boolgroup2(savep: GroupShape, groupname: string, op: BoolOp): false | BoolShape {
-        if (savep.childs.length === 0) return false;
-        const shapes = savep.childs.slice(0).reverse(); // group内部是反过来的
-        const pp = savep.parent;
-        if (!(pp instanceof GroupShape)) return false;
-        const style: Style = this.cloneStyle(savep.style);
-        if (style.fills.length === 0) {
-            style.fills.push(newSolidColorFill()); // 自动添加个填充
-        }
-        let gshape = newBoolShape(groupname, style);
-
-        const api = this.__repo.start("boolgroup2", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-            const state = {} as SelectionState;
-            if (!isUndo) state.shapes = [gshape.id];
-            else state.shapes = cmd.saveselection?.shapes || [];
-            selection.restore(state);
-        });
         try {
+            if (savep.childs.length === 0) return false;
+            const shapes = savep.childs.slice(0).reverse(); // group内部是反过来的
+            const pp = savep.parent;
+            if (!(pp instanceof GroupShape)) return false;
+            const style: Style = this.cloneStyle(savep.style);
+            if (style.fills.length === 0) {
+                style.fills.push(newSolidColorFill()); // 自动添加个填充
+            }
+
+            let gshape = newBoolShape(groupname, style);
+            gshape.transform = makeShapeTransform1By2(makeShapeTransform2By1(savep.matrix2Root()));
+
+            const api = this.__repo.start("boolgroup2", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+                const state = {} as SelectionState;
+                if (!isUndo) state.shapes = [gshape.id];
+                else state.shapes = cmd.saveselection?.shapes || [];
+                selection.restore(state);
+            });
+
             // 0、save shapes[0].parent？最外层shape？位置？  层级最高图形的parent
             let saveidx = pp.indexOfChild(savep);
             // gshape.isBoolOpShape = true;
@@ -555,8 +570,8 @@ export class PageEditor {
         } catch (e) {
             console.log(e)
             this.__repo.rollback();
+            return false;
         }
-        return false;
     }
 
     /**
