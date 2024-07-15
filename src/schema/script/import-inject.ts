@@ -18,8 +18,8 @@ inject['ImageShape']['before'] = `\
         imageRef: source.imageRef,
         isEnabled: true,
         imageScaleMode: types.ImageScaleMode.Fill,
-        originalImageHeight: source.frame.height,
-        originalImageWidth: source.frame.width
+        originalImageHeight: source.size.height,
+        originalImageWidth: source.size.width
     }
     const fills = new BasicArray<types.Fill>();
     fills.push(fill);
