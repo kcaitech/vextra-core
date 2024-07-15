@@ -521,26 +521,6 @@ export class CrdtNumber extends Basic {
         this.value = value
     }
 }
-/* document meta */
-export class DocumentMeta extends Basic {
-    typeId = "document-meta"
-    id: string
-    name: string
-    fmtVer: number
-    pagesList: DocumentMeta_pagesList
-    lastCmdId: string
-    symbolregist: BasicMap<string, string>
-    freesymbolsVersionId?: string
-    constructor(id: string, name: string, fmtVer: number, pagesList: DocumentMeta_pagesList, lastCmdId: string, symbolregist: BasicMap<string, string>) {
-        super()
-        this.id = id
-        this.name = name
-        this.fmtVer = fmtVer
-        this.pagesList = pagesList
-        this.lastCmdId = lastCmdId
-        this.symbolregist = symbolregist
-    }
-}
 /* export format */
 export class ExportFormat extends Basic {
     typeId = "export-format"
@@ -1006,4 +986,24 @@ export class Artboard extends GroupShape {
 /* bool shape */
 export class BoolShape extends GroupShape {
     typeId = "bool-shape"
+}
+/* document meta */
+export class DocumentMeta extends Basic {
+    typeId = "document-meta"
+    id: string
+    name: string
+    fmtVer: number
+    pagesList: DocumentMeta_pagesList
+    lastCmdId: string
+    symbolregist: BasicMap<string, string>
+    freesymbols?: BasicMap<string, SymbolShape | SymbolUnionShape>
+    constructor(id: string, name: string, fmtVer: number, pagesList: DocumentMeta_pagesList, lastCmdId: string, symbolregist: BasicMap<string, string>) {
+        super()
+        this.id = id
+        this.name = name
+        this.fmtVer = fmtVer
+        this.pagesList = pagesList
+        this.lastCmdId = lastCmdId
+        this.symbolregist = symbolregist
+    }
 }

@@ -80,7 +80,7 @@ export async function importDocument(file: File, gurad: IDataGuard /*inflateRawS
         pageList.push(new PageListItem([i] as BasicArray<number>, p.id, p.name));
     })
 
-    const document = new Document(uuid(), "", "", new BasicMap(), file.name, pageList, gurad);
+    const document = new Document(uuid(), file.name, "", "", pageList, new BasicMap(), gurad);
 
     startLoader(json, pages, document);
 

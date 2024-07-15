@@ -539,16 +539,6 @@ export type CrdtNumber = {
     crdtidx: Crdtidx,
     value: number,
 }
-/* document meta */
-export type DocumentMeta = {
-    id: string,
-    name: string,
-    fmtVer: number,
-    pagesList: DocumentMeta_pagesList,
-    lastCmdId: string,
-    symbolregist: Map<string, string>,
-    freesymbolsVersionId?: string,
-}
 /* export format */
 export type ExportFormat = {
     crdtidx: Crdtidx,
@@ -810,6 +800,16 @@ export type Artboard = GroupShape & {
 }
 /* bool shape */
 export type BoolShape = GroupShape
+/* document meta */
+export type DocumentMeta = {
+    id: string,
+    name: string,
+    fmtVer: number,
+    pagesList: DocumentMeta_pagesList,
+    lastCmdId: string,
+    symbolregist: Map<string, string>,
+    freesymbols?: Map<string, SymbolShape | SymbolUnionShape>,
+}
 /* group shape */
 export type GroupShape = Shape & {
     childs: GroupShape_childs,
