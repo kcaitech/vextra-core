@@ -1463,6 +1463,7 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
         green: 216,
         red: 216
     }
+    const size = source.size ?? (source as any).frame;
     const fill: types.Fill = {
         typeId: "fill",
         color: color,
@@ -1472,12 +1473,10 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
         imageRef: source.imageRef,
         isEnabled: true,
         imageScaleMode: types.ImageScaleMode.Fill,
-        originalImageHeight: source.size.height,
-        originalImageWidth: source.size.width
+        originalImageHeight: size.height,
+        originalImageWidth: size.width
     }
-    const fills = new BasicArray<types.Fill>();
-    fills.push(fill);
-    source.style.fills = fills;
+    source.style.fills = [fill];
     if (!source.pathsegs) { // 兼容旧数据
         const seg: types.PathSegment = {
             crdtidx: [0],
