@@ -57,16 +57,16 @@ export class PageView extends GroupShapeView implements RootView {
     }
 
     onRemoveView(parent: ShapeView, view: ShapeView | ShapeView[]): void {
-        const remove = (v: ShapeView) => {
+        const remove = (parent: ShapeView, v: ShapeView) => {
             const cur = this.m_views.get(v.id);
-            if (cur && cur.parent?.id !== parent.id) return; // 已经不是同一个了
+            if (cur && cur.parent?.id !== parent.id) return; // 已经不是同一个了(被复用)
             this.m_views.delete(v.id);
             if (v instanceof ArtboradView) this.m_artboards.delete(v.id);
             if (v instanceof CutoutShapeView) this.m_cutouts.delete(v.id);
-            v.m_children.forEach((c) => remove(c as ShapeView));
+            v.m_children.forEach((c) => remove(v, c as ShapeView));
         }
-        if (Array.isArray(view)) view.forEach(remove);
-        else remove(view);
+        if (Array.isArray(view)) view.forEach((v) => remove(parent, v));
+        else remove(parent, view);
     }
 
     getView(id: string) {

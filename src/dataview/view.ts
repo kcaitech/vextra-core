@@ -95,7 +95,7 @@ export class DataView extends EventEL {
         this.m_ctx = ctx;
         this.m_data = props.data;
         this.m_transx = props.transx;
-        this.m_varsContainer = props.varsContainer;
+        // this.m_varsContainer = props.varsContainer;
         this.m_isVirtual = props.isVirtual;
 
         this._datawatcher = this._datawatcher.bind(this);
