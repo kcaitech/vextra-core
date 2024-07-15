@@ -628,24 +628,6 @@ export function exportCrdtNumber(source: types.CrdtNumber, ctx?: IExportContext)
     ret.value = source.value
     return ret
 }
-/* document meta */
-export function exportDocumentMeta(source: types.DocumentMeta, ctx?: IExportContext): types.DocumentMeta {
-    const ret: types.DocumentMeta = {} as types.DocumentMeta
-    ret.id = source.id
-    ret.name = source.name
-    ret.fmtVer = source.fmtVer
-    ret.pagesList = exportDocumentMeta_pagesList(source.pagesList, ctx)
-    ret.lastCmdId = source.lastCmdId
-    ret.symbolregist = (() => {
-        const ret: any = {}
-        source.symbolregist.forEach((source, k) => {
-            ret[k] = source
-        })
-        return ret
-    })()
-    if (source.freesymbolsVersionId) ret.freesymbolsVersionId = source.freesymbolsVersionId
-    return ret
-}
 /* export format */
 export function exportExportFormat(source: types.ExportFormat, ctx?: IExportContext): types.ExportFormat {
     const ret: types.ExportFormat = {} as types.ExportFormat
@@ -1057,6 +1039,41 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
 export function exportBoolShape(source: types.BoolShape, ctx?: IExportContext): types.BoolShape {
     const ret: types.BoolShape = exportGroupShape(source, ctx) as types.BoolShape
     ret.typeId = "bool-shape"
+    return ret
+}
+/* document meta */
+export function exportDocumentMeta(source: types.DocumentMeta, ctx?: IExportContext): types.DocumentMeta {
+    const ret: types.DocumentMeta = {} as types.DocumentMeta
+    ret.id = source.id
+    ret.name = source.name
+    ret.fmtVer = source.fmtVer
+    ret.pagesList = exportDocumentMeta_pagesList(source.pagesList, ctx)
+    ret.lastCmdId = source.lastCmdId
+    ret.symbolregist = (() => {
+        const ret: any = {}
+        source.symbolregist.forEach((source, k) => {
+            ret[k] = source
+        })
+        return ret
+    })()
+    if (source.freesymbols) ret.freesymbols = (() => {
+        const ret: any = {}
+        source.freesymbols.forEach((source, k) => {
+            ret[k] = (() => {
+                if (typeof source !== "object") {
+                    return source
+                }
+                if (source.typeId === "symbol-shape") {
+                    return exportSymbolShape(source as types.SymbolShape, ctx)
+                }
+                if (source.typeId === "symbol-union-shape") {
+                    return exportSymbolUnionShape(source as types.SymbolUnionShape, ctx)
+                }
+                throw new Error("unknow typeId: " + source.typeId)
+            })()
+        })
+        return ret
+    })()
     return ret
 }
 /* group shape */

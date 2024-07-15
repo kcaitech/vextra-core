@@ -711,32 +711,6 @@ export function importCrdtNumber(source: types.CrdtNumber, ctx?: IImportContext)
         source.value)
     return ret
 }
-/* document meta */
-function importDocumentMetaOptional(tar: impl.DocumentMeta, source: types.DocumentMeta, ctx?: IImportContext) {
-    if (source.freesymbolsVersionId) tar.freesymbolsVersionId = source.freesymbolsVersionId
-}
-export function importDocumentMeta(source: types.DocumentMeta, ctx?: IImportContext): impl.DocumentMeta {
-        // inject code
-    if (!(source as any).symbolregist) (source as any).symbolregist = {};
-
-    const ret: impl.DocumentMeta = new impl.DocumentMeta (
-        source.id,
-        source.name,
-        source.fmtVer,
-        importDocumentMeta_pagesList(source.pagesList, ctx),
-        source.lastCmdId,
-        (() => {
-            const ret = new BasicMap<string, string>()
-            const _val = source.symbolregist as any
-            Object.keys(source.symbolregist).forEach((k) => {
-                const val = _val[k]
-                ret.set(k, val)
-            })
-            return ret
-        })())
-    importDocumentMetaOptional(ret, source, ctx)
-    return ret
-}
 /* export format */
 export function importExportFormat(source: types.ExportFormat, ctx?: IImportContext): impl.ExportFormat {
     const ret: impl.ExportFormat = new impl.ExportFormat (
@@ -1601,6 +1575,51 @@ export function importBoolShape(source: types.BoolShape, ctx?: IImportContext): 
         importStyle(source.style, ctx),
         importGroupShape_childs(source.childs, ctx))
     importBoolShapeOptional(ret, source, ctx)
+    return ret
+}
+/* document meta */
+function importDocumentMetaOptional(tar: impl.DocumentMeta, source: types.DocumentMeta, ctx?: IImportContext) {
+    if (source.freesymbols) tar.freesymbols = (() => {
+        const ret = new BasicMap<string, impl.SymbolShape | impl.SymbolUnionShape>()
+        const _val = source.freesymbols as any
+        Object.keys(source.freesymbols).forEach((k) => {
+            const val = _val[k]
+            ret.set(k, (() => {
+                if (typeof val !== "object") {
+                    return val
+                }
+                if (val.typeId === "symbol-shape") {
+                    return importSymbolShape(val as types.SymbolShape, ctx)
+                }
+                if (val.typeId === "symbol-union-shape") {
+                    return importSymbolUnionShape(val as types.SymbolUnionShape, ctx)
+                }
+                throw new Error("unknow typeId: " + val.typeId)
+            })())
+        })
+        return ret
+    })()
+}
+export function importDocumentMeta(source: types.DocumentMeta, ctx?: IImportContext): impl.DocumentMeta {
+        // inject code
+    if (!(source as any).symbolregist) (source as any).symbolregist = {};
+
+    const ret: impl.DocumentMeta = new impl.DocumentMeta (
+        source.id,
+        source.name,
+        source.fmtVer,
+        importDocumentMeta_pagesList(source.pagesList, ctx),
+        source.lastCmdId,
+        (() => {
+            const ret = new BasicMap<string, string>()
+            const _val = source.symbolregist as any
+            Object.keys(source.symbolregist).forEach((k) => {
+                const val = _val[k]
+                ret.set(k, val)
+            })
+            return ret
+        })())
+    importDocumentMetaOptional(ret, source, ctx)
     return ret
 }
 /* group shape */

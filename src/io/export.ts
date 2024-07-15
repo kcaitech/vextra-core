@@ -8,9 +8,8 @@
 import { Document } from "../data/document";
 import { Border, Fill, Page, Shadow, Style } from "../data/classes";
 import * as types from "../data/typesdefine"
-import { exportDocumentMeta, exportPage, exportSymbolShape, exportSymbolUnionShape, IExportContext } from "../data/baseexport";
+import { exportDocumentMeta, exportPage, IExportContext } from "../data/baseexport";
 import { BasicArray } from "../data/basic";
-import { SymbolUnionShape } from "../data/baseclasses";
 
 export function newStyle(): Style {
     const borders = new BasicArray<Border>();
@@ -22,8 +21,7 @@ export function newStyle(): Style {
 export interface ExFromJson {
     document_meta: types.DocumentMeta,
     pages: types.Page[],
-    media_names: string[],
-    freesymbols: types.SymbolShape[],
+    media_names: string[]
 }
 
 class ExfContext implements IExportContext {
@@ -45,30 +43,6 @@ export async function exportExForm(document: Document): Promise<ExFromJson> {
         pages.push(page);
     }
 
-    const freesymbols: types.SymbolShape[] = [];
-    // // 导出未在page中导出的symbol
-    for (let k of ctx.symbols) {
-        ctx.refsymbols.delete(k);
-    }
-    const freesymbolsSet = new Set<string>();
-    const symMgr = document.symbolsMgr;
-    for (let k of ctx.refsymbols) {
-        if (freesymbolsSet.has(k)) continue;
-        // 未导出的symbol
-
-        const symbol = symMgr.get(k);
-        if (!symbol) continue;
-
-        if (symbol.parent instanceof SymbolUnionShape) {
-            freesymbols.push(exportSymbolUnionShape(symbol.parent));
-            symbol.parent.childs.forEach(c => freesymbolsSet.add(c.id))
-            freesymbolsSet.add(symbol.id);
-        } else {
-            freesymbols.push(exportSymbolShape(symbol))
-            freesymbolsSet.add(symbol.id);
-        }
-    }
-
     // medias
     const media_names: string[] = [];
     for (const mediaId of ctx.medias) if (await document.mediasMgr.get(mediaId) !== undefined) media_names.push(mediaId);
@@ -79,7 +53,6 @@ export async function exportExForm(document: Document): Promise<ExFromJson> {
     return {
         document_meta,
         pages,
-        media_names,
-        freesymbols
+        media_names
     }
 }

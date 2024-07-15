@@ -26,8 +26,21 @@
                 "type": "string"
             }
         },
-        "freesymbolsVersionId": {
-            "type": "string"
+        "freesymbols": {
+            "type": "map",
+            "key": {
+                "type": "string"
+            },
+            "value": {
+                "oneOf": [
+                    {
+                        "$ref": "./symbol-shape.json"
+                    },
+                    {
+                        "$ref": "./symbol-union-shape.json"
+                    }
+                ]
+            }
         },
         "fmtVer": {
             "type": "number"
