@@ -1,6 +1,7 @@
 import {
     BoolShape,
     GroupShape,
+    ImageShape,
     PathShape,
     PathShape2,
     RectShape,

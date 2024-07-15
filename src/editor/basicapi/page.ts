@@ -4,7 +4,9 @@ import { Op } from "../../coop/common/op";
 import { crdtArrayInsert, crdtArrayMove, crdtArrayRemove, crdtSetAttr, crdtShapeInsert, crdtShapeMove, crdtShapeRemove } from "./basic";
 import { GroupShape, Shape, SymbolShape } from "../../data/shape";
 import { ShapeFrame, SymbolUnionShape } from "../../data/baseclasses";
-import { BasicArray } from "../../data/basic";
+import { BasicArray, BasicMap } from "../../data/basic";
+import { IImportContext, importSymbolShape } from "../../data/baseimport";
+import { FMT_VER_latest } from "../../data/fmtver";
 
 export function pageInsert(document: Document, page: Page, index: number) {
     if (index < 0) return;
@@ -95,6 +97,10 @@ export function shapeInsert(document: Document, page: Page, parent: GroupShape, 
 
         if (shape instanceof SymbolShape && (!(shape instanceof SymbolUnionShape))) {
             ops.push(registSymbol(document, shape.id, page.id));
+            if (document.freesymbols && document.freesymbols.has(shape.id)) {
+                ops.push(crdtSetAttr(document.freesymbols, shape.id, undefined));
+            }
+            document.symbolsMgr.clearDuplicate(shape.id);
         }
     }
     recursive(parent, shape, index);
@@ -109,6 +115,16 @@ export function shapeDelete(document: Document, page: Page, parent: GroupShape, 
     // 从叶子开始删除
     const ops: Op[] = [];
     const recursive = (parent: GroupShape, shape: Shape, index: number) => {
+        let saveShape: SymbolShape | undefined;
+        if (shape instanceof SymbolShape && (!(shape instanceof SymbolUnionShape))) {
+            // 备份symbolshape
+            const ctx = new class implements IImportContext {
+                document: Document = document;
+                curPage: string = page.id;
+                fmtVer: number = FMT_VER_latest;
+            }
+            saveShape = importSymbolShape(shape, ctx);
+        }
         if (shape instanceof GroupShape) {
             const childs = shape.childs;
             for (let i = childs.length - 1; i >= 0; --i) {
@@ -119,10 +135,15 @@ export function shapeDelete(document: Document, page: Page, parent: GroupShape, 
         const op = crdtShapeRemove(page, parent, index);
         if (op) {
             ops.push(op);
-            if (shape instanceof SymbolShape && (!(shape instanceof SymbolUnionShape))) {
+            if (saveShape) {
                 ops.push(registSymbol(document, shape.id, "freesymbols"));
+                if (!document.freesymbols) document.freesymbols = new BasicMap();
+                ops.push(crdtSetAttr(document.freesymbols, saveShape.id, saveShape));
             }
             page.onRemoveShape(op.origin as Shape, false);
+        }
+        if (saveShape) {
+            document.symbolsMgr.clearDuplicate(saveShape.id);
         }
     }
     const shape = parent.childs[index];
