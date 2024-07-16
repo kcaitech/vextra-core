@@ -19,6 +19,15 @@
             "items": {
                 "$ref": "./prototype-inter-action.json"
             }
+        },
+        "overlayPositionType":{
+            "$ref": "./overlay-positions.json"
+        },
+        "overlayBackgroundInteraction":{
+             "$ref": "./overlay-background-interaction.json"
+        },
+        "overlayBackgroundAppearance":{
+            "$ref":"./overlay-background-appearance.json"
         }
     },
     "required": [],

@@ -17,7 +17,8 @@ import * as classes from "./baseclasses";
 import { BasicArray } from "./basic";
 import { Path } from "./path";
 import { RadiusType } from "./consts";
-import { Guide,PrototypeInterAction } from "./baseclasses";
+import { Guide, PrototypeInterAction, OverlayBackgroundAppearance } from "./baseclasses";
+import { Color } from "./color";
 
 
 export class Artboard extends GroupShape implements classes.Artboard {
@@ -27,6 +28,10 @@ export class Artboard extends GroupShape implements classes.Artboard {
     guides?: BasicArray<Guide>;
     prototypeStartingPoint?: classes.PrototypeStartingPoint;
     prototypeInteractions?: BasicArray<PrototypeInterAction>;
+    overlayPositionType?: classes.OverlayPositions;
+    overlayBackgroundInteraction?: classes.OverlayBackgroundInteraction;
+    overlayBackgroundAppearance?: classes.OverlayBackgroundAppearance;
+
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
@@ -39,7 +44,10 @@ export class Artboard extends GroupShape implements classes.Artboard {
         haveEdit?: boolean,
         guides?: BasicArray<Guide>,
         prototypeStartingPoint?: classes.PrototypeStartingPoint,
-        prototypeInteractions?: BasicArray<classes.PrototypeInterAction>
+        prototypeInteractions?: BasicArray<classes.PrototypeInterAction>,
+        overlayPositionType?: classes.OverlayPositions,
+        overlayBackgroundInteraction?: classes.OverlayBackgroundInteraction,
+        overlayBackgroundAppearance?: classes.OverlayBackgroundAppearance,
 
     ) {
         super(
@@ -56,6 +64,9 @@ export class Artboard extends GroupShape implements classes.Artboard {
         this.guides = guides;
         this.prototypeStartingPoint = prototypeStartingPoint
         this.prototypeInteractions = prototypeInteractions
+        this.overlayPositionType = overlayPositionType
+        this.overlayBackgroundInteraction = overlayBackgroundInteraction
+        this.overlayBackgroundAppearance = overlayBackgroundAppearance
     }
 
     getOpTarget(path: string[]) {

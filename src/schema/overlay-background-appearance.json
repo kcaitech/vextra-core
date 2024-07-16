@@ -1,0 +1,21 @@
+{
+    "description": "overlay-background-appearance",
+    "type": "object",
+    "properties": {
+        "typeId": {
+            "type": "string",
+            "default": "shape"
+        },
+        "backgroundType": {
+            "$ref": "./overlay-background-type.json"
+        },
+        "backgroundColor": {
+            "$ref": "./color.json"
+        }
+    },
+    "required": [
+        "backgroundType",
+        "backgroundColor"
+    ],
+    "additionalProperties": false
+}
