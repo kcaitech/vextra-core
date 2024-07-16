@@ -13,6 +13,7 @@ import {
     importContactForm,
     importGradient,
     importPage,
+    importPrototypeStartingPoint,
     importPaintFilter,
     importSymbolShape,
     importSymbolUnionShape,
@@ -34,6 +35,7 @@ importh['border-side-setting'] = importBorderSideSetting;
 importh['blur'] = importBlur;
 importh['symbol-shape'] = importSymbolShape;
 importh['symbol-union-shape'] = importSymbolUnionShape;
+importh['prototype-starting-point'] = importPrototypeStartingPoint;
 importh['paint-filter'] = importPaintFilter;
 
 function apply(document: Document, target: Object, op: IdOp): IdOpRecord {

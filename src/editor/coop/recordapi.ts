@@ -26,7 +26,14 @@ import {
     TableCellType,
     TableShape,
     Artboard, Guide,
-    Transform
+    Transform,
+    PrototypeStartingPoint,
+    PrototypeEvents,
+    PrototypeConnectionType,
+    PrototypeNavigationType,
+    PrototypeTransitionType,
+    PrototypeEasingType,
+    PrototypeEasingfunction
 } from "../../data/classes";
 import {
     BoolOp,
@@ -50,7 +57,7 @@ import {
 } from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
-import { ContactForm, ContactRole, ContextSettings, CurvePoint, ExportFormat, ExportOptions, PaintFilter } from "../../data/baseclasses";
+import { ContactForm, ContactRole, ContextSettings, CurvePoint, ExportFormat, ExportOptions, PaintFilter, PrototypeInterAction } from "../../data/baseclasses";
 import { ContactShape } from "../../data/contact"
 import { Color } from "../../data/classes";
 import { Op, OpType } from "../../coop/common/op";
@@ -479,6 +486,123 @@ export class Api {
         }
         this.addOp(basicapi.crdtSetAttr(contextSettings, 'blenMode', blendMode));
     }
+    setShapeProtoStart(page: Page, shape: Shape, PSPoint: PrototypeStartingPoint | undefined) {
+        checkShapeAtPage(page, shape);
+        this.addOp(basicapi.crdtSetAttr(shape, "prototypeStartingPoint", PSPoint));
+    }
+
+    delShapeProtoStart(page: Page, shape: Shape) {
+        checkShapeAtPage(page, shape);
+        this.addOp(basicapi.crdtSetAttr(shape, "prototypeStartingPoint", undefined));
+    }
+
+    insertShapeprototypeInteractions(page: Page, shape: Shape, action: PrototypeInterAction) {
+        checkShapeAtPage(page, shape)
+        let prototypeInteractions = (shape as Artboard).prototypeInteractions;
+        if (!prototypeInteractions) {
+            (shape as Artboard).prototypeInteractions = new BasicArray<PrototypeInterAction>();
+            prototypeInteractions = (shape as Artboard).prototypeInteractions!;
+        }
+        this.addOp(basicapi.crdtArrayInsert(prototypeInteractions, prototypeInteractions.length, action))
+    }
+
+    deleteShapePrototypeInteractions(page: Page, shape: Shape, id: string) {
+        checkShapeAtPage(page, shape)
+        let prototypeInteractions = (shape as Artboard).prototypeInteractions;
+        if (!prototypeInteractions) return;
+        const index = prototypeInteractions?.findIndex(i => i.id === id)
+        this.addOp(basicapi.crdtArrayRemove(prototypeInteractions, index))
+    }
+
+    shapeModifyPrototypeActionEvent(page: Page, shape: Shape, id: string, value: PrototypeEvents) {
+        checkShapeAtPage(page, shape)
+        let prototypeInteractions = (shape as Artboard).prototypeInteractions;
+        const action = prototypeInteractions?.find(i => i.id === id)
+        if (!action) return;
+        this.addOp(basicapi.crdtSetAttr(action.event, 'interactionType', value))
+    }
+
+    shapeModifyPrototypeActionEventTime(page: Page, shape: Shape, id: string, value: number) {
+        checkShapeAtPage(page, shape)
+        let prototypeInteractions = (shape as Artboard).prototypeInteractions;
+        const action = prototypeInteractions?.find(i => i.id === id)
+        if (!action) return;
+        this.addOp(basicapi.crdtSetAttr(action.event, 'transitionTimeout', value))
+    }
+
+    shapeModifyPrototypeActionConnNav(page: Page, shape: Shape, id: string, conn: PrototypeConnectionType | undefined, nav: PrototypeNavigationType | undefined) {
+        checkShapeAtPage(page, shape)
+        const prototypeInteractions = (shape as Artboard).prototypeInteractions;
+        if (!prototypeInteractions) return;
+        const action = prototypeInteractions?.find(i => i.id === id)?.actions[0];
+        if (!action) return;
+        this.addOp(basicapi.crdtSetAttr(action, 'connectionType', conn))
+        this.addOp(basicapi.crdtSetAttr(action, 'navigationType', nav))
+    }
+
+    shapeModifyPrototypeActionTargetNodeID(page: Page, shape: Shape, id: string, value: string) {
+        checkShapeAtPage(page, shape)
+        const prototypeInteractions = (shape as Artboard).prototypeInteractions;
+        if (!prototypeInteractions) return;
+        const action = prototypeInteractions?.find(i => i.id === id)?.actions[0];
+        if (!action) return;
+        this.addOp(basicapi.crdtSetAttr(action, 'targetNodeID', value))
+    }
+
+    shapeModifyPrototypeActionTransitionType(page: Page, shape: Shape, id: string, value: PrototypeTransitionType) {
+        checkShapeAtPage(page, shape)
+        const prototypeInteractions = (shape as Artboard).prototypeInteractions;
+        if (!prototypeInteractions) return;
+        const action = prototypeInteractions?.find(i => i.id === id)?.actions[0];
+        if (!action) return;
+        this.addOp(basicapi.crdtSetAttr(action, 'transitionType', value))
+    }
+
+    shapeModifyPrototypeActionTransitionDuration(page: Page, shape: Shape, id: string, value: number) {
+        checkShapeAtPage(page, shape)
+        const prototypeInteractions = (shape as Artboard).prototypeInteractions;
+        if (!prototypeInteractions) return;
+        const action = prototypeInteractions?.find(i => i.id === id)?.actions[0];
+        if (!action) return;
+        this.addOp(basicapi.crdtSetAttr(action, 'transitionDuration', value))
+    }
+
+    shapeModifyPrototypeActionEasingType(page: Page, shape: Shape, id: string, value: PrototypeEasingType) {
+        checkShapeAtPage(page, shape)
+        const prototypeInteractions = (shape as Artboard).prototypeInteractions;
+        if (!prototypeInteractions) return;
+        const action = prototypeInteractions?.find(i => i.id === id)?.actions[0];
+        if (!action) return;
+        this.addOp(basicapi.crdtSetAttr(action, 'easingType', value))
+    }
+
+    shapeModifyPrototypeActionConnectionURL(page: Page, shape: Shape, id: string, value: string) {
+        checkShapeAtPage(page, shape)
+        const prototypeInteractions = (shape as Artboard).prototypeInteractions;
+        if (!prototypeInteractions) return;
+        const action = prototypeInteractions?.find(i => i.id === id)?.actions[0];
+        if (!action) return;
+        this.addOp(basicapi.crdtSetAttr(action, 'connectionURL', value))
+    }
+
+    shapeModifyPrototypeActionOpenUrlInNewTab(page: Page, shape: Shape, id: string, value: boolean) {
+        checkShapeAtPage(page, shape)
+        const prototypeInteractions = (shape as Artboard).prototypeInteractions;
+        if (!prototypeInteractions) return;
+        const action = prototypeInteractions?.find(i => i.id === id)?.actions[0];
+        if (!action) return;
+        this.addOp(basicapi.crdtSetAttr(action, 'openUrlInNewTab', value))
+    }
+
+    shapeModifyPrototypeActionEasingFunction(page: Page, shape: Shape, id: string, value: PrototypeEasingfunction) {
+        checkShapeAtPage(page, shape)
+        const prototypeInteractions = (shape as Artboard).prototypeInteractions;
+        if (!prototypeInteractions) return;
+        const action = prototypeInteractions?.find(i => i.id === id)?.actions[0];
+        if (!action) return;
+        this.addOp(basicapi.crdtSetAttr(action, 'easingFunction', value))
+    }
+
     shapeModifyResizingConstraint(page: Page, shape: Shape, resizingConstraint: number) {
         this._shapeModifyAttr(page, shape, "resizingConstraint", resizingConstraint);
     }
