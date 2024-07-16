@@ -19,6 +19,7 @@ type Para_spans = BasicArray<impl.Span>
 type PathSegment_points = BasicArray<impl.CurvePoint>
 type PathShape_pathsegs = BasicArray<impl.PathSegment>
 type PathShape2_pathsegs = BasicArray<impl.PathSegment>
+type PrototypeActions_easingFunction = BasicArray<number>
 type PrototypeInterAction_crdtidx = BasicArray<number>
 type PrototypeInterAction_actions = BasicArray<impl.PrototypeActions>
 type Style_borders = BasicArray<impl.Border>
@@ -371,6 +372,18 @@ export function importLineJoinStyle(source: types.LineJoinStyle, ctx?: IImportCo
 export function importMarkerType(source: types.MarkerType, ctx?: IImportContext): impl.MarkerType {
     return source
 }
+/* overlayBackgroundInteraction */
+export function importOverlayBackgroundInteraction(source: types.OverlayBackgroundInteraction, ctx?: IImportContext): impl.OverlayBackgroundInteraction {
+    return source
+}
+/* interactionType */
+export function importOverlayBackgroundType(source: types.OverlayBackgroundType, ctx?: IImportContext): impl.OverlayBackgroundType {
+    return source
+}
+/* overlayPositionType */
+export function importOverlayPositions(source: types.OverlayPositions, ctx?: IImportContext): impl.OverlayPositions {
+    return source
+}
 /* override types */
 export function importOverrideType(source: types.OverrideType, ctx?: IImportContext): impl.OverrideType {
     return source
@@ -453,6 +466,13 @@ export function importPoint2D(source: types.Point2D, ctx?: IImportContext): impl
         source.y)
     return ret
 }
+export function importPrototypeActions_easingFunction(source: types.PrototypeActions_easingFunction, ctx?: IImportContext): PrototypeActions_easingFunction {
+    const ret: PrototypeActions_easingFunction = new BasicArray()
+    source.forEach((source, i) => {
+        ret.push(source)
+    })
+    return ret
+}
 /* connectionType */
 export function importPrototypeConnectionType(source: types.PrototypeConnectionType, ctx?: IImportContext): impl.PrototypeConnectionType {
     return source
@@ -461,17 +481,17 @@ export function importPrototypeConnectionType(source: types.PrototypeConnectionT
 export function importPrototypeEasingType(source: types.PrototypeEasingType, ctx?: IImportContext): impl.PrototypeEasingType {
     return source
 }
-/* easingfunction */
-export function importPrototypeEasingfunction(source: types.PrototypeEasingfunction, ctx?: IImportContext): impl.PrototypeEasingfunction {
-    const ret: impl.PrototypeEasingfunction = new BasicArray()
-    source.forEach((source, i) => {
-        ret.push(source)
-    })
-    return ret
-}
 /* interactionType */
 export function importPrototypeEvents(source: types.PrototypeEvents, ctx?: IImportContext): impl.PrototypeEvents {
     return source
+}
+/* extraScrollOffset */
+export function importPrototypeExtrascrolloffset(source: types.PrototypeExtrascrolloffset, ctx?: IImportContext): impl.PrototypeExtrascrolloffset {
+    const ret: impl.PrototypeExtrascrolloffset = new impl.PrototypeExtrascrolloffset (
+        source.id,
+        source.x,
+        source.y)
+    return ret
 }
 export function importPrototypeInterAction_crdtidx(source: types.PrototypeInterAction_crdtidx, ctx?: IImportContext): PrototypeInterAction_crdtidx {
     const ret: PrototypeInterAction_crdtidx = new BasicArray()
@@ -829,8 +849,20 @@ export function importGradient(source: types.Gradient, ctx?: IImportContext): im
     importGradientOptional(ret, source, ctx)
     return ret
 }
+/* overlay-background-appearance */
+function importOverlayBackgroundAppearanceOptional(tar: impl.OverlayBackgroundAppearance, source: types.OverlayBackgroundAppearance, ctx?: IImportContext) {
+    if (source.typeId) tar.typeId = source.typeId
+}
+export function importOverlayBackgroundAppearance(source: types.OverlayBackgroundAppearance, ctx?: IImportContext): impl.OverlayBackgroundAppearance {
+    const ret: impl.OverlayBackgroundAppearance = new impl.OverlayBackgroundAppearance (
+        importOverlayBackgroundType(source.backgroundType, ctx),
+        importColor(source.backgroundColor, ctx))
+    importOverlayBackgroundAppearanceOptional(ret, source, ctx)
+    return ret
+}
 /* actions */
 function importPrototypeActionsOptional(tar: impl.PrototypeActions, source: types.PrototypeActions, ctx?: IImportContext) {
+    if (source.typeId) tar.typeId = source.typeId
     if (source.targetNodeID) tar.targetNodeID = source.targetNodeID
     if (source.transitionType) tar.transitionType = importPrototypeTransitionType(source.transitionType, ctx)
     if (source.transitionDuration) tar.transitionDuration = source.transitionDuration
@@ -838,10 +870,12 @@ function importPrototypeActionsOptional(tar: impl.PrototypeActions, source: type
     if (source.connectionURL) tar.connectionURL = source.connectionURL
     if (source.openUrlInNewTab) tar.openUrlInNewTab = source.openUrlInNewTab
     if (source.navigationType) tar.navigationType = importPrototypeNavigationType(source.navigationType, ctx)
-    if (source.easingFunction) tar.easingFunction = importPrototypeEasingfunction(source.easingFunction, ctx)
+    if (source.easingFunction) tar.easingFunction = importPrototypeActions_easingFunction(source.easingFunction, ctx)
+    if (source.extraScrollOffset) tar.extraScrollOffset = importPrototypeExtrascrolloffset(source.extraScrollOffset, ctx)
 }
 export function importPrototypeActions(source: types.PrototypeActions, ctx?: IImportContext): impl.PrototypeActions {
     const ret: impl.PrototypeActions = new impl.PrototypeActions (
+        importCrdtidx(source.crdtidx, ctx),
         source.id,
         importPrototypeConnectionType(source.connectionType, ctx))
     importPrototypeActionsOptional(ret, source, ctx)
@@ -1645,6 +1679,9 @@ function importArtboardOptional(tar: impl.Artboard, source: types.Artboard, ctx?
     if (source.guides) tar.guides = importArtboard_guides(source.guides, ctx)
     if (source.prototypeStartingPoint) tar.prototypeStartingPoint = importPrototypeStartingPoint(source.prototypeStartingPoint, ctx)
     if (source.prototypeInteractions) tar.prototypeInteractions = importArtboard_prototypeInteractions(source.prototypeInteractions, ctx)
+    if (source.overlayPositionType) tar.overlayPositionType = importOverlayPositions(source.overlayPositionType, ctx)
+    if (source.overlayBackgroundInteraction) tar.overlayBackgroundInteraction = importOverlayBackgroundInteraction(source.overlayBackgroundInteraction, ctx)
+    if (source.overlayBackgroundAppearance) tar.overlayBackgroundAppearance = importOverlayBackgroundAppearance(source.overlayBackgroundAppearance, ctx)
 }
 export function importArtboard(source: types.Artboard, ctx?: IImportContext): impl.Artboard {
     const ret: impl.Artboard = new impl.Artboard (

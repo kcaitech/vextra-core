@@ -1,7 +1,0 @@
-{
-    "description": "easingfunction",
-    "type": "array",
-    "items": {
-        "type": "number"
-    }
-}

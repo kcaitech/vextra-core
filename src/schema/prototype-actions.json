@@ -2,7 +2,13 @@
     "description": "actions",
     "type": "object",
     "properties": {
+        "crdtidx": {
+          "$ref": "./crdtidx.json"
+        },
         "id": {
+            "type": "string"
+        },
+        "typeId": {
             "type": "string"
         },
         "targetNodeID": {
@@ -32,10 +38,17 @@
             "$ref": "./prototype-navigation-type.json"
         },
         "easingFunction": {
-            "$ref": "./prototype-easingfunction.json"
+            "type": "array",
+            "items": {
+                "type": "number"
+            }
+        },
+        "extraScrollOffset": {
+            "$ref": "./prototype-extrascrolloffset.json"
         }
     },
     "required": [
+        "crdtidx",
         "id",
         "connectionType"
     ]

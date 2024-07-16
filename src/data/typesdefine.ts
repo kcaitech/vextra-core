@@ -228,6 +228,28 @@ export enum MarkerType {
     Round = "round",
     Square = "square",
 }
+/* overlayBackgroundInteraction */
+export enum OverlayBackgroundInteraction {
+    NONE = "NONE",
+    CLOSEONCLICKOUTSIDE = "CLOSE_ON_CLICK_OUTSIDE",
+}
+/* interactionType */
+export enum OverlayBackgroundType {
+    NONE = "NONE",
+    SOLIDCOLOR = "SOLID_COLOR",
+}
+/* overlayPositionType */
+export enum OverlayPositions {
+    TOPLEFT = "TOP_LEFT",
+    TOPCENTER = "TOP_CENTER",
+    TOPRIGHT = "TOP_RIGHT",
+    CENTERLEFT = "CENTER_LEFT",
+    CENTER = "CENTER",
+    CENTERRIGHT = "CENTER_RIGHT",
+    BOTTOMLEFT = "BOTTOM_LEFT",
+    BOTTOMCENTER = "BOTTOM_CENTER",
+    BOTTOMRIGHT = "BOTTOM_RIGHT",
+}
 /* override types */
 export enum OverrideType {
     Name = "name",
@@ -279,6 +301,7 @@ export type Point2D = {
     x: number,
     y: number,
 }
+export type PrototypeActions_easingFunction = Array<number>
 /* connectionType */
 export enum PrototypeConnectionType {
     NONE = "NONE",
@@ -297,8 +320,6 @@ export enum PrototypeEasingType {
     OUTBACKCUBIC = "OUT_BACK_CUBIC",
     INOUTBACKCUBIC = "INOUT_BACK_CUBIC",
 }
-/* easingfunction */
-export type PrototypeEasingfunction = Array<number>
 /* interactionType */
 export enum PrototypeEvents {
     ONCLICK = "ON_CLICK",
@@ -311,6 +332,13 @@ export enum PrototypeEvents {
     MOUSEDOWN = "MOUSE_DOWN",
     MOUSEUP = "MOUSE_UP",
     AFTERTIMEOUT = "AFTER_TIMEOUT",
+}
+/* extraScrollOffset */
+export type PrototypeExtrascrolloffset = {
+    typeId: string,
+    id: string,
+    x: number,
+    y: number,
 }
 export type PrototypeInterAction_crdtidx = Array<number>
 export type PrototypeInterAction_actions = Array<PrototypeActions>
@@ -606,10 +634,18 @@ export type Gradient = {
     elipseLength?: number,
     gradientOpacity?: number,
 }
+/* overlay-background-appearance */
+export type OverlayBackgroundAppearance = {
+    backgroundType: OverlayBackgroundType,
+    backgroundColor: Color,
+    typeId?: string,
+}
 /* actions */
 export type PrototypeActions = {
+    crdtidx: Crdtidx,
     id: string,
     connectionType: PrototypeConnectionType,
+    typeId?: string,
     targetNodeID?: string,
     transitionType?: PrototypeTransitionType,
     transitionDuration?: number,
@@ -617,7 +653,8 @@ export type PrototypeActions = {
     connectionURL?: string,
     openUrlInNewTab?: boolean,
     navigationType?: PrototypeNavigationType,
-    easingFunction?: PrototypeEasingfunction,
+    easingFunction?: PrototypeActions_easingFunction,
+    extraScrollOffset?: PrototypeExtrascrolloffset,
 }
 /* event */
 export type PrototypeEvent = {
@@ -852,6 +889,9 @@ export type Artboard = GroupShape & {
     guides?: Artboard_guides,
     prototypeStartingPoint?: PrototypeStartingPoint,
     prototypeInteractions?: Artboard_prototypeInteractions,
+    overlayPositionType?: OverlayPositions,
+    overlayBackgroundInteraction?: OverlayBackgroundInteraction,
+    overlayBackgroundAppearance?: OverlayBackgroundAppearance,
 }
 /* bool shape */
 export type BoolShape = GroupShape

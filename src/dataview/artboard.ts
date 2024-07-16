@@ -169,4 +169,16 @@ export class ArtboradView extends GroupShapeView {
     get prototypeInterAction() {
         return (this.m_data as Artboard).prototypeInteractions;
     }
+
+    get overlayPositionType(){
+        return (this.m_data as Artboard).overlayPositionType
+    }
+
+    get overlayBackgroundInteraction(){
+        return (this.m_data as Artboard).overlayBackgroundInteraction
+    }
+
+    get overlayBackgroundAppearance(){
+        return (this.m_data as Artboard).overlayBackgroundAppearance
+    }
 }

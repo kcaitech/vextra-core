@@ -20,6 +20,9 @@ export {
     LineCapStyle,
     LineJoinStyle,
     MarkerType,
+    OverlayBackgroundInteraction,
+    OverlayBackgroundType,
+    OverlayPositions,
     OverrideType,
     PrototypeConnectionType,
     PrototypeEasingType,
@@ -62,6 +65,9 @@ import {
     LineCapStyle,
     LineJoinStyle,
     MarkerType,
+    OverlayBackgroundInteraction,
+    OverlayBackgroundType,
+    OverlayPositions,
     OverrideType,
     PrototypeConnectionType,
     PrototypeEasingType,
@@ -291,8 +297,20 @@ export class Point2D extends Basic {
         this.y = y
     }
 }
-/* easingfunction */
-export type PrototypeEasingfunction = BasicArray<number>
+type PrototypeActions_easingFunction = BasicArray<number>
+/* extraScrollOffset */
+export class PrototypeExtrascrolloffset extends Basic {
+    typeId = "prototype-extrascrolloffset"
+    id: string
+    x: number
+    y: number
+    constructor(id: string, x: number, y: number) {
+        super()
+        this.id = id
+        this.x = x
+        this.y = y
+    }
+}
 type PrototypeInterAction_crdtidx = BasicArray<number>
 type PrototypeInterAction_actions = BasicArray<PrototypeActions>
 /* prototypeStartingPoint */
@@ -552,9 +570,21 @@ export class Gradient extends Basic {
         this.stops = stops
     }
 }
+/* overlay-background-appearance */
+export class OverlayBackgroundAppearance extends Basic {
+    typeId = "overlay-background-appearance"
+    backgroundType: OverlayBackgroundType
+    backgroundColor: Color
+    constructor(backgroundType: OverlayBackgroundType, backgroundColor: Color) {
+        super()
+        this.backgroundType = backgroundType
+        this.backgroundColor = backgroundColor
+    }
+}
 /* actions */
 export class PrototypeActions extends Basic {
     typeId = "prototype-actions"
+    crdtidx: Crdtidx
     id: string
     connectionType: PrototypeConnectionType
     targetNodeID?: string
@@ -564,9 +594,11 @@ export class PrototypeActions extends Basic {
     connectionURL?: string
     openUrlInNewTab?: boolean
     navigationType?: PrototypeNavigationType
-    easingFunction?: PrototypeEasingfunction
-    constructor(id: string, connectionType: PrototypeConnectionType) {
+    easingFunction?: PrototypeActions_easingFunction
+    extraScrollOffset?: PrototypeExtrascrolloffset
+    constructor(crdtidx: Crdtidx, id: string, connectionType: PrototypeConnectionType) {
         super()
+        this.crdtidx = crdtidx
         this.id = id
         this.connectionType = connectionType
     }
@@ -995,6 +1027,9 @@ export class Artboard extends GroupShape {
     guides?: Artboard_guides
     prototypeStartingPoint?: PrototypeStartingPoint
     prototypeInteractions?: Artboard_prototypeInteractions
+    overlayPositionType?: OverlayPositions
+    overlayBackgroundInteraction?: OverlayBackgroundInteraction
+    overlayBackgroundAppearance?: OverlayBackgroundAppearance
 }
 /* bool shape */
 export class BoolShape extends GroupShape {
