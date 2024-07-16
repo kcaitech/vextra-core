@@ -1,5 +1,5 @@
 import { OpType } from "../../coop/common/op";
-import { Basic, ResourceMgr } from "../../data/basic";
+import { BasicArray, ResourceMgr, isDataBasicType } from "../../data/basic";
 import { IdOp, IdOpRecord } from "../../coop/client/crdt";
 import { RepoNode, RepoNodePath } from "./base";
 import { Cmd, OpItem } from "../../coop/common/repo";
@@ -15,7 +15,9 @@ import {
     importPage,
     importPrototypeStartingPoint,
     importTableCell,
-    importVariable
+    importVariable,
+    importOverlayBackgroundAppearance,
+    importPrototypeExtrascrolloffset
 } from "../../data/baseimport";
 import { SNumber } from "../../coop/client/snumber";
 
@@ -29,7 +31,12 @@ function apply(document: Document, target: Object, op: IdOp): IdOpRecord {
         };
         const data = JSON.parse(op.data);
         const typeId = data.typeId;
-        if (typeId === 'table-cell') {
+        if (Array.isArray(data)) {
+            data.forEach(v => {
+                if (typeof v !== "number") throw new Error();
+            })
+            value = new BasicArray(...data);
+        } else if (typeId === 'table-cell') {
             value = importTableCell(data, ctx);
         } else if (typeId === 'variable') {
             value = importVariable(data, ctx);
@@ -49,12 +56,16 @@ function apply(document: Document, target: Object, op: IdOp): IdOpRecord {
             value = importBlur(data, ctx);
         } else if (typeId === 'prototype-starting-point') {
             value = importPrototypeStartingPoint(data, ctx);
+        } else if (typeId === 'overlay-background-appearance') {
+            value = importOverlayBackgroundAppearance(data, ctx)
+        } else if (typeId === 'prototype-extrascrolloffset') {
+            value = importPrototypeExtrascrolloffset(data, ctx)
         } else {
             throw new Error('need import ' + typeId)
         }
     }
 
-    if (typeof value === 'object' && (!(value instanceof Basic))) throw new Error("need import: " + value?.typeId);
+    if (typeof value === 'object' && (!(isDataBasicType(value)))) throw new Error("need import: " + value?.typeId);
     let origin;
     if (target instanceof Map) {
         origin = target.get(op.id);
@@ -79,7 +90,7 @@ function apply(document: Document, target: Object, op: IdOp): IdOpRecord {
 }
 
 function simpleApply(target: Object, op: IdOp, value: any) {
-    if (typeof value === 'object' && (!(value instanceof Basic))) throw new Error("need import: " + value?.typeId);
+    if (typeof value === 'object' && (!(isDataBasicType(value)))) throw new Error("need import: " + value?.typeId);
     let origin;
     if (target instanceof Map) {
         origin = target.get(op.id);
