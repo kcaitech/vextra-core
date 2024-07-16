@@ -59,7 +59,7 @@ import {
     Transform
 } from "../data/classes";
 import { TextShapeEditor } from "./textshape";
-import { modify_frame_after_insert, set_childs_id, transform_data } from "../io/cilpboard";
+import { set_childs_id, transform_data } from "../io/cilpboard";
 import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
 import { render2path } from "../render";
 import { Matrix } from "../basic/matrix";
@@ -103,13 +103,11 @@ import {
     shape4fill
 } from "./symbol";
 import { is_circular_ref2 } from "./utils/ref_check";
-import { BorderSideSetting, BorderStyle, CurvePoint, ExportFormat, Point2D, Shadow } from "../data/baseclasses";
+import { BorderSideSetting, BorderStyle, ExportFormat, Point2D, Shadow } from "../data/baseclasses";
 import {
     calculateInnerAnglePosition,
     getPolygonPoints,
     getPolygonVertices,
-    get_rotate_for_straight,
-    is_straight,
     update_frame_by_points
 } from "./utils/path";
 import { modify_shapes_height, modify_shapes_width } from "./utils/common";
@@ -1045,6 +1043,75 @@ export class PageEditor {
                 else state.shapes = cmd.saveselection?.shapes || [];
                 selection.restore(state);
             });
+
+            api.shapeDelete(this.__document, this.__page, parent, index);
+            pathShape = api.shapeInsert(this.__document, this.__page, parent, pathShape, index) as PathShape;
+
+            this.__repo.commit();
+            return pathShape;
+        } catch (e) {
+            console.log(e)
+            this.__repo.rollback();
+            return false;
+        }
+    }
+
+    flattenGroup(shape: GroupShape, groupname: string): PathShape | false {
+        try {
+            // step1
+            if (shape.childs.length === 0) return false;
+            const shapes = shape.childs.slice(0).reverse();
+            const pp = shape.parent;
+            if (!(pp instanceof GroupShape)) return false;
+            const style: Style = this.cloneStyle(shape.style);
+            if (style.fills.length === 0) {
+                style.fills.push(newSolidColorFill());
+            }
+
+            let gshape = newBoolShape(groupname, style);
+            gshape.transform = makeShapeTransform1By2(makeShapeTransform2By1(shape.matrix2Root()));
+
+            const api = this.__repo.start("flattenGroup", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+                const state = {} as SelectionState;
+                if (!isUndo) state.shapes = [gshape.id];
+                else state.shapes = cmd.saveselection?.shapes || [];
+                selection.restore(state);
+            });
+
+            let saveidx = pp.indexOfChild(shape);
+            gshape = group(this.__document, this.__page, shapes, gshape, pp, saveidx, api);
+            saveidx = pp.indexOfChild(shape);
+            if (saveidx >= 0) api.shapeDelete(this.__document, this.__page, pp, saveidx);
+            shapes.forEach((shape) => api.shapeModifyBoolOp(this.__page, shape, BoolOp.Union))
+
+            // step 2
+            const parent = gshape.parent as GroupShape;
+            if (!parent) return false;
+
+            const path = render2path(gshape);
+
+            const copyStyle = findUsableFillStyle(gshape);
+            const style2: Style = this.cloneStyle(copyStyle);
+            const borderStyle = findUsableBorderStyle(gshape);
+            if (borderStyle !== copyStyle) {
+                style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
+            }
+
+            const gframe = gshape.frame;
+            const boundingBox = path.calcBounds();
+            const x = boundingBox.minX;
+            const y = boundingBox.minY;
+            const w = boundingBox.maxX - boundingBox.minX;
+            const h = boundingBox.maxY - boundingBox.minY;
+            const frame = new ShapeFrame(gframe.x, gframe.y, w, h);
+            path.translate(-boundingBox.minX, -boundingBox.minY);
+            let pathShape = newPathShape(gshape.name, frame, path, style2);
+            pathShape.fixedRadius = gshape.fixedRadius;
+            pathShape.transform = makeShapeTransform1By2(new Transform2()
+                .setTranslate(ColVector3D.FromXY(x, y))
+                .addTransform(makeShapeTransform2By1(gshape.transform)))
+
+            const index = parent.indexOfChild(gshape);
 
             api.shapeDelete(this.__document, this.__page, parent, index);
             pathShape = api.shapeInsert(this.__document, this.__page, parent, pathShape, index) as PathShape;
@@ -2986,7 +3053,6 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
-
 
     //export cutout
     shapesExportFormatUnify(actions: ExportFormatReplaceAction[]) {
