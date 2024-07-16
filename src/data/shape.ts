@@ -446,6 +446,12 @@ export class Shape extends Basic implements classes.Shape {
     get isStraight() {
         return false;
     }
+    getImageFill() {
+        const fills = this.getFills();
+        if (!fills.length) return false;
+        const result = fills.some(fill => fill.fillType === classes.FillType.Pattern);
+        return result;
+    }
 }
 
 export class GroupShape extends Shape implements classes.GroupShape {
@@ -558,6 +564,10 @@ export class GroupShape extends Shape implements classes.GroupShape {
     get radiusType() {
         return RadiusType.Fixed;
     }
+
+    getImageFill() {
+        return false;
+    }
 }
 
 export class BoolShape extends GroupShape implements classes.BoolShape {
@@ -598,6 +608,12 @@ export class BoolShape extends GroupShape implements classes.BoolShape {
 
     get isPathIcon() {
         return true;
+    }
+    getImageFill() {
+        const fills = this.style.getFills();
+        if (!fills.length) return false;
+        const result = fills.some(fill => fill.fillType === classes.FillType.Pattern);
+        return result;
     }
 }
 
@@ -990,7 +1006,6 @@ export class RectShape extends PathShape implements classes.RectShape {
 export class ImageShape extends RectShape implements classes.ImageShape {
     typeId = 'image-shape'
     imageRef: string;
-
     private __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
     private __cacheData?: { buff: Uint8Array, base64: string };
 
@@ -1002,7 +1017,7 @@ export class ImageShape extends RectShape implements classes.ImageShape {
         frame: ShapeFrame,
         style: Style,
         pathsegs: BasicArray<PathSegment>,
-        imageRef: string
+        imageRef: string,
     ) {
         super(
             crdtidx,
@@ -1011,9 +1026,8 @@ export class ImageShape extends RectShape implements classes.ImageShape {
             type,
             frame,
             style,
-            pathsegs
+            pathsegs,
         )
-
         this.imageRef = imageRef
     }
 
@@ -1056,6 +1070,9 @@ export class ImageShape extends RectShape implements classes.ImageShape {
     }
 
     get isPathIcon() {
+        return false;
+    }
+    getImageFill() {
         return false;
     }
 }
@@ -1187,11 +1204,18 @@ export class TextShape extends Shape implements classes.TextShape {
     get isPathIcon() {
         return false;
     }
+    getImageFill() {
+        // const fills = this.style.getFills();
+        // if (!fills.length) return false;
+        // const result = fills.some(fill => fill.fillType === classes.FillType.Pattern);
+        // return result;
+        return false;
+    }
 }
 
 export class CutoutShape extends PathShape implements classes.CutoutShape {
     typeId = 'cutout-shape'
-    scalingStroke: boolean;
+    exportOptions?: ExportOptions
 
     constructor(
         crdtidx: BasicArray<number>,
@@ -1201,7 +1225,7 @@ export class CutoutShape extends PathShape implements classes.CutoutShape {
         frame: ShapeFrame,
         style: Style,
         pathsegs: BasicArray<PathSegment>,
-        scalingStroke: boolean
+        exportOptions?: ExportOptions
     ) {
         super(
             crdtidx,
@@ -1212,7 +1236,7 @@ export class CutoutShape extends PathShape implements classes.CutoutShape {
             style,
             pathsegs
         )
-        this.scalingStroke = scalingStroke;
+        this.exportOptions = exportOptions;
     }
 
     get isNoSupportDiamondScale() {
@@ -1230,9 +1254,11 @@ export class CutoutShape extends PathShape implements classes.CutoutShape {
     get isPathIcon() {
         return false;
     }
-
-    get radius(): number[] {
-        return [0];
+    get radiusType() {
+        return RadiusType.None;
+    }
+    getImageFill() {
+        return false;
     }
 }
 

@@ -315,6 +315,7 @@ export class ShapeView extends DataView {
             || args.includes('isClosed') // 闭合状态
             || (this.m_fixedRadius || 0) !== ((this.m_data as any).fixedRadius || 0) // 固定圆角
             || args.includes('cornerRadius') // 圆角
+            || args.includes('imageRef')
         ) {
             this.m_path = undefined;
             this.m_pathstr = undefined;
@@ -915,5 +916,9 @@ export class ShapeView extends DataView {
 
     get isStraight() {
         return this.m_data.isStraight;
+    }
+
+    get isImageFill() {
+        return this.m_data.getImageFill();
     }
 }

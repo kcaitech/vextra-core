@@ -174,4 +174,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     get frameType() {
         return FrameType.Flex;
     }
+    getImageFill() {
+        return false;
+    }
 }

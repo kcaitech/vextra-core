@@ -17,6 +17,7 @@ export {
     FillType,
     GradientType,
     GuideAxis,
+    ImageScaleMode,
     LineCapStyle,
     LineJoinStyle,
     MarkerType,
@@ -24,6 +25,7 @@ export {
     OverlayBackgroundType,
     OverlayPositions,
     OverrideType,
+    PaintFilterType,
     PrototypeConnectionType,
     PrototypeEasingType,
     PrototypeEvents,
@@ -62,6 +64,7 @@ import {
     FillType,
     GradientType,
     GuideAxis,
+    ImageScaleMode,
     LineCapStyle,
     LineJoinStyle,
     MarkerType,
@@ -69,6 +72,7 @@ import {
     OverlayBackgroundType,
     OverlayPositions,
     OverrideType,
+    PaintFilterType,
     PrototypeConnectionType,
     PrototypeEasingType,
     PrototypeEvents,
@@ -267,6 +271,27 @@ export class PageListItem extends Basic {
     }
 }
 type Page_guides = BasicArray<Guide>
+/* paint filter */
+export class PaintFilter extends Basic {
+    typeId = "paint-filter"
+    exposure: number
+    contrast: number
+    saturation: number
+    temperature: number
+    tint: number
+    shadow: number
+    hue: number
+    constructor(exposure: number, contrast: number, saturation: number, temperature: number, tint: number, shadow: number, hue: number) {
+        super()
+        this.exposure = exposure
+        this.contrast = contrast
+        this.saturation = saturation
+        this.temperature = temperature
+        this.tint = tint
+        this.shadow = shadow
+        this.hue = hue
+    }
+}
 type Para_spans = BasicArray<Span>
 type PathSegment_points = BasicArray<CurvePoint>
 /* path segment */
@@ -286,6 +311,25 @@ export class PathSegment extends Basic {
 }
 type PathShape_pathsegs = BasicArray<PathSegment>
 type PathShape2_pathsegs = BasicArray<PathSegment>
+/* pattern transform */
+export class PatternTransform extends Basic {
+    typeId = "pattern-transform"
+    m00: number
+    m01: number
+    m02: number
+    m10: number
+    m11: number
+    m12: number
+    constructor(m00: number, m01: number, m02: number, m10: number, m11: number, m12: number) {
+        super()
+        this.m00 = m00
+        this.m01 = m01
+        this.m02 = m02
+        this.m10 = m10
+        this.m11 = m11
+        this.m12 = m12
+    }
+}
 /* point 2d */
 export class Point2D extends Basic {
     typeId = "point-2d"
@@ -670,6 +714,14 @@ export class Border extends Basic {
     sideSetting: BorderSideSetting
     contextSettings?: ContextSettings
     gradient?: Gradient
+    imageRef?: string
+    imageScaleMode?: ImageScaleMode
+    rotation?: number
+    scale?: number
+    originalImageWidth?: number
+    originalImageHeight?: number
+    paintFilter?: PaintFilter
+    transform?: PatternTransform
     constructor(crdtidx: Crdtidx, id: string, isEnabled: boolean, fillType: FillType, color: Color, position: BorderPosition, thickness: number, borderStyle: BorderStyle, cornerType: CornerType, sideSetting: BorderSideSetting) {
         super()
         this.crdtidx = crdtidx
@@ -696,6 +748,13 @@ export class Fill extends Basic {
     gradient?: Gradient
     imageRef?: string
     fillRule?: FillRule
+    imageScaleMode?: ImageScaleMode
+    rotation?: number
+    scale?: number
+    originalImageWidth?: number
+    originalImageHeight?: number
+    paintFilter?: PaintFilter
+    transform?: PatternTransform
     constructor(crdtidx: Crdtidx, id: string, isEnabled: boolean, fillType: FillType, color: Color) {
         super()
         this.crdtidx = crdtidx
@@ -958,11 +1017,6 @@ export class ContactShape extends PathShape {
 /* cutout shape */
 export class CutoutShape extends PathShape {
     typeId = "cutout-shape"
-    scalingStroke: boolean
-    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, frame: ShapeFrame, style: Style, pathsegs: PathShape_pathsegs, scalingStroke: boolean) {
-        super(crdtidx, id, name, type, frame, style, pathsegs)
-        this.scalingStroke = scalingStroke
-    }
 }
 /* image shape */
 export class ImageShape extends PathShape {
