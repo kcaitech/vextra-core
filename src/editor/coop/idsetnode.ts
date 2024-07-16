@@ -1,5 +1,5 @@
 import { OpType } from "../../coop/common/op";
-import { Basic, ResourceMgr } from "../../data/basic";
+import { BasicArray, ResourceMgr, isDataBasicType } from "../../data/basic";
 import { IdOp, IdOpRecord } from "../../coop/client/crdt";
 import { RepoNode, RepoNodePath } from "./base";
 import { Cmd, OpItem } from "../../coop/common/repo";
@@ -18,7 +18,9 @@ import {
     importSymbolShape,
     importSymbolUnionShape,
     importTableCell,
-    importVariable
+    importVariable,
+    importOverlayBackgroundAppearance,
+    importPrototypeExtrascrolloffset
 } from "../../data/baseimport";
 import { SNumber } from "../../coop/client/snumber";
 import { FMT_VER_latest } from "../../data/fmtver";
@@ -36,6 +38,8 @@ importh['blur'] = importBlur;
 importh['symbol-shape'] = importSymbolShape;
 importh['symbol-union-shape'] = importSymbolUnionShape;
 importh['prototype-starting-point'] = importPrototypeStartingPoint;
+importh['overlay-background-appearance'] = importOverlayBackgroundAppearance;
+importh['prototype-extrascrolloffset'] = importPrototypeExtrascrolloffset;
 importh['paint-filter'] = importPaintFilter;
 
 function apply(document: Document, target: Object, op: IdOp): IdOpRecord {
@@ -57,7 +61,7 @@ function apply(document: Document, target: Object, op: IdOp): IdOpRecord {
         }
     }
 
-    if (typeof value === 'object' && (!(value instanceof Basic))) throw new Error("need import: " + value?.typeId);
+    if (typeof value === 'object' && (!(isDataBasicType(value)))) throw new Error("need import: " + value?.typeId);
     let origin;
     if (target instanceof Map) {
         origin = target.get(op.id);
@@ -82,7 +86,7 @@ function apply(document: Document, target: Object, op: IdOp): IdOpRecord {
 }
 
 function simpleApply(target: Object, op: IdOp, value: any) {
-    if (typeof value === 'object' && (!(value instanceof Basic))) throw new Error("need import: " + value?.typeId);
+    if (typeof value === 'object' && (!(isDataBasicType(value)))) throw new Error("need import: " + value?.typeId);
     let origin;
     if (target instanceof Map) {
         origin = target.get(op.id);

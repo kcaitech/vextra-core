@@ -117,7 +117,9 @@ import {
     PrototypeNavigationType,
     PrototypeTransitionType,
     PrototypeEasingType,
-    PrototypeEasingfunction
+    OverlayPositions,
+    OverlayBackgroundInteraction,
+    OverlayBackgroundAppearance
 } from "../data/baseclasses";
 import { calculateInnerAnglePosition, getPolygonPoints, getPolygonVertices, get_rotate_for_straight, is_straight, update_frame_by_points } from "./utils/path";
 import { modify_shapes_height, modify_shapes_width } from "./utils/common";
@@ -3247,11 +3249,11 @@ export class PageEditor {
         }
     }
 
-    setPrototypeActionEasingType(shape: ShapeView, id: string, value: PrototypeEasingType) {
+    setPrototypeActionEasingType(shape: ShapeView, id: string, value: PrototypeEasingType, esfn: BasicArray<number>) {
         try {
             const api = this.__repo.start('setPrototypeActionEasingType');
             const __shape = adapt2Shape(shape);
-            api.shapeModifyPrototypeActionEasingType(this.__page, __shape, id, value);
+            api.shapeModifyPrototypeActionEasingType(this.__page, __shape, id, value, esfn);
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
@@ -3280,11 +3282,66 @@ export class PageEditor {
         }
     }
 
-    setPrototypeActionEasingFunction(shape: ShapeView, id: string, value: PrototypeEasingfunction) {
+    setPrototypeActionEasingFunction(shape: ShapeView, id: string, value: BasicArray<number>) {
         try {
             const api = this.__repo.start('setPrototypeActionOpenUrlInNewTab');
             const __shape = adapt2Shape(shape);
             api.shapeModifyPrototypeActionEasingFunction(this.__page, __shape, id, value);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setPrototypeExtraScrollOffsetX(shape: ShapeView, id: string, value: number){
+        try {
+            const api = this.__repo.start('setPrototypeExtraScrollOffsetX');
+            const __shape = adapt2Shape(shape);
+            api.shapeModifyPrototypeExtraScrollOffsetX(this.__page, __shape, id, value);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    
+    setPrototypeExtraScrollOffsetY(shape: ShapeView, id: string, value: number){
+        try {
+            const api = this.__repo.start('setPrototypeExtraScrollOffsetY');
+            const __shape = adapt2Shape(shape);
+            api.shapeModifyPrototypeExtraScrollOffsetY(this.__page, __shape, id, value);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setOverlayPositionType(shape: ShapeView,value:OverlayPositions){
+        try {
+            const api = this.__repo.start('setOverlayPositionType');
+            const __shape = adapt2Shape(shape);
+            api.shapeModifyOverlayPositionType(this.__page, __shape,value);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setOverlayBackgroundInteraction(shape: ShapeView,value:OverlayBackgroundInteraction){
+        try {
+            const api = this.__repo.start('setOverlayBackgroundInteraction');
+            const __shape = adapt2Shape(shape);
+            api.shapeModifyOverlayBackgroundInteraction(this.__page, __shape,value);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setOverlayBackgroundAppearance(shape: ShapeView,value?:OverlayBackgroundAppearance){
+        try {
+            const api = this.__repo.start('setOverlayBackgroundAppearance');
+            const __shape = adapt2Shape(shape);
+            api.shapeModifyOverlayBackgroundAppearance(this.__page, __shape,value);
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();

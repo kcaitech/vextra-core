@@ -33,7 +33,11 @@ import {
     PrototypeNavigationType,
     PrototypeTransitionType,
     PrototypeEasingType,
-    PrototypeEasingfunction
+    PrototypeExtrascrolloffset,
+    OverlayPositions,
+    OverlayBackgroundInteraction,
+    OverlayBackgroundAppearance,
+    OverlayBackgroundType
 } from "../../data/classes";
 import {
     BoolOp,
@@ -567,13 +571,14 @@ export class Api {
         this.addOp(basicapi.crdtSetAttr(action, 'transitionDuration', value))
     }
 
-    shapeModifyPrototypeActionEasingType(page: Page, shape: Shape, id: string, value: PrototypeEasingType) {
+    shapeModifyPrototypeActionEasingType(page: Page, shape: Shape, id: string, value: PrototypeEasingType, esfn: BasicArray<number>) {
         checkShapeAtPage(page, shape)
         const prototypeInteractions = (shape as Artboard).prototypeInteractions;
         if (!prototypeInteractions) return;
         const action = prototypeInteractions?.find(i => i.id === id)?.actions[0];
         if (!action) return;
-        this.addOp(basicapi.crdtSetAttr(action, 'easingType', value))
+        this.addOp(basicapi.crdtSetAttr(action, 'easingType', value));
+        this.addOp(basicapi.crdtSetAttr(action, 'easingFunction', esfn))
     }
 
     shapeModifyPrototypeActionConnectionURL(page: Page, shape: Shape, id: string, value: string) {
@@ -594,13 +599,65 @@ export class Api {
         this.addOp(basicapi.crdtSetAttr(action, 'openUrlInNewTab', value))
     }
 
-    shapeModifyPrototypeActionEasingFunction(page: Page, shape: Shape, id: string, value: PrototypeEasingfunction) {
+    shapeModifyPrototypeActionEasingFunction(page: Page, shape: Shape, id: string, value: BasicArray<number>) {
         checkShapeAtPage(page, shape)
         const prototypeInteractions = (shape as Artboard).prototypeInteractions;
         if (!prototypeInteractions) return;
         const action = prototypeInteractions?.find(i => i.id === id)?.actions[0];
         if (!action) return;
         this.addOp(basicapi.crdtSetAttr(action, 'easingFunction', value))
+    }
+
+    shapeModifyPrototypeExtraScrollOffsetX(page: Page, shape: Shape, id: string, value: number) {
+        checkShapeAtPage(page, shape)
+        const prototypeInteractions = (shape as Artboard).prototypeInteractions;
+        if (!prototypeInteractions) return;
+        const action = prototypeInteractions?.find(i => i.id === id)?.actions[0];
+        if (!action) return;
+        let extraScrollOffset = action.extraScrollOffset
+        if (!extraScrollOffset) {
+            id = uuid()
+            extraScrollOffset = new PrototypeExtrascrolloffset(id, 0, 0)
+            this.addOp(basicapi.crdtSetAttr(action, 'extraScrollOffset', extraScrollOffset))
+        }
+        this.addOp(basicapi.crdtSetAttr(extraScrollOffset, 'x', value))
+    }
+
+    shapeModifyPrototypeExtraScrollOffsetY(page: Page, shape: Shape, id: string, value: number) {
+        checkShapeAtPage(page, shape)
+        const prototypeInteractions = (shape as Artboard).prototypeInteractions;
+        if (!prototypeInteractions) return;
+        const action = prototypeInteractions?.find(i => i.id === id)?.actions[0];
+        if (!action) return;
+        let extraScrollOffset = action.extraScrollOffset
+        if (!extraScrollOffset) {
+            id = uuid()
+            extraScrollOffset = new PrototypeExtrascrolloffset(id, 0, 0)
+            this.addOp(basicapi.crdtSetAttr(action, 'extraScrollOffset', extraScrollOffset))
+        }
+        this.addOp(basicapi.crdtSetAttr(extraScrollOffset, 'y', value))
+
+    }
+
+    shapeModifyOverlayPositionType(page: Page, shape: Shape, value: OverlayPositions) {
+        checkShapeAtPage(page, shape)
+        this.addOp(basicapi.crdtSetAttr(shape, "overlayPositionType", value));
+    }
+
+    shapeModifyOverlayBackgroundInteraction(page: Page, shape: Shape, value: OverlayBackgroundInteraction) {
+        checkShapeAtPage(page, shape)
+        this.addOp(basicapi.crdtSetAttr(shape, "overlayBackgroundInteraction", value));
+    }
+
+    shapeModifyOverlayBackgroundAppearance(page: Page, shape: Shape, value?: OverlayBackgroundAppearance) {
+        checkShapeAtPage(page, shape)
+        let Appearance = (shape as Artboard).overlayBackgroundAppearance
+        if (!Appearance) {
+            const val = new OverlayBackgroundAppearance(OverlayBackgroundType.SOLIDCOLOR, new Color(0.25, 0, 0, 0))
+            this.addOp(basicapi.crdtSetAttr(shape, "overlayBackgroundAppearance", val));
+        } else {
+            this.addOp(basicapi.crdtSetAttr(shape, "overlayBackgroundAppearance", value));
+        }
     }
 
     shapeModifyResizingConstraint(page: Page, shape: Shape, resizingConstraint: number) {
