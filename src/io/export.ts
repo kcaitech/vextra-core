@@ -50,6 +50,22 @@ export async function exportExForm(document: Document): Promise<ExFromJson> {
 
     // document meta
     const document_meta = exportDocumentMeta(document, ctx);
+    // 清除多余freesymbols，防止文檔膨脹
+    const freesymbols: { [key: string]: types.SymbolShape } = document_meta.freesymbols as any;
+    if (freesymbols) {
+        const unionInUse = (sym: types.SymbolShape) => {
+            for (let i = 0, len = sym.childs.length; i < len; ++i) {
+                if (ctx.refsymbols.has(sym.childs[i].id)) return true;
+            }
+            return false;
+        }
+        const symInUse = (sym: types.SymbolShape) => {
+            return sym.typeId === "symbol-union-shape" ? unionInUse(sym) : ctx.refsymbols.has(sym.id);
+        }
+        Object.keys(freesymbols).forEach(k => {
+            if (!symInUse(freesymbols[k])) delete freesymbols[k]
+        })
+    }
     return {
         document_meta,
         pages,

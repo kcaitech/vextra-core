@@ -52,8 +52,7 @@ function exportBaseProp(p: BaseProp, source: string, $: Writer, insideArr: boole
                 exportBasePropType(valType, $)
                 $.append('>()')
                 $.nl('const _val = ', source, ' as any')
-                $.nl('Object.keys(', source, ').forEach((k) => ').sub(() => {
-                    $.nl('const val = _val[k]')
+                $.nl('objkeys(_val).forEach((val, k) => ').sub(() => {
                     $.nl('ret.set(k, ')
                     exportBaseProp(p.val, 'val', $, insideArr)
                     $.append(')')
@@ -269,6 +268,10 @@ export function gen(out: string) {
         $.nl('curPage: string')
         $.nl('fmtVer: number')
     })
+
+    $.fmt(`function objkeys(obj: any) {
+        return obj instanceof Map ? obj : { forEach: (f: (v: any, k: string) => void) => Object.keys(obj).forEach((k) => f(obj[k], k)) };
+    }`)
 
     // 先将inner类型声明一下
     for (let i = 0, len = nodes.length; i < len; ++i) {
