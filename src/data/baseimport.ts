@@ -359,6 +359,10 @@ export function importGuide(source: types.Guide, ctx?: IImportContext): impl.Gui
         source.offset)
     return ret
 }
+/* image scale mode */
+export function importImageScaleMode(source: types.ImageScaleMode, ctx?: IImportContext): impl.ImageScaleMode {
+    return source
+}
 /* line cap style */
 export function importLineCapStyle(source: types.LineCapStyle, ctx?: IImportContext): impl.LineCapStyle {
     return source
@@ -406,6 +410,22 @@ export function importPage_guides(source: types.Page_guides, ctx?: IImportContex
     })
     return ret
 }
+/* paint filter */
+export function importPaintFilter(source: types.PaintFilter, ctx?: IImportContext): impl.PaintFilter {
+    const ret: impl.PaintFilter = new impl.PaintFilter (
+        source.exposure,
+        source.contrast,
+        source.saturation,
+        source.temperature,
+        source.tint,
+        source.shadow,
+        source.hue)
+    return ret
+}
+/* paint filter type */
+export function importPaintFilterType(source: types.PaintFilterType, ctx?: IImportContext): impl.PaintFilterType {
+    return source
+}
 export function importPara_spans(source: types.Para_spans, ctx?: IImportContext): Para_spans {
     const ret: Para_spans = new BasicArray()
     source.forEach((source, i) => {
@@ -444,6 +464,17 @@ export function importPathShape2_pathsegs(source: types.PathShape2_pathsegs, ctx
         if (!source.crdtidx) source.crdtidx = [i]
         ret.push(importPathSegment(source, ctx))
     })
+    return ret
+}
+/* pattern transform */
+export function importPatternTransform(source: types.PatternTransform, ctx?: IImportContext): impl.PatternTransform {
+    const ret: impl.PatternTransform = new impl.PatternTransform (
+        source.m00,
+        source.m01,
+        source.m02,
+        source.m10,
+        source.m11,
+        source.m12)
     return ret
 }
 /* point 2d */
@@ -904,6 +935,14 @@ export function importSpan(source: types.Span, ctx?: IImportContext): impl.Span 
 function importBorderOptional(tar: impl.Border, source: types.Border, ctx?: IImportContext) {
     if (source.contextSettings) tar.contextSettings = importContextSettings(source.contextSettings, ctx)
     if (source.gradient) tar.gradient = importGradient(source.gradient, ctx)
+    if (source.imageRef) tar.imageRef = source.imageRef
+    if (source.imageScaleMode) tar.imageScaleMode = importImageScaleMode(source.imageScaleMode, ctx)
+    if (source.rotation) tar.rotation = source.rotation
+    if (source.scale) tar.scale = source.scale
+    if (source.originalImageWidth) tar.originalImageWidth = source.originalImageWidth
+    if (source.originalImageHeight) tar.originalImageHeight = source.originalImageHeight
+    if (source.paintFilter) tar.paintFilter = importPaintFilter(source.paintFilter, ctx)
+    if (source.transform) tar.transform = importPatternTransform(source.transform, ctx)
 }
 export function importBorder(source: types.Border, ctx?: IImportContext): impl.Border {
         // inject code
@@ -937,6 +976,13 @@ function importFillOptional(tar: impl.Fill, source: types.Fill, ctx?: IImportCon
     if (source.gradient) tar.gradient = importGradient(source.gradient, ctx)
     if (source.imageRef) tar.imageRef = source.imageRef
     if (source.fillRule) tar.fillRule = importFillRule(source.fillRule, ctx)
+    if (source.imageScaleMode) tar.imageScaleMode = importImageScaleMode(source.imageScaleMode, ctx)
+    if (source.rotation) tar.rotation = source.rotation
+    if (source.scale) tar.scale = source.scale
+    if (source.originalImageWidth) tar.originalImageWidth = source.originalImageWidth
+    if (source.originalImageHeight) tar.originalImageHeight = source.originalImageHeight
+    if (source.paintFilter) tar.paintFilter = importPaintFilter(source.paintFilter, ctx)
+    if (source.transform) tar.transform = importPatternTransform(source.transform, ctx)
 }
 export function importFill(source: types.Fill, ctx?: IImportContext): impl.Fill {
     const ret: impl.Fill = new impl.Fill (
@@ -1505,8 +1551,7 @@ export function importCutoutShape(source: types.CutoutShape, ctx?: IImportContex
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
-        importPathShape_pathsegs(source.pathsegs, ctx),
-        source.scalingStroke)
+        importPathShape_pathsegs(source.pathsegs, ctx))
     importCutoutShapeOptional(ret, source, ctx)
     return ret
 }
@@ -1514,6 +1559,28 @@ export function importCutoutShape(source: types.CutoutShape, ctx?: IImportContex
 const importImageShapeOptional = importPathShapeOptional
 export function importImageShape(source: types.ImageShape, ctx?: IImportContext): impl.ImageShape {
         // inject code
+    const color: types.Color = {
+        typeId: "color",
+        alpha: 1,
+        blue: 216,
+        green: 216,
+        red: 216
+    }
+    const fill: types.Fill = {
+        typeId: "fill",
+        color: color,
+        crdtidx: [0],
+        fillType: types.FillType.Pattern,
+        id: "bdcd3743-fb61-4aeb-8864-b95d47b84a90",
+        imageRef: source.imageRef,
+        isEnabled: true,
+        imageScaleMode: types.ImageScaleMode.Fill,
+        originalImageHeight: source.frame.height,
+        originalImageWidth: source.frame.width
+    }
+    const fills = new BasicArray<types.Fill>();
+    fills.push(fill);
+    source.style.fills = fills;
     if (!source.pathsegs) { // 兼容旧数据
         const seg: types.PathSegment = {
             crdtidx: [0],
@@ -1572,9 +1639,6 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
         importPathShape_pathsegs(source.pathsegs, ctx),
         source.imageRef)
     importImageShapeOptional(ret, source, ctx)
-        // inject code
-    if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
-
     return ret
 }
 /* line shape */

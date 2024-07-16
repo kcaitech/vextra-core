@@ -70,7 +70,7 @@ export function startLoader(lzdata: LzData, document: Document) {
     }
     __handler['bitmap'] = (ctx: LoadContext, data: IJSON, i: number) => {
         const image = importImage(ctx, data, importer, i)
-        image.setImageMgr(document.mediasMgr)
+        // image.setImageMgr(document.mediasMgr)
         return image;
     }
     __handler['page'] = (ctx: LoadContext, data: IJSON, i: number) => importPage(ctx, data, importer)

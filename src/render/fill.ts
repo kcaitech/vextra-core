@@ -4,6 +4,7 @@ import { render as renderGradient } from "./gradient";
 import { render as clippathR } from "./clippath"
 import { objectId } from "../basic/objectid";
 import { findOverrideAndVar } from "./basic";
+import { patternRender } from "./pattern";
 
 function randomId() {
     return Math.floor((Math.random() * 10000) + 1);
@@ -59,20 +60,17 @@ handler[FillType.Gradient] = function (h: Function, frame: ShapeFrame, fill: Fil
 }
 
 handler[FillType.Pattern] = function (h: Function, frame: ShapeFrame, fill: Fill, path: string): any {
-    const id = "clippath-fill-" + objectId(fill) + randomId();
-    const cp = clippathR(h, id, path);
+    const id = "pattern-fill-" + objectId(fill) + randomId();
+    const color = fill.color;
+    const pattern = patternRender(h, frame, id, path, fill);
+    
+    const _path = h('path', {
+        d: path,
+        fill: 'url(#' + id + ')',
+        "fill-opacity": (color ? color.alpha : 1)
+    })
 
-    const url = fill.peekImage(true);
-    const props: any = {}
-    // const frame = shape.frame;
-    props.width = frame.width;
-    props.height = frame.height;
-    props['xlink:href'] = url;
-    props['preserveAspectRatio'] = "none meet";
-    props["clip-path"] = "url(#" + id + ")"
-    const img = h("image", props);
-
-    return h("g", [cp, img]);
+    return h("g", [pattern, _path]);
 }
 
 export function render(h: Function, fills: Fill[], frame: ShapeFrame, path: string): Array<any> {
