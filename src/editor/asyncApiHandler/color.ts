@@ -1,7 +1,9 @@
 import { AsyncApiCaller } from "./AsyncApiCaller";
 import { CoopRepository } from "../coop/cooprepo";
 import { Document } from "../../data/document";
-import { PageView } from "../../dataview";
+import { PageView, ShapeView, adapt2Shape } from "../../dataview";
+import { shape4fill } from "../../editor/symbol";
+import { PaintFilterType } from "../../data";
 
 export class ColorPicker extends AsyncApiCaller {
     constructor(repo: CoopRepository, document: Document, page: PageView) {
@@ -19,6 +21,44 @@ export class ColorPicker extends AsyncApiCaller {
         } catch (e) {
             console.log('ColorPicker.execute:', e);
             this.exception = true;
+        }
+    }
+
+    executeImageScale(shapes: ShapeView[], scale: number, index: number) {
+        try {
+            const api = this.api;
+            const page = this.page;
+            for (let i = 0; i < shapes.length; i++) {
+                const shape = shapes[i];
+                const s = shape4fill(api, page, shape);
+                api.setFillImageScale(page, s, index, scale);
+            }
+            this.updateView();
+        } catch (e) {
+            this.exception = true;
+            console.log('ColorPicker.executeImageScale', e);
+        }
+    }
+    executeImageFilter(shapes: ShapeView[],key: PaintFilterType, value: number, index: number) {
+        try {
+            const api = this.api;
+            const page = this.page;
+            for (let i = 0; i < shapes.length; i++) {
+                const shape = shapes[i];
+                const s = shape4fill(api, page, shape);
+                api.setFillImageFilter(page, s, index, key, value);
+            }
+            this.updateView();
+        } catch (e) {
+            this.exception = true;
+            console.log('ColorPicker.executeImageFilter', e);
+        }
+    }
+    commit() {
+        if (this.__repo.isNeedCommit() && !this.exception) {
+            this.__repo.commit();
+        } else {
+            this.__repo.rollback();
         }
     }
 }

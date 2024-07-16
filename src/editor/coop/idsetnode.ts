@@ -14,6 +14,7 @@ import {
     importGradient,
     importPage,
     importPrototypeStartingPoint,
+    importPaintFilter,
     importTableCell,
     importVariable
 } from "../../data/baseimport";
@@ -49,6 +50,8 @@ function apply(document: Document, target: Object, op: IdOp): IdOpRecord {
             value = importBlur(data, ctx);
         } else if (typeId === 'prototype-starting-point') {
             value = importPrototypeStartingPoint(data, ctx);
+        }  else if (typeId === 'paint-filter') {
+            value = importPaintFilter(data, ctx);
         } else {
             throw new Error('need import ' + typeId)
         }
