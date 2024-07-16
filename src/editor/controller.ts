@@ -27,6 +27,7 @@ import {
     newContact,
     newCutoutShape,
     newDefaultTextShape,
+    newImageFillShape,
     newImageShape,
     newLineShape,
     newOvalShape,
@@ -118,7 +119,7 @@ export interface AsyncCreator {
     init_media: (page: Page, parent: GroupShape, name: string, frame: ShapeFrame, media: {
         buff: Uint8Array,
         base64: string
-    }) => Shape | undefined;
+    }, originFrame: { width: number, height: number }) => Shape | undefined;
     init_text: (page: Page, parent: GroupShape, frame: ShapeFrame, content: string, attr?: TextAttr) => Shape | undefined;
     init_arrow: (page: Page, parent: GroupShape, name: string, frame: ShapeFrame) => Shape | undefined;
     init_contact: (page: Page, parent: GroupShape, frame: ShapeFrame, name: string, apex?: ContactForm) => Shape | undefined;
@@ -320,7 +321,7 @@ export class Controller {
         const init_media = (page: Page, parent: GroupShape, name: string, frame: ShapeFrame, media: {
             buff: Uint8Array,
             base64: string
-        }): Shape | undefined => {
+        }, originFrame: { width: number, height: number }): Shape | undefined => {
             status = Status.Pending;
             if (this.__document) { // media文件处理
                 try {
@@ -328,7 +329,7 @@ export class Controller {
                     const format = getFormatFromBase64(media.base64);
                     const ref = `${v4()}.${format}`;
                     this.__document.mediasMgr.add(ref, media);
-                    const shape = newImageShape(name, frame, this.__document.mediasMgr, ref);
+                    const shape = newImageFillShape(name, frame, this.__document.mediasMgr, originFrame, ref);
                     const xy = parent.frame2Root();
                     shape.frame.x -= xy.x;
                     shape.frame.y -= xy.y;
@@ -1384,9 +1385,9 @@ function adjust_group_rotate_frame(api: Api, page: Page, s: GroupShape, sx: numb
 }
 
 function set_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, Matrix>,
-                         origin1: { x: number, y: number },
-                         origin2: { x: number, y: number },
-                         sx: number, sy: number, recorder?: SizeRecorder) {
+    origin1: { x: number, y: number },
+    origin2: { x: number, y: number },
+    sx: number, sy: number, recorder?: SizeRecorder) {
     const p = s.parent;
     if (!p) {
         return;
@@ -1439,8 +1440,8 @@ function set_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, Matri
 }
 
 function __migrate(document: Document,
-                   api: Api, page: Page, targetParent: GroupShape, shape: Shape, dlt: string, index: number,
-                   transform: { ohflip: boolean, ovflip: boolean, pminverse: number[] }
+    api: Api, page: Page, targetParent: GroupShape, shape: Shape, dlt: string, index: number,
+    transform: { ohflip: boolean, ovflip: boolean, pminverse: number[] }
 ) {
     const error = unable_to_migrate(targetParent, shape);
     if (error) {

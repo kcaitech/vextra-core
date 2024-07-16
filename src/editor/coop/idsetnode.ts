@@ -14,6 +14,7 @@ import {
     importGradient,
     importPage,
     importPrototypeStartingPoint,
+    importPaintFilter,
     importTableCell,
     importVariable,
     importOverlayBackgroundAppearance,
@@ -60,6 +61,8 @@ function apply(document: Document, target: Object, op: IdOp): IdOpRecord {
             value = importOverlayBackgroundAppearance(data, ctx)
         } else if (typeId === 'prototype-extrascrolloffset') {
             value = importPrototypeExtrascrolloffset(data, ctx)
+        }  else if (typeId === 'paint-filter') {
+            value = importPaintFilter(data, ctx);
         } else {
             throw new Error('need import ' + typeId)
         }
