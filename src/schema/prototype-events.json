@@ -1,0 +1,16 @@
+{
+    "description": "interactionType",
+    "enum": [
+        "ON_CLICK",
+        "DB_CLICK",
+        "RIGHT_CLICK",
+        "DRAG",
+        "HOVER",
+        "MOUSE_ENTER",
+        "MOUSE_LEAVE",
+        "MOUSE_DOWN",
+        "MOUSE_UP",
+        "AFTER_TIMEOUT"
+    ],
+    "default": "ON_CLICK"
+}

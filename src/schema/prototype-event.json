@@ -1,0 +1,16 @@
+{
+    "description": "event",
+    "type": "object",
+    "properties": {
+        "interactionType": {
+            "$ref": "./prototype-events.json"
+        },
+        "transitionTimeout": {
+            "type": "number",
+            "default": 800
+        }
+    },
+    "required": [
+        "interactionType"
+    ]
+}

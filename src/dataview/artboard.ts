@@ -157,4 +157,12 @@ export class ArtboradView extends GroupShapeView {
     get guides() {
         return (this.m_data as Page).guides;
     }
+
+    get prototypeStartPoint() {
+        return (this.m_data as Artboard).prototypeStartingPoint;
+    }
+
+    get prototypeInterAction() {
+        return (this.m_data as Artboard).prototypeInteractions;
+    }
 }

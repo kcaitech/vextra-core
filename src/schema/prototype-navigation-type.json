@@ -1,0 +1,11 @@
+{
+    "description": "navigationType",
+    "enum": [
+        "NAVIGATE",
+        "SWAP_STATE",
+        "SCROLL_TO",
+        "OVERLAY",
+        "SWAP"
+    ],
+    "default": "INSTANT"
+}

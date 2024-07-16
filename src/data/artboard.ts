@@ -17,14 +17,16 @@ import * as classes from "./baseclasses";
 import { BasicArray } from "./basic";
 import { Path } from "./path";
 import { RadiusType } from "./consts";
-import { Guide } from "./baseclasses";
+import { Guide,PrototypeInterAction } from "./baseclasses";
+
 
 export class Artboard extends GroupShape implements classes.Artboard {
     typeId = 'artboard';
     cornerRadius?: CornerRadius
     haveEdit?: boolean | undefined;
     guides?: BasicArray<Guide>;
-
+    prototypeStartingPoint?: classes.PrototypeStartingPoint;
+    prototypeInteractions?: BasicArray<PrototypeInterAction>;
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
@@ -35,7 +37,10 @@ export class Artboard extends GroupShape implements classes.Artboard {
         style: Style,
         childs: BasicArray<(GroupShape | Shape | ImageShape | PathShape | RectShape | TextShape)>,
         haveEdit?: boolean,
-        guides?: BasicArray<Guide>
+        guides?: BasicArray<Guide>,
+        prototypeStartingPoint?: classes.PrototypeStartingPoint,
+        prototypeInteractions?: BasicArray<classes.PrototypeInterAction>
+
     ) {
         super(
             crdtidx,
@@ -49,6 +54,8 @@ export class Artboard extends GroupShape implements classes.Artboard {
         )
         this.haveEdit = haveEdit;
         this.guides = guides;
+        this.prototypeStartingPoint = prototypeStartingPoint
+        this.prototypeInteractions = prototypeInteractions
     }
 
     getOpTarget(path: string[]) {
@@ -56,6 +63,9 @@ export class Artboard extends GroupShape implements classes.Artboard {
         if (id0 === 'cornerRadius' && !this.cornerRadius) this.cornerRadius = new CornerRadius(0, 0, 0, 0);
         if (id0 === "guides" && !this.guides) {
             this.guides = new BasicArray<Guide>();
+        }
+        if (id0 === "prototypeInteractions" && !this.prototypeInteractions) {
+            this.prototypeInteractions = new BasicArray<PrototypeInterAction>();
         }
         return super.getOpTarget(path);
     }

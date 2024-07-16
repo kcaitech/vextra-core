@@ -12,6 +12,13 @@ export function exportArtboard_guides(source: types.Artboard_guides, ctx?: IExpo
     })
     return ret
 }
+export function exportArtboard_prototypeInteractions(source: types.Artboard_prototypeInteractions, ctx?: IExportContext): types.Artboard_prototypeInteractions {
+    const ret: types.Artboard_prototypeInteractions = []
+    source.forEach((source) => {
+        ret.push(exportPrototypeInterAction(source, ctx))
+    })
+    return ret
+}
 /* blend mode */
 export function exportBlendMode(source: types.BlendMode, ctx?: IExportContext): types.BlendMode {
     return source
@@ -401,6 +408,55 @@ export function exportPoint2D(source: types.Point2D, ctx?: IExportContext): type
     ret.y = source.y
     return ret
 }
+/* connectionType */
+export function exportPrototypeConnectionType(source: types.PrototypeConnectionType, ctx?: IExportContext): types.PrototypeConnectionType {
+    return source
+}
+/* easingType */
+export function exportPrototypeEasingType(source: types.PrototypeEasingType, ctx?: IExportContext): types.PrototypeEasingType {
+    return source
+}
+/* easingfunction */
+export function exportPrototypeEasingfunction(source: types.PrototypeEasingfunction, ctx?: IExportContext): types.PrototypeEasingfunction {
+    const ret: types.PrototypeEasingfunction = []
+    source.forEach((source) => {
+        ret.push(source)
+    })
+    return ret
+}
+/* interactionType */
+export function exportPrototypeEvents(source: types.PrototypeEvents, ctx?: IExportContext): types.PrototypeEvents {
+    return source
+}
+export function exportPrototypeInterAction_crdtidx(source: types.PrototypeInterAction_crdtidx, ctx?: IExportContext): types.PrototypeInterAction_crdtidx {
+    const ret: types.PrototypeInterAction_crdtidx = []
+    source.forEach((source) => {
+        ret.push(source)
+    })
+    return ret
+}
+export function exportPrototypeInterAction_actions(source: types.PrototypeInterAction_actions, ctx?: IExportContext): types.PrototypeInterAction_actions {
+    const ret: types.PrototypeInterAction_actions = []
+    source.forEach((source) => {
+        ret.push(exportPrototypeActions(source, ctx))
+    })
+    return ret
+}
+/* navigationType */
+export function exportPrototypeNavigationType(source: types.PrototypeNavigationType, ctx?: IExportContext): types.PrototypeNavigationType {
+    return source
+}
+/* prototypeStartingPoint */
+export function exportPrototypeStartingPoint(source: types.PrototypeStartingPoint, ctx?: IExportContext): types.PrototypeStartingPoint {
+    const ret: types.PrototypeStartingPoint = {} as types.PrototypeStartingPoint
+    ret.name = source.name
+    ret.desc = source.desc
+    return ret
+}
+/* transitionType */
+export function exportPrototypeTransitionType(source: types.PrototypeTransitionType, ctx?: IExportContext): types.PrototypeTransitionType {
+    return source
+}
 /* resize type */
 export function exportResizeType(source: types.ResizeType, ctx?: IExportContext): types.ResizeType {
     return source
@@ -500,10 +556,24 @@ export function exportStyle_contacts(source: types.Style_contacts, ctx?: IExport
     })
     return ret
 }
+export function exportSymbolRefShape_prototypeInteractions(source: types.SymbolRefShape_prototypeInteractions, ctx?: IExportContext): types.SymbolRefShape_prototypeInteractions {
+    const ret: types.SymbolRefShape_prototypeInteractions = []
+    source.forEach((source) => {
+        ret.push(exportPrototypeInterAction(source, ctx))
+    })
+    return ret
+}
 export function exportSymbolShape_guides(source: types.SymbolShape_guides, ctx?: IExportContext): types.SymbolShape_guides {
     const ret: types.SymbolShape_guides = []
     source.forEach((source) => {
         ret.push(exportGuide(source, ctx))
+    })
+    return ret
+}
+export function exportSymbolShape_prototypeInteractions(source: types.SymbolShape_prototypeInteractions, ctx?: IExportContext): types.SymbolShape_prototypeInteractions {
+    const ret: types.SymbolShape_prototypeInteractions = []
+    source.forEach((source) => {
+        ret.push(exportPrototypeInterAction(source, ctx))
     })
     return ret
 }
@@ -696,6 +766,38 @@ export function exportGradient(source: types.Gradient, ctx?: IExportContext): ty
     ret.stops = exportGradient_stops(source.stops, ctx)
     if (source.elipseLength) ret.elipseLength = source.elipseLength
     if (source.gradientOpacity) ret.gradientOpacity = source.gradientOpacity
+    return ret
+}
+/* actions */
+export function exportPrototypeActions(source: types.PrototypeActions, ctx?: IExportContext): types.PrototypeActions {
+    const ret: types.PrototypeActions = {} as types.PrototypeActions
+    ret.id = source.id
+    ret.connectionType = exportPrototypeConnectionType(source.connectionType, ctx)
+    if (source.targetNodeID) ret.targetNodeID = source.targetNodeID
+    if (source.transitionType) ret.transitionType = exportPrototypeTransitionType(source.transitionType, ctx)
+    if (source.transitionDuration) ret.transitionDuration = source.transitionDuration
+    if (source.easingType) ret.easingType = exportPrototypeEasingType(source.easingType, ctx)
+    if (source.connectionURL) ret.connectionURL = source.connectionURL
+    if (source.openUrlInNewTab) ret.openUrlInNewTab = source.openUrlInNewTab
+    if (source.navigationType) ret.navigationType = exportPrototypeNavigationType(source.navigationType, ctx)
+    if (source.easingFunction) ret.easingFunction = exportPrototypeEasingfunction(source.easingFunction, ctx)
+    return ret
+}
+/* event */
+export function exportPrototypeEvent(source: types.PrototypeEvent, ctx?: IExportContext): types.PrototypeEvent {
+    const ret: types.PrototypeEvent = {} as types.PrototypeEvent
+    ret.interactionType = exportPrototypeEvents(source.interactionType, ctx)
+    if (source.transitionTimeout) ret.transitionTimeout = source.transitionTimeout
+    return ret
+}
+/* prototypeInteraction */
+export function exportPrototypeInterAction(source: types.PrototypeInterAction, ctx?: IExportContext): types.PrototypeInterAction {
+    const ret: types.PrototypeInterAction = {} as types.PrototypeInterAction
+    ret.crdtidx = exportPrototypeInterAction_crdtidx(source.crdtidx, ctx)
+    ret.id = source.id
+    ret.event = exportPrototypeEvent(source.event, ctx)
+    ret.actions = exportPrototypeInterAction_actions(source.actions, ctx)
+    if (source.typeId) ret.typeId = source.typeId
     return ret
 }
 /* span attr */
@@ -1027,6 +1129,8 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
     })()
     if (source.isCustomSize) ret.isCustomSize = source.isCustomSize
     if (source.cornerRadius) ret.cornerRadius = exportCornerRadius(source.cornerRadius, ctx)
+    if (source.prototypeStartingPoint) ret.prototypeStartingPoint = exportPrototypeStartingPoint(source.prototypeStartingPoint, ctx)
+    if (source.prototypeInteractions) ret.prototypeInteractions = exportSymbolRefShape_prototypeInteractions(source.prototypeInteractions, ctx)
         // inject code
     if (ctx?.refsymbols) ctx.refsymbols.add(ret.refId);
 
@@ -1078,6 +1182,8 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
     ret.typeId = "artboard"
     if (source.cornerRadius) ret.cornerRadius = exportCornerRadius(source.cornerRadius, ctx)
     if (source.guides) ret.guides = exportArtboard_guides(source.guides, ctx)
+    if (source.prototypeStartingPoint) ret.prototypeStartingPoint = exportPrototypeStartingPoint(source.prototypeStartingPoint, ctx)
+    if (source.prototypeInteractions) ret.prototypeInteractions = exportArtboard_prototypeInteractions(source.prototypeInteractions, ctx)
     return ret
 }
 /* bool shape */
@@ -1157,6 +1263,8 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
     })()
     if (source.cornerRadius) ret.cornerRadius = exportCornerRadius(source.cornerRadius, ctx)
     if (source.guides) ret.guides = exportSymbolShape_guides(source.guides, ctx)
+    if (source.prototypeStartingPoint) ret.prototypeStartingPoint = exportPrototypeStartingPoint(source.prototypeStartingPoint, ctx)
+    if (source.prototypeInteractions) ret.prototypeInteractions = exportSymbolShape_prototypeInteractions(source.prototypeInteractions, ctx)
         // inject code
     if (ctx?.symbols) ctx.symbols.add(ret.id);
 
