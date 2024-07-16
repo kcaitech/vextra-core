@@ -114,7 +114,8 @@ export class Document extends (DocumentMeta) {
         lastCmdId: string, // 此版本最后一个cmd的id
         pagesList: BasicArray<PageListItem>,
         symbolregist: BasicMap<string, string>,
-        guard: IDataGuard
+        guard: IDataGuard,
+        freesymbols?: BasicMap<string, SymbolShape>
     ) {
         super(id, name, FMT_VER_latest, pagesList ?? new BasicArray(), lastCmdId, symbolregist)
         this.__versionId = versionId;
@@ -124,6 +125,7 @@ export class Document extends (DocumentMeta) {
         this.__medias = new ResourceMgr<{ buff: Uint8Array, base64: string }>([id, 'medias']);
         this.__styles = new ResourceMgr<Style>([id, 'styles']);
         this.__correspondent = new SpecialActionCorrespondent();
+        this.freesymbols = freesymbols;
         return guard.guard(this);
     }
 
