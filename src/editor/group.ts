@@ -3,14 +3,9 @@
 // 2. 画板
 // 3. BOOL
 
-import { Page } from "../data/page";
-import { Matrix } from "../basic/matrix";
-import { GroupShape, Shape } from "../data/shape";
+import { GroupShape, Shape, Document, Page, makeShapeTransform1By2, makeShapeTransform2By1 } from "../data";
 import { Api } from "./coop/recordapi";
-import { Document } from "../data/document"
-import { makeShapeTransform1By2, makeShapeTransform2By1 } from "../data";
 import { ColVector3D } from "../basic/matrix2";
-import { log } from "debug";
 
 export function expandBounds(bounds: {
     left: number,
@@ -38,13 +33,11 @@ export function group<T extends GroupShape>(document: Document, page: Page, shap
     // 图层在root上的transform
     const shapes2rootTransform = shapes.map(s => makeShapeTransform2By1(s.matrix2Root()));
 
-    // gshape在root上的transform
+    // gshape在root上的transform 或 单位矩阵
     const groupTransform = makeShapeTransform2By1(gshape.transform);
     const groupInverseTransform = groupTransform.getInverse();
 
     const shapes2groupTransform = shapes2rootTransform.map(t => t.clone().addTransform(groupInverseTransform));
-
-    shapes2groupTransform.forEach((t, i) => console.log(shapes[i].name, t.toString()));
 
     let left = Infinity;
     let right = -Infinity;
