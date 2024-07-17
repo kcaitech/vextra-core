@@ -1902,6 +1902,33 @@ export class PageEditor {
         }
     }
 
+    makeMask(shapes: ShapeView[]) {
+        try {
+            const page = this.__page;
+            const api = this.__repo.start('modify-mask-status');
+
+            const len = shapes.length;
+            if (!len)
+                return false;
+            else if (len === 1) {
+                const bottom = shapes[0];
+                if (bottom.parent!.id === page.id) { // 在页面下要创建一个新的Mask组包裹起来
+
+                } else {
+                    const __target_mask = !bottom.mask;
+                    api.shapeModifyMask(page, adapt2Shape(bottom), __target_mask);
+                }
+            } else {
+                // 多个图层，选择层级最高的图层所在的环境创建一个Mask组
+            }
+            this.__repo.commit();
+            return true;
+        } catch (e) {
+            console.log('makeMask', e);
+            this.__repo.rollback();
+            return false;
+        }
+    }
 
     // 渐变
     //翻转
@@ -2276,6 +2303,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesFillImageRotate(actions: BatchAction[]) {
         const api = this.__repo.start('setShapesFillImageRotate');
         try {
@@ -2289,6 +2317,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesFillImageScale(actions: BatchAction[]) {
         const api = this.__repo.start('setShapesFillImageScale');
         try {
@@ -2302,6 +2331,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesFillEdit(shape: ShapeView, idx: number, edit: boolean) {
         const api = this.__repo.start('setShapesFillEdit');
         try {
@@ -2535,7 +2565,21 @@ export class PageEditor {
                 let borders: BasicArray<Border> = new BasicArray<Border>();
                 let fills: BasicArray<Fill> = new BasicArray<Fill>();
                 for (let b_i = 0; b_i < b.length; b_i++) {
-                    const { isEnabled, color, fillType, gradient, contextSettings, imageRef, transform, paintFilter, imageScaleMode, scale, rotation, originalImageHeight, originalImageWidth } = b[b_i];
+                    const {
+                        isEnabled,
+                        color,
+                        fillType,
+                        gradient,
+                        contextSettings,
+                        imageRef,
+                        transform,
+                        paintFilter,
+                        imageScaleMode,
+                        scale,
+                        rotation,
+                        originalImageHeight,
+                        originalImageWidth
+                    } = b[b_i];
                     const fill = new Fill([i] as BasicArray<number>, uuid(), isEnabled, fillType, color);
                     fill.gradient = gradient;
                     fill.contextSettings = contextSettings;
@@ -2555,7 +2599,21 @@ export class PageEditor {
                     fills.unshift(fill);
                 }
                 for (let f_i = 0; f_i < f.length; f_i++) {
-                    const { isEnabled, color, fillType, gradient, contextSettings, imageRef, transform, paintFilter, imageScaleMode, scale, rotation, originalImageHeight, originalImageWidth } = f[f_i];
+                    const {
+                        isEnabled,
+                        color,
+                        fillType,
+                        gradient,
+                        contextSettings,
+                        imageRef,
+                        transform,
+                        paintFilter,
+                        imageScaleMode,
+                        scale,
+                        rotation,
+                        originalImageHeight,
+                        originalImageWidth
+                    } = f[f_i];
                     let border: Border;
                     let fill_type = fillType;
                     if (fillType === FillType.Pattern) {
@@ -2951,7 +3009,6 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
-
 
     //export cutout
     shapesExportFormatUnify(actions: ExportFormatReplaceAction[]) {
