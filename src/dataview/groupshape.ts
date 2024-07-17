@@ -1,11 +1,13 @@
-import { GroupShape, Shape, ShapeFrame, ShapeSize, ShapeType, SymbolRefShape, SymbolShape } from "../data/classes";
+import { GroupShape, Shape, ShapeSize, ShapeType, SymbolRefShape, SymbolShape } from "../data";
 import { ShapeView } from "./shape";
 import { getShapeViewId } from "./basic";
 import { EL } from "./el";
 import { DataView, RootView } from "./view";
 import { DViewCtx, PropsType, VarsContainer } from "./viewctx";
+import { objectId } from "../basic/objectid";
 
 export class GroupShapeView extends ShapeView {
+    maskMap: Map<string, string> = new Map();
 
     get data(): GroupShape {
         return this.m_data as GroupShape;
@@ -23,13 +25,25 @@ export class GroupShapeView extends ShapeView {
     }
 
     protected onChildChange(...args: any[]) {
-        if (args.includes('childs') || args.includes('mask')) {
-            // todo
-            console.log('__更新Mask缓存__');
-        }
         if (args.includes('fills') || args.includes('borders')) {
             this.notify(...args); // 通知界面更新
         }
+        if (args.includes('childs') || args.includes('mask')) {
+            this.updateMaskMap();
+        }
+    }
+
+    updateMaskMap() {
+        const map = this.maskMap;
+        map.clear();
+        const children = this.getDataChilds();
+        let currentMask = '';
+        for (let i = 0; i < children.length; i++) {
+            const child = children[i];
+            if (child.mask) currentMask = `mask_${objectId(child)}`;
+            map.set(child.id, currentMask);
+        }
+        console.log('__update_mask_map__', this.maskMap);
     }
 
     onDestory(): void {
@@ -47,6 +61,7 @@ export class GroupShapeView extends ShapeView {
         super.onDataChange(...args);
         if (args.includes('childs')) {
             // this.updateChildren();
+            this.updateMaskMap();
             this.m_need_updatechilds = true;
         }
     }

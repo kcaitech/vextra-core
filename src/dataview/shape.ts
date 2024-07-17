@@ -22,7 +22,6 @@ import {
 } from "../data/classes";
 import { findOverrideAndVar } from "./basic";
 import { EL, elh } from "./el";
-import { FrameType } from "../data/consts";
 import { Matrix } from "../basic/matrix";
 import { DataView } from "./view"
 import { DViewCtx, PropsType } from "./viewctx";
@@ -30,9 +29,8 @@ import { objectId } from "../basic/objectid";
 import { BasicArray } from "../data/basic";
 import { fixConstrainFrame } from "../data/constrain";
 import { BlurType, MarkerType } from "../data/typesdefine";
-import { makeShapeTransform2By1, makeShapeTransform1By2, transform1Equals2 } from "../data/shape_transform_util";
+import { makeShapeTransform2By1, makeShapeTransform1By2 } from "../data/shape_transform_util";
 import { Transform as Transform2 } from "../basic/transform";
-import { Matrix2 } from "../index";
 
 export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     return (
@@ -349,9 +347,6 @@ export class ShapeView extends DataView {
             this.m_path = undefined;
             this.m_pathstr = undefined;
         }
-        // if (args.includes('fills')) this.m_fills = undefined;
-        // if (args.includes('borders')) this.m_borders = undefined;
-        // this.updateRenderArgs(this.data.frame, this.data.isFlippedHorizontal, this.data.isFlippedVertical, this.data.rotation, this.data.fixedRadius)
     }
 
     protected _findOV(ot: OverrideType, vt: VariableType): Variable | undefined {
