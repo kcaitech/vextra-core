@@ -23,6 +23,10 @@ export class GroupShapeView extends ShapeView {
     }
 
     protected onChildChange(...args: any[]) {
+        if (args.includes('childs') || args.includes('mask')) {
+            // todo
+            console.log('__更新Mask缓存__');
+        }
         if (args.includes('fills') || args.includes('borders')) {
             this.notify(...args); // 通知界面更新
         }
@@ -47,7 +51,10 @@ export class GroupShapeView extends ShapeView {
         }
     }
 
-    protected _layout(size: ShapeSize, shape: Shape, parentFrame: ShapeSize | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scale: { x: number, y: number } | undefined): void {
+    protected _layout(size: ShapeSize, shape: Shape, parentFrame: ShapeSize | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scale: {
+        x: number,
+        y: number
+    } | undefined): void {
         super._layout(size, shape, parentFrame, varsContainer, scale);
         if (this.m_need_updatechilds) {
             this.notify("childs"); // notify childs change
@@ -72,7 +79,10 @@ export class GroupShapeView extends ShapeView {
         return childs;
     }
 
-    protected layoutChild(child: Shape, idx: number, transx: { x: number, y: number } | undefined, varsContainer: VarsContainer | undefined, resue: Map<string, DataView>, rView: RootView | undefined) {
+    protected layoutChild(child: Shape, idx: number, transx: {
+        x: number,
+        y: number
+    } | undefined, varsContainer: VarsContainer | undefined, resue: Map<string, DataView>, rView: RootView | undefined) {
         let cdom: DataView | undefined = resue.get(child.id);
         const props = { data: child, transx, varsContainer, isVirtual: this.m_isVirtual };
         if (cdom) {
@@ -97,7 +107,10 @@ export class GroupShapeView extends ShapeView {
         this.addChild(cdom, idx);
     }
 
-    protected layoutChilds(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, parentFrame: ShapeSize, scale?: { x: number, y: number }): void {
+    protected layoutChilds(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, parentFrame: ShapeSize, scale?: {
+        x: number,
+        y: number
+    }): void {
         const childs = this.getDataChilds();
         const resue: Map<string, DataView> = new Map();
         this.m_children.forEach((c) => resue.set(c.data.id, c));

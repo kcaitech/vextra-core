@@ -485,6 +485,20 @@ export class ShapeView extends DataView {
         return !!this.m_data.mask;
     }
 
+    get masked(): boolean {
+        const parent = this.parent;
+
+        if (!parent) return false;
+        const children = parent.childs;
+        let currentIdx = -1;
+        for (let i = 0; i > -1; i++) {
+            const c = children[i];
+            if (currentIdx > -1 && c.mask) return true;
+            if (c.id === this.id) currentIdx = i;
+        }
+        return false;
+    }
+
     // prepare() {
     //     // prepare path
     //     // prepare frame
