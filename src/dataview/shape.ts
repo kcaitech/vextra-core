@@ -481,6 +481,10 @@ export class ShapeView extends DataView {
         return v ? v.value : !!this.m_data.isLocked;
     }
 
+    get mask(): boolean {
+        return !!this.m_data.mask;
+    }
+
     // prepare() {
     //     // prepare path
     //     // prepare frame
@@ -635,7 +639,6 @@ export class ShapeView extends DataView {
     }
 
     // ================== render ===========================
-
 
     protected renderFills(): EL[] {
         // if (!this.m_fills) {

@@ -73,6 +73,9 @@
         },
         "haveEdit": {
             "type": "boolean"
+        },
+        "mask": {
+            "type": "boolean"
         }
     },
     "required": [
