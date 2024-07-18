@@ -2,16 +2,27 @@ import { BasicArray } from "../../../data/basic";
 import { Document, Page, Shape, ShapeFrame, ShapeSize, ShapeType, Style, SymbolShape, Transform } from "../../../data/classes";
 import { updatePageFrame } from "../common/basic";
 import { IJSON, LoadContext } from "./basic";
-import { importPage, importRectShape } from "./shapeio";
+import {
+    importEllipse,
+    importGroup,
+    importPage,
+    importRectShape,
+    importSymbol,
+    importSymbolRef,
+    importTextShape
+} from "./shapeio";
+import {UZIPFiles} from "uzip";
+import {base64Encode} from "../../../basic/utils";
 
-export function startLoader(file: IJSON, pages: IJSON[], document: Document) {
+export function startLoader(file: IJSON, pages: IJSON[], document: Document, nodeChangesMap: Map<string, IJSON>, unzipped: UZIPFiles) {
     // const __remote: LzData = lzdata;
     const __document: Document = document;
     const __handler: { [ket: string]: (ctx: LoadContext, data: IJSON, i: number) => Shape } = {}
 
-    const importer = (ctx: LoadContext, data: IJSON, i: number): Shape => {
+    const importer = (ctx: LoadContext, data: IJSON, i: number): Shape | undefined => {
         const _class = data['type']
-        const f = __handler[_class] || ((ctx, data, i: number) => importRectShape(ctx, data, importer, i))
+        const f = __handler[_class]
+        if (!f) return;
         const ret: Shape = f(ctx, data, i);
         // if (data['sharedStyleID']) {
         //     __document.stylesMgr.add(data['sharedStyleID'], ret.style)
@@ -32,41 +43,44 @@ export function startLoader(file: IJSON, pages: IJSON[], document: Document) {
         return page;
     }
 
-    // const loadMedia = async (id: string): Promise<{ buff: Uint8Array; base64: string; }> => {
-    //     const buffer: Uint8Array = await __remote.loadRaw('images/' + id)
+    const loadMedia = async (id: string): Promise<{ buff: Uint8Array; base64: string; }> => {
+        const extIndex = id.lastIndexOf('.');
+        const idWithoutExt = extIndex !== -1 ? id.slice(0, extIndex) : id;
+        const ext = extIndex !== -1 ? id.substring(extIndex + 1) : '';
 
-    //     const uInt8Array = buffer;
-    //     let i = uInt8Array.length;
-    //     const binaryString = new Array(i);
-    //     while (i--) {
-    //         binaryString[i] = String.fromCharCode(uInt8Array[i]);
-    //     }
-    //     const data = binaryString.join('');
+        const buffer = unzipped[`images/${idWithoutExt}`];
 
-    //     const base64 = base64Encode(data);
+        const uInt8Array = buffer;
+        let i = uInt8Array.length;
+        const binaryString = new Array(i);
+        while (i--) {
+            binaryString[i] = String.fromCharCode(uInt8Array[i]);
+        }
+        const data = binaryString.join('');
 
-    //     let url = '';
-    //     const ext = id.substring(id.lastIndexOf('.') + 1);
-    //     if (ext == "png") {
-    //         url = "data:image/png;base64," + base64;
-    //     }
-    //     else if (ext == "gif") {
-    //         url = "data:image/gif;base64," + base64;
-    //     }
-    //     else {
-    //         console.log("imageExt", ext);
-    //     }
+        const base64 = base64Encode(data);
 
-    //     return { buff: buffer, base64: url }
-    // }
+        let url = '';
+        if (ext == "png") {
+            url = "data:image/png;base64," + base64;
+        }
+        else if (ext == "gif") {
+            url = "data:image/gif;base64," + base64;
+        }
+        else {
+            console.log("imageExt", ext);
+        }
+
+        return { buff: buffer, base64: url }
+    }
 
     const symbolsSet = new Map<string, SymbolShape>()
     const ctx: LoadContext = new LoadContext(document.mediasMgr);
 
     // const importer = this.importer = this.importer.bind(this)
-    __handler['rectangle'] = (ctx: LoadContext, data: IJSON, i: number) => importRectShape(ctx, data, importer, i)
+    __handler['ROUNDED_RECTANGLE'] = (ctx: LoadContext, data: IJSON, i: number) => importRectShape(ctx, data, importer, i)
     // __handler['shapeGroup'] = (ctx: LoadContext, data: IJSON, i: number) => importShapeGroupShape(ctx, data, importer, i)
-    // __handler['group'] = (ctx: LoadContext, data: IJSON, i: number) => importGroupShape(ctx, data, importer, i)
+    __handler['FRAME'] = (ctx: LoadContext, data: IJSON, i: number) => importGroup(ctx, data, importer, i)
     // __handler['shapePath'] = (ctx: LoadContext, data: IJSON, i: number) => importPathShape(ctx, data, importer, i)
     // __handler['artboard'] = (ctx: LoadContext, data: IJSON, i: number) => {
     //     return importArtboard(ctx, data, importer, i)
@@ -76,9 +90,11 @@ export function startLoader(file: IJSON, pages: IJSON[], document: Document) {
     //     image.setImageMgr(document.mediasMgr)
     //     return image;
     // }
-    __handler['page'] = (ctx: LoadContext, data: IJSON, i: number) => importPage(ctx, data, importer)
-    // __handler['text'] = (ctx: LoadContext, data: IJSON, i: number) => importTextShape(ctx, data, importer, i)
-    // __handler['oval'] = (ctx: LoadContext, data: IJSON, i: number) => importPathShape(ctx, data, importer, i)
+    __handler['PAGE'] = (ctx: LoadContext, data: IJSON, i: number) => importPage(ctx, data, importer)
+    __handler['TEXT'] = (ctx: LoadContext, data: IJSON, i: number) => importTextShape(ctx, data, importer, i)
+    __handler['ELLIPSE'] = (ctx: LoadContext, data: IJSON, i: number) => importEllipse(ctx, data, importer, i)
+    __handler['SYMBOL'] = (ctx: LoadContext, data: IJSON, i: number) => importSymbol(ctx, data, importer, i)
+    __handler['INSTANCE'] = (ctx: LoadContext, data: IJSON, i: number) => importSymbolRef(ctx, data, importer, i, nodeChangesMap)
     // __handler['star'] = (ctx: LoadContext, data: IJSON, i: number) => importPathShape(ctx, data, importer, i)
     // __handler['triangle'] = (ctx: LoadContext, data: IJSON, i: number) => importPathShape(ctx, data, importer, i)
     // __handler['polygon'] = (ctx: LoadContext, data: IJSON, i: number) => importPathShape(ctx, data, importer, i)
@@ -93,7 +109,7 @@ export function startLoader(file: IJSON, pages: IJSON[], document: Document) {
     //     return symRef;
     // }
 
-    // document.mediasMgr.setLoader((id) => loadMedia(id))
+    document.mediasMgr.setLoader((id) => loadMedia(id))
     document.pagesMgr.setLoader(async (id) => {
         const page = await loadPage(ctx, id)
         // document.pagesMgr.add(page.id, page) // 在pagesMgr里也会add

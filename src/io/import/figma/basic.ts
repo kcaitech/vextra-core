@@ -1,3 +1,3 @@
 
-export { IJSON, LoadContext, ImportFun } from "../common/basic";
+export { IJSON, LoadContext, ImportFun1 as ImportFun } from "../common/basic";
 

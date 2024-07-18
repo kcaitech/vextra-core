@@ -237,9 +237,9 @@ export class Transform { // 变换
             const yAngle = angleXY - 0.5 * Math.PI // y轴（绕z轴预期方向）旋转角度（-π/2 ~ π/2）
             const {x: zX, y: zY, z: zZ} = expectedZ.cross(matrix3x3.col2) as ColVector3D // z轴的旋转轴
             const zAngle = expectedZ.angleTo(matrix3x3.col2) // z轴旋转角度（-π ~ π）
+            // https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/rotate3d#syntax
             const zS = Math.sin(zAngle)
             const zT = 1 - Math.cos(zAngle)
-            // https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/rotate3d#syntax
             this.skewMatrix = new Matrix(new NumberArray2D([4, 4], [
                 1, -Math.sin(yAngle), -zY * zS + zX * zZ * zT, 0,
                 0, Math.cos(yAngle), zX + zY * zZ * zT, 0,
@@ -424,7 +424,7 @@ export class Transform { // 变换
         const toUnit = to.clone().normalize()
 
         const transform = new Transform()
-        if (from.equals(to)) transform;
+        if (from.equals(to)) return transform;
 
         const axis = fromUnit.cross(toUnit) as ColVector3D
         const angle = fromUnit.angleTo(toUnit)
@@ -730,11 +730,13 @@ export class Transform { // 变换
         this.setTranslate(new ColVector3D([translateNow.x, translateNow.y, value]))
     }
 
+    // 是否存在平移
     hasTranslate() {
         if (!this.isSubMatrixLatest) this.updateMatrix();
         return isZero(this.translateMatrix.m03) && isZero(this.translateMatrix.m13) && isZero(this.translateMatrix.m23)
     }
 
+    // 是否仅存在平移
     onlyTranslate() {
         if (!this.isMatrixLatest) this.updateMatrix();
         return this.matrix.clone().resize([3, 3]).isIdentity
@@ -743,7 +745,7 @@ export class Transform { // 变换
     // 缩放
     scale(params: {
         point?: ColVector3D, // 缩放的中心点
-        vector: ColVector3D, // 缩放值的向量
+        vector: ColVector3D, // 缩放值向量
         mode?: TransformMode,
     }) {
         if (params.mode === undefined) params.mode = TransformMode.Global;
@@ -763,6 +765,7 @@ export class Transform { // 变换
         if (params.mode === TransformMode.Local) {
             if (params.point) {
                 // diffTranslate = (S1 - S0) * (-P) // P为缩放中心
+
                 const s0 = this.scaleMatrix.buildMatrix().resize([3, 3])
 
                 this.scaleMatrix = ScaleMatrix.FromMatrix(matrix.multiply(this.scaleMatrix))
@@ -902,11 +905,13 @@ export class Transform { // 变换
         this.setScale(new ColVector3D([scaleNow.x, scaleNow.y, value]))
     }
 
+    // 是否存在缩放
     hasScale() {
         if (!this.isSubMatrixLatest) this.updateMatrix();
         return !this.scaleMatrix.isIdentity
     }
 
+    // 是否仅存在缩放
     onlyScale() {
         return !this.hasTranslate() && !this.hasSkew() && !this.hasRotation()
     }
@@ -1251,6 +1256,7 @@ export class Transform { // 变换
         return !this.rotateMatrix.isIdentity
     }
 
+    // 是否仅存在旋转
     onlyRotation() {
         return !this.hasTranslate() && !this.hasSkew() && !this.hasScale()
     }
@@ -1433,9 +1439,9 @@ export class Transform { // 变换
         if (params.skew !== undefined) {
             matrix = this._getSkewMatrix(params.skew)
         } else if (params.skewAxis !== undefined) {
-            if (params.skewAxis.x !== undefined) matrix.setSubMatrix(params.skewAxis.x, [0, 0]);
-            if (params.skewAxis.y !== undefined) matrix.setSubMatrix(params.skewAxis.y, [0, 1]);
-            if (params.skewAxis.z !== undefined) matrix.setSubMatrix(params.skewAxis.z, [0, 2]);
+            if (params.skewAxis.x !== undefined) matrix.setSubMatrix(params.skewAxis.x.normalize(), [0, 0]);
+            if (params.skewAxis.y !== undefined) matrix.setSubMatrix(params.skewAxis.y.normalize(), [0, 1]);
+            if (params.skewAxis.z !== undefined) matrix.setSubMatrix(params.skewAxis.z.normalize(), [0, 2]);
         }
 
         this.skewMatrix = matrix
@@ -1453,6 +1459,7 @@ export class Transform { // 变换
         return !this.skewMatrix.isIdentity
     }
 
+    // 是否仅存在斜切
     onlySkew() {
         return !this.hasTranslate() && !this.hasRotation() && !this.hasScale()
     }
@@ -1749,25 +1756,25 @@ export class Transform { // 变换
 
     makeFromRotateMatrix() { // 根据rotateMatrix构建新的Transform
         return new Transform({
-            matrix: this.rotateMatrix.clone(),
+            matrix: Matrix.FromMatrix(this.rotateMatrix.clone()),
         })
     }
 
     makeFromTranslateMatrix() { // 根据translateMatrix构建新的Transform
         return new Transform({
-            matrix: this.translateMatrix.clone(),
+            matrix: Matrix.FromMatrix(this.translateMatrix.clone()),
         })
     }
 
     makeFromSkewMatrix() { // 根据skewMatrix构建新的Transform
         return new Transform({
-            matrix: this.skewMatrix.clone(),
+            matrix: Matrix.FromMatrix(this.skewMatrix.clone()),
         })
     }
 
     makeFromScaleMatrix() { // 根据scaleMatrix构建新的Transform
         return new Transform({
-            matrix: this.scaleMatrix.clone(),
+            matrix: Matrix.FromMatrix(this.scaleMatrix.clone()),
         })
     }
 
@@ -1986,11 +1993,13 @@ export class Plane {
     }
 
     intersectionWithLine(line: Line) { // 平面与直线的交点
+        if (this.isLineParallel(line)) return undefined;
         const t = (this.d + this.normal.dot(this.normal)) / this.normal.dot(line.direction)
         return line.point.add(line.direction.clone().multiplyByNumber(t))
     }
 
     intersectionWithPlane(plane: Plane) { // 平面与平面的相交线
+        if (this.isPlaneParallel(plane)) return undefined;
         const direction = this.normal.cross(plane.normal) as ColVector3D
         return new Line(direction, this.intersectionWithLine(new Line(direction, this.normal.multiplyByNumber(this.d))))
     }

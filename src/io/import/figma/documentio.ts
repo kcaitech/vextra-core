@@ -1,13 +1,17 @@
-import { uuid } from "../../../basic/uuid";
-import { BasicArray, BasicMap, IDataGuard } from "../../../data/basic";
-import { Document, PageListItem } from "../../../data/document";
-import { IJSON } from "./basic";
-import { figToJson } from "./fig2json";
-import { startLoader } from "./loader";
+import {uuid} from "../../../basic/uuid";
+import {BasicArray, BasicMap, IDataGuard} from "../../../data/basic";
+import {Document, PageListItem} from "../../../data/document";
+import {IJSON} from "./basic";
+import {figToJson} from "./fig2json";
+import {startLoader} from "./loader";
+import * as UZIP from "uzip";
+
 // import { getFigJsonData } from "./tojson";
 
 
-function insert2childs(childs: { parentIndex: { position: string } }[], node: { parentIndex: { position: string } }, start: number, end: number/* 包含 */) {
+function insert2childs(childs: { parentIndex: { position: string } }[], node: {
+    parentIndex: { position: string }
+}, start: number, end: number/* 包含 */) {
     // 比较少时直接逐一比较
     if ((end - start) < 5) {
         for (let i = start; i <= end; ++i) {
@@ -34,10 +38,13 @@ export async function importDocument(file: File, gurad: IDataGuard /*inflateRawS
     const buffer = await file.arrayBuffer();
 
     const json = figToJson((buffer)) as IJSON;
-    // console.log(json)
+    const unzipped = UZIP.parse(buffer);
 
     const nodeChanges = json['nodeChanges'];
     if (!nodeChanges || !Array.isArray(nodeChanges)) throw new Error("data error");
+
+    const nodeChangesMap = new Map<string, IJSON>();
+    for (const node of nodeChanges) nodeChangesMap.set([node['guid']['localID'], node['guid']['sessionID']].join(','), node);
 
     // 先生成对象树
     const nodesmap = new Map<string, IJSON>();
@@ -53,24 +60,22 @@ export async function importDocument(file: File, gurad: IDataGuard /*inflateRawS
         const parentid = [pguid['localID'], pguid['sessionID']].join(',');
         const visible = node['visible'];
 
-        const pnode = nodesmap.get(parentid);
+        const pnode = nodeChangesMap.get(parentid);
+        if (pnode && !Array.isArray(pnode.childs)) pnode.childs = [];
 
-        switch (type) {
-            case "DOCUMENT":
-                break;
-            case "CANVAS":
-                if (!visible) break;
-                // page
-                node.childs = [];
-                nodesmap.set(nodeid, node);
-                pages.push(node);
-                break;
-            case "ROUNDED_RECTANGLE":
-                // 矩形
-                if (pnode) {
-                    insert2childs(pnode.childs, node, 0, pnode.childs.length - 1);
-                }
-                break;
+        if (type === 'CANVAS') {
+            if (!visible) return;
+            nodesmap.set(nodeid, node);
+            pages.push(node);
+        }
+
+        // if (![
+        //     'ROUNDED_RECTANGLE',
+        //     'ELLIPSE',
+        // ].includes(type)) return;
+
+        if (pnode) {
+            insert2childs(pnode.childs, node, 0, pnode.childs.length - 1);
         }
     })
 
@@ -82,7 +87,7 @@ export async function importDocument(file: File, gurad: IDataGuard /*inflateRawS
 
     const document = new Document(uuid(), "", "", new BasicMap(), file.name, pageList, gurad);
 
-    startLoader(json, pages, document);
+    startLoader(json, pages, document, nodeChangesMap, unzipped);
 
     return document;
 }
