@@ -18,6 +18,7 @@ export class GroupShapeView extends ShapeView {
 
         this._bubblewatcher = this._bubblewatcher.bind(this);
         this.m_data.bubblewatch(this._bubblewatcher);
+        this.updateMaskMap();
     }
 
     protected _bubblewatcher(...args: any[]) {
@@ -43,7 +44,8 @@ export class GroupShapeView extends ShapeView {
             if (child.mask) currentMask = `mask_${objectId(child)}`;
             map.set(child.id, currentMask);
         }
-        console.log('__update_mask_map__', this.maskMap);
+        this.childs.forEach(c => c.notify('mask-env-changed'));
+        // console.log('__update_mask_map__', this.maskMap);
     }
 
     onDestory(): void {

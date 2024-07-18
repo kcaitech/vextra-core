@@ -31,6 +31,7 @@ import { fixConstrainFrame } from "../data/constrain";
 import { BlurType, MarkerType } from "../data/typesdefine";
 import { makeShapeTransform2By1, makeShapeTransform1By2 } from "../data/shape_transform_util";
 import { Transform as Transform2 } from "../basic/transform";
+import { GroupShapeView } from "./groupshape";
 
 export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     return (
@@ -481,17 +482,7 @@ export class ShapeView extends DataView {
     }
 
     get masked(): boolean {
-        const parent = this.parent;
-
-        if (!parent) return false;
-        const children = parent.childs;
-        let currentIdx = -1;
-        for (let i = 0; i > -1; i++) {
-            const c = children[i];
-            if (currentIdx > -1 && c.mask) return true;
-            if (c.id === this.id) currentIdx = i;
-        }
-        return false;
+        return Boolean((this.parent as GroupShapeView)?.maskMap.get(this.id) && !this.m_data.mask);
     }
 
     // prepare() {
