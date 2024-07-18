@@ -12,13 +12,6 @@ export function exportArtboard_guides(source: types.Artboard_guides, ctx?: IExpo
     })
     return ret
 }
-export function exportArtboard_prototypeInteractions(source: types.Artboard_prototypeInteractions, ctx?: IExportContext): types.Artboard_prototypeInteractions {
-    const ret: types.Artboard_prototypeInteractions = []
-    source.forEach((source) => {
-        ret.push(exportPrototypeInterAction(source, ctx))
-    })
-    return ret
-}
 /* blend mode */
 export function exportBlendMode(source: types.BlendMode, ctx?: IExportContext): types.BlendMode {
     return source
@@ -455,13 +448,6 @@ export function exportPrototypeInterAction_crdtidx(source: types.PrototypeInterA
     })
     return ret
 }
-export function exportPrototypeInterAction_actions(source: types.PrototypeInterAction_actions, ctx?: IExportContext): types.PrototypeInterAction_actions {
-    const ret: types.PrototypeInterAction_actions = []
-    source.forEach((source) => {
-        ret.push(exportPrototypeActions(source, ctx))
-    })
-    return ret
-}
 /* navigationType */
 export function exportPrototypeNavigationType(source: types.PrototypeNavigationType, ctx?: IExportContext): types.PrototypeNavigationType {
     return source
@@ -524,6 +510,13 @@ export function exportShapeSize(source: types.ShapeSize, ctx?: IExportContext): 
 export function exportShapeType(source: types.ShapeType, ctx?: IExportContext): types.ShapeType {
     return source
 }
+export function exportShape_prototypeInteractions(source: types.Shape_prototypeInteractions, ctx?: IExportContext): types.Shape_prototypeInteractions {
+    const ret: types.Shape_prototypeInteractions = []
+    source.forEach((source) => {
+        ret.push(exportPrototypeInterAction(source, ctx))
+    })
+    return ret
+}
 /* side type */
 export function exportSideType(source: types.SideType, ctx?: IExportContext): types.SideType {
     return source
@@ -576,24 +569,10 @@ export function exportStyle_contacts(source: types.Style_contacts, ctx?: IExport
     })
     return ret
 }
-export function exportSymbolRefShape_prototypeInteractions(source: types.SymbolRefShape_prototypeInteractions, ctx?: IExportContext): types.SymbolRefShape_prototypeInteractions {
-    const ret: types.SymbolRefShape_prototypeInteractions = []
-    source.forEach((source) => {
-        ret.push(exportPrototypeInterAction(source, ctx))
-    })
-    return ret
-}
 export function exportSymbolShape_guides(source: types.SymbolShape_guides, ctx?: IExportContext): types.SymbolShape_guides {
     const ret: types.SymbolShape_guides = []
     source.forEach((source) => {
         ret.push(exportGuide(source, ctx))
-    })
-    return ret
-}
-export function exportSymbolShape_prototypeInteractions(source: types.SymbolShape_prototypeInteractions, ctx?: IExportContext): types.SymbolShape_prototypeInteractions {
-    const ret: types.SymbolShape_prototypeInteractions = []
-    source.forEach((source) => {
-        ret.push(exportPrototypeInterAction(source, ctx))
     })
     return ret
 }
@@ -827,7 +806,7 @@ export function exportPrototypeInterAction(source: types.PrototypeInterAction, c
     ret.crdtidx = exportPrototypeInterAction_crdtidx(source.crdtidx, ctx)
     ret.id = source.id
     ret.event = exportPrototypeEvent(source.event, ctx)
-    ret.actions = exportPrototypeInterAction_actions(source.actions, ctx)
+    ret.actions = exportPrototypeActions(source.actions, ctx)
     if (source.typeId) ret.typeId = source.typeId
     return ret
 }
@@ -1004,6 +983,11 @@ export function exportShape(source: types.Shape, ctx?: IExportContext): types.Sh
         return ret
     })()
     if (source.haveEdit) ret.haveEdit = source.haveEdit
+    if (source.prototypeStartingPoint) ret.prototypeStartingPoint = exportPrototypeStartingPoint(source.prototypeStartingPoint, ctx)
+    if (source.prototypeInteractions) ret.prototypeInteractions = exportShape_prototypeInteractions(source.prototypeInteractions, ctx)
+    if (source.overlayPositionType) ret.overlayPositionType = exportOverlayPositions(source.overlayPositionType, ctx)
+    if (source.overlayBackgroundInteraction) ret.overlayBackgroundInteraction = exportOverlayBackgroundInteraction(source.overlayBackgroundInteraction, ctx)
+    if (source.overlayBackgroundAppearance) ret.overlayBackgroundAppearance = exportOverlayBackgroundAppearance(source.overlayBackgroundAppearance, ctx)
     return ret
 }
 /* table cell */
@@ -1160,8 +1144,6 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
     })()
     if (source.isCustomSize) ret.isCustomSize = source.isCustomSize
     if (source.cornerRadius) ret.cornerRadius = exportCornerRadius(source.cornerRadius, ctx)
-    if (source.prototypeStartingPoint) ret.prototypeStartingPoint = exportPrototypeStartingPoint(source.prototypeStartingPoint, ctx)
-    if (source.prototypeInteractions) ret.prototypeInteractions = exportSymbolRefShape_prototypeInteractions(source.prototypeInteractions, ctx)
         // inject code
     if (ctx?.refsymbols) ctx.refsymbols.add(ret.refId);
 
@@ -1213,11 +1195,6 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
     ret.typeId = "artboard"
     if (source.cornerRadius) ret.cornerRadius = exportCornerRadius(source.cornerRadius, ctx)
     if (source.guides) ret.guides = exportArtboard_guides(source.guides, ctx)
-    if (source.prototypeStartingPoint) ret.prototypeStartingPoint = exportPrototypeStartingPoint(source.prototypeStartingPoint, ctx)
-    if (source.prototypeInteractions) ret.prototypeInteractions = exportArtboard_prototypeInteractions(source.prototypeInteractions, ctx)
-    if (source.overlayPositionType) ret.overlayPositionType = exportOverlayPositions(source.overlayPositionType, ctx)
-    if (source.overlayBackgroundInteraction) ret.overlayBackgroundInteraction = exportOverlayBackgroundInteraction(source.overlayBackgroundInteraction, ctx)
-    if (source.overlayBackgroundAppearance) ret.overlayBackgroundAppearance = exportOverlayBackgroundAppearance(source.overlayBackgroundAppearance, ctx)
     return ret
 }
 /* bool shape */
@@ -1297,8 +1274,6 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
     })()
     if (source.cornerRadius) ret.cornerRadius = exportCornerRadius(source.cornerRadius, ctx)
     if (source.guides) ret.guides = exportSymbolShape_guides(source.guides, ctx)
-    if (source.prototypeStartingPoint) ret.prototypeStartingPoint = exportPrototypeStartingPoint(source.prototypeStartingPoint, ctx)
-    if (source.prototypeInteractions) ret.prototypeInteractions = exportSymbolShape_prototypeInteractions(source.prototypeInteractions, ctx)
         // inject code
     if (ctx?.symbols) ctx.symbols.add(ret.id);
 

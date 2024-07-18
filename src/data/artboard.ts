@@ -26,11 +26,6 @@ export class Artboard extends GroupShape implements classes.Artboard {
     cornerRadius?: CornerRadius
     haveEdit?: boolean | undefined;
     guides?: BasicArray<Guide>;
-    prototypeStartingPoint?: classes.PrototypeStartingPoint;
-    prototypeInteractions?: BasicArray<PrototypeInterAction>;
-    overlayPositionType?: classes.OverlayPositions;
-    overlayBackgroundInteraction?: classes.OverlayBackgroundInteraction;
-    overlayBackgroundAppearance?: classes.OverlayBackgroundAppearance;
 
     constructor(
         crdtidx: BasicArray<number>,
@@ -43,11 +38,6 @@ export class Artboard extends GroupShape implements classes.Artboard {
         childs: BasicArray<(GroupShape | Shape | ImageShape | PathShape | RectShape | TextShape)>,
         haveEdit?: boolean,
         guides?: BasicArray<Guide>,
-        prototypeStartingPoint?: classes.PrototypeStartingPoint,
-        prototypeInteractions?: BasicArray<classes.PrototypeInterAction>,
-        overlayPositionType?: classes.OverlayPositions,
-        overlayBackgroundInteraction?: classes.OverlayBackgroundInteraction,
-        overlayBackgroundAppearance?: classes.OverlayBackgroundAppearance,
 
     ) {
         super(
@@ -62,11 +52,6 @@ export class Artboard extends GroupShape implements classes.Artboard {
         )
         this.haveEdit = haveEdit;
         this.guides = guides;
-        this.prototypeStartingPoint = prototypeStartingPoint
-        this.prototypeInteractions = prototypeInteractions
-        this.overlayPositionType = overlayPositionType
-        this.overlayBackgroundInteraction = overlayBackgroundInteraction
-        this.overlayBackgroundAppearance = overlayBackgroundAppearance
     }
 
     getOpTarget(path: string[]) {
@@ -74,9 +59,6 @@ export class Artboard extends GroupShape implements classes.Artboard {
         if (id0 === 'cornerRadius' && !this.cornerRadius) this.cornerRadius = new CornerRadius(0, 0, 0, 0);
         if (id0 === "guides" && !this.guides) {
             this.guides = new BasicArray<Guide>();
-        }
-        if (id0 === "prototypeInteractions" && !this.prototypeInteractions) {
-            this.prototypeInteractions = new BasicArray<PrototypeInterAction>();
         }
         return super.getOpTarget(path);
     }
