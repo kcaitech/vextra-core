@@ -108,20 +108,26 @@ marker[MarkerType.Square] = function (h: Function, style: Style, border: Border,
     const range = border.sideSetting.thicknessTop;
     const marker_props: any = {
         id: "arrow-" + id,
-        viewBox: "0 0 10 10",
-        refX: "0",
-        refY: "5",
-        markerWidth: range * 2,
-        markerHeight: range * 2,
+        viewBox: `0 0 ${range * 6} ${range * 6}`,
+        refX: "3",
+        refY: "3",
+        markerWidth: range,
+        markerHeight: range,
         orient: "auto-start-reverse"
+    }
+    if (range <= 1) {
+        marker_props.markerWidth = 2;
+        marker_props.markerHeight = 2
+        marker_props.viewBox = `0 0 ${12} ${12}` ;
     }
     const fill_color = border.fillType === FillType.Gradient ? 'white' : "rgb(" + color.red + "," + color.green + "," + color.blue + ")"
     const marker_content_props: any = {
-        d: 'M0 0 h10 l10 h-10  z',
+        width: 6,
+        height: 6,
         stroke: 'none',
         fill: fill_color
     }
-    return h('marker', marker_props, [h("path", marker_content_props)]);
+    return h('marker', marker_props, [h("rect", marker_content_props)]);
 }
 marker[MarkerType.Round] = function (h: Function, style: Style, border: Border, id: number | string) {
     const color = border.color;
@@ -133,7 +139,7 @@ marker[MarkerType.Round] = function (h: Function, style: Style, border: Border, 
         refY: "5",
         markerWidth: range,
         markerHeight: range,
-        orient: "auto-start-reverse"
+        orient: "auto-start-reverse",
     }
     if (range <= 1) {
         marker_props.markerWidth = 2;

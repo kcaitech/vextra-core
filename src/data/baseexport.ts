@@ -285,6 +285,10 @@ export function exportGuide(source: types.Guide, ctx?: IExportContext): types.Gu
     ret.offset = source.offset
     return ret
 }
+/* image scale mode */
+export function exportImageScaleMode(source: types.ImageScaleMode, ctx?: IExportContext): types.ImageScaleMode {
+    return source
+}
 /* line cap style */
 export function exportLineCapStyle(source: types.LineCapStyle, ctx?: IExportContext): types.LineCapStyle {
     return source
@@ -326,6 +330,22 @@ export function exportPage_guides(source: types.Page_guides, ctx?: IExportContex
     })
     return ret
 }
+/* paint filter */
+export function exportPaintFilter(source: types.PaintFilter, ctx?: IExportContext): types.PaintFilter {
+    const ret: types.PaintFilter = {} as types.PaintFilter
+    ret.exposure = source.exposure
+    ret.contrast = source.contrast
+    ret.saturation = source.saturation
+    ret.temperature = source.temperature
+    ret.tint = source.tint
+    ret.shadow = source.shadow
+    ret.hue = source.hue
+    return ret
+}
+/* paint filter type */
+export function exportPaintFilterType(source: types.PaintFilterType, ctx?: IExportContext): types.PaintFilterType {
+    return source
+}
 export function exportPara_spans(source: types.Para_spans, ctx?: IExportContext): types.Para_spans {
     const ret: types.Para_spans = []
     source.forEach((source) => {
@@ -361,6 +381,17 @@ export function exportPathShape2_pathsegs(source: types.PathShape2_pathsegs, ctx
     source.forEach((source) => {
         ret.push(exportPathSegment(source, ctx))
     })
+    return ret
+}
+/* pattern transform */
+export function exportPatternTransform(source: types.PatternTransform, ctx?: IExportContext): types.PatternTransform {
+    const ret: types.PatternTransform = {} as types.PatternTransform
+    ret.m00 = source.m00
+    ret.m01 = source.m01
+    ret.m02 = source.m02
+    ret.m10 = source.m10
+    ret.m11 = source.m11
+    ret.m12 = source.m12
     return ret
 }
 /* point 2d */
@@ -628,24 +659,6 @@ export function exportCrdtNumber(source: types.CrdtNumber, ctx?: IExportContext)
     ret.value = source.value
     return ret
 }
-/* document meta */
-export function exportDocumentMeta(source: types.DocumentMeta, ctx?: IExportContext): types.DocumentMeta {
-    const ret: types.DocumentMeta = {} as types.DocumentMeta
-    ret.id = source.id
-    ret.name = source.name
-    ret.fmtVer = source.fmtVer
-    ret.pagesList = exportDocumentMeta_pagesList(source.pagesList, ctx)
-    ret.lastCmdId = source.lastCmdId
-    ret.symbolregist = (() => {
-        const ret: any = {}
-        source.symbolregist.forEach((source, k) => {
-            ret[k] = source
-        })
-        return ret
-    })()
-    if (source.freesymbolsVersionId) ret.freesymbolsVersionId = source.freesymbolsVersionId
-    return ret
-}
 /* export format */
 export function exportExportFormat(source: types.ExportFormat, ctx?: IExportContext): types.ExportFormat {
     const ret: types.ExportFormat = {} as types.ExportFormat
@@ -727,6 +740,14 @@ export function exportBorder(source: types.Border, ctx?: IExportContext): types.
     ret.sideSetting = exportBorderSideSetting(source.sideSetting, ctx)
     if (source.contextSettings) ret.contextSettings = exportContextSettings(source.contextSettings, ctx)
     if (source.gradient) ret.gradient = exportGradient(source.gradient, ctx)
+    if (source.imageRef) ret.imageRef = source.imageRef
+    if (source.imageScaleMode) ret.imageScaleMode = exportImageScaleMode(source.imageScaleMode, ctx)
+    if (source.rotation) ret.rotation = source.rotation
+    if (source.scale) ret.scale = source.scale
+    if (source.originalImageWidth) ret.originalImageWidth = source.originalImageWidth
+    if (source.originalImageHeight) ret.originalImageHeight = source.originalImageHeight
+    if (source.paintFilter) ret.paintFilter = exportPaintFilter(source.paintFilter, ctx)
+    if (source.transform) ret.transform = exportPatternTransform(source.transform, ctx)
     return ret
 }
 /* fill */
@@ -743,6 +764,13 @@ export function exportFill(source: types.Fill, ctx?: IExportContext): types.Fill
     if (source.gradient) ret.gradient = exportGradient(source.gradient, ctx)
     if (source.imageRef) ret.imageRef = source.imageRef
     if (source.fillRule) ret.fillRule = exportFillRule(source.fillRule, ctx)
+    if (source.imageScaleMode) ret.imageScaleMode = exportImageScaleMode(source.imageScaleMode, ctx)
+    if (source.rotation) ret.rotation = source.rotation
+    if (source.scale) ret.scale = source.scale
+    if (source.originalImageWidth) ret.originalImageWidth = source.originalImageWidth
+    if (source.originalImageHeight) ret.originalImageHeight = source.originalImageHeight
+    if (source.paintFilter) ret.paintFilter = exportPaintFilter(source.paintFilter, ctx)
+    if (source.transform) ret.transform = exportPatternTransform(source.transform, ctx)
         // inject code
     if (ctx?.medias && ret.imageRef) ctx.medias.add(ret.imageRef);
 
@@ -1019,7 +1047,6 @@ export function exportContactShape(source: types.ContactShape, ctx?: IExportCont
 export function exportCutoutShape(source: types.CutoutShape, ctx?: IExportContext): types.CutoutShape {
     const ret: types.CutoutShape = exportPathShape(source, ctx) as types.CutoutShape
     ret.typeId = "cutout-shape"
-    ret.scalingStroke = source.scalingStroke
     return ret
 }
 /* image shape */
@@ -1057,6 +1084,41 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
 export function exportBoolShape(source: types.BoolShape, ctx?: IExportContext): types.BoolShape {
     const ret: types.BoolShape = exportGroupShape(source, ctx) as types.BoolShape
     ret.typeId = "bool-shape"
+    return ret
+}
+/* document meta */
+export function exportDocumentMeta(source: types.DocumentMeta, ctx?: IExportContext): types.DocumentMeta {
+    const ret: types.DocumentMeta = {} as types.DocumentMeta
+    ret.id = source.id
+    ret.name = source.name
+    ret.fmtVer = source.fmtVer
+    ret.pagesList = exportDocumentMeta_pagesList(source.pagesList, ctx)
+    ret.lastCmdId = source.lastCmdId
+    ret.symbolregist = (() => {
+        const ret: any = {}
+        source.symbolregist.forEach((source, k) => {
+            ret[k] = source
+        })
+        return ret
+    })()
+    if (source.freesymbols) ret.freesymbols = (() => {
+        const ret: any = {}
+        source.freesymbols.forEach((source, k) => {
+            ret[k] = (() => {
+                if (typeof source !== "object") {
+                    return source
+                }
+                if (source.typeId === "symbol-shape") {
+                    return exportSymbolShape(source as types.SymbolShape, ctx)
+                }
+                if (source.typeId === "symbol-union-shape") {
+                    return exportSymbolUnionShape(source as types.SymbolUnionShape, ctx)
+                }
+                throw new Error("unknow typeId: " + source.typeId)
+            })()
+        })
+        return ret
+    })()
     return ret
 }
 /* group shape */

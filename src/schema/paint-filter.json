@@ -1,0 +1,44 @@
+{
+    "description": "paint filter",
+    "type": "object",
+    "properties": {
+        "exposure": {
+            "type": "number",
+            "default": 0
+        },
+        "contrast": {
+            "type": "number",
+            "default": 0
+        },
+        "saturation": {
+            "type": "number",
+            "default": 0
+        },
+        "temperature": {
+            "type": "number",
+            "default": 0
+        },
+        "tint": {
+            "type": "number",
+            "default": 0
+        },
+        "shadow": {
+            "type": "number",
+            "default": 0
+        },
+        "hue": {
+            "type": "number",
+            "default": 0
+        }
+    },
+    "required": [
+        "exposure",
+        "contrast",
+        "saturation",
+        "temperature",
+        "tint",
+        "shadow",
+        "hue"
+    ],
+    "additionalProperties": false
+}

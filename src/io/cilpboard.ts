@@ -270,19 +270,19 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
             }
 
             if (type === ShapeType.Rectangle) {
-                r = importRectShape(_s as any as types.RectShape);
+                r = importRectShape(_s as any as types.RectShape, ctx);
             } else if (type === ShapeType.Oval) {
-                r = importOvalShape(_s as any as types.OvalShape);
+                r = importOvalShape(_s as any as types.OvalShape, ctx);
             } else if (type === ShapeType.Line) {
-                r = importLineShape(_s as any as types.LineShape);
+                r = importLineShape(_s as any as types.LineShape, ctx);
             } else if (type === ShapeType.Image) {
                 r = importImageShape(_s as any as types.ImageShape, ctx);
             } else if (type === ShapeType.Text) {
                 r = importTextShape(_s as any as types.TextShape, ctx);
             } else if (type === ShapeType.Path) {
-                r = importPathShape(_s as any as types.PathShape);
+                r = importPathShape(_s as any as types.PathShape, ctx);
             } else if (type === ShapeType.Path2) {
-                r = importPathShape2(_s as any as types.PathShape2);
+                r = importPathShape2(_s as any as types.PathShape2, ctx);
             } else if (type === ShapeType.Artboard) {
                 const children = (_s as any).childs;
                 children && children.length && set_childs_id(children, matched);

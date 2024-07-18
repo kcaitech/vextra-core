@@ -205,6 +205,14 @@ export type Guide = {
     axis: GuideAxis,
     offset: number,
 }
+/* image scale mode */
+export enum ImageScaleMode {
+    Fill = "fill",
+    Stretch = "stretch",
+    Fit = "fit",
+    Crop = "crop",
+    Tile = "tile",
+}
 /* line cap style */
 export enum LineCapStyle {
     Butt = "butt",
@@ -262,6 +270,26 @@ export type PageListItem = {
     versionId?: string,
 }
 export type Page_guides = Array<Guide>
+/* paint filter */
+export type PaintFilter = {
+    exposure: number,
+    contrast: number,
+    saturation: number,
+    temperature: number,
+    tint: number,
+    shadow: number,
+    hue: number,
+}
+/* paint filter type */
+export enum PaintFilterType {
+    Exposure = "exposure",
+    Contrast = "contrast",
+    Saturation = "saturation",
+    Temperature = "temperature",
+    Tint = "tint",
+    Shadow = "shadow",
+    Hue = "hue",
+}
 export type Para_spans = Array<Span>
 export type PathSegment_points = Array<CurvePoint>
 /* path segment */
@@ -273,6 +301,15 @@ export type PathSegment = {
 }
 export type PathShape_pathsegs = Array<PathSegment>
 export type PathShape2_pathsegs = Array<PathSegment>
+/* pattern transform */
+export type PatternTransform = {
+    m00: number,
+    m01: number,
+    m02: number,
+    m10: number,
+    m11: number,
+    m12: number,
+}
 /* point 2d */
 export type Point2D = {
     x: number,
@@ -502,16 +539,6 @@ export type CrdtNumber = {
     crdtidx: Crdtidx,
     value: number,
 }
-/* document meta */
-export type DocumentMeta = {
-    id: string,
-    name: string,
-    fmtVer: number,
-    pagesList: DocumentMeta_pagesList,
-    lastCmdId: string,
-    symbolregist: Map<string, string>,
-    freesymbolsVersionId?: string,
-}
 /* export format */
 export type ExportFormat = {
     crdtidx: Crdtidx,
@@ -579,6 +606,14 @@ export type Border = {
     sideSetting: BorderSideSetting,
     contextSettings?: ContextSettings,
     gradient?: Gradient,
+    imageRef?: string,
+    imageScaleMode?: ImageScaleMode,
+    rotation?: number,
+    scale?: number,
+    originalImageWidth?: number,
+    originalImageHeight?: number,
+    paintFilter?: PaintFilter,
+    transform?: PatternTransform,
 }
 /* fill */
 export type Fill = {
@@ -592,6 +627,13 @@ export type Fill = {
     gradient?: Gradient,
     imageRef?: string,
     fillRule?: FillRule,
+    imageScaleMode?: ImageScaleMode,
+    rotation?: number,
+    scale?: number,
+    originalImageWidth?: number,
+    originalImageHeight?: number,
+    paintFilter?: PaintFilter,
+    transform?: PatternTransform,
 }
 /* span attr */
 export type ParaAttr = SpanAttr & {
@@ -740,9 +782,7 @@ export type ContactShape = PathShape & {
     to?: ContactForm,
 }
 /* cutout shape */
-export type CutoutShape = PathShape & {
-    scalingStroke: boolean,
-}
+export type CutoutShape = PathShape
 /* image shape */
 export type ImageShape = PathShape & {
     imageRef: string,
@@ -760,6 +800,16 @@ export type Artboard = GroupShape & {
 }
 /* bool shape */
 export type BoolShape = GroupShape
+/* document meta */
+export type DocumentMeta = {
+    id: string,
+    name: string,
+    fmtVer: number,
+    pagesList: DocumentMeta_pagesList,
+    lastCmdId: string,
+    symbolregist: Map<string, string>,
+    freesymbols?: Map<string, SymbolShape | SymbolUnionShape>,
+}
 /* group shape */
 export type GroupShape = Shape & {
     childs: GroupShape_childs,

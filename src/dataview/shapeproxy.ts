@@ -66,7 +66,9 @@ shandler['parent'] = shandler['__parent'] = (view: ShapeView) => {
 };
 shandler['isVisible'] = (view: ShapeView) => view.isVisible;
 shandler['isLocked'] = (view: ShapeView) => view.isLocked;
-shandler['frame'] = (view: ShapeView) => view.frame;
+// shandler['frame'] = (view: ShapeView) => view.frame;
+shandler['size'] = (view: ShapeView) => view.size;
+shandler['transform'] = (view: ShapeView) => view.transform;
 // todo flip
 // shandler['isFlippedVertical'] = (view: ShapeView) => view.isFlippedVertical;
 // shandler['isFlippedHorizontal'] = (view: ShapeView) => view.isFlippedHorizontal;

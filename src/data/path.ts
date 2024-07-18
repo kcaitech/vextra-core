@@ -6,7 +6,7 @@ import { uuid } from "../basic/uuid";
 
 // ----------------------------------------------------------------------------------
 // transform
-const transfromHandler: { [key: string]: (m: Matrix, item: any[]) => void } = {}
+const transformHandler: { [key: string]: (m: Matrix, item: any[]) => void } = {}
 
 function transformAbsPoint(m: Matrix, x: number, y: number): { x: number, y: number } {
     return m.computeCoord(x, y)
@@ -31,11 +31,11 @@ function transformRef(m: Matrix, item: any[]) {
     item[2] = xy.y;
 }
 
-transfromHandler['M'] = transformPoint;
-transfromHandler['m'] = transformRef;
-transfromHandler['L'] = transformPoint;
-transfromHandler['l'] = transformRef;
-transfromHandler['A'] = function (m: Matrix, item: any[]) {
+transformHandler['M'] = transformPoint;
+transformHandler['m'] = transformRef;
+transformHandler['L'] = transformPoint;
+transformHandler['l'] = transformRef;
+transformHandler['A'] = function (m: Matrix, item: any[]) {
     // todo
     // (rx ry x-axis-rotation large-arc-flag sweep-flag x y)
     let xy = transformRefPoint(m, item[1], item[2])
@@ -45,7 +45,7 @@ transfromHandler['A'] = function (m: Matrix, item: any[]) {
     item[6] = xy.x;
     item[7] = xy.y;
 }
-transfromHandler['a'] = function (m: Matrix, item: any[]) {
+transformHandler['a'] = function (m: Matrix, item: any[]) {
     // todo
     let xy = transformRefPoint(m, item[1], item[2])
     item[1] = xy.x;
@@ -55,23 +55,23 @@ transfromHandler['a'] = function (m: Matrix, item: any[]) {
     item[7] = xy.y;
 }
 
-transfromHandler['H'] = function (m: Matrix, item: any[]) {
+transformHandler['H'] = function (m: Matrix, item: any[]) {
     const xy = transformAbsPoint(m, item[1], 0)
     item[1] = xy.x;
 }
-transfromHandler['h'] = function (m: Matrix, item: any[]) {
+transformHandler['h'] = function (m: Matrix, item: any[]) {
     const xy = transformRefPoint(m, item[1], 0)
     item[1] = xy.x;
 }
-transfromHandler['V'] = function (m: Matrix, item: any[]) {
+transformHandler['V'] = function (m: Matrix, item: any[]) {
     const xy = transformAbsPoint(m, 0, item[1])
     item[1] = xy.y;
 }
-transfromHandler['v'] = function (m: Matrix, item: any[]) {
+transformHandler['v'] = function (m: Matrix, item: any[]) {
     const xy = transformRefPoint(m, 0, item[1])
     item[1] = xy.y;
 }
-transfromHandler['C'] = function (m: Matrix, item: any[]) {
+transformHandler['C'] = function (m: Matrix, item: any[]) {
     // C x1 y1, x2 y2, x y
     let xy;
     xy = transformAbsPoint(m, item[1], item[2])
@@ -84,7 +84,7 @@ transfromHandler['C'] = function (m: Matrix, item: any[]) {
     item[5] = xy.x;
     item[6] = xy.y;
 }
-transfromHandler['c'] = function (m: Matrix, item: any[]) {
+transformHandler['c'] = function (m: Matrix, item: any[]) {
     // c dx1 dy1, dx2 dy2, dx dy
     let xy;
     xy = transformRefPoint(m, item[1], item[2])
@@ -97,7 +97,7 @@ transfromHandler['c'] = function (m: Matrix, item: any[]) {
     item[5] = xy.x;
     item[6] = xy.y;
 }
-transfromHandler['Q'] = function (m: Matrix, item: any[]) {
+transformHandler['Q'] = function (m: Matrix, item: any[]) {
     // C x1 y1, x2 y2, x y
     let xy;
     xy = transformAbsPoint(m, item[1], item[2])
@@ -107,7 +107,7 @@ transfromHandler['Q'] = function (m: Matrix, item: any[]) {
     item[3] = xy.x;
     item[4] = xy.y;
 }
-transfromHandler['q'] = function (m: Matrix, item: any[]) {
+transformHandler['q'] = function (m: Matrix, item: any[]) {
     // c dx1 dy1, dx2 dy2, dx dy
     let xy;
     xy = transformRefPoint(m, item[1], item[2])
@@ -117,9 +117,9 @@ transfromHandler['q'] = function (m: Matrix, item: any[]) {
     item[3] = xy.x;
     item[4] = xy.y;
 }
-transfromHandler['Z'] = function (m: Matrix, item: any[]) {
+transformHandler['Z'] = function (m: Matrix, item: any[]) {
 }
-transfromHandler['z'] = function (m: Matrix, item: any[]) {
+transformHandler['z'] = function (m: Matrix, item: any[]) {
 }
 
 /**
@@ -128,7 +128,7 @@ transfromHandler['z'] = function (m: Matrix, item: any[]) {
  */
 function transformPath(matrix: Matrix) {
     return (item: any[]) => {
-        const t = transfromHandler[item[0]];
+        const t = transformHandler[item[0]];
         if (!t) {
             console.error(item);
             throw new Error();
@@ -190,8 +190,7 @@ translateHandler['c'] = function (item: any[], x: number, y: number) {
     // c dx1 dy1, dx2 dy2, dx dy
 }
 translateHandler['S'] = function (item: any[], x: number, y: number) {
-    // C x1 y1, x2 y2, x y
-    // translateHandler['C'](item, x, y);
+
     item[1] += x;
     item[2] += y;
     item[3] += x;
@@ -266,14 +265,25 @@ function calculateBezier(t: number, p0: number, p1: number, p2: number, p3: numb
     return (mt * mt * mt * p0) + (3 * mt * mt * t * p1) + (3 * mt * t * t * p2) + (t * t * t * p3);
 }
 
+// todo 二次贝塞尔曲线包围盒子的计算
+function calculateQuaBoundingBox(x1: number, y1: number, cx: number, cy: number, x2: number, y2: number) {
+    const bounds: Bounds = {
+        minX: Math.min(x1, x2),
+        minY: Math.min(y1, y2),
+        maxX: Math.max(x1, x2),
+        maxY: Math.max(y1, y2)
+    }
+
+}
+
 /**
  * Calculate the bounding box for this bezier curve.
  * http://pomax.nihongoresources.com/pages/bezier/
  */
-function calculateBoundingBox(x1: number, y1: number,
-                              cx1: number, cy1: number,
-                              cx2: number, cy2: number,
-                              x2: number, y2: number) {
+function calculateCubeBoundingBox(x1: number, y1: number,
+                                  cx1: number, cy1: number,
+                                  cx2: number, cy2: number,
+                                  x2: number, y2: number) {
     const bounds: Bounds = {
         minX: Math.min(x1, x2),
         minY: Math.min(y1, y2),
@@ -337,12 +347,6 @@ function calculateBoundingBox(x1: number, y1: number,
         }
     }
     return bounds;
-    // return [
-    //     bounds.minX, bounds.minY,
-    //     bounds.minX, bounds.maxY,
-    //     bounds.maxX, bounds.maxY,
-    //     bounds.maxX, bounds.minY,
-    // ];
 }
 
 // ----------------------------------------------------------------------------------
@@ -565,7 +569,7 @@ boundsHandler['A'] = (ctx: BoundsCtx, item: any[]) => {
         const y1 = item[2];
         const x2 = item[3];
         const y2 = item[4];
-        const bounds = calculateBoundingBox(ctx.prepoint.x, ctx.prepoint.y, x1, y1, x2, y2, x, y);
+        const bounds = calculateCubeBoundingBox(ctx.prepoint.x, ctx.prepoint.y, x1, y1, x2, y2, x, y);
         expandBounds(ctx, bounds.minX, bounds.minY)
         expandBounds(ctx, bounds.maxX, bounds.maxY)
     }
@@ -592,7 +596,7 @@ boundsHandler['a'] = (ctx: BoundsCtx, item: any[]) => {
         const y1 = item[2];
         const x2 = item[3];
         const y2 = item[4];
-        const bounds = calculateBoundingBox(ctx.prepoint.x, ctx.prepoint.y, x1, y1, x2, y2, x, y);
+        const bounds = calculateCubeBoundingBox(ctx.prepoint.x, ctx.prepoint.y, x1, y1, x2, y2, x, y);
         expandBounds(ctx, bounds.minX, bounds.minY)
         expandBounds(ctx, bounds.maxX, bounds.maxY)
     }
@@ -637,7 +641,7 @@ boundsHandler['C'] = (ctx: BoundsCtx, item: any[]) => {
     const y1 = item[2];
     const x2 = item[3];
     const y2 = item[4];
-    const bounds = calculateBoundingBox(ctx.prepoint.x, ctx.prepoint.y, x1, y1, x2, y2, x, y);
+    const bounds = calculateCubeBoundingBox(ctx.prepoint.x, ctx.prepoint.y, x1, y1, x2, y2, x, y);
     expandBounds(ctx, bounds.minX, bounds.minY)
     expandBounds(ctx, bounds.maxX, bounds.maxY)
     ctx.prepoint.x = x;
@@ -651,7 +655,7 @@ boundsHandler['c'] = (ctx: BoundsCtx, item: any[]) => {
     const y1 = ctx.prepoint.y + item[2];
     const x2 = ctx.prepoint.x + item[3];
     const y2 = ctx.prepoint.y + item[4];
-    const bounds = calculateBoundingBox(ctx.prepoint.x, ctx.prepoint.y, x1, y1, x2, y2, x, y);
+    const bounds = calculateCubeBoundingBox(ctx.prepoint.x, ctx.prepoint.y, x1, y1, x2, y2, x, y);
     expandBounds(ctx, bounds.minX, bounds.minY)
     expandBounds(ctx, bounds.maxX, bounds.maxY)
     ctx.prepoint.x = x;
@@ -670,9 +674,9 @@ boundsHandler['z'] = (ctx: BoundsCtx, item: any[]) => {
 
 function calcPathBounds(path: any[]): Bounds {
     const ctx: BoundsCtx = {
-        beginpoint: {x: 0, y: 0},
-        prepoint: {x: 0, y: 0},
-        bounds: {minX: 0, minY: 0, maxX: 0, maxY: 0},
+        beginpoint: { x: 0, y: 0 },
+        prepoint: { x: 0, y: 0 },
+        bounds: { minX: 0, minY: 0, maxX: 0, maxY: 0 },
         boundsinited: false
     }
 
@@ -686,10 +690,8 @@ function calcPathBounds(path: any[]): Bounds {
     return ctx.bounds;
 }
 
-// eslint-disable-next-line
-const pathCommand = /([achlmrqstvz])[\s,]*((-?\d*\.?\d*(?:e[\-+]?\d+)?[\s]*,?[\s]*)+)/ig;
-// eslint-disable-next-line
-const pathValues = /(-?\d*\.?\d*(?:e[\-+]?\d+)?)[\s]*,?[\s]*/ig;
+const pathCommand = /([achlmrqstvz])[\s,]*((-?\d*\.?\d*(?:e[\-+]?\d+)?\s*,?\s*)+)/ig;
+const pathValues = /(-?\d*\.?\d*(?:e[\-+]?\d+)?)\s*,?\s*/ig;
 
 export function parsePathString(pathString: string): (string | number)[][] {
     if (!pathString) {
@@ -700,7 +702,7 @@ export function parsePathString(pathString: string): (string | number)[][] {
     //     return pathClone(pth.arr);
     // }
 
-    const paramCounts: any = {a: 7, c: 6, h: 1, l: 2, m: 2, r: 4, q: 4, s: 4, t: 2, v: 1, z: 0};
+    const paramCounts: any = { a: 7, c: 6, h: 1, l: 2, m: 2, r: 4, q: 4, s: 4, t: 2, v: 1, z: 0 };
     const data: (string | number)[][] = [];
     // if (R.is(pathString, array) && R.is(pathString[0], array)) { // rough assumption
     //     data = pathClone(pathString);
@@ -767,11 +769,11 @@ function convertPath2CurvePoints(path: any[], width: number, height: number): {
         segs: []
     };
     ctx.segs.push({
-        beginpoint: {x: 0, y: 0},
-        prepoint: {x: 0, y: 0},
+        beginpoint: { x: 0, y: 0 },
+        prepoint: { x: 0, y: 0 },
         points: [],
 
-        preHandle: {x: 0, y: 0},
+        preHandle: { x: 0, y: 0 },
         lastCommand: 'M'
     });
 
@@ -786,9 +788,7 @@ function convertPath2CurvePoints(path: any[], width: number, height: number): {
 
         const len = seg.points.length;
 
-        if (len <= 1) {
-            continue;
-        }
+        if (len <= 1) continue;
 
         const p0 = seg.points[0];
         const pe = seg.points[len - 1];
@@ -812,11 +812,9 @@ function convertPath2CurvePoints(path: any[], width: number, height: number): {
 
     for (let i = 0, len = ctx.segs.length; i < len; i++) {
         const seg = ctx.segs[i];
-        if (seg.points.length <= 1) {
-            continue;
-        }
+        if (seg.points.length <= 1) continue;
 
-        ret.push({points: seg.points, isClosed: !!seg.isClosed})
+        ret.push({ points: seg.points, isClosed: !!seg.isClosed })
     }
 
     ret.forEach((seg) => {
@@ -842,11 +840,11 @@ curvHandler['M'] = (ctx: CurvCtx, item: any[]) => {
     const x = item[1];
     const y = item[2];
     const seg = {
-        beginpoint: {x, y},
-        prepoint: {x, y},
+        beginpoint: { x, y },
+        prepoint: { x, y },
         points: [],
 
-        preHandle: {x, y},
+        preHandle: { x, y },
         lastCommand: 'M'
     }
 
@@ -861,11 +859,11 @@ curvHandler['m'] = (ctx: CurvCtx, item: any[]) => {
     const x = (preseg.prepoint.x || 0) + item[1];
     const y = (preseg.prepoint.y || 0) + item[2];
     const seg = {
-        beginpoint: {x, y},
-        prepoint: {x, y},
+        beginpoint: { x, y },
+        prepoint: { x, y },
         points: [],
 
-        preHandle: {x, y},
+        preHandle: { x, y },
         lastCommand: 'M'
     }
 
@@ -924,10 +922,31 @@ function curveHandleBezier(seg: CurvSeg, x1: number, y1: number, x2: number, y2:
     point.toX = x2;
     point.toY = y2;
 
-    seg.prepoint = {x, y};
-    seg.preHandle = {x: x2, y: y2};
+    seg.prepoint = { x, y };
+    seg.preHandle = { x: x2, y: y2 };
 
     seg.points.push(point);
+}
+
+function curveHandleQuaBezier(seg: CurvSeg, cx: number, cy: number, x: number, y: number) {
+    const len = seg.points.length;
+    if (len) {
+        const prePoint = seg.points[seg.points.length - 1];
+        prePoint.hasFrom = true;
+        prePoint.fromX = cx;
+        prePoint.fromY = cy;
+    } else {
+        const point = new CurvePoint([0] as BasicArray<number>, uuid(), seg.beginpoint.x, seg.beginpoint.y, CurveMode.Asymmetric);
+        point.hasFrom = true;
+        point.fromX = cx;
+        point.fromY = cy;
+        seg.points.push(point);
+    }
+
+    seg.prepoint = { x, y };
+    seg.preHandle = { x: cx, y: cy };
+
+    seg.points.push(new CurvePoint([len] as BasicArray<number>, uuid(), x, y, CurveMode.Asymmetric));
 }
 
 curvHandler['A'] = (ctx: CurvCtx, item: any[]) => {
@@ -1069,7 +1088,7 @@ curvHandler['S'] = (ctx: CurvCtx, item: any[]) => {
         const x = item[3];
         const y = item[4];
 
-        curveHandleBezier(seg, x1, y1, x2, y2, x, y);
+        curveHandleQuaBezier(seg, x1, y1, x, y);
     }
 
     item[0] = 'C';
@@ -1096,7 +1115,7 @@ curvHandler['s'] = (ctx: CurvCtx, item: any[]) => {
         const x = seg.prepoint.x + item[3];
         const y = seg.prepoint.y + item[4];
 
-        curveHandleBezier(seg, ex, ey, ex, ey, x, y);
+        curveHandleQuaBezier(seg, ex, ey, x, y);
     }
 
     item[0] = 'C';
@@ -1112,7 +1131,7 @@ curvHandler['Q'] = (ctx: CurvCtx, item: any[]) => {
     const x1 = item[1];
     const y1 = item[2];
 
-    curveHandleBezier(seg, x1, y1, x1, y1, x, y);
+    curveHandleQuaBezier(seg, x1, y1, x, y);
 
     item[0] = 'C';
     seg.lastCommand = 'C';
@@ -1126,7 +1145,7 @@ curvHandler['q'] = (ctx: CurvCtx, item: any[]) => {
     const x1 = seg.prepoint.x + item[1];
     const y1 = seg.prepoint.y + item[2];
 
-    curveHandleBezier(seg, x1, y1, x1, y1, x, y);
+    curveHandleQuaBezier(seg, x1, y1, x, y);
 
     item[0] = 'C';
     seg.lastCommand = 'C';
@@ -1139,7 +1158,10 @@ curvHandler['T'] = (ctx: CurvCtx, item: any[]) => {
         const x = 2 * seg.prepoint.x - seg.preHandle.x;
         const y = 2 * seg.prepoint.y - seg.preHandle.y;
 
-        curveHandleBezier(seg, x, y, x, y, item[1], item[2]);
+        const tx = item[1];
+        const ty = item[2];
+
+        curveHandleQuaBezier(seg, x, y, tx, ty);
 
         item[0] = 'C';
         seg.lastCommand = 'C';
@@ -1158,7 +1180,7 @@ curvHandler['t'] = (ctx: CurvCtx, item: any[]) => {
         const x = 2 * seg.prepoint.x - seg.preHandle.x;
         const y = 2 * seg.prepoint.y - seg.preHandle.y;
 
-        curveHandleBezier(seg, x, y, x, y, item[1] + seg.prepoint.x, item[2] + seg.prepoint.y);
+        curveHandleQuaBezier(seg, x, y, item[1] + seg.prepoint.x, item[2] + seg.prepoint.y);
 
         item[0] = 'C';
         seg.lastCommand = 'C';

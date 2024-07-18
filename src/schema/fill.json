@@ -31,6 +31,31 @@
         },
         "fillRule": {
             "$ref": "./fill-rule.json"
+        },
+        "imageScaleMode": {
+            "$ref": "./image-scale-mode.json"
+        },
+        "rotation": {
+            "type": "number",
+            "default": 0
+        },
+        "scale": {
+            "type": "number",
+            "default": 0
+        },
+        "originalImageWidth": {
+            "type": "number",
+            "default": 0
+        },
+        "originalImageHeight": {
+            "type": "number",
+            "default": 0
+        },
+        "paintFilter": {
+            "$ref": "./paint-filter.json"
+        },
+        "transform": {
+            "$ref": "./pattern-transform.json"
         }
     },
     "required": [

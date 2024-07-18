@@ -9,6 +9,9 @@ export interface IImportContext {
     curPage: string
     fmtVer: number
 }
+function objkeys(obj: any) {
+    return obj instanceof Map ? obj : { forEach: (f: (v: any, k: string) => void) => Object.keys(obj).forEach((k) => f(obj[k], k)) };
+}
 type Artboard_guides = BasicArray<impl.Guide>
 type DocumentMeta_pagesList = BasicArray<impl.PageListItem>
 type ExportOptions_exportFormats = BasicArray<impl.ExportFormat>
@@ -349,6 +352,10 @@ export function importGuide(source: types.Guide, ctx?: IImportContext): impl.Gui
         source.offset)
     return ret
 }
+/* image scale mode */
+export function importImageScaleMode(source: types.ImageScaleMode, ctx?: IImportContext): impl.ImageScaleMode {
+    return source
+}
 /* line cap style */
 export function importLineCapStyle(source: types.LineCapStyle, ctx?: IImportContext): impl.LineCapStyle {
     return source
@@ -396,6 +403,22 @@ export function importPage_guides(source: types.Page_guides, ctx?: IImportContex
     })
     return ret
 }
+/* paint filter */
+export function importPaintFilter(source: types.PaintFilter, ctx?: IImportContext): impl.PaintFilter {
+    const ret: impl.PaintFilter = new impl.PaintFilter (
+        source.exposure,
+        source.contrast,
+        source.saturation,
+        source.temperature,
+        source.tint,
+        source.shadow,
+        source.hue)
+    return ret
+}
+/* paint filter type */
+export function importPaintFilterType(source: types.PaintFilterType, ctx?: IImportContext): impl.PaintFilterType {
+    return source
+}
 export function importPara_spans(source: types.Para_spans, ctx?: IImportContext): Para_spans {
     const ret: Para_spans = new BasicArray()
     source.forEach((source, i) => {
@@ -434,6 +457,17 @@ export function importPathShape2_pathsegs(source: types.PathShape2_pathsegs, ctx
         if (!source.crdtidx) source.crdtidx = [i]
         ret.push(importPathSegment(source, ctx))
     })
+    return ret
+}
+/* pattern transform */
+export function importPatternTransform(source: types.PatternTransform, ctx?: IImportContext): impl.PatternTransform {
+    const ret: impl.PatternTransform = new impl.PatternTransform (
+        source.m00,
+        source.m01,
+        source.m02,
+        source.m10,
+        source.m11,
+        source.m12)
     return ret
 }
 /* point 2d */
@@ -711,32 +745,6 @@ export function importCrdtNumber(source: types.CrdtNumber, ctx?: IImportContext)
         source.value)
     return ret
 }
-/* document meta */
-function importDocumentMetaOptional(tar: impl.DocumentMeta, source: types.DocumentMeta, ctx?: IImportContext) {
-    if (source.freesymbolsVersionId) tar.freesymbolsVersionId = source.freesymbolsVersionId
-}
-export function importDocumentMeta(source: types.DocumentMeta, ctx?: IImportContext): impl.DocumentMeta {
-        // inject code
-    if (!(source as any).symbolregist) (source as any).symbolregist = {};
-
-    const ret: impl.DocumentMeta = new impl.DocumentMeta (
-        source.id,
-        source.name,
-        source.fmtVer,
-        importDocumentMeta_pagesList(source.pagesList, ctx),
-        source.lastCmdId,
-        (() => {
-            const ret = new BasicMap<string, string>()
-            const _val = source.symbolregist as any
-            Object.keys(source.symbolregist).forEach((k) => {
-                const val = _val[k]
-                ret.set(k, val)
-            })
-            return ret
-        })())
-    importDocumentMetaOptional(ret, source, ctx)
-    return ret
-}
 /* export format */
 export function importExportFormat(source: types.ExportFormat, ctx?: IImportContext): impl.ExportFormat {
     const ret: impl.ExportFormat = new impl.ExportFormat (
@@ -809,6 +817,14 @@ export function importSpan(source: types.Span, ctx?: IImportContext): impl.Span 
 function importBorderOptional(tar: impl.Border, source: types.Border, ctx?: IImportContext) {
     if (source.contextSettings) tar.contextSettings = importContextSettings(source.contextSettings, ctx)
     if (source.gradient) tar.gradient = importGradient(source.gradient, ctx)
+    if (source.imageRef) tar.imageRef = source.imageRef
+    if (source.imageScaleMode) tar.imageScaleMode = importImageScaleMode(source.imageScaleMode, ctx)
+    if (source.rotation) tar.rotation = source.rotation
+    if (source.scale) tar.scale = source.scale
+    if (source.originalImageWidth) tar.originalImageWidth = source.originalImageWidth
+    if (source.originalImageHeight) tar.originalImageHeight = source.originalImageHeight
+    if (source.paintFilter) tar.paintFilter = importPaintFilter(source.paintFilter, ctx)
+    if (source.transform) tar.transform = importPatternTransform(source.transform, ctx)
 }
 export function importBorder(source: types.Border, ctx?: IImportContext): impl.Border {
         // inject code
@@ -842,6 +858,13 @@ function importFillOptional(tar: impl.Fill, source: types.Fill, ctx?: IImportCon
     if (source.gradient) tar.gradient = importGradient(source.gradient, ctx)
     if (source.imageRef) tar.imageRef = source.imageRef
     if (source.fillRule) tar.fillRule = importFillRule(source.fillRule, ctx)
+    if (source.imageScaleMode) tar.imageScaleMode = importImageScaleMode(source.imageScaleMode, ctx)
+    if (source.rotation) tar.rotation = source.rotation
+    if (source.scale) tar.scale = source.scale
+    if (source.originalImageWidth) tar.originalImageWidth = source.originalImageWidth
+    if (source.originalImageHeight) tar.originalImageHeight = source.originalImageHeight
+    if (source.paintFilter) tar.paintFilter = importPaintFilter(source.paintFilter, ctx)
+    if (source.transform) tar.transform = importPatternTransform(source.transform, ctx)
 }
 export function importFill(source: types.Fill, ctx?: IImportContext): impl.Fill {
     const ret: impl.Fill = new impl.Fill (
@@ -896,8 +919,7 @@ function importStyleOptional(tar: impl.Style, source: types.Style, ctx?: IImport
     if (source.varbinds) tar.varbinds = (() => {
         const ret = new BasicMap<string, string>()
         const _val = source.varbinds as any
-        Object.keys(source.varbinds).forEach((k) => {
-            const val = _val[k]
+        objkeys(_val).forEach((val, k) => {
             ret.set(k, val)
         })
         return ret
@@ -961,8 +983,7 @@ function importShapeOptional(tar: impl.Shape, source: types.Shape, ctx?: IImport
     if (source.varbinds) tar.varbinds = (() => {
         const ret = new BasicMap<string, string>()
         const _val = source.varbinds as any
-        Object.keys(source.varbinds).forEach((k) => {
-            const val = _val[k]
+        objkeys(_val).forEach((val, k) => {
             ret.set(k, val)
         })
         return ret
@@ -1090,8 +1111,7 @@ export function importTableShape(source: types.TableShape, ctx?: IImportContext)
         (() => {
             const ret = new BasicMap<string, impl.TableCell>()
             const _val = source.cells as any
-            Object.keys(source.cells).forEach((k) => {
-                const val = _val[k]
+            objkeys(_val).forEach((val, k) => {
                 ret.set(k, importTableCell(val, ctx))
             })
             return ret
@@ -1311,8 +1331,7 @@ function importSymbolRefShapeOptional(tar: impl.SymbolRefShape, source: types.Sy
     if (source.overrides) tar.overrides = (() => {
         const ret = new BasicMap<string, string>()
         const _val = source.overrides as any
-        Object.keys(source.overrides).forEach((k) => {
-            const val = _val[k]
+        objkeys(_val).forEach((val, k) => {
             ret.set(k, val)
         })
         return ret
@@ -1342,8 +1361,7 @@ export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImport
         (() => {
             const ret = new BasicMap<string, impl.Variable>()
             const _val = source.variables as any
-            Object.keys(source.variables).forEach((k) => {
-                const val = _val[k]
+            objkeys(_val).forEach((val, k) => {
                 ret.set(k, importVariable(val, ctx))
             })
             return ret
@@ -1428,8 +1446,7 @@ export function importCutoutShape(source: types.CutoutShape, ctx?: IImportContex
         importTransform(source.transform, ctx),
         importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
-        importPathShape_pathsegs(source.pathsegs, ctx),
-        source.scalingStroke)
+        importPathShape_pathsegs(source.pathsegs, ctx))
     importCutoutShapeOptional(ret, source, ctx)
     return ret
 }
@@ -1437,6 +1454,27 @@ export function importCutoutShape(source: types.CutoutShape, ctx?: IImportContex
 const importImageShapeOptional = importPathShapeOptional
 export function importImageShape(source: types.ImageShape, ctx?: IImportContext): impl.ImageShape {
         // inject code
+    const color: types.Color = {
+        typeId: "color",
+        alpha: 1,
+        blue: 216,
+        green: 216,
+        red: 216
+    }
+    const size = source.size ?? (source as any).frame;
+    const fill: types.Fill = {
+        typeId: "fill",
+        color: color,
+        crdtidx: [0],
+        fillType: types.FillType.Pattern,
+        id: "bdcd3743-fb61-4aeb-8864-b95d47b84a90",
+        imageRef: source.imageRef,
+        isEnabled: true,
+        imageScaleMode: types.ImageScaleMode.Fill,
+        originalImageHeight: size.height,
+        originalImageWidth: size.width
+    }
+    source.style.fills = [fill];
     if (!source.pathsegs) { // 兼容旧数据
         const seg: types.PathSegment = {
             crdtidx: [0],
@@ -1497,9 +1535,6 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
         importPathShape_pathsegs(source.pathsegs, ctx),
         source.imageRef)
     importImageShapeOptional(ret, source, ctx)
-        // inject code
-    if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
-
     return ret
 }
 /* line shape */
@@ -1603,6 +1638,49 @@ export function importBoolShape(source: types.BoolShape, ctx?: IImportContext): 
     importBoolShapeOptional(ret, source, ctx)
     return ret
 }
+/* document meta */
+function importDocumentMetaOptional(tar: impl.DocumentMeta, source: types.DocumentMeta, ctx?: IImportContext) {
+    if (source.freesymbols) tar.freesymbols = (() => {
+        const ret = new BasicMap<string, impl.SymbolShape | impl.SymbolUnionShape>()
+        const _val = source.freesymbols as any
+        objkeys(_val).forEach((val, k) => {
+            ret.set(k, (() => {
+                if (typeof val !== "object") {
+                    return val
+                }
+                if (val.typeId === "symbol-shape") {
+                    return importSymbolShape(val as types.SymbolShape, ctx)
+                }
+                if (val.typeId === "symbol-union-shape") {
+                    return importSymbolUnionShape(val as types.SymbolUnionShape, ctx)
+                }
+                throw new Error("unknow typeId: " + val.typeId)
+            })())
+        })
+        return ret
+    })()
+}
+export function importDocumentMeta(source: types.DocumentMeta, ctx?: IImportContext): impl.DocumentMeta {
+        // inject code
+    if (!(source as any).symbolregist) (source as any).symbolregist = {};
+
+    const ret: impl.DocumentMeta = new impl.DocumentMeta (
+        source.id,
+        source.name,
+        source.fmtVer,
+        importDocumentMeta_pagesList(source.pagesList, ctx),
+        source.lastCmdId,
+        (() => {
+            const ret = new BasicMap<string, string>()
+            const _val = source.symbolregist as any
+            objkeys(_val).forEach((val, k) => {
+                ret.set(k, val)
+            })
+            return ret
+        })())
+    importDocumentMetaOptional(ret, source, ctx)
+    return ret
+}
 /* group shape */
 function importGroupShapeOptional(tar: impl.GroupShape, source: types.GroupShape, ctx?: IImportContext) {
     importShapeOptional(tar, source)
@@ -1659,8 +1737,7 @@ function importSymbolShapeOptional(tar: impl.SymbolShape, source: types.SymbolSh
     if (source.symtags) tar.symtags = (() => {
         const ret = new BasicMap<string, string>()
         const _val = source.symtags as any
-        Object.keys(source.symtags).forEach((k) => {
-            const val = _val[k]
+        objkeys(_val).forEach((val, k) => {
             ret.set(k, val)
         })
         return ret
@@ -1682,8 +1759,7 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
         (() => {
             const ret = new BasicMap<string, impl.Variable>()
             const _val = source.variables as any
-            Object.keys(source.variables).forEach((k) => {
-                const val = _val[k]
+            objkeys(_val).forEach((val, k) => {
                 ret.set(k, importVariable(val, ctx))
             })
             return ret
@@ -1715,8 +1791,7 @@ export function importSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IIm
         (() => {
             const ret = new BasicMap<string, impl.Variable>()
             const _val = source.variables as any
-            Object.keys(source.variables).forEach((k) => {
-                const val = _val[k]
+            objkeys(_val).forEach((val, k) => {
                 ret.set(k, importVariable(val, ctx))
             })
             return ret

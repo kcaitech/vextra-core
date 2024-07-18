@@ -398,4 +398,7 @@ export class TableShape extends Shape implements classes.TableShape {
     get isPathIcon() {
         return false;
     }
+    getImageFill() {
+        return false;
+    }
 }

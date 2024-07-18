@@ -11,7 +11,8 @@ import {
     SymbolShape,
     VariableType,
     Gradient,
-    GradientType
+    GradientType,
+    PathShape
 } from "../data/classes";
 import { findOverrideAndVar } from "../data/utils";
 import { randomId } from "./basic";
@@ -24,7 +25,15 @@ function handler(h: Function, style: Style, border: Border, path: string, shape:
         d: path,
         fill: "none",
         stroke: '',
+        "stroke-linejoin": border.cornerType,
         'stroke-width': thickness
+    }
+    if (shape instanceof PathShape && shape.pathsegs.length > 1) {
+        if (startMarkerType === MarkerType.Round || endMarkerType === MarkerType.Round) {
+            body_props['stroke-linecap'] = 'round';
+        } else if (startMarkerType === MarkerType.Square || endMarkerType === MarkerType.Square) {
+            body_props['stroke-linecap'] = 'square';
+        }
     }
     let g_;
     const { length, gap } = border.borderStyle;
@@ -101,7 +110,15 @@ function angular_handler(h: Function, style: Style, border: Border, path: string
         d: path,
         fill: "none",
         stroke: '',
+        "stroke-linejoin": border.cornerType,
         'stroke-width': thickness
+    }
+    if (shape instanceof PathShape && shape.pathsegs.length > 1) {
+        if (startMarkerType === MarkerType.Round || endMarkerType === MarkerType.Round) {
+            body_props['stroke-linecap'] = 'round';
+        } else if (startMarkerType === MarkerType.Square || endMarkerType === MarkerType.Square) {
+            body_props['stroke-linecap'] = 'square';
+        }
     }
     const elArr = new Array();
     const frame = shape.frame;

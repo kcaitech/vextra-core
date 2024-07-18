@@ -1,4 +1,5 @@
 import {
+    ImageShape,
     PathShape,
     PathShape2,
     Shape,
@@ -13,6 +14,7 @@ import { EL, elh } from "./el";
 import { innerShadowId, renderBorders } from "../render";
 import { objectId } from "../basic/objectid";
 import { BlurType, PathSegment } from "../data/typesdefine";
+import { render as renderLineBorders } from "../render/line_borders"
 
 export class PathShapeView extends ShapeView {
 
@@ -57,6 +59,9 @@ export class PathShapeView extends ShapeView {
     // }
 
     protected renderBorders(): EL[] {
+        if((this.segments.length === 1 && !this.segments[0].isClosed) || this.segments.length > 1) {
+            return renderLineBorders(elh,this.data.style, this.getBorders(), this.startMarkerType, this.endMarkerType, this.getPathStr(), this.m_data);
+        }
         return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.m_data);
     }
 

@@ -6,12 +6,6 @@ import { SymbolRefShape } from "./symbolref";
 export class SymbolMgr extends WatchableObject {
     private __resource = new Map<string, { symbols: Array<SymbolShape>, refs: Map<number, SymbolRefShape> }>()
     private __guard?: (data: Shape) => Shape;
-    // private __updater?: (data: SymbolShape) => void;
-    // private __loading: Map<string, {
-    //     id: string,
-    //     resolves: ((v: SymbolShape | undefined) => void)[],
-    //     rejects: ((e?: any) => void)[]
-    // }> = new Map();
     private __crdtpath: string[];
 
     private __regist: Map<string, string>;
@@ -22,12 +16,6 @@ export class SymbolMgr extends WatchableObject {
         this.__guard = guard;
         this.__crdtpath = crdtpath;
     }
-    // get parent() {
-    //     return this.__parent;
-    // }
-    // set parent(parent: Basic | undefined) {
-    //     this.__parent = parent;
-    // }
 
     getCrdtPath(): string[] {
         return this.__crdtpath;
@@ -38,37 +26,11 @@ export class SymbolMgr extends WatchableObject {
     get keys() {
         return Array.from(this.__resource.keys());
     }
-    // get resource() {
-    //     return Array.from(this.__resource.values()).map((v) => v.symbols);
-    // }
+
     get(id: string): SymbolShape | undefined {
         return this._get(id)
-        // if (r) return r;
-        // // 等通知
-        // let loading = this.__loading.get(id);
-        // if (!loading) {
-        //     loading = {
-        //         id,
-        //         resolves: [],
-        //         rejects: []
-        //     }
-        //     this.__loading.set(id, loading);
-        // }
-        // const _loading = loading;
-        // return new Promise<SymbolShape | undefined>((resolve, reject) => {
-        //     _loading.resolves.push(resolve)
-        //     _loading.rejects.push(reject)
-        // })
     }
-    // setUpdater(updater: (data: SymbolShape) => void) {
-    //     this.__updater = updater;
-    // }
-    // getSync(id: string): SymbolShape | undefined {
-    //     return this._get(id)
-    // }
-    // getSync2(id: string): SymbolShape[] | undefined {
-    //     return this.__resource.get(id)?.symbols;
-    // }
+
     add(id: string, r: SymbolShape) {
         r = this.__guard && this.__guard(r) as SymbolShape || r
         let arr = this.__resource.get(id)
@@ -77,22 +39,31 @@ export class SymbolMgr extends WatchableObject {
             this.__resource.set(id, arr);
         }
         arr.symbols.push(r);
-        // if (this.__updater) this.__updater(r);
-
-        // 这时symbolshape可能还没有parent
-        // resolve loading
-        // const loading = this.__loading.get(id);
-        // if (loading) loading.resolves.forEach(r => r(arr));
-        // this.notify(id);
 
         this._notify(id);
 
         return r;
     }
 
+    clearDuplicate(id: string) {
+        const val = this.__resource.get(id)?.symbols
+        if (!val || val.length <= 1) return;
+
+        const s = new Set();
+        for (let i = val.length - 1; i >= 0; --i) {
+            const v = val[i];
+            const p = v.getPage();
+            const t = p ? p.id : 'freesymbols';
+            if (s.has(t)) {
+                val.splice(i, 1);
+            } else {
+                s.add(t);
+            }
+        }
+    }
+
     private _get(id: string) {
         const val = this.__resource.get(id)?.symbols
-        // if (r && r.length > 0) return r;
         if (!val) return undefined;
 
         const reg = this.__regist.get(id);
@@ -118,9 +89,6 @@ export class SymbolMgr extends WatchableObject {
         const run = () => {
             const sym = this._get(id);
             if (!sym) return;
-            // const loading = this.__loading.get(id);
-            // if (loading) loading.resolves.forEach(r => r(sym));
-            // this.notify(id);
 
             const item = this.__resource.get(id)!;
             item.refs.forEach(ref => ref.onSymbolReady());

@@ -34,7 +34,7 @@ const needCompatibleSet = new Set([
     'star-shape',
 ]);
 
-function exportBaseProp(p: BaseProp, source: string, $: Writer) {
+function exportBaseProp(p: BaseProp, source: string, $: Writer, insideArr: boolean) {
     switch (p.type) {
         case 'string':
         case 'number':
@@ -52,10 +52,9 @@ function exportBaseProp(p: BaseProp, source: string, $: Writer) {
                 exportBasePropType(valType, $)
                 $.append('>()')
                 $.nl('const _val = ', source, ' as any')
-                $.nl('Object.keys(', source, ').forEach((k) => ').sub(() => {
-                    $.nl('const val = _val[k]')
+                $.nl('objkeys(_val).forEach((val, k) => ').sub(() => {
                     $.nl('ret.set(k, ')
-                    exportBaseProp(p.val, 'val', $)
+                    exportBaseProp(p.val, 'val', $, insideArr)
                     $.append(')')
                 }).append(')')
                 $.nl('return ret')
@@ -81,7 +80,7 @@ function exportBaseProp(p: BaseProp, source: string, $: Writer) {
                             usedArray = true;
                             $.nl('if (Array.isArray(', source, ')) ').sub(() => {
                                 $.nl('return ')
-                                exportBaseProp(v, source, $)
+                                exportBaseProp(v, source, $, insideArr)
                             })
                             prop.splice(i, 1);
                             continue;
@@ -99,7 +98,7 @@ function exportBaseProp(p: BaseProp, source: string, $: Writer) {
                         if (!n) throw new Error('not find node ' + v.val);
                         if (n.schemaId) {
                             $.fmt(`if (${source}.typeId === "${n.schemaId}") {
-                                ${n && n.schemaId && needCompatibleSet.has(n.schemaId) ? `if (!${source}.crdtidx) ${source}.crdtidx = [i]` : ''}
+                                ${insideArr && n && n.schemaId && needCompatibleSet.has(n.schemaId) ? `if (!${source}.crdtidx) ${source}.crdtidx = [i]` : ''}
                                 return import${v.val}(${source} as types.${v.val}, ctx)
                             }`)
                         } else {
@@ -152,7 +151,7 @@ function exportObject(n: Node, $: Writer) {
             if (extend && superoptional.length > 0) $.nl('import', extend, 'Optional(tar, source)')
             localoptional.forEach((v) => {
                 $.nl('if (source.', v.name, ') ', 'tar.', v.name, ' = ');
-                exportBaseProp(v, 'source.' + v.name, $);
+                exportBaseProp(v, 'source.' + v.name, $, false);
             })
         })
     } else if (extend && superoptional.length > 0) {
@@ -177,7 +176,7 @@ function exportObject(n: Node, $: Writer) {
                 if (v.name === 'typeId') return;
                 if (j > 0) $.append(',').newline();
                 $.indent();
-                exportBaseProp(v, 'source.' + v.name, $);
+                exportBaseProp(v, 'source.' + v.name, $, false);
                 ++j;
             })
         });
@@ -217,7 +216,7 @@ function exportNode(n: Node, $: Writer) {
                     }
                 }
                 $.nl('ret.push(')
-                exportBaseProp(item, 'source', $)
+                exportBaseProp(item, 'source', $, true)
                 $.append(')')
             }).append(')')
             $.nl('return ret')
@@ -269,6 +268,10 @@ export function gen(out: string) {
         $.nl('curPage: string')
         $.nl('fmtVer: number')
     })
+
+    $.fmt(`function objkeys(obj: any) {
+        return obj instanceof Map ? obj : { forEach: (f: (v: any, k: string) => void) => Object.keys(obj).forEach((k) => f(obj[k], k)) };
+    }`)
 
     // 先将inner类型声明一下
     for (let i = 0, len = nodes.length; i < len; ++i) {
