@@ -18,18 +18,19 @@ import {
     CornerRadius,
     Blur,
     ShapeSize,
-    Transform
-} from "../data/classes";
+    Transform,
+    BasicArray,
+    makeShapeTransform2By1,
+    makeShapeTransform1By2
+} from "../data";
 import { findOverrideAndVar } from "./basic";
 import { EL, elh } from "./el";
 import { Matrix } from "../basic/matrix";
 import { DataView } from "./view"
 import { DViewCtx, PropsType } from "./viewctx";
 import { objectId } from "../basic/objectid";
-import { BasicArray } from "../data/basic";
 import { fixConstrainFrame } from "../data/constrain";
-import { BlurType, MarkerType } from "../data/typesdefine";
-import { makeShapeTransform2By1, makeShapeTransform1By2 } from "../data/shape_transform_util";
+import { BlurType, MarkerType } from "../data";
 import { Transform as Transform2 } from "../basic/transform";
 import { GroupShapeView } from "./groupshape";
 

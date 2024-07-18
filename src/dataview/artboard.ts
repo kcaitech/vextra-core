@@ -3,8 +3,8 @@ import { GroupShapeView } from "./groupshape";
 import { innerShadowId, renderBorders, renderFills } from "../render";
 import { objectId } from "../basic/objectid";
 import { render as clippathR } from "../render/clippath"
-import { Artboard } from "../data/artboard";
-import { BlurType, CornerRadius, Page } from "../data/classes";
+import { Artboard } from "../data";
+import { BlurType, CornerRadius, Page } from "../data";
 
 
 export class ArtboradView extends GroupShapeView {
