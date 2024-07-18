@@ -8,7 +8,6 @@ export interface IImportContext {
     curPage: string
 }
 type Artboard_guides = BasicArray<impl.Guide>
-type Artboard_prototypeInteractions = BasicArray<impl.PrototypeInterAction>
 type DocumentMeta_pagesList = BasicArray<impl.PageListItem>
 type ExportOptions_exportFormats = BasicArray<impl.ExportFormat>
 type Gradient_stops = BasicArray<impl.Stop>
@@ -21,15 +20,13 @@ type PathShape_pathsegs = BasicArray<impl.PathSegment>
 type PathShape2_pathsegs = BasicArray<impl.PathSegment>
 type PrototypeActions_easingFunction = BasicArray<number>
 type PrototypeInterAction_crdtidx = BasicArray<number>
-type PrototypeInterAction_actions = BasicArray<impl.PrototypeActions>
+type Shape_prototypeInteractions = BasicArray<impl.PrototypeInterAction>
 type Style_borders = BasicArray<impl.Border>
 type Style_fills = BasicArray<impl.Fill>
 type Style_shadows = BasicArray<impl.Shadow>
 type Style_innerShadows = BasicArray<impl.Shadow>
 type Style_contacts = BasicArray<impl.ContactRole>
-type SymbolRefShape_prototypeInteractions = BasicArray<impl.PrototypeInterAction>
 type SymbolShape_guides = BasicArray<impl.Guide>
-type SymbolShape_prototypeInteractions = BasicArray<impl.PrototypeInterAction>
 type TableShape_rowHeights = BasicArray<impl.CrdtNumber>
 type TableShape_colWidths = BasicArray<impl.CrdtNumber>
 type Text_paras = BasicArray<impl.Para>
@@ -38,13 +35,6 @@ export function importArtboard_guides(source: types.Artboard_guides, ctx?: IImpo
     const ret: Artboard_guides = new BasicArray()
     source.forEach((source, i) => {
         ret.push(importGuide(source, ctx))
-    })
-    return ret
-}
-export function importArtboard_prototypeInteractions(source: types.Artboard_prototypeInteractions, ctx?: IImportContext): Artboard_prototypeInteractions {
-    const ret: Artboard_prototypeInteractions = new BasicArray()
-    source.forEach((source, i) => {
-        ret.push(importPrototypeInterAction(source, ctx))
     })
     return ret
 }
@@ -517,24 +507,21 @@ export function importPrototypeEvents(source: types.PrototypeEvents, ctx?: IImpo
     return source
 }
 /* extraScrollOffset */
+function importPrototypeExtrascrolloffsetOptional(tar: impl.PrototypeExtrascrolloffset, source: types.PrototypeExtrascrolloffset, ctx?: IImportContext) {
+    if (source.typeId) tar.typeId = source.typeId
+}
 export function importPrototypeExtrascrolloffset(source: types.PrototypeExtrascrolloffset, ctx?: IImportContext): impl.PrototypeExtrascrolloffset {
     const ret: impl.PrototypeExtrascrolloffset = new impl.PrototypeExtrascrolloffset (
         source.id,
         source.x,
         source.y)
+    importPrototypeExtrascrolloffsetOptional(ret, source, ctx)
     return ret
 }
 export function importPrototypeInterAction_crdtidx(source: types.PrototypeInterAction_crdtidx, ctx?: IImportContext): PrototypeInterAction_crdtidx {
     const ret: PrototypeInterAction_crdtidx = new BasicArray()
     source.forEach((source, i) => {
         ret.push(source)
-    })
-    return ret
-}
-export function importPrototypeInterAction_actions(source: types.PrototypeInterAction_actions, ctx?: IImportContext): PrototypeInterAction_actions {
-    const ret: PrototypeInterAction_actions = new BasicArray()
-    source.forEach((source, i) => {
-        ret.push(importPrototypeActions(source, ctx))
     })
     return ret
 }
@@ -594,6 +581,13 @@ export function importShapeFrame(source: types.ShapeFrame, ctx?: IImportContext)
 export function importShapeType(source: types.ShapeType, ctx?: IImportContext): impl.ShapeType {
     return source
 }
+export function importShape_prototypeInteractions(source: types.Shape_prototypeInteractions, ctx?: IImportContext): Shape_prototypeInteractions {
+    const ret: Shape_prototypeInteractions = new BasicArray()
+    source.forEach((source, i) => {
+        ret.push(importPrototypeInterAction(source, ctx))
+    })
+    return ret
+}
 /* side type */
 export function importSideType(source: types.SideType, ctx?: IImportContext): impl.SideType {
     return source
@@ -651,24 +645,10 @@ export function importStyle_contacts(source: types.Style_contacts, ctx?: IImport
     })
     return ret
 }
-export function importSymbolRefShape_prototypeInteractions(source: types.SymbolRefShape_prototypeInteractions, ctx?: IImportContext): SymbolRefShape_prototypeInteractions {
-    const ret: SymbolRefShape_prototypeInteractions = new BasicArray()
-    source.forEach((source, i) => {
-        ret.push(importPrototypeInterAction(source, ctx))
-    })
-    return ret
-}
 export function importSymbolShape_guides(source: types.SymbolShape_guides, ctx?: IImportContext): SymbolShape_guides {
     const ret: SymbolShape_guides = new BasicArray()
     source.forEach((source, i) => {
         ret.push(importGuide(source, ctx))
-    })
-    return ret
-}
-export function importSymbolShape_prototypeInteractions(source: types.SymbolShape_prototypeInteractions, ctx?: IImportContext): SymbolShape_prototypeInteractions {
-    const ret: SymbolShape_prototypeInteractions = new BasicArray()
-    source.forEach((source, i) => {
-        ret.push(importPrototypeInterAction(source, ctx))
     })
     return ret
 }
@@ -931,7 +911,7 @@ export function importPrototypeInterAction(source: types.PrototypeInterAction, c
         importPrototypeInterAction_crdtidx(source.crdtidx, ctx),
         source.id,
         importPrototypeEvent(source.event, ctx),
-        importPrototypeInterAction_actions(source.actions, ctx))
+        importPrototypeActions(source.actions, ctx))
     importPrototypeInterActionOptional(ret, source, ctx)
     return ret
 }
@@ -1146,6 +1126,11 @@ function importShapeOptional(tar: impl.Shape, source: types.Shape, ctx?: IImport
         return ret
     })()
     if (source.haveEdit) tar.haveEdit = source.haveEdit
+    if (source.prototypeStartingPoint) tar.prototypeStartingPoint = importPrototypeStartingPoint(source.prototypeStartingPoint, ctx)
+    if (source.prototypeInteractions) tar.prototypeInteractions = importShape_prototypeInteractions(source.prototypeInteractions, ctx)
+    if (source.overlayPositionType) tar.overlayPositionType = importOverlayPositions(source.overlayPositionType, ctx)
+    if (source.overlayBackgroundInteraction) tar.overlayBackgroundInteraction = importOverlayBackgroundInteraction(source.overlayBackgroundInteraction, ctx)
+    if (source.overlayBackgroundAppearance) tar.overlayBackgroundAppearance = importOverlayBackgroundAppearance(source.overlayBackgroundAppearance, ctx)
 }
 export function importShape(source: types.Shape, ctx?: IImportContext): impl.Shape {
     const ret: impl.Shape = new impl.Shape (
@@ -1480,8 +1465,6 @@ function importSymbolRefShapeOptional(tar: impl.SymbolRefShape, source: types.Sy
     })()
     if (source.isCustomSize) tar.isCustomSize = source.isCustomSize
     if (source.cornerRadius) tar.cornerRadius = importCornerRadius(source.cornerRadius, ctx)
-    if (source.prototypeStartingPoint) tar.prototypeStartingPoint = importPrototypeStartingPoint(source.prototypeStartingPoint, ctx)
-    if (source.prototypeInteractions) tar.prototypeInteractions = importSymbolRefShape_prototypeInteractions(source.prototypeInteractions, ctx)
 }
 export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImportContext): impl.SymbolRefShape {
         // inject code
@@ -1741,11 +1724,6 @@ function importArtboardOptional(tar: impl.Artboard, source: types.Artboard, ctx?
     importGroupShapeOptional(tar, source)
     if (source.cornerRadius) tar.cornerRadius = importCornerRadius(source.cornerRadius, ctx)
     if (source.guides) tar.guides = importArtboard_guides(source.guides, ctx)
-    if (source.prototypeStartingPoint) tar.prototypeStartingPoint = importPrototypeStartingPoint(source.prototypeStartingPoint, ctx)
-    if (source.prototypeInteractions) tar.prototypeInteractions = importArtboard_prototypeInteractions(source.prototypeInteractions, ctx)
-    if (source.overlayPositionType) tar.overlayPositionType = importOverlayPositions(source.overlayPositionType, ctx)
-    if (source.overlayBackgroundInteraction) tar.overlayBackgroundInteraction = importOverlayBackgroundInteraction(source.overlayBackgroundInteraction, ctx)
-    if (source.overlayBackgroundAppearance) tar.overlayBackgroundAppearance = importOverlayBackgroundAppearance(source.overlayBackgroundAppearance, ctx)
 }
 export function importArtboard(source: types.Artboard, ctx?: IImportContext): impl.Artboard {
     const ret: impl.Artboard = new impl.Artboard (
@@ -1833,8 +1811,6 @@ function importSymbolShapeOptional(tar: impl.SymbolShape, source: types.SymbolSh
     })()
     if (source.cornerRadius) tar.cornerRadius = importCornerRadius(source.cornerRadius, ctx)
     if (source.guides) tar.guides = importSymbolShape_guides(source.guides, ctx)
-    if (source.prototypeStartingPoint) tar.prototypeStartingPoint = importPrototypeStartingPoint(source.prototypeStartingPoint, ctx)
-    if (source.prototypeInteractions) tar.prototypeInteractions = importSymbolShape_prototypeInteractions(source.prototypeInteractions, ctx)
 }
 export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContext): impl.SymbolShape {
     const ret: impl.SymbolShape = new impl.SymbolShape (

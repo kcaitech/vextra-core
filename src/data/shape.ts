@@ -14,6 +14,7 @@ import {
     ShapeFrame,
     ShapeType,
     VariableType,
+    PrototypeInterAction
 } from "./baseclasses"
 import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
@@ -74,6 +75,9 @@ export class Shape extends Basic implements classes.Shape {
         if (id0 === 'style') return this.style.getOpTarget(path.slice(1));
         if (id0 === 'varbinds' && !this.varbinds) this.varbinds = new BasicMap();
         if (id0 === "exportOptions" && !this.exportOptions) this.exportOptions = new ExportOptions(new BasicArray(), 0, false, false, false, false);
+        if (id0 === "prototypeInteractions" && !this.prototypeInteractions) {
+            this.prototypeInteractions = new BasicArray<PrototypeInterAction>();
+        }
         return super.getOpTarget(path);
     }
 
@@ -101,9 +105,12 @@ export class Shape extends Basic implements classes.Shape {
     hasClippingMask?: boolean
     shouldBreakMaskChain?: boolean
     varbinds?: BasicMap<string, string>
-
     haveEdit?: boolean | undefined
-
+    prototypeStartingPoint?: classes.PrototypeStartingPoint;
+    prototypeInteractions?: BasicArray<PrototypeInterAction>;
+    overlayPositionType?: classes.OverlayPositions;
+    overlayBackgroundInteraction?: classes.OverlayBackgroundInteraction;
+    overlayBackgroundAppearance?: classes.OverlayBackgroundAppearance;
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
@@ -713,8 +720,6 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
     symtags?: BasicMap<string, string>
     cornerRadius?: CornerRadius
     guides?: BasicArray<Guide>
-    prototypeStartingPoint?: classes.PrototypeStartingPoint
-    prototypeInteractions?: BasicArray<classes.PrototypeInterAction>
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
@@ -725,8 +730,6 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         childs: BasicArray<Shape>,
         variables: BasicMap<string, Variable>,
         guides?: BasicArray<Guide>,
-        prototypeStartingPoint?: classes.PrototypeStartingPoint,
-        prototypeInteractions?: BasicArray<classes.PrototypeInterAction>
     ) {
         super(
             crdtidx,
@@ -739,8 +742,6 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         )
         this.variables = variables;
         this.guides = guides;
-        this.prototypeStartingPoint = prototypeStartingPoint
-        this.prototypeInteractions = prototypeInteractions
     }
 
     getOpTarget(path: string[]): any {

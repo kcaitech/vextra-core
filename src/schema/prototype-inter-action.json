@@ -8,8 +8,8 @@
                 "type": "number"
             }
         },
-        "typeId":{
-            "type":"string"
+        "typeId": {
+            "type": "string"
         },
         "id": {
             "type": "string"
@@ -18,10 +18,7 @@
             "$ref": "./prototype-event.json"
         },
         "actions": {
-            "type": "array",
-            "items": {
-                "$ref": "./prototype-actions.json"
-            }
+            "$ref": "./prototype-actions.json"
         }
     },
     "required": [

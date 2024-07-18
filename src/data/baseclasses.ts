@@ -95,7 +95,6 @@ import {
 } from "./typesdefine"
 import { Basic, BasicArray, BasicMap } from "./basic"
 type Artboard_guides = BasicArray<Guide>
-type Artboard_prototypeInteractions = BasicArray<PrototypeInterAction>
 /* border style */
 export class BorderStyle extends Basic {
     typeId = "border-style"
@@ -356,7 +355,6 @@ export class PrototypeExtrascrolloffset extends Basic {
     }
 }
 type PrototypeInterAction_crdtidx = BasicArray<number>
-type PrototypeInterAction_actions = BasicArray<PrototypeActions>
 /* prototypeStartingPoint */
 export class PrototypeStartingPoint extends Basic {
     typeId = "prototype-starting-point"
@@ -411,6 +409,7 @@ export class ShapeFrame extends Basic {
         this.height = height
     }
 }
+type Shape_prototypeInteractions = BasicArray<PrototypeInterAction>
 /* stop */
 export class Stop extends Basic {
     typeId = "stop"
@@ -431,9 +430,7 @@ type Style_fills = BasicArray<Fill>
 type Style_shadows = BasicArray<Shadow>
 type Style_innerShadows = BasicArray<Shadow>
 type Style_contacts = BasicArray<ContactRole>
-type SymbolRefShape_prototypeInteractions = BasicArray<PrototypeInterAction>
 type SymbolShape_guides = BasicArray<Guide>
-type SymbolShape_prototypeInteractions = BasicArray<PrototypeInterAction>
 type TableShape_rowHeights = BasicArray<CrdtNumber>
 type TableShape_colWidths = BasicArray<CrdtNumber>
 type Text_paras = BasicArray<Para>
@@ -663,8 +660,8 @@ export class PrototypeInterAction extends Basic {
     crdtidx: PrototypeInterAction_crdtidx
     id: string
     event: PrototypeEvent
-    actions: PrototypeInterAction_actions
-    constructor(crdtidx: PrototypeInterAction_crdtidx, id: string, event: PrototypeEvent, actions: PrototypeInterAction_actions) {
+    actions: PrototypeActions
+    constructor(crdtidx: PrototypeInterAction_crdtidx, id: string, event: PrototypeEvent, actions: PrototypeActions) {
         super()
         this.crdtidx = crdtidx
         this.id = id
@@ -853,6 +850,11 @@ export class Shape extends Basic {
     shouldBreakMaskChain?: boolean
     varbinds?: BasicMap<string, string>
     haveEdit?: boolean
+    prototypeStartingPoint?: PrototypeStartingPoint
+    prototypeInteractions?: Shape_prototypeInteractions
+    overlayPositionType?: OverlayPositions
+    overlayBackgroundInteraction?: OverlayBackgroundInteraction
+    overlayBackgroundAppearance?: OverlayBackgroundAppearance
     constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, frame: ShapeFrame, style: Style) {
         super()
         this.crdtidx = crdtidx
@@ -991,8 +993,6 @@ export class SymbolRefShape extends Shape {
     overrides?: BasicMap<string, string>
     isCustomSize?: boolean
     cornerRadius?: CornerRadius
-    prototypeStartingPoint?: PrototypeStartingPoint
-    prototypeInteractions?: SymbolRefShape_prototypeInteractions
     constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, frame: ShapeFrame, style: Style, refId: string, variables: BasicMap<string, Variable>) {
         super(crdtidx, id, name, type, frame, style)
         this.refId = refId
@@ -1063,8 +1063,6 @@ export class SymbolShape extends GroupShape {
     symtags?: BasicMap<string, string>
     cornerRadius?: CornerRadius
     guides?: SymbolShape_guides
-    prototypeStartingPoint?: PrototypeStartingPoint
-    prototypeInteractions?: SymbolShape_prototypeInteractions
     constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, frame: ShapeFrame, style: Style, childs: GroupShape_childs, variables: BasicMap<string, Variable>) {
         super(crdtidx, id, name, type, frame, style, childs)
         this.variables = variables
@@ -1079,11 +1077,6 @@ export class Artboard extends GroupShape {
     typeId = "artboard"
     cornerRadius?: CornerRadius
     guides?: Artboard_guides
-    prototypeStartingPoint?: PrototypeStartingPoint
-    prototypeInteractions?: Artboard_prototypeInteractions
-    overlayPositionType?: OverlayPositions
-    overlayBackgroundInteraction?: OverlayBackgroundInteraction
-    overlayBackgroundAppearance?: OverlayBackgroundAppearance
 }
 /* bool shape */
 export class BoolShape extends GroupShape {

@@ -84,6 +84,24 @@
         },
         "haveEdit": {
             "type": "boolean"
+        },
+        "prototypeStartingPoint": {
+            "$ref": "./prototype-starting-point.json"
+        },
+        "prototypeInteractions": {
+            "type": "array",
+            "items": {
+                "$ref": "./prototype-inter-action.json"
+            }
+        },
+        "overlayPositionType":{
+            "$ref": "./overlay-positions.json"
+        },
+        "overlayBackgroundInteraction":{
+             "$ref": "./overlay-background-interaction.json"
+        },
+        "overlayBackgroundAppearance":{
+            "$ref":"./overlay-background-appearance.json"
         }
     },
     "required": [

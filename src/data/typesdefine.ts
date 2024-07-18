@@ -1,6 +1,5 @@
 /* 代码生成，勿手动修改 */
 export type Artboard_guides = Array<Guide>
-export type Artboard_prototypeInteractions = Array<PrototypeInterAction>
 /* blend mode */
 export enum BlendMode {
     Normal = "normal",
@@ -372,13 +371,12 @@ export enum PrototypeEvents {
 }
 /* extraScrollOffset */
 export type PrototypeExtrascrolloffset = {
-    typeId: string,
     id: string,
     x: number,
     y: number,
+    typeId?: string,
 }
 export type PrototypeInterAction_crdtidx = Array<number>
-export type PrototypeInterAction_actions = Array<PrototypeActions>
 /* navigationType */
 export enum PrototypeNavigationType {
     NAVIGATE = "NAVIGATE",
@@ -478,6 +476,7 @@ export enum ShapeType {
     Cutout = "cutout",
     BoolShape = "bool-shape",
 }
+export type Shape_prototypeInteractions = Array<PrototypeInterAction>
 /* side type */
 export enum SideType {
     Normal = "normal",
@@ -505,9 +504,7 @@ export type Style_fills = Array<Fill>
 export type Style_shadows = Array<Shadow>
 export type Style_innerShadows = Array<Shadow>
 export type Style_contacts = Array<ContactRole>
-export type SymbolRefShape_prototypeInteractions = Array<PrototypeInterAction>
 export type SymbolShape_guides = Array<Guide>
-export type SymbolShape_prototypeInteractions = Array<PrototypeInterAction>
 /* table cell types */
 export enum TableCellType {
     None = "none",
@@ -703,7 +700,7 @@ export type PrototypeInterAction = {
     crdtidx: PrototypeInterAction_crdtidx,
     id: string,
     event: PrototypeEvent,
-    actions: PrototypeInterAction_actions,
+    actions: PrototypeActions,
     typeId?: string,
 }
 /* span attr */
@@ -842,6 +839,11 @@ export type Shape = {
     shouldBreakMaskChain?: boolean,
     varbinds?: Map<string, string>,
     haveEdit?: boolean,
+    prototypeStartingPoint?: PrototypeStartingPoint,
+    prototypeInteractions?: Shape_prototypeInteractions,
+    overlayPositionType?: OverlayPositions,
+    overlayBackgroundInteraction?: OverlayBackgroundInteraction,
+    overlayBackgroundAppearance?: OverlayBackgroundAppearance,
 }
 /* table cell */
 export type TableCell = Shape & {
@@ -910,8 +912,6 @@ export type SymbolRefShape = Shape & {
     overrides?: Map<string, string>,
     isCustomSize?: boolean,
     cornerRadius?: CornerRadius,
-    prototypeStartingPoint?: PrototypeStartingPoint,
-    prototypeInteractions?: SymbolRefShape_prototypeInteractions,
 }
 /* contact shape */
 export type ContactShape = PathShape & {
@@ -937,11 +937,6 @@ export type OvalShape = PathShape & {
 export type Artboard = GroupShape & {
     cornerRadius?: CornerRadius,
     guides?: Artboard_guides,
-    prototypeStartingPoint?: PrototypeStartingPoint,
-    prototypeInteractions?: Artboard_prototypeInteractions,
-    overlayPositionType?: OverlayPositions,
-    overlayBackgroundInteraction?: OverlayBackgroundInteraction,
-    overlayBackgroundAppearance?: OverlayBackgroundAppearance,
 }
 /* bool shape */
 export type BoolShape = GroupShape
@@ -961,8 +956,6 @@ export type SymbolShape = GroupShape & {
     symtags?: Map<string, string>,
     cornerRadius?: CornerRadius,
     guides?: SymbolShape_guides,
-    prototypeStartingPoint?: PrototypeStartingPoint,
-    prototypeInteractions?: SymbolShape_prototypeInteractions,
 }
 /* symbol union shape */
 export type SymbolUnionShape = SymbolShape

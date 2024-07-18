@@ -921,4 +921,23 @@ export class ShapeView extends DataView {
     get isImageFill() {
         return this.m_data.getImageFill();
     }
+    get prototypeStartPoint() {
+        return this.m_data.prototypeStartingPoint;
+    }
+
+    get prototypeInterAction() {
+        return this.m_data.prototypeInteractions;
+    }
+
+    get overlayPositionType(){
+        return this.m_data.overlayPositionType
+    }
+
+    get overlayBackgroundInteraction(){
+        return this.m_data.overlayBackgroundInteraction
+    }
+
+    get overlayBackgroundAppearance(){
+        return this.m_data.overlayBackgroundAppearance
+    }
 }

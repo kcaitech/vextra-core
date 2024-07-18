@@ -29,15 +29,6 @@
         },
         "cornerRadius": {
             "$ref": "./corner-radius.json"
-        },
-        "prototypeStartingPoint": {
-          "$ref": "./prototype-starting-point.json"
-        },
-        "prototypeInteractions": {
-            "type": "array",
-            "items": {
-                "$ref": "./prototype-inter-action.json"
-            }
         }
     },
     "required": [
