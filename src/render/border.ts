@@ -1,10 +1,9 @@
 import { render as renderGradient } from "./gradient";
 import { objectId } from '../basic/objectid';
 import {
-    Artboard,
-    Border, BorderPosition, FillType, Gradient, GradientType, ImageShape, OverrideType, RectShape, Shape, ShapeSize, ShapeType, SideType, SymbolRefShape,
+    Border, BorderPosition, FillType, Gradient, GradientType, OverrideType, Shape, ShapeSize, ShapeType, SideType, SymbolRefShape,
     SymbolShape, VariableType
-} from "../data/classes";
+} from "../data";
 import { findOverrideAndVar, randomId } from "./basic";
 import { renderCustomBorder } from "./border_custom";
 

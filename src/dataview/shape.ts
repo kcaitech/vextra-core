@@ -485,6 +485,10 @@ export class ShapeView extends DataView {
         return Boolean((this.parent as GroupShapeView)?.maskMap.get(this.id) && !this.m_data.mask);
     }
 
+    get maskId(): string {
+        return (this.parent as GroupShapeView)?.maskMap.get(this.id) || '';
+    }
+
     // prepare() {
     //     // prepare path
     //     // prepare frame
