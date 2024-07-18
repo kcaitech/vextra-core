@@ -170,6 +170,10 @@ export class DataView extends EventEL {
 
     }
 
+    get isDistroyed() {
+        return this.m_isdistroyed;
+    }
+
     onDataChange(...args: any[]) {
     }
 
