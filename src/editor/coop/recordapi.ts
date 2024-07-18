@@ -496,7 +496,7 @@ export class Api {
         checkShapeAtPage(page, shape)
         const prototypeInteractions = (shape as Artboard).prototypeInteractions;
         if (!prototypeInteractions) return;
-        const action = prototypeInteractions?.find(i => i.id === id)?.actions[0];
+        const action = prototypeInteractions?.find(i => i.id === id)?.actions;
         if (!action) return;
         this.addOp(basicapi.crdtSetAttr(action, 'connectionType', conn))
         this.addOp(basicapi.crdtSetAttr(action, 'navigationType', nav))
@@ -506,7 +506,7 @@ export class Api {
         checkShapeAtPage(page, shape)
         const prototypeInteractions = (shape as Artboard).prototypeInteractions;
         if (!prototypeInteractions) return;
-        const action = prototypeInteractions?.find(i => i.id === id)?.actions[0];
+        const action = prototypeInteractions?.find(i => i.id === id)?.actions;
         if (!action) return;
         this.addOp(basicapi.crdtSetAttr(action, 'targetNodeID', value))
     }
@@ -515,7 +515,7 @@ export class Api {
         checkShapeAtPage(page, shape)
         const prototypeInteractions = (shape as Artboard).prototypeInteractions;
         if (!prototypeInteractions) return;
-        const action = prototypeInteractions?.find(i => i.id === id)?.actions[0];
+        const action = prototypeInteractions?.find(i => i.id === id)?.actions;
         if (!action) return;
         this.addOp(basicapi.crdtSetAttr(action, 'transitionType', value))
     }
@@ -524,7 +524,7 @@ export class Api {
         checkShapeAtPage(page, shape)
         const prototypeInteractions = (shape as Artboard).prototypeInteractions;
         if (!prototypeInteractions) return;
-        const action = prototypeInteractions?.find(i => i.id === id)?.actions[0];
+        const action = prototypeInteractions?.find(i => i.id === id)?.actions;
         if (!action) return;
         this.addOp(basicapi.crdtSetAttr(action, 'transitionDuration', value))
     }
@@ -533,7 +533,7 @@ export class Api {
         checkShapeAtPage(page, shape)
         const prototypeInteractions = (shape as Artboard).prototypeInteractions;
         if (!prototypeInteractions) return;
-        const action = prototypeInteractions?.find(i => i.id === id)?.actions[0];
+        const action = prototypeInteractions?.find(i => i.id === id)?.actions;
         if (!action) return;
         this.addOp(basicapi.crdtSetAttr(action, 'easingType', value));
         this.addOp(basicapi.crdtSetAttr(action, 'easingFunction', esfn))
@@ -543,7 +543,7 @@ export class Api {
         checkShapeAtPage(page, shape)
         const prototypeInteractions = (shape as Artboard).prototypeInteractions;
         if (!prototypeInteractions) return;
-        const action = prototypeInteractions?.find(i => i.id === id)?.actions[0];
+        const action = prototypeInteractions?.find(i => i.id === id)?.actions;
         if (!action) return;
         this.addOp(basicapi.crdtSetAttr(action, 'connectionURL', value))
     }
@@ -552,7 +552,7 @@ export class Api {
         checkShapeAtPage(page, shape)
         const prototypeInteractions = (shape as Artboard).prototypeInteractions;
         if (!prototypeInteractions) return;
-        const action = prototypeInteractions?.find(i => i.id === id)?.actions[0];
+        const action = prototypeInteractions?.find(i => i.id === id)?.actions;
         if (!action) return;
         this.addOp(basicapi.crdtSetAttr(action, 'openUrlInNewTab', value))
     }
@@ -561,7 +561,7 @@ export class Api {
         checkShapeAtPage(page, shape)
         const prototypeInteractions = (shape as Artboard).prototypeInteractions;
         if (!prototypeInteractions) return;
-        const action = prototypeInteractions?.find(i => i.id === id)?.actions[0];
+        const action = prototypeInteractions?.find(i => i.id === id)?.actions;
         if (!action) return;
         this.addOp(basicapi.crdtSetAttr(action, 'easingFunction', value))
     }
@@ -570,7 +570,7 @@ export class Api {
         checkShapeAtPage(page, shape)
         const prototypeInteractions = (shape as Artboard).prototypeInteractions;
         if (!prototypeInteractions) return;
-        const action = prototypeInteractions?.find(i => i.id === id)?.actions[0];
+        const action = prototypeInteractions?.find(i => i.id === id)?.actions;
         if (!action) return;
         let extraScrollOffset = action.extraScrollOffset
         if (!extraScrollOffset) {
@@ -585,7 +585,7 @@ export class Api {
         checkShapeAtPage(page, shape)
         const prototypeInteractions = (shape as Artboard).prototypeInteractions;
         if (!prototypeInteractions) return;
-        const action = prototypeInteractions?.find(i => i.id === id)?.actions[0];
+        const action = prototypeInteractions?.find(i => i.id === id)?.actions;
         if (!action) return;
         let extraScrollOffset = action.extraScrollOffset
         if (!extraScrollOffset) {
