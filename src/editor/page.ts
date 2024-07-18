@@ -59,7 +59,7 @@ import {
     Transform
 } from "../data/classes";
 import { TextShapeEditor } from "./textshape";
-import { modify_frame_after_insert, set_childs_id, transform_data } from "../io/cilpboard";
+import { set_childs_id, transform_data } from "../io/cilpboard";
 import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
 import { render2path } from "../render";
 import { Matrix } from "../basic/matrix";
@@ -121,7 +121,7 @@ import {
     OverlayBackgroundInteraction,
     OverlayBackgroundAppearance
 } from "../data/baseclasses";
-import { calculateInnerAnglePosition, getPolygonPoints, getPolygonVertices, get_rotate_for_straight, is_straight, update_frame_by_points } from "./utils/path";
+import { calculateInnerAnglePosition, getPolygonPoints, getPolygonVertices, update_frame_by_points } from "./utils/path";
 import { modify_shapes_height, modify_shapes_width } from "./utils/common";
 import { CoopRepository } from "./coop/cooprepo";
 import { Api, TextShapeLike } from "./coop/recordapi";
@@ -1021,37 +1021,41 @@ export class PageEditor {
     }
 
     flattenBoolShape(shape: BoolShape): PathShape | false {
-        // if (!shape.isBoolOpShape) return false;
-        const parent = shape.parent as GroupShape;
-        if (!parent) return false;
-
-        const path = render2path(shape);
-
-        // copy fill and borders
-        const copyStyle = findUsableFillStyle(shape);
-        const style: Style = this.cloneStyle(copyStyle);
-        const borderStyle = findUsableBorderStyle(shape);
-        if (borderStyle !== copyStyle) {
-            style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
-        }
-
-        const gframe = shape.frame;
-        const boundingBox = path.calcBounds();
-        const w = boundingBox.maxX - boundingBox.minX;
-        const h = boundingBox.maxY - boundingBox.minY;
-        const frame = new ShapeFrame(gframe.x + boundingBox.minX, gframe.y + boundingBox.minY, w, h); // clone
-        path.translate(-boundingBox.minX, -boundingBox.minY);
-
-        let pathShape = newPathShape(shape.name, frame, path, style);
-        pathShape.fixedRadius = shape.fixedRadius;
-        const index = parent.indexOfChild(shape);
-        const api = this.__repo.start("flattenBoolShape", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-            const state = {} as SelectionState;
-            if (!isUndo) state.shapes = [pathShape.id];
-            else state.shapes = cmd.saveselection?.shapes || [];
-            selection.restore(state);
-        });
         try {
+            const parent = shape.parent as GroupShape;
+            if (!parent) return false;
+
+            const path = render2path(shape);
+
+            const copyStyle = findUsableFillStyle(shape);
+            const style: Style = this.cloneStyle(copyStyle);
+            const borderStyle = findUsableBorderStyle(shape);
+            if (borderStyle !== copyStyle) {
+                style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
+            }
+
+            const gframe = shape.frame;
+            const boundingBox = path.calcBounds();
+            const x = boundingBox.minX;
+            const y = boundingBox.minY;
+            const w = boundingBox.maxX - boundingBox.minX;
+            const h = boundingBox.maxY - boundingBox.minY;
+            const frame = new ShapeFrame(gframe.x, gframe.y, w, h);
+            path.translate(-boundingBox.minX, -boundingBox.minY);
+            let pathShape = newPathShape(shape.name, frame, path, style);
+            pathShape.fixedRadius = shape.fixedRadius;
+            pathShape.transform = makeShapeTransform1By2(new Transform2() // shape图层坐标系
+                .setTranslate(ColVector3D.FromXY(x, y)) // pathShape图层坐标系
+                .addTransform(makeShapeTransform2By1(shape.transform))) // pathShape在父级坐标系下的transform;
+
+            const index = parent.indexOfChild(shape);
+            const api = this.__repo.start("flattenBoolShape", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+                const state = {} as SelectionState;
+                if (!isUndo) state.shapes = [pathShape.id];
+                else state.shapes = cmd.saveselection?.shapes || [];
+                selection.restore(state);
+            });
+
             api.shapeDelete(this.__document, this.__page, parent, index);
             pathShape = api.shapeInsert(this.__document, this.__page, parent, pathShape, index) as PathShape;
 
@@ -1060,8 +1064,77 @@ export class PageEditor {
         } catch (e) {
             console.log(e)
             this.__repo.rollback();
+            return false;
         }
-        return false;
+    }
+
+    flattenGroup(shape: GroupShape, groupname: string): PathShape | false {
+        try {
+            // step1
+            if (shape.childs.length === 0) return false;
+            const shapes = shape.childs.slice(0).reverse();
+            const pp = shape.parent;
+            if (!(pp instanceof GroupShape)) return false;
+            const style: Style = this.cloneStyle(shape.style);
+            if (style.fills.length === 0) {
+                style.fills.push(newSolidColorFill());
+            }
+
+            let gshape = newBoolShape(groupname, style);
+            gshape.transform = makeShapeTransform1By2(makeShapeTransform2By1(shape.matrix2Root()));
+
+            const api = this.__repo.start("flattenGroup", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+                const state = {} as SelectionState;
+                if (!isUndo) state.shapes = [gshape.id];
+                else state.shapes = cmd.saveselection?.shapes || [];
+                selection.restore(state);
+            });
+
+            let saveidx = pp.indexOfChild(shape);
+            gshape = group(this.__document, this.__page, shapes, gshape, pp, saveidx, api);
+            saveidx = pp.indexOfChild(shape);
+            if (saveidx >= 0) api.shapeDelete(this.__document, this.__page, pp, saveidx);
+            shapes.forEach((shape) => api.shapeModifyBoolOp(this.__page, shape, BoolOp.Union))
+
+            // step 2
+            const parent = gshape.parent as GroupShape;
+            if (!parent) return false;
+
+            const path = render2path(gshape);
+
+            const copyStyle = findUsableFillStyle(gshape);
+            const style2: Style = this.cloneStyle(copyStyle);
+            const borderStyle = findUsableBorderStyle(gshape);
+            if (borderStyle !== copyStyle) {
+                style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
+            }
+
+            const gframe = gshape.frame;
+            const boundingBox = path.calcBounds();
+            const x = boundingBox.minX;
+            const y = boundingBox.minY;
+            const w = boundingBox.maxX - boundingBox.minX;
+            const h = boundingBox.maxY - boundingBox.minY;
+            const frame = new ShapeFrame(gframe.x, gframe.y, w, h);
+            path.translate(-boundingBox.minX, -boundingBox.minY);
+            let pathShape = newPathShape(gshape.name, frame, path, style2);
+            pathShape.fixedRadius = gshape.fixedRadius;
+            pathShape.transform = makeShapeTransform1By2(new Transform2()
+                .setTranslate(ColVector3D.FromXY(x, y))
+                .addTransform(makeShapeTransform2By1(gshape.transform)))
+
+            const index = parent.indexOfChild(gshape);
+
+            api.shapeDelete(this.__document, this.__page, parent, index);
+            pathShape = api.shapeInsert(this.__document, this.__page, parent, pathShape, index) as PathShape;
+
+            this.__repo.commit();
+            return pathShape;
+        } catch (e) {
+            console.log(e)
+            this.__repo.rollback();
+            return false;
+        }
     }
 
     private removeContactSides(api: Api, page: Page, shape: types.ContactShape) {
@@ -2286,6 +2359,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesFillImageRotate(actions: BatchAction[]) {
         const api = this.__repo.start('setShapesFillImageRotate');
         try {
@@ -2299,6 +2373,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesFillImageScale(actions: BatchAction[]) {
         const api = this.__repo.start('setShapesFillImageScale');
         try {
@@ -2312,6 +2387,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesFillEdit(shape: ShapeView, idx: number, edit: boolean) {
         const api = this.__repo.start('setShapesFillEdit');
         try {
@@ -2545,7 +2621,21 @@ export class PageEditor {
                 let borders: BasicArray<Border> = new BasicArray<Border>();
                 let fills: BasicArray<Fill> = new BasicArray<Fill>();
                 for (let b_i = 0; b_i < b.length; b_i++) {
-                    const { isEnabled, color, fillType, gradient, contextSettings, imageRef, transform, paintFilter, imageScaleMode, scale, rotation, originalImageHeight, originalImageWidth } = b[b_i];
+                    const {
+                        isEnabled,
+                        color,
+                        fillType,
+                        gradient,
+                        contextSettings,
+                        imageRef,
+                        transform,
+                        paintFilter,
+                        imageScaleMode,
+                        scale,
+                        rotation,
+                        originalImageHeight,
+                        originalImageWidth
+                    } = b[b_i];
                     const fill = new Fill([i] as BasicArray<number>, uuid(), isEnabled, fillType, color);
                     fill.gradient = gradient;
                     fill.contextSettings = contextSettings;
@@ -2565,7 +2655,21 @@ export class PageEditor {
                     fills.unshift(fill);
                 }
                 for (let f_i = 0; f_i < f.length; f_i++) {
-                    const { isEnabled, color, fillType, gradient, contextSettings, imageRef, transform, paintFilter, imageScaleMode, scale, rotation, originalImageHeight, originalImageWidth } = f[f_i];
+                    const {
+                        isEnabled,
+                        color,
+                        fillType,
+                        gradient,
+                        contextSettings,
+                        imageRef,
+                        transform,
+                        paintFilter,
+                        imageScaleMode,
+                        scale,
+                        rotation,
+                        originalImageHeight,
+                        originalImageWidth
+                    } = f[f_i];
                     let border: Border;
                     let fill_type = fillType;
                     if (fillType === FillType.Pattern) {
@@ -2961,7 +3065,6 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
-
 
     //export cutout
     shapesExportFormatUnify(actions: ExportFormatReplaceAction[]) {
