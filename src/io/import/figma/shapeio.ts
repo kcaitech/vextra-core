@@ -32,6 +32,8 @@ import {
     Gradient,
     GradientType,
     Page,
+    Shadow,
+    ShadowPosition,
     ShapeSize,
     SideType,
     Stop,
@@ -52,11 +54,64 @@ function importColor(color: IJSON, opacity: number = 1) {
     return new Color(color.a * opacity, Math.round(color.r * 255), Math.round(color.g * 255), Math.round(color.b * 255));
 }
 
+function setGradient(
+    type: string,
+    transform: Transform2,
+    stops: {
+        color: {
+            r: number,
+            g: number,
+            b: number,
+            a: number,
+        },
+        position: number,
+    }[],
+    opacity: number,
+    size: any,
+    item: Fill | Border,
+) {
+    if (type === 'GRADIENT_LINEAR') {
+        const {col0: from, col1: to} = transform.transform([
+            ColVector3D.FromXY(0, 0.5),
+            ColVector3D.FromXY(1, 0.5),
+        ])
+
+        const from1 = new Point2D(from.x, from.y)
+        const to1 = new Point2D(to.x, to.y)
+        const colorType = GradientType.Linear
+        const stops1 = stops.map((item, i) => {
+                return new Stop([i] as BasicArray<number>, uuid(), item.position, importColor(item.color))
+            }
+        ) as BasicArray<Stop>
+
+        item.gradient = new Gradient(from1, to1, colorType, stops1 as BasicArray<Stop>, undefined, opacity);
+        item.fillType = FillType.Gradient
+    } else if (type === 'GRADIENT_RADIAL' || type === 'GRADIENT_ANGULAR') {
+        const {col0: from, col1: to} = transform.transform([
+            ColVector3D.FromXY(0.5, 0.5),
+            ColVector3D.FromXY(1, 0.5),
+        ])
+        const decompose = transform.decompose()
+
+        const from1 = new Point2D(from.x, from.y)
+        const to1 = new Point2D(to.x, to.y)
+        const colorType = type === 'GRADIENT_RADIAL' ? GradientType.Radial : GradientType.Angular
+        const elipseLength = decompose.scale.y / decompose.scale.x * size.y / size.x
+        const stops1 = stops.map((item, i) => {
+                return new Stop([i] as BasicArray<number>, uuid(), item.position, importColor(item.color))
+            }
+        ) as BasicArray<Stop>
+
+        item.gradient = new Gradient(from1, to1, colorType, stops1 as BasicArray<Stop>, elipseLength, opacity);
+        item.fillType = FillType.Gradient
+    }
+}
+
 function importFills(style: Style, data: IJSON) {
     const fillPaints = data.fillPaints;
     const fillGeometry = data.fillGeometry;
     if (!fillPaints) return;
-    const size = data['size'] || {x: 1, y: 1};
+    const size = data.size || {x: 1, y: 1};
 
     for (const fill of fillPaints) {
         const type = fill.type;
@@ -65,7 +120,7 @@ function importFills(style: Style, data: IJSON) {
         const visible = fill.visible;
         const blendMode = fill.blendMode;
 
-        const color = fill['color'] || {
+        const color = fill.color || {
             r: 1,
             g: 1,
             b: 1,
@@ -86,41 +141,7 @@ function importFills(style: Style, data: IJSON) {
         const transform = fill.transform ? makeShapeTransform2By1(fill.transform).getInverse() : new Transform2();
         const stopsVar = fill.stopsVar;
 
-        if (type === 'GRADIENT_LINEAR') {
-            const {col0: from, col1: to} = transform.transform([
-                ColVector3D.FromXY(0, 0.5),
-                ColVector3D.FromXY(1, 0.5),
-            ])
-
-            const from1 = new Point2D(from.x, from.y)
-            const to1 = new Point2D(to.x, to.y)
-            const colorType = GradientType.Linear
-            const stops1 = stops.map((item, i) => {
-                    return new Stop([i] as BasicArray<number>, uuid(), item.position, importColor(item.color))
-                }
-            ) as BasicArray<Stop>
-
-            f.gradient = new Gradient(from1, to1, colorType, stops1 as BasicArray<Stop>, undefined, opacity);
-            f.fillType = FillType.Gradient
-        } else if (type === 'GRADIENT_RADIAL' || type === 'GRADIENT_ANGULAR') {
-            const {col0: from, col1: to} = transform.transform([
-                ColVector3D.FromXY(0.5, 0.5),
-                ColVector3D.FromXY(1, 0.5),
-            ])
-            const decompose = transform.decompose()
-
-            const from1 = new Point2D(from.x, from.y)
-            const to1 = new Point2D(to.x, to.y)
-            const colorType = type === 'GRADIENT_RADIAL' ? GradientType.Radial : GradientType.Angular
-            const elipseLength = decompose.scale.y / decompose.scale.x * size.y / size.x
-            const stops1 = stops.map((item, i) => {
-                    return new Stop([i] as BasicArray<number>, uuid(), item.position, importColor(item.color))
-                }
-            ) as BasicArray<Stop>
-
-            f.gradient = new Gradient(from1, to1, colorType, stops1 as BasicArray<Stop>, elipseLength, opacity);
-            f.fillType = FillType.Gradient
-        }
+        setGradient(type, transform, stops, opacity, size, f);
 
         style.fills.push(f);
     }
@@ -130,11 +151,12 @@ function importStroke(style: Style, data: IJSON) {
     const strokePaints = data.strokePaints;
     const strokeGeometry = data.strokeGeometry;
     if (!strokePaints) return;
+    const size = data.size || {x: 1, y: 1};
 
     const strokeAlign = data.strokeAlign;
     const strokeWeight = data.strokeWeight;
     const strokeJoin = data.strokeJoin;
-    const dashPattern = data.dashPattern;
+    const dashPattern = data.dashPattern || [0, 0];
 
     for (const stroke of strokePaints) {
         const type = stroke.type;
@@ -142,41 +164,59 @@ function importStroke(style: Style, data: IJSON) {
         const visible = stroke.visible;
         const blendMode = stroke.blendMode;
 
-        if (type === 'SOLID') {
-            const color = stroke.color;
-            const opacity = stroke.opacity;
+        const stops = stroke.stops as {
+            color: {
+                r: number,
+                g: number,
+                b: number,
+                a: number,
+            },
+            position: number,
+        }[];
+        const transform = stroke.transform ? makeShapeTransform2By1(stroke.transform).getInverse() : new Transform2();
+        const stopsVar = stroke.stopsVar;
 
-            let position: BorderPosition;
-            if (strokeAlign === "INSIDE") position = BorderPosition.Inner;
-            else if (strokeAlign === "CENTER") position = BorderPosition.Center;
-            else position = BorderPosition.Outer;
+        const color = stroke.color || {
+            r: 1,
+            g: 1,
+            b: 1,
+            a: 1,
+        }
+        const opacity = stroke.opacity;
 
-            const borderStyle = new BorderStyle(dashPattern[0], dashPattern[1]);
-            const side = new BorderSideSetting(SideType.Normal, strokeWeight, strokeWeight, strokeWeight, strokeWeight);
+        let position: BorderPosition;
+        if (strokeAlign === "INSIDE") position = BorderPosition.Inner;
+        else if (strokeAlign === "CENTER") position = BorderPosition.Center;
+        else position = BorderPosition.Outer;
 
-            let cornerType: CornerType;
-            if (strokeJoin) {
-                if (strokeJoin === "MITER") cornerType = CornerType.Miter;
-                else if (strokeJoin === "ROUND") cornerType = CornerType.Round;
-                else cornerType = CornerType.Bevel;
-            } else {
-                cornerType = CornerType.Miter;
-            }
+        const borderStyle = new BorderStyle(dashPattern[0], dashPattern[1]);
+        const side = new BorderSideSetting(SideType.Normal, strokeWeight, strokeWeight, strokeWeight, strokeWeight);
 
-            style.borders.push(new Border(
-                [0] as BasicArray<number>,
-                uuid(),
-                true,
-                FillType.SolidColor,
-                importColor(color, opacity),
-                position,
-                strokeWeight,
-                borderStyle,
-                cornerType,
-                side,
-            ))
+        let cornerType: CornerType;
+        if (strokeJoin) {
+            if (strokeJoin === "MITER") cornerType = CornerType.Miter;
+            else if (strokeJoin === "ROUND") cornerType = CornerType.Round;
+            else cornerType = CornerType.Bevel;
+        } else {
+            cornerType = CornerType.Miter;
         }
 
+        const border = new Border(
+            [style.borders.length] as BasicArray<number>,
+            uuid(),
+            true,
+            FillType.SolidColor,
+            importColor(color, opacity),
+            position,
+            strokeWeight,
+            borderStyle,
+            cornerType,
+            side,
+        );
+
+        setGradient(type, transform, stops, opacity, size, border);
+
+        style.borders.push(border)
     }
 }
 
@@ -190,22 +230,36 @@ function importEffects(style: Style, data: IJSON) {
         const visible = effect.visible;
         const blendMode = effect.blendMode;
 
-        if (type === 'DROP_SHADOW') {
-            const color = effect.color;
-            const offset = effect.offset;
-            const radius = effect.radius;
-            const spread = effect.spread;
-            const showShadowBehindNode = effect.showShadowBehindNode;
+        const color = effect.color;
+        const offset = effect.offset;
+        const radius = effect.radius;
+        const spread = effect.spread;
+        const showShadowBehindNode = effect.showShadowBehindNode;
 
+        let shadowType;
+        if (type === 'DROP_SHADOW') shadowType = ShadowPosition.Outer;
+        else if (type === 'INNER_SHADOW') shadowType = ShadowPosition.Inner;
+
+        if (shadowType) {
+            style.shadows.push(new Shadow(
+                [style.shadows.length] as BasicArray<number>,
+                uuid(),
+                visible,
+                radius,
+                importColor(color),
+                offset.x,
+                offset.y,
+                spread,
+                shadowType,
+            ));
         }
-
     }
 }
 
 function importStyle(style: Style, data: IJSON) {
     importFills(style, data);
     importStroke(style, data);
-    importStroke(style, data);
+    importEffects(style, data);
 }
 
 function importShapeFrame(data: IJSON) {
@@ -353,6 +407,27 @@ export function importPathShape(ctx: LoadContext, data: IJSON, f: ImportFun, ind
     return shape;
 }
 
+export function importLine(ctx: LoadContext, data: IJSON, f: ImportFun, index: number): PathShape {
+    const frame = importShapeFrame(data);
+    const visible = data['visible'];
+    const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
+    importStyle(style, data);
+
+    frame.size.width = frame.size.width || 1;
+    frame.size.height = frame.size.height || 1;
+
+    const segment = new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(
+        new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight),
+        new CurvePoint([1] as BasicArray<number>, uuid(), 1, 0, CurveMode.Straight),
+    ), false)
+    const shape = new PathShape([index] as BasicArray<number>, uuid(), data['name'], ShapeType.Path, frame.trans, frame.size, style, new BasicArray<PathSegment>(segment));
+
+    shape.isVisible = visible;
+    shape.style = style;
+
+    return shape;
+}
+
 export function importEllipse(ctx: LoadContext, data: IJSON, f: ImportFun, index: number): OvalShape {
     const frame = importShapeFrame(data);
     const visible = data['visible'];
@@ -368,6 +443,10 @@ export function importEllipse(ctx: LoadContext, data: IJSON, f: ImportFun, index
 }
 
 export function importGroup(ctx: LoadContext, data: IJSON, f: ImportFun, index: number): GroupShape {
+    if (!data.resizeToFit) {
+        return importArtboard(ctx, data, f, index);
+    }
+
     const frame = importShapeFrame(data);
     const visible = data['visible'];
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());

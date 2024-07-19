@@ -87,6 +87,8 @@ export async function importDocument(file: File, gurad: IDataGuard /*inflateRawS
 
     const document = new Document(uuid(), file.name, "", "", pageList, new BasicMap(), gurad);
 
+    console.log(json)
+    console.log(nodeChangesMap)
     startLoader(json, pages, document, nodeChangesMap, unzipped);
 
     return document;

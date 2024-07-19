@@ -5,6 +5,7 @@ import { IJSON, LoadContext } from "./basic";
 import {
     importEllipse,
     importGroup,
+    importLine,
     importPage,
     importRectShape,
     importSymbol,
@@ -95,6 +96,7 @@ export function startLoader(file: IJSON, pages: IJSON[], document: Document, nod
     __handler['ELLIPSE'] = (ctx: LoadContext, data: IJSON, i: number) => importEllipse(ctx, data, importer, i)
     __handler['SYMBOL'] = (ctx: LoadContext, data: IJSON, i: number) => importSymbol(ctx, data, importer, i)
     __handler['INSTANCE'] = (ctx: LoadContext, data: IJSON, i: number) => importSymbolRef(ctx, data, importer, i, nodeChangesMap)
+    __handler['LINE'] = (ctx: LoadContext, data: IJSON, i: number) => importLine(ctx, data, importer, i)
     // __handler['star'] = (ctx: LoadContext, data: IJSON, i: number) => importPathShape(ctx, data, importer, i)
     // __handler['triangle'] = (ctx: LoadContext, data: IJSON, i: number) => importPathShape(ctx, data, importer, i)
     // __handler['polygon'] = (ctx: LoadContext, data: IJSON, i: number) => importPathShape(ctx, data, importer, i)
