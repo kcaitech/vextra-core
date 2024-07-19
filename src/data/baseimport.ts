@@ -884,7 +884,6 @@ function importPrototypeActionsOptional(tar: impl.PrototypeActions, source: type
 }
 export function importPrototypeActions(source: types.PrototypeActions, ctx?: IImportContext): impl.PrototypeActions {
     const ret: impl.PrototypeActions = new impl.PrototypeActions (
-        importCrdtidx(source.crdtidx, ctx),
         source.id,
         importPrototypeConnectionType(source.connectionType, ctx))
     importPrototypeActionsOptional(ret, source, ctx)

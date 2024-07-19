@@ -637,7 +637,6 @@ export class OverlayBackgroundAppearance extends Basic {
 /* actions */
 export class PrototypeActions extends Basic {
     typeId = "prototype-actions"
-    crdtidx: Crdtidx
     id: string
     connectionType: PrototypeConnectionType
     targetNodeID?: string
@@ -649,9 +648,8 @@ export class PrototypeActions extends Basic {
     navigationType?: PrototypeNavigationType
     easingFunction?: PrototypeActions_easingFunction
     extraScrollOffset?: PrototypeExtrascrolloffset
-    constructor(crdtidx: Crdtidx, id: string, connectionType: PrototypeConnectionType) {
+    constructor(id: string, connectionType: PrototypeConnectionType) {
         super()
-        this.crdtidx = crdtidx
         this.id = id
         this.connectionType = connectionType
     }

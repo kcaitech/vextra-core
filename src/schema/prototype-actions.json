@@ -2,9 +2,6 @@
     "description": "actions",
     "type": "object",
     "properties": {
-        "crdtidx": {
-          "$ref": "./crdtidx.json"
-        },
         "id": {
             "type": "string"
         },
@@ -47,7 +44,6 @@
         }
     },
     "required": [
-        "crdtidx",
         "id",
         "connectionType"
     ],
