@@ -1,5 +1,6 @@
-import {BasicArray, BasicMap} from "../../../data/basic";
 import {
+    BasicArray,
+    BasicMap,
     CurveMode,
     CurvePoint,
     FillRule,
@@ -9,6 +10,7 @@ import {
     PathSegment,
     PathShape,
     Point2D,
+    PolygonShape,
     RectShape,
     Shape,
     ShapeFrame,
@@ -16,10 +18,6 @@ import {
     SymbolShape,
     TextShape,
     Transform,
-} from "../../../data/shape";
-import {uuid} from "../../../basic/uuid";
-import {IJSON, ImportFun, LoadContext} from "./basic";
-import {
     Artboard,
     Border,
     BorderPosition,
@@ -41,7 +39,9 @@ import {
     SymbolRefShape,
     Text,
     TextBehaviour,
-} from "../../../data/classes";
+} from "../../../data";
+import {uuid} from "../../../basic/uuid";
+import {IJSON, ImportFun, LoadContext} from "./basic";
 import * as shapeCreator from "../../../editor/creator";
 import * as types from "../../../data/typesdefine";
 import {importText} from "../sketch/textio";
@@ -49,6 +49,7 @@ import {float_accuracy} from "../../../basic/consts";
 import {makeShapeTransform2By1} from "../../../data";
 import {ColVector3D} from "../../../basic/matrix2";
 import {Transform as Transform2} from "../../../basic/transform";
+import {getPolygonPoints, getPolygonVertices} from "../../../editor/utils/path";
 
 function importColor(color: IJSON, opacity: number = 1) {
     return new Color(color.a * opacity, Math.round(color.r * 255), Math.round(color.g * 255), Math.round(color.b * 255));
@@ -285,44 +286,13 @@ export function importPage(ctx: LoadContext, data: IJSON, f: ImportFun): Page {
     return shape;
 }
 
-export function importRectShape(ctx: LoadContext, data: IJSON, f: ImportFun, index: number): Shape {
-    if (Array.isArray(data.fillPaints)) {
-        const imageInfo = data.fillPaints.find(item => item.type === 'IMAGE');
-        if (imageInfo?.image?.hash instanceof Uint8Array) return importImageShape(ctx, data, f, index);
-    }
-    if (data.vectorData?.vectorNetwork) {
-        return importPathShape(ctx, data, f, index);
-    }
-
-    const frame = importShapeFrame(data);
-    const visible = data['visible'];
-    const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
-    importStyle(style, data);
-
-    const curvePoint = new BasicArray<CurvePoint>();
-    const id = uuid();
-    const p1 = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight); // lt
-    const p2 = new CurvePoint([1] as BasicArray<number>, uuid(), 1, 0, CurveMode.Straight); // rt
-    const p3 = new CurvePoint([2] as BasicArray<number>, uuid(), 1, 1, CurveMode.Straight); // rb
-    const p4 = new CurvePoint([3] as BasicArray<number>, uuid(), 0, 1, CurveMode.Straight); // lb
-    curvePoint.push(p1, p2, p3, p4);
-
-    const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, true);
-    const shape = new RectShape([index] as BasicArray<number>, id, data['name'], types.ShapeType.Rectangle, frame.trans, frame.size, style, new BasicArray<PathSegment>(segment));
-
-    shape.isVisible = visible;
-    shape.style = style;
-
-    return shape;
-}
-
 function importPoints(data: IJSON): [CurvePoint[], boolean] {
     const vectorData = data.vectorData;
-    const vectorNetwork = vectorData.vectorNetwork;
+    const vectorNetwork = vectorData?.vectorNetwork;
     const vertices = vectorNetwork?.vertices as any[];
     const segments = vectorNetwork?.segments as any[];
     const regions = vectorNetwork?.regions as any[];
-    const normalizedSize = vectorData.normalizedSize as any;
+    const normalizedSize = vectorData?.normalizedSize as any;
 
     if (!Array.isArray(vertices) || !Array.isArray(segments) || !Array.isArray(regions) || !normalizedSize) {
         return [[], false];
@@ -392,14 +362,51 @@ function importPoints(data: IJSON): [CurvePoint[], boolean] {
 }
 
 export function importPathShape(ctx: LoadContext, data: IJSON, f: ImportFun, index: number): PathShape {
+    if (Array.isArray(data.fillPaints)) {
+        const imageInfo = data.fillPaints.find(item => item.type === 'IMAGE');
+        if (imageInfo?.image?.hash instanceof Uint8Array) return importImageShape(ctx, data, f, index);
+    }
+
     const frame = importShapeFrame(data);
     const visible = data['visible'];
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
     importStyle(style, data);
 
-    const [points, isClosed] = importPoints(data);
+    let cls = PathShape;
+    let shapeType = types.ShapeType.Path;
+    let [points, isClosed] = importPoints(data);
+    if (points.length === 0) {
+        points.push(
+            new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight), // lt
+            new CurvePoint([1] as BasicArray<number>, uuid(), 1, 0, CurveMode.Straight), // rt
+            new CurvePoint([2] as BasicArray<number>, uuid(), 1, 1, CurveMode.Straight), // rb
+            new CurvePoint([3] as BasicArray<number>, uuid(), 0, 1, CurveMode.Straight), // lb
+        );
+        isClosed = true;
+        cls = RectShape;
+        shapeType = types.ShapeType.Rectangle;
+    }
     const segment = new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...points), isClosed)
-    const shape = new PathShape([index] as BasicArray<number>, uuid(), data['name'], ShapeType.Path, frame.trans, frame.size, style, new BasicArray<PathSegment>(segment));
+    const shape = new cls([index] as BasicArray<number>, uuid(), data['name'], shapeType, frame.trans, frame.size, style, new BasicArray<PathSegment>(segment));
+
+    shape.isVisible = visible;
+    shape.style = style;
+
+    return shape;
+}
+
+export function importPolygon(ctx: LoadContext, data: IJSON, f: ImportFun, index: number): PathShape {
+    const frame = importShapeFrame(data);
+    const visible = data['visible'];
+    const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
+    importStyle(style, data);
+
+    const count = data.count || 3;
+    const vertices = getPolygonVertices(count);
+    const points = getPolygonPoints(vertices);
+
+    const segment = new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...points), true)
+    const shape = new PolygonShape([index] as BasicArray<number>, uuid(), data['name'], types.ShapeType.Polygon, frame.trans, frame.size, style, new BasicArray<PathSegment>(segment), count);
 
     shape.isVisible = visible;
     shape.style = style;
