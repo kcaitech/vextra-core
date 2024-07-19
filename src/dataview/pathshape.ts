@@ -1,5 +1,4 @@
 import {
-    ImageShape,
     PathShape,
     PathShape2,
     Shape,
@@ -7,9 +6,8 @@ import {
     ShapeType,
     SymbolRefShape,
     SymbolShape
-} from "../data/classes";
+} from "../data";
 import { ShapeView } from "./shape";
-import { DViewCtx, PropsType } from "./viewctx";
 import { EL, elh } from "./el";
 import { innerShadowId, renderBorders } from "../render";
 import { objectId } from "../basic/objectid";
@@ -32,58 +30,32 @@ export class PathShapeView extends ShapeView {
         return this.data.isClosed;
     }
 
-    protected _layout(size: ShapeSize, shape: Shape, parentFrame: ShapeSize | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scale: { x: number, y: number } | undefined): void {
+    protected _layout(size: ShapeSize, shape: Shape, parentFrame: ShapeSize | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scale: {
+        x: number,
+        y: number
+    } | undefined): void {
         this.m_pathsegs = undefined;
         super._layout(size, shape, parentFrame, varsContainer, scale);
     }
 
-    // layoutOnDiamondShape(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scaleX: number, scaleY: number, rotate: number, vflip: boolean, hflip: boolean, bbox: ShapeFrame, m: Matrix): void {
-    //     const shape = this.m_data as PathShape2;
-    //     m.preScale(shape.frame.width, shape.frame.height); // points投影到parent坐标系的矩阵
-
-    //     const matrix2 = matrix2parent(bbox.x, bbox.y, bbox.width, bbox.height, 0, false, false);
-    //     matrix2.preScale(bbox.width, bbox.height); // 当对象太小时，求逆矩阵会infinity
-    //     m.multiAtLeft(matrix2.inverse); // 反向投影到新的坐标系
-
-    //     const pathsegs = shape.pathsegs;
-    //     const newpathsegs = pathsegs.map((seg) => {
-    //         return { crdtidx: seg.crdtidx, id: seg.id, points: transformPoints(seg.points, m), isClosed: seg.isClosed }
-    //     });
-    //     this.m_pathsegs = newpathsegs;
-
-    //     const frame = this.frame;
-    //     const parsed = newpathsegs.map((seg) => parsePath(seg.points, !!seg.isClosed, frame.width, frame.height, this.fixedRadius));
-    //     const concat = Array.prototype.concat.apply([], parsed);
-    //     this.m_path = new Path(concat);
-    //     this.m_pathstr = this.m_path.toString();
-    // }
-
     protected renderBorders(): EL[] {
-        if((this.segments.length === 1 && !this.segments[0].isClosed) || this.segments.length > 1) {
-            return renderLineBorders(elh,this.data.style, this.getBorders(), this.startMarkerType, this.endMarkerType, this.getPathStr(), this.m_data);
+        if ((this.segments.length === 1 && !this.segments[0].isClosed) || this.segments.length > 1) {
+            return renderLineBorders(elh, this.data.style, this.getBorders(), this.startMarkerType, this.endMarkerType, this.getPathStr(), this.m_data);
         }
         return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.m_data);
     }
 
     render(): number {
-
-        // const tid = this.id;
-        const isDirty = this.checkAndResetDirty();
-        if (!isDirty) {
-            return this.m_render_version;
-        }
+        if (!this.checkAndResetDirty()) return this.m_render_version;
 
         if (!this.isVisible) {
-            this.reset("g"); // 还是要给个节点，不然后后面可见了挂不上dom
+            this.reset("g");
             return ++this.m_render_version;
         }
 
-        // fill
         const fills = this.renderFills() || []; // cache
-        // childs
-        const childs = this.renderContents(); // VDomArray
-        // border
         const borders = this.renderBorders() || []; // ELArray
+        const childs = this.renderContents(); // VDomArray
 
         const props = this.renderProps();
         const filterId = `${objectId(this)}`;
@@ -108,7 +80,7 @@ export class PathShapeView extends ShapeView {
                 }
             }
         }
-        if (shadows.length > 0) { // 阴影
+        if (shadows.length) { // 阴影
             const ex_props = Object.assign({}, props);
             delete props.style;
             delete props.transform;
@@ -148,9 +120,7 @@ export class PathShapeView extends ShapeView {
 
     renderStatic() {
         const fills = this.renderFills() || []; // cache
-        // childs
         const childs = this.renderContents(); // VDomArray
-        // border
         const borders = this.renderBorders() || []; // ELArray
 
         const props = this.renderStaticProps();

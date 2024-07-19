@@ -1,5 +1,5 @@
 import { DViewCtx, PropsType } from "./viewctx";
-import { Shape, SymbolRefShape, SymbolShape } from "../data/classes";
+import { Shape, SymbolRefShape, SymbolShape } from "../data";
 import { getShapeViewId, stringh } from "./basic";
 import { EL } from "./el";
 import { objectId } from "../basic/objectid";

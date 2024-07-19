@@ -1,5 +1,4 @@
 import { ShapeSize, Fill, FillType, Gradient, Shape, SymbolRefShape, SymbolShape, Variable, OverrideType, VariableType } from "../data/classes";
-// import { ELArray, EL, h } from "./basic";
 import { render as renderGradient } from "./gradient";
 import { render as clippathR } from "./clippath"
 import { objectId } from "../basic/objectid";

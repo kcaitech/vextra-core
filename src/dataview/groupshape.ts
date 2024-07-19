@@ -62,16 +62,18 @@ export class GroupShapeView extends ShapeView {
     onDataChange(...args: any[]): void {
         super.onDataChange(...args);
         if (args.includes('childs')) {
-            // this.updateChildren();
             this.updateMaskMap();
             this.m_need_updatechilds = true;
         }
     }
 
-    protected _layout(size: ShapeSize, shape: Shape, parentFrame: ShapeSize | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scale: {
-        x: number,
-        y: number
-    } | undefined): void {
+    protected _layout(
+        size: ShapeSize,
+        shape: Shape,
+        parentFrame: ShapeSize | undefined,
+        varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
+        scale: { x: number, y: number } | undefined
+    ): void {
         super._layout(size, shape, parentFrame, varsContainer, scale);
         if (this.m_need_updatechilds) {
             this.notify("childs"); // notify childs change
@@ -96,51 +98,49 @@ export class GroupShapeView extends ShapeView {
         return childs;
     }
 
-    protected layoutChild(child: Shape, idx: number, transx: {
-        x: number,
-        y: number
-    } | undefined, varsContainer: VarsContainer | undefined, resue: Map<string, DataView>, rView: RootView | undefined) {
+    protected layoutChild(
+        child: Shape,
+        idx: number,
+        transx: { x: number, y: number } | undefined,
+        varsContainer: VarsContainer | undefined,
+        resue: Map<string, DataView>,
+        rView: RootView | undefined
+    ) {
         let cdom: DataView | undefined = resue.get(child.id);
         const props = { data: child, transx, varsContainer, isVirtual: this.m_isVirtual };
         if (cdom) {
             this.moveChild(cdom, idx);
-            cdom.layout(props);
-            return;
+            return cdom.layout(props);
         }
-
         cdom = rView && rView.getView(getShapeViewId(child.id, varsContainer));
         if (cdom) {
             // 将cdom移除再add到当前group
             const p = cdom.parent;
             if (p) p.removeChild(cdom);
             this.addChild(cdom, idx);
-            cdom.layout(props);
-            return;
+            return cdom.layout(props);
         }
-
         const comsMap = this.m_ctx.comsMap;
         const Com = comsMap.get(child.type) || comsMap.get(ShapeType.Rectangle)!;
         cdom = new Com(this.m_ctx, props) as DataView;
         this.addChild(cdom, idx);
     }
 
-    protected layoutChilds(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, parentFrame: ShapeSize, scale?: {
-        x: number,
-        y: number
-    }): void {
+    protected layoutChilds(
+        varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
+        parentFrame: ShapeSize,
+        scale?: { x: number, y: number }): void {
         const childs = this.getDataChilds();
         const resue: Map<string, DataView> = new Map();
         this.m_children.forEach((c) => resue.set(c.data.id, c));
         const rootView = this.getRootView();
         for (let i = 0, len = childs.length; i < len; i++) {
-            const cc = childs[i]
             // update childs
-            this.layoutChild(cc, i, scale, varsContainer, resue, rootView);
+            this.layoutChild(childs[i], i, scale, varsContainer, resue, rootView);
         }
         // 删除多余的
         const removes = this.removeChilds(childs.length, Number.MAX_VALUE);
         if (rootView) rootView.addDelayDestory(removes);
         else removes.forEach((c => c.destory()));
     }
-
 }

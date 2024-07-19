@@ -1,15 +1,30 @@
 import { render as renderGradient } from "./gradient";
 import { objectId } from '../basic/objectid';
 import {
-    Border, BorderPosition, FillType, Gradient, GradientType, OverrideType, Shape, ShapeSize, ShapeType, SideType, SymbolRefShape,
-    SymbolShape, VariableType
+    Border,
+    BorderPosition,
+    FillType,
+    Gradient,
+    GradientType,
+    OverrideType,
+    Shape,
+    ShapeSize,
+    ShapeType,
+    SideType,
+    SymbolRefShape,
+    SymbolShape,
+    VariableType
 } from "../data";
 import { findOverrideAndVar, randomId } from "./basic";
 import { renderCustomBorder } from "./border_custom";
 
 
-const handler: { [key: string]: (h: Function, frame: ShapeSize, border: Border, path: string, shape?: Shape) => any } = {};
-const angularHandler: { [key: string]: (h: Function, frame: ShapeSize, border: Border, path: string, shape?: Shape) => any } = {};
+const handler: {
+    [key: string]: (h: Function, frame: ShapeSize, border: Border, path: string, shape?: Shape) => any
+} = {};
+const angularHandler: {
+    [key: string]: (h: Function, frame: ShapeSize, border: Border, path: string, shape?: Shape) => any
+} = {};
 
 angularHandler[BorderPosition.Inner] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape?: Shape): any {
     if (shape && is_side_custom(border.sideSetting.sideType, shape)) {
@@ -58,12 +73,12 @@ angularHandler[BorderPosition.Inner] = function (h: Function, frame: ShapeSize, 
         ]),
 
         h("foreignObject", {
-            x: 0,
-            y: 0,
-            width,
-            height,
-            mask: "url(#" + maskId + ")"
-        },
+                x: 0,
+                y: 0,
+                width,
+                height,
+                mask: "url(#" + maskId + ")"
+            },
             h("div", { width: "100%", height: "100%", style: g_.style }))
     ]);
 }
@@ -108,12 +123,12 @@ angularHandler[BorderPosition.Center] = function (h: Function, frame: ShapeSize,
             h("path", path_props)
         ]),
         h("foreignObject", {
-            width,
-            height,
-            x,
-            y,
-            mask: "url(#" + maskId + ")"
-        },
+                width,
+                height,
+                x,
+                y,
+                mask: "url(#" + maskId + ")"
+            },
             h("div", { width: "100%", height: "100%", style: g_.style })),
     ])
 }
@@ -127,8 +142,8 @@ angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, 
     const g_ = renderGradient(h, border.gradient as Gradient, frame);
     const width = frame.width + 2 * thickness;
     const height = frame.height + 2 * thickness;
-    const x = - thickness;
-    const y = - thickness;
+    const x = -thickness;
+    const y = -thickness;
     const rId = randomId();
     const mask1Id = "mask1-border" + objectId(border) + rId;
     const mask2Id = "mask2-border" + objectId(border) + rId;
@@ -165,12 +180,12 @@ angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, 
             h('path', path_props)
         ]),
         h("foreignObject", {
-            width,
-            height,
-            x,
-            y,
-            mask: "url(#" + mask2Id + ")"
-        },
+                width,
+                height,
+                x,
+                y,
+                mask: "url(#" + mask2Id + ")"
+            },
             h("div", { width: "100%", height: "100%", style: g_.style })),
     ]);
 }
@@ -343,7 +358,7 @@ export function render(h: Function, borders: Border[], frame: ShapeSize, path: s
 }
 
 export function renderWithVars(h: Function, shape: Shape, frame: ShapeSize, path: string,
-    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
+                               varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
     let borders = shape.style.borders;
     if (varsContainer) {
         const _vars = findOverrideAndVar(shape, OverrideType.Borders, varsContainer);
@@ -361,7 +376,5 @@ export function renderWithVars(h: Function, shape: Shape, frame: ShapeSize, path
 
 function is_side_custom(sideType: SideType, shape: Shape) {
     if (sideType === SideType.Normal || shape.haveEdit) return false;
-    const type = [ShapeType.Rectangle, ShapeType.Artboard, ShapeType.Image, ShapeType.Symbol, ShapeType.SymbolRef, ShapeType.SymbolUnion];
-    if (type.includes(shape.type)) return true;
-    else return false;
+    return [ShapeType.Rectangle, ShapeType.Artboard, ShapeType.Image, ShapeType.Symbol, ShapeType.SymbolRef, ShapeType.SymbolUnion].includes(shape.type);
 }

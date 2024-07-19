@@ -139,7 +139,6 @@ export function boundingBox(frame: ShapeSize, shape: Shape): ShapeFrame {
     return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
 }
 
-
 export function transformPoints(points: CurvePoint[], matrix: Matrix) {
     const ret: CurvePoint[] = [];
     for (let i = 0, len = points.length; i < len; i++) {
@@ -176,9 +175,6 @@ function frame2Parent(t: Transform, size: ShapeSize): ShapeFrame {
 export class ShapeView extends DataView {
     // layout & render args
     // m_frame: ShapeFrame;
-    // m_hflip?: boolean;
-    // m_vflip?: boolean;
-    // m_rotate?: number;
     m_transform: Transform;
     m_size: ShapeSize;
 
@@ -239,14 +235,6 @@ export class ShapeView extends DataView {
 
     get transform2() {
         if (!this.m_transform2) this.m_transform2 = makeShapeTransform2By1(this.m_transform);
-        // if (!transform1Equals2(makeShapeTransform1By2(this.m_transform2), this.transform)) {
-        //     this.m_transform2.setMatrix(new Matrix2([4, 4], [
-        //         this.transform.m00, this.transform.m01, 0, this.transform.m02,
-        //         this.transform.m10, this.transform.m11, 0, this.transform.m12,
-        //         0, 0, 1, 0,
-        //         0, 0, 0, 1,
-        //     ], true))
-        // }
         return this.m_transform2;
     }
 
@@ -405,7 +393,7 @@ export class ShapeView extends DataView {
         while (p.type !== ShapeType.Page && p.m_parent) {
             p = p.m_parent as ShapeView;
         }
-        return p.type == ShapeType.Page ? p : undefined;
+        return p.type === ShapeType.Page ? p : undefined;
     }
 
     get varbinds() {
@@ -593,16 +581,15 @@ export class ShapeView extends DataView {
         this.layoutChilds(varsContainer, this.size, { x: scaleX, y: scaleY });
     }
 
-    // 更新frame, vflip, hflip, rotate, fixedRadius, 及对应的cache数据，如path
+    // 更新frame, fixedRadius, 及对应的cache数据，如path
     // 更新childs, 及向下更新数据变更了的child(在datachangeset)
     // 父级向下更新时带props, 自身更新不带
     layout(props?: PropsType) {
         // todo props没更新时是否要update
-        // 在frame、flip、rotate修改时需要update
+        // 在frame修改时需要update
         const needLayout = this.m_ctx.removeReLayout(this); // remove from changeset
 
         if (props) {
-            // 
             if (props.data.id !== this.m_data.id) throw new Error('id not match');
             const dataChanged = objectId(props.data) !== objectId(this.m_data);
             if (dataChanged) {
@@ -615,9 +602,7 @@ export class ShapeView extends DataView {
             if (!needLayout &&
                 !dataChanged &&
                 !diffTransform &&
-                !diffVars) {
-                return;
-            }
+                !diffVars) return;
 
             if (diffTransform) {
                 // update transform
@@ -690,10 +675,7 @@ export class ShapeView extends DataView {
             if (props.style) {
                 props.style['mix-blend-mode'] = contextSettings.blenMode;
             } else {
-                const style: any = {
-                    'mix-blend-mode': contextSettings.blenMode
-                }
-                props.style = style;
+                props.style = { 'mix-blend-mode': contextSettings.blenMode };
             }
         }
         return props;
@@ -727,10 +709,7 @@ export class ShapeView extends DataView {
             if (props.style) {
                 props.style['mix-blend-mode'] = contextSettings.blenMode;
             } else {
-                const style: any = {
-                    'mix-blend-mode': contextSettings.blenMode
-                }
-                props.style = style;
+                props.style = { 'mix-blend-mode': contextSettings.blenMode };
             }
         }
 
@@ -747,29 +726,25 @@ export class ShapeView extends DataView {
 
     protected m_render_version: number = 0;
 
+    get renderVersion() {
+        return this.m_render_version;
+    }
+
     protected checkAndResetDirty(): boolean {
         return this.m_ctx.removeDirty(this);
     }
 
     render(): number {
-
-        // const tid = this.id;
-        const isDirty = this.checkAndResetDirty();
-        if (!isDirty) {
-            return this.m_render_version;
-        }
+        if (!this.checkAndResetDirty()) return this.m_render_version;
 
         if (!this.isVisible) {
             this.reset("g"); // 还是要给个节点，不然后后面可见了挂不上dom
             return ++this.m_render_version;
         }
 
-        // fill
         const fills = this.renderFills() || []; // cache
-        // childs
-        const childs = this.renderContents(); // VDomArray
-        // border
         const borders = this.renderBorders() || []; // ELArray
+        const childs = this.renderContents(); // VDomArray
 
         const props = this.renderProps();
 
@@ -778,7 +753,7 @@ export class ShapeView extends DataView {
         const blurId = `blur_${objectId(this)}`;
         const blur = this.renderBlur(blurId);
 
-        if (shadows.length > 0) { // 阴影
+        if (shadows.length) { // 阴影
             const ex_props = Object.assign({}, props);
             delete props.style;
             delete props.transform;
@@ -822,14 +797,14 @@ export class ShapeView extends DataView {
                 delete props.opacity;
             } else {
                 if (props.style) {
-                    (props.style as any)['mix-blend-mode'] = contextSettings.blenMode;
+                    props.style['mix-blend-mode'] = contextSettings.blenMode;
                 } else {
                     props.style = style;
                 }
             }
         }
 
-        if (shadows.length > 0) { // 阴影
+        if (shadows.length) { // 阴影
             const ex_props = Object.assign({}, props);
             delete props.style;
             delete props.transform;
