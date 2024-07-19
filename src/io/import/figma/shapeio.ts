@@ -371,6 +371,7 @@ export function importPathShape(ctx: LoadContext, data: IJSON, f: ImportFun, ind
     const visible = data['visible'];
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
     importStyle(style, data);
+    const id = data.kcId || uuid();
 
     let cls = PathShape;
     let shapeType = types.ShapeType.Path;
@@ -387,7 +388,7 @@ export function importPathShape(ctx: LoadContext, data: IJSON, f: ImportFun, ind
         shapeType = types.ShapeType.Rectangle;
     }
     const segment = new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...points), isClosed)
-    const shape = new cls([index] as BasicArray<number>, uuid(), data['name'], shapeType, frame.trans, frame.size, style, new BasicArray<PathSegment>(segment));
+    const shape = new cls([index] as BasicArray<number>, id, data['name'], shapeType, frame.trans, frame.size, style, new BasicArray<PathSegment>(segment));
 
     shape.isVisible = visible;
     shape.style = style;
@@ -400,13 +401,14 @@ export function importPolygon(ctx: LoadContext, data: IJSON, f: ImportFun, index
     const visible = data['visible'];
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
     importStyle(style, data);
+    const id = data.kcId || uuid();
 
     const count = data.count || 3;
     const vertices = getPolygonVertices(count);
     const points = getPolygonPoints(vertices);
 
     const segment = new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...points), true)
-    const shape = new PolygonShape([index] as BasicArray<number>, uuid(), data['name'], types.ShapeType.Polygon, frame.trans, frame.size, style, new BasicArray<PathSegment>(segment), count);
+    const shape = new PolygonShape([index] as BasicArray<number>, id, data['name'], types.ShapeType.Polygon, frame.trans, frame.size, style, new BasicArray<PathSegment>(segment), count);
 
     shape.isVisible = visible;
     shape.style = style;
@@ -419,6 +421,7 @@ export function importLine(ctx: LoadContext, data: IJSON, f: ImportFun, index: n
     const visible = data['visible'];
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
     importStyle(style, data);
+    const id = data.kcId || uuid();
 
     frame.size.width = frame.size.width || 1;
     frame.size.height = frame.size.height || 1;
@@ -427,7 +430,7 @@ export function importLine(ctx: LoadContext, data: IJSON, f: ImportFun, index: n
         new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight),
         new CurvePoint([1] as BasicArray<number>, uuid(), 1, 0, CurveMode.Straight),
     ), false)
-    const shape = new PathShape([index] as BasicArray<number>, uuid(), data['name'], ShapeType.Path, frame.trans, frame.size, style, new BasicArray<PathSegment>(segment));
+    const shape = new PathShape([index] as BasicArray<number>, id, data['name'], ShapeType.Path, frame.trans, frame.size, style, new BasicArray<PathSegment>(segment));
 
     shape.isVisible = visible;
     shape.style = style;
@@ -458,9 +461,10 @@ export function importGroup(ctx: LoadContext, data: IJSON, f: ImportFun, index: 
     const visible = data['visible'];
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
     importStyle(style, data);
+    const id = data.kcId || uuid();
 
     const childs: Shape[] = (data['childs'] as IJSON[] || []).map((d: IJSON, i: number) => f(ctx, d, i)).filter(item => item) as Shape[];
-    const shape = new GroupShape(new BasicArray(), uuid(), data['name'], types.ShapeType.Group, frame.trans, frame.size, style, new BasicArray<Shape>(...childs))
+    const shape = new GroupShape(new BasicArray(), id, data['name'], types.ShapeType.Group, frame.trans, frame.size, style, new BasicArray<Shape>(...childs))
     shape.isVisible = visible;
 
     return shape;
@@ -471,9 +475,9 @@ export function importImageShape(ctx: LoadContext, data: IJSON, f: ImportFun, in
     const visible = data['visible'];
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
     importStyle(style, data);
+    const id = data.kcId || uuid();
 
     const curvePoint = new BasicArray<CurvePoint>();
-    const id = uuid();
     const p1 = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight); // lt
     const p2 = new CurvePoint([1] as BasicArray<number>, uuid(), 1, 0, CurveMode.Straight); // rt
     const p3 = new CurvePoint([2] as BasicArray<number>, uuid(), 1, 1, CurveMode.Straight); // rb
@@ -501,9 +505,10 @@ export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun, inde
     const visible = data['visible'];
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
     importStyle(style, data);
+    const id = data.kcId || uuid();
 
     const childs: Shape[] = (data['childs'] as IJSON[] || []).map((d: IJSON, i: number) => f(ctx, d, i)).filter(item => item) as Shape[];
-    const shape = new Artboard([index] as BasicArray<number>, uuid(), data['name'], ShapeType.Artboard, frame.trans, frame.size, style, new BasicArray<Shape>(...childs));
+    const shape = new Artboard([index] as BasicArray<number>, id, data['name'], ShapeType.Artboard, frame.trans, frame.size, style, new BasicArray<Shape>(...childs));
     shape.isVisible = visible;
 
     return shape;
@@ -514,13 +519,14 @@ export function importTextShape(ctx: LoadContext, data: IJSON, f: ImportFun, ind
     const visible = data['visible'];
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
     importStyle(style, data);
+    const id = data.kcId || uuid();
 
     const textStyle = data['style'] && data['style']['textStyle'];
     const text: Text = data['textData']?.['characters'] && importText(data['textData']['characters'], textStyle);
     const textBehaviour = [TextBehaviour.Flexible, TextBehaviour.Fixed, TextBehaviour.FixWidthAndHeight][data['textBehaviour']] ?? TextBehaviour.Flexible;
     text.attr && (text.attr.textBehaviour = textBehaviour);
 
-    const shape = new TextShape([index] as BasicArray<number>, uuid(), data['name'], ShapeType.Text, frame.trans, frame.size, style, text);
+    const shape = new TextShape([index] as BasicArray<number>, id, data['name'], ShapeType.Text, frame.trans, frame.size, style, text);
     shape.isVisible = visible;
 
     return shape;
@@ -531,9 +537,8 @@ export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun, index:
     const visible = data['visible'];
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
     importStyle(style, data);
+    const id = data.kcId || uuid();
 
-    const id = uuid();
-    data['symbolID'] = id;
     const childs: Shape[] = (data['childs'] as IJSON[] || []).map((d: IJSON, i: number) => f(ctx, d, i)).filter(item => item) as Shape[];
     const shape = new SymbolShape([index] as BasicArray<number>, id, data['name'], ShapeType.Symbol, frame.trans, frame.size, style, new BasicArray<Shape>(...childs), new BasicMap());
     shape.isVisible = visible;
@@ -546,12 +551,13 @@ export function importSymbolRef(ctx: LoadContext, data: IJSON, f: ImportFun, ind
     const visible = data['visible'];
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
     importStyle(style, data);
+    const id = data.kcId || uuid();
 
-    const symbolId = [data['symbolData']['symbolID']['localID'], data['symbolData']['symbolID']['sessionID']].join(',')
-    const symbol = nodeChangesMap.get(symbolId)
-    const symbolRawID = symbol?.['symbolID']
+    const symbolId = [data['symbolData']['symbolID']['localID'], data['symbolData']['symbolID']['sessionID']].join(',');
+    const symbol = nodeChangesMap.get(symbolId);
+    const symbolRawID = symbol?.kcId;
 
-    const shape = new SymbolRefShape([index] as BasicArray<number>, uuid(), data['name'], ShapeType.SymbolRef, frame.trans, frame.size, style, symbolRawID, new BasicMap());
+    const shape = new SymbolRefShape([index] as BasicArray<number>, id, data['name'], ShapeType.SymbolRef, frame.trans, frame.size, style, symbolRawID, new BasicMap());
     shape.isVisible = visible;
 
     return shape;

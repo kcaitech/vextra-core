@@ -75,21 +75,19 @@ export function startLoader(file: IJSON, pages: IJSON[], document: Document, nod
     __handler['PAGE'] = (ctx: LoadContext, data: IJSON, i: number) => importPage(ctx, data, importer)
     __handler['TEXT'] = (ctx: LoadContext, data: IJSON, i: number) => importTextShape(ctx, data, importer, i)
     __handler['ELLIPSE'] = (ctx: LoadContext, data: IJSON, i: number) => importEllipse(ctx, data, importer, i)
-    __handler['SYMBOL'] = (ctx: LoadContext, data: IJSON, i: number) => importSymbol(ctx, data, importer, i)
-    __handler['INSTANCE'] = (ctx: LoadContext, data: IJSON, i: number) => importSymbolRef(ctx, data, importer, i, nodeChangesMap)
     __handler['LINE'] = (ctx: LoadContext, data: IJSON, i: number) => importLine(ctx, data, importer, i)
     __handler['STAR'] = (ctx: LoadContext, data: IJSON, i: number) => importPathShape(ctx, data, importer, i)
     __handler['REGULAR_POLYGON'] = (ctx: LoadContext, data: IJSON, i: number) => importPolygon(ctx, data, importer, i)
-    // __handler['symbolMaster'] = (ctx: LoadContext, data: IJSON, i: number) => {
-    //     const symbol = importSymbol(ctx, data, importer, i)
-    //     symbolsSet.set(symbol.id, symbol)
-    //     return symbol
-    // }
-    // __handler['symbolInstance'] = (ctx: LoadContext, data: IJSON, i: number) => {
-    //     const symRef = importSymbolRef(ctx, data, importer, i)
-    //     symRef.setSymbolMgr(document.symbolsMgr);
-    //     return symRef;
-    // }
+    __handler['SYMBOL'] = (ctx: LoadContext, data: IJSON, i: number) => {
+        const symbol = importSymbol(ctx, data, importer, i);
+        // symbolsSet.set(symbol.id, symbol);
+        return symbol;
+    }
+    __handler['INSTANCE'] = (ctx: LoadContext, data: IJSON, i: number) => {
+        const symbolRef = importSymbolRef(ctx, data, importer, i, nodeChangesMap);
+        // symbolRef.setSymbolMgr(document.symbolsMgr);
+        return symbolRef;
+    }
 
     document.mediasMgr.setLoader((id) => loadMedia(id))
     document.pagesMgr.setLoader(async (id) => {

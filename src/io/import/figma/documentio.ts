@@ -44,7 +44,10 @@ export async function importDocument(file: File, gurad: IDataGuard /*inflateRawS
     if (!nodeChanges || !Array.isArray(nodeChanges)) throw new Error("data error");
 
     const nodeChangesMap = new Map<string, IJSON>();
-    for (const node of nodeChanges) nodeChangesMap.set([node['guid']['localID'], node['guid']['sessionID']].join(','), node);
+    for (const node of nodeChanges) {
+        node.kcId = uuid();
+        nodeChangesMap.set([node['guid']['localID'], node['guid']['sessionID']].join(','), node);
+    }
 
     // 先生成对象树
     const nodesmap = new Map<string, IJSON>();
