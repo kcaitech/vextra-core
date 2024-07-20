@@ -130,10 +130,13 @@ export class GroupShapeView extends ShapeView {
         varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
         parentFrame: ShapeSize,
         scale?: { x: number, y: number }): void {
+
         const childs = this.getDataChilds();
         const resue: Map<string, DataView> = new Map();
         this.m_children.forEach((c) => resue.set(c.data.id, c));
         const rootView = this.getRootView();
+        console.log('__layoutChilds__', this.name, resue);
+
         for (let i = 0, len = childs.length; i < len; i++) {
             // update childs
             this.layoutChild(childs[i], i, scale, varsContainer, resue, rootView);
@@ -142,5 +145,13 @@ export class GroupShapeView extends ShapeView {
         const removes = this.removeChilds(childs.length, Number.MAX_VALUE);
         if (rootView) rootView.addDelayDestory(removes);
         else removes.forEach((c => c.destory()));
+    }
+    protected getMaskGroup() {
+        let masks: Shape[][] = [];
+        const childs = this.getDataChilds();
+        let currentMask = '';
+        for (let i = 0, len = childs.length; i < len; i++) {
+            const cur = childs[i];
+        }
     }
 }
