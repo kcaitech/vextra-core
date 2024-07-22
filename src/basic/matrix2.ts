@@ -307,10 +307,10 @@ export class Matrix { // 矩阵
         return this.cols(0)
     }
 
-    mapCol<T>(callback: (col: ColVector, colIndex: number) => T) {
+    mapCol<T>(callback: (col: ColVector, colIndex: number, matrix: this) => T) {
         const [_, n] = this.size
         const result: T[] = []
-        for (let i = 0; i < n; i++) result.push(callback(this.col(i), i));
+        for (let i = 0; i < n; i++) result.push(callback(this.col(i), i, this));
         return result
     }
 
@@ -592,16 +592,16 @@ export class Matrix { // 矩阵
         const startCol = start[1]
 
         const [m0, n0] = this.size
-        const [m2, _] = matrix.size
+        const [m2, n2] = matrix.size
 
         if (size === undefined) size = [m2, m2];
         const [m1, n1] = size
 
         if (m1 < 0 || n1 < 0) throw new Error("子矩阵大小不能为负");
         if (startRow < 0 || startCol < 0 || startRow + m1 > m0 || startCol + n1 > n0) throw new Error("子矩阵范围越界");
-        if (n1 !== m2) throw new Error("矩阵阶数不匹配，无法相乘");
+        if (m2 < n1 || n2 < n1) throw new Error("矩阵阶数不匹配，无法相乘");
 
-        this.setSubMatrix(this.subMatrix(size, start).multiply(matrix), start)
+        this.setSubMatrix(this.subMatrix(size, start).multiply(matrix.clone().resize([n1, n1])), start)
 
         return this
     }
@@ -628,16 +628,16 @@ export class Matrix { // 矩阵
         const startCol = start[1]
 
         const [m0, n0] = this.size
-        const [_, n2] = matrix.size
+        const [m2, n2] = matrix.size
 
         if (size === undefined) size = [n2, n2];
         const [m1, n1] = size
 
         if (m1 < 0 || n1 < 0) throw new Error("子矩阵大小不能为负");
         if (startRow < 0 || startCol < 0 || startRow + m1 > m0 || startCol + n1 > n0) throw new Error("子矩阵范围越界");
-        if (n2 !== m1) throw new Error("矩阵阶数不匹配，无法相乘");
+        if (m2 < m1 || n2 < m1) throw new Error("矩阵阶数不匹配，无法相乘");
 
-        this.setSubMatrix(Matrix.FromMatrix(matrix.clone()).multiply(this.subMatrix(size, start)), start)
+        this.setSubMatrix(Matrix.FromMatrix(matrix.clone().resize([m1, m1])).multiply(this.subMatrix(size, start)), start)
 
         return this
     }
@@ -657,8 +657,7 @@ export class Matrix { // 矩阵
         }
 
         if (m === 3) {
-            const det = this.m00 * this.m11 * this.m22 + this.m01 * this.m12 * this.m20 + this.m02 * this.m10 * this.m21
-                - this.m02 * this.m11 * this.m20 - this.m01 * this.m10 * this.m22 - this.m00 * this.m12 * this.m21
+            const det = this.determinant()
             if (isZero(det)) return; // 行列式为0，矩阵不可逆
             return new Matrix(new NumberArray2D([3, 3], [
                 (this.m11 * this.m22 - this.m12 * this.m21) / det, (this.m02 * this.m21 - this.m01 * this.m22) / det, (this.m01 * this.m12 - this.m02 * this.m11) / det,
@@ -666,7 +665,7 @@ export class Matrix { // 矩阵
                 (this.m10 * this.m21 - this.m11 * this.m20) / det, (this.m01 * this.m20 - this.m00 * this.m21) / det, (this.m00 * this.m11 - this.m01 * this.m10) / det,
             ], true))
         } else if (m === 2) {
-            const det = this.m00 * this.m11 - this.m01 * this.m10
+            const det = this.determinant()
             if (isZero(det)) return; // 行列式为0，矩阵不可逆
             return new Matrix(new NumberArray2D([2, 2], [
                 this.m11 / det, -this.m01 / det,
@@ -785,10 +784,10 @@ export class Matrix { // 矩阵
         if (!this.isSquare) throw new Error("矩阵不是方阵，无行列式");
 
         const [m, n] = this.size // 矩阵的阶数
-        if (m === 1) return this.m00; // 1阶矩阵的行列式
-        if (m === 2) return this.m00 * this.m11 - this.m01 * this.m10; // 2阶矩阵的行列式
         if (m === 3) return this.m00 * this.m11 * this.m22 + this.m01 * this.m12 * this.m20 + this.m02 * this.m10 * this.m21
             - this.m02 * this.m11 * this.m20 - this.m01 * this.m10 * this.m22 - this.m00 * this.m12 * this.m21; // 3阶矩阵的行列式
+        if (m === 2) return this.m00 * this.m11 - this.m01 * this.m10; // 2阶矩阵的行列式
+        if (m === 1) return this.m00; // 1阶矩阵的行列式
 
         let result = 0
         for (let i = 0; i < n; i++) {

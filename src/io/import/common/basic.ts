@@ -15,6 +15,8 @@ export class LoadContext {
 
 export type ImportFun = (ctx: LoadContext, data: IJSON, i: number) => Shape
 
+export type ImportFun1 = (ctx: LoadContext, data: IJSON, i: number) => Shape | undefined
+
 
 export function updatePageFrame(p: Page) {
     const pf = p.frame;
@@ -50,8 +52,8 @@ export function updatePageFrame(p: Page) {
 
     for (let i = 0; i < cc; i++) {
         const c = p.childs[i];
-        c.transform.translateX = cf.x - l;
-        c.transform.translateY = cf.y - t;
+        c.transform.translateX -= l;
+        c.transform.translateY -= t;
         // cf.width = cf.width;
         // cf.height = cf.height;
         // console.log("c", i, cf)

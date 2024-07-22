@@ -1,31 +1,48 @@
-import { uuid } from "../../../basic/uuid";
-import { BasicArray, BasicMap, IDataGuard } from "../../../data/basic";
-import { Document, PageListItem } from "../../../data/document";
-import { IJSON } from "./basic";
-import { figToJson } from "./fig2json";
-import { startLoader } from "./loader";
-// import { getFigJsonData } from "./tojson";
+import {uuid} from "../../../basic/uuid";
+import {BasicArray, BasicMap, IDataGuard, Document, PageListItem} from "../../../data";
+import {IJSON} from "./basic";
+import {figToJson} from "./fig2json";
+import {startLoader} from "./loader";
+import * as UZIP from "uzip";
+
+function compare(l: string, r: string) {
+    if (l.length < r.length) return -1;
+    else if (l.length > r.length) return 1;
+    if (l === r) return 0;
+    return l.charCodeAt(l.length - 1) > r.charCodeAt(r.length - 1) ? 1 : -1;
+}
 
 
-function insert2childs(childs: { parentIndex: { position: string } }[], node: { parentIndex: { position: string } }, start: number, end: number/* 包含 */) {
+function insert2childs(
+    list: {
+        parentIndex: { position: string },
+        [key: string]: any,
+    }[],
+    node: {
+        parentIndex: { position: string },
+        [key: string]: any,
+    },
+    start: number,
+    end: number, // 包含
+) {
     // 比较少时直接逐一比较
     if ((end - start) < 5) {
-        for (let i = start; i <= end; ++i) {
-            const c = childs[i];
-            if (c.parentIndex.position > node.parentIndex.position) {
-                childs.splice(i, 0, node);
+        for (let i = start; i <= end; i++) {
+            const item = list[i];
+            if (compare(item.parentIndex.position, node.parentIndex.position)) {
+                list.splice(i, 0, node);
                 return;
             }
         }
-        childs.splice(end, 0, node);
+        list.splice(end + 1, 0, node);
         return;
     }
-    const mid = Math.round((start + end) / 2);
-    const c = childs[mid];
-    if (c.parentIndex.position > node.parentIndex.position) {
-        insert2childs(childs, node, start, mid - 1);
+    const middleIndex = Math.round((start + end) / 2);
+    const middleItem = list[middleIndex];
+    if (compare(middleItem.parentIndex.position, node.parentIndex.position)) {
+        insert2childs(list, node, start, middleIndex);
     } else {
-        insert2childs(childs, node, mid + 1, end);
+        insert2childs(list, node, middleIndex + 1, end);
     }
 }
 
@@ -34,17 +51,23 @@ export async function importDocument(file: File, gurad: IDataGuard /*inflateRawS
     const buffer = await file.arrayBuffer();
 
     const json = figToJson((buffer)) as IJSON;
-    // console.log(json)
+    const unzipped = UZIP.parse(buffer);
 
     const nodeChanges = json['nodeChanges'];
     if (!nodeChanges || !Array.isArray(nodeChanges)) throw new Error("data error");
 
+    const nodeChangesMap = new Map<string, IJSON>();
+    for (const node of nodeChanges) {
+        node.kcId = uuid();
+        nodeChangesMap.set([node['guid']['localID'], node['guid']['sessionID']].join(','), node);
+    }
+
     // 先生成对象树
     const nodesmap = new Map<string, IJSON>();
     const pages: IJSON[] = [];
-    nodeChanges.forEach(node => {
+    for (const node of nodeChanges) {
         const type = node['type'];
-        if (type === "DOCUMENT") return;
+        if (type === "DOCUMENT") continue;
 
         const guid = node['guid'];
         const nodeid = [guid['localID'], guid['sessionID']].join(',');
@@ -53,36 +76,36 @@ export async function importDocument(file: File, gurad: IDataGuard /*inflateRawS
         const parentid = [pguid['localID'], pguid['sessionID']].join(',');
         const visible = node['visible'];
 
-        const pnode = nodesmap.get(parentid);
+        const pnode = nodeChangesMap.get(parentid);
+        if (pnode && !Array.isArray(pnode.childs)) pnode.childs = [];
 
-        switch (type) {
-            case "DOCUMENT":
-                break;
-            case "CANVAS":
-                if (!visible) break;
-                // page
-                node.childs = [];
-                nodesmap.set(nodeid, node);
-                pages.push(node);
-                break;
-            case "ROUNDED_RECTANGLE":
-                // 矩形
-                if (pnode) {
-                    insert2childs(pnode.childs, node, 0, pnode.childs.length - 1);
-                }
-                break;
+        if (type === 'CANVAS') {
+            if (!visible) continue;
+            nodesmap.set(nodeid, node);
+            pages.push(node);
         }
-    })
+
+        if (pnode) {
+            insert2childs(pnode.childs, node, 0, pnode.childs.length - 1);
+        }
+    }
+
+    for (const node of nodeChanges) {
+        if (Array.isArray(node.childs)) node.childs.reverse();
+    }
 
     const pageList = new BasicArray<PageListItem>();
-    pages.forEach((p, i) => {
-        p.id = uuid();
-        pageList.push(new PageListItem([i] as BasicArray<number>, p.id, p.name));
-    })
+    for (let i = 0; i < pages.length; i++) {
+        const page = pages[i];
+        page.id = uuid();
+        pageList.push(new PageListItem([i] as BasicArray<number>, page.id, page.name));
+    }
 
     const document = new Document(uuid(), file.name, "", "", pageList, new BasicMap(), gurad);
 
-    startLoader(json, pages, document);
+    console.log(json)
+    console.log(nodeChangesMap)
+    startLoader(json, pages, document, nodeChangesMap, unzipped);
 
     return document;
 }
