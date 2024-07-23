@@ -9,6 +9,7 @@ import {
 } from "../data";
 import { render as borderR } from "./border";
 import { findOverrideAndVar } from "../data/utils";
+
 const shadowOri: {
     [key: string]: (h: Function, shadow: Shadow, frame: ShapeSize, id: string, i: number, path: string, fills: Fill[], borders: Border[], shapeType: ShapeType, blur?: Blur) => any
 } = {};
@@ -42,19 +43,13 @@ shadowOri[ShadowPosition.Outer] = function (h: Function, shadow: Shadow, frame: 
     const multiy = +((((spread * 2) + height) - (spread / 100)) / height - s).toFixed(3);
     const fe_color_matrix1 = {
         type: "matrix",
-        values: `0 0 0 ${red / 255} 0
-               0 0 0 ${green / 255} 0
-               0 0 0 ${blue / 255} 0
-               0 0 0 ${alpha} 0`,
+        values: `0 0 0 ${red / 255} 0 0 0 0 ${green / 255} 0 0 0 0 ${blue / 255} 0 0 0 0 ${alpha} 0`,
         result: `color${i}`
     }
     const fe_color_matrix = {
         in: `SourceAlpha`,
         type: "matrix",
-        values: `0 0 0 0 0
-                   0 0 0 0 0
-                   0 0 0 0 0
-                   0 0 0 127 0`,
+        values: `0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0`,
     }
     const fe_offset = { dx: offsetX / multix, dy: offsetY / multiy, }
     const fe_gaussian_blur = {

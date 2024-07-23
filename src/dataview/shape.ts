@@ -763,11 +763,9 @@ export class ShapeView extends DataView {
     }
 
     renderStatic() {
-        const fills = this.renderFills() || []; // cache
-        // childs
-        const childs = this.renderContents(); // VDomArray
-        // border
-        const borders = this.renderBorders() || []; // ELArray
+        const fills = this.renderFills() || [];
+        const childs = this.renderContents();
+        const borders = this.renderBorders() || [];
 
         const props = this.renderStaticProps();
 
@@ -848,5 +846,38 @@ export class ShapeView extends DataView {
 
     get isImageFill() {
         return this.m_data.getImageFill();
+    }
+
+    get dom() {
+        const fills = this.renderFills();
+        const childs = this.renderContents();
+        const borders = this.renderBorders();
+
+        const filterId = `${objectId(this)}`;
+        const shadows = this.renderShadows(filterId);
+        const blurId = `blur_${objectId(this)}`;
+        const blur = this.renderBlur(blurId);
+
+        let children = [...fills, ...childs, ...borders];
+
+        if (shadows.length) {
+            let filter: string = '';
+            const inner_url = innerShadowId(filterId, this.getShadows());
+            if (this.type === ShapeType.Rectangle || this.type === ShapeType.Oval) {
+                if (inner_url.length) filter = `${inner_url.join(' ')}`
+            } else {
+                filter = `url(#pd_outer-${filterId}) `;
+                if (inner_url.length) filter += inner_url.join(' ');
+            }
+            children = [...shadows, elh("g", { filter }, children)];
+        }
+
+        if (blur.length) {
+            let filter: string = '';
+            if (this.blur?.type === BlurType.Gaussian) filter = `url(#${blurId})`;
+            children = [...blur, elh('g', { filter }, children)];
+        }
+
+        return elh("g", {}, children);
     }
 }

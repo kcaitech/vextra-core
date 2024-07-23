@@ -1,21 +1,38 @@
-import { TextLayout } from "../data/textlayout";
-import { OverrideType, Para, Path, ShapeFrame, ShapeSize, Span, Text, TextBehaviour, TextShape, Transform, VariableType } from "../data/classes";
+import {
+    OverrideType,
+    Para,
+    Path,
+    BasicArray,
+    TextLayout,
+    ShapeSize,
+    Span,
+    Text,
+    TextBehaviour,
+    TextShape,
+    Transform,
+    VariableType,
+    ShapeType,
+    BlurType,
+    makeShapeTransform2By1,
+    makeShapeTransform1By2
+} from "../data";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
 import { renderText2Path, renderTextLayout } from "../render/text";
-import { CursorLocate, TextLocate, locateCursor, locateNextCursor, locatePrevCursor, locateRange, locateText } from "../data/textlocate";
-import { BasicArray } from "../data/basic";
+import {
+    CursorLocate, TextLocate, locateCursor,
+    locateNextCursor, locatePrevCursor, locateRange, locateText
+} from "../data/textlocate";
 import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "../data/textutils";
-import { DViewCtx, PropsType } from "./viewctx";
 import { objectId } from "../basic/objectid";
+import { innerShadowId } from "../render";
 
 export class TextShapeView extends ShapeView {
-
-    // protected isNoSupportDiamondScale(): boolean {
-    //     return this.m_data.isNoSupportDiamondScale;
-    // }
     __str: string | undefined;
     __strText: Text | undefined;
+    m_transform_form_mask?: Transform;
+    m_mask_group?: ShapeView[];
+
     getText(): Text {
         const v = this._findOV(OverrideType.Text, VariableType.Text);
         if (v && typeof v.value === 'string') {
@@ -45,9 +62,11 @@ export class TextShapeView extends ShapeView {
         if (typeof text === 'string') throw new Error("");
         return text;
     }
+
     get data() {
         return this.m_data as TextShape;
     }
+
     get text() {
         return this.getText();
     }
@@ -58,6 +77,7 @@ export class TextShapeView extends ShapeView {
 
     __layoutToken: string | undefined;
     __preText: Text | undefined;
+
     getLayout() {
         const text = this.getText();
         if (this.__preText && this.__layoutToken && objectId(this.__preText) !== objectId(text)) {
@@ -145,27 +165,148 @@ export class TextShapeView extends ShapeView {
         const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
         if (textBehaviour !== TextBehaviour.Flexible) return;
         let notify = false;
-        const width = Math.ceil(this.m_layout.contentWidth);
-        const height = Math.ceil(this.m_layout.contentHeight);
-        const adjX = this.m_layout.alignX;
-        // if (adjX !== 0) {
-        //     this.m_frame.x = origin.x + adjX;
-        //     notify = true;
-        // }
-        // if (width !== this.m_frame.width) {
-        //     this.m_frame.width = width;
-        //     notify = true;
-        // }
-        // if (height !== this.m_frame.height) {
-        //     this.m_frame.height = height;
-        //     notify = true;
-        // }
-        // notify?
         if (notify) {
             this.m_pathstr = undefined; // need update
             this.m_path = undefined;
             this.notify("shape-frame");
         }
+    }
+
+    render(): number {
+        if (!this.checkAndResetDirty()) return this.m_render_version;
+
+        if (!this.isVisible || this.masked) {
+            this.reset("g");
+            return ++this.m_render_version;
+        }
+
+        const fills = this.renderFills() || [];
+        const childs = this.renderContents();
+        const borders = this.renderBorders() || [];
+        const filterId = `${objectId(this)}`;
+        const shadows = this.renderShadows(filterId);
+        const blurId = `blur_${objectId(this)}`;
+        const blur = this.renderBlur(blurId);
+
+        let props = this.renderProps();
+        let children = [...fills, ...childs, ...borders];
+
+        // 阴影
+        if (shadows.length) {
+            let filter: string = '';
+            const inner_url = innerShadowId(filterId, this.getShadows());
+            if (this.type === ShapeType.Rectangle || this.type === ShapeType.Oval) {
+                if (inner_url.length) filter = `${inner_url.join(' ')}`
+            } else {
+                filter = `url(#pd_outer-${filterId}) `;
+                if (inner_url.length) filter += inner_url.join(' ');
+            }
+            children = [...shadows, elh("g", { filter }, children)];
+        }
+
+        // 模糊
+        if (blur.length) {
+            let filter: string = '';
+            if (this.blur?.type === BlurType.Gaussian) filter = `url(#${blurId})`;
+            children = [...blur, elh('g', { filter }, children)];
+        }
+
+        // 遮罩
+        const _mask_space = this.renderMask();
+        if (_mask_space) {
+            Object.assign(props.style, { transform: _mask_space.toString() });
+            const id = `mask-base-${objectId(this)}`;
+            const __body_transform = this.transformFromMask;
+            const __body = elh("g", { style: { transform: __body_transform } }, children);
+            this.bleach(__body);
+            children = [__body];
+            const mask = elh('mask', { id }, children);
+            const rely = elh('g', { mask: `url(#${id})` }, this.relyLayers);
+            children = [mask, rely];
+        }
+
+        this.reset("g", props, children);
+
+        return ++this.m_render_version;
+    }
+
+    get relyLayers() {
+        if (!this.m_transform_form_mask) this.m_transform_form_mask = this.renderMask();
+        if (!this.m_transform_form_mask) return;
+
+        const group = this.m_mask_group || [];
+        if (group.length < 2) return;
+        const inverse = makeShapeTransform2By1(this.m_transform_form_mask).getInverse();
+        const els: EL[] = [];
+        for (let i = 1; i < group.length; i++) {
+            const __s = group[i];
+            const dom = __s.dom;
+            (dom.elattr as any)['style'] = { 'transform': makeShapeTransform1By2(__s.transform2.clone().addTransform(inverse)).toString() };
+            els.push(dom);
+        }
+
+        return els;
+    }
+
+    get transformFromMask() {
+        if (!this.m_transform_form_mask) this.m_transform_form_mask = this.renderMask();
+        if (!this.m_transform_form_mask) return;
+
+        const space = makeShapeTransform2By1(this.m_transform_form_mask).getInverse();
+
+        return makeShapeTransform1By2(this.transform2.clone().addTransform(space)).toString()
+    }
+
+    renderMask() {
+        if (!this.mask) return;
+        const parent = this.parent;
+        if (!parent || parent.type === ShapeType.Page) return;
+        const __children = parent.childs;
+        let index = __children.findIndex(i => i.id === this.id);
+        if (index === -1) return;
+        const maskGroup: ShapeView[] = [this];
+        this.m_mask_group = maskGroup;
+        for (let i = index + 1; i < __children.length; i++) {
+            const cur = __children[i];
+            if (cur && !cur.mask) maskGroup.push(cur);
+            else break;
+        }
+        let x = Infinity;
+        let y = Infinity;
+
+        maskGroup.forEach(s => {
+            const box = s.boundingBox();
+            if (box.x < x) x = box.x;
+            if (box.y < y) y = box.y;
+        });
+
+        return new Transform(1, 0, x, 0, 1, y);
+    }
+
+    bleach(el: EL) {  // 漂白
+        if (el.elattr.fill) el.elattr.fill = '#FFF';
+        if (el.elattr.stroke) el.elattr.stroke = '#FFF';
+
+        // 漂白字体
+        if (el.eltag === 'text') {
+            if ((el.elattr?.style as any).fill) {
+                (el.elattr?.style as any).fill = '#FFF'
+            }
+        }
+
+        // 漂白阴影
+        if (el.eltag === 'feColorMatrix' && el.elattr.result) {
+            let values: any = el.elattr.values;
+            if (values) values = values.split(' ');
+            if (values[3]) values[3] = 1;
+            if (values[8]) values[8] = 1;
+            if (values[13]) values[13] = 1;
+            el.elattr.values = values.join(' ');
+        }
+
+        // 渐变漂白不了
+
+        if (Array.isArray(el.elchilds)) el.elchilds.forEach(el => this.bleach(el));
     }
 
     onDestory(): void {

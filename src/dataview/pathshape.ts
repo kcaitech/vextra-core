@@ -7,7 +7,8 @@ import {
     ShapeSize,
     ShapeType,
     SymbolRefShape,
-    SymbolShape, Transform
+    SymbolShape,
+    Transform
 } from "../data";
 import { ShapeView } from "./shape";
 import { EL, elh } from "./el";
@@ -15,11 +16,11 @@ import { innerShadowId, renderBorders } from "../render";
 import { objectId } from "../basic/objectid";
 import { BlurType, PathSegment } from "../data/typesdefine";
 import { render as renderLineBorders } from "../render/line_borders"
-import { GroupShapeView } from "./groupshape";
 
 export class PathShapeView extends ShapeView {
-
     m_pathsegs?: PathSegment[];
+    m_transform_form_mask?: Transform;
+    m_mask_group?: ShapeView[];
 
     get segments() {
         return this.m_pathsegs || (this.m_data as PathShape2).pathsegs;
@@ -51,7 +52,7 @@ export class PathShapeView extends ShapeView {
     render(): number {
         if (!this.checkAndResetDirty()) return this.m_render_version;
 
-        if (!this.isVisible) {
+        if (!this.isVisible || this.masked) {
             this.reset("g");
             return ++this.m_render_version;
         }
@@ -86,39 +87,94 @@ export class PathShapeView extends ShapeView {
             children = [...blur, elh('g', { filter }, children)];
         }
 
+        // 遮罩
+        const _mask_space = this.renderMask();
+        if (_mask_space) {
+            Object.assign(props.style, { transform: _mask_space.toString() });
+            const id = `mask-base-${objectId(this)}`;
+            const __body_transform = this.transformFromMask;
+            const __body = elh("g", { style: { transform: __body_transform } }, children);
+            this.bleach(__body);
+            children = [__body];
+            const mask = elh('mask', { id }, children);
+            const rely = elh('g', { mask: `url(#${id})` }, this.relyLayers);
+            children = [mask, rely];
+        }
+
         this.reset("g", props, children);
 
         return ++this.m_render_version;
     }
 
-    // renderMasked() {
-    //     const fills = this.renderFills() || [];
-    //     const borders = this.renderBorders() || [];
-    //
-    //     const props = this.renderProps();
-    //
-    //     const t = makeShapeTransform2By1(this.maskTransform);
-    //     const ot = this.transform2;
-    //     ot.addTransform(t.getInverse());
-    //     (props as any).style['transform'] = makeShapeTransform1By2(ot).toString();
-    //     return elh("g", props, [...fills, ...borders]);
-    // }
+    get relyLayers() {
+        if (!this.m_transform_form_mask) this.m_transform_form_mask = this.renderMask();
+        if (!this.m_transform_form_mask) return;
 
-    // get maskTransform() {
-    //     const parent = this.parent as GroupShapeView;
-    //     const maskArea: ShapeView[] = [];
-    //     let x = Infinity;
-    //     let y = Infinity;
-    //
-    //     maskArea.forEach(s => {
-    //         const box = s.boundingBox();
-    //         if (box.x < x) x = box.x;
-    //         if (box.y < y) y = box.y;
-    //     });
-    //
-    //     return new Transform(1, 0, x, 0, 1, y);
-    // }
+        const group = this.m_mask_group || [];
+        if (group.length < 2) return;
+        const inverse = makeShapeTransform2By1(this.m_transform_form_mask).getInverse();
+        const els: EL[] = [];
+        for (let i = 1; i < group.length; i++) {
+            const __s = group[i];
+            const dom = __s.dom;
+            (dom.elattr as any)['style'] = { 'transform': makeShapeTransform1By2(__s.transform2.clone().addTransform(inverse)).toString() };
+            els.push(dom);
+        }
 
+        return els;
+    }
+
+    get transformFromMask() {
+        if (!this.m_transform_form_mask) this.m_transform_form_mask = this.renderMask();
+        if (!this.m_transform_form_mask) return;
+
+        const space = makeShapeTransform2By1(this.m_transform_form_mask).getInverse();
+
+        return makeShapeTransform1By2(this.transform2.clone().addTransform(space)).toString()
+    }
+
+    renderMask() {
+        if (!this.mask) return;
+        const parent = this.parent;
+        if (!parent || parent.type === ShapeType.Page) return;
+        const __children = parent.childs;
+        let index = __children.findIndex(i => i.id === this.id);
+        if (index === -1) return;
+        const maskGroup: ShapeView[] = [this];
+        this.m_mask_group = maskGroup;
+        for (let i = index + 1; i < __children.length; i++) {
+            const cur = __children[i];
+            if (cur && !cur.mask) maskGroup.push(cur);
+            else break;
+        }
+        let x = Infinity;
+        let y = Infinity;
+
+        maskGroup.forEach(s => {
+            const box = s.boundingBox();
+            if (box.x < x) x = box.x;
+            if (box.y < y) y = box.y;
+        });
+
+        return new Transform(1, 0, x, 0, 1, y);
+    }
+    bleach(el: EL) {  // 漂白
+        if (el.elattr.fill) el.elattr.fill = '#FFF';
+        if (el.elattr.stroke) el.elattr.stroke = '#FFF';
+        // 漂白阴影
+        if (el.eltag === 'feColorMatrix' && el.elattr.result) {
+            let values: any = el.elattr.values;
+            if (values) values = values.split(' ');
+            if (values[3]) values[3] = 1;
+            if (values[8]) values[8] = 1;
+            if (values[13]) values[13] = 1;
+            el.elattr.values = values.join(' ');
+        }
+
+        // 渐变漂白不了
+
+        if (Array.isArray(el.elchilds)) el.elchilds.forEach(el => this.bleach(el));
+    }
     renderStatic() {
         const fills = this.renderFills() || []; // cache
         const childs = this.renderContents(); // VDomArray
@@ -157,10 +213,4 @@ export class PathShapeView extends ShapeView {
         }
     }
 
-    bleach(el: EL) {  // 漂白
-        if (el.elattr.fill) el.elattr.fill = '#FFF';
-        if (Array.isArray(el.elchilds)) {
-            el.elchilds.forEach(e => this.bleach(e));
-        }
-    }
 }
