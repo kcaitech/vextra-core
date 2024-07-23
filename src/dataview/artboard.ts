@@ -25,7 +25,7 @@ export class ArtboradView extends GroupShapeView {
         return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.data);
     }
 
-    protected renderProps(): { [key: string]: string } {
+    protected renderProps(): { [key: string]: string } & { style: any } {
         const shape = this.m_data;
         const props: any = {
             xmlns: "http://www.w3.org/2000/svg",
@@ -97,6 +97,7 @@ export class ArtboradView extends GroupShapeView {
         const fills = this.renderFills() || []; // cache
         // childs
         const childs = this.renderContents(); // VDomArray
+        if (this.m_data.name === '容器 2') console.log('_childs_', childs);
         // border
         const borders = this.renderBorders() || []; // ELArray
 
@@ -151,9 +152,6 @@ export class ArtboradView extends GroupShapeView {
         return ++this.m_render_version;
     }
 
-    // get points() {
-    //     return (this.m_data as Artboard).points;
-    // }
     get guides() {
         return (this.m_data as Page).guides;
     }

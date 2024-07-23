@@ -1,11 +1,13 @@
 import {
+    makeShapeTransform1By2,
+    makeShapeTransform2By1,
     PathShape,
     PathShape2,
     Shape,
     ShapeSize,
     ShapeType,
     SymbolRefShape,
-    SymbolShape
+    SymbolShape, Transform
 } from "../data";
 import { ShapeView } from "./shape";
 import { EL, elh } from "./el";
@@ -13,6 +15,7 @@ import { innerShadowId, renderBorders } from "../render";
 import { objectId } from "../basic/objectid";
 import { BlurType, PathSegment } from "../data/typesdefine";
 import { render as renderLineBorders } from "../render/line_borders"
+import { GroupShapeView } from "./groupshape";
 
 export class PathShapeView extends ShapeView {
 
@@ -53,70 +56,68 @@ export class PathShapeView extends ShapeView {
             return ++this.m_render_version;
         }
 
-        const fills = this.renderFills() || []; // cache
-        const borders = this.renderBorders() || []; // ELArray
-        const childs = this.renderContents(); // VDomArray
-
-        const props = this.renderProps();
+        const fills = this.renderFills() || [];
+        const borders = this.renderBorders() || [];
         const filterId = `${objectId(this)}`;
         const shadows = this.renderShadows(filterId);
         const blurId = `blur_${objectId(this)}`;
         const blur = this.renderBlur(blurId);
-        const g_props: any = {}
-        const contextSettings = this.style.contextSettings;
-        if (contextSettings) {
-            const style: any = {
-                'mix-blend-mode': contextSettings.blenMode
-            }
-            if (blur.length) {
-                g_props.style = style;
-                g_props.opacity = props.opacity;
-                delete props.opacity;
-            } else {
-                if (props.style) {
-                    (props.style as any)['mix-blend-mode'] = contextSettings.blenMode;
-                } else {
-                    props.style = style;
-                }
-            }
-        }
-        if (shadows.length) { // 阴影
-            const ex_props = Object.assign({}, props);
-            delete props.style;
-            delete props.transform;
-            delete props.opacity;
+
+        let props = this.renderProps();
+        let children = [...fills, ...borders];
+
+        // 阴影
+        if (shadows.length) {
+            let filter: string = '';
             const inner_url = innerShadowId(filterId, this.getShadows());
             if (this.type === ShapeType.Rectangle || this.type === ShapeType.Oval) {
-                if (blur.length && inner_url.length) {
-                    props.filter = `${inner_url.join(' ')}`
-                    if (this.blur?.type === BlurType.Gaussian) props.filter += ` url(#${blurId})`
-                } else {
-                    if (inner_url.length) props.filter = inner_url.join(' ');
-                    if (blur.length && this.blur?.type === BlurType.Gaussian) props.filter = `url(#${blurId})`;
-                }
+                if (inner_url.length) filter = `${inner_url.join(' ')}`
             } else {
-                props.filter = `url(#pd_outer-${filterId}) `;
-                if (blur.length && this.blur?.type === BlurType.Gaussian) props.filter += `url(#${blurId}) `;
-                if (inner_url.length) props.filter += inner_url.join(' ');
+                filter = `url(#pd_outer-${filterId}) `;
+                if (inner_url.length) filter += inner_url.join(' ');
             }
-            const body = elh("g", props, [...fills, ...childs, ...borders]);
-            if (blur.length) {
-                const g = elh('g', g_props, [...shadows, body]);
-                this.reset("g", ex_props, [...blur, g])
-            } else {
-                this.reset("g", ex_props, [...shadows, body])
-            }
-        } else {
-            if (blur.length && this.blur?.type === BlurType.Gaussian) props.filter = `url(#${blurId})`;
-            if (blur.length) {
-                const g = elh('g', g_props, [...fills, ...childs, ...borders]);
-                this.reset("g", props, [...blur, g]);
-            } else {
-                this.reset("g", props, [...blur, ...fills, ...childs, ...borders]);
-            }
+            children = [...shadows, elh("g", { filter }, children)];
         }
+
+        // 模糊
+        if (blur.length) {
+            let filter: string = '';
+            if (this.blur?.type === BlurType.Gaussian) filter = `url(#${blurId})`;
+            children = [...blur, elh('g', { filter }, children)];
+        }
+
+        this.reset("g", props, children);
+
         return ++this.m_render_version;
     }
+
+    // renderMasked() {
+    //     const fills = this.renderFills() || [];
+    //     const borders = this.renderBorders() || [];
+    //
+    //     const props = this.renderProps();
+    //
+    //     const t = makeShapeTransform2By1(this.maskTransform);
+    //     const ot = this.transform2;
+    //     ot.addTransform(t.getInverse());
+    //     (props as any).style['transform'] = makeShapeTransform1By2(ot).toString();
+    //     return elh("g", props, [...fills, ...borders]);
+    // }
+
+    // get maskTransform() {
+    //     const parent = this.parent as GroupShapeView;
+    //     const maskArea: ShapeView[] = [];
+    //     let x = Infinity;
+    //     let y = Infinity;
+    //
+    //     maskArea.forEach(s => {
+    //         const box = s.boundingBox();
+    //         if (box.x < x) x = box.x;
+    //         if (box.y < y) y = box.y;
+    //     });
+    //
+    //     return new Transform(1, 0, x, 0, 1, y);
+    // }
 
     renderStatic() {
         const fills = this.renderFills() || []; // cache
@@ -153,6 +154,13 @@ export class PathShapeView extends ShapeView {
         } else {
             if (blur.length && this.blur?.type === BlurType.Gaussian) props.filter = `url(#${blurId})`;
             return elh("g", props, [...blur, ...fills, ...childs, ...borders]);
+        }
+    }
+
+    bleach(el: EL) {  // 漂白
+        if (el.elattr.fill) el.elattr.fill = '#FFF';
+        if (Array.isArray(el.elchilds)) {
+            el.elchilds.forEach(e => this.bleach(e));
         }
     }
 }

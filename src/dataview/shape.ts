@@ -612,10 +612,6 @@ export class ShapeView extends DataView {
                 // update varscontainer
                 this.m_ctx.removeDirty(this);
                 this.varsContainer = props.varsContainer;
-                const _id = this.id;
-                // if (_id !== tid) {
-                //     // tid = _id;
-                // }
             }
         }
 
@@ -655,29 +651,23 @@ export class ShapeView extends DataView {
         return renderBlur(elh, this.blur, blurId, this.size, this.getFills(), this.getPathStr());
     }
 
-    protected renderProps(): { [key: string]: string } {
-        const frame = this.frame;
-        // const path = this.getPath(); // cache
-        const props: any = {}
+    protected renderProps(): { [key: string]: string } & { style: any } {
+        const props: any = {};
+        const style: any = {};
+
+        style['transform'] = this.transform.toString();
 
         const contextSettings = this.contextSettings;
-        if (contextSettings && (contextSettings.opacity ?? 1) !== 1) {
-            props.opacity = contextSettings.opacity;
+
+        if (contextSettings) {
+            if (contextSettings.opacity !== undefined) {
+                props.opacity = contextSettings.opacity;
+            }
+            style['mix-blend-mode'] = contextSettings.blenMode;
         }
 
-        // 填充需要应用transform，边框不用，直接变换path
-        if (this.isNoTransform()) {
-            if (frame.x !== 0 || frame.y !== 0) props.transform = `translate(${frame.x},${frame.y})`
-        } else {
-            props.style = { transform: this.transform.toString() };
-        }
-        if (contextSettings) {
-            if (props.style) {
-                props.style['mix-blend-mode'] = contextSettings.blenMode;
-            } else {
-                props.style = { 'mix-blend-mode': contextSettings.blenMode };
-            }
-        }
+        props.style = style;
+
         return props;
     }
 
@@ -718,7 +708,7 @@ export class ShapeView extends DataView {
 
     protected renderContents(): EL[] {
         const childs = this.m_children;
-        childs.forEach((c) => c.render())
+        childs.forEach((c) => c.render());
         return childs;
     }
 
