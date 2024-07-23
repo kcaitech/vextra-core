@@ -20,7 +20,9 @@ import {
     importTableCell,
     importVariable,
     importOverlayBackgroundAppearance,
-    importPrototypeExtrascrolloffset
+    importPrototypeExtrascrolloffset,
+    importPrototypeActions_easingFunction,
+    importPrototypeActions
 } from "../../data/baseimport";
 import { SNumber } from "../../coop/client/snumber";
 import { FMT_VER_latest } from "../../data/fmtver";
@@ -40,6 +42,7 @@ importh['symbol-union-shape'] = importSymbolUnionShape;
 importh['prototype-starting-point'] = importPrototypeStartingPoint;
 importh['overlay-background-appearance'] = importOverlayBackgroundAppearance;
 importh['prototype-extrascrolloffset'] = importPrototypeExtrascrolloffset;
+importh['prototype-actions'] = importPrototypeActions;
 importh['paint-filter'] = importPaintFilter;
 
 function apply(document: Document, target: Object, op: IdOp): IdOpRecord {
@@ -54,7 +57,12 @@ function apply(document: Document, target: Object, op: IdOp): IdOpRecord {
         const data = JSON.parse(op.data);
         const typeId = data.typeId;
         const h = importh[typeId];
-        if (h) {
+        if (Array.isArray(data)) {
+            data.forEach(v => {
+                if (typeof v !== "number") throw new Error();
+            })
+            value = new BasicArray(...data);
+        } else if (h) {
             value = h(data, ctx);
         } else {
             throw new Error('need import ' + typeId)
