@@ -778,7 +778,6 @@ export function exportOverlayBackgroundAppearance(source: types.OverlayBackgroun
 /* actions */
 export function exportPrototypeActions(source: types.PrototypeActions, ctx?: IExportContext): types.PrototypeActions {
     const ret: types.PrototypeActions = {} as types.PrototypeActions
-    ret.crdtidx = exportCrdtidx(source.crdtidx, ctx)
     ret.id = source.id
     ret.connectionType = exportPrototypeConnectionType(source.connectionType, ctx)
     if (source.typeId) ret.typeId = source.typeId

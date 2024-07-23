@@ -17,8 +17,7 @@ import * as classes from "./baseclasses";
 import { BasicArray } from "./basic";
 import { Path } from "./path";
 import { RadiusType } from "./consts";
-import { Guide, PrototypeInterAction, OverlayBackgroundAppearance } from "./baseclasses";
-import { Color } from "./color";
+import { Guide} from "./baseclasses";
 
 
 export class Artboard extends GroupShape implements classes.Artboard {

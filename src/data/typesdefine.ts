@@ -680,7 +680,6 @@ export type OverlayBackgroundAppearance = {
 }
 /* actions */
 export type PrototypeActions = {
-    crdtidx: Crdtidx,
     id: string,
     connectionType: PrototypeConnectionType,
     typeId?: string,

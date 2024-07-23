@@ -36,12 +36,10 @@ type PrototypeInterAction_crdtidx = BasicArray<number>
 
 export class PrototypeActions extends classes.PrototypeActions {
     constructor(
-        crdtidx: BasicArray<number>,
         id: string,
         connectionType: PrototypeConnectionType,
     ) {
         super(
-            crdtidx,
             id,
             connectionType
         )
