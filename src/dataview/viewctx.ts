@@ -3,7 +3,7 @@ import { Shape, ShapeType, SymbolShape } from "../data/shape";
 import { SymbolRefShape } from "../data/classes";
 import { EventEmitter } from "../basic/event";
 import { objectId } from "../basic/objectid";
-import { ShapeFrame } from "src/data/typesdefine";
+import { Notifiable } from "../data/basic";
 
 
 export type VarsContainer = (SymbolRefShape | SymbolShape)[];
@@ -16,16 +16,126 @@ export interface PropsType {
     isVirtual?: boolean;
 }
 
-interface DataView {
+interface DataView extends Notifiable {
     // id: string;
     layout(props?: PropsType): void;
     render(): number;
     parent?: DataView;
+    updateFrames(): boolean;
+    emit(name: string, ...args: any[]): void;
 }
 
 export interface ViewType {
     new(ctx: DViewCtx, props: PropsType): DataView;
 }
+
+class FrameUpdateArr extends Array<DataView> {
+    private __set = new Set<number>();
+    push(...items: DataView[]): number {
+        for (let i = 0, len = items.length; i < len; ++i) {
+            const item = items[i];
+            const id = objectId(item);
+            if (this.__set.has(id)) continue;
+            this.__set.add(id);
+            super.push(item);
+        }
+        return this.length;
+    }
+    clear() {
+        this.__set.clear();
+        this.length = 0;
+    }
+}
+
+export function updateViewsFrame(updates: { data: DataView }[]) {
+    if (updates.length === 0) return;
+    type Node = { view: DataView, updated: boolean, childs: Node[], changed: boolean, needupdate: boolean, parent: Node | undefined }
+    const updatetree: Map<number, Node> = new Map();
+    updates.forEach((_s) => {
+        const s = _s.data;
+        let n: Node | undefined = updatetree.get(objectId(s));
+        if (n) {
+            n.needupdate = true;
+            return;
+        }
+        n = { view: s, updated: false, childs: [], changed: false, needupdate: true, parent: undefined }
+        updatetree.set(objectId(s), n);
+
+        let cn = n;
+        let p = s.parent;
+        while (p) {
+            let pn: Node | undefined = updatetree.get(objectId(p));
+            if (!pn) {
+                pn = { view: p, updated: false, childs: [], changed: false, needupdate: false, parent: undefined }
+                updatetree.set(objectId(p), pn);
+            }
+
+            pn.childs.push(cn);
+            cn.parent = pn;
+
+            cn = pn;
+            p = p.parent;
+        }
+    });
+
+    const nextRoot = () => {
+        const n = updatetree.entries().next();
+        if (n.done) return undefined;
+        let node = n.value[1];
+        // 防止循环引用
+        let maxloop = 10000;
+        while (node.parent && (--maxloop > 0)) node = node.parent;
+        if (maxloop <= 0) throw new Error("circular reference")
+        return node;
+    }
+
+    const dropTree = (root: Node) => {
+        const nodes = [root];
+        let n = nodes.pop();
+        while (n) {
+            if (n.childs.length > 0) nodes.push(...n.childs);
+            updatetree.delete(objectId(n.view))
+            n = nodes.pop();
+        }
+    }
+
+    const afterTravel = (root: Node, traver: (n: Node) => void) => {
+        const nodes = [{ node: root, visited: false }];
+
+        let n = nodes[nodes.length - 1];
+        while (n) {
+            if (n.visited || n.node.childs.length === 0) {
+                traver(n.node);
+                nodes.pop();
+            }
+            else {
+                n.visited = true;
+                nodes.push(...n.node.childs.map(n => ({ node: n, visited: false })));
+            }
+            n = nodes[nodes.length - 1];
+        }
+    }
+
+    let root = nextRoot();
+    while (root) {
+        // 从下往上更新
+        afterTravel(root, (next: Node) => {
+            const needupdate = next.needupdate || ((childs) => {
+                for (let i = 0; i < childs.length; i++) {
+                    if (childs[i].changed) return true;
+                }
+                return false;
+            })(next.childs)
+            const changed = needupdate && next.view.updateFrames();
+            next.updated = true;
+            next.changed = changed;
+        })
+
+        dropTree(root);
+        root = nextRoot();
+    }
+}
+
 
 export class DViewCtx extends EventEmitter {
 
@@ -40,6 +150,8 @@ export class DViewCtx extends EventEmitter {
     // 要由上往下更新
     protected dirtyset: Map<number, DataView> = new Map();
 
+    private needNotify: Map<number, DataView> = new Map();
+
     setReLayout(v: DataView) {
         this.relayoutset.set(objectId(v), v);
         this._continueLoop();
@@ -47,6 +159,10 @@ export class DViewCtx extends EventEmitter {
     setDirty(v: DataView) {
         this.dirtyset.set(objectId(v), v);
         this._continueLoop();
+    }
+
+    addNotifyLayout(v: DataView) {
+        this.needNotify.set(objectId(v), v);
     }
 
     removeReLayout(v: DataView) {
@@ -103,7 +219,61 @@ export class DViewCtx extends EventEmitter {
                 d.layout();
             }
         }
+
+        // update frames
+        updateViewsFrame(update);
     }
+
+    private updateFocus() {
+        if (!this.focusshape) return false;
+
+        const startTime = Date.now();
+        const focusdepends: number[] = [];
+        let p: Shape | undefined = this.focusshape;
+        while (p) {
+            focusdepends.push(objectId(p));
+            p = p.parent;
+        }
+
+        const needupdate: DataView[] = [];
+        this.relayoutset.forEach((v, k) => {
+            needupdate.push(v);
+        });
+        // 由高向下更新
+        for (let i = focusdepends.length - 1; i >= 0; i--) {
+            const d = this.relayoutset.get(focusdepends[i]);
+            if (d) d.layout();
+        }
+
+        const updated: { data: DataView }[] = [];
+        for (let i = 0, len = needupdate.length; i < len; ++i) {
+            if (!this.relayoutset.get(objectId(needupdate[i]))) {
+                updated.push({ data: needupdate[i] })
+            }
+        }
+        // update frames
+        updateViewsFrame(updated);
+
+        for (let i = focusdepends.length - 1; i >= 0; i--) {
+            const d = this.dirtyset.get(focusdepends[i]);
+            if (d) d.render();
+        }
+
+        this.notifyLayout();
+
+        // check time
+        const expendsTime = Date.now() - startTime;
+        return (expendsTime > DViewCtx.FRAME_TIME);
+    }
+
+    private notifyLayout() {
+        this.needNotify.forEach((v) => {
+            v.notify('layout');
+            v.emit('layout');
+        });
+        this.needNotify.clear();
+    }
+
     // todo idle
     // todo selection
     // protected idlecallbacks: Array<() => boolean> = [];
@@ -116,34 +286,10 @@ export class DViewCtx extends EventEmitter {
     protected aloop(): boolean {
 
         const hasUpdate = this.relayoutset.size > 0 || this.dirtyset.size > 0;
-        const startTime = Date.now();
 
         // 优先更新选中对象
-        if (this.focusshape) {
-
-            const focusdepends: number[] = [];
-            let p: Shape | undefined = this.focusshape;
-            while (p) {
-                focusdepends.push(objectId(p));
-                p = p.parent;
-            }
-
-            // 由高向下更新
-            for (let i = focusdepends.length - 1; i >= 0; i--) {
-                const d = this.relayoutset.get(focusdepends[i]);
-                if (d) d.layout();
-            }
-
-            for (let i = focusdepends.length - 1; i >= 0; i--) {
-                const d = this.dirtyset.get(focusdepends[i]);
-                if (d) d.render();
-            }
-
-            // check time
-            const expendsTime = Date.now() - startTime;
-            if (expendsTime > DViewCtx.FRAME_TIME) {
-                return true;
-            }
+        if (this.updateFocus()) {
+            return true;
         }
 
         // update
@@ -167,6 +313,8 @@ export class DViewCtx extends EventEmitter {
         this.dirtyset.forEach((v, k) => {
             v.render();
         });
+
+        this.notifyLayout();
 
         if (this.relayoutset.size || this.dirtyset.size) {
             console.log("loop not empty ", this.relayoutset.size, this.dirtyset.size);

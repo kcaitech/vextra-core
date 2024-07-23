@@ -23,9 +23,8 @@ export function startLoader(file: IJSON, pages: IJSON[], document: Document) {
         // ctx.shapeIds.clear();
         const json: IJSON | undefined = pages.find(p => p.id === id);
         if (!json) {
-            const size = new ShapeSize(100, 100);
             const trans = new Transform();
-            return new Page(new BasicArray(), id, "", ShapeType.Page, trans, size, new Style(new BasicArray(), new BasicArray(), new BasicArray()), new BasicArray());
+            return new Page(new BasicArray(), id, "", ShapeType.Page, trans, new Style(new BasicArray(), new BasicArray(), new BasicArray()), new BasicArray());
         }
         const page = importPage(ctx, json, importer);
         updatePageFrame(page);

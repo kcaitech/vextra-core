@@ -743,7 +743,6 @@ export class Shape extends Basic {
     name: string
     type: ShapeType
     transform: Transform
-    size: ShapeSize
     style: Style
     boolOp?: BoolOp
     isFixedToViewport?: boolean
@@ -759,14 +758,13 @@ export class Shape extends Basic {
     shouldBreakMaskChain?: boolean
     varbinds?: BasicMap<string, string>
     haveEdit?: boolean
-    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, size: ShapeSize, style: Style) {
+    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style) {
         super()
         this.crdtidx = crdtidx
         this.id = id
         this.name = name
         this.type = type
         this.transform = transform
-        this.size = size
         this.style = style
     }
 }
@@ -778,8 +776,8 @@ export class TableCell extends Shape {
     imageRef?: string
     rowSpan?: number
     colSpan?: number
-    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, size: ShapeSize, style: Style, cellType: TableCellType, text: Text) {
-        super(crdtidx, id, name, type, transform, size, style)
+    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style, cellType: TableCellType, text: Text) {
+        super(crdtidx, id, name, type, transform, style)
         this.cellType = cellType
         this.text = text
     }
@@ -787,12 +785,14 @@ export class TableCell extends Shape {
 /* table shape */
 export class TableShape extends Shape {
     typeId = "table-shape"
+    size: ShapeSize
     cells: BasicMap<string, TableCell>
     rowHeights: TableShape_rowHeights
     colWidths: TableShape_colWidths
     textAttr?: TextAttr
-    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, size: ShapeSize, style: Style, cells: BasicMap<string, TableCell>, rowHeights: TableShape_rowHeights, colWidths: TableShape_colWidths) {
-        super(crdtidx, id, name, type, transform, size, style)
+    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style, size: ShapeSize, cells: BasicMap<string, TableCell>, rowHeights: TableShape_rowHeights, colWidths: TableShape_colWidths) {
+        super(crdtidx, id, name, type, transform, style)
+        this.size = size
         this.cells = cells
         this.rowHeights = rowHeights
         this.colWidths = colWidths
@@ -801,10 +801,12 @@ export class TableShape extends Shape {
 /* text shape */
 export class TextShape extends Shape {
     typeId = "text-shape"
+    size: ShapeSize
     text: Text
     fixedRadius?: number
-    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, size: ShapeSize, style: Style, text: Text) {
-        super(crdtidx, id, name, type, transform, size, style)
+    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style, size: ShapeSize, text: Text) {
+        super(crdtidx, id, name, type, transform, style)
+        this.size = size
         this.text = text
     }
 }
@@ -849,20 +851,24 @@ export class Comment extends Basic {
 /* path shape */
 export class PathShape extends Shape {
     typeId = "path-shape"
+    size: ShapeSize
     pathsegs: PathShape_pathsegs
     fixedRadius?: number
-    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, size: ShapeSize, style: Style, pathsegs: PathShape_pathsegs) {
-        super(crdtidx, id, name, type, transform, size, style)
+    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style, size: ShapeSize, pathsegs: PathShape_pathsegs) {
+        super(crdtidx, id, name, type, transform, style)
+        this.size = size
         this.pathsegs = pathsegs
     }
 }
 /* path shape */
 export class PathShape2 extends Shape {
     typeId = "path-shape2"
+    size: ShapeSize
     pathsegs: PathShape2_pathsegs
     fixedRadius?: number
-    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, size: ShapeSize, style: Style, pathsegs: PathShape2_pathsegs) {
-        super(crdtidx, id, name, type, transform, size, style)
+    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style, size: ShapeSize, pathsegs: PathShape2_pathsegs) {
+        super(crdtidx, id, name, type, transform, style)
+        this.size = size
         this.pathsegs = pathsegs
     }
 }
@@ -870,8 +876,8 @@ export class PathShape2 extends Shape {
 export class PolygonShape extends PathShape {
     typeId = "polygon-shape"
     counts: number
-    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, size: ShapeSize, style: Style, pathsegs: PathShape_pathsegs, counts: number = 3) {
-        super(crdtidx, id, name, type, transform, size, style, pathsegs)
+    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style, size: ShapeSize, pathsegs: PathShape_pathsegs, counts: number = 3) {
+        super(crdtidx, id, name, type, transform, style, size, pathsegs)
         this.counts = counts
     }
 }
@@ -884,8 +890,8 @@ export class StarShape extends PathShape {
     typeId = "star-shape"
     counts: number
     innerAngle: number
-    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, size: ShapeSize, style: Style, pathsegs: PathShape_pathsegs, counts: number = 5, innerAngle: number = 0.382) {
-        super(crdtidx, id, name, type, transform, size, style, pathsegs)
+    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style, size: ShapeSize, pathsegs: PathShape_pathsegs, counts: number = 5, innerAngle: number = 0.382) {
+        super(crdtidx, id, name, type, transform, style, size, pathsegs)
         this.counts = counts
         this.innerAngle = innerAngle
     }
@@ -893,13 +899,15 @@ export class StarShape extends PathShape {
 /* symbol ref shape */
 export class SymbolRefShape extends Shape {
     typeId = "symbol-ref-shape"
+    size: ShapeSize
     refId: string
     variables: BasicMap<string, Variable>
     overrides?: BasicMap<string, string>
     isCustomSize?: boolean
     cornerRadius?: CornerRadius
-    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, size: ShapeSize, style: Style, refId: string, variables: BasicMap<string, Variable>) {
-        super(crdtidx, id, name, type, transform, size, style)
+    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style, size: ShapeSize, refId: string, variables: BasicMap<string, Variable>) {
+        super(crdtidx, id, name, type, transform, style)
+        this.size = size
         this.refId = refId
         this.variables = variables
     }
@@ -912,8 +920,8 @@ export class ContactShape extends PathShape {
     mark: boolean
     from?: ContactForm
     to?: ContactForm
-    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, size: ShapeSize, style: Style, pathsegs: PathShape_pathsegs, isEdited: boolean, text: Text, mark: boolean) {
-        super(crdtidx, id, name, type, transform, size, style, pathsegs)
+    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style, size: ShapeSize, pathsegs: PathShape_pathsegs, isEdited: boolean, text: Text, mark: boolean) {
+        super(crdtidx, id, name, type, transform, style, size, pathsegs)
         this.isEdited = isEdited
         this.text = text
         this.mark = mark
@@ -927,8 +935,8 @@ export class CutoutShape extends PathShape {
 export class ImageShape extends PathShape {
     typeId = "image-shape"
     imageRef: string
-    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, size: ShapeSize, style: Style, pathsegs: PathShape_pathsegs, imageRef: string) {
-        super(crdtidx, id, name, type, transform, size, style, pathsegs)
+    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style, size: ShapeSize, pathsegs: PathShape_pathsegs, imageRef: string) {
+        super(crdtidx, id, name, type, transform, style, size, pathsegs)
         this.imageRef = imageRef
     }
 }
@@ -940,8 +948,8 @@ export class LineShape extends PathShape {
 export class OvalShape extends PathShape {
     typeId = "oval-shape"
     ellipse: Ellipse
-    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, size: ShapeSize, style: Style, pathsegs: PathShape_pathsegs, ellipse: Ellipse) {
-        super(crdtidx, id, name, type, transform, size, style, pathsegs)
+    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style, size: ShapeSize, pathsegs: PathShape_pathsegs, ellipse: Ellipse) {
+        super(crdtidx, id, name, type, transform, style, size, pathsegs)
         this.ellipse = ellipse
     }
 }
@@ -950,8 +958,8 @@ export class GroupShape extends Shape {
     typeId = "group-shape"
     childs: GroupShape_childs
     fixedRadius?: number
-    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, size: ShapeSize, style: Style, childs: GroupShape_childs) {
-        super(crdtidx, id, name, type, transform, size, style)
+    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style, childs: GroupShape_childs) {
+        super(crdtidx, id, name, type, transform, style)
         this.childs = childs
     }
 }
@@ -964,12 +972,14 @@ export class Page extends GroupShape {
 /* symbol shape */
 export class SymbolShape extends GroupShape {
     typeId = "symbol-shape"
+    size: ShapeSize
     variables: BasicMap<string, Variable>
     symtags?: BasicMap<string, string>
     cornerRadius?: CornerRadius
     guides?: SymbolShape_guides
-    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, size: ShapeSize, style: Style, childs: GroupShape_childs, variables: BasicMap<string, Variable>) {
-        super(crdtidx, id, name, type, transform, size, style, childs)
+    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style, childs: GroupShape_childs, size: ShapeSize, variables: BasicMap<string, Variable>) {
+        super(crdtidx, id, name, type, transform, style, childs)
+        this.size = size
         this.variables = variables
     }
 }
@@ -980,8 +990,13 @@ export class SymbolUnionShape extends SymbolShape {
 /* artboard shape */
 export class Artboard extends GroupShape {
     typeId = "artboard"
+    size: ShapeSize
     cornerRadius?: CornerRadius
     guides?: Artboard_guides
+    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style, childs: GroupShape_childs, size: ShapeSize) {
+        super(crdtidx, id, name, type, transform, style, childs)
+        this.size = size
+    }
 }
 /* bool shape */
 export class BoolShape extends GroupShape {

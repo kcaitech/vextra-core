@@ -1,6 +1,5 @@
-import { BoolOp, BoolShape, Border, BorderPosition, Path, PathShape, ShapeFrame, parsePath } from "../data/classes";
-import { ShapeView } from "./shape";
-import { DViewCtx, PropsType } from "./viewctx";
+import { BoolOp, BoolShape, Border, BorderPosition, Path, PathShape, ShapeFrame, ShapeSize, parsePath } from "../data/classes";
+import { ShapeView, updateFrame } from "./shape";
 import { IPalPath, gPal } from "../basic/pal";
 import { TextShapeView } from "./textshape";
 import { GroupShapeView } from "./groupshape";
@@ -207,13 +206,16 @@ function render2path(shape: ShapeView): Path {
     if (fVisibleIdx >= cc) return new Path();
 
     const child0 = shape.m_children[fVisibleIdx] as ShapeView;
-    const frame0 = child0.frame;
+    let frame0: ShapeFrame;
     const path0 = render2path(child0);
 
     if (child0.isNoTransform()) {
-        path0.translate(frame0.x, frame0.y);
+        path0.translate(child0.transform.translateX, child0.transform.translateY);
+        frame0 = new ShapeFrame(child0.transform.translateX, child0.transform.translateY, child0.frame.width, child0.frame.height);
     } else {
-        path0.transform(child0.matrix2Parent())
+        path0.transform(child0.matrix2Parent());
+        const bounds = path0.calcBounds();
+        frame0 = new ShapeFrame(bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
     }
 
     const pframe = shape.frame;
@@ -227,12 +229,15 @@ function render2path(shape: ShapeView): Path {
     for (let i = fVisibleIdx + 1; i < cc; i++) {
         const child1 = shape.m_children[i] as ShapeView;
         if (!child1.isVisible) continue;
-        const frame1 = child1.frame;
+        let frame1: ShapeFrame;
         const path1 = render2path(child1);
         if (child1.isNoTransform()) {
-            path1.translate(frame1.x, frame1.y);
+            path1.translate(child1.transform.translateX, child1.transform.translateY);
+            frame1 = new ShapeFrame(child1.transform.translateX, child1.transform.translateY, child1.frame.width, child1.frame.height);
         } else {
-            path1.transform(child1.matrix2Parent())
+            path1.transform(child1.matrix2Parent());
+            const bounds = path1.calcBounds();
+            frame1 = new ShapeFrame(bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
         }
         const pathop = child1.m_data.boolOp ?? BoolOp.None;
         const palpath1 = gPal.makePalPath(path1.toString());
@@ -308,6 +313,8 @@ export class BoolShapeView extends GroupShapeView {
     getPath() {
         if (this.m_path) return this.m_path;
         this.m_path = render2path(this);
+        // const frame = this.frame;
+        // if (frame.x !== 0 || frame.y !== 0) this.m_path.translate(frame.x, frame.y);
         this.m_path.freeze();
         return this.m_path;
     }
@@ -315,5 +322,67 @@ export class BoolShapeView extends GroupShapeView {
     // childs
     protected renderContents(): EL[] {
         return [];
+    }
+
+    updateFrames(): boolean {
+        const path = this.getPath().clone();
+        // const transform = this.transform;
+        // if (this.isNoTransform()) {
+        //     if (transform.translateX !== 0 || transform.translateY !== 0) path.translate(transform.translateX, transform.translateY)
+        // } else {
+        //     path.transform(transform)
+        // }
+        const bounds = path.calcBounds();
+
+        const borders = this.getBorders();
+        let maxborder = 0;
+        borders.forEach(b => {
+            if (b.position === BorderPosition.Outer) {
+                maxborder = Math.max(b.thickness, maxborder);
+            }
+            else if (b.position !== BorderPosition.Center) {
+                maxborder = Math.max(b.thickness / 2, maxborder);
+            }
+        })
+
+        let changed = this._save_frame.x !== this.m_frame.x || this._save_frame.y !== this.m_frame.y ||
+            this._save_frame.width !== this.m_frame.width || this._save_frame.height !== this.m_frame.height;
+
+        if (updateFrame(this.m_frame, bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY)) changed = true;
+        {
+            this._save_frame.x = this.m_frame.x;
+            this._save_frame.y = this.m_frame.y;
+            this._save_frame.width = this.m_frame.width;
+            this._save_frame.height = this.m_frame.height;
+        };
+        // update visible
+        if (updateFrame(this.m_visibleFrame, this.frame.x - maxborder, this.frame.y - maxborder, this.frame.width + maxborder * 2, this.frame.height + maxborder * 2)) changed = true;
+
+        // update outer
+        if (updateFrame(this.m_outerFrame, this.m_visibleFrame.x, this.m_visibleFrame.y, this.m_visibleFrame.width, this.m_visibleFrame.height)) changed = true;
+
+        const mapframe = (i: ShapeFrame, out: ShapeFrame) => {
+            const transform = this.transform;
+            if (this.isNoTransform()) {
+                return updateFrame(out, i.x + transform.translateX, i.y + transform.translateY, i.width, i.height);
+            }
+            const frame = i;
+            const m = transform;
+            const corners = [
+                { x: frame.x, y: frame.y },
+                { x: frame.x + frame.width, y: frame.y },
+                { x: frame.x + frame.width, y: frame.y + frame.height },
+                { x: frame.x, y: frame.y + frame.height }]
+                .map((p) => m.computeCoord(p));
+            const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
+            const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
+            const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
+            const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
+            return updateFrame(out, minx, miny, maxx - minx, maxy - miny);
+        }
+        if (mapframe(this.m_frame, this._p_frame)) changed = true;
+        if (mapframe(this.m_visibleFrame, this._p_visibleFrame)) changed = true;
+        if (mapframe(this.m_outerFrame, this._p_outerFrame)) changed = true;
+        return changed;
     }
 }

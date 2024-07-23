@@ -83,7 +83,7 @@ export class DataView extends EventEL {
     m_data: Shape;
     m_children: DataView[] = [];
     m_parent: DataView | undefined;
-    m_transx?: {x: number, y: number};
+    m_transx?: { x: number, y: number };
     private m_varsContainer?: (SymbolRefShape | SymbolShape)[];
     m_isVirtual?: boolean;
 
@@ -181,7 +181,8 @@ export class DataView extends EventEL {
         throw new Error('not implemented');
     }
 
-    // 
+    updateFrames() { return false; }
+
     render(): number {
         return 0;
     }
@@ -194,8 +195,8 @@ export class DataView extends EventEL {
         }
     }
 
-    onMounted() {}
-    protected onUnmounted() {}
+    onMounted() { }
+    protected onUnmounted() { }
 
     addChild(child: DataView, idx?: number) {
         if (child.m_parent) throw new Error('child already added');
@@ -325,7 +326,7 @@ export class DataView extends EventEL {
     }
 
     toSVGString(): string {
-        const frame = this.m_data.frame;
+        const frame = this.m_data.size;
         const attrs: { [kye: string]: string | number } = {};
         attrs['version'] = "1.1";
         attrs['xmlns'] = "http://www.w3.org/2000/svg";

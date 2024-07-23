@@ -4,7 +4,7 @@ import { innerShadowId, renderBorders, renderFills } from "../render";
 import { objectId } from "../basic/objectid";
 import { render as clippathR } from "../render/clippath"
 import { Artboard } from "../data/artboard";
-import { BlurType, CornerRadius, Page } from "../data/classes";
+import { BlurType, CornerRadius, Page, ShapeSize } from "../data/classes";
 
 
 export class ArtboradView extends GroupShapeView {
@@ -114,8 +114,8 @@ export class ArtboradView extends GroupShapeView {
         if (!this.isNoTransform()) {
             props.style = { transform: this.transform.toString() };
         } else {
-            const frame = this.frame;
-            props.transform = `translate(${frame.x},${frame.y})`;
+            const transform = this.transform;
+            if (transform.translateX !== 0 || transform.translateY !== 0) props.transform = `translate(${transform.translateX},${transform.translateY})`
         }
 
         const contextSettings = this.style.contextSettings;
@@ -157,4 +157,9 @@ export class ArtboradView extends GroupShapeView {
     get guides() {
         return (this.m_data as Page).guides;
     }
+
+    updateFrames(): boolean {
+        return this.super_updateFrames();
+    }
+
 }

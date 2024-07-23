@@ -1,5 +1,5 @@
 import { BasicArray } from "../../../data/basic";
-import {CurveMode, CurvePoint, PathSegment, RectShape, Shape, ShapeFrame, ShapeType} from "../../../data/shape";
+import { CurveMode, CurvePoint, PathSegment, RectShape, Shape, ShapeFrame, ShapeType } from "../../../data/shape";
 import { uuid } from "../../../basic/uuid";
 import { IJSON, ImportFun, LoadContext } from "./basic";
 import { Color, Fill, FillType, Page, ShapeSize, Style, Transform } from "../../../data/classes";
@@ -62,7 +62,7 @@ export function importPage(ctx: LoadContext, data: IJSON, f: ImportFun): Page {
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
     importStyle(style, data);
     const childs: Shape[] = (data['childs'] || []).map((d: IJSON, i: number) => f(ctx, d, i));
-    const shape = new Page(new BasicArray<number>(), data.id, data.name, ShapeType.Page, frame.trans, frame.size, style, new BasicArray<Shape>(...childs));
+    const shape = new Page(new BasicArray<number>(), data.id, data.name, ShapeType.Page, frame.trans, style, new BasicArray<Shape>(...childs));
     shape.isVisible = visible;
     return shape;
 }
@@ -81,7 +81,7 @@ export function importRectShape(ctx: LoadContext, data: IJSON, f: ImportFun, ind
     curvePoint.push(p1, p2, p3, p4);
 
     const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, true);
-    const shape = new RectShape(new BasicArray(), id, data['name'], types.ShapeType.Rectangle, frame.trans, frame.size, style, new BasicArray<PathSegment>(segment));
+    const shape = new RectShape(new BasicArray(), id, data['name'], types.ShapeType.Rectangle, frame.trans, style, frame.size, new BasicArray<PathSegment>(segment));
     shape.isVisible = visible;
     return shape;
 }

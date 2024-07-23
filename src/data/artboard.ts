@@ -20,7 +20,12 @@ import { RadiusType } from "./consts";
 import { Guide } from "./baseclasses";
 
 export class Artboard extends GroupShape implements classes.Artboard {
+    get frame(): ShapeFrame {
+        return new ShapeFrame(0, 0, this.size.width, this.size.height);
+    }
     typeId = 'artboard';
+    // @ts-ignore
+    size: ShapeSize
     cornerRadius?: CornerRadius
     haveEdit?: boolean | undefined;
     guides?: BasicArray<Guide>;
@@ -31,9 +36,9 @@ export class Artboard extends GroupShape implements classes.Artboard {
         name: string,
         type: ShapeType,
         transform: Transform,
-        size: ShapeSize,
         style: Style,
         childs: BasicArray<(GroupShape | Shape | ImageShape | PathShape | RectShape | TextShape)>,
+        size: ShapeSize,
         haveEdit?: boolean,
         guides?: BasicArray<Guide>
     ) {
@@ -43,10 +48,10 @@ export class Artboard extends GroupShape implements classes.Artboard {
             name,
             ShapeType.Artboard,
             transform,
-            size,
             style,
             childs
         )
+        this.size = size
         this.haveEdit = haveEdit;
         this.guides = guides;
     }
@@ -61,10 +66,10 @@ export class Artboard extends GroupShape implements classes.Artboard {
     }
 
     getPath(fixedRadius?: number): Path {
-        return this.getPathOfFrame(this.size, fixedRadius);
+        return this.getPathOfSize(this.size, fixedRadius);
     }
 
-    getPathOfFrame(frame: ShapeSize, fixedRadius?: number | undefined): Path {
+    getPathOfSize(frame: ShapeSize, fixedRadius?: number | undefined): Path {
         return getPathOfRadius(frame, this.cornerRadius, fixedRadius);
     }
 

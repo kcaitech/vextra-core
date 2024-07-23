@@ -2,6 +2,9 @@
     "description": "artboard shape",
     "type": "object",
     "properties": {
+        "size": {
+            "$ref": "./shape-size.json"
+        },
         "cornerRadius": {
             "$ref": "./corner-radius.json"
         },
@@ -12,7 +15,9 @@
             }
         }
     },
-    "required": [],
+    "required": [
+        "size"
+    ],
     "allOf": [
         {
             "$ref": "./group-shape.json"

@@ -132,7 +132,7 @@ export function render2path(shape: Shape): Path {
             // return shape.getPath().wrap(thickness, 0);
             const path = shape.getPath(fixedRadius);
             const p0 = gPal.makePalPath(path.toString());
-            const newpath = p0.stroke({width: thickness});
+            const newpath = p0.stroke({ width: thickness });
             p0.delete();
             return new Path(newpath);
         }
@@ -151,32 +151,37 @@ export function render2path(shape: Shape): Path {
     if (fVisibleIdx >= cc) return new Path();
 
     const child0 = shape.childs[fVisibleIdx];
-    const frame0 = child0.frame;
+    let frame0;
     const path0 = render2path(child0);
 
     if (child0.isNoTransform()) {
-        path0.translate(frame0.x, frame0.y);
+        path0.translate(child0.transform.translateX, child0.transform.translateY);
+        frame0 = new ShapeFrame(child0.transform.translateX, child0.transform.translateY, child0.size.width, child0.size.height);
     } else {
-        path0.transform(child0.matrix2Parent())
+        path0.transform(child0.matrix2Parent());
+        const bounds = path0.calcBounds();
+        frame0 = new ShapeFrame(bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
     }
 
-    const pframe = shape.frame;
+    const pframe = shape.size;
     const gridSize = Math.ceil(Math.sqrt(cc));
 
     const grid = new FrameGrid(pframe.width / gridSize, pframe.height / gridSize, gridSize, gridSize);
-
     grid.push(frame0);
 
     let joinPath: IPalPath = gPal.makePalPath(path0.toString());
     for (let i = fVisibleIdx + 1; i < cc; i++) {
         const child1 = shape.childs[i];
         if (!child1.isVisible) continue;
-        const frame1 = child1.frame;
+        let frame1;
         const path1 = render2path(child1);
         if (child1.isNoTransform()) {
-            path1.translate(frame1.x, frame1.y);
+            path1.translate(child1.transform.translateX, child1.transform.translateY);
+            frame1 = new ShapeFrame(child1.transform.translateX, child1.transform.translateY, child1.size.width, child1.size.height);
         } else {
-            path1.transform(child1.matrix2Parent())
+            path1.transform(child1.matrix2Parent());
+            const bounds = path1.calcBounds();
+            frame1 = new ShapeFrame(bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
         }
         const pathop = child1.boolOp ?? BoolOp.None;
         const palpath1 = gPal.makePalPath(path1.toString());
@@ -200,7 +205,7 @@ export function render2path(shape: Shape): Path {
     let resultpath: Path | undefined;
     // radius
     if (fixedRadius && fixedRadius > 0) {
-        const frame = shape.frame;
+        const frame = shape.size;
         const path = new Path(pathstr);
         const segs = path.toCurvePoints(frame.width, frame.height);
         const ps: any[] = [];

@@ -1,15 +1,13 @@
 import {
-    ImageShape,
     PathShape,
     PathShape2,
     Shape,
-    ShapeSize,
+    ShapeFrame,
     ShapeType,
     SymbolRefShape,
     SymbolShape
 } from "../data/classes";
 import { ShapeView } from "./shape";
-import { DViewCtx, PropsType } from "./viewctx";
 import { EL, elh } from "./el";
 import { innerShadowId, renderBorders } from "../render";
 import { objectId } from "../basic/objectid";
@@ -32,7 +30,7 @@ export class PathShapeView extends ShapeView {
         return this.data.isClosed;
     }
 
-    protected _layout(size: ShapeSize, shape: Shape, parentFrame: ShapeSize | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scale: { x: number, y: number } | undefined): void {
+    protected _layout(size: ShapeFrame, shape: Shape, parentFrame: ShapeFrame | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scale: { x: number, y: number } | undefined): void {
         this.m_pathsegs = undefined;
         super._layout(size, shape, parentFrame, varsContainer, scale);
     }

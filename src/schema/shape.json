@@ -17,9 +17,6 @@
         "transform": {
             "$ref": "./transform.json"
         },
-        "size": {
-            "$ref": "./shape-size.json"
-        },
         "style": {
             "$ref": "./style.json"
         },
@@ -82,7 +79,6 @@
         "name",
         "type",
         "transform",
-        "size",
         "style"
     ],
     "additionalProperties": false

@@ -5,7 +5,6 @@ import { DataView, RootView } from "./view";
 import { isDiffRenderTransform, isDiffVarsContainer, isNoTransform } from "./shape";
 import { getShapeViewId } from "./basic";
 import { DViewCtx, PropsType, VarsContainer } from "./viewctx";
-import { ResizingConstraints } from "../data/consts";
 import { findOverride, findVar } from "./basic";
 import { objectId } from "../basic/objectid";
 
@@ -29,13 +28,16 @@ export class SymbolRefView extends ShapeView {
             varsContainer.push(this.m_sym.parent);
         }
         varsContainer.push(this.m_sym);
-        let refframe = this.m_data.frame;
-        const symframe = this.m_sym.frame;
+        let refframe;
+        const symframe = new ShapeFrame(0, 0, this.m_sym.size.width, this.m_sym.size.height);
         if (this.isVirtualShape && !(this.m_data as SymbolRefShape).isCustomSize) {
-            refframe = new ShapeFrame(refframe.x, refframe.y, symframe.width, symframe.height);
+            refframe = new ShapeFrame(0, 0, symframe.width, symframe.height);
+        } else {
+            refframe = new ShapeFrame(0, 0, this.m_data.size.width, this.m_data.size.height);
         }
-        const parentFrame = this.parent?.size;
+        const parentFrame = this.parent?.frame;
         this._layout(refframe, this.m_data, parentFrame, varsContainer, this.m_transx);
+        this.updateFrames();
     }
 
     // protected isNoSupportDiamondScale(): boolean {
@@ -212,12 +214,14 @@ export class SymbolRefView extends ShapeView {
         varsContainer.push(this.m_sym);
 
         // let transx: RenderTransform | undefined;
-        let refframe = this.m_data.size;
+        let refframe;
         const symframe = this.m_sym.size;
         if (this.isVirtualShape && !this.data.isCustomSize) {
-            refframe = new ShapeSize(symframe.width, symframe.height);
+            refframe = new ShapeFrame(0, 0, symframe.width, symframe.height);
+        } else {
+            refframe = new ShapeFrame(0, 0, this.m_data.size.width, this.m_data.size.height);
         }
-        const parentFrame = this.parent?.size;
+        const parentFrame = this.parent?.frame;
         const noTrans = isNoTransform(this.m_transx);
         if (noTrans && refframe.width === symframe.width && refframe.height === symframe.height) {
             this._layout(refframe, this.data, parentFrame, varsContainer, this.m_transx); // 普通更新
@@ -239,11 +243,11 @@ export class SymbolRefView extends ShapeView {
         // 
         // todo
         {
-            const refframe = this.size;
+            const refframe = this.frame;
             const scaleX = refframe.width / symframe.width;
             const scaleY = refframe.height / symframe.height;
 
-            this.layoutChilds(varsContainer, this.size, { x: scaleX, y: scaleY });
+            this.layoutChilds(varsContainer, this.frame, { x: scaleX, y: scaleY });
         }
 
         this.notify("layout");

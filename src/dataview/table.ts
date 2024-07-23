@@ -92,7 +92,7 @@ export class TableView extends ShapeView {
         return undefined;
     }
 
-    protected _layout(size: ShapeSize, shape: Shape, parentFrame: ShapeSize | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scale: { x: number, y: number } | undefined): void {
+    protected _layout(size: ShapeFrame, shape: Shape, parentFrame: ShapeFrame | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scale: { x: number, y: number } | undefined): void {
 
         super._layout(size, shape, parentFrame, varsContainer, scale);
         // if (this.m_need_updatechilds) {
@@ -134,7 +134,6 @@ export class TableView extends ShapeView {
             "",
             ShapeType.TableCell,
             new Transform(),
-            new ShapeSize(0, 0),
             new Style(new BasicArray(), new BasicArray(), new BasicArray()),
             TableCellType.Text,
             newTableCellText(this.data.textAttr));

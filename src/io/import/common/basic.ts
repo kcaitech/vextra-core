@@ -17,43 +17,43 @@ export type ImportFun = (ctx: LoadContext, data: IJSON, i: number) => Shape
 
 
 export function updatePageFrame(p: Page) {
-    const pf = p.frame;
-    const cc = p.childs.length;
-    if (cc === 0) {
-        p.transform.translateX = 0;
-        p.transform.translateY = 0;
-        p.size.width = 0
-        p.size.height = 0
-        return;
-    }
-    const c = p.childs[0];
-    const cf = c.frame;
-    let l = cf.x, t = cf.y, r = l + cf.width, b = t + cf.height;
-    for (let i = 1; i < cc; i++) {
-        const c = p.childs[i];
-        const cf = c.frame;
-        const cl = cf.x, ct = cf.y, cr = cl + cf.width, cb = ct + cf.height;
-        l = Math.min(cl, l);
-        t = Math.min(ct, t);
-        r = Math.max(cr, r);
-        b = Math.max(cb, b);
-        // console.log("c", i, cf)
-    }
-    // console.log("pf", pf)
-    // console.log(l, t, r, b)
-    // pf.set(pf.x + l, pf.y + t, r - l, b - t);
-    p.transform.translateX = pf.x + l;
-    p.transform.translateY = pf.y + t;
-    p.size.width = r - l
-    p.size.height = b - t
-    // console.log(pf)
+    // const pf = p.size;
+    // const cc = p.childs.length;
+    // if (cc === 0) {
+    //     p.transform.translateX = 0;
+    //     p.transform.translateY = 0;
+    //     p.size.width = 0
+    //     p.size.height = 0
+    //     return;
+    // }
+    // const c = p.childs[0];
+    // const cf = c.size;
+    // let l = cf.x, t = cf.y, r = l + cf.width, b = t + cf.height;
+    // for (let i = 1; i < cc; i++) {
+    //     const c = p.childs[i];
+    //     const cf = c.size;
+    //     const cl = cf.x, ct = cf.y, cr = cl + cf.width, cb = ct + cf.height;
+    //     l = Math.min(cl, l);
+    //     t = Math.min(ct, t);
+    //     r = Math.max(cr, r);
+    //     b = Math.max(cb, b);
+    //     // console.log("c", i, cf)
+    // }
+    // // console.log("pf", pf)
+    // // console.log(l, t, r, b)
+    // // pf.set(pf.x + l, pf.y + t, r - l, b - t);
+    // p.transform.translateX = pf.x + l;
+    // p.transform.translateY = pf.y + t;
+    // p.size.width = r - l
+    // p.size.height = b - t
+    // // console.log(pf)
 
-    for (let i = 0; i < cc; i++) {
-        const c = p.childs[i];
-        c.transform.translateX = cf.x - l;
-        c.transform.translateY = cf.y - t;
-        // cf.width = cf.width;
-        // cf.height = cf.height;
-        // console.log("c", i, cf)
-    }
+    // for (let i = 0; i < cc; i++) {
+    //     const c = p.childs[i];
+    //     c.transform.translateX = cf.x - l;
+    //     c.transform.translateY = cf.y - t;
+    //     // cf.width = cf.width;
+    //     // cf.height = cf.height;
+    //     // console.log("c", i, cf)
+    // }
 }

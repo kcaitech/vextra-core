@@ -2,6 +2,9 @@
     "description": "text shape",
     "type": "object",
     "properties": {
+        "size": {
+            "$ref": "./shape-size.json"
+        },
         "text": {
             "$ref": "./text.json"
         },
@@ -10,6 +13,7 @@
         }
     },
     "required": [
+        "size",
         "text"
     ],
     "allOf": [

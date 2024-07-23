@@ -1,7 +1,7 @@
 
 
 import { DefaultColor, isColorEqual, randomId } from "./basic";
-import { TextShape, Path, Color, Para, ParaAttr, Text, Span, FillType, Gradient, ShapeFrame, UnderlineType, StrikethroughType, Blur, BlurType, SpanAttr } from '../data/classes';
+import { TextShape, Path, Color, Para, ParaAttr, Text, Span, FillType, Gradient, ShapeFrame, UnderlineType, StrikethroughType, Blur, BlurType, SpanAttr, ShapeSize } from '../data/classes';
 import { GraphArray, TextLayout } from "../data/textlayout";
 import { gPal } from "../basic/pal";
 import { BasicArray } from "../data/basic";
@@ -111,7 +111,7 @@ function renderDecorateRects(h: Function, x: number, y: number, hight: number, d
     }
 }
 
-export function renderTextLayout(h: Function, textlayout: TextLayout, frame?: ShapeFrame, blur?: Blur) {
+export function renderTextLayout(h: Function, textlayout: TextLayout, frame?: ShapeSize, blur?: Blur) {
     const childs = [];
 
     const { xOffset, yOffset, paras } = textlayout;

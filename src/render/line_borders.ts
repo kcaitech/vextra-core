@@ -44,7 +44,7 @@ function handler(h: Function, style: Style, border: Border, path: string, shape:
         body_props.stroke = "rgb(" + color.red + "," + color.green + "," + color.blue + ")";
         body_props['opacity'] = border.color.alpha;
     } else {
-        g_ = renderGradient(h, border.gradient as Gradient, shape.frame);
+        g_ = renderGradient(h, border.gradient as Gradient, shape.size);
         const opacity = border.gradient?.gradientOpacity;
         body_props.opacity = opacity === undefined ? 1 : opacity; ``
         body_props.stroke = "url(#" + g_.id + ")";
@@ -53,7 +53,7 @@ function handler(h: Function, style: Style, border: Border, path: string, shape:
         delete body_props.opacity;
         let line_g;
         if (border.fillType === FillType.Gradient) {
-            line_g = lineGradient(h, border.gradient as Gradient, shape.frame, thickness);
+            line_g = lineGradient(h, border.gradient as Gradient, shape.size, thickness);
         }
         const g_cs: any[] = [h('path', body_props)];
         if (endMarkerType && endMarkerType !== MarkerType.Line) {
@@ -70,7 +70,7 @@ function handler(h: Function, style: Style, border: Border, path: string, shape:
         }
         if (line_g) {
             body_props.stroke = 'white'
-            const frame = shape.frame;
+            const frame = shape.size;
             const id = "mask-line-" + objectId(border) + randomId();
             const mk = h("mask", { id }, g_cs);
             const width = frame.width + (thickness * 12);
@@ -104,7 +104,7 @@ function handler(h: Function, style: Style, border: Border, path: string, shape:
 function angular_handler(h: Function, style: Style, border: Border, path: string, shape: Shape, startMarkerType?: MarkerType, endMarkerType?: MarkerType): any {
     const thickness = border.sideSetting.thicknessTop;
     const opacity = border.gradient?.gradientOpacity;
-    let line_g = lineGradient(h, border.gradient as Gradient, shape.frame, thickness);
+    let line_g = lineGradient(h, border.gradient as Gradient, shape.size, thickness);
     const id = "mask-line-" + objectId(border) + randomId();
     const body_props: any = {
         d: path,
@@ -121,7 +121,7 @@ function angular_handler(h: Function, style: Style, border: Border, path: string
         }
     }
     const elArr = new Array();
-    const frame = shape.frame;
+    const frame = shape.size;
     const fg = h("foreignObject", {
         width: frame.width + (thickness * 12), height: frame.height + (thickness * 12), x: -(thickness * 6), y: -(thickness * 6),
         mask: "url(#" + id + ")",

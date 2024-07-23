@@ -9,7 +9,112 @@ export { Vector, ColVector2D, ColVector3D, Matrix as Matrix2 } from "./basic/mat
 export { NumberArray2D } from "./basic/number_array"
 
 // data
-export * from "./data"
+// 限制上层使用data,尽量使用view
+// export * from "./data"
+export {
+    IWatchable,
+    WatchableObject,
+    BasicArray,
+    GradientType,
+    ShapeType,
+    BlendMode,
+    BorderPosition,
+    ImageScaleMode,
+    ExportFormatNameingScheme,
+    BlurType,
+    ShadowPosition,
+    FillType,
+    Gradient,
+    Color,
+    PaintFilter,
+    PaintFilterType,
+    Border,
+    Fill,
+    Stop,
+    Shadow,
+    CurveMode,
+    PathType,
+    TextBehaviour,
+    RadiusType,
+    Style,
+    Blur,
+    Point2D,
+    MarkerType,
+    SideType,
+    ShapeFrame,
+    ShapeSize,
+    CornerType,
+    BorderSideSetting,
+    BorderStyle,
+    ExportFormat,
+    ExportFileFormat,
+    ExportOptions,
+    ExportVisibleScaleType,
+    Text,
+    Para,
+    Variable,
+    VariableType,
+    OverrideType,
+    ContextSettings,
+    ResizingConstraints,
+    ResizingConstraints2,
+    AttrGetter,
+    TableCellType,
+    TextVerAlign,
+    TextHorAlign,
+    UnderlineType,
+    StrikethroughType,
+    TextTransformType,
+    CurvePoint,
+    ContactForm,
+    BulletNumbersType,
+    PageListItem,
+    GuideAxis,
+    Path,
+    BoolOp,
+    ContactType,
+    SpanAttr,
+    TextAttr,
+    FillRule,
+    PatternTransform,
+
+    TableGridItem,
+    TableLayout,
+    ResourceMgr,
+
+    // todo
+    Shape,
+    Page,
+    TextShape,
+    SymbolShape,
+    SymbolRefShape,
+    TableCell,
+    CutoutShape,
+    GroupShape,
+    Artboard,
+    SymbolUnionShape,
+    TableShape,
+    ContactShape,
+    BoolShape,
+    PathShape,
+    PolygonShape,
+    RectShape,
+    ImageShape,
+    StarShape,
+
+    Document,
+    Repository,
+} from "./data"
+
+export {
+
+    makeMatrixByTransform2,
+    makeShapeTransform2By1,
+    makeShapeTransform1By2,
+    updateShapeTransform1By2,
+
+    importGradient
+} from "./data"
 
 // data view
 export * from "./dataview"

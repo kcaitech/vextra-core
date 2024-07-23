@@ -48,8 +48,6 @@ import * as types from "../data/typesdefine";
 import { v4 } from "uuid";
 import { Document } from "../data/document";
 import { newSymbolRefShape, newTextShape, newTextShapeByText } from "../editor/creator";
-import { Api } from "../editor/coop/recordapi";
-import { translateTo } from "../editor/frame";
 import { Page } from "../data/page";
 import { FMT_VER_latest } from "../data/fmtver";
 
@@ -390,12 +388,12 @@ export function trasnform_text(document: Document, text: types.Text, gen?: boole
     return _text;
 }
 
-export function modify_frame_after_insert(api: Api, page: Page, shapes: Shape[]) {
-    for (let i = 0, len = shapes.length; i < len; i++) {
-        const shape = shapes[i];
-        translateTo(api, page, shape, shape.frame.x, shape.frame.y);
-    }
-}
+// export function modify_frame_after_insert(api: Api, page: Page, shapes: Shape[]) {
+//     for (let i = 0, len = shapes.length; i < len; i++) {
+//         const shape = shapes[i];
+//         translateTo(api, page, shape, shape.frame.x, shape.frame.y);
+//     }
+// }
 
 export function XYsBounding(points: { x: number, y: number }[]) {
     const xs: number[] = [];
@@ -416,7 +414,7 @@ export function get_frame(shapes: Shape[]): { x: number, y: number }[] {
     for (let i = 0, len = shapes.length; i < len; i++) {
         const s = shapes[i];
         const m = s.matrix2Root();
-        const f = s.frame;
+        const f = s.size;
         const ps: { x: number, y: number }[] = [
             {x: 0, y: 0},
             {x: f.width, y: 0},

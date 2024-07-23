@@ -24,7 +24,7 @@ export class ImageShapeView extends RectShapeView {
         const path = this.getPathStr();
         const id = "pattern-clip-" + objectId(this);
         const url = shape.style.fills[0].peekImage(true) ?? this.m_imgPH;
-        const pattern = patternRender(elh, shape.frame, id, path, url as any);
+        const pattern = patternRender(elh, shape.size, id, path, url as any);
       
         const _path = elh('path', {
             d: path,

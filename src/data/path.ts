@@ -3,29 +3,30 @@ import { CurveMode, CurvePoint } from "./baseclasses";
 import { float_accuracy } from "../basic/consts";
 import { BasicArray } from "./basic";
 import { uuid } from "../basic/uuid";
+import { Transform } from "./transform";
 
 // ----------------------------------------------------------------------------------
 // transform
-const transformHandler: { [key: string]: (m: Matrix, item: any[]) => void } = {}
+const transformHandler: { [key: string]: (m: Matrix | Transform, item: any[]) => void } = {}
 
-function transformAbsPoint(m: Matrix, x: number, y: number): { x: number, y: number } {
+function transformAbsPoint(m: Matrix | Transform, x: number, y: number): { x: number, y: number } {
     return m.computeCoord(x, y)
 }
 
-function transformRefPoint(m: Matrix, dx: number, dy: number): { x: number, y: number } {
+function transformRefPoint(m: Matrix | Transform, dx: number, dy: number): { x: number, y: number } {
     const xy = m.computeCoord(dx, dy)
     xy.x -= m.m02;
     xy.y -= m.m12;
     return xy;
 }
 
-function transformPoint(m: Matrix, item: any[]) {
+function transformPoint(m: Matrix | Transform, item: any[]) {
     const xy = transformAbsPoint(m, item[1], item[2])
     item[1] = xy.x;
     item[2] = xy.y;
 }
 
-function transformRef(m: Matrix, item: any[]) {
+function transformRef(m: Matrix | Transform, item: any[]) {
     const xy = transformRefPoint(m, item[1], item[2])
     item[1] = xy.x;
     item[2] = xy.y;
@@ -35,7 +36,7 @@ transformHandler['M'] = transformPoint;
 transformHandler['m'] = transformRef;
 transformHandler['L'] = transformPoint;
 transformHandler['l'] = transformRef;
-transformHandler['A'] = function (m: Matrix, item: any[]) {
+transformHandler['A'] = function (m: Matrix | Transform, item: any[]) {
     // todo
     // (rx ry x-axis-rotation large-arc-flag sweep-flag x y)
     let xy = transformRefPoint(m, item[1], item[2])
@@ -45,7 +46,7 @@ transformHandler['A'] = function (m: Matrix, item: any[]) {
     item[6] = xy.x;
     item[7] = xy.y;
 }
-transformHandler['a'] = function (m: Matrix, item: any[]) {
+transformHandler['a'] = function (m: Matrix | Transform, item: any[]) {
     // todo
     let xy = transformRefPoint(m, item[1], item[2])
     item[1] = xy.x;
@@ -55,23 +56,23 @@ transformHandler['a'] = function (m: Matrix, item: any[]) {
     item[7] = xy.y;
 }
 
-transformHandler['H'] = function (m: Matrix, item: any[]) {
+transformHandler['H'] = function (m: Matrix | Transform, item: any[]) {
     const xy = transformAbsPoint(m, item[1], 0)
     item[1] = xy.x;
 }
-transformHandler['h'] = function (m: Matrix, item: any[]) {
+transformHandler['h'] = function (m: Matrix | Transform, item: any[]) {
     const xy = transformRefPoint(m, item[1], 0)
     item[1] = xy.x;
 }
-transformHandler['V'] = function (m: Matrix, item: any[]) {
+transformHandler['V'] = function (m: Matrix | Transform, item: any[]) {
     const xy = transformAbsPoint(m, 0, item[1])
     item[1] = xy.y;
 }
-transformHandler['v'] = function (m: Matrix, item: any[]) {
+transformHandler['v'] = function (m: Matrix | Transform, item: any[]) {
     const xy = transformRefPoint(m, 0, item[1])
     item[1] = xy.y;
 }
-transformHandler['C'] = function (m: Matrix, item: any[]) {
+transformHandler['C'] = function (m: Matrix | Transform, item: any[]) {
     // C x1 y1, x2 y2, x y
     let xy;
     xy = transformAbsPoint(m, item[1], item[2])
@@ -84,7 +85,7 @@ transformHandler['C'] = function (m: Matrix, item: any[]) {
     item[5] = xy.x;
     item[6] = xy.y;
 }
-transformHandler['c'] = function (m: Matrix, item: any[]) {
+transformHandler['c'] = function (m: Matrix | Transform, item: any[]) {
     // c dx1 dy1, dx2 dy2, dx dy
     let xy;
     xy = transformRefPoint(m, item[1], item[2])
@@ -97,7 +98,7 @@ transformHandler['c'] = function (m: Matrix, item: any[]) {
     item[5] = xy.x;
     item[6] = xy.y;
 }
-transformHandler['Q'] = function (m: Matrix, item: any[]) {
+transformHandler['Q'] = function (m: Matrix | Transform, item: any[]) {
     // C x1 y1, x2 y2, x y
     let xy;
     xy = transformAbsPoint(m, item[1], item[2])
@@ -107,7 +108,7 @@ transformHandler['Q'] = function (m: Matrix, item: any[]) {
     item[3] = xy.x;
     item[4] = xy.y;
 }
-transformHandler['q'] = function (m: Matrix, item: any[]) {
+transformHandler['q'] = function (m: Matrix | Transform, item: any[]) {
     // c dx1 dy1, dx2 dy2, dx dy
     let xy;
     xy = transformRefPoint(m, item[1], item[2])
@@ -117,16 +118,16 @@ transformHandler['q'] = function (m: Matrix, item: any[]) {
     item[3] = xy.x;
     item[4] = xy.y;
 }
-transformHandler['Z'] = function (m: Matrix, item: any[]) {
+transformHandler['Z'] = function (m: Matrix | Transform, item: any[]) {
 }
-transformHandler['z'] = function (m: Matrix, item: any[]) {
+transformHandler['z'] = function (m: Matrix | Transform, item: any[]) {
 }
 
 /**
  *
  * @param matrix
  */
-function transformPath(matrix: Matrix) {
+function transformPath(matrix: Matrix | Transform) {
     return (item: any[]) => {
         const t = transformHandler[item[0]];
         if (!t) {
@@ -684,7 +685,7 @@ function calcPathBounds(path: any[]): Bounds {
         const item = path[i];
         boundsHandler[item[0]](ctx, item)
     }
-    if (path[path.length - 1][0].toLowerCase() !== 'z') { // 闭合
+    if (path.length > 0 && path[path.length - 1][0].toLowerCase() !== 'z') { // 闭合
         boundsHandler['z'](ctx, path[path.length - 1])
     }
     return ctx.bounds;
@@ -1264,7 +1265,7 @@ export class Path {
         }
     }
 
-    transform(m: Matrix) {
+    transform(m: Matrix | Transform) {
         this.m_segs = this.m_segs.map(transformPath(m));
         this.__bounds = undefined;
     }
