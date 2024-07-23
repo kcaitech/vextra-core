@@ -12,13 +12,17 @@ import {
     makeShapeTransform2By1,
     ResizingConstraints2,
     TextShape,
-    TextBehaviour
+    TextBehaviour,
+    makeShapeTransform1By2,
 } from "../../../data";
 import { adapt2Shape, PageView, ShapeView } from "../../../dataview";
 
-import { ColVector3D, makeShapeTransform1By2, Transform as Transform2, XYsBounding } from "../../../index";
+// import { ColVector3D, makeShapeTransform1By2, Transform as Transform2, XYsBounding } from "../../../index";
 import { Api } from "../../coop/recordapi";
 import { fixTextShapeFrameByLayout } from "../../utils/other";
+import { Transform as Transform2 } from "../../../basic/transform";
+import { ColVector3D } from "../../../basic/matrix2";
+import { XYsBounding } from "../../../io/cilpboard";
 
 export type RangeRecorder = Map<string, {
     toRight?: number,
@@ -464,7 +468,7 @@ export class Scaler extends AsyncApiCaller {
                     if (v.isCustomSize) continue;
                     const page = v.getPage();
                     if (!page) throw new Error();
-                    api.shapeModifyWH(page as Page, v, shape.frame.width, shape.frame.height);
+                    api.shapeModifyWH(page as Page, v, shape.size.width, shape.size.height);
                 }
             } else if (shape instanceof SymbolRefShape) {
                 api.shapeModifyIsCustomSize(page, shape, true);

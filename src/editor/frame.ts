@@ -1,24 +1,19 @@
 import { Page } from "../data/page";
 import { Matrix } from "../basic/matrix";
 import {
-    CurvePoint,
     GroupShape,
-    PathShape,
-    PathShape2,
     Shape,
     ShapeFrame,
-    ShapeType,
     SymbolShape,
     TextShape
 } from "../data/shape";
 import { TextBehaviour } from "../data/typesdefine";
 import { fixTextShapeFrameByLayout } from "./utils/other";
-import { FrameType, PathType, ResizingConstraints, ResizingConstraints2 } from "../data/consts";
+import { ResizingConstraints2 } from "../data/consts";
 import { Api } from "./coop/recordapi";
 import { Document } from "../data/document";
 import { ShapeSize, SymbolUnionShape } from "../data/classes";
 import { SymbolRefShape } from "../data/symbolref";
-import { makeShapeTransform1By2, makeShapeTransform2By1 } from "../data";
 
 interface PageXY {
     x: number

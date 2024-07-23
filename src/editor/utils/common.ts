@@ -23,7 +23,7 @@ function modify_straight_length(api: Api, page: Page, shape: PathShape, val: num
     const p2 = points[1];
 
     const m = shape.matrix2Parent();
-    const f = shape.frame;
+    const f = shape.size;
 
     m.preScale(f.width, f.height);
 
@@ -54,9 +54,9 @@ export function modify_shapes_width(api: Api, document: Document, page: Page, sh
             continue;
         }
 
-        const w = shape.frame.width;
+        const w = shape.size.width;
 
-        let h = shape.frame.height;
+        let h = shape.size.height;
 
         if (shape.constrainerProportions) {
             const rate = w / val;
@@ -68,7 +68,7 @@ export function modify_shapes_width(api: Api, document: Document, page: Page, sh
         if (shape instanceof GroupShape) {
             reLayoutBySizeChanged(api, page, shape, {
                 x: val / w,
-                y: h / shape.frame.height
+                y: h / shape.size.height
             });
         }
     }
@@ -82,9 +82,9 @@ export function modify_shapes_height(api: Api, document: Document, page: Page, s
             continue; // 直线段的高度不可修改恒定为0.01
         }
 
-        let w = shape.frame.width;
+        let w = shape.size.width;
 
-        const h = shape.frame.height;
+        const h = shape.size.height;
 
         if (shape.constrainerProportions) {
             const rate = h / val;
@@ -95,7 +95,7 @@ export function modify_shapes_height(api: Api, document: Document, page: Page, s
 
         if (shape instanceof GroupShape) {
             reLayoutBySizeChanged(api, page, shape, {
-                x: w / shape.frame.width,
+                x: w / shape.size.width,
                 y: val / h
             });
         }
@@ -116,7 +116,7 @@ export function adapt_for_artboard(api: Api, page: Page, artboard: Artboard) {
 
     const m_artboard_to_root = artboard.matrix2Root();
 
-    const f = artboard.frame;
+    const f = artboard.size;
     const box = get_new_box();
 
     if (no_need_to_adapt()) {
@@ -135,7 +135,7 @@ export function adapt_for_artboard(api: Api, page: Page, artboard: Artboard) {
         const points: Point2D[] = [];
 
         children.forEach(c => {
-            const f = c.frame;
+            const f = c.size;
             const m2p = c.matrix2Parent();
             points.push(
                 ...[
@@ -165,8 +165,9 @@ export function adapt_for_artboard(api: Api, page: Page, artboard: Artboard) {
 
     function re_children_layout() {
         children.forEach(c => {
-            api.shapeModifyX(page, c, c.frame.x - box.x);
-            api.shapeModifyY(page, c, c.frame.y - box.y);
+            const f = c.frame;
+            api.shapeModifyX(page, c, f.x - box.x);
+            api.shapeModifyY(page, c, f.y - box.y);
         })
     }
 }

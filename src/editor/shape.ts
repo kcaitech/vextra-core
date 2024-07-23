@@ -201,7 +201,7 @@ export class ShapeEditor {
                 if (view.isCustomSize) {
                     api.shapeModifyIsCustomSize(this.__page, view.data, false);
                     const sym = view.symData;
-                    if (sym) api.shapeModifyWH(this.__page, view.data, sym.frame.width, sym.frame.height);
+                    if (sym) api.shapeModifyWH(this.__page, view.data, sym.size.width, sym.size.height);
                 }
             } else {
                 // 清空p中与当前view相关的variables,overrides
@@ -1169,7 +1169,7 @@ export class ShapeEditor {
                 if (!view.data.isCustomSize) {
                     const sym = this.__document.symbolsMgr.get(refId);
                     if (sym) {
-                        api.shapeModifyWH(this.__page, view.data, sym.frame.width, sym.frame.height);
+                        api.shapeModifyWH(this.__page, view.data, sym.size.width, sym.size.height);
                     }
                 }
             }

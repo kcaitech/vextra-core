@@ -581,7 +581,7 @@ export class PageEditor {
             if (!shapes.length) return;
 
             const shape0 = shapes[0];
-            const frame = importShapeFrame(shape0.frame);
+            const frame = shape0.frame;
 
             const replace = shapes.length === 1
                 && ((shape0 instanceof GroupShape && !(shape0 instanceof BoolShape)) || shape0 instanceof Artboard);
@@ -847,8 +847,8 @@ export class PageEditor {
                 curPage: string = _this.__page.id;
                 fmtVer: number = FMT_VER_latest
             };
-            const { x, y, width, height } = shape.frame;
-            const tmpArtboard: Artboard = newArtboard(shape.name, new ShapeFrame(x, y, width, height));
+            // const { width, height } = shape.size;
+            const tmpArtboard: Artboard = newArtboard(shape.name, shape.frame);
             // initFrame(tmpArtboard, shape.frame);
             tmpArtboard.childs = shape.naviChilds! as BasicArray<Shape>;
             tmpArtboard.varbinds = shape.varbinds;
@@ -857,6 +857,8 @@ export class PageEditor {
             tmpArtboard.transform.m01 = shape.transform.m01;
             tmpArtboard.transform.m10 = shape.transform.m10;
             tmpArtboard.transform.m11 = shape.transform.m11;
+            tmpArtboard.transform.m02 = shape.transform.m02;
+            tmpArtboard.transform.m12 = shape.transform.m12;
             tmpArtboard.cornerRadius = shape.cornerRadius;
             const symbolData = exportArtboard(tmpArtboard); // todo 如果symbol只有一个child时
 
@@ -2144,7 +2146,7 @@ export class PageEditor {
                     f(this.__page, s, index, new_gradient);
                 } else {
                     const stops = new BasicArray<Stop>();
-                    const frame = target.frame;
+                    // const frame = target.frame;
                     const { alpha, red, green, blue } = gradient_container.color;
                     stops.push(new Stop(new BasicArray(), uuid(), 0, new Color(alpha, red, green, blue)), new Stop(new BasicArray(), uuid(), 1, new Color(0, red, green, blue)))
                     const from = value === GradientType.Linear ? { x: 0.5, y: 0 } : { x: 0.5, y: 0.5 };
@@ -3448,7 +3450,7 @@ export class PageEditor {
                 const s = shapes[i];
                 if (s.type !== ShapeType.Line) continue;
                 const o1 = s.matrix2Root().computeCoord2(0, 0);
-                const f = s.frame, r = getHorizontalRadians({ x: 0, y: 0 }, { x: f.width, y: f.height });
+                const f = s.size, r = getHorizontalRadians({ x: 0, y: 0 }, { x: f.width, y: f.height });
                 api.shapeModifyWH(this.__page, s, v * Math.cos(r), v * Math.sin(r));
                 const o2 = s.matrix2Root().computeCoord2(0, 0);
                 translate(api, this.__page, s, o1.x - o2.x, o1.y - o2.y);

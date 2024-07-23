@@ -664,7 +664,6 @@ export function cell4edit2(page: Page, view: TableView, _cell: TableCellView, ap
             "",
             ShapeType.TableCell,
             trans,
-            size,
             new Style(new BasicArray(), new BasicArray(), new BasicArray()),
             TableCellType.Text,
             newTableCellText(view.data.textAttr));
@@ -692,7 +691,6 @@ export function cell4edit(page: Page, view: TableView, rowIdx: number, colIdx: n
             "",
             ShapeType.TableCell,
             trans,
-            size,
             new Style(new BasicArray(), new BasicArray(), new BasicArray()),
             TableCellType.Text,
             newTableCellText(view.data.textAttr));

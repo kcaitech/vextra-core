@@ -23,27 +23,27 @@ function _checkNum(x: number) {
     if (Number.isNaN(x) || (!Number.isFinite(x))) throw new Error(String(x));
 }
 
-export function shapeModifyX(page: Page, shape: Shape, x: number, needUpdateFrame?: { shape: Shape, page: Page }[]) {
+export function shapeModifyX(page: Page, shape: Shape, x: number) {
     // check
     _checkNum(x);
     const frame = shape.transform;
     if (x !== frame.m02) {
         const op = crdtSetAttr(shape.transform, 'm02', x);
-        if (needUpdateFrame) needUpdateFrame.push({ shape, page });
+        // if (needUpdateFrame) needUpdateFrame.push({ shape, page });
         return op;
     }
 }
-export function shapeModifyY(page: Page, shape: Shape, y: number, needUpdateFrame?: { shape: Shape, page: Page }[]) {
+export function shapeModifyY(page: Page, shape: Shape, y: number) {
     // check
     _checkNum(y);
     const frame = shape.transform;
     if (y !== frame.m12) {
         const op = crdtSetAttr(shape.transform, 'm12', y);
-        if (needUpdateFrame) needUpdateFrame.push({ shape, page });
+        // if (needUpdateFrame) needUpdateFrame.push({ shape, page });
         return op;
     }
 }
-export function shapeModifyWH(page: Page, shape: Shape, w: number, h: number, needUpdateFrame?: { shape: Shape, page: Page }[]) {
+export function shapeModifyWH(page: Page, shape: Shape, w: number, h: number) {
     // check
     if (Number.isNaN(w) || (!Number.isFinite(w))) throw new Error(String(w));
     if (Number.isNaN(h) || (!Number.isFinite(h))) throw new Error(String(h));
@@ -51,7 +51,7 @@ export function shapeModifyWH(page: Page, shape: Shape, w: number, h: number, ne
     if (w !== frame.width || h !== frame.height) {
         const op = [crdtSetAttr(frame, 'width', w), crdtSetAttr(frame, 'height', h)];
         // shape.setFrameSize(w, h); // todo
-        if (needUpdateFrame) needUpdateFrame.push({ shape, page });
+        // if (needUpdateFrame) needUpdateFrame.push({ shape, page });
         return op;
     }
 }
@@ -63,29 +63,29 @@ export function shapeModifyEndMarkerType(shape: Shape, mt: MarkerType) {
     const style = shape.style;
     if (mt !== style.endMarkerType) return crdtSetAttr(style, 'endMarkerType', mt);
 }
-export function shapeModifyWidth(page: Page, shape: Shape, w: number, needUpdateFrame?: { shape: Shape, page: Page }[]) {
+export function shapeModifyWidth(page: Page, shape: Shape, w: number) {
     // check
     if (Number.isNaN(w) || (!Number.isFinite(w))) throw new Error(String(w));
     const frame = shape.size;
     if (w !== frame.width) {
         // shape.setFrameSize(w, frame.height); // todo
         const op = crdtSetAttr(frame, 'width', w);
-        if (needUpdateFrame) needUpdateFrame.push({ shape, page });
+        // if (needUpdateFrame) needUpdateFrame.push({ shape, page });
         return op;
     }
 }
-export function shapeModifyHeight(page: Page, shape: Shape, h: number, needUpdateFrame?: { shape: Shape, page: Page }[]) {
+export function shapeModifyHeight(page: Page, shape: Shape, h: number) {
     // check
     if (Number.isNaN(h) || (!Number.isFinite(h))) throw new Error(String(h));
     const frame = shape.size;
     if (h !== frame.height) {
         // shape.setFrameSize(frame.width, h);
         const op = crdtSetAttr(frame, 'height', h);
-        if (needUpdateFrame) needUpdateFrame.push({ shape, page });
+        // if (needUpdateFrame) needUpdateFrame.push({ shape, page });
         return op;
     }
 }
-export function shapeModifyTransform(page: Page, shape: Shape, transform: Transform, needUpdateFrame?: { shape: Shape, page: Page }[]) {
+export function shapeModifyTransform(page: Page, shape: Shape, transform: Transform) {
     // rotate = rotate % 360; // 0-360
     // if (rotate !== shape.rotation) {
     //     rotate = rotate * Math.PI / 180; // 0-2PI
@@ -114,10 +114,10 @@ export function shapeModifyTransform(page: Page, shape: Shape, transform: Transf
     ops.push(crdtSetAttr(shape.transform, 'm02', transform.m02));
     ops.push(crdtSetAttr(shape.transform, 'm12', transform.m12));
 
-    if (needUpdateFrame) needUpdateFrame.push({ shape, page });
+    // if (needUpdateFrame) needUpdateFrame.push({ shape, page });
     return ops;
 }
-export function shapeModifyTransformNoTranslage(page: Page, shape: Shape, transform: Transform, needUpdateFrame?: { shape: Shape, page: Page }[]) {
+export function shapeModifyTransformNoTranslage(page: Page, shape: Shape, transform: Transform) {
     // rotate = rotate % 360; // 0-360
     // if (rotate !== shape.rotation) {
     //     rotate = rotate * Math.PI / 180; // 0-2PI
@@ -146,7 +146,7 @@ export function shapeModifyTransformNoTranslage(page: Page, shape: Shape, transf
     // ops.push(crdtSetAttr(shape.transform, 'm02', transform.m02));
     // ops.push(crdtSetAttr(shape.transform, 'm12', transform.m12));
 
-    if (needUpdateFrame) needUpdateFrame.push({ shape, page });
+    // if (needUpdateFrame) needUpdateFrame.push({ shape, page });
     return ops;
 }
 export function shapeModifyCounts(shape: (PolygonShape | StarShape), counts: number) {

@@ -77,10 +77,10 @@ function _checkNum(x: number) {
     if (Number.isNaN(x) || (!Number.isFinite(x))) throw new Error(String(x));
 }
 
-function _checkFrame(frame: ShapeFrame) {
+function _checkFrame(frame: ShapeSize) {
     if (frame.width === 0 || frame.height === 0) throw new Error();
-    _checkNum(frame.x);
-    _checkNum(frame.y);
+    // _checkNum(frame.x);
+    // _checkNum(frame.y);
     _checkNum(frame.width);
     _checkNum(frame.height);
 }
@@ -233,7 +233,7 @@ export function newPathShape(name: string, frame: ShapeFrame, path: Path, style?
     transform.m12 = frame.y;
     const size = new ShapeSize(frame.width, frame.height);
 
-    const shape = new PathShape(new BasicArray(), id, name, types.ShapeType.Path, transform, size, style, pathsegs);
+    const shape = new PathShape(new BasicArray(), id, name, types.ShapeType.Path, transform, style, size, pathsegs);
     addCommonAttr(shape);
     return shape;
 }
@@ -256,7 +256,7 @@ export function newRectShape(name: string, frame: ShapeFrame): RectShape {
     transform.m12 = frame.y;
     const size = new ShapeSize(frame.width, frame.height);
 
-    const shape = new RectShape(new BasicArray(), id, name, types.ShapeType.Rectangle, transform, size, style, new BasicArray<PathSegment>(segment));
+    const shape = new RectShape(new BasicArray(), id, name, types.ShapeType.Rectangle, transform, style, size, new BasicArray<PathSegment>(segment));
     addCommonAttr(shape);
     return shape;
 }
@@ -316,7 +316,7 @@ export function newOvalShape(name: string, frame: ShapeFrame): OvalShape {
     transform.m12 = frame.y;
     const size = new ShapeSize(frame.width, frame.height);
 
-    const shape = new OvalShape([4] as BasicArray<number>, id, name, types.ShapeType.Oval, transform, size, style, new BasicArray<PathSegment>(segment), ellipse);
+    const shape = new OvalShape([4] as BasicArray<number>, id, name, types.ShapeType.Oval, transform, style, size, new BasicArray<PathSegment>(segment), ellipse);
 
     addCommonAttr(shape);
     return shape;
@@ -336,7 +336,7 @@ export function newPolygonShape(name: string, frame: ShapeFrame): PolygonShape {
     transform.m12 = frame.y;
     const size = new ShapeSize(frame.width, frame.height);
 
-    const shape = new PolygonShape(new BasicArray(), id, name, types.ShapeType.Polygon, transform, size, style, new BasicArray<PathSegment>(segment), 3);
+    const shape = new PolygonShape(new BasicArray(), id, name, types.ShapeType.Polygon, transform, style, size, new BasicArray<PathSegment>(segment), 3);
     addCommonAttr(shape);
     return shape;
 }
@@ -355,7 +355,7 @@ export function newStellateShape(name: string, frame: ShapeFrame): StarShape {
     transform.m12 = frame.y;
     const size = new ShapeSize(frame.width, frame.height);
 
-    const shape = new StarShape(new BasicArray(), id, name, types.ShapeType.Star, transform, size, style, new BasicArray<PathSegment>(segment), 5, 0.382);
+    const shape = new StarShape(new BasicArray(), id, name, types.ShapeType.Star, transform, style, size, new BasicArray<PathSegment>(segment), 5, 0.382);
     addCommonAttr(shape);
     return shape;
 }
@@ -377,7 +377,7 @@ export function newLineShape(name: string, frame: ShapeFrame): LineShape {
     transform.m12 = frame.y;
     const size = new ShapeSize(frame.width, frame.height);
 
-    const shape = new LineShape(new BasicArray(), uuid(), name, types.ShapeType.Line, transform, size, style, new BasicArray<PathSegment>(segment));
+    const shape = new LineShape(new BasicArray(), uuid(), name, types.ShapeType.Line, transform, style, size, new BasicArray<PathSegment>(segment));
     addCommonAttr(shape);
     return shape;
 }
@@ -400,7 +400,7 @@ export function newArrowShape(name: string, frame: ShapeFrame): LineShape {
     transform.m12 = frame.y;
     const size = new ShapeSize(frame.width, frame.height);
 
-    const shape = new LineShape(new BasicArray(), uuid(), name, types.ShapeType.Line, transform, size, style, new BasicArray<PathSegment>(segment));
+    const shape = new LineShape(new BasicArray(), uuid(), name, types.ShapeType.Line, transform, style, size, new BasicArray<PathSegment>(segment));
     addCommonAttr(shape);
     return shape;
 }
@@ -474,7 +474,7 @@ export function newImageShape(name: string, frame: ShapeFrame, mediasMgr: Resour
     transform.m12 = frame.y;
     const size = new ShapeSize(frame.width, frame.height);
 
-    const img = new ImageShape(new BasicArray(), id, name, types.ShapeType.Image, transform, size, style, new BasicArray<PathSegment>(segment), ref || '');
+    const img = new ImageShape(new BasicArray(), id, name, types.ShapeType.Image, transform, style, size, new BasicArray<PathSegment>(segment), ref || '');
     img.setImageMgr(mediasMgr);
     addCommonAttr(img);
     img.style.fills.length = 0;
@@ -502,7 +502,7 @@ export function newImageFillShape(name: string, frame: ShapeFrame, mediasMgr: Re
     transform.m12 = frame.y;
     const size = new ShapeSize(frame.width, frame.height);
 
-    const shape = new RectShape(new BasicArray(), id, name, types.ShapeType.Rectangle, transform, size, style, new BasicArray<PathSegment>(segment));
+    const shape = new RectShape(new BasicArray(), id, name, types.ShapeType.Rectangle, transform, style, size, new BasicArray<PathSegment>(segment));
     addCommonAttr(shape);
     const fillColor = new Color(1, 216, 216, 216);
     const fill = new Fill(new BasicArray(), uuid(), true, FillType.Pattern, fillColor);
@@ -539,8 +539,8 @@ export function newTable(name: string, frame: ShapeFrame, rowCount: number, colu
         name,
         types.ShapeType.Table,
         transform,
-        size,
         newStyle(),
+        size,
         new BasicMap(),
         new BasicArray(),
         new BasicArray());// importTableShape(template_table_shape as types.TableShape);
@@ -608,7 +608,7 @@ export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm):
     transform.m12 = frame.y;
     const size = new ShapeSize(frame.width, frame.height);
 
-    const shape = new ContactShape(new BasicArray(), uuid(), name, types.ShapeType.Contact, transform, size, style, new BasicArray<PathSegment>(segment), false, text, false);
+    const shape = new ContactShape(new BasicArray(), uuid(), name, types.ShapeType.Contact, transform, style, size, new BasicArray<PathSegment>(segment), false, text, false);
 
     shape.from = apex;
     shape.to = undefined;
@@ -642,7 +642,7 @@ export function newCutoutShape(name: string, frame: ShapeFrame): CutoutShape {
     const exportOptions = new ExportOptions(new BasicArray(), 0, false, false, false, false);
     const exportFormat = new ExportFormat(new BasicArray(), uuid(), 0, ExportFileFormat.Png, '', ExportFormatNameingScheme.Prefix, 1, ExportVisibleScaleType.Scale)
     exportOptions.exportFormats.push(exportFormat);
-    const shape = new CutoutShape(new BasicArray(), id, name, types.ShapeType.Cutout, transform, size, style, new BasicArray<PathSegment>(segment));
+    const shape = new CutoutShape(new BasicArray(), id, name, types.ShapeType.Cutout, transform, style, size, new BasicArray<PathSegment>(segment));
     shape.exportOptions = exportOptions;
     addCommonAttr(shape);
     return shape;
@@ -662,9 +662,9 @@ export function newSymbolShape(name: string, frame: ShapeFrame, style?: Style): 
         name,
         types.ShapeType.Symbol,
         transform,
-        size,
         newflatStyle(),
         new BasicArray(),
+        size,
         new BasicMap(),
         // createNormalPoints()
     );
@@ -688,9 +688,9 @@ export function newSymbolShapeUnion(name: string, frame: ShapeFrame): SymbolUnio
         name,
         types.ShapeType.SymbolUnion,
         transform,
-        size,
         style,
         new BasicArray(),
+        size,
         new BasicMap(),
         // createNormalPoints()
     );
@@ -706,7 +706,7 @@ export function newSymbolRefShape(name: string, frame: ShapeFrame, refId: string
     transform.m12 = frame.y;
     const size = new ShapeSize(frame.width, frame.height);
 
-    const ref = new SymbolRefShape(new BasicArray(), uuid(), name, types.ShapeType.SymbolRef, transform, size, newflatStyle(), refId, new BasicMap());
+    const ref = new SymbolRefShape(new BasicArray(), uuid(), name, types.ShapeType.SymbolRef, transform, newflatStyle(), size, refId, new BasicMap());
     addCommonAttr(ref);
     ref.setSymbolMgr(symbol_mgr);
     return ref;

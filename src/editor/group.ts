@@ -160,8 +160,9 @@ export function ungroup(document: Document, page: Page, shape: GroupShape, api: 
         const m2 = c.matrix2Parent();
         const cur = m2.computeCoord(0, 0);
 
-        api.shapeModifyX(page, c, c.frame.x + target.x - cur.x);
-        api.shapeModifyY(page, c, c.frame.y + target.y - cur.y);
+        const frame = c.frame;
+        api.shapeModifyX(page, c, frame.x + target.x - cur.x);
+        api.shapeModifyY(page, c, frame.y + target.y - cur.y);
     }
     for (let len = shape.childs.length; len > 0; len--) {
         const c = shape.childs[0];

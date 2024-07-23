@@ -99,7 +99,7 @@ export class PathModifier extends AsyncApiCaller {
             const trans = new Transform();
             trans.m02 = frame.x;
             trans.m12 = frame.y;
-            const vec = new PathShape(new BasicArray(), uuid(), name, ShapeType.Path, trans, size, style, new BasicArray<PathSegment>(segment));
+            const vec = new PathShape(new BasicArray(), uuid(), name, ShapeType.Path, trans, style, size, new BasicArray<PathSegment>(segment));
 
             addCommonAttr(vec);
 
@@ -282,9 +282,9 @@ export class PathModifier extends AsyncApiCaller {
     }
 
     execute4handle(_shape: ShapeView, index: number, side: 'from' | 'to',
-                   from: { x: number, y: number },
-                   to: { x: number, y: number },
-                   segmentIndex: number) {
+        from: { x: number, y: number },
+        to: { x: number, y: number },
+        segmentIndex: number) {
         try {
             const api = this.api;
             const page = this.page;

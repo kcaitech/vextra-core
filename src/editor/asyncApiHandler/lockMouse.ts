@@ -222,7 +222,7 @@ export class LockMouseHandler extends AsyncApiCaller {
                 const d = (shape.rotation || 0) + deg;
 
                 const t = makeShapeTransform2By1(shape.transform);
-                const { width, height } = shape.size;
+                const { width, height } = shape.frame;
 
                 const angle = d % 360 * Math.PI / 180;
                 const os = t.decomposeEuler().z;
