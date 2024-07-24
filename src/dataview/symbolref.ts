@@ -243,7 +243,7 @@ export class SymbolRefView extends ShapeView {
         if (!this.hasSize()) {
             let frame = this.frame; // 不需要更新
             const save1 = transform.computeCoord(0, 0);
-            const t = skewTransfrom();
+            const t = skewTransfrom().clone();
             const save2 = t.computeCoord(0, 0)
             const dx = save1.x - save2.x;
             const dy = save1.y - save2.y;
@@ -273,7 +273,7 @@ export class SymbolRefView extends ShapeView {
             frame.height *= scale.y;
         }
 
-        const t = skewTransfrom();
+        const t = skewTransfrom().clone();
         const cur = t.computeCoord(0, 0);
         t.trans(frame.x - cur.x, frame.y - cur.y);
 

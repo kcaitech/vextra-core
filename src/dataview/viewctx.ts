@@ -29,27 +29,9 @@ export interface ViewType {
     new(ctx: DViewCtx, props: PropsType): DataView;
 }
 
-class FrameUpdateArr extends Array<DataView> {
-    private __set = new Set<number>();
-    push(...items: DataView[]): number {
-        for (let i = 0, len = items.length; i < len; ++i) {
-            const item = items[i];
-            const id = objectId(item);
-            if (this.__set.has(id)) continue;
-            this.__set.add(id);
-            super.push(item);
-        }
-        return this.length;
-    }
-    clear() {
-        this.__set.clear();
-        this.length = 0;
-    }
-}
-
 export function updateViewsFrame(updates: { data: DataView }[]) {
     if (updates.length === 0) return;
-    type Node = { view: DataView, updated: boolean, childs: Node[], changed: boolean, needupdate: boolean, parent: Node | undefined }
+    type Node = { view: DataView, childs: Node[], needupdate: boolean, parent: Node | undefined }
     const updatetree: Map<number, Node> = new Map();
     updates.forEach((_s) => {
         const s = _s.data;
@@ -58,7 +40,7 @@ export function updateViewsFrame(updates: { data: DataView }[]) {
             n.needupdate = true;
             return;
         }
-        n = { view: s, updated: false, childs: [], changed: false, needupdate: true, parent: undefined }
+        n = { view: s, childs: [], needupdate: true, parent: undefined }
         updatetree.set(objectId(s), n);
 
         let cn = n;
@@ -66,7 +48,7 @@ export function updateViewsFrame(updates: { data: DataView }[]) {
         while (p) {
             let pn: Node | undefined = updatetree.get(objectId(p));
             if (!pn) {
-                pn = { view: p, updated: false, childs: [], changed: false, needupdate: false, parent: undefined }
+                pn = { view: p, childs: [], needupdate: false, parent: undefined }
                 updatetree.set(objectId(p), pn);
             }
 
@@ -78,61 +60,36 @@ export function updateViewsFrame(updates: { data: DataView }[]) {
         }
     });
 
-    const nextRoot = () => {
-        const n = updatetree.entries().next();
-        if (n.done) return undefined;
-        let node = n.value[1];
-        // 防止循环引用
-        let maxloop = 10000;
-        while (node.parent && (--maxloop > 0)) node = node.parent;
-        if (maxloop <= 0) throw new Error("circular reference")
-        return node;
-    }
-
-    const dropTree = (root: Node) => {
-        const nodes = [root];
-        let n = nodes.pop();
-        while (n) {
-            if (n.childs.length > 0) nodes.push(...n.childs);
-            updatetree.delete(objectId(n.view))
-            n = nodes.pop();
-        }
-    }
 
     const afterTravel = (root: Node, traver: (n: Node) => void) => {
-        const nodes = [{ node: root, visited: false }];
-
+        const nodes = [root];
+        const visited = new Set<number>();
         let n = nodes[nodes.length - 1];
         while (n) {
-            if (n.visited || n.node.childs.length === 0) {
-                traver(n.node);
+            if (visited.has(objectId(n)) || n.childs.length === 0) {
+                traver(n);
                 nodes.pop();
-            }
-            else {
-                n.visited = true;
-                nodes.push(...n.node.childs.map(n => ({ node: n, visited: false })));
+            } else {
+                visited.add(objectId(n))
+                nodes.push(...n.childs);
             }
             n = nodes[nodes.length - 1];
         }
     }
 
-    let root = nextRoot();
-    while (root) {
+    const roots: Node[] = [];
+    for (let n of updatetree.values()) {
+        if (!n.parent) roots.push(n);
+    }
+
+    for (let i = 0, len = roots.length; i < len; ++i) {
+        const root = roots[i];
         // 从下往上更新
         afterTravel(root, (next: Node) => {
-            const needupdate = next.needupdate || ((childs) => {
-                for (let i = 0; i < childs.length; i++) {
-                    if (childs[i].changed) return true;
-                }
-                return false;
-            })(next.childs)
+            const needupdate = next.needupdate;
             const changed = needupdate && next.view.updateFrames();
-            next.updated = true;
-            next.changed = changed;
+            if (changed && next.parent) next.parent.needupdate = true;
         })
-
-        dropTree(root);
-        root = nextRoot();
     }
 }
 

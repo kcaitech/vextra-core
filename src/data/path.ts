@@ -508,7 +508,7 @@ type BoundsCtx = {
     boundsinited: boolean
 }
 
-const boundsHandler: { [key: string]: (ctx: BoundsCtx, item: any[]) => void } = {}
+const boundsHandler: { [key: string]: (ctx: BoundsCtx, item: (string | number)[]) => void } = {}
 
 function expandBounds(ctx: BoundsCtx, x: number, y: number) {
     if (!ctx.boundsinited) {
@@ -520,9 +520,9 @@ function expandBounds(ctx: BoundsCtx, x: number, y: number) {
     expandYBounds(ctx.bounds, y);
 }
 
-boundsHandler['M'] = (ctx: BoundsCtx, item: any[]) => {
-    const x = item[1];
-    const y = item[2];
+boundsHandler['M'] = (ctx: BoundsCtx, item: (string | number)[]) => {
+    const x = item[1] as number;
+    const y = item[2] as number;
 
     ctx.beginpoint.x = x;
     ctx.beginpoint.y = y;
@@ -667,13 +667,21 @@ boundsHandler['Z'] = (ctx: BoundsCtx, item: any[]) => {
     ctx.prepoint.x = ctx.beginpoint.x;
     ctx.prepoint.y = ctx.beginpoint.y;
 }
-boundsHandler['z'] = (ctx: BoundsCtx, item: any[]) => {
+boundsHandler['z'] = (ctx: BoundsCtx, item: (string | number)[]) => {
     expandBounds(ctx, ctx.prepoint.x, ctx.prepoint.y);
     ctx.prepoint.x = ctx.beginpoint.x;
     ctx.prepoint.y = ctx.beginpoint.y;
 }
 
-function calcPathBounds(path: any[]): Bounds {
+boundsHandler['Q'] = (ctx: BoundsCtx, item: (string | number)[]) => {
+    // todo
+}
+
+boundsHandler['q'] = (ctx: BoundsCtx, item: (string | number)[]) => {
+    // todo
+}
+
+function calcPathBounds(path: (string | number)[][]): Bounds {
     const ctx: BoundsCtx = {
         beginpoint: { x: 0, y: 0 },
         prepoint: { x: 0, y: 0 },
@@ -683,9 +691,11 @@ function calcPathBounds(path: any[]): Bounds {
 
     for (let i = 0, len = path.length; i < len; i++) {
         const item = path[i];
-        boundsHandler[item[0]](ctx, item)
+        const h = boundsHandler[item[0]];
+        if (!h) throw new Error("no bounds handler for " + item[0])
+        h(ctx, item)
     }
-    if (path.length > 0 && path[path.length - 1][0].toLowerCase() !== 'z') { // 闭合
+    if (path.length > 0 && path[path.length - 1][0].toString().toLowerCase() !== 'z') { // 闭合
         boundsHandler['z'](ctx, path[path.length - 1])
     }
     return ctx.bounds;
