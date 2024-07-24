@@ -47,8 +47,8 @@ export class GroupShapeView extends ShapeView {
         }
     }
 
-    protected _layout(size: ShapeFrame, shape: Shape, parentFrame: ShapeSize | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scale: { x: number, y: number } | undefined): void {
-        super._layout(size, shape, parentFrame, varsContainer, scale);
+    protected _layout(shape: Shape, parentFrame: ShapeSize | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scale: { x: number, y: number } | undefined): void {
+        super._layout(shape, parentFrame, varsContainer, scale);
         if (this.m_need_updatechilds) {
             this.notify("childs"); // notify childs change
             this.m_need_updatechilds = false;
@@ -72,9 +72,9 @@ export class GroupShapeView extends ShapeView {
         return childs;
     }
 
-    protected layoutChild(child: Shape, idx: number, transx: { x: number, y: number } | undefined, varsContainer: VarsContainer | undefined, resue: Map<string, DataView>, rView: RootView | undefined) {
+    protected layoutChild(child: Shape, idx: number, scale: { x: number, y: number } | undefined, varsContainer: VarsContainer | undefined, resue: Map<string, DataView>, rView: RootView | undefined) {
         let cdom: DataView | undefined = resue.get(child.id);
-        const props = { data: child, transx, varsContainer, isVirtual: this.m_isVirtual };
+        const props = { data: child, scale, varsContainer, isVirtual: this.m_isVirtual };
         if (cdom) {
             this.moveChild(cdom, idx);
             cdom.layout(props);

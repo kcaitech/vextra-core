@@ -23,6 +23,9 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     get frame(): classes.ShapeFrame {
         return new ShapeFrame(0, 0, this.size.width, this.size.height);
     }
+    hasSize(): boolean {
+        return true;
+    }
     typeId = 'symbol-ref-shape'
     private __refId: string // set 方法会进事务
     // @ts-ignore

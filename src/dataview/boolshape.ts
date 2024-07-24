@@ -50,12 +50,16 @@ class FrameGrid {
     _cellRowsCount: number;
     _cellColsCount: number;
     _rows: ShapeFrame[][][] = [];
+    _offsetx: number;
+    _offsety: number;
 
-    constructor(cellWidth: number, cellHeight: number, cellRowsCount: number, cellColsCount: number) {
+    constructor(cellWidth: number, cellHeight: number, cellRowsCount: number, cellColsCount: number, offsetx: number, offsety: number) {
         this._cellWidth = cellWidth;
         this._cellHeight = cellHeight;
         this._cellRowsCount = cellRowsCount;
         this._cellColsCount = cellColsCount;
+        this._offsetx = offsetx;
+        this._offsety = offsety;
     }
 
     checkIntersectAndPush(frame: ShapeFrame): boolean {
@@ -67,10 +71,10 @@ class FrameGrid {
     }
 
     private _checkIntersectAndPush(frame: ShapeFrame, preset: boolean): boolean {
-        const xs = (frame.x);
-        const xe = (frame.x + frame.width);
-        const ys = (frame.y);
-        const ye = (frame.y + frame.height);
+        const xs = (frame.x) - this._offsetx;
+        const xe = (frame.x + frame.width) - this._offsetx;
+        const ys = (frame.y) - this._offsety;
+        const ye = (frame.y + frame.height) - this._offsety;
 
         const is = Math.max(0, xs / this._cellWidth);
         const ie = Math.max(1, xe / this._cellWidth);
@@ -178,6 +182,25 @@ function border2path(shape: ShapeView, borders: Border[]): Path {
     }
 }
 
+function boundsFrame(shape: ShapeView): ShapeFrame {
+    let minx = 0, maxx = 0, miny = 0, maxy = 0;
+    shape.childs.forEach((c, i) => {
+        const cf = c.frame;
+        if (i === 0) {
+            minx = cf.x;
+            maxx = cf.x + cf.width;
+            miny = cf.y;
+            maxy = cf.y + cf.height;
+        } else {
+            minx = Math.min(minx, cf.x);
+            maxx = Math.max(maxx, cf.x + cf.width);
+            miny = Math.min(miny, cf.y);
+            maxy = Math.max(maxy, cf.y + cf.height);
+        }
+    })
+    return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
+}
+
 function render2path(shape: ShapeView): Path {
     const shapeIsGroup = shape instanceof GroupShapeView;
     let fixedRadius: number | undefined;
@@ -218,10 +241,10 @@ function render2path(shape: ShapeView): Path {
         frame0 = new ShapeFrame(bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
     }
 
-    const pframe = shape.frame;
+    const pframe = boundsFrame(shape);
     const gridSize = Math.ceil(Math.sqrt(cc));
 
-    const grid = new FrameGrid(pframe.width / gridSize, pframe.height / gridSize, gridSize, gridSize);
+    const grid = new FrameGrid(pframe.width / gridSize, pframe.height / gridSize, gridSize, gridSize, pframe.x, pframe.y);
 
     grid.push(frame0);
 

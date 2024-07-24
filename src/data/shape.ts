@@ -194,7 +194,11 @@ export class Shape extends Basic implements classes.Shape {
 
     }
     get frame(): ShapeFrame {
-        return new ShapeFrame();
+        const { width, height } = this.size;
+        return new ShapeFrame(0, 0, width, height);
+    }
+    hasSize(): boolean {
+        return false;
     }
 
     getPathOfSize(frame: ShapeSize, fixedRadius?: number): Path {
@@ -696,6 +700,9 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
     get frame(): classes.ShapeFrame {
         return new ShapeFrame(0, 0, this.size.width, this.size.height);
     }
+    hasSize(): boolean {
+        return true;
+    }
 
     static Default_State = "49751e86-9b2c-4d1b-81b0-36f19b5407d2"
 
@@ -840,6 +847,9 @@ export class PathShape extends Shape implements classes.PathShape {
     get frame(): classes.ShapeFrame {
         return new ShapeFrame(0, 0, this.size.width, this.size.height);
     }
+    hasSize(): boolean {
+        return true;
+    }
 
     typeId = 'path-shape'
     // @ts-ignore
@@ -918,6 +928,9 @@ export class PathShape extends Shape implements classes.PathShape {
 export class PathShape2 extends Shape implements classes.PathShape2 {
     get frame(): classes.ShapeFrame {
         return new ShapeFrame(0, 0, this.size.width, this.size.height);
+    }
+    hasSize(): boolean {
+        return true;
     }
     typeId = 'path-shape2'
     // @ts-ignore
@@ -1154,6 +1167,9 @@ export class TextShape extends Shape implements classes.TextShape {
     fixedRadius?: number
     get frame(): classes.ShapeFrame {
         return new ShapeFrame(0, 0, this.size.width, this.size.height);
+    }
+    hasSize(): boolean {
+        return true;
     }
     constructor(
         crdtidx: BasicArray<number>,

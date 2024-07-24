@@ -83,7 +83,7 @@ export class DataView extends EventEL {
     m_data: Shape;
     m_children: DataView[] = [];
     m_parent: DataView | undefined;
-    m_transx?: { x: number, y: number };
+    m_scale?: { x: number, y: number };
     private m_varsContainer?: (SymbolRefShape | SymbolShape)[];
     m_isVirtual?: boolean;
 
@@ -94,7 +94,7 @@ export class DataView extends EventEL {
         super("");
         this.m_ctx = ctx;
         this.m_data = props.data;
-        this.m_transx = props.transx;
+        this.m_scale = props.scale;
         // this.m_varsContainer = props.varsContainer;
         this.m_isVirtual = props.isVirtual;
 

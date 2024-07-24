@@ -31,6 +31,7 @@ import { fixConstrainFrame } from "../data/constrain";
 import { BlurType, BorderPosition, MarkerType } from "../data/typesdefine";
 import { makeShapeTransform2By1, makeShapeTransform1By2 } from "../data/shape_transform_util";
 import { Transform as Transform2 } from "../basic/transform";
+import { float_accuracy } from "../basic/consts";
 
 export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     return (
@@ -41,7 +42,7 @@ export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     );
 }
 
-export function isDiffRenderTransform(lhs: { x: number, y: number } | undefined, rhs: {
+export function isDiffScale(lhs: { x: number, y: number } | undefined, rhs: {
     x: number,
     y: number
 } | undefined) {
@@ -75,7 +76,7 @@ export function isDiffVarsContainer(lhs: (SymbolRefShape | SymbolShape)[] | unde
     return false;
 }
 
-export function isNoTransform(trans: { x: number, y: number } | undefined): boolean {
+export function isNoScale(trans: { x: number, y: number } | undefined): boolean {
     // return !trans || trans.matrix.isIdentity()
     return !trans || trans.x === 1 && trans.y === 1;
 }
@@ -93,7 +94,7 @@ export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeSize, frame:
         frame.width *= scaleX;
         frame.height *= scaleY;
     } else {
-        const resizingConstraint = shape.resizingConstraint!; // 默认值为靠左、靠顶、宽高固定
+        const resizingConstraint = shape.resizingConstraint ?? 0; // 默认值为靠左、靠顶、宽高固定
         // const recorder = (window as any).__size_recorder;
         const __f = fixConstrainFrame(resizingConstraint, frame.x, frame.y, frame.width, frame.height, scaleX, scaleY, parentFrame, originParentFrame);
 
@@ -164,7 +165,7 @@ export function transformPoints(points: CurvePoint[], matrix: Matrix) {
     return ret;
 }
 
-function frame2Parent(t: Transform, size: ShapeSize): ShapeFrame {
+export function frame2Parent(t: Transform, size: ShapeSize): ShapeFrame {
     if (t.m00 == 1 && t.m01 === 0 && t.m10 === 0 && t.m11 === 1) return new ShapeFrame(t.m02, t.m12, size.width, size.height)
     const lt = t.computeCoord(0, 0);
     const rb = t.computeCoord(size.width, size.height);
@@ -207,14 +208,14 @@ export class ShapeView extends DataView {
     // m_rotate?: number;
     m_transform: Transform;
     // todo
-    _save_frame: ShapeFrame; // 对象内坐标系的大小
-    m_frame: ShapeFrame; // 对象内坐标系的大小
-    m_visibleFrame: ShapeFrame; // 对象内坐标系的大小
-    m_outerFrame: ShapeFrame; // 对象内坐标系的大小
+    _save_frame: ShapeFrame = new ShapeFrame(); // 对象内坐标系的大小
+    m_frame: ShapeFrame = new ShapeFrame(); // 对象内坐标系的大小
+    m_visibleFrame: ShapeFrame = new ShapeFrame(); // 对象内坐标系的大小
+    m_outerFrame: ShapeFrame = new ShapeFrame(); // 对象内坐标系的大小
 
-    _p_frame: ShapeFrame; // 父级坐标系的大小
-    _p_visibleFrame: ShapeFrame; // 父级坐标系的大小
-    _p_outerFrame: ShapeFrame; // 父级坐标系的大小
+    _p_frame: ShapeFrame = new ShapeFrame(); // 父级坐标系的大小
+    _p_visibleFrame: ShapeFrame = new ShapeFrame(); // 父级坐标系的大小
+    _p_outerFrame: ShapeFrame = new ShapeFrame(); // 父级坐标系的大小
 
     m_fixedRadius?: number;
     // cache
@@ -231,17 +232,17 @@ export class ShapeView extends DataView {
 
         const t = shape.transform;
         this.m_transform = new Transform(t.m00, t.m01, t.m02, t.m10, t.m11, t.m12)
-        const size = shape.size;
+        // 不可以
+        // const size = shape.size;
         // this.m_size = new ShapeFrame(0, 0, size.width, size.height);
         this.m_fixedRadius = (shape as PathShape).fixedRadius; // rectangle
-        this.m_frame = new ShapeFrame(0, 0, size.width, size.height);
-        this._save_frame = new ShapeFrame(0, 0, size.width, size.height);
-        this.m_visibleFrame = new ShapeFrame(0, 0, size.width, size.height);
-        this.m_outerFrame = new ShapeFrame(0, 0, size.width, size.height);
-
-        this._p_frame = new ShapeFrame(0, 0, size.width, size.height);
-        this._p_visibleFrame = new ShapeFrame(0, 0, size.width, size.height);
-        this._p_outerFrame = new ShapeFrame(0, 0, size.width, size.height);
+        // this.m_frame = new ShapeFrame(0, 0, size.width, size.height);
+        // this._save_frame = new ShapeFrame(0, 0, size.width, size.height);
+        // this.m_visibleFrame = new ShapeFrame(0, 0, size.width, size.height);
+        // this.m_outerFrame = new ShapeFrame(0, 0, size.width, size.height);
+        // this._p_frame = new ShapeFrame(0, 0, size.width, size.height);
+        // this._p_visibleFrame = new ShapeFrame(0, 0, size.width, size.height);
+        // this._p_outerFrame = new ShapeFrame(0, 0, size.width, size.height);
     }
 
     hitContent(x: number, y: number, deep: boolean): { shape: ShapeView; x: number; y: number; }[] {
@@ -260,9 +261,14 @@ export class ShapeView extends DataView {
         return ret;
     }
 
+    hasSize() {
+        return this.m_data.hasSize();
+    }
+
     onMounted() {
-        const parentFrame = this.parent?.frame;
-        this._layout(this.frame, this.m_data, parentFrame, this.varsContainer, this.m_transx);
+        const parent = this.parent;
+        const parentFrame = parent?.hasSize() ? parent.frame : undefined;
+        this._layout(this.m_data, parentFrame, this.varsContainer, this.m_scale);
         this.updateFrames();
     }
 
@@ -649,79 +655,129 @@ export class ShapeView extends DataView {
         return changed;
     }
 
-    protected layoutChilds(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, parentFrame: ShapeSize, scale?: {
+    protected layoutChilds(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, parentFrame: ShapeSize | undefined, scale?: {
         x: number,
         y: number
     }) {
     }
 
-    protected _layout(size: ShapeFrame, shape: Shape, parentFrame: ShapeSize | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scale: {
+    protected _layout(shape: Shape, parentFrame: ShapeSize | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scale: {
         x: number,
         y: number
     } | undefined) {
-        let notTrans = isNoTransform(scale);
-        const trans = shape.transform;
+
+        const transform = shape.transform;
         // case 1 不需要变形
-        if (!scale || notTrans) {
+        if (!scale || scale.x === 1 && scale.y === 1) {
             // update frame, hflip, vflip, rotate
-            this.updateLayoutArgs(trans, size, (shape as PathShape).fixedRadius);
+            let frame = this.frame;
+            if (this.hasSize()) {
+                frame = this.data.frame;
+            }
+            this.updateLayoutArgs(transform, frame, (shape as PathShape).fixedRadius);
             this.layoutChilds(varsContainer, this.frame);
             return;
         }
 
-        // const frameType = shape.frameType;
-        // if (!frameType) { // 无实体frame
-        //     return;
-        // }
+        const skewTransfrom = () => {
+            let t = transform;
+            if (scale.x !== scale.y) { // todo
+                t = t.clone();
+                // const save1 = t.computeCoord(0, 0);
+                t.scale(scale.x, scale.y);
+                // 保留skew去除scale
+                const t2 = makeShapeTransform2By1(t);
+                t2.clearScaleSize();
+                t = makeShapeTransform1By2(t2);
+                // const save2 = t.computeCoord(0, 0)
+                // const dx = save1.x - save2.x;
+                // const dy = save1.y - save2.y;
+                // t.trans(dx, dy);
+            }
+            return t;
+        }
 
-        // const canSkew = frameType === FrameType.Path && !shape.isNoTransform();
+        // 当前对象如果没有frame,需要childs layout完成后才有
+        // 但如果有constrain,则需要提前计算出frame?当前是直接不需要constrain
+        if (!this.hasSize()) {
+            let frame = this.frame; // 不需要更新
+            const save1 = transform.computeCoord(0, 0);
+            const t = skewTransfrom();
+            const save2 = t.computeCoord(0, 0)
+            const dx = save1.x - save2.x;
+            const dy = save1.y - save2.y;
+            t.trans(dx, dy);
+            this.updateLayoutArgs(t, frame, (shape as PathShape).fixedRadius);
+            this.layoutChilds(varsContainer, undefined, scale);
+            return;
+        }
 
-        const frame = frame2Parent(shape.transform, size);
+        const resizingConstraint = shape.resizingConstraint ?? 0; // 默认值为靠左、靠顶、宽高固定
+        const size = this.data.size;
+        const frame = frame2Parent(transform, size);
         const saveW = frame.width;
         const saveH = frame.height;
 
         let scaleX = scale.x;
         let scaleY = scale.y;
 
-        // page不会来到这里。group没有constrain，不需要parentFrame
-        //
-        if (parentFrame) {
+        if (parentFrame && resizingConstraint !== 0) {
             fixFrameByConstrain(shape, parentFrame, frame, scaleX, scaleY);
             scaleX = (frame.width / saveW);
             scaleY = (frame.height / saveH);
         } else {
-            frame.x *= scaleX;
-            frame.y *= scaleY;
-            frame.width *= scaleX;
-            frame.height *= scaleY;
+            frame.x *= scale.x;
+            frame.y *= scale.y;
+            frame.width *= scale.x;
+            frame.height *= scale.y;
         }
 
-        // if (!canSkew && scaleX !== scaleY) {
-        //     scaleX = Math.min(scaleX, scaleY);
-        //     scaleY = scaleX;
-        //     frame.width = saveW * scaleX;
-        //     frame.height = saveH * scaleY;
-        // }
+        const t = skewTransfrom();
+        const cur = t.computeCoord(0, 0);
+        t.trans(frame.x - cur.x, frame.y - cur.y);
 
-        // 保持frame.{x, y}不变
-        const sizeXY = shape.transform.inverseRef(frame.width, frame.height);
-        const size2 = new ShapeFrame(0, 0, sizeXY.x, sizeXY.y);
+        const inverse = t.inverse;
+        const lt = inverse.computeCoord(frame.x, frame.y); // 应该是{0，0}
+        if (Math.abs(lt.x) > float_accuracy || Math.abs(lt.y) > float_accuracy) throw new Error();
+        const rb = inverse.computeCoord(frame.x + frame.width, frame.y + frame.height);
+        const size2 = new ShapeFrame(lt.x, lt.y, (rb.x - lt.x), (rb.y - lt.y));
 
-        let transform = shape.transform.clone();
-        if (scaleX !== scaleY) {
-            transform.scale(scaleX, scaleY);
-            // 保留skew去除scale
-            const t2 = makeShapeTransform2By1(transform);
-            t2.clearScaleSize();
-            transform = makeShapeTransform1By2(t2);
-        }
-        const frame2 = frame2Parent(transform, size2);
-        const dx = frame.x - frame2.x;
-        const dy = frame.y - frame2.y;
-        transform.trans(dx, dy);
-
-        this.updateLayoutArgs(transform, size2, (shape as PathShape).fixedRadius);
+        this.updateLayoutArgs(t, size2, (shape as PathShape).fixedRadius);
         this.layoutChilds(varsContainer, this.frame, { x: scaleX, y: scaleY });
+    }
+
+    protected updateLayoutProps(props: PropsType, needLayout: boolean) {
+        // const needLayout = this.m_ctx.removeReLayout(this); // remove from changeset
+        if (props.data.id !== this.m_data.id) throw new Error('id not match');
+        const dataChanged = objectId(props.data) !== objectId(this.m_data);
+        if (dataChanged) {
+            // data changed
+            this.setData(props.data);
+        }
+        // check
+        const diffTransform = isDiffScale(props.scale, this.m_scale);
+        const diffVars = isDiffVarsContainer(props.varsContainer, this.varsContainer);
+        if (!needLayout &&
+            !dataChanged &&
+            !diffTransform &&
+            !diffVars) {
+            return false;
+        }
+
+        if (diffTransform) {
+            // update transform
+            this.m_scale = props.scale;
+        }
+        if (diffVars) {
+            // update varscontainer
+            this.m_ctx.removeDirty(this);
+            this.varsContainer = props.varsContainer;
+            const _id = this.id;
+            // if (_id !== tid) {
+            //     // tid = _id;
+            // }
+        }
+        return true;
     }
 
     // 更新frame, vflip, hflip, rotate, fixedRadius, 及对应的cache数据，如path
@@ -731,47 +787,14 @@ export class ShapeView extends DataView {
         // todo props没更新时是否要update
         // 在frame、flip、rotate修改时需要update
         const needLayout = this.m_ctx.removeReLayout(this); // remove from changeset
-
-        if (props) {
-            // 
-            if (props.data.id !== this.m_data.id) throw new Error('id not match');
-            const dataChanged = objectId(props.data) !== objectId(this.m_data);
-            if (dataChanged) {
-                // data changed
-                this.setData(props.data);
-            }
-            // check
-            const diffTransform = isDiffRenderTransform(props.transx, this.m_transx);
-            const diffVars = isDiffVarsContainer(props.varsContainer, this.varsContainer);
-            if (!needLayout &&
-                !dataChanged &&
-                !diffTransform &&
-                !diffVars) {
-                return;
-            }
-
-            if (diffTransform) {
-                // update transform
-                this.m_transx = props.transx;
-            }
-            if (diffVars) {
-                // update varscontainer
-                this.m_ctx.removeDirty(this);
-                this.varsContainer = props.varsContainer;
-                const _id = this.id;
-                // if (_id !== tid) {
-                //     // tid = _id;
-                // }
-            }
+        if (props && !this.updateLayoutProps(props, needLayout)) {
+            return;
         }
 
-        // todo
-        const parentFrame = this.parent?.frame;
-
+        const parent = this.parent;
+        const parentFrame = parent?.hasSize() ? parent.frame : undefined;
         this.m_ctx.setDirty(this);
-        // todo
-        const layoutframe = new ShapeFrame(0, 0, this.m_data.size.width, this.m_data.size.height);
-        this._layout(layoutframe, this.m_data, parentFrame, this.varsContainer, this.m_transx);
+        this._layout(this.m_data, parentFrame, this.varsContainer, this.m_scale);
         this.m_ctx.addNotifyLayout(this);
     }
 

@@ -20,12 +20,16 @@ class FrameGrid {
     _cellRowsCount: number;
     _cellColsCount: number;
     _rows: ShapeFrame[][][] = [];
+    _offsetx: number;
+    _offsety: number;
 
-    constructor(cellWidth: number, cellHeight: number, cellRowsCount: number, cellColsCount: number) {
+    constructor(cellWidth: number, cellHeight: number, cellRowsCount: number, cellColsCount: number, offsetx: number, offsety: number) {
         this._cellWidth = cellWidth;
         this._cellHeight = cellHeight;
         this._cellRowsCount = cellRowsCount;
         this._cellColsCount = cellColsCount;
+        this._offsetx = offsetx;
+        this._offsety = offsety;
     }
 
     checkIntersectAndPush(frame: ShapeFrame): boolean {
@@ -37,10 +41,10 @@ class FrameGrid {
     }
 
     private _checkIntersectAndPush(frame: ShapeFrame, preset: boolean): boolean {
-        const xs = (frame.x);
-        const xe = (frame.x + frame.width);
-        const ys = (frame.y);
-        const ye = (frame.y + frame.height);
+        const xs = (frame.x) - this._offsetx;
+        const xe = (frame.x + frame.width) - this._offsetx;
+        const ys = (frame.y) - this._offsety;
+        const ye = (frame.y + frame.height) - this._offsety;
 
         const is = Math.max(0, xs / this._cellWidth);
         const ie = Math.max(1, xe / this._cellWidth);
