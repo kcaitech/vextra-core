@@ -30,8 +30,6 @@ import { innerShadowId } from "../render";
 export class TextShapeView extends ShapeView {
     __str: string | undefined;
     __strText: Text | undefined;
-    m_transform_form_mask?: Transform;
-    m_mask_group?: ShapeView[];
 
     getText(): Text {
         const v = this._findOV(OverrideType.Text, VariableType.Text);
@@ -170,117 +168,6 @@ export class TextShapeView extends ShapeView {
             this.m_path = undefined;
             this.notify("shape-frame");
         }
-    }
-
-    render(): number {
-        if (!this.checkAndResetDirty()) return this.m_render_version;
-        const mb = this.maskedBy;
-        if (mb) {
-            mb.notify('mask');
-            this.reset("g");
-            return ++this.m_render_version;
-        }
-        if (!this.isVisible) {
-            this.reset("g");
-            return ++this.m_render_version;
-        }
-        const fills = this.renderFills() || [];
-        const childs = this.renderContents();
-        const borders = this.renderBorders() || [];
-        const filterId = `${objectId(this)}`;
-        const shadows = this.renderShadows(filterId);
-        const blurId = `blur_${objectId(this)}`;
-        const blur = this.renderBlur(blurId);
-
-        let props = this.renderProps();
-        let children = [...fills, ...childs, ...borders];
-
-        // 阴影
-        if (shadows.length) {
-            let filter: string = '';
-            const inner_url = innerShadowId(filterId, this.getShadows());
-            filter = `url(#pd_outer-${filterId}) `;
-            if (inner_url.length) filter += inner_url.join(' ');
-            children = [...shadows, elh("g", { filter }, children)];
-        }
-
-        // 模糊
-        if (blur.length) {
-            let filter: string = '';
-            if (this.blur?.type === BlurType.Gaussian) filter = `url(#${blurId})`;
-            children = [...blur, elh('g', { filter }, children)];
-        }
-
-        // 遮罩
-        const _mask_space = this.renderMask();
-        if (_mask_space) {
-            Object.assign(props.style, { transform: _mask_space.toString() });
-            const id = `mask-base-${objectId(this)}`;
-            const __body_transform = this.transformFromMask;
-            const __body = elh("g", { style: { transform: __body_transform } }, children);
-            this.bleach(__body);
-            children = [__body];
-            const mask = elh('mask', { id }, children);
-            const rely = elh('g', { mask: `url(#${id})` }, this.relyLayers);
-            children = [mask, rely];
-        }
-
-        this.reset("g", props, children);
-
-        return ++this.m_render_version;
-    }
-
-    get relyLayers() {
-        if (!this.m_transform_form_mask) this.m_transform_form_mask = this.renderMask();
-        if (!this.m_transform_form_mask) return;
-
-        const group = this.m_mask_group || [];
-        if (group.length < 2) return;
-        const inverse = makeShapeTransform2By1(this.m_transform_form_mask).getInverse();
-        const els: EL[] = [];
-        for (let i = 1; i < group.length; i++) {
-            const __s = group[i];
-            const dom = __s.dom;
-            (dom.elattr as any)['style'] = { 'transform': makeShapeTransform1By2(__s.transform2.clone().addTransform(inverse)).toString() };
-            els.push(dom);
-        }
-
-        return els;
-    }
-
-    get transformFromMask() {
-        this.m_transform_form_mask = this.renderMask();
-        if (!this.m_transform_form_mask) return;
-
-        const space = makeShapeTransform2By1(this.m_transform_form_mask).getInverse();
-
-        return makeShapeTransform1By2(this.transform2.clone().addTransform(space)).toString()
-    }
-
-    renderMask() {
-        if (!this.mask) return;
-        const parent = this.parent;
-        if (!parent || parent.type === ShapeType.Page) return;
-        const __children = parent.childs;
-        let index = __children.findIndex(i => i.id === this.id);
-        if (index === -1) return;
-        const maskGroup: ShapeView[] = [this];
-        this.m_mask_group = maskGroup;
-        for (let i = index + 1; i < __children.length; i++) {
-            const cur = __children[i];
-            if (cur && !cur.mask) maskGroup.push(cur);
-            else break;
-        }
-        let x = Infinity;
-        let y = Infinity;
-
-        maskGroup.forEach(s => {
-            const box = s.boundingBox();
-            if (box.x < x) x = box.x;
-            if (box.y < y) y = box.y;
-        });
-
-        return new Transform(1, 0, x, 0, 1, y);
     }
 
     bleach(el: EL) {  // 漂白

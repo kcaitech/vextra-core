@@ -19,8 +19,6 @@ import { render as renderLineBorders } from "../render/line_borders"
 
 export class PathShapeView extends ShapeView {
     m_pathsegs?: PathSegment[];
-    m_transform_form_mask?: Transform;
-    m_mask_group?: ShapeView[];
 
     get segments() {
         return this.m_pathsegs || (this.m_data as PathShape2).pathsegs;
@@ -66,6 +64,7 @@ export class PathShapeView extends ShapeView {
 
         const fills = this.renderFills() || [];
         const borders = this.renderBorders() || [];
+
         const filterId = `${objectId(this)}`;
         const shadows = this.renderShadows(filterId);
         const blurId = `blur_${objectId(this)}`;

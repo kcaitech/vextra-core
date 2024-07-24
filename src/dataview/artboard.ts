@@ -26,7 +26,6 @@ export class ArtboradView extends GroupShapeView {
     }
 
     protected renderProps(): { [key: string]: string } & { style: any } {
-        const shape = this.m_data;
         const props: any = {
             xmlns: "http://www.w3.org/2000/svg",
             "xmlns:xlink": "http://www.w3.org/1999/xlink",
@@ -34,17 +33,10 @@ export class ArtboradView extends GroupShapeView {
             preserveAspectRatio: "xMinYMin meet",
             overflow: "hidden",
         }
-        const contextSettings = shape.style.contextSettings;
-
-        if (contextSettings && (contextSettings.opacity ?? 1) !== 1) {
-            props.opacity = contextSettings.opacity;
-        }
 
         const frame = this.frame;
         props.width = frame.width;
         props.height = frame.height;
-        props.x = 0;
-        props.y = 0;
         props.viewBox = `0 0 ${frame.width} ${frame.height}`;
 
         return props;
@@ -83,71 +75,58 @@ export class ArtboradView extends GroupShapeView {
     }
 
     render(): number {
-        const isDirty = this.checkAndResetDirty();
-        if (!isDirty) {
-            return this.m_render_version;
-        }
+        if (!this.checkAndResetDirty()) return this.m_render_version;
 
         if (!this.isVisible) {
             this.reset("g");
             return ++this.m_render_version;
         }
 
-        // fill
-        const fills = this.renderFills() || []; // cache
-        // childs
-        const childs = this.renderContents(); // VDomArray
-        if (this.m_data.name === '容器 2') console.log('_childs_', childs);
-        // border
-        const borders = this.renderBorders() || []; // ELArray
+        const fills = this.renderFills();
+        const childs = this.renderContents();
+        const borders = this.renderBorders();
 
         const svgprops = this.renderProps();
-
         const filterId = `${objectId(this)}`;
         const shadows = this.renderShadows(filterId);
         const blurId = `blur_${objectId(this)}`;
         const blur = this.renderBlur(blurId);
 
-        const props: any = {};
-        props.opacity = svgprops.opacity;
-        delete svgprops.opacity;
-
-        if (!this.isNoTransform()) {
-            props.style = { transform: this.transform.toString() };
-        } else {
-            const frame = this.frame;
-            props.transform = `translate(${frame.x},${frame.y})`;
-        }
-
         const contextSettings = this.style.contextSettings;
+
+        let props: any = { style: { transform: this.transform.toString() } };
+        let children = [...fills, ...childs];
+
         if (contextSettings) {
-            if (props.style) {
-                props.style['mix-blend-mode'] = contextSettings.blenMode;
-            } else {
-                props.style = {
-                    'mix-blend-mode': contextSettings.blenMode
-                };
-            }
+            props.opacity = contextSettings.opacity;
+            props.style['mix-blend-mode'] = contextSettings.blenMode;
         }
 
         const id = "clippath-artboard-" + objectId(this);
-        if (blur.length && this.blur?.type === BlurType.Gaussian) {
-            props.filter = `url(#${blurId})`;
-        }
+        const cp = clippathR(elh, id, this.getPathStr());
 
-        const content_container = elh("g", { "clip-path": "url(#" + id + ")" }, [...fills, ...childs]);
+        children = [elh(
+            "g",
+            { "clip-path": "url(#" + id + ")" },
+            [elh(
+                "svg",
+                svgprops,
+                [cp, ...children, ...borders]
+            )]
+        )];
 
-        if (shadows.length > 0) { // 阴影
+        if (shadows.length) {
             const inner_url = innerShadowId(filterId, this.getShadows());
             if (inner_url.length) svgprops.filter = inner_url.join(' ');
-            const cp = clippathR(elh, id, this.getPathStr());
-            const body = elh("svg", svgprops, [cp, content_container]);
-            this.reset("g", props, [...shadows, ...blur, body, ...borders])
-        } else {
-            const cp = clippathR(elh, id, this.getPathStr());
-            const body = elh("svg", svgprops, [cp, content_container]);
-            this.reset("g", props, [...blur, body, ...borders])
+            children = [...shadows, ...children];
         }
+
+        if (blur.length && this.blur?.type === BlurType.Gaussian) {
+            props.filter = `url(#${blurId})`;
+            children = [...blur, ...children];
+        }
+
+        this.reset("g", props, children);
 
         return ++this.m_render_version;
     }

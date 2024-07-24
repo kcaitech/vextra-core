@@ -181,6 +181,9 @@ export class ShapeView extends DataView {
 
     m_transform2: Transform2 | undefined;
 
+    m_transform_form_mask?: Transform;
+    m_mask_group?: ShapeView[];
+
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
         const shape = props.data;
@@ -725,38 +728,62 @@ export class ShapeView extends DataView {
     render(): number {
         if (!this.checkAndResetDirty()) return this.m_render_version;
 
+        const mb = this.maskedBy;
+        if (mb) {
+            mb.notify('pathsegs');
+            this.reset("g");
+            return ++this.m_render_version;
+        }
+
         if (!this.isVisible) {
             this.reset("g"); // 还是要给个节点，不然后后面可见了挂不上dom
             return ++this.m_render_version;
         }
 
-        const fills = this.renderFills() || []; // cache
-        const borders = this.renderBorders() || []; // ELArray
-        const childs = this.renderContents(); // VDomArray
-
-        const props = this.renderProps();
+        const fills = this.renderFills();
+        const borders = this.renderBorders();
+        const childs = this.renderContents();
 
         const filterId = `${objectId(this)}`;
         const shadows = this.renderShadows(filterId);
         const blurId = `blur_${objectId(this)}`;
         const blur = this.renderBlur(blurId);
 
-        if (shadows.length) { // 阴影
-            const ex_props = Object.assign({}, props);
-            delete props.style;
-            delete props.transform;
-            delete props.opacity;
+        let props = this.renderProps();
+        let children = [...fills, ...childs, ...borders];
 
+        // 阴影
+        if (shadows.length) {
+            let filter: string = '';
             const inner_url = innerShadowId(filterId, this.getShadows());
-            props.filter = `url(#pd_outer-${filterId}) `;
-            if (blur.length && this.blur?.type === BlurType.Gaussian) props.filter += `url(#${blurId}) `;
-            if (inner_url.length) props.filter += inner_url.join(' ');
-            const body = elh("g", props, [...fills, ...childs, ...borders]);
-            this.reset("g", ex_props, [...shadows, ...blur, body])
-        } else {
-            if (blur.length && this.blur?.type === BlurType.Gaussian) props.filter = `url(#${blurId})`;
-            this.reset("g", props, [...blur, ...fills, ...childs, ...borders]);
+            filter = `url(#pd_outer-${filterId}) `;
+            if (inner_url.length) filter += inner_url.join(' ');
+            children = [...shadows, elh("g", { filter }, children)];
         }
+
+        // 模糊
+        if (blur.length) {
+            let filter: string = '';
+            if (this.blur?.type === BlurType.Gaussian) filter = `url(#${blurId})`;
+            children = [...blur, elh('g', { filter }, children)];
+        }
+
+        // 遮罩
+        const _mask_space = this.renderMask();
+        if (_mask_space) {
+            Object.assign(props.style, { transform: _mask_space.toString() });
+            const id = `mask-base-${objectId(this)}`;
+            const __body_transform = this.transformFromMask;
+            const __body = elh("g", { style: { transform: __body_transform } }, children);
+            this.bleach(__body);
+            children = [__body];
+            const mask = elh('mask', { id }, children);
+            const rely = elh('g', { mask: `url(#${id})` }, this.relyLayers);
+            children = [mask, rely];
+        }
+
+        this.reset("g", props, children);
+
         return ++this.m_render_version;
     }
 
@@ -844,6 +871,77 @@ export class ShapeView extends DataView {
 
     get isImageFill() {
         return this.m_data.getImageFill();
+    }
+
+    get relyLayers() {
+        if (!this.m_transform_form_mask) this.m_transform_form_mask = this.renderMask();
+        if (!this.m_transform_form_mask) return;
+
+        const group = this.m_mask_group || [];
+        if (group.length < 2) return;
+        const inverse = makeShapeTransform2By1(this.m_transform_form_mask).getInverse();
+        const els: EL[] = [];
+        for (let i = 1; i < group.length; i++) {
+            const __s = group[i];
+            const dom = __s.dom;
+            (dom.elattr as any)['style'] = { 'transform': makeShapeTransform1By2(__s.transform2.clone().addTransform(inverse)).toString() };
+            els.push(dom);
+        }
+
+        return els;
+    }
+
+    get transformFromMask() {
+        this.m_transform_form_mask = this.renderMask();
+        if (!this.m_transform_form_mask) return;
+
+        const space = makeShapeTransform2By1(this.m_transform_form_mask).getInverse();
+
+        return makeShapeTransform1By2(this.transform2.clone().addTransform(space)).toString()
+    }
+
+    renderMask() {
+        if (!this.mask) return;
+        const parent = this.parent;
+        if (!parent || parent.type === ShapeType.Page) return;
+        const __children = parent.childs;
+        let index = __children.findIndex(i => i.id === this.id);
+        if (index === -1) return;
+        const maskGroup: ShapeView[] = [this];
+        this.m_mask_group = maskGroup;
+        for (let i = index + 1; i < __children.length; i++) {
+            const cur = __children[i];
+            if (cur && !cur.mask) maskGroup.push(cur);
+            else break;
+        }
+        let x = Infinity;
+        let y = Infinity;
+
+        maskGroup.forEach(s => {
+            const box = s.boundingBox();
+            if (box.x < x) x = box.x;
+            if (box.y < y) y = box.y;
+        });
+
+        return new Transform(1, 0, x, 0, 1, y);
+    }
+
+    bleach(el: EL) {  // 漂白
+        if (el.elattr.fill) el.elattr.fill = '#FFF';
+        if (el.elattr.stroke) el.elattr.stroke = '#FFF';
+        // 漂白阴影
+        if (el.eltag === 'feColorMatrix' && el.elattr.result) {
+            let values: any = el.elattr.values;
+            if (values) values = values.split(' ');
+            if (values[3]) values[3] = 1;
+            if (values[8]) values[8] = 1;
+            if (values[13]) values[13] = 1;
+            el.elattr.values = values.join(' ');
+        }
+
+        // 渐变漂白不了
+
+        if (Array.isArray(el.elchilds)) el.elchilds.forEach(el => this.bleach(el));
     }
 
     get dom() {
