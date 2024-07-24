@@ -173,15 +173,9 @@ function frame2Parent(t: Transform, size: ShapeSize): ShapeFrame {
 }
 
 export class ShapeView extends DataView {
-    // layout & render args
-    // m_frame: ShapeFrame;
     m_transform: Transform;
     m_size: ShapeSize;
-
     m_fixedRadius?: number;
-    // cache
-    // m_fills?: EL[]; // 不缓存,可回收
-    // m_borders?: EL[];
     m_path?: Path;
     m_pathstr?: string;
 
@@ -472,6 +466,10 @@ export class ShapeView extends DataView {
 
     get masked(): boolean {
         return Boolean((this.parent as GroupShapeView)?.maskMap.get(this.id) && !this.m_data.mask);
+    }
+
+    get maskedBy() {
+        return (this.parent as GroupShapeView)?.maskedByMap.get(this.id);
     }
 
     get maskId(): string {

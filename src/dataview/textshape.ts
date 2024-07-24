@@ -174,12 +174,16 @@ export class TextShapeView extends ShapeView {
 
     render(): number {
         if (!this.checkAndResetDirty()) return this.m_render_version;
-
-        if (!this.isVisible || this.masked) {
+        const mb = this.maskedBy;
+        if (mb) {
+            mb.notify('mask');
             this.reset("g");
             return ++this.m_render_version;
         }
-
+        if (!this.isVisible) {
+            this.reset("g");
+            return ++this.m_render_version;
+        }
         const fills = this.renderFills() || [];
         const childs = this.renderContents();
         const borders = this.renderBorders() || [];
@@ -195,12 +199,8 @@ export class TextShapeView extends ShapeView {
         if (shadows.length) {
             let filter: string = '';
             const inner_url = innerShadowId(filterId, this.getShadows());
-            if (this.type === ShapeType.Rectangle || this.type === ShapeType.Oval) {
-                if (inner_url.length) filter = `${inner_url.join(' ')}`
-            } else {
-                filter = `url(#pd_outer-${filterId}) `;
-                if (inner_url.length) filter += inner_url.join(' ');
-            }
+            filter = `url(#pd_outer-${filterId}) `;
+            if (inner_url.length) filter += inner_url.join(' ');
             children = [...shadows, elh("g", { filter }, children)];
         }
 
@@ -249,7 +249,7 @@ export class TextShapeView extends ShapeView {
     }
 
     get transformFromMask() {
-        if (!this.m_transform_form_mask) this.m_transform_form_mask = this.renderMask();
+        this.m_transform_form_mask = this.renderMask();
         if (!this.m_transform_form_mask) return;
 
         const space = makeShapeTransform2By1(this.m_transform_form_mask).getInverse();

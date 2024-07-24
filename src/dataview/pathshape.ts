@@ -52,7 +52,14 @@ export class PathShapeView extends ShapeView {
     render(): number {
         if (!this.checkAndResetDirty()) return this.m_render_version;
 
-        if (!this.isVisible || this.masked) {
+        const mb = this.maskedBy;
+        if (mb) {
+            mb.notify('pathsegs');
+            this.reset("g");
+            return ++this.m_render_version;
+        }
+
+        if (!this.isVisible) {
             this.reset("g");
             return ++this.m_render_version;
         }
@@ -125,7 +132,7 @@ export class PathShapeView extends ShapeView {
     }
 
     get transformFromMask() {
-        if (!this.m_transform_form_mask) this.m_transform_form_mask = this.renderMask();
+        this.m_transform_form_mask = this.renderMask();
         if (!this.m_transform_form_mask) return;
 
         const space = makeShapeTransform2By1(this.m_transform_form_mask).getInverse();
@@ -158,6 +165,7 @@ export class PathShapeView extends ShapeView {
 
         return new Transform(1, 0, x, 0, 1, y);
     }
+
     bleach(el: EL) {  // 漂白
         if (el.elattr.fill) el.elattr.fill = '#FFF';
         if (el.elattr.stroke) el.elattr.stroke = '#FFF';
@@ -175,6 +183,7 @@ export class PathShapeView extends ShapeView {
 
         if (Array.isArray(el.elchilds)) el.elchilds.forEach(el => this.bleach(el));
     }
+
     renderStatic() {
         const fills = this.renderFills() || []; // cache
         const childs = this.renderContents(); // VDomArray

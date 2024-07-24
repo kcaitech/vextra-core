@@ -8,6 +8,7 @@ import { objectId } from "../basic/objectid";
 
 export class GroupShapeView extends ShapeView {
     maskMap: Map<string, string> = new Map();
+    maskedByMap: Map<string, Shape> = new Map;
 
     get data(): GroupShape {
         return this.m_data as GroupShape;
@@ -37,15 +38,23 @@ export class GroupShapeView extends ShapeView {
     updateMaskMap() {
         const map = this.maskMap;
         map.clear();
+        const map2 = this.maskedByMap;
+        map2.clear();
+
         const children = this.getDataChilds();
         let currentMask = '';
+        let mask: Shape | undefined = undefined;
         for (let i = 0; i < children.length; i++) {
             const child = children[i];
-            if (child.mask) currentMask = `mask_${objectId(child)}`;
+            if (child.mask) {
+                currentMask = `mask_${objectId(child)}`;
+                mask = child;
+            } else {
+                mask && map2.set(child.id, mask)
+            }
             map.set(child.id, currentMask);
         }
         this.childs.forEach(c => c.notify('mask-env-changed'));
-        // console.log('__update_mask_map__', this.maskMap);
     }
 
     onDestory(): void {
@@ -97,6 +106,7 @@ export class GroupShapeView extends ShapeView {
         childs.forEach((c) => c.render());
         return childs;
     }
+
     protected layoutChild(
         child: Shape,
         idx: number,
