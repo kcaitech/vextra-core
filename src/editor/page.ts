@@ -1902,24 +1902,40 @@ export class PageEditor {
         }
     }
 
-    makeMask(shapes: ShapeView[]) {
+    makeMask(shapes: ShapeView[], maskName?: string) {
         try {
             const page = this.__page;
-            const api = this.__repo.start('modify-mask-status');
+            const doc = this.__document;
+            let resultShapes: string[] = [];
+            const api = this.__repo.start('modify-mask-status', (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+                const state = {} as SelectionState;
+                if (!isUndo) state.shapes = resultShapes;
+                else state.shapes = cmd.saveselection?.shapes || [];
+                selection.restore(state);
+            });
 
             const len = shapes.length;
             if (!len)
                 return false;
             else if (len === 1) {
-                const bottom = shapes[0];
-                if (bottom.parent!.id === page.id) { // 在页面下要创建一个新的Mask组包裹起来
-
+                const bottom = adapt2Shape(shapes[0]);
+                if (bottom.parent!.id === page.id) {
+                    const gshape = newGroupShape(maskName!);
+                    const saveidx = page.indexOfChild(bottom);
+                    resultShapes = [group(doc, page, [bottom], gshape, page, saveidx, api).id];
+                    if (!bottom.mask) api.shapeModifyMask(page, bottom, true);
                 } else {
                     const __target_mask = !bottom.mask;
-                    api.shapeModifyMask(page, adapt2Shape(bottom), __target_mask);
+                    api.shapeModifyMask(page, bottom, __target_mask);
                 }
             } else {
-                // 多个图层，选择层级最高的图层所在的环境创建一个Mask组
+                const bottom = adapt2Shape(shapes[0]);
+                const savep = bottom.parent as GroupShape;
+                const gshape = newGroupShape(maskName!);
+                const saveidx = savep.indexOfChild(bottom);
+                const __mg = group(doc, page, shapes.map(shape => adapt2Shape(shape)), gshape, savep, saveidx, api);
+                resultShapes = [__mg.id];
+                if (!__mg.childs[0].mask) api.shapeModifyMask(page, __mg.childs[0], true);
             }
             this.__repo.commit();
             return true;
