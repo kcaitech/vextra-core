@@ -65,7 +65,9 @@ function _checkNum(x: number) {
     // check
     if (Number.isNaN(x) || (!Number.isFinite(x))) throw new Error(String(x));
 }
-function _checkFrame(frame: ShapeSize) {
+function _checkFrame(shape: Shape) {
+    if (!shape.hasSize()) return;
+    const frame: ShapeSize = shape.size;
     if (frame.width === 0 || frame.height === 0) throw new Error();
     // _checkNum(frame.x);
     // _checkNum(frame.y);
@@ -77,7 +79,7 @@ export function shapeInsert(document: Document, page: Page, parent: GroupShape, 
     // shape不可以一次性插入多个对象，需要分开插入
     // 从根开始插入
 
-    _checkFrame(shape.size);
+    _checkFrame(shape);
 
     const ops: Op[] = [];
 
