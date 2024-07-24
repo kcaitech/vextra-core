@@ -430,11 +430,6 @@ export class PageEditor {
         return false;
     }
 
-    /**
-     * @description 解除容器
-     * @param shape
-     * @returns { false | Shape[] } 成功则返回被解除容器的所有子元素
-     */
     dissolution_artboard(shapes: Artboard[]): false | Shape[] {
         const childrens: Shape[] = [];
         const api = this.__repo.start("dissolution_artboard", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
@@ -1241,8 +1236,6 @@ export class PageEditor {
 
     /**
      * @description 同一容器下批量粘贴shape
-     * @param shapes 未进入文档的shape
-     * @param adjusted 是否提前调整过相对位置
      */
     pasteShapes1(parent: GroupShape, shapes: Shape[]): { shapes: Shape[] } | false {
         const api = this.__repo.start("insertShapes1", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
@@ -1275,8 +1268,6 @@ export class PageEditor {
 
     /**
      * @description 指定容器下粘贴shape
-     * @param shapes 未进入文档的shape
-     * @param actions.index 插入位置
      */
     pasteShapes2(shapes: Shape[], actions: { parent: GroupShape, index: number }[]): Shape[] | false {
         const api = this.__repo.start("insertShapes2", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
@@ -1459,13 +1450,6 @@ export class PageEditor {
 
     /**
      * @description 参数可选的创建并插入图形
-     * @param ex_params 包含某一些属性的特定参数
-     *  is_arrow?: 箭头(style)
-     *  rotation?: 初始化角度
-     *  target_xy?: 插入位置(frame)
-     *  media?: 静态资源
-     *  ...
-     * @returns
      */
     create2(page: Page, parent: GroupShape, type: ShapeType, name: string, frame: ShapeFrame, ex_params: any) {
         const { is_arrow, rotation, target_xy } = ex_params;
@@ -1536,9 +1520,6 @@ export class PageEditor {
         return false;
     }
 
-    /**
-     * @param shapes 逆序图层
-     */
     upperLayer(shapes: ShapeView[], step?: number) {
         const fixUpStep = (parent: GroupShape, set: Set<string>, targetIndex: number, currentIndex: number) => {
             const max = parent.childs.length - 1;
@@ -1598,9 +1579,6 @@ export class PageEditor {
         }
     }
 
-    /**
-     * @param shapes 正序图层
-     */
     lowerLayer(shapes: ShapeView[], step?: number) {
         const fixLowStep = (parent: GroupShape, set: Set<string>, targetIndex: number, currentIndex: number) => {
             if (targetIndex < 0) {
