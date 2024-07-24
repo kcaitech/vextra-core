@@ -323,18 +323,21 @@ export class ShapeView extends DataView {
     }
 
     onDataChange(...args: any[]): void {
-        if (args.includes('points') // 点
-            || args.includes('pathsegs') // 线
-            || args.includes('isClosed') // 闭合状态
-            || (this.m_fixedRadius || 0) !== ((this.m_data as any).fixedRadius || 0) // 固定圆角
-            || args.includes('cornerRadius') // 圆角
+        if (args.includes('mask')) (this.parent as GroupShapeView).updateMaskMap();
+
+        const masked = this.masked;
+        if (masked) return masked.notify('rerender-mask');
+
+        if (args.includes('points')
+            || args.includes('pathsegs')
+            || args.includes('isClosed')
+            || (this.m_fixedRadius || 0) !== ((this.m_data as any).fixedRadius || 0)
+            || args.includes('cornerRadius')
             || args.includes('imageRef')
         ) {
             this.m_path = undefined;
             this.m_pathstr = undefined;
         }
-
-        if (args.includes('mask')) (this.parent as GroupShapeView).updateMaskMap();
     }
 
     protected _findOV(ot: OverrideType, vt: VariableType): Variable | undefined {
@@ -710,15 +713,15 @@ export class ShapeView extends DataView {
     render(): number {
         if (!this.checkAndResetDirty()) return this.m_render_version;
 
-        const mb = this.masked;
-        if (mb) {
-            mb.notify('pathsegs');
+        const masked = this.masked;
+        if (masked) {
+            masked.notify('rerender-mask');
             this.reset("g");
             return ++this.m_render_version;
         }
 
         if (!this.isVisible) {
-            this.reset("g"); // 还是要给个节点，不然后后面可见了挂不上dom
+            this.reset("g");
             return ++this.m_render_version;
         }
 

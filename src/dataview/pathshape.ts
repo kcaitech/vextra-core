@@ -52,7 +52,7 @@ export class PathShapeView extends ShapeView {
 
         const mb = this.masked;
         if (mb) {
-            mb.notify('pathsegs');
+            mb.notify('rerender-mask');
             this.reset("g");
             return ++this.m_render_version;
         }

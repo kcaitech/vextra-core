@@ -124,7 +124,7 @@ export class TextShapeView extends ShapeView {
     }
 
     onDataChange(...args: any[]): void {
-        super.onDataChange();
+        super.onDataChange(...args);
         this.m_textpath = undefined;
     }
 

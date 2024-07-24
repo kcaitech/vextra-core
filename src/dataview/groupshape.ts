@@ -25,9 +25,7 @@ export class GroupShapeView extends ShapeView {
     }
 
     protected onChildChange(...args: any[]) {
-        if (args.includes('fills') || args.includes('borders')) {
-            this.notify(...args); // 通知界面更新
-        }
+        if (args.includes('fills') || args.includes('borders')) this.notify(...args);
     }
 
     updateMaskMap() {
@@ -41,16 +39,16 @@ export class GroupShapeView extends ShapeView {
             const child = children[i];
             if (child.mask) {
                 mask = child;
-                maskShape.push(child)
+                maskShape.push(child);
             } else {
                 mask && map.set(child.id, mask);
             }
         }
         this.childs.forEach(c => {
-            c.notify('mask-env-changed');
+            if (c.mask) return;
             c.m_ctx.setDirty(c);
         });
-        maskShape.forEach(m => m.notify('mask-env-changed'));
+        maskShape.forEach(m => m.notify('rerender-mask'));
     }
 
     onDestory(): void {
