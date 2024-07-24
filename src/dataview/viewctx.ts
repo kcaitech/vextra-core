@@ -31,7 +31,7 @@ export interface ViewType {
 
 export function updateViewsFrame(updates: { data: DataView }[]) {
     if (updates.length === 0) return;
-    type Node = { view: DataView, childs: Node[], needupdate: boolean, parent: Node | undefined }
+    type Node = { view: DataView, childs: Node[], needupdate: boolean, parent: Node | undefined, visited: boolean }
     const updatetree: Map<number, Node> = new Map();
     updates.forEach((_s) => {
         const s = _s.data;
@@ -40,7 +40,7 @@ export function updateViewsFrame(updates: { data: DataView }[]) {
             n.needupdate = true;
             return;
         }
-        n = { view: s, childs: [], needupdate: true, parent: undefined }
+        n = { view: s, childs: [], needupdate: true, parent: undefined, visited: false }
         updatetree.set(objectId(s), n);
 
         let cn = n;
@@ -48,7 +48,7 @@ export function updateViewsFrame(updates: { data: DataView }[]) {
         while (p) {
             let pn: Node | undefined = updatetree.get(objectId(p));
             if (!pn) {
-                pn = { view: p, childs: [], needupdate: false, parent: undefined }
+                pn = { view: p, childs: [], needupdate: false, parent: undefined, visited: false }
                 updatetree.set(objectId(p), pn);
             }
 
@@ -63,14 +63,13 @@ export function updateViewsFrame(updates: { data: DataView }[]) {
 
     const afterTravel = (root: Node, traver: (n: Node) => void) => {
         const nodes = [root];
-        const visited = new Set<number>();
         let n = nodes[nodes.length - 1];
         while (n) {
-            if (visited.has(objectId(n)) || n.childs.length === 0) {
+            if (n.visited || n.childs.length === 0) {
                 traver(n);
                 nodes.pop();
             } else {
-                visited.add(objectId(n))
+                n.visited = true;
                 nodes.push(...n.childs);
             }
             n = nodes[nodes.length - 1];

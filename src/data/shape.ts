@@ -148,22 +148,6 @@ export class Shape extends Basic implements classes.Shape {
         return false;
     }
 
-    // get transform2() {
-    //     return makeShapeTransform2By1(this.transform);
-    // }
-    /**
-     * @deprecated 尽量不用,最终要去掉
-     */
-    // get frame(): ShapeFrame {
-    //     const transform2 = this.transform2;
-    //     const scale = transform2.decomposeScale();
-    //     const trans = transform2.decomposeTranslate();
-    //     const width = Math.abs(this.size.width * scale.x);
-    //     const height = Math.abs(this.size.height * scale.y);
-    //     const frame = new ShapeFrame(trans.x, trans.y, width, height);
-    //     Object.freeze(frame);
-    //     return frame;
-    // }
     /**
      * @deprecated
      */
