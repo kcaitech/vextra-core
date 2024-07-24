@@ -11,6 +11,7 @@ import { objectId } from "../basic/objectid";
 
 export class SymbolRefView extends ShapeView {
 
+    private m_swap_ref_id: string | undefined;
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
 
@@ -47,6 +48,11 @@ export class SymbolRefView extends ShapeView {
     }
 
     getRefId(): string {
+        const swap_ref_id = localStorage.getItem('refId');
+        console.log(swap_ref_id, 'this.m_swap_ref_id');
+        if (swap_ref_id) {
+            return swap_ref_id;
+        }
         const v = this._findOV(OverrideType.SymbolID, VariableType.SymbolRef);
         return v ? v.value : (this.m_data as SymbolRefShape).refId;
     }
@@ -75,6 +81,13 @@ export class SymbolRefView extends ShapeView {
     }
     get isCustomSize() {
         return this.data.isCustomSize;
+    }
+
+    modifyRefState(refId: string) {
+        this.m_swap_ref_id = refId;
+        // this.symwatcher = this.symwatcher.bind(this);
+        this.loadsym();
+        // this.onDataChange();
     }
 
     getPath() {
