@@ -59,7 +59,7 @@ import {
     Transform
 } from "../data/classes";
 import { TextShapeEditor } from "./textshape";
-import { modify_frame_after_insert, set_childs_id, transform_data } from "../io/cilpboard";
+import { set_childs_id, transform_data } from "../io/cilpboard";
 import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
 import { render2path } from "../render";
 import { Matrix } from "../basic/matrix";
@@ -103,13 +103,11 @@ import {
     shape4fill
 } from "./symbol";
 import { is_circular_ref2 } from "./utils/ref_check";
-import { BorderSideSetting, BorderStyle, CurvePoint, ExportFormat, Point2D, Shadow } from "../data/baseclasses";
+import { BorderSideSetting, BorderStyle, ExportFormat, Point2D, Shadow } from "../data/baseclasses";
 import {
     calculateInnerAnglePosition,
     getPolygonPoints,
     getPolygonVertices,
-    get_rotate_for_straight,
-    is_straight,
     update_frame_by_points
 } from "./utils/path";
 import { modify_shapes_height, modify_shapes_width } from "./utils/common";
@@ -1905,6 +1903,7 @@ export class PageEditor {
                 } else {
                     const __target_mask = !bottom.mask;
                     api.shapeModifyMask(page, bottom, __target_mask);
+                    resultShapes = [bottom.id];
                 }
             } else {
                 const bottom = adapt2Shape(shapes[0]);
