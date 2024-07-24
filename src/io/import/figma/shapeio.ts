@@ -286,7 +286,7 @@ export function importPage(ctx: LoadContext, data: IJSON, f: ImportFun): Page {
     return shape;
 }
 
-function importPoints(data: IJSON): [CurvePoint[], boolean] {
+function importSegments(data: IJSON): PathSegment[] {
     const vectorData = data.vectorData;
     const vectorNetwork = vectorData?.vectorNetwork;
     const vertices = vectorNetwork?.vertices as any[];
@@ -295,12 +295,10 @@ function importPoints(data: IJSON): [CurvePoint[], boolean] {
     const normalizedSize = vectorData?.normalizedSize as any;
 
     if (!Array.isArray(vertices) || !Array.isArray(segments) || !Array.isArray(regions) || !normalizedSize) {
-        return [[], false];
+        return [];
     }
 
-    const length = segments.length;
-
-    function getCycleIndex(i: number) {
+    function getCycleIndex(length: number, i: number) {
         i %= length;
         if (i < 0) i += length;
         return i;
@@ -319,51 +317,17 @@ function importPoints(data: IJSON): [CurvePoint[], boolean] {
         return vertex;
     }
 
-    const region = regions?.[0];
-    const regionLoop = region?.loops?.[0]
-    let regionLoopSegments = regionLoop?.segments || Array.from({length: segments.length}, (v, i) => i);
-    // regionLoopSegments = [0, 2, 1]
-
-    const points: {
+    function toCurvePoints(points: {
         from?: any,
         to?: any,
-    }[] = [];
-    let isEqualLastPoint = false;
-    for (let i = 0; i < length; i++) {
-        const currentSegmentsIndex = regionLoopSegments[getCycleIndex(i)];
-        const nextSegmentsIndex = regionLoopSegments[getCycleIndex(i + 1)];
-
-        const currentSegment = segments[currentSegmentsIndex];
-        const nextSegment = segments[nextSegmentsIndex];
-
-        if (!isEqualLastPoint) {
-            points.push({
-                from: currentSegment.start,
-            });
-        }
-
-        isEqualLastPoint = currentSegment.end.vertex === nextSegment.start.vertex;
-
-        if (i !== length - 1 || !isEqualLastPoint) {
-            const point1 = {to: currentSegment.end} as any;
-            if (isEqualLastPoint) point1.from = nextSegment.start;
-            points.push(point1);
-        } else { // 是最后一个且isEqualLastPoint为true
-            points[0].to = currentSegment.end;
-        }
-    }
-
-    return [
-        points.map((item, i) => {
-            console.log(i + 1, item)
+    }[]) {
+        return points.map((item, i) => {
             const basePoint = getVertex({vertex: item.from ? item.from.vertex : item.to.vertex});
-            console.log("base", basePoint.x * normalizedSize.x, basePoint.y * normalizedSize.y)
             const p = new CurvePoint([i] as BasicArray<number>, uuid(), basePoint.x, basePoint.y, CurveMode.Straight);
             const hasCurveFrom = item.from && (Math.abs(item.from.dx) > float_accuracy || Math.abs(item.from.dy) > float_accuracy);
             const hasCurveTo = item.to && (Math.abs(item.to.dx) > float_accuracy || Math.abs(item.to.dy) > float_accuracy);
             if (hasCurveFrom) {
                 const point = getVertex(item.from);
-                console.log("from", point.x * normalizedSize.x, point.y * normalizedSize.y)
                 p.mode = CurveMode.Disconnected;
                 p.hasFrom = true;
                 p.fromX = point.x;
@@ -371,16 +335,69 @@ function importPoints(data: IJSON): [CurvePoint[], boolean] {
             }
             if (hasCurveTo) {
                 const point = getVertex(item.to);
-                console.log("to", point.x * normalizedSize.x, point.y * normalizedSize.y)
                 p.mode = CurveMode.Disconnected;
                 p.hasTo = true;
                 p.toX = point.x;
                 p.toY = point.y;
             }
             return p;
-        }),
-        segments[regionLoopSegments[0]].start.vertex === segments[regionLoopSegments[regionLoopSegments.length - 1]].end.vertex,
-    ];
+        })
+    }
+
+    const segments1 = [];
+
+    if (regions.length > 0) {
+        for (const region of regions) {
+            const regionLoop = region?.loops?.[0]
+            let regionLoopSegments = regionLoop?.segments;
+
+            if (regionLoopSegments) {
+                const points: {
+                    from?: any,
+                    to?: any,
+                }[] = [];
+                let isEqualLastPoint = false;
+                const length = regionLoopSegments.length;
+                for (let i = 0; i < length; i++) {
+                    const currentSegmentsIndex = regionLoopSegments[getCycleIndex(length, i)];
+                    const nextSegmentsIndex = regionLoopSegments[getCycleIndex(length, i + 1)];
+
+                    const currentSegment = segments[currentSegmentsIndex];
+                    const nextSegment = segments[nextSegmentsIndex];
+
+                    if (!isEqualLastPoint) {
+                        points.push({
+                            from: currentSegment.start,
+                        });
+                    }
+
+                    isEqualLastPoint = currentSegment.end.vertex === nextSegment.start.vertex;
+
+                    if (i !== length - 1 || !isEqualLastPoint) {
+                        const point1 = {to: currentSegment.end} as any;
+                        if (isEqualLastPoint) point1.from = nextSegment.start;
+                        points.push(point1);
+                    } else { // 是最后一个且isEqualLastPoint为true
+                        points[0].to = currentSegment.end;
+                    }
+                }
+
+                const isClosed = segments[regionLoopSegments[0]].start.vertex === segments[regionLoopSegments[regionLoopSegments.length - 1]].end.vertex;
+                segments1.push(new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...toCurvePoints(points)), isClosed));
+            }
+        }
+    } else {
+        for (let i = 0; i < segments.length; i++) {
+            const segment = segments[i];
+            const points = toCurvePoints([
+                {from: segment.start},
+                {to: segment.end},
+            ]);
+            segments1.push(new PathSegment([i] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...points), false))
+        }
+    }
+
+    return segments1;
 }
 
 export function importPathShape(ctx: LoadContext, data: IJSON, f: ImportFun, index: number): PathShape {
@@ -397,20 +414,18 @@ export function importPathShape(ctx: LoadContext, data: IJSON, f: ImportFun, ind
 
     let cls = PathShape;
     let shapeType = types.ShapeType.Path;
-    let [points, isClosed] = importPoints(data);
-    if (points.length === 0) {
-        points.push(
+    let segments = importSegments(data);
+    if (segments.length === 0) {
+        segments = [new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(
             new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight), // lt
             new CurvePoint([1] as BasicArray<number>, uuid(), 1, 0, CurveMode.Straight), // rt
             new CurvePoint([2] as BasicArray<number>, uuid(), 1, 1, CurveMode.Straight), // rb
             new CurvePoint([3] as BasicArray<number>, uuid(), 0, 1, CurveMode.Straight), // lb
-        );
-        isClosed = true;
+        ), true)];
         cls = RectShape;
         shapeType = types.ShapeType.Rectangle;
     }
-    const segment = new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...points), isClosed)
-    const shape = new cls([index] as BasicArray<number>, id, data.name, shapeType, frame.trans, frame.size, style, new BasicArray<PathSegment>(segment));
+    const shape = new cls([index] as BasicArray<number>, id, data.name, shapeType, frame.trans, frame.size, style, new BasicArray<PathSegment>(...segments));
 
     shape.isVisible = visible;
     shape.style = style;
