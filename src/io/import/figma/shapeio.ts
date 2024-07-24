@@ -298,7 +298,7 @@ function importPoints(data: IJSON): [CurvePoint[], boolean] {
         return [[], false];
     }
 
-    const length = vertices.length;
+    const length = segments.length;
 
     function getCycleIndex(i: number) {
         i %= length;
@@ -311,7 +311,7 @@ function importPoints(data: IJSON): [CurvePoint[], boolean] {
         dx?: number,
         dy?: number,
     }) {
-        const vertex = vertices[index.vertex];
+        const vertex = {...vertices[index.vertex]};
         vertex.x += (index.dx || 0);
         vertex.y += (index.dy || 0);
         vertex.x /= normalizedSize.x;
@@ -319,37 +319,59 @@ function importPoints(data: IJSON): [CurvePoint[], boolean] {
         return vertex;
     }
 
-    const region = regions[0];
-    const regionLoop = region.loops[0]
-    const regionLoopSegments = regionLoop.segments;
+    const region = regions?.[0];
+    const regionLoop = region?.loops?.[0]
+    let regionLoopSegments = regionLoop?.segments || Array.from({length: segments.length}, (v, i) => i);
+    // regionLoopSegments = [0, 2, 1]
+
     const points: {
-        left: any,
-        right: any,
+        from?: any,
+        to?: any,
     }[] = [];
+    let isEqualLastPoint = false;
     for (let i = 0; i < length; i++) {
-        const indexL = regionLoopSegments[getCycleIndex(i - 1)];
-        const indexR = regionLoopSegments[getCycleIndex(i)];
-        points.push({
-            left: segments[indexL].end,
-            right: segments[indexR].start,
-        });
+        const currentSegmentsIndex = regionLoopSegments[getCycleIndex(i)];
+        const nextSegmentsIndex = regionLoopSegments[getCycleIndex(i + 1)];
+
+        const currentSegment = segments[currentSegmentsIndex];
+        const nextSegment = segments[nextSegmentsIndex];
+
+        if (!isEqualLastPoint) {
+            points.push({
+                from: currentSegment.start,
+            });
+        }
+
+        isEqualLastPoint = currentSegment.end.vertex === nextSegment.start.vertex;
+
+        if (i !== length - 1 || !isEqualLastPoint) {
+            const point1 = {to: currentSegment.end} as any;
+            if (isEqualLastPoint) point1.from = nextSegment.start;
+            points.push(point1);
+        } else { // 是最后一个且isEqualLastPoint为true
+            points[0].to = currentSegment.end;
+        }
     }
 
     return [
         points.map((item, i) => {
-            const basePoint = getVertex({vertex: item.left.vertex});
+            console.log(i + 1, item)
+            const basePoint = getVertex({vertex: item.from ? item.from.vertex : item.to.vertex});
+            console.log("base", basePoint.x * normalizedSize.x, basePoint.y * normalizedSize.y)
             const p = new CurvePoint([i] as BasicArray<number>, uuid(), basePoint.x, basePoint.y, CurveMode.Straight);
-            const hasCurveFrom = Math.abs(item.left.dx) > float_accuracy || Math.abs(item.left.dy) > float_accuracy;
-            const hasCurveTo = Math.abs(item.right.dx) > float_accuracy || Math.abs(item.right.dy) > float_accuracy;
+            const hasCurveFrom = item.from && (Math.abs(item.from.dx) > float_accuracy || Math.abs(item.from.dy) > float_accuracy);
+            const hasCurveTo = item.to && (Math.abs(item.to.dx) > float_accuracy || Math.abs(item.to.dy) > float_accuracy);
             if (hasCurveFrom) {
-                const point = getVertex(item.left);
+                const point = getVertex(item.from);
+                console.log("from", point.x * normalizedSize.x, point.y * normalizedSize.y)
                 p.mode = CurveMode.Disconnected;
                 p.hasFrom = true;
                 p.fromX = point.x;
                 p.fromY = point.y;
             }
             if (hasCurveTo) {
-                const point = getVertex(item.right);
+                const point = getVertex(item.to);
+                console.log("to", point.x * normalizedSize.x, point.y * normalizedSize.y)
                 p.mode = CurveMode.Disconnected;
                 p.hasTo = true;
                 p.toX = point.x;
@@ -553,7 +575,7 @@ export function importSymbolRef(ctx: LoadContext, data: IJSON, f: ImportFun, ind
     importStyle(style, data);
     const id = data.kcId || uuid();
 
-    const symbolId = data.symbolData.symbolID.localID + data.symbolData.symbolID.sessionID;
+    const symbolId = [data.symbolData.symbolID.localID, data.symbolData.symbolID.sessionID].join(',');
     const symbol = nodeChangesMap.get(symbolId);
     const symbolRawID = symbol?.kcId;
 

@@ -33,7 +33,7 @@ export function startLoader(file: IJSON, pages: IJSON[], document: Document, nod
             return new Page(new BasicArray(), id, "", ShapeType.Page, trans, size, new Style(new BasicArray(), new BasicArray(), new BasicArray()), new BasicArray());
         }
         const page = importPage(ctx, json, importer);
-        updatePageFrame(page);
+        // updatePageFrame(page);
         return page;
     }
 
@@ -80,21 +80,19 @@ export function startLoader(file: IJSON, pages: IJSON[], document: Document, nod
     __handler['REGULAR_POLYGON'] = (ctx: LoadContext, data: IJSON, i: number) => importPolygon(ctx, data, importer, i)
     __handler['SYMBOL'] = (ctx: LoadContext, data: IJSON, i: number) => {
         const symbol = importSymbol(ctx, data, importer, i);
-        // symbolsSet.set(symbol.id, symbol);
+        symbolsSet.set(symbol.id, symbol);
         return symbol;
     }
     __handler['INSTANCE'] = (ctx: LoadContext, data: IJSON, i: number) => {
         const symbolRef = importSymbolRef(ctx, data, importer, i, nodeChangesMap);
-        // symbolRef.setSymbolMgr(document.symbolsMgr);
+        symbolRef.setSymbolMgr(document.symbolsMgr);
         return symbolRef;
     }
 
     document.mediasMgr.setLoader((id) => loadMedia(id))
     document.pagesMgr.setLoader(async (id) => {
         const page = await loadPage(ctx, id)
-        // document.pagesMgr.add(page.id, page) // 在pagesMgr里也会add
         symbolsSet.forEach((v, k) => {
-            // document.symbolregist.set(k, id);
             document.symbolsMgr.add(k, v);
         })
         symbolsSet.clear();
