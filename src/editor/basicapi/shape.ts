@@ -47,6 +47,7 @@ export function shapeModifyWH(page: Page, shape: Shape, w: number, h: number) {
     // check
     if (Number.isNaN(w) || (!Number.isFinite(w))) throw new Error(String(w));
     if (Number.isNaN(h) || (!Number.isFinite(h))) throw new Error(String(h));
+    if (!shape.hasSize()) return;
     const frame = shape.size;
     if (w !== frame.width || h !== frame.height) {
         const op = [crdtSetAttr(frame, 'width', w), crdtSetAttr(frame, 'height', h)];
@@ -66,10 +67,9 @@ export function shapeModifyEndMarkerType(shape: Shape, mt: MarkerType) {
 export function shapeModifyWidth(page: Page, shape: Shape, w: number) {
     // check
     if (Number.isNaN(w) || (!Number.isFinite(w))) throw new Error(String(w));
-    const frame = shape.size;
-    if (w !== frame.width) {
+    if (shape.hasSize() && shape.size.width !== w) {
         // shape.setFrameSize(w, frame.height); // todo
-        const op = crdtSetAttr(frame, 'width', w);
+        const op = crdtSetAttr(shape.size, 'width', w);
         // if (needUpdateFrame) needUpdateFrame.push({ shape, page });
         return op;
     }
@@ -77,10 +77,9 @@ export function shapeModifyWidth(page: Page, shape: Shape, w: number) {
 export function shapeModifyHeight(page: Page, shape: Shape, h: number) {
     // check
     if (Number.isNaN(h) || (!Number.isFinite(h))) throw new Error(String(h));
-    const frame = shape.size;
-    if (h !== frame.height) {
+    if (shape.hasSize() && h !== shape.size.height) {
         // shape.setFrameSize(frame.width, h);
-        const op = crdtSetAttr(frame, 'height', h);
+        const op = crdtSetAttr(shape.size, 'height', h);
         // if (needUpdateFrame) needUpdateFrame.push({ shape, page });
         return op;
     }
