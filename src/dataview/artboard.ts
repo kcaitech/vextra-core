@@ -126,6 +126,20 @@ export class ArtboradView extends GroupShapeView {
             children = [...blur, ...children];
         }
 
+        // 遮罩
+        const _mask_space = this.renderMask();
+        if (_mask_space) {
+            Object.assign(props.style, { transform: _mask_space.toString() });
+            const id = `mask-base-${objectId(this)}`;
+            const __body_transform = this.transformFromMask;
+            const __body = elh("g", { style: { transform: __body_transform } }, children);
+            this.bleach(__body);
+            children = [__body];
+            const mask = elh('mask', { id }, children);
+            const rely = elh('g', { mask: `url(#${id})` }, this.relyLayers);
+            children = [mask, rely];
+        }
+
         this.reset("g", props, children);
 
         return ++this.m_render_version;

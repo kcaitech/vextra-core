@@ -272,7 +272,6 @@ export class ShapeView extends DataView {
         return this.m_data.isClosed;
     }
 
-    // private __boundingBox?: ShapeFrame;
     boundingBox(): ShapeFrame {
         if (this.isNoTransform()) return this.frame;
         const path = this.getPath().clone();
@@ -334,6 +333,8 @@ export class ShapeView extends DataView {
             this.m_path = undefined;
             this.m_pathstr = undefined;
         }
+
+        if (args.includes('mask')) (this.parent as GroupShapeView).updateMaskMap();
     }
 
     protected _findOV(ot: OverrideType, vt: VariableType): Variable | undefined {
@@ -467,22 +468,9 @@ export class ShapeView extends DataView {
         return !!this.m_data.mask;
     }
 
-    get masked(): boolean {
-        return Boolean((this.parent as GroupShapeView)?.maskMap.get(this.id) && !this.m_data.mask);
+    get masked() {
+        return (this.parent as GroupShapeView)?.maskMap.get(this.id);
     }
-
-    get maskedBy() {
-        return (this.parent as GroupShapeView)?.maskedByMap.get(this.id);
-    }
-
-    get maskId(): string {
-        return (this.parent as GroupShapeView)?.maskMap.get(this.id) || '';
-    }
-
-    // prepare() {
-    //     // prepare path
-    //     // prepare frame
-    // }
 
     // =================== update ========================
     updateLayoutArgs(trans: Transform, size: ShapeSize, radius: number | undefined) {
@@ -713,13 +701,7 @@ export class ShapeView extends DataView {
         return childs;
     }
 
-    // private m_save_render: EL | undefined;
-
     protected m_render_version: number = 0;
-
-    get renderVersion() {
-        return this.m_render_version;
-    }
 
     protected checkAndResetDirty(): boolean {
         return this.m_ctx.removeDirty(this);
@@ -728,7 +710,7 @@ export class ShapeView extends DataView {
     render(): number {
         if (!this.checkAndResetDirty()) return this.m_render_version;
 
-        const mb = this.maskedBy;
+        const mb = this.masked;
         if (mb) {
             mb.notify('pathsegs');
             this.reset("g");
@@ -940,7 +922,6 @@ export class ShapeView extends DataView {
         }
 
         // 渐变漂白不了
-
         if (Array.isArray(el.elchilds)) el.elchilds.forEach(el => this.bleach(el));
     }
 

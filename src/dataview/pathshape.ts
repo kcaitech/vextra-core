@@ -50,7 +50,7 @@ export class PathShapeView extends ShapeView {
     render(): number {
         if (!this.checkAndResetDirty()) return this.m_render_version;
 
-        const mb = this.maskedBy;
+        const mb = this.masked;
         if (mb) {
             mb.notify('pathsegs');
             this.reset("g");

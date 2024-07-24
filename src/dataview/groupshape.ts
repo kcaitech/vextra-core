@@ -4,11 +4,9 @@ import { getShapeViewId } from "./basic";
 import { EL } from "./el";
 import { DataView, RootView } from "./view";
 import { DViewCtx, PropsType, VarsContainer } from "./viewctx";
-import { objectId } from "../basic/objectid";
 
 export class GroupShapeView extends ShapeView {
-    maskMap: Map<string, string> = new Map();
-    maskedByMap: Map<string, Shape> = new Map;
+    maskMap: Map<string, Shape> = new Map;
 
     get data(): GroupShape {
         return this.m_data as GroupShape;
@@ -30,31 +28,29 @@ export class GroupShapeView extends ShapeView {
         if (args.includes('fills') || args.includes('borders')) {
             this.notify(...args); // 通知界面更新
         }
-        if (args.includes('childs') || args.includes('mask')) {
-            this.updateMaskMap();
-        }
     }
 
     updateMaskMap() {
         const map = this.maskMap;
         map.clear();
-        const map2 = this.maskedByMap;
-        map2.clear();
 
         const children = this.getDataChilds();
-        let currentMask = '';
         let mask: Shape | undefined = undefined;
+        const maskShape: Shape[] = [];
         for (let i = 0; i < children.length; i++) {
             const child = children[i];
             if (child.mask) {
-                currentMask = `mask_${objectId(child)}`;
                 mask = child;
+                maskShape.push(child)
             } else {
-                mask && map2.set(child.id, mask)
+                mask && map.set(child.id, mask);
             }
-            map.set(child.id, currentMask);
         }
-        this.childs.forEach(c => c.notify('mask-env-changed'));
+        this.childs.forEach(c => {
+            c.notify('mask-env-changed');
+            c.m_ctx.setDirty(c);
+        });
+        maskShape.forEach(m => m.notify('mask-env-changed'));
     }
 
     onDestory(): void {
