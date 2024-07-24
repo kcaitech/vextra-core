@@ -1894,7 +1894,7 @@ export class PageEditor {
 
             const len = shapes.length;
             if (!len)
-                return false;
+                throw new Error('no shapes');
             else if (len === 1) {
                 const bottom = adapt2Shape(shapes[0]);
                 if (bottom.parent!.id === page.id) {
