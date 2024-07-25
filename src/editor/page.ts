@@ -1969,10 +1969,15 @@ export class PageEditor {
             else if (len === 1) {
                 const bottom = adapt2Shape(shapes[0]);
                 if (bottom.parent!.id === page.id) {
-                    const gshape = newGroupShape(maskName!);
-                    const saveidx = page.indexOfChild(bottom);
-                    resultShapes = [group(doc, page, [bottom], gshape, page, saveidx, api).id];
-                    if (!bottom.mask) api.shapeModifyMask(page, bottom, true);
+                    if (bottom.mask) {
+                        api.shapeModifyMask(page, bottom, false);
+                        resultShapes = [bottom.id];
+                    } else {
+                        const gshape = newGroupShape(maskName!);
+                        const saveidx = page.indexOfChild(bottom);
+                        resultShapes = [group(doc, page, [bottom], gshape, page, saveidx, api).id];
+                        api.shapeModifyMask(page, bottom, true);
+                    }
                 } else {
                     const __target_mask = !bottom.mask;
                     api.shapeModifyMask(page, bottom, __target_mask);
