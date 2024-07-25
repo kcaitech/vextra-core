@@ -13,7 +13,7 @@ export class SymbolRefView extends ShapeView {
 
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
-
+        this.updateMaskMap();
         this.symwatcher = this.symwatcher.bind(this);
         this.loadsym();
         // this.afterInit();
