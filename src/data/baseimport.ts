@@ -9,6 +9,9 @@ export interface IImportContext {
     curPage: string
     fmtVer: number
 }
+function objkeys(obj: any) {
+    return obj instanceof Map ? obj : { forEach: (f: (v: any, k: string) => void) => Object.keys(obj).forEach((k) => f(obj[k], k)) };
+}
 type Artboard_guides = BasicArray<impl.Guide>
 type DocumentMeta_pagesList = BasicArray<impl.PageListItem>
 type ExportOptions_exportFormats = BasicArray<impl.ExportFormat>
@@ -916,8 +919,7 @@ function importStyleOptional(tar: impl.Style, source: types.Style, ctx?: IImport
     if (source.varbinds) tar.varbinds = (() => {
         const ret = new BasicMap<string, string>()
         const _val = source.varbinds as any
-        Object.keys(source.varbinds).forEach((k) => {
-            const val = _val[k]
+        objkeys(_val).forEach((val, k) => {
             ret.set(k, val)
         })
         return ret
@@ -981,8 +983,7 @@ function importShapeOptional(tar: impl.Shape, source: types.Shape, ctx?: IImport
     if (source.varbinds) tar.varbinds = (() => {
         const ret = new BasicMap<string, string>()
         const _val = source.varbinds as any
-        Object.keys(source.varbinds).forEach((k) => {
-            const val = _val[k]
+        objkeys(_val).forEach((val, k) => {
             ret.set(k, val)
         })
         return ret
@@ -1111,8 +1112,7 @@ export function importTableShape(source: types.TableShape, ctx?: IImportContext)
         (() => {
             const ret = new BasicMap<string, impl.TableCell>()
             const _val = source.cells as any
-            Object.keys(source.cells).forEach((k) => {
-                const val = _val[k]
+            objkeys(_val).forEach((val, k) => {
                 ret.set(k, importTableCell(val, ctx))
             })
             return ret
@@ -1332,8 +1332,7 @@ function importSymbolRefShapeOptional(tar: impl.SymbolRefShape, source: types.Sy
     if (source.overrides) tar.overrides = (() => {
         const ret = new BasicMap<string, string>()
         const _val = source.overrides as any
-        Object.keys(source.overrides).forEach((k) => {
-            const val = _val[k]
+        objkeys(_val).forEach((val, k) => {
             ret.set(k, val)
         })
         return ret
@@ -1363,8 +1362,7 @@ export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImport
         (() => {
             const ret = new BasicMap<string, impl.Variable>()
             const _val = source.variables as any
-            Object.keys(source.variables).forEach((k) => {
-                const val = _val[k]
+            objkeys(_val).forEach((val, k) => {
                 ret.set(k, importVariable(val, ctx))
             })
             return ret
@@ -1464,6 +1462,7 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
         green: 216,
         red: 216
     }
+    const size = source.size ?? (source as any).frame;
     const fill: types.Fill = {
         typeId: "fill",
         color: color,
@@ -1473,12 +1472,10 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
         imageRef: source.imageRef,
         isEnabled: true,
         imageScaleMode: types.ImageScaleMode.Fill,
-        originalImageHeight: source.size.height,
-        originalImageWidth: source.size.width
+        originalImageHeight: size.height,
+        originalImageWidth: size.width
     }
-    const fills = new BasicArray<types.Fill>();
-    fills.push(fill);
-    source.style.fills = fills;
+    source.style.fills = [fill];
     if (!source.pathsegs) { // 兼容旧数据
         const seg: types.PathSegment = {
             crdtidx: [0],
@@ -1647,8 +1644,7 @@ function importDocumentMetaOptional(tar: impl.DocumentMeta, source: types.Docume
     if (source.freesymbols) tar.freesymbols = (() => {
         const ret = new BasicMap<string, impl.SymbolShape | impl.SymbolUnionShape>()
         const _val = source.freesymbols as any
-        Object.keys(source.freesymbols).forEach((k) => {
-            const val = _val[k]
+        objkeys(_val).forEach((val, k) => {
             ret.set(k, (() => {
                 if (typeof val !== "object") {
                     return val
@@ -1678,8 +1674,7 @@ export function importDocumentMeta(source: types.DocumentMeta, ctx?: IImportCont
         (() => {
             const ret = new BasicMap<string, string>()
             const _val = source.symbolregist as any
-            Object.keys(source.symbolregist).forEach((k) => {
-                const val = _val[k]
+            objkeys(_val).forEach((val, k) => {
                 ret.set(k, val)
             })
             return ret
@@ -1743,8 +1738,7 @@ function importSymbolShapeOptional(tar: impl.SymbolShape, source: types.SymbolSh
     if (source.symtags) tar.symtags = (() => {
         const ret = new BasicMap<string, string>()
         const _val = source.symtags as any
-        Object.keys(source.symtags).forEach((k) => {
-            const val = _val[k]
+        objkeys(_val).forEach((val, k) => {
             ret.set(k, val)
         })
         return ret
@@ -1766,8 +1760,7 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
         (() => {
             const ret = new BasicMap<string, impl.Variable>()
             const _val = source.variables as any
-            Object.keys(source.variables).forEach((k) => {
-                const val = _val[k]
+            objkeys(_val).forEach((val, k) => {
                 ret.set(k, importVariable(val, ctx))
             })
             return ret
@@ -1799,8 +1792,7 @@ export function importSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IIm
         (() => {
             const ret = new BasicMap<string, impl.Variable>()
             const _val = source.variables as any
-            Object.keys(source.variables).forEach((k) => {
-                const val = _val[k]
+            objkeys(_val).forEach((val, k) => {
                 ret.set(k, importVariable(val, ctx))
             })
             return ret

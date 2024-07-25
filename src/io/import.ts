@@ -104,10 +104,7 @@ export async function importDocument(storage: storage.IStorage, documentPath: st
     const idToVersionId: Map<string, string | undefined> = new Map(meta.pagesList.map(p => [p.id, p.versionId]));
     const fmtVer = meta.fmtVer ?? 0;
 
-    const document = new Document(meta.id, meta.name, versionId ?? "", meta.lastCmdId, meta.pagesList, meta.symbolregist, gurad);
-    if (meta.freesymbols) {
-        document.freesymbols = meta.freesymbols as BasicMap<string, SymbolShape>;
-    }
+    const document = new Document(meta.id, meta.name, versionId ?? "", meta.lastCmdId, meta.pagesList, meta.symbolregist, gurad, meta.freesymbols as BasicMap<string, SymbolShape>);
 
     document.pagesMgr.setLoader((id: string) => {
         const ctx: IImportContext = new class implements IImportContext { document: Document = document; curPage: string = id; fmtVer: number = fmtVer };
