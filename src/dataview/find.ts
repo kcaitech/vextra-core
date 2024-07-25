@@ -200,7 +200,7 @@ export function find4select(view: ShapeView, skewrect: { x: number, y: number }[
                 ret.push(view);
                 return false;
             }
-            return level <= 1;
+            return level <= 1 && insersect_skewrect_rect(skewrect, view.visibleFrame);
         }
         if (insersect_skewrect_rect(skewrect, view.visibleFrame)) {
             ret.push(view);
