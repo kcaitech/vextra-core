@@ -871,6 +871,7 @@ export function exportShape(source: types.Shape, ctx?: IExportContext): types.Sh
         return ret
     })()
     if (source.haveEdit) ret.haveEdit = source.haveEdit
+    if (source.mask) ret.mask = source.mask
     return ret
 }
 /* table cell */

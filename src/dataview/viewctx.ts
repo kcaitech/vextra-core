@@ -24,7 +24,7 @@ interface DataView {
 }
 
 export interface ViewType {
-    new(ctx: DViewCtx, props: PropsType): DataView;
+    new(ctx: DViewCtx, props: PropsType, shapes?: Shape[]): DataView;
 }
 
 export class DViewCtx extends EventEmitter {
