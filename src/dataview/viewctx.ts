@@ -11,7 +11,7 @@ export type VarsContainer = (SymbolRefShape | SymbolShape)[];
 
 export interface PropsType {
     data: Shape;
-    scale: { x: number, y: number } | undefined;
+    scale?: { x: number, y: number };
     varsContainer?: VarsContainer;
     isVirtual?: boolean;
 }

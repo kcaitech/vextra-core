@@ -348,14 +348,7 @@ export class BoolShapeView extends GroupShapeView {
     }
 
     updateFrames(): boolean {
-        const path = this.getPath().clone();
-        // const transform = this.transform;
-        // if (this.isNoTransform()) {
-        //     if (transform.translateX !== 0 || transform.translateY !== 0) path.translate(transform.translateX, transform.translateY)
-        // } else {
-        //     path.transform(transform)
-        // }
-        const bounds = path.calcBounds();
+        const bounds = this.getPath().calcBounds();
 
         const borders = this.getBorders();
         let maxborder = 0;
@@ -381,8 +374,24 @@ export class BoolShapeView extends GroupShapeView {
         // update visible
         if (updateFrame(this.m_visibleFrame, this.frame.x - maxborder, this.frame.y - maxborder, this.frame.width + maxborder * 2, this.frame.height + maxborder * 2)) changed = true;
 
+        const childouterbounds = this.m_children.map(c => (c as ShapeView)._p_outerFrame);
+        const reducer = (p: { minx: number, miny: number, maxx: number, maxy: number }, c: ShapeFrame, i: number) => {
+            if (i === 0) {
+                p.minx = c.x;
+                p.maxx = c.x + c.width;
+                p.miny = c.y;
+                p.maxy = c.y + c.height;
+            } else {
+                p.minx = Math.min(p.minx, c.x);
+                p.maxx = Math.max(p.maxx, c.x + c.width);
+                p.miny = Math.min(p.miny, c.y);
+                p.maxy = Math.max(p.maxy, c.y + c.height);
+            }
+            return p;
+        }
+        const outerbounds = childouterbounds.reduce(reducer, { minx: 0, miny: 0, maxx: 0, maxy: 0 });
         // update outer
-        if (updateFrame(this.m_outerFrame, this.m_visibleFrame.x, this.m_visibleFrame.y, this.m_visibleFrame.width, this.m_visibleFrame.height)) changed = true;
+        if (updateFrame(this.m_outerFrame, outerbounds.minx, outerbounds.miny, outerbounds.maxx - outerbounds.minx, outerbounds.maxy - outerbounds.miny)) changed = true;
 
         const mapframe = (i: ShapeFrame, out: ShapeFrame) => {
             const transform = this.transform;

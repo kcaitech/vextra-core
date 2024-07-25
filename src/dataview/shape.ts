@@ -201,26 +201,20 @@ export function updateFrame(frame: ShapeFrame, x: number, y: number, w: number, 
 }
 
 export class ShapeView extends DataView {
-    // layout & render args
-    // m_frame: ShapeFrame;
-    // m_hflip?: boolean;
-    // m_vflip?: boolean;
-    // m_rotate?: number;
+
     m_transform: Transform;
-    // todo
-    _save_frame: ShapeFrame = new ShapeFrame(); // 对象内坐标系的大小
+
+    _save_frame: ShapeFrame = new ShapeFrame(); // 对象内坐标系的大小 // 用于updateFrames判断frame是否变更
     m_frame: ShapeFrame = new ShapeFrame(); // 对象内坐标系的大小
     m_visibleFrame: ShapeFrame = new ShapeFrame(); // 对象内坐标系的大小
     m_outerFrame: ShapeFrame = new ShapeFrame(); // 对象内坐标系的大小
 
-    _p_frame: ShapeFrame = new ShapeFrame(); // 父级坐标系的大小
-    _p_visibleFrame: ShapeFrame = new ShapeFrame(); // 父级坐标系的大小
-    _p_outerFrame: ShapeFrame = new ShapeFrame(); // 父级坐标系的大小
+    _p_frame: ShapeFrame = new ShapeFrame(); // 父级坐标系的大小 // 用于优化updateFrames
+    _p_visibleFrame: ShapeFrame = new ShapeFrame(); // 父级坐标系的大小 // 用于优化updateFrames
+    _p_outerFrame: ShapeFrame = new ShapeFrame(); // 父级坐标系的大小 // 用于优化updateFrames
 
     m_fixedRadius?: number;
-    // cache
-    // m_fills?: EL[]; // 不缓存,可回收
-    // m_borders?: EL[];
+
     m_path?: Path;
     m_pathstr?: string;
 
@@ -229,20 +223,9 @@ export class ShapeView extends DataView {
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
         const shape = props.data;
-
         const t = shape.transform;
         this.m_transform = new Transform(t.m00, t.m01, t.m02, t.m10, t.m11, t.m12)
-        // 不可以
-        // const size = shape.size;
-        // this.m_size = new ShapeFrame(0, 0, size.width, size.height);
         this.m_fixedRadius = (shape as PathShape).fixedRadius; // rectangle
-        // this.m_frame = new ShapeFrame(0, 0, size.width, size.height);
-        // this._save_frame = new ShapeFrame(0, 0, size.width, size.height);
-        // this.m_visibleFrame = new ShapeFrame(0, 0, size.width, size.height);
-        // this.m_outerFrame = new ShapeFrame(0, 0, size.width, size.height);
-        // this._p_frame = new ShapeFrame(0, 0, size.width, size.height);
-        // this._p_visibleFrame = new ShapeFrame(0, 0, size.width, size.height);
-        // this._p_outerFrame = new ShapeFrame(0, 0, size.width, size.height);
     }
 
     hitContent(x: number, y: number, deep: boolean): { shape: ShapeView; x: number; y: number; }[] {
@@ -317,16 +300,12 @@ export class ShapeView extends DataView {
         return this.frame;
     }
 
-    get frame() {
-        return this.m_frame;
-    }
-
     /**
      * 对象内容区位置大小
      */
-    // get contentFrame() {
-    //     return this.m_contentFrame;
-    // }
+    get frame() {
+        return this.m_frame;
+    }
     /**
      * contentFrame+边框，对象实际显示的位置大小
      */
@@ -430,9 +409,6 @@ export class ShapeView extends DataView {
             this.m_path = undefined;
             this.m_pathstr = undefined;
         }
-        // if (args.includes('fills')) this.m_fills = undefined;
-        // if (args.includes('borders')) this.m_borders = undefined;
-        // this.updateRenderArgs(this.data.frame, this.data.isFlippedHorizontal, this.data.isFlippedVertical, this.data.rotation, this.data.fixedRadius)
     }
 
     protected _findOV(ot: OverrideType, vt: VariableType): Variable | undefined {
@@ -564,11 +540,6 @@ export class ShapeView extends DataView {
         return v ? v.value : !!this.m_data.isLocked;
     }
 
-    // prepare() {
-    //     // prepare path
-    //     // prepare frame
-    // }
-
     // =================== update ========================
     updateLayoutArgs(trans: Transform, size: ShapeFrame, radius: number | undefined) {
 
@@ -596,8 +567,7 @@ export class ShapeView extends DataView {
     }
 
     updateFrames() {
-        // todo
-        // const size = this.m_data.size;
+
         let changed = this._save_frame.x !== this.m_frame.x || this._save_frame.y !== this.m_frame.y ||
             this._save_frame.width !== this.m_frame.width || this._save_frame.height !== this.m_frame.height;
         if (changed) {
@@ -683,16 +653,10 @@ export class ShapeView extends DataView {
             let t = transform;
             if (scale.x !== scale.y) { // todo
                 t = t.clone();
-                // const save1 = t.computeCoord(0, 0);
                 t.scale(scale.x, scale.y);
-                // 保留skew去除scale
                 const t2 = makeShapeTransform2By1(t);
                 t2.clearScaleSize();
                 t = makeShapeTransform1By2(t2);
-                // const save2 = t.computeCoord(0, 0)
-                // const dx = save1.x - save2.x;
-                // const dy = save1.y - save2.y;
-                // t.trans(dx, dy);
             }
             return t;
         }
@@ -802,18 +766,10 @@ export class ShapeView extends DataView {
 
 
     protected renderFills(): EL[] {
-        // if (!this.m_fills) {
-        //     this.m_fills = renderFills(elh, this.getFills(), this.frame, this.getPathStr());
-        // }
-        // return this.m_fills;
         return renderFills(elh, this.getFills(), this.frame, this.getPathStr());
     }
 
     protected renderBorders(): EL[] {
-        // if (!this.m_borders) {
-        //     this.m_borders = renderBorders(elh, this.getBorders(), this.frame, this.getPathStr());
-        // }
-        // return this.m_borders;
         return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.m_data);
     }
 
@@ -827,8 +783,7 @@ export class ShapeView extends DataView {
     }
 
     protected renderProps(): { [key: string]: string } {
-        // const frame = this.size;
-        // const path = this.getPath(); // cache
+
         const props: any = {}
 
         const contextSettings = this.contextSettings;
@@ -900,8 +855,6 @@ export class ShapeView extends DataView {
         return childs;
     }
 
-    // private m_save_render: EL | undefined;
-
     protected m_render_version: number = 0;
 
     protected checkAndResetDirty(): boolean {
@@ -910,7 +863,6 @@ export class ShapeView extends DataView {
 
     render(): number {
 
-        // const tid = this.id;
         const isDirty = this.checkAndResetDirty();
         if (!isDirty) {
             return this.m_render_version;

@@ -113,25 +113,11 @@ export class GroupShapeView extends ShapeView {
         else removes.forEach((c => c.destory()));
     }
 
-    super_updateFrames(): boolean {
-        return super.updateFrames();
-    }
+    // super_updateFrames(): boolean {
+    //     return super.updateFrames();
+    // }
 
     updateFrames(): boolean {
-
-        // const bounds = (frame: ShapeFrame, m: Transform) => {
-        //     const corners = [
-        //         { x: frame.x, y: frame.y },
-        //         { x: frame.x + frame.width, y: frame.y },
-        //         { x: frame.x + frame.width, y: frame.y + frame.height },
-        //         { x: frame.x, y: frame.y + frame.height }]
-        //         .map((p) => m.computeCoord(p));
-        //     const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
-        //     const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
-        //     const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
-        //     const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
-        //     return { minx, miny, maxx, maxy }
-        // }
 
         const childcontentbounds = this.m_children.map(c => (c as ShapeView)._p_frame);
 

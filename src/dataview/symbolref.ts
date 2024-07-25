@@ -194,7 +194,6 @@ export class SymbolRefView extends ShapeView {
         const prescale = { x: _scale?.x ?? 1, y: _scale?.y ?? 1 }
         const scale = { x: prescale.x, y: prescale.y }
         const childscale = { x: scale.x, y: scale.y }
-        // const symframe = new ShapeFrame(0, 0, this.m_sym.size.width, this.m_sym.size.height);
 
         // 调整过大小的，使用用户调整的大小，否则跟随symbol大小
         if (!(this.m_data as SymbolRefShape).isCustomSize) {
@@ -207,10 +206,7 @@ export class SymbolRefView extends ShapeView {
             childscale.x *= this.m_data.size.width / this.m_sym.size.width;
             childscale.y *= this.m_data.size.height / this.m_sym.size.height;
         }
-        // const parent = this.parent;
-        // const parentFrame = parent?.hasSize() ? parent.frame : undefined;
 
-        // const shape = this.data;
         const transform = shape.transform;
         // case 1 不需要变形
         if (scale.x === 1 && scale.y === 1) {
@@ -222,18 +218,13 @@ export class SymbolRefView extends ShapeView {
 
         const skewTransfrom = () => {
             let t = transform;
-            if (scale.x !== scale.y) { // todo
+            if (scale.x !== scale.y) {
                 t = t.clone();
-                // const save1 = t.computeCoord(0, 0);
                 t.scale(scale.x, scale.y);
                 // 保留skew去除scale
                 const t2 = makeShapeTransform2By1(t);
                 t2.clearScaleSize();
                 t = makeShapeTransform1By2(t2);
-                // const save2 = t.computeCoord(0, 0)
-                // const dx = save1.x - save2.x;
-                // const dy = save1.y - save2.y;
-                // t.trans(dx, dy);
             }
             return t;
         }
