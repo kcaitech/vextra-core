@@ -574,14 +574,13 @@ export class PageEditor {
 
     /**
      * 创建组件
-     * symbolref引用的symbol可能被其他人取消，那么symbolref应该能引用普通的对象！
      */
     makeSymbol(document: Document, shapes: Shape[], name?: string) {
         try {
             if (!shapes.length) return;
 
             const shape0 = shapes[0];
-            const frame = shape0.frame;
+            const frame = shape0.frame2Parent();
 
             const replace = shapes.length === 1
                 && ((shape0 instanceof GroupShape && !(shape0 instanceof BoolShape)) || shape0 instanceof Artboard);
