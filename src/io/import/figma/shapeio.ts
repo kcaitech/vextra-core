@@ -38,7 +38,7 @@ import {
     Style,
     SymbolRefShape,
     Text,
-    TextBehaviour,
+    TextBehaviour, SymbolUnionShape,
 } from "../../../data";
 import {uuid} from "../../../basic/uuid";
 import {IJSON, ImportFun, LoadContext} from "./basic";
@@ -538,6 +538,10 @@ export function importImageShape(ctx: LoadContext, data: IJSON, f: ImportFun, in
 }
 
 export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun, index: number): Artboard {
+    if (data.isStateGroup) {
+        return importSymbolUnion(ctx, data, f, index);
+    }
+
     const frame = importShapeFrame(data);
     const visible = data.visible;
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
@@ -595,6 +599,20 @@ export function importSymbolRef(ctx: LoadContext, data: IJSON, f: ImportFun, ind
     const symbolRawID = symbol?.kcId;
 
     const shape = new SymbolRefShape([index] as BasicArray<number>, id, data.name, ShapeType.SymbolRef, frame.trans, frame.size, style, symbolRawID, new BasicMap());
+    shape.isVisible = visible;
+
+    return shape;
+}
+
+export function importSymbolUnion(ctx: LoadContext, data: IJSON, f: ImportFun, index: number): SymbolUnionShape {
+    const frame = importShapeFrame(data);
+    const visible = data.visible;
+    const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
+    importStyle(style, data);
+    const id = data.kcId || uuid();
+
+    const childs: Shape[] = (data.childs as IJSON[] || []).map((d: IJSON, i: number) => f(ctx, d, i)).filter(item => item) as Shape[];
+    const shape = new SymbolUnionShape([index] as BasicArray<number>, id, data.name, ShapeType.Symbol, frame.trans, frame.size, style, new BasicArray<Shape>(...childs), new BasicMap());
     shape.isVisible = visible;
 
     return shape;
