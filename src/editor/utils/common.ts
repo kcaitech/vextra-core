@@ -62,13 +62,13 @@ export function modify_shapes_width(api: Api, document: Document, page: Page, sh
             const rate = w / val;
             h = h / rate;
         }
-
+        const origin_h = shape.frame.height;
         expandTo(api, document, page, shape, val, h);
 
         if (shape instanceof GroupShape) {
             reLayoutBySizeChanged(api, page, shape, {
                 x: val / w,
-                y: h / shape.frame.height
+                y: h / origin_h
             });
         }
     }
@@ -91,11 +91,12 @@ export function modify_shapes_height(api: Api, document: Document, page: Page, s
             w = w / rate;
         }
 
+        const origin_w = shape.frame.width;
         expandTo(api, document, page, shape, w, val);
 
         if (shape instanceof GroupShape) {
             reLayoutBySizeChanged(api, page, shape, {
-                x: w / shape.frame.width,
+                x: w / origin_w,
                 y: val / h
             });
         }
