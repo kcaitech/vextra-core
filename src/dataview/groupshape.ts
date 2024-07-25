@@ -6,7 +6,6 @@ import { DataView, RootView } from "./view";
 import { DViewCtx, PropsType, VarsContainer } from "./viewctx";
 
 export class GroupShapeView extends ShapeView {
-    maskMap: Map<string, Shape> = new Map;
 
     get data(): GroupShape {
         return this.m_data as GroupShape;
@@ -27,7 +26,7 @@ export class GroupShapeView extends ShapeView {
     protected onChildChange(...args: any[]) {
         if (args.includes('fills') || args.includes('borders')) this.notify(...args);
     }
-
+    maskMap: Map<string, Shape> = new Map;
     updateMaskMap() {
         const map = this.maskMap;
         map.clear();

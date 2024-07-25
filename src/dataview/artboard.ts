@@ -77,6 +77,13 @@ export class ArtboradView extends GroupShapeView {
     render(): number {
         if (!this.checkAndResetDirty()) return this.m_render_version;
 
+        const mb = this.masked;
+        if (mb) {
+            mb.notify('rerender-mask');
+            this.reset("g");
+            return ++this.m_render_version;
+        }
+
         if (!this.isVisible) {
             this.reset("g");
             return ++this.m_render_version;
