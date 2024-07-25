@@ -49,6 +49,7 @@ export class GroupShapeView extends ShapeView {
             c.m_ctx.setDirty(c);
         });
         maskShape.forEach(m => m.notify('rerender-mask'));
+        this.notify('mask-env-change');
     }
 
     onDestory(): void {

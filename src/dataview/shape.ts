@@ -912,8 +912,8 @@ export class ShapeView extends DataView {
     }
 
     bleach(el: EL) {  // 漂白
-        if (el.elattr.fill) el.elattr.fill = '#FFF';
-        if (el.elattr.stroke) el.elattr.stroke = '#FFF';
+        if (el.elattr.fill && el.elattr.fill !== 'none' && !(el.elattr.fill as string).startsWith('url')) el.elattr.fill = '#FFF';
+        if (el.elattr.stroke && el.elattr.stroke !== 'none' && !(el.elattr.stroke as string).startsWith('url')) el.elattr.stroke = '#FFF';
         // 漂白阴影
         if (el.eltag === 'feColorMatrix' && el.elattr.result) {
             let values: any = el.elattr.values;
