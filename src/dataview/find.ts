@@ -160,7 +160,7 @@ function insersect_skewrect_rect(skewrect: { x: number, y: number }[], rect: Rec
 
 function _find(view: ShapeView, skewrect: { x: number, y: number }[], level: number, finder: (view: ShapeView, level: number, skewrect: { x: number, y: number }[]) => boolean) {
 
-    if (!insersect_skewrect_rect(skewrect, view.outerFrame)) return;
+    // if (!insersect_skewrect_rect(skewrect, view.outerFrame)) return;
     if (!finder(view, level, skewrect)) return;
 
     view.childs.forEach(c => {
@@ -186,7 +186,7 @@ export function find4select(view: ShapeView, skewrect: { x: number, y: number }[
     const ret: ShapeView[] = [];
 
     const alt_finder = (view: ShapeView, level: number, skewrect: { x: number, y: number }[]) => {
-        if (level === 0) return true;
+        if (level === 0) return insersect_skewrect_rect(skewrect, view.outerFrame);
         if (contains_skewrect_rect(skewrect, view.frame)) {
             ret.push(view);
         }
@@ -194,7 +194,7 @@ export function find4select(view: ShapeView, skewrect: { x: number, y: number }[
     }
 
     const finder = (view: ShapeView, level: number, skewrect: { x: number, y: number }[]) => {
-        if (level === 0) return true;
+        if (level === 0) return insersect_skewrect_rect(skewrect, view.outerFrame);
         if (view.type === ShapeType.Artboard) {
             if (contains_skewrect_rect(skewrect, view.frame)) {
                 ret.push(view);
