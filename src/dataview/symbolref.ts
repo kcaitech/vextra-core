@@ -13,9 +13,9 @@ export class SymbolRefView extends ShapeView {
 
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
-        this.updateMaskMap();
         this.symwatcher = this.symwatcher.bind(this);
         this.loadsym();
+        this.updateMaskMap();
         // this.afterInit();
     }
 
@@ -51,7 +51,7 @@ export class SymbolRefView extends ShapeView {
         return v ? v.value : (this.m_data as SymbolRefShape).refId;
     }
 
-    maskMap: Map<string, Shape> = new Map;
+    maskMap: Map<string, Shape | boolean> = new Map;
     updateMaskMap() {
         const map = this.maskMap;
         map.clear();

@@ -1,27 +1,31 @@
-import { innerShadowId, renderBorders, renderFills, renderShadows, renderBlur } from "../render";
+import { innerShadowId, renderBlur, renderBorders, renderFills, renderShadows } from "../render";
 import {
-    VariableType,
-    OverrideType,
-    Variable,
-    ShapeFrame,
-    SymbolRefShape,
-    SymbolShape,
-    Shape,
+    BasicArray,
+    Blur,
+    BlurType,
+    Border,
+    CornerRadius,
     CurvePoint,
-    Point2D,
+    Fill,
+    FillType,
+    GradientType,
+    makeShapeTransform1By2,
+    makeShapeTransform2By1,
+    MarkerType,
+    OverrideType,
     Path,
     PathShape,
-    Fill,
-    Border,
+    Point2D,
     Shadow,
-    ShapeType,
-    CornerRadius,
-    Blur,
+    Shape,
+    ShapeFrame,
     ShapeSize,
+    ShapeType,
+    SymbolRefShape,
+    SymbolShape,
     Transform,
-    BasicArray,
-    makeShapeTransform2By1,
-    makeShapeTransform1By2
+    Variable,
+    VariableType
 } from "../data";
 import { findOverrideAndVar } from "./basic";
 import { EL, elh } from "./el";
@@ -30,9 +34,10 @@ import { DataView } from "./view"
 import { DViewCtx, PropsType } from "./viewctx";
 import { objectId } from "../basic/objectid";
 import { fixConstrainFrame } from "../data/constrain";
-import { BlurType, MarkerType } from "../data";
 import { Transform as Transform2 } from "../basic/transform";
 import { GroupShapeView } from "./groupshape";
+import { importBorder, importFill } from "../data/baseimport";
+import { exportBorder, exportFill } from "../data/baseexport";
 
 export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     return (
@@ -472,7 +477,7 @@ export class ShapeView extends DataView {
     }
 
     get masked() {
-        return (this.parent as GroupShapeView)?.maskMap.get(this.id);
+        return (this.parent as GroupShapeView)?.maskMap.get(this.m_data.id);
     }
 
     // =================== update ========================
@@ -619,19 +624,27 @@ export class ShapeView extends DataView {
     // ================== render ===========================
 
     protected renderFills(): EL[] {
-        // if (!this.m_fills) {
-        //     this.m_fills = renderFills(elh, this.getFills(), this.frame, this.getPathStr());
-        // }
-        // return this.m_fills;
-        return renderFills(elh, this.getFills(), this.size, this.getPathStr());
+        let fills = this.getFills();
+        if (this.mask) {
+            fills = fills.map(f => {
+                const nf = importFill(exportFill(f));
+                if (nf.fillType === FillType.Gradient && nf.gradient?.gradientType === GradientType.Angular) nf.fillType = FillType.SolidColor;
+                return nf;
+            })
+        }
+        return renderFills(elh, fills, this.size, this.getPathStr());
     }
 
     protected renderBorders(): EL[] {
-        // if (!this.m_borders) {
-        //     this.m_borders = renderBorders(elh, this.getBorders(), this.frame, this.getPathStr());
-        // }
-        // return this.m_borders;
-        return renderBorders(elh, this.getBorders(), this.size, this.getPathStr(), this.m_data);
+        let borders = this.getBorders();
+        if (this.mask) {
+            borders = borders.map(b => {
+                const nb = importBorder(exportBorder(b));
+                if (nb.fillType === FillType.Gradient && nb.gradient?.gradientType === GradientType.Angular) nb.fillType = FillType.SolidColor;
+                return nb;
+            })
+        }
+        return renderBorders(elh, borders, this.size, this.getPathStr(), this.m_data);
     }
 
     protected renderShadows(filterId: string): EL[] {
@@ -869,7 +882,10 @@ export class ShapeView extends DataView {
         for (let i = 1; i < group.length; i++) {
             const __s = group[i];
             const dom = __s.dom;
-            (dom.elattr as any)['style'] = { 'transform': makeShapeTransform1By2(__s.transform2.clone().addTransform(inverse)).toString() };
+            if (!(dom.elattr as any)['style']) {
+                (dom.elattr as any)['style'] = {};
+            }
+            (dom.elattr as any)['style']['transform'] = makeShapeTransform1By2(__s.transform2.clone().addTransform(inverse)).toString();
             els.push(dom);
         }
 
@@ -938,6 +954,15 @@ export class ShapeView extends DataView {
         const blurId = `blur_${objectId(this)}`;
         const blur = this.renderBlur(blurId);
 
+        const contextSettings = this.style.contextSettings;
+        const props: any = {};
+        if (contextSettings) {
+            if (contextSettings.opacity !== undefined) {
+                props.opacity = contextSettings.opacity;
+            }
+            props.style = { 'mix-blend-mode': contextSettings.blenMode };
+        }
+
         let children = [...fills, ...childs, ...borders];
 
         if (shadows.length) {
@@ -958,6 +983,6 @@ export class ShapeView extends DataView {
             children = [...blur, elh('g', { filter }, children)];
         }
 
-        return elh("g", {}, children);
+        return elh("g", props, children);
     }
 }
