@@ -62,6 +62,7 @@ import { ShapeView, TableCellView, TextShapeView } from "../../dataview";
 import { BasicArray } from "../../data";
 import { FMT_VER_latest } from "../../data/fmtver";
 import { objectId } from "../../basic/objectid";
+import { crdtSetAttr } from "../basicapi";
 
 // 要支持variable的修改
 export type TextShapeLike = TableCellView | TextShapeView
@@ -438,6 +439,9 @@ export class Api {
     }
     shapeModifyVisible(page: Page, shape: Shape, isVisible: boolean) {
         this._shapeModifyAttr(page, shape, "isVisible", isVisible);
+    }
+    shapeModifyMask(page: Page, shape: Shape, mask: boolean) {
+        this._shapeModifyAttr(page, shape, "mask", mask);
     }
     shapeModifySymRef(page: Page, shape: SymbolRefShape, refId: string) {
         this._shapeModifyAttr(page, shape, "refId", refId);

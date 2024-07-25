@@ -20,12 +20,12 @@ import {
     Span,
     ShapeType,
     Variable, Document, TableShape, FillType, Gradient
-} from "../data/classes";
+} from "../data";
 import { CoopRepository } from "./coop/cooprepo";
 import { Api } from "./coop/recordapi";
 import { ShapeEditor } from "./shape";
 import { fixTableShapeFrameByLayout, fixTextShapeFrameByLayout } from "./utils/other";
-import { BasicArray } from "../data/basic";
+import { BasicArray } from "../data";
 import { mergeParaAttr, mergeSpanAttr } from "../data/textutils";
 import { importGradient, importText } from "../data/baseimport";
 import { AsyncGradientEditor, Status } from "./controller";
@@ -33,8 +33,8 @@ import { CmdMergeType } from "./coop/localcmd";
 import { ShapeView, TableCellView, TableView, TextShapeView, adapt2Shape } from "../dataview";
 import { cell4edit2, varParent } from "./symbol";
 import { uuid } from "../basic/uuid";
-import { SymbolRefShape, SymbolShape, GroupShape } from "../data/classes";
-import { ParaAttr } from "../data/classes";
+import { SymbolRefShape, SymbolShape, GroupShape } from "../data";
+import { ParaAttr } from "../data";
 
 type TextShapeLike = Shape & { text: Text }
 
