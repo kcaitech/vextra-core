@@ -75,36 +75,34 @@ function setGradient(
         const {col0: from, col1: to} = transform.transform([
             ColVector3D.FromXY(0, 0.5),
             ColVector3D.FromXY(1, 0.5),
-        ])
+        ]);
 
-        const from1 = new Point2D(from.x, from.y)
-        const to1 = new Point2D(to.x, to.y)
-        const colorType = GradientType.Linear
+        const from1 = new Point2D(from.x, from.y);
+        const to1 = new Point2D(to.x, to.y);
+        const colorType = GradientType.Linear;
         const stops1 = stops.map((item, i) => {
-                return new Stop([i] as BasicArray<number>, uuid(), item.position, importColor(item.color))
-            }
-        ) as BasicArray<Stop>
+            return new Stop([i] as BasicArray<number>, uuid(), item.position, importColor(item.color))
+        }) as BasicArray<Stop>;
 
         item.gradient = new Gradient(from1, to1, colorType, stops1 as BasicArray<Stop>, undefined, opacity);
-        item.fillType = FillType.Gradient
+        item.fillType = FillType.Gradient;
     } else if (type === 'GRADIENT_RADIAL' || type === 'GRADIENT_ANGULAR') {
         const {col0: from, col1: to} = transform.transform([
             ColVector3D.FromXY(0.5, 0.5),
             ColVector3D.FromXY(1, 0.5),
-        ])
-        const decompose = transform.decompose()
+        ]);
+        const decompose = transform.decompose();
 
-        const from1 = new Point2D(from.x, from.y)
-        const to1 = new Point2D(to.x, to.y)
-        const colorType = type === 'GRADIENT_RADIAL' ? GradientType.Radial : GradientType.Angular
-        const elipseLength = decompose.scale.y / decompose.scale.x * size.y / size.x
+        const from1 = new Point2D(from.x, from.y);
+        const to1 = new Point2D(to.x, to.y);
+        const colorType = type === 'GRADIENT_RADIAL' ? GradientType.Radial : GradientType.Angular;
+        const elipseLength = decompose.scale.y / decompose.scale.x * size.y / size.x;
         const stops1 = stops.map((item, i) => {
-                return new Stop([i] as BasicArray<number>, uuid(), item.position, importColor(item.color))
-            }
-        ) as BasicArray<Stop>
+            return new Stop([i] as BasicArray<number>, uuid(), item.position, importColor(item.color))
+        }) as BasicArray<Stop>;
 
         item.gradient = new Gradient(from1, to1, colorType, stops1 as BasicArray<Stop>, elipseLength, opacity);
-        item.fillType = FillType.Gradient
+        item.fillType = FillType.Gradient;
     }
 }
 
