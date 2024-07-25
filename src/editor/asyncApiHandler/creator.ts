@@ -236,18 +236,16 @@ export class CreatorApiCaller extends AsyncApiCaller {
                     deleteEmptyGroupShape(this.__document, page, s, api);
                 }
             }
-            const realXY = shapes.map((s) => s.frame2Root());
-            const t_xy = shape.frame;
-            const savep = adapt2Shape(shapes[0].parent!) as GroupShape;
-            const m = new Matrix(savep.matrix2Root().inverse);
+            const realXY = shapes.map((s) => s.matrix2Root().computeCoord(0, 0));
+            const m = new Matrix(shape.matrix2Root().inverse);
             for (let i = 0; i < shapes.length; i++) {
-                const c = adapt2Shape(shapes[i]);
+                const c = (shapes[i]);
                 const r = realXY[i]
                 const target = m.computeCoord(r.x, r.y);
-                const cur = c.matrix2Parent().computeCoord(0, 0);
-                const cframe = c.frame;
-                api.shapeModifyX(page, c, cframe.x + target.x - cur.x - t_xy.x);
-                api.shapeModifyY(page, c, cframe.y + target.y - cur.y - t_xy.y);
+                const cur = c.data.matrix2Parent().computeCoord(0, 0);
+                const transform = c.data.transform;
+                api.shapeModifyX(page, c.data, transform.translateX + target.x - cur.x);
+                api.shapeModifyY(page, c.data, transform.translateY + target.y - cur.y);
             }
 
             function deleteEmptyGroupShape(document: Document, page: Page, shape: Shape, api: Api): boolean {
