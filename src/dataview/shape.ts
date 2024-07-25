@@ -888,7 +888,7 @@ export class ShapeView extends DataView {
     renderMask() {
         if (!this.mask) return;
         const parent = this.parent;
-        if (!parent || parent.type === ShapeType.Page) return;
+        if (!parent) return;
         const __children = parent.childs;
         let index = __children.findIndex(i => i.id === this.id);
         if (index === -1) return;
