@@ -3,9 +3,9 @@ import { Page } from "../../data/page";
 import { Op } from "../../coop/common/op";
 import { crdtArrayInsert, crdtArrayMove, crdtArrayRemove, crdtSetAttr, crdtShapeInsert, crdtShapeMove, crdtShapeRemove } from "./basic";
 import { GroupShape, Shape, SymbolShape } from "../../data/shape";
-import { ShapeFrame, SymbolUnionShape } from "../../data/baseclasses";
+import { ShapeFrame, SymbolUnionShape } from "../../data/shape";
 import { BasicArray, BasicMap } from "../../data/basic";
-import { IImportContext, importSymbolShape } from "../../data/baseimport";
+import { IImportContext, importSymbolShape, importSymbolUnionShape } from "../../data/baseimport";
 import { FMT_VER_latest } from "../../data/fmtver";
 
 export function pageInsert(document: Document, page: Page, index: number) {
@@ -114,40 +114,41 @@ export function shapeDelete(document: Document, page: Page, parent: GroupShape, 
     // shape不可以一次删除多个对象，要分开删除
     // 从叶子开始删除
     const ops: Op[] = [];
-    const recursive = (parent: GroupShape, shape: Shape, index: number) => {
+    const recursive = (parent: GroupShape, shape: Shape, index: number, level: number) => {
         let saveShape: SymbolShape | undefined;
-        if (shape instanceof SymbolShape && (!(shape instanceof SymbolUnionShape))) {
+        if (shape instanceof SymbolShape && (!(level > 0 && parent instanceof SymbolShape))) {
             // 备份symbolshape
             const ctx = new class implements IImportContext {
                 document: Document = document;
                 curPage: string = page.id;
                 fmtVer: number = FMT_VER_latest;
             }
-            saveShape = importSymbolShape(shape, ctx);
+            saveShape = shape instanceof SymbolUnionShape ? importSymbolUnionShape(shape, ctx) : importSymbolShape(shape, ctx);
         }
         if (shape instanceof GroupShape) {
             const childs = shape.childs;
             for (let i = childs.length - 1; i >= 0; --i) {
                 const c = childs[i];
-                recursive(shape, c, i);
+                recursive(shape, c, i, level + 1);
             }
         }
         const op = crdtShapeRemove(page, parent, index);
         if (op) {
             ops.push(op);
-            if (saveShape) {
+            if (shape instanceof SymbolShape && (!(shape instanceof SymbolUnionShape))) {
                 ops.push(registSymbol(document, shape.id, "freesymbols"));
+                document.symbolsMgr.clearDuplicate(shape.id);
+            }
+            if (saveShape) {
                 if (!document.freesymbols) document.freesymbols = new BasicMap();
                 ops.push(crdtSetAttr(document.freesymbols, saveShape.id, saveShape));
+                document.symbolsMgr.clearDuplicate(saveShape.id);
             }
             page.onRemoveShape(op.origin as Shape, false);
         }
-        if (saveShape) {
-            document.symbolsMgr.clearDuplicate(saveShape.id);
-        }
     }
     const shape = parent.childs[index];
-    recursive(parent, shape, index);
+    recursive(parent, shape, index, 0);
 
     if (ops.length > 0 && parent.childs.length > 0) {
         needUpdateFrame.push({ shape: parent.childs[0], page })
