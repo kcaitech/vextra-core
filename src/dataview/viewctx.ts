@@ -86,10 +86,7 @@ export class DViewCtx extends EventEmitter {
         }
 
         this.relayoutset.forEach((v, k) => {
-            update.push({
-                data: v,
-                level: level(v)
-            });
+            update.push({ data: v, level: level(v) });
         });
 
         // 小的在前
