@@ -15,7 +15,7 @@ export { render as renderBlur } from "./blur";
 // export { render as renderLine } from "./line";
 // export { render as renderPathShape } from "./pathshape";
 // export { render as renderRecShape } from "./rectangle";
-export { render2path } from "./boolgroup";
+// export { render2path } from "./boolgroup";
 // export { render as renderSymbolRef } from "./symbolref";
 // export { render as renderSymbol } from "./symbol";
 // export { render as renderTextShape } from "./text";

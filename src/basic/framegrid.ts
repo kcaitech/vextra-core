@@ -1,25 +1,30 @@
 
-import { ShapeFrame } from "../data/baseclasses";
+interface Rect {
+    x: number,
+    y: number,
+    width: number,
+    height: number
+}
 
-function _is_intersect(frame0: ShapeFrame, frame1: ShapeFrame) {
+function _is_intersect(frame0: Rect, frame1: Rect) {
     return !(frame0.x > frame1.x + frame1.width ||
         frame0.x + frame0.width < frame1.x ||
         frame0.y > frame1.y + frame1.height ||
         frame0.y + frame0.height < frame1.y);
 }
-function is_intersect(arr: ShapeFrame[], frame: ShapeFrame) {
+function is_intersect(arr: Rect[], frame: Rect) {
     for (let i = 0; i < arr.length; i++) {
         if (_is_intersect(arr[i], frame)) return true;
     }
     return false;
 }
 
-class FrameGrid {
+export class FrameGrid {
     _cellWidth: number;
     _cellHeight: number;
     _cellRowsCount: number;
     _cellColsCount: number;
-    _rows: ShapeFrame[][][] = [];
+    _rows: Rect[][][] = [];
     _offsetx: number;
     _offsety: number;
 
@@ -32,15 +37,15 @@ class FrameGrid {
         this._offsety = offsety;
     }
 
-    checkIntersectAndPush(frame: ShapeFrame): boolean {
+    checkIntersectAndPush(frame: Rect): boolean {
         return this._checkIntersectAndPush(frame, false);
     }
 
-    push(frame: ShapeFrame) {
+    push(frame: Rect) {
         this._checkIntersectAndPush(frame, true);
     }
 
-    private _checkIntersectAndPush(frame: ShapeFrame, preset: boolean): boolean {
+    private _checkIntersectAndPush(frame: Rect, preset: boolean): boolean {
         const xs = (frame.x) - this._offsetx;
         const xe = (frame.x + frame.width) - this._offsetx;
         const ys = (frame.y) - this._offsety;
