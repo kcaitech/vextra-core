@@ -441,7 +441,6 @@ export class Scaler extends AsyncApiCaller {
     private recorder: RangeRecorder = new Map();
     private sizeRecorder: SizeRecorder = new Map();
     private transformRecorder: TransformRecorder = new Map;
-    private needUpdateCustomSizeStatus: Set<Shape> = new Set();
 
     constructor(repo: CoopRepository, document: Document, page: PageView) {
         super(repo, document, page);
@@ -452,28 +451,7 @@ export class Scaler extends AsyncApiCaller {
     }
 
     private afterShapeSizeChange() {
-        if (!this.needUpdateCustomSizeStatus.size) {
-            return;
-        }
 
-        const document = this.__document;
-        const api = this.api;
-        const page = this.page;
-        this.needUpdateCustomSizeStatus.forEach(shape => {
-            if (shape instanceof SymbolShape && !(shape instanceof SymbolUnionShape)) {
-                const symId = shape.id;
-                const refs = document.symbolsMgr.getRefs(symId);
-                if (!refs) return;
-                for (let [k, v] of refs) {
-                    if (v.isCustomSize) continue;
-                    const page = v.getPage();
-                    if (!page) throw new Error();
-                    api.shapeModifyWH(page as Page, v, shape.size.width, shape.size.height);
-                }
-            } else if (shape instanceof SymbolRefShape) {
-                api.shapeModifyIsCustomSize(page, shape, true);
-            }
-        })
     }
 
     execute(params: {
@@ -494,9 +472,8 @@ export class Scaler extends AsyncApiCaller {
                 const item = params[i];
 
                 const shape = adapt2Shape(item.shape);
-                const size = item.size;
-                const scale = item.scale;
                 if (shape instanceof TextShape) {
+                    const size = item.size;
                     if (size.width !== shape.size.width || size.height !== shape.size.height) {
                         const textBehaviour = shape.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
                         if (size.height !== shape.size.height) {
@@ -511,13 +488,19 @@ export class Scaler extends AsyncApiCaller {
                         api.shapeModifyWH(page, shape, size.width, size.height)
                         fixTextShapeFrameByLayout(api, page, shape);
                     }
-                } else {
+                } else if (shape.hasSize()) {
+                    const size = item.size;
                     api.shapeModifyWH(page, shape, size.width, size.height)
                 }
                 api.shapeModifyTransform(page, shape, makeShapeTransform1By2(item.transform2));
 
                 if (shape instanceof GroupShape) {
+                    const scale = item.scale;
                     reLayoutBySizeChanged(api, page, shape as GroupShape, scale, recorder, sizeRecorder, transformRecorder);
+                }
+
+                if (shape instanceof SymbolRefShape && !shape.isCustomSize) {
+                    api.shapeModifyIsCustomSize(page, shape, true);
                 }
             }
 
