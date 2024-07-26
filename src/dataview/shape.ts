@@ -172,6 +172,13 @@ export function frame2Parent(t: Transform, size: ShapeSize): ShapeFrame {
     return new ShapeFrame(lt.x, lt.y, rb.x - lt.x, rb.y - lt.y);
 }
 
+export function frame2Parent2(t: Transform, size: ShapeFrame): ShapeFrame {
+    if (t.m00 == 1 && t.m01 === 0 && t.m10 === 0 && t.m11 === 1) return new ShapeFrame(t.m02, t.m12, size.width, size.height)
+    const lt = t.computeCoord(size.x, size.y);
+    const rb = t.computeCoord(size.x + size.width, size.y + size.height);
+    return new ShapeFrame(lt.x, lt.y, rb.x - lt.x, rb.y - lt.y);
+}
+
 function frameContains(frame: ShapeFrame, x: number, y: number) {
     return x >= frame.x && x < (frame.x + frame.width) && y >= frame.y && y < (frame.y + frame.height);
 }
@@ -649,11 +656,12 @@ export class ShapeView extends DataView {
             return;
         }
 
-        const skewTransfrom = () => {
+        const skewTransfrom = (scalex: number, scaley: number) => {
             let t = transform;
-            if (scale.x !== scale.y) { // todo
+            if (scalex !== scaley) {
                 t = t.clone();
-                t.scale(scale.x, scale.y);
+                t.scale(scalex, scaley);
+                // 保留skew去除scale
                 const t2 = makeShapeTransform2By1(t);
                 t2.clearScaleSize();
                 t = makeShapeTransform1By2(t2);
@@ -661,12 +669,15 @@ export class ShapeView extends DataView {
             return t;
         }
 
+        const resizingConstraint = shape.resizingConstraint ?? 0; // 默认值为靠左、靠顶、宽高固定
         // 当前对象如果没有frame,需要childs layout完成后才有
         // 但如果有constrain,则需要提前计算出frame?当前是直接不需要constrain
-        if (!this.hasSize()) {
+        if (!this.hasSize() && (resizingConstraint === 0 || !parentFrame)) {
             let frame = this.frame; // 不需要更新
-            const save1 = transform.computeCoord(0, 0);
-            const t = skewTransfrom().clone();
+            const t0 = transform.clone();
+            t0.scale(scale.x, scale.y);
+            const save1 = t0.computeCoord(0, 0);
+            const t = skewTransfrom(scale.x, scale.y).clone();
             const save2 = t.computeCoord(0, 0)
             const dx = save1.x - save2.x;
             const dy = save1.y - save2.y;
@@ -676,9 +687,8 @@ export class ShapeView extends DataView {
             return;
         }
 
-        const resizingConstraint = shape.resizingConstraint ?? 0; // 默认值为靠左、靠顶、宽高固定
-        const size = this.data.size;
-        const frame = frame2Parent(transform, size);
+        const size = this.data.frame; // 如果是group,实时计算的大小。view中此时可能没有
+        const frame = frame2Parent2(transform, size);
         const saveW = frame.width;
         const saveH = frame.height;
 
@@ -696,15 +706,15 @@ export class ShapeView extends DataView {
             frame.height *= scale.y;
         }
 
-        const t = skewTransfrom().clone();
+        const t = skewTransfrom(scaleX, scaleY).clone();
         const cur = t.computeCoord(0, 0);
         t.trans(frame.x - cur.x, frame.y - cur.y);
 
         const inverse = t.inverse;
-        const lt = inverse.computeCoord(frame.x, frame.y); // 应该是{0，0}
-        if (Math.abs(lt.x) > float_accuracy || Math.abs(lt.y) > float_accuracy) throw new Error();
+        // const lt = inverse.computeCoord(frame.x, frame.y); // 应该是{0，0}
+        // if (Math.abs(lt.x) > float_accuracy || Math.abs(lt.y) > float_accuracy) throw new Error();
         const rb = inverse.computeCoord(frame.x + frame.width, frame.y + frame.height);
-        const size2 = new ShapeFrame(lt.x, lt.y, (rb.x - lt.x), (rb.y - lt.y));
+        const size2 = new ShapeFrame(0, 0, (rb.x), (rb.y));
 
         this.updateLayoutArgs(t, size2, (shape as PathShape).fixedRadius);
         this.layoutChilds(varsContainer, this.frame, { x: scaleX, y: scaleY });

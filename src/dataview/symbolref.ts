@@ -1,5 +1,5 @@
 import { Border, ContextSettings, CornerRadius, Fill, MarkerType, OverrideType, PathShape, Shadow, Shape, ShapeFrame, ShapeSize, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType, getPathOfRadius } from "../data/classes";
-import { fixFrameByConstrain, frame2Parent, ShapeView } from "./shape";
+import { fixFrameByConstrain, frame2Parent, frame2Parent2, ShapeView } from "./shape";
 import { ShapeType } from "../data/classes";
 import { DataView, RootView } from "./view";
 import { getShapeViewId } from "./basic";
@@ -216,11 +216,11 @@ export class SymbolRefView extends ShapeView {
             return;
         }
 
-        const skewTransfrom = () => {
+        const skewTransfrom = (scalex: number, scaley: number) => {
             let t = transform;
-            if (scale.x !== scale.y) {
+            if (scalex !== scaley) {
                 t = t.clone();
-                t.scale(scale.x, scale.y);
+                t.scale(scalex, scaley);
                 // 保留skew去除scale
                 const t2 = makeShapeTransform2By1(t);
                 t2.clearScaleSize();
@@ -229,12 +229,15 @@ export class SymbolRefView extends ShapeView {
             return t;
         }
 
+        const resizingConstraint = shape.resizingConstraint ?? 0; // 默认值为靠左、靠顶、宽高固定
         // 当前对象如果没有frame,需要childs layout完成后才有
         // 但如果有constrain,则需要提前计算出frame?当前是直接不需要constrain
-        if (!this.hasSize()) {
+        if (!this.hasSize() && (resizingConstraint === 0 || !parentFrame)) {
             let frame = this.frame; // 不需要更新
-            const save1 = transform.computeCoord(0, 0);
-            const t = skewTransfrom().clone();
+            const t0 = transform.clone();
+            t0.scale(scale.x, scale.y);
+            const save1 = t0.computeCoord(0, 0);
+            const t = skewTransfrom(scale.x, scale.y).clone();
             const save2 = t.computeCoord(0, 0)
             const dx = save1.x - save2.x;
             const dy = save1.y - save2.y;
@@ -244,9 +247,8 @@ export class SymbolRefView extends ShapeView {
             return;
         }
 
-        const resizingConstraint = shape.resizingConstraint ?? 0; // 默认值为靠左、靠顶、宽高固定
-        const size = this.data.size;
-        const frame = frame2Parent(transform, size);
+        const size = this.data.frame; // 如果是group,实时计算的大小。view中此时可能没有
+        const frame = frame2Parent2(transform, size);
         const saveW = frame.width;
         const saveH = frame.height;
 
@@ -264,15 +266,15 @@ export class SymbolRefView extends ShapeView {
             frame.height *= scale.y;
         }
 
-        const t = skewTransfrom().clone();
+        const t = skewTransfrom(scaleX, scaleY).clone();
         const cur = t.computeCoord(0, 0);
         t.trans(frame.x - cur.x, frame.y - cur.y);
 
         const inverse = t.inverse;
-        const lt = inverse.computeCoord(frame.x, frame.y); // 应该是{0，0}
-        if (Math.abs(lt.x) > float_accuracy || Math.abs(lt.y) > float_accuracy) throw new Error();
+        // const lt = inverse.computeCoord(frame.x, frame.y); // 应该是{0，0}
+        // if (Math.abs(lt.x) > float_accuracy || Math.abs(lt.y) > float_accuracy) throw new Error();
         const rb = inverse.computeCoord(frame.x + frame.width, frame.y + frame.height);
-        const size2 = new ShapeFrame(lt.x, lt.y, (rb.x - lt.x), (rb.y - lt.y));
+        const size2 = new ShapeFrame(0, 0, (rb.x), (rb.y));
         this.updateLayoutArgs(t, size2, 0);
         // 重新计算 childscale
         childscale.x = size2.width / this.m_sym.size.width;
