@@ -330,9 +330,6 @@ export class ShapeView extends DataView {
     onDataChange(...args: any[]): void {
         if (args.includes('mask')) (this.parent as GroupShapeView).updateMaskMap();
 
-        const masked = this.masked;
-        if (masked) return masked.notify('rerender-mask');
-
         if (args.includes('points')
             || args.includes('pathsegs')
             || args.includes('isClosed')
@@ -343,6 +340,9 @@ export class ShapeView extends DataView {
             this.m_path = undefined;
             this.m_pathstr = undefined;
         }
+
+        const masked = this.masked;
+        if (masked) masked.notify('rerender-mask');
     }
 
     protected _findOV(ot: OverrideType, vt: VariableType): Variable | undefined {

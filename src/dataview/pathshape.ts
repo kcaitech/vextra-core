@@ -165,7 +165,7 @@ export class PathShapeView extends ShapeView {
         return new Transform(1, 0, x, 0, 1, y);
     }
 
-    bleach(el: EL) {  // 漂白
+    bleach(el: EL) {  // 漂白，mask元素内，白色的像素显示，黑色的像素隐藏
         if (el.elattr.fill && el.elattr.fill !== 'none' && !(el.elattr.fill as string).startsWith('url(#gradient')) {
             el.elattr.fill = '#FFF';
         }
@@ -181,8 +181,6 @@ export class PathShapeView extends ShapeView {
             if (values[13]) values[13] = 1;
             el.elattr.values = values.join(' ');
         }
-
-        // 渐变漂白不了
 
         if (Array.isArray(el.elchilds)) el.elchilds.forEach(el => this.bleach(el));
     }
