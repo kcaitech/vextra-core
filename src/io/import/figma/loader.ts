@@ -32,7 +32,7 @@ export function startLoader(file: IJSON, pages: IJSON[], document: Document, nod
             const trans = new Transform();
             return new Page(new BasicArray(), id, "", ShapeType.Page, trans, size, new Style(new BasicArray(), new BasicArray(), new BasicArray()), new BasicArray());
         }
-        const page = importPage(ctx, json, importer);
+        const page = importPage(ctx, json, importer, nodeChangesMap);
         // updatePageFrame(page);
         return page;
     }
@@ -69,17 +69,17 @@ export function startLoader(file: IJSON, pages: IJSON[], document: Document, nod
     const symbolsSet = new Map<string, SymbolShape>()
     const ctx: LoadContext = new LoadContext(document.mediasMgr);
 
-    __handler['ROUNDED_RECTANGLE'] = (ctx: LoadContext, data: IJSON, i: number) => importPathShape(ctx, data, importer, i)
-    __handler['VECTOR'] = (ctx: LoadContext, data: IJSON, i: number) => importPathShape(ctx, data, importer, i)
-    __handler['FRAME'] = (ctx: LoadContext, data: IJSON, i: number) => importGroup(ctx, data, importer, i)
-    __handler['PAGE'] = (ctx: LoadContext, data: IJSON, i: number) => importPage(ctx, data, importer)
-    __handler['TEXT'] = (ctx: LoadContext, data: IJSON, i: number) => importTextShape(ctx, data, importer, i)
-    __handler['ELLIPSE'] = (ctx: LoadContext, data: IJSON, i: number) => importEllipse(ctx, data, importer, i)
-    __handler['LINE'] = (ctx: LoadContext, data: IJSON, i: number) => importLine(ctx, data, importer, i)
-    __handler['STAR'] = (ctx: LoadContext, data: IJSON, i: number) => importPathShape(ctx, data, importer, i)
-    __handler['REGULAR_POLYGON'] = (ctx: LoadContext, data: IJSON, i: number) => importPolygon(ctx, data, importer, i)
+    __handler['ROUNDED_RECTANGLE'] = (ctx: LoadContext, data: IJSON, i: number) => importPathShape(ctx, data, importer, i, nodeChangesMap)
+    __handler['VECTOR'] = (ctx: LoadContext, data: IJSON, i: number) => importPathShape(ctx, data, importer, i, nodeChangesMap)
+    __handler['FRAME'] = (ctx: LoadContext, data: IJSON, i: number) => importGroup(ctx, data, importer, i, nodeChangesMap)
+    __handler['PAGE'] = (ctx: LoadContext, data: IJSON, i: number) => importPage(ctx, data, importer, nodeChangesMap)
+    __handler['TEXT'] = (ctx: LoadContext, data: IJSON, i: number) => importTextShape(ctx, data, importer, i, nodeChangesMap)
+    __handler['ELLIPSE'] = (ctx: LoadContext, data: IJSON, i: number) => importEllipse(ctx, data, importer, i, nodeChangesMap)
+    __handler['LINE'] = (ctx: LoadContext, data: IJSON, i: number) => importLine(ctx, data, importer, i, nodeChangesMap)
+    __handler['STAR'] = (ctx: LoadContext, data: IJSON, i: number) => importPathShape(ctx, data, importer, i, nodeChangesMap)
+    __handler['REGULAR_POLYGON'] = (ctx: LoadContext, data: IJSON, i: number) => importPolygon(ctx, data, importer, i, nodeChangesMap)
     __handler['SYMBOL'] = (ctx: LoadContext, data: IJSON, i: number) => {
-        const symbol = importSymbol(ctx, data, importer, i);
+        const symbol = importSymbol(ctx, data, importer, i, nodeChangesMap);
         symbolsSet.set(symbol.id, symbol);
         return symbol;
     }

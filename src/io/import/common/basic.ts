@@ -1,6 +1,6 @@
-import { Shape } from "../../../data/shape";
-import { ResourceMgr } from "../../../data/basic";
-import { Page } from "../../../data/page";
+import {Shape, Variable} from "../../../data/shape";
+import {BasicMap, ResourceMgr} from "../../../data/basic";
+import { Page } from "../../../data";
 
 export interface IJSON {
     [key: string]: any
@@ -8,6 +8,8 @@ export interface IJSON {
 export class LoadContext {
     // shapeIds: Set<string> = new Set();
     mediasMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>;
+    rawVariables = new Map<string, IJSON>();
+    variables = new BasicMap<string, Variable>();
     constructor(mediasMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>) {
         this.mediasMgr = mediasMgr;
     }

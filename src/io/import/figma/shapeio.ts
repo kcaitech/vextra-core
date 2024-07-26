@@ -1,44 +1,48 @@
 import {
+    Artboard,
     BasicArray,
     BasicMap,
-    CurveMode,
-    CurvePoint,
-    FillRule,
-    GroupShape,
-    ImageShape,
-    OvalShape,
-    PathSegment,
-    PathShape,
-    Point2D,
-    PolygonShape,
-    RectShape,
-    Shape,
-    ShapeFrame,
-    ShapeType,
-    SymbolShape,
-    TextShape,
-    Transform,
-    Artboard,
     Border,
     BorderPosition,
     BorderSideSetting,
     BorderStyle,
     Color,
     CornerType,
+    CurveMode,
+    CurvePoint,
     Fill,
+    FillRule,
     FillType,
     Gradient,
     GradientType,
+    GroupShape,
+    ImageShape,
+    makeShapeTransform2By1,
+    OvalShape, OverrideType,
     Page,
+    PathSegment,
+    PathShape,
+    Point2D,
+    PolygonShape,
+    RectShape,
     Shadow,
     ShadowPosition,
+    Shape,
+    ShapeFrame,
     ShapeSize,
+    ShapeType,
     SideType,
     Stop,
     Style,
     SymbolRefShape,
+    SymbolShape,
+    SymbolUnionShape,
     Text,
-    TextBehaviour, SymbolUnionShape,
+    TextBehaviour,
+    TextShape,
+    Transform,
+    Variable,
+    VariableType,
 } from "../../../data";
 import {uuid} from "../../../basic/uuid";
 import {IJSON, ImportFun, LoadContext} from "./basic";
@@ -46,10 +50,17 @@ import * as shapeCreator from "../../../editor/creator";
 import * as types from "../../../data/typesdefine";
 import {importText} from "../sketch/textio";
 import {float_accuracy} from "../../../basic/consts";
-import {makeShapeTransform2By1} from "../../../data";
 import {ColVector3D} from "../../../basic/matrix2";
 import {Transform as Transform2} from "../../../basic/transform";
 import {getPolygonPoints, getPolygonVertices} from "../../../editor/utils/path";
+
+function toStrId(id?: {
+    localID: string,
+    sessionID: string,
+}) {
+    if (!id) return '';
+    return [id.localID, id.sessionID].join(',');
+}
 
 function importColor(color: IJSON, opacity: number = 1) {
     return new Color(color.a * opacity, Math.round(color.r * 255), Math.round(color.g * 255), Math.round(color.b * 255));
@@ -270,7 +281,50 @@ function importShapeFrame(data: IJSON) {
     }
 }
 
-export function importPage(ctx: LoadContext, data: IJSON, f: ImportFun): Page {
+function importComponentPropRefs(data: IJSON, shape: Shape, rawVariables: Map<string, IJSON>, variables: BasicMap<string, Variable>) {
+    const componentPropRefs = data.componentPropRefs;
+    if (!Array.isArray(componentPropRefs)) return;
+
+    function getVarbinds() {
+        let varbinds = shape.varbinds;
+        if (!varbinds) varbinds = shape.varbinds = new BasicMap();
+        return varbinds;
+    }
+
+    function getParentPropDef(rawVariable?: IJSON) {
+        if (!rawVariable) return;
+        let res = rawVariable;
+        while (res.parentPropDefId) {
+            const next = rawVariables.get(toStrId(res.parentPropDefId));
+            if (!next) return;
+            res = next;
+        }
+        return res;
+    }
+
+    for (const componentPropRef of componentPropRefs) {
+        const defId = toStrId(componentPropRef.defID);
+        const componentPropNodeField = componentPropRef.componentPropNodeField;
+        const rawVariable = getParentPropDef(rawVariables.get(defId));
+        const variable = rawVariable?.kcVariable;
+        if (!variable) continue;
+        const varId = variable.id;
+
+        if (componentPropNodeField === 'VISIBLE') {
+            const varbinds = getVarbinds();
+            varbinds.set(OverrideType.Visible, varId)
+        } else if (componentPropNodeField === 'OVERRIDDEN_SYMBOL_ID') {
+            const varbinds = getVarbinds();
+            varbinds.set(OverrideType.SymbolID, varId)
+        }
+    }
+}
+
+function importShapeProperty(data: IJSON, shape: Shape, rawVariables: Map<string, IJSON>, variables: BasicMap<string, Variable>) {
+    importComponentPropRefs(data, shape, rawVariables, variables);
+}
+
+export function importPage(ctx: LoadContext, data: IJSON, f: ImportFun, nodeChangesMap: Map<string, IJSON>): Page {
     const visible = data.visible;
     const frame = importShapeFrame(data);
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
@@ -280,6 +334,8 @@ export function importPage(ctx: LoadContext, data: IJSON, f: ImportFun): Page {
     const shape = new Page(new BasicArray<number>(), data.id, data.name, ShapeType.Page, frame.trans, frame.size, style, new BasicArray<Shape>(...childs));
 
     shape.isVisible = visible;
+
+    importShapeProperty(data, shape, ctx.rawVariables, ctx.variables);
 
     return shape;
 }
@@ -398,10 +454,10 @@ function importSegments(data: IJSON): PathSegment[] {
     return segments1;
 }
 
-export function importPathShape(ctx: LoadContext, data: IJSON, f: ImportFun, index: number): PathShape {
+export function importPathShape(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>): PathShape {
     if (Array.isArray(data.fillPaints)) {
         const imageInfo = data.fillPaints.find(item => item.type === 'IMAGE');
-        if (imageInfo?.image?.hash instanceof Uint8Array) return importImageShape(ctx, data, f, index);
+        if (imageInfo?.image?.hash instanceof Uint8Array) return importImageShape(ctx, data, f, index, nodeChangesMap);
     }
 
     const frame = importShapeFrame(data);
@@ -428,10 +484,12 @@ export function importPathShape(ctx: LoadContext, data: IJSON, f: ImportFun, ind
     shape.isVisible = visible;
     shape.style = style;
 
+    importShapeProperty(data, shape, ctx.rawVariables, ctx.variables);
+
     return shape;
 }
 
-export function importPolygon(ctx: LoadContext, data: IJSON, f: ImportFun, index: number): PathShape {
+export function importPolygon(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>): PathShape {
     const frame = importShapeFrame(data);
     const visible = data.visible;
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
@@ -448,10 +506,12 @@ export function importPolygon(ctx: LoadContext, data: IJSON, f: ImportFun, index
     shape.isVisible = visible;
     shape.style = style;
 
+    importShapeProperty(data, shape, ctx.rawVariables, ctx.variables);
+
     return shape;
 }
 
-export function importLine(ctx: LoadContext, data: IJSON, f: ImportFun, index: number): PathShape {
+export function importLine(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>): PathShape {
     const frame = importShapeFrame(data);
     const visible = data.visible;
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
@@ -470,10 +530,12 @@ export function importLine(ctx: LoadContext, data: IJSON, f: ImportFun, index: n
     shape.isVisible = visible;
     shape.style = style;
 
+    importShapeProperty(data, shape, ctx.rawVariables, ctx.variables);
+
     return shape;
 }
 
-export function importEllipse(ctx: LoadContext, data: IJSON, f: ImportFun, index: number): OvalShape {
+export function importEllipse(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>): OvalShape {
     const frame = importShapeFrame(data);
     const visible = data.visible;
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
@@ -484,12 +546,14 @@ export function importEllipse(ctx: LoadContext, data: IJSON, f: ImportFun, index
     shape.isVisible = visible;
     shape.style = style;
 
+    importShapeProperty(data, shape, ctx.rawVariables, ctx.variables);
+
     return shape;
 }
 
-export function importGroup(ctx: LoadContext, data: IJSON, f: ImportFun, index: number): GroupShape {
+export function importGroup(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>): GroupShape {
     if (!data.resizeToFit) {
-        return importArtboard(ctx, data, f, index);
+        return importArtboard(ctx, data, f, index, nodeChangesMap);
     }
 
     const frame = importShapeFrame(data);
@@ -502,10 +566,12 @@ export function importGroup(ctx: LoadContext, data: IJSON, f: ImportFun, index: 
     const shape = new GroupShape(new BasicArray(), id, data.name, types.ShapeType.Group, frame.trans, frame.size, style, new BasicArray<Shape>(...childs))
     shape.isVisible = visible;
 
+    importShapeProperty(data, shape, ctx.rawVariables, ctx.variables);
+
     return shape;
 }
 
-export function importImageShape(ctx: LoadContext, data: IJSON, f: ImportFun, index: number): ImageShape {
+export function importImageShape(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>): ImageShape {
     const frame = importShapeFrame(data);
     const visible = data.visible;
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
@@ -532,12 +598,14 @@ export function importImageShape(ctx: LoadContext, data: IJSON, f: ImportFun, in
     shape.isVisible = visible;
     shape.style = style;
 
+    importShapeProperty(data, shape, ctx.rawVariables, ctx.variables);
+
     return shape;
 }
 
-export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun, index: number): Artboard {
+export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>): Artboard {
     if (data.isStateGroup) {
-        return importSymbolUnion(ctx, data, f, index);
+        return importSymbolUnion(ctx, data, f, index, nodeChangesMap);
     }
 
     const frame = importShapeFrame(data);
@@ -550,10 +618,12 @@ export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun, inde
     const shape = new Artboard([index] as BasicArray<number>, id, data.name, ShapeType.Artboard, frame.trans, frame.size, style, new BasicArray<Shape>(...childs));
     shape.isVisible = visible;
 
+    importShapeProperty(data, shape, ctx.rawVariables, ctx.variables);
+
     return shape;
 }
 
-export function importTextShape(ctx: LoadContext, data: IJSON, f: ImportFun, index: number): TextShape {
+export function importTextShape(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>): TextShape {
     const frame = importShapeFrame(data);
     const visible = data.visible;
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
@@ -568,19 +638,87 @@ export function importTextShape(ctx: LoadContext, data: IJSON, f: ImportFun, ind
     const shape = new TextShape([index] as BasicArray<number>, id, data.name, ShapeType.Text, frame.trans, frame.size, style, text);
     shape.isVisible = visible;
 
+    importShapeProperty(data, shape, ctx.rawVariables, ctx.variables);
+
     return shape;
 }
 
-export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun, index: number): SymbolShape {
+function importVariables(rawVariables: Map<string, IJSON>, variables: BasicMap<string, Variable>, data: IJSON, nodeChangesMap: Map<string, IJSON>)
+    : [Map<string, IJSON>, BasicMap<string, Variable>] {
+
+    const componentPropDefs = data.componentPropDefs;
+
+    const rawVariables1 = new Map<string, IJSON>();
+    const variables1 = new BasicMap<string, Variable>();
+
+    if (componentPropDefs) for (const componentPropDef of componentPropDefs) {
+        let type = componentPropDef.type;
+        const rawVarId = toStrId(componentPropDef.id);
+        let varName = componentPropDef.name;
+        const varId = uuid();
+        let rawVarValue = componentPropDef.varValue;
+
+        rawVariables.set(rawVarId, componentPropDef);
+        rawVariables1.set(rawVarId, componentPropDef);
+
+        const parentPropDefId = toStrId(componentPropDef.parentPropDefId);
+        if (parentPropDefId) {
+            const rawParentPropDef = rawVariables.get(parentPropDefId);
+            if (rawParentPropDef) {
+                componentPropDef.rawParentPropDef = rawParentPropDef;
+                type = rawParentPropDef.type;
+                varName = rawParentPropDef.name;
+                rawVarValue = rawParentPropDef.varValue;
+            }
+        }
+
+        let varType, varValue;
+        if (type === 'BOOL') {
+            varType = VariableType.Visible;
+            varValue = rawVarValue.value.boolValue;
+        } else if (type === 'INSTANCE_SWAP') {
+            varType = VariableType.SymbolRef;
+            const symbolId = toStrId(rawVarValue.value.symbolIdValue.guid);
+            const symbol = nodeChangesMap.get(symbolId);
+            varValue = symbol?.kcId;
+        } else {
+            continue;
+        }
+
+        const variable = new Variable(varId, varType, varName, varValue);
+        componentPropDef.kcVariable = variable;
+        variables.set(varId, variable);
+        variables1.set(varId, variable);
+    }
+
+    const stateGroupPropertyValueOrders = data.stateGroupPropertyValueOrders;
+    if (Array.isArray(stateGroupPropertyValueOrders)) for (const stateGroupPropertyValueOrder of stateGroupPropertyValueOrders) {
+        const property = stateGroupPropertyValueOrder.property;
+        const values = stateGroupPropertyValueOrder.values;
+        const varId = uuid();
+        const variable = new Variable(varId, VariableType.Status, property, '');
+        variables.set(varId, variable);
+        variables1.set(varId, variable);
+        stateGroupPropertyValueOrder.kcVariable = variable;
+    }
+
+    return [rawVariables1, variables1];
+}
+
+export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>): SymbolShape {
     const frame = importShapeFrame(data);
     const visible = data.visible;
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
     importStyle(style, data);
     const id = data.kcId || uuid();
 
+    const variablesRes = importVariables(ctx.rawVariables, ctx.variables, data, nodeChangesMap);
+
     const childs: Shape[] = (data.childs as IJSON[] || []).map((d: IJSON, i: number) => f(ctx, d, i)).filter(item => item) as Shape[];
-    const shape = new SymbolShape([index] as BasicArray<number>, id, data.name, ShapeType.Symbol, frame.trans, frame.size, style, new BasicArray<Shape>(...childs), new BasicMap());
+    const shape = new SymbolShape([index] as BasicArray<number>, id, data.name, ShapeType.Symbol, frame.trans, frame.size, style, new BasicArray<Shape>(...childs), variablesRes[1]);
     shape.isVisible = visible;
+
+    importShapeProperty(data, shape, ctx.rawVariables, ctx.variables);
 
     return shape;
 }
@@ -592,26 +730,56 @@ export function importSymbolRef(ctx: LoadContext, data: IJSON, f: ImportFun, ind
     importStyle(style, data);
     const id = data.kcId || uuid();
 
-    const symbolId = [data.symbolData.symbolID.localID, data.symbolData.symbolID.sessionID].join(',');
+    const variablesRes = importVariables(ctx.rawVariables, ctx.variables, data, nodeChangesMap);
+
+    const symbolId = toStrId(data.symbolData.symbolID);
     const symbol = nodeChangesMap.get(symbolId);
     const symbolRawID = symbol?.kcId;
 
-    const shape = new SymbolRefShape([index] as BasicArray<number>, id, data.name, ShapeType.SymbolRef, frame.trans, frame.size, style, symbolRawID, new BasicMap());
+    const shape = new SymbolRefShape([index] as BasicArray<number>, id, data.name, ShapeType.SymbolRef, frame.trans, frame.size, style, symbolRawID, variablesRes[1]);
     shape.isVisible = visible;
+
+    importShapeProperty(data, shape, ctx.rawVariables, ctx.variables);
 
     return shape;
 }
 
-export function importSymbolUnion(ctx: LoadContext, data: IJSON, f: ImportFun, index: number): SymbolUnionShape {
+export function importSymbolUnion(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>): SymbolUnionShape {
     const frame = importShapeFrame(data);
     const visible = data.visible;
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
     importStyle(style, data);
     const id = data.kcId || uuid();
 
+    const variablesRes = importVariables(ctx.rawVariables, ctx.variables, data, nodeChangesMap);
+
     const childs: Shape[] = (data.childs as IJSON[] || []).map((d: IJSON, i: number) => f(ctx, d, i)).filter(item => item) as Shape[];
-    const shape = new SymbolUnionShape([index] as BasicArray<number>, id, data.name, ShapeType.Symbol, frame.trans, frame.size, style, new BasicArray<Shape>(...childs), new BasicMap());
+
+    const stateGroupPropertyValueOrders = data.stateGroupPropertyValueOrders;
+    if (Array.isArray(stateGroupPropertyValueOrders) && stateGroupPropertyValueOrders.length > 0) for (const child of childs) {
+        const name = child.name;
+        let symtags = (child as SymbolShape).symtags;
+        if (!symtags) {
+            symtags = new BasicMap<string, string>();
+            (child as SymbolShape).symtags = symtags;
+        }
+
+        for (const stateGroupPropertyValueOrder of stateGroupPropertyValueOrders) {
+            const property = stateGroupPropertyValueOrder.property;
+            const values = stateGroupPropertyValueOrder.values;
+            const variable = stateGroupPropertyValueOrder.kcVariable;
+            if (!variable) continue;
+            const varId = variable.id;
+            const regex = new RegExp(`(?:^|,\\s*)${property}=([^,]+)`);
+            const match = name.match(regex);
+            if (match) symtags.set(varId, match[1].trim());
+        }
+    }
+
+    const shape = new SymbolUnionShape([index] as BasicArray<number>, id, data.name, ShapeType.SymbolUnion, frame.trans, frame.size, style, new BasicArray<Shape>(...childs), variablesRes[1]);
     shape.isVisible = visible;
+
+    importShapeProperty(data, shape, ctx.rawVariables, ctx.variables);
 
     return shape;
 }
