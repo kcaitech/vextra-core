@@ -16,6 +16,7 @@ import { innerShadowId, renderBorders } from "../render";
 import { objectId } from "../basic/objectid";
 import { BlurType, PathSegment } from "../data/typesdefine";
 import { render as renderLineBorders } from "../render/line_borders"
+import { PageView } from "./page";
 
 export class PathShapeView extends ShapeView {
     m_pathsegs?: PathSegment[];
@@ -50,9 +51,9 @@ export class PathShapeView extends ShapeView {
     render(): number {
         if (!this.checkAndResetDirty()) return this.m_render_version;
 
-        const mb = this.masked;
-        if (mb) {
-            mb.notify('rerender-mask');
+        const masked = this.masked;
+        if (masked) {
+            (this.getPage() as PageView).getView(masked.id)?.render();
             this.reset("g");
             return ++this.m_render_version;
         }

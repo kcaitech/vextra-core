@@ -5,6 +5,7 @@ import { objectId } from "../basic/objectid";
 import { render as clippathR } from "../render/clippath"
 import { Artboard } from "../data";
 import { BlurType, CornerRadius, Page } from "../data";
+import { PageView } from "./page";
 
 
 export class ArtboradView extends GroupShapeView {
@@ -77,9 +78,9 @@ export class ArtboradView extends GroupShapeView {
     render(): number {
         if (!this.checkAndResetDirty()) return this.m_render_version;
 
-        const mb = this.masked;
-        if (mb) {
-            mb.notify('rerender-mask');
+        const masked = this.masked;
+        if (masked) {
+            (this.getPage() as PageView).getView(masked.id)?.render();
             this.reset("g");
             return ++this.m_render_version;
         }

@@ -38,6 +38,7 @@ import { Transform as Transform2 } from "../basic/transform";
 import { GroupShapeView } from "./groupshape";
 import { importBorder, importFill } from "../data/baseimport";
 import { exportBorder, exportFill } from "../data/baseexport";
+import { PageView } from "./page";
 
 export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     return (
@@ -728,7 +729,7 @@ export class ShapeView extends DataView {
 
         const masked = this.masked;
         if (masked) {
-            masked.notify('rerender-mask');
+            (this.getPage() as PageView).getView(masked.id)?.render();
             this.reset("g");
             return ++this.m_render_version;
         }
