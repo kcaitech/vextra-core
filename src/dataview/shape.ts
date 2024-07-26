@@ -31,6 +31,7 @@ import { fixConstrainFrame } from "../data/constrain";
 import { BlurType, BorderPosition, MarkerType } from "../data/typesdefine";
 import { makeShapeTransform2By1, makeShapeTransform1By2 } from "../data/shape_transform_util";
 import { Transform as Transform2 } from "../basic/transform";
+import { float_accuracy } from "../basic/consts";
 
 export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     return (
@@ -481,8 +482,8 @@ export class ShapeView extends DataView {
     }
 
     isNoTransform() {
-        const t = this.transform;
-        return t.m00 == 1 && t.m01 === 0 && t.m10 === 0 && t.m11 === 1;
+        const { m00, m01, m10, m11 } = this.transform;
+        return Math.abs(m00 - 1) < float_accuracy && Math.abs(m01) < float_accuracy && Math.abs(m10) < float_accuracy && Math.abs(m11 - 1) < float_accuracy;
     }
 
     matrix2Parent(matrix?: Matrix) {

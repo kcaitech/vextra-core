@@ -1,4 +1,4 @@
-import { BoolOp, BoolShape, Border, BorderPosition, Path, PathShape, ShapeFrame, ShapeSize, parsePath } from "../data/classes";
+import { BoolOp, BoolShape, Border, BorderPosition, Path, PathShape, ShapeFrame, parsePath } from "../data/classes";
 import { ShapeView, updateFrame } from "./shape";
 import { IPalPath, gPal } from "../basic/pal";
 import { TextShapeView } from "./textshape";
@@ -185,7 +185,7 @@ function border2path(shape: ShapeView, borders: Border[]): Path {
 function boundsFrame(shape: ShapeView): ShapeFrame {
     let minx = 0, maxx = 0, miny = 0, maxy = 0;
     shape.childs.forEach((c, i) => {
-        const cf = c.frame;
+        const cf = c._p_frame;
         if (i === 0) {
             minx = cf.x;
             maxx = cf.x + cf.width;
