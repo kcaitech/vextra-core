@@ -173,7 +173,6 @@ function intersect_skewrect_group_rect(view: GroupShapeView, skewrect: { x: numb
     return deep(view, skewrect);
 
     function deep(_view: GroupShapeView, skewrect: { x: number, y: number }[]) {
-
         const children = _view.childs;
 
         const bounds = skewrect_bounds(skewrect);
@@ -196,8 +195,8 @@ function unable_area(view: ShapeView) {
     return view.isLocked || !view.isVisible;
 }
 
-function is_fixed_board(view: ShapeView) {
-    return view.type === ShapeType.Artboard && !!view.childs.length;
+function is_fixed_board(view: ShapeView, level: number) {
+    return view.type === ShapeType.Artboard && !!view.childs.length && level === 1;
 }
 
 function __find(view: ShapeView, skewrect: {
@@ -219,7 +218,6 @@ function _find(view: ShapeView, rect: Rect, level: number, finder: (view: ShapeV
     x: number,
     y: number
 }[]) => boolean) {
-
     if (!intersect_rect(rect, view.outerFrame)) return;
     const skewrect: { x: number, y: number }[] = [
         { x: rect.x, y: rect.y },
@@ -227,7 +225,6 @@ function _find(view: ShapeView, rect: Rect, level: number, finder: (view: ShapeV
         { x: rect.x + rect.width, y: rect.y + rect.height },
         { x: rect.x, y: rect.y + rect.height }]
     if (!finder(view, level, skewrect)) return;
-
     view.childs.forEach(c => {
         if (!intersect_rect(rect, c._p_outerFrame)) return;
         const transfrom = c.transform.inverse;
@@ -243,30 +240,33 @@ function _find(view: ShapeView, rect: Rect, level: number, finder: (view: ShapeV
 // }
 
 export function find4select(view: ShapeView, rect: Rect, alt: boolean) {
-    // console.log(`{x: ${rect.x}, y: ${rect.y}, width: ${rect.width}, height: ${rect.height}}`)
-
     const ret: ShapeView[] = [];
 
     const alt_finder = (view: ShapeView, level: number, skewrect: { x: number, y: number }[]) => {
         if (unable_area(view)) return false;
         if (level === 0) return true;
-        if (contains_skewrect_rect(skewrect, view.frame)) {
-            ret.push(view);
-        }
+        if (is_fixed_board(view, level)) {
+            if (contains_skewrect_rect(skewrect, view.frame)) {
+                ret.push(view);
+                return false;
+            } else {
+                return intersect_skewrect_rect(skewrect, view.visibleFrame);
+            }
+        } else if (contains_skewrect_rect(skewrect, view.frame)) ret.push(view);
         return false;
     }
 
     const finder = (view: ShapeView, level: number, skewrect: { x: number, y: number }[]) => {
         if (unable_area(view)) return false;
         if (level === 0) return true;
-        if (is_fixed_board(view)) {
+        if (is_fixed_board(view, level)) {
             if (contains_skewrect_rect(skewrect, view.frame)) {
                 ret.push(view);
                 return false;
+            } else {
+                return intersect_skewrect_rect(skewrect, view.visibleFrame);
             }
-            return level <= 1 && intersect_skewrect_rect(skewrect, view.visibleFrame);
-        }
-        if (view.type === ShapeType.Group) {
+        } else if (view.type === ShapeType.Group) {
             if (intersect_skewrect_group_rect(view as GroupShapeView, skewrect)) ret.push(view);
         } else if (intersect_skewrect_rect(skewrect, view.visibleFrame)) ret.push(view);
         return false;
