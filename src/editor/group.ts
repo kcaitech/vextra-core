@@ -120,15 +120,12 @@ export function group<T extends GroupShape>(document: Document, page: Page, shap
         const idx = p.indexOfChild(s);
         api.shapeMove(page, p, idx, gshape, 0); // 层级低的放前面
 
-        if (p.childs.length <= 0) {
-            deleteEmptyGroupShape(document, page, p, api)
-        }
+        if (p.childs.length <= 0) deleteEmptyGroupShape(document, page, p, api);
     }
 
     const inverse2 = makeShapeTransform2By1(gshape.matrix2Root()).getInverse();
     for (let i = 0, len = shapes.length; i < len; i++) {
-        const c = shapes[i]
-        api.shapeModifyTransform(page, c, makeShapeTransform1By2(shapes2rootTransform[i].addTransform(inverse2)));
+        api.shapeModifyTransform(page, shapes[i], makeShapeTransform1By2(shapes2rootTransform[i].addTransform(inverse2)));
     }
 
     return gshape;
@@ -147,16 +144,6 @@ export function ungroup(document: Document, page: Page, shape: GroupShape, api: 
         m1.multiAtLeft(m);
         const target = m1.computeCoord(0, 0);
 
-        if (shape.rotation) {
-            // api.shapeModifyRotate(page, c, (c.rotation || 0) + shape.rotation)
-        }
-        // todo flip
-        // if (shape.isFlippedHorizontal) {
-        //     api.shapeModifyHFlip(page, c, !c.isFlippedHorizontal)
-        // }
-        // if (shape.isFlippedVertical) {
-        //     api.shapeModifyVFlip(page, c, !c.isFlippedVertical)
-        // }
         const m2 = c.matrix2Parent();
         const cur = m2.computeCoord(0, 0);
 
