@@ -132,7 +132,7 @@ function boundsFrame(shape: ShapeView): ShapeFrame {
     return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
 }
 
-export function render2path(shape: ShapeView): Path {
+export function render2path(shape: ShapeView, defaultOp = BoolOp.None): Path {
     const shapeIsGroup = shape instanceof GroupShapeView;
     let fixedRadius: number | undefined;
     if (shapeIsGroup) fixedRadius = shape.fixedRadius;
@@ -193,7 +193,7 @@ export function render2path(shape: ShapeView): Path {
             const bounds = path1.calcBounds();
             frame1 = new ShapeFrame(bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
         }
-        const pathop = child1.m_data.boolOp ?? BoolOp.None;
+        const pathop = child1.m_data.boolOp ?? defaultOp;
         const palpath1 = gPal.makePalPath(path1.toString());
 
         if (pathop === BoolOp.None) {
