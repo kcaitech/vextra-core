@@ -1074,7 +1074,7 @@ export class PageEditor {
             style.fills.push(newSolidColorFill());
         }
 
-        const path = render2path(shape);
+        const path = render2path(shape, BoolOp.Union);
 
         const copyStyle = findUsableFillStyle(shape);
         const style2: Style = this.cloneStyle(copyStyle);
