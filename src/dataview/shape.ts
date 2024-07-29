@@ -32,6 +32,7 @@ import { BlurType, BorderPosition, MarkerType } from "../data/typesdefine";
 import { makeShapeTransform2By1, makeShapeTransform1By2 } from "../data/shape_transform_util";
 import { Transform as Transform2 } from "../basic/transform";
 import { float_accuracy } from "../basic/consts";
+import { ColVector3D } from "../basic/matrix2";
 
 export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     return (
@@ -281,15 +282,17 @@ export class ShapeView extends DataView {
     get frame() {
         return this.m_frame;
     }
+
     /**
      * contentFrame+边框，对象实际显示的位置大小
      */
     get visibleFrame() {
         return this.m_frame;
     }
+
     /**
      * 包含被裁剪的对象
-    */
+     */
     get outerFrame() {
         return this.m_outerFrame;
     }
@@ -315,7 +318,7 @@ export class ShapeView extends DataView {
     }
 
     /**
-     * @returns 
+     * @returns
      */
     boundingBox(): ShapeFrame {
         if (this.isNoTransform()) {
@@ -557,8 +560,7 @@ export class ShapeView extends DataView {
         borders.forEach(b => {
             if (b.position === BorderPosition.Outer) {
                 maxborder = Math.max(b.thickness, maxborder);
-            }
-            else if (b.position !== BorderPosition.Center) {
+            } else if (b.position !== BorderPosition.Center) {
                 maxborder = Math.max(b.thickness / 2, maxborder);
             }
         })
