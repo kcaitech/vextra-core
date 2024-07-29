@@ -46,12 +46,28 @@ export class SymbolRefView extends ShapeView {
     }
 
     getRefId(): string {
-        const swap_ref_id = localStorage.getItem('refId');
+        const swap_ref_id = this.getLsRefId();
         if (swap_ref_id) {
-            return swap_ref_id;
+            return swap_ref_id as string;
         }
         const v = this._findOV(OverrideType.SymbolID, VariableType.SymbolRef);
         return v ? v.value : (this.m_data as SymbolRefShape).refId;
+    }
+
+    getLsRefId(): boolean | string {
+        const pathname = window.location.pathname;
+        const jsonString = sessionStorage.getItem('refId');
+        if (pathname.includes("prototype") && jsonString) {
+            const refIdArray = JSON.parse(jsonString);
+            const maprefIdArray = new Map(refIdArray) as Map<string, string>;
+            if (maprefIdArray.has(this.id)) {
+                return maprefIdArray.get(this.id) || false;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
     }
 
     // private m_refId: string | undefined;
