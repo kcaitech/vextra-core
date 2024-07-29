@@ -170,25 +170,21 @@ function intersect_skewrect_rect(skewrect: { x: number, y: number }[], rect: Rec
 }
 
 function intersect_skewrect_group_rect(view: GroupShapeView, skewrect: { x: number, y: number }[]) {
-    return deep(view, skewrect);
+    const children = view.childs;
 
-    function deep(_view: GroupShapeView, skewrect: { x: number, y: number }[]) {
-        const children = _view.childs;
-
-        const bounds = skewrect_bounds(skewrect);
-        for (let i = 0; i < children.length; i++) {
-            const child = children[i];
-            if (!intersect_rect(bounds, child._p_outerFrame)) continue;
-            const transfrom = child.transform.inverse;
-            const cskewrect = skewrect.map((p) => transfrom.computeCoord(p));
-            if (child.type === ShapeType.Group) {
-                if (deep(child as GroupShapeView, cskewrect)) return true;
-            } else if (intersect_skewrect_rect(cskewrect, child.visibleFrame)) {
-                return true;
-            }
+    const bounds = skewrect_bounds(skewrect);
+    for (let i = 0; i < children.length; i++) {
+        const child = children[i];
+        if (!intersect_rect(bounds, child._p_outerFrame)) continue;
+        const transfrom = child.transform.inverse;
+        const cskewrect = skewrect.map((p) => transfrom.computeCoord(p));
+        if (child.type === ShapeType.Group) {
+            if (intersect_skewrect_group_rect(child as GroupShapeView, cskewrect)) return true;
+        } else if (intersect_skewrect_rect(cskewrect, child.visibleFrame)) {
+            return true;
         }
-        return false;
     }
+    return false;
 }
 
 function unable_area(view: ShapeView) {
