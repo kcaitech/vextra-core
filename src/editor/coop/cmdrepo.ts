@@ -867,7 +867,11 @@ class CmdSync {
             const repotree = this.repotrees.get(_blockId);
             if (!repotree) return; // 无需更新
 
-            repotree.roll2Version(this.dataVer, SNumber.MAX_SAFE_INTEGER)
+            try {
+                repotree.roll2Version(this.dataVer, SNumber.MAX_SAFE_INTEGER)
+            } catch(e) {
+                console.error(e)
+            }
         }
     }
 

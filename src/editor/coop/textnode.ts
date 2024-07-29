@@ -541,7 +541,7 @@ export class TextRepoNode extends RepoNode {
         ops[0].cmd.ops.push(...record);
         this.commit(record.map(op => ({ cmd: ops[0].cmd, op })))
     }
-    roll2Version(baseVer: string, version: string) {
+    roll2Version(baseVer: string, version: string): Map<string, string> | undefined {
         if (SNumber.comp(baseVer, version) > 0) throw new Error();
         // search and apply
         const ops = this.ops.concat(...this.localops);
@@ -558,7 +558,12 @@ export class TextRepoNode extends RepoNode {
         if (verIdx < 0) verIdx = ops.length;
         for (let i = baseIdx; i < verIdx; i++) {
             const op = ops[i];
-            const record = apply(this.document, target, op.op as ArrayOp);
+            let record;
+            try {
+                record = apply(this.document, target, op.op as ArrayOp);
+            } catch (e) {
+                console.error(e)
+            }
             if (record) {
                 // replace op
                 const idx = op.cmd.ops.indexOf(op.op);

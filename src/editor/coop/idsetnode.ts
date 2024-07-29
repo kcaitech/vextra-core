@@ -254,7 +254,7 @@ export class CrdtIdRepoNode extends RepoNode {
             ops[0].cmd.ops.splice(idx, 1, record);
         }
     }
-    roll2Version(baseVer: string, version: string) {
+    roll2Version(baseVer: string, version: string): Map<string, string> | undefined {
         if (SNumber.comp(baseVer, version) > 0) throw new Error();
         // search and apply
         const ops = this.ops.concat(...this.localops);
@@ -272,15 +272,20 @@ export class CrdtIdRepoNode extends RepoNode {
 
         // if (baseIdx < 0) baseIdx = 0;
         if (verIdx < 0) verIdx = ops.length;
+
+        let _version: string | undefined;
+        let ret;
         if (verIdx === 0) {
-            const op = ops[verIdx].op as IdOpRecord;
+            const item = ops[verIdx];
+            _version = item.cmd.version;
+            const op = item.op as IdOpRecord;
             let origin;
             if (this.savedOrigin) {
                 origin = this.origin;
             } else {
                 origin = op.origin; // 没有save的话，那么op只能是本地op
             }
-            apply(this.document,
+            ret = apply(this.document,
                 target, {
                 data: origin,
                 id: op.id,
@@ -290,7 +295,13 @@ export class CrdtIdRepoNode extends RepoNode {
         } else {
             const op = ops[verIdx - 1];
             if (!op) throw new Error("not found");
-            apply(this.document, target, op.op as IdOp);
+            _version = op.cmd.version;
+            ret = apply(this.document, target, op.op as IdOp);
+        }
+        if (_version && ret && (typeof ret.data2 === 'object') && ret.data2.id) {
+            const updateVers = new Map<string, string>();
+            updateVers.set(ret.data2.id, _version)
+            return updateVers;
         }
     }
 
