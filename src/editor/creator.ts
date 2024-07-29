@@ -1,7 +1,7 @@
 import { v4 as uuid } from "uuid";
-import { Page } from "../data/page";
-import { Artboard } from "../data/artboard";
-import { Document, PageListItem } from "../data/document";
+import { Page } from "../data";
+import { Artboard } from "../data";
+import { Document, PageListItem } from "../data";
 import {
     GroupShape,
     LineShape,
@@ -19,16 +19,16 @@ import {
     PolygonShape,
     StarShape,
     ShapeSize,
-    Transform
-} from "../data/shape";
-import { ContactShape } from "../data/contact"
+    Transform,
+    ContactShape
+} from "../data";
 import * as types from "../data/typesdefine"
 import {
     importArtboard,
     importGroupShape,
     importPage,
     importText,
-    importShapeFrame, importTextShape, importBoolShape
+    importTextShape, importBoolShape
 } from "../data/baseimport";
 import template_group_shape from "./template/group-shape.json";
 import template_bool_shape from "./template/bool-shape.json";
@@ -55,22 +55,31 @@ import {
     BorderStyle,
     SymbolRefShape,
     TextAttr,
-} from "../data/classes";
-import { BasicArray, BasicMap } from "../data/basic";
-import { Repository } from "../data/transact";
-import { Comment } from "../data/comment";
-import { ResourceMgr } from "../data/basic";
-import { TableShape } from "../data/table";
+} from "../data";
+import { BasicArray, BasicMap } from "../data";
+import { Repository } from "../data";
+import { Comment } from "../data";
+import { ResourceMgr } from "../data";
+import { TableShape } from "../data";
 
 export { newText, newText2 } from "../data/textutils";
-// import i18n from '../../i18n' // data不能引用外面工程的内容
-import { BorderSideSetting, ContactForm, CrdtNumber, ExportFileFormat, ExportFormat, ExportFormatNameingScheme, ExportOptions, ExportVisibleScaleType, SideType } from "../data/baseclasses";
+import {
+    BorderSideSetting,
+    ContactForm,
+    CrdtNumber,
+    ExportFileFormat,
+    ExportFormat,
+    ExportFormatNameingScheme,
+    ExportOptions,
+    ExportVisibleScaleType,
+    SideType
+} from "../data";
 import { Matrix } from "../basic/matrix";
-import { ResizingConstraints2 } from "../data/consts";
+import { ResizingConstraints2 } from "../data";
 import { SymbolMgr } from "../data/symbolmgr";
 import { newText } from "../data/textutils";
 import { getPolygonPoints, getPolygonVertices } from "./utils/path";
-import { makeShapeTransform2By1, updateShapeTransform1By2 } from "../data/shape_transform_util";
+import { makeShapeTransform2By1, updateShapeTransform1By2 } from "../data";
 
 function _checkNum(x: number) {
     // check

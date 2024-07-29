@@ -220,9 +220,7 @@ export class CreatorApiCaller extends AsyncApiCaller {
                 this.api.addFillAt(this.page, shape, fill, 0);
             }
 
-            if (!shape || !shapes.length) {
-                return;
-            }
+            if (!shape || !shapes.length) return;
 
             const api = this.api;
             const page = this.page;
@@ -265,7 +263,6 @@ export class CreatorApiCaller extends AsyncApiCaller {
 
     commit() {
         if (this.__repo.isNeedCommit() && !this.exception) {
-
             if (this.shape instanceof LineShape) { // 线条的宽高最后根据两个点的位置计算
                 update_frame_by_points(this.api, this.page, this.shape, true);
             }
@@ -287,11 +284,8 @@ export class CreatorApiCaller extends AsyncApiCaller {
     private getCount(type: ShapeType) {
         let count = 1;
         this.page.shapes.forEach(v => {
-            if (v.type === type) {
-                count++;
-            }
+            if (v.type === type) count++;
         });
-
         return count;
     }
 
