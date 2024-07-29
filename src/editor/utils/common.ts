@@ -1,14 +1,12 @@
-import { expandTo, translate, translateTo } from "../../editor/frame";
-import { Page } from "../../data/page";
-import { GroupShape, PathShape, Shape, ShapeFrame } from "../../data/shape";
+import { expandTo, translateTo } from "../frame";
 import { Api } from "../coop/recordapi";
 import { is_straight, update_frame_by_points } from "./path";
-import { getHorizontalRadians } from "../../editor/page";
-import { Artboard } from "../../data/artboard";
+import { getHorizontalRadians } from "../page";
+import { Artboard, Document, GroupShape, PathShape, Shape, ShapeFrame, Page } from "../../data";
 import { Point2D } from "../../data/typesdefine";
 import { float_accuracy } from "../../basic/consts";
-import { Document } from "../../data/document";
 import { reLayoutBySizeChanged } from "../asyncApiHandler";
+import { adapt2Shape, ArtboradView } from "../../dataview";
 
 function equal_with_mean(a: number, b: number) {
     return Math.abs(a - b) < float_accuracy;
@@ -105,48 +103,45 @@ export function modify_shapes_height(api: Api, document: Document, page: Page, s
 /**
  * @description 裁剪容器空白区域(保留自身transform)
  */
-export function adapt_for_artboard(api: Api, page: Page, artboard: Artboard) {
-    const minimum_WH = 0.01;
+export function adapt_for_artboard(api: Api, page: Page, artboard: ArtboradView) {
+    const minimum_WH = 1;
     const children = artboard.childs;
-    if (!children.length) {
-        console.log('adapt_for_artboard: !children.length');
-        return;
-    }
-
+    if (!children.length) return console.log('adapt_for_artboard: !children.length');
 
     const m_artboard_to_root = artboard.matrix2Root();
 
     const f = artboard.size;
     const box = get_new_box();
 
-    if (no_need_to_adapt()) {
-        throw new Error("adapt_for_artboard: no_need_to_adapt");
-    }
+    if (no_need_to_adapt()) return console.log('invalid action');
 
     re_children_layout();
 
-    api.shapeModifyWH(page, artboard, Math.max(box.width, minimum_WH), Math.max(box.height, minimum_WH));
+    const a = adapt2Shape(artboard);
 
-    const artboard_xy = m_artboard_to_root.computeCoord2(box.x, box.y);
-    translateTo(api, page, artboard, artboard_xy.x, artboard_xy.y);
+    api.shapeModifyWH(page, a, Math.max(box.width, minimum_WH), Math.max(box.height, minimum_WH));
 
-    // utils
+    const artboard_xy = m_artboard_to_root.computeCoord3(box);
+    translateTo(api, page, a, artboard_xy.x, artboard_xy.y);
+
+    return true;
+
     function get_new_box() {
         const points: Point2D[] = [];
 
         children.forEach(c => {
-            const f = c.size;
-            const m2p = c.matrix2Parent();
-            points.push(
-                ...[
-                    { x: 0, y: 0 },
-                    { x: f.width, y: 0 },
-                    { x: f.width, y: f.height },
-                    { x: 0, y: f.height }
-                ]
-                    .map(i => m2p.computeCoord3(i))
-            )
-        })
+            const f = c.frame;
+            const m = c.matrix2Parent();
+            const r = f.x + f.width;
+            const b = f.y + f.height;
+
+            points.push(...[
+                { x: f.x, y: f.y },
+                { x: r, y: f.y },
+                { x: r, y: b },
+                { x: f.x, y: b }
+            ].map(i => m.computeCoord3(i)));
+        });
 
         const minx = points.reduce((pre, cur) => Math.min(pre, cur.x), points[0].x);
         const maxx = points.reduce((pre, cur) => Math.max(pre, cur.x), points[0].x);
@@ -165,9 +160,9 @@ export function adapt_for_artboard(api: Api, page: Page, artboard: Artboard) {
 
     function re_children_layout() {
         children.forEach(c => {
-            const f = c.frame;
-            api.shapeModifyX(page, c, f.x - box.x);
-            api.shapeModifyY(page, c, f.y - box.y);
-        })
+            const d = adapt2Shape(c);
+            api.shapeModifyX(page, d, c.transform.translateX - box.x);
+            api.shapeModifyY(page, d, c.transform.translateY - box.y);
+        });
     }
 }
