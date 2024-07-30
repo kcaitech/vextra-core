@@ -32,7 +32,6 @@ import { BlurType, BorderPosition, MarkerType } from "../data/typesdefine";
 import { makeShapeTransform2By1, makeShapeTransform1By2 } from "../data/shape_transform_util";
 import { Transform as Transform2 } from "../basic/transform";
 import { float_accuracy } from "../basic/consts";
-import { ColVector3D } from "../basic/matrix2";
 
 export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     return (
