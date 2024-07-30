@@ -451,10 +451,6 @@ export class Scaler extends AsyncApiCaller {
         return this.__repo.start('sync-scale')
     }
 
-    private afterShapeSizeChange() {
-
-    }
-
     execute(params: {
         shape: ShapeView;
         size: { width: number, height: number },
@@ -505,7 +501,6 @@ export class Scaler extends AsyncApiCaller {
                 }
             }
 
-            this.afterShapeSizeChange();
             this.updateView();
         } catch (error) {
             console.log('error:', error);
@@ -514,7 +509,6 @@ export class Scaler extends AsyncApiCaller {
     }
 
     commit() {
-        // this.afterShapeSizeChange();
         super.commit();
     }
 }
