@@ -3312,7 +3312,40 @@ export class PageEditor {
         try {
             const api = this.__repo.start('setPrototypeActionConnectionType');
             const __shape = adapt2Shape(shape);
+            const transitionType = shape.prototypeInterAction?.find(i => i.id === id)?.actions.transitionType
+            const old_nav = shape.prototypeInterAction?.find(i => i.id === id)?.actions.navigationType
             api.shapeModifyPrototypeActionConnNav(this.__page, __shape, id, conn, nav);
+
+            if (nav === PrototypeNavigationType.SCROLLTO || old_nav === PrototypeNavigationType.SCROLLTO) {
+                const arr = [PrototypeTransitionType.INSTANTTRANSITION, PrototypeTransitionType.DISSOLVE]
+                if (!transitionType) return
+                if (!arr.includes(transitionType)) {
+                    api.shapeModifyPrototypeActionTransitionType(this.__page, __shape, id, PrototypeTransitionType.INSTANTTRANSITION)
+                }
+                api.shapeModifyPrototypeActionTargetNodeID(this.__page, __shape, id, undefined)
+            }
+            if (nav === PrototypeNavigationType.SWAPSTATE || old_nav === PrototypeNavigationType.SWAPSTATE) {
+                const arr = [PrototypeTransitionType.INSTANTTRANSITION, PrototypeTransitionType.SCROLLANIMATE]
+                if (!transitionType) return
+                if (!arr.includes(transitionType)) {
+                    api.shapeModifyPrototypeActionTransitionType(this.__page, __shape, id, PrototypeTransitionType.INSTANTTRANSITION)
+                }
+                api.shapeModifyPrototypeActionTargetNodeID(this.__page, __shape, id, undefined)
+            }
+            if (nav === PrototypeNavigationType.OVERLAY || nav === PrototypeNavigationType.SWAP) {
+                const arr = [
+                    PrototypeTransitionType.INSTANTTRANSITION,
+                    PrototypeTransitionType.DISSOLVE,
+                    PrototypeTransitionType.MOVEFROMLEFT,
+                    PrototypeTransitionType.MOVEFROMRIGHT,
+                    PrototypeTransitionType.MOVEFROMTOP,
+                    PrototypeTransitionType.MOVEFROMBOTTOM
+                ]
+                if (!transitionType) return
+                if (!arr.includes(transitionType)) {
+                    api.shapeModifyPrototypeActionTransitionType(this.__page, __shape, id, PrototypeTransitionType.INSTANTTRANSITION)
+                }
+            }
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
@@ -3396,7 +3429,7 @@ export class PageEditor {
         }
     }
 
-    setPrototypeExtraScrollOffsetX(shape: ShapeView, id: string, value: number){
+    setPrototypeExtraScrollOffsetX(shape: ShapeView, id: string, value: number) {
         try {
             const api = this.__repo.start('setPrototypeExtraScrollOffsetX');
             const __shape = adapt2Shape(shape);
@@ -3406,8 +3439,8 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
-    
-    setPrototypeExtraScrollOffsetY(shape: ShapeView, id: string, value: number){
+
+    setPrototypeExtraScrollOffsetY(shape: ShapeView, id: string, value: number) {
         try {
             const api = this.__repo.start('setPrototypeExtraScrollOffsetY');
             const __shape = adapt2Shape(shape);
@@ -3418,33 +3451,33 @@ export class PageEditor {
         }
     }
 
-    setOverlayPositionType(shape: ShapeView,value:OverlayPositions){
+    setOverlayPositionType(shape: ShapeView, value: OverlayPositions) {
         try {
             const api = this.__repo.start('setOverlayPositionType');
             const __shape = adapt2Shape(shape);
-            api.shapeModifyOverlayPositionType(this.__page, __shape,value);
+            api.shapeModifyOverlayPositionType(this.__page, __shape, value);
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
         }
     }
 
-    setOverlayBackgroundInteraction(shape: ShapeView,value:OverlayBackgroundInteraction){
+    setOverlayBackgroundInteraction(shape: ShapeView, value: OverlayBackgroundInteraction) {
         try {
             const api = this.__repo.start('setOverlayBackgroundInteraction');
             const __shape = adapt2Shape(shape);
-            api.shapeModifyOverlayBackgroundInteraction(this.__page, __shape,value);
+            api.shapeModifyOverlayBackgroundInteraction(this.__page, __shape, value);
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
         }
     }
 
-    setOverlayBackgroundAppearance(shape: ShapeView,value?:OverlayBackgroundAppearance){
+    setOverlayBackgroundAppearance(shape: ShapeView, value?: OverlayBackgroundAppearance) {
         try {
             const api = this.__repo.start('setOverlayBackgroundAppearance');
             const __shape = adapt2Shape(shape);
-            api.shapeModifyOverlayBackgroundAppearance(this.__page, __shape,value);
+            api.shapeModifyOverlayBackgroundAppearance(this.__page, __shape, value);
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();

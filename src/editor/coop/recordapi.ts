@@ -544,7 +544,7 @@ export class Api {
         this.addOp(basicapi.crdtSetAttr(action, 'navigationType', nav))
     }
 
-    shapeModifyPrototypeActionTargetNodeID(page: Page, shape: Shape, id: string, value: string) {
+    shapeModifyPrototypeActionTargetNodeID(page: Page, shape: Shape, id: string, value: string | undefined) {
         checkShapeAtPage(page, shape)
         const prototypeInteractions = (shape as Artboard).prototypeInteractions;
         if (!prototypeInteractions) return;
