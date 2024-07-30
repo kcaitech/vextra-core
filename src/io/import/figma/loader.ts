@@ -1,5 +1,4 @@
 import {BasicArray, Document, Page, Shape, ShapeSize, ShapeType, Style, SymbolShape, Transform} from "../../../data";
-import {updatePageFrame} from "../common/basic";
 import {IJSON, LoadContext} from "./basic";
 import {
     importEllipse,
@@ -8,6 +7,7 @@ import {
     importPage,
     importPathShape,
     importPolygon,
+    importStar,
     importSymbol,
     importSymbolRef,
     importTextShape
@@ -76,7 +76,7 @@ export function startLoader(file: IJSON, pages: IJSON[], document: Document, nod
     __handler['TEXT'] = (ctx: LoadContext, data: IJSON, i: number) => importTextShape(ctx, data, importer, i, nodeChangesMap)
     __handler['ELLIPSE'] = (ctx: LoadContext, data: IJSON, i: number) => importEllipse(ctx, data, importer, i, nodeChangesMap)
     __handler['LINE'] = (ctx: LoadContext, data: IJSON, i: number) => importLine(ctx, data, importer, i, nodeChangesMap)
-    __handler['STAR'] = (ctx: LoadContext, data: IJSON, i: number) => importPathShape(ctx, data, importer, i, nodeChangesMap)
+    __handler['STAR'] = (ctx: LoadContext, data: IJSON, i: number) => importStar(ctx, data, importer, i, nodeChangesMap)
     __handler['REGULAR_POLYGON'] = (ctx: LoadContext, data: IJSON, i: number) => importPolygon(ctx, data, importer, i, nodeChangesMap)
     __handler['SYMBOL'] = (ctx: LoadContext, data: IJSON, i: number) => {
         const symbol = importSymbol(ctx, data, importer, i, nodeChangesMap);
