@@ -1,10 +1,7 @@
 import { AsyncApiCaller } from "./AsyncApiCaller";
 import { CoopRepository } from "../coop/cooprepo";
-import { Document } from "../../data/document";
 import { adapt2Shape, GroupShapeView, PageView, ShapeView, SymbolRefView } from "../../dataview";
-import { expand, translate } from "../frame";
-import { RadiusType } from "../../data/consts";
-import { ShapeType, SymbolRefShape } from "../../data/symbolref";
+import { translate } from "../frame";
 import { shape4cornerRadius } from "../symbol";
 import {
     GroupShape,
@@ -14,18 +11,24 @@ import {
     StarShape,
     SymbolShape,
     TextShape,
-    Transform
-} from "../../data/shape";
-import { Artboard } from "../../data/artboard";
+    Transform,
+    Artboard,
+    ShapeType,
+    SymbolRefShape,
+    Document,
+    RadiusType,
+    TextBehaviour,
+    makeShapeTransform2By1,
+    makeShapeTransform1By2
+} from "../../data";
 import {
     calculateInnerAnglePosition,
     getPolygonPoints,
-    getPolygonVertices,
+    getPolygonVertices
 } from "../utils/path";
-import { makeShapeTransform1By2, makeShapeTransform2By1, TextBehaviour } from "../../data";
 import { ColVector3D } from "../../basic/matrix2";
 import { Line, TransformMode } from "../../basic/transform";
-import { RangeRecorder, reLayoutBySizeChanged, SizeRecorder, TransformRecorder } from "./transform";
+import { reLayoutBySizeChanged } from "./transform";
 import { fixTextShapeFrameByLayout } from "../utils/other";
 
 export class LockMouseHandler extends AsyncApiCaller {
@@ -46,10 +49,7 @@ export class LockMouseHandler extends AsyncApiCaller {
 
             for (let i = 0; i < shapes.length; i++) {
                 const shape = adapt2Shape(shapes[i]);
-                if (shape.isVirtualShape) {
-                    continue;
-                }
-
+                if (shape.isVirtualShape) continue;
                 translate(api, page, shape, dx, 0);
             }
             this.updateView();
@@ -66,10 +66,7 @@ export class LockMouseHandler extends AsyncApiCaller {
 
             for (let i = 0; i < shapes.length; i++) {
                 const shape = adapt2Shape(shapes[i]);
-                if (shape.isVirtualShape) {
-                    continue;
-                }
-
+                if (shape.isVirtualShape) continue;
                 translate(api, page, shape, 0, dy);
             }
             this.updateView();
@@ -83,7 +80,6 @@ export class LockMouseHandler extends AsyncApiCaller {
         try {
             const api = this.api;
             const page = this.page;
-            const document = this.__document;
 
             for (let i = 0; i < shapes.length; i++) {
                 const view = shapes[i];
@@ -120,7 +116,6 @@ export class LockMouseHandler extends AsyncApiCaller {
         try {
             const api = this.api;
             const page = this.page;
-            const document = this.__document;
 
             for (let i = 0; i < shapes.length; i++) {
                 const view = shapes[i];
@@ -161,9 +156,7 @@ export class LockMouseHandler extends AsyncApiCaller {
             for (let i = 0; i < shapes.length; i++) {
                 if (shapes[i].type !== ShapeType.Polygon && shapes[i].type !== ShapeType.Star) continue;
                 const shape = adapt2Shape(shapes[i]) as PolygonShape | StarShape;
-                if (shape.isVirtualShape || shape.haveEdit || shape.counts === count) {
-                    continue;
-                }
+                if (shape.isVirtualShape || shape.haveEdit || shape.counts === count) continue;
                 const offset = shape.type === ShapeType.Star ? (shape as StarShape).innerAngle : undefined;
                 const counts = getPolygonVertices(shape.type === ShapeType.Star ? count * 2 : count, offset);
                 const points = getPolygonPoints(counts, shape.radius[0]);
@@ -217,9 +210,7 @@ export class LockMouseHandler extends AsyncApiCaller {
             for (let i = 0; i < shapes.length; i++) {
                 const shape = shapes[i];
 
-                if (shape.isVirtualShape) {
-                    continue;
-                }
+                if (shape.isVirtualShape) continue;
 
                 const d = (shape.rotation || 0) + deg;
 
@@ -256,9 +247,7 @@ export class LockMouseHandler extends AsyncApiCaller {
             for (let i = 0; i < shapes.length; i++) {
                 const shape = adapt2Shape(shapes[i]);
 
-                if (shape.isVirtualShape) {
-                    continue;
-                }
+                if (shape.isVirtualShape) continue;
 
                 const isRect = shape.radiusType === RadiusType.Rect;
 
@@ -278,9 +267,7 @@ export class LockMouseHandler extends AsyncApiCaller {
                         const points = shape.pathsegs[0].points;
                         for (let _i = 0; _i < 4; _i++) {
                             const val = values[_i];
-                            if (points[_i].radius === val || val < 0) {
-                                continue;
-                            }
+                            if (points[_i].radius === val || val < 0) continue;
 
                             api.modifyPointCornerRadius(page, shape, _i, val, 0);
                         }
@@ -294,9 +281,7 @@ export class LockMouseHandler extends AsyncApiCaller {
                     if (shape instanceof PathShape) {
                         shape.pathsegs.forEach((seg, index) => {
                             for (let _i = 0; _i < seg.points.length; _i++) {
-                                if (seg.points[_i].radius === values[0]) {
-                                    continue;
-                                }
+                                if (seg.points[_i].radius === values[0]) continue;
 
                                 api.modifyPointCornerRadius(page, shape, _i, values[0], index);
                             }
@@ -341,9 +326,7 @@ export class LockMouseHandler extends AsyncApiCaller {
             const page = this.page;
             for (let i = 0; i < shapes.length; i++) {
                 const shape = adapt2Shape(shapes[i]);
-                if (shape.isVirtualShape) {
-                    continue;
-                }
+                if (shape.isVirtualShape) continue;
                 api.setShadowOffsetY(page, shape, idx, val);
             }
 
@@ -360,9 +343,7 @@ export class LockMouseHandler extends AsyncApiCaller {
             const page = this.page;
             for (let i = 0; i < shapes.length; i++) {
                 const shape = adapt2Shape(shapes[i]);
-                if (shape.isVirtualShape) {
-                    continue;
-                }
+                if (shape.isVirtualShape) continue;
                 api.setShadowBlur(page, shape, idx, val);
             }
 
@@ -379,9 +360,7 @@ export class LockMouseHandler extends AsyncApiCaller {
             const page = this.page;
             for (let i = 0; i < shapes.length; i++) {
                 const shape = adapt2Shape(shapes[i]);
-                if (shape.isVirtualShape) {
-                    continue;
-                }
+                if (shape.isVirtualShape) continue;
                 api.setShadowSpread(page, shape, idx, val);
             }
 
