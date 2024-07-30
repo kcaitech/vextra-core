@@ -1,4 +1,4 @@
-import { PathShape2, Shape, ShapeFrame, ShapeSize, SymbolRefShape, SymbolShape } from "../data/classes";
+import { PathShape2, Shape, ShapeFrame, ShapeSize, SymbolRefShape, SymbolShape } from "../data";
 import { ShapeView } from "./shape";
 import { Matrix } from "../basic/matrix";
 import { PathSegment } from "../data/typesdefine";

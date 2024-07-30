@@ -1,4 +1,4 @@
-import { RectShape } from "../data/shape";
+import { RectShape } from "../data";
 import { PathShapeView } from "./pathshape";
 
 export class RectShapeView extends PathShapeView {
