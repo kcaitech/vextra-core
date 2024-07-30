@@ -3,8 +3,6 @@ import { AsyncApiCaller } from "../AsyncApiCaller";
 import {
     Document, GroupShape,
     Shape,
-    SymbolShape,
-    SymbolUnionShape,
     Page,
     SymbolRefShape,
     ShapeType,
@@ -16,8 +14,6 @@ import {
     makeShapeTransform1By2,
 } from "../../../data";
 import { adapt2Shape, PageView, ShapeView } from "../../../dataview";
-
-// import { ColVector3D, makeShapeTransform1By2, Transform as Transform2, XYsBounding } from "../../../index";
 import { Api } from "../../coop/recordapi";
 import { fixTextShapeFrameByLayout } from "../../utils/other";
 import { Transform as Transform2 } from "../../../basic/transform";
@@ -33,6 +29,8 @@ export type RangeRecorder = Map<string, {
 }>;
 
 export type SizeRecorder = Map<string, {
+    x: number;
+    y: number;
     width: number;
     height: number;
 }>;
@@ -68,6 +66,7 @@ export function reLayoutBySizeChanged(
     _sizeRecorder?: SizeRecorder,
     _transformRecorder?: TransformRecorder
 ) {
+    console.log('__0946__');
     const rangeRecorder: RangeRecorder = _rangeRecorder ?? new Map();
     const sizeRecorder: SizeRecorder = _sizeRecorder ?? new Map();
     const transformRecorder: TransformRecorder = _transformRecorder ?? new Map();
@@ -339,12 +338,15 @@ export function reLayoutBySizeChanged(
             const transform = getTransform(s);
 
             const size = getSize(s);
-
+            const x = size.x;
+            const y = size.y;
+            const r = x + size.width;
+            const b = y + size.height;
             const cols = transform.transform([
-                ColVector3D.FromXY(0, 0),
-                ColVector3D.FromXY(size.width, 0),
-                ColVector3D.FromXY(size.width, size.height),
-                ColVector3D.FromXY(0, size.height)
+                ColVector3D.FromXY(x, y),
+                ColVector3D.FromXY(r, y),
+                ColVector3D.FromXY(r, b),
+                ColVector3D.FromXY(x, b)
             ]);
 
             const box = XYsBounding([cols.col0, cols.col1, cols.col2, cols.col3]);
@@ -363,8 +365,10 @@ export function reLayoutBySizeChanged(
         let size = sizeRecorder.get(s.id);
         if (!size) {
             size = {
-                width: s.size.width,
-                height: s.size.height
+                x: s.frame.x,
+                y: s.frame.y,
+                width: s.frame.width,
+                height: s.frame.height
             };
             sizeRecorder.set(s.id, size);
         }
