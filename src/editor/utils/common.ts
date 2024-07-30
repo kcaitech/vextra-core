@@ -6,7 +6,7 @@ import { Artboard, Document, GroupShape, PathShape, Shape, ShapeFrame, Page } fr
 import { Point2D } from "../../data/typesdefine";
 import { float_accuracy } from "../../basic/consts";
 import { reLayoutBySizeChanged } from "../asyncApiHandler";
-import { adapt2Shape, ArtboradView } from "../../dataview";
+import { adapt2Shape, ArtboradView, GroupShapeView, ShapeView } from "../../dataview";
 
 function equal_with_mean(a: number, b: number) {
     return Math.abs(a - b) < float_accuracy;
@@ -43,9 +43,10 @@ function modify_straight_length(api: Api, page: Page, shape: PathShape, val: num
 /**
  * @description 主动修改图形的宽度为指定宽度val，这个函数因直线段而存在🤯
  */
-export function modify_shapes_width(api: Api, document: Document, page: Page, shapes: Shape[], val: number) {
+export function modify_shapes_width(api: Api, document: Document, page: Page, shapes: ShapeView[], val: number) {
     for (let i = 0, l = shapes.length; i < l; i++) {
-        const shape = shapes[i];
+        const view = shapes[i];
+        const shape = adapt2Shape(view);
 
         if (is_straight(shape)) {
             modify_straight_length(api, page, shape as PathShape, val);
@@ -63,18 +64,17 @@ export function modify_shapes_width(api: Api, document: Document, page: Page, sh
 
         expandTo(api, document, page, shape, val, h);
 
-        if (shape instanceof GroupShape) {
-            reLayoutBySizeChanged(api, page, shape, {
-                x: val / w,
-                y: h / shape.size.height
-            });
+        if (view instanceof GroupShapeView) {
+            console.log('__width_sx__', val / w);
+            reLayoutBySizeChanged(api, page, view, { x: val / w, y: h / shape.size.height });
         }
     }
 }
 
-export function modify_shapes_height(api: Api, document: Document, page: Page, shapes: Shape[], val: number) {
+export function modify_shapes_height(api: Api, document: Document, page: Page, shapes: ShapeView[], val: number) {
     for (let i = 0, l = shapes.length; i < l; i++) {
-        const shape = shapes[i];
+        const view = shapes[i];
+        const shape = adapt2Shape(view);
 
         if (is_straight(shape)) {
             continue; // 直线段的高度不可修改恒定为0.01
@@ -91,8 +91,8 @@ export function modify_shapes_height(api: Api, document: Document, page: Page, s
 
         expandTo(api, document, page, shape, w, val);
 
-        if (shape instanceof GroupShape) {
-            reLayoutBySizeChanged(api, page, shape, {
+        if (view instanceof GroupShapeView) {
+            reLayoutBySizeChanged(api, page, view, {
                 x: w / shape.size.width,
                 y: val / h
             });

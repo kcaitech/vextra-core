@@ -13,7 +13,7 @@ import {
     TextBehaviour,
     makeShapeTransform1By2,
 } from "../../../data";
-import { adapt2Shape, PageView, ShapeView } from "../../../dataview";
+import { adapt2Shape, GroupShapeView, PageView, ShapeView, TextShapeView } from "../../../dataview";
 import { Api } from "../../coop/recordapi";
 import { fixTextShapeFrameByLayout } from "../../utils/other";
 import { Transform as Transform2 } from "../../../basic/transform";
@@ -57,7 +57,7 @@ export type TransformRecorder = Map<string, Transform2>;
 export function reLayoutBySizeChanged(
     api: Api,
     page: Page,
-    shape: GroupShape,
+    shape: GroupShapeView,
     scale: { x: number, y: number },
     _rangeRecorder?: RangeRecorder,
     _sizeRecorder?: SizeRecorder,
@@ -76,6 +76,7 @@ export function reLayoutBySizeChanged(
         const __p_transform = new Transform2().setScale(ColVector3D.FromXYZ(SX, SY, 1));
 
         for (const child of children) {
+            const data = adapt2Shape(child);
             const transform = getTransform(child).clone();
             transform.addTransform(__p_transform);
 
@@ -84,7 +85,7 @@ export function reLayoutBySizeChanged(
             const oSize = getSize(child);
             const width = oSize.width * Math.abs(_scale.x);
             const height = oSize.height * Math.abs(_scale.y);
-            if (child instanceof TextShape) {
+            if (child instanceof TextShapeView) {
                 if (width !== child.size.width || height !== child.size.height) {
                     const textBehaviour = child.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
                     if (height !== child.size.height) {
@@ -96,17 +97,17 @@ export function reLayoutBySizeChanged(
                             api.shapeModifyTextBehaviour(page, child.text, TextBehaviour.Fixed);
                         }
                     }
-                    api.shapeModifyWH(page, child, width, height)
+                    api.shapeModifyWH(page, data, width, height)
                     fixTextShapeFrameByLayout(api, page, child);
                 }
             } else {
-                api.shapeModifyWH(page, child, width, height)
+                api.shapeModifyWH(page, data, width, height)
             }
 
             transform.clearScaleSize();
-            api.shapeModifyTransform(page, child, makeShapeTransform1By2(transform));
+            api.shapeModifyTransform(page, data, makeShapeTransform1By2(transform));
 
-            if (child instanceof GroupShape) {
+            if (child instanceof GroupShapeView) {
                 reLayoutBySizeChanged(api, page, child, _scale, rangeRecorder, sizeRecorder, transformRecorder);
             }
         }
@@ -143,10 +144,12 @@ export function reLayoutBySizeChanged(
 
                 // · 保持距离两边的数值不变的情况下，shape宽变化，将对child的width造成影响(注意bounding位置是不受影响的)
                 // 比对前后child的width得到ScaleX，根据该值调整水平缩放，实现两边的固定
-                const bounding = box(child);
+                const bounding = getBox(child);
                 const __to_right = toRight(child);
 
-                const __target_width = shape.size.width - bounding.x - __to_right;
+                const envSize = getSize(shape);
+
+                const __target_width = envSize.width * SX - bounding.x - __to_right;
                 const __target_sx = __target_width / bounding.width;
 
                 // 确定一个缩放区域(BSS)：以bounding左上角为原点的一个坐标系
@@ -190,7 +193,7 @@ export function reLayoutBySizeChanged(
 
                     if (ResizingConstraints2.isFixedToLeft(resizingConstraint)) {
                         // 靠左固定
-                        const bounding = box(child);
+                        const bounding = getBox(child);
                         transform.translate(ColVector3D.FromXY(-(bounding.x * SX - bounding.x), 0));
                     } else if (ResizingConstraints2.isFixedToRight(resizingConstraint)) {
                         // 靠右固定
@@ -204,11 +207,13 @@ export function reLayoutBySizeChanged(
                 } else {
                     // 宽度固定
                     if (ResizingConstraints2.isFixedToRight(resizingConstraint)) {
+                        const envSize = getSize(shape);
                         // 靠右固定
-                        transform.translate(ColVector3D.FromXY((SX - 1) * (shape.size.width / SX), 0));
+                        transform.translate(ColVector3D.FromXY((SX - 1) * envSize.width, 0));
                     } else if (ResizingConstraints2.isHorizontalJustifyCenter(resizingConstraint)) {
+                        const envSize = getSize(shape);
                         // 居中
-                        const delta = shape.size.width / 2 - (shape.size.width / SX) / 2;
+                        const delta = (envSize.width * SX) / 2 - envSize.width / 2;
                         transform.translate(ColVector3D.FromXY(delta, 0));
                     }
                 }
@@ -229,13 +234,14 @@ export function reLayoutBySizeChanged(
                 transform.clearScaleSize();
             } else if (ResizingConstraints2.isFixedTopAndBottom(resizingConstraint)) {
                 // 上下固定
-                const bounding = box(child);
+                const bounding = getBox(child);
                 const __to_bottom = toBottom(child);
-
-                const __target_height = shape.size.height - bounding.y - __to_bottom;
+                const envSize = getSize(shape);
+                const __target_height = envSize.height * SY - bounding.y - __to_bottom;
                 const __target_sy = __target_height / bounding.height;
 
-                const __sec_transform = new Transform2().setTranslate(ColVector3D.FromXY(bounding.x, bounding.y));
+                const __sec_transform = new Transform2()
+                    .setTranslate(ColVector3D.FromXY(bounding.x, bounding.y));
 
                 transform.addTransform(__sec_transform.getInverse());
 
@@ -269,7 +275,7 @@ export function reLayoutBySizeChanged(
 
                     if (ResizingConstraints2.isFixedToTop(resizingConstraint)) {
                         // 靠顶部固定
-                        const bounding = box(child);
+                        const bounding = getBox(child);
                         transform.translate(ColVector3D.FromXY(0, -(bounding.y * SY - bounding.y)));
                     } else if (ResizingConstraints2.isFixedToBottom(resizingConstraint)) {
                         // 靠底边固定
@@ -284,17 +290,20 @@ export function reLayoutBySizeChanged(
                     // 高度固定
                     if (ResizingConstraints2.isFixedToBottom(resizingConstraint)) {
                         // 靠底边固定
-                        transform.translate(ColVector3D.FromXY(0, (SY - 1) * (shape.size.height / SY)));
+                        const envSize = getSize(shape);
+                        transform.translate(ColVector3D.FromXY(0, (SY - 1) * envSize.height));
                     } else if (ResizingConstraints2.isVerticalJustifyCenter(resizingConstraint)) {
                         // 居中
-                        const delta = shape.size.height / 2 - (shape.size.height / SY) / 2;
+                        const envSize = getSize(shape);
+                        const delta = (envSize.height * SY) / 2 - envSize.height / 2;
                         transform.translate(ColVector3D.FromXY(0, delta));
                     }
                 }
             }
 
+            const data = adapt2Shape(child);
             // 执行计算结果
-            if (child instanceof TextShape) {
+            if (child instanceof TextShapeView) {
                 if (targetWidth !== child.size.width || targetHeight !== child.size.height) {
                     const textBehaviour = child.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
                     if (targetHeight !== child.size.height) {
@@ -306,15 +315,15 @@ export function reLayoutBySizeChanged(
                             api.shapeModifyTextBehaviour(page, child.text, TextBehaviour.Fixed);
                         }
                     }
-                    api.shapeModifyWH(page, child, targetWidth, targetHeight)
+                    api.shapeModifyWH(page, data, targetWidth, targetHeight)
                     fixTextShapeFrameByLayout(api, page, child);
                 }
             } else {
-                api.shapeModifyWH(page, child, targetWidth, targetHeight)
+                api.shapeModifyWH(page, data, targetWidth, targetHeight)
             }
-            api.shapeModifyTransform(page, child, makeShapeTransform1By2(transform));
+            api.shapeModifyTransform(page, data, makeShapeTransform1By2(transform));
 
-            if ((oSize.width !== targetWidth || oSize.height !== targetHeight) && (child instanceof GroupShape)) {
+            if ((oSize.width !== targetWidth || oSize.height !== targetHeight) && (child instanceof GroupShapeView)) {
                 // 向下传递
                 reLayoutBySizeChanged(api, page, child, __scale, rangeRecorder, sizeRecorder, transformRecorder);
             }
@@ -322,7 +331,7 @@ export function reLayoutBySizeChanged(
     }
 
     // utils
-    function box(s: Shape) {
+    function getBox(s: ShapeView) {
         let RR = rangeRecorder.get(s.id);
 
         if (!RR) {
@@ -357,7 +366,7 @@ export function reLayoutBySizeChanged(
         return RR.box;
     }
 
-    function getSize(s: Shape) {
+    function getSize(s: ShapeView) {
         let size = sizeRecorder.get(s.id);
         if (!size) {
             const f = s.frame;
@@ -372,66 +381,66 @@ export function reLayoutBySizeChanged(
         return size;
     }
 
-    function getTransform(s: Shape) {
+    function getTransform(s: ShapeView) {
         let transform = transformRecorder.get(s.id);
         if (!transform) {
-            transform = makeShapeTransform2By1(s.transform);
+            transform = s.transform2.clone();
             transformRecorder.set(s.id, transform);
         }
         return transform;
     }
 
-    function centerOffsetLeft(s: Shape) {
-        let RR = rangeRecorder.get(s.id);
-        if (!RR) {
-            RR = {};
-            rangeRecorder.set(s.id, RR);
-        }
-        if (RR.centerOffsetLeft === undefined) {
-            const bounding = box(s);
-            RR.centerOffsetLeft = (bounding.x + bounding.width / 2) - (shape.size.width / SX) / 2;
-        }
-
-        return RR.centerOffsetLeft;
-    }
-
-    function toRight(s: Shape) {
+    function toRight(s: ShapeView) {
         let RR = rangeRecorder.get(s.id);
         if (!RR) {
             RR = {};
             rangeRecorder.set(s.id, RR);
         }
         if (RR.toRight === undefined) {
-            const bounding = box(s);
-            RR.toRight = s.parent!.size.width / SX - bounding.x - bounding.width;
+            const bounding = getBox(s);
+            RR.toRight = s.parent!.size.width - bounding.x - bounding.width;
         }
 
         return RR.toRight;
     }
 
-    function toBottom(s: Shape) {
+    function centerOffsetLeft(s: ShapeView) {
+        let RR = rangeRecorder.get(s.id);
+        if (!RR) {
+            RR = {};
+            rangeRecorder.set(s.id, RR);
+        }
+        if (RR.centerOffsetLeft === undefined) {
+            const bounding = getBox(s);
+            RR.centerOffsetLeft = (bounding.x + bounding.width / 2) - shape.size.width / 2;
+        }
+
+        return RR.centerOffsetLeft;
+    }
+
+    function toBottom(s: ShapeView) {
         let RR = rangeRecorder.get(s.id);
         if (!RR) {
             RR = {};
             rangeRecorder.set(s.id, RR);
         }
         if (RR.toBottom === undefined) {
-            const bounding = box(s);
-            RR.toBottom = s.parent!.size.height / SY - bounding.y - bounding.height;
+            const bounding = getBox(s);
+            RR.toBottom = s.parent!.size.height - bounding.y - bounding.height;
         }
 
         return RR.toBottom;
     }
 
-    function centerOffsetTop(s: Shape) {
+    function centerOffsetTop(s: ShapeView) {
         let RR = rangeRecorder.get(s.id);
         if (!RR) {
             RR = {};
             rangeRecorder.set(s.id, RR);
         }
         if (RR.centerOffsetTop === undefined) {
-            const bounding = box(s);
-            RR.centerOffsetTop = (bounding.y + bounding.height / 2) - (shape.size.height / SY) / 2;
+            const bounding = getBox(s);
+            RR.centerOffsetTop = (bounding.y + bounding.height / 2) - shape.size.height / 2;
         }
 
         return RR.centerOffsetTop;
@@ -491,9 +500,9 @@ export class Scaler extends AsyncApiCaller {
                 }
                 api.shapeModifyTransform(page, shape, makeShapeTransform1By2(item.transform2));
 
-                if (shape instanceof GroupShape) {
+                if (item.shape instanceof GroupShapeView) {
                     const scale = item.scale;
-                    reLayoutBySizeChanged(api, page, shape as GroupShape, scale, recorder, sizeRecorder, transformRecorder);
+                    reLayoutBySizeChanged(api, page, item.shape, scale, recorder, sizeRecorder, transformRecorder);
                 }
 
                 if (shape instanceof SymbolRefShape && !shape.isCustomSize) {

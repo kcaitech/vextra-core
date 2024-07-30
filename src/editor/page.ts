@@ -1907,7 +1907,7 @@ export class PageEditor {
         }
     }
 
-    modifyShapesWidth(shapes: Shape[], val: number) {
+    modifyShapesWidth(shapes: ShapeView[], val: number) {
         try {
             const api = this.__repo.start('modifyShapesWidth');
             modify_shapes_width(api, this.__document, this.__page, shapes, val)
@@ -1917,7 +1917,7 @@ export class PageEditor {
         }
     }
 
-    modifyShapesHeight(shapes: Shape[], val: number) {
+    modifyShapesHeight(shapes: ShapeView[], val: number) {
         try {
             const api = this.__repo.start('modifyShapesHeight');
             modify_shapes_height(api, this.__document, this.__page, shapes, val)

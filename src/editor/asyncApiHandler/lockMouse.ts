@@ -1,7 +1,7 @@
 import { AsyncApiCaller } from "./AsyncApiCaller";
 import { CoopRepository } from "../coop/cooprepo";
 import { Document } from "../../data/document";
-import { adapt2Shape, PageView, ShapeView, SymbolRefView } from "../../dataview";
+import { adapt2Shape, GroupShapeView, PageView, ShapeView, SymbolRefView } from "../../dataview";
 import { expand, translate } from "../frame";
 import { RadiusType } from "../../data/consts";
 import { ShapeType, SymbolRefShape } from "../../data/symbolref";
@@ -86,7 +86,8 @@ export class LockMouseHandler extends AsyncApiCaller {
             const document = this.__document;
 
             for (let i = 0; i < shapes.length; i++) {
-                const shape = adapt2Shape(shapes[i]);
+                const view = shapes[i];
+                const shape = adapt2Shape(view);
                 if (shape.isVirtualShape) continue;
 
                 const size = shape.size;
@@ -101,8 +102,8 @@ export class LockMouseHandler extends AsyncApiCaller {
                     api.shapeModifyWidth(page, shape, size.width + dw);
                 }
 
-                if (shape instanceof GroupShape) {
-                    reLayoutBySizeChanged(api, page, shape, {
+                if (view instanceof GroupShapeView) {
+                    reLayoutBySizeChanged(api, page, view, {
                         x: Math.abs(size.width / (size.width - dw)),
                         y: 1
                     }, new Map(), new Map(), new Map());
@@ -122,7 +123,8 @@ export class LockMouseHandler extends AsyncApiCaller {
             const document = this.__document;
 
             for (let i = 0; i < shapes.length; i++) {
-                const shape = adapt2Shape(shapes[i]);
+                const view = shapes[i];
+                const shape = adapt2Shape(view);
                 if (shape.isVirtualShape) continue;
 
                 const size = shape.size;
@@ -137,8 +139,8 @@ export class LockMouseHandler extends AsyncApiCaller {
                     api.shapeModifyHeight(page, shape, size.height + dh);
                 }
 
-                if (shape instanceof GroupShape) {
-                    reLayoutBySizeChanged(api, page, shape, {
+                if (view instanceof GroupShapeView) {
+                    reLayoutBySizeChanged(api, page, view, {
                         x: 1,
                         y: Math.abs(size.height / (size.height - dh))
                     }, new Map(), new Map(), new Map());
