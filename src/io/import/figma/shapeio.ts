@@ -44,15 +44,16 @@ import {
     Variable,
     VariableType,
 } from "../../../data";
-import {uuid} from "../../../basic/uuid";
-import {IJSON, ImportFun, LoadContext} from "./basic";
+import { uuid } from "../../../basic/uuid";
+import { IJSON, ImportFun, LoadContext } from "./basic";
 import * as shapeCreator from "../../../editor/creator";
 import * as types from "../../../data/typesdefine";
-import {importText} from "../sketch/textio";
-import {float_accuracy} from "../../../basic/consts";
-import {ColVector3D} from "../../../basic/matrix2";
-import {Transform as Transform2} from "../../../basic/transform";
-import {getPolygonPoints, getPolygonVertices} from "../../../editor/utils/path";
+import { float_accuracy } from "../../../basic/consts";
+import { ColVector3D } from "../../../basic/matrix2";
+import { Transform as Transform2 } from "../../../basic/transform";
+import { getPolygonPoints, getPolygonVertices } from "../../../editor/utils/path";
+import { importText } from "./textio";
+import { importColor } from "./common";
 
 function toStrId(id?: {
     localID: string,
@@ -60,10 +61,6 @@ function toStrId(id?: {
 }) {
     if (!id) return '';
     return [id.localID, id.sessionID].join(',');
-}
-
-function importColor(color: IJSON, opacity: number = 1) {
-    return new Color(color.a * opacity, Math.round(color.r * 255), Math.round(color.g * 255), Math.round(color.b * 255));
 }
 
 function setGradient(
@@ -83,7 +80,7 @@ function setGradient(
     item: Fill | Border,
 ) {
     if (type === 'GRADIENT_LINEAR') {
-        const {col0: from, col1: to} = transform.transform([
+        const { col0: from, col1: to } = transform.transform([
             ColVector3D.FromXY(0, 0.5),
             ColVector3D.FromXY(1, 0.5),
         ]);
@@ -98,7 +95,7 @@ function setGradient(
         item.gradient = new Gradient(from1, to1, colorType, stops1 as BasicArray<Stop>, undefined, opacity);
         item.fillType = FillType.Gradient;
     } else if (type === 'GRADIENT_RADIAL' || type === 'GRADIENT_ANGULAR') {
-        const {col0: from, col1: to} = transform.transform([
+        const { col0: from, col1: to } = transform.transform([
             ColVector3D.FromXY(0.5, 0.5),
             ColVector3D.FromXY(1, 0.5),
         ]);
@@ -121,7 +118,7 @@ function importFills(style: Style, data: IJSON) {
     const fillPaints = data.fillPaints;
     const fillGeometry = data.fillGeometry;
     if (!fillPaints) return;
-    const size = data.size || {x: 1, y: 1};
+    const size = data.size || { x: 1, y: 1 };
 
     for (const fill of fillPaints) {
         const type = fill.type;
@@ -161,7 +158,7 @@ function importStroke(style: Style, data: IJSON) {
     const strokePaints = data.strokePaints;
     const strokeGeometry = data.strokeGeometry;
     if (!strokePaints) return;
-    const size = data.size || {x: 1, y: 1};
+    const size = data.size || { x: 1, y: 1 };
 
     const strokeAlign = data.strokeAlign;
     const strokeWeight = data.strokeWeight;
@@ -273,8 +270,8 @@ function importStyle(style: Style, data: IJSON) {
 }
 
 function importShapeFrame(data: IJSON) {
-    const size = data.size || {x: 1, y: 1};
-    const trans = data.transform || {m00: 1, m10: 0, m01: 0, m11: 1, m02: 0, m12: 0};
+    const size = data.size || { x: 1, y: 1 };
+    const trans = data.transform || { m00: 1, m10: 0, m01: 0, m11: 1, m02: 0, m12: 0 };
     return {
         size: new ShapeSize(size.x, size.y),
         trans: new Transform(trans.m00, trans.m01, trans.m02, trans.m10, trans.m11, trans.m12)
@@ -363,7 +360,7 @@ function importSegments(data: IJSON): PathSegment[] {
         dx?: number,
         dy?: number,
     }) {
-        const vertex = {...vertices[index.vertex]};
+        const vertex = { ...vertices[index.vertex] };
         vertex.x += (index.dx || 0);
         vertex.y += (index.dy || 0);
         vertex.x /= normalizedSize.x;
@@ -376,7 +373,7 @@ function importSegments(data: IJSON): PathSegment[] {
         to?: any,
     }[]) {
         return points.map((item, i) => {
-            const basePoint = getVertex({vertex: item.from ? item.from.vertex : item.to.vertex});
+            const basePoint = getVertex({ vertex: item.from ? item.from.vertex : item.to.vertex });
             const p = new CurvePoint([i] as BasicArray<number>, uuid(), basePoint.x, basePoint.y, CurveMode.Straight);
             const hasCurveFrom = item.from && (Math.abs(item.from.dx) > float_accuracy || Math.abs(item.from.dy) > float_accuracy);
             const hasCurveTo = item.to && (Math.abs(item.to.dx) > float_accuracy || Math.abs(item.to.dy) > float_accuracy);
@@ -428,7 +425,7 @@ function importSegments(data: IJSON): PathSegment[] {
                     isEqualLastPoint = currentSegment.end.vertex === nextSegment.start.vertex;
 
                     if (i !== length - 1 || !isEqualLastPoint) {
-                        const point1 = {to: currentSegment.end} as any;
+                        const point1 = { to: currentSegment.end } as any;
                         if (isEqualLastPoint) point1.from = nextSegment.start;
                         points.push(point1);
                     } else { // 是最后一个且isEqualLastPoint为true
@@ -444,8 +441,8 @@ function importSegments(data: IJSON): PathSegment[] {
         for (let i = 0; i < segments.length; i++) {
             const segment = segments[i];
             const points = toCurvePoints([
-                {from: segment.start},
-                {to: segment.end},
+                { from: segment.start },
+                { to: segment.end },
             ]);
             segments1.push(new PathSegment([i] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...points), false))
         }
@@ -627,12 +624,20 @@ export function importTextShape(ctx: LoadContext, data: IJSON, f: ImportFun, ind
     const frame = importShapeFrame(data);
     const visible = data.visible;
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
-    importStyle(style, data);
+    // importStyle(style, data);
+    importEffects(style, data); // FILL,BORDERS都是应用到文本上的
     const id = data.kcId || uuid();
 
-    const textStyle = data.style && data.style['textStyle'];
-    const text: Text = data.textData?.characters && importText(data.textData.characters, textStyle);
-    const textBehaviour = [TextBehaviour.Flexible, TextBehaviour.Fixed, TextBehaviour.FixWidthAndHeight][data.textBehaviour] ?? TextBehaviour.Flexible;
+    // const textStyle = data.style && data.style['textStyle'];
+    const text: Text = data.textData && importText(data.textData, data);
+    const textBehaviour = ((textAutoResize: string) => {
+        switch (textAutoResize) {
+            case "HEIGHT": return TextBehaviour.Fixed;
+            case "NONE": return TextBehaviour.FixWidthAndHeight;
+            case "WIDTH_AND_HEIGHT": return TextBehaviour.Flexible;
+            default: return TextBehaviour.Flexible;
+        }
+    })(data.textAutoResize);
     text.attr && (text.attr.textBehaviour = textBehaviour);
 
     const shape = new TextShape([index] as BasicArray<number>, id, data.name, ShapeType.Text, frame.trans, frame.size, style, text);
