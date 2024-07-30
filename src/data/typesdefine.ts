@@ -703,6 +703,7 @@ export type Shape = {
     shouldBreakMaskChain?: boolean,
     varbinds?: Map<string, string>,
     haveEdit?: boolean,
+    mask?: boolean,
 }
 /* table cell */
 export type TableCell = Shape & {

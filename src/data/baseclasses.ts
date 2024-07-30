@@ -758,6 +758,7 @@ export class Shape extends Basic {
     shouldBreakMaskChain?: boolean
     varbinds?: BasicMap<string, string>
     haveEdit?: boolean
+    mask?: boolean
     constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style) {
         super()
         this.crdtidx = crdtidx

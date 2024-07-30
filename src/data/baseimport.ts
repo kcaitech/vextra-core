@@ -989,6 +989,7 @@ function importShapeOptional(tar: impl.Shape, source: types.Shape, ctx?: IImport
         return ret
     })()
     if (source.haveEdit) tar.haveEdit = source.haveEdit
+    if (source.mask) tar.mask = source.mask
 }
 export function importShape(source: types.Shape, ctx?: IImportContext): impl.Shape {
     const ret: impl.Shape = new impl.Shape (

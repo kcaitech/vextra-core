@@ -1,5 +1,5 @@
 import { TextLayout } from "../data/textlayout";
-import { Path, ShapeFrame, TableCell, TableCellType, Text } from "../data/classes";
+import { BlurType, Path, ShapeFrame, TableCell, TableCellType, Text } from "../data/classes";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
 import { renderText2Path, renderTextLayout } from "../render/text";
@@ -8,7 +8,7 @@ import { CursorLocate, TextLocate, locateCursor, locateNextCursor, locatePrevCur
 import { newTableCellText } from "../data/textutils";
 import { objectId } from "../basic/objectid";
 import { TableView } from "./table";
-import { DataView } from "./view";
+import { innerShadowId } from "../render";
 
 export class TableCellView extends ShapeView {
 
@@ -223,5 +223,45 @@ export class TableCellView extends ShapeView {
     onDestory(): void {
         super.onDestory();
         if (this.__layoutToken && this.__preText) this.__preText.dropLayout(this.__layoutToken, this.id);
+    }
+    render(): number {
+        if (!this.checkAndResetDirty()) return this.m_render_version;
+
+        if (!this.isVisible) {
+            this.reset("g");
+            return ++this.m_render_version;
+        }
+
+        const fills = this.renderFills();
+        const borders = this.renderBorders();
+        const childs = this.renderContents();
+
+        const filterId = `${objectId(this)}`;
+        const shadows = this.renderShadows(filterId);
+        const blurId = `blur_${objectId(this)}`;
+        const blur = this.renderBlur(blurId);
+
+        let props = this.renderProps();
+        let children = [...fills, ...childs, ...borders];
+
+        // 阴影
+        if (shadows.length) {
+            let filter: string = '';
+            const inner_url = innerShadowId(filterId, this.getShadows());
+            filter = `url(#pd_outer-${filterId}) `;
+            if (inner_url.length) filter += inner_url.join(' ');
+            children = [...shadows, elh("g", { filter }, children)];
+        }
+
+        // 模糊
+        if (blur.length) {
+            let filter: string = '';
+            if (this.blur?.type === BlurType.Gaussian) filter = `url(#${blurId})`;
+            children = [...blur, elh('g', { filter }, children)];
+        }
+
+        this.reset("g", props, children);
+
+        return ++this.m_render_version;
     }
 }

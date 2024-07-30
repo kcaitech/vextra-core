@@ -1,5 +1,5 @@
 import { Basic, BasicArray, BasicMap, ResourceMgr } from "./basic";
-import { Border, Style } from "./style";
+import { Style } from "./style";
 import { Text } from "./text";
 import * as classes from "./baseclasses"
 import {
@@ -122,6 +122,7 @@ export class Shape extends Basic implements classes.Shape {
     varbinds?: BasicMap<string, string>
 
     haveEdit?: boolean | undefined
+    mask?: boolean
 
     constructor(
         crdtidx: BasicArray<number>, id: string, name: string, type: ShapeType, transform: Transform, style: Style
@@ -327,10 +328,6 @@ export class Shape extends Basic implements classes.Shape {
         }
     }
 
-    getBorderIndex(border: Border): number {
-        return this.style.borders.findIndex(i => i === border);
-    }
-
     findVar(varId: string, ret: Variable[]) {
         this.parent?.findVar(varId, ret);
     }
@@ -400,8 +397,7 @@ export class Shape extends Basic implements classes.Shape {
     getImageFill() {
         const fills = this.getFills();
         if (!fills.length) return false;
-        const result = fills.some(fill => fill.fillType === classes.FillType.Pattern);
-        return result;
+        return fills.some(fill => fill.fillType === classes.FillType.Pattern);
     }
 }
 

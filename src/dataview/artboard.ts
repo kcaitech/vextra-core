@@ -6,6 +6,7 @@ import { render as clippathR } from "../render/clippath"
 import { Artboard } from "../data/artboard";
 import { BlurType, BorderPosition, CornerRadius, Page, ShapeFrame, ShapeSize } from "../data/classes";
 import { ShapeView, updateFrame } from "./shape";
+import { PageView } from "./page";
 
 
 export class ArtboradView extends GroupShapeView {
@@ -26,8 +27,7 @@ export class ArtboradView extends GroupShapeView {
         return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.data);
     }
 
-    protected renderProps(): { [key: string]: string } {
-        const shape = this.m_data;
+    protected renderProps(): { [key: string]: string } & { style: any } {
         const props: any = {
             xmlns: "http://www.w3.org/2000/svg",
             "xmlns:xlink": "http://www.w3.org/1999/xlink",
@@ -35,17 +35,10 @@ export class ArtboradView extends GroupShapeView {
             preserveAspectRatio: "xMinYMin meet",
             overflow: "hidden",
         }
-        const contextSettings = shape.style.contextSettings;
-
-        if (contextSettings && (contextSettings.opacity ?? 1) !== 1) {
-            props.opacity = contextSettings.opacity;
-        }
 
         const frame = this.frame;
         props.width = frame.width;
         props.height = frame.height;
-        props.x = 0;
-        props.y = 0;
         props.viewBox = `0 0 ${frame.width} ${frame.height}`;
 
         return props;
@@ -84,9 +77,13 @@ export class ArtboradView extends GroupShapeView {
     }
 
     render(): number {
-        const isDirty = this.checkAndResetDirty();
-        if (!isDirty) {
-            return this.m_render_version;
+        if (!this.checkAndResetDirty()) return this.m_render_version;
+
+        const masked = this.masked;
+        if (masked) {
+            (this.getPage() as PageView).getView(masked.id)?.render();
+            this.reset("g");
+            return ++this.m_render_version;
         }
 
         if (!this.isVisible) {
@@ -94,67 +91,69 @@ export class ArtboradView extends GroupShapeView {
             return ++this.m_render_version;
         }
 
-        // fill
-        const fills = this.renderFills() || []; // cache
-        // childs
-        const childs = this.renderContents(); // VDomArray
-        // border
-        const borders = this.renderBorders() || []; // ELArray
+        const fills = this.renderFills();
+        const childs = this.renderContents();
+        const borders = this.renderBorders();
 
         const svgprops = this.renderProps();
-
         const filterId = `${objectId(this)}`;
         const shadows = this.renderShadows(filterId);
         const blurId = `blur_${objectId(this)}`;
         const blur = this.renderBlur(blurId);
 
-        const props: any = {};
-        props.opacity = svgprops.opacity;
-        delete svgprops.opacity;
-
-        if (!this.isNoTransform()) {
-            props.style = { transform: this.transform.toString() };
-        } else {
-            const transform = this.transform;
-            if (transform.translateX !== 0 || transform.translateY !== 0) props.transform = `translate(${transform.translateX},${transform.translateY})`
-        }
-
         const contextSettings = this.style.contextSettings;
+
+        let props: any = { style: { transform: this.transform.toString() } };
+        let children = [...fills, ...childs];
+
         if (contextSettings) {
-            if (props.style) {
-                props.style['mix-blend-mode'] = contextSettings.blenMode;
-            } else {
-                props.style = {
-                    'mix-blend-mode': contextSettings.blenMode
-                };
-            }
+            props.opacity = contextSettings.opacity;
+            props.style['mix-blend-mode'] = contextSettings.blenMode;
         }
 
         const id = "clippath-artboard-" + objectId(this);
-        if (blur.length && this.blur?.type === BlurType.Gaussian) {
-            props.filter = `url(#${blurId})`;
-        }
+        const cp = clippathR(elh, id, this.getPathStr());
 
-        const content_container = elh("g", { "clip-path": "url(#" + id + ")" }, [...fills, ...childs]);
+        children = [elh(
+            "g",
+            { "clip-path": "url(#" + id + ")" },
+            [elh(
+                "svg",
+                svgprops,
+                [cp, ...children, ...borders]
+            )]
+        )];
 
-        if (shadows.length > 0) { // 阴影
+        if (shadows.length) {
             const inner_url = innerShadowId(filterId, this.getShadows());
             if (inner_url.length) svgprops.filter = inner_url.join(' ');
-            const cp = clippathR(elh, id, this.getPathStr());
-            const body = elh("svg", svgprops, [cp, content_container]);
-            this.reset("g", props, [...shadows, ...blur, body, ...borders])
-        } else {
-            const cp = clippathR(elh, id, this.getPathStr());
-            const body = elh("svg", svgprops, [cp, content_container]);
-            this.reset("g", props, [...blur, body, ...borders])
+            children = [...shadows, ...children];
         }
+
+        if (blur.length && this.blur?.type === BlurType.Gaussian) {
+            props.filter = `url(#${blurId})`;
+            children = [...blur, ...children];
+        }
+
+        // 遮罩
+        const _mask_space = this.renderMask();
+        if (_mask_space) {
+            Object.assign(props.style, { transform: _mask_space.toString() });
+            const id = `mask-base-${objectId(this)}`;
+            const __body_transform = this.transformFromMask;
+            const __body = elh("g", { style: { transform: __body_transform } }, children);
+            this.bleach(__body);
+            children = [__body];
+            const mask = elh('mask', { id }, children);
+            const rely = elh('g', { mask: `url(#${id})` }, this.relyLayers);
+            children = [mask, rely];
+        }
+
+        this.reset("g", props, children);
 
         return ++this.m_render_version;
     }
 
-    // get points() {
-    //     return (this.m_data as Artboard).points;
-    // }
     get guides() {
         return (this.m_data as Page).guides;
     }
