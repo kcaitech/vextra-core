@@ -1811,11 +1811,12 @@ export class PageEditor {
     }
 
     modifyShapesX(actions: { target: Shape, x: number }[]) {
-        const api = this.__repo.start('modifyShapesX');
         try {
+            const api = this.__repo.start('modifyShapesX');
+            const page = this.__page;
             for (let i = 0; i < actions.length; i++) {
                 const action = actions[i];
-                api.shapeModifyX(this.__page, action.target, action.x);
+                api.shapeModifyX(page, action.target, action.x);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1824,11 +1825,12 @@ export class PageEditor {
     }
 
     modifyShapesY(actions: { target: Shape, y: number }[]) {
-        const api = this.__repo.start('modifyShapesY');
         try {
+            const api = this.__repo.start('modifyShapesY');
+            const page = this.__page;
             for (let i = 0; i < actions.length; i++) {
                 const action = actions[i];
-                api.shapeModifyY(this.__page, action.target, action.y);
+                api.shapeModifyY(page, action.target, action.y);
             }
             this.__repo.commit();
         } catch (error) {
