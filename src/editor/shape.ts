@@ -56,6 +56,7 @@ import {
     shape4fill,
     shape4shadow
 } from "./symbol";
+import { ISave4Restore, SelectionState } from "./coop/localcmd";
 
 export class ShapeEditor {
     protected __shape: ShapeView;
@@ -1019,7 +1020,12 @@ export class ShapeEditor {
             const index = childs.findIndex(s => s.id === this.shape.id);
             if (index >= 0) {
                 try {
-                    const api = this.__repo.start("deleteShape");
+                    const api = this.__repo.start("deleteShape", (selection: ISave4Restore, isUndo: boolean) => {
+                        const state = {} as SelectionState;
+                        if (isUndo) state.shapes = [this.shape.id];
+                        else state.shapes = [];
+                        selection.restore(state);
+                    });
                     if (this.shape.type === ShapeType.Contact) { // 将执行删除连接线，需要清除连接线对起始两边的影响
                         this.removeContactSides(api, this.__page, this.shape as unknown as ContactShape);
                     } else {
