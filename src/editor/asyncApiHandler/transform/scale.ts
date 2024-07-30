@@ -66,7 +66,6 @@ export function reLayoutBySizeChanged(
     _sizeRecorder?: SizeRecorder,
     _transformRecorder?: TransformRecorder
 ) {
-    console.log('__0946__');
     const rangeRecorder: RangeRecorder = _rangeRecorder ?? new Map();
     const sizeRecorder: SizeRecorder = _sizeRecorder ?? new Map();
     const transformRecorder: TransformRecorder = _transformRecorder ?? new Map();
@@ -364,11 +363,12 @@ export function reLayoutBySizeChanged(
     function getSize(s: Shape) {
         let size = sizeRecorder.get(s.id);
         if (!size) {
+            const f = s.frame;
             size = {
-                x: s.frame.x,
-                y: s.frame.y,
-                width: s.frame.width,
-                height: s.frame.height
+                x: f.x,
+                y: f.y,
+                width: f.width,
+                height: f.height
             };
             sizeRecorder.set(s.id, size);
         }
