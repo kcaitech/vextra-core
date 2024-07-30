@@ -598,11 +598,14 @@ export function importStar(ctx: LoadContext, data: IJSON, f: ImportFun, index: n
     importStyle(style, data);
     const id = data.kcId || uuid();
 
-    const vertices = getPolygonVertices(10, 0.382);
-    const points = getPolygonPoints(vertices);
+    const count = data.count || 5;
+    const cornerRadius = data.cornerRadius || 0;
+    const starInnerScale = data.starInnerScale || 0.382;
+    const vertices = getPolygonVertices(count * 2, starInnerScale);
+    const points = getPolygonPoints(vertices, cornerRadius);
 
     const segment = new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...points), true)
-    const shape = new StarShape([index] as BasicArray<number>, id, data.name, types.ShapeType.Star, frame.trans, frame.size, style, new BasicArray<PathSegment>(segment), 5, 0.382);
+    const shape = new StarShape([index] as BasicArray<number>, id, data.name, types.ShapeType.Star, frame.trans, frame.size, style, new BasicArray<PathSegment>(segment), count, starInnerScale);
 
     shape.isVisible = visible;
     shape.style = style;
