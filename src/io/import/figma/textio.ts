@@ -37,14 +37,21 @@ export function importText(data: IJSON, textStyle: IJSON): Text {
 
     // 默认字体颜色
     const fillPaints = textStyle.fillPaints;
+    const fontColor = fillPaints && fillPaints[0] && importColor(fillPaints[0].color, fillPaints[0].opacity);
     const fontSize = textStyle.fontSize;
     /**
     family: "Inter"
     postscript: ""
     style: "Regular"
      */
-    const fontName = textStyle.fontName;
-    const weight = fontWeightMap[fontName?.style];
+    const font = textStyle.fontName;
+    const fontName = font?.family;
+    const weight = fontWeightMap[font?.style];
+    /**
+    units: "PERCENT" "PIXELS"
+    value: 100
+     */
+    const lineHeight = textStyle.lineHeight;
 
     // 默认字体边框
     // const strokePaints = data.strokePaints; // 还不支持
@@ -83,13 +90,19 @@ export function importText(data: IJSON, textStyle: IJSON): Text {
             const span = new Span(spanEnd - spanIndex);
             span.fontSize = fontSize;
             span.weight = weight;
+            span.fontName = fontName;
+            span.color = fontColor;
             if (spanattr) {
                 const fillPaints = spanattr.fillPaints;
+                const fontColor = fillPaints && fillPaints[0] && importColor(fillPaints[0].color, fillPaints[0].opacity);
+                if (fontColor) span.color = fontColor;
                 const fontSize = spanattr.fontSize;
-                const fontName = spanattr.fontName;
-                const weight = fontWeightMap[fontName?.style];
+                const font = spanattr.fontName;
+                const fontName = font?.family;
+                const weight = fontWeightMap[font?.style];
                 if (fontSize) span.fontSize = fontSize;
                 if (weight) span.weight = weight;
+                if (fontName) span.fontName = fontName;
             }
             // span.fontName = "PingFang SC";
             // set attributes
@@ -97,8 +110,17 @@ export function importText(data: IJSON, textStyle: IJSON): Text {
             spanIndex = spanEnd;
         }
 
-        // paraAttr.maximumLineHeight = 24;
-        // paraAttr.minimumLineHeight = 24;
+        if (lineHeight && fontSize) {
+            const value = lineHeight.value;
+            if (lineHeight.units === 'PERCENT') {
+                const v = Math.round(fontSize * 1.35 * value / 100);
+                paraAttr.maximumLineHeight = v;
+                paraAttr.minimumLineHeight = v;
+            } else if (lineHeight.units === 'PIXELS') {
+                paraAttr.maximumLineHeight = value;
+                paraAttr.minimumLineHeight = value;
+            }
+        }
 
         index = end;
         const para = new Para(ptext, spans);
