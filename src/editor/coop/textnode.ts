@@ -402,11 +402,16 @@ export class TextRepoNode extends RepoNode {
         }
 
         const curops: OpItem[] = this.ops.concat(...this.localops.filter((op) => ((op.op as ArrayOp).type1 !== ArrayOpType.Selection)));
-        if (curops.length === 0) throw new Error(); // todo 是可能的。在组件的变量编辑时，记录的是override前的变量的selection位置，当前节点可能只有一个selectionop。但这会出问题
+        if (curops.length === 0) {
+             // 是可能的。在组件的变量编辑时，记录的是override前的变量的selection位置，当前节点可能只有一个selectionop。但这会出问题
+             // 另外是空文本框，被自动删除，此时也仅有一个selectionop
+             // 现在外面cmd commit时过滤掉仅一个selection的op。
+            throw new Error();
+        }
         if (curops.length < realOpCount) throw new Error();
 
         // 需要变换
-        const index = ((curops as any/* 这里神奇的编译报错 */).findLastIndex((v: OpItem) => (v.cmd.id === ops[0].cmd.id))) - realOpCount + 1;
+        const index = ((curops).findLastIndex((v: OpItem) => (v.cmd.id === ops[0].cmd.id))) - realOpCount + 1;
         if (index < 0) throw new Error("not find ops");
         // check
         for (let i = 0; i < realOpCount; i++) {

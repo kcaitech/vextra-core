@@ -393,6 +393,13 @@ class CmdSync {
         // 1. 分类op
         const subrepos = classifyOps([cmd]);
         for (let { k, v } of subrepos) {
+            // 过滤掉仅一个selection的op
+            if (v.length === 1 && v[0].op === cmd.saveselection?.text) {
+                const idx = cmd.ops.indexOf(v[0].op);
+                if (idx >= 0) cmd.ops.splice(idx, 1);
+                cmd.saveselection.text = undefined;
+                continue;
+            }
             // check
             // if (v.length > 1) {
             //     console.warn("op can merge?? ", v)
