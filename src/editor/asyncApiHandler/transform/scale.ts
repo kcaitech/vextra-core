@@ -58,10 +58,7 @@ export function reLayoutBySizeChanged(
     api: Api,
     page: Page,
     shape: GroupShape,
-    scale: {
-        x: number,
-        y: number
-    },
+    scale: { x: number, y: number },
     _rangeRecorder?: RangeRecorder,
     _sizeRecorder?: SizeRecorder,
     _transformRecorder?: TransformRecorder
