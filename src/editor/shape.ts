@@ -1,23 +1,11 @@
 import {
-    BoolShape,
-    GroupShape,
-    ImageShape,
-    PathShape,
-    PathShape2,
-    RectShape,
-    Shape,
-    ShapeType,
-    SymbolShape,
-    SymbolUnionShape,
-    TextShape,
-    Variable,
-    VariableType
-} from "../data/shape";
-import { Border, BorderPosition, BorderStyle, Fill, MarkerType, Shadow } from "../data/style";
+    BoolShape, GroupShape, PathShape, PathShape2, RectShape, Shape, ShapeType,
+    SymbolShape, SymbolUnionShape, TextShape, Variable, VariableType,
+    Color, PathType, Document, SymbolRefShape, Text, Artboard, Page,
+    Border, BorderPosition, BorderStyle, Fill, MarkerType, Shadow,
+    BoolOp, CurvePoint, ExportFormat, ContactShape
+} from "../data";
 import { expand, expandTo, translate, translateTo } from "./frame";
-import { BoolOp, CurvePoint, ExportFormat } from "../data/baseclasses";
-import { Artboard } from "../data/artboard";
-import { Page } from "../data/page";
 import { CoopRepository } from "./coop/cooprepo";
 import {
     CurveMode,
@@ -30,8 +18,6 @@ import {
 import { Api } from "./coop/recordapi";
 import { importCurvePoint } from "../data/baseimport";
 import { v4 } from "uuid";
-import { ContactShape } from "../data/contact";
-import { Document, SymbolRefShape, Text } from "../data/classes";
 import { uuid } from "../basic/uuid";
 import {
     after_remove,
@@ -47,7 +33,6 @@ import {
     modify_points_xy,
     update_frame_by_points
 } from "./utils/path";
-import { Color } from "../data/color";
 import { adapt_for_artboard } from "./utils/common";
 import {
     ShapeView,
@@ -71,7 +56,6 @@ import {
     shape4fill,
     shape4shadow
 } from "./symbol";
-import { PathType } from "../data/consts";
 
 export class ShapeEditor {
     protected __shape: ShapeView;
@@ -131,9 +115,6 @@ export class ShapeEditor {
 
     /**
      * 检查当前shape的overrideType对应的属性值是否由变量起作用，如果是则判断var是否可以修改，如可以则「修改」var，否则先override再「修改」新的var
-     * @param varType
-     * @param overrideType
-     * @param valuefun
      * @returns
      */
     modifyVariable(varType: VariableType, overrideType: OverrideType, value: any, api: Api): boolean {
