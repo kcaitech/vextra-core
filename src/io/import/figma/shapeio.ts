@@ -151,8 +151,17 @@ function parseFills(fills: {
         }[];
         const transform = fill.transform ? makeShapeTransform2By1(fill.transform).getInverse() : new Transform2();
         const stopsVar = fill.stopsVar;
-
         setGradient(type, transform, stops, opacity, size, f);
+
+        const imageHash = fill.image?.hash;
+        if (type === 'IMAGE' && (imageHash instanceof Uint8Array)) {
+            f.fillType = FillType.Pattern;
+            let hexString = "";
+            for (let i = 0; i < imageHash.length; i++) {
+                hexString += imageHash[i].toString(16).padStart(2, '0');
+            }
+            f.imageRef = `${hexString}.png`;
+        }
 
         result.push(f);
     }
@@ -570,11 +579,6 @@ function importSegments(data: IJSON): {
 }
 
 export function importPathShape(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>): PathShape {
-    if (Array.isArray(data.fillPaints)) {
-        const imageInfo = data.fillPaints.find(item => item.type === 'IMAGE');
-        if (imageInfo?.image?.hash instanceof Uint8Array) return importImageShape(ctx, data, f, index, nodeChangesMap);
-    }
-
     const frame = importShapeFrame(data);
     const visible = data.visible;
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
@@ -602,7 +606,6 @@ export function importPathShape(ctx: LoadContext, data: IJSON, f: ImportFun, ind
     const shape = new cls([index] as BasicArray<number>, id, data.name, shapeType, frame.trans, frame.size, style, new BasicArray<PathSegment>(...segments));
     style.startMarkerType = startStrokeCap;
     style.endMarkerType = endStrokeCap;
-    if (startStrokeCap || endStrokeCap) console.log(startStrokeCap, endStrokeCap);
 
     shape.isVisible = visible;
     shape.style = style;
@@ -712,38 +715,6 @@ export function importGroup(ctx: LoadContext, data: IJSON, f: ImportFun, index: 
     const childs: Shape[] = (data.childs as IJSON[] || []).map((d: IJSON, i: number) => f(ctx, d, i)).filter(item => item) as Shape[];
     const shape = new GroupShape(new BasicArray(), id, data.name, types.ShapeType.Group, frame.trans, frame.size, style, new BasicArray<Shape>(...childs))
     shape.isVisible = visible;
-
-    importShapeProperty(data, shape, ctx.rawVariables, ctx.variables, nodeChangesMap);
-
-    return shape;
-}
-
-export function importImageShape(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>): ImageShape {
-    const frame = importShapeFrame(data);
-    const visible = data.visible;
-    const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
-    importStyle(style, data);
-    const id = data.kcId || uuid();
-
-    const curvePoint = new BasicArray<CurvePoint>();
-    const p1 = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight); // lt
-    const p2 = new CurvePoint([1] as BasicArray<number>, uuid(), 1, 0, CurveMode.Straight); // rt
-    const p3 = new CurvePoint([2] as BasicArray<number>, uuid(), 1, 1, CurveMode.Straight); // rb
-    const p4 = new CurvePoint([3] as BasicArray<number>, uuid(), 0, 1, CurveMode.Straight); // lb
-    curvePoint.push(p1, p2, p3, p4);
-
-    const imageInfo = data.fillPaints.find((item: any) => item.type === 'IMAGE');
-    const imageHash = imageInfo.image.hash as Uint8Array;
-    let hexString = "";
-    for (let i = 0; i < imageHash.length; i++) {
-        hexString += imageHash[i].toString(16).padStart(2, '0');
-    }
-
-    const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, true);
-    const shape = new ImageShape([index] as BasicArray<number>, id, data.name, types.ShapeType.Image, frame.trans, frame.size, style, new BasicArray<PathSegment>(segment), `${hexString}.png`);
-
-    shape.isVisible = visible;
-    shape.style = style;
 
     importShapeProperty(data, shape, ctx.rawVariables, ctx.variables, nodeChangesMap);
 
