@@ -16,8 +16,7 @@ function opPath(bop: BoolOp, path0: IPalPath, path1: IPalPath, isIntersect: bool
         case BoolOp.Intersect:
             if (isIntersect) {
                 path0.intersection(path1);
-            }
-            else {
+            } else {
                 return gPal.makePalPath("");
             }
             break;
@@ -79,8 +78,7 @@ function border2path(shape: ShapeView, borders: Border[]): Path {
         p0.delete();
         p1.delete();
         return new Path(newpath);
-    }
-    else if (outsidewidth === 0) {
+    } else if (outsidewidth === 0) {
         const path = shape.getPathStr();
         const p0 = gPal.makePalPath(path);
         const p1 = gPal.makePalPath(path);
@@ -90,8 +88,7 @@ function border2path(shape: ShapeView, borders: Border[]): Path {
         p0.delete();
         p1.delete();
         return new Path(newpath);
-    }
-    else {
+    } else {
         const path = shape.getPathStr();
         const p0 = gPal.makePalPath(path);
         const p1 = gPal.makePalPath(path);
@@ -223,8 +220,7 @@ export function render2path(shape: ShapeView, defaultOp = BoolOp.None): Path {
             ps.push(...parsePath(seg.points, !!seg.isClosed, frame.width, frame.height, fixedRadius));
         })
         resultpath = new Path(ps);
-    }
-    else {
+    } else {
         resultpath = new Path(pathstr);
     }
     return resultpath;
@@ -279,15 +275,12 @@ export class BoolShapeView extends GroupShapeView {
     }
 
     updateFrames(): boolean {
-        const bounds = this.getPath().calcBounds();
-
         const borders = this.getBorders();
         let maxborder = 0;
         borders.forEach(b => {
             if (b.position === BorderPosition.Outer) {
                 maxborder = Math.max(b.thickness, maxborder);
-            }
-            else if (b.position !== BorderPosition.Center) {
+            } else if (b.position === BorderPosition.Center) {
                 maxborder = Math.max(b.thickness / 2, maxborder);
             }
         })
@@ -295,13 +288,14 @@ export class BoolShapeView extends GroupShapeView {
         let changed = this._save_frame.x !== this.m_frame.x || this._save_frame.y !== this.m_frame.y ||
             this._save_frame.width !== this.m_frame.width || this._save_frame.height !== this.m_frame.height;
 
-        if (updateFrame(this.m_frame, bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY)) changed = true;
-        {
+        const bounds = this.getPath().calcBounds();
+        if (updateFrame(this.m_frame, bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY)) {
             this._save_frame.x = this.m_frame.x;
             this._save_frame.y = this.m_frame.y;
             this._save_frame.width = this.m_frame.width;
             this._save_frame.height = this.m_frame.height;
-        };
+            changed = true;
+        }
         // update visible
         if (updateFrame(this.m_visibleFrame, this.frame.x - maxborder, this.frame.y - maxborder, this.frame.width + maxborder * 2, this.frame.height + maxborder * 2)) changed = true;
 

@@ -176,7 +176,7 @@ export class ArtboradView extends GroupShapeView {
             if (b.position === BorderPosition.Outer) {
                 maxborder = Math.max(b.thickness, maxborder);
             }
-            else if (b.position !== BorderPosition.Center) {
+            else if (b.position === BorderPosition.Center) {
                 maxborder = Math.max(b.thickness / 2, maxborder);
             }
         })

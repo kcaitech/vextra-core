@@ -3,10 +3,13 @@ import {
     BasicArray,
     Blur,
     BlurType,
-    Border, BorderPosition,
+    Border,
+    BorderPosition,
     CornerRadius,
     CurvePoint,
-    Fill, FillType, GradientType,
+    Fill,
+    FillType,
+    GradientType,
     makeShapeTransform1By2,
     makeShapeTransform2By1,
     MarkerType,
@@ -538,7 +541,6 @@ export class ShapeView extends DataView {
 
     // =================== update ========================
     updateLayoutArgs(trans: Transform, size: ShapeFrame, radius: number | undefined) {
-
         if (size.width !== this.m_frame.width || size.height !== this.m_frame.height || size.x !== this.m_frame.x || size.y !== this.m_frame.y) {
             this.m_pathstr = undefined; // need update
             this.m_path = undefined;
@@ -563,9 +565,9 @@ export class ShapeView extends DataView {
     }
 
     updateFrames() {
-
         let changed = this._save_frame.x !== this.m_frame.x || this._save_frame.y !== this.m_frame.y ||
             this._save_frame.width !== this.m_frame.width || this._save_frame.height !== this.m_frame.height;
+
         if (changed) {
             this._save_frame.x = this.m_frame.x;
             this._save_frame.y = this.m_frame.y;
@@ -578,7 +580,7 @@ export class ShapeView extends DataView {
         borders.forEach(b => {
             if (b.position === BorderPosition.Outer) {
                 maxborder = Math.max(b.thickness, maxborder);
-            } else if (b.position !== BorderPosition.Center) {
+            } else if (b.position === BorderPosition.Center) {
                 maxborder = Math.max(b.thickness / 2, maxborder);
             }
         })
