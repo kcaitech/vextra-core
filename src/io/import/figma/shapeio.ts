@@ -2,10 +2,12 @@ import {
     Artboard,
     BasicArray,
     BasicMap,
+    BlendMode,
     Border,
     BorderPosition,
     BorderSideSetting,
     BorderStyle,
+    ContextSettings,
     CornerType,
     CurveMode,
     CurvePoint,
@@ -15,10 +17,10 @@ import {
     Gradient,
     GradientType,
     GroupShape,
-    ImageShape,
     makeShapeTransform2By1,
     MarkerType,
-    OvalShape, OverrideType,
+    OvalShape,
+    OverrideType,
     Page,
     PathSegment,
     PathShape,
@@ -412,6 +414,10 @@ function importSymbolOverrides(data: IJSON, shape: Shape, rawVariables: Map<stri
 function importShapeProperty(data: IJSON, shape: Shape, rawVariables: Map<string, IJSON>, variables: BasicMap<string, Variable>, nodeChangesMap: Map<string, IJSON>) {
     importComponentPropRefs(data, shape, rawVariables, variables);
     importSymbolOverrides(data, shape, rawVariables, variables, nodeChangesMap);
+
+    shape.constrainerProportions = data.proportionsConstrained;
+    shape.isLocked = data.locked;
+    if (data.opacity !== undefined) shape.style.contextSettings = new ContextSettings(BlendMode.Normal, data.opacity);
 }
 
 export function importPage(ctx: LoadContext, data: IJSON, f: ImportFun, nodeChangesMap: Map<string, IJSON>): Page {
