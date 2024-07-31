@@ -17,6 +17,7 @@ import {
     GroupShape,
     ImageShape,
     makeShapeTransform2By1,
+    MarkerType,
     OvalShape, OverrideType,
     Page,
     PathSegment,
@@ -44,16 +45,16 @@ import {
     Variable,
     VariableType,
 } from "../../../data";
-import { uuid } from "../../../basic/uuid";
-import { IJSON, ImportFun, LoadContext } from "./basic";
+import {uuid} from "../../../basic/uuid";
+import {IJSON, ImportFun, LoadContext} from "./basic";
 import * as shapeCreator from "../../../editor/creator";
 import * as types from "../../../data/typesdefine";
-import { float_accuracy } from "../../../basic/consts";
-import { ColVector3D } from "../../../basic/matrix2";
-import { Transform as Transform2 } from "../../../basic/transform";
-import { getPolygonPoints, getPolygonVertices } from "../../../editor/utils/path";
-import { importText } from "./textio";
-import { importColor } from "./common";
+import {float_accuracy} from "../../../basic/consts";
+import {ColVector3D} from "../../../basic/matrix2";
+import {Transform as Transform2} from "../../../basic/transform";
+import {getPolygonPoints, getPolygonVertices} from "../../../editor/utils/path";
+import {importText} from "./textio";
+import {importColor} from "./common";
 
 function toStrId(id?: {
     localID: string,
@@ -80,7 +81,7 @@ function setGradient(
     item: Fill | Border,
 ) {
     if (type === 'GRADIENT_LINEAR') {
-        const { col0: from, col1: to } = transform.transform([
+        const {col0: from, col1: to} = transform.transform([
             ColVector3D.FromXY(0, 0.5),
             ColVector3D.FromXY(1, 0.5),
         ]);
@@ -95,7 +96,7 @@ function setGradient(
         item.gradient = new Gradient(from1, to1, colorType, stops1 as BasicArray<Stop>, undefined, opacity);
         item.fillType = FillType.Gradient;
     } else if (type === 'GRADIENT_RADIAL' || type === 'GRADIENT_ANGULAR') {
-        const { col0: from, col1: to } = transform.transform([
+        const {col0: from, col1: to} = transform.transform([
             ColVector3D.FromXY(0.5, 0.5),
             ColVector3D.FromXY(1, 0.5),
         ]);
@@ -302,8 +303,8 @@ function importStyle(style: Style, data: IJSON) {
 }
 
 function importShapeFrame(data: IJSON) {
-    const size = data.size || { x: 1, y: 1 };
-    const trans = data.transform || { m00: 1, m10: 0, m01: 0, m11: 1, m02: 0, m12: 0 };
+    const size = data.size || {x: 1, y: 1};
+    const trans = data.transform || {m00: 1, m10: 0, m01: 0, m11: 1, m02: 0, m12: 0};
     return {
         size: new ShapeSize(size.x, size.y),
         trans: new Transform(trans.m00, trans.m01, trans.m02, trans.m10, trans.m11, trans.m12)
@@ -420,7 +421,11 @@ export function importPage(ctx: LoadContext, data: IJSON, f: ImportFun, nodeChan
     return shape;
 }
 
-function importSegments(data: IJSON): PathSegment[] {
+function importSegments(data: IJSON): {
+    segments: PathSegment[],
+    startStrokeCap?: MarkerType,
+    endStrokeCap?: MarkerType,
+} {
     const vectorData = data.vectorData;
     const vectorNetwork = vectorData?.vectorNetwork;
     const vertices = vectorNetwork?.vertices as any[];
@@ -429,7 +434,15 @@ function importSegments(data: IJSON): PathSegment[] {
     const normalizedSize = vectorData?.normalizedSize as any;
 
     if (!Array.isArray(vertices) || !Array.isArray(segments) || !Array.isArray(regions) || !normalizedSize) {
-        return [];
+        return {
+            segments: [],
+        };
+    }
+
+    const styleOverrideTable = vectorData?.styleOverrideTable;
+    const styleOverrideTableMap = new Map();
+    if (Array.isArray(styleOverrideTable)) for (const item of styleOverrideTable) {
+        styleOverrideTableMap.set(item.styleID, item);
     }
 
     function getCycleIndex(length: number, i: number) {
@@ -443,11 +456,11 @@ function importSegments(data: IJSON): PathSegment[] {
         dx?: number,
         dy?: number,
     }) {
-        const vertex = { ...vertices[index.vertex] };
+        const vertex = {...vertices[index.vertex]};
         vertex.x += (index.dx || 0);
         vertex.y += (index.dy || 0);
-        vertex.x /= normalizedSize.x;
-        vertex.y /= normalizedSize.y;
+        vertex.x /= (normalizedSize.x || 1);
+        vertex.y /= (normalizedSize.y || 1);
         return vertex;
     }
 
@@ -456,7 +469,7 @@ function importSegments(data: IJSON): PathSegment[] {
         to?: any,
     }[]) {
         return points.map((item, i) => {
-            const basePoint = getVertex({ vertex: item.from ? item.from.vertex : item.to.vertex });
+            const basePoint = getVertex({vertex: item.from ? item.from.vertex : item.to.vertex});
             const p = new CurvePoint([i] as BasicArray<number>, uuid(), basePoint.x, basePoint.y, CurveMode.Straight);
             const hasCurveFrom = item.from && (Math.abs(item.from.dx) > float_accuracy || Math.abs(item.from.dy) > float_accuracy);
             const hasCurveTo = item.to && (Math.abs(item.to.dx) > float_accuracy || Math.abs(item.to.dy) > float_accuracy);
@@ -478,7 +491,10 @@ function importSegments(data: IJSON): PathSegment[] {
         })
     }
 
-    const segments1 = [];
+    const segments1: PathSegment[] = [];
+    const result: any = {
+        segments: segments1,
+    }
 
     if (regions.length > 0) {
         for (const region of regions) {
@@ -508,7 +524,7 @@ function importSegments(data: IJSON): PathSegment[] {
                     isEqualLastPoint = currentSegment.end.vertex === nextSegment.start.vertex;
 
                     if (i !== length - 1 || !isEqualLastPoint) {
-                        const point1 = { to: currentSegment.end } as any;
+                        const point1 = {to: currentSegment.end} as any;
                         if (isEqualLastPoint) point1.from = nextSegment.start;
                         points.push(point1);
                     } else { // 是最后一个且isEqualLastPoint为true
@@ -524,14 +540,33 @@ function importSegments(data: IJSON): PathSegment[] {
         for (let i = 0; i < segments.length; i++) {
             const segment = segments[i];
             const points = toCurvePoints([
-                { from: segment.start },
-                { to: segment.end },
+                {from: segment.start},
+                {to: segment.end},
             ]);
             segments1.push(new PathSegment([i] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...points), false))
         }
+
+        function getStrokeCap(strokeCap: string) {
+            if (strokeCap === 'ARROW_LINES') return MarkerType.OpenArrow;
+            else if (strokeCap === 'ARROW_EQUILATERAL') return MarkerType.FilledArrow;
+            // else if (strokeCap === 'TRIANGLE_FILLED') return MarkerType.OpenArrow;
+            else if (strokeCap === 'CIRCLE_FILLED') return MarkerType.FilledCircle;
+            else if (strokeCap === 'DIAMOND_FILLED') return MarkerType.FilledSquare;
+            else return MarkerType.Line;
+        }
+
+        const startVertexStyleID = vertices[segments[0].start.vertex].styleID;
+        const startStyleOverride = styleOverrideTableMap.get(startVertexStyleID);
+        const startStrokeCap = startStyleOverride?.strokeCap;
+        if (startStrokeCap) result.startStrokeCap = getStrokeCap(startStrokeCap);
+
+        const endVertexStyleID = vertices[segments[segments.length - 1].end.vertex].styleID;
+        const endStyleOverride = styleOverrideTableMap.get(endVertexStyleID);
+        const endStrokeCap = endStyleOverride?.strokeCap;
+        if (endStrokeCap) result.endStrokeCap = getStrokeCap(endStrokeCap);
     }
 
-    return segments1;
+    return result;
 }
 
 export function importPathShape(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>): PathShape {
@@ -546,9 +581,14 @@ export function importPathShape(ctx: LoadContext, data: IJSON, f: ImportFun, ind
     importStyle(style, data);
     const id = data.kcId || uuid();
 
+    if (frame.size.width === 0 || frame.size.height === 0) {
+        frame.size.width = frame.size.width || 1;
+        frame.size.height = frame.size.height || 1;
+    }
+
     let cls = PathShape;
     let shapeType = types.ShapeType.Path;
-    let segments = importSegments(data);
+    let {segments, startStrokeCap, endStrokeCap} = importSegments(data);
     if (segments.length === 0) {
         segments = [new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(
             new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight), // lt
@@ -560,6 +600,9 @@ export function importPathShape(ctx: LoadContext, data: IJSON, f: ImportFun, ind
         shapeType = types.ShapeType.Rectangle;
     }
     const shape = new cls([index] as BasicArray<number>, id, data.name, shapeType, frame.trans, frame.size, style, new BasicArray<PathSegment>(...segments));
+    style.startMarkerType = startStrokeCap;
+    style.endMarkerType = endStrokeCap;
+    if (startStrokeCap || endStrokeCap) console.log(startStrokeCap, endStrokeCap);
 
     shape.isVisible = visible;
     shape.style = style;
@@ -739,10 +782,14 @@ export function importTextShape(ctx: LoadContext, data: IJSON, f: ImportFun, ind
     const text: Text = data.textData && importText(data.textData, data);
     const textBehaviour = ((textAutoResize: string) => {
         switch (textAutoResize) {
-            case "HEIGHT": return TextBehaviour.Fixed;
-            case "NONE": return TextBehaviour.FixWidthAndHeight;
-            case "WIDTH_AND_HEIGHT": return TextBehaviour.Flexible;
-            default: return TextBehaviour.Flexible;
+            case "HEIGHT":
+                return TextBehaviour.Fixed;
+            case "NONE":
+                return TextBehaviour.FixWidthAndHeight;
+            case "WIDTH_AND_HEIGHT":
+                return TextBehaviour.Flexible;
+            default:
+                return TextBehaviour.Flexible;
         }
     })(data.textAutoResize);
     text.attr && (text.attr.textBehaviour = textBehaviour);
