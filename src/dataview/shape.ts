@@ -904,8 +904,9 @@ export class ShapeView extends DataView {
 
         // 模糊
         if (blur.length) {
+            console.log('__blur__');
             let filter: string = '';
-            if (this.blur?.type === BlurType.Gaussian) filter = `url(#${blurId})`;
+            filter = `url(#${blurId})`;
             children = [...blur, elh('g', { filter }, children)];
         }
 

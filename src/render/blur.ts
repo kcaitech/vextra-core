@@ -74,7 +74,7 @@ handler[BlurType.Background] = (h: Function, blur: Blur, id: string, frame: Shap
 
 export function render(h: Function, blur: Blur, id: string, frame: ShapeSize, fills: Fill[], path: string) {
     if (!blur || !blur.isEnabled) return [];
-    if (blur.type !== BlurType.Gaussian) return [];
+    // if (blur.type !== BlurType.Gaussian) return [];
     const el = handler[blur.type](h, blur, id, frame, fills, path);
     if (!el) return [];
     return [el];
