@@ -237,7 +237,7 @@ function parseStroke(strokes: {
         const border = new Border(
             [strokesIndex + i] as BasicArray<number>,
             uuid(),
-            true,
+            visible,
             FillType.SolidColor,
             importColor(color, opacity),
             position,
