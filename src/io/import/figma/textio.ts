@@ -5,17 +5,17 @@ import * as types from "../../../data/classes"
 import { BasicArray } from "../../../data/basic";
 import { IJSON } from "./basic";
 
-function importHorzAlignment(align: number) {
-    return [types.TextHorAlign.Left,
-    types.TextHorAlign.Right,
-    types.TextHorAlign.Centered,
-    types.TextHorAlign.Justified,
-    types.TextHorAlign.Natural][align] ?? types.TextHorAlign.Left;
+function importHorzAlignment(align: string) {
+    switch (align) {
+        case "RIGHT": return types.TextHorAlign.Right;
+        case "CENTER": return types.TextHorAlign.Centered;
+        default: return types.TextHorAlign.Left;
+    }
 }
 function importVertAlignment(align: string) {
     switch (align) {
         case 'TOP': return types.TextVerAlign.Top;
-        case 'MIDDLE': return types.TextVerAlign.Middle;
+        case "CENTER": return types.TextVerAlign.Middle;
         case 'BOTTOM': return types.TextVerAlign.Bottom;
         default: return types.TextVerAlign.Top;
     }
@@ -55,6 +55,9 @@ export function importText(data: IJSON, textStyle: IJSON): Text {
 
     // 默认字体边框
     // const strokePaints = data.strokePaints; // 还不支持
+
+    const alignment = textStyle.textAlignHorizontal && importHorzAlignment(textStyle.textAlignHorizontal);
+    const verAlign = textStyle.textAlignVertical && importVertAlignment(textStyle.textAlignVertical);
 
     let text: string = data["characters"] || "";
     if (text[text.length - 1] != '\n') {
@@ -121,6 +124,7 @@ export function importText(data: IJSON, textStyle: IJSON): Text {
                 paraAttr.minimumLineHeight = value;
             }
         }
+        if (alignment && alignment !== types.TextHorAlign.Left) paraAttr.alignment = alignment;
 
         index = end;
         const para = new Para(ptext, spans);
@@ -129,12 +133,7 @@ export function importText(data: IJSON, textStyle: IJSON): Text {
     }
 
     const textAttr: TextAttr = new TextAttr();
-    if (textStyle) {
-        // textAttr.verticalAlignment = importVertAlignment(textStyle['textAlignVertical']);
-        // textAttr.alignment = importHorzAlignment(styParaAttr['alignment']);
-        // textAttr.minimumLineHeight = styParaAttr['minimumLineHeight'];
-        // textAttr.maximumLineHeight = styParaAttr['maximumLineHeight'];
-    }
+    if (verAlign && verAlign !== types.TextVerAlign.Top) textAttr.verAlign = verAlign;
 
     const ret = new Text(paras);
     ret.attr = textAttr;
