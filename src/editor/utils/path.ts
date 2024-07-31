@@ -28,7 +28,7 @@ export function pathEdit(api: Api, page: Page, s: PathShape, index: number, end:
     // todo 连接线相关操作
     let m = matrix ? matrix : new Matrix();
     if (!matrix) {
-        const w = s.frame.width, h = s.frame.height;
+        const w = s.size.width, h = s.size.height;
         if (w === 0 || h === 0) throw new Error(); // 不可以为0
         m.multiAtLeft(s.matrix2Root());
         m.preScale(w, h);
@@ -98,7 +98,7 @@ export function pointsEdit(api: Api, page: Page, s: Shape, points: CurvePoint[],
 export function contact_edit(api: Api, page: Page, s: ContactShape, index1: number, index2: number, dx: number, dy: number) { // 以边为操作目标编辑路径
     // todo 连接线相关操作
     const m = new Matrix(s.matrix2Root());
-    const w = s.frame.width, h = s.frame.height;
+    const w = s.size.width, h = s.size.height;
 
     m.preScale(w, h);
 
@@ -163,7 +163,7 @@ export function get_points_for_init(page: Page, shape: ContactShape, index: numb
         }
 
         const m1 = shape.matrix2Root();
-        const f = shape.frame;
+        const f = shape.size;
         m1.preScale(f.width, f.height);
         const m2 = new Matrix(m1.inverse);
 
@@ -204,7 +204,7 @@ export function get_points_for_init(page: Page, shape: ContactShape, index: numb
         }
 
         const m1 = shape.matrix2Root();
-        const f = shape.frame;
+        const f = shape.size;
         m1.preScale(f.width, f.height);
         const m2 = new Matrix(m1.inverse);
 
@@ -269,7 +269,7 @@ export function update_frame_by_points(api: Api, page: Page, s: Shape, reLayout 
         return;
     }
     const m3 = new Matrix(s.matrix2Parent());
-    m3.preScale(s.frame.width, s.frame.height);
+    m3.preScale(s.size.width, s.size.height);
     m1.multiAtLeft(m3.inverse);
 
     (s as PathShape).pathsegs.forEach((segment, index) => {
@@ -571,7 +571,7 @@ export function modify_points_xy(api: Api, page: Page, s: Shape, actions: {
     y: number;
 }[]) {
     let m = new Matrix(s.matrix2Parent());
-    const f = s.frame;
+    const f = s.size;
     m.preScale(f.width, f.height);
 
     m = new Matrix(m.inverse);
@@ -599,33 +599,33 @@ export function is_straight(shape: Shape) {
     return points.length === 2 && !points[0].hasFrom && !points[1].hasTo; // 两个点的，那就是直线
 }
 
-export function get_rotate_for_straight(shape: PathShape, v: number) {
-    const points = (shape as PathShape)?.pathsegs[0]?.points;
+// export function get_rotate_for_straight(shape: PathShape, v: number) {
+//     const points = (shape as PathShape)?.pathsegs[0]?.points;
 
-    const f = shape.frame, m = shape.matrix2Root();
-    m.preScale(f.width, f.height);
-    const p1 = points[0];
-    const p2 = points[1];
+//     const f = shape.size, m = shape.matrix2Root();
+//     m.preScale(f.width, f.height);
+//     const p1 = points[0];
+//     const p2 = points[1];
 
-    if (!p1 || !p2) {
-        return 0;
-    }
+//     if (!p1 || !p2) {
+//         return 0;
+//     }
 
-    const lt = m.computeCoord2(p1.x, p1.y);
-    const rb = m.computeCoord2(p2.x, p2.y);
-    const real_r = Number(getHorizontalAngle(lt, rb).toFixed(2));
+//     const lt = m.computeCoord2(p1.x, p1.y);
+//     const rb = m.computeCoord2(p2.x, p2.y);
+//     const real_r = Number(getHorizontalAngle(lt, rb).toFixed(2));
 
-    let dr = v - real_r;
-    // todo flip
-    // if (shape.isFlippedHorizontal) {
-    //     dr = -dr;
-    // }
-    // if (shape.isFlippedVertical) {
-    //     dr = -dr;
-    // }
+//     let dr = v - real_r;
+//     // todo flip
+//     // if (shape.isFlippedHorizontal) {
+//     //     dr = -dr;
+//     // }
+//     // if (shape.isFlippedVertical) {
+//     //     dr = -dr;
+//     // }
 
-    return (shape.rotation || 0) + dr;
-}
+//     return (shape.rotation || 0) + dr;
+// }
 
 // 生成一个顶点为 (0.5, 0)，中心点为 (0.5, 0.5)，边数为 n 的等边多边形的顶点坐标
 export function getPolygonVertices(sidesCount: number, offsetPercent?: number) {

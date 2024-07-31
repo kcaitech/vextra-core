@@ -34,7 +34,15 @@ import {
     update_frame_by_points
 } from "./utils/path";
 import { adapt_for_artboard } from "./utils/common";
-import { ShapeView, SymbolRefView, SymbolView, adapt2Shape, findOverride } from "../dataview";
+import {
+    ShapeView,
+    SymbolRefView,
+    SymbolView,
+    TextShapeView,
+    adapt2Shape,
+    findOverride,
+    ArtboradView
+} from "../dataview";
 import {
     is_part_of_symbol,
     is_part_of_symbolref,
@@ -182,7 +190,7 @@ export class ShapeEditor {
                 if (view.isCustomSize) {
                     api.shapeModifyIsCustomSize(this.__page, view.data, false);
                     const sym = view.symData;
-                    if (sym) api.shapeModifyWH(this.__page, view.data, sym.frame.width, sym.frame.height);
+                    if (sym) api.shapeModifyWH(this.__page, view.data, sym.size.width, sym.size.height);
                 }
             } else {
                 // 清空p中与当前view相关的variables,overrides
@@ -985,17 +993,16 @@ export class ShapeEditor {
 
     // 容器自适应大小
     public adapt() {
-        if (!(this.shape instanceof Artboard)) {
-            console.log('adapt: !(this.shape instanceof Artboard)');
-            return;
-        }
-
         try {
-            const api = this.__repo.start("adapt");
-            adapt_for_artboard(api, this.__page, this.shape);
-            this.__repo.commit();
+            if (!(this.view instanceof ArtboradView)) throw new Error('!(this.shape instanceof Artboard)');
+            const api = this.__repo.start('adapt');
+            if (adapt_for_artboard(api, this.__page, this.view)) {
+                this.__repo.commit();
+            } else {
+                throw new Error('wrong env');
+            }
         } catch (error) {
-            console.log('adapt', error);
+            console.error('adapt', error);
             this.__repo.rollback();
         }
     }
@@ -1151,7 +1158,7 @@ export class ShapeEditor {
                 if (!view.data.isCustomSize) {
                     const sym = this.__document.symbolsMgr.get(refId);
                     if (sym) {
-                        api.shapeModifyWH(this.__page, view.data, sym.frame.width, sym.frame.height);
+                        api.shapeModifyWH(this.__page, view.data, sym.size.width, sym.size.height);
                     }
                 }
             }

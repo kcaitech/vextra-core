@@ -7,6 +7,7 @@ import { ShapeFrame, SymbolUnionShape } from "../../data/shape";
 import { BasicArray, BasicMap } from "../../data/basic";
 import { IImportContext, importSymbolShape, importSymbolUnionShape } from "../../data/baseimport";
 import { FMT_VER_latest } from "../../data/fmtver";
+import { ShapeSize } from "src/data/typesdefine";
 
 export function pageInsert(document: Document, page: Page, index: number) {
     if (index < 0) return;
@@ -64,19 +65,21 @@ function _checkNum(x: number) {
     // check
     if (Number.isNaN(x) || (!Number.isFinite(x))) throw new Error(String(x));
 }
-function _checkFrame(frame: ShapeFrame) {
+function _checkFrame(shape: Shape) {
+    if (!shape.hasSize()) return;
+    const frame: ShapeSize = shape.size;
     if (frame.width === 0 || frame.height === 0) throw new Error();
-    _checkNum(frame.x);
-    _checkNum(frame.y);
+    // _checkNum(frame.x);
+    // _checkNum(frame.y);
     _checkNum(frame.width);
     _checkNum(frame.height);
 }
 
-export function shapeInsert(document: Document, page: Page, parent: GroupShape, shape: Shape, index: number, needUpdateFrame: { shape: Shape, page: Page }[]) {
+export function shapeInsert(document: Document, page: Page, parent: GroupShape, shape: Shape, index: number) {
     // shape不可以一次性插入多个对象，需要分开插入
     // 从根开始插入
 
-    _checkFrame(shape.frame);
+    _checkFrame(shape);
 
     const ops: Op[] = [];
 
@@ -105,11 +108,11 @@ export function shapeInsert(document: Document, page: Page, parent: GroupShape, 
     }
     recursive(parent, shape, index);
 
-    needUpdateFrame.push({ shape, page });
+    // needUpdateFrame.push({ shape, page });
 
     return ops;
 }
-export function shapeDelete(document: Document, page: Page, parent: GroupShape, index: number, needUpdateFrame: { shape: Shape, page: Page }[]) {
+export function shapeDelete(document: Document, page: Page, parent: GroupShape, index: number) {
 
     // shape不可以一次删除多个对象，要分开删除
     // 从叶子开始删除
@@ -150,9 +153,9 @@ export function shapeDelete(document: Document, page: Page, parent: GroupShape, 
     const shape = parent.childs[index];
     recursive(parent, shape, index, 0);
 
-    if (ops.length > 0 && parent.childs.length > 0) {
-        needUpdateFrame.push({ shape: parent.childs[0], page })
-    }
+    // if (ops.length > 0 && parent.childs.length > 0) {
+    //     needUpdateFrame.push({ shape: parent.childs[0], page })
+    // }
 
     return ops;
 }
@@ -166,13 +169,13 @@ export function shapeDelete(document: Document, page: Page, parent: GroupShape, 
  * @param needUpdateFrame 
  * @returns 
  */
-export function shapeMove(page: Page, parent: GroupShape, index: number, parent2: GroupShape, index2: number, needUpdateFrame: { shape: Shape, page: Page }[]) {
+export function shapeMove(page: Page, parent: GroupShape, index: number, parent2: GroupShape, index2: number) {
     const op = crdtShapeMove(page, parent, index, parent2, index2);
-    if (op && op.length > 0) {
-        needUpdateFrame.push({ shape: op[op.length - 1].data2 as Shape, page })
-        if (parent.id !== parent2.id && parent.childs.length > 0) {
-            needUpdateFrame.push({ shape: parent.childs[0], page })
-        }
-    }
+    // if (op && op.length > 0) {
+    //     needUpdateFrame.push({ shape: op[op.length - 1].data2 as Shape, page })
+    //     if (parent.id !== parent2.id && parent.childs.length > 0) {
+    //         needUpdateFrame.push({ shape: parent.childs[0], page })
+    //     }
+    // }
     return op;
 }

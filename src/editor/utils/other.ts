@@ -4,7 +4,7 @@ import {
     BorderPosition,
     BorderStyle,
     Color,
-    Document, 
+    Document,
     GroupShape,
     OverrideType,
     Page,
@@ -55,7 +55,7 @@ export function fixTextShapeFrameByLayout(api: _Api, page: Page, shape: TextShap
 
             const targetHeight = Math.ceil(Math.max(fontsize, layout.contentHeight));
 
-            api.shapeModifyWH(page, _shape, shape.frame.width, targetHeight);
+            api.shapeModifyWH(page, _shape, shape.size.width, targetHeight);
             break;
         }
         case TextBehaviour.Flexible: {
@@ -115,7 +115,7 @@ export function find_state_space(union: SymbolShape) {
     let space_x = -1;
     for (let i = 0, len = childs.length; i < len; i++) {
         const child = childs[i];
-        const m2p = child.matrix2Parent(), f = child.frame;
+        const m2p = child.matrix2Parent(), f = child.size;
         const point = [
             { x: 0, y: 0 },
             { x: f.width, y: 0 },
@@ -133,13 +133,13 @@ export function find_state_space(union: SymbolShape) {
 export function modify_frame_after_inset_state(page: Page, api: Api, union: SymbolShape) {
     const space = find_state_space(union)
     if (!space) return;
-    const delta_x = union.frame.width - space.x;
-    const delta_y = union.frame.height - space.y;
+    const delta_x = union.size.width - space.x;
+    const delta_y = union.size.height - space.y;
     if (delta_x <= 0) {
-        api.shapeModifyWidth(page, union, union.frame.width - delta_x + 20)
+        api.shapeModifyWidth(page, union, union.size.width - delta_x + 20)
     }
     if (delta_y <= 0) {
-        api.shapeModifyHeight(page, union, union.frame.height - delta_y + 20)
+        api.shapeModifyHeight(page, union, union.size.height - delta_y + 20)
     }
 }
 
@@ -466,5 +466,5 @@ export function modify_index(parent: GroupShape, s1: Shape, s2: Shape, index: nu
 
 export function after_remove(parent: GroupShape | ShapeView) {
     return parent instanceof Shape ? (((parent?.type === ShapeType.Group) || (parent instanceof SymbolUnionShape)) && !parent?.childs?.length) :
-    (((parent?.type === ShapeType.Group) || (parent.data instanceof SymbolUnionShape)) && !(parent?.data as GroupShape).childs?.length);
+        (((parent?.type === ShapeType.Group) || (parent.data instanceof SymbolUnionShape)) && !(parent?.data as GroupShape).childs?.length);
 }
