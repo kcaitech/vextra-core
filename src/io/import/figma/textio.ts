@@ -1,14 +1,16 @@
 
-import { Para, ParaAttr, Span, Text, TextAttr, TextTransformType } from "../../../data/text";
+import { BulletNumbers, Para, ParaAttr, Span, Text, TextAttr, TextTransformType } from "../../../data/text";
 import { importColor } from "./common";
 import * as types from "../../../data/classes"
 import { BasicArray } from "../../../data/basic";
 import { IJSON } from "./basic";
+import { mergeSpanAttr } from "../../../data/textutils";
 
 function importHorzAlignment(align: string) {
     switch (align) {
         case "RIGHT": return types.TextHorAlign.Right;
         case "CENTER": return types.TextHorAlign.Centered;
+        case "JUSTIFIED": return types.TextHorAlign.Justified;
         default: return types.TextHorAlign.Left;
     }
 }
@@ -31,6 +33,15 @@ const fontWeightMap: { [key: string]: number } = {
     "Light": 300,
     "Extra Light": 200,
     "Thin": 100,
+}
+
+function importTransform(textCase: string) {
+    switch (textCase) {
+        case "UPPER": return TextTransformType.Uppercase;
+        case "LOWER": return TextTransformType.Lowercase;
+        case "TITLE": return TextTransformType.UppercaseFirst;
+        case "ORIGINAL": console.warn("unsupport ORIGINAL transform"); return;
+    }
 }
 
 export function importText(data: IJSON, textStyle: IJSON): Text {
@@ -59,6 +70,14 @@ export function importText(data: IJSON, textStyle: IJSON): Text {
     const alignment = textStyle.textAlignHorizontal && importHorzAlignment(textStyle.textAlignHorizontal);
     const verAlign = textStyle.textAlignVertical && importVertAlignment(textStyle.textAlignVertical);
 
+    // "UNDERLINE" "STRIKETHROUGH"
+    const textDecoration = textStyle.textDecoration;
+
+    const transform = importTransform(textStyle.textCase);
+
+    const paragraphSpacing = textStyle.paragraphSpacing;
+    const listSpacing = textStyle.listSpacing;
+
     let text: string = data["characters"] || "";
     if (text[text.length - 1] != '\n') {
         text = text + "\n"; // attr也要修正
@@ -80,7 +99,7 @@ export function importText(data: IJSON, textStyle: IJSON): Text {
     while (index < text.length) {
 
         const end = text.indexOf('\n', index) + 1;
-        const ptext = text.substring(index, end);
+        let ptext = text.substring(index, end);
         const paraAttr: ParaAttr = new ParaAttr(); // todo
         const spans = new BasicArray<Span>();
 
@@ -95,6 +114,11 @@ export function importText(data: IJSON, textStyle: IJSON): Text {
             span.weight = weight;
             span.fontName = fontName;
             span.color = fontColor;
+            if (textDecoration === 'STRIKETHROUGH') span.strikethrough = types.StrikethroughType.Single;
+            else if (textDecoration === 'UNDERLINE') span.underline = types.UnderlineType.Single;
+
+            if (transform) span.transform = transform;
+
             if (spanattr) {
                 const fillPaints = spanattr.fillPaints;
                 const fontColor = fillPaints && fillPaints[0] && importColor(fillPaints[0].color, fillPaints[0].opacity);
@@ -106,9 +130,21 @@ export function importText(data: IJSON, textStyle: IJSON): Text {
                 if (fontSize) span.fontSize = fontSize;
                 if (weight) span.weight = weight;
                 if (fontName) span.fontName = fontName;
+
+                const transform = importTransform(spanattr.textCase);
+                if (transform) span.transform = transform;
+
+                const textDecoration = spanattr.textDecoration;
+                if (textDecoration === 'STRIKETHROUGH') {
+                    span.underline = undefined;
+                    span.strikethrough = types.StrikethroughType.Single;
+                }
+                else if (textDecoration === 'UNDERLINE') {
+                    span.strikethrough = undefined;
+                    span.underline = types.UnderlineType.Single;
+                }
             }
-            // span.fontName = "PingFang SC";
-            // set attributes
+
             spans.push(span);
             spanIndex = spanEnd;
         }
@@ -125,6 +161,54 @@ export function importText(data: IJSON, textStyle: IJSON): Text {
             }
         }
         if (alignment && alignment !== types.TextHorAlign.Left) paraAttr.alignment = alignment;
+        if (paragraphSpacing !== undefined && fontSize !== undefined) {
+            if (lineHeight.units === 'PERCENT') {
+                paraAttr.paraSpacing = paragraphSpacing
+            } else if (lineHeight.units === 'PIXELS') {
+                paraAttr.paraSpacing = paragraphSpacing - fontSize;
+            }
+        }
+
+        const line = lines[paras.length];
+
+        if (line) {
+            const indentationLevel = line.indentationLevel;
+            if (indentationLevel) paraAttr.indent = indentationLevel - 1;
+        }
+
+        const lineType = line?.lineType;
+        // "UNORDERED_LIST" "ORDERED_LIST" "PLAIN"
+        if (line && (lineType === "UNORDERED_LIST" || lineType === "ORDERED_LIST")) {
+
+            if (listSpacing !== undefined && fontSize !== undefined) {
+                if (lineHeight.units === 'PERCENT') {
+                    paraAttr.paraSpacing = listSpacing
+                } else if (lineHeight.units === 'PIXELS') {
+                    paraAttr.paraSpacing = listSpacing - fontSize;
+                }
+            }
+            const isFirstLineOfList = line.isFirstLineOfList;
+            const listStartOffset = line.listStartOffset;
+
+            ptext = '*' + ptext;
+
+            const span = new Span(1);
+            if (spans.length > 0) mergeSpanAttr(span, spans[0]);
+            span.placeholder = true;
+            spans.unshift(span);
+            span.bulletNumbers = new BulletNumbers(lineType === "UNORDERED_LIST" ? types.BulletNumbersType.Disorded : types.BulletNumbersType.Ordered1Ai);
+            if (isFirstLineOfList) span.bulletNumbers.behavior = types.BulletNumbersBehavior.Renew;
+            if (listStartOffset) span.bulletNumbers.offset = listStartOffset;
+
+        } else {
+            if (paragraphSpacing !== undefined && fontSize !== undefined) {
+                if (lineHeight.units === 'PERCENT') {
+                    paraAttr.paraSpacing = paragraphSpacing
+                } else if (lineHeight.units === 'PIXELS') {
+                    paraAttr.paraSpacing = paragraphSpacing - fontSize;
+                }
+            }
+        }
 
         index = end;
         const para = new Para(ptext, spans);
