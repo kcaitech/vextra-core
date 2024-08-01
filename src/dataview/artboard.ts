@@ -130,8 +130,7 @@ export class ArtboradView extends GroupShapeView {
             children = [...shadows, ...children];
         }
 
-        if (blur.length && this.blur?.type === BlurType.Gaussian) {
-            props.filter = `url(#${blurId})`;
+        if (blur.length) {
             children = [...blur, ...children];
         }
 

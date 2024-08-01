@@ -765,7 +765,6 @@ export class ShapeView extends DataView {
     // ================== render ===========================
 
     protected renderFills(): EL[] {
-        return renderFills(elh, this.getFills(), this.frame, this.getPathStr());
         let fills = this.getFills();
         if (this.mask) {
             fills = fills.map(f => {
@@ -778,7 +777,6 @@ export class ShapeView extends DataView {
     }
 
     protected renderBorders(): EL[] {
-        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.m_data);
         let borders = this.getBorders();
         if (this.mask) {
             borders = borders.map(b => {
@@ -796,7 +794,7 @@ export class ShapeView extends DataView {
 
     protected renderBlur(blurId: string): EL[] {
         if (!this.blur) return [];
-        return renderBlur(elh, this.blur, blurId, this.frame, this.getFills(), this.getPathStr());
+        return renderBlur(elh, this.blur, blurId, this.frame, this.getFills(), this.getBorders(),this.getPathStr());
     }
 
     protected renderProps(): { [key: string]: string } & { style: any } {
