@@ -78,10 +78,13 @@ function toStrId(id?: {
     return [id.localID, id.sessionID].join(',');
 }
 
-function setGradient(
-    type: string,
-    transform: Transform2,
-    stops: {
+export function parseGradient(
+    data: IJSON,
+    size: any,
+) {
+    const type = data.type;
+    const transform = data.transform ? makeShapeTransform2By1(data.transform).getInverse() : new Transform2();
+    const stops = data.stops as {
         color: {
             r: number,
             g: number,
@@ -89,11 +92,9 @@ function setGradient(
             a: number,
         },
         position: number,
-    }[],
-    opacity: number,
-    size: any,
-    item: Fill | Border,
-) {
+    }[];
+    const opacity = data.opacity;
+
     if (type === 'GRADIENT_LINEAR') {
         const {col0: from, col1: to} = transform.transform([
             ColVector3D.FromXY(0, 0.5),
@@ -107,8 +108,7 @@ function setGradient(
             return new Stop([i] as BasicArray<number>, uuid(), item.position, importColor(item.color))
         }) as BasicArray<Stop>;
 
-        item.gradient = new Gradient(from1, to1, colorType, stops1 as BasicArray<Stop>, undefined, opacity);
-        item.fillType = FillType.Gradient;
+        return new Gradient(from1, to1, colorType, stops1 as BasicArray<Stop>, undefined, opacity);
     } else if (type === 'GRADIENT_RADIAL' || type === 'GRADIENT_ANGULAR') {
         const {col0: from, col1: to} = transform.transform([
             ColVector3D.FromXY(0.5, 0.5),
@@ -124,7 +124,18 @@ function setGradient(
             return new Stop([i] as BasicArray<number>, uuid(), item.position, importColor(item.color))
         }) as BasicArray<Stop>;
 
-        item.gradient = new Gradient(from1, to1, colorType, stops1 as BasicArray<Stop>, elipseLength, opacity);
+        return new Gradient(from1, to1, colorType, stops1 as BasicArray<Stop>, elipseLength, opacity);
+    }
+}
+
+function setGradient(
+    data: IJSON,
+    size: any,
+    item: Fill | Border,
+) {
+    const gradient = parseGradient(data, size);
+    if (gradient) {
+        item.gradient = gradient;
         item.fillType = FillType.Gradient;
     }
 }
@@ -159,18 +170,7 @@ function parseFills(
         const f = new Fill([fillsIndex + i] as BasicArray<number>, uuid(), visible, FillType.SolidColor, importColor(color, opacity));
         f.fillRule = FillRule.Nonzero;
 
-        const stops = fill.stops as {
-            color: {
-                r: number,
-                g: number,
-                b: number,
-                a: number,
-            },
-            position: number,
-        }[];
-        const transform = fill.transform ? makeShapeTransform2By1(fill.transform).getInverse() : new Transform2();
-        const stopsVar = fill.stopsVar;
-        setGradient(type, transform, stops, opacity, size, f);
+        setGradient(fill, size, f);
 
         const imageHash = fill.image?.hash;
         if (type === 'IMAGE' && (imageHash instanceof Uint8Array)) {
@@ -217,22 +217,9 @@ function parseStroke(strokes: {
     const result = new BasicArray<Border>();
     for (let i = 0; i < strokePaints.length; i++) {
         const stroke = strokePaints[i];
-        const type = stroke.type;
 
         const visible = stroke.visible;
         const blendMode = stroke.blendMode;
-
-        const stops = stroke.stops as {
-            color: {
-                r: number,
-                g: number,
-                b: number,
-                a: number,
-            },
-            position: number,
-        }[];
-        const transform = stroke.transform ? makeShapeTransform2By1(stroke.transform).getInverse() : new Transform2();
-        const stopsVar = stroke.stopsVar;
 
         const color = stroke.color || {
             r: 1,
@@ -287,7 +274,7 @@ function parseStroke(strokes: {
             side,
         );
 
-        setGradient(type, transform, stops, opacity, size, border);
+        setGradient(stroke, size, border);
 
         result.push(border);
     }

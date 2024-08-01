@@ -1,25 +1,34 @@
-
-import { BulletNumbers, Para, ParaAttr, Span, Text, TextAttr, TextTransformType } from "../../../data/text";
-import { importColor } from "./common";
+import {BulletNumbers, Para, ParaAttr, Span, Text, TextAttr, TextTransformType} from "../../../data/text";
+import {importColor} from "./common";
 import * as types from "../../../data/classes"
-import { BasicArray } from "../../../data/basic";
-import { IJSON } from "./basic";
-import { mergeSpanAttr } from "../../../data/textutils";
+import {BasicArray} from "../../../data/basic";
+import {IJSON} from "./basic";
+import {mergeSpanAttr} from "../../../data/textutils";
+import {parseGradient} from "./shapeio";
 
 function importHorzAlignment(align: string) {
     switch (align) {
-        case "RIGHT": return types.TextHorAlign.Right;
-        case "CENTER": return types.TextHorAlign.Centered;
-        case "JUSTIFIED": return types.TextHorAlign.Justified;
-        default: return types.TextHorAlign.Left;
+        case "RIGHT":
+            return types.TextHorAlign.Right;
+        case "CENTER":
+            return types.TextHorAlign.Centered;
+        case "JUSTIFIED":
+            return types.TextHorAlign.Justified;
+        default:
+            return types.TextHorAlign.Left;
     }
 }
+
 function importVertAlignment(align: string) {
     switch (align) {
-        case 'TOP': return types.TextVerAlign.Top;
-        case "CENTER": return types.TextVerAlign.Middle;
-        case 'BOTTOM': return types.TextVerAlign.Bottom;
-        default: return types.TextVerAlign.Top;
+        case 'TOP':
+            return types.TextVerAlign.Top;
+        case "CENTER":
+            return types.TextVerAlign.Middle;
+        case 'BOTTOM':
+            return types.TextVerAlign.Bottom;
+        default:
+            return types.TextVerAlign.Top;
     }
 }
 
@@ -37,10 +46,15 @@ const fontWeightMap: { [key: string]: number } = {
 
 function importTransform(textCase: string) {
     switch (textCase) {
-        case "UPPER": return TextTransformType.Uppercase;
-        case "LOWER": return TextTransformType.Lowercase;
-        case "TITLE": return TextTransformType.UppercaseFirst;
-        case "ORIGINAL": console.warn("unsupport ORIGINAL transform"); return;
+        case "UPPER":
+            return TextTransformType.Uppercase;
+        case "LOWER":
+            return TextTransformType.Lowercase;
+        case "TITLE":
+            return TextTransformType.UppercaseFirst;
+        case "ORIGINAL":
+            console.warn("unsupport ORIGINAL transform");
+            return;
     }
 }
 
@@ -48,19 +62,22 @@ export function importText(data: IJSON, textStyle: IJSON): Text {
 
     // 默认字体颜色
     const fillPaints = textStyle.fillPaints;
-    const fontColor = fillPaints && fillPaints[0] && importColor(fillPaints[0].color, fillPaints[0].opacity);
+    const fillPaint = fillPaints && fillPaints[0];
+    const fontColor = fillPaint && importColor(fillPaint.color, fillPaint.opacity);
+    const gradient = parseGradient(fillPaint, textStyle.size);
     const fontSize = textStyle.fontSize;
+    const letterSpacingValue = textStyle.letterSpacing?.value || 0;
     /**
-    family: "Inter"
-    postscript: ""
-    style: "Regular"
+     family: "Inter"
+     postscript: ""
+     style: "Regular"
      */
     const font = textStyle.fontName;
     const fontName = font?.family;
     const weight = fontWeightMap[font?.style];
     /**
-    units: "PERCENT" "PIXELS"
-    value: 100
+     units: "PERCENT" "PIXELS"
+     value: 100
      */
     const lineHeight = textStyle.lineHeight;
 
@@ -114,6 +131,8 @@ export function importText(data: IJSON, textStyle: IJSON): Text {
             span.weight = weight;
             span.fontName = fontName;
             span.color = fontColor;
+            if (gradient) span.gradient = gradient;
+            span.kerning = letterSpacingValue;
             if (textDecoration === 'STRIKETHROUGH') span.strikethrough = types.StrikethroughType.Single;
             else if (textDecoration === 'UNDERLINE') span.underline = types.UnderlineType.Single;
 
@@ -121,8 +140,11 @@ export function importText(data: IJSON, textStyle: IJSON): Text {
 
             if (spanattr) {
                 const fillPaints = spanattr.fillPaints;
-                const fontColor = fillPaints && fillPaints[0] && importColor(fillPaints[0].color, fillPaints[0].opacity);
+                const fillPaint = fillPaints && fillPaints[0];
+                const fontColor = fillPaint && importColor(fillPaint.color, fillPaint.opacity);
+                const gradient = parseGradient(fillPaint, spanattr.size);
                 if (fontColor) span.color = fontColor;
+                if (gradient) span.gradient = gradient;
                 const fontSize = spanattr.fontSize;
                 const font = spanattr.fontName;
                 const fontName = font?.family;
@@ -138,8 +160,7 @@ export function importText(data: IJSON, textStyle: IJSON): Text {
                 if (textDecoration === 'STRIKETHROUGH') {
                     span.underline = undefined;
                     span.strikethrough = types.StrikethroughType.Single;
-                }
-                else if (textDecoration === 'UNDERLINE') {
+                } else if (textDecoration === 'UNDERLINE') {
                     span.strikethrough = undefined;
                     span.underline = types.UnderlineType.Single;
                 }
