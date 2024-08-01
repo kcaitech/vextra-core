@@ -13,6 +13,7 @@ export {
     OverlayBackgroundInteraction,
     OverlayPositions,
     OverlayBackgroundType,
+    ScrollDirection
 } from './baseclasses';
 import { uuid } from '../basic/uuid';
 import * as classes from "./baseclasses"

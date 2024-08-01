@@ -467,6 +467,10 @@ export function exportPrototypeTransitionType(source: types.PrototypeTransitionT
 export function exportResizeType(source: types.ResizeType, ctx?: IExportContext): types.ResizeType {
     return source
 }
+/* scrollDirection */
+export function exportScrollDirection(source: types.ScrollDirection, ctx?: IExportContext): types.ScrollDirection {
+    return source
+}
 /* shadow position */
 export function exportShadowPosition(source: types.ShadowPosition, ctx?: IExportContext): types.ShadowPosition {
     return source
@@ -987,6 +991,7 @@ export function exportShape(source: types.Shape, ctx?: IExportContext): types.Sh
     if (source.overlayPositionType) ret.overlayPositionType = exportOverlayPositions(source.overlayPositionType, ctx)
     if (source.overlayBackgroundInteraction) ret.overlayBackgroundInteraction = exportOverlayBackgroundInteraction(source.overlayBackgroundInteraction, ctx)
     if (source.overlayBackgroundAppearance) ret.overlayBackgroundAppearance = exportOverlayBackgroundAppearance(source.overlayBackgroundAppearance, ctx)
+    if (source.scrollDirection) ret.scrollDirection = exportScrollDirection(source.scrollDirection, ctx)
     return ret
 }
 /* table cell */

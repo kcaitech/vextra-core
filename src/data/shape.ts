@@ -15,7 +15,8 @@ import {
     ShapeType,
     VariableType,
     ShapeSize,
-    PrototypeInterAction
+    PrototypeInterAction,
+    ScrollDirection
 } from "./baseclasses"
 import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
@@ -130,6 +131,7 @@ export class Shape extends Basic implements classes.Shape {
     overlayPositionType?: classes.OverlayPositions;
     overlayBackgroundInteraction?: classes.OverlayBackgroundInteraction;
     overlayBackgroundAppearance?: classes.OverlayBackgroundAppearance;
+    scrollDirection?: classes.ScrollDirection;
 
     constructor(
         crdtidx: BasicArray<number>,

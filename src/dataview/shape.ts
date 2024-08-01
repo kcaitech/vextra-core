@@ -895,4 +895,8 @@ export class ShapeView extends DataView {
     get overlayBackgroundAppearance(){
         return this.m_data.overlayBackgroundAppearance
     }
+
+    get scrollDirection(){
+        return this.m_data.scrollDirection
+    }
 }

@@ -91,6 +91,9 @@
         },
         "overlayBackgroundAppearance":{
             "$ref":"./overlay-background-appearance.json"
+        },
+        "scrollDirection":{
+             "$ref":"./scroll-direction.json"
         }
     },
     "required": [

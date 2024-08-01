@@ -423,6 +423,13 @@ export enum ResizeType {
     Resize = "resize",
     Float = "float",
 }
+/* scrollDirection */
+export enum ScrollDirection {
+    NONE = "NONE",
+    HORIZONTAL = "HORIZONTAL",
+    VERTICAL = "VERTICAL",
+    BOTH = "BOTH",
+}
 /* shadow position */
 export enum ShadowPosition {
     Inner = "inner",
@@ -845,6 +852,7 @@ export type Shape = {
     overlayPositionType?: OverlayPositions,
     overlayBackgroundInteraction?: OverlayBackgroundInteraction,
     overlayBackgroundAppearance?: OverlayBackgroundAppearance,
+    scrollDirection?: ScrollDirection,
 }
 /* table cell */
 export type TableCell = Shape & {
