@@ -1,6 +1,7 @@
 import {BulletNumbers, Para, ParaAttr, Span, Text, TextAttr, TextTransformType} from "../../../data/text";
 import {importColor} from "./common";
 import * as types from "../../../data/classes"
+import {FillType} from "../../../data/classes"
 import {BasicArray} from "../../../data/basic";
 import {IJSON} from "./basic";
 import {mergeSpanAttr} from "../../../data/textutils";
@@ -131,7 +132,10 @@ export function importText(data: IJSON, textStyle: IJSON): Text {
             span.weight = weight;
             span.fontName = fontName;
             span.color = fontColor;
-            if (gradient) span.gradient = gradient;
+            if (gradient) {
+                span.gradient = gradient;
+                span.fillType = FillType.Gradient;
+            }
             span.kerning = letterSpacingValue;
             if (textDecoration === 'STRIKETHROUGH') span.strikethrough = types.StrikethroughType.Single;
             else if (textDecoration === 'UNDERLINE') span.underline = types.UnderlineType.Single;
@@ -144,7 +148,10 @@ export function importText(data: IJSON, textStyle: IJSON): Text {
                 const fontColor = fillPaint && importColor(fillPaint.color, fillPaint.opacity);
                 const gradient = parseGradient(fillPaint, spanattr.size);
                 if (fontColor) span.color = fontColor;
-                if (gradient) span.gradient = gradient;
+                if (gradient) {
+                    span.gradient = gradient;
+                    span.fillType = FillType.Gradient;
+                }
                 const fontSize = spanattr.fontSize;
                 const font = spanattr.fontName;
                 const fontName = font?.family;
