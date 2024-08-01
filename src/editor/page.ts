@@ -119,7 +119,8 @@ import {
     PrototypeEasingType,
     OverlayPositions,
     OverlayBackgroundInteraction,
-    OverlayBackgroundAppearance
+    OverlayBackgroundAppearance,
+    ScrollDirection
 } from "../data/baseclasses";
 import { calculateInnerAnglePosition, getPolygonPoints, getPolygonVertices, update_frame_by_points } from "./utils/path";
 import { modify_shapes_height, modify_shapes_width } from "./utils/common";
@@ -3478,6 +3479,17 @@ export class PageEditor {
             const api = this.__repo.start('setOverlayBackgroundAppearance');
             const __shape = adapt2Shape(shape);
             api.shapeModifyOverlayBackgroundAppearance(this.__page, __shape, value);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    
+    setscrollDirection(shape: ShapeView, value: ScrollDirection) {
+        try {
+            const api = this.__repo.start('setscrollDirection');
+            const __shape = adapt2Shape(shape);
+            api.shapeModifyscrollDirection(this.__page, __shape, value);
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
