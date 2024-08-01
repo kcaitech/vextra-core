@@ -7,10 +7,11 @@ import {
     importPage,
     importPathShape,
     importPolygon,
+    importSlice,
     importStar,
     importSymbol,
     importSymbolRef,
-    importTextShape
+    importTextShape,
 } from "./shapeio";
 import {UZIPFiles} from "uzip";
 import {base64Encode} from "../../../basic/utils";
@@ -88,6 +89,8 @@ export function startLoader(file: IJSON, pages: IJSON[], document: Document, nod
         symbolRef.setSymbolMgr(document.symbolsMgr);
         return symbolRef;
     }
+    __handler['SLICE'] = (ctx: LoadContext, data: IJSON, i: number) => importSlice(ctx, data, importer, i, nodeChangesMap)
+    __handler['BOOLEAN_OPERATION'] = (ctx: LoadContext, data: IJSON, i: number) => importGroup(ctx, data, importer, i, nodeChangesMap)
 
     document.mediasMgr.setLoader((id) => loadMedia(id))
     document.pagesMgr.setLoader(async (id) => {

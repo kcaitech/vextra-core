@@ -3,14 +3,25 @@ import {
     BasicArray,
     BasicMap,
     BlendMode,
+    Blur,
+    BlurType,
+    BoolOp,
+    BoolShape,
     Border,
     BorderPosition,
     BorderSideSetting,
     BorderStyle,
     ContextSettings,
+    CornerRadius,
     CornerType,
     CurveMode,
     CurvePoint,
+    CutoutShape,
+    ExportFileFormat,
+    ExportFormat,
+    ExportFormatNameingScheme,
+    ExportOptions,
+    ExportVisibleScaleType,
     Fill,
     FillRule,
     FillType,
@@ -27,6 +38,7 @@ import {
     Point2D,
     PolygonShape,
     RectShape,
+    ResizingConstraints2,
     Shadow,
     ShadowPosition,
     Shape,
@@ -117,9 +129,14 @@ function setGradient(
     }
 }
 
-function parseFills(fills: {
-    fillPaints: IJSON[],
-}, fillsIndex: number = 0, size?: IJSON) {
+function parseFills(
+    ctx: LoadContext,
+    fills: {
+        fillPaints: IJSON[],
+    },
+    fillsIndex: number = 0,
+    size?: IJSON,
+) {
     const fillPaints = fills.fillPaints;
     if (!Array.isArray(fillPaints)) return;
     size = size || {x: 1, y: 1};
@@ -157,6 +174,7 @@ function parseFills(fills: {
 
         const imageHash = fill.image?.hash;
         if (type === 'IMAGE' && (imageHash instanceof Uint8Array)) {
+            f.setImageMgr(ctx.mediasMgr);
             f.fillType = FillType.Pattern;
             let hexString = "";
             for (let i = 0; i < imageHash.length; i++) {
@@ -171,8 +189,8 @@ function parseFills(fills: {
     return result;
 }
 
-function importFills(style: Style, data: IJSON) {
-    const fills = parseFills(data as any, style.fills.length, data.size);
+function importFills(ctx: LoadContext, style: Style, data: IJSON) {
+    const fills = parseFills(ctx, data as any, style.fills.length, data.size);
     if (fills) style.fills.push(...fills);
 }
 
@@ -182,6 +200,11 @@ function parseStroke(strokes: {
     strokeWeight: number,
     strokeJoin: string,
     dashPattern: number[],
+    borderStrokeWeightsIndependent?: boolean,
+    borderTopWeight?: number,
+    borderBottomWeight?: number,
+    borderLeftWeight?: number,
+    borderRightWeight?: number,
 }, strokesIndex: number = 0, size?: IJSON) {
     const strokePaints = strokes.strokePaints;
     if (!Array.isArray(strokePaints)) return;
@@ -225,7 +248,22 @@ function parseStroke(strokes: {
         else position = BorderPosition.Outer;
 
         const borderStyle = new BorderStyle(dashPattern[0], dashPattern[1]);
-        const side = new BorderSideSetting(SideType.Normal, strokeWeight, strokeWeight, strokeWeight, strokeWeight);
+        const thicknessTop = strokes.borderStrokeWeightsIndependent ? (strokes.borderTopWeight || 0) : strokeWeight;
+        const thicknessBottom = strokes.borderStrokeWeightsIndependent ? (strokes.borderBottomWeight || 0) : strokeWeight;
+        const thicknessLeft = strokes.borderStrokeWeightsIndependent ? (strokes.borderLeftWeight || 0) : strokeWeight;
+        const thicknessRight = strokes.borderStrokeWeightsIndependent ? (strokes.borderRightWeight || 0) : strokeWeight;
+        let sideType = SideType.Normal;
+        if (strokes.borderStrokeWeightsIndependent) {
+            if ([thicknessTop, thicknessBottom, thicknessLeft, thicknessRight].filter(item => item !== 0).length === 1) {
+                if (thicknessTop !== 0) sideType = SideType.Top;
+                else if (thicknessBottom !== 0) sideType = SideType.Bottom;
+                else if (thicknessLeft !== 0) sideType = SideType.Left;
+                else if (thicknessRight !== 0) sideType = SideType.Right;
+            } else {
+                sideType = SideType.Custom;
+            }
+        }
+        const side = new BorderSideSetting(sideType, thicknessTop, thicknessLeft, thicknessBottom, thicknessRight);
 
         let cornerType: CornerType;
         if (strokeJoin) {
@@ -257,7 +295,7 @@ function parseStroke(strokes: {
     return result;
 }
 
-function importStroke(style: Style, data: IJSON) {
+function importStroke(ctx: LoadContext, style: Style, data: IJSON) {
     const strokes = parseStroke(data as any, style.fills.length, data.size);
     if (strokes) style.borders.push(...strokes);
 }
@@ -302,15 +340,21 @@ function parseEffects(effects0: {
     return result;
 }
 
-function importEffects(style: Style, data: IJSON) {
+function importEffects(ctx: LoadContext, style: Style, data: IJSON) {
     const effects = parseEffects(data as any, style.shadows.length);
     if (effects) style.shadows.push(...effects);
+
+    const effects1 = data.effects;
+    if (!Array.isArray(effects1)) return;
+    const gaussian = effects1.find(effect => effect.type === 'FOREGROUND_BLUR');
+    if (!gaussian) return;
+    style.blur = new Blur(true, new Point2D(0, 0), gaussian.radius || 4, BlurType.Gaussian);
 }
 
-function importStyle(style: Style, data: IJSON) {
-    importFills(style, data);
-    importStroke(style, data);
-    importEffects(style, data);
+function importStyle(ctx: LoadContext, style: Style, data: IJSON) {
+    importFills(ctx, style, data);
+    importStroke(ctx, style, data);
+    importEffects(ctx, style, data);
 }
 
 function importShapeFrame(data: IJSON) {
@@ -322,7 +366,7 @@ function importShapeFrame(data: IJSON) {
     }
 }
 
-function importComponentPropRefs(data: IJSON, shape: Shape, rawVariables: Map<string, IJSON>, variables: BasicMap<string, Variable>) {
+function importComponentPropRefs(ctx: LoadContext, data: IJSON, shape: Shape, rawVariables: Map<string, IJSON>, variables: BasicMap<string, Variable>) {
     const componentPropRefs = data.componentPropRefs;
     if (!Array.isArray(componentPropRefs)) return;
 
@@ -361,7 +405,7 @@ function importComponentPropRefs(data: IJSON, shape: Shape, rawVariables: Map<st
     }
 }
 
-function importSymbolOverrides(data: IJSON, shape: Shape, rawVariables: Map<string, IJSON>, variables: BasicMap<string, Variable>, nodeChangesMap: Map<string, IJSON>) {
+function importSymbolOverrides(ctx: LoadContext, data: IJSON, shape: Shape, rawVariables: Map<string, IJSON>, variables: BasicMap<string, Variable>, nodeChangesMap: Map<string, IJSON>) {
     const symbolOverrides = data.symbolData?.symbolOverrides;
     if (!Array.isArray(symbolOverrides)) return;
 
@@ -386,7 +430,7 @@ function importSymbolOverrides(data: IJSON, shape: Shape, rawVariables: Map<stri
         const joinId = shapeIds.join('/');
 
         if (symbolOverride.fillPaints) {
-            const fills = parseFills(symbolOverride);
+            const fills = parseFills(ctx, symbolOverride);
             if (fills) {
                 shapeVariables.set(varId, new Variable(varId, VariableType.Fills, 'fills', fills));
                 shapeOverrides.set(`${joinId}/${OverrideType.Fills}`, varId);
@@ -411,27 +455,151 @@ function importSymbolOverrides(data: IJSON, shape: Shape, rawVariables: Map<stri
     }
 }
 
-function importShapeProperty(data: IJSON, shape: Shape, rawVariables: Map<string, IJSON>, variables: BasicMap<string, Variable>, nodeChangesMap: Map<string, IJSON>) {
-    importComponentPropRefs(data, shape, rawVariables, variables);
-    importSymbolOverrides(data, shape, rawVariables, variables, nodeChangesMap);
-
+function importLocked(ctx: LoadContext, data: IJSON, shape: Shape) {
     shape.constrainerProportions = data.proportionsConstrained;
     shape.isLocked = data.locked;
-    if (data.opacity !== undefined) shape.style.contextSettings = new ContextSettings(BlendMode.Normal, data.opacity);
+}
+
+function importRadius(ctx: LoadContext, data: IJSON, shape: Shape) {
+    const cornerRadius = data.cornerRadius;
+    const rectangleCornerRadiiIndependent = data.rectangleCornerRadiiIndependent;
+    const rectangleTopLeftCornerRadius = rectangleCornerRadiiIndependent ? data.rectangleTopLeftCornerRadius : cornerRadius;
+    const rectangleTopRightCornerRadius = rectangleCornerRadiiIndependent ? data.rectangleTopRightCornerRadius : cornerRadius;
+    const rectangleBottomRightCornerRadius = rectangleCornerRadiiIndependent ? data.rectangleBottomRightCornerRadius : cornerRadius;
+    const rectangleBottomLeftCornerRadius = rectangleCornerRadiiIndependent ? data.rectangleBottomLeftCornerRadius : cornerRadius;
+
+    const pathsegs = (shape as PathShape).pathsegs;
+    if (pathsegs) {
+        if (cornerRadius && !rectangleCornerRadiiIndependent) {
+            for (const segment of pathsegs) {
+                for (const point of segment.points) {
+                    point.radius = cornerRadius;
+                }
+            }
+        } else if (rectangleCornerRadiiIndependent) {
+            pathsegs[0].points[0] = rectangleTopLeftCornerRadius;
+            pathsegs[0].points[1] = rectangleTopRightCornerRadius;
+            pathsegs[0].points[2] = rectangleBottomRightCornerRadius;
+            pathsegs[0].points[3] = rectangleBottomLeftCornerRadius;
+        }
+    }
+
+    if (shape instanceof Artboard || shape instanceof SymbolShape || shape instanceof SymbolRefShape) {
+        shape.cornerRadius = new CornerRadius(rectangleTopLeftCornerRadius, rectangleTopRightCornerRadius, rectangleBottomRightCornerRadius, rectangleBottomLeftCornerRadius);
+    }
+}
+
+function importBlend(ctx: LoadContext, data: IJSON, shape: Shape) {
+    const blendMode = data.blendMode;
+
+    let blendMode1;
+    if (blendMode === 'NORMAL') blendMode1 = BlendMode.Normal;
+    else if (blendMode === 'DARKEN') blendMode1 = BlendMode.Darken;
+    else if (blendMode === 'MULTIPLY') blendMode1 = BlendMode.Multiply;
+    else if (blendMode === 'PLUS_DARKER') blendMode1 = BlendMode.PlusDarker;
+    else if (blendMode === 'COLOR_BURN') blendMode1 = BlendMode.ColorBurn;
+    else if (blendMode === 'LIGHTEN') blendMode1 = BlendMode.Lighten;
+    else if (blendMode === 'SCREEN') blendMode1 = BlendMode.Screen;
+    else if (blendMode === 'PLUS_LIGHTER') blendMode1 = BlendMode.PlusLighter;
+    else if (blendMode === 'COLOR_DODGE') blendMode1 = BlendMode.ColorDodge;
+    else if (blendMode === 'OVERLAY') blendMode1 = BlendMode.Overlay;
+    else if (blendMode === 'SOFT_LIGHT') blendMode1 = BlendMode.SoftLight;
+    else if (blendMode === 'HARD_LIGHT') blendMode1 = BlendMode.HardLight;
+    else if (blendMode === 'DIFFERENCE') blendMode1 = BlendMode.Difference;
+    else if (blendMode === 'EXCLUSION') blendMode1 = BlendMode.Exclusion;
+    else if (blendMode === 'HUE') blendMode1 = BlendMode.Hue;
+    else if (blendMode === 'SATURATION') blendMode1 = BlendMode.Saturation;
+    else if (blendMode === 'COLOR') blendMode1 = BlendMode.Color;
+    else if (blendMode === 'LUMINOSITY') blendMode1 = BlendMode.Luminosity;
+    else blendMode1 = BlendMode.Normal;
+
+    shape.style.contextSettings = new ContextSettings(blendMode1, data.opacity || 1);
+}
+
+function importExportOptions(ctx: LoadContext, data: IJSON, shape: Shape) {
+    const exportSettings = data.exportSettings;
+    if (!Array.isArray(exportSettings)) return;
+
+    const exportFormatList: ExportFormat[] = [];
+    for (const exportSetting of exportSettings) {
+        let imageType = exportSetting.imageType;
+        let fileFormat;
+        if (imageType === 'PNG') fileFormat = ExportFileFormat.Png;
+        else if (imageType === 'JPG') fileFormat = ExportFileFormat.Jpg;
+        else if (imageType === 'SVG') fileFormat = ExportFileFormat.Svg;
+        else if (imageType === 'PDF') fileFormat = ExportFileFormat.Pdf;
+        else fileFormat = ExportFileFormat.Png;
+
+        exportFormatList.push(new ExportFormat(
+            new BasicArray(),
+            uuid(),
+            0,
+            fileFormat,
+            exportSetting.suffix || '',
+            ExportFormatNameingScheme.Suffix,
+            exportSetting.constraint?.value || 1,
+            ExportVisibleScaleType.Scale,
+        ));
+    }
+
+    if (exportFormatList.length === 0) return;
+
+    let exportOptions = shape.exportOptions;
+    if (!exportOptions) {
+        exportOptions = new ExportOptions(new BasicArray(), 0, false, false, false, false);
+        shape.exportOptions = exportOptions;
+    }
+    exportOptions.exportFormats.push(...exportFormatList);
+}
+
+function importMask(ctx: LoadContext, data: IJSON, shape: Shape) {
+    if (data.mask) shape.mask = data.mask;
+}
+
+function importConstraint(ctx: LoadContext, data: IJSON, shape: Shape) {
+    const horizontalConstraint = data.horizontalConstraint || 'MIN';
+    const verticalConstraint = data.verticalConstraint || 'MIN';
+
+    let status = ResizingConstraints2.Default;
+
+    if (horizontalConstraint === 'MIN') status = ResizingConstraints2.setToFixedLeft(status);
+    else if (horizontalConstraint === 'MAX') status = ResizingConstraints2.setToFixedRight(status);
+    else if (horizontalConstraint === 'STRETCH') status = ResizingConstraints2.setToFixedLeftAndRight(status);
+    else if (horizontalConstraint === 'CENTER') status = ResizingConstraints2.setToHorizontalJustifyCenter(status);
+    else if (horizontalConstraint === 'SCALE') status = ResizingConstraints2.setToScaleByWidth(status);
+
+    if (verticalConstraint === 'MIN') status = ResizingConstraints2.setToFixedTop(status);
+    else if (verticalConstraint === 'MAX') status = ResizingConstraints2.setToFixedBottom(status);
+    else if (verticalConstraint === 'STRETCH') status = ResizingConstraints2.setToFixedTopAndBottom(status);
+    else if (verticalConstraint === 'CENTER') status = ResizingConstraints2.setToVerticalJustifyCenter(status);
+    else if (verticalConstraint === 'SCALE') status = ResizingConstraints2.setToScaleByHeight(status);
+
+    shape.resizingConstraint = status;
+}
+
+function importShapeProperty(ctx: LoadContext, data: IJSON, shape: Shape, nodeChangesMap: Map<string, IJSON>) {
+    importComponentPropRefs(ctx, data, shape, ctx.rawVariables, ctx.variables);
+    importSymbolOverrides(ctx, data, shape, ctx.rawVariables, ctx.variables, nodeChangesMap);
+    importLocked(ctx, data, shape);
+    importRadius(ctx, data, shape);
+    importBlend(ctx, data, shape);
+    importExportOptions(ctx, data, shape);
+    importMask(ctx, data, shape);
+    importConstraint(ctx, data, shape);
 }
 
 export function importPage(ctx: LoadContext, data: IJSON, f: ImportFun, nodeChangesMap: Map<string, IJSON>): Page {
     const visible = data.visible;
     const frame = importShapeFrame(data);
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
-    importStyle(style, data);
+    importStyle(ctx, style, data);
 
     const childs: Shape[] = (data.childs as IJSON[] || []).map((d: IJSON, i: number) => f(ctx, d, i)).filter(item => item) as Shape[];
     const shape = new Page(new BasicArray<number>(), data.id, data.name, ShapeType.Page, frame.trans, frame.size, style, new BasicArray<Shape>(...childs));
 
     shape.isVisible = visible;
 
-    importShapeProperty(data, shape, ctx.rawVariables, ctx.variables, nodeChangesMap);
+    importShapeProperty(ctx, data, shape, nodeChangesMap);
 
     return shape;
 }
@@ -567,6 +735,8 @@ function importSegments(data: IJSON): {
             // else if (strokeCap === 'TRIANGLE_FILLED') return MarkerType.OpenArrow;
             else if (strokeCap === 'CIRCLE_FILLED') return MarkerType.FilledCircle;
             else if (strokeCap === 'DIAMOND_FILLED') return MarkerType.FilledSquare;
+            else if (strokeCap === 'ROUND') return MarkerType.Round;
+            else if (strokeCap === 'SQUARE') return MarkerType.Square;
             else return MarkerType.Line;
         }
 
@@ -588,7 +758,7 @@ export function importPathShape(ctx: LoadContext, data: IJSON, f: ImportFun, ind
     const frame = importShapeFrame(data);
     const visible = data.visible;
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
-    importStyle(style, data);
+    importStyle(ctx, style, data);
     const id = data.kcId || uuid();
 
     if (frame.size.width === 0 || frame.size.height === 0) {
@@ -616,7 +786,7 @@ export function importPathShape(ctx: LoadContext, data: IJSON, f: ImportFun, ind
     shape.isVisible = visible;
     shape.style = style;
 
-    importShapeProperty(data, shape, ctx.rawVariables, ctx.variables, nodeChangesMap);
+    importShapeProperty(ctx, data, shape, nodeChangesMap);
 
     return shape;
 }
@@ -625,7 +795,7 @@ export function importPolygon(ctx: LoadContext, data: IJSON, f: ImportFun, index
     const frame = importShapeFrame(data);
     const visible = data.visible;
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
-    importStyle(style, data);
+    importStyle(ctx, style, data);
     const id = data.kcId || uuid();
 
     const count = data.count || 3;
@@ -638,7 +808,7 @@ export function importPolygon(ctx: LoadContext, data: IJSON, f: ImportFun, index
     shape.isVisible = visible;
     shape.style = style;
 
-    importShapeProperty(data, shape, ctx.rawVariables, ctx.variables, nodeChangesMap);
+    importShapeProperty(ctx, data, shape, nodeChangesMap);
 
     return shape;
 }
@@ -647,7 +817,7 @@ export function importStar(ctx: LoadContext, data: IJSON, f: ImportFun, index: n
     const frame = importShapeFrame(data);
     const visible = data.visible;
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
-    importStyle(style, data);
+    importStyle(ctx, style, data);
     const id = data.kcId || uuid();
 
     const count = data.count || 5;
@@ -662,7 +832,7 @@ export function importStar(ctx: LoadContext, data: IJSON, f: ImportFun, index: n
     shape.isVisible = visible;
     shape.style = style;
 
-    importShapeProperty(data, shape, ctx.rawVariables, ctx.variables, nodeChangesMap);
+    importShapeProperty(ctx, data, shape, nodeChangesMap);
 
     return shape;
 }
@@ -671,7 +841,7 @@ export function importLine(ctx: LoadContext, data: IJSON, f: ImportFun, index: n
     const frame = importShapeFrame(data);
     const visible = data.visible;
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
-    importStyle(style, data);
+    importStyle(ctx, style, data);
     const id = data.kcId || uuid();
 
     frame.size.width = frame.size.width || 1;
@@ -686,7 +856,7 @@ export function importLine(ctx: LoadContext, data: IJSON, f: ImportFun, index: n
     shape.isVisible = visible;
     shape.style = style;
 
-    importShapeProperty(data, shape, ctx.rawVariables, ctx.variables, nodeChangesMap);
+    importShapeProperty(ctx, data, shape, nodeChangesMap);
 
     return shape;
 }
@@ -695,34 +865,49 @@ export function importEllipse(ctx: LoadContext, data: IJSON, f: ImportFun, index
     const frame = importShapeFrame(data);
     const visible = data.visible;
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
-    importStyle(style, data);
+    importStyle(ctx, style, data);
 
     const shape = shapeCreator.newOvalShape(data.name, new ShapeFrame(frame.trans.translateX, frame.trans.translateY, frame.size.width, frame.size.height));
 
     shape.isVisible = visible;
     shape.style = style;
 
-    importShapeProperty(data, shape, ctx.rawVariables, ctx.variables, nodeChangesMap);
+    importShapeProperty(ctx, data, shape, nodeChangesMap);
 
     return shape;
 }
 
 export function importGroup(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>): GroupShape {
-    if (!data.resizeToFit) {
+    const booleanOperation = data.booleanOperation;
+    if (!data.resizeToFit && !booleanOperation) {
         return importArtboard(ctx, data, f, index, nodeChangesMap);
     }
 
     const frame = importShapeFrame(data);
     const visible = data.visible;
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
-    importStyle(style, data);
+    importStyle(ctx, style, data);
     const id = data.kcId || uuid();
 
     const childs: Shape[] = (data.childs as IJSON[] || []).map((d: IJSON, i: number) => f(ctx, d, i)).filter(item => item) as Shape[];
-    const shape = new GroupShape(new BasicArray(), id, data.name, types.ShapeType.Group, frame.trans, frame.size, style, new BasicArray<Shape>(...childs))
+
+    const cls = !booleanOperation ? GroupShape : BoolShape;
+    const shapeType = !booleanOperation ? types.ShapeType.Group : types.ShapeType.BoolShape;
+    const shape = new cls(new BasicArray(), id, data.name, shapeType, frame.trans, frame.size, style, new BasicArray<Shape>(...childs));
+
+    if (booleanOperation) {
+        let boolOp;
+        if (booleanOperation === 'UNION') boolOp = BoolOp.Union;
+        else if (booleanOperation === 'SUBTRACT') boolOp = BoolOp.Subtract;
+        else if (booleanOperation === 'INTERSECT') boolOp = BoolOp.Intersect;
+        else if (booleanOperation === 'XOR') boolOp = BoolOp.Diff;
+        else boolOp = BoolOp.None;
+        for (const child of childs) child.boolOp = boolOp;
+    }
+
     shape.isVisible = visible;
 
-    importShapeProperty(data, shape, ctx.rawVariables, ctx.variables, nodeChangesMap);
+    importShapeProperty(ctx, data, shape, nodeChangesMap);
 
     return shape;
 }
@@ -735,14 +920,14 @@ export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun, inde
     const frame = importShapeFrame(data);
     const visible = data.visible;
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
-    importStyle(style, data);
+    importStyle(ctx, style, data);
     const id = data.kcId || uuid();
 
     const childs: Shape[] = (data.childs as IJSON[] || []).map((d: IJSON, i: number) => f(ctx, d, i)).filter(item => item) as Shape[];
     const shape = new Artboard([index] as BasicArray<number>, id, data.name, ShapeType.Artboard, frame.trans, frame.size, style, new BasicArray<Shape>(...childs));
     shape.isVisible = visible;
 
-    importShapeProperty(data, shape, ctx.rawVariables, ctx.variables, nodeChangesMap);
+    importShapeProperty(ctx, data, shape, nodeChangesMap);
 
     return shape;
 }
@@ -751,8 +936,8 @@ export function importTextShape(ctx: LoadContext, data: IJSON, f: ImportFun, ind
     const frame = importShapeFrame(data);
     const visible = data.visible;
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
-    // importStyle(style, data);
-    importEffects(style, data); // FILL,BORDERS都是应用到文本上的
+    // importStyle(ctx, style, data);
+    importEffects(ctx, style, data); // FILL,BORDERS都是应用到文本上的
     const id = data.kcId || uuid();
 
     // const textStyle = data.style && data.style['textStyle'];
@@ -774,7 +959,7 @@ export function importTextShape(ctx: LoadContext, data: IJSON, f: ImportFun, ind
     const shape = new TextShape([index] as BasicArray<number>, id, data.name, ShapeType.Text, frame.trans, frame.size, style, text);
     shape.isVisible = visible;
 
-    importShapeProperty(data, shape, ctx.rawVariables, ctx.variables, nodeChangesMap);
+    importShapeProperty(ctx, data, shape, nodeChangesMap);
 
     return shape;
 }
@@ -845,7 +1030,7 @@ export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun, index:
     const frame = importShapeFrame(data);
     const visible = data.visible;
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
-    importStyle(style, data);
+    importStyle(ctx, style, data);
     const id = data.kcId || uuid();
 
     const variablesRes = importVariables(ctx.rawVariables, ctx.variables, data, nodeChangesMap);
@@ -854,7 +1039,7 @@ export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun, index:
     const shape = new SymbolShape([index] as BasicArray<number>, id, data.name, ShapeType.Symbol, frame.trans, frame.size, style, new BasicArray<Shape>(...childs), variablesRes[1]);
     shape.isVisible = visible;
 
-    importShapeProperty(data, shape, ctx.rawVariables, ctx.variables, nodeChangesMap);
+    importShapeProperty(ctx, data, shape, nodeChangesMap);
 
     return shape;
 }
@@ -863,7 +1048,7 @@ export function importSymbolRef(ctx: LoadContext, data: IJSON, f: ImportFun, ind
     const frame = importShapeFrame(data);
     const visible = data.visible;
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
-    importStyle(style, data);
+    importStyle(ctx, style, data);
     const id = data.kcId || uuid();
 
     const variablesRes = importVariables(ctx.rawVariables, ctx.variables, data, nodeChangesMap);
@@ -875,7 +1060,7 @@ export function importSymbolRef(ctx: LoadContext, data: IJSON, f: ImportFun, ind
     const shape = new SymbolRefShape([index] as BasicArray<number>, id, data.name, ShapeType.SymbolRef, frame.trans, frame.size, style, symbolRawID, variablesRes[1]);
     shape.isVisible = visible;
 
-    importShapeProperty(data, shape, ctx.rawVariables, ctx.variables, nodeChangesMap);
+    importShapeProperty(ctx, data, shape, nodeChangesMap);
 
     return shape;
 }
@@ -884,7 +1069,7 @@ export function importSymbolUnion(ctx: LoadContext, data: IJSON, f: ImportFun, i
     const frame = importShapeFrame(data);
     const visible = data.visible;
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
-    importStyle(style, data);
+    importStyle(ctx, style, data);
     const id = data.kcId || uuid();
 
     const variablesRes = importVariables(ctx.rawVariables, ctx.variables, data, nodeChangesMap);
@@ -915,7 +1100,57 @@ export function importSymbolUnion(ctx: LoadContext, data: IJSON, f: ImportFun, i
     const shape = new SymbolUnionShape([index] as BasicArray<number>, id, data.name, ShapeType.SymbolUnion, frame.trans, frame.size, style, new BasicArray<Shape>(...childs), variablesRes[1]);
     shape.isVisible = visible;
 
-    importShapeProperty(data, shape, ctx.rawVariables, ctx.variables, nodeChangesMap);
+    importShapeProperty(ctx, data, shape, nodeChangesMap);
+
+    return shape;
+}
+
+export function importSlice(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>): CutoutShape {
+    const frame = importShapeFrame(data);
+    const visible = data.visible;
+    const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
+    importStyle(ctx, style, data);
+    const id = data.kcId || uuid();
+
+    const curvePoint = new BasicArray<CurvePoint>();
+    const p1 = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight); // lt
+    const p2 = new CurvePoint([1] as BasicArray<number>, uuid(), 1, 0, CurveMode.Straight); // rt
+    const p3 = new CurvePoint([2] as BasicArray<number>, uuid(), 1, 1, CurveMode.Straight); // rb
+    const p4 = new CurvePoint([3] as BasicArray<number>, uuid(), 0, 1, CurveMode.Straight); // lb
+    const p5 = new CurvePoint([4] as BasicArray<number>, uuid(), 0, 0.00001, CurveMode.Straight); // lt
+    curvePoint.push(p1, p2, p3, p4, p5);
+    const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, true);
+    const shape = new CutoutShape([index] as BasicArray<number>, id, data.name, ShapeType.Cutout, frame.trans, frame.size, style, new BasicArray<PathSegment>(segment));
+
+    shape.isVisible = visible;
+    shape.style = style;
+
+    importShapeProperty(ctx, data, shape, nodeChangesMap);
+
+    return shape;
+}
+
+export function importUnion(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>): CutoutShape {
+    const frame = importShapeFrame(data);
+    const visible = data.visible;
+    const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
+    importStyle(ctx, style, data);
+    const id = data.kcId || uuid();
+
+    const curvePoint = new BasicArray<CurvePoint>();
+    const p1 = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight); // lt
+    const p2 = new CurvePoint([1] as BasicArray<number>, uuid(), 1, 0, CurveMode.Straight); // rt
+    const p3 = new CurvePoint([2] as BasicArray<number>, uuid(), 1, 1, CurveMode.Straight); // rb
+    const p4 = new CurvePoint([3] as BasicArray<number>, uuid(), 0, 1, CurveMode.Straight); // lb
+    const p5 = new CurvePoint([4] as BasicArray<number>, uuid(), 0, 0.00001, CurveMode.Straight); // lt
+    curvePoint.push(p1, p2, p3, p4, p5);
+    const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, true);
+    const shape = new CutoutShape([index] as BasicArray<number>, id, data.name, ShapeType.Cutout, frame.trans, frame.size, style, new BasicArray<PathSegment>(segment));
+
+    shape.isVisible = visible;
+    shape.style = style;
+
+    importShapeProperty(ctx, data, shape, nodeChangesMap);
 
     return shape;
 }
