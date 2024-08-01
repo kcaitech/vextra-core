@@ -11,6 +11,8 @@ import { ContactShape } from "../../data/contact";
 import { get_box_pagexy, get_nearest_border_point } from "../../data/utils";
 import { PathType } from "../../data/consts";
 import { importCurvePoint } from "../../data/baseimport";
+import { makeShapeTransform1By2, makeShapeTransform2By1 } from "../../data";
+import { ColVector3D } from "../../basic/matrix2";
 
 interface XY {
     x: number
@@ -228,10 +230,7 @@ export function before_modify_side(api: Api, page: Page, shape: ContactShape, in
 
 export function update_frame_by_points(api: Api, page: Page, s: Shape, reLayout = false) {
     const box = s.boundingBox3();
-
-    if (!box) {
-        return;
-    }
+    if (!box) return;
 
     const m = s.matrix2Root();
 
@@ -251,41 +250,30 @@ export function update_frame_by_points(api: Api, page: Page, s: Shape, reLayout 
         frameChange = true;
     }
 
-    const rootXY = m.computeCoord2(box.x, box.y);
+    const rootXY = m.computeCoord3(box);
     const targetXY = s.parent!.matrix2Root().inverseCoord(rootXY);
-    const __targetXY = s.matrix2Parent().computeCoord2(0, 0);
 
-    const dx = targetXY.x - __targetXY.x;
-    const dy = targetXY.y - __targetXY.y;
+    const dx = targetXY.x - s.transform.translateX;
+    const dy = targetXY.y - s.transform.translateY;
 
-    if (dx) {
-        api.shapeModifyX(page, s, f.x + dx);
-    }
-    if (dy) {
-        api.shapeModifyY(page, s, f.y + dy);
+    if (dx || dy) {
+        api.shapeModifyTransform(page, s, makeShapeTransform1By2(makeShapeTransform2By1(s.transform).setTranslate(ColVector3D.FromXY(targetXY.x, targetXY.y))));
     }
 
-    if (!(frameChange || reLayout)) { // 只有宽高被改变，才会需要重排2D points.
-        return;
-    }
+    if (!(frameChange || reLayout)) return; // 只有宽高被改变，才会需要重排2D points.
+
     const m3 = new Matrix(s.matrix2Parent());
     m3.preScale(s.size.width, s.size.height);
     m1.multiAtLeft(m3.inverse);
 
-    (s as PathShape).pathsegs.forEach((segment, index) => {
-        exe(index, m1, segment.points);
-    });
+    (s as PathShape).pathsegs.forEach((segment, index) => exe(index, m1, segment.points));
 
     function exe(segment: number, m: Matrix, points: CurvePoint[]) {
-        if (!points || !points.length) {
-            return false;
-        }
+        if (!points || !points.length) return false;
 
         for (let i = 0, len = points.length; i < len; i++) {
             const p = points[i];
-            if (!p) {
-                continue;
-            }
+            if (!p) continue;
 
             if (p.hasFrom) {
                 api.shapeModifyCurvFromPoint(page, s, i, m.computeCoord2(p.fromX || 0, p.fromY || 0), segment);
