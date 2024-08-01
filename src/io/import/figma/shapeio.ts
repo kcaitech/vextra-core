@@ -500,7 +500,7 @@ function importBlend(ctx: LoadContext, data: IJSON, shape: Shape) {
     else if (blendMode === 'COLOR_BURN') blendMode1 = BlendMode.ColorBurn;
     else if (blendMode === 'LIGHTEN') blendMode1 = BlendMode.Lighten;
     else if (blendMode === 'SCREEN') blendMode1 = BlendMode.Screen;
-    else if (blendMode === 'PLUS_LIGHTER') blendMode1 = BlendMode.PlusLighter;
+    else if (blendMode === 'LINEAR_DODGE') blendMode1 = BlendMode.PlusLighter;
     else if (blendMode === 'COLOR_DODGE') blendMode1 = BlendMode.ColorDodge;
     else if (blendMode === 'OVERLAY') blendMode1 = BlendMode.Overlay;
     else if (blendMode === 'SOFT_LIGHT') blendMode1 = BlendMode.SoftLight;
