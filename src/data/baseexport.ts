@@ -992,6 +992,7 @@ export function exportShape(source: types.Shape, ctx?: IExportContext): types.Sh
     if (source.overlayBackgroundInteraction) ret.overlayBackgroundInteraction = exportOverlayBackgroundInteraction(source.overlayBackgroundInteraction, ctx)
     if (source.overlayBackgroundAppearance) ret.overlayBackgroundAppearance = exportOverlayBackgroundAppearance(source.overlayBackgroundAppearance, ctx)
     if (source.scrollDirection) ret.scrollDirection = exportScrollDirection(source.scrollDirection, ctx)
+    if (source.mask) ret.mask = source.mask
     return ret
 }
 /* table cell */

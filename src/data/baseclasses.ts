@@ -866,6 +866,7 @@ export class Shape extends Basic {
     overlayBackgroundInteraction?: OverlayBackgroundInteraction
     overlayBackgroundAppearance?: OverlayBackgroundAppearance
     scrollDirection?: ScrollDirection
+    mask?: boolean
     constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, size: ShapeSize, style: Style) {
         super()
         this.crdtidx = crdtidx

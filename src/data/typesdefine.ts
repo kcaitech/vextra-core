@@ -853,6 +853,7 @@ export type Shape = {
     overlayBackgroundInteraction?: OverlayBackgroundInteraction,
     overlayBackgroundAppearance?: OverlayBackgroundAppearance,
     scrollDirection?: ScrollDirection,
+    mask?: boolean,
 }
 /* table cell */
 export type TableCell = Shape & {

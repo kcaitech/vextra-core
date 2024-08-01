@@ -24,7 +24,7 @@ interface DataView {
 }
 
 export interface ViewType {
-    new(ctx: DViewCtx, props: PropsType): DataView;
+    new(ctx: DViewCtx, props: PropsType, shapes?: Shape[]): DataView;
 }
 
 export class DViewCtx extends EventEmitter {
@@ -86,10 +86,7 @@ export class DViewCtx extends EventEmitter {
         }
 
         this.relayoutset.forEach((v, k) => {
-            update.push({
-                data: v,
-                level: level(v)
-            });
+            update.push({ data: v, level: level(v) });
         });
 
         // 小的在前

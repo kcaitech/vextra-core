@@ -1,5 +1,15 @@
-import { ShapeSize, Fill, FillType, Gradient, Shape, SymbolRefShape, SymbolShape, Variable, OverrideType, VariableType } from "../data/classes";
-// import { ELArray, EL, h } from "./basic";
+import {
+    Fill,
+    FillType,
+    Gradient,
+    GradientType,
+    OverrideType,
+    Shape,
+    ShapeSize,
+    SymbolRefShape,
+    SymbolShape,
+    VariableType
+} from "../data/classes";
 import { render as renderGradient } from "./gradient";
 import { render as clippathR } from "./clippath"
 import { objectId } from "../basic/objectid";
@@ -25,11 +35,9 @@ handler[FillType.SolidColor] = function (h: Function, frame: ShapeSize, fill: Fi
 
 handler[FillType.Gradient] = function (h: Function, frame: ShapeSize, fill: Fill, path: string): any {
     const opacity = fill.gradient?.gradientOpacity;
-    const elArr = new Array();
+    const elArr = [];
     const g_ = renderGradient(h, fill.gradient as Gradient, frame);
-    if (g_.node) {
-        elArr.push(g_.node);
-    }
+    if (g_.node) elArr.push(g_.node);
     const gid = g_.id;
     const gStyle = g_.style;
     if (gStyle) {
@@ -37,13 +45,12 @@ handler[FillType.Gradient] = function (h: Function, frame: ShapeSize, fill: Fill
         const cp = clippathR(h, id, path);
         elArr.push(cp);
         elArr.push(h("foreignObject", {
-            width: frame.width, height: frame.height, x: 0, y: 0,
-            "clip-path": "url(#" + id + ")",
-            opacity: opacity === undefined ? 1 : opacity
-        },
+                width: frame.width, height: frame.height, x: 0, y: 0,
+                "clip-path": "url(#" + id + ")",
+                opacity: opacity === undefined ? 1 : opacity
+            },
             h("div", { width: "100%", height: "100%", style: gStyle })));
-    }
-    else {
+    } else {
         elArr.push(h('path', {
             d: path,
             fill: "url(#" + gid + ")",
@@ -53,9 +60,6 @@ handler[FillType.Gradient] = function (h: Function, frame: ShapeSize, fill: Fill
             "fill-rule": fill.fillRule || "evenodd",
         }));
     }
-    // if (elArr.length == 1) {
-    //     return elArr[0];
-    // }
     return h("g", elArr);
 }
 
@@ -63,7 +67,7 @@ handler[FillType.Pattern] = function (h: Function, frame: ShapeSize, fill: Fill,
     const id = "pattern-fill-" + objectId(fill) + randomId();
     const color = fill.color;
     const pattern = patternRender(h, frame, id, path, fill);
-    
+
     const _path = h('path', {
         d: path,
         fill: 'url(#' + id + ')',
@@ -87,8 +91,64 @@ export function render(h: Function, fills: Fill[], frame: ShapeSize, path: strin
     return elArr;
 }
 
+const handler2: { [key: string]: (h: Function, frame: ShapeSize, fill: Fill, path: string) => any } = {};
+handler2[FillType.SolidColor] = function (h: Function, frame: ShapeSize, fill: Fill, path: string): any {
+    return handler[FillType.SolidColor](h, frame, fill, path)
+}
+
+handler2[FillType.Gradient] = function (h: Function, frame: ShapeSize, fill: Fill, path: string): any {
+    if (fill.gradient?.gradientType === GradientType.Angular) {
+        return handler[FillType.SolidColor](h, frame, fill, path);
+    }
+    const opacity = fill.gradient?.gradientOpacity;
+    const elArr = [];
+    const g_ = renderGradient(h, fill.gradient as Gradient, frame);
+    if (g_.node) elArr.push(g_.node);
+    const gid = g_.id;
+    const gStyle = g_.style;
+    if (gStyle) {
+        const id = "clippath-fill-" + objectId(fill) + randomId();
+        const cp = clippathR(h, id, path);
+        elArr.push(cp);
+        elArr.push(h("foreignObject", {
+                width: frame.width, height: frame.height, x: 0, y: 0,
+                "clip-path": "url(#" + id + ")",
+                opacity: opacity === undefined ? 1 : opacity
+            },
+            h("div", { width: "100%", height: "100%", style: gStyle })));
+    } else {
+        elArr.push(h('path', {
+            d: path,
+            fill: "url(#" + gid + ")",
+            "fill-opacity": opacity === undefined ? 1 : opacity,
+            stroke: 'none',
+            'stroke-width': 0,
+            "fill-rule": fill.fillRule || "evenodd",
+        }));
+    }
+    return h("g", elArr);
+}
+
+handler2[FillType.Pattern] = function (h: Function, frame: ShapeSize, fill: Fill, path: string): any {
+    return handler[FillType.Pattern](h, frame, fill, path)
+}
+
+export function render2(h: Function, fills: Fill[], frame: ShapeSize, path: string): Array<any> {
+    const fillsCount = fills.length;
+    const elArr = [];
+    for (let i = 0; i < fillsCount; i++) {
+        const fill = fills[i];
+        if (!fill.isEnabled) {
+            continue;
+        }
+        const fillType = fill.fillType;
+        elArr.push(handler2[fillType](h, frame, fill, path));
+    }
+    return elArr;
+}
+
 export function renderWithVars(h: Function, shape: Shape, frame: ShapeSize, path: string,
-    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
+                               varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
     let fills = shape.style.fills;
     if (varsContainer) {
         const _vars = findOverrideAndVar(shape, OverrideType.Fills, varsContainer);

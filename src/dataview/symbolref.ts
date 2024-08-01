@@ -12,9 +12,9 @@ import { objectId } from "../basic/objectid";
 export class SymbolRefView extends ShapeView {
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
-
         this.symwatcher = this.symwatcher.bind(this);
         this.loadsym();
+        this.updateMaskMap();
         // this.afterInit();
     }
 
@@ -69,11 +69,34 @@ export class SymbolRefView extends ShapeView {
             return false;
         }
     }
+    maskMap: Map<string, Shape | boolean> = new Map;
+    updateMaskMap() {
+        const map = this.maskMap;
+        map.clear();
+
+        const children = this.getDataChilds();
+        let mask: Shape | undefined = undefined;
+        const maskShape: Shape[] = [];
+        for (let i = 0; i < children.length; i++) {
+            const child = children[i];
+            if (child.mask) {
+                mask = child;
+                maskShape.push(child);
+            } else {
+                mask && map.set(child.id, mask);
+            }
+        }
+        this.childs.forEach(c => {
+            if (c.mask) return;
+            c.m_ctx.setDirty(c);
+        });
+        maskShape.forEach(m => m.notify('rerender-mask'));
+        this.notify('mask-env-change');
+    }
 
     // private m_refId: string | undefined;
     private m_sym: SymbolShape | undefined;
     private m_union: SymbolShape | undefined;
-
 
     get symData() {
         return this.m_sym;
@@ -106,6 +129,9 @@ export class SymbolRefView extends ShapeView {
     onDataChange(...args: any[]): void {
         super.onDataChange(...args);
         this.loadsym();
+        if (args.includes('childs')) {
+            this.updateMaskMap();
+        }
     }
 
     symwatcher(...args: any[]) {

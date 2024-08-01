@@ -1,5 +1,5 @@
 import { Basic, BasicArray, BasicMap, ResourceMgr } from "./basic";
-import { Border, Style } from "./style";
+import { Style } from "./style";
 import { Text } from "./text";
 import * as classes from "./baseclasses"
 import {
@@ -132,6 +132,7 @@ export class Shape extends Basic implements classes.Shape {
     overlayBackgroundInteraction?: classes.OverlayBackgroundInteraction;
     overlayBackgroundAppearance?: classes.OverlayBackgroundAppearance;
     scrollDirection?: classes.ScrollDirection;
+    mask?: boolean
 
     constructor(
         crdtidx: BasicArray<number>,
@@ -342,10 +343,6 @@ export class Shape extends Basic implements classes.Shape {
         }
     }
 
-    getBorderIndex(border: Border): number {
-        return this.style.borders.findIndex(i => i === border);
-    }
-
     findVar(varId: string, ret: Variable[]) {
         this.parent?.findVar(varId, ret);
     }
@@ -385,10 +382,6 @@ export class Shape extends Basic implements classes.Shape {
         return this.style.shadows;
     }
 
-    // get isNoSupportDiamondScale() {  // 默认都支持压扁缩放
-    //     return false;
-    // }
-
     get frameType() {
         return FrameType.Path;
     }
@@ -423,8 +416,7 @@ export class Shape extends Basic implements classes.Shape {
     getImageFill() {
         const fills = this.getFills();
         if (!fills.length) return false;
-        const result = fills.some(fill => fill.fillType === classes.FillType.Pattern);
-        return result;
+        return fills.some(fill => fill.fillType === classes.FillType.Pattern);
     }
 }
 

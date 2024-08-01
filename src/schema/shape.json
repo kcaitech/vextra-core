@@ -94,6 +94,9 @@
         },
         "scrollDirection":{
              "$ref":"./scroll-direction.json"
+        },
+        "mask": {
+            "type": "boolean"
         }
     },
     "required": [
