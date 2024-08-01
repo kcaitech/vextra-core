@@ -477,10 +477,10 @@ function importRadius(ctx: LoadContext, data: IJSON, shape: Shape) {
                 }
             }
         } else if (rectangleCornerRadiiIndependent) {
-            pathsegs[0].points[0] = rectangleTopLeftCornerRadius;
-            pathsegs[0].points[1] = rectangleTopRightCornerRadius;
-            pathsegs[0].points[2] = rectangleBottomRightCornerRadius;
-            pathsegs[0].points[3] = rectangleBottomLeftCornerRadius;
+            pathsegs[0].points[0].radius = rectangleTopLeftCornerRadius;
+            pathsegs[0].points[1].radius = rectangleTopRightCornerRadius;
+            pathsegs[0].points[2].radius = rectangleBottomRightCornerRadius;
+            pathsegs[0].points[3].radius = rectangleBottomLeftCornerRadius;
         }
     }
 
@@ -1106,31 +1106,6 @@ export function importSymbolUnion(ctx: LoadContext, data: IJSON, f: ImportFun, i
 }
 
 export function importSlice(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>): CutoutShape {
-    const frame = importShapeFrame(data);
-    const visible = data.visible;
-    const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
-    importStyle(ctx, style, data);
-    const id = data.kcId || uuid();
-
-    const curvePoint = new BasicArray<CurvePoint>();
-    const p1 = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight); // lt
-    const p2 = new CurvePoint([1] as BasicArray<number>, uuid(), 1, 0, CurveMode.Straight); // rt
-    const p3 = new CurvePoint([2] as BasicArray<number>, uuid(), 1, 1, CurveMode.Straight); // rb
-    const p4 = new CurvePoint([3] as BasicArray<number>, uuid(), 0, 1, CurveMode.Straight); // lb
-    const p5 = new CurvePoint([4] as BasicArray<number>, uuid(), 0, 0.00001, CurveMode.Straight); // lt
-    curvePoint.push(p1, p2, p3, p4, p5);
-    const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, true);
-    const shape = new CutoutShape([index] as BasicArray<number>, id, data.name, ShapeType.Cutout, frame.trans, frame.size, style, new BasicArray<PathSegment>(segment));
-
-    shape.isVisible = visible;
-    shape.style = style;
-
-    importShapeProperty(ctx, data, shape, nodeChangesMap);
-
-    return shape;
-}
-
-export function importUnion(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>): CutoutShape {
     const frame = importShapeFrame(data);
     const visible = data.visible;
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
