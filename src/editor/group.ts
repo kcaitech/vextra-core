@@ -6,6 +6,7 @@
 import { GroupShape, Shape, Document, Page, makeShapeTransform1By2, makeShapeTransform2By1 } from "../data";
 import { Api } from "./coop/recordapi";
 import { ColVector3D } from "../basic/matrix2";
+import { PageView } from "../dataview";
 
 export function expandBounds(bounds: {
     left: number,
