@@ -56,7 +56,7 @@ export class SymbolRefView extends ShapeView {
 
     getLsRefId(): boolean | string {
         const pathname = window.location.pathname;
-        const jsonString = sessionStorage.getItem('refId');
+        const jsonString = sessionStorage.getItem('symrefSwitchId');
         if (pathname.includes("prototype") && jsonString) {
             const refIdArray = JSON.parse(jsonString);
             const maprefIdArray = new Map(refIdArray) as Map<string, string>;
