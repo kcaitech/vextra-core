@@ -62,10 +62,10 @@ function importTransform(textCase: string) {
 export function importText(data: IJSON, textStyle: IJSON): Text {
 
     // 默认字体颜色
-    const fillPaints = textStyle.fillPaints;
+    const fillPaints = textStyle.fillPaints as IJSON[] | undefined;
     const fillPaint = fillPaints && fillPaints[0];
     const fontColor = fillPaint && importColor(fillPaint.color, fillPaint.opacity);
-    const gradient = parseGradient(fillPaint, textStyle.size);
+    const gradient = fillPaint && parseGradient(fillPaint, textStyle.size);
     const fontSize = textStyle.fontSize;
     const letterSpacingValue = textStyle.letterSpacing?.value || 0;
     /**
@@ -146,7 +146,7 @@ export function importText(data: IJSON, textStyle: IJSON): Text {
                 const fillPaints = spanattr.fillPaints;
                 const fillPaint = fillPaints && fillPaints[0];
                 const fontColor = fillPaint && importColor(fillPaint.color, fillPaint.opacity);
-                const gradient = parseGradient(fillPaint, spanattr.size);
+                const gradient = fillPaint && parseGradient(fillPaint, spanattr.size);
                 if (fontColor) span.color = fontColor;
                 if (gradient) {
                     span.gradient = gradient;
