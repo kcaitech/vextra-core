@@ -38,7 +38,8 @@ import {
     OverlayBackgroundInteraction,
     OverlayBackgroundAppearance,
     OverlayBackgroundType,
-    ScrollDirection
+    ScrollDirection,
+    OverlayPosition,
 } from "../../data/classes";
 import {
     BoolOp,
@@ -644,7 +645,7 @@ export class Api {
 
     }
 
-    shapeModifyOverlayPositionType(page: Page, shape: Shape, value: OverlayPositions) {
+    shapeModifyOverlayPositionType(page: Page, shape: Shape, value: OverlayPosition) {
         checkShapeAtPage(page, shape)
         this.addOp(basicapi.crdtSetAttr(shape, "overlayPositionType", value));
     }
