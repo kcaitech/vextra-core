@@ -64,11 +64,13 @@ import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
 import { Matrix } from "../basic/matrix";
 import {
     IImportContext,
-    importArtboard, importBlur,
+    importArtboard,
+    importBlur,
     importBorder,
-    importCornerRadius, importFill,
-    importGradient, importShadow,
-    importShapeFrame,
+    importCornerRadius,
+    importFill,
+    importGradient,
+    importShadow,
     importStop,
     importStyle,
     importSymbolShape,
@@ -100,7 +102,8 @@ import {
     modify_variable_with_api,
     shape4border,
     shape4cornerRadius,
-    shape4fill, shape4shadow
+    shape4fill,
+    shape4shadow
 } from "./symbol";
 import { is_circular_ref2 } from "./utils/ref_check";
 import { BorderSideSetting, BorderStyle, ExportFormat, Point2D, Shadow } from "../data/baseclasses";
@@ -502,7 +505,6 @@ export class PageEditor {
     }
 
     boolgroup(shapes: Shape[], groupname: string, op: BoolOp): false | BoolShape {
-        // shapes = shapes.filter(i => i instanceof PathShape || i instanceof PathShape2 || i instanceof BoolShape); // 不需要过滤
         if (shapes.length === 0) return false;
         if (shapes.find((v) => !v.parent)) return false;
         const fshape = shapes[0];
@@ -3622,6 +3624,41 @@ export class PageEditor {
             this.__repo.commit();
         } catch (error) {
             console.error('pasteProperties:', error);
+            this.__repo.rollback();
+        }
+    }
+
+    outlineShapes(shapes: ShapeView[]) {
+        try {
+            const ids: string[] = [];
+            const api = this.__repo.start('outlineShapes', (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+                const state = {} as SelectionState;
+                if (!isUndo) state.shapes = ids;
+                else state.shapes = cmd.saveselection?.shapes || [];
+                selection.restore(state);
+            });
+            for (const view of shapes) {
+                if (!(view instanceof TextShapeView)) continue;
+                const shape = adapt2Shape(view) as TextShape;
+                const path = view.getTextPath();
+                const copyStyle = findUsableFillStyle(view);
+                const style: Style = this.cloneStyle(copyStyle);
+                const mainColor = shape.text.paras[0]?.spans[0]?.color;
+                if (mainColor) {
+                    const len = style.fills.length;
+                    style.fills.push(new Fill([len] as BasicArray<number>, uuid(), true, FillType.SolidColor, mainColor));
+                }
+                let pathShape = newPathShape(view.name, view.frame, path, style);
+                pathShape.transform = shape.transform.clone();
+                const parent = shape.parent as GroupShape;
+                const index = parent.indexOfChild(shape);
+                api.shapeDelete(this.__document, this.__page, parent, index);
+                pathShape = api.shapeInsert(this.__document, this.__page, parent, pathShape, index) as PathShape;
+                ids.push(pathShape.id);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.error('outlineShapes:', error);
             this.__repo.rollback();
         }
     }
