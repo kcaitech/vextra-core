@@ -107,12 +107,10 @@ export {
 } from "./data"
 
 export {
-
     makeMatrixByTransform2,
     makeShapeTransform2By1,
     makeShapeTransform1By2,
     updateShapeTransform1By2,
-
     importGradient
 } from "./data"
 
@@ -158,7 +156,7 @@ export { RadixConvert } from "./coop/common/radix_convert"
 
 export { Transform as TransformRaw } from "./data/transform"
 
-// render
-// export * from "./render"
-// export * from "./renderStatic"
+// properties
+export { exportBorder, exportFill, exportShadow, exportBlur } from './data/baseexport';
+
 
