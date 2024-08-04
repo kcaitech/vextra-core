@@ -818,11 +818,12 @@ export class Api {
         this.addOp(basicapi.removeContactRoleAt(shape.style, index));
     }
     // shadow
-    addShadows(page: Page, shape: Shape, shadows: Shadow[]) {
+    addShadows(page: Page, shape: Shape | Variable, shadows: Shadow[]) {
         checkShapeAtPage(page, shape);
+        const __shadows = shape instanceof Shape ? shape.style.shadows : shape.value
         for (let i = 0; i < shadows.length; i++) {
             const shadow = shadows[i];
-            this.addOp(basicapi.addShadow(shape.style.shadows, shadow, i));
+            this.addOp(basicapi.addShadow(__shadows, shadow, i));
         }
     }
     addShadow(page: Page, shape: Shape | Variable, shadow: Shadow, index: number) {
