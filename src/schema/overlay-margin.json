@@ -1,0 +1,29 @@
+{
+    "description": "overlay margin",
+    "type": "object",
+    "properties": {
+        "top": {
+            "type": "number",
+            "default": 0
+        },
+        "bottom": {
+            "type": "number",
+            "default": 0
+        },
+        "left": {
+            "type": "number",
+            "default": 0
+        },
+        "right": {
+            "type": "number",
+            "default": 0
+        }
+    },
+    "required": [
+        "top",
+        "bottom",
+        "left",
+        "right"
+    ],
+    "additionalProperties": false
+}

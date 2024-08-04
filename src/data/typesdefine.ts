@@ -245,6 +245,13 @@ export enum OverlayBackgroundType {
     NONE = "NONE",
     SOLIDCOLOR = "SOLID_COLOR",
 }
+/* overlay margin */
+export type OverlayMargin = {
+    top: number,
+    bottom: number,
+    left: number,
+    right: number,
+}
 /* overlayPositionType */
 export enum OverlayPositions {
     TOPLEFT = "TOP_LEFT",
@@ -684,6 +691,11 @@ export type OverlayBackgroundAppearance = {
     backgroundType: OverlayBackgroundType,
     backgroundColor: Color,
     typeId?: string,
+}
+/* overlay position */
+export type OverlayPosition = {
+    position: OverlayPositions,
+    margin: OverlayMargin,
 }
 /* actions */
 export type PrototypeActions = {

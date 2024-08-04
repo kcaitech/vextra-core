@@ -379,6 +379,15 @@ export function importOverlayBackgroundInteraction(source: types.OverlayBackgrou
 export function importOverlayBackgroundType(source: types.OverlayBackgroundType, ctx?: IImportContext): impl.OverlayBackgroundType {
     return source
 }
+/* overlay margin */
+export function importOverlayMargin(source: types.OverlayMargin, ctx?: IImportContext): impl.OverlayMargin {
+    const ret: impl.OverlayMargin = new impl.OverlayMargin (
+        source.top,
+        source.bottom,
+        source.left,
+        source.right)
+    return ret
+}
 /* overlayPositionType */
 export function importOverlayPositions(source: types.OverlayPositions, ctx?: IImportContext): impl.OverlayPositions {
     return source
@@ -871,6 +880,13 @@ export function importOverlayBackgroundAppearance(source: types.OverlayBackgroun
         importOverlayBackgroundType(source.backgroundType, ctx),
         importColor(source.backgroundColor, ctx))
     importOverlayBackgroundAppearanceOptional(ret, source, ctx)
+    return ret
+}
+/* overlay position */
+export function importOverlayPosition(source: types.OverlayPosition, ctx?: IImportContext): impl.OverlayPosition {
+    const ret: impl.OverlayPosition = new impl.OverlayPosition (
+        importOverlayPositions(source.position, ctx),
+        importOverlayMargin(source.margin, ctx))
     return ret
 }
 /* actions */
