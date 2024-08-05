@@ -162,6 +162,10 @@ export class TableCellView extends ShapeView {
         return locateNextCursor(this.getLayout(), index);
     }
 
+    get masked() {
+        return undefined;
+    }
+
     getTextPath() {
         if (!this.m_textpath) {
             this.m_textpath = renderText2Path(this.getLayout(), 0, 0)
