@@ -582,7 +582,7 @@ export function importPage(ctx: LoadContext, data: IJSON, f: ImportFun, nodeChan
     importStyle(ctx, style, data);
 
     const childs: Shape[] = (data.childs as IJSON[] || []).map((d: IJSON, i: number) => f(ctx, d, i)).filter(item => item) as Shape[];
-    const shape = new Page(new BasicArray<number>(), data.id, data.name, ShapeType.Page, frame.trans, frame.size, style, new BasicArray<Shape>(...childs));
+    const shape = new Page(new BasicArray<number>(), data.id, data.name, ShapeType.Page, frame.trans, style, new BasicArray<Shape>(...childs));
 
     shape.isVisible = visible;
 
@@ -766,7 +766,7 @@ export function importPathShape(ctx: LoadContext, data: IJSON, f: ImportFun, ind
         cls = RectShape;
         shapeType = types.ShapeType.Rectangle;
     }
-    const shape = new cls([index] as BasicArray<number>, id, data.name, shapeType, frame.trans, frame.size, style, new BasicArray<PathSegment>(...segments));
+    const shape = new cls([index] as BasicArray<number>, id, data.name, shapeType, frame.trans, style, frame.size, new BasicArray<PathSegment>(...segments));
     style.startMarkerType = startStrokeCap;
     style.endMarkerType = endStrokeCap;
 
@@ -790,7 +790,7 @@ export function importPolygon(ctx: LoadContext, data: IJSON, f: ImportFun, index
     const points = getPolygonPoints(vertices);
 
     const segment = new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...points), true)
-    const shape = new PolygonShape([index] as BasicArray<number>, id, data.name, types.ShapeType.Polygon, frame.trans, frame.size, style, new BasicArray<PathSegment>(segment), count);
+    const shape = new PolygonShape([index] as BasicArray<number>, id, data.name, types.ShapeType.Polygon, frame.trans, style, frame.size, new BasicArray<PathSegment>(segment), count);
 
     shape.isVisible = visible;
     shape.style = style;
@@ -814,7 +814,7 @@ export function importStar(ctx: LoadContext, data: IJSON, f: ImportFun, index: n
     const points = getPolygonPoints(vertices, cornerRadius);
 
     const segment = new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...points), true)
-    const shape = new StarShape([index] as BasicArray<number>, id, data.name, types.ShapeType.Star, frame.trans, frame.size, style, new BasicArray<PathSegment>(segment), count, starInnerScale);
+    const shape = new StarShape([index] as BasicArray<number>, id, data.name, types.ShapeType.Star, frame.trans, style, frame.size, new BasicArray<PathSegment>(segment), count, starInnerScale);
 
     shape.isVisible = visible;
     shape.style = style;
@@ -838,7 +838,7 @@ export function importLine(ctx: LoadContext, data: IJSON, f: ImportFun, index: n
         new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight),
         new CurvePoint([1] as BasicArray<number>, uuid(), 1, 0, CurveMode.Straight),
     ), false)
-    const shape = new PathShape([index] as BasicArray<number>, id, data.name, ShapeType.Path, frame.trans, frame.size, style, new BasicArray<PathSegment>(segment));
+    const shape = new PathShape([index] as BasicArray<number>, id, data.name, ShapeType.Path, frame.trans, style, frame.size, new BasicArray<PathSegment>(segment));
 
     shape.isVisible = visible;
     shape.style = style;
@@ -880,7 +880,7 @@ export function importGroup(ctx: LoadContext, data: IJSON, f: ImportFun, index: 
 
     const cls = !booleanOperation ? GroupShape : BoolShape;
     const shapeType = !booleanOperation ? types.ShapeType.Group : types.ShapeType.BoolShape;
-    const shape = new cls(new BasicArray(), id, data.name, shapeType, frame.trans, frame.size, style, new BasicArray<Shape>(...childs));
+    const shape = new cls(new BasicArray(), id, data.name, shapeType, frame.trans, style, new BasicArray<Shape>(...childs));
 
     if (booleanOperation) {
         let boolOp;
@@ -911,7 +911,7 @@ export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun, inde
     const id = data.kcId || uuid();
 
     const childs: Shape[] = (data.childs as IJSON[] || []).map((d: IJSON, i: number) => f(ctx, d, i)).filter(item => item) as Shape[];
-    const shape = new Artboard([index] as BasicArray<number>, id, data.name, ShapeType.Artboard, frame.trans, frame.size, style, new BasicArray<Shape>(...childs));
+    const shape = new Artboard([index] as BasicArray<number>, id, data.name, ShapeType.Artboard, frame.trans, style, new BasicArray<Shape>(...childs), frame.size);
     shape.isVisible = visible;
 
     importShapeProperty(ctx, data, shape, nodeChangesMap);
@@ -943,7 +943,7 @@ export function importTextShape(ctx: LoadContext, data: IJSON, f: ImportFun, ind
     })(data.textAutoResize);
     text.attr && (text.attr.textBehaviour = textBehaviour);
 
-    const shape = new TextShape([index] as BasicArray<number>, id, data.name, ShapeType.Text, frame.trans, frame.size, style, text);
+    const shape = new TextShape([index] as BasicArray<number>, id, data.name, ShapeType.Text, frame.trans, style, frame.size, text);
     shape.isVisible = visible;
 
     importShapeProperty(ctx, data, shape, nodeChangesMap);
@@ -1023,7 +1023,7 @@ export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun, index:
     const variablesRes = importVariables(ctx.rawVariables, ctx.variables, data, nodeChangesMap);
 
     const childs: Shape[] = (data.childs as IJSON[] || []).map((d: IJSON, i: number) => f(ctx, d, i)).filter(item => item) as Shape[];
-    const shape = new SymbolShape([index] as BasicArray<number>, id, data.name, ShapeType.Symbol, frame.trans, frame.size, style, new BasicArray<Shape>(...childs), variablesRes[1]);
+    const shape = new SymbolShape([index] as BasicArray<number>, id, data.name, ShapeType.Symbol, frame.trans, style, new BasicArray<Shape>(...childs), frame.size, variablesRes[1]);
     shape.isVisible = visible;
 
     importShapeProperty(ctx, data, shape, nodeChangesMap);
@@ -1044,7 +1044,7 @@ export function importSymbolRef(ctx: LoadContext, data: IJSON, f: ImportFun, ind
     const symbol = nodeChangesMap.get(symbolId);
     const symbolRawID = symbol?.kcId;
 
-    const shape = new SymbolRefShape([index] as BasicArray<number>, id, data.name, ShapeType.SymbolRef, frame.trans, frame.size, style, symbolRawID, variablesRes[1]);
+    const shape = new SymbolRefShape([index] as BasicArray<number>, id, data.name, ShapeType.SymbolRef, frame.trans, style, frame.size, symbolRawID, variablesRes[1]);
     shape.isVisible = visible;
 
     importShapeProperty(ctx, data, shape, nodeChangesMap);
@@ -1084,7 +1084,7 @@ export function importSymbolUnion(ctx: LoadContext, data: IJSON, f: ImportFun, i
         }
     }
 
-    const shape = new SymbolUnionShape([index] as BasicArray<number>, id, data.name, ShapeType.SymbolUnion, frame.trans, frame.size, style, new BasicArray<Shape>(...childs), variablesRes[1]);
+    const shape = new SymbolUnionShape([index] as BasicArray<number>, id, data.name, ShapeType.SymbolUnion, frame.trans, style, new BasicArray<Shape>(...childs), frame.size, variablesRes[1]);
     shape.isVisible = visible;
 
     importShapeProperty(ctx, data, shape, nodeChangesMap);
@@ -1107,7 +1107,7 @@ export function importSlice(ctx: LoadContext, data: IJSON, f: ImportFun, index: 
     const p5 = new CurvePoint([4] as BasicArray<number>, uuid(), 0, 0.00001, CurveMode.Straight); // lt
     curvePoint.push(p1, p2, p3, p4, p5);
     const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, true);
-    const shape = new CutoutShape([index] as BasicArray<number>, id, data.name, ShapeType.Cutout, frame.trans, frame.size, style, new BasicArray<PathSegment>(segment));
+    const shape = new CutoutShape([index] as BasicArray<number>, id, data.name, ShapeType.Cutout, frame.trans, style, frame.size, new BasicArray<PathSegment>(segment));
 
     shape.isVisible = visible;
     shape.style = style;
