@@ -76,9 +76,11 @@ export class ArtboradView extends GroupShapeView {
         return props;
     }
 
+    _svgnode?: EL;
+
     render(): number {
         if (!this.checkAndResetDirty()) return this.m_render_version;
-
+        this._svgnode = undefined;
         const masked = this.masked;
         if (masked) {
             (this.getPage() as PageView).getView(masked.id)?.render();
@@ -114,14 +116,15 @@ export class ArtboradView extends GroupShapeView {
         const id = "clippath-artboard-" + objectId(this);
         const cp = clippathR(elh, id, this.getPathStr());
 
+        this._svgnode = elh(
+            "svg",
+            svgprops,
+            [cp, ...children, ...borders]
+        )
         children = [elh(
             "g",
             { "clip-path": "url(#" + id + ")" },
-            [elh(
-                "svg",
-                svgprops,
-                [cp, ...children, ...borders]
-            )]
+            [this._svgnode]
         )];
 
         if (shadows.length) {
