@@ -861,7 +861,7 @@ export type Shape = {
     haveEdit?: boolean,
     prototypeStartingPoint?: PrototypeStartingPoint,
     prototypeInteractions?: Shape_prototypeInteractions,
-    overlayPositionType?: OverlayPositions,
+    overlayPositionType?: OverlayPosition,
     overlayBackgroundInteraction?: OverlayBackgroundInteraction,
     overlayBackgroundAppearance?: OverlayBackgroundAppearance,
     scrollDirection?: ScrollDirection,

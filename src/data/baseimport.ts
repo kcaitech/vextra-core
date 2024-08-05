@@ -1140,7 +1140,7 @@ function importShapeOptional(tar: impl.Shape, source: types.Shape, ctx?: IImport
     if (source.haveEdit) tar.haveEdit = source.haveEdit
     if (source.prototypeStartingPoint) tar.prototypeStartingPoint = importPrototypeStartingPoint(source.prototypeStartingPoint, ctx)
     if (source.prototypeInteractions) tar.prototypeInteractions = importShape_prototypeInteractions(source.prototypeInteractions, ctx)
-    if (source.overlayPositionType) tar.overlayPositionType = importOverlayPositions(source.overlayPositionType, ctx)
+    if (source.overlayPositionType) tar.overlayPositionType = importOverlayPosition(source.overlayPositionType, ctx)
     if (source.overlayBackgroundInteraction) tar.overlayBackgroundInteraction = importOverlayBackgroundInteraction(source.overlayBackgroundInteraction, ctx)
     if (source.overlayBackgroundAppearance) tar.overlayBackgroundAppearance = importOverlayBackgroundAppearance(source.overlayBackgroundAppearance, ctx)
     if (source.scrollDirection) tar.scrollDirection = importScrollDirection(source.scrollDirection, ctx)

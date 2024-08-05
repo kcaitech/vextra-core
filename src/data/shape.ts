@@ -16,7 +16,13 @@ import {
     VariableType,
     ShapeSize,
     PrototypeInterAction,
-    ScrollDirection
+    OverlayPosition,
+    ScrollDirection,
+    OverlayPositions,
+    OverlayBackgroundAppearance,
+    OverlayBackgroundType,
+    OverlayMargin,
+    Color
 } from "./baseclasses"
 import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
@@ -24,7 +30,7 @@ import { TextLayout } from "./textlayout";
 import { parsePath } from "./pathparser";
 import { FrameType, PathType, RadiusType, RECT_POINTS } from "./consts";
 import { Variable } from "./variable";
-import { makeShapeTransform2By1} from "./shape_transform_util";
+import { makeShapeTransform2By1 } from "./shape_transform_util";
 import { Transform } from "./transform";
 export { Transform } from "./transform";
 export {
@@ -99,6 +105,12 @@ export class Shape extends Basic implements classes.Shape {
         if (id0 === "prototypeInteractions" && !this.prototypeInteractions) {
             this.prototypeInteractions = new BasicArray<PrototypeInterAction>();
         }
+        if (id0 === "overlayPositionType" && !this.overlayPositionType) {
+            this.overlayPositionType = new OverlayPosition(OverlayPositions.CENTER, new OverlayMargin)
+        }
+        if (id0 === "overlayBackgroundAppearance" && !this.overlayBackgroundAppearance) {
+            this.overlayBackgroundAppearance = new OverlayBackgroundAppearance(OverlayBackgroundType.SOLIDCOLOR, new Color(0.25, 0, 0, 0))
+        }
         return super.getOpTarget(path);
     }
 
@@ -128,7 +140,7 @@ export class Shape extends Basic implements classes.Shape {
     haveEdit?: boolean | undefined
     prototypeStartingPoint?: classes.PrototypeStartingPoint;
     prototypeInteractions?: BasicArray<PrototypeInterAction>;
-    overlayPositionType?: classes.OverlayPositions;
+    overlayPositionType?: classes.OverlayPosition;
     overlayBackgroundInteraction?: classes.OverlayBackgroundInteraction;
     overlayBackgroundAppearance?: classes.OverlayBackgroundAppearance;
     scrollDirection?: classes.ScrollDirection;

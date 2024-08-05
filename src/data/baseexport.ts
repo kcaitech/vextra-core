@@ -1004,7 +1004,7 @@ export function exportShape(source: types.Shape, ctx?: IExportContext): types.Sh
     if (source.haveEdit) ret.haveEdit = source.haveEdit
     if (source.prototypeStartingPoint) ret.prototypeStartingPoint = exportPrototypeStartingPoint(source.prototypeStartingPoint, ctx)
     if (source.prototypeInteractions) ret.prototypeInteractions = exportShape_prototypeInteractions(source.prototypeInteractions, ctx)
-    if (source.overlayPositionType) ret.overlayPositionType = exportOverlayPositions(source.overlayPositionType, ctx)
+    if (source.overlayPositionType) ret.overlayPositionType = exportOverlayPosition(source.overlayPositionType, ctx)
     if (source.overlayBackgroundInteraction) ret.overlayBackgroundInteraction = exportOverlayBackgroundInteraction(source.overlayBackgroundInteraction, ctx)
     if (source.overlayBackgroundAppearance) ret.overlayBackgroundAppearance = exportOverlayBackgroundAppearance(source.overlayBackgroundAppearance, ctx)
     if (source.scrollDirection) ret.scrollDirection = exportScrollDirection(source.scrollDirection, ctx)

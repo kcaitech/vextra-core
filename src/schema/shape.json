@@ -84,7 +84,7 @@
             }
         },
         "overlayPositionType":{
-            "$ref": "./overlay-positions.json"
+            "$ref": "./overlay-position.json"
         },
         "overlayBackgroundInteraction":{
              "$ref": "./overlay-background-interaction.json"
