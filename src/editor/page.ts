@@ -66,10 +66,10 @@ import {
     IImportContext,
     importArtboard,
     importBlur,
-    importBorder,
+    importBorder, importContextSettings,
     importCornerRadius,
     importFill,
-    importGradient,
+    importGradient, importMarkerType,
     importShadow,
     importStop,
     importStyle,
@@ -1457,17 +1457,13 @@ export class PageEditor {
                         api.shapeModifyRadius2(page, _shape, lt, rt, rb, lb);
                     }
 
-                    if (shape.isVirtualShape) {
-                        continue;
-                    }
+                    if (shape.isVirtualShape) continue;
 
                     if (shape instanceof PathShape) {
                         const points = shape.pathsegs[0].points;
                         for (let _i = 0; _i < 4; _i++) {
                             const val = values[_i];
-                            if (points[_i].radius === val || val < 0) {
-                                continue;
-                            }
+                            if (points[_i].radius === val || val < 0) continue;
 
                             api.modifyPointCornerRadius(page, shape, _i, val, 0);
                         }
@@ -1488,9 +1484,7 @@ export class PageEditor {
                         api.shapeModifyRadius2(page, __shape, lt, rt, rb, lb)
                     }
                 } else {
-                    if (shape.isVirtualShape || shape.radiusType === RadiusType.None) {
-                        continue;
-                    }
+                    if (shape.isVirtualShape || shape.radiusType === RadiusType.None) continue;
 
                     if (shape instanceof PathShape) {
                         shape.pathsegs.forEach((seg, index) => {
@@ -3572,6 +3566,10 @@ export class PageEditor {
             const borders = source.borders;
             const shadows = source.shadows;
             const blur = source.blur;
+            const radius = source.radius;
+            const contextSetting = source.contextSetting;
+            const mark = source.mark;
+            const text = source.text;
 
             const document = this.__document;
             const ctx = new class {
@@ -3618,6 +3616,69 @@ export class PageEditor {
                     api.deleteBlur(this.__page, shape);
                     if (blur) {
                         api.addBlur(this.__page, shape, importBlur(blur));
+                    }
+                }
+                // radius
+                {
+                    if (radius) {
+                        let needUpdateFrame = false;
+                        if (shape instanceof SymbolRefShape) {
+                            const _shape = shape4cornerRadius(api, page, shapes[i] as SymbolRefView);
+                            api.shapeModifyRadius2(page, _shape, radius[0], radius[1], radius[2], radius[3]);
+                        } else if (shape instanceof Artboard || shape instanceof SymbolShape) {
+                            api.shapeModifyRadius2(page, shape, radius[0], radius[1], radius[2], radius[3]);
+                        } else if (shape instanceof PathShape || shape instanceof PathShape2) {
+                            const isRect = shape.radiusType === RadiusType.Rect;
+                            if (isRect) {
+                                const points = shape.pathsegs[0].points;
+                                for (let _i = 0; _i < 4; _i++) {
+                                    const val = radius[_i];
+                                    if (points[_i].radius === val || val < 0) continue;
+
+                                    api.modifyPointCornerRadius(page, shape, _i, val, 0);
+                                }
+                            } else {
+                                shape.pathsegs.forEach((seg, index) => {
+                                    for (let _i = 0; _i < seg.points.length; _i++) {
+                                        if (seg.points[_i].radius === radius[0]) continue;
+                                        api.modifyPointCornerRadius(page, shape, _i, radius[0], index);
+                                    }
+                                });
+                            }
+                            needUpdateFrame = true;
+                        } else {
+                            api.shapeModifyFixedRadius(page, shape as GroupShape | TextShape, radius[0]);
+                        }
+
+                        if (needUpdateFrame) {
+                            update_frame_by_points(api, this.__page, shape);
+                        }
+                    }
+                }
+                // contextSetting
+                {
+                    if (contextSetting) {
+                        const __cs = importContextSettings(contextSetting);
+                        api.shapeModifyContextSettingsOpacity(page, shape, __cs.opacity ?? 1);
+                        api.shapeModifyContextSettingsBlendMode(page, shape, __cs.blenMode);
+                    }
+                }
+                // mark
+                {
+                    if (mark?.start) {
+                        const __start = importMarkerType(mark.start);
+                        api.shapeModifyStartMarkerType(page, shape, __start);
+                    }
+                    if (mark?.end) {
+                        const __end = importMarkerType(mark.end);
+                        api.shapeModifyEndMarkerType(page, shape, __end);
+                    }
+                }
+                // text
+                {
+                    // todo
+                    if (text && shape instanceof TextShape) {
+
                     }
                 }
             }
