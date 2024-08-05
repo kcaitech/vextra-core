@@ -1,4 +1,4 @@
-import {GroupShape, Shape, ShapeFrame, ShapeType, SymbolUnionShape, TextShape} from "../data/shape";
+import { GroupShape, Shape, ShapeFrame, ShapeType, SymbolUnionShape, TextShape } from "../data/shape";
 import {
     exportArtboard,
     exportBoolShape,
@@ -46,9 +46,9 @@ import {
 } from "../data/baseimport";
 import * as types from "../data/typesdefine";
 import { v4 } from "uuid";
-import { Document } from "../data/document";
+import { Document } from "../data";
 import { newSymbolRefShape, newTextShape, newTextShapeByText } from "../editor/creator";
-import { Page } from "../data/page";
+import { Page } from "../data";
 import { FMT_VER_latest } from "../data/fmtver";
 
 export function set_childs_id(shapes: Shape[], matched?: Set<string>) {
@@ -126,7 +126,7 @@ export function export_shape(shapes: Shape[]) {
             result.push(content);
         }
     }
-    return {shapes: result, ctx}
+    return { shapes: result, ctx }
 }
 
 /**
@@ -152,13 +152,13 @@ function match_for_contact(source: Shape[]) {
         const from = all.get(c.from?.shapeId || '') || undefined;
         const to = all.get(c.to?.shapeId || '') || undefined;
 
-        units.push({contact: c as unknown as Shape, from, to});
+        units.push({ contact: c as unknown as Shape, from, to });
     }
 
     const modified = new Set<Shape>();
 
     for (let i = 0, l = units.length; i < l; i++) {
-        const {contact, from, to} = units[i];
+        const { contact, from, to } = units[i];
 
         if (!from) {
             (contact as unknown as types.ContactShape).from = undefined;
@@ -406,7 +406,7 @@ export function XYsBounding(points: { x: number, y: number }[]) {
     const bottom = Math.max(...ys);
     const left = Math.min(...xs);
     const right = Math.max(...xs);
-    return {top, bottom, left, right};
+    return { top, bottom, left, right };
 }
 
 export function get_frame(shapes: Shape[]): { x: number, y: number }[] {
@@ -416,15 +416,15 @@ export function get_frame(shapes: Shape[]): { x: number, y: number }[] {
         const m = s.matrix2Root();
         const f = s.size;
         const ps: { x: number, y: number }[] = [
-            {x: 0, y: 0},
-            {x: f.width, y: 0},
-            {x: f.width, y: f.height},
-            {x: 0, y: f.height}
+            { x: 0, y: 0 },
+            { x: f.width, y: 0 },
+            { x: f.width, y: f.height },
+            { x: 0, y: f.height }
         ];
         for (let i = 0; i < 4; i++) points.push(m.computeCoord3(ps[i]));
     }
     const b = XYsBounding(points);
-    return [{x: b.left, y: b.top}, {x: b.right, y: b.top}, {x: b.right, y: b.bottom}, {x: b.left, y: b.bottom}];
+    return [{ x: b.left, y: b.top }, { x: b.right, y: b.top }, { x: b.right, y: b.bottom }, { x: b.left, y: b.bottom }];
 }
 
 export function after_paster(document: Document, media: any) {
@@ -451,7 +451,7 @@ export function after_paster(document: Document, media: any) {
             buff[i] = base64.charCodeAt(i);
         }
 
-        const _media = {base64: m, buff};
+        const _media = { base64: m, buff };
 
         media[ref] = _media;
 
