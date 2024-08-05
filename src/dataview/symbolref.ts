@@ -49,7 +49,7 @@ export class SymbolRefView extends ShapeView {
     }
 
     getRefId(): string {
-        const swap_ref_id = this.getLsRefId();
+        const swap_ref_id = this.getSessionRefId();
         if (swap_ref_id) {
             return swap_ref_id as string;
         }
@@ -57,9 +57,9 @@ export class SymbolRefView extends ShapeView {
         return v ? v.value : (this.m_data as SymbolRefShape).refId;
     }
 
-    getLsRefId(): boolean | string {
+    getSessionRefId(): boolean | string {
         const pathname = window.location.pathname;
-        const jsonString = sessionStorage.getItem('sessionRefIdKey');
+        const jsonString = sessionStorage.getItem(sessionRefIdKey);
         if (pathname.includes("prototype") && jsonString) {
             const refIdArray = JSON.parse(jsonString);
             const maprefIdArray = new Map(refIdArray) as Map<string, string>;
