@@ -988,7 +988,7 @@ export class TableEditor extends ShapeEditor {
         return false;
     }
 
-    public setTextWeight(weight: number, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
+    public setTextWeight(weight: number, italic: boolean, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
         const api = this.__repo.start("setTableTextWeight");
         try {
             if (range) {
@@ -998,45 +998,17 @@ export class TableEditor extends ShapeEditor {
                     const cell = c.cell;
                     if (cell && cell.cellType === TableCellType.Text && cell.data.parent) {
                         api.textModifyWeight(this.__page, cell as TextShapeLike, weight, 0, cell.text.length);
-                    }
-                })
-            }
-            else {
-                api.tableModifyTextWeight(this.__page, this.shape, weight);
-                const cells = this.view.childs as TableCellView[];
-                cells.forEach((cell) => {
-                    if (cell && cell.cellType === TableCellType.Text && cell.data.parent) {
-                        api.textModifyWeight(this.__page, cell as TextShapeLike, weight, 0, cell.text.length);
-                    }
-                })
-            }
-            this.__repo.commit();
-            return true;
-        } catch (error) {
-            console.log(error)
-            this.__repo.rollback();
-        }
-        return false;
-    }
-
-    public setTextItalic(italic: boolean, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        const api = this.__repo.start("setTableTextItalic");
-        try {
-            if (range) {
-                this._initCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd, api);
-                const cells = this.view.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
-                cells.forEach((c) => {
-                    const cell = c.cell;
-                    if (cell && cell.cellType === TableCellType.Text && cell.data.parent) {
                         api.textModifyItalic(this.__page, cell as TextShapeLike, italic, 0, cell.text.length);
                     }
                 })
             }
             else {
+                api.tableModifyTextWeight(this.__page, this.shape, weight);
                 api.tableModifyTextItalic(this.__page, this.shape, italic);
                 const cells = this.view.childs as TableCellView[];
                 cells.forEach((cell) => {
                     if (cell && cell.cellType === TableCellType.Text && cell.data.parent) {
+                        api.textModifyWeight(this.__page, cell as TextShapeLike, weight, 0, cell.text.length);
                         api.textModifyItalic(this.__page, cell as TextShapeLike, italic, 0, cell.text.length);
                     }
                 })
