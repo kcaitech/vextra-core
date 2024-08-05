@@ -1,0 +1,17 @@
+{
+    "description": "overlay position",
+    "type": "object",
+    "properties": {
+        "position": {
+            "$ref": "./overlay-positions.json"
+        },
+        "margin": {
+           "$ref": "./overlay-margin.json"
+        }
+    },
+    "required": [
+        "position",
+        "margin"
+    ],
+    "additionalProperties": false
+}

@@ -309,6 +309,15 @@ export function exportOverlayBackgroundInteraction(source: types.OverlayBackgrou
 export function exportOverlayBackgroundType(source: types.OverlayBackgroundType, ctx?: IExportContext): types.OverlayBackgroundType {
     return source
 }
+/* overlay margin */
+export function exportOverlayMargin(source: types.OverlayMargin, ctx?: IExportContext): types.OverlayMargin {
+    const ret: types.OverlayMargin = {} as types.OverlayMargin
+    ret.top = source.top
+    ret.bottom = source.bottom
+    ret.left = source.left
+    ret.right = source.right
+    return ret
+}
 /* overlayPositionType */
 export function exportOverlayPositions(source: types.OverlayPositions, ctx?: IExportContext): types.OverlayPositions {
     return source
@@ -777,6 +786,13 @@ export function exportOverlayBackgroundAppearance(source: types.OverlayBackgroun
     ret.backgroundType = exportOverlayBackgroundType(source.backgroundType, ctx)
     ret.backgroundColor = exportColor(source.backgroundColor, ctx)
     if (source.typeId) ret.typeId = source.typeId
+    return ret
+}
+/* overlay position */
+export function exportOverlayPosition(source: types.OverlayPosition, ctx?: IExportContext): types.OverlayPosition {
+    const ret: types.OverlayPosition = {} as types.OverlayPosition
+    ret.position = exportOverlayPositions(source.position, ctx)
+    ret.margin = exportOverlayMargin(source.margin, ctx)
     return ret
 }
 /* actions */

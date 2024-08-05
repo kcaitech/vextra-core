@@ -249,6 +249,21 @@ export class Guide extends Basic {
         this.offset = offset
     }
 }
+/* overlay margin */
+export class OverlayMargin extends Basic {
+    typeId = "overlay-margin"
+    top: number
+    bottom: number
+    left: number
+    right: number
+    constructor(top: number = 0, bottom: number = 0, left: number = 0, right: number = 0) {
+        super()
+        this.top = top
+        this.bottom = bottom
+        this.left = left
+        this.right = right
+    }
+}
 /* padding */
 export class Padding extends Basic {
     typeId = "padding"
@@ -634,6 +649,17 @@ export class OverlayBackgroundAppearance extends Basic {
         super()
         this.backgroundType = backgroundType
         this.backgroundColor = backgroundColor
+    }
+}
+/* overlay position */
+export class OverlayPosition extends Basic {
+    typeId = "overlay-position"
+    position: OverlayPositions
+    margin: OverlayMargin
+    constructor(position: OverlayPositions, margin: OverlayMargin) {
+        super()
+        this.position = position
+        this.margin = margin
     }
 }
 /* actions */
