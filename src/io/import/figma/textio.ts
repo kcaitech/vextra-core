@@ -67,7 +67,7 @@ export function importText(data: IJSON, textStyle: IJSON): Text {
     const fontColor = fillPaint && importColor(fillPaint.color, fillPaint.opacity);
     const gradient = fillPaint && parseGradient(fillPaint, textStyle.size);
     const fontSize = textStyle.fontSize;
-    const letterSpacingValue = textStyle.letterSpacing?.value || 0;
+    const letterSpacing = textStyle.letterSpacing;
     /**
      family: "Inter"
      postscript: ""
@@ -136,7 +136,11 @@ export function importText(data: IJSON, textStyle: IJSON): Text {
                 span.gradient = gradient;
                 span.fillType = FillType.Gradient;
             }
-            span.kerning = letterSpacingValue;
+            if (letterSpacing) {
+                let value = letterSpacing.value;
+                if (letterSpacing.units === 'PERCENT' && fontSize) value = Math.round(fontSize * 1.35 * value / 100);
+                span.kerning = value;
+            }
             if (textDecoration === 'STRIKETHROUGH') span.strikethrough = types.StrikethroughType.Single;
             else if (textDecoration === 'UNDERLINE') span.underline = types.UnderlineType.Single;
 
@@ -152,13 +156,34 @@ export function importText(data: IJSON, textStyle: IJSON): Text {
                     span.gradient = gradient;
                     span.fillType = FillType.Gradient;
                 }
-                const fontSize = spanattr.fontSize;
+                const fontSize1 = spanattr.fontSize;
                 const font = spanattr.fontName;
                 const fontName = font?.family;
                 const weight = fontWeightMap[font?.style];
-                if (fontSize) span.fontSize = fontSize;
+                if (fontSize1) span.fontSize = fontSize1;
                 if (weight) span.weight = weight;
                 if (fontName) span.fontName = fontName;
+
+                const fontSize2 = fontSize1 || fontSize;
+                const lineHeight = spanattr.lineHeight;
+                if (lineHeight) {
+                    const value = lineHeight.value;
+                    if (lineHeight.units === 'PERCENT' && fontSize2) {
+                        const v = Math.round(fontSize2 * 1.35 * value / 100);
+                        paraAttr.maximumLineHeight = v;
+                        paraAttr.minimumLineHeight = v;
+                    } else if (lineHeight.units === 'PIXELS') {
+                        paraAttr.maximumLineHeight = value;
+                        paraAttr.minimumLineHeight = value;
+                    }
+                }
+
+                const letterSpacing = spanattr.letterSpacing;
+                if (letterSpacing) {
+                    let value = letterSpacing.value;
+                    if (letterSpacing.units === 'PERCENT' && fontSize2) value = Math.round(fontSize2 * 1.35 * value / 100);
+                    span.kerning = value;
+                }
 
                 const transform = importTransform(spanattr.textCase);
                 if (transform) span.transform = transform;
@@ -177,9 +202,9 @@ export function importText(data: IJSON, textStyle: IJSON): Text {
             spanIndex = spanEnd;
         }
 
-        if (lineHeight && fontSize) {
+        if (lineHeight && !paraAttr.maximumLineHeight && !paraAttr.minimumLineHeight) {
             const value = lineHeight.value;
-            if (lineHeight.units === 'PERCENT') {
+            if (lineHeight.units === 'PERCENT' && fontSize) {
                 const v = Math.round(fontSize * 1.35 * value / 100);
                 paraAttr.maximumLineHeight = v;
                 paraAttr.minimumLineHeight = v;
@@ -189,10 +214,10 @@ export function importText(data: IJSON, textStyle: IJSON): Text {
             }
         }
         if (alignment && alignment !== types.TextHorAlign.Left) paraAttr.alignment = alignment;
-        if (paragraphSpacing !== undefined && fontSize !== undefined) {
+        if (paragraphSpacing !== undefined) {
             if (lineHeight.units === 'PERCENT') {
                 paraAttr.paraSpacing = paragraphSpacing
-            } else if (lineHeight.units === 'PIXELS') {
+            } else if (lineHeight.units === 'PIXELS' && fontSize !== undefined) {
                 paraAttr.paraSpacing = paragraphSpacing - fontSize;
             }
         }
@@ -208,10 +233,10 @@ export function importText(data: IJSON, textStyle: IJSON): Text {
         // "UNORDERED_LIST" "ORDERED_LIST" "PLAIN"
         if (line && (lineType === "UNORDERED_LIST" || lineType === "ORDERED_LIST")) {
 
-            if (listSpacing !== undefined && fontSize !== undefined) {
+            if (listSpacing !== undefined) {
                 if (lineHeight.units === 'PERCENT') {
                     paraAttr.paraSpacing = listSpacing
-                } else if (lineHeight.units === 'PIXELS') {
+                } else if (lineHeight.units === 'PIXELS' && fontSize !== undefined) {
                     paraAttr.paraSpacing = listSpacing - fontSize;
                 }
             }
@@ -229,10 +254,10 @@ export function importText(data: IJSON, textStyle: IJSON): Text {
             if (listStartOffset) span.bulletNumbers.offset = listStartOffset;
 
         } else {
-            if (paragraphSpacing !== undefined && fontSize !== undefined) {
+            if (paragraphSpacing !== undefined) {
                 if (lineHeight.units === 'PERCENT') {
                     paraAttr.paraSpacing = paragraphSpacing
-                } else if (lineHeight.units === 'PIXELS') {
+                } else if (lineHeight.units === 'PIXELS' && fontSize !== undefined) {
                     paraAttr.paraSpacing = paragraphSpacing - fontSize;
                 }
             }
