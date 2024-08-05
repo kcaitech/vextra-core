@@ -1,6 +1,6 @@
-import { Shape } from "../../../data/shape";
-import { ResourceMgr } from "../../../data/basic";
-import { Page } from "../../../data/page";
+import {Shape, Variable} from "../../../data";
+import {BasicMap, ResourceMgr} from "../../../data";
+import { Page } from "../../../data";
 
 export interface IJSON {
     [key: string]: any
@@ -8,12 +8,16 @@ export interface IJSON {
 export class LoadContext {
     // shapeIds: Set<string> = new Set();
     mediasMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>;
+    rawVariables = new Map<string, IJSON>();
+    variables = new BasicMap<string, Variable>();
     constructor(mediasMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>) {
         this.mediasMgr = mediasMgr;
     }
 }
 
 export type ImportFun = (ctx: LoadContext, data: IJSON, i: number) => Shape
+
+export type ImportFun1 = (ctx: LoadContext, data: IJSON, i: number) => Shape | undefined
 
 
 export function updatePageFrame(p: Page) {
@@ -50,8 +54,8 @@ export function updatePageFrame(p: Page) {
 
     // for (let i = 0; i < cc; i++) {
     //     const c = p.childs[i];
-    //     c.transform.translateX = cf.x - l;
-    //     c.transform.translateY = cf.y - t;
+    //     c.transform.translateX -= l;
+    //     c.transform.translateY -= t;
     //     // cf.width = cf.width;
     //     // cf.height = cf.height;
     //     // console.log("c", i, cf)

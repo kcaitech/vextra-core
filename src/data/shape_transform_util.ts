@@ -1,7 +1,7 @@
-import { Transform } from "./transform";
-import { Transform as Transform2 } from "../basic/transform";
-import { Matrix as Matrix2 } from "../basic/matrix2";
-import { Matrix } from "../basic/matrix";
+import {Transform} from "./transform";
+import {Transform as Transform2} from "../basic/transform";
+import {Matrix as Matrix2} from "../basic/matrix2";
+import {Matrix} from "../basic/matrix";
 
 export function makeShapeTransform2By1(transform: Transform | Matrix): Transform2 {
     return new Transform2({
@@ -25,8 +25,8 @@ export function makeMatrixByTransform2(transform2: Transform2) {
         transform2.m01,
         transform2.m11,
         transform2.m03,
-        transform2.m13]
-    );
+        transform2.m13,
+    ]);
 }
 
 export function transform1Equals2(transform: Transform, transform2: Transform) {
