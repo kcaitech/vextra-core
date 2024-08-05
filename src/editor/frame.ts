@@ -240,22 +240,22 @@ export function expandTo(api: Api, document: Document, page: Page, shape: Shape,
         changed = setSize(page, shape, w, h, api);
     } else {
         // todo
-        const frame = shape.frame;
-        // 修改frame后的matrix，用来判断修改后(0,0)点的偏移位置
-        const cx1 = w / 2;
-        const cy1 = h / 2;
-        const m1 = new Matrix();
-        m1.trans(-cx1, -cy1);
-        if (shape.rotation) m1.rotate(shape.rotation / 180 * Math.PI);
-        m1.trans(cx1, cy1);
-        m1.trans(frame.x, frame.y);
-        const m = shape.matrix2Parent();
-        const xy = m.computeCoord(0, 0);
-        const xy1 = m1.computeCoord(0, 0);
-        const dx = xy.x - xy1.x;
-        const dy = xy.y - xy1.y;
-        api.shapeModifyX(page, shape, shape.transform.translateX + dx)
-        api.shapeModifyY(page, shape, shape.transform.translateY + dy)
+        // const frame = shape.frame;
+        // // 修改frame后的matrix，用来判断修改后(0,0)点的偏移位置
+        // const cx1 = w / 2;
+        // const cy1 = h / 2;
+        // const m1 = new Matrix();
+        // m1.trans(-cx1, -cy1);
+        // if (shape.rotation) m1.rotate(shape.rotation / 180 * Math.PI);
+        // m1.trans(cx1, cy1);
+        // m1.trans(frame.x, frame.y);
+        // const m = shape.matrix2Parent();
+        // const xy = m.computeCoord(0, 0);
+        // const xy1 = m1.computeCoord(0, 0);
+        // const dx = xy.x - xy1.x;
+        // const dy = xy.y - xy1.y;
+        // api.shapeModifyX(page, shape, shape.transform.translateX + dx)
+        // api.shapeModifyY(page, shape, shape.transform.translateY + dy)
 
         changed = setSize(page, shape, w, h, api);
     }
