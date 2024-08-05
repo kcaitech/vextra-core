@@ -645,7 +645,7 @@ export class Api {
 
     }
 
-    shapeModifyOverlayPositionType(page: Page, shape: Shape, value: OverlayPosition) {
+    shapeModifyOverlayPositionType(page: Page, shape: Shape, value: OverlayPositions) {
         checkShapeAtPage(page, shape)
         this.addOp(basicapi.crdtSetAttr(shape, "overlayPositionType", value));
     }
