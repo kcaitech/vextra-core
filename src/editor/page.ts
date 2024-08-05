@@ -120,7 +120,9 @@ import {
     OverlayPositions,
     OverlayBackgroundInteraction,
     OverlayBackgroundAppearance,
-    ScrollDirection
+    ScrollDirection,
+    OverlayPosition,
+    OverlayMargin
 } from "../data/baseclasses";
 import { calculateInnerAnglePosition, getPolygonPoints, getPolygonVertices, update_frame_by_points } from "./utils/path";
 import { modify_shapes_height, modify_shapes_width } from "./utils/common";
@@ -3484,6 +3486,50 @@ export class PageEditor {
             const api = this.__repo.start('setOverlayPositionType');
             const __shape = adapt2Shape(shape);
             api.shapeModifyOverlayPositionType(this.__page, __shape, value);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setOverlayPositionTypeMarginTop(shape: ShapeView, value: number){
+        try {
+            const api = this.__repo.start('setOverlayPositionTypeMarginTop');
+            const __shape = adapt2Shape(shape);
+            api.shapeModifyOverlayPositionTypeMarginTop(this.__page, __shape, value);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setOverlayPositionTypeMarginBottom(shape: ShapeView, value: number){
+        try {
+            const api = this.__repo.start('setOverlayPositionTypeMarginBottom');
+            const __shape = adapt2Shape(shape);
+            api.shapeModifyOverlayPositionTypeMarginBottom(this.__page, __shape, value);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setOverlayPositionTypeMarginLeft(shape: ShapeView, value: number){
+        try {
+            const api = this.__repo.start('setOverlayPositionTypeMarginLeft');
+            const __shape = adapt2Shape(shape);
+            api.shapeModifyOverlayPositionTypeMarginLeft(this.__page, __shape, value);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setOverlayPositionTypeMarginRight(shape: ShapeView, value: number){
+        try {
+            const api = this.__repo.start('setOverlayPositionTypeMarginRight');
+            const __shape = adapt2Shape(shape);
+            api.shapeModifyOverlayPositionTypeMarginRight(this.__page, __shape, value);
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();

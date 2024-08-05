@@ -22,7 +22,8 @@ import {
     importOverlayBackgroundAppearance,
     importPrototypeExtrascrolloffset,
     importPrototypeActions_easingFunction,
-    importPrototypeActions
+    importPrototypeActions,
+    importOverlayPosition
 } from "../../data/baseimport";
 import { SNumber } from "../../coop/client/snumber";
 import { FMT_VER_latest } from "../../data/fmtver";
@@ -44,6 +45,7 @@ importh['overlay-background-appearance'] = importOverlayBackgroundAppearance;
 importh['prototype-extrascrolloffset'] = importPrototypeExtrascrolloffset;
 importh['prototype-actions'] = importPrototypeActions;
 importh['paint-filter'] = importPaintFilter;
+importh['overlay-position']=importOverlayPosition
 
 function apply(document: Document, target: Object, op: IdOp): IdOpRecord {
     let value = op.data;

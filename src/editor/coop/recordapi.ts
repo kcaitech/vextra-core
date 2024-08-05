@@ -40,6 +40,7 @@ import {
     OverlayBackgroundType,
     ScrollDirection,
     OverlayPosition,
+    OverlayMargin
 } from "../../data/classes";
 import {
     BoolOp,
@@ -622,7 +623,7 @@ export class Api {
         if (!action) return;
         let extraScrollOffset = action.extraScrollOffset
         if (!extraScrollOffset) {
-            id = uuid()
+            const id = uuid()
             extraScrollOffset = new PrototypeExtrascrolloffset(id, 0, 0)
             this.addOp(basicapi.crdtSetAttr(action, 'extraScrollOffset', extraScrollOffset))
         }
@@ -637,7 +638,7 @@ export class Api {
         if (!action) return;
         let extraScrollOffset = action.extraScrollOffset
         if (!extraScrollOffset) {
-            id = uuid()
+            const id = uuid()
             extraScrollOffset = new PrototypeExtrascrolloffset(id, 0, 0)
             this.addOp(basicapi.crdtSetAttr(action, 'extraScrollOffset', extraScrollOffset))
         }
@@ -647,7 +648,43 @@ export class Api {
 
     shapeModifyOverlayPositionType(page: Page, shape: Shape, value: OverlayPositions) {
         checkShapeAtPage(page, shape)
-        this.addOp(basicapi.crdtSetAttr(shape, "overlayPositionType", value));
+        const position = shape.overlayPositionType
+        if (!position) {
+            const val = new OverlayPosition(OverlayPositions.CENTER, new OverlayMargin())
+            this.addOp(basicapi.crdtSetAttr(shape, "overlayPositionType", val))
+        } else if (value !== position.position) {
+            const val = new OverlayPosition(value, new OverlayMargin())
+            this.addOp(basicapi.crdtSetAttr(shape, "overlayPositionType", val));
+        }
+
+    }
+
+    shapeModifyOverlayPositionTypeMarginTop(page: Page, shape: Shape, value: number) {
+        checkShapeAtPage(page, shape)
+        const margin = shape.overlayPositionType?.margin
+        if (!margin) return;
+        this.addOp(basicapi.crdtSetAttr(margin, 'top', value))
+    }
+
+    shapeModifyOverlayPositionTypeMarginBottom(page: Page, shape: Shape, value: number) {
+        checkShapeAtPage(page, shape)
+        const margin = shape.overlayPositionType?.margin
+        if (!margin) return;
+        this.addOp(basicapi.crdtSetAttr(margin, 'bottom', value))
+    }
+
+    shapeModifyOverlayPositionTypeMarginLeft(page: Page, shape: Shape, value: number) {
+        checkShapeAtPage(page, shape)
+        const margin = shape.overlayPositionType?.margin
+        if (!margin) return;
+        this.addOp(basicapi.crdtSetAttr(margin, 'left', value))
+    }
+
+    shapeModifyOverlayPositionTypeMarginRight(page: Page, shape: Shape, value: number) {
+        checkShapeAtPage(page, shape)
+        const margin = shape.overlayPositionType?.margin
+        if (!margin) return;
+        this.addOp(basicapi.crdtSetAttr(margin, 'right', value))
     }
 
     shapeModifyOverlayBackgroundInteraction(page: Page, shape: Shape, value: OverlayBackgroundInteraction) {
