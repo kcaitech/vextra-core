@@ -26,7 +26,7 @@ import {
     MarkerType,
     ShadowPosition,
     ShapeType,
-    SideType
+    SideType, StrikethroughType, UnderlineType
 } from "../data/typesdefine";
 import { Page } from "../data/page";
 import {
@@ -73,7 +73,7 @@ import {
     importShadow,
     importStop,
     importStyle,
-    importSymbolShape,
+    importSymbolShape, importText,
     importTransform
 } from "../data/baseimport";
 import { gPal } from "../basic/pal";
@@ -85,7 +85,7 @@ import {
     adjust_selection_before_group,
     after_remove,
     clear_binds_effect,
-    find_state_space,
+    find_state_space, fixTextShapeFrameByLayout,
     get_symbol_by_layer,
     init_state,
     make_union,
@@ -3676,9 +3676,22 @@ export class PageEditor {
                 }
                 // text
                 {
-                    // todo
                     if (text && shape instanceof TextShape) {
-
+                        const __text = importText(text);
+                        const alpha = __text.paras[0]?.spans[0];
+                        const len = shape.text.length;
+                        const __view = view as TextShapeView;
+                        if (alpha) {
+                            api.textModifyColor(page, __view, 0, len, alpha.color);
+                            api.textModifyFontName(page, __view, 0, len, alpha.fontName!);
+                            api.textModifyFontSize(page, __view, 0, len, alpha.fontSize!);
+                            api.textModifyItalic(page, __view, !!alpha.italic, 0, len);
+                            api.textModifyKerning(page, __view, alpha.kerning!, 0, len);
+                            api.textModifyUnderline(page, __view, alpha.underline, 0, len);
+                            api.textModifyStrikethrough(page, __view, alpha.strikethrough, 0, len);
+                            api.textModifyWeight(page, __view, alpha.weight!, 0, len);
+                            fixTextShapeFrameByLayout(api, page, __view)
+                        }
                     }
                 }
             }
