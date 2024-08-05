@@ -3570,38 +3570,42 @@ export class PageEditor {
             const contextSetting = source.contextSetting;
             const mark = source.mark;
             const text = source.text;
+            if (fills.length || borders.length) {
+                const document = this.__document;
+                const ctx = new class {
+                    document = document;
+                    curPage = page.id;
+                    fmtVer = FMT_VER_latest;
+                };
 
-            const document = this.__document;
-            const ctx = new class {
-                document = document;
-                curPage = page.id;
-                fmtVer = FMT_VER_latest;
-            };
-
+                const flatten = flattenShapes(shapes);
+                for (const view of flatten) {
+                    const shape = adapt2Shape(view);
+                    // fills
+                    {
+                        const s = shape4fill(api, page, view);
+                        api.deleteFills(page, s, 0, view.style.fills.length);
+                        if (fills?.length) {
+                            const __fills = fills.map((i: Fill) => importFill(i, ctx));
+                            api.addFills(page, s, __fills);
+                        }
+                    }
+                    // borders
+                    {
+                        const s = shape4border(api, page, view);
+                        api.deleteBorders(page, s, 0, view.style.borders.length);
+                        if (borders?.length) {
+                            const __borders = borders.map((i: Border) => importBorder(i));
+                            api.addBorders(page, s, __borders);
+                        }
+                    }
+                }
+            }
             for (let i = 0; i < shapes.length; i++) {
                 const view = shapes[i];
                 const shape = adapt2Shape(view);
 
                 if (shape.isVirtualShape) continue;
-
-                // fills
-                {
-                    const s = shape4fill(api, page, view);
-                    api.deleteFills(page, s, 0, view.style.fills.length);
-                    if (fills?.length) {
-                        const __fills = fills.map((i: Fill) => importFill(i, ctx));
-                        api.addFills(page, s, __fills);
-                    }
-                }
-                // borders
-                {
-                    const s = shape4border(api, page, view);
-                    api.deleteBorders(page, s, 0, view.style.borders.length);
-                    if (borders?.length) {
-                        const __borders = borders.map((i: Border) => importBorder(i));
-                        api.addBorders(page, s, __borders);
-                    }
-                }
                 // shadows
                 {
                     const s = shape4shadow(api, page, view);
@@ -3699,6 +3703,19 @@ export class PageEditor {
         } catch (error) {
             console.error('pasteProperties:', error);
             this.__repo.rollback();
+        }
+
+        function flattenShapes(shapes: ShapeView[]): ShapeView[] {
+            return shapes.reduce((result: any, item: ShapeView) => {
+                if (item.type === ShapeType.Group) {
+                    const childs = (item).childs as ShapeView[];
+                    if (Array.isArray(childs)) {
+                        return result.concat(flattenShapes(childs));
+                    }
+                } else {
+                    return result.concat(item);
+                }
+            }, []);
         }
     }
 
