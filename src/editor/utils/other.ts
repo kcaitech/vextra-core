@@ -61,7 +61,7 @@ export function fixTextShapeFrameByLayout(api: _Api, page: Page, shape: TextShap
         case TextBehaviour.Flexible: {
             const layout = shape.getLayout();
             const xOffset = layout.alignX;
-            if (xOffset !== 0) api.shapeModifyX(page, _shape, _shape.frame.x + xOffset);
+            if (xOffset !== 0) api.shapeModifyX(page, _shape, _shape.transform.translateX + xOffset);
             // const fontsize = shape.text.attr?.fontSize ?? Text.DefaultFontSize;
             // api.shapeModifyWH(page, _shape, Math.max(fontsize, layout.contentWidth), Math.max(fontsize, layout.contentHeight));
 
