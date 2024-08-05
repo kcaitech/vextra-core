@@ -6,17 +6,24 @@ import {startLoader} from "./loader";
 import * as UZIP from "uzip";
 
 function compare(l: string, r: string) {
-    if (l.length < r.length) return -1;
-    else if (l.length > r.length) return 1;
-    else if (l === r) return 0;
-    for (let i = 0; i < l.length; i++) {
+    if (l === r) return 0;
+
+    const lIsMinus = l.startsWith(' ');
+    const rIsMinus = r.startsWith(' ');
+    if (lIsMinus && !rIsMinus) return -1;
+    if (!lIsMinus && rIsMinus) return 1;
+
+    if (lIsMinus) l = l.slice(1);
+    if (rIsMinus) r = r.slice(1);
+
+    const loopCount = Math.min(l.length, r.length);
+    for (let i = 0; i < loopCount; i++) {
         const res = l.charCodeAt(i) - r.charCodeAt(i);
         if (res !== 0) return res > 0 ? 1 : -1;
     }
-    return 0;
-}
 
-// (window as any).compare = compare;
+    return l.length > r.length ? 1 : -1;
+}
 
 function insert2childs(
     list: {

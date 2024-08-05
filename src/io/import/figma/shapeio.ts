@@ -80,7 +80,7 @@ function toStrId(id?: {
 
 export function parseGradient(
     data: IJSON,
-    size: any,
+    size: { x: number, y: number },
 ) {
     const type = data.type;
     const transform = data.transform ? makeShapeTransform2By1(data.transform).getInverse() : new Transform2();
@@ -94,6 +94,7 @@ export function parseGradient(
         position: number,
     }[];
     const opacity = data.opacity;
+    size = size || {x: 1, y: 1};
 
     if (type === 'GRADIENT_LINEAR') {
         const {col0: from, col1: to} = transform.transform([
@@ -146,7 +147,7 @@ function parseFills(
         fillPaints: IJSON[],
     },
     fillsIndex: number = 0,
-    size?: IJSON,
+    size?: { x: number, y: number },
 ) {
     const fillPaints = fills.fillPaints;
     if (!Array.isArray(fillPaints)) return;
