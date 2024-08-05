@@ -65,10 +65,12 @@ import { Matrix } from "../basic/matrix";
 import {
     IImportContext,
     importArtboard,
+    importBlur,
     importBorder,
     importCornerRadius,
+    importFill,
     importGradient,
-    importShapeFrame,
+    importShadow,
     importStop,
     importStyle,
     importSymbolShape,
@@ -100,7 +102,8 @@ import {
     modify_variable_with_api,
     shape4border,
     shape4cornerRadius,
-    shape4fill
+    shape4fill,
+    shape4shadow
 } from "./symbol";
 import { is_circular_ref2 } from "./utils/ref_check";
 import { BorderSideSetting, BorderStyle, ExportFormat, Point2D, Shadow } from "../data/baseclasses";
@@ -311,11 +314,23 @@ export interface ExportFormatFileFormatAction {
     value: ExportFileFormat
 }
 
-export function getHorizontalRadians(A: { x: number, y: number }, B: { x: number, y: number }) {
+export function getHorizontalRadians(A: {
+    x: number,
+    y: number
+}, B: {
+    x: number,
+    y: number
+}) {
     return Math.atan2(B.y - A.y, B.x - A.x)
 }
 
-export function getHorizontalAngle(A: { x: number, y: number }, B: { x: number, y: number }) {
+export function getHorizontalAngle(A: {
+    x: number,
+    y: number
+}, B: {
+    x: number,
+    y: number
+}) {
     const deltaX = B.x - A.x;
     const deltaY = B.y - A.y;
     const angleInDegrees = Math.atan2(deltaY, deltaX) * 180 / Math.PI;
@@ -490,7 +505,6 @@ export class PageEditor {
     }
 
     boolgroup(shapes: Shape[], groupname: string, op: BoolOp): false | BoolShape {
-        // shapes = shapes.filter(i => i instanceof PathShape || i instanceof PathShape2 || i instanceof BoolShape); // 不需要过滤
         if (shapes.length === 0) return false;
         if (shapes.find((v) => !v.parent)) return false;
         const fshape = shapes[0];
@@ -754,7 +768,11 @@ export class PageEditor {
      * todo 考虑union symbol
      */
     extractSymbol(shapes: Shape[]) {
-        const actions: { parent: Shape, self: Shape, insertIndex: number }[] = []
+        const actions: {
+            parent: Shape,
+            self: Shape,
+            insertIndex: number
+        }[] = []
         const replaceId = (shape: types.Shape) => {
             shape.id = uuid();
             if ((shape as types.GroupShape).childs) {
@@ -770,7 +788,9 @@ export class PageEditor {
             }
         }
 
-        const transferVars = (rootRef: SymbolRefShape, g: { childs: types.Shape[] }) => {
+        const transferVars = (rootRef: SymbolRefShape, g: {
+            childs: types.Shape[]
+        }) => {
             const overrides = rootRef.overrides;
             const vars = rootRef.variables;
             if (!overrides) return;
@@ -1291,7 +1311,9 @@ export class PageEditor {
     /**
      * @description 同一容器下批量粘贴shape
      */
-    pasteShapes1(parent: GroupShape, shapes: Shape[]): { shapes: Shape[] } | false {
+    pasteShapes1(parent: GroupShape, shapes: Shape[]): {
+        shapes: Shape[]
+    } | false {
         const api = this.__repo.start("insertShapes1", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
             const state = {} as SelectionState;
             if (!isUndo) state.shapes = shapes.map(s => s.id);
@@ -1323,7 +1345,10 @@ export class PageEditor {
     /**
      * @description 指定容器下粘贴shape
      */
-    pasteShapes2(shapes: Shape[], actions: { parent: GroupShape, index: number }[]): Shape[] | false {
+    pasteShapes2(shapes: Shape[], actions: {
+        parent: GroupShape,
+        index: number
+    }[]): Shape[] | false {
         const api = this.__repo.start("insertShapes2", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
             const state = {} as SelectionState;
             if (!isUndo) state.shapes = shapes.map(s => s.id);
@@ -1353,7 +1378,10 @@ export class PageEditor {
      * @param actions
      * @returns
      */
-    pasteShapes3(actions: { env: GroupShape, shapes: Shape[] }[]): Shape[] | false {
+    pasteShapes3(actions: {
+        env: GroupShape,
+        shapes: Shape[]
+    }[]): Shape[] | false {
         try {
             const api = this.__repo.start("pasteShapes3", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
                 const state = {} as SelectionState;
@@ -1719,7 +1747,10 @@ export class PageEditor {
             }
 
             // 记录每个图形相对lt_point的位置
-            const delta_xys: { x: number, y: number }[] = [];
+            const delta_xys: {
+                x: number,
+                y: number
+            }[] = [];
             for (let i = 0; i < len; i++) {
                 const r = replacement[i];
                 const rf = r.frame;
@@ -1788,7 +1819,10 @@ export class PageEditor {
         }
     }
 
-    modifyShapesX(actions: { target: Shape, x: number }[]) {
+    modifyShapesX(actions: {
+        target: Shape,
+        x: number
+    }[]) {
         try {
             const api = this.__repo.start('modifyShapesX');
             const page = this.__page;
@@ -1802,7 +1836,10 @@ export class PageEditor {
         }
     }
 
-    modifyShapesY(actions: { target: Shape, y: number }[]) {
+    modifyShapesY(actions: {
+        target: Shape,
+        y: number
+    }[]) {
         try {
             const api = this.__repo.start('modifyShapesY');
             const page = this.__page;
@@ -1816,7 +1853,10 @@ export class PageEditor {
         }
     }
 
-    modifyShapesAngleCount(actions: { target: (PolygonShape | StarShape), count: number }[]) {
+    modifyShapesAngleCount(actions: {
+        target: (PolygonShape | StarShape),
+        count: number
+    }[]) {
         const api = this.__repo.start('modifyShapesAngleCount');
         try {
             for (let i = 0; i < actions.length; i++) {
@@ -1835,7 +1875,10 @@ export class PageEditor {
         }
     }
 
-    modifyShapesInnerAngle(actions: { target: StarShape, offset: number }[]) {
+    modifyShapesInnerAngle(actions: {
+        target: StarShape,
+        offset: number
+    }[]) {
         const api = this.__repo.start('modifyShapesInnerAngle');
         try {
             for (let i = 0; i < actions.length; i++) {
@@ -1905,7 +1948,10 @@ export class PageEditor {
         }
     }
 
-    setShapesRotate(actions: { shape: ShapeView, transform: Transform }[]) {
+    setShapesRotate(actions: {
+        shape: ShapeView,
+        transform: Transform
+    }[]) {
         try {
             const api = this.__repo.start('setShapesRotate');
             for (const action of actions) {
@@ -1922,7 +1968,10 @@ export class PageEditor {
         }
     }
 
-    shapesFlip(params: { shape: ShapeView, transform2: Transform2 }[]) {
+    shapesFlip(params: {
+        shape: ShapeView,
+        transform2: Transform2
+    }[]) {
         try {
             const api = this.__repo.start('shapesFlip');
             const page = this.__page;
@@ -3511,6 +3560,105 @@ export class PageEditor {
             this.__repo.commit();
         } catch (error) {
             console.error('modifyStyleByEyeDropper:', error);
+            this.__repo.rollback();
+        }
+    }
+
+    pasteProperties(shapes: ShapeView[], source: any) {
+        try {
+            const api = this.__repo.start('pasteProperties');
+            const page = this.__page;
+            const fills = source.fills;
+            const borders = source.borders;
+            const shadows = source.shadows;
+            const blur = source.blur;
+
+            const document = this.__document;
+            const ctx = new class {
+                document = document;
+                curPage = page.id;
+                fmtVer = FMT_VER_latest;
+            };
+
+            for (let i = 0; i < shapes.length; i++) {
+                const view = shapes[i];
+                const shape = adapt2Shape(view);
+
+                if (shape.isVirtualShape) continue;
+
+                // fills
+                {
+                    const s = shape4fill(api, page, view);
+                    api.deleteFills(page, s, 0, view.style.fills.length);
+                    if (fills?.length) {
+                        const __fills = fills.map((i: Fill) => importFill(i, ctx));
+                        api.addFills(page, s, __fills);
+                    }
+                }
+                // borders
+                {
+                    const s = shape4border(api, page, view);
+                    api.deleteBorders(page, s, 0, view.style.borders.length);
+                    if (borders?.length) {
+                        const __borders = borders.map((i: Border) => importBorder(i));
+                        api.addBorders(page, s, __borders);
+                    }
+                }
+                // shadows
+                {
+                    const s = shape4shadow(api, page, view);
+                    api.deleteShadows(page, s, 0, view.style.shadows.length);
+                    if (shadows?.length) {
+                        const __shadows = shadows.map((i: Shadow) => importShadow(i));
+                        api.addShadows(page, s, __shadows);
+                    }
+                }
+                // blur
+                {
+                    api.deleteBlur(this.__page, shape);
+                    if (blur) {
+                        api.addBlur(this.__page, shape, importBlur(blur));
+                    }
+                }
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.error('pasteProperties:', error);
+            this.__repo.rollback();
+        }
+    }
+
+    outlineShapes(shapes: ShapeView[]) {
+        try {
+            const ids: string[] = [];
+            const api = this.__repo.start('outlineShapes', (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+                const state = {} as SelectionState;
+                if (!isUndo) state.shapes = ids;
+                else state.shapes = cmd.saveselection?.shapes || [];
+                selection.restore(state);
+            });
+            for (const view of shapes) {
+                if (!(view instanceof TextShapeView)) continue;
+                const shape = adapt2Shape(view) as TextShape;
+                const path = view.getTextPath();
+                const copyStyle = findUsableFillStyle(view);
+                const style: Style = this.cloneStyle(copyStyle);
+                const mainColor = shape.text.paras[0]?.spans[0]?.color;
+                if (mainColor) {
+                    const len = style.fills.length;
+                    style.fills.push(new Fill([len] as BasicArray<number>, uuid(), true, FillType.SolidColor, mainColor));
+                }
+                let pathShape = newPathShape(view.name, view.frame, path, style);
+                pathShape.transform = shape.transform.clone();
+                const parent = shape.parent as GroupShape;
+                const index = parent.indexOfChild(shape);
+                api.shapeDelete(this.__document, this.__page, parent, index);
+                pathShape = api.shapeInsert(this.__document, this.__page, parent, pathShape, index) as PathShape;
+                ids.push(pathShape.id);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.error('outlineShapes:', error);
             this.__repo.rollback();
         }
     }
