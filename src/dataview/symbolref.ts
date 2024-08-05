@@ -9,6 +9,9 @@ import { ResizingConstraints } from "../data/consts";
 import { findOverride, findVar } from "./basic";
 import { objectId } from "../basic/objectid";
 
+// 播放页组件状态切换会话存储refId的key值；
+export const sessionRefIdKey = 'ref-id-cf76c6c6-beed-4c33-ae71-134ee876b990';
+
 export class SymbolRefView extends ShapeView {
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
@@ -56,7 +59,7 @@ export class SymbolRefView extends ShapeView {
 
     getLsRefId(): boolean | string {
         const pathname = window.location.pathname;
-        const jsonString = sessionStorage.getItem('symrefSwitchId');
+        const jsonString = sessionStorage.getItem('sessionRefIdKey');
         if (pathname.includes("prototype") && jsonString) {
             const refIdArray = JSON.parse(jsonString);
             const maprefIdArray = new Map(refIdArray) as Map<string, string>;
