@@ -53,6 +53,7 @@ export interface IPalPath {
     toSVGString(): string;
     delete(): void;
     stroke(ops?: StrokeOpts): string;
+    dash(on: number, off: number, phase: number): boolean;
 }
 
 export const gPal: {
@@ -61,7 +62,7 @@ export const gPal: {
         getTextPath: TextPathFun,
     },
     boolop: BoolOpFuns,
-    makePalPath: (path: string) => IPalPath,
+    makePalPath: (path: string) => IPalPath
 } = {
     text: {
         textMeasure: (code: string, font: string) => undefined,
