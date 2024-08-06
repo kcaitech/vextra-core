@@ -27,7 +27,11 @@ export abstract class RepoNode {
     abstract redo(ops: OpItem[], receiver?: Cmd): void;
     abstract dropOps(ops: OpItem[]): void;
 
-    abstract roll2Version(baseVer: string, version: string): void;
+    /**
+     *
+     * @return Map<nodeid, baseversion>
+     */
+    abstract roll2Version(baseVer: string, version: string): Map<string, string> | undefined;
 
     abstract undoLocals(): void;
     abstract redoLocals(): void;
@@ -104,10 +108,20 @@ export class RepoNodePath {
     roll2Version(baseVer: string, version: string) {
         const roll = (node: RepoNodePath, baseVer: string) => {
             baseVer = SNumber.comp(baseVer, node.baseVer) < 0 ? node.baseVer : baseVer;
+            let updateVers: Map<string, string> | undefined
             if (node.node) {
-                node.node.roll2Version(baseVer, version);
+                try {
+                    updateVers = node.node.roll2Version(baseVer, version);
+                } catch (e) {
+                    console.error(e);
+                }
             }
-            node.childs.forEach((n) => roll(n, baseVer));
+            node.childs.forEach((n) => {
+                if (updateVers && updateVers.has(n.id)) {
+                    n.baseVer = updateVers.get(n.id)!;
+                }
+                roll(n, baseVer)
+            });
         }
         roll(this, baseVer);
     }

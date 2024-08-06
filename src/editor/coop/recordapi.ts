@@ -13,10 +13,8 @@ import {
     CurveMode, PathSegment,
     PolygonShape,
     StarShape,
-    ImageShape,
-    ShapeType
 } from "../../data/shape";
-import { updateShapesFrame } from "./utils";
+// import { updateShapesFrame } from "./utils";
 import { Blur, Border, BorderPosition, BorderStyle, Fill, Gradient, MarkerType, Shadow } from "../../data/style";
 import { BulletNumbers, SpanAttr, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
 import {
@@ -141,7 +139,8 @@ export class Api {
     }
 
     private cmd: Cmd | undefined;
-    private needUpdateFrame = new FrameUpdateArr();
+    // 不可以更新
+    // private needUpdateFrame = new FrameUpdateArr();
 
     start(saveselection: SelectionState | undefined,
         selectionupdater: (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => void,
@@ -165,7 +164,7 @@ export class Api {
             selectionupdater,
             dataFmtVer: FMT_VER_latest,
         };
-        this.needUpdateFrame.clear();
+        // this.needUpdateFrame.clear();
     }
     updateTextSelectionPath(crdtpath: string[]) {
         if (this.cmd?.saveselection?.text) this.cmd.saveselection.text.path = crdtpath;
@@ -182,7 +181,7 @@ export class Api {
     }
     rollback() {
         this.cmd = undefined;
-        this.needUpdateFrame.clear();
+        // this.needUpdateFrame.clear();
     }
     commit(mergetype: CmdMergeType = CmdMergeType.None): Cmd | undefined {
         const cmd = this.cmd;
@@ -190,14 +189,14 @@ export class Api {
         cmd.id = uuid();
         cmd.time = Date.now();
         cmd.mergetype = mergetype;
-        if (this.needUpdateFrame.length > 0) {
-            // todo 不同page
-            const update = this.needUpdateFrame.slice(0);
-            const page = update[0].page;
-            const shapes = update.map((v) => v.shape);
-            updateShapesFrame(page, shapes, this);
-        }
-        this.needUpdateFrame.clear();
+        // if (this.needUpdateFrame.length > 0) {
+        //     // todo 不同page
+        //     const update = this.needUpdateFrame.slice(0);
+        //     const page = update[0].page;
+        //     const shapes = update.map((v) => v.shape);
+        //     updateShapesFrame(page, shapes, this);
+        // }
+        // this.needUpdateFrame.clear();
         this.cmd = undefined;
         // merge op
         if (cmd.ops.length > 1) {
@@ -320,22 +319,22 @@ export class Api {
     //     this.addOp(basicapi.registSymbol(document, symbolId, pageId));
     // }
     shapeInsert(document: Document, page: Page, parent: GroupShape, shape: Shape, index: number) {
-        this.addOp(basicapi.shapeInsert(document, page, parent, shape, index, this.needUpdateFrame));
+        this.addOp(basicapi.shapeInsert(document, page, parent, shape, index));
         return page.getShape(shape.id) as Shape;
     }
     shapeDelete(document: Document, page: Page, parent: GroupShape, index: number) {
-        this.addOp(basicapi.shapeDelete(document, page, parent, index, this.needUpdateFrame));
+        this.addOp(basicapi.shapeDelete(document, page, parent, index));
     }
     shapeMove(page: Page, fromParent: GroupShape, fromIdx: number, toParent: GroupShape, toIdx: number) {
-        this.addOp(basicapi.shapeMove(page, fromParent, fromIdx, toParent, toIdx, this.needUpdateFrame));
+        this.addOp(basicapi.shapeMove(page, fromParent, fromIdx, toParent, toIdx));
     }
     shapeModifyX(page: Page, shape: Shape, x: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyX(page, shape, x, this.needUpdateFrame));
+        this.addOp(basicapi.shapeModifyX(page, shape, x));
     }
     shapeModifyY(page: Page, shape: Shape, y: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyY(page, shape, y, this.needUpdateFrame));
+        this.addOp(basicapi.shapeModifyY(page, shape, y));
     }
     shapeModifyWH(page: Page, shape: Shape, w: number, h: number) {
         this.shapeModifyWidth(page, shape, w);
@@ -343,11 +342,11 @@ export class Api {
     }
     shapeModifyWidth(page: Page, shape: Shape, w: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyWidth(page, shape, w, this.needUpdateFrame));
+        this.addOp(basicapi.shapeModifyWidth(page, shape, w));
     }
     shapeModifyHeight(page: Page, shape: Shape, h: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyHeight(page, shape, h, this.needUpdateFrame));
+        this.addOp(basicapi.shapeModifyHeight(page, shape, h));
     }
     shapeModifyCounts(page: Page, shape: (PolygonShape | StarShape), counts: number) {
         checkShapeAtPage(page, shape);
@@ -380,11 +379,11 @@ export class Api {
     }
     shapeModifyTransform(page: Page, shape: Shape, transform: Transform) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyTransform(page, shape, transform, this.needUpdateFrame));
+        this.addOp(basicapi.shapeModifyTransform(page, shape, transform));
     }
     shapeModifyRotate(page: Page, shape: Shape, rotate: Transform) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyTransform(page, shape, rotate, this.needUpdateFrame));
+        this.addOp(basicapi.shapeModifyTransform(page, shape, rotate));
     }
     shapeModifyConstrainerProportions(page: Page, shape: Shape, prop: boolean) {
         checkShapeAtPage(page, shape);
@@ -465,11 +464,11 @@ export class Api {
     }
     shapeModifyHFlip(page: Page, shape: Shape) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyHFlip(page, shape, this.needUpdateFrame));
+        this.addOp(basicapi.shapeModifyHFlip(page, shape));
     }
     shapeModifyVFlip(page: Page, shape: Shape,) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyVFlip(page, shape, this.needUpdateFrame));
+        this.addOp(basicapi.shapeModifyVFlip(page, shape));
     }
 
     shapeModifyContextSettingsOpacity(page: Page, shape: Shape | Variable, contextSettingsOpacity: number) {
@@ -1044,11 +1043,12 @@ export class Api {
         this.addOp(basicapi.removeContactRoleAt(shape.style, index));
     }
     // shadow
-    addShadows(page: Page, shape: Shape, shadows: Shadow[]) {
+    addShadows(page: Page, shape: Shape | Variable, shadows: Shadow[]) {
         checkShapeAtPage(page, shape);
+        const __shadows = shape instanceof Shape ? shape.style.shadows : shape.value
         for (let i = 0; i < shadows.length; i++) {
             const shadow = shadows[i];
-            this.addOp(basicapi.addShadow(shape.style.shadows, shadow, i));
+            this.addOp(basicapi.addShadow(__shadows, shadow, i));
         }
     }
     addShadow(page: Page, shape: Shape | Variable, shadow: Shadow, index: number) {

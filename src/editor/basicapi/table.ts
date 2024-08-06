@@ -16,7 +16,6 @@ export function tableInitCell(table: TableShape, rowIdx: number, colIdx: number)
         "",
         ShapeType.TableCell,
         trans,
-        size,
         new Style(new BasicArray(), new BasicArray(), new BasicArray()),
         TableCellType.Text,
         newTableCellText(table.textAttr));

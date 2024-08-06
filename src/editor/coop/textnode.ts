@@ -402,11 +402,16 @@ export class TextRepoNode extends RepoNode {
         }
 
         const curops: OpItem[] = this.ops.concat(...this.localops.filter((op) => ((op.op as ArrayOp).type1 !== ArrayOpType.Selection)));
-        if (curops.length === 0) throw new Error(); // todo 是可能的。在组件的变量编辑时，记录的是override前的变量的selection位置，当前节点可能只有一个selectionop。但这会出问题
+        if (curops.length === 0) {
+             // 是可能的。在组件的变量编辑时，记录的是override前的变量的selection位置，当前节点可能只有一个selectionop。但这会出问题
+             // 另外是空文本框，被自动删除，此时也仅有一个selectionop
+             // 现在外面cmd commit时过滤掉仅一个selection的op。
+            throw new Error();
+        }
         if (curops.length < realOpCount) throw new Error();
 
         // 需要变换
-        const index = ((curops as any/* 这里神奇的编译报错 */).findLastIndex((v: OpItem) => (v.cmd.id === ops[0].cmd.id))) - realOpCount + 1;
+        const index = ((curops).findLastIndex((v: OpItem) => (v.cmd.id === ops[0].cmd.id))) - realOpCount + 1;
         if (index < 0) throw new Error("not find ops");
         // check
         for (let i = 0; i < realOpCount; i++) {
@@ -541,7 +546,7 @@ export class TextRepoNode extends RepoNode {
         ops[0].cmd.ops.push(...record);
         this.commit(record.map(op => ({ cmd: ops[0].cmd, op })))
     }
-    roll2Version(baseVer: string, version: string) {
+    roll2Version(baseVer: string, version: string): Map<string, string> | undefined {
         if (SNumber.comp(baseVer, version) > 0) throw new Error();
         // search and apply
         const ops = this.ops.concat(...this.localops);
@@ -558,7 +563,12 @@ export class TextRepoNode extends RepoNode {
         if (verIdx < 0) verIdx = ops.length;
         for (let i = baseIdx; i < verIdx; i++) {
             const op = ops[i];
-            const record = apply(this.document, target, op.op as ArrayOp);
+            let record;
+            try {
+                record = apply(this.document, target, op.op as ArrayOp);
+            } catch (e) {
+                console.error(e)
+            }
             if (record) {
                 // replace op
                 const idx = op.cmd.ops.indexOf(op.op);

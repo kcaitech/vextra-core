@@ -6,7 +6,7 @@
 import { GroupShape, Shape, Document, Page, makeShapeTransform1By2, makeShapeTransform2By1 } from "../data";
 import { Api } from "./coop/recordapi";
 import { ColVector3D } from "../basic/matrix2";
-import { PageView } from "../dataview";
+import { Transform } from "../basic/transform";
 
 export function expandBounds(bounds: {
     left: number,
@@ -121,15 +121,12 @@ export function group<T extends GroupShape>(document: Document, page: Page, shap
         const idx = p.indexOfChild(s);
         api.shapeMove(page, p, idx, gshape, 0); // 层级低的放前面
 
-        if (p.childs.length <= 0) {
-            deleteEmptyGroupShape(document, page, p, api)
-        }
+        if (p.childs.length <= 0) deleteEmptyGroupShape(document, page, p, api);
     }
 
     const inverse2 = makeShapeTransform2By1(gshape.matrix2Root()).getInverse();
     for (let i = 0, len = shapes.length; i < len; i++) {
-        const c = shapes[i]
-        api.shapeModifyTransform(page, c, makeShapeTransform1By2(shapes2rootTransform[i].addTransform(inverse2)));
+        api.shapeModifyTransform(page, shapes[i], makeShapeTransform1By2(shapes2rootTransform[i].addTransform(inverse2)));
     }
 
     return gshape;
@@ -139,34 +136,18 @@ export function ungroup(document: Document, page: Page, shape: GroupShape, api: 
     const savep = shape.parent as GroupShape;
     let idx = savep.indexOfChild(shape);
     const saveidx = idx;
-    const m = shape.matrix2Parent();
     const childs: Shape[] = [];
-
+    const transformMap: Map<string, Transform> = new Map<string, Transform>();
     for (let i = 0, len = shape.childs.length; i < len; i++) {
-        const c = shape.childs[i]
-        const m1 = c.matrix2Parent();
-        m1.multiAtLeft(m);
-        const target = m1.computeCoord(0, 0);
-
-        if (shape.rotation) {
-            // api.shapeModifyRotate(page, c, (c.rotation || 0) + shape.rotation)
-        }
-        // todo flip
-        // if (shape.isFlippedHorizontal) {
-        //     api.shapeModifyHFlip(page, c, !c.isFlippedHorizontal)
-        // }
-        // if (shape.isFlippedVertical) {
-        //     api.shapeModifyVFlip(page, c, !c.isFlippedVertical)
-        // }
-        const m2 = c.matrix2Parent();
-        const cur = m2.computeCoord(0, 0);
-
-        api.shapeModifyX(page, c, c.frame.x + target.x - cur.x);
-        api.shapeModifyY(page, c, c.frame.y + target.y - cur.y);
+        const c = shape.childs[i];
+        transformMap.set(c.id, makeShapeTransform2By1(c.matrix2Root()));
     }
+    const env_transform = makeShapeTransform2By1(savep.matrix2Root()).getInverse(); // 目标父级的transform
     for (let len = shape.childs.length; len > 0; len--) {
         const c = shape.childs[0];
-        api.shapeMove(page, shape, 0, savep, idx)
+        const transform = transformMap.get(c.id)!;
+        api.shapeMove(page, shape, 0, savep, idx);
+        api.shapeModifyTransform(page, c, makeShapeTransform1By2(transform.addTransform(env_transform)));
         idx++;
         childs.push(c);
     }

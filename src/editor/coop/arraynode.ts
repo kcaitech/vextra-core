@@ -285,7 +285,7 @@ export class CrdtArrayReopNode extends RepoNode {
         }
     }
 
-    roll2Version(baseVer: string, version: string): void {
+    roll2Version(baseVer: string, version: string): Map<string, string> | undefined {
         if (SNumber.comp(baseVer, version) > 0) throw new Error();
         // search and apply
         const ops = this.ops.concat(...this.localops);
@@ -300,9 +300,18 @@ export class CrdtArrayReopNode extends RepoNode {
         let verIdx = ops.findIndex((op) => SNumber.comp(op.cmd.version, version) > 0);
 
         if (verIdx < 0) verIdx = ops.length;
+        const updateVers = new Map<string, string>();
         for (let i = baseIdx; i < verIdx; i++) {
             const op = ops[i];
-            const record = apply(this.document, target, op.op as ArrayMoveOp);
+            let record: ArrayMoveOpRecord | undefined;
+            try {
+                record = apply(this.document, target, op.op as ArrayMoveOp);
+                if (record?.data && (record.data as CrdtItem).id) {
+                    updateVers.set((record.data as CrdtItem).id, op.cmd.version)
+                }
+            } catch (e) {
+                console.error(e)
+            }
             if (record) {
                 // replace op
                 const idx = op.cmd.ops.indexOf(op.op);
@@ -311,5 +320,6 @@ export class CrdtArrayReopNode extends RepoNode {
                 op.cmd.ops.splice(idx, 1, record);
             }
         }
+        return updateVers;
     }
 }

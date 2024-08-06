@@ -738,7 +738,7 @@ export class Controller {
 
         const api = this.__repo.start("asyncPathEditor");
         let status: Status = Status.Pending;
-        const w = shape.frame.width, h = shape.frame.height;
+        const w = shape.size.width, h = shape.size.height;
         let m = new Matrix(shape.matrix2Root());
         m.preScale(w, h);
         m = new Matrix(m.inverse); // root -> 1
