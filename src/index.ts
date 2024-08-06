@@ -104,6 +104,25 @@ export {
 
     Document,
     Repository,
+
+    OverlayPosition,
+    OverlayMargin,
+    OverlayPositions,
+    OverlayBackgroundType,
+    OverlayBackgroundInteraction,
+    OverlayBackgroundAppearance,
+
+    PrototypeStartingPoint,
+    PrototypeInterAction,
+    PrototypeConnectionType,
+    PrototypeEasingType,
+    PrototypeActions,
+    PrototypeEvents,
+    PrototypeEvent,
+    PrototypeNavigationType,
+    PrototypeTransitionType,
+
+    ScrollDirection
 } from "./data"
 
 export {
