@@ -3685,17 +3685,36 @@ export class PageEditor {
                         const alpha = __text.paras[0]?.spans[0];
                         const len = shape.text.length;
                         const __view = view as TextShapeView;
-                        if (alpha) {
-                            api.textModifyColor(page, __view, 0, len, alpha.color);
-                            api.textModifyFontName(page, __view, 0, len, alpha.fontName!);
-                            api.textModifyFontSize(page, __view, 0, len, alpha.fontSize!);
-                            api.textModifyItalic(page, __view, !!alpha.italic, 0, len);
-                            api.textModifyKerning(page, __view, alpha.kerning!, 0, len);
-                            api.textModifyUnderline(page, __view, alpha.underline, 0, len);
-                            api.textModifyStrikethrough(page, __view, alpha.strikethrough, 0, len);
-                            api.textModifyWeight(page, __view, alpha.weight!, 0, len);
-                            fixTextShapeFrameByLayout(api, page, __view)
+                        let needFixFrame = false;
+                        const attr = __text.attr;
+                        if (attr) {
+                            api.shapeModifyTextVerAlign(page, __view, attr.verAlign!); // 垂直位置
+                            api.shapeModifyTextBehaviour(page, __view.text, attr.textBehaviour!); // 宽高表现
                         }
+                        if (alpha) {
+                            api.textModifyColor(page, __view, 0, len, alpha.color); // 字体颜色
+                            api.textModifyFontName(page, __view, 0, len, alpha.fontName!); // 字体
+                            api.textModifyFontSize(page, __view, 0, len, alpha.fontSize!); // 字号
+                            api.textModifyItalic(page, __view, !!alpha.italic, 0, len); // 斜体
+                            api.textModifyKerning(page, __view, alpha.kerning || 0, 0, len); // 字间距
+                            api.textModifyUnderline(page, __view, alpha.underline, 0, len); // 下划线
+                            api.textModifyStrikethrough(page, __view, alpha.strikethrough, 0, len); // 删除线
+                            api.textModifyWeight(page, __view, alpha.weight!, 0, len); // 字重
+                            api.textModifyHighlightColor(page, __view, 0, len, alpha.highlight); // 高亮底色
+                            needFixFrame = true;
+                        }
+
+                        const alphaAttr = __text.paras[0]?.attr;
+                        if (alphaAttr) {
+                            api.textModifyParaSpacing(page, __view, alphaAttr.paraSpacing || 0, 0, len); // 段落间距
+                            api.textModifyMinLineHeight(page, __view, alphaAttr.minimumLineHeight!, 0, len); // 行高
+                            api.textModifyMaxLineHeight(page, __view, alphaAttr.maximumLineHeight!, 0, len); // 行高
+                            api.textModifyHorAlign(page, __view, alphaAttr.alignment!, 0, len); // 水平位置
+
+                            needFixFrame = true;
+                        }
+
+                        needFixFrame && fixTextShapeFrameByLayout(api, page, __view);
                     }
                 }
             }
