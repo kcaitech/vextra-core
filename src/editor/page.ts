@@ -26,7 +26,7 @@ import {
     MarkerType,
     ShadowPosition,
     ShapeType,
-    SideType, StrikethroughType, UnderlineType
+    SideType
 } from "../data/typesdefine";
 import { Page } from "../data/page";
 import {
@@ -66,14 +66,17 @@ import {
     IImportContext,
     importArtboard,
     importBlur,
-    importBorder, importContextSettings,
+    importBorder,
+    importContextSettings,
     importCornerRadius,
     importFill,
-    importGradient, importMarkerType,
+    importGradient,
+    importMarkerType,
     importShadow,
     importStop,
     importStyle,
-    importSymbolShape, importText,
+    importSymbolShape,
+    importText,
     importTransform
 } from "../data/baseimport";
 import { gPal } from "../basic/pal";
@@ -85,7 +88,8 @@ import {
     adjust_selection_before_group,
     after_remove,
     clear_binds_effect,
-    find_state_space, fixTextShapeFrameByLayout,
+    find_state_space,
+    fixTextShapeFrameByLayout,
     get_symbol_by_layer,
     init_state,
     make_union,
@@ -121,6 +125,7 @@ import { unable_to_migrate } from "./utils/migrate";
 import {
     adapt2Shape,
     BoolShapeView,
+    border2path,
     PageView,
     render2path,
     ShapeView,
@@ -3740,6 +3745,8 @@ export class PageEditor {
 
     outlineShapes(shapes: ShapeView[]) {
         try {
+            const document = this.__document;
+            const page = this.__page;
             const ids: string[] = [];
             const api = this.__repo.start('outlineShapes', (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
                 const state = {} as SelectionState;
@@ -3748,23 +3755,45 @@ export class PageEditor {
                 selection.restore(state);
             });
             for (const view of shapes) {
-                if (!(view instanceof TextShapeView)) continue;
-                const shape = adapt2Shape(view) as TextShape;
-                const path = view.getTextPath();
-                const copyStyle = findUsableFillStyle(view);
-                const style: Style = this.cloneStyle(copyStyle);
-                const mainColor = shape.text.paras[0]?.spans[0]?.color;
-                if (mainColor) {
-                    const len = style.fills.length;
-                    style.fills.push(new Fill([len] as BasicArray<number>, uuid(), true, FillType.SolidColor, mainColor));
+                if (view instanceof TextShapeView) {
+                    const shape = adapt2Shape(view) as TextShape;
+                    const path = view.getTextPath();
+                    const copyStyle = findUsableFillStyle(view);
+                    const style: Style = this.cloneStyle(copyStyle);
+                    const mainColor = shape.text.paras[0]?.spans[0]?.color;
+                    if (mainColor) {
+                        const len = style.fills.length;
+                        style.fills.push(new Fill([len] as BasicArray<number>, uuid(), true, FillType.SolidColor, mainColor));
+                    }
+                    let pathShape = newPathShape(view.name, view.frame, path, style);
+                    pathShape.transform = shape.transform.clone();
+                    const parent = shape.parent as GroupShape;
+                    const index = parent.indexOfChild(shape);
+                    api.shapeDelete(document, page, parent, index);
+                    pathShape = api.shapeInsert(document, page, parent, pathShape, index) as PathShape;
+                    ids.push(pathShape.id);
+                } else {
+                    ids.push(view.data.id);
+                    const borders = view.getBorders();
+                    if (!borders.length) continue;
+                    const shape = adapt2Shape(view);
+                    const parent = shape.parent as GroupShape;
+                    for (let i = borders.length - 1; i > -1; i--) {
+                        const border = borders[i];
+                        const path = border2path(view, border);
+                        const copyStyle = findUsableFillStyle(view);
+                        const style: Style = this.cloneStyle(copyStyle);
+                        style.fills[0].color = border.color;
+                        style.borders.length = 0;
+                        let pathShape = newPathShape(view.name + '(stroke)', view.frame, path, style);
+                        pathShape.transform = shape.transform.clone();
+                        const index = parent.indexOfChild(shape);
+                        pathShape = api.shapeInsert(document, page, parent, pathShape, index + 1) as PathShape;
+                        if (border.position !== BorderPosition.Inner) update_frame_by_points(api, page, pathShape);
+                        ids.push(pathShape.id);
+                    }
+                    api.deleteBorders(page, shape, 0, borders.length);
                 }
-                let pathShape = newPathShape(view.name, view.frame, path, style);
-                pathShape.transform = shape.transform.clone();
-                const parent = shape.parent as GroupShape;
-                const index = parent.indexOfChild(shape);
-                api.shapeDelete(this.__document, this.__page, parent, index);
-                pathShape = api.shapeInsert(this.__document, this.__page, parent, pathShape, index) as PathShape;
-                ids.push(pathShape.id);
             }
             this.__repo.commit();
         } catch (error) {
