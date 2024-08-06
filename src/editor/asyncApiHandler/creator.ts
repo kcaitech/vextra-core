@@ -220,9 +220,7 @@ export class CreatorApiCaller extends AsyncApiCaller {
                 this.api.addFillAt(this.page, shape, fill, 0);
             }
 
-            if (!shape || !shapes.length) {
-                return;
-            }
+            if (!shape || !shapes.length) return;
 
             const api = this.api;
             const page = this.page;
@@ -236,17 +234,16 @@ export class CreatorApiCaller extends AsyncApiCaller {
                     deleteEmptyGroupShape(this.__document, page, s, api);
                 }
             }
-            const realXY = shapes.map((s) => s.frame2Root());
-            const t_xy = shape.frame;
-            const savep = adapt2Shape(shapes[0].parent!) as GroupShape;
-            const m = new Matrix(savep.matrix2Root().inverse);
+            const realXY = shapes.map((s) => s.matrix2Root().computeCoord(0, 0));
+            const m = new Matrix(shape.matrix2Root().inverse);
             for (let i = 0; i < shapes.length; i++) {
-                const c = adapt2Shape(shapes[i]);
+                const c = (shapes[i]);
                 const r = realXY[i]
                 const target = m.computeCoord(r.x, r.y);
-                const cur = c.matrix2Parent().computeCoord(0, 0);
-                api.shapeModifyX(page, c, c.frame.x + target.x - cur.x - t_xy.x);
-                api.shapeModifyY(page, c, c.frame.y + target.y - cur.y - t_xy.y);
+                const cur = c.data.matrix2Parent().computeCoord(0, 0);
+                const transform = c.data.transform;
+                api.shapeModifyX(page, c.data, transform.translateX + target.x - cur.x);
+                api.shapeModifyY(page, c.data, transform.translateY + target.y - cur.y);
             }
 
             function deleteEmptyGroupShape(document: Document, page: Page, shape: Shape, api: Api): boolean {
@@ -266,7 +263,6 @@ export class CreatorApiCaller extends AsyncApiCaller {
 
     commit() {
         if (this.__repo.isNeedCommit() && !this.exception) {
-
             if (this.shape instanceof LineShape) { // 线条的宽高最后根据两个点的位置计算
                 update_frame_by_points(this.api, this.page, this.shape, true);
             }
@@ -288,11 +284,8 @@ export class CreatorApiCaller extends AsyncApiCaller {
     private getCount(type: ShapeType) {
         let count = 1;
         this.page.shapes.forEach(v => {
-            if (v.type === type) {
-                count++;
-            }
+            if (v.type === type) count++;
         });
-
         return count;
     }
 

@@ -1,27 +1,18 @@
 import { AsyncApiCaller } from "./AsyncApiCaller";
 import { CoopRepository } from "../coop/cooprepo";
-import { Document } from "../../data/document";
+import { Document } from "../../data";
 import { adapt2Shape, GroupShapeView, PageView, ShapeView } from "../../dataview";
-import {
-    CurveMode,
-    CurvePoint,
-    GroupShape,
-    PathSegment,
-    PathShape,
-    Shape,
-    ShapeFrame,
-    ShapeType
-} from "../../data/shape";
-import { BasicArray } from "../../data/basic";
+import { CurveMode, CurvePoint, GroupShape, PathSegment, PathShape, Shape, ShapeFrame, ShapeType } from "../../data";
+import { BasicArray } from "../../data";
 import { uuid } from "../../basic/uuid";
 import { __pre_curve, after_insert_point, update_frame_by_points } from "../utils/path";
-import { PathType } from "../../data/consts";
+import { PathType } from "../../data";
 import { addCommonAttr, newflatStyle } from "../creator";
-import { Border, BorderStyle, CornerType, Fill, FillType, Shadow, Style } from "../../data/style";
-import { Color } from "../../data/color";
+import { Border, BorderStyle, CornerType, Fill, FillType, Shadow, Style } from "../../data";
+import { Color } from "../../data";
 import * as types from "../../data/typesdefine";
 import { ISave4Restore, LocalCmd, SelectionState } from "../coop/localcmd";
-import { BorderSideSetting, ShapeSize, SideType, Transform } from "../../data/classes";
+import { BorderSideSetting, ShapeSize, SideType, Transform } from "../../data";
 import { importStyle } from "../../data/baseimport";
 import { exportStyle } from "../../data/baseexport";
 
@@ -99,7 +90,7 @@ export class PathModifier extends AsyncApiCaller {
             const trans = new Transform();
             trans.m02 = frame.x;
             trans.m12 = frame.y;
-            const vec = new PathShape(new BasicArray(), uuid(), name, ShapeType.Path, trans, size, style, new BasicArray<PathSegment>(segment));
+            const vec = new PathShape(new BasicArray(), uuid(), name, ShapeType.Path, trans, style, size, new BasicArray<PathSegment>(segment));
 
             addCommonAttr(vec);
 

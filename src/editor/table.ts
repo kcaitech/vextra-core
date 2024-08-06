@@ -358,13 +358,13 @@ export class TableEditor extends ShapeEditor {
     // 调整列宽
     setColWidth(idx: number, width: number) {
         const total = this.shape.colWidths.reduce((pre, w) => pre + w.value, 0);
-        const curWidth = this.shape.colWidths[idx].value / total * this.shape.frame.width;
+        const curWidth = this.shape.colWidths[idx].value / total * this.shape.size.width;
         if (width === curWidth) return;
         const weight = this.shape.colWidths[idx].value * width / curWidth;
         const api = this.__repo.start('setColWidth');
         try {
             api.tableModifyColWidth(this.__page, this.shape, idx, weight);
-            api.shapeModifyWH(this.__page, this.shape, this.shape.frame.width - curWidth + width, this.shape.frame.height);
+            api.shapeModifyWH(this.__page, this.shape, this.shape.size.width - curWidth + width, this.shape.size.height);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -392,13 +392,13 @@ export class TableEditor extends ShapeEditor {
     // 调整行高
     setRowHeight(idx: number, height: number) {
         const total = this.view.heightTotalWeights;
-        const curHeight = this.shape.rowHeights[idx].value / total * this.shape.frame.height;
+        const curHeight = this.shape.rowHeights[idx].value / total * this.shape.size.height;
         if (height === curHeight) return;
         const weight = this.shape.rowHeights[idx].value * height / curHeight;
         const api = this.__repo.start('setRowHeight');
         try {
             api.tableModifyRowHeight(this.__page, this.shape, idx, weight);
-            api.shapeModifyWH(this.__page, this.shape, this.shape.frame.width, this.shape.frame.height - curHeight + height);
+            api.shapeModifyWH(this.__page, this.shape, this.shape.size.width, this.shape.size.height - curHeight + height);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -425,11 +425,11 @@ export class TableEditor extends ShapeEditor {
 
     insertRow(idx: number, height: number) {
         const total = this.view.heightTotalWeights;
-        const weight = height / this.shape.frame.height * total;
+        const weight = height / this.shape.size.height * total;
         const api = this.__repo.start('insertRow');
         try {
             api.tableInsertRow(this.__page, this.shape, idx, weight);
-            api.shapeModifyWH(this.__page, this.shape, this.shape.frame.width, this.shape.frame.height + height);
+            api.shapeModifyWH(this.__page, this.shape, this.shape.size.width, this.shape.size.height + height);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -439,13 +439,13 @@ export class TableEditor extends ShapeEditor {
 
     insertMultiRow(idx: number, height: number, count: number) {
         const total = this.view.heightTotalWeights;
-        const weight = height / this.shape.frame.height * total;
+        const weight = height / this.shape.size.height * total;
         const api = this.__repo.start('insertMultiRow');
         try {
             for (let i = 0; i < count; ++i) {
                 api.tableInsertRow(this.__page, this.shape, idx + i, weight);
             }
-            api.shapeModifyWH(this.__page, this.shape, this.shape.frame.width, this.shape.frame.height + height * count);
+            api.shapeModifyWH(this.__page, this.shape, this.shape.size.width, this.shape.size.height + height * count);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -482,8 +482,8 @@ export class TableEditor extends ShapeEditor {
                     }
                 })
             }
-            const curHeight = removeWeight / total * this.shape.frame.height;
-            api.shapeModifyWH(this.__page, this.shape, this.shape.frame.width, this.shape.frame.height - curHeight);
+            const curHeight = removeWeight / total * this.shape.size.height;
+            api.shapeModifyWH(this.__page, this.shape, this.shape.size.width, this.shape.size.height - curHeight);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -493,11 +493,11 @@ export class TableEditor extends ShapeEditor {
 
     insertCol(idx: number, width: number) {
         const total = this.view.widthTotalWeights;
-        const weight = width / this.shape.frame.width * total;
+        const weight = width / this.shape.size.width * total;
         const api = this.__repo.start('insertCol');
         try {
             api.tableInsertCol(this.__page, this.shape, idx, weight);
-            api.shapeModifyWH(this.__page, this.shape, this.shape.frame.width + width, this.shape.frame.height);
+            api.shapeModifyWH(this.__page, this.shape, this.shape.size.width + width, this.shape.size.height);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -507,13 +507,13 @@ export class TableEditor extends ShapeEditor {
 
     insertMultiCol(idx: number, width: number, count: number) {
         const total = this.view.widthTotalWeights;
-        const weight = width / this.shape.frame.width * total;
+        const weight = width / this.shape.size.width * total;
         const api = this.__repo.start('insertMultiCol');
         try {
             for (let i = 0; i < count; ++i) {
                 api.tableInsertCol(this.__page, this.shape, idx + i, weight);
             }
-            api.shapeModifyWH(this.__page, this.shape, this.shape.frame.width + width * count, this.shape.frame.height);
+            api.shapeModifyWH(this.__page, this.shape, this.shape.size.width + width * count, this.shape.size.height);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -551,8 +551,8 @@ export class TableEditor extends ShapeEditor {
                     }
                 })
             }
-            const curWidth = removeWeight / total * this.shape.frame.width;
-            api.shapeModifyWH(this.__page, this.shape, this.shape.frame.width - curWidth, this.shape.frame.height);
+            const curWidth = removeWeight / total * this.shape.size.width;
+            api.shapeModifyWH(this.__page, this.shape, this.shape.size.width - curWidth, this.shape.size.height);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -584,7 +584,7 @@ export class TableEditor extends ShapeEditor {
                 removeColWeight += this.shape.colWidths[colStart].value;
                 api.tableRemoveCol(this.__page, this.shape, colStart);
             }
-            const removeWidth = removeColWeight / colTotal * this.shape.frame.width;
+            const removeWidth = removeColWeight / colTotal * this.shape.size.width;
             if (colStart < this.shape.colCount) {
                 const idx = colStart;
                 const count = colCount;
@@ -605,7 +605,7 @@ export class TableEditor extends ShapeEditor {
                 removeRowWeight += this.shape.rowHeights[rowStart].value;
                 api.tableRemoveRow(this.__page, this.shape, rowStart);
             }
-            const removeHeight = removeRowWeight / rowTotal * this.shape.frame.height;
+            const removeHeight = removeRowWeight / rowTotal * this.shape.size.height;
             if (rowStart < this.shape.rowCount) {
                 const idx = rowStart;
                 const count = rowCount;
@@ -621,7 +621,7 @@ export class TableEditor extends ShapeEditor {
                 })
             }
 
-            api.shapeModifyWH(this.__page, this.shape, this.shape.frame.width - removeWidth, this.shape.frame.height - removeHeight);
+            api.shapeModifyWH(this.__page, this.shape, this.shape.size.width - removeWidth, this.shape.size.height - removeHeight);
             this.__repo.commit();
         } catch (e) {
             console.error(e);

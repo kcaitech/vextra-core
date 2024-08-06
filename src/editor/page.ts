@@ -26,7 +26,7 @@ import {
     MarkerType,
     ShadowPosition,
     ShapeType,
-    SideType
+    SideType, StrikethroughType, UnderlineType
 } from "../data/typesdefine";
 import { Page } from "../data/page";
 import {
@@ -61,18 +61,20 @@ import {
 import { TextShapeEditor } from "./textshape";
 import { set_childs_id, transform_data } from "../io/cilpboard";
 import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
-import { render2path } from "../render";
 import { Matrix } from "../basic/matrix";
 import {
     IImportContext,
     importArtboard,
-    importBorder,
+    importBlur,
+    importBorder, importContextSettings,
     importCornerRadius,
-    importGradient,
-    importShapeFrame,
+    importFill,
+    importGradient, importMarkerType,
+    importShadow,
     importStop,
     importStyle,
-    importSymbolShape
+    importSymbolShape, importText,
+    importTransform
 } from "../data/baseimport";
 import { gPal } from "../basic/pal";
 import { findUsableBorderStyle, findUsableFillStyle } from "../render/boolgroup";
@@ -83,7 +85,7 @@ import {
     adjust_selection_before_group,
     after_remove,
     clear_binds_effect,
-    find_state_space,
+    find_state_space, fixTextShapeFrameByLayout,
     get_symbol_by_layer,
     init_state,
     make_union,
@@ -100,7 +102,8 @@ import {
     modify_variable_with_api,
     shape4border,
     shape4cornerRadius,
-    shape4fill
+    shape4fill,
+    shape4shadow
 } from "./symbol";
 import { is_circular_ref2 } from "./utils/ref_check";
 import {
@@ -132,7 +135,9 @@ import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
 import { unable_to_migrate } from "./utils/migrate";
 import {
     adapt2Shape,
+    BoolShapeView,
     PageView,
+    render2path,
     ShapeView,
     SymbolRefView,
     SymbolView,
@@ -324,11 +329,23 @@ export interface ExportFormatFileFormatAction {
     value: ExportFileFormat
 }
 
-export function getHorizontalRadians(A: { x: number, y: number }, B: { x: number, y: number }) {
+export function getHorizontalRadians(A: {
+    x: number,
+    y: number
+}, B: {
+    x: number,
+    y: number
+}) {
     return Math.atan2(B.y - A.y, B.x - A.x)
 }
 
-export function getHorizontalAngle(A: { x: number, y: number }, B: { x: number, y: number }) {
+export function getHorizontalAngle(A: {
+    x: number,
+    y: number
+}, B: {
+    x: number,
+    y: number
+}) {
     const deltaX = B.x - A.x;
     const deltaY = B.y - A.y;
     const angleInDegrees = Math.atan2(deltaY, deltaX) * 180 / Math.PI;
@@ -503,7 +520,6 @@ export class PageEditor {
     }
 
     boolgroup(shapes: Shape[], groupname: string, op: BoolOp): false | BoolShape {
-        // shapes = shapes.filter(i => i instanceof PathShape || i instanceof PathShape2 || i instanceof BoolShape); // 不需要过滤
         if (shapes.length === 0) return false;
         if (shapes.find((v) => !v.parent)) return false;
         const fshape = shapes[0];
@@ -584,14 +600,13 @@ export class PageEditor {
 
     /**
      * 创建组件
-     * symbolref引用的symbol可能被其他人取消，那么symbolref应该能引用普通的对象！
      */
     makeSymbol(document: Document, shapes: Shape[], name?: string) {
         try {
             if (!shapes.length) return;
 
             const shape0 = shapes[0];
-            const frame = importShapeFrame(shape0.frame);
+            const frame = shape0.frame2Parent();
 
             const replace = shapes.length === 1
                 && ((shape0 instanceof GroupShape && !(shape0 instanceof BoolShape)) || shape0 instanceof Artboard);
@@ -768,7 +783,11 @@ export class PageEditor {
      * todo 考虑union symbol
      */
     extractSymbol(shapes: Shape[]) {
-        const actions: { parent: Shape, self: Shape, insertIndex: number }[] = []
+        const actions: {
+            parent: Shape,
+            self: Shape,
+            insertIndex: number
+        }[] = []
         const replaceId = (shape: types.Shape) => {
             shape.id = uuid();
             if ((shape as types.GroupShape).childs) {
@@ -784,7 +803,9 @@ export class PageEditor {
             }
         }
 
-        const transferVars = (rootRef: SymbolRefShape, g: { childs: types.Shape[] }) => {
+        const transferVars = (rootRef: SymbolRefShape, g: {
+            childs: types.Shape[]
+        }) => {
             const overrides = rootRef.overrides;
             const vars = rootRef.variables;
             if (!overrides) return;
@@ -857,8 +878,8 @@ export class PageEditor {
                 curPage: string = _this.__page.id;
                 fmtVer: number = FMT_VER_latest
             };
-            const { x, y, width, height } = shape.frame;
-            const tmpArtboard: Artboard = newArtboard(shape.name, new ShapeFrame(x, y, width, height));
+            // const { width, height } = shape.size;
+            const tmpArtboard: Artboard = newArtboard(shape.name, shape.frame);
             // initFrame(tmpArtboard, shape.frame);
             tmpArtboard.childs = shape.naviChilds! as BasicArray<Shape>;
             tmpArtboard.varbinds = shape.varbinds;
@@ -867,6 +888,8 @@ export class PageEditor {
             tmpArtboard.transform.m01 = shape.transform.m01;
             tmpArtboard.transform.m10 = shape.transform.m10;
             tmpArtboard.transform.m11 = shape.transform.m11;
+            tmpArtboard.transform.m02 = shape.transform.m02;
+            tmpArtboard.transform.m12 = shape.transform.m12;
             tmpArtboard.cornerRadius = shape.cornerRadius;
             const symbolData = exportArtboard(tmpArtboard); // todo 如果symbol只有一个child时
 
@@ -933,10 +956,10 @@ export class PageEditor {
         return importStyle(style, ctx);
     }
 
-    flattenShapes(shapes: Shape[], name?: string): PathShape | PathShape2 | false {
+    flattenShapes(shapes: ShapeView[], name?: string): PathShape | PathShape2 | false {
         if (shapes.length === 0) return false;
         if (shapes.find((v) => !v.parent)) return false;
-        const fshape = shapes[0];
+        const fshape = adapt2Shape(shapes[0]);
         const savep = fshape.parent as GroupShape;
         const saveidx = savep.indexOfChild(fshape);
         if (!name) name = fshape.name;
@@ -1001,7 +1024,7 @@ export class PageEditor {
             pathShape = api.shapeInsert(this.__document, this.__page, savep, pathShape, saveidx) as PathShape | PathShape2;
 
             for (let i = 0, len = shapes.length; i < len; i++) {
-                const s = shapes[i];
+                const s = adapt2Shape(shapes[i]);
                 const p = s.parent as GroupShape;
                 const idx = p.indexOfChild(s);
                 api.shapeDelete(this.__document, this.__page, p, idx);
@@ -1018,9 +1041,9 @@ export class PageEditor {
         return false;
     }
 
-    flattenBoolShape(shape: BoolShape): PathShape | false {
+    flattenBoolShape(shape: BoolShapeView): PathShape | false {
         try {
-            const parent = shape.parent as GroupShape;
+            const parent = adapt2Shape(shape).parent as GroupShape;
             if (!parent) return false;
 
             const path = render2path(shape);
@@ -1046,7 +1069,7 @@ export class PageEditor {
                 .setTranslate(ColVector3D.FromXY(x, y)) // pathShape图层坐标系
                 .addTransform(makeShapeTransform2By1(shape.transform))) // pathShape在父级坐标系下的transform;
 
-            const index = parent.indexOfChild(shape);
+            const index = parent.indexOfChild(adapt2Shape(shape));
             const api = this.__repo.start("flattenBoolShape", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
                 const state = {} as SelectionState;
                 if (!isUndo) state.shapes = [pathShape.id];
@@ -1066,65 +1089,45 @@ export class PageEditor {
         }
     }
 
-    flattenGroup(shape: GroupShape, groupname: string): PathShape | false {
+    flattenGroup(shape: ShapeView, groupname: string): PathShape | false {
+        // step1
+        if (shape.childs.length === 0) return false;
+        const _shape = adapt2Shape(shape);
+        const _parent = _shape.parent as GroupShape;
+        // const shapes = shape.childs.slice(0).reverse();
+        // const pp = shape.parent;
+        const saveidx = _parent?.indexOfChild(_shape) ?? -1;
+        if (saveidx < 0) return false;
+        // if (!(pp instanceof GroupShape)) return false;
+        const style: Style = this.cloneStyle(shape.style);
+        if (style.fills.length === 0) {
+            style.fills.push(newSolidColorFill());
+        }
+
+        const path = render2path(shape, BoolOp.Union);
+
+        const copyStyle = findUsableFillStyle(shape);
+        const style2: Style = this.cloneStyle(copyStyle);
+        const borderStyle = findUsableBorderStyle(shape);
+        if (borderStyle !== copyStyle) {
+            style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
+        }
+
+        let pathShape = newPathShape(shape.name, shape.frame, path, style2);
+        pathShape.fixedRadius = shape.fixedRadius;
+        pathShape.transform = importTransform(shape.transform);
+        pathShape.style = style;
+
         try {
-            // step1
-            if (shape.childs.length === 0) return false;
-            const shapes = shape.childs.slice(0).reverse();
-            const pp = shape.parent;
-            if (!(pp instanceof GroupShape)) return false;
-            const style: Style = this.cloneStyle(shape.style);
-            if (style.fills.length === 0) {
-                style.fills.push(newSolidColorFill());
-            }
-
-            let gshape = newBoolShape(groupname, style);
-            gshape.transform = makeShapeTransform1By2(makeShapeTransform2By1(shape.matrix2Root()));
-
             const api = this.__repo.start("flattenGroup", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
                 const state = {} as SelectionState;
-                if (!isUndo) state.shapes = [gshape.id];
+                if (!isUndo) state.shapes = [shape.id];
                 else state.shapes = cmd.saveselection?.shapes || [];
                 selection.restore(state);
             });
 
-            let saveidx = pp.indexOfChild(shape);
-            gshape = group(this.__document, this.__page, shapes, gshape, pp, saveidx, api);
-            saveidx = pp.indexOfChild(shape);
-            if (saveidx >= 0) api.shapeDelete(this.__document, this.__page, pp, saveidx);
-            shapes.forEach((shape) => api.shapeModifyBoolOp(this.__page, shape, BoolOp.Union))
-
-            // step 2
-            const parent = gshape.parent as GroupShape;
-            if (!parent) return false;
-
-            const path = render2path(gshape);
-
-            const copyStyle = findUsableFillStyle(gshape);
-            const style2: Style = this.cloneStyle(copyStyle);
-            const borderStyle = findUsableBorderStyle(gshape);
-            if (borderStyle !== copyStyle) {
-                style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
-            }
-
-            const gframe = gshape.frame;
-            const boundingBox = path.calcBounds();
-            const x = boundingBox.minX;
-            const y = boundingBox.minY;
-            const w = boundingBox.maxX - boundingBox.minX;
-            const h = boundingBox.maxY - boundingBox.minY;
-            const frame = new ShapeFrame(gframe.x, gframe.y, w, h);
-            path.translate(-boundingBox.minX, -boundingBox.minY);
-            let pathShape = newPathShape(gshape.name, frame, path, style2);
-            pathShape.fixedRadius = gshape.fixedRadius;
-            pathShape.transform = makeShapeTransform1By2(new Transform2()
-                .setTranslate(ColVector3D.FromXY(x, y))
-                .addTransform(makeShapeTransform2By1(gshape.transform)))
-
-            const index = parent.indexOfChild(gshape);
-
-            api.shapeDelete(this.__document, this.__page, parent, index);
-            pathShape = api.shapeInsert(this.__document, this.__page, parent, pathShape, index) as PathShape;
+            api.shapeDelete(this.__document, this.__page, _parent, saveidx);
+            pathShape = api.shapeInsert(this.__document, this.__page, _parent, pathShape, saveidx) as PathShape;
 
             this.__repo.commit();
             return pathShape;
@@ -1323,7 +1326,9 @@ export class PageEditor {
     /**
      * @description 同一容器下批量粘贴shape
      */
-    pasteShapes1(parent: GroupShape, shapes: Shape[]): { shapes: Shape[] } | false {
+    pasteShapes1(parent: GroupShape, shapes: Shape[]): {
+        shapes: Shape[]
+    } | false {
         const api = this.__repo.start("insertShapes1", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
             const state = {} as SelectionState;
             if (!isUndo) state.shapes = shapes.map(s => s.id);
@@ -1355,7 +1360,10 @@ export class PageEditor {
     /**
      * @description 指定容器下粘贴shape
      */
-    pasteShapes2(shapes: Shape[], actions: { parent: GroupShape, index: number }[]): Shape[] | false {
+    pasteShapes2(shapes: Shape[], actions: {
+        parent: GroupShape,
+        index: number
+    }[]): Shape[] | false {
         const api = this.__repo.start("insertShapes2", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
             const state = {} as SelectionState;
             if (!isUndo) state.shapes = shapes.map(s => s.id);
@@ -1385,7 +1393,10 @@ export class PageEditor {
      * @param actions
      * @returns
      */
-    pasteShapes3(actions: { env: GroupShape, shapes: Shape[] }[]): Shape[] | false {
+    pasteShapes3(actions: {
+        env: GroupShape,
+        shapes: Shape[]
+    }[]): Shape[] | false {
         try {
             const api = this.__repo.start("pasteShapes3", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
                 const state = {} as SelectionState;
@@ -1461,17 +1472,13 @@ export class PageEditor {
                         api.shapeModifyRadius2(page, _shape, lt, rt, rb, lb);
                     }
 
-                    if (shape.isVirtualShape) {
-                        continue;
-                    }
+                    if (shape.isVirtualShape) continue;
 
                     if (shape instanceof PathShape) {
                         const points = shape.pathsegs[0].points;
                         for (let _i = 0; _i < 4; _i++) {
                             const val = values[_i];
-                            if (points[_i].radius === val || val < 0) {
-                                continue;
-                            }
+                            if (points[_i].radius === val || val < 0) continue;
 
                             api.modifyPointCornerRadius(page, shape, _i, val, 0);
                         }
@@ -1492,9 +1499,7 @@ export class PageEditor {
                         api.shapeModifyRadius2(page, __shape, lt, rt, rb, lb)
                     }
                 } else {
-                    if (shape.isVirtualShape || shape.radiusType === RadiusType.None) {
-                        continue;
-                    }
+                    if (shape.isVirtualShape || shape.radiusType === RadiusType.None) continue;
 
                     if (shape instanceof PathShape) {
                         shape.pathsegs.forEach((seg, index) => {
@@ -1751,7 +1756,10 @@ export class PageEditor {
             }
 
             // 记录每个图形相对lt_point的位置
-            const delta_xys: { x: number, y: number }[] = [];
+            const delta_xys: {
+                x: number,
+                y: number
+            }[] = [];
             for (let i = 0; i < len; i++) {
                 const r = replacement[i];
                 const rf = r.frame;
@@ -1820,12 +1828,16 @@ export class PageEditor {
         }
     }
 
-    modifyShapesX(actions: { target: Shape, x: number }[]) {
-        const api = this.__repo.start('modifyShapesX');
+    modifyShapesX(actions: {
+        target: Shape,
+        x: number
+    }[]) {
         try {
+            const api = this.__repo.start('modifyShapesX');
+            const page = this.__page;
             for (let i = 0; i < actions.length; i++) {
                 const action = actions[i];
-                api.shapeModifyX(this.__page, action.target, action.x);
+                api.shapeModifyX(page, action.target, action.x);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1833,12 +1845,16 @@ export class PageEditor {
         }
     }
 
-    modifyShapesY(actions: { target: Shape, y: number }[]) {
-        const api = this.__repo.start('modifyShapesY');
+    modifyShapesY(actions: {
+        target: Shape,
+        y: number
+    }[]) {
         try {
+            const api = this.__repo.start('modifyShapesY');
+            const page = this.__page;
             for (let i = 0; i < actions.length; i++) {
                 const action = actions[i];
-                api.shapeModifyY(this.__page, action.target, action.y);
+                api.shapeModifyY(page, action.target, action.y);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1846,7 +1862,10 @@ export class PageEditor {
         }
     }
 
-    modifyShapesAngleCount(actions: { target: (PolygonShape | StarShape), count: number }[]) {
+    modifyShapesAngleCount(actions: {
+        target: (PolygonShape | StarShape),
+        count: number
+    }[]) {
         const api = this.__repo.start('modifyShapesAngleCount');
         try {
             for (let i = 0; i < actions.length; i++) {
@@ -1865,7 +1884,10 @@ export class PageEditor {
         }
     }
 
-    modifyShapesInnerAngle(actions: { target: StarShape, offset: number }[]) {
+    modifyShapesInnerAngle(actions: {
+        target: StarShape,
+        offset: number
+    }[]) {
         const api = this.__repo.start('modifyShapesInnerAngle');
         try {
             for (let i = 0; i < actions.length; i++) {
@@ -1915,7 +1937,7 @@ export class PageEditor {
         }
     }
 
-    modifyShapesWidth(shapes: Shape[], val: number) {
+    modifyShapesWidth(shapes: ShapeView[], val: number) {
         try {
             const api = this.__repo.start('modifyShapesWidth');
             modify_shapes_width(api, this.__document, this.__page, shapes, val)
@@ -1925,7 +1947,7 @@ export class PageEditor {
         }
     }
 
-    modifyShapesHeight(shapes: Shape[], val: number) {
+    modifyShapesHeight(shapes: ShapeView[], val: number) {
         try {
             const api = this.__repo.start('modifyShapesHeight');
             modify_shapes_height(api, this.__document, this.__page, shapes, val)
@@ -1935,7 +1957,10 @@ export class PageEditor {
         }
     }
 
-    setShapesRotate(actions: { shape: ShapeView, transform: Transform }[]) {
+    setShapesRotate(actions: {
+        shape: ShapeView,
+        transform: Transform
+    }[]) {
         try {
             const api = this.__repo.start('setShapesRotate');
             for (const action of actions) {
@@ -1952,7 +1977,10 @@ export class PageEditor {
         }
     }
 
-    shapesFlip(params: { shape: ShapeView, transform2: Transform2 }[]) {
+    shapesFlip(params: {
+        shape: ShapeView,
+        transform2: Transform2
+    }[]) {
         try {
             const api = this.__repo.start('shapesFlip');
             const page = this.__page;
@@ -2186,7 +2214,7 @@ export class PageEditor {
                     f(this.__page, s, index, new_gradient);
                 } else {
                     const stops = new BasicArray<Stop>();
-                    const frame = target.frame;
+                    // const frame = target.frame;
                     const { alpha, red, green, blue } = gradient_container.color;
                     stops.push(new Stop(new BasicArray(), uuid(), 0, new Color(alpha, red, green, blue)), new Stop(new BasicArray(), uuid(), 1, new Color(0, red, green, blue)))
                     const from = value === GradientType.Linear ? { x: 0.5, y: 0 } : { x: 0.5, y: 0.5 };
@@ -3787,7 +3815,7 @@ export class PageEditor {
                 const s = shapes[i];
                 if (s.type !== ShapeType.Line) continue;
                 const o1 = s.matrix2Root().computeCoord2(0, 0);
-                const f = s.frame, r = getHorizontalRadians({ x: 0, y: 0 }, { x: f.width, y: f.height });
+                const f = s.size, r = getHorizontalRadians({ x: 0, y: 0 }, { x: f.width, y: f.height });
                 api.shapeModifyWH(this.__page, s, v * Math.cos(r), v * Math.sin(r));
                 const o2 = s.matrix2Root().computeCoord2(0, 0);
                 translate(api, this.__page, s, o1.x - o2.x, o1.y - o2.y);
@@ -3838,6 +3866,202 @@ export class PageEditor {
             this.__repo.commit();
         } catch (error) {
             console.error('modifyStyleByEyeDropper:', error);
+            this.__repo.rollback();
+        }
+    }
+
+    pasteProperties(shapes: ShapeView[], source: any) {
+        try {
+            const api = this.__repo.start('pasteProperties');
+            const page = this.__page;
+            const fills = source.fills;
+            const borders = source.borders;
+            const shadows = source.shadows;
+            const blur = source.blur;
+            const radius = source.radius;
+            const contextSetting = source.contextSetting;
+            const mark = source.mark;
+            const text = source.text;
+            if (fills.length || borders.length) {
+                const document = this.__document;
+                const ctx = new class {
+                    document = document;
+                    curPage = page.id;
+                    fmtVer = FMT_VER_latest;
+                };
+
+                const flatten = flattenShapes(shapes);
+                for (const view of flatten) {
+                    const shape = adapt2Shape(view);
+                    // fills
+                    {
+                        const s = shape4fill(api, page, view);
+                        api.deleteFills(page, s, 0, view.style.fills.length);
+                        if (fills?.length) {
+                            const __fills = fills.map((i: Fill) => importFill(i, ctx));
+                            api.addFills(page, s, __fills);
+                        }
+                    }
+                    // borders
+                    {
+                        const s = shape4border(api, page, view);
+                        api.deleteBorders(page, s, 0, view.style.borders.length);
+                        if (borders?.length) {
+                            const __borders = borders.map((i: Border) => importBorder(i));
+                            api.addBorders(page, s, __borders);
+                        }
+                    }
+                }
+            }
+            for (let i = 0; i < shapes.length; i++) {
+                const view = shapes[i];
+                const shape = adapt2Shape(view);
+
+                if (shape.isVirtualShape) continue;
+                // shadows
+                {
+                    const s = shape4shadow(api, page, view);
+                    api.deleteShadows(page, s, 0, view.style.shadows.length);
+                    if (shadows?.length) {
+                        const __shadows = shadows.map((i: Shadow) => importShadow(i));
+                        api.addShadows(page, s, __shadows);
+                    }
+                }
+                // blur
+                {
+                    api.deleteBlur(this.__page, shape);
+                    if (blur) {
+                        api.addBlur(this.__page, shape, importBlur(blur));
+                    }
+                }
+                // radius
+                {
+                    if (radius) {
+                        let needUpdateFrame = false;
+                        if (shape instanceof SymbolRefShape) {
+                            const _shape = shape4cornerRadius(api, page, shapes[i] as SymbolRefView);
+                            api.shapeModifyRadius2(page, _shape, radius[0], radius[1], radius[2], radius[3]);
+                        } else if (shape instanceof Artboard || shape instanceof SymbolShape) {
+                            api.shapeModifyRadius2(page, shape, radius[0], radius[1], radius[2], radius[3]);
+                        } else if (shape instanceof PathShape || shape instanceof PathShape2) {
+                            const isRect = shape.radiusType === RadiusType.Rect;
+                            if (isRect) {
+                                const points = shape.pathsegs[0].points;
+                                for (let _i = 0; _i < 4; _i++) {
+                                    const val = radius[_i];
+                                    if (points[_i].radius === val || val < 0) continue;
+
+                                    api.modifyPointCornerRadius(page, shape, _i, val, 0);
+                                }
+                            } else {
+                                shape.pathsegs.forEach((seg, index) => {
+                                    for (let _i = 0; _i < seg.points.length; _i++) {
+                                        if (seg.points[_i].radius === radius[0]) continue;
+                                        api.modifyPointCornerRadius(page, shape, _i, radius[0], index);
+                                    }
+                                });
+                            }
+                            needUpdateFrame = true;
+                        } else {
+                            api.shapeModifyFixedRadius(page, shape as GroupShape | TextShape, radius[0]);
+                        }
+
+                        if (needUpdateFrame) {
+                            update_frame_by_points(api, this.__page, shape);
+                        }
+                    }
+                }
+                // contextSetting
+                {
+                    if (contextSetting) {
+                        const __cs = importContextSettings(contextSetting);
+                        api.shapeModifyContextSettingsOpacity(page, shape, __cs.opacity ?? 1);
+                        api.shapeModifyContextSettingsBlendMode(page, shape, __cs.blenMode);
+                    }
+                }
+                // mark
+                {
+                    if (mark?.start) {
+                        const __start = importMarkerType(mark.start);
+                        api.shapeModifyStartMarkerType(page, shape, __start);
+                    }
+                    if (mark?.end) {
+                        const __end = importMarkerType(mark.end);
+                        api.shapeModifyEndMarkerType(page, shape, __end);
+                    }
+                }
+                // text
+                {
+                    if (text && shape instanceof TextShape) {
+                        const __text = importText(text);
+                        const alpha = __text.paras[0]?.spans[0];
+                        const len = shape.text.length;
+                        const __view = view as TextShapeView;
+                        if (alpha) {
+                            api.textModifyColor(page, __view, 0, len, alpha.color);
+                            api.textModifyFontName(page, __view, 0, len, alpha.fontName!);
+                            api.textModifyFontSize(page, __view, 0, len, alpha.fontSize!);
+                            api.textModifyItalic(page, __view, !!alpha.italic, 0, len);
+                            api.textModifyKerning(page, __view, alpha.kerning!, 0, len);
+                            api.textModifyUnderline(page, __view, alpha.underline, 0, len);
+                            api.textModifyStrikethrough(page, __view, alpha.strikethrough, 0, len);
+                            api.textModifyWeight(page, __view, alpha.weight!, 0, len);
+                            fixTextShapeFrameByLayout(api, page, __view)
+                        }
+                    }
+                }
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.error('pasteProperties:', error);
+            this.__repo.rollback();
+        }
+
+        function flattenShapes(shapes: ShapeView[]): ShapeView[] {
+            return shapes.reduce((result: any, item: ShapeView) => {
+                if (item.type === ShapeType.Group) {
+                    const childs = (item).childs as ShapeView[];
+                    if (Array.isArray(childs)) {
+                        return result.concat(flattenShapes(childs));
+                    }
+                } else {
+                    return result.concat(item);
+                }
+            }, []);
+        }
+    }
+
+    outlineShapes(shapes: ShapeView[]) {
+        try {
+            const ids: string[] = [];
+            const api = this.__repo.start('outlineShapes', (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+                const state = {} as SelectionState;
+                if (!isUndo) state.shapes = ids;
+                else state.shapes = cmd.saveselection?.shapes || [];
+                selection.restore(state);
+            });
+            for (const view of shapes) {
+                if (!(view instanceof TextShapeView)) continue;
+                const shape = adapt2Shape(view) as TextShape;
+                const path = view.getTextPath();
+                const copyStyle = findUsableFillStyle(view);
+                const style: Style = this.cloneStyle(copyStyle);
+                const mainColor = shape.text.paras[0]?.spans[0]?.color;
+                if (mainColor) {
+                    const len = style.fills.length;
+                    style.fills.push(new Fill([len] as BasicArray<number>, uuid(), true, FillType.SolidColor, mainColor));
+                }
+                let pathShape = newPathShape(view.name, view.frame, path, style);
+                pathShape.transform = shape.transform.clone();
+                const parent = shape.parent as GroupShape;
+                const index = parent.indexOfChild(shape);
+                api.shapeDelete(this.__document, this.__page, parent, index);
+                pathShape = api.shapeInsert(this.__document, this.__page, parent, pathShape, index) as PathShape;
+                ids.push(pathShape.id);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.error('outlineShapes:', error);
             this.__repo.rollback();
         }
     }
