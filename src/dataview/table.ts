@@ -92,9 +92,9 @@ export class TableView extends ShapeView {
         return undefined;
     }
 
-    protected _layout(size: ShapeSize, shape: Shape, parentFrame: ShapeSize | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scale: { x: number, y: number } | undefined): void {
+    protected _layout(shape: Shape, parentFrame: ShapeFrame | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scale: { x: number, y: number } | undefined): void {
 
-        super._layout(size, shape, parentFrame, varsContainer, scale);
+        super._layout(shape, parentFrame, varsContainer, scale);
         // if (this.m_need_updatechilds) {
         //     this.m_need_updatechilds = false;
         this.updateChildren();
@@ -134,7 +134,6 @@ export class TableView extends ShapeView {
             "",
             ShapeType.TableCell,
             new Transform(),
-            new ShapeSize(0, 0),
             new Style(new BasicArray(), new BasicArray(), new BasicArray()),
             TableCellType.Text,
             newTableCellText(this.data.textAttr));
@@ -173,7 +172,7 @@ export class TableView extends ShapeView {
                 // if (cellLayout.index.row === i && cellLayout.index.col === j) {
                 const cellId = this.rowHeights[rowIdx].id + "," + this.colWidths[colIdx].id;
                 const cdom = reuse.get(cellId) as TableCellView | undefined;
-                const props = { data: cdom?.data as TableCell, transx: this.m_transx, varsContainer: this.varsContainer, frame: cellLayout.frame, isVirtual: this.m_isVirtual, index: cellLayout.index };
+                const props = { data: cdom?.data as TableCell, scale: this.m_scale, varsContainer: this.varsContainer, frame: cellLayout.frame, isVirtual: this.m_isVirtual, index: cellLayout.index };
                 if (cdom) {
                     const cell = this._getCellAt2(rowIdx, colIdx);
                     if (cell) props.data = cell;

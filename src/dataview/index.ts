@@ -22,3 +22,6 @@ export * from "./rect"
 export * from "./boolshape"
 export * from "./polygon"
 export * from "./star"
+
+export { find4select } from "./find"
+export { hitContent, hitVisible, hitOuter } from "./hittest"

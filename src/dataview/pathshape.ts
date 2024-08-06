@@ -4,7 +4,7 @@ import {
     PathShape,
     PathShape2,
     Shape,
-    ShapeSize,
+    ShapeFrame,
     ShapeType,
     SymbolRefShape,
     SymbolShape,
@@ -33,12 +33,9 @@ export class PathShapeView extends ShapeView {
         return this.data.isClosed;
     }
 
-    protected _layout(size: ShapeSize, shape: Shape, parentFrame: ShapeSize | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scale: {
-        x: number,
-        y: number
-    } | undefined): void {
+    protected _layout(shape: Shape, parentFrame: ShapeFrame | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scale: { x: number, y: number } | undefined): void {
         this.m_pathsegs = undefined;
-        super._layout(size, shape, parentFrame, varsContainer, scale);
+        super._layout(shape, parentFrame, varsContainer, scale);
     }
 
     protected renderBorders(): EL[] {

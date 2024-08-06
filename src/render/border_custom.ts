@@ -369,7 +369,7 @@ export const renderCustomBorder = (h: Function, frame: ShapeSize, border: Border
 
 const outer_mask_path = (shape: Shape, border: Border, iscenter: boolean) => {
     const cornerType = border.cornerType
-    const { width, height } = shape.frame;
+    const { width, height } = shape.size;
     const radius = shape.radius;
     const { sideType, thicknessBottom, thicknessTop, thicknessLeft, thicknessRight } = border.sideSetting;
     const t = iscenter ? thicknessTop / 2 : thicknessTop;
@@ -377,7 +377,7 @@ const outer_mask_path = (shape: Shape, border: Border, iscenter: boolean) => {
     const l = iscenter ? thicknessLeft / 2 : thicknessLeft;
     const r = iscenter ? thicknessRight / 2 : thicknessRight;
     if (Math.max(...radius) > 0 || sideType !== SideType.Custom || cornerType !== CornerType.Bevel) {
-        return outer_radius_border_path(radius, shape.frame, border.sideSetting, cornerType, iscenter);
+        return outer_radius_border_path(radius, shape.size, border.sideSetting, cornerType, iscenter);
     } else {
         //切角
         const w = width + r + l;
@@ -515,7 +515,7 @@ const mask_surplus_path = (frame: ShapeSize, r: number[], side: BorderSideSettin
 }
 
 const inner_mask_path = (shape: Shape, border: Border, iscenter: boolean) => {
-    const { width, height } = shape.frame;
+    const { width, height } = shape.size;
     const r = shape.radius;
     const { sideType, thicknessBottom, thicknessTop, thicknessLeft, thicknessRight } = border.sideSetting;
     const tt = iscenter ? thicknessTop / 2 : thicknessTop;
@@ -526,7 +526,7 @@ const inner_mask_path = (shape: Shape, border: Border, iscenter: boolean) => {
     const p2 = new CurvePoint([] as any, '', 1, 0, CurveMode.Straight);
     const p3 = new CurvePoint([] as any, '', 1, 1, CurveMode.Straight);
     const p4 = new CurvePoint([] as any, '', 0, 1, CurveMode.Straight);
-    const radius = getCornerSize(r, shape.frame);
+    const radius = getCornerSize(r, shape.size);
 
     if (radius[0] > 0) {
         const side = Math.max(tl, tt);

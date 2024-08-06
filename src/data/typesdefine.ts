@@ -843,7 +843,6 @@ export type Shape = {
     name: string,
     type: ShapeType,
     transform: Transform,
-    size: ShapeSize,
     style: Style,
     boolOp?: BoolOp,
     isFixedToViewport?: boolean,
@@ -877,6 +876,7 @@ export type TableCell = Shape & {
 }
 /* table shape */
 export type TableShape = Shape & {
+    size: ShapeSize,
     cells: Map<string, TableCell>,
     rowHeights: TableShape_rowHeights,
     colWidths: TableShape_colWidths,
@@ -884,6 +884,7 @@ export type TableShape = Shape & {
 }
 /* text shape */
 export type TextShape = Shape & {
+    size: ShapeSize,
     text: Text,
     fixedRadius?: number,
 }
@@ -908,11 +909,13 @@ export type Comment = {
 }
 /* path shape */
 export type PathShape = Shape & {
+    size: ShapeSize,
     pathsegs: PathShape_pathsegs,
     fixedRadius?: number,
 }
 /* path shape */
 export type PathShape2 = Shape & {
+    size: ShapeSize,
     pathsegs: PathShape2_pathsegs,
     fixedRadius?: number,
 }
@@ -929,6 +932,7 @@ export type StarShape = PathShape & {
 }
 /* symbol ref shape */
 export type SymbolRefShape = Shape & {
+    size: ShapeSize,
     refId: string,
     variables: Map<string, Variable>,
     overrides?: Map<string, string>,
@@ -957,6 +961,7 @@ export type OvalShape = PathShape & {
 }
 /* artboard shape */
 export type Artboard = GroupShape & {
+    size: ShapeSize,
     cornerRadius?: CornerRadius,
     guides?: Artboard_guides,
 }
@@ -984,6 +989,7 @@ export type Page = GroupShape & {
 }
 /* symbol shape */
 export type SymbolShape = GroupShape & {
+    size: ShapeSize,
     variables: Map<string, Variable>,
     symtags?: Map<string, string>,
     cornerRadius?: CornerRadius,

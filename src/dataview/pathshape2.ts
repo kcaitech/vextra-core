@@ -1,6 +1,5 @@
-import { PathShape2, Shape, ShapeFrame, ShapeSize, SymbolRefShape, SymbolShape } from "../data";
+import { PathShape2, Shape, ShapeFrame, SymbolRefShape, SymbolShape } from "../data/classes";
 import { ShapeView } from "./shape";
-import { Matrix } from "../basic/matrix";
 import { PathSegment } from "../data/typesdefine";
 import { DViewCtx, PropsType } from "./viewctx";
 import { EL, elh } from "./el";
@@ -10,7 +9,6 @@ export class PathShapeView2 extends ShapeView {
 
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
-        // this.afterInit();
     }
 
     m_pathsegs?: PathSegment[];
@@ -19,31 +17,10 @@ export class PathShapeView2 extends ShapeView {
         return this.m_pathsegs || (this.m_data as PathShape2).pathsegs;
     }
 
-    protected _layout(size: ShapeSize, shape: Shape, parentFrame: ShapeSize | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scale: { x: number, y: number } | undefined): void {
+    protected _layout(shape: Shape, parentFrame: ShapeFrame | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scale: { x: number, y: number } | undefined): void {
         this.m_pathsegs = undefined;
-        super._layout(size, shape, parentFrame, varsContainer, scale);
+        super._layout(shape, parentFrame, varsContainer, scale);
     }
-
-    // layoutOnDiamondShape(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scaleX: number, scaleY: number, rotate: number, vflip: boolean, hflip: boolean, bbox: ShapeFrame, m: Matrix): void {
-    //     const shape = this.m_data as PathShape2;
-    //     m.preScale(shape.frame.width, shape.frame.height); // points投影到parent坐标系的矩阵
-
-    //     const matrix2 = matrix2parent(bbox.x, bbox.y, bbox.width, bbox.height, 0, false, false);
-    //     matrix2.preScale(bbox.width, bbox.height); // 当对象太小时，求逆矩阵会infinity
-    //     m.multiAtLeft(matrix2.inverse); // 反向投影到新的坐标系
-
-    //     const pathsegs = shape.pathsegs;
-    //     const newpathsegs = pathsegs.map((seg) => {
-    //         return { crdtidx: seg.crdtidx, id: seg.id, points: transformPoints(seg.points, m), isClosed: seg.isClosed }
-    //     });
-    //     this.m_pathsegs = newpathsegs;
-
-    //     const frame = this.frame;
-    //     const parsed = newpathsegs.map((seg) => parsePath(seg.points, !!seg.isClosed, frame.width, frame.height, this.fixedRadius));
-    //     const concat = Array.prototype.concat.apply([], parsed);
-    //     this.m_path = new Path(concat);
-    //     this.m_pathstr = this.m_path.toString();
-    // }
 
     protected renderBorders(): EL[] {
         return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.m_data, false);

@@ -1,17 +1,25 @@
 import { Style } from "./style";
 import * as classes from "./baseclasses"
 import { BasicArray, BasicMap, ResourceMgr } from "./basic";
-import { ShapeType, TableCellType, CrdtNumber } from "./baseclasses"
+import { ShapeType, TableCellType, CrdtNumber, ShapeFrame } from "./baseclasses"
 import {Shape, Transform, ShapeSize} from "./shape";
 import { Path } from "./path";
 import { Text, TextAttr } from "./text"
-import { FrameType, PathType } from "./consts";
+import { PathType } from "./consts";
 import { newTableCellText } from "./textutils";
 export { TableLayout, TableGridItem } from "./tablelayout";
 export { TableCellType } from "./baseclasses";
 export { CrdtNumber } from "./baseclasses";
 
 export class TableCell extends Shape implements classes.TableCell {
+    get size(): classes.ShapeSize {
+        return this.frame;
+    }
+    set size(size: classes.ShapeSize) {
+    }
+    get frame(): classes.ShapeFrame {
+        return new ShapeFrame();
+    }
 
     typeId = 'table-cell'
     cellType: TableCellType
@@ -28,7 +36,6 @@ export class TableCell extends Shape implements classes.TableCell {
         name: string,
         type: ShapeType,
         transform: Transform,
-        size: ShapeSize, // cell里的frame是无用的，真实的位置大小通过行高列宽计算
         style: Style,
         cellType: TableCellType,
         text: Text
@@ -39,7 +46,6 @@ export class TableCell extends Shape implements classes.TableCell {
             name,
             type,
             transform,
-            size,
             style
         )
         this.cellType = cellType
@@ -73,7 +79,7 @@ export class TableCell extends Shape implements classes.TableCell {
      * @param frame 
      * @returns 
      */
-    static getPathOfFrame(frame: ShapeSize): Path {
+    static getPathOfSize(frame: ShapeSize): Path {
         const x = 0;
         const y = 0;
         const w = frame.width;
@@ -86,7 +92,7 @@ export class TableCell extends Shape implements classes.TableCell {
         return new Path(path);
     }
 
-    getPathOfFrame(frame: ShapeSize, fixedRadius?: number): Path {
+    getPathOfSize(frame: ShapeSize, fixedRadius?: number): Path {
         const x = 0;
         const y = 0;
         const w = frame.width;
@@ -153,8 +159,15 @@ export class TableShape extends Shape implements classes.TableShape {
     static MinCellSize = 10;
     static MaxRowCount = 50;
     static MaxColCount = 50;
-
+    get frame(): classes.ShapeFrame {
+        return new ShapeFrame(0, 0, this.size.width, this.size.height);
+    }
+    hasSize(): boolean {
+        return true;
+    }
     typeId = 'table-shape'
+    // @ts-ignore
+    size: ShapeSize
     cells: BasicMap<string, TableCell>
     rowHeights: BasicArray<CrdtNumber>
     colWidths: BasicArray<CrdtNumber>
@@ -171,8 +184,8 @@ export class TableShape extends Shape implements classes.TableShape {
         name: string,
         type: ShapeType,
         transform: Transform,
-        size: ShapeSize,
         style: Style,
+        size: ShapeSize,
         cells: BasicMap<string, TableCell>,
         rowHeights: BasicArray<CrdtNumber>,
         colWidths: BasicArray<CrdtNumber>
@@ -183,9 +196,9 @@ export class TableShape extends Shape implements classes.TableShape {
             name,
             ShapeType.Table,
             transform,
-            size,
             style,
         )
+        this.size = size
         this.rowHeights = rowHeights
         this.colWidths = colWidths
         this.cells = cells;
@@ -237,7 +250,7 @@ export class TableShape extends Shape implements classes.TableShape {
         return this.colWidths.length;
     }
 
-    getPathOfFrame(frame: ShapeSize, fixedRadius?: number): Path {
+    getPathOfSize(frame: ShapeSize, fixedRadius?: number): Path {
         const x = 0;
         const y = 0;
         const w = frame.width;
@@ -387,9 +400,9 @@ export class TableShape extends Shape implements classes.TableShape {
     //     return true;
     // }
 
-    get frameType() {
-        return FrameType.Rect;
-    }
+    // get frameType() {
+    //     return FrameType.Rect;
+    // }
 
     get pathType() {
         return PathType.Fixed;

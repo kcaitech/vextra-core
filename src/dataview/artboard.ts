@@ -3,8 +3,9 @@ import { GroupShapeView } from "./groupshape";
 import { innerShadowId, renderBorders, renderFills } from "../render";
 import { objectId } from "../basic/objectid";
 import { render as clippathR } from "../render/clippath"
-import { Artboard } from "../data";
-import { BlurType, CornerRadius, Page } from "../data";
+import { Artboard } from "../data/artboard";
+import { BlurType, BorderPosition, CornerRadius, Page, ShapeFrame, ShapeSize } from "../data/classes";
+import { ShapeView, updateFrame } from "./shape";
 import { PageView } from "./page";
 
 
@@ -75,9 +76,11 @@ export class ArtboradView extends GroupShapeView {
         return props;
     }
 
+    _svgnode?: EL;
+
     render(): number {
         if (!this.checkAndResetDirty()) return this.m_render_version;
-
+        this._svgnode = undefined;
         const masked = this.masked;
         if (masked) {
             (this.getPage() as PageView).getView(masked.id)?.render();
@@ -113,14 +116,15 @@ export class ArtboradView extends GroupShapeView {
         const id = "clippath-artboard-" + objectId(this);
         const cp = clippathR(elh, id, this.getPathStr());
 
+        this._svgnode = elh(
+            "svg",
+            svgprops,
+            [cp, ...children, ...borders]
+        )
         children = [elh(
             "g",
             { "clip-path": "url(#" + id + ")" },
-            [elh(
-                "svg",
-                svgprops,
-                [cp, ...children, ...borders]
-            )]
+            [this._svgnode]
         )];
 
         if (shadows.length) {
@@ -129,8 +133,7 @@ export class ArtboradView extends GroupShapeView {
             children = [...shadows, ...children];
         }
 
-        if (blur.length && this.blur?.type === BlurType.Gaussian) {
-            props.filter = `url(#${blurId})`;
+        if (blur.length) {
             children = [...blur, ...children];
         }
 
@@ -156,4 +159,75 @@ export class ArtboradView extends GroupShapeView {
     get guides() {
         return (this.m_data as Page).guides;
     }
+
+
+    updateFrames() {
+
+        let changed = this._save_frame.x !== this.m_frame.x || this._save_frame.y !== this.m_frame.y ||
+            this._save_frame.width !== this.m_frame.width || this._save_frame.height !== this.m_frame.height;
+        if (changed) {
+            this._save_frame.x = this.m_frame.x;
+            this._save_frame.y = this.m_frame.y;
+            this._save_frame.width = this.m_frame.width;
+            this._save_frame.height = this.m_frame.height;
+        }
+
+        const borders = this.getBorders();
+        let maxborder = 0;
+        borders.forEach(b => {
+            if (b.position === BorderPosition.Outer) {
+                maxborder = Math.max(b.thickness, maxborder);
+            }
+            else if (b.position === BorderPosition.Center) {
+                maxborder = Math.max(b.thickness / 2, maxborder);
+            }
+        })
+
+        // update visible
+        if (updateFrame(this.m_visibleFrame, this.frame.x - maxborder, this.frame.y - maxborder, this.frame.width + maxborder * 2, this.frame.height + maxborder * 2)) changed = true;
+
+        const childouterbounds = this.m_children.map(c => (c as ShapeView)._p_outerFrame);
+        const reducer = (p: { minx: number, miny: number, maxx: number, maxy: number }, c: ShapeFrame, i: number) => {
+            p.minx = Math.min(p.minx, c.x);
+            p.maxx = Math.max(p.maxx, c.x + c.width);
+            p.miny = Math.min(p.miny, c.y);
+            p.maxy = Math.max(p.maxy, c.y + c.height);
+            return p;
+        }
+        const frame = this.frame;
+        const outerbounds = childouterbounds.reduce(reducer, { minx: frame.x, miny: frame.y, maxx: frame.x + frame.width, maxy: frame.y + frame.height });
+        // update outer
+        if (updateFrame(this.m_outerFrame, outerbounds.minx, outerbounds.miny, outerbounds.maxx - outerbounds.minx, outerbounds.maxy - outerbounds.miny)) changed = true;
+
+        // to parent frame
+        const mapframe = (i: ShapeFrame, out: ShapeFrame) => {
+            const transform = this.transform;
+            if (this.isNoTransform()) {
+                return updateFrame(out, i.x + transform.translateX, i.y + transform.translateY, i.width, i.height);
+            }
+            const frame = i;
+            const m = transform;
+            const corners = [
+                { x: frame.x, y: frame.y },
+                { x: frame.x + frame.width, y: frame.y },
+                { x: frame.x + frame.width, y: frame.y + frame.height },
+                { x: frame.x, y: frame.y + frame.height }]
+                .map((p) => m.computeCoord(p));
+            const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
+            const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
+            const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
+            const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
+            return updateFrame(out, minx, miny, maxx - minx, maxy - miny);
+        }
+        if (mapframe(this.m_frame, this._p_frame)) changed = true;
+        if (mapframe(this.m_visibleFrame, this._p_visibleFrame)) changed = true;
+        if (mapframe(this.m_outerFrame, this._p_outerFrame)) changed = true;
+
+        if (changed) {
+            this.m_ctx.addNotifyLayout(this);
+        }
+
+        return changed;
+    }
+
 }

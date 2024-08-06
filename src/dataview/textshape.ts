@@ -11,10 +11,7 @@ import {
     TextShape,
     Transform,
     VariableType,
-    ShapeType,
-    BlurType,
-    makeShapeTransform2By1,
-    makeShapeTransform1By2
+    ShapeFrame
 } from "../data";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
@@ -25,7 +22,6 @@ import {
 } from "../data/textlocate";
 import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "../data/textutils";
 import { objectId } from "../basic/objectid";
-import { innerShadowId } from "../render";
 
 export class TextShapeView extends ShapeView {
     __str: string | undefined;
@@ -136,14 +132,14 @@ export class TextShapeView extends ShapeView {
     __origin_frame: ShapeSize = new ShapeSize();
 
     forceUpdateOriginFrame() {
-        const frame = this.data.frame;
+        const frame = this.data.size;
         // this.__origin_frame.x = frame.x;
         // this.__origin_frame.y = frame.y;
         this.__origin_frame.width = frame.width;
         this.__origin_frame.height = frame.height;
     }
 
-    updateLayoutArgs(trans: Transform, size: ShapeSize, radius: number | undefined): void {
+    updateLayoutArgs(trans: Transform, size: ShapeFrame, radius: number | undefined): void {
         // if (this.isVirtualShape && isDiffShapeFrame(this.m_frame, frame)) {
         //     this.updateSize(frame.width, frame.height);
         // }

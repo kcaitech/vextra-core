@@ -10,7 +10,7 @@ import {Shape, SymbolShape, CornerRadius, Transform, ShapeSize} from "./shape";
 import { Path } from "./path";
 import { Variable } from "./variable";
 import { SymbolMgr } from "./symbolmgr";
-import { FrameType, PathType, RadiusType } from "./consts";
+import { PathType, RadiusType } from "./consts";
 import { exportSymbolRefShape } from "./baseexport";
 
 function genRefId(refId: string, type: OverrideType) {
@@ -20,10 +20,16 @@ function genRefId(refId: string, type: OverrideType) {
 
 export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     __symMgr?: SymbolMgr
-
+    get frame(): classes.ShapeFrame {
+        return new ShapeFrame(0, 0, this.size.width, this.size.height);
+    }
+    hasSize(): boolean {
+        return true;
+    }
     typeId = 'symbol-ref-shape'
     private __refId: string // set 方法会进事务
-
+    // @ts-ignore
+    size: ShapeSize
     overrides?: BasicMap<string, string> // 同varbinds，只是作用域为引用的symbol对象
     variables: BasicMap<string, Variable>
     isCustomSize?: boolean
@@ -34,8 +40,8 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         name: string,
         type: ShapeType,
         transform: Transform,
-        size: ShapeSize,
         style: Style,
+        size: ShapeSize,
         refId: string,
         variables: BasicMap<string, Variable>,
     ) {
@@ -45,9 +51,9 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
             name,
             type,
             transform,
-            size,
             style
         )
+        this.size = size
         this.__refId = refId
         this.variables = variables;
     }
@@ -121,7 +127,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         return this.__symMgr;
     }
 
-    getPathOfFrame(frame: ShapeSize, fixedRadius?: number): Path {
+    getPathOfSize(frame: ShapeSize, fixedRadius?: number): Path {
         const w = frame.width;
         const h = frame.height;
         const path = [
@@ -167,9 +173,9 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         return RadiusType.Rect;
     }
 
-    get frameType() {
-        return FrameType.Flex;
-    }
+    // get frameType() {
+    //     return FrameType.Flex;
+    // }
     getImageFill() {
         return false;
     }
