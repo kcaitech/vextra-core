@@ -46,7 +46,6 @@ export class Page extends GroupShape implements classes.Page {
         name: string,
         type: ShapeType,
         transform: Transform,
-        size: ShapeSize,
         style: Style,
         childs: BasicArray<(GroupShape | Shape | ImageShape | PathShape | RectShape | TextShape)>,
         isReserveLib?: boolean,
@@ -60,9 +59,8 @@ export class Page extends GroupShape implements classes.Page {
             name,
             ShapeType.Page,
             transform,
-            size,
             style,
-            childs
+            childs,
         )
         // this.onAddShape(this); // 不能add 自己
         childs.forEach((c) => this.onAddShape(c));

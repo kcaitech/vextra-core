@@ -980,7 +980,6 @@ export function exportShape(source: types.Shape, ctx?: IExportContext): types.Sh
     ret.name = source.name
     ret.type = exportShapeType(source.type, ctx)
     ret.transform = exportTransform(source.transform, ctx)
-    ret.size = exportShapeSize(source.size, ctx)
     ret.style = exportStyle(source.style, ctx)
     if (source.boolOp) ret.boolOp = exportBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport) ret.isFixedToViewport = source.isFixedToViewport
@@ -1029,6 +1028,7 @@ export function exportTableCell(source: types.TableCell, ctx?: IExportContext): 
 export function exportTableShape(source: types.TableShape, ctx?: IExportContext): types.TableShape {
     const ret: types.TableShape = exportShape(source, ctx) as types.TableShape
     ret.typeId = "table-shape"
+    ret.size = exportShapeSize(source.size, ctx)
     ret.cells = (() => {
         const ret: any = {}
         source.cells.forEach((source, k) => {
@@ -1045,6 +1045,7 @@ export function exportTableShape(source: types.TableShape, ctx?: IExportContext)
 export function exportTextShape(source: types.TextShape, ctx?: IExportContext): types.TextShape {
     const ret: types.TextShape = exportShape(source, ctx) as types.TextShape
     ret.typeId = "text-shape"
+    ret.size = exportShapeSize(source.size, ctx)
     ret.text = exportText(source.text, ctx)
     if (source.fixedRadius) ret.fixedRadius = source.fixedRadius
     return ret
@@ -1111,6 +1112,7 @@ export function exportComment(source: types.Comment, ctx?: IExportContext): type
 export function exportPathShape(source: types.PathShape, ctx?: IExportContext): types.PathShape {
     const ret: types.PathShape = exportShape(source, ctx) as types.PathShape
     ret.typeId = "path-shape"
+    ret.size = exportShapeSize(source.size, ctx)
     ret.pathsegs = exportPathShape_pathsegs(source.pathsegs, ctx)
     if (source.fixedRadius) ret.fixedRadius = source.fixedRadius
     return ret
@@ -1119,6 +1121,7 @@ export function exportPathShape(source: types.PathShape, ctx?: IExportContext): 
 export function exportPathShape2(source: types.PathShape2, ctx?: IExportContext): types.PathShape2 {
     const ret: types.PathShape2 = exportShape(source, ctx) as types.PathShape2
     ret.typeId = "path-shape2"
+    ret.size = exportShapeSize(source.size, ctx)
     ret.pathsegs = exportPathShape2_pathsegs(source.pathsegs, ctx)
     if (source.fixedRadius) ret.fixedRadius = source.fixedRadius
     return ret
@@ -1148,6 +1151,7 @@ export function exportStarShape(source: types.StarShape, ctx?: IExportContext): 
 export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExportContext): types.SymbolRefShape {
     const ret: types.SymbolRefShape = exportShape(source, ctx) as types.SymbolRefShape
     ret.typeId = "symbol-ref-shape"
+    ret.size = exportShapeSize(source.size, ctx)
     ret.refId = source.refId
     ret.variables = (() => {
         const ret: any = {}
@@ -1214,6 +1218,7 @@ export function exportOvalShape(source: types.OvalShape, ctx?: IExportContext): 
 export function exportArtboard(source: types.Artboard, ctx?: IExportContext): types.Artboard {
     const ret: types.Artboard = exportGroupShape(source, ctx) as types.Artboard
     ret.typeId = "artboard"
+    ret.size = exportShapeSize(source.size, ctx)
     if (source.cornerRadius) ret.cornerRadius = exportCornerRadius(source.cornerRadius, ctx)
     if (source.guides) ret.guides = exportArtboard_guides(source.guides, ctx)
     return ret
@@ -1279,6 +1284,7 @@ export function exportPage(source: types.Page, ctx?: IExportContext): types.Page
 export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContext): types.SymbolShape {
     const ret: types.SymbolShape = exportGroupShape(source, ctx) as types.SymbolShape
     ret.typeId = "symbol-shape"
+    ret.size = exportShapeSize(source.size, ctx)
     ret.variables = (() => {
         const ret: any = {}
         source.variables.forEach((source, k) => {

@@ -1153,7 +1153,6 @@ export function importShape(source: types.Shape, ctx?: IImportContext): impl.Sha
         source.name,
         importShapeType(source.type, ctx),
         importTransform(source.transform, ctx),
-        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx))
     importShapeOptional(ret, source, ctx)
     return ret
@@ -1211,7 +1210,6 @@ export function importTableCell(source: types.TableCell, ctx?: IImportContext): 
         source.name,
         importShapeType(source.type, ctx),
         importTransform(source.transform, ctx),
-        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
         importTableCellType(source.cellType, ctx),
         importText(source.text, ctx))
@@ -1262,8 +1260,8 @@ export function importTableShape(source: types.TableShape, ctx?: IImportContext)
         source.name,
         importShapeType(source.type, ctx),
         importTransform(source.transform, ctx),
-        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
+        importShapeSize(source.size, ctx),
         (() => {
             const ret = new BasicMap<string, impl.TableCell>()
             const _val = source.cells as any
@@ -1293,8 +1291,8 @@ export function importTextShape(source: types.TextShape, ctx?: IImportContext): 
         source.name,
         importShapeType(source.type, ctx),
         importTransform(source.transform, ctx),
-        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
+        importShapeSize(source.size, ctx),
         importText(source.text, ctx))
     importTextShapeOptional(ret, source, ctx)
     return ret
@@ -1389,8 +1387,8 @@ export function importPathShape(source: types.PathShape, ctx?: IImportContext): 
         source.name,
         importShapeType(source.type, ctx),
         importTransform(source.transform, ctx),
-        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
+        importShapeSize(source.size, ctx),
         importPathShape_pathsegs(source.pathsegs, ctx))
     importPathShapeOptional(ret, source, ctx)
     return ret
@@ -1408,8 +1406,8 @@ export function importPathShape2(source: types.PathShape2, ctx?: IImportContext)
         source.name,
         importShapeType(source.type, ctx),
         importTransform(source.transform, ctx),
-        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
+        importShapeSize(source.size, ctx),
         importPathShape2_pathsegs(source.pathsegs, ctx))
     importPathShape2Optional(ret, source, ctx)
     return ret
@@ -1424,8 +1422,8 @@ export function importPolygonShape(source: types.PolygonShape, ctx?: IImportCont
         source.name,
         importShapeType(source.type, ctx),
         importTransform(source.transform, ctx),
-        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
+        importShapeSize(source.size, ctx),
         importPathShape_pathsegs(source.pathsegs, ctx),
         source.counts)
     importPolygonShapeOptional(ret, source, ctx)
@@ -1457,8 +1455,8 @@ export function importRectShape(source: types.RectShape, ctx?: IImportContext): 
         source.name,
         importShapeType(source.type, ctx),
         importTransform(source.transform, ctx),
-        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
+        importShapeSize(source.size, ctx),
         importPathShape_pathsegs(source.pathsegs, ctx))
     importRectShapeOptional(ret, source, ctx)
     return ret
@@ -1473,8 +1471,8 @@ export function importStarShape(source: types.StarShape, ctx?: IImportContext): 
         source.name,
         importShapeType(source.type, ctx),
         importTransform(source.transform, ctx),
-        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
+        importShapeSize(source.size, ctx),
         importPathShape_pathsegs(source.pathsegs, ctx),
         source.counts,
         source.innerAngle)
@@ -1511,8 +1509,8 @@ export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImport
         source.name,
         importShapeType(source.type, ctx),
         importTransform(source.transform, ctx),
-        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
+        importShapeSize(source.size, ctx),
         source.refId,
         (() => {
             const ret = new BasicMap<string, impl.Variable>()
@@ -1565,8 +1563,8 @@ export function importContactShape(source: types.ContactShape, ctx?: IImportCont
         source.name,
         importShapeType(source.type, ctx),
         importTransform(source.transform, ctx),
-        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
+        importShapeSize(source.size, ctx),
         importPathShape_pathsegs(source.pathsegs, ctx),
         source.isEdited,
         importText(source.text, ctx),
@@ -1600,8 +1598,8 @@ export function importCutoutShape(source: types.CutoutShape, ctx?: IImportContex
         source.name,
         importShapeType(source.type, ctx),
         importTransform(source.transform, ctx),
-        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
+        importShapeSize(source.size, ctx),
         importPathShape_pathsegs(source.pathsegs, ctx))
     importCutoutShapeOptional(ret, source, ctx)
     return ret
@@ -1686,8 +1684,8 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
         source.name,
         importShapeType(source.type, ctx),
         importTransform(source.transform, ctx),
-        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
+        importShapeSize(source.size, ctx),
         importPathShape_pathsegs(source.pathsegs, ctx),
         source.imageRef)
     importImageShapeOptional(ret, source, ctx)
@@ -1719,8 +1717,8 @@ export function importLineShape(source: types.LineShape, ctx?: IImportContext): 
         source.name,
         importShapeType(source.type, ctx),
         importTransform(source.transform, ctx),
-        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
+        importShapeSize(source.size, ctx),
         importPathShape_pathsegs(source.pathsegs, ctx))
     importLineShapeOptional(ret, source, ctx)
     return ret
@@ -1751,8 +1749,8 @@ export function importOvalShape(source: types.OvalShape, ctx?: IImportContext): 
         source.name,
         importShapeType(source.type, ctx),
         importTransform(source.transform, ctx),
-        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
+        importShapeSize(source.size, ctx),
         importPathShape_pathsegs(source.pathsegs, ctx),
         importEllipse(source.ellipse, ctx))
     importOvalShapeOptional(ret, source, ctx)
@@ -1772,9 +1770,9 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
         source.name,
         importShapeType(source.type, ctx),
         importTransform(source.transform, ctx),
-        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
-        importGroupShape_childs(source.childs, ctx))
+        importGroupShape_childs(source.childs, ctx),
+        importShapeSize(source.size, ctx))
     importArtboardOptional(ret, source, ctx)
     return ret
 }
@@ -1788,7 +1786,6 @@ export function importBoolShape(source: types.BoolShape, ctx?: IImportContext): 
         source.name,
         importShapeType(source.type, ctx),
         importTransform(source.transform, ctx),
-        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
         importGroupShape_childs(source.childs, ctx))
     importBoolShapeOptional(ret, source, ctx)
@@ -1857,7 +1854,6 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
         source.name,
         importShapeType(source.type, ctx),
         importTransform(source.transform, ctx),
-        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
         importGroupShape_childs(source.childs, ctx))
     importGroupShapeOptional(ret, source, ctx)
@@ -1881,7 +1877,6 @@ export function importPage(source: types.Page, ctx?: IImportContext): impl.Page 
         source.name,
         importShapeType(source.type, ctx),
         importTransform(source.transform, ctx),
-        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
         importGroupShape_childs(source.childs, ctx))
     importPageOptional(ret, source, ctx)
@@ -1909,9 +1904,9 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
         source.name,
         importShapeType(source.type, ctx),
         importTransform(source.transform, ctx),
-        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
         importGroupShape_childs(source.childs, ctx),
+        importShapeSize(source.size, ctx),
         (() => {
             const ret = new BasicMap<string, impl.Variable>()
             const _val = source.variables as any
@@ -1941,9 +1936,9 @@ export function importSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IIm
         source.name,
         importShapeType(source.type, ctx),
         importTransform(source.transform, ctx),
-        importShapeSize(source.size, ctx),
         importStyle(source.style, ctx),
         importGroupShape_childs(source.childs, ctx),
+        importShapeSize(source.size, ctx),
         (() => {
             const ret = new BasicMap<string, impl.Variable>()
             const _val = source.variables as any

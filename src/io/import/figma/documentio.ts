@@ -6,12 +6,24 @@ import {startLoader} from "./loader";
 import * as UZIP from "uzip";
 
 function compare(l: string, r: string) {
-    if (l.length < r.length) return -1;
-    else if (l.length > r.length) return 1;
     if (l === r) return 0;
-    return l.charCodeAt(l.length - 1) > r.charCodeAt(r.length - 1) ? 1 : -1;
-}
 
+    const lIsMinus = l.startsWith(' ');
+    const rIsMinus = r.startsWith(' ');
+    if (lIsMinus && !rIsMinus) return -1;
+    if (!lIsMinus && rIsMinus) return 1;
+
+    if (lIsMinus) l = l.slice(1);
+    if (rIsMinus) r = r.slice(1);
+
+    const loopCount = Math.min(l.length, r.length);
+    for (let i = 0; i < loopCount; i++) {
+        const res = l.charCodeAt(i) - r.charCodeAt(i);
+        if (res !== 0) return res > 0 ? 1 : -1;
+    }
+
+    return l.length > r.length ? 1 : -1;
+}
 
 function insert2childs(
     list: {
@@ -29,7 +41,7 @@ function insert2childs(
     if ((end - start) < 5) {
         for (let i = start; i <= end; i++) {
             const item = list[i];
-            if (compare(item.parentIndex.position, node.parentIndex.position)) {
+            if (compare(item.parentIndex.position, node.parentIndex.position) > 0) {
                 list.splice(i, 0, node);
                 return;
             }
@@ -39,7 +51,7 @@ function insert2childs(
     }
     const middleIndex = Math.round((start + end) / 2);
     const middleItem = list[middleIndex];
-    if (compare(middleItem.parentIndex.position, node.parentIndex.position)) {
+    if (compare(middleItem.parentIndex.position, node.parentIndex.position) > 0) {
         insert2childs(list, node, start, middleIndex);
     } else {
         insert2childs(list, node, middleIndex + 1, end);
@@ -87,13 +99,13 @@ export async function importDocument(file: File, gurad: IDataGuard /*inflateRawS
 
         if (pnode) {
             insert2childs(pnode.childs, node, 0, pnode.childs.length - 1);
+            node.parent = pnode;
         }
     }
 
-    for (const node of nodeChanges) {
-        if (Array.isArray(node.childs)) node.childs.reverse();
-    }
-
+    pages.sort((a, b) => {
+        return compare(a.parentIndex.position, b.parentIndex.position);
+    });
     const pageList = new BasicArray<PageListItem>();
     for (let i = 0; i < pages.length; i++) {
         const page = pages[i];
@@ -104,7 +116,6 @@ export async function importDocument(file: File, gurad: IDataGuard /*inflateRawS
     const document = new Document(uuid(), file.name, "", "", pageList, new BasicMap(), gurad);
 
     console.log(json)
-    console.log(nodeChangesMap)
     startLoader(json, pages, document, nodeChangesMap, unzipped);
 
     return document;

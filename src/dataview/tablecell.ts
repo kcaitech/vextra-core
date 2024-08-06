@@ -1,7 +1,7 @@
 import { TextLayout } from "../data/textlayout";
 import { BlurType, Path, ShapeFrame, TableCell, TableCellType, Text } from "../data/classes";
 import { EL, elh } from "./el";
-import { ShapeView, isDiffShapeFrame } from "./shape";
+import { ShapeView } from "./shape";
 import { renderText2Path, renderTextLayout } from "../render/text";
 import { DViewCtx, PropsType } from "./viewctx";
 import { CursorLocate, TextLocate, locateCursor, locateNextCursor, locatePrevCursor, locateRange, locateText } from "../data/textlocate";
@@ -22,8 +22,10 @@ export class TableCellView extends ShapeView {
         const frame = props.frame;
         this.m_transform.m02 = frame.x;
         this.m_transform.m12 = frame.y;
-        this.m_size.width = frame.width;
-        this.m_size.height = frame.height;
+        this.m_frame.x = frame.x;
+        this.m_frame.y = frame.y;
+        this.m_frame.width = frame.width;
+        this.m_frame.height = frame.height;
         this.m_index = props.index;
         // this.afterInit();
     }
@@ -57,12 +59,14 @@ export class TableCellView extends ShapeView {
         }
 
         const frame = props.frame;
-        if (this.m_transform.m02 !== frame.x || this.m_transform.m12 !== frame.y || this.m_size.width !== frame.width || this.m_size.height !== frame.height) {
+        if (this.m_transform.m02 !== frame.x || this.m_transform.m12 !== frame.y || this.frame.width !== frame.width || this.frame.height !== frame.height) {
             // this.updateLayoutArgs(frame, undefined, undefined, undefined, undefined);
             this.m_transform.m02 = frame.x;
             this.m_transform.m12 = frame.y;
-            this.m_size.width = frame.width;
-            this.m_size.height = frame.height;
+            this.m_frame.x = frame.x;
+            this.m_frame.y = frame.y;
+            this.m_frame.width = frame.width;
+            this.m_frame.height = frame.height;
             this.m_textpath = undefined;
             this.m_layout = undefined; // todo
             this.m_path = undefined;
@@ -156,6 +160,10 @@ export class TableCellView extends ShapeView {
 
     locateNextCursor(index: number): number {
         return locateNextCursor(this.getLayout(), index);
+    }
+
+    get masked() {
+        return undefined;
     }
 
     getTextPath() {

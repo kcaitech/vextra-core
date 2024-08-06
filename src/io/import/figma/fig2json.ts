@@ -149,12 +149,29 @@ export const figToJson = (fileBuffer: Buffer | ArrayBuffer): object => {
     const json = schemaHelper[`decodeMessage`](dataBB)
     if (json.nodeChanges) for (const node of json.nodeChanges) {
         const vectorNetworkIndex = node.vectorData?.vectorNetworkBlob;
-        if (!Number.isInteger(vectorNetworkIndex)) continue;
-        const vectorNetworkBlob = json.blobs[vectorNetworkIndex]?.bytes;
-        if (!vectorNetworkBlob) continue;
-        const vectorNetwork = parseBlob('vectorNetwork', vectorNetworkBlob);
-        delete node.vectorData.vectorNetworkBlob;
-        node.vectorData.vectorNetwork = vectorNetwork;
+        if (Number.isInteger(vectorNetworkIndex)) {
+            const vectorNetworkBlob = json.blobs[vectorNetworkIndex]?.bytes;
+            if (vectorNetworkBlob) {
+                const vectorNetwork = parseBlob('vectorNetwork', vectorNetworkBlob);
+                delete node.vectorData.vectorNetworkBlob;
+                node.vectorData.vectorNetwork = vectorNetwork;
+            }
+        }
+
+        for (const geometry of [
+            (node.strokeGeometry as any[] || []).filter(item => Number.isInteger(item.commandsBlob)),
+            (node.fillGeometry as any[] || []).filter(item => Number.isInteger(item.commandsBlob)),
+        ]) {
+            if (geometry.length > 0) for (const geometryItem of geometry) {
+                const commandIndex = geometryItem.commandsBlob;
+                const commandsBlob = json.blobs[commandIndex]?.bytes;
+                if (commandsBlob) {
+                    const commands = parseBlob('commands', commandsBlob);
+                    delete geometryItem.commandsBlob;
+                    geometryItem.commands = commands;
+                }
+            }
+        }
     }
 
     return convertBlobsToBase64(json)

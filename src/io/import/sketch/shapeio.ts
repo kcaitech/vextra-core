@@ -233,7 +233,7 @@ export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun, i: n
 
     // const points = createNormalPoints();
 
-    const shape = new Artboard([i] as BasicArray<number>, id, name, ShapeType.Artboard, frame.trans, frame.size, style, new BasicArray<Shape>(...childs));
+    const shape = new Artboard([i] as BasicArray<number>, id, name, ShapeType.Artboard, frame.trans, style, new BasicArray<Shape>(...childs), frame.size);
 
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
@@ -260,7 +260,7 @@ export function importGroupShape(ctx: LoadContext, data: IJSON, f: ImportFun, i:
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON, i: number) => f(ctx, d, i));
-    const shape = new GroupShape([i] as BasicArray<number>, id, name, ShapeType.Group, frame.trans, frame.size, style, new BasicArray<Shape>(...childs));
+    const shape = new GroupShape([i] as BasicArray<number>, id, name, ShapeType.Group, frame.trans, style, new BasicArray<Shape>(...childs));
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     shape.exportOptions = exportOptions;
@@ -283,7 +283,7 @@ export function importShapeGroupShape(ctx: LoadContext, data: IJSON, f: ImportFu
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON, i: number) => f(ctx, d, i));
-    const shape = new BoolShape([i] as BasicArray<number>, id, name, ShapeType.BoolShape, frame.trans, frame.size, style, new BasicArray<Shape>(...childs));
+    const shape = new BoolShape([i] as BasicArray<number>, id, name, ShapeType.BoolShape, frame.trans, style, new BasicArray<Shape>(...childs));
     // shape.isBoolOpShape = true;
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
@@ -318,7 +318,7 @@ export function importImage(ctx: LoadContext, data: IJSON, f: ImportFun, i: numb
     const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, true);
     // shape.setImageMgr(env.mediaMgr);
     // const shape = new ImageShape([i] as BasicArray<number>, id, name, ShapeType.Image, frame, style, new BasicArray<PathSegment>(segment), imageRef);
-    const shape = new PathShape([i] as BasicArray<number>, id, name, ShapeType.Path, frame.trans, frame.size, style, new BasicArray<PathSegment>(segment));
+    const shape = new PathShape([i] as BasicArray<number>, id, name, ShapeType.Path, frame.trans, style, frame.size, new BasicArray<PathSegment>(segment));
     const fillColor = new Color(1, 216, 216, 216);
     const fill = new Fill(new BasicArray(), uuid(), true, FillType.Pattern, fillColor);
     fill.imageRef = imageRef;
@@ -352,7 +352,7 @@ export function importPage(ctx: LoadContext, data: IJSON, f: ImportFun): Page {
     // const isClosed = data['isClosed'];
 
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON, i: number) => f(ctx, d, i));
-    const shape = new Page(new BasicArray<number>(), id, name, ShapeType.Page, frame.trans, frame.size, style, new BasicArray<Shape>(...childs));
+    const shape = new Page(new BasicArray<number>(), id, name, ShapeType.Page, frame.trans, style, new BasicArray<Shape>(...childs));
     // shape.appendChilds(childs);
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
@@ -377,7 +377,7 @@ export function importPathShape(ctx: LoadContext, data: IJSON, f: ImportFun, i: 
 
     const segment = new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...points), data['isClosed'])
 
-    const shape = new PathShape([i] as BasicArray<number>, id, name, ShapeType.Path, frame.trans, frame.size, style, new BasicArray<PathSegment>(segment));
+    const shape = new PathShape([i] as BasicArray<number>, id, name, ShapeType.Path, frame.trans, style, frame.size, new BasicArray<PathSegment>(segment));
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     shape.exportOptions = exportOptions;
@@ -404,7 +404,7 @@ export function importRectShape(ctx: LoadContext, data: IJSON, f: ImportFun, i: 
     // const radius = new RectRadius(r, r, r, r);
 
     const segment: PathSegment = new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...points), data['isClosed']);
-    const shape = new RectShape([i] as BasicArray<number>, id, name, ShapeType.Rectangle, frame.trans, frame.size, style, new BasicArray<PathSegment>(segment));
+    const shape = new RectShape([i] as BasicArray<number>, id, name, ShapeType.Rectangle, frame.trans, style, frame.size, new BasicArray<PathSegment>(segment));
 
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
@@ -430,7 +430,7 @@ export function importTextShape(ctx: LoadContext, data: IJSON, f: ImportFun, i: 
     const textBehaviour = [TextBehaviour.Flexible, TextBehaviour.Fixed, TextBehaviour.FixWidthAndHeight][data['textBehaviour']] ?? TextBehaviour.Flexible;
     text.attr && (text.attr.textBehaviour = textBehaviour);
     // const isClosed = data['isClosed'];
-    const shape = new TextShape([i] as BasicArray<number>, id, name, ShapeType.Text, frame.trans, frame.size, style, text);
+    const shape = new TextShape([i] as BasicArray<number>, id, name, ShapeType.Text, frame.trans, style, frame.size, text);
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     shape.exportOptions = exportOptions;
@@ -455,7 +455,7 @@ export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun, i: num
     const id = uniqueId(ctx, data['symbolID']);
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON, i: number) => f(ctx, d, i));
     // const points = createNormalPoints();
-    const shape = new SymbolShape([i] as BasicArray<number>, id, name, ShapeType.Symbol, frame.trans, frame.size, style, new BasicArray<Shape>(...childs), new BasicMap());
+    const shape = new SymbolShape([i] as BasicArray<number>, id, name, ShapeType.Symbol, frame.trans, style, new BasicArray<Shape>(...childs), frame.size, new BasicMap());
 
     // env.symbolManager.addSymbol(id, name, env.pageId, shape);
     // shape.appendChilds(childs);
@@ -480,7 +480,7 @@ export function importSymbolRef(ctx: LoadContext, data: IJSON, f: ImportFun, i: 
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
 
-    const shape = new SymbolRefShape([i] as BasicArray<number>, id, name, ShapeType.SymbolRef, frame.trans, frame.size, style, data['symbolID'], new BasicMap());
+    const shape = new SymbolRefShape([i] as BasicArray<number>, id, name, ShapeType.SymbolRef, frame.trans, style, frame.size, data['symbolID'], new BasicMap());
 
     if (data['overrideValues']) importOverrides(shape, data['overrideValues']);
     importShapePropertys(shape, data);
