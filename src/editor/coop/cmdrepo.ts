@@ -589,7 +589,13 @@ class CmdSync {
         type: "duplicate",
         duplicateCmd: Cmd,
     }) {
-        this.receive([errorInfo.duplicateCmd])
+        if (this.postingcmds.length > 1) {
+            // 如果是batch提交的cmd，需要进行拉取
+            // 不然应该也不会出错，但会多次重复提交，一个一个的返回duplicateCmd
+            this.nettask.pull(errorInfo.duplicateCmd.version); // 理论上说这就是第一个batch的cmd
+        } else {
+            this.receive([errorInfo.duplicateCmd])
+        }
     }
 
     // 收到远程cmd
