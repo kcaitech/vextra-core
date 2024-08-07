@@ -6,7 +6,7 @@ import { GroupShapeView } from "./groupshape";
 import { EL, elh } from "./el";
 import { renderBorders, renderFills } from "../render";
 import { FrameGrid } from "../basic/framegrid";
-import { borders2path } from "./basic";
+import { borders2path } from "../editor/utils/path";
 
 function opPath(bop: BoolOp, path0: IPalPath, path1: IPalPath, isIntersect: boolean): IPalPath {
     switch (bop) {
