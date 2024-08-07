@@ -647,14 +647,9 @@ export class Api {
 
     shapeModifyOverlayPositionType(page: Page, shape: Shape, value: OverlayPositions) {
         checkShapeAtPage(page, shape)
-        const position = shape.overlayPositionType
-        if (!position) {
-            const val = new OverlayPosition(OverlayPositions.CENTER, new OverlayMargin())
-            this.addOp(basicapi.crdtSetAttr(shape, "overlayPositionType", val))
-        } else if (value !== position.position) {
-            const val = new OverlayPosition(value, new OverlayMargin())
-            this.addOp(basicapi.crdtSetAttr(shape, "overlayPositionType", val));
-        }
+        let overlayPositionType = shape.overlayPositionType
+        overlayPositionType = new OverlayPosition(value, new OverlayMargin())
+        this.addOp(basicapi.crdtSetAttr(shape, 'overlayPositionType', overlayPositionType))
 
     }
 
