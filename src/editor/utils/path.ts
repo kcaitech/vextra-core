@@ -1,18 +1,19 @@
 import { Api } from "../coop/recordapi";
-import { ContactForm, CurveMode, ShapeType } from "../../data/typesdefine";
+import { BorderPosition, ContactForm, CornerType, CurveMode, MarkerType, ShapeType } from "../../data/typesdefine";
 import { CurvePoint, PathShape, PathShape2, Shape } from "../../data/shape";
 import { Page } from "../../data/page";
 import { v4 } from "uuid";
 import { uuid } from "../../basic/uuid";
 import { BasicArray } from "../../data/basic";
 import { Matrix } from "../../basic/matrix";
-import { getHorizontalAngle } from "../page";
 import { ContactShape } from "../../data/contact";
 import { get_box_pagexy, get_nearest_border_point } from "../../data/utils";
 import { PathType } from "../../data/consts";
 import { importCurvePoint } from "../../data/baseimport";
-import { makeShapeTransform1By2, makeShapeTransform2By1 } from "../../data";
+import { Border, makeShapeTransform1By2, makeShapeTransform2By1, Path } from "../../data";
 import { ColVector3D } from "../../basic/matrix2";
+import { PathShapeView2, ShapeView } from "../../dataview";
+import { Cap, gPal, IPalPath, Join } from "../../basic/pal";
 
 interface XY {
     x: number
@@ -661,4 +662,182 @@ export function calculateInnerAnglePosition(percent: number, angle: number) {
     const newY = cy + ((maxpoint.y - cy) * percent);
 
     return { x: newX, y: newY };
+}
+
+export function borders2path(shape: ShapeView, borders: Border[]): Path {
+    // 还要判断边框的位置
+    let insidewidth = 0;
+    let outsidewidth = 0;
+
+    borders.forEach((b) => {
+        if (!b.isEnabled) return;
+        const sideSetting = b.sideSetting;
+        // todo
+        const thickness = (sideSetting.thicknessBottom + sideSetting.thicknessLeft + sideSetting.thicknessTop + sideSetting.thicknessRight) / 4;
+        if (b.position === BorderPosition.Center) {
+            insidewidth = Math.max(insidewidth, thickness / 2);
+            outsidewidth = Math.max(outsidewidth, thickness / 2);
+        } else if (b.position === BorderPosition.Inner) {
+            insidewidth = Math.max(insidewidth, thickness);
+        } else if (b.position === BorderPosition.Outer) {
+            outsidewidth = Math.max(outsidewidth, thickness);
+        }
+    })
+
+    if (insidewidth === 0 && outsidewidth === 0) return new Path();
+
+    if (insidewidth === outsidewidth) {
+        const path = shape.getPath();
+        const p0 = gPal.makePalPath(path.toString());
+        const newpath = p0.stroke({ width: (insidewidth + outsidewidth) });
+        p0.delete();
+        return new Path(newpath);
+    }
+    if (insidewidth === 0) {
+        const path = shape.getPathStr();
+        const p0 = gPal.makePalPath(path);
+        const p1 = gPal.makePalPath(path);
+        p0.stroke({ width: outsidewidth * 2 });
+        p0.subtract(p1);
+        const newpath = p0.toSVGString();
+        p0.delete();
+        p1.delete();
+        return new Path(newpath);
+    } else if (outsidewidth === 0) {
+        const path = shape.getPathStr();
+        const p0 = gPal.makePalPath(path);
+        const p1 = gPal.makePalPath(path);
+        // p0.dash(10, 10, 1);
+        p0.stroke({ width: insidewidth * 2 });
+        p0.intersection(p1);
+        const newpath = p0.toSVGString();
+        p0.delete();
+        p1.delete();
+        return new Path(newpath);
+    } else {
+        const path = shape.getPathStr();
+        const p0 = gPal.makePalPath(path);
+        const p1 = gPal.makePalPath(path);
+        const p2 = gPal.makePalPath(path);
+
+        p0.stroke({ width: insidewidth * 2 });
+        p1.stroke({ width: outsidewidth * 2 });
+
+        if (insidewidth > outsidewidth) {
+            p0.intersection(p2);
+        } else {
+            p1.subtract(p2);
+        }
+        p0.union(p1);
+        const newpath = p0.toSVGString();
+        p0.delete();
+        p1.delete();
+        p2.delete();
+        return new Path(newpath);
+    }
+}
+
+export function border2path(shape: ShapeView, border: Border) {
+    const dashPath = (p: IPalPath) => p.dash(10, 10, 1);
+
+    const position = border.position;
+    const setting = border.sideSetting;
+    const isDash = border.borderStyle.gap;
+
+    const startMarker = shape.startMarkerType;
+    const endMarker = shape.endMarkerType;
+
+    const mark =  (shape instanceof PathShapeView2)
+        && !!(startMarker || endMarker)
+        && shape.segments.length === 1
+        && shape.segments[0].isClosed;
+
+    const isEven = (setting.thicknessTop + setting.thicknessRight + setting.thicknessBottom + setting.thicknessLeft) / 4 === setting.thicknessLeft;
+
+    let __path_str = '';
+
+    const join = (() => {
+        const type = border.cornerType;
+        if (type === CornerType.Round) return Join.ROUND;
+        else if (type === CornerType.Bevel) return Join.BEVEL;
+        else return Join.MITER;
+    })();
+
+    const cap = (() => {
+        const end = shape.style.endMarkerType;
+        const start = shape.style.startMarkerType;
+        if (end === MarkerType.Round && start === MarkerType.Round) return Cap.ROUND;
+        else if (end === MarkerType.Square && start === MarkerType.Square) return Cap.SQUARE;
+        else return Cap.BUTT;
+    })();
+
+    const basicParams: any = {
+        join: { value: join },
+        cap: { value: cap }
+    };
+
+    const path = shape.getPathStr();
+    const thickness = setting.thicknessTop;
+
+    if (mark) {
+        const width = shape.frame.width;
+        const height = shape.frame.height;
+        const points = shape.segments[0].points;
+        const lastPoint = points[points.length - 1];
+        const preLastPoint = points[points.length - 2];
+
+        const p0 = gPal.makePalPath(path);
+        if (isDash) dashPath(p0);
+        p0.stroke(Object.assign(basicParams, { width: thickness }));
+
+        if (endMarker === MarkerType.OpenArrow) {
+            const radians = getRadians(preLastPoint as CurvePoint, lastPoint as CurvePoint);
+
+        }
+
+    } else if (isEven) {
+        if (position === BorderPosition.Outer) {
+            const p0 = gPal.makePalPath(path);
+            const p1 = gPal.makePalPath(path);
+            if (isDash) dashPath(p0);
+            p0.stroke(Object.assign(basicParams, { width: thickness * 2 }));
+            p0.subtract(p1);
+            __path_str = p0.toSVGString();
+            p0.delete();
+            p1.delete();
+        } else if (position === BorderPosition.Center) {
+            const p0 = gPal.makePalPath(path);
+            // const tp = gPal.makePalPath('M100 -50 h60 v80 h-60 z');
+            if (isDash) dashPath(p0);
+            p0.stroke(Object.assign(basicParams, { width: thickness }));
+            // tp.stroke(Object.assign(basicParams, { width: thickness }));
+            // p0.union(tp);
+            __path_str = p0.toSVGString();
+            p0.delete();
+        } else {
+            const path = shape.getPathStr();
+            const p0 = gPal.makePalPath(path);
+            const p1 = gPal.makePalPath(path);
+            if (isDash) dashPath(p0);
+            p0.stroke(Object.assign(basicParams, { width: thickness * 2 }));
+            p0.intersection(p1);
+            __path_str = p0.toSVGString();
+            p0.delete();
+            p1.delete();
+        }
+    } else {
+
+    }
+
+    return new Path(__path_str);
+
+    function getRadians(pre: CurvePoint, next: CurvePoint) {
+        if (!pre.hasFrom && !next.hasTo) { // 直线
+            const deltaX = next.x - pre.x;
+            const deltaY = next.y - pre.y;
+            return Math.atan2(deltaY, deltaX);
+        } else {
+            return 1;
+        }
+    }
 }

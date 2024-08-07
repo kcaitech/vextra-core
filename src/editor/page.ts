@@ -112,6 +112,7 @@ import {
 import { is_circular_ref2 } from "./utils/ref_check";
 import { BorderSideSetting, BorderStyle, ExportFormat, Point2D, Shadow } from "../data/baseclasses";
 import {
+    border2path,
     calculateInnerAnglePosition,
     getPolygonPoints,
     getPolygonVertices,
@@ -125,7 +126,6 @@ import { unable_to_migrate } from "./utils/migrate";
 import {
     adapt2Shape,
     BoolShapeView,
-    border2path,
     PageView,
     render2path,
     ShapeView,
@@ -3743,7 +3743,7 @@ export class PageEditor {
         }
     }
 
-    outlineShapes(shapes: ShapeView[]) {
+    outlineShapes(shapes: ShapeView[], suffix?: string) {
         try {
             const document = this.__document;
             const page = this.__page;
@@ -3773,26 +3773,29 @@ export class PageEditor {
                     pathShape = api.shapeInsert(document, page, parent, pathShape, index) as PathShape;
                     ids.push(pathShape.id);
                 } else {
-                    ids.push(view.data.id);
                     const borders = view.getBorders();
                     if (!borders.length) continue;
                     const shape = adapt2Shape(view);
                     const parent = shape.parent as GroupShape;
-                    for (let i = borders.length - 1; i > -1; i--) {
-                        const border = borders[i];
-                        const path = border2path(view, border);
+                    const border2shape = (border: Border) => {
                         const copyStyle = findUsableFillStyle(view);
                         const style: Style = this.cloneStyle(copyStyle);
-                        style.fills[0].color = border.color;
+                        const fill = new Fill([0] as BasicArray<number>, uuid(), true, border.fillType, border.color);
+                        fill.gradient = border.gradient;
+                        if (fill.fillType === FillType.Pattern) fill.fillType = FillType.SolidColor;
+                        style.fills = new BasicArray<Fill>(fill);
                         style.borders.length = 0;
-                        let pathShape = newPathShape(view.name + '(stroke)', view.frame, path, style);
-                        pathShape.transform = shape.transform.clone();
+                        const path = border2path(view, border);
+                        let pathshape = newPathShape(view.name + suffix, view.frame, path, style);
+                        pathshape.transform = shape.transform.clone();
                         const index = parent.indexOfChild(shape);
-                        pathShape = api.shapeInsert(document, page, parent, pathShape, index + 1) as PathShape;
-                        if (border.position !== BorderPosition.Inner) update_frame_by_points(api, page, pathShape);
-                        ids.push(pathShape.id);
+                        pathshape = api.shapeInsert(document, page, parent, pathshape, index + 1) as PathShape;
+                        if (border.position !== BorderPosition.Inner) update_frame_by_points(api, page, pathshape);
+                        ids.push(pathshape.id);
                     }
+                    for (let i = borders.length - 1; i > -1; i--) border2shape(borders[i]);
                     api.deleteBorders(page, shape, 0, borders.length);
+                    ids.push(view.data.id);
                 }
             }
             this.__repo.commit();
