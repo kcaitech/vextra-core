@@ -12,7 +12,7 @@ import { PathType } from "../../data/consts";
 import { importCurvePoint } from "../../data/baseimport";
 import { Border, makeShapeTransform1By2, makeShapeTransform2By1, Path } from "../../data";
 import { ColVector3D } from "../../basic/matrix2";
-import { PathShapeView2, ShapeView } from "../../dataview";
+import { PathShapeView, ShapeView } from "../../dataview";
 import { Cap, gPal, IPalPath, Join } from "../../basic/pal";
 
 interface XY {
@@ -588,34 +588,6 @@ export function is_straight(shape: Shape) {
     return points.length === 2 && !points[0].hasFrom && !points[1].hasTo; // 两个点的，那就是直线
 }
 
-// export function get_rotate_for_straight(shape: PathShape, v: number) {
-//     const points = (shape as PathShape)?.pathsegs[0]?.points;
-
-//     const f = shape.size, m = shape.matrix2Root();
-//     m.preScale(f.width, f.height);
-//     const p1 = points[0];
-//     const p2 = points[1];
-
-//     if (!p1 || !p2) {
-//         return 0;
-//     }
-
-//     const lt = m.computeCoord2(p1.x, p1.y);
-//     const rb = m.computeCoord2(p2.x, p2.y);
-//     const real_r = Number(getHorizontalAngle(lt, rb).toFixed(2));
-
-//     let dr = v - real_r;
-//     // todo flip
-//     // if (shape.isFlippedHorizontal) {
-//     //     dr = -dr;
-//     // }
-//     // if (shape.isFlippedVertical) {
-//     //     dr = -dr;
-//     // }
-
-//     return (shape.rotation || 0) + dr;
-// }
-
 // 生成一个顶点为 (0.5, 0)，中心点为 (0.5, 0.5)，边数为 n 的等边多边形的顶点坐标
 export function getPolygonVertices(sidesCount: number, offsetPercent?: number) {
     const cx = 0.5;
@@ -747,10 +719,13 @@ export function border2path(shape: ShapeView, border: Border) {
     const startMarker = shape.startMarkerType;
     const endMarker = shape.endMarkerType;
 
-    const mark =  (shape instanceof PathShapeView2)
+    const width = shape.frame.width;
+    const height = shape.frame.height;
+
+    const mark = (shape instanceof PathShapeView)
         && !!(startMarker || endMarker)
         && shape.segments.length === 1
-        && shape.segments[0].isClosed;
+        && !shape.segments[0].isClosed;
 
     const isEven = (setting.thicknessTop + setting.thicknessRight + setting.thicknessBottom + setting.thicknessLeft) / 4 === setting.thicknessLeft;
 
@@ -780,21 +755,15 @@ export function border2path(shape: ShapeView, border: Border) {
     const thickness = setting.thicknessTop;
 
     if (mark) {
-        const width = shape.frame.width;
-        const height = shape.frame.height;
-        const points = shape.segments[0].points;
-        const lastPoint = points[points.length - 1];
-        const preLastPoint = points[points.length - 2];
-
         const p0 = gPal.makePalPath(path);
         if (isDash) dashPath(p0);
         p0.stroke(Object.assign(basicParams, { width: thickness }));
+        const __start = getStartMarkPath();
+        if (__start) p0.union(__start);
+        const __end = getEndMarkPath();
+        if (__end) p0.union(__end);
 
-        if (endMarker === MarkerType.OpenArrow) {
-            const radians = getRadians(preLastPoint as CurvePoint, lastPoint as CurvePoint);
-
-        }
-
+        __path_str = p0.toSVGString();
     } else if (isEven) {
         if (position === BorderPosition.Outer) {
             const p0 = gPal.makePalPath(path);
@@ -807,11 +776,8 @@ export function border2path(shape: ShapeView, border: Border) {
             p1.delete();
         } else if (position === BorderPosition.Center) {
             const p0 = gPal.makePalPath(path);
-            // const tp = gPal.makePalPath('M100 -50 h60 v80 h-60 z');
             if (isDash) dashPath(p0);
             p0.stroke(Object.assign(basicParams, { width: thickness }));
-            // tp.stroke(Object.assign(basicParams, { width: thickness }));
-            // p0.union(tp);
             __path_str = p0.toSVGString();
             p0.delete();
         } else {
@@ -833,11 +799,170 @@ export function border2path(shape: ShapeView, border: Border) {
 
     function getRadians(pre: CurvePoint, next: CurvePoint) {
         if (!pre.hasFrom && !next.hasTo) { // 直线
-            const deltaX = next.x - pre.x;
-            const deltaY = next.y - pre.y;
+            const deltaX = (next.x - pre.x) * width;
+            const deltaY = (next.y - pre.y) * height;
             return Math.atan2(deltaY, deltaX);
         } else {
             return 1;
+        }
+    }
+
+    function getStartMarkPath() {
+        if (!startMarker) return undefined;
+        const points = (shape as PathShapeView).segments[0].points;
+        const first = points[0];
+        const second = points[1];
+
+        if (startMarker === MarkerType.OpenArrow) {
+            const radians = getRadians(first as CurvePoint, second as CurvePoint);
+            const fixedX = first.x * width;
+            const fixedY = first.y * height;
+            const __mark_points = [
+                { x: fixedX + 3.5 * thickness, y: fixedY - 3 * thickness },
+                { x: fixedX - 0.5 * thickness, y: fixedY },
+                { x: fixedX + 3.5 * thickness, y: fixedY + 3 * thickness }
+            ];
+            const m = new Matrix();
+            m.rotate(radians, fixedX, fixedY);
+            __mark_points.forEach(i => {
+                const __p = m.computeCoord3(i);
+                i.x = __p.x;
+                i.y = __p.y;
+            });
+            const [p1, p2, p3] = __mark_points;
+            const pathstr = `M${p1.x} ${p1.y} L${p2.x} ${p2.y} L${p3.x} ${p3.y}`;
+            const __end = gPal.makePalPath(pathstr);
+            __end.stroke({
+                width: thickness,
+                cap: { value: Cap.ROUND } as any,
+                join: { value: Join.ROUND } as any,
+            });
+
+            return __end;
+        }else if (startMarker === MarkerType.FilledArrow) {
+            const radians = getRadians(first as CurvePoint, second as CurvePoint);
+            const fixedX = first.x * width;
+            const fixedY = first.y * height;
+            const __mark_points = [
+                { x: fixedX + 3 * thickness, y: fixedY - 3 * thickness },
+                { x: fixedX - 3 * thickness, y: fixedY },
+                { x: fixedX + 3 * thickness, y: fixedY + 3 * thickness }
+            ];
+            const m = new Matrix();
+            m.rotate(radians, fixedX, fixedY);
+            __mark_points.forEach(i => {
+                const __p = m.computeCoord3(i);
+                i.x = __p.x;
+                i.y = __p.y;
+            });
+            const [p1, p2, p3] = __mark_points;
+            const pathstr = `M${p1.x} ${p1.y} L${p2.x} ${p2.y} L${p3.x} ${p3.y} z`;
+            return gPal.makePalPath(pathstr);
+        } else if (startMarker === MarkerType.FilledCircle) {
+            const fixedX = first.x * width;
+            const fixedY = first.y * height;
+            const radius = thickness * 3;
+            const pathstr = `M${fixedX} ${fixedY} h ${-radius} a${radius} ${radius} 0 1 0 ${2 * radius} 0 a${radius} ${radius} 0 1 0 ${-2 * radius} 0`;
+            return gPal.makePalPath(pathstr);
+        } else if (startMarker === MarkerType.FilledSquare) {
+            const radians = getRadians(first as CurvePoint, second as CurvePoint);
+            const fixedX = first.x * width;
+            const fixedY = first.y * height;
+            const __mark_points = [
+                { x: fixedX, y: fixedY - 3 * thickness },
+                { x: fixedX - 3 * thickness, y: fixedY },
+                { x: fixedX, y: fixedY + 3 * thickness },
+                { x: fixedX + 3 * thickness, y: fixedY }
+            ];
+            const m = new Matrix();
+            m.rotate(radians, fixedX, fixedY);
+            __mark_points.forEach(i => {
+                const __p = m.computeCoord3(i);
+                i.x = __p.x;
+                i.y = __p.y;
+            });
+            const [p1, p2, p3, p4] = __mark_points;
+            const pathstr = `M${p1.x} ${p1.y} L${p2.x} ${p2.y} L${p3.x} ${p3.y} L${p4.x} ${p4.y} z`;
+            return gPal.makePalPath(pathstr);
+        }
+    }
+
+    function getEndMarkPath() {
+        if (!endMarker) return;
+        const points = (shape as PathShapeView).segments[0].points;
+        const lastPoint = points[points.length - 1];
+        const preLastPoint = points[points.length - 2];
+        if (endMarker === MarkerType.OpenArrow) {
+            const radians = getRadians(preLastPoint as CurvePoint, lastPoint as CurvePoint);
+            const fixedX = lastPoint.x * width;
+            const fixedY = lastPoint.y * height;
+            const __mark_points = [
+                { x: fixedX - 3.5 * thickness, y: fixedY - 3 * thickness },
+                { x: fixedX + 0.5 * thickness, y: fixedY },
+                { x: fixedX - 3.5 * thickness, y: fixedY + 3 * thickness }
+            ];
+            const m = new Matrix();
+            m.rotate(radians, fixedX, fixedY);
+            __mark_points.forEach(i => {
+                const __p = m.computeCoord3(i);
+                i.x = __p.x;
+                i.y = __p.y;
+            });
+            const [p1, p2, p3] = __mark_points;
+            const pathstr = `M${p1.x} ${p1.y} L${p2.x} ${p2.y} L${p3.x} ${p3.y}`;
+            const __end = gPal.makePalPath(pathstr);
+            __end.stroke({
+                width: thickness,
+                cap: { value: Cap.ROUND } as any,
+                join: { value: Join.ROUND } as any,
+            });
+
+            return __end;
+        } else if (endMarker === MarkerType.FilledArrow) {
+            const radians = getRadians(preLastPoint as CurvePoint, lastPoint as CurvePoint);
+            const fixedX = lastPoint.x * width;
+            const fixedY = lastPoint.y * height;
+            const __mark_points = [
+                { x: fixedX - 3 * thickness, y: fixedY - 3 * thickness },
+                { x: fixedX + 3 * thickness, y: fixedY },
+                { x: fixedX - 3 * thickness, y: fixedY + 3 * thickness }
+            ];
+            const m = new Matrix();
+            m.rotate(radians, fixedX, fixedY);
+            __mark_points.forEach(i => {
+                const __p = m.computeCoord3(i);
+                i.x = __p.x;
+                i.y = __p.y;
+            });
+            const [p1, p2, p3] = __mark_points;
+            const pathstr = `M${p1.x} ${p1.y} L${p2.x} ${p2.y} L${p3.x} ${p3.y} z`;
+            return gPal.makePalPath(pathstr);
+        } else if (endMarker === MarkerType.FilledCircle) {
+            const fixedX = lastPoint.x * width;
+            const fixedY = lastPoint.y * height;
+            const radius = thickness * 3;
+            const pathstr = `M${fixedX} ${fixedY} h ${-radius} a${radius} ${radius} 0 1 0 ${2 * radius} 0 a${radius} ${radius} 0 1 0 ${-2 * radius} 0`;
+            return gPal.makePalPath(pathstr);
+        } else if (endMarker === MarkerType.FilledSquare) {
+            const radians = getRadians(preLastPoint as CurvePoint, lastPoint as CurvePoint);
+            const fixedX = lastPoint.x * width;
+            const fixedY = lastPoint.y * height;
+            const __mark_points = [
+                { x: fixedX, y: fixedY - 3 * thickness },
+                { x: fixedX + 3 * thickness, y: fixedY },
+                { x: fixedX, y: fixedY + 3 * thickness },
+                { x: fixedX - 3 * thickness, y: fixedY }
+            ];
+            const m = new Matrix();
+            m.rotate(radians, fixedX, fixedY);
+            __mark_points.forEach(i => {
+                const __p = m.computeCoord3(i);
+                i.x = __p.x;
+                i.y = __p.y;
+            });
+            const [p1, p2, p3, p4] = __mark_points;
+            const pathstr = `M${p1.x} ${p1.y} L${p2.x} ${p2.y} L${p3.x} ${p3.y} L${p4.x} ${p4.y} z`;
+            return gPal.makePalPath(pathstr);
         }
     }
 }

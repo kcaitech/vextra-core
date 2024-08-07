@@ -3794,8 +3794,12 @@ export class PageEditor {
                         ids.push(pathshape.id);
                     }
                     for (let i = borders.length - 1; i > -1; i--) border2shape(borders[i]);
-                    api.deleteBorders(page, shape, 0, borders.length);
-                    ids.push(view.data.id);
+                    if (shape.style.fills.length) {
+                        api.deleteBorders(page, shape, 0, borders.length);
+                        ids.push(view.data.id);
+                    } else {
+                        api.shapeDelete(document, page, parent, parent.indexOfChild(shape));
+                    }
                 }
             }
             this.__repo.commit();
