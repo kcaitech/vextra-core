@@ -47,7 +47,7 @@ export class Line extends Array<GraphArray> {
     // public actualBoundingBoxDescent: number = 0;
 
     get actualBoundingBoxDescent() {
-        return (this.maxFontSize * TEXT_BASELINE_RATIO);
+        return Math.round(this.maxFontSize * TEXT_BASELINE_RATIO);
     }
     public x: number = 0;
     public y: number = 0;
