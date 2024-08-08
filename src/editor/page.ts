@@ -3771,6 +3771,7 @@ export class PageEditor {
                     const index = parent.indexOfChild(shape);
                     api.shapeDelete(document, page, parent, index);
                     pathShape = api.shapeInsert(document, page, parent, pathShape, index) as PathShape;
+                    update_frame_by_points(api, page, pathShape);
                     ids.push(pathShape.id);
                 } else {
                     const borders = view.getBorders();
@@ -3790,7 +3791,7 @@ export class PageEditor {
                         pathshape.transform = shape.transform.clone();
                         const index = parent.indexOfChild(shape);
                         pathshape = api.shapeInsert(document, page, parent, pathshape, index + 1) as PathShape;
-                        if (border.position !== BorderPosition.Inner) update_frame_by_points(api, page, pathshape);
+                        update_frame_by_points(api, page, pathshape);
                         ids.push(pathshape.id);
                     }
                     for (let i = borders.length - 1; i > -1; i--) border2shape(borders[i]);

@@ -12,7 +12,7 @@ import { PathType } from "../../data/consts";
 import { importCurvePoint } from "../../data/baseimport";
 import { Border, makeShapeTransform1By2, makeShapeTransform2By1, Path } from "../../data";
 import { ColVector3D } from "../../basic/matrix2";
-import { PathShapeView, ShapeView } from "../../dataview";
+import { ContactLineView, PathShapeView, ShapeView } from "../../dataview";
 import { Cap, gPal, IPalPath, Join } from "../../basic/pal";
 
 interface XY {
@@ -773,34 +773,43 @@ export function border2path(shape: ShapeView, border: Border) {
 
         __path_str = p0.toSVGString();
     } else if (isEven) {
-        if (position === BorderPosition.Outer) {
-            const p0 = gPal.makePalPath(path);
-            const p1 = gPal.makePalPath(path);
-            if (isDash) dashPath(p0);
-            p0.stroke(Object.assign(basicParams, { width: thickness * 2 }));
-            p0.subtract(p1);
-            __path_str = p0.toSVGString();
-            p0.delete();
-            p1.delete();
-        } else if (position === BorderPosition.Center) {
+        const __open = (shape as PathShapeView).segments.some(i => !i.isClosed);
+        if (__open) {
             const p0 = gPal.makePalPath(path);
             if (isDash) dashPath(p0);
             p0.stroke(Object.assign(basicParams, { width: thickness }));
             __path_str = p0.toSVGString();
             p0.delete();
         } else {
-            const path = shape.getPathStr();
-            const p0 = gPal.makePalPath(path);
-            const p1 = gPal.makePalPath(path);
-            if (isDash) dashPath(p0);
-            p0.stroke(Object.assign(basicParams, { width: thickness * 2 }));
-            p0.intersection(p1);
-            __path_str = p0.toSVGString();
-            p0.delete();
-            p1.delete();
+            if (position === BorderPosition.Outer) {
+                const p0 = gPal.makePalPath(path);
+                const p1 = gPal.makePalPath(path);
+                if (isDash) dashPath(p0);
+                p0.stroke(Object.assign(basicParams, { width: thickness * 2 }));
+                p0.subtract(p1);
+                __path_str = p0.toSVGString();
+                p0.delete();
+                p1.delete();
+            } else if (position === BorderPosition.Center) {
+                const p0 = gPal.makePalPath(path);
+                if (isDash) dashPath(p0);
+                p0.stroke(Object.assign(basicParams, { width: thickness }));
+                __path_str = p0.toSVGString();
+                p0.delete();
+            } else {
+                const path = shape.getPathStr();
+                const p0 = gPal.makePalPath(path);
+                const p1 = gPal.makePalPath(path);
+                if (isDash) dashPath(p0);
+                p0.stroke(Object.assign(basicParams, { width: thickness * 2 }));
+                p0.intersection(p1);
+                __path_str = p0.toSVGString();
+                p0.delete();
+                p1.delete();
+            }
         }
     } else {
-        if (shape.data.haveEdit) {
+        if (!shape.data.haveEdit) {
             const path = strokeOdd()
             if (path) __path_str = path.toSVGString();
         }
@@ -860,7 +869,8 @@ export function border2path(shape: ShapeView, border: Border) {
 
     function getStartMarkPath() {
         if (!startMarker) return undefined;
-        const points = (shape as PathShapeView).segments[0].points;
+        let points = (shape as PathShapeView).segments[0].points;
+        if (shape instanceof ContactLineView) points = shape.getPoints();
         const first = points[0];
         const second = points[1];
 
@@ -940,7 +950,8 @@ export function border2path(shape: ShapeView, border: Border) {
 
     function getEndMarkPath() {
         if (!endMarker) return;
-        const points = (shape as PathShapeView).segments[0].points;
+        let points = (shape as PathShapeView).segments[0].points;
+        if (shape instanceof ContactLineView) points = shape.getPoints();
         const lastPoint = points[points.length - 1];
         const preLastPoint = points[points.length - 2];
         if (endMarker === MarkerType.OpenArrow) {
@@ -1018,6 +1029,7 @@ export function border2path(shape: ShapeView, border: Border) {
     }
 
     function getOddSide(thickness: number, path: string) {
+        if (!(thickness > 0)) return;
         if (position === BorderPosition.Inner) {
             const p0 = gPal.makePalPath(shape.getPathStr());
             const p1 = gPal.makePalPath(path);
@@ -1041,7 +1053,7 @@ export function border2path(shape: ShapeView, border: Border) {
     }
 
     function strokeOdd() {
-        let path = getOddSide(setting.thicknessTop, `M0 0 L${width} 0`);
+        let path = getOddSide(setting.thicknessTop, `M0 0 h${width}`);
 
         const right = getOddSide(setting.thicknessRight, `M${width} 0 L${width} ${height}`);
         if (right && path) {
@@ -1065,7 +1077,7 @@ export function border2path(shape: ShapeView, border: Border) {
         }
 
         const __cor = corner();
-        if (__cor) path.union(__cor);
+        if (path && __cor) path.union(__cor);
 
         return path;
     }
