@@ -758,8 +758,16 @@ export function border2path(shape: ShapeView, border: Border) {
         const p0 = gPal.makePalPath(path);
         if (isDash) dashPath(p0);
         p0.stroke(Object.assign(basicParams, { width: thickness }));
+
+        const startCap = getStartCap();
+        if (startCap) p0.union(startCap);
+
+        const endCap = getEndCap();
+        if (endCap) p0.union(endCap);
+
         const __start = getStartMarkPath();
         if (__start) p0.union(__start);
+
         const __end = getEndMarkPath();
         if (__end) p0.union(__end);
 
@@ -797,14 +805,54 @@ export function border2path(shape: ShapeView, border: Border) {
 
     return new Path(__path_str);
 
-    function getRadians(pre: CurvePoint, next: CurvePoint) {
-        if (!pre.hasFrom && !next.hasTo) { // 直线
+    function getRadians(pre: CurvePoint, next: CurvePoint, isEnd?: boolean) {
+        if (!pre.hasFrom && !next.hasTo) {
             const deltaX = (next.x - pre.x) * width;
             const deltaY = (next.y - pre.y) * height;
             return Math.atan2(deltaY, deltaX);
         } else {
-            return 1;
+            const p0 = { x: pre.x * width, y: pre.y * height };
+            const p3 = { x: next.x * width, y: next.y * height };
+
+            const p1 = { x: (pre.fromX || pre.x) * width, y: (pre.fromY || pre.y) * height };
+            const p2 = { x: (next.toX || next.x) * width, y: (next.toY || next.y) * height }
+
+            return tangent(p0, p1, p2, p3, isEnd ? 1 : 0);
         }
+
+        function tangent(p0: XY, p1: XY, p2: XY, p3: XY, t: number) {
+            if (pre.fromX !== undefined && next.toX !== undefined) {
+                const tangent = {
+                    x: 3 * (1 - t) ** 2 * (p1.x - p0.x) + 6 * (1 - t) * t * (p2.x - p1.x) + 3 * t ** 2 * (p3.x - p2.x),
+                    y: 3 * (1 - t) ** 2 * (p1.y - p0.y) + 6 * (1 - t) * t * (p2.y - p1.y) + 3 * t ** 2 * (p3.y - p2.y),
+                }
+                return Math.atan2(tangent.y, tangent.x);
+            } else if (next.toX !== undefined) {
+                let dx = 2 * ((1 - t) * (p2.x - p0.x) + t * (p3.x - p2.x));
+                let dy = 2 * ((1 - t) * (p2.y - p0.y) + t * (p3.y - p2.y));
+                return Math.atan2(dy, dx);
+            } else {
+                let dx = 2 * ((1 - t) * (p1.x - p0.x) + t * (p3.x - p1.x));
+                let dy = 2 * ((1 - t) * (p1.y - p0.y) + t * (p3.y - p1.y));
+                return Math.atan2(dy, dx)
+            }
+        }
+    }
+
+    function getStartCap() {
+        if (startMarker !== MarkerType.Round && startMarker !== MarkerType.Square) return;
+        const round = gPal.makePalPath(path);
+        const cap = startMarker === MarkerType.Round ? Cap.ROUND : Cap.SQUARE;
+        round.stroke({ cap: { value: cap } as any, width: thickness, join: { value: join } as any });
+        return round;
+    }
+
+    function getEndCap() {
+        if (endMarker !== MarkerType.Round && endMarker !== MarkerType.Square) return;
+        const round = gPal.makePalPath(path);
+        const cap = endMarker === MarkerType.Round ? Cap.ROUND : Cap.SQUARE;
+        round.stroke({ cap: { value: cap } as any, width: thickness, join: { value: join } as any });
+        return round;
     }
 
     function getStartMarkPath() {
@@ -839,7 +887,7 @@ export function border2path(shape: ShapeView, border: Border) {
             });
 
             return __end;
-        }else if (startMarker === MarkerType.FilledArrow) {
+        } else if (startMarker === MarkerType.FilledArrow) {
             const radians = getRadians(first as CurvePoint, second as CurvePoint);
             const fixedX = first.x * width;
             const fixedY = first.y * height;
@@ -893,7 +941,7 @@ export function border2path(shape: ShapeView, border: Border) {
         const lastPoint = points[points.length - 1];
         const preLastPoint = points[points.length - 2];
         if (endMarker === MarkerType.OpenArrow) {
-            const radians = getRadians(preLastPoint as CurvePoint, lastPoint as CurvePoint);
+            const radians = getRadians(preLastPoint as CurvePoint, lastPoint as CurvePoint, true);
             const fixedX = lastPoint.x * width;
             const fixedY = lastPoint.y * height;
             const __mark_points = [
@@ -919,7 +967,7 @@ export function border2path(shape: ShapeView, border: Border) {
 
             return __end;
         } else if (endMarker === MarkerType.FilledArrow) {
-            const radians = getRadians(preLastPoint as CurvePoint, lastPoint as CurvePoint);
+            const radians = getRadians(preLastPoint as CurvePoint, lastPoint as CurvePoint, true);
             const fixedX = lastPoint.x * width;
             const fixedY = lastPoint.y * height;
             const __mark_points = [
@@ -944,7 +992,7 @@ export function border2path(shape: ShapeView, border: Border) {
             const pathstr = `M${fixedX} ${fixedY} h ${-radius} a${radius} ${radius} 0 1 0 ${2 * radius} 0 a${radius} ${radius} 0 1 0 ${-2 * radius} 0`;
             return gPal.makePalPath(pathstr);
         } else if (endMarker === MarkerType.FilledSquare) {
-            const radians = getRadians(preLastPoint as CurvePoint, lastPoint as CurvePoint);
+            const radians = getRadians(preLastPoint as CurvePoint, lastPoint as CurvePoint, true);
             const fixedX = lastPoint.x * width;
             const fixedY = lastPoint.y * height;
             const __mark_points = [
