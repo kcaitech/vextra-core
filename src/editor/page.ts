@@ -3767,6 +3767,7 @@ export class PageEditor {
                     }
                     let pathShape = newPathShape(view.name, view.frame, path, style);
                     pathShape.transform = shape.transform.clone();
+                    pathShape.mask = shape.mask;
                     const parent = shape.parent as GroupShape;
                     const index = parent.indexOfChild(shape);
                     api.shapeDelete(document, page, parent, index);
@@ -3789,6 +3790,7 @@ export class PageEditor {
                         const path = border2path(view, border);
                         let pathshape = newPathShape(view.name + suffix, view.frame, path, style);
                         pathshape.transform = shape.transform.clone();
+                        pathshape.mask = shape.mask;
                         const index = parent.indexOfChild(shape);
                         pathshape = api.shapeInsert(document, page, parent, pathshape, index + 1) as PathShape;
                         update_frame_by_points(api, page, pathshape);
