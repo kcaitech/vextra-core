@@ -727,7 +727,7 @@ export function border2path(shape: ShapeView, border: Border) {
         && shape.segments.length === 1
         && !shape.segments[0].isClosed;
 
-    const isEven = !shape.data.haveEdit && (setting.thicknessTop + setting.thicknessRight + setting.thicknessBottom + setting.thicknessLeft) / 4 === setting.thicknessLeft;
+    const isEven = (setting.thicknessTop + setting.thicknessRight + setting.thicknessBottom + setting.thicknessLeft) / 4 === setting.thicknessLeft;
 
     let __path_str = '';
 
@@ -800,8 +800,10 @@ export function border2path(shape: ShapeView, border: Border) {
             p1.delete();
         }
     } else {
-        const path = strokeOdd()
-        if (path) __path_str = path.toSVGString();
+        if (shape.data.haveEdit) {
+            const path = strokeOdd()
+            if (path) __path_str = path.toSVGString();
+        }
     }
 
     return new Path(__path_str);
