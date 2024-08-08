@@ -800,27 +800,7 @@ export function border2path(shape: ShapeView, border: Border) {
             p1.delete();
         }
     } else {
-        let path = getTop();
-
-        const right = getRight();
-        if (right && path) {
-            path.union(right);
-        } else if (right) {
-            path = right;
-        }
-        const bottom = getBottom();
-        if (bottom && path) {
-            path.union(bottom);
-        } else if (bottom) {
-            path = bottom;
-        }
-        const left = getLeft();
-        if (left && path) {
-            path.union(left);
-        } else if (left) {
-            path = left;
-        }
-
+        const path = strokeOdd()
         if (path) __path_str = path.toSVGString();
     }
 
@@ -1035,59 +1015,129 @@ export function border2path(shape: ShapeView, border: Border) {
         }
     }
 
-    function getTop() {
-        const thickness = border.sideSetting.thicknessTop;
-        if (!thickness) return;
+    function getOddSide(thickness: number, path: string) {
         if (position === BorderPosition.Inner) {
             const p0 = gPal.makePalPath(shape.getPathStr());
-            const path = `M0 0 L${width} 0`;
             const p1 = gPal.makePalPath(path);
             if (isDash) dashPath(p1);
             p1.stroke(Object.assign(basicParams, { width: thickness * 2 }));
             p1.intersection(p0);
+            return p1;
+        } else if (position === BorderPosition.Center) {
+            const p1 = gPal.makePalPath(path);
+            if (isDash) dashPath(p1);
+            p1.stroke(Object.assign(basicParams, { width: thickness }));
+            return p1;
+        } else {
+            const p0 = gPal.makePalPath(shape.getPathStr());
+            const p1 = gPal.makePalPath(path);
+            if (isDash) dashPath(p1);
+            p1.stroke(Object.assign(basicParams, { width: thickness * 2 }));
+            p1.subtract(p0);
             return p1;
         }
     }
 
-    function getRight() {
-        const thickness = border.sideSetting.thicknessRight;
-        if (!thickness) return;
-        if (position === BorderPosition.Inner) {
-            const p0 = gPal.makePalPath(shape.getPathStr());
-            const path = `M${width} 0 L${width} ${height}`;
-            const p1 = gPal.makePalPath(path);
-            if (isDash) dashPath(p1);
-            p1.stroke(Object.assign(basicParams, { width: thickness * 2 }));
-            p1.intersection(p0);
-            return p1;
+    function strokeOdd() {
+        let path = getOddSide(setting.thicknessTop, `M0 0 L${width} 0`);
+
+        const right = getOddSide(setting.thicknessRight, `M${width} 0 L${width} ${height}`);
+        if (right && path) {
+            path.union(right);
+        } else if (right) {
+            path = right;
         }
+
+        const bottom = getOddSide(setting.thicknessBottom, `M${width} ${height} L0 ${height}`);
+        if (bottom && path) {
+            path.union(bottom);
+        } else if (bottom) {
+            path = bottom;
+        }
+
+        const left = getOddSide(setting.thicknessLeft, `M0 ${height} L0 0`);
+        if (left && path) {
+            path.union(left);
+        } else if (left) {
+            path = left;
+        }
+
+        const __cor = corner();
+        if (__cor) path.union(__cor);
+
+        return path;
     }
 
-    function getBottom() {
-        const thickness = border.sideSetting.thicknessBottom;
-        if (!thickness) return;
-        if (position === BorderPosition.Inner) {
-            const p0 = gPal.makePalPath(shape.getPathStr());
-            const path = `M${width} ${height} L0 ${height}`;
-            const p1 = gPal.makePalPath(path);
-            if (isDash) dashPath(p1);
-            p1.stroke(Object.assign(basicParams, { width: thickness * 2 }));
-            p1.intersection(p0);
-            return p1;
+    function corner() {
+        const type = border.cornerType;
+        if (border.position === BorderPosition.Inner) return;
+        let { thicknessBottom: b, thicknessRight: r, thicknessLeft: l, thicknessTop: t } = setting;
+        if (border.position === BorderPosition.Center) {
+            b /= 2;
+            r /= 2;
+            l /= 2;
+            t /= 2;
         }
-    }
+        const w = width;
+        const h = height;
+        let cornerPathStr = '';
+        if (type === CornerType.Bevel) {
+            if (t && r) {
+                cornerPathStr += `M${w} ${-t} L${w + r} 0 h${-r} z`;
+            }
+            if (r && b) {
+                cornerPathStr += `M${w + r} ${h} L${w} ${h + b} v${-b} z`;
+            }
+            if (b && l) {
+                cornerPathStr += `M0 ${h + b} L${-l} ${h} h${l} z`;
+            }
+            if (l && t) {
+                cornerPathStr += `M${-l} 0 L0 ${-t} v${t} z`;
+            }
+        } else if (type === CornerType.Round) {
+            if (t && r) {
+                if (t > r) {
+                    cornerPathStr += `M${w} ${-t} a${r} ${r} 0 0 1 ${r} ${r} L${w + r} 0 h${-r} z`;
+                } else {
+                    cornerPathStr += `M${w} ${-t} L${w + r - t} ${-t} a${t} ${t} 0 0 1 ${t} ${t} h${-r} z`;
+                }
+            }
+            if (r && b) {
+                if (r > b) {
+                    cornerPathStr += `M${w + r} ${h} a${b} ${b} 0 0 1 ${-b} ${b} L${w} ${h + b} v${-b}z`;
+                } else {
+                    cornerPathStr += `M${w + r} ${h} L${w + r} ${h + b - r} a${r} ${r} 0 0 1 ${-r} ${r} v${-b} z`;
+                }
+            }
+            if (b && l) {
+                if (b > l) {
+                    cornerPathStr += `M0 ${h + b} a${l} ${l} 0 0 1 ${-l} ${-l} L${-l} ${h} h${l} z`;
+                } else {
+                    cornerPathStr += `M0 ${h + b} h${-l + b} a${b} ${b} 0 0 1 ${-b} ${-b} h${l} z`;
+                }
+            }
+            if (l && t) {
+                if (l > t) {
+                    cornerPathStr += `M${-l} 0 a${t} ${t} 0 0 1 ${t} ${-t} L0 ${-t} v${t} z`;
+                } else {
+                    cornerPathStr += `M${-l} 0 L${-l} ${-t + l} a${l} ${l} 0 0 1 ${l} ${-l} v${t}`;
+                }
+            }
+        } else {
+            if (t && r) {
+                cornerPathStr += `M${w} ${-t} h${r} v${t} h${-r} z`;
+            }
+            if (r && b) {
+                cornerPathStr += `M${w + r} ${h} v${b} h${-r} v${-b} z`;
+            }
+            if (b && l) {
+                cornerPathStr += `M0 ${h + b} h${-l} v${-b} h${l} z`;
+            }
+            if (l && t) {
+                cornerPathStr += `M${-l} 0 v${-t} h${l} v${t} z`;
+            }
+        }
 
-    function getLeft() {
-        const thickness = border.sideSetting.thicknessLeft;
-        if (!thickness) return;
-        if (position === BorderPosition.Inner) {
-            const p0 = gPal.makePalPath(shape.getPathStr());
-            const path = `M0 ${height} L0 0`;
-            const p1 = gPal.makePalPath(path);
-            if (isDash) dashPath(p1);
-            p1.stroke(Object.assign(basicParams, { width: thickness * 2 }));
-            p1.intersection(p0);
-            return p1;
-        }
+        if (cornerPathStr) return gPal.makePalPath(cornerPathStr);
     }
 }
