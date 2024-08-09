@@ -779,7 +779,7 @@ export function border2path(shape: ShapeView, border: Border) {
 
         __path_str = p0.toSVGString();
     } else if (isEven) {
-        const __open = (shape as PathShapeView).segments.some(i => !i.isClosed);
+        const __open = (shape instanceof PathShapeView) && shape.segments.some(i => !i.isClosed);
         if (__open) {
             const p0 = make(path);
             if (isDash) dashPath(p0);

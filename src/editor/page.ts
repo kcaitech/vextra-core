@@ -7,6 +7,7 @@ import {
     RectShape,
     Shape,
     ShapeFrame,
+    ShapeType,
     StarShape,
     SymbolShape,
     SymbolUnionShape,
@@ -25,7 +26,6 @@ import {
     GradientType,
     MarkerType,
     ShadowPosition,
-    ShapeType,
     SideType
 } from "../data/typesdefine";
 import { Page } from "../data/page";
@@ -125,8 +125,11 @@ import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
 import { unable_to_migrate } from "./utils/migrate";
 import {
     adapt2Shape,
+    ArtboradView,
     BoolShapeView,
-    PageView, PathShapeView,
+    ContactLineView, CutoutShapeView, GroupShapeView,
+    PageView,
+    PathShapeView,
     render2path,
     ShapeView,
     SymbolRefView,
@@ -3754,7 +3757,23 @@ export class PageEditor {
                 else state.shapes = cmd.saveselection?.shapes || [];
                 selection.restore(state);
             });
-            for (const view of shapes) {
+            const __flatten = (shapes: ShapeView[], init?: ShapeView[]) => {
+                const res: ShapeView[] = init ?? [];
+                for (const view of shapes) {
+                    if (view instanceof TableView) continue;
+                    if (view instanceof ContactLineView) continue;
+                    if (view instanceof CutoutShapeView) continue;
+                    if (view.type === ShapeType.Group || view instanceof ArtboradView || view instanceof SymbolView) {
+                        res.push(...__flatten((view as GroupShapeView).childs));
+                        continue;
+                    }
+                    res.push(view)
+                }
+                return res;
+            }
+            const __shapes = __flatten(shapes);
+
+            for (const view of __shapes) {
                 if (view instanceof TextShapeView) {
                     const shape = adapt2Shape(view) as TextShape;
                     const path = view.getTextPath();
