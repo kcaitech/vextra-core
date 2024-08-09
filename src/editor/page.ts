@@ -127,7 +127,10 @@ import {
     adapt2Shape,
     ArtboradView,
     BoolShapeView,
-    ContactLineView, CutoutShapeView, GroupShapeView,
+    ContactLineView,
+    CutoutShapeView,
+    GroupShapeView,
+    ImageShapeView,
     PageView,
     PathShapeView,
     render2path,
@@ -3757,11 +3760,10 @@ export class PageEditor {
                 else state.shapes = cmd.saveselection?.shapes || [];
                 selection.restore(state);
             });
-            const __flatten = (shapes: ShapeView[], init?: ShapeView[]) => {
-                const res: ShapeView[] = init ?? [];
+            const __flatten = (shapes: ShapeView[]) => {
+                const res: ShapeView[] = [];
                 for (const view of shapes) {
                     if (view instanceof TableView) continue;
-                    if (view instanceof ContactLineView) continue;
                     if (view instanceof CutoutShapeView) continue;
                     if (view.type === ShapeType.Group || view instanceof ArtboradView || view instanceof SymbolView) {
                         res.push(...__flatten((view as GroupShapeView).childs));
@@ -3787,6 +3789,7 @@ export class PageEditor {
                     let pathShape = newPathShape(view.name, view.frame, path, style);
                     pathShape.transform = shape.transform.clone();
                     pathShape.mask = shape.mask;
+                    pathShape.resizingConstraint = shape.resizingConstraint;
                     const parent = shape.parent as GroupShape;
                     const index = parent.indexOfChild(shape);
                     api.shapeDelete(document, page, parent, index);
@@ -3810,6 +3813,7 @@ export class PageEditor {
                         let pathshape = newPathShape(view.name + suffix, view.frame, path, style);
                         pathshape.transform = shape.transform.clone();
                         pathshape.mask = shape.mask;
+                        pathshape.resizingConstraint = shape.resizingConstraint;
                         const index = parent.indexOfChild(shape);
                         pathshape = api.shapeInsert(document, page, parent, pathshape, index + 1) as PathShape;
                         update_frame_by_points(api, page, pathshape);
@@ -3836,7 +3840,22 @@ export class PageEditor {
             if (shapes.length > 1) {
                 return this.flattenShapes(shapes);
             } else if (shapes.length === 1) {
-                const view = shapes[0];
+                const __flatten = (view: ShapeView) => {
+                    const res: ShapeView[] = [];
+                    if (view instanceof PathShapeView) {
+                        res.push(view);
+                    } else {
+                        if (view.type === ShapeType.Group || view instanceof ArtboradView) {
+                            res.push(...__flatten(view));
+                        }
+                    }
+                    return res;
+                }
+                const __shapes = __flatten(shapes[0]);
+                if (__shapes.length > 1) {
+                    return this.flattenShapes(shapes);
+                }
+                const view = __shapes[0];
                 const shape = adapt2Shape(view);
                 if (!(view instanceof PathShapeView)) return;
                 const api = this.__repo.start('flattenSelection');
