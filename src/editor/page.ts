@@ -127,12 +127,9 @@ import {
     adapt2Shape,
     ArtboradView,
     BoolShapeView,
-    ContactLineView,
     CutoutShapeView,
     GroupShapeView,
-    ImageShapeView,
     PageView,
-    PathShapeView,
     render2path,
     ShapeView,
     SymbolRefView,
@@ -3835,34 +3832,59 @@ export class PageEditor {
         }
     }
 
-    flattenSelection(shapes: ShapeView[]) {
+    flattenSelection(shapes: ShapeView[], name?: string) {
+        // 先把所有可以参与拼合的图层整理出来
+        // 确定一组属性，包括边框、填充、蒙版、约束等
+        //
         try {
-            if (shapes.length > 1) {
-                return this.flattenShapes(shapes);
-            } else if (shapes.length === 1) {
-                const __flatten = (view: ShapeView) => {
-                    const res: ShapeView[] = [];
-                    if (view instanceof PathShapeView) {
-                        res.push(view);
-                    } else {
-                        if (view.type === ShapeType.Group || view instanceof ArtboradView) {
-                            res.push(...__flatten(view));
-                        }
+            if (!shapes.length) return;
+            let virtualSelection = false;
+            const __shapes = (function deep(shapes: ShapeView[]) {
+                const result: ShapeView[] = [];
+                for (const view of shapes) {
+                    if (view.isVirtualShape) {
+                        virtualSelection = true;
+                        break;
                     }
-                    return res;
+                    if (view instanceof ArtboradView || view instanceof SymbolView || view.type === ShapeType.Group) {
+                        result.push(...deep(view.childs));
+                        continue;
+                    }
+                    result.push(view);
                 }
-                const __shapes = __flatten(shapes[0]);
-                if (__shapes.length > 1) {
-                    return this.flattenShapes(shapes);
-                }
-                const view = __shapes[0];
-                const shape = adapt2Shape(view);
-                if (!(view instanceof PathShapeView)) return;
-                const api = this.__repo.start('flattenSelection');
-                update_frame_by_points(api, this.__page, shape);
-                api.shapeEditPoints(this.__page, shape, true);
-                this.__repo.commit();
+                return result;
+            })(shapes);
+            if (virtualSelection || !__shapes.length) return;
+
+            for (const view of __shapes) {
+
             }
+            // if (shapes.length > 1) {
+            //     return this.flattenShapes(shapes);
+            // } else if (shapes.length === 1) {
+            //     const __flatten = (view: ShapeView) => {
+            //         const res: ShapeView[] = [];
+            //         if (view instanceof PathShapeView) {
+            //             res.push(view);
+            //         } else {
+            //             if (view.type === ShapeType.Group || view instanceof ArtboradView) {
+            //                 res.push(...__flatten(view));
+            //             }
+            //         }
+            //         return res;
+            //     }
+            //     const __shapes = __flatten(shapes[0]);
+            //     if (__shapes.length > 1) {
+            //         return this.flattenShapes(shapes);
+            //     }
+            //     const view = __shapes[0];
+            //     const shape = adapt2Shape(view);
+            //     if (!(view instanceof PathShapeView)) return;
+            //     const api = this.__repo.start('flattenSelection');
+            //     update_frame_by_points(api, this.__page, shape);
+            //     api.shapeEditPoints(this.__page, shape, true);
+            //     this.__repo.commit();
+            // }
         } catch (e) {
             this.__repo.rollback()
             console.error(e)
