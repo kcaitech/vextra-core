@@ -3,17 +3,13 @@
     "type": "object",
     "properties": {
         "crdtidx": {
-            "type": "array",
-            "items": {
-                "type": "number"
-            }
+            "$ref": "./crdtidx.json"
         },
         "id": {
             "type": "string"
         },
         "position": {
-            "type": "number",
-            "default": 0
+            "type": "number"
         },
         "color": {
             "$ref": "./color.json"

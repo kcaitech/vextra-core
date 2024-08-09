@@ -1,0 +1,21 @@
+{
+    "description": "border options",
+    "type": "object",
+    "properties": {
+        "isEnabled": {
+            "type": "boolean"
+        },
+        "lineCapStyle": {
+            "$ref": "./line-cap-style.json"
+        },
+        "lineJoinStyle": {
+            "$ref": "./line-join-style.json"
+        }
+    },
+    "required": [
+        "isEnabled",
+        "lineCapStyle",
+        "lineJoinStyle"
+    ],
+    "additionalProperties": false
+}

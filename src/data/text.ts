@@ -9,7 +9,7 @@ import {
     TextTransformType,
     TextVerAlign,
     UnderlineType
-} from "./classes";
+} from "./baseclasses";
 
 import { Basic, BasicArray } from "./basic";
 
@@ -35,7 +35,7 @@ import { _travelTextPara } from "./texttravel";
 import { FillType, Padding } from "./baseclasses";
 import { Gradient } from "./style"
 import { Color } from "./color";
-import { ShapeFrame } from "./typesdefine";
+import { ShapeFrame, ShapeSize } from "./typesdefine";
 
 /*
  文本框属性
@@ -66,7 +66,7 @@ export class SpanAttr extends Basic implements classes.SpanAttr {
     color?: Color
     strikethrough?: StrikethroughType
     underline?: UnderlineType
-    bold?: number
+    weight?: number
     italic?: boolean
     bulletNumbers?: BulletNumbers
     highlight?: Color
@@ -113,7 +113,7 @@ export class AttrGetter extends TextAttr {
     fontSizeIsMulti: boolean = false;
     colorIsMulti: boolean = false;
     highlightIsMulti: boolean = false;
-    boldIsMulti: boolean = false;
+    weightIsMulti: boolean = false;
     italicIsMulti: boolean = false;
     underlineIsMulti: boolean = false;
     strikethroughIsMulti: boolean = false;
@@ -185,7 +185,7 @@ export class Text extends Basic implements classes.Text {
         }
     }
 
-    getLayout3(frame: ShapeFrame, owner: string, token: string | undefined): { token: string, layout: TextLayout } {
+    getLayout3(frame: ShapeSize, owner: string, token: string | undefined): { token: string, layout: TextLayout } {
 
         const width = frame.width;
         const height = frame.height;
@@ -224,7 +224,7 @@ export class Text extends Basic implements classes.Text {
         return { token: cur, layout: o.layout! }
     }
 
-    getLayout2(frame: ShapeFrame): TextLayout {
+    getLayout2(frame: ShapeSize): TextLayout {
 
         const width = frame.width;
         const height = frame.height;

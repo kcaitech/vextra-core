@@ -132,7 +132,12 @@ export class BasicMap<T0, T1> extends Map<T0, T1> {
     }
 }
 
-export class WatchableObject extends Basic implements Notifiable {
+export interface IWatchable {
+    watch(watcher: ((...args: any[]) => void)): (() => void)
+    unwatch(watcher: ((...args: any[]) => void)): boolean
+}
+
+export class WatchableObject extends Basic implements Notifiable, IWatchable {
     public __watcher: Set<((...args: any[]) => void)> = new Set();
     public watch(watcher: ((...args: any[]) => void)): (() => void) {
         this.__watcher.add(watcher);
@@ -238,7 +243,7 @@ export class ResourceMgr<T> extends WatchableObject {
         return r;
     }
 
-    forEach(callback:(v: T, k: string) => void) {
+    forEach(callback: (v: T, k: string) => void) {
         this.__resource.forEach((_v, _k) => {
             callback(_v, _k)
         })

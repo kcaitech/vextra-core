@@ -1,8 +1,6 @@
-import { GroupShape, Shape, ShapeFrame, ShapeType, SymbolRefShape, SymbolShape } from "../data/classes";
-import { ShapeView } from "./shape";
-import { matrix2parent } from "./shape";
-import { RenderTransform, getShapeViewId } from "./basic";
-import { Matrix } from "../basic/matrix";
+import { GroupShape, Shape, ShapeSize, ShapeType, SymbolRefShape, SymbolShape, ShapeFrame, Transform } from "../data/classes";
+import { ShapeView, updateFrame } from "./shape";
+import { getShapeViewId } from "./basic";
 import { EL } from "./el";
 import { DataView, RootView } from "./view";
 import { DViewCtx, PropsType, VarsContainer } from "./viewctx";
@@ -13,13 +11,12 @@ export class GroupShapeView extends ShapeView {
         return this.m_data as GroupShape;
     }
 
-    constructor(ctx: DViewCtx, props: PropsType, isTopClass: boolean = true) {
-        super(ctx, props, false);
+    constructor(ctx: DViewCtx, props: PropsType) {
+        super(ctx, props);
 
         this._bubblewatcher = this._bubblewatcher.bind(this);
         this.m_data.bubblewatch(this._bubblewatcher);
-
-        if (isTopClass) this.afterInit();
+        this.updateMaskMap();
     }
 
     protected _bubblewatcher(...args: any[]) {
@@ -27,9 +24,31 @@ export class GroupShapeView extends ShapeView {
     }
 
     protected onChildChange(...args: any[]) {
-        if (args.includes('fills') || args.includes('borders')) {
-            this.notify(...args); // 通知界面更新
+        if (args.includes('fills') || args.includes('borders')) this.notify(...args);
+    }
+    maskMap: Map<string, Shape> = new Map;
+    updateMaskMap() {
+        const map = this.maskMap;
+        map.clear();
+
+        const children = this.getDataChilds();
+        let mask: Shape | undefined = undefined;
+        const maskShape: Shape[] = [];
+        for (let i = 0; i < children.length; i++) {
+            const child = children[i];
+            if (child.mask) {
+                mask = child;
+                maskShape.push(child);
+            } else {
+                mask && map.set(child.id, mask);
+            }
         }
+        this.childs.forEach(c => {
+            if (c.mask) return;
+            c.m_ctx.setDirty(c);
+        });
+        maskShape.forEach(m => m.notify('rerender-mask'));
+        this.notify('mask-env-change');
     }
 
     onDestory(): void {
@@ -46,13 +65,13 @@ export class GroupShapeView extends ShapeView {
     onDataChange(...args: any[]): void {
         super.onDataChange(...args);
         if (args.includes('childs')) {
-            // this.updateChildren();
+            this.updateMaskMap();
             this.m_need_updatechilds = true;
         }
     }
 
-    protected _layout(frame: ShapeFrame, shape: Shape, transform: RenderTransform | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): void {
-        super._layout(frame, shape, transform, varsContainer);
+    protected _layout(shape: Shape, parentFrame: ShapeSize | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scale: { x: number, y: number } | undefined): void {
+        super._layout(shape, parentFrame, varsContainer, scale);
         if (this.m_need_updatechilds) {
             this.notify("childs"); // notify childs change
             this.m_need_updatechilds = false;
@@ -72,122 +91,124 @@ export class GroupShapeView extends ShapeView {
     // childs
     protected renderContents(): EL[] {
         const childs = this.m_children;
-        childs.forEach((c) => c.render())
+        childs.forEach((c) => c.render());
         return childs;
     }
 
-    protected layoutChild(child: Shape, idx: number, transx: RenderTransform | undefined, varsContainer: VarsContainer | undefined, resue: Map<string, DataView>, rView: RootView | undefined) {
+    protected layoutChild(child: Shape, idx: number, scale: { x: number, y: number } | undefined, varsContainer: VarsContainer | undefined, resue: Map<string, DataView>, rView: RootView | undefined) {
         let cdom: DataView | undefined = resue.get(child.id);
-        const props = { data: child, transx, varsContainer, isVirtual: this.m_isVirtual };
+        const props = { data: child, scale, varsContainer, isVirtual: this.m_isVirtual };
         if (cdom) {
             this.moveChild(cdom, idx);
-            cdom.layout(props);
-            return;
+            return cdom.layout(props);
         }
-
         cdom = rView && rView.getView(getShapeViewId(child.id, varsContainer));
         if (cdom) {
             // 将cdom移除再add到当前group
             const p = cdom.parent;
             if (p) p.removeChild(cdom);
             this.addChild(cdom, idx);
-            cdom.layout(props);
-            return;
+            return cdom.layout(props);
         }
-
         const comsMap = this.m_ctx.comsMap;
         const Com = comsMap.get(child.type) || comsMap.get(ShapeType.Rectangle)!;
         cdom = new Com(this.m_ctx, props) as DataView;
         this.addChild(cdom, idx);
     }
 
-    updateLayoutArgs(frame: ShapeFrame, hflip: boolean | undefined, vflip: boolean | undefined, rotate: number | undefined, radius?: number | undefined): void {
-        super.updateLayoutArgs(frame, hflip, vflip, rotate, radius);
+    protected layoutChilds(
+        varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
+        parentFrame: ShapeSize,
+        scale?: { x: number, y: number }): void {
+        const childs = this.getDataChilds();
+        const resue: Map<string, DataView> = new Map();
+        this.m_children.forEach((c) => resue.set(c.data.id, c));
+        const rootView = this.getRootView();
+        for (let i = 0, len = childs.length; i < len; i++) {
+            this.layoutChild(childs[i], i, scale, varsContainer, resue, rootView);
+        }
+        // 删除多余的
+        const removes = this.removeChilds(childs.length, Number.MAX_VALUE);
+        if (rootView) rootView.addDelayDestory(removes);
+        else removes.forEach((c => c.destory()));
+    }
+
+    // super_updateFrames(): boolean {
+    //     return super.updateFrames();
+    // }
+
+    updateFrames(): boolean {
+
+        const childcontentbounds = this.m_children.map(c => (c as ShapeView)._p_frame);
+
+        const childvisiblebounds = this.m_children.map(c => (c as ShapeView)._p_visibleFrame);
+
+        const childouterbounds = this.m_children.map(c => (c as ShapeView)._p_outerFrame);
+
+        const reducer = (p: { minx: number, miny: number, maxx: number, maxy: number }, c: ShapeFrame, i: number) => {
+            if (i === 0) {
+                p.minx = c.x;
+                p.maxx = c.x + c.width;
+                p.miny = c.y;
+                p.maxy = c.y + c.height;
+            } else {
+                p.minx = Math.min(p.minx, c.x);
+                p.maxx = Math.max(p.maxx, c.x + c.width);
+                p.miny = Math.min(p.miny, c.y);
+                p.maxy = Math.max(p.maxy, c.y + c.height);
+            }
+            return p;
+        }
+
+        const contentbounds = childcontentbounds.reduce(reducer, { minx: 0, miny: 0, maxx: 0, maxy: 0 });
+        const visiblebounds = childvisiblebounds.reduce(reducer, { minx: 0, miny: 0, maxx: 0, maxy: 0 });
+        const outerbounds = childouterbounds.reduce(reducer, { minx: 0, miny: 0, maxx: 0, maxy: 0 });
+
         // todo
-        // if (this.m_need_updatechilds) {
-        //     // this.updateChildren();
-        //     this.m_need_updatechilds = false;
-        // }
-    }
-
-    protected layoutOnNormal(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): void {
-        const childs = this.getDataChilds();
-        const resue: Map<string, DataView> = new Map();
-        this.m_children.forEach((c) => resue.set(c.data.id, c));
-        const rootView = this.getRootView();
-        for (let i = 0, len = childs.length; i < len; i++) {
-            const cc = childs[i]
-            // update childs
-            this.layoutChild(cc, i, undefined, varsContainer, resue, rootView);
+        let changed = this._save_frame.x !== this.m_frame.x || this._save_frame.y !== this.m_frame.y ||
+            this._save_frame.width !== this.m_frame.width || this._save_frame.height !== this.m_frame.height;
+        if (updateFrame(this.m_frame, contentbounds.minx, contentbounds.miny, contentbounds.maxx - contentbounds.minx, contentbounds.maxy - contentbounds.miny)) {
+            this.m_pathstr = undefined; // need update
+            this.m_path = undefined;
+            changed = true;
         }
-        // 删除多余的
-        const removes = this.removeChilds(childs.length, Number.MAX_VALUE);
-        if (rootView) rootView.addDelayDestory(removes);
-        else removes.forEach((c => c.destory()));
-    }
+        {
+            this._save_frame.x = this.m_frame.x;
+            this._save_frame.y = this.m_frame.y;
+            this._save_frame.width = this.m_frame.width;
+            this._save_frame.height = this.m_frame.height;
+        };
+        // update visible
+        if (updateFrame(this.m_visibleFrame, visiblebounds.minx, visiblebounds.miny, visiblebounds.maxx - visiblebounds.minx, visiblebounds.maxy - visiblebounds.miny)) changed = true;
+        // update outer
+        if (updateFrame(this.m_outerFrame, outerbounds.minx, outerbounds.miny, outerbounds.maxx - outerbounds.minx, outerbounds.maxy - outerbounds.miny)) changed = true;
 
-    layoutOnRectShape(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, parentFrame: ShapeFrame, scaleX: number, scaleY: number): void {
-        const childs = this.getDataChilds();
-        const resue: Map<string, DataView> = new Map();
-        this.m_children.forEach((c) => resue.set(c.data.id, c));
-        const rootView = this.getRootView();
-        for (let i = 0, len = childs.length; i < len; i++) {
-            const cc = childs[i]
-            const transform = {
-                dx: 0,
-                dy: 0,
-                scaleX,
-                scaleY,
-                parentFrame: this.frame,
-                vflip: false,
-                hflip: false,
-                rotate: 0
+        const mapframe = (i: ShapeFrame, out: ShapeFrame) => {
+            const transform = this.transform;
+            if (this.isNoTransform()) {
+                return updateFrame(out, i.x + transform.translateX, i.y + transform.translateY, i.width, i.height);
             }
-            // update childs
-            this.layoutChild(cc, i, transform, varsContainer!, resue, rootView);
+            const frame = i;
+            const m = transform;
+            const corners = [
+                { x: frame.x, y: frame.y },
+                { x: frame.x + frame.width, y: frame.y },
+                { x: frame.x + frame.width, y: frame.y + frame.height },
+                { x: frame.x, y: frame.y + frame.height }]
+                .map((p) => m.computeCoord(p));
+            const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
+            const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
+            const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
+            const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
+            return updateFrame(out, minx, miny, maxx - minx, maxy - miny);
         }
-        // 删除多余的
-        const removes = this.removeChilds(childs.length, Number.MAX_VALUE);
-        if (rootView) rootView.addDelayDestory(removes);
-        else removes.forEach((c => c.destory()));
-    }
+        if (mapframe(this.m_frame, this._p_frame)) changed = true;
+        if (mapframe(this.m_visibleFrame, this._p_visibleFrame)) changed = true;
+        if (mapframe(this.m_outerFrame, this._p_outerFrame)) changed = true;
 
-    layoutOnDiamondShape(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scaleX: number, scaleY: number, rotate: number, vflip: boolean, hflip: boolean, bbox: ShapeFrame, m: Matrix): void {
-        const childs = this.getDataChilds();
-        const resue: Map<string, DataView> = new Map();
-        this.m_children.forEach((c) => resue.set(c.data.id, c));
-        const rootView = this.getRootView();
-        for (let i = 0, len = childs.length; i < len; i++) { //摆正： 将旋转、翻转放入到子对象
-            const cc = childs[i]
-            const m1 = cc.matrix2Parent();
-            m1.multiAtLeft(m);
-            const target = m1.computeCoord(0, 0);
-            const c_rotate = rotate + (cc.rotation || 0);
-            const c_hflip = hflip ? !cc.isFlippedHorizontal : !!cc.isFlippedHorizontal;
-            const c_vflip = vflip ? !cc.isFlippedVertical : !!cc.isFlippedVertical;
-            const c_frame = cc.frame;
-            // cc matrix2Parent
-            const m2 = matrix2parent(c_frame.x, c_frame.y, c_frame.width, c_frame.height, c_rotate, c_hflip, c_vflip);
-            m2.trans(bbox.x, bbox.y); // todo 使用parentFrame.x y会与rect对不齐，待研究
-            const cur = m2.computeCoord(0, 0);
-            const dx = target.x - cur.x;
-            const dy = target.y - cur.y;
-            const transform = {
-                dx,
-                dy,
-                scaleX,
-                scaleY,
-                parentFrame: this.frame,
-                vflip,
-                hflip,
-                rotate
-            }
-            // update childs
-            this.layoutChild(cc, i, transform, varsContainer!, resue, rootView);
+        if (changed) {
+            this.m_ctx.addNotifyLayout(this);
         }
-        // 删除多余的
-        const removes = this.removeChilds(childs.length, Number.MAX_VALUE);
-        if (rootView) rootView.addDelayDestory(removes);
-        else removes.forEach((c => c.destory()));
+        return changed;
     }
 }

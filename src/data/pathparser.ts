@@ -1,4 +1,4 @@
-import { CurvePoint } from "./shape";
+import { CurvePoint } from "./baseclasses";
 import { Point2D } from "./typesdefine"
 
 type CornerCalcInfo = {
@@ -66,9 +66,7 @@ function findTForLength(p0: Point2D, p1: Point2D, p2: Point2D, p3: Point2D, targ
     while (t0 <= t1) {
         const currentLength = bezierLength(p0, p1, p2, p3, t);
 
-        if (Math.abs(currentLength - targetLength) < epsilon) {
-            return t;
-        }
+        if (Math.abs(currentLength - targetLength) < epsilon) return t;
 
         if (currentLength < targetLength) {
             t0 = t;
@@ -79,9 +77,8 @@ function findTForLength(p0: Point2D, p1: Point2D, p2: Point2D, p3: Point2D, targ
         }
     }
 
-    return null; // 如果未找到合适的参数t，返回null
+    return null;
 }
-
 
 function distanceTo(p0: Point2D, p1: Point2D) {
     return Math.hypot(p0.x - p1.x, p0.y - p1.y);
@@ -133,6 +130,9 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, width: number
 
     const bezierCurveTo = (x1: number, y1: number, x2: number, y2: number, tx: number, ty: number) => {
         path.push(["C", x1, y1, x2, y2, tx, ty]);
+    }
+    const bezierQuaCurveTo = (x: number, y: number, tx: number, ty: number) => {
+        path.push(["Q", x, y, tx, ty]);
     }
     const moveTo = (x: number, y: number) => {
         path.push(["M", x, y]);
@@ -311,8 +311,10 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, width: number
         }
 
         // 获取终点信息
-        if (_isCornerRadius(toIdx) && (cornerInfo = _getCornerInfo(toIdx))) {
-            const { preTangent, preSlices } = cornerInfo;
+        const isCorEnd = _isCornerRadius(toIdx);
+
+        if (isCorEnd && (cornerInfo = _getCornerInfo(toIdx))) {
+            const { preTangent, preSlices } = cornerInfo as any;
             endPt = preTangent;
             if (preSlices.length) {
                 startHandle = preSlices[1][2];
@@ -341,8 +343,8 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, width: number
         }
 
         // 如果 end 的时候是 corner，绘制圆角
-        if (_isCornerRadius(toIdx) && (cornerInfo = _getCornerInfo(toIdx))) {
-            const { nextTangent, preHandle, nextHandle } = cornerInfo;
+        if (isCorEnd && cornerInfo) {
+            const { nextTangent, preHandle, nextHandle } = cornerInfo as any;
             bezierCurveTo(preHandle.x, preHandle.y, nextHandle.x, nextHandle.y, nextTangent.x, nextTangent.y);
         }
     }

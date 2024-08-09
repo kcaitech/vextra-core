@@ -1,17 +1,25 @@
 import { Style } from "./style";
 import * as classes from "./baseclasses"
 import { BasicArray, BasicMap, ResourceMgr } from "./basic";
-import { ShapeType, ShapeFrame, TableCellType, CrdtNumber } from "./baseclasses"
-import { Shape } from "./shape";
+import { ShapeType, TableCellType, CrdtNumber, ShapeFrame } from "./baseclasses"
+import {Shape, Transform, ShapeSize} from "./shape";
 import { Path } from "./path";
 import { Text, TextAttr } from "./text"
-import { FrameType, PathType } from "./consts";
+import { PathType } from "./consts";
 import { newTableCellText } from "./textutils";
 export { TableLayout, TableGridItem } from "./tablelayout";
 export { TableCellType } from "./baseclasses";
 export { CrdtNumber } from "./baseclasses";
 
 export class TableCell extends Shape implements classes.TableCell {
+    get size(): classes.ShapeSize {
+        return this.frame;
+    }
+    set size(size: classes.ShapeSize) {
+    }
+    get frame(): classes.ShapeFrame {
+        return new ShapeFrame();
+    }
 
     typeId = 'table-cell'
     cellType: TableCellType
@@ -27,7 +35,7 @@ export class TableCell extends Shape implements classes.TableCell {
         id: string,
         name: string,
         type: ShapeType,
-        frame: ShapeFrame, // cell里的frame是无用的，真实的位置大小通过行高列宽计算
+        transform: Transform,
         style: Style,
         cellType: TableCellType,
         text: Text
@@ -37,7 +45,7 @@ export class TableCell extends Shape implements classes.TableCell {
             id,
             name,
             type,
-            frame,
+            transform,
             style
         )
         this.cellType = cellType
@@ -71,7 +79,7 @@ export class TableCell extends Shape implements classes.TableCell {
      * @param frame 
      * @returns 
      */
-    static getPathOfFrame(frame: ShapeFrame): Path {
+    static getPathOfSize(frame: ShapeSize): Path {
         const x = 0;
         const y = 0;
         const w = frame.width;
@@ -84,7 +92,7 @@ export class TableCell extends Shape implements classes.TableCell {
         return new Path(path);
     }
 
-    getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
+    getPathOfSize(frame: ShapeSize, fixedRadius?: number): Path {
         const x = 0;
         const y = 0;
         const w = frame.width;
@@ -144,77 +152,6 @@ export class TableCell extends Shape implements classes.TableCell {
         if (!this.text) throw new Error("");
         return this.text;
     }
-
-    // todo
-    // __layoutToken: string | undefined;
-
-    // getLayout(): TextLayout | undefined {
-    //     if (!this.text) return;
-    //     const table = this.parent as TableShape;
-    //     const indexCell = table.indexOfCell2(this);
-    //     if (!indexCell) return;
-
-    //     const rowSpan = Math.max(this.rowSpan ?? 1, 1);
-    //     const colSpan = Math.max(this.colSpan ?? 1, 1);
-
-    //     let widthWeight = table.colWidths[indexCell.colIdx].value;
-    //     for (let i = 1; i < colSpan; ++i) {
-    //         widthWeight += table.colWidths[indexCell.colIdx + i].value;
-    //     }
-    //     let heightWeight = table.rowHeights[indexCell.rowIdx].value;
-    //     for (let i = 1; i < rowSpan; ++i) {
-    //         heightWeight += table.rowHeights[indexCell.rowIdx + i].value;
-    //     }
-
-    //     const width = widthWeight / table.widthTotalWeights * table.frame.width;
-    //     const height = heightWeight / table.heightTotalWeights * table.frame.height;
-    //     // this.text.updateSize(width, height);
-
-    //     const layout = this.text.getLayout3(width, height, this.id, this.__layoutToken);
-
-    //     this.__layoutToken = layout.token;
-    //     return layout.layout;
-    // }
-
-    // locateText(x: number, y: number): TextLocate {
-    //     return locateText(this.getLayout()!, x, y);
-    // }
-    // locateCursor(index: number, cursorAtBefore: boolean): CursorLocate | undefined {
-    //     return locateCursor(this.getLayout()!, index, cursorAtBefore);
-    // }
-    // locateRange(start: number, end: number): { x: number, y: number }[] {
-    //     return locateRange(this.getLayout()!, start, end);
-    // }
-
-    // setContentType(contentType: TableCellType | undefined) {
-    //     contentType = contentType === TableCellType.None ? undefined : contentType;
-    //     this.cellType = contentType;
-    // }
-
-    // setContentText(text: Text | undefined) {
-    //     this.text = text;
-    // }
-
-    // setContentImage(ref: string | undefined) {
-    //     this.imageRef = ref;
-    // }
-
-    // 这个设计不太好？
-    // setCellSpan(rowSpan: number | undefined, colSpan: number | undefined) {
-    //     rowSpan = rowSpan && rowSpan <= 1 ? undefined : rowSpan;
-    //     colSpan = colSpan && colSpan <= 1 ? undefined : colSpan;
-    //     this.rowSpan = rowSpan;
-    //     this.colSpan = colSpan;
-    //     if (this.text) this.text.reLayout();
-    //     const parent = this.parent;
-    //     if (parent) (parent as TableShape).reLayout();
-    // }
-
-    // onRollback(): void {
-    //     if (this.text) this.text.reLayout();
-    //     const parent = this.parent;
-    //     if (parent) (parent as TableShape).reLayout();
-    // }
 }
 
 export class TableShape extends Shape implements classes.TableShape {
@@ -222,8 +159,15 @@ export class TableShape extends Shape implements classes.TableShape {
     static MinCellSize = 10;
     static MaxRowCount = 50;
     static MaxColCount = 50;
-
+    get frame(): classes.ShapeFrame {
+        return new ShapeFrame(0, 0, this.size.width, this.size.height);
+    }
+    hasSize(): boolean {
+        return true;
+    }
     typeId = 'table-shape'
+    // @ts-ignore
+    size: ShapeSize
     cells: BasicMap<string, TableCell>
     rowHeights: BasicArray<CrdtNumber>
     colWidths: BasicArray<CrdtNumber>
@@ -239,8 +183,9 @@ export class TableShape extends Shape implements classes.TableShape {
         id: string,
         name: string,
         type: ShapeType,
-        frame: ShapeFrame,
+        transform: Transform,
         style: Style,
+        size: ShapeSize,
         cells: BasicMap<string, TableCell>,
         rowHeights: BasicArray<CrdtNumber>,
         colWidths: BasicArray<CrdtNumber>
@@ -250,9 +195,10 @@ export class TableShape extends Shape implements classes.TableShape {
             id,
             name,
             ShapeType.Table,
-            frame,
+            transform,
             style,
         )
+        this.size = size
         this.rowHeights = rowHeights
         this.colWidths = colWidths
         this.cells = cells;
@@ -304,7 +250,7 @@ export class TableShape extends Shape implements classes.TableShape {
         return this.colWidths.length;
     }
 
-    getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
+    getPathOfSize(frame: ShapeSize, fixedRadius?: number): Path {
         const x = 0;
         const y = 0;
         const w = frame.width;
@@ -450,19 +396,22 @@ export class TableShape extends Shape implements classes.TableShape {
     //     return getTableVisibleCells(this, this.getLayout(), rowStart, rowEnd, colStart, colEnd);
     // }
 
-    get isNoSupportDiamondScale() {
-        return true;
-    }
+    // get isNoSupportDiamondScale() {
+    //     return true;
+    // }
 
-    get frameType() {
-        return FrameType.Rect;
-    }
+    // get frameType() {
+    //     return FrameType.Rect;
+    // }
 
     get pathType() {
         return PathType.Fixed;
     }
 
     get isPathIcon() {
+        return false;
+    }
+    getImageFill() {
         return false;
     }
 }

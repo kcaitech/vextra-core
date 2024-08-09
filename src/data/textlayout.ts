@@ -4,7 +4,8 @@ import { BasicArray } from "./basic"
 import { layoutBulletNumber } from "./textbnlayout";
 import { transformText } from "./textlayouttransform";
 import { gPal } from "../basic/pal";
-import { ShapeFrame, TextAttr } from "./typesdefine";
+import { ShapeSize } from "./typesdefine";
+import { TEXT_BASELINE_RATIO } from "./consts";
 
 const TAB_WIDTH = 28;
 const INDENT_WIDTH = TAB_WIDTH;
@@ -21,15 +22,33 @@ export interface IGraphy {
 
 export class GraphArray extends Array<IGraphy> {
     public attr: SpanAttr | undefined;
+    // public actualBoundingBoxDescent: number = 0;
     get graphCount() {
         return this.length;
     }
-    get charCount() {
-        return this.reduce((c, g) => c + g.cc, 0);
+    // get charCount() {
+    //     return this.reduce((c, g) => c + g.cc, 0);
+    // }
+    public charCount: number = 0;
+
+    push(...items: IGraphy[]): number {
+        if (items.length === 1) {
+            // this.actualBoundingBoxDescent = Math.max(this.actualBoundingBoxDescent, items[0].metrics?.actualBoundingBoxDescent || 0);
+            this.charCount += items[0].cc;
+        } else {
+            // this.actualBoundingBoxDescent = items.reduce((p, c) => Math.max(p, c.metrics?.actualBoundingBoxDescent || 0), this.actualBoundingBoxDescent);
+            this.charCount += items.reduce((c, g) => c + g.cc, 0);
+        }
+        return super.push(...items);
     }
 }
 export class Line extends Array<GraphArray> {
     public maxFontSize: number = 0;
+    // public actualBoundingBoxDescent: number = 0;
+
+    get actualBoundingBoxDescent() {
+        return (this.maxFontSize * TEXT_BASELINE_RATIO);
+    }
     public x: number = 0;
     public y: number = 0;
     public lineHeight: number = 0;
@@ -42,6 +61,21 @@ export class Line extends Array<GraphArray> {
     public alignment: TextHorAlign = TextHorAlign.Left;
     public layoutWidth: number = 0;
 
+    push(...items: GraphArray[]): number {
+        if (items.length === 1) {
+            // this.actualBoundingBoxDescent = Math.max(this.actualBoundingBoxDescent, items[0].actualBoundingBoxDescent || 0);
+            this.maxFontSize = Math.max(this.maxFontSize, items[0].attr?.fontSize || 0);
+            this.charCount += items[0].charCount;
+            ++this.graphCount;
+        } else {
+            // this.actualBoundingBoxDescent = items.reduce((p, c) => Math.max(p, c.actualBoundingBoxDescent || 0), this.actualBoundingBoxDescent);
+            this.maxFontSize = items.reduce((p, c) => Math.max(p, c.attr?.fontSize || 0), this.maxFontSize);
+            this.charCount += items.reduce((p, c) => p + c.charCount, 0);
+            this.graphCount += items.length;
+        }
+        return super.push(...items);
+    }
+
     toJSON() {
         const graphs: GraphArray[] = [];
         for (let i = 0; i < this.length; ++i) {
@@ -49,6 +83,7 @@ export class Line extends Array<GraphArray> {
         }
         return {
             maxFontSize: this.maxFontSize,
+            actualBoundingBoxDescent: this.actualBoundingBoxDescent,
             x: this.x,
             y: this.y,
             lineHeight: this.lineHeight,
@@ -124,9 +159,9 @@ export class LayoutItem {
     // __frameHeight: number = 0;
     __textBehaviour: TextBehaviour | undefined;
     __verAlign: TextVerAlign | undefined;
-    __frame: ShapeFrame = { x: 0, y: 0, width: 0, height: 0 }
+    __frame: ShapeSize = { width: 0, height: 0 }
 
-    update(frame: ShapeFrame, text: Text) {
+    update(frame: ShapeSize, text: Text) {
         const layoutWidth = ((b: TextBehaviour) => {
             switch (b) {
                 case TextBehaviour.Flexible: return Number.MAX_VALUE;
@@ -182,8 +217,8 @@ export class LayoutItem {
 
         // this.__frameWidth = w;
         // this.__frameHeight = h;
-        this.__frame.x = frame.x;
-        this.__frame.y = frame.y;
+        // this.__frame.x = frame.x;
+        // this.__frame.y = frame.y;
         this.__frame.width = frame.width;
         this.__frame.height = frame.height;
 
@@ -377,7 +412,12 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
 
     let spanIdx = 0, spanOffset = 0
     let span = spans[spanIdx];
-    let font = "normal " + span.fontSize + "px " + span.fontName;
+    const italic = span.italic;
+    const weight = span.weight || 400;
+    const fontSize = span.fontSize;
+    // font = "normal " + span.fontSize + "px " + span.fontName;
+    let font = (italic ? 'italic ' : 'normal ') + weight + ' ' + fontSize + 'px ' + span.fontName;
+    // let font = "normal " + span.fontSize + "px " + span.fontName;
 
     const indent = (para.attr?.indent || 0) * INDENT_WIDTH;
     const startX = Math.min(indent, width), endX = width;
@@ -385,7 +425,6 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
 
     let graphArray: GraphArray | undefined;
     let line: Line = new Line();
-    line.maxFontSize = span.fontSize ?? 0;
     const lineArray: LineArray = [];
 
     let preSpanIdx = spanIdx;
@@ -398,7 +437,11 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
         if (preSpanIdx !== spanIdx) {
             preSpanIdx = spanIdx;
             span = spans[spanIdx];
-            font = "normal " + span.fontSize + "px " + span.fontName;
+            const italic = span.italic;
+            const weight = span.weight || 400;
+            const fontSize = span.fontSize;
+            // font = "normal " + span.fontSize + "px " + span.fontName;
+            font = (italic ? 'italic ' : 'normal ') + weight + ' ' + fontSize + 'px ' + span.fontName;
         }
 
         if (span.length === 0 && spanIdx < spansCount - 1) { // 不是最后一个空的span
@@ -442,20 +485,12 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
                 spanOffset = 0;
                 spanIdx++;
             }
-            if (line.length === 0 && graphArray.length === 1) { // 回车换行，如果不是空行不计算行高
-                line.maxFontSize = Math.max(line.maxFontSize, span.fontSize ?? 0)
-            }
 
             line.push(graphArray);
-            line.charCount += c.length;
-            line.graphCount += graphArray.length;
             graphArray = undefined; //new GraphArray();
             lineArray.push(line);
             line = new Line();
             curX = startX;
-            // if (preSpanIdx === spanIdx || spanIdx >= spansCount) {
-            //     line.maxFontSize = span.fontSize ?? 0;
-            // }
             continue;
         }
 
@@ -482,11 +517,8 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
                 spanOffset = 0;
                 spanIdx++;
                 line.push(graphArray);
-                line.graphCount += graphArray.length;
                 graphArray = undefined;
             }
-            line.maxFontSize = Math.max(line.maxFontSize, span.fontSize ?? 0)
-            line.charCount += c.length;
             lineArray.bulletNumbers = layout;
             continue;
         }
@@ -523,13 +555,8 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
                 spanOffset = 0;
                 spanIdx++;
                 line.push(graphArray);
-                line.graphCount += graphArray.length;
                 graphArray = undefined;
             }
-            // if (preSpanIdx !== spanIdx || spanIdx >= spansCount) {
-            line.maxFontSize = Math.max(line.maxFontSize, span.fontSize ?? 0)
-            line.charCount += c.length;
-            // }
         }
         else if (line.length === 0 && (!graphArray || graphArray.length === 0)) { // 至少一个字符
             if (!graphArray) {
@@ -546,10 +573,7 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
                 cc: c.length
             });
 
-            line.maxFontSize = span.fontSize ?? 0;
             line.push(graphArray);
-            line.graphCount += graphArray.length;
-            line.charCount += c.length;
             graphArray = undefined;
             lineArray.push(line);
             line = new Line();
@@ -560,24 +584,17 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
             if (spanOffset >= span.length) {
                 spanOffset = 0;
                 spanIdx++;
-                // if (spanIdx >= spansCount) line.maxFontSize = span.fontSize ?? 0;
             }
-            // else {
-            //     line.maxFontSize = span.fontSize ?? 0;
-            // }
         }
         else {
             if (graphArray) {
                 line.push(graphArray);
-                line.graphCount += graphArray.length;
             }
 
             graphArray = new GraphArray();
             graphArray.attr = span;
             lineArray.push(line);
             line = new Line();
-            line.maxFontSize = span.fontSize ?? 0;
-            line.charCount += c.length;
 
             curX = startX;
             graphArray.push({
@@ -597,7 +614,6 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
                 spanOffset = 0;
                 spanIdx++;
                 line.push(graphArray);
-                line.graphCount += graphArray.length;
                 graphArray = undefined;
             }
         }
@@ -605,7 +621,6 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
 
     if (graphArray && graphArray.length > 0) {
         line.push(graphArray);
-        line.graphCount += graphArray.length;
     }
     if (line.length > 0) {
         lineArray.push(line);
@@ -664,7 +679,7 @@ export function layoutPara(text: Text, para: Para, layoutWidth: number, preBulle
     return paraLayout;
 }
 
-export function layoutText(text: Text, frame: ShapeFrame, behavior?: TextBehaviour): TextLayout {
+export function layoutText(text: Text, frame: ShapeSize, behavior?: TextBehaviour): TextLayout {
     const layoutWidth = ((b: TextBehaviour) => {
         switch (b) {
             case TextBehaviour.Flexible: return Number.MAX_VALUE;

@@ -16,7 +16,8 @@ function initComsMap(comsMap: Map<ShapeType, any>) {
     comsMap.set(ShapeType.Image, ImageShapeView);
     comsMap.set(ShapeType.BoolShape, BoolShapeView);
     comsMap.set(ShapeType.Path, PathShapeView);
-    comsMap.set(ShapeType.Path2, PathShapeView2);
+    // comsMap.set(ShapeType.Path2, PathShapeView2);
+    // comsMap.set(ShapeType.Rectangle, PathShapeDom);
     comsMap.set(ShapeType.Oval, PathShapeView);
     comsMap.set(ShapeType.Text, TextShapeView);
     comsMap.set(ShapeType.Symbol, SymbolView);
@@ -38,7 +39,7 @@ export function exportSvg(shape: Shape): string {
 
     const ViewClass = adaptCtx.comsMap.get(shape.type);
     if (!ViewClass) throw new Error("export svg, unknow shape type : " + shape.type)
-    const view = new ViewClass(adaptCtx, { data: shape }) as DataView;
+    const view = new ViewClass(adaptCtx, { data: shape, scale: undefined }) as DataView;
 
     adaptCtx.layoutAll();
     view.render();

@@ -1,28 +1,28 @@
-import { Border, ContextSettings, CornerRadius, Fill, MarkerType, OverrideType, Shadow, Shape, ShapeFrame, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType, getPathOfRadius } from "../data/classes";
-import { ShapeView } from "./shape";
+import { Border, ContextSettings, CornerRadius, Fill, MarkerType, OverrideType, PathShape, Shadow, Shape, ShapeFrame, ShapeSize, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType, getPathOfRadius } from "../data/classes";
+import { fixFrameByConstrain, frame2Parent, frame2Parent2, ShapeView } from "./shape";
 import { ShapeType } from "../data/classes";
 import { DataView, RootView } from "./view";
-import { fixFrameByConstrain, isDiffRenderTransform, isDiffVarsContainer, isNoTransform } from "./shape";
-import { RenderTransform, getShapeViewId } from "./basic";
+import { getShapeViewId } from "./basic";
 import { DViewCtx, PropsType, VarsContainer } from "./viewctx";
-import { ResizingConstraints } from "../data/consts";
-import { Matrix } from "../basic/matrix";
 import { findOverride, findVar } from "./basic";
 import { objectId } from "../basic/objectid";
+import { makeShapeTransform1By2, makeShapeTransform2By1 } from "../data/shape_transform_util";
+import { ResizingConstraints2 } from "../data/consts";
+import { float_accuracy } from "../basic/consts";
 
 export class SymbolRefView extends ShapeView {
 
     constructor(ctx: DViewCtx, props: PropsType) {
-        super(ctx, props, false);
-
+        super(ctx, props);
         this.symwatcher = this.symwatcher.bind(this);
         this.loadsym();
-        this.afterInit();
+        this.updateMaskMap();
+        // this.afterInit();
     }
 
-    protected afterInit(): void {
+    onMounted(): void {
         if (!this.m_sym) {
-            super.afterInit();
+            super.onMounted();
             return;
         }
         const varsContainer = (this.varsContainer || []).concat(this.m_data as SymbolRefShape);
@@ -30,17 +30,16 @@ export class SymbolRefView extends ShapeView {
             varsContainer.push(this.m_sym.parent);
         }
         varsContainer.push(this.m_sym);
-        let refframe = this.m_data.frame;
-        const symframe = this.m_sym.frame;
-        if (this.isVirtualShape && !(this.m_data as SymbolRefShape).isCustomSize) {
-            refframe = new ShapeFrame(refframe.x, refframe.y, symframe.width, symframe.height);
-        }
-        this._layout(refframe, this.m_data, this.m_transx, varsContainer);
+        // let refframe;
+        const parent = this.parent;
+        const parentFrame = parent?.hasSize() ? parent.frame : undefined;
+        this._layout(this.m_data, parentFrame, varsContainer, this.m_scale);
+        this.updateFrames();
     }
 
-    protected isNoSupportDiamondScale(): boolean {
-        return this.m_data.isNoSupportDiamondScale;
-    }
+    // protected isNoSupportDiamondScale(): boolean {
+    //     return this.m_data.isNoSupportDiamondScale;
+    // }
 
     getDataChilds(): Shape[] {
         return this.m_sym ? this.m_sym.childs : [];
@@ -51,10 +50,34 @@ export class SymbolRefView extends ShapeView {
         return v ? v.value : (this.m_data as SymbolRefShape).refId;
     }
 
+    maskMap: Map<string, Shape | boolean> = new Map;
+    updateMaskMap() {
+        const map = this.maskMap;
+        map.clear();
+
+        const children = this.getDataChilds();
+        let mask: Shape | undefined = undefined;
+        const maskShape: Shape[] = [];
+        for (let i = 0; i < children.length; i++) {
+            const child = children[i];
+            if (child.mask) {
+                mask = child;
+                maskShape.push(child);
+            } else {
+                mask && map.set(child.id, mask);
+            }
+        }
+        this.childs.forEach(c => {
+            if (c.mask) return;
+            c.m_ctx.setDirty(c);
+        });
+        maskShape.forEach(m => m.notify('rerender-mask'));
+        this.notify('mask-env-change');
+    }
+
     // private m_refId: string | undefined;
     private m_sym: SymbolShape | undefined;
     private m_union: SymbolShape | undefined;
-
 
     get symData() {
         return this.m_sym;
@@ -87,6 +110,9 @@ export class SymbolRefView extends ShapeView {
     onDataChange(...args: any[]): void {
         super.onDataChange(...args);
         this.loadsym();
+        if (args.includes('childs')) {
+            this.updateMaskMap();
+        }
     }
 
     symwatcher(...args: any[]) {
@@ -136,9 +162,9 @@ export class SymbolRefView extends ShapeView {
         if (this.m_sym) this.m_sym.unwatch(this.symwatcher);
     }
 
-    private layoutChild(child: Shape, idx: number, transx: RenderTransform | undefined, varsContainer: VarsContainer | undefined, resue: Map<string, DataView>, rView: RootView | undefined): boolean {
+    private layoutChild(child: Shape, idx: number, scale: { x: number, y: number } | undefined, varsContainer: VarsContainer | undefined, resue: Map<string, DataView>, rView: RootView | undefined): boolean {
         let cdom: DataView | undefined = resue.get(child.id);
-        const props = { data: child, transx, varsContainer, isVirtual: true };
+        const props = { data: child, scale, varsContainer, isVirtual: true };
 
         if (cdom) {
             const changed = this.moveChild(cdom, idx);
@@ -165,139 +191,126 @@ export class SymbolRefView extends ShapeView {
 
     layout(props?: PropsType | undefined): void {
         const needLayout = this.m_ctx.removeReLayout(this); // remove from changeset
-
-        if (props) {
-            // 
-            if (props.data.id !== this.m_data.id) throw new Error('id not match');
-            const dataChanged = objectId(props.data) !== objectId(this.m_data);
-            if (dataChanged) {
-                // data changed
-                this.setData(props.data);
-            }
-            // check
-            const diffTransform = isDiffRenderTransform(props.transx, this.m_transx);
-            const diffVars = isDiffVarsContainer(props.varsContainer, this.varsContainer);
-            if (!needLayout &&
-                !dataChanged &&
-                !diffTransform &&
-                !diffVars) {
-                return;
-            }
-
-            if (diffTransform) {
-                // update transform
-                this.m_transx = props.transx;
-            }
-            if (diffVars) {
-                // update varscontainer
-                this.m_ctx.removeDirty(this);
-                this.varsContainer = props.varsContainer;
-                const _id = this.id;
-                // if (_id !== tid) {
-                //     // tid = _id;
-                // }
-            }
+        if (props && !this.updateLayoutProps(props, needLayout)) {
+            return;
         }
 
         this.m_ctx.setDirty(this);
+        this.m_ctx.addNotifyLayout(this);
 
+        const varsContainer = (this.varsContainer || []).concat(this.m_data as SymbolRefShape);
+        if (this.m_sym) {
+            if (this.m_sym.parent instanceof SymbolUnionShape) {
+                varsContainer.push(this.m_sym.parent);
+            }
+            varsContainer.push(this.m_sym);
+        }
+
+        const parent = this.parent;
+        const parentFrame = parent?.hasSize() ? parent.frame : undefined;
+        this._layout(this.data, parentFrame, varsContainer, this.m_scale)
+    }
+
+    protected _layout(shape: Shape, parentFrame: ShapeSize | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, _scale: { x: number; y: number; } | undefined): void {
         if (!this.m_sym) {
+            this.updateLayoutArgs(shape.transform, shape.frame, 0);
             this.removeChilds(0, this.m_children.length).forEach((c) => c.destory());
             return;
         }
-        const varsContainer = (this.varsContainer || []).concat(this.m_data as SymbolRefShape);
-        if (this.m_sym.parent instanceof SymbolUnionShape) {
-            varsContainer.push(this.m_sym.parent);
-        }
-        varsContainer.push(this.m_sym);
 
-        // let transx: RenderTransform | undefined;
-        let refframe = this.m_data.frame;
-        const symframe = this.m_sym.frame;
-        if (this.isVirtualShape && !(this.m_data as SymbolRefShape).isCustomSize) {
-            refframe = new ShapeFrame(refframe.x, refframe.y, symframe.width, symframe.height);
+        const prescale = { x: _scale?.x ?? 1, y: _scale?.y ?? 1 }
+        const scale = { x: prescale.x, y: prescale.y }
+        const childscale = { x: scale.x, y: scale.y }
+
+        // 调整过大小的，使用用户调整的大小，否则跟随symbol大小
+        if (!(this.m_data as SymbolRefShape).isCustomSize) {
+            // 跟随symbol大小
+            // 
+            scale.x *= this.m_sym.size.width / this.m_data.size.width;
+            scale.y *= this.m_sym.size.height / this.m_data.size.height;
+        } else {
+            // 使用自己大小
+            childscale.x *= this.m_data.size.width / this.m_sym.size.width;
+            childscale.y *= this.m_data.size.height / this.m_sym.size.height;
         }
-        const noTrans = isNoTransform(this.m_transx);
-        if (noTrans && refframe.width === symframe.width && refframe.height === symframe.height) {
-            this._layout(refframe, this.m_data, undefined, varsContainer); // 普通更新
-            this.notify("layout");
+
+        const transform = shape.transform;
+        // case 1 不需要变形
+        if (scale.x === 1 && scale.y === 1) {
+            let frame = this.data.frame;
+            this.updateLayoutArgs(transform, frame, 0);
+            this.layoutChilds(varsContainer, this.frame, childscale);
             return;
         }
-        // 先更新自己, 再更新子对象
-        if (!noTrans) {
-            // todo: 临时hack
-            const saveLayoutNormal = this.layoutOnNormal;
-            const saveLayoutOnRectShape = this.layoutOnRectShape;
-            this.layoutOnNormal = () => { };
-            this.layoutOnRectShape = () => { };
-            this._layout(refframe, this.m_data, this.m_transx, varsContainer);
-            this.layoutOnNormal = saveLayoutNormal;
-            this.layoutOnRectShape = saveLayoutOnRectShape;
-        }
-        else { // 第一个
-            const shape = this.m_data;
-            this.updateLayoutArgs(refframe, shape.isFlippedHorizontal, shape.isFlippedVertical, shape.rotation, (shape as any).fixedRadius);
-        }
-        // 
-        // todo
-        {
 
-            const refframe = this.m_frame;
-            const scaleX = refframe.width / symframe.width;
-            const scaleY = refframe.height / symframe.height;
-
-            // todo
-            const shape = this.m_sym;
-            const frame = shape.frame;
-            let x = frame.x;
-            let y = frame.y;
-            let width = frame.width;
-            let height = frame.height;
-
-            const resizingConstraint = shape.resizingConstraint;
-            const fixWidth = resizingConstraint && ResizingConstraints.hasWidth(resizingConstraint);
-            const fixHeight = resizingConstraint && ResizingConstraints.hasHeight(resizingConstraint);
-
-            const saveW = width;
-            const saveH = height;
-
-            if (fixWidth && fixHeight) {
-                // 不需要缩放，但要调整位置
-                x *= scaleX;
-                y *= scaleY;
-                // 居中
-                x += (width * (scaleX - 1)) / 2;
-                y += (height * (scaleY - 1)) / 2;
-            } if (fixWidth || fixHeight) {
-                const newscaleX = fixWidth ? 1 : scaleX;
-                const newscaleY = fixHeight ? 1 : scaleY;
-                x *= scaleX;
-                y *= scaleY;
-                if (fixWidth) x += (width * (scaleX - 1)) / 2;
-                if (fixHeight) y += (height * (scaleY - 1)) / 2;
-                width *= newscaleX;
-                height *= newscaleY;
+        const skewTransfrom = (scalex: number, scaley: number) => {
+            let t = transform;
+            if (scalex !== scaley) {
+                t = t.clone();
+                t.scale(scalex, scaley);
+                // 保留skew去除scale
+                const t2 = makeShapeTransform2By1(t);
+                t2.clearScaleSize();
+                t = makeShapeTransform1By2(t2);
             }
-            else {
-                const frame = refframe;
-                x = frame.x;
-                y = frame.y;
-                width = frame.width;
-                height = frame.height;
-            }
-            const parentFrame = new ShapeFrame(x, y, width, height);
-
-            fixFrameByConstrain(shape, refframe, parentFrame, scaleX, scaleY);
-
-            const cscaleX = parentFrame.width / saveW;
-            const cscaleY = parentFrame.height / saveH;
-            this.layoutOnRectShape(varsContainer, parentFrame, cscaleX, cscaleY);
+            return t;
         }
 
-        this.notify("layout");
+        const resizingConstraint = shape.resizingConstraint ?? 0; // 默认值为靠左、靠顶、宽高固定
+        // 当前对象如果没有frame,需要childs layout完成后才有
+        // 但如果有constrain,则需要提前计算出frame?当前是直接不需要constrain
+        if (!this.hasSize() && (resizingConstraint === 0 || !parentFrame)) {
+            let frame = this.frame; // 不需要更新
+            const t0 = transform.clone();
+            t0.scale(scale.x, scale.y);
+            const save1 = t0.computeCoord(0, 0);
+            const t = skewTransfrom(scale.x, scale.y).clone();
+            const save2 = t.computeCoord(0, 0)
+            const dx = save1.x - save2.x;
+            const dy = save1.y - save2.y;
+            t.trans(dx, dy);
+            this.updateLayoutArgs(t, frame, 0);
+            this.layoutChilds(varsContainer, undefined, childscale);
+            return;
+        }
+
+        const size = this.data.frame; // 如果是group,实时计算的大小。view中此时可能没有
+        const frame = frame2Parent2(transform, size);
+        const saveW = frame.width;
+        const saveH = frame.height;
+
+        let scaleX = scale.x;
+        let scaleY = scale.y;
+
+        if (parentFrame && resizingConstraint !== 0) {
+            fixFrameByConstrain(shape, parentFrame, frame, scaleX, scaleY);
+            scaleX = (frame.width / saveW);
+            scaleY = (frame.height / saveH);
+        } else {
+            frame.x *= prescale.x;
+            frame.y *= prescale.y;
+            frame.width *= scale.x;
+            frame.height *= scale.y;
+        }
+
+        const t = skewTransfrom(scaleX, scaleY).clone();
+        const cur = t.computeCoord(0, 0);
+        t.trans(frame.x - cur.x, frame.y - cur.y);
+
+        const inverse = t.inverse;
+        // const lt = inverse.computeCoord(frame.x, frame.y); // 应该是{0，0}
+        // if (Math.abs(lt.x) > float_accuracy || Math.abs(lt.y) > float_accuracy) throw new Error();
+        const rb = inverse.computeCoord(frame.x + frame.width, frame.y + frame.height);
+        const size2 = new ShapeFrame(0, 0, (rb.x), (rb.y));
+        this.updateLayoutArgs(t, size2, 0);
+        // 重新计算 childscale
+        childscale.x = size2.width / this.m_sym.size.width;
+        childscale.y = size2.height / this.m_sym.size.height;
+
+        this.layoutChilds(varsContainer, this.frame, childscale);
     }
 
-    protected layoutOnNormal(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): void {
+    protected layoutChilds(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, parentFrame: ShapeSize | undefined, scale?: { x: number, y: number }): void {
         const childs = this.getDataChilds();
         const resue: Map<string, DataView> = new Map();
         this.m_children.forEach((c) => resue.set(c.data.id, c));
@@ -306,7 +319,7 @@ export class SymbolRefView extends ShapeView {
         for (let i = 0, len = childs.length; i < len; i++) {
             const cc = childs[i]
             // update childs
-            if (this.layoutChild(cc, i, undefined, varsContainer, resue, rootView)) {
+            if (this.layoutChild(cc, i, scale, varsContainer, resue, rootView)) {
                 changed = true;
             }
         }
@@ -324,45 +337,6 @@ export class SymbolRefView extends ShapeView {
         }
     }
 
-    layoutOnRectShape(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, parentFrame: ShapeFrame, scaleX: number, scaleY: number): void {
-        const childs = this.getDataChilds();
-        const resue: Map<string, DataView> = new Map();
-        this.m_children.forEach((c) => resue.set(c.data.id, c));
-        const rootView = this.getRootView();
-        let changed = false;
-        for (let i = 0, len = childs.length; i < len; i++) {
-            const cc = childs[i]
-            const transform = {
-                dx: 0,
-                dy: 0,
-                scaleX,
-                scaleY,
-                parentFrame: this.frame,
-                vflip: false,
-                hflip: false,
-                rotate: 0
-            }
-            // update childs
-            if (this.layoutChild(cc, i, transform, varsContainer!, resue, rootView)) {
-                changed = true;
-            }
-        }
-        // 删除多余的
-        if (this.m_children.length > childs.length) {
-            const removes = this.removeChilds(childs.length, Number.MAX_VALUE);
-            if (rootView) rootView.addDelayDestory(removes);
-            else removes.forEach((c => c.destory()));
-            changed = true;
-        }
-
-        if (changed) {
-            this.notify("childs"); // notify childs change
-        }
-    }
-
-    layoutOnDiamondShape(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scaleX: number, scaleY: number, rotate: number, vflip: boolean, hflip: boolean, bbox: ShapeFrame, m: Matrix): void {
-        throw new Error("Method not implemented.");
-    }
 
     protected _findOV2(ot: OverrideType, vt: VariableType): Variable | undefined {
         const data = this.data;

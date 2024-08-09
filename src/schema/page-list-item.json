@@ -3,24 +3,16 @@
     "type": "object",
     "properties": {
         "crdtidx": {
-            "type": "array",
-            "items": {
-                "type": "number"
-            }
+            "$ref": "./crdtidx.json"
         },
         "id": {
-            "type": "string",
-            "minLength": 32,
-            "maxLength": 36,
-            "default": "$uuid"
+            "type": "string"
         },
         "name": {
-            "type": "string",
-            "default": "Page"
+            "type": "string"
         },
         "versionId": {
-            "type": "string",
-            "default": ""
+            "type": "string"
         }
     },
     "required": [

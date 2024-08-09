@@ -7,31 +7,33 @@ import { ShapeType, CurvePoint, ShapeFrame } from "./baseclasses"
 import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
 import { parsePath } from "./pathparser";
-import { ContactForm, ContactType } from "./baseclasses";
+import { ContactForm, ContactType, PathSegment } from "./baseclasses";
 import { gen_matrix1, gen_path, handle_contact_from, handle_contact_to, path_for_edited, path_for_free_contact, path_for_free_end_contact, path_for_free_start_contact, slice_invalid_point } from "./utils";
-import { PathShape, Shape } from "./shape";
+import {PathShape, Shape, Transform, ShapeSize} from "./shape";
 import { Page } from "./page";
-import { FrameType, RadiusType } from "./consts";
+import { RadiusType } from "./consts";
 interface PageXY {
     x: number
     y: number
 }
 export class ContactShape extends PathShape implements classes.ContactShape {
     typeId = 'contact-shape'
-    from?: ContactForm
-    to?: ContactForm
+
     isEdited: boolean
     mark: boolean
     text: Text
+
+    from?: ContactForm
+    to?: ContactForm
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
         name: string,
         type: ShapeType,
-        frame: ShapeFrame,
+        transform: Transform,
         style: Style,
-        points: BasicArray<CurvePoint>,
-        isClosed: boolean,
+        size: ShapeSize,
+        pathsegs: BasicArray<PathSegment>,
         isEdited: boolean,
         text: Text,
         mark: boolean
@@ -41,21 +43,35 @@ export class ContactShape extends PathShape implements classes.ContactShape {
             id,
             name,
             type,
-            frame,
+            transform,
             style,
-            points,
-            isClosed
+            size,
+            pathsegs
         )
+
         this.crdtidx = crdtidx;
         this.isEdited = isEdited; // 路径是否已被编辑
         this.text = text;
         this.mark = mark;
     }
+
+    get points() {
+        if (!this.pathsegs.length) {
+            return new BasicArray<CurvePoint>();
+        } else {
+            return this.pathsegs[0].points;
+        }
+    }
+
+    get isClosed() {
+        return !!this.pathsegs[0]?.isClosed;
+    }
+
     /**
      * @description 根据连接类型，在图形身上找一个点。该点的坐标系为页面坐标系
      */
     get_pagexy(shape: Shape, type: ContactType, m2r: Matrix) {
-        const f = shape.frame;
+        const f = shape.size;
         switch (type) {
             case ContactType.Top: return m2r.computeCoord2(f.width / 2, 0);
             case ContactType.Right: return m2r.computeCoord2(f.width, f.height / 2);
@@ -69,7 +85,7 @@ export class ContactShape extends PathShape implements classes.ContactShape {
      * @description 根据连接类型，在外围寻找一个最合适的点。该点的坐标系为页面坐标系
      */
     get_nearest_border_point(shape: Shape, contactType: ContactType) { // 寻找距离外围最近的一个点
-        const f = shape.frame, m2r = shape.matrix2Root();
+        const f = shape.size, m2r = shape.matrix2Root();
         const points = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }];
         const t = m2r.computeCoord2(0, 0);
         const box = { left: t.x, right: t.x, top: t.y, bottom: t.y };
@@ -195,7 +211,7 @@ export class ContactShape extends PathShape implements classes.ContactShape {
         }
 
         if (!fromShape && !toShape) {
-            path_for_free_contact(points, this.frame.width, this.frame.height);
+            path_for_free_contact(points, this.size.width, this.size.height);
         }
 
         if (fromShape && !toShape) {
@@ -203,7 +219,7 @@ export class ContactShape extends PathShape implements classes.ContactShape {
         }
 
         if (!fromShape && toShape) {
-            path_for_free_start_contact(points, end_point, this.frame.width, this.frame.height);
+            path_for_free_start_contact(points, end_point, this.size.width, this.size.height);
         }
 
         return slice_invalid_point(points);
@@ -211,14 +227,14 @@ export class ContactShape extends PathShape implements classes.ContactShape {
 
     private __pathCache: Path | undefined;
     getPath(): Path {
-        return this.getPathOfFrame(this.frame, this.fixedRadius);
+        return this.getPathOfSize(this.size, this.fixedRadius);
     }
 
     getPath2(): Path {
         return this.getPath();
     }
 
-    getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
+    getPathOfSize(frame: ShapeSize, fixedRadius?: number): Path {
         // const offsetX = 0;
         // const offsetY = 0;
         const width = frame.width;
@@ -237,13 +253,13 @@ export class ContactShape extends PathShape implements classes.ContactShape {
         return this.__page;
     }
 
-    get isNoSupportDiamondScale() {
-        return true;
-    }
+    // get isNoSupportDiamondScale() {
+    //     return true;
+    // }
 
-    get frameType() {
-        return FrameType.None;
-    }
+    // get frameType() {
+    //     return FrameType.None;
+    // }
 
     get isPathIcon() {
         return false;
@@ -251,5 +267,8 @@ export class ContactShape extends PathShape implements classes.ContactShape {
 
     get radiusType() {
         return RadiusType.Fixed;
+    }
+    getImageFill() {
+        return false;
     }
 }

@@ -66,9 +66,12 @@ shandler['parent'] = shandler['__parent'] = (view: ShapeView) => {
 };
 shandler['isVisible'] = (view: ShapeView) => view.isVisible;
 shandler['isLocked'] = (view: ShapeView) => view.isLocked;
-shandler['frame'] = (view: ShapeView) => view.frame;
-shandler['isFlippedVertical'] = (view: ShapeView) => view.isFlippedVertical;
-shandler['isFlippedHorizontal'] = (view: ShapeView) => view.isFlippedHorizontal;
+// shandler['frame'] = (view: ShapeView) => view.frame;
+shandler['size'] = (view: ShapeView) => view.frame;
+shandler['transform'] = (view: ShapeView) => view.transform;
+// todo flip
+// shandler['isFlippedVertical'] = (view: ShapeView) => view.isFlippedVertical;
+// shandler['isFlippedHorizontal'] = (view: ShapeView) => view.isFlippedHorizontal;
 shandler['rotation'] = (view: ShapeView) => view.rotation;
 shandler['isNoTransform'] = (view: ShapeView) => { return () => view.isNoTransform(); }
 shandler['getPath'] = (view: ShapeView) => { return () => view.getPath(); }
@@ -134,14 +137,14 @@ class PathShapeHdl extends ShapeHdl {
         return this.m_view as PathShapeView;
     }
     get(target: object, propertyKey: PropertyKey, receiver?: any) {
-        const propStr = propertyKey.toString();
-        if (propStr === 'points') {
-            const points = this.view.m_points;
-            if (points) {
-                return points;
-            }
-            return (this.view.data as PathShape).points;
-        }
+        // const propStr = propertyKey.toString();
+        // if (propStr === 'points') {
+        //     const points = this.view.m_points;
+        //     if (points) {
+        //         return points;
+        //     }
+        //     return (this.view.data as PathShape).points;
+        // }
         return super.get(target, propertyKey, receiver);
     }
 }

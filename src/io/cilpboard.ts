@@ -1,6 +1,7 @@
 import { GroupShape, Shape, ShapeFrame, ShapeType, SymbolUnionShape, TextShape } from "../data/shape";
 import {
-    exportArtboard, exportBoolShape,
+    exportArtboard,
+    exportBoolShape,
     exportContactShape,
     exportCutoutShape,
     exportGradient,
@@ -9,8 +10,9 @@ import {
     exportLineShape,
     exportOvalShape,
     exportPathShape,
-    exportPathShape2,
+    exportPathShape2, exportPolygonShape,
     exportRectShape,
+    exportStarShape,
     exportSymbolRefShape,
     exportSymbolShape,
     exportSymbolUnionShape,
@@ -32,7 +34,9 @@ import {
     importOvalShape,
     importPathShape,
     importPathShape2,
+    importPolygonShape,
     importRectShape,
+    importStarShape,
     importSymbolRefShape,
     importSymbolShape,
     importSymbolUnionShape,
@@ -42,11 +46,10 @@ import {
 } from "../data/baseimport";
 import * as types from "../data/typesdefine";
 import { v4 } from "uuid";
-import { Document } from "../data/document";
+import { Document } from "../data";
 import { newSymbolRefShape, newTextShape, newTextShapeByText } from "../editor/creator";
-import { Api } from "../editor/coop/recordapi";
-import { translateTo } from "../editor/frame";
-import { Page } from "../data/page";
+import { Page } from "../data";
+import { FMT_VER_latest } from "../data/fmtver";
 
 export function set_childs_id(shapes: Shape[], matched?: Set<string>) {
     for (let i = 0, len = shapes.length; i < len; i++) {
@@ -114,6 +117,10 @@ export function export_shape(shapes: Shape[]) {
             content = exportSymbolUnionShape(shape as unknown as types.SymbolUnionShape, ctx);
         } else if (type === ShapeType.BoolShape) {
             content = exportBoolShape(shape as unknown as types.BoolShape, ctx);
+        } else if (type === ShapeType.Star) {
+            content = exportStarShape(shape as unknown as types.StarShape, ctx);
+        } else if (type === ShapeType.Polygon) {
+            content = exportPolygonShape(shape as unknown as types.PolygonShape, ctx)
         }
         if (content) {
             result.push(content);
@@ -211,6 +218,7 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
     const ctx: IImportContext = new class implements IImportContext {
         document: Document = document;
         curPage: string = page.id;
+        fmtVer: number = FMT_VER_latest
     };
     const result: Shape[] = [];
 
@@ -234,19 +242,22 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
                 if (!ref) {
                     continue;
                 }
-                const f = new ShapeFrame(_s.frame.x, _s.frame.y, _s.frame.width, _s.frame.height);
+
+                const f = new ShapeFrame(_s.transform.m02, _s.transform.m12, _s.size.width, _s.size.height);
                 if ((_s instanceof SymbolUnionShape)) {
                     const dlt = (_s as any).childs[0];
                     if (!dlt) continue;
-                    f.width = dlt.frame.width;
-                    f.height = dlt.frame.height;
+                    f.width = dlt.size.width;
+                    f.height = dlt.size.height;
                 }
                 r = newSymbolRefShape(_s.name, f, _s.id, document.symbolsMgr);
-                // rotate & flip
                 if (r) {
-                    r.rotation = _s.rotation;
-                    r.isFlippedHorizontal = _s.isFlippedHorizontal;
-                    r.isFlippedVertical = _s.isFlippedVertical;
+                    const rt = r.transform;
+                    const st = _s.transform;
+                    rt.m00 = st.m00;
+                    rt.m01 = st.m01;
+                    rt.m10 = st.m10;
+                    rt.m11 = st.m11;
                     result.push(r);
                 }
                 continue;
@@ -257,19 +268,19 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
             }
 
             if (type === ShapeType.Rectangle) {
-                r = importRectShape(_s as any as types.RectShape);
+                r = importRectShape(_s as any as types.RectShape, ctx);
             } else if (type === ShapeType.Oval) {
-                r = importOvalShape(_s as any as types.OvalShape);
+                r = importOvalShape(_s as any as types.OvalShape, ctx);
             } else if (type === ShapeType.Line) {
-                r = importLineShape(_s as any as types.LineShape);
+                r = importLineShape(_s as any as types.LineShape, ctx);
             } else if (type === ShapeType.Image) {
                 r = importImageShape(_s as any as types.ImageShape, ctx);
             } else if (type === ShapeType.Text) {
                 r = importTextShape(_s as any as types.TextShape, ctx);
             } else if (type === ShapeType.Path) {
-                r = importPathShape(_s as any as types.PathShape);
+                r = importPathShape(_s as any as types.PathShape, ctx);
             } else if (type === ShapeType.Path2) {
-                r = importPathShape2(_s as any as types.PathShape2);
+                r = importPathShape2(_s as any as types.PathShape2, ctx);
             } else if (type === ShapeType.Artboard) {
                 const children = (_s as any).childs;
                 children && children.length && set_childs_id(children, matched);
@@ -314,6 +325,10 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
                 const children = (_s as any).childs;
                 children && children.length && set_childs_id(children, matched);
                 r = importBoolShape(_s as any as types.BoolShape, ctx);
+            } else if (type === ShapeType.Star) {
+                r = importStarShape(_s as any as types.StarShape, ctx)
+            } else if (type === ShapeType.Polygon) {
+                r = importPolygonShape(_s as any as types.PolygonShape, ctx)
             }
 
             if (r) {
@@ -373,12 +388,12 @@ export function trasnform_text(document: Document, text: types.Text, gen?: boole
     return _text;
 }
 
-export function modify_frame_after_insert(api: Api, page: Page, shapes: Shape[]) {
-    for (let i = 0, len = shapes.length; i < len; i++) {
-        const shape = shapes[i];
-        translateTo(api, page, shape, shape.frame.x, shape.frame.y);
-    }
-}
+// export function modify_frame_after_insert(api: Api, page: Page, shapes: Shape[]) {
+//     for (let i = 0, len = shapes.length; i < len; i++) {
+//         const shape = shapes[i];
+//         translateTo(api, page, shape, shape.frame.x, shape.frame.y);
+//     }
+// }
 
 export function XYsBounding(points: { x: number, y: number }[]) {
     const xs: number[] = [];
@@ -399,7 +414,7 @@ export function get_frame(shapes: Shape[]): { x: number, y: number }[] {
     for (let i = 0, len = shapes.length; i < len; i++) {
         const s = shapes[i];
         const m = s.matrix2Root();
-        const f = s.frame;
+        const f = s.size;
         const ps: { x: number, y: number }[] = [
             { x: 0, y: 0 },
             { x: f.width, y: 0 },

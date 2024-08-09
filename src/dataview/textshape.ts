@@ -1,26 +1,32 @@
-import { TextLayout } from "../data/textlayout";
-import { OverrideType, Para, Path, ShapeFrame, Span, Text, TextBehaviour, TextShape, VariableType } from "../data/classes";
+import {
+    OverrideType,
+    Para,
+    Path,
+    BasicArray,
+    TextLayout,
+    ShapeSize,
+    Span,
+    Text,
+    TextBehaviour,
+    TextShape,
+    Transform,
+    VariableType,
+    ShapeFrame
+} from "../data";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
 import { renderText2Path, renderTextLayout } from "../render/text";
-import { CursorLocate, TextLocate, locateCursor, locateNextCursor, locatePrevCursor, locateRange, locateText } from "../data/textlocate";
-import { BasicArray } from "../data/basic";
+import {
+    CursorLocate, TextLocate, locateCursor,
+    locateNextCursor, locatePrevCursor, locateRange, locateText
+} from "../data/textlocate";
 import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "../data/textutils";
-import { DViewCtx, PropsType } from "./viewctx";
 import { objectId } from "../basic/objectid";
 
 export class TextShapeView extends ShapeView {
-
-    constructor(ctx: DViewCtx, props: PropsType, isTopClass: boolean = true) {
-        super(ctx, props, false);
-        if (isTopClass) this.afterInit();
-    }
-
-    protected isNoSupportDiamondScale(): boolean {
-        return this.m_data.isNoSupportDiamondScale;
-    }
     __str: string | undefined;
     __strText: Text | undefined;
+
     getText(): Text {
         const v = this._findOV(OverrideType.Text, VariableType.Text);
         if (v && typeof v.value === 'string') {
@@ -50,9 +56,11 @@ export class TextShapeView extends ShapeView {
         if (typeof text === 'string') throw new Error("");
         return text;
     }
+
     get data() {
         return this.m_data as TextShape;
     }
+
     get text() {
         return this.getText();
     }
@@ -63,6 +71,7 @@ export class TextShapeView extends ShapeView {
 
     __layoutToken: string | undefined;
     __preText: Text | undefined;
+
     getLayout() {
         const text = this.getText();
         if (this.__preText && this.__layoutToken && objectId(this.__preText) !== objectId(text)) {
@@ -110,62 +119,77 @@ export class TextShapeView extends ShapeView {
         return this.m_textpath;
     }
 
-    renderContents(): EL[] {
-        const layout = this.getLayout();
-        return renderTextLayout(elh, layout, this.frame);
+    onDataChange(...args: any[]): void {
+        super.onDataChange(...args);
+        this.m_textpath = undefined;
     }
 
-    __origin_frame: ShapeFrame = new ShapeFrame(0, 0, 0, 0);
+    renderContents(): EL[] {
+        const layout = this.getLayout();
+        return renderTextLayout(elh, layout, this.frame, this.blur);
+    }
+
+    __origin_frame: ShapeSize = new ShapeSize();
 
     forceUpdateOriginFrame() {
-        const frame = this.data.frame;
-        this.__origin_frame.x = frame.x;
-        this.__origin_frame.y = frame.y;
+        const frame = this.data.size;
+        // this.__origin_frame.x = frame.x;
+        // this.__origin_frame.y = frame.y;
         this.__origin_frame.width = frame.width;
         this.__origin_frame.height = frame.height;
     }
 
-    updateLayoutArgs(frame: ShapeFrame, hflip: boolean | undefined, vflip: boolean | undefined, rotate: number | undefined, radius: number | undefined): void {
+    updateLayoutArgs(trans: Transform, size: ShapeFrame, radius: number | undefined): void {
         // if (this.isVirtualShape && isDiffShapeFrame(this.m_frame, frame)) {
         //     this.updateSize(frame.width, frame.height);
         // }
-        super.updateLayoutArgs(frame, hflip, vflip, rotate, radius);
-        this.__origin_frame.x = frame.x;
-        this.__origin_frame.y = frame.y;
-        this.__origin_frame.width = frame.width;
-        this.__origin_frame.height = frame.height;
+        super.updateLayoutArgs(trans, size, radius);
+        // this.__origin_frame.x = frame.x;
+        // this.__origin_frame.y = frame.y;
+        this.__origin_frame.width = size.width;
+        this.__origin_frame.height = size.height;
         // update frame by layout
         this.getLayout(); // 要提前排版，不然frame不对，填充不对。也可以考虑先renderContents，再renderFills。
-        this.updateFrameByLayout(frame);
+        this.updateFrameByLayout(size);
     }
 
-    private updateFrameByLayout(origin: ShapeFrame) {
+    private updateFrameByLayout(origin: ShapeSize) {
         if (!this.isVirtualShape || !this.m_layout) return;
         const text = this.getText();
         const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
         if (textBehaviour !== TextBehaviour.Flexible) return;
         let notify = false;
-        const width = Math.ceil(this.m_layout.contentWidth);
-        const height = Math.ceil(this.m_layout.contentHeight);
-        const adjX = this.m_layout.alignX;
-        if (adjX !== 0) {
-            this.m_frame.x = origin.x + adjX;
-            notify = true;
-        }
-        if (width !== this.m_frame.width) {
-            this.m_frame.width = width;
-            notify = true;
-        }
-        if (height !== this.m_frame.height) {
-            this.m_frame.height = height;
-            notify = true;
-        }
-        // notify?
         if (notify) {
             this.m_pathstr = undefined; // need update
             this.m_path = undefined;
             this.notify("shape-frame");
         }
+    }
+
+    bleach(el: EL) {  // 漂白
+        if (el.elattr.fill) el.elattr.fill = '#FFF';
+        if (el.elattr.stroke) el.elattr.stroke = '#FFF';
+
+        // 漂白字体
+        if (el.eltag === 'text') {
+            if ((el.elattr?.style as any).fill) {
+                (el.elattr?.style as any).fill = '#FFF'
+            }
+        }
+
+        // 漂白阴影
+        if (el.eltag === 'feColorMatrix' && el.elattr.result) {
+            let values: any = el.elattr.values;
+            if (values) values = values.split(' ');
+            if (values[3]) values[3] = 1;
+            if (values[8]) values[8] = 1;
+            if (values[13]) values[13] = 1;
+            el.elattr.values = values.join(' ');
+        }
+
+        // 渐变漂白不了
+
+        if (Array.isArray(el.elchilds)) el.elchilds.forEach(el => this.bleach(el));
     }
 
     onDestory(): void {

@@ -1,7 +1,7 @@
 import { Page } from "../data/page";
 import { IImportContext, importDocumentMeta, importPage, importSymbolShape, importSymbolUnionShape } from "../data/baseimport";
 import * as types from "../data/typesdefine"
-import { IDataGuard } from "../data/basic";
+import { BasicMap, IDataGuard } from "../data/basic";
 import { Document, DocumentMeta } from "../data/document";
 import * as storage from "./storage";
 import { base64Encode, base64ToDataUrl } from "../basic/utils";
@@ -15,7 +15,6 @@ interface IDataLoader {
     loadDocumentMeta(id: string): Promise<DocumentMeta>
     loadPage(ctx: IImportContext, id: string): Promise<Page>
     loadMedia(ctx: IImportContext, id: string): Promise<{ buff: Uint8Array, base64: string }>
-    loadFreeSymbols(ctx: IImportContext, id: string, versionId?: string): Promise<SymbolShape[]>
 }
 
 class RemoteLoader {
@@ -65,15 +64,6 @@ export class DataLoader implements IDataLoader {
         return importPage(json as types.Page, ctx)
     }
 
-    async loadFreeSymbols(ctx: IImportContext, versionId?: string): Promise<SymbolShape[]> {
-        const json: IJSON = await this.remoteLoader.loadJson(`${this.documentPath}/freesymbols.json`, versionId)
-        const syms = json as types.SymbolShape[] || [];
-        return syms.map((s) => {
-            if (s.typeId === 'symbol-union-shape') return importSymbolUnionShape(s, ctx);
-            return importSymbolShape(s, ctx)
-        })
-    }
-
     async loadMedia(ctx: IImportContext, id: string, versionId?: string): Promise<{
         buff: Uint8Array;
         base64: string;
@@ -112,28 +102,19 @@ export async function importDocument(storage: storage.IStorage, documentPath: st
 
     const meta = await loader.loadDocumentMeta(versionId);
     const idToVersionId: Map<string, string | undefined> = new Map(meta.pagesList.map(p => [p.id, p.versionId]));
+    const fmtVer = meta.fmtVer ?? 0;
 
-    const document = new Document(meta.id, versionId ?? "", meta.lastCmdId, meta.symbolregist, meta.name, meta.pagesList, gurad);
+    const document = new Document(meta.id, meta.name, versionId ?? "", meta.lastCmdId, meta.pagesList, meta.symbolregist, gurad, meta.freesymbols as BasicMap<string, SymbolShape>);
 
     document.pagesMgr.setLoader((id: string) => {
-        const ctx: IImportContext = new class implements IImportContext { document: Document = document; curPage: string = id };
+        const ctx: IImportContext = new class implements IImportContext { document: Document = document; curPage: string = id; fmtVer: number = fmtVer };
         const page = loader.loadPage(ctx, id, idToVersionId.get(id))
         return page;
     });
     document.mediasMgr.setLoader((id: string) => {
-        const ctx: IImportContext = new class implements IImportContext { document: Document = document; curPage: string = "" };
+        const ctx: IImportContext = new class implements IImportContext { document: Document = document; curPage: string = ""; fmtVer: number = fmtVer };
         return loader.loadMedia(ctx, id)
     });
-
-    document.__freesymbolsLoader = (() => {
-        let hasLoadFreeSymbols = false;
-        return async () => {
-            if (hasLoadFreeSymbols) return undefined;
-            const ctx: IImportContext = new class implements IImportContext { document: Document = document; curPage: string = "freesymbols" };
-            await loader.loadFreeSymbols(ctx, meta.freesymbolsVersionId);
-            hasLoadFreeSymbols = true;
-        }
-    })();
 
     return {
         document: document,

@@ -1,0 +1,33 @@
+{
+  "description": "guide",
+  "type": "object",
+  "properties": {
+    "crdtidx": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "typeId": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string"
+    },
+    "axis": {
+      "$ref": "./guide-axis.json"
+    },
+    "offset": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "crdtidx",
+    "typeId",
+    "id",
+    "axis",
+    "offset"
+  ],
+  "additionalProperties": false
+}

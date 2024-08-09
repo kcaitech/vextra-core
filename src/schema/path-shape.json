@@ -2,22 +2,22 @@
     "description": "path shape",
     "type": "object",
     "properties": {
-        "points": {
+        "size": {
+            "$ref": "./shape-size.json"
+        },
+        "pathsegs": {
             "type": "array",
             "items": {
-                "$ref": "./curve-point.json"
+                "$ref": "./path-segment.json"
             }
-        },
-        "isClosed": {
-            "type": "boolean"
         },
         "fixedRadius": {
             "type": "number"
         }
     },
     "required": [
-        "points",
-        "isClosed"
+        "size",
+        "pathsegs"
     ],
     "allOf": [
         {

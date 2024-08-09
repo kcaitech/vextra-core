@@ -1,0 +1,38 @@
+{
+    "description": "transform",
+    "type": "object",
+    "properties": {
+        "m00": {
+            "type": "number",
+            "default": 1
+        },
+        "m01": {
+            "type": "number",
+            "default": 0
+        },
+        "m02": {
+            "type": "number",
+            "default": 0
+        },
+        "m10": {
+            "type": "number",
+            "default": 0
+        },
+        "m11": {
+            "type": "number",
+            "default": 1
+        },
+        "m12": {
+            "type": "number",
+            "default": 0
+        }
+    },
+    "required": [
+        "m00",
+        "m01",
+        "m02",
+        "m10",
+        "m11",
+        "m12"
+    ]
+}

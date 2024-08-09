@@ -1,13 +1,14 @@
 import { TextLayout } from "../data/textlayout";
-import { Path, ShapeFrame, TableCell, TableCellType, Text } from "../data/classes";
+import { BlurType, Path, ShapeFrame, TableCell, TableCellType, Text } from "../data/classes";
 import { EL, elh } from "./el";
-import { ShapeView, isDiffShapeFrame } from "./shape";
+import { ShapeView } from "./shape";
 import { renderText2Path, renderTextLayout } from "../render/text";
 import { DViewCtx, PropsType } from "./viewctx";
 import { CursorLocate, TextLocate, locateCursor, locateNextCursor, locatePrevCursor, locateRange, locateText } from "../data/textlocate";
 import { newTableCellText } from "../data/textutils";
 import { objectId } from "../basic/objectid";
 import { TableView } from "./table";
+import { innerShadowId } from "../render";
 
 export class TableCellView extends ShapeView {
 
@@ -15,19 +16,21 @@ export class TableCellView extends ShapeView {
     private m_index: { row: number, col: number };
 
     constructor(ctx: DViewCtx, props: PropsType & { frame: ShapeFrame } & { index: { row: number, col: number } }, imgPH: string) {
-        super(ctx, props, false);
+        super(ctx, props);
         this.m_imgPH = imgPH;
 
         const frame = props.frame;
+        this.m_transform.m02 = frame.x;
+        this.m_transform.m12 = frame.y;
         this.m_frame.x = frame.x;
         this.m_frame.y = frame.y;
         this.m_frame.width = frame.width;
         this.m_frame.height = frame.height;
         this.m_index = props.index;
-        this.afterInit();
+        // this.afterInit();
     }
 
-    protected afterInit(): void {
+    onMounted(): void {
         // const frame = this.frame;
         // if (!this.isVirtualShape && this.cellType === TableCellType.Text) {
         //     const text = this.getText();
@@ -56,10 +59,18 @@ export class TableCellView extends ShapeView {
         }
 
         const frame = props.frame;
-        if (isDiffShapeFrame(this.m_frame, frame)) {
-            this.updateLayoutArgs(frame, undefined, undefined, undefined, undefined);
+        if (this.m_transform.m02 !== frame.x || this.m_transform.m12 !== frame.y || this.frame.width !== frame.width || this.frame.height !== frame.height) {
+            // this.updateLayoutArgs(frame, undefined, undefined, undefined, undefined);
+            this.m_transform.m02 = frame.x;
+            this.m_transform.m12 = frame.y;
+            this.m_frame.x = frame.x;
+            this.m_frame.y = frame.y;
+            this.m_frame.width = frame.width;
+            this.m_frame.height = frame.height;
             this.m_textpath = undefined;
             this.m_layout = undefined; // todo
+            this.m_path = undefined;
+            this.m_pathstr = undefined;
             // if (!this.m_isVirtual) {
             //     const shape = this.m_data as TableCell;
             //     shape.text?.updateSize(frame.width, frame.height);
@@ -151,6 +162,10 @@ export class TableCellView extends ShapeView {
         return locateNextCursor(this.getLayout(), index);
     }
 
+    get masked() {
+        return undefined;
+    }
+
     getTextPath() {
         if (!this.m_textpath) {
             this.m_textpath = renderText2Path(this.getLayout(), 0, 0)
@@ -204,7 +219,7 @@ export class TableCellView extends ShapeView {
             //     shape.text?.updateSize(frame.width, frame.height);
             // }
             const layout = this.getLayout();
-            return renderTextLayout(elh, layout, frame);
+            return renderTextLayout(elh, layout, frame, this.blur);
         }
         return [];
     }
@@ -212,5 +227,45 @@ export class TableCellView extends ShapeView {
     onDestory(): void {
         super.onDestory();
         if (this.__layoutToken && this.__preText) this.__preText.dropLayout(this.__layoutToken, this.id);
+    }
+    render(): number {
+        if (!this.checkAndResetDirty()) return this.m_render_version;
+
+        if (!this.isVisible) {
+            this.reset("g");
+            return ++this.m_render_version;
+        }
+
+        const fills = this.renderFills();
+        const borders = this.renderBorders();
+        const childs = this.renderContents();
+
+        const filterId = `${objectId(this)}`;
+        const shadows = this.renderShadows(filterId);
+        const blurId = `blur_${objectId(this)}`;
+        const blur = this.renderBlur(blurId);
+
+        let props = this.renderProps();
+        let children = [...fills, ...childs, ...borders];
+
+        // 阴影
+        if (shadows.length) {
+            let filter: string = '';
+            const inner_url = innerShadowId(filterId, this.getShadows());
+            filter = `url(#pd_outer-${filterId}) `;
+            if (inner_url.length) filter += inner_url.join(' ');
+            children = [...shadows, elh("g", { filter }, children)];
+        }
+
+        // 模糊
+        if (blur.length) {
+            let filter: string = '';
+            if (this.blur?.type === BlurType.Gaussian) filter = `url(#${blurId})`;
+            children = [...blur, elh('g', { filter }, children)];
+        }
+
+        this.reset("g", props, children);
+
+        return ++this.m_render_version;
     }
 }

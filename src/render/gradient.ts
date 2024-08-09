@@ -1,5 +1,5 @@
 import { objectId } from "../basic/objectid";
-import { ShapeFrame, Gradient, GradientType, Stop, Color } from "../data/classes";
+import { ShapeSize, Gradient, GradientType, Stop, Color } from "../data/classes";
 
 const defaultColor = Color.DefaultColor;
 
@@ -15,7 +15,7 @@ function renderStop(h: Function, d: Stop): any {
     return n;
 }
 
-export function render(h: Function, value: Gradient, frame: ShapeFrame): { id: string, style: string | undefined, node: any } {
+export function render(h: Function, value: Gradient, frame: ShapeSize): { id: string, style: string | undefined, node: any } {
     const id = "gradient" + objectId(value);
     let style;
     let node: any;

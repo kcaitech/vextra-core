@@ -3,16 +3,13 @@
     "type": "object",
     "properties": {
         "userId": {
-            "type": "string",
-            "default": ""
+            "type": "string"
         },
         "userNickname": {
-            "type": "string",
-            "default": "anonymous"
+            "type": "string"
         },
         "avatar": {
-            "type": "string",
-            "default": ""
+            "type": "string"
         }
     },
     "required": [

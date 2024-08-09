@@ -3,28 +3,19 @@
     "type": "object",
     "properties": {
         "crdtidx": {
-            "type": "array",
-            "items": {
-                "type": "number"
-            }
+            "$ref": "./crdtidx.json"
         },
         "typeId": {
-            "type": "string",
-            "default": "shape"
+            "type": "string"
         },
         "id": {
-            "type": "string",
-            "minLength": 32,
-            "maxLength": 36,
-            "default": "$uuid"
+            "type": "string"
         },
         "isEnabled": {
-            "type": "boolean",
-            "default": false
+            "type": "boolean"
         },
         "blurRadius": {
-            "type": "number",
-            "default": 0
+            "type": "number"
         },
         "color": {
             "$ref": "./color.json"
@@ -36,16 +27,13 @@
             "$ref": "./graphics-context-settings.json"
         },
         "offsetX": {
-            "type": "number",
-            "default": 0
+            "type": "number"
         },
         "offsetY": {
-            "type": "number",
-            "default": 0
+            "type": "number"
         },
         "spread": {
-            "type": "number",
-            "default": 0
+            "type": "number"
         }
     },
     "required": [

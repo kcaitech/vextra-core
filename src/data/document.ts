@@ -2,10 +2,11 @@ import { DocumentMeta, PageListItem } from "./baseclasses";
 import { Page } from "./page";
 import { BasicArray, BasicMap, IDataGuard, ResourceMgr, WatchableObject } from "./basic";
 import { Style } from "./style";
-import { GroupShape, Shape, TextShape } from "./shape";
+import { GroupShape, Shape, SymbolShape, SymbolUnionShape, TextShape } from "./shape";
 import { TableShape } from "./table";
 import { SymbolRefShape } from "./symbolref";
 import { SymbolMgr } from "./symbolmgr";
+import { FMT_VER_latest } from "./fmtver";
 
 export { DocumentMeta, PageListItem } from "./baseclasses";
 
@@ -66,7 +67,7 @@ export class Document extends (DocumentMeta) {
     getOpTarget(path: string[]): any {
         if (path.length === 0) throw new Error("path is empty");
         const path0 = path[0];
-        if (path.length === 1) {
+        if (path.length === 1) { // document
             if (path0 === this.id) return this;
             throw new Error("The shape is not found");
         }
@@ -75,14 +76,9 @@ export class Document extends (DocumentMeta) {
         let i = 2;
         if (path1 === 'pages') {
             target = this.__pages;
-            // } else if (path1 === 'artboards') {
-            //     target = this.__artboards;
-        } else if (path1 === 'symbols') {
-            target = this.__symbols;
-        } else if (path1 === 'styles') {
-            target = this.__styles;
-        } else if (path1 === 'medias') {
-            target = this.__medias;
+        } else if (path1 === 'freesymbols') {
+            if (!this.freesymbols) this.freesymbols = new BasicMap();
+            target = this.freesymbols;
         } else {
             i = 1;
         }
@@ -109,19 +105,19 @@ export class Document extends (DocumentMeta) {
     private __medias: ResourceMgr<{ buff: Uint8Array, base64: string }>
     private __versionId: string;
     private __name: string;
-    __freesymbolsLoader?: () => Promise<any>;
     __correspondent: SpecialActionCorrespondent; // 额外动作通信
 
     constructor(
         id: string,
+        name: string,
         versionId: string, // 版本id
         lastCmdId: string, // 此版本最后一个cmd的id
-        symbolregist: BasicMap<string, string>,
-        name: string,
         pagesList: BasicArray<PageListItem>,
-        guard: IDataGuard
+        symbolregist: BasicMap<string, string>,
+        guard: IDataGuard,
+        freesymbols?: BasicMap<string, SymbolShape>
     ) {
-        super(id, name, pagesList ?? new BasicArray(), lastCmdId, symbolregist)
+        super(id, name, FMT_VER_latest, pagesList ?? new BasicArray(), lastCmdId, symbolregist)
         this.__versionId = versionId;
         this.__name = name;
         this.__pages = new ResourceMgr<Page>([id, 'pages'], (data: Page) => guard.guard(data));
@@ -129,6 +125,7 @@ export class Document extends (DocumentMeta) {
         this.__medias = new ResourceMgr<{ buff: Uint8Array, base64: string }>([id, 'medias']);
         this.__styles = new ResourceMgr<Style>([id, 'styles']);
         this.__correspondent = new SpecialActionCorrespondent();
+        this.freesymbols = freesymbols;
         return guard.guard(this);
     }
 

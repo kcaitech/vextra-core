@@ -1,19 +1,28 @@
-import { CurvePoint, PathShape, Shape, ShapeFrame, ShapeType, SymbolRefShape, SymbolShape } from "../data/classes";
-import { Path } from "../data/path";
-import { parsePath } from "../data/pathparser";
-import { ShapeView, matrix2parent, transformPoints } from "./shape";
-import { Matrix } from "../basic/matrix";
-import { RenderTransform } from "./basic";
-import { DViewCtx, PropsType } from "./viewctx";
+import {
+    makeShapeTransform1By2,
+    makeShapeTransform2By1,
+    PathShape,
+    PathShape2,
+    Shape,
+    ShapeFrame,
+    ShapeType,
+    SymbolRefShape,
+    SymbolShape,
+    Transform
+} from "../data";
+import { ShapeView } from "./shape";
 import { EL, elh } from "./el";
 import { innerShadowId, renderBorders } from "../render";
 import { objectId } from "../basic/objectid";
+import { BlurType, PathSegment } from "../data/typesdefine";
+import { render as renderLineBorders } from "../render/line_borders"
+import { PageView } from "./page";
 
 export class PathShapeView extends ShapeView {
+    m_pathsegs?: PathSegment[];
 
-    constructor(ctx: DViewCtx, props: PropsType, isTopClass: boolean = true) {
-        super(ctx, props, isTopClass);
-        this.afterInit();
+    get segments() {
+        return this.m_pathsegs || (this.m_data as PathShape2).pathsegs;
     }
 
     get data(): PathShape {
@@ -24,90 +33,167 @@ export class PathShapeView extends ShapeView {
         return this.data.isClosed;
     }
 
-    get points() {
-        return this.m_points || this.data.points;
-    }
-
-    m_points?: CurvePoint[];
-
-    protected _layout(frame: ShapeFrame, shape: Shape, transform: RenderTransform | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): void {
-        this.m_points = undefined;
-        super._layout(frame, shape, transform, varsContainer);
-    }
-
-    layoutOnDiamondShape(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scaleX: number, scaleY: number, rotate: number, vflip: boolean, hflip: boolean, bbox: ShapeFrame, m: Matrix): void {
-        const shape = this.m_data as PathShape;
-        m.preScale(shape.frame.width, shape.frame.height); // points投影到parent坐标系的矩阵
-
-        const matrix2 = matrix2parent(bbox.x, bbox.y, bbox.width, bbox.height, 0, false, false);
-        matrix2.preScale(bbox.width, bbox.height); // 当对象太小时，求逆矩阵会infinity
-        m.multiAtLeft(matrix2.inverse); // 反向投影到新的坐标系
-
-        const points = transformPoints(shape.points, m); // 新的points
-        this.m_points = points;
-        const frame = this.frame;
-        this.m_path = new Path(parsePath(points, shape.isClosed, frame.width, frame.height, shape.fixedRadius));
-        this.m_pathstr = this.m_path.toString();
+    protected _layout(shape: Shape, parentFrame: ShapeFrame | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scale: { x: number, y: number } | undefined): void {
+        this.m_pathsegs = undefined;
+        super._layout(shape, parentFrame, varsContainer, scale);
     }
 
     protected renderBorders(): EL[] {
-        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.m_data, this.isClosed);
-    }
-    render(): number {
-
-        // const tid = this.id;
-        const isDirty = this.checkAndResetDirty();
-        if (!isDirty) {
-            return this.m_render_version;
+        if ((this.segments.length === 1 && !this.segments[0].isClosed) || this.segments.length > 1) {
+            return renderLineBorders(elh, this.data.style, this.getBorders(), this.startMarkerType, this.endMarkerType, this.getPathStr(), this.m_data);
         }
+        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.m_data);
+    }
 
-        if (!this.isVisible) {
-            this.reset("g"); // 还是要给个节点，不然后后面可见了挂不上dom
+    render(): number {
+        if (!this.checkAndResetDirty()) return this.m_render_version;
+
+        const masked = this.masked;
+        if (masked) {
+            (this.getPage() as PageView).getView(masked.id)?.render();
+            this.reset("g");
             return ++this.m_render_version;
         }
 
-        // fill
-        const fills = this.renderFills() || []; // cache
-        // childs
-        const childs = this.renderContents(); // VDomArray
-        // border
-        const borders = this.renderBorders() || []; // ELArray
+        if (!this.isVisible) {
+            this.reset("g");
+            return ++this.m_render_version;
+        }
 
-        const props = this.renderProps();
+        const fills = this.renderFills() || [];
+        const borders = this.renderBorders() || [];
+
         const filterId = `${objectId(this)}`;
         const shadows = this.renderShadows(filterId);
+        const blurId = `blur_${objectId(this)}`;
+        const blur = this.renderBlur(blurId);
 
-        if (shadows.length > 0) { // 阴影
-            const ex_props = Object.assign({}, props);
-            delete props.style;
-            delete props.transform;
-            delete props.opacity;
+        let props = this.renderProps();
+        let children = [...fills, ...borders];
+
+        // 阴影
+        if (shadows.length) {
+            let filter: string = '';
             const inner_url = innerShadowId(filterId, this.getShadows());
             if (this.type === ShapeType.Rectangle || this.type === ShapeType.Oval) {
-                if (inner_url.length) props.filter = inner_url;
+                if (inner_url.length) filter = `${inner_url.join(' ')}`
             } else {
-                props.filter = `url(#pd_outer-${filterId}) ${inner_url}`;
+                filter = `url(#pd_outer-${filterId}) `;
+                if (inner_url.length) filter += inner_url.join(' ');
             }
-            const body = elh("g", props, [...fills, ...childs, ...borders]);
-            this.reset("g", ex_props, [...shadows, body])
-        } else {
-            this.reset("g", props, [...fills, ...childs, ...borders]);
+            children = [...shadows, elh("g", { filter }, children)];
         }
+
+        // 模糊
+        if (blur.length) {
+            let filter: string = '';
+            if (this.blur?.type === BlurType.Gaussian) filter = `url(#${blurId})`;
+            children = [...blur, elh('g', { filter }, children)];
+        }
+
+        // 遮罩
+        const _mask_space = this.renderMask();
+        if (_mask_space) {
+            Object.assign(props.style, { transform: _mask_space.toString() });
+            const id = `mask-base-${objectId(this)}`;
+            const __body_transform = this.transformFromMask;
+            const __body = elh("g", { style: { transform: __body_transform } }, children);
+            this.bleach(__body);
+            children = [__body];
+            const mask = elh('mask', { id }, children);
+            const rely = elh('g', { mask: `url(#${id})` }, this.relyLayers);
+            children = [mask, rely];
+        }
+
+        this.reset("g", props, children);
+
         return ++this.m_render_version;
+    }
+
+    get relyLayers() {
+        if (!this.m_transform_form_mask) this.m_transform_form_mask = this.renderMask();
+        if (!this.m_transform_form_mask) return;
+
+        const group = this.m_mask_group || [];
+        if (group.length < 2) return;
+        const inverse = makeShapeTransform2By1(this.m_transform_form_mask).getInverse();
+        const els: EL[] = [];
+        for (let i = 1; i < group.length; i++) {
+            const __s = group[i];
+            const dom = __s.dom;
+            (dom.elattr as any)['style'] = { 'transform': makeShapeTransform1By2(__s.transform2.clone().addTransform(inverse)).toString() };
+            els.push(dom);
+        }
+
+        return els;
+    }
+
+    get transformFromMask() {
+        this.m_transform_form_mask = this.renderMask();
+        if (!this.m_transform_form_mask) return;
+
+        const space = makeShapeTransform2By1(this.m_transform_form_mask).getInverse();
+
+        return makeShapeTransform1By2(this.transform2.clone().addTransform(space)).toString()
+    }
+
+    renderMask() {
+        if (!this.mask) return;
+        const parent = this.parent;
+        if (!parent) return;
+        const __children = parent.childs;
+        let index = __children.findIndex(i => i.id === this.id);
+        if (index === -1) return;
+        const maskGroup: ShapeView[] = [this];
+        this.m_mask_group = maskGroup;
+        for (let i = index + 1; i < __children.length; i++) {
+            const cur = __children[i];
+            if (cur && !cur.mask) maskGroup.push(cur);
+            else break;
+        }
+        let x = Infinity;
+        let y = Infinity;
+
+        maskGroup.forEach(s => {
+            const box = s.boundingBox();
+            if (box.x < x) x = box.x;
+            if (box.y < y) y = box.y;
+        });
+
+        return new Transform(1, 0, x, 0, 1, y);
+    }
+
+    bleach(el: EL) {  // 漂白，mask元素内，白色的像素显示，黑色的像素隐藏
+        if (el.elattr.fill && el.elattr.fill !== 'none' && !(el.elattr.fill as string).startsWith('url(#gradient')) {
+            el.elattr.fill = '#FFF';
+        }
+        if (el.elattr.stroke && el.elattr.stroke !== 'none' && !(el.elattr.stroke as string).startsWith('url(#gradient')) {
+            el.elattr.stroke = '#FFF';
+        }
+        // 漂白阴影
+        if (el.eltag === 'feColorMatrix' && el.elattr.result) {
+            let values: any = el.elattr.values;
+            if (values) values = values.split(' ');
+            if (values[3]) values[3] = 1;
+            if (values[8]) values[8] = 1;
+            if (values[13]) values[13] = 1;
+            el.elattr.values = values.join(' ');
+        }
+
+        if (Array.isArray(el.elchilds)) el.elchilds.forEach(el => this.bleach(el));
     }
 
     renderStatic() {
         const fills = this.renderFills() || []; // cache
-        // childs
         const childs = this.renderContents(); // VDomArray
-        // border
         const borders = this.renderBorders() || []; // ELArray
 
         const props = this.renderStaticProps();
 
         const filterId = `${objectId(this)}`;
         const shadows = this.renderShadows(filterId);
-
+        const blurId = `blur_${objectId(this)}`;
+        const blur = this.renderBlur(blurId);
         if (shadows.length > 0) { // 阴影
             const ex_props = Object.assign({}, props);
             delete props.style;
@@ -115,14 +201,24 @@ export class PathShapeView extends ShapeView {
             delete props.opacity;
             const inner_url = innerShadowId(filterId, this.getShadows());
             if (this.type === ShapeType.Rectangle || this.type === ShapeType.Oval) {
-                if (inner_url.length) props.filter = inner_url;
+                if (blur.length && inner_url.length) {
+                    props.filter = `${inner_url.join(' ')}`
+                    if (this.blur?.type === BlurType.Gaussian) props.filter += ` url(#${blurId})`
+                } else {
+                    if (inner_url.length) props.filter = inner_url.join(' ');
+                    if (blur.length && this.blur?.type === BlurType.Gaussian) props.filter = `url(#${blurId})`;
+                }
             } else {
-                props.filter = `url(#pd_outer-${filterId}) ${inner_url}`;
+                props.filter = `url(#pd_outer-${filterId}) `;
+                if (blur.length && this.blur?.type === BlurType.Gaussian) props.filter += `url(#${blurId}) `;
+                if (inner_url.length) props.filter += inner_url.join(' ');
             }
             const body = elh("g", props, [...fills, ...childs, ...borders]);
-            return elh("g", ex_props, [...shadows, body]);
+            return elh("g", ex_props, [...shadows, ...blur, body]);
         } else {
-            return elh("g", props, [...fills, ...childs, ...borders])
+            if (blur.length && this.blur?.type === BlurType.Gaussian) props.filter = `url(#${blurId})`;
+            return elh("g", props, [...blur, ...fills, ...childs, ...borders]);
         }
     }
+
 }

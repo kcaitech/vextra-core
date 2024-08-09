@@ -61,6 +61,9 @@
                 },
                 {
                     "$ref": "./corner-radius.json"
+                },
+                {
+                    "$ref": "./blur.json"
                 }
             ]
         }

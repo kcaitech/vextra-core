@@ -1,19 +1,20 @@
+import { ShapeSize } from "src/data/baseclasses";
 import { Page } from "../data/page";
 import { ArtboradView } from "./artboard";
 import { CutoutShapeView } from "./cutout";
 import { GroupShapeView } from "./groupshape";
-import { ShapeView, isDiffShapeFrame } from "./shape";
-import { DataView, RootView } from "./view";
+import { ShapeView } from "./shape";
+import { RootView } from "./view";
 import { DViewCtx, PropsType } from "./viewctx";
 
-function checkFrame(v: ShapeView) {
-    const lhs = v.frame;
-    const rhs = v.m_data.frame;
-    if (isDiffShapeFrame(lhs, rhs)) {
-        console.error(`frame not match: ${lhs} vs ${rhs}`, v.name)
-    }
-    v.m_children.forEach((c) => checkFrame(c as ShapeView));
-}
+// function checkFrame(v: ShapeView) {
+//     const lhs = v.frame;
+//     const rhs = v.m_data.frame;
+//     if (isDiffShapeFrame(lhs, rhs)) {
+//         console.error(`frame not match: ${lhs} vs ${rhs}`, v.name)
+//     }
+//     v.m_children.forEach((c) => checkFrame(c as ShapeView));
+// }
 
 function checkPath(v: ShapeView) {
     const lhs = v.getPathStr();
@@ -32,8 +33,8 @@ export class PageView extends GroupShapeView implements RootView {
     private m_delaydestorys: Map<string, ShapeView> = new Map();
 
     constructor(ctx: DViewCtx, props: PropsType) {
-        super(ctx, props, false);
-        this.afterInit();
+        super(ctx, props);
+        this.onMounted();
 
         const destoryDelayDestorys = () => {
             this.m_delaydestorys.forEach((v) => {
@@ -57,16 +58,16 @@ export class PageView extends GroupShapeView implements RootView {
     }
 
     onRemoveView(parent: ShapeView, view: ShapeView | ShapeView[]): void {
-        const remove = (v: ShapeView) => {
+        const remove = (parent: ShapeView, v: ShapeView) => {
             const cur = this.m_views.get(v.id);
-            if (cur && cur.parent?.id !== parent.id) return; // 已经不是同一个了
+            if (cur && cur.parent?.id !== parent.id) return; // 已经不是同一个了(被复用)
             this.m_views.delete(v.id);
             if (v instanceof ArtboradView) this.m_artboards.delete(v.id);
             if (v instanceof CutoutShapeView) this.m_cutouts.delete(v.id);
-            v.m_children.forEach((c) => remove(c as ShapeView));
+            v.m_children.forEach((c) => remove(v, c as ShapeView));
         }
-        if (Array.isArray(view)) view.forEach(remove);
-        else remove(view);
+        if (Array.isArray(view)) view.forEach((v) => remove(parent, v));
+        else remove(parent, view);
     }
 
     getView(id: string) {
@@ -106,6 +107,11 @@ export class PageView extends GroupShapeView implements RootView {
         return this.m_views.get(id);
     }
 
+    get guides() {
+        return (this.m_data as Page).guides;
+    }
+
+
     protected renderProps() {
         // let width = Math.ceil(Math.max(100, this.m_data.frame.width));
         // let height = Math.ceil(Math.max(100, this.m_data.frame.height));
@@ -138,9 +144,9 @@ export class PageView extends GroupShapeView implements RootView {
     }
 
     // for debug
-    dbgCheckFrame() {
-        checkFrame(this);
-    }
+    // dbgCheckFrame() {
+    //     checkFrame(this);
+    // }
 
     dbgCheckPath() {
         checkPath(this);

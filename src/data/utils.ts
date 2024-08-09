@@ -2,9 +2,9 @@ import { v4 } from "uuid";
 import { Matrix } from "../basic/matrix";
 import { CurvePoint, PathShape, Shape, SymbolShape, Variable } from "./shape";
 import { ContactType, CurveMode, OverrideType } from "./typesdefine";
-import { Api } from "../editor/coop/recordapi";
+// import { Api } from "../editor/coop/recordapi";
 import { Page } from "./page";
-import { importCurvePoint } from "./baseimport";
+import { importCurvePoint, importPolygonShape, importStarShape } from "./baseimport";
 import { importArtboard, importContactShape, importBoolShape, importGroupShape, importImageShape, importLineShape, importOvalShape, importPathShape, importPathShape2, importRectShape, importSymbolRefShape, importTableCell, importTableShape, importTextShape } from "./baseimport";
 import * as types from "./typesdefine"
 import { ContactShape, SymbolRefShape } from "./classes";
@@ -14,7 +14,7 @@ import { BasicArray } from "./basic";
  * @description root -> 图形自身上且单位为比例系数的矩阵
  */
 export function gen_matrix1(shape: Shape, prem?: Matrix) {
-    const f = shape.frame;
+    const f = shape.size;
     let m = prem || shape.matrix2Root();
     m.preScale(f.width, f.height);
     m = new Matrix(m.inverse);
@@ -32,7 +32,7 @@ interface XY {
  * @description 根据连接类型获取页面坐标系上的连接点
  */
 function get_pagexy(shape: Shape, type: ContactType, m2r: Matrix) {
-    const f = shape.frame;
+    const f = shape.size;
     switch (type) {
         case ContactType.Top: return m2r.computeCoord2(f.width / 2, 0);
         case ContactType.Right: return m2r.computeCoord2(f.width, f.height / 2);
@@ -570,17 +570,17 @@ export function d(a: PageXY, b: XY): 'ver' | 'hor' | false {
     if (Math.abs(a.y - b.y) < 0.0001) return 'hor';
     return false;
 }
-export function update_contact_points(api: Api, shape: ContactShape, page: Page) {
-    const _p = shape.getPoints();
-    const len = shape.points.length;
-    api.deletePoints(page, shape as PathShape, 0, len);
-    for (let i = 0, len2 = _p.length; i < len2; i++) {
-        const p = importCurvePoint((_p[i]));
-        p.id = v4();
-        _p[i] = p;
-    }
-    api.addPoints(page, shape as PathShape, _p);
-}
+// export function update_contact_points(api: Api, shape: ContactShape, page: Page) {
+//     const _p = shape.getPoints();
+//     const len = shape.points.length;
+//     api.deletePoints(page, shape as PathShape, 0, len, 0);
+//     for (let i = 0, len2 = _p.length; i < len2; i++) {
+//         const p = importCurvePoint((_p[i]));
+//         p.id = v4();
+//         _p[i] = p;
+//     }
+//     api.addPoints(page, shape as PathShape, _p, 0);
+// }
 
 export function copyShape(source: types.Shape) {
     if (source.typeId == 'bool-shape') {
@@ -624,6 +624,12 @@ export function copyShape(source: types.Shape) {
     }
     if (source.typeId == 'contact-shape') {
         return importContactShape(source as types.ContactShape)
+    }
+    if (source.typeId == 'polygon-shape') {
+        return importPolygonShape(source as types.PolygonShape)
+    }
+    if (source.typeId == 'star-shape') {
+        return importStarShape(source as types.StarShape)
     }
     throw new Error("unknow shape type: " + source.typeId)
 }
@@ -819,7 +825,7 @@ export function path_for_free_end_contact(shape: ContactShape, points: CurvePoin
     }
     const end = points.pop()!;
 
-    if (Math.abs(start.y - end.y) * shape.frame.height < 5) {
+    if (Math.abs(start.y - end.y) * shape.size.height < 5) {
         points.push(new CurvePoint(([points.length] as BasicArray<number>), v4(), end.x, start.y, CurveMode.Straight));
     } else {
         points.push(new CurvePoint(([points.length] as BasicArray<number>), v4(), end.x, start.y, CurveMode.Straight), end);
@@ -960,7 +966,7 @@ function get_bezier_c(pre: XY, cur: XY, next: XY, radius: number, minDist: numbe
 }
 
 export function _get_path(shape: types.Artboard) {
-    const f = shape.frame;
+    const f = shape.size;
 
     const min = Math.min(f.width, f.height) / 2;
 

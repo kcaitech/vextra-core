@@ -8,49 +8,71 @@ import {
     ShapeType,
     TextShape,
     CornerRadius,
-    getPathOfRadius
+    getPathOfRadius,
+    Transform,
+    ShapeSize,
 } from "./shape";
 import { Style } from "./style";
 import * as classes from "./baseclasses";
 import { BasicArray } from "./basic";
 import { Path } from "./path";
 import { RadiusType } from "./consts";
+import { Guide } from "./baseclasses";
+
 export class Artboard extends GroupShape implements classes.Artboard {
+    get frame(): ShapeFrame {
+        return new ShapeFrame(0, 0, this.size.width, this.size.height);
+    }
+    hasSize(): boolean {
+        return true;
+    }
     typeId = 'artboard';
+    // @ts-ignore
+    size: ShapeSize
     cornerRadius?: CornerRadius
     haveEdit?: boolean | undefined;
+    guides?: BasicArray<Guide>;
+
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
         name: string,
         type: ShapeType,
-        frame: ShapeFrame,
+        transform: Transform,
         style: Style,
         childs: BasicArray<(GroupShape | Shape | ImageShape | PathShape | RectShape | TextShape)>,
-        haveEdit?: boolean
+        size: ShapeSize,
+        haveEdit?: boolean,
+        guides?: BasicArray<Guide>
     ) {
         super(
             crdtidx,
             id,
             name,
             ShapeType.Artboard,
-            frame,
+            transform,
             style,
             childs
         )
+        this.size = size
         this.haveEdit = haveEdit;
+        this.guides = guides;
     }
 
     getOpTarget(path: string[]) {
-        if (path[0] === 'cornerRadius' && !this.cornerRadius) this.cornerRadius = new CornerRadius(0, 0, 0, 0);
+        const id0 = path[0];
+        if (id0 === 'cornerRadius' && !this.cornerRadius) this.cornerRadius = new CornerRadius(0, 0, 0, 0);
+        if (id0 === "guides" && !this.guides) {
+            this.guides = new BasicArray<Guide>();
+        }
         return super.getOpTarget(path);
     }
 
     getPath(fixedRadius?: number): Path {
-        return this.getPathOfFrame(this.frame, fixedRadius);
+        return this.getPathOfSize(this.size, fixedRadius);
     }
 
-    getPathOfFrame(frame: classes.ShapeFrame, fixedRadius?: number | undefined): Path {
+    getPathOfSize(frame: ShapeSize, fixedRadius?: number | undefined): Path {
         return getPathOfRadius(frame, this.cornerRadius, fixedRadius);
     }
 

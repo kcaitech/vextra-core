@@ -1,6 +1,6 @@
 import { DViewCtx, PropsType } from "./viewctx";
-import { Shape, SymbolRefShape, SymbolShape } from "../data/classes";
-import { RenderTransform, getShapeViewId, stringh } from "./basic";
+import { Shape, SymbolRefShape, SymbolShape } from "../data";
+import { getShapeViewId, stringh } from "./basic";
 import { EL } from "./el";
 import { objectId } from "../basic/objectid";
 
@@ -83,7 +83,7 @@ export class DataView extends EventEL {
     m_data: Shape;
     m_children: DataView[] = [];
     m_parent: DataView | undefined;
-    m_transx?: RenderTransform;
+    m_scale?: { x: number, y: number };
     private m_varsContainer?: (SymbolRefShape | SymbolShape)[];
     m_isVirtual?: boolean;
 
@@ -94,8 +94,8 @@ export class DataView extends EventEL {
         super("");
         this.m_ctx = ctx;
         this.m_data = props.data;
-        this.m_transx = props.transx;
-        this.m_varsContainer = props.varsContainer;
+        this.m_scale = props.scale;
+        // this.m_varsContainer = props.varsContainer;
         this.m_isVirtual = props.isVirtual;
 
         this._datawatcher = this._datawatcher.bind(this);
@@ -170,6 +170,10 @@ export class DataView extends EventEL {
 
     }
 
+    get isDistroyed() {
+        return this.m_isdistroyed;
+    }
+
     onDataChange(...args: any[]) {
     }
 
@@ -177,7 +181,8 @@ export class DataView extends EventEL {
         throw new Error('not implemented');
     }
 
-    // 
+    updateFrames() { return false; }
+
     render(): number {
         return 0;
     }
@@ -189,6 +194,9 @@ export class DataView extends EventEL {
             p = p.m_parent;
         }
     }
+
+    onMounted() { }
+    protected onUnmounted() { }
 
     addChild(child: DataView, idx?: number) {
         if (child.m_parent) throw new Error('child already added');
@@ -211,6 +219,7 @@ export class DataView extends EventEL {
         if ((root as any).isRootView) {
             (root as any as RootView).onAddView(child);
         }
+        child.onMounted();
     }
 
     addChilds(childs: DataView[], idx?: number) {
@@ -241,6 +250,9 @@ export class DataView extends EventEL {
         if ((root as any).isRootView) {
             (root as any as RootView).onAddView(childs);
         }
+        childs.forEach(c => {
+            c.onMounted();
+        })
     }
 
     removeChild(idx: number | DataView) {
@@ -261,6 +273,7 @@ export class DataView extends EventEL {
                 (root as any as RootView).onRemoveView(this, dom);
             }
             dom.m_parent = undefined;
+            dom.onUnmounted();
         }
         return dom;
     }
@@ -304,13 +317,16 @@ export class DataView extends EventEL {
             if ((root as any).isRootView) {
                 (root as any as RootView).onRemoveView(this, dom);
             }
-            dom.forEach(d => d.m_parent = undefined);
+            dom.forEach(d => {
+                d.m_parent = undefined
+                d.onUnmounted();
+            });
         }
         return dom;
     }
 
     toSVGString(): string {
-        const frame = this.m_data.frame;
+        const frame = this.m_data.size;
         const attrs: { [kye: string]: string | number } = {};
         attrs['version'] = "1.1";
         attrs['xmlns'] = "http://www.w3.org/2000/svg";
@@ -344,6 +360,7 @@ export class DataView extends EventEL {
         // remove first?
         this.onDestory();
         this.m_isdistroyed = true;
+        this.notify('destroy');
         // destroy childs
         // destroy dom
         // recycle?

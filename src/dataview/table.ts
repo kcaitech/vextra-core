@@ -1,11 +1,25 @@
-import { OverrideType, Shape, ShapeFrame, ShapeType, Style, SymbolRefShape, SymbolShape, TableCell, TableCellType, TableGridItem, TableLayout, TableShape } from "../data/classes";
+import {
+    OverrideType,
+    Shape,
+    ShapeFrame, ShapeSize,
+    ShapeType,
+    Style,
+    SymbolRefShape,
+    SymbolShape,
+    TableCell,
+    TableCellType,
+    TableGridItem,
+    TableLayout,
+    TableShape,
+    Transform
+} from "../data/classes";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
 import { DataView } from "./view"
 import { DViewCtx, PropsType } from "./viewctx";
 import { locateCell, locateCellIndex } from "../data/tablelocate";
 import { TableCellView } from "./tablecell";
-import { RenderTransform, findOverride, getShapeViewId } from "./basic";
+import { findOverride, getShapeViewId } from "./basic";
 import { layoutTable } from "../data/tablelayout";
 import { getTableCells, getTableVisibleCells } from "../data/tableread";
 import { BasicArray } from "../data/basic";
@@ -18,11 +32,11 @@ export class TableView extends ShapeView {
     private m_cells: Map<string, TableCellView> = new Map();
 
     constructor(ctx: DViewCtx, props: PropsType) {
-        super(ctx, props, false);
+        super(ctx, props);
         this.updateChildren();
         // this._bubblewatcher = this._bubblewatcher.bind(this);
         // this.m_data.bubblewatch(this._bubblewatcher);
-        this.afterInit();
+        // this.afterInit();
     }
 
     get data(): TableShape {
@@ -50,9 +64,9 @@ export class TableView extends ShapeView {
     // protected onChildChange(...args: any[]) {
     // }
 
-    protected isNoSupportDiamondScale(): boolean {
-        return this.m_data.isNoSupportDiamondScale;
-    }
+    // protected isNoSupportDiamondScale(): boolean {
+    //     return this.m_data.isNoSupportDiamondScale;
+    // }
 
     getDataChilds(): Shape[] {
         return [];
@@ -78,9 +92,9 @@ export class TableView extends ShapeView {
         return undefined;
     }
 
-    protected _layout(frame: ShapeFrame, shape: Shape, transform: RenderTransform | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): void {
+    protected _layout(shape: Shape, parentFrame: ShapeFrame | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scale: { x: number, y: number } | undefined): void {
 
-        super._layout(frame, shape, transform, varsContainer);
+        super._layout(shape, parentFrame, varsContainer, scale);
         // if (this.m_need_updatechilds) {
         //     this.m_need_updatechilds = false;
         this.updateChildren();
@@ -119,7 +133,7 @@ export class TableView extends ShapeView {
             cellId,
             "",
             ShapeType.TableCell,
-            new ShapeFrame(0, 0, 0, 0),
+            new Transform(),
             new Style(new BasicArray(), new BasicArray(), new BasicArray()),
             TableCellType.Text,
             newTableCellText(this.data.textAttr));
@@ -158,7 +172,7 @@ export class TableView extends ShapeView {
                 // if (cellLayout.index.row === i && cellLayout.index.col === j) {
                 const cellId = this.rowHeights[rowIdx].id + "," + this.colWidths[colIdx].id;
                 const cdom = reuse.get(cellId) as TableCellView | undefined;
-                const props = { data: cdom?.data as TableCell, transx: this.m_transx, varsContainer: this.varsContainer, frame: cellLayout.frame, isVirtual: this.m_isVirtual, index: cellLayout.index };
+                const props = { data: cdom?.data as TableCell, scale: this.m_scale, varsContainer: this.varsContainer, frame: cellLayout.frame, isVirtual: this.m_isVirtual, index: cellLayout.index };
                 if (cdom) {
                     const cell = this._getCellAt2(rowIdx, colIdx);
                     if (cell) props.data = cell;

@@ -1,730 +1,838 @@
-/**
- * 代码生成，勿手动修改
- * 可修改schema后在schema目录运行node script生成
- */
-
-/* winding rule */
-export enum WindingRule {
-    NonZero = 'non-zero',
-    EvenOdd = 'even-odd',
+/* 代码生成，勿手动修改 */
+export type Artboard_guides = Array<Guide>
+/* blend mode */
+export enum BlendMode {
+    Normal = "normal",
+    Darken = "darken",
+    Multiply = "multiply",
+    ColorBurn = "color-burn",
+    Lighten = "lighten",
+    Screen = "screen",
+    ColorDodge = "color-dodge",
+    Overlay = "overlay",
+    SoftLight = "soft-light",
+    HardLight = "hard-light",
+    Difference = "difference",
+    Exclusion = "exclusion",
+    Hue = "hue",
+    Saturation = "saturation",
+    Color = "color",
+    Luminosity = "luminosity",
+    PlusDarker = "plus-darker",
+    PlusLighter = "plus-lighter",
+}
+/* blur types */
+export enum BlurType {
+    Gaussian = "gaussian",
+    Motion = "motion",
+    Zoom = "zoom",
+    Background = "background",
+}
+/* bool op types */
+export enum BoolOp {
+    None = "none",
+    Union = "union",
+    Subtract = "subtract",
+    Intersect = "intersect",
+    Diff = "diff",
+}
+/* border position */
+export enum BorderPosition {
+    Inner = "inner",
+    Center = "center",
+    Outer = "outer",
+}
+/* border style */
+export type BorderStyle = {
+    length: number,
+    gap: number,
+}
+/* bullet & item number behavior */
+export enum BulletNumbersBehavior {
+    Inherit = "inherit",
+    Renew = "renew",
+}
+/* bullet & item number types */
+export enum BulletNumbersType {
+    None = "none",
+    Ordered1Ai = "ordered-1ai",
+    Disorded = "disorded",
+}
+/* bullet numbers */
+export type BulletNumbers = {
+    type: BulletNumbersType,
+    behavior?: BulletNumbersBehavior,
+    offset?: number,
+}
+/* color controls */
+export type ColorControls = {
+    isEnabled: boolean,
+    brightness: number,
+    contrast: number,
+    hue: number,
+    saturation: number,
 }
 /* color */
-export type Variable = {
-    id: string
-    type: VariableType
-    name: string
-    value: (number | string | boolean | Color | Text | Gradient | Style | (Border | Fill | Shadow)[] | ContextSettings | TableCell | ExportOptions | CornerRadius)
+export type Color = {
+    typeId: string,
+    alpha: number,
+    red: number,
+    green: number,
+    blue: number,
 }
-/* variable types */
-export enum VariableType {
-    Name = 'name',
-    Color = 'color',
-    Gradient = 'gradient',
-    Text = 'text',
-    Visible = 'visible',
-    Lock = 'lock',
-    SymbolRef = 'symbolRef',
-    Status = 'status',
-    ImageRef = 'imageRef',
-    Fills = 'fills',
-    Borders = 'borders',
-    Shadows = 'shadows',
-    Style = 'style',
-    ContextSettings = 'contextSettings',
-    TableCell = 'tableCell',
-    MarkerType = 'markerType',
-    ExportOptions = 'exportOptions',
-    CornerRadius = 'cornerRadius',
+/* contact role type */
+export enum ContactRoleType {
+    From = "from",
+    To = "to",
 }
-/* user infomation */
-export type UserInfo = {
-    userId: string
-    userNickname: string
-    avatar: string
+/* contact type */
+export enum ContactType {
+    Top = "top",
+    Right = "right",
+    Bottom = "bottom",
+    Left = "left",
 }
-/* underline types */
-export enum UnderlineType {
-    None = 'none',
-    Single = 'single',
-    Double = 'double',
+/* context settings */
+export type ContextSettings = {
+    typeId: string,
+    blenMode: BlendMode,
+    opacity: number,
 }
-/* text */
-export type Text = {
-    typeId: string
-    paras: Para[]
-    attr?: TextAttr
+/* couner radius */
+export type CornerRadius = {
+    typeId: string,
+    lt: number,
+    rt: number,
+    lb: number,
+    rb: number,
 }
-/* text vertical alignment */
-export enum TextVerAlign {
-    Top = 'top',
-    Middle = 'middle',
-    Bottom = 'bottom',
+/* corner type */
+export enum CornerType {
+    Miter = "miter",
+    Bevel = "bevel",
+    Round = "round",
 }
-/* text transform types */
-export enum TextTransformType {
-    None = 'none',
-    Uppercase = 'uppercase',
-    Lowercase = 'lowercase',
-    UppercaseFirst = 'uppercase-first',
+/* crdtidx */
+export type Crdtidx = Array<number>
+/* curve mode */
+export enum CurveMode {
+    None = "none",
+    Straight = "straight",
+    Mirrored = "mirrored",
+    Asymmetric = "asymmetric",
+    Disconnected = "disconnected",
 }
-/* text orientation */
-export enum TextOrientation {
-    Horizontal = 'horizontal',
-    Vertical = 'vertical',
+/* curve point */
+export type CurvePoint = {
+    crdtidx: Crdtidx,
+    id: string,
+    x: number,
+    y: number,
+    mode: CurveMode,
+    radius?: number,
+    fromX?: number,
+    fromY?: number,
+    toX?: number,
+    toY?: number,
+    hasFrom?: boolean,
+    hasTo?: boolean,
 }
-/* text horizontal alignment */
-export enum TextHorAlign {
-    Left = 'left',
-    Right = 'right',
-    Centered = 'centered',
-    Justified = 'justified',
-    Natural = 'natural',
+export type DocumentMeta_pagesList = Array<PageListItem>
+/* ellipse attributes */
+export type Ellipse = {
+    cx: number,
+    cy: number,
+    rx: number,
+    ry: number,
 }
-/* text behaviour */
-export enum TextBehaviour {
-    Flexible = 'flexible',
-    Fixed = 'fixed',
-    FixWidthAndHeight = 'fixWidthAndHeight',
+/* export file format */
+export enum ExportFileFormat {
+    Png = "png",
+    Jpg = "jpg",
+    Tiff = "tiff",
+    Eps = "eps",
+    Pdf = "pdf",
+    Webp = "webp",
+    Svg = "svg",
 }
-/* table cell types */
-export enum TableCellType {
-    None = 'none',
-    Text = 'text',
-    Image = 'image',
+/* export format nameing scheme */
+export enum ExportFormatNameingScheme {
+    Suffix = "suffix",
+    Prefix = "prefix",
 }
-/* style */
-export type Style = {
-    typeId: string
-    miterLimit?: number
-    windingRule?: WindingRule
-    blur?: Blur
-    borderOptions?: BorderOptions
-    borders: Border[]
-    colorControls?: ColorControls
-    contextSettings?: ContextSettings
-    fills: Fill[]
-    innerShadows?: Shadow[]
-    shadows: Shadow[]
-    contacts?: ContactRole[]
-    startMarkerType?: MarkerType
-    endMarkerType?: MarkerType
-    varbinds?: Map<string, string>
+export type ExportOptions_exportFormats = Array<ExportFormat>
+/* visible scale type */
+export enum ExportVisibleScaleType {
+    Scale = "scale",
+    Width = "width",
+    Height = "height",
 }
-/* strikethrough types */
-export enum StrikethroughType {
-    None = 'none',
-    Single = 'single',
-    Double = 'double',
+/* fill rule */
+export enum FillRule {
+    Nonzero = "nonzero",
+    Evenodd = "evenodd",
 }
-/* stop */
-export type Stop = {
-    crdtidx: number[]
-    id: string
-    position: number
-    color: Color
+/* fill types */
+export enum FillType {
+    SolidColor = "solid-color",
+    Gradient = "gradient",
+    Pattern = "pattern",
 }
-/* span attr */
-export type SpanAttr = {
-    fontName?: string
-    fontSize?: number
-    color?: Color
-    strikethrough?: StrikethroughType
-    underline?: UnderlineType
-    bold?: number
-    italic?: boolean
-    bulletNumbers?: BulletNumbers
-    highlight?: Color
-    kerning?: number
-    transform?: TextTransformType
-    placeholder?: boolean
-    fillType?: FillType
-    gradient?: Gradient
+/* gradient type */
+export enum GradientType {
+    Linear = "linear",
+    Radial = "radial",
+    Angular = "angular",
 }
-/* side type */
-export enum SideType {
-    Normal = 'normal',
-    Top = 'top',
-    Bottom = 'bottom',
-    Left = 'left',
-    Right = 'right',
-    Custom = 'custom',
+export type Gradient_stops = Array<Stop>
+/* graphics contex settings */
+export type GraphicsContextSettings = {
+    blendMode: BlendMode,
+    opacity: number,
 }
-/* shape */
-export type Shape = {
-    crdtidx: number[]
-    typeId: string
-    id: string
-    type: ShapeType
-    frame: ShapeFrame
-    style: Style
-    boolOp?: BoolOp
-    isFixedToViewport?: boolean
-    isFlippedHorizontal?: boolean
-    isFlippedVertical?: boolean
-    isLocked?: boolean
-    isVisible?: boolean
-    exportOptions?: ExportOptions
-    name: string
-    nameIsFixed?: boolean
-    resizingConstraint?: number
-    resizingType?: ResizeType
-    rotation?: number
-    constrainerProportions?: boolean
-    clippingMaskMode?: number
-    hasClippingMask?: boolean
-    shouldBreakMaskChain?: boolean
-    varbinds?: Map<string, string>
-    haveEdit?: boolean
+export type GroupShape_childs = Array<GroupShape | ImageShape | PathShape | PathShape2 | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape | PolygonShape | StarShape>
+/* guide axis */
+export enum GuideAxis {
+    X = "X",
+    Y = "Y",
 }
-/* shape types */
-export enum ShapeType {
-    Path = 'path',
-    Path2 = 'path2',
-    Group = 'group',
-    Artboard = 'artboard',
-    Image = 'image',
-    Page = 'page',
-    Text = 'text',
-    SymbolRef = 'symbol-ref',
-    Symbol = 'symbol',
-    SymbolUnion = 'symbol-union',
-    ArtboardRef = 'artboard-ref',
-    Rectangle = 'rectangle',
-    Triangle = 'triangle',
-    Star = 'star',
-    Polygon = 'polygon',
-    Oval = 'oval',
-    Line = 'line',
-    Table = 'table',
-    TableCell = 'table-cell',
-    Contact = 'contact',
-    Cutout = 'cutout',
-    BoolShape = 'bool-shape',
+export type Guide_crdtidx = Array<number>
+/* guide */
+export type Guide = {
+    crdtidx: Guide_crdtidx,
+    typeId: string,
+    id: string,
+    axis: GuideAxis,
+    offset: number,
+}
+/* image scale mode */
+export enum ImageScaleMode {
+    Fill = "fill",
+    Stretch = "stretch",
+    Fit = "fit",
+    Crop = "crop",
+    Tile = "tile",
+}
+/* line cap style */
+export enum LineCapStyle {
+    Butt = "butt",
+    Round = "round",
+    Projecting = "projecting",
+}
+/* line join style */
+export enum LineJoinStyle {
+    Miter = "miter",
+    Round = "round",
+    Bevel = "bevel",
+}
+/* marker type */
+export enum MarkerType {
+    Line = "line",
+    FilledArrow = "filled-arrow",
+    OpenArrow = "open-arrow",
+    FilledCircle = "filled-circle",
+    FilledSquare = "filled-square",
+    Round = "round",
+    Square = "square",
+}
+/* override types */
+export enum OverrideType {
+    Name = "name",
+    Text = "text",
+    Image = "image",
+    Fills = "fills",
+    Borders = "borders",
+    Shadows = "shadows",
+    Visible = "visible",
+    Lock = "lock",
+    Variable = "variable",
+    SymbolID = "symbolID",
+    ContextSettings = "contextSettings",
+    TableCell = "tableCell",
+    StartMarkerType = "startMarkerType",
+    EndMarkerType = "endMarkerType",
+    ExportOptions = "exportOptions",
+    CornerRadius = "cornerRadius",
+    Blur = "blur",
+}
+/* padding */
+export type Padding = {
+    left?: number,
+    top?: number,
+    right?: number,
+    bottom?: number,
+}
+/* page list item */
+export type PageListItem = {
+    crdtidx: Crdtidx,
+    id: string,
+    name: string,
+    versionId?: string,
+}
+export type Page_guides = Array<Guide>
+/* paint filter */
+export type PaintFilter = {
+    exposure: number,
+    contrast: number,
+    saturation: number,
+    temperature: number,
+    tint: number,
+    shadow: number,
+    hue: number,
+}
+/* paint filter type */
+export enum PaintFilterType {
+    Exposure = "exposure",
+    Contrast = "contrast",
+    Saturation = "saturation",
+    Temperature = "temperature",
+    Tint = "tint",
+    Shadow = "shadow",
+    Hue = "hue",
+}
+export type Para_spans = Array<Span>
+export type PathSegment_points = Array<CurvePoint>
+/* path segment */
+export type PathSegment = {
+    crdtidx: Crdtidx,
+    id: string,
+    points: PathSegment_points,
+    isClosed: boolean,
+}
+export type PathShape_pathsegs = Array<PathSegment>
+export type PathShape2_pathsegs = Array<PathSegment>
+/* pattern transform */
+export type PatternTransform = {
+    m00: number,
+    m01: number,
+    m02: number,
+    m10: number,
+    m11: number,
+    m12: number,
+}
+/* point 2d */
+export type Point2D = {
+    x: number,
+    y: number,
+}
+/* resize type */
+export enum ResizeType {
+    Stretch = "stretch",
+    PinToEdge = "pinToEdge",
+    Resize = "resize",
+    Float = "float",
+}
+/* shadow position */
+export enum ShadowPosition {
+    Inner = "inner",
+    Outer = "outer",
+}
+/* shadow */
+export type Shadow = {
+    crdtidx: Crdtidx,
+    typeId: string,
+    id: string,
+    isEnabled: boolean,
+    blurRadius: number,
+    color: Color,
+    offsetX: number,
+    offsetY: number,
+    spread: number,
+    position: ShadowPosition,
+    contextSettings?: GraphicsContextSettings,
 }
 /* shape frame
  * x,y为parent坐标系里的点
  * width,height为当前shape的坐标空间大小 */
 export type ShapeFrame = {
-    x: number
-    y: number
-    width: number
-    height: number
+    x: number,
+    y: number,
+    width: number,
+    height: number,
 }
-/* shadow */
-export type Shadow = {
-    crdtidx: number[]
-    typeId: string
-    id: string
-    isEnabled: boolean
-    blurRadius: number
-    color: Color
-    position: ShadowPosition
-    contextSettings?: GraphicsContextSettings
-    offsetX: number
-    offsetY: number
-    spread: number
+/* shape size */
+export type ShapeSize = {
+    width: number,
+    height: number,
 }
-/* shadow position */
-export enum ShadowPosition {
-    Inner = 'inner',
-    Outer = 'outer',
+/* shape types */
+export enum ShapeType {
+    Path = "path",
+    Path2 = "path2",
+    Group = "group",
+    Artboard = "artboard",
+    Image = "image",
+    Page = "page",
+    Text = "text",
+    SymbolRef = "symbol-ref",
+    Symbol = "symbol",
+    SymbolUnion = "symbol-union",
+    Rectangle = "rectangle",
+    Triangle = "triangle",
+    Star = "star",
+    Polygon = "polygon",
+    Oval = "oval",
+    Line = "line",
+    Table = "table",
+    TableCell = "table-cell",
+    Contact = "contact",
+    Cutout = "cutout",
+    BoolShape = "bool-shape",
 }
-/* resize type */
-export enum ResizeType {
-    Stretch = 'stretch',
-    PinToEdge = 'pinToEdge',
-    Resize = 'resize',
-    Float = 'float',
+/* side type */
+export enum SideType {
+    Normal = "normal",
+    Top = "top",
+    Bottom = "bottom",
+    Left = "left",
+    Right = "right",
+    Custom = "custom",
 }
-/* point 2d */
-export type Point2D = {
-    x: number
-    y: number
+/* stop */
+export type Stop = {
+    crdtidx: Crdtidx,
+    id: string,
+    position: number,
+    color: Color,
 }
-/* path segment */
-export type PathSegment = {
-    crdtidx: number[]
-    id: string
-    points: CurvePoint[]
-    isClosed: boolean
+/* strikethrough types */
+export enum StrikethroughType {
+    None = "none",
+    Single = "single",
+    Double = "double",
 }
-/* para */
-export type Para = {
-    text: string
-    spans: Span[]
-    attr?: ParaAttr
+export type Style_borders = Array<Border>
+export type Style_fills = Array<Fill>
+export type Style_shadows = Array<Shadow>
+export type Style_innerShadows = Array<Shadow>
+export type Style_contacts = Array<ContactRole>
+export type SymbolShape_guides = Array<Guide>
+/* table cell types */
+export enum TableCellType {
+    None = "none",
+    Text = "text",
+    Image = "image",
 }
-/* page list item */
-export type PageListItem = {
-    crdtidx: number[]
-    id: string
-    name: string
-    versionId?: string
+export type TableShape_rowHeights = Array<CrdtNumber>
+export type TableShape_colWidths = Array<CrdtNumber>
+/* text behaviour */
+export enum TextBehaviour {
+    Flexible = "flexible",
+    Fixed = "fixed",
+    FixWidthAndHeight = "fixWidthAndHeight",
 }
-/* padding */
-export type Padding = {
-    left?: number
-    top?: number
-    right?: number
-    bottom?: number
+/* text horizontal alignment */
+export enum TextHorAlign {
+    Left = "left",
+    Right = "right",
+    Centered = "centered",
+    Justified = "justified",
+    Natural = "natural",
 }
-/* override types */
-export enum OverrideType {
-    Name = 'name',
-    Text = 'text',
-    Image = 'image',
-    Fills = 'fills',
-    Borders = 'borders',
-    Shadows = 'shadows',
-    Visible = 'visible',
-    Lock = 'lock',
-    Variable = 'variable',
-    SymbolID = 'symbolID',
-    ContextSettings = 'contextSettings',
-    TableCell = 'tableCell',
-    StartMarkerType = 'startMarkerType',
-    EndMarkerType = 'endMarkerType',
-    ExportOptions = 'exportOptions',
-    CornerRadius = 'cornerRadius',
+/* text orientation */
+export enum TextOrientation {
+    Horizontal = "horizontal",
+    Vertical = "vertical",
 }
-/* marker type */
-export enum MarkerType {
-    Line = 'line',
-    FilledArrow = 'filled-arrow',
-    OpenArrow = 'open-arrow',
-    FilledCircle = 'filled-circle',
-    FilledSquare = 'filled-square',
-    Round = 'round',
-    Square = 'square',
+/* text transform types */
+export enum TextTransformType {
+    None = "none",
+    Uppercase = "uppercase",
+    Lowercase = "lowercase",
+    UppercaseFirst = "uppercase-first",
 }
-/* line join style */
-export enum LineJoinStyle {
-    Miter = 'miter',
-    Round = 'round',
-    Bevel = 'bevel',
+/* text vertical alignment */
+export enum TextVerAlign {
+    Top = "top",
+    Middle = "middle",
+    Bottom = "bottom",
 }
-/* line cap style */
-export enum LineCapStyle {
-    Butt = 'butt',
-    Round = 'round',
-    Projecting = 'projecting',
+export type Text_paras = Array<Para>
+/* transform */
+export type Transform = {
+    m00: number,
+    m01: number,
+    m02: number,
+    m10: number,
+    m11: number,
+    m12: number,
 }
-/* graphics contex settings */
-export type GraphicsContextSettings = {
-    blendMode: BlendMode
-    opacity: number
+/* underline types */
+export enum UnderlineType {
+    None = "none",
+    Single = "single",
+    Double = "double",
 }
-/* gradient */
-export type Gradient = {
-    typeId: string
-    elipseLength?: number
-    from: Point2D
-    to: Point2D
-    stops: Stop[]
-    gradientType: GradientType
-    gradientOpacity?: number
+/* user infomation */
+export type UserInfo = {
+    userId: string,
+    userNickname: string,
+    avatar: string,
 }
-/* gradient type */
-export enum GradientType {
-    Linear = 'linear',
-    Radial = 'radial',
-    Angular = 'angular',
+/* variable types */
+export enum VariableType {
+    Name = "name",
+    Color = "color",
+    Gradient = "gradient",
+    Text = "text",
+    Visible = "visible",
+    Lock = "lock",
+    SymbolRef = "symbolRef",
+    Status = "status",
+    ImageRef = "imageRef",
+    Fills = "fills",
+    Borders = "borders",
+    Shadows = "shadows",
+    Style = "style",
+    ContextSettings = "contextSettings",
+    TableCell = "tableCell",
+    MarkerType = "markerType",
+    ExportOptions = "exportOptions",
+    CornerRadius = "cornerRadius",
+    Blur = "blur",
 }
-/* fill */
-export type Fill = {
-    crdtidx: number[]
-    typeId: string
-    id: string
-    isEnabled: boolean
-    fillType: FillType
-    color: Color
-    contextSettings?: ContextSettings
-    gradient?: Gradient
-    imageRef?: string
-    fillRule?: FillRule
-}
-/* fill types */
-export enum FillType {
-    SolidColor = 'solid-color',
-    Gradient = 'gradient',
-    Pattern = 'pattern',
-}
-/* fill rule */
-export enum FillRule {
-    Nonzero = 'nonzero',
-    Evenodd = 'evenodd',
-}
-/* visible scale type */
-export enum ExportVisibleScaleType {
-    Scale = 'scale',
-    Width = 'width',
-    Height = 'height',
-}
-/* export options */
-export type ExportOptions = {
-    typeId: string
-    exportFormats: ExportFormat[]
-    childOptions: number
-    shouldTrim: boolean
-    trimTransparent: boolean
-    canvasBackground: boolean
-    unfold: boolean
-}
-/* export format */
-export type ExportFormat = {
-    crdtidx: number[]
-    id: string
-    absoluteSize: number
-    fileFormat: ExportFileFormat
-    name: string
-    namingScheme: ExportFormatNameingScheme
-    scale: number
-    visibleScaleType: ExportVisibleScaleType
-}
-/* export format nameing scheme */
-export enum ExportFormatNameingScheme {
-    Suffix = 'suffix',
-    Prefix = 'prefix',
-}
-/* export file format */
-export enum ExportFileFormat {
-    Png = 'png',
-    Jpg = 'jpg',
-    Tiff = 'tiff',
-    Eps = 'eps',
-    Pdf = 'pdf',
-    Webp = 'webp',
-    Svg = 'svg',
-}
-/* ellipse attributes */
-export type Ellipse = {
-    cx: number
-    cy: number
-    rx: number
-    ry: number
-}
-/* document meta */
-export type DocumentMeta = {
-    id: string
-    name: string
-    pagesList: PageListItem[]
-    lastCmdId: string
-    symbolregist: Map<string, string>
-    freesymbolsVersionId?: string
-}
-/* curve point */
-export type CurvePoint = {
-    crdtidx: number[]
-    id: string
-    radius?: number
-    fromX?: number
-    fromY?: number
-    toX?: number
-    toY?: number
-    hasFrom?: boolean
-    hasTo?: boolean
-    mode: CurveMode
-    x: number
-    y: number
-}
-/* curve mode */
-export enum CurveMode {
-    None = 'none',
-    Straight = 'straight',
-    Mirrored = 'mirrored',
-    Asymmetric = 'asymmetric',
-    Disconnected = 'disconnected',
-}
-/* crdt number */
-export type CrdtNumber = {
-    id: string
-    crdtidx: number[]
-    value: number
-}
-/* corner type */
-export enum CornerType {
-    Miter = 'miter',
-    Bevel = 'bevel',
-    Round = 'round',
-}
-/* couner radius */
-export type CornerRadius = {
-    typeId: string
-    lt: number
-    rt: number
-    lb: number
-    rb: number
-}
-/* context settings */
-export type ContextSettings = {
-    typeId: string
-    blenMode: BlendMode
-    opacity: number
-}
-/* contact type */
-export enum ContactType {
-    Top = 'top',
-    Right = 'right',
-    Bottom = 'bottom',
-    Left = 'left',
-}
-/* contactstyle */
-export type ContactRole = {
-    crdtidx: number[]
-    id: string
-    roleType: ContactRoleType
-    shapeId: string
-}
-/* contact role type */
-export enum ContactRoleType {
-    From = 'from',
-    To = 'to',
-}
-/* contact form */
-export type ContactForm = {
-    contactType: ContactType
-    shapeId: string
-}
-/* comment */
-export type Comment = {
-    pageId: string
-    id: string
-    frame: ShapeFrame
-    user: UserInfo
-    createAt: string
-    content: string
-    parasiticBody: Shape
-    parentId?: string
-    rootId?: string
-}
-/* color */
-export type Color = {
-    typeId: string
-    alpha: number
-    red: number
-    green: number
-    blue: number
-}
-/* color controls */
-export type ColorControls = {
-    isEnabled: boolean
-    brightness: number
-    contrast: number
-    hue: number
-    saturation: number
-}
-/* bullet numbers */
-export type BulletNumbers = {
-    behavior?: BulletNumbersBehavior
-    offset?: number
-    type: BulletNumbersType
-}
-/* bullet & item number types */
-export enum BulletNumbersType {
-    None = 'none',
-    Ordered1Ai = 'ordered-1ai',
-    Disorded = 'disorded',
-}
-/* bullet & item number behavior */
-export enum BulletNumbersBehavior {
-    Inherit = 'inherit',
-    Renew = 'renew',
-}
-/* border */
-export type Border = {
-    crdtidx: number[]
-    typeId: string
-    id: string
-    isEnabled: boolean
-    fillType: FillType
-    color: Color
-    contextSettings?: ContextSettings
-    position: BorderPosition
-    thickness: number
-    gradient?: Gradient
-    borderStyle: BorderStyle
-    cornerType: CornerType
-    sideSetting: BorderSideSetting
-}
-/* border style */
-export type BorderStyle = {
-    length: number
-    gap: number
-}
-/* border side setting */
-export type BorderSideSetting = {
-    sideType: SideType
-    thicknessTop: number
-    thicknessLeft: number
-    thicknessBottom: number
-    thicknessRight: number
-}
-/* border position */
-export enum BorderPosition {
-    Inner = 'inner',
-    Center = 'center',
-    Outer = 'outer',
-}
-/* border options */
-export type BorderOptions = {
-    isEnabled: boolean
-    lineCapStyle: LineCapStyle
-    lineJoinStyle: LineJoinStyle
-}
-/* bool op types */
-export enum BoolOp {
-    None = 'none',
-    Union = 'union',
-    Subtract = 'subtract',
-    Intersect = 'intersect',
-    Diff = 'diff',
+export type Variable_0 = Array<Border | Fill | Shadow>
+/* winding rule */
+export enum WindingRule {
+    NonZero = "non-zero",
+    EvenOdd = "even-odd",
 }
 /* blur */
 export type Blur = {
-    isEnabled: boolean
-    center: Point2D
-    motionAngle?: number
-    radius?: number
-    saturation: number
-    type: BlurType
+    typeId: string,
+    isEnabled: boolean,
+    center: Point2D,
+    saturation: number,
+    type: BlurType,
+    motionAngle?: number,
+    radius?: number,
 }
-/* blur types */
-export enum BlurType {
-    Gaussian = 'gaussian',
-    Motion = 'motion',
-    Zoom = 'zoom',
-    Background = 'background',
+/* border options */
+export type BorderOptions = {
+    isEnabled: boolean,
+    lineCapStyle: LineCapStyle,
+    lineJoinStyle: LineJoinStyle,
 }
-/* blend mode */
-export enum BlendMode {
-    Normal = 'normal',
-    Darken = 'darken',
-    Multiply = 'multiply',
-    ColorBurn = 'color-burn',
-    Lighten = 'lighten',
-    Screen = 'screen',
-    ColorDodge = 'color-dodge',
-    Overlay = 'overlay',
-    SoftLight = 'soft-light',
-    HardLight = 'hard-light',
-    Difference = 'difference',
-    Exclusion = 'exclusion',
-    Hue = 'hue',
-    Saturation = 'saturation',
-    Color = 'color',
-    Luminosity = 'luminosity',
-    PlusDarker = 'plus-darker',
-    PlusLighter = 'plus-lighter',
+/* border side setting */
+export type BorderSideSetting = {
+    sideType: SideType,
+    thicknessTop: number,
+    thicknessLeft: number,
+    thicknessBottom: number,
+    thicknessRight: number,
 }
-/* text shape */
-export type TextShape = Shape & {
-    text: Text
-    fixedRadius?: number
+/* contact form */
+export type ContactForm = {
+    contactType: ContactType,
+    shapeId: string,
 }
-/* table shape */
-export type TableShape = Shape & {
-    cells: Map<string, TableCell>
-    rowHeights: CrdtNumber[]
-    colWidths: CrdtNumber[]
-    textAttr?: TextAttr
+/* contactstyle */
+export type ContactRole = {
+    crdtidx: Crdtidx,
+    id: string,
+    roleType: ContactRoleType,
+    shapeId: string,
 }
-/* table cell */
-export type TableCell = Shape & {
-    cellType: TableCellType
-    text: Text
-    imageRef?: string
-    rowSpan?: number
-    colSpan?: number
+/* crdt number */
+export type CrdtNumber = {
+    id: string,
+    crdtidx: Crdtidx,
+    value: number,
 }
-/* symbol ref shape */
-export type SymbolRefShape = Shape & {
-    refId: string
-    overrides?: Map<string, string>
-    variables: Map<string, Variable>
-    isCustomSize?: boolean
-    cornerRadius?: CornerRadius
+/* export format */
+export type ExportFormat = {
+    crdtidx: Crdtidx,
+    id: string,
+    absoluteSize: number,
+    fileFormat: ExportFileFormat,
+    name: string,
+    namingScheme: ExportFormatNameingScheme,
+    scale: number,
+    visibleScaleType: ExportVisibleScaleType,
+}
+/* export options */
+export type ExportOptions = {
+    typeId: string,
+    exportFormats: ExportOptions_exportFormats,
+    childOptions: number,
+    shouldTrim: boolean,
+    trimTransparent: boolean,
+    canvasBackground: boolean,
+    unfold: boolean,
+}
+/* gradient */
+export type Gradient = {
+    typeId: string,
+    from: Point2D,
+    to: Point2D,
+    gradientType: GradientType,
+    stops: Gradient_stops,
+    elipseLength?: number,
+    gradientOpacity?: number,
+}
+/* span attr */
+export type SpanAttr = {
+    fontName?: string,
+    fontSize?: number,
+    color?: Color,
+    strikethrough?: StrikethroughType,
+    underline?: UnderlineType,
+    weight?: number,
+    italic?: boolean,
+    bulletNumbers?: BulletNumbers,
+    highlight?: Color,
+    kerning?: number,
+    transform?: TextTransformType,
+    placeholder?: boolean,
+    fillType?: FillType,
+    gradient?: Gradient,
 }
 /* span attr */
 export type Span = SpanAttr & {
-    length: number
+    length: number,
 }
-/* path shape */
-export type PathShape2 = Shape & {
-    pathsegs: PathSegment[]
-    fixedRadius?: number
+/* border */
+export type Border = {
+    crdtidx: Crdtidx,
+    typeId: string,
+    id: string,
+    isEnabled: boolean,
+    fillType: FillType,
+    color: Color,
+    position: BorderPosition,
+    thickness: number,
+    borderStyle: BorderStyle,
+    cornerType: CornerType,
+    sideSetting: BorderSideSetting,
+    contextSettings?: ContextSettings,
+    gradient?: Gradient,
+    imageRef?: string,
+    imageScaleMode?: ImageScaleMode,
+    rotation?: number,
+    scale?: number,
+    originalImageWidth?: number,
+    originalImageHeight?: number,
+    paintFilter?: PaintFilter,
+    transform?: PatternTransform,
 }
-/* path shape */
-export type PathShape = Shape & {
-    points: CurvePoint[]
-    isClosed: boolean
-    fixedRadius?: number
-}
-/* rect shape */
-export type RectShape = PathShape & {
+/* fill */
+export type Fill = {
+    crdtidx: Crdtidx,
+    typeId: string,
+    id: string,
+    isEnabled: boolean,
+    fillType: FillType,
+    color: Color,
+    contextSettings?: ContextSettings,
+    gradient?: Gradient,
+    imageRef?: string,
+    fillRule?: FillRule,
+    imageScaleMode?: ImageScaleMode,
+    rotation?: number,
+    scale?: number,
+    originalImageWidth?: number,
+    originalImageHeight?: number,
+    paintFilter?: PaintFilter,
+    transform?: PatternTransform,
 }
 /* span attr */
 export type ParaAttr = SpanAttr & {
-    alignment?: TextHorAlign
-    paraSpacing?: number
-    minimumLineHeight?: number
-    maximumLineHeight?: number
-    indent?: number
+    alignment?: TextHorAlign,
+    paraSpacing?: number,
+    minimumLineHeight?: number,
+    maximumLineHeight?: number,
+    indent?: number,
+}
+/* para */
+export type Para = {
+    text: string,
+    spans: Para_spans,
+    attr?: ParaAttr,
+}
+/* style */
+export type Style = {
+    typeId: string,
+    borders: Style_borders,
+    fills: Style_fills,
+    shadows: Style_shadows,
+    miterLimit?: number,
+    windingRule?: WindingRule,
+    blur?: Blur,
+    borderOptions?: BorderOptions,
+    colorControls?: ColorControls,
+    contextSettings?: ContextSettings,
+    innerShadows?: Style_innerShadows,
+    contacts?: Style_contacts,
+    startMarkerType?: MarkerType,
+    endMarkerType?: MarkerType,
+    varbinds?: Map<string, string>,
 }
 /* text attr */
 export type TextAttr = ParaAttr & {
-    verAlign?: TextVerAlign
-    orientation?: TextOrientation
-    textBehaviour?: TextBehaviour
-    padding?: Padding
+    verAlign?: TextVerAlign,
+    orientation?: TextOrientation,
+    textBehaviour?: TextBehaviour,
+    padding?: Padding,
 }
-/* oval shape */
-export type OvalShape = PathShape & {
-    ellipse: Ellipse
+/* text */
+export type Text = {
+    typeId: string,
+    paras: Text_paras,
+    attr?: TextAttr,
 }
-/* line shape */
-export type LineShape = PathShape & {
+/* shape */
+export type Shape = {
+    crdtidx: Crdtidx,
+    typeId: string,
+    id: string,
+    name: string,
+    type: ShapeType,
+    transform: Transform,
+    style: Style,
+    boolOp?: BoolOp,
+    isFixedToViewport?: boolean,
+    isLocked?: boolean,
+    isVisible?: boolean,
+    exportOptions?: ExportOptions,
+    nameIsFixed?: boolean,
+    resizingConstraint?: number,
+    resizingType?: ResizeType,
+    constrainerProportions?: boolean,
+    clippingMaskMode?: number,
+    hasClippingMask?: boolean,
+    shouldBreakMaskChain?: boolean,
+    varbinds?: Map<string, string>,
+    haveEdit?: boolean,
+    mask?: boolean,
 }
-/* image shape */
-export type ImageShape = PathShape & {
-    imageRef: string
+/* table cell */
+export type TableCell = Shape & {
+    cellType: TableCellType,
+    text: Text,
+    imageRef?: string,
+    rowSpan?: number,
+    colSpan?: number,
 }
-/* group shape */
-export type GroupShape = Shape & {
-    childs: (GroupShape | ImageShape | PathShape | PathShape2 | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape)[]
-    fixedRadius?: number
+/* table shape */
+export type TableShape = Shape & {
+    size: ShapeSize,
+    cells: Map<string, TableCell>,
+    rowHeights: TableShape_rowHeights,
+    colWidths: TableShape_colWidths,
+    textAttr?: TextAttr,
 }
-/* symbol shape */
-export type SymbolShape = GroupShape & {
-    variables: Map<string, Variable>
-    symtags?: Map<string, string>
-    cornerRadius?: CornerRadius
+/* text shape */
+export type TextShape = Shape & {
+    size: ShapeSize,
+    text: Text,
+    fixedRadius?: number,
 }
-/* symbol union shape */
-export type SymbolUnionShape = SymbolShape & {
+/* color */
+export type Variable = {
+    id: string,
+    type: VariableType,
+    name: string,
+    value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur,
 }
-/* page */
-export type Page = GroupShape & {
-    backgroundColor?: Color
+/* comment */
+export type Comment = {
+    pageId: string,
+    id: string,
+    frame: ShapeFrame,
+    user: UserInfo,
+    createAt: string,
+    content: string,
+    parasiticBody: Shape,
+    parentId?: string,
+    rootId?: string,
 }
-/* cutout shape */
-export type CutoutShape = PathShape & {
-    scalingStroke: boolean
+/* path shape */
+export type PathShape = Shape & {
+    size: ShapeSize,
+    pathsegs: PathShape_pathsegs,
+    fixedRadius?: number,
+}
+/* path shape */
+export type PathShape2 = Shape & {
+    size: ShapeSize,
+    pathsegs: PathShape2_pathsegs,
+    fixedRadius?: number,
+}
+/* polygon shape */
+export type PolygonShape = PathShape & {
+    counts: number,
+}
+/* rect shape */
+export type RectShape = PathShape
+/* star shape */
+export type StarShape = PathShape & {
+    counts: number,
+    innerAngle: number,
+}
+/* symbol ref shape */
+export type SymbolRefShape = Shape & {
+    size: ShapeSize,
+    refId: string,
+    variables: Map<string, Variable>,
+    overrides?: Map<string, string>,
+    isCustomSize?: boolean,
+    cornerRadius?: CornerRadius,
 }
 /* contact shape */
-export type ContactShape = Shape & {
-    points: CurvePoint[]
-    from?: ContactForm
-    to?: ContactForm
-    isEdited: boolean
-    isClosed: boolean
-    mark: boolean
-    text: Text
-    fixedRadius?: number
+export type ContactShape = PathShape & {
+    isEdited: boolean,
+    text: Text,
+    mark: boolean,
+    from?: ContactForm,
+    to?: ContactForm,
 }
-/* bool shape */
-export type BoolShape = GroupShape & {
+/* cutout shape */
+export type CutoutShape = PathShape
+/* image shape */
+export type ImageShape = PathShape & {
+    imageRef: string,
+}
+/* line shape */
+export type LineShape = PathShape
+/* oval shape */
+export type OvalShape = PathShape & {
+    ellipse: Ellipse,
 }
 /* artboard shape */
 export type Artboard = GroupShape & {
-    cornerRadius?: CornerRadius
+    size: ShapeSize,
+    cornerRadius?: CornerRadius,
+    guides?: Artboard_guides,
 }
+/* bool shape */
+export type BoolShape = GroupShape
+/* document meta */
+export type DocumentMeta = {
+    id: string,
+    name: string,
+    fmtVer: number,
+    pagesList: DocumentMeta_pagesList,
+    lastCmdId: string,
+    symbolregist: Map<string, string>,
+    freesymbols?: Map<string, SymbolShape | SymbolUnionShape>,
+}
+/* group shape */
+export type GroupShape = Shape & {
+    childs: GroupShape_childs,
+    fixedRadius?: number,
+}
+/* page */
+export type Page = GroupShape & {
+    backgroundColor?: Color,
+    guides?: Page_guides,
+}
+/* symbol shape */
+export type SymbolShape = GroupShape & {
+    size: ShapeSize,
+    variables: Map<string, Variable>,
+    symtags?: Map<string, string>,
+    cornerRadius?: CornerRadius,
+    guides?: SymbolShape_guides,
+}
+/* symbol union shape */
+export type SymbolUnionShape = SymbolShape

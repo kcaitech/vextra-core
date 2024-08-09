@@ -1,0 +1,18 @@
+{
+    "description": "graphics contex settings",
+    "type": "object",
+    "properties": {
+        "blendMode": {
+            "$ref": "./blend-mode.json"
+        },
+        "opacity": {
+            "type": "number",
+            "default": 1
+        }
+    },
+    "required": [
+        "blendMode",
+        "opacity"
+    ],
+    "additionalProperties": false
+}

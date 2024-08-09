@@ -1,32 +1,26 @@
 {
   "compilerOptions": {
     "target": "esnext",
-    "module": "commonjs",
+    "module": "esnext",
+    "moduleResolution": "Node",
     "strict": true,
-    "jsx": "preserve",
-    "importHelpers": true,
-    "moduleResolution": "node",
-    "experimentalDecorators": true,
-    "skipLibCheck": true,
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
+    "outDir": "dist",
     "declaration": true,
+    "declarationDir": "dist/types",
     "declarationMap": false,
     "sourceMap": false,
-    "baseUrl": "src",
-    "outDir": "dist",
+    "baseUrl": "./",
     "types": [
       "jest",
       "node"
     ],
-    "paths": {
-    },
+    "paths": {},
     "lib": [
-      "esnext",
       "dom",
       "dom.iterable",
-      "scripthost"
+      "esnext"
     ]
   },
   "include": [

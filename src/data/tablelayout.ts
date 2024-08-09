@@ -1,5 +1,5 @@
 import { Grid } from "../basic/grid";
-import { ShapeFrame } from "./shape";
+import { ShapeFrame, ShapeSize } from "./shape";
 import { TableCell, TableShape } from "./table";
 
 export type TableGridItem = { index: { row: number, col: number }, span: { row: number, col: number }, frame: ShapeFrame }
@@ -35,7 +35,7 @@ export type TableLayout = {
 //     }
 // }
 
-export function layoutTable(table: TableShape, frame: ShapeFrame, cellGetter: (ri: number, ci: number) => TableCell | undefined): TableLayout {
+export function layoutTable(table: TableShape, frame: ShapeSize, cellGetter: (ri: number, ci: number) => TableCell | undefined): TableLayout {
     // const frame = table.frame;
     const grid: Grid<TableGridItem> = new Grid<TableGridItem>(table.rowHeights.length, table.colWidths.length);
     // const cells = table.cells;

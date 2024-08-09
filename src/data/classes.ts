@@ -1,3 +1,4 @@
+
 export * from './artboard'
 export * from './document'
 export * from './page'
@@ -10,7 +11,11 @@ export * from './table'
 export * from './contact'
 export * from './symbolref'
 export * from './color'
+export * from './guide'
 
 export { parsePath } from './pathparser'
 export { layoutTable } from './tablelayout'
 export { layoutText, TextLayout, getNextChar } from './textlayout'
+export { importGradient } from './baseimport'
+
+export { Crdtidx } from './baseclasses'

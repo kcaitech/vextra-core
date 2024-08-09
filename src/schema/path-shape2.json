@@ -2,6 +2,9 @@
     "description": "path shape",
     "type": "object",
     "properties": {
+        "size": {
+            "$ref": "./shape-size.json"
+        },
         "pathsegs": {
             "type": "array",
             "items": {
@@ -13,6 +16,7 @@
         }
     },
     "required": [
+        "size",
         "pathsegs"
     ],
     "allOf": [

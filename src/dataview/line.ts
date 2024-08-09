@@ -2,9 +2,9 @@ import { render as renderBorders } from "../render/line_borders"
 import { EL, elh } from "./el";
 import { PathShapeView } from "./pathshape";
 export class LineView extends PathShapeView {
-    protected isNoSupportDiamondScale(): boolean {
-        return this.m_data.isNoSupportDiamondScale;
-    }
+    // protected isNoSupportDiamondScale(): boolean {
+    //     return this.m_data.isNoSupportDiamondScale;
+    // }
 
     protected renderFills(): EL[] {
         return [];

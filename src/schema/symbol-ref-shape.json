@@ -2,9 +2,11 @@
     "description": "symbol ref shape",
     "type": "object",
     "properties": {
+        "size": {
+            "$ref": "./shape-size.json"
+        },
         "refId": {
-            "type": "string",
-            "default": "$uuid"
+            "type": "string"
         },
         "overrides": {
             "type": "map",
@@ -32,6 +34,7 @@
         }
     },
     "required": [
+        "size",
         "refId",
         "variables"
     ],

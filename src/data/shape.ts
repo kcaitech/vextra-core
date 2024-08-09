@@ -1,5 +1,5 @@
 import { Basic, BasicArray, BasicMap, ResourceMgr } from "./basic";
-import { BlendMode, Border, ContextSettings, Style } from "./style";
+import { Style } from "./style";
 import { Text } from "./text";
 import * as classes from "./baseclasses"
 import {
@@ -7,36 +7,32 @@ import {
     CornerRadius,
     CurveMode,
     CurvePoint,
-    ExportOptions,
+    ExportOptions, Guide,
     OverrideType,
     PathSegment,
     ResizeType,
     ShapeFrame,
     ShapeType,
-    VariableType
+    VariableType,
+    ShapeSize,
 } from "./baseclasses"
 import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
 import { TextLayout } from "./textlayout";
 import { parsePath } from "./pathparser";
-import { FrameType, PathType, RadiusType, RECT_POINTS } from "./consts";
+import { PathType, RadiusType, RECT_POINTS } from "./consts";
 import { Variable } from "./variable";
-import { TableShape } from "./table";
-import { SymbolRefShape } from "./symbolref";
-
+import { Transform } from "./transform";
+import { makeShapeTransform2By1 } from "./shape_transform_util";
+export { Transform } from "./transform";
 export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D,
     CurvePoint, ShapeFrame, Ellipse, PathSegment, OverrideType, VariableType,
-    FillRule, CornerRadius,
+    FillRule, CornerRadius, ShapeSize
 } from "./baseclasses";
 
 export { Variable } from "./variable";
 
-// todo
-// 存在变量的地方：ref, symbol
-// 在ref里，由proxy处理（监听所有变量的容器（ref, symbol））
-// 在symbol，这是个普通shape, 绘制由绘制处理？（怎么处理的？监听所有的变量容器）
-//   试图层可以获取，但更新呢？监听所有的变量容器
 
 export class Shape extends Basic implements classes.Shape {
 
@@ -64,77 +60,6 @@ export class Shape extends Basic implements classes.Shape {
         this.parent?.bubblenotify(...args);
     }
 
-    getCrdtPath(): string[] {
-        const page = this.getPage();
-        if (page && page !== this) return [page.id, this.id];
-        else return [this.id];
-    }
-
-    getOpTarget(path: string[]): any {
-        const id0 = path[0];
-        if (id0 === 'style') return this.style.getOpTarget(path.slice(1));
-        if (id0 === 'varbinds' && !this.varbinds) this.varbinds = new BasicMap();
-        if (id0 === "exportOptions" && !this.exportOptions) this.exportOptions = new ExportOptions(new BasicArray(), 0, false, false, false, false);
-        return super.getOpTarget(path);
-    }
-
-    // shape
-    typeId = 'shape'
-    crdtidx: BasicArray<number>
-    id: string
-    type: ShapeType
-    frame: ShapeFrame
-    style: Style
-    boolOp?: BoolOp
-    isFixedToViewport?: boolean
-    isFlippedHorizontal?: boolean
-    isFlippedVertical?: boolean
-    isLocked?: boolean
-    isVisible?: boolean
-    exportOptions?: ExportOptions
-    name: string
-    nameIsFixed?: boolean
-    resizingConstraint?: number
-    resizingType?: ResizeType
-    rotation?: number
-    constrainerProportions?: boolean
-    clippingMaskMode?: number
-    hasClippingMask?: boolean
-    shouldBreakMaskChain?: boolean
-    varbinds?: BasicMap<string, string>
-
-    isClosed: boolean = true;
-    haveEdit?: boolean | undefined;
-
-    constructor(
-        crdtidx: BasicArray<number>,
-        id: string,
-        name: string,
-        type: ShapeType,
-        frame: ShapeFrame,
-        style: Style,
-    ) {
-        super()
-        this.crdtidx = crdtidx
-        this.id = id
-        this.name = name
-        this.type = type
-        this.frame = frame
-        this.style = style
-    }
-
-    // /**
-    //  * for command
-    //  */
-    // get shapeId(): (string | { rowIdx: number, colIdx: number })[] {
-    //     return [this.id];
-    // }
-
-    // public notify(...args: any[]): void {
-    //     super.notify(...args);
-    //     this.parent?.bubblenotify(...args);
-    // }
-
     private __bubblewatcher: Set<((...args: any[]) => void)> = new Set();
 
     public bubblewatch(watcher: ((...args: any[]) => void)): (() => void) {
@@ -158,6 +83,60 @@ export class Shape extends Basic implements classes.Shape {
         this.parent?.bubblenotify(...args);
     }
 
+    getCrdtPath(): string[] {
+        const page = this.getPage();
+        if (page && page !== this) return [page.id, this.id];
+        else return [this.id];
+    }
+
+    getOpTarget(path: string[]): any {
+        const id0 = path[0];
+        if (id0 === 'style') return this.style.getOpTarget(path.slice(1));
+        if (id0 === 'varbinds' && !this.varbinds) this.varbinds = new BasicMap();
+        if (id0 === "exportOptions" && !this.exportOptions) this.exportOptions = new ExportOptions(new BasicArray(), 0, false, false, false, false);
+        return super.getOpTarget(path);
+    }
+
+    // shape
+    typeId = 'shape'
+    crdtidx: BasicArray<number>
+    id: string
+    type: ShapeType
+    // frame: ShapeFrame
+    style: Style
+    transform: Transform
+    // size: ShapeSize
+    boolOp?: BoolOp
+    isFixedToViewport?: boolean
+    isLocked?: boolean
+    isVisible?: boolean
+    exportOptions?: ExportOptions
+    name: string
+    nameIsFixed?: boolean
+    resizingConstraint?: number
+    resizingType?: ResizeType
+    constrainerProportions?: boolean
+    clippingMaskMode?: number
+    hasClippingMask?: boolean
+    shouldBreakMaskChain?: boolean
+    varbinds?: BasicMap<string, string>
+
+    haveEdit?: boolean | undefined
+    mask?: boolean
+
+    constructor(
+        crdtidx: BasicArray<number>, id: string, name: string, type: ShapeType, transform: Transform, style: Style
+    ) {
+        super()
+        this.crdtidx = crdtidx
+        this.id = id
+        this.name = name
+        this.type = type
+        this.transform = transform
+        // this.size = size
+        this.style = style
+    }
+
     get naviChilds(): Shape[] | undefined {
         return undefined;
     }
@@ -170,14 +149,49 @@ export class Shape extends Basic implements classes.Shape {
         return false;
     }
 
-    getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
+    /**
+     * @deprecated
+     */
+    get rotation(): number {
+        return makeShapeTransform2By1(this.transform).decomposeEuler().z * 180 / Math.PI;
+    }
+
+    get x(): number {
+        return this.transform.m02
+    }
+
+    set x(v: number) {
+        this.transform.m02 = v
+    }
+
+    get y(): number {
+        return this.transform.m12
+    }
+
+    set y(v: number) {
+        this.transform.m12 = v
+    }
+
+    get size(): ShapeSize {
+        return new ShapeSize();
+    }
+    set size(size: ShapeSize) {
+
+    }
+    get frame(): ShapeFrame {
+        const { width, height } = this.size;
+        return new ShapeFrame(0, 0, width, height);
+    }
+    hasSize(): boolean {
+        return false;
+    }
+
+    getPathOfSize(frame: ShapeSize, fixedRadius?: number): Path {
         return new Path();
     }
-
     getPath(fixedRadius?: number): Path {
-        return this.getPathOfFrame(this.frame, fixedRadius);
+        return this.getPathOfSize(this.frame, fixedRadius);
     }
-
     getPathStr(fixedRadius?: number): string {
         return this.getPath(fixedRadius).toString();
     }
@@ -209,17 +223,19 @@ export class Shape extends Basic implements classes.Shape {
     frame2Root(): ShapeFrame {
         const frame = this.frame;
         const m = this.matrix2Root();
-        const lt = m.computeCoord(0, 0);
-        const rb = m.computeCoord(frame.width, frame.height);
+        const lt = m.computeCoord(frame.x, frame.y);
+        const rb = m.computeCoord(frame.x + frame.width, frame.y + frame.height);
         return new ShapeFrame(lt.x, lt.y, rb.x - lt.x, rb.y - lt.y);
     }
 
     frame2Parent(): ShapeFrame {
-        if (this.isNoTransform()) return this.frame;
         const frame = this.frame;
-        const m = this.matrix2Parent();
-        const lt = m.computeCoord(0, 0);
-        const rb = m.computeCoord(frame.width, frame.height);
+        if (this.isNoTransform()) {
+            return new ShapeFrame(this.transform.m02 + frame.x, this.transform.m12 + frame.y, frame.width, frame.height);
+        }
+        const m = this.transform;
+        const lt = m.computeCoord(frame.x, frame.y);
+        const rb = m.computeCoord(frame.x + frame.width, frame.y + frame.height);
         return new ShapeFrame(lt.x, lt.y, rb.x - lt.x, rb.y - lt.y);
     }
 
@@ -238,49 +254,47 @@ export class Shape extends Basic implements classes.Shape {
     }
 
     isNoTransform() {
-        return !(this.rotation || this.isFlippedHorizontal || this.isFlippedVertical)
+        const t = this.transform;
+        return t.m00 == 1 && t.m01 === 0 && t.m10 === 0 && t.m11 === 1;
     }
 
     matrix2Parent(matrix?: Matrix) {
-        const m = matrix || new Matrix();
-        const frame = this.frame;
-        if (this.isNoTransform()) {
-            m.trans(frame.x, frame.y);
-            return m;
-        }
-        const cx = frame.width / 2;
-        const cy = frame.height / 2;
-        m.trans(-cx, -cy);
-        if (this.rotation) m.rotate(this.rotation / 360 * 2 * Math.PI);
-        if (this.isFlippedHorizontal) m.flipHoriz();
-        if (this.isFlippedVertical) m.flipVert();
-        m.trans(cx, cy);
-        m.trans(frame.x, frame.y);
-        return m;
+        const m = this.transform.toMatrix();
+        if (!matrix) return m;
+        matrix.multiAtLeft(m);
+        return matrix;
     }
 
-    // private __boundingBox?: ShapeFrame;
     boundingBox(): ShapeFrame {
-        if (this.isNoTransform()) return this.frame;
+        if (this.isNoTransform()) {
+            const transform = this.transform;
+            const size = this.frame;
+
+            return new ShapeFrame(transform.translateX, transform.translateY, size.width, size.height);
+        }
+
         const path = this.getPath();
         if (path.length > 0) {
-            const m = this.matrix2Parent();
+            const m = this.transform;
             path.transform(m);
             const bounds = path.calcBounds();
             return new ShapeFrame(bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
         }
 
         const frame = this.frame;
-        const m = this.matrix2Parent();
-        const corners = [{ x: 0, y: 0 }, { x: frame.width, y: 0 }, { x: frame.width, y: frame.height }, {
-            x: 0,
-            y: frame.height
-        }]
-            .map((p) => m.computeCoord(p));
+        const m = this.transform;
+        const corners = [
+            { x: frame.x, y: frame.y },
+            { x: frame.x + frame.width, y: frame.y },
+            { x: frame.x + frame.width, y: frame.y + frame.height },
+            { x: frame.x, y: frame.y + frame.height }
+        ].map((p) => m.computeCoord(p));
+
         const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
         const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
         const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
         const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
+
         return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
     }
 
@@ -288,21 +302,14 @@ export class Shape extends Basic implements classes.Shape {
      * @description 无论是否transform都进行Bounds计算并返回
      */
     boundingBox2(): ShapeFrame {
-        const path = this.getPath();
-        if (path.length > 0) {
-            const m = this.matrix2Parent();
-            path.transform(m);
-            const bounds = path.calcBounds();
-            return new ShapeFrame(bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
-        }
-
         const frame = this.frame;
-        const m = this.matrix2Parent();
-        const corners = [{ x: 0, y: 0 }, { x: frame.width, y: 0 }, { x: frame.width, y: frame.height }, {
-            x: 0,
-            y: frame.height
-        }]
-            .map((p) => m.computeCoord(p));
+        const m = this.transform;
+        const corners = [
+            { x: frame.x, y: frame.y },
+            { x: frame.x + frame.width, y: frame.y },
+            { x: frame.x + frame.width, y: frame.y + frame.height },
+            { x: frame.x, y: frame.y + frame.height }
+        ].map((p) => m.computeCoord(p));
         const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
         const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
         const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
@@ -319,59 +326,6 @@ export class Shape extends Basic implements classes.Shape {
             const bounds = path.calcBounds();
             return new ShapeFrame(bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
         }
-    }
-
-    flipHorizontal() {
-        this.isFlippedHorizontal = !this.isFlippedHorizontal;
-    }
-
-    flipVertical() {
-        this.isFlippedVertical = !this.isFlippedVertical;
-    }
-
-    rotate(deg: number) {
-        deg = deg % 360;
-        this.rotation = deg;
-    }
-
-    setResizingConstraint(value: number) {
-        this.resizingConstraint = value;
-    }
-
-    setContextSettingsOpacity(value: number) {
-        if (!this.style.contextSettings) {
-            this.style.contextSettings = new ContextSettings(BlendMode.Normal, 1);
-        }
-        this.style.contextSettings.opacity = value;
-    }
-
-    getBorderIndex(border: Border): number {
-        return this.style.borders.findIndex(i => i === border);
-    }
-
-    setName(name: string) {
-        this.name = name;
-    }
-
-    toggleVisible() {
-        this.isVisible = !this.isVisible;
-    }
-
-    toggleLock() {
-        this.isLocked = !this.isLocked;
-    }
-
-    setShapesConstrainerProportions(val: boolean) {
-        this.constrainerProportions = val;
-    }
-
-    setFrameSize(w: number, h: number) {
-        this.frame.width = w;
-        this.frame.height = h;
-    }
-
-    setVisible(isVisible: boolean | undefined) {
-        this.isVisible = isVisible;
     }
 
     findVar(varId: string, ret: Variable[]) {
@@ -413,14 +367,6 @@ export class Shape extends Basic implements classes.Shape {
         return this.style.shadows;
     }
 
-    get isNoSupportDiamondScale() {  // 默认都支持压扁缩放
-        return false;
-    }
-
-    get frameType() {
-        return FrameType.Path;
-    }
-
     get isContainer() { // 容器类元素: 页面、容器、组件、组件Union
         return false;
     }
@@ -440,12 +386,25 @@ export class Shape extends Basic implements classes.Shape {
     get radiusType() {
         return RadiusType.None;
     }
+
+    get isClosed() {
+        return true;
+    }
+
+    get isStraight() {
+        return false;
+    }
+    getImageFill() {
+        const fills = this.getFills();
+        if (!fills.length) return false;
+        return fills.some(fill => fill.fillType === classes.FillType.Pattern);
+    }
 }
 
 export class GroupShape extends Shape implements classes.GroupShape {
+
     typeId = 'group-shape';
-    childs: BasicArray<(GroupShape | Shape | ImageShape | PathShape | RectShape | TextShape | TableShape | SymbolRefShape)>
-    // wideframe: ShapeFrame
+    childs: BasicArray<(GroupShape | Shape | ImageShape | PathShape | RectShape | TextShape)>
     fixedRadius?: number
 
     constructor(
@@ -453,7 +412,7 @@ export class GroupShape extends Shape implements classes.GroupShape {
         id: string,
         name: string,
         type: ShapeType,
-        frame: ShapeFrame,
+        transform: Transform,
         style: Style,
         childs: BasicArray<(GroupShape | Shape | ImageShape | PathShape | RectShape | TextShape)>
     ) {
@@ -462,11 +421,10 @@ export class GroupShape extends Shape implements classes.GroupShape {
             id,
             name,
             type,
-            frame,
+            transform,
             style
         )
         this.childs = childs;
-        // this.wideframe = new ShapeFrame(frame.x, frame.y, frame.width, frame.height);
     }
 
     get naviChilds(): Shape[] | undefined {
@@ -520,26 +478,26 @@ export class GroupShape extends Shape implements classes.GroupShape {
         })
     }
 
-    getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
+    getPathOfSize(frame: ShapeSize, fixedRadius?: number): Path {
         const x = 0;
         const y = 0;
         const w = frame.width;
         const h = frame.height;
         let path = [["M", x, y],
-            ["l", w, 0],
-            ["l", 0, h],
-            ["l", -w, 0],
-            ["z"]];
+        ["l", w, 0],
+        ["l", 0, h],
+        ["l", -w, 0],
+        ["z"]];
         return new Path(path);
     }
 
-    get isNoSupportDiamondScale() {
-        return true;
-    }
+    // get isNoSupportDiamondScale() {
+    //     return true;
+    // }
 
-    get frameType() {
-        return FrameType.Flex;
-    }
+    // get frameType() {
+    //     return FrameType.Flex;
+    // }
 
     get pathType() {
         return PathType.Fixed;
@@ -552,6 +510,36 @@ export class GroupShape extends Shape implements classes.GroupShape {
     get radiusType() {
         return RadiusType.Fixed;
     }
+
+    getImageFill() {
+        return false;
+    }
+
+    get size(): ShapeSize {
+        return this.frame;
+    }
+    set size(size: ShapeSize) {
+    }
+    get frame(): ShapeFrame {
+        const childframes = this.childs.map((c) => c.frame2Parent());
+        const reducer = (p: { minx: number, miny: number, maxx: number, maxy: number }, c: ShapeFrame, i: number) => {
+            if (i === 0) {
+                p.minx = c.x;
+                p.maxx = c.x + c.width;
+                p.miny = c.y;
+                p.maxy = c.y + c.height;
+            } else {
+                p.minx = Math.min(p.minx, c.x);
+                p.maxx = Math.max(p.maxx, c.x + c.width);
+                p.miny = Math.min(p.miny, c.y);
+                p.maxy = Math.max(p.maxy, c.y + c.height);
+            }
+            return p;
+        }
+        const bounds = childframes.reduce(reducer, { minx: 0, miny: 0, maxx: 0, maxy: 0 });
+        const { minx, miny, maxx, maxy } = bounds;
+        return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
+    }
 }
 
 export class BoolShape extends GroupShape implements classes.BoolShape {
@@ -562,7 +550,7 @@ export class BoolShape extends GroupShape implements classes.BoolShape {
         id: string,
         name: string,
         type: ShapeType,
-        frame: ShapeFrame,
+        transform: Transform,
         style: Style,
         childs: BasicArray<(GroupShape | Shape)>
     ) {
@@ -571,7 +559,7 @@ export class BoolShape extends GroupShape implements classes.BoolShape {
             id,
             name,
             ShapeType.BoolShape,
-            frame,
+            transform,
             style,
             childs
         )
@@ -593,6 +581,12 @@ export class BoolShape extends GroupShape implements classes.BoolShape {
     get isPathIcon() {
         return true;
     }
+    getImageFill() {
+        const fills = this.style.getFills();
+        if (!fills.length) return false;
+        const result = fills.some(fill => fill.fillType === classes.FillType.Pattern);
+        return result;
+    }
 }
 
 // export function genRefId(refId: string, type: OverrideType) {
@@ -600,7 +594,7 @@ export class BoolShape extends GroupShape implements classes.BoolShape {
 //     return refId + '/' + type;
 // }
 
-export function getPathOfRadius(frame: ShapeFrame, cornerRadius?: CornerRadius, fixedRadius?: number): Path {
+export function getPathOfRadius(frame: ShapeSize, cornerRadius?: CornerRadius, fixedRadius?: number): Path {
     const w = frame.width;
     const h = frame.height;
 
@@ -683,38 +677,56 @@ export function getPathOfRadius(frame: ShapeFrame, cornerRadius?: CornerRadius, 
 }
 
 export class SymbolShape extends GroupShape implements classes.SymbolShape {
+    get frame(): classes.ShapeFrame {
+        return new ShapeFrame(0, 0, this.size.width, this.size.height);
+    }
+    hasSize(): boolean {
+        return true;
+    }
 
     static Default_State = "49751e86-9b2c-4d1b-81b0-36f19b5407d2"
 
     typeId = 'symbol-shape'
+    // @ts-ignore
+    size: ShapeSize;
     variables: BasicMap<string, Variable> // 怎么做关联
     symtags?: BasicMap<string, string>
     cornerRadius?: CornerRadius
+    guides?: BasicArray<Guide>;
+
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
         name: string,
         type: ShapeType,
-        frame: ShapeFrame,
+        transform: Transform,
         style: Style,
         childs: BasicArray<Shape>,
-        variables: BasicMap<string, Variable>
+        size: ShapeSize,
+        variables: BasicMap<string, Variable>,
+        guides?: BasicArray<Guide>
     ) {
         super(
             crdtidx,
             id,
             name,
             type,
-            frame,
+            transform,
             style,
             childs
         )
+        this.size = size;
         this.variables = variables;
+        this.guides = guides;
     }
 
     getOpTarget(path: string[]): any {
-        if (path[0] === 'symtags' && !this.symtags) this.symtags = new BasicMap<string, string>();
-        if (path[0] === 'cornerRadius' && !this.cornerRadius) this.cornerRadius = new CornerRadius(0, 0, 0, 0);
+        const id0 = path[0];
+        if (id0 === 'symtags' && !this.symtags) this.symtags = new BasicMap<string, string>();
+        if (id0 === 'cornerRadius' && !this.cornerRadius) this.cornerRadius = new CornerRadius(0, 0, 0, 0);
+        if (id0 === "guides" && !this.guides) {
+            this.guides = new BasicArray<Guide>();
+        }
         return super.getOpTarget(path);
     }
 
@@ -757,9 +769,10 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         return true;
     }
 
-    getPathOfFrame(frame: classes.ShapeFrame, fixedRadius?: number | undefined): Path {
+    getPathOfSize(frame: ShapeSize, fixedRadius?: number | undefined): Path {
         return getPathOfRadius(frame, this.cornerRadius, fixedRadius);
     }
+
     get radius(): number[] {
         return [
             this.cornerRadius?.lt || 0,
@@ -782,9 +795,10 @@ export class SymbolUnionShape extends SymbolShape implements classes.SymbolUnion
         id: string,
         name: string,
         type: ShapeType,
-        frame: ShapeFrame,
+        transform: Transform,
         style: Style,
         childs: BasicArray<Shape>,
+        size: ShapeSize,
         variables: BasicMap<string, Variable>
     ) {
         super(
@@ -792,9 +806,10 @@ export class SymbolUnionShape extends SymbolShape implements classes.SymbolUnion
             id,
             name,
             type,
-            frame,
+            transform,
             style,
             childs,
+            size,
             variables
         )
     }
@@ -809,62 +824,16 @@ export class SymbolUnionShape extends SymbolShape implements classes.SymbolUnion
 }
 
 export class PathShape extends Shape implements classes.PathShape {
+    get frame(): classes.ShapeFrame {
+        return new ShapeFrame(0, 0, this.size.width, this.size.height);
+    }
+    hasSize(): boolean {
+        return true;
+    }
+
     typeId = 'path-shape'
-    points: BasicArray<CurvePoint>
-    isClosed: boolean
-    fixedRadius?: number
-
-    constructor(
-        crdtidx: BasicArray<number>,
-        id: string,
-        name: string,
-        type: ShapeType,
-        frame: ShapeFrame,
-        style: Style,
-        points: BasicArray<CurvePoint>,
-        isClosed: boolean
-    ) {
-        super(
-            crdtidx,
-            id,
-            name,
-            type,
-            frame,
-            style
-        )
-        this.points = points;
-        this.isClosed = isClosed;
-    }
-
-    /**
-     *
-     * @param fixedRadius shape自身的fixedRadius优先
-     * @returns
-     */
-    getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
-        // const offsetX = 0;
-        // const offsetY = 0;
-        const width = frame.width;
-        const height = frame.height;
-
-        fixedRadius = this.fixedRadius ?? fixedRadius;
-
-        const path = parsePath(this.points, !!this.isClosed, width, height, fixedRadius);
-
-        return new Path(path);
-    }
-
-    setRadius(radius: number): void {
-        this.points.forEach((p) => p.radius = radius);
-    }
-
-    get radius(): number[] {
-        return this.points.map((p) => p.radius || 0);
-    }
-}
-
-export class PathShape2 extends Shape implements classes.PathShape2 {
-    typeId = 'path-shape2'
+    // @ts-ignore
+    size: ShapeSize;
     pathsegs: BasicArray<PathSegment>
     fixedRadius?: number
 
@@ -873,8 +842,9 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
         id: string,
         name: string,
         type: ShapeType,
-        frame: ShapeFrame,
+        transform: Transform,
         style: Style,
+        size: ShapeSize,
         pathsegs: BasicArray<PathSegment>
     ) {
         super(
@@ -882,13 +852,95 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
             id,
             name,
             type,
-            frame,
+            transform,
+            style
+        );
+        this.size = size;
+        this.pathsegs = pathsegs;
+    }
+
+    getPathOfSize(frame: ShapeSize, fixedRadius?: number): Path {
+        // const offsetX = 0;
+        // const offsetY = 0;
+        const width = frame.width;
+        const height = frame.height;
+
+        fixedRadius = this.fixedRadius ?? fixedRadius;
+
+        const path: any[] = [];
+        this.pathsegs.forEach((seg) => {
+            path.push(...parsePath(seg.points, seg.isClosed, width, height, fixedRadius));
+        });
+
+        return new Path(path);
+    }
+
+    // setRadius(radius: number): void {
+    //     this.points.forEach((p) => p.radius = radius);
+    // }
+
+    // get radius(): number[] {
+    //     return this.points.map((p) => p.radius || 0);
+    // }
+
+    get radius(): number[] {
+        return this.pathsegs.reduce((radius: number[], seg) => seg.points.reduce((radius, p) => {
+            radius.push(p.radius || 0);
+            return radius;
+        }, radius), []);
+    }
+
+    get radiusType(): RadiusType {
+        return RadiusType.Fixed;
+    }
+
+    get isStraight(): boolean {
+        if (this.pathsegs.length !== 1) return false;
+        const points = this.pathsegs[0].points;
+        if (points.length !== 2) return false;
+        const start = points[0];
+        const end = points[1];
+
+        return !start.hasFrom && !end.hasTo;
+    }
+}
+
+export class PathShape2 extends Shape implements classes.PathShape2 {
+    get frame(): classes.ShapeFrame {
+        return new ShapeFrame(0, 0, this.size.width, this.size.height);
+    }
+    hasSize(): boolean {
+        return true;
+    }
+    typeId = 'path-shape2'
+    // @ts-ignore
+    size: ShapeSize;
+    pathsegs: BasicArray<PathSegment>
+    fixedRadius?: number
+
+    constructor(
+        crdtidx: BasicArray<number>,
+        id: string,
+        name: string,
+        type: ShapeType,
+        transform: Transform,
+        style: Style,
+        size: ShapeSize,
+        pathsegs: BasicArray<PathSegment>
+    ) {
+        super(
+            crdtidx,
+            id,
+            name,
+            type,
+            transform,
             style
         )
+        this.size = size;
         this.pathsegs = pathsegs
     }
 
-    getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
+    getPathOfSize(frame: ShapeSize, fixedRadius?: number): Path {
         // const offsetX = 0;
         // const offsetY = 0;
         const width = frame.width;
@@ -912,7 +964,7 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
     }
 
     get pathType() {
-        return PathType.Multi;
+        return PathType.Editable;
     }
 
     get radiusType() {
@@ -924,60 +976,37 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
 
 export class RectShape extends PathShape implements classes.RectShape {
     typeId = 'rect-shape'
+
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
         name: string,
         type: ShapeType,
-        frame: ShapeFrame,
+        transform: Transform,
         style: Style,
-        points: BasicArray<CurvePoint>,
-        isClosed: boolean,
+        size: ShapeSize,
+        pathsegs: BasicArray<PathSegment>
     ) {
         super(
             crdtidx,
             id,
             name,
             type,
-            frame,
+            transform,
             style,
-            points,
-            isClosed,
+            size,
+            pathsegs
         )
-        this.isClosed = isClosed;
     }
 
-    // setRectRadius(lt: number, rt: number, rb: number, lb: number): void {
-    //     const ps = this.points;
-    //     if (ps.length === 4) {
-    //         ps[0].radius = lt;
-    //         ps[1].radius = rt;
-    //         ps[2].radius = rb;
-    //         ps[3].radius = lb;
-    //     }
-    // }
-
-    getRectRadius(): { lt: number, rt: number, rb: number, lb: number } {
-        const ret = { lt: 0, rt: 0, rb: 0, lb: 0 };
-        const ps = this.points;
-        if (ps.length === 4) {
-            ret.lt = ps[0].radius || 0;
-            ret.rt = ps[1].radius || 0;
-            ret.rb = ps[2].radius || 0;
-            ret.lb = ps[3].radius || 0;
-        }
-        return ret;
-    }
     get radiusType() {
-        return (this.points.length === 4 && this.isClosed) ? RadiusType.Rect : RadiusType.Fixed;
+        return this.haveEdit ? RadiusType.Fixed : RadiusType.Rect;
     }
 }
 
 export class ImageShape extends RectShape implements classes.ImageShape {
     typeId = 'image-shape'
     imageRef: string;
-    points: BasicArray<CurvePoint>;
-
     private __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
     private __cacheData?: { buff: Uint8Array, base64: string };
 
@@ -986,10 +1015,10 @@ export class ImageShape extends RectShape implements classes.ImageShape {
         id: string,
         name: string,
         type: ShapeType,
-        frame: ShapeFrame,
+        transform: Transform,
         style: Style,
-        points: BasicArray<CurvePoint>,
-        isClosed: boolean,
+        size: ShapeSize,
+        pathsegs: BasicArray<PathSegment>,
         imageRef: string,
     ) {
         super(
@@ -997,15 +1026,12 @@ export class ImageShape extends RectShape implements classes.ImageShape {
             id,
             name,
             type,
-            frame,
+            transform,
             style,
-            points,
-            isClosed
+            size,
+            pathsegs,
         )
-
-        this.points = points;
         this.imageRef = imageRef
-        this.isClosed = isClosed;
     }
 
     setImageMgr(imageMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>) {
@@ -1038,15 +1064,18 @@ export class ImageShape extends RectShape implements classes.ImageShape {
         return this.__cacheData && this.__cacheData.base64 || "";
     }
 
-    get isNoSupportDiamondScale() {
-        return true;
-    }
+    // get isNoSupportDiamondScale() {
+    //     return true;
+    // }
 
-    get frameType() {
-        return FrameType.Rect;
-    }
+    // get frameType() {
+    //     return FrameType.Rect;
+    // }
 
     get isPathIcon() {
+        return false;
+    }
+    getImageFill() {
         return false;
     }
 }
@@ -1060,10 +1089,10 @@ export class OvalShape extends PathShape implements classes.OvalShape {
         id: string,
         name: string,
         type: ShapeType,
-        frame: ShapeFrame,
+        transform: Transform,
         style: Style,
-        points: BasicArray<CurvePoint>,
-        isClosed: boolean,
+        size: ShapeSize,
+        pathsegs: BasicArray<PathSegment>,
         ellipse: classes.Ellipse
     ) {
         super(
@@ -1071,13 +1100,12 @@ export class OvalShape extends PathShape implements classes.OvalShape {
             id,
             name,
             type,
-            frame,
+            transform,
             style,
-            points,
-            isClosed
+            size,
+            pathsegs
         )
         this.ellipse = ellipse;
-        this.isClosed = isClosed;
     }
 }
 
@@ -1089,37 +1117,48 @@ export class LineShape extends PathShape implements classes.LineShape {
         id: string,
         name: string,
         type: ShapeType,
-        frame: ShapeFrame,
+        transform: Transform,
         style: Style,
-        points: BasicArray<CurvePoint>,
-        isClosed: boolean
+        size: ShapeSize,
+        pathsegs: BasicArray<PathSegment>
     ) {
         super(
             crdtidx,
             id,
             name,
             type,
-            frame,
+            transform,
             style,
-            points,
-            isClosed
-        )
-        this.isClosed = isClosed;
+            size,
+            pathsegs
+        );
+    }
+
+    get isStraight() {
+        return !this.haveEdit; // 直线没有编辑过就肯定是直线
     }
 }
 
 export class TextShape extends Shape implements classes.TextShape {
     typeId = 'text-shape'
+    // @ts-ignore
+    size: ShapeSize
     text: Text
     fixedRadius?: number
-
+    get frame(): classes.ShapeFrame {
+        return new ShapeFrame(0, 0, this.size.width, this.size.height);
+    }
+    hasSize(): boolean {
+        return true;
+    }
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
         name: string,
         type: ShapeType,
-        frame: ShapeFrame,
+        transform: Transform,
         style: Style,
+        size: ShapeSize,
         text: Text
     ) {
         super(
@@ -1127,9 +1166,10 @@ export class TextShape extends Shape implements classes.TextShape {
             id,
             name,
             type,
-            frame,
+            transform,
             style
         )
+        this.size = size;
         this.text = text
         // text.updateSize(frame.width, frame.height);
     }
@@ -1140,7 +1180,7 @@ export class TextShape extends Shape implements classes.TextShape {
         return super.getOpTarget(path);
     }
 
-    getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
+    getPathOfSize(frame: ShapeSize, fixedRadius?: number): Path {
 
         const w = frame.width;
         const h = frame.height;
@@ -1154,70 +1194,76 @@ export class TextShape extends Shape implements classes.TextShape {
         const x = 0;
         const y = 0;
         const path = [["M", x, y],
-            ["l", w, 0],
-            ["l", 0, h],
-            ["l", -w, 0],
-            ["z"]];
+        ["l", w, 0],
+        ["l", 0, h],
+        ["l", -w, 0],
+        ["z"]];
         return new Path(path);
     }
 
     getLayout(): TextLayout {
-        return this.text.getLayout2(this.frame);
+        return this.text.getLayout2(this.size);
     }
 
-    get isNoSupportDiamondScale() {
-        return true;
-    }
+    // get isNoSupportDiamondScale() {
+    //     return true;
+    // }
 
-    get frameType() {
-        return FrameType.Rect;
-    }
+    // get frameType() {
+    //     return FrameType.Rect;
+    // }
 
     get pathType() {
         return PathType.Fixed;
     }
 
     get isPathIcon() {
+        return false;
+    }
+    getImageFill() {
+        // const fills = this.style.getFills();
+        // if (!fills.length) return false;
+        // const result = fills.some(fill => fill.fillType === classes.FillType.Pattern);
+        // return result;
         return false;
     }
 }
 
 export class CutoutShape extends PathShape implements classes.CutoutShape {
     typeId = 'cutout-shape'
-    scalingStroke: boolean;
+    exportOptions?: ExportOptions
 
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
         name: string,
         type: ShapeType,
-        frame: ShapeFrame,
+        transform: Transform,
         style: Style,
-        points: BasicArray<CurvePoint>,
-        isClosed: boolean,
-        scalingStroke: boolean
+        size: ShapeSize,
+        pathsegs: BasicArray<PathSegment>,
+        exportOptions?: ExportOptions
     ) {
         super(
             crdtidx,
             id,
             name,
             type,
-            frame,
+            transform,
             style,
-            points,
-            isClosed
+            size,
+            pathsegs
         )
-        this.scalingStroke = scalingStroke;
-        this.isClosed = false;
+        this.exportOptions = exportOptions;
     }
 
-    get isNoSupportDiamondScale() {
-        return true;
-    }
+    // get isNoSupportDiamondScale() {
+    //     return true;
+    // }
 
-    get frameType() {
-        return FrameType.Rect;
-    }
+    // get frameType() {
+    //     return FrameType.Rect;
+    // }
 
     get pathType() {
         return PathType.Fixed;
@@ -1226,8 +1272,71 @@ export class CutoutShape extends PathShape implements classes.CutoutShape {
     get isPathIcon() {
         return false;
     }
+    get radiusType() {
+        return RadiusType.None;
+    }
+    getImageFill() {
+        return false;
+    }
+}
 
-    get radius(): number[] {
-        return [0];
+export class PolygonShape extends PathShape implements classes.PolygonShape {
+    typeId = 'polygon-shape'
+    counts: number
+
+    constructor(
+        crdtidx: BasicArray<number>,
+        id: string,
+        name: string,
+        type: ShapeType,
+        transform: Transform,
+        style: Style,
+        size: ShapeSize,
+        pathsegs: BasicArray<PathSegment>,
+        counts: number
+    ) {
+        super(
+            crdtidx,
+            id,
+            name,
+            type,
+            transform,
+            style,
+            size,
+            pathsegs
+        )
+        this.counts = counts
+    }
+}
+
+export class StarShape extends PathShape implements classes.StarShape {
+    typeId = 'star-shape'
+    counts: number
+    innerAngle: number;
+
+    constructor(
+        crdtidx: BasicArray<number>,
+        id: string,
+        name: string,
+        type: ShapeType,
+        transform: Transform,
+        style: Style,
+        size: ShapeSize,
+        pathsegs: BasicArray<PathSegment>,
+        counts: number,
+        innerAngle: number
+    ) {
+        super(
+            crdtidx,
+            id,
+            name,
+            type,
+            transform,
+            style,
+            size,
+            pathsegs
+        )
+        this.counts = counts;
+        this.innerAngle = innerAngle;
     }
 }

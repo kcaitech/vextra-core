@@ -17,7 +17,7 @@
         "underline": {
             "$ref": "./underline-type.json"
         },
-        "bold": {
+        "weight": {
             "type": "number"
         },
         "italic": {

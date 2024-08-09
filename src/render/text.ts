@@ -1,14 +1,11 @@
 
 
-import { DefaultColor, findOverrideAndVar, isColorEqual, isVisible, randomId } from "./basic";
-import { TextShape, Path, Color, SymbolShape, SymbolRefShape, OverrideType, VariableType, Para, ParaAttr, Text, Span, FillType, Gradient, ShapeFrame, UnderlineType, StrikethroughType } from '../data/classes';
+import { DefaultColor, isColorEqual, randomId } from "./basic";
+import { TextShape, Path, Color, Para, ParaAttr, Text, Span, FillType, Gradient, ShapeFrame, UnderlineType, StrikethroughType, Blur, BlurType, SpanAttr, ShapeSize } from '../data/classes';
 import { GraphArray, TextLayout } from "../data/textlayout";
 import { gPal } from "../basic/pal";
-import { renderWithVars as fillR } from "./fill";
-import { renderWithVars as borderR } from "./border";
 import { BasicArray } from "../data/basic";
 import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "../data/textutils";
-import { innerShadowId, renderWithVars as shadowR } from "./shadow";
 import { render as renderGradient } from "./gradient";
 import { objectId } from "../basic/objectid";
 
@@ -44,13 +41,19 @@ export function renderText2Path(layout: TextLayout, offsetX: number, offsetY: nu
                 const span = garr.attr;
                 const font = span?.fontName || '';
                 const fontSize = span?.fontSize || 0;
-                const y = lineY + (line.lineHeight - fontSize) / 2; // top
+                const bottom = lineY + line.lineHeight - (line.lineHeight - line.maxFontSize) / 2;
 
+                // 以bottom对齐，然后再根据最大actualBoundingBoxDescent进行偏移
+                const offsetY = line.actualBoundingBoxDescent;
+                const baseY = bottom - offsetY;
+
+                const weight = (span?.weight) || 400;
+                const italic = !!(span?.italic);
                 paths.push(...garr.map((g) => {
                     if (isBlankChar(g.char.charCodeAt(0))) return new Path();
-                    const pathstr = getTextPath(font, fontSize, g.char.charCodeAt(0))
+                    const pathstr = getTextPath(font, fontSize, italic, weight, g.char.charCodeAt(0))
                     const path = new Path(pathstr)
-                    path.translate(g.x + lineX, y);
+                    path.translate(g.x + lineX, baseY);
                     return path;
                 }))
             }
@@ -108,7 +111,7 @@ function renderDecorateRects(h: Function, x: number, y: number, hight: number, d
     }
 }
 
-export function renderTextLayout(h: Function, textlayout: TextLayout, frame?: ShapeFrame) {
+export function renderTextLayout(h: Function, textlayout: TextLayout, frame?: ShapeSize, blur?: Blur) {
     const childs = [];
 
     const { xOffset, yOffset, paras } = textlayout;
@@ -132,10 +135,16 @@ export function renderTextLayout(h: Function, textlayout: TextLayout, frame?: Sh
             const linechilds = [];
 
             for (let garrIdx = 0, garrCount = line.length; garrIdx < garrCount; garrIdx++) {
-                const gText = []
+                const gText: string[] = []
                 const gX = []
                 // const gY = []
                 const garr = line[garrIdx];
+                const span = garr.attr;
+                const fontSize = span?.fontSize || 0;
+                const bottom = lineY + line.lineHeight - (line.lineHeight - line.maxFontSize) / 2;
+                const offsetY = line.actualBoundingBoxDescent;
+                const baseY = bottom - offsetY;
+
                 for (let gIdx = 0, gCount = garr.length; gIdx < gCount; gIdx++) {
                     const graph = garr[gIdx];
                     if (isBlankChar(graph.char.charCodeAt(0))) { // 两个连续的空格或者首个空格，svg显示有问题
@@ -145,18 +154,15 @@ export function renderTextLayout(h: Function, textlayout: TextLayout, frame?: Sh
                     gX.push(graph.x + lineX);
                 }
 
-                const span = garr.attr;
-                const fontSize = span?.fontSize || 0;
-                const fontName = span?.fontName;
-                const y = lineY + (line.lineHeight) / 2;
 
+                const fontName = span?.fontName;
                 const font = "normal " + fontSize + "px " + fontName;
                 const style: any = {
                     font,
-                    'alignment-baseline': 'central'
+                    'alignment-baseline': 'baseline'
                 }
                 if (span) {
-                    style['font-weight'] = span.bold || 400;
+                    style['font-weight'] = span.weight || 400;
                     if (span.italic) style['font-style'] = "italic";
                     if (span.gradient && span.fillType === FillType.Gradient && frame) {
                         const g_ = renderGradient(h, span.gradient as Gradient, frame);
@@ -176,7 +182,7 @@ export function renderTextLayout(h: Function, textlayout: TextLayout, frame?: Sh
                         if (g_.style) {
                             const opacity = span.gradient.gradientOpacity;
                             const id = "clippath-fill-" + objectId(span.gradient) + randomId();
-                            const cp = h("clipPath", { id }, [h('text', { x: gX.join(' '), y, style, "clip-rule": "evenodd" }, gText.join(''))]);
+                            const cp = h("clipPath", { id }, [h('text', { x: gX.join(' '), y: baseY, style, "clip-rule": "evenodd" }, gText.join(''))]);
                             linechilds.push(cp);
                             linechilds.push(h("foreignObject", {
                                 width: textlayout.contentWidth, height: textlayout.contentHeight, x: xOffset, y: yOffset,
@@ -185,10 +191,21 @@ export function renderTextLayout(h: Function, textlayout: TextLayout, frame?: Sh
                             },
                                 h("div", { width: "100%", height: "100%", style: g_.style })));
                         } else {
-                            linechilds.push(h('text', { x: gX.join(' '), y, style }, gText.join(''),));
+                            linechilds.push(h('text', { x: gX.join(' '), y: baseY, style }, gText.join(''),));
                         }
                     } else {
-                        linechilds.push(h('text', { x: gX.join(' '), y, style }, gText.join(''),));
+                        linechilds.push(h('text', { x: gX.join(' '), y: baseY, style }, gText.join(''),));
+                    }
+                    if (blur && blur.isEnabled && blur.type === BlurType.Background && span && is_alpha(span)) {
+                        const id = "clip-blur-" + objectId(blur) + randomId();
+                        const cp = h("clipPath", { id }, [h('text', { x: gX.join(' '), y: baseY, style, "clip-rule": "evenodd" }, gText.join(''))]);
+                        const foreignObject = h("foreignObject",
+                            {
+                                width: textlayout.contentWidth, height: textlayout.contentHeight, x: xOffset, y: yOffset
+                            },
+                            h("div", { style: { width: "100%", height: "100%", 'backdrop-filter': `blur(${blur.saturation / 2}px)`, "clip-path": "url(#" + id + ")" } }))
+                        const backgroundBlur = h("g", [cp, foreignObject])
+                        linechilds.push(backgroundBlur);
                     }
                 }
 
@@ -224,6 +241,14 @@ export function renderTextLayout(h: Function, textlayout: TextLayout, frame?: Sh
     return childs;
 }
 
+const is_alpha = (span: SpanAttr) => {
+    if (span.highlight && span.highlight.alpha === 1) return false;
+    if (span.color && span.color.alpha > 0 && span.color.alpha < 1) {
+        return true;
+    } else {
+        return false;
+    }
+};
 
 function createTextByString(stringValue: string, refShape: TextShape) {
     const text = new Text(new BasicArray());

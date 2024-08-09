@@ -2,10 +2,10 @@
 
 import { Text } from "./text";
 import { BulletNumbersLayout, TextLayout, fixLineHorAlign, layoutPara } from "./textlayout";
-import { ShapeFrame, TextBehaviour, TextHorAlign, TextVerAlign } from "./typesdefine";
+import { ShapeFrame, ShapeSize, TextBehaviour, TextHorAlign, TextVerAlign } from "./typesdefine";
 
 export function layoutAtInsert(text: Text,
-    frame: ShapeFrame,
+    frame: ShapeSize,
     index: number,
     len: number,
     layout: TextLayout): TextLayout {
@@ -140,7 +140,7 @@ export function layoutAtInsert(text: Text,
 }
 
 export function layoutAtDelete(text: Text,
-    frame: ShapeFrame,
+    frame: ShapeSize,
     index: number,
     len: number,
     layout: TextLayout): TextLayout {
@@ -275,7 +275,7 @@ export function layoutAtDelete(text: Text,
 }
 
 export function layoutAtFormat(text: Text,
-    frame: ShapeFrame,
+    frame: ShapeSize,
     index: number,
     len: number,
     layout: TextLayout): TextLayout {

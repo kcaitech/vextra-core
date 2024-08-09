@@ -3,16 +3,14 @@
     "type": "object",
     "properties": {
         "typeId": {
-            "type": "string",
-            "default": "shape"
+            "type": "string"
         },
         "blenMode": {
-            "$ref": "./blend-mode.json",
-            "default": "normal"
+            "$ref": "./blend-mode.json"
         },
         "opacity": {
             "type": "number",
-            "default": 0
+            "default": 1
         }
     },
     "required": [

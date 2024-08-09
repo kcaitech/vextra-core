@@ -3,24 +3,16 @@
     "type": "object",
     "properties": {
         "crdtidx": {
-            "type": "array",
-            "items": {
-                "type": "number"
-            }
+            "$ref": "./crdtidx.json"
         },
         "typeId": {
-            "type": "string",
-            "default": "shape"
+            "type": "string"
         },
         "id": {
-            "type": "string",
-            "minLength": 32,
-            "maxLength": 36,
-            "default": "$uuid"
+            "type": "string"
         },
         "isEnabled": {
-            "type": "boolean",
-            "default": false
+            "type": "boolean"
         },
         "fillType": {
             "$ref": "./fill-type.json"
@@ -39,6 +31,31 @@
         },
         "fillRule": {
             "$ref": "./fill-rule.json"
+        },
+        "imageScaleMode": {
+            "$ref": "./image-scale-mode.json"
+        },
+        "rotation": {
+            "type": "number",
+            "default": 0
+        },
+        "scale": {
+            "type": "number",
+            "default": 0
+        },
+        "originalImageWidth": {
+            "type": "number",
+            "default": 0
+        },
+        "originalImageHeight": {
+            "type": "number",
+            "default": 0
+        },
+        "paintFilter": {
+            "$ref": "./paint-filter.json"
+        },
+        "transform": {
+            "$ref": "./pattern-transform.json"
         }
     },
     "required": [

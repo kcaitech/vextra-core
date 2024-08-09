@@ -1,4 +1,5 @@
-import { Shape, ShapeFrame, SymbolRefShape, SymbolShape } from "../data/classes";
+import { Matrix } from "../basic/matrix";
+import {  ShapeFrame, SymbolRefShape, SymbolShape } from "../data/classes";
 
 export { findVar, findOverride, findOverrideAndVar } from "../data/utils"
 
@@ -83,16 +84,15 @@ export function getShapeViewId(shapeId: string,
     return shapeId;
 }
 
-
-export interface RenderTransform {
-    // 为保持位置及形状不变，提前设置给子对象的参数
-    dx: number
-    dy: number
-    rotate: number
-    hflip: boolean
-    vflip: boolean
-
-    scaleX: number // == parent.frame.width / parentFrame.width ?
-    scaleY: number
-    parentFrame: ShapeFrame // parent的实际绘制frame
-}
+// export interface RenderTransform {
+//     // 为保持位置及形状不变，提前设置给子对象的参数
+//     // dx: number
+//     // dy: number
+//     // rotate: number
+//     // hflip: boolean
+//     // vflip: boolean
+//     scaleX: number // == parent.frame.width / parentFrame.width ?
+//     scaleY: number
+//     parentFrame: ShapeFrame // parent的实际绘制frame
+//     // matrix: Matrix;
+// }

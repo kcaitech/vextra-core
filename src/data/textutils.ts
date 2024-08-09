@@ -49,7 +49,7 @@ export function isDiffSpanAttr(span: SpanAttr, attr: SpanAttr): boolean {
         return true;
     }
 
-    if (attr.bold !== span.bold) {
+    if (attr.weight !== span.weight) {
         return true;
     }
     if (!!attr.italic !== !!span.italic) {
@@ -134,10 +134,10 @@ function _mergeSpanAttr(span: SpanAttr, attr: SpanAttr, isSetting?: boolean) {
         }
     }
 
-    // bold
-    if (attr.bold !== undefined) {
-        if (!span.bold || span.bold !== attr.bold) {
-            span.bold = attr.bold;
+    // weight
+    if (attr.weight !== undefined) {
+        if (!span.weight || span.weight !== attr.weight) {
+            span.weight = attr.weight;
             changed = true;
         }
     }
@@ -299,7 +299,7 @@ export function newText(textAttr?: TextAttr): Text {
     para.attr.minimumLineHeight = 24;
     text.paras.push(para);
     const span = new Span(para.length);
-    span.fontName = "PingFangSC";
+    span.fontName = "PingFang SC";
     span.fontSize = 14;
     span.color = new Color(1, 51, 51, 51);
     para.spans.push(span);
@@ -318,7 +318,7 @@ export function newText2(textAttr?: TextAttr, paraAttr?: ParaAttr, spanAttr?: Sp
     para.attr.minimumLineHeight = 24;
     text.paras.push(para);
     const span = new Span(para.length);
-    span.fontName = "PingFangSC";
+    span.fontName = "PingFang SC";
     span.fontSize = 14;
     span.color = new Color(0.85, 0, 0, 0);
     para.spans.push(span);

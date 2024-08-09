@@ -13,12 +13,12 @@ export class ContactLineView extends PathShapeView {
     private page: Page | undefined = undefined;
 
     constructor(ctx: DViewCtx, props: PropsType) {
-        super(ctx, props, false);
+        super(ctx, props);
         this.watcher_sides = this.watcher_sides.bind(this);
 
         this.updateApex();
 
-        this.afterInit();
+        // this.afterInit();
     }
 
     get data(): ContactShape {

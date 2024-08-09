@@ -3,12 +3,116 @@ export * from "./basic/matrix"
 export * from "./basic/objectid"
 export * from "./basic/pal"
 export * from "./basic/utils"
+export { IEventEmitter, EventEmitter } from "./basic/event"
+export { Transform, TransformMode, Line, LineThrough0, Plane, PlaneThrough0 } from './basic/transform'
+export { Vector, ColVector2D, ColVector3D, Matrix as Matrix2 } from "./basic/matrix2"
+export { NumberArray2D } from "./basic/number_array"
 
 // data
-export * from "./data/basic"
-export * from "./data/classes"
-export * from "./data/transact"
-export * from "./data/consts"
+// 限制上层使用data,尽量使用view
+// export * from "./data"
+export {
+    IWatchable,
+    WatchableObject,
+    BasicArray,
+    GradientType,
+    ShapeType,
+    BlendMode,
+    BorderPosition,
+    ImageScaleMode,
+    ExportFormatNameingScheme,
+    BlurType,
+    ShadowPosition,
+    FillType,
+    Gradient,
+    Color,
+    PaintFilter,
+    PaintFilterType,
+    Border,
+    Fill,
+    Stop,
+    Shadow,
+    CurveMode,
+    PathType,
+    TextBehaviour,
+    RadiusType,
+    Style,
+    Blur,
+    Point2D,
+    MarkerType,
+    SideType,
+    ShapeFrame,
+    ShapeSize,
+    CornerType,
+    BorderSideSetting,
+    BorderStyle,
+    ExportFormat,
+    ExportFileFormat,
+    ExportOptions,
+    ExportVisibleScaleType,
+    Text,
+    Para,
+    Variable,
+    VariableType,
+    OverrideType,
+    ContextSettings,
+    ResizingConstraints,
+    ResizingConstraints2,
+    AttrGetter,
+    TableCellType,
+    TextVerAlign,
+    TextHorAlign,
+    UnderlineType,
+    StrikethroughType,
+    TextTransformType,
+    CurvePoint,
+    ContactForm,
+    BulletNumbersType,
+    PageListItem,
+    GuideAxis,
+    Path,
+    BoolOp,
+    ContactType,
+    SpanAttr,
+    TextAttr,
+    FillRule,
+    PatternTransform,
+
+    TableGridItem,
+    TableLayout,
+    ResourceMgr,
+
+    // todo
+    Shape,
+    Page,
+    TextShape,
+    SymbolShape,
+    SymbolRefShape,
+    TableCell,
+    CutoutShape,
+    GroupShape,
+    Artboard,
+    SymbolUnionShape,
+    TableShape,
+    ContactShape,
+    BoolShape,
+    PathShape,
+    PolygonShape,
+    RectShape,
+    ImageShape,
+    StarShape,
+
+    Document,
+    Repository,
+} from "./data"
+
+export {
+    makeMatrixByTransform2,
+    makeShapeTransform2By1,
+    makeShapeTransform1By2,
+    updateShapeTransform1By2,
+    importGradient
+} from "./data"
 
 // data view
 export * from "./dataview"
@@ -50,7 +154,9 @@ export { ArrayOpSelection } from "./coop/client/arrayop"
 export { SNumber } from "./coop/client/snumber"
 export { RadixConvert } from "./coop/common/radix_convert"
 
-// render
-// export * from "./render"
-// export * from "./renderStatic"
+export { Transform as TransformRaw } from "./data/transform"
+
+// properties
+export { exportBorder, exportFill, exportShadow, exportBlur } from './data/baseexport';
+
 

@@ -1,3 +1,4 @@
+import { TEXT_BASELINE_RATIO } from "./consts";
 import { SpanAttr } from "./text";
 import { IGraphy, TextLayout, isNewLineCharCode } from "./textlayout";
 import { Point2D } from "./typesdefine";
@@ -202,10 +203,12 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
                 const span = line[line.length - 1];
                 if (span.length === 0) break; // error
                 const graph = span[span.length - 1];
-                const y = lineY + (line.lineHeight - graph.ch) / 2;
+                const y = lineY + line.lineHeight - (line.lineHeight - (line.maxFontSize)) / 2; // bottom
                 const x = lineX + graph.x + graph.cw;
-                const p0 = { x, y };
-                const p1 = { x, y: y + graph.ch };
+                const baseY = y - line.actualBoundingBoxDescent;
+                const cb = baseY + (graph.ch * TEXT_BASELINE_RATIO);
+                const p0 = { x, y: cb - graph.ch };
+                const p1 = { x, y: cb };
                 const ret = makeCursorLocate(layout, pi, li, line.length - 1, [p0, p1])
                 return ret;
             }
@@ -242,8 +245,8 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
                     if (!graph) throw new Error();
                 }
                 let x = lineX + graph.x;
-                let y = lineY + (line.lineHeight - graph.ch) / 2;
-                let ch = graph.ch;
+                const y = lineY + line.lineHeight - (line.lineHeight - (line.maxFontSize)) / 2; // bottom
+                let _g = graph;
                 if (index > 0) {
                     // const preGraph = span[index - 1];
                     if (!preGraph) throw new Error();
@@ -252,8 +255,7 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
                     } else {
                         x = lineX + (preGraph.x + preGraph.cw + graph.x) / 2;
                     }
-                    y = lineY + (line.lineHeight - preGraph.ch) / 2;
-                    ch = preGraph.ch;
+                    _g = preGraph;
                 }
                 else if (i > 0) {
                     const preSpan = line[i - 1];
@@ -263,12 +265,12 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
                     } else {
                         x = lineX + (preGraph.x + preGraph.cw + graph.x) / 2;
                     }
-                    y = lineY + (line.lineHeight - preGraph.ch) / 2;
-                    ch = preGraph.ch;
+                    _g = preGraph;
                 }
-
-                const p0 = { x, y };
-                const p1 = { x, y: y + ch };
+                const baseY = y - line.actualBoundingBoxDescent;
+                const cb = baseY + (_g.ch * TEXT_BASELINE_RATIO);
+                const p0 = { x, y: cb - _g.ch };
+                const p1 = { x, y: cb };
                 const ret = makeCursorLocate(layout, pi, li, i, [p0, p1])
                 return ret;
             }

@@ -2,6 +2,9 @@
     "description": "symbol shape",
     "type": "object",
     "properties": {
+        "size": {
+            "$ref": "./shape-size.json"
+        },
         "variables": {
             "type": "map",
             "key": {
@@ -22,9 +25,16 @@
         },
         "cornerRadius": {
             "$ref": "./corner-radius.json"
+        },
+        "guides": {
+            "type": "array",
+            "items": {
+                "$ref": "./guide.json"
+            }
         }
     },
     "required": [
+        "size",
         "variables"
     ],
     "allOf": [
