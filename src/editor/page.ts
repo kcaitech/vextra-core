@@ -7,6 +7,7 @@ import {
     RectShape,
     Shape,
     ShapeFrame,
+    ShapeType,
     StarShape,
     SymbolShape,
     SymbolUnionShape,
@@ -25,8 +26,7 @@ import {
     GradientType,
     MarkerType,
     ShadowPosition,
-    ShapeType,
-    SideType, StrikethroughType, UnderlineType
+    SideType
 } from "../data/typesdefine";
 import { Page } from "../data/page";
 import {
@@ -66,14 +66,17 @@ import {
     IImportContext,
     importArtboard,
     importBlur,
-    importBorder, importContextSettings,
+    importBorder,
+    importContextSettings,
     importCornerRadius,
     importFill,
-    importGradient, importMarkerType,
+    importGradient,
+    importMarkerType,
     importShadow,
     importStop,
     importStyle,
-    importSymbolShape, importText,
+    importSymbolShape,
+    importText,
     importTransform
 } from "../data/baseimport";
 import { gPal } from "../basic/pal";
@@ -85,7 +88,8 @@ import {
     adjust_selection_before_group,
     after_remove,
     clear_binds_effect,
-    find_state_space, fixTextShapeFrameByLayout,
+    find_state_space,
+    fixTextShapeFrameByLayout,
     get_symbol_by_layer,
     init_state,
     make_union,
@@ -108,6 +112,7 @@ import {
 import { is_circular_ref2 } from "./utils/ref_check";
 import { BorderSideSetting, BorderStyle, ExportFormat, Point2D, Shadow } from "../data/baseclasses";
 import {
+    border2path,
     calculateInnerAnglePosition,
     getPolygonPoints,
     getPolygonVertices,
@@ -120,8 +125,14 @@ import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
 import { unable_to_migrate } from "./utils/migrate";
 import {
     adapt2Shape,
+    ArtboradView,
     BoolShapeView,
+    ContactLineView,
+    CutoutShapeView,
+    GroupShapeView,
+    ImageShapeView,
     PageView,
+    PathShapeView,
     render2path,
     ShapeView,
     SymbolRefView,
@@ -3685,17 +3696,36 @@ export class PageEditor {
                         const alpha = __text.paras[0]?.spans[0];
                         const len = shape.text.length;
                         const __view = view as TextShapeView;
-                        if (alpha) {
-                            api.textModifyColor(page, __view, 0, len, alpha.color);
-                            api.textModifyFontName(page, __view, 0, len, alpha.fontName!);
-                            api.textModifyFontSize(page, __view, 0, len, alpha.fontSize!);
-                            api.textModifyItalic(page, __view, !!alpha.italic, 0, len);
-                            api.textModifyKerning(page, __view, alpha.kerning!, 0, len);
-                            api.textModifyUnderline(page, __view, alpha.underline, 0, len);
-                            api.textModifyStrikethrough(page, __view, alpha.strikethrough, 0, len);
-                            api.textModifyWeight(page, __view, alpha.weight!, 0, len);
-                            fixTextShapeFrameByLayout(api, page, __view)
+                        let needFixFrame = false;
+                        const attr = __text.attr;
+                        if (attr) {
+                            api.shapeModifyTextVerAlign(page, __view, attr.verAlign!); // 垂直位置
+                            api.shapeModifyTextBehaviour(page, __view.text, attr.textBehaviour!); // 宽高表现
                         }
+                        if (alpha) {
+                            api.textModifyColor(page, __view, 0, len, alpha.color); // 字体颜色
+                            api.textModifyFontName(page, __view, 0, len, alpha.fontName!); // 字体
+                            api.textModifyFontSize(page, __view, 0, len, alpha.fontSize!); // 字号
+                            api.textModifyItalic(page, __view, !!alpha.italic, 0, len); // 斜体
+                            api.textModifyKerning(page, __view, alpha.kerning || 0, 0, len); // 字间距
+                            api.textModifyUnderline(page, __view, alpha.underline, 0, len); // 下划线
+                            api.textModifyStrikethrough(page, __view, alpha.strikethrough, 0, len); // 删除线
+                            api.textModifyWeight(page, __view, alpha.weight!, 0, len); // 字重
+                            api.textModifyHighlightColor(page, __view, 0, len, alpha.highlight); // 高亮底色
+                            needFixFrame = true;
+                        }
+
+                        const alphaAttr = __text.paras[0]?.attr;
+                        if (alphaAttr) {
+                            api.textModifyParaSpacing(page, __view, alphaAttr.paraSpacing || 0, 0, len); // 段落间距
+                            api.textModifyMinLineHeight(page, __view, alphaAttr.minimumLineHeight!, 0, len); // 行高
+                            api.textModifyMaxLineHeight(page, __view, alphaAttr.maximumLineHeight!, 0, len); // 行高
+                            api.textModifyHorAlign(page, __view, alphaAttr.alignment!, 0, len); // 水平位置
+
+                            needFixFrame = true;
+                        }
+
+                        needFixFrame && fixTextShapeFrameByLayout(api, page, __view);
                     }
                 }
             }
@@ -3719,8 +3749,10 @@ export class PageEditor {
         }
     }
 
-    outlineShapes(shapes: ShapeView[]) {
+    outlineShapes(shapes: ShapeView[], suffix?: string) {
         try {
+            const document = this.__document;
+            const page = this.__page;
             const ids: string[] = [];
             const api = this.__repo.start('outlineShapes', (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
                 const state = {} as SelectionState;
@@ -3728,29 +3760,112 @@ export class PageEditor {
                 else state.shapes = cmd.saveselection?.shapes || [];
                 selection.restore(state);
             });
-            for (const view of shapes) {
-                if (!(view instanceof TextShapeView)) continue;
-                const shape = adapt2Shape(view) as TextShape;
-                const path = view.getTextPath();
-                const copyStyle = findUsableFillStyle(view);
-                const style: Style = this.cloneStyle(copyStyle);
-                const mainColor = shape.text.paras[0]?.spans[0]?.color;
-                if (mainColor) {
-                    const len = style.fills.length;
-                    style.fills.push(new Fill([len] as BasicArray<number>, uuid(), true, FillType.SolidColor, mainColor));
+            const __flatten = (shapes: ShapeView[]) => {
+                const res: ShapeView[] = [];
+                for (const view of shapes) {
+                    if (view instanceof TableView) continue;
+                    if (view instanceof CutoutShapeView) continue;
+                    if (view.type === ShapeType.Group || view instanceof ArtboradView || view instanceof SymbolView) {
+                        res.push(...__flatten((view as GroupShapeView).childs));
+                        continue;
+                    }
+                    res.push(view)
                 }
-                let pathShape = newPathShape(view.name, view.frame, path, style);
-                pathShape.transform = shape.transform.clone();
-                const parent = shape.parent as GroupShape;
-                const index = parent.indexOfChild(shape);
-                api.shapeDelete(this.__document, this.__page, parent, index);
-                pathShape = api.shapeInsert(this.__document, this.__page, parent, pathShape, index) as PathShape;
-                ids.push(pathShape.id);
+                return res;
+            }
+            const __shapes = __flatten(shapes);
+
+            for (const view of __shapes) {
+                if (view instanceof TextShapeView) {
+                    const shape = adapt2Shape(view) as TextShape;
+                    const path = view.getTextPath();
+                    const copyStyle = findUsableFillStyle(view);
+                    const style: Style = this.cloneStyle(copyStyle);
+                    const mainColor = shape.text.paras[0]?.spans[0]?.color;
+                    if (mainColor) {
+                        const len = style.fills.length;
+                        style.fills.push(new Fill([len] as BasicArray<number>, uuid(), true, FillType.SolidColor, mainColor));
+                    }
+                    let pathShape = newPathShape(view.name, view.frame, path, style);
+                    pathShape.transform = shape.transform.clone();
+                    pathShape.mask = shape.mask;
+                    pathShape.resizingConstraint = shape.resizingConstraint;
+                    const parent = shape.parent as GroupShape;
+                    const index = parent.indexOfChild(shape);
+                    api.shapeDelete(document, page, parent, index);
+                    pathShape = api.shapeInsert(document, page, parent, pathShape, index) as PathShape;
+                    update_frame_by_points(api, page, pathShape);
+                    ids.push(pathShape.id);
+                } else {
+                    const borders = view.getBorders();
+                    if (!borders.length) continue;
+                    const shape = adapt2Shape(view);
+                    const parent = shape.parent as GroupShape;
+                    const border2shape = (border: Border) => {
+                        const copyStyle = findUsableFillStyle(view);
+                        const style: Style = this.cloneStyle(copyStyle);
+                        const fill = new Fill([0] as BasicArray<number>, uuid(), true, border.fillType, border.color);
+                        fill.gradient = border.gradient;
+                        if (fill.fillType === FillType.Pattern) fill.fillType = FillType.SolidColor;
+                        style.fills = new BasicArray<Fill>(fill);
+                        style.borders.length = 0;
+                        const path = border2path(view, border);
+                        let pathshape = newPathShape(view.name + suffix, view.frame, path, style);
+                        pathshape.transform = shape.transform.clone();
+                        pathshape.mask = shape.mask;
+                        pathshape.resizingConstraint = shape.resizingConstraint;
+                        const index = parent.indexOfChild(shape);
+                        pathshape = api.shapeInsert(document, page, parent, pathshape, index + 1) as PathShape;
+                        update_frame_by_points(api, page, pathshape);
+                        ids.push(pathshape.id);
+                    }
+                    for (let i = borders.length - 1; i > -1; i--) border2shape(borders[i]);
+                    if (shape.style.fills.length) {
+                        api.deleteBorders(page, shape, 0, borders.length);
+                        ids.push(view.data.id);
+                    } else {
+                        api.shapeDelete(document, page, parent, parent.indexOfChild(shape));
+                    }
+                }
             }
             this.__repo.commit();
         } catch (error) {
             console.error('outlineShapes:', error);
             this.__repo.rollback();
+        }
+    }
+
+    flattenSelection(shapes: ShapeView[]) {
+        try {
+            if (shapes.length > 1) {
+                return this.flattenShapes(shapes);
+            } else if (shapes.length === 1) {
+                const __flatten = (view: ShapeView) => {
+                    const res: ShapeView[] = [];
+                    if (view instanceof PathShapeView) {
+                        res.push(view);
+                    } else {
+                        if (view.type === ShapeType.Group || view instanceof ArtboradView) {
+                            res.push(...__flatten(view));
+                        }
+                    }
+                    return res;
+                }
+                const __shapes = __flatten(shapes[0]);
+                if (__shapes.length > 1) {
+                    return this.flattenShapes(shapes);
+                }
+                const view = __shapes[0];
+                const shape = adapt2Shape(view);
+                if (!(view instanceof PathShapeView)) return;
+                const api = this.__repo.start('flattenSelection');
+                update_frame_by_points(api, this.__page, shape);
+                api.shapeEditPoints(this.__page, shape, true);
+                this.__repo.commit();
+            }
+        } catch (e) {
+            this.__repo.rollback()
+            console.error(e)
         }
     }
 
