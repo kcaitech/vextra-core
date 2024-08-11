@@ -243,7 +243,6 @@ export class LockMouseHandler extends AsyncApiCaller {
             const page = this.page;
 
             const updateFrameTargets = this.updateFrameTargets;
-
             for (let i = 0; i < shapes.length; i++) {
                 const shape = adapt2Shape(shapes[i]);
 
