@@ -33,7 +33,7 @@ import {
     newArrowShape,
     newArtboard,
     newBoolShape,
-    newGroupShape,
+    newGroupShape, newImageFillShape,
     newLineShape,
     newOvalShape,
     newPathShape,
@@ -143,6 +143,7 @@ import { FMT_VER_latest } from "../data/fmtver";
 import { makeShapeTransform1By2, makeShapeTransform2By1, updateShapeTransform1By2 } from "../data/shape_transform_util";
 import { ColVector3D } from "../basic/matrix2";
 import { Transform as Transform2 } from "../basic/transform";
+import { getFormatFromBase64 } from "../basic/utils";
 
 
 // 用于批量操作的单个操作类型
@@ -320,6 +321,16 @@ export interface ExportFormatFileFormatAction {
     target: Shape
     index: number
     value: ExportFileFormat
+}
+
+export interface ImagePack {
+    size: {
+        width: number;
+        height: number;
+    },
+    buff: Uint8Array;
+    base64: string;
+    name: string;
 }
 
 export function getHorizontalRadians(A: {
@@ -3829,6 +3840,41 @@ export class PageEditor {
         } catch (error) {
             console.error('outlineShapes:', error);
             this.__repo.rollback();
+        }
+    }
+
+    insertImagesToPage(images: { pack: ImagePack, transform: Transform }[]) {
+        try {
+            const ids: string[] = [];
+            const imageShapes: { shape: Shape, imageRef: string }[] = [];
+            const api = this.__repo.start('insertImagesToPage', (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+                const state = {} as SelectionState;
+                if (!isUndo) state.shapes = ids;
+                else state.shapes = cmd.saveselection?.shapes || [];
+                selection.restore(state);
+            });
+            const document = this.__document;
+            const page = this.__page;
+            for (const item of images) {
+                const { size, name, buff, base64 } = item.pack;
+                const format = getFormatFromBase64(base64);
+                const ref = `${v4()}.${format}`;
+                document.mediasMgr.add(ref, { buff, base64 });
+                const shape = newImageFillShape(name, new ShapeFrame(0, 0, size.width, size.height), document.mediasMgr, size, ref);
+                shape.transform = item.transform;
+                const index = page.childs.length;
+                const __s = api.shapeInsert(document, page, page, shape, index);
+                if (__s) {
+                    ids.push(__s.id);
+                    imageShapes.push({ shape: __s, imageRef: ref });
+                }
+            }
+            this.__repo.commit();
+            return imageShapes;
+        } catch (e) {
+            this.__repo.rollback();
+            console.error('insertImagesToPage:', e);
+            return false;
         }
     }
 
