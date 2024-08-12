@@ -14,6 +14,7 @@ import { float_accuracy } from "../basic/consts";
 export const sessionRefIdKey = 'ref-id-cf76c6c6-beed-4c33-ae71-134ee876b990';
 
 export class SymbolRefView extends ShapeView {
+
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
         this.symwatcher = this.symwatcher.bind(this);

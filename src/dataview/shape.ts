@@ -41,6 +41,7 @@ import { GroupShapeView } from "./groupshape";
 import { importBorder, importFill } from "../data/baseimport";
 import { exportBorder, exportFill } from "../data/baseexport";
 import { PageView } from "./page";
+import { ArtboradView } from "./artboard";
 
 export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     return (
@@ -416,6 +417,8 @@ export class ShapeView extends DataView {
         const m = this.transform.toMatrix();
         const p = this.parent;
         if (p) {
+            const offset = (p as ArtboradView).innerTransform;
+            offset &&  m.multiAtLeft(offset.toMatrix())
             m.multiAtLeft(p.matrix2Root())
         }
         return m;
