@@ -105,8 +105,8 @@ export class Shape extends Basic implements classes.Shape {
         if (id0 === "prototypeInteractions" && !this.prototypeInteractions) {
             this.prototypeInteractions = new BasicArray<PrototypeInterAction>();
         }
-        if (id0 === "overlayPositionType" && !this.overlayPosition) {
-            this.overlayPosition = new OverlayPosition(OverlayPositionType.CENTER, new OverlayMargin)
+        if (id0 === "overlayPosition" && !this.overlayPosition) {
+            this.overlayPosition = new OverlayPosition(OverlayPositionType.CENTER, new OverlayMargin())
         }
         if (id0 === "overlayBackgroundAppearance" && !this.overlayBackgroundAppearance) {
             this.overlayBackgroundAppearance = new OverlayBackgroundAppearance(OverlayBackgroundType.SOLIDCOLOR, new Color(0.25, 0, 0, 0))

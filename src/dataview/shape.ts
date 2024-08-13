@@ -13,10 +13,16 @@ import {
     makeShapeTransform1By2,
     makeShapeTransform2By1,
     MarkerType,
+    OverlayBackgroundAppearance,
+    OverlayBackgroundInteraction,
+    OverlayPosition,
     OverrideType,
     Path,
     PathShape,
     Point2D,
+    PrototypeInterAction,
+    PrototypeStartingPoint,
+    ScrollDirection,
     Shadow,
     Shape,
     ShapeFrame,
@@ -418,7 +424,7 @@ export class ShapeView extends DataView {
         const p = this.parent;
         if (p) {
             const offset = (p as ArtboradView).innerTransform;
-            offset &&  m.multiAtLeft(offset.toMatrix())
+            offset && m.multiAtLeft(offset.toMatrix())
             m.multiAtLeft(p.matrix2Root())
         }
         return m;
@@ -797,7 +803,7 @@ export class ShapeView extends DataView {
 
     protected renderBlur(blurId: string): EL[] {
         if (!this.blur) return [];
-        return renderBlur(elh, this.blur, blurId, this.frame, this.getFills(), this.getBorders(),this.getPathStr());
+        return renderBlur(elh, this.blur, blurId, this.frame, this.getFills(), this.getBorders(), this.getPathStr());
     }
 
     protected renderProps(): { [key: string]: string } & { style: any } {
@@ -1014,28 +1020,35 @@ export class ShapeView extends DataView {
     get isImageFill() {
         return this.m_data.getImageFill();
     }
-    get prototypeStartPoint() {
-        return this.m_data.prototypeStartingPoint;
+
+    get prototypeStartPoint(): PrototypeStartingPoint | undefined {
+        const v = this._findOV(OverrideType.ProtoStartPoint, VariableType.ProtoStartPoint);
+        return v ? v.value : this.m_data.prototypeStartingPoint;
     }
 
-    get prototypeInterAction() {
-        return this.m_data.prototypeInteractions;
+    get prototypeInterActions(): BasicArray<PrototypeInterAction> | undefined {
+        const v = this._findOV(OverrideType.ProtoInteractions, VariableType.ProtoInteractions);
+        return v ? v.value : this.m_data.prototypeInteractions;
     }
 
-    get overlayPositionType(){
-        return this.m_data.overlayPosition
+    get overlayPosition(): OverlayPosition | undefined {
+        const v = this._findOV(OverrideType.OverlayPosition, VariableType.OverlayPosition);
+        return v ? v.value : this.m_data.overlayPosition
     }
 
-    get overlayBackgroundInteraction(){
-        return this.m_data.overlayBackgroundInteraction
+    get overlayBackgroundInteraction(): OverlayBackgroundInteraction | undefined {
+        const v = this._findOV(OverrideType.OverlayInteraction, VariableType.OverlayInteraction);
+        return v ? v.value : this.m_data.overlayBackgroundInteraction
     }
 
-    get overlayBackgroundAppearance(){
-        return this.m_data.overlayBackgroundAppearance
+    get overlayBackgroundAppearance(): OverlayBackgroundAppearance | undefined {
+        const v = this._findOV(OverrideType.OverlayAppearance, VariableType.OverlayAppearance);
+        return v ? v.value : this.m_data.overlayBackgroundAppearance
     }
 
-    get scrollDirection(){
-        return this.m_data.scrollDirection
+    get scrollDirection(): ScrollDirection | undefined {
+        const v = this._findOV(OverrideType.ScrollDirection, VariableType.ScrollDirection);
+        return v ? v.value : this.m_data.scrollDirection
     }
 
     get relyLayers() {
