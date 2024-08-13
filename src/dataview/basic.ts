@@ -1,25 +1,15 @@
-import { Matrix } from "../basic/matrix";
-import {  ShapeFrame, SymbolRefShape, SymbolShape } from "../data/classes";
+
+import { SymbolRefShape, SymbolShape } from "../data/classes";
 
 export { findVar, findOverride, findOverrideAndVar } from "../data/utils"
 
-export function stringh(tag: string, attrs?: any, childs?: Array<string> | string): string;
 export function stringh(tag: string, childs?: Array<string> | string): string;
-export function stringh(...args: any[]): string {
-    const tag = args[0];
-    let attrs = args[1];
-    let childs = args[2];
-    if (args.length === 3) {
-        //
-    }
-    else if (args.length === 2) {
-        if (Array.isArray(args[1])) {
-            attrs = undefined;
-            childs = args[1];
-        }
-    }
-    else {
-        throw new Error("args err!");
+export function stringh(tag: string, attrs?: { [key: string]: any }, childs?: Array<string> | string): string;
+export function stringh(tag: string, attrs?: { [key: string]: any } | (Array<string> | string), childs?: Array<string> | string): string {
+
+    if (Array.isArray(attrs) || typeof attrs === 'string') {
+        attrs = undefined;
+        childs = attrs;
     }
 
     if (typeof tag !== 'string') {
@@ -83,16 +73,3 @@ export function getShapeViewId(shapeId: string,
     if (varsContainer) return genid(shapeId, varsContainer);
     return shapeId;
 }
-
-// export interface RenderTransform {
-//     // 为保持位置及形状不变，提前设置给子对象的参数
-//     // dx: number
-//     // dy: number
-//     // rotate: number
-//     // hflip: boolean
-//     // vflip: boolean
-//     scaleX: number // == parent.frame.width / parentFrame.width ?
-//     scaleY: number
-//     parentFrame: ShapeFrame // parent的实际绘制frame
-//     // matrix: Matrix;
-// }
