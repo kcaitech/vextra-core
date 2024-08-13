@@ -17,6 +17,13 @@
         "endMarkerType",
         "exportOptions",
         "cornerRadius",
-        "blur"
+        "blur",
+
+        "protoStartPoint",
+        "protoInteractions",
+        "overlayPosition",
+        "overlayInteraction",
+        "overlayAppearance",
+        "scrollDirection"
     ]
 }

@@ -46,6 +46,9 @@
                             },
                             {
                                 "$ref": "./shadow.json"
+                            },
+                            {
+                                "$ref": "./prototype-inter-action.json"
                             }
                         ]
                     }
@@ -64,6 +67,15 @@
                 },
                 {
                     "$ref": "./blur.json"
+                },
+                {
+                    "$ref": "./prototype-starting-point.json"
+                },
+                {
+                    "$ref": "./overlay-position.json"
+                },
+                {
+                    "$ref": "./overlay-background-appearance.json"
                 }
             ]
         }

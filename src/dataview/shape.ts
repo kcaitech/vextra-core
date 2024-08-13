@@ -1023,7 +1023,7 @@ export class ShapeView extends DataView {
     }
 
     get overlayPositionType(){
-        return this.m_data.overlayPositionType
+        return this.m_data.overlayPosition
     }
 
     get overlayBackgroundInteraction(){

@@ -11,7 +11,7 @@ export {
     PrototypeExtrascrolloffset,
     OverlayBackgroundAppearance,
     OverlayBackgroundInteraction,
-    OverlayPositions,
+    OverlayPositionType,
     OverlayBackgroundType,
     ScrollDirection,
     OverlayPosition,

@@ -23,7 +23,7 @@ export {
     MarkerType,
     OverlayBackgroundInteraction,
     OverlayBackgroundType,
-    OverlayPositions,
+    OverlayPositionType,
     OverrideType,
     PaintFilterType,
     PrototypeConnectionType,
@@ -71,7 +71,7 @@ import {
     MarkerType,
     OverlayBackgroundInteraction,
     OverlayBackgroundType,
-    OverlayPositions,
+    OverlayPositionType,
     OverrideType,
     PaintFilterType,
     PrototypeConnectionType,
@@ -262,6 +262,17 @@ export class OverlayMargin extends Basic {
         this.bottom = bottom
         this.left = left
         this.right = right
+    }
+}
+/* overlay position */
+export class OverlayPosition extends Basic {
+    typeId = "overlay-position"
+    position: OverlayPositionType
+    margin: OverlayMargin
+    constructor(position: OverlayPositionType, margin: OverlayMargin) {
+        super()
+        this.position = position
+        this.margin = margin
     }
 }
 /* padding */
@@ -494,7 +505,7 @@ export class UserInfo extends Basic {
         this.avatar = avatar
     }
 }
-type Variable_0 = BasicArray<Border | Fill | Shadow>
+type Variable_0 = BasicArray<Border | Fill | Shadow | PrototypeInterAction>
 /* blur */
 export class Blur extends Basic {
     typeId = "blur"
@@ -649,17 +660,6 @@ export class OverlayBackgroundAppearance extends Basic {
         super()
         this.backgroundType = backgroundType
         this.backgroundColor = backgroundColor
-    }
-}
-/* overlay position */
-export class OverlayPosition extends Basic {
-    typeId = "overlay-position"
-    position: OverlayPositions
-    margin: OverlayMargin
-    constructor(position: OverlayPositions, margin: OverlayMargin) {
-        super()
-        this.position = position
-        this.margin = margin
     }
 }
 /* actions */
@@ -887,7 +887,7 @@ export class Shape extends Basic {
     haveEdit?: boolean
     prototypeStartingPoint?: PrototypeStartingPoint
     prototypeInteractions?: Shape_prototypeInteractions
-    overlayPositionType?: OverlayPosition
+    overlayPosition?: OverlayPosition
     overlayBackgroundInteraction?: OverlayBackgroundInteraction
     overlayBackgroundAppearance?: OverlayBackgroundAppearance
     scrollDirection?: ScrollDirection
@@ -950,8 +950,8 @@ export class Variable extends Basic {
     id: string
     type: VariableType
     name: string
-    value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur
-    constructor(id: string, type: VariableType, name: string, value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur) {
+    value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur | PrototypeStartingPoint | OverlayPosition | OverlayBackgroundAppearance
+    constructor(id: string, type: VariableType, name: string, value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur | PrototypeStartingPoint | OverlayPosition | OverlayBackgroundAppearance) {
         super()
         this.id = id
         this.type = type

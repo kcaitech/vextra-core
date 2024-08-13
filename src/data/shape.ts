@@ -18,7 +18,7 @@ import {
     PrototypeInterAction,
     OverlayPosition,
     ScrollDirection,
-    OverlayPositions,
+    OverlayPositionType,
     OverlayBackgroundAppearance,
     OverlayBackgroundType,
     OverlayMargin,
@@ -105,8 +105,8 @@ export class Shape extends Basic implements classes.Shape {
         if (id0 === "prototypeInteractions" && !this.prototypeInteractions) {
             this.prototypeInteractions = new BasicArray<PrototypeInterAction>();
         }
-        if (id0 === "overlayPositionType" && !this.overlayPositionType) {
-            this.overlayPositionType = new OverlayPosition(OverlayPositions.CENTER, new OverlayMargin)
+        if (id0 === "overlayPositionType" && !this.overlayPosition) {
+            this.overlayPosition = new OverlayPosition(OverlayPositionType.CENTER, new OverlayMargin)
         }
         if (id0 === "overlayBackgroundAppearance" && !this.overlayBackgroundAppearance) {
             this.overlayBackgroundAppearance = new OverlayBackgroundAppearance(OverlayBackgroundType.SOLIDCOLOR, new Color(0.25, 0, 0, 0))
@@ -140,7 +140,7 @@ export class Shape extends Basic implements classes.Shape {
     haveEdit?: boolean | undefined
     prototypeStartingPoint?: classes.PrototypeStartingPoint;
     prototypeInteractions?: BasicArray<PrototypeInterAction>;
-    overlayPositionType?: classes.OverlayPosition;
+    overlayPosition?: classes.OverlayPosition;
     overlayBackgroundInteraction?: classes.OverlayBackgroundInteraction;
     overlayBackgroundAppearance?: classes.OverlayBackgroundAppearance;
     scrollDirection?: classes.ScrollDirection;

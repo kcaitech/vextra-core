@@ -319,8 +319,17 @@ export function exportOverlayMargin(source: types.OverlayMargin, ctx?: IExportCo
     return ret
 }
 /* overlayPositionType */
-export function exportOverlayPositions(source: types.OverlayPositions, ctx?: IExportContext): types.OverlayPositions {
+export function exportOverlayPositionType(source: types.OverlayPositionType, ctx?: IExportContext): types.OverlayPositionType {
     return source
+}
+/* overlay position */
+export function exportOverlayPosition(source: types.OverlayPosition, ctx?: IExportContext): types.OverlayPosition {
+    const ret: types.OverlayPosition = {} as types.OverlayPosition
+    ret.typeId = "overlay-position"
+    ret.typeId = source.typeId
+    ret.position = exportOverlayPositionType(source.position, ctx)
+    ret.margin = exportOverlayMargin(source.margin, ctx)
+    return ret
 }
 /* override types */
 export function exportOverrideType(source: types.OverrideType, ctx?: IExportContext): types.OverrideType {
@@ -464,6 +473,8 @@ export function exportPrototypeNavigationType(source: types.PrototypeNavigationT
 /* prototypeStartingPoint */
 export function exportPrototypeStartingPoint(source: types.PrototypeStartingPoint, ctx?: IExportContext): types.PrototypeStartingPoint {
     const ret: types.PrototypeStartingPoint = {} as types.PrototypeStartingPoint
+    ret.typeId = "prototype-starting-point"
+    ret.typeId = source.typeId
     ret.name = source.name
     ret.desc = source.desc
     return ret
@@ -677,6 +688,9 @@ export function exportVariable_0(source: types.Variable_0, ctx?: IExportContext)
             if (source.typeId === "shadow") {
                 return exportShadow(source as types.Shadow, ctx)
             }
+            if (source.typeId === "prototype-inter-action") {
+                return exportPrototypeInterAction(source as types.PrototypeInterAction, ctx)
+            }
             throw new Error("unknow typeId: " + source.typeId)
         })())
     })
@@ -783,16 +797,10 @@ export function exportGradient(source: types.Gradient, ctx?: IExportContext): ty
 /* overlay-background-appearance */
 export function exportOverlayBackgroundAppearance(source: types.OverlayBackgroundAppearance, ctx?: IExportContext): types.OverlayBackgroundAppearance {
     const ret: types.OverlayBackgroundAppearance = {} as types.OverlayBackgroundAppearance
+    ret.typeId = "overlay-background-appearance"
+    ret.typeId = source.typeId
     ret.backgroundType = exportOverlayBackgroundType(source.backgroundType, ctx)
     ret.backgroundColor = exportColor(source.backgroundColor, ctx)
-    if (source.typeId) ret.typeId = source.typeId
-    return ret
-}
-/* overlay position */
-export function exportOverlayPosition(source: types.OverlayPosition, ctx?: IExportContext): types.OverlayPosition {
-    const ret: types.OverlayPosition = {} as types.OverlayPosition
-    ret.position = exportOverlayPositions(source.position, ctx)
-    ret.margin = exportOverlayMargin(source.margin, ctx)
     return ret
 }
 /* actions */
@@ -1003,7 +1011,7 @@ export function exportShape(source: types.Shape, ctx?: IExportContext): types.Sh
     if (source.haveEdit) ret.haveEdit = source.haveEdit
     if (source.prototypeStartingPoint) ret.prototypeStartingPoint = exportPrototypeStartingPoint(source.prototypeStartingPoint, ctx)
     if (source.prototypeInteractions) ret.prototypeInteractions = exportShape_prototypeInteractions(source.prototypeInteractions, ctx)
-    if (source.overlayPositionType) ret.overlayPositionType = exportOverlayPosition(source.overlayPositionType, ctx)
+    if (source.overlayPosition) ret.overlayPosition = exportOverlayPosition(source.overlayPosition, ctx)
     if (source.overlayBackgroundInteraction) ret.overlayBackgroundInteraction = exportOverlayBackgroundInteraction(source.overlayBackgroundInteraction, ctx)
     if (source.overlayBackgroundAppearance) ret.overlayBackgroundAppearance = exportOverlayBackgroundAppearance(source.overlayBackgroundAppearance, ctx)
     if (source.scrollDirection) ret.scrollDirection = exportScrollDirection(source.scrollDirection, ctx)
@@ -1089,6 +1097,15 @@ export function exportVariable(source: types.Variable, ctx?: IExportContext): ty
         }
         if (source.value.typeId === "blur") {
             return exportBlur(source.value as types.Blur, ctx)
+        }
+        if (source.value.typeId === "prototype-starting-point") {
+            return exportPrototypeStartingPoint(source.value as types.PrototypeStartingPoint, ctx)
+        }
+        if (source.value.typeId === "overlay-position") {
+            return exportOverlayPosition(source.value as types.OverlayPosition, ctx)
+        }
+        if (source.value.typeId === "overlay-background-appearance") {
+            return exportOverlayBackgroundAppearance(source.value as types.OverlayBackgroundAppearance, ctx)
         }
         throw new Error("unknow typeId: " + source.value.typeId)
     })()

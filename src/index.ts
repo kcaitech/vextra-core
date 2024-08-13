@@ -107,7 +107,7 @@ export {
 
     OverlayPosition,
     OverlayMargin,
-    OverlayPositions,
+    OverlayPositionType,
     OverlayBackgroundType,
     OverlayBackgroundInteraction,
     OverlayBackgroundAppearance,

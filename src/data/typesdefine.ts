@@ -253,7 +253,7 @@ export type OverlayMargin = {
     right: number,
 }
 /* overlayPositionType */
-export enum OverlayPositions {
+export enum OverlayPositionType {
     TOPLEFT = "TOP_LEFT",
     TOPCENTER = "TOP_CENTER",
     TOPRIGHT = "TOP_RIGHT",
@@ -263,6 +263,12 @@ export enum OverlayPositions {
     BOTTOMLEFT = "BOTTOM_LEFT",
     BOTTOMCENTER = "BOTTOM_CENTER",
     BOTTOMRIGHT = "BOTTOM_RIGHT",
+}
+/* overlay position */
+export type OverlayPosition = {
+    typeId: string,
+    position: OverlayPositionType,
+    margin: OverlayMargin,
 }
 /* override types */
 export enum OverrideType {
@@ -283,6 +289,12 @@ export enum OverrideType {
     ExportOptions = "exportOptions",
     CornerRadius = "cornerRadius",
     Blur = "blur",
+    ProtoStartPoint = "protoStartPoint",
+    ProtoInteractions = "protoInteractions",
+    OverlayPosition = "overlayPosition",
+    OverlayInteraction = "overlayInteraction",
+    OverlayAppearance = "overlayAppearance",
+    ScrollDirection = "scrollDirection",
 }
 /* padding */
 export type Padding = {
@@ -394,6 +406,7 @@ export enum PrototypeNavigationType {
 }
 /* prototypeStartingPoint */
 export type PrototypeStartingPoint = {
+    typeId: string,
     name: string,
     desc: string,
 }
@@ -606,8 +619,14 @@ export enum VariableType {
     ExportOptions = "exportOptions",
     CornerRadius = "cornerRadius",
     Blur = "blur",
+    ProtoStartPoint = "protoStartPoint",
+    ProtoInteractions = "protoInteractions",
+    OverlayPosition = "overlayPosition",
+    OverlayInteraction = "overlayInteraction",
+    OverlayAppearance = "overlayAppearance",
+    ScrollDirection = "scrollDirection",
 }
-export type Variable_0 = Array<Border | Fill | Shadow>
+export type Variable_0 = Array<Border | Fill | Shadow | PrototypeInterAction>
 /* winding rule */
 export enum WindingRule {
     NonZero = "non-zero",
@@ -688,14 +707,9 @@ export type Gradient = {
 }
 /* overlay-background-appearance */
 export type OverlayBackgroundAppearance = {
+    typeId: string,
     backgroundType: OverlayBackgroundType,
     backgroundColor: Color,
-    typeId?: string,
-}
-/* overlay position */
-export type OverlayPosition = {
-    position: OverlayPositions,
-    margin: OverlayMargin,
 }
 /* actions */
 export type PrototypeActions = {
@@ -860,7 +874,7 @@ export type Shape = {
     haveEdit?: boolean,
     prototypeStartingPoint?: PrototypeStartingPoint,
     prototypeInteractions?: Shape_prototypeInteractions,
-    overlayPositionType?: OverlayPosition,
+    overlayPosition?: OverlayPosition,
     overlayBackgroundInteraction?: OverlayBackgroundInteraction,
     overlayBackgroundAppearance?: OverlayBackgroundAppearance,
     scrollDirection?: ScrollDirection,
@@ -893,7 +907,7 @@ export type Variable = {
     id: string,
     type: VariableType,
     name: string,
-    value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur,
+    value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur | PrototypeStartingPoint | OverlayPosition | OverlayBackgroundAppearance,
 }
 /* comment */
 export type Comment = {

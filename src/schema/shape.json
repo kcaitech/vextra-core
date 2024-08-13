@@ -80,7 +80,7 @@
                 "$ref": "./prototype-inter-action.json"
             }
         },
-        "overlayPositionType":{
+        "overlayPosition":{
             "$ref": "./overlay-position.json"
         },
         "overlayBackgroundInteraction":{
