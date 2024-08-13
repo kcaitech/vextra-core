@@ -81,7 +81,7 @@ import {
 } from "../data/baseimport";
 import { gPal } from "../basic/pal";
 import { findUsableBorderStyle, findUsableFillStyle } from "../render/boolgroup";
-import { BasicArray } from "../data/basic";
+import { BasicArray, ResourceMgr } from "../data/basic";
 import { TableEditor } from "./table";
 import { exportArtboard, exportGradient, exportStop, exportSymbolShape, exportVariable } from "../data/baseexport";
 import {
@@ -144,7 +144,6 @@ import { makeShapeTransform1By2, makeShapeTransform2By1, updateShapeTransform1By
 import { ColVector3D } from "../basic/matrix2";
 import { Transform as Transform2 } from "../basic/transform";
 import { getFormatFromBase64 } from "../basic/utils";
-
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -331,6 +330,16 @@ export interface ImagePack {
     buff: Uint8Array;
     base64: string;
     name: string;
+}
+
+export interface SVGParseResult {
+    shape: Shape,
+    mediaResourceMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>
+}
+
+export interface UploadAssets {
+    ref: string,
+    buff: Uint8Array
 }
 
 export function getHorizontalRadians(A: {
@@ -3843,10 +3852,10 @@ export class PageEditor {
         }
     }
 
-    insertImagesToPage(images: { pack: ImagePack, transform: Transform }[]) {
+    insertImagesToPage(images: { pack: ImagePack | SVGParseResult, transform: Transform }[]) {
         try {
             const ids: string[] = [];
-            const imageShapes: { shape: Shape, imageRef: string }[] = [];
+            const imageShapes: { shape: Shape, upload: UploadAssets[] }[] = [];
             const api = this.__repo.start('insertImagesToPage', (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
                 const state = {} as SelectionState;
                 if (!isUndo) state.shapes = ids;
@@ -3856,17 +3865,33 @@ export class PageEditor {
             const document = this.__document;
             const page = this.__page;
             for (const item of images) {
-                const { size, name, buff, base64 } = item.pack;
-                const format = getFormatFromBase64(base64);
-                const ref = `${v4()}.${format}`;
-                document.mediasMgr.add(ref, { buff, base64 });
-                const shape = newImageFillShape(name, new ShapeFrame(0, 0, size.width, size.height), document.mediasMgr, size, ref);
-                shape.transform = item.transform;
-                const index = page.childs.length;
-                const __s = api.shapeInsert(document, page, page, shape, index);
-                if (__s) {
-                    ids.push(__s.id);
-                    imageShapes.push({ shape: __s, imageRef: ref });
+                if ((item.pack as ImagePack).size) {
+                    const { size, name, buff, base64 } = item.pack as ImagePack;
+                    const format = getFormatFromBase64(base64);
+                    const ref = `${v4()}.${format}`;
+                    document.mediasMgr.add(ref, { buff, base64 });
+                    const reg = new RegExp(`.${format}|.jpg$`, 'img');
+                    const shape = newImageFillShape(name.replace(reg, '') || 'image', new ShapeFrame(0, 0, size.width, size.height), document.mediasMgr, size, ref);
+                    shape.transform = item.transform;
+                    const index = page.childs.length;
+                    const __s = api.shapeInsert(document, page, page, shape, index);
+                    if (__s) {
+                        ids.push(__s.id);
+                        imageShapes.push({ shape: __s, upload: [{ ref, buff }] });
+                    }
+                } else {
+                    const shape = (item.pack as SVGParseResult).shape;
+                    shape.transform = item.transform;
+                    const index = page.childs.length;
+                    const __s = api.shapeInsert(document, page, page, shape, index);
+                    if (__s) {
+                        ids.push(__s.id);
+                        const upload: UploadAssets[] = [];
+                        (item.pack as SVGParseResult).mediaResourceMgr.forEach((v, k) => {
+                            upload.push({ ref: k, buff: v.buff });
+                        })
+                        imageShapes.push({ shape: __s, upload });
+                    }
                 }
             }
             this.__repo.commit();
