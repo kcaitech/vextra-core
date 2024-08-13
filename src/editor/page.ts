@@ -72,6 +72,8 @@ import {
     importFill,
     importGradient,
     importMarkerType,
+    importOverlayPosition,
+    importPrototypeInterAction,
     importShadow,
     importStop,
     importStyle,
@@ -104,6 +106,7 @@ import {
     is_part_of_symbolref,
     is_state,
     modify_variable_with_api,
+    override_variable,
     shape4border,
     shape4cornerRadius,
     shape4fill,
@@ -131,7 +134,7 @@ import {
     OverlayPosition,
     OverlayMargin
 } from "../data/baseclasses";
-import {border2path,calculateInnerAnglePosition, getPolygonPoints, getPolygonVertices, update_frame_by_points } from "./utils/path";
+import { border2path, calculateInnerAnglePosition, getPolygonPoints, getPolygonVertices, update_frame_by_points } from "./utils/path";
 import { modify_shapes_height, modify_shapes_width } from "./utils/common";
 import { CoopRepository } from "./coop/cooprepo";
 import { Api, TextShapeLike } from "./coop/recordapi";
@@ -3307,11 +3310,11 @@ export class PageEditor {
         }
     }
 
-    setPrototypeStart(shape: ShapeView, PSName: PrototypeStartingPoint) {
+    setPrototypeStart(shape: ShapeView, startpoint: PrototypeStartingPoint) {
         try {
             const api = this.__repo.start('setPrototypeStart');
-            const __shape = adapt2Shape(shape);
-            api.setShapeProtoStart(this.__page, __shape, PSName);
+            if (modify_variable_with_api(api, this.__page, shape, VariableType.ProtoStartPoint, OverrideType.ProtoStartPoint, startpoint)) return;
+            api.setShapeProtoStart(this.__page, shape.data, startpoint);
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
@@ -3321,6 +3324,7 @@ export class PageEditor {
     delPrototypeStart(shape: ShapeView) {
         try {
             const api = this.__repo.start('delPrototypeStart');
+            if (modify_variable_with_api(api, this.__page, shape, VariableType.ProtoStartPoint, OverrideType.ProtoStartPoint, undefined)) return;
             const __shape = adapt2Shape(shape);
             api.setShapeProtoStart(this.__page, __shape, undefined);
             this.__repo.commit();
@@ -3329,11 +3333,23 @@ export class PageEditor {
         }
     }
 
+    private shape4protoActions(api: Api, page: Page, shape: ShapeView) {
+        const _var = override_variable(page, VariableType.ProtoInteractions, OverrideType.ProtoInteractions, (_var) => {
+            const actions = _var?.value ?? shape.prototypeInterActions;
+            return new BasicArray(...((actions || []) as Array<PrototypeInterAction>).map((v) => {
+                const ret = importPrototypeInterAction(v);
+                return ret;
+            }
+            ))
+        }, api, shape)
+        return _var || shape.data;
+    }
+
     insertPrototypeAction(shape: ShapeView, action: PrototypeInterAction) {
         try {
             const api = this.__repo.start('insertPrototypeAction');
-            const __shape = adapt2Shape(shape);
-            api.insertShapeprototypeInteractions(this.__page, __shape, action);
+            const _shape = this.shape4protoActions(api, this.__page, shape);
+            api.insertShapeprototypeInteractions(this.__page, _shape, action);
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
@@ -3343,8 +3359,8 @@ export class PageEditor {
     deletePrototypeAction(shape: ShapeView, id: string) {
         try {
             const api = this.__repo.start('deletePrototypeAction');
-            const __shape = adapt2Shape(shape);
-            api.deleteShapePrototypeInteractions(this.__page, __shape, id);
+            const _shape = this.shape4protoActions(api, this.__page, shape);
+            api.deleteShapePrototypeInteractions(this.__page, _shape, id);
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
@@ -3354,8 +3370,8 @@ export class PageEditor {
     setPrototypeActionEvent(shape: ShapeView, id: string, value: PrototypeEvents) {
         try {
             const api = this.__repo.start('setPrototypeActionEvent');
-            const __shape = adapt2Shape(shape);
-            api.shapeModifyPrototypeActionEvent(this.__page, __shape, id, value);
+            const _shape = this.shape4protoActions(api, this.__page, shape);
+            api.shapeModifyPrototypeActionEvent(this.__page, _shape, id, value);
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
@@ -3365,8 +3381,8 @@ export class PageEditor {
     setPrototypeActionEventTime(shape: ShapeView, id: string, value: number) {
         try {
             const api = this.__repo.start('setPrototypeActionEventTime');
-            const __shape = adapt2Shape(shape);
-            api.shapeModifyPrototypeActionEventTime(this.__page, __shape, id, value);
+            const _shape = this.shape4protoActions(api, this.__page, shape);
+            api.shapeModifyPrototypeActionEventTime(this.__page, _shape, id, value);
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
@@ -3376,9 +3392,9 @@ export class PageEditor {
     setPrototypeActionConnNav(shape: ShapeView, id: string, conn: PrototypeConnectionType | undefined, nav: PrototypeNavigationType | undefined) {
         try {
             const api = this.__repo.start('setPrototypeActionConnectionType');
-            const __shape = adapt2Shape(shape);
-            const transitionType = shape.prototypeInterAction?.find(i => i.id === id)?.actions.transitionType
-            const old_nav = shape.prototypeInterAction?.find(i => i.id === id)?.actions.navigationType
+            const __shape = this.shape4protoActions(api, this.__page, shape);
+            const transitionType = shape.prototypeInterActions?.find(i => i.id === id)?.actions.transitionType
+            const old_nav = shape.prototypeInterActions?.find(i => i.id === id)?.actions.navigationType
             api.shapeModifyPrototypeActionConnNav(this.__page, __shape, id, conn, nav);
 
             if (nav === PrototypeNavigationType.SCROLLTO || old_nav === PrototypeNavigationType.SCROLLTO) {
@@ -3420,7 +3436,7 @@ export class PageEditor {
     setPrototypeActionTargetNodeID(shape: ShapeView, id: string, value: string) {
         try {
             const api = this.__repo.start('setPrototypeActionTargetNodeID');
-            const __shape = adapt2Shape(shape);
+            const __shape = this.shape4protoActions(api, this.__page, shape);
             api.shapeModifyPrototypeActionTargetNodeID(this.__page, __shape, id, value);
             this.__repo.commit();
         } catch (error) {
@@ -3431,7 +3447,7 @@ export class PageEditor {
     setPrototypeActionTransitionType(shape: ShapeView, id: string, value: PrototypeTransitionType) {
         try {
             const api = this.__repo.start('setPrototypeActionTransitionType');
-            const __shape = adapt2Shape(shape);
+            const __shape = this.shape4protoActions(api, this.__page, shape);
             api.shapeModifyPrototypeActionTransitionType(this.__page, __shape, id, value);
             this.__repo.commit();
         } catch (error) {
@@ -3442,7 +3458,7 @@ export class PageEditor {
     setPrototypeActionTransitionDuration(shape: ShapeView, id: string, value: number) {
         try {
             const api = this.__repo.start('setPrototypeActionTransitionDuration');
-            const __shape = adapt2Shape(shape);
+            const __shape = this.shape4protoActions(api, this.__page, shape);
             api.shapeModifyPrototypeActionTransitionDuration(this.__page, __shape, id, value);
             this.__repo.commit();
         } catch (error) {
@@ -3453,7 +3469,7 @@ export class PageEditor {
     setPrototypeActionEasingType(shape: ShapeView, id: string, value: PrototypeEasingType, esfn: BasicArray<number>) {
         try {
             const api = this.__repo.start('setPrototypeActionEasingType');
-            const __shape = adapt2Shape(shape);
+            const __shape = this.shape4protoActions(api, this.__page, shape);
             api.shapeModifyPrototypeActionEasingType(this.__page, __shape, id, value, esfn);
             this.__repo.commit();
         } catch (error) {
@@ -3464,7 +3480,7 @@ export class PageEditor {
     setPrototypeActionConnectionURL(shape: ShapeView, id: string, value: string) {
         try {
             const api = this.__repo.start('setPrototypeActionConnectionURL');
-            const __shape = adapt2Shape(shape);
+            const __shape = this.shape4protoActions(api, this.__page, shape);
             api.shapeModifyPrototypeActionConnectionURL(this.__page, __shape, id, value);
             this.__repo.commit();
         } catch (error) {
@@ -3475,7 +3491,7 @@ export class PageEditor {
     setPrototypeActionOpenUrlInNewTab(shape: ShapeView, id: string, value: boolean) {
         try {
             const api = this.__repo.start('setPrototypeActionOpenUrlInNewTab');
-            const __shape = adapt2Shape(shape);
+            const __shape = this.shape4protoActions(api, this.__page, shape);
             api.shapeModifyPrototypeActionOpenUrlInNewTab(this.__page, __shape, id, value);
             this.__repo.commit();
         } catch (error) {
@@ -3486,7 +3502,7 @@ export class PageEditor {
     setPrototypeActionEasingFunction(shape: ShapeView, id: string, value: BasicArray<number>) {
         try {
             const api = this.__repo.start('setPrototypeActionOpenUrlInNewTab');
-            const __shape = adapt2Shape(shape);
+            const __shape = this.shape4protoActions(api, this.__page, shape);
             api.shapeModifyPrototypeActionEasingFunction(this.__page, __shape, id, value);
             this.__repo.commit();
         } catch (error) {
@@ -3497,7 +3513,7 @@ export class PageEditor {
     setPrototypeExtraScrollOffsetX(shape: ShapeView, id: string, value: number) {
         try {
             const api = this.__repo.start('setPrototypeExtraScrollOffsetX');
-            const __shape = adapt2Shape(shape);
+            const __shape = this.shape4protoActions(api, this.__page, shape);
             api.shapeModifyPrototypeExtraScrollOffsetX(this.__page, __shape, id, value);
             this.__repo.commit();
         } catch (error) {
@@ -3508,7 +3524,7 @@ export class PageEditor {
     setPrototypeExtraScrollOffsetY(shape: ShapeView, id: string, value: number) {
         try {
             const api = this.__repo.start('setPrototypeExtraScrollOffsetY');
-            const __shape = adapt2Shape(shape);
+            const __shape = this.shape4protoActions(api, this.__page, shape);
             api.shapeModifyPrototypeExtraScrollOffsetY(this.__page, __shape, id, value);
             this.__repo.commit();
         } catch (error) {
@@ -3516,10 +3532,18 @@ export class PageEditor {
         }
     }
 
+    private shape4overlayPosition(api: Api, page: Page, shape: ShapeView) {
+        const _var = override_variable(page, VariableType.OverlayPosition, OverrideType.OverlayPosition, (_var) => {
+            const position = _var?.value ?? shape.overlayPosition;
+            return position ? importOverlayPosition(position) : new OverlayPosition(OverlayPositionType.CENTER, new OverlayMargin())
+        }, api, shape)
+        return _var || shape.data;
+    }
+
     setOverlayPositionType(shape: ShapeView, value: OverlayPositionType) {
         try {
             const api = this.__repo.start('setOverlayPositionType');
-            const __shape = adapt2Shape(shape);
+            const __shape = this.shape4overlayPosition(api, this.__page, shape);
             api.shapeModifyOverlayPositionType(this.__page, __shape, value);
             this.__repo.commit();
         } catch (error) {
@@ -3527,10 +3551,10 @@ export class PageEditor {
         }
     }
 
-    setOverlayPositionTypeMarginTop(shape: ShapeView, value: number){
+    setOverlayPositionTypeMarginTop(shape: ShapeView, value: number) {
         try {
             const api = this.__repo.start('setOverlayPositionTypeMarginTop');
-            const __shape = adapt2Shape(shape);
+            const __shape = this.shape4overlayPosition(api, this.__page, shape);
             api.shapeModifyOverlayPositionTypeMarginTop(this.__page, __shape, value);
             this.__repo.commit();
         } catch (error) {
@@ -3538,10 +3562,10 @@ export class PageEditor {
         }
     }
 
-    setOverlayPositionTypeMarginBottom(shape: ShapeView, value: number){
+    setOverlayPositionTypeMarginBottom(shape: ShapeView, value: number) {
         try {
             const api = this.__repo.start('setOverlayPositionTypeMarginBottom');
-            const __shape = adapt2Shape(shape);
+            const __shape = this.shape4overlayPosition(api, this.__page, shape);
             api.shapeModifyOverlayPositionTypeMarginBottom(this.__page, __shape, value);
             this.__repo.commit();
         } catch (error) {
@@ -3549,10 +3573,10 @@ export class PageEditor {
         }
     }
 
-    setOverlayPositionTypeMarginLeft(shape: ShapeView, value: number){
+    setOverlayPositionTypeMarginLeft(shape: ShapeView, value: number) {
         try {
             const api = this.__repo.start('setOverlayPositionTypeMarginLeft');
-            const __shape = adapt2Shape(shape);
+            const __shape = this.shape4overlayPosition(api, this.__page, shape);
             api.shapeModifyOverlayPositionTypeMarginLeft(this.__page, __shape, value);
             this.__repo.commit();
         } catch (error) {
@@ -3560,10 +3584,10 @@ export class PageEditor {
         }
     }
 
-    setOverlayPositionTypeMarginRight(shape: ShapeView, value: number){
+    setOverlayPositionTypeMarginRight(shape: ShapeView, value: number) {
         try {
             const api = this.__repo.start('setOverlayPositionTypeMarginRight');
-            const __shape = adapt2Shape(shape);
+            const __shape = this.shape4overlayPosition(api, this.__page, shape);
             api.shapeModifyOverlayPositionTypeMarginRight(this.__page, __shape, value);
             this.__repo.commit();
         } catch (error) {
@@ -3574,6 +3598,7 @@ export class PageEditor {
     setOverlayBackgroundInteraction(shape: ShapeView, value: OverlayBackgroundInteraction) {
         try {
             const api = this.__repo.start('setOverlayBackgroundInteraction');
+            if (modify_variable_with_api(api, this.__page, shape, VariableType.OverlayInteraction, OverrideType.OverlayInteraction, value)) return;
             const __shape = adapt2Shape(shape);
             api.shapeModifyOverlayBackgroundInteraction(this.__page, __shape, value);
             this.__repo.commit();
@@ -3585,6 +3610,7 @@ export class PageEditor {
     setOverlayBackgroundAppearance(shape: ShapeView, value?: OverlayBackgroundAppearance) {
         try {
             const api = this.__repo.start('setOverlayBackgroundAppearance');
+            if (modify_variable_with_api(api, this.__page, shape, VariableType.OverlayAppearance, OverrideType.OverlayAppearance, value)) return;
             const __shape = adapt2Shape(shape);
             api.shapeModifyOverlayBackgroundAppearance(this.__page, __shape, value);
             this.__repo.commit();
@@ -3592,10 +3618,11 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
-    
+
     setscrollDirection(shape: ShapeView, value: ScrollDirection) {
         try {
             const api = this.__repo.start('setscrollDirection');
+            if (modify_variable_with_api(api, this.__page, shape, VariableType.ScrollDirection, OverrideType.ScrollDirection, value)) return;
             const __shape = adapt2Shape(shape);
             api.shapeModifyscrollDirection(this.__page, __shape, value);
             this.__repo.commit();
