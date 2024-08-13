@@ -114,7 +114,7 @@ export function reLayoutBySizeChanged(
     } else {
         // 除去编组，其他容器级别的图层需要根据具体是约束状态进行重新布局
         for (const child of children) {
-            const resizingConstraint = child.resizingConstraint ?? ResizingConstraints2.Default;
+            const resizingConstraint = child.resizingConstraint ?? 0;
 
             const oSize = getSize(child);
 

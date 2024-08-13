@@ -508,10 +508,10 @@ export class Api {
 
     insertShapeprototypeInteractions(page: Page, shape: Shape, action: PrototypeInterAction) {
         checkShapeAtPage(page, shape)
-        let prototypeInteractions = (shape as Artboard).prototypeInteractions;
+        let prototypeInteractions = shape.prototypeInteractions;
         if (!prototypeInteractions) {
-            (shape as Artboard).prototypeInteractions = new BasicArray<PrototypeInterAction>();
-            prototypeInteractions = (shape as Artboard).prototypeInteractions!;
+            shape.prototypeInteractions = new BasicArray<PrototypeInterAction>();
+            prototypeInteractions = shape.prototypeInteractions!;
         }
         this.addOp(basicapi.crdtArrayInsert(prototypeInteractions, prototypeInteractions.length, action))
     }
