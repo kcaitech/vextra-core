@@ -124,7 +124,7 @@ import {
     PrototypeNavigationType,
     PrototypeTransitionType,
     PrototypeEasingType,
-    OverlayPositions,
+    OverlayPositionType,
     OverlayBackgroundInteraction,
     OverlayBackgroundAppearance,
     ScrollDirection,
@@ -3516,7 +3516,7 @@ export class PageEditor {
         }
     }
 
-    setOverlayPositionType(shape: ShapeView, value: OverlayPositions) {
+    setOverlayPositionType(shape: ShapeView, value: OverlayPositionType) {
         try {
             const api = this.__repo.start('setOverlayPositionType');
             const __shape = adapt2Shape(shape);

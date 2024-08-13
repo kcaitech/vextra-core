@@ -32,7 +32,7 @@ import {
     PrototypeTransitionType,
     PrototypeEasingType,
     PrototypeExtrascrolloffset,
-    OverlayPositions,
+    OverlayPositionType,
     OverlayBackgroundInteraction,
     OverlayBackgroundAppearance,
     OverlayBackgroundType,
@@ -645,9 +645,9 @@ export class Api {
 
     }
 
-    shapeModifyOverlayPositionType(page: Page, shape: Shape, value: OverlayPositions) {
+    shapeModifyOverlayPositionType(page: Page, shape: Shape, value: OverlayPositionType) {
         checkShapeAtPage(page, shape)
-        let overlayPositionType = shape.overlayPositionType
+        let overlayPositionType = shape.overlayPosition
         overlayPositionType = new OverlayPosition(value, new OverlayMargin())
         this.addOp(basicapi.crdtSetAttr(shape, 'overlayPositionType', overlayPositionType))
 
@@ -655,28 +655,28 @@ export class Api {
 
     shapeModifyOverlayPositionTypeMarginTop(page: Page, shape: Shape, value: number) {
         checkShapeAtPage(page, shape)
-        const margin = shape.overlayPositionType?.margin
+        const margin = shape.overlayPosition?.margin
         if (!margin) return;
         this.addOp(basicapi.crdtSetAttr(margin, 'top', value))
     }
 
     shapeModifyOverlayPositionTypeMarginBottom(page: Page, shape: Shape, value: number) {
         checkShapeAtPage(page, shape)
-        const margin = shape.overlayPositionType?.margin
+        const margin = shape.overlayPosition?.margin
         if (!margin) return;
         this.addOp(basicapi.crdtSetAttr(margin, 'bottom', value))
     }
 
     shapeModifyOverlayPositionTypeMarginLeft(page: Page, shape: Shape, value: number) {
         checkShapeAtPage(page, shape)
-        const margin = shape.overlayPositionType?.margin
+        const margin = shape.overlayPosition?.margin
         if (!margin) return;
         this.addOp(basicapi.crdtSetAttr(margin, 'left', value))
     }
 
     shapeModifyOverlayPositionTypeMarginRight(page: Page, shape: Shape, value: number) {
         checkShapeAtPage(page, shape)
-        const margin = shape.overlayPositionType?.margin
+        const margin = shape.overlayPosition?.margin
         if (!margin) return;
         this.addOp(basicapi.crdtSetAttr(margin, 'right', value))
     }
