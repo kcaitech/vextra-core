@@ -89,9 +89,9 @@ export class DocEditor {
             if (shape.style.contacts?.length) {
                 contactApex.push(shape);
             }
-            // if (shape.prototypeInteractions?.length) {
-            //     prototypeInterAction.push(shape)
-            // }
+            if (shape.prototypeInteractions?.length) {
+                prototypeInterAction.push(shape)
+            }
 
             idReflex.set(shape.id, id);
             idReflexInverse.set(id, shape.id);
@@ -132,16 +132,16 @@ export class DocEditor {
         })
 
         //重新绑定原型的targetid
-        // prototypeInterAction.forEach(shape => {
-        //     if (shape.prototypeInteractions?.length) {
-        //         shape.prototypeInteractions.forEach(action => {
-        //             if (action.actions.targetNodeID) {
-        //                 const newTargetid = idReflex.get(action.actions.targetNodeID);
-        //                 if (newTargetid) action.actions.targetNodeID = newTargetid;
-        //             }
-        //         })
-        //     }
-        // })
+        prototypeInterAction.forEach(shape => {
+            if (shape.prototypeInteractions?.length) {
+                shape.prototypeInteractions.forEach(action => {
+                    if (action.actions.targetNodeID) {
+                        const newTargetid = idReflex.get(action.actions.targetNodeID);
+                        if (newTargetid) action.actions.targetNodeID = newTargetid;
+                    }
+                })
+            }
+        })
 
         const document = this.__document;
         const ctx: IImportContext = new class implements IImportContext {
