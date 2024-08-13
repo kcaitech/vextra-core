@@ -143,14 +143,14 @@ export class ArtboradView extends GroupShapeView {
         this._svgnode = elh(
             "svg",
             svgprops,
-            [cp, ...children, ...borders]
+            [cp, ...children]
         )
 
         children = [elh(
             "g",
             { "clip-path": "url(#" + id + ")" },
             [this._svgnode]
-        )];
+        ), ...borders];
 
         if (shadows.length) {
             const inner_url = innerShadowId(filterId, this.getShadows());

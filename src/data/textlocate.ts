@@ -206,7 +206,7 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
                 const y = lineY + line.lineHeight - (line.lineHeight - (line.maxFontSize)) / 2; // bottom
                 const x = lineX + graph.x + graph.cw;
                 const baseY = y - line.actualBoundingBoxDescent;
-                const cb = baseY + (graph.ch * TEXT_BASELINE_RATIO);
+                const cb = baseY + Math.round(graph.ch * TEXT_BASELINE_RATIO);
                 const p0 = { x, y: cb - graph.ch };
                 const p1 = { x, y: cb };
                 const ret = makeCursorLocate(layout, pi, li, line.length - 1, [p0, p1])
@@ -268,7 +268,7 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
                     _g = preGraph;
                 }
                 const baseY = y - line.actualBoundingBoxDescent;
-                const cb = baseY + (_g.ch * TEXT_BASELINE_RATIO);
+                const cb = baseY + Math.round(_g.ch * TEXT_BASELINE_RATIO);
                 const p0 = { x, y: cb - _g.ch };
                 const p1 = { x, y: cb };
                 const ret = makeCursorLocate(layout, pi, li, i, [p0, p1])

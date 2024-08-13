@@ -905,7 +905,6 @@ export class ShapeView extends DataView {
 
         // 模糊
         if (blur.length) {
-            console.log('__blur__');
             let filter: string = '';
             filter = `url(#${blurId})`;
             children = [...blur, elh('g', { filter }, children)];
