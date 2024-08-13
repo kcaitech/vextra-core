@@ -794,7 +794,7 @@ export class ShapeView extends DataView {
 
     protected renderBlur(blurId: string): EL[] {
         if (!this.blur) return [];
-        return renderBlur(elh, this.blur, blurId, this.frame, this.getFills(), this.getBorders(),this.getPathStr());
+        return renderBlur(elh, this.blur, blurId, this.frame, this.getFills(), this.getBorders(), this.getPathStr());
     }
 
     protected renderProps(): { [key: string]: string } & { style: any } {
@@ -1125,5 +1125,16 @@ export class ShapeView extends DataView {
         }
 
         return elh("g", props, children);
+    }
+
+    reloadImage(target?: Set<string>) {
+        const fills = this.getFills(); // 重载填充图片
+        fills.forEach((fill) => {
+            if (fill.fillType === FillType.Pattern) {
+                if (!target) fill.reloadImage();
+                else if (target.has(fill.imageRef || '')) fill.reloadImage();
+            }
+        })
+        this.m_ctx.setDirty(this);
     }
 }
