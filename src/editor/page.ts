@@ -3852,7 +3852,7 @@ export class PageEditor {
         }
     }
 
-    insertImagesToPage(images: { pack: ImagePack | SVGParseResult, transform: Transform }[]) {
+    insertImages(images: { pack: ImagePack | SVGParseResult, transform: Transform }[], env?: GroupShapeView) {
         try {
             const ids: string[] = [];
             const imageShapes: { shape: Shape, upload: UploadAssets[] }[] = [];
@@ -3864,6 +3864,7 @@ export class PageEditor {
             });
             const document = this.__document;
             const page = this.__page;
+            const parent = (env ? adapt2Shape(env) : this.__page) as GroupShape;
             for (const item of images) {
                 if ((item.pack as ImagePack).size) {
                     const { size, name, buff, base64 } = item.pack as ImagePack;
@@ -3873,8 +3874,8 @@ export class PageEditor {
                     const reg = new RegExp(`.${format}|.jpg$`, 'img');
                     const shape = newImageFillShape(name.replace(reg, '') || 'image', new ShapeFrame(0, 0, size.width, size.height), document.mediasMgr, size, ref);
                     shape.transform = item.transform;
-                    const index = page.childs.length;
-                    const __s = api.shapeInsert(document, page, page, shape, index);
+                    const index = parent.childs.length;
+                    const __s = api.shapeInsert(document, page, parent, shape, index);
                     if (__s) {
                         ids.push(__s.id);
                         imageShapes.push({ shape: __s, upload: [{ ref, buff }] });
@@ -3882,8 +3883,8 @@ export class PageEditor {
                 } else {
                     const shape = (item.pack as SVGParseResult).shape;
                     shape.transform = item.transform;
-                    const index = page.childs.length;
-                    const __s = api.shapeInsert(document, page, page, shape, index);
+                    const index = parent.childs.length;
+                    const __s = api.shapeInsert(document, page, parent, shape, index);
                     if (__s) {
                         ids.push(__s.id);
                         const upload: UploadAssets[] = [];
