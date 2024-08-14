@@ -1009,7 +1009,7 @@ export class ShapeView extends DataView {
     }
 
     get isImageFill() {
-        return this.m_data.getImageFill();
+        return this.m_data.isImageFill;
     }
 
     get relyLayers() {
