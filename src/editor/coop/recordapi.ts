@@ -646,9 +646,9 @@ export class Api {
 
     }
 
-    shapeModifyOverlayPositionType(page: Page, shape: Shape | Variable, value: OverlayPositionType) {
+    shapeModifyOverlayPositionType(page: Page, shape: Shape, value: OverlayPositionType) {
         checkShapeAtPage(page, shape)
-        let overlayPosition: OverlayPosition | undefined = shape instanceof Variable ? shape.value : shape.overlayPosition
+        let overlayPosition: OverlayPosition | undefined = shape.overlayPosition
         if (!overlayPosition && shape instanceof Shape) {
             overlayPosition = new OverlayPosition(OverlayPositionType.CENTER, new OverlayMargin())
             shape.overlayPosition = overlayPosition;
@@ -657,39 +657,39 @@ export class Api {
         this.addOp(basicapi.crdtSetAttr(overlayPosition, 'position', value))
         const margin = overlayPosition.margin
         if (!margin) return;
-        this.addOp(basicapi.crdtSetAttr(margin, 'top', 0))
-        this.addOp(basicapi.crdtSetAttr(margin, 'bottom', 0))
-        this.addOp(basicapi.crdtSetAttr(margin, 'left', 0))
-        this.addOp(basicapi.crdtSetAttr(margin, 'right', 0))
+        if (margin.top) this.addOp(basicapi.crdtSetAttr(margin, 'top', 0))
+        if (margin.bottom) this.addOp(basicapi.crdtSetAttr(margin, 'bottom', 0))
+        if (margin.left) this.addOp(basicapi.crdtSetAttr(margin, 'left', 0))
+        if (margin.right) this.addOp(basicapi.crdtSetAttr(margin, 'right', 0))
     }
 
-    shapeModifyOverlayPositionTypeMarginTop(page: Page, shape: Shape | Variable, value: number) {
+    shapeModifyOverlayPositionTypeMarginTop(page: Page, shape: Shape, value: number) {
         checkShapeAtPage(page, shape)
-        const overlayPosition: OverlayPosition | undefined = shape instanceof Variable ? shape.value : shape.overlayPosition
+        const overlayPosition: OverlayPosition | undefined = shape.overlayPosition
         const margin = overlayPosition?.margin
         if (!margin) return;
         this.addOp(basicapi.crdtSetAttr(margin, 'top', value))
     }
 
-    shapeModifyOverlayPositionTypeMarginBottom(page: Page, shape: Shape | Variable, value: number) {
+    shapeModifyOverlayPositionTypeMarginBottom(page: Page, shape: Shape, value: number) {
         checkShapeAtPage(page, shape)
-        const overlayPosition: OverlayPosition | undefined = shape instanceof Variable ? shape.value : shape.overlayPosition
+        const overlayPosition: OverlayPosition | undefined = shape.overlayPosition
         const margin = overlayPosition?.margin
         if (!margin) return;
         this.addOp(basicapi.crdtSetAttr(margin, 'bottom', value))
     }
 
-    shapeModifyOverlayPositionTypeMarginLeft(page: Page, shape: Shape | Variable, value: number) {
+    shapeModifyOverlayPositionTypeMarginLeft(page: Page, shape: Shape, value: number) {
         checkShapeAtPage(page, shape)
-        const overlayPosition: OverlayPosition | undefined = shape instanceof Variable ? shape.value : shape.overlayPosition
+        const overlayPosition: OverlayPosition | undefined = shape.overlayPosition
         const margin = overlayPosition?.margin
         if (!margin) return;
         this.addOp(basicapi.crdtSetAttr(margin, 'left', value))
     }
 
-    shapeModifyOverlayPositionTypeMarginRight(page: Page, shape: Shape | Variable, value: number) {
+    shapeModifyOverlayPositionTypeMarginRight(page: Page, shape: Shape, value: number) {
         checkShapeAtPage(page, shape)
-        const overlayPosition: OverlayPosition | undefined = shape instanceof Variable ? shape.value : shape.overlayPosition
+        const overlayPosition: OverlayPosition | undefined = shape.overlayPosition
         const margin = overlayPosition?.margin
         if (!margin) return;
         this.addOp(basicapi.crdtSetAttr(margin, 'right', value))

@@ -3313,8 +3313,8 @@ export class PageEditor {
     setPrototypeStart(shape: ShapeView, startpoint: PrototypeStartingPoint) {
         try {
             const api = this.__repo.start('setPrototypeStart');
-            if (modify_variable_with_api(api, this.__page, shape, VariableType.ProtoStartPoint, OverrideType.ProtoStartPoint, startpoint)) return;
-            api.setShapeProtoStart(this.__page, shape.data, startpoint);
+            const __shape = adapt2Shape(shape);
+            api.setShapeProtoStart(this.__page, __shape, startpoint);
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
@@ -3324,7 +3324,6 @@ export class PageEditor {
     delPrototypeStart(shape: ShapeView) {
         try {
             const api = this.__repo.start('delPrototypeStart');
-            if (modify_variable_with_api(api, this.__page, shape, VariableType.ProtoStartPoint, OverrideType.ProtoStartPoint, undefined)) return;
             const __shape = adapt2Shape(shape);
             api.setShapeProtoStart(this.__page, __shape, undefined);
             this.__repo.commit();
@@ -3532,18 +3531,10 @@ export class PageEditor {
         }
     }
 
-    private shape4overlayPosition(api: Api, page: Page, shape: ShapeView) {
-        const _var = override_variable(page, VariableType.OverlayPosition, OverrideType.OverlayPosition, (_var) => {
-            const position = _var?.value ?? shape.overlayPosition;
-            return position ? importOverlayPosition(position) : new OverlayPosition(OverlayPositionType.CENTER, new OverlayMargin())
-        }, api, shape)
-        return _var || shape.data;
-    }
-
     setOverlayPositionType(shape: ShapeView, value: OverlayPositionType) {
         try {
             const api = this.__repo.start('setOverlayPositionType');
-            const __shape = this.shape4overlayPosition(api, this.__page, shape);
+            const __shape = adapt2Shape(shape);
             api.shapeModifyOverlayPositionType(this.__page, __shape, value);
             this.__repo.commit();
         } catch (error) {
@@ -3554,7 +3545,7 @@ export class PageEditor {
     setOverlayPositionTypeMarginTop(shape: ShapeView, value: number) {
         try {
             const api = this.__repo.start('setOverlayPositionTypeMarginTop');
-            const __shape = this.shape4overlayPosition(api, this.__page, shape);
+            const __shape = adapt2Shape(shape);
             api.shapeModifyOverlayPositionTypeMarginTop(this.__page, __shape, value);
             this.__repo.commit();
         } catch (error) {
@@ -3565,7 +3556,7 @@ export class PageEditor {
     setOverlayPositionTypeMarginBottom(shape: ShapeView, value: number) {
         try {
             const api = this.__repo.start('setOverlayPositionTypeMarginBottom');
-            const __shape = this.shape4overlayPosition(api, this.__page, shape);
+            const __shape = adapt2Shape(shape);
             api.shapeModifyOverlayPositionTypeMarginBottom(this.__page, __shape, value);
             this.__repo.commit();
         } catch (error) {
@@ -3576,7 +3567,7 @@ export class PageEditor {
     setOverlayPositionTypeMarginLeft(shape: ShapeView, value: number) {
         try {
             const api = this.__repo.start('setOverlayPositionTypeMarginLeft');
-            const __shape = this.shape4overlayPosition(api, this.__page, shape);
+            const __shape = adapt2Shape(shape);
             api.shapeModifyOverlayPositionTypeMarginLeft(this.__page, __shape, value);
             this.__repo.commit();
         } catch (error) {
@@ -3587,7 +3578,7 @@ export class PageEditor {
     setOverlayPositionTypeMarginRight(shape: ShapeView, value: number) {
         try {
             const api = this.__repo.start('setOverlayPositionTypeMarginRight');
-            const __shape = this.shape4overlayPosition(api, this.__page, shape);
+            const __shape = adapt2Shape(shape);
             api.shapeModifyOverlayPositionTypeMarginRight(this.__page, __shape, value);
             this.__repo.commit();
         } catch (error) {
@@ -3598,7 +3589,6 @@ export class PageEditor {
     setOverlayBackgroundInteraction(shape: ShapeView, value: OverlayBackgroundInteraction) {
         try {
             const api = this.__repo.start('setOverlayBackgroundInteraction');
-            if (modify_variable_with_api(api, this.__page, shape, VariableType.OverlayInteraction, OverrideType.OverlayInteraction, value)) return;
             const __shape = adapt2Shape(shape);
             api.shapeModifyOverlayBackgroundInteraction(this.__page, __shape, value);
             this.__repo.commit();
@@ -3610,7 +3600,6 @@ export class PageEditor {
     setOverlayBackgroundAppearance(shape: ShapeView, value?: OverlayBackgroundAppearance) {
         try {
             const api = this.__repo.start('setOverlayBackgroundAppearance');
-            if (modify_variable_with_api(api, this.__page, shape, VariableType.OverlayAppearance, OverrideType.OverlayAppearance, value)) return;
             const __shape = adapt2Shape(shape);
             api.shapeModifyOverlayBackgroundAppearance(this.__page, __shape, value);
             this.__repo.commit();
@@ -3622,7 +3611,6 @@ export class PageEditor {
     setscrollDirection(shape: ShapeView, value: ScrollDirection) {
         try {
             const api = this.__repo.start('setscrollDirection');
-            if (modify_variable_with_api(api, this.__page, shape, VariableType.ScrollDirection, OverrideType.ScrollDirection, value)) return;
             const __shape = adapt2Shape(shape);
             api.shapeModifyscrollDirection(this.__page, __shape, value);
             this.__repo.commit();
