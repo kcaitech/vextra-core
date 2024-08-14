@@ -289,12 +289,7 @@ export enum OverrideType {
     ExportOptions = "exportOptions",
     CornerRadius = "cornerRadius",
     Blur = "blur",
-    ProtoStartPoint = "protoStartPoint",
     ProtoInteractions = "protoInteractions",
-    OverlayPosition = "overlayPosition",
-    OverlayInteraction = "overlayInteraction",
-    OverlayAppearance = "overlayAppearance",
-    ScrollDirection = "scrollDirection",
 }
 /* padding */
 export type Padding = {
@@ -619,12 +614,7 @@ export enum VariableType {
     ExportOptions = "exportOptions",
     CornerRadius = "cornerRadius",
     Blur = "blur",
-    ProtoStartPoint = "protoStartPoint",
     ProtoInteractions = "protoInteractions",
-    OverlayPosition = "overlayPosition",
-    OverlayInteraction = "overlayInteraction",
-    OverlayAppearance = "overlayAppearance",
-    ScrollDirection = "scrollDirection",
 }
 export type Variable_0 = Array<Border | Fill | Shadow | PrototypeInterAction>
 /* winding rule */
@@ -907,7 +897,7 @@ export type Variable = {
     id: string,
     type: VariableType,
     name: string,
-    value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur | PrototypeStartingPoint | OverlayPosition | OverlayBackgroundAppearance,
+    value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur,
 }
 /* comment */
 export type Comment = {

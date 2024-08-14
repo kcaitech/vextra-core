@@ -20,13 +20,6 @@
         "exportOptions",
         "cornerRadius",
         "blur",
-
-        "protoStartPoint",
-        "protoInteractions",
-        "overlayPosition",
-        "overlayInteraction",
-        "overlayAppearance",
-        "scrollDirection"
-
+        "protoInteractions"
     ]
 }

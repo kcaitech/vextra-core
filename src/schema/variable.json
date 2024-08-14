@@ -67,15 +67,6 @@
                 },
                 {
                     "$ref": "./blur.json"
-                },
-                {
-                    "$ref": "./prototype-starting-point.json"
-                },
-                {
-                    "$ref": "./overlay-position.json"
-                },
-                {
-                    "$ref": "./overlay-background-appearance.json"
                 }
             ]
         }

@@ -950,8 +950,8 @@ export class Variable extends Basic {
     id: string
     type: VariableType
     name: string
-    value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur | PrototypeStartingPoint | OverlayPosition | OverlayBackgroundAppearance
-    constructor(id: string, type: VariableType, name: string, value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur | PrototypeStartingPoint | OverlayPosition | OverlayBackgroundAppearance) {
+    value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur
+    constructor(id: string, type: VariableType, name: string, value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur) {
         super()
         this.id = id
         this.type = type

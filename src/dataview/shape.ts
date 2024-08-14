@@ -1022,8 +1022,7 @@ export class ShapeView extends DataView {
     }
 
     get prototypeStartPoint(): PrototypeStartingPoint | undefined {
-        const v = this._findOV(OverrideType.ProtoStartPoint, VariableType.ProtoStartPoint);
-        return v ? v.value : this.m_data.prototypeStartingPoint;
+        return this.m_data.prototypeStartingPoint;
     }
 
     get prototypeInterActions(): BasicArray<PrototypeInterAction> | undefined {
@@ -1032,23 +1031,19 @@ export class ShapeView extends DataView {
     }
 
     get overlayPosition(): OverlayPosition | undefined {
-        const v = this._findOV(OverrideType.OverlayPosition, VariableType.OverlayPosition);
-        return v ? v.value : this.m_data.overlayPosition
+        return this.m_data.overlayPosition
     }
 
     get overlayBackgroundInteraction(): OverlayBackgroundInteraction | undefined {
-        const v = this._findOV(OverrideType.OverlayInteraction, VariableType.OverlayInteraction);
-        return v ? v.value : this.m_data.overlayBackgroundInteraction
+        return this.m_data.overlayBackgroundInteraction
     }
 
     get overlayBackgroundAppearance(): OverlayBackgroundAppearance | undefined {
-        const v = this._findOV(OverrideType.OverlayAppearance, VariableType.OverlayAppearance);
-        return v ? v.value : this.m_data.overlayBackgroundAppearance
+        return this.m_data.overlayBackgroundAppearance
     }
 
     get scrollDirection(): ScrollDirection | undefined {
-        const v = this._findOV(OverrideType.ScrollDirection, VariableType.ScrollDirection);
-        return v ? v.value : this.m_data.scrollDirection
+        return this.m_data.scrollDirection
     }
 
     get relyLayers() {

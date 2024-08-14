@@ -1098,15 +1098,6 @@ export function exportVariable(source: types.Variable, ctx?: IExportContext): ty
         if (source.value.typeId === "blur") {
             return exportBlur(source.value as types.Blur, ctx)
         }
-        if (source.value.typeId === "prototype-starting-point") {
-            return exportPrototypeStartingPoint(source.value as types.PrototypeStartingPoint, ctx)
-        }
-        if (source.value.typeId === "overlay-position") {
-            return exportOverlayPosition(source.value as types.OverlayPosition, ctx)
-        }
-        if (source.value.typeId === "overlay-background-appearance") {
-            return exportOverlayBackgroundAppearance(source.value as types.OverlayBackgroundAppearance, ctx)
-        }
         throw new Error("unknow typeId: " + source.value.typeId)
     })()
     return ret
