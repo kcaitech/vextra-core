@@ -138,7 +138,7 @@ export class DViewCtx extends EventEmitter {
         return this.dirtyset.delete(vid);
     }
 
-    protected focusshape: Shape | undefined;
+    protected focusshape: DataView | undefined;
 
     protected onIdle(): boolean {
         return false;
@@ -182,7 +182,7 @@ export class DViewCtx extends EventEmitter {
 
         const startTime = Date.now();
         const focusdepends: number[] = [];
-        let p: Shape | undefined = this.focusshape;
+        let p: DataView | undefined = this.focusshape;
         while (p) {
             focusdepends.push(objectId(p));
             p = p.parent;

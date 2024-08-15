@@ -1,4 +1,3 @@
-import { ShapeSize } from "src/data/baseclasses";
 import { Page } from "../data/page";
 import { ArtboradView } from "./artboard";
 import { CutoutShapeView } from "./cutout";
