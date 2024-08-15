@@ -132,7 +132,9 @@ import {
     OverlayBackgroundAppearance,
     ScrollDirection,
     OverlayPosition,
-    OverlayMargin
+    OverlayMargin,
+    PrototypeEvent,
+    PrototypeActions
 } from "../data/baseclasses";
 import { border2path, calculateInnerAnglePosition, getPolygonPoints, getPolygonVertices, update_frame_by_points } from "./utils/path";
 import { modify_shapes_height, modify_shapes_width } from "./utils/common";
@@ -3332,22 +3334,31 @@ export class PageEditor {
         }
     }
 
-    private shape4protoActions(api: Api, page: Page, shape: ShapeView) {
+    private shape4protoActions(api: Api, page: Page, shape: ShapeView, id: string | undefined) {
         const _var = override_variable(page, VariableType.ProtoInteractions, OverrideType.ProtoInteractions, (_var) => {
-            const actions = _var?.value ?? shape.prototypeInterActions;
-            return new BasicArray(...((actions || []) as Array<PrototypeInterAction>).map((v) => {
-                const ret = importPrototypeInterAction(v);
-                return ret;
+            const ret = new BasicArray();
+            if (id) {
+                const actions = _var?.value ?? shape.prototypeInterActions;
+                const a = ((actions || []) as PrototypeInterAction[]).find(v => v.id === id);
+                if (a) ret.push(a);
             }
-            ))
+            return ret;
         }, api, shape)
+        if (_var && id && !(_var.value as PrototypeInterAction[]).find(v => v.id === id)) {
+            const inherit = shape.inheritPrototypeInterActions;
+            const i = inherit && inherit.find(v => v.id === id);
+            if (i) {
+                const a = new PrototypeInterAction(new BasicArray(), id, new PrototypeEvent(i.event.interactionType), new PrototypeActions(i.actions.connectionType))
+                api.insertShapeprototypeInteractions(this.__page, _var, a);
+            }
+        }
         return _var || shape.data;
     }
 
     insertPrototypeAction(shape: ShapeView, action: PrototypeInterAction) {
         try {
             const api = this.__repo.start('insertPrototypeAction');
-            const _shape = this.shape4protoActions(api, this.__page, shape);
+            const _shape = this.shape4protoActions(api, this.__page, shape, undefined);
             api.insertShapeprototypeInteractions(this.__page, _shape, action);
             this.__repo.commit();
         } catch (error) {
@@ -3358,8 +3369,12 @@ export class PageEditor {
     deletePrototypeAction(shape: ShapeView, id: string) {
         try {
             const api = this.__repo.start('deletePrototypeAction');
-            const _shape = this.shape4protoActions(api, this.__page, shape);
-            api.deleteShapePrototypeInteractions(this.__page, _shape, id);
+            const _shape = this.shape4protoActions(api, this.__page, shape, id);
+            if (_shape instanceof Variable) {
+                api.shapeModifyPrototypeActionDeleted(this.__page, _shape, id, true);
+            } else {
+                api.deleteShapePrototypeInteractions(this.__page, _shape, id);
+            }
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
@@ -3369,7 +3384,7 @@ export class PageEditor {
     setPrototypeActionEvent(shape: ShapeView, id: string, value: PrototypeEvents) {
         try {
             const api = this.__repo.start('setPrototypeActionEvent');
-            const _shape = this.shape4protoActions(api, this.__page, shape);
+            const _shape = this.shape4protoActions(api, this.__page, shape, id);
             api.shapeModifyPrototypeActionEvent(this.__page, _shape, id, value);
             this.__repo.commit();
         } catch (error) {
@@ -3380,7 +3395,7 @@ export class PageEditor {
     setPrototypeActionEventTime(shape: ShapeView, id: string, value: number) {
         try {
             const api = this.__repo.start('setPrototypeActionEventTime');
-            const _shape = this.shape4protoActions(api, this.__page, shape);
+            const _shape = this.shape4protoActions(api, this.__page, shape, id);
             api.shapeModifyPrototypeActionEventTime(this.__page, _shape, id, value);
             this.__repo.commit();
         } catch (error) {
@@ -3391,7 +3406,7 @@ export class PageEditor {
     setPrototypeActionConnNav(shape: ShapeView, id: string, conn: PrototypeConnectionType | undefined, nav: PrototypeNavigationType | undefined) {
         try {
             const api = this.__repo.start('setPrototypeActionConnectionType');
-            const __shape = this.shape4protoActions(api, this.__page, shape);
+            const __shape = this.shape4protoActions(api, this.__page, shape, id);
             const transitionType = shape.prototypeInterActions?.find(i => i.id === id)?.actions.transitionType
             const old_nav = shape.prototypeInterActions?.find(i => i.id === id)?.actions.navigationType
             api.shapeModifyPrototypeActionConnNav(this.__page, __shape, id, conn, nav);
@@ -3435,7 +3450,7 @@ export class PageEditor {
     setPrototypeActionTargetNodeID(shape: ShapeView, id: string, value: string) {
         try {
             const api = this.__repo.start('setPrototypeActionTargetNodeID');
-            const __shape = this.shape4protoActions(api, this.__page, shape);
+            const __shape = this.shape4protoActions(api, this.__page, shape, id);
             api.shapeModifyPrototypeActionTargetNodeID(this.__page, __shape, id, value);
             this.__repo.commit();
         } catch (error) {
@@ -3446,7 +3461,7 @@ export class PageEditor {
     setPrototypeActionTransitionType(shape: ShapeView, id: string, value: PrototypeTransitionType) {
         try {
             const api = this.__repo.start('setPrototypeActionTransitionType');
-            const __shape = this.shape4protoActions(api, this.__page, shape);
+            const __shape = this.shape4protoActions(api, this.__page, shape, id);
             api.shapeModifyPrototypeActionTransitionType(this.__page, __shape, id, value);
             this.__repo.commit();
         } catch (error) {
@@ -3457,7 +3472,7 @@ export class PageEditor {
     setPrototypeActionTransitionDuration(shape: ShapeView, id: string, value: number) {
         try {
             const api = this.__repo.start('setPrototypeActionTransitionDuration');
-            const __shape = this.shape4protoActions(api, this.__page, shape);
+            const __shape = this.shape4protoActions(api, this.__page, shape, id);
             api.shapeModifyPrototypeActionTransitionDuration(this.__page, __shape, id, value);
             this.__repo.commit();
         } catch (error) {
@@ -3468,7 +3483,7 @@ export class PageEditor {
     setPrototypeActionEasingType(shape: ShapeView, id: string, value: PrototypeEasingType, esfn: BasicArray<number>) {
         try {
             const api = this.__repo.start('setPrototypeActionEasingType');
-            const __shape = this.shape4protoActions(api, this.__page, shape);
+            const __shape = this.shape4protoActions(api, this.__page, shape, id);
             api.shapeModifyPrototypeActionEasingType(this.__page, __shape, id, value, esfn);
             this.__repo.commit();
         } catch (error) {
@@ -3479,7 +3494,7 @@ export class PageEditor {
     setPrototypeActionConnectionURL(shape: ShapeView, id: string, value: string) {
         try {
             const api = this.__repo.start('setPrototypeActionConnectionURL');
-            const __shape = this.shape4protoActions(api, this.__page, shape);
+            const __shape = this.shape4protoActions(api, this.__page, shape, id);
             api.shapeModifyPrototypeActionConnectionURL(this.__page, __shape, id, value);
             this.__repo.commit();
         } catch (error) {
@@ -3490,7 +3505,7 @@ export class PageEditor {
     setPrototypeActionOpenUrlInNewTab(shape: ShapeView, id: string, value: boolean) {
         try {
             const api = this.__repo.start('setPrototypeActionOpenUrlInNewTab');
-            const __shape = this.shape4protoActions(api, this.__page, shape);
+            const __shape = this.shape4protoActions(api, this.__page, shape, id);
             api.shapeModifyPrototypeActionOpenUrlInNewTab(this.__page, __shape, id, value);
             this.__repo.commit();
         } catch (error) {
@@ -3501,7 +3516,7 @@ export class PageEditor {
     setPrototypeActionEasingFunction(shape: ShapeView, id: string, value: BasicArray<number>) {
         try {
             const api = this.__repo.start('setPrototypeActionOpenUrlInNewTab');
-            const __shape = this.shape4protoActions(api, this.__page, shape);
+            const __shape = this.shape4protoActions(api, this.__page, shape, id);
             api.shapeModifyPrototypeActionEasingFunction(this.__page, __shape, id, value);
             this.__repo.commit();
         } catch (error) {
@@ -3512,7 +3527,7 @@ export class PageEditor {
     setPrototypeExtraScrollOffsetX(shape: ShapeView, id: string, value: number) {
         try {
             const api = this.__repo.start('setPrototypeExtraScrollOffsetX');
-            const __shape = this.shape4protoActions(api, this.__page, shape);
+            const __shape = this.shape4protoActions(api, this.__page, shape, id);
             api.shapeModifyPrototypeExtraScrollOffsetX(this.__page, __shape, id, value);
             this.__repo.commit();
         } catch (error) {
@@ -3523,7 +3538,7 @@ export class PageEditor {
     setPrototypeExtraScrollOffsetY(shape: ShapeView, id: string, value: number) {
         try {
             const api = this.__repo.start('setPrototypeExtraScrollOffsetY');
-            const __shape = this.shape4protoActions(api, this.__page, shape);
+            const __shape = this.shape4protoActions(api, this.__page, shape, id);
             api.shapeModifyPrototypeExtraScrollOffsetY(this.__page, __shape, id, value);
             this.__repo.commit();
         } catch (error) {

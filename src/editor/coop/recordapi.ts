@@ -31,7 +31,7 @@ import {
     PrototypeNavigationType,
     PrototypeTransitionType,
     PrototypeEasingType,
-    PrototypeExtrascrolloffset,
+    Point2D,
     OverlayPositionType,
     OverlayBackgroundInteraction,
     OverlayBackgroundAppearance,
@@ -46,7 +46,6 @@ import {
     BulletNumbersType,
     ExportFileFormat,
     OverrideType,
-    Point2D,
     StrikethroughType,
     TextTransformType,
     UnderlineType,
@@ -60,6 +59,7 @@ import {
     ImageScaleMode,
     PaintFilterType,
 } from "../../data/typesdefine";
+import * as types from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
 import { ContactForm, ContactRole, ContextSettings, CurvePoint, ExportFormat, ExportOptions, PaintFilter, PrototypeInterAction } from "../../data/baseclasses";
@@ -525,6 +525,14 @@ export class Api {
         this.addOp(basicapi.crdtArrayRemove(prototypeInteractions, index))
     }
 
+    shapeModifyPrototypeActionDeleted(page: Page, shape: Shape | Variable, id: string, isDeleted: boolean) {
+        checkShapeAtPage(page, shape)
+        const prototypeInteractions: BasicArray<PrototypeInterAction> = shape instanceof Variable ? shape.value : shape.prototypeInteractions;
+        const action = prototypeInteractions?.find(i => i.id === id)
+        if (!action || (!!action.isDeleted) === isDeleted) return;
+        this.addOp(basicapi.crdtSetAttr(action, 'isDeleted', isDeleted))
+    }
+
     shapeModifyPrototypeActionEvent(page: Page, shape: Shape | Variable, id: string, value: PrototypeEvents) {
         checkShapeAtPage(page, shape)
         const prototypeInteractions: BasicArray<PrototypeInterAction> = shape instanceof Variable ? shape.value : shape.prototypeInteractions;
@@ -624,7 +632,7 @@ export class Api {
         let extraScrollOffset = action.extraScrollOffset
         if (!extraScrollOffset) {
             const id = uuid()
-            extraScrollOffset = new PrototypeExtrascrolloffset(id, 0, 0)
+            extraScrollOffset = new Point2D(0, 0)
             this.addOp(basicapi.crdtSetAttr(action, 'extraScrollOffset', extraScrollOffset))
         }
         this.addOp(basicapi.crdtSetAttr(extraScrollOffset, 'x', value))
@@ -639,7 +647,7 @@ export class Api {
         let extraScrollOffset = action.extraScrollOffset
         if (!extraScrollOffset) {
             const id = uuid()
-            extraScrollOffset = new PrototypeExtrascrolloffset(id, 0, 0)
+            extraScrollOffset = new Point2D(0, 0)
             this.addOp(basicapi.crdtSetAttr(action, 'extraScrollOffset', extraScrollOffset))
         }
         this.addOp(basicapi.crdtSetAttr(extraScrollOffset, 'y', value))
@@ -731,15 +739,15 @@ export class Api {
     shapeModifyFixedRadius(page: Page, shape: GroupShape | PathShape | PathShape2 | TextShape, fixedRadius: number | undefined) {
         this._shapeModifyAttr(page, shape, "fixedRadius", fixedRadius);
     }
-    shapeModifyCurvPoint(page: Page, shape: Shape, index: number, point: Point2D, segmentIndex: number) {
+    shapeModifyCurvPoint(page: Page, shape: Shape, index: number, point: types.Point2D, segmentIndex: number) {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.shapeModifyCurvPoint(shape, index, point, segmentIndex));
     }
-    shapeModifyCurvFromPoint(page: Page, shape: Shape, index: number, point: Point2D, segmentIndex: number) {
+    shapeModifyCurvFromPoint(page: Page, shape: Shape, index: number, point: types.Point2D, segmentIndex: number) {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.shapeModifyCurvFromPoint(shape, index, point, segmentIndex));
     }
-    shapeModifyCurvToPoint(page: Page, shape: Shape, index: number, point: Point2D, segmentIndex: number) {
+    shapeModifyCurvToPoint(page: Page, shape: Shape, index: number, point: types.Point2D, segmentIndex: number) {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.shapeModifyCurvToPoint(shape, index, point, segmentIndex));
     }

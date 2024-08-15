@@ -20,7 +20,7 @@ import {
     importTableCell,
     importVariable,
     importOverlayBackgroundAppearance,
-    importPrototypeExtrascrolloffset,
+    importPoint2D,
     importPrototypeActions_easingFunction,
     importPrototypeActions,
     importOverlayPosition
@@ -42,7 +42,7 @@ importh['symbol-shape'] = importSymbolShape;
 importh['symbol-union-shape'] = importSymbolUnionShape;
 importh['prototype-starting-point'] = importPrototypeStartingPoint;
 importh['overlay-background-appearance'] = importOverlayBackgroundAppearance;
-importh['prototype-extrascrolloffset'] = importPrototypeExtrascrolloffset;
+importh['prototype-extrascrolloffset'] = importPoint2D;
 importh['prototype-actions'] = importPrototypeActions;
 importh['paint-filter'] = importPaintFilter;
 importh['overlay-position']=importOverlayPosition
