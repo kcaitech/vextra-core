@@ -1,4 +1,4 @@
-import { __objidkey } from '../basic/objectid';
+
 import { IDataGuard, WatchableObject } from './basic';
 
 class ProxyHandler {
