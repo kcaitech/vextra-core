@@ -1027,26 +1027,26 @@ export class ShapeView extends DataView {
 
     get prototypeInterActions(): BasicArray<PrototypeInterAction> | undefined {
         const v = this._findOV(OverrideType.ProtoInteractions, VariableType.ProtoInteractions);
-        if (v?.value) {
-            // 需要做合并
-            const interactions = (v.value as BasicArray<PrototypeInterAction>).slice(0);
-            const deleted = interactions.filter((v) => !!v.isDeleted);
-            const inherit = this.m_data.prototypeInteractions || [];
-            const ret = new BasicArray<PrototypeInterAction>();
-            inherit.forEach(v => {
-                if (v.isDeleted) return;
-                if (deleted.find(v1 => v1.id === v.id)) return;
-                const o = interactions.find(v1 => v1.id === v.id);
-                ret.push(o ? o : v);
-            })
-            interactions.forEach(v => {
-                if (v.isDeleted) return;
-                if (inherit.find(v1 => v1.id === v.id)) return;
-                ret.push(v);
-            })
-            return ret;
+        if (!v?.value) {
+            return this.inheritPrototypeInterActions;
         }
-        return this.inheritPrototypeInterActions;
+        // 需要做合并
+        const interactions = (v.value as BasicArray<PrototypeInterAction>).slice(0);
+        const deleted = interactions.filter((v) => !!v.isDeleted);
+        const inherit = this.m_data.prototypeInteractions || [];
+        const ret = new BasicArray<PrototypeInterAction>();
+        inherit.forEach(v => {
+            if (v.isDeleted) return;
+            if (deleted.find(v1 => v1.id === v.id)) return;
+            const o = interactions.find(v1 => v1.id === v.id);
+            ret.push(o ? o : v);
+        })
+        interactions.forEach(v => {
+            if (v.isDeleted) return;
+            if (inherit.find(v1 => v1.id === v.id)) return;
+            ret.push(v);
+        })
+        return ret;
     }
     get inheritPrototypeInterActions(): BasicArray<PrototypeInterAction> | undefined {
         return this.m_data.prototypeInteractions;
