@@ -33,6 +33,7 @@ import { fixTextShapeFrameByLayout } from "../utils/other";
 
 export class LockMouseHandler extends AsyncApiCaller {
     updateFrameTargets: Set<Shape> = new Set();
+    private whRatioMap = new Map<string, number>();
 
     constructor(repo: CoopRepository, document: Document, page: PageView) {
         super(repo, document, page);
@@ -80,29 +81,36 @@ export class LockMouseHandler extends AsyncApiCaller {
         try {
             const api = this.api;
             const page = this.page;
-
+            const whRatioMap = this.whRatioMap;
             for (let i = 0; i < shapes.length; i++) {
                 const view = shapes[i];
                 const shape = adapt2Shape(view);
                 if (shape.isVirtualShape) continue;
-
                 const size = shape.size;
+                let dh = 0;
+                if (shape.constrainerProportions) {
+                    if (!whRatioMap.has(shape.id)) {
+                        const ratio = size.width / size.height;
+                        whRatioMap.set(shape.id, ratio);
+                    }
+                    const ratio = whRatioMap.get(shape.id);
+                    if (ratio) dh = dw / ratio;
+                }
+                api.shapeModifyWidth(page, shape, size.width + dw)
+                if (dh) api.shapeModifyHeight(page, shape, size.height + dh);
                 if (shape instanceof TextShape) {
                     const textBehaviour = shape.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
                     if (textBehaviour === TextBehaviour.Flexible) {
                         api.shapeModifyTextBehaviour(page, shape.text, TextBehaviour.Fixed);
                     }
-                    api.shapeModifyWidth(page, shape, size.width + dw)
                     fixTextShapeFrameByLayout(api, page, shape);
-                } else {
-                    api.shapeModifyWidth(page, shape, size.width + dw);
                 }
 
                 if (view instanceof GroupShapeView) {
                     reLayoutBySizeChanged(api, page, view, {
                         x: Math.abs(size.width / (size.width - dw)),
-                        y: 1
-                    }, new Map(), new Map(), new Map());
+                        y: Math.abs(size.height / (size.height - dh))
+                    });
                 }
             }
             this.updateView();
@@ -116,29 +124,35 @@ export class LockMouseHandler extends AsyncApiCaller {
         try {
             const api = this.api;
             const page = this.page;
-
+            const whRatioMap = this.whRatioMap;
             for (let i = 0; i < shapes.length; i++) {
                 const view = shapes[i];
                 const shape = adapt2Shape(view);
                 if (shape.isVirtualShape) continue;
-
                 const size = shape.size;
+                let dw = 0;
+                if (shape.constrainerProportions) {
+                    if (!whRatioMap.has(shape.id)) {
+                        const ratio = size.width / size.height;
+                        whRatioMap.set(shape.id, ratio);
+                    }
+                    const ratio = whRatioMap.get(shape.id);
+                    if (ratio) dw = dh * ratio;
+                }
+                api.shapeModifyHeight(page, shape, size.height + dh);
+                if (dw) api.shapeModifyWidth(page, shape, size.width + dw);
                 if (shape instanceof TextShape) {
                     const textBehaviour = shape.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
                     if (textBehaviour !== TextBehaviour.FixWidthAndHeight) {
                         api.shapeModifyTextBehaviour(page, shape.text, TextBehaviour.FixWidthAndHeight);
                     }
-                    api.shapeModifyHeight(page, shape, size.height + dh)
                     fixTextShapeFrameByLayout(api, page, shape);
-                } else {
-                    api.shapeModifyHeight(page, shape, size.height + dh);
                 }
-
                 if (view instanceof GroupShapeView) {
                     reLayoutBySizeChanged(api, page, view, {
-                        x: 1,
+                        x: Math.abs(size.width / (size.width - dw)),
                         y: Math.abs(size.height / (size.height - dh))
-                    }, new Map(), new Map(), new Map());
+                    });
                 }
             }
             this.updateView();

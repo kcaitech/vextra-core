@@ -33,7 +33,7 @@ import {
     newArrowShape,
     newArtboard,
     newBoolShape,
-    newGroupShape,
+    newGroupShape, newImageFillShape,
     newLineShape,
     newOvalShape,
     newPathShape,
@@ -83,7 +83,7 @@ import {
 } from "../data/baseimport";
 import { gPal } from "../basic/pal";
 import { findUsableBorderStyle, findUsableFillStyle } from "../render/boolgroup";
-import { BasicArray } from "../data/basic";
+import { BasicArray, ResourceMgr } from "../data/basic";
 import { TableEditor } from "./table";
 import { exportArtboard, exportGradient, exportStop, exportSymbolShape, exportVariable } from "../data/baseexport";
 import {
@@ -162,7 +162,7 @@ import { FMT_VER_latest } from "../data/fmtver";
 import { makeShapeTransform1By2, makeShapeTransform2By1, updateShapeTransform1By2 } from "../data/shape_transform_util";
 import { ColVector3D } from "../basic/matrix2";
 import { Transform as Transform2 } from "../basic/transform";
-
+import { getFormatFromBase64 } from "../basic/utils";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -339,6 +339,26 @@ export interface ExportFormatFileFormatAction {
     target: Shape
     index: number
     value: ExportFileFormat
+}
+
+export interface ImagePack {
+    size: {
+        width: number;
+        height: number;
+    },
+    buff: Uint8Array;
+    base64: string;
+    name: string;
+}
+
+export interface SVGParseResult {
+    shape: Shape,
+    mediaResourceMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>
+}
+
+export interface UploadAssets {
+    ref: string,
+    buff: Uint8Array
 }
 
 export function getHorizontalRadians(A: {
@@ -4170,6 +4190,58 @@ export class PageEditor {
         } catch (error) {
             console.error('outlineShapes:', error);
             this.__repo.rollback();
+        }
+    }
+
+    insertImages(images: { pack: ImagePack | SVGParseResult, transform: Transform }[], env?: GroupShapeView) {
+        try {
+            const ids: string[] = [];
+            const imageShapes: { shape: Shape, upload: UploadAssets[] }[] = [];
+            const api = this.__repo.start('insertImagesToPage', (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+                const state = {} as SelectionState;
+                if (!isUndo) state.shapes = ids;
+                else state.shapes = cmd.saveselection?.shapes || [];
+                selection.restore(state);
+            });
+            const document = this.__document;
+            const page = this.__page;
+            const parent = (env ? adapt2Shape(env) : this.__page) as GroupShape;
+            for (const item of images) {
+                if ((item.pack as ImagePack).size) {
+                    const { size, name, buff, base64 } = item.pack as ImagePack;
+                    const format = getFormatFromBase64(base64);
+                    const ref = `${v4()}.${format}`;
+                    document.mediasMgr.add(ref, { buff, base64 });
+                    const reg = new RegExp(`.${format}|.jpg$`, 'img');
+                    const shape = newImageFillShape(name.replace(reg, '') || 'image', new ShapeFrame(0, 0, size.width, size.height), document.mediasMgr, size, ref);
+                    shape.transform = item.transform;
+                    const index = parent.childs.length;
+                    const __s = api.shapeInsert(document, page, parent, shape, index);
+                    if (__s) {
+                        ids.push(__s.id);
+                        imageShapes.push({ shape: __s, upload: [{ ref, buff }] });
+                    }
+                } else {
+                    const shape = (item.pack as SVGParseResult).shape;
+                    shape.transform = item.transform;
+                    const index = parent.childs.length;
+                    const __s = api.shapeInsert(document, page, parent, shape, index);
+                    if (__s) {
+                        ids.push(__s.id);
+                        const upload: UploadAssets[] = [];
+                        (item.pack as SVGParseResult).mediaResourceMgr.forEach((v, k) => {
+                            upload.push({ ref: k, buff: v.buff });
+                        })
+                        imageShapes.push({ shape: __s, upload });
+                    }
+                }
+            }
+            this.__repo.commit();
+            return imageShapes;
+        } catch (e) {
+            this.__repo.rollback();
+            console.error('insertImagesToPage:', e);
+            return false;
         }
     }
 
