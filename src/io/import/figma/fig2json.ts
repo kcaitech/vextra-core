@@ -174,7 +174,8 @@ export const figToJson = (fileBuffer: Buffer | ArrayBuffer): object => {
         }
     }
 
-    return convertBlobsToBase64(json)
+    // return convertBlobsToBase64(json)
+    return json
 }
 
 function convertBlobsToBase64(json: any): object {

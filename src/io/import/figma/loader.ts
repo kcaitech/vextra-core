@@ -43,6 +43,7 @@ export function startLoader(file: IJSON, pages: IJSON[], document: Document, nod
         const ext = extIndex !== -1 ? id.substring(extIndex + 1) : '';
 
         const buffer = unzipped[`images/${idWithoutExt}`];
+        if (!buffer) return {buff: new Uint8Array(), base64: ""};
 
         const uInt8Array = buffer;
         let i = uInt8Array.length;
