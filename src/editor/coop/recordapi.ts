@@ -24,7 +24,21 @@ import {
     TableCellType,
     TableShape,
     Artboard, Guide,
-    Transform
+    Transform,
+    PrototypeStartingPoint,
+    PrototypeEvents,
+    PrototypeConnectionType,
+    PrototypeNavigationType,
+    PrototypeTransitionType,
+    PrototypeEasingType,
+    Point2D,
+    OverlayPositionType,
+    OverlayBackgroundInteraction,
+    OverlayBackgroundAppearance,
+    OverlayBackgroundType,
+    ScrollDirection,
+    OverlayPosition,
+    OverlayMargin
 } from "../../data/classes";
 import {
     BoolOp,
@@ -32,7 +46,6 @@ import {
     BulletNumbersType,
     ExportFileFormat,
     OverrideType,
-    Point2D,
     StrikethroughType,
     TextTransformType,
     UnderlineType,
@@ -46,9 +59,10 @@ import {
     ImageScaleMode,
     PaintFilterType,
 } from "../../data/typesdefine";
+import * as types from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
-import { ContactForm, ContactRole, ContextSettings, CurvePoint, ExportFormat, ExportOptions, PaintFilter } from "../../data/baseclasses";
+import { ContactForm, ContactRole, ContextSettings, CurvePoint, ExportFormat, ExportOptions, PaintFilter, PrototypeInterAction } from "../../data/baseclasses";
 import { ContactShape } from "../../data/contact"
 import { Color } from "../../data/classes";
 import { Op, OpType } from "../../coop/common/op";
@@ -482,6 +496,234 @@ export class Api {
         }
         this.addOp(basicapi.crdtSetAttr(contextSettings, 'blenMode', blendMode));
     }
+    setShapeProtoStart(page: Page, shape: Shape, PSPoint: PrototypeStartingPoint | undefined) {
+        checkShapeAtPage(page, shape);
+        this.addOp(basicapi.crdtSetAttr(shape, "prototypeStartingPoint", PSPoint));
+    }
+
+    delShapeProtoStart(page: Page, shape: Shape) {
+        checkShapeAtPage(page, shape);
+        this.addOp(basicapi.crdtSetAttr(shape, "prototypeStartingPoint", undefined));
+    }
+
+    insertShapeprototypeInteractions(page: Page, shape: Shape | Variable, action: PrototypeInterAction) {
+        checkShapeAtPage(page, shape)
+        let prototypeInteractions = shape instanceof Variable ? shape.value : shape.prototypeInteractions;
+        if (!prototypeInteractions && shape instanceof Shape) {
+            shape.prototypeInteractions = new BasicArray<PrototypeInterAction>();
+            prototypeInteractions = shape.prototypeInteractions!;
+        }
+        if (!prototypeInteractions) throw new Error();
+        this.addOp(basicapi.crdtArrayInsert(prototypeInteractions, prototypeInteractions.length, action))
+    }
+
+    deleteShapePrototypeInteractions(page: Page, shape: Shape | Variable, id: string) {
+        checkShapeAtPage(page, shape)
+        const prototypeInteractions: BasicArray<PrototypeInterAction> = shape instanceof Variable ? shape.value : shape.prototypeInteractions;
+        if (!prototypeInteractions) return;
+        const index = prototypeInteractions?.findIndex(i => i.id === id)
+        this.addOp(basicapi.crdtArrayRemove(prototypeInteractions, index))
+    }
+
+    shapeModifyPrototypeActionDeleted(page: Page, shape: Shape | Variable, id: string, isDeleted: boolean) {
+        checkShapeAtPage(page, shape)
+        const prototypeInteractions: BasicArray<PrototypeInterAction> = shape instanceof Variable ? shape.value : shape.prototypeInteractions;
+        const action = prototypeInteractions?.find(i => i.id === id)
+        if (!action || (!!action.isDeleted) === isDeleted) return;
+        this.addOp(basicapi.crdtSetAttr(action, 'isDeleted', isDeleted))
+    }
+
+    shapeModifyPrototypeActionEvent(page: Page, shape: Shape | Variable, id: string, value: PrototypeEvents) {
+        checkShapeAtPage(page, shape)
+        const prototypeInteractions: BasicArray<PrototypeInterAction> = shape instanceof Variable ? shape.value : shape.prototypeInteractions;
+        const action = prototypeInteractions?.find(i => i.id === id)
+        if (!action) return;
+        this.addOp(basicapi.crdtSetAttr(action.event, 'interactionType', value))
+    }
+
+    shapeModifyPrototypeActionEventTime(page: Page, shape: Shape | Variable, id: string, value: number) {
+        checkShapeAtPage(page, shape)
+        const prototypeInteractions: BasicArray<PrototypeInterAction> = shape instanceof Variable ? shape.value : shape.prototypeInteractions;
+        const action = prototypeInteractions?.find(i => i.id === id)
+        if (!action) return;
+        this.addOp(basicapi.crdtSetAttr(action.event, 'transitionTimeout', value))
+    }
+
+    shapeModifyPrototypeActionConnNav(page: Page, shape: Shape | Variable, id: string, conn: PrototypeConnectionType | undefined, nav: PrototypeNavigationType | undefined) {
+        checkShapeAtPage(page, shape)
+        const prototypeInteractions: BasicArray<PrototypeInterAction> = shape instanceof Variable ? shape.value : shape.prototypeInteractions;
+        if (!prototypeInteractions) return;
+        const action = prototypeInteractions?.find(i => i.id === id)?.actions;
+        if (!action) return;
+        this.addOp(basicapi.crdtSetAttr(action, 'connectionType', conn))
+        this.addOp(basicapi.crdtSetAttr(action, 'navigationType', nav))
+    }
+
+    shapeModifyPrototypeActionTargetNodeID(page: Page, shape: Shape | Variable, id: string, value: string | undefined) {
+        checkShapeAtPage(page, shape)
+        const prototypeInteractions: BasicArray<PrototypeInterAction> = shape instanceof Variable ? shape.value : shape.prototypeInteractions;
+        if (!prototypeInteractions) return;
+        const action = prototypeInteractions?.find(i => i.id === id)?.actions;
+        if (!action) return;
+        this.addOp(basicapi.crdtSetAttr(action, 'targetNodeID', value))
+    }
+
+    shapeModifyPrototypeActionTransitionType(page: Page, shape: Shape | Variable, id: string, value: PrototypeTransitionType) {
+        checkShapeAtPage(page, shape)
+        const prototypeInteractions: BasicArray<PrototypeInterAction> = shape instanceof Variable ? shape.value : shape.prototypeInteractions;
+        if (!prototypeInteractions) return;
+        const action = prototypeInteractions?.find(i => i.id === id)?.actions;
+        if (!action) return;
+        this.addOp(basicapi.crdtSetAttr(action, 'transitionType', value))
+    }
+
+    shapeModifyPrototypeActionTransitionDuration(page: Page, shape: Shape | Variable, id: string, value: number) {
+        checkShapeAtPage(page, shape)
+        const prototypeInteractions: BasicArray<PrototypeInterAction> = shape instanceof Variable ? shape.value : shape.prototypeInteractions;
+        if (!prototypeInteractions) return;
+        const action = prototypeInteractions?.find(i => i.id === id)?.actions;
+        if (!action) return;
+        this.addOp(basicapi.crdtSetAttr(action, 'transitionDuration', value))
+    }
+
+    shapeModifyPrototypeActionEasingType(page: Page, shape: Shape | Variable, id: string, value: PrototypeEasingType, esfn: BasicArray<number>) {
+        checkShapeAtPage(page, shape)
+        const prototypeInteractions: BasicArray<PrototypeInterAction> = shape instanceof Variable ? shape.value : shape.prototypeInteractions;
+        if (!prototypeInteractions) return;
+        const action = prototypeInteractions?.find(i => i.id === id)?.actions;
+        if (!action) return;
+        this.addOp(basicapi.crdtSetAttr(action, 'easingType', value));
+        this.addOp(basicapi.crdtSetAttr(action, 'easingFunction', esfn))
+    }
+
+    shapeModifyPrototypeActionConnectionURL(page: Page, shape: Shape | Variable, id: string, value: string) {
+        checkShapeAtPage(page, shape)
+        const prototypeInteractions: BasicArray<PrototypeInterAction> = shape instanceof Variable ? shape.value : shape.prototypeInteractions;
+        if (!prototypeInteractions) return;
+        const action = prototypeInteractions?.find(i => i.id === id)?.actions;
+        if (!action) return;
+        this.addOp(basicapi.crdtSetAttr(action, 'connectionURL', value))
+    }
+
+    shapeModifyPrototypeActionOpenUrlInNewTab(page: Page, shape: Shape | Variable, id: string, value: boolean) {
+        checkShapeAtPage(page, shape)
+        const prototypeInteractions: BasicArray<PrototypeInterAction> = shape instanceof Variable ? shape.value : shape.prototypeInteractions;
+        if (!prototypeInteractions) return;
+        const action = prototypeInteractions?.find(i => i.id === id)?.actions;
+        if (!action) return;
+        this.addOp(basicapi.crdtSetAttr(action, 'openUrlInNewTab', value))
+    }
+
+    shapeModifyPrototypeActionEasingFunction(page: Page, shape: Shape | Variable, id: string, value: BasicArray<number>) {
+        checkShapeAtPage(page, shape)
+        const prototypeInteractions: BasicArray<PrototypeInterAction> = shape instanceof Variable ? shape.value : shape.prototypeInteractions;
+        if (!prototypeInteractions) return;
+        const action = prototypeInteractions?.find(i => i.id === id)?.actions;
+        if (!action) return;
+        this.addOp(basicapi.crdtSetAttr(action, 'easingFunction', value))
+    }
+
+    shapeModifyPrototypeExtraScrollOffsetX(page: Page, shape: Shape | Variable, id: string, value: number) {
+        checkShapeAtPage(page, shape)
+        const prototypeInteractions: BasicArray<PrototypeInterAction> = shape instanceof Variable ? shape.value : shape.prototypeInteractions;
+        if (!prototypeInteractions) return;
+        const action = prototypeInteractions?.find(i => i.id === id)?.actions;
+        if (!action) return;
+        let extraScrollOffset = action.extraScrollOffset
+        if (!extraScrollOffset) {
+            const id = uuid()
+            extraScrollOffset = new Point2D(0, 0)
+            this.addOp(basicapi.crdtSetAttr(action, 'extraScrollOffset', extraScrollOffset))
+        }
+        this.addOp(basicapi.crdtSetAttr(extraScrollOffset, 'x', value))
+    }
+
+    shapeModifyPrototypeExtraScrollOffsetY(page: Page, shape: Shape | Variable, id: string, value: number) {
+        checkShapeAtPage(page, shape)
+        const prototypeInteractions: BasicArray<PrototypeInterAction> = shape instanceof Variable ? shape.value : shape.prototypeInteractions;
+        if (!prototypeInteractions) return;
+        const action = prototypeInteractions?.find(i => i.id === id)?.actions;
+        if (!action) return;
+        let extraScrollOffset = action.extraScrollOffset
+        if (!extraScrollOffset) {
+            const id = uuid()
+            extraScrollOffset = new Point2D(0, 0)
+            this.addOp(basicapi.crdtSetAttr(action, 'extraScrollOffset', extraScrollOffset))
+        }
+        this.addOp(basicapi.crdtSetAttr(extraScrollOffset, 'y', value))
+
+    }
+
+    shapeModifyOverlayPositionType(page: Page, shape: Shape, value: OverlayPositionType) {
+        checkShapeAtPage(page, shape)
+        let overlayPosition: OverlayPosition | undefined = shape.overlayPosition
+        if (!overlayPosition && shape instanceof Shape) {
+            overlayPosition = new OverlayPosition(OverlayPositionType.CENTER, new OverlayMargin())
+            shape.overlayPosition = overlayPosition;
+        }
+        if (!overlayPosition) throw new Error();
+        this.addOp(basicapi.crdtSetAttr(overlayPosition, 'position', value))
+        const margin = overlayPosition.margin
+        if (!margin) return;
+        if (margin.top) this.addOp(basicapi.crdtSetAttr(margin, 'top', 0))
+        if (margin.bottom) this.addOp(basicapi.crdtSetAttr(margin, 'bottom', 0))
+        if (margin.left) this.addOp(basicapi.crdtSetAttr(margin, 'left', 0))
+        if (margin.right) this.addOp(basicapi.crdtSetAttr(margin, 'right', 0))
+    }
+
+    shapeModifyOverlayPositionTypeMarginTop(page: Page, shape: Shape, value: number) {
+        checkShapeAtPage(page, shape)
+        const overlayPosition: OverlayPosition | undefined = shape.overlayPosition
+        const margin = overlayPosition?.margin
+        if (!margin) return;
+        this.addOp(basicapi.crdtSetAttr(margin, 'top', value))
+    }
+
+    shapeModifyOverlayPositionTypeMarginBottom(page: Page, shape: Shape, value: number) {
+        checkShapeAtPage(page, shape)
+        const overlayPosition: OverlayPosition | undefined = shape.overlayPosition
+        const margin = overlayPosition?.margin
+        if (!margin) return;
+        this.addOp(basicapi.crdtSetAttr(margin, 'bottom', value))
+    }
+
+    shapeModifyOverlayPositionTypeMarginLeft(page: Page, shape: Shape, value: number) {
+        checkShapeAtPage(page, shape)
+        const overlayPosition: OverlayPosition | undefined = shape.overlayPosition
+        const margin = overlayPosition?.margin
+        if (!margin) return;
+        this.addOp(basicapi.crdtSetAttr(margin, 'left', value))
+    }
+
+    shapeModifyOverlayPositionTypeMarginRight(page: Page, shape: Shape, value: number) {
+        checkShapeAtPage(page, shape)
+        const overlayPosition: OverlayPosition | undefined = shape.overlayPosition
+        const margin = overlayPosition?.margin
+        if (!margin) return;
+        this.addOp(basicapi.crdtSetAttr(margin, 'right', value))
+    }
+
+    shapeModifyOverlayBackgroundInteraction(page: Page, shape: Shape, value: OverlayBackgroundInteraction) {
+        checkShapeAtPage(page, shape)
+        this.addOp(basicapi.crdtSetAttr(shape, "overlayBackgroundInteraction", value));
+    }
+
+    shapeModifyOverlayBackgroundAppearance(page: Page, shape: Shape, value?: OverlayBackgroundAppearance) {
+        checkShapeAtPage(page, shape)
+        let Appearance = (shape as Artboard).overlayBackgroundAppearance
+        if (!Appearance) {
+            const val = new OverlayBackgroundAppearance(OverlayBackgroundType.SOLIDCOLOR, new Color(0.25, 0, 0, 0))
+            this.addOp(basicapi.crdtSetAttr(shape, "overlayBackgroundAppearance", val));
+        } else {
+            this.addOp(basicapi.crdtSetAttr(shape, "overlayBackgroundAppearance", value));
+        }
+    }
+
+    shapeModifyscrollDirection(page: Page, shape: Shape, value: ScrollDirection) {
+        checkShapeAtPage(page, shape)
+        this.addOp(basicapi.crdtSetAttr(shape, "scrollDirection", value));
+    }
+
     shapeModifyResizingConstraint(page: Page, shape: Shape, resizingConstraint: number) {
         this._shapeModifyAttr(page, shape, "resizingConstraint", resizingConstraint);
     }
@@ -497,15 +739,15 @@ export class Api {
     shapeModifyFixedRadius(page: Page, shape: GroupShape | PathShape | PathShape2 | TextShape, fixedRadius: number | undefined) {
         this._shapeModifyAttr(page, shape, "fixedRadius", fixedRadius);
     }
-    shapeModifyCurvPoint(page: Page, shape: Shape, index: number, point: Point2D, segmentIndex: number) {
+    shapeModifyCurvPoint(page: Page, shape: Shape, index: number, point: types.Point2D, segmentIndex: number) {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.shapeModifyCurvPoint(shape, index, point, segmentIndex));
     }
-    shapeModifyCurvFromPoint(page: Page, shape: Shape, index: number, point: Point2D, segmentIndex: number) {
+    shapeModifyCurvFromPoint(page: Page, shape: Shape, index: number, point: types.Point2D, segmentIndex: number) {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.shapeModifyCurvFromPoint(shape, index, point, segmentIndex));
     }
-    shapeModifyCurvToPoint(page: Page, shape: Shape, index: number, point: Point2D, segmentIndex: number) {
+    shapeModifyCurvToPoint(page: Page, shape: Shape, index: number, point: types.Point2D, segmentIndex: number) {
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.shapeModifyCurvToPoint(shape, index, point, segmentIndex));
     }
