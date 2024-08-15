@@ -110,11 +110,11 @@ export class DViewCtx extends EventEmitter {
 
     setReLayout(v: DataView) {
         this.relayoutset.set(objectId(v), v);
-        this._continueLoop();
+        this.continueLoop();
     }
     setDirty(v: DataView) {
         this.dirtyset.set(objectId(v), v);
-        this._continueLoop();
+        this.continueLoop();
     }
 
     addNotifyLayout(v: DataView) {
@@ -280,7 +280,7 @@ export class DViewCtx extends EventEmitter {
         return this.onIdle();
     }
 
-    private _continueLoop() {
+    continueLoop() {
         if (this.__looping && !this.__inframe && this.requestAnimationFrame) this._startLoop(this.requestAnimationFrame);
     }
 
