@@ -21,13 +21,13 @@ export type BoolOpFuns = {
 
 export type TextPathFun = (font: string, fontSize: number, italic: boolean, weight: number, charCode: number) => string;
 
-enum Join {
+export enum Join {
     "MITER",
     "ROUND",
     "BEVEL"
 }
 
-enum Cap {
+export enum Cap {
     "BUTT",
     "ROUND",
     "SQUARE",
@@ -42,17 +42,26 @@ export interface StrokeOpts {
     res_scale?: number;
     join?: Join;
     cap?: Cap;
-};
+}
 
 export interface IPalPath {
     difference(path: IPalPath): boolean,
+
     intersection(path: IPalPath): boolean,
+
     subtract(path: IPalPath): boolean,
+
     union(path: IPalPath): boolean
+
     addPath(path: IPalPath): boolean
+
     toSVGString(): string;
+
     delete(): void;
+
     stroke(ops?: StrokeOpts): string;
+
+    dash(on: number, off: number, phase: number): boolean;
 }
 
 export const gPal: {
@@ -61,7 +70,7 @@ export const gPal: {
         getTextPath: TextPathFun,
     },
     boolop: BoolOpFuns,
-    makePalPath: (path: string) => IPalPath,
+    makePalPath: (path: string) => IPalPath
 } = {
     text: {
         textMeasure: (code: string, font: string) => undefined,

@@ -22,8 +22,8 @@ export class TableCellView extends ShapeView {
         const frame = props.frame;
         this.m_transform.m02 = frame.x;
         this.m_transform.m12 = frame.y;
-        this.m_frame.x = frame.x;
-        this.m_frame.y = frame.y;
+        // this.m_frame.x = frame.x;
+        // this.m_frame.y = frame.y;
         this.m_frame.width = frame.width;
         this.m_frame.height = frame.height;
         this.m_index = props.index;
@@ -63,8 +63,8 @@ export class TableCellView extends ShapeView {
             // this.updateLayoutArgs(frame, undefined, undefined, undefined, undefined);
             this.m_transform.m02 = frame.x;
             this.m_transform.m12 = frame.y;
-            this.m_frame.x = frame.x;
-            this.m_frame.y = frame.y;
+            // this.m_frame.x = frame.x;
+            // this.m_frame.y = frame.y;
             this.m_frame.width = frame.width;
             this.m_frame.height = frame.height;
             this.m_textpath = undefined;
