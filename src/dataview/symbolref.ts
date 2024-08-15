@@ -8,6 +8,7 @@ import { findOverride, findVar } from "./basic";
 import { objectId } from "../basic/objectid";
 import { makeShapeTransform1By2, makeShapeTransform2By1 } from "../data/shape_transform_util";
 import { BasicArray } from "../data/basic";
+import { findOverrideAll } from "../data/utils";
 
 // 播放页组件状态切换会话存储refId的key值；
 export const sessionRefIdKey = 'ref-id-cf76c6c6-beed-4c33-ae71-134ee876b990';
@@ -371,6 +372,19 @@ export class SymbolRefView extends ShapeView {
         }
     }
 
+    protected _findOV2All(ot: OverrideType, vt: VariableType): Variable[] | undefined {
+        const data = this.data;
+        const varsContainer = (this.varsContainer || []).concat(data);
+        const id = ""; // ?
+        const _vars = findOverrideAll(id, ot, varsContainer);
+        // if (!_vars) return;
+        // const _var = _vars[_vars.length - 1];
+        // if (_var && _var.type === vt) {
+        //     return _var;
+        // }
+        return _vars;
+    }
+
     get contextSettings(): ContextSettings | undefined {
         const v = this._findOV2(OverrideType.ContextSettings, VariableType.ContextSettings);
         if (v) return v.value;
@@ -411,12 +425,21 @@ export class SymbolRefView extends ShapeView {
 
     get prototypeInterActions(): BasicArray<PrototypeInterAction> | undefined {
         // 三个合并
-        const v = this._findOV2(OverrideType.ProtoInteractions, VariableType.ProtoInteractions);
-        if (!v?.value) {
+        const v = this._findOV2All(OverrideType.ProtoInteractions, VariableType.ProtoInteractions);
+        if (!v) {
             return this.inheritPrototypeInterActions;
         }
         // 需要做合并
-        const overrides = (v.value as BasicArray<PrototypeInterAction>);
+        // 合并vars
+        const overrides = new BasicArray<PrototypeInterAction>();
+        v.reverse().forEach(v => {
+            const o = (v.value as BasicArray<PrototypeInterAction>).slice(0).reverse();
+            o.forEach(o => {
+                if (!overrides.find(o1 => o1.id === o.id)) overrides.push(o);
+            })
+        })
+        overrides.reverse();
+
         const deleted = overrides.filter((v) => !!v.isDeleted);
         const inherit = (this.inheritPrototypeInterActions || []) as BasicArray<PrototypeInterAction>;
         const ret = new BasicArray<PrototypeInterAction>();

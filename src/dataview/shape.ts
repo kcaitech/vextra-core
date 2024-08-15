@@ -48,6 +48,7 @@ import { importBorder, importFill } from "../data/baseimport";
 import { exportBorder, exportFill } from "../data/baseexport";
 import { PageView } from "./page";
 import { ArtboradView } from "./artboard";
+import { findOverrideAll } from "../data/utils";
 
 export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     return (
@@ -417,6 +418,17 @@ export class ShapeView extends DataView {
         if (_var && _var.type === vt) {
             return _var;
         }
+    }
+
+    protected _findOVAll(ot: OverrideType, vt: VariableType): Variable[] | undefined {
+        if (!this.varsContainer) return;
+        const _vars = findOverrideAll(this.m_data.id, ot, this.varsContainer);
+        // if (!_vars) return;
+        // const _var = _vars[_vars.length - 1];
+        // if (_var && _var.type === vt) {
+        //     return _var;
+        // }
+        return _vars;
     }
 
     matrix2Root() {
@@ -1026,14 +1038,23 @@ export class ShapeView extends DataView {
     }
 
     get prototypeInterActions(): BasicArray<PrototypeInterAction> | undefined {
-        const v = this._findOV(OverrideType.ProtoInteractions, VariableType.ProtoInteractions);
-        if (!v?.value) {
-            return this.inheritPrototypeInterActions;
+        const v = this._findOVAll(OverrideType.ProtoInteractions, VariableType.ProtoInteractions);
+        if (!v) {
+            return this.m_data.prototypeInteractions;
         }
         // 需要做合并
-        const overrides = (v.value as BasicArray<PrototypeInterAction>);
+        // 合并vars
+        const overrides = new BasicArray<PrototypeInterAction>();
+        v.reverse().forEach(v => {
+            const o = (v.value as BasicArray<PrototypeInterAction>).slice(0).reverse();
+            o.forEach(o => {
+                if (!overrides.find(o1 => o1.id === o.id)) overrides.push(o);
+            })
+        })
+        overrides.reverse();
+
         const deleted = overrides.filter((v) => !!v.isDeleted);
-        const inherit = this.inheritPrototypeInterActions || [];
+        const inherit = this.m_data.prototypeInteractions || [];
         const ret = new BasicArray<PrototypeInterAction>();
         inherit.forEach(v => {
             if (v.isDeleted) return;
@@ -1047,9 +1068,6 @@ export class ShapeView extends DataView {
             ret.push(v);
         })
         return ret;
-    }
-    get inheritPrototypeInterActions(): BasicArray<PrototypeInterAction> | undefined {
-        return this.m_data.prototypeInteractions;
     }
 
     get overlayPosition(): OverlayPosition | undefined {
