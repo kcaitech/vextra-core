@@ -1,5 +1,4 @@
 import { objectId } from "../basic/objectid";
-import { render as clippathR } from "./clippath"
 import {
     Border,
     FillType,

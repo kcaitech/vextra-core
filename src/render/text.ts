@@ -1,7 +1,7 @@
 
 
 import { DefaultColor, isColorEqual, randomId } from "./basic";
-import { TextShape, Path, Color, Para, ParaAttr, Text, Span, FillType, Gradient, ShapeFrame, UnderlineType, StrikethroughType, Blur, BlurType, SpanAttr, ShapeSize } from '../data/classes';
+import { TextShape, Path, Color, Para, ParaAttr, Text, Span, FillType, Gradient, UnderlineType, StrikethroughType, Blur, BlurType, SpanAttr, ShapeSize } from '../data/classes';
 import { GraphArray, TextLayout } from "../data/textlayout";
 import { gPal } from "../basic/pal";
 import { BasicArray } from "../data/basic";
