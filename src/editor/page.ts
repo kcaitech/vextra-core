@@ -3338,14 +3338,14 @@ export class PageEditor {
         const _var = override_variable(page, VariableType.ProtoInteractions, OverrideType.ProtoInteractions, (_var) => {
             const ret = new BasicArray();
             if (id) {
-                const actions = _var?.value ?? shape.prototypeInterActions;
+                const actions = shape.prototypeInterActions;
                 const a = ((actions || []) as PrototypeInterAction[]).find(v => v.id === id);
                 if (a) ret.push(a);
             }
             return ret;
         }, api, shape)
         if (_var && id && !(_var.value as PrototypeInterAction[]).find(v => v.id === id)) {
-            const inherit = shape.inheritPrototypeInterActions;
+            const inherit = shape.prototypeInterActions;
             const i = inherit && inherit.find(v => v.id === id);
             if (i) {
                 const a = new PrototypeInterAction(new BasicArray(), id, new PrototypeEvent(i.event.interactionType), new PrototypeActions(i.actions.connectionType))
