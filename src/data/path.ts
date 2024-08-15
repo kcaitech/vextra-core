@@ -1300,3 +1300,4 @@ export class Path {
         Object.freeze(this.m_segs);
     }
 }
+
