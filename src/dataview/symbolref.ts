@@ -416,17 +416,17 @@ export class SymbolRefView extends ShapeView {
             return this.inheritPrototypeInterActions;
         }
         // 需要做合并
-        const interactions = (v.value as BasicArray<PrototypeInterAction>).slice(0);
-        const deleted = interactions.filter((v) => !!v.isDeleted);
-        const inherit = (this.m_data.prototypeInteractions || []).slice(0).concat(...(this.m_sym?.prototypeInteractions || [])) as BasicArray<PrototypeInterAction>;
+        const overrides = (v.value as BasicArray<PrototypeInterAction>);
+        const deleted = overrides.filter((v) => !!v.isDeleted);
+        const inherit = (this.inheritPrototypeInterActions || []) as BasicArray<PrototypeInterAction>;
         const ret = new BasicArray<PrototypeInterAction>();
         inherit.forEach(v => {
             if (v.isDeleted) return;
             if (deleted.find(v1 => v1.id === v.id)) return;
-            const o = interactions.find(v1 => v1.id === v.id);
+            const o = overrides.find(v1 => v1.id === v.id);
             ret.push(o ? o : v);
         })
-        interactions.forEach(v => {
+        overrides.forEach(v => {
             if (v.isDeleted) return;
             if (inherit.find(v1 => v1.id === v.id)) return;
             ret.push(v);
