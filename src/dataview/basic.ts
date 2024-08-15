@@ -1,22 +1,15 @@
-import { SymbolRefShape, SymbolShape } from "../data";
+
+import { SymbolRefShape, SymbolShape } from "../data/classes";
 
 export { findVar, findOverride, findOverrideAndVar } from "../data/utils"
 
-export function stringh(tag: string, attrs?: any, childs?: Array<string> | string): string;
 export function stringh(tag: string, childs?: Array<string> | string): string;
-export function stringh(...args: any[]): string {
-    const tag = args[0];
-    let attrs = args[1];
-    let childs = args[2];
-    if (args.length === 3) {
-        //
-    } else if (args.length === 2) {
-        if (Array.isArray(args[1])) {
-            attrs = undefined;
-            childs = args[1];
-        }
-    } else {
-        throw new Error("args err!");
+export function stringh(tag: string, attrs?: { [key: string]: any }, childs?: Array<string> | string): string;
+export function stringh(tag: string, attrs?: { [key: string]: any } | (Array<string> | string), childs?: Array<string> | string): string {
+
+    if (Array.isArray(attrs) || typeof attrs === 'string') {
+        attrs = undefined;
+        childs = attrs;
     }
 
     if (typeof tag !== 'string') {

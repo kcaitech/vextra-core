@@ -1,5 +1,5 @@
 import { BoolShape, Shape, Style } from "../data/classes";
-import { ShapeView } from "src/dataview";
+import { ShapeView } from "../dataview";
 
 // find first usable style
 export function findUsableFillStyle(shape: Shape | ShapeView): Style {

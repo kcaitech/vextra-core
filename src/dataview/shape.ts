@@ -1030,7 +1030,7 @@ export class ShapeView extends DataView {
     }
 
     get isImageFill() {
-        return this.m_data.getImageFill();
+        return this.m_data.isImageFill;
     }
 
     get prototypeStartPoint(): PrototypeStartingPoint | undefined {
@@ -1199,5 +1199,16 @@ export class ShapeView extends DataView {
         }
 
         return elh("g", props, children);
+    }
+
+    reloadImage(target?: Set<string>) {
+        const fills = this.getFills(); // 重载填充图片
+        fills.forEach((fill) => {
+            if (fill.fillType === FillType.Pattern) {
+                if (!target) fill.reloadImage();
+                else if (target.has(fill.imageRef || '')) fill.reloadImage();
+            }
+        })
+        this.m_ctx.setDirty(this);
     }
 }

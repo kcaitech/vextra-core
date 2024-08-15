@@ -1,4 +1,4 @@
-import { GroupShape, Shape, ShapeSize, ShapeType, SymbolRefShape, SymbolShape, ShapeFrame, Transform } from "../data/classes";
+import { GroupShape, Shape, ShapeSize, ShapeType, SymbolRefShape, SymbolShape, ShapeFrame } from "../data/classes";
 import { ShapeView, updateFrame } from "./shape";
 import { getShapeViewId } from "./basic";
 import { EL } from "./el";

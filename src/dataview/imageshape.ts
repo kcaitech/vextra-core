@@ -1,6 +1,6 @@
 import { objectId } from "../basic/objectid";
 import { EL, elh } from "./el";
-import { patternRender, renderMaskPattern } from "../render/pattern"
+import { patternRender } from "../render/pattern"
 import { DViewCtx, PropsType } from "./viewctx";
 import { CurvePoint, ImageShape } from "../data/shape";
 import { RectShapeView } from "./rect";
@@ -14,10 +14,6 @@ export class ImageShapeView extends RectShapeView {
         this.m_imgPH = imgPH;
         // this.afterInit();
     }
-
-    // protected isNoSupportDiamondScale(): boolean {
-    //     return this.m_data.isNoSupportDiamondScale;
-    // }
 
     renderContents(): EL[] {
         const shape = this.m_data as ImageShape;
@@ -37,5 +33,9 @@ export class ImageShapeView extends RectShapeView {
     get points() {
         const pathsegs = (this.m_data as ImageShape).pathsegs
         return pathsegs.length ? pathsegs[0].points : new BasicArray<CurvePoint>();
+    }
+
+    get isImageFill() {
+        return true;
     }
 }
