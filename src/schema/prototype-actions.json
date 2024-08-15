@@ -1,0 +1,48 @@
+{
+    "description": "actions",
+    "type": "object",
+    "properties": {
+        "typeId": {
+            "type": "string"
+        },
+        "targetNodeID": {
+            "type": "string"
+        },
+        "transitionType": {
+            "$ref": "./prototype-transition-type.json"
+        },
+        "transitionDuration": {
+            "type": "number",
+            "default": 0.3
+        },
+        "easingType": {
+            "$ref": "./prototype-easing-type.json"
+        },
+        "connectionType": {
+            "$ref": "./prototype-connection-type.json"
+        },
+        "connectionURL": {
+            "type": "string"
+        },
+        "openUrlInNewTab": {
+            "type": "boolean"
+        },
+        "navigationType": {
+            "$ref": "./prototype-navigation-type.json"
+        },
+        "easingFunction": {
+            "type": "array",
+            "items": {
+                "type": "number"
+            }
+        },
+        "extraScrollOffset": {
+            "$ref": "./point-2d.json"
+        }
+    },
+    "required": [
+        "typeId",
+        "connectionType"
+    ],
+    "additionalProperties": false
+}

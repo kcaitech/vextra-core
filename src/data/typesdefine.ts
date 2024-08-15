@@ -235,6 +235,41 @@ export enum MarkerType {
     Round = "round",
     Square = "square",
 }
+/* overlayBackgroundInteraction */
+export enum OverlayBackgroundInteraction {
+    NONE = "NONE",
+    CLOSEONCLICKOUTSIDE = "CLOSE_ON_CLICK_OUTSIDE",
+}
+/* interactionType */
+export enum OverlayBackgroundType {
+    NONE = "NONE",
+    SOLIDCOLOR = "SOLID_COLOR",
+}
+/* overlay margin */
+export type OverlayMargin = {
+    top: number,
+    bottom: number,
+    left: number,
+    right: number,
+}
+/* overlayPositionType */
+export enum OverlayPositionType {
+    TOPLEFT = "TOP_LEFT",
+    TOPCENTER = "TOP_CENTER",
+    TOPRIGHT = "TOP_RIGHT",
+    CENTERLEFT = "CENTER_LEFT",
+    CENTER = "CENTER",
+    CENTERRIGHT = "CENTER_RIGHT",
+    BOTTOMLEFT = "BOTTOM_LEFT",
+    BOTTOMCENTER = "BOTTOM_CENTER",
+    BOTTOMRIGHT = "BOTTOM_RIGHT",
+}
+/* overlay position */
+export type OverlayPosition = {
+    typeId: string,
+    position: OverlayPositionType,
+    margin: OverlayMargin,
+}
 /* override types */
 export enum OverrideType {
     Name = "name",
@@ -254,6 +289,7 @@ export enum OverrideType {
     ExportOptions = "exportOptions",
     CornerRadius = "cornerRadius",
     Blur = "blur",
+    ProtoInteractions = "protoInteractions",
 }
 /* padding */
 export type Padding = {
@@ -315,12 +351,92 @@ export type Point2D = {
     x: number,
     y: number,
 }
+export type PrototypeActions_easingFunction = Array<number>
+/* connectionType */
+export enum PrototypeConnectionType {
+    NONE = "NONE",
+    INTERNALNODE = "INTERNAL_NODE",
+    BACK = "BACK",
+    URL = "URL",
+    CLOSE = "CLOSE",
+}
+/* easingType */
+export enum PrototypeEasingType {
+    LINEAR = "LINEAR",
+    INCUBIC = "IN_CUBIC",
+    OUTCUBIC = "OUT_CUBIC",
+    INOUTCUBIC = "INOUT_CUBIC",
+    INBACKCUBIC = "IN_BACK_CUBIC",
+    OUTBACKCUBIC = "OUT_BACK_CUBIC",
+    INOUTBACKCUBIC = "INOUT_BACK_CUBIC",
+}
+/* interactionType */
+export enum PrototypeEvents {
+    ONCLICK = "ON_CLICK",
+    DBCLICK = "DB_CLICK",
+    RIGHTCLICK = "RIGHT_CLICK",
+    DRAG = "DRAG",
+    HOVER = "HOVER",
+    MOUSEENTER = "MOUSE_ENTER",
+    MOUSELEAVE = "MOUSE_LEAVE",
+    MOUSEDOWN = "MOUSE_DOWN",
+    MOUSEUP = "MOUSE_UP",
+    AFTERTIMEOUT = "AFTER_TIMEOUT",
+}
+export type PrototypeInterAction_crdtidx = Array<number>
+/* navigationType */
+export enum PrototypeNavigationType {
+    NAVIGATE = "NAVIGATE",
+    SWAPSTATE = "SWAP_STATE",
+    SCROLLTO = "SCROLL_TO",
+    OVERLAY = "OVERLAY",
+    SWAP = "SWAP",
+}
+/* prototypeStartingPoint */
+export type PrototypeStartingPoint = {
+    typeId: string,
+    name: string,
+    desc: string,
+}
+/* transitionType */
+export enum PrototypeTransitionType {
+    INSTANTTRANSITION = "INSTANT_TRANSITION",
+    DISSOLVE = "DISSOLVE",
+    MOVEFROMRIGHT = "MOVE_FROM_RIGHT",
+    MOVEFROMLEFT = "MOVE_FROM_LEFT",
+    MOVEFROMTOP = "MOVE_FROM_TOP",
+    MOVEFROMBOTTOM = "MOVE_FROM_BOTTOM",
+    MOVEOUTTORIGHT = "MOVE_OUT_TO_RIGHT",
+    MOVEOUTTOLEFT = "MOVE_OUT_TO_LEFT",
+    MOVEOUTTOTOP = "MOVE_OUT_TO_TOP",
+    MOVEOUTTOBOTTOM = "MOVE_OUT_TO_BOTTOM",
+    SLIDEFROMRIGHT = "SLIDE_FROM_RIGHT",
+    SLIDEFROMLEFT = "SLIDE_FROM_LEFT",
+    SLIDEFROMTOP = "SLIDE_FROM_TOP",
+    SLIDEFROMBOTTOM = "SLIDE_FROM_BOTTOM",
+    SLIDEOUTTORIGHT = "SLIDE_OUT_TO_RIGHT",
+    SLIDEOUTTOLEFT = "SLIDE_OUT_TO_LEFT",
+    SLIDEOUTTOTOP = "SLIDE_OUT_TO_TOP",
+    SLIDEOUTTOBOTTOM = "SLIDE_OUT_TO_BOTTOM",
+    PUSHFROMRIGHT = "PUSH_FROM_RIGHT",
+    PUSHFROMLEFT = "PUSH_FROM_LEFT",
+    PUSHFROMTOP = "PUSH_FROM_TOP",
+    PUSHFROMBOTTOM = "PUSH_FROM_BOTTOM",
+    SCROLLANIMATE = "SCROLL_ANIMATE",
+}
 /* resize type */
 export enum ResizeType {
     Stretch = "stretch",
     PinToEdge = "pinToEdge",
     Resize = "resize",
     Float = "float",
+}
+/* scrollDirection */
+export enum ScrollDirection {
+    NONE = "NONE",
+    HORIZONTAL = "HORIZONTAL",
+    VERTICAL = "VERTICAL",
+    BOTH = "BOTH",
 }
 /* shadow position */
 export enum ShadowPosition {
@@ -379,6 +495,7 @@ export enum ShapeType {
     Cutout = "cutout",
     BoolShape = "bool-shape",
 }
+export type Shape_prototypeInteractions = Array<PrototypeInterAction>
 /* side type */
 export enum SideType {
     Normal = "normal",
@@ -490,8 +607,9 @@ export enum VariableType {
     ExportOptions = "exportOptions",
     CornerRadius = "cornerRadius",
     Blur = "blur",
+    ProtoInteractions = "protoInteractions",
 }
-export type Variable_0 = Array<Border | Fill | Shadow>
+export type Variable_0 = Array<Border | Fill | Shadow | PrototypeInterAction>
 /* winding rule */
 export enum WindingRule {
     NonZero = "non-zero",
@@ -569,6 +687,40 @@ export type Gradient = {
     stops: Gradient_stops,
     elipseLength?: number,
     gradientOpacity?: number,
+}
+/* overlay-background-appearance */
+export type OverlayBackgroundAppearance = {
+    typeId: string,
+    backgroundType: OverlayBackgroundType,
+    backgroundColor: Color,
+}
+/* actions */
+export type PrototypeActions = {
+    typeId: string,
+    connectionType: PrototypeConnectionType,
+    targetNodeID?: string,
+    transitionType?: PrototypeTransitionType,
+    transitionDuration?: number,
+    easingType?: PrototypeEasingType,
+    connectionURL?: string,
+    openUrlInNewTab?: boolean,
+    navigationType?: PrototypeNavigationType,
+    easingFunction?: PrototypeActions_easingFunction,
+    extraScrollOffset?: Point2D,
+}
+/* event */
+export type PrototypeEvent = {
+    interactionType: PrototypeEvents,
+    transitionTimeout?: number,
+}
+/* prototypeInteraction */
+export type PrototypeInterAction = {
+    crdtidx: PrototypeInterAction_crdtidx,
+    id: string,
+    event: PrototypeEvent,
+    actions: PrototypeActions,
+    typeId?: string,
+    isDeleted?: boolean,
 }
 /* span attr */
 export type SpanAttr = {
@@ -703,6 +855,12 @@ export type Shape = {
     shouldBreakMaskChain?: boolean,
     varbinds?: Map<string, string>,
     haveEdit?: boolean,
+    prototypeStartingPoint?: PrototypeStartingPoint,
+    prototypeInteractions?: Shape_prototypeInteractions,
+    overlayPosition?: OverlayPosition,
+    overlayBackgroundInteraction?: OverlayBackgroundInteraction,
+    overlayBackgroundAppearance?: OverlayBackgroundAppearance,
+    scrollDirection?: ScrollDirection,
     mask?: boolean,
 }
 /* table cell */

@@ -19,6 +19,7 @@
         "markerType",
         "exportOptions",
         "cornerRadius",
-        "blur"
+        "blur",
+        "protoInteractions"
     ]
 }

@@ -884,6 +884,21 @@ export function findOverride(refId: string, type: OverrideType, varsContainer: (
     return ret ? [ret.v] : undefined;
 }
 
+export function findOverrideAll(refId: string, type: OverrideType, varsContainer: (SymbolRefShape | SymbolShape)[]) {
+    let ret: Variable[] = [];
+    for (let i = varsContainer.length - 1; i >= 0; --i) {
+        const container = varsContainer[i];
+        if (container instanceof SymbolRefShape) {
+            const override = container.getOverrid(refId, type);
+            if (override) {
+                ret.push(override.v);
+            }
+            refId = refId.length > 0 ? (container.id + '/' + refId) : container.id;
+        }
+    }
+    return ret.length > 0 ? ret : undefined;
+}
+
 export function findOverrideAndVar(
     shape: Shape, // not proxyed
     overType: OverrideType,

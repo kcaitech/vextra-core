@@ -4,12 +4,27 @@ import { innerShadowId, renderBorders, renderFills } from "../render";
 import { objectId } from "../basic/objectid";
 import { render as clippathR } from "../render/clippath"
 import { Artboard } from "../data/artboard";
-import { BlurType, BorderPosition, CornerRadius, Page, ShapeFrame, ShapeSize } from "../data/classes";
+import { BlurType, BorderPosition, CornerRadius, Page, ShapeFrame, ShapeSize, Transform } from "../data/classes";
 import { ShapeView, updateFrame } from "./shape";
 import { PageView } from "./page";
 
 
 export class ArtboradView extends GroupShapeView {
+
+    m_inner_transform: Transform | undefined;
+    get innerTransform(): Transform | undefined {
+        return this.m_inner_transform;
+    }
+
+    initInnerTransform(transform: Transform) {
+        this.m_inner_transform = transform;
+        this.m_ctx.setDirty(this);
+    }
+    innerScrollOffset(x: number, y: number) {
+        if (!this.m_inner_transform) this.m_inner_transform = new Transform();
+        this.m_inner_transform.trans(x, y);
+        this.m_ctx.setDirty(this);
+    }
 
     get data() {
         return this.m_data as Artboard;
@@ -80,6 +95,7 @@ export class ArtboradView extends GroupShapeView {
 
     render(): number {
         if (!this.checkAndResetDirty()) return this.m_render_version;
+
         this._svgnode = undefined;
         const masked = this.masked;
         if (masked) {
@@ -106,8 +122,16 @@ export class ArtboradView extends GroupShapeView {
         const contextSettings = this.style.contextSettings;
 
         let props: any = { style: { transform: this.transform.toString() } };
+
         let children = [...fills, ...childs];
 
+        if (this.innerTransform) {
+            const child = elh("g", {
+                id: this.id,
+                transform: this.innerTransform.toString()
+            }, childs);
+            children = [...fills, child];
+        }
         if (contextSettings) {
             props.opacity = contextSettings.opacity;
             props.style['mix-blend-mode'] = contextSettings.blenMode;

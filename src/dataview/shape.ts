@@ -13,10 +13,16 @@ import {
     makeShapeTransform1By2,
     makeShapeTransform2By1,
     MarkerType,
+    OverlayBackgroundAppearance,
+    OverlayBackgroundInteraction,
+    OverlayPosition,
     OverrideType,
     Path,
     PathShape,
     Point2D,
+    PrototypeInterAction,
+    PrototypeStartingPoint,
+    ScrollDirection,
     Shadow,
     Shape,
     ShapeFrame,
@@ -41,6 +47,8 @@ import { GroupShapeView } from "./groupshape";
 import { importBorder, importFill } from "../data/baseimport";
 import { exportBorder, exportFill } from "../data/baseexport";
 import { PageView } from "./page";
+import { ArtboradView } from "./artboard";
+import { findOverrideAll } from "../data/utils";
 
 export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     return (
@@ -412,10 +420,23 @@ export class ShapeView extends DataView {
         }
     }
 
+    protected _findOVAll(ot: OverrideType, vt: VariableType): Variable[] | undefined {
+        if (!this.varsContainer) return;
+        const _vars = findOverrideAll(this.m_data.id, ot, this.varsContainer);
+        // if (!_vars) return;
+        // const _var = _vars[_vars.length - 1];
+        // if (_var && _var.type === vt) {
+        //     return _var;
+        // }
+        return _vars;
+    }
+
     matrix2Root() {
         const m = this.transform.toMatrix();
         const p = this.parent;
         if (p) {
+            const offset = (p as ArtboradView).innerTransform;
+            offset && m.multiAtLeft(offset.toMatrix())
             m.multiAtLeft(p.matrix2Root())
         }
         return m;
@@ -1010,6 +1031,59 @@ export class ShapeView extends DataView {
 
     get isImageFill() {
         return this.m_data.isImageFill;
+    }
+
+    get prototypeStartPoint(): PrototypeStartingPoint | undefined {
+        return this.m_data.prototypeStartingPoint;
+    }
+
+    get prototypeInterActions(): BasicArray<PrototypeInterAction> | undefined {
+        const v = this._findOVAll(OverrideType.ProtoInteractions, VariableType.ProtoInteractions);
+        if (!v) {
+            return this.m_data.prototypeInteractions;
+        }
+        // 需要做合并
+        // 合并vars
+        const overrides = new BasicArray<PrototypeInterAction>();
+        v.reverse().forEach(v => {
+            const o = (v.value as BasicArray<PrototypeInterAction>).slice(0).reverse();
+            o.forEach(o => {
+                if (!overrides.find(o1 => o1.id === o.id)) overrides.push(o);
+            })
+        })
+        overrides.reverse();
+
+        const deleted = overrides.filter((v) => !!v.isDeleted);
+        const inherit = this.m_data.prototypeInteractions || [];
+        const ret = new BasicArray<PrototypeInterAction>();
+        inherit.forEach(v => {
+            if (v.isDeleted) return;
+            if (deleted.find(v1 => v1.id === v.id)) return;
+            const o = overrides.find(v1 => v1.id === v.id);
+            ret.push(o ? o : v);
+        })
+        overrides.forEach(v => {
+            if (v.isDeleted) return;
+            if (inherit.find(v1 => v1.id === v.id)) return;
+            ret.push(v);
+        })
+        return ret;
+    }
+
+    get overlayPosition(): OverlayPosition | undefined {
+        return this.m_data.overlayPosition
+    }
+
+    get overlayBackgroundInteraction(): OverlayBackgroundInteraction | undefined {
+        return this.m_data.overlayBackgroundInteraction
+    }
+
+    get overlayBackgroundAppearance(): OverlayBackgroundAppearance | undefined {
+        return this.m_data.overlayBackgroundAppearance
+    }
+
+    get scrollDirection(): ScrollDirection | undefined {
+        return this.m_data.scrollDirection
     }
 
     get relyLayers() {

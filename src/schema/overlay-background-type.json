@@ -1,0 +1,8 @@
+{
+    "description": "interactionType",
+    "enum": [
+        "NONE",
+        "SOLID_COLOR"
+    ],
+    "default": "NONE"
+}

@@ -15,6 +15,14 @@ import {
     ShapeType,
     VariableType,
     ShapeSize,
+    PrototypeInterAction,
+    OverlayPosition,
+    ScrollDirection,
+    OverlayPositionType,
+    OverlayBackgroundAppearance,
+    OverlayBackgroundType,
+    OverlayMargin,
+    Color
 } from "./baseclasses"
 import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
@@ -95,6 +103,15 @@ export class Shape extends Basic implements classes.Shape {
         if (id0 === 'style') return this.style.getOpTarget(path.slice(1));
         if (id0 === 'varbinds' && !this.varbinds) this.varbinds = new BasicMap();
         if (id0 === "exportOptions" && !this.exportOptions) this.exportOptions = new ExportOptions(new BasicArray(), 0, false, false, false, false);
+        if (id0 === "prototypeInteractions" && !this.prototypeInteractions) {
+            this.prototypeInteractions = new BasicArray<PrototypeInterAction>();
+        }
+        if (id0 === "overlayPosition" && !this.overlayPosition) {
+            this.overlayPosition = new OverlayPosition(OverlayPositionType.CENTER, new OverlayMargin())
+        }
+        if (id0 === "overlayBackgroundAppearance" && !this.overlayBackgroundAppearance) {
+            this.overlayBackgroundAppearance = new OverlayBackgroundAppearance(OverlayBackgroundType.SOLIDCOLOR, new Color(0.25, 0, 0, 0))
+        }
         return super.getOpTarget(path);
     }
 
@@ -121,8 +138,13 @@ export class Shape extends Basic implements classes.Shape {
     hasClippingMask?: boolean
     shouldBreakMaskChain?: boolean
     varbinds?: BasicMap<string, string>
-
     haveEdit?: boolean | undefined
+    prototypeStartingPoint?: classes.PrototypeStartingPoint;
+    prototypeInteractions?: BasicArray<PrototypeInterAction>;
+    overlayPosition?: classes.OverlayPosition;
+    overlayBackgroundInteraction?: classes.OverlayBackgroundInteraction;
+    overlayBackgroundAppearance?: classes.OverlayBackgroundAppearance;
+    scrollDirection?: classes.ScrollDirection;
     mask?: boolean
 
     constructor(
@@ -698,8 +720,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
     variables: BasicMap<string, Variable> // 怎么做关联
     symtags?: BasicMap<string, string>
     cornerRadius?: CornerRadius
-    guides?: BasicArray<Guide>;
-
+    guides?: BasicArray<Guide>
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
@@ -710,7 +731,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         childs: BasicArray<Shape>,
         size: ShapeSize,
         variables: BasicMap<string, Variable>,
-        guides?: BasicArray<Guide>
+        guides?: BasicArray<Guide>,
     ) {
         super(
             crdtidx,

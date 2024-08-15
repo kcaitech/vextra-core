@@ -1,0 +1,20 @@
+{
+    "description": "prototypeStartingPoint",
+    "type": "object",
+    "properties": {
+        "typeId": {
+            "type": "string"
+        },
+        "name": {
+            "type": "string"
+        },
+        "desc": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "typeId",
+        "name",
+        "desc"
+    ]
+}
