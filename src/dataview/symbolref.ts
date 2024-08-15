@@ -421,7 +421,8 @@ export class SymbolRefView extends ShapeView {
             inherit.forEach(v => {
                 if (v.isDeleted) return;
                 if (deleted.find(v1 => v1.id === v.id)) return;
-                ret.push(v);
+                const o = interactions.find(v1 => v1.id === v.id);
+                ret.push(o ? o : v);
             })
             interactions.forEach(v => {
                 if (v.isDeleted) return;
