@@ -706,7 +706,7 @@ function importSegments(data: IJSON): {
                 segments1.push(new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...toCurvePoints(points)), isClosed));
             }
         }
-    } else {
+    } else if (segments.length > 0) {
         for (let i = 0; i < segments.length; i++) {
             const segment = segments[i];
             const points = toCurvePoints([

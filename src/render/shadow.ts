@@ -227,12 +227,15 @@ function shadowShape(h: Function, shadows: Shadow[], frame: ShapeSize, id: strin
             h_nodes.push(...h_node);
         }
     }
-    const filter_props: any = { id: 'pd_outer-' + id, x: '-20%', y: '-20%', height: '140%', width: '140%' };
+    const filter_props = { id: 'pd_outer-' + id, x: '-20%', y: '-20%', height: '140%', width: '140%' };
     const m_border = shapeType === ShapeType.Line ? max_border(borders) * 9 : max_border(borders);
-    filter_props.width = ((Math.max(...f_props.props_w) + Math.max(...f_props.props_w) + (m_border * 2)) / width) * 100 + '%';
-    filter_props.height = ((Math.max(...f_props.props_h) + Math.max(...f_props.props_h) + (m_border * 2)) / height) * 100 + '%';
-    filter_props.x = ((Math.min(...f_props.props_x) + Math.min(...f_props.props_x) - m_border) / width) * 100 + '%';
-    filter_props.y = ((Math.min(...f_props.props_y) + Math.min(...f_props.props_y) - m_border) / height) * 100 + '%';
+    // fix width,height可能为0
+    if (width !== 0 && height !== 0) {
+        filter_props.width = ((Math.max(...f_props.props_w) + Math.max(...f_props.props_w) + (m_border * 2)) / width) * 100 + '%';
+        filter_props.height = ((Math.max(...f_props.props_h) + Math.max(...f_props.props_h) + (m_border * 2)) / height) * 100 + '%';
+        filter_props.x = ((Math.min(...f_props.props_x) + Math.min(...f_props.props_x) - m_border) / width) * 100 + '%';
+        filter_props.y = ((Math.min(...f_props.props_y) + Math.min(...f_props.props_y) - m_border) / height) * 100 + '%';
+    }
     const fe_flood = {
         'flood-opacity': `0`,
         result: `BackgroundImageFix`
