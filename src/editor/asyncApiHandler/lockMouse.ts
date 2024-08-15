@@ -109,7 +109,7 @@ export class LockMouseHandler extends AsyncApiCaller {
                 if (view instanceof GroupShapeView) {
                     reLayoutBySizeChanged(api, page, view, {
                         x: Math.abs(size.width / (size.width - dw)),
-                        y: 1
+                        y: Math.abs(size.height / (size.height - dh))
                     });
                 }
             }
@@ -150,7 +150,7 @@ export class LockMouseHandler extends AsyncApiCaller {
                 }
                 if (view instanceof GroupShapeView) {
                     reLayoutBySizeChanged(api, page, view, {
-                        x: 1,
+                        x: Math.abs(size.width / (size.width - dw)),
                         y: Math.abs(size.height / (size.height - dh))
                     });
                 }
