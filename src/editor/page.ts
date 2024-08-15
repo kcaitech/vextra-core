@@ -26,8 +26,7 @@ import {
     MarkerType,
     ShadowPosition,
     ShapeType,
-    SideType, StrikethroughType, UnderlineType
-} from "../data/typesdefine";
+    SideType} from "../data/typesdefine";
 import { Page } from "../data/page";
 import {
     newArrowShape,
@@ -77,7 +76,7 @@ import {
     importTransform
 } from "../data/baseimport";
 import { gPal } from "../basic/pal";
-import { findUsableBorderStyle, findUsableFillStyle } from "../render/boolgroup";
+// import { findUsableBorderStyle, findUsableFillStyle } from "../render/boolgroup";
 import { BasicArray } from "../data/basic";
 import { TableEditor } from "./table";
 import { exportArtboard, exportGradient, exportStop, exportSymbolShape, exportVariable } from "../data/baseexport";
@@ -336,6 +335,18 @@ export function getHorizontalAngle(A: {
     const angleInDegrees = Math.atan2(deltaY, deltaX) * 180 / Math.PI;
     const angle = (angleInDegrees + 360) % 360;
     return angle;
+}
+
+function findUsableFillStyle(shape: Shape | ShapeView): Style {
+    if (shape.style.fills.length > 0) return shape.style;
+    if (shape instanceof BoolShape && shape.childs.length > 0) return findUsableFillStyle(shape.childs[0]);
+    return shape.style;
+}
+
+function findUsableBorderStyle(shape: Shape | ShapeView): Style {
+    if (shape.style.borders.length > 0) return shape.style;
+    if (shape instanceof BoolShape && shape.childs.length > 0) return findUsableBorderStyle(shape.childs[0]);
+    return shape.style;
 }
 
 export class PageEditor {
