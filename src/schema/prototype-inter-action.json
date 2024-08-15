@@ -19,6 +19,9 @@
         },
         "actions": {
             "$ref": "./prototype-actions.json"
+        },
+        "isDeleted": {
+            "type": "boolean"
         }
     },
     "required": [

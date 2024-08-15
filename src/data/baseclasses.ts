@@ -369,19 +369,6 @@ export class Point2D extends Basic {
     }
 }
 type PrototypeActions_easingFunction = BasicArray<number>
-/* extraScrollOffset */
-export class PrototypeExtrascrolloffset extends Basic {
-    typeId = "prototype-extrascrolloffset"
-    id: string
-    x: number
-    y: number
-    constructor(id: string, x: number = 0, y: number = 0) {
-        super()
-        this.id = id
-        this.x = x
-        this.y = y
-    }
-}
 type PrototypeInterAction_crdtidx = BasicArray<number>
 /* prototypeStartingPoint */
 export class PrototypeStartingPoint extends Basic {
@@ -665,7 +652,6 @@ export class OverlayBackgroundAppearance extends Basic {
 /* actions */
 export class PrototypeActions extends Basic {
     typeId = "prototype-actions"
-    id: string
     connectionType: PrototypeConnectionType
     targetNodeID?: string
     transitionType?: PrototypeTransitionType
@@ -675,10 +661,9 @@ export class PrototypeActions extends Basic {
     openUrlInNewTab?: boolean
     navigationType?: PrototypeNavigationType
     easingFunction?: PrototypeActions_easingFunction
-    extraScrollOffset?: PrototypeExtrascrolloffset
-    constructor(id: string, connectionType: PrototypeConnectionType) {
+    extraScrollOffset?: Point2D
+    constructor(connectionType: PrototypeConnectionType) {
         super()
-        this.id = id
         this.connectionType = connectionType
     }
 }
@@ -699,6 +684,7 @@ export class PrototypeInterAction extends Basic {
     id: string
     event: PrototypeEvent
     actions: PrototypeActions
+    isDeleted?: boolean
     constructor(crdtidx: PrototypeInterAction_crdtidx, id: string, event: PrototypeEvent, actions: PrototypeActions) {
         super()
         this.crdtidx = crdtidx

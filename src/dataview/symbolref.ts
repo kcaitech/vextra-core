@@ -1,5 +1,5 @@
-import { Border, ContextSettings, CornerRadius, Fill, MarkerType, OverrideType, PathShape, Shadow, Shape, ShapeFrame, ShapeSize, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType, getPathOfRadius } from "../data/classes";
-import { fixFrameByConstrain, frame2Parent, frame2Parent2, ShapeView } from "./shape";
+import { Border, ContextSettings, CornerRadius, Fill, MarkerType, OverrideType, PrototypeInterAction, Shadow, Shape, ShapeFrame, ShapeSize, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType, getPathOfRadius } from "../data/classes";
+import { fixFrameByConstrain, frame2Parent2, ShapeView } from "./shape";
 import { ShapeType } from "../data/classes";
 import { DataView, RootView } from "./view";
 import { getShapeViewId } from "./basic";
@@ -7,8 +7,7 @@ import { DViewCtx, PropsType, VarsContainer } from "./viewctx";
 import { findOverride, findVar } from "./basic";
 import { objectId } from "../basic/objectid";
 import { makeShapeTransform1By2, makeShapeTransform2By1 } from "../data/shape_transform_util";
-import { ResizingConstraints2 } from "../data/consts";
-import { float_accuracy } from "../basic/consts";
+import { BasicArray } from "../data/basic";
 
 // 播放页组件状态切换会话存储refId的key值；
 export const sessionRefIdKey = 'ref-id-cf76c6c6-beed-4c33-ae71-134ee876b990';
@@ -408,5 +407,36 @@ export class SymbolRefView extends ShapeView {
         const v = this._findOV2(OverrideType.CornerRadius, VariableType.CornerRadius);
         if (v) return v.value;
         return this.m_sym?.cornerRadius;
+    }
+
+    get prototypeInterActions(): BasicArray<PrototypeInterAction> | undefined {
+        // 三个合并
+        const v = this._findOV2(OverrideType.ProtoInteractions, VariableType.ProtoInteractions);
+        if (v?.value) {
+            // 需要做合并
+            const interactions = (v.value as BasicArray<PrototypeInterAction>).slice(0);
+            const deleted = interactions.filter((v) => !!v.isDeleted);
+            const inherit = (this.m_data.prototypeInteractions || []).slice(0).concat(...(this.m_sym?.prototypeInteractions || [])) as BasicArray<PrototypeInterAction>;
+            const ret = new BasicArray<PrototypeInterAction>();
+            inherit.forEach(v => {
+                if (v.isDeleted) return;
+                if (deleted.find(v1 => v1.id === v.id)) return;
+                ret.push(v);
+            })
+            interactions.forEach(v => {
+                if (v.isDeleted) return;
+                if (inherit.find(v1 => v1.id === v.id)) return;
+                ret.push(v);
+            })
+            return ret;
+        }
+        return this.inheritPrototypeInterActions;
+    }
+
+    get inheritPrototypeInterActions(): BasicArray<PrototypeInterAction> | undefined {
+        if (this.m_data.prototypeInteractions) {
+            return this.m_data.prototypeInteractions.slice(0).concat(...(this.m_sym?.prototypeInteractions || [])) as BasicArray<PrototypeInterAction>
+        }
+        return this.m_sym?.prototypeInteractions;
     }
 }

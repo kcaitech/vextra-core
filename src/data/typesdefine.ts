@@ -383,13 +383,6 @@ export enum PrototypeEvents {
     MOUSEUP = "MOUSE_UP",
     AFTERTIMEOUT = "AFTER_TIMEOUT",
 }
-/* extraScrollOffset */
-export type PrototypeExtrascrolloffset = {
-    id: string,
-    x: number,
-    y: number,
-    typeId?: string,
-}
 export type PrototypeInterAction_crdtidx = Array<number>
 /* navigationType */
 export enum PrototypeNavigationType {
@@ -703,9 +696,8 @@ export type OverlayBackgroundAppearance = {
 }
 /* actions */
 export type PrototypeActions = {
-    id: string,
+    typeId: string,
     connectionType: PrototypeConnectionType,
-    typeId?: string,
     targetNodeID?: string,
     transitionType?: PrototypeTransitionType,
     transitionDuration?: number,
@@ -714,7 +706,7 @@ export type PrototypeActions = {
     openUrlInNewTab?: boolean,
     navigationType?: PrototypeNavigationType,
     easingFunction?: PrototypeActions_easingFunction,
-    extraScrollOffset?: PrototypeExtrascrolloffset,
+    extraScrollOffset?: Point2D,
 }
 /* event */
 export type PrototypeEvent = {
@@ -728,6 +720,7 @@ export type PrototypeInterAction = {
     event: PrototypeEvent,
     actions: PrototypeActions,
     typeId?: string,
+    isDeleted?: boolean,
 }
 /* span attr */
 export type SpanAttr = {

@@ -450,15 +450,6 @@ export function exportPrototypeEasingType(source: types.PrototypeEasingType, ctx
 export function exportPrototypeEvents(source: types.PrototypeEvents, ctx?: IExportContext): types.PrototypeEvents {
     return source
 }
-/* extraScrollOffset */
-export function exportPrototypeExtrascrolloffset(source: types.PrototypeExtrascrolloffset, ctx?: IExportContext): types.PrototypeExtrascrolloffset {
-    const ret: types.PrototypeExtrascrolloffset = {} as types.PrototypeExtrascrolloffset
-    ret.id = source.id
-    ret.x = source.x
-    ret.y = source.y
-    if (source.typeId) ret.typeId = source.typeId
-    return ret
-}
 export function exportPrototypeInterAction_crdtidx(source: types.PrototypeInterAction_crdtidx, ctx?: IExportContext): types.PrototypeInterAction_crdtidx {
     const ret: types.PrototypeInterAction_crdtidx = []
     source.forEach((source) => {
@@ -806,9 +797,9 @@ export function exportOverlayBackgroundAppearance(source: types.OverlayBackgroun
 /* actions */
 export function exportPrototypeActions(source: types.PrototypeActions, ctx?: IExportContext): types.PrototypeActions {
     const ret: types.PrototypeActions = {} as types.PrototypeActions
-    ret.id = source.id
+    ret.typeId = "prototype-actions"
+    ret.typeId = source.typeId
     ret.connectionType = exportPrototypeConnectionType(source.connectionType, ctx)
-    if (source.typeId) ret.typeId = source.typeId
     if (source.targetNodeID) ret.targetNodeID = source.targetNodeID
     if (source.transitionType) ret.transitionType = exportPrototypeTransitionType(source.transitionType, ctx)
     if (source.transitionDuration) ret.transitionDuration = source.transitionDuration
@@ -817,7 +808,7 @@ export function exportPrototypeActions(source: types.PrototypeActions, ctx?: IEx
     if (source.openUrlInNewTab) ret.openUrlInNewTab = source.openUrlInNewTab
     if (source.navigationType) ret.navigationType = exportPrototypeNavigationType(source.navigationType, ctx)
     if (source.easingFunction) ret.easingFunction = exportPrototypeActions_easingFunction(source.easingFunction, ctx)
-    if (source.extraScrollOffset) ret.extraScrollOffset = exportPrototypeExtrascrolloffset(source.extraScrollOffset, ctx)
+    if (source.extraScrollOffset) ret.extraScrollOffset = exportPoint2D(source.extraScrollOffset, ctx)
     return ret
 }
 /* event */
@@ -835,6 +826,7 @@ export function exportPrototypeInterAction(source: types.PrototypeInterAction, c
     ret.event = exportPrototypeEvent(source.event, ctx)
     ret.actions = exportPrototypeActions(source.actions, ctx)
     if (source.typeId) ret.typeId = source.typeId
+    if (source.isDeleted) ret.isDeleted = source.isDeleted
     return ret
 }
 /* span attr */

@@ -2,9 +2,6 @@
     "description": "actions",
     "type": "object",
     "properties": {
-        "id": {
-            "type": "string"
-        },
         "typeId": {
             "type": "string"
         },
@@ -40,11 +37,11 @@
             }
         },
         "extraScrollOffset": {
-            "$ref": "./prototype-extrascrolloffset.json"
+            "$ref": "./point-2d.json"
         }
     },
     "required": [
-        "id",
+        "typeId",
         "connectionType"
     ],
     "additionalProperties": false

@@ -8,7 +8,7 @@ export {
     PrototypeEvent,
     PrototypeStartingPoint,
     PrototypeInterAction,
-    PrototypeExtrascrolloffset,
+    Point2D,
     OverlayBackgroundAppearance,
     OverlayBackgroundInteraction,
     OverlayPositionType,
@@ -19,7 +19,7 @@ export {
 } from './baseclasses';
 import { uuid } from '../basic/uuid';
 import * as classes from "./baseclasses"
-import { PrototypeEvent, PrototypeConnectionType,PrototypeExtrascrolloffset } from './baseclasses';
+import { PrototypeEvent, PrototypeConnectionType,Point2D } from './baseclasses';
 import { BasicArray } from './basic';
 
 type PrototypeInterAction_crdtidx = BasicArray<number>
@@ -38,18 +38,9 @@ type PrototypeInterAction_crdtidx = BasicArray<number>
 
 
 export class PrototypeActions extends classes.PrototypeActions {
-    constructor(
-        id: string,
-        connectionType: PrototypeConnectionType,
-    ) {
-        super(
-            id,
-            connectionType
-        )
-    }
 
     getOpTarget(path: string[]): any {
-        if (path[0] === 'extraScrollOffset' && !this.extraScrollOffset) this.extraScrollOffset = new PrototypeExtrascrolloffset(uuid(),0,0);
+        if (path[0] === 'extraScrollOffset' && !this.extraScrollOffset) this.extraScrollOffset = new Point2D(0,0);
         return super.getOpTarget(path);
     }
 }

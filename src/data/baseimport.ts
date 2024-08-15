@@ -527,18 +527,6 @@ export function importPrototypeEasingType(source: types.PrototypeEasingType, ctx
 export function importPrototypeEvents(source: types.PrototypeEvents, ctx?: IImportContext): impl.PrototypeEvents {
     return source
 }
-/* extraScrollOffset */
-function importPrototypeExtrascrolloffsetOptional(tar: impl.PrototypeExtrascrolloffset, source: types.PrototypeExtrascrolloffset, ctx?: IImportContext) {
-    if (source.typeId) tar.typeId = source.typeId
-}
-export function importPrototypeExtrascrolloffset(source: types.PrototypeExtrascrolloffset, ctx?: IImportContext): impl.PrototypeExtrascrolloffset {
-    const ret: impl.PrototypeExtrascrolloffset = new impl.PrototypeExtrascrolloffset (
-        source.id,
-        source.x,
-        source.y)
-    importPrototypeExtrascrolloffsetOptional(ret, source, ctx)
-    return ret
-}
 export function importPrototypeInterAction_crdtidx(source: types.PrototypeInterAction_crdtidx, ctx?: IImportContext): PrototypeInterAction_crdtidx {
     const ret: PrototypeInterAction_crdtidx = new BasicArray()
     source.forEach((source, i) => {
@@ -890,7 +878,6 @@ export function importOverlayBackgroundAppearance(source: types.OverlayBackgroun
 }
 /* actions */
 function importPrototypeActionsOptional(tar: impl.PrototypeActions, source: types.PrototypeActions, ctx?: IImportContext) {
-    if (source.typeId) tar.typeId = source.typeId
     if (source.targetNodeID) tar.targetNodeID = source.targetNodeID
     if (source.transitionType) tar.transitionType = importPrototypeTransitionType(source.transitionType, ctx)
     if (source.transitionDuration) tar.transitionDuration = source.transitionDuration
@@ -899,11 +886,10 @@ function importPrototypeActionsOptional(tar: impl.PrototypeActions, source: type
     if (source.openUrlInNewTab) tar.openUrlInNewTab = source.openUrlInNewTab
     if (source.navigationType) tar.navigationType = importPrototypeNavigationType(source.navigationType, ctx)
     if (source.easingFunction) tar.easingFunction = importPrototypeActions_easingFunction(source.easingFunction, ctx)
-    if (source.extraScrollOffset) tar.extraScrollOffset = importPrototypeExtrascrolloffset(source.extraScrollOffset, ctx)
+    if (source.extraScrollOffset) tar.extraScrollOffset = importPoint2D(source.extraScrollOffset, ctx)
 }
 export function importPrototypeActions(source: types.PrototypeActions, ctx?: IImportContext): impl.PrototypeActions {
     const ret: impl.PrototypeActions = new impl.PrototypeActions (
-        source.id,
         importPrototypeConnectionType(source.connectionType, ctx))
     importPrototypeActionsOptional(ret, source, ctx)
     return ret
@@ -921,6 +907,7 @@ export function importPrototypeEvent(source: types.PrototypeEvent, ctx?: IImport
 /* prototypeInteraction */
 function importPrototypeInterActionOptional(tar: impl.PrototypeInterAction, source: types.PrototypeInterAction, ctx?: IImportContext) {
     if (source.typeId) tar.typeId = source.typeId
+    if (source.isDeleted) tar.isDeleted = source.isDeleted
 }
 export function importPrototypeInterAction(source: types.PrototypeInterAction, ctx?: IImportContext): impl.PrototypeInterAction {
     const ret: impl.PrototypeInterAction = new impl.PrototypeInterAction (
