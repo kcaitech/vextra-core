@@ -72,8 +72,10 @@ import {
     importFill,
     importGradient,
     importMarkerType,
+    importOverlayBackgroundAppearance,
     importOverlayPosition,
     importPrototypeInterAction,
+    importPrototypeStartingPoint,
     importShadow,
     importStop,
     importStyle,
@@ -647,8 +649,19 @@ export class PageEditor {
 
             const symbolShape = newSymbolShape(replace ? shape0.name : (name ?? shape0.name), frame, style);
 
-            if (replace && shape0 instanceof Artboard && shape0.cornerRadius) {
-                symbolShape.cornerRadius = importCornerRadius(shape0.cornerRadius);
+            if (replace && shape0 instanceof Artboard) {
+                if (shape0.cornerRadius) symbolShape.cornerRadius = importCornerRadius(shape0.cornerRadius);
+                if (shape0.prototypeInteractions) {
+                    symbolShape.prototypeInteractions = new BasicArray();
+                    shape0.prototypeInteractions.forEach(v => {
+                        symbolShape.prototypeInteractions?.push(importPrototypeInterAction(v));
+                    })
+                }
+                if (shape0.prototypeStartingPoint) symbolShape.prototypeStartingPoint = importPrototypeStartingPoint(shape0.prototypeStartingPoint);
+                if (shape0.overlayPosition) symbolShape.overlayPosition = importOverlayPosition(shape0.overlayPosition);
+                if (shape0.overlayBackgroundInteraction) symbolShape.overlayBackgroundInteraction = (shape0.overlayBackgroundInteraction);
+                if (shape0.overlayBackgroundAppearance) symbolShape.overlayBackgroundAppearance = importOverlayBackgroundAppearance(shape0.overlayBackgroundAppearance);
+                if (shape0.scrollDirection) symbolShape.scrollDirection = (shape0.scrollDirection);
             }
 
             const page = this.__page;
@@ -3360,7 +3373,7 @@ export class PageEditor {
             if (id) {
                 const actions = shape.prototypeInterActions;
                 const a = ((actions || []) as PrototypeInterAction[]).find(v => v.id === id);
-                if (a) ret.push(a);
+                if (a) ret.push(importPrototypeInterAction(a));
             }
             return ret;
         }, api, shape)
