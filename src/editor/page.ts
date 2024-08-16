@@ -3360,7 +3360,7 @@ export class PageEditor {
             if (id) {
                 const actions = shape.prototypeInterActions;
                 const a = ((actions || []) as PrototypeInterAction[]).find(v => v.id === id);
-                if (a) ret.push(a);
+                if (a) ret.push(importPrototypeInterAction(a));
             }
             return ret;
         }, api, shape)
