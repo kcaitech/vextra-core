@@ -3432,14 +3432,6 @@ export class PageEditor {
             api.shapeModifyPrototypeActionConnNav(this.__page, __shape, id, conn, nav);
 
             if (nav === PrototypeNavigationType.SCROLLTO || old_nav === PrototypeNavigationType.SCROLLTO) {
-                const arr = [PrototypeTransitionType.INSTANTTRANSITION, PrototypeTransitionType.DISSOLVE]
-                if (!transitionType) return
-                if (!arr.includes(transitionType)) {
-                    api.shapeModifyPrototypeActionTransitionType(this.__page, __shape, id, PrototypeTransitionType.INSTANTTRANSITION)
-                }
-                api.shapeModifyPrototypeActionTargetNodeID(this.__page, __shape, id, undefined)
-            }
-            if (nav === PrototypeNavigationType.SWAPSTATE || old_nav === PrototypeNavigationType.SWAPSTATE) {
                 const arr = [PrototypeTransitionType.INSTANTTRANSITION, PrototypeTransitionType.SCROLLANIMATE]
                 if (!transitionType) return
                 if (!arr.includes(transitionType)) {
@@ -3447,7 +3439,15 @@ export class PageEditor {
                 }
                 api.shapeModifyPrototypeActionTargetNodeID(this.__page, __shape, id, undefined)
             }
-            if (nav === PrototypeNavigationType.OVERLAY || nav === PrototypeNavigationType.SWAP) {
+            if (nav === PrototypeNavigationType.SWAPSTATE || old_nav === PrototypeNavigationType.SWAPSTATE) {
+                const arr = [PrototypeTransitionType.INSTANTTRANSITION, PrototypeTransitionType.DISSOLVE]
+                if (!transitionType) return
+                if (!arr.includes(transitionType)) {
+                    api.shapeModifyPrototypeActionTransitionType(this.__page, __shape, id, PrototypeTransitionType.INSTANTTRANSITION)
+                }
+                api.shapeModifyPrototypeActionTargetNodeID(this.__page, __shape, id, undefined)
+            }
+            if (nav === PrototypeNavigationType.OVERLAY || nav === PrototypeNavigationType.SWAP||nav === PrototypeNavigationType.NAVIGATE) {
                 const arr = [
                     PrototypeTransitionType.INSTANTTRANSITION,
                     PrototypeTransitionType.DISSOLVE,
