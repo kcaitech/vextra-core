@@ -7,6 +7,7 @@ import {
     RectShape,
     Shape,
     ShapeFrame,
+    ShapeType,
     StarShape,
     SymbolShape,
     SymbolUnionShape,
@@ -25,14 +26,14 @@ import {
     GradientType,
     MarkerType,
     ShadowPosition,
-    ShapeType,
-    SideType} from "../data/typesdefine";
+    SideType
+} from "../data/typesdefine";
 import { Page } from "../data/page";
 import {
     newArrowShape,
     newArtboard,
     newBoolShape,
-    newGroupShape,
+    newGroupShape, newImageFillShape,
     newLineShape,
     newOvalShape,
     newPathShape,
@@ -65,26 +66,31 @@ import {
     IImportContext,
     importArtboard,
     importBlur,
-    importBorder, importContextSettings,
+    importBorder,
+    importContextSettings,
     importCornerRadius,
     importFill,
-    importGradient, importMarkerType,
+    importGradient,
+    importMarkerType,
+    importOverlayPosition,
+    importPrototypeInterAction,
     importShadow,
     importStop,
     importStyle,
-    importSymbolShape, importText,
+    importSymbolShape,
+    importText,
     importTransform
 } from "../data/baseimport";
 import { gPal } from "../basic/pal";
-// import { findUsableBorderStyle, findUsableFillStyle } from "../render/boolgroup";
-import { BasicArray } from "../data/basic";
+import { BasicArray, ResourceMgr } from "../data/basic";
 import { TableEditor } from "./table";
 import { exportArtboard, exportGradient, exportStop, exportSymbolShape, exportVariable } from "../data/baseexport";
 import {
     adjust_selection_before_group,
     after_remove,
     clear_binds_effect,
-    find_state_space, fixTextShapeFrameByLayout,
+    find_state_space,
+    fixTextShapeFrameByLayout,
     get_symbol_by_layer,
     init_state,
     make_union,
@@ -99,19 +105,37 @@ import {
     is_part_of_symbolref,
     is_state,
     modify_variable_with_api,
+    override_variable,
     shape4border,
     shape4cornerRadius,
     shape4fill,
     shape4shadow
 } from "./symbol";
 import { is_circular_ref2 } from "./utils/ref_check";
-import { BorderSideSetting, BorderStyle, ExportFormat, Point2D, Shadow } from "../data/baseclasses";
 import {
-    calculateInnerAnglePosition,
-    getPolygonPoints,
-    getPolygonVertices,
-    update_frame_by_points
-} from "./utils/path";
+    BorderSideSetting,
+    BorderStyle,
+    CurvePoint,
+    ExportFormat,
+    Point2D,
+    PrototypeInterAction,
+    PrototypeStartingPoint,
+    Shadow,
+    PrototypeEvents,
+    PrototypeConnectionType,
+    PrototypeNavigationType,
+    PrototypeTransitionType,
+    PrototypeEasingType,
+    OverlayPositionType,
+    OverlayBackgroundInteraction,
+    OverlayBackgroundAppearance,
+    ScrollDirection,
+    OverlayPosition,
+    OverlayMargin,
+    PrototypeEvent,
+    PrototypeActions
+} from "../data/baseclasses";
+import { border2path, calculateInnerAnglePosition, getPolygonPoints, getPolygonVertices, update_frame_by_points } from "./utils/path";
 import { modify_shapes_height, modify_shapes_width } from "./utils/common";
 import { CoopRepository } from "./coop/cooprepo";
 import { Api, TextShapeLike } from "./coop/recordapi";
@@ -119,7 +143,10 @@ import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
 import { unable_to_migrate } from "./utils/migrate";
 import {
     adapt2Shape,
+    ArtboradView,
     BoolShapeView,
+    CutoutShapeView,
+    GroupShapeView,
     PageView,
     render2path,
     ShapeView,
@@ -134,7 +161,7 @@ import { FMT_VER_latest } from "../data/fmtver";
 import { makeShapeTransform1By2, makeShapeTransform2By1, updateShapeTransform1By2 } from "../data/shape_transform_util";
 import { ColVector3D } from "../basic/matrix2";
 import { Transform as Transform2 } from "../basic/transform";
-
+import { getFormatFromBase64 } from "../basic/utils";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -311,6 +338,26 @@ export interface ExportFormatFileFormatAction {
     target: Shape
     index: number
     value: ExportFileFormat
+}
+
+export interface ImagePack {
+    size: {
+        width: number;
+        height: number;
+    },
+    buff: Uint8Array;
+    base64: string;
+    name: string;
+}
+
+export interface SVGParseResult {
+    shape: Shape,
+    mediaResourceMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>
+}
+
+export interface UploadAssets {
+    ref: string,
+    buff: Uint8Array
 }
 
 export function getHorizontalRadians(A: {
@@ -3296,6 +3343,328 @@ export class PageEditor {
         }
     }
 
+    setPrototypeStart(shape: ShapeView, startpoint: PrototypeStartingPoint) {
+        try {
+            const api = this.__repo.start('setPrototypeStart');
+            const __shape = adapt2Shape(shape);
+            api.setShapeProtoStart(this.__page, __shape, startpoint);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    delPrototypeStart(shape: ShapeView) {
+        try {
+            const api = this.__repo.start('delPrototypeStart');
+            const __shape = adapt2Shape(shape);
+            api.setShapeProtoStart(this.__page, __shape, undefined);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    private shape4protoActions(api: Api, page: Page, shape: ShapeView, id: string | undefined) {
+        const _var = override_variable(page, VariableType.ProtoInteractions, OverrideType.ProtoInteractions, (_var) => {
+            const ret = new BasicArray();
+            if (id) {
+                const actions = shape.prototypeInterActions;
+                const a = ((actions || []) as PrototypeInterAction[]).find(v => v.id === id);
+                if (a) ret.push(a);
+            }
+            return ret;
+        }, api, shape)
+        if (_var && id && !(_var.value as PrototypeInterAction[]).find(v => v.id === id)) {
+            const inherit = shape.prototypeInterActions;
+            const i = inherit && inherit.find(v => v.id === id);
+            if (i) {
+                const a = new PrototypeInterAction(new BasicArray(), id, new PrototypeEvent(i.event.interactionType), new PrototypeActions(i.actions.connectionType))
+                api.insertShapeprototypeInteractions(this.__page, _var, a);
+            }
+        }
+        return _var || shape.data;
+    }
+
+    insertPrototypeAction(shape: ShapeView, action: PrototypeInterAction) {
+        try {
+            const api = this.__repo.start('insertPrototypeAction');
+            const _shape = this.shape4protoActions(api, this.__page, shape, undefined);
+            api.insertShapeprototypeInteractions(this.__page, _shape, action);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    deletePrototypeAction(shape: ShapeView, id: string) {
+        try {
+            const api = this.__repo.start('deletePrototypeAction');
+            const _shape = this.shape4protoActions(api, this.__page, shape, id);
+            if (_shape instanceof Variable) {
+                api.shapeModifyPrototypeActionDeleted(this.__page, _shape, id, true);
+            } else {
+                api.deleteShapePrototypeInteractions(this.__page, _shape, id);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setPrototypeActionEvent(shape: ShapeView, id: string, value: PrototypeEvents) {
+        try {
+            const api = this.__repo.start('setPrototypeActionEvent');
+            const _shape = this.shape4protoActions(api, this.__page, shape, id);
+            api.shapeModifyPrototypeActionEvent(this.__page, _shape, id, value);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setPrototypeActionEventTime(shape: ShapeView, id: string, value: number) {
+        try {
+            const api = this.__repo.start('setPrototypeActionEventTime');
+            const _shape = this.shape4protoActions(api, this.__page, shape, id);
+            api.shapeModifyPrototypeActionEventTime(this.__page, _shape, id, value);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setPrototypeActionConnNav(shape: ShapeView, id: string, conn: PrototypeConnectionType | undefined, nav: PrototypeNavigationType | undefined) {
+        try {
+            const api = this.__repo.start('setPrototypeActionConnectionType');
+            const __shape = this.shape4protoActions(api, this.__page, shape, id);
+            const transitionType = shape.prototypeInterActions?.find(i => i.id === id)?.actions.transitionType
+            const old_nav = shape.prototypeInterActions?.find(i => i.id === id)?.actions.navigationType
+            api.shapeModifyPrototypeActionConnNav(this.__page, __shape, id, conn, nav);
+
+            if (nav === PrototypeNavigationType.SCROLLTO || old_nav === PrototypeNavigationType.SCROLLTO) {
+                const arr = [PrototypeTransitionType.INSTANTTRANSITION, PrototypeTransitionType.DISSOLVE]
+                if (!transitionType) return
+                if (!arr.includes(transitionType)) {
+                    api.shapeModifyPrototypeActionTransitionType(this.__page, __shape, id, PrototypeTransitionType.INSTANTTRANSITION)
+                }
+                api.shapeModifyPrototypeActionTargetNodeID(this.__page, __shape, id, undefined)
+            }
+            if (nav === PrototypeNavigationType.SWAPSTATE || old_nav === PrototypeNavigationType.SWAPSTATE) {
+                const arr = [PrototypeTransitionType.INSTANTTRANSITION, PrototypeTransitionType.SCROLLANIMATE]
+                if (!transitionType) return
+                if (!arr.includes(transitionType)) {
+                    api.shapeModifyPrototypeActionTransitionType(this.__page, __shape, id, PrototypeTransitionType.INSTANTTRANSITION)
+                }
+                api.shapeModifyPrototypeActionTargetNodeID(this.__page, __shape, id, undefined)
+            }
+            if (nav === PrototypeNavigationType.OVERLAY || nav === PrototypeNavigationType.SWAP) {
+                const arr = [
+                    PrototypeTransitionType.INSTANTTRANSITION,
+                    PrototypeTransitionType.DISSOLVE,
+                    PrototypeTransitionType.MOVEFROMLEFT,
+                    PrototypeTransitionType.MOVEFROMRIGHT,
+                    PrototypeTransitionType.MOVEFROMTOP,
+                    PrototypeTransitionType.MOVEFROMBOTTOM
+                ]
+                if (!transitionType) return
+                if (!arr.includes(transitionType)) {
+                    api.shapeModifyPrototypeActionTransitionType(this.__page, __shape, id, PrototypeTransitionType.INSTANTTRANSITION)
+                }
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setPrototypeActionTargetNodeID(shape: ShapeView, id: string, value: string) {
+        try {
+            const api = this.__repo.start('setPrototypeActionTargetNodeID');
+            const __shape = this.shape4protoActions(api, this.__page, shape, id);
+            api.shapeModifyPrototypeActionTargetNodeID(this.__page, __shape, id, value);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setPrototypeActionTransitionType(shape: ShapeView, id: string, value: PrototypeTransitionType) {
+        try {
+            const api = this.__repo.start('setPrototypeActionTransitionType');
+            const __shape = this.shape4protoActions(api, this.__page, shape, id);
+            api.shapeModifyPrototypeActionTransitionType(this.__page, __shape, id, value);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setPrototypeActionTransitionDuration(shape: ShapeView, id: string, value: number) {
+        try {
+            const api = this.__repo.start('setPrototypeActionTransitionDuration');
+            const __shape = this.shape4protoActions(api, this.__page, shape, id);
+            api.shapeModifyPrototypeActionTransitionDuration(this.__page, __shape, id, value);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setPrototypeActionEasingType(shape: ShapeView, id: string, value: PrototypeEasingType, esfn: BasicArray<number>) {
+        try {
+            const api = this.__repo.start('setPrototypeActionEasingType');
+            const __shape = this.shape4protoActions(api, this.__page, shape, id);
+            api.shapeModifyPrototypeActionEasingType(this.__page, __shape, id, value, esfn);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setPrototypeActionConnectionURL(shape: ShapeView, id: string, value: string) {
+        try {
+            const api = this.__repo.start('setPrototypeActionConnectionURL');
+            const __shape = this.shape4protoActions(api, this.__page, shape, id);
+            api.shapeModifyPrototypeActionConnectionURL(this.__page, __shape, id, value);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setPrototypeActionOpenUrlInNewTab(shape: ShapeView, id: string, value: boolean) {
+        try {
+            const api = this.__repo.start('setPrototypeActionOpenUrlInNewTab');
+            const __shape = this.shape4protoActions(api, this.__page, shape, id);
+            api.shapeModifyPrototypeActionOpenUrlInNewTab(this.__page, __shape, id, value);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setPrototypeActionEasingFunction(shape: ShapeView, id: string, value: BasicArray<number>) {
+        try {
+            const api = this.__repo.start('setPrototypeActionOpenUrlInNewTab');
+            const __shape = this.shape4protoActions(api, this.__page, shape, id);
+            api.shapeModifyPrototypeActionEasingFunction(this.__page, __shape, id, value);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setPrototypeExtraScrollOffsetX(shape: ShapeView, id: string, value: number) {
+        try {
+            const api = this.__repo.start('setPrototypeExtraScrollOffsetX');
+            const __shape = this.shape4protoActions(api, this.__page, shape, id);
+            api.shapeModifyPrototypeExtraScrollOffsetX(this.__page, __shape, id, value);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setPrototypeExtraScrollOffsetY(shape: ShapeView, id: string, value: number) {
+        try {
+            const api = this.__repo.start('setPrototypeExtraScrollOffsetY');
+            const __shape = this.shape4protoActions(api, this.__page, shape, id);
+            api.shapeModifyPrototypeExtraScrollOffsetY(this.__page, __shape, id, value);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setOverlayPositionType(shape: ShapeView, value: OverlayPositionType) {
+        try {
+            const api = this.__repo.start('setOverlayPositionType');
+            const __shape = adapt2Shape(shape);
+            api.shapeModifyOverlayPositionType(this.__page, __shape, value);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setOverlayPositionTypeMarginTop(shape: ShapeView, value: number) {
+        try {
+            const api = this.__repo.start('setOverlayPositionTypeMarginTop');
+            const __shape = adapt2Shape(shape);
+            api.shapeModifyOverlayPositionTypeMarginTop(this.__page, __shape, value);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setOverlayPositionTypeMarginBottom(shape: ShapeView, value: number) {
+        try {
+            const api = this.__repo.start('setOverlayPositionTypeMarginBottom');
+            const __shape = adapt2Shape(shape);
+            api.shapeModifyOverlayPositionTypeMarginBottom(this.__page, __shape, value);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setOverlayPositionTypeMarginLeft(shape: ShapeView, value: number) {
+        try {
+            const api = this.__repo.start('setOverlayPositionTypeMarginLeft');
+            const __shape = adapt2Shape(shape);
+            api.shapeModifyOverlayPositionTypeMarginLeft(this.__page, __shape, value);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setOverlayPositionTypeMarginRight(shape: ShapeView, value: number) {
+        try {
+            const api = this.__repo.start('setOverlayPositionTypeMarginRight');
+            const __shape = adapt2Shape(shape);
+            api.shapeModifyOverlayPositionTypeMarginRight(this.__page, __shape, value);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setOverlayBackgroundInteraction(shape: ShapeView, value: OverlayBackgroundInteraction) {
+        try {
+            const api = this.__repo.start('setOverlayBackgroundInteraction');
+            const __shape = adapt2Shape(shape);
+            api.shapeModifyOverlayBackgroundInteraction(this.__page, __shape, value);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setOverlayBackgroundAppearance(shape: ShapeView, value?: OverlayBackgroundAppearance) {
+        try {
+            const api = this.__repo.start('setOverlayBackgroundAppearance');
+            const __shape = adapt2Shape(shape);
+            api.shapeModifyOverlayBackgroundAppearance(this.__page, __shape, value);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setscrollDirection(shape: ShapeView, value: ScrollDirection) {
+        try {
+            const api = this.__repo.start('setscrollDirection');
+            const __shape = adapt2Shape(shape);
+            api.shapeModifyscrollDirection(this.__page, __shape, value);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
     toggleShapesVisible(shapes: ShapeView[]) {
         const api = this.__repo.start('setShapesVisible');
         try {
@@ -3696,17 +4065,36 @@ export class PageEditor {
                         const alpha = __text.paras[0]?.spans[0];
                         const len = shape.text.length;
                         const __view = view as TextShapeView;
-                        if (alpha) {
-                            api.textModifyColor(page, __view, 0, len, alpha.color);
-                            api.textModifyFontName(page, __view, 0, len, alpha.fontName!);
-                            api.textModifyFontSize(page, __view, 0, len, alpha.fontSize!);
-                            api.textModifyItalic(page, __view, !!alpha.italic, 0, len);
-                            api.textModifyKerning(page, __view, alpha.kerning!, 0, len);
-                            api.textModifyUnderline(page, __view, alpha.underline, 0, len);
-                            api.textModifyStrikethrough(page, __view, alpha.strikethrough, 0, len);
-                            api.textModifyWeight(page, __view, alpha.weight!, 0, len);
-                            fixTextShapeFrameByLayout(api, page, __view)
+                        let needFixFrame = false;
+                        const attr = __text.attr;
+                        if (attr) {
+                            api.shapeModifyTextVerAlign(page, __view, attr.verAlign!); // 垂直位置
+                            api.shapeModifyTextBehaviour(page, __view.text, attr.textBehaviour!); // 宽高表现
                         }
+                        if (alpha) {
+                            api.textModifyColor(page, __view, 0, len, alpha.color); // 字体颜色
+                            api.textModifyFontName(page, __view, 0, len, alpha.fontName!); // 字体
+                            api.textModifyFontSize(page, __view, 0, len, alpha.fontSize!); // 字号
+                            api.textModifyItalic(page, __view, !!alpha.italic, 0, len); // 斜体
+                            api.textModifyKerning(page, __view, alpha.kerning || 0, 0, len); // 字间距
+                            api.textModifyUnderline(page, __view, alpha.underline, 0, len); // 下划线
+                            api.textModifyStrikethrough(page, __view, alpha.strikethrough, 0, len); // 删除线
+                            api.textModifyWeight(page, __view, alpha.weight!, 0, len); // 字重
+                            api.textModifyHighlightColor(page, __view, 0, len, alpha.highlight); // 高亮底色
+                            needFixFrame = true;
+                        }
+
+                        const alphaAttr = __text.paras[0]?.attr;
+                        if (alphaAttr) {
+                            api.textModifyParaSpacing(page, __view, alphaAttr.paraSpacing || 0, 0, len); // 段落间距
+                            api.textModifyMinLineHeight(page, __view, alphaAttr.minimumLineHeight!, 0, len); // 行高
+                            api.textModifyMaxLineHeight(page, __view, alphaAttr.maximumLineHeight!, 0, len); // 行高
+                            api.textModifyHorAlign(page, __view, alphaAttr.alignment!, 0, len); // 水平位置
+
+                            needFixFrame = true;
+                        }
+
+                        needFixFrame && fixTextShapeFrameByLayout(api, page, __view);
                     }
                 }
             }
@@ -3730,8 +4118,10 @@ export class PageEditor {
         }
     }
 
-    outlineShapes(shapes: ShapeView[]) {
+    outlineShapes(shapes: ShapeView[], suffix?: string) {
         try {
+            const document = this.__document;
+            const page = this.__page;
             const ids: string[] = [];
             const api = this.__repo.start('outlineShapes', (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
                 const state = {} as SelectionState;
@@ -3739,29 +4129,189 @@ export class PageEditor {
                 else state.shapes = cmd.saveselection?.shapes || [];
                 selection.restore(state);
             });
-            for (const view of shapes) {
-                if (!(view instanceof TextShapeView)) continue;
-                const shape = adapt2Shape(view) as TextShape;
-                const path = view.getTextPath();
-                const copyStyle = findUsableFillStyle(view);
-                const style: Style = this.cloneStyle(copyStyle);
-                const mainColor = shape.text.paras[0]?.spans[0]?.color;
-                if (mainColor) {
-                    const len = style.fills.length;
-                    style.fills.push(new Fill([len] as BasicArray<number>, uuid(), true, FillType.SolidColor, mainColor));
+            const __flatten = (shapes: ShapeView[]) => {
+                const res: ShapeView[] = [];
+                for (const view of shapes) {
+                    if (view instanceof TableView) continue;
+                    if (view instanceof CutoutShapeView) continue;
+                    if (view.type === ShapeType.Group || view instanceof ArtboradView || view instanceof SymbolView) {
+                        res.push(...__flatten((view as GroupShapeView).childs));
+                        continue;
+                    }
+                    res.push(view)
                 }
-                let pathShape = newPathShape(view.name, view.frame, path, style);
-                pathShape.transform = shape.transform.clone();
-                const parent = shape.parent as GroupShape;
-                const index = parent.indexOfChild(shape);
-                api.shapeDelete(this.__document, this.__page, parent, index);
-                pathShape = api.shapeInsert(this.__document, this.__page, parent, pathShape, index) as PathShape;
-                ids.push(pathShape.id);
+                return res;
+            }
+            const __shapes = __flatten(shapes);
+
+            for (const view of __shapes) {
+                if (view instanceof TextShapeView) {
+                    const shape = adapt2Shape(view) as TextShape;
+                    const path = view.getTextPath();
+                    const copyStyle = findUsableFillStyle(view);
+                    const style: Style = this.cloneStyle(copyStyle);
+                    const mainColor = shape.text.paras[0]?.spans[0]?.color;
+                    if (mainColor) {
+                        const len = style.fills.length;
+                        style.fills.push(new Fill([len] as BasicArray<number>, uuid(), true, FillType.SolidColor, mainColor));
+                    }
+                    let pathShape = newPathShape(view.name, view.frame, path, style);
+                    pathShape.transform = shape.transform.clone();
+                    pathShape.mask = shape.mask;
+                    pathShape.resizingConstraint = shape.resizingConstraint;
+                    const parent = shape.parent as GroupShape;
+                    const index = parent.indexOfChild(shape);
+                    api.shapeDelete(document, page, parent, index);
+                    pathShape = api.shapeInsert(document, page, parent, pathShape, index) as PathShape;
+                    update_frame_by_points(api, page, pathShape);
+                    ids.push(pathShape.id);
+                } else {
+                    const borders = view.getBorders();
+                    if (!borders.length) continue;
+                    const shape = adapt2Shape(view);
+                    const parent = shape.parent as GroupShape;
+                    const border2shape = (border: Border) => {
+                        const copyStyle = findUsableFillStyle(view);
+                        const style: Style = this.cloneStyle(copyStyle);
+                        const fill = new Fill([0] as BasicArray<number>, uuid(), true, border.fillType, border.color);
+                        fill.gradient = border.gradient;
+                        if (fill.fillType === FillType.Pattern) fill.fillType = FillType.SolidColor;
+                        style.fills = new BasicArray<Fill>(fill);
+                        style.borders.length = 0;
+                        const path = border2path(view, border);
+                        let pathshape = newPathShape(view.name + suffix, view.frame, path, style);
+                        pathshape.transform = shape.transform.clone();
+                        pathshape.mask = shape.mask;
+                        pathshape.resizingConstraint = shape.resizingConstraint;
+                        const index = parent.indexOfChild(shape);
+                        pathshape = api.shapeInsert(document, page, parent, pathshape, index + 1) as PathShape;
+                        update_frame_by_points(api, page, pathshape);
+                        ids.push(pathshape.id);
+                    }
+                    for (let i = borders.length - 1; i > -1; i--) border2shape(borders[i]);
+                    if (shape.style.fills.length) {
+                        api.deleteBorders(page, shape, 0, borders.length);
+                        ids.push(view.data.id);
+                    } else {
+                        api.shapeDelete(document, page, parent, parent.indexOfChild(shape));
+                    }
+                }
             }
             this.__repo.commit();
         } catch (error) {
             console.error('outlineShapes:', error);
             this.__repo.rollback();
+        }
+    }
+
+    insertImages(images: { pack: ImagePack | SVGParseResult, transform: Transform }[], env?: GroupShapeView) {
+        try {
+            const ids: string[] = [];
+            const imageShapes: { shape: Shape, upload: UploadAssets[] }[] = [];
+            const api = this.__repo.start('insertImagesToPage', (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+                const state = {} as SelectionState;
+                if (!isUndo) state.shapes = ids;
+                else state.shapes = cmd.saveselection?.shapes || [];
+                selection.restore(state);
+            });
+            const document = this.__document;
+            const page = this.__page;
+            const parent = (env ? adapt2Shape(env) : this.__page) as GroupShape;
+            for (const item of images) {
+                if ((item.pack as ImagePack).size) {
+                    const { size, name, buff, base64 } = item.pack as ImagePack;
+                    const format = getFormatFromBase64(base64);
+                    const ref = `${v4()}.${format}`;
+                    document.mediasMgr.add(ref, { buff, base64 });
+                    const reg = new RegExp(`.${format}|.jpg$`, 'img');
+                    const shape = newImageFillShape(name.replace(reg, '') || 'image', new ShapeFrame(0, 0, size.width, size.height), document.mediasMgr, size, ref);
+                    shape.transform = item.transform;
+                    const index = parent.childs.length;
+                    const __s = api.shapeInsert(document, page, parent, shape, index);
+                    if (__s) {
+                        ids.push(__s.id);
+                        imageShapes.push({ shape: __s, upload: [{ ref, buff }] });
+                    }
+                } else {
+                    const shape = (item.pack as SVGParseResult).shape;
+                    shape.transform = item.transform;
+                    const index = parent.childs.length;
+                    const __s = api.shapeInsert(document, page, parent, shape, index);
+                    if (__s) {
+                        ids.push(__s.id);
+                        const upload: UploadAssets[] = [];
+                        (item.pack as SVGParseResult).mediaResourceMgr.forEach((v, k) => {
+                            upload.push({ ref: k, buff: v.buff });
+                        })
+                        imageShapes.push({ shape: __s, upload });
+                    }
+                }
+            }
+            this.__repo.commit();
+            return imageShapes;
+        } catch (e) {
+            this.__repo.rollback();
+            console.error('insertImagesToPage:', e);
+            return false;
+        }
+    }
+
+    flattenSelection(shapes: ShapeView[], name?: string) {
+        // 先把所有可以参与拼合的图层整理出来
+        // 确定一组属性，包括边框、填充、蒙版、约束等
+        //
+        try {
+            if (!shapes.length) return;
+            let virtualSelection = false;
+            const __shapes = (function deep(shapes: ShapeView[]) {
+                const result: ShapeView[] = [];
+                for (const view of shapes) {
+                    if (view.isVirtualShape) {
+                        virtualSelection = true;
+                        break;
+                    }
+                    if (view instanceof ArtboradView || view instanceof SymbolView || view.type === ShapeType.Group) {
+                        result.push(...deep(view.childs));
+                        continue;
+                    }
+                    result.push(view);
+                }
+                return result;
+            })(shapes);
+            if (virtualSelection || !__shapes.length) return;
+
+            for (const view of __shapes) {
+
+            }
+            // if (shapes.length > 1) {
+            //     return this.flattenShapes(shapes);
+            // } else if (shapes.length === 1) {
+            //     const __flatten = (view: ShapeView) => {
+            //         const res: ShapeView[] = [];
+            //         if (view instanceof PathShapeView) {
+            //             res.push(view);
+            //         } else {
+            //             if (view.type === ShapeType.Group || view instanceof ArtboradView) {
+            //                 res.push(...__flatten(view));
+            //             }
+            //         }
+            //         return res;
+            //     }
+            //     const __shapes = __flatten(shapes[0]);
+            //     if (__shapes.length > 1) {
+            //         return this.flattenShapes(shapes);
+            //     }
+            //     const view = __shapes[0];
+            //     const shape = adapt2Shape(view);
+            //     if (!(view instanceof PathShapeView)) return;
+            //     const api = this.__repo.start('flattenSelection');
+            //     update_frame_by_points(api, this.__page, shape);
+            //     api.shapeEditPoints(this.__page, shape, true);
+            //     this.__repo.commit();
+            // }
+        } catch (e) {
+            this.__repo.rollback()
+            console.error(e)
         }
     }
 

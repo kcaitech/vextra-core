@@ -7,7 +7,7 @@ import { ShapeFrame, SymbolUnionShape } from "../../data/shape";
 import { BasicArray, BasicMap } from "../../data/basic";
 import { IImportContext, importSymbolShape, importSymbolUnionShape } from "../../data/baseimport";
 import { FMT_VER_latest } from "../../data/fmtver";
-import { ShapeSize } from "src/data/typesdefine";
+import { ShapeSize } from "../../data/typesdefine";
 
 export function pageInsert(document: Document, page: Page, index: number) {
     if (index < 0) return;
