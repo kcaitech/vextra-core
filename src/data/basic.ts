@@ -189,6 +189,15 @@ export class ResourceMgr<T> extends WatchableObject {
     get keys() {
         return Array.from(this.__resource.keys());
     }
+
+    has(key: string) {
+        return this.__resource.has(key);
+    }
+
+    delete(key: string) {
+        return this.__resource.delete(key);
+    }
+
     get resource() {
         return Array.from(this.__resource.values());
     }

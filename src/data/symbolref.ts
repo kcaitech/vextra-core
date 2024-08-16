@@ -43,7 +43,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         style: Style,
         size: ShapeSize,
         refId: string,
-        variables: BasicMap<string, Variable>
+        variables: BasicMap<string, Variable>,
     ) {
         super(
             crdtidx,
@@ -173,10 +173,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         return RadiusType.Rect;
     }
 
-    // get frameType() {
-    //     return FrameType.Flex;
-    // }
-    getImageFill() {
+    get isImageFill() {
         return false;
     }
 }

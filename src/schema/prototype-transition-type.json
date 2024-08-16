@@ -1,0 +1,29 @@
+{
+    "description": "transitionType",
+    "enum": [
+        "INSTANT_TRANSITION",
+        "DISSOLVE",
+        "MOVE_FROM_RIGHT",
+        "MOVE_FROM_LEFT",
+        "MOVE_FROM_TOP",
+        "MOVE_FROM_BOTTOM",
+        "MOVE_OUT_TO_RIGHT",
+        "MOVE_OUT_TO_LEFT",
+        "MOVE_OUT_TO_TOP",
+        "MOVE_OUT_TO_BOTTOM",
+        "SLIDE_FROM_RIGHT",
+        "SLIDE_FROM_LEFT",
+        "SLIDE_FROM_TOP",
+        "SLIDE_FROM_BOTTOM",
+        "SLIDE_OUT_TO_RIGHT",
+        "SLIDE_OUT_TO_LEFT",
+        "SLIDE_OUT_TO_TOP",
+        "SLIDE_OUT_TO_BOTTOM",
+        "PUSH_FROM_RIGHT",
+        "PUSH_FROM_LEFT",
+        "PUSH_FROM_TOP",
+        "PUSH_FROM_BOTTOM",
+        "SCROLL_ANIMATE"
+    ],
+    "default": "INSTANT_TRANSITION"
+}

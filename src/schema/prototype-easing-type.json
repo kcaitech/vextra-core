@@ -1,0 +1,13 @@
+{
+    "description": "easingType",
+    "enum": [
+        "LINEAR",
+        "IN_CUBIC",
+        "OUT_CUBIC",
+        "INOUT_CUBIC",
+        "IN_BACK_CUBIC",
+        "OUT_BACK_CUBIC",
+        "INOUT_BACK_CUBIC"
+    ],
+    "default": "INSTANT"
+}

@@ -1,4 +1,4 @@
-import { Page } from "../data/page";
+import { Page } from "../data";
 import { ArtboradView } from "./artboard";
 import { CutoutShapeView } from "./cutout";
 import { GroupShapeView } from "./groupshape";

@@ -1,10 +1,9 @@
 import { v4 } from "uuid";
 import { Matrix } from "../basic/matrix";
-import { CurvePoint, PathShape, Shape, SymbolShape, Variable } from "./shape";
+import { CurvePoint, Shape, SymbolShape, Variable } from "./shape";
 import { ContactType, CurveMode, OverrideType } from "./typesdefine";
-// import { Api } from "../editor/coop/recordapi";
 import { Page } from "./page";
-import { importCurvePoint, importPolygonShape, importStarShape } from "./baseimport";
+import { importPolygonShape, importStarShape } from "./baseimport";
 import { importArtboard, importContactShape, importBoolShape, importGroupShape, importImageShape, importLineShape, importOvalShape, importPathShape, importPathShape2, importRectShape, importSymbolRefShape, importTableCell, importTableShape, importTextShape } from "./baseimport";
 import * as types from "./typesdefine"
 import { ContactShape, SymbolRefShape } from "./classes";
@@ -885,6 +884,21 @@ export function findOverride(refId: string, type: OverrideType, varsContainer: (
     return ret ? [ret.v] : undefined;
 }
 
+export function findOverrideAll(refId: string, type: OverrideType, varsContainer: (SymbolRefShape | SymbolShape)[]) {
+    let ret: Variable[] = [];
+    for (let i = varsContainer.length - 1; i >= 0; --i) {
+        const container = varsContainer[i];
+        if (container instanceof SymbolRefShape) {
+            const override = container.getOverrid(refId, type);
+            if (override) {
+                ret.push(override.v);
+            }
+            refId = refId.length > 0 ? (container.id + '/' + refId) : container.id;
+        }
+    }
+    return ret.length > 0 ? ret : undefined;
+}
+
 export function findOverrideAndVar(
     shape: Shape, // not proxyed
     overType: OverrideType,
@@ -988,4 +1002,8 @@ export function _get_path(shape: types.Artboard) {
     const ltc = get_bezier_c(lb, lt, rt, radius, min);
 
     return [m, t, rtc, r, rbc, b, lbc, l, ltc, ["z"]];
+}
+
+export function is_mac() {
+    return /macintosh|mac os x/i.test(navigator.userAgent);
 }

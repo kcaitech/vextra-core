@@ -1,0 +1,11 @@
+{
+    "description": "connectionType",
+    "enum": [
+        "NONE",
+        "INTERNAL_NODE",
+        "BACK",
+        "URL",
+        "CLOSE"
+    ],
+    "default": "NONE"
+}

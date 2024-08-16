@@ -1,0 +1,21 @@
+{
+    "description": "overlay position",
+    "type": "object",
+    "properties": {
+        "typeId": {
+            "type": "string"
+        },
+        "position": {
+            "$ref": "./overlay-position-type.json"
+        },
+        "margin": {
+           "$ref": "./overlay-margin.json"
+        }
+    },
+    "required": [
+        "typeId",
+        "position",
+        "margin"
+    ],
+    "additionalProperties": false
+}

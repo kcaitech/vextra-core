@@ -1,0 +1,8 @@
+{
+    "description": "overlayBackgroundInteraction",
+    "enum": [
+        "NONE",
+        "CLOSE_ON_CLICK_OUTSIDE"
+    ],
+    "default": "NONE"
+}

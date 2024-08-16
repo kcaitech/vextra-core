@@ -21,9 +21,18 @@ export {
     LineCapStyle,
     LineJoinStyle,
     MarkerType,
+    OverlayBackgroundInteraction,
+    OverlayBackgroundType,
+    OverlayPositionType,
     OverrideType,
     PaintFilterType,
+    PrototypeConnectionType,
+    PrototypeEasingType,
+    PrototypeEvents,
+    PrototypeNavigationType,
+    PrototypeTransitionType,
     ResizeType,
+    ScrollDirection,
     ShadowPosition,
     ShapeType,
     SideType,
@@ -60,9 +69,18 @@ import {
     LineCapStyle,
     LineJoinStyle,
     MarkerType,
+    OverlayBackgroundInteraction,
+    OverlayBackgroundType,
+    OverlayPositionType,
     OverrideType,
     PaintFilterType,
+    PrototypeConnectionType,
+    PrototypeEasingType,
+    PrototypeEvents,
+    PrototypeNavigationType,
+    PrototypeTransitionType,
     ResizeType,
+    ScrollDirection,
     ShadowPosition,
     ShapeType,
     SideType,
@@ -231,6 +249,32 @@ export class Guide extends Basic {
         this.offset = offset
     }
 }
+/* overlay margin */
+export class OverlayMargin extends Basic {
+    typeId = "overlay-margin"
+    top: number
+    bottom: number
+    left: number
+    right: number
+    constructor(top: number = 0, bottom: number = 0, left: number = 0, right: number = 0) {
+        super()
+        this.top = top
+        this.bottom = bottom
+        this.left = left
+        this.right = right
+    }
+}
+/* overlay position */
+export class OverlayPosition extends Basic {
+    typeId = "overlay-position"
+    position: OverlayPositionType
+    margin: OverlayMargin
+    constructor(position: OverlayPositionType, margin: OverlayMargin) {
+        super()
+        this.position = position
+        this.margin = margin
+    }
+}
 /* padding */
 export class Padding extends Basic {
     typeId = "padding"
@@ -324,6 +368,19 @@ export class Point2D extends Basic {
         this.y = y
     }
 }
+type PrototypeActions_easingFunction = BasicArray<number>
+type PrototypeInterAction_crdtidx = BasicArray<number>
+/* prototypeStartingPoint */
+export class PrototypeStartingPoint extends Basic {
+    typeId = "prototype-starting-point"
+    name: string
+    desc: string
+    constructor(name: string, desc: string) {
+        super()
+        this.name = name
+        this.desc = desc
+    }
+}
 /* shadow */
 export class Shadow extends Basic {
     typeId = "shadow"
@@ -378,6 +435,7 @@ export class ShapeSize extends Basic {
         this.height = height
     }
 }
+type Shape_prototypeInteractions = BasicArray<PrototypeInterAction>
 /* stop */
 export class Stop extends Basic {
     typeId = "stop"
@@ -434,7 +492,7 @@ export class UserInfo extends Basic {
         this.avatar = avatar
     }
 }
-type Variable_0 = BasicArray<Border | Fill | Shadow>
+type Variable_0 = BasicArray<Border | Fill | Shadow | PrototypeInterAction>
 /* blur */
 export class Blur extends Basic {
     typeId = "blur"
@@ -578,6 +636,61 @@ export class Gradient extends Basic {
         this.to = to
         this.gradientType = gradientType
         this.stops = stops
+    }
+}
+/* overlay-background-appearance */
+export class OverlayBackgroundAppearance extends Basic {
+    typeId = "overlay-background-appearance"
+    backgroundType: OverlayBackgroundType
+    backgroundColor: Color
+    constructor(backgroundType: OverlayBackgroundType, backgroundColor: Color) {
+        super()
+        this.backgroundType = backgroundType
+        this.backgroundColor = backgroundColor
+    }
+}
+/* actions */
+export class PrototypeActions extends Basic {
+    typeId = "prototype-actions"
+    connectionType: PrototypeConnectionType
+    targetNodeID?: string
+    transitionType?: PrototypeTransitionType
+    transitionDuration?: number
+    easingType?: PrototypeEasingType
+    connectionURL?: string
+    openUrlInNewTab?: boolean
+    navigationType?: PrototypeNavigationType
+    easingFunction?: PrototypeActions_easingFunction
+    extraScrollOffset?: Point2D
+    constructor(connectionType: PrototypeConnectionType) {
+        super()
+        this.connectionType = connectionType
+    }
+}
+/* event */
+export class PrototypeEvent extends Basic {
+    typeId = "prototype-event"
+    interactionType: PrototypeEvents
+    transitionTimeout?: number
+    constructor(interactionType: PrototypeEvents) {
+        super()
+        this.interactionType = interactionType
+    }
+}
+/* prototypeInteraction */
+export class PrototypeInterAction extends Basic {
+    typeId = "prototype-inter-action"
+    crdtidx: PrototypeInterAction_crdtidx
+    id: string
+    event: PrototypeEvent
+    actions: PrototypeActions
+    isDeleted?: boolean
+    constructor(crdtidx: PrototypeInterAction_crdtidx, id: string, event: PrototypeEvent, actions: PrototypeActions) {
+        super()
+        this.crdtidx = crdtidx
+        this.id = id
+        this.event = event
+        this.actions = actions
     }
 }
 /* span attr */
@@ -758,6 +871,12 @@ export class Shape extends Basic {
     shouldBreakMaskChain?: boolean
     varbinds?: BasicMap<string, string>
     haveEdit?: boolean
+    prototypeStartingPoint?: PrototypeStartingPoint
+    prototypeInteractions?: Shape_prototypeInteractions
+    overlayPosition?: OverlayPosition
+    overlayBackgroundInteraction?: OverlayBackgroundInteraction
+    overlayBackgroundAppearance?: OverlayBackgroundAppearance
+    scrollDirection?: ScrollDirection
     mask?: boolean
     constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style) {
         super()

@@ -17,7 +17,8 @@ import * as classes from "./baseclasses";
 import { BasicArray } from "./basic";
 import { Path } from "./path";
 import { RadiusType } from "./consts";
-import { Guide } from "./baseclasses";
+import { Guide} from "./baseclasses";
+
 
 export class Artboard extends GroupShape implements classes.Artboard {
     get frame(): ShapeFrame {
@@ -43,7 +44,8 @@ export class Artboard extends GroupShape implements classes.Artboard {
         childs: BasicArray<(GroupShape | Shape | ImageShape | PathShape | RectShape | TextShape)>,
         size: ShapeSize,
         haveEdit?: boolean,
-        guides?: BasicArray<Guide>
+        guides?: BasicArray<Guide>,
+
     ) {
         super(
             crdtidx,

@@ -301,6 +301,36 @@ export function exportLineJoinStyle(source: types.LineJoinStyle, ctx?: IExportCo
 export function exportMarkerType(source: types.MarkerType, ctx?: IExportContext): types.MarkerType {
     return source
 }
+/* overlayBackgroundInteraction */
+export function exportOverlayBackgroundInteraction(source: types.OverlayBackgroundInteraction, ctx?: IExportContext): types.OverlayBackgroundInteraction {
+    return source
+}
+/* interactionType */
+export function exportOverlayBackgroundType(source: types.OverlayBackgroundType, ctx?: IExportContext): types.OverlayBackgroundType {
+    return source
+}
+/* overlay margin */
+export function exportOverlayMargin(source: types.OverlayMargin, ctx?: IExportContext): types.OverlayMargin {
+    const ret: types.OverlayMargin = {} as types.OverlayMargin
+    ret.top = source.top
+    ret.bottom = source.bottom
+    ret.left = source.left
+    ret.right = source.right
+    return ret
+}
+/* overlayPositionType */
+export function exportOverlayPositionType(source: types.OverlayPositionType, ctx?: IExportContext): types.OverlayPositionType {
+    return source
+}
+/* overlay position */
+export function exportOverlayPosition(source: types.OverlayPosition, ctx?: IExportContext): types.OverlayPosition {
+    const ret: types.OverlayPosition = {} as types.OverlayPosition
+    ret.typeId = "overlay-position"
+    ret.typeId = source.typeId
+    ret.position = exportOverlayPositionType(source.position, ctx)
+    ret.margin = exportOverlayMargin(source.margin, ctx)
+    return ret
+}
 /* override types */
 export function exportOverrideType(source: types.OverrideType, ctx?: IExportContext): types.OverrideType {
     return source
@@ -401,8 +431,55 @@ export function exportPoint2D(source: types.Point2D, ctx?: IExportContext): type
     ret.y = source.y
     return ret
 }
+export function exportPrototypeActions_easingFunction(source: types.PrototypeActions_easingFunction, ctx?: IExportContext): types.PrototypeActions_easingFunction {
+    const ret: types.PrototypeActions_easingFunction = []
+    source.forEach((source) => {
+        ret.push(source)
+    })
+    return ret
+}
+/* connectionType */
+export function exportPrototypeConnectionType(source: types.PrototypeConnectionType, ctx?: IExportContext): types.PrototypeConnectionType {
+    return source
+}
+/* easingType */
+export function exportPrototypeEasingType(source: types.PrototypeEasingType, ctx?: IExportContext): types.PrototypeEasingType {
+    return source
+}
+/* interactionType */
+export function exportPrototypeEvents(source: types.PrototypeEvents, ctx?: IExportContext): types.PrototypeEvents {
+    return source
+}
+export function exportPrototypeInterAction_crdtidx(source: types.PrototypeInterAction_crdtidx, ctx?: IExportContext): types.PrototypeInterAction_crdtidx {
+    const ret: types.PrototypeInterAction_crdtidx = []
+    source.forEach((source) => {
+        ret.push(source)
+    })
+    return ret
+}
+/* navigationType */
+export function exportPrototypeNavigationType(source: types.PrototypeNavigationType, ctx?: IExportContext): types.PrototypeNavigationType {
+    return source
+}
+/* prototypeStartingPoint */
+export function exportPrototypeStartingPoint(source: types.PrototypeStartingPoint, ctx?: IExportContext): types.PrototypeStartingPoint {
+    const ret: types.PrototypeStartingPoint = {} as types.PrototypeStartingPoint
+    ret.typeId = "prototype-starting-point"
+    ret.typeId = source.typeId
+    ret.name = source.name
+    ret.desc = source.desc
+    return ret
+}
+/* transitionType */
+export function exportPrototypeTransitionType(source: types.PrototypeTransitionType, ctx?: IExportContext): types.PrototypeTransitionType {
+    return source
+}
 /* resize type */
 export function exportResizeType(source: types.ResizeType, ctx?: IExportContext): types.ResizeType {
+    return source
+}
+/* scrollDirection */
+export function exportScrollDirection(source: types.ScrollDirection, ctx?: IExportContext): types.ScrollDirection {
     return source
 }
 /* shadow position */
@@ -447,6 +524,13 @@ export function exportShapeSize(source: types.ShapeSize, ctx?: IExportContext): 
 /* shape types */
 export function exportShapeType(source: types.ShapeType, ctx?: IExportContext): types.ShapeType {
     return source
+}
+export function exportShape_prototypeInteractions(source: types.Shape_prototypeInteractions, ctx?: IExportContext): types.Shape_prototypeInteractions {
+    const ret: types.Shape_prototypeInteractions = []
+    source.forEach((source) => {
+        ret.push(exportPrototypeInterAction(source, ctx))
+    })
+    return ret
 }
 /* side type */
 export function exportSideType(source: types.SideType, ctx?: IExportContext): types.SideType {
@@ -595,6 +679,9 @@ export function exportVariable_0(source: types.Variable_0, ctx?: IExportContext)
             if (source.typeId === "shadow") {
                 return exportShadow(source as types.Shadow, ctx)
             }
+            if (source.typeId === "prototype-inter-action") {
+                return exportPrototypeInterAction(source as types.PrototypeInterAction, ctx)
+            }
             throw new Error("unknow typeId: " + source.typeId)
         })())
     })
@@ -696,6 +783,50 @@ export function exportGradient(source: types.Gradient, ctx?: IExportContext): ty
     ret.stops = exportGradient_stops(source.stops, ctx)
     if (source.elipseLength) ret.elipseLength = source.elipseLength
     if (source.gradientOpacity) ret.gradientOpacity = source.gradientOpacity
+    return ret
+}
+/* overlay-background-appearance */
+export function exportOverlayBackgroundAppearance(source: types.OverlayBackgroundAppearance, ctx?: IExportContext): types.OverlayBackgroundAppearance {
+    const ret: types.OverlayBackgroundAppearance = {} as types.OverlayBackgroundAppearance
+    ret.typeId = "overlay-background-appearance"
+    ret.typeId = source.typeId
+    ret.backgroundType = exportOverlayBackgroundType(source.backgroundType, ctx)
+    ret.backgroundColor = exportColor(source.backgroundColor, ctx)
+    return ret
+}
+/* actions */
+export function exportPrototypeActions(source: types.PrototypeActions, ctx?: IExportContext): types.PrototypeActions {
+    const ret: types.PrototypeActions = {} as types.PrototypeActions
+    ret.typeId = "prototype-actions"
+    ret.typeId = source.typeId
+    ret.connectionType = exportPrototypeConnectionType(source.connectionType, ctx)
+    if (source.targetNodeID) ret.targetNodeID = source.targetNodeID
+    if (source.transitionType) ret.transitionType = exportPrototypeTransitionType(source.transitionType, ctx)
+    if (source.transitionDuration) ret.transitionDuration = source.transitionDuration
+    if (source.easingType) ret.easingType = exportPrototypeEasingType(source.easingType, ctx)
+    if (source.connectionURL) ret.connectionURL = source.connectionURL
+    if (source.openUrlInNewTab) ret.openUrlInNewTab = source.openUrlInNewTab
+    if (source.navigationType) ret.navigationType = exportPrototypeNavigationType(source.navigationType, ctx)
+    if (source.easingFunction) ret.easingFunction = exportPrototypeActions_easingFunction(source.easingFunction, ctx)
+    if (source.extraScrollOffset) ret.extraScrollOffset = exportPoint2D(source.extraScrollOffset, ctx)
+    return ret
+}
+/* event */
+export function exportPrototypeEvent(source: types.PrototypeEvent, ctx?: IExportContext): types.PrototypeEvent {
+    const ret: types.PrototypeEvent = {} as types.PrototypeEvent
+    ret.interactionType = exportPrototypeEvents(source.interactionType, ctx)
+    if (source.transitionTimeout) ret.transitionTimeout = source.transitionTimeout
+    return ret
+}
+/* prototypeInteraction */
+export function exportPrototypeInterAction(source: types.PrototypeInterAction, ctx?: IExportContext): types.PrototypeInterAction {
+    const ret: types.PrototypeInterAction = {} as types.PrototypeInterAction
+    ret.crdtidx = exportPrototypeInterAction_crdtidx(source.crdtidx, ctx)
+    ret.id = source.id
+    ret.event = exportPrototypeEvent(source.event, ctx)
+    ret.actions = exportPrototypeActions(source.actions, ctx)
+    if (source.typeId) ret.typeId = source.typeId
+    if (source.isDeleted) ret.isDeleted = source.isDeleted
     return ret
 }
 /* span attr */
@@ -870,6 +1001,12 @@ export function exportShape(source: types.Shape, ctx?: IExportContext): types.Sh
         return ret
     })()
     if (source.haveEdit) ret.haveEdit = source.haveEdit
+    if (source.prototypeStartingPoint) ret.prototypeStartingPoint = exportPrototypeStartingPoint(source.prototypeStartingPoint, ctx)
+    if (source.prototypeInteractions) ret.prototypeInteractions = exportShape_prototypeInteractions(source.prototypeInteractions, ctx)
+    if (source.overlayPosition) ret.overlayPosition = exportOverlayPosition(source.overlayPosition, ctx)
+    if (source.overlayBackgroundInteraction) ret.overlayBackgroundInteraction = exportOverlayBackgroundInteraction(source.overlayBackgroundInteraction, ctx)
+    if (source.overlayBackgroundAppearance) ret.overlayBackgroundAppearance = exportOverlayBackgroundAppearance(source.overlayBackgroundAppearance, ctx)
+    if (source.scrollDirection) ret.scrollDirection = exportScrollDirection(source.scrollDirection, ctx)
     if (source.mask) ret.mask = source.mask
     return ret
 }

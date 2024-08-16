@@ -14,8 +14,7 @@ export function stringh(tag: string, attrs?: { [key: string]: any } | (Array<str
 
     if (typeof tag !== 'string') {
         throw new Error("not support:" + tag);
-    }
-    else if (tag.length === 0) {
+    } else if (tag.length === 0) {
         throw new Error("tag is empty");
     }
 
@@ -28,22 +27,19 @@ export function stringh(tag: string, attrs?: { [key: string]: any } | (Array<str
                 if (attr[b] !== undefined) style += b + ':' + attr[b] + ';';
             }
             ret += ' ' + a + '="' + style + '"';
-        }
-        else {
+        } else {
             if (attr !== undefined) ret += ' ' + a + '="' + attr + '"';
         }
     }
     ret += '>';
     if (!childs) {
         // 
-    }
-    else if (Array.isArray(childs)) for (let i = 0, len = childs.length; i < len; i++) {
+    } else if (Array.isArray(childs)) for (let i = 0, len = childs.length; i < len; i++) {
         ret += childs[i];
     }
     else if (typeof childs === 'string') {
         ret += childs;
-    }
-    else {
+    } else {
         throw new Error("unknow childs:" + childs);
     }
     ret += '</' + tag + '>';
@@ -51,7 +47,7 @@ export function stringh(tag: string, attrs?: { [key: string]: any } | (Array<str
 }
 
 export function genid(shapeId: string,
-    varsContainer: (SymbolRefShape | SymbolShape)[]) {
+                      varsContainer: (SymbolRefShape | SymbolShape)[]) {
     if (varsContainer.length > 0) {
         let id = "";
         for (let i = 0, len = varsContainer.length; i < len; ++i) {
@@ -69,7 +65,7 @@ export function genid(shapeId: string,
 }
 
 export function getShapeViewId(shapeId: string,
-    varsContainer?: (SymbolRefShape | SymbolShape)[]) {
+                               varsContainer?: (SymbolRefShape | SymbolShape)[]) {
     if (varsContainer) return genid(shapeId, varsContainer);
     return shapeId;
 }

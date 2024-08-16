@@ -3,7 +3,19 @@ import { importParaAttr, importTextAttr } from "./baseimport";
 import { BasicArray } from "./basic";
 import { Color } from "./color";
 import { Gradient } from "./style";
-import { Para, SpanAttr, ParaAttr, Text, TextAttr, Span, TextBehaviour, UnderlineType, StrikethroughType, BulletNumbers } from "./text";
+import {
+    Para,
+    SpanAttr,
+    ParaAttr,
+    Text,
+    TextAttr,
+    Span,
+    TextBehaviour,
+    UnderlineType,
+    StrikethroughType,
+    BulletNumbers
+} from "./text";
+import { is_mac } from "./utils";
 
 export const gradient_equals = (a: Gradient, b: Gradient) => {
     if (a.gradientType !== b.gradientType || a.elipseLength !== b.elipseLength || a.gradientOpacity !== b.gradientOpacity) {
@@ -29,16 +41,14 @@ export function isDiffSpanAttr(span: SpanAttr, attr: SpanAttr): boolean {
     if (attr.color) {
         if (!span.color) return true;
         if (!(attr.color.equals(span.color))) return true;
-    }
-    else if (span.color) {
+    } else if (span.color) {
         return true;
     }
 
     if (attr.highlight) {
         if (!span.highlight) return true;
         if (!(attr.highlight.equals(span.highlight))) return true;
-    }
-    else if (span.highlight) {
+    } else if (span.highlight) {
         return true;
     }
 
@@ -91,8 +101,7 @@ export function isDiffSpanAttr(span: SpanAttr, attr: SpanAttr): boolean {
     if (attr.gradient) {
         if (!span.gradient) return true;
         if (!(gradient_equals(span.gradient, attr.gradient))) return true;
-    }
-    else if (span.gradient) {
+    } else if (span.gradient) {
         return true;
     }
 
@@ -227,12 +236,10 @@ export function mergeParaAttr(para: Para | ParaAttr, attr: Para | ParaAttr): boo
         if (!para.attr) {
             if (_attr) para.attr = importParaAttr(_attr); // deep clone
             return !!_attr;
-        }
-        else if (_attr) {
+        } else if (_attr) {
             return _mergeParaAttr(para.attr, _attr);
         }
-    }
-    else if (_attr) {
+    } else if (_attr) {
         return _mergeParaAttr(para, _attr);
     }
     return false;
@@ -299,7 +306,7 @@ export function newText(textAttr?: TextAttr): Text {
     para.attr.minimumLineHeight = 24;
     text.paras.push(para);
     const span = new Span(para.length);
-    span.fontName = "PingFang SC";
+    span.fontName = is_mac() ? "PingFang SC" : "微软雅黑";
     span.fontSize = 14;
     span.color = new Color(1, 51, 51, 51);
     para.spans.push(span);
@@ -318,7 +325,7 @@ export function newText2(textAttr?: TextAttr, paraAttr?: ParaAttr, spanAttr?: Sp
     para.attr.minimumLineHeight = 24;
     text.paras.push(para);
     const span = new Span(para.length);
-    span.fontName = "PingFang SC";
+    span.fontName = is_mac() ? "PingFang SC" : "微软雅黑";
     span.fontSize = 14;
     span.color = new Color(0.85, 0, 0, 0);
     para.spans.push(span);

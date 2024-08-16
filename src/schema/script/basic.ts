@@ -277,7 +277,7 @@ function extractBaseProp(schema: any, name: string | undefined, n: Node): BasePr
         const ref = schema['$ref'];
         if (ref === '#') {
             let p = n;
-            while(p.inner) p = p.parent!;
+            while (p.inner) p = p.parent!;
             return {
                 type: 'node',
                 val: p.name
@@ -327,7 +327,7 @@ function extractArrayValue(schema: any, item: ItemProp, n: Node) {
 
         if (ref === '#') {
             let p = n;
-            while(p.inner) p = p.parent!;
+            while (p.inner) p = p.parent!;
             item.val = p.name;
         } else {
             const filename = ref.substring(0, ref.length - schemaext.length)
@@ -384,6 +384,7 @@ export function loadSchemas(schemadir: string) {
 
         // extract object
         if (node.value.type === 'object') {
+            // console.log('__node.value__', node.value, filepath);
             const properties = schema.properties;
             extractObjectValue(properties, schema.required || [], node.value.props, node);
         }

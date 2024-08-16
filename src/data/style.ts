@@ -1,13 +1,29 @@
 import * as classes from "./baseclasses"
 import {
-    BorderOptions, ColorControls, ContextSettings,
-    Shadow, WindingRule, FillType, BorderPosition,
-    BorderStyle, MarkerType, ContactRole, VariableType, Point2D, GradientType, Stop, BlendMode, FillRule, CornerType, BorderSideSetting,
+    BorderOptions,
+    ColorControls,
+    ContextSettings,
+    Shadow,
+    WindingRule,
+    FillType,
+    BorderPosition,
+    BorderStyle,
+    MarkerType,
+    ContactRole,
+    VariableType,
+    Point2D,
+    GradientType,
+    Stop,
+    BlendMode,
+    FillRule,
+    CornerType,
+    BorderSideSetting,
     BlurType
 } from "./baseclasses";
 import { Basic, BasicArray, BasicMap, ResourceMgr } from "./basic";
 import { Variable } from "./variable";
 import { Color } from "./color";
+
 export {
     GradientType,
     BlendMode,
@@ -43,7 +59,7 @@ export {
 } from "./baseclasses"
 
 /**
- * gradient 
+ * gradient
  */
 export class Gradient extends Basic implements classes.Gradient {
     typeId = 'gradient'
@@ -53,6 +69,7 @@ export class Gradient extends Basic implements classes.Gradient {
     stops: BasicArray<Stop>
     gradientType: GradientType
     gradientOpacity?: number;
+
     constructor(
         from: Point2D,
         to: Point2D,
@@ -96,6 +113,7 @@ export class Border extends Basic implements classes.Border {
 
     private __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
     private __cacheData?: { media: { buff: Uint8Array, base64: string }, ref: string };
+
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
@@ -124,6 +142,7 @@ export class Border extends Basic implements classes.Border {
     setImageMgr(imageMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>) {
         this.__imageMgr = imageMgr;
     }
+
     getImageMgr(): ResourceMgr<{ buff: Uint8Array, base64: string }> | undefined {
         return this.__imageMgr;
     }
@@ -178,29 +197,18 @@ export class Fill extends Basic implements classes.Fill {
         this.fillType = fillType
         this.color = color
     }
+
     setImageMgr(imageMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>) {
         this.__imageMgr = imageMgr;
     }
+
     getImageMgr(): ResourceMgr<{ buff: Uint8Array, base64: string }> | undefined {
         return this.__imageMgr;
     }
 
     private __startLoad: boolean = false;
-    peekImage(startLoad: boolean = false) {
-        // const ret = this.__cacheData?.base64;
-        // if (ret) return ret;
-        // if (!this.imageRef) return "";
-        // if (startLoad && !this.__startLoad) {
-        //     this.__startLoad = true;
-        //     this.__imageMgr && this.__imageMgr.get(this.imageRef).then((val) => {
-        //         if (!this.__cacheData) {
-        //             this.__cacheData = val;
-        //             if (val) this.notify();
-        //         }
-        //     })
-        // }
-        // return ret;
 
+    peekImage(startLoad: boolean = false) {
         if (this.__cacheData?.ref === this.imageRef) {
             return this.__cacheData?.media.base64;
         }
@@ -211,16 +219,21 @@ export class Fill extends Basic implements classes.Fill {
             mediaMgr && mediaMgr
                 .get(this.imageRef)
                 .then((val) => {
-                    if (val) {
-                        this.__cacheData = { media: val, ref: this.imageRef! };
-                    }
-                }).finally(() => {
+                    if (val) this.__cacheData = { media: val, ref: this.imageRef! };
+                })
+                .finally(() => {
                     this.__startLoad = false;
                     this.notify('image-reload');
                     return this.__cacheData?.media.base64;
                 })
         }
     }
+
+    reloadImage() {
+        this.__cacheData = undefined;
+        this.peekImage();
+    }
+
     // image fill
     async loadImage(): Promise<string> {
         if (this.__cacheData) return this.__cacheData.media.base64;
@@ -287,6 +300,7 @@ export class Style extends Basic implements classes.Style {
     private findVar(varId: string, ret: Variable[]): boolean {
         return !!(this.__parent as any)?.findVar(varId, ret);
     }
+
     getFills(): BasicArray<Fill> {
         if (!this.varbinds) return this.fills;
 
@@ -301,6 +315,7 @@ export class Style extends Basic implements classes.Style {
         }
         return this.fills;
     }
+
     getBorders(): BasicArray<Border> {
         if (!this.varbinds) return this.borders;
 
@@ -325,6 +340,7 @@ export class Blur extends Basic implements classes.Blur {
     radius?: number
     saturation: number
     type: BlurType
+
     constructor(
         isEnabled: boolean,
         center: Point2D,
