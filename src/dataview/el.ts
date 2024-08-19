@@ -94,7 +94,7 @@ export class EL {
         // _el_instance.push(this);
     }
 
-    toSVGString(): string {
+    outerHtml(): string {
         const toSVGString = (el: EL): string => {
             const childs = Array.isArray(el.elchilds) ? el.elchilds.map((c: EL) => {
                 return toSVGString(c);
@@ -102,6 +102,20 @@ export class EL {
             return stringh(el.eltag, el.elattr, childs)
         }
         return toSVGString(this);
+    }
+
+    innerHtml(): string {
+        const toSVGString = (el: EL): string => {
+            const childs = Array.isArray(el.elchilds) ? el.elchilds.map((c: EL) => {
+                return toSVGString(c);
+            }) : (el.elchilds);
+            return stringh(el.eltag, el.elattr, childs)
+        }
+        if (Array.isArray(this.elchilds)) {
+            return this.elchilds.reduce((p, c) => p + toSVGString(c), '');
+        } else {
+            return this.elchilds;
+        }
     }
 }
 

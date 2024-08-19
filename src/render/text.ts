@@ -111,6 +111,30 @@ function renderDecorateRects(h: Function, x: number, y: number, hight: number, d
     }
 }
 
+
+const _escapeChars: { [key: string]: string } = {};
+_escapeChars['<'] = '&lt;';
+_escapeChars['>'] = '&gt;';
+_escapeChars['&'] = '&amp;';
+
+function escapeWebChar(text: string) {
+    const ret: string[] = [];
+    let i = 0, j = 0, len = text.length;
+    for (; i < len; ++i) {
+        const e = _escapeChars[text[i]];
+        if (e) {
+            if (i > j) ret.push(text.substring(j, i));
+            ret.push(e);
+            j = i + 1;
+        }
+    }
+    if (ret.length > 0) {
+        if (i > j) ret.push(text.substring(j, i));
+        return ret.join('');
+    }
+    return text;
+}
+
 export function renderTextLayout(h: Function, textlayout: TextLayout, frame?: ShapeSize, blur?: Blur) {
     const childs = [];
 
@@ -177,12 +201,13 @@ export function renderTextLayout(h: Function, textlayout: TextLayout, frame?: Sh
                 }
 
                 if (gText.length > 0) {
+                    const text = escapeWebChar(gText.join(''))
                     if (span && span.gradient && span.fillType === FillType.Gradient && frame) {
                         const g_ = renderGradient(h, span.gradient as Gradient, frame);
                         if (g_.style) {
                             const opacity = span.gradient.gradientOpacity;
                             const id = "clippath-fill-" + objectId(span.gradient) + randomId();
-                            const cp = h("clipPath", { id }, [h('text', { x: gX.join(' '), y: baseY, style, "clip-rule": "evenodd" }, gText.join(''))]);
+                            const cp = h("clipPath", { id }, [h('text', { x: gX.join(' '), y: baseY, style, "clip-rule": "evenodd" }, text)]);
                             linechilds.push(cp);
                             linechilds.push(h("foreignObject", {
                                 width: textlayout.contentWidth, height: textlayout.contentHeight, x: xOffset, y: yOffset,
@@ -191,14 +216,14 @@ export function renderTextLayout(h: Function, textlayout: TextLayout, frame?: Sh
                             },
                                 h("div", { width: "100%", height: "100%", style: g_.style })));
                         } else {
-                            linechilds.push(h('text', { x: gX.join(' '), y: baseY, style }, gText.join(''),));
+                            linechilds.push(h('text', { x: gX.join(' '), y: baseY, style }, text));
                         }
                     } else {
-                        linechilds.push(h('text', { x: gX.join(' '), y: baseY, style }, gText.join(''),));
+                        linechilds.push(h('text', { x: gX.join(' '), y: baseY, style }, text));
                     }
                     if (blur && blur.isEnabled && blur.type === BlurType.Background && span && is_alpha(span)) {
                         const id = "clip-blur-" + objectId(blur) + randomId();
-                        const cp = h("clipPath", { id }, [h('text', { x: gX.join(' '), y: baseY, style, "clip-rule": "evenodd" }, gText.join(''))]);
+                        const cp = h("clipPath", { id }, [h('text', { x: gX.join(' '), y: baseY, style, "clip-rule": "evenodd" }, text)]);
                         const foreignObject = h("foreignObject",
                             {
                                 width: textlayout.contentWidth, height: textlayout.contentHeight, x: xOffset, y: yOffset
