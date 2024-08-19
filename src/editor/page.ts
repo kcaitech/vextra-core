@@ -3444,7 +3444,7 @@ export class PageEditor {
             const old_nav = shape.prototypeInterActions?.find(i => i.id === id)?.actions.navigationType
             api.shapeModifyPrototypeActionConnNav(this.__page, __shape, id, conn, nav);
 
-            if (nav === PrototypeNavigationType.SCROLLTO || old_nav === PrototypeNavigationType.SCROLLTO) {
+            if (nav === PrototypeNavigationType.SCROLLTO && old_nav !== PrototypeNavigationType.SCROLLTO) {
                 const arr = [PrototypeTransitionType.INSTANTTRANSITION, PrototypeTransitionType.SCROLLANIMATE]
                 if (!transitionType) return
                 if (!arr.includes(transitionType)) {
@@ -3452,7 +3452,7 @@ export class PageEditor {
                 }
                 api.shapeModifyPrototypeActionTargetNodeID(this.__page, __shape, id, undefined)
             }
-            if (nav === PrototypeNavigationType.SWAPSTATE || old_nav === PrototypeNavigationType.SWAPSTATE) {
+            if (nav === PrototypeNavigationType.SWAPSTATE && old_nav !== PrototypeNavigationType.SWAPSTATE) {
                 const arr = [PrototypeTransitionType.INSTANTTRANSITION, PrototypeTransitionType.DISSOLVE]
                 if (!transitionType) return
                 if (!arr.includes(transitionType)) {
