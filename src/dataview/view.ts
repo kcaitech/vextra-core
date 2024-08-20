@@ -187,6 +187,10 @@ export class DataView extends EventEL {
         return 0;
     }
 
+    asyncRender(): number {
+        return 0;
+    }
+
     getRootView(): RootView | undefined {
         let p: DataView | undefined = this;
         while (p) {

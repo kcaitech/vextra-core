@@ -903,6 +903,14 @@ export class ShapeView extends DataView {
         return this.m_ctx.removeDirty(this);
     }
 
+    asyncRender(): number {
+        const renderContents = this.renderContents;
+        this.renderContents = () => this.m_children;
+        const version = this.render();
+        this.renderContents = renderContents;
+        return version;
+    }
+
     render(): number {
         if (!this.checkAndResetDirty()) return this.m_render_version;
 

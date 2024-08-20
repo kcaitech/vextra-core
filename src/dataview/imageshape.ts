@@ -30,6 +30,10 @@ export class ImageShapeView extends RectShapeView {
         return [pattern, _path];
     }
 
+    asyncRender() {
+        return this.render();
+    }
+
     get points() {
         const pathsegs = (this.m_data as ImageShape).pathsegs
         return pathsegs.length ? pathsegs[0].points : new BasicArray<CurvePoint>();

@@ -205,6 +205,10 @@ export class BoolShapeView extends GroupShapeView {
         return [];
     }
 
+    asyncRender() {
+        return this.render();
+    }
+
     updateFrames(): boolean {
         const borders = this.getBorders();
         let maxborder = 0;

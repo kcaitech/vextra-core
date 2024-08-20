@@ -19,7 +19,7 @@ export interface PropsType {
 interface DataView extends Notifiable {
     // id: string;
     layout(props?: PropsType): void;
-    render(): number;
+    asyncRender(): number;
     parent?: DataView;
     updateFrames(): boolean;
     emit(name: string, ...args: any[]): void;
@@ -95,7 +95,7 @@ export function updateViewsFrame(updates: { data: DataView }[]) {
 
 export class DViewCtx extends EventEmitter {
 
-    static FRAME_TIME = 40; // 25帧
+    static FRAME_TIME = 20; // 实际会有延迟
 
     comsMap: Map<ShapeType, ViewType> = new Map();
     // 选区
@@ -209,7 +209,7 @@ export class DViewCtx extends EventEmitter {
 
         for (let i = focusdepends.length - 1; i >= 0; i--) {
             const d = this.dirtyset.get(focusdepends[i]);
-            if (d) d.render();
+            if (d) d.asyncRender();
         }
 
         this.notifyLayout();
@@ -240,6 +240,7 @@ export class DViewCtx extends EventEmitter {
 
         const hasUpdate = this.relayoutset.size > 0 || this.dirtyset.size > 0;
 
+        let startTime = Date.now();
         // 优先更新选中对象
         if (this.updateFocus()) {
             return true;
@@ -263,9 +264,13 @@ export class DViewCtx extends EventEmitter {
         // }
 
         // 渲染
-        this.dirtyset.forEach((v, k) => {
-            v.render();
-        });
+        for (let [k, v] of this.dirtyset) {
+            v.asyncRender();
+            const expendsTime = Date.now() - startTime;
+            if (expendsTime > DViewCtx.FRAME_TIME) {
+                return true;
+            }
+        }
 
         this.notifyLayout();
 
