@@ -207,7 +207,7 @@ export class DViewCtx extends EventEmitter {
         // update frames
         updateViewsFrame(updated);
 
-        for (let i = focusdepends.length - 1; i >= 0; i--) {
+        for (let i = 0, len = focusdepends.length; i < len; ++i) {
             const d = this.dirtyset.get(focusdepends[i]);
             if (d) d.asyncRender();
         }
