@@ -3,9 +3,9 @@
 import { Color } from "../data/classes";
 export { findOverrideAndVar } from "../data/utils";
 
-export function isColorEqual(lhs: Color, rhs: Color): boolean {
-    return lhs.equals(rhs);
-}
+// export function isColorEqual(lhs: Color, rhs: Color): boolean {
+//     return lhs.equals(rhs);
+// }
 
 export const DefaultColor = Color.DefaultColor;
 

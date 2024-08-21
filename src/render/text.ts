@@ -1,17 +1,16 @@
 
 
-import { DefaultColor, isColorEqual, randomId } from "./basic";
-import { TextShape, Path, Color, Para, ParaAttr, Text, Span, FillType, Gradient, UnderlineType, StrikethroughType, Blur, BlurType, SpanAttr, ShapeSize } from '../data/classes';
+import { DefaultColor, randomId } from "./basic";
+import { Path, Color, FillType, Gradient, UnderlineType, StrikethroughType, Blur, BlurType, SpanAttr, ShapeSize } from '../data/classes';
 import { GraphArray, TextLayout } from "../data/textlayout";
 import { gPal } from "../basic/pal";
-import { BasicArray } from "../data/basic";
-import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "../data/textutils";
 import { render as renderGradient } from "./gradient";
 import { objectId } from "../basic/objectid";
 
-function toRGBA(color: Color): string {
-    return "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";
-}
+// function toRGBA(color: Color): string {
+//     // return "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";
+//     // return color.toRGBA();
+// }
 
 function isBlankChar(charCode: number) {
     switch (charCode) {
@@ -65,7 +64,7 @@ export function renderText2Path(layout: TextLayout, offsetX: number, offsetY: nu
 function collectDecorateRange(garr: GraphArray, decorateRange: { start: number, end: number, color: Color }[], preGarrIdx: number, garrIdx: number, color: Color) {
     if (preGarrIdx === garrIdx - 1) {
         const last = decorateRange[decorateRange.length - 1];
-        if (isColorEqual(last.color, color)) {
+        if ((last.color.equals(color))) {
             const endGraph = garr[garr.length - 1];
             const end = endGraph.x + endGraph.cw;
             last.end = end;
@@ -87,7 +86,7 @@ function renderDecorateLines(h: Function, x: number, y: number, decorateRange: {
         props["fill-opacity"] = 1;
         props.d = d;
         props.fill = 'none';
-        props.stroke = toRGBA(l.color);
+        props.stroke = (l.color.toRGBA());
         props["stroke-width"] = 1;
         childs.push(h('path', props));
     }
@@ -104,7 +103,7 @@ function renderDecorateRects(h: Function, x: number, y: number, hight: number, d
         const props: any = {};
         props["fill-opacity"] = 1;
         props.d = d;
-        props.fill = toRGBA(l.color);
+        props.fill = (l.color.toRGBA());
         props.stroke = 'none';
         props["stroke-width"] = 1;
         childs.push(h('path', props));
@@ -196,7 +195,7 @@ export function renderTextLayout(h: Function, textlayout: TextLayout, frame?: Sh
                         style['fill'] = "url(#" + gid + ")";
                         style['fill-opacity'] = opacity === undefined ? 1 : opacity;
                     } else {
-                        if (span.color) style['fill'] = toRGBA(span.color);
+                        if (span.color) style['fill'] = (span.color.toRGBA());
                     }
                 }
 
@@ -274,19 +273,3 @@ const is_alpha = (span: SpanAttr) => {
         return false;
     }
 };
-
-function createTextByString(stringValue: string, refShape: TextShape) {
-    const text = new Text(new BasicArray());
-    if (refShape.text.attr) {
-        mergeTextAttr(text, refShape.text.attr);
-    }
-    const para = new Para('\n', new BasicArray());
-    para.attr = new ParaAttr();
-    text.paras.push(para);
-    const span = new Span(para.length);
-    para.spans.push(span);
-    mergeParaAttr(para, refShape.text.paras[0]);
-    mergeSpanAttr(span, refShape.text.paras[0].spans[0]);
-    text.insertText(stringValue, 0);
-    return text;
-}
