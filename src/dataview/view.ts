@@ -341,7 +341,7 @@ export class DataView extends EventEL {
         attrs.height = frame.height;
         // attrs.viewBox = `${frame.x} ${frame.y} ${frame.width} ${frame.height}`;
         attrs.overflow = "visible";
-        return stringh('svg', attrs, this.outerHtml());
+        return stringh('svg', attrs, this.outerHTML);
     }
 
     destory() {

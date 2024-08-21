@@ -94,7 +94,7 @@ export class EL {
         // _el_instance.push(this);
     }
 
-    outerHtml(): string {
+    get outerHTML(): string {
         const toSVGString = (el: EL): string => {
             const childs = Array.isArray(el.elchilds) ? el.elchilds.map((c: EL) => {
                 return toSVGString(c);
@@ -104,7 +104,7 @@ export class EL {
         return toSVGString(this);
     }
 
-    innerHtml(): string {
+    get innerHTML(): string {
         const toSVGString = (el: EL): string => {
             const childs = Array.isArray(el.elchilds) ? el.elchilds.map((c: EL) => {
                 return toSVGString(c);
