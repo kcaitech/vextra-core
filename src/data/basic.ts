@@ -181,7 +181,8 @@ export class ResourceMgr<T> extends WatchableObject {
         id: string,
         timeout: number,
         resolves: ((v: T | undefined) => void)[],
-        rejects: ((e?: any) => void)[]
+        rejects: ((e?: any) => void)[],
+        maxRepeatCount: number;
     }> = new Map();
     private __crdtpath: string[];
 
@@ -225,7 +226,8 @@ export class ResourceMgr<T> extends WatchableObject {
                 id,
                 timeout: Date.now() + TIME_OUT,
                 resolves: [],
-                rejects: []
+                rejects: [],
+                maxRepeatCount: 0
             }
             this.__loading.set(id, loading);
         } else if (loading.timeout > Date.now()) {
@@ -238,7 +240,16 @@ export class ResourceMgr<T> extends WatchableObject {
             loading.timeout = Date.now() + TIME_OUT;
         }
 
-        r = this.__loader && await this.__loader(id);
+        if (this.__loader && loading.maxRepeatCount < 10) {
+            try {
+                const __r = await this.__loader(id);
+                if (__r) r = __r;
+            } catch (e) {
+                loading.maxRepeatCount++;
+                console.error(e)
+            }
+        }
+
         if (r) r = this.add(id, r)
 
         loading.resolves.forEach((v) => v(r));
@@ -246,6 +257,7 @@ export class ResourceMgr<T> extends WatchableObject {
 
         return r
     }
+
     setLoader(loader?: (id: string) => Promise<T>) {
         this.__loader = loader;
     }

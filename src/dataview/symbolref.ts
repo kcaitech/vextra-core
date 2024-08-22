@@ -60,7 +60,7 @@ export class SymbolRefView extends ShapeView {
     getSessionRefId(): boolean | string {
         const pathname = window.location.pathname;
         const jsonString = sessionStorage.getItem(sessionRefIdKey);
-        if (pathname.includes("prototype") && jsonString) {
+        if (!pathname.includes("document") && jsonString) {
             const refIdArray = JSON.parse(jsonString);
             const maprefIdArray = new Map(refIdArray) as Map<string, string>;
             if (maprefIdArray.has(this.id)) {
