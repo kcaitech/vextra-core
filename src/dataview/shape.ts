@@ -24,6 +24,7 @@ import {
     PrototypeStartingPoint,
     ScrollDirection,
     Shadow,
+    ShadowPosition,
     Shape,
     ShapeFrame,
     ShapeSize,
@@ -306,7 +307,7 @@ export class ShapeView extends DataView {
      * contentFrame+边框，对象实际显示的位置大小
      */
     get visibleFrame() {
-        return this.m_frame;
+        return this.m_visibleFrame;
     }
 
     /**
@@ -605,9 +606,26 @@ export class ShapeView extends DataView {
                 maxborder = Math.max(b.thickness / 2, maxborder);
             }
         })
+        // 阴影
+        const shadows = this.getShadows();
+        let st = 0, sb = 0, sl = 0, sr = 0;
+        shadows.forEach(s => {
+            if (!s.isEnabled) return;
+            if (s.position !== ShadowPosition.Outer) return;
+            const w = s.blurRadius + s.spread;
+            sl = Math.max(-s.offsetX + w, sl);
+            sr = Math.max(s.offsetX + w, sr);
+            st = Math.max(-s.offsetY + w, st);
+            sb = Math.max(s.offsetY + w, sb);
+        })
+
+        const el = Math.max(maxborder, sl);
+        const et = Math.max(maxborder, st);
+        const er = Math.max(maxborder, sr);
+        const eb = Math.max(maxborder, sb);
 
         // update visible
-        if (updateFrame(this.m_visibleFrame, this.frame.x - maxborder, this.frame.y - maxborder, this.frame.width + maxborder * 2, this.frame.height + maxborder * 2)) changed = true;
+        if (updateFrame(this.m_visibleFrame, this.frame.x - el, this.frame.y - et, this.frame.width + el + er, this.frame.height + et + eb)) changed = true;
 
         // update outer
         if (updateFrame(this.m_outerFrame, this.m_visibleFrame.x, this.m_visibleFrame.y, this.m_visibleFrame.width, this.m_visibleFrame.height)) changed = true;
@@ -883,6 +901,14 @@ export class ShapeView extends DataView {
 
     protected checkAndResetDirty(): boolean {
         return this.m_ctx.removeDirty(this);
+    }
+
+    asyncRender(): number {
+        const renderContents = this.renderContents;
+        this.renderContents = () => this.m_children;
+        const version = this.render();
+        this.renderContents = renderContents;
+        return version;
     }
 
     render(): number {
