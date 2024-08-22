@@ -89,7 +89,7 @@ export function render2path(shape: ShapeView, defaultOp = BoolOp.None): Path {
 
     const child0 = shape.m_children[fVisibleIdx] as ShapeView;
     let frame0: ShapeFrame;
-    const path0 = render2path(child0);
+    const path0 = child0 instanceof GroupShapeView && !(child0 instanceof BoolShapeView) ? render2path(child0) : child0.getPath().clone();
 
     if (child0.isNoTransform()) {
         path0.translate(child0.transform.translateX, child0.transform.translateY);
@@ -112,7 +112,7 @@ export function render2path(shape: ShapeView, defaultOp = BoolOp.None): Path {
         const child1 = shape.m_children[i] as ShapeView;
         if (!child1.isVisible) continue;
         let frame1: ShapeFrame;
-        const path1 = render2path(child1);
+        const path1 = child1 instanceof GroupShapeView && !(child1 instanceof BoolShapeView) ? render2path(child1) : child1.getPath().clone();
         if (child1.isNoTransform()) {
             path1.translate(child1.transform.translateX, child1.transform.translateY);
             frame1 = new ShapeFrame(child1.transform.translateX, child1.transform.translateY, child1.frame.width, child1.frame.height);
