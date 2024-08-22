@@ -72,8 +72,10 @@ import {
     importFill,
     importGradient,
     importMarkerType,
+    importOverlayBackgroundAppearance,
     importOverlayPosition,
     importPrototypeInterAction,
+    importPrototypeStartingPoint,
     importShadow,
     importStop,
     importStyle,
@@ -658,8 +660,19 @@ export class PageEditor {
 
             const symbolShape = newSymbolShape(replace ? shape0.name : (name ?? shape0.name), frame, style);
 
-            if (replace && shape0 instanceof Artboard && shape0.cornerRadius) {
-                symbolShape.cornerRadius = importCornerRadius(shape0.cornerRadius);
+            if (replace && shape0 instanceof Artboard) {
+                if (shape0.cornerRadius) symbolShape.cornerRadius = importCornerRadius(shape0.cornerRadius);
+                if (shape0.prototypeInteractions) {
+                    symbolShape.prototypeInteractions = new BasicArray();
+                    shape0.prototypeInteractions.forEach(v => {
+                        symbolShape.prototypeInteractions?.push(importPrototypeInterAction(v));
+                    })
+                }
+                if (shape0.prototypeStartingPoint) symbolShape.prototypeStartingPoint = importPrototypeStartingPoint(shape0.prototypeStartingPoint);
+                if (shape0.overlayPosition) symbolShape.overlayPosition = importOverlayPosition(shape0.overlayPosition);
+                if (shape0.overlayBackgroundInteraction) symbolShape.overlayBackgroundInteraction = (shape0.overlayBackgroundInteraction);
+                if (shape0.overlayBackgroundAppearance) symbolShape.overlayBackgroundAppearance = importOverlayBackgroundAppearance(shape0.overlayBackgroundAppearance);
+                if (shape0.scrollDirection) symbolShape.scrollDirection = (shape0.scrollDirection);
             }
 
             const page = this.__page;
@@ -3371,7 +3384,7 @@ export class PageEditor {
             if (id) {
                 const actions = shape.prototypeInterActions;
                 const a = ((actions || []) as PrototypeInterAction[]).find(v => v.id === id);
-                if (a) ret.push(a);
+                if (a) ret.push(importPrototypeInterAction(a));
             }
             return ret;
         }, api, shape)
@@ -3442,15 +3455,7 @@ export class PageEditor {
             const old_nav = shape.prototypeInterActions?.find(i => i.id === id)?.actions.navigationType
             api.shapeModifyPrototypeActionConnNav(this.__page, __shape, id, conn, nav);
 
-            if (nav === PrototypeNavigationType.SCROLLTO || old_nav === PrototypeNavigationType.SCROLLTO) {
-                const arr = [PrototypeTransitionType.INSTANTTRANSITION, PrototypeTransitionType.DISSOLVE]
-                if (!transitionType) return
-                if (!arr.includes(transitionType)) {
-                    api.shapeModifyPrototypeActionTransitionType(this.__page, __shape, id, PrototypeTransitionType.INSTANTTRANSITION)
-                }
-                api.shapeModifyPrototypeActionTargetNodeID(this.__page, __shape, id, undefined)
-            }
-            if (nav === PrototypeNavigationType.SWAPSTATE || old_nav === PrototypeNavigationType.SWAPSTATE) {
+            if (nav === PrototypeNavigationType.SCROLLTO && old_nav !== PrototypeNavigationType.SCROLLTO) {
                 const arr = [PrototypeTransitionType.INSTANTTRANSITION, PrototypeTransitionType.SCROLLANIMATE]
                 if (!transitionType) return
                 if (!arr.includes(transitionType)) {
@@ -3458,7 +3463,15 @@ export class PageEditor {
                 }
                 api.shapeModifyPrototypeActionTargetNodeID(this.__page, __shape, id, undefined)
             }
-            if (nav === PrototypeNavigationType.OVERLAY || nav === PrototypeNavigationType.SWAP) {
+            if (nav === PrototypeNavigationType.SWAPSTATE && old_nav !== PrototypeNavigationType.SWAPSTATE) {
+                const arr = [PrototypeTransitionType.INSTANTTRANSITION, PrototypeTransitionType.DISSOLVE]
+                if (!transitionType) return
+                if (!arr.includes(transitionType)) {
+                    api.shapeModifyPrototypeActionTransitionType(this.__page, __shape, id, PrototypeTransitionType.INSTANTTRANSITION)
+                }
+                api.shapeModifyPrototypeActionTargetNodeID(this.__page, __shape, id, undefined)
+            }
+            if (nav === PrototypeNavigationType.OVERLAY || nav === PrototypeNavigationType.SWAP||nav === PrototypeNavigationType.NAVIGATE) {
                 const arr = [
                     PrototypeTransitionType.INSTANTTRANSITION,
                     PrototypeTransitionType.DISSOLVE,
