@@ -55,10 +55,10 @@ function setLoader(pack: { [p: string]: string | Uint8Array; }, document: Docume
     }
 }
 
-export function importDocument(mdd: { [p: string]: string | Uint8Array }, guard: IDataGuard) {
+export function importDocument(name: string, mdd: { [p: string]: string | Uint8Array }, guard: IDataGuard) {
     const meta = JSON.parse(mdd['document-meta.json'] as string);
     const pageList = meta.pagesList as BasicArray<PageListItem>;
-    const document = new Document(uuid(), meta.name, "", "", pageList, new BasicMap(), guard);
+    const document = new Document(uuid(), name, "", "", pageList, new BasicMap(), guard);
     setLoader(mdd, document);
     return document;
 }
