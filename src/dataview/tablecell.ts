@@ -228,6 +228,10 @@ export class TableCellView extends ShapeView {
         super.onDestory();
         if (this.__layoutToken && this.__preText) this.__preText.dropLayout(this.__layoutToken, this.id);
     }
+    asyncRender() {
+        return this.render();
+    }
+
     render(): number {
         if (!this.checkAndResetDirty()) return this.m_render_version;
 

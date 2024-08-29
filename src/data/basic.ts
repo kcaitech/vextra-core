@@ -1,3 +1,4 @@
+import { error } from "kiwi-schema/util";
 
 const __uuid = '8BC00DB1-35BD-1B62-F81F-23E231443680'
 
@@ -89,6 +90,7 @@ export class BasicArray<T> extends Array<T> {
     get parent() {
         return this.__parent;
     }
+
     notify(...args: any[]): void {
         this.__parent && this.__parent.notify(this.__propKey, ...args);
     }
@@ -96,6 +98,7 @@ export class BasicArray<T> extends Array<T> {
     onRollback(from: string) { // 非正常事务中，需要清空一些缓存数据
         this.__parent && this.__parent.onRollback(from);
     }
+
     getCrdtPath(): string[] {
         if (this.__parent) return this.__parent.getCrdtPath().concat(this.__propKey!);
         else return [];
@@ -116,13 +119,16 @@ export class BasicMap<T0, T1> extends Map<T0, T1> {
     notify(...args: any[]): void {
         this.__parent && this.__parent.notify(this.__propKey, ...args);
     }
+
     onRollback(from: string) { // 非正常事务中，需要清空一些缓存数据
         this.__parent && this.__parent.onRollback(from);
     }
+
     getCrdtPath(): string[] {
         if (this.__parent) return this.__parent.getCrdtPath().concat(this.__propKey!);
         else return [];
     }
+
     toJSON() {
         const ret: any = {}
         for (let [k, v] of this) {
@@ -134,20 +140,24 @@ export class BasicMap<T0, T1> extends Map<T0, T1> {
 
 export interface IWatchable {
     watch(watcher: ((...args: any[]) => void)): (() => void)
+
     unwatch(watcher: ((...args: any[]) => void)): boolean
 }
 
 export class WatchableObject extends Basic implements Notifiable, IWatchable {
     public __watcher: Set<((...args: any[]) => void)> = new Set();
+
     public watch(watcher: ((...args: any[]) => void)): (() => void) {
         this.__watcher.add(watcher);
         return () => {
             this.__watcher.delete(watcher);
         };
     }
+
     public unwatch(watcher: ((...args: any[]) => void)): boolean {
         return this.__watcher.delete(watcher);
     }
+
     public notify(...args: any[]) {
         if (this.__watcher.size === 0) return;
         // 在set的foreach内部修改set会导致无限循环
@@ -171,7 +181,8 @@ export class ResourceMgr<T> extends WatchableObject {
         id: string,
         timeout: number,
         resolves: ((v: T | undefined) => void)[],
-        rejects: ((e?: any) => void)[]
+        rejects: ((e?: any) => void)[],
+        maxRepeatCount: number;
     }> = new Map();
     private __crdtpath: string[];
 
@@ -180,21 +191,33 @@ export class ResourceMgr<T> extends WatchableObject {
         this.__guard = guard;
         this.__crdtpath = crdtpath;
     }
+
     getCrdtPath(): string[] {
         return this.__crdtpath;
     }
+
     get size() {
         return this.__resource.size;
     }
+
     get keys() {
         return Array.from(this.__resource.keys());
     }
+
+    has(key: string) {
+        return this.__resource.has(key);
+    }
+
+    delete(key: string) {
+        return this.__resource.delete(key);
+    }
+
     get resource() {
         return Array.from(this.__resource.values());
     }
 
     async get(id: string): Promise<T | undefined> {
-        let r = this.__resource.get(id)
+        let r = this.__resource.get(id);
         if (r) return r;
 
         let loading = this.__loading.get(id)
@@ -203,22 +226,30 @@ export class ResourceMgr<T> extends WatchableObject {
                 id,
                 timeout: Date.now() + TIME_OUT,
                 resolves: [],
-                rejects: []
+                rejects: [],
+                maxRepeatCount: 0
             }
             this.__loading.set(id, loading);
-        }
-        else if (loading.timeout > Date.now()) {
+        } else if (loading.timeout > Date.now()) {
             return new Promise<T | undefined>((resolve, reject) => {
                 loading?.resolves.push(resolve)
                 loading?.rejects.push(reject)
             })
-        }
-        else {
+        } else {
             // 重新加载
             loading.timeout = Date.now() + TIME_OUT;
         }
 
-        r = this.__loader && await this.__loader(id)
+        if (this.__loader && loading.maxRepeatCount < 10) {
+            try {
+                const __r = await this.__loader(id);
+                if (__r) r = __r;
+            } catch (e) {
+                loading.maxRepeatCount++;
+                console.error(e)
+            }
+        }
+
         if (r) r = this.add(id, r)
 
         loading.resolves.forEach((v) => v(r));
@@ -226,15 +257,19 @@ export class ResourceMgr<T> extends WatchableObject {
 
         return r
     }
+
     setLoader(loader?: (id: string) => Promise<T>) {
         this.__loader = loader;
     }
+
     setUpdater(updater: (data: T) => void) {
         this.__updater = updater;
     }
+
     getSync(id: string): T | undefined {
         return this.__resource.get(id)
     }
+
     add(id: string, r: T) {
         r = this.__guard && this.__guard(r) || r
         this.__resource.set(id, r);

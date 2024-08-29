@@ -45,7 +45,14 @@ export async function exportExForm(document: Document): Promise<ExFromJson> {
 
     // medias
     const media_names: string[] = [];
-    for (const mediaId of ctx.medias) if (await document.mediasMgr.get(mediaId) !== undefined) media_names.push(mediaId);
+    for (const mediaId of ctx.medias) {
+        try {
+            const exist = await document.mediasMgr.get(mediaId);
+            if (exist) media_names.push(mediaId);
+        } catch (e) {
+            console.error(e);
+        }
+    }
     // metas
 
     // document meta

@@ -110,7 +110,25 @@ export {
     StackAlign,
     StackSizing,
     StackWrap,
-    StackSize
+    StackSize,
+    OverlayPosition,
+    OverlayMargin,
+    OverlayPositionType,
+    OverlayBackgroundType,
+    OverlayBackgroundInteraction,
+    OverlayBackgroundAppearance,
+
+    PrototypeStartingPoint,
+    PrototypeInterAction,
+    PrototypeConnectionType,
+    PrototypeEasingType,
+    PrototypeActions,
+    PrototypeEvents,
+    PrototypeEvent,
+    PrototypeNavigationType,
+    PrototypeTransitionType,
+
+    ScrollDirection
 } from "./data"
 
 export {

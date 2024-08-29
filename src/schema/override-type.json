@@ -17,6 +17,7 @@
         "endMarkerType",
         "exportOptions",
         "cornerRadius",
-        "blur"
+        "blur",
+        "protoInteractions"
     ]
 }

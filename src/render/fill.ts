@@ -82,9 +82,7 @@ export function render(h: Function, fills: Fill[], frame: ShapeSize, path: strin
     const elArr = new Array();
     for (let i = 0; i < fillsCount; i++) {
         const fill = fills[i];
-        if (!fill.isEnabled) {
-            continue;
-        }
+        if (!fill.isEnabled) continue;
         const fillType = fill.fillType;
         elArr.push(handler[fillType](h, frame, fill, path));
     }

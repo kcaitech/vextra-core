@@ -23,6 +23,9 @@ type Para_spans = BasicArray<impl.Span>
 type PathSegment_points = BasicArray<impl.CurvePoint>
 type PathShape_pathsegs = BasicArray<impl.PathSegment>
 type PathShape2_pathsegs = BasicArray<impl.PathSegment>
+type PrototypeActions_easingFunction = BasicArray<number>
+type PrototypeInterAction_crdtidx = BasicArray<number>
+type Shape_prototypeInteractions = BasicArray<impl.PrototypeInterAction>
 type Style_borders = BasicArray<impl.Border>
 type Style_fills = BasicArray<impl.Fill>
 type Style_shadows = BasicArray<impl.Shadow>
@@ -32,7 +35,7 @@ type SymbolShape_guides = BasicArray<impl.Guide>
 type TableShape_rowHeights = BasicArray<impl.CrdtNumber>
 type TableShape_colWidths = BasicArray<impl.CrdtNumber>
 type Text_paras = BasicArray<impl.Para>
-type Variable_0 = BasicArray<impl.Border | impl.Fill | impl.Shadow>
+type Variable_0 = BasicArray<impl.Border | impl.Fill | impl.Shadow | impl.PrototypeInterAction>
 export function importArtboard_guides(source: types.Artboard_guides, ctx?: IImportContext): Artboard_guides {
     const ret: Artboard_guides = new BasicArray()
     source.forEach((source, i) => {
@@ -368,6 +371,34 @@ export function importLineJoinStyle(source: types.LineJoinStyle, ctx?: IImportCo
 export function importMarkerType(source: types.MarkerType, ctx?: IImportContext): impl.MarkerType {
     return source
 }
+/* overlayBackgroundInteraction */
+export function importOverlayBackgroundInteraction(source: types.OverlayBackgroundInteraction, ctx?: IImportContext): impl.OverlayBackgroundInteraction {
+    return source
+}
+/* interactionType */
+export function importOverlayBackgroundType(source: types.OverlayBackgroundType, ctx?: IImportContext): impl.OverlayBackgroundType {
+    return source
+}
+/* overlay margin */
+export function importOverlayMargin(source: types.OverlayMargin, ctx?: IImportContext): impl.OverlayMargin {
+    const ret: impl.OverlayMargin = new impl.OverlayMargin (
+        source.top,
+        source.bottom,
+        source.left,
+        source.right)
+    return ret
+}
+/* overlayPositionType */
+export function importOverlayPositionType(source: types.OverlayPositionType, ctx?: IImportContext): impl.OverlayPositionType {
+    return source
+}
+/* overlay position */
+export function importOverlayPosition(source: types.OverlayPosition, ctx?: IImportContext): impl.OverlayPosition {
+    const ret: impl.OverlayPosition = new impl.OverlayPosition (
+        importOverlayPositionType(source.position, ctx),
+        importOverlayMargin(source.margin, ctx))
+    return ret
+}
 /* override types */
 export function importOverrideType(source: types.OverrideType, ctx?: IImportContext): impl.OverrideType {
     return source
@@ -477,8 +508,53 @@ export function importPoint2D(source: types.Point2D, ctx?: IImportContext): impl
         source.y)
     return ret
 }
+export function importPrototypeActions_easingFunction(source: types.PrototypeActions_easingFunction, ctx?: IImportContext): PrototypeActions_easingFunction {
+    const ret: PrototypeActions_easingFunction = new BasicArray()
+    source.forEach((source, i) => {
+        ret.push(source)
+    })
+    return ret
+}
+/* connectionType */
+export function importPrototypeConnectionType(source: types.PrototypeConnectionType, ctx?: IImportContext): impl.PrototypeConnectionType {
+    return source
+}
+/* easingType */
+export function importPrototypeEasingType(source: types.PrototypeEasingType, ctx?: IImportContext): impl.PrototypeEasingType {
+    return source
+}
+/* interactionType */
+export function importPrototypeEvents(source: types.PrototypeEvents, ctx?: IImportContext): impl.PrototypeEvents {
+    return source
+}
+export function importPrototypeInterAction_crdtidx(source: types.PrototypeInterAction_crdtidx, ctx?: IImportContext): PrototypeInterAction_crdtidx {
+    const ret: PrototypeInterAction_crdtidx = new BasicArray()
+    source.forEach((source, i) => {
+        ret.push(source)
+    })
+    return ret
+}
+/* navigationType */
+export function importPrototypeNavigationType(source: types.PrototypeNavigationType, ctx?: IImportContext): impl.PrototypeNavigationType {
+    return source
+}
+/* prototypeStartingPoint */
+export function importPrototypeStartingPoint(source: types.PrototypeStartingPoint, ctx?: IImportContext): impl.PrototypeStartingPoint {
+    const ret: impl.PrototypeStartingPoint = new impl.PrototypeStartingPoint (
+        source.name,
+        source.desc)
+    return ret
+}
+/* transitionType */
+export function importPrototypeTransitionType(source: types.PrototypeTransitionType, ctx?: IImportContext): impl.PrototypeTransitionType {
+    return source
+}
 /* resize type */
 export function importResizeType(source: types.ResizeType, ctx?: IImportContext): impl.ResizeType {
+    return source
+}
+/* scrollDirection */
+export function importScrollDirection(source: types.ScrollDirection, ctx?: IImportContext): impl.ScrollDirection {
     return source
 }
 /* shadow position */
@@ -524,6 +600,13 @@ export function importShapeSize(source: types.ShapeSize, ctx?: IImportContext): 
 /* shape types */
 export function importShapeType(source: types.ShapeType, ctx?: IImportContext): impl.ShapeType {
     return source
+}
+export function importShape_prototypeInteractions(source: types.Shape_prototypeInteractions, ctx?: IImportContext): Shape_prototypeInteractions {
+    const ret: Shape_prototypeInteractions = new BasicArray()
+    source.forEach((source, i) => {
+        ret.push(importPrototypeInterAction(source, ctx))
+    })
+    return ret
 }
 /* side type */
 export function importSideType(source: types.SideType, ctx?: IImportContext): impl.SideType {
@@ -703,6 +786,9 @@ export function importVariable_0(source: types.Variable_0, ctx?: IImportContext)
                 if (!source.crdtidx) source.crdtidx = [i]
                 return importShadow(source as types.Shadow, ctx)
             }
+            if (source.typeId === "prototype-inter-action") {
+                return importPrototypeInterAction(source as types.PrototypeInterAction, ctx)
+            }
             throw new Error("unknow typeId: " + source.typeId)
         })())
     })
@@ -829,6 +915,55 @@ export function importGradient(source: types.Gradient, ctx?: IImportContext): im
         importGradientType(source.gradientType, ctx),
         importGradient_stops(source.stops, ctx))
     importGradientOptional(ret, source, ctx)
+    return ret
+}
+/* overlay-background-appearance */
+export function importOverlayBackgroundAppearance(source: types.OverlayBackgroundAppearance, ctx?: IImportContext): impl.OverlayBackgroundAppearance {
+    const ret: impl.OverlayBackgroundAppearance = new impl.OverlayBackgroundAppearance (
+        importOverlayBackgroundType(source.backgroundType, ctx),
+        importColor(source.backgroundColor, ctx))
+    return ret
+}
+/* actions */
+function importPrototypeActionsOptional(tar: impl.PrototypeActions, source: types.PrototypeActions, ctx?: IImportContext) {
+    if (source.targetNodeID) tar.targetNodeID = source.targetNodeID
+    if (source.transitionType) tar.transitionType = importPrototypeTransitionType(source.transitionType, ctx)
+    if (source.transitionDuration) tar.transitionDuration = source.transitionDuration
+    if (source.easingType) tar.easingType = importPrototypeEasingType(source.easingType, ctx)
+    if (source.connectionURL) tar.connectionURL = source.connectionURL
+    if (source.openUrlInNewTab) tar.openUrlInNewTab = source.openUrlInNewTab
+    if (source.navigationType) tar.navigationType = importPrototypeNavigationType(source.navigationType, ctx)
+    if (source.easingFunction) tar.easingFunction = importPrototypeActions_easingFunction(source.easingFunction, ctx)
+    if (source.extraScrollOffset) tar.extraScrollOffset = importPoint2D(source.extraScrollOffset, ctx)
+}
+export function importPrototypeActions(source: types.PrototypeActions, ctx?: IImportContext): impl.PrototypeActions {
+    const ret: impl.PrototypeActions = new impl.PrototypeActions (
+        importPrototypeConnectionType(source.connectionType, ctx))
+    importPrototypeActionsOptional(ret, source, ctx)
+    return ret
+}
+/* event */
+function importPrototypeEventOptional(tar: impl.PrototypeEvent, source: types.PrototypeEvent, ctx?: IImportContext) {
+    if (source.transitionTimeout) tar.transitionTimeout = source.transitionTimeout
+}
+export function importPrototypeEvent(source: types.PrototypeEvent, ctx?: IImportContext): impl.PrototypeEvent {
+    const ret: impl.PrototypeEvent = new impl.PrototypeEvent (
+        importPrototypeEvents(source.interactionType, ctx))
+    importPrototypeEventOptional(ret, source, ctx)
+    return ret
+}
+/* prototypeInteraction */
+function importPrototypeInterActionOptional(tar: impl.PrototypeInterAction, source: types.PrototypeInterAction, ctx?: IImportContext) {
+    if (source.typeId) tar.typeId = source.typeId
+    if (source.isDeleted) tar.isDeleted = source.isDeleted
+}
+export function importPrototypeInterAction(source: types.PrototypeInterAction, ctx?: IImportContext): impl.PrototypeInterAction {
+    const ret: impl.PrototypeInterAction = new impl.PrototypeInterAction (
+        importPrototypeInterAction_crdtidx(source.crdtidx, ctx),
+        source.id,
+        importPrototypeEvent(source.event, ctx),
+        importPrototypeActions(source.actions, ctx))
+    importPrototypeInterActionOptional(ret, source, ctx)
     return ret
 }
 /* span attr */
@@ -1037,6 +1172,12 @@ function importShapeOptional(tar: impl.Shape, source: types.Shape, ctx?: IImport
         return ret
     })()
     if (source.haveEdit) tar.haveEdit = source.haveEdit
+    if (source.prototypeStartingPoint) tar.prototypeStartingPoint = importPrototypeStartingPoint(source.prototypeStartingPoint, ctx)
+    if (source.prototypeInteractions) tar.prototypeInteractions = importShape_prototypeInteractions(source.prototypeInteractions, ctx)
+    if (source.overlayPosition) tar.overlayPosition = importOverlayPosition(source.overlayPosition, ctx)
+    if (source.overlayBackgroundInteraction) tar.overlayBackgroundInteraction = importOverlayBackgroundInteraction(source.overlayBackgroundInteraction, ctx)
+    if (source.overlayBackgroundAppearance) tar.overlayBackgroundAppearance = importOverlayBackgroundAppearance(source.overlayBackgroundAppearance, ctx)
+    if (source.scrollDirection) tar.scrollDirection = importScrollDirection(source.scrollDirection, ctx)
     if (source.mask) tar.mask = source.mask
 }
 export function importShape(source: types.Shape, ctx?: IImportContext): impl.Shape {

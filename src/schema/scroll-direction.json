@@ -1,0 +1,10 @@
+{
+    "description": "scrollDirection",
+    "enum": [
+        "NONE",
+        "HORIZONTAL",
+        "VERTICAL",
+        "BOTH"
+    ],
+    "default": "NONE"
+}

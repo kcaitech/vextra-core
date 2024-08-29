@@ -5,7 +5,7 @@ import { CornerRadius, Shape, ShapeFrame, ShapeType, SymbolShape } from "../data
 import { VarsContainer } from "./viewctx";
 import { DataView, RootView } from "./view"
 import { getShapeViewId } from "./basic";
-import { BorderPosition, Page } from "../data";
+import { BorderPosition, Page, ShadowPosition } from "../data";
 import { ShapeView, updateFrame } from "./shape";
 
 export class SymbolView extends GroupShapeView {
@@ -93,25 +93,53 @@ export class SymbolView extends GroupShapeView {
             }
         })
 
-        // update visible
-        if (updateFrame(this.m_visibleFrame, this.frame.x - maxborder, this.frame.y - maxborder, this.frame.width + maxborder * 2, this.frame.height + maxborder * 2)) changed = true;
+        // 阴影
+        const shadows = this.getShadows();
+        let st = 0, sb = 0, sl = 0, sr = 0;
+        shadows.forEach(s => {
+            if (!s.isEnabled) return;
+            if (s.position !== ShadowPosition.Outer) return;
+            const w = s.blurRadius + s.spread;
+            sl = Math.max(-s.offsetX + w, sl);
+            sr = Math.max(s.offsetX + w, sr);
+            st = Math.max(-s.offsetY + w, st);
+            sb = Math.max(s.offsetY + w, sb);
+        })
 
+        const el = Math.max(maxborder, sl);
+        const et = Math.max(maxborder, st);
+        const er = Math.max(maxborder, sr);
+        const eb = Math.max(maxborder, sb);
+
+        // update visible
+        if (updateFrame(this.m_visibleFrame, this.frame.x - el, this.frame.y - et, this.frame.width + el + er, this.frame.height + et + eb)) changed = true;
+
+        // const childouterbounds = this.m_children.map(c => (c as ShapeView)._p_outerFrame);
+        // const reducer = (p: { minx: number, miny: number, maxx: number, maxy: number }, c: ShapeFrame, i: number) => {
+        //     if (i === 0) {
+        //         p.minx = c.x;
+        //         p.maxx = c.x + c.width;
+        //         p.miny = c.y;
+        //         p.maxy = c.y + c.height;
+        //     } else {
+        //         p.minx = Math.min(p.minx, c.x);
+        //         p.maxx = Math.max(p.maxx, c.x + c.width);
+        //         p.miny = Math.min(p.miny, c.y);
+        //         p.maxy = Math.max(p.maxy, c.y + c.height);
+        //     }
+        //     return p;
+        // }
+        // const outerbounds = childouterbounds.reduce(reducer, { minx: 0, miny: 0, maxx: 0, maxy: 0 });
         const childouterbounds = this.m_children.map(c => (c as ShapeView)._p_outerFrame);
         const reducer = (p: { minx: number, miny: number, maxx: number, maxy: number }, c: ShapeFrame, i: number) => {
-            if (i === 0) {
-                p.minx = c.x;
-                p.maxx = c.x + c.width;
-                p.miny = c.y;
-                p.maxy = c.y + c.height;
-            } else {
-                p.minx = Math.min(p.minx, c.x);
-                p.maxx = Math.max(p.maxx, c.x + c.width);
-                p.miny = Math.min(p.miny, c.y);
-                p.maxy = Math.max(p.maxy, c.y + c.height);
-            }
+            p.minx = Math.min(p.minx, c.x);
+            p.maxx = Math.max(p.maxx, c.x + c.width);
+            p.miny = Math.min(p.miny, c.y);
+            p.maxy = Math.max(p.maxy, c.y + c.height);
             return p;
         }
-        const outerbounds = childouterbounds.reduce(reducer, { minx: 0, miny: 0, maxx: 0, maxy: 0 });
+        const _f = this.m_visibleFrame;
+        const outerbounds = childouterbounds.reduce(reducer, { minx: _f.x, miny: _f.y, maxx: _f.x + _f.width, maxy: _f.y + _f.height });
         // update outer
         if (updateFrame(this.m_outerFrame, outerbounds.minx, outerbounds.miny, outerbounds.maxx - outerbounds.minx, outerbounds.maxy - outerbounds.miny)) changed = true;
 

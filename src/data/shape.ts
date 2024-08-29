@@ -15,6 +15,14 @@ import {
     ShapeType,
     VariableType,
     ShapeSize,
+    PrototypeInterAction,
+    OverlayPosition,
+    ScrollDirection,
+    OverlayPositionType,
+    OverlayBackgroundAppearance,
+    OverlayBackgroundType,
+    OverlayMargin,
+    Color
 } from "./baseclasses"
 import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
@@ -24,6 +32,7 @@ import { PathType, RadiusType, RECT_POINTS } from "./consts";
 import { Variable } from "./variable";
 import { Transform } from "./transform";
 import { makeShapeTransform2By1 } from "./shape_transform_util";
+
 export { Transform } from "./transform";
 export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D,
@@ -94,6 +103,15 @@ export class Shape extends Basic implements classes.Shape {
         if (id0 === 'style') return this.style.getOpTarget(path.slice(1));
         if (id0 === 'varbinds' && !this.varbinds) this.varbinds = new BasicMap();
         if (id0 === "exportOptions" && !this.exportOptions) this.exportOptions = new ExportOptions(new BasicArray(), 0, false, false, false, false);
+        if (id0 === "prototypeInteractions" && !this.prototypeInteractions) {
+            this.prototypeInteractions = new BasicArray<PrototypeInterAction>();
+        }
+        if (id0 === "overlayPosition" && !this.overlayPosition) {
+            this.overlayPosition = new OverlayPosition(OverlayPositionType.CENTER, new OverlayMargin())
+        }
+        if (id0 === "overlayBackgroundAppearance" && !this.overlayBackgroundAppearance) {
+            this.overlayBackgroundAppearance = new OverlayBackgroundAppearance(OverlayBackgroundType.SOLIDCOLOR, new Color(0.25, 0, 0, 0))
+        }
         return super.getOpTarget(path);
     }
 
@@ -120,8 +138,13 @@ export class Shape extends Basic implements classes.Shape {
     hasClippingMask?: boolean
     shouldBreakMaskChain?: boolean
     varbinds?: BasicMap<string, string>
-
     haveEdit?: boolean | undefined
+    prototypeStartingPoint?: classes.PrototypeStartingPoint;
+    prototypeInteractions?: BasicArray<PrototypeInterAction>;
+    overlayPosition?: classes.OverlayPosition;
+    overlayBackgroundInteraction?: classes.OverlayBackgroundInteraction;
+    overlayBackgroundAppearance?: classes.OverlayBackgroundAppearance;
+    scrollDirection?: classes.ScrollDirection;
     mask?: boolean
 
     constructor(
@@ -175,13 +198,16 @@ export class Shape extends Basic implements classes.Shape {
     get size(): ShapeSize {
         return new ShapeSize();
     }
+
     set size(size: ShapeSize) {
 
     }
+
     get frame(): ShapeFrame {
         const { width, height } = this.size;
         return new ShapeFrame(0, 0, width, height);
     }
+
     hasSize(): boolean {
         return false;
     }
@@ -189,9 +215,11 @@ export class Shape extends Basic implements classes.Shape {
     getPathOfSize(frame: ShapeSize, fixedRadius?: number): Path {
         return new Path();
     }
+
     getPath(fixedRadius?: number): Path {
         return this.getPathOfSize(this.frame, fixedRadius);
     }
+
     getPathStr(fixedRadius?: number): string {
         return this.getPath(fixedRadius).toString();
     }
@@ -394,10 +422,9 @@ export class Shape extends Basic implements classes.Shape {
     get isStraight() {
         return false;
     }
-    getImageFill() {
-        const fills = this.getFills();
-        if (!fills.length) return false;
-        return fills.some(fill => fill.fillType === classes.FillType.Pattern);
+
+    get isImageFill() {
+        return this.getFills().some(fill => fill.fillType === classes.FillType.Pattern);
     }
 }
 
@@ -484,10 +511,10 @@ export class GroupShape extends Shape implements classes.GroupShape {
         const w = frame.width;
         const h = frame.height;
         let path = [["M", x, y],
-        ["l", w, 0],
-        ["l", 0, h],
-        ["l", -w, 0],
-        ["z"]];
+            ["l", w, 0],
+            ["l", 0, h],
+            ["l", -w, 0],
+            ["z"]];
         return new Path(path);
     }
 
@@ -511,15 +538,17 @@ export class GroupShape extends Shape implements classes.GroupShape {
         return RadiusType.Fixed;
     }
 
-    getImageFill() {
+    get isImageFill() {
         return false;
     }
 
     get size(): ShapeSize {
         return this.frame;
     }
+
     set size(size: ShapeSize) {
     }
+
     get frame(): ShapeFrame {
         const childframes = this.childs.map((c) => c.frame2Parent());
         const reducer = (p: { minx: number, miny: number, maxx: number, maxy: number }, c: ShapeFrame, i: number) => {
@@ -581,11 +610,9 @@ export class BoolShape extends GroupShape implements classes.BoolShape {
     get isPathIcon() {
         return true;
     }
-    getImageFill() {
-        const fills = this.style.getFills();
-        if (!fills.length) return false;
-        const result = fills.some(fill => fill.fillType === classes.FillType.Pattern);
-        return result;
+
+    get isImageFill() {
+        return this.style.getFills().some(fill => fill.fillType === classes.FillType.Pattern);
     }
 }
 
@@ -680,6 +707,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
     get frame(): classes.ShapeFrame {
         return new ShapeFrame(0, 0, this.size.width, this.size.height);
     }
+
     hasSize(): boolean {
         return true;
     }
@@ -692,8 +720,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
     variables: BasicMap<string, Variable> // 怎么做关联
     symtags?: BasicMap<string, string>
     cornerRadius?: CornerRadius
-    guides?: BasicArray<Guide>;
-
+    guides?: BasicArray<Guide>
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
@@ -704,7 +731,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         childs: BasicArray<Shape>,
         size: ShapeSize,
         variables: BasicMap<string, Variable>,
-        guides?: BasicArray<Guide>
+        guides?: BasicArray<Guide>,
     ) {
         super(
             crdtidx,
@@ -827,6 +854,7 @@ export class PathShape extends Shape implements classes.PathShape {
     get frame(): classes.ShapeFrame {
         return new ShapeFrame(0, 0, this.size.width, this.size.height);
     }
+
     hasSize(): boolean {
         return true;
     }
@@ -909,9 +937,11 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
     get frame(): classes.ShapeFrame {
         return new ShapeFrame(0, 0, this.size.width, this.size.height);
     }
+
     hasSize(): boolean {
         return true;
     }
+
     typeId = 'path-shape2'
     // @ts-ignore
     size: ShapeSize;
@@ -1064,19 +1094,12 @@ export class ImageShape extends RectShape implements classes.ImageShape {
         return this.__cacheData && this.__cacheData.base64 || "";
     }
 
-    // get isNoSupportDiamondScale() {
-    //     return true;
-    // }
-
-    // get frameType() {
-    //     return FrameType.Rect;
-    // }
-
     get isPathIcon() {
         return false;
     }
-    getImageFill() {
-        return false;
+
+    get isImageFill() {
+        return true;
     }
 }
 
@@ -1145,12 +1168,15 @@ export class TextShape extends Shape implements classes.TextShape {
     size: ShapeSize
     text: Text
     fixedRadius?: number
+
     get frame(): classes.ShapeFrame {
         return new ShapeFrame(0, 0, this.size.width, this.size.height);
     }
+
     hasSize(): boolean {
         return true;
     }
+
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
@@ -1194,10 +1220,10 @@ export class TextShape extends Shape implements classes.TextShape {
         const x = 0;
         const y = 0;
         const path = [["M", x, y],
-        ["l", w, 0],
-        ["l", 0, h],
-        ["l", -w, 0],
-        ["z"]];
+            ["l", w, 0],
+            ["l", 0, h],
+            ["l", -w, 0],
+            ["z"]];
         return new Path(path);
     }
 
@@ -1220,11 +1246,8 @@ export class TextShape extends Shape implements classes.TextShape {
     get isPathIcon() {
         return false;
     }
-    getImageFill() {
-        // const fills = this.style.getFills();
-        // if (!fills.length) return false;
-        // const result = fills.some(fill => fill.fillType === classes.FillType.Pattern);
-        // return result;
+
+    get isImageFill() {
         return false;
     }
 }
@@ -1272,10 +1295,12 @@ export class CutoutShape extends PathShape implements classes.CutoutShape {
     get isPathIcon() {
         return false;
     }
+
     get radiusType() {
         return RadiusType.None;
     }
-    getImageFill() {
+
+    get isImageFill() {
         return false;
     }
 }

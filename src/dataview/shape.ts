@@ -13,11 +13,18 @@ import {
     makeShapeTransform1By2,
     makeShapeTransform2By1,
     MarkerType,
+    OverlayBackgroundAppearance,
+    OverlayBackgroundInteraction,
+    OverlayPosition,
     OverrideType,
     Path,
     PathShape,
     Point2D,
+    PrototypeInterAction,
+    PrototypeStartingPoint,
+    ScrollDirection,
     Shadow,
+    ShadowPosition,
     Shape,
     ShapeFrame,
     ShapeSize,
@@ -41,6 +48,8 @@ import { GroupShapeView } from "./groupshape";
 import { importBorder, importFill } from "../data/baseimport";
 import { exportBorder, exportFill } from "../data/baseexport";
 import { PageView } from "./page";
+import { ArtboradView } from "./artboard";
+import { findOverrideAll } from "../data/utils";
 
 export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     return (
@@ -298,7 +307,7 @@ export class ShapeView extends DataView {
      * contentFrame+边框，对象实际显示的位置大小
      */
     get visibleFrame() {
-        return this.m_frame;
+        return this.m_visibleFrame;
     }
 
     /**
@@ -412,10 +421,23 @@ export class ShapeView extends DataView {
         }
     }
 
+    protected _findOVAll(ot: OverrideType, vt: VariableType): Variable[] | undefined {
+        if (!this.varsContainer) return;
+        const _vars = findOverrideAll(this.m_data.id, ot, this.varsContainer);
+        // if (!_vars) return;
+        // const _var = _vars[_vars.length - 1];
+        // if (_var && _var.type === vt) {
+        //     return _var;
+        // }
+        return _vars;
+    }
+
     matrix2Root() {
         const m = this.transform.toMatrix();
         const p = this.parent;
         if (p) {
+            const offset = (p as ArtboradView).innerTransform;
+            offset && m.multiAtLeft(offset.toMatrix())
             m.multiAtLeft(p.matrix2Root())
         }
         return m;
@@ -584,9 +606,26 @@ export class ShapeView extends DataView {
                 maxborder = Math.max(b.thickness / 2, maxborder);
             }
         })
+        // 阴影
+        const shadows = this.getShadows();
+        let st = 0, sb = 0, sl = 0, sr = 0;
+        shadows.forEach(s => {
+            if (!s.isEnabled) return;
+            if (s.position !== ShadowPosition.Outer) return;
+            const w = s.blurRadius + s.spread;
+            sl = Math.max(-s.offsetX + w, sl);
+            sr = Math.max(s.offsetX + w, sr);
+            st = Math.max(-s.offsetY + w, st);
+            sb = Math.max(s.offsetY + w, sb);
+        })
+
+        const el = Math.max(maxborder, sl);
+        const et = Math.max(maxborder, st);
+        const er = Math.max(maxborder, sr);
+        const eb = Math.max(maxborder, sb);
 
         // update visible
-        if (updateFrame(this.m_visibleFrame, this.frame.x - maxborder, this.frame.y - maxborder, this.frame.width + maxborder * 2, this.frame.height + maxborder * 2)) changed = true;
+        if (updateFrame(this.m_visibleFrame, this.frame.x - el, this.frame.y - et, this.frame.width + el + er, this.frame.height + et + eb)) changed = true;
 
         // update outer
         if (updateFrame(this.m_outerFrame, this.m_visibleFrame.x, this.m_visibleFrame.y, this.m_visibleFrame.width, this.m_visibleFrame.height)) changed = true;
@@ -794,7 +833,7 @@ export class ShapeView extends DataView {
 
     protected renderBlur(blurId: string): EL[] {
         if (!this.blur) return [];
-        return renderBlur(elh, this.blur, blurId, this.frame, this.getFills(), this.getBorders(),this.getPathStr());
+        return renderBlur(elh, this.blur, blurId, this.frame, this.getFills(), this.getBorders(), this.getPathStr());
     }
 
     protected renderProps(): { [key: string]: string } & { style: any } {
@@ -862,6 +901,14 @@ export class ShapeView extends DataView {
 
     protected checkAndResetDirty(): boolean {
         return this.m_ctx.removeDirty(this);
+    }
+
+    asyncRender(): number {
+        const renderContents = this.renderContents;
+        this.renderContents = () => this.m_children;
+        const version = this.render();
+        this.renderContents = renderContents;
+        return version;
     }
 
     render(): number {
@@ -1009,7 +1056,60 @@ export class ShapeView extends DataView {
     }
 
     get isImageFill() {
-        return this.m_data.getImageFill();
+        return this.m_data.isImageFill;
+    }
+
+    get prototypeStartPoint(): PrototypeStartingPoint | undefined {
+        return this.m_data.prototypeStartingPoint;
+    }
+
+    get prototypeInterActions(): BasicArray<PrototypeInterAction> | undefined {
+        const v = this._findOVAll(OverrideType.ProtoInteractions, VariableType.ProtoInteractions);
+        if (!v) {
+            return this.m_data.prototypeInteractions;
+        }
+        // 需要做合并
+        // 合并vars
+        const overrides = new BasicArray<PrototypeInterAction>();
+        v.reverse().forEach(v => {
+            const o = (v.value as BasicArray<PrototypeInterAction>).slice(0).reverse();
+            o.forEach(o => {
+                if (!overrides.find(o1 => o1.id === o.id)) overrides.push(o);
+            })
+        })
+        overrides.reverse();
+
+        const deleted = overrides.filter((v) => !!v.isDeleted);
+        const inherit = this.m_data.prototypeInteractions || [];
+        const ret = new BasicArray<PrototypeInterAction>();
+        inherit.forEach(v => {
+            if (v.isDeleted) return;
+            if (deleted.find(v1 => v1.id === v.id)) return;
+            const o = overrides.find(v1 => v1.id === v.id);
+            ret.push(o ? o : v);
+        })
+        overrides.forEach(v => {
+            if (v.isDeleted) return;
+            if (inherit.find(v1 => v1.id === v.id)) return;
+            ret.push(v);
+        })
+        return ret;
+    }
+
+    get overlayPosition(): OverlayPosition | undefined {
+        return this.m_data.overlayPosition
+    }
+
+    get overlayBackgroundInteraction(): OverlayBackgroundInteraction | undefined {
+        return this.m_data.overlayBackgroundInteraction
+    }
+
+    get overlayBackgroundAppearance(): OverlayBackgroundAppearance | undefined {
+        return this.m_data.overlayBackgroundAppearance
+    }
+
+    get scrollDirection(): ScrollDirection | undefined {
+        return this.m_data.scrollDirection
     }
 
     get relyLayers() {
@@ -1125,5 +1225,16 @@ export class ShapeView extends DataView {
         }
 
         return elh("g", props, children);
+    }
+
+    reloadImage(target?: Set<string>) {
+        const fills = this.getFills(); // 重载填充图片
+        fills.forEach((fill) => {
+            if (fill.fillType === FillType.Pattern) {
+                if (!target) fill.reloadImage();
+                else if (target.has(fill.imageRef || '')) fill.reloadImage();
+            }
+        })
+        this.m_ctx.setDirty(this);
     }
 }

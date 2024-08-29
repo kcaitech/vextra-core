@@ -71,6 +71,27 @@
         "haveEdit": {
             "type": "boolean"
         },
+        "prototypeStartingPoint": {
+            "$ref": "./prototype-starting-point.json"
+        },
+        "prototypeInteractions": {
+            "type": "array",
+            "items": {
+                "$ref": "./prototype-inter-action.json"
+            }
+        },
+        "overlayPosition":{
+            "$ref": "./overlay-position.json"
+        },
+        "overlayBackgroundInteraction":{
+             "$ref": "./overlay-background-interaction.json"
+        },
+        "overlayBackgroundAppearance":{
+            "$ref":"./overlay-background-appearance.json"
+        },
+        "scrollDirection":{
+             "$ref":"./scroll-direction.json"
+        },
         "mask": {
             "type": "boolean"
         }

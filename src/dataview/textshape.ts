@@ -124,6 +124,10 @@ export class TextShapeView extends ShapeView {
         this.m_textpath = undefined;
     }
 
+    asyncRender() {
+        return this.render();
+    }
+
     renderContents(): EL[] {
         const layout = this.getLayout();
         return renderTextLayout(elh, layout, this.frame, this.blur);

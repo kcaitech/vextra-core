@@ -4,12 +4,27 @@ import { innerShadowId, renderBorders, renderFills } from "../render";
 import { objectId } from "../basic/objectid";
 import { render as clippathR } from "../render/clippath"
 import { Artboard } from "../data/artboard";
-import { AutoLayout, BlurType, BorderPosition, CornerRadius, Page, ShapeFrame, ShapeSize } from "../data/classes";
+import { AutoLayout, BorderPosition, CornerRadius, Page, ShadowPosition, ShapeFrame, ShapeSize, Transform } from "../data/classes";
 import { ShapeView, updateFrame } from "./shape";
 import { PageView } from "./page";
 
 
 export class ArtboradView extends GroupShapeView {
+
+    m_inner_transform: Transform | undefined;
+    get innerTransform(): Transform | undefined {
+        return this.m_inner_transform;
+    }
+
+    initInnerTransform(transform: Transform) {
+        this.m_inner_transform = transform;
+        this.m_ctx.setDirty(this);
+    }
+    innerScrollOffset(x: number, y: number) {
+        if (!this.m_inner_transform) this.m_inner_transform = new Transform();
+        this.m_inner_transform.trans(x, y);
+        this.m_ctx.setDirty(this);
+    }
 
     get data() {
         return this.m_data as Artboard;
@@ -80,11 +95,12 @@ export class ArtboradView extends GroupShapeView {
         return props;
     }
 
-    _svgnode?: EL;
+    // _svgnode?: EL;
 
     render(): number {
         if (!this.checkAndResetDirty()) return this.m_render_version;
-        this._svgnode = undefined;
+
+        // this._svgnode = undefined;
         const masked = this.masked;
         if (masked) {
             (this.getPage() as PageView).getView(masked.id)?.render();
@@ -110,8 +126,16 @@ export class ArtboradView extends GroupShapeView {
         const contextSettings = this.style.contextSettings;
 
         let props: any = { style: { transform: this.transform.toString() } };
+
         let children = [...fills, ...childs];
 
+        if (this.innerTransform) {
+            const child = elh("g", {
+                id: this.id,
+                transform: this.innerTransform.toString()
+            }, childs);
+            children = [...fills, child];
+        }
         if (contextSettings) {
             props.opacity = contextSettings.opacity;
             props.style['mix-blend-mode'] = contextSettings.blenMode;
@@ -120,7 +144,7 @@ export class ArtboradView extends GroupShapeView {
         const id = "clippath-artboard-" + objectId(this);
         const cp = clippathR(elh, id, this.getPathStr());
 
-        this._svgnode = elh(
+        const _svgnode = elh(
             "svg",
             svgprops,
             [cp, ...children]
@@ -129,7 +153,7 @@ export class ArtboradView extends GroupShapeView {
         children = [elh(
             "g",
             { "clip-path": "url(#" + id + ")" },
-            [this._svgnode]
+            [_svgnode]
         ), ...borders];
 
         if (shadows.length) {
@@ -188,8 +212,26 @@ export class ArtboradView extends GroupShapeView {
             }
         })
 
+        // 阴影
+        const shadows = this.getShadows();
+        let st = 0, sb = 0, sl = 0, sr = 0;
+        shadows.forEach(s => {
+            if (!s.isEnabled) return;
+            if (s.position !== ShadowPosition.Outer) return;
+            const w = s.blurRadius + s.spread;
+            sl = Math.max(-s.offsetX + w, sl);
+            sr = Math.max(s.offsetX + w, sr);
+            st = Math.max(-s.offsetY + w, st);
+            sb = Math.max(s.offsetY + w, sb);
+        })
+
+        const el = Math.max(maxborder, sl);
+        const et = Math.max(maxborder, st);
+        const er = Math.max(maxborder, sr);
+        const eb = Math.max(maxborder, sb);
+
         // update visible
-        if (updateFrame(this.m_visibleFrame, this.frame.x - maxborder, this.frame.y - maxborder, this.frame.width + maxborder * 2, this.frame.height + maxborder * 2)) changed = true;
+        if (updateFrame(this.m_visibleFrame, this.frame.x - el, this.frame.y - et, this.frame.width + el + er, this.frame.height + et + eb)) changed = true;
 
         const childouterbounds = this.m_children.map(c => (c as ShapeView)._p_outerFrame);
         const reducer = (p: { minx: number, miny: number, maxx: number, maxy: number }, c: ShapeFrame, i: number) => {
@@ -199,8 +241,8 @@ export class ArtboradView extends GroupShapeView {
             p.maxy = Math.max(p.maxy, c.y + c.height);
             return p;
         }
-        const frame = this.frame;
-        const outerbounds = childouterbounds.reduce(reducer, { minx: frame.x, miny: frame.y, maxx: frame.x + frame.width, maxy: frame.y + frame.height });
+        const _f = this.m_visibleFrame;
+        const outerbounds = childouterbounds.reduce(reducer, { minx: _f.x, miny: _f.y, maxx: _f.x + _f.width, maxy: _f.y + _f.height });
         // update outer
         if (updateFrame(this.m_outerFrame, outerbounds.minx, outerbounds.miny, outerbounds.maxx - outerbounds.minx, outerbounds.maxy - outerbounds.miny)) changed = true;
 

@@ -1,5 +1,5 @@
-import { Border, ContextSettings, CornerRadius, Fill, MarkerType, OverrideType, PathShape, Shadow, Shape, ShapeFrame, ShapeSize, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType, getPathOfRadius } from "../data/classes";
-import { fixFrameByConstrain, frame2Parent, frame2Parent2, ShapeView } from "./shape";
+import { Border, ContextSettings, CornerRadius, Fill, MarkerType, OverrideType, PrototypeInterAction, Shadow, Shape, ShapeFrame, ShapeSize, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType, getPathOfRadius } from "../data/classes";
+import { fixFrameByConstrain, frame2Parent2, ShapeView } from "./shape";
 import { ShapeType } from "../data/classes";
 import { DataView, RootView } from "./view";
 import { getShapeViewId } from "./basic";
@@ -7,8 +7,11 @@ import { DViewCtx, PropsType, VarsContainer } from "./viewctx";
 import { findOverride, findVar } from "./basic";
 import { objectId } from "../basic/objectid";
 import { makeShapeTransform1By2, makeShapeTransform2By1 } from "../data/shape_transform_util";
-import { ResizingConstraints2 } from "../data/consts";
-import { float_accuracy } from "../basic/consts";
+import { BasicArray } from "../data/basic";
+import { findOverrideAll } from "../data/utils";
+
+// 播放页组件状态切换会话存储refId的key值；
+export const sessionRefIdKey = 'ref-id-cf76c6c6-beed-4c33-ae71-134ee876b990';
 
 export class SymbolRefView extends ShapeView {
 
@@ -46,10 +49,29 @@ export class SymbolRefView extends ShapeView {
     }
 
     getRefId(): string {
+        const swap_ref_id = this.getSessionRefId();
+        if (swap_ref_id) {
+            return swap_ref_id as string;
+        }
         const v = this._findOV(OverrideType.SymbolID, VariableType.SymbolRef);
         return v ? v.value : (this.m_data as SymbolRefShape).refId;
     }
 
+    getSessionRefId(): boolean | string {
+        const pathname = window.location.pathname;
+        const jsonString = sessionStorage.getItem(sessionRefIdKey);
+        if (!pathname.includes("document") && jsonString) {
+            const refIdArray = JSON.parse(jsonString);
+            const maprefIdArray = new Map(refIdArray) as Map<string, string>;
+            if (maprefIdArray.has(this.id)) {
+                return maprefIdArray.get(this.id) || false;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
     maskMap: Map<string, Shape | boolean> = new Map;
     updateMaskMap() {
         const map = this.maskMap;
@@ -350,6 +372,19 @@ export class SymbolRefView extends ShapeView {
         }
     }
 
+    protected _findOV2All(ot: OverrideType, vt: VariableType): Variable[] | undefined {
+        const data = this.data;
+        const varsContainer = (this.varsContainer || []).concat(data);
+        const id = ""; // ?
+        const _vars = findOverrideAll(id, ot, varsContainer);
+        // if (!_vars) return;
+        // const _var = _vars[_vars.length - 1];
+        // if (_var && _var.type === vt) {
+        //     return _var;
+        // }
+        return _vars;
+    }
+
     get contextSettings(): ContextSettings | undefined {
         const v = this._findOV2(OverrideType.ContextSettings, VariableType.ContextSettings);
         if (v) return v.value;
@@ -386,5 +421,46 @@ export class SymbolRefView extends ShapeView {
         const v = this._findOV2(OverrideType.CornerRadius, VariableType.CornerRadius);
         if (v) return v.value;
         return this.m_sym?.cornerRadius;
+    }
+
+    get prototypeInterActions(): BasicArray<PrototypeInterAction> | undefined {
+        // 三个合并
+        const v = this._findOV2All(OverrideType.ProtoInteractions, VariableType.ProtoInteractions);
+        if (!v) {
+            return this.inheritPrototypeInterActions;
+        }
+        // 需要做合并
+        // 合并vars
+        const overrides = new BasicArray<PrototypeInterAction>();
+        v.reverse().forEach(v => {
+            const o = (v.value as BasicArray<PrototypeInterAction>).slice(0).reverse();
+            o.forEach(o => {
+                if (!overrides.find(o1 => o1.id === o.id)) overrides.push(o);
+            })
+        })
+        overrides.reverse();
+
+        const deleted = overrides.filter((v) => !!v.isDeleted);
+        const inherit = (this.inheritPrototypeInterActions || []) as BasicArray<PrototypeInterAction>;
+        const ret = new BasicArray<PrototypeInterAction>();
+        inherit.forEach(v => {
+            if (v.isDeleted) return;
+            if (deleted.find(v1 => v1.id === v.id)) return;
+            const o = overrides.find(v1 => v1.id === v.id);
+            ret.push(o ? o : v);
+        })
+        overrides.forEach(v => {
+            if (v.isDeleted) return;
+            if (inherit.find(v1 => v1.id === v.id)) return;
+            ret.push(v);
+        })
+        return ret;
+    }
+
+    get inheritPrototypeInterActions(): BasicArray<PrototypeInterAction> | undefined {
+        if (this.m_data.prototypeInteractions) {
+            return this.m_data.prototypeInteractions.slice(0).concat(...(this.m_sym?.prototypeInteractions || [])) as BasicArray<PrototypeInterAction>
+        }
+        return this.m_sym?.prototypeInteractions;
     }
 }

@@ -26,7 +26,6 @@ export {
     StackWrap,
     AutoLayout
 } from "./baseclasses"
-
 export class Artboard extends GroupShape implements classes.Artboard {
     get frame(): ShapeFrame {
         return new ShapeFrame(0, 0, this.size.width, this.size.height);
