@@ -529,6 +529,29 @@ export function importShapeType(source: types.ShapeType, ctx?: IImportContext): 
 export function importSideType(source: types.SideType, ctx?: IImportContext): impl.SideType {
     return source
 }
+/* stack align */
+export function importStackAlign(source: types.StackAlign, ctx?: IImportContext): impl.StackAlign {
+    return source
+}
+/* stack mode */
+export function importStackMode(source: types.StackMode, ctx?: IImportContext): impl.StackMode {
+    return source
+}
+/* stack size */
+export function importStackSize(source: types.StackSize, ctx?: IImportContext): impl.StackSize {
+    const ret: impl.StackSize = new impl.StackSize (
+        source.x,
+        source.y)
+    return ret
+}
+/* stack sizing */
+export function importStackSizing(source: types.StackSizing, ctx?: IImportContext): impl.StackSizing {
+    return source
+}
+/* stack wrap */
+export function importStackWrap(source: types.StackWrap, ctx?: IImportContext): impl.StackWrap {
+    return source
+}
 /* stop */
 export function importStop(source: types.Stop, ctx?: IImportContext): impl.Stop {
     const ret: impl.Stop = new impl.Stop (
@@ -688,6 +711,31 @@ export function importVariable_0(source: types.Variable_0, ctx?: IImportContext)
 /* winding rule */
 export function importWindingRule(source: types.WindingRule, ctx?: IImportContext): impl.WindingRule {
     return source
+}
+/* auto layout */
+function importAutoLayoutOptional(tar: impl.AutoLayout, source: types.AutoLayout, ctx?: IImportContext) {
+    if (source.stackMode) tar.stackMode = importStackMode(source.stackMode, ctx)
+    if (source.stackWrap) tar.stackWrap = importStackWrap(source.stackWrap, ctx)
+    if (source.stackHorizontalGapSizing) tar.stackHorizontalGapSizing = importStackSizing(source.stackHorizontalGapSizing, ctx)
+    if (source.stackVerticalGapSizing) tar.stackVerticalGapSizing = importStackSizing(source.stackVerticalGapSizing, ctx)
+    if (source.stackPrimarySizing) tar.stackPrimarySizing = importStackSizing(source.stackPrimarySizing, ctx)
+    if (source.stackCounterSizing) tar.stackCounterSizing = importStackSizing(source.stackCounterSizing, ctx)
+    if (source.stackPrimaryAlignItems) tar.stackPrimaryAlignItems = importStackAlign(source.stackPrimaryAlignItems, ctx)
+    if (source.stackCounterAlignItems) tar.stackCounterAlignItems = importStackAlign(source.stackCounterAlignItems, ctx)
+    if (source.stackReverseZIndex) tar.stackReverseZIndex = source.stackReverseZIndex
+    if (source.minSize) tar.minSize = importStackSize(source.minSize, ctx)
+    if (source.maxSize) tar.maxSize = importStackSize(source.maxSize, ctx)
+}
+export function importAutoLayout(source: types.AutoLayout, ctx?: IImportContext): impl.AutoLayout {
+    const ret: impl.AutoLayout = new impl.AutoLayout (
+        source.stackSpacing,
+        source.stackCounterSpacing,
+        source.stackHorizontalPadding,
+        source.stackVerticalPadding,
+        source.stackPaddingRight,
+        source.stackPaddingBottom)
+    importAutoLayoutOptional(ret, source, ctx)
+    return ret
 }
 /* blur */
 function importBlurOptional(tar: impl.Blur, source: types.Blur, ctx?: IImportContext) {
@@ -1606,6 +1654,7 @@ function importArtboardOptional(tar: impl.Artboard, source: types.Artboard, ctx?
     importGroupShapeOptional(tar, source)
     if (source.cornerRadius) tar.cornerRadius = importCornerRadius(source.cornerRadius, ctx)
     if (source.guides) tar.guides = importArtboard_guides(source.guides, ctx)
+    if (source.autoLayout) tar.autoLayout = importAutoLayout(source.autoLayout, ctx)
 }
 export function importArtboard(source: types.Artboard, ctx?: IImportContext): impl.Artboard {
     compatibleOldData(source, ctx)

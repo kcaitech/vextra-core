@@ -452,6 +452,29 @@ export function exportShapeType(source: types.ShapeType, ctx?: IExportContext): 
 export function exportSideType(source: types.SideType, ctx?: IExportContext): types.SideType {
     return source
 }
+/* stack align */
+export function exportStackAlign(source: types.StackAlign, ctx?: IExportContext): types.StackAlign {
+    return source
+}
+/* stack mode */
+export function exportStackMode(source: types.StackMode, ctx?: IExportContext): types.StackMode {
+    return source
+}
+/* stack size */
+export function exportStackSize(source: types.StackSize, ctx?: IExportContext): types.StackSize {
+    const ret: types.StackSize = {} as types.StackSize
+    ret.x = source.x
+    ret.y = source.y
+    return ret
+}
+/* stack sizing */
+export function exportStackSizing(source: types.StackSizing, ctx?: IExportContext): types.StackSizing {
+    return source
+}
+/* stack wrap */
+export function exportStackWrap(source: types.StackWrap, ctx?: IExportContext): types.StackWrap {
+    return source
+}
 /* stop */
 export function exportStop(source: types.Stop, ctx?: IExportContext): types.Stop {
     const ret: types.Stop = {} as types.Stop
@@ -603,6 +626,30 @@ export function exportVariable_0(source: types.Variable_0, ctx?: IExportContext)
 /* winding rule */
 export function exportWindingRule(source: types.WindingRule, ctx?: IExportContext): types.WindingRule {
     return source
+}
+/* auto layout */
+export function exportAutoLayout(source: types.AutoLayout, ctx?: IExportContext): types.AutoLayout {
+    const ret: types.AutoLayout = {} as types.AutoLayout
+    ret.typeId = "auto-layout"
+    ret.typeId = source.typeId
+    ret.stackSpacing = source.stackSpacing
+    ret.stackCounterSpacing = source.stackCounterSpacing
+    ret.stackHorizontalPadding = source.stackHorizontalPadding
+    ret.stackVerticalPadding = source.stackVerticalPadding
+    ret.stackPaddingRight = source.stackPaddingRight
+    ret.stackPaddingBottom = source.stackPaddingBottom
+    if (source.stackMode) ret.stackMode = exportStackMode(source.stackMode, ctx)
+    if (source.stackWrap) ret.stackWrap = exportStackWrap(source.stackWrap, ctx)
+    if (source.stackHorizontalGapSizing) ret.stackHorizontalGapSizing = exportStackSizing(source.stackHorizontalGapSizing, ctx)
+    if (source.stackVerticalGapSizing) ret.stackVerticalGapSizing = exportStackSizing(source.stackVerticalGapSizing, ctx)
+    if (source.stackPrimarySizing) ret.stackPrimarySizing = exportStackSizing(source.stackPrimarySizing, ctx)
+    if (source.stackCounterSizing) ret.stackCounterSizing = exportStackSizing(source.stackCounterSizing, ctx)
+    if (source.stackPrimaryAlignItems) ret.stackPrimaryAlignItems = exportStackAlign(source.stackPrimaryAlignItems, ctx)
+    if (source.stackCounterAlignItems) ret.stackCounterAlignItems = exportStackAlign(source.stackCounterAlignItems, ctx)
+    if (source.stackReverseZIndex) ret.stackReverseZIndex = source.stackReverseZIndex
+    if (source.minSize) ret.minSize = exportStackSize(source.minSize, ctx)
+    if (source.maxSize) ret.maxSize = exportStackSize(source.maxSize, ctx)
+    return ret
 }
 /* blur */
 export function exportBlur(source: types.Blur, ctx?: IExportContext): types.Blur {
@@ -1084,6 +1131,7 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
     ret.size = exportShapeSize(source.size, ctx)
     if (source.cornerRadius) ret.cornerRadius = exportCornerRadius(source.cornerRadius, ctx)
     if (source.guides) ret.guides = exportArtboard_guides(source.guides, ctx)
+    if (source.autoLayout) ret.autoLayout = exportAutoLayout(source.autoLayout, ctx)
     return ret
 }
 /* bool shape */

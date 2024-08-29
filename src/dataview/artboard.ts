@@ -4,7 +4,7 @@ import { innerShadowId, renderBorders, renderFills } from "../render";
 import { objectId } from "../basic/objectid";
 import { render as clippathR } from "../render/clippath"
 import { Artboard } from "../data/artboard";
-import { BlurType, BorderPosition, CornerRadius, Page, ShapeFrame, ShapeSize } from "../data/classes";
+import { AutoLayout, BlurType, BorderPosition, CornerRadius, Page, ShapeFrame, ShapeSize } from "../data/classes";
 import { ShapeView, updateFrame } from "./shape";
 import { PageView } from "./page";
 
@@ -17,6 +17,10 @@ export class ArtboradView extends GroupShapeView {
 
     get cornerRadius(): CornerRadius | undefined {
         return (this.data).cornerRadius;
+    }
+
+    get autoLayout(): AutoLayout | undefined {
+        return (this.data).autoLayout;
     }
 
     protected renderFills(): EL[] {

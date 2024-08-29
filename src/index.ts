@@ -104,6 +104,13 @@ export {
 
     Document,
     Repository,
+
+    AutoLayout,
+    StackMode,
+    StackAlign,
+    StackSizing,
+    StackWrap,
+    StackSize
 } from "./data"
 
 export {

@@ -14,10 +14,18 @@ import {
 } from "./shape";
 import { Style } from "./style";
 import * as classes from "./baseclasses";
-import { BasicArray } from "./basic";
+import { Basic, BasicArray } from "./basic";
 import { Path } from "./path";
 import { RadiusType } from "./consts";
 import { Guide } from "./baseclasses";
+export {
+    StackAlign,
+    StackMode,
+    StackSize,
+    StackSizing,
+    StackWrap,
+    AutoLayout
+} from "./baseclasses"
 
 export class Artboard extends GroupShape implements classes.Artboard {
     get frame(): ShapeFrame {
@@ -32,6 +40,7 @@ export class Artboard extends GroupShape implements classes.Artboard {
     cornerRadius?: CornerRadius
     haveEdit?: boolean | undefined;
     guides?: BasicArray<Guide>;
+    autoLayout?: classes.AutoLayout;
 
     constructor(
         crdtidx: BasicArray<number>,
@@ -43,7 +52,8 @@ export class Artboard extends GroupShape implements classes.Artboard {
         childs: BasicArray<(GroupShape | Shape | ImageShape | PathShape | RectShape | TextShape)>,
         size: ShapeSize,
         haveEdit?: boolean,
-        guides?: BasicArray<Guide>
+        guides?: BasicArray<Guide>,
+        autoLayout?: classes.AutoLayout
     ) {
         super(
             crdtidx,
@@ -57,6 +67,7 @@ export class Artboard extends GroupShape implements classes.Artboard {
         this.size = size
         this.haveEdit = haveEdit;
         this.guides = guides;
+        this.autoLayout = autoLayout;
     }
 
     getOpTarget(path: string[]) {
