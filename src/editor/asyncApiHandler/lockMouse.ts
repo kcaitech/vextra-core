@@ -19,7 +19,8 @@ import {
     RadiusType,
     TextBehaviour,
     makeShapeTransform2By1,
-    makeShapeTransform1By2
+    makeShapeTransform1By2,
+    StackSizing
 } from "../../data";
 import {
     calculateInnerAnglePosition,
@@ -30,6 +31,7 @@ import { ColVector3D } from "../../basic/matrix2";
 import { Line, TransformMode } from "../../basic/transform";
 import { reLayoutBySizeChanged } from "./transform";
 import { fixTextShapeFrameByLayout } from "../utils/other";
+import { getAutoLayoutShapes, modifyAutoLayout } from "../utils/auto_layout";
 
 export class LockMouseHandler extends AsyncApiCaller {
     updateFrameTargets: Set<Shape> = new Set();
@@ -49,6 +51,8 @@ export class LockMouseHandler extends AsyncApiCaller {
 
             for (let i = 0; i < shapes.length; i++) {
                 const shape = adapt2Shape(shapes[i]);
+                const parent = shape.parent;
+                if (parent && (parent as Artboard).autoLayout) continue;
                 if (shape.isVirtualShape) continue;
                 translate(api, page, shape, dx, 0);
             }
@@ -66,6 +70,8 @@ export class LockMouseHandler extends AsyncApiCaller {
 
             for (let i = 0; i < shapes.length; i++) {
                 const shape = adapt2Shape(shapes[i]);
+                const parent = shape.parent;
+                if (parent && (parent as Artboard).autoLayout) continue;
                 if (shape.isVirtualShape) continue;
                 translate(api, page, shape, 0, dy);
             }
@@ -80,7 +86,6 @@ export class LockMouseHandler extends AsyncApiCaller {
         try {
             const api = this.api;
             const page = this.page;
-
             for (let i = 0; i < shapes.length; i++) {
                 const view = shapes[i];
                 const shape = adapt2Shape(view);
@@ -96,6 +101,9 @@ export class LockMouseHandler extends AsyncApiCaller {
                     fixTextShapeFrameByLayout(api, page, shape);
                 } else {
                     api.shapeModifyWidth(page, shape, size.width + dw);
+                    if ((shape as Artboard).autoLayout) {
+                        api.shapeModifyAutoLayoutSizing(page, shape, StackSizing.Fixed, 'hor');
+                    }
                 }
 
                 if (view instanceof GroupShapeView) {
@@ -104,6 +112,11 @@ export class LockMouseHandler extends AsyncApiCaller {
                         y: 1
                     }, new Map(), new Map(), new Map());
                 }
+            }
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                modifyAutoLayout(this.page, api, parent);
             }
             this.updateView();
         } catch (e) {
@@ -132,6 +145,9 @@ export class LockMouseHandler extends AsyncApiCaller {
                     fixTextShapeFrameByLayout(api, page, shape);
                 } else {
                     api.shapeModifyHeight(page, shape, size.height + dh);
+                    if ((shape as Artboard).autoLayout) {
+                        api.shapeModifyAutoLayoutSizing(page, shape, StackSizing.Fixed, 'ver');
+                    }
                 }
 
                 if (view instanceof GroupShapeView) {
@@ -140,6 +156,11 @@ export class LockMouseHandler extends AsyncApiCaller {
                         y: Math.abs(size.height / (size.height - dh))
                     }, new Map(), new Map(), new Map());
                 }
+            }
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                modifyAutoLayout(this.page, api, parent);
             }
             this.updateView();
         } catch (e) {
@@ -229,7 +250,11 @@ export class LockMouseHandler extends AsyncApiCaller {
                 const transform = makeShapeTransform1By2(t) as Transform;
                 api.shapeModifyRotate(page, adapt2Shape(shape), transform)
             }
-
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                modifyAutoLayout(this.page, api, parent);
+            }
             this.updateView();
         } catch (e) {
             console.log('LockMouseHandler.executeRotate', e);

@@ -12,7 +12,7 @@ import {
     SymbolShape,
     Variable
 } from "../../data/shape";
-import { ContactShape, SymbolRefShape, ContactForm, Artboard } from "../../data/classes";
+import { ContactShape, SymbolRefShape, ContactForm, Artboard, AutoLayout } from "../../data/classes";
 import {BoolOp, CurveMode, MarkerType, OverrideType, Point2D, Transform} from "../../data/typesdefine";
 import { BasicMap } from "../../data/basic";
 import { crdtArrayInsert, crdtArrayRemove, crdtSetAttr } from "./basic";
@@ -143,6 +143,10 @@ export function shapeModifyVisible(shape: Shape | Variable, isVisible: boolean) 
 }
 export function shapeModifyLock(shape: Shape, isLocked: boolean) {
     return crdtSetAttr(shape, 'isLocked', isLocked);
+}
+
+export function shapeAutoLayout(shape: Shape, autoLayout: AutoLayout | undefined) {
+    return crdtSetAttr(shape, 'autoLayout', autoLayout);
 }
 export function shapeModifyHFlip(page: Page, shape: Shape, needUpdateFrame?: { shape: Shape, page: Page }[]) {
     const transform2 = makeShapeTransform2By1(shape.transform);

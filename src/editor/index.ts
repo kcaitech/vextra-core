@@ -11,6 +11,8 @@ import { ISave4Restore } from "./coop/localcmd";
 import { PageView, ShapeView, TableCellView, TableView, TextShapeView } from "../dataview";
 import { Page } from "../data/page";
 
+export * from "./utils/auto_layout"
+
 export { DocEditor } from "./document";
 export { PageEditor } from "./page";
 

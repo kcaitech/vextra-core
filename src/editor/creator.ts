@@ -1,7 +1,5 @@
 import { v4 as uuid } from "uuid";
-import { Page } from "../data";
-import { Artboard } from "../data";
-import { Document, PageListItem } from "../data";
+import { AutoLayout, Page, Artboard, Document, PageListItem } from "../data";
 import {
     GroupShape,
     LineShape,
@@ -215,6 +213,25 @@ export function newArtboard2(name: string, frame: ShapeFrame): Artboard {
     const fill = new Fill(new BasicArray(), uuid(), true, FillType.SolidColor, fillColor);
     artboard.style.fills.push(fill);
 
+    addCommonAttr(artboard);
+
+    artboard.fixedRadius = 0;
+
+    return artboard
+}
+
+export function newAutoLayoutArtboard(name: string, frame: ShapeFrame, autoLayout: AutoLayout): Artboard {
+    _checkFrame(frame);
+    template_artboard.id = uuid();
+    template_artboard.name = name;
+
+    template_artboard.transform.m02 = frame.x;
+    template_artboard.transform.m12 = frame.y;
+    template_artboard.size.width = frame.width;
+    template_artboard.size.height = frame.height;
+
+    const artboard = importArtboard(template_artboard as types.Artboard);
+    artboard.autoLayout = autoLayout;
     addCommonAttr(artboard);
 
     artboard.fixedRadius = 0;

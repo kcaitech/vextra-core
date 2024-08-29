@@ -12,13 +12,16 @@ import {
     TextShape,
     TextBehaviour,
     makeShapeTransform1By2,
+    Artboard,
+    StackSizing,
 } from "../../../data";
-import { adapt2Shape, GroupShapeView, PageView, ShapeView, TextShapeView } from "../../../dataview";
+import { adapt2Shape, ArtboradView, GroupShapeView, PageView, ShapeView, TextShapeView } from "../../../dataview";
 import { Api } from "../../coop/recordapi";
 import { fixTextShapeFrameByLayout } from "../../utils/other";
 import { Transform as Transform2 } from "../../../basic/transform";
 import { ColVector3D } from "../../../basic/matrix2";
 import { XYsBounding } from "../../../io/cilpboard";
+import { getAutoLayoutShapes, modifyAutoLayout } from "../../utils/auto_layout";
 
 export type RangeRecorder = Map<string, {
     toRight?: number,
@@ -111,6 +114,8 @@ export function reLayoutBySizeChanged(
                 reLayoutBySizeChanged(api, page, child, _scale, rangeRecorder, sizeRecorder, transformRecorder);
             }
         }
+    } else if((shape as ArtboradView).autoLayout){
+        modifyAutoLayout(page, api, shape);
     } else {
         // 除去编组，其他容器级别的图层需要根据具体是约束状态进行重新布局
         for (const child of children) {
@@ -473,10 +478,10 @@ export class Scaler extends AsyncApiCaller {
             const recorder = this.recorder;
             const sizeRecorder = this.sizeRecorder;
             const transformRecorder = this.transformRecorder;
-
+            const shapes: ShapeView[] = [];
             for (let i = 0; i < params.length; i++) {
                 const item = params[i];
-
+                shapes.push(item.shape);
                 const shape = adapt2Shape(item.shape);
                 if (shape instanceof TextShape) {
                     const size = item.size;
@@ -499,7 +504,10 @@ export class Scaler extends AsyncApiCaller {
                     api.shapeModifyWH(page, shape, size.width, size.height)
                 }
                 api.shapeModifyTransform(page, shape, makeShapeTransform1By2(item.transform2));
-
+                if ((shape as Artboard).autoLayout) {
+                    api.shapeModifyAutoLayoutSizing(page, shape, StackSizing.Fixed, 'hor');
+                    api.shapeModifyAutoLayoutSizing(page, shape, StackSizing.Fixed, 'ver');
+                }
                 if (item.shape instanceof GroupShapeView) {
                     const scale = item.scale;
                     reLayoutBySizeChanged(api, page, item.shape, scale, recorder, sizeRecorder, transformRecorder);
@@ -509,7 +517,11 @@ export class Scaler extends AsyncApiCaller {
                     api.shapeModifyIsCustomSize(page, shape, true);
                 }
             }
-
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                modifyAutoLayout(this.page, api, parent);
+            }
             this.updateView();
         } catch (error) {
             console.log('error:', error);

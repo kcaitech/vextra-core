@@ -32,6 +32,7 @@ import { Page } from "../data/page";
 import {
     newArrowShape,
     newArtboard,
+    newAutoLayoutArtboard,
     newBoolShape,
     newGroupShape,
     newLineShape,
@@ -110,7 +111,7 @@ import {
     shape4shadow
 } from "./symbol";
 import { is_circular_ref2 } from "./utils/ref_check";
-import { BorderSideSetting, BorderStyle, ExportFormat, Point2D, Shadow } from "../data/baseclasses";
+import { AutoLayout, BorderSideSetting, BorderStyle, ExportFormat, Point2D, Shadow } from "../data/baseclasses";
 import {
     border2path,
     calculateInnerAnglePosition,
@@ -143,6 +144,7 @@ import { FMT_VER_latest } from "../data/fmtver";
 import { makeShapeTransform1By2, makeShapeTransform2By1, updateShapeTransform1By2 } from "../data/shape_transform_util";
 import { ColVector3D } from "../basic/matrix2";
 import { Transform as Transform2 } from "../basic/transform";
+import { initAutoLayout, layoutShapesOrder, layoutSpacing } from "./utils/auto_layout";
 
 
 // 用于批量操作的单个操作类型
@@ -471,6 +473,38 @@ export class PageEditor {
             }
             this.__repo.commit();
             return childrens.length > 0 ? childrens : false;
+        } catch (e) {
+            console.log(e)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+
+    create_autolayout_artboard(shapes: ShapeView[], artboardname: string): false | Artboard {
+        if (shapes.length === 0) return false;
+        if (shapes.find((v) => !v.parent)) return false;
+        const fshape = adapt2Shape(shapes[0]);
+        const savep = fshape.parent as GroupShape;
+        const shapes_rows = layoutShapesOrder(shapes);
+        const { hor, ver } = layoutSpacing(shapes_rows);
+        const layoutInfo = new AutoLayout(hor, ver, 0, 0, 0, 0);
+        let artboard = newAutoLayoutArtboard(artboardname, new ShapeFrame(0, 0, 100, 100), layoutInfo);
+
+        const api = this.__repo.start("create_autolayout_artboard", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+            const state = {} as SelectionState;
+            if (!isUndo) state.shapes = [artboard.id];
+            else state.shapes = cmd.saveselection?.shapes || [];
+            selection.restore(state);
+        });
+        try {
+            const saveidx = savep.indexOfChild(adapt2Shape(shapes[0]));
+            artboard = group(this.__document, this.__page, shapes.map(s => adapt2Shape(s)), artboard, savep, saveidx, api) as Artboard;
+            const frame = initAutoLayout(this.__page, api, artboard, shapes_rows);
+            if(frame) {
+                api.shapeModifyWH(this.__page, artboard, frame.width, frame.height);
+            }
+            this.__repo.commit();
+            return artboard;
         } catch (e) {
             console.log(e)
             this.__repo.rollback();

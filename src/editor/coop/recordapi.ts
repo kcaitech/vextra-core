@@ -45,10 +45,14 @@ import {
     BlurType,
     ImageScaleMode,
     PaintFilterType,
+    StackWrap,
+    StackMode,
+    StackAlign,
+    StackSizing,
 } from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
-import { ContactForm, ContactRole, ContextSettings, CurvePoint, ExportFormat, ExportOptions, PaintFilter } from "../../data/baseclasses";
+import { AutoLayout, ContactForm, ContactRole, ContextSettings, CurvePoint, ExportFormat, ExportOptions, PaintFilter } from "../../data/baseclasses";
 import { ContactShape } from "../../data/contact"
 import { Color } from "../../data/classes";
 import { Op, OpType } from "../../coop/common/op";
@@ -61,6 +65,7 @@ import { BasicArray } from "../../data";
 import { FMT_VER_latest } from "../../data/fmtver";
 import { objectId } from "../../basic/objectid";
 import { crdtSetAttr } from "../basicapi";
+import { PaddingDir } from "../shape";
 
 // 要支持variable的修改
 export type TextShapeLike = TableCellView | TextShapeView
@@ -516,6 +521,99 @@ export class Api {
         // if (!(shape instanceof SymbolRefShape)) return;
         this._shapeModifyAttr(page, shape, "isCustomSize", isCustomSize ? true : undefined);
     }
+
+    // 自动布局
+    shapeAutoLayout(page: Page, shape: Shape, autoLayout: AutoLayout | undefined) {
+        checkShapeAtPage(page, shape);
+        this.addOp(basicapi.shapeAutoLayout(shape, autoLayout));
+    }
+
+    shapeModifyAutoLayoutPadding(page: Page, shape: Shape, padding: number, direction: PaddingDir) {
+        checkShapeAtPage(page, shape);
+        const autoLayout = (shape as Artboard).autoLayout;
+        if (!autoLayout) return;
+        if (direction === 'top') {
+            this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackVerticalPadding', padding));
+        } else if (direction === 'right') {
+            this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackPaddingRight', padding));
+        } else if (direction === 'bottom') {
+            this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackPaddingBottom', padding));
+        } else if (direction === 'left') {
+            this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackHorizontalPadding', padding));
+        }
+    }
+    shapeModifyAutoLayoutHorPadding(page: Page, shape: Shape, hor: number, right: number) {
+        checkShapeAtPage(page, shape);
+        const autoLayout = (shape as Artboard).autoLayout;
+        if (!autoLayout) return;
+        this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackHorizontalPadding', hor));
+        this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackPaddingRight', right));
+    }
+    shapeModifyAutoLayoutVerPadding(page: Page, shape: Shape, ver: number, bottom: number) {
+        checkShapeAtPage(page, shape);
+        const autoLayout = (shape as Artboard).autoLayout;
+        if (!autoLayout) return;
+        this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackVerticalPadding', ver));
+        this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackPaddingBottom', bottom));
+    }
+    shapeModifyAutoLayoutWrap(page: Page, shape: Shape, wrap: StackWrap) {
+        checkShapeAtPage(page, shape);
+        const autoLayout = (shape as Artboard).autoLayout;
+        if (!autoLayout || autoLayout.stackWrap === wrap) return;
+        this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackWrap', wrap));
+    }
+
+    shapeModifyAutoLayoutMode(page: Page, shape: Shape, mode: StackMode) {
+        checkShapeAtPage(page, shape);
+        const autoLayout = (shape as Artboard).autoLayout;
+        if (!autoLayout || autoLayout.stackMode === mode) return;
+        this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackMode', mode));
+    }
+
+    shapeModifyAutoLayoutSpace(page: Page, shape: Shape, space: number, direction: PaddingDir) {
+        checkShapeAtPage(page, shape);
+        const autoLayout = (shape as Artboard).autoLayout;
+        if (!autoLayout) return;
+        if (direction === 'ver') {
+            this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackCounterSpacing', space));
+        } else if (direction === 'hor') {
+            this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackSpacing', space));
+        }
+    }
+
+    shapeModifyAutoLayoutAlignItems(page: Page, shape: Shape, primary: StackAlign, counter: StackAlign) {
+        checkShapeAtPage(page, shape);
+        const autoLayout = (shape as Artboard).autoLayout;
+        if (!autoLayout) return;
+        if (autoLayout.stackCounterAlignItems !== counter) {
+            this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackCounterAlignItems', counter));
+        }
+        if (autoLayout.stackPrimaryAlignItems !== primary) {
+            this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackPrimaryAlignItems', primary));
+        }
+    }
+
+    shapeModifyAutoLayoutSizing(page: Page, shape: Shape, sizing: StackSizing, direction: PaddingDir) {
+        checkShapeAtPage(page, shape);
+        const autoLayout = (shape as Artboard).autoLayout;
+        if (!autoLayout) return;
+        if (direction === 'ver' && autoLayout.stackCounterSizing !== sizing) {
+            this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackCounterSizing', sizing));
+        } else if (direction === 'hor' && autoLayout.stackPrimarySizing !== sizing) {
+            this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackPrimarySizing', sizing));
+        }
+    }
+    shapeModifyAutoLayoutGapSizing(page: Page, shape: Shape, sizing: StackSizing, direction: PaddingDir) {
+        checkShapeAtPage(page, shape);
+        const autoLayout = (shape as Artboard).autoLayout;
+        if (!autoLayout) return;
+        if (direction === 'ver' && autoLayout.stackVerticalGapSizing !== sizing) {
+            this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackVerticalGapSizing', sizing));
+        } else if (direction === 'hor' && autoLayout.stackHorizontalGapSizing !== sizing) {
+            this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackHorizontalGapSizing', sizing));
+        }
+    }
+
     // 添加一次fill
     addFillAt(page: Page, shape: Shape | Variable, fill: Fill, index: number) {
         checkShapeAtPage(page, shape);

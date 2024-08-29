@@ -6,6 +6,7 @@ import { Cmd, OpItem } from "../../coop/common/repo";
 import { Document } from "../../data/document";
 import {
     IImportContext,
+    importAutoLayout,
     importBlur,
     importBorderSideSetting,
     importBorderStyle,
@@ -35,6 +36,7 @@ importh['blur'] = importBlur;
 importh['symbol-shape'] = importSymbolShape;
 importh['symbol-union-shape'] = importSymbolUnionShape;
 importh['paint-filter'] = importPaintFilter;
+importh['auto-layout'] = importAutoLayout;
 
 function apply(document: Document, target: Object, op: IdOp): IdOpRecord {
     let value = op.data;

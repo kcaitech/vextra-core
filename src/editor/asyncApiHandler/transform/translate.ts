@@ -8,12 +8,14 @@ import {
     Document,
     Transform,
     makeShapeTransform2By1,
-    makeShapeTransform1By2
+    makeShapeTransform1By2,
+    Artboard
 } from "../../../data";
 import { after_migrate, unable_to_migrate } from "../../utils/migrate";
 import { get_state_name, is_state } from "../../symbol";
 import { Api } from "../../coop/recordapi";
 import { ISave4Restore, LocalCmd, SelectionState } from "../../coop/localcmd";
+import { getAutoLayoutShapes, modifyAutoLayout } from "../../../editor/utils/auto_layout";
 
 export type TranslateUnit = {
     shape: ShapeView;
@@ -44,10 +46,17 @@ export class Transporter extends AsyncApiCaller {
     execute(translateUnits: TranslateUnit[]) {
         try {
             const api = this.api;
+            const shapes: ShapeView[] = [];
             for (let i = 0; i < translateUnits.length; i++) {
                 const unit = translateUnits[i];
+                shapes.push(unit.shape);
                 const shape = adapt2Shape(unit.shape);
                 api.shapeModifyTransform(this.page, shape, unit.transform);
+            }
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                modifyAutoLayout(this.page, api, parent);
             }
             this.updateView();
         } catch (error) {

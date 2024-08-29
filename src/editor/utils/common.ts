@@ -3,7 +3,7 @@ import { Api } from "../coop/recordapi";
 import { is_straight, update_frame_by_points } from "./path";
 import { getHorizontalRadians } from "../page";
 import { Artboard, Document, GroupShape, PathShape, Shape, ShapeFrame, Page } from "../../data";
-import { Point2D } from "../../data/typesdefine";
+import { Point2D, StackSizing } from "../../data/typesdefine";
 import { float_accuracy } from "../../basic/consts";
 import { reLayoutBySizeChanged } from "../asyncApiHandler";
 import { adapt2Shape, ArtboradView, GroupShapeView, ShapeView } from "../../dataview";
@@ -63,7 +63,9 @@ export function modify_shapes_width(api: Api, document: Document, page: Page, sh
         }
         const origin_h = shape.frame.height;
         expandTo(api, document, page, shape, val, h);
-
+        if ((shape as Artboard).autoLayout) {
+            api.shapeModifyAutoLayoutSizing(page, shape, StackSizing.Fixed, 'hor');
+        }
         if (view instanceof GroupShapeView) {
             reLayoutBySizeChanged(api, page, view, { x: val / w, y: h / origin_h });
         }
@@ -90,7 +92,9 @@ export function modify_shapes_height(api: Api, document: Document, page: Page, s
 
         const origin_w = shape.frame.width;
         expandTo(api, document, page, shape, w, val);
-
+        if ((shape as Artboard).autoLayout) {
+            api.shapeModifyAutoLayoutSizing(page, shape, StackSizing.Fixed, 'ver');
+        }
         if (view instanceof GroupShapeView) {
             reLayoutBySizeChanged(api, page, view, {
                 x: w / origin_w,
