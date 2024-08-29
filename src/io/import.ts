@@ -1,5 +1,9 @@
 import { Page } from "../data/page";
-import { IImportContext, importDocumentMeta, importPage, importSymbolShape, importSymbolUnionShape } from "../data/baseimport";
+import {
+    IImportContext,
+    importDocumentMeta,
+    importPage
+} from "../data/baseimport";
 import * as types from "../data/typesdefine"
 import { BasicMap, IDataGuard } from "../data/basic";
 import { Document, DocumentMeta } from "../data/document";
@@ -13,12 +17,14 @@ interface IJSON {
 
 interface IDataLoader {
     loadDocumentMeta(id: string): Promise<DocumentMeta>
+
     loadPage(ctx: IImportContext, id: string): Promise<Page>
+
     loadMedia(ctx: IImportContext, id: string): Promise<{ buff: Uint8Array, base64: string }>
 }
 
 class RemoteLoader {
-    private storage: storage.IStorage;
+    protected storage: storage.IStorage;
 
     constructor(storage: storage.IStorage) {
         this.storage = storage;
@@ -41,9 +47,8 @@ class RemoteLoader {
 }
 
 export class DataLoader implements IDataLoader {
-
-    private remoteLoader: RemoteLoader;
-    private documentPath: string;
+    protected remoteLoader: RemoteLoader;
+    protected documentPath: string;
 
     constructor(storage: storage.IStorage, documentPath: string) {
         this.remoteLoader = new RemoteLoader(storage);
@@ -107,12 +112,83 @@ export async function importDocument(storage: storage.IStorage, documentPath: st
     const document = new Document(meta.id, meta.name, versionId ?? "", meta.lastCmdId, meta.pagesList, meta.symbolregist, gurad, meta.freesymbols as BasicMap<string, SymbolShape>);
 
     document.pagesMgr.setLoader((id: string) => {
-        const ctx: IImportContext = new class implements IImportContext { document: Document = document; curPage: string = id; fmtVer: number = fmtVer };
+        const ctx: IImportContext = new class implements IImportContext {
+            document: Document = document;
+            curPage: string = id;
+            fmtVer: number = fmtVer
+        };
         const page = loader.loadPage(ctx, id, idToVersionId.get(id))
         return page;
     });
     document.mediasMgr.setLoader((id: string) => {
-        const ctx: IImportContext = new class implements IImportContext { document: Document = document; curPage: string = ""; fmtVer: number = fmtVer };
+        const ctx: IImportContext = new class implements IImportContext {
+            document: Document = document;
+            curPage: string = "";
+            fmtVer: number = fmtVer
+        };
+        return loader.loadMedia(ctx, id)
+    });
+
+    return {
+        document: document,
+        loader: loader,
+    };
+}
+
+
+export class LocalDataLoader extends DataLoader {
+    constructor(storage: storage.IStorage, documentPath: string) {
+        super(storage, documentPath);
+    }
+    async loadDocumentMeta(versionId?: string): Promise<DocumentMeta> {
+        const json: IJSON = await this.remoteLoader.loadJson('document-meta', versionId)
+        return importDocumentMeta(json as types.DocumentMeta, undefined)
+    }
+
+    async loadPage(ctx: IImportContext, id: string, versionId?: string): Promise<Page> {
+        const json: IJSON = await this.remoteLoader.loadJson(id, versionId)
+        return importPage(json as types.Page, ctx)
+    }
+
+    async loadMedia(ctx: IImportContext, id: string, versionId?: string): Promise<{
+        buff: Uint8Array;
+        base64: string;
+    }> {
+        const buffer: Uint8Array = await this.remoteLoader.loadRaw(`medias/${id}`, versionId)
+        const uInt8Array = buffer;
+        let i = uInt8Array.length;
+        const binaryString = new Array(i);
+        while (i--) {
+            binaryString[i] = String.fromCharCode(uInt8Array[i]);
+        }
+        const data = binaryString.join('');
+        return { buff: buffer, base64: data }
+    }
+}
+
+export async function importLocalDocument(storage: storage.IStorage, documentPath: string, fid: string, versionId: string, gurad: IDataGuard) {
+    const loader = new LocalDataLoader(storage, documentPath);
+
+    const meta = await loader.loadDocumentMeta(versionId);
+    const idToVersionId: Map<string, string | undefined> = new Map(meta.pagesList.map(p => [p.id, p.versionId]));
+    const fmtVer = meta.fmtVer ?? 0;
+
+    const document = new Document(meta.id, meta.name, versionId ?? "", meta.lastCmdId, meta.pagesList, meta.symbolregist, gurad, meta.freesymbols as BasicMap<string, SymbolShape>);
+
+    document.pagesMgr.setLoader((id: string) => {
+        const ctx: IImportContext = new class implements IImportContext {
+            document: Document = document;
+            curPage: string = id;
+            fmtVer: number = fmtVer
+        };
+        return loader.loadPage(ctx, id, idToVersionId.get(id))
+    });
+    document.mediasMgr.setLoader((id: string) => {
+        const ctx: IImportContext = new class implements IImportContext {
+            document: Document = document;
+            curPage: string = "";
+            fmtVer: number = fmtVer
+        };
         return loader.loadMedia(ctx, id)
     });
 
