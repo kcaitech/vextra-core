@@ -52,6 +52,10 @@
             "type": "boolean",
             "default": false
         },
+        "bordersTakeSpace": {
+            "type": "boolean",
+            "default": false
+        },
         "minSize": {
             "$ref": "./stack-size.json"
         },
