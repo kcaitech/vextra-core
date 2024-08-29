@@ -9,7 +9,8 @@ import {
     Transform,
     makeShapeTransform2By1,
     makeShapeTransform1By2,
-    Artboard
+    Artboard,
+    ShapeType
 } from "../../../data";
 import { after_migrate, unable_to_migrate } from "../../utils/migrate";
 import { get_state_name, is_state } from "../../symbol";
@@ -26,7 +27,7 @@ export class Transporter extends AsyncApiCaller {
     origin_envs = new Map<string, { shape: ShapeView, index: number }[]>();
     except_envs: ShapeView[] = [];
     current_env_id: string = '';
-
+    prototype = new Map<string, Shape>()
     shapes: (Shape | ShapeView)[] = [];
 
     constructor(repo: CoopRepository, document: Document, page: PageView, shapes: ShapeView[]) {
@@ -198,6 +199,21 @@ export class Transporter extends AsyncApiCaller {
         api.shapeModifyTransform(page, shape, makeShapeTransform1By2(transform));
         api.shapeMove(page, origin, origin.indexOfChild(shape), targetParent, index++);
 
+        //标记容器是否被移动到其他容器
+        if (shape.parent?.isContainer && shape.parent.type !== ShapeType.Page) {
+            this.prototype.set(shape.id, shape)
+        } else {
+            this.prototype.clear()
+        }
         after_migrate(document, page, api, origin);
+    }
+    commit() {
+        //存在标记的容器，删除其原型流程
+        if (this.prototype.size) {
+            this.prototype.forEach((v) => {
+                this.api.delShapeProtoStart(this.page, v)
+            })
+        }
+        super.commit();
     }
 }

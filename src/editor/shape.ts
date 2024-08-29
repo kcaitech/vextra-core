@@ -61,10 +61,10 @@ import {
     shape4fill,
     shape4shadow
 } from "./symbol";
-import { ISave4Restore, SelectionState } from "./coop/localcmd";
 import { initAutoLayout, layoutShapesOrder, layoutSpacing, modifyAutoLayout } from "./utils/auto_layout";
 
 export type PaddingDir = 'ver' | 'hor' | 'top' | 'right' | 'bottom' | 'left';
+import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
 
 export class ShapeEditor {
     protected __shape: ShapeView;
@@ -1028,10 +1028,10 @@ export class ShapeEditor {
             const index = childs.findIndex(s => s.id === this.shape.id);
             if (index >= 0) {
                 try {
-                    const api = this.__repo.start("deleteShape", (selection: ISave4Restore, isUndo: boolean) => {
+                    const api = this.__repo.start("deleteShape", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
                         const state = {} as SelectionState;
                         if (isUndo) state.shapes = [this.shape.id];
-                        else state.shapes = [];
+                        else state.shapes = cmd.saveselection?.shapes || [];
                         selection.restore(state);
                     });
                     if (this.shape.type === ShapeType.Contact) { // 将执行删除连接线，需要清除连接线对起始两边的影响

@@ -78,6 +78,7 @@ import { SymbolMgr } from "../data/symbolmgr";
 import { newText } from "../data/textutils";
 import { getPolygonPoints, getPolygonVertices } from "./utils/path";
 import { makeShapeTransform2By1, updateShapeTransform1By2 } from "../data";
+import { is_mac } from "../data/utils";
 
 function _checkNum(x: number) {
     // check
@@ -623,7 +624,7 @@ export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm):
     para.attr.minimumLineHeight = 24;
     text.paras.push(para);
     const span = new Span(para.length);
-    span.fontName = "PingFang SC";
+    span.fontName = is_mac() ? "PingFang SC" : "微软雅黑";
     span.fontSize = 14;
     span.color = new Color(0.85, 0, 0, 0);
     para.spans.push(span);

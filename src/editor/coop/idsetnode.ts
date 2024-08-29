@@ -1,5 +1,5 @@
 import { OpType } from "../../coop/common/op";
-import { Basic, ResourceMgr } from "../../data/basic";
+import { BasicArray, ResourceMgr, isDataBasicType } from "../../data/basic";
 import { IdOp, IdOpRecord } from "../../coop/client/crdt";
 import { RepoNode, RepoNodePath } from "./base";
 import { Cmd, OpItem } from "../../coop/common/repo";
@@ -14,11 +14,17 @@ import {
     importContactForm,
     importGradient,
     importPage,
+    importPrototypeStartingPoint,
     importPaintFilter,
     importSymbolShape,
     importSymbolUnionShape,
     importTableCell,
-    importVariable
+    importVariable,
+    importOverlayBackgroundAppearance,
+    importPoint2D,
+    importPrototypeActions_easingFunction,
+    importPrototypeActions,
+    importOverlayPosition
 } from "../../data/baseimport";
 import { SNumber } from "../../coop/client/snumber";
 import { FMT_VER_latest } from "../../data/fmtver";
@@ -35,8 +41,13 @@ importh['border-side-setting'] = importBorderSideSetting;
 importh['blur'] = importBlur;
 importh['symbol-shape'] = importSymbolShape;
 importh['symbol-union-shape'] = importSymbolUnionShape;
+importh['prototype-starting-point'] = importPrototypeStartingPoint;
+importh['overlay-background-appearance'] = importOverlayBackgroundAppearance;
+importh['prototype-extrascrolloffset'] = importPoint2D;
+importh['prototype-actions'] = importPrototypeActions;
 importh['paint-filter'] = importPaintFilter;
 importh['auto-layout'] = importAutoLayout;
+importh['overlay-position']=importOverlayPosition
 
 function apply(document: Document, target: Object, op: IdOp): IdOpRecord {
     let value = op.data;
@@ -50,14 +61,19 @@ function apply(document: Document, target: Object, op: IdOp): IdOpRecord {
         const data = JSON.parse(op.data);
         const typeId = data.typeId;
         const h = importh[typeId];
-        if (h) {
+        if (Array.isArray(data)) {
+            data.forEach(v => {
+                if (typeof v !== "number") throw new Error();
+            })
+            value = new BasicArray(...data);
+        } else if (h) {
             value = h(data, ctx);
         } else {
             throw new Error('need import ' + typeId)
         }
     }
 
-    if (typeof value === 'object' && (!(value instanceof Basic))) throw new Error("need import: " + value?.typeId);
+    if (typeof value === 'object' && (!(isDataBasicType(value)))) throw new Error("need import: " + value?.typeId);
     let origin;
     if (target instanceof Map) {
         origin = target.get(op.id);
@@ -82,7 +98,7 @@ function apply(document: Document, target: Object, op: IdOp): IdOpRecord {
 }
 
 function simpleApply(target: Object, op: IdOp, value: any) {
-    if (typeof value === 'object' && (!(value instanceof Basic))) throw new Error("need import: " + value?.typeId);
+    if (typeof value === 'object' && (!(isDataBasicType(value)))) throw new Error("need import: " + value?.typeId);
     let origin;
     if (target instanceof Map) {
         origin = target.get(op.id);

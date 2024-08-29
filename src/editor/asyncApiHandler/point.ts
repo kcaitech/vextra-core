@@ -23,6 +23,7 @@ import {
     getPolygonVertices,
     update_frame_by_points
 } from "../utils/path";
+import { TableShape } from "../../data";
 
 export class PointModifyHandler extends AsyncApiCaller {
     updateFrameTargets: Set<Shape> = new Set();
@@ -98,9 +99,7 @@ export class PointModifyHandler extends AsyncApiCaller {
             for (let i = 0; i < shapes.length; i++) {
                 const shape = adapt2Shape(shapes[i]);
 
-                if (shape.isVirtualShape) {
-                    continue;
-                }
+                if (shape.isVirtualShape) continue;
 
                 const isRect = shape.radiusType === RadiusType.Rect;
 
@@ -132,7 +131,6 @@ export class PointModifyHandler extends AsyncApiCaller {
                         api.shapeModifyRadius2(page, __shape, lt, rt, rb, lb)
                     }
                 } else {
-
                     if (shape instanceof PathShape) {
                         shape.pathsegs.forEach((seg, index) => {
                             for (let _i = 0; _i < seg.points.length; _i++) {
