@@ -1,4 +1,4 @@
-import { is_mac } from "../../data/utils";
+// import { is_mac } from "../../data/utils";
 
 export const inject: any = {};
 inject['ImageShape'] = {} as any;
@@ -321,7 +321,7 @@ inject['TableCell']['before'] = `\
                 text: "\\n",
                 spans: [
                     {
-                        fontName: ${is_mac() ? "PingFang SC" : "微软雅黑"},
+                        fontName: is_mac() ? "PingFang SC" : "微软雅黑",
                         fontSize: 14,
                         length: 1,
                         color: {

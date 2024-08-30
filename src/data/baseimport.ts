@@ -4,6 +4,7 @@ import * as types from "./typesdefine"
 import { BasicArray, BasicMap } from "./basic"
 import { uuid } from "../basic/uuid"
 import { compatibleOldData } from "./basecompatible"
+import { is_mac } from "./utils"
 export interface IImportContext {
     document: impl.Document
     curPage: string
@@ -809,6 +810,7 @@ function importAutoLayoutOptional(tar: impl.AutoLayout, source: types.AutoLayout
     if (source.stackPrimaryAlignItems) tar.stackPrimaryAlignItems = importStackAlign(source.stackPrimaryAlignItems, ctx)
     if (source.stackCounterAlignItems) tar.stackCounterAlignItems = importStackAlign(source.stackCounterAlignItems, ctx)
     if (source.stackReverseZIndex) tar.stackReverseZIndex = source.stackReverseZIndex
+    if (source.bordersTakeSpace) tar.bordersTakeSpace = source.bordersTakeSpace
     if (source.minSize) tar.minSize = importStackSize(source.minSize, ctx)
     if (source.maxSize) tar.maxSize = importStackSize(source.maxSize, ctx)
 }
@@ -1209,7 +1211,7 @@ export function importTableCell(source: types.TableCell, ctx?: IImportContext): 
                 text: "\n",
                 spans: [
                     {
-                        fontName: "PingFang SC",
+                        fontName: is_mac() ? "PingFang SC" : "微软雅黑",
                         fontSize: 14,
                         length: 1,
                         color: {

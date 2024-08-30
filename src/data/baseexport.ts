@@ -734,6 +734,7 @@ export function exportAutoLayout(source: types.AutoLayout, ctx?: IExportContext)
     if (source.stackPrimaryAlignItems) ret.stackPrimaryAlignItems = exportStackAlign(source.stackPrimaryAlignItems, ctx)
     if (source.stackCounterAlignItems) ret.stackCounterAlignItems = exportStackAlign(source.stackCounterAlignItems, ctx)
     if (source.stackReverseZIndex) ret.stackReverseZIndex = source.stackReverseZIndex
+    if (source.bordersTakeSpace) ret.bordersTakeSpace = source.bordersTakeSpace
     if (source.minSize) ret.minSize = exportStackSize(source.minSize, ctx)
     if (source.maxSize) ret.maxSize = exportStackSize(source.maxSize, ctx)
     return ret

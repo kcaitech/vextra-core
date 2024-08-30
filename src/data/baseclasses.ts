@@ -443,6 +443,7 @@ export class ShapeSize extends Basic {
         this.height = height
     }
 }
+type Shape_prototypeInteractions = BasicArray<PrototypeInterAction>
 /* stack size */
 export class StackSize extends Basic {
     typeId = "stack-size"
@@ -454,7 +455,6 @@ export class StackSize extends Basic {
         this.y = y
     }
 }
-type Shape_prototypeInteractions = BasicArray<PrototypeInterAction>
 /* stop */
 export class Stop extends Basic {
     typeId = "stop"
@@ -511,6 +511,7 @@ export class UserInfo extends Basic {
         this.avatar = avatar
     }
 }
+type Variable_0 = BasicArray<Border | Fill | Shadow | PrototypeInterAction>
 /* auto layout */
 export class AutoLayout extends Basic {
     typeId = "auto-layout"
@@ -529,6 +530,7 @@ export class AutoLayout extends Basic {
     stackPrimaryAlignItems?: StackAlign
     stackCounterAlignItems?: StackAlign
     stackReverseZIndex?: boolean
+    bordersTakeSpace?: boolean
     minSize?: StackSize
     maxSize?: StackSize
     constructor(stackSpacing: number, stackCounterSpacing: number, stackHorizontalPadding: number, stackVerticalPadding: number, stackPaddingRight: number, stackPaddingBottom: number) {
@@ -541,7 +543,6 @@ export class AutoLayout extends Basic {
         this.stackPaddingBottom = stackPaddingBottom
     }
 }
-type Variable_0 = BasicArray<Border | Fill | Shadow | PrototypeInterAction>
 /* blur */
 export class Blur extends Basic {
     typeId = "blur"

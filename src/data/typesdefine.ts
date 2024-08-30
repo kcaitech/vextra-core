@@ -660,6 +660,7 @@ export type AutoLayout = {
     stackPrimaryAlignItems?: StackAlign,
     stackCounterAlignItems?: StackAlign,
     stackReverseZIndex?: boolean,
+    bordersTakeSpace?: boolean,
     minSize?: StackSize,
     maxSize?: StackSize,
 }
