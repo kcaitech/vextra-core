@@ -855,6 +855,18 @@ export class Api {
             this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackHorizontalGapSizing', sizing));
         }
     }
+    shapeModifyAutoLayoutStackZIndex(page: Page, shape: Shape, stack: boolean) {
+        checkShapeAtPage(page, shape);
+        const autoLayout = (shape as Artboard).autoLayout;
+        if (!autoLayout) return;
+        this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackReverseZIndex', stack));
+    }
+    shapeModifyAutoLayoutStroke(page: Page, shape: Shape, stroke: boolean) {
+        checkShapeAtPage(page, shape);
+        const autoLayout = (shape as Artboard).autoLayout;
+        if (!autoLayout) return;
+        this.addOp(basicapi.crdtSetAttr(autoLayout, 'bordersTakeSpace', stroke));
+    }
 
     // 添加一次fill
     addFillAt(page: Page, shape: Shape | Variable, fill: Fill, index: number) {

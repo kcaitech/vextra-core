@@ -61,7 +61,7 @@ import {
     shape4fill,
     shape4shadow
 } from "./symbol";
-import { initAutoLayout, layoutShapesOrder, layoutSpacing, modifyAutoLayout } from "./utils/auto_layout";
+import { getAutoLayoutShapes, initAutoLayout, layoutShapesOrder, layoutSpacing, modifyAutoLayout } from "./utils/auto_layout";
 
 export type PaddingDir = 'ver' | 'hor' | 'top' | 'right' | 'bottom' | 'left';
 import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
@@ -356,6 +356,11 @@ export class ShapeEditor {
             const isVisible = !this.view.isVisible;
             if (this.modifyVariable(VariableType.Visible, OverrideType.Visible, isVisible, api)) return;
             api.shapeModifyVisible(this.__page, this.shape, isVisible);
+            const parents = getAutoLayoutShapes([this.__shape]);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                modifyAutoLayout(this.__page, api, parent);
+            }
         })
     }
 
@@ -1483,10 +1488,10 @@ export class ShapeEditor {
     addAutoLayout() {
         const api = this.__repo.start("addAutoLayout");
         try {
-            const shapes_rows = layoutShapesOrder(this.__shape.childs);
+            const shapes_rows = layoutShapesOrder(this.__shape.childs.map(s => adapt2Shape(s)));
             const { hor, ver } = layoutSpacing(shapes_rows);
-            const h_padding = shapes_rows.length ? Math.max(Math.round(shapes_rows[0][0]._p_frame.x), 0) : 0;
-            const v_padding = shapes_rows.length ? Math.max(Math.round(shapes_rows[0][0]._p_frame.y), 0) : 0;
+            const h_padding = shapes_rows.length ? Math.max(Math.round(shapes_rows[0][0].frame.x), 0) : 0;
+            const v_padding = shapes_rows.length ? Math.max(Math.round(shapes_rows[0][0].frame.y), 0) : 0;
             const layoutInfo = new AutoLayout(hor, ver, h_padding, v_padding, h_padding, v_padding);
             const shape = adapt2Shape(this.__shape);
             api.shapeAutoLayout(this.__page, shape, layoutInfo);
@@ -1606,6 +1611,30 @@ export class ShapeEditor {
             const shape = adapt2Shape(this.__shape);
             api.shapeModifyAutoLayoutGapSizing(this.__page, shape, sizing, direction);
             api.shapeModifyAutoLayoutSizing(this.__page, shape, StackSizing.Fixed, direction);
+            modifyAutoLayout(this.__page, api, this.__shape);
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+    modifyAutoLayoutZIndex(stack: boolean) {
+        const api = this.__repo.start("modifyAutoLayoutZIndex");
+        try {
+            const shape = adapt2Shape(this.__shape);
+            api.shapeModifyAutoLayoutStackZIndex(this.__page, shape, stack);
+            modifyAutoLayout(this.__page, api, this.__shape);
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+    modifyAutoLayoutStroke(included: boolean) {
+        const api = this.__repo.start("modifyAutoLayoutStroke");
+        try {
+            const shape = adapt2Shape(this.__shape);
+            api.shapeModifyAutoLayoutStroke(this.__page, shape, included);
             modifyAutoLayout(this.__page, api, this.__shape);
             this.__repo.commit();
         } catch (e) {

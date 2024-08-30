@@ -54,6 +54,7 @@ import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
 import { BasicArray } from "../data/basic";
 import { Fill } from "../data/style";
 import { TextAttr } from "../data/classes";
+import { getAutoLayoutShapes, modifyAutoLayout } from "./utils/auto_layout";
 
 interface PageXY { // 页面坐标系的xy
     x: number
@@ -984,6 +985,13 @@ export class Controller {
                             break;
                     }
                 }
+                const parents = getAutoLayoutShapes(shapes);
+                for (let i = 0; i < parents.length; i++) {
+                    const parent = parents[i];
+                    if(parent.autoLayout?.bordersTakeSpace) {
+                        modifyAutoLayout(page, api, parent);
+                    }
+                }
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
@@ -1027,6 +1035,13 @@ export class Controller {
                             break
                         default:
                             break;
+                    }
+                }
+                const parents = getAutoLayoutShapes(shapes);
+                for (let i = 0; i < parents.length; i++) {
+                    const parent = parents[i];
+                    if(parent.autoLayout?.bordersTakeSpace) {
+                        modifyAutoLayout(page, api, parent);
                     }
                 }
                 this.__repo.transactCtx.fireNotify();

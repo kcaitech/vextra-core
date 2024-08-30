@@ -3,16 +3,21 @@ import { CoopRepository } from "../coop/cooprepo";
 import { Document } from "../../data/document";
 import { adapt2Shape, ArtboradView, GroupShapeView, PageView, ShapeView } from "../../dataview";
 import {
+    GroupShape,
     Shape,
+    ShapeType,
 } from "../../data/shape";
 import { PaddingDir } from "../shape";
 import { modifyAutoLayout } from "../utils/auto_layout";
 import { translate } from "../frame";
-import { StackSizing } from "../..//data";
+import { makeShapeTransform1By2, makeShapeTransform2By1, Page, StackSizing } from "../..//data";
+import { after_migrate, unable_to_migrate } from "../utils/migrate";
+import { get_state_name, is_state } from "../symbol";
+import { Api } from "../coop/recordapi";
 
 export class AutoLayoutModify extends AsyncApiCaller {
     updateFrameTargets: Set<Shape> = new Set();
-
+    prototype = new Map<string, Shape>()
     constructor(repo: CoopRepository, document: Document, page: PageView) {
         super(repo, document, page);
     }
@@ -108,8 +113,46 @@ export class AutoLayoutModify extends AsyncApiCaller {
         }
     }
 
+    private __migrate(document: Document, api: Api, page: Page, targetParent: GroupShape, shape: Shape, dlt: string, index: number) {
+        const error = unable_to_migrate(targetParent, shape);
+        if (error) {
+            console.log('migrate error:', error);
+            return;
+        }
+        const origin: GroupShape = shape.parent as GroupShape;
+
+        if (origin.id === targetParent.id) {
+            return;
+        }
+
+        if (is_state(shape)) {
+            const name = get_state_name(shape as any, dlt);
+            api.shapeModifyName(page, shape, `${origin.name}/${name}`);
+        }
+        const transform = makeShapeTransform2By1(shape.matrix2Root());
+        const __t = makeShapeTransform2By1(targetParent.matrix2Root());
+
+        transform.addTransform(__t.getInverse());
+
+        api.shapeModifyTransform(page, shape, makeShapeTransform1By2(transform));
+        api.shapeMove(page, origin, origin.indexOfChild(shape), targetParent, index++);
+
+        //标记容器是否被移动到其他容器
+        if (shape.parent?.isContainer && shape.parent.type !== ShapeType.Page) {
+            this.prototype.set(shape.id, shape)
+        } else {
+            this.prototype.clear()
+        }
+        after_migrate(document, page, api, origin);
+    }
+
     commit() {
         if (this.__repo.isNeedCommit() && !this.exception) {
+            if (this.prototype.size) {
+                this.prototype.forEach((v) => {
+                    this.api.delShapeProtoStart(this.page, v)
+                })
+            }
             this.__repo.commit();
         } else {
             this.__repo.rollback();
