@@ -26,13 +26,18 @@ export {
     StackWrap,
     AutoLayout
 } from "./baseclasses"
+import { exportArtboard, IExportContext } from "./baseexport";
+
+
 export class Artboard extends GroupShape implements classes.Artboard {
     get frame(): ShapeFrame {
         return new ShapeFrame(0, 0, this.size.width, this.size.height);
     }
+
     hasSize(): boolean {
         return true;
     }
+
     typeId = 'artboard';
     // @ts-ignore
     size: ShapeSize

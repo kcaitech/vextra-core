@@ -8,6 +8,8 @@ export { Transform, TransformMode, Line, LineThrough0, Plane, PlaneThrough0 } fr
 export { Vector, ColVector2D, ColVector3D, Matrix as Matrix2 } from "./basic/matrix2"
 export { NumberArray2D } from "./basic/number_array"
 
+export * from "./basic/error"
+
 // data
 // 限制上层使用data,尽量使用view
 // export * from "./data"
