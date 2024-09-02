@@ -1490,8 +1490,8 @@ export class ShapeEditor {
         try {
             const shapes_rows = layoutShapesOrder(this.__shape.childs.map(s => adapt2Shape(s)));
             const { hor, ver } = layoutSpacing(shapes_rows);
-            const h_padding = shapes_rows.length ? Math.max(Math.round(shapes_rows[0][0].frame.x), 0) : 0;
-            const v_padding = shapes_rows.length ? Math.max(Math.round(shapes_rows[0][0].frame.y), 0) : 0;
+            const h_padding = shapes_rows.length ? Math.max(Math.round(shapes_rows[0][0].x), 0) : 0;
+            const v_padding = shapes_rows.length ? Math.max(Math.round(shapes_rows[0][0].y), 0) : 0;
             const layoutInfo = new AutoLayout(hor, ver, h_padding, v_padding, h_padding, v_padding);
             const shape = adapt2Shape(this.__shape);
             api.shapeAutoLayout(this.__page, shape, layoutInfo);
