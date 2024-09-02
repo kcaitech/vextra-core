@@ -1192,7 +1192,6 @@ export class ShapeView extends DataView {
             el.elattr.values = values.join(' ');
         }
 
-        // 渐变漂白不了
         if (Array.isArray(el.elchilds)) el.elchilds.forEach(el => this.bleach(el));
     }
 
@@ -1247,5 +1246,9 @@ export class ShapeView extends DataView {
             }
         })
         this.m_ctx.setDirty(this);
+    }
+
+    get stackPositioning() {
+        return this.m_data.stackPositioning;
     }
 }

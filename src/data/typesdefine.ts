@@ -517,6 +517,11 @@ export enum StackMode {
     Horizontal = "horizontal",
     Vertical = "vertical",
 }
+/* stack positioning */
+export enum StackPositioning {
+    AUTO = "AUTO",
+    ABSOLUTE = "ABSOLUTE",
+}
 /* stack size */
 export type StackSize = {
     x: number,
@@ -911,6 +916,7 @@ export type Shape = {
     overlayBackgroundAppearance?: OverlayBackgroundAppearance,
     scrollDirection?: ScrollDirection,
     mask?: boolean,
+    stackPositioning?: StackPositioning,
 }
 /* table cell */
 export type TableCell = Shape & {

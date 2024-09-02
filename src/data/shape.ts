@@ -22,7 +22,7 @@ import {
     OverlayBackgroundAppearance,
     OverlayBackgroundType,
     OverlayMargin,
-    Color
+    Color, StackPositioning
 } from "./baseclasses"
 import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
@@ -37,7 +37,7 @@ export { Transform } from "./transform";
 export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D,
     CurvePoint, ShapeFrame, Ellipse, PathSegment, OverrideType, VariableType,
-    FillRule, CornerRadius, ShapeSize
+    FillRule, CornerRadius, ShapeSize, StackPositioning
 } from "./baseclasses";
 
 export { Variable } from "./variable";
@@ -145,7 +145,8 @@ export class Shape extends Basic implements classes.Shape {
     overlayBackgroundInteraction?: classes.OverlayBackgroundInteraction;
     overlayBackgroundAppearance?: classes.OverlayBackgroundAppearance;
     scrollDirection?: classes.ScrollDirection;
-    mask?: boolean
+    mask?: boolean;
+    stackPositioning?: classes.StackPositioning;
 
     constructor(
         crdtidx: BasicArray<number>, id: string, name: string, type: ShapeType, transform: Transform, style: Style

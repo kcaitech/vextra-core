@@ -38,6 +38,7 @@ export {
     SideType,
     StackAlign,
     StackMode,
+    StackPositioning,
     StackSizing,
     StackWrap,
     StrikethroughType,
@@ -90,6 +91,7 @@ import {
     SideType,
     StackAlign,
     StackMode,
+    StackPositioning,
     StackSizing,
     StackWrap,
     StrikethroughType,
@@ -928,6 +930,7 @@ export class Shape extends Basic {
     overlayBackgroundAppearance?: OverlayBackgroundAppearance
     scrollDirection?: ScrollDirection
     mask?: boolean
+    stackPositioning?: StackPositioning
     constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style) {
         super()
         this.crdtidx = crdtidx

@@ -621,6 +621,10 @@ export function importStackAlign(source: types.StackAlign, ctx?: IImportContext)
 export function importStackMode(source: types.StackMode, ctx?: IImportContext): impl.StackMode {
     return source
 }
+/* stack positioning */
+export function importStackPositioning(source: types.StackPositioning, ctx?: IImportContext): impl.StackPositioning {
+    return source
+}
 /* stack size */
 export function importStackSize(source: types.StackSize, ctx?: IImportContext): impl.StackSize {
     const ret: impl.StackSize = new impl.StackSize (
@@ -1181,6 +1185,7 @@ function importShapeOptional(tar: impl.Shape, source: types.Shape, ctx?: IImport
     if (source.overlayBackgroundAppearance) tar.overlayBackgroundAppearance = importOverlayBackgroundAppearance(source.overlayBackgroundAppearance, ctx)
     if (source.scrollDirection) tar.scrollDirection = importScrollDirection(source.scrollDirection, ctx)
     if (source.mask) tar.mask = source.mask
+    if (source.stackPositioning) tar.stackPositioning = importStackPositioning(source.stackPositioning, ctx)
 }
 export function importShape(source: types.Shape, ctx?: IImportContext): impl.Shape {
     const ret: impl.Shape = new impl.Shape (

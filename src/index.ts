@@ -130,7 +130,9 @@ export {
     PrototypeNavigationType,
     PrototypeTransitionType,
 
-    ScrollDirection
+    ScrollDirection,
+
+    StackPositioning
 } from "./data"
 
 export {

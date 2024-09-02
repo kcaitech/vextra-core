@@ -544,6 +544,10 @@ export function exportStackAlign(source: types.StackAlign, ctx?: IExportContext)
 export function exportStackMode(source: types.StackMode, ctx?: IExportContext): types.StackMode {
     return source
 }
+/* stack positioning */
+export function exportStackPositioning(source: types.StackPositioning, ctx?: IExportContext): types.StackPositioning {
+    return source
+}
 /* stack size */
 export function exportStackSize(source: types.StackSize, ctx?: IExportContext): types.StackSize {
     const ret: types.StackSize = {} as types.StackSize
@@ -1056,6 +1060,7 @@ export function exportShape(source: types.Shape, ctx?: IExportContext): types.Sh
     if (source.overlayBackgroundAppearance) ret.overlayBackgroundAppearance = exportOverlayBackgroundAppearance(source.overlayBackgroundAppearance, ctx)
     if (source.scrollDirection) ret.scrollDirection = exportScrollDirection(source.scrollDirection, ctx)
     if (source.mask) ret.mask = source.mask
+    if (source.stackPositioning) ret.stackPositioning = exportStackPositioning(source.stackPositioning, ctx)
     return ret
 }
 /* table cell */
