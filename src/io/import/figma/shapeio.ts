@@ -35,6 +35,7 @@ import {
     Page,
     PathSegment,
     PathShape,
+    PatternTransform,
     Point2D,
     PolygonShape,
     RectShape,
@@ -181,6 +182,7 @@ function parseFills(
                 hexString += imageHash[i].toString(16).padStart(2, '0');
             }
             f.imageRef = `${hexString}.png`;
+
             let imageScaleMode;
             if (fill.imageScaleMode === 'FILL') imageScaleMode = ImageScaleMode.Fill;
             else if (fill.imageScaleMode === 'STRETCH') imageScaleMode = ImageScaleMode.Stretch;
@@ -189,6 +191,14 @@ function parseFills(
             else if (fill.imageScaleMode === 'TILE') imageScaleMode = ImageScaleMode.Tile;
             else imageScaleMode = ImageScaleMode.Fill;
             f.imageScaleMode = imageScaleMode;
+
+            f.originalImageWidth = fill.originalImageWidth;
+            f.originalImageHeight = fill.originalImageHeight;
+            f.scale = fill.scale;
+            const t = fill.transform;
+            if (t) f.transform = new PatternTransform(t.m00, t.m01, t.m02, t.m10, t.m11, t.m12);
+
+            console.log(f)
         }
 
         result.push(f);
