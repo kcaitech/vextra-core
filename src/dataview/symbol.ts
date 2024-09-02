@@ -5,7 +5,7 @@ import { CornerRadius, Shape, ShapeFrame, ShapeType, SymbolShape } from "../data
 import { VarsContainer } from "./viewctx";
 import { DataView, RootView } from "./view"
 import { getShapeViewId } from "./basic";
-import { BorderPosition, Page, ShadowPosition } from "../data";
+import { AutoLayout, BorderPosition, Page, ShadowPosition } from "../data";
 import { ShapeView, updateFrame } from "./shape";
 
 export class SymbolView extends GroupShapeView {
@@ -26,6 +26,10 @@ export class SymbolView extends GroupShapeView {
 
     get symtags() {
         return this.data.symtags;
+    }
+
+    get autoLayout(): AutoLayout | undefined {
+        return (this.data).autoLayout;
     }
 
     // fills

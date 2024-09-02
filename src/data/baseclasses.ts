@@ -1078,6 +1078,7 @@ export class SymbolRefShape extends Shape {
     overrides?: BasicMap<string, string>
     isCustomSize?: boolean
     cornerRadius?: CornerRadius
+    autoLayout?: AutoLayout
     constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style, size: ShapeSize, refId: string, variables: BasicMap<string, Variable>) {
         super(crdtidx, id, name, type, transform, style)
         this.size = size
@@ -1150,6 +1151,7 @@ export class SymbolShape extends GroupShape {
     symtags?: BasicMap<string, string>
     cornerRadius?: CornerRadius
     guides?: SymbolShape_guides
+    autoLayout?: AutoLayout
     constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style, childs: GroupShape_childs, size: ShapeSize, variables: BasicMap<string, Variable>) {
         super(crdtidx, id, name, type, transform, style, childs)
         this.size = size
