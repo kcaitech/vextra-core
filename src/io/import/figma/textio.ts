@@ -1,8 +1,17 @@
-import {BulletNumbers, Para, ParaAttr, Span, Text, TextAttr, TextTransformType} from "../../../data/text";
+import {
+    BulletNumbers,
+    Para,
+    ParaAttr,
+    Span,
+    Text,
+    TextAttr,
+    TextBehaviour,
+    TextTransformType
+} from "../../../data/text";
 import {importColor} from "./common";
 import * as types from "../../../data/classes"
-import {FillType} from "../../../data/classes"
-import {BasicArray} from "../../../data/basic";
+import {FillType} from "../../../data"
+import {BasicArray} from "../../../data";
 import {IJSON} from "./basic";
 import {mergeSpanAttr} from "../../../data/textutils";
 import {parseGradient} from "./shapeio";
@@ -95,6 +104,8 @@ export function importText(data: IJSON, textStyle: IJSON): Text {
 
     const paragraphSpacing = textStyle.paragraphSpacing;
     const listSpacing = textStyle.listSpacing;
+
+    const textAutoResize = textStyle.textAutoResize;
 
     let text: string = data["characters"] || "";
     if (text[text.length - 1] != '\n') {
@@ -272,7 +283,21 @@ export function importText(data: IJSON, textStyle: IJSON): Text {
     const textAttr: TextAttr = new TextAttr();
     if (verAlign && verAlign !== types.TextVerAlign.Top) textAttr.verAlign = verAlign;
 
+    textAttr.textBehaviour = ((textAutoResize: string) => {
+        switch (textAutoResize) {
+            case "HEIGHT":
+                return TextBehaviour.Fixed;
+            case "NONE":
+                return TextBehaviour.FixWidthAndHeight;
+            case "WIDTH_AND_HEIGHT":
+                return TextBehaviour.Flexible;
+            default:
+                return TextBehaviour.Flexible;
+        }
+    })(textAutoResize);
+
     const ret = new Text(paras);
     ret.attr = textAttr;
+
     return ret;
 }

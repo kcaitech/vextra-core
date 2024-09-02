@@ -434,6 +434,9 @@ function importSymbolOverrides(ctx: LoadContext, data: IJSON, shape: Shape, rawV
         const varId = uuid();
         const joinId = shapeIds.join('/');
 
+        // 叠加复合的nodeChanges
+        const nodeChanges = [...guids].reverse().reduce((prev, guid) => Object.assign(prev, nodeChangesMap.get(toStrId(guid))), {});
+
         if (symbolOverride.fillPaints) {
             const fills = parseFills(ctx, symbolOverride);
             if (fills) {
@@ -455,6 +458,14 @@ function importSymbolOverrides(ctx: LoadContext, data: IJSON, shape: Shape, rawV
             if (effects) {
                 shapeVariables.set(varId, new Variable(varId, VariableType.Shadows, 'effects', effects));
                 shapeOverrides.set(`${joinId}/${OverrideType.Shadows}`, varId);
+            }
+        }
+
+        if (symbolOverride.textData) {
+            const text = importText(symbolOverride.textData, nodeChanges);
+            if (text) {
+                shapeVariables.set(varId, new Variable(varId, VariableType.Text, 'text', text));
+                shapeOverrides.set(`${joinId}/${OverrideType.Text}`, varId);
             }
         }
     }
@@ -950,19 +961,6 @@ export function importTextShape(ctx: LoadContext, data: IJSON, f: ImportFun, ind
 
     // const textStyle = data.style && data.style['textStyle'];
     const text: Text = data.textData && importText(data.textData, data);
-    const textBehaviour = ((textAutoResize: string) => {
-        switch (textAutoResize) {
-            case "HEIGHT":
-                return TextBehaviour.Fixed;
-            case "NONE":
-                return TextBehaviour.FixWidthAndHeight;
-            case "WIDTH_AND_HEIGHT":
-                return TextBehaviour.Flexible;
-            default:
-                return TextBehaviour.Flexible;
-        }
-    })(data.textAutoResize);
-    text.attr && (text.attr.textBehaviour = textBehaviour);
 
     const shape = new TextShape([index] as BasicArray<number>, id, data.name, ShapeType.Text, frame.trans, style, frame.size, text);
     shape.isVisible = visible;
