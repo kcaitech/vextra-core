@@ -34,6 +34,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     variables: BasicMap<string, Variable>
     isCustomSize?: boolean
     cornerRadius?: CornerRadius
+    autoLayout?: classes.AutoLayout;
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
@@ -44,6 +45,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         size: ShapeSize,
         refId: string,
         variables: BasicMap<string, Variable>,
+        autoLayout?: classes.AutoLayout
     ) {
         super(
             crdtidx,
@@ -56,6 +58,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         this.size = size
         this.__refId = refId
         this.variables = variables;
+        this.autoLayout = autoLayout;
     }
 
     toJSON() { // 直接json导出没有导出refId
