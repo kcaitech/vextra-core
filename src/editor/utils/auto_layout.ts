@@ -91,6 +91,8 @@ export const initAutoLayout = (page: Page, api: Api, container: Shape, shape_row
     let max_row_width = 0;
     let max_row_height = 0;
 
+    let container_auto_height = leftPadding + layoutInfo.stackPaddingBottom;
+
     for (let i = 0; i < shape_row.length; i++) {
         const shape = shape_row[i];
         const frame = boundingBox(shape);
@@ -116,10 +118,12 @@ export const initAutoLayout = (page: Page, api: Api, container: Shape, shape_row
         if (i !== shape_row.length - 1 && (leftPadding + boundingBox(shape_row[i + 1]).width > (container.size.width - layoutInfo.stackPaddingRight))) {
             leftPadding = layoutInfo.stackHorizontalPadding; // 重置为左边距
             topPadding += maxHeightInRow + verSpacing; // 换行，增加 y 坐标
+            container_auto_height += maxHeightInRow + verSpacing;
             maxHeightInRow = 0; // 重置当前行的最大高度
         }
     }
-    return { width: max_row_width, height: max_row_height }
+    container_auto_height += maxHeightInRow;
+    return { width: max_row_width, height: max_row_height, container_hieght: container_auto_height }
 }
 
 export const modifyAutoLayout = (page: Page, api: Api, shape: ShapeView) => {
