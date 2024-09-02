@@ -721,6 +721,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
     symtags?: BasicMap<string, string>
     cornerRadius?: CornerRadius
     guides?: BasicArray<Guide>
+    autoLayout?: classes.AutoLayout
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
@@ -732,6 +733,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         size: ShapeSize,
         variables: BasicMap<string, Variable>,
         guides?: BasicArray<Guide>,
+        autoLayout?: classes.AutoLayout
     ) {
         super(
             crdtidx,
@@ -745,6 +747,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         this.size = size;
         this.variables = variables;
         this.guides = guides;
+        this.autoLayout = autoLayout;
     }
 
     getOpTarget(path: string[]): any {
@@ -826,7 +829,8 @@ export class SymbolUnionShape extends SymbolShape implements classes.SymbolUnion
         style: Style,
         childs: BasicArray<Shape>,
         size: ShapeSize,
-        variables: BasicMap<string, Variable>
+        variables: BasicMap<string, Variable>,
+        autoLayout?: classes.AutoLayout
     ) {
         super(
             crdtidx,

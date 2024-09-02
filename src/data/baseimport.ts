@@ -1932,6 +1932,7 @@ function importSymbolShapeOptional(tar: impl.SymbolShape, source: types.SymbolSh
     })()
     if (source.cornerRadius) tar.cornerRadius = importCornerRadius(source.cornerRadius, ctx)
     if (source.guides) tar.guides = importSymbolShape_guides(source.guides, ctx)
+    if (source.autoLayout) tar.autoLayout = importAutoLayout(source.autoLayout, ctx)
 }
 export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContext): impl.SymbolShape {
     compatibleOldData(source, ctx)

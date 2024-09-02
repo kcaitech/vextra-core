@@ -939,7 +939,11 @@ export class ShapeView extends DataView {
 
         const fills = this.renderFills();
         const borders = this.renderBorders();
-        const childs = this.renderContents();
+        let childs = this.renderContents();
+        const autoInfo = (this.m_data as SymbolShape).autoLayout;
+        if (autoInfo && autoInfo.stackReverseZIndex) {
+            childs = childs.reverse();
+        }
 
         const filterId = `${objectId(this)}`;
         const shadows = this.renderShadows(filterId);
@@ -986,7 +990,11 @@ export class ShapeView extends DataView {
 
     renderStatic() {
         const fills = this.renderFills() || [];
-        const childs = this.renderContents();
+        let childs = this.renderContents();
+        const autoInfo = (this.m_data as SymbolShape).autoLayout;
+        if (autoInfo && autoInfo.stackReverseZIndex) {
+            childs = childs.reverse();
+        }
         const borders = this.renderBorders() || [];
 
         const props = this.renderStaticProps();

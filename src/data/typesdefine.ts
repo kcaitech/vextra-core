@@ -1041,6 +1041,7 @@ export type SymbolShape = GroupShape & {
     symtags?: Map<string, string>,
     cornerRadius?: CornerRadius,
     guides?: SymbolShape_guides,
+    autoLayout?: AutoLayout,
 }
 /* symbol union shape */
 export type SymbolUnionShape = SymbolShape
