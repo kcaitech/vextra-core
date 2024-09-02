@@ -27,7 +27,7 @@ import {
     FillType,
     Gradient,
     GradientType,
-    GroupShape,
+    GroupShape, ImageScaleMode,
     makeShapeTransform2By1,
     MarkerType,
     OvalShape,
@@ -181,6 +181,14 @@ function parseFills(
                 hexString += imageHash[i].toString(16).padStart(2, '0');
             }
             f.imageRef = `${hexString}.png`;
+            let imageScaleMode;
+            if (fill.imageScaleMode === 'FILL') imageScaleMode = ImageScaleMode.Fill;
+            else if (fill.imageScaleMode === 'STRETCH') imageScaleMode = ImageScaleMode.Stretch;
+            else if (fill.imageScaleMode === 'FIT') imageScaleMode = ImageScaleMode.Fit;
+            else if (fill.imageScaleMode === 'CROP') imageScaleMode = ImageScaleMode.Crop;
+            else if (fill.imageScaleMode === 'TILE') imageScaleMode = ImageScaleMode.Tile;
+            else imageScaleMode = ImageScaleMode.Fill;
+            f.imageScaleMode = imageScaleMode;
         }
 
         result.push(f);
