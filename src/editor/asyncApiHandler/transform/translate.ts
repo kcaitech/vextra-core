@@ -1,6 +1,6 @@
 import { CoopRepository } from "../../coop/cooprepo";
 import { AsyncApiCaller } from "../AsyncApiCaller";
-import { ShapeView, adapt2Shape, PageView } from "../../../dataview";
+import { ShapeView, adapt2Shape, PageView, GroupShapeView, ArtboradView } from "../../../dataview";
 import {
     GroupShape,
     Shape,
@@ -9,14 +9,15 @@ import {
     Transform,
     makeShapeTransform2By1,
     makeShapeTransform1By2,
-    Artboard,
     ShapeType
 } from "../../../data";
 import { after_migrate, unable_to_migrate } from "../../utils/migrate";
 import { get_state_name, is_state } from "../../symbol";
 import { Api } from "../../coop/recordapi";
 import { ISave4Restore, LocalCmd, SelectionState } from "../../coop/localcmd";
-import { getAutoLayoutShapes, modifyAutoLayout } from "../../../editor/utils/auto_layout";
+import { getAutoLayoutShapes, modifyAutoLayout } from "../../utils/auto_layout";
+import { StackPositioning } from "../../../data/typesdefine";
+import { translate } from "../../frame";
 
 export type TranslateUnit = {
     shape: ShapeView;
@@ -207,6 +208,35 @@ export class Transporter extends AsyncApiCaller {
         }
         after_migrate(document, page, api, origin);
     }
+
+    modifyShapesStackPosition(shapes: ShapeView[], p: StackPositioning) {
+        const api = this.api;
+        const page = this.page;
+        for (const shape of shapes) {
+            const s = adapt2Shape(shape);
+            api.shapeModifyStackPosition(page, s, p);
+        }
+    }
+
+    swap(shape: GroupShapeView, targets: ShapeView[], x: number, y: number) {
+        try {
+            const layoutShape = (shape as ArtboradView);
+            if (!layoutShape.autoLayout) return;
+            const api = this.api;
+            const page = this.page;
+            for (let index = 0; index < targets.length; index++) {
+                const target = targets[index];
+                const frame = target._p_frame;
+                translate(api, page, adapt2Shape(target), x - frame.x, y - frame.y);
+            }
+            modifyAutoLayout(page, api, shape);
+            this.updateView();
+        } catch (e) {
+            this.exception = true;
+            console.log('Transporter.swap', e);
+        }
+    }
+
     commit() {
         //存在标记的容器，删除其原型流程
         if (this.prototype.size) {

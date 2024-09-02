@@ -76,7 +76,6 @@ export class AutoLayoutModify extends AsyncApiCaller {
         }
     }
 
-
     executeSpace(shape: GroupShapeView, value: number, direction: PaddingDir) {
         try {
             const layoutShape = (shape as ArtboradView);
@@ -94,14 +93,14 @@ export class AutoLayoutModify extends AsyncApiCaller {
         }
     }
 
-    swapShapeLayout(shape: GroupShapeView, tragets: ShapeView[], x: number, y: number) {
+    swapShapeLayout(shape: GroupShapeView, targets: ShapeView[], x: number, y: number) {
         try {
             const layoutShape = (shape as ArtboradView);
             if (!layoutShape.autoLayout) return;
             const api = this.api;
             const page = this.page;
-            for (let index = 0; index < tragets.length; index++) {
-                const target = tragets[index];
+            for (let index = 0; index < targets.length; index++) {
+                const target = targets[index];
                 const frame = target._p_frame;
                 translate(api, page, adapt2Shape(target), x - frame.x, y - frame.y);
             }
@@ -121,9 +120,7 @@ export class AutoLayoutModify extends AsyncApiCaller {
         }
         const origin: GroupShape = shape.parent as GroupShape;
 
-        if (origin.id === targetParent.id) {
-            return;
-        }
+        if (origin.id === targetParent.id) return;
 
         if (is_state(shape)) {
             const name = get_state_name(shape as any, dlt);

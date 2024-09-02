@@ -61,7 +61,7 @@ import {
     StackWrap,
     StackMode,
     StackAlign,
-    StackSizing,
+    StackSizing, StackPositioning,
 } from "../../data/typesdefine";
 import * as types from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
@@ -1375,6 +1375,11 @@ export class Api {
         if (!item) return;
         if (!item.exportOptions) return;
         this.addOp(basicapi.setPageExportPreviewUnfold(item.exportOptions, unfold));
+    }
+
+    shapeModifyStackPosition(page: Page, shape: Shape, position: StackPositioning) {
+        checkShapeAtPage(page, shape);
+        this.addOp(crdtSetAttr(shape, "stackPositioning", position));
     }
 
     // text
