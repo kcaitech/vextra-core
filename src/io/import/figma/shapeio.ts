@@ -588,6 +588,9 @@ export function importPage(ctx: LoadContext, data: IJSON, f: ImportFun, nodeChan
 
     importShapeProperty(ctx, data, shape, nodeChangesMap);
 
+    const backgroundColor = data.backgroundColor;
+    if (backgroundColor) shape.backgroundColor = importColor(backgroundColor);
+
     return shape;
 }
 
