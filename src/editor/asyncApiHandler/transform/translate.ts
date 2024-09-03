@@ -9,14 +9,14 @@ import {
     Transform,
     makeShapeTransform2By1,
     makeShapeTransform1By2,
-    ShapeType
+    ShapeType,
+    StackPositioning
 } from "../../../data";
 import { after_migrate, unable_to_migrate } from "../../utils/migrate";
 import { get_state_name, is_state } from "../../symbol";
 import { Api } from "../../coop/recordapi";
 import { ISave4Restore, LocalCmd, SelectionState } from "../../coop/localcmd";
 import { getAutoLayoutShapes, modifyAutoLayout } from "../../utils/auto_layout";
-import { StackPositioning } from "../../../data/typesdefine";
 import { translate } from "../../frame";
 
 export type TranslateUnit = {
