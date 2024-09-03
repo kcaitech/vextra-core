@@ -122,21 +122,25 @@ export class Transporter extends AsyncApiCaller {
     migrate(targetParent: GroupShape, sortedShapes: Shape[], dlt: string) {
         try {
             if (targetParent.id === this.current_env_id) return;
-            const oEnv = this.page.getShape(this.current_env_id) as GroupShape;
-            const parents: GroupShape[] = [oEnv, targetParent];
+
+            const api = this.api;
+            const page = this.page;
+            const document = this.__document;
 
             let index = targetParent.childs.length;
             for (let i = 0, len = sortedShapes.length; i < len; i++) {
-                this.__migrate(this.__document, this.api, this.page, targetParent, sortedShapes[i], dlt, index);
+                this.__migrate(document, api, page, targetParent, sortedShapes[i], dlt, index);
                 index++;
             }
 
-            this.setCurrentEnv(targetParent);
+            const oEnv = page.getShape(this.current_env_id) as GroupShape;
+            const parents: GroupShape[] = [oEnv, targetParent];
             for (let i = 0; i < parents.length; i++) {
                 const parent = parents[i];
-                console.log(parent.name, parent.childs);
-                modifyAutoLayout(this.page, this.api, parent);
+                modifyAutoLayout(page, api, parent);
             }
+
+            this.setCurrentEnv(targetParent);
             this.updateView();
         } catch (e) {
             console.log('Transporter.migrate:', e);
@@ -164,14 +168,25 @@ export class Transporter extends AsyncApiCaller {
         try {
             if (emit_by.id === this.current_env_id) return;
 
+            const api = this.api;
+            const page = this.page;
+            const document = this.__document;
+            const parents = new Map<string, Shape>()
             this.origin_envs.forEach((v, k) => {
-                const op = this.page.getShape(k) as GroupShape | undefined;
+                const op = page.getShape(k) as GroupShape;
                 if (!op) return;
+
+                parents.set(op.id, op);
 
                 for (let i = 0, l = v.length; i < l; i++) {
                     const _v = v[i];
-                    this.__migrate(this.__document, this.api, this.page, op as GroupShape, adapt2Shape(_v.shape), dlt, _v.index);
+                    this.__migrate(document, api, page, op, adapt2Shape(_v.shape), dlt, _v.index);
                 }
+            });
+            const oEnv = page.getShape(this.current_env_id);
+            oEnv && parents.set(oEnv.id, oEnv);
+            parents.forEach(s => {
+                modifyAutoLayout(page, api, s as GroupShape);
             });
             this.updateView();
             this.setCurrentEnv(emit_by);

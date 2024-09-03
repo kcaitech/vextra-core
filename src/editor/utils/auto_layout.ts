@@ -143,8 +143,7 @@ export const modifyAutoLayout = (page: Page, api: Api, shape: Shape) => {
     const layoutInfo = target.autoLayout;
     if (!layoutInfo) return;
     const shape_rows = layoutShapesOrder(target.childs);
-    const shape_row: Shape[] = [];
-    shape_rows.forEach(item => shape_row.push(...item));
+    const shape_row: Shape[] = shape_rows.flat();
     const frame = { width: target.size.width, height: target.size.height }
     if (layoutInfo.stackPrimarySizing === StackSizing.Auto) {
         const { width, height } = autoWidthLayout(page, api, layoutInfo, shape_row, frame);
