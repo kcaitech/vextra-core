@@ -269,7 +269,8 @@ export class CreatorApiCaller extends AsyncApiCaller {
             }
             const parent = this.__params?.parent;
             if (parent && (parent as ArtboradView).autoLayout) {
-                modifyAutoLayout(this.page, this.api, parent);
+                const __shape = adapt2Shape(parent) as GroupShape;
+                modifyAutoLayout(this.page, this.api, __shape);
             }
             this.__repo.commit();
         } else {

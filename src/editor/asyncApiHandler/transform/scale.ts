@@ -115,7 +115,8 @@ export function reLayoutBySizeChanged(
             }
         }
     } else if((shape as ArtboradView).autoLayout){
-        modifyAutoLayout(page, api, shape);
+        const __shape = adapt2Shape(shape);
+        modifyAutoLayout(page, api, __shape);
     } else {
         // 除去编组，其他容器级别的图层需要根据具体是约束状态进行重新布局
         for (const child of children) {

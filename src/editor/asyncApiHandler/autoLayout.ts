@@ -18,6 +18,7 @@ import { Api } from "../coop/recordapi";
 export class AutoLayoutModify extends AsyncApiCaller {
     updateFrameTargets: Set<Shape> = new Set();
     prototype = new Map<string, Shape>()
+
     constructor(repo: CoopRepository, document: Document, page: PageView) {
         super(repo, document, page);
     }
@@ -33,8 +34,9 @@ export class AutoLayoutModify extends AsyncApiCaller {
             const api = this.api;
             const page = this.page;
             const padding = Math.max(0, Math.round(value));
-            api.shapeModifyAutoLayoutPadding(page, adapt2Shape(layoutShape), padding, direction);
-            modifyAutoLayout(page, api, shape);
+            const __shape = adapt2Shape(layoutShape);
+            api.shapeModifyAutoLayoutPadding(page, __shape, padding, direction);
+            modifyAutoLayout(page, api, __shape);
             this.updateView();
         } catch (e) {
             this.exception = true;
@@ -50,8 +52,9 @@ export class AutoLayoutModify extends AsyncApiCaller {
             const page = this.page;
             const padding = Math.max(0, Math.round(value));
             const r_padding = Math.max(0, Math.round(right));
-            api.shapeModifyAutoLayoutHorPadding(page, adapt2Shape(layoutShape), padding, r_padding);
-            modifyAutoLayout(page, api, shape);
+            const __shape = adapt2Shape(layoutShape);
+            api.shapeModifyAutoLayoutHorPadding(page, __shape, padding, r_padding);
+            modifyAutoLayout(page, api, __shape);
             this.updateView();
         } catch (e) {
             this.exception = true;
@@ -67,8 +70,9 @@ export class AutoLayoutModify extends AsyncApiCaller {
             const page = this.page;
             const padding = Math.max(0, Math.round(value));
             const b_padding = Math.max(0, Math.round(bottom));
-            api.shapeModifyAutoLayoutVerPadding(page, adapt2Shape(layoutShape), padding, b_padding);
-            modifyAutoLayout(page, api, shape);
+            const __shape = adapt2Shape(layoutShape);
+            api.shapeModifyAutoLayoutVerPadding(page, __shape, padding, b_padding);
+            modifyAutoLayout(page, api, __shape);
             this.updateView();
         } catch (e) {
             this.exception = true;
@@ -83,9 +87,10 @@ export class AutoLayoutModify extends AsyncApiCaller {
             const api = this.api;
             const page = this.page;
             const space = Math.round(value);
-            api.shapeModifyAutoLayoutSpace(page, adapt2Shape(layoutShape), space, direction);
-            api.shapeModifyAutoLayoutGapSizing(page, adapt2Shape(layoutShape), StackSizing.Fixed, direction);
-            modifyAutoLayout(page, api, shape);
+            const __shape = adapt2Shape(layoutShape);
+            api.shapeModifyAutoLayoutSpace(page, __shape, space, direction);
+            api.shapeModifyAutoLayoutGapSizing(page, __shape, StackSizing.Fixed, direction);
+            modifyAutoLayout(page, api, __shape);
             this.updateView();
         } catch (e) {
             this.exception = true;
@@ -104,7 +109,8 @@ export class AutoLayoutModify extends AsyncApiCaller {
                 const frame = target._p_frame;
                 translate(api, page, adapt2Shape(target), x - frame.x, y - frame.y);
             }
-            modifyAutoLayout(page, api, shape);
+
+            modifyAutoLayout(page, api,  adapt2Shape(shape));
             this.updateView();
         } catch (e) {
             this.exception = true;

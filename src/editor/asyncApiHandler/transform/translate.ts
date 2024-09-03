@@ -9,14 +9,14 @@ import {
     Transform,
     makeShapeTransform2By1,
     makeShapeTransform1By2,
-    ShapeType
+    ShapeType,
+    StackPositioning
 } from "../../../data";
 import { after_migrate, unable_to_migrate } from "../../utils/migrate";
 import { get_state_name, is_state } from "../../symbol";
 import { Api } from "../../coop/recordapi";
 import { ISave4Restore, LocalCmd, SelectionState } from "../../coop/localcmd";
 import { getAutoLayoutShapes, modifyAutoLayout } from "../../utils/auto_layout";
-import { StackPositioning } from "../../../data/typesdefine";
 import { translate } from "../../frame";
 
 export type TranslateUnit = {
@@ -121,9 +121,9 @@ export class Transporter extends AsyncApiCaller {
 
     migrate(targetParent: GroupShape, sortedShapes: Shape[], dlt: string) {
         try {
-            if (targetParent.id === this.current_env_id) {
-                return;
-            }
+            if (targetParent.id === this.current_env_id) return;
+            const oEnv = this.page.getShape(this.current_env_id) as GroupShape;
+            const parents: GroupShape[] = [oEnv, targetParent];
 
             let index = targetParent.childs.length;
             for (let i = 0, len = sortedShapes.length; i < len; i++) {
@@ -132,6 +132,11 @@ export class Transporter extends AsyncApiCaller {
             }
 
             this.setCurrentEnv(targetParent);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                console.log(parent.name, parent.childs);
+                modifyAutoLayout(this.page, this.api, parent);
+            }
             this.updateView();
         } catch (e) {
             console.log('Transporter.migrate:', e);
@@ -229,7 +234,7 @@ export class Transporter extends AsyncApiCaller {
                 const frame = target._p_frame;
                 translate(api, page, adapt2Shape(target), x - frame.x, y - frame.y);
             }
-            modifyAutoLayout(page, api, shape);
+            modifyAutoLayout(page, api, adapt2Shape(shape));
             this.updateView();
         } catch (e) {
             this.exception = true;
