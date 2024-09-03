@@ -26,6 +26,7 @@ export type TranslateUnit = {
 
 export class Transporter extends AsyncApiCaller {
     origin_envs = new Map<string, { shape: ShapeView, index: number }[]>();
+    origin_xy_envs = new Map<string, { shape: ShapeView, xy: { x: number, y: number } }[]>();
     except_envs: ShapeView[] = [];
     current_env_id: string = '';
     prototype = new Map<string, Shape>()
@@ -123,7 +124,7 @@ export class Transporter extends AsyncApiCaller {
         try {
             if (targetParent.id === this.current_env_id) return;
             const oEnv = this.page.getShape(this.current_env_id) as GroupShape;
-            const parents: GroupShape[] = [oEnv, targetParent];
+            const parents: GroupShape[] = [targetParent];
 
             let index = targetParent.childs.length;
             for (let i = 0, len = sortedShapes.length; i < len; i++) {
@@ -146,6 +147,10 @@ export class Transporter extends AsyncApiCaller {
 
     setEnv(envs: Map<string, { shape: ShapeView, index: number }[]>) {
         this.origin_envs = envs;
+    }
+
+    setOriginXyEnv(envs: Map<string, { shape: ShapeView, xy: { x: number, y: number } }[]>) {
+        this.origin_xy_envs = envs;
     }
 
     setExceptEnvs(except: ShapeView[]) {
@@ -173,6 +178,17 @@ export class Transporter extends AsyncApiCaller {
                     this.__migrate(this.__document, this.api, this.page, op as GroupShape, adapt2Shape(_v.shape), dlt, _v.index);
                 }
             });
+            this.origin_xy_envs.forEach((v, k) => {
+                const op = this.page.getShape(k) as GroupShape | undefined;
+                if (!op) return;
+
+                for (let i = 0, l = v.length; i < l; i++) {
+                    const _v = v[i];
+                    this.api.shapeModifyX(this.page, adapt2Shape(_v.shape), _v.xy.x);
+                    this.api.shapeModifyY(this.page, adapt2Shape(_v.shape), _v.xy.y);
+                }
+            });
+
             this.updateView();
             this.setCurrentEnv(emit_by);
         } catch (error) {
