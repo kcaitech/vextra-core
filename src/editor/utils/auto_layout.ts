@@ -103,7 +103,7 @@ export const initAutoLayout = (page: Page, api: Api, container: Shape, shape_row
     let max_row_width = 0;
     let max_row_height = 0;
 
-    let container_auto_height = leftPadding + layoutInfo.stackPaddingBottom;
+    let container_auto_height = topPadding + layoutInfo.stackPaddingBottom;
 
     for (let i = 0; i < shape_row.length; i++) {
         const shape = shape_row[i];
