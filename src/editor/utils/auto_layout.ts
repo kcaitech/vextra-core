@@ -1,4 +1,16 @@
-import { Artboard, AutoLayout, BorderPosition, Page, Shape, ShapeFrame, ShapeType, StackAlign, StackMode, StackSizing, StackWrap } from "../../data";
+import {
+    Artboard,
+    AutoLayout,
+    BorderPosition,
+    Page,
+    Shape,
+    ShapeFrame,
+    ShapeType,
+    StackAlign,
+    StackMode,
+    StackSizing,
+    StackWrap
+} from "../../data";
 import { adapt2Shape, ArtboradView, ShapeView } from "../../dataview";
 import { Api } from "../coop/recordapi";
 
@@ -126,18 +138,19 @@ export const initAutoLayout = (page: Page, api: Api, container: Shape, shape_row
     return { width: max_row_width, height: max_row_height, container_hieght: container_auto_height }
 }
 
-export const modifyAutoLayout = (page: Page, api: Api, shape: ShapeView) => {
-    const layoutInfo = (shape as ArtboradView).data.autoLayout;
+export const modifyAutoLayout = (page: Page, api: Api, shape: Shape) => {
+    const target = shape as Artboard;
+    const layoutInfo = target.autoLayout;
     if (!layoutInfo) return;
-    const shape_rows = layoutShapesOrder((shape.data as Artboard).childs);
+    const shape_rows = layoutShapesOrder(target.childs);
     const shape_row: Shape[] = [];
     shape_rows.forEach(item => shape_row.push(...item));
-    const frame = { width: shape.data.size.width, height: shape.data.size.height }
+    const frame = { width: target.size.width, height: target.size.height }
     if (layoutInfo.stackPrimarySizing === StackSizing.Auto) {
         const { width, height } = autoWidthLayout(page, api, layoutInfo, shape_row, frame);
-        api.shapeModifyWidth(page, adapt2Shape(shape), width);
+        api.shapeModifyWidth(page, target, width);
         if (layoutInfo.stackCounterSizing !== StackSizing.Fixed) {
-            api.shapeModifyHeight(page, adapt2Shape(shape), height);
+            api.shapeModifyHeight(page, target, height);
         }
     } else {
         let autoHeight = 0;
@@ -150,12 +163,15 @@ export const modifyAutoLayout = (page: Page, api: Api, shape: ShapeView) => {
             autoHeight = autoHorizontalLayout(page, api, layoutInfo, shape_rows, frame);
         }
         if (layoutInfo.stackCounterSizing !== StackSizing.Fixed) {
-            api.shapeModifyHeight(page, adapt2Shape(shape), autoHeight);
+            api.shapeModifyHeight(page, target, autoHeight);
         }
     }
 }
 
-const autoWidthLayout = (page: Page, api: Api, layoutInfo: AutoLayout, shape_row: Shape[], container: { width: number, height: number }) => {
+const autoWidthLayout = (page: Page, api: Api, layoutInfo: AutoLayout, shape_row: Shape[], container: {
+    width: number,
+    height: number
+}) => {
     const horSpacing = layoutInfo.stackSpacing; // 水平间距
     const verSpacing = layoutInfo.stackCounterSpacing; //垂直间距
     let leftPadding = layoutInfo.stackHorizontalPadding; //左边距
@@ -220,7 +236,10 @@ const autoWidthLayout = (page: Page, api: Api, layoutInfo: AutoLayout, shape_row
     return { width: container_auto_width, height: container_auto_height }
 }
 
-const autoWrapLayout = (page: Page, api: Api, layoutInfo: AutoLayout, shape_rows: Shape[][], container: { width: number, height: number }) => {
+const autoWrapLayout = (page: Page, api: Api, layoutInfo: AutoLayout, shape_rows: Shape[][], container: {
+    width: number,
+    height: number
+}) => {
     const shape_row: Shape[] = [];
     shape_rows.forEach(item => shape_row.push(...item));
     let horSpacing = layoutInfo.stackSpacing; // 水平间距
@@ -326,7 +345,10 @@ const autoWrapLayout = (page: Page, api: Api, layoutInfo: AutoLayout, shape_rows
     return container_auto_height;
 }
 
-const autoHorizontalLayout = (page: Page, api: Api, layoutInfo: AutoLayout, shape_rows: Shape[][], container: { width: number, height: number }) => {
+const autoHorizontalLayout = (page: Page, api: Api, layoutInfo: AutoLayout, shape_rows: Shape[][], container: {
+    width: number,
+    height: number
+}) => {
     const shape_row: Shape[] = [];
     shape_rows.forEach(item => shape_row.push(...item));
     let horSpacing = layoutInfo.stackSpacing; // 水平间距
@@ -391,7 +413,10 @@ const autoHorizontalLayout = (page: Page, api: Api, layoutInfo: AutoLayout, shap
     return container_auto_height;
 }
 
-const autoVerticalLayout = (page: Page, api: Api, layoutInfo: AutoLayout, shape_rows: Shape[][], container: { width: number, height: number }) => {
+const autoVerticalLayout = (page: Page, api: Api, layoutInfo: AutoLayout, shape_rows: Shape[][], container: {
+    width: number,
+    height: number
+}) => {
     const shape_row: Shape[] = [];
     shape_rows.forEach(item => shape_row.push(...item));
     let verSpacing = layoutInfo.stackCounterSpacing; //垂直间距
@@ -458,13 +483,13 @@ const autoVerticalLayout = (page: Page, api: Api, layoutInfo: AutoLayout, shape_
 
 
 export const getAutoLayoutShapes = (shapes: ShapeView[]) => {
-    const parents: ArtboradView[] = [];
+    const parents: Artboard[] = [];
     for (let i = 0; i < shapes.length; i++) {
-        const shape = shapes[i];
+        const shape = adapt2Shape(shapes[i]);
         const parent = shape.parent;
-        if (parent && (parent as ArtboradView).autoLayout) {
+        if (parent && (parent as Artboard).autoLayout) {
             const hasP = parents.some(item => item.id === parent.id);
-            if (!hasP) parents.push(parent as ArtboradView);
+            if (!hasP) parents.push(parent as Artboard);
         }
     }
     return parents;

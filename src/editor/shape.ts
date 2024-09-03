@@ -1523,7 +1523,7 @@ export class ShapeEditor {
         try {
             const shape = adapt2Shape(this.__shape);
             api.shapeModifyAutoLayoutPadding(this.__page, shape, Math.max(padding, 0), direction);
-            modifyAutoLayout(this.__page, api, this.__shape);
+            modifyAutoLayout(this.__page, api, shape);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -1535,7 +1535,7 @@ export class ShapeEditor {
         try {
             const shape = adapt2Shape(this.__shape);
             api.shapeModifyAutoLayoutHorPadding(this.__page, shape, Math.max(hor, 0), Math.max(right, 0));
-            modifyAutoLayout(this.__page, api, this.__shape);
+            modifyAutoLayout(this.__page, api, shape);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -1547,7 +1547,7 @@ export class ShapeEditor {
         try {
             const shape = adapt2Shape(this.__shape);
             api.shapeModifyAutoLayoutVerPadding(this.__page, shape, Math.max(ver, 0), Math.max(bottom, 0));
-            modifyAutoLayout(this.__page, api, this.__shape);
+            modifyAutoLayout(this.__page, api, shape);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -1561,7 +1561,7 @@ export class ShapeEditor {
             const shape = adapt2Shape(this.__shape);
             api.shapeModifyAutoLayoutWrap(this.__page, shape, wrap);
             api.shapeModifyAutoLayoutMode(this.__page, shape, mode);
-            modifyAutoLayout(this.__page, api, this.__shape);
+            modifyAutoLayout(this.__page, api, shape);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -1575,7 +1575,7 @@ export class ShapeEditor {
             const shape = adapt2Shape(this.__shape);
             api.shapeModifyAutoLayoutSpace(this.__page, shape, space, direction);
             api.shapeModifyAutoLayoutGapSizing(this.__page, shape, StackSizing.Fixed, direction);
-            modifyAutoLayout(this.__page, api, this.__shape);
+            modifyAutoLayout(this.__page, api, shape);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -1588,7 +1588,7 @@ export class ShapeEditor {
         try {
             const shape = adapt2Shape(this.__shape);
             api.shapeModifyAutoLayoutAlignItems(this.__page, shape, primary, counter);
-            modifyAutoLayout(this.__page, api, this.__shape);
+            modifyAutoLayout(this.__page, api, shape);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -1601,7 +1601,7 @@ export class ShapeEditor {
             const shape = adapt2Shape(this.__shape);
             api.shapeModifyAutoLayoutSizing(this.__page, shape, sizing, direction);
             api.shapeModifyAutoLayoutGapSizing(this.__page, shape, StackSizing.Fixed, direction);
-            modifyAutoLayout(this.__page, api, this.__shape);
+            modifyAutoLayout(this.__page, api, shape);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -1614,7 +1614,7 @@ export class ShapeEditor {
             const shape = adapt2Shape(this.__shape);
             api.shapeModifyAutoLayoutGapSizing(this.__page, shape, sizing, direction);
             api.shapeModifyAutoLayoutSizing(this.__page, shape, StackSizing.Fixed, direction);
-            modifyAutoLayout(this.__page, api, this.__shape);
+            modifyAutoLayout(this.__page, api, shape);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -1626,7 +1626,7 @@ export class ShapeEditor {
         try {
             const shape = adapt2Shape(this.__shape);
             api.shapeModifyAutoLayoutStackZIndex(this.__page, shape, stack);
-            modifyAutoLayout(this.__page, api, this.__shape);
+            modifyAutoLayout(this.__page, api, shape);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -1638,7 +1638,7 @@ export class ShapeEditor {
         try {
             const shape = adapt2Shape(this.__shape);
             api.shapeModifyAutoLayoutStroke(this.__page, shape, included);
-            modifyAutoLayout(this.__page, api, this.__shape);
+            modifyAutoLayout(this.__page, api, shape);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
