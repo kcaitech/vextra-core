@@ -2077,14 +2077,19 @@ export class PageEditor {
         transform: Transform
     }[]) {
         try {
+            const shapes: ShapeView[] = [];
             const api = this.__repo.start('setShapesRotate');
             for (const action of actions) {
                 const { shape: shapeView, transform } = action;
-
+                shapes.push(shapeView);
                 const s = adapt2Shape(shapeView);
                 api.shapeModifyRotate(this.__page, s, transform);
             }
-
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                modifyAutoLayout(this.__page, api, parent);
+            }
             this.__repo.commit();
         } catch (error) {
             console.log(error);
