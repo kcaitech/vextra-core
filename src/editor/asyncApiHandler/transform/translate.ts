@@ -172,22 +172,19 @@ export class Transporter extends AsyncApiCaller {
             const page = this.page;
             const document = this.__document;
             const parents = new Map<string, Shape>()
+            const __migrate = this.__migrate.bind(this);
             this.origin_envs.forEach((v, k) => {
                 const op = page.getShape(k) as GroupShape;
                 if (!op) return;
-
                 parents.set(op.id, op);
-
                 for (let i = 0, l = v.length; i < l; i++) {
                     const _v = v[i];
-                    this.__migrate(document, api, page, op, adapt2Shape(_v.shape), dlt, _v.index);
+                    __migrate(document, api, page, op, adapt2Shape(_v.shape), dlt, _v.index);
                 }
             });
             const oEnv = page.getShape(this.current_env_id);
             oEnv && parents.set(oEnv.id, oEnv);
-            parents.forEach(s => {
-                modifyAutoLayout(page, api, s as GroupShape);
-            });
+            parents.forEach(s => modifyAutoLayout(page, api, s as GroupShape));
             this.updateView();
             this.setCurrentEnv(emit_by);
         } catch (error) {
