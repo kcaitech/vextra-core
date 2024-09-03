@@ -197,8 +197,6 @@ function parseFills(
             f.scale = fill.scale;
             const t = fill.transform;
             if (t) f.transform = new PatternTransform(t.m00, t.m01, t.m02, t.m10, t.m11, t.m12);
-
-            console.log(f)
         }
 
         result.push(f);
@@ -434,8 +432,8 @@ function importSymbolOverrides(ctx: LoadContext, data: IJSON, shape: Shape, rawV
         const varId = uuid();
         const joinId = shapeIds.join('/');
 
-        // 叠加复合的nodeChanges
-        const nodeChanges = [...guids].reverse().reduce((prev, guid) => Object.assign(prev, nodeChangesMap.get(toStrId(guid))), {});
+        // 叠加的nodeChanges
+        const nodeChanges = [...guids, data.guid].reverse().reduce((prev, guid) => Object.assign(prev, nodeChangesMap.get(toStrId(guid))), {});
 
         if (symbolOverride.fillPaints) {
             const fills = parseFills(ctx, symbolOverride);
@@ -619,6 +617,8 @@ export function importPage(ctx: LoadContext, data: IJSON, f: ImportFun, nodeChan
 
     const backgroundColor = data.backgroundColor;
     if (backgroundColor) shape.backgroundColor = importColor(backgroundColor);
+
+    data.shape = shape;
 
     return shape;
 }
@@ -807,6 +807,8 @@ export function importPathShape(ctx: LoadContext, data: IJSON, f: ImportFun, ind
 
     importShapeProperty(ctx, data, shape, nodeChangesMap);
 
+    data.shape = shape;
+
     return shape;
 }
 
@@ -828,6 +830,8 @@ export function importPolygon(ctx: LoadContext, data: IJSON, f: ImportFun, index
     shape.style = style;
 
     importShapeProperty(ctx, data, shape, nodeChangesMap);
+
+    data.shape = shape;
 
     return shape;
 }
@@ -853,6 +857,8 @@ export function importStar(ctx: LoadContext, data: IJSON, f: ImportFun, index: n
 
     importShapeProperty(ctx, data, shape, nodeChangesMap);
 
+    data.shape = shape;
+
     return shape;
 }
 
@@ -877,6 +883,8 @@ export function importLine(ctx: LoadContext, data: IJSON, f: ImportFun, index: n
 
     importShapeProperty(ctx, data, shape, nodeChangesMap);
 
+    data.shape = shape;
+
     return shape;
 }
 
@@ -893,10 +901,14 @@ export function importEllipse(ctx: LoadContext, data: IJSON, f: ImportFun, index
 
     importShapeProperty(ctx, data, shape, nodeChangesMap);
 
+    data.shape = shape;
+
     return shape;
 }
 
 export function importGroup(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>): GroupShape {
+    if (data.name === 'Frame 128') console.log(data);
+
     const booleanOperation = data.booleanOperation;
     if (!data.resizeToFit && !booleanOperation) {
         return importArtboard(ctx, data, f, index, nodeChangesMap);
@@ -928,6 +940,8 @@ export function importGroup(ctx: LoadContext, data: IJSON, f: ImportFun, index: 
 
     importShapeProperty(ctx, data, shape, nodeChangesMap);
 
+    data.shape = shape;
+
     return shape;
 }
 
@@ -948,6 +962,8 @@ export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun, inde
 
     importShapeProperty(ctx, data, shape, nodeChangesMap);
 
+    data.shape = shape;
+
     return shape;
 }
 
@@ -966,6 +982,8 @@ export function importTextShape(ctx: LoadContext, data: IJSON, f: ImportFun, ind
     shape.isVisible = visible;
 
     importShapeProperty(ctx, data, shape, nodeChangesMap);
+
+    data.shape = shape;
 
     return shape;
 }
@@ -1047,6 +1065,8 @@ export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun, index:
 
     importShapeProperty(ctx, data, shape, nodeChangesMap);
 
+    data.shape = shape;
+
     return shape;
 }
 
@@ -1062,11 +1082,14 @@ export function importSymbolRef(ctx: LoadContext, data: IJSON, f: ImportFun, ind
     const symbolId = toStrId(data.symbolData.symbolID);
     const symbol = nodeChangesMap.get(symbolId);
     const symbolRawID = symbol?.kcId;
+    data.symbolData.symbolData = symbol;
 
     const shape = new SymbolRefShape([index] as BasicArray<number>, id, data.name, ShapeType.SymbolRef, frame.trans, style, frame.size, symbolRawID, variablesRes[1]);
     shape.isVisible = visible;
 
     importShapeProperty(ctx, data, shape, nodeChangesMap);
+
+    data.shape = shape;
 
     return shape;
 }
@@ -1108,6 +1131,8 @@ export function importSymbolUnion(ctx: LoadContext, data: IJSON, f: ImportFun, i
 
     importShapeProperty(ctx, data, shape, nodeChangesMap);
 
+    data.shape = shape;
+
     return shape;
 }
 
@@ -1132,6 +1157,8 @@ export function importSlice(ctx: LoadContext, data: IJSON, f: ImportFun, index: 
     shape.style = style;
 
     importShapeProperty(ctx, data, shape, nodeChangesMap);
+
+    data.shape = shape;
 
     return shape;
 }

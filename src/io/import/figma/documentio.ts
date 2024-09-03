@@ -1,20 +1,13 @@
 import {uuid} from "../../../basic/uuid";
 import {BasicArray, BasicMap, IDataGuard, Document, PageListItem} from "../../../data";
-import {IJSON} from "./basic";
+import {IJSON, LoadContext} from "./basic";
 import {figToJson} from "./fig2json";
-import {startLoader} from "./loader";
+import {importer, startLoader} from "./loader";
 import * as UZIP from "uzip";
+import {importSymbol, importSymbolUnion} from "./shapeio";
 
 function compare(l: string, r: string) {
     if (l === r) return 0;
-
-    const lIsMinus = l.startsWith(' ');
-    const rIsMinus = r.startsWith(' ');
-    if (lIsMinus && !rIsMinus) return -1;
-    if (!lIsMinus && rIsMinus) return 1;
-
-    if (lIsMinus) l = l.slice(1);
-    if (rIsMinus) r = r.slice(1);
 
     const loopCount = Math.min(l.length, r.length);
     for (let i = 0; i < loopCount; i++) {
@@ -113,10 +106,20 @@ export async function importDocument(file: File, gurad: IDataGuard /*inflateRawS
         pageList.push(new PageListItem([i] as BasicArray<number>, page.id, page.name));
     }
 
-    const document = new Document(uuid(), file.name, "", "", pageList, new BasicMap(), gurad);
+    const freesymbols = new BasicMap();
+    const document = new Document(uuid(), file.name, "", "", pageList, new BasicMap(), gurad, freesymbols as any);
 
-    console.log(json)
-    startLoader(json, pages, document, nodeChangesMap, unzipped);
+    console.log(json);
+    const ctx: LoadContext = new LoadContext(document.mediasMgr);
+    startLoader(json, pages, document, nodeChangesMap, ctx, unzipped);
+
+    const internalPage = nodeChanges.find(node => !node.visible && node.name === 'Internal Only Canvas');
+    const internalPageSymbolChilds = internalPage?.childs?.filter((item: any) => item.type === 'SYMBOL' || (item.type === 'FRAME' && !item.resizeToFit && item.isStateGroup));
+    if (Array.isArray(internalPageSymbolChilds)) for (let i = 0; i < internalPageSymbolChilds.length; i++) {
+        const item = internalPageSymbolChilds[i];
+        const shape = (item.type === 'SYMBOL' ? importSymbol : importSymbolUnion)(ctx, item, importer, i, nodeChangesMap);
+        freesymbols.set(shape.id, shape);
+    }
 
     return document;
 }
