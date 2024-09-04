@@ -429,15 +429,54 @@ function importSymbolOverrides(ctx: LoadContext, data: IJSON, shape: Shape, rawV
         const shapeIds = guids.map(guid => nodeChangesMap.get(toStrId(guid))?.kcId);
         if (shapeIds.find(id => !id)) continue;
 
-        const varId = uuid();
         const joinId = shapeIds.join('/');
 
-        // 叠加的nodeChanges
-        const nodeChanges = [...guids, data.guid].reverse().reduce((prev, guid) => Object.assign(prev, nodeChangesMap.get(toStrId(guid))), {});
+        if (symbolOverride.textData) {
+            // 叠加的text属性
+            const _guids = [...guids].reverse();
+            let textProps = {
+                ...nodeChangesMap.get(toStrId(_guids[0])),
+            };
+            for (let i = 1; i < _guids.length; i++) {
+                const guid = _guids[i];
+                const item = nodeChangesMap.get(toStrId(guid));
+                if (!item) continue;
+                const itemSymbolOverrides = item.symbolData?.symbolOverrides
+                if (!Array.isArray(itemSymbolOverrides)) continue;
+                const itemSymbolOverride = itemSymbolOverrides.find(item => {
+                    if (!item.textData) return false;
+                    const itemGuids = item.guidPath.guids as [];
+                    if (itemGuids.length !== i) return false;
+                    // 每一级guid都相等
+                    return itemGuids.find((v, j) => {
+                        return toStrId(v) !== toStrId(_guids[i - 1 - j]);
+                    }) === undefined;
+                });
+                if (!itemSymbolOverride) continue;
+                textProps = {
+                    ...textProps,
+                    ...itemSymbolOverride,
+                }
+            }
+            textProps = {
+                ...textProps,
+                ...symbolOverride,
+            };
+
+            const text = importText(textProps.textData, textProps);
+            if (text) {
+                const varId = uuid();
+                shapeVariables.set(varId, new Variable(varId, VariableType.Text, 'text', text));
+                shapeOverrides.set(`${joinId}/${OverrideType.Text}`, varId);
+            }
+
+            continue;
+        }
 
         if (symbolOverride.fillPaints) {
             const fills = parseFills(ctx, symbolOverride);
             if (fills) {
+                const varId = uuid();
                 shapeVariables.set(varId, new Variable(varId, VariableType.Fills, 'fills', fills));
                 shapeOverrides.set(`${joinId}/${OverrideType.Fills}`, varId);
             }
@@ -446,6 +485,7 @@ function importSymbolOverrides(ctx: LoadContext, data: IJSON, shape: Shape, rawV
         if (symbolOverride.strokePaints) {
             const strokes = parseStroke(symbolOverride);
             if (strokes) {
+                const varId = uuid();
                 shapeVariables.set(varId, new Variable(varId, VariableType.Borders, 'borders', strokes));
                 shapeOverrides.set(`${joinId}/${OverrideType.Borders}`, varId);
             }
@@ -454,16 +494,9 @@ function importSymbolOverrides(ctx: LoadContext, data: IJSON, shape: Shape, rawV
         if (symbolOverride.effects) {
             const effects = parseEffects(symbolOverride);
             if (effects) {
+                const varId = uuid();
                 shapeVariables.set(varId, new Variable(varId, VariableType.Shadows, 'effects', effects));
                 shapeOverrides.set(`${joinId}/${OverrideType.Shadows}`, varId);
-            }
-        }
-
-        if (symbolOverride.textData) {
-            const text = importText(symbolOverride.textData, nodeChanges);
-            if (text) {
-                shapeVariables.set(varId, new Variable(varId, VariableType.Text, 'text', text));
-                shapeOverrides.set(`${joinId}/${OverrideType.Text}`, varId);
             }
         }
     }

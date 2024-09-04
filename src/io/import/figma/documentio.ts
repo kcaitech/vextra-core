@@ -119,6 +119,7 @@ export async function importDocument(file: File, gurad: IDataGuard /*inflateRawS
         const item = internalPageSymbolChilds[i];
         const shape = (item.type === 'SYMBOL' ? importSymbol : importSymbolUnion)(ctx, item, importer, i, nodeChangesMap);
         freesymbols.set(shape.id, shape);
+        document.symbolsMgr.add(shape.id, freesymbols.get(shape.id) as any);
     }
 
     return document;
