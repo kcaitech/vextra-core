@@ -303,9 +303,9 @@ const autoWrapLayout = (page: Page, api: Api, layoutInfo: AutoLayout, shape_rows
             // 计算左侧边距以居中
             if (layoutInfo.stackHorizontalGapSizing === StackSizing.Auto) {
                 horHeight = (container_width - rowWidth) / Math.max(1, (rowShapes.length - 1));
-                if (rowShapes.length === 1) {
-                    startX += (container_width / 2) - (rowWidth / 2);
-                }
+                // if (rowShapes.length === 1) {
+                //     startX += (container_width / 2) - (rowWidth / 2);
+                // }
             } else {
                 if (layoutInfo.stackCounterAlignItems === StackAlign.Center) {
                     startX += (container_width - rowWidth) / 2;
