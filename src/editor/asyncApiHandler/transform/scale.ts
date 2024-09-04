@@ -448,17 +448,118 @@ export function reLayoutBySizeChanged(
 }
 
 export interface UniformScaleUnit {
-    shape: ShapeView,
-    transform: Transform2,
-    size: { width: number, height: number }
+    shape: ShapeView;
+    transform: Transform2;
+    size: { width: number, height: number };
+    decomposeScale: { x: number, y: number };
+}
+
+export function reLayoutByUniformScale(
+    api: Api,
+    page: Page,
+    shape: GroupShapeView,
+    scale: { x: number, y: number },
+    container: ShapeView[],
+    _rangeRecorder?: RangeRecorder,
+    _sizeRecorder?: SizeRecorder,
+    _transformRecorder?: TransformRecorder
+) {
+    const rangeRecorder: RangeRecorder = _rangeRecorder ?? new Map();
+    const sizeRecorder: SizeRecorder = _sizeRecorder ?? new Map();
+    const transformRecorder: TransformRecorder = _transformRecorder ?? new Map();
+
+    const children = shape.childs;
+    const { x: SX, y: SY } = scale;
+
+    const __p_transform = new Transform2().setScale(ColVector3D.FromXYZ(SX, SY, 1));
+
+    for (const child of children) {
+        container.push(child);
+        const data = adapt2Shape(child);
+        const transform = getTransform(child).clone();
+        transform.addTransform(__p_transform);
+
+        const _s = transform.decomposeScale();
+        const _scale = { x: _s.x, y: _s.y };
+        const oSize = getSize(child);
+        const width = oSize.width * Math.abs(_scale.x);
+        const height = oSize.height * Math.abs(_scale.y);
+        if (child instanceof TextShapeView) {
+            if (width !== child.size.width || height !== child.size.height) {
+                const textBehaviour = child.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
+                if (height !== child.size.height) {
+                    if (textBehaviour !== TextBehaviour.FixWidthAndHeight) {
+                        api.shapeModifyTextBehaviour(page, child.text, TextBehaviour.FixWidthAndHeight);
+                    }
+                } else {
+                    if (textBehaviour === TextBehaviour.Flexible) {
+                        api.shapeModifyTextBehaviour(page, child.text, TextBehaviour.Fixed);
+                    }
+                }
+                api.shapeModifyWH(page, data, width, height)
+                fixTextShapeFrameByLayout(api, page, child);
+            }
+        } else {
+            api.shapeModifyWH(page, data, width, height)
+        }
+
+        transform.clearScaleSize();
+        api.shapeModifyTransform(page, data, makeShapeTransform1By2(transform));
+
+        if (child instanceof GroupShapeView) {
+            reLayoutByUniformScale(api, page, child, _scale, container, rangeRecorder, sizeRecorder, transformRecorder);
+        }
+
+        function getSize(s: ShapeView) {
+            let size = sizeRecorder.get(s.id);
+            if (!size) {
+                const f = s.frame;
+                size = {
+                    x: f.x,
+                    y: f.y,
+                    width: f.width,
+                    height: f.height
+                };
+                sizeRecorder.set(s.id, size);
+            }
+            return size;
+        }
+
+        function getTransform(s: ShapeView) {
+            let transform = transformRecorder.get(s.id);
+            if (!transform) {
+                transform = s.transform2.clone();
+                transformRecorder.set(s.id, transform);
+            }
+            return transform;
+        }
+    }
 }
 
 export function uniformScale(api: Api, page: Page, units: UniformScaleUnit[], ratio: number) {
+    const container4modifyStyle: ShapeView[] = [];
     for (const unit of units) {
-        const { transform, shape: view, size } = unit;
+        const { transform, shape: view, size, decomposeScale } = unit;
+        container4modifyStyle.push(view);
         const shape = adapt2Shape(view);
         api.shapeModifyTransform(page, shape, makeShapeTransform1By2(transform));
         api.shapeModifyWH(page, shape, size.width, size.height);
+
+        if (view instanceof GroupShapeView) reLayoutByUniformScale(api, page, view, decomposeScale, container4modifyStyle);
+    }
+    for (const view of container4modifyStyle) {
+        const shape = adapt2Shape(view);
+        const borders = shape.getBorders();
+        borders.forEach((b, i) => {
+            // api.setBorderThickness(page, shape, i, b.thickness * ratio);
+        });
+        const shadows = shape.getShadows();
+        shadows.forEach((s, i) => {
+            api.setShadowBlur(page, shape, i, s.blurRadius * ratio);
+            api.setShadowOffsetX(page, shape, i, s.offsetX * ratio);
+            api.setShadowOffsetY(page, shape, i, s.offsetY * ratio);
+            api.setShadowSpread(page, shape, i, s.spread * ratio)
+        });
     }
 }
 
