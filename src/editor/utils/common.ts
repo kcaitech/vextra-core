@@ -147,10 +147,19 @@ export function adapt_for_artboard(api: Api, page: Page, artboard: ArtboradView)
             ].map(i => m.computeCoord3(i)));
         });
 
-        const minx = points.reduce((pre, cur) => Math.min(pre, cur.x), points[0].x);
-        const maxx = points.reduce((pre, cur) => Math.max(pre, cur.x), points[0].x);
-        const miny = points.reduce((pre, cur) => Math.min(pre, cur.y), points[0].y);
-        const maxy = points.reduce((pre, cur) => Math.max(pre, cur.y), points[0].y);
+        let minx = points.reduce((pre, cur) => Math.min(pre, cur.x), points[0].x);
+        let maxx = points.reduce((pre, cur) => Math.max(pre, cur.x), points[0].x);
+        let miny = points.reduce((pre, cur) => Math.min(pre, cur.y), points[0].y);
+        let maxy = points.reduce((pre, cur) => Math.max(pre, cur.y), points[0].y);
+
+        const layout = artboard.autoLayout;
+        if (layout) {
+            const { stackHorizontalPadding, stackVerticalPadding, stackPaddingBottom, stackPaddingRight } = layout;
+            minx -= stackHorizontalPadding;
+            miny -= stackVerticalPadding;
+            maxx += stackPaddingRight;
+            maxy += stackPaddingBottom;
+        }
 
         return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
     }
