@@ -61,7 +61,13 @@ import {
     shape4fill,
     shape4shadow
 } from "./symbol";
-import { getAutoLayoutShapes, initAutoLayout, layoutShapesOrder, layoutSpacing, modifyAutoLayout } from "./utils/auto_layout";
+import {
+    getAutoLayoutShapes,
+    initAutoLayout,
+    layoutShapesOrder,
+    layoutSpacing,
+    modifyAutoLayout
+} from "./utils/auto_layout";
 
 export type PaddingDir = 'ver' | 'hor' | 'top' | 'right' | 'bottom' | 'left';
 import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
@@ -1008,13 +1014,9 @@ export class ShapeEditor {
     // 容器自适应大小
     public adapt() {
         try {
-            if (!(this.view instanceof ArtboradView)) throw new Error('!(this.shape instanceof Artboard)');
+            if (!(this.view instanceof ArtboradView)) return;
             const api = this.__repo.start('adapt');
-            if (adapt_for_artboard(api, this.__page, this.view)) {
-                this.__repo.commit();
-            } else {
-                throw new Error('wrong env');
-            }
+            if (adapt_for_artboard(api, this.__page, this.view)) this.__repo.commit();
         } catch (error) {
             console.error('adapt', error);
             this.__repo.rollback();
@@ -1530,6 +1532,7 @@ export class ShapeEditor {
             this.__repo.rollback();
         }
     }
+
     modifyAutoLayoutHorPadding(hor: number, right: number) {
         const api = this.__repo.start("modifyAutoLayoutHorPadding");
         try {
@@ -1542,6 +1545,7 @@ export class ShapeEditor {
             this.__repo.rollback();
         }
     }
+
     modifyAutoLayoutVerPadding(ver: number, bottom: number) {
         const api = this.__repo.start("modifyAutoLayoutVerPadding");
         try {
@@ -1595,6 +1599,7 @@ export class ShapeEditor {
             this.__repo.rollback();
         }
     }
+
     modifyAutoLayoutSizing(sizing: StackSizing, direction: PaddingDir) {
         const api = this.__repo.start("modifyAutoLayoutSizing");
         try {
@@ -1608,6 +1613,7 @@ export class ShapeEditor {
             this.__repo.rollback();
         }
     }
+
     modifyAutoLayoutGapSizing(sizing: StackSizing, direction: PaddingDir) {
         const api = this.__repo.start("modifyAutoLayoutGapSizing");
         try {
@@ -1621,6 +1627,7 @@ export class ShapeEditor {
             this.__repo.rollback();
         }
     }
+
     modifyAutoLayoutZIndex(stack: boolean) {
         const api = this.__repo.start("modifyAutoLayoutZIndex");
         try {
@@ -1633,6 +1640,7 @@ export class ShapeEditor {
             this.__repo.rollback();
         }
     }
+
     modifyAutoLayoutStroke(included: boolean) {
         const api = this.__repo.start("modifyAutoLayoutStroke");
         try {
