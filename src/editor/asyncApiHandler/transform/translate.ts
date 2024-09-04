@@ -27,6 +27,7 @@ export type TranslateUnit = {
 export class Transporter extends AsyncApiCaller {
     origin_envs = new Map<string, { shape: ShapeView, index: number }[]>();
     origin_xy_envs = new Map<string, { shape: ShapeView, xy: { x: number, y: number } }[]>();
+    need_layout_shape = new Set<string>();
     except_envs: ShapeView[] = [];
     current_env_id: string = '';
     prototype = new Map<string, Shape>()
@@ -133,8 +134,8 @@ export class Transporter extends AsyncApiCaller {
                 this.__migrate(document, api, page, targetParent, sortedShapes[i], dlt, index);
                 index++;
             }
-
-            const parents: GroupShape[] = [ targetParent];
+            this.need_layout_shape.add(this.current_env_id);
+            const parents: GroupShape[] = [targetParent];
             for (let i = 0; i < parents.length; i++) {
                 const parent = parents[i];
                 modifyAutoLayout(page, api, parent);
@@ -175,14 +176,13 @@ export class Transporter extends AsyncApiCaller {
             const api = this.api;
             const page = this.page;
             const document = this.__document;
-            const parents = new Map<string, Shape>()
             const __migrate = this.__migrate.bind(this);
             this.origin_envs.forEach((v, k) => {
                 const op = page.getShape(k) as GroupShape;
                 if (!op) return;
-                parents.set(op.id, op);
                 for (let i = 0, l = v.length; i < l; i++) {
                     const _v = v[i];
+                    this.need_layout_shape.delete(_v.shape.id);
                     __migrate(document, api, page, op, adapt2Shape(_v.shape), dlt, _v.index);
                 }
             });
@@ -197,9 +197,6 @@ export class Transporter extends AsyncApiCaller {
                 }
             });
 
-            const oEnv = page.getShape(this.current_env_id);
-            oEnv && parents.set(oEnv.id, oEnv);
-            parents.forEach(s => modifyAutoLayout(page, api, s as GroupShape));
             this.updateView();
             this.setCurrentEnv(emit_by);
         } catch (error) {
@@ -275,6 +272,15 @@ export class Transporter extends AsyncApiCaller {
             this.prototype.forEach((v) => {
                 this.api.delShapeProtoStart(this.page, v)
             })
+        }
+        const parents: GroupShape[] = [];
+        this.need_layout_shape.forEach(v => {
+            const target = this.page.getShape(v) as GroupShape;
+            target && parents.push(target);
+        })
+        for (let i = 0; i < parents.length; i++) {
+            const parent = parents[i];
+            modifyAutoLayout(this.page, this.api, parent);
         }
         super.commit();
     }

@@ -171,14 +171,31 @@ const autoWidthLayout = (page: Page, api: Api, layoutInfo: AutoLayout, shape_row
     width: number,
     height: number
 }) => {
-    const horSpacing = layoutInfo.stackSpacing; // 水平间距
-    const verSpacing = layoutInfo.stackCounterSpacing; //垂直间距
+    const minShapeWidth = Math.min(...shape_row.map(s => boundingBox(s, layoutInfo.bordersTakeSpace).width));
+    const minShapeHeight = Math.min(...shape_row.map(s => boundingBox(s, layoutInfo.bordersTakeSpace).height));
+    const horSpacing = Math.max(layoutInfo.stackSpacing, -minShapeWidth); // 水平间距
+    let verSpacing = layoutInfo.stackCounterSpacing; //垂直间距
     let leftPadding = layoutInfo.stackHorizontalPadding; //左边距
     let topPadding = layoutInfo.stackVerticalPadding; //上边距
+    const container_height = container.height - layoutInfo.stackPaddingBottom - layoutInfo.stackVerticalPadding;
     const max_height = Math.max(...shape_row.map(shape => boundingBox(shape, layoutInfo.bordersTakeSpace).height));
     const max_width = Math.max(...shape_row.map(shape => boundingBox(shape, layoutInfo.bordersTakeSpace).width));
     let container_auto_width = layoutInfo.stackPaddingRight + layoutInfo.stackHorizontalPadding;
     let container_auto_height = layoutInfo.stackPaddingBottom + layoutInfo.stackVerticalPadding;
+    const totalVerHeight = shape_row.reduce((sum, s) => sum + boundingBox(s, layoutInfo.bordersTakeSpace).height, 0) + (shape_row.length - 1) * verSpacing;
+    const totalHeight = shape_row.reduce((sum, s) => sum + boundingBox(s, layoutInfo.bordersTakeSpace).height, 0);
+    let maxVerSpacing = 0;
+    if (layoutInfo.stackMode === StackMode.Vertical) {
+        verSpacing = Math.max(verSpacing, -minShapeHeight);
+        if (layoutInfo.stackVerticalGapSizing === StackSizing.Auto) {
+            verSpacing = 0;
+            maxVerSpacing = Math.max(-minShapeHeight, (container_height - totalHeight) / Math.max(1, (shape_row.length - 1)));
+            if (shape_row.length === 1) {
+                const space = (container_height / 2) - (minShapeHeight / 2);
+                topPadding += Math.max(space, 0);
+            }
+        }
+    }
     for (let i = 0; i < shape_row.length; i++) {
         const shape = shape_row[i];
         const frame = boundingBox(shape, layoutInfo.bordersTakeSpace);
@@ -186,6 +203,18 @@ const autoWidthLayout = (page: Page, api: Api, layoutInfo: AutoLayout, shape_row
         if (layoutInfo.stackCounterAlignItems === StackAlign.Center) {
             if (layoutInfo.stackMode === StackMode.Vertical) {
                 leftPadding += (max_width - frame.width) / 2;
+            }
+        } else if (layoutInfo.stackCounterAlignItems === StackAlign.Max) {
+            if (layoutInfo.stackMode === StackMode.Vertical) {
+                leftPadding += max_width - frame.width;
+            }
+        }
+        if (layoutInfo.stackPrimaryAlignItems === StackAlign.Center) {
+            if (layoutInfo.stackMode === StackMode.Vertical) {
+                if (layoutInfo.stackCounterSizing === StackSizing.Fixed) {
+                    const h = container.height - layoutInfo.stackVerticalPadding - layoutInfo.stackPaddingBottom;
+                    topPadding += (h - totalVerHeight) / 2;
+                }
             } else {
                 if (layoutInfo.stackCounterSizing === StackSizing.Fixed) {
                     const h = container.height - layoutInfo.stackVerticalPadding - layoutInfo.stackPaddingBottom;
@@ -194,9 +223,12 @@ const autoWidthLayout = (page: Page, api: Api, layoutInfo: AutoLayout, shape_row
                     topPadding += (max_height - frame.height) / 2;
                 }
             }
-        } else if (layoutInfo.stackCounterAlignItems === StackAlign.Max) {
+        } else if (layoutInfo.stackPrimaryAlignItems === StackAlign.Max) {
             if (layoutInfo.stackMode === StackMode.Vertical) {
-                leftPadding += max_width - frame.width;
+                if (layoutInfo.stackCounterSizing === StackSizing.Fixed) {
+                    const h = container.height - layoutInfo.stackVerticalPadding - layoutInfo.stackPaddingBottom;
+                    topPadding += h - totalVerHeight;
+                }
             } else {
                 if (layoutInfo.stackCounterSizing === StackSizing.Fixed) {
                     const h = container.height - layoutInfo.stackVerticalPadding - layoutInfo.stackPaddingBottom;
@@ -216,7 +248,7 @@ const autoWidthLayout = (page: Page, api: Api, layoutInfo: AutoLayout, shape_row
         api.shapeModifyY(page, (shape), y);
         if (layoutInfo.stackMode === StackMode.Vertical) {
             leftPadding = layoutInfo.stackHorizontalPadding; // 重置为左边距
-            topPadding += frame.height + verSpacing; // 换行，增加 y 坐标
+            topPadding += frame.height + verSpacing + Math.max(maxVerSpacing, 0); // 换行，增加 y 坐标
             container_auto_height += frame.height + verSpacing;
         } else {
             // 更新下一个图形的 x 坐标
@@ -226,7 +258,7 @@ const autoWidthLayout = (page: Page, api: Api, layoutInfo: AutoLayout, shape_row
         }
     }
     if (layoutInfo.stackMode === StackMode.Vertical) {
-        container_auto_height -= verSpacing;
+        container_auto_height -= (verSpacing + Math.max(maxVerSpacing, 0));
         container_auto_width += max_width;
     } else {
         container_auto_width -= horSpacing;
@@ -241,8 +273,9 @@ const autoWrapLayout = (page: Page, api: Api, layoutInfo: AutoLayout, shape_rows
 }) => {
     const shape_row: Shape[] = [];
     shape_rows.forEach(item => shape_row.push(...item));
-    let horSpacing = layoutInfo.stackSpacing; // 水平间距
-    let verSpacing = layoutInfo.stackCounterSpacing; //垂直间距
+    const minShapeWidth = Math.min(...shape_row.map(s => boundingBox(s, layoutInfo.bordersTakeSpace).width));
+    let horSpacing = Math.max(layoutInfo.stackSpacing, -minShapeWidth); // 水平间距
+    let verSpacing = Math.max(layoutInfo.stackCounterSpacing, 0); //垂直间距
     let topPadding = layoutInfo.stackVerticalPadding; //上边距
 
     const container_width = container.width - layoutInfo.stackPaddingRight - layoutInfo.stackHorizontalPadding;
@@ -350,7 +383,8 @@ const autoHorizontalLayout = (page: Page, api: Api, layoutInfo: AutoLayout, shap
 }) => {
     const shape_row: Shape[] = [];
     shape_rows.forEach(item => shape_row.push(...item));
-    let horSpacing = layoutInfo.stackSpacing; // 水平间距
+    const minShapeWidth = Math.min(...shape_row.map(s => boundingBox(s, layoutInfo.bordersTakeSpace).width));
+    let horSpacing = Math.max(layoutInfo.stackSpacing, -minShapeWidth); // 水平间距
     let leftPadding = layoutInfo.stackHorizontalPadding; //左边距
     let topPadding = layoutInfo.stackVerticalPadding; //上边距
 
@@ -418,7 +452,8 @@ const autoVerticalLayout = (page: Page, api: Api, layoutInfo: AutoLayout, shape_
 }) => {
     const shape_row: Shape[] = [];
     shape_rows.forEach(item => shape_row.push(...item));
-    let verSpacing = layoutInfo.stackCounterSpacing; //垂直间距
+    const minShapeHeight = Math.min(...shape_row.map(s => boundingBox(s, layoutInfo.bordersTakeSpace).height));
+    let verSpacing = Math.max(layoutInfo.stackCounterSpacing, -minShapeHeight); //垂直间距
     let leftPadding = layoutInfo.stackHorizontalPadding; //左边距
     let topPadding = layoutInfo.stackVerticalPadding; //上边距
 
@@ -433,11 +468,11 @@ const autoVerticalLayout = (page: Page, api: Api, layoutInfo: AutoLayout, shape_
     let maxVerSpacing = 0;
     if (layoutInfo.stackCounterSizing === StackSizing.Fixed) {
         if (layoutInfo.stackVerticalGapSizing === StackSizing.Auto) {
-            const allShapeHeight = shape_row.reduce((sum, s) => sum + boundingBox(s, layoutInfo.bordersTakeSpace).height, 0);
-            const maxShapeHeight = Math.max(...shape_row.map(s => boundingBox(s, layoutInfo.bordersTakeSpace).height));
-            maxVerSpacing = Math.max(-maxShapeHeight, (container_height - allShapeHeight) / Math.max(1, (shape_row.length - 1)));
+            const totalHeight = shape_row.reduce((sum, s) => sum + boundingBox(s, layoutInfo.bordersTakeSpace).height, 0);
+            maxVerSpacing = Math.max(-minShapeHeight, (container_height - totalHeight) / Math.max(1, (shape_row.length - 1)));
             if (shape_row.length === 1) {
-                maxVerSpacing += (container_height / 2) - (allShapeHeight / 2);
+                const space = (container_height / 2) - (totalHeight / 2);
+                topPadding += Math.max(space, 0);
             }
         } else {
             if (layoutInfo.stackPrimaryAlignItems === StackAlign.Center) {
@@ -474,9 +509,9 @@ const autoVerticalLayout = (page: Page, api: Api, layoutInfo: AutoLayout, shape_
         api.shapeModifyX(page, (shape), x);
         api.shapeModifyY(page, (shape), y);
         // 更新当前行的 x 坐标
-        topPadding += frame.height + verSpacing + Math.max(maxVerSpacing, 0);
+        topPadding += frame.height + verSpacing + maxVerSpacing;
     }
-    container_auto_height -= verSpacing;
+    container_auto_height -= verSpacing + maxVerSpacing;
     return container_auto_height;
 }
 
