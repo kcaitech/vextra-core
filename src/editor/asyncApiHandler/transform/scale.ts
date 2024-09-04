@@ -447,6 +447,21 @@ export function reLayoutBySizeChanged(
     }
 }
 
+export interface UniformScaleUnit {
+    shape: ShapeView,
+    transform: Transform2,
+    size: { width: number, height: number }
+}
+
+export function uniformScale(api: Api, page: Page, units: UniformScaleUnit[], ratio: number) {
+    for (const unit of units) {
+        const { transform, shape: view, size } = unit;
+        const shape = adapt2Shape(view);
+        api.shapeModifyTransform(page, shape, makeShapeTransform1By2(transform));
+        api.shapeModifyWH(page, shape, size.width, size.height);
+    }
+}
+
 export class Scaler extends AsyncApiCaller {
     private recorder: RangeRecorder = new Map();
     private sizeRecorder: SizeRecorder = new Map();
