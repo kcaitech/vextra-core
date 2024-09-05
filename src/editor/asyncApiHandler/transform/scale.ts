@@ -1,20 +1,20 @@
 import { CoopRepository } from "../../coop/cooprepo";
 import { AsyncApiCaller } from "../AsyncApiCaller";
 import {
-    Document, GroupShape,
-    Shape,
-    Page,
-    SymbolRefShape,
-    ShapeType,
-    ShapeFrame,
-    makeShapeTransform2By1,
-    ResizingConstraints2,
-    TextShape,
-    TextBehaviour,
+    BorderSideSetting,
+    Document,
     makeShapeTransform1By2,
+    Page,
+    ResizingConstraints2,
+    ShapeFrame,
+    ShapeType,
+    SideType,
+    SymbolRefShape,
+    TextBehaviour,
+    TextShape,
 } from "../../../data";
 import { adapt2Shape, GroupShapeView, PageView, ShapeView, TextShapeView } from "../../../dataview";
-import { Api } from "../../coop/recordapi";
+import { Api, TextShapeLike } from "../../coop/recordapi";
 import { fixTextShapeFrameByLayout } from "../../utils/other";
 import { Transform as Transform2 } from "../../../basic/transform";
 import { ColVector3D } from "../../../basic/matrix2";
@@ -551,7 +551,7 @@ export function uniformScale(api: Api, page: Page, units: UniformScaleUnit[], ra
         const shape = adapt2Shape(view);
         const borders = shape.getBorders();
         borders.forEach((b, i) => {
-            // api.setBorderThickness(page, shape, i, b.thickness * ratio);
+            api.setBorderSide(page, shape, i, new BorderSideSetting(SideType.Normal, b.sideSetting.thicknessTop * ratio, b.sideSetting.thicknessLeft * ratio, b.sideSetting.thicknessBottom * ratio, b.sideSetting.thicknessRight * ratio));
         });
         const shadows = shape.getShadows();
         shadows.forEach((s, i) => {
@@ -560,6 +560,33 @@ export function uniformScale(api: Api, page: Page, units: UniformScaleUnit[], ra
             api.setShadowOffsetY(page, shape, i, s.offsetY * ratio);
             api.setShadowSpread(page, shape, i, s.spread * ratio)
         });
+        if (view instanceof TextShapeView) {
+
+        }
+    }
+
+    function scale4text(text: TextShapeLike) {
+        const paraSpacing = text.text.attr?.paraSpacing;
+
+        if (paraSpacing !== undefined) {
+            api.textModifyParaSpacing(page, text, paraSpacing * ratio, 0, text.text.length);
+        } else {
+        }
+        let index = 0;
+        for (const paras of text.text.paras) {
+            let __index = index;
+            const spans = paras.spans;
+            for (const span of spans) {
+                if (span.fontSize !== undefined) {
+                    api.textModifyFontSize(page, text, index, span.length, span.fontSize * ratio);
+                }
+                if (span.kerning) {
+                    api.textModifyKerning(page, text, index, span.length, span.kerning * ratio);
+                }
+                __index += span.length;
+            }
+            index += paras.length;
+        }
     }
 }
 
