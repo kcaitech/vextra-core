@@ -110,14 +110,14 @@ export function modify_shapes_height(api: Api, document: Document, page: Page, s
 export function adapt_for_artboard(api: Api, page: Page, artboard: ArtboradView) {
     const minimum_WH = 1;
     const children = artboard.childs;
-    if (!children.length) return console.log('adapt_for_artboard: !children.length');
+    if (!children.length) throw new Error('!children.length') ;
 
     const m_artboard_to_root = artboard.matrix2Root();
 
     const f = artboard.size;
     const box = get_new_box();
 
-    if (no_need_to_adapt()) return console.log('invalid action');
+    if (no_need_to_adapt()) throw new Error('invalid action');
 
     re_children_layout();
 
