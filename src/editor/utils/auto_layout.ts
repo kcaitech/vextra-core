@@ -14,7 +14,7 @@ import {
 import { adapt2Shape, ArtboradView, ShapeView } from "../../dataview";
 import { Api } from "../coop/recordapi";
 
-export function layoutShapesOrder(shapes: Shape[]) {
+export function layoutShapesOrder(shapes: Shape[], sort?: Map<string, number>) {
     let shape_rows: Shape[][] = [];
     let unassignedShapes: Shape[] = [...shapes];
 
@@ -39,8 +39,17 @@ export function layoutShapesOrder(shapes: Shape[]) {
             const b_frame = boundingBox(b);
             if (a_frame.x > b_frame.x) {
                 return 1;
-            } else {
+            } else if (a_frame.x < b_frame.x) {
                 return -1;
+            } else {
+                if (sort) {
+                    const _a = sort.get(a.id);
+                    const _b = sort.get(b.id);
+                    if (typeof _a !== 'number' || typeof _b !== 'number') return -1;
+                    return _a > _b ? 1 : -1;
+                } else {
+                    return -1;
+                }
             }
         })
         // 保存当前行的图形
@@ -138,11 +147,11 @@ export const initAutoLayout = (page: Page, api: Api, container: Shape, shape_row
     return { width: max_row_width, height: max_row_height, container_hieght: container_auto_height }
 }
 
-export const modifyAutoLayout = (page: Page, api: Api, shape: Shape) => {
+export const modifyAutoLayout = (page: Page, api: Api, shape: Shape, sort?: Map<string, number>) => {
     const target = shape as Artboard;
     const layoutInfo = target.autoLayout;
     if (!layoutInfo) return;
-    const shape_rows = layoutShapesOrder(target.childs);
+    const shape_rows = layoutShapesOrder(target.childs, sort);
     const shape_row: Shape[] = shape_rows.flat();
     const frame = { width: target.size.width, height: target.size.height }
     if (layoutInfo.stackPrimarySizing === StackSizing.Auto) {

@@ -247,7 +247,7 @@ export class Transporter extends AsyncApiCaller {
         }
     }
 
-    swap(shape: GroupShapeView, targets: ShapeView[], x: number, y: number) {
+    swap(shape: GroupShapeView, targets: ShapeView[], x: number, y: number, sort: Map<string, number>) {
         try {
             const layoutShape = (shape as ArtboradView);
             if (!layoutShape.autoLayout) return;
@@ -258,7 +258,7 @@ export class Transporter extends AsyncApiCaller {
                 const frame = target._p_frame;
                 translate(api, page, adapt2Shape(target), x - frame.x, y - frame.y);
             }
-            modifyAutoLayout(page, api, adapt2Shape(shape));
+            modifyAutoLayout(page, api, adapt2Shape(shape), sort);
             this.updateView();
         } catch (e) {
             this.exception = true;
