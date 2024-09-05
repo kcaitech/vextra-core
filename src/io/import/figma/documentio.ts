@@ -4,7 +4,7 @@ import {IJSON, LoadContext} from "./basic";
 import {figToJson} from "./fig2json";
 import {importer, startLoader} from "./loader";
 import * as UZIP from "uzip";
-import {importSymbol, importSymbolUnion} from "./shapeio";
+import {importStylesFromId, importSymbol, importSymbolUnion, toStrId} from "./shapeio";
 
 function compare(l: string, r: string) {
     if (l === r) return 0;
@@ -62,9 +62,16 @@ export async function importDocument(file: File, gurad: IDataGuard /*inflateRawS
     if (!nodeChanges || !Array.isArray(nodeChanges)) throw new Error("data error");
 
     const nodeChangesMap = new Map<string, IJSON>();
+    const nodeKeyMap = new Map<string, IJSON>();
     for (const node of nodeChanges) {
         node.kcId = uuid();
-        nodeChangesMap.set([node['guid']['localID'], node['guid']['sessionID']].join(','), node);
+        nodeChangesMap.set(toStrId(node['guid']), node);
+
+        const key = node.key;
+        if (key) nodeKeyMap.set(key, node);
+
+        const overrideKey = node.overrideKey;
+        if (overrideKey) nodeChangesMap.set(toStrId(overrideKey), node);
     }
 
     // 先生成对象树
@@ -111,16 +118,18 @@ export async function importDocument(file: File, gurad: IDataGuard /*inflateRawS
 
     console.log(json);
     const ctx: LoadContext = new LoadContext(document.mediasMgr);
-    startLoader(json, pages, document, nodeChangesMap, ctx, unzipped);
+    startLoader(json, pages, document, nodeChangesMap, nodeKeyMap, ctx, unzipped);
 
     const internalPage = nodeChanges.find(node => !node.visible && node.name === 'Internal Only Canvas');
     const internalPageSymbolChilds = internalPage?.childs?.filter((item: any) => item.type === 'SYMBOL' || (item.type === 'FRAME' && !item.resizeToFit && item.isStateGroup));
     if (Array.isArray(internalPageSymbolChilds)) for (let i = 0; i < internalPageSymbolChilds.length; i++) {
         const item = internalPageSymbolChilds[i];
-        const shape = (item.type === 'SYMBOL' ? importSymbol : importSymbolUnion)(ctx, item, importer, i, nodeChangesMap);
+        const shape = (item.type === 'SYMBOL' ? importSymbol : importSymbolUnion)(ctx, item, importer, i, nodeChangesMap, nodeKeyMap);
         freesymbols.set(shape.id, shape);
         document.symbolsMgr.add(shape.id, freesymbols.get(shape.id) as any);
     }
+
+    for (const node of nodeChanges) importStylesFromId(node, node, nodeChangesMap, nodeKeyMap);
 
     return document;
 }

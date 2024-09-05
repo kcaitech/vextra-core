@@ -28,32 +28,34 @@ export const importer = (ctx: LoadContext, data: IJSON, i: number): Shape | unde
 const symbolsSet = new Map<string, SymbolShape>();
 
 let _nodeChangesMap: Map<string, IJSON>;
-__handler['ROUNDED_RECTANGLE'] = (ctx: LoadContext, data: IJSON, i: number) => importPathShape(ctx, data, importer, i, _nodeChangesMap);
-__handler['VECTOR'] = (ctx: LoadContext, data: IJSON, i: number) => importPathShape(ctx, data, importer, i, _nodeChangesMap);
-__handler['FRAME'] = (ctx: LoadContext, data: IJSON, i: number) => importGroup(ctx, data, importer, i, _nodeChangesMap);
-__handler['PAGE'] = (ctx: LoadContext, data: IJSON, i: number) => importPage(ctx, data, importer, _nodeChangesMap);
-__handler['TEXT'] = (ctx: LoadContext, data: IJSON, i: number) => importTextShape(ctx, data, importer, i, _nodeChangesMap);
-__handler['ELLIPSE'] = (ctx: LoadContext, data: IJSON, i: number) => importEllipse(ctx, data, importer, i, _nodeChangesMap);
-__handler['LINE'] = (ctx: LoadContext, data: IJSON, i: number) => importLine(ctx, data, importer, i, _nodeChangesMap);
-__handler['STAR'] = (ctx: LoadContext, data: IJSON, i: number) => importStar(ctx, data, importer, i, _nodeChangesMap);
-__handler['REGULAR_POLYGON'] = (ctx: LoadContext, data: IJSON, i: number) => importPolygon(ctx, data, importer, i, _nodeChangesMap);
+let _nodeKeyMap: Map<string, IJSON>;
+__handler['ROUNDED_RECTANGLE'] = (ctx: LoadContext, data: IJSON, i: number) => importPathShape(ctx, data, importer, i, _nodeChangesMap, _nodeKeyMap);
+__handler['VECTOR'] = (ctx: LoadContext, data: IJSON, i: number) => importPathShape(ctx, data, importer, i, _nodeChangesMap, _nodeKeyMap);
+__handler['FRAME'] = (ctx: LoadContext, data: IJSON, i: number) => importGroup(ctx, data, importer, i, _nodeChangesMap, _nodeKeyMap);
+__handler['PAGE'] = (ctx: LoadContext, data: IJSON, i: number) => importPage(ctx, data, importer, _nodeChangesMap, _nodeKeyMap);
+__handler['TEXT'] = (ctx: LoadContext, data: IJSON, i: number) => importTextShape(ctx, data, importer, i, _nodeChangesMap, _nodeKeyMap);
+__handler['ELLIPSE'] = (ctx: LoadContext, data: IJSON, i: number) => importEllipse(ctx, data, importer, i, _nodeChangesMap, _nodeKeyMap);
+__handler['LINE'] = (ctx: LoadContext, data: IJSON, i: number) => importLine(ctx, data, importer, i, _nodeChangesMap, _nodeKeyMap);
+__handler['STAR'] = (ctx: LoadContext, data: IJSON, i: number) => importStar(ctx, data, importer, i, _nodeChangesMap, _nodeKeyMap);
+__handler['REGULAR_POLYGON'] = (ctx: LoadContext, data: IJSON, i: number) => importPolygon(ctx, data, importer, i, _nodeChangesMap, _nodeKeyMap);
 __handler['SYMBOL'] = (ctx: LoadContext, data: IJSON, i: number) => {
-    const symbol = importSymbol(ctx, data, importer, i, _nodeChangesMap);
+    const symbol = importSymbol(ctx, data, importer, i, _nodeChangesMap, _nodeKeyMap);
     symbolsSet.set(symbol.id, symbol);
     return symbol;
 }
 let symbolsMgr: any;
 __handler['INSTANCE'] = (ctx: LoadContext, data: IJSON, i: number) => {
-    const symbolRef = importSymbolRef(ctx, data, importer, i, _nodeChangesMap);
+    const symbolRef = importSymbolRef(ctx, data, importer, i, _nodeChangesMap, _nodeKeyMap);
     symbolRef.setSymbolMgr(symbolsMgr);
     return symbolRef;
 }
-__handler['SLICE'] = (ctx: LoadContext, data: IJSON, i: number) => importSlice(ctx, data, importer, i, _nodeChangesMap);
-__handler['BOOLEAN_OPERATION'] = (ctx: LoadContext, data: IJSON, i: number) => importGroup(ctx, data, importer, i, _nodeChangesMap);
+__handler['SLICE'] = (ctx: LoadContext, data: IJSON, i: number) => importSlice(ctx, data, importer, i, _nodeChangesMap, _nodeKeyMap);
+__handler['BOOLEAN_OPERATION'] = (ctx: LoadContext, data: IJSON, i: number) => importGroup(ctx, data, importer, i, _nodeChangesMap, _nodeKeyMap);
 
-export function startLoader(file: IJSON, pages: IJSON[], document: Document, nodeChangesMap: Map<string, IJSON>, ctx: LoadContext, unzipped: UZIPFiles) {
+export function startLoader(file: IJSON, pages: IJSON[], document: Document, nodeChangesMap: Map<string, IJSON>, nodeKeyMap: Map<string, IJSON>, ctx: LoadContext, unzipped: UZIPFiles) {
     symbolsSet.clear();
     _nodeChangesMap = nodeChangesMap;
+    _nodeKeyMap = nodeKeyMap;
     symbolsMgr = document.symbolsMgr;
 
     const loadPage = async (ctx: LoadContext, id: string): Promise<Page> => {
@@ -62,7 +64,7 @@ export function startLoader(file: IJSON, pages: IJSON[], document: Document, nod
             const trans = new Transform();
             return new Page(new BasicArray(), id, "", ShapeType.Page, trans, new Style(new BasicArray(), new BasicArray(), new BasicArray()), new BasicArray());
         }
-        const page = importPage(ctx, json, importer, nodeChangesMap);
+        const page = importPage(ctx, json, importer, nodeChangesMap, nodeKeyMap);
         // updatePageFrame(page);
         return page;
     }
