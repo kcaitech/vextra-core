@@ -121,10 +121,6 @@ export class SymbolRefView extends ShapeView {
     get isCustomSize() {
         return this.data.isCustomSize;
     }
-    get autoLayout(): AutoLayout | undefined {
-        return (this.data).autoLayout;
-    }
-
 
     getPath() {
         if (this.m_path) return this.m_path;
@@ -466,5 +462,11 @@ export class SymbolRefView extends ShapeView {
             return this.m_data.prototypeInteractions.slice(0).concat(...(this.m_sym?.prototypeInteractions || [])) as BasicArray<PrototypeInterAction>
         }
         return this.m_sym?.prototypeInteractions;
+    }
+
+    get autoLayout(): AutoLayout | undefined {
+        const v = this._findOV2(OverrideType.AutoLayout, VariableType.AutoLayout);
+        if (v) return v.value;
+        return this.m_sym?.autoLayout;
     }
 }

@@ -290,6 +290,7 @@ export enum OverrideType {
     CornerRadius = "cornerRadius",
     Blur = "blur",
     ProtoInteractions = "protoInteractions",
+    AutoLayout = "autoLayout",
 }
 /* padding */
 export type Padding = {
@@ -640,6 +641,7 @@ export enum VariableType {
     CornerRadius = "cornerRadius",
     Blur = "blur",
     ProtoInteractions = "protoInteractions",
+    AutoLayout = "autoLayout",
 }
 export type Variable_0 = Array<Border | Fill | Shadow | PrototypeInterAction>
 /* winding rule */
@@ -945,7 +947,7 @@ export type Variable = {
     id: string,
     type: VariableType,
     name: string,
-    value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur,
+    value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur | AutoLayout,
 }
 /* comment */
 export type Comment = {
@@ -990,7 +992,6 @@ export type SymbolRefShape = Shape & {
     overrides?: Map<string, string>,
     isCustomSize?: boolean,
     cornerRadius?: CornerRadius,
-    autoLayout?: AutoLayout,
 }
 /* contact shape */
 export type ContactShape = PathShape & {

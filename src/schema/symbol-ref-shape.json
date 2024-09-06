@@ -31,9 +31,6 @@
         },
         "cornerRadius": {
             "$ref": "./corner-radius.json"
-        },
-        "autoLayout": {
-            "$ref": "./auto-layout.json"
         }
     },
     "required": [

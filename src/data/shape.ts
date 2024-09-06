@@ -512,10 +512,10 @@ export class GroupShape extends Shape implements classes.GroupShape {
         const w = frame.width;
         const h = frame.height;
         let path = [["M", x, y],
-            ["l", w, 0],
-            ["l", 0, h],
-            ["l", -w, 0],
-            ["z"]];
+        ["l", w, 0],
+        ["l", 0, h],
+        ["l", -w, 0],
+        ["z"]];
         return new Path(path);
     }
 
@@ -1225,10 +1225,10 @@ export class TextShape extends Shape implements classes.TextShape {
         const x = 0;
         const y = 0;
         const path = [["M", x, y],
-            ["l", w, 0],
-            ["l", 0, h],
-            ["l", -w, 0],
-            ["z"]];
+        ["l", w, 0],
+        ["l", 0, h],
+        ["l", -w, 0],
+        ["z"]];
         return new Path(path);
     }
 

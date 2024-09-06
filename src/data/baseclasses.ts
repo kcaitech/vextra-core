@@ -989,8 +989,8 @@ export class Variable extends Basic {
     id: string
     type: VariableType
     name: string
-    value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur
-    constructor(id: string, type: VariableType, name: string, value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur) {
+    value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur | AutoLayout
+    constructor(id: string, type: VariableType, name: string, value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur | AutoLayout) {
         super()
         this.id = id
         this.type = type
@@ -1078,7 +1078,6 @@ export class SymbolRefShape extends Shape {
     overrides?: BasicMap<string, string>
     isCustomSize?: boolean
     cornerRadius?: CornerRadius
-    autoLayout?: AutoLayout
     constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style, size: ShapeSize, refId: string, variables: BasicMap<string, Variable>) {
         super(crdtidx, id, name, type, transform, style)
         this.size = size

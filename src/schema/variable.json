@@ -67,6 +67,9 @@
                 },
                 {
                     "$ref": "./blur.json"
+                },
+                {
+                    "$ref": "./auto-layout.json"
                 }
             ]
         }

@@ -1143,6 +1143,9 @@ export function exportVariable(source: types.Variable, ctx?: IExportContext): ty
         if (source.value.typeId === "blur") {
             return exportBlur(source.value as types.Blur, ctx)
         }
+        if (source.value.typeId === "auto-layout") {
+            return exportAutoLayout(source.value as types.AutoLayout, ctx)
+        }
         throw new Error("unknow typeId: " + source.value.typeId)
     })()
     return ret
@@ -1222,7 +1225,6 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
     })()
     if (source.isCustomSize) ret.isCustomSize = source.isCustomSize
     if (source.cornerRadius) ret.cornerRadius = exportCornerRadius(source.cornerRadius, ctx)
-    if (source.autoLayout) ret.autoLayout = exportAutoLayout(source.autoLayout, ctx)
         // inject code
     if (ctx?.refsymbols) ctx.refsymbols.add(ret.refId);
 
