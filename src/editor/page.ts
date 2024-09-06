@@ -557,7 +557,7 @@ export class PageEditor {
         if (shapes.find((v) => !v.parent)) return false;
         const fshape = adapt2Shape(shapes[0]);
         const savep = fshape.parent as GroupShape;
-        const shapes_rows = layoutShapesOrder(shapes.map(s => adapt2Shape(s)));
+        const shapes_rows = layoutShapesOrder(shapes.map(s => adapt2Shape(s)), false);
         const { hor, ver } = layoutSpacing(shapes_rows);
         const layoutInfo = new AutoLayout(hor, ver, 0, 0, 0, 0);
         let artboard = newAutoLayoutArtboard(artboardname, new ShapeFrame(0, 0, 100, 100), layoutInfo);
@@ -1944,15 +1944,22 @@ export class PageEditor {
     }
 
     modifyShapesX(actions: {
-        target: Shape,
+        target: ShapeView,
         x: number
     }[]) {
         try {
             const api = this.__repo.start('modifyShapesX');
             const page = this.__page;
+            const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
                 const action = actions[i];
-                api.shapeModifyX(page, action.target, action.x);
+                shapes.push(action.target);
+                api.shapeModifyX(page, adapt2Shape(action.target), action.x);
+            }
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                modifyAutoLayout(page, api, parent);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1961,15 +1968,22 @@ export class PageEditor {
     }
 
     modifyShapesY(actions: {
-        target: Shape,
+        target: ShapeView,
         y: number
     }[]) {
         try {
             const api = this.__repo.start('modifyShapesY');
             const page = this.__page;
+            const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
                 const action = actions[i];
-                api.shapeModifyY(page, action.target, action.y);
+                shapes.push(action.target);
+                api.shapeModifyY(page, adapt2Shape(action.target), action.y);
+            }
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                modifyAutoLayout(page, api, parent);
             }
             this.__repo.commit();
         } catch (error) {

@@ -114,7 +114,7 @@ export function reLayoutBySizeChanged(
                 reLayoutBySizeChanged(api, page, child, _scale, rangeRecorder, sizeRecorder, transformRecorder);
             }
         }
-    } else if((shape as ArtboradView).autoLayout){
+    } else if ((shape as ArtboradView).autoLayout) {
         const __shape = adapt2Shape(shape);
         modifyAutoLayout(page, api, __shape);
     } else {
@@ -506,8 +506,12 @@ export class Scaler extends AsyncApiCaller {
                 }
                 api.shapeModifyTransform(page, shape, makeShapeTransform1By2(item.transform2));
                 if ((shape as Artboard).autoLayout) {
-                    api.shapeModifyAutoLayoutSizing(page, shape, StackSizing.Fixed, 'hor');
-                    api.shapeModifyAutoLayoutSizing(page, shape, StackSizing.Fixed, 'ver');
+                    if (item.size.width !== item.shape.size.width) {
+                        api.shapeModifyAutoLayoutSizing(page, shape, StackSizing.Fixed, 'hor');
+                    }
+                    if (item.size.height !== item.shape.size.height) {
+                        api.shapeModifyAutoLayoutSizing(page, shape, StackSizing.Fixed, 'ver');
+                    }
                 }
                 if (item.shape instanceof GroupShapeView) {
                     const scale = item.scale;

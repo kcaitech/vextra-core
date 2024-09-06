@@ -1490,7 +1490,7 @@ export class ShapeEditor {
     addAutoLayout() {
         const api = this.__repo.start("addAutoLayout");
         try {
-            const shapes_rows = layoutShapesOrder(this.__shape.childs.map(s => adapt2Shape(s)));
+            const shapes_rows = layoutShapesOrder(this.__shape.childs.map(s => adapt2Shape(s)), false);
             const { hor, ver } = layoutSpacing(shapes_rows);
             const h_padding = shapes_rows.length ? Math.max(Math.round(shapes_rows[0][0].x), 0) : 0;
             const v_padding = shapes_rows.length ? Math.max(Math.round(shapes_rows[0][0].y), 0) : 0;

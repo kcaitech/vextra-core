@@ -54,7 +54,7 @@ import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
 import { BasicArray } from "../data/basic";
 import { Fill } from "../data/style";
 import { TextAttr } from "../data/classes";
-import { getAutoLayoutShapes, modifyAutoLayout } from "./utils/auto_layout";
+import { getAutoLayoutShapes, layoutShapesOrder, modifyAutoLayout } from "./utils/auto_layout";
 
 interface PageXY { // 页面坐标系的xy
     x: number
@@ -952,6 +952,18 @@ export class Controller {
     }
 
     public asyncBorderThickness(_shapes: ShapeView[], _page: Page | PageView): AsyncBorderThickness {
+        const sort: Map<string, number> = new Map();
+        const parents = getAutoLayoutShapes(_shapes);
+        for (let i = 0; i < parents.length; i++) {
+            const parent = parents[i];
+            if (parent.autoLayout?.bordersTakeSpace) {
+                const shape_rows = layoutShapesOrder(parent.childs, !!parent.autoLayout?.bordersTakeSpace);
+                const shape_row: Shape[] = shape_rows.flat();
+                shape_row.forEach((item, index) => {
+                    sort.set(item.id, index);
+                })
+            }
+        }
         const shapes: ShapeView[] = _shapes;
         const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
 
@@ -985,18 +997,18 @@ export class Controller {
                             break;
                     }
                 }
-                const parents = getAutoLayoutShapes(shapes);
-                for (let i = 0; i < parents.length; i++) {
-                    const parent = parents[i];
-                    if(parent.autoLayout?.bordersTakeSpace) {
-                        modifyAutoLayout(page, api, parent);
-                    }
-                }
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
                 console.error(e);
                 status = Status.Exception;
+            }
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                if (parent.autoLayout?.bordersTakeSpace) {
+                    modifyAutoLayout(page, api, parent, sort, true);
+                }
             }
         }
         const close = () => {
@@ -1037,18 +1049,18 @@ export class Controller {
                             break;
                     }
                 }
-                const parents = getAutoLayoutShapes(shapes);
-                for (let i = 0; i < parents.length; i++) {
-                    const parent = parents[i];
-                    if(parent.autoLayout?.bordersTakeSpace) {
-                        modifyAutoLayout(page, api, parent);
-                    }
-                }
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
                 console.error(e);
                 status = Status.Exception;
+            }
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                if (parent.autoLayout?.bordersTakeSpace) {
+                    modifyAutoLayout(page, api, parent);
+                }
             }
         }
         const close = () => {

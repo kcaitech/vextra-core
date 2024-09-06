@@ -57,6 +57,11 @@ export class LockMouseHandler extends AsyncApiCaller {
                 if (shape.isVirtualShape) continue;
                 translate(api, page, shape, dx, 0);
             }
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                modifyAutoLayout(this.page, api, parent);
+            }
             this.updateView();
         } catch (e) {
             this.exception = true;
@@ -75,6 +80,11 @@ export class LockMouseHandler extends AsyncApiCaller {
                 if (parent && (parent as Artboard).autoLayout) continue;
                 if (shape.isVirtualShape) continue;
                 translate(api, page, shape, 0, dy);
+            }
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                modifyAutoLayout(this.page, api, parent);
             }
             this.updateView();
         } catch (e) {

@@ -14,23 +14,30 @@ import {
 import { adapt2Shape, ArtboradView, ShapeView } from "../../dataview";
 import { Api } from "../coop/recordapi";
 
-export function layoutShapesOrder(shapes: Shape[], sort?: Map<string, number>) {
+export function layoutShapesOrder(shapes: Shape[], includedBorder: boolean, sort?: Map<string, number>, cursort = false) {
     let shape_rows: Shape[][] = [];
-    let unassignedShapes: Shape[] = [...shapes];
-
+    let unassignedShapes: Shape[] = [...shapes].filter(shape => shape.getVisible());
+    if (sort && cursort) {
+        const shapeMap = new Map(shapes.map(s => [s.id, s]));
+        const shapesRow: Shape[] = [];
+        sort.forEach((v, k) => {
+            const shape = shapeMap.get(k);
+            shape && shapesRow.push(shape);
+        });
+        return [shapesRow];
+    }
     while (unassignedShapes.length > 0) {
         // 找出 y + height 最小的图形作为基准图形
         const baseShape = unassignedShapes.reduce((minShape, shape) => {
-            const frame = boundingBox(shape);
-            const min_frame = boundingBox(minShape);
-            return (frame.y + frame.height < min_frame.y + min_frame.height) ? shape : minShape;
+            const frame = boundingBox(shape, includedBorder);
+            const min_frame = boundingBox(minShape, includedBorder);
+            return ((frame.y + frame.height) < (min_frame.y + min_frame.height)) ? shape : minShape;
         });
-
         // 将与基准图形相交的图形放入当前行
         const currentRow = unassignedShapes.filter(shape => {
-            const frame = boundingBox(shape);
-            const base_frame = boundingBox(baseShape);
-            return frame.y < base_frame.y + base_frame.height && frame.y + frame.height >= base_frame.y;
+            const frame = boundingBox(shape, includedBorder);
+            const base_frame = boundingBox(baseShape, includedBorder);
+            return (frame.y + 1) < (base_frame.y + base_frame.height)
         });
 
         // 将当前行按 x 坐标排序
@@ -147,11 +154,11 @@ export const initAutoLayout = (page: Page, api: Api, container: Shape, shape_row
     return { width: max_row_width, height: max_row_height, container_hieght: container_auto_height }
 }
 
-export const modifyAutoLayout = (page: Page, api: Api, shape: Shape, sort?: Map<string, number>) => {
+export const modifyAutoLayout = (page: Page, api: Api, shape: Shape, sort?: Map<string, number>, cursort = false) => {
     const target = shape as Artboard;
     const layoutInfo = target.autoLayout;
     if (!layoutInfo) return;
-    const shape_rows = layoutShapesOrder(target.childs, sort);
+    const shape_rows = layoutShapesOrder(target.childs, !!layoutInfo.bordersTakeSpace, sort, cursort);
     const shape_row: Shape[] = shape_rows.flat();
     const frame = { width: target.size.width, height: target.size.height }
     if (layoutInfo.stackPrimarySizing === StackSizing.Auto) {
@@ -529,7 +536,11 @@ export const getAutoLayoutShapes = (shapes: ShapeView[]) => {
     const parents: Artboard[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = adapt2Shape(shapes[i]);
-        const parent = shape.parent;
+        let parent = shape.parent;
+        if (!parent || parent.type === ShapeType.Page) continue;
+        while (parent && (parent.type === ShapeType.BoolShape || parent.type === ShapeType.Group)) {
+            parent = parent?.parent;
+        }
         if (parent && (parent as Artboard).autoLayout) {
             const hasP = parents.some(item => item.id === parent.id);
             if (!hasP) parents.push(parent as Artboard);
