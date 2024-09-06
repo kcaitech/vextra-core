@@ -565,7 +565,12 @@ export function uniformScale(
         container4modifyStyle.push(view);
         const shape = adapt2Shape(view);
         api.shapeModifyTransform(page, shape, makeShapeTransform1By2(transform));
-        api.shapeModifyWH(page, shape, size.width, size.height);
+
+        if (shape.hasSize()) api.shapeModifyWH(page, shape, size.width, size.height);
+
+        if (shape instanceof SymbolRefShape && !shape.isCustomSize) {
+            api.shapeModifyIsCustomSize(page, shape, true);
+        }
 
         if (view instanceof GroupShapeView) reLayoutByUniformScale(api, page, view, decomposeScale, container4modifyStyle, rangeRecorder, sizeRecorder, transformRecorder);
     }
