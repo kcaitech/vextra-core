@@ -376,7 +376,7 @@ const textStyleKeys = [
 ]
 
 const textStyleKeys1 = [
-    'fillPaints', 'size',
+    'fillPaints',
 ]
 
 function hasTextProp(data: any, ancestorData: any) {

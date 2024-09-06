@@ -289,9 +289,9 @@ export function importText(data: IJSON): Text {
             case "HEIGHT":
                 return TextBehaviour.Fixed;
             case "NONE":
-                return TextBehaviour.FixWidthAndHeight;
-            case "WIDTH_AND_HEIGHT":
                 return TextBehaviour.Flexible;
+            case "WIDTH_AND_HEIGHT":
+                return TextBehaviour.FixWidthAndHeight;
             default:
                 return TextBehaviour.Flexible;
         }
