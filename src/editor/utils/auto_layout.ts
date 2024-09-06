@@ -366,6 +366,8 @@ const autoWrapLayout = (page: Page, api: Api, layoutInfo: AutoLayout, shape_rows
             // 布局当前行的矩形并垂直居中
             rowShapes.forEach((s, i) => {
                 const frame = boundingBox(s, layoutInfo.bordersTakeSpace);
+                console.log(s.name, frame);
+
                 let verticalOffset = 0;
                 if (layoutInfo.stackPrimaryAlignItems === StackAlign.Center) {
                     verticalOffset = (maxHeightInRow - frame.height) / 2;

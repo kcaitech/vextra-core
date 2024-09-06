@@ -66,6 +66,7 @@ import { Matrix } from "../basic/matrix";
 import {
     IImportContext,
     importArtboard,
+    importAutoLayout,
     importBlur,
     importBorder,
     importContextSettings,
@@ -727,6 +728,7 @@ export class PageEditor {
                 if (shape0.overlayBackgroundInteraction) symbolShape.overlayBackgroundInteraction = (shape0.overlayBackgroundInteraction);
                 if (shape0.overlayBackgroundAppearance) symbolShape.overlayBackgroundAppearance = importOverlayBackgroundAppearance(shape0.overlayBackgroundAppearance);
                 if (shape0.scrollDirection) symbolShape.scrollDirection = (shape0.scrollDirection);
+                if (shape0.autoLayout) symbolShape.autoLayout = importAutoLayout(shape0.autoLayout);
             }
 
             const page = this.__page;
@@ -892,7 +894,7 @@ export class PageEditor {
      * @description 将引用的组件解引用(解绑)
      * todo 考虑union symbol
      */
-    extractSymbol(shapes: Shape[]) {
+    extractSymbol(shapes: ShapeView[]) {
         const actions: {
             parent: Shape,
             self: Shape,
@@ -971,7 +973,7 @@ export class PageEditor {
 
         const return_shapes: Shape[] = [];
         for (let i = 0, len = shapes.length; i < len; i++) {
-            const shape: SymbolRefShape = shapes[i] as SymbolRefShape;
+            const shape: SymbolRefShape = adapt2Shape(shapes[i]) as SymbolRefShape;
             if (shape.type !== ShapeType.SymbolRef) {
                 return_shapes.push(shape);
                 continue;
@@ -1001,6 +1003,10 @@ export class PageEditor {
             tmpArtboard.transform.m02 = shape.transform.m02;
             tmpArtboard.transform.m12 = shape.transform.m12;
             tmpArtboard.cornerRadius = shape.cornerRadius;
+            const layoutInfo = (shapes[i] as SymbolRefView).autoLayout;
+            if (layoutInfo) {
+                tmpArtboard.autoLayout = importAutoLayout(layoutInfo);
+            }
             const symbolData = exportArtboard(tmpArtboard); // todo 如果symbol只有一个child时
 
             // 遍历symbolData,如有symbolref,则查找根shape是否有对应override的变量,如有则存到symbolref内
