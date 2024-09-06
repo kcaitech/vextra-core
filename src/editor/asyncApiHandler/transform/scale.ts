@@ -470,12 +470,13 @@ export function reLayoutByUniformScale(
     container: ShapeView[],
     _rangeRecorder?: RangeRecorder,
     _sizeRecorder?: SizeRecorder,
-    _transformRecorder?: TransformRecorder
+    _transformRecorder?: TransformRecorder,
+    _valueRecorder?: Map<string, number>
 ) {
     const rangeRecorder: RangeRecorder = _rangeRecorder ?? new Map();
     const sizeRecorder: SizeRecorder = _sizeRecorder ?? new Map();
     const transformRecorder: TransformRecorder = _transformRecorder ?? new Map();
-
+    const valueRecorder: Map<string, number> = _valueRecorder ?? new Map();
     const children = shape.childs;
     const { x: SX, y: SY } = scale;
 
@@ -515,7 +516,7 @@ export function reLayoutByUniformScale(
         api.shapeModifyTransform(page, data, makeShapeTransform1By2(transform));
 
         if (child instanceof GroupShapeView) {
-            reLayoutByUniformScale(api, page, child, _scale, container, rangeRecorder, sizeRecorder, transformRecorder);
+            reLayoutByUniformScale(api, page, child, _scale, container, rangeRecorder, sizeRecorder, transformRecorder, valueRecorder);
         }
 
         function getSize(s: ShapeView) {
@@ -544,7 +545,20 @@ export function reLayoutByUniformScale(
     }
 }
 
-export function uniformScale(api: Api, page: Page, units: UniformScaleUnit[], ratio: number) {
+export function uniformScale(
+    api: Api,
+    page: Page,
+    units: UniformScaleUnit[],
+    ratio: number,
+    _rangeRecorder?: RangeRecorder,
+    _sizeRecorder?: SizeRecorder,
+    _transformRecorder?: TransformRecorder,
+    _valueRecorder?: Map<string, number>
+) {
+    const rangeRecorder: RangeRecorder = _rangeRecorder ?? new Map();
+    const sizeRecorder: SizeRecorder = _sizeRecorder ?? new Map();
+    const transformRecorder: TransformRecorder = _transformRecorder ?? new Map();
+    const valueRecorder: Map<string, number> = _valueRecorder ?? new Map();
     const container4modifyStyle: ShapeView[] = [];
     for (const unit of units) {
         const { transform, shape: view, size, decomposeScale } = unit;
@@ -553,21 +567,39 @@ export function uniformScale(api: Api, page: Page, units: UniformScaleUnit[], ra
         api.shapeModifyTransform(page, shape, makeShapeTransform1By2(transform));
         api.shapeModifyWH(page, shape, size.width, size.height);
 
-        if (view instanceof GroupShapeView) reLayoutByUniformScale(api, page, view, decomposeScale, container4modifyStyle);
+        if (view instanceof GroupShapeView) reLayoutByUniformScale(api, page, view, decomposeScale, container4modifyStyle, rangeRecorder, sizeRecorder, transformRecorder);
     }
     const textSet: TextShapeLike[] = [];
     for (const view of container4modifyStyle) {
         const shape = adapt2Shape(view);
         const borders = shape.getBorders();
         borders.forEach((b, i) => {
-            api.setBorderSide(page, shape, i, new BorderSideSetting(SideType.Normal, b.sideSetting.thicknessTop * ratio, b.sideSetting.thicknessLeft * ratio, b.sideSetting.thicknessBottom * ratio, b.sideSetting.thicknessRight * ratio));
+            const bId = b.id + shape.id;
+            const thicknessTop = getBaseValue(bId, 'thicknessTop', b.sideSetting.thicknessTop);
+            const thicknessLeft = getBaseValue(bId, 'thicknessLeft', b.sideSetting.thicknessLeft);
+            const thicknessBottom = getBaseValue(bId, 'thicknessBottom', b.sideSetting.thicknessBottom);
+            const thicknessRight = getBaseValue(bId, 'thicknessRight', b.sideSetting.thicknessRight);
+            const setting = new BorderSideSetting(
+                SideType.Normal,
+                thicknessTop * ratio,
+                thicknessLeft * ratio,
+                thicknessBottom * ratio,
+                thicknessRight * ratio
+            );
+
+            api.setBorderSide(page, shape, i, setting);
         });
         const shadows = shape.getShadows();
         shadows.forEach((s, i) => {
-            api.setShadowBlur(page, shape, i, s.blurRadius * ratio);
-            api.setShadowOffsetX(page, shape, i, s.offsetX * ratio);
-            api.setShadowOffsetY(page, shape, i, s.offsetY * ratio);
-            api.setShadowSpread(page, shape, i, s.spread * ratio)
+            const sId = s.id + shape.id;
+            const blurRadius = getBaseValue(sId, 'blurRadius', s.blurRadius);
+            api.setShadowBlur(page, shape, i, blurRadius * ratio);
+            const offsetX = getBaseValue(sId, 'offsetX', s.offsetX);
+            api.setShadowOffsetX(page, shape, i, offsetX * ratio);
+            const offsetY = getBaseValue(sId, 'offsetY', s.offsetY);
+            api.setShadowOffsetY(page, shape, i, offsetY * ratio);
+            const spread = getBaseValue(sId, 'spread', s.spread);
+            api.setShadowSpread(page, shape, i, spread * ratio)
         });
 
         if (view instanceof TextShapeView) textSet.push(view);
@@ -582,38 +614,57 @@ export function uniformScale(api: Api, page: Page, units: UniformScaleUnit[], ra
     for (const textLike of textSet) scale4text(textLike);
 
     function scale4text(text: TextShapeLike) {
-        const paraSpacing = text.text.attr?.paraSpacing;
-        if (paraSpacing !== undefined) {
+        const paraSpacing = getBaseValue(text.id, 'paraSpacing', text.text.attr?.paraSpacing || 0);
+        if (paraSpacing) {
             api.textModifyParaSpacing(page, text, paraSpacing * ratio, 0, text.text.length);
         }
         let index = 0;
-        for (const paras of text.text.paras) {
+        for (let j = 0; j < text.text.paras.length; j++) {
+            const para = text.text.paras[j];
+            const pId = text.id + j;
+            const minimumLineHeight = getBaseValue(pId, 'minimumLineHeight', para.attr?.minimumLineHeight || 0);
+            if (minimumLineHeight) {
+                api.textModifyMinLineHeight(page, text, minimumLineHeight * ratio, index, para.length);
+            }
+            const maximumLineHeight = getBaseValue(pId, 'maximumLineHeight', para.attr?.maximumLineHeight || 0);
+            if (maximumLineHeight) {
+                api.textModifyMaxLineHeight(page, text, maximumLineHeight * ratio, index, para.length);
+            }
             let __index = index;
-            const spans = paras.spans;
-            for (const span of spans) {
-                if (span.fontSize !== undefined) {
-                    api.textModifyFontSize(page, text, __index, span.length, span.fontSize * ratio);
+            const spans = para.spans;
+            for (let i = 0; i < spans.length; i++) {
+                const span = spans[i];
+                const sId = text.id + i + j;
+                const spanFontSize = getBaseValue(sId, 'spanFontSize', span.fontSize || 0);
+                if (spanFontSize) {
+                    api.textModifyFontSize(page, text, __index, span.length, spanFontSize * ratio);
                 }
-                if (span.kerning) {
-                    api.textModifyKerning(page, text, __index, span.length, span.kerning * ratio);
+                const spanKerning = getBaseValue(sId, 'spanKerning', span.kerning || 0);
+                if (spanKerning) {
+                    api.textModifyKerning(page, text, __index, span.length, spanKerning * ratio);
                 }
                 __index += span.length;
             }
-            if (paras.attr?.minimumLineHeight !== undefined) {
-                api.textModifyMinLineHeight(page, text, paras.attr.minimumLineHeight * ratio, index, paras.length);
-            }
-            if (paras.attr?.maximumLineHeight !== undefined) {
-                api.textModifyMaxLineHeight(page, text, paras.attr.maximumLineHeight * ratio, index, paras.length);
-            }
-            index += paras.length;
+            index += para.length;
         }
+    }
+
+    function getBaseValue(id: string, key: string, current: number) {
+        const dKey = id + key;
+        let value = valueRecorder.get(dKey)!;
+        if (value === undefined) {
+            value = current;
+            valueRecorder.set(dKey, value);
+        }
+        return value;
     }
 }
 
 export class Scaler extends AsyncApiCaller {
     private recorder: RangeRecorder = new Map();
     private sizeRecorder: SizeRecorder = new Map();
-    private transformRecorder: TransformRecorder = new Map;
+    private transformRecorder: TransformRecorder = new Map();
+    private valueRecorder: Map<string, number> = new Map();
 
     constructor(repo: CoopRepository, document: Document, page: PageView) {
         super(repo, document, page);
@@ -673,6 +724,16 @@ export class Scaler extends AsyncApiCaller {
                 }
             }
 
+            this.updateView();
+        } catch (error) {
+            console.log('error:', error);
+            this.exception = true;
+        }
+    }
+
+    executeUniform(units: UniformScaleUnit[], ratio: number) {
+        try {
+            uniformScale(this.api, this.page, units, ratio, this.recorder, this.sizeRecorder, this.transformRecorder, this.valueRecorder);
             this.updateView();
         } catch (error) {
             console.log('error:', error);
