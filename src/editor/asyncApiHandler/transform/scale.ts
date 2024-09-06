@@ -13,7 +13,15 @@ import {
     TextBehaviour,
     TextShape,
 } from "../../../data";
-import { adapt2Shape, GroupShapeView, PageView, ShapeView, TextShapeView } from "../../../dataview";
+import {
+    adapt2Shape,
+    GroupShapeView,
+    PageView,
+    ShapeView,
+    TableCellView,
+    TableView,
+    TextShapeView
+} from "../../../dataview";
 import { Api, TextShapeLike } from "../../coop/recordapi";
 import { fixTextShapeFrameByLayout } from "../../utils/other";
 import { Transform as Transform2 } from "../../../basic/transform";
@@ -547,6 +555,7 @@ export function uniformScale(api: Api, page: Page, units: UniformScaleUnit[], ra
 
         if (view instanceof GroupShapeView) reLayoutByUniformScale(api, page, view, decomposeScale, container4modifyStyle);
     }
+    const textSet: TextShapeLike[] = [];
     for (const view of container4modifyStyle) {
         const shape = adapt2Shape(view);
         const borders = shape.getBorders();
@@ -560,17 +569,22 @@ export function uniformScale(api: Api, page: Page, units: UniformScaleUnit[], ra
             api.setShadowOffsetY(page, shape, i, s.offsetY * ratio);
             api.setShadowSpread(page, shape, i, s.spread * ratio)
         });
-        if (view instanceof TextShapeView) {
 
+        if (view instanceof TextShapeView) textSet.push(view);
+        if (view instanceof TableView) {
+            for (const child of view.childs) {
+                const cell = child as TableCellView;
+                if (cell.text.paras.length === 1 && cell.text.paras[0].text === '\n') continue;
+                textSet.push(cell);
+            }
         }
     }
+    for (const textLike of textSet) scale4text(textLike);
 
     function scale4text(text: TextShapeLike) {
         const paraSpacing = text.text.attr?.paraSpacing;
-
         if (paraSpacing !== undefined) {
             api.textModifyParaSpacing(page, text, paraSpacing * ratio, 0, text.text.length);
-        } else {
         }
         let index = 0;
         for (const paras of text.text.paras) {
@@ -578,12 +592,18 @@ export function uniformScale(api: Api, page: Page, units: UniformScaleUnit[], ra
             const spans = paras.spans;
             for (const span of spans) {
                 if (span.fontSize !== undefined) {
-                    api.textModifyFontSize(page, text, index, span.length, span.fontSize * ratio);
+                    api.textModifyFontSize(page, text, __index, span.length, span.fontSize * ratio);
                 }
                 if (span.kerning) {
-                    api.textModifyKerning(page, text, index, span.length, span.kerning * ratio);
+                    api.textModifyKerning(page, text, __index, span.length, span.kerning * ratio);
                 }
                 __index += span.length;
+            }
+            if (paras.attr?.minimumLineHeight !== undefined) {
+                api.textModifyMinLineHeight(page, text, paras.attr.minimumLineHeight * ratio, index, paras.length);
+            }
+            if (paras.attr?.maximumLineHeight !== undefined) {
+                api.textModifyMaxLineHeight(page, text, paras.attr.maximumLineHeight * ratio, index, paras.length);
             }
             index += paras.length;
         }
