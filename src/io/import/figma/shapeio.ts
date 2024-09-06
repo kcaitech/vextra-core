@@ -386,7 +386,7 @@ function hasTextProp(data: any, ancestorData: any) {
 
 function getProps(obj: any, keys: string[]) {
     const result: any = {};
-    for (const key in keys) if (key in obj) result[key] = obj[key];
+    for (const key of keys) if (key in obj) result[key] = obj[key];
     return result;
 }
 
