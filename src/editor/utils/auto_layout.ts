@@ -2,6 +2,7 @@ import {
     Artboard,
     AutoLayout,
     BorderPosition,
+    GroupShape,
     Page,
     Shape,
     ShapeFrame,
@@ -552,7 +553,7 @@ export const getAutoLayoutShapes = (shapes: ShapeView[]) => {
 }
 
 function boundingBox(shape: Shape, includedBorder?: boolean): ShapeFrame {
-    let frame = { ...shape.frame };
+    let frame = { ...getShapeFrame(shape) };
     if (includedBorder) {
         const borders = shape.getBorders();
         let maxtopborder = 0;
@@ -590,5 +591,27 @@ function boundingBox(shape: Shape, includedBorder?: boolean): ShapeFrame {
     const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
     const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
     const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
+    return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
+}
+
+const getShapeFrame = (shape: Shape) => {
+    if (shape.type !== ShapeType.Group) return shape.frame;
+    const childframes = (shape as GroupShape).childs.map((c) => c.boundingBox());
+    const reducer = (p: { minx: number, miny: number, maxx: number, maxy: number }, c: ShapeFrame, i: number) => {
+        if (i === 0) {
+            p.minx = c.x;
+            p.maxx = c.x + c.width;
+            p.miny = c.y;
+            p.maxy = c.y + c.height;
+        } else {
+            p.minx = Math.min(p.minx, c.x);
+            p.maxx = Math.max(p.maxx, c.x + c.width);
+            p.miny = Math.min(p.miny, c.y);
+            p.maxy = Math.max(p.maxy, c.y + c.height);
+        }
+        return p;
+    }
+    const bounds = childframes.reduce(reducer, { minx: 0, miny: 0, maxx: 0, maxy: 0 });
+    const { minx, miny, maxx, maxy } = bounds;
     return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
 }
