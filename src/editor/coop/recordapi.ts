@@ -1266,6 +1266,10 @@ export class Api {
         if (!item.exportOptions) return;
         this.addOp(basicapi.setPageExportPreviewUnfold(item.exportOptions, unfold));
     }
+    modifySymbolRefInnerEnvScale(page: Page, shape: SymbolRefShape, innerScale: number) {
+        checkShapeAtPage(page, shape);
+        this.addOp(crdtSetAttr(shape,'innerEnvScale', innerScale));
+    }
 
     // text
     insertSimpleText(page: Page, shape: TextShapeLike | Variable, idx: number, text: string, attr?: SpanAttr) {
