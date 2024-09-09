@@ -558,8 +558,6 @@ export class SymbolRefView extends ShapeView {
             children = [mask, rely];
         }
 
-        // children = [elh('g', { transform: 'scale(1.5)' }, children)];
-
         this.reset("g", props, children);
 
         return ++this.m_render_version;
