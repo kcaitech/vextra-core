@@ -321,7 +321,7 @@ inject['TableCell']['before'] = `\
                 text: "\\n",
                 spans: [
                     {
-                        fontName: ${is_mac() ? "PingFang SC" : "微软雅黑"},
+                        fontName: is_mac() ? "PingFang SC" : "微软雅黑",
                         fontSize: 14,
                         length: 1,
                         color: {

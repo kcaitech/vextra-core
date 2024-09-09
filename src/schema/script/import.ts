@@ -262,6 +262,7 @@ export function gen(out: string) {
     $.nl('import { BasicArray, BasicMap } from "./basic"')
     $.nl('import { uuid } from "../basic/uuid"')
     $.nl('import { compatibleOldData } from "./basecompatible"')
+    $.nl('import { is_mac } from "./utils"')
 
     $.nl('export interface IImportContext ').sub(() => {
         $.nl('document: impl.Document')
