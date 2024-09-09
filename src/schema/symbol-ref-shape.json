@@ -31,6 +31,9 @@
         },
         "cornerRadius": {
             "$ref": "./corner-radius.json"
+        },
+        "innerEnvScale": {
+            "type": "number"
         }
     },
     "required": [

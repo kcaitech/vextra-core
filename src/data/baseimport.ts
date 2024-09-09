@@ -1479,6 +1479,7 @@ function importSymbolRefShapeOptional(tar: impl.SymbolRefShape, source: types.Sy
     })()
     if (source.isCustomSize) tar.isCustomSize = source.isCustomSize
     if (source.cornerRadius) tar.cornerRadius = importCornerRadius(source.cornerRadius, ctx)
+    if (source.innerEnvScale) tar.innerEnvScale = source.innerEnvScale
 }
 export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImportContext): impl.SymbolRefShape {
         // inject code

@@ -1169,6 +1169,7 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
     })()
     if (source.isCustomSize) ret.isCustomSize = source.isCustomSize
     if (source.cornerRadius) ret.cornerRadius = exportCornerRadius(source.cornerRadius, ctx)
+    if (source.innerEnvScale) ret.innerEnvScale = source.innerEnvScale
         // inject code
     if (ctx?.refsymbols) ctx.refsymbols.add(ret.refId);
 

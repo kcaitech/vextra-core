@@ -935,6 +935,7 @@ export type SymbolRefShape = Shape & {
     overrides?: Map<string, string>,
     isCustomSize?: boolean,
     cornerRadius?: CornerRadius,
+    innerEnvScale?: number,
 }
 /* contact shape */
 export type ContactShape = PathShape & {
