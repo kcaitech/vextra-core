@@ -4,6 +4,7 @@ import * as types from "./typesdefine"
 import { BasicArray, BasicMap } from "./basic"
 import { uuid } from "../basic/uuid"
 import { compatibleOldData } from "./basecompatible"
+import { is_mac } from "./utils"
 export interface IImportContext {
     document: impl.Document
     curPage: string
@@ -1161,7 +1162,7 @@ export function importTableCell(source: types.TableCell, ctx?: IImportContext): 
                 text: "\n",
                 spans: [
                     {
-                        fontName: "PingFang SC",
+                        fontName: is_mac() ? "PingFang SC" : "微软雅黑",
                         fontSize: 14,
                         length: 1,
                         color: {
