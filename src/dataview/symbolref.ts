@@ -15,10 +15,10 @@ import {
     SymbolUnionShape,
     Variable,
     VariableType,
-    getPathOfRadius
+    getPathOfRadius,
+    ShapeType
 } from "../data/classes";
 import { fixFrameByConstrain, frame2Parent2, ShapeView } from "./shape";
-import { ShapeType } from "../data/classes";
 import { DataView, RootView } from "./view";
 import { getShapeViewId } from "./basic";
 import { DViewCtx, PropsType, VarsContainer } from "./viewctx";
@@ -41,7 +41,6 @@ export class SymbolRefView extends ShapeView {
         this.symwatcher = this.symwatcher.bind(this);
         this.loadsym();
         this.updateMaskMap();
-        // this.afterInit();
     }
 
     onMounted(): void {
@@ -60,10 +59,6 @@ export class SymbolRefView extends ShapeView {
         this._layout(this.m_data, parentFrame, varsContainer, this.m_scale);
         this.updateFrames();
     }
-
-    // protected isNoSupportDiamondScale(): boolean {
-    //     return this.m_data.isNoSupportDiamondScale;
-    // }
 
     getDataChilds(): Shape[] {
         return this.m_sym ? this.m_sym.childs : [];
@@ -210,10 +205,7 @@ export class SymbolRefView extends ShapeView {
         if (this.m_sym) this.m_sym.unwatch(this.symwatcher);
     }
 
-    private layoutChild(child: Shape, idx: number, scale: {
-        x: number,
-        y: number
-    } | undefined, varsContainer: VarsContainer | undefined, resue: Map<string, DataView>, rView: RootView | undefined): boolean {
+    private layoutChild(child: Shape, idx: number, scale: { x: number, y: number } | undefined, varsContainer: VarsContainer | undefined, resue: Map<string, DataView>, rView: RootView | undefined): boolean {
         let cdom: DataView | undefined = resue.get(child.id);
         const props = { data: child, scale, varsContainer, isVirtual: true };
 
@@ -262,10 +254,7 @@ export class SymbolRefView extends ShapeView {
         this._layout(this.data, parentFrame, varsContainer, this.m_scale)
     }
 
-    protected _layout(shape: Shape, parentFrame: ShapeSize | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, _scale: {
-        x: number;
-        y: number;
-    } | undefined): void {
+    protected _layout(shape: Shape, parentFrame: ShapeSize | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, _scale: { x: number; y: number; } | undefined): void {
         if (!this.m_sym) {
             this.updateLayoutArgs(shape.transform, shape.frame, 0);
             this.removeChilds(0, this.m_children.length).forEach((c) => c.destory());
@@ -364,10 +353,7 @@ export class SymbolRefView extends ShapeView {
         this.layoutChilds(varsContainer, this.frame, childscale);
     }
 
-    protected layoutChilds(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, parentFrame: ShapeSize | undefined, scale?: {
-        x: number,
-        y: number
-    }): void {
+    protected layoutChilds(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, parentFrame: ShapeSize | undefined, scale?: { x: number, y: number }): void {
         const childs = this.getDataChilds();
         const resue: Map<string, DataView> = new Map();
         this.m_children.forEach((c) => resue.set(c.data.id, c));
