@@ -1270,7 +1270,14 @@ export class Api {
         checkShapeAtPage(page, shape);
         this.addOp(crdtSetAttr(shape,'innerEnvScale', innerScale));
     }
-
+    modifyShapeScale(page: Page, shape: Shape, value: number) {
+        checkShapeAtPage(page, shape);
+        this.addOp(crdtSetAttr(shape,'scale', value));
+    }
+    modifyShapeStyleWeight(page: Page, shape: Shape, value: number) {
+        checkShapeAtPage(page, shape);
+        this.addOp(crdtSetAttr(shape,'styleWeight', value));
+    }
     // text
     insertSimpleText(page: Page, shape: TextShapeLike | Variable, idx: number, text: string, attr?: SpanAttr) {
         checkShapeAtPage(page, shape);

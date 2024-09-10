@@ -566,10 +566,13 @@ export function uniformScale(
         const shape = adapt2Shape(view);
         api.shapeModifyTransform(page, shape, makeShapeTransform1By2(transform));
 
-        if (shape.hasSize()) api.shapeModifyWH(page, shape, size.width, size.height);
-
-        if (shape instanceof SymbolRefShape && !shape.isCustomSize) {
-            api.shapeModifyIsCustomSize(page, shape, true);
+        if (shape instanceof SymbolRefShape) {
+            if (shape.isCustomSize) api.shapeModifyIsCustomSize(page, shape, true);
+            const oSize = getSize(view);
+            const scale = size.width / oSize.width;
+            api.modifyShapeScale(page, shape, scale);
+        } else {
+            if (shape.hasSize()) api.shapeModifyWH(page, shape, size.width, size.height);
         }
 
         if (view instanceof GroupShapeView) reLayoutByUniformScale(api, page, view, decomposeScale, container4modifyStyle, rangeRecorder, sizeRecorder, transformRecorder);
@@ -662,6 +665,21 @@ export function uniformScale(
             valueRecorder.set(dKey, value);
         }
         return value;
+    }
+
+    function getSize(s: ShapeView) {
+        let size = sizeRecorder.get(s.id);
+        if (!size) {
+            const f = s.frame;
+            size = {
+                x: f.x,
+                y: f.y,
+                width: f.width,
+                height: f.height
+            };
+            sizeRecorder.set(s.id, size);
+        }
+        return size;
     }
 }
 
