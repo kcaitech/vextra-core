@@ -94,6 +94,12 @@
         },
         "mask": {
             "type": "boolean"
+        },
+        "scale": {
+            "type": "number"
+        },
+        "styleWeight": {
+            "type": "number"
         }
     },
     "required": [

@@ -264,7 +264,6 @@ export class SymbolRefView extends ShapeView {
             this.removeChilds(0, this.m_children.length).forEach((c) => c.destory());
             return;
         }
-
         const prescale = { x: _scale?.x ?? 1, y: _scale?.y ?? 1 }
         const scale = { x: prescale.x, y: prescale.y }
         const childscale = { x: scale.x, y: scale.y }
@@ -284,7 +283,6 @@ export class SymbolRefView extends ShapeView {
         if (scale.x === 1 && scale.y === 1) {
             let frame = this.data.frame;
             this.updateLayoutArgs(transform, frame, 0);
-            // childscale.x = 2;
             this.layoutChilds(varsContainer, this.frame, childscale);
             return;
         }
@@ -347,7 +345,7 @@ export class SymbolRefView extends ShapeView {
         // const lt = inverse.computeCoord(frame.x, frame.y); // 应该是{0，0}
         // if (Math.abs(lt.x) > float_accuracy || Math.abs(lt.y) > float_accuracy) throw new Error();
         const rb = inverse.computeCoord(frame.x + frame.width, frame.y + frame.height);
-        const size2 = new ShapeFrame(0, 0, (rb.x), (rb.y));
+        const size2 = new ShapeFrame(0, 0, rb.x, rb.y);
         this.updateLayoutArgs(t, size2, 0);
         // 重新计算 childscale
         childscale.x = size2.width / this.m_sym.size.width;
@@ -365,7 +363,7 @@ export class SymbolRefView extends ShapeView {
         const rootView = this.getRootView();
         let changed = false;
         for (let i = 0, len = childs.length; i < len; i++) {
-            const cc = childs[i]
+            const cc = childs[i];
             // update childs
             if (this.layoutChild(cc, i, scale, varsContainer, resue, rootView)) changed = true;
         }

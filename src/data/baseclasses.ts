@@ -878,6 +878,8 @@ export class Shape extends Basic {
     overlayBackgroundAppearance?: OverlayBackgroundAppearance
     scrollDirection?: ScrollDirection
     mask?: boolean
+    scale?: number
+    styleWeight?: number
     constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style) {
         super()
         this.crdtidx = crdtidx

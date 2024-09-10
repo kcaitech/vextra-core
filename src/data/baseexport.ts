@@ -1008,6 +1008,8 @@ export function exportShape(source: types.Shape, ctx?: IExportContext): types.Sh
     if (source.overlayBackgroundAppearance) ret.overlayBackgroundAppearance = exportOverlayBackgroundAppearance(source.overlayBackgroundAppearance, ctx)
     if (source.scrollDirection) ret.scrollDirection = exportScrollDirection(source.scrollDirection, ctx)
     if (source.mask) ret.mask = source.mask
+    if (source.scale) ret.scale = source.scale
+    if (source.styleWeight) ret.styleWeight = source.styleWeight
     return ret
 }
 /* table cell */

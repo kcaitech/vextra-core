@@ -671,21 +671,17 @@ export class ShapeView extends DataView {
         x: number,
         y: number
     } | undefined) {
-
         const transform = shape.transform;
         // case 1 不需要变形
         if (!scale || scale.x === 1 && scale.y === 1) {
-            // update frame, hflip, vflip, rotate
             let frame = this.frame;
-            if (this.hasSize()) {
-                frame = this.data.frame;
-            }
+            if (this.hasSize()) frame = this.data.frame;
             this.updateLayoutArgs(transform, frame, (shape as PathShape).fixedRadius);
             this.layoutChilds(varsContainer, this.frame);
             return;
         }
 
-        const skewTransfrom = (scalex: number, scaley: number) => {
+        const skewTransform = (scalex: number, scaley: number) => {
             let t = transform;
             if (scalex !== scaley) {
                 t = t.clone();
@@ -706,7 +702,7 @@ export class ShapeView extends DataView {
             const t0 = transform.clone();
             t0.scale(scale.x, scale.y);
             const save1 = t0.computeCoord(0, 0);
-            const t = skewTransfrom(scale.x, scale.y).clone();
+            const t = skewTransform(scale.x, scale.y).clone();
             const save2 = t.computeCoord(0, 0)
             const dx = save1.x - save2.x;
             const dy = save1.y - save2.y;
@@ -735,10 +731,9 @@ export class ShapeView extends DataView {
             frame.height *= scale.y;
         }
 
-        const t = skewTransfrom(scaleX, scaleY).clone();
+        const t = skewTransform(scaleX, scaleY).clone();
         const cur = t.computeCoord(0, 0);
         t.trans(frame.x - cur.x, frame.y - cur.y);
-
         const inverse = t.inverse;
         // const lt = inverse.computeCoord(frame.x, frame.y); // 应该是{0，0}
         // if (Math.abs(lt.x) > float_accuracy || Math.abs(lt.y) > float_accuracy) throw new Error();
@@ -790,9 +785,7 @@ export class ShapeView extends DataView {
         // todo props没更新时是否要update
         // 在frame、flip、rotate修改时需要update
         const needLayout = this.m_ctx.removeReLayout(this); // remove from changeset
-        if (props && !this.updateLayoutProps(props, needLayout)) {
-            return;
-        }
+        if (props && !this.updateLayoutProps(props, needLayout)) return;
 
         const parent = this.parent;
         const parentFrame = parent?.hasSize() ? parent.frame : undefined;
