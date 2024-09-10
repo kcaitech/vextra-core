@@ -205,7 +205,10 @@ export class SymbolRefView extends ShapeView {
         if (this.m_sym) this.m_sym.unwatch(this.symwatcher);
     }
 
-    private layoutChild(child: Shape, idx: number, scale: { x: number, y: number } | undefined, varsContainer: VarsContainer | undefined, resue: Map<string, DataView>, rView: RootView | undefined): boolean {
+    private layoutChild(child: Shape, idx: number, scale: {
+        x: number,
+        y: number
+    } | undefined, varsContainer: VarsContainer | undefined, resue: Map<string, DataView>, rView: RootView | undefined): boolean {
         let cdom: DataView | undefined = resue.get(child.id);
         const props = { data: child, scale, varsContainer, isVirtual: true };
 
@@ -234,9 +237,7 @@ export class SymbolRefView extends ShapeView {
 
     layout(props?: PropsType | undefined): void {
         const needLayout = this.m_ctx.removeReLayout(this); // remove from changeset
-        if (props && !this.updateLayoutProps(props, needLayout)) {
-            return;
-        }
+        if (props && !this.updateLayoutProps(props, needLayout)) return;
 
         this.m_ctx.setDirty(this);
         this.m_ctx.addNotifyLayout(this);
@@ -254,7 +255,10 @@ export class SymbolRefView extends ShapeView {
         this._layout(this.data, parentFrame, varsContainer, this.m_scale)
     }
 
-    protected _layout(shape: Shape, parentFrame: ShapeSize | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, _scale: { x: number; y: number; } | undefined): void {
+    protected _layout(shape: Shape, parentFrame: ShapeSize | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, _scale: {
+        x: number;
+        y: number;
+    } | undefined): void {
         if (!this.m_sym) {
             this.updateLayoutArgs(shape.transform, shape.frame, 0);
             this.removeChilds(0, this.m_children.length).forEach((c) => c.destory());
@@ -266,22 +270,21 @@ export class SymbolRefView extends ShapeView {
         const childscale = { x: scale.x, y: scale.y }
 
         // 调整过大小的，使用用户调整的大小，否则跟随symbol大小
-        if (!(this.m_data as SymbolRefShape).isCustomSize) {
-            // 跟随symbol大小
-            // 
-            scale.x *= this.m_sym.size.width / this.m_data.size.width;
-            scale.y *= this.m_sym.size.height / this.m_data.size.height;
-        } else {
+        if ((this.m_data as SymbolRefShape).isCustomSize) {
             // 使用自己大小
             childscale.x *= this.m_data.size.width / this.m_sym.size.width;
             childscale.y *= this.m_data.size.height / this.m_sym.size.height;
+        } else {
+            // 跟随symbol大小
+            scale.x *= this.m_sym.size.width / this.m_data.size.width;
+            scale.y *= this.m_sym.size.height / this.m_data.size.height;
         }
-
         const transform = shape.transform;
         // case 1 不需要变形
         if (scale.x === 1 && scale.y === 1) {
             let frame = this.data.frame;
             this.updateLayoutArgs(transform, frame, 0);
+            // childscale.x = 2;
             this.layoutChilds(varsContainer, this.frame, childscale);
             return;
         }
@@ -349,11 +352,13 @@ export class SymbolRefView extends ShapeView {
         // 重新计算 childscale
         childscale.x = size2.width / this.m_sym.size.width;
         childscale.y = size2.height / this.m_sym.size.height;
-
         this.layoutChilds(varsContainer, this.frame, childscale);
     }
 
-    protected layoutChilds(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, parentFrame: ShapeSize | undefined, scale?: { x: number, y: number }): void {
+    protected layoutChilds(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, parentFrame: ShapeSize | undefined, scale?: {
+        x: number,
+        y: number
+    }): void {
         const childs = this.getDataChilds();
         const resue: Map<string, DataView> = new Map();
         this.m_children.forEach((c) => resue.set(c.data.id, c));
@@ -362,12 +367,10 @@ export class SymbolRefView extends ShapeView {
         for (let i = 0, len = childs.length; i < len; i++) {
             const cc = childs[i]
             // update childs
-            if (this.layoutChild(cc, i, scale, varsContainer, resue, rootView)) {
-                changed = true;
-            }
+            if (this.layoutChild(cc, i, scale, varsContainer, resue, rootView)) changed = true;
         }
-        // 删除多余的
 
+        // 删除多余的
         if (this.m_children.length > childs.length) {
             const removes = this.removeChilds(childs.length, Number.MAX_VALUE);
             if (rootView) rootView.addDelayDestory(removes);
@@ -375,9 +378,7 @@ export class SymbolRefView extends ShapeView {
             changed = true;
         }
 
-        if (changed) {
-            this.notify("childs");
-        }
+        if (changed) this.notify("childs");
     }
 
 

@@ -5,6 +5,9 @@ import { DViewCtx, PropsType } from "./viewctx";
 import { EL, elh } from "./el";
 import { renderBorders } from "../render";
 
+/**
+ * @deprecated 使用PathShapeView
+ */
 export class PathShapeView2 extends ShapeView {
 
     constructor(ctx: DViewCtx, props: PropsType) {
