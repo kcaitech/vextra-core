@@ -438,6 +438,7 @@ export class ShapeView extends DataView {
         if (p) {
             const offset = (p as ArtboradView).innerTransform;
             offset && m.multiAtLeft(offset.toMatrix())
+            if (p.scale) m.scale(p.scale);
             m.multiAtLeft(p.matrix2Root())
         }
         return m;
@@ -491,7 +492,9 @@ export class ShapeView extends DataView {
     }
 
     matrix2Parent(matrix?: Matrix) {
-        return matrix2parent(this.transform, matrix);
+        const m = matrix2parent(this.transform, matrix);
+        if (this.parent!.scale) m.scale(this.parent!.scale);
+        return m;
     }
 
     getFills(): Fill[] {
@@ -1229,5 +1232,9 @@ export class ShapeView extends DataView {
             }
         })
         this.m_ctx.setDirty(this);
+    }
+
+    get scale() {
+        return this.data.scale;
     }
 }

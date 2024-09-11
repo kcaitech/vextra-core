@@ -503,7 +503,10 @@ export class SymbolRefView extends ShapeView {
 
         const fills = this.renderFills();
         const borders = this.renderBorders();
-        const childs = this.renderContents();
+        let childs = this.renderContents();
+
+        if (this.scale) childs = [elh('g', { transform: `scale(${this.scale})` }, childs)];
+
 
         const filterId = `${objectId(this)}`;
         const shadows = this.renderShadows(filterId);
