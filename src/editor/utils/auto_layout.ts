@@ -618,9 +618,10 @@ const getShapeFrame = (shape: Shape) => {
 
 
 export const tidyUpLayout = (page: Page, api: Api, shape_rows: ShapeView[][], horSpacing: number, verSpacing: number) => {
-    const frast_frame = shape_rows[0][0]._p_frame;
-    let leftTrans = frast_frame.x; //水平起点
-    let topTrans = frast_frame.y; //垂直起点
+    const minX = Math.min(...shape_rows[0].map(s => s._p_frame.x));
+    const minY = Math.min(...shape_rows[0].map(s => s._p_frame.y));
+    let leftTrans = minX; //水平起点
+    let topTrans = minY; //垂直起点
     for (let i = 0; i < shape_rows.length; i++) {
         const shape_row = shape_rows[i];
         // 更新当前行的最大高度
@@ -642,7 +643,7 @@ export const tidyUpLayout = (page: Page, api: Api, shape_rows: ShapeView[][], ho
                 transx = leftTrans - frame.x;
                 transy = topTrans + verticalOffset - frame.y;
             }
-            
+
             const x = shape.transform.translateX + transx;
             const y = shape.transform.translateY + transy;
             api.shapeModifyX(page, adapt2Shape(shape), x);
@@ -651,7 +652,7 @@ export const tidyUpLayout = (page: Page, api: Api, shape_rows: ShapeView[][], ho
             // 更新下一个图形的 x 坐标
             leftTrans += frame.width + horSpacing;
         }
-        leftTrans = frast_frame.x; // 重置为左边距
+        leftTrans = minX; // 重置为左边距
         topTrans += maxHeightInRow + verSpacing; // 换行，增加 y 坐标
     }
 }
