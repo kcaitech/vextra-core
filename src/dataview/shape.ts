@@ -438,7 +438,7 @@ export class ShapeView extends DataView {
         if (p) {
             const offset = (p as ArtboradView).innerTransform;
             offset && m.multiAtLeft(offset.toMatrix())
-            if (p.scale) m.scale(p.scale);
+            p.scale && m.scale(p.scale);
             m.multiAtLeft(p.matrix2Root())
         }
         return m;
