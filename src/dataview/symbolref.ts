@@ -268,21 +268,27 @@ export class SymbolRefView extends ShapeView {
         const scale = { x: prescale.x, y: prescale.y }
         const childscale = { x: scale.x, y: scale.y }
 
+        const data_size = this.scale ? {x: 0, y: 0, width: this.m_data.size.width / this.scale, height: this.m_data.size.height / this.scale} : this.m_data.frame;
+
         // 调整过大小的，使用用户调整的大小，否则跟随symbol大小
         if ((this.m_data as SymbolRefShape).isCustomSize) {
             // 使用自己大小
-            childscale.x *= this.m_data.size.width / this.m_sym.size.width;
-            childscale.y *= this.m_data.size.height / this.m_sym.size.height;
+            childscale.x *= data_size.width / this.m_sym.size.width;
+            childscale.y *= data_size.height / this.m_sym.size.height;
         } else {
             // 跟随symbol大小
-            scale.x *= this.m_sym.size.width / this.m_data.size.width;
-            scale.y *= this.m_sym.size.height / this.m_data.size.height;
+            scale.x *= this.m_sym.size.width / data_size.width;
+            scale.y *= this.m_sym.size.height / data_size.height;
         }
         const transform = shape.transform;
         // case 1 不需要变形
         if (scale.x === 1 && scale.y === 1) {
-            let frame = this.data.frame;
+            let frame =  data_size as ShapeFrame; //this.data.frame;
             this.updateLayoutArgs(transform, frame, 0);
+            if (this.scale) {
+                childscale.x /= this.scale;
+                childscale.y /= this.scale;
+            }
             this.layoutChilds(varsContainer, this.frame, childscale);
             return;
         }
@@ -342,8 +348,6 @@ export class SymbolRefView extends ShapeView {
         t.trans(frame.x - cur.x, frame.y - cur.y);
 
         const inverse = t.inverse;
-        // const lt = inverse.computeCoord(frame.x, frame.y); // 应该是{0，0}
-        // if (Math.abs(lt.x) > float_accuracy || Math.abs(lt.y) > float_accuracy) throw new Error();
         const rb = inverse.computeCoord(frame.x + frame.width, frame.y + frame.height);
         const size2 = new ShapeFrame(0, 0, rb.x, rb.y);
         this.updateLayoutArgs(t, size2, 0);

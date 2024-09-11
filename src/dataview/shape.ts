@@ -100,22 +100,17 @@ export function isNoScale(trans: { x: number, y: number } | undefined): boolean 
 }
 
 export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeSize, frame: ShapeFrame, scaleX: number, scaleY: number) {
-    if (shape.parent?.type === ShapeType.Page) return; // page不会有constrain
-    const originParentFrame = shape.parent?.size; // 至少有page!
-    if (!originParentFrame) return;
+    if (shape.parent!.type === ShapeType.Page) return; // page不会有constrain
+    const originParentFrame = shape.parent!.size; // 至少有page!
 
-    const isGroupChild = shape.parent?.type === ShapeType.Group;
-
-    if (isGroupChild) { // 编组的子元素当忽略约束并跟随编组缩放
+    if (shape.parent!.type === ShapeType.Group) { // 编组的子元素当忽略约束并跟随编组缩放
         frame.x *= scaleX;
         frame.y *= scaleY;
         frame.width *= scaleX;
         frame.height *= scaleY;
     } else {
         const resizingConstraint = shape.resizingConstraint ?? 0; // 默认值为靠左、靠顶、宽高固定
-        // const recorder = (window as any).__size_recorder;
         const __f = fixConstrainFrame(resizingConstraint, frame.x, frame.y, frame.width, frame.height, scaleX, scaleY, parentFrame, originParentFrame);
-
         frame.x = __f.x;
         frame.y = __f.y;
         frame.width = __f.width;
@@ -738,8 +733,6 @@ export class ShapeView extends DataView {
         const cur = t.computeCoord(0, 0);
         t.trans(frame.x - cur.x, frame.y - cur.y);
         const inverse = t.inverse;
-        // const lt = inverse.computeCoord(frame.x, frame.y); // 应该是{0，0}
-        // if (Math.abs(lt.x) > float_accuracy || Math.abs(lt.y) > float_accuracy) throw new Error();
         const rb = inverse.computeCoord(frame.x + frame.width, frame.y + frame.height);
         const size2 = new ShapeFrame(0, 0, (rb.x), (rb.y));
 
