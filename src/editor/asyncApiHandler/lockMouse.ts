@@ -31,7 +31,7 @@ import { ColVector3D } from "../../basic/matrix2";
 import { Line, TransformMode } from "../../basic/transform";
 import { reLayoutBySizeChanged } from "./transform";
 import { fixTextShapeFrameByLayout } from "../utils/other";
-import { getAutoLayoutShapes, modifyAutoLayout } from "../utils/auto_layout";
+import { getAutoLayoutShapes, modifyAutoLayout, tidyUpLayout } from "../utils/auto_layout";
 
 export class LockMouseHandler extends AsyncApiCaller {
     updateFrameTargets: Set<Shape> = new Set();
@@ -423,6 +423,19 @@ export class LockMouseHandler extends AsyncApiCaller {
             console.log('LockMouseHandler.executeShadowS');
         }
     }
+
+    executeTidyup(shapes: ShapeView[][], hor: number, ver: number) {
+        try {
+            const api = this.api;
+            const page = this.page;
+            tidyUpLayout(page, api, shapes, hor, ver);
+            this.updateView();
+        } catch (e) {
+            this.exception = true;
+            console.log('LockMouseHandler.executeHorTidyup', e);
+        }
+    }
+
 
     commit() {
         if (this.__repo.isNeedCommit() && !this.exception) {
