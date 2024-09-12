@@ -1029,14 +1029,10 @@ export class PageEditor {
                     scale4Text(text);
                 }
                 const blur = child.style.blur;
-                if (blur?.saturation) {
-                    blur.saturation *= uniformScale;
-                }
+                if (blur?.saturation) blur.saturation *= uniformScale;
                 if ((child as any).pathsegs?.length) {
                     (child as any).pathsegs.forEach((segs: any) => {
-                        segs.points.forEach((point: any) => {
-                            point.radius && (point.radius *= uniformScale);
-                        });
+                        segs.points.forEach((point: any) => point.radius && (point.radius *= uniformScale));
                     });
                 }
                 if (child.type === ShapeType.Table) {
