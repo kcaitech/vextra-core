@@ -44,6 +44,7 @@ export class SymbolView extends GroupShapeView {
 
         if (cdom) {
             this.moveChild(cdom, idx);
+            console.log('--symbol-layout--')
             cdom.layout(props);
             return;
         }
@@ -54,6 +55,7 @@ export class SymbolView extends GroupShapeView {
             const p = cdom.parent;
             if (p) p.removeChild(cdom);
             this.addChild(cdom, idx);
+            console.log('--symbol-layout-2--')
             cdom.layout(props);
             return;
         }

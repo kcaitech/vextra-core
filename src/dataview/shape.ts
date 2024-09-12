@@ -99,10 +99,9 @@ export function isNoScale(trans: { x: number, y: number } | undefined): boolean 
     return !trans || trans.x === 1 && trans.y === 1;
 }
 
-export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeSize, frame: ShapeFrame, scaleX: number, scaleY: number) {
+export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeSize, frame: ShapeFrame, scaleX: number, scaleY: number, uniformScale: number | undefined) {
     if (shape.parent!.type === ShapeType.Page) return; // page不会有constrain
     const originParentFrame = shape.parent!.size; // 至少有page!
-
     if (shape.parent!.type === ShapeType.Group) { // 编组的子元素当忽略约束并跟随编组缩放
         frame.x *= scaleX;
         frame.y *= scaleY;
@@ -110,7 +109,19 @@ export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeSize, frame:
         frame.height *= scaleY;
     } else {
         const resizingConstraint = shape.resizingConstraint ?? 0; // 默认值为靠左、靠顶、宽高固定
-        const __f = fixConstrainFrame(resizingConstraint, frame.x, frame.y, frame.width, frame.height, scaleX, scaleY, parentFrame, originParentFrame);
+        const __cur_env = {
+            width: parentFrame.width,
+            height: parentFrame.height
+        }
+        const __pre_env = {
+            width: originParentFrame.width,
+            height: originParentFrame.height
+        }
+        if (uniformScale) {
+            __cur_env.width /= uniformScale;
+            __cur_env.height /= uniformScale;
+        }
+        const __f = fixConstrainFrame(resizingConstraint, frame.x, frame.y, frame.width, frame.height, scaleX, scaleY, __cur_env, __pre_env);
         frame.x = __f.x;
         frame.y = __f.y;
         frame.width = __f.width;
@@ -242,7 +253,7 @@ export class ShapeView extends DataView {
     onMounted() {
         const parent = this.parent;
         const parentFrame = parent?.hasSize() ? parent.frame : undefined;
-        this._layout(this.m_data, parentFrame, this.varsContainer, this.m_scale);
+        this._layout(this.m_data, parentFrame, this.varsContainer, this.m_scale, this.m_uniform_scale);
         this.updateFrames();
     }
 
@@ -659,16 +670,20 @@ export class ShapeView extends DataView {
         return changed;
     }
 
-    protected layoutChilds(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, parentFrame: ShapeSize | undefined, scale?: {
-        x: number,
-        y: number
-    }) {
+    protected layoutChilds(
+        varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
+        parentFrame: ShapeSize | undefined,
+        scale?: { x: number, y: number }
+    ) {
     }
 
-    protected _layout(shape: Shape, parentFrame: ShapeSize | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scale: {
-        x: number,
-        y: number
-    } | undefined) {
+    protected _layout(
+        shape: Shape,
+        parentFrame: ShapeSize | undefined,
+        varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
+        scale: { x: number, y: number } | undefined,
+        uniformScale: number | undefined
+    ) {
         const transform = shape.transform;
         // case 1 不需要变形
         if (!scale || scale.x === 1 && scale.y === 1) {
@@ -719,7 +734,7 @@ export class ShapeView extends DataView {
         let scaleY = scale.y;
 
         if (parentFrame && resizingConstraint !== 0) {
-            fixFrameByConstrain(shape, parentFrame, frame, scaleX, scaleY);
+            fixFrameByConstrain(shape, parentFrame, frame, scaleX, scaleY, uniformScale);
             scaleX = (frame.width / saveW);
             scaleY = (frame.height / saveH);
         } else {
@@ -762,6 +777,7 @@ export class ShapeView extends DataView {
             // update transform
             this.m_scale = props.scale;
         }
+        this.m_uniform_scale = props.uniformScale;
         if (diffVars) {
             // update varscontainer
             this.m_ctx.removeDirty(this);
@@ -786,7 +802,7 @@ export class ShapeView extends DataView {
         const parent = this.parent;
         const parentFrame = parent?.hasSize() ? parent.frame : undefined;
         this.m_ctx.setDirty(this);
-        this._layout(this.m_data, parentFrame, this.varsContainer, this.m_scale);
+        this._layout(this.m_data, parentFrame, this.varsContainer, this.m_scale, this.m_uniform_scale);
         this.m_ctx.addNotifyLayout(this);
     }
 

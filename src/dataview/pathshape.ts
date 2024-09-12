@@ -36,12 +36,15 @@ export class PathShapeView extends ShapeView {
         return this.data.isClosed;
     }
 
-    protected _layout(shape: Shape, parentFrame: ShapeFrame | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scale: {
-        x: number,
-        y: number
-    } | undefined): void {
+    protected _layout(
+        shape: Shape,
+        parentFrame: ShapeFrame | undefined,
+        varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
+        scale: { x: number, y: number } | undefined,
+        uniformScale: number | undefined
+    ): void {
         this.m_pathsegs = undefined;
-        super._layout(shape, parentFrame, varsContainer, scale);
+        super._layout(shape, parentFrame, varsContainer, scale, uniformScale);
     }
 
     protected renderBorders(): EL[] {
