@@ -1007,7 +1007,6 @@ export class PageEditor {
                 child.size.height *= Math.abs(__scale.y);
                 t.clearScaleSize();
                 child.transform = makeShapeTransform1By2(t);
-
                 const borders = child.style.borders;
                 borders.forEach(b => {
                     b.sideSetting = new BorderSideSetting(
@@ -1028,6 +1027,17 @@ export class PageEditor {
                 if (child.type === ShapeType.Text) {
                     const text = (child as TextShape).text;
                     scale4Text(text);
+                }
+                const blur = child.style.blur;
+                if (blur?.saturation) {
+                    blur.saturation *= uniformScale;
+                }
+                if ((child as any).pathsegs?.length) {
+                    (child as any).pathsegs.forEach((segs: any) => {
+                        segs.points.forEach((point: any) => {
+                            point.radius && (point.radius *= uniformScale);
+                        });
+                    });
                 }
                 if (child.type === ShapeType.Table) {
                     const cells = Object.values((child as any).cells);
