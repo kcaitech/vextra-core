@@ -1032,7 +1032,7 @@ export class PageEditor {
                 if (child.type === ShapeType.Table) {
                     const cells = Object.values((child as any).cells);
                     cells.forEach((cell: any) => {
-                        if (cell.text) scale4Text(cell.text)
+                        if (cell.text) scale4Text(cell.text);
                     });
                 }
 

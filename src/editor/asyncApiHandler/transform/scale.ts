@@ -569,7 +569,7 @@ export function uniformScale(
         if (shape instanceof SymbolRefShape) {
             if (!shape.isCustomSize) api.shapeModifyIsCustomSize(page, shape, true);
             const scale = getScale(view);
-            if (scale !== undefined) api.modifyShapeScale(page, shape, scale * ratio);
+            api.modifyShapeScale(page, shape, scale * ratio);
         }
 
         if (shape.hasSize()) api.shapeModifyWH(page, shape, size.width, size.height);
@@ -618,8 +618,8 @@ export function uniformScale(
             }
         }
         if (view instanceof SymbolRefView) {
-            const scale = getBaseValue(view.id, 'scale', view.scale || 0);
-            if (scale && scale !== 1) api.modifyShapeScale(page, shape, scale * ratio);
+            const scale = getScale(view);
+            api.modifyShapeScale(page, shape, scale * ratio);
         }
     }
     for (const textLike of textSet) scale4text(textLike);
