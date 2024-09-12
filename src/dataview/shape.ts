@@ -735,13 +735,17 @@ export class ShapeView extends DataView {
 
         if (parentFrame && resizingConstraint !== 0) {
             fixFrameByConstrain(shape, parentFrame, frame, scaleX, scaleY, uniformScale);
-            scaleX = (frame.width / saveW);
-            scaleY = (frame.height / saveH);
+            scaleX = frame.width / saveW;
+            scaleY = frame.height / saveH;
         } else {
-            frame.x *= scale.x;
-            frame.y *= scale.y;
-            frame.width *= scale.x;
-            frame.height *= scale.y;
+            if (uniformScale) {
+                scaleX /= uniformScale;
+                scaleY /= uniformScale;
+            }
+            frame.x *= scaleX;
+            frame.y *= scaleY;
+            frame.width *= scaleX;
+            frame.height *= scaleY;
         }
 
         const t = skewTransform(scaleX, scaleY).clone();

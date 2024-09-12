@@ -352,6 +352,7 @@ export function formatText(shapetext: Text, index: number, length: number, key: 
 export function formatPara(shapetext: Text, index: number, length: number, key: string, value: any): { index: number, len: number, value: any }[] {
     const ret: { index: number, len: number, value: any }[] = [];
     let offset = index;
+    // todo layout by padding
     _travelTextPara(shapetext.paras, index, length, (paraArray, paraIndex, para, index, length) => {
         offset -= index;
         const end = Math.min(para.length, index + length);

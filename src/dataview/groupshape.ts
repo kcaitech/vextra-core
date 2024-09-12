@@ -114,7 +114,6 @@ export class GroupShapeView extends ShapeView {
         const props = { data: child, scale, varsContainer, isVirtual: this.m_isVirtual };
         if (cdom) {
             this.moveChild(cdom, idx);
-            console.log('--gs-layoutChild--')
             return cdom.layout(props);
         }
         cdom = rView && rView.getView(getShapeViewId(child.id, varsContainer));
@@ -123,7 +122,6 @@ export class GroupShapeView extends ShapeView {
             const p = cdom.parent;
             if (p) p.removeChild(cdom);
             this.addChild(cdom, idx);
-            console.log('--gs-layoutChild-2--')
             return cdom.layout(props);
         }
         const comsMap = this.m_ctx.comsMap;

@@ -260,6 +260,10 @@ export class SymbolRefView extends ShapeView {
         this._layout(this.data, parentFrame, varsContainer, this.m_scale, this.m_uniform_scale)
     }
 
+    get frame4child() {
+        return this.frame;
+    }
+
     protected _layout(
         shape: Shape,
         parentFrame: ShapeSize | undefined,
@@ -336,13 +340,21 @@ export class SymbolRefView extends ShapeView {
 
         if (parentFrame && resizingConstraint !== 0) {
             fixFrameByConstrain(shape, parentFrame, frame, scaleX, scaleY, this.m_uniform_scale);
-            scaleX = (frame.width / saveW);
-            scaleY = (frame.height / saveH);
+            scaleX = frame.width / saveW;
+            scaleY = frame.height / saveH;
         } else {
-            frame.x *= prescale.x;
-            frame.y *= prescale.y;
-            frame.width *= scale.x;
-            frame.height *= scale.y;
+            if (uniformScale) {
+                scaleX /= uniformScale;
+                scaleY /= uniformScale;
+                frame.x *= prescale.x / uniformScale;
+                frame.y *= prescale.y / uniformScale;
+            } else {
+                frame.x *= prescale.x;
+                frame.y *= prescale.y;
+            }
+
+            frame.width *= scaleX;
+            frame.height *= scaleY;
         }
 
         const t = skewTransform(scaleX, scaleY).clone();
@@ -365,7 +377,6 @@ export class SymbolRefView extends ShapeView {
         scale?: { x: number, y: number },
         uniformScale?: number
     ): void {
-        // console.log('layoutChilds', uniformScale);
         const childs = this.getDataChilds();
         const resue: Map<string, DataView> = new Map();
         this.m_children.forEach((c) => resue.set(c.data.id, c));
