@@ -1041,6 +1041,13 @@ export class PageEditor {
                         if (cell.text) scale4Text(cell.text);
                     });
                 }
+                if ((child as any).cornerRadius) {
+                    const __corner: any = (child as any).cornerRadius;
+                    __corner.lt *= uniformScale;
+                    __corner.rt *= uniformScale;
+                    __corner.rb *= uniformScale;
+                    __corner.lb *= uniformScale;
+                }
 
                 if (child instanceof GroupShape) {
                     let innerScale = uniformScale;
