@@ -679,21 +679,6 @@ export function uniformScale(
         return value;
     }
 
-    function getSize(s: ShapeView) {
-        let size = sizeRecorder.get(s.id);
-        if (!size) {
-            const f = s.frame;
-            size = {
-                x: f.x,
-                y: f.y,
-                width: f.width,
-                height: f.height
-            };
-            sizeRecorder.set(s.id, size);
-        }
-        return size;
-    }
-
     function getScale(s: ShapeView) {
         let scale = valueRecorder.get(s.id);
         if (scale === undefined) {
