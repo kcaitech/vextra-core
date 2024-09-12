@@ -218,9 +218,7 @@ export class SymbolRefView extends ShapeView {
         const props = { data: child, scale, varsContainer, isVirtual: true, uniformScale };
 
         if (cdom) {
-            // console.log('child', child.name, props.uniformScale, uniformScale)
             const changed = this.moveChild(cdom, idx);
-            console.log('--symbolref-layout--', props)
             cdom.layout(props);
             return changed;
         }
@@ -231,7 +229,6 @@ export class SymbolRefView extends ShapeView {
             const p = cdom.parent;
             if (p) p.removeChild(cdom);
             this.addChild(cdom, idx);
-            console.log('--symbolref-layout-2--')
             cdom.layout(props);
             return true;
         }
