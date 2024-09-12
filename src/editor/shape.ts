@@ -193,6 +193,9 @@ export class ShapeEditor {
                     const sym = view.symData;
                     if (sym) api.shapeModifyWH(this.__page, view.data, sym.size.width, sym.size.height);
                 }
+                if (view.scale && view.scale !== 1) {
+                    api.modifyShapeScale(this.__page, view.data, 1);
+                }
             } else {
                 // 清空p中与当前view相关的variables,overrides
                 const variables = (p).variables;

@@ -78,6 +78,9 @@ export function textModifySpanKerning(parent: ShapeView | Variable, shapetext: T
 export function textModifyParaSpacing(parent: ShapeView | Variable, shapetext: Text, paraSpacing: number, index: number, len: number) {
     return otTextSetParaAttr(parent, shapetext, index, len, "paraSpacing", paraSpacing);
 }
+export function textModifyPaddingHor(parent: ShapeView | Variable, shapetext: Text, padding: { left: number, right: number }, index: number, len: number) {
+    return otTextSetParaAttr(parent, shapetext, index, len, "padding", padding);
+}
 
 export function textModifySpanTransfrom(parent: ShapeView | Variable, shapetext: Text, transform: TextTransformType | undefined, index: number, len: number) {
     // 句属性

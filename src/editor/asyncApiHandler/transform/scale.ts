@@ -17,7 +17,7 @@ import {
     adapt2Shape,
     GroupShapeView,
     PageView,
-    ShapeView,
+    ShapeView, SymbolRefView,
     TableCellView,
     TableView,
     TextShapeView
@@ -617,6 +617,10 @@ export function uniformScale(
                 textSet.push(cell);
             }
         }
+        if (view instanceof SymbolRefView) {
+            const scale = getBaseValue(view.id, 'scale', view.scale || 0);
+            if (scale && scale !== 1) api.modifyShapeScale(page, shape, scale * ratio);
+        }
     }
     for (const textLike of textSet) scale4text(textLike);
 
@@ -624,6 +628,15 @@ export function uniformScale(
         const paraSpacing = getBaseValue(text.id, 'paraSpacing', text.text.attr?.paraSpacing || 0);
         if (paraSpacing) {
             api.textModifyParaSpacing(page, text, paraSpacing * ratio, 0, text.text.length);
+        }
+        const paddingLeft = getBaseValue(text.id, 'paddingLeft', text.text.attr?.padding?.left || 0);
+        const paddingRight = getBaseValue(text.id, 'paddingRight', text.text.attr?.padding?.right || 0);
+
+        if (paddingLeft || paddingRight) {
+            api.textModifyPaddingHor(page, text, {
+                left: (paddingLeft || 0) * ratio,
+                right: (paddingRight || 0) * ratio
+            }, 0, text.text.length);
         }
         let index = 0;
         for (let j = 0; j < text.text.paras.length; j++) {

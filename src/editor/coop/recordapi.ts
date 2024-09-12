@@ -1266,17 +1266,9 @@ export class Api {
         if (!item.exportOptions) return;
         this.addOp(basicapi.setPageExportPreviewUnfold(item.exportOptions, unfold));
     }
-    modifySymbolRefInnerEnvScale(page: Page, shape: SymbolRefShape, innerScale: number) {
-        checkShapeAtPage(page, shape);
-        this.addOp(crdtSetAttr(shape,'innerEnvScale', innerScale));
-    }
     modifyShapeScale(page: Page, shape: Shape, value: number) {
         checkShapeAtPage(page, shape);
         this.addOp(crdtSetAttr(shape,'scale', value));
-    }
-    modifyShapeStyleWeight(page: Page, shape: Shape, value: number) {
-        checkShapeAtPage(page, shape);
-        this.addOp(crdtSetAttr(shape,'styleWeight', value));
     }
     // text
     insertSimpleText(page: Page, shape: TextShapeLike | Variable, idx: number, text: string, attr?: SpanAttr) {
@@ -1510,6 +1502,17 @@ export class Api {
         len = alignRange.len;
         this.addOp(basicapi.textModifyParaSpacing(shape, _text, paraSpacing, index, len));
     }
+    textModifyPaddingHor(page: Page, shape: TextShapeLike | Variable, padding: { left: number, right: number },  index: number, len: number) {
+        checkShapeAtPage(page, shape);
+        const _text = shape instanceof ShapeView ? shape.text : shape.value;
+        if (!_text || !(_text instanceof Text)) throw Error();
+
+        const alignRange = _text.alignParaRange(index, len);
+        index = alignRange.index;
+        len = alignRange.len;
+        this.addOp(basicapi.textModifyPaddingHor(shape, _text, padding, index, len));
+    }
+
     textModifyTransform(page: Page, shape: TextShapeLike | Variable, transform: TextTransformType | undefined, index: number, len: number) {
         checkShapeAtPage(page, shape);
         const _text = shape instanceof ShapeView ? shape.text : shape.value;
