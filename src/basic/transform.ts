@@ -1841,6 +1841,7 @@ export class Line {
     }
 
     distanceToPoint(point: ColVector3D) { // 点到直线的距离
+        // 叉积的模 = 两向量组成的平行四边形面积 = 底 * 高 = direction的模 * 点到直线的距离 = 点到直线的距离
         return (this.direction.cross(point.subtract(this.point)) as ColVector3D).norm
     }
 

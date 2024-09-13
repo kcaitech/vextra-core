@@ -1,5 +1,7 @@
 import {ByteBuffer, compileSchema, decodeBinarySchema, parseSchema} from "kiwi-schema"
 import * as UZIP from "uzip"
+import * as pako from "pako"
+import * as fzstd from "fzstd"
 
 const transfer8to32 = function (fileByte: Uint8Array, start: number, cache: Uint8Array) {
     cache[0] = fileByte[start + 0]
@@ -293,25 +295,28 @@ function figToBinaryParts(fileBuffer: ArrayBuffer | Buffer): Uint8Array[] {
     let start = 8
 
     // jumps 4 bytes over delimiter
-    calcEnd(fileByte, start)
     start += 4
 
     const result = []
     while (start < fileByte.length) {
         let end = calcEnd(fileByte, start)
-        start += 4
+        const index = start + 4;
+        start += 4 + end;
 
-        let byteTemp = fileByte.slice(start, start + end)
+        let byteTemp = fileByte.slice(index, index + end)
 
         // TODO: we might not need to check for this
         // Decompress everything other than PNG bytes (they remain compressed and are handled by image-loaders)
         // WARN: it is possible this byte is not png, maybe I need to check a few more bytes?
-        if (!(fileByte[start] == 137 && fileByte[start + 1] == 80)) {
-            byteTemp = UZIP.inflateRaw(byteTemp)
+        if (!(fileByte[index] == 137 && fileByte[index + 1] == 80)) {
+            try {
+                byteTemp = fzstd.decompress(byteTemp);
+            } catch (err) {
+                byteTemp = pako.inflateRaw(byteTemp);
+            }
         }
 
         result.push(byteTemp)
-        start += end
     }
 
     return result
