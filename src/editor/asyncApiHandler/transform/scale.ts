@@ -1,6 +1,7 @@
 import { CoopRepository } from "../../coop/cooprepo";
 import { AsyncApiCaller } from "../AsyncApiCaller";
 import {
+    Artboard,
     BorderSideSetting,
     Document,
     makeShapeTransform1By2,
@@ -16,8 +17,8 @@ import {
 import {
     adapt2Shape,
     GroupShapeView,
-    PageView,
-    ShapeView,
+    PageView, PathShapeView,
+    ShapeView, SymbolRefView,
     TableCellView,
     TableView,
     TextShapeView
@@ -566,11 +567,13 @@ export function uniformScale(
         const shape = adapt2Shape(view);
         api.shapeModifyTransform(page, shape, makeShapeTransform1By2(transform));
 
-        if (shape.hasSize()) api.shapeModifyWH(page, shape, size.width, size.height);
-
-        if (shape instanceof SymbolRefShape && !shape.isCustomSize) {
-            api.shapeModifyIsCustomSize(page, shape, true);
+        if (shape instanceof SymbolRefShape) {
+            if (!shape.isCustomSize) api.shapeModifyIsCustomSize(page, shape, true);
+            const scale = getScale(view);
+            api.modifyShapeScale(page, shape, scale * ratio);
         }
+
+        if (shape.hasSize()) api.shapeModifyWH(page, shape, size.width, size.height);
 
         if (view instanceof GroupShapeView) reLayoutByUniformScale(api, page, view, decomposeScale, container4modifyStyle, rangeRecorder, sizeRecorder, transformRecorder);
     }
@@ -606,6 +609,8 @@ export function uniformScale(
             const spread = getBaseValue(sId, 'spread', s.spread);
             api.setShadowSpread(page, shape, i, spread * ratio)
         });
+        const blur = view.blur;
+        if (blur?.saturation) api.shapeModifyBlurSaturation(page, shape, blur.saturation * ratio);
 
         if (view instanceof TextShapeView) textSet.push(view);
         if (view instanceof TableView) {
@@ -615,6 +620,26 @@ export function uniformScale(
                 textSet.push(cell);
             }
         }
+        if (view instanceof SymbolRefView) {
+            const scale = getScale(view);
+            api.modifyShapeScale(page, shape, scale * ratio);
+        }
+        if (view instanceof PathShapeView) {
+            const segments = view.segments;
+            segments.forEach((segment, i) => {
+                segment.points.forEach((point, j) => {
+                    const corner = point.radius;
+                    corner && api.modifyPointCornerRadius(page, shape, j, corner * ratio, i);
+                });
+            });
+        }
+        if (view.cornerRadius) {
+            const lt = view.cornerRadius.lt;
+            const rt = view.cornerRadius.rt;
+            const rb = view.cornerRadius.rb;
+            const lb = view.cornerRadius.lb;
+            if (lt || rt || rb || lb) api.shapeModifyRadius2(page, shape as Artboard, lt * ratio, rt * ratio, rb * ratio, lb * ratio);
+        }
     }
     for (const textLike of textSet) scale4text(textLike);
 
@@ -622,6 +647,15 @@ export function uniformScale(
         const paraSpacing = getBaseValue(text.id, 'paraSpacing', text.text.attr?.paraSpacing || 0);
         if (paraSpacing) {
             api.textModifyParaSpacing(page, text, paraSpacing * ratio, 0, text.text.length);
+        }
+        const paddingLeft = getBaseValue(text.id, 'paddingLeft', text.text.attr?.padding?.left || 0);
+        const paddingRight = getBaseValue(text.id, 'paddingRight', text.text.attr?.padding?.right || 0);
+
+        if (paddingLeft || paddingRight) {
+            api.textModifyPaddingHor(page, text, {
+                left: (paddingLeft || 0) * ratio,
+                right: (paddingRight || 0) * ratio
+            }, 0, text.text.length);
         }
         let index = 0;
         for (let j = 0; j < text.text.paras.length; j++) {
@@ -662,6 +696,15 @@ export function uniformScale(
             valueRecorder.set(dKey, value);
         }
         return value;
+    }
+
+    function getScale(s: ShapeView) {
+        let scale = valueRecorder.get(s.id);
+        if (scale === undefined) {
+            scale = s.uniformScale ?? 1;
+            valueRecorder.set(s.id, scale);
+        }
+        return scale;
     }
 }
 
