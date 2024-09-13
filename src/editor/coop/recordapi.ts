@@ -627,62 +627,6 @@ export class Api {
         this.addOp(basicapi.crdtSetAttr(action, 'easingFunction', value))
     }
 
-    shapeModifyPrototypeActionEasingFunctionx1(page: Page, shape: Shape | Variable, id: string, value: number) {
-        checkShapeAtPage(page, shape)
-        const prototypeInteractions: BasicArray<PrototypeInterAction> = shape instanceof Variable ? shape.value : shape.prototypeInteractions;
-        if (!prototypeInteractions) return;
-        const action = prototypeInteractions?.find(i => i.id === id)?.actions;
-        if (!action) return;
-        let easingFunction = action.easingFunction;
-        if (!easingFunction) {
-            easingFunction = new PrototypeEasingBezier(0, 0, 1, 1)
-            this.addOp(basicapi.crdtSetAttr(action, 'easingFunction', easingFunction))
-        }
-        this.addOp(basicapi.crdtSetAttr(easingFunction, 'x1', value))
-    }
-
-    shapeModifyPrototypeActionEasingFunctiony1(page: Page, shape: Shape | Variable, id: string, value: number) {
-        checkShapeAtPage(page, shape)
-        const prototypeInteractions: BasicArray<PrototypeInterAction> = shape instanceof Variable ? shape.value : shape.prototypeInteractions;
-        if (!prototypeInteractions) return;
-        const action = prototypeInteractions?.find(i => i.id === id)?.actions;
-        if (!action) return;
-        let easingFunction = action.easingFunction;
-        if (!easingFunction) {
-            easingFunction = new PrototypeEasingBezier(0, 0, 1, 1)
-            this.addOp(basicapi.crdtSetAttr(action, 'easingFunction', easingFunction))
-        }
-        this.addOp(basicapi.crdtSetAttr(easingFunction, 'y1', value))
-    }
-
-    shapeModifyPrototypeActionEasingFunctionx2(page: Page, shape: Shape | Variable, id: string, value: number) {
-        checkShapeAtPage(page, shape)
-        const prototypeInteractions: BasicArray<PrototypeInterAction> = shape instanceof Variable ? shape.value : shape.prototypeInteractions;
-        if (!prototypeInteractions) return;
-        const action = prototypeInteractions?.find(i => i.id === id)?.actions;
-        if (!action) return;
-        let easingFunction = action.easingFunction;
-        if (!easingFunction) {
-            easingFunction = new PrototypeEasingBezier(0, 0, 1, 1)
-            this.addOp(basicapi.crdtSetAttr(action, 'easingFunction', easingFunction))
-        }
-        this.addOp(basicapi.crdtSetAttr(easingFunction, 'x2', value))
-    }
-
-    shapeModifyPrototypeActionEasingFunctiony2(page: Page, shape: Shape | Variable, id: string, value: number) {
-        checkShapeAtPage(page, shape)
-        const prototypeInteractions: BasicArray<PrototypeInterAction> = shape instanceof Variable ? shape.value : shape.prototypeInteractions;
-        if (!prototypeInteractions) return;
-        const action = prototypeInteractions?.find(i => i.id === id)?.actions;
-        if (!action) return;
-        let easingFunction = action.easingFunction;
-        if (!easingFunction) {
-            easingFunction = new PrototypeEasingBezier(0, 0, 1, 1)
-            this.addOp(basicapi.crdtSetAttr(action, 'easingFunction', easingFunction))
-        }
-        this.addOp(basicapi.crdtSetAttr(easingFunction, 'y2', value))
-    }
-
     shapeModifyPrototypeExtraScrollOffsetX(page: Page, shape: Shape | Variable, id: string, value: number) {
         checkShapeAtPage(page, shape)
         const prototypeInteractions: BasicArray<PrototypeInterAction> = shape instanceof Variable ? shape.value : shape.prototypeInteractions;

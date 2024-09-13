@@ -3584,49 +3584,6 @@ export class PageEditor {
         }
     }
 
-    setPrototypeActionEasingFunctionx1(shape: ShapeView, id: string, value: number) {
-        try {
-            const api = this.__repo.start('setPrototypeActionEasingFunctionx1');
-            const __shape = this.shape4protoActions(api, this.__page, shape, id);
-            api.shapeModifyPrototypeActionEasingFunctionx1(this.__page, __shape, id, value);
-            this.__repo.commit();
-        } catch (error) {
-            this.__repo.rollback();
-        }
-    }
-
-    setPrototypeActionEasingFunctiony1(shape: ShapeView, id: string, value: number) {
-        try {
-            const api = this.__repo.start('setPrototypeActionEasingFunctiony1');
-            const __shape = this.shape4protoActions(api, this.__page, shape, id);
-            api.shapeModifyPrototypeActionEasingFunctiony1(this.__page, __shape, id, value);
-            this.__repo.commit();
-        } catch (error) {
-            this.__repo.rollback();
-        }
-    }
-    setPrototypeActionEasingFunctionx2(shape: ShapeView, id: string, value: number) {
-        try {
-            const api = this.__repo.start('setPrototypeActionEasingFunctionx2');
-            const __shape = this.shape4protoActions(api, this.__page, shape, id);
-            api.shapeModifyPrototypeActionEasingFunctionx2(this.__page, __shape, id, value);
-            this.__repo.commit();
-        } catch (error) {
-            this.__repo.rollback();
-        }
-    }
-
-    setPrototypeActionEasingFunctiony2(shape: ShapeView, id: string, value: number) {
-        try {
-            const api = this.__repo.start('setPrototypeActionEasingFunctiony2');
-            const __shape = this.shape4protoActions(api, this.__page, shape, id);
-            api.shapeModifyPrototypeActionEasingFunctiony2(this.__page, __shape, id, value);
-            this.__repo.commit();
-        } catch (error) {
-            this.__repo.rollback();
-        }
-    }
-
     setPrototypeExtraScrollOffsetX(shape: ShapeView, id: string, value: number) {
         try {
             const api = this.__repo.start('setPrototypeExtraScrollOffsetX');
