@@ -1,6 +1,7 @@
 import { CoopRepository } from "../../coop/cooprepo";
 import { AsyncApiCaller } from "../AsyncApiCaller";
 import {
+    Artboard,
     BorderSideSetting,
     Document,
     makeShapeTransform1By2,
@@ -16,7 +17,7 @@ import {
 import {
     adapt2Shape,
     GroupShapeView,
-    PageView,
+    PageView, PathShapeView,
     ShapeView, SymbolRefView,
     TableCellView,
     TableView,
@@ -608,6 +609,8 @@ export function uniformScale(
             const spread = getBaseValue(sId, 'spread', s.spread);
             api.setShadowSpread(page, shape, i, spread * ratio)
         });
+        const blur = view.blur;
+        if (blur?.saturation) api.shapeModifyBlurSaturation(page, shape, blur.saturation * ratio);
 
         if (view instanceof TextShapeView) textSet.push(view);
         if (view instanceof TableView) {
@@ -620,6 +623,22 @@ export function uniformScale(
         if (view instanceof SymbolRefView) {
             const scale = getScale(view);
             api.modifyShapeScale(page, shape, scale * ratio);
+        }
+        if (view instanceof PathShapeView) {
+            const segments = view.segments;
+            segments.forEach((segment, i) => {
+                segment.points.forEach((point, j) => {
+                    const corner = point.radius;
+                    corner && api.modifyPointCornerRadius(page, shape, j, corner * ratio, i);
+                });
+            });
+        }
+        if (view.cornerRadius) {
+            const lt = view.cornerRadius.lt;
+            const rt = view.cornerRadius.rt;
+            const rb = view.cornerRadius.rb;
+            const lb = view.cornerRadius.lb;
+            if (lt || rt || rb || lb) api.shapeModifyRadius2(page, shape as Artboard, lt * ratio, rt * ratio, rb * ratio, lb * ratio);
         }
     }
     for (const textLike of textSet) scale4text(textLike);
