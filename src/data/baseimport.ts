@@ -1713,7 +1713,12 @@ export function importLineShape(source: types.LineShape, ctx?: IImportContext): 
     return ret
 }
 /* oval shape */
-const importOvalShapeOptional = importPathShapeOptional
+function importOvalShapeOptional(tar: impl.OvalShape, source: types.OvalShape, ctx?: IImportContext) {
+    importPathShapeOptional(tar, source)
+    if (source.startingAngle) tar.startingAngle = source.startingAngle
+    if (source.endingAngle) tar.endingAngle = source.endingAngle
+    if (source.innerRadius) tar.innerRadius = source.innerRadius
+}
 export function importOvalShape(source: types.OvalShape, ctx?: IImportContext): impl.OvalShape {
         // inject code
     if (!source.pathsegs?.length) { // 兼容旧数据

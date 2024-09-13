@@ -1107,6 +1107,9 @@ export class ImageShape extends RectShape implements classes.ImageShape {
 export class OvalShape extends PathShape implements classes.OvalShape {
     typeId = 'oval-shape'
     ellipse: classes.Ellipse
+    startingAngle?: number
+    endingAngle?: number
+    innerRadius?: number
 
     constructor(
         crdtidx: BasicArray<number>,

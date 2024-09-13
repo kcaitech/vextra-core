@@ -1214,6 +1214,9 @@ export function exportOvalShape(source: types.OvalShape, ctx?: IExportContext): 
     const ret: types.OvalShape = exportPathShape(source, ctx) as types.OvalShape
     ret.typeId = "oval-shape"
     ret.ellipse = exportEllipse(source.ellipse, ctx)
+    if (source.startingAngle) ret.startingAngle = source.startingAngle
+    if (source.endingAngle) ret.endingAngle = source.endingAngle
+    if (source.innerRadius) ret.innerRadius = source.innerRadius
     return ret
 }
 /* artboard shape */
