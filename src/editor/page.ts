@@ -135,7 +135,9 @@ import {
     OverlayPosition,
     OverlayMargin,
     PrototypeEvent,
-    PrototypeActions
+    PrototypeActions,
+    Crdtidx,
+    PrototypeEasingBezier
 } from "../data/baseclasses";
 import { border2path, calculateInnerAnglePosition, getPolygonPoints, getPolygonVertices, update_frame_by_points } from "./utils/path";
 import { modify_shapes_height, modify_shapes_width } from "./utils/common";
@@ -3471,7 +3473,7 @@ export class PageEditor {
                 }
                 api.shapeModifyPrototypeActionTargetNodeID(this.__page, __shape, id, undefined)
             }
-            if (nav === PrototypeNavigationType.OVERLAY || nav === PrototypeNavigationType.SWAP||nav === PrototypeNavigationType.NAVIGATE) {
+            if (nav === PrototypeNavigationType.OVERLAY || nav === PrototypeNavigationType.SWAP || nav === PrototypeNavigationType.NAVIGATE) {
                 const arr = [
                     PrototypeTransitionType.INSTANTTRANSITION,
                     PrototypeTransitionType.DISSOLVE,
@@ -3524,11 +3526,25 @@ export class PageEditor {
         }
     }
 
-    setPrototypeActionEasingType(shape: ShapeView, id: string, value: PrototypeEasingType, esfn: BasicArray<number>) {
+    setPrototypeActionEasingType(shape: ShapeView, id: string, value: PrototypeEasingType, esfn: PrototypeEasingBezier) {
         try {
             const api = this.__repo.start('setPrototypeActionEasingType');
             const __shape = this.shape4protoActions(api, this.__page, shape, id);
-            api.shapeModifyPrototypeActionEasingType(this.__page, __shape, id, value, esfn);
+            const prototypeInteractions: BasicArray<PrototypeInterAction> | undefined = shape.prototypeInterActions;
+            if (!prototypeInteractions) return;
+            const action = prototypeInteractions?.find(i => i.id === id)?.actions;
+            if (!action) return;
+            api.shapeModifyPrototypeActionEasingType(this.__page, __shape, id, value);
+            let val = action.easingFunction
+            if (value === PrototypeEasingType.CUSTOMCUBIC) {
+                if (val) {
+                    api.shapeModifyPrototypeActionEasingFunction(this.__page, __shape, id, val)
+                } else {
+                    api.shapeModifyPrototypeActionEasingFunction(this.__page, __shape, id, esfn)
+                }
+            } else {
+                api.shapeModifyPrototypeActionEasingFunction(this.__page, __shape, id, esfn)
+            }
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
@@ -3557,11 +3573,54 @@ export class PageEditor {
         }
     }
 
-    setPrototypeActionEasingFunction(shape: ShapeView, id: string, value: BasicArray<number>) {
+    setPrototypeActionEasingFunction(shape: ShapeView, id: string, value: PrototypeEasingBezier) {
         try {
-            const api = this.__repo.start('setPrototypeActionOpenUrlInNewTab');
+            const api = this.__repo.start('setPrototypeActionEasingFunction');
             const __shape = this.shape4protoActions(api, this.__page, shape, id);
             api.shapeModifyPrototypeActionEasingFunction(this.__page, __shape, id, value);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setPrototypeActionEasingFunctionx1(shape: ShapeView, id: string, value: number) {
+        try {
+            const api = this.__repo.start('setPrototypeActionEasingFunctionx1');
+            const __shape = this.shape4protoActions(api, this.__page, shape, id);
+            api.shapeModifyPrototypeActionEasingFunctionx1(this.__page, __shape, id, value);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setPrototypeActionEasingFunctiony1(shape: ShapeView, id: string, value: number) {
+        try {
+            const api = this.__repo.start('setPrototypeActionEasingFunctiony1');
+            const __shape = this.shape4protoActions(api, this.__page, shape, id);
+            api.shapeModifyPrototypeActionEasingFunctiony1(this.__page, __shape, id, value);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setPrototypeActionEasingFunctionx2(shape: ShapeView, id: string, value: number) {
+        try {
+            const api = this.__repo.start('setPrototypeActionEasingFunctionx2');
+            const __shape = this.shape4protoActions(api, this.__page, shape, id);
+            api.shapeModifyPrototypeActionEasingFunctionx2(this.__page, __shape, id, value);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setPrototypeActionEasingFunctiony2(shape: ShapeView, id: string, value: number) {
+        try {
+            const api = this.__repo.start('setPrototypeActionEasingFunctiony2');
+            const __shape = this.shape4protoActions(api, this.__page, shape, id);
+            api.shapeModifyPrototypeActionEasingFunctiony2(this.__page, __shape, id, value);
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();

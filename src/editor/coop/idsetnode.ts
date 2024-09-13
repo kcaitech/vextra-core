@@ -20,10 +20,11 @@ import {
     importTableCell,
     importVariable,
     importOverlayBackgroundAppearance,
+    importPrototypeEasingBezier,
     importPoint2D,
-    importPrototypeActions_easingFunction,
     importPrototypeActions,
-    importOverlayPosition
+    importOverlayPosition,
+    importCrdtidx,
 } from "../../data/baseimport";
 import { SNumber } from "../../coop/client/snumber";
 import { FMT_VER_latest } from "../../data/fmtver";
@@ -42,10 +43,11 @@ importh['symbol-shape'] = importSymbolShape;
 importh['symbol-union-shape'] = importSymbolUnionShape;
 importh['prototype-starting-point'] = importPrototypeStartingPoint;
 importh['overlay-background-appearance'] = importOverlayBackgroundAppearance;
-importh['prototype-extrascrolloffset'] = importPoint2D;
+importh['point-2d'] = importPoint2D;
 importh['prototype-actions'] = importPrototypeActions;
 importh['paint-filter'] = importPaintFilter;
 importh['overlay-position']=importOverlayPosition
+importh['prototype-easing-bezier']=importPrototypeEasingBezier
 
 function apply(document: Document, target: Object, op: IdOp): IdOpRecord {
     let value = op.data;
