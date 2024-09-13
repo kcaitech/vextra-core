@@ -95,10 +95,7 @@
         "mask": {
             "type": "boolean"
         },
-        "scale": {
-            "type": "number"
-        },
-        "styleWeight": {
+        "uniformScale": {
             "type": "number"
         }
     },

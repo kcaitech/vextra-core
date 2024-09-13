@@ -146,8 +146,7 @@ export class Shape extends Basic implements classes.Shape {
     overlayBackgroundAppearance?: classes.OverlayBackgroundAppearance;
     scrollDirection?: classes.ScrollDirection;
     mask?: boolean;
-    scale?: number;
-    styleWeight?: number;
+    uniformScale?: number;
 
     constructor(
         crdtidx: BasicArray<number>, id: string, name: string, type: ShapeType, transform: Transform, style: Style

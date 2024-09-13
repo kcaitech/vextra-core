@@ -295,7 +295,7 @@ export class SymbolRefView extends ShapeView {
         if (scale.x === 1 && scale.y === 1) {
             let frame = this.m_data.frame;
             this.updateLayoutArgs(transform, frame, 0);
-            this.layoutChilds(varsContainer, frame, childscale, this.scale);
+            this.layoutChilds(varsContainer, frame, childscale, this.uniformScale);
             return;
         }
 
@@ -326,7 +326,7 @@ export class SymbolRefView extends ShapeView {
             const dy = save1.y - save2.y;
             t.trans(dx, dy);
             this.updateLayoutArgs(t, frame, 0);
-            this.layoutChilds(varsContainer, undefined, childscale, this.scale);
+            this.layoutChilds(varsContainer, undefined, childscale, this.uniformScale);
             return;
         }
 
@@ -368,7 +368,7 @@ export class SymbolRefView extends ShapeView {
         // 重新计算 childscale
         childscale.x = size2.width / this.m_sym.size.width;
         childscale.y = size2.height / this.m_sym.size.height;
-        this.layoutChilds(varsContainer, this.frame, childscale, this.scale);
+        this.layoutChilds(varsContainer, this.frame, childscale, this.uniformScale);
     }
 
     protected layoutChilds(
@@ -525,7 +525,7 @@ export class SymbolRefView extends ShapeView {
         const borders = this.renderBorders();
         let childs = this.renderContents();
 
-        if (this.scale) childs = [elh('g', { transform: `scale(${this.scale})` }, childs)];
+        if (this.uniformScale) childs = [elh('g', { transform: `scale(${this.uniformScale})` }, childs)];
 
         const filterId = `${objectId(this)}`;
         const shadows = this.renderShadows(filterId);
