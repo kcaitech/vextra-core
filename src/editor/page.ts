@@ -139,7 +139,13 @@ import {
     Crdtidx,
     PrototypeEasingBezier
 } from "../data/baseclasses";
-import { border2path, calculateInnerAnglePosition, getPolygonPoints, getPolygonVertices, update_frame_by_points } from "./utils/path";
+import {
+    border2path,
+    calculateInnerAnglePosition,
+    getPolygonPoints,
+    getPolygonVertices,
+    update_frame_by_points
+} from "./utils/path";
 import { modify_shapes_height, modify_shapes_width } from "./utils/common";
 import { CoopRepository } from "./coop/cooprepo";
 import { Api, TextShapeLike } from "./coop/recordapi";
@@ -166,6 +172,7 @@ import { makeShapeTransform1By2, makeShapeTransform2By1, updateShapeTransform1By
 import { ColVector3D } from "../basic/matrix2";
 import { Transform as Transform2 } from "../basic/transform";
 import { getFormatFromBase64 } from "../basic/utils";
+import { uniformScale, UniformScaleUnit } from "./asyncApiHandler";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -4341,6 +4348,17 @@ export class PageEditor {
         } catch (e) {
             this.__repo.rollback()
             console.error(e)
+        }
+    }
+
+    uniformScale(units: UniformScaleUnit[], ratio: number) {
+        try {
+            const api = this.__repo.start('uniformScale');
+            uniformScale(api, this.__page, units, ratio);
+            this.__repo.commit();
+        } catch (e) {
+            this.__repo.rollback();
+            console.error(e);
         }
     }
 
