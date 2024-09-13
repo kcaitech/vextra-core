@@ -1012,6 +1012,7 @@ export function exportShape(source: types.Shape, ctx?: IExportContext): types.Sh
     if (source.overlayBackgroundAppearance) ret.overlayBackgroundAppearance = exportOverlayBackgroundAppearance(source.overlayBackgroundAppearance, ctx)
     if (source.scrollDirection) ret.scrollDirection = exportScrollDirection(source.scrollDirection, ctx)
     if (source.mask) ret.mask = source.mask
+    if (source.uniformScale) ret.uniformScale = source.uniformScale
     return ret
 }
 /* table cell */
@@ -1173,6 +1174,7 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
     })()
     if (source.isCustomSize) ret.isCustomSize = source.isCustomSize
     if (source.cornerRadius) ret.cornerRadius = exportCornerRadius(source.cornerRadius, ctx)
+    if (source.innerEnvScale) ret.innerEnvScale = source.innerEnvScale
         // inject code
     if (ctx?.refsymbols) ctx.refsymbols.add(ret.refId);
 

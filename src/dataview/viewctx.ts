@@ -14,6 +14,7 @@ export interface PropsType {
     scale?: { x: number, y: number };
     varsContainer?: VarsContainer;
     isVirtual?: boolean;
+    uniformScale?: number | undefined;
 }
 
 interface DataView extends Notifiable {

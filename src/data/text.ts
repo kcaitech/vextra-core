@@ -491,4 +491,17 @@ export class Text extends Basic implements classes.Text {
         if (bottom) this.attr.padding.bottom = bottom;
         this.reLayout(); // todo
     }
+
+    setPaddingLeft(left: number) {
+        if (!this.attr) this.attr = new TextAttr();
+        if (!this.attr.padding) this.attr.padding = new Padding();
+        if (left) this.attr.padding.left = left;
+        this.reLayout(); // todo
+    }
+    setPaddingRight(right: number) {
+        if (!this.attr) this.attr = new TextAttr();
+        if (!this.attr.padding) this.attr.padding = new Padding();
+        if (right) this.attr.padding.right = right;
+        this.reLayout(); // todo
+    }
 }

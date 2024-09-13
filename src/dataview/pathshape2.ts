@@ -5,6 +5,9 @@ import { DViewCtx, PropsType } from "./viewctx";
 import { EL, elh } from "./el";
 import { renderBorders } from "../render";
 
+/**
+ * @deprecated 使用PathShapeView
+ */
 export class PathShapeView2 extends ShapeView {
 
     constructor(ctx: DViewCtx, props: PropsType) {
@@ -17,9 +20,15 @@ export class PathShapeView2 extends ShapeView {
         return this.m_pathsegs || (this.m_data as PathShape2).pathsegs;
     }
 
-    protected _layout(shape: Shape, parentFrame: ShapeFrame | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scale: { x: number, y: number } | undefined): void {
+    protected _layout(
+        shape: Shape,
+        parentFrame: ShapeFrame | undefined,
+        varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
+        scale: { x: number, y: number } | undefined,
+        uniformScale: number | undefined
+    ): void {
         this.m_pathsegs = undefined;
-        super._layout(shape, parentFrame, varsContainer, scale);
+        super._layout(shape, parentFrame, varsContainer, scale, uniformScale);
     }
 
     protected renderBorders(): EL[] {

@@ -1,14 +1,6 @@
 import { ResizingConstraints2 } from "./consts";
 import { ShapeSize } from "./typesdefine";
 
-/**
- * @param resizingConstraint 约束条件
- * @param (x, y, width, height) 当前shape未调整前的位置大小
- * @param (scaleX, scaleY) 需要调整的缩放值
- * @param currentEnvFrame 当前父级容器大小，可通过originEnvFrame与scale计算出来
- * @param originEnvFrame 未调整前父级容器大小
- * @returns (x, y, width, height) 应用约束后的当前shape位置大小
- */
 export function fixConstrainFrame(resizingConstraint: number, x: number, y: number, width: number, height: number, scaleX: number, scaleY: number, currentEnvFrame: ShapeSize, originEnvFrame: ShapeSize) {
     // 水平 HORIZONTAL
     if (ResizingConstraints2.isHorizontalScale(resizingConstraint)) { // 跟随缩放。一旦跟随缩放，则不需要考虑其他约束场景了

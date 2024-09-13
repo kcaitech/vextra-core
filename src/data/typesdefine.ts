@@ -870,6 +870,7 @@ export type Shape = {
     overlayBackgroundAppearance?: OverlayBackgroundAppearance,
     scrollDirection?: ScrollDirection,
     mask?: boolean,
+    uniformScale?: number,
 }
 /* table cell */
 export type TableCell = Shape & {
@@ -943,6 +944,7 @@ export type SymbolRefShape = Shape & {
     overrides?: Map<string, string>,
     isCustomSize?: boolean,
     cornerRadius?: CornerRadius,
+    innerEnvScale?: number,
 }
 /* contact shape */
 export type ContactShape = PathShape & {

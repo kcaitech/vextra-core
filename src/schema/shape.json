@@ -94,6 +94,9 @@
         },
         "mask": {
             "type": "boolean"
+        },
+        "uniformScale": {
+            "type": "number"
         }
     },
     "required": [
