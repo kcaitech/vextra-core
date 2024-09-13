@@ -1,0 +1,27 @@
+{
+    "description": "oval shape",
+    "type": "object",
+    "properties": {
+        "ellipse": {
+            "$ref": "./ellipse.json"
+        },
+        "startingAngle": {
+            "type": "number"
+        },
+        "endingAngle": {
+            "type": "number"
+        },
+        "innerRadius": {
+            "type": "number"
+        }
+    },
+    "required": [
+        "ellipse"
+    ],
+    "allOf": [
+        {
+            "$ref": "./path-shape.json"
+        }
+    ],
+    "additionalProperties": false
+}
