@@ -682,7 +682,7 @@ export function uniformScale(
     function getScale(s: ShapeView) {
         let scale = valueRecorder.get(s.id);
         if (scale === undefined) {
-            scale = s.scale ?? 1;
+            scale = s.uniformScale ?? 1;
             valueRecorder.set(s.id, scale);
         }
         return scale;

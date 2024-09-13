@@ -954,7 +954,7 @@ export class PageEditor {
 
             const symbolData = exportArtboard(tmpArtboard); // todo 如果symbol只有一个child时
 
-            if (shape.scale && shape.scale !== 1) solidify(symbolData as GroupShape, shape.scale);
+            if (shape.uniformScale && shape.uniformScale !== 1) solidify(symbolData as GroupShape, shape.uniformScale);
 
             // 遍历symbolData,如有symbolref,则查找根shape是否有对应override的变量,如有则存到symbolref内
             transferVars(shape, symbolData);
@@ -1051,7 +1051,7 @@ export class PageEditor {
 
                 if (child instanceof GroupShape) {
                     let innerScale = uniformScale;
-                    if (child.scale) innerScale *= child.scale;
+                    if (child.uniformScale) innerScale *= child.uniformScale;
                     solidify(child, innerScale);
                 }
             }

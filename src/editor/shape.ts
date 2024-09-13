@@ -193,7 +193,7 @@ export class ShapeEditor {
                     const sym = view.symData;
                     if (sym) api.shapeModifyWH(this.__page, view.data, sym.size.width, sym.size.height);
                 }
-                if (view.scale && view.scale !== 1) {
+                if (view.uniformScale && view.uniformScale !== 1) {
                     api.modifyShapeScale(this.__page, view.data, 1);
                 }
             } else {
