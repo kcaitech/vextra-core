@@ -351,7 +351,6 @@ export type Point2D = {
     x: number,
     y: number,
 }
-export type PrototypeActions_easingFunction = Array<number>
 /* connectionType */
 export enum PrototypeConnectionType {
     NONE = "NONE",
@@ -359,6 +358,14 @@ export enum PrototypeConnectionType {
     BACK = "BACK",
     URL = "URL",
     CLOSE = "CLOSE",
+}
+/* prototypeEasingBezier */
+export type PrototypeEasingBezier = {
+    typeId: string,
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number,
 }
 /* easingType */
 export enum PrototypeEasingType {
@@ -369,6 +376,7 @@ export enum PrototypeEasingType {
     INBACKCUBIC = "IN_BACK_CUBIC",
     OUTBACKCUBIC = "OUT_BACK_CUBIC",
     INOUTBACKCUBIC = "INOUT_BACK_CUBIC",
+    CUSTOMCUBIC = "CUSTOM_CUBIC",
 }
 /* interactionType */
 export enum PrototypeEvents {
@@ -705,7 +713,7 @@ export type PrototypeActions = {
     connectionURL?: string,
     openUrlInNewTab?: boolean,
     navigationType?: PrototypeNavigationType,
-    easingFunction?: PrototypeActions_easingFunction,
+    easingFunction?: PrototypeEasingBezier,
     extraScrollOffset?: Point2D,
 }
 /* event */

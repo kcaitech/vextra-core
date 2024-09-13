@@ -123,6 +123,7 @@ export {
     PrototypeEvent,
     PrototypeNavigationType,
     PrototypeTransitionType,
+    PrototypeEasingBezier,
 
     ScrollDirection
 } from "./data"

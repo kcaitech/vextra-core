@@ -4,6 +4,7 @@ import * as types from "./typesdefine"
 import { BasicArray, BasicMap } from "./basic"
 import { uuid } from "../basic/uuid"
 import { compatibleOldData } from "./basecompatible"
+import { is_mac } from "./utils"
 export interface IImportContext {
     document: impl.Document
     curPage: string
@@ -23,7 +24,6 @@ type Para_spans = BasicArray<impl.Span>
 type PathSegment_points = BasicArray<impl.CurvePoint>
 type PathShape_pathsegs = BasicArray<impl.PathSegment>
 type PathShape2_pathsegs = BasicArray<impl.PathSegment>
-type PrototypeActions_easingFunction = BasicArray<number>
 type PrototypeInterAction_crdtidx = BasicArray<number>
 type Shape_prototypeInteractions = BasicArray<impl.PrototypeInterAction>
 type Style_borders = BasicArray<impl.Border>
@@ -508,16 +508,18 @@ export function importPoint2D(source: types.Point2D, ctx?: IImportContext): impl
         source.y)
     return ret
 }
-export function importPrototypeActions_easingFunction(source: types.PrototypeActions_easingFunction, ctx?: IImportContext): PrototypeActions_easingFunction {
-    const ret: PrototypeActions_easingFunction = new BasicArray()
-    source.forEach((source, i) => {
-        ret.push(source)
-    })
-    return ret
-}
 /* connectionType */
 export function importPrototypeConnectionType(source: types.PrototypeConnectionType, ctx?: IImportContext): impl.PrototypeConnectionType {
     return source
+}
+/* prototypeEasingBezier */
+export function importPrototypeEasingBezier(source: types.PrototypeEasingBezier, ctx?: IImportContext): impl.PrototypeEasingBezier {
+    const ret: impl.PrototypeEasingBezier = new impl.PrototypeEasingBezier (
+        source.x1,
+        source.y1,
+        source.x2,
+        source.y2)
+    return ret
 }
 /* easingType */
 export function importPrototypeEasingType(source: types.PrototypeEasingType, ctx?: IImportContext): impl.PrototypeEasingType {
@@ -885,7 +887,7 @@ function importPrototypeActionsOptional(tar: impl.PrototypeActions, source: type
     if (source.connectionURL) tar.connectionURL = source.connectionURL
     if (source.openUrlInNewTab) tar.openUrlInNewTab = source.openUrlInNewTab
     if (source.navigationType) tar.navigationType = importPrototypeNavigationType(source.navigationType, ctx)
-    if (source.easingFunction) tar.easingFunction = importPrototypeActions_easingFunction(source.easingFunction, ctx)
+    if (source.easingFunction) tar.easingFunction = importPrototypeEasingBezier(source.easingFunction, ctx)
     if (source.extraScrollOffset) tar.extraScrollOffset = importPoint2D(source.extraScrollOffset, ctx)
 }
 export function importPrototypeActions(source: types.PrototypeActions, ctx?: IImportContext): impl.PrototypeActions {
@@ -1161,7 +1163,7 @@ export function importTableCell(source: types.TableCell, ctx?: IImportContext): 
                 text: "\n",
                 spans: [
                     {
-                        fontName: "PingFang SC",
+                        fontName: is_mac() ? "PingFang SC" : "微软雅黑",
                         fontSize: 14,
                         length: 1,
                         color: {
