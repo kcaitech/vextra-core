@@ -135,11 +135,6 @@ import {
     PrototypeStartingPoint,
     PrototypeTransitionType,
     ScrollDirection,
-    OverlayPosition,
-    OverlayMargin,
-    PrototypeEvent,
-    PrototypeActions,
-    Crdtidx,
     PrototypeEasingBezier,
     Shadow
 } from "../data/baseclasses";
