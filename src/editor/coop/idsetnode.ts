@@ -49,14 +49,14 @@ importh['paint-filter'] = importPaintFilter;
 importh['overlay-position']=importOverlayPosition
 importh['prototype-easing-bezier']=importPrototypeEasingBezier
 
-function apply(document: Document, target: Object, op: IdOp): IdOpRecord {
+function apply(document: Document, target: Object, op: IdOp, fmtVer: number): IdOpRecord {
     let value = op.data;
     if (typeof op.data === 'string' && (op.data[0] === '{' || op.data[0] === '[')) {
         // import data
         const ctx: IImportContext = new class implements IImportContext {
             document: Document = document;
             curPage: string = ""; // 这个用于判断symbol 可以不设置
-            fmtVer: number = FMT_VER_latest
+            fmtVer: number = fmtVer ?? 0
         };
         const data = JSON.parse(op.data);
         const typeId = data.typeId;
@@ -199,7 +199,8 @@ export class CrdtIdRepoNode extends RepoNode {
             this.localops.forEach(item => (item.op as IdOpRecord).target = undefined) // 不可再undo
         } else {
             if (this.localops.length === 0) {
-                apply(this.document, target, this.ops[this.ops.length - 1].op as IdOp)
+                const item = this.ops[this.ops.length - 1]
+                apply(this.document, target, item.op as IdOp, item.cmd.dataFmtVer)
             }
         }
     }
@@ -241,7 +242,7 @@ export class CrdtIdRepoNode extends RepoNode {
         const op0 = ops[0].op as IdOpRecord;
         const target = op0.target; // this.getOpTarget(op0.path.slice(0, op0.path.length - 1));
         const rop = revert(op0);
-        const record = target && apply(this.document, target, rop) || stringifyData(rop)
+        const record = target && apply(this.document, target, rop, FMT_VER_latest) || stringifyData(rop)
         if (receiver) {
             receiver.ops.push(record);
             this.commit([{ cmd: receiver, op: record }]);
@@ -260,7 +261,7 @@ export class CrdtIdRepoNode extends RepoNode {
         const target = this.getOpTarget(op0.path.slice(0, op0.path.length - 1));
         const op = ops[ops.length - 1].op as IdOpRecord;
         const rop = revert(op);
-        const record = target && apply(this.document, target, rop) || stringifyData(rop);
+        const record = target && apply(this.document, target, rop, FMT_VER_latest) || stringifyData(rop);
         if (receiver) {
             receiver.ops.push(record);
             this.commit([{ cmd: receiver, op: record }]);
@@ -309,12 +310,12 @@ export class CrdtIdRepoNode extends RepoNode {
                 id: op.id,
                 type: op.type,
                 path: op.path,
-            });
+            }, item.cmd.dataFmtVer);
         } else {
             const op = ops[verIdx - 1];
             if (!op) throw new Error("not found");
             _version = op.cmd.version;
-            ret = apply(this.document, target, op.op as IdOp);
+            ret = apply(this.document, target, op.op as IdOp, op.cmd.dataFmtVer);
         }
         if (_version && ret && (typeof ret.data2 === 'object') && ret.data2.id) {
             const updateVers = new Map<string, string>();
