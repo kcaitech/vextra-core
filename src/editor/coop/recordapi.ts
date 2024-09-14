@@ -1172,6 +1172,21 @@ export class Api {
         this.addOp(basicapi.crdtSetAttr(blur, 'isEnabled', isEnabled));
     }
 
+    ovalModifyStartingAngle(page: Page, shape: Shape | Variable, angle: number) {
+        checkShapeAtPage(page, shape);
+        this.addOp(basicapi.crdtSetAttr(shape, 'startingAngle', angle));
+    }
+
+    ovalModifyEndingAngle(page: Page, shape: Shape | Variable, angle: number) {
+        checkShapeAtPage(page, shape);
+        this.addOp(basicapi.crdtSetAttr(shape, 'endingAngle', angle));
+    }
+
+    ovalModifyInnerRadius(page: Page, shape: Shape | Variable, radius: number) {
+        checkShapeAtPage(page, shape);
+        this.addOp(basicapi.crdtSetAttr(shape, 'innerRadius', radius));
+    }
+
     // cutout
     deleteExportFormatAt(page: Page, shape: Shape | Variable, idx: number) {
         checkShapeAtPage(page, shape);
@@ -1268,7 +1283,7 @@ export class Api {
     }
     modifyShapeScale(page: Page, shape: Shape, value: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(crdtSetAttr(shape,'scale', value));
+        this.addOp(crdtSetAttr(shape,'uniformScale', value));
     }
     // text
     insertSimpleText(page: Page, shape: TextShapeLike | Variable, idx: number, text: string, attr?: SpanAttr) {

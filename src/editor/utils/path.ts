@@ -507,9 +507,7 @@ export function after_insert_point(page: Page, api: Api, path_shape: Shape, inde
     const xy = get_node_xy_by_round(previous, next);
     api.shapeModifyCurvPoint(page, path_shape, index, xy, __segment);
 
-    if (!is_curve(previous, next)) {
-        return;
-    }
+    if (!is_curve(previous, next)) return;
 
     api.modifyPointCurveMode(page, path_shape, index, CurveMode.Asymmetric, __segment);
     const { start, from, to, end } = get_curve(previous, next);
