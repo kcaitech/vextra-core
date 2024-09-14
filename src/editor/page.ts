@@ -52,7 +52,6 @@ import {
     Color,
     Fill,
     Gradient,
-    Path,
     PathShape,
     Stop,
     Style,
@@ -172,6 +171,7 @@ import { ColVector3D } from "../basic/matrix2";
 import { Transform as Transform2 } from "../basic/transform";
 import { getFormatFromBase64 } from "../basic/utils";
 import { uniformScale, UniformScaleUnit } from "./asyncApiHandler";
+import { Path } from "@kcdesign/path";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -1151,7 +1151,7 @@ export class PageEditor {
                 pathstr = shapepath.toString();
             }
         })
-        const path = new Path(pathstr);
+        const path = Path.fromSVGString(pathstr);
         path.translate(-frame.x, -frame.y);
 
         let pathShape = newPathShape(name, frame, path, style);
@@ -1198,13 +1198,13 @@ export class PageEditor {
             }
 
             const gframe = shape.frame;
-            const boundingBox = path.calcBounds();
-            const x = boundingBox.minX;
-            const y = boundingBox.minY;
-            const w = boundingBox.maxX - boundingBox.minX;
-            const h = boundingBox.maxY - boundingBox.minY;
+            const boundingBox = path.bbox();
+            const x = boundingBox.x;
+            const y = boundingBox.y;
+            const w = boundingBox.w;
+            const h = boundingBox.h;
             const frame = new ShapeFrame(gframe.x, gframe.y, w, h);
-            path.translate(-boundingBox.minX, -boundingBox.minY);
+            path.translate(-boundingBox.x, -boundingBox.y);
             let pathShape = newPathShape(shape.name, frame, path, style);
             pathShape.fixedRadius = shape.fixedRadius;
             pathShape.transform = makeShapeTransform1By2(new Transform2() // shape图层坐标系

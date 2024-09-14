@@ -45,7 +45,6 @@ import {
     FillType,
     Para,
     ParaAttr,
-    Path,
     ShapeFrame,
     Span,
     Style,
@@ -81,6 +80,8 @@ import { newText } from "../data/textutils";
 import { getPolygonPoints, getPolygonVertices } from "./utils/path";
 import { makeShapeTransform2By1, updateShapeTransform1By2 } from "../data";
 import { is_mac } from "../data/utils";
+import { Path } from "@kcdesign/path";
+import { convertPath2CurvePoints } from "src/data/pathconvert";
 
 function _checkNum(x: number) {
     // check
@@ -229,7 +230,7 @@ export function newPathShape(name: string, frame: ShapeFrame, path: Path, style?
 
     style = style || newStyle();
     const id = uuid();
-    const segs = path.toCurvePoints(frame.width, frame.height);
+    const segs = convertPath2CurvePoints(path, frame.width, frame.height);
     const pathsegs = new BasicArray<PathSegment>();
     segs.forEach((seg, i) => {
         const points = seg.points;

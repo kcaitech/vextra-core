@@ -10,10 +10,11 @@ import { ContactShape } from "../../data/contact";
 import { get_box_pagexy, get_nearest_border_point } from "../../data/utils";
 import { PathType } from "../../data/consts";
 import { importCurvePoint } from "../../data/baseimport";
-import { Border, makeShapeTransform1By2, makeShapeTransform2By1, Path } from "../../data";
+import { Border, makeShapeTransform1By2, makeShapeTransform2By1 } from "../../data";
 import { ColVector3D } from "../../basic/matrix2";
 import { ContactLineView, PathShapeView, ShapeView } from "../../dataview";
 import { Cap, gPal, IPalPath, Join } from "../../basic/pal";
+import { Path } from "@kcdesign/path";
 
 interface XY {
     x: number
@@ -663,7 +664,7 @@ export function borders2path(shape: ShapeView, borders: Border[]): Path {
         const p0 = gPal.makePalPath(path.toString());
         const newpath = p0.stroke({ width: (insidewidth + outsidewidth) });
         p0.delete();
-        return new Path(newpath);
+        return Path.fromSVGString(newpath);
     }
     if (insidewidth === 0) {
         const path = shape.getPathStr();
@@ -674,7 +675,7 @@ export function borders2path(shape: ShapeView, borders: Border[]): Path {
         const newpath = p0.toSVGString();
         p0.delete();
         p1.delete();
-        return new Path(newpath);
+        return Path.fromSVGString(newpath);
     } else if (outsidewidth === 0) {
         const path = shape.getPathStr();
         const p0 = gPal.makePalPath(path);
@@ -685,7 +686,7 @@ export function borders2path(shape: ShapeView, borders: Border[]): Path {
         const newpath = p0.toSVGString();
         p0.delete();
         p1.delete();
-        return new Path(newpath);
+        return Path.fromSVGString(newpath);
     } else {
         const path = shape.getPathStr();
         const p0 = gPal.makePalPath(path);
@@ -705,7 +706,7 @@ export function borders2path(shape: ShapeView, borders: Border[]): Path {
         p0.delete();
         p1.delete();
         p2.delete();
-        return new Path(newpath);
+        return Path.fromSVGString(newpath);
     }
 }
 
@@ -817,7 +818,7 @@ export function border2path(shape: ShapeView, border: Border) {
 
     stack.forEach(i => i?.delete());
 
-    return new Path(__path_str);
+    return Path.fromSVGString(__path_str);
 
     function getRadians(pre: CurvePoint, next: CurvePoint, isEnd?: boolean) {
         if (!pre.hasFrom && !next.hasTo) {
