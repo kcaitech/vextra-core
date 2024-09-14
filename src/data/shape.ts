@@ -24,7 +24,6 @@ import {
     OverlayMargin,
     Color
 } from "./baseclasses"
-import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
 import { TextLayout } from "./textlayout";
 import { parsePath } from "./pathparser";
@@ -32,6 +31,7 @@ import { PathType, RadiusType, RECT_POINTS } from "./consts";
 import { Variable } from "./variable";
 import { Transform } from "./transform";
 import { makeShapeTransform2By1 } from "./shape_transform_util";
+import { Path } from "@kcdesign/path";
 
 export { Transform } from "./transform";
 export {
@@ -306,8 +306,8 @@ export class Shape extends Basic implements classes.Shape {
         if (path.length > 0) {
             const m = this.transform;
             path.transform(m);
-            const bounds = path.calcBounds();
-            return new ShapeFrame(bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
+            const bounds = path.bbox();
+            return new ShapeFrame(bounds.x, bounds.y, bounds.w, bounds.h);
         }
 
         const frame = this.frame;
@@ -352,8 +352,8 @@ export class Shape extends Basic implements classes.Shape {
     boundingBox3(): ShapeFrame | undefined {
         const path = this.getPath();
         if (path.length > 0) {
-            const bounds = path.calcBounds();
-            return new ShapeFrame(bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
+            const bounds = path.bbox();
+            return new ShapeFrame(bounds.x, bounds.y, bounds.w, bounds.h);
         }
     }
 
@@ -511,12 +511,12 @@ export class GroupShape extends Shape implements classes.GroupShape {
         const y = 0;
         const w = frame.width;
         const h = frame.height;
-        let path = [["M", x, y],
+        const path = [["M", x, y],
             ["l", w, 0],
             ["l", 0, h],
             ["l", -w, 0],
             ["z"]];
-        return new Path(path);
+        return Path.fromSVGString(path.join(''));
     }
 
     // get isNoSupportDiamondScale() {
@@ -641,7 +641,7 @@ export function getPathOfRadius(frame: ShapeSize, cornerRadius?: CornerRadius, f
             ["l", -w, 0],
             ["z"]
         ]
-        return new Path(path);
+        return Path.fromSVGString(path.join(''));
     }
 
     const maxRadius = Math.min(w / 2, h / 2);
@@ -701,7 +701,7 @@ export function getPathOfRadius(frame: ShapeSize, cornerRadius?: CornerRadius, f
         p4.radius = lb;
     }
 
-    return new Path(parsePath(new BasicArray<CurvePoint>(p1, p2, p3, p4), true, w, h, fixedRadius));
+    return (parsePath(new BasicArray<CurvePoint>(p1, p2, p3, p4), true, w, h, fixedRadius));
 }
 
 export class SymbolShape extends GroupShape implements classes.SymbolShape {
@@ -896,12 +896,12 @@ export class PathShape extends Shape implements classes.PathShape {
 
         fixedRadius = this.fixedRadius ?? fixedRadius;
 
-        const path: any[] = [];
+        const path: Path = new Path();
         this.pathsegs.forEach((seg) => {
-            path.push(...parsePath(seg.points, seg.isClosed, width, height, fixedRadius));
+            path.addPath(parsePath(seg.points, seg.isClosed, width, height, fixedRadius));
         });
 
-        return new Path(path);
+        return path
     }
 
     // setRadius(radius: number): void {
@@ -979,12 +979,12 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
 
         fixedRadius = this.fixedRadius ?? fixedRadius;
 
-        const path: any[] = [];
+        const path: Path = new Path();
         this.pathsegs.forEach((seg) => {
-            path.push(...parsePath(seg.points, seg.isClosed, width, height, fixedRadius));
+            path.addPath(parsePath(seg.points, seg.isClosed, width, height, fixedRadius));
         });
 
-        return new Path(path);
+        return path
     }
 
     get radius(): number[] {
@@ -1214,8 +1214,7 @@ export class TextShape extends Shape implements classes.TextShape {
 
         fixedRadius = this.fixedRadius ?? fixedRadius;
         if (fixedRadius) {
-            const path = parsePath(RECT_POINTS, true, w, h, fixedRadius);
-            return new Path(path);
+            return parsePath(RECT_POINTS, true, w, h, fixedRadius);
         }
 
         const x = 0;
@@ -1225,7 +1224,7 @@ export class TextShape extends Shape implements classes.TextShape {
             ["l", 0, h],
             ["l", -w, 0],
             ["z"]];
-        return new Path(path);
+        return Path.fromSVGString(path.join(''));
     }
 
     getLayout(): TextLayout {

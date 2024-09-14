@@ -7,11 +7,11 @@ export {
 } from "./baseclasses"
 import { ShapeType, ShapeFrame, OverrideType } from "./baseclasses"
 import {Shape, SymbolShape, CornerRadius, Transform, ShapeSize} from "./shape";
-import { Path } from "./path";
 import { Variable } from "./variable";
 import { SymbolMgr } from "./symbolmgr";
 import { PathType, RadiusType } from "./consts";
 import { exportSymbolRefShape } from "./baseexport";
+import { Path } from "@kcdesign/path";
 
 function genRefId(refId: string, type: OverrideType) {
     if (type === OverrideType.Variable) return refId;
@@ -138,7 +138,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
             ["l", -w, 0],
             ["z"]
         ]
-        return new Path(path);
+        return Path.fromSVGString(path.join(''));
     }
 
     getOverrid(refId: string, type: OverrideType): { refId: string, v: Variable } | undefined {

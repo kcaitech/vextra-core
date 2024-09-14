@@ -1,11 +1,12 @@
 
 
 import { DefaultColor, randomId } from "./basic";
-import { Path, Color, FillType, Gradient, UnderlineType, StrikethroughType, Blur, BlurType, SpanAttr, ShapeSize } from '../data/classes';
+import { Color, FillType, Gradient, UnderlineType, StrikethroughType, Blur, BlurType, SpanAttr, ShapeSize } from '../data/classes';
 import { GraphArray, TextLayout } from "../data/textlayout";
 import { gPal } from "../basic/pal";
 import { render as renderGradient } from "./gradient";
 import { objectId } from "../basic/objectid";
+import { Path } from "@kcdesign/path";
 
 // function toRGBA(color: Color): string {
 //     // return "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";
@@ -48,13 +49,14 @@ export function renderText2Path(layout: TextLayout, offsetX: number, offsetY: nu
 
                 const weight = (span?.weight) || 400;
                 const italic = !!(span?.italic);
-                paths.push(...garr.map((g) => {
-                    if (isBlankChar(g.char.charCodeAt(0))) return new Path();
+                
+                garr.forEach((g) => {
+                    if (isBlankChar(g.char.charCodeAt(0))) return;
                     const pathstr = getTextPath(font, fontSize, italic, weight, g.char.charCodeAt(0))
-                    const path = new Path(pathstr)
+                    const path = Path.fromSVGString(pathstr)
                     path.translate(g.x + lineX, baseY);
-                    return path;
-                }))
+                    paths.addPath(path)
+                })
             }
         }
     }

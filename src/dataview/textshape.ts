@@ -1,7 +1,6 @@
 import {
     OverrideType,
     Para,
-    Path,
     BasicArray,
     TextLayout,
     ShapeSize,
@@ -22,6 +21,7 @@ import {
 } from "../data/textlocate";
 import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "../data/textutils";
 import { objectId } from "../basic/objectid";
+import { Path } from "@kcdesign/path";
 
 export class TextShapeView extends ShapeView {
     __str: string | undefined;

@@ -15,10 +15,9 @@ import {
 import { Style } from "./style";
 import * as classes from "./baseclasses";
 import { BasicArray } from "./basic";
-import { Path } from "./path";
 import { RadiusType } from "./consts";
 import { Guide } from "./baseclasses";
-import { exportArtboard, IExportContext } from "./baseexport";
+import { Path } from "@kcdesign/path";
 
 
 export class Artboard extends GroupShape implements classes.Artboard {

@@ -72,7 +72,6 @@ export {
     BulletNumbersType,
     PageListItem,
     GuideAxis,
-    Path,
     BoolOp,
     ContactType,
     SpanAttr,
@@ -182,3 +181,4 @@ export { Transform as TransformRaw } from "./data/transform"
 export { exportBorder, exportFill, exportShadow, exportBlur } from './data/baseexport';
 
 
+export { Path } from '@kcdesign/path'

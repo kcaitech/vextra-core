@@ -3,10 +3,10 @@ import * as classes from "./baseclasses"
 import { BasicArray, BasicMap, ResourceMgr } from "./basic";
 import { ShapeType, TableCellType, CrdtNumber, ShapeFrame } from "./baseclasses"
 import {Shape, Transform, ShapeSize} from "./shape";
-import { Path } from "./path";
 import { Text, TextAttr } from "./text"
 import { PathType } from "./consts";
 import { newTableCellText } from "./textutils";
+import { Path } from "@kcdesign/path";
 export { TableLayout, TableGridItem } from "./tablelayout";
 export { TableCellType } from "./baseclasses";
 export { CrdtNumber } from "./baseclasses";
@@ -89,7 +89,7 @@ export class TableCell extends Shape implements classes.TableCell {
         ["l", 0, h],
         ["l", -w, 0],
         ["z"]];
-        return new Path(path);
+        return Path.fromSVGString(path.join(''));
     }
 
     getPathOfSize(frame: ShapeSize, fixedRadius?: number): Path {
@@ -102,7 +102,7 @@ export class TableCell extends Shape implements classes.TableCell {
         ["l", 0, h],
         ["l", -w, 0],
         ["z"]];
-        return new Path(path);
+        return Path.fromSVGString(path.join(''));
     }
 
     isImageCell() {
@@ -260,7 +260,7 @@ export class TableShape extends Shape implements classes.TableShape {
         ["l", 0, h],
         ["l", -w, 0],
         ["z"]];
-        return new Path(path);
+        return Path.fromSVGString(path.join(''));
     }
     // getLayout(): TableLayout {
     //     this.__layout.update(this);

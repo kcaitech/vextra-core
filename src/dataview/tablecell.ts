@@ -1,5 +1,5 @@
 import { TextLayout } from "../data/textlayout";
-import { BlurType, Path, ShapeFrame, TableCell, TableCellType, Text } from "../data/classes";
+import { BlurType, ShapeFrame, TableCell, TableCellType, Text } from "../data/classes";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
 import { renderText2Path, renderTextLayout } from "../render/text";
@@ -9,6 +9,7 @@ import { newTableCellText } from "../data/textutils";
 import { objectId } from "../basic/objectid";
 import { TableView } from "./table";
 import { innerShadowId } from "../render";
+import { Path } from "@kcdesign/path";
 
 export class TableCellView extends ShapeView {
 

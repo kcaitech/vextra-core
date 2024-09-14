@@ -17,7 +17,6 @@ import {
     OverlayBackgroundInteraction,
     OverlayPosition,
     OverrideType,
-    Path,
     PathShape,
     Point2D,
     PrototypeInterAction,
@@ -50,6 +49,7 @@ import { exportBorder, exportFill } from "../data/baseexport";
 import { PageView } from "./page";
 import { ArtboradView } from "./artboard";
 import { findOverrideAll } from "../data/utils";
+import { Path } from "@kcdesign/path";
 
 export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     return (
@@ -145,11 +145,11 @@ export function boundingBox(frame: ShapeSize, shape: Shape): ShapeFrame {
 
     const path = shape.getPathOfSize(frame);
     if (path.length > 0) {
-        const bounds = path.calcBounds();
-        _minx = bounds.minX;
-        _maxx = bounds.maxX;
-        _miny = bounds.minY;
-        _maxy = bounds.maxY;
+        const bounds = path.bbox();
+        _minx = bounds.x;
+        _maxx = bounds.x2;
+        _miny = bounds.y;
+        _maxy = bounds.y2;
     }
 
     const m = shape.matrix2Parent();
@@ -353,8 +353,8 @@ export class ShapeView extends DataView {
         if (path.length > 0) {
             const m = this.matrix2Parent();
             path.transform(m);
-            const bounds = path.calcBounds();
-            return new ShapeFrame(bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
+            const bounds = path.bbox();
+            return new ShapeFrame(bounds.x, bounds.y, bounds.w, bounds.h);
         }
 
         const frame = this.frame;
@@ -380,8 +380,8 @@ export class ShapeView extends DataView {
         if (path.length > 0) {
             const m = this.matrix2Parent();
             path.transform(m);
-            const bounds = path.calcBounds();
-            return new ShapeFrame(bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
+            const bounds = path.bbox();
+            return new ShapeFrame(bounds.x, bounds.y, bounds.w, bounds.h);
         }
 
         const frame = this.frame;

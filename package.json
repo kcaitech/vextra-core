@@ -20,6 +20,7 @@
     "schema": "tsx src/schema/script"
   },
   "dependencies": {
+    "@kcdesign/path": "file:../kcdesign-path",
     "kiwi-schema": "^0.5.0",
     "uuid": "^9.0.0",
     "uzip": "^0.20201231.0"
