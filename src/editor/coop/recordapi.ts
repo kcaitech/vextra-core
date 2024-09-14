@@ -1272,7 +1272,7 @@ export class Api {
     }
     modifyShapeScale(page: Page, shape: Shape, value: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(crdtSetAttr(shape,'scale', value));
+        this.addOp(crdtSetAttr(shape,'uniformScale', value));
     }
     // text
     insertSimpleText(page: Page, shape: TextShapeLike | Variable, idx: number, text: string, attr?: SpanAttr) {
