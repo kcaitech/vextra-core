@@ -81,7 +81,7 @@ import { getPolygonPoints, getPolygonVertices } from "./utils/path";
 import { makeShapeTransform2By1, updateShapeTransform1By2 } from "../data";
 import { is_mac } from "../data/utils";
 import { Path } from "@kcdesign/path";
-import { convertPath2CurvePoints } from "src/data/pathconvert";
+import { convertPath2CurvePoints } from "../data/pathconvert";
 
 function _checkNum(x: number) {
     // check
