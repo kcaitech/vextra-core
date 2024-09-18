@@ -2,7 +2,7 @@ import { expandTo, translateTo } from "../frame";
 import { Api } from "../coop/recordapi";
 import { is_straight, update_frame_by_points } from "./path";
 import { getHorizontalRadians } from "../page";
-import { Artboard, Document, GroupShape, PathShape, Shape, ShapeFrame, Page } from "../../data";
+import { Artboard, Document, PathShape, ShapeFrame, Page } from "../../data";
 import { Point2D, StackSizing } from "../../data/typesdefine";
 import { float_accuracy } from "../../basic/consts";
 import { reLayoutBySizeChanged } from "../asyncApiHandler";

@@ -66,7 +66,7 @@ import {
 import * as types from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
-import { AutoLayout, ContactForm, ContactRole, ContextSettings, CurvePoint, ExportFormat, ExportOptions, PaintFilter, PrototypeInterAction } from "../../data/baseclasses";
+import { ContactForm, ContactRole, ContextSettings, AutoLayout, CurvePoint, ExportFormat, ExportOptions, PaintFilter, PrototypeEasingBezier, PrototypeInterAction } from "../../data/baseclasses";
 import { ContactShape } from "../../data/contact"
 import { Color } from "../../data/classes";
 import { Op, OpType } from "../../coop/common/op";
@@ -591,14 +591,13 @@ export class Api {
         this.addOp(basicapi.crdtSetAttr(action, 'transitionDuration', value))
     }
 
-    shapeModifyPrototypeActionEasingType(page: Page, shape: Shape | Variable, id: string, value: PrototypeEasingType, esfn: BasicArray<number>) {
+    shapeModifyPrototypeActionEasingType(page: Page, shape: Shape | Variable, id: string, value: PrototypeEasingType) {
         checkShapeAtPage(page, shape)
         const prototypeInteractions: BasicArray<PrototypeInterAction> = shape instanceof Variable ? shape.value : shape.prototypeInteractions;
         if (!prototypeInteractions) return;
         const action = prototypeInteractions?.find(i => i.id === id)?.actions;
         if (!action) return;
         this.addOp(basicapi.crdtSetAttr(action, 'easingType', value));
-        this.addOp(basicapi.crdtSetAttr(action, 'easingFunction', esfn))
     }
 
     shapeModifyPrototypeActionConnectionURL(page: Page, shape: Shape | Variable, id: string, value: string) {
@@ -619,12 +618,17 @@ export class Api {
         this.addOp(basicapi.crdtSetAttr(action, 'openUrlInNewTab', value))
     }
 
-    shapeModifyPrototypeActionEasingFunction(page: Page, shape: Shape | Variable, id: string, value: BasicArray<number>) {
+    shapeModifyPrototypeActionEasingFunction(page: Page, shape: Shape | Variable, id: string, value: PrototypeEasingBezier) {
         checkShapeAtPage(page, shape)
         const prototypeInteractions: BasicArray<PrototypeInterAction> = shape instanceof Variable ? shape.value : shape.prototypeInteractions;
         if (!prototypeInteractions) return;
         const action = prototypeInteractions?.find(i => i.id === id)?.actions;
         if (!action) return;
+        let easingFunction = action.easingFunction;
+        if (!easingFunction) {
+            easingFunction = new PrototypeEasingBezier(0, 0, 1, 1)
+            this.addOp(basicapi.crdtSetAttr(action, 'easingFunction', easingFunction))
+        }
         this.addOp(basicapi.crdtSetAttr(action, 'easingFunction', value))
     }
 
@@ -1382,6 +1386,10 @@ export class Api {
         this.addOp(crdtSetAttr(shape, "stackPositioning", position));
     }
 
+    modifyShapeScale(page: Page, shape: Shape, value: number) {
+        checkShapeAtPage(page, shape);
+        this.addOp(crdtSetAttr(shape,'uniformScale', value));
+    }
     // text
     insertSimpleText(page: Page, shape: TextShapeLike | Variable, idx: number, text: string, attr?: SpanAttr) {
         checkShapeAtPage(page, shape);
@@ -1614,6 +1622,17 @@ export class Api {
         len = alignRange.len;
         this.addOp(basicapi.textModifyParaSpacing(shape, _text, paraSpacing, index, len));
     }
+    textModifyPaddingHor(page: Page, shape: TextShapeLike | Variable, padding: { left: number, right: number },  index: number, len: number) {
+        checkShapeAtPage(page, shape);
+        const _text = shape instanceof ShapeView ? shape.text : shape.value;
+        if (!_text || !(_text instanceof Text)) throw Error();
+
+        const alignRange = _text.alignParaRange(index, len);
+        index = alignRange.index;
+        len = alignRange.len;
+        this.addOp(basicapi.textModifyPaddingHor(shape, _text, padding, index, len));
+    }
+
     textModifyTransform(page: Page, shape: TextShapeLike | Variable, transform: TextTransformType | undefined, index: number, len: number) {
         checkShapeAtPage(page, shape);
         const _text = shape instanceof ShapeView ? shape.text : shape.value;

@@ -34,7 +34,8 @@ import {
     newArtboard,
     newAutoLayoutArtboard,
     newBoolShape,
-    newGroupShape, newImageFillShape,
+    newGroupShape,
+    newImageFillShape,
     newLineShape,
     newOvalShape,
     newPathShape,
@@ -57,6 +58,8 @@ import {
     Stop,
     Style,
     SymbolRefShape,
+    TableShape,
+    Text,
     Transform
 } from "../data/classes";
 import { TextShapeEditor } from "./textshape";
@@ -120,27 +123,31 @@ import {
     AutoLayout,
     BorderSideSetting,
     BorderStyle,
-    CurvePoint,
     ExportFormat,
-    Point2D,
-    PrototypeInterAction,
-    PrototypeStartingPoint,
-    Shadow,
-    PrototypeEvents,
-    PrototypeConnectionType,
-    PrototypeNavigationType,
-    PrototypeTransitionType,
-    PrototypeEasingType,
-    OverlayPositionType,
-    OverlayBackgroundInteraction,
     OverlayBackgroundAppearance,
-    ScrollDirection,
-    OverlayPosition,
-    OverlayMargin,
+    OverlayBackgroundInteraction,
+    OverlayPositionType,
+    Point2D,
+    PrototypeActions,
+    PrototypeConnectionType,
+    PrototypeEasingType,
     PrototypeEvent,
-    PrototypeActions
+    PrototypeEvents,
+    PrototypeInterAction,
+    PrototypeNavigationType,
+    PrototypeStartingPoint,
+    PrototypeTransitionType,
+    ScrollDirection,
+    PrototypeEasingBezier,
+    Shadow
 } from "../data/baseclasses";
-import { border2path, calculateInnerAnglePosition, getPolygonPoints, getPolygonVertices, update_frame_by_points } from "./utils/path";
+import {
+    border2path,
+    calculateInnerAnglePosition,
+    getPolygonPoints,
+    getPolygonVertices,
+    update_frame_by_points
+} from "./utils/path";
 import { modify_shapes_height, modify_shapes_width } from "./utils/common";
 import { CoopRepository } from "./coop/cooprepo";
 import { Api, TextShapeLike } from "./coop/recordapi";
@@ -169,6 +176,7 @@ import { Transform as Transform2 } from "../basic/transform";
 import { getAutoLayoutShapes, initAutoLayout, layoutShapesOrder, layoutSpacing, modifyAutoLayout, tidyUpLayout } from "./utils/auto_layout";
 
 import { getFormatFromBase64 } from "../basic/utils";
+import { uniformScale, UniformScaleUnit } from "./asyncApiHandler";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -927,9 +935,7 @@ export class PageEditor {
                     transferVars(rootRef, c as any);
                     return;
                 }
-                if (!(c.typeId === "symbol-ref-shape")) {
-                    continue;
-                }
+                if (c.typeId !== "symbol-ref-shape") continue;
                 let refId = c.id;
                 // 去掉头部rootref.id
                 refId = refId.substring(refId.indexOf('/') + 1);
@@ -990,9 +996,8 @@ export class PageEditor {
                 curPage: string = _this.__page.id;
                 fmtVer: number = FMT_VER_latest
             };
-            // const { width, height } = shape.size;
             const tmpArtboard: Artboard = newArtboard(shape.name, shape.frame);
-            // initFrame(tmpArtboard, shape.frame);
+
             tmpArtboard.childs = shape.naviChilds! as BasicArray<Shape>;
             tmpArtboard.varbinds = shape.varbinds;
             tmpArtboard.style = shape.style;
@@ -1007,7 +1012,10 @@ export class PageEditor {
             if (layoutInfo) {
                 tmpArtboard.autoLayout = importAutoLayout(layoutInfo);
             }
+
             const symbolData = exportArtboard(tmpArtboard); // todo 如果symbol只有一个child时
+
+            if (shape.uniformScale && shape.uniformScale !== 1) solidify(symbolData as GroupShape, shape.uniformScale);
 
             // 遍历symbolData,如有symbolref,则查找根shape是否有对应override的变量,如有则存到symbolref内
             transferVars(shape, symbolData);
@@ -1047,6 +1055,84 @@ export class PageEditor {
         } catch (e) {
             console.log(e)
             this.__repo.rollback();
+        }
+
+        function solidify(shape: GroupShape, uniformScale: number) {
+            const children = shape.childs;
+            for (const child of children) {
+                const t = makeShapeTransform2By1(child.transform);
+                const scale = new Transform2().setScale(ColVector3D.FromXYZ(uniformScale, uniformScale, 1));
+                t.addTransform(scale);
+                const __scale = t.decomposeScale();
+                child.size.width *= Math.abs(__scale.x);
+                child.size.height *= Math.abs(__scale.y);
+                t.clearScaleSize();
+                child.transform = makeShapeTransform1By2(t);
+                const borders = child.style.borders;
+                borders.forEach(b => {
+                    b.sideSetting = new BorderSideSetting(
+                        SideType.Normal,
+                        b.sideSetting.thicknessTop * uniformScale,
+                        b.sideSetting.thicknessLeft * uniformScale,
+                        b.sideSetting.thicknessBottom * uniformScale,
+                        b.sideSetting.thicknessRight * uniformScale
+                    );
+                });
+                const shadows = child.style.shadows;
+                shadows.forEach(s => {
+                    s.offsetX *= uniformScale;
+                    s.offsetY *= uniformScale;
+                    s.blurRadius *= uniformScale;
+                    s.spread *= uniformScale;
+                });
+                if (child.type === ShapeType.Text) {
+                    const text = (child as TextShape).text;
+                    scale4Text(text);
+                }
+                const blur = child.style.blur;
+                if (blur?.saturation) blur.saturation *= uniformScale;
+                if ((child as any).pathsegs?.length) {
+                    (child as any).pathsegs.forEach((segs: any) => {
+                        segs.points.forEach((point: any) => point.radius && (point.radius *= uniformScale));
+                    });
+                }
+                if (child.type === ShapeType.Table) {
+                    const cells = Object.values((child as any).cells);
+                    cells.forEach((cell: any) => {
+                        if (cell.text) scale4Text(cell.text);
+                    });
+                }
+                if ((child as any).cornerRadius) {
+                    const __corner: any = (child as any).cornerRadius;
+                    __corner.lt *= uniformScale;
+                    __corner.rt *= uniformScale;
+                    __corner.rb *= uniformScale;
+                    __corner.lb *= uniformScale;
+                }
+
+                if (child instanceof GroupShape) {
+                    let innerScale = uniformScale;
+                    if (child.uniformScale) innerScale *= child.uniformScale;
+                    solidify(child, innerScale);
+                }
+            }
+
+            function scale4Text(text: Text) {
+                const attr = text.attr;
+                if (attr?.paraSpacing) attr.paraSpacing *= uniformScale;
+                if (attr?.padding?.left) attr.padding.left *= uniformScale;
+                if (attr?.padding?.right) attr.padding.right *= uniformScale;
+                const paras = text.paras;
+                for (const para of paras) {
+                    const attr = para.attr;
+                    if (attr?.maximumLineHeight) attr.maximumLineHeight *= uniformScale;
+                    if (attr?.minimumLineHeight) attr.minimumLineHeight *= uniformScale;
+                    for (const span of para.spans) {
+                        if (span.fontSize) span.fontSize *= uniformScale;
+                        if (span.kerning) span.kerning *= uniformScale;
+                    }
+                }
+            }
         }
     }
 
@@ -3708,11 +3794,25 @@ export class PageEditor {
         }
     }
 
-    setPrototypeActionEasingType(shape: ShapeView, id: string, value: PrototypeEasingType, esfn: BasicArray<number>) {
+    setPrototypeActionEasingType(shape: ShapeView, id: string, value: PrototypeEasingType, esfn: PrototypeEasingBezier) {
         try {
             const api = this.__repo.start('setPrototypeActionEasingType');
             const __shape = this.shape4protoActions(api, this.__page, shape, id);
-            api.shapeModifyPrototypeActionEasingType(this.__page, __shape, id, value, esfn);
+            const prototypeInteractions: BasicArray<PrototypeInterAction> | undefined = shape.prototypeInterActions;
+            if (!prototypeInteractions) return;
+            const action = prototypeInteractions?.find(i => i.id === id)?.actions;
+            if (!action) return;
+            api.shapeModifyPrototypeActionEasingType(this.__page, __shape, id, value);
+            let val = action.easingFunction
+            if (value === PrototypeEasingType.CUSTOMCUBIC) {
+                if (val) {
+                    api.shapeModifyPrototypeActionEasingFunction(this.__page, __shape, id, val)
+                } else {
+                    api.shapeModifyPrototypeActionEasingFunction(this.__page, __shape, id, esfn)
+                }
+            } else {
+                api.shapeModifyPrototypeActionEasingFunction(this.__page, __shape, id, esfn)
+            }
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
@@ -3741,9 +3841,9 @@ export class PageEditor {
         }
     }
 
-    setPrototypeActionEasingFunction(shape: ShapeView, id: string, value: BasicArray<number>) {
+    setPrototypeActionEasingFunction(shape: ShapeView, id: string, value: PrototypeEasingBezier) {
         try {
-            const api = this.__repo.start('setPrototypeActionOpenUrlInNewTab');
+            const api = this.__repo.start('setPrototypeActionEasingFunction');
             const __shape = this.shape4protoActions(api, this.__page, shape, id);
             api.shapeModifyPrototypeActionEasingFunction(this.__page, __shape, id, value);
             this.__repo.commit();
@@ -4514,6 +4614,17 @@ export class PageEditor {
         } catch (e) {
             this.__repo.rollback()
             console.error(e)
+        }
+    }
+
+    uniformScale(units: UniformScaleUnit[], ratio: number) {
+        try {
+            const api = this.__repo.start('uniformScale');
+            uniformScale(api, this.__page, units, ratio);
+            this.__repo.commit();
+        } catch (e) {
+            this.__repo.rollback();
+            console.error(e);
         }
     }
 

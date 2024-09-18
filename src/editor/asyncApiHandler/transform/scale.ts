@@ -1,22 +1,31 @@
 import { CoopRepository } from "../../coop/cooprepo";
 import { AsyncApiCaller } from "../AsyncApiCaller";
 import {
-    Document, GroupShape,
-    Shape,
-    Page,
-    SymbolRefShape,
-    ShapeType,
-    ShapeFrame,
-    makeShapeTransform2By1,
-    ResizingConstraints2,
-    TextShape,
-    TextBehaviour,
-    makeShapeTransform1By2,
     Artboard,
+    BorderSideSetting,
+    Document,
+    makeShapeTransform1By2,
     StackSizing,
+    Page,
+    ResizingConstraints2,
+    ShapeFrame,
+    ShapeType,
+    SideType,
+    SymbolRefShape,
+    TextBehaviour,
+    TextShape,
 } from "../../../data";
-import { adapt2Shape, ArtboradView, GroupShapeView, PageView, ShapeView, TextShapeView } from "../../../dataview";
-import { Api } from "../../coop/recordapi";
+import {
+    ArtboradView,
+    adapt2Shape,
+    GroupShapeView,
+    PageView, PathShapeView,
+    ShapeView, SymbolRefView,
+    TableCellView,
+    TableView,
+    TextShapeView
+} from "../../../dataview";
+import { Api, TextShapeLike } from "../../coop/recordapi";
 import { fixTextShapeFrameByLayout } from "../../utils/other";
 import { Transform as Transform2 } from "../../../basic/transform";
 import { ColVector3D } from "../../../basic/matrix2";
@@ -453,10 +462,263 @@ export function reLayoutBySizeChanged(
     }
 }
 
+export interface UniformScaleUnit {
+    shape: ShapeView;
+    transform: Transform2;
+    size: { width: number, height: number };
+    decomposeScale: { x: number, y: number };
+}
+
+export function reLayoutByUniformScale(
+    api: Api,
+    page: Page,
+    shape: GroupShapeView,
+    scale: { x: number, y: number },
+    container: ShapeView[],
+    _rangeRecorder?: RangeRecorder,
+    _sizeRecorder?: SizeRecorder,
+    _transformRecorder?: TransformRecorder,
+    _valueRecorder?: Map<string, number>
+) {
+    const rangeRecorder: RangeRecorder = _rangeRecorder ?? new Map();
+    const sizeRecorder: SizeRecorder = _sizeRecorder ?? new Map();
+    const transformRecorder: TransformRecorder = _transformRecorder ?? new Map();
+    const valueRecorder: Map<string, number> = _valueRecorder ?? new Map();
+    const children = shape.childs;
+    const { x: SX, y: SY } = scale;
+
+    const __p_transform = new Transform2().setScale(ColVector3D.FromXYZ(SX, SY, 1));
+
+    for (const child of children) {
+        container.push(child);
+        const data = adapt2Shape(child);
+        const transform = getTransform(child).clone();
+        transform.addTransform(__p_transform);
+
+        const _s = transform.decomposeScale();
+        const _scale = { x: _s.x, y: _s.y };
+        const oSize = getSize(child);
+        const width = oSize.width * Math.abs(_scale.x);
+        const height = oSize.height * Math.abs(_scale.y);
+        if (child instanceof TextShapeView) {
+            if (width !== child.size.width || height !== child.size.height) {
+                const textBehaviour = child.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
+                if (height !== child.size.height) {
+                    if (textBehaviour !== TextBehaviour.FixWidthAndHeight) {
+                        api.shapeModifyTextBehaviour(page, child.text, TextBehaviour.FixWidthAndHeight);
+                    }
+                } else {
+                    if (textBehaviour === TextBehaviour.Flexible) {
+                        api.shapeModifyTextBehaviour(page, child.text, TextBehaviour.Fixed);
+                    }
+                }
+                api.shapeModifyWH(page, data, width, height)
+                fixTextShapeFrameByLayout(api, page, child);
+            }
+        } else {
+            api.shapeModifyWH(page, data, width, height)
+        }
+
+        transform.clearScaleSize();
+        api.shapeModifyTransform(page, data, makeShapeTransform1By2(transform));
+
+        if (child instanceof GroupShapeView) {
+            reLayoutByUniformScale(api, page, child, _scale, container, rangeRecorder, sizeRecorder, transformRecorder, valueRecorder);
+        }
+
+        function getSize(s: ShapeView) {
+            let size = sizeRecorder.get(s.id);
+            if (!size) {
+                const f = s.frame;
+                size = {
+                    x: f.x,
+                    y: f.y,
+                    width: f.width,
+                    height: f.height
+                };
+                sizeRecorder.set(s.id, size);
+            }
+            return size;
+        }
+
+        function getTransform(s: ShapeView) {
+            let transform = transformRecorder.get(s.id);
+            if (!transform) {
+                transform = s.transform2.clone();
+                transformRecorder.set(s.id, transform);
+            }
+            return transform;
+        }
+    }
+}
+
+export function uniformScale(
+    api: Api,
+    page: Page,
+    units: UniformScaleUnit[],
+    ratio: number,
+    _rangeRecorder?: RangeRecorder,
+    _sizeRecorder?: SizeRecorder,
+    _transformRecorder?: TransformRecorder,
+    _valueRecorder?: Map<string, number>
+) {
+    const rangeRecorder: RangeRecorder = _rangeRecorder ?? new Map();
+    const sizeRecorder: SizeRecorder = _sizeRecorder ?? new Map();
+    const transformRecorder: TransformRecorder = _transformRecorder ?? new Map();
+    const valueRecorder: Map<string, number> = _valueRecorder ?? new Map();
+    const container4modifyStyle: ShapeView[] = [];
+    for (const unit of units) {
+        const { transform, shape: view, size, decomposeScale } = unit;
+        container4modifyStyle.push(view);
+        const shape = adapt2Shape(view);
+        api.shapeModifyTransform(page, shape, makeShapeTransform1By2(transform));
+
+        if (shape instanceof SymbolRefShape) {
+            if (!shape.isCustomSize) api.shapeModifyIsCustomSize(page, shape, true);
+            const scale = getScale(view);
+            api.modifyShapeScale(page, shape, scale * ratio);
+        }
+
+        if (shape.hasSize()) api.shapeModifyWH(page, shape, size.width, size.height);
+
+        if (view instanceof GroupShapeView) reLayoutByUniformScale(api, page, view, decomposeScale, container4modifyStyle, rangeRecorder, sizeRecorder, transformRecorder);
+    }
+    const textSet: TextShapeLike[] = [];
+    for (const view of container4modifyStyle) {
+        const shape = adapt2Shape(view);
+        const borders = shape.getBorders();
+        borders.forEach((b, i) => {
+            const bId = b.id + shape.id;
+            const thicknessTop = getBaseValue(bId, 'thicknessTop', b.sideSetting.thicknessTop);
+            const thicknessLeft = getBaseValue(bId, 'thicknessLeft', b.sideSetting.thicknessLeft);
+            const thicknessBottom = getBaseValue(bId, 'thicknessBottom', b.sideSetting.thicknessBottom);
+            const thicknessRight = getBaseValue(bId, 'thicknessRight', b.sideSetting.thicknessRight);
+            const setting = new BorderSideSetting(
+                SideType.Normal,
+                thicknessTop * ratio,
+                thicknessLeft * ratio,
+                thicknessBottom * ratio,
+                thicknessRight * ratio
+            );
+
+            api.setBorderSide(page, shape, i, setting);
+        });
+        const shadows = shape.getShadows();
+        shadows.forEach((s, i) => {
+            const sId = s.id + shape.id;
+            const blurRadius = getBaseValue(sId, 'blurRadius', s.blurRadius);
+            api.setShadowBlur(page, shape, i, blurRadius * ratio);
+            const offsetX = getBaseValue(sId, 'offsetX', s.offsetX);
+            api.setShadowOffsetX(page, shape, i, offsetX * ratio);
+            const offsetY = getBaseValue(sId, 'offsetY', s.offsetY);
+            api.setShadowOffsetY(page, shape, i, offsetY * ratio);
+            const spread = getBaseValue(sId, 'spread', s.spread);
+            api.setShadowSpread(page, shape, i, spread * ratio)
+        });
+        const blur = view.blur;
+        if (blur?.saturation) api.shapeModifyBlurSaturation(page, shape, blur.saturation * ratio);
+
+        if (view instanceof TextShapeView) textSet.push(view);
+        if (view instanceof TableView) {
+            for (const child of view.childs) {
+                const cell = child as TableCellView;
+                if (cell.text.paras.length === 1 && cell.text.paras[0].text === '\n') continue;
+                textSet.push(cell);
+            }
+        }
+        if (view instanceof SymbolRefView) {
+            const scale = getScale(view);
+            api.modifyShapeScale(page, shape, scale * ratio);
+        }
+        if (view instanceof PathShapeView) {
+            const segments = view.segments;
+            segments.forEach((segment, i) => {
+                segment.points.forEach((point, j) => {
+                    const corner = point.radius;
+                    corner && api.modifyPointCornerRadius(page, shape, j, corner * ratio, i);
+                });
+            });
+        }
+        if (view.cornerRadius) {
+            const lt = view.cornerRadius.lt;
+            const rt = view.cornerRadius.rt;
+            const rb = view.cornerRadius.rb;
+            const lb = view.cornerRadius.lb;
+            if (lt || rt || rb || lb) api.shapeModifyRadius2(page, shape as Artboard, lt * ratio, rt * ratio, rb * ratio, lb * ratio);
+        }
+    }
+    for (const textLike of textSet) scale4text(textLike);
+
+    function scale4text(text: TextShapeLike) {
+        const paraSpacing = getBaseValue(text.id, 'paraSpacing', text.text.attr?.paraSpacing || 0);
+        if (paraSpacing) {
+            api.textModifyParaSpacing(page, text, paraSpacing * ratio, 0, text.text.length);
+        }
+        const paddingLeft = getBaseValue(text.id, 'paddingLeft', text.text.attr?.padding?.left || 0);
+        const paddingRight = getBaseValue(text.id, 'paddingRight', text.text.attr?.padding?.right || 0);
+
+        if (paddingLeft || paddingRight) {
+            api.textModifyPaddingHor(page, text, {
+                left: (paddingLeft || 0) * ratio,
+                right: (paddingRight || 0) * ratio
+            }, 0, text.text.length);
+        }
+        let index = 0;
+        for (let j = 0; j < text.text.paras.length; j++) {
+            const para = text.text.paras[j];
+            const pId = text.id + j;
+            const minimumLineHeight = getBaseValue(pId, 'minimumLineHeight', para.attr?.minimumLineHeight || 0);
+            if (minimumLineHeight) {
+                api.textModifyMinLineHeight(page, text, minimumLineHeight * ratio, index, para.length);
+            }
+            const maximumLineHeight = getBaseValue(pId, 'maximumLineHeight', para.attr?.maximumLineHeight || 0);
+            if (maximumLineHeight) {
+                api.textModifyMaxLineHeight(page, text, maximumLineHeight * ratio, index, para.length);
+            }
+            let __index = index;
+            const spans = para.spans;
+            for (let i = 0; i < spans.length; i++) {
+                const span = spans[i];
+                const sId = text.id + i + j;
+                const spanFontSize = getBaseValue(sId, 'spanFontSize', span.fontSize || 0);
+                if (spanFontSize) {
+                    api.textModifyFontSize(page, text, __index, span.length, spanFontSize * ratio);
+                }
+                const spanKerning = getBaseValue(sId, 'spanKerning', span.kerning || 0);
+                if (spanKerning) {
+                    api.textModifyKerning(page, text, __index, span.length, spanKerning * ratio);
+                }
+                __index += span.length;
+            }
+            index += para.length;
+        }
+    }
+
+    function getBaseValue(id: string, key: string, current: number) {
+        const dKey = id + key;
+        let value = valueRecorder.get(dKey)!;
+        if (value === undefined) {
+            value = current;
+            valueRecorder.set(dKey, value);
+        }
+        return value;
+    }
+
+    function getScale(s: ShapeView) {
+        let scale = valueRecorder.get(s.id);
+        if (scale === undefined) {
+            scale = s.uniformScale ?? 1;
+            valueRecorder.set(s.id, scale);
+        }
+        return scale;
+    }
+}
+
 export class Scaler extends AsyncApiCaller {
     private recorder: RangeRecorder = new Map();
     private sizeRecorder: SizeRecorder = new Map();
-    private transformRecorder: TransformRecorder = new Map;
+    private transformRecorder: TransformRecorder = new Map();
+    private valueRecorder: Map<string, number> = new Map();
 
     constructor(repo: CoopRepository, document: Document, page: PageView) {
         super(repo, document, page);
@@ -527,6 +789,16 @@ export class Scaler extends AsyncApiCaller {
                 const parent = parents[i];
                 modifyAutoLayout(this.page, api, parent);
             }
+            this.updateView();
+        } catch (error) {
+            console.log('error:', error);
+            this.exception = true;
+        }
+    }
+
+    executeUniform(units: UniformScaleUnit[], ratio: number) {
+        try {
+            uniformScale(this.api, this.page, units, ratio, this.recorder, this.sizeRecorder, this.transformRecorder, this.valueRecorder);
             this.updateView();
         } catch (error) {
             console.log('error:', error);

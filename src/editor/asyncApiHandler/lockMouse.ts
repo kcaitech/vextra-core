@@ -29,13 +29,24 @@ import {
 } from "../utils/path";
 import { ColVector3D } from "../../basic/matrix2";
 import { Line, TransformMode } from "../../basic/transform";
-import { reLayoutBySizeChanged } from "./transform";
+import {
+    RangeRecorder,
+    reLayoutBySizeChanged,
+    SizeRecorder,
+    TransformRecorder,
+    uniformScale,
+    UniformScaleUnit
+} from "./transform";
 import { fixTextShapeFrameByLayout } from "../utils/other";
 import { getAutoLayoutShapes, modifyAutoLayout, tidyUpLayout } from "../utils/auto_layout";
 
 export class LockMouseHandler extends AsyncApiCaller {
-    updateFrameTargets: Set<Shape> = new Set();
+    private recorder: RangeRecorder = new Map();
+    private sizeRecorder: SizeRecorder = new Map();
+    private transformRecorder: TransformRecorder = new Map();
+    private valueRecorder: Map<string, number> = new Map();
     private whRatioMap = new Map<string, number>();
+    updateFrameTargets: Set<Shape> = new Set();
 
     constructor(repo: CoopRepository, document: Document, page: PageView) {
         super(repo, document, page);
@@ -436,6 +447,16 @@ export class LockMouseHandler extends AsyncApiCaller {
         }
     }
 
+
+    executeUniform(units: UniformScaleUnit[], ratio: number) {
+        try {
+            uniformScale(this.api, this.page, units, ratio, this.recorder, this.sizeRecorder, this.transformRecorder, this.valueRecorder);
+            this.updateView();
+        } catch (error) {
+            console.log('error:', error);
+            this.exception = true;
+        }
+    }
 
     commit() {
         if (this.__repo.isNeedCommit() && !this.exception) {
