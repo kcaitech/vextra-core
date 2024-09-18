@@ -97,6 +97,9 @@
         },
         "stackPositioning": {
             "$ref": "./stack-positioning.json"
+        },
+        "uniformScale": {
+            "type": "number"
         }
     },
     "required": [

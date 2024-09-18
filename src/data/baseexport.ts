@@ -431,16 +431,20 @@ export function exportPoint2D(source: types.Point2D, ctx?: IExportContext): type
     ret.y = source.y
     return ret
 }
-export function exportPrototypeActions_easingFunction(source: types.PrototypeActions_easingFunction, ctx?: IExportContext): types.PrototypeActions_easingFunction {
-    const ret: types.PrototypeActions_easingFunction = []
-    source.forEach((source) => {
-        ret.push(source)
-    })
-    return ret
-}
 /* connectionType */
 export function exportPrototypeConnectionType(source: types.PrototypeConnectionType, ctx?: IExportContext): types.PrototypeConnectionType {
     return source
+}
+/* prototypeEasingBezier */
+export function exportPrototypeEasingBezier(source: types.PrototypeEasingBezier, ctx?: IExportContext): types.PrototypeEasingBezier {
+    const ret: types.PrototypeEasingBezier = {} as types.PrototypeEasingBezier
+    ret.typeId = "prototype-easing-bezier"
+    ret.typeId = source.typeId
+    ret.x1 = source.x1
+    ret.y1 = source.y1
+    ret.x2 = source.x2
+    ret.y2 = source.y2
+    return ret
 }
 /* easingType */
 export function exportPrototypeEasingType(source: types.PrototypeEasingType, ctx?: IExportContext): types.PrototypeEasingType {
@@ -859,7 +863,7 @@ export function exportPrototypeActions(source: types.PrototypeActions, ctx?: IEx
     if (source.connectionURL) ret.connectionURL = source.connectionURL
     if (source.openUrlInNewTab) ret.openUrlInNewTab = source.openUrlInNewTab
     if (source.navigationType) ret.navigationType = exportPrototypeNavigationType(source.navigationType, ctx)
-    if (source.easingFunction) ret.easingFunction = exportPrototypeActions_easingFunction(source.easingFunction, ctx)
+    if (source.easingFunction) ret.easingFunction = exportPrototypeEasingBezier(source.easingFunction, ctx)
     if (source.extraScrollOffset) ret.extraScrollOffset = exportPoint2D(source.extraScrollOffset, ctx)
     return ret
 }
@@ -1061,6 +1065,7 @@ export function exportShape(source: types.Shape, ctx?: IExportContext): types.Sh
     if (source.scrollDirection) ret.scrollDirection = exportScrollDirection(source.scrollDirection, ctx)
     if (source.mask) ret.mask = source.mask
     if (source.stackPositioning) ret.stackPositioning = exportStackPositioning(source.stackPositioning, ctx)
+    if (source.uniformScale) ret.uniformScale = source.uniformScale
     return ret
 }
 /* table cell */
@@ -1225,6 +1230,7 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
     })()
     if (source.isCustomSize) ret.isCustomSize = source.isCustomSize
     if (source.cornerRadius) ret.cornerRadius = exportCornerRadius(source.cornerRadius, ctx)
+    if (source.innerEnvScale) ret.innerEnvScale = source.innerEnvScale
         // inject code
     if (ctx?.refsymbols) ctx.refsymbols.add(ret.refId);
 

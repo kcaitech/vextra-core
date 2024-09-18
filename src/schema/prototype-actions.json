@@ -31,10 +31,7 @@
             "$ref": "./prototype-navigation-type.json"
         },
         "easingFunction": {
-            "type": "array",
-            "items": {
-                "type": "number"
-            }
+           "$ref": "./prototype-easing-bezier.json"
         },
         "extraScrollOffset": {
             "$ref": "./point-2d.json"

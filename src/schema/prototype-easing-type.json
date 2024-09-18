@@ -7,7 +7,8 @@
         "INOUT_CUBIC",
         "IN_BACK_CUBIC",
         "OUT_BACK_CUBIC",
-        "INOUT_BACK_CUBIC"
+        "INOUT_BACK_CUBIC",
+        "CUSTOM_CUBIC"
     ],
     "default": "INSTANT"
 }

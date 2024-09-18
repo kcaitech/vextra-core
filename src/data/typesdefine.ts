@@ -352,7 +352,6 @@ export type Point2D = {
     x: number,
     y: number,
 }
-export type PrototypeActions_easingFunction = Array<number>
 /* connectionType */
 export enum PrototypeConnectionType {
     NONE = "NONE",
@@ -360,6 +359,14 @@ export enum PrototypeConnectionType {
     BACK = "BACK",
     URL = "URL",
     CLOSE = "CLOSE",
+}
+/* prototypeEasingBezier */
+export type PrototypeEasingBezier = {
+    typeId: string,
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number,
 }
 /* easingType */
 export enum PrototypeEasingType {
@@ -370,6 +377,7 @@ export enum PrototypeEasingType {
     INBACKCUBIC = "IN_BACK_CUBIC",
     OUTBACKCUBIC = "OUT_BACK_CUBIC",
     INOUTBACKCUBIC = "INOUT_BACK_CUBIC",
+    CUSTOMCUBIC = "CUSTOM_CUBIC",
 }
 /* interactionType */
 export enum PrototypeEvents {
@@ -761,7 +769,7 @@ export type PrototypeActions = {
     connectionURL?: string,
     openUrlInNewTab?: boolean,
     navigationType?: PrototypeNavigationType,
-    easingFunction?: PrototypeActions_easingFunction,
+    easingFunction?: PrototypeEasingBezier,
     extraScrollOffset?: Point2D,
 }
 /* event */
@@ -919,6 +927,7 @@ export type Shape = {
     scrollDirection?: ScrollDirection,
     mask?: boolean,
     stackPositioning?: StackPositioning,
+    uniformScale?: number,
 }
 /* table cell */
 export type TableCell = Shape & {
@@ -992,6 +1001,7 @@ export type SymbolRefShape = Shape & {
     overrides?: Map<string, string>,
     isCustomSize?: boolean,
     cornerRadius?: CornerRadius,
+    innerEnvScale?: number,
 }
 /* contact shape */
 export type ContactShape = PathShape & {

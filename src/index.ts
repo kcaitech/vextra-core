@@ -129,6 +129,7 @@ export {
     PrototypeEvent,
     PrototypeNavigationType,
     PrototypeTransitionType,
+    PrototypeEasingBezier,
 
     ScrollDirection,
 

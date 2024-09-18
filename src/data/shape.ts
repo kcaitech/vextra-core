@@ -147,6 +147,7 @@ export class Shape extends Basic implements classes.Shape {
     scrollDirection?: classes.ScrollDirection;
     mask?: boolean;
     stackPositioning?: classes.StackPositioning;
+    uniformScale?: number;
 
     constructor(
         crdtidx: BasicArray<number>, id: string, name: string, type: ShapeType, transform: Transform, style: Style

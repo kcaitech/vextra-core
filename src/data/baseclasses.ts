@@ -378,7 +378,21 @@ export class Point2D extends Basic {
         this.y = y
     }
 }
-type PrototypeActions_easingFunction = BasicArray<number>
+/* prototypeEasingBezier */
+export class PrototypeEasingBezier extends Basic {
+    typeId = "prototype-easing-bezier"
+    x1: number
+    y1: number
+    x2: number
+    y2: number
+    constructor(x1: number, y1: number, x2: number, y2: number) {
+        super()
+        this.x1 = x1
+        this.y1 = y1
+        this.x2 = x2
+        this.y2 = y2
+    }
+}
 type PrototypeInterAction_crdtidx = BasicArray<number>
 /* prototypeStartingPoint */
 export class PrototypeStartingPoint extends Basic {
@@ -712,7 +726,7 @@ export class PrototypeActions extends Basic {
     connectionURL?: string
     openUrlInNewTab?: boolean
     navigationType?: PrototypeNavigationType
-    easingFunction?: PrototypeActions_easingFunction
+    easingFunction?: PrototypeEasingBezier
     extraScrollOffset?: Point2D
     constructor(connectionType: PrototypeConnectionType) {
         super()
@@ -931,6 +945,7 @@ export class Shape extends Basic {
     scrollDirection?: ScrollDirection
     mask?: boolean
     stackPositioning?: StackPositioning
+    uniformScale?: number
     constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style) {
         super()
         this.crdtidx = crdtidx
@@ -1078,6 +1093,7 @@ export class SymbolRefShape extends Shape {
     overrides?: BasicMap<string, string>
     isCustomSize?: boolean
     cornerRadius?: CornerRadius
+    innerEnvScale?: number
     constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style, size: ShapeSize, refId: string, variables: BasicMap<string, Variable>) {
         super(crdtidx, id, name, type, transform, style)
         this.size = size
