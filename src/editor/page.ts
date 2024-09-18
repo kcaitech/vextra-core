@@ -171,6 +171,7 @@ import { ColVector3D } from "../basic/matrix2";
 import { Transform as Transform2 } from "../basic/transform";
 import { getFormatFromBase64 } from "../basic/utils";
 import { uniformScale, UniformScaleUnit } from "./asyncApiHandler";
+import { modifyEndingAngle, modifyRadius, modifyStartingAngle, modifySweep } from "./asyncApiHandler/arc";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -4417,6 +4418,50 @@ export class PageEditor {
         try {
             const api = this.__repo.start('uniformScale');
             uniformScale(api, this.__page, units, ratio);
+            this.__repo.commit();
+        } catch (e) {
+            this.__repo.rollback();
+            console.error(e);
+        }
+    }
+
+    modifyShapesSweep(shapes: ShapeView[], value: number) {
+        try {
+            const api = this.__repo.start('modifyShapesSweep');
+            modifySweep(api, this.__page, shapes, value);
+            this.__repo.commit();
+        } catch (e) {
+            this.__repo.rollback();
+            console.error(e);
+        }
+    }
+
+    modifyShapesStartingAngle(shapes: ShapeView[], value: number) {
+        try {
+            const api = this.__repo.start('modifyShapesStartAngle');
+            modifyStartingAngle(api, this.__page, shapes, value);
+            this.__repo.commit();
+        } catch (e) {
+            this.__repo.rollback();
+            console.error(e);
+        }
+    }
+
+    modifyShapesEndingAngle(shapes: ShapeView[], value: number) {
+        try {
+            const api = this.__repo.start('modifyShapesEndingAngle');
+            modifyEndingAngle(api, this.__page, shapes, value);
+            this.__repo.commit();
+        } catch (e) {
+            this.__repo.rollback();
+            console.error(e);
+        }
+    }
+
+    modifyShapesRadius(shapes: ShapeView[], value: number) {
+        try {
+            const api = this.__repo.start('modifyShapesEndingAngle');
+            modifyRadius(api, this.__page, shapes, value);
             this.__repo.commit();
         } catch (e) {
             this.__repo.rollback();
