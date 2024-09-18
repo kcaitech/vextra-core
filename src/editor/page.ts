@@ -4529,10 +4529,10 @@ export class PageEditor {
         return new TableEditor(shape, this.__page, this.__repo, this.__document);
     }
 
-    tidyUpShapesLayout(shape_rows: ShapeView[][], hor: number, ver: number) {
+    tidyUpShapesLayout(shape_rows: ShapeView[][], hor: number, ver: number, dir: boolean) {
         const api = this.__repo.start('tidyUpShapesLayout');
         try {
-            tidyUpLayout(this.__page, api, shape_rows, hor, ver);
+            tidyUpLayout(this.__page, api, shape_rows, hor, ver, dir);
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();

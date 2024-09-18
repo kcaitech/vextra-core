@@ -424,11 +424,11 @@ export class LockMouseHandler extends AsyncApiCaller {
         }
     }
 
-    executeTidyup(shapes: ShapeView[][], hor: number, ver: number) {
+    executeTidyup(shapes: ShapeView[][], hor: number, ver: number, dir: boolean) {
         try {
             const api = this.api;
             const page = this.page;
-            tidyUpLayout(page, api, shapes, hor, ver);
+            tidyUpLayout(page, api, shapes, hor, ver, dir);
             this.updateView();
         } catch (e) {
             this.exception = true;
