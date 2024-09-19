@@ -16,12 +16,18 @@ import { after_migrate, unable_to_migrate } from "../../utils/migrate";
 import { get_state_name, is_state } from "../../symbol";
 import { Api } from "../../coop/recordapi";
 import { ISave4Restore, LocalCmd, SelectionState } from "../../coop/localcmd";
-import { getAutoLayoutShapes, modifyAutoLayout } from "../../utils/auto_layout";
+import { getAutoLayoutShapes, modifyAutoLayout, tidyUpLayout } from "../../utils/auto_layout";
 import { translate } from "../../frame";
 
 export type TranslateUnit = {
     shape: ShapeView;
     transform: Transform
+}
+export type TidyUpInfo = {
+    shapes: ShapeView[][]
+    horSpace: number
+    verSpace: number
+    dir: boolean
 }
 
 export class Transporter extends AsyncApiCaller {
@@ -263,6 +269,31 @@ export class Transporter extends AsyncApiCaller {
         } catch (e) {
             this.exception = true;
             console.log('Transporter.swap', e);
+        }
+    }
+
+    tidy_swap(shape: ShapeView, x: number, y: number) {
+        try {
+            const api = this.api;
+            const page = this.page;
+            const frame = shape._p_frame;
+            translate(api, page, adapt2Shape(shape), x - frame.x, y - frame.y);
+            this.updateView();
+        } catch (e) {
+            this.exception = true;
+            console.log('Transporter.swap', e);
+        }
+    }
+
+    tidyUpShapesLayout(shape_rows: ShapeView[][], hor: number, ver: number, dir: boolean, startXY?: { x: number, y: number }) {
+        try {
+            const api = this.api;
+            const page = this.page;
+            tidyUpLayout(page, api, shape_rows, hor, ver, dir, startXY);
+            this.updateView();
+        } catch (error) {
+            this.exception = true;
+            console.log('Transporter.tidyUpShapesLayout', error);
         }
     }
 

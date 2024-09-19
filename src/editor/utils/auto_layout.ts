@@ -617,11 +617,11 @@ const getShapeFrame = (shape: Shape) => {
 }
 
 
-export const tidyUpLayout = (page: Page, api: Api, shape_rows: ShapeView[][], horSpacing: number, verSpacing: number, dir_hor: boolean) => {
+export const tidyUpLayout = (page: Page, api: Api, shape_rows: ShapeView[][], horSpacing: number, verSpacing: number, dir_hor: boolean, start?: { x: number, y: number }) => {
     const minX = Math.min(...shape_rows[0].map(s => s._p_frame.x));
     const minY = Math.min(...shape_rows[0].map(s => s._p_frame.y));
-    let leftTrans = minX; //水平起点
-    let topTrans = minY; //垂直起点
+    let leftTrans = start?.x || minX; //水平起点
+    let topTrans = start?.y || minY; //垂直起点
     const minWidth = Math.min(...shape_rows.map(row => Math.min(...row.map(s => s._p_frame.width))));
     const minHeight = Math.min(...shape_rows.map(row => Math.min(...row.map(s => s._p_frame.height))));
     horSpacing = Math.max(-minWidth + 1, horSpacing);
@@ -657,7 +657,7 @@ export const tidyUpLayout = (page: Page, api: Api, shape_rows: ShapeView[][], ho
                 // 更新下一个图形的 x 坐标
                 leftTrans += frame.width + horSpacing;
             }
-            leftTrans = minX; // 重置为左边距
+            leftTrans = start?.x || minX; // 重置为左边距
             topTrans += maxHeightInRow + verSpacing; // 换行，增加 y 坐标
         }
     } else {
@@ -692,7 +692,7 @@ export const tidyUpLayout = (page: Page, api: Api, shape_rows: ShapeView[][], ho
                 // 更新下一个图形的 y 坐标
                 topTrans += frame.height + verSpacing;
             }
-            topTrans = minY; // 重置为上边距
+            topTrans = start?.y || minY; // 重置为上边距
             leftTrans += maxWidthInRow + horSpacing; // 换列，增加 x 坐标
         }
     }
