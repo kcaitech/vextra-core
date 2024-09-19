@@ -7,7 +7,6 @@ import { uuid } from "../../basic/uuid";
 
 export function modifySweep(api: Api, page: Page, shapes: ShapeView[], value: number) {
     const end = Math.PI * 2 * (value / 100);
-
     for (const view of shapes) {
         const shape = adapt2Shape(view) as OvalShape;
         let startingAngle: number = shape.startingAngle!;
@@ -25,9 +24,17 @@ export function modifySweep(api: Api, page: Page, shapes: ShapeView[], value: nu
 }
 
 export function modifyStartingAngle(api: Api, page: Page, shapes: ShapeView[], value: number) {
+    const round = Math.PI * 2;
     for (const view of shapes) {
         const shape = adapt2Shape(view);
+        if (!(shape instanceof OvalShape)) continue;
+        const end = shape.endingAngle ?? round;
+        const start = shape.startingAngle ?? 0;
+        const delta = end - start;
         api.ovalModifyStartingAngle(page, shape, value);
+        api.ovalModifyEndingAngle(page, shape, value + delta);
+
+        modifyPathByArc(api, page, shape);
     }
 }
 
@@ -41,7 +48,9 @@ export function modifyEndingAngle(api: Api, page: Page, shapes: ShapeView[], val
 export function modifyRadius(api: Api, page: Page, shapes: ShapeView[], value: number) {
     for (const view of shapes) {
         const shape = adapt2Shape(view);
+        if (!(shape instanceof OvalShape)) continue;
         api.ovalModifyInnerRadius(page, shape, value);
+        modifyPathByArc(api, page, shape);
     }
 }
 
@@ -95,7 +104,7 @@ export class OvalPathParser {
         } else if (Math.abs(sweep) === 1) {
             if (radius) {
                 const points = this.getQuarters(1);
-                const points2 = this.getQuarters(1 - radius);
+                const points2 = this.getQuarters(radius);
                 segments.push({ points, isClosed: true }, { points: points2, isClosed: true });
             } else {
                 const points = this.getQuarters(1);
@@ -260,6 +269,9 @@ export class OvalPathParser {
         return points;
     }
 
+    /**
+     * 逆向一条曲线
+     */
     private reverse(points: CurvePoint[]) {
         let __points: CurvePoint[] = [];
         for (const point of points) {

@@ -4425,17 +4425,6 @@ export class PageEditor {
         }
     }
 
-    modifyShapesSweep(shapes: ShapeView[], value: number) {
-        try {
-            const api = this.__repo.start('modifyShapesSweep');
-            modifySweep(api, this.__page, shapes, value);
-            this.__repo.commit();
-        } catch (e) {
-            this.__repo.rollback();
-            console.error(e);
-        }
-    }
-
     modifyShapesStartingAngle(shapes: ShapeView[], value: number) {
         try {
             const api = this.__repo.start('modifyShapesStartAngle');
@@ -4447,10 +4436,10 @@ export class PageEditor {
         }
     }
 
-    modifyShapesEndingAngle(shapes: ShapeView[], value: number) {
+    modifyShapesSweep(shapes: ShapeView[], value: number) {
         try {
-            const api = this.__repo.start('modifyShapesEndingAngle');
-            modifyEndingAngle(api, this.__page, shapes, value);
+            const api = this.__repo.start('modifyShapesSweep');
+            modifySweep(api, this.__page, shapes, value);
             this.__repo.commit();
         } catch (e) {
             this.__repo.rollback();
@@ -4460,7 +4449,7 @@ export class PageEditor {
 
     modifyShapesRadius(shapes: ShapeView[], value: number) {
         try {
-            const api = this.__repo.start('modifyShapesEndingAngle');
+            const api = this.__repo.start('modifyShapesRadius');
             modifyRadius(api, this.__page, shapes, value);
             this.__repo.commit();
         } catch (e) {
