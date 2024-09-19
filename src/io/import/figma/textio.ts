@@ -1,8 +1,17 @@
-import {BulletNumbers, Para, ParaAttr, Span, Text, TextAttr, TextTransformType} from "../../../data/text";
+import {
+    BulletNumbers,
+    Para,
+    ParaAttr,
+    Span,
+    Text,
+    TextAttr,
+    TextBehaviour,
+    TextTransformType
+} from "../../../data/text";
 import {importColor} from "./common";
 import * as types from "../../../data/classes"
-import {FillType} from "../../../data/classes"
-import {BasicArray} from "../../../data/basic";
+import {FillType} from "../../../data"
+import {BasicArray} from "../../../data";
 import {IJSON} from "./basic";
 import {mergeSpanAttr} from "../../../data/textutils";
 import {parseGradient} from "./shapeio";
@@ -59,57 +68,60 @@ function importTransform(textCase: string) {
     }
 }
 
-export function importText(data: IJSON, textStyle: IJSON): Text {
+export function importText(data: IJSON): Text {
+    const textData = data.textData;
 
     // 默认字体颜色
-    const fillPaints = textStyle.fillPaints as IJSON[] | undefined;
+    const fillPaints = data.fillPaints as IJSON[] | undefined;
     const fillPaint = fillPaints && fillPaints[0];
     const fontColor = fillPaint && importColor(fillPaint.color, fillPaint.opacity);
-    const gradient = fillPaint && parseGradient(fillPaint, textStyle.size);
-    const fontSize = textStyle.fontSize;
-    const letterSpacing = textStyle.letterSpacing;
+    const gradient = fillPaint && parseGradient(fillPaint, data.size);
+    const fontSize = data.fontSize;
+    const letterSpacing = data.letterSpacing;
     /**
      family: "Inter"
      postscript: ""
      style: "Regular"
      */
-    const font = textStyle.fontName;
+    const font = data.fontName;
     const fontName = font?.family;
     const weight = fontWeightMap[font?.style];
     /**
      units: "PERCENT" "PIXELS"
      value: 100
      */
-    const lineHeight = textStyle.lineHeight;
+    const lineHeight = data.lineHeight;
 
     // 默认字体边框
     // const strokePaints = data.strokePaints; // 还不支持
 
-    const alignment = textStyle.textAlignHorizontal && importHorzAlignment(textStyle.textAlignHorizontal);
-    const verAlign = textStyle.textAlignVertical && importVertAlignment(textStyle.textAlignVertical);
+    const alignment = data.textAlignHorizontal && importHorzAlignment(data.textAlignHorizontal);
+    const verAlign = data.textAlignVertical && importVertAlignment(data.textAlignVertical);
 
     // "UNDERLINE" "STRIKETHROUGH"
-    const textDecoration = textStyle.textDecoration;
+    const textDecoration = data.textDecoration;
 
-    const transform = importTransform(textStyle.textCase);
+    const transform = importTransform(data.textCase);
 
-    const paragraphSpacing = textStyle.paragraphSpacing;
-    const listSpacing = textStyle.listSpacing;
+    const paragraphSpacing = data.paragraphSpacing;
+    const listSpacing = data.listSpacing;
 
-    let text: string = data["characters"] || "";
+    const textAutoResize = data.textAutoResize;
+
+    let text: string = textData["characters"] || "";
     if (text[text.length - 1] != '\n') {
         text = text + "\n"; // attr也要修正
     }
-    const lines = data['lines']; // 段落
+    const lines = textData['lines']; // 段落
     const styleOverrideTable = ((styleOverrideTable: any[]) => {
         const t = {} as { [key: number]: any };
         styleOverrideTable.forEach(s => {
             t[s.styleID] = s;
         })
         return t;
-    })(data.styleOverrideTable || []);
+    })(textData.styleOverrideTable || []);
     let index = 0;
-    const characterStyleIDs = (data["characterStyleIDs"] || {}) as { [key: number]: number | undefined };
+    const characterStyleIDs = (textData["characterStyleIDs"] || {}) as { [key: number]: number | undefined };
     const paras = new BasicArray<Para>();
 
     // let attrIdx = 0;
@@ -272,7 +284,21 @@ export function importText(data: IJSON, textStyle: IJSON): Text {
     const textAttr: TextAttr = new TextAttr();
     if (verAlign && verAlign !== types.TextVerAlign.Top) textAttr.verAlign = verAlign;
 
+    textAttr.textBehaviour = ((textAutoResize: string) => {
+        switch (textAutoResize) {
+            case "HEIGHT":
+                return TextBehaviour.Fixed;
+            case "NONE":
+                return TextBehaviour.Flexible;
+            case "WIDTH_AND_HEIGHT":
+                return TextBehaviour.FixWidthAndHeight;
+            default:
+                return TextBehaviour.Flexible;
+        }
+    })(textAutoResize);
+
     const ret = new Text(paras);
     ret.attr = textAttr;
+
     return ret;
 }
