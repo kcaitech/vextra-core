@@ -1,9 +1,11 @@
 import { Api } from "../coop/recordapi";
-import { BasicArray, CurveMode, CurvePoint, OvalShape, Page, PathSegment, Shape } from "../../data";
-import { adapt2Shape, ShapeView } from "../../dataview";
+import { BasicArray, CurveMode, CurvePoint, Document, OvalShape, Page, PathSegment, Shape } from "../../data";
+import { adapt2Shape, PageView, PathShapeView, ShapeView } from "../../dataview";
 import { v4 } from "uuid";
 import { Matrix } from "../../basic/matrix";
 import { uuid } from "../../basic/uuid";
+import { AsyncApiCaller } from "./AsyncApiCaller";
+import { CoopRepository } from "../coop/cooprepo";
 
 export function modifySweep(api: Api, page: Page, shapes: ShapeView[], value: number) {
     const end = Math.PI * 2 * (value / 100);
@@ -330,5 +332,73 @@ export class OvalPathParser {
         __end.hasFrom = false;
 
         return { start, end: __end };
+    }
+}
+
+export class OvalModifier extends AsyncApiCaller {
+    private __delta: Map<ShapeView, number> = new Map();
+
+    constructor(repo: CoopRepository, document: Document, page: PageView) {
+        super(repo, document, page);
+    }
+
+    start() {
+        return this.__repo.start('oval-modify');
+    }
+
+    private getDelta(view: ShapeView) {
+        let d = this.__delta.get(view);
+        if (d === undefined) {
+            d = ((view as PathShapeView).endingAngle ?? Math.PI * 2) - ((view as PathShapeView).startingAngle ?? 0);
+            this.__delta.set(view, d);
+        }
+        return d;
+    }
+
+    modifyStart(value: number, shapes: ShapeView[]) {
+        const api = this.api;
+        const page = this.page;
+        for (const view of shapes) {
+            const oval = adapt2Shape(view);
+            if (!(oval instanceof OvalShape)) continue;
+            api.ovalModifyStartingAngle(page, oval, value);
+            const delta = this.getDelta(view);
+            api.ovalModifyEndingAngle(page, oval, value + delta);
+            modifyPathByArc(api, page, oval);
+        }
+        this.updateView();
+    }
+
+    modifyEnd(value: number, shapes: ShapeView[]) {
+        const api = this.api;
+        const page = this.page;
+        for (const view of shapes) {
+            const oval = adapt2Shape(view);
+            if (!(oval instanceof OvalShape)) continue;
+            let start = oval.startingAngle ?? 0;
+            api.ovalModifyEndingAngle(page, oval, start + value);
+            modifyPathByArc(api, page, oval);
+        }
+        this.updateView();
+    }
+
+    modifyRadius(value: number, shapes: ShapeView[]) {
+        const api = this.api;
+        const page = this.page;
+        for (const view of shapes) {
+            const oval = adapt2Shape(view);
+            if (!(oval instanceof OvalShape)) continue;
+            api.ovalModifyInnerRadius(page, oval, value);
+            modifyPathByArc(api, page, oval);
+        }
+        this.updateView();
+    }
+
+    commit() {
+        if (this.__repo.isNeedCommit() && !this.exception) {
+            this.__repo.commit();
+        } else {
+            this.__repo.rollback();
+        }
     }
 }
