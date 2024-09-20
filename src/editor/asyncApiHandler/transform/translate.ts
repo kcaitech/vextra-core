@@ -278,7 +278,6 @@ export class Transporter extends AsyncApiCaller {
             const page = this.page;
             const frame = shape._p_frame;
             translate(api, page, adapt2Shape(shape), x - frame.x, y - frame.y);
-            this.updateView();
         } catch (e) {
             this.exception = true;
             console.log('Transporter.swap', e);
