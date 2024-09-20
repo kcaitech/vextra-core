@@ -395,6 +395,32 @@ export class OvalModifier extends AsyncApiCaller {
         this.updateView();
     }
 
+    swapGap(view: ShapeView) {
+        const api = this.api;
+        const page = this.page;
+
+        const shape = adapt2Shape(view);
+        if (!(shape instanceof OvalShape)) return;
+
+        const round = Math.PI * 2;
+        const start = shape.startingAngle ?? 0;
+        const end = shape.endingAngle ?? round;
+        const sweep = (end - start) / round;
+
+        if (sweep === 1) return;
+        if (sweep === 0) return api.ovalModifyEndingAngle(page, shape, start + round);
+
+        let __end;
+        if (sweep < 0) {
+            __end = end + round;
+        } else {
+            __end = end - round;
+        }
+        __end += start;
+
+        api.ovalModifyEndingAngle(page, shape, __end);
+    }
+
     commit() {
         if (this.__repo.isNeedCommit() && !this.exception) {
             this.__repo.commit();
