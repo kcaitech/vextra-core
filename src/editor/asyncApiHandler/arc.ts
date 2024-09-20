@@ -140,6 +140,7 @@ export class OvalPathParser {
 
             segments.push({ points, isClosed: true });
         }
+
         return segments;
     }
 
@@ -197,7 +198,8 @@ export class OvalPathParser {
         const points = this.getQuarters(radius);
         const arcPoints: CurvePoint[] = [];
 
-        const sweep = Math.abs((end - start) / (Math.PI * 2)) * 100;
+        const __sweep = (end - start) / (Math.PI * 2) * 100;
+        const sweep = Math.abs(__sweep);
 
         if (sweep > 0 && sweep < 25) {
             const t = sweep / 25;
@@ -243,7 +245,7 @@ export class OvalPathParser {
         }
 
         // 往上翻一下
-        if (end < 0) {
+        if (__sweep < 0) {
             const matrix = new Matrix();
             matrix.flipVert(0.5);
             this.transform(arcPoints, matrix);
@@ -375,8 +377,7 @@ export class OvalModifier extends AsyncApiCaller {
         for (const view of shapes) {
             const oval = adapt2Shape(view);
             if (!(oval instanceof OvalShape)) continue;
-            let start = oval.startingAngle ?? 0;
-            api.ovalModifyEndingAngle(page, oval, start + value);
+            api.ovalModifyEndingAngle(page, oval, value);
             modifyPathByArc(api, page, oval);
         }
         this.updateView();
