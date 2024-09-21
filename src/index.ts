@@ -180,4 +180,6 @@ export { Transform as TransformRaw } from "./data/transform"
 // properties
 export { exportBorder, exportFill, exportShadow, exportBlur } from './data/baseexport';
 
+export { LinearApi } from './editor/linearapi/linearapi';
+
 
