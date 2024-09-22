@@ -1,4 +1,4 @@
-import { CoopRepository } from "../../coop/cooprepo";
+import { CoopRepository } from "../../../coop/cooprepo";
 import { AsyncApiCaller } from "../AsyncApiCaller";
 import {
     Artboard,
@@ -23,7 +23,7 @@ import {
     TableView,
     TextShapeView
 } from "../../../dataview";
-import { Api, TextShapeLike } from "../../coop/recordapi";
+import { Api, TextShapeLike } from "../../../coop/recordapi";
 import { fixTextShapeFrameByLayout } from "../../utils/other";
 import { Transform as Transform2 } from "../../../basic/transform";
 import { ColVector3D } from "../../../basic/matrix2";

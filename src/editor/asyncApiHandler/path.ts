@@ -1,5 +1,5 @@
 import { AsyncApiCaller } from "./AsyncApiCaller";
-import { CoopRepository } from "../coop/cooprepo";
+import { CoopRepository } from "../../coop/cooprepo";
 import { Document } from "../../data";
 import { adapt2Shape, GroupShapeView, PageView, ShapeView } from "../../dataview";
 import { CurveMode, CurvePoint, GroupShape, PathSegment, PathShape, Shape, ShapeFrame, ShapeType } from "../../data";
@@ -11,7 +11,7 @@ import { addCommonAttr, newflatStyle } from "../creator";
 import { Border, BorderStyle, CornerType, Fill, FillType, Shadow, Style } from "../../data";
 import { Color } from "../../data";
 import * as types from "../../data/typesdefine";
-import { ISave4Restore, LocalCmd, SelectionState } from "../coop/localcmd";
+import { ISave4Restore, LocalCmd, SelectionState } from "../../coop/localcmd";
 import { BorderSideSetting, ShapeSize, SideType, Transform } from "../../data";
 import { importStyle } from "../../data/baseimport";
 import { exportStyle } from "../../data/baseexport";

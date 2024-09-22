@@ -2,7 +2,7 @@ import { OverrideType, Shape, ShapeType, SymbolShape, Variable, VariableType, Sy
 import { ExportOptions, SymbolRefShape } from "../data/symbolref";
 import { uuid } from "../basic/uuid";
 import { Page } from "../data/page";
-import { Api } from "./coop/recordapi";
+import { Api } from "../coop/recordapi";
 import { newText2 } from "./creator";
 import { BlendMode, Border, ContextSettings, Fill, Shadow, ShapeSize, Style, TableCell, TableCellType, Text, Transform } from "../data/classes";
 import { findOverride, findVar } from "../data/utils";

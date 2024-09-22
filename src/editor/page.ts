@@ -145,9 +145,9 @@ import {
     update_frame_by_points
 } from "./utils/path";
 import { modify_shapes_height, modify_shapes_width } from "./utils/common";
-import { CoopRepository } from "./coop/cooprepo";
-import { Api, TextShapeLike } from "./coop/recordapi";
-import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
+import { CoopRepository } from "../coop/cooprepo";
+import { Api, TextShapeLike } from "../coop/recordapi";
+import { ISave4Restore, LocalCmd, SelectionState } from "../coop/localcmd";
 import { unable_to_migrate } from "./utils/migrate";
 import {
     adapt2Shape,

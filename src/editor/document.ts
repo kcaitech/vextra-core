@@ -6,7 +6,7 @@ import { v4 as uuid } from "uuid";
 import { exportPage } from "../data/baseexport";
 import { IImportContext, importPage } from "../data/baseimport";
 import { newDocument } from "./creator";
-import { CoopRepository } from "./coop/cooprepo";
+import { CoopRepository } from "../coop/cooprepo";
 import { Repository } from "../data/transact";
 import * as types from "../data/typesdefine";
 import { FMT_VER_latest } from "../data/fmtver";

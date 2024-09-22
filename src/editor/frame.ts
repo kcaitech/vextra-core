@@ -9,7 +9,7 @@ import {
 import { TextBehaviour } from "../data/typesdefine";
 import { fixTextShapeFrameByLayout } from "./utils/other";
 import { ResizingConstraints2 } from "../data/consts";
-import { Api } from "./coop/recordapi";
+import { Api } from "../coop/recordapi";
 import { Document } from "../data/document";
 import { ShapeSize, SymbolUnionShape } from "../data/classes";
 import { SymbolRefShape } from "../data/symbolref";

@@ -1,4 +1,4 @@
-import { CoopRepository } from "./coop/cooprepo";
+import { CoopRepository } from "../coop/cooprepo";
 import { Document, Shape, ShapeType, Page, ResizingConstraints2 } from "../data";
 
 export class resizingConstraintEditor {

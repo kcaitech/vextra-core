@@ -1,4 +1,4 @@
-import { CoopRepository } from "../../coop/cooprepo";
+import { CoopRepository } from "../../../coop/cooprepo";
 import { AsyncApiCaller } from "../AsyncApiCaller";
 import { ShapeView, adapt2Shape, PageView } from "../../../dataview";
 import {
@@ -13,8 +13,8 @@ import {
 } from "../../../data";
 import { after_migrate, unable_to_migrate } from "../../utils/migrate";
 import { get_state_name, is_state } from "../../symbol";
-import { Api } from "../../coop/recordapi";
-import { ISave4Restore, LocalCmd, SelectionState } from "../../coop/localcmd";
+import { Api } from "../../../coop/recordapi";
+import { ISave4Restore, LocalCmd, SelectionState } from "../../../coop/localcmd";
 
 export type TranslateUnit = {
     shape: ShapeView;
