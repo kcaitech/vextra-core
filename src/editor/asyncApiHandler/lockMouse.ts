@@ -19,7 +19,7 @@ import {
     RadiusType,
     TextBehaviour,
     makeShapeTransform2By1,
-    makeShapeTransform1By2
+    makeShapeTransform1By2, OvalShape
 } from "../../data";
 import {
     calculateInnerAnglePosition,
@@ -37,6 +37,7 @@ import {
     UniformScaleUnit
 } from "./transform";
 import { fixTextShapeFrameByLayout } from "../utils/other";
+import { modifyPathByArc } from "./arc";
 
 export class LockMouseHandler extends AsyncApiCaller {
     private recorder: RangeRecorder = new Map();
@@ -240,7 +241,7 @@ export class LockMouseHandler extends AsyncApiCaller {
                 const d = (shape.rotation || 0) + deg;
 
                 const t = makeShapeTransform2By1(shape.transform);
-                const { width, height } = shape.frame;
+                const {width, height} = shape.frame;
 
                 const angle = d % 360 * Math.PI / 180;
                 const os = t.decomposeEuler().z;
@@ -401,6 +402,39 @@ export class LockMouseHandler extends AsyncApiCaller {
             this.updateView();
         } catch (error) {
             console.log('error:', error);
+            this.exception = true;
+        }
+    }
+
+    modifyStartingAngleBy(shapes: ShapeView[], delta: number) {
+        try {
+            const round = Math.PI * 2;
+            const api = this.api;
+            const page = this.page;
+
+            for (const view of shapes) {
+                const shape = adapt2Shape(view);
+                if (!(shape instanceof OvalShape)) continue;
+                const end = shape.endingAngle ?? round;
+                const start = shape.startingAngle ?? 0;
+
+                const d = end - start;
+
+                let targetStart = start + delta;
+
+                if (targetStart > round) targetStart %= round;
+                else if (targetStart < 0) targetStart += round;
+
+                const targetEnd = targetStart + d;
+
+                api.ovalModifyStartingAngle(page, shape, targetStart);
+                api.ovalModifyEndingAngle(page, shape, targetEnd);
+
+                modifyPathByArc(api, page, shape);
+            }
+            this.updateView();
+        } catch (error) {
+            console.error(error);
             this.exception = true;
         }
     }
