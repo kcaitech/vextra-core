@@ -49,7 +49,6 @@ export class LinearApi {
         else {
             this.api = this.__repo.start(desc);
             this.__connected = true;
-            console.log('--连接成功--');
             return true;
         }
     }
@@ -58,7 +57,6 @@ export class LinearApi {
         if (!this.__connected) return;
         this.__connected = false;
         this.exception ? this.__rollback() : this.__commit();
-        console.log('--断开连接--');
     }
 
     private execute(desc: string, exe: Function) {
@@ -84,6 +82,8 @@ export class LinearApi {
         }
     }
 
+    // private---------divide---------public
+
     /**
      * @description 修改弧形起点
      */
@@ -102,6 +102,42 @@ export class LinearApi {
                 api.ovalModifyStartingAngle(page, shape, value);
                 api.ovalModifyEndingAngle(page, shape, value + delta);
 
+                modifyPathByArc(api, page, shape);
+            }
+        });
+    }
+
+    /**
+     * @description 修改弧形覆盖率
+     */
+    modifySweep(shapes: ShapeView[], value: number) {
+        this.execute('modify-sweep-linear', () => {
+            const api = this.api!;
+            const page = this.page;
+
+            for (const view of shapes) {
+                const shape = adapt2Shape(view);
+                if (!(shape instanceof OvalShape)) continue;
+                const start = shape.startingAngle ?? 0;
+                api.ovalModifyEndingAngle(page, shape, start + value);
+                modifyPathByArc(api, page, shape);
+            }
+        });
+    }
+
+    /**
+     * @description 修改弧形镂空半径
+     */
+    modifyInnerRadius(shapes: ShapeView[], value: number) {
+        this.execute('modify-inner-radius-linear', () => {
+            const api = this.api!;
+            const page = this.page;
+
+            for (const view of shapes) {
+                const shape = adapt2Shape(view);
+                if (!(shape instanceof OvalShape)) continue;
+
+                api.ovalModifyInnerRadius(page, shape, value);
                 modifyPathByArc(api, page, shape);
             }
         });

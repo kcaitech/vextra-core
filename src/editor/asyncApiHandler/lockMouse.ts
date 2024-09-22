@@ -439,6 +439,61 @@ export class LockMouseHandler extends AsyncApiCaller {
         }
     }
 
+    modifySweepBy(shapes: ShapeView[], delta: number) {
+        try {
+            const round = Math.PI * 2;
+            const api = this.api;
+            const page = this.page;
+
+            for (const view of shapes) {
+                const shape = adapt2Shape(view);
+                if (!(shape instanceof OvalShape)) continue;
+
+                const start = shape.startingAngle ?? 0;
+                const end = shape.endingAngle ?? round;
+
+                let targetEnd = end + delta;
+                if (targetEnd - start < -round) targetEnd = -round + start;
+                else if (targetEnd - start > round) targetEnd = round + start;
+
+                api.ovalModifyEndingAngle(page, shape, targetEnd);
+
+                modifyPathByArc(api, page, shape);
+            }
+
+            this.updateView();
+        } catch (error) {
+            console.error(error);
+            this.exception = true;
+        }
+    }
+
+    modifyInnerRadiusBy(shapes: ShapeView[], delta: number) {
+        try {
+            const api = this.api;
+            const page = this.page;
+
+            for (const view of shapes) {
+                const shape = adapt2Shape(view);
+                if (!(shape instanceof OvalShape)) continue;
+
+                let targetInnerRadius = (shape.innerRadius ?? 0) + delta;
+
+                if (targetInnerRadius < 0) targetInnerRadius = 0;
+                else if (targetInnerRadius > 1) targetInnerRadius = 1;
+
+                api.ovalModifyInnerRadius(page, shape, targetInnerRadius);
+
+                modifyPathByArc(api, page, shape);
+            }
+
+            this.updateView();
+        } catch (error) {
+            console.error(error);
+            this.exception = true;
+        }
+    }
+
     commit() {
         if (this.__repo.isNeedCommit() && !this.exception) {
             this.__repo.commit();
