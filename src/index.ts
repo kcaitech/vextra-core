@@ -148,9 +148,6 @@ export * from "./io/cilpboard"
 export * from "./io/export/svg"
 
 // editor
-export * from "./editor/coop/localcmd"
-export * from "./editor/coop/cooprepo"
-export * from "./editor/coop/net"
 export * from "./editor"
 export * from "./editor/document"
 export * from "./editor/page"
@@ -168,12 +165,7 @@ export * from "./service/symbollist"
 export * from "./editor/asyncApiHandler"
 
 // coop
-// export * from "./coop"
-export { Cmd } from "./coop/common/repo"
-export * from "./coop/client/serial"
-export { ArrayOpSelection } from "./coop/client/arrayop"
-export { SNumber } from "./coop/client/snumber"
-export { RadixConvert } from "./coop/common/radix_convert"
+export * from "./coop"
 
 export { Transform as TransformRaw } from "./data/transform"
 

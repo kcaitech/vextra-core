@@ -106,7 +106,7 @@ export function convertPath2CurvePoints(path: Path, width: number, height: numbe
     const cmds = path.getCmds();
 
     for (let i = 0, len = cmds.length; i < len; i++) {
-        const p = cmds[0];
+        const p = cmds[i];
         const x = p.start.x;
         const y = p.start.y;
         const seg = {
