@@ -20,7 +20,7 @@ import { importColor, importStyle, importXY } from "./styleio";
 import { Page } from "../../../data/page";
 import { importText } from "./textio";
 import { Artboard } from "../../../data/artboard";
-import { Text } from "../../../data/text";
+import { Text } from "../../../data/text/text";
 import {
     BoolOp,
     Color,

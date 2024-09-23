@@ -18,8 +18,8 @@ import { renderText2Path, renderTextLayout } from "../render/text";
 import {
     CursorLocate, TextLocate, locateCursor,
     locateNextCursor, locatePrevCursor, locateRange, locateText
-} from "../data/textlocate";
-import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "../data/textutils";
+} from "../data/text/textlocate";
+import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "../data/text/textutils";
 import { objectId } from "../basic/objectid";
 import { Path } from "@kcdesign/path";
 

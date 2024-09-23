@@ -3,9 +3,9 @@ import * as classes from "./baseclasses"
 import { BasicArray, BasicMap, ResourceMgr } from "./basic";
 import { ShapeType, TableCellType, CrdtNumber, ShapeFrame } from "./baseclasses"
 import {Shape, Transform, ShapeSize} from "./shape";
-import { Text, TextAttr } from "./text"
+import { Text, TextAttr } from "./text/text"
 import { PathType } from "./consts";
-import { newTableCellText } from "./textutils";
+import { newTableCellText } from "./text/textutils";
 import { Path } from "@kcdesign/path";
 export { TableLayout, TableGridItem } from "./tablelayout";
 export { TableCellType } from "./baseclasses";

@@ -1,6 +1,6 @@
 import { Basic, BasicArray, BasicMap, ResourceMgr } from "./basic";
 import { Style } from "./style";
-import { Text } from "./text";
+import { Text } from "./text/text";
 import * as classes from "./baseclasses"
 import {
     BoolOp,
@@ -25,7 +25,7 @@ import {
     Color
 } from "./baseclasses"
 import { Matrix } from "../basic/matrix";
-import { TextLayout } from "./textlayout";
+import { TextLayout } from "./text/textlayout";
 import { parsePath } from "./pathparser";
 import { PathType, RadiusType, RECT_POINTS } from "./consts";
 import { Variable } from "./variable";

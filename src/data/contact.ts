@@ -1,5 +1,5 @@
 import { Style } from "./style";
-import { Text } from "./text";
+import { Text } from "./text/text";
 import * as classes from "./baseclasses"
 import { BasicArray } from "./basic";
 export { CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint, ShapeFrame, Ellipse, PathSegment } from "./baseclasses"

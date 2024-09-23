@@ -9,9 +9,9 @@ import {
     TextTransformType,
     TextVerAlign,
     UnderlineType
-} from "./baseclasses";
+} from "../baseclasses";
 
-import { Basic, BasicArray } from "./basic";
+import { Basic, BasicArray } from "../basic";
 
 export {
     TextVerAlign,
@@ -25,17 +25,17 @@ export {
     BulletNumbersBehavior,
     TextTransformType,
     Padding
-} from "./baseclasses";
-import * as classes from "./baseclasses"
+} from "../baseclasses";
+import * as classes from "../baseclasses"
 import { deleteText, formatPara, formatText, insertComplexText, insertSimpleText, setBulletNumbersBehavior, setBulletNumbersStart, setBulletNumbersType, setParaIndent } from "./textedit";
 import { LayoutItem, TextLayout, layoutText } from "./textlayout";
 import { layoutAtDelete, layoutAtFormat, layoutAtInsert } from "./textinclayout";
 import { getSimpleText, getUsedFontNames, getTextFormat, getTextWithFmt } from "./textread";
 import { _travelTextPara } from "./texttravel";
-import { FillType, Padding } from "./baseclasses";
-import { Gradient } from "./style"
-import { Color } from "./color";
-import { ShapeFrame, ShapeSize } from "./typesdefine";
+import { FillType, Padding } from "../baseclasses";
+import { Gradient } from "../style"
+import { Color } from "../color";
+import { ShapeFrame, ShapeSize } from "../typesdefine";
 
 /*
  文本框属性

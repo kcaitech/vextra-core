@@ -2,7 +2,7 @@
 
 import { Text } from "./text";
 import { BulletNumbersLayout, TextLayout, fixLineHorAlign, layoutPara } from "./textlayout";
-import { ShapeFrame, ShapeSize, TextBehaviour, TextHorAlign, TextVerAlign } from "./typesdefine";
+import { ShapeFrame, ShapeSize, TextBehaviour, TextHorAlign, TextVerAlign } from "../typesdefine";
 
 export function layoutAtInsert(text: Text,
     frame: ShapeSize,

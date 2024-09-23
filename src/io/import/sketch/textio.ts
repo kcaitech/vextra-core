@@ -1,5 +1,5 @@
 
-import { Para, ParaAttr, Span, Text, TextAttr, TextTransformType } from "../../../data/text";
+import { Para, ParaAttr, Span, Text, TextAttr, TextTransformType } from "../../../data/text/text";
 import { importColor } from "./styleio";
 import * as types from "../../../data/classes"
 import { BasicArray } from "../../../data/basic";

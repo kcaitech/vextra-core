@@ -1,6 +1,6 @@
 // bullet numbers layout
 
-import { gPal } from "../basic/pal";
+import { gPal } from "../../basic/pal";
 import { BulletNumbers, BulletNumbersBehavior, BulletNumbersType, Para, Span, TextTransformType } from "./text";
 import { BulletNumbersLayout, IGraphy } from "./textlayout";
 import { transformText } from "./textlayouttransform";

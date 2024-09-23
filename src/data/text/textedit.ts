@@ -1,5 +1,5 @@
-import { importSpan } from "./baseimport";
-import { BasicArray } from "./basic";
+import { importSpan } from "../baseimport";
+import { BasicArray } from "../basic";
 import { Para, Span, SpanAttr, ParaAttr, Text, BulletNumbersType, BulletNumbersBehavior } from "./text";
 import { _travelTextPara } from "./texttravel";
 import { isDiffSpanAttr, mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "./textutils";

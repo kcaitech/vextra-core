@@ -1,9 +1,9 @@
-import { BasicArray } from "./basic";
+import { BasicArray } from "../basic";
 import { Para, AttrGetter, Span, SpanAttr, Text, ParaAttr, UnderlineType, StrikethroughType, TextTransformType, TextAttr, TextHorAlign } from "./text";
 import { _travelTextPara } from "./texttravel";
 import { mergeParaAttr, mergeSpanAttr } from "./textutils";
-import { Color } from "./color";
-import { FillType } from "./style";
+import { Color } from "../color";
+import { FillType } from "../style";
 import { gradient_equals } from "./textutils";
 export function getSimpleText(shapetext: Text, index: number, length: number): string {
     let text = '';

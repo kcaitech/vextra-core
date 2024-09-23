@@ -7,13 +7,13 @@ import {
     TextAttr,
     TextBehaviour,
     TextTransformType
-} from "../../../data/text";
+} from "../../../data/text/text";
 import {importColor} from "./common";
 import * as types from "../../../data/classes"
 import {FillType} from "../../../data"
 import {BasicArray} from "../../../data";
 import {IJSON} from "./basic";
-import {mergeSpanAttr} from "../../../data/textutils";
+import {mergeSpanAttr} from "../../../data/text/textutils";
 import {parseGradient} from "./shapeio";
 
 function importHorzAlignment(align: string) {

@@ -1,11 +1,12 @@
 import { BulletNumbersType, Text, TextBehaviour } from "./text";
 import { Para, Span, SpanAttr, TextHorAlign, TextVerAlign } from "./text";
-import { BasicArray } from "./basic"
+import { BasicArray } from "../basic"
 import { layoutBulletNumber } from "./textbnlayout";
 import { transformText } from "./textlayouttransform";
-import { gPal } from "../basic/pal";
-import { ShapeSize } from "./typesdefine";
-import { TEXT_BASELINE_RATIO } from "./consts";
+import { gPal } from "../../basic/pal";
+import { ShapeSize } from "../typesdefine";
+import { TEXT_BASELINE_RATIO } from "../consts";
+import { getNextChar } from "./basic";
 
 const TAB_WIDTH = 28;
 const INDENT_WIDTH = TAB_WIDTH;
@@ -375,21 +376,6 @@ export function isNewLineCharCode(code: number) {
     return false;
 }
 
-// https://www.jianshu.com/p/42fd6f84c27a
-export function getNextChar(text: string, index: number): string {
-    const code = text.charCodeAt(index);
-    if (!(0xD800 <= code && code <= 0xDBFF)) return text.charAt(index);
-
-    const code2 = text.charCodeAt(index + 1);
-    if (!(0xDC00 <= code2 && code2 <= 0xDFFF)) return text.charAt(index);
-
-    // 还要判断下一个
-    const code3 = text.charCodeAt(index + 2);
-    if (code3 === 0x200D) { // 零宽度连接符
-        return String.fromCharCode(code, code2, code3) + getNextChar(text, index + 3);
-    }
-    return String.fromCharCode(code, code2);
-}
 
 export function layoutLines(_text: Text, para: Para, width: number, preBulletNumbers: BulletNumbersLayout[]): LineArray {
     const measure = gPal.text.textMeasure;
