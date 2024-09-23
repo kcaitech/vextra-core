@@ -4,7 +4,7 @@ import { crdtArrayInsert, crdtArrayRemove, crdtSetAttr } from "./basic";
 import { uuid } from "../../basic/uuid";
 import { BasicArray } from "../../data/basic";
 import { Op } from "../../coop/common/op";
-import { newTableCellText } from "../../data/textutils";
+import { newTableCellText } from "../../data/text/textutils";
 
 export function tableInitCell(table: TableShape, rowIdx: number, colIdx: number) {
     const cellId = table.rowHeights[rowIdx].id + "," + table.colWidths[colIdx].id;

@@ -9,7 +9,7 @@ import { Cmd } from "../../coop/common/repo";
 import { ICoopNet } from "./net";
 import { transform } from "../../coop/client/arrayoptransform";
 import { ArrayOp, ArrayOpSelection, ArrayOpType } from "../../coop/client/arrayop";
-import { Text } from "../../data/text";
+import { Text } from "../../data/text/text";
 
 
 class MockNet implements ICoopNet {

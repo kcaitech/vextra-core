@@ -1,4 +1,4 @@
-import { _travelTextPara } from "../data/texttravel";
+import { _travelTextPara } from "../data/text/texttravel";
 import {
     BulletNumbersBehavior,
     BulletNumbersType,
@@ -26,7 +26,7 @@ import { Api } from "./coop/recordapi";
 import { ShapeEditor } from "./shape";
 import { fixTableShapeFrameByLayout, fixTextShapeFrameByLayout } from "./utils/other";
 import { BasicArray } from "../data";
-import { mergeParaAttr, mergeSpanAttr } from "../data/textutils";
+import { mergeParaAttr, mergeSpanAttr } from "../data/text/textutils";
 import { importGradient, importText } from "../data/baseimport";
 import { AsyncGradientEditor, Status } from "./controller";
 import { CmdMergeType } from "./coop/localcmd";

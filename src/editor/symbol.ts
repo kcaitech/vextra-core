@@ -10,7 +10,7 @@ import { BasicArray } from "../data/basic";
 import { IImportContext, importBorder, importColor, importContextSettings, importCornerRadius, importExportOptions, importFill, importGradient, importShadow, importStyle, importTableCell, importTableShape, importText } from "../data/baseimport";
 import { ArtboradView, ShapeView, SymbolRefView, SymbolView, TableCellView, TableView, isAdaptedShape } from "../dataview";
 import { Document, ShapeFrame } from "../data/classes";
-import { newTableCellText } from "../data/textutils";
+import { newTableCellText } from "../data/text/textutils";
 import { FMT_VER_latest } from "../data/fmtver";
 
 /**

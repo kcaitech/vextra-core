@@ -16,7 +16,7 @@ import {
 } from "../../data/shape";
 // import { updateShapesFrame } from "./utils";
 import { Blur, Border, BorderPosition, BorderStyle, Fill, Gradient, MarkerType, Shadow } from "../../data/style";
-import { BulletNumbers, SpanAttr, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
+import { BulletNumbers, SpanAttr, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text/text";
 import {
     RectShape,
     SymbolRefShape,
@@ -60,7 +60,7 @@ import {
     PaintFilterType,
 } from "../../data/typesdefine";
 import * as types from "../../data/typesdefine";
-import { _travelTextPara } from "../../data/texttravel";
+import { _travelTextPara } from "../../data/text/texttravel";
 import { uuid } from "../../basic/uuid";
 import { ContactForm, ContactRole, ContextSettings, Crdtidx, CurvePoint, ExportFormat, ExportOptions, PaintFilter, PrototypeEasingBezier, PrototypeInterAction } from "../../data/baseclasses";
 import { ContactShape } from "../../data/contact"

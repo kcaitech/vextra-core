@@ -1,6 +1,6 @@
 import { RepoNode, RepoNodePath } from "./base";
 import { OpType } from "../../coop/common/op";
-import { Text } from "../../data/text";
+import { Text } from "../../data/text/text";
 import { transform } from "../../coop/client/arrayoptransform";
 import { ArrayOp, ArrayOpSelection, ArrayOpType } from "../../coop/client/arrayop";
 import { TextOpAttr, TextOpAttrRecord, TextOpInsert, TextOpInsertRecord, TextOpRemove, TextOpRemoveRecord } from "../../coop/client/textop";

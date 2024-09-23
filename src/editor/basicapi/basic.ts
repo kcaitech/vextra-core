@@ -3,7 +3,7 @@ import { ArrayMoveOpRecord, CrdtItem, IdOpRecord, TreeMoveOpRecord, crdtGetArrIn
 import { GroupShape, Shape, Variable } from "../../data/shape";
 import { TextOpAttrRecord, TextOpInsertRecord, TextOpRemoveRecord } from "../../coop/client/textop";
 import { OpType } from "../../coop/common/op";
-import { Para, ParaAttr, Span, SpanAttr, Text } from "../../data/text";
+import { Para, ParaAttr, Span, SpanAttr, Text } from "../../data/text/text";
 import { Page } from "../../data/page";
 import { SNumber } from "../../coop/client/snumber";
 import { ShapeView } from "../../dataview";

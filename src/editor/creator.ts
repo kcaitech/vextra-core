@@ -61,7 +61,7 @@ import { Comment } from "../data";
 import { ResourceMgr } from "../data";
 import { TableShape } from "../data";
 
-export { newText, newText2 } from "../data/textutils";
+export { newText, newText2 } from "../data/text/textutils";
 import {
     BorderSideSetting,
     ContactForm,
@@ -76,7 +76,7 @@ import {
 import { Matrix } from "../basic/matrix";
 import { ResizingConstraints2 } from "../data";
 import { SymbolMgr } from "../data/symbolmgr";
-import { newText } from "../data/textutils";
+import { newText } from "../data/text/textutils";
 import { getPolygonPoints, getPolygonVertices } from "./utils/path";
 import { makeShapeTransform2By1, updateShapeTransform1By2 } from "../data";
 import { is_mac } from "../data/utils";
