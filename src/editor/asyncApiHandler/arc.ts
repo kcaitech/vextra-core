@@ -98,7 +98,7 @@ export class OvalPathParser {
 
         const segments: { points: CurvePoint[], isClosed: boolean }[] = [];
 
-        const sweep = (end - start) / round;
+        const sweep = Number(((end - start) / round).toFixed(4));
         if (!sweep) {
             const points = [this.__p(start, 1), this.__p(start, (1 + (1 - radius)) / 2), this.__p(start, 1 - radius)];
             if (radius === 1) points.pop();
