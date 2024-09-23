@@ -37,6 +37,7 @@ import {
     OverlayBackgroundAppearance,
     OverlayBackgroundType,
     ScrollDirection,
+    ScrollBehavior,
     OverlayPosition,
     OverlayMargin
 } from "../../data/classes";
@@ -728,6 +729,11 @@ export class Api {
         this.addOp(basicapi.crdtSetAttr(shape, "scrollDirection", value));
     }
 
+    shapeModifyScrollBehavior(page: Page, shape: Shape, value: ScrollBehavior) {
+        checkShapeAtPage(page, shape)
+        this.addOp(basicapi.crdtSetAttr(shape, "scrollBehavior", value));
+    }
+
     shapeModifyResizingConstraint(page: Page, shape: Shape, resizingConstraint: number) {
         this._shapeModifyAttr(page, shape, "resizingConstraint", resizingConstraint);
     }
@@ -1272,7 +1278,7 @@ export class Api {
     }
     modifyShapeScale(page: Page, shape: Shape, value: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(crdtSetAttr(shape,'uniformScale', value));
+        this.addOp(crdtSetAttr(shape, 'uniformScale', value));
     }
     // text
     insertSimpleText(page: Page, shape: TextShapeLike | Variable, idx: number, text: string, attr?: SpanAttr) {
@@ -1506,7 +1512,7 @@ export class Api {
         len = alignRange.len;
         this.addOp(basicapi.textModifyParaSpacing(shape, _text, paraSpacing, index, len));
     }
-    textModifyPaddingHor(page: Page, shape: TextShapeLike | Variable, padding: { left: number, right: number },  index: number, len: number) {
+    textModifyPaddingHor(page: Page, shape: TextShapeLike | Variable, padding: { left: number, right: number }, index: number, len: number) {
         checkShapeAtPage(page, shape);
         const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();

@@ -135,6 +135,7 @@ import {
     PrototypeStartingPoint,
     PrototypeTransitionType,
     ScrollDirection,
+    ScrollBehavior,
     PrototypeEasingBezier,
     Shadow
 } from "../data/baseclasses";
@@ -681,6 +682,7 @@ export class PageEditor {
                 if (shape0.overlayBackgroundInteraction) symbolShape.overlayBackgroundInteraction = (shape0.overlayBackgroundInteraction);
                 if (shape0.overlayBackgroundAppearance) symbolShape.overlayBackgroundAppearance = importOverlayBackgroundAppearance(shape0.overlayBackgroundAppearance);
                 if (shape0.scrollDirection) symbolShape.scrollDirection = (shape0.scrollDirection);
+                if (shape0.scrollBehavior) symbolShape.scrollBehavior = (shape0.scrollBehavior);
             }
 
             const page = this.__page;
@@ -3773,6 +3775,21 @@ export class PageEditor {
             const __shape = adapt2Shape(shape);
             api.shapeModifyscrollDirection(this.__page, __shape, value);
             this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setScrollBehavior(shapes: ShapeView[], value: ScrollBehavior) {
+        const api = this.__repo.start('setScrollBehavior');
+        try {
+            for (let i = 0; i < shapes.length; i++) {
+                const shape = shapes[i];
+                const __shape = adapt2Shape(shape);
+                const types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                if (!types.includes(__shape.parent!.type)) continue;
+                api.shapeModifyScrollBehavior(this.__page, __shape, value);
+            }
         } catch (error) {
             this.__repo.rollback();
         }
