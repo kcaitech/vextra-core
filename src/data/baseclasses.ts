@@ -32,6 +32,7 @@ export {
     PrototypeNavigationType,
     PrototypeTransitionType,
     ResizeType,
+    ScrollBehavior,
     ScrollDirection,
     ShadowPosition,
     ShapeType,
@@ -80,6 +81,7 @@ import {
     PrototypeNavigationType,
     PrototypeTransitionType,
     ResizeType,
+    ScrollBehavior,
     ScrollDirection,
     ShadowPosition,
     ShapeType,
@@ -891,6 +893,7 @@ export class Shape extends Basic {
     overlayBackgroundInteraction?: OverlayBackgroundInteraction
     overlayBackgroundAppearance?: OverlayBackgroundAppearance
     scrollDirection?: ScrollDirection
+    scrollBehavior?: ScrollBehavior
     mask?: boolean
     uniformScale?: number
     constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style) {

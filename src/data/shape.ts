@@ -18,6 +18,7 @@ import {
     PrototypeInterAction,
     OverlayPosition,
     ScrollDirection,
+    ScrollBehavior,
     OverlayPositionType,
     OverlayBackgroundAppearance,
     OverlayBackgroundType,
@@ -145,6 +146,7 @@ export class Shape extends Basic implements classes.Shape {
     overlayBackgroundInteraction?: classes.OverlayBackgroundInteraction;
     overlayBackgroundAppearance?: classes.OverlayBackgroundAppearance;
     scrollDirection?: classes.ScrollDirection;
+    scrollBehavior?: classes.ScrollBehavior;
     mask?: boolean;
     uniformScale?: number;
 

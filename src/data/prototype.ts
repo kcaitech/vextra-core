@@ -14,6 +14,7 @@ export {
     OverlayPositionType,
     OverlayBackgroundType,
     ScrollDirection,
+    ScrollBehavior,
     OverlayPosition,
     OverlayMargin,
 } from './baseclasses';

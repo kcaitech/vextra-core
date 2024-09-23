@@ -22,6 +22,7 @@ import {
     Point2D,
     PrototypeInterAction,
     PrototypeStartingPoint,
+    ScrollBehavior,
     ScrollDirection,
     Shadow,
     ShadowPosition,
@@ -1119,6 +1120,10 @@ export class ShapeView extends DataView {
 
     get scrollDirection(): ScrollDirection | undefined {
         return this.m_data.scrollDirection
+    }
+
+    get scrollBehavior(): ScrollBehavior | undefined {
+        return this.m_data.scrollBehavior;
     }
 
     get relyLayers() {

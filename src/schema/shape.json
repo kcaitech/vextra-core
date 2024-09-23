@@ -80,17 +80,20 @@
                 "$ref": "./prototype-inter-action.json"
             }
         },
-        "overlayPosition":{
+        "overlayPosition": {
             "$ref": "./overlay-position.json"
         },
-        "overlayBackgroundInteraction":{
-             "$ref": "./overlay-background-interaction.json"
+        "overlayBackgroundInteraction": {
+            "$ref": "./overlay-background-interaction.json"
         },
-        "overlayBackgroundAppearance":{
-            "$ref":"./overlay-background-appearance.json"
+        "overlayBackgroundAppearance": {
+            "$ref": "./overlay-background-appearance.json"
         },
-        "scrollDirection":{
-             "$ref":"./scroll-direction.json"
+        "scrollDirection": {
+            "$ref": "./scroll-direction.json"
+        },
+        "scrollBehavior": {
+            "$ref": "./scroll-behavior.json"
         },
         "mask": {
             "type": "boolean"

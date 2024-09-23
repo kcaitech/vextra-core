@@ -1,0 +1,9 @@
+{
+    "description": "scrollBehavior",
+    "enum": [
+        "SCROLLS",
+        "FIXED_WHEN_CHILD_OF_SCROLLING_FRAME",
+        "STICKY_SCROLLS"
+    ],
+    "default": "SCROLLS"
+}

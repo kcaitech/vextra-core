@@ -555,6 +555,10 @@ export function importPrototypeTransitionType(source: types.PrototypeTransitionT
 export function importResizeType(source: types.ResizeType, ctx?: IImportContext): impl.ResizeType {
     return source
 }
+/* scrollBehavior */
+export function importScrollBehavior(source: types.ScrollBehavior, ctx?: IImportContext): impl.ScrollBehavior {
+    return source
+}
 /* scrollDirection */
 export function importScrollDirection(source: types.ScrollDirection, ctx?: IImportContext): impl.ScrollDirection {
     return source
@@ -1132,6 +1136,7 @@ function importShapeOptional(tar: impl.Shape, source: types.Shape, ctx?: IImport
     if (source.overlayBackgroundInteraction) tar.overlayBackgroundInteraction = importOverlayBackgroundInteraction(source.overlayBackgroundInteraction, ctx)
     if (source.overlayBackgroundAppearance) tar.overlayBackgroundAppearance = importOverlayBackgroundAppearance(source.overlayBackgroundAppearance, ctx)
     if (source.scrollDirection) tar.scrollDirection = importScrollDirection(source.scrollDirection, ctx)
+    if (source.scrollBehavior) tar.scrollBehavior = importScrollBehavior(source.scrollBehavior, ctx)
     if (source.mask) tar.mask = source.mask
     if (source.uniformScale) tar.uniformScale = source.uniformScale
 }

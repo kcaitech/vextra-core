@@ -439,6 +439,12 @@ export enum ResizeType {
     Resize = "resize",
     Float = "float",
 }
+/* scrollBehavior */
+export enum ScrollBehavior {
+    SCROLLS = "SCROLLS",
+    FIXEDWHENCHILDOFSCROLLINGFRAME = "FIXED_WHEN_CHILD_OF_SCROLLING_FRAME",
+    STICKYSCROLLS = "STICKY_SCROLLS",
+}
 /* scrollDirection */
 export enum ScrollDirection {
     NONE = "NONE",
@@ -869,6 +875,7 @@ export type Shape = {
     overlayBackgroundInteraction?: OverlayBackgroundInteraction,
     overlayBackgroundAppearance?: OverlayBackgroundAppearance,
     scrollDirection?: ScrollDirection,
+    scrollBehavior?: ScrollBehavior,
     mask?: boolean,
     uniformScale?: number,
 }

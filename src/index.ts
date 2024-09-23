@@ -125,7 +125,8 @@ export {
     PrototypeTransitionType,
     PrototypeEasingBezier,
 
-    ScrollDirection
+    ScrollDirection,
+    ScrollBehavior
 } from "./data"
 
 export {
