@@ -65,14 +65,14 @@ export function modifyPathByArc(api: Api, page: Page, shape: Shape) {
     const start = shape.startingAngle ?? 0;
     const end = shape.endingAngle ?? round;
 
-    const parser = new OvalPathParser({start, end, radius});
+    const parser = new OvalPathParser({ start, end, radius });
     const segments = parser.getPath();
     if (segments.length) {
         while (shape.pathsegs.length) {
             api.deleteSegmentAt(page, shape, shape.pathsegs.length - 1);
         }
         while (segments.length) {
-            const {points, isClosed} = segments.pop()!;
+            const { points, isClosed } = segments.pop()!;
             api.addSegmentAt(page, shape, 0, new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...points), isClosed));
         }
     }
@@ -100,17 +100,17 @@ export class OvalPathParser {
 
         const sweep = (end - start) / round;
         if (!sweep) {
-            const points = [this.__p(start, 1), this.__p(start, 1 - radius)];
+            const points = [this.__p(start, 1), this.__p(start, (1 + (1 - radius)) / 2), this.__p(start, 1 - radius)];
             if (radius === 1) points.pop();
-            segments.push({points, isClosed: false});
+            segments.push({ points, isClosed: false });
         } else if (Math.abs(sweep) === 1) {
             if (radius) {
                 const points = this.getQuarters(1);
                 const points2 = this.getQuarters(radius);
-                segments.push({points, isClosed: true}, {points: points2, isClosed: true});
+                segments.push({ points, isClosed: true }, { points: points2, isClosed: true });
             } else {
                 const points = this.getQuarters(1);
-                segments.push({points, isClosed: true});
+                segments.push({ points, isClosed: true });
             }
         } else {
             const matrix = new Matrix();
@@ -138,7 +138,7 @@ export class OvalPathParser {
                 points.push(...this.reverse(arc2));
             } else points.push(arc2[0]);
 
-            segments.push({points, isClosed: true});
+            segments.push({ points, isClosed: true });
         }
 
         return segments;
@@ -299,8 +299,8 @@ export class OvalPathParser {
      * @description 分割三阶贝塞尔曲线
      */
     private cubicBezierFragment(start: CurvePoint, end: CurvePoint, t: number) {
-        const c1 = {x: start.fromX!, y: start.fromY!};
-        const c2 = {x: end.toX!, y: end.toY!};
+        const c1 = { x: start.fromX!, y: start.fromY! };
+        const c2 = { x: end.toX!, y: end.toY! };
 
         const d = 1 - t;
 
@@ -333,7 +333,7 @@ export class OvalPathParser {
         __end.hasTo = true;
         __end.hasFrom = false;
 
-        return {start, end: __end};
+        return { start, end: __end };
     }
 }
 
@@ -363,9 +363,11 @@ export class OvalModifier extends AsyncApiCaller {
         for (const view of shapes) {
             const oval = adapt2Shape(view);
             if (!(oval instanceof OvalShape)) continue;
-            api.ovalModifyStartingAngle(page, oval, value);
             const delta = this.getDelta(view);
+
+            api.ovalModifyStartingAngle(page, oval, value);
             api.ovalModifyEndingAngle(page, oval, value + delta);
+
             modifyPathByArc(api, page, oval);
         }
         this.updateView();
