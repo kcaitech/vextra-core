@@ -20,7 +20,6 @@ export function modifySweep(api: Api, page: Page, shapes: ShapeView[], value: nu
 
         const target = startingAngle + end;
         api.ovalModifyEndingAngle(page, shape, target);
-
         modifyPathByArc(api, page, shape);
     }
 }
