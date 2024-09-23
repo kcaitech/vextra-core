@@ -163,7 +163,7 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, width: number
             return false;
         }
 
-        if (curvePoint.hasFrom || curvePoint.hasTo) {
+        if (curvePoint.hasFrom && curvePoint.hasTo) {
             return false;
         }
 
