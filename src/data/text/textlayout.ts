@@ -6,7 +6,7 @@ import { transformText } from "./textlayouttransform";
 import { gPal } from "../../basic/pal";
 import { ShapeSize } from "../typesdefine";
 import { TEXT_BASELINE_RATIO } from "../consts";
-import { getNextChar } from "./basic";
+import { getNextChar, isNewLineCharCode } from "./basic";
 
 const TAB_WIDTH = 28;
 const INDENT_WIDTH = TAB_WIDTH;
@@ -355,27 +355,6 @@ function adjustLineHorAlign(line: Line, align: TextHorAlign, width: number) {
     line.alignment = align;
     line.layoutWidth = width;
 }
-
-export function isNewLineCharCode(code: number) {
-    // U+0009: Horizontal tab
-    // U+000A: Line feed
-    // U+000B: Vertical tab
-    // U+000C: Form feed
-    // U+000D: Carriage return
-    // U+0020: Space
-    // U+00A0: Non-breaking space
-    // U+2028: Line separator
-    // U+2029: Paragraph separator
-    switch (code) {
-        case 0x0A:
-        case 0x0D:
-        case 0x2028:
-        case 0x2029:
-            return true;
-    }
-    return false;
-}
-
 
 export function layoutLines(_text: Text, para: Para, width: number, preBulletNumbers: BulletNumbersLayout[]): LineArray {
     const measure = gPal.text.textMeasure;

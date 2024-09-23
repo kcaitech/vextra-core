@@ -54,3 +54,23 @@ export function getNextChar(text: string, index: number): string {
     }
     return String.fromCharCode(code, code2);
 }
+
+export function isNewLineCharCode(code: number) {
+    // U+0009: Horizontal tab
+    // U+000A: Line feed
+    // U+000B: Vertical tab
+    // U+000C: Form feed
+    // U+000D: Carriage return
+    // U+0020: Space
+    // U+00A0: Non-breaking space
+    // U+2028: Line separator
+    // U+2029: Paragraph separator
+    switch (code) {
+        case 0x0A:
+        case 0x0D:
+        case 0x2028:
+        case 0x2029:
+            return true;
+    }
+    return false;
+}
