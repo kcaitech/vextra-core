@@ -978,7 +978,7 @@ export type BoolShape = GroupShape
 export type DocumentMeta = {
     id: string,
     name: string,
-    fmtVer: number,
+    fmtVer: string,
     pagesList: DocumentMeta_pagesList,
     lastCmdId: string,
     symbolregist: Map<string, string>,

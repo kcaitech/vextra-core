@@ -5,7 +5,7 @@ import { Matrix } from "../basic/matrix"
 export interface IImportContext {
     document: impl.Document
     curPage: string
-    fmtVer: number
+    fmtVer: string
 }
 
 export function compatibleOldData(source: types.Shape, ctx?: IImportContext) {

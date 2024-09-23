@@ -8,7 +8,7 @@ import { is_mac } from "./utils"
 export interface IImportContext {
     document: impl.Document
     curPage: string
-    fmtVer: number
+    fmtVer: string
 }
 function objkeys(obj: any) {
     return obj instanceof Map ? obj : { forEach: (f: (v: any, k: string) => void) => Object.keys(obj).forEach((k) => f(obj[k], k)) };

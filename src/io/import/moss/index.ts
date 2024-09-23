@@ -44,7 +44,7 @@ function setLoader(pack: { [p: string]: string | Uint8Array; }, document: Docume
         const ctx: IImportContext = new class implements IImportContext {
             document: Document = document;
             curPage: string = id;
-            fmtVer: number = document.fmtVer;
+            fmtVer: string = document.fmtVer;
         };
         const page = JSON.parse(pack[id] as string) as Page;
         if (!page) {

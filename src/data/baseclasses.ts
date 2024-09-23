@@ -1143,12 +1143,12 @@ export class DocumentMeta extends Basic {
     typeId = "document-meta"
     id: string
     name: string
-    fmtVer: number
+    fmtVer: string
     pagesList: DocumentMeta_pagesList
     lastCmdId: string
     symbolregist: BasicMap<string, string>
     freesymbols?: BasicMap<string, SymbolShape | SymbolUnionShape>
-    constructor(id: string, name: string, fmtVer: number, pagesList: DocumentMeta_pagesList, lastCmdId: string, symbolregist: BasicMap<string, string>) {
+    constructor(id: string, name: string, fmtVer: string, pagesList: DocumentMeta_pagesList, lastCmdId: string, symbolregist: BasicMap<string, string>) {
         super()
         this.id = id
         this.name = name

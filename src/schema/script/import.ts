@@ -267,7 +267,7 @@ export function gen(out: string) {
     $.nl('export interface IImportContext ').sub(() => {
         $.nl('document: impl.Document')
         $.nl('curPage: string')
-        $.nl('fmtVer: number')
+        $.nl('fmtVer: string')
     })
 
     $.fmt(`function objkeys(obj: any) {
