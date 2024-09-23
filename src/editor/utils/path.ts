@@ -1,4 +1,4 @@
-import { Api } from "../coop/recordapi";
+import { Api } from "../../coop/recordapi";
 import { BorderPosition, ContactForm, CornerType, CurveMode, MarkerType, ShapeType } from "../../data/typesdefine";
 import { CurvePoint, PathShape, PathShape2, Shape } from "../../data/shape";
 import { Page } from "../../data/page";

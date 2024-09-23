@@ -24,7 +24,7 @@ import {
     SideType,
     BorderSideSetting,
 } from "../../data/classes";
-import { Api } from "../coop/recordapi";
+import { Api } from "../../coop/recordapi";
 import { BasicArray, BasicMap } from "../../data/basic";
 import { newSymbolRefShape, newSymbolShapeUnion } from "../creator";
 import { uuid } from "../../basic/uuid";

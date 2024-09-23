@@ -1,5 +1,5 @@
 import { expandTo, translateTo } from "../frame";
-import { Api } from "../coop/recordapi";
+import { Api } from "../../coop/recordapi";
 import { is_straight, update_frame_by_points } from "./path";
 import { getHorizontalRadians } from "../page";
 import { Document, PathShape, ShapeFrame, Page } from "../../data";

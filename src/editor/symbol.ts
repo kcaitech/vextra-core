@@ -2,7 +2,7 @@ import { OverrideType, Shape, ShapeType, SymbolShape, Variable, VariableType, Sy
 import { ExportOptions, SymbolRefShape } from "../data/symbolref";
 import { uuid } from "../basic/uuid";
 import { Page } from "../data/page";
-import { Api } from "./coop/recordapi";
+import { Api } from "../coop/recordapi";
 import { newText2 } from "./creator";
 import { BlendMode, Border, ContextSettings, Fill, Shadow, ShapeSize, Style, TableCell, TableCellType, Text, Transform } from "../data/classes";
 import { findOverride, findVar } from "../data/utils";
@@ -342,7 +342,7 @@ export function override_variable2(page: Page, varType: VariableType, overrideTy
 function _clone_value(_var: Variable, document: Document, page: Page) {
     if (_var.value === undefined) return undefined;
 
-    const ctx: IImportContext = new class implements IImportContext { document: Document = document; curPage: string = page.id; fmtVer: number = FMT_VER_latest };
+    const ctx: IImportContext = new class implements IImportContext { document: Document = document; curPage: string = page.id; fmtVer: string = FMT_VER_latest };
 
     switch (_var.type) {
         case VariableType.MarkerType:

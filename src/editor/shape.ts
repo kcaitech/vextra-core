@@ -6,7 +6,7 @@ import {
     BoolOp, CurvePoint, ExportFormat, ContactShape
 } from "../data";
 import { expand, expandTo, translate, translateTo } from "./frame";
-import { CoopRepository } from "./coop/cooprepo";
+import { CoopRepository } from "../coop/cooprepo";
 import {
     CurveMode,
     ExportFileFormat,
@@ -15,7 +15,7 @@ import {
     OverrideType,
     ShadowPosition
 } from "../data/typesdefine";
-import { Api } from "./coop/recordapi";
+import { Api } from "../coop/recordapi";
 import { importCurvePoint } from "../data/baseimport";
 import { v4 } from "uuid";
 import { uuid } from "../basic/uuid";
@@ -56,7 +56,7 @@ import {
     shape4fill,
     shape4shadow
 } from "./symbol";
-import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
+import { ISave4Restore, LocalCmd, SelectionState } from "../coop/localcmd";
 
 export class ShapeEditor {
     protected __shape: ShapeView;

@@ -145,9 +145,9 @@ import {
     update_frame_by_points
 } from "./utils/path";
 import { modify_shapes_height, modify_shapes_width } from "./utils/common";
-import { CoopRepository } from "./coop/cooprepo";
-import { Api, TextShapeLike } from "./coop/recordapi";
-import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
+import { CoopRepository } from "../coop/cooprepo";
+import { Api, TextShapeLike } from "../coop/recordapi";
+import { ISave4Restore, LocalCmd, SelectionState } from "../coop/localcmd";
 import { unable_to_migrate } from "./utils/migrate";
 import {
     adapt2Shape,
@@ -813,7 +813,7 @@ export class PageEditor {
             const ctx: IImportContext = new class implements IImportContext {
                 document: Document = _this.__document;
                 curPage: string = _this.__page.id;
-                fmtVer: number = FMT_VER_latest
+                fmtVer: string = FMT_VER_latest
             };
             const api = this.__repo.start("makeStateAt");
             // api.registSymbol(this.__document, source.id, this.__page.id); // 先设置上, import好加入symmgr
@@ -938,7 +938,7 @@ export class PageEditor {
             const ctx: IImportContext = new class implements IImportContext {
                 document: Document = _this.__document;
                 curPage: string = _this.__page.id;
-                fmtVer: number = FMT_VER_latest
+                fmtVer: string = FMT_VER_latest
             };
             const tmpArtboard: Artboard = newArtboard(shape.name, shape.frame);
 
@@ -1093,7 +1093,7 @@ export class PageEditor {
         const ctx: IImportContext = new class implements IImportContext {
             document: Document = _this.__document;
             curPage: string = _this.__page.id;
-            fmtVer: number = FMT_VER_latest
+            fmtVer: string = FMT_VER_latest
         };
         return importStyle(style, ctx);
     }
