@@ -487,7 +487,6 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
     while (iter.hasNext()) {
         const next = nextGraphy(iter, lineArray, preBulletNumbers);
         const graphys = next.graphys;
-        // const cc = graphys.reduce((p, v0) => p + v0.reduce((p, g) => p + g.cc, 0), 0);
 
         if (next.type === 'nl') { // new line
             assignGraphysX(graphys, curX);
@@ -504,8 +503,6 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
             // 调整startX
             startX = cw + lastKerning;
         }
-
-        // todo assign graphys x
 
         if (cw + curX <= endX) { // cw + curX + charSpace <= endX,兼容sketch
             assignGraphysX(graphys, curX);
