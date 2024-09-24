@@ -18,6 +18,9 @@ import { Api } from "../../coop/recordapi";
 import { ISave4Restore, LocalCmd, SelectionState } from "../../coop/localcmd";
 import { getAutoLayoutShapes, modifyAutoLayout } from "../../utils/auto_layout";
 import { translate } from "../../frame";
+import { transform_data } from "../../../io/cilpboard";
+import { importShape } from "../../../data/baseimport";
+import { exportShape } from "../../../data/baseexport";
 
 export type TranslateUnit = {
     shape: ShapeView;
@@ -263,6 +266,66 @@ export class Transporter extends AsyncApiCaller {
         } catch (e) {
             this.exception = true;
             console.log('Transporter.swap', e);
+        }
+    }
+
+    drawn(shapes: ShapeView[], transforms?: Transform[]) {
+        try {
+            const api = this.api;
+            const page = this.page;
+            const document = this.__document;
+            const source = transform_data(document, page, shapes.map(i => adapt2Shape(i)));
+            if (source.length !== shapes.length) {
+                this.exception = true;
+                return;
+            }
+            if (transforms && transforms.length !== shapes.length) {
+                this.exception = true;
+                return;
+            }
+            const results: Shape[] = [];
+            for (let i = 0; i < shapes.length; i++) {
+                const shape = adapt2Shape(shapes[i]);
+
+                const transform = transforms?.[i];
+                if (transform) api.shapeModifyTransform(page, shape, transform);
+
+                const parent = shape.parent as GroupShape;
+                const targetIndex = parent.indexOfChild(shape) + 1;
+                const __source = source[i];
+                results.push(api.shapeInsert(document, page, parent, __source, targetIndex));
+            }
+            this.updateView();
+            return results;
+        } catch (e) {
+            this.exception = true;
+            console.error(e);
+        }
+    }
+
+    revert(shapes: ShapeView[], bases: ShapeView[]) {
+        try {
+            if (shapes.length !== bases.length) {
+                this.exception = true;
+                return;
+            }
+
+            const api = this.api;
+            const page = this.page;
+            const document = this.__document;
+
+            for (let i = 0; i < shapes.length; i++) {
+                const shape = adapt2Shape(shapes[i]);
+                const base = adapt2Shape(bases[i]);
+                api.shapeModifyTransform(page, base, shape.transform.clone());
+                const parent = shape.parent as GroupShape;
+                api.shapeDelete(document, page, parent, parent.indexOfChild(shape));
+            }
+
+            this.updateView();
+        } catch (e) {
+            this.exception = true;
+            console.error(e);
         }
     }
 
