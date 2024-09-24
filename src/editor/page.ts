@@ -3801,6 +3801,7 @@ export class PageEditor {
                 if (!types.includes(__shape.parent!.type)) continue;
                 api.shapeModifyScrollBehavior(this.__page, __shape, value);
             }
+            this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
         }
