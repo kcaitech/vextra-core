@@ -63,6 +63,7 @@ export class Line extends Array<GraphArray> {
     public layoutWidth: number = 0;
 
     push(...items: GraphArray[]): number {
+        if (items.length === 0) return 0
         if (items.length === 1) {
             // this.actualBoundingBoxDescent = Math.max(this.actualBoundingBoxDescent, items[0].actualBoundingBoxDescent || 0);
             this.maxFontSize = Math.max(this.maxFontSize, items[0].attr?.fontSize || 0);
@@ -73,6 +74,14 @@ export class Line extends Array<GraphArray> {
             this.maxFontSize = items.reduce((p, c) => Math.max(p, c.attr?.fontSize || 0), this.maxFontSize);
             this.charCount += items.reduce((p, c) => p + c.charCount, 0);
             this.graphCount += items.length;
+        }
+        if (this.length > 0) {
+            const pre = this[this.length - 1]
+            const cur = items[0];
+            if (pre.attr === cur.attr) { // merge
+                pre.push(...cur);
+                items.splice(0, 1);
+            }
         }
         return super.push(...items);
     }
