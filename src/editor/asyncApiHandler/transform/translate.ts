@@ -19,8 +19,6 @@ import { ISave4Restore, LocalCmd, SelectionState } from "../../coop/localcmd";
 import { getAutoLayoutShapes, modifyAutoLayout } from "../../utils/auto_layout";
 import { translate } from "../../frame";
 import { transform_data } from "../../../io/cilpboard";
-import { importShape } from "../../../data/baseimport";
-import { exportShape } from "../../../data/baseexport";
 
 export type TranslateUnit = {
     shape: ShapeView;
