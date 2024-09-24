@@ -1,12 +1,11 @@
 import { BulletNumbersType, ParaIter, ParaIterItem, Text, TextBehaviour } from "./text";
 import { Para, Span, SpanAttr, TextHorAlign, TextVerAlign } from "./text";
-import { BasicArray } from "../basic"
 import { layoutBulletNumber } from "./textbnlayout";
 import { transformText } from "./textlayouttransform";
 import { gPal } from "../../basic/pal";
 import { ParaAttr, ShapeSize, TextTransformType } from "../typesdefine";
-import { autoLineHeight, TEXT_BASELINE_RATIO } from "../consts";
-import { getNextChar, isLetter, isNewLineCharCode, isPureHeadPunc, isTailPunc } from "./basic";
+import { autoLineHeight, TEXT_BASELINE_RATIO } from "./basic";
+import { isLetter, isNewLineCharCode, isPureHeadPunc, isTailPunc } from "./basic";
 
 const TAB_WIDTH = 28;
 const INDENT_WIDTH = TAB_WIDTH;
