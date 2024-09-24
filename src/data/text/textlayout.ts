@@ -510,7 +510,7 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
         const cw = graphys.reduce((p, v0) => p + v0.reduce((p, g) => p + g.cw + (v0.attr?.kerning ?? paraCharSpace), 0), 0) - lastKerning; // todo字间距不对？
         if (next.type === 'bn') {
             // 调整startX
-            startX = cw + lastKerning;
+            startX += cw + lastKerning;
         }
 
         if (cw + curX <= endX) { // cw + curX + charSpace <= endX,兼容sketch
