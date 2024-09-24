@@ -250,6 +250,13 @@ function _mergeParaAttr(paraAttr: ParaAttr, attr: ParaAttr): boolean {
     let changed = false;
     changed = _mergeSpanAttr(paraAttr, attr);
 
+    if (attr.autoLineHeight != undefined) {
+        if (paraAttr.autoLineHeight == undefined || paraAttr.autoLineHeight !== attr.autoLineHeight) {
+            paraAttr.autoLineHeight = attr.autoLineHeight;
+            changed = true;
+        }
+    }
+
     if (attr.minimumLineHeight != undefined) {
         if (paraAttr.minimumLineHeight == undefined || paraAttr.minimumLineHeight !== attr.minimumLineHeight) {
             paraAttr.minimumLineHeight = attr.minimumLineHeight;

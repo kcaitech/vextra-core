@@ -918,6 +918,7 @@ export function exportParaAttr(source: types.ParaAttr, ctx?: IExportContext): ty
     if (source.paraSpacing) ret.paraSpacing = source.paraSpacing
     if (source.minimumLineHeight) ret.minimumLineHeight = source.minimumLineHeight
     if (source.maximumLineHeight) ret.maximumLineHeight = source.maximumLineHeight
+    if (source.autoLineHeight) ret.autoLineHeight = source.autoLineHeight
     if (source.indent) ret.indent = source.indent
     return ret
 }

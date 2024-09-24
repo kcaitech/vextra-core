@@ -86,6 +86,7 @@ export class ParaAttr extends SpanAttr implements classes.ParaAttr {
     typeId = 'para-attr'
     alignment?: TextHorAlign
     paraSpacing?: number
+    autoLineHeight?: boolean
     minimumLineHeight?: number
     maximumLineHeight?: number
     indent?: number
@@ -122,6 +123,7 @@ export class AttrGetter extends TextAttr {
     alignmentIsMulti: boolean = false;
     paraSpacingIsMulti: boolean = false;
     kerningIsMulti: boolean = false;
+    autoLineHeightIsMulti: boolean = false
     minimumLineHeightIsMulti: boolean = false;
     maximumLineHeightIsMulti: boolean = false;
     transformIsMulti: boolean = false;

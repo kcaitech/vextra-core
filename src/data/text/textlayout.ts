@@ -4,8 +4,8 @@ import { BasicArray } from "../basic"
 import { layoutBulletNumber } from "./textbnlayout";
 import { transformText } from "./textlayouttransform";
 import { gPal } from "../../basic/pal";
-import { ShapeSize, TextTransformType } from "../typesdefine";
-import { TEXT_BASELINE_RATIO } from "../consts";
+import { ParaAttr, ShapeSize, TextTransformType } from "../typesdefine";
+import { autoLineHeight, TEXT_BASELINE_RATIO } from "../consts";
 import { getNextChar, isLetter, isNewLineCharCode, isPureHeadPunc, isTailPunc } from "./basic";
 
 const TAB_WIDTH = 28;
@@ -381,7 +381,7 @@ function _nextGraphy(span: Span, lineArray: LineArray, c: string, idx: number, t
     }
 }
 
-function nextGraphy(iter: ParaIter, lineArray: LineArray, preBulletNumbers: BulletNumbersLayout[]): GraphArray[] { // 可能多个span，
+function nextGraphy(iter: ParaIter, lineArray: LineArray, preBulletNumbers: BulletNumbersLayout[]): { type: 'ch' | 'nl' | 'bn', graphys: GraphArray[] } { // 可能多个span，
     let cur = iter.next();
     const c = cur.char;
     const code = c.charCodeAt(0);
@@ -401,7 +401,7 @@ function nextGraphy(iter: ParaIter, lineArray: LineArray, preBulletNumbers: Bull
             x: 0,
             cc: 1
         });
-        return [graphArray]
+        return { type: 'nl', graphys: [graphArray] }
     }
 
     if (c.length === 1 &&
@@ -420,7 +420,7 @@ function nextGraphy(iter: ParaIter, lineArray: LineArray, preBulletNumbers: Bull
         graphArray.push(layout.graph);
 
         lineArray.bulletNumbers = layout;
-        return [graphArray]
+        return { type: 'bn', graphys: [graphArray] }
     }
 
     // todo tab 不对
@@ -465,16 +465,16 @@ function nextGraphy(iter: ParaIter, lineArray: LineArray, preBulletNumbers: Bull
         }
         break;
     }
-    return ret;
+    return { type: 'ch', graphys: ret }
 }
 
 export function layoutLines(_text: Text, para: Para, width: number, preBulletNumbers: BulletNumbersLayout[]): LineArray {
 
     const paraCharSpace = para.attr?.kerning ?? 0;
     const indent = (para.attr?.indent || 0) * INDENT_WIDTH;
-    const startX = Math.min(indent, width), endX = width;
     const lineArray: LineArray = [];
     const iter = para.iter();
+    let startX = Math.min(indent, width), endX = width;
     let curX = startX;
     let line: Line = new Line();
 
@@ -486,18 +486,25 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
     }
 
     while (iter.hasNext()) {
-        const graphys = nextGraphy(iter, lineArray, preBulletNumbers);
-        const cc = graphys.reduce((p, v0) => p + v0.reduce((p, g) => p + g.cc, 0), 0);
+        const next = nextGraphy(iter, lineArray, preBulletNumbers);
+        const graphys = next.graphys;
+        // const cc = graphys.reduce((p, v0) => p + v0.reduce((p, g) => p + g.cc, 0), 0);
 
-        if (cc === 1 && isNewLineCharCode(graphys[0][0].char.charCodeAt(0))) { // new line
+        if (next.type === 'nl') { // new line
+            assignGraphysX(graphys, curX);
             line.push(...graphys);
             lineArray.push(line);
             line = new Line();
             curX = startX;
             continue;
         }
+
         const lastKerning = graphys[graphys.length - 1].attr?.kerning ?? paraCharSpace;
         const cw = graphys.reduce((p, v0) => p + v0.reduce((p, g) => p + g.cw + (v0.attr?.kerning ?? paraCharSpace), 0), 0) - lastKerning; // todo字间距不对？
+        if (next.type === 'bn') {
+            // 调整startX
+            startX = cw + lastKerning;
+        }
 
         // todo assign graphys x
 
@@ -509,7 +516,7 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
         }
 
         if (line.length === 0) {
-            assignGraphysX(graphys, startX);
+            assignGraphysX(graphys, curX);
             line.push(...graphys);
             lineArray.push(line);
             line = new Line();
@@ -521,7 +528,7 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
         line = new Line();
         assignGraphysX(graphys, startX);
         line.push(...graphys);
-        curX =  startX + cw + lastKerning;
+        curX = startX + cw + lastKerning;
         continue;
     }
 
@@ -532,6 +539,23 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
     return lineArray;
 }
 
+function clampLineHeight(pAttr: ParaAttr | undefined, maxFontSize: number) {
+    if (!pAttr) return maxFontSize;
+    if (pAttr.autoLineHeight) {
+        // auto lineHeight
+        return autoLineHeight(maxFontSize)
+    }
+
+    let lineHeight = maxFontSize;
+    if (pAttr.maximumLineHeight) {
+        lineHeight = Math.min(pAttr.maximumLineHeight, lineHeight)
+    }
+    if (pAttr.minimumLineHeight) {
+        lineHeight = Math.max(pAttr.minimumLineHeight, lineHeight);
+    }
+    return lineHeight;
+}
+
 export function layoutPara(text: Text, para: Para, layoutWidth: number, preBulletNumbers: BulletNumbersLayout[]) {
     let paraWidth = 0;
     const layouts = layoutLines(text, para, layoutWidth, preBulletNumbers);
@@ -540,20 +564,15 @@ export function layoutPara(text: Text, para: Para, layoutWidth: number, preBulle
     let graphCount = 0;
     let charCount = 0;
     const lines = layouts.map((line) => {
-        let lineHeight = line.maxFontSize;
-        if (pAttr && pAttr.maximumLineHeight) {
-            lineHeight = Math.min(pAttr.maximumLineHeight, lineHeight)
-        }
-        if (pAttr && pAttr.minimumLineHeight) {
-            lineHeight = Math.max(pAttr.minimumLineHeight, lineHeight);
-        }
+        const lineHeight = clampLineHeight(pAttr, line.maxFontSize);
+
         const y = paraHeight;
         paraHeight += lineHeight;
         graphCount += line.graphCount;
         charCount += line.charCount;
 
         line.y = y;
-        line.lineHeight = lineHeight; // todo 自动行高
+        line.lineHeight = lineHeight;
 
         const firstspan = line[0];
         const firstgraph = firstspan[0];

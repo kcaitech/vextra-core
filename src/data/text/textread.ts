@@ -224,11 +224,19 @@ function _getParaFormat(attr: ParaAttr, attrGetter: AttrGetter, defaultAttr: Tex
         attrGetter.kerningIsMulti = true;
     }
 
+    const autoLineHeight = attr.autoLineHeight ?? (defaultAttr?.autoLineHeight) ?? false;
+    if (attrGetter.autoLineHeight === undefined) {
+        attrGetter.autoLineHeight = autoLineHeight;
+    }
+    else if (attrGetter.autoLineHeight !== autoLineHeight) {
+        attrGetter.autoLineHeightIsMulti = true;
+    }
+
     const maximumLineHeight = attr.maximumLineHeight ?? (defaultAttr?.maximumLineHeight) ?? 0;
     if (attrGetter.maximumLineHeight === undefined) {
         attrGetter.maximumLineHeight = maximumLineHeight;
     }
-    else if (maximumLineHeight === undefined || attrGetter.maximumLineHeight !== maximumLineHeight) {
+    else if (attrGetter.maximumLineHeight !== maximumLineHeight) {
         attrGetter.maximumLineHeightIsMulti = true;
     }
 
@@ -236,7 +244,7 @@ function _getParaFormat(attr: ParaAttr, attrGetter: AttrGetter, defaultAttr: Tex
     if (attrGetter.minimumLineHeight === undefined) {
         attrGetter.minimumLineHeight = minimumLineHeight;
     }
-    else if (minimumLineHeight === undefined || attrGetter.minimumLineHeight !== minimumLineHeight) {
+    else if (attrGetter.minimumLineHeight !== minimumLineHeight) {
         attrGetter.minimumLineHeightIsMulti = true;
     }
 

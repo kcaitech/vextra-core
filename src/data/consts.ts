@@ -347,3 +347,8 @@ export enum RadiusType {
 
 
 export const TEXT_BASELINE_RATIO = 0.135; // 从figma测试出来的值
+
+const ratio = 0.21 // 从figma测试出来的值
+export function autoLineHeight(fontsize: number) {
+    return Math.round(fontsize * ratio)
+}

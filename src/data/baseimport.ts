@@ -1023,6 +1023,7 @@ function importParaAttrOptional(tar: impl.ParaAttr, source: types.ParaAttr, ctx?
     if (source.paraSpacing) tar.paraSpacing = source.paraSpacing
     if (source.minimumLineHeight) tar.minimumLineHeight = source.minimumLineHeight
     if (source.maximumLineHeight) tar.maximumLineHeight = source.maximumLineHeight
+    if (source.autoLineHeight) tar.autoLineHeight = source.autoLineHeight
     if (source.indent) tar.indent = source.indent
 }
 export function importParaAttr(source: types.ParaAttr, ctx?: IImportContext): impl.ParaAttr {

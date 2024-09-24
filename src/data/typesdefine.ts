@@ -801,6 +801,7 @@ export type ParaAttr = SpanAttr & {
     paraSpacing?: number,
     minimumLineHeight?: number,
     maximumLineHeight?: number,
+    autoLineHeight?: boolean,
     indent?: number,
 }
 /* para */
