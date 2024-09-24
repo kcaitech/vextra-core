@@ -3480,7 +3480,7 @@ export class PageEditor {
             const inherit = shape.prototypeInterActions;
             const i = inherit && inherit.find(v => v.id === id);
             if (i) {
-                const a = new PrototypeInterAction(new BasicArray(), id, new PrototypeEvent(i.event.interactionType), new PrototypeActions(i.actions.connectionType))
+                const a = new PrototypeInterAction(new BasicArray(), id, new PrototypeEvent(i.event.interactionType), new PrototypeActions(i.actions.connectionType, true))
                 api.insertShapeprototypeInteractions(this.__page, _var, a);
             }
         }
@@ -3642,6 +3642,17 @@ export class PageEditor {
             const api = this.__repo.start('setPrototypeActionConnectionURL');
             const __shape = this.shape4protoActions(api, this.__page, shape, id);
             api.shapeModifyPrototypeActionConnectionURL(this.__page, __shape, id, value);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setPrototypeIsOpenNewTab(shape: ShapeView, id: string, value: boolean) {
+        try {
+            const api = this.__repo.start('setPrototypeIsOpenNewTab');
+            const __shape = this.shape4protoActions(api, this.__page, shape, id);
+            api.shapeModifyPrototypeIsOpenNewTab(this.__page, __shape, id, value);
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();

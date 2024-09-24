@@ -605,6 +605,15 @@ export class Api {
         this.addOp(basicapi.crdtSetAttr(action, 'connectionURL', value))
     }
 
+    shapeModifyPrototypeIsOpenNewTab(page: Page, shape: Shape | Variable, id: string, value: boolean) {
+        checkShapeAtPage(page, shape)
+        const prototypeInteractions: BasicArray<PrototypeInterAction> = shape instanceof Variable ? shape.value : shape.prototypeInteractions;
+        if (!prototypeInteractions) return;
+        const action = prototypeInteractions?.find(i => i.id === id)?.actions;
+        if (!action) return;
+        this.addOp(basicapi.crdtSetAttr(action, 'openUrlInNewTab', value))
+    }
+
     shapeModifyPrototypeActionOpenUrlInNewTab(page: Page, shape: Shape | Variable, id: string, value: boolean) {
         checkShapeAtPage(page, shape)
         const prototypeInteractions: BasicArray<PrototypeInterAction> = shape instanceof Variable ? shape.value : shape.prototypeInteractions;
