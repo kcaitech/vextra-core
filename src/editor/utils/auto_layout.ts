@@ -629,6 +629,7 @@ export const tidyUpLayout = (page: Page, api: Api, shape_rows: ShapeView[][], ho
     if (!dir_hor) {
         for (let i = 0; i < shape_rows.length; i++) {
             const shape_row = shape_rows[i];
+            if(shape_row.length === 0) continue;
             // 更新当前行的最大高度
             const maxHeightInRow = Math.max(...shape_row.map(s => s._p_frame.height));
             for (let i = 0; i < shape_row.length; i++) {
@@ -647,8 +648,7 @@ export const tidyUpLayout = (page: Page, api: Api, shape_rows: ShapeView[][], ho
                 } else {
                     transx = leftTrans - frame.x;
                     transy = topTrans + verticalOffset - frame.y;
-                }
-
+                }      
                 const x = shape.transform.translateX + transx;
                 const y = shape.transform.translateY + transy;
                 api.shapeModifyX(page, adapt2Shape(shape), x);
@@ -664,6 +664,7 @@ export const tidyUpLayout = (page: Page, api: Api, shape_rows: ShapeView[][], ho
         // 垂直方向
         for (let i = 0; i < shape_rows.length; i++) {
             const shape_row = shape_rows[i];
+            if(shape_row.length === 0) continue;
             // 更新当前行的最大宽度
             const maxWidthInRow = Math.max(...shape_row.map(s => s._p_frame.width));
             for (let i = 0; i < shape_row.length; i++) {
