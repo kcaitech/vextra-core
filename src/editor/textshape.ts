@@ -811,12 +811,17 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
-    public setLineHeight(lineHeight: number, index: number, len: number) {
+    public setLineHeight(lineHeight: number | 'auto', index: number, len: number) {
         const api = this.__repo.start("setLineHeight");
         try {
             const shape = this.shape4edit(api);
-            api.textModifyMinLineHeight(this.__page, shape, lineHeight, index, len)
-            api.textModifyMaxLineHeight(this.__page, shape, lineHeight, index, len)
+            if (lineHeight === 'auto') {
+                api.textModifyAutoLineHeight(this.__page, shape, true, index, len)
+            } else {
+                api.textModifyAutoLineHeight(this.__page, shape, false, index, len)
+                api.textModifyMinLineHeight(this.__page, shape, lineHeight, index, len)
+                api.textModifyMaxLineHeight(this.__page, shape, lineHeight, index, len)
+            }
             this.fixFrameByLayout(api);
             this.__repo.commit();
             return true;
@@ -826,7 +831,7 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
-    public setLineHeightMulit(shapes: (TextShapeView | TableCellView)[], lineHeight: number) {
+    public setLineHeightMulit(shapes: (TextShapeView | TableCellView)[], lineHeight: number | 'auto') {
         const api = this.__repo.start("setLineHeightMulit");
         try {
             for (let i = 0; i < shapes.length; i++) {
@@ -835,8 +840,13 @@ export class TextShapeEditor extends ShapeEditor {
                 const shape = this.shape4edit(api, text_shape);
                 const text = shape instanceof ShapeView ? shape.text : shape.value as Text;
                 const text_length = text.length;
-                api.textModifyMinLineHeight(this.__page, shape, lineHeight, 0, text_length)
-                api.textModifyMaxLineHeight(this.__page, shape, lineHeight, 0, text_length)
+                if (lineHeight === 'auto') {
+                    api.textModifyAutoLineHeight(this.__page, shape, true, 0, text_length)
+                } else {
+                    api.textModifyAutoLineHeight(this.__page, shape, false, 0, text_length)
+                    api.textModifyMinLineHeight(this.__page, shape, lineHeight, 0, text_length)
+                    api.textModifyMaxLineHeight(this.__page, shape, lineHeight, 0, text_length)
+                }
                 this.fixFrameByLayout2(api, shape);
             }
             this.__repo.commit();
