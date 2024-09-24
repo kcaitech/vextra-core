@@ -228,7 +228,7 @@ function _getParaFormat(attr: ParaAttr, attrGetter: AttrGetter, defaultAttr: Tex
     if (attrGetter.autoLineHeight === undefined) {
         attrGetter.autoLineHeight = autoLineHeight;
     }
-    else if (attrGetter.autoLineHeight !== autoLineHeight) {
+    else if (attrGetter.autoLineHeight !== !!autoLineHeight) {
         attrGetter.autoLineHeightIsMulti = true;
     }
 
@@ -265,6 +265,9 @@ function _mergeParaAttr(from: AttrGetter, to: AttrGetter) {
 
     if (from.kerningIsMulti) to.kerningIsMulti = true;
     else if (from.kerning !== undefined) to.kerning = from.kerning;
+
+    if (from.autoLineHeightIsMulti) to.autoLineHeightIsMulti = true;
+    else if (from.autoLineHeight !== undefined) to.autoLineHeight = from.autoLineHeight;
 
     if (from.maximumLineHeightIsMulti) to.maximumLineHeightIsMulti = true;
     else if (from.maximumLineHeight !== undefined) to.maximumLineHeight = from.maximumLineHeight;
