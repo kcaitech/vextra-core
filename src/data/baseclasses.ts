@@ -669,18 +669,19 @@ export class OverlayBackgroundAppearance extends Basic {
 export class PrototypeActions extends Basic {
     typeId = "prototype-actions"
     connectionType: PrototypeConnectionType
+    openUrlInNewTab: boolean
     targetNodeID?: string
     transitionType?: PrototypeTransitionType
     transitionDuration?: number
     easingType?: PrototypeEasingType
     connectionURL?: string
-    openUrlInNewTab?: boolean
     navigationType?: PrototypeNavigationType
     easingFunction?: PrototypeEasingBezier
     extraScrollOffset?: Point2D
-    constructor(connectionType: PrototypeConnectionType) {
+    constructor(connectionType: PrototypeConnectionType, openUrlInNewTab: boolean) {
         super()
         this.connectionType = connectionType
+        this.openUrlInNewTab = openUrlInNewTab
     }
 }
 /* event */

@@ -431,6 +431,7 @@ export enum PrototypeTransitionType {
     PUSHFROMTOP = "PUSH_FROM_TOP",
     PUSHFROMBOTTOM = "PUSH_FROM_BOTTOM",
     SCROLLANIMATE = "SCROLL_ANIMATE",
+    SMARTANIMATE = "SMART_ANIMATE",
 }
 /* resize type */
 export enum ResizeType {
@@ -712,12 +713,12 @@ export type OverlayBackgroundAppearance = {
 export type PrototypeActions = {
     typeId: string,
     connectionType: PrototypeConnectionType,
+    openUrlInNewTab: boolean,
     targetNodeID?: string,
     transitionType?: PrototypeTransitionType,
     transitionDuration?: number,
     easingType?: PrototypeEasingType,
     connectionURL?: string,
-    openUrlInNewTab?: boolean,
     navigationType?: PrototypeNavigationType,
     easingFunction?: PrototypeEasingBezier,
     extraScrollOffset?: Point2D,

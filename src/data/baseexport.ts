@@ -808,12 +808,12 @@ export function exportPrototypeActions(source: types.PrototypeActions, ctx?: IEx
     ret.typeId = "prototype-actions"
     ret.typeId = source.typeId
     ret.connectionType = exportPrototypeConnectionType(source.connectionType, ctx)
+    ret.openUrlInNewTab = source.openUrlInNewTab
     if (source.targetNodeID) ret.targetNodeID = source.targetNodeID
     if (source.transitionType) ret.transitionType = exportPrototypeTransitionType(source.transitionType, ctx)
     if (source.transitionDuration) ret.transitionDuration = source.transitionDuration
     if (source.easingType) ret.easingType = exportPrototypeEasingType(source.easingType, ctx)
     if (source.connectionURL) ret.connectionURL = source.connectionURL
-    if (source.openUrlInNewTab) ret.openUrlInNewTab = source.openUrlInNewTab
     if (source.navigationType) ret.navigationType = exportPrototypeNavigationType(source.navigationType, ctx)
     if (source.easingFunction) ret.easingFunction = exportPrototypeEasingBezier(source.easingFunction, ctx)
     if (source.extraScrollOffset) ret.extraScrollOffset = exportPoint2D(source.extraScrollOffset, ctx)

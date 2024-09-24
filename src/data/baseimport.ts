@@ -889,14 +889,14 @@ function importPrototypeActionsOptional(tar: impl.PrototypeActions, source: type
     if (source.transitionDuration) tar.transitionDuration = source.transitionDuration
     if (source.easingType) tar.easingType = importPrototypeEasingType(source.easingType, ctx)
     if (source.connectionURL) tar.connectionURL = source.connectionURL
-    if (source.openUrlInNewTab) tar.openUrlInNewTab = source.openUrlInNewTab
     if (source.navigationType) tar.navigationType = importPrototypeNavigationType(source.navigationType, ctx)
     if (source.easingFunction) tar.easingFunction = importPrototypeEasingBezier(source.easingFunction, ctx)
     if (source.extraScrollOffset) tar.extraScrollOffset = importPoint2D(source.extraScrollOffset, ctx)
 }
 export function importPrototypeActions(source: types.PrototypeActions, ctx?: IImportContext): impl.PrototypeActions {
     const ret: impl.PrototypeActions = new impl.PrototypeActions (
-        importPrototypeConnectionType(source.connectionType, ctx))
+        importPrototypeConnectionType(source.connectionType, ctx),
+        source.openUrlInNewTab)
     importPrototypeActionsOptional(ret, source, ctx)
     return ret
 }

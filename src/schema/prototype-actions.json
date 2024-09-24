@@ -39,7 +39,8 @@
     },
     "required": [
         "typeId",
-        "connectionType"
+        "connectionType",
+        "openUrlInNewTab"
     ],
     "additionalProperties": false
 }
