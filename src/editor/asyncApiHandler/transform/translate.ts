@@ -132,8 +132,7 @@ export class Transporter extends AsyncApiCaller {
 
             let index = targetParent.childs.length;
             for (let i = 0, len = sortedShapes.length; i < len; i++) {
-                this.__migrate(document, api, page, targetParent, sortedShapes[i], dlt, index);
-                index++;
+                this.__migrate(document, api, page, targetParent, sortedShapes[i], dlt, index) && index++;
             }
             this.need_layout_shape.add(this.current_env_id);
             const parents: GroupShape[] = [targetParent];
@@ -210,12 +209,12 @@ export class Transporter extends AsyncApiCaller {
         const error = unable_to_migrate(targetParent, shape);
         if (error) {
             console.log('migrate error:', error);
-            return;
+            return false;
         }
         const origin: GroupShape = shape.parent as GroupShape;
 
         if (origin.id === targetParent.id) {
-            return;
+            return false;
         }
 
         if (is_state(shape)) {
@@ -237,6 +236,7 @@ export class Transporter extends AsyncApiCaller {
             this.prototype.clear()
         }
         after_migrate(document, page, api, origin);
+        return true;
     }
 
     modifyShapesStackPosition(shapes: ShapeView[], p: StackPositioning) {
@@ -250,15 +250,15 @@ export class Transporter extends AsyncApiCaller {
 
     swap(shape: GroupShapeView, targets: ShapeView[], x: number, y: number, sort: Map<string, number>) {
         try {
-            const layoutShape = (shape as ArtboradView);
-            if (!layoutShape.autoLayout) return;
             const api = this.api;
             const page = this.page;
+            // todo try to delete this code
             for (let index = 0; index < targets.length; index++) {
                 const target = targets[index];
                 const frame = target._p_frame;
                 translate(api, page, adapt2Shape(target), x - frame.x, y - frame.y);
             }
+
             modifyAutoLayout(page, api, adapt2Shape(shape), sort);
             this.updateView();
         } catch (e) {
