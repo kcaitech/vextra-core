@@ -106,6 +106,12 @@ export {
     Document,
     Repository,
 
+    AutoLayout,
+    StackMode,
+    StackAlign,
+    StackSizing,
+    StackWrap,
+    StackSize,
     OverlayPosition,
     OverlayMargin,
     OverlayPositionType,
@@ -124,7 +130,9 @@ export {
     PrototypeTransitionType,
     PrototypeEasingBezier,
 
-    ScrollDirection
+    ScrollDirection,
+
+    StackPositioning
 } from "./data"
 
 export {

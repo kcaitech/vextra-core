@@ -607,12 +607,23 @@ export class ShapeView extends DataView {
         }
 
         const borders = this.getBorders();
-        let maxborder = 0;
+        let maxtopborder = 0;
+        let maxleftborder = 0;
+        let maxrightborder = 0;
+        let maxbottomborder = 0;
         borders.forEach(b => {
-            if (b.position === BorderPosition.Outer) {
-                maxborder = Math.max(b.thickness, maxborder);
-            } else if (b.position === BorderPosition.Center) {
-                maxborder = Math.max(b.thickness / 2, maxborder);
+            if (b.isEnabled) {
+                if (b.position === BorderPosition.Outer) {
+                    maxtopborder = Math.max(b.sideSetting.thicknessTop, maxtopborder);
+                    maxleftborder = Math.max(b.sideSetting.thicknessLeft, maxleftborder);
+                    maxrightborder = Math.max(b.sideSetting.thicknessRight, maxrightborder);
+                    maxbottomborder = Math.max(b.sideSetting.thicknessBottom, maxbottomborder);
+                } else if (b.position === BorderPosition.Center) {
+                    maxtopborder = Math.max(b.sideSetting.thicknessTop / 2, maxtopborder);
+                    maxleftborder = Math.max(b.sideSetting.thicknessLeft / 2, maxleftborder);
+                    maxrightborder = Math.max(b.sideSetting.thicknessRight / 2, maxrightborder);
+                    maxbottomborder = Math.max(b.sideSetting.thicknessBottom / 2, maxbottomborder);
+                }
             }
         })
         // 阴影
@@ -628,10 +639,10 @@ export class ShapeView extends DataView {
             sb = Math.max(s.offsetY + w, sb);
         })
 
-        const el = Math.max(maxborder, sl);
-        const et = Math.max(maxborder, st);
-        const er = Math.max(maxborder, sr);
-        const eb = Math.max(maxborder, sb);
+        const el = Math.max(maxleftborder, sl);
+        const et = Math.max(maxtopborder, st);
+        const er = Math.max(maxrightborder, sr);
+        const eb = Math.max(maxbottomborder, sb);
 
         // update visible
         if (updateFrame(this.m_visibleFrame, this.frame.x - el, this.frame.y - et, this.frame.width + el + er, this.frame.height + et + eb)) changed = true;
@@ -937,7 +948,11 @@ export class ShapeView extends DataView {
 
         const fills = this.renderFills();
         const borders = this.renderBorders();
-        const childs = this.renderContents();
+        let childs = this.renderContents();
+        const autoInfo = (this.m_data as SymbolShape).autoLayout;
+        if (autoInfo && autoInfo.stackReverseZIndex) {
+            childs = childs.reverse();
+        }
 
         const filterId = `${objectId(this)}`;
         const shadows = this.renderShadows(filterId);
@@ -984,7 +999,11 @@ export class ShapeView extends DataView {
 
     renderStatic() {
         const fills = this.renderFills() || [];
-        const childs = this.renderContents();
+        let childs = this.renderContents();
+        const autoInfo = (this.m_data as SymbolShape).autoLayout;
+        if (autoInfo && autoInfo.stackReverseZIndex) {
+            childs = childs.reverse();
+        }
         const borders = this.renderBorders() || [];
 
         const props = this.renderStaticProps();
@@ -1190,7 +1209,6 @@ export class ShapeView extends DataView {
             el.elattr.values = values.join(' ');
         }
 
-        // 渐变漂白不了
         if (Array.isArray(el.elchilds)) el.elchilds.forEach(el => this.bleach(el));
     }
 
@@ -1247,6 +1265,9 @@ export class ShapeView extends DataView {
         this.m_ctx.setDirty(this);
     }
 
+    get stackPositioning() {
+        return this.m_data.stackPositioning;
+    }
     get uniformScale() {
         return this.data.uniformScale;
     }

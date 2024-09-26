@@ -22,7 +22,7 @@ import {
     OverlayBackgroundAppearance,
     OverlayBackgroundType,
     OverlayMargin,
-    Color
+    Color, StackPositioning
 } from "./baseclasses"
 import { Matrix } from "../basic/matrix";
 import { TextLayout } from "./text/textlayout";
@@ -37,7 +37,7 @@ export { Transform } from "./transform";
 export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D,
     CurvePoint, ShapeFrame, Ellipse, PathSegment, OverrideType, VariableType,
-    FillRule, CornerRadius, ShapeSize
+    FillRule, CornerRadius, ShapeSize, StackPositioning
 } from "./baseclasses";
 
 export { Variable } from "./variable";
@@ -146,6 +146,7 @@ export class Shape extends Basic implements classes.Shape {
     overlayBackgroundAppearance?: classes.OverlayBackgroundAppearance;
     scrollDirection?: classes.ScrollDirection;
     mask?: boolean;
+    stackPositioning?: classes.StackPositioning;
     uniformScale?: number;
 
     constructor(
@@ -722,6 +723,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
     symtags?: BasicMap<string, string>
     cornerRadius?: CornerRadius
     guides?: BasicArray<Guide>
+    autoLayout?: classes.AutoLayout
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
@@ -733,6 +735,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         size: ShapeSize,
         variables: BasicMap<string, Variable>,
         guides?: BasicArray<Guide>,
+        autoLayout?: classes.AutoLayout
     ) {
         super(
             crdtidx,
@@ -746,6 +749,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         this.size = size;
         this.variables = variables;
         this.guides = guides;
+        this.autoLayout = autoLayout;
     }
 
     getOpTarget(path: string[]): any {
@@ -827,7 +831,8 @@ export class SymbolUnionShape extends SymbolShape implements classes.SymbolUnion
         style: Style,
         childs: BasicArray<Shape>,
         size: ShapeSize,
-        variables: BasicMap<string, Variable>
+        variables: BasicMap<string, Variable>,
+        autoLayout?: classes.AutoLayout
     ) {
         super(
             crdtidx,

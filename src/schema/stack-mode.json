@@ -1,0 +1,8 @@
+{
+    "description": "stack mode",
+    "enum": [
+        "horizontal",
+        "vertical"
+    ],
+    "default": "horizontal"
+}

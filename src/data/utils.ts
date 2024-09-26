@@ -1005,5 +1005,5 @@ export function _get_path(shape: types.Artboard) {
 }
 
 export function is_mac() {
-    return /macintosh|mac os x/i.test(navigator.userAgent);
+    return navigator && /macintosh|mac os x/i.test(navigator.userAgent);
 }

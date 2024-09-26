@@ -290,6 +290,7 @@ export enum OverrideType {
     CornerRadius = "cornerRadius",
     Blur = "blur",
     ProtoInteractions = "protoInteractions",
+    AutoLayout = "autoLayout",
 }
 /* padding */
 export type Padding = {
@@ -513,6 +514,38 @@ export enum SideType {
     Right = "right",
     Custom = "custom",
 }
+/* stack align */
+export enum StackAlign {
+    Min = "min",
+    Center = "center",
+    Max = "max",
+    SpaceEvenly = "space-evenly",
+}
+/* stack mode */
+export enum StackMode {
+    Horizontal = "horizontal",
+    Vertical = "vertical",
+}
+/* stack positioning */
+export enum StackPositioning {
+    AUTO = "AUTO",
+    ABSOLUTE = "ABSOLUTE",
+}
+/* stack size */
+export type StackSize = {
+    x: number,
+    y: number,
+}
+/* stack sizing */
+export enum StackSizing {
+    Fixed = "fixed",
+    Auto = "auto",
+}
+/* stack wrap */
+export enum StackWrap {
+    Wrap = "wrap",
+    NoWrap = "no-wrap",
+}
 /* stop */
 export type Stop = {
     crdtidx: Crdtidx,
@@ -616,12 +649,35 @@ export enum VariableType {
     CornerRadius = "cornerRadius",
     Blur = "blur",
     ProtoInteractions = "protoInteractions",
+    AutoLayout = "autoLayout",
 }
 export type Variable_0 = Array<Border | Fill | Shadow | PrototypeInterAction>
 /* winding rule */
 export enum WindingRule {
     NonZero = "non-zero",
     EvenOdd = "even-odd",
+}
+/* auto layout */
+export type AutoLayout = {
+    typeId: string,
+    stackSpacing: number,
+    stackCounterSpacing: number,
+    stackHorizontalPadding: number,
+    stackVerticalPadding: number,
+    stackPaddingRight: number,
+    stackPaddingBottom: number,
+    stackMode?: StackMode,
+    stackWrap?: StackWrap,
+    stackHorizontalGapSizing?: StackSizing,
+    stackVerticalGapSizing?: StackSizing,
+    stackPrimarySizing?: StackSizing,
+    stackCounterSizing?: StackSizing,
+    stackPrimaryAlignItems?: StackAlign,
+    stackCounterAlignItems?: StackAlign,
+    stackReverseZIndex?: boolean,
+    bordersTakeSpace?: boolean,
+    minSize?: StackSize,
+    maxSize?: StackSize,
 }
 /* blur */
 export type Blur = {
@@ -871,6 +927,7 @@ export type Shape = {
     overlayBackgroundAppearance?: OverlayBackgroundAppearance,
     scrollDirection?: ScrollDirection,
     mask?: boolean,
+    stackPositioning?: StackPositioning,
     uniformScale?: number,
 }
 /* table cell */
@@ -900,7 +957,7 @@ export type Variable = {
     id: string,
     type: VariableType,
     name: string,
-    value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur,
+    value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur | AutoLayout,
 }
 /* comment */
 export type Comment = {
@@ -972,6 +1029,7 @@ export type Artboard = GroupShape & {
     size: ShapeSize,
     cornerRadius?: CornerRadius,
     guides?: Artboard_guides,
+    autoLayout?: AutoLayout,
 }
 /* bool shape */
 export type BoolShape = GroupShape
@@ -1002,6 +1060,7 @@ export type SymbolShape = GroupShape & {
     symtags?: Map<string, string>,
     cornerRadius?: CornerRadius,
     guides?: SymbolShape_guides,
+    autoLayout?: AutoLayout,
 }
 /* symbol union shape */
 export type SymbolUnionShape = SymbolShape
