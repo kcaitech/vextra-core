@@ -7,7 +7,7 @@ import {
     AutoLayout
 } from "../data";
 import { expand, expandTo, translate, translateTo } from "./frame";
-import { CoopRepository } from "./coop/cooprepo";
+import { CoopRepository } from "../coop/cooprepo";
 import {
     CurveMode,
     ExportFileFormat,
@@ -20,7 +20,7 @@ import {
     StackSizing,
     StackWrap
 } from "../data/typesdefine";
-import { Api } from "./coop/recordapi";
+import { Api } from "../coop/recordapi";
 import { importCurvePoint } from "../data/baseimport";
 import { v4 } from "uuid";
 import { uuid } from "../basic/uuid";
@@ -61,6 +61,7 @@ import {
     shape4fill,
     shape4shadow
 } from "./symbol";
+import { ISave4Restore, LocalCmd, SelectionState } from "../coop/localcmd";
 import {
     getAutoLayoutShapes,
     initAutoLayout,
@@ -70,7 +71,6 @@ import {
 } from "./utils/auto_layout";
 
 export type PaddingDir = 'ver' | 'hor' | 'top' | 'right' | 'bottom' | 'left';
-import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
 
 export class ShapeEditor {
     protected __shape: ShapeView;
@@ -206,6 +206,9 @@ export class ShapeEditor {
                     api.shapeModifyIsCustomSize(this.__page, view.data, false);
                     const sym = view.symData;
                     if (sym) api.shapeModifyWH(this.__page, view.data, sym.size.width, sym.size.height);
+                }
+                if (view.uniformScale && view.uniformScale !== 1) {
+                    api.modifyShapeScale(this.__page, view.data, 1);
                 }
             } else {
                 // 清空p中与当前view相关的variables,overrides

@@ -1,5 +1,4 @@
 import { AsyncApiCaller } from "./AsyncApiCaller";
-import { CoopRepository } from "../coop/cooprepo";
 import { Document } from "../../data/document";
 import { adapt2Shape, ArtboradView, GroupShapeView, PageView, ShapeView } from "../../dataview";
 import {
@@ -13,7 +12,8 @@ import { translate } from "../frame";
 import { makeShapeTransform1By2, makeShapeTransform2By1, Page, StackSizing } from "../..//data";
 import { after_migrate, unable_to_migrate } from "../utils/migrate";
 import { get_state_name, is_state } from "../symbol";
-import { Api } from "../coop/recordapi";
+import { CoopRepository } from "../../coop/cooprepo";
+import { Api } from "../../coop/recordapi";
 
 export class AutoLayoutModify extends AsyncApiCaller {
     updateFrameTargets: Set<Shape> = new Set();

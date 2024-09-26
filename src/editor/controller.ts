@@ -26,10 +26,10 @@ import {
 } from "./creator";
 
 import { Page } from "../data/page";
-import { CoopRepository } from "./coop/cooprepo";
+import { CoopRepository } from "../coop/cooprepo";
 import { v4 } from "uuid";
 import { Document } from "../data/document";
-import { Api } from "./coop/recordapi";
+import { Api } from "../coop/recordapi";
 import { Matrix } from "../basic/matrix";
 import { Artboard } from "../data/artboard";
 import { uuid } from "../basic/uuid";
@@ -50,7 +50,7 @@ import {
 } from "./utils/path";
 import { Color } from "../data/color";
 import { adapt2Shape, ContactLineView, PageView, PathShapeView, ShapeView } from "../dataview";
-import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
+import { ISave4Restore, LocalCmd, SelectionState } from "../coop/localcmd";
 import { BasicArray } from "../data/basic";
 import { Fill } from "../data/style";
 import { TextAttr } from "../data/classes";

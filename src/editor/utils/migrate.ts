@@ -1,6 +1,6 @@
 import { SymbolRefShape, Document, Page, GroupShape, Shape, ShapeType, SymbolUnionShape } from "../../data";
 import { is_circular_ref2 } from "./ref_check";
-import { Api } from "../coop/recordapi";
+import { Api } from "../../coop/recordapi";
 import { is_exist_invalid_shape2 } from "../symbol";
 
 /**

@@ -1,5 +1,5 @@
 import { AsyncApiCaller } from "./AsyncApiCaller";
-import { CoopRepository } from "../coop/cooprepo";
+import { CoopRepository } from "../../coop/cooprepo";
 import { Artboard, BasicArray, Document, Guide, GuideAxis, Page, ShapeType } from "../../data";
 import { adapt2Shape, PageView, ShapeView } from "../../dataview";
 import { uuid } from "../../basic/uuid";

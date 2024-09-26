@@ -12,9 +12,8 @@ import {
     StackSizing,
     StackWrap
 } from "../../data";
-import { adapt2Shape, ArtboradView, ShapeView } from "../../dataview";
-import { Api } from "../coop/recordapi";
-
+import { adapt2Shape, ArtboradView, PageView, ShapeView } from "../../dataview";
+import { Api } from "../../coop/recordapi";
 export function layoutShapesOrder(shapes: Shape[], includedBorder: boolean, sort?: Map<string, number>, cursort = false) {
     let shape_rows: Shape[][] = [];
     let unassignedShapes: Shape[] = [...shapes].filter(shape => shape.getVisible());
@@ -613,4 +612,87 @@ const getShapeFrame = (shape: Shape) => {
     const bounds = childframes.reduce(reducer, { minx: 0, miny: 0, maxx: 0, maxy: 0 });
     const { minx, miny, maxx, maxy } = bounds;
     return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
+}
+
+
+export const tidyUpLayout = (page: Page, api: Api, shape_rows: ShapeView[][], horSpacing: number, verSpacing: number, dir_hor: boolean, start?: { x: number, y: number }) => {
+    const minX = Math.min(...shape_rows[0].map(s => s._p_frame.x));
+    const minY = Math.min(...shape_rows[0].map(s => s._p_frame.y));
+    let leftTrans = start?.x || minX; //水平起点
+    let topTrans = start?.y || minY; //垂直起点
+    const minWidth = Math.min(...shape_rows.map(row => Math.min(...row.map(s => s._p_frame.width))));
+    const minHeight = Math.min(...shape_rows.map(row => Math.min(...row.map(s => s._p_frame.height))));
+    horSpacing = Math.max(-minWidth + 1, horSpacing);
+    verSpacing = Math.max(-minHeight + 1, verSpacing);
+    if (!dir_hor) {
+        for (let i = 0; i < shape_rows.length; i++) {
+            const shape_row = shape_rows[i];
+            if(shape_row.length === 0) continue;
+            // 更新当前行的最大高度
+            const maxHeightInRow = Math.max(...shape_row.map(s => s._p_frame.height));
+            for (let i = 0; i < shape_row.length; i++) {
+                const shape = shape_row[i];
+                const frame = shape._p_frame;
+                const parent = shape.parent!;
+                let transx = 0;
+                let transy = 0;
+                // 设置新的 x 和 y 坐标
+                const verticalOffset = (maxHeightInRow - frame.height) / 2;
+                if (parent.type === ShapeType.Page) {
+                    const m = parent.matrix2Root();
+                    const box = m.computeCoord2(shape._p_frame.x, shape._p_frame.y);
+                    transx = leftTrans - box.x;
+                    transy = topTrans + verticalOffset - box.y;
+                } else {
+                    transx = leftTrans - frame.x;
+                    transy = topTrans + verticalOffset - frame.y;
+                }      
+                const x = shape.transform.translateX + transx;
+                const y = shape.transform.translateY + transy;
+                api.shapeModifyX(page, adapt2Shape(shape), x);
+                api.shapeModifyY(page, adapt2Shape(shape), y);
+
+                // 更新下一个图形的 x 坐标
+                leftTrans += frame.width + horSpacing;
+            }
+            leftTrans = start?.x || minX; // 重置为左边距
+            topTrans += maxHeightInRow + verSpacing; // 换行，增加 y 坐标
+        }
+    } else {
+        // 垂直方向
+        for (let i = 0; i < shape_rows.length; i++) {
+            const shape_row = shape_rows[i];
+            if(shape_row.length === 0) continue;
+            // 更新当前行的最大宽度
+            const maxWidthInRow = Math.max(...shape_row.map(s => s._p_frame.width));
+            for (let i = 0; i < shape_row.length; i++) {
+                const shape = shape_row[i];
+                const frame = shape._p_frame;
+                const parent = shape.parent!;
+                let transx = 0;
+                let transy = 0;
+                // 设置新的 x 和 y 坐标
+                const horizontalOffset = (maxWidthInRow - frame.width) / 2;
+                if (parent.type === ShapeType.Page) {
+                    const m = parent.matrix2Root();
+                    const box = m.computeCoord2(shape._p_frame.x, shape._p_frame.y);
+                    transx = leftTrans + horizontalOffset - box.x;
+                    transy = topTrans - box.y;
+                } else {
+                    transx = leftTrans + horizontalOffset - frame.x;
+                    transy = topTrans - frame.y;
+                }
+
+                const x = shape.transform.translateX + transx;
+                const y = shape.transform.translateY + transy;
+                api.shapeModifyX(page, adapt2Shape(shape), x);
+                api.shapeModifyY(page, adapt2Shape(shape), y);
+
+                // 更新下一个图形的 y 坐标
+                topTrans += frame.height + verSpacing;
+            }
+            topTrans = start?.y || minY; // 重置为上边距
+            leftTrans += maxWidthInRow + horSpacing; // 换列，增加 x 坐标
+        }
+    }
 }

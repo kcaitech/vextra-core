@@ -1,7 +1,7 @@
 import { TableView } from "../dataview";
 import { Page } from "../data/page";
 import { TableShape } from "../data/table";
-import { Api } from "./coop/recordapi";
+import { Api } from "../coop/recordapi";
 
 const MinCellSize = TableShape.MinCellSize;
 

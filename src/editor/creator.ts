@@ -43,7 +43,6 @@ import {
     FillType,
     Para,
     ParaAttr,
-    Path,
     ShapeFrame,
     Span,
     Style,
@@ -60,7 +59,7 @@ import { Comment } from "../data";
 import { ResourceMgr } from "../data";
 import { TableShape } from "../data";
 
-export { newText, newText2 } from "../data/textutils";
+export { newText, newText2 } from "../data/text/textutils";
 import {
     BorderSideSetting,
     ContactForm,
@@ -75,10 +74,12 @@ import {
 import { Matrix } from "../basic/matrix";
 import { ResizingConstraints2 } from "../data";
 import { SymbolMgr } from "../data/symbolmgr";
-import { newText } from "../data/textutils";
+import { newText } from "../data/text/textutils";
 import { getPolygonPoints, getPolygonVertices } from "./utils/path";
 import { makeShapeTransform2By1, updateShapeTransform1By2 } from "../data";
 import { is_mac } from "../data/utils";
+import { Path } from "@kcdesign/path";
+import { convertPath2CurvePoints } from "../data/pathconvert";
 
 function _checkNum(x: number) {
     // check
@@ -246,7 +247,7 @@ export function newPathShape(name: string, frame: ShapeFrame, path: Path, style?
 
     style = style || newStyle();
     const id = uuid();
-    const segs = path.toCurvePoints(frame.width, frame.height);
+    const segs = convertPath2CurvePoints(path, frame.width, frame.height);
     const pathsegs = new BasicArray<PathSegment>();
     segs.forEach((seg, i) => {
         const points = seg.points;
@@ -291,6 +292,7 @@ export function newRectShape(name: string, frame: ShapeFrame): RectShape {
 // 三次贝塞尔曲线绘制椭圆
 // https://juejin.cn/post/7212650952532459578
 // https://pomax.github.io/bezierinfo/#circles_cubic
+// kappa = 4 * (Math.sqrt(2) - 1) / 3;
 export function newOvalShape(name: string, frame: ShapeFrame): OvalShape {
     _checkFrame(frame);
     const style = newStyle();
@@ -298,7 +300,6 @@ export function newOvalShape(name: string, frame: ShapeFrame): OvalShape {
     const id = uuid();
     const ellipse = new Ellipse(0, 0, 0, 0);
 
-    // 上
     const p1 = new CurvePoint([0] as BasicArray<number>, uuid(), 0.5, 1, CurveMode.Mirrored);
     p1.hasFrom = true;
     p1.hasTo = true;
@@ -307,7 +308,6 @@ export function newOvalShape(name: string, frame: ShapeFrame): OvalShape {
     p1.toX = 0.224107611110493;
     p1.toY = 1;
 
-    // 右
     const p2 = new CurvePoint([1] as BasicArray<number>, uuid(), 1, 0.5, CurveMode.Mirrored);
     p2.hasFrom = true;
     p2.hasTo = true;
@@ -316,7 +316,6 @@ export function newOvalShape(name: string, frame: ShapeFrame): OvalShape {
     p2.toX = 1;
     p2.toY = 0.775892388889507;
 
-    // 下
     const p3 = new CurvePoint([2] as BasicArray<number>, uuid(), 0.5, 0, CurveMode.Mirrored);
     p3.hasFrom = true;
     p3.hasTo = true;
@@ -325,7 +324,6 @@ export function newOvalShape(name: string, frame: ShapeFrame): OvalShape {
     p3.toX = 0.775892388889507;
     p3.toY = 0;
 
-    // 左
     const p4 = new CurvePoint([3] as BasicArray<number>, uuid(), 0, 0.5, CurveMode.Mirrored);
     p4.hasFrom = true;
     p4.hasTo = true;
