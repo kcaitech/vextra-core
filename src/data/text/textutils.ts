@@ -1,8 +1,8 @@
 // import { gradient_equals } from "../io/cilpboard";
-import { importParaAttr, importTextAttr } from "./baseimport";
-import { BasicArray } from "./basic";
-import { Color } from "./color";
-import { Gradient } from "./style";
+import { importParaAttr, importTextAttr } from "../baseimport";
+import { BasicArray } from "../basic";
+import { Color } from "../color";
+import { Gradient } from "../style";
 import {
     Para,
     SpanAttr,
@@ -15,7 +15,7 @@ import {
     StrikethroughType,
     BulletNumbers
 } from "./text";
-import { is_mac } from "./utils";
+import { is_mac } from "../utils";
 
 export const gradient_equals = (a: Gradient, b: Gradient) => {
     if (a.gradientType !== b.gradientType || a.elipseLength !== b.elipseLength || a.gradientOpacity !== b.gradientOpacity) {
@@ -249,6 +249,13 @@ function _mergeParaAttr(paraAttr: ParaAttr, attr: ParaAttr): boolean {
     // const attrIsSetter = attr instanceof ParaAttrSetter;
     let changed = false;
     changed = _mergeSpanAttr(paraAttr, attr);
+
+    if (attr.autoLineHeight != undefined) {
+        if (paraAttr.autoLineHeight == undefined || paraAttr.autoLineHeight !== attr.autoLineHeight) {
+            paraAttr.autoLineHeight = attr.autoLineHeight;
+            changed = true;
+        }
+    }
 
     if (attr.minimumLineHeight != undefined) {
         if (paraAttr.minimumLineHeight == undefined || paraAttr.minimumLineHeight !== attr.minimumLineHeight) {

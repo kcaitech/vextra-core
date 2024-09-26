@@ -1,6 +1,7 @@
 import {
+    FillType, GradientType,
     makeShapeTransform1By2,
-    makeShapeTransform2By1,
+    makeShapeTransform2By1, OvalShape,
     PathShape,
     PathShape2,
     Shape,
@@ -17,6 +18,8 @@ import { objectId } from "../basic/objectid";
 import { BlurType, PathSegment } from "../data/typesdefine";
 import { render as renderLineBorders } from "../render/line_borders"
 import { PageView } from "./page";
+import { importBorder } from "../data/baseimport";
+import { exportBorder } from "../data/baseexport";
 
 export class PathShapeView extends ShapeView {
     m_pathsegs?: PathSegment[];
@@ -33,16 +36,30 @@ export class PathShapeView extends ShapeView {
         return this.data.isClosed;
     }
 
-    protected _layout(shape: Shape, parentFrame: ShapeFrame | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scale: { x: number, y: number } | undefined): void {
+    protected _layout(
+        shape: Shape,
+        parentFrame: ShapeFrame | undefined,
+        varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
+        scale: { x: number, y: number } | undefined,
+        uniformScale: number | undefined
+    ): void {
         this.m_pathsegs = undefined;
-        super._layout(shape, parentFrame, varsContainer, scale);
+        super._layout(shape, parentFrame, varsContainer, scale, uniformScale);
     }
 
     protected renderBorders(): EL[] {
-        if ((this.segments.length === 1 && !this.segments[0].isClosed) || this.segments.length > 1) {
-            return renderLineBorders(elh, this.data.style, this.getBorders(), this.startMarkerType, this.endMarkerType, this.getPathStr(), this.m_data);
+        let borders = this.getBorders();
+        if (this.mask) {
+            borders = borders.map(b => {
+                const nb = importBorder(exportBorder(b));
+                if (nb.fillType === FillType.Gradient && nb.gradient?.gradientType === GradientType.Angular) nb.fillType = FillType.SolidColor;
+                return nb;
+            })
         }
-        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.m_data);
+        if ((this.segments.length === 1 && !this.segments[0].isClosed) || this.segments.length > 1) {
+            return renderLineBorders(elh, this.data.style, borders, this.startMarkerType, this.endMarkerType, this.getPathStr(), this.m_data);
+        }
+        return renderBorders(elh, borders, this.frame, this.getPathStr(), this.m_data);
     }
 
     render(): number {
@@ -221,4 +238,19 @@ export class PathShapeView extends ShapeView {
         }
     }
 
+    get startingAngle() {
+        return (this.data as OvalShape).startingAngle;
+    }
+
+    get endingAngle() {
+        return (this.data as OvalShape).endingAngle;
+    }
+
+    get innerRadius() {
+        return (this.data as OvalShape).innerRadius;
+    }
+
+    get haveEdit() {
+        return this.data.haveEdit;
+    }
 }

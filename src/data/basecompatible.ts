@@ -1,15 +1,15 @@
 import * as impl from "./classes"
 import * as types from "./typesdefine"
-import { FMT_VER_transfrom } from "./fmtver"
+import { lessThan, FMT_VER_transfrom } from "./fmtver"
 import { Matrix } from "../basic/matrix"
 export interface IImportContext {
     document: impl.Document
     curPage: string
-    fmtVer: number
+    fmtVer: string
 }
 
 export function compatibleOldData(source: types.Shape, ctx?: IImportContext) {
-    if (ctx && ctx.fmtVer < FMT_VER_transfrom) {
+    if (ctx && lessThan(ctx.fmtVer, FMT_VER_transfrom)) { // todo 应该在import ctx中初始化好，不是每次判断
         const _source = source as any
         const frame = _source.frame as types.ShapeFrame
         const isFlippedHorizontal = _source.isFlippedHorizontal as boolean

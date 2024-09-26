@@ -1,5 +1,6 @@
 import { CurvePoint } from "./baseclasses";
 import { Point2D } from "./typesdefine"
+import { Path, PathBuilder } from "@kcdesign/path"
 
 type CornerCalcInfo = {
     curPoint: Point2D;
@@ -117,31 +118,31 @@ function add(p: Point2D, pt: Point2D) {
  * curveMode 4, disconnected, control point 位置随意
  * curveMode 3, 也是对称，长度可以不一样
  */
-export function parsePath(points: CurvePoint[], isClosed: boolean, width: number, height: number, fixedRadius: number = 0): (string | number)[][] {
+export function parsePath(points: CurvePoint[], isClosed: boolean, width: number, height: number, fixedRadius: number = 0): Path {
     let hasBegin = false;
 
 
     const len = points.length;
-    if (len < 2) return [];
+    if (len < 2) return new Path();
 
     const cacheCornerCalcInfo: { [k: number]: CornerCalcInfo } = {};
 
-    const path: (string | number)[][] = []
+    const builder = new PathBuilder();
 
     const bezierCurveTo = (x1: number, y1: number, x2: number, y2: number, tx: number, ty: number) => {
-        path.push(["C", x1, y1, x2, y2, tx, ty]);
+        builder.cubicTo(tx, ty, x1, y1, x2, y2)
     }
     const bezierQuaCurveTo = (x: number, y: number, tx: number, ty: number) => {
-        path.push(["Q", x, y, tx, ty]);
+        builder.quadTo(tx, ty, x, y)
     }
     const moveTo = (x: number, y: number) => {
-        path.push(["M", x, y]);
+        builder.moveTo(x, y);
     }
     const lineTo = (x: number, y: number) => {
-        path.push(["L", x, y])
+        builder.lineTo(x, y);
     }
     const closePath = () => {
-        path.push(["Z"]);
+        builder.close();
     }
 
     const transformPoint = (x: number, y: number): Point2D => ({ x: x * width, y: y * height });
@@ -163,7 +164,7 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, width: number
             return false;
         }
 
-        if (curvePoint.hasFrom || curvePoint.hasTo) {
+        if (curvePoint.hasFrom && curvePoint.hasTo) {
             return false;
         }
 
@@ -349,6 +350,6 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, width: number
         }
     }
 
-    return path;
+    return builder.getPath();
 }
 

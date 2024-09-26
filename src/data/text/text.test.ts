@@ -1,7 +1,7 @@
 import * as chai from 'chai'
 import { Para, Span, Text } from './text';
-import { BasicArray } from './basic';
-import { Color } from './classes';
+import { BasicArray } from '../basic';
+import { Color } from '../classes';
 
 const assert = chai.assert;
 

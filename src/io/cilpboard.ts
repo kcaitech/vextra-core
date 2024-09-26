@@ -218,7 +218,7 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
     const ctx: IImportContext = new class implements IImportContext {
         document: Document = document;
         curPage: string = page.id;
-        fmtVer: number = FMT_VER_latest
+        fmtVer: string = FMT_VER_latest
     };
     const result: Shape[] = [];
 
@@ -244,7 +244,7 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
                 }
 
                 const f = new ShapeFrame(_s.transform.m02, _s.transform.m12, _s.size.width, _s.size.height);
-                if ((_s instanceof SymbolUnionShape)) {
+                if (_s instanceof SymbolUnionShape) {
                     const dlt = (_s as any).childs[0];
                     if (!dlt) continue;
                     f.width = dlt.size.width;

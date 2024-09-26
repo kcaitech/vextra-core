@@ -1,7 +1,7 @@
 import * as chai from 'chai'
-import { gPal } from '../basic/pal'
+import { gPal } from '../../basic/pal'
 import { Para, Span, Text } from './text';
-import { BasicArray } from './basic';
+import { BasicArray } from '../basic';
 
 const m: TextMetrics = {
     actualBoundingBoxAscent: 1,

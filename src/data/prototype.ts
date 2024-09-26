@@ -1,7 +1,7 @@
 export {
     PrototypeConnectionType,
     PrototypeEasingType,
-    // PrototypeActions,
+    PrototypeEasingBezier,
     PrototypeEvents,
     PrototypeNavigationType,
     PrototypeTransitionType,
@@ -15,11 +15,11 @@ export {
     OverlayBackgroundType,
     ScrollDirection,
     OverlayPosition,
-    OverlayMargin
+    OverlayMargin,
 } from './baseclasses';
 import { uuid } from '../basic/uuid';
 import * as classes from "./baseclasses"
-import { PrototypeEvent, PrototypeConnectionType,Point2D } from './baseclasses';
+import { PrototypeEvent, PrototypeConnectionType, Point2D, PrototypeEasingBezier } from './baseclasses';
 import { BasicArray } from './basic';
 
 type PrototypeInterAction_crdtidx = BasicArray<number>
@@ -39,8 +39,9 @@ type PrototypeInterAction_crdtidx = BasicArray<number>
 
 export class PrototypeActions extends classes.PrototypeActions {
 
-    getOpTarget(path: string[]): any {
-        if (path[0] === 'extraScrollOffset' && !this.extraScrollOffset) this.extraScrollOffset = new Point2D(0,0);
+    getOpTarget(path: string[]): any {        
+        if (path[0] === 'extraScrollOffset' && !this.extraScrollOffset) this.extraScrollOffset = new Point2D(0, 0);
+        if (path[0] === 'easingFunction' && !this.easingFunction) this.easingFunction = new PrototypeEasingBezier(0, 0, 1, 1)
         return super.getOpTarget(path);
     }
 }

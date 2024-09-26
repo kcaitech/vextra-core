@@ -1,6 +1,5 @@
-import { AutoLayout, Border, ContextSettings, CornerRadius, Fill, MarkerType, OverrideType, PrototypeInterAction, Shadow, Shape, ShapeFrame, ShapeSize, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType, getPathOfRadius } from "../data/classes";
+import { AutoLayout, Border, ContextSettings, CornerRadius, Fill, MarkerType, OverrideType, PrototypeInterAction, Shadow, Shape, ShapeFrame, ShapeSize, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType, getPathOfRadius, ShapeType } from "../data/classes";
 import { fixFrameByConstrain, frame2Parent2, ShapeView } from "./shape";
-import { ShapeType } from "../data/classes";
 import { DataView, RootView } from "./view";
 import { getShapeViewId } from "./basic";
 import { DViewCtx, PropsType, VarsContainer } from "./viewctx";
@@ -9,6 +8,9 @@ import { objectId } from "../basic/objectid";
 import { makeShapeTransform1By2, makeShapeTransform2By1 } from "../data/shape_transform_util";
 import { BasicArray } from "../data/basic";
 import { findOverrideAll } from "../data/utils";
+import { PageView } from "./page";
+import { innerShadowId } from "../render";
+import { elh } from "./el";
 
 // 播放页组件状态切换会话存储refId的key值；
 export const sessionRefIdKey = 'ref-id-cf76c6c6-beed-4c33-ae71-134ee876b990';
@@ -20,7 +22,6 @@ export class SymbolRefView extends ShapeView {
         this.symwatcher = this.symwatcher.bind(this);
         this.loadsym();
         this.updateMaskMap();
-        // this.afterInit();
     }
 
     onMounted(): void {
@@ -36,13 +37,9 @@ export class SymbolRefView extends ShapeView {
         // let refframe;
         const parent = this.parent;
         const parentFrame = parent?.hasSize() ? parent.frame : undefined;
-        this._layout(this.m_data, parentFrame, varsContainer, this.m_scale);
+        this._layout(this.m_data, parentFrame, varsContainer, this.m_scale, this.m_uniform_scale);
         this.updateFrames();
     }
-
-    // protected isNoSupportDiamondScale(): boolean {
-    //     return this.m_data.isNoSupportDiamondScale;
-    // }
 
     getDataChilds(): Shape[] {
         return this.m_sym ? this.m_sym.childs : [];
@@ -72,7 +69,9 @@ export class SymbolRefView extends ShapeView {
             return false;
         }
     }
+
     maskMap: Map<string, Shape | boolean> = new Map;
+
     updateMaskMap() {
         const map = this.maskMap;
         map.clear();
@@ -104,6 +103,7 @@ export class SymbolRefView extends ShapeView {
     get symData() {
         return this.m_sym;
     }
+
     get refId(): string {
         return this.getRefId();
     }
@@ -115,9 +115,11 @@ export class SymbolRefView extends ShapeView {
     get variables() {
         return this.data.variables;
     }
+
     get overrides() {
         return this.data.overrides;
     }
+
     get isCustomSize() {
         return this.data.isCustomSize;
     }
@@ -184,9 +186,17 @@ export class SymbolRefView extends ShapeView {
         if (this.m_sym) this.m_sym.unwatch(this.symwatcher);
     }
 
-    private layoutChild(child: Shape, idx: number, scale: { x: number, y: number } | undefined, varsContainer: VarsContainer | undefined, resue: Map<string, DataView>, rView: RootView | undefined): boolean {
+    private layoutChild(
+        child: Shape,
+        idx: number,
+        scale: { x: number, y: number } | undefined,
+        varsContainer: VarsContainer | undefined,
+        resue: Map<string, DataView>,
+        rView: RootView | undefined,
+        uniformScale: number | undefined
+    ): boolean {
         let cdom: DataView | undefined = resue.get(child.id);
-        const props = { data: child, scale, varsContainer, isVirtual: true };
+        const props = { data: child, scale, varsContainer, isVirtual: true, uniformScale };
 
         if (cdom) {
             const changed = this.moveChild(cdom, idx);
@@ -213,9 +223,7 @@ export class SymbolRefView extends ShapeView {
 
     layout(props?: PropsType | undefined): void {
         const needLayout = this.m_ctx.removeReLayout(this); // remove from changeset
-        if (props && !this.updateLayoutProps(props, needLayout)) {
-            return;
-        }
+        if (props && !this.updateLayoutProps(props, needLayout)) return;
 
         this.m_ctx.setDirty(this);
         this.m_ctx.addNotifyLayout(this);
@@ -230,42 +238,49 @@ export class SymbolRefView extends ShapeView {
 
         const parent = this.parent;
         const parentFrame = parent?.hasSize() ? parent.frame : undefined;
-        this._layout(this.data, parentFrame, varsContainer, this.m_scale)
+        this._layout(this.data, parentFrame, varsContainer, this.m_scale, this.m_uniform_scale)
     }
 
-    protected _layout(shape: Shape, parentFrame: ShapeSize | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, _scale: { x: number; y: number; } | undefined): void {
+    get frame4child() {
+        return this.frame;
+    }
+
+    protected _layout(
+        shape: Shape,
+        parentFrame: ShapeSize | undefined,
+        varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
+        _scale: { x: number; y: number; } | undefined,
+        uniformScale: number | undefined
+    ): void {
         if (!this.m_sym) {
             this.updateLayoutArgs(shape.transform, shape.frame, 0);
             this.removeChilds(0, this.m_children.length).forEach((c) => c.destory());
             return;
         }
-
         const prescale = { x: _scale?.x ?? 1, y: _scale?.y ?? 1 }
         const scale = { x: prescale.x, y: prescale.y }
         const childscale = { x: scale.x, y: scale.y }
 
         // 调整过大小的，使用用户调整的大小，否则跟随symbol大小
-        if (!(this.m_data as SymbolRefShape).isCustomSize) {
-            // 跟随symbol大小
-            // 
-            scale.x *= this.m_sym.size.width / this.m_data.size.width;
-            scale.y *= this.m_sym.size.height / this.m_data.size.height;
-        } else {
+        if ((this.m_data as SymbolRefShape).isCustomSize) {
             // 使用自己大小
             childscale.x *= this.m_data.size.width / this.m_sym.size.width;
             childscale.y *= this.m_data.size.height / this.m_sym.size.height;
+        } else {
+            // 跟随symbol大小
+            scale.x *= this.m_sym.size.width / this.m_data.size.width;
+            scale.y *= this.m_sym.size.height / this.m_data.size.height;
         }
-
         const transform = shape.transform;
         // case 1 不需要变形
         if (scale.x === 1 && scale.y === 1) {
-            let frame = this.data.frame;
+            let frame = this.m_data.frame;
             this.updateLayoutArgs(transform, frame, 0);
-            this.layoutChilds(varsContainer, this.frame, childscale);
+            this.layoutChilds(varsContainer, frame, childscale, this.uniformScale);
             return;
         }
 
-        const skewTransfrom = (scalex: number, scaley: number) => {
+        const skewTransform = (scalex: number, scaley: number) => {
             let t = transform;
             if (scalex !== scaley) {
                 t = t.clone();
@@ -286,13 +301,13 @@ export class SymbolRefView extends ShapeView {
             const t0 = transform.clone();
             t0.scale(scale.x, scale.y);
             const save1 = t0.computeCoord(0, 0);
-            const t = skewTransfrom(scale.x, scale.y).clone();
+            const t = skewTransform(scale.x, scale.y).clone();
             const save2 = t.computeCoord(0, 0)
             const dx = save1.x - save2.x;
             const dy = save1.y - save2.y;
             t.trans(dx, dy);
             this.updateLayoutArgs(t, frame, 0);
-            this.layoutChilds(varsContainer, undefined, childscale);
+            this.layoutChilds(varsContainer, undefined, childscale, this.uniformScale);
             return;
         }
 
@@ -305,48 +320,56 @@ export class SymbolRefView extends ShapeView {
         let scaleY = scale.y;
 
         if (parentFrame && resizingConstraint !== 0) {
-            fixFrameByConstrain(shape, parentFrame, frame, scaleX, scaleY);
-            scaleX = (frame.width / saveW);
-            scaleY = (frame.height / saveH);
+            fixFrameByConstrain(shape, parentFrame, frame, scaleX, scaleY, this.m_uniform_scale);
+            scaleX = frame.width / saveW;
+            scaleY = frame.height / saveH;
         } else {
-            frame.x *= prescale.x;
-            frame.y *= prescale.y;
-            frame.width *= scale.x;
-            frame.height *= scale.y;
+            if (uniformScale) {
+                scaleX /= uniformScale;
+                scaleY /= uniformScale;
+                frame.x *= prescale.x / uniformScale;
+                frame.y *= prescale.y / uniformScale;
+            } else {
+                frame.x *= prescale.x;
+                frame.y *= prescale.y;
+            }
+
+            frame.width *= scaleX;
+            frame.height *= scaleY;
         }
 
-        const t = skewTransfrom(scaleX, scaleY).clone();
+        const t = skewTransform(scaleX, scaleY).clone();
         const cur = t.computeCoord(0, 0);
         t.trans(frame.x - cur.x, frame.y - cur.y);
 
         const inverse = t.inverse;
-        // const lt = inverse.computeCoord(frame.x, frame.y); // 应该是{0，0}
-        // if (Math.abs(lt.x) > float_accuracy || Math.abs(lt.y) > float_accuracy) throw new Error();
         const rb = inverse.computeCoord(frame.x + frame.width, frame.y + frame.height);
-        const size2 = new ShapeFrame(0, 0, (rb.x), (rb.y));
+        const size2 = new ShapeFrame(0, 0, rb.x, rb.y);
         this.updateLayoutArgs(t, size2, 0);
         // 重新计算 childscale
         childscale.x = size2.width / this.m_sym.size.width;
         childscale.y = size2.height / this.m_sym.size.height;
-
-        this.layoutChilds(varsContainer, this.frame, childscale);
+        this.layoutChilds(varsContainer, this.frame, childscale, this.uniformScale);
     }
 
-    protected layoutChilds(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, parentFrame: ShapeSize | undefined, scale?: { x: number, y: number }): void {
+    protected layoutChilds(
+        varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
+        parentFrame: ShapeSize | undefined,
+        scale?: { x: number, y: number },
+        uniformScale?: number
+    ): void {
         const childs = this.getDataChilds();
         const resue: Map<string, DataView> = new Map();
         this.m_children.forEach((c) => resue.set(c.data.id, c));
         const rootView = this.getRootView();
         let changed = false;
         for (let i = 0, len = childs.length; i < len; i++) {
-            const cc = childs[i]
+            const cc = childs[i];
             // update childs
-            if (this.layoutChild(cc, i, scale, varsContainer, resue, rootView)) {
-                changed = true;
-            }
+            if (this.layoutChild(cc, i, scale, varsContainer, resue, rootView, uniformScale)) changed = true;
         }
-        // 删除多余的
 
+        // 删除多余的
         if (this.m_children.length > childs.length) {
             const removes = this.removeChilds(childs.length, Number.MAX_VALUE);
             if (rootView) rootView.addDelayDestory(removes);
@@ -354,9 +377,7 @@ export class SymbolRefView extends ShapeView {
             changed = true;
         }
 
-        if (changed) {
-            this.notify("childs");
-        }
+        if (changed) this.notify("childs");
     }
 
 
@@ -407,6 +428,7 @@ export class SymbolRefView extends ShapeView {
         const v = this._findOV2(OverrideType.StartMarkerType, VariableType.MarkerType);
         return v ? v.value : this.m_sym?.style.startMarkerType;
     }
+
     get endMarkerType(): MarkerType | undefined {
         const v = this._findOV2(OverrideType.EndMarkerType, VariableType.MarkerType);
         return v ? v.value : this.m_sym?.style.endMarkerType;
@@ -417,6 +439,7 @@ export class SymbolRefView extends ShapeView {
         if (v) return v.value;
         return this.m_sym?.style.shadows || [];
     }
+
     get cornerRadius(): CornerRadius | undefined {
         const v = this._findOV2(OverrideType.CornerRadius, VariableType.CornerRadius);
         if (v) return v.value;
@@ -468,5 +491,68 @@ export class SymbolRefView extends ShapeView {
         const v = this._findOV2(OverrideType.AutoLayout, VariableType.AutoLayout);
         if (v) return v.value;
         return this.m_sym?.autoLayout;
+    }
+    render(): number {
+        if (!this.checkAndResetDirty()) return this.m_render_version;
+
+        const masked = this.masked;
+        if (masked) {
+            (this.getPage() as PageView).getView(masked.id)?.render();
+            this.reset("g");
+            return ++this.m_render_version;
+        }
+
+        if (!this.isVisible) {
+            this.reset("g");
+            return ++this.m_render_version;
+        }
+
+        const fills = this.renderFills();
+        const borders = this.renderBorders();
+        let childs = this.renderContents();
+
+        if (this.uniformScale) childs = [elh('g', { transform: `scale(${this.uniformScale})` }, childs)];
+
+        const filterId = `${objectId(this)}`;
+        const shadows = this.renderShadows(filterId);
+        const blurId = `blur_${objectId(this)}`;
+        const blur = this.renderBlur(blurId);
+
+        let props = this.renderProps();
+        let children = [...fills, ...childs, ...borders];
+
+        // 阴影
+        if (shadows.length) {
+            let filter: string = '';
+            const inner_url = innerShadowId(filterId, this.getShadows());
+            filter = `url(#pd_outer-${filterId}) `;
+            if (inner_url.length) filter += inner_url.join(' ');
+            children = [...shadows, elh("g", { filter }, children)];
+        }
+
+        // 模糊
+        if (blur.length) {
+            let filter: string = '';
+            filter = `url(#${blurId})`;
+            children = [...blur, elh('g', { filter }, children)];
+        }
+
+        // 遮罩
+        const _mask_space = this.renderMask();
+        if (_mask_space) {
+            Object.assign(props.style, { transform: _mask_space.toString() });
+            const id = `mask-base-${objectId(this)}`;
+            const __body_transform = this.transformFromMask;
+            const __body = elh("g", { style: { transform: __body_transform } }, children);
+            this.bleach(__body);
+            children = [__body];
+            const mask = elh('mask', { id }, children);
+            const rely = elh('g', { mask: `url(#${id})` }, this.relyLayers);
+            children = [mask, rely];
+        }
+
+        this.reset("g", props, children);
+
+        return ++this.m_render_version;
     }
 }

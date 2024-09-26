@@ -1,5 +1,5 @@
-import { importSpan } from "./baseimport";
-import { BasicArray } from "./basic";
+import { importSpan } from "../baseimport";
+import { BasicArray } from "../basic";
 import { Para, Span, SpanAttr, ParaAttr, Text, BulletNumbersType, BulletNumbersBehavior } from "./text";
 import { _travelTextPara } from "./texttravel";
 import { isDiffSpanAttr, mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "./textutils";
@@ -352,6 +352,7 @@ export function formatText(shapetext: Text, index: number, length: number, key: 
 export function formatPara(shapetext: Text, index: number, length: number, key: string, value: any): { index: number, len: number, value: any }[] {
     const ret: { index: number, len: number, value: any }[] = [];
     let offset = index;
+    // todo layout by padding
     _travelTextPara(shapetext.paras, index, length, (paraArray, paraIndex, para, index, length) => {
         offset -= index;
         const end = Math.min(para.length, index + length);

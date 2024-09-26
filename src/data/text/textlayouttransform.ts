@@ -1,4 +1,4 @@
-import { TextTransformType } from "./typesdefine";
+import { TextTransformType } from "../typesdefine";
 
 function toUpperCase(char: string) {
     const code = char.charCodeAt(0);

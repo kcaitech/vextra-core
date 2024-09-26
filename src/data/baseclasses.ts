@@ -378,7 +378,21 @@ export class Point2D extends Basic {
         this.y = y
     }
 }
-type PrototypeActions_easingFunction = BasicArray<number>
+/* prototypeEasingBezier */
+export class PrototypeEasingBezier extends Basic {
+    typeId = "prototype-easing-bezier"
+    x1: number
+    y1: number
+    x2: number
+    y2: number
+    constructor(x1: number, y1: number, x2: number, y2: number) {
+        super()
+        this.x1 = x1
+        this.y1 = y1
+        this.x2 = x2
+        this.y2 = y2
+    }
+}
 type PrototypeInterAction_crdtidx = BasicArray<number>
 /* prototypeStartingPoint */
 export class PrototypeStartingPoint extends Basic {
@@ -712,7 +726,7 @@ export class PrototypeActions extends Basic {
     connectionURL?: string
     openUrlInNewTab?: boolean
     navigationType?: PrototypeNavigationType
-    easingFunction?: PrototypeActions_easingFunction
+    easingFunction?: PrototypeEasingBezier
     extraScrollOffset?: Point2D
     constructor(connectionType: PrototypeConnectionType) {
         super()
@@ -844,6 +858,7 @@ export class ParaAttr extends SpanAttr {
     paraSpacing?: number
     minimumLineHeight?: number
     maximumLineHeight?: number
+    autoLineHeight?: boolean
     indent?: number
 }
 /* para */
@@ -931,6 +946,7 @@ export class Shape extends Basic {
     scrollDirection?: ScrollDirection
     mask?: boolean
     stackPositioning?: StackPositioning
+    uniformScale?: number
     constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style) {
         super()
         this.crdtidx = crdtidx
@@ -1078,6 +1094,7 @@ export class SymbolRefShape extends Shape {
     overrides?: BasicMap<string, string>
     isCustomSize?: boolean
     cornerRadius?: CornerRadius
+    innerEnvScale?: number
     constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style, size: ShapeSize, refId: string, variables: BasicMap<string, Variable>) {
         super(crdtidx, id, name, type, transform, style)
         this.size = size
@@ -1121,6 +1138,9 @@ export class LineShape extends PathShape {
 export class OvalShape extends PathShape {
     typeId = "oval-shape"
     ellipse: Ellipse
+    startingAngle?: number
+    endingAngle?: number
+    innerRadius?: number
     constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style, size: ShapeSize, pathsegs: PathShape_pathsegs, ellipse: Ellipse) {
         super(crdtidx, id, name, type, transform, style, size, pathsegs)
         this.ellipse = ellipse
@@ -1182,12 +1202,12 @@ export class DocumentMeta extends Basic {
     typeId = "document-meta"
     id: string
     name: string
-    fmtVer: number
+    fmtVer: string
     pagesList: DocumentMeta_pagesList
     lastCmdId: string
     symbolregist: BasicMap<string, string>
     freesymbols?: BasicMap<string, SymbolShape | SymbolUnionShape>
-    constructor(id: string, name: string, fmtVer: number, pagesList: DocumentMeta_pagesList, lastCmdId: string, symbolregist: BasicMap<string, string>) {
+    constructor(id: string, name: string, fmtVer: string, pagesList: DocumentMeta_pagesList, lastCmdId: string, symbolregist: BasicMap<string, string>) {
         super()
         this.id = id
         this.name = name

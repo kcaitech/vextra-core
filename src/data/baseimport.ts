@@ -8,7 +8,7 @@ import { is_mac } from "./utils"
 export interface IImportContext {
     document: impl.Document
     curPage: string
-    fmtVer: number
+    fmtVer: string
 }
 function objkeys(obj: any) {
     return obj instanceof Map ? obj : { forEach: (f: (v: any, k: string) => void) => Object.keys(obj).forEach((k) => f(obj[k], k)) };
@@ -24,7 +24,6 @@ type Para_spans = BasicArray<impl.Span>
 type PathSegment_points = BasicArray<impl.CurvePoint>
 type PathShape_pathsegs = BasicArray<impl.PathSegment>
 type PathShape2_pathsegs = BasicArray<impl.PathSegment>
-type PrototypeActions_easingFunction = BasicArray<number>
 type PrototypeInterAction_crdtidx = BasicArray<number>
 type Shape_prototypeInteractions = BasicArray<impl.PrototypeInterAction>
 type Style_borders = BasicArray<impl.Border>
@@ -509,16 +508,18 @@ export function importPoint2D(source: types.Point2D, ctx?: IImportContext): impl
         source.y)
     return ret
 }
-export function importPrototypeActions_easingFunction(source: types.PrototypeActions_easingFunction, ctx?: IImportContext): PrototypeActions_easingFunction {
-    const ret: PrototypeActions_easingFunction = new BasicArray()
-    source.forEach((source, i) => {
-        ret.push(source)
-    })
-    return ret
-}
 /* connectionType */
 export function importPrototypeConnectionType(source: types.PrototypeConnectionType, ctx?: IImportContext): impl.PrototypeConnectionType {
     return source
+}
+/* prototypeEasingBezier */
+export function importPrototypeEasingBezier(source: types.PrototypeEasingBezier, ctx?: IImportContext): impl.PrototypeEasingBezier {
+    const ret: impl.PrototypeEasingBezier = new impl.PrototypeEasingBezier (
+        source.x1,
+        source.y1,
+        source.x2,
+        source.y2)
+    return ret
 }
 /* easingType */
 export function importPrototypeEasingType(source: types.PrototypeEasingType, ctx?: IImportContext): impl.PrototypeEasingType {
@@ -939,7 +940,7 @@ function importPrototypeActionsOptional(tar: impl.PrototypeActions, source: type
     if (source.connectionURL) tar.connectionURL = source.connectionURL
     if (source.openUrlInNewTab) tar.openUrlInNewTab = source.openUrlInNewTab
     if (source.navigationType) tar.navigationType = importPrototypeNavigationType(source.navigationType, ctx)
-    if (source.easingFunction) tar.easingFunction = importPrototypeActions_easingFunction(source.easingFunction, ctx)
+    if (source.easingFunction) tar.easingFunction = importPrototypeEasingBezier(source.easingFunction, ctx)
     if (source.extraScrollOffset) tar.extraScrollOffset = importPoint2D(source.extraScrollOffset, ctx)
 }
 export function importPrototypeActions(source: types.PrototypeActions, ctx?: IImportContext): impl.PrototypeActions {
@@ -1075,6 +1076,7 @@ function importParaAttrOptional(tar: impl.ParaAttr, source: types.ParaAttr, ctx?
     if (source.paraSpacing) tar.paraSpacing = source.paraSpacing
     if (source.minimumLineHeight) tar.minimumLineHeight = source.minimumLineHeight
     if (source.maximumLineHeight) tar.maximumLineHeight = source.maximumLineHeight
+    if (source.autoLineHeight) tar.autoLineHeight = source.autoLineHeight
     if (source.indent) tar.indent = source.indent
 }
 export function importParaAttr(source: types.ParaAttr, ctx?: IImportContext): impl.ParaAttr {
@@ -1186,6 +1188,7 @@ function importShapeOptional(tar: impl.Shape, source: types.Shape, ctx?: IImport
     if (source.scrollDirection) tar.scrollDirection = importScrollDirection(source.scrollDirection, ctx)
     if (source.mask) tar.mask = source.mask
     if (source.stackPositioning) tar.stackPositioning = importStackPositioning(source.stackPositioning, ctx)
+    if (source.uniformScale) tar.uniformScale = source.uniformScale
 }
 export function importShape(source: types.Shape, ctx?: IImportContext): impl.Shape {
     const ret: impl.Shape = new impl.Shape (
@@ -1536,6 +1539,7 @@ function importSymbolRefShapeOptional(tar: impl.SymbolRefShape, source: types.Sy
     })()
     if (source.isCustomSize) tar.isCustomSize = source.isCustomSize
     if (source.cornerRadius) tar.cornerRadius = importCornerRadius(source.cornerRadius, ctx)
+    if (source.innerEnvScale) tar.innerEnvScale = source.innerEnvScale
 }
 export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImportContext): impl.SymbolRefShape {
         // inject code
@@ -1768,7 +1772,12 @@ export function importLineShape(source: types.LineShape, ctx?: IImportContext): 
     return ret
 }
 /* oval shape */
-const importOvalShapeOptional = importPathShapeOptional
+function importOvalShapeOptional(tar: impl.OvalShape, source: types.OvalShape, ctx?: IImportContext) {
+    importPathShapeOptional(tar, source)
+    if (source.startingAngle) tar.startingAngle = source.startingAngle
+    if (source.endingAngle) tar.endingAngle = source.endingAngle
+    if (source.innerRadius) tar.innerRadius = source.innerRadius
+}
 export function importOvalShape(source: types.OvalShape, ctx?: IImportContext): impl.OvalShape {
         // inject code
     if (!source.pathsegs?.length) { // 兼容旧数据

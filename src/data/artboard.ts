@@ -14,10 +14,10 @@ import {
 } from "./shape";
 import { Style } from "./style";
 import * as classes from "./baseclasses";
-import { Basic, BasicArray } from "./basic";
-import { Path } from "./path";
+import { BasicArray } from "./basic";
 import { RadiusType } from "./consts";
 import { Guide } from "./baseclasses";
+import { Path } from "@kcdesign/path";
 export {
     StackAlign,
     StackMode,

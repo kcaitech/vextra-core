@@ -35,7 +35,9 @@ export class GroupShapeView extends ShapeView {
     protected onChildChange(...args: any[]) {
         if (args.includes('fills') || args.includes('borders')) this.notify(...args);
     }
+
     maskMap: Map<string, Shape> = new Map;
+
     updateMaskMap() {
         const map = this.maskMap;
         map.clear();
@@ -79,8 +81,14 @@ export class GroupShapeView extends ShapeView {
         }
     }
 
-    protected _layout(shape: Shape, parentFrame: ShapeSize | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scale: { x: number, y: number } | undefined): void {
-        super._layout(shape, parentFrame, varsContainer, scale);
+    protected _layout(
+        shape: Shape,
+        parentFrame: ShapeSize | undefined,
+        varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
+        scale: { x: number, y: number } | undefined,
+        uniformScale: number | undefined
+    ): void {
+        super._layout(shape, parentFrame, varsContainer, scale, uniformScale);
         if (this.m_need_updatechilds) {
             this.notify("childs"); // notify childs change
             this.m_need_updatechilds = false;
@@ -104,7 +112,13 @@ export class GroupShapeView extends ShapeView {
         return childs;
     }
 
-    protected layoutChild(child: Shape, idx: number, scale: { x: number, y: number } | undefined, varsContainer: VarsContainer | undefined, resue: Map<string, DataView>, rView: RootView | undefined) {
+    protected layoutChild(
+        child: Shape, idx: number,
+        scale: { x: number, y: number } | undefined,
+        varsContainer: VarsContainer | undefined,
+        resue: Map<string, DataView>,
+        rView: RootView | undefined
+    ) {
         let cdom: DataView | undefined = resue.get(child.id);
         const props = { data: child, scale, varsContainer, isVirtual: this.m_isVirtual };
         if (cdom) {
@@ -186,7 +200,8 @@ export class GroupShapeView extends ShapeView {
             this._save_frame.y = this.m_frame.y;
             this._save_frame.width = this.m_frame.width;
             this._save_frame.height = this.m_frame.height;
-        };
+        }
+        ;
         // update visible
         if (updateFrame(this.m_visibleFrame, visiblebounds.minx, visiblebounds.miny, visiblebounds.maxx - visiblebounds.minx, visiblebounds.maxy - visiblebounds.miny)) changed = true;
         // update outer

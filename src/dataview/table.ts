@@ -23,7 +23,7 @@ import { findOverride, getShapeViewId } from "./basic";
 import { layoutTable } from "../data/tablelayout";
 import { getTableCells, getTableVisibleCells } from "../data/tableread";
 import { BasicArray } from "../data/basic";
-import { newTableCellText } from "../data/textutils";
+import { newTableCellText } from "../data/text/textutils";
 import { Point2D } from "../data/typesdefine";
 import { render as renderLine } from "../render/line_borders";
 
@@ -92,9 +92,15 @@ export class TableView extends ShapeView {
         return undefined;
     }
 
-    protected _layout(shape: Shape, parentFrame: ShapeFrame | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scale: { x: number, y: number } | undefined): void {
+    protected _layout(
+        shape: Shape,
+        parentFrame: ShapeFrame | undefined,
+        varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
+        scale: { x: number, y: number } | undefined,
+        uniformScale: number | undefined
+    ): void {
 
-        super._layout(shape, parentFrame, varsContainer, scale);
+        super._layout(shape, parentFrame, varsContainer, scale, uniformScale);
         // if (this.m_need_updatechilds) {
         //     this.m_need_updatechilds = false;
         this.updateChildren();

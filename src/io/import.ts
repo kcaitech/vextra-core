@@ -61,7 +61,9 @@ export class DataLoader implements IDataLoader {
 
     async loadDocumentMeta(versionId?: string): Promise<DocumentMeta> {
         const json: IJSON = await this.remoteLoader.loadJson(`${this.documentPath}/document-meta.json`, versionId)
-        return importDocumentMeta(json as types.DocumentMeta, undefined)
+        const meta = importDocumentMeta(json as types.DocumentMeta, undefined)
+        if (meta.fmtVer) meta.fmtVer = meta.fmtVer.toString()
+        return meta;
     }
 
     async loadPage(ctx: IImportContext, id: string, versionId?: string): Promise<Page> {
@@ -115,7 +117,7 @@ export async function importDocument(storage: storage.IStorage, documentPath: st
         const ctx: IImportContext = new class implements IImportContext {
             document: Document = document;
             curPage: string = id;
-            fmtVer: number = fmtVer
+            fmtVer: string = fmtVer
         };
         const page = loader.loadPage(ctx, id, idToVersionId.get(id))
         return page;
@@ -124,7 +126,7 @@ export async function importDocument(storage: storage.IStorage, documentPath: st
         const ctx: IImportContext = new class implements IImportContext {
             document: Document = document;
             curPage: string = "";
-            fmtVer: number = fmtVer
+            fmtVer: string = fmtVer
         };
         return loader.loadMedia(ctx, id)
     });
@@ -179,7 +181,7 @@ export async function importLocalDocument(storage: storage.IStorage, documentPat
         const ctx: IImportContext = new class implements IImportContext {
             document: Document = document;
             curPage: string = id;
-            fmtVer: number = fmtVer
+            fmtVer: string = fmtVer
         };
         return loader.loadPage(ctx, id, idToVersionId.get(id))
     });
@@ -187,7 +189,7 @@ export async function importLocalDocument(storage: storage.IStorage, documentPat
         const ctx: IImportContext = new class implements IImportContext {
             document: Document = document;
             curPage: string = "";
-            fmtVer: number = fmtVer
+            fmtVer: string = fmtVer
         };
         return loader.loadMedia(ctx, id)
     });
