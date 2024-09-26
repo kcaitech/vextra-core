@@ -176,6 +176,7 @@ import { getAutoLayoutShapes, initAutoLayout, layoutShapesOrder, layoutSpacing, 
 
 import { getFormatFromBase64 } from "../basic/utils";
 import { uniformScale, UniformScaleUnit } from "./asyncApiHandler";
+import { modifyEndingAngle, modifyRadius, modifyStartingAngle, modifySweep } from "./asyncApiHandler/arc";
 import { Path } from "@kcdesign/path";
 
 // 用于批量操作的单个操作类型
@@ -4621,6 +4622,39 @@ export class PageEditor {
         try {
             const api = this.__repo.start('uniformScale');
             uniformScale(api, this.__page, units, ratio);
+            this.__repo.commit();
+        } catch (e) {
+            this.__repo.rollback();
+            console.error(e);
+        }
+    }
+
+    modifyShapesStartingAngle(shapes: ShapeView[], value: number) {
+        try {
+            const api = this.__repo.start('modifyShapesStartAngle');
+            modifyStartingAngle(api, this.__page, shapes, value);
+            this.__repo.commit();
+        } catch (e) {
+            this.__repo.rollback();
+            console.error(e);
+        }
+    }
+
+    modifyShapesSweep(shapes: ShapeView[], value: number) {
+        try {
+            const api = this.__repo.start('modifyShapesSweep');
+            modifySweep(api, this.__page, shapes, value);
+            this.__repo.commit();
+        } catch (e) {
+            this.__repo.rollback();
+            console.error(e);
+        }
+    }
+
+    modifyShapesRadius(shapes: ShapeView[], value: number) {
+        try {
+            const api = this.__repo.start('modifyShapesRadius');
+            modifyRadius(api, this.__page, shapes, value);
             this.__repo.commit();
         } catch (e) {
             this.__repo.rollback();
