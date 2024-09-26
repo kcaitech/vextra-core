@@ -1,11 +1,10 @@
-import { Api } from "../coop/recordapi";
 import { BasicArray, CurveMode, CurvePoint, Document, OvalShape, Page, PathSegment, Shape } from "../../data";
 import { adapt2Shape, PageView, PathShapeView, ShapeView } from "../../dataview";
 import { v4 } from "uuid";
 import { Matrix } from "../../basic/matrix";
 import { uuid } from "../../basic/uuid";
 import { AsyncApiCaller } from "./AsyncApiCaller";
-import { CoopRepository } from "../coop/cooprepo";
+import {Api, CoopRepository} from "../../coop";
 
 export function modifySweep(api: Api, page: Page, shapes: ShapeView[], value: number) {
     const end = Math.PI * 2 * (value / 100);

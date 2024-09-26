@@ -1,8 +1,7 @@
-import { CoopRepository } from "../coop/cooprepo";
 import { Document, OvalShape, Page } from "../../data";
-import { Api } from "../coop/recordapi";
 import { adapt2Shape, PageView, ShapeView } from "../../dataview";
 import { modifyPathByArc } from "../asyncApiHandler";
+import {Api, CoopRepository} from "../../coop";
 
 export class LinearApi {
     private readonly __repo: CoopRepository;
