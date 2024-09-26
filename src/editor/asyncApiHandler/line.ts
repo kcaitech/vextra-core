@@ -4,14 +4,15 @@ import { Document } from "../../data/document";
 import { adapt2Shape, PageView, PathShapeView } from "../../dataview";
 import { PathShape } from "../../data/shape";
 import { update_frame_by_points } from "../utils/path";
+import { getAutoLayoutShapes, modifyAutoLayout } from "../utils/auto_layout";
 
 export class LineHandleApiCaller extends AsyncApiCaller {
-    readonly line: PathShape;
+    readonly line: PathShapeView;
 
     constructor(repo: CoopRepository, document: Document, page: PageView, lineView: PathShapeView) {
         super(repo, document, page)
 
-        this.line = adapt2Shape(lineView) as PathShape;
+        this.line = lineView;
     }
 
     start() {
@@ -20,7 +21,7 @@ export class LineHandleApiCaller extends AsyncApiCaller {
 
     execute(start: { x: number, y: number }, end: { x: number, y: number }) {
         try {
-            const shape = this.line;
+            const shape = adapt2Shape(this.line) as PathShape;
 
             const points = shape?.pathsegs[0]?.points;
 
@@ -46,7 +47,12 @@ export class LineHandleApiCaller extends AsyncApiCaller {
 
     commit() {
         if (this.__repo.isNeedCommit() && !this.exception) {
-            update_frame_by_points(this.api, this.page, this.line, true);
+            update_frame_by_points(this.api, this.page, adapt2Shape(this.line), true);
+            const parents = getAutoLayoutShapes([this.line]);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                modifyAutoLayout(this.page, this.api, parent);
+            }
             this.__repo.commit();
         } else {
             this.__repo.rollback();

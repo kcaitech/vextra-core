@@ -21,7 +21,7 @@ import {
     makeShapeTransform1By2,
     updateShapeTransform1By2
 } from "../../data";
-import { adapt2Shape, GroupShapeView, PageView, ShapeView } from "../../dataview";
+import { adapt2Shape, ArtboradView, GroupShapeView, PageView, ShapeView } from "../../dataview";
 import {
     newArrowShape,
     newArtboard,
@@ -43,6 +43,7 @@ import { Point2D } from "../../data/typesdefine";
 import { update_frame_by_points } from "../utils/path";
 import { translateTo } from "../frame";
 import { Transform as Transform2 } from "../../basic/transform";
+import { modifyAutoLayout } from "../utils/auto_layout";
 
 export interface GeneratorParams {
     parent: GroupShapeView;
@@ -266,7 +267,11 @@ export class CreatorApiCaller extends AsyncApiCaller {
             if (this.shape instanceof LineShape) { // 线条的宽高最后根据两个点的位置计算
                 update_frame_by_points(this.api, this.page, this.shape, true);
             }
-
+            const parent = this.__params?.parent;
+            if (parent && (parent as ArtboradView).autoLayout) {
+                const __shape = adapt2Shape(parent) as GroupShape;
+                modifyAutoLayout(this.page, this.api, __shape);
+            }
             this.__repo.commit();
         } else {
             this.__repo.rollback();

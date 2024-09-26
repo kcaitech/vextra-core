@@ -19,7 +19,8 @@ import {
     RadiusType,
     TextBehaviour,
     makeShapeTransform2By1,
-    makeShapeTransform1By2
+    makeShapeTransform1By2,
+    StackSizing
 } from "../../data";
 import {
     calculateInnerAnglePosition,
@@ -37,6 +38,7 @@ import {
     UniformScaleUnit
 } from "./transform";
 import { fixTextShapeFrameByLayout } from "../utils/other";
+import { getAutoLayoutShapes, modifyAutoLayout, tidyUpLayout } from "../utils/auto_layout";
 
 export class LockMouseHandler extends AsyncApiCaller {
     private recorder: RangeRecorder = new Map();
@@ -61,8 +63,15 @@ export class LockMouseHandler extends AsyncApiCaller {
 
             for (let i = 0; i < shapes.length; i++) {
                 const shape = adapt2Shape(shapes[i]);
+                const parent = shape.parent;
+                if (parent && (parent as Artboard).autoLayout) continue;
                 if (shape.isVirtualShape) continue;
                 translate(api, page, shape, dx, 0);
+            }
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                modifyAutoLayout(this.page, api, parent);
             }
             this.updateView();
         } catch (e) {
@@ -78,8 +87,15 @@ export class LockMouseHandler extends AsyncApiCaller {
 
             for (let i = 0; i < shapes.length; i++) {
                 const shape = adapt2Shape(shapes[i]);
+                const parent = shape.parent;
+                if (parent && (parent as Artboard).autoLayout) continue;
                 if (shape.isVirtualShape) continue;
                 translate(api, page, shape, 0, dy);
+            }
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                modifyAutoLayout(this.page, api, parent);
             }
             this.updateView();
         } catch (e) {
@@ -115,6 +131,11 @@ export class LockMouseHandler extends AsyncApiCaller {
                         api.shapeModifyTextBehaviour(page, shape.text, TextBehaviour.Fixed);
                     }
                     fixTextShapeFrameByLayout(api, page, shape);
+                } else {
+                    api.shapeModifyWidth(page, shape, size.width + dw);
+                    if ((shape as Artboard).autoLayout) {
+                        api.shapeModifyAutoLayoutSizing(page, shape, StackSizing.Fixed, 'hor');
+                    }
                 }
 
                 if (view instanceof GroupShapeView) {
@@ -123,6 +144,11 @@ export class LockMouseHandler extends AsyncApiCaller {
                         y: Math.abs(size.height / (size.height - dh))
                     });
                 }
+            }
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                modifyAutoLayout(this.page, api, parent);
             }
             this.updateView();
         } catch (e) {
@@ -158,6 +184,11 @@ export class LockMouseHandler extends AsyncApiCaller {
                         api.shapeModifyTextBehaviour(page, shape.text, TextBehaviour.FixWidthAndHeight);
                     }
                     fixTextShapeFrameByLayout(api, page, shape);
+                } else {
+                    api.shapeModifyHeight(page, shape, size.height + dh);
+                    if ((shape as Artboard).autoLayout) {
+                        api.shapeModifyAutoLayoutSizing(page, shape, StackSizing.Fixed, 'ver');
+                    }
                 }
                 if (view instanceof GroupShapeView) {
                     reLayoutBySizeChanged(api, page, view, {
@@ -165,6 +196,11 @@ export class LockMouseHandler extends AsyncApiCaller {
                         y: Math.abs(size.height / (size.height - dh))
                     });
                 }
+            }
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                modifyAutoLayout(this.page, api, parent);
             }
             this.updateView();
         } catch (e) {
@@ -254,7 +290,11 @@ export class LockMouseHandler extends AsyncApiCaller {
                 const transform = makeShapeTransform1By2(t) as Transform;
                 api.shapeModifyRotate(page, adapt2Shape(shape), transform)
             }
-
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                modifyAutoLayout(this.page, api, parent);
+            }
             this.updateView();
         } catch (e) {
             console.log('LockMouseHandler.executeRotate', e);
@@ -394,6 +434,19 @@ export class LockMouseHandler extends AsyncApiCaller {
             console.log('LockMouseHandler.executeShadowS');
         }
     }
+
+    executeTidyup(shapes: ShapeView[][], hor: number, ver: number, dir: boolean) {
+        try {
+            const api = this.api;
+            const page = this.page;
+            tidyUpLayout(page, api, shapes, hor, ver, dir);
+            this.updateView();
+        } catch (e) {
+            this.exception = true;
+            console.log('LockMouseHandler.executeHorTidyup', e);
+        }
+    }
+
 
     executeUniform(units: UniformScaleUnit[], ratio: number) {
         try {
