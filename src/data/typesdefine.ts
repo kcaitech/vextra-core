@@ -1023,6 +1023,9 @@ export type LineShape = PathShape
 /* oval shape */
 export type OvalShape = PathShape & {
     ellipse: Ellipse,
+    startingAngle?: number,
+    endingAngle?: number,
+    innerRadius?: number,
 }
 /* artboard shape */
 export type Artboard = GroupShape & {

@@ -1138,6 +1138,9 @@ export class LineShape extends PathShape {
 export class OvalShape extends PathShape {
     typeId = "oval-shape"
     ellipse: Ellipse
+    startingAngle?: number
+    endingAngle?: number
+    innerRadius?: number
     constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style, size: ShapeSize, pathsegs: PathShape_pathsegs, ellipse: Ellipse) {
         super(crdtidx, id, name, type, transform, style, size, pathsegs)
         this.ellipse = ellipse
