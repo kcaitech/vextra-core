@@ -500,7 +500,7 @@ export class ShapeView extends DataView {
 
     matrix2Parent(matrix?: Matrix) {
         const m = matrix2parent(this.transform, matrix);
-        if (this.parent!.uniformScale) m.scale(this.parent!.uniformScale);
+        if (this.parent?.uniformScale) m.scale(this.parent!.uniformScale);
         return m;
     }
 
