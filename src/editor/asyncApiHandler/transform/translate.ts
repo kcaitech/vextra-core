@@ -1,16 +1,18 @@
 import { CoopRepository } from "../../../coop/cooprepo";
 import { AsyncApiCaller } from "../AsyncApiCaller";
-import { ShapeView, adapt2Shape, PageView, GroupShapeView, ArtboradView } from "../../../dataview";
+import { adapt2Shape, ArtboradView, GroupShapeView, PageView, ShapeView } from "../../../dataview";
 import {
-    GroupShape,
-    Shape,
-    Page,
+    Artboard,
     Document,
-    Transform,
-    makeShapeTransform2By1,
+    GroupShape,
     makeShapeTransform1By2,
+    makeShapeTransform2By1,
+    Page,
+    Shape,
     ShapeType,
-    StackPositioning
+    StackMode,
+    StackPositioning,
+    Transform
 } from "../../../data";
 import { after_migrate, unable_to_migrate } from "../../utils/migrate";
 import { get_state_name, is_state } from "../../symbol";
@@ -19,6 +21,7 @@ import { ISave4Restore, LocalCmd, SelectionState } from "../../../coop/localcmd"
 import { getAutoLayoutShapes, modifyAutoLayout, tidyUpLayout } from "../../utils/auto_layout";
 import { translate } from "../../frame";
 import { transform_data } from "../../../io/cilpboard";
+import { MossError } from "../../../basic/error";
 
 export type TranslateUnit = {
     shape: ShapeView;
@@ -128,30 +131,53 @@ export class Transporter extends AsyncApiCaller {
         }
     }
 
-    migrate(targetParent: GroupShape, sortedShapes: Shape[], dlt: string) {
-        try {
-            if (targetParent.id === this.current_env_id) return;
+    // migrate(targetParent: GroupShape, sortedShapes: Shape[], dlt: string) {
+    //     try {
+    //         if (targetParent.id === this.current_env_id) return;
+    //
+    //         const api = this.api;
+    //         const page = this.page;
+    //         const document = this.__document;
+    //
+    //         let index = targetParent.childs.length;
+    //         for (let i = 0, len = sortedShapes.length; i < len; i++) {
+    //             this.__migrate(document, api, page, targetParent, sortedShapes[i], dlt, index) && index++;
+    //         }
+    //         this.need_layout_shape.add(this.current_env_id);
+    //         const parents: GroupShape[] = [targetParent];
+    //         for (let i = 0; i < parents.length; i++) {
+    //             const parent = parents[i];
+    //             modifyAutoLayout(page, api, parent);
+    //         }
+    //
+    //         this.setCurrentEnv(targetParent);
+    //         this.updateView();
+    //     } catch (e) {
+    //         console.log('Transporter.migrate:', e);
+    //         this.exception = true;
+    //     }
+    // }
 
+    migrate(target: ShapeView, sortedShapes: ShapeView[], dlt: string) {
+        try {
             const api = this.api;
             const page = this.page;
             const document = this.__document;
 
-            let index = targetParent.childs.length;
+            const targetParent = adapt2Shape(target) as GroupShape;
+
+            let index = target.childs.length;
             for (let i = 0, len = sortedShapes.length; i < len; i++) {
-                this.__migrate(document, api, page, targetParent, sortedShapes[i], dlt, index) && index++;
-            }
-            this.need_layout_shape.add(this.current_env_id);
-            const parents: GroupShape[] = [targetParent];
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                modifyAutoLayout(page, api, parent);
+                this.__migrate(document, api, page, targetParent, adapt2Shape(sortedShapes[i]), dlt, index) && index++;
             }
 
-            this.setCurrentEnv(targetParent);
             this.updateView();
+
+            return true;
         } catch (e) {
-            console.log('Transporter.migrate:', e);
+            console.error(e);
             this.exception = true;
+            return false;
         }
     }
 
@@ -213,16 +239,8 @@ export class Transporter extends AsyncApiCaller {
 
     private __migrate(document: Document, api: Api, page: Page, targetParent: GroupShape, shape: Shape, dlt: string, index: number) {
         const error = unable_to_migrate(targetParent, shape);
-        if (error) {
-            console.log('migrate error:', error);
-            return false;
-        }
+        if (error) throw new MossError(`error type ${error}`);
         const origin: GroupShape = shape.parent as GroupShape;
-
-        if (origin.id === targetParent.id) {
-            return false;
-        }
-
         if (is_state(shape)) {
             const name = get_state_name(shape as any, dlt);
             api.shapeModifyName(page, shape, `${origin.name}/${name}`);
@@ -345,7 +363,10 @@ export class Transporter extends AsyncApiCaller {
         }
     }
 
-    tidyUpShapesLayout(shape_rows: ShapeView[][], hor: number, ver: number, dir: boolean, startXY?: { x: number, y: number }) {
+    tidyUpShapesLayout(shape_rows: ShapeView[][], hor: number, ver: number, dir: boolean, startXY?: {
+        x: number,
+        y: number
+    }) {
         try {
             const api = this.api;
             const page = this.page;
@@ -354,6 +375,51 @@ export class Transporter extends AsyncApiCaller {
         } catch (error) {
             this.exception = true;
             console.log('Transporter.tidyUpShapesLayout', error);
+        }
+    }
+
+    insert(layout: ShapeView, placement: ShapeView, position: -1 | 1, sel: ShapeView[]) {
+        try {
+            const container = layout as ArtboradView;
+            const envData = adapt2Shape(container) as Artboard;
+            const placementData = adapt2Shape(placement);
+
+            const isHor = (container.autoLayout?.stackMode || StackMode.Horizontal) === StackMode.Horizontal;
+            const sortSel = sel.sort((a, b) => {
+                const xy1 = a.parent!.matrix2Root().computeCoord3(a.boundingBox());
+                const xy2 = b.parent!.matrix2Root().computeCoord3(b.boundingBox())
+                const v1 = isHor ? xy1.x : xy1.y;
+                const v2 = isHor ? xy2.x : xy2.y;
+
+                if (v1 > v2) return -1;
+                else return 1;
+            });
+
+
+            const frame = placement._p_frame;
+
+            const api = this.api;
+            const page = this.page;
+
+            let x = frame.x + (position > 0 ? sortSel.length : -1);
+            let y = frame.y + (position > 0 ? sortSel.length : -1);
+            const index = envData.indexOfChild(placementData) + (position > 0 ? 1 : 0);
+
+            for (let i = sortSel.length - 1; i > -1; i--) {
+                const view = sortSel[i];
+                const oParent = adapt2Shape(view.parent!) as GroupShape;
+                const shape = adapt2Shape(view);
+                const oIndex = oParent.indexOfChild(shape);
+
+                api.shapeMove(page, oParent, oIndex, envData, index);
+                api.shapeModifyX(page, shape, x);
+                api.shapeModifyY(page, shape, y);
+            }
+
+            modifyAutoLayout(page, api, envData);
+        } catch (e) {
+            this.exception = true;
+            console.error(e);
         }
     }
 
