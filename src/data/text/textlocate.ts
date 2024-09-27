@@ -1,7 +1,8 @@
-import { TEXT_BASELINE_RATIO } from "./consts";
+import { TEXT_BASELINE_RATIO } from "./basic";
 import { SpanAttr } from "./text";
-import { IGraphy, TextLayout, isNewLineCharCode } from "./textlayout";
-import { Point2D } from "./typesdefine";
+import { IGraphy, TextLayout } from "./textlayout";
+import { Point2D } from "../typesdefine";
+import { isNewLineCharCode } from "./basic";
 
 export class TextLocate {
     index: number = 0;

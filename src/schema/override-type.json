@@ -18,6 +18,7 @@
         "exportOptions",
         "cornerRadius",
         "blur",
-        "protoInteractions"
+        "protoInteractions",
+        "autoLayout"
     ]
 }

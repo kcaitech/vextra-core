@@ -1,0 +1,10 @@
+{
+    "description": "stack align",
+    "enum": [
+        "min",
+        "center",
+        "max",
+        "space-evenly"
+    ],
+    "default": "min"
+}

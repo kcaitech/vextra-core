@@ -1,10 +1,9 @@
 import { Style } from "./style";
-import { Text } from "./text";
+import { Text } from "./text/text";
 import * as classes from "./baseclasses"
 import { BasicArray } from "./basic";
 export { CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint, ShapeFrame, Ellipse, PathSegment } from "./baseclasses"
 import { ShapeType, CurvePoint, ShapeFrame } from "./baseclasses"
-import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
 import { parsePath } from "./pathparser";
 import { ContactForm, ContactType, PathSegment } from "./baseclasses";
@@ -12,6 +11,7 @@ import { gen_matrix1, gen_path, handle_contact_from, handle_contact_to, path_for
 import {PathShape, Shape, Transform, ShapeSize} from "./shape";
 import { Page } from "./page";
 import { RadiusType } from "./consts";
+import { Path } from "@kcdesign/path";
 interface PageXY {
     x: number
     y: number
@@ -240,8 +240,7 @@ export class ContactShape extends PathShape implements classes.ContactShape {
         const width = frame.width;
         const height = frame.height;
         const points = this.getPoints();
-        const path = parsePath(points, !!this.isClosed, width, height, fixedRadius);
-        this.__pathCache = new Path(path);
+        this.__pathCache = parsePath(points, !!this.isClosed, width, height, fixedRadius);
         return this.__pathCache;
     }
 

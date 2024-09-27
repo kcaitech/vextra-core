@@ -12,3 +12,19 @@ npm run dev<br>
 ## schema生成代码
 npm run schema<br>
 // 如出现奇怪运行错误，更新node版本
+
+
+# 模块引用关系
+data -> basic
+io ->   data
+render -> data
+dataview -> render
+            data
+            io
+coop -> data
+        dataview
+        io
+editor->    data
+            dataview
+            coop
+            io

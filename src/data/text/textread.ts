@@ -1,9 +1,9 @@
-import { BasicArray } from "./basic";
+import { BasicArray } from "../basic";
 import { Para, AttrGetter, Span, SpanAttr, Text, ParaAttr, UnderlineType, StrikethroughType, TextTransformType, TextAttr, TextHorAlign } from "./text";
 import { _travelTextPara } from "./texttravel";
 import { mergeParaAttr, mergeSpanAttr } from "./textutils";
-import { Color } from "./color";
-import { FillType } from "./style";
+import { Color } from "../color";
+import { FillType } from "../style";
 import { gradient_equals } from "./textutils";
 export function getSimpleText(shapetext: Text, index: number, length: number): string {
     let text = '';
@@ -224,11 +224,19 @@ function _getParaFormat(attr: ParaAttr, attrGetter: AttrGetter, defaultAttr: Tex
         attrGetter.kerningIsMulti = true;
     }
 
+    const autoLineHeight = attr.autoLineHeight ?? (defaultAttr?.autoLineHeight) ?? false;
+    if (attrGetter.autoLineHeight === undefined) {
+        attrGetter.autoLineHeight = autoLineHeight;
+    }
+    else if (attrGetter.autoLineHeight !== !!autoLineHeight) {
+        attrGetter.autoLineHeightIsMulti = true;
+    }
+
     const maximumLineHeight = attr.maximumLineHeight ?? (defaultAttr?.maximumLineHeight) ?? 0;
     if (attrGetter.maximumLineHeight === undefined) {
         attrGetter.maximumLineHeight = maximumLineHeight;
     }
-    else if (maximumLineHeight === undefined || attrGetter.maximumLineHeight !== maximumLineHeight) {
+    else if (attrGetter.maximumLineHeight !== maximumLineHeight) {
         attrGetter.maximumLineHeightIsMulti = true;
     }
 
@@ -236,7 +244,7 @@ function _getParaFormat(attr: ParaAttr, attrGetter: AttrGetter, defaultAttr: Tex
     if (attrGetter.minimumLineHeight === undefined) {
         attrGetter.minimumLineHeight = minimumLineHeight;
     }
-    else if (minimumLineHeight === undefined || attrGetter.minimumLineHeight !== minimumLineHeight) {
+    else if (attrGetter.minimumLineHeight !== minimumLineHeight) {
         attrGetter.minimumLineHeightIsMulti = true;
     }
 
@@ -257,6 +265,9 @@ function _mergeParaAttr(from: AttrGetter, to: AttrGetter) {
 
     if (from.kerningIsMulti) to.kerningIsMulti = true;
     else if (from.kerning !== undefined) to.kerning = from.kerning;
+
+    if (from.autoLineHeightIsMulti) to.autoLineHeightIsMulti = true;
+    else if (from.autoLineHeight !== undefined) to.autoLineHeight = from.autoLineHeight;
 
     if (from.maximumLineHeightIsMulti) to.maximumLineHeightIsMulti = true;
     else if (from.maximumLineHeight !== undefined) to.maximumLineHeight = from.maximumLineHeight;

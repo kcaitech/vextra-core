@@ -15,9 +15,17 @@ import {
 import { Style } from "./style";
 import * as classes from "./baseclasses";
 import { BasicArray } from "./basic";
-import { Path } from "./path";
 import { RadiusType } from "./consts";
 import { Guide } from "./baseclasses";
+import { Path } from "@kcdesign/path";
+export {
+    StackAlign,
+    StackMode,
+    StackSize,
+    StackSizing,
+    StackWrap,
+    AutoLayout
+} from "./baseclasses"
 import { exportArtboard, IExportContext } from "./baseexport";
 
 
@@ -36,6 +44,7 @@ export class Artboard extends GroupShape implements classes.Artboard {
     cornerRadius?: CornerRadius
     haveEdit?: boolean | undefined;
     guides?: BasicArray<Guide>;
+    autoLayout?: classes.AutoLayout;
 
     constructor(
         crdtidx: BasicArray<number>,
@@ -48,6 +57,7 @@ export class Artboard extends GroupShape implements classes.Artboard {
         size: ShapeSize,
         haveEdit?: boolean,
         guides?: BasicArray<Guide>,
+        autoLayout?: classes.AutoLayout
     ) {
         super(
             crdtidx,
@@ -61,6 +71,7 @@ export class Artboard extends GroupShape implements classes.Artboard {
         this.size = size
         this.haveEdit = haveEdit;
         this.guides = guides;
+        this.autoLayout = autoLayout;
     }
 
     getOpTarget(path: string[]) {

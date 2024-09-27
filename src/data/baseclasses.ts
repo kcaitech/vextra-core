@@ -37,6 +37,11 @@ export {
     ShadowPosition,
     ShapeType,
     SideType,
+    StackAlign,
+    StackMode,
+    StackPositioning,
+    StackSizing,
+    StackWrap,
     StrikethroughType,
     TableCellType,
     TextBehaviour,
@@ -86,6 +91,11 @@ import {
     ShadowPosition,
     ShapeType,
     SideType,
+    StackAlign,
+    StackMode,
+    StackPositioning,
+    StackSizing,
+    StackWrap,
     StrikethroughType,
     TableCellType,
     TextBehaviour,
@@ -452,6 +462,17 @@ export class ShapeSize extends Basic {
     }
 }
 type Shape_prototypeInteractions = BasicArray<PrototypeInterAction>
+/* stack size */
+export class StackSize extends Basic {
+    typeId = "stack-size"
+    x: number
+    y: number
+    constructor(x: number = 0, y: number = 0) {
+        super()
+        this.x = x
+        this.y = y
+    }
+}
 /* stop */
 export class Stop extends Basic {
     typeId = "stop"
@@ -509,6 +530,37 @@ export class UserInfo extends Basic {
     }
 }
 type Variable_0 = BasicArray<Border | Fill | Shadow | PrototypeInterAction>
+/* auto layout */
+export class AutoLayout extends Basic {
+    typeId = "auto-layout"
+    stackSpacing: number
+    stackCounterSpacing: number
+    stackHorizontalPadding: number
+    stackVerticalPadding: number
+    stackPaddingRight: number
+    stackPaddingBottom: number
+    stackMode?: StackMode
+    stackWrap?: StackWrap
+    stackHorizontalGapSizing?: StackSizing
+    stackVerticalGapSizing?: StackSizing
+    stackPrimarySizing?: StackSizing
+    stackCounterSizing?: StackSizing
+    stackPrimaryAlignItems?: StackAlign
+    stackCounterAlignItems?: StackAlign
+    stackReverseZIndex?: boolean
+    bordersTakeSpace?: boolean
+    minSize?: StackSize
+    maxSize?: StackSize
+    constructor(stackSpacing: number, stackCounterSpacing: number, stackHorizontalPadding: number, stackVerticalPadding: number, stackPaddingRight: number, stackPaddingBottom: number) {
+        super()
+        this.stackSpacing = stackSpacing
+        this.stackCounterSpacing = stackCounterSpacing
+        this.stackHorizontalPadding = stackHorizontalPadding
+        this.stackVerticalPadding = stackVerticalPadding
+        this.stackPaddingRight = stackPaddingRight
+        this.stackPaddingBottom = stackPaddingBottom
+    }
+}
 /* blur */
 export class Blur extends Basic {
     typeId = "blur"
@@ -809,6 +861,7 @@ export class ParaAttr extends SpanAttr {
     paraSpacing?: number
     minimumLineHeight?: number
     maximumLineHeight?: number
+    autoLineHeight?: boolean
     indent?: number
 }
 /* para */
@@ -896,6 +949,7 @@ export class Shape extends Basic {
     scrollDirection?: ScrollDirection
     scrollBehavior?: ScrollBehavior
     mask?: boolean
+    stackPositioning?: StackPositioning
     uniformScale?: number
     constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style) {
         super()
@@ -955,8 +1009,8 @@ export class Variable extends Basic {
     id: string
     type: VariableType
     name: string
-    value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur
-    constructor(id: string, type: VariableType, name: string, value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur) {
+    value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur | AutoLayout
+    constructor(id: string, type: VariableType, name: string, value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur | AutoLayout) {
         super()
         this.id = id
         this.type = type
@@ -1088,6 +1142,9 @@ export class LineShape extends PathShape {
 export class OvalShape extends PathShape {
     typeId = "oval-shape"
     ellipse: Ellipse
+    startingAngle?: number
+    endingAngle?: number
+    innerRadius?: number
     constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style, size: ShapeSize, pathsegs: PathShape_pathsegs, ellipse: Ellipse) {
         super(crdtidx, id, name, type, transform, style, size, pathsegs)
         this.ellipse = ellipse
@@ -1117,6 +1174,7 @@ export class SymbolShape extends GroupShape {
     symtags?: BasicMap<string, string>
     cornerRadius?: CornerRadius
     guides?: SymbolShape_guides
+    autoLayout?: AutoLayout
     constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style, childs: GroupShape_childs, size: ShapeSize, variables: BasicMap<string, Variable>) {
         super(crdtidx, id, name, type, transform, style, childs)
         this.size = size
@@ -1133,6 +1191,7 @@ export class Artboard extends GroupShape {
     size: ShapeSize
     cornerRadius?: CornerRadius
     guides?: Artboard_guides
+    autoLayout?: AutoLayout
     constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style, childs: GroupShape_childs, size: ShapeSize) {
         super(crdtidx, id, name, type, transform, style, childs)
         this.size = size
@@ -1147,12 +1206,12 @@ export class DocumentMeta extends Basic {
     typeId = "document-meta"
     id: string
     name: string
-    fmtVer: number
+    fmtVer: string
     pagesList: DocumentMeta_pagesList
     lastCmdId: string
     symbolregist: BasicMap<string, string>
     freesymbols?: BasicMap<string, SymbolShape | SymbolUnionShape>
-    constructor(id: string, name: string, fmtVer: number, pagesList: DocumentMeta_pagesList, lastCmdId: string, symbolregist: BasicMap<string, string>) {
+    constructor(id: string, name: string, fmtVer: string, pagesList: DocumentMeta_pagesList, lastCmdId: string, symbolregist: BasicMap<string, string>) {
         super()
         this.id = id
         this.name = name

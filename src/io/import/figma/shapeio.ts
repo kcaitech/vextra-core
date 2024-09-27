@@ -27,7 +27,7 @@ import {
     FillType,
     Gradient,
     GradientType,
-    GroupShape,
+    GroupShape, ImageScaleMode,
     makeShapeTransform2By1,
     MarkerType,
     OvalShape,
@@ -35,6 +35,7 @@ import {
     Page,
     PathSegment,
     PathShape,
+    PatternTransform,
     Point2D,
     PolygonShape,
     RectShape,
@@ -70,7 +71,7 @@ import {getPolygonPoints, getPolygonVertices} from "../../../editor/utils/path";
 import {importText} from "./textio";
 import {importColor} from "./common";
 
-function toStrId(id?: {
+export function toStrId(id?: {
     localID: string,
     sessionID: string,
 }) {
@@ -140,6 +141,14 @@ function setGradient(
     }
 }
 
+const fillStyleKeys = [
+    'fillPaints',
+]
+
+function hasFillProp(data: any) {
+    return fillStyleKeys.some(key => key in data);
+}
+
 function parseFills(
     ctx: LoadContext,
     fills: {
@@ -181,6 +190,21 @@ function parseFills(
                 hexString += imageHash[i].toString(16).padStart(2, '0');
             }
             f.imageRef = `${hexString}.png`;
+
+            let imageScaleMode;
+            if (fill.imageScaleMode === 'FILL') imageScaleMode = ImageScaleMode.Fill;
+            else if (fill.imageScaleMode === 'STRETCH') imageScaleMode = ImageScaleMode.Stretch;
+            else if (fill.imageScaleMode === 'FIT') imageScaleMode = ImageScaleMode.Fit;
+            else if (fill.imageScaleMode === 'CROP') imageScaleMode = ImageScaleMode.Crop;
+            else if (fill.imageScaleMode === 'TILE') imageScaleMode = ImageScaleMode.Tile;
+            else imageScaleMode = ImageScaleMode.Fill;
+            f.imageScaleMode = imageScaleMode;
+
+            f.originalImageWidth = fill.originalImageWidth;
+            f.originalImageHeight = fill.originalImageHeight;
+            f.scale = fill.scale;
+            const t = fill.transform;
+            if (t) f.transform = new PatternTransform(t.m00, t.m01, t.m02, t.m10, t.m11, t.m12);
         }
 
         result.push(f);
@@ -192,6 +216,16 @@ function parseFills(
 function importFills(ctx: LoadContext, style: Style, data: IJSON) {
     const fills = parseFills(ctx, data as any, style.fills.length, data.size);
     if (fills) style.fills.push(...fills);
+}
+
+
+const strokeStyleKeys = [
+    'strokePaints', 'strokeAlign', 'strokeWeight', 'strokeJoin', 'dashPattern', 'borderStrokeWeightsIndependent',
+    'borderTopWeight', 'borderBottomWeight', 'borderLeftWeight', 'borderRightWeight',
+]
+
+function hasStrokeProp(data: any) {
+    return strokeStyleKeys.some(key => key in data);
 }
 
 function parseStroke(strokes: {
@@ -287,6 +321,15 @@ function importStroke(ctx: LoadContext, style: Style, data: IJSON) {
     if (strokes) style.borders.push(...strokes);
 }
 
+
+const effectStyleKeys = [
+    'effects',
+]
+
+function hasEffectProp(data: any) {
+    return effectStyleKeys.some(key => key in data);
+}
+
 function parseEffects(effects0: {
     effects: IJSON[],
 }, effectsIndex: number = 0) {
@@ -325,6 +368,51 @@ function parseEffects(effects0: {
     }
 
     return result;
+}
+
+const textStyleKeys = [
+    'fontSize', 'letterSpacing', 'fontName', 'lineHeight', 'strokePaints', 'textAlignHorizontal', 'textAlignVertical',
+    'textDecoration', 'textCase', 'paragraphSpacing', 'listSpacing', 'textAutoResize',
+]
+
+const textStyleKeys1 = [
+    'fillPaints',
+]
+
+function hasTextProp(data: any, ancestorData: any) {
+    return data.textData || textStyleKeys.some(key => key in data)
+        || (ancestorData.type === 'TEXT' && textStyleKeys1.some(key => key in ancestorData));
+}
+
+function getProps(obj: any, keys: string[]) {
+    const result: any = {};
+    for (const key of keys) if (key in obj) result[key] = obj[key];
+    return result;
+}
+
+function importStyleFromId(styleKeyName: string, styleKeys: string[], data: any, result: any, nodeChangesMap: Map<string, IJSON>, nodeKeyMap: Map<string, IJSON>) {
+    const styleId = data[styleKeyName];
+    if (!styleId) return;
+    const styleIdGuid = styleId.guid;
+    const styleIdRefKey = styleId.assetRef?.key;
+    const styleIdNode = styleIdGuid ? nodeChangesMap.get(toStrId(styleIdGuid)) : nodeKeyMap.get(styleIdRefKey);
+    if (styleIdNode) {
+        Object.assign(result, getProps(styleIdNode, styleKeys));
+        result[styleKeyName + 'Node'] = styleIdNode;
+    }
+}
+
+function importTextStyleFromId(data: any, result: any, nodeChangesMap: Map<string, IJSON>, nodeKeyMap: Map<string, IJSON>) {
+    return importStyleFromId('styleIdForText', [...textStyleKeys, ...textStyleKeys1], data, result, nodeChangesMap, nodeKeyMap);
+}
+
+function importFillStyleFromId(data: any, result: any, nodeChangesMap: Map<string, IJSON>, nodeKeyMap: Map<string, IJSON>) {
+    return importStyleFromId('styleIdForFill', fillStyleKeys, data, result, nodeChangesMap, nodeKeyMap);
+}
+
+export function importStylesFromId(data: any, result: any, nodeChangesMap: Map<string, IJSON>, nodeKeyMap: Map<string, IJSON>) {
+    importTextStyleFromId(data, result, nodeChangesMap, nodeKeyMap);
+    importFillStyleFromId(data, result, nodeChangesMap, nodeKeyMap);
 }
 
 function importEffects(ctx: LoadContext, style: Style, data: IJSON) {
@@ -392,7 +480,7 @@ function importComponentPropRefs(ctx: LoadContext, data: IJSON, shape: Shape, ra
     }
 }
 
-function importSymbolOverrides(ctx: LoadContext, data: IJSON, shape: Shape, rawVariables: Map<string, IJSON>, variables: BasicMap<string, Variable>, nodeChangesMap: Map<string, IJSON>) {
+function importSymbolOverrides(ctx: LoadContext, data: IJSON, shape: Shape, rawVariables: Map<string, IJSON>, variables: BasicMap<string, Variable>, nodeChangesMap: Map<string, IJSON>, nodeKeyMap: Map<string, IJSON>) {
     const symbolOverrides = data.symbolData?.symbolOverrides;
     if (!Array.isArray(symbolOverrides)) return;
 
@@ -410,31 +498,88 @@ function importSymbolOverrides(ctx: LoadContext, data: IJSON, shape: Shape, rawV
         const guids = guidPath?.guids;
         if (!Array.isArray(guids) || guids.length === 0) continue;
 
-        const shapeIds = guids.map(guid => nodeChangesMap.get(toStrId(guid))?.kcId);
-        if (shapeIds.find(id => !id)) continue;
+        const guidsNodes = guids.map(guid => nodeChangesMap.get(toStrId(guid)));
+        if (guidsNodes.some(node => !node)) continue;
+        guidPath.guidsNodes = guidsNodes;
 
-        const varId = uuid();
+        const shapeIds = guidsNodes.map(node => node!.kcId);
         const joinId = shapeIds.join('/');
 
-        if (symbolOverride.fillPaints) {
-            const fills = parseFills(ctx, symbolOverride);
+        // 叠加的属性
+        const _guids = [...guids].reverse();
+        const ancestorData = nodeChangesMap.get(toStrId(_guids[0]));
+        let overlayProps = {
+            ...ancestorData,
+        };
+        for (let i = 1; i < _guids.length; i++) {
+            const guid = _guids[i];
+            const item = nodeChangesMap.get(toStrId(guid));
+            if (!item) continue;
+            const itemSymbolOverrides = item.symbolData?.symbolOverrides
+            if (!Array.isArray(itemSymbolOverrides)) continue;
+            const itemSymbolOverride = itemSymbolOverrides.find(item => {
+                const itemGuids = item.guidPath.guids as [];
+                if (itemGuids.length !== i) return false;
+                // 每一级guid都相等
+                return itemGuids.find((v, j) => {
+                    return toStrId(v) !== toStrId(_guids[i - 1 - j]);
+                }) === undefined;
+            });
+            if (!itemSymbolOverride) continue;
+            overlayProps = {
+                ...overlayProps,
+                ...itemSymbolOverride,
+            }
+        }
+        overlayProps = {
+            ...overlayProps,
+            ...symbolOverride,
+        };
+
+        importStylesFromId(symbolOverride, overlayProps, nodeChangesMap, nodeKeyMap);
+
+        if (hasTextProp(symbolOverride, ancestorData) && overlayProps.textData) {
+            const text = importText(overlayProps);
+            if (text) {
+                const varId = uuid();
+                shapeVariables.set(varId, new Variable(varId, VariableType.Text, 'text', text));
+                shapeOverrides.set(`${joinId}/${OverrideType.Text}`, varId);
+            }
+
+            continue;
+        }
+
+        if (hasFillProp(symbolOverride)) {
+            const fills = parseFills(ctx, overlayProps as any);
             if (fills) {
+                const varId = uuid();
                 shapeVariables.set(varId, new Variable(varId, VariableType.Fills, 'fills', fills));
                 shapeOverrides.set(`${joinId}/${OverrideType.Fills}`, varId);
             }
         }
 
-        if (symbolOverride.strokePaints) {
-            const strokes = parseStroke(symbolOverride);
+        if (hasStrokeProp(symbolOverride)) {
+            const strokes = parseStroke(overlayProps as any);
             if (strokes) {
+                const varId = uuid();
                 shapeVariables.set(varId, new Variable(varId, VariableType.Borders, 'borders', strokes));
                 shapeOverrides.set(`${joinId}/${OverrideType.Borders}`, varId);
             }
         }
 
-        if (symbolOverride.effects) {
-            const effects = parseEffects(symbolOverride);
+        if (hasRadiusProp(symbolOverride)) {
+            const radius = importRadius(ctx, overlayProps as any);
+            if (radius) {
+                const varId = uuid();
+                shapeVariables.set(varId, new Variable(varId, VariableType.CornerRadius, 'radius', radius));
+                shapeOverrides.set(`${joinId}/${OverrideType.CornerRadius}`, varId);
+            }
+        }
+
+        if (hasEffectProp(symbolOverride)) {
+            const effects = parseEffects(overlayProps as any);
             if (effects) {
+                const varId = uuid();
                 shapeVariables.set(varId, new Variable(varId, VariableType.Shadows, 'effects', effects));
                 shapeOverrides.set(`${joinId}/${OverrideType.Shadows}`, varId);
             }
@@ -447,13 +592,20 @@ function importLocked(ctx: LoadContext, data: IJSON, shape: Shape) {
     shape.isLocked = data.locked;
 }
 
-function importRadius(ctx: LoadContext, data: IJSON, shape: Shape) {
+function hasRadiusProp(data: any) {
+    return data.cornerRadius || data.rectangleCornerRadiiIndependent || data.rectangleTopLeftCornerRadius || data.rectangleTopRightCornerRadius || data.rectangleBottomRightCornerRadius || data.rectangleBottomLeftCornerRadius;
+}
+
+function importRadius(ctx: LoadContext, data: IJSON, shape?: Shape) {
     const cornerRadius = data.cornerRadius;
     const rectangleCornerRadiiIndependent = data.rectangleCornerRadiiIndependent;
     const rectangleTopLeftCornerRadius = rectangleCornerRadiiIndependent ? data.rectangleTopLeftCornerRadius : cornerRadius;
     const rectangleTopRightCornerRadius = rectangleCornerRadiiIndependent ? data.rectangleTopRightCornerRadius : cornerRadius;
     const rectangleBottomRightCornerRadius = rectangleCornerRadiiIndependent ? data.rectangleBottomRightCornerRadius : cornerRadius;
     const rectangleBottomLeftCornerRadius = rectangleCornerRadiiIndependent ? data.rectangleBottomLeftCornerRadius : cornerRadius;
+
+    const _cornerRadius = new CornerRadius(rectangleTopLeftCornerRadius, rectangleTopRightCornerRadius, rectangleBottomRightCornerRadius, rectangleBottomLeftCornerRadius);
+    if (!shape) return _cornerRadius;
 
     const pathsegs = (shape as PathShape).pathsegs;
     if (pathsegs) {
@@ -472,8 +624,10 @@ function importRadius(ctx: LoadContext, data: IJSON, shape: Shape) {
     }
 
     if (shape instanceof Artboard || shape instanceof SymbolShape || shape instanceof SymbolRefShape) {
-        shape.cornerRadius = new CornerRadius(rectangleTopLeftCornerRadius, rectangleTopRightCornerRadius, rectangleBottomRightCornerRadius, rectangleBottomLeftCornerRadius);
+        shape.cornerRadius = _cornerRadius;
     }
+
+    return _cornerRadius;
 }
 
 function importBlend(ctx: LoadContext, data: IJSON, shape: Shape) {
@@ -564,9 +718,9 @@ function importConstraint(ctx: LoadContext, data: IJSON, shape: Shape) {
     shape.resizingConstraint = status;
 }
 
-function importShapeProperty(ctx: LoadContext, data: IJSON, shape: Shape, nodeChangesMap: Map<string, IJSON>) {
+function importShapeProperty(ctx: LoadContext, data: IJSON, shape: Shape, nodeChangesMap: Map<string, IJSON>, nodeKeyMap: Map<string, IJSON>) {
     importComponentPropRefs(ctx, data, shape, ctx.rawVariables, ctx.variables);
-    importSymbolOverrides(ctx, data, shape, ctx.rawVariables, ctx.variables, nodeChangesMap);
+    importSymbolOverrides(ctx, data, shape, ctx.rawVariables, ctx.variables, nodeChangesMap, nodeKeyMap);
     importLocked(ctx, data, shape);
     importRadius(ctx, data, shape);
     importBlend(ctx, data, shape);
@@ -575,9 +729,10 @@ function importShapeProperty(ctx: LoadContext, data: IJSON, shape: Shape, nodeCh
     importConstraint(ctx, data, shape);
 }
 
-export function importPage(ctx: LoadContext, data: IJSON, f: ImportFun, nodeChangesMap: Map<string, IJSON>): Page {
+export function importPage(ctx: LoadContext, data: IJSON, f: ImportFun, nodeChangesMap: Map<string, IJSON>, nodeKeyMap: Map<string, IJSON>): Page {
     const visible = data.visible;
     const frame = importShapeFrame(data);
+
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
     importStyle(ctx, style, data);
 
@@ -586,7 +741,12 @@ export function importPage(ctx: LoadContext, data: IJSON, f: ImportFun, nodeChan
 
     shape.isVisible = visible;
 
-    importShapeProperty(ctx, data, shape, nodeChangesMap);
+    importShapeProperty(ctx, data, shape, nodeChangesMap, nodeKeyMap);
+
+    const backgroundColor = data.backgroundColor;
+    if (backgroundColor) shape.backgroundColor = importColor(backgroundColor);
+
+    data.shape = shape;
 
     return shape;
 }
@@ -741,7 +901,7 @@ function importSegments(data: IJSON): {
     return result;
 }
 
-export function importPathShape(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>): PathShape {
+export function importPathShape(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>, nodeKeyMap: Map<string, IJSON>): PathShape {
     const frame = importShapeFrame(data);
     const visible = data.visible;
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
@@ -773,12 +933,14 @@ export function importPathShape(ctx: LoadContext, data: IJSON, f: ImportFun, ind
     shape.isVisible = visible;
     shape.style = style;
 
-    importShapeProperty(ctx, data, shape, nodeChangesMap);
+    importShapeProperty(ctx, data, shape, nodeChangesMap, nodeKeyMap);
+
+    data.shape = shape;
 
     return shape;
 }
 
-export function importPolygon(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>): PathShape {
+export function importPolygon(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>, nodeKeyMap: Map<string, IJSON>): PathShape {
     const frame = importShapeFrame(data);
     const visible = data.visible;
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
@@ -795,12 +957,14 @@ export function importPolygon(ctx: LoadContext, data: IJSON, f: ImportFun, index
     shape.isVisible = visible;
     shape.style = style;
 
-    importShapeProperty(ctx, data, shape, nodeChangesMap);
+    importShapeProperty(ctx, data, shape, nodeChangesMap, nodeKeyMap);
+
+    data.shape = shape;
 
     return shape;
 }
 
-export function importStar(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>): PathShape {
+export function importStar(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>, nodeKeyMap: Map<string, IJSON>): PathShape {
     const frame = importShapeFrame(data);
     const visible = data.visible;
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
@@ -819,12 +983,14 @@ export function importStar(ctx: LoadContext, data: IJSON, f: ImportFun, index: n
     shape.isVisible = visible;
     shape.style = style;
 
-    importShapeProperty(ctx, data, shape, nodeChangesMap);
+    importShapeProperty(ctx, data, shape, nodeChangesMap, nodeKeyMap);
+
+    data.shape = shape;
 
     return shape;
 }
 
-export function importLine(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>): PathShape {
+export function importLine(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>, nodeKeyMap: Map<string, IJSON>): PathShape {
     const frame = importShapeFrame(data);
     const visible = data.visible;
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
@@ -843,12 +1009,14 @@ export function importLine(ctx: LoadContext, data: IJSON, f: ImportFun, index: n
     shape.isVisible = visible;
     shape.style = style;
 
-    importShapeProperty(ctx, data, shape, nodeChangesMap);
+    importShapeProperty(ctx, data, shape, nodeChangesMap, nodeKeyMap);
+
+    data.shape = shape;
 
     return shape;
 }
 
-export function importEllipse(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>): OvalShape {
+export function importEllipse(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>, nodeKeyMap: Map<string, IJSON>): OvalShape {
     const frame = importShapeFrame(data);
     const visible = data.visible;
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
@@ -859,15 +1027,17 @@ export function importEllipse(ctx: LoadContext, data: IJSON, f: ImportFun, index
     shape.isVisible = visible;
     shape.style = style;
 
-    importShapeProperty(ctx, data, shape, nodeChangesMap);
+    importShapeProperty(ctx, data, shape, nodeChangesMap, nodeKeyMap);
+
+    data.shape = shape;
 
     return shape;
 }
 
-export function importGroup(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>): GroupShape {
+export function importGroup(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>, nodeKeyMap: Map<string, IJSON>): GroupShape {
     const booleanOperation = data.booleanOperation;
     if (!data.resizeToFit && !booleanOperation) {
-        return importArtboard(ctx, data, f, index, nodeChangesMap);
+        return importArtboard(ctx, data, f, index, nodeChangesMap, nodeKeyMap);
     }
 
     const frame = importShapeFrame(data);
@@ -894,14 +1064,16 @@ export function importGroup(ctx: LoadContext, data: IJSON, f: ImportFun, index: 
 
     shape.isVisible = visible;
 
-    importShapeProperty(ctx, data, shape, nodeChangesMap);
+    importShapeProperty(ctx, data, shape, nodeChangesMap, nodeKeyMap);
+
+    data.shape = shape;
 
     return shape;
 }
 
-export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>): Artboard {
+export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>, nodeKeyMap: Map<string, IJSON>): Artboard {
     if (data.isStateGroup) {
-        return importSymbolUnion(ctx, data, f, index, nodeChangesMap);
+        return importSymbolUnion(ctx, data, f, index, nodeChangesMap, nodeKeyMap);
     }
 
     const frame = importShapeFrame(data);
@@ -914,12 +1086,14 @@ export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun, inde
     const shape = new Artboard([index] as BasicArray<number>, id, data.name, ShapeType.Artboard, frame.trans, style, new BasicArray<Shape>(...childs), frame.size);
     shape.isVisible = visible;
 
-    importShapeProperty(ctx, data, shape, nodeChangesMap);
+    importShapeProperty(ctx, data, shape, nodeChangesMap, nodeKeyMap);
+
+    data.shape = shape;
 
     return shape;
 }
 
-export function importTextShape(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>): TextShape {
+export function importTextShape(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>, nodeKeyMap: Map<string, IJSON>): TextShape {
     const frame = importShapeFrame(data);
     const visible = data.visible;
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
@@ -928,25 +1102,14 @@ export function importTextShape(ctx: LoadContext, data: IJSON, f: ImportFun, ind
     const id = data.kcId || uuid();
 
     // const textStyle = data.style && data.style['textStyle'];
-    const text: Text = data.textData && importText(data.textData, data);
-    const textBehaviour = ((textAutoResize: string) => {
-        switch (textAutoResize) {
-            case "HEIGHT":
-                return TextBehaviour.Fixed;
-            case "NONE":
-                return TextBehaviour.FixWidthAndHeight;
-            case "WIDTH_AND_HEIGHT":
-                return TextBehaviour.Flexible;
-            default:
-                return TextBehaviour.Flexible;
-        }
-    })(data.textAutoResize);
-    text.attr && (text.attr.textBehaviour = textBehaviour);
+    const text: Text = data.textData && importText(data);
 
     const shape = new TextShape([index] as BasicArray<number>, id, data.name, ShapeType.Text, frame.trans, style, frame.size, text);
     shape.isVisible = visible;
 
-    importShapeProperty(ctx, data, shape, nodeChangesMap);
+    importShapeProperty(ctx, data, shape, nodeChangesMap, nodeKeyMap);
+
+    data.shape = shape;
 
     return shape;
 }
@@ -1013,7 +1176,7 @@ function importVariables(rawVariables: Map<string, IJSON>, variables: BasicMap<s
     return [rawVariables1, variables1];
 }
 
-export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>): SymbolShape {
+export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>, nodeKeyMap: Map<string, IJSON>): SymbolShape {
     const frame = importShapeFrame(data);
     const visible = data.visible;
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
@@ -1026,12 +1189,14 @@ export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun, index:
     const shape = new SymbolShape([index] as BasicArray<number>, id, data.name, ShapeType.Symbol, frame.trans, style, new BasicArray<Shape>(...childs), frame.size, variablesRes[1]);
     shape.isVisible = visible;
 
-    importShapeProperty(ctx, data, shape, nodeChangesMap);
+    importShapeProperty(ctx, data, shape, nodeChangesMap, nodeKeyMap);
+
+    data.shape = shape;
 
     return shape;
 }
 
-export function importSymbolRef(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>): SymbolRefShape {
+export function importSymbolRef(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>, nodeKeyMap: Map<string, IJSON>): SymbolRefShape {
     const frame = importShapeFrame(data);
     const visible = data.visible;
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
@@ -1043,16 +1208,19 @@ export function importSymbolRef(ctx: LoadContext, data: IJSON, f: ImportFun, ind
     const symbolId = toStrId(data.symbolData.symbolID);
     const symbol = nodeChangesMap.get(symbolId);
     const symbolRawID = symbol?.kcId;
+    data.symbolData.symbolData = symbol;
 
     const shape = new SymbolRefShape([index] as BasicArray<number>, id, data.name, ShapeType.SymbolRef, frame.trans, style, frame.size, symbolRawID, variablesRes[1]);
     shape.isVisible = visible;
 
-    importShapeProperty(ctx, data, shape, nodeChangesMap);
+    importShapeProperty(ctx, data, shape, nodeChangesMap, nodeKeyMap);
+
+    data.shape = shape;
 
     return shape;
 }
 
-export function importSymbolUnion(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>): SymbolUnionShape {
+export function importSymbolUnion(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>, nodeKeyMap: Map<string, IJSON>): SymbolUnionShape {
     const frame = importShapeFrame(data);
     const visible = data.visible;
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
@@ -1087,12 +1255,14 @@ export function importSymbolUnion(ctx: LoadContext, data: IJSON, f: ImportFun, i
     const shape = new SymbolUnionShape([index] as BasicArray<number>, id, data.name, ShapeType.SymbolUnion, frame.trans, style, new BasicArray<Shape>(...childs), frame.size, variablesRes[1]);
     shape.isVisible = visible;
 
-    importShapeProperty(ctx, data, shape, nodeChangesMap);
+    importShapeProperty(ctx, data, shape, nodeChangesMap, nodeKeyMap);
+
+    data.shape = shape;
 
     return shape;
 }
 
-export function importSlice(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>): CutoutShape {
+export function importSlice(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>, nodeKeyMap: Map<string, IJSON>): CutoutShape {
     const frame = importShapeFrame(data);
     const visible = data.visible;
     const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
@@ -1112,7 +1282,9 @@ export function importSlice(ctx: LoadContext, data: IJSON, f: ImportFun, index: 
     shape.isVisible = visible;
     shape.style = style;
 
-    importShapeProperty(ctx, data, shape, nodeChangesMap);
+    importShapeProperty(ctx, data, shape, nodeChangesMap, nodeKeyMap);
+
+    data.shape = shape;
 
     return shape;
 }

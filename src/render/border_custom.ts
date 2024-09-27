@@ -1,4 +1,4 @@
-import { Border, BorderPosition, BorderSideSetting, CornerType, CurveMode, CurvePoint, FillType, Gradient, GradientType, Path, Shape, ShapeSize, SideType, parsePath } from "../data/classes";
+import { Border, BorderPosition, BorderSideSetting, CornerType, CurveMode, CurvePoint, FillType, Gradient, GradientType, Shape, ShapeSize, SideType, parsePath } from "../data/classes";
 import { render as renderGradient } from "./gradient";
 import { objectId } from '../basic/objectid';
 import { randomId } from "./basic";
@@ -390,7 +390,7 @@ const outer_mask_path = (shape: Shape, border: Border, iscenter: boolean) => {
         const p6 = new CurvePoint([] as any, '', 0, height + b, CurveMode.Straight);
         const p7 = new CurvePoint([] as any, '', -l, height, CurveMode.Straight);
         const p8 = new CurvePoint([] as any, '', -l, 0, CurveMode.Straight);
-        const path = new Path(parsePath(new BasicArray<CurvePoint>(p1, p2, p3, p4, p5, p6, p7, p8), true, w, h, undefined));
+        const path = (parsePath(new BasicArray<CurvePoint>(p1, p2, p3, p4, p5, p6, p7, p8), true, w, h, undefined));
         const m = new Matrix();
         m.preScale(w, h);
         path.transform(new Matrix(m.inverse));
@@ -436,7 +436,7 @@ const outer_radius_border_path = (radius: number[], frame: ShapeSize, side: Bord
     }
     let w = width + r + l, h = height + t + b
 
-    const path = new Path(parsePath(new BasicArray<CurvePoint>(p1, p2, p3, p4), true, w, h, undefined));
+    const path = (parsePath(new BasicArray<CurvePoint>(p1, p2, p3, p4), true, w, h, undefined));
     path.translate(-l, -t);
     return path.toString();
 }
@@ -507,7 +507,7 @@ const mask_surplus_path = (frame: ShapeSize, r: number[], side: BorderSideSettin
     const p4 = new CurvePoint([] as any, '', _p4.x, _p4.y, CurveMode.Straight);
     const m_x = Math.max(_p2.x, _p3.x);
     const m_y = Math.max(_p3.y, _p4.y);
-    const path = new Path(parsePath(new BasicArray<CurvePoint>(p1, p2, p3, p4), true, m_x, m_y, undefined));
+    const path = (parsePath(new BasicArray<CurvePoint>(p1, p2, p3, p4), true, m_x, m_y, undefined));
     const m = new Matrix();
     m.preScale(m_x, m_y);
     path.transform(new Matrix(m.inverse));
@@ -546,7 +546,7 @@ const inner_mask_path = (shape: Shape, border: Border, iscenter: boolean) => {
     }
     let w = (tr + tl) > width ? 0 : width - (tr + tl), h = (tt + tb) > height ? 0 : height - (tt + tb)
 
-    const path = new Path(parsePath(new BasicArray<CurvePoint>(p1, p2, p3, p4), true, w, h, undefined));
+    const path = (parsePath(new BasicArray<CurvePoint>(p1, p2, p3, p4), true, w, h, undefined));
     path.translate(tl, tt);
     return path.toString();
 }

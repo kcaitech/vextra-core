@@ -1,11 +1,11 @@
-import { BulletNumbersType, Text, TextBehaviour } from "./text";
+import { BulletNumbersType, ParaIter, ParaIterItem, Text, TextBehaviour } from "./text";
 import { Para, Span, SpanAttr, TextHorAlign, TextVerAlign } from "./text";
-import { BasicArray } from "./basic"
 import { layoutBulletNumber } from "./textbnlayout";
 import { transformText } from "./textlayouttransform";
-import { gPal } from "../basic/pal";
-import { ShapeSize } from "./typesdefine";
-import { TEXT_BASELINE_RATIO } from "./consts";
+import { gPal } from "../../basic/pal";
+import { ParaAttr, ShapeSize, TextTransformType } from "../typesdefine";
+import { autoLineHeight, TEXT_BASELINE_RATIO } from "./basic";
+import { isLetter, isNewLineCharCode, isPureHeadPunc, isTailPunc } from "./basic";
 
 const TAB_WIDTH = 28;
 const INDENT_WIDTH = TAB_WIDTH;
@@ -18,6 +18,7 @@ export interface IGraphy {
     index: number,
     x: number,
     cc: number // char count
+    subgraphys?: IGraphy[] // 用于项目符号编号等的排版
 }
 
 export class GraphArray extends Array<IGraphy> {
@@ -62,6 +63,7 @@ export class Line extends Array<GraphArray> {
     public layoutWidth: number = 0;
 
     push(...items: GraphArray[]): number {
+        if (items.length === 0) return 0
         if (items.length === 1) {
             // this.actualBoundingBoxDescent = Math.max(this.actualBoundingBoxDescent, items[0].actualBoundingBoxDescent || 0);
             this.maxFontSize = Math.max(this.maxFontSize, items[0].attr?.fontSize || 0);
@@ -72,6 +74,14 @@ export class Line extends Array<GraphArray> {
             this.maxFontSize = items.reduce((p, c) => Math.max(p, c.attr?.fontSize || 0), this.maxFontSize);
             this.charCount += items.reduce((p, c) => p + c.charCount, 0);
             this.graphCount += items.length;
+        }
+        if (this.length > 0) {
+            const pre = this[this.length - 1]
+            const cur = items[0];
+            if (pre.attr === cur.attr) { // merge
+                pre.push(...cur);
+                items.splice(0, 1);
+            }
         }
         return super.push(...items);
     }
@@ -355,278 +365,200 @@ function adjustLineHorAlign(line: Line, align: TextHorAlign, width: number) {
     line.layoutWidth = width;
 }
 
-export function isNewLineCharCode(code: number) {
-    // U+0009: Horizontal tab
-    // U+000A: Line feed
-    // U+000B: Vertical tab
-    // U+000C: Form feed
-    // U+000D: Carriage return
-    // U+0020: Space
-    // U+00A0: Non-breaking space
-    // U+2028: Line separator
-    // U+2029: Paragraph separator
-    switch (code) {
-        case 0x0A:
-        case 0x0D:
-        case 0x2028:
-        case 0x2029:
-            return true;
+function _nextGraphy(span: Span, lineArray: LineArray, c: string, idx: number, transfrom?: TextTransformType): IGraphy {
+    const transformType = span.transform ?? transfrom;
+    const char = transformText(c, idx === 0 || (idx === 1 && !!lineArray.bulletNumbers), transformType);
+
+    const italic = span.italic;
+    const weight = span.weight || 400;
+    const fontSize = span.fontSize ?? 0;
+    const font = (italic ? 'italic ' : 'normal ') + weight + ' ' + fontSize + 'px ' + span.fontName;
+    const measure = gPal.text.textMeasure;
+    const m = measure(char, font);
+    const cw = m?.width ?? 0;
+    const ch = typeof fontSize !== 'number' ? Number.parseFloat(fontSize) : fontSize; // fix bug: 数据中存在字符串类型的fontsize时，后续出错
+
+    return {
+        char,
+        metrics: m,
+        cw,
+        ch,
+        index: idx,
+        x: 0,
+        cc: c.length
     }
-    return false;
 }
 
-// https://www.jianshu.com/p/42fd6f84c27a
-export function getNextChar(text: string, index: number): string {
-    const code = text.charCodeAt(index);
-    if (!(0xD800 <= code && code <= 0xDBFF)) return text.charAt(index);
+function nextGraphy(iter: ParaIter, lineArray: LineArray, preBulletNumbers: BulletNumbersLayout[]): { type: 'ch' | 'nl' | 'bn', graphys: GraphArray[] } { // 可能多个span，
+    let cur = iter.next();
+    const c = cur.char;
+    const code = c.charCodeAt(0);
+    const span = cur.span;
 
-    const code2 = text.charCodeAt(index + 1);
-    if (!(0xDC00 <= code2 && code2 <= 0xDFFF)) return text.charAt(index);
-
-    // 还要判断下一个
-    const code3 = text.charCodeAt(index + 2);
-    if (code3 === 0x200D) { // 零宽度连接符
-        return String.fromCharCode(code, code2, code3) + getNextChar(text, index + 3);
+    if (c.length === 1 && isNewLineCharCode(code)) {
+        // new line
+        const graphArray = new GraphArray();
+        // '\n'
+        graphArray.attr = span;
+        graphArray.push({
+            char: '\n',
+            metrics: undefined,
+            cw: 0, // ?
+            ch: span.fontSize ?? 0,
+            index: cur.idx,
+            x: 0,
+            cc: 1
+        });
+        return { type: 'nl', graphys: [graphArray] }
     }
-    return String.fromCharCode(code, code2);
+
+    if (c.length === 1 &&
+        cur.spanIdx === 0 &&
+        code === 0x2A &&
+        span.placeholder &&
+        span.length === 1 &&
+        span.bulletNumbers) { // '*' 项目符号编号
+
+        // bullet number
+        const layout = layoutBulletNumber(iter.para, span, span.bulletNumbers, preBulletNumbers); // todo graphyGroup, 支持排版项目符号
+
+        const graphArray = new GraphArray();
+        graphArray.attr = span;
+
+        graphArray.push(layout.graph);
+
+        lineArray.bulletNumbers = layout;
+        return { type: 'bn', graphys: [graphArray] }
+    }
+
+    // todo tab 不对
+    // indent 未处理
+    const transformType = iter.para.attr?.transform;
+
+    // text
+    // todo 英文字符不截断
+    // todo 标点符号位置正确
+
+
+    let graphArray = new GraphArray();
+    graphArray.attr = span;
+    graphArray.push(_nextGraphy(span, lineArray, cur.char, cur.idx, transformType));
+
+    const appendGraphy = (next: ParaIterItem) => {
+        if (graphArray.attr === next.span) {
+            graphArray.push(_nextGraphy(next.span, lineArray, next.char, next.idx, transformType));
+        } else {
+            graphArray = new GraphArray();
+            graphArray.attr = next.span;
+            graphArray.push(_nextGraphy(next.span, lineArray, next.char, next.idx, transformType));
+            ret.push(graphArray)
+        }
+    }
+
+    const ret: GraphArray[] = [graphArray];
+    while (iter.hasNext()) {
+        let next = iter.peekNext();
+        // 当前是字符,后面的也是字符，需要加到当前graphy，继续
+        // 后面的是不可在行首的符号，需要加到当前graphy，结束
+        // 当前是不可在行尾的符号，后面需要加个字符啥的，继续
+        if (isLetter(cur.char) && isLetter(next.char) || isPureHeadPunc(cur.char)) {
+            cur = iter.next();
+            appendGraphy(cur);
+            continue;
+        }
+        if (isTailPunc(next.char)) {
+            cur = iter.next();
+            appendGraphy(cur);
+            break;
+        }
+        break;
+    }
+    return { type: 'ch', graphys: ret }
 }
 
 export function layoutLines(_text: Text, para: Para, width: number, preBulletNumbers: BulletNumbersLayout[]): LineArray {
-    const measure = gPal.text.textMeasure;
-    let spans = para.spans;
-    let spansCount = spans.length;
-    if (spansCount === 0) {
-        if (para.length === 0) {
-            return [];
-        }
-        spansCount = 1;
-        spans = new BasicArray<Span>(new Span(para.length)); // fix
-    }
-    // const frame = shape.frame;
-    // const width = frame.width;
+
     const paraCharSpace = para.attr?.kerning ?? 0;
-
-    const text = para.text;
-    let textIdx = 0
-    const textLen = text.length
-
-    let spanIdx = 0, spanOffset = 0
-    let span = spans[spanIdx];
-    const italic = span.italic;
-    const weight = span.weight || 400;
-    const fontSize = span.fontSize;
-    // font = "normal " + span.fontSize + "px " + span.fontName;
-    let font = (italic ? 'italic ' : 'normal ') + weight + ' ' + fontSize + 'px ' + span.fontName;
-    // let font = "normal " + span.fontSize + "px " + span.fontName;
-
     const indent = (para.attr?.indent || 0) * INDENT_WIDTH;
-    const startX = Math.min(indent, width), endX = width;
-    let curX = startX;
-
-    let graphArray: GraphArray | undefined;
-    let line: Line = new Line();
     const lineArray: LineArray = [];
+    const iter = para.iter();
+    let startX = Math.min(indent, width), endX = width;
+    let curX = startX;
+    let line: Line = new Line();
 
-    let preSpanIdx = spanIdx;
+    const assignGraphysX = (graphys: GraphArray[], curX: number) => {
+        graphys.forEach(arr => arr.forEach(g => {
+            g.x = curX;
+            curX += g.cw + (arr.attr?.kerning ?? paraCharSpace);
+        }))
+    }
 
-    const defaultTransform = (para.attr?.transform) ?? (_text.attr?.transform);
+    while (iter.hasNext()) {
+        const next = nextGraphy(iter, lineArray, preBulletNumbers);
+        const graphys = next.graphys;
 
-    for (; textIdx < textLen;) {
-        if (spanIdx >= spansCount) spanIdx = spansCount - 1; // fix
-
-        if (preSpanIdx !== spanIdx) {
-            preSpanIdx = spanIdx;
-            span = spans[spanIdx];
-            const italic = span.italic;
-            const weight = span.weight || 400;
-            const fontSize = span.fontSize;
-            // font = "normal " + span.fontSize + "px " + span.fontName;
-            font = (italic ? 'italic ' : 'normal ') + weight + ' ' + fontSize + 'px ' + span.fontName;
-        }
-
-        if (span.length === 0 && spanIdx < spansCount - 1) { // 不是最后一个空的span
-            spanIdx++;
-            continue;
-        }
-
-        const c = getNextChar(text, textIdx); //text.charCodeAt(textIdx);
-        const code = c.charCodeAt(0);
-        if (c.length === 1 && isNewLineCharCode(code)) {
-            // '\n'
-            if (!graphArray) {
-                graphArray = new GraphArray();
-                graphArray.attr = span;
-            }
-
-            let preGraph;
-            if (graphArray.length > 0) {
-                preGraph = graphArray[graphArray.length - 1];
-            }
-            else if (line.length > 0) {
-                const preGArr = line[line.length - 1];
-                preGraph = preGArr[preGArr.length - 1];
-            }
-            if (preGraph) {
-                curX = preGraph.x + preGraph.cw;
-            }
-
-            graphArray.push({
-                char: '\n',
-                metrics: undefined,
-                cw: 0, // ?
-                ch: span.fontSize ?? 0,
-                index: textIdx,
-                x: curX,
-                cc: 1
-            });
-            textIdx += c.length;
-            spanOffset++;
-            if (spanOffset >= span.length) {
-                spanOffset = 0;
-                spanIdx++;
-            }
-
-            line.push(graphArray);
-            graphArray = undefined; //new GraphArray();
+        if (next.type === 'nl') { // new line
+            assignGraphysX(graphys, curX);
+            line.push(...graphys);
             lineArray.push(line);
             line = new Line();
             curX = startX;
             continue;
         }
 
-        const charSpace = span.kerning ?? paraCharSpace;
-        if (c.length === 1 &&
-            spanIdx === 0 &&
-            code === 0x2A &&
-            span.placeholder &&
-            span.length === 1 &&
-            span.bulletNumbers) { // '*' 项目符号编号
-            const layout = layoutBulletNumber(para, span, span.bulletNumbers, preBulletNumbers);
-            layout.graph.x += curX;
-
-            if (!graphArray) {
-                graphArray = new GraphArray();
-                graphArray.attr = span;
-            }
-
-            graphArray.push(layout.graph);
-            curX = layout.graph.x + layout.graph.cw + charSpace;
-            textIdx += c.length;
-            spanOffset++;
-            if (spanOffset >= span.length) {
-                spanOffset = 0;
-                spanIdx++;
-                line.push(graphArray);
-                graphArray = undefined;
-            }
-            lineArray.bulletNumbers = layout;
-            continue;
+        const lastKerning = graphys[graphys.length - 1].attr?.kerning ?? paraCharSpace;
+        const cw = graphys.reduce((p, v0) => p + v0.reduce((p, g) => p + g.cw + (v0.attr?.kerning ?? paraCharSpace), 0), 0) - lastKerning; // todo字间距不对？
+        if (next.type === 'bn') {
+            // 调整startX
+            startX += cw + lastKerning;
         }
-
-        // todo tab 不对
-        // indent 未处理
-        const transformType = span.transform ?? defaultTransform;
-        const char = transformText(c, textIdx === 0 || (textIdx === 1 && !!lineArray.bulletNumbers), transformType);
-
-        const m = measure(char, font);
-        const cw = m?.width ?? 0;
-        const fontSize = span.fontSize ?? 0;
-        const ch = typeof fontSize !== 'number' ? Number.parseFloat(fontSize) : fontSize; // fix bug: 数据中存在字符串类型的fontsize时，后续出错
 
         if (cw + curX <= endX) { // cw + curX + charSpace <= endX,兼容sketch
-            if (!graphArray) {
-                graphArray = new GraphArray();
-                graphArray.attr = span;
-            }
-            graphArray.push({
-                char,
-                metrics: m,
-                cw,
-                ch,
-                index: textIdx,
-                x: curX,
-                cc: c.length
-            });
-
-            curX += cw + charSpace;
-            textIdx += c.length;
-            spanOffset++;
-            if (spanOffset >= span.length) {
-                spanOffset = 0;
-                spanIdx++;
-                line.push(graphArray);
-                graphArray = undefined;
-            }
+            assignGraphysX(graphys, curX);
+            line.push(...graphys);
+            curX += cw + lastKerning;
+            continue;
         }
-        else if (line.length === 0 && (!graphArray || graphArray.length === 0)) { // 至少一个字符
-            if (!graphArray) {
-                graphArray = new GraphArray();
-                graphArray.attr = span;
-            }
-            graphArray.push({
-                char,
-                metrics: m,
-                cw,
-                ch,
-                index: textIdx,
-                x: Math.max(0, endX - cw), // 挤进一个
-                cc: c.length
-            });
 
-            line.push(graphArray);
-            graphArray = undefined;
+        if (line.length === 0) {
+            assignGraphysX(graphys, curX);
+            line.push(...graphys);
             lineArray.push(line);
             line = new Line();
-
             curX = startX;
-            textIdx += c.length;
-            spanOffset++;
-            if (spanOffset >= span.length) {
-                spanOffset = 0;
-                spanIdx++;
-            }
+            continue;
         }
-        else {
-            if (graphArray) {
-                line.push(graphArray);
-            }
 
-            graphArray = new GraphArray();
-            graphArray.attr = span;
-            lineArray.push(line);
-            line = new Line();
-
-            curX = startX;
-            graphArray.push({
-                char,
-                metrics: m,
-                cw,
-                ch,
-                index: textIdx,
-                x: curX,
-                cc: c.length
-            });
-
-            curX += cw + charSpace;
-            textIdx += c.length;
-            spanOffset++;
-            if (spanOffset >= span.length) {
-                spanOffset = 0;
-                spanIdx++;
-                line.push(graphArray);
-                graphArray = undefined;
-            }
-        }
+        lineArray.push(line);
+        line = new Line();
+        assignGraphysX(graphys, startX);
+        line.push(...graphys);
+        curX = startX + cw + lastKerning;
+        continue;
     }
 
-    if (graphArray && graphArray.length > 0) {
-        line.push(graphArray);
-    }
     if (line.length > 0) {
         lineArray.push(line);
     }
 
     return lineArray;
+}
+
+function clampLineHeight(pAttr: ParaAttr | undefined, maxFontSize: number) {
+    if (!pAttr) return maxFontSize;
+    if (pAttr.autoLineHeight) {
+        // auto lineHeight
+        return autoLineHeight(maxFontSize)
+    }
+
+    let lineHeight = maxFontSize;
+    if (pAttr.maximumLineHeight) {
+        lineHeight = Math.min(pAttr.maximumLineHeight, lineHeight)
+    }
+    if (pAttr.minimumLineHeight) {
+        lineHeight = Math.max(pAttr.minimumLineHeight, lineHeight);
+    }
+    return lineHeight;
 }
 
 export function layoutPara(text: Text, para: Para, layoutWidth: number, preBulletNumbers: BulletNumbersLayout[]) {
@@ -637,13 +569,8 @@ export function layoutPara(text: Text, para: Para, layoutWidth: number, preBulle
     let graphCount = 0;
     let charCount = 0;
     const lines = layouts.map((line) => {
-        let lineHeight = line.maxFontSize;
-        if (pAttr && pAttr.maximumLineHeight) {
-            lineHeight = Math.min(pAttr.maximumLineHeight, lineHeight)
-        }
-        if (pAttr && pAttr.minimumLineHeight) {
-            lineHeight = Math.max(pAttr.minimumLineHeight, lineHeight);
-        }
+        const lineHeight = clampLineHeight(pAttr, line.maxFontSize);
+
         const y = paraHeight;
         paraHeight += lineHeight;
         graphCount += line.graphCount;

@@ -1,0 +1,76 @@
+{
+    "description": "auto layout",
+    "type": "object",
+    "properties": {
+        "typeId": {
+            "type": "string",
+            "default": "shape"
+        },
+        "stackMode": {
+            "$ref": "./stack-mode.json"
+        },
+        "stackWrap": {
+            "$ref": "./stack-wrap.json"
+        },
+        "stackSpacing": {
+            "type": "number"
+        },
+        "stackCounterSpacing": {
+            "type": "number"
+        },
+        "stackHorizontalGapSizing": {
+            "$ref": "./stack-sizing.json"
+        },
+        "stackVerticalGapSizing": {
+            "$ref": "./stack-sizing.json"
+        },
+        "stackHorizontalPadding": {
+            "type": "number"
+        },
+        "stackVerticalPadding": {
+            "type": "number"
+        },
+        "stackPaddingRight": {
+            "type": "number"
+        },
+        "stackPaddingBottom": {
+            "type": "number"
+        },
+        "stackPrimarySizing": {
+            "$ref": "./stack-sizing.json"
+        },
+        "stackCounterSizing": {
+            "$ref": "./stack-sizing.json"
+        },
+        "stackPrimaryAlignItems": {
+            "$ref": "./stack-align.json"
+        },
+        "stackCounterAlignItems": {
+            "$ref": "./stack-align.json"
+        },
+        "stackReverseZIndex": {
+            "type": "boolean",
+            "default": false
+        },
+        "bordersTakeSpace": {
+            "type": "boolean",
+            "default": false
+        },
+        "minSize": {
+            "$ref": "./stack-size.json"
+        },
+        "maxSize": {
+            "$ref": "./stack-size.json"
+        }
+    },
+    "required": [
+        "typeId",
+        "stackSpacing",
+        "stackCounterSpacing",
+        "stackHorizontalPadding",
+        "stackVerticalPadding",
+        "stackPaddingRight",
+        "stackPaddingBottom"
+    ],
+    "additionalProperties": false
+}

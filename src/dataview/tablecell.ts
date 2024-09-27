@@ -1,14 +1,15 @@
-import { TextLayout } from "../data/textlayout";
-import { BlurType, Path, ShapeFrame, TableCell, TableCellType, Text } from "../data/classes";
+import { TextLayout } from "../data/text/textlayout";
+import { BlurType, ShapeFrame, TableCell, TableCellType, Text } from "../data/classes";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
 import { renderText2Path, renderTextLayout } from "../render/text";
 import { DViewCtx, PropsType } from "./viewctx";
-import { CursorLocate, TextLocate, locateCursor, locateNextCursor, locatePrevCursor, locateRange, locateText } from "../data/textlocate";
-import { newTableCellText } from "../data/textutils";
+import { CursorLocate, TextLocate, locateCursor, locateNextCursor, locatePrevCursor, locateRange, locateText } from "../data/text/textlocate";
+import { newTableCellText } from "../data/text/textutils";
 import { objectId } from "../basic/objectid";
 import { TableView } from "./table";
 import { innerShadowId } from "../render";
+import { Path } from "@kcdesign/path";
 
 export class TableCellView extends ShapeView {
 

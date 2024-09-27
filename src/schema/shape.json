@@ -98,6 +98,9 @@
         "mask": {
             "type": "boolean"
         },
+        "stackPositioning": {
+            "$ref": "./stack-positioning.json"
+        },
         "uniformScale": {
             "type": "number"
         }

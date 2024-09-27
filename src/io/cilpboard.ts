@@ -218,7 +218,7 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
     const ctx: IImportContext = new class implements IImportContext {
         document: Document = document;
         curPage: string = page.id;
-        fmtVer: number = FMT_VER_latest
+        fmtVer: string = FMT_VER_latest
     };
     const result: Shape[] = [];
 

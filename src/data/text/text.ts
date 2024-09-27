@@ -9,9 +9,9 @@ import {
     TextTransformType,
     TextVerAlign,
     UnderlineType
-} from "./baseclasses";
+} from "../baseclasses";
 
-import { Basic, BasicArray } from "./basic";
+import { Basic, BasicArray } from "../basic";
 
 export {
     TextVerAlign,
@@ -25,17 +25,18 @@ export {
     BulletNumbersBehavior,
     TextTransformType,
     Padding
-} from "./baseclasses";
-import * as classes from "./baseclasses"
+} from "../baseclasses";
+import * as classes from "../baseclasses"
 import { deleteText, formatPara, formatText, insertComplexText, insertSimpleText, setBulletNumbersBehavior, setBulletNumbersStart, setBulletNumbersType, setParaIndent } from "./textedit";
 import { LayoutItem, TextLayout, layoutText } from "./textlayout";
 import { layoutAtDelete, layoutAtFormat, layoutAtInsert } from "./textinclayout";
 import { getSimpleText, getUsedFontNames, getTextFormat, getTextWithFmt } from "./textread";
 import { _travelTextPara } from "./texttravel";
-import { FillType, Padding } from "./baseclasses";
-import { Gradient } from "./style"
-import { Color } from "./color";
-import { ShapeFrame, ShapeSize } from "./typesdefine";
+import { FillType, Padding } from "../baseclasses";
+import { Gradient } from "../style"
+import { Color } from "../color";
+import { ShapeFrame, ShapeSize } from "../typesdefine";
+import { getNextChar } from "./basic";
 
 /*
  文本框属性
@@ -85,6 +86,7 @@ export class ParaAttr extends SpanAttr implements classes.ParaAttr {
     typeId = 'para-attr'
     alignment?: TextHorAlign
     paraSpacing?: number
+    autoLineHeight?: boolean
     minimumLineHeight?: number
     maximumLineHeight?: number
     indent?: number
@@ -121,6 +123,7 @@ export class AttrGetter extends TextAttr {
     alignmentIsMulti: boolean = false;
     paraSpacingIsMulti: boolean = false;
     kerningIsMulti: boolean = false;
+    autoLineHeightIsMulti: boolean = false
     minimumLineHeightIsMulti: boolean = false;
     maximumLineHeightIsMulti: boolean = false;
     transformIsMulti: boolean = false;
@@ -138,6 +141,63 @@ export class Span extends SpanAttr implements classes.Span {
         super(
         )
         this.length = length
+    }
+}
+
+const EmptySpan = new Span(1);
+Object.freeze(EmptySpan)
+
+export type ParaIterItem = { char: string, span: Span, idx: number, spanIdx: number }
+
+export class ParaIter {
+    private _para: Para;
+    private _idx: number = 0;
+    private _text: string;
+
+    private _spanIdx: number = 0;
+    private _spanOffset: number = 0;
+    constructor(para: Para) {
+        this._para = para;
+        this._text = para.text;
+    }
+
+    hasNext(): boolean {
+        return this._idx < this._text.length;
+    }
+
+    get para() {
+        return this._para;
+    }
+
+    private _nextAttr(step: number) {
+        let span = this._para.spans[this._spanIdx];
+        this._spanOffset += step;
+        while (this._spanOffset >= span.length) {
+            ++this._spanIdx;
+            if (this._spanIdx >= this._para.spans.length) {
+                this._spanIdx = this._para.spans.length - 1;
+                this._spanOffset = 0;
+                break;
+            }
+            this._spanOffset -= span.length;
+            span = this._para.spans[this._spanIdx];
+        }
+    }
+
+    next(): ParaIterItem {
+        const item = this.peekNext();
+        const len = item.char.length;
+        this._nextAttr(len)
+        this._idx += len;
+        return item
+    }
+
+    peekNext(): ParaIterItem {
+        const char = getNextChar(this._text, this._idx);
+        const span = this._para.spans[this._spanIdx] ?? EmptySpan;
+        const spanIdx = this._spanIdx;
+        const idx = this._idx;
+        return { char, span, idx, spanIdx }
     }
 }
 
@@ -159,6 +219,10 @@ export class Para extends Basic implements classes.Para {
     }
     charAt(index: number): string {
         return this.text.charAt(index);
+    }
+
+    iter() {
+        return new ParaIter(this)
     }
 }
 

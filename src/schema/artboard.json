@@ -13,6 +13,9 @@
             "items": {
                 "$ref": "./guide.json"
             }
+        },
+        "autoLayout": {
+            "$ref": "./auto-layout.json"
         }
     },
     "required": [

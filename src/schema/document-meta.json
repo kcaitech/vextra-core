@@ -43,7 +43,7 @@
             }
         },
         "fmtVer": {
-            "type": "number"
+            "type": "string"
         }
     },
     "required": [

@@ -23,7 +23,7 @@ import { findOverride, getShapeViewId } from "./basic";
 import { layoutTable } from "../data/tablelayout";
 import { getTableCells, getTableVisibleCells } from "../data/tableread";
 import { BasicArray } from "../data/basic";
-import { newTableCellText } from "../data/textutils";
+import { newTableCellText } from "../data/text/textutils";
 import { Point2D } from "../data/typesdefine";
 import { render as renderLine } from "../render/line_borders";
 

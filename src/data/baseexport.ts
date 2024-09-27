@@ -544,6 +544,33 @@ export function exportShape_prototypeInteractions(source: types.Shape_prototypeI
 export function exportSideType(source: types.SideType, ctx?: IExportContext): types.SideType {
     return source
 }
+/* stack align */
+export function exportStackAlign(source: types.StackAlign, ctx?: IExportContext): types.StackAlign {
+    return source
+}
+/* stack mode */
+export function exportStackMode(source: types.StackMode, ctx?: IExportContext): types.StackMode {
+    return source
+}
+/* stack positioning */
+export function exportStackPositioning(source: types.StackPositioning, ctx?: IExportContext): types.StackPositioning {
+    return source
+}
+/* stack size */
+export function exportStackSize(source: types.StackSize, ctx?: IExportContext): types.StackSize {
+    const ret: types.StackSize = {} as types.StackSize
+    ret.x = source.x
+    ret.y = source.y
+    return ret
+}
+/* stack sizing */
+export function exportStackSizing(source: types.StackSizing, ctx?: IExportContext): types.StackSizing {
+    return source
+}
+/* stack wrap */
+export function exportStackWrap(source: types.StackWrap, ctx?: IExportContext): types.StackWrap {
+    return source
+}
 /* stop */
 export function exportStop(source: types.Stop, ctx?: IExportContext): types.Stop {
     const ret: types.Stop = {} as types.Stop
@@ -698,6 +725,31 @@ export function exportVariable_0(source: types.Variable_0, ctx?: IExportContext)
 /* winding rule */
 export function exportWindingRule(source: types.WindingRule, ctx?: IExportContext): types.WindingRule {
     return source
+}
+/* auto layout */
+export function exportAutoLayout(source: types.AutoLayout, ctx?: IExportContext): types.AutoLayout {
+    const ret: types.AutoLayout = {} as types.AutoLayout
+    ret.typeId = "auto-layout"
+    ret.typeId = source.typeId
+    ret.stackSpacing = source.stackSpacing
+    ret.stackCounterSpacing = source.stackCounterSpacing
+    ret.stackHorizontalPadding = source.stackHorizontalPadding
+    ret.stackVerticalPadding = source.stackVerticalPadding
+    ret.stackPaddingRight = source.stackPaddingRight
+    ret.stackPaddingBottom = source.stackPaddingBottom
+    if (source.stackMode) ret.stackMode = exportStackMode(source.stackMode, ctx)
+    if (source.stackWrap) ret.stackWrap = exportStackWrap(source.stackWrap, ctx)
+    if (source.stackHorizontalGapSizing) ret.stackHorizontalGapSizing = exportStackSizing(source.stackHorizontalGapSizing, ctx)
+    if (source.stackVerticalGapSizing) ret.stackVerticalGapSizing = exportStackSizing(source.stackVerticalGapSizing, ctx)
+    if (source.stackPrimarySizing) ret.stackPrimarySizing = exportStackSizing(source.stackPrimarySizing, ctx)
+    if (source.stackCounterSizing) ret.stackCounterSizing = exportStackSizing(source.stackCounterSizing, ctx)
+    if (source.stackPrimaryAlignItems) ret.stackPrimaryAlignItems = exportStackAlign(source.stackPrimaryAlignItems, ctx)
+    if (source.stackCounterAlignItems) ret.stackCounterAlignItems = exportStackAlign(source.stackCounterAlignItems, ctx)
+    if (source.stackReverseZIndex) ret.stackReverseZIndex = source.stackReverseZIndex
+    if (source.bordersTakeSpace) ret.bordersTakeSpace = source.bordersTakeSpace
+    if (source.minSize) ret.minSize = exportStackSize(source.minSize, ctx)
+    if (source.maxSize) ret.maxSize = exportStackSize(source.maxSize, ctx)
+    return ret
 }
 /* blur */
 export function exportBlur(source: types.Blur, ctx?: IExportContext): types.Blur {
@@ -922,6 +974,7 @@ export function exportParaAttr(source: types.ParaAttr, ctx?: IExportContext): ty
     if (source.paraSpacing) ret.paraSpacing = source.paraSpacing
     if (source.minimumLineHeight) ret.minimumLineHeight = source.minimumLineHeight
     if (source.maximumLineHeight) ret.maximumLineHeight = source.maximumLineHeight
+    if (source.autoLineHeight) ret.autoLineHeight = source.autoLineHeight
     if (source.indent) ret.indent = source.indent
     return ret
 }
@@ -1017,6 +1070,7 @@ export function exportShape(source: types.Shape, ctx?: IExportContext): types.Sh
     if (source.scrollDirection) ret.scrollDirection = exportScrollDirection(source.scrollDirection, ctx)
     if (source.scrollBehavior) ret.scrollBehavior = exportScrollBehavior(source.scrollBehavior, ctx)
     if (source.mask) ret.mask = source.mask
+    if (source.stackPositioning) ret.stackPositioning = exportStackPositioning(source.stackPositioning, ctx)
     if (source.uniformScale) ret.uniformScale = source.uniformScale
     return ret
 }
@@ -1099,6 +1153,9 @@ export function exportVariable(source: types.Variable, ctx?: IExportContext): ty
         }
         if (source.value.typeId === "blur") {
             return exportBlur(source.value as types.Blur, ctx)
+        }
+        if (source.value.typeId === "auto-layout") {
+            return exportAutoLayout(source.value as types.AutoLayout, ctx)
         }
         throw new Error("unknow typeId: " + source.value.typeId)
     })()
@@ -1223,6 +1280,9 @@ export function exportOvalShape(source: types.OvalShape, ctx?: IExportContext): 
     const ret: types.OvalShape = exportPathShape(source, ctx) as types.OvalShape
     ret.typeId = "oval-shape"
     ret.ellipse = exportEllipse(source.ellipse, ctx)
+    if (source.startingAngle) ret.startingAngle = source.startingAngle
+    if (source.endingAngle) ret.endingAngle = source.endingAngle
+    if (source.innerRadius) ret.innerRadius = source.innerRadius
     return ret
 }
 /* artboard shape */
@@ -1232,6 +1292,7 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
     ret.size = exportShapeSize(source.size, ctx)
     if (source.cornerRadius) ret.cornerRadius = exportCornerRadius(source.cornerRadius, ctx)
     if (source.guides) ret.guides = exportArtboard_guides(source.guides, ctx)
+    if (source.autoLayout) ret.autoLayout = exportAutoLayout(source.autoLayout, ctx)
     return ret
 }
 /* bool shape */
@@ -1312,6 +1373,7 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
     })()
     if (source.cornerRadius) ret.cornerRadius = exportCornerRadius(source.cornerRadius, ctx)
     if (source.guides) ret.guides = exportSymbolShape_guides(source.guides, ctx)
+    if (source.autoLayout) ret.autoLayout = exportAutoLayout(source.autoLayout, ctx)
         // inject code
     if (ctx?.symbols) ctx.symbols.add(ret.id);
 

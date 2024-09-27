@@ -1,7 +1,7 @@
 import {
     FillType, GradientType,
     makeShapeTransform1By2,
-    makeShapeTransform2By1,
+    makeShapeTransform2By1, OvalShape,
     PathShape,
     PathShape2,
     Shape,
@@ -238,4 +238,19 @@ export class PathShapeView extends ShapeView {
         }
     }
 
+    get startingAngle() {
+        return (this.data as OvalShape).startingAngle;
+    }
+
+    get endingAngle() {
+        return (this.data as OvalShape).endingAngle;
+    }
+
+    get innerRadius() {
+        return (this.data as OvalShape).innerRadius;
+    }
+
+    get haveEdit() {
+        return this.data.haveEdit;
+    }
 }

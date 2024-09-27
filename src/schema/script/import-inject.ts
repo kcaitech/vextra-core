@@ -1,4 +1,4 @@
-import { is_mac } from "../../data/utils";
+// import { is_mac } from "../../data/utils";
 
 export const inject: any = {};
 inject['ImageShape'] = {} as any;

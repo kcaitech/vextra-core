@@ -345,5 +345,3 @@ export enum RadiusType {
     Rect = 2
 }
 
-
-export const TEXT_BASELINE_RATIO = 0.135; // 从figma测试出来的值
