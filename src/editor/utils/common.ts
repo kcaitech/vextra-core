@@ -1,9 +1,9 @@
 import { expandTo, translateTo } from "../frame";
-import { Api } from "../coop/recordapi";
+import { Api } from "../../coop/recordapi";
 import { is_straight, update_frame_by_points } from "./path";
 import { getHorizontalRadians } from "../page";
-import { Document, PathShape, ShapeFrame, Page } from "../../data";
-import { Point2D } from "../../data/typesdefine";
+import { Artboard, Document, PathShape, ShapeFrame, Page } from "../../data";
+import { Point2D, StackSizing } from "../../data/typesdefine";
 import { float_accuracy } from "../../basic/consts";
 import { reLayoutBySizeChanged } from "../asyncApiHandler";
 import { adapt2Shape, ArtboradView, GroupShapeView, ShapeView } from "../../dataview";
@@ -63,7 +63,9 @@ export function modify_shapes_width(api: Api, document: Document, page: Page, sh
         }
         const origin_h = shape.frame.height;
         expandTo(api, document, page, shape, val, h);
-
+        if ((shape as Artboard).autoLayout) {
+            api.shapeModifyAutoLayoutSizing(page, shape, StackSizing.Fixed, 'hor');
+        }
         if (view instanceof GroupShapeView) {
             reLayoutBySizeChanged(api, page, view, { x: val / w, y: h / origin_h });
         }
@@ -90,7 +92,9 @@ export function modify_shapes_height(api: Api, document: Document, page: Page, s
 
         const origin_w = shape.frame.width;
         expandTo(api, document, page, shape, w, val);
-
+        if ((shape as Artboard).autoLayout) {
+            api.shapeModifyAutoLayoutSizing(page, shape, StackSizing.Fixed, 'ver');
+        }
         if (view instanceof GroupShapeView) {
             reLayoutBySizeChanged(api, page, view, {
                 x: w / origin_w,
@@ -106,14 +110,14 @@ export function modify_shapes_height(api: Api, document: Document, page: Page, s
 export function adapt_for_artboard(api: Api, page: Page, artboard: ArtboradView) {
     const minimum_WH = 1;
     const children = artboard.childs;
-    if (!children.length) return console.log('adapt_for_artboard: !children.length');
+    if (!children.length) throw new Error('!children.length') ;
 
     const m_artboard_to_root = artboard.matrix2Root();
 
     const f = artboard.size;
     const box = get_new_box();
 
-    if (no_need_to_adapt()) return console.log('invalid action');
+    if (no_need_to_adapt()) throw new Error('invalid action');
 
     re_children_layout();
 
@@ -143,10 +147,19 @@ export function adapt_for_artboard(api: Api, page: Page, artboard: ArtboradView)
             ].map(i => m.computeCoord3(i)));
         });
 
-        const minx = points.reduce((pre, cur) => Math.min(pre, cur.x), points[0].x);
-        const maxx = points.reduce((pre, cur) => Math.max(pre, cur.x), points[0].x);
-        const miny = points.reduce((pre, cur) => Math.min(pre, cur.y), points[0].y);
-        const maxy = points.reduce((pre, cur) => Math.max(pre, cur.y), points[0].y);
+        let minx = points.reduce((pre, cur) => Math.min(pre, cur.x), points[0].x);
+        let maxx = points.reduce((pre, cur) => Math.max(pre, cur.x), points[0].x);
+        let miny = points.reduce((pre, cur) => Math.min(pre, cur.y), points[0].y);
+        let maxy = points.reduce((pre, cur) => Math.max(pre, cur.y), points[0].y);
+
+        const layout = artboard.autoLayout;
+        if (layout) {
+            const { stackHorizontalPadding, stackVerticalPadding, stackPaddingBottom, stackPaddingRight } = layout;
+            minx -= stackHorizontalPadding;
+            miny -= stackVerticalPadding;
+            maxx += stackPaddingRight;
+            maxy += stackPaddingBottom;
+        }
 
         return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
     }

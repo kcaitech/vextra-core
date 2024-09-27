@@ -1,13 +1,15 @@
-import { CoopRepository } from "../../coop/cooprepo";
+import { CoopRepository } from "../../../coop/cooprepo";
 import { AsyncApiCaller } from "../AsyncApiCaller";
 import {
     Artboard,
     BorderSideSetting,
     Document,
     makeShapeTransform1By2,
+    StackSizing,
     Page,
     ResizingConstraints2,
     ShapeFrame,
+    ShapeSize,
     ShapeType,
     SideType,
     SymbolRefShape,
@@ -15,19 +17,23 @@ import {
     TextShape,
 } from "../../../data";
 import {
+    ArtboradView,
     adapt2Shape,
     GroupShapeView,
-    PageView, PathShapeView,
-    ShapeView, SymbolRefView,
+    PageView,
+    PathShapeView,
+    ShapeView,
+    SymbolRefView,
     TableCellView,
     TableView,
     TextShapeView
 } from "../../../dataview";
-import { Api, TextShapeLike } from "../../coop/recordapi";
+import { Api, TextShapeLike } from "../../../coop/recordapi";
 import { fixTextShapeFrameByLayout } from "../../utils/other";
 import { Transform as Transform2 } from "../../../basic/transform";
 import { ColVector3D } from "../../../basic/matrix2";
 import { XYsBounding } from "../../../io/cilpboard";
+import { getAutoLayoutShapes, modifyAutoLayout } from "../../utils/auto_layout";
 
 export type RangeRecorder = Map<string, {
     toRight?: number,
@@ -95,20 +101,7 @@ export function reLayoutBySizeChanged(
             const width = oSize.width * Math.abs(_scale.x);
             const height = oSize.height * Math.abs(_scale.y);
             if (child instanceof TextShapeView) {
-                if (width !== child.size.width || height !== child.size.height) {
-                    const textBehaviour = child.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
-                    if (height !== child.size.height) {
-                        if (textBehaviour !== TextBehaviour.FixWidthAndHeight) {
-                            api.shapeModifyTextBehaviour(page, child.text, TextBehaviour.FixWidthAndHeight);
-                        }
-                    } else {
-                        if (textBehaviour === TextBehaviour.Flexible) {
-                            api.shapeModifyTextBehaviour(page, child.text, TextBehaviour.Fixed);
-                        }
-                    }
-                    api.shapeModifyWH(page, data, width, height)
-                    fixTextShapeFrameByLayout(api, page, child);
-                }
+                fixTextLayout(data as TextShape, oSize, width, height);
             } else {
                 api.shapeModifyWH(page, data, width, height)
             }
@@ -120,6 +113,9 @@ export function reLayoutBySizeChanged(
                 reLayoutBySizeChanged(api, page, child, _scale, rangeRecorder, sizeRecorder, transformRecorder);
             }
         }
+    } else if ((shape as ArtboradView).autoLayout) {
+        const __shape = adapt2Shape(shape);
+        modifyAutoLayout(page, api, __shape);
     } else {
         // 除去编组，其他容器级别的图层需要根据具体是约束状态进行重新布局
         for (const child of children) {
@@ -313,20 +309,7 @@ export function reLayoutBySizeChanged(
             const data = adapt2Shape(child);
             // 执行计算结果
             if (child instanceof TextShapeView) {
-                if (targetWidth !== child.size.width || targetHeight !== child.size.height) {
-                    const textBehaviour = child.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
-                    if (targetHeight !== child.size.height) {
-                        if (textBehaviour !== TextBehaviour.FixWidthAndHeight) {
-                            api.shapeModifyTextBehaviour(page, child.text, TextBehaviour.FixWidthAndHeight);
-                        }
-                    } else {
-                        if (textBehaviour === TextBehaviour.Flexible) {
-                            api.shapeModifyTextBehaviour(page, child.text, TextBehaviour.Fixed);
-                        }
-                    }
-                    api.shapeModifyWH(page, data, targetWidth, targetHeight)
-                    fixTextShapeFrameByLayout(api, page, child);
-                }
+                fixTextLayout(data as TextShape, oSize, targetWidth, targetHeight)
             } else {
                 api.shapeModifyWH(page, data, targetWidth, targetHeight)
             }
@@ -340,6 +323,33 @@ export function reLayoutBySizeChanged(
     }
 
     // utils
+    function fixTextLayout(data: TextShape, oSize: {
+        width: number,
+        height: number
+    }, targetWidth: number, targetHeight: number) {
+        const isWidthChange = oSize.width !== targetWidth;
+        const isHeightChange = oSize.height !== targetHeight;
+        const textShape = data as TextShape;
+        const behaviour = textShape.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
+        if (isWidthChange && isHeightChange) {
+            if (behaviour !== TextBehaviour.FixWidthAndHeight) {
+                api.shapeModifyTextBehaviour(page, textShape.text, TextBehaviour.FixWidthAndHeight);
+            }
+            api.shapeModifyWH(page, textShape, targetWidth, targetHeight);
+        } else if (isWidthChange) {
+            if (behaviour !== TextBehaviour.Fixed) {
+                api.shapeModifyTextBehaviour(page, textShape.text, TextBehaviour.Fixed);
+            }
+            api.shapeModifyWidth(page, textShape, targetWidth);
+        } else if (isHeightChange) {
+            if (behaviour !== TextBehaviour.FixWidthAndHeight) {
+                api.shapeModifyTextBehaviour(page, textShape.text, TextBehaviour.FixWidthAndHeight);
+            }
+            api.shapeModifyHeight(page, textShape, targetHeight);
+        }
+        fixTextShapeFrameByLayout(api, page, textShape);
+    }
+
     function getBox(s: ShapeView) {
         let RR = rangeRecorder.get(s.id);
 
@@ -494,24 +504,25 @@ export function reLayoutByUniformScale(
         const oSize = getSize(child);
         const width = oSize.width * Math.abs(_scale.x);
         const height = oSize.height * Math.abs(_scale.y);
-        if (child instanceof TextShapeView) {
-            if (width !== child.size.width || height !== child.size.height) {
-                const textBehaviour = child.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
-                if (height !== child.size.height) {
-                    if (textBehaviour !== TextBehaviour.FixWidthAndHeight) {
-                        api.shapeModifyTextBehaviour(page, child.text, TextBehaviour.FixWidthAndHeight);
-                    }
-                } else {
-                    if (textBehaviour === TextBehaviour.Flexible) {
-                        api.shapeModifyTextBehaviour(page, child.text, TextBehaviour.Fixed);
-                    }
-                }
-                api.shapeModifyWH(page, data, width, height)
-                fixTextShapeFrameByLayout(api, page, child);
-            }
-        } else {
-            api.shapeModifyWH(page, data, width, height)
-        }
+        // if (child instanceof TextShapeView) {
+        //     if (width !== child.size.width || height !== child.size.height) {
+        //         const textBehaviour = child.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
+        //         if (height !== child.size.height) {
+        //             if (textBehaviour !== TextBehaviour.FixWidthAndHeight) {
+        //                 api.shapeModifyTextBehaviour(page, child.text, TextBehaviour.FixWidthAndHeight);
+        //             }
+        //         } else {
+        //             if (textBehaviour === TextBehaviour.Flexible) {
+        //                 api.shapeModifyTextBehaviour(page, child.text, TextBehaviour.Fixed);
+        //             }
+        //         }
+        //         api.shapeModifyWH(page, data, width, height)
+        //         fixTextShapeFrameByLayout(api, page, child);
+        //     }
+        // } else {
+        //     api.shapeModifyWH(page, data, width, height)
+        // }
+        api.shapeModifyWH(page, data, width, height)
 
         transform.clearScaleSize();
         api.shapeModifyTransform(page, data, makeShapeTransform1By2(transform));
@@ -735,33 +746,26 @@ export class Scaler extends AsyncApiCaller {
             const recorder = this.recorder;
             const sizeRecorder = this.sizeRecorder;
             const transformRecorder = this.transformRecorder;
-
+            const shapes: ShapeView[] = [];
             for (let i = 0; i < params.length; i++) {
                 const item = params[i];
-
+                shapes.push(item.shape);
                 const shape = adapt2Shape(item.shape);
                 if (shape instanceof TextShape) {
-                    const size = item.size;
-                    if (size.width !== shape.size.width || size.height !== shape.size.height) {
-                        const textBehaviour = shape.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
-                        if (size.height !== shape.size.height) {
-                            if (textBehaviour !== TextBehaviour.FixWidthAndHeight) {
-                                api.shapeModifyTextBehaviour(page, shape.text, TextBehaviour.FixWidthAndHeight);
-                            }
-                        } else {
-                            if (textBehaviour === TextBehaviour.Flexible) {
-                                api.shapeModifyTextBehaviour(page, shape.text, TextBehaviour.Fixed);
-                            }
-                        }
-                        api.shapeModifyWH(page, shape, size.width, size.height)
-                        fixTextShapeFrameByLayout(api, page, shape);
-                    }
+                    this.fixTextSize(item.shape as TextShapeView, item.size as ShapeSize);
                 } else if (shape.hasSize()) {
                     const size = item.size;
                     api.shapeModifyWH(page, shape, size.width, size.height)
                 }
                 api.shapeModifyTransform(page, shape, makeShapeTransform1By2(item.transform2));
-
+                if ((shape as Artboard).autoLayout) {
+                    if (item.size.width !== item.shape.size.width) {
+                        api.shapeModifyAutoLayoutSizing(page, shape, StackSizing.Fixed, 'hor');
+                    }
+                    if (item.size.height !== item.shape.size.height) {
+                        api.shapeModifyAutoLayoutSizing(page, shape, StackSizing.Fixed, 'ver');
+                    }
+                }
                 if (item.shape instanceof GroupShapeView) {
                     const scale = item.scale;
                     reLayoutBySizeChanged(api, page, item.shape, scale, recorder, sizeRecorder, transformRecorder);
@@ -771,12 +775,60 @@ export class Scaler extends AsyncApiCaller {
                     api.shapeModifyIsCustomSize(page, shape, true);
                 }
             }
-
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                modifyAutoLayout(this.page, api, parent);
+            }
             this.updateView();
         } catch (error) {
             console.log('error:', error);
             this.exception = true;
         }
+    }
+
+    fixTextSize(view: TextShapeView, targetSize: ShapeSize) {
+        const api = this.api;
+        const page = this.page;
+
+        const shape = adapt2Shape(view) as TextShape;
+        const originSize = this.getSize(view);
+        const isWidthChange = targetSize.width !== originSize.width;
+        const isHeightChange = targetSize.height !== originSize.height;
+        const behaviour = shape.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
+
+        if (isWidthChange && isHeightChange) {
+            if (behaviour !== TextBehaviour.FixWidthAndHeight) {
+                api.shapeModifyTextBehaviour(page, shape.text, TextBehaviour.FixWidthAndHeight);
+            }
+            api.shapeModifyWH(page, shape, targetSize.width, targetSize.height);
+        } else if (isWidthChange) {
+            if (behaviour !== TextBehaviour.Fixed) {
+                api.shapeModifyTextBehaviour(page, shape.text, TextBehaviour.Fixed);
+            }
+            api.shapeModifyWidth(page, shape, targetSize.width);
+        } else if (isHeightChange) {
+            if (behaviour !== TextBehaviour.FixWidthAndHeight) {
+                api.shapeModifyTextBehaviour(page, shape.text, TextBehaviour.FixWidthAndHeight);
+            }
+            api.shapeModifyHeight(page, shape, targetSize.height);
+        }
+        fixTextShapeFrameByLayout(api, page, shape);
+    }
+
+    getSize(view: TextShapeView) {
+        let size = this.sizeRecorder.get(view.id);
+        if (!size) {
+            const f = view.frame;
+            size = {
+                x: f.x,
+                y: f.y,
+                width: f.width,
+                height: f.height
+            };
+            this.sizeRecorder.set(view.id, size);
+        }
+        return size;
     }
 
     executeUniform(units: UniformScaleUnit[], ratio: number) {

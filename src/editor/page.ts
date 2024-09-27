@@ -32,6 +32,7 @@ import { Page } from "../data/page";
 import {
     newArrowShape,
     newArtboard,
+    newAutoLayoutArtboard,
     newBoolShape,
     newGroupShape,
     newImageFillShape,
@@ -52,7 +53,6 @@ import {
     Color,
     Fill,
     Gradient,
-    Path,
     PathShape,
     Stop,
     Style,
@@ -68,6 +68,7 @@ import { Matrix } from "../basic/matrix";
 import {
     IImportContext,
     importArtboard,
+    importAutoLayout,
     importBlur,
     importBorder,
     importContextSettings,
@@ -118,6 +119,7 @@ import {
 } from "./symbol";
 import { is_circular_ref2 } from "./utils/ref_check";
 import {
+    AutoLayout,
     BorderSideSetting,
     BorderStyle,
     ExportFormat,
@@ -147,9 +149,9 @@ import {
     update_frame_by_points
 } from "./utils/path";
 import { modify_shapes_height, modify_shapes_width } from "./utils/common";
-import { CoopRepository } from "./coop/cooprepo";
-import { Api, TextShapeLike } from "./coop/recordapi";
-import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
+import { CoopRepository } from "../coop/cooprepo";
+import { Api, TextShapeLike } from "../coop/recordapi";
+import { ISave4Restore, LocalCmd, SelectionState } from "../coop/localcmd";
 import { unable_to_migrate } from "./utils/migrate";
 import {
     adapt2Shape,
@@ -171,8 +173,12 @@ import { FMT_VER_latest } from "../data/fmtver";
 import { makeShapeTransform1By2, makeShapeTransform2By1, updateShapeTransform1By2 } from "../data/shape_transform_util";
 import { ColVector3D } from "../basic/matrix2";
 import { Transform as Transform2 } from "../basic/transform";
+import { getAutoLayoutShapes, initAutoLayout, layoutShapesOrder, layoutSpacing, modifyAutoLayout, tidyUpLayout } from "./utils/auto_layout";
+
 import { getFormatFromBase64 } from "../basic/utils";
 import { uniformScale, UniformScaleUnit } from "./asyncApiHandler";
+import { modifyEndingAngle, modifyRadius, modifyStartingAngle, modifySweep } from "./asyncApiHandler/arc";
+import { Path } from "@kcdesign/path";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -426,10 +432,10 @@ export class PageEditor {
         this.__document = document;
     }
 
-    group(shapes: Shape[], groupname: string): false | GroupShape { // shapes中元素index越小层级越高，即在图形列表的位置最高
+    group(shapes: ShapeView[], groupname: string): false | GroupShape { // shapes中元素index越小层级越高，即在图形列表的位置最高
         if (shapes.length === 0) return false;
         if (shapes.find((v) => !v.parent)) return false;
-        const fshape = shapes[0];
+        const fshape = adapt2Shape(shapes[0]);
         const savep = fshape.parent as GroupShape;
         // 1、新建一个GroupShape
         let gshape = newGroupShape(groupname);
@@ -442,10 +448,14 @@ export class PageEditor {
         });
         try {
             // 0、save shapes[0].parent？最外层shape？位置？  层级最高图形的parent
-            const saveidx = savep.indexOfChild(shapes[0]);
+            const saveidx = savep.indexOfChild(adapt2Shape(shapes[0]));
 
-            gshape = group(this.__document, this.__page, shapes, gshape, savep, saveidx, api);
-
+            gshape = group(this.__document, this.__page, shapes.map(s => adapt2Shape(s)), gshape, savep, saveidx, api);
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                modifyAutoLayout(this.__page, api, parent);
+            }
             this.__repo.commit();
             return gshape;
         } catch (e) {
@@ -455,8 +465,9 @@ export class PageEditor {
         return false;
     }
 
-    ungroup(shapes: GroupShape[]): false | Shape[] {
+    ungroup(shapes: GroupShapeView[]): false | Shape[] {
         const childrens: Shape[] = [];
+        const parents = getAutoLayoutShapes(shapes);
         const api = this.__repo.start("ungroup", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
             const state = {} as SelectionState;
             if (!isUndo) state.shapes = childrens.map(s => s.id);
@@ -468,8 +479,12 @@ export class PageEditor {
                 const shape = shapes[i];
                 if (shape.isVirtualShape) continue;
                 if (!shape.parent) continue;
-                const childs = ungroup(this.__document, this.__page, shape, api);
+                const childs = ungroup(this.__document, this.__page, adapt2Shape(shape) as GroupShape, api);
                 childrens.push(...childs);
+            }
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                modifyAutoLayout(this.__page, api, parent);
             }
             this.__repo.commit();
             return childrens.length > 0 ? childrens : false;
@@ -486,10 +501,10 @@ export class PageEditor {
      * @param artboardname
      * @returns { false | Artboard } 成功则返回容器
      */
-    create_artboard(shapes: Shape[], artboardname: string): false | Artboard {
+    create_artboard(shapes: ShapeView[], artboardname: string): false | Artboard {
         if (shapes.length === 0) return false;
         if (shapes.find((v) => !v.parent)) return false;
-        const fshape = shapes[0];
+        const fshape = adapt2Shape(shapes[0]);
         const savep = fshape.parent as GroupShape;
         let artboard = newArtboard(artboardname, new ShapeFrame(0, 0, 100, 100));
 
@@ -501,10 +516,14 @@ export class PageEditor {
         });
         try {
             // 0、save shapes[0].parent？最外层shape？位置？  层级最高图形的parent
-            const saveidx = savep.indexOfChild(shapes[0]);
+            const saveidx = savep.indexOfChild(adapt2Shape(shapes[0]));
             // 1、新建一个GroupShape
-            artboard = group(this.__document, this.__page, shapes, artboard, savep, saveidx, api) as Artboard;
-
+            artboard = group(this.__document, this.__page, shapes.map(s => adapt2Shape(s)), artboard, savep, saveidx, api) as Artboard;
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                modifyAutoLayout(this.__page, api, parent);
+            }
             this.__repo.commit();
             return artboard;
         } catch (e) {
@@ -514,7 +533,7 @@ export class PageEditor {
         return false;
     }
 
-    dissolution_artboard(shapes: Artboard[]): false | Shape[] {
+    dissolution_artboard(shapes: ArtboradView[]): false | Shape[] {
         const childrens: Shape[] = [];
         const api = this.__repo.start("dissolution_artboard", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
             const state = {} as SelectionState;
@@ -523,15 +542,52 @@ export class PageEditor {
             selection.restore(state);
         });
         try {
+            const parents = getAutoLayoutShapes(shapes);
             for (let i = 0; i < shapes.length; i++) {
                 const shape = shapes[i];
                 if (shape.isVirtualShape) continue;
                 if (!shape.parent) continue;
-                const childs = ungroup(this.__document, this.__page, shape, api);
+                const childs = ungroup(this.__document, this.__page, adapt2Shape(shape) as Artboard, api);
                 childrens.push(...childs);
+            }
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                modifyAutoLayout(this.__page, api, parent);
             }
             this.__repo.commit();
             return childrens.length > 0 ? childrens : false;
+        } catch (e) {
+            console.log(e)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+
+    create_autolayout_artboard(shapes: ShapeView[], artboardname: string): false | Artboard {
+        if (shapes.length === 0) return false;
+        if (shapes.find((v) => !v.parent)) return false;
+        const fshape = adapt2Shape(shapes[0]);
+        const savep = fshape.parent as GroupShape;
+        const shapes_rows = layoutShapesOrder(shapes.map(s => adapt2Shape(s)), false);
+        const { hor, ver } = layoutSpacing(shapes_rows);
+        const layoutInfo = new AutoLayout(hor, ver, 0, 0, 0, 0);
+        let artboard = newAutoLayoutArtboard(artboardname, new ShapeFrame(0, 0, 100, 100), layoutInfo);
+
+        const api = this.__repo.start("create_autolayout_artboard", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+            const state = {} as SelectionState;
+            if (!isUndo) state.shapes = [artboard.id];
+            else state.shapes = cmd.saveselection?.shapes || [];
+            selection.restore(state);
+        });
+        try {
+            const saveidx = savep.indexOfChild(adapt2Shape(shapes[0]));
+            artboard = group(this.__document, this.__page, shapes.map(s => adapt2Shape(s)), artboard, savep, saveidx, api) as Artboard;
+            const frame = initAutoLayout(this.__page, api, artboard, shapes_rows);
+            if (frame) {
+                api.shapeModifyWH(this.__page, artboard, frame.width, frame.height);
+            }
+            this.__repo.commit();
+            return artboard;
         } catch (e) {
             console.log(e)
             this.__repo.rollback();
@@ -683,6 +739,7 @@ export class PageEditor {
                 if (shape0.overlayBackgroundAppearance) symbolShape.overlayBackgroundAppearance = importOverlayBackgroundAppearance(shape0.overlayBackgroundAppearance);
                 if (shape0.scrollDirection) symbolShape.scrollDirection = (shape0.scrollDirection);
                 if (shape0.scrollBehavior) symbolShape.scrollBehavior = (shape0.scrollBehavior);
+                if (shape0.autoLayout) symbolShape.autoLayout = importAutoLayout(shape0.autoLayout);
             }
 
             const page = this.__page;
@@ -815,7 +872,7 @@ export class PageEditor {
             const ctx: IImportContext = new class implements IImportContext {
                 document: Document = _this.__document;
                 curPage: string = _this.__page.id;
-                fmtVer: number = FMT_VER_latest
+                fmtVer: string = FMT_VER_latest
             };
             const api = this.__repo.start("makeStateAt");
             // api.registSymbol(this.__document, source.id, this.__page.id); // 先设置上, import好加入symmgr
@@ -848,7 +905,7 @@ export class PageEditor {
      * @description 将引用的组件解引用(解绑)
      * todo 考虑union symbol
      */
-    extractSymbol(shapes: Shape[]) {
+    extractSymbol(shapes: ShapeView[]) {
         const actions: {
             parent: Shape,
             self: Shape,
@@ -925,7 +982,7 @@ export class PageEditor {
 
         const return_shapes: Shape[] = [];
         for (let i = 0, len = shapes.length; i < len; i++) {
-            const shape: SymbolRefShape = shapes[i] as SymbolRefShape;
+            const shape: SymbolRefShape = adapt2Shape(shapes[i]) as SymbolRefShape;
             if (shape.type !== ShapeType.SymbolRef) {
                 return_shapes.push(shape);
                 continue;
@@ -940,7 +997,7 @@ export class PageEditor {
             const ctx: IImportContext = new class implements IImportContext {
                 document: Document = _this.__document;
                 curPage: string = _this.__page.id;
-                fmtVer: number = FMT_VER_latest
+                fmtVer: string = FMT_VER_latest
             };
             const tmpArtboard: Artboard = newArtboard(shape.name, shape.frame);
 
@@ -954,6 +1011,10 @@ export class PageEditor {
             tmpArtboard.transform.m02 = shape.transform.m02;
             tmpArtboard.transform.m12 = shape.transform.m12;
             tmpArtboard.cornerRadius = shape.cornerRadius;
+            const layoutInfo = (shapes[i] as SymbolRefView).autoLayout;
+            if (layoutInfo) {
+                tmpArtboard.autoLayout = importAutoLayout(layoutInfo);
+            }
 
             const symbolData = exportArtboard(tmpArtboard); // todo 如果symbol只有一个child时
 
@@ -1095,7 +1156,7 @@ export class PageEditor {
         const ctx: IImportContext = new class implements IImportContext {
             document: Document = _this.__document;
             curPage: string = _this.__page.id;
-            fmtVer: number = FMT_VER_latest
+            fmtVer: string = FMT_VER_latest
         };
         return importStyle(style, ctx);
     }
@@ -1153,7 +1214,7 @@ export class PageEditor {
                 pathstr = shapepath.toString();
             }
         })
-        const path = new Path(pathstr);
+        const path = Path.fromSVGString(pathstr);
         path.translate(-frame.x, -frame.y);
 
         let pathShape = newPathShape(name, frame, path, style);
@@ -1200,13 +1261,13 @@ export class PageEditor {
             }
 
             const gframe = shape.frame;
-            const boundingBox = path.calcBounds();
-            const x = boundingBox.minX;
-            const y = boundingBox.minY;
-            const w = boundingBox.maxX - boundingBox.minX;
-            const h = boundingBox.maxY - boundingBox.minY;
+            const boundingBox = path.bbox();
+            const x = boundingBox.x;
+            const y = boundingBox.y;
+            const w = boundingBox.w;
+            const h = boundingBox.h;
             const frame = new ShapeFrame(gframe.x, gframe.y, w, h);
-            path.translate(-boundingBox.minX, -boundingBox.minY);
+            path.translate(-boundingBox.x, -boundingBox.y);
             let pathShape = newPathShape(shape.name, frame, path, style);
             pathShape.fixedRadius = shape.fixedRadius;
             pathShape.transform = makeShapeTransform1By2(new Transform2() // shape图层坐标系
@@ -1431,6 +1492,11 @@ export class PageEditor {
                 this.__repo.rollback();
                 return false;
             }
+        }
+        const parents = getAutoLayoutShapes(shapes);
+        for (let i = 0; i < parents.length; i++) {
+            const parent = parents[i];
+            modifyAutoLayout(this.__page, api, parent);
         }
         if (need_special_notify) {
             this.__document.__correspondent.notify('update-symbol-list');
@@ -1973,15 +2039,22 @@ export class PageEditor {
     }
 
     modifyShapesX(actions: {
-        target: Shape,
+        target: ShapeView,
         x: number
     }[]) {
         try {
             const api = this.__repo.start('modifyShapesX');
             const page = this.__page;
+            const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
                 const action = actions[i];
-                api.shapeModifyX(page, action.target, action.x);
+                shapes.push(action.target);
+                api.shapeModifyX(page, adapt2Shape(action.target), action.x);
+            }
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                modifyAutoLayout(page, api, parent);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1990,15 +2063,22 @@ export class PageEditor {
     }
 
     modifyShapesY(actions: {
-        target: Shape,
+        target: ShapeView,
         y: number
     }[]) {
         try {
             const api = this.__repo.start('modifyShapesY');
             const page = this.__page;
+            const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
                 const action = actions[i];
-                api.shapeModifyY(page, action.target, action.y);
+                shapes.push(action.target);
+                api.shapeModifyY(page, adapt2Shape(action.target), action.y);
+            }
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                modifyAutoLayout(page, api, parent);
             }
             this.__repo.commit();
         } catch (error) {
@@ -2106,14 +2186,19 @@ export class PageEditor {
         transform: Transform
     }[]) {
         try {
+            const shapes: ShapeView[] = [];
             const api = this.__repo.start('setShapesRotate');
             for (const action of actions) {
                 const { shape: shapeView, transform } = action;
-
+                shapes.push(shapeView);
                 const s = adapt2Shape(shapeView);
                 api.shapeModifyRotate(this.__page, s, transform);
             }
-
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                modifyAutoLayout(this.__page, api, parent);
+            }
             this.__repo.commit();
         } catch (error) {
             console.log(error);
@@ -2679,10 +2764,19 @@ export class PageEditor {
     setShapesBorderEnabled(actions: BatchAction[]) {
         const api = this.__repo.start('setShapesBorderEnabled');
         try {
+            const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
                 const { target, index, value } = actions[i];
+                shapes.push(target);
                 const s = shape4border(api, this.__page, target);
                 api.setBorderEnable(this.__page, s, index, value);
+            }
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                if (parent.autoLayout?.bordersTakeSpace) {
+                    modifyAutoLayout(this.__page, api, parent);
+                }
             }
             this.__repo.commit();
         } catch (error) {
@@ -2707,11 +2801,20 @@ export class PageEditor {
     shapesAddBorder(actions: BatchAction2[]) {
         const api = this.__repo.start('shapesAddBorder');
         try {
+            const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
+                shapes.push(target);
                 const s = shape4border(api, this.__page, target);
                 const l = s instanceof Shape ? s.style.borders.length : s.value.length;
                 api.addBorderAt(this.__page, s, value, l);
+            }
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                if (parent.autoLayout?.bordersTakeSpace) {
+                    modifyAutoLayout(this.__page, api, parent);
+                }
             }
             this.__repo.commit();
         } catch (error) {
@@ -2723,10 +2826,19 @@ export class PageEditor {
     shapesDeleteBorder(actions: BatchAction3[]) {
         const api = this.__repo.start('shapesDeleteBorder');
         try {
+            const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
                 const { target, index } = actions[i];
+                shapes.push(target);
                 const s = shape4border(api, this.__page, target);
                 api.deleteBorderAt(this.__page, s, index);
+            }
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                if (parent.autoLayout?.bordersTakeSpace) {
+                    modifyAutoLayout(this.__page, api, parent);
+                }
             }
             this.__repo.commit();
         } catch (error) {
@@ -2737,11 +2849,20 @@ export class PageEditor {
     shapesBordersUnify(actions: BatchAction2[]) {
         const api = this.__repo.start('shapesBordersUnify');
         try {
+            const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
+                shapes.push(target);
                 const s = shape4border(api, this.__page, target);
                 api.deleteBorders(this.__page, s, 0, target.style.borders.length);
                 api.addBorders(this.__page, s, value);
+            }
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                if (parent.autoLayout?.bordersTakeSpace) {
+                    modifyAutoLayout(this.__page, api, parent);
+                }
             }
             this.__repo.commit();
         } catch (error) {
@@ -2752,11 +2873,20 @@ export class PageEditor {
     setShapesBorderPosition(actions: BatchAction[]) {
         const api = this.__repo.start('setShapesBorderPosition');
         try {
+            const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
                 const { target, value, index } = actions[i];
+                shapes.push(target);
                 if (target.type === ShapeType.Table) continue;
                 const s = shape4border(api, this.__page, target);
                 api.setBorderPosition(this.__page, s, index, value);
+            }
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                if (parent.autoLayout?.bordersTakeSpace) {
+                    modifyAutoLayout(this.__page, api, parent);
+                }
             }
             this.__repo.commit();
         } catch (error) {
@@ -2767,8 +2897,10 @@ export class PageEditor {
     setShapesBorderThickness(actions: BatchAction[]) {
         const api = this.__repo.start('setShapesBorderThickness');
         try {
+            const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
                 const { target, value, index } = actions[i];
+                shapes.push(target);
                 const s = shape4border(api, this.__page, target);
                 const borders = target.getBorders();
                 const sideType = borders[index].sideSetting.sideType;
@@ -2791,6 +2923,14 @@ export class PageEditor {
                     default:
                         api.setBorderSide(this.__page, s, index, new BorderSideSetting(sideType, value, value, value, value));
                         break;
+                }
+
+            }
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                if (parent.autoLayout?.bordersTakeSpace) {
+                    modifyAutoLayout(this.__page, api, parent);
                 }
             }
             this.__repo.commit();
@@ -2931,10 +3071,19 @@ export class PageEditor {
     setShapesBorderSide(actions: BatchAction[]) {
         const api = this.__repo.start('setShapesBorderSide');
         try {
+            const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
                 const { target, value, index } = actions[i];
+                shapes.push(target);
                 const s = shape4border(api, this.__page, target);
                 api.setBorderSide(this.__page, s, index, value);
+            }
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                if (parent.autoLayout?.bordersTakeSpace) {
+                    modifyAutoLayout(this.__page, api, parent);
+                }
             }
             this.__repo.commit();
         } catch (error) {
@@ -2945,10 +3094,19 @@ export class PageEditor {
     setShapeBorderThicknessTop(actions: BatchAction[]) {
         const api = this.__repo.start('setShapeBorderThicknessTop');
         try {
+            const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
                 const { target, value, index } = actions[i];
+                shapes.push(target);
                 const s = shape4border(api, this.__page, target);
                 api.setBorderThicknessTop(this.__page, s, index, value);
+            }
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                if (parent.autoLayout?.bordersTakeSpace) {
+                    modifyAutoLayout(this.__page, api, parent);
+                }
             }
             this.__repo.commit();
         } catch (error) {
@@ -2959,10 +3117,19 @@ export class PageEditor {
     setShapeBorderThicknessRight(actions: BatchAction[]) {
         const api = this.__repo.start('setShapeBorderThicknessRight');
         try {
+            const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
                 const { target, value, index } = actions[i];
+                shapes.push(target);
                 const s = shape4border(api, this.__page, target);
                 api.setBorderThicknessRight(this.__page, s, index, value);
+            }
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                if (parent.autoLayout?.bordersTakeSpace) {
+                    modifyAutoLayout(this.__page, api, parent);
+                }
             }
             this.__repo.commit();
         } catch (error) {
@@ -2973,10 +3140,19 @@ export class PageEditor {
     setShapeBorderThicknessBottom(actions: BatchAction[]) {
         const api = this.__repo.start('setShapeBorderThicknessBottom');
         try {
+            const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
                 const { target, value, index } = actions[i];
+                shapes.push(target);
                 const s = shape4border(api, this.__page, target);
                 api.setBorderThicknessBottom(this.__page, s, index, value);
+            }
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                if (parent.autoLayout?.bordersTakeSpace) {
+                    modifyAutoLayout(this.__page, api, parent);
+                }
             }
             this.__repo.commit();
         } catch (error) {
@@ -2987,10 +3163,19 @@ export class PageEditor {
     setShapeBorderThicknessLeft(action: BatchAction[]) {
         const api = this.__repo.start('setShapeBorderThicknessLeft');
         try {
+            const shapes: ShapeView[] = [];
             for (let i = 0; i < action.length; i++) {
                 const { target, value, index } = action[i];
+                shapes.push(target);
                 const s = shape4border(api, this.__page, target);
                 api.setBorderThicknessLeft(this.__page, s, index, value);
+            }
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                if (parent.autoLayout?.bordersTakeSpace) {
+                    modifyAutoLayout(this.__page, api, parent);
+                }
             }
             this.__repo.commit();
         } catch (error) {
@@ -3824,6 +4009,11 @@ export class PageEditor {
                 // }
                 api.shapeModifyVisible(this.__page, shape.data, isVisible);
             }
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                modifyAutoLayout(this.__page, api, parent);
+            }
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
@@ -4468,6 +4658,39 @@ export class PageEditor {
         }
     }
 
+    modifyShapesStartingAngle(shapes: ShapeView[], value: number) {
+        try {
+            const api = this.__repo.start('modifyShapesStartAngle');
+            modifyStartingAngle(api, this.__page, shapes, value);
+            this.__repo.commit();
+        } catch (e) {
+            this.__repo.rollback();
+            console.error(e);
+        }
+    }
+
+    modifyShapesSweep(shapes: ShapeView[], value: number) {
+        try {
+            const api = this.__repo.start('modifyShapesSweep');
+            modifySweep(api, this.__page, shapes, value);
+            this.__repo.commit();
+        } catch (e) {
+            this.__repo.rollback();
+            console.error(e);
+        }
+    }
+
+    modifyShapesRadius(shapes: ShapeView[], value: number) {
+        try {
+            const api = this.__repo.start('modifyShapesRadius');
+            modifyRadius(api, this.__page, shapes, value);
+            this.__repo.commit();
+        } catch (e) {
+            this.__repo.rollback();
+            console.error(e);
+        }
+    }
+
     editor4Shape(shape: ShapeView): ShapeEditor {
         return new ShapeEditor(shape, this.__page, this.__repo, this.__document);
     }
@@ -4478,5 +4701,15 @@ export class PageEditor {
 
     editor4Table(shape: TableView): TableEditor {
         return new TableEditor(shape, this.__page, this.__repo, this.__document);
+    }
+
+    tidyUpShapesLayout(shape_rows: ShapeView[][], hor: number, ver: number, dir: boolean) {
+        const api = this.__repo.start('tidyUpShapesLayout');
+        try {
+            tidyUpLayout(this.__page, api, shape_rows, hor, ver, dir);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
     }
 }

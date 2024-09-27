@@ -3,13 +3,15 @@ import { DocEditor } from "./document";
 import { PageEditor } from "./page";
 import { ShapeEditor } from "./shape";
 import { Controller } from "./controller";
-import { CoopRepository } from "./coop/cooprepo";
+import { CoopRepository } from "../coop/cooprepo";
 import { TextShapeEditor } from "./textshape";
 import { TableEditor } from "./table";
 import { resizingConstraintEditor } from "./resizingConstraint";
-import { ISave4Restore } from "./coop/localcmd";
+import { ISave4Restore } from "../coop/localcmd";
 import { PageView, ShapeView, TableCellView, TableView, TextShapeView } from "../dataview";
 import { Page } from "../data/page";
+
+export * from "./utils/auto_layout"
 
 export { DocEditor } from "./document";
 export { PageEditor } from "./page";

@@ -1,10 +1,7 @@
-import { SymbolRefShape } from "../../data/symbolref";
-import { GroupShape, Shape, ShapeType, SymbolUnionShape } from "../../data/shape";
+import { SymbolRefShape, Document, Page, GroupShape, Shape, ShapeType, SymbolUnionShape } from "../../data";
 import { is_circular_ref2 } from "./ref_check";
-import { Api } from "../coop/recordapi";
-import { Page } from "../../data/page";
-import { is_exist_invalid_shape2, is_part_of_symbol } from "../symbol";
-import { Document } from "../../data/document";
+import { Api } from "../../coop/recordapi";
+import { is_exist_invalid_shape2 } from "../symbol";
 
 /**
  * @description 图层迁移是一个危险程度很高的行为，很有可能造成父子循环或引用循环，从而导致应用卡死！因此函数务必要非常可靠，同时还要确保入口尽量单一，便于维护。

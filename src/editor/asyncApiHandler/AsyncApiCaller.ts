@@ -1,6 +1,6 @@
-import { CoopRepository } from "../coop/cooprepo";
+import { CoopRepository } from "../../coop/cooprepo";
 import { Document, Page } from "../../data";
-import { Api } from "../coop/recordapi";
+import { Api } from "../../coop/recordapi";
 import { PageView, adapt2Shape } from "../../dataview";
 
 export class AsyncApiCaller {
@@ -8,13 +8,14 @@ export class AsyncApiCaller {
     __document: Document;
     api: Api;
     page: Page;
+    pageView: PageView;
 
     exception: boolean = false;
 
     constructor(repo: CoopRepository, document: Document, page: PageView) {
         this.__repo = repo;
         this.__document = document;
-
+        this.pageView = page;
         this.page = adapt2Shape(page) as Page;
         this.api = this.start()
     }

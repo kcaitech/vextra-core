@@ -1,5 +1,5 @@
 import { AsyncApiCaller } from "./AsyncApiCaller";
-import { CoopRepository } from "../coop/cooprepo";
+import { CoopRepository } from "../../coop/cooprepo";
 import { adapt2Shape, GroupShapeView, PageView, ShapeView, SymbolRefView } from "../../dataview";
 import { translate } from "../frame";
 import { shape4cornerRadius } from "../symbol";
@@ -19,7 +19,9 @@ import {
     RadiusType,
     TextBehaviour,
     makeShapeTransform2By1,
-    makeShapeTransform1By2
+    makeShapeTransform1By2,
+    StackSizing,
+    OvalShape
 } from "../../data";
 import {
     calculateInnerAnglePosition,
@@ -37,6 +39,8 @@ import {
     UniformScaleUnit
 } from "./transform";
 import { fixTextShapeFrameByLayout } from "../utils/other";
+import { getAutoLayoutShapes, modifyAutoLayout, tidyUpLayout } from "../utils/auto_layout";
+import { modifyPathByArc } from "./arc";
 
 export class LockMouseHandler extends AsyncApiCaller {
     private recorder: RangeRecorder = new Map();
@@ -61,8 +65,15 @@ export class LockMouseHandler extends AsyncApiCaller {
 
             for (let i = 0; i < shapes.length; i++) {
                 const shape = adapt2Shape(shapes[i]);
+                const parent = shape.parent;
+                if (parent && (parent as Artboard).autoLayout) continue;
                 if (shape.isVirtualShape) continue;
                 translate(api, page, shape, dx, 0);
+            }
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                modifyAutoLayout(this.page, api, parent);
             }
             this.updateView();
         } catch (e) {
@@ -78,8 +89,15 @@ export class LockMouseHandler extends AsyncApiCaller {
 
             for (let i = 0; i < shapes.length; i++) {
                 const shape = adapt2Shape(shapes[i]);
+                const parent = shape.parent;
+                if (parent && (parent as Artboard).autoLayout) continue;
                 if (shape.isVirtualShape) continue;
                 translate(api, page, shape, 0, dy);
+            }
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                modifyAutoLayout(this.page, api, parent);
             }
             this.updateView();
         } catch (e) {
@@ -115,6 +133,11 @@ export class LockMouseHandler extends AsyncApiCaller {
                         api.shapeModifyTextBehaviour(page, shape.text, TextBehaviour.Fixed);
                     }
                     fixTextShapeFrameByLayout(api, page, shape);
+                } else {
+                    api.shapeModifyWidth(page, shape, size.width + dw);
+                    if ((shape as Artboard).autoLayout) {
+                        api.shapeModifyAutoLayoutSizing(page, shape, StackSizing.Fixed, 'hor');
+                    }
                 }
 
                 if (view instanceof GroupShapeView) {
@@ -123,6 +146,11 @@ export class LockMouseHandler extends AsyncApiCaller {
                         y: Math.abs(size.height / (size.height - dh))
                     });
                 }
+            }
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                modifyAutoLayout(this.page, api, parent);
             }
             this.updateView();
         } catch (e) {
@@ -158,6 +186,11 @@ export class LockMouseHandler extends AsyncApiCaller {
                         api.shapeModifyTextBehaviour(page, shape.text, TextBehaviour.FixWidthAndHeight);
                     }
                     fixTextShapeFrameByLayout(api, page, shape);
+                } else {
+                    api.shapeModifyHeight(page, shape, size.height + dh);
+                    if ((shape as Artboard).autoLayout) {
+                        api.shapeModifyAutoLayoutSizing(page, shape, StackSizing.Fixed, 'ver');
+                    }
                 }
                 if (view instanceof GroupShapeView) {
                     reLayoutBySizeChanged(api, page, view, {
@@ -165,6 +198,11 @@ export class LockMouseHandler extends AsyncApiCaller {
                         y: Math.abs(size.height / (size.height - dh))
                     });
                 }
+            }
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                modifyAutoLayout(this.page, api, parent);
             }
             this.updateView();
         } catch (e) {
@@ -240,7 +278,7 @@ export class LockMouseHandler extends AsyncApiCaller {
                 const d = (shape.rotation || 0) + deg;
 
                 const t = makeShapeTransform2By1(shape.transform);
-                const { width, height } = shape.frame;
+                const {width, height} = shape.frame;
 
                 const angle = d % 360 * Math.PI / 180;
                 const os = t.decomposeEuler().z;
@@ -254,7 +292,11 @@ export class LockMouseHandler extends AsyncApiCaller {
                 const transform = makeShapeTransform1By2(t) as Transform;
                 api.shapeModifyRotate(page, adapt2Shape(shape), transform)
             }
-
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                modifyAutoLayout(this.page, api, parent);
+            }
             this.updateView();
         } catch (e) {
             console.log('LockMouseHandler.executeRotate', e);
@@ -395,12 +437,113 @@ export class LockMouseHandler extends AsyncApiCaller {
         }
     }
 
+    executeTidyup(shapes: ShapeView[][], hor: number, ver: number, dir: boolean) {
+        try {
+            const api = this.api;
+            const page = this.page;
+            tidyUpLayout(page, api, shapes, hor, ver, dir);
+            this.updateView();
+        } catch (e) {
+            this.exception = true;
+            console.log('LockMouseHandler.executeHorTidyup', e);
+        }
+    }
+
+
     executeUniform(units: UniformScaleUnit[], ratio: number) {
         try {
             uniformScale(this.api, this.page, units, ratio, this.recorder, this.sizeRecorder, this.transformRecorder, this.valueRecorder);
             this.updateView();
         } catch (error) {
             console.log('error:', error);
+            this.exception = true;
+        }
+    }
+
+    modifyStartingAngleBy(shapes: ShapeView[], delta: number) {
+        try {
+            const round = Math.PI * 2;
+            const api = this.api;
+            const page = this.page;
+
+            for (const view of shapes) {
+                const shape = adapt2Shape(view);
+                if (!(shape instanceof OvalShape)) continue;
+                const end = shape.endingAngle ?? round;
+                const start = shape.startingAngle ?? 0;
+
+                const d = end - start;
+
+                let targetStart = start + delta;
+
+                if (targetStart > round) targetStart %= round;
+                else if (targetStart < 0) targetStart += round;
+
+                const targetEnd = targetStart + d;
+
+                api.ovalModifyStartingAngle(page, shape, targetStart);
+                api.ovalModifyEndingAngle(page, shape, targetEnd);
+
+                modifyPathByArc(api, page, shape);
+            }
+            this.updateView();
+        } catch (error) {
+            console.error(error);
+            this.exception = true;
+        }
+    }
+
+    modifySweepBy(shapes: ShapeView[], delta: number) {
+        try {
+            const round = Math.PI * 2;
+            const api = this.api;
+            const page = this.page;
+
+            for (const view of shapes) {
+                const shape = adapt2Shape(view);
+                if (!(shape instanceof OvalShape)) continue;
+
+                const start = shape.startingAngle ?? 0;
+                const end = shape.endingAngle ?? round;
+
+                let targetEnd = end + delta;
+                if (targetEnd - start < -round) targetEnd = -round + start;
+                else if (targetEnd - start > round) targetEnd = round + start;
+
+                api.ovalModifyEndingAngle(page, shape, targetEnd);
+
+                modifyPathByArc(api, page, shape);
+            }
+
+            this.updateView();
+        } catch (error) {
+            console.error(error);
+            this.exception = true;
+        }
+    }
+
+    modifyInnerRadiusBy(shapes: ShapeView[], delta: number) {
+        try {
+            const api = this.api;
+            const page = this.page;
+
+            for (const view of shapes) {
+                const shape = adapt2Shape(view);
+                if (!(shape instanceof OvalShape)) continue;
+
+                let targetInnerRadius = (shape.innerRadius ?? 0) + delta;
+
+                if (targetInnerRadius < 0) targetInnerRadius = 0;
+                else if (targetInnerRadius > 1) targetInnerRadius = 1;
+
+                api.ovalModifyInnerRadius(page, shape, targetInnerRadius);
+
+                modifyPathByArc(api, page, shape);
+            }
+
+            this.updateView();
+        } catch (error) {
+            console.error(error);
             this.exception = true;
         }
     }
