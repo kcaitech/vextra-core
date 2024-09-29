@@ -157,7 +157,6 @@ export class Transporter extends AsyncApiCaller {
     //         this.exception = true;
     //     }
     // }
-
     migrate(target: ShapeView, sortedShapes: ShapeView[], dlt: string) {
         try {
             const api = this.api;
