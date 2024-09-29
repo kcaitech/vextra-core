@@ -615,7 +615,7 @@ const getShapeFrame = (shape: Shape) => {
     return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
 }
 
-export type TidyUpAlgin = 'center' | 'stert' | 'end';
+export type TidyUpAlgin = 'center' | 'start' | 'end';
 export const tidyUpLayout = (page: Page, api: Api, shape_rows: ShapeView[][], horSpacing: number, verSpacing: number, dir_hor: boolean, algin: TidyUpAlgin, start?: { x: number, y: number }) => {
     const minX = Math.min(...shape_rows[0].map(s => s._p_frame.x));
     const minY = Math.min(...shape_rows[0].map(s => s._p_frame.y));
