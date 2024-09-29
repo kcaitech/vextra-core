@@ -172,7 +172,7 @@ import { FMT_VER_latest } from "../data/fmtver";
 import { makeShapeTransform1By2, makeShapeTransform2By1, updateShapeTransform1By2 } from "../data/shape_transform_util";
 import { ColVector3D } from "../basic/matrix2";
 import { Transform as Transform2 } from "../basic/transform";
-import { getAutoLayoutShapes, initAutoLayout, layoutShapesOrder, layoutSpacing, modifyAutoLayout, tidyUpLayout } from "./utils/auto_layout";
+import { getAutoLayoutShapes, initAutoLayout, layoutShapesOrder, layoutSpacing, modifyAutoLayout, TidyUpAlgin, tidyUpLayout } from "./utils/auto_layout";
 
 import { getFormatFromBase64 } from "../basic/utils";
 import { uniformScale, UniformScaleUnit } from "./asyncApiHandler";
@@ -4674,10 +4674,10 @@ export class PageEditor {
         return new TableEditor(shape, this.__page, this.__repo, this.__document);
     }
 
-    tidyUpShapesLayout(shape_rows: ShapeView[][], hor: number, ver: number, dir: boolean) {
+    tidyUpShapesLayout(shape_rows: ShapeView[][], hor: number, ver: number, dir: boolean, algin: TidyUpAlgin) {
         const api = this.__repo.start('tidyUpShapesLayout');
         try {
-            tidyUpLayout(this.__page, api, shape_rows, hor, ver, dir);
+            tidyUpLayout(this.__page, api, shape_rows, hor, ver, dir, algin);
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();

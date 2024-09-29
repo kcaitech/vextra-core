@@ -615,8 +615,8 @@ const getShapeFrame = (shape: Shape) => {
     return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
 }
 
-
-export const tidyUpLayout = (page: Page, api: Api, shape_rows: ShapeView[][], horSpacing: number, verSpacing: number, dir_hor: boolean, start?: { x: number, y: number }) => {
+export type TidyUpAlgin = 'center' | 'stert' | 'end';
+export const tidyUpLayout = (page: Page, api: Api, shape_rows: ShapeView[][], horSpacing: number, verSpacing: number, dir_hor: boolean, algin: TidyUpAlgin, start?: { x: number, y: number }) => {
     const minX = Math.min(...shape_rows[0].map(s => s._p_frame.x));
     const minY = Math.min(...shape_rows[0].map(s => s._p_frame.y));
     let leftTrans = start?.x || minX; //水平起点
@@ -628,7 +628,7 @@ export const tidyUpLayout = (page: Page, api: Api, shape_rows: ShapeView[][], ho
     if (!dir_hor) {
         for (let i = 0; i < shape_rows.length; i++) {
             const shape_row = shape_rows[i];
-            if(shape_row.length === 0) continue;
+            if (shape_row.length === 0) continue;
             // 更新当前行的最大高度
             const maxHeightInRow = Math.max(...shape_row.map(s => s._p_frame.height));
             for (let i = 0; i < shape_row.length; i++) {
@@ -638,7 +638,12 @@ export const tidyUpLayout = (page: Page, api: Api, shape_rows: ShapeView[][], ho
                 let transx = 0;
                 let transy = 0;
                 // 设置新的 x 和 y 坐标
-                const verticalOffset = (maxHeightInRow - frame.height) / 2;
+                let verticalOffset = 0;
+                if (algin === 'center') {
+                    verticalOffset = (maxHeightInRow - frame.height) / 2;
+                } else if (algin === 'end') {
+                    verticalOffset = maxHeightInRow - frame.height;
+                }
                 if (parent.type === ShapeType.Page) {
                     const m = parent.matrix2Root();
                     const box = m.computeCoord2(shape._p_frame.x, shape._p_frame.y);
@@ -647,7 +652,7 @@ export const tidyUpLayout = (page: Page, api: Api, shape_rows: ShapeView[][], ho
                 } else {
                     transx = leftTrans - frame.x;
                     transy = topTrans + verticalOffset - frame.y;
-                }      
+                }
                 const x = shape.transform.translateX + transx;
                 const y = shape.transform.translateY + transy;
                 api.shapeModifyX(page, adapt2Shape(shape), x);
@@ -663,7 +668,7 @@ export const tidyUpLayout = (page: Page, api: Api, shape_rows: ShapeView[][], ho
         // 垂直方向
         for (let i = 0; i < shape_rows.length; i++) {
             const shape_row = shape_rows[i];
-            if(shape_row.length === 0) continue;
+            if (shape_row.length === 0) continue;
             // 更新当前行的最大宽度
             const maxWidthInRow = Math.max(...shape_row.map(s => s._p_frame.width));
             for (let i = 0; i < shape_row.length; i++) {
@@ -673,7 +678,12 @@ export const tidyUpLayout = (page: Page, api: Api, shape_rows: ShapeView[][], ho
                 let transx = 0;
                 let transy = 0;
                 // 设置新的 x 和 y 坐标
-                const horizontalOffset = (maxWidthInRow - frame.width) / 2;
+                let horizontalOffset = 0;
+                if (algin === 'center') {
+                    horizontalOffset = (maxWidthInRow - frame.width) / 2;
+                } else if (algin === 'end') {
+                    horizontalOffset = maxWidthInRow - frame.width;
+                }
                 if (parent.type === ShapeType.Page) {
                     const m = parent.matrix2Root();
                     const box = m.computeCoord2(shape._p_frame.x, shape._p_frame.y);
