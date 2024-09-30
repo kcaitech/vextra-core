@@ -14,6 +14,7 @@ import {
 } from "../../data";
 import { adapt2Shape, ArtboradView, PageView, ShapeView } from "../../dataview";
 import { Api } from "../../coop/recordapi";
+
 export function layoutShapesOrder(shapes: Shape[], includedBorder: boolean, sort?: Map<string, number>, cursort = false) {
     let shape_rows: Shape[][] = [];
     let unassignedShapes: Shape[] = [...shapes].filter(shape => shape.getVisible());
@@ -170,12 +171,35 @@ export const modifyAutoLayout = (page: Page, api: Api, shape: Shape, sort?: Map<
     } else {
         let autoHeight = 0;
         if (!layoutInfo.stackWrap || layoutInfo.stackWrap === StackWrap.Wrap) {
-            autoHeight = autoWrapLayout(page, api, layoutInfo, shape_rows, frame);
+            autoHeight = autoWrapLayout(page, api, layoutInfo, shape_row, frame);
 
         } else if (layoutInfo.stackMode === StackMode.Vertical) {
-            autoHeight = autoVerticalLayout(page, api, layoutInfo, shape_rows, frame);
+            autoHeight = autoVerticalLayout(page, api, layoutInfo, shape_row, frame);
         } else {
-            autoHeight = autoHorizontalLayout(page, api, layoutInfo, shape_rows, frame);
+            autoHeight = autoHorizontalLayout(page, api, layoutInfo, shape_row, frame);
+        }
+        if (layoutInfo.stackCounterSizing !== StackSizing.Fixed) {
+            api.shapeModifyHeight(page, target, autoHeight);
+        }
+    }
+}
+
+export function reLayoutBySort(page: Page, api: Api, target: Artboard, sort: Map<string, number>) {
+    const layoutInfo = target.autoLayout!;
+    const shapesSorted: Shape[] = target.childs.toSorted((a, b) => sort.get(a.id)! < sort.get(b.id)! ? -1 : 1);
+    const frame = { width: target.size.width, height: target.size.height }
+    if (layoutInfo.stackPrimarySizing === StackSizing.Auto) {
+        const { width, height } = autoWidthLayout(page, api, layoutInfo, shapesSorted, frame);
+        api.shapeModifyWidth(page, target, width);
+        if (layoutInfo.stackCounterSizing !== StackSizing.Fixed) api.shapeModifyHeight(page, target, height);
+    } else {
+        let autoHeight;
+        if (!layoutInfo.stackWrap || layoutInfo.stackWrap === StackWrap.Wrap) {
+            autoHeight = autoWrapLayout(page, api, layoutInfo, shapesSorted, frame);
+        } else if (layoutInfo.stackMode === StackMode.Vertical) {
+            autoHeight = autoVerticalLayout(page, api, layoutInfo, shapesSorted, frame);
+        } else {
+            autoHeight = autoHorizontalLayout(page, api, layoutInfo, shapesSorted, frame);
         }
         if (layoutInfo.stackCounterSizing !== StackSizing.Fixed) {
             api.shapeModifyHeight(page, target, autoHeight);
@@ -283,12 +307,10 @@ const autoWidthLayout = (page: Page, api: Api, layoutInfo: AutoLayout, shape_row
     return { width: container_auto_width, height: container_auto_height }
 }
 
-const autoWrapLayout = (page: Page, api: Api, layoutInfo: AutoLayout, shape_rows: Shape[][], container: {
+const autoWrapLayout = (page: Page, api: Api, layoutInfo: AutoLayout, shape_row: Shape[], container: {
     width: number,
     height: number
 }) => {
-    const shape_row: Shape[] = [];
-    shape_rows.forEach(item => shape_row.push(...item));
     const minShapeWidth = Math.min(...shape_row.map(s => boundingBox(s, layoutInfo.bordersTakeSpace).width));
     let horSpacing = Math.max(layoutInfo.stackSpacing, -minShapeWidth); // 水平间距
     let verSpacing = Math.max(layoutInfo.stackCounterSpacing, 0); //垂直间距
@@ -394,12 +416,10 @@ const autoWrapLayout = (page: Page, api: Api, layoutInfo: AutoLayout, shape_rows
     return container_auto_height;
 }
 
-const autoHorizontalLayout = (page: Page, api: Api, layoutInfo: AutoLayout, shape_rows: Shape[][], container: {
+const autoHorizontalLayout = (page: Page, api: Api, layoutInfo: AutoLayout, shape_row: Shape[], container: {
     width: number,
     height: number
 }) => {
-    const shape_row: Shape[] = [];
-    shape_rows.forEach(item => shape_row.push(...item));
     const minShapeWidth = Math.min(...shape_row.map(s => boundingBox(s, layoutInfo.bordersTakeSpace).width));
     let horSpacing = Math.max(layoutInfo.stackSpacing, -minShapeWidth); // 水平间距
     let leftPadding = layoutInfo.stackHorizontalPadding; //左边距
@@ -463,12 +483,10 @@ const autoHorizontalLayout = (page: Page, api: Api, layoutInfo: AutoLayout, shap
     return container_auto_height;
 }
 
-const autoVerticalLayout = (page: Page, api: Api, layoutInfo: AutoLayout, shape_rows: Shape[][], container: {
+const autoVerticalLayout = (page: Page, api: Api, layoutInfo: AutoLayout, shape_row: Shape[], container: {
     width: number,
     height: number
 }) => {
-    const shape_row: Shape[] = [];
-    shape_rows.forEach(item => shape_row.push(...item));
     const minShapeHeight = Math.min(...shape_row.map(s => boundingBox(s, layoutInfo.bordersTakeSpace).height));
     let verSpacing = Math.max(layoutInfo.stackCounterSpacing, -minShapeHeight); //垂直间距
     let leftPadding = layoutInfo.stackHorizontalPadding; //左边距
@@ -615,7 +633,10 @@ const getShapeFrame = (shape: Shape) => {
 }
 
 
-export const tidyUpLayout = (page: Page, api: Api, shape_rows: ShapeView[][], horSpacing: number, verSpacing: number, dir_hor: boolean, start?: { x: number, y: number }) => {
+export const tidyUpLayout = (page: Page, api: Api, shape_rows: ShapeView[][], horSpacing: number, verSpacing: number, dir_hor: boolean, start?: {
+    x: number,
+    y: number
+}) => {
     const minX = Math.min(...shape_rows[0].map(s => s._p_frame.x));
     const minY = Math.min(...shape_rows[0].map(s => s._p_frame.y));
     let leftTrans = start?.x || minX; //水平起点
@@ -627,7 +648,7 @@ export const tidyUpLayout = (page: Page, api: Api, shape_rows: ShapeView[][], ho
     if (!dir_hor) {
         for (let i = 0; i < shape_rows.length; i++) {
             const shape_row = shape_rows[i];
-            if(shape_row.length === 0) continue;
+            if (shape_row.length === 0) continue;
             // 更新当前行的最大高度
             const maxHeightInRow = Math.max(...shape_row.map(s => s._p_frame.height));
             for (let i = 0; i < shape_row.length; i++) {
@@ -646,7 +667,7 @@ export const tidyUpLayout = (page: Page, api: Api, shape_rows: ShapeView[][], ho
                 } else {
                     transx = leftTrans - frame.x;
                     transy = topTrans + verticalOffset - frame.y;
-                }      
+                }
                 const x = shape.transform.translateX + transx;
                 const y = shape.transform.translateY + transy;
                 api.shapeModifyX(page, adapt2Shape(shape), x);
@@ -662,7 +683,7 @@ export const tidyUpLayout = (page: Page, api: Api, shape_rows: ShapeView[][], ho
         // 垂直方向
         for (let i = 0; i < shape_rows.length; i++) {
             const shape_row = shape_rows[i];
-            if(shape_row.length === 0) continue;
+            if (shape_row.length === 0) continue;
             // 更新当前行的最大宽度
             const maxWidthInRow = Math.max(...shape_row.map(s => s._p_frame.width));
             for (let i = 0; i < shape_row.length; i++) {
