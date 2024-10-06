@@ -1,4 +1,4 @@
-import { CoopRepository } from "../../../coop/cooprepo";
+import { CoopRepository } from "../../../coop";
 import { AsyncApiCaller } from "../AsyncApiCaller";
 import { adapt2Shape, ArtboradView, GroupShapeView, PageView, ShapeView } from "../../../dataview";
 import {
@@ -12,26 +12,33 @@ import {
     ShapeType,
     StackMode,
     StackPositioning,
-    Transform
 } from "../../../data";
+import {Transform as TransformRaw} from "../../../data";
 import { after_migrate, unable_to_migrate } from "../../utils/migrate";
 import { get_state_name, is_state } from "../../symbol";
-import { Api } from "../../../coop/recordapi";
-import { ISave4Restore, LocalCmd, SelectionState } from "../../../coop/localcmd";
+import { Api } from "../../../coop";
+import { ISave4Restore, LocalCmd, SelectionState } from "../../../coop";
 import { getAutoLayoutShapes, modifyAutoLayout, tidyUpLayout } from "../../utils/auto_layout";
 import { translate } from "../../frame";
 import { transform_data } from "../../../io/cilpboard";
 import { MossError } from "../../../basic/error";
+import { Transform } from "../../../basic/transform";
 
 export type TranslateUnit = {
     shape: ShapeView;
-    transform: Transform
+    transform: TransformRaw
 }
 export type TidyUpInfo = {
     shapes: ShapeView[][]
     horSpace: number
     verSpace: number
     dir: boolean
+}
+
+interface TranslateBaseItem {
+    transformRaw: TransformRaw,
+    transform: Transform;
+    view: ShapeView;
 }
 
 export class Transporter extends AsyncApiCaller {
@@ -84,7 +91,7 @@ export class Transporter extends AsyncApiCaller {
             const result: Shape[] = [];
             for (let i = 0, len = actions.length; i < len; i++) {
                 const shape = _ss[i];
-                const { parent, index } = actions[i];
+                const {parent, index} = actions[i];
                 shape.name = this.genName(shape);
                 this.api.shapeInsert(this.__document, this.page, parent, shape, index);
                 result.push(parent.childs[index]);
@@ -290,32 +297,44 @@ export class Transporter extends AsyncApiCaller {
         }
     }
 
-    drawn(shapes: ShapeView[], transforms?: Transform[]) {
+    reflect: Map<string, Shape> | undefined;
+
+    drawn(
+        shapes: ShapeView[],
+        transform: Map<string, TranslateBaseItem>,
+        env?: Map<ShapeView, { parent: ShapeView, index: number }>
+    ) {
         try {
             const api = this.api;
             const page = this.page;
             const document = this.__document;
-            const source = transform_data(document, page, shapes.map(i => adapt2Shape(i)));
-            if (source.length !== shapes.length) {
-                this.exception = true;
-                return;
-            }
-            if (transforms && transforms.length !== shapes.length) {
-                this.exception = true;
-                return;
-            }
+            const reflect: Map<string, Shape> = new Map();
             const results: Shape[] = [];
-            for (let i = 0; i < shapes.length; i++) {
-                const shape = adapt2Shape(shapes[i]);
+            const parents: Artboard[] = [];
+            for (const view of shapes) {
+                const shape = adapt2Shape(view);
+                const parent = shape.parent! as GroupShape;
+                const index = parent.indexOfChild(shape);
 
-                const transform = transforms?.[i];
-                if (transform) api.shapeModifyTransform(page, shape, transform);
+                const source = transform_data(document, page, [shape]).pop()!;
+                const __shape = api.shapeInsert(document, page, parent, source, index + 1);
+                results.push(__shape);
+                reflect.set(__shape.id, shape);
 
-                const parent = shape.parent as GroupShape;
-                const targetIndex = parent.indexOfChild(shape) + 1;
-                const __source = source[i];
-                results.push(api.shapeInsert(document, page, parent, __source, targetIndex));
+                if (env) {
+                    const original = env.get(view)!;
+                    const originalParent = adapt2Shape(original.parent) as GroupShape;
+                    api.shapeMove(page, parent, index, originalParent, original.index);
+
+                    if (originalParent instanceof Artboard && originalParent.autoLayout) parents.push(originalParent);
+                }
+
+                api.shapeModifyTransform(page, shape, transform.get(view.id)!.transformRaw);
             }
+
+            if (parents.length) for (const p of parents) modifyAutoLayout(page, api, p);
+
+            this.reflect = reflect;
             this.updateView();
             return results;
         } catch (e) {
@@ -324,26 +343,48 @@ export class Transporter extends AsyncApiCaller {
         }
     }
 
-    revert(shapes: ShapeView[], bases: ShapeView[]) {
+    revert(shapes: ShapeView[]) {
         try {
-            if (shapes.length !== bases.length) {
+            if (!this.reflect) {
                 this.exception = true;
                 return;
             }
+
+            const reflect = this.reflect;
 
             const api = this.api;
             const page = this.page;
             const document = this.__document;
 
+            const parents: Shape[] = [];
+            const results: Shape[] = [];
+
             for (let i = 0; i < shapes.length; i++) {
                 const shape = adapt2Shape(shapes[i]);
-                const base = adapt2Shape(bases[i]);
-                api.shapeModifyTransform(page, base, shape.transform.clone());
-                const parent = shape.parent as GroupShape;
-                api.shapeDelete(document, page, parent, parent.indexOfChild(shape));
+                const originShape = reflect.get(shape.id)!;
+                const originParent = originShape.parent as GroupShape;
+                const currentParent = shape.parent as GroupShape;
+                if (currentParent !== originParent) {
+                    const indexF = originParent.indexOfChild(shape);
+                    const indexT = currentParent.indexOfChild(shape);
+                    api.shapeMove(page, originParent, indexF, currentParent, indexT);
+                }
+                api.shapeModifyTransform(page, originShape, shape.transform.clone());
+                api.shapeDelete(document, page, currentParent, currentParent.indexOfChild(shape));
+
+                if ((originShape as Artboard).autoLayout) parents.push(originShape);
+                if ((currentParent as Artboard).autoLayout) parents.push(currentParent);
+
+                results.push(originShape);
             }
 
+            if (parents.length) for (const p of parents) modifyAutoLayout(page, api, p);
+
+            this.reflect = undefined;
+
             this.updateView();
+
+            return results;
         } catch (e) {
             this.exception = true;
             console.error(e);
