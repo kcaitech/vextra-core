@@ -218,13 +218,7 @@ export class Transporter extends AsyncApiCaller {
 
     revert(shapes: ShapeView[]) {
         try {
-            if (!this.reflect) {
-                this.exception = true;
-                return;
-            }
-
-            const reflect = this.reflect;
-
+            const reflect = this.reflect!;
             const api = this.api;
             const page = this.page;
             const document = this.__document;
@@ -235,20 +229,22 @@ export class Transporter extends AsyncApiCaller {
             for (let i = 0; i < shapes.length; i++) {
                 const shape = adapt2Shape(shapes[i]);
                 const originShape = reflect.get(shape.id)!;
-                const originParent = originShape.parent as GroupShape;
-                const currentParent = shape.parent as GroupShape;
+
+                const originParent = originShape.parent as Artboard;
+                const currentParent = shape.parent as Artboard;
                 if (currentParent !== originParent) {
-                    const indexF = originParent.indexOfChild(shape);
+                    const indexF = originParent.indexOfChild(originShape);
                     const indexT = currentParent.indexOfChild(shape);
                     api.shapeMove(page, originParent, indexF, currentParent, indexT);
                 }
+
                 api.shapeModifyTransform(page, originShape, shape.transform.clone());
                 api.shapeDelete(document, page, currentParent, currentParent.indexOfChild(shape));
 
-                if ((originShape as Artboard).autoLayout) parents.push(originShape);
-                if ((currentParent as Artboard).autoLayout) parents.push(currentParent);
-
                 results.push(originShape);
+
+                if (originParent.autoLayout) parents.push(originShape);
+                if (currentParent.autoLayout) parents.push(currentParent);
             }
 
             if (parents.length) for (const p of parents) modifyAutoLayout(page, api, p);
