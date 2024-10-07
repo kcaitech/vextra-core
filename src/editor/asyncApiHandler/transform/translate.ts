@@ -49,7 +49,7 @@ export interface MigrateItem {
 }
 
 export class Transporter extends AsyncApiCaller {
-    need_layout_shape = new Set<string>();
+    need_layout_shape: Set<Artboard> = new Set();
     prototype = new Map<string, Shape>()
     shapes: (Shape | ShapeView)[] = [];
 
@@ -138,6 +138,8 @@ export class Transporter extends AsyncApiCaller {
         } else {
             this.prototype.clear()
         }
+        if ((origin as Artboard).autoLayout) this.need_layout_shape.add(origin);
+        if ((targetParent as Artboard).autoLayout) this.need_layout_shape.add(targetParent);
         after_migrate(document, page, api, origin);
         return true;
     }
@@ -183,7 +185,7 @@ export class Transporter extends AsyncApiCaller {
             const document = this.__document;
             const reflect: Map<string, Shape> = new Map();
             const results: Shape[] = [];
-            const parents: Artboard[] = [];
+            const layoutSet = this.need_layout_shape;
             for (const view of shapes) {
                 const shape = adapt2Shape(view);
                 const parent = shape.parent! as GroupShape;
@@ -199,13 +201,12 @@ export class Transporter extends AsyncApiCaller {
                     const originalParent = adapt2Shape(original.parent) as GroupShape;
                     api.shapeMove(page, parent, index, originalParent, original.index);
 
-                    if (originalParent instanceof Artboard && originalParent.autoLayout) parents.push(originalParent);
+                    if ((originalParent as Artboard).autoLayout) layoutSet.add(originalParent);
+                    if ((parent as Artboard).autoLayout) layoutSet.add(parent);
                 }
 
                 api.shapeModifyTransform(page, shape, transform.get(view.id)!.transformRaw);
             }
-
-            if (parents.length) for (const p of parents) modifyAutoLayout(page, api, p);
 
             this.reflect = reflect;
             this.updateView();
@@ -223,8 +224,8 @@ export class Transporter extends AsyncApiCaller {
             const page = this.page;
             const document = this.__document;
 
-            const parents: Shape[] = [];
             const results: Shape[] = [];
+            const layoutSet = this.need_layout_shape;
 
             for (let i = 0; i < shapes.length; i++) {
                 const shape = adapt2Shape(shapes[i]);
@@ -243,11 +244,9 @@ export class Transporter extends AsyncApiCaller {
 
                 results.push(originShape);
 
-                if (originParent.autoLayout) parents.push(originShape);
-                if (currentParent.autoLayout) parents.push(currentParent);
+                if (originParent.autoLayout) layoutSet.add(originParent);
+                if (currentParent.autoLayout) layoutSet.add(currentParent);
             }
-
-            if (parents.length) for (const p of parents) modifyAutoLayout(page, api, p);
 
             this.reflect = undefined;
 
@@ -339,15 +338,9 @@ export class Transporter extends AsyncApiCaller {
                 this.api.delShapeProtoStart(this.page, v)
             })
         }
-        const parents: GroupShape[] = [];
-        this.need_layout_shape.forEach(v => {
-            const target = this.page.getShape(v) as GroupShape;
-            target && parents.push(target);
-        })
-        for (let i = 0; i < parents.length; i++) {
-            const parent = parents[i];
+        this.need_layout_shape.forEach(parent => {
             modifyAutoLayout(this.page, this.api, parent);
-        }
+        })
         super.commit();
     }
 }
