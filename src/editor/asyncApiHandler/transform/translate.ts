@@ -237,15 +237,15 @@ export class Transporter extends AsyncApiCaller {
                     const indexF = originParent.indexOfChild(originShape);
                     const indexT = currentParent.indexOfChild(shape);
                     api.shapeMove(page, originParent, indexF, currentParent, indexT);
+
+                    if (originParent.autoLayout) layoutSet.add(originParent);
+                    if (currentParent.autoLayout) layoutSet.add(currentParent);
                 }
 
-                api.shapeModifyTransform(page, originShape, shape.transform.clone());
+                api.shapeModifyTransform(page, originShape, shape.transform);
                 api.shapeDelete(document, page, currentParent, currentParent.indexOfChild(shape));
 
                 results.push(originShape);
-
-                if (originParent.autoLayout) layoutSet.add(originParent);
-                if (currentParent.autoLayout) layoutSet.add(currentParent);
             }
 
             this.reflect = undefined;
