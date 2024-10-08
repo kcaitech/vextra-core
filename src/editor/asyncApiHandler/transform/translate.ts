@@ -130,7 +130,10 @@ export class Transporter extends AsyncApiCaller {
         transform.addTransform(__t.getInverse());
 
         api.shapeModifyTransform(page, shape, makeShapeTransform1By2(transform));
-        api.shapeMove(page, origin, origin.indexOfChild(shape), targetParent, index);
+
+        let originIndex = origin.indexOfChild(shape)
+        if (origin.id === targetParent.id && originIndex < index) index--;
+        api.shapeMove(page, origin, originIndex, targetParent, index);
 
         //标记容器是否被移动到其他容器
         if (shape.parent?.isContainer && shape.parent.type !== ShapeType.Page) {
@@ -199,7 +202,12 @@ export class Transporter extends AsyncApiCaller {
                 if (env) {
                     const original = env.get(view)!;
                     const originalParent = adapt2Shape(original.parent) as GroupShape;
-                    api.shapeMove(page, parent, index, originalParent, original.index);
+
+                    const targetIndex = (parent.id === originalParent.id && index < original.index)
+                        ? original.index - 1
+                        : original.index;
+
+                    api.shapeMove(page, parent, index, originalParent, targetIndex);
 
                     if ((originalParent as Artboard).autoLayout) layoutSet.add(originalParent);
                     if ((parent as Artboard).autoLayout) layoutSet.add(parent);
@@ -236,6 +244,7 @@ export class Transporter extends AsyncApiCaller {
                 if (currentParent !== originParent) {
                     const indexF = originParent.indexOfChild(originShape);
                     const indexT = currentParent.indexOfChild(shape);
+
                     api.shapeMove(page, originParent, indexF, currentParent, indexT);
 
                     if (originParent.autoLayout) layoutSet.add(originParent);
@@ -318,7 +327,6 @@ export class Transporter extends AsyncApiCaller {
                 const oParent = adapt2Shape(view.parent!) as GroupShape;
                 const shape = adapt2Shape(view);
                 const oIndex = oParent.indexOfChild(shape);
-
                 api.shapeMove(page, oParent, oIndex, envData, index);
                 api.shapeModifyX(page, shape, x);
                 api.shapeModifyY(page, shape, y);

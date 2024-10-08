@@ -7,6 +7,7 @@ import { Point2D, StackSizing } from "../../data/typesdefine";
 import { float_accuracy } from "../../basic/consts";
 import { reLayoutBySizeChanged } from "../asyncApiHandler";
 import { adapt2Shape, ArtboradView, GroupShapeView, ShapeView } from "../../dataview";
+import { getAutoLayoutShapes, modifyAutoLayout } from "./auto_layout";
 
 function equal_with_mean(a: number, b: number) {
     return Math.abs(a - b) < float_accuracy;
@@ -70,6 +71,11 @@ export function modify_shapes_width(api: Api, document: Document, page: Page, sh
             reLayoutBySizeChanged(api, page, view, { x: val / w, y: h / origin_h });
         }
     }
+    const parents = getAutoLayoutShapes(shapes);
+    for (let i = 0; i < parents.length; i++) {
+        const parent = parents[i];
+        modifyAutoLayout(page, api, parent);
+    }
 }
 
 export function modify_shapes_height(api: Api, document: Document, page: Page, shapes: ShapeView[], val: number) {
@@ -101,6 +107,11 @@ export function modify_shapes_height(api: Api, document: Document, page: Page, s
                 y: val / h
             });
         }
+    }
+    const parents = getAutoLayoutShapes(shapes);
+    for (let i = 0; i < parents.length; i++) {
+        const parent = parents[i];
+        modifyAutoLayout(page, api, parent);
     }
 }
 
