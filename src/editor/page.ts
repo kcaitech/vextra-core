@@ -2576,6 +2576,19 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+     setShapesFillOpacity(actions: BatchAction[]) {
+        const api = this.__repo.start('setShapesFillOpacity');
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index, value } = actions[i];
+                const s = shape4fill(api, this.__page, target);
+                api.setFillOpacity(this.__page, s, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
 
     setShapesFillEnabled(actions: BatchAction[]) {
         const api = this.__repo.start('setShapesFillEnabled');
