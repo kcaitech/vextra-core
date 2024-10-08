@@ -172,7 +172,7 @@ export class ParaIter {
     private _nextAttr(step: number) {
         let span = this._para.spans[this._spanIdx];
         this._spanOffset += step;
-        while (this._spanOffset >= span.length) {
+        while (span && this._spanOffset >= span.length) {
             ++this._spanIdx;
             if (this._spanIdx >= this._para.spans.length) {
                 this._spanIdx = this._para.spans.length - 1;

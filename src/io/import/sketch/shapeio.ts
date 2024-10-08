@@ -48,13 +48,16 @@ function uniqueId(ctx: LoadContext, id: string): string {
 }
 
 function importExportOptions(data: IJSON): ExportOptions {
-    return ((d) => {
+    const d: IJSON = data['exportOptions'];
+    if (!d) {
         return new ExportOptions(
             new BasicArray<ExportFormat>(),
             0,
             false, false, false, false)
     }
-    )(data['exportOptions']);
+    const formats = d['exportFormats'] || new BasicArray<ExportFormat>();
+    const trim = d['shouldTrim'] || false;
+    return new ExportOptions(formats, 0, trim, false, false, false)
 }
 
 function importShapeFrame(data: IJSON) {
@@ -234,10 +237,11 @@ export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun, i: n
     // const points = createNormalPoints();
 
     const shape = new Artboard([i] as BasicArray<number>, id, name, ShapeType.Artboard, frame.trans, style, new BasicArray<Shape>(...childs), frame.size);
-
+    
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     shape.exportOptions = exportOptions;
+    shape.mask = data['hasClippingMask'];
     return shape;
 }
 
@@ -264,6 +268,7 @@ export function importGroupShape(ctx: LoadContext, data: IJSON, f: ImportFun, i:
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     shape.exportOptions = exportOptions;
+    shape.mask = data['hasClippingMask'];
     return shape;
 }
 
@@ -288,6 +293,7 @@ export function importShapeGroupShape(ctx: LoadContext, data: IJSON, f: ImportFu
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     shape.exportOptions = exportOptions;
+    shape.mask = data['hasClippingMask'];
     return shape;
 }
 
@@ -332,6 +338,7 @@ export function importImage(ctx: LoadContext, data: IJSON, f: ImportFun, i: numb
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     shape.exportOptions = exportOptions;
+    shape.mask = data['hasClippingMask'];
     return shape;
 }
 
@@ -357,6 +364,7 @@ export function importPage(ctx: LoadContext, data: IJSON, f: ImportFun): Page {
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     shape.exportOptions = exportOptions;
+    shape.mask = data['hasClippingMask'];
     return shape;
 }
 
@@ -381,6 +389,7 @@ export function importPathShape(ctx: LoadContext, data: IJSON, f: ImportFun, i: 
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     shape.exportOptions = exportOptions;
+    shape.mask = data['hasClippingMask'];
     return shape;
 }
 
@@ -409,6 +418,7 @@ export function importRectShape(ctx: LoadContext, data: IJSON, f: ImportFun, i: 
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     shape.exportOptions = exportOptions;
+    shape.mask = data['hasClippingMask'];
     return shape;
 }
 
@@ -430,10 +440,13 @@ export function importTextShape(ctx: LoadContext, data: IJSON, f: ImportFun, i: 
     const textBehaviour = [TextBehaviour.Flexible, TextBehaviour.Fixed, TextBehaviour.FixWidthAndHeight][data['textBehaviour']] ?? TextBehaviour.Flexible;
     text.attr && (text.attr.textBehaviour = textBehaviour);
     // const isClosed = data['isClosed'];
+    // 导入填充是文字颜色
+    style.fills = new BasicArray();
     const shape = new TextShape([i] as BasicArray<number>, id, name, ShapeType.Text, frame.trans, style, frame.size, text);
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     shape.exportOptions = exportOptions;
+    shape.mask = data['hasClippingMask'];
     return shape;
 }
 
@@ -461,6 +474,7 @@ export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun, i: num
     // shape.appendChilds(childs);
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
+    shape.mask = data['hasClippingMask'];
     return shape;
 }
 
@@ -485,5 +499,6 @@ export function importSymbolRef(ctx: LoadContext, data: IJSON, f: ImportFun, i: 
     if (data['overrideValues']) importOverrides(shape, data['overrideValues']);
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
+    shape.mask = data['hasClippingMask'];
     return shape;
 }

@@ -13,6 +13,7 @@ async function importPageList(lzData: LzData, pageIds: string[]): Promise<BasicA
 
     const meta: [string, string][] = Object.keys(pagesAndArtboards).map((key: string) => {
         const item: IJSON = pagesAndArtboards[key];
+
         const name: string = item['name'];
         return [key, name];
     });
@@ -21,10 +22,18 @@ async function importPageList(lzData: LzData, pageIds: string[]): Promise<BasicA
     const pageList = new BasicArray<PageListItem>();
 
     for (let i = 0, len = pageIds.length; i < len; i++) {
-        const id = pageIds[i]
+        const id = pageIds[i];
+        console.log(id, 'id');
+        
         // if (id === LibType.Symbol) continue; // 组件库页面
-        const name = metaMap.get(id) || 'Unknow'
-        pageList.push(new PageListItem([i] as BasicArray<number>, id, name))
+        let name = metaMap.get(id);
+        if (!name) {
+            const p = await lzData.loadJson(`pages/${id}.json`);
+            console.log(p, 'page');
+            
+            name = p['name'];
+        }
+        pageList.push(new PageListItem([i] as BasicArray<number>, id, name || 'Unknow'))
     }
 
     return pageList;

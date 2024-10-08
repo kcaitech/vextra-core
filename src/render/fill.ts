@@ -65,13 +65,13 @@ handler[FillType.Gradient] = function (h: Function, frame: ShapeSize, fill: Fill
 
 handler[FillType.Pattern] = function (h: Function, frame: ShapeSize, fill: Fill, path: string): any {
     const id = "pattern-fill-" + objectId(fill) + randomId();
-    const color = fill.color;
+    const setting = fill.contextSettings;
     const pattern = patternRender(h, frame, id, path, fill);
 
     const _path = h('path', {
         d: path,
         fill: 'url(#' + id + ')',
-        "fill-opacity": (color ? color.alpha : 1)
+        "fill-opacity": (setting ? setting.opacity : 1)
     })
 
     return h("g", [pattern, _path]);
