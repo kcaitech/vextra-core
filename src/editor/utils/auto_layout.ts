@@ -195,7 +195,7 @@ export const modifyAutoLayout = (page: Page, api: Api, shape: Shape, sort?: Map<
 export function reLayoutBySort(page: Page, api: Api, target: Artboard, sort: Map<string, number>) {
     const layoutInfo = target.autoLayout!;
     const shapesSorted: Shape[] = [...target.childs].sort((a, b) => sort.get(a.id)! < sort.get(b.id)! ? -1 : 1);
-    const frame = {width: target.size.width, height: target.size.height}
+    const frame = { width: target.size.width, height: target.size.height }
     if (layoutInfo.stackPrimarySizing === StackSizing.Auto) {
         const {width, height} = autoWidthLayout(page, api, layoutInfo, shapesSorted, frame);
         api.shapeModifyWidth(page, target, width);
