@@ -116,15 +116,16 @@ export function importText(data: IJSON, textStyle: IJSON): Text {
 
 function fontName(font: IJSON) {
     if (!font['name']) return;
-    const newName = font['name'].replace(/-BoldItalic|-BlackItalic|-Thin|-Light|-ExtraLight|-SemiBold|-Black|-Italic|-Bold|-Medium|-ExtraBold|-Regular/, "");
+    const newName = font['name'].replace(/-BoldItalic|-BlackItalic|-Thin|-Light|-ExtraLight|-SemiBold|-Black|-Italic|-Bold|-Medium|-ExtraBold|-Regular/i, "");
     return newName;
 }
 
 function fontWeight(font: IJSON) {
     if (!font['name']) return;
-    const reg = RegExp(/BoldItalic|BlackItalic|ExtraBold|Thin|ExtraLight|SemiBold|Black|Italic|Bold|Medium|Light|Regular/);
-    const weight = font['name'].match(reg)[0];
-    switch (weight) {
+    const reg = RegExp(/BoldItalic|BlackItalic|ExtraBold|Thin|ExtraLight|SemiBold|Black|Italic|Bold|Medium|Light|Regular/i);
+    const weight = font['name'].match(reg);
+    if(!weight) return;
+    switch (weight[0]) {
         case 'Regular':
             return { weight: 400, italic: false };
         case 'Light':
