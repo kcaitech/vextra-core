@@ -12,7 +12,7 @@ import {
     StackSizing,
     StackWrap
 } from "../../data";
-import { adapt2Shape, ArtboradView, PageView, ShapeView } from "../../dataview";
+import { adapt2Shape, ShapeView } from "../../dataview";
 import { Api } from "../../coop/recordapi";
 
 export function layoutShapesOrder(shapes: Shape[], includedBorder: boolean, sort?: Map<string, number>, cursort = false) {
