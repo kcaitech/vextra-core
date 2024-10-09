@@ -38,9 +38,11 @@ export function layoutShapesOrder(shapes: Shape[], includedBorder: boolean, sort
         const currentRow = unassignedShapes.filter(shape => {
             const frame = boundingBox(shape, includedBorder);
             const base_frame = boundingBox(baseShape, includedBorder);
-            return (frame.y + 1) < (base_frame.y + base_frame.height)
+            return frame.y <= (base_frame.y + base_frame.height)
         });
-
+        if (currentRow.length === 0) {
+            currentRow.push(baseShape);
+        }
         // 将当前行按 x 坐标排序
         currentRow.sort((a, b) => {
             const a_frame = boundingBox(a);
@@ -56,7 +58,7 @@ export function layoutShapesOrder(shapes: Shape[], includedBorder: boolean, sort
                     if (typeof _a !== 'number' || typeof _b !== 'number') return -1;
                     return _a > _b ? 1 : -1;
                 } else {
-                    return -1;
+                    return 1;
                 }
             }
         })
@@ -195,7 +197,7 @@ export const modifyAutoLayout = (page: Page, api: Api, shape: Shape, sort?: Map<
 export function reLayoutBySort(page: Page, api: Api, target: Artboard, sort: Map<string, number>) {
     const layoutInfo = target.autoLayout!;
     const shapesSorted: Shape[] = [...target.childs].sort((a, b) => sort.get(a.id)! < sort.get(b.id)! ? -1 : 1);
-    const frame = { width: target.size.width, height: target.size.height }
+    const frame = {width: target.size.width, height: target.size.height}
     if (layoutInfo.stackPrimarySizing === StackSizing.Auto) {
         const {width, height} = autoWidthLayout(page, api, layoutInfo, shapesSorted, frame);
         api.shapeModifyWidth(page, target, width);
@@ -586,6 +588,8 @@ export const getAutoLayoutShapes = (shapes: ShapeView[]) => {
 
 function boundingBox(shape: Shape, includedBorder?: boolean): ShapeFrame {
     let frame = {...getShapeFrame(shape)};
+    frame.height = Math.max(frame.height, 1);
+    frame.width = Math.max(frame.width, 1);
     if (includedBorder) {
         const borders = shape.getBorders();
         let maxtopborder = 0;
