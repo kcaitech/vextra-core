@@ -12,8 +12,8 @@ import {
     StackSizing,
     StackWrap
 } from "../../data";
-import { adapt2Shape, ArtboradView, PageView, ShapeView } from "../../dataview";
-import { Api } from "../../coop/recordapi";
+import {adapt2Shape, ArtboradView, PageView, ShapeView} from "../../dataview";
+import {Api} from "../../coop/recordapi";
 
 export function layoutShapesOrder(shapes: Shape[], includedBorder: boolean, sort?: Map<string, number>, cursort = false) {
     let shape_rows: Shape[][] = [];
@@ -103,7 +103,7 @@ export function layoutSpacing(shape_rows: Shape[][]) {
     let averageVerSpacing = verSpacingCount > 0 ? Math.floor(totalVerSpacing / verSpacingCount) : 0;
     averageVerSpacing = averageVerSpacing > 0 ? averageVerSpacing : 0;
 
-    return { hor: averageHorSpacing, ver: averageVerSpacing }
+    return {hor: averageHorSpacing, ver: averageVerSpacing}
 }
 
 export const initAutoLayout = (page: Page, api: Api, container: Shape, shape_rows: Shape[][]) => {
@@ -152,7 +152,7 @@ export const initAutoLayout = (page: Page, api: Api, container: Shape, shape_row
         }
     }
     container_auto_height += maxHeightInRow;
-    return { width: max_row_width, height: max_row_height, container_hieght: container_auto_height }
+    return {width: max_row_width, height: max_row_height, container_hieght: container_auto_height}
 }
 
 export const modifyAutoLayout = (page: Page, api: Api, shape: Shape, sort?: Map<string, number>, cursort = false) => {
@@ -161,12 +161,16 @@ export const modifyAutoLayout = (page: Page, api: Api, shape: Shape, sort?: Map<
     if (!layoutInfo) return;
     const shape_rows = layoutShapesOrder(target.childs, !!layoutInfo.bordersTakeSpace, sort, cursort);
     const shape_row: Shape[] = shape_rows.flat();
-    const frame = { width: target.size.width, height: target.size.height }
+    const frame = {width: target.size.width, height: target.size.height}
     if (layoutInfo.stackPrimarySizing === StackSizing.Auto) {
-        const { width, height } = autoWidthLayout(page, api, layoutInfo, shape_row, frame);
+        const {width, height} = autoWidthLayout(page, api, layoutInfo, shape_row, frame);
         api.shapeModifyWidth(page, target, width);
         if (layoutInfo.stackCounterSizing !== StackSizing.Fixed) {
             api.shapeModifyHeight(page, target, height);
+        }
+        const p = target.parent as Artboard;
+        if (p && p.autoLayout && p.autoLayout.stackCounterSizing !== StackSizing.Fixed) {
+            modifyAutoLayout(page, api, p);
         }
     } else {
         let autoHeight = 0;
@@ -180,18 +184,26 @@ export const modifyAutoLayout = (page: Page, api: Api, shape: Shape, sort?: Map<
         }
         if (layoutInfo.stackCounterSizing !== StackSizing.Fixed) {
             api.shapeModifyHeight(page, target, autoHeight);
+            const p = target.parent as Artboard;
+            if (p && p.autoLayout && p.autoLayout.stackCounterSizing !== StackSizing.Fixed) {
+                modifyAutoLayout(page, api, p);
+            }
         }
     }
 }
 
 export function reLayoutBySort(page: Page, api: Api, target: Artboard, sort: Map<string, number>) {
     const layoutInfo = target.autoLayout!;
-    const shapesSorted: Shape[] = target.childs.toSorted((a, b) => sort.get(a.id)! < sort.get(b.id)! ? -1 : 1);
-    const frame = { width: target.size.width, height: target.size.height }
+    const shapesSorted: Shape[] = [...target.childs].sort((a, b) => sort.get(a.id)! < sort.get(b.id)! ? -1 : 1);
+    const frame = {width: target.size.width, height: target.size.height}
     if (layoutInfo.stackPrimarySizing === StackSizing.Auto) {
-        const { width, height } = autoWidthLayout(page, api, layoutInfo, shapesSorted, frame);
+        const {width, height} = autoWidthLayout(page, api, layoutInfo, shapesSorted, frame);
         api.shapeModifyWidth(page, target, width);
         if (layoutInfo.stackCounterSizing !== StackSizing.Fixed) api.shapeModifyHeight(page, target, height);
+        const p = target.parent as Artboard;
+        if (p && p.autoLayout && p.autoLayout.stackCounterSizing !== StackSizing.Fixed) {
+            modifyAutoLayout(page, api, p);
+        }
     } else {
         let autoHeight;
         if (!layoutInfo.stackWrap || layoutInfo.stackWrap === StackWrap.Wrap) {
@@ -203,6 +215,10 @@ export function reLayoutBySort(page: Page, api: Api, target: Artboard, sort: Map
         }
         if (layoutInfo.stackCounterSizing !== StackSizing.Fixed) {
             api.shapeModifyHeight(page, target, autoHeight);
+            const p = target.parent as Artboard;
+            if (p && p.autoLayout && p.autoLayout.stackCounterSizing !== StackSizing.Fixed) {
+                modifyAutoLayout(page, api, p);
+            }
         }
     }
 }
@@ -304,7 +320,7 @@ const autoWidthLayout = (page: Page, api: Api, layoutInfo: AutoLayout, shape_row
         container_auto_width -= horSpacing;
         container_auto_height += max_height;
     }
-    return { width: container_auto_width, height: container_auto_height }
+    return {width: container_auto_width, height: container_auto_height}
 }
 
 const autoWrapLayout = (page: Page, api: Api, layoutInfo: AutoLayout, shape_row: Shape[], container: {
@@ -569,7 +585,7 @@ export const getAutoLayoutShapes = (shapes: ShapeView[]) => {
 }
 
 function boundingBox(shape: Shape, includedBorder?: boolean): ShapeFrame {
-    let frame = { ...getShapeFrame(shape) };
+    let frame = {...getShapeFrame(shape)};
     if (includedBorder) {
         const borders = shape.getBorders();
         let maxtopborder = 0;
@@ -598,10 +614,10 @@ function boundingBox(shape: Shape, includedBorder?: boolean): ShapeFrame {
     }
     const m = shape.transform;
     const corners = [
-        { x: frame.x, y: frame.y },
-        { x: frame.x + frame.width, y: frame.y },
-        { x: frame.x + frame.width, y: frame.y + frame.height },
-        { x: frame.x, y: frame.y + frame.height }]
+        {x: frame.x, y: frame.y},
+        {x: frame.x + frame.width, y: frame.y},
+        {x: frame.x + frame.width, y: frame.y + frame.height},
+        {x: frame.x, y: frame.y + frame.height}]
         .map((p) => m.computeCoord(p));
     const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
     const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
@@ -627,8 +643,8 @@ const getShapeFrame = (shape: Shape) => {
         }
         return p;
     }
-    const bounds = childframes.reduce(reducer, { minx: 0, miny: 0, maxx: 0, maxy: 0 });
-    const { minx, miny, maxx, maxy } = bounds;
+    const bounds = childframes.reduce(reducer, {minx: 0, miny: 0, maxx: 0, maxy: 0});
+    const {minx, miny, maxx, maxy} = bounds;
     return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
 }
 
