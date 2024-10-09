@@ -301,11 +301,11 @@ function patternFillType(data: IJSON) {
     const patternMode = ((t) => {
         switch (t) {
             case 0: return ImageScaleMode.Tile;
-            case 1: return ImageScaleMode.Fill;
+            case 1: return ImageScaleMode.Stretch;
             case 2: return ImageScaleMode.Stretch;
             case 3: return ImageScaleMode.Fit;
             case 4: return ImageScaleMode.Crop;
-            default: return ImageScaleMode.Fill;
+            default: return ImageScaleMode.Stretch;
         }
     })(data['patternFillType']);
     return patternMode;
