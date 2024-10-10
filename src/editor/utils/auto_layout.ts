@@ -12,8 +12,8 @@ import {
     StackSizing,
     StackWrap
 } from "../../data";
-import {adapt2Shape, ArtboradView, PageView, ShapeView} from "../../dataview";
-import {Api} from "../../coop/recordapi";
+import { adapt2Shape, ShapeView } from "../../dataview";
+import { Api } from "../../coop";
 
 export function layoutShapesOrder(shapes: Shape[], includedBorder: boolean, sort?: Map<string, number>, cursort = false) {
     let shape_rows: Shape[][] = [];
