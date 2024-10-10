@@ -35,7 +35,7 @@ export class ArtboradView extends GroupShapeView {
     }
 
     get autoLayout(): AutoLayout | undefined {
-        return (this.data).autoLayout;
+        return this.data.autoLayout;
     }
 
     protected renderFills(): EL[] {
