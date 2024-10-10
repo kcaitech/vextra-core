@@ -1,5 +1,5 @@
 import { Document, OvalShape, Page } from "../../data";
-import { adapt2Shape, PageView, ShapeView, SymbolRefView, TableView } from "../../dataview";
+import { adapt2Shape, ArtboradView, PageView, ShapeView, SymbolRefView, SymbolView, TableView } from "../../dataview";
 import { modifyPathByArc } from "../asyncApiHandler";
 import { Api, CoopRepository } from "../../coop";
 import { modify_shapes_height, modify_shapes_width } from "../utils/common";
@@ -12,7 +12,7 @@ import { BatchAction, BatchAction2, BatchAction5, PageEditor } from "../page";
 import { IImportContext, importGradient, } from "../../data/baseimport";
 import { exportGradient, } from "../../data/baseexport";
 import { TableEditor } from "../table";
-import { getAutoLayoutShapes, modifyAutoLayout, tidyUpLayout } from "../utils/auto_layout";
+import { getAutoLayoutShapes, modifyAutoLayout, reLayoutBySort, TidyUpAlgin, tidyUpLayout } from "../utils/auto_layout";
 import { ShapeEditor } from "../shape";
 
 export class LinearApi {
@@ -733,11 +733,19 @@ export class LinearApi {
      * @description 修改自动布局间距
      */
 
-    tidyUpShapesLayout(shape_rows: ShapeView[][], hor: number, ver: number, dir: boolean) {
+    tidyUpShapesLayout(shape_rows: ShapeView[][], hor: number, ver: number, dir: boolean,algin: TidyUpAlgin) {
         this.execute('', () => {
             const api = this.api!;
             const page = this.page;
-            tidyUpLayout(page, api, shape_rows, hor, ver, dir);
+            tidyUpLayout(page, api, shape_rows, hor, ver, dir,algin);
         })
+    }
+     /* @description 自动布局内重新布局
+    
+     */
+    reLayout(env: ArtboradView | SymbolView, sort: Map<string, number>) {
+        this.execute('re-layout-linear', () => {
+            reLayoutBySort(this.page, this.api!, adapt2Shape(env) as Artboard, sort);
+        });
     }
 }

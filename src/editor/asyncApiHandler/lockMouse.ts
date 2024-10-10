@@ -39,7 +39,7 @@ import {
     UniformScaleUnit
 } from "./transform";
 import { fixTextShapeFrameByLayout } from "../utils/other";
-import { getAutoLayoutShapes, modifyAutoLayout, tidyUpLayout } from "../utils/auto_layout";
+import { getAutoLayoutShapes, modifyAutoLayout, TidyUpAlgin, tidyUpLayout } from "../utils/auto_layout";
 import { modifyPathByArc } from "./arc";
 
 export class LockMouseHandler extends AsyncApiCaller {
@@ -437,11 +437,11 @@ export class LockMouseHandler extends AsyncApiCaller {
         }
     }
 
-    executeTidyup(shapes: ShapeView[][], hor: number, ver: number, dir: boolean) {
+    executeTidyup(shapes: ShapeView[][], hor: number, ver: number, dir: boolean, algin: TidyUpAlgin) {
         try {
             const api = this.api;
             const page = this.page;
-            tidyUpLayout(page, api, shapes, hor, ver, dir);
+            tidyUpLayout(page, api, shapes, hor, ver, dir, algin);
             this.updateView();
         } catch (e) {
             this.exception = true;
