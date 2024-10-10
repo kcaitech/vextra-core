@@ -13,7 +13,7 @@ import {
     StackWrap
 } from "../../data";
 import { adapt2Shape, ShapeView } from "../../dataview";
-import { Api } from "../../coop/recordapi";
+import { Api } from "../../coop";
 
 export function layoutShapesOrder(shapes: Shape[], includedBorder: boolean, sort?: Map<string, number>, cursort = false) {
     let shape_rows: Shape[][] = [];
