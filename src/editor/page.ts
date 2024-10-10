@@ -14,7 +14,7 @@ import {
     TextShape,
     Variable,
     VariableType
-} from "../data/shape";
+} from "../data";
 import { ShapeEditor } from "./shape";
 import * as types from "../data/typesdefine";
 import {
@@ -27,8 +27,8 @@ import {
     MarkerType,
     ShadowPosition,
     SideType
-} from "../data/typesdefine";
-import { Page } from "../data/page";
+} from "../data";
+import { Page } from "../data";
 import {
     newArrowShape,
     newArtboard,
@@ -44,7 +44,7 @@ import {
     newSymbolRefShape,
     newSymbolShape
 } from "./creator";
-import { Document } from "../data/document";
+import { Document } from "../data";
 import { expand, translate, translateTo } from "./frame";
 import { uuid } from "../basic/uuid";
 import {
@@ -60,7 +60,7 @@ import {
     TableShape,
     Text,
     Transform
-} from "../data/classes";
+} from "../data";
 import { TextShapeEditor } from "./textshape";
 import { set_childs_id, transform_data } from "../io/cilpboard";
 import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
@@ -88,7 +88,7 @@ import {
     importTransform
 } from "../data/baseimport";
 import { gPal } from "../basic/pal";
-import { BasicArray, ResourceMgr } from "../data/basic";
+import { BasicArray, ResourceMgr } from "../data";
 import { TableEditor } from "./table";
 import { exportArtboard, exportGradient, exportStop, exportSymbolShape, exportVariable } from "../data/baseexport";
 import {
@@ -149,9 +149,9 @@ import {
     update_frame_by_points
 } from "./utils/path";
 import { modify_shapes_height, modify_shapes_width } from "./utils/common";
-import { CoopRepository } from "../coop/cooprepo";
+import { CoopRepository } from "../coop";
 import { Api, TextShapeLike } from "../coop/recordapi";
-import { ISave4Restore, LocalCmd, SelectionState } from "../coop/localcmd";
+import { ISave4Restore, LocalCmd, SelectionState } from "../coop";
 import { unable_to_migrate } from "./utils/migrate";
 import {
     adapt2Shape,
@@ -168,16 +168,16 @@ import {
     TableView,
     TextShapeView
 } from "../dataview";
-import { RadiusType, ResizingConstraints2 } from "../data/consts";
+import { RadiusType, ResizingConstraints2 } from "../data";
 import { FMT_VER_latest } from "../data/fmtver";
-import { makeShapeTransform1By2, makeShapeTransform2By1, updateShapeTransform1By2 } from "../data/shape_transform_util";
+import { makeShapeTransform1By2, makeShapeTransform2By1, updateShapeTransform1By2 } from "../data";
 import { ColVector3D } from "../basic/matrix2";
 import { Transform as Transform2 } from "../basic/transform";
 import { getAutoLayoutShapes, initAutoLayout, layoutShapesOrder, layoutSpacing, modifyAutoLayout, TidyUpAlgin, tidyUpLayout } from "./utils/auto_layout";
 
 import { getFormatFromBase64 } from "../basic/utils";
 import { uniformScale, UniformScaleUnit } from "./asyncApiHandler";
-import { modifyEndingAngle, modifyRadius, modifyStartingAngle, modifySweep } from "./asyncApiHandler/arc";
+import { modifyRadius, modifyStartingAngle, modifySweep } from "./asyncApiHandler";
 import { Path } from "@kcdesign/path";
 
 // 用于批量操作的单个操作类型
@@ -1637,7 +1637,6 @@ export class PageEditor {
             return false;
         }
     }
-
 
     // 创建一个shape
     create(type: ShapeType, name: string, frame: ShapeFrame): Shape {

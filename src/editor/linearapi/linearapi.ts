@@ -1,7 +1,8 @@
-import { Document, OvalShape, Page } from "../../data";
-import { adapt2Shape, PageView, ShapeView } from "../../dataview";
+import { Artboard, Document, OvalShape, Page } from "../../data";
+import { adapt2Shape, ArtboradView, PageView, ShapeView, SymbolView } from "../../dataview";
 import { modifyPathByArc } from "../asyncApiHandler";
-import {Api, CoopRepository} from "../../coop";
+import { Api, CoopRepository } from "../../coop";
+import { modifyAutoLayout, reLayoutBySort } from "../utils/auto_layout";
 
 export class LinearApi {
     private readonly __repo: CoopRepository;
@@ -139,6 +140,15 @@ export class LinearApi {
                 api.ovalModifyInnerRadius(page, shape, value);
                 modifyPathByArc(api, page, shape);
             }
+        });
+    }
+
+    /**
+     * @description 自动布局内重新布局
+     */
+    reLayout(env: ArtboradView | SymbolView, sort: Map<string, number>) {
+        this.execute('re-layout-linear', () => {
+            reLayoutBySort(this.page, this.api!, adapt2Shape(env) as Artboard, sort);
         });
     }
 }
