@@ -24,6 +24,8 @@ import { Text } from "../../../data/text/text";
 import {
     BoolOp,
     Color,
+    ExportFormatNameingScheme,
+    ExportVisibleScaleType,
     Fill,
     FillType,
     ImageScaleMode,
@@ -46,7 +48,31 @@ function uniqueId(ctx: LoadContext, id: string): string {
     // ctx.shapeIds.add(id);
     return id;
 }
-
+function importExportFormats(data: IJSON): BasicArray<ExportFormat> {
+    const formats = (data['exportFormats'] || []).map((d: IJSON, i: number) => {
+        const absoluteSize = d['absoluteSize'];
+        const fileFormat = d['fileFormat'];
+        const name = d['name'];
+        const namingScheme = ((t) => {
+            switch (t) {
+                case 0: return ExportFormatNameingScheme.Prefix;
+                case 1: return ExportFormatNameingScheme.Suffix;
+                default: return ExportFormatNameingScheme.Prefix;
+            }
+        })(d['namingScheme']);
+        const scale = d['scale'];
+        const visibleScaleType = ((t) => {
+            switch (t) {
+                case 0: return ExportVisibleScaleType.Scale;
+                case 1: return ExportVisibleScaleType.Width;
+                case 2: return ExportVisibleScaleType.Height;
+                default: return ExportVisibleScaleType.Scale;
+            }
+        })(d['visibleScaleType']);
+        return new ExportFormat([i] as BasicArray<number>, uuid(), absoluteSize, fileFormat, name, namingScheme, scale, visibleScaleType);
+    })
+    return formats;
+}
 function importExportOptions(data: IJSON): ExportOptions {
     const d: IJSON = data['exportOptions'];
     if (!d) {
@@ -55,7 +81,7 @@ function importExportOptions(data: IJSON): ExportOptions {
             0,
             false, false, false, false)
     }
-    const formats = d['exportFormats'] || new BasicArray<ExportFormat>();
+    const formats = importExportFormats(d);
     const trim = d['shouldTrim'] || false;
     return new ExportOptions(formats, 0, trim, false, false, false)
 }
@@ -204,6 +230,11 @@ function importShapePropertys(shape: Shape, data: IJSON) {
     shape.constrainerProportions = data.frame['constrainerProportions'];
 }
 
+const hasFill = (fills: Fill[]) => {
+    if (fills.length === 0) return false;
+    return fills.some(f => f.isEnabled);
+}
+
 export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun, i: number): Artboard {
     // const type = importShapeType(data);
     const id: string = uniqueId(ctx, data['do_objectID']);
@@ -233,7 +264,7 @@ export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun, i: n
         style.fills.push(fill);
     }
     const childs = (data['layers'] || []).map((d: IJSON, i: number) => f(ctx, d, i));
-    if (data['hasClippingMask']) {
+    if (data['hasClippingMask'] && !hasFill(style.fills)) {
         const fill = new Fill([style.fills.length] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0));
         style.fills.push(fill);
     }
@@ -267,7 +298,7 @@ export function importGroupShape(ctx: LoadContext, data: IJSON, f: ImportFun, i:
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON, i: number) => f(ctx, d, i));
-    
+
     const shape = new GroupShape([i] as BasicArray<number>, id, name, ShapeType.Group, frame.trans, style, new BasicArray<Shape>(...childs));
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
@@ -291,7 +322,7 @@ export function importShapeGroupShape(ctx: LoadContext, data: IJSON, f: ImportFu
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON, i: number) => f(ctx, d, i));
-    if (data['hasClippingMask']) {
+    if (data['hasClippingMask'] && !hasFill(style.fills)) {
         const fill = new Fill([style.fills.length] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0));
         style.fills.push(fill);
     }
@@ -341,7 +372,7 @@ export function importImage(ctx: LoadContext, data: IJSON, f: ImportFun, i: numb
     fill.setImageMgr(ctx.mediasMgr);
     const fills = new BasicArray<Fill>();
     fills.push(fill);
-    if (data['hasClippingMask']) {
+    if (data['hasClippingMask'] && !hasFill(fills)) {
         const fill = new Fill([fills.length] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0));
         fills.push(fill);
     }
@@ -375,7 +406,6 @@ export function importPage(ctx: LoadContext, data: IJSON, f: ImportFun): Page {
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     shape.exportOptions = exportOptions;
-    shape.mask = data['hasClippingMask'];
     return shape;
 }
 
@@ -395,7 +425,7 @@ export function importPathShape(ctx: LoadContext, data: IJSON, f: ImportFun, i: 
     // const text = data['attributedString'] && importText(data['attributedString']);
 
     const segment = new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...points), data['isClosed'])
-    if (data['hasClippingMask']) {
+    if (data['hasClippingMask'] && !hasFill(style.fills)) {
         const fill = new Fill([style.fills.length] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0));
         style.fills.push(fill);
     }
@@ -425,7 +455,7 @@ export function importRectShape(ctx: LoadContext, data: IJSON, f: ImportFun, i: 
     // const isClosed = data['isClosed'];
     // const r = data['fixedRadius'] || 0;
     // const radius = new RectRadius(r, r, r, r);
-    if (data['hasClippingMask']) {
+    if (data['hasClippingMask'] && !hasFill(style.fills)) {
         const fill = new Fill([style.fills.length] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0));
         style.fills.push(fill);
     }
@@ -489,7 +519,7 @@ export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun, i: num
     const id = uniqueId(ctx, data['symbolID']);
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON, i: number) => f(ctx, d, i));
     // const points = createNormalPoints();
-    if (data['hasClippingMask']) {
+    if (data['hasClippingMask'] && !hasFill(style.fills)) {
         const fill = new Fill([style.fills.length] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0));
         style.fills.push(fill);
     }
@@ -518,7 +548,7 @@ export function importSymbolRef(ctx: LoadContext, data: IJSON, f: ImportFun, i: 
     }
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
-    if (data['hasClippingMask']) {
+    if (data['hasClippingMask'] && !hasFill(style.fills)) {
         const fill = new Fill([style.fills.length] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0));
         style.fills.push(fill);
     }
