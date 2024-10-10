@@ -131,6 +131,7 @@ export {
     PrototypeEasingBezier,
 
     ScrollDirection,
+    ScrollBehavior,
 
     StackPositioning
 } from "./data"

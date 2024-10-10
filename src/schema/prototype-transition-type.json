@@ -23,7 +23,8 @@
         "PUSH_FROM_LEFT",
         "PUSH_FROM_TOP",
         "PUSH_FROM_BOTTOM",
-        "SCROLL_ANIMATE"
+        "SCROLL_ANIMATE",
+        "SMART_ANIMATE"
     ],
     "default": "INSTANT_TRANSITION"
 }

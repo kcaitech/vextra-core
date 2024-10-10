@@ -432,6 +432,7 @@ export enum PrototypeTransitionType {
     PUSHFROMTOP = "PUSH_FROM_TOP",
     PUSHFROMBOTTOM = "PUSH_FROM_BOTTOM",
     SCROLLANIMATE = "SCROLL_ANIMATE",
+    SMARTANIMATE = "SMART_ANIMATE",
 }
 /* resize type */
 export enum ResizeType {
@@ -439,6 +440,12 @@ export enum ResizeType {
     PinToEdge = "pinToEdge",
     Resize = "resize",
     Float = "float",
+}
+/* scrollBehavior */
+export enum ScrollBehavior {
+    SCROLLS = "SCROLLS",
+    FIXEDWHENCHILDOFSCROLLINGFRAME = "FIXED_WHEN_CHILD_OF_SCROLLING_FRAME",
+    STICKYSCROLLS = "STICKY_SCROLLS",
 }
 /* scrollDirection */
 export enum ScrollDirection {
@@ -762,12 +769,12 @@ export type OverlayBackgroundAppearance = {
 export type PrototypeActions = {
     typeId: string,
     connectionType: PrototypeConnectionType,
+    openUrlInNewTab: boolean,
     targetNodeID?: string,
     transitionType?: PrototypeTransitionType,
     transitionDuration?: number,
     easingType?: PrototypeEasingType,
     connectionURL?: string,
-    openUrlInNewTab?: boolean,
     navigationType?: PrototypeNavigationType,
     easingFunction?: PrototypeEasingBezier,
     extraScrollOffset?: Point2D,
@@ -926,6 +933,7 @@ export type Shape = {
     overlayBackgroundInteraction?: OverlayBackgroundInteraction,
     overlayBackgroundAppearance?: OverlayBackgroundAppearance,
     scrollDirection?: ScrollDirection,
+    scrollBehavior?: ScrollBehavior,
     mask?: boolean,
     stackPositioning?: StackPositioning,
     uniformScale?: number,

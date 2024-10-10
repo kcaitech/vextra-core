@@ -4,7 +4,7 @@ import { innerShadowId, renderBorders, renderFills } from "../render";
 import { objectId } from "../basic/objectid";
 import { render as clippathR } from "../render/clippath"
 import { Artboard } from "../data/artboard";
-import { AutoLayout, BorderPosition, CornerRadius, Page, ShadowPosition, ShapeFrame, ShapeSize, Transform } from "../data/classes";
+import { AutoLayout, BorderPosition, CornerRadius, Page, ScrollBehavior, ShadowPosition, ShapeFrame, ShapeSize, Transform } from "../data/classes";
 import { ShapeView, updateFrame } from "./shape";
 import { PageView } from "./page";
 
@@ -35,7 +35,7 @@ export class ArtboradView extends GroupShapeView {
     }
 
     get autoLayout(): AutoLayout | undefined {
-        return (this.data).autoLayout;
+        return this.data.autoLayout;
     }
 
     protected renderFills(): EL[] {
@@ -133,6 +133,20 @@ export class ArtboradView extends GroupShapeView {
         let children = [...fills, ...childs];
 
         if (this.innerTransform) {
+            childs = childs.map(c => {
+                const s = c as ShapeView;
+                const trans = new Transform();
+                if (s.scrollBehavior === ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME && this.innerTransform) {
+                    trans.trans(-this.innerTransform.translateX, -this.innerTransform.translateY);
+                    return elh("g", { transform: trans.toString() }, [c]);
+                } else if (s.scrollBehavior === ScrollBehavior.STICKYSCROLLS && this.innerTransform) {
+                    if (s._p_frame.y + this.innerTransform.translateY < 0) {
+                        trans.trans(0, -(s._p_frame.y + this.innerTransform.translateY));
+                        return elh("g", { transform: trans.toString() }, [c]);
+                    }
+                }
+                return c;
+            })
             const child = elh("g", {
                 id: this.id,
                 transform: this.innerTransform.toString()

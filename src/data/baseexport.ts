@@ -482,6 +482,10 @@ export function exportPrototypeTransitionType(source: types.PrototypeTransitionT
 export function exportResizeType(source: types.ResizeType, ctx?: IExportContext): types.ResizeType {
     return source
 }
+/* scrollBehavior */
+export function exportScrollBehavior(source: types.ScrollBehavior, ctx?: IExportContext): types.ScrollBehavior {
+    return source
+}
 /* scrollDirection */
 export function exportScrollDirection(source: types.ScrollDirection, ctx?: IExportContext): types.ScrollDirection {
     return source
@@ -856,12 +860,12 @@ export function exportPrototypeActions(source: types.PrototypeActions, ctx?: IEx
     ret.typeId = "prototype-actions"
     ret.typeId = source.typeId
     ret.connectionType = exportPrototypeConnectionType(source.connectionType, ctx)
+    ret.openUrlInNewTab = source.openUrlInNewTab
     if (source.targetNodeID) ret.targetNodeID = source.targetNodeID
     if (source.transitionType) ret.transitionType = exportPrototypeTransitionType(source.transitionType, ctx)
     if (source.transitionDuration) ret.transitionDuration = source.transitionDuration
     if (source.easingType) ret.easingType = exportPrototypeEasingType(source.easingType, ctx)
     if (source.connectionURL) ret.connectionURL = source.connectionURL
-    if (source.openUrlInNewTab) ret.openUrlInNewTab = source.openUrlInNewTab
     if (source.navigationType) ret.navigationType = exportPrototypeNavigationType(source.navigationType, ctx)
     if (source.easingFunction) ret.easingFunction = exportPrototypeEasingBezier(source.easingFunction, ctx)
     if (source.extraScrollOffset) ret.extraScrollOffset = exportPoint2D(source.extraScrollOffset, ctx)
@@ -1064,6 +1068,7 @@ export function exportShape(source: types.Shape, ctx?: IExportContext): types.Sh
     if (source.overlayBackgroundInteraction) ret.overlayBackgroundInteraction = exportOverlayBackgroundInteraction(source.overlayBackgroundInteraction, ctx)
     if (source.overlayBackgroundAppearance) ret.overlayBackgroundAppearance = exportOverlayBackgroundAppearance(source.overlayBackgroundAppearance, ctx)
     if (source.scrollDirection) ret.scrollDirection = exportScrollDirection(source.scrollDirection, ctx)
+    if (source.scrollBehavior) ret.scrollBehavior = exportScrollBehavior(source.scrollBehavior, ctx)
     if (source.mask) ret.mask = source.mask
     if (source.stackPositioning) ret.stackPositioning = exportStackPositioning(source.stackPositioning, ctx)
     if (source.uniformScale) ret.uniformScale = source.uniformScale

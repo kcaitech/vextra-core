@@ -555,6 +555,10 @@ export function importPrototypeTransitionType(source: types.PrototypeTransitionT
 export function importResizeType(source: types.ResizeType, ctx?: IImportContext): impl.ResizeType {
     return source
 }
+/* scrollBehavior */
+export function importScrollBehavior(source: types.ScrollBehavior, ctx?: IImportContext): impl.ScrollBehavior {
+    return source
+}
 /* scrollDirection */
 export function importScrollDirection(source: types.ScrollDirection, ctx?: IImportContext): impl.ScrollDirection {
     return source
@@ -938,14 +942,14 @@ function importPrototypeActionsOptional(tar: impl.PrototypeActions, source: type
     if (source.transitionDuration) tar.transitionDuration = source.transitionDuration
     if (source.easingType) tar.easingType = importPrototypeEasingType(source.easingType, ctx)
     if (source.connectionURL) tar.connectionURL = source.connectionURL
-    if (source.openUrlInNewTab) tar.openUrlInNewTab = source.openUrlInNewTab
     if (source.navigationType) tar.navigationType = importPrototypeNavigationType(source.navigationType, ctx)
     if (source.easingFunction) tar.easingFunction = importPrototypeEasingBezier(source.easingFunction, ctx)
     if (source.extraScrollOffset) tar.extraScrollOffset = importPoint2D(source.extraScrollOffset, ctx)
 }
 export function importPrototypeActions(source: types.PrototypeActions, ctx?: IImportContext): impl.PrototypeActions {
     const ret: impl.PrototypeActions = new impl.PrototypeActions (
-        importPrototypeConnectionType(source.connectionType, ctx))
+        importPrototypeConnectionType(source.connectionType, ctx),
+        source.openUrlInNewTab)
     importPrototypeActionsOptional(ret, source, ctx)
     return ret
 }
@@ -1186,6 +1190,7 @@ function importShapeOptional(tar: impl.Shape, source: types.Shape, ctx?: IImport
     if (source.overlayBackgroundInteraction) tar.overlayBackgroundInteraction = importOverlayBackgroundInteraction(source.overlayBackgroundInteraction, ctx)
     if (source.overlayBackgroundAppearance) tar.overlayBackgroundAppearance = importOverlayBackgroundAppearance(source.overlayBackgroundAppearance, ctx)
     if (source.scrollDirection) tar.scrollDirection = importScrollDirection(source.scrollDirection, ctx)
+    if (source.scrollBehavior) tar.scrollBehavior = importScrollBehavior(source.scrollBehavior, ctx)
     if (source.mask) tar.mask = source.mask
     if (source.stackPositioning) tar.stackPositioning = importStackPositioning(source.stackPositioning, ctx)
     if (source.uniformScale) tar.uniformScale = source.uniformScale

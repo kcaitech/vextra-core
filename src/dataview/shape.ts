@@ -21,6 +21,7 @@ import {
     Point2D,
     PrototypeInterAction,
     PrototypeStartingPoint,
+    ScrollBehavior,
     ScrollDirection,
     Shadow,
     ShadowPosition,
@@ -499,7 +500,7 @@ export class ShapeView extends DataView {
 
     matrix2Parent(matrix?: Matrix) {
         const m = matrix2parent(this.transform, matrix);
-        if (this.parent!.uniformScale) m.scale(this.parent!.uniformScale);
+        if (this.parent?.uniformScale) m.scale(this.parent!.uniformScale);
         return m;
     }
 
@@ -1138,6 +1139,10 @@ export class ShapeView extends DataView {
 
     get scrollDirection(): ScrollDirection | undefined {
         return this.m_data.scrollDirection
+    }
+
+    get scrollBehavior(): ScrollBehavior | undefined {
+        return this.m_data.scrollBehavior;
     }
 
     get relyLayers() {

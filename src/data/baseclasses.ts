@@ -32,6 +32,7 @@ export {
     PrototypeNavigationType,
     PrototypeTransitionType,
     ResizeType,
+    ScrollBehavior,
     ScrollDirection,
     ShadowPosition,
     ShapeType,
@@ -85,6 +86,7 @@ import {
     PrototypeNavigationType,
     PrototypeTransitionType,
     ResizeType,
+    ScrollBehavior,
     ScrollDirection,
     ShadowPosition,
     ShapeType,
@@ -719,18 +721,19 @@ export class OverlayBackgroundAppearance extends Basic {
 export class PrototypeActions extends Basic {
     typeId = "prototype-actions"
     connectionType: PrototypeConnectionType
+    openUrlInNewTab: boolean
     targetNodeID?: string
     transitionType?: PrototypeTransitionType
     transitionDuration?: number
     easingType?: PrototypeEasingType
     connectionURL?: string
-    openUrlInNewTab?: boolean
     navigationType?: PrototypeNavigationType
     easingFunction?: PrototypeEasingBezier
     extraScrollOffset?: Point2D
-    constructor(connectionType: PrototypeConnectionType) {
+    constructor(connectionType: PrototypeConnectionType, openUrlInNewTab: boolean) {
         super()
         this.connectionType = connectionType
+        this.openUrlInNewTab = openUrlInNewTab
     }
 }
 /* event */
@@ -944,6 +947,7 @@ export class Shape extends Basic {
     overlayBackgroundInteraction?: OverlayBackgroundInteraction
     overlayBackgroundAppearance?: OverlayBackgroundAppearance
     scrollDirection?: ScrollDirection
+    scrollBehavior?: ScrollBehavior
     mask?: boolean
     stackPositioning?: StackPositioning
     uniformScale?: number

@@ -92,6 +92,9 @@
         "scrollDirection": {
             "$ref": "./scroll-direction.json"
         },
+        "scrollBehavior": {
+            "$ref": "./scroll-behavior.json"
+        },
         "mask": {
             "type": "boolean"
         },
