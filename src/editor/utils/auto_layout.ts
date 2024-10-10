@@ -38,7 +38,7 @@ export function layoutShapesOrder(shapes: Shape[], includedBorder: boolean, sort
         const currentRow = unassignedShapes.filter(shape => {
             const frame = boundingBox(shape, includedBorder);
             const base_frame = boundingBox(baseShape, includedBorder);
-            return frame.y <= (base_frame.y + base_frame.height)
+            return frame.y < (base_frame.y + base_frame.height)
         });
         if (currentRow.length === 0) {
             currentRow.push(baseShape);
