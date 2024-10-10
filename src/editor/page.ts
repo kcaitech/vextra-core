@@ -1969,10 +1969,7 @@ export class PageEditor {
             }
 
             // 记录每个图形相对lt_point的位置
-            const delta_xys: {
-                x: number,
-                y: number
-            }[] = [];
+            const delta_xys: { x: number, y: number }[] = [];
             for (let i = 0; i < len; i++) {
                 const r = replacement[i];
                 const rf = r.frame;
@@ -1980,14 +1977,11 @@ export class PageEditor {
                 delta_xys.push(dt);
             }
 
-
             // 开始替换
             for (let i = 0; i < src.length; i++) {
                 const s = src[i];
 
-                if (is_state(s)) {
-                    continue;
-                }
+                if (is_state(s)) continue;
 
                 const p = s.parent as GroupShape;
                 if (!p) throw new Error('invalid root');
