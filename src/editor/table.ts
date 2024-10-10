@@ -2,7 +2,7 @@ import { TableCell, TableShape } from "../data/table";
 import { ShapeEditor } from "./shape";
 import { Page } from "../data/page";
 import { CoopRepository } from "../coop/cooprepo";
-import { BorderPosition, BorderStyle, StrikethroughType, TableCellType, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType, FillType, ImageScaleMode } from "../data/baseclasses";
+import { BorderPosition, BorderStyle, StrikethroughType, TableCellType, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType, FillType, ImageScaleMode, BorderSideSetting, SideType } from "../data/baseclasses";
 import { adjColum, adjRow } from "./tableadjust";
 import { Border, Fill, Gradient } from "../data/style";
 import { fixTableShapeFrameByLayout } from "./utils/other";
@@ -1354,7 +1354,8 @@ export class TableEditor extends ShapeEditor {
             this.view._getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
                 if (cell.cell) {
                     const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
-                    api.setBorderThickness(this.__page, c.data, idx, thickness);
+                    api.setBorderSide(this.__page, c.data, idx, new BorderSideSetting(SideType.Normal, thickness, thickness, thickness, thickness));
+                    // api.setBorderThickness(this.__page, c.data, idx, thickness);
                 }
             })
             this.__repo.commit();
@@ -1372,7 +1373,8 @@ export class TableEditor extends ShapeEditor {
                 this.view._getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
                     if (cell.cell) {
                         const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
-                        api.setBorderThickness(this.__page, c.data, idx, contextSettingThickness);
+                        api.setBorderSide(this.__page, c.data, idx, new BorderSideSetting(SideType.Normal, contextSettingThickness, contextSettingThickness, contextSettingThickness, contextSettingThickness));
+                        // api.setBorderThickness(this.__page, c.data, idx, contextSettingThickness);
                     }
                 })
                 this.__repo.transactCtx.fireNotify();

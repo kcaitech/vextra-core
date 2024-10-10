@@ -1,16 +1,19 @@
 import { Document, OvalShape, Page } from "../../data";
-import { adapt2Shape, PageView, ShapeView, SymbolRefView } from "../../dataview";
+import { adapt2Shape, PageView, ShapeView, SymbolRefView, TableView } from "../../dataview";
 import { modifyPathByArc } from "../asyncApiHandler";
 import { Api, CoopRepository } from "../../coop";
 import { modify_shapes_height, modify_shapes_width } from "../utils/common";
-import { Artboard, FillType, PathShape, SymbolRefShape, Transform } from "../../data/classes";
+import { Artboard, BorderSideSetting, Color, FillType, PathShape, SideType, SymbolRefShape, Transform } from "../../data/classes";
 import { RadiusType } from "../../data/consts";
-import { shape4contextSettings, shape4cornerRadius, shape4fill } from "../symbol";
+import { shape4border, shape4contextSettings, shape4cornerRadius, shape4fill, shape4shadow } from "../symbol";
 import { update_frame_by_points } from "../utils/path";
 import { GroupShape, PathShape2, SymbolShape, TextShape, Shape } from "../../data/shape";
-import { BatchAction5 } from "../page";
+import { BatchAction, BatchAction2, BatchAction5, PageEditor } from "../page";
 import { IImportContext, importGradient, } from "../../data/baseimport";
 import { exportGradient, } from "../../data/baseexport";
+import { TableEditor } from "../table";
+import { getAutoLayoutShapes, modifyAutoLayout, tidyUpLayout } from "../utils/auto_layout";
+import { ShapeEditor } from "../shape";
 
 export class LinearApi {
     private readonly __repo: CoopRepository;
@@ -335,8 +338,8 @@ export class LinearApi {
     }
 
     /**
-   * @description 修改图形透明度
-   */
+    * @description 修改图形填充透明度-gradient
+    */
 
     modifyGradientOpacity(actions: BatchAction5[]) {
         this.execute('modify-gradient-opacity', () => {
@@ -360,5 +363,381 @@ export class LinearApi {
                 f(page, shape, index, new_gradient);
             }
         });
+    }
+
+    /**
+    * @description 修改图形填充透明度-solid
+    */
+
+    modifyFillOpacity(actions: BatchAction[]) {
+        this.execute('modify-fill-opacity', () => {
+            const api = this.api!;
+            const page = this.page;
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index, value } = actions[i];
+                const s = shape4fill(api, page, target);
+                api.setFillColor(page, s, index, value);
+            }
+        });
+    }
+
+    private editor4table: undefined | TableEditor;
+    private getTableEditor(table: TableView) {
+        if (!this.editor4table) {
+            this.editor4table = new PageEditor(this.__repo, this.page, this.__document).editor4Table(table)
+        };
+        return this.editor4table!;
+    }
+    /**
+   * @description 修改图形填充透明度-table
+   */
+    modifyFillOpacity4Cell(idx: number, color: Color, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }, table: TableView) {
+        const editor = this.getTableEditor(table);
+        this.execute('modify-fill-opacity-4Cell', () => {
+            const api = this.api!;
+            const page = this.page;
+            editor.view._getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
+                if (cell.cell) {
+                    const c = editor.cell4edit(cell.rowIdx, cell.colIdx, api);
+                    api.setFillColor(page, c.data, idx, color)
+                }
+            })
+        });
+    }
+
+    /**
+     * @description 修改边框透明度
+     */
+
+    modifyBorderOpacity(actions: BatchAction[]) {
+        this.execute('modify-border-opacity', () => {
+            const api = this.api!;
+            const page = this.page;
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index, value } = actions[i];
+                const s = shape4border(api, page, target);
+                api.setBorderColor(page, s, index, value);
+            }
+        });
+    }
+
+    /**
+     * @description 修改边框透明度-table
+     */
+
+    modifyBorderOpacity4Cell(idx: number, color: Color, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }, table: TableView) {
+        const editor = this.getTableEditor(table);
+        this.execute('modify-border-opacity-4Cell', () => {
+            const api = this.api!;
+            const page = this.page;
+            editor.view._getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
+                if (cell.cell) {
+                    const c = editor.cell4edit(cell.rowIdx, cell.colIdx, api);
+                    api.setBorderColor(page, c.data, idx, color);
+                }
+            })
+        });
+    }
+
+    /**
+     *  @description 修改边框粗细
+     */
+
+    modifyShapesBorderThickness(actions: BatchAction[]) {
+        this.execute('modify-shapes-border-Thickness', () => {
+            const api = this.api!;
+            const page = this.page;
+            const shapes: ShapeView[] = [];
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value, index } = actions[i];
+                shapes.push(target);
+                const s = shape4border(api, page, target);
+                const borders = target.getBorders();
+                const sideType = borders[index].sideSetting.sideType;
+                switch (sideType) {
+                    case SideType.Normal:
+                        api.setBorderSide(page, s, index, new BorderSideSetting(sideType, value, value, value, value));
+                        break;
+                    case SideType.Top:
+                        api.setBorderThicknessTop(page, s, index, value);
+                        break
+                    case SideType.Right:
+                        api.setBorderThicknessRight(page, s, index, value);
+                        break
+                    case SideType.Bottom:
+                        api.setBorderThicknessBottom(page, s, index, value);
+                        break
+                    case SideType.Left:
+                        api.setBorderThicknessLeft(page, s, index, value);
+                        break
+                    default:
+                        api.setBorderSide(page, s, index, new BorderSideSetting(sideType, value, value, value, value));
+                        break;
+                }
+
+            }
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                if (parent.autoLayout?.bordersTakeSpace) {
+                    modifyAutoLayout(page, api, parent);
+                }
+            }
+        });
+    }
+
+    modifyBorderThicknessTop(actions: BatchAction[]) {
+        this.execute('modify-border-thickness-top', () => {
+            const api = this.api!;
+            const page = this.page;
+            const shapes: ShapeView[] = [];
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value, index } = actions[i];
+                shapes.push(target);
+                const s = shape4border(api, page, target);
+                api.setBorderThicknessTop(page, s, index, value);
+            }
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                if (parent.autoLayout?.bordersTakeSpace) {
+                    modifyAutoLayout(page, api, parent);
+                }
+            }
+        })
+    }
+
+    modifyBorderThicknessBottom(actions: BatchAction[]) {
+        this.execute('modify-border-thickness-bottom', () => {
+            const api = this.api!;
+            const page = this.page;
+            const shapes: ShapeView[] = [];
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value, index } = actions[i];
+                shapes.push(target);
+                const s = shape4border(api, page, target);
+                api.setBorderThicknessBottom(page, s, index, value);
+            }
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                if (parent.autoLayout?.bordersTakeSpace) {
+                    modifyAutoLayout(page, api, parent);
+                }
+            }
+        })
+    }
+
+    modifyBorderThicknessLeft(actions: BatchAction[]) {
+        this.execute('modify-border-thickness-left', () => {
+            const api = this.api!;
+            const page = this.page;
+            const shapes: ShapeView[] = [];
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value, index } = actions[i];
+                shapes.push(target);
+                const s = shape4border(api, page, target);
+                api.setBorderThicknessLeft(page, s, index, value);
+            }
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                if (parent.autoLayout?.bordersTakeSpace) {
+                    modifyAutoLayout(page, api, parent);
+                }
+            }
+        })
+    }
+
+    modifyBorderThicknessRight(actions: BatchAction[]) {
+        this.execute('modify-border-thickness-right', () => {
+            const api = this.api!;
+            const page = this.page;
+            const shapes: ShapeView[] = [];
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value, index } = actions[i];
+                shapes.push(target);
+                const s = shape4border(api, page, target);
+                api.setBorderThicknessRight(page, s, index, value);
+            }
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                if (parent.autoLayout?.bordersTakeSpace) {
+                    modifyAutoLayout(page, api, parent);
+                }
+            }
+        })
+    }
+
+    /**
+     * @description 修改边框粗细 table
+     */
+
+    modifyBorderThickness4Cell(idx: number, thickness: number, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }, table: TableView) {
+        const editor = this.getTableEditor(table);
+        this.execute('modify-border-thickness-4Cell', () => {
+            const api = this.api!;
+            const page = this.page;
+            editor.view._getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
+                if (cell.cell) {
+                    const c = editor.cell4edit(cell.rowIdx, cell.colIdx, api);
+                    api.setBorderSide(page, c.data, idx, new BorderSideSetting(SideType.Normal, thickness, thickness, thickness, thickness));
+                    // api.setBorderThickness(this.__page, c.data, idx, thickness);
+                }
+            })
+        });
+    }
+
+    /**
+     * @description 修改图形模糊样式
+     */
+
+    modifyShapeBlurSaturation(actions: BatchAction2[]) {
+        this.execute('modify-shape-blur-saturation', () => {
+            const api = this.api!;
+            const page = this.page;
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                api.shapeModifyBlurSaturation(page, adapt2Shape(target), value);
+            }
+        })
+    }
+
+    /**
+     * @description 修改图形阴影位置 X
+     */
+    private shape: undefined | ShapeView
+    private shape4shadow(api: Api, shape?: ShapeView) {
+        if (!this.shape) this.shape = shape;
+        return shape4shadow(api, this.page, this.shape!);
+    }
+
+    modifyShadowOffSetX(idx: number, offserX: number, s: ShapeView) {
+        this.execute('modify-shadow-offset-x', () => {
+            const api = this.api!;
+            const page = this.page;
+            const shape = this.shape4shadow(api, s)
+            api.setShadowOffsetX(page, shape, idx, offserX);
+        })
+    }
+
+    modifyShapesShadowOffsetX(actions: BatchAction[]) {
+        this.execute('modify-shapes-shadow-offset-x', () => {
+            const api = this.api!;
+            const page = this.page;
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value, index } = actions[i];
+                api.setShadowOffsetX(page, adapt2Shape(target), index, value);
+            }
+        })
+    }
+
+    /**
+     * @description 修改图形阴影位置 Y
+     */
+
+    modifyShadowOffSetY(idx: number, offserY: number, s: ShapeView) {
+        this.execute('modify-shadow-offset-y', () => {
+            const api = this.api!;
+            const page = this.page;
+            const shape = this.shape4shadow(api, s)
+            api.setShadowOffsetY(page, shape, idx, offserY);
+        })
+    }
+
+    modifyShapesShadowOffsetY(actions: BatchAction[]) {
+        this.execute('modify-shapes-shadow-offset-y', () => {
+            const api = this.api!;
+            const page = this.page;
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value, index } = actions[i];
+                api.setShadowOffsetY(page, adapt2Shape(target), index, value);
+            }
+        })
+    }
+
+    /**
+     * @description 修改图形阴影blur
+     */
+
+    modifyShadowBlur(idx: number, blur: number, s: ShapeView) {
+        this.execute('modify-shadow-blur', () => {
+            const api = this.api!;
+            const page = this.page;
+            const shape = this.shape4shadow(api, s)
+            api.setShadowBlur(page, shape, idx, blur);
+        })
+    }
+
+    modifyShapesShadowBlur(actions: BatchAction[]) {
+        this.execute('modify-shapes-shadow-blur', () => {
+            const api = this.api!;
+            const page = this.page;
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value, index } = actions[i];
+                api.setShadowBlur(page, adapt2Shape(target), index, value);
+            }
+        })
+    }
+
+    /**
+    * @description 修改图形阴影spread
+    */
+
+    modifyShadowSpread(idx: number, spread: number, s: ShapeView) {
+        this.execute('modify-shadow-spread', () => {
+            const api = this.api!;
+            const page = this.page;
+            const shape = this.shape4shadow(api, s)
+            api.setShadowSpread(page, shape, idx, spread);
+        })
+    }
+
+    modifyShapesShadowSpread(actions: BatchAction[]) {
+        this.execute('modify-shapes-shadow-spread', () => {
+            const api = this.api!;
+            const page = this.page;
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value, index } = actions[i];
+                api.setShadowSpread(page, adapt2Shape(target), index, value);
+            }
+        })
+    }
+
+    /**
+     * @description 修改图形阴影color
+     */
+
+    modifyShadowColor(idx: number, color: Color, s: ShapeView) {
+        this.execute('modify-shadow-color', () => {
+            const api = this.api!;
+            const page = this.page;
+            const shape = this.shape4shadow(api, s);
+            api.setShadowColor(page, shape, idx, color);
+        })
+    }
+
+    modifyShapesShadowColor(actions: BatchAction[]) {
+        this.execute('modify-shapes-shadow-color', () => {
+            const api = this.api!;
+            const page = this.page;
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value, index } = actions[i];
+                api.setShadowColor(page, adapt2Shape(target), index, value);
+            }
+        })
+    }
+
+    /**
+     * @description 修改自动布局间距
+     */
+
+    tidyUpShapesLayout(shape_rows: ShapeView[][], hor: number, ver: number, dir: boolean) {
+        this.execute('', () => {
+            const api = this.api!;
+            const page = this.page;
+            tidyUpLayout(page, api, shape_rows, hor, ver, dir);
+        })
     }
 }
