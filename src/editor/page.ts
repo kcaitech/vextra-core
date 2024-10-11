@@ -1956,34 +1956,28 @@ export class PageEditor {
         try {
             const len = replacement.length;
             // 寻找replacement的左上角(lt_point)，该点将和src中每个图形的左上角重合
-            const any_r_f = replacement[0].frame;
-            const lt_point = { x: any_r_f.x, y: any_r_f.y };
+            const any_r_f = replacement[0].transform;
+            const lt_point = { x: any_r_f.translateX, y: any_r_f.translateY };
             for (let i = 1; i < len; i++) {
-                const frame = replacement[i].frame;
-                if (frame.x < lt_point.x) lt_point.x = frame.x;
-                if (frame.y < lt_point.y) lt_point.y = frame.y;
+                const frame = replacement[i].transform;
+                if (frame.translateX < lt_point.x) lt_point.x = frame.translateX;
+                if (frame.translateY < lt_point.y) lt_point.y = frame.translateY;
             }
 
             // 记录每个图形相对lt_point的位置
-            const delta_xys: {
-                x: number,
-                y: number
-            }[] = [];
+            const delta_xys: { x: number, y: number }[] = [];
             for (let i = 0; i < len; i++) {
                 const r = replacement[i];
-                const rf = r.frame;
-                const dt = { x: rf.x - lt_point.x, y: rf.y - lt_point.y };
+                const rf = r.transform;
+                const dt = { x: rf.translateX - lt_point.x, y: rf.translateY - lt_point.y };
                 delta_xys.push(dt);
             }
-
 
             // 开始替换
             for (let i = 0; i < src.length; i++) {
                 const s = src[i];
 
-                if (is_state(s)) {
-                    continue;
-                }
+                if (is_state(s)) continue;
 
                 const p = s.parent as GroupShape;
                 if (!p) throw new Error('invalid root');
@@ -1991,8 +1985,8 @@ export class PageEditor {
                 if (save_index < 0) throw new Error('invalid childs data');
 
                 // 记录被替换掉的图形原先所在的位置
-                const fr = s.frame;
-                const save_frame = { x: fr.x, y: fr.y };
+                const fr = s.transform;
+                const save_frame = { x: fr.translateX, y: fr.translateY };
                 // 先删除将被替换的图形
                 const del_res = this.delete_inner(this.__page, s, api);
                 if (!del_res) throw new Error('delete failed');
