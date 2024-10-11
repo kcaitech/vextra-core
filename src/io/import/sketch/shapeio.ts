@@ -282,6 +282,9 @@ export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun, i: n
 }
 
 export function importGroupShape(ctx: LoadContext, data: IJSON, f: ImportFun, i: number): GroupShape {
+    if (data['hasBackgroundColor'] || data['backgroundColor']) {
+        return importArtboard(ctx, data, f, i);
+    }
     // const type = importShapeType(data);
     const id: string = uniqueId(ctx, data['do_objectID']);
     const exportOptions = importExportOptions(data);
