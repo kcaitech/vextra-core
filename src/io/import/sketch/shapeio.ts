@@ -23,6 +23,7 @@ import { Artboard } from "../../../data/artboard";
 import { Text } from "../../../data/text/text";
 import {
     BoolOp,
+    Border,
     Color,
     ExportFormatNameingScheme,
     ExportVisibleScaleType,
@@ -234,6 +235,10 @@ const hasFill = (fills: Fill[]) => {
     if (fills.length === 0) return false;
     return fills.some(f => f.isEnabled);
 }
+const hasBorder = (borders: Border[]) => {
+    if (borders.length === 0) return false;
+    return borders.some(b => b.isEnabled);
+}
 
 export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun, i: number): Artboard {
     // const type = importShapeType(data);
@@ -264,13 +269,10 @@ export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun, i: n
         style.fills.push(fill);
     }
     const childs = (data['layers'] || []).map((d: IJSON, i: number) => f(ctx, d, i));
-    if (data['hasClippingMask'] && !hasFill(style.fills)) {
-        const fill = new Fill([style.fills.length] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0));
-        style.fills.push(fill);
-    }
+    const shapes = new BasicArray<Shape>(...addMaskRect(childs, ctx, data['layers'] || []));
     // const points = createNormalPoints();
 
-    const shape = new Artboard([i] as BasicArray<number>, id, name, ShapeType.Artboard, frame.trans, style, new BasicArray<Shape>(...childs), frame.size);
+    const shape = new Artboard([i] as BasicArray<number>, id, name, ShapeType.Artboard, frame.trans, style, shapes, frame.size);
 
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
@@ -298,8 +300,8 @@ export function importGroupShape(ctx: LoadContext, data: IJSON, f: ImportFun, i:
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON, i: number) => f(ctx, d, i));
-
-    const shape = new GroupShape([i] as BasicArray<number>, id, name, ShapeType.Group, frame.trans, style, new BasicArray<Shape>(...childs));
+    const shapes = new BasicArray<Shape>(...addMaskRect(childs, ctx, data['layers'] || []));
+    const shape = new GroupShape([i] as BasicArray<number>, id, name, ShapeType.Group, frame.trans, style, shapes);
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     shape.exportOptions = exportOptions;
@@ -322,11 +324,8 @@ export function importShapeGroupShape(ctx: LoadContext, data: IJSON, f: ImportFu
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON, i: number) => f(ctx, d, i));
-    if (data['hasClippingMask'] && !hasFill(style.fills)) {
-        const fill = new Fill([style.fills.length] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0));
-        style.fills.push(fill);
-    }
-    const shape = new BoolShape([i] as BasicArray<number>, id, name, ShapeType.BoolShape, frame.trans, style, new BasicArray<Shape>(...childs));
+    const shapes = new BasicArray<Shape>(...addMaskRect(childs, ctx, data['layers'] || []));
+    const shape = new BoolShape([i] as BasicArray<number>, id, name, ShapeType.BoolShape, frame.trans, style, shapes);
     // shape.isBoolOpShape = true;
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
@@ -372,10 +371,6 @@ export function importImage(ctx: LoadContext, data: IJSON, f: ImportFun, i: numb
     fill.setImageMgr(ctx.mediasMgr);
     const fills = new BasicArray<Fill>();
     fills.push(fill);
-    if (data['hasClippingMask'] && !hasFill(fills)) {
-        const fill = new Fill([fills.length] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0));
-        fills.push(fill);
-    }
     shape.style.fills = fills;
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
@@ -401,7 +396,8 @@ export function importPage(ctx: LoadContext, data: IJSON, f: ImportFun): Page {
     // const isClosed = data['isClosed'];
 
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON, i: number) => f(ctx, d, i));
-    const shape = new Page(new BasicArray<number>(), id, name, ShapeType.Page, frame.trans, style, new BasicArray<Shape>(...childs));
+    const shapes = new BasicArray<Shape>(...addMaskRect(childs, ctx, data['layers'] || []));
+    const shape = new Page(new BasicArray<number>(), id, name, ShapeType.Page, frame.trans, style, shapes);
     // shape.appendChilds(childs);
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
@@ -425,10 +421,6 @@ export function importPathShape(ctx: LoadContext, data: IJSON, f: ImportFun, i: 
     // const text = data['attributedString'] && importText(data['attributedString']);
 
     const segment = new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...points), data['isClosed'])
-    if (data['hasClippingMask'] && !hasFill(style.fills)) {
-        const fill = new Fill([style.fills.length] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0));
-        style.fills.push(fill);
-    }
     const shape = new PathShape([i] as BasicArray<number>, id, name, ShapeType.Path, frame.trans, style, frame.size, new BasicArray<PathSegment>(segment));
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
@@ -455,10 +447,6 @@ export function importRectShape(ctx: LoadContext, data: IJSON, f: ImportFun, i: 
     // const isClosed = data['isClosed'];
     // const r = data['fixedRadius'] || 0;
     // const radius = new RectRadius(r, r, r, r);
-    if (data['hasClippingMask'] && !hasFill(style.fills)) {
-        const fill = new Fill([style.fills.length] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0));
-        style.fills.push(fill);
-    }
     const segment: PathSegment = new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...points), data['isClosed']);
     const shape = new RectShape([i] as BasicArray<number>, id, name, ShapeType.Rectangle, frame.trans, style, frame.size, new BasicArray<PathSegment>(segment));
 
@@ -489,10 +477,6 @@ export function importTextShape(ctx: LoadContext, data: IJSON, f: ImportFun, i: 
     // const isClosed = data['isClosed'];
     // 导入填充是文字颜色
     style.fills = new BasicArray();
-    if (data['hasClippingMask']) {
-        const fill = new Fill([style.fills.length] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0));
-        style.fills.push(fill);
-    }
     const shape = new TextShape([i] as BasicArray<number>, id, name, ShapeType.Text, frame.trans, style, frame.size, text);
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
@@ -519,11 +503,14 @@ export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun, i: num
     const id = uniqueId(ctx, data['symbolID']);
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON, i: number) => f(ctx, d, i));
     // const points = createNormalPoints();
-    if (data['hasClippingMask'] && !hasFill(style.fills)) {
-        const fill = new Fill([style.fills.length] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0));
+    const shapes = new BasicArray<Shape>(...addMaskRect(childs, ctx, data['layers'] || []));
+    const hasBackgroundColor: boolean = data['hasBackgroundColor'];
+    const backgroundColor: Color | undefined = data['backgroundColor'] && importColor(data['backgroundColor']);
+    if (hasBackgroundColor && backgroundColor) {
+        const fill = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, backgroundColor);
         style.fills.push(fill);
     }
-    const shape = new SymbolShape([i] as BasicArray<number>, id, name, ShapeType.Symbol, frame.trans, style, new BasicArray<Shape>(...childs), frame.size, new BasicMap());
+    const shape = new SymbolShape([i] as BasicArray<number>, id, name, ShapeType.Symbol, frame.trans, style, shapes, frame.size, new BasicMap());
 
     // env.symbolManager.addSymbol(id, name, env.pageId, shape);
     // shape.appendChilds(childs);
@@ -548,8 +535,10 @@ export function importSymbolRef(ctx: LoadContext, data: IJSON, f: ImportFun, i: 
     }
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
-    if (data['hasClippingMask'] && !hasFill(style.fills)) {
-        const fill = new Fill([style.fills.length] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0));
+    const hasBackgroundColor: boolean = data['hasBackgroundColor'];
+    const backgroundColor: Color | undefined = data['backgroundColor'] && importColor(data['backgroundColor']);
+    if (hasBackgroundColor && backgroundColor) {
+        const fill = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, backgroundColor);
         style.fills.push(fill);
     }
     const shape = new SymbolRefShape([i] as BasicArray<number>, id, name, ShapeType.SymbolRef, frame.trans, style, frame.size, data['symbolID'], new BasicMap());
@@ -559,4 +548,39 @@ export function importSymbolRef(ctx: LoadContext, data: IJSON, f: ImportFun, i: 
     importBoolOp(shape, data);
     shape.mask = data['hasClippingMask'];
     return shape;
+}
+
+const addMaskRect = (childs: Shape[], ctx: LoadContext, data: IJSON[]) => {
+    const shapes: Shape[] = [];
+    for (let i = 0; i < childs.length; i++) {
+        const shape = childs[i];
+        const d = data[i];
+        if (d['hasClippingMask'] && d['clippingMaskMode'] === 0) {
+            const style = importStyle(ctx, d['style']);
+            if (!hasFill(shape.style.fills)) {
+                const fill = new Fill([shape.style.fills.length] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0));
+                shape.style.fills.push(fill);
+                if (hasBorder(shape.style.borders)) {
+                    const points: CurvePoint[] = importPoints(d);
+                    const segment: PathSegment = new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...points), d['isClosed']);
+                    const s = new RectShape([i] as BasicArray<number>, uuid(), shape.name, ShapeType.Rectangle, shape.transform, style, shape.size, new BasicArray<PathSegment>(segment));
+                    importShapePropertys(s, d);
+                    importBoolOp(s, d);
+                    shapes.push(s, shape);
+                } else {
+                    shapes.push(shape);
+                }
+            } else {
+                const points: CurvePoint[] = importPoints(d);
+                const segment: PathSegment = new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...points), d['isClosed']);
+                const s = new RectShape([i] as BasicArray<number>, uuid(), shape.name, ShapeType.Rectangle, shape.transform, style, shape.size, new BasicArray<PathSegment>(segment));
+                importShapePropertys(s, d);
+                importBoolOp(s, d);
+                shapes.push(s, shape);
+            }
+        } else {
+            shapes.push(shape);
+        }
+    }
+    return shapes;
 }
