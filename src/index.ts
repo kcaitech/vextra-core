@@ -5,7 +5,7 @@ export * from "./basic/pal"
 export * from "./basic/utils"
 export {IEventEmitter, EventEmitter} from "./basic/event"
 export {Transform, TransformMode, Line, LineThrough0, Plane, PlaneThrough0} from './basic/transform'
-export {Vector, ColVector2D, ColVector3D} from "./basic/matrix2"
+export {Vector, ColVector2D, ColVector3D, Matrix as Matrix2} from "./basic/matrix2"
 export {NumberArray2D} from "./basic/number_array"
 
 export * from "./basic/error"
