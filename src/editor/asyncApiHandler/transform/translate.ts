@@ -203,9 +203,10 @@ export class Transporter extends AsyncApiCaller {
                     const original = env.get(view)!;
                     const originalParent = adapt2Shape(original.parent) as GroupShape;
 
-                    const targetIndex = (parent.id === originalParent.id && index < original.index)
+                    let targetIndex = (parent.id === originalParent.id && index < original.index)
                         ? original.index - 1
                         : original.index;
+                    targetIndex = Math.max(0, Math.min(originalParent.childs.length, targetIndex));
 
                     api.shapeMove(page, parent, index, originalParent, targetIndex);
 
