@@ -173,7 +173,15 @@ import { FMT_VER_latest } from "../data/fmtver";
 import { makeShapeTransform1By2, makeShapeTransform2By1, updateShapeTransform1By2 } from "../data";
 import { ColVector3D } from "../basic/matrix2";
 import { Transform as Transform2 } from "../basic/transform";
-import { getAutoLayoutShapes, initAutoLayout, layoutShapesOrder, layoutSpacing, modifyAutoLayout, TidyUpAlgin, tidyUpLayout } from "./utils/auto_layout";
+import {
+    getAutoLayoutShapes,
+    initAutoLayout,
+    layoutShapesOrder,
+    layoutSpacing,
+    modifyAutoLayout,
+    TidyUpAlgin,
+    tidyUpLayout
+} from "./utils/auto_layout";
 
 import { getFormatFromBase64 } from "../basic/utils";
 import { uniformScale, UniformScaleUnit } from "./asyncApiHandler";
@@ -4492,8 +4500,16 @@ export class PageEditor {
                     ids.push(pathShape.id);
                 } else {
                     const borders = view.getBorders();
-                    if (!borders.length) continue;
                     const shape = adapt2Shape(view);
+                    if (!borders.length) {
+                        if ((shape instanceof StarShape || shape instanceof PolygonShape) && !shape.haveEdit) {
+                            update_frame_by_points(api, page, shape);
+                            api.shapeEditPoints(page, shape, true);
+                            ids.push(shape.id);
+                        }
+                        continue;
+                    }
+
                     const parent = shape.parent as GroupShape;
                     const border2shape = (border: Border) => {
                         const copyStyle = findUsableFillStyle(view);
@@ -4517,6 +4533,7 @@ export class PageEditor {
                     if (shape.style.fills.length) {
                         api.deleteBorders(page, shape, 0, borders.length);
                         ids.push(view.data.id);
+                        if (shape instanceof PathShape) update_frame_by_points(api, page, shape);
                     } else {
                         api.shapeDelete(document, page, parent, parent.indexOfChild(shape));
                     }
@@ -4529,7 +4546,10 @@ export class PageEditor {
         }
     }
 
-    insertImages(images: { pack: ImagePack | SVGParseResult, transform: Transform }[], fixed: boolean, env: GroupShapeView) {
+    insertImages(images: {
+        pack: ImagePack | SVGParseResult,
+        transform: Transform
+    }[], fixed: boolean, env: GroupShapeView) {
         try {
             const ids: string[] = [];
             const imageShapes: { shape: Shape, upload: UploadAssets[] }[] = [];
