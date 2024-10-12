@@ -4563,7 +4563,6 @@ export class PageEditor {
     flattenSelection(shapes: ShapeView[], name?: string) {
         // 先把所有可以参与拼合的图层整理出来
         // 确定一组属性，包括边框、填充、蒙版、约束等
-        //
         try {
             if (!shapes.length) return;
             let virtualSelection = false;
