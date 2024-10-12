@@ -16,9 +16,9 @@ import {
 import { Transform as TransformRaw } from "../../../data";
 import { after_migrate, unable_to_migrate } from "../../utils/migrate";
 import { get_state_name, is_state } from "../../symbol";
-import { Api } from "../../../coop";
-import { ISave4Restore, LocalCmd, SelectionState } from "../../../coop";
-import { getAutoLayoutShapes, modifyAutoLayout, tidyUpLayout } from "../../utils/auto_layout";
+import { Api } from "../../../coop/recordapi";
+import { ISave4Restore, LocalCmd, SelectionState } from "../../../coop/localcmd";
+import { getAutoLayoutShapes, modifyAutoLayout, TidyUpAlgin, tidyUpLayout } from "../../utils/auto_layout";
 import { translate } from "../../frame";
 import { transform_data } from "../../../io/cilpboard";
 import { MossError } from "../../../basic/error";
@@ -281,14 +281,11 @@ export class Transporter extends AsyncApiCaller {
         }
     }
 
-    tidyUpShapesLayout(shape_rows: ShapeView[][], hor: number, ver: number, dir: boolean, startXY?: {
-        x: number,
-        y: number
-    }) {
+    tidyUpShapesLayout(shape_rows: ShapeView[][], hor: number, ver: number, dir: boolean, algin: TidyUpAlgin, startXY?: { x: number, y: number }) {
         try {
             const api = this.api;
             const page = this.page;
-            tidyUpLayout(page, api, shape_rows, hor, ver, dir, startXY);
+            tidyUpLayout(page, api, shape_rows, hor, ver, dir, algin, startXY);
             this.updateView();
         } catch (error) {
             this.exception = true;

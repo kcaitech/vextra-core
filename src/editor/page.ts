@@ -137,6 +137,7 @@ import {
     PrototypeStartingPoint,
     PrototypeTransitionType,
     ScrollDirection,
+    ScrollBehavior,
     PrototypeEasingBezier,
     Shadow
 } from "../data/baseclasses";
@@ -172,14 +173,8 @@ import { FMT_VER_latest } from "../data/fmtver";
 import { makeShapeTransform1By2, makeShapeTransform2By1, updateShapeTransform1By2 } from "../data";
 import { ColVector3D } from "../basic/matrix2";
 import { Transform as Transform2 } from "../basic/transform";
-import {
-    getAutoLayoutShapes,
-    initAutoLayout,
-    layoutShapesOrder,
-    layoutSpacing,
-    modifyAutoLayout,
-    tidyUpLayout
-} from "./utils/auto_layout";
+import { getAutoLayoutShapes, initAutoLayout, layoutShapesOrder, layoutSpacing, modifyAutoLayout, TidyUpAlgin, tidyUpLayout } from "./utils/auto_layout";
+
 import { getFormatFromBase64 } from "../basic/utils";
 import { uniformScale, UniformScaleUnit } from "./asyncApiHandler";
 import { modifyRadius, modifyStartingAngle, modifySweep } from "./asyncApiHandler";
@@ -743,6 +738,7 @@ export class PageEditor {
                 if (shape0.overlayBackgroundInteraction) symbolShape.overlayBackgroundInteraction = (shape0.overlayBackgroundInteraction);
                 if (shape0.overlayBackgroundAppearance) symbolShape.overlayBackgroundAppearance = importOverlayBackgroundAppearance(shape0.overlayBackgroundAppearance);
                 if (shape0.scrollDirection) symbolShape.scrollDirection = (shape0.scrollDirection);
+                if (shape0.scrollBehavior) symbolShape.scrollBehavior = (shape0.scrollBehavior);
                 if (shape0.autoLayout) symbolShape.autoLayout = importAutoLayout(shape0.autoLayout);
             }
 
@@ -3662,7 +3658,7 @@ export class PageEditor {
             const inherit = shape.prototypeInterActions;
             const i = inherit && inherit.find(v => v.id === id);
             if (i) {
-                const a = new PrototypeInterAction(new BasicArray(), id, new PrototypeEvent(i.event.interactionType), new PrototypeActions(i.actions.connectionType))
+                const a = new PrototypeInterAction(new BasicArray(), id, new PrototypeEvent(i.event.interactionType), new PrototypeActions(i.actions.connectionType, true))
                 api.insertShapeprototypeInteractions(this.__page, _var, a);
             }
         }
@@ -3830,6 +3826,17 @@ export class PageEditor {
         }
     }
 
+    setPrototypeIsOpenNewTab(shape: ShapeView, id: string, value: boolean) {
+        try {
+            const api = this.__repo.start('setPrototypeIsOpenNewTab');
+            const __shape = this.shape4protoActions(api, this.__page, shape, id);
+            api.shapeModifyPrototypeIsOpenNewTab(this.__page, __shape, id, value);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
     setPrototypeActionOpenUrlInNewTab(shape: ShapeView, id: string, value: boolean) {
         try {
             const api = this.__repo.start('setPrototypeActionOpenUrlInNewTab');
@@ -3956,6 +3963,22 @@ export class PageEditor {
             const api = this.__repo.start('setscrollDirection');
             const __shape = adapt2Shape(shape);
             api.shapeModifyscrollDirection(this.__page, __shape, value);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setScrollBehavior(shapes: ShapeView[], value: ScrollBehavior) {
+        const api = this.__repo.start('setScrollBehavior');
+        try {
+            for (let i = 0; i < shapes.length; i++) {
+                const shape = shapes[i];
+                const __shape = adapt2Shape(shape);
+                const types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                if (!types.includes(__shape.parent!.type)) continue;
+                api.shapeModifyScrollBehavior(this.__page, __shape, value);
+            }
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
@@ -4674,10 +4697,10 @@ export class PageEditor {
         return new TableEditor(shape, this.__page, this.__repo, this.__document);
     }
 
-    tidyUpShapesLayout(shape_rows: ShapeView[][], hor: number, ver: number, dir: boolean) {
+    tidyUpShapesLayout(shape_rows: ShapeView[][], hor: number, ver: number, dir: boolean, algin: TidyUpAlgin) {
         const api = this.__repo.start('tidyUpShapesLayout');
         try {
-            tidyUpLayout(this.__page, api, shape_rows, hor, ver, dir);
+            tidyUpLayout(this.__page, api, shape_rows, hor, ver, dir, algin);
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
