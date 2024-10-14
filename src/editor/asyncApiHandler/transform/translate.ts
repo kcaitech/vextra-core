@@ -255,6 +255,8 @@ export class Transporter extends AsyncApiCaller {
                 api.shapeModifyTransform(page, originShape, shape.transform);
                 api.shapeDelete(document, page, currentParent, currentParent.indexOfChild(shape));
 
+                this.prototype.delete(shape.id);
+
                 results.push(originShape);
             }
 
