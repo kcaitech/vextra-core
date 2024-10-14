@@ -295,11 +295,10 @@ export class Transporter extends AsyncApiCaller {
         }
     }
 
-    insert(layout: ShapeView, placement: ShapeView, position: -1 | 1, sel: ShapeView[]) {
+    insert(layout: ShapeView, placement: ShapeView | undefined, position: -1 | 1, sel: ShapeView[]) {
         try {
             const container = layout as ArtboradView;
             const envData = adapt2Shape(container) as Artboard;
-            const placementData = adapt2Shape(placement);
 
             const isHor = (container.autoLayout?.stackMode || StackMode.Horizontal) === StackMode.Horizontal;
             const sortSel = sel.sort((a, b) => {
@@ -313,14 +312,14 @@ export class Transporter extends AsyncApiCaller {
             });
 
 
-            const frame = placement._p_frame;
+            const frame = placement ? placement._p_frame : {x: 0, y: 0};
 
             const api = this.api;
             const page = this.page;
 
             let x = frame.x + (position > 0 ? sortSel.length : -1);
             let y = frame.y + (position > 0 ? sortSel.length : -1);
-            const index = envData.indexOfChild(placementData) + (position > 0 ? 1 : 0);
+            const index = placement ? envData.indexOfChild(adapt2Shape(placement)) + (position > 0 ? 1 : 0) : 0;
 
             for (let i = sortSel.length - 1; i > -1; i--) {
                 const view = sortSel[i];
