@@ -1,12 +1,15 @@
-import { AutoLayout, Border, ContextSettings, CornerRadius, Fill, MarkerType, OverrideType, PrototypeInterAction, Shadow, Shape, ShapeFrame, ShapeSize, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType, getPathOfRadius, ShapeType } from "../data/classes";
+import {
+    AutoLayout, Border, ContextSettings, CornerRadius, Fill, MarkerType, OverrideType, PrototypeInterAction,
+    Shadow, Shape, ShapeFrame, ShapeSize, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType,
+    ShapeType, BasicArray,
+    getPathOfRadius, makeShapeTransform1By2, makeShapeTransform2By1
+} from "../data";
 import { fixFrameByConstrain, frame2Parent2, ShapeView } from "./shape";
 import { DataView, RootView } from "./view";
 import { getShapeViewId } from "./basic";
 import { DViewCtx, PropsType, VarsContainer } from "./viewctx";
 import { findOverride, findVar } from "./basic";
 import { objectId } from "../basic/objectid";
-import { makeShapeTransform1By2, makeShapeTransform2By1 } from "../data/shape_transform_util";
-import { BasicArray } from "../data/basic";
 import { findOverrideAll } from "../data/utils";
 import { PageView } from "./page";
 import { innerShadowId } from "../render";
@@ -96,7 +99,6 @@ export class SymbolRefView extends ShapeView {
         this.notify('mask-env-change');
     }
 
-    // private m_refId: string | undefined;
     private m_sym: SymbolShape | undefined;
     private m_union: SymbolShape | undefined;
 
@@ -160,9 +162,6 @@ export class SymbolRefView extends ShapeView {
         const refId = this.getRefId();
         const sym = symMgr.get(refId);
         if (!sym) return;
-        // if (this.m_refId === refId) {
-        //     return;
-        // }
 
         if (this.m_sym && objectId(this.m_sym) === objectId(sym)) return;
 
@@ -397,13 +396,7 @@ export class SymbolRefView extends ShapeView {
         const data = this.data;
         const varsContainer = (this.varsContainer || []).concat(data);
         const id = ""; // ?
-        const _vars = findOverrideAll(id, ot, varsContainer);
-        // if (!_vars) return;
-        // const _var = _vars[_vars.length - 1];
-        // if (_var && _var.type === vt) {
-        //     return _var;
-        // }
-        return _vars;
+        return findOverrideAll(id, ot, varsContainer);
     }
 
     get contextSettings(): ContextSettings | undefined {
