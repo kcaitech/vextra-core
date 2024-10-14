@@ -259,6 +259,7 @@ export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun, i: n
     const hasBackgroundColor: boolean = data['hasBackgroundColor'];
     const backgroundColor: Color | undefined = data['backgroundColor'] && importColor(data['backgroundColor']);
 
+    // todo 容器填充与背景的取舍问题
     if (hasBackgroundColor && backgroundColor) {
         const fill = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, backgroundColor);
         style.fills.length = 0;
