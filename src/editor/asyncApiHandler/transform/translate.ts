@@ -311,7 +311,6 @@ export class Transporter extends AsyncApiCaller {
                 else return 1;
             });
 
-
             const frame = placement ? placement._p_frame : {x: 0, y: 0};
 
             const api = this.api;
