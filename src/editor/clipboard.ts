@@ -2,10 +2,21 @@ import { CoopRepository } from "../coop";
 import { Document, GroupShape, Page, Shape } from "../data";
 
 export function assign(shape: Shape) {
-    const parent = shape.parent! as GroupShape;
-    const names = parent.childs.map(i => {
-        if (i.id !== shape.id) return i.name;
-    }).filter(i => i);
+    const parent = shape.parent as GroupShape;
+
+    const names: Set<string> = new Set();
+    for (const view of parent.childs) {
+        if (view.id === shape.id) continue;
+        names.add(view.name);
+    }
+
+    const reg = /\d+$/i
+    let name = shape.name;
+    while (names.has(name)) {
+        const match = name.match(reg)
+        name = match ? name + Number(match[0] + 1) : name + 1;
+    }
+    return name;
 }
 
 export class MossClipboardInterface {
