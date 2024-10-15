@@ -74,23 +74,27 @@ export class TextShapeEditor extends ShapeEditor {
         return this._cacheAttr;
     }
 
+    public setCachedSpanAttr(){
+        this._cacheAttr = new SpanAttr();
+    }
+
     public insertText(text: string, index: number, attr?: SpanAttr): number {
         return this.insertText2(text, index, 0, attr);
     }
 
-    private fixFrameByLayout(api: _Api) {
+    public fixFrameByLayout(api: _Api) {
         if (this.shape.isVirtualShape) return; // api = basicapi;
         if (this.view instanceof TextShapeView) fixTextShapeFrameByLayout(api, this.__page, this.view);
         else if (this.view instanceof TableCellView) fixTableShapeFrameByLayout(api, this.__page, this.view, this.view.parent as TableView);
     }
-    private fixFrameByLayout2(api: _Api, shape: TextShapeView | TableCellView | Variable) {
+    public fixFrameByLayout2(api: _Api, shape: TextShapeView | TableCellView | Variable) {
         if (shape instanceof Variable) return;
         if (shape.isVirtualShape) return; // api = basicapi;
         if (shape instanceof TextShapeView) fixTextShapeFrameByLayout(api, this.__page, shape);
         else if (shape instanceof TableCellView) fixTableShapeFrameByLayout(api, this.__page, shape, this.view.parent as TableView);
     }
 
-    private shape4edit(api: Api, shape?: TextShapeView | TableCellView): Variable | TableCellView | TextShapeView {
+    public shape4edit(api: Api, shape?: TextShapeView | TableCellView): Variable | TableCellView | TextShapeView {
         const _shape = shape ?? this.__shape as (TextShapeView | TableCellView);
 
         if (_shape instanceof TableCellView) {
