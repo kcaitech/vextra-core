@@ -1,9 +1,9 @@
 import { Document, OvalShape, Page } from "../../data";
-import { adapt2Shape, ArtboradView, PageView, ShapeView, SymbolRefView, SymbolView, TableView } from "../../dataview";
+import { adapt2Shape, ArtboradView, PageView, ShapeView, SymbolRefView, SymbolView, TableCellView, TableView, TextShapeView } from "../../dataview";
 import { modifyPathByArc } from "../asyncApiHandler";
 import { Api, CoopRepository } from "../../coop";
 import { modify_shapes_height, modify_shapes_width } from "../utils/common";
-import { Artboard, BorderSideSetting, Color, FillType, PathShape, SideType, SymbolRefShape, Transform } from "../../data/classes";
+import { Artboard, BorderSideSetting, Color, FillType, PathShape, ShapeType, SideType, SymbolRefShape, Transform } from "../../data/classes";
 import { RadiusType } from "../../data/consts";
 import { shape4border, shape4contextSettings, shape4cornerRadius, shape4fill, shape4shadow } from "../symbol";
 import { update_frame_by_points } from "../utils/path";
@@ -14,6 +14,7 @@ import { exportGradient, } from "../../data/baseexport";
 import { TableEditor } from "../table";
 import { getAutoLayoutShapes, modifyAutoLayout, reLayoutBySort, TidyUpAlgin, tidyUpLayout } from "../utils/auto_layout";
 import { ShapeEditor } from "../shape";
+import { TextShapeEditor } from "../textshape";
 
 export class LinearApi {
     private readonly __repo: CoopRepository;
@@ -382,6 +383,7 @@ export class LinearApi {
     }
 
     private editor4table: undefined | TableEditor;
+    private TableShape: undefined | TableView;
     private getTableEditor(table: TableView) {
         if (!this.editor4table) {
             this.editor4table = new PageEditor(this.__repo, this.page, this.__document).editor4Table(table)
@@ -609,7 +611,7 @@ export class LinearApi {
      */
     private shape: undefined | ShapeView
     private shape4shadow(api: Api, shape?: ShapeView) {
-        if (!this.shape) this.shape = shape;
+        if (!this.shape || this.shape !== shape) this.shape = shape;
         return shape4shadow(api, this.page, this.shape!);
     }
 
@@ -733,19 +735,228 @@ export class LinearApi {
      * @description 修改自动布局间距
      */
 
-    tidyUpShapesLayout(shape_rows: ShapeView[][], hor: number, ver: number, dir: boolean,algin: TidyUpAlgin) {
-        this.execute('', () => {
+    tidyUpShapesLayout(shape_rows: ShapeView[][], hor: number, ver: number, dir: boolean, algin: TidyUpAlgin) {
+        this.execute('tidyup-shapes-layout', () => {
             const api = this.api!;
             const page = this.page;
-            tidyUpLayout(page, api, shape_rows, hor, ver, dir,algin);
+            tidyUpLayout(page, api, shape_rows, hor, ver, dir, algin);
         })
     }
-     /* @description 自动布局内重新布局
-    
-     */
+    /* @description 自动布局内重新布局
+   
+    */
     reLayout(env: ArtboradView | SymbolView, sort: Map<string, number>) {
         this.execute('re-layout-linear', () => {
             reLayoutBySort(this.page, this.api!, adapt2Shape(env) as Artboard, sort);
         });
+    }
+
+    private editor4text: undefined | TextShapeEditor;
+    private TextShape: undefined | TextShapeView;
+    private getTextEditor(text: TextShapeView) {
+        if (!this.editor4text || this.TextShape !== text) {
+            this.editor4text = new PageEditor(this.__repo, this.page, this.__document).editor4TextShape(text)
+            this.TextShape = text
+        };
+        return this.editor4text!;
+    }
+
+    /**
+     * @description 修改文本颜色 alpha
+     */
+
+    modifyTextColor(index: number, len: number, color: Color | undefined, text: TextShapeView) {
+        const editor4text = this.getTextEditor(text)
+        if (len === 0) {
+            let cacheAttr = editor4text.getCachedSpanAttr();
+            if (cacheAttr === undefined) {
+                editor4text.setCachedSpanAttr;
+                cacheAttr = editor4text.getCachedSpanAttr()
+                if (cacheAttr) cacheAttr.color = color;
+                return;
+            }
+        }
+        this.execute('modify-text-color', () => {
+            const api = this.api!;
+            const page = this.page;
+            const shape = editor4text.shape4edit(api);
+            api.textModifyColor(page, shape, index, len, color)
+        })
+    }
+
+    modifyTextColorMulti(shapes: (TextShapeView | TableCellView)[], color: Color | undefined) {
+        this.execute('modify-text-color-multi', () => {
+            const api = this.api!;
+            const page = this.page;
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const text_shape = shapes[i];
+                if (text_shape.type !== ShapeType.Text) continue;
+                const editor4text = this.getTextEditor(text_shape as TextShapeView)
+                const shape = editor4text.shape4edit(api, text_shape);
+                const text = shape instanceof ShapeView ? shape.text : shape.value as Text;
+                const text_length = text.length;
+                if (text_length === 0) continue;
+                api.textModifyColor(page, shape, 0, text_length, color);
+            }
+        })
+    }
+
+
+
+    /**
+     * @description 修改文本高亮 alpha
+     */
+
+    modifyTextHighlightColor(index: number, len: number, color: Color | undefined, text: TextShapeView) {
+        const editor4text = this.getTextEditor(text)
+        if (len === 0) {
+            let cacheAttr = editor4text.getCachedSpanAttr();
+            if (cacheAttr) cacheAttr.highlight = color;
+            return;
+        }
+        this.execute('modify-text-highlight-color', () => {
+            const api = this.api!;
+            const page = this.page;
+            const shape = editor4text.shape4edit(api);
+            api.textModifyHighlightColor(page, shape, index, len, color)
+        })
+    }
+
+    modifyTextHighlightColorMulti(shapes: (TextShapeView | TableCellView)[], color: Color | undefined) {
+        this.execute('modify-text-highlight-color-multi', () => {
+            const api = this.api!;
+            const page = this.page;
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const text_shape = shapes[i];
+                if (text_shape.type !== ShapeType.Text) continue;
+                const editor4text = this.getTextEditor(text_shape as TextShapeView)
+                const shape = editor4text.shape4edit(api, text_shape);
+                const text = shape instanceof ShapeView ? shape.text : shape.value as Text;
+                const text_length = text.length;
+                if (text_length === 0) continue;
+                api.textModifyHighlightColor(page, shape, 0, text_length, color);
+            }
+        })
+    }
+
+    /**
+     * @description 修改文本字号 size
+     */
+
+    modifyTextFontSize(index: number, len: number, fontSize: number, text: TextShapeView) {
+        const editor4text = this.getTextEditor(text)
+        if (typeof fontSize !== 'number') {
+            fontSize = Number.parseFloat(fontSize);
+        }
+        if (len === 0) {
+            let cacheAttr = editor4text.getCachedSpanAttr();
+            if (cacheAttr) cacheAttr.fontSize = fontSize;
+            return;
+        }
+        this.execute('modify-text-font-size', () => {
+            const api = this.api!;
+            const page = this.page;
+            const shape = editor4text.shape4edit(api);
+            api.textModifyFontSize(page, shape, index, len, fontSize)
+            editor4text.fixFrameByLayout(api);
+        })
+    }
+
+    modifyTextFontSizeMulti(shapes: (TextShapeView | TableCellView)[], fontSize: number) {
+        this.execute('modify-text-font-size-multi', () => {
+            const api = this.api!;
+            const page = this.page;
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const text_shape = shapes[i];
+                if (text_shape.type !== ShapeType.Text) continue;
+                const editor4text = this.getTextEditor(text_shape as TextShapeView)
+                const shape = editor4text.shape4edit(api, text_shape);
+                const text = shape instanceof ShapeView ? shape.text : shape.value as Text;
+                const text_length = text.length;
+                if (text_length === 0) continue;
+                api.textModifyFontSize(page, shape, 0, text_length, fontSize);
+            }
+        })
+    }
+
+    /**
+     * @description 修改文本行高
+     */
+
+    modifyTextLineHeight(lineHeight: number | 'auto', index: number, len: number, text: TextShapeView) {
+        const editor4text = this.getTextEditor(text)
+        this.execute('modify-text-line-height', () => {
+            const api = this.api!;
+            const page = this.page;
+            const shape = editor4text.shape4edit(api);
+            if (lineHeight === 'auto') {
+                api.textModifyAutoLineHeight(page, shape, true, index, len)
+            } else {
+                api.textModifyAutoLineHeight(page, shape, false, index, len)
+                api.textModifyMinLineHeight(page, shape, lineHeight, index, len)
+                api.textModifyMaxLineHeight(page, shape, lineHeight, index, len)
+            }
+            editor4text.fixFrameByLayout(api);
+        })
+    }
+
+    modifyTextLineHeightMulit(shapes: (TextShapeView | TableCellView)[], lineHeight: number | 'auto') {
+        this.execute('modify-text-line-height-mulit', () => {
+            const api = this.api!;
+            const page = this.page;
+            for (let i = 0; i < shapes.length; i++) {
+                const text_shape = shapes[i];
+                if (text_shape.type !== ShapeType.Text) continue;
+                const editor4text = this.getTextEditor(text_shape as TextShapeView)
+                const shape = editor4text.shape4edit(api, text_shape);
+                const text = shape instanceof ShapeView ? shape.text : shape.value as Text;
+                const text_length = text.length;
+                if (lineHeight === 'auto') {
+                    api.textModifyAutoLineHeight(page, shape, true, 0, text_length)
+                } else {
+                    api.textModifyAutoLineHeight(page, shape, false, 0, text_length)
+                    api.textModifyMinLineHeight(page, shape, lineHeight, 0, text_length)
+                    api.textModifyMaxLineHeight(page, shape, lineHeight, 0, text_length)
+                }
+                editor4text.fixFrameByLayout2(api, shape);
+            }
+        })
+    }
+
+    /**
+     * @description 修改文本字间距
+     */
+
+    modifyTextCharSpacing(kerning: number, index: number, len: number, text: TextShapeView) {
+        const editor4text = this.getTextEditor(text)
+        if (len === 0) {
+            let cacheAttr = editor4text.getCachedSpanAttr();
+            if (cacheAttr) cacheAttr.kerning = kerning;
+            return;
+        }
+        this.execute('modify-text-char-spacing', () => {
+            const api = this.api!;
+            const page = this.page;
+            const shape = editor4text.shape4edit(api);
+            api.textModifyKerning(page, shape, kerning, index, len)
+            editor4text.fixFrameByLayout(api);
+        })
+    }
+
+    modifyTextCharSpacingMulit(shapes: (TextShapeView | TableCellView)[], kerning: number) {
+        this.execute('modify-text-char-spacing-mulit', () => {
+            const api = this.api!;
+            const page = this.page;
+            for (let i = 0; i < shapes.length; i++) {
+                const text_shape = shapes[i];
+                if (text_shape.type !== ShapeType.Text) continue;
+                const editor4text = this.getTextEditor(text_shape as TextShapeView)
+                const shape = editor4text.shape4edit(api, text_shape);
+                const text = shape instanceof ShapeView ? shape.text : shape.value as Text;
+                const text_length = text.length;
+                api.textModifyKerning(page, shape, kerning, 0, text_length);
+                editor4text.fixFrameByLayout2(api, shape);
+            }
+        })
     }
 }
