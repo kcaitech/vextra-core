@@ -1,13 +1,4 @@
-import {
-    GroupShape,
-    Shape,
-    ShapeSize,
-    ShapeType,
-    SymbolRefShape,
-    SymbolShape,
-    ShapeFrame,
-    AutoLayout
-} from "../data/classes";
+import { GroupShape, Shape, ShapeFrame, ShapeSize, ShapeType, SymbolRefShape, SymbolShape } from "../data";
 import { ShapeView, updateFrame } from "./shape";
 import { getShapeViewId } from "./basic";
 import { EL } from "./el";
@@ -201,7 +192,6 @@ export class GroupShapeView extends ShapeView {
             this._save_frame.width = this.m_frame.width;
             this._save_frame.height = this.m_frame.height;
         }
-        ;
         // update visible
         if (updateFrame(this.m_visibleFrame, visiblebounds.minx, visiblebounds.miny, visiblebounds.maxx - visiblebounds.minx, visiblebounds.maxy - visiblebounds.miny)) changed = true;
         // update outer

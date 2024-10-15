@@ -364,6 +364,8 @@ export function importPage(ctx: LoadContext, data: IJSON, f: ImportFun): Page {
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     shape.exportOptions = exportOptions;
+    // 导入的页面均为可见页面
+    shape.isVisible = true;
     return shape;
 }
 
@@ -450,16 +452,16 @@ export function importTextShape(ctx: LoadContext, data: IJSON, f: ImportFun, i: 
 export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun, i: number): SymbolShape {
     // const type = importShapeType(data);
     // const id: string = data['do_objectID'];
-    const exportOptions = importExportOptions(data);
+    // const exportOptions = importExportOptions(data);
     const frame = importShapeFrame(data);
     const name: string = data['name'];
     // const points: Point[] = importPoints(data);
     // const image = data['image'];
     // const imageRef = image && image['_ref'];
     const style = importStyle(ctx, data['style']);
-    if (data['sharedStyleID']) {
-        // env.styleMgr.addShared(data['sharedStyleID'], style);
-    }
+    // if (data['sharedStyleID']) {
+    //     env.styleMgr.addShared(data['sharedStyleID'], style);
+    // }
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
     const id = uniqueId(ctx, data['symbolID']);
