@@ -16,8 +16,8 @@ import {
 import { Transform as TransformRaw } from "../../../data";
 import { after_migrate, unable_to_migrate } from "../../utils/migrate";
 import { get_state_name, is_state } from "../../symbol";
-import { Api } from "../../../coop/recordapi";
-import { ISave4Restore, LocalCmd, SelectionState } from "../../../coop/localcmd";
+import { Api } from "../../../coop";
+import { ISave4Restore, LocalCmd, SelectionState } from "../../../coop";
 import { getAutoLayoutShapes, modifyAutoLayout, TidyUpAlgin, tidyUpLayout } from "../../utils/auto_layout";
 import { translate } from "../../frame";
 import { transform_data } from "../../../io/cilpboard";
