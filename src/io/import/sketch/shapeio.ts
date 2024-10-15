@@ -215,9 +215,9 @@ export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun, i: n
     const frame = importShapeFrame(data);
     const name: string = data['name'];
     const style = importStyle(ctx, data['style']);
-    if (data['sharedStyleID']) {
-        // env.styleMgr.addShared(data['sharedStyleID'], style);
-    }
+    // if (data['sharedStyleID']) {
+    //     env.styleMgr.addShared(data['sharedStyleID'], style);
+    // }
     const hasBackgroundColor: boolean = data['hasBackgroundColor'];
     const backgroundColor: Color | undefined = data['backgroundColor'] && importColor(data['backgroundColor']);
 
@@ -231,13 +231,7 @@ export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun, i: n
     // const shapes = new BasicArray<Shape>(...addMaskRect(childs, ctx, data['layers'] || []));
     const shape = new Artboard([i] as BasicArray<number>, id, name, ShapeType.Artboard, frame.trans, style, new BasicArray<Shape>(...childs), frame.size);
 
-    if (childs.length && determineAsContainerRadiusShape(shape, childs[0])) {
-        const drop = childs.splice(0, 1)[0];
-        const points = (drop as PathShape).pathsegs[0].points;
-        const radius = points.map(i => i.radius!);
-        shape.cornerRadius = new CornerRadius(radius[0], radius[1], radius[3], radius[2]);
-        shape.childs = new BasicArray<Shape>(...childs);
-    }
+    childs.length && determineAsContainerRadiusShape(shape, childs);
 
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
@@ -471,14 +465,17 @@ export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun, i: num
     const id = uniqueId(ctx, data['symbolID']);
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON, i: number) => f(ctx, d, i));
     // const points = createNormalPoints();
-    const shapes = new BasicArray<Shape>(...addMaskRect(childs, ctx, data['layers'] || []));
+    // const shapes = new BasicArray<Shape>(...addMaskRect(childs, ctx, data['layers'] || []));
     const hasBackgroundColor: boolean = data['hasBackgroundColor'];
     const backgroundColor: Color | undefined = data['backgroundColor'] && importColor(data['backgroundColor']);
     if (hasBackgroundColor && backgroundColor) {
         const fill = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, backgroundColor);
         style.fills.push(fill);
     }
-    const shape = new SymbolShape([i] as BasicArray<number>, id, name, ShapeType.Symbol, frame.trans, style, shapes, frame.size, new BasicMap());
+    // const shape = new SymbolShape([i] as BasicArray<number>, id, name, ShapeType.Symbol, frame.trans, style, shapes, frame.size, new BasicMap());
+    const shape = new SymbolShape([i] as BasicArray<number>, id, name, ShapeType.Symbol, frame.trans, style, new BasicArray<Shape>(...childs), frame.size, new BasicMap());
+
+    childs.length && determineAsContainerRadiusShape(shape, childs);
 
     // env.symbolManager.addSymbol(id, name, env.pageId, shape);
     // shape.appendChilds(childs);
@@ -491,7 +488,7 @@ export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun, i: num
 export function importSymbolRef(ctx: LoadContext, data: IJSON, f: ImportFun, i: number): SymbolRefShape {
     // const type = importShapeType(data);
     const id: string = uniqueId(ctx, data['do_objectID']);
-    const exportOptions = importExportOptions(data);
+    // const exportOptions = importExportOptions(data);
     const frame = importShapeFrame(data);
     const name: string = data['name'];
     // const points: Point[] = importPoints(data);
@@ -553,12 +550,23 @@ function addMaskRect(childs: Shape[], ctx: LoadContext, data: IJSON[]) {
     return shapes;
 }
 
-function determineAsContainerRadiusShape(parent: Artboard, shape: Shape) {
-    // 判断shape是否为用来给容器做圆角的遮罩，如果是，直接去掉shape，并把与遮罩等效的圆角设置到容器上
+function determineAsContainerRadiusShape(parent: Artboard | SymbolShape, childs: Shape[]) {
+    // 判断shape是否为用来给容器做圆角的遮罩，如果是，直接去掉shape，并把与遮罩等效的圆角/填充/边框设置到容器上
+    const shape = childs[0];
     const parentSize = parent.size;
     const shapeSize = shape.size;
     const sizeEqual = shapeSize.width === parentSize.width && shapeSize.height === parentSize.height;
     const isRect = shape instanceof RectShape;
     const rect = isRect && shape.pathsegs.length === 1 && shape.pathsegs[0].points.length === 4 && shape.pathsegs[0].isClosed;
-    return !!(shape.resizingConstraint === 228 && rect && sizeEqual && shape.mask);
+
+    if (!!(shape.resizingConstraint === 228 && rect && sizeEqual && shape.mask)) {
+        const drop = childs.splice(0, 1)[0];
+        const points = (drop as PathShape).pathsegs[0].points;
+        const radius = points.map(i => i.radius!);
+        parent.cornerRadius = new CornerRadius(radius[0], radius[1], radius[3], radius[2]);
+        parent.childs = new BasicArray<Shape>(...childs);
+        if (drop.style.fills.length) parent.style.fills = drop.style.fills;
+        if (drop.style.borders.length) parent.style.borders = drop.style.borders;
+        if (drop.style.shadows.length) parent.style.shadows = drop.style.shadows;
+    }
 }
