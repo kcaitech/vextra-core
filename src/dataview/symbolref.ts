@@ -136,9 +136,7 @@ export class SymbolRefView extends ShapeView {
     onDataChange(...args: any[]): void {
         super.onDataChange(...args);
         this.loadsym();
-        if (args.includes('childs')) {
-            this.updateMaskMap();
-        }
+        if (args.includes('childs')) this.updateMaskMap();
     }
 
     symwatcher(...args: any[]) {
@@ -176,6 +174,8 @@ export class SymbolRefView extends ShapeView {
             this.m_union = union;
             if (this.m_union) this.m_union.watch(this.symwatcher);
         }
+        this.m_pathstr = '';
+        this.m_path = undefined;
         this.m_ctx.setReLayout(this);
     }
 
