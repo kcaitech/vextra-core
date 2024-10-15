@@ -307,8 +307,8 @@ export class Transporter extends AsyncApiCaller {
                 const v1 = isHor ? xy1.x : xy1.y;
                 const v2 = isHor ? xy2.x : xy2.y;
 
-                if (v1 > v2) return -1;
-                else return 1;
+                if (v1 > v2) return 1;
+                else return -1;
             });
 
             const frame = placement ? placement._p_frame : {x: 0, y: 0};
