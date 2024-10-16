@@ -1,6 +1,9 @@
 import { CoopRepository } from "../coop";
 import { Document, GroupShape, Page, Shape } from "../data";
 
+/**
+ * @description 根据shape所属环境分配一个名称
+ */
 export function assign(shape: Shape) {
     const parent = shape.parent as GroupShape;
 
@@ -10,7 +13,7 @@ export function assign(shape: Shape) {
         names.add(view.name);
     }
 
-    const reg = /\d+$/i
+    const reg = /\d+$/i;
     let name = shape.name;
     while (names.has(name)) {
         const match = name.match(reg)
