@@ -4689,7 +4689,8 @@ export class PageEditor {
             const api = this.__repo.start('modifyShapesRadius');
             const page = this.__page;
             for (const view of shapes) {
-                if (view instanceof ArtboradView || view instanceof SymbolView) {
+                if (view.isVirtualShape) continue;
+                if (view instanceof ArtboradView || view instanceof SymbolView || view instanceof SymbolRefView) {
                     const shape = adapt2Shape(view);
                     api.modifyContainersFrameMaskStatus(page, shape, value);
                 }
