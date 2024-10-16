@@ -230,7 +230,7 @@ export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun, i: n
     const childs = (data['layers'] || []).map((d: IJSON, i: number) => f(ctx, d, i));
     // const shapes = new BasicArray<Shape>(...addMaskRect(childs, ctx, data['layers'] || []));
     const shape = new Artboard([i] as BasicArray<number>, id, name, ShapeType.Artboard, frame.trans, style, new BasicArray<Shape>(...childs), frame.size);
-
+    shape['frameMaskDisabled'] = !data['hasClippingMask'];
     childs.length && determineAsContainerRadiusShape(shape, childs);
 
     importShapePropertys(shape, data);
@@ -479,6 +479,8 @@ export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun, i: num
 
     childs.length && determineAsContainerRadiusShape(shape, childs);
 
+    shape['frameMaskDisabled'] = !data['hasClippingMask'];
+
     // env.symbolManager.addSymbol(id, name, env.pageId, shape);
     // shape.appendChilds(childs);
     importShapePropertys(shape, data);
@@ -509,7 +511,7 @@ export function importSymbolRef(ctx: LoadContext, data: IJSON, f: ImportFun, i: 
         style.fills.push(fill);
     }
     const shape = new SymbolRefShape([i] as BasicArray<number>, id, name, ShapeType.SymbolRef, frame.trans, style, frame.size, data['symbolID'], new BasicMap());
-
+    shape['frameMaskDisabled'] = !data['hasClippingMask'];
     if (data['overrideValues']) importOverrides(shape, data['overrideValues']);
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
