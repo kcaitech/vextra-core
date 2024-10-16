@@ -1,12 +1,14 @@
-import { AutoLayout, Border, ContextSettings, CornerRadius, Fill, MarkerType, OverrideType, PrototypeInterAction, Shadow, Shape, ShapeFrame, ShapeSize, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType, getPathOfRadius, ShapeType } from "../data/classes";
-import { fixFrameByConstrain, frame2Parent2, ShapeView } from "./shape";
+import {
+    AutoLayout, Border, ContextSettings, CornerRadius, Fill, MarkerType, OverrideType, PrototypeInterAction, Shadow,
+    Shape, ShapeFrame, ShapeSize, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType, ShapeType,
+    BasicArray, getPathOfRadius, makeShapeTransform1By2, makeShapeTransform2By1
+} from "../data";
+import { ShapeView, fixFrameByConstrain, frame2Parent2 } from "./shape";
 import { DataView, RootView } from "./view";
 import { getShapeViewId } from "./basic";
 import { DViewCtx, PropsType, VarsContainer } from "./viewctx";
 import { findOverride, findVar } from "./basic";
 import { objectId } from "../basic/objectid";
-import { makeShapeTransform1By2, makeShapeTransform2By1 } from "../data/shape_transform_util";
-import { BasicArray } from "../data/basic";
 import { findOverrideAll } from "../data/utils";
 import { PageView } from "./page";
 import { innerShadowId } from "../render";
@@ -380,7 +382,6 @@ export class SymbolRefView extends ShapeView {
         if (changed) this.notify("childs");
     }
 
-
     protected _findOV2(ot: OverrideType, vt: VariableType): Variable | undefined {
         const data = this.data;
         const varsContainer = (this.varsContainer || []).concat(data);
@@ -492,6 +493,7 @@ export class SymbolRefView extends ShapeView {
         if (v) return v.value;
         return this.m_sym?.autoLayout;
     }
+
     render(): number {
         if (!this.checkAndResetDirty()) return this.m_render_version;
 
