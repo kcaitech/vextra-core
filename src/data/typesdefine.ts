@@ -1011,6 +1011,7 @@ export type SymbolRefShape = Shape & {
     isCustomSize?: boolean,
     cornerRadius?: CornerRadius,
     innerEnvScale?: number,
+    frameMaskDisabled?: boolean,
 }
 /* contact shape */
 export type ContactShape = PathShape & {
