@@ -1,11 +1,12 @@
 import { GroupShapeView } from "./groupshape";
 import { renderBorders, renderFills } from "../render";
 import { EL, elh } from "./el";
-import { CornerRadius, Shape, ShapeFrame, ShapeType, SymbolShape } from "../data/shape";
+import {
+    CornerRadius, Shape, ShapeFrame, ShapeType, SymbolShape, AutoLayout, BorderPosition, Page, ShadowPosition
+} from "../data";
 import { VarsContainer } from "./viewctx";
 import { DataView, RootView } from "./view"
 import { getShapeViewId } from "./basic";
-import { AutoLayout, BorderPosition, Page, ShadowPosition } from "../data";
 import { ShapeView, updateFrame } from "./shape";
 
 export class SymbolView extends GroupShapeView {
@@ -188,4 +189,7 @@ export class SymbolView extends GroupShapeView {
         return changed;
     }
 
+    get frameMaskDisabled() {
+        return (this.m_data as SymbolShape).frameMaskDisabled;
+    }
 }

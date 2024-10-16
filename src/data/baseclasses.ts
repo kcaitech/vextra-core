@@ -1175,6 +1175,7 @@ export class SymbolShape extends GroupShape {
     cornerRadius?: CornerRadius
     guides?: SymbolShape_guides
     autoLayout?: AutoLayout
+    frameMaskDisabled?: boolean
     constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style, childs: GroupShape_childs, size: ShapeSize, variables: BasicMap<string, Variable>) {
         super(crdtidx, id, name, type, transform, style, childs)
         this.size = size
@@ -1192,6 +1193,7 @@ export class Artboard extends GroupShape {
     cornerRadius?: CornerRadius
     guides?: Artboard_guides
     autoLayout?: AutoLayout
+    frameMaskDisabled?: boolean
     constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style, childs: GroupShape_childs, size: ShapeSize) {
         super(crdtidx, id, name, type, transform, style, childs)
         this.size = size

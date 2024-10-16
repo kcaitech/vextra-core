@@ -1820,6 +1820,7 @@ function importArtboardOptional(tar: impl.Artboard, source: types.Artboard, ctx?
     if (source.cornerRadius) tar.cornerRadius = importCornerRadius(source.cornerRadius, ctx)
     if (source.guides) tar.guides = importArtboard_guides(source.guides, ctx)
     if (source.autoLayout) tar.autoLayout = importAutoLayout(source.autoLayout, ctx)
+    if (source.frameMaskDisabled) tar.frameMaskDisabled = source.frameMaskDisabled
 }
 export function importArtboard(source: types.Artboard, ctx?: IImportContext): impl.Artboard {
     compatibleOldData(source, ctx)
@@ -1955,6 +1956,7 @@ function importSymbolShapeOptional(tar: impl.SymbolShape, source: types.SymbolSh
     if (source.cornerRadius) tar.cornerRadius = importCornerRadius(source.cornerRadius, ctx)
     if (source.guides) tar.guides = importSymbolShape_guides(source.guides, ctx)
     if (source.autoLayout) tar.autoLayout = importAutoLayout(source.autoLayout, ctx)
+    if (source.frameMaskDisabled) tar.frameMaskDisabled = source.frameMaskDisabled
 }
 export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContext): impl.SymbolShape {
     compatibleOldData(source, ctx)

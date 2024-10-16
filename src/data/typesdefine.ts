@@ -1041,6 +1041,7 @@ export type Artboard = GroupShape & {
     cornerRadius?: CornerRadius,
     guides?: Artboard_guides,
     autoLayout?: AutoLayout,
+    frameMaskDisabled?: boolean,
 }
 /* bool shape */
 export type BoolShape = GroupShape
@@ -1072,6 +1073,7 @@ export type SymbolShape = GroupShape & {
     cornerRadius?: CornerRadius,
     guides?: SymbolShape_guides,
     autoLayout?: AutoLayout,
+    frameMaskDisabled?: boolean,
 }
 /* symbol union shape */
 export type SymbolUnionShape = SymbolShape

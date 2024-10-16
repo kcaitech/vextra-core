@@ -206,7 +206,6 @@ export class ArtboradView extends GroupShapeView {
         return (this.m_data as Page).guides;
     }
 
-
     updateFrames() {
 
         let changed = this._save_frame.x !== this.m_frame.x || this._save_frame.y !== this.m_frame.y ||
@@ -304,4 +303,7 @@ export class ArtboradView extends GroupShapeView {
         return changed;
     }
 
+    get frameMaskDisabled() {
+        return (this.m_data as Artboard).frameMaskDisabled;
+    }
 }
