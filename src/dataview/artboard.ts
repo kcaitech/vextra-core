@@ -3,8 +3,9 @@ import { GroupShapeView } from "./groupshape";
 import { innerShadowId, renderBorders, renderFills } from "../render";
 import { objectId } from "../basic/objectid";
 import { render as clippathR } from "../render/clippath"
-import { Artboard } from "../data/artboard";
-import { AutoLayout, BorderPosition, CornerRadius, Page, ScrollBehavior, ShadowPosition, ShapeFrame, ShapeSize, Transform } from "../data/classes";
+import {
+    AutoLayout, BorderPosition, CornerRadius, Page, ScrollBehavior, ShadowPosition, ShapeFrame, Transform, Artboard
+} from "../data";
 import { ShapeView, updateFrame } from "./shape";
 import { PageView } from "./page";
 
@@ -157,7 +158,7 @@ export class ArtboradView extends GroupShapeView {
 
         if (this.frameMaskDisabled) {
             svgprops['overflow'] = 'visible';
-            children = [elh("svg", svgprops, elh("svg", svgprops, [...fills, ...borders, ...childs]))];
+            children = [elh("svg", svgprops, [...fills, ...borders, ...childs])];
         } else {
             const id = "clip-board-" + objectId(this);
             const _svg_node = elh("svg", svgprops, [clippathR(elh, id, this.getPathStr()), ...children]);
