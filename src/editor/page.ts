@@ -764,7 +764,7 @@ export class PageEditor {
                 api.shapeDelete(document, page, shape0.parent as GroupShape, index);
             } else {
                 const index = (shape0.parent as GroupShape).indexOfChild(shape0);
-
+                symbolShape.frameMaskDisabled = true;
                 sym = group(document, page, shapes, symbolShape, shape0.parent as GroupShape, index, api);
 
                 for (let i = 0; i < shapes.length; i++) {
@@ -4681,6 +4681,23 @@ export class PageEditor {
         } catch (e) {
             this.__repo.rollback();
             console.error(e);
+        }
+    }
+
+    modifyContainersFrameMaskStatus(shapes: ShapeView[], value: boolean) {
+        try {
+            const api = this.__repo.start('modifyShapesRadius');
+            const page = this.__page;
+            for (const view of shapes) {
+                if (view instanceof ArtboradView || view instanceof SymbolView) {
+                    const shape = adapt2Shape(view);
+                    api.modifyContainersFrameMaskStatus(page, shape, value);
+                }
+            }
+            this.__repo.commit();
+        } catch (e) {
+            this.__repo.rollback();
+            throw e;
         }
     }
 
