@@ -1147,6 +1147,7 @@ export class PageEditor {
             ref.transform.m01 = sym.transform.m01;
             ref.transform.m10 = sym.transform.m10;
             ref.transform.m11 = sym.transform.m11;
+            ref.frameMaskDisabled = sym.frameMaskDisabled;
         }
         return ref;
     }
