@@ -230,7 +230,7 @@ export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun, i: n
     const childs = (data['layers'] || []).map((d: IJSON, i: number) => f(ctx, d, i));
     // const shapes = new BasicArray<Shape>(...addMaskRect(childs, ctx, data['layers'] || []));
     const shape = new Artboard([i] as BasicArray<number>, id, name, ShapeType.Artboard, frame.trans, style, new BasicArray<Shape>(...childs), frame.size);
-    shape['frameMaskDisabled'] = !data['hasClippingMask'];
+    shape['frameMaskDisabled'] = false;
     childs.length && determineAsContainerRadiusShape(shape, childs);
 
     importShapePropertys(shape, data);
