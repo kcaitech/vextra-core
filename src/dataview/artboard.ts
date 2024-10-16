@@ -95,12 +95,9 @@ export class ArtboradView extends GroupShapeView {
         return props;
     }
 
-    // _svgnode?: EL;
-
     render(): number {
         if (!this.checkAndResetDirty()) return this.m_render_version;
 
-        // this._svgnode = undefined;
         const masked = this.masked;
         if (masked) {
             (this.getPage() as PageView).getView(masked.id)?.render();
@@ -158,20 +155,14 @@ export class ArtboradView extends GroupShapeView {
             props.style['mix-blend-mode'] = contextSettings.blenMode;
         }
 
-        const id = "clippath-artboard-" + objectId(this);
-        const cp = clippathR(elh, id, this.getPathStr());
-
-        const _svgnode = elh(
-            "svg",
-            svgprops,
-            [cp, ...children]
-        )
-
-        children = [elh(
-            "g",
-            { "clip-path": "url(#" + id + ")" },
-            [_svgnode]
-        ), ...borders];
+        if (this.frameMaskDisabled) {
+            svgprops['overflow'] = 'visible';
+            children = [elh("svg", svgprops, elh("svg", svgprops, [...fills, ...borders, ...childs]))];
+        } else {
+            const id = "clip-board-" + objectId(this);
+            const _svg_node = elh("svg", svgprops, [clippathR(elh, id, this.getPathStr()), ...children]);
+            children = [elh("g", {"clip-path": "url(#" + id + ")"}, [_svg_node]), ...borders];
+        }
 
         if (shadows.length) {
             const inner_url = innerShadowId(filterId, this.getShadows());
@@ -179,11 +170,8 @@ export class ArtboradView extends GroupShapeView {
             children = [...shadows, ...children];
         }
 
-        if (blur.length) {
-            children = [...blur, ...children];
-        }
+        if (blur.length) children = [...blur, ...children];
 
-        // 遮罩
         const _mask_space = this.renderMask();
         if (_mask_space) {
             Object.assign(props.style, { transform: _mask_space.toString() });
@@ -205,7 +193,6 @@ export class ArtboradView extends GroupShapeView {
     get guides() {
         return (this.m_data as Page).guides;
     }
-
 
     updateFrames() {
 
@@ -304,4 +291,7 @@ export class ArtboradView extends GroupShapeView {
         return changed;
     }
 
+    get frameMaskDisabled() {
+        return (this.m_data as Artboard).frameMaskDisabled;
+    }
 }

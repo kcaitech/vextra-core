@@ -1,10 +1,9 @@
 import {
-    AutoLayout, Border, ContextSettings, CornerRadius, Fill, MarkerType, OverrideType, PrototypeInterAction,
-    Shadow, Shape, ShapeFrame, ShapeSize, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType,
-    ShapeType, BasicArray,
-    getPathOfRadius, makeShapeTransform1By2, makeShapeTransform2By1
+    AutoLayout, Border, ContextSettings, CornerRadius, Fill, MarkerType, OverrideType, PrototypeInterAction, Shadow,
+    Shape, ShapeFrame, ShapeSize, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType, ShapeType,
+    BasicArray, getPathOfRadius, makeShapeTransform1By2, makeShapeTransform2By1
 } from "../data";
-import { fixFrameByConstrain, frame2Parent2, ShapeView } from "./shape";
+import { ShapeView, fixFrameByConstrain, frame2Parent2 } from "./shape";
 import { DataView, RootView } from "./view";
 import { getShapeViewId } from "./basic";
 import { DViewCtx, PropsType, VarsContainer } from "./viewctx";
@@ -14,6 +13,7 @@ import { findOverrideAll } from "../data/utils";
 import { PageView } from "./page";
 import { innerShadowId } from "../render";
 import { elh } from "./el";
+import { render as clippathR } from "../render/clippath";
 
 // 播放页组件状态切换会话存储refId的key值；
 export const sessionRefIdKey = 'ref-id-cf76c6c6-beed-4c33-ae71-134ee876b990';
@@ -101,30 +101,6 @@ export class SymbolRefView extends ShapeView {
 
     private m_sym: SymbolShape | undefined;
     private m_union: SymbolShape | undefined;
-
-    get symData() {
-        return this.m_sym;
-    }
-
-    get refId(): string {
-        return this.getRefId();
-    }
-
-    get data() {
-        return this.m_data as SymbolRefShape;
-    }
-
-    get variables() {
-        return this.data.variables;
-    }
-
-    get overrides() {
-        return this.data.overrides;
-    }
-
-    get isCustomSize() {
-        return this.data.isCustomSize;
-    }
 
     getPath() {
         if (this.m_path) return this.m_path;
@@ -238,10 +214,6 @@ export class SymbolRefView extends ShapeView {
         const parent = this.parent;
         const parentFrame = parent?.hasSize() ? parent.frame : undefined;
         this._layout(this.data, parentFrame, varsContainer, this.m_scale, this.m_uniform_scale)
-    }
-
-    get frame4child() {
-        return this.frame;
     }
 
     protected _layout(
@@ -379,7 +351,6 @@ export class SymbolRefView extends ShapeView {
         if (changed) this.notify("childs");
     }
 
-
     protected _findOV2(ot: OverrideType, vt: VariableType): Variable | undefined {
         const data = this.data;
         const varsContainer = (this.varsContainer || []).concat(data);
@@ -399,12 +370,6 @@ export class SymbolRefView extends ShapeView {
         return findOverrideAll(id, ot, varsContainer);
     }
 
-    get contextSettings(): ContextSettings | undefined {
-        const v = this._findOV2(OverrideType.ContextSettings, VariableType.ContextSettings);
-        if (v) return v.value;
-        return this.m_sym?.style.contextSettings;
-    }
-
     getFills(): Fill[] {
         const v = this._findOV2(OverrideType.Fills, VariableType.Fills);
         if (v) return v.value;
@@ -417,6 +382,88 @@ export class SymbolRefView extends ShapeView {
         return this.m_sym?.style.borders || [];
     }
 
+    getShadows(): Shadow[] {
+        const v = this._findOV2(OverrideType.Shadows, VariableType.Shadows);
+        if (v) return v.value;
+        return this.m_sym?.style.shadows || [];
+    }
+
+    render(): number {
+        if (!this.checkAndResetDirty()) return this.m_render_version;
+
+        const masked = this.masked;
+        if (masked) {
+            (this.getPage() as PageView).getView(masked.id)?.render();
+            this.reset("g");
+            return ++this.m_render_version;
+        }
+
+        if (!this.isVisible) {
+            this.reset("g");
+            return ++this.m_render_version;
+        }
+
+        const fills = this.renderFills();
+        const borders = this.renderBorders();
+        let childs = this.renderContents();
+
+        if (this.uniformScale) childs = [elh('g', {transform: `scale(${this.uniformScale})`}, childs)];
+
+        const filterId = `${objectId(this)}`;
+        const shadows = this.renderShadows(filterId);
+        const blurId = `blur_${objectId(this)}`;
+        const blur = this.renderBlur(blurId);
+
+        let props = this.renderProps();
+
+        let children;
+        if (this.frameMaskDisabled) {
+            children = [...fills, ...borders, ...childs];
+        } else {
+            const id = "clip-symbol-ref-" + objectId(this);
+            const clip = clippathR(elh, id, this.getPathStr());
+            children = [
+                clip,
+                elh("g", {"clip-path": "url(#" + id + ")"}, [...fills, ...childs]),
+                ...borders
+            ];
+        }
+
+        // 阴影
+        if (shadows.length) {
+            let filter: string = '';
+            const inner_url = innerShadowId(filterId, this.getShadows());
+            filter = `url(#pd_outer-${filterId}) `;
+            if (inner_url.length) filter += inner_url.join(' ');
+            children = [...shadows, elh("g", {filter}, children)];
+        }
+
+        // 模糊
+        if (blur.length) {
+            let filter: string = '';
+            filter = `url(#${blurId})`;
+            children = [...blur, elh('g', {filter}, children)];
+        }
+
+        // 遮罩
+        const _mask_space = this.renderMask();
+        if (_mask_space) {
+            Object.assign(props.style, {transform: _mask_space.toString()});
+            const id = `mask-base-${objectId(this)}`;
+            const __body_transform = this.transformFromMask;
+            const __body = elh("g", {style: {transform: __body_transform}}, children);
+            this.bleach(__body);
+            children = [__body];
+            const mask = elh('mask', {id}, children);
+            const rely = elh('g', {mask: `url(#${id})`}, this.relyLayers);
+            children = [mask, rely];
+        }
+
+        this.reset("g", props, children);
+
+        return ++this.m_render_version;
+    }
+
     get startMarkerType(): MarkerType | undefined {
         const v = this._findOV2(OverrideType.StartMarkerType, VariableType.MarkerType);
         return v ? v.value : this.m_sym?.style.startMarkerType;
@@ -425,12 +472,6 @@ export class SymbolRefView extends ShapeView {
     get endMarkerType(): MarkerType | undefined {
         const v = this._findOV2(OverrideType.EndMarkerType, VariableType.MarkerType);
         return v ? v.value : this.m_sym?.style.endMarkerType;
-    }
-
-    getShadows(): Shadow[] {
-        const v = this._findOV2(OverrideType.Shadows, VariableType.Shadows);
-        if (v) return v.value;
-        return this.m_sym?.style.shadows || [];
     }
 
     get cornerRadius(): CornerRadius | undefined {
@@ -485,67 +526,42 @@ export class SymbolRefView extends ShapeView {
         if (v) return v.value;
         return this.m_sym?.autoLayout;
     }
-    render(): number {
-        if (!this.checkAndResetDirty()) return this.m_render_version;
 
-        const masked = this.masked;
-        if (masked) {
-            (this.getPage() as PageView).getView(masked.id)?.render();
-            this.reset("g");
-            return ++this.m_render_version;
-        }
+    get frame4child() {
+        return this.frame;
+    }
 
-        if (!this.isVisible) {
-            this.reset("g");
-            return ++this.m_render_version;
-        }
+    get contextSettings(): ContextSettings | undefined {
+        const v = this._findOV2(OverrideType.ContextSettings, VariableType.ContextSettings);
+        if (v) return v.value;
+        return this.m_sym?.style.contextSettings;
+    }
 
-        const fills = this.renderFills();
-        const borders = this.renderBorders();
-        let childs = this.renderContents();
+    get symData() {
+        return this.m_sym;
+    }
 
-        if (this.uniformScale) childs = [elh('g', { transform: `scale(${this.uniformScale})` }, childs)];
+    get refId(): string {
+        return this.getRefId();
+    }
 
-        const filterId = `${objectId(this)}`;
-        const shadows = this.renderShadows(filterId);
-        const blurId = `blur_${objectId(this)}`;
-        const blur = this.renderBlur(blurId);
+    get data() {
+        return this.m_data as SymbolRefShape;
+    }
 
-        let props = this.renderProps();
-        let children = [...fills, ...childs, ...borders];
+    get variables() {
+        return this.data.variables;
+    }
 
-        // 阴影
-        if (shadows.length) {
-            let filter: string = '';
-            const inner_url = innerShadowId(filterId, this.getShadows());
-            filter = `url(#pd_outer-${filterId}) `;
-            if (inner_url.length) filter += inner_url.join(' ');
-            children = [...shadows, elh("g", { filter }, children)];
-        }
+    get overrides() {
+        return this.data.overrides;
+    }
 
-        // 模糊
-        if (blur.length) {
-            let filter: string = '';
-            filter = `url(#${blurId})`;
-            children = [...blur, elh('g', { filter }, children)];
-        }
+    get isCustomSize() {
+        return this.data.isCustomSize;
+    }
 
-        // 遮罩
-        const _mask_space = this.renderMask();
-        if (_mask_space) {
-            Object.assign(props.style, { transform: _mask_space.toString() });
-            const id = `mask-base-${objectId(this)}`;
-            const __body_transform = this.transformFromMask;
-            const __body = elh("g", { style: { transform: __body_transform } }, children);
-            this.bleach(__body);
-            children = [__body];
-            const mask = elh('mask', { id }, children);
-            const rely = elh('g', { mask: `url(#${id})` }, this.relyLayers);
-            children = [mask, rely];
-        }
-
-        this.reset("g", props, children);
-
-        return ++this.m_render_version;
+    get frameMaskDisabled() {
+        return (this.m_data as SymbolRefShape).frameMaskDisabled;
     }
 }

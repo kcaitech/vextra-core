@@ -1,4 +1,4 @@
-import { GroupShape, Shape, ShapeFrame, ShapeType, SymbolUnionShape, TextShape } from "../data/shape";
+import { GroupShape, Shape, ShapeFrame, ShapeType, SymbolShape, SymbolUnionShape, TextShape } from "../data/shape";
 import {
     exportArtboard,
     exportBoolShape,
@@ -46,7 +46,7 @@ import {
 } from "../data/baseimport";
 import * as types from "../data/typesdefine";
 import { v4 } from "uuid";
-import { Document } from "../data";
+import { Document, SymbolRefShape } from "../data";
 import { newSymbolRefShape, newTextShape, newTextShapeByText } from "../editor/creator";
 import { Page } from "../data";
 import { FMT_VER_latest } from "../data/fmtver";
@@ -239,9 +239,7 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
                     result.push(r);
                     continue;
                 }
-                if (!ref) {
-                    continue;
-                }
+                if (!ref) continue;
 
                 const f = new ShapeFrame(_s.transform.m02, _s.transform.m12, _s.size.width, _s.size.height);
                 if (_s instanceof SymbolUnionShape) {
@@ -258,6 +256,7 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
                     rt.m01 = st.m01;
                     rt.m10 = st.m10;
                     rt.m11 = st.m11;
+                    (r as SymbolRefShape).frameMaskDisabled = (_s as SymbolShape).frameMaskDisabled;
                     result.push(r);
                 }
                 continue;
@@ -287,19 +286,14 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
                 r = importArtboard(_s as any, ctx);
             } else if (type === ShapeType.Group) {
                 const children = (_s as GroupShape).childs;
-
                 children && children.length && set_childs_id(children, matched);
-
                 r = importGroupShape(_s as any, ctx);
             } else if (type === ShapeType.Table) {
                 const children = (_s as any as GroupShape).childs;
                 children && children.length && set_childs_id(children, matched);
-
                 r = importTableShape(_s as any as types.TableShape, ctx);
             } else if (type === ShapeType.SymbolRef) {
-                if (!document.symbolsMgr.get((_s as any as types.SymbolRefShape).refId)) {
-                    continue;
-                }
+                if (!document.symbolsMgr.get((_s as any as types.SymbolRefShape).refId)) continue;
                 r = importSymbolRefShape(_s as any as types.SymbolRefShape, ctx);
             } else if (type === ShapeType.Contact) {
                 r = importContactShape(_s as any as types.ContactShape, ctx)
