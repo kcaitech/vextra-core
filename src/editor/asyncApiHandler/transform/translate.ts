@@ -23,6 +23,7 @@ import { translate } from "../../frame";
 import { transform_data } from "../../../io/cilpboard";
 import { MossError } from "../../../basic/error";
 import { Transform } from "../../../basic/transform";
+import { assign } from "../../clipboard";
 
 export type TranslateUnit = {
     shape: ShapeView;
@@ -52,6 +53,7 @@ export class Transporter extends AsyncApiCaller {
     need_layout_shape: Set<Artboard> = new Set();
     prototype = new Map<string, Shape>()
     shapes: (Shape | ShapeView)[] = [];
+    need_assign: Set<Shape> = new Set();
 
     constructor(repo: CoopRepository, document: Document, page: PageView, shapes: ShapeView[]) {
         super(repo, document, page)
@@ -189,6 +191,7 @@ export class Transporter extends AsyncApiCaller {
             const reflect: Map<string, Shape> = new Map();
             const results: Shape[] = [];
             const layoutSet = this.need_layout_shape;
+            const assignSet = this.need_assign;
             for (const view of shapes) {
                 const shape = adapt2Shape(view);
                 const parent = shape.parent! as GroupShape;
@@ -198,6 +201,7 @@ export class Transporter extends AsyncApiCaller {
                 const __shape = api.shapeInsert(document, page, parent, source, index + 1);
                 results.push(__shape);
                 reflect.set(__shape.id, shape);
+                assignSet.add(__shape);
 
                 if (env) {
                     const original = env.get(view)!;
@@ -261,6 +265,7 @@ export class Transporter extends AsyncApiCaller {
             }
 
             this.reflect = undefined;
+            this.need_assign.clear();
 
             this.updateView();
 
@@ -344,9 +349,15 @@ export class Transporter extends AsyncApiCaller {
                 this.api.delShapeProtoStart(this.page, v)
             })
         }
+        if (this.need_assign.size) {
+            this.need_assign.forEach(shape => {
+                this.api.shapeModifyName(this.page, shape, assign(shape));
+            })
+        }
         this.need_layout_shape.forEach(parent => {
             modifyAutoLayout(this.page, this.api, parent);
         })
+
         super.commit();
     }
 }

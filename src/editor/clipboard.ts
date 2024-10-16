@@ -14,7 +14,7 @@ export function assign(shape: Shape) {
     let name = shape.name;
     while (names.has(name)) {
         const match = name.match(reg)
-        name = match ? name + Number(match[0] + 1) : name + 1;
+        name = match ? name.slice(0, match.index) + (Number(match[0]) + 1) : name + ' 1';
     }
     return name;
 }
