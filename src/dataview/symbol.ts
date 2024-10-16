@@ -220,8 +220,8 @@ export class SymbolView extends GroupShapeView {
         const blur = this.renderBlur(blurId);
 
         let props = this.renderProps();
-        let children;
 
+        let children;
         if (this.frameMaskDisabled) {
             children = [...fills, ...borders, ...childs];
         } else {

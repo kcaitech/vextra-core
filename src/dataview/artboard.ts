@@ -159,7 +159,7 @@ export class ArtboradView extends GroupShapeView {
             svgprops['overflow'] = 'visible';
             children = [elh("svg", svgprops, elh("svg", svgprops, [...fills, ...borders, ...childs]))];
         } else {
-            const id = "clippath-artboard-" + objectId(this);
+            const id = "clip-board-" + objectId(this);
             const _svg_node = elh("svg", svgprops, [clippathR(elh, id, this.getPathStr()), ...children]);
             children = [elh("g", {"clip-path": "url(#" + id + ")"}, [_svg_node]), ...borders];
         }
