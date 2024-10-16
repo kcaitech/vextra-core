@@ -1,5 +1,5 @@
 import { GroupShapeView } from "./groupshape";
-import { renderBorders, renderFills } from "../render";
+import { innerShadowId, renderBorders, renderFills } from "../render";
 import { EL, elh } from "./el";
 import {
     CornerRadius, Shape, ShapeFrame, ShapeType, SymbolShape, AutoLayout, BorderPosition, Page, ShadowPosition
@@ -8,6 +8,9 @@ import { VarsContainer } from "./viewctx";
 import { DataView, RootView } from "./view"
 import { getShapeViewId } from "./basic";
 import { ShapeView, updateFrame } from "./shape";
+import { PageView } from "./page";
+import { objectId } from "../basic/objectid";
+import { render as clippathR } from "../render/clippath";
 
 export class SymbolView extends GroupShapeView {
     get data() {
@@ -31,6 +34,14 @@ export class SymbolView extends GroupShapeView {
 
     get autoLayout(): AutoLayout | undefined {
         return (this.data).autoLayout;
+    }
+
+    get guides() {
+        return (this.m_data as Page).guides;
+    }
+
+    get frameMaskDisabled() {
+        return (this.m_data as SymbolShape).frameMaskDisabled;
     }
 
     // fills
@@ -67,13 +78,6 @@ export class SymbolView extends GroupShapeView {
         const Com = comsMap.get(child.type) || comsMap.get(ShapeType.Rectangle)!;
         cdom = new Com(this.m_ctx, props) as DataView;
         this.addChild(cdom, idx);
-    }
-
-    // get points() {
-    //     return (this.m_data as SymbolShape).points;
-    // }
-    get guides() {
-        return (this.m_data as Page).guides;
     }
 
     updateFrames() {
@@ -189,7 +193,79 @@ export class SymbolView extends GroupShapeView {
         return changed;
     }
 
-    get frameMaskDisabled() {
-        return (this.m_data as SymbolShape).frameMaskDisabled;
+    render(): number {
+        if (!this.checkAndResetDirty()) return this.m_render_version;
+
+        const masked = this.masked;
+        if (masked) {
+            (this.getPage() as PageView).getView(masked.id)?.render();
+            this.reset("g");
+            return ++this.m_render_version;
+        }
+
+        if (!this.isVisible) {
+            this.reset("g");
+            return ++this.m_render_version;
+        }
+
+        const fills = this.renderFills();
+        const borders = this.renderBorders();
+        let childs = this.renderContents();
+        const autoInfo = (this.m_data as SymbolShape).autoLayout;
+        if (autoInfo && autoInfo.stackReverseZIndex) childs = childs.reverse();
+
+        const filterId = `${objectId(this)}`;
+        const shadows = this.renderShadows(filterId);
+        const blurId = `blur_${objectId(this)}`;
+        const blur = this.renderBlur(blurId);
+
+        let props = this.renderProps();
+        let children;
+
+        if (this.frameMaskDisabled) {
+            children = [...fills, ...borders, ...childs];
+        } else {
+            const id = "clip-symbol-" + objectId(this);
+            const clip = clippathR(elh, id, this.getPathStr());
+            children = [
+                clip,
+                elh("g", {"clip-path": "url(#" + id + ")"}, [...fills, ...childs]),
+                ...borders
+            ];
+        }
+
+        // 阴影
+        if (shadows.length) {
+            let filter: string = '';
+            const inner_url = innerShadowId(filterId, this.getShadows());
+            filter = `url(#pd_outer-${filterId}) `;
+            if (inner_url.length) filter += inner_url.join(' ');
+            children = [...shadows, elh("g", {filter}, children)];
+        }
+
+        // 模糊
+        if (blur.length) {
+            let filter: string = '';
+            filter = `url(#${blurId})`;
+            children = [...blur, elh('g', {filter}, children)];
+        }
+
+        // 遮罩
+        const _mask_space = this.renderMask();
+        if (_mask_space) {
+            Object.assign(props.style, {transform: _mask_space.toString()});
+            const id = `mask-base-${objectId(this)}`;
+            const __body_transform = this.transformFromMask;
+            const __body = elh("g", {style: {transform: __body_transform}}, children);
+            this.bleach(__body);
+            children = [__body];
+            const mask = elh('mask', {id}, children);
+            const rely = elh('g', {mask: `url(#${id})`}, this.relyLayers);
+            children = [mask, rely];
+        }
+
+        this.reset("g", props, children);
+
+        return ++this.m_render_version;
     }
 }
