@@ -4293,7 +4293,6 @@ export class PageEditor {
 
                 const flatten = flattenShapes(shapes);
                 for (const view of flatten) {
-                    const shape = adapt2Shape(view);
                     // fills
                     {
                         const s = shape4fill(api, page, view);
@@ -4351,25 +4350,23 @@ export class PageEditor {
                                 for (let _i = 0; _i < 4; _i++) {
                                     const val = radius[_i];
                                     if (points[_i].radius === val || val < 0) continue;
-
                                     api.modifyPointCornerRadius(page, shape, _i, val, 0);
+                                    needUpdateFrame = true;
                                 }
                             } else {
                                 shape.pathsegs.forEach((seg, index) => {
                                     for (let _i = 0; _i < seg.points.length; _i++) {
-                                        if (seg.points[_i].radius === radius[0]) continue;
+                                        if ((seg.points[_i].radius ?? 0) === radius[0]) continue;
                                         api.modifyPointCornerRadius(page, shape, _i, radius[0], index);
+                                        needUpdateFrame = true;
                                     }
                                 });
                             }
-                            needUpdateFrame = true;
                         } else {
                             api.shapeModifyFixedRadius(page, shape as GroupShape | TextShape, radius[0]);
                         }
 
-                        if (needUpdateFrame) {
-                            update_frame_by_points(api, this.__page, shape);
-                        }
+                        needUpdateFrame && update_frame_by_points(api, this.__page, shape);
                     }
                 }
                 // contextSetting
