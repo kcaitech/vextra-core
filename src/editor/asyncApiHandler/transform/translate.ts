@@ -16,13 +16,14 @@ import {
 import { Transform as TransformRaw } from "../../../data";
 import { after_migrate, unable_to_migrate } from "../../utils/migrate";
 import { get_state_name, is_state } from "../../symbol";
-import { Api } from "../../../coop/recordapi";
-import { ISave4Restore, LocalCmd, SelectionState } from "../../../coop/localcmd";
+import { Api } from "../../../coop";
+import { ISave4Restore, LocalCmd, SelectionState } from "../../../coop";
 import { getAutoLayoutShapes, modifyAutoLayout, TidyUpAlgin, tidyUpLayout } from "../../utils/auto_layout";
 import { translate } from "../../frame";
 import { transform_data } from "../../../io/cilpboard";
 import { MossError } from "../../../basic/error";
 import { Transform } from "../../../basic/transform";
+import { assign } from "../../clipboard";
 
 export type TranslateUnit = {
     shape: ShapeView;
@@ -52,6 +53,7 @@ export class Transporter extends AsyncApiCaller {
     need_layout_shape: Set<Artboard> = new Set();
     prototype = new Map<string, Shape>()
     shapes: (Shape | ShapeView)[] = [];
+    need_assign: Set<Shape> = new Set();
 
     constructor(repo: CoopRepository, document: Document, page: PageView, shapes: ShapeView[]) {
         super(repo, document, page)
@@ -189,6 +191,7 @@ export class Transporter extends AsyncApiCaller {
             const reflect: Map<string, Shape> = new Map();
             const results: Shape[] = [];
             const layoutSet = this.need_layout_shape;
+            const assignSet = this.need_assign;
             for (const view of shapes) {
                 const shape = adapt2Shape(view);
                 const parent = shape.parent! as GroupShape;
@@ -198,6 +201,7 @@ export class Transporter extends AsyncApiCaller {
                 const __shape = api.shapeInsert(document, page, parent, source, index + 1);
                 results.push(__shape);
                 reflect.set(__shape.id, shape);
+                assignSet.add(__shape);
 
                 if (env) {
                     const original = env.get(view)!;
@@ -255,10 +259,13 @@ export class Transporter extends AsyncApiCaller {
                 api.shapeModifyTransform(page, originShape, shape.transform);
                 api.shapeDelete(document, page, currentParent, currentParent.indexOfChild(shape));
 
+                this.prototype.delete(shape.id);
+
                 results.push(originShape);
             }
 
             this.reflect = undefined;
+            this.need_assign.clear();
 
             this.updateView();
 
@@ -293,11 +300,10 @@ export class Transporter extends AsyncApiCaller {
         }
     }
 
-    insert(layout: ShapeView, placement: ShapeView, position: -1 | 1, sel: ShapeView[]) {
+    insert(layout: ShapeView, placement: ShapeView | undefined, position: -1 | 1, sel: ShapeView[]) {
         try {
             const container = layout as ArtboradView;
             const envData = adapt2Shape(container) as Artboard;
-            const placementData = adapt2Shape(placement);
 
             const isHor = (container.autoLayout?.stackMode || StackMode.Horizontal) === StackMode.Horizontal;
             const sortSel = sel.sort((a, b) => {
@@ -306,19 +312,18 @@ export class Transporter extends AsyncApiCaller {
                 const v1 = isHor ? xy1.x : xy1.y;
                 const v2 = isHor ? xy2.x : xy2.y;
 
-                if (v1 > v2) return -1;
-                else return 1;
+                if (v1 > v2) return 1;
+                else return -1;
             });
 
-
-            const frame = placement._p_frame;
+            const frame = placement ? placement._p_frame : {x: 0, y: 0};
 
             const api = this.api;
             const page = this.page;
 
             let x = frame.x + (position > 0 ? sortSel.length : -1);
             let y = frame.y + (position > 0 ? sortSel.length : -1);
-            const index = envData.indexOfChild(placementData) + (position > 0 ? 1 : 0);
+            const index = placement ? envData.indexOfChild(adapt2Shape(placement)) + (position > 0 ? 1 : 0) : 0;
 
             for (let i = sortSel.length - 1; i > -1; i--) {
                 const view = sortSel[i];
@@ -344,9 +349,15 @@ export class Transporter extends AsyncApiCaller {
                 this.api.delShapeProtoStart(this.page, v)
             })
         }
+        if (this.need_assign.size) {
+            this.need_assign.forEach(shape => {
+                this.api.shapeModifyName(this.page, shape, assign(shape));
+            })
+        }
         this.need_layout_shape.forEach(parent => {
             modifyAutoLayout(this.page, this.api, parent);
         })
+
         super.commit();
     }
 }
