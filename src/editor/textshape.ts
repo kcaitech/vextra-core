@@ -30,11 +30,12 @@ import { mergeParaAttr, mergeSpanAttr } from "../data/text/textutils";
 import { importGradient, importText } from "../data/baseimport";
 import { AsyncGradientEditor, Status } from "./controller";
 import { CmdMergeType } from "../coop/localcmd";
-import { ShapeView, TableCellView, TableView, TextShapeView, adapt2Shape } from "../dataview";
+import { ArtboradView, ShapeView, TableCellView, TableView, TextShapeView, adapt2Shape } from "../dataview";
 import { cell4edit2, varParent } from "./symbol";
 import { uuid } from "../basic/uuid";
 import { SymbolRefShape, SymbolShape, GroupShape } from "../data";
 import { ParaAttr } from "../data";
+import { modifyAutoLayout } from "./utils/auto_layout";
 
 type TextShapeLike = Shape & { text: Text }
 

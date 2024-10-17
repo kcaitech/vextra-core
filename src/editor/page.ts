@@ -764,7 +764,7 @@ export class PageEditor {
                 api.shapeDelete(document, page, shape0.parent as GroupShape, index);
             } else {
                 const index = (shape0.parent as GroupShape).indexOfChild(shape0);
-
+                symbolShape.frameMaskDisabled = true;
                 sym = group(document, page, shapes, symbolShape, shape0.parent as GroupShape, index, api);
 
                 for (let i = 0; i < shapes.length; i++) {
@@ -1147,6 +1147,7 @@ export class PageEditor {
             ref.transform.m01 = sym.transform.m01;
             ref.transform.m10 = sym.transform.m10;
             ref.transform.m11 = sym.transform.m11;
+            ref.frameMaskDisabled = sym.frameMaskDisabled;
         }
         return ref;
     }
@@ -2565,6 +2566,19 @@ export class PageEditor {
                 const { target, index, value } = actions[i];
                 const s = shape4fill(api, this.__page, target);
                 api.setFillColor(this.__page, s, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+     setShapesFillOpacity(actions: BatchAction[]) {
+        const api = this.__repo.start('setShapesFillOpacity');
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index, value } = actions[i];
+                const s = shape4fill(api, this.__page, target);
+                api.setFillOpacity(this.__page, s, index, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -4681,6 +4695,24 @@ export class PageEditor {
         } catch (e) {
             this.__repo.rollback();
             console.error(e);
+        }
+    }
+
+    modifyContainersFrameMaskStatus(shapes: ShapeView[], value: boolean) {
+        try {
+            const api = this.__repo.start('modifyShapesRadius');
+            const page = this.__page;
+            for (const view of shapes) {
+                if (view.isVirtualShape) continue;
+                if (view instanceof ArtboradView || view instanceof SymbolView || view instanceof SymbolRefView) {
+                    const shape = adapt2Shape(view);
+                    api.modifyContainersFrameMaskStatus(page, shape, value);
+                }
+            }
+            this.__repo.commit();
+        } catch (e) {
+            this.__repo.rollback();
+            throw e;
         }
     }
 

@@ -30,7 +30,8 @@ import { newSymbolRefShape, newSymbolShapeUnion } from "../creator";
 import { uuid } from "../../basic/uuid";
 import * as types from "../../data/typesdefine";
 import { translateTo } from "../frame";
-import { PageView, ShapeView, TableCellView, TableView, TextShapeView, adapt2Shape } from "../../dataview";
+import { ArtboradView, PageView, ShapeView, TableCellView, TableView, TextShapeView, adapt2Shape } from "../../dataview";
+import { modifyAutoLayout } from "./auto_layout";
 
 interface _Api {
     shapeModifyX(page: Page, shape: Shape, x: number): void;
@@ -54,8 +55,11 @@ export function fixTextShapeFrameByLayout(api: _Api, page: Page, shape: TextShap
             // expandTo(api as Api, page, shape, shape.frame.width, Math.max(fontsize, layout.contentHeight));
 
             const targetHeight = Math.ceil(Math.max(fontsize, layout.contentHeight));
-
             api.shapeModifyWH(page, _shape, shape.size.width, targetHeight);
+            const parent = shape.parent as ShapeView;
+            if (parent && (parent as ArtboradView).autoLayout) {
+                modifyAutoLayout(page, api as Api, adapt2Shape(parent));
+            }
             break;
         }
         case TextBehaviour.Flexible: {
@@ -69,6 +73,10 @@ export function fixTextShapeFrameByLayout(api: _Api, page: Page, shape: TextShap
             const targetHeight = Math.ceil(layout.contentHeight);
 
             api.shapeModifyWH(page, _shape, targetWidth, targetHeight);
+            const parent = shape.parent as ShapeView;
+            if (parent && (parent as ArtboradView).autoLayout) {
+                modifyAutoLayout(page, api as Api, adapt2Shape(parent));
+            }
             // expandTo(api as Api, page, shape, Math.max(fontsize, layout.contentWidth), Math.max(fontsize, layout.contentHeight));
             break;
         }
