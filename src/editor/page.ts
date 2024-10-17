@@ -1,6 +1,6 @@
 import {
     BoolShape,
-    GroupShape,
+    GroupShape, OvalShape,
     OverrideType,
     PathShape2,
     PolygonShape,
@@ -4386,7 +4386,9 @@ export class PageEditor {
                             api.shapeModifyFixedRadius(page, shape as GroupShape | TextShape, radius[0]);
                         }
 
-                        needUpdateFrame && update_frame_by_points(api, this.__page, shape);
+                        if (needUpdateFrame && !((shape instanceof StarShape || shape instanceof PolygonShape) && !shape.haveEdit)) {
+                            update_frame_by_points(api, this.__page, shape);
+                        }
                     }
                 }
                 // contextSetting
