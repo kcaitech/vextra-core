@@ -563,7 +563,8 @@ function determineAsContainerRadiusShape(parent: Artboard | SymbolShape, childs:
     const isRect = shape instanceof RectShape;
     const rect = isRect && shape.pathsegs.length === 1 && shape.pathsegs[0].points.length === 4 && shape.pathsegs[0].isClosed;
 
-    if (!!(shape.resizingConstraint === 228 && rect && sizeEqual && shape.mask)) {
+    // if (!!(shape.resizingConstraint === 228 && rect && sizeEqual && shape.mask)) {
+    if (!!(rect && sizeEqual && shape.mask)) {
         const drop = childs.splice(0, 1)[0];
         const points = (drop as PathShape).pathsegs[0].points;
         const radius = points.map(i => i.radius!);
