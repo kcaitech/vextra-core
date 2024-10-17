@@ -187,6 +187,7 @@ import { getFormatFromBase64 } from "../basic/utils";
 import { uniformScale, UniformScaleUnit } from "./asyncApiHandler";
 import { modifyRadius, modifyStartingAngle, modifySweep } from "./asyncApiHandler";
 import { Path } from "@kcdesign/path";
+import { assign } from "./clipboard";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -1560,7 +1561,9 @@ export class PageEditor {
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const shape = shapes[i];
                 // shape.id = uuid();
-                api.shapeInsert(this.__document, this.__page, parent, shape, index);
+                const __shape = api.shapeInsert(this.__document, this.__page, parent, shape, index);
+                const name = assign(__shape);
+                api.shapeModifyName(this.__page, __shape, name);
                 result.push(parent.childs[index]);
                 index++;
             }
@@ -1595,7 +1598,9 @@ export class PageEditor {
                 const shape = shapes[i];
                 const { parent, index } = actions[i];
                 // shape.id = uuid();
-                api.shapeInsert(this.__document, this.__page, parent, shape, index);
+                const __shape = api.shapeInsert(this.__document, this.__page, parent, shape, index);
+                const name = assign(__shape);
+                api.shapeModifyName(this.__page, __shape, name);
                 result.push(parent.childs[index]);
             }
             this.__repo.commit();
@@ -1633,8 +1638,9 @@ export class PageEditor {
                 for (let j = 0; j < shapes.length; j++) {
                     let index = env.childs.length;
 
-                    api.shapeInsert(this.__document, this.__page, env, shapes[j], index);
-
+                    const __shape = api.shapeInsert(this.__document, this.__page, env, shapes[j], index);
+                    const name = assign(__shape);
+                    api.shapeModifyName(this.__page, __shape, name);
                     result.push(env.childs[index]);
                 }
             }
