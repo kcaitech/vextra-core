@@ -1,4 +1,13 @@
-import { GroupShape, Shape, ShapeFrame, ShapeType, SymbolUnionShape, TextShape } from "../data";
+import {
+    GroupShape,
+    Shape,
+    ShapeFrame,
+    ShapeType,
+    SymbolRefShape,
+    SymbolShape,
+    SymbolUnionShape,
+    TextShape
+} from "../data";
 import {
     exportArtboard,
     exportBoolShape,
