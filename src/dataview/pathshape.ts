@@ -67,7 +67,7 @@ export class PathShapeView extends ShapeView {
 
         const masked = this.masked;
         if (masked) {
-            (this.getPage() as PageView).getView(masked.id)?.render();
+            (this.getPage() as PageView)?.getView(masked.id)?.render();
             this.reset("g");
             return ++this.m_render_version;
         }
