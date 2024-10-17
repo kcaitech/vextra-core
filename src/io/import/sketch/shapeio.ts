@@ -193,7 +193,8 @@ function importShapePropertys(shape: Shape, data: IJSON) {
     // shape.rotation = -data['rotation'];
     const resizingConstraint = data['resizingConstraint'];
     if (resizingConstraint) {
-        shape.resizingConstraint = (~resizingConstraint) & ResizingConstraints2.Mask;
+        if ([63, 18, 27].includes(resizingConstraint)) shape.resizingConstraint = 0; // 额外约束值
+        else shape.resizingConstraint = (~resizingConstraint) & ResizingConstraints2.Mask;
     }
     shape.isVisible = data['isVisible'];
     shape.isLocked = data['isLocked'];
@@ -512,6 +513,7 @@ export function importSymbolRef(ctx: LoadContext, data: IJSON, f: ImportFun, i: 
     }
     const shape = new SymbolRefShape([i] as BasicArray<number>, id, name, ShapeType.SymbolRef, frame.trans, style, frame.size, data['symbolID'], new BasicMap());
     shape['frameMaskDisabled'] = !data['hasClippingMask'];
+    shape['isCustomSize'] = true; // 因为无法判定是否修改了尺寸，默认都给已经修改了尺寸
     if (data['overrideValues']) importOverrides(shape, data['overrideValues']);
     importShapePropertys(shape, data);
     importBoolOp(shape, data);

@@ -82,11 +82,9 @@ export const ResizingConstraints2 = {
     Height: 0b00010000, // 16
     Top: 0b00100000, // 32
 
-    // extra -- 额外的不兼容sketch的值
     HCenter: 0b01000000, // 64
     VCenter: 0b10000000, // 128
 
-    // default 
     Default: 0b00110110,
 
     // horizontal
@@ -94,7 +92,6 @@ export const ResizingConstraints2 = {
      * @description 靠左固定，为真的前提是：不靠右边、不居中
      */
     isFixedToLeft(val: number): boolean {
-        // val = this.Mask ^ val; // 不需要异或了，统一在导入的I/O中做了处理
         return !!(val & this.Left) && !(val & this.Right) && !(val & this.HCenter);
     },
 
