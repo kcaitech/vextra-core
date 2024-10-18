@@ -4099,8 +4099,7 @@ export class PageEditor {
 
         if (!pre.length) {
             return false;
-        }
-
+        }        
         try {
             const api = this.__repo.start('afterShapeListDrag');
             if (position === "inner") {
@@ -4120,6 +4119,11 @@ export class PageEditor {
                     let last = (host as GroupShape).childs.length;
                     if (parent.id === host.id) { // 同一父级
                         last--;
+                    } else {
+                        if (host instanceof BoolShape) {
+                            const op = host.getBoolOp().op;
+                            api.shapeModifyBoolOp(this.__page, item, op);
+                        }
                     }
 
                     api.shapeMove(this.__page, parent, parent.indexOfChild(item), host as GroupShape, last);
@@ -4168,10 +4172,14 @@ export class PageEditor {
                         index = previous_index;
                     } else {
                         index = host_parent.indexOfChild(host);
-                    }
-
+                    }                    
                     if (parent.id === host_parent.id) { // 同一父级
                         index = modify_index((parent) as GroupShape, item, host, index);
+                    } else {
+                        if (host_parent instanceof BoolShape) {
+                            const op = host_parent.getBoolOp().op;
+                            api.shapeModifyBoolOp(this.__page, item, op);
+                        }
                     }
 
                     if (position === "upper") {
