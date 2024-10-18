@@ -80,17 +80,17 @@ export function render2path(shape: ShapeView, defaultOp = BoolOp.None): Path {
     }
 
     let fVisibleIdx = 0;
-    for (let i = 0; i < shape.m_children.length; ++i) {
-        if ((shape.m_children[i] as ShapeView).isVisible) {
+    for (let i = 0; i < shape.data.childs.length; ++i) {
+        if (shape.data.childs[i].isVisible) {
             fVisibleIdx = i;
             break;
         }
     }
 
-    const cc = shape.m_children.length;
+    const cc = shape.data.childs.length;
     if (fVisibleIdx >= cc) return new Path();
 
-    const child0 = shape.m_children[fVisibleIdx] as ShapeView;
+    const child0 = shape.m_children.find(c => shape.data.childs[fVisibleIdx].id === c.id) as ShapeView;
     let frame0: ShapeFrame;
     let path0 = child0 instanceof GroupShapeView && !(child0 instanceof BoolShapeView) ? render2path(child0) : child0.getPath().clone();
 
@@ -112,7 +112,7 @@ export function render2path(shape: ShapeView, defaultOp = BoolOp.None): Path {
 
     // let joinPath: IPalPath = gPal.makePalPath(path0.toSVGString());
     for (let i = fVisibleIdx + 1; i < cc; i++) {
-        const child1 = shape.m_children[i] as ShapeView;
+        const child1 = shape.m_children.find(c => shape.data.childs[i].id === c.id) as ShapeView;
         if (!child1.isVisible) continue;
         let frame1: ShapeFrame;
         const path1 = child1 instanceof GroupShapeView && !(child1 instanceof BoolShapeView) ? render2path(child1) : child1.getPath().clone();
@@ -134,6 +134,7 @@ export function render2path(shape: ShapeView, defaultOp = BoolOp.None): Path {
         } else {
             const intersect = grid.checkIntersectAndPush(frame1);
             const path = opPath(pathop, path0, path1, intersect);
+            
             if (path !== path0) {
                 path0 = path;
             }
@@ -179,7 +180,7 @@ export class BoolShapeView extends GroupShapeView {
 
     onDataChange(...args: any[]): void {
         super.onDataChange(...args);
-        if (args.includes('variables')) {
+        if (args.includes('variables') || args.includes('childs')) {
             this.m_path = undefined;
             this.m_pathstr = undefined;
         }
