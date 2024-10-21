@@ -15,7 +15,6 @@ const shadowOri: {
 } = {};
 shadowOri[ShadowPosition.Outer] = function (h: Function, shadow: Shadow, frame: ShapeSize, id: string, i: number, path: string, fills: Fill[], borders: Border[], shapeType: ShapeType, blur?: Blur): any {
     const { width, height } = frame;
-    // const shadow = style.shadows[i];
     const f_props: any = {
         props_w: [width * 1.4],
         props_h: [height * 1.4],
@@ -229,7 +228,6 @@ function shadowShape(h: Function, shadows: Shadow[], frame: ShapeSize, id: strin
     }
     const filter_props = { id: 'pd_outer-' + id, x: '-20%', y: '-20%', height: '140%', width: '140%' };
     const m_border = shapeType === ShapeType.Line ? max_border(borders) * 9 : max_border(borders);
-    // fix width,height可能为0
     if (width !== 0 && height !== 0) {
         filter_props.width = ((Math.max(...f_props.props_w) + Math.max(...f_props.props_w) + (m_border * 2)) / width) * 100 + '%';
         filter_props.height = ((Math.max(...f_props.props_h) + Math.max(...f_props.props_h) + (m_border * 2)) / height) * 100 + '%';
