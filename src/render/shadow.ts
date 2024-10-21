@@ -246,18 +246,15 @@ function shadowShape(h: Function, shadows: Shadow[], frame: ShapeSize, id: strin
         in2: `effect${shadows.length}_dropShadow`,
         result: `shape`
     }
-    const filter = h("filter", filter_props, [
+    return h("filter", filter_props, [
         h('feFlood', fe_flood),
         ...h_nodes,
         h('feBlend', fe_blend),
     ])
-    return filter;
 }
 
 export function render(h: Function, id: string, shadows: Shadow[], path: string, frame: ShapeSize, fills: Fill[], borders: Border[], shapeType: ShapeType, blur?: Blur) {
     const elArr = [];
-    // const style = shape.style;
-    // const frame = shape.frame;
     const inner_f = [];
     let filters: any[] = [];
     let paths: any[] = [];
@@ -282,13 +279,9 @@ export function render(h: Function, id: string, shadows: Shadow[], path: string,
     }
     if (shapeType !== ShapeType.Rectangle && shapeType !== ShapeType.Artboard && shapeType !== ShapeType.Oval) {
         const filter = shadowShape(h, shadows, frame, id, borders, shapeType);
-        if (filter) {
-            elArr.push(filter);
-        }
+        if (filter) elArr.push(filter);
     }
-    if (filters.length) {
-        elArr.push(h("g", [...filters, ...paths]));
-    }
+    if (filters.length) elArr.push(h("g", [...filters, ...paths]));
     elArr.push(...inner_f);
     return elArr;
 }
