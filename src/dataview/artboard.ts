@@ -112,17 +112,13 @@ export class ArtboradView extends GroupShapeView {
         }
 
         const fills = this.renderFills();
-        let childs = this.renderContents();
-        if (this.autoLayout && this.autoLayout.stackReverseZIndex) {
-            childs = childs.reverse();
-        }
+        const childs = this.renderContents();
+        if (this.autoLayout && this.autoLayout.stackReverseZIndex) childs.reverse();
         const borders = this.renderBorders();
 
         const svgprops = this.renderProps();
         const filterId = `${objectId(this)}`;
         const shadows = this.renderShadows(filterId);
-        const blurId = `blur_${objectId(this)}`;
-        const blur = this.renderBlur(blurId);
 
         const contextSettings = this.style.contextSettings;
 
@@ -131,7 +127,7 @@ export class ArtboradView extends GroupShapeView {
         let children = [...fills, ...childs];
 
         if (this.innerTransform) {
-            childs = childs.map(c => {
+            const innerEL = childs.map(c => {
                 const s = c as ShapeView;
                 const trans = new Transform();
                 if (s.scrollBehavior === ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME && this.innerTransform) {
@@ -148,7 +144,7 @@ export class ArtboradView extends GroupShapeView {
             const child = elh("g", {
                 id: this.id,
                 transform: this.innerTransform.toString()
-            }, childs);
+            }, innerEL);
             children = [...fills, child];
         }
         if (contextSettings) {
@@ -171,7 +167,11 @@ export class ArtboradView extends GroupShapeView {
             children = [...shadows, ...children];
         }
 
-        if (blur.length) children = [...blur, ...children];
+        if (this.style.blur) {
+            const blurId = `blur_${objectId(this)}`;
+            const blur = this.renderBlur(blurId);
+            children = [...blur, ...children];
+        }
 
         const _mask_space = this.renderMask();
         if (_mask_space) {
