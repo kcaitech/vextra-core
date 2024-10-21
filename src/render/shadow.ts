@@ -77,17 +77,18 @@ shadowOri[ShadowPosition.Outer] = function (h: Function, shadow: Shadow, frame: 
         }
     }
     const filter = h("filter", filter_props, filter_child);
-    let fill = 'none';
+    let fill = 'black';
 
-    if (fills.length) {
-        for (let i = 0; i < fills.length; i++) {
-            const _fill = fills[i];
-            if (_fill.color.alpha !== 0 && _fill.isEnabled) {
-                fill = 'black';
-                break;
-            }
-        }
-    }
+    // 取舍，都给了black
+    // if (fills.length) {
+    //     for (let i = 0; i < fills.length; i++) {
+    //         const _fill = fills[i];
+    //         if (_fill.color.alpha !== 0 && _fill.isEnabled) {
+    //             fill = 'black';
+    //             break;
+    //         }
+    //     }
+    // }
     const border = borderR(h, borders, frame, path, undefined)
 
     const body_props: any = {
