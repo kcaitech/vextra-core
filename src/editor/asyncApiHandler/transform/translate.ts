@@ -2,23 +2,14 @@ import { CoopRepository } from "../../../coop";
 import { AsyncApiCaller } from "../AsyncApiCaller";
 import { adapt2Shape, ArtboradView, GroupShapeView, PageView, ShapeView } from "../../../dataview";
 import {
-    Artboard,
-    Document,
-    GroupShape,
-    makeShapeTransform1By2,
-    makeShapeTransform2By1,
-    Page,
-    Shape,
-    ShapeType,
-    StackMode,
-    StackPositioning,
+    Artboard, Document, GroupShape, Page, Shape, ShapeType, StackMode, Transform as TransformRaw,
+    makeShapeTransform1By2, makeShapeTransform2By1,
 } from "../../../data";
-import { Transform as TransformRaw } from "../../../data";
 import { after_migrate, unable_to_migrate } from "../../utils/migrate";
 import { get_state_name, is_state } from "../../symbol";
 import { Api } from "../../../coop";
 import { ISave4Restore, LocalCmd, SelectionState } from "../../../coop";
-import { getAutoLayoutShapes, modifyAutoLayout, TidyUpAlgin, tidyUpLayout } from "../../utils/auto_layout";
+import { TidyUpAlgin, modifyAutoLayout, tidyUpLayout } from "../../utils/auto_layout";
 import { translate } from "../../frame";
 import { transform_data } from "../../../io/cilpboard";
 import { MossError } from "../../../basic/error";
@@ -72,21 +63,14 @@ export class Transporter extends AsyncApiCaller {
     execute(translateUnits: TranslateUnit[]) {
         try {
             const api = this.api;
-            const shapes: ShapeView[] = [];
             for (let i = 0; i < translateUnits.length; i++) {
                 const unit = translateUnits[i];
-                shapes.push(unit.shape);
                 const shape = adapt2Shape(unit.shape);
                 api.shapeModifyTransform(this.page, shape, unit.transform);
             }
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                modifyAutoLayout(this.page, api, parent);
-            }
             this.updateView();
         } catch (error) {
-            console.log('Transporter.execute:', error);
+            console.error('Transporter.execute:', error);
             this.exception = true;
         }
     }
@@ -149,20 +133,10 @@ export class Transporter extends AsyncApiCaller {
         return true;
     }
 
-    modifyShapesStackPosition(shapes: ShapeView[], p: StackPositioning) {
-        const api = this.api;
-        const page = this.page;
-        for (const shape of shapes) {
-            const s = adapt2Shape(shape);
-            api.shapeModifyStackPosition(page, s, p);
-        }
-    }
-
     swap(shape: GroupShapeView, targets: ShapeView[], x: number, y: number, sort: Map<string, number>) {
         try {
             const api = this.api;
             const page = this.page;
-            // todo try to delete this code
             for (let index = 0; index < targets.length; index++) {
                 const target = targets[index];
                 const frame = target._p_frame;
@@ -173,7 +147,7 @@ export class Transporter extends AsyncApiCaller {
             this.updateView();
         } catch (e) {
             this.exception = true;
-            console.log('Transporter.swap', e);
+            console.error('Transporter.swap', e);
         }
     }
 
@@ -284,19 +258,22 @@ export class Transporter extends AsyncApiCaller {
             translate(api, page, adapt2Shape(shape), x - frame.x, y - frame.y);
         } catch (e) {
             this.exception = true;
-            console.log('Transporter.swap', e);
+            console.error('Transporter.swap', e);
         }
     }
 
-    tidyUpShapesLayout(shape_rows: ShapeView[][], hor: number, ver: number, dir: boolean, algin: TidyUpAlgin, startXY?: { x: number, y: number }) {
+    tidyUpShapesLayout(shape_rows: ShapeView[][], hor: number, ver: number, dir: boolean, align: TidyUpAlgin, startXY?: {
+        x: number,
+        y: number
+    }) {
         try {
             const api = this.api;
             const page = this.page;
-            tidyUpLayout(page, api, shape_rows, hor, ver, dir, algin, startXY);
+            tidyUpLayout(page, api, shape_rows, hor, ver, dir, align, startXY);
             this.updateView();
         } catch (error) {
             this.exception = true;
-            console.log('Transporter.tidyUpShapesLayout', error);
+            console.error('Transporter.tidyUpShapesLayout', error);
         }
     }
 
