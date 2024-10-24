@@ -229,7 +229,7 @@ export function translate(api: Api, page: Page, shape: Shape, dx: number, dy: nu
         x = Math.round(x);
         y = Math.round(y);
     }
-    translateTo(api, page, shape, xy.x + dx, xy.y + dy);
+    translateTo(api, page, shape, x, y);
 }
 
 export function expandTo(api: Api, document: Document, page: Page, shape: Shape, w: number, h: number) {
@@ -272,7 +272,7 @@ export function expand(api: Api, document: Document, page: Page, shape: Shape, d
         w = Math.round(w);
         h = Math.round(h);
     }
-    expandTo(api, document, page, shape, frame.width + dw, frame.height + dh);
+    expandTo(api, document, page, shape, w, h);
 }
 
 
