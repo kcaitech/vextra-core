@@ -990,8 +990,9 @@ export class PageEditor {
         }
 
         const return_shapes: Shape[] = [];
-        for (let i = 0, len = shapes.length; i < len; i++) {
-            const shape: SymbolRefShape = adapt2Shape(shapes[i]) as SymbolRefShape;
+        for (const view of shapes) {
+
+            const shape: SymbolRefShape = adapt2Shape(view) as SymbolRefShape;
             if (shape.type !== ShapeType.SymbolRef) {
                 return_shapes.push(shape);
                 continue;
@@ -1019,10 +1020,16 @@ export class PageEditor {
             tmpArtboard.transform.m11 = shape.transform.m11;
             tmpArtboard.transform.m02 = shape.transform.m02;
             tmpArtboard.transform.m12 = shape.transform.m12;
-            tmpArtboard.cornerRadius = shape.cornerRadius;
-            const layoutInfo = (shapes[i] as SymbolRefView).autoLayout;
+
+            tmpArtboard.frameMaskDisabled = shape.frameMaskDisabled;
+
+            const layoutInfo = (view as SymbolRefView).autoLayout;
             if (layoutInfo) {
                 tmpArtboard.autoLayout = importAutoLayout(layoutInfo);
+            }
+            const radius = (view as SymbolRefView).cornerRadius
+            if (radius) {
+                tmpArtboard.cornerRadius = importCornerRadius(radius);
             }
 
             const symbolData = exportArtboard(tmpArtboard); // todo 如果symbol只有一个child时
