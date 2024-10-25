@@ -3,7 +3,7 @@ import {
     BasicMap, Transform, Page, ShapeType, Style
 } from "../../../data";
 import { uuid } from "../../../basic/uuid";
-import { IImportContext, importPage } from "../../../data/baseimport";
+import { IImportContext, importPage, importDocumentMeta } from "../../../data/baseimport";
 import { base64Encode, base64ToDataUrl } from "../../../basic/utils";
 
 function setLoader(pack: { [p: string]: string | Uint8Array; }, document: Document) {
@@ -57,7 +57,7 @@ function setLoader(pack: { [p: string]: string | Uint8Array; }, document: Docume
 
 export function importDocument(name: string, mdd: { [p: string]: string | Uint8Array }, guard: IDataGuard) {
     const meta = JSON.parse(mdd['document-meta.json'] as string);
-    const pageList = meta.pagesList as BasicArray<PageListItem>;
+    const pageList = importDocumentMeta(meta,undefined).pagesList;
     const document = new Document(uuid(), name, "", "", pageList, new BasicMap(), guard);
     setLoader(mdd, document);
     return document;
