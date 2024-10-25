@@ -14,8 +14,9 @@ import { OpType } from "@kcdesign/path";
 function opPath(bop: BoolOp, path0: Path, path1: Path, isIntersect: boolean): Path {
     switch (bop) {
         case BoolOp.Diff:
-            if (isIntersect) path0.op(path1, OpType.Xor);
-            else path0.addPath(path1);
+            // if (isIntersect) path0.op(path1, OpType.Xor);
+            // else path0.addPath(path1);
+            path0.op(path1, OpType.Xor);
             break;
         case BoolOp.Intersect:
             if (isIntersect) {
@@ -28,8 +29,9 @@ function opPath(bop: BoolOp, path0: Path, path1: Path, isIntersect: boolean): Pa
             if (isIntersect) path0.op(path1, OpType.Difference);
             break;
         case BoolOp.Union:
-            if (!isIntersect) path0.addPath(path1)
-            else path0.op(path1, OpType.Union);
+            // if (!isIntersect) path0.addPath(path1)
+            // else path0.op(path1, OpType.Union);
+            path0.op(path1, OpType.Union);
             break;
     }
     return path0;
@@ -92,8 +94,8 @@ export function render2path(shape: ShapeView, defaultOp = BoolOp.None): Path {
 
     const child0 = shape.m_children.find(c => shape.data.childs[fVisibleIdx].id === c.id) as ShapeView;
     let frame0: ShapeFrame;
-    let path0 = child0 instanceof GroupShapeView && !(child0 instanceof BoolShapeView) ? render2path(child0) : child0.getPath().clone();
-
+    let path0 = child0 instanceof GroupShapeView && !(child0 instanceof BoolShapeView) ? render2path(child0, BoolOp.Union) : (child0 instanceof TextShapeView) ? child0.getTextPath().clone() : child0.getPath().clone();
+    
     if (child0.isNoTransform()) {
         path0.translate(child0.transform.translateX, child0.transform.translateY);
         frame0 = new ShapeFrame(child0.transform.translateX, child0.transform.translateY, child0.frame.width, child0.frame.height);
@@ -115,7 +117,7 @@ export function render2path(shape: ShapeView, defaultOp = BoolOp.None): Path {
         const child1 = shape.m_children.find(c => shape.data.childs[i].id === c.id) as ShapeView;
         if (!child1.isVisible) continue;
         let frame1: ShapeFrame;
-        const path1 = child1 instanceof GroupShapeView && !(child1 instanceof BoolShapeView) ? render2path(child1) : child1.getPath().clone();
+        const path1 = child1 instanceof GroupShapeView && !(child1 instanceof BoolShapeView) ? render2path(child1, BoolOp.Union) : (child1 instanceof TextShapeView) ? child1.getTextPath().clone() : child1.getPath().clone();
         if (child1.isNoTransform()) {
             path1.translate(child1.transform.translateX, child1.transform.translateY);
             frame1 = new ShapeFrame(child1.transform.translateX, child1.transform.translateY, child1.frame.width, child1.frame.height);
@@ -134,7 +136,7 @@ export function render2path(shape: ShapeView, defaultOp = BoolOp.None): Path {
         } else {
             const intersect = grid.checkIntersectAndPush(frame1);
             const path = opPath(pathop, path0, path1, intersect);
-            
+
             if (path !== path0) {
                 path0 = path;
             }
