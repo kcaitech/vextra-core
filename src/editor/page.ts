@@ -4072,7 +4072,7 @@ export class PageEditor {
         if (!host_parent || host_parent.isVirtualShape) {
             return false;
         }
-
+        let autoLayoutShape: Artboard | undefined;
         let pre: Shape[] = [];
         for (let i = 0, l = shapes.length; i < l; i++) {
             const item = shapes[i];
@@ -4099,7 +4099,7 @@ export class PageEditor {
 
         if (!pre.length) {
             return false;
-        }        
+        }
         try {
             const api = this.__repo.start('afterShapeListDrag');
             if (position === "inner") {
@@ -4123,6 +4123,9 @@ export class PageEditor {
                         if (host instanceof BoolShape) {
                             const op = host.getBoolOp().op;
                             api.shapeModifyBoolOp(this.__page, item, op);
+                        }
+                        if (host instanceof Artboard) {
+                            autoLayoutShape = host;
                         }
                     }
 
@@ -4172,13 +4175,16 @@ export class PageEditor {
                         index = previous_index;
                     } else {
                         index = host_parent.indexOfChild(host);
-                    }                    
+                    }
                     if (parent.id === host_parent.id) { // 同一父级
                         index = modify_index((parent) as GroupShape, item, host, index);
                     } else {
                         if (host_parent instanceof BoolShape) {
                             const op = host_parent.getBoolOp().op;
                             api.shapeModifyBoolOp(this.__page, item, op);
+                        }
+                        if (host_parent instanceof Artboard) {
+                            autoLayoutShape = host_parent;
                         }
                     }
 
@@ -4199,6 +4205,9 @@ export class PageEditor {
                         this.delete_inner(this.__page, parent, api);
                     }
                 }
+            }
+            if (autoLayoutShape) {
+                modifyAutoLayout(this.__page, api, autoLayoutShape);
             }
             this.__repo.commit();
             return true;
