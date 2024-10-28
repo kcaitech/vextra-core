@@ -158,7 +158,6 @@ export class LinearApi {
     /**
      * @description 修改图形X轴位置
      */
-
     modifyShapesX(actions: {
         target: ShapeView,
         x: number
@@ -176,7 +175,6 @@ export class LinearApi {
     /**
      * @description 修改图形Y轴位置
      */
-
     modifyShapesY(actions: {
         target: ShapeView,
         y: number
@@ -187,6 +185,26 @@ export class LinearApi {
             for (let i = 0; i < actions.length; i++) {
                 const action = actions[i];
                 api.shapeModifyY(page, adapt2Shape(action.target), action.y);
+            }
+        });
+    }
+
+    /**
+     * @description 修改图形XY轴位置
+     */
+    modifyShapesXY(actions: {
+        target: ShapeView,
+        dx: number,
+        dy: number
+    }[]) {
+        this.execute('modify-shapes-xy', () => {
+            const api = this.api!;
+            const page = this.page;
+            for (const action of actions) {
+                const { target, dx, dy } = action;
+                if (target.isVirtualShape) continue;
+                api.shapeModifyX(page, adapt2Shape(target), target.transform.translateX + dx);
+                api.shapeModifyY(page, adapt2Shape(target), target.transform.translateY + dy);
             }
         });
     }
