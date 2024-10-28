@@ -92,7 +92,6 @@ import { BasicArray, ResourceMgr } from "../data";
 import { TableEditor } from "./table";
 import { exportArtboard, exportGradient, exportStop, exportSymbolShape, exportVariable } from "../data/baseexport";
 import {
-    adjust_selection_before_group,
     after_remove,
     clear_binds_effect,
     find_state_space,
@@ -101,8 +100,7 @@ import {
     init_state,
     make_union,
     modify_frame_after_inset_state,
-    modify_index,
-    trans_after_make_symbol
+    modify_index
 } from "./utils/other";
 import { v4 } from "uuid";
 import {
@@ -749,6 +747,7 @@ export class PageEditor {
                 if (shape0.scrollDirection) symbolShape.scrollDirection = (shape0.scrollDirection);
                 if (shape0.scrollBehavior) symbolShape.scrollBehavior = (shape0.scrollBehavior);
                 if (shape0.autoLayout) symbolShape.autoLayout = importAutoLayout(shape0.autoLayout);
+                if (shape0.frameMaskDisabled) symbolShape.frameMaskDisabled = shape0.frameMaskDisabled;
             }
 
             const page = this.__page;
@@ -758,9 +757,6 @@ export class PageEditor {
                 else state.shapes = cmd.saveselection?.shapes || [];
                 selection.restore(state);
             });
-
-            const need_trans_data: Shape[] = [];
-            adjust_selection_before_group(document, page, shapes, api, need_trans_data);
 
             let sym: SymbolShape;
             if (replace) {
@@ -789,24 +785,64 @@ export class PageEditor {
                 }
             }
 
-            if (sym) {
-                const result = sym;
+            if (!sym) throw new Error('failed');
 
-                document.symbolsMgr.add(result.id, result);
+            const result = sym;
+            document.symbolsMgr.add(result.id, result);
 
-                if (need_trans_data.length) {
-                    trans_after_make_symbol(page, result, need_trans_data, api);
+            const innerSymbols: Shape[] = [];
+
+            function _find(group: GroupShape) {
+                for (const child of group.childs) {
+                    if (child instanceof SymbolShape || child instanceof SymbolUnionShape) {
+                        innerSymbols.push(child);
+                        continue;
+                    }
+                    if (child instanceof GroupShape) _find(child);
                 }
-
-                this.__repo.commit();
-                return result;
-            } else {
-                throw new Error('failed')
             }
 
+            _find(sym);
+
+            if (innerSymbols.length) { // replace
+                const offset = sym.boundingBox().width + 24;
+                const matrixToPage = new Matrix(page.matrix2Root().inverse);
+                for (const symbol of innerSymbols) {
+                    const frame = new ShapeFrame(symbol.transform.m02, symbol.transform.m12, symbol.size.width, symbol.size.height);
+                    let refId = symbol.id;
+                    if (symbol instanceof SymbolUnionShape) {
+                        const dlt = symbol.childs[0];
+                        if (!dlt) continue;
+                        refId = dlt.id;
+                        frame.width = dlt.size.width;
+                        frame.height = dlt.size.height;
+                    }
+                    const ref = newSymbolRefShape(symbol.name, frame, refId, document.symbolsMgr);
+                    if (ref) {
+                        const rt = ref.transform;
+                        const st = symbol.transform;
+                        rt.m00 = st.m00;
+                        rt.m01 = st.m01;
+                        rt.m10 = st.m10;
+                        rt.m11 = st.m11;
+                        ref.frameMaskDisabled = (symbol as SymbolShape).frameMaskDisabled;
+                    }
+                    const parent = symbol.parent as GroupShape;
+                    api.shapeInsert(document, page, parent, ref, parent.indexOfChild(symbol));
+                    const om = symbol.matrix2Root();
+                    om.trans(offset, 0);
+                    om.multiAtLeft(matrixToPage);
+                    
+                    api.shapeMove(page, parent, parent.indexOfChild(symbol), page, page.childs.length);
+                    api.shapeModifyTransform(page, symbol, makeShapeTransform1By2(makeShapeTransform2By1(om)));
+                }
+            }
+
+            this.__repo.commit();
+            return result;
         } catch (e) {
-            console.log(e)
             this.__repo.rollback();
+            throw e;
         }
     }
 
