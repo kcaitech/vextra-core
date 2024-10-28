@@ -190,7 +190,7 @@ export class LinearApi {
     }
 
     /**
-     * @description 修改图形XY轴位置
+     * @description 偏移图形XY轴位置
      */
     modifyShapesXY(actions: {
         target: ShapeView,
