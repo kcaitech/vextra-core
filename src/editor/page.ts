@@ -832,7 +832,7 @@ export class PageEditor {
                     const om = symbol.matrix2Root();
                     om.trans(offset, 0);
                     om.multiAtLeft(matrixToPage);
-                    
+
                     api.shapeMove(page, parent, parent.indexOfChild(symbol), page, page.childs.length);
                     api.shapeModifyTransform(page, symbol, makeShapeTransform1By2(makeShapeTransform2By1(om)));
                 }
@@ -2077,11 +2077,13 @@ export class PageEditor {
     }
 
     arrange(actions: PositonAdjust[]) {
-        const api = this.__repo.start('arrange');
         try {
-            for (let i = 0; i < actions.length; i++) {
-                const action = actions[i];
-                translate(api, this.__page, action.target, action.transX, action.transY);
+            const api = this.__repo.start('arrange');
+            const page = this.__page;
+            for (const action of actions) {
+                const {target, transX, transY} = action;
+                api.shapeModifyX(page, target, target.transform.translateX + transX);
+                api.shapeModifyY(page, target, target.transform.translateY + transY);
             }
             this.__repo.commit();
         } catch (error) {
