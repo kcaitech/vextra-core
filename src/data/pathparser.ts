@@ -212,12 +212,23 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, width: number
         const tangent = Math.tan(radian / 2);
         let dist = radius / tangent;
 
+        const minRadius = () => {
+            const pr = pre.radius || fixedRadius;
+            const nr = next.radius || fixedRadius;
+            const cr = cur.radius || fixedRadius;
+   
+            const percent1 = (cr / (cr + pr)) * lenAB;
+            const percent2 = (cr / (cr + nr)) * lenBC;
+            return Math.max(0, Math.min(percent1, percent2));
+        }
         // 校准 dist，用户设置的 cornerRadius 可能太大，而实际显示 cornerRadius 受到 AB BC 两边长度限制。
         // 如果 B C 端点设置了 cornerRadius，可用长度减半
-        const minDist = Math.min(
-            (pre.radius || fixedRadius) > 0 ? lenAB / 2 : lenAB,
-            (next.radius || fixedRadius) > 0 ? lenBC / 2 : lenBC
-        );
+        const minDist = minRadius();
+        // const minDist = Math.min(
+        //     (pre.radius || fixedRadius) > 0 ? lenAB / 2 : lenAB,
+        //     (next.radius || fixedRadius) > 0 ? lenBC / 2 : lenBC
+        // );
+
 
         if (dist > minDist) {
             dist = minDist;

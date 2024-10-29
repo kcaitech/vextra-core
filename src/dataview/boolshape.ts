@@ -6,10 +6,13 @@ import { GroupShapeView } from "./groupshape";
 import { EL, elh } from "./el";
 import { renderBorders, renderFills } from "../render";
 import { FrameGrid } from "../basic/framegrid";
-import { borders2path } from "../editor/utils/path";
+import { border2path, borders2path } from "../editor/utils/path";
 import { Path } from "@kcdesign/path";
 import { convertPath2CurvePoints } from "../data/pathconvert";
 import { OpType } from "@kcdesign/path";
+import { LineView } from "./line";
+import { gPal, IPalPath } from "../basic/pal";
+import { PathShapeView } from "./pathshape";
 
 function opPath(bop: BoolOp, path0: Path, path1: Path, isIntersect: boolean): Path {
     switch (bop) {
@@ -94,8 +97,8 @@ export function render2path(shape: ShapeView, defaultOp = BoolOp.None): Path {
 
     const child0 = shape.m_children.find(c => shape.data.childs[fVisibleIdx].id === c.id) as ShapeView;
     let frame0: ShapeFrame;
-    let path0 = child0 instanceof GroupShapeView && !(child0 instanceof BoolShapeView) ? render2path(child0, BoolOp.Union) : (child0 instanceof TextShapeView) ? child0.getTextPath().clone() : child0.getPath().clone();
-    
+    let path0 = getPath(child0);
+    if (!path0) return new Path();
     if (child0.isNoTransform()) {
         path0.translate(child0.transform.translateX, child0.transform.translateY);
         frame0 = new ShapeFrame(child0.transform.translateX, child0.transform.translateY, child0.frame.width, child0.frame.height);
@@ -117,7 +120,8 @@ export function render2path(shape: ShapeView, defaultOp = BoolOp.None): Path {
         const child1 = shape.m_children.find(c => shape.data.childs[i].id === c.id) as ShapeView;
         if (!child1.isVisible) continue;
         let frame1: ShapeFrame;
-        const path1 = child1 instanceof GroupShapeView && !(child1 instanceof BoolShapeView) ? render2path(child1, BoolOp.Union) : (child1 instanceof TextShapeView) ? child1.getTextPath().clone() : child1.getPath().clone();
+        const path1 = getPath(child1)!;
+        if (!path1) continue;
         if (child1.isNoTransform()) {
             path1.translate(child1.transform.translateX, child1.transform.translateY);
             frame1 = new ShapeFrame(child1.transform.translateX, child1.transform.translateY, child1.frame.width, child1.frame.height);
@@ -281,5 +285,31 @@ export class BoolShapeView extends GroupShapeView {
         if (mapframe(this.m_visibleFrame, this._p_visibleFrame)) changed = true;
         if (mapframe(this.m_outerFrame, this._p_outerFrame)) changed = true;
         return changed;
+    }
+}
+
+const getPath = (shape: ShapeView) => {
+    if (shape instanceof GroupShapeView && !(shape instanceof BoolShapeView)) {
+        return render2path(shape, BoolOp.Union);
+    } else if (shape instanceof TextShapeView) {
+        return shape.getTextPath().clone();
+    } else if (shape instanceof PathShapeView && (!shape.data.isClosed || !hasFill(shape))) {
+        const borders = shape.getBorders();
+        let p0: IPalPath | undefined;
+        for (let i = borders.length - 1; i > -1; i--) {
+            const b = borders[i];
+            if (!b.isEnabled) return;
+            const t = b.sideSetting.thicknessLeft;
+            const path = border2path(shape, borders[i]);
+            if (!p0) {
+                p0 = gPal.makePalPath(path.toSVGString());
+            } else {
+                const p1 = gPal.makePalPath(path.toSVGString());
+                p0.union(p1);
+            }
+        }
+        return p0 ? Path.fromSVGString(p0.toSVGString()) : new Path();
+    } else {
+        return shape.getPath().clone();
     }
 }
