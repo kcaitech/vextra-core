@@ -1501,7 +1501,7 @@ export class ShapeEditor {
             const shape = adapt2Shape(this.__shape);
             api.shapeAutoLayout(this.__page, shape, layoutInfo);
             const frame = initAutoLayout(this.__page, api, shape, shapes_rows);
-            if (frame) {
+            if (frame && shapes_rows[0]) {
                 api.shapeModifyHeight(this.__page, shape, frame.container_hieght);
             }
             this.__repo.commit();

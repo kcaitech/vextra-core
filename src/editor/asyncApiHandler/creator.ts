@@ -1,5 +1,5 @@
 import { AsyncApiCaller } from "./AsyncApiCaller";
-import { CoopRepository } from "../../coop/cooprepo";
+import { CoopRepository } from "../../coop";
 import {
     Document,
     ContactForm,
@@ -35,10 +35,10 @@ import {
     newStellateShape,
     newTextShape
 } from "../creator";
-import { ISave4Restore, LocalCmd, SelectionState } from "../../coop/localcmd";
+import { ISave4Restore, LocalCmd, SelectionState } from "../../coop";
 import { uuid } from "../../basic/uuid";
 import { Matrix } from "../../basic/matrix";
-import { Api } from "../../coop/recordapi";
+import { Api } from "../../coop";
 import { Point2D } from "../../data/typesdefine";
 import { update_frame_by_points } from "../utils/path";
 import { translateTo } from "../frame";

@@ -1,6 +1,6 @@
 import {
     BoolShape,
-    GroupShape,
+    GroupShape, OvalShape,
     OverrideType,
     PathShape2,
     PolygonShape,
@@ -173,12 +173,21 @@ import { FMT_VER_latest } from "../data/fmtver";
 import { makeShapeTransform1By2, makeShapeTransform2By1, updateShapeTransform1By2 } from "../data";
 import { ColVector3D } from "../basic/matrix2";
 import { Transform as Transform2 } from "../basic/transform";
-import { getAutoLayoutShapes, initAutoLayout, layoutShapesOrder, layoutSpacing, modifyAutoLayout, TidyUpAlgin, tidyUpLayout } from "./utils/auto_layout";
+import {
+    getAutoLayoutShapes,
+    initAutoLayout,
+    layoutShapesOrder,
+    layoutSpacing,
+    modifyAutoLayout,
+    TidyUpAlgin,
+    tidyUpLayout
+} from "./utils/auto_layout";
 
 import { getFormatFromBase64 } from "../basic/utils";
 import { uniformScale, UniformScaleUnit } from "./asyncApiHandler";
 import { modifyRadius, modifyStartingAngle, modifySweep } from "./asyncApiHandler";
 import { Path } from "@kcdesign/path";
+import { assign } from "./clipboard";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -764,7 +773,7 @@ export class PageEditor {
                 api.shapeDelete(document, page, shape0.parent as GroupShape, index);
             } else {
                 const index = (shape0.parent as GroupShape).indexOfChild(shape0);
-
+                symbolShape.frameMaskDisabled = true;
                 sym = group(document, page, shapes, symbolShape, shape0.parent as GroupShape, index, api);
 
                 for (let i = 0; i < shapes.length; i++) {
@@ -1147,6 +1156,7 @@ export class PageEditor {
             ref.transform.m01 = sym.transform.m01;
             ref.transform.m10 = sym.transform.m10;
             ref.transform.m11 = sym.transform.m11;
+            ref.frameMaskDisabled = sym.frameMaskDisabled;
         }
         return ref;
     }
@@ -1551,7 +1561,9 @@ export class PageEditor {
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const shape = shapes[i];
                 // shape.id = uuid();
-                api.shapeInsert(this.__document, this.__page, parent, shape, index);
+                const __shape = api.shapeInsert(this.__document, this.__page, parent, shape, index);
+                const name = assign(__shape);
+                api.shapeModifyName(this.__page, __shape, name);
                 result.push(parent.childs[index]);
                 index++;
             }
@@ -1586,7 +1598,9 @@ export class PageEditor {
                 const shape = shapes[i];
                 const { parent, index } = actions[i];
                 // shape.id = uuid();
-                api.shapeInsert(this.__document, this.__page, parent, shape, index);
+                const __shape = api.shapeInsert(this.__document, this.__page, parent, shape, index);
+                const name = assign(__shape);
+                api.shapeModifyName(this.__page, __shape, name);
                 result.push(parent.childs[index]);
             }
             this.__repo.commit();
@@ -1624,8 +1638,9 @@ export class PageEditor {
                 for (let j = 0; j < shapes.length; j++) {
                     let index = env.childs.length;
 
-                    api.shapeInsert(this.__document, this.__page, env, shapes[j], index);
-
+                    const __shape = api.shapeInsert(this.__document, this.__page, env, shapes[j], index);
+                    const name = assign(__shape);
+                    api.shapeModifyName(this.__page, __shape, name);
                     result.push(env.childs[index]);
                 }
             }
@@ -2565,6 +2580,19 @@ export class PageEditor {
                 const { target, index, value } = actions[i];
                 const s = shape4fill(api, this.__page, target);
                 api.setFillColor(this.__page, s, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+     setShapesFillOpacity(actions: BatchAction[]) {
+        const api = this.__repo.start('setShapesFillOpacity');
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index, value } = actions[i];
+                const s = shape4fill(api, this.__page, target);
+                api.setFillOpacity(this.__page, s, index, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -4302,7 +4330,6 @@ export class PageEditor {
 
                 const flatten = flattenShapes(shapes);
                 for (const view of flatten) {
-                    const shape = adapt2Shape(view);
                     // fills
                     {
                         const s = shape4fill(api, page, view);
@@ -4360,23 +4387,23 @@ export class PageEditor {
                                 for (let _i = 0; _i < 4; _i++) {
                                     const val = radius[_i];
                                     if (points[_i].radius === val || val < 0) continue;
-
                                     api.modifyPointCornerRadius(page, shape, _i, val, 0);
+                                    needUpdateFrame = true;
                                 }
                             } else {
                                 shape.pathsegs.forEach((seg, index) => {
                                     for (let _i = 0; _i < seg.points.length; _i++) {
-                                        if (seg.points[_i].radius === radius[0]) continue;
+                                        if ((seg.points[_i].radius ?? 0) === radius[0]) continue;
                                         api.modifyPointCornerRadius(page, shape, _i, radius[0], index);
+                                        needUpdateFrame = true;
                                     }
                                 });
                             }
-                            needUpdateFrame = true;
                         } else {
                             api.shapeModifyFixedRadius(page, shape as GroupShape | TextShape, radius[0]);
                         }
 
-                        if (needUpdateFrame) {
+                        if (needUpdateFrame && !((shape instanceof StarShape || shape instanceof PolygonShape) && !shape.haveEdit)) {
                             update_frame_by_points(api, this.__page, shape);
                         }
                     }
@@ -4509,8 +4536,16 @@ export class PageEditor {
                     ids.push(pathShape.id);
                 } else {
                     const borders = view.getBorders();
-                    if (!borders.length) continue;
                     const shape = adapt2Shape(view);
+                    if (!borders.length) {
+                        if ((shape instanceof StarShape || shape instanceof PolygonShape) && !shape.haveEdit) {
+                            update_frame_by_points(api, page, shape);
+                            api.shapeEditPoints(page, shape, true);
+                            ids.push(shape.id);
+                        }
+                        continue;
+                    }
+
                     const parent = shape.parent as GroupShape;
                     const border2shape = (border: Border) => {
                         const copyStyle = findUsableFillStyle(view);
@@ -4534,6 +4569,7 @@ export class PageEditor {
                     if (shape.style.fills.length) {
                         api.deleteBorders(page, shape, 0, borders.length);
                         ids.push(view.data.id);
+                        if (shape instanceof PathShape) update_frame_by_points(api, page, shape);
                     } else {
                         api.shapeDelete(document, page, parent, parent.indexOfChild(shape));
                     }
@@ -4546,7 +4582,10 @@ export class PageEditor {
         }
     }
 
-    insertImages(images: { pack: ImagePack | SVGParseResult, transform: Transform }[], env?: GroupShapeView) {
+    insertImages(images: {
+        pack: ImagePack | SVGParseResult,
+        transform: Transform
+    }[], fixed: boolean, env: GroupShapeView) {
         try {
             const ids: string[] = [];
             const imageShapes: { shape: Shape, upload: UploadAssets[] }[] = [];
@@ -4558,7 +4597,7 @@ export class PageEditor {
             });
             const document = this.__document;
             const page = this.__page;
-            const parent = (env ? adapt2Shape(env) : this.__page) as GroupShape;
+            const parent = adapt2Shape(env) as GroupShape;
             for (const item of images) {
                 if ((item.pack as ImagePack).size) {
                     const { size, name, buff, base64 } = item.pack as ImagePack;
@@ -4568,6 +4607,7 @@ export class PageEditor {
                     const reg = new RegExp(`.${format}|.jpg$`, 'img');
                     const shape = newImageFillShape(name.replace(reg, '') || 'image', new ShapeFrame(0, 0, size.width, size.height), document.mediasMgr, size, ref);
                     shape.transform = item.transform;
+                    if (fixed) shape.constrainerProportions = true;
                     const index = parent.childs.length;
                     const __s = api.shapeInsert(document, page, parent, shape, index);
                     if (__s) {
@@ -4577,6 +4617,7 @@ export class PageEditor {
                 } else {
                     const shape = (item.pack as SVGParseResult).shape;
                     shape.transform = item.transform;
+                    if (fixed) shape.constrainerProportions = true;
                     const index = parent.childs.length;
                     const __s = api.shapeInsert(document, page, parent, shape, index);
                     if (__s) {
@@ -4601,7 +4642,6 @@ export class PageEditor {
     flattenSelection(shapes: ShapeView[], name?: string) {
         // 先把所有可以参与拼合的图层整理出来
         // 确定一组属性，包括边框、填充、蒙版、约束等
-        //
         try {
             if (!shapes.length) return;
             let virtualSelection = false;
@@ -4698,6 +4738,24 @@ export class PageEditor {
         } catch (e) {
             this.__repo.rollback();
             console.error(e);
+        }
+    }
+
+    modifyContainersFrameMaskStatus(shapes: ShapeView[], value: boolean) {
+        try {
+            const api = this.__repo.start('modifyShapesRadius');
+            const page = this.__page;
+            for (const view of shapes) {
+                if (view.isVirtualShape) continue;
+                if (view instanceof ArtboradView || view instanceof SymbolView || view instanceof SymbolRefView) {
+                    const shape = adapt2Shape(view);
+                    api.modifyContainersFrameMaskStatus(page, shape, value);
+                }
+            }
+            this.__repo.commit();
+        } catch (e) {
+            this.__repo.rollback();
+            throw e;
         }
     }
 
