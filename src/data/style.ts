@@ -209,21 +209,21 @@ export class Fill extends Basic implements classes.Fill {
     private __startLoad: boolean = false;
 
     peekImage(startLoad: boolean = false) {
-        if (this.__cacheData?.ref === this.imageRef) {
-            return this.__cacheData?.media.base64;
-        }
+        if (this.__cacheData?.ref === this.imageRef) return this.__cacheData?.media.base64;
         if (!this.imageRef) return "";
         if (startLoad && !this.__startLoad) {
             this.__startLoad = true;
+            const origin = !!this.__cacheData?.media;
             const mediaMgr = this.__imageMgr;
             mediaMgr && mediaMgr
                 .get(this.imageRef)
                 .then((val) => {
                     if (val) this.__cacheData = { media: val, ref: this.imageRef! };
+                    else this.__cacheData = { media: { base64: '', buff: new Uint8Array() }, ref: this.imageRef! };
                 })
                 .finally(() => {
                     this.__startLoad = false;
-                    this.notify('image-reload');
+                    if (origin !== !!this.__cacheData?.media) this.notify('image-reload');
                     return this.__cacheData?.media.base64;
                 })
         }

@@ -3,8 +3,9 @@ import { GroupShapeView } from "./groupshape";
 import { innerShadowId, renderBorders, renderFills } from "../render";
 import { objectId } from "../basic/objectid";
 import { render as clippathR } from "../render/clippath"
-import { Artboard } from "../data/artboard";
-import { AutoLayout, BorderPosition, CornerRadius, Page, ScrollBehavior, ShadowPosition, ShapeFrame, ShapeSize, Transform } from "../data/classes";
+import {
+    AutoLayout, BorderPosition, CornerRadius, Page, ScrollBehavior, ShadowPosition, ShapeFrame, Transform, Artboard
+} from "../data";
 import { ShapeView, updateFrame } from "./shape";
 import { PageView } from "./page";
 
@@ -95,15 +96,12 @@ export class ArtboradView extends GroupShapeView {
         return props;
     }
 
-    // _svgnode?: EL;
-
     render(): number {
         if (!this.checkAndResetDirty()) return this.m_render_version;
 
-        // this._svgnode = undefined;
         const masked = this.masked;
         if (masked) {
-            (this.getPage() as PageView).getView(masked.id)?.render();
+            (this.getPage() as PageView)?.getView(masked.id)?.render();
             this.reset("g");
             return ++this.m_render_version;
         }
@@ -114,17 +112,13 @@ export class ArtboradView extends GroupShapeView {
         }
 
         const fills = this.renderFills();
-        let childs = this.renderContents();
-        if (this.autoLayout && this.autoLayout.stackReverseZIndex) {
-            childs = childs.reverse();
-        }
+        const childs = this.renderContents();
+        if (this.autoLayout && this.autoLayout.stackReverseZIndex) childs.reverse();
         const borders = this.renderBorders();
 
         const svgprops = this.renderProps();
         const filterId = `${objectId(this)}`;
         const shadows = this.renderShadows(filterId);
-        const blurId = `blur_${objectId(this)}`;
-        const blur = this.renderBlur(blurId);
 
         const contextSettings = this.style.contextSettings;
 
@@ -133,7 +127,7 @@ export class ArtboradView extends GroupShapeView {
         let children = [...fills, ...childs];
 
         if (this.innerTransform) {
-            childs = childs.map(c => {
+            const innerEL = childs.map(c => {
                 const s = c as ShapeView;
                 const trans = new Transform();
                 if (s.scrollBehavior === ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME && this.innerTransform) {
@@ -150,7 +144,7 @@ export class ArtboradView extends GroupShapeView {
             const child = elh("g", {
                 id: this.id,
                 transform: this.innerTransform.toString()
-            }, childs);
+            }, innerEL);
             children = [...fills, child];
         }
         if (contextSettings) {
@@ -158,20 +152,14 @@ export class ArtboradView extends GroupShapeView {
             props.style['mix-blend-mode'] = contextSettings.blenMode;
         }
 
-        const id = "clippath-artboard-" + objectId(this);
-        const cp = clippathR(elh, id, this.getPathStr());
-
-        const _svgnode = elh(
-            "svg",
-            svgprops,
-            [cp, ...children]
-        )
-
-        children = [elh(
-            "g",
-            { "clip-path": "url(#" + id + ")" },
-            [_svgnode]
-        ), ...borders];
+        if (this.frameMaskDisabled) {
+            svgprops['overflow'] = 'visible';
+            children = [elh("svg", svgprops, [...fills, ...borders, ...childs])];
+        } else {
+            const id = "clip-board-" + objectId(this);
+            const _svg_node = elh("svg", svgprops, [clippathR(elh, id, this.getPathStr()), ...children]);
+            children = [elh("g", {"clip-path": "url(#" + id + ")"}, [_svg_node]), ...borders];
+        }
 
         if (shadows.length) {
             const inner_url = innerShadowId(filterId, this.getShadows());
@@ -179,11 +167,13 @@ export class ArtboradView extends GroupShapeView {
             children = [...shadows, ...children];
         }
 
-        if (blur.length) {
+        if (this.style.blur) {
+            const blurId = `blur_${objectId(this)}`;
+            const blur = this.renderBlur(blurId);
             children = [...blur, ...children];
+            props['filter'] = `url(#${blurId})`
         }
 
-        // 遮罩
         const _mask_space = this.renderMask();
         if (_mask_space) {
             Object.assign(props.style, { transform: _mask_space.toString() });
@@ -205,7 +195,6 @@ export class ArtboradView extends GroupShapeView {
     get guides() {
         return (this.m_data as Page).guides;
     }
-
 
     updateFrames() {
 
@@ -304,4 +293,7 @@ export class ArtboradView extends GroupShapeView {
         return changed;
     }
 
+    get frameMaskDisabled() {
+        return (this.m_data as Artboard).frameMaskDisabled;
+    }
 }

@@ -1,4 +1,13 @@
-import { GroupShape, Shape, ShapeFrame, ShapeType, SymbolUnionShape, TextShape } from "../data/shape";
+import {
+    GroupShape,
+    Shape,
+    ShapeFrame,
+    ShapeType,
+    SymbolRefShape,
+    SymbolShape,
+    SymbolUnionShape,
+    TextShape
+} from "../data";
 import {
     exportArtboard,
     exportBoolShape,
@@ -47,7 +56,7 @@ import {
 import * as types from "../data/typesdefine";
 import { v4 } from "uuid";
 import { Document } from "../data";
-import { newSymbolRefShape, newTextShape, newTextShapeByText } from "../editor/creator";
+import { newSymbolRefShape, newTextShapeByText } from "../editor/creator";
 import { Page } from "../data";
 import { FMT_VER_latest } from "../data/fmtver";
 
@@ -239,9 +248,7 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
                     result.push(r);
                     continue;
                 }
-                if (!ref) {
-                    continue;
-                }
+                if (!ref) continue;
 
                 const f = new ShapeFrame(_s.transform.m02, _s.transform.m12, _s.size.width, _s.size.height);
                 if (_s instanceof SymbolUnionShape) {
@@ -258,6 +265,7 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
                     rt.m01 = st.m01;
                     rt.m10 = st.m10;
                     rt.m11 = st.m11;
+                    (r as SymbolRefShape).frameMaskDisabled = (_s as SymbolShape).frameMaskDisabled;
                     result.push(r);
                 }
                 continue;
@@ -287,19 +295,14 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
                 r = importArtboard(_s as any, ctx);
             } else if (type === ShapeType.Group) {
                 const children = (_s as GroupShape).childs;
-
                 children && children.length && set_childs_id(children, matched);
-
                 r = importGroupShape(_s as any, ctx);
             } else if (type === ShapeType.Table) {
                 const children = (_s as any as GroupShape).childs;
                 children && children.length && set_childs_id(children, matched);
-
                 r = importTableShape(_s as any as types.TableShape, ctx);
             } else if (type === ShapeType.SymbolRef) {
-                if (!document.symbolsMgr.get((_s as any as types.SymbolRefShape).refId)) {
-                    continue;
-                }
+                if (!document.symbolsMgr.get((_s as any as types.SymbolRefShape).refId)) continue;
                 r = importSymbolRefShape(_s as any as types.SymbolRefShape, ctx);
             } else if (type === ShapeType.Contact) {
                 r = importContactShape(_s as any as types.ContactShape, ctx)
@@ -308,7 +311,6 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
             } else if (type === ShapeType.SymbolUnion) {
                 const children = (_s as any as SymbolUnionShape).childs;
                 if (!Array.isArray(children)) continue;
-                // check
                 let isFree = true;
                 for (let i = 0; i < children.length; ++i) {
                     const cid = children[i].id;
@@ -344,8 +346,6 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
 
 /**
  * 生成对象副本
- * @param src 原对象
- * @returns
  */
 export function transform_data(document: Document, page: Page, src: Shape[]): Shape[] {
     return import_shape_from_clipboard(document, page, export_shape(src).shapes);
@@ -373,27 +373,6 @@ export function import_text(document: Document, text: types.Text, gen?: boolean)
     }
     return importText(text);
 }
-
-/**
- * @description 段落整理
- * @param text
- * @param { boolean } gen 直接生成一个文字图层，否则返回整理之后的text副本
- */
-export function trasnform_text(document: Document, text: types.Text, gen?: boolean): TextShape | types.Text {
-    const _text = importText(exportText(text));
-    if (gen) {
-        const name = text.paras[0].text || 'text';
-        return newTextShape(name)
-    }
-    return _text;
-}
-
-// export function modify_frame_after_insert(api: Api, page: Page, shapes: Shape[]) {
-//     for (let i = 0, len = shapes.length; i < len; i++) {
-//         const shape = shapes[i];
-//         translateTo(api, page, shape, shape.frame.x, shape.frame.y);
-//     }
-// }
 
 export function XYsBounding(points: { x: number, y: number }[]) {
     const xs: number[] = [];

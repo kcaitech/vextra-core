@@ -9,9 +9,8 @@ const handler: { [key: string]: (h: Function, frame: ShapeSize, id: string, path
 
 handler[ImageScaleMode.Fill] = function (h: Function, frame: ShapeSize, id: string, path: string, fill: Fill): any {
     const url = fill.peekImage(true) || default_url;
-    let image_w = fill.originalImageWidth || 64;
-    let image_h = fill.originalImageHeight || 64;
-
+    let image_w = fill.originalImageWidth || frame.width;
+    let image_h = fill.originalImageHeight || frame.height;
     const img_props: any = {
         'xlink:href': url,
         x: 0,
@@ -121,8 +120,8 @@ handler[ImageScaleMode.Fill] = function (h: Function, frame: ShapeSize, id: stri
 
 handler[ImageScaleMode.Fit] = function (h: Function, frame: ShapeSize, id: string, path: string, fill: Fill): any {
     const url = fill.peekImage(true) || default_url;
-    let image_w = fill.originalImageWidth || 64;
-    let image_h = fill.originalImageHeight || 64;
+    let image_w = fill.originalImageWidth || frame.width;
+    let image_h = fill.originalImageHeight || frame.height;
 
     const img_props: any = {
         'xlink:href': url,
@@ -276,8 +275,8 @@ handler[ImageScaleMode.Crop] = function (h: Function, frame: ShapeSize, id: stri
 }
 
 handler[ImageScaleMode.Tile] = function (h: Function, frame: ShapeSize, id: string, path: string, fill: Fill): any {
-    let image_w = fill.originalImageWidth || 64;
-    let image_h = fill.originalImageHeight || 64;
+    let image_w = fill.originalImageWidth || frame.width;
+    let image_h = fill.originalImageHeight || frame.height;
     let scale = typeof fill.scale === 'number' ? fill.scale : 0.5;
     const url = fill.peekImage(true) || default_url;
     const maskId = "mask-" + objectId(fill) + randomId();

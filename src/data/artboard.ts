@@ -45,6 +45,7 @@ export class Artboard extends GroupShape implements classes.Artboard {
     haveEdit?: boolean | undefined;
     guides?: BasicArray<Guide>;
     autoLayout?: classes.AutoLayout;
+    frameMaskDisabled?: boolean;
 
     constructor(
         crdtidx: BasicArray<number>,
@@ -57,7 +58,8 @@ export class Artboard extends GroupShape implements classes.Artboard {
         size: ShapeSize,
         haveEdit?: boolean,
         guides?: BasicArray<Guide>,
-        autoLayout?: classes.AutoLayout
+        autoLayout?: classes.AutoLayout,
+        frameMaskDisabled?: boolean
     ) {
         super(
             crdtidx,
@@ -72,6 +74,7 @@ export class Artboard extends GroupShape implements classes.Artboard {
         this.haveEdit = haveEdit;
         this.guides = guides;
         this.autoLayout = autoLayout;
+        this.frameMaskDisabled = frameMaskDisabled;
     }
 
     getOpTarget(path: string[]) {

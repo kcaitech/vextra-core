@@ -1,10 +1,10 @@
-import {uuid} from "../../../basic/uuid";
-import {BasicArray, BasicMap, IDataGuard, Document, PageListItem} from "../../../data";
-import {IJSON, LoadContext} from "./basic";
-import {figToJson} from "./fig2json";
-import {importer, startLoader} from "./loader";
+import { uuid } from "../../../basic/uuid";
+import { BasicArray, BasicMap, IDataGuard, Document, PageListItem } from "../../../data";
+import { IJSON, LoadContext } from "./basic";
+import { figToJson } from "./fig2json";
+import { importer, startLoader } from "./loader";
 import * as UZIP from "uzip";
-import {importStylesFromId, importSymbol, importSymbolUnion, toStrId} from "./shapeio";
+import { importStylesFromId, importSymbol, importSymbolUnion, toStrId } from "./shapeio";
 
 function compare(l: string, r: string) {
     if (l === r) return 0;
@@ -114,9 +114,9 @@ export async function importDocument(file: File, gurad: IDataGuard /*inflateRawS
     }
 
     const freesymbols = new BasicMap();
-    const document = new Document(uuid(), file.name, "", "", pageList, new BasicMap(), gurad, freesymbols as any);
 
-    console.log(json);
+    const document = new Document(uuid(), file.name.replace(/.fig$/, ''), "", "", pageList, new BasicMap(), gurad, freesymbols as any);
+
     const ctx: LoadContext = new LoadContext(document.mediasMgr);
     startLoader(json, pages, document, nodeChangesMap, nodeKeyMap, ctx, unzipped);
 

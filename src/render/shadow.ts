@@ -15,7 +15,6 @@ const shadowOri: {
 } = {};
 shadowOri[ShadowPosition.Outer] = function (h: Function, shadow: Shadow, frame: ShapeSize, id: string, i: number, path: string, fills: Fill[], borders: Border[], shapeType: ShapeType, blur?: Blur): any {
     const { width, height } = frame;
-    // const shadow = style.shadows[i];
     const f_props: any = {
         props_w: [width * 1.4],
         props_h: [height * 1.4],
@@ -78,17 +77,18 @@ shadowOri[ShadowPosition.Outer] = function (h: Function, shadow: Shadow, frame: 
         }
     }
     const filter = h("filter", filter_props, filter_child);
-    let fill = 'none';
+    let fill = 'black';
 
-    if (fills.length) {
-        for (let i = 0; i < fills.length; i++) {
-            const _fill = fills[i];
-            if (_fill.color.alpha !== 0 && _fill.isEnabled) {
-                fill = 'black';
-                break;
-            }
-        }
-    }
+    // 取舍，都给了black
+    // if (fills.length) {
+    //     for (let i = 0; i < fills.length; i++) {
+    //         const _fill = fills[i];
+    //         if (_fill.color.alpha !== 0 && _fill.isEnabled) {
+    //             fill = 'black';
+    //             break;
+    //         }
+    //     }
+    // }
     const border = borderR(h, borders, frame, path, undefined)
 
     const body_props: any = {
@@ -229,7 +229,6 @@ function shadowShape(h: Function, shadows: Shadow[], frame: ShapeSize, id: strin
     }
     const filter_props = { id: 'pd_outer-' + id, x: '-20%', y: '-20%', height: '140%', width: '140%' };
     const m_border = shapeType === ShapeType.Line ? max_border(borders) * 9 : max_border(borders);
-    // fix width,height可能为0
     if (width !== 0 && height !== 0) {
         filter_props.width = ((Math.max(...f_props.props_w) + Math.max(...f_props.props_w) + (m_border * 2)) / width) * 100 + '%';
         filter_props.height = ((Math.max(...f_props.props_h) + Math.max(...f_props.props_h) + (m_border * 2)) / height) * 100 + '%';
@@ -246,18 +245,15 @@ function shadowShape(h: Function, shadows: Shadow[], frame: ShapeSize, id: strin
         in2: `effect${shadows.length}_dropShadow`,
         result: `shape`
     }
-    const filter = h("filter", filter_props, [
+    return h("filter", filter_props, [
         h('feFlood', fe_flood),
         ...h_nodes,
         h('feBlend', fe_blend),
     ])
-    return filter;
 }
 
 export function render(h: Function, id: string, shadows: Shadow[], path: string, frame: ShapeSize, fills: Fill[], borders: Border[], shapeType: ShapeType, blur?: Blur) {
     const elArr = [];
-    // const style = shape.style;
-    // const frame = shape.frame;
     const inner_f = [];
     let filters: any[] = [];
     let paths: any[] = [];
@@ -282,13 +278,9 @@ export function render(h: Function, id: string, shadows: Shadow[], path: string,
     }
     if (shapeType !== ShapeType.Rectangle && shapeType !== ShapeType.Artboard && shapeType !== ShapeType.Oval) {
         const filter = shadowShape(h, shadows, frame, id, borders, shapeType);
-        if (filter) {
-            elArr.push(filter);
-        }
+        if (filter) elArr.push(filter);
     }
-    if (filters.length) {
-        elArr.push(h("g", [...filters, ...paths]));
-    }
+    if (filters.length) elArr.push(h("g", [...filters, ...paths]));
     elArr.push(...inner_f);
     return elArr;
 }
