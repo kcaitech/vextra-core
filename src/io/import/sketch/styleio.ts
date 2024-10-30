@@ -14,10 +14,14 @@ import { BlendMode, GradientType, MarkerType, WindingRule, BlurType, LineCapStyl
 import { BasicArray } from "../../../data/basic";
 import { uuid } from "../../../basic/uuid";
 import { IJSON, LoadContext } from "./basic";
-import { BorderSideSetting, CornerType, ShadowPosition, SideType } from "../../../data/baseclasses";
+import { BorderSideSetting, CornerType, ImageScaleMode, ShadowPosition, SideType } from "../../../data/baseclasses";
 
 export function importColor(data: IJSON): Color {
     // if (!data)
+    if (!data) {
+        const defaultColor = new Color(1, 216, 216, 216);
+        return defaultColor;
+    }
     const alpha: number = data['alpha'] as number;
     let blue: number = data['blue'];
     let green: number = data['green'];
@@ -32,6 +36,23 @@ function importContextSettings(data: IJSON): ContextSettings {
     const blendMode: BlendMode = ((m) => {
         switch (m) {
             case 0: return BlendMode.Normal;
+            case 1: return BlendMode.Darken;
+            case 2: return BlendMode.Multiply;
+            case 3: return BlendMode.ColorBurn;
+            case 4: return BlendMode.Lighten;
+            case 5: return BlendMode.Screen;
+            case 6: return BlendMode.ColorDodge;
+            case 7: return BlendMode.Overlay;
+            case 8: return BlendMode.SoftLight;
+            case 9: return BlendMode.HardLight;
+            case 10: return BlendMode.Difference;
+            case 11: return BlendMode.Exclusion;
+            case 12: return BlendMode.Hue;
+            case 13: return BlendMode.Saturation;
+            case 14: return BlendMode.Color;
+            case 15: return BlendMode.Luminosity;
+            case 16: return BlendMode.PlusDarker;
+            case 17: return BlendMode.PlusLighter;
             default: return BlendMode.Normal;
         }
     })(data['blendMode']);
@@ -96,15 +117,6 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
             default: return WindingRule.NonZero;
         }
     })(data['windingRule']);
-
-    // const blur: Blur = ((d) => {
-    //     return new Blur(
-    //         false,
-    //         new Point2D(0, 0), // {x: 0, y: 0},
-    //         0,
-    //         BlurType.Gaussian
-    //     );
-    // })(data['blur']);
 
     const borderOptions: BorderOptions = ((d: IJSON) => {
         return new BorderOptions(
@@ -230,12 +242,15 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
         }
 
         const fill = new Fill([i] as BasicArray<number>, uuid(), isEnabled, fillType, color);
+        fill.imageScaleMode = patternFillType(d);
         fill.gradient = gradient;
         fill.imageRef = imageRef;
+        fill.scale = d['patternTileScale'];
         fill.contextSettings = contextSettings;
         fill.setImageMgr(ctx.mediasMgr);
         return fill;
     });
+
     const shadows: Shadow[] = (data['shadows'] || []).map((d: IJSON, i: number) => {
         const isEnabled: boolean = d['isEnabled'];
         const color: Color = importColor(d['color']);
@@ -244,16 +259,54 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
         return shadow;
     });
 
+    (data['innerShadows'] || []).forEach((d: IJSON, i: number) => {
+        const isEnabled: boolean = d['isEnabled'];
+        const color: Color = importColor(d['color']);
+        const blurRadius = d["blurRadius"], offsetX = d["offsetX"], offsetY = d["offsetY"], spread = d["spread"]
+        const shadow = new Shadow([shadows.length + i] as BasicArray<number>, uuid(), isEnabled, blurRadius, color, offsetX, offsetY, spread, ShadowPosition.Inner);
+        shadows.push(shadow);
+    })
+
     const style: Style = new Style(new BasicArray<Border>(...borders), new BasicArray<Fill>(...fills), new BasicArray<Shadow>(...shadows));
+
+    style.blur = importBlur(data);
 
     style.startMarkerType = startMarkerType;
     style.endMarkerType = endMarkerType;
 
     style.miterLimit = miterLimit;
     style.windingRule = windingRule;
-    // style.blur = blur;
     style.borderOptions = borderOptions;
     style.contextSettings = contextSettings;
 
     return style;
+}
+
+function importBlur(data: IJSON): Blur | undefined {
+    const d = data['blur'];
+    if (!d) return;
+    const isEnabled: boolean = d['isEnabled'];
+    const saturation = d['radius'];
+    const type = (t: number): BlurType => {
+        switch (t) {
+            case 0: return BlurType.Gaussian;
+            case 3: return BlurType.Background;
+            default: return BlurType.Gaussian;
+        }
+    }
+    return new Blur(isEnabled, new Point2D(0, 0), saturation, type(d['type']));
+}
+
+function patternFillType(data: IJSON) {
+    const patternMode = ((t) => {
+        switch (t) {
+            case 0: return ImageScaleMode.Tile;
+            case 1: return ImageScaleMode.Stretch;
+            case 2: return ImageScaleMode.Stretch;
+            case 3: return ImageScaleMode.Fit;
+            case 4: return ImageScaleMode.Crop;
+            default: return ImageScaleMode.Stretch;
+        }
+    })(data['patternFillType']);
+    return patternMode;
 }

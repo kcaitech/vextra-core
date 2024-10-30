@@ -1,43 +1,16 @@
 import {
-    BoolShape,
-    CurveMode,
-    CurvePoint,
-    ExportFormat,
-    ExportOptions,
-    GroupShape,
-    ImageShape,
-    OverrideType, PathSegment,
-    PathShape,
-    RectShape,
-    Shape,
-    ShapeFrame,
-    SymbolShape,
-    TextShape,
-    Variable,
-    VariableType
-} from "../../../data/shape";
+    BoolShape, CurveMode, CurvePoint, ExportFormat, ExportOptions, GroupShape, TextShape, Variable,
+    OverrideType, PathSegment, PathShape, RectShape, Shape, SymbolShape, VariableType, CornerRadius
+} from "../../../data";
 import { importColor, importStyle, importXY } from "./styleio";
-import { Page } from "../../../data/page";
 import { importText } from "./textio";
-import { Artboard } from "../../../data/artboard";
-import { Text } from "../../../data/text/text";
 import {
-    BoolOp,
-    Color,
-    Fill,
-    FillType,
-    ImageScaleMode,
-    Point2D,
-    ShapeSize,
-    ShapeType,
-    SymbolRefShape,
-    TextBehaviour,
-    Transform
-} from "../../../data/classes"
-import { BasicArray, BasicMap } from "../../../data/basic";
+    BoolOp, Border, Color, ExportFormatNameingScheme, ExportVisibleScaleType, Fill, BasicArray, BasicMap, Artboard,
+    FillType, ImageScaleMode, Point2D, ShapeSize, ShapeType, SymbolRefShape, TextBehaviour, Transform, Text, Page
+} from "../../../data"
 import { IJSON, ImportFun, LoadContext } from "./basic";
 import { uuid } from "../../../basic/uuid";
-import { ResizingConstraints2 } from "../../../data/consts";
+import { ResizingConstraints2 } from "../../../data";
 import { float_accuracy } from "../../../basic/consts";
 import { Matrix } from "../../../basic/matrix";
 
@@ -46,15 +19,41 @@ function uniqueId(ctx: LoadContext, id: string): string {
     // ctx.shapeIds.add(id);
     return id;
 }
-
+function importExportFormats(data: IJSON): BasicArray<ExportFormat> {
+    return (data['exportFormats'] || []).map((d: IJSON, i: number) => {
+        const absoluteSize = d['absoluteSize'];
+        const fileFormat = d['fileFormat'];
+        const name = d['name'];
+        const namingScheme = ((t) => {
+            switch (t) {
+                case 0: return ExportFormatNameingScheme.Prefix;
+                case 1: return ExportFormatNameingScheme.Suffix;
+                default: return ExportFormatNameingScheme.Prefix;
+            }
+        })(d['namingScheme']);
+        const scale = d['scale'];
+        const visibleScaleType = ((t) => {
+            switch (t) {
+                case 0: return ExportVisibleScaleType.Scale;
+                case 1: return ExportVisibleScaleType.Width;
+                case 2: return ExportVisibleScaleType.Height;
+                default: return ExportVisibleScaleType.Scale;
+            }
+        })(d['visibleScaleType']);
+        return new ExportFormat([i] as BasicArray<number>, uuid(), absoluteSize, fileFormat, name, namingScheme, scale, visibleScaleType);
+    })
+}
 function importExportOptions(data: IJSON): ExportOptions {
-    return ((d) => {
+    const d: IJSON = data['exportOptions'];
+    if (!d) {
         return new ExportOptions(
             new BasicArray<ExportFormat>(),
             0,
             false, false, false, false)
     }
-    )(data['exportOptions']);
+    const formats = importExportFormats(d);
+    const trim = d['shouldTrim'] || false;
+    return new ExportOptions(formats, 0, trim, false, false, false)
 }
 
 function importShapeFrame(data: IJSON) {
@@ -194,54 +193,58 @@ function importShapePropertys(shape: Shape, data: IJSON) {
     // shape.rotation = -data['rotation'];
     const resizingConstraint = data['resizingConstraint'];
     if (resizingConstraint) {
-        shape.resizingConstraint = (~resizingConstraint) & ResizingConstraints2.Mask;
+        if ([63, 18, 27].includes(resizingConstraint)) shape.resizingConstraint = 0; // 额外约束值
+        else shape.resizingConstraint = (~resizingConstraint) & ResizingConstraints2.Mask;
     }
     shape.isVisible = data['isVisible'];
     shape.isLocked = data['isLocked'];
     shape.constrainerProportions = data.frame['constrainerProportions'];
 }
 
+const hasFill = (fills: Fill[]) => {
+    if (fills.length === 0) return false;
+    return fills.some(f => f.isEnabled);
+}
+const hasBorder = (borders: Border[]) => {
+    if (borders.length === 0) return false;
+    return borders.some(b => b.isEnabled);
+}
+
 export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun, i: number): Artboard {
-    // const type = importShapeType(data);
     const id: string = uniqueId(ctx, data['do_objectID']);
     const exportOptions = importExportOptions(data);
     const frame = importShapeFrame(data);
     const name: string = data['name'];
-    // const points: Point[] = importPoints(data);
-    // const image = data['image'];
-    // const imageRef = image && image['_ref'];
     const style = importStyle(ctx, data['style']);
-    if (data['sharedStyleID']) {
-        // env.styleMgr.addShared(data['sharedStyleID'], style);
-    }
-    // const text = data['attributedString'] && importText(data['attributedString']);
-    // const isClosed = data['isClosed'];
-
+    // if (data['sharedStyleID']) {
+    //     env.styleMgr.addShared(data['sharedStyleID'], style);
+    // }
     const hasBackgroundColor: boolean = data['hasBackgroundColor'];
     const backgroundColor: Color | undefined = data['backgroundColor'] && importColor(data['backgroundColor']);
 
-    if (hasBackgroundColor && backgroundColor) {
+    if (data['_class'] === ShapeType.Artboard && hasBackgroundColor && backgroundColor) {
         const fill = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, backgroundColor);
         style.fills.length = 0;
         style.fills.push(fill);
-    } else {
-        const fill = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 255, 255, 255));
-        style.fills.length = 0;
-        style.fills.push(fill);
     }
+
     const childs = (data['layers'] || []).map((d: IJSON, i: number) => f(ctx, d, i));
-
-    // const points = createNormalPoints();
-
+    // const shapes = new BasicArray<Shape>(...addMaskRect(childs, ctx, data['layers'] || []));
     const shape = new Artboard([i] as BasicArray<number>, id, name, ShapeType.Artboard, frame.trans, style, new BasicArray<Shape>(...childs), frame.size);
+    shape['frameMaskDisabled'] = false;
+    childs.length && determineAsContainerRadiusShape(shape, childs);
 
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     shape.exportOptions = exportOptions;
+    shape.mask = data['hasClippingMask'];
     return shape;
 }
 
 export function importGroupShape(ctx: LoadContext, data: IJSON, f: ImportFun, i: number): GroupShape {
+    if (data['hasBackgroundColor'] || data['backgroundColor']) {
+        return importArtboard(ctx, data, f, i);
+    }
     // const type = importShapeType(data);
     const id: string = uniqueId(ctx, data['do_objectID']);
     const exportOptions = importExportOptions(data);
@@ -260,7 +263,8 @@ export function importGroupShape(ctx: LoadContext, data: IJSON, f: ImportFun, i:
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON, i: number) => f(ctx, d, i));
-    const shape = new GroupShape([i] as BasicArray<number>, id, name, ShapeType.Group, frame.trans, style, new BasicArray<Shape>(...childs));
+    const shapes = new BasicArray<Shape>(...addMaskRect(childs, ctx, data['layers'] || []));
+    const shape = new GroupShape([i] as BasicArray<number>, id, name, ShapeType.Group, frame.trans, style, shapes);
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     shape.exportOptions = exportOptions;
@@ -283,11 +287,13 @@ export function importShapeGroupShape(ctx: LoadContext, data: IJSON, f: ImportFu
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON, i: number) => f(ctx, d, i));
-    const shape = new BoolShape([i] as BasicArray<number>, id, name, ShapeType.BoolShape, frame.trans, style, new BasicArray<Shape>(...childs));
+    const shapes = new BasicArray<Shape>(...addMaskRect(childs, ctx, data['layers'] || []));
+    const shape = new BoolShape([i] as BasicArray<number>, id, name, ShapeType.BoolShape, frame.trans, style, shapes);
     // shape.isBoolOpShape = true;
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     shape.exportOptions = exportOptions;
+    shape.mask = data['hasClippingMask'];
     return shape;
 }
 
@@ -332,6 +338,7 @@ export function importImage(ctx: LoadContext, data: IJSON, f: ImportFun, i: numb
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     shape.exportOptions = exportOptions;
+    shape.mask = data['hasClippingMask'];
     return shape;
 }
 
@@ -352,11 +359,14 @@ export function importPage(ctx: LoadContext, data: IJSON, f: ImportFun): Page {
     // const isClosed = data['isClosed'];
 
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON, i: number) => f(ctx, d, i));
-    const shape = new Page(new BasicArray<number>(), id, name, ShapeType.Page, frame.trans, style, new BasicArray<Shape>(...childs));
+    const shapes = new BasicArray<Shape>(...addMaskRect(childs, ctx, data['layers'] || []));
+    const shape = new Page(new BasicArray<number>(), id, name, ShapeType.Page, frame.trans, style, shapes);
     // shape.appendChilds(childs);
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     shape.exportOptions = exportOptions;
+    // 导入的页面均为可见页面
+    shape.isVisible = true;
     return shape;
 }
 
@@ -376,11 +386,11 @@ export function importPathShape(ctx: LoadContext, data: IJSON, f: ImportFun, i: 
     // const text = data['attributedString'] && importText(data['attributedString']);
 
     const segment = new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...points), data['isClosed'])
-
     const shape = new PathShape([i] as BasicArray<number>, id, name, ShapeType.Path, frame.trans, style, frame.size, new BasicArray<PathSegment>(segment));
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     shape.exportOptions = exportOptions;
+    shape.mask = data['hasClippingMask'];
     return shape;
 }
 
@@ -402,13 +412,13 @@ export function importRectShape(ctx: LoadContext, data: IJSON, f: ImportFun, i: 
     // const isClosed = data['isClosed'];
     // const r = data['fixedRadius'] || 0;
     // const radius = new RectRadius(r, r, r, r);
-
     const segment: PathSegment = new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...points), data['isClosed']);
     const shape = new RectShape([i] as BasicArray<number>, id, name, ShapeType.Rectangle, frame.trans, style, frame.size, new BasicArray<PathSegment>(segment));
 
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     shape.exportOptions = exportOptions;
+    shape.mask = data['hasClippingMask'];
     return shape;
 }
 
@@ -430,44 +440,60 @@ export function importTextShape(ctx: LoadContext, data: IJSON, f: ImportFun, i: 
     const textBehaviour = [TextBehaviour.Flexible, TextBehaviour.Fixed, TextBehaviour.FixWidthAndHeight][data['textBehaviour']] ?? TextBehaviour.Flexible;
     text.attr && (text.attr.textBehaviour = textBehaviour);
     // const isClosed = data['isClosed'];
+    // 导入填充是文字颜色
+    style.fills = new BasicArray();
     const shape = new TextShape([i] as BasicArray<number>, id, name, ShapeType.Text, frame.trans, style, frame.size, text);
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     shape.exportOptions = exportOptions;
+    shape.mask = data['hasClippingMask'];
     return shape;
 }
 
 export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun, i: number): SymbolShape {
     // const type = importShapeType(data);
     // const id: string = data['do_objectID'];
-    const exportOptions = importExportOptions(data);
+    // const exportOptions = importExportOptions(data);
     const frame = importShapeFrame(data);
     const name: string = data['name'];
     // const points: Point[] = importPoints(data);
     // const image = data['image'];
     // const imageRef = image && image['_ref'];
     const style = importStyle(ctx, data['style']);
-    if (data['sharedStyleID']) {
-        // env.styleMgr.addShared(data['sharedStyleID'], style);
-    }
+    // if (data['sharedStyleID']) {
+    //     env.styleMgr.addShared(data['sharedStyleID'], style);
+    // }
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
     const id = uniqueId(ctx, data['symbolID']);
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON, i: number) => f(ctx, d, i));
     // const points = createNormalPoints();
+    // const shapes = new BasicArray<Shape>(...addMaskRect(childs, ctx, data['layers'] || []));
+    const hasBackgroundColor: boolean = data['hasBackgroundColor'];
+    const backgroundColor: Color | undefined = data['backgroundColor'] && importColor(data['backgroundColor']);
+    if (hasBackgroundColor && backgroundColor) {
+        const fill = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, backgroundColor);
+        style.fills.push(fill);
+    }
+    // const shape = new SymbolShape([i] as BasicArray<number>, id, name, ShapeType.Symbol, frame.trans, style, shapes, frame.size, new BasicMap());
     const shape = new SymbolShape([i] as BasicArray<number>, id, name, ShapeType.Symbol, frame.trans, style, new BasicArray<Shape>(...childs), frame.size, new BasicMap());
+
+    childs.length && determineAsContainerRadiusShape(shape, childs);
+
+    shape['frameMaskDisabled'] = !data['hasClippingMask'];
 
     // env.symbolManager.addSymbol(id, name, env.pageId, shape);
     // shape.appendChilds(childs);
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
+    shape.mask = data['hasClippingMask'];
     return shape;
 }
 
 export function importSymbolRef(ctx: LoadContext, data: IJSON, f: ImportFun, i: number): SymbolRefShape {
     // const type = importShapeType(data);
     const id: string = uniqueId(ctx, data['do_objectID']);
-    const exportOptions = importExportOptions(data);
+    // const exportOptions = importExportOptions(data);
     const frame = importShapeFrame(data);
     const name: string = data['name'];
     // const points: Point[] = importPoints(data);
@@ -479,11 +505,75 @@ export function importSymbolRef(ctx: LoadContext, data: IJSON, f: ImportFun, i: 
     }
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
-
+    const hasBackgroundColor: boolean = data['hasBackgroundColor'];
+    const backgroundColor: Color | undefined = data['backgroundColor'] && importColor(data['backgroundColor']);
+    if (hasBackgroundColor && backgroundColor) {
+        const fill = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, backgroundColor);
+        style.fills.push(fill);
+    }
     const shape = new SymbolRefShape([i] as BasicArray<number>, id, name, ShapeType.SymbolRef, frame.trans, style, frame.size, data['symbolID'], new BasicMap());
-
+    shape['frameMaskDisabled'] = !data['hasClippingMask'];
+    shape['isCustomSize'] = true; // 因为无法判定是否修改了尺寸，默认都给已经修改了尺寸
     if (data['overrideValues']) importOverrides(shape, data['overrideValues']);
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
+    shape.mask = data['hasClippingMask'];
     return shape;
+}
+
+function addMaskRect(childs: Shape[], ctx: LoadContext, data: IJSON[]) {
+    const shapes: Shape[] = [];
+    for (let i = 0; i < childs.length; i++) {
+        const shape = childs[i];
+        const d = data[i];
+        if (d['hasClippingMask'] && d['clippingMaskMode'] === 0) {
+            const style = importStyle(ctx, d['style']);
+            if (!hasFill(shape.style.fills)) {
+                const fill = new Fill([shape.style.fills.length] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0));
+                shape.style.fills.push(fill);
+                if (hasBorder(shape.style.borders)) {
+                    const points: CurvePoint[] = importPoints(d);
+                    const segment: PathSegment = new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...points), d['isClosed']);
+                    const s = new RectShape([i] as BasicArray<number>, uuid(), shape.name, ShapeType.Rectangle, shape.transform, style, shape.size, new BasicArray<PathSegment>(segment));
+                    importShapePropertys(s, d);
+                    importBoolOp(s, d);
+                    shapes.push(s, shape);
+                } else {
+                    shapes.push(shape);
+                }
+            } else {
+                const points: CurvePoint[] = importPoints(d);
+                const segment: PathSegment = new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...points), d['isClosed']);
+                const s = new RectShape([i] as BasicArray<number>, uuid(), shape.name, ShapeType.Rectangle, shape.transform, style, shape.size, new BasicArray<PathSegment>(segment));
+                importShapePropertys(s, d);
+                importBoolOp(s, d);
+                shapes.push(s, shape);
+            }
+        } else {
+            shapes.push(shape);
+        }
+    }
+    return shapes;
+}
+
+function determineAsContainerRadiusShape(parent: Artboard | SymbolShape, childs: Shape[]) {
+    // 判断shape是否为用来给容器做圆角的遮罩，如果是，直接去掉shape，并把与遮罩等效的圆角/填充/边框设置到容器上
+    const shape = childs[0];
+    const parentSize = parent.size;
+    const shapeSize = shape.size;
+    const sizeEqual = shapeSize.width === parentSize.width && shapeSize.height === parentSize.height;
+    const isRect = shape instanceof RectShape;
+    const rect = isRect && shape.pathsegs.length === 1 && shape.pathsegs[0].points.length === 4 && shape.pathsegs[0].isClosed;
+
+    // if (!!(shape.resizingConstraint === 228 && rect && sizeEqual && shape.mask)) {
+    if (!!(rect && sizeEqual && shape.mask)) {
+        const drop = childs.splice(0, 1)[0];
+        const points = (drop as PathShape).pathsegs[0].points;
+        const radius = points.map(i => i.radius!);
+        parent.cornerRadius = new CornerRadius(radius[0], radius[1], radius[3], radius[2]);
+        parent.childs = new BasicArray<Shape>(...childs);
+        if (drop.style.fills.length) parent.style.fills = drop.style.fills;
+        if (drop.style.borders.length) parent.style.borders = drop.style.borders;
+        if (drop.style.shadows.length) parent.style.shadows = drop.style.shadows;
+    }
 }

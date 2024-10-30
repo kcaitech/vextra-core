@@ -16,6 +16,9 @@
         },
         "autoLayout": {
             "$ref": "./auto-layout.json"
+        },
+        "frameMaskDisabled": {
+            "type": "boolean"
         }
     },
     "required": [

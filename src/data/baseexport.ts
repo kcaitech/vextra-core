@@ -1237,6 +1237,7 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
     if (source.isCustomSize) ret.isCustomSize = source.isCustomSize
     if (source.cornerRadius) ret.cornerRadius = exportCornerRadius(source.cornerRadius, ctx)
     if (source.innerEnvScale) ret.innerEnvScale = source.innerEnvScale
+    if (source.frameMaskDisabled) ret.frameMaskDisabled = source.frameMaskDisabled
         // inject code
     if (ctx?.refsymbols) ctx.refsymbols.add(ret.refId);
 
@@ -1293,6 +1294,7 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
     if (source.cornerRadius) ret.cornerRadius = exportCornerRadius(source.cornerRadius, ctx)
     if (source.guides) ret.guides = exportArtboard_guides(source.guides, ctx)
     if (source.autoLayout) ret.autoLayout = exportAutoLayout(source.autoLayout, ctx)
+    if (source.frameMaskDisabled) ret.frameMaskDisabled = source.frameMaskDisabled
     return ret
 }
 /* bool shape */
@@ -1374,6 +1376,7 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
     if (source.cornerRadius) ret.cornerRadius = exportCornerRadius(source.cornerRadius, ctx)
     if (source.guides) ret.guides = exportSymbolShape_guides(source.guides, ctx)
     if (source.autoLayout) ret.autoLayout = exportAutoLayout(source.autoLayout, ctx)
+    if (source.frameMaskDisabled) ret.frameMaskDisabled = source.frameMaskDisabled
         // inject code
     if (ctx?.symbols) ctx.symbols.add(ret.id);
 
