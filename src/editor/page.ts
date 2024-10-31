@@ -158,6 +158,7 @@ import {
     CutoutShapeView,
     GroupShapeView,
     PageView,
+    PathShapeView,
     render2path,
     ShapeView,
     SymbolRefView,
@@ -642,20 +643,28 @@ export class PageEditor {
             return false;
         }
     }
-
+    hasFill(shape: Shape) {
+        const fills = shape.getFills();
+        if (fills.length === 0) return false;
+        for (let i = 0, len = fills.length; i < len; ++i) {
+            if (fills[i].isEnabled) return true;
+        }
+        return false;
+    }
     boolgroup(shapes: Shape[], groupname: string, op: BoolOp): false | BoolShape {
         if (shapes.length === 0) return false;
         if (shapes.find((v) => !v.parent)) return false;
         const fshape = shapes[0];
         const savep = fshape.parent as GroupShape;
         // copy fill and borders
-        const copyStyle = findUsableFillStyle(shapes[shapes.length - 1]);
+        const endShape = shapes[shapes.length - 1];
+        const copyStyle = findUsableFillStyle(endShape);
         const style: Style = this.cloneStyle(copyStyle);
         if (style.fills.length === 0) {
             style.fills.push(newSolidColorFill()); // 自动添加个填充
         }
-        const borderStyle = findUsableBorderStyle(shapes[shapes.length - 1]);
-        if (borderStyle !== copyStyle) {
+        const borderStyle = findUsableBorderStyle(endShape);
+        if (borderStyle !== copyStyle && (endShape instanceof PathShape && (!endShape.isClosed || !this.hasFill(endShape)))) {
             style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
         }
         // 1、新建一个GroupShape
@@ -1230,10 +1239,11 @@ export class PageEditor {
         if (!name) name = fshape.name;
 
         // copy fill and borders
+        const endShape = shapes[shapes.length - 1];
         const copyStyle = findUsableFillStyle(shapes[shapes.length - 1]);
         const style: Style = this.cloneStyle(copyStyle);
         const borderStyle = findUsableBorderStyle(shapes[shapes.length - 1]);
-        if (borderStyle !== copyStyle) {
+        if (borderStyle !== copyStyle && (endShape instanceof PathShape && (!endShape.isClosed || !this.hasFill(endShape)))) {
             style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
         }
 
@@ -1316,7 +1326,7 @@ export class PageEditor {
             const copyStyle = findUsableFillStyle(shape);
             const style: Style = this.cloneStyle(copyStyle);
             const borderStyle = findUsableBorderStyle(shape);
-            if (borderStyle !== copyStyle) {
+            if (borderStyle !== copyStyle && (shape instanceof PathShape && (!shape.isClosed || !this.hasFill(shape)))) {
                 style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
             }
 
@@ -1374,7 +1384,7 @@ export class PageEditor {
         const copyStyle = findUsableFillStyle(shape);
         const style2: Style = this.cloneStyle(copyStyle);
         const borderStyle = findUsableBorderStyle(shape);
-        if (borderStyle !== copyStyle) {
+        if (borderStyle !== copyStyle && (shape instanceof PathShape && (!shape.isClosed || !this.hasFill(shape)))) {
             style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
         }
 
@@ -2088,7 +2098,7 @@ export class PageEditor {
             const api = this.__repo.start('arrange');
             const page = this.__page;
             for (const action of actions) {
-                const {target, transX, transY} = action;
+                const { target, transX, transY } = action;
                 api.shapeModifyX(page, target, target.transform.translateX + transX);
                 api.shapeModifyY(page, target, target.transform.translateY + transY);
             }
