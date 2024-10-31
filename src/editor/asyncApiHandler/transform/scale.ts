@@ -672,11 +672,11 @@ export function uniformScale(
         for (let j = 0; j < text.text.paras.length; j++) {
             const para = text.text.paras[j];
             const pId = text.id + j;
-            const minimumLineHeight = getBaseValue(pId, 'minimumLineHeight', para.attr?.minimumLineHeight || 0);
+            const minimumLineHeight = getBaseValue(pId, 'minimumLineHeight', para.attr?.minimumLineHeight || 121);
             if (minimumLineHeight) {
                 api.textModifyMinLineHeight(page, text, minimumLineHeight * ratio, index, para.length);
             }
-            const maximumLineHeight = getBaseValue(pId, 'maximumLineHeight', para.attr?.maximumLineHeight || 0);
+            const maximumLineHeight = getBaseValue(pId, 'maximumLineHeight', para.attr?.maximumLineHeight || 121);
             if (maximumLineHeight) {
                 api.textModifyMaxLineHeight(page, text, maximumLineHeight * ratio, index, para.length);
             }
@@ -738,6 +738,8 @@ export class Scaler extends AsyncApiCaller {
         size: { width: number, height: number },
         scale: { x: number, y: number },
         transform2: Transform2,
+        w_change: boolean,
+        h_change: boolean
     }[]) {
         try {
             const api = this.api;
@@ -759,10 +761,10 @@ export class Scaler extends AsyncApiCaller {
                 }
                 api.shapeModifyTransform(page, shape, makeShapeTransform1By2(item.transform2));
                 if ((shape as Artboard).autoLayout) {
-                    if (item.size.width !== item.shape.size.width) {
+                    if (item.w_change) {
                         api.shapeModifyAutoLayoutSizing(page, shape, StackSizing.Fixed, 'hor');
                     }
-                    if (item.size.height !== item.shape.size.height) {
+                    if (item.h_change) {
                         api.shapeModifyAutoLayoutSizing(page, shape, StackSizing.Fixed, 'ver');
                     }
                 }

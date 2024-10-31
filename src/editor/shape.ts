@@ -1497,7 +1497,15 @@ export class ShapeEditor {
             const { hor, ver } = layoutSpacing(shapes_rows);
             const h_padding = shapes_rows.length ? Math.max(Math.round(shapes_rows[0][0].x), 0) : 0;
             const v_padding = shapes_rows.length ? Math.max(Math.round(shapes_rows[0][0].y), 0) : 0;
-            const layoutInfo = new AutoLayout(hor, ver, h_padding, v_padding, h_padding, v_padding);
+            const ver_auto = shapes_rows.length === 1 || shapes_rows.every(s => s.length === 1) ? StackSizing.Auto : StackSizing.Fixed;
+            const layoutInfo = new AutoLayout(hor, ver, h_padding, v_padding, h_padding, v_padding, ver_auto);
+            if (shapes_rows.length === 1) {
+                layoutInfo.stackWrap = StackWrap.NoWrap;
+                layoutInfo.stackMode = StackMode.Horizontal;
+            } else if (shapes_rows.every(s => s.length === 1)) {
+                layoutInfo.stackWrap = StackWrap.NoWrap;
+                layoutInfo.stackMode = StackMode.Vertical;
+            }
             const shape = adapt2Shape(this.__shape);
             api.shapeAutoLayout(this.__page, shape, layoutInfo);
             const frame = initAutoLayout(this.__page, api, shape, shapes_rows);

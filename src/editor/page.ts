@@ -579,7 +579,15 @@ export class PageEditor {
         const savep = fshape.parent as GroupShape;
         const shapes_rows = layoutShapesOrder(shapes.map(s => adapt2Shape(s)), false);
         const { hor, ver } = layoutSpacing(shapes_rows);
-        const layoutInfo = new AutoLayout(hor, ver, 0, 0, 0, 0);
+        const ver_auto = shapes_rows.length === 1 || shapes_rows.every(s => s.length === 1) ? types.StackSizing.Auto : types.StackSizing.Fixed;
+        const layoutInfo = new AutoLayout(hor, ver, 0, 0, 0, 0, ver_auto);
+        if (shapes_rows.length === 1) {
+            layoutInfo.stackWrap = types.StackWrap.NoWrap;
+            layoutInfo.stackMode = types.StackMode.Horizontal;
+        } else if (shapes_rows.every(s => s.length === 1)) {
+            layoutInfo.stackWrap = types.StackWrap.NoWrap;
+            layoutInfo.stackMode = types.StackMode.Vertical;
+        }
         let artboard = newAutoLayoutArtboard(artboardname, new ShapeFrame(0, 0, 100, 100), layoutInfo);
 
         const api = this.__repo.start("create_autolayout_artboard", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
@@ -2586,7 +2594,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
-     setShapesFillOpacity(actions: BatchAction[]) {
+    setShapesFillOpacity(actions: BatchAction[]) {
         const api = this.__repo.start('setShapesFillOpacity');
         try {
             for (let i = 0; i < actions.length; i++) {
@@ -4456,6 +4464,7 @@ export class PageEditor {
                         const alphaAttr = __text.paras[0]?.attr;
                         if (alphaAttr) {
                             api.textModifyParaSpacing(page, __view, alphaAttr.paraSpacing || 0, 0, len); // 段落间距
+                            api.textModifyAutoLineHeight(page, __view, alphaAttr.autoLineHeight ?? true, 0, len)
                             api.textModifyMinLineHeight(page, __view, alphaAttr.minimumLineHeight!, 0, len); // 行高
                             api.textModifyMaxLineHeight(page, __view, alphaAttr.maximumLineHeight!, 0, len); // 行高
                             api.textModifyHorAlign(page, __view, alphaAttr.alignment!, 0, len); // 水平位置

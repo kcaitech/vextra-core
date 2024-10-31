@@ -886,24 +886,20 @@ export class LinearApi {
      * @description 修改文本行高
      */
 
-    modifyTextLineHeight(lineHeight: number | 'auto', index: number, len: number, text: TextShapeView) {
+    modifyTextLineHeight(lineHeight: number | undefined, isAuto: boolean, index: number, len: number, text: TextShapeView) {
         const editor4text = this.getTextEditor(text)
         this.execute('modify-text-line-height', () => {
             const api = this.api!;
             const page = this.page;
             const shape = editor4text.shape4edit(api);
-            if (lineHeight === 'auto') {
-                api.textModifyAutoLineHeight(page, shape, true, index, len)
-            } else {
-                api.textModifyAutoLineHeight(page, shape, false, index, len)
-                api.textModifyMinLineHeight(page, shape, lineHeight, index, len)
-                api.textModifyMaxLineHeight(page, shape, lineHeight, index, len)
-            }
+            api.textModifyAutoLineHeight(page, shape, isAuto, index, len)
+            api.textModifyMinLineHeight(page, shape, lineHeight, index, len)
+            api.textModifyMaxLineHeight(page, shape, lineHeight, index, len)
             editor4text.fixFrameByLayout(api);
         })
     }
 
-    modifyTextLineHeightMulit(shapes: (TextShapeView | TableCellView)[], lineHeight: number | 'auto') {
+    modifyTextLineHeightMulit(shapes: (TextShapeView | TableCellView)[], lineHeight: number | undefined, isAuto: boolean) {
         this.execute('modify-text-line-height-mulit', () => {
             const api = this.api!;
             const page = this.page;
@@ -914,13 +910,9 @@ export class LinearApi {
                 const shape = editor4text.shape4edit(api, text_shape);
                 const text = shape instanceof ShapeView ? shape.text : shape.value as Text;
                 const text_length = text.length;
-                if (lineHeight === 'auto') {
-                    api.textModifyAutoLineHeight(page, shape, true, 0, text_length)
-                } else {
-                    api.textModifyAutoLineHeight(page, shape, false, 0, text_length)
-                    api.textModifyMinLineHeight(page, shape, lineHeight, 0, text_length)
-                    api.textModifyMaxLineHeight(page, shape, lineHeight, 0, text_length)
-                }
+                api.textModifyAutoLineHeight(page, shape, isAuto, 0, text_length)
+                api.textModifyMinLineHeight(page, shape, lineHeight, 0, text_length)
+                api.textModifyMaxLineHeight(page, shape, lineHeight, 0, text_length)
                 editor4text.fixFrameByLayout2(api, shape);
             }
         })
