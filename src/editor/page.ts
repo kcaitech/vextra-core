@@ -1,34 +1,51 @@
 import {
+    Artboard,
+    BasicArray,
+    BoolOp,
     BoolShape,
-    GroupShape, OvalShape,
+    Border,
+    BorderPosition,
+    Color,
+    Document,
+    ExportFileFormat,
+    ExportFormatNameingScheme,
+    Fill,
+    FillType,
+    Gradient,
+    GradientType,
+    GroupShape,
+    makeShapeTransform1By2,
+    makeShapeTransform2By1,
+    MarkerType,
     OverrideType,
+    Page,
+    PathShape,
     PathShape2,
     PolygonShape,
+    RadiusType,
     RectShape,
+    ResizingConstraints2,
+    ResourceMgr,
+    ShadowPosition,
     Shape,
     ShapeFrame,
     ShapeType,
+    SideType,
     StarShape,
+    Stop,
+    Style,
+    SymbolRefShape,
     SymbolShape,
     SymbolUnionShape,
+    Text,
     TextShape,
+    Transform,
+    updateShapeTransform1By2,
     Variable,
     VariableType
 } from "../data";
 import { ShapeEditor } from "./shape";
 import * as types from "../data/typesdefine";
-import {
-    BoolOp,
-    BorderPosition,
-    ExportFileFormat,
-    ExportFormatNameingScheme,
-    FillType,
-    GradientType,
-    MarkerType,
-    ShadowPosition,
-    SideType
-} from "../data";
-import { Page } from "../data";
 import {
     newArrowShape,
     newArtboard,
@@ -44,23 +61,8 @@ import {
     newSymbolRefShape,
     newSymbolShape
 } from "./creator";
-import { Document } from "../data";
 import { expand, translate, translateTo } from "./frame";
 import { uuid } from "../basic/uuid";
-import {
-    Artboard,
-    Border,
-    Color,
-    Fill,
-    Gradient,
-    PathShape,
-    Stop,
-    Style,
-    SymbolRefShape,
-    TableShape,
-    Text,
-    Transform
-} from "../data";
 import { TextShapeEditor } from "./textshape";
 import { set_childs_id, transform_data } from "../io/cilpboard";
 import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
@@ -88,7 +90,6 @@ import {
     importTransform
 } from "../data/baseimport";
 import { gPal } from "../basic/pal";
-import { BasicArray, ResourceMgr } from "../data";
 import { TableEditor } from "./table";
 import { exportArtboard, exportGradient, exportStop, exportSymbolShape, exportVariable } from "../data/baseexport";
 import {
@@ -127,6 +128,7 @@ import {
     Point2D,
     PrototypeActions,
     PrototypeConnectionType,
+    PrototypeEasingBezier,
     PrototypeEasingType,
     PrototypeEvent,
     PrototypeEvents,
@@ -134,9 +136,8 @@ import {
     PrototypeNavigationType,
     PrototypeStartingPoint,
     PrototypeTransitionType,
-    ScrollDirection,
     ScrollBehavior,
-    PrototypeEasingBezier,
+    ScrollDirection,
     Shadow
 } from "../data/baseclasses";
 import {
@@ -147,9 +148,8 @@ import {
     update_frame_by_points
 } from "./utils/path";
 import { modify_shapes_height, modify_shapes_width } from "./utils/common";
-import { CoopRepository } from "../coop";
+import { CoopRepository, ISave4Restore, LocalCmd, SelectionState } from "../coop";
 import { Api, TextShapeLike } from "../coop/recordapi";
-import { ISave4Restore, LocalCmd, SelectionState } from "../coop";
 import { unable_to_migrate } from "./utils/migrate";
 import {
     adapt2Shape,
@@ -166,9 +166,7 @@ import {
     TableView,
     TextShapeView
 } from "../dataview";
-import { RadiusType, ResizingConstraints2 } from "../data";
 import { FMT_VER_latest } from "../data/fmtver";
-import { makeShapeTransform1By2, makeShapeTransform2By1, updateShapeTransform1By2 } from "../data";
 import { ColVector3D } from "../basic/matrix2";
 import { Transform as Transform2 } from "../basic/transform";
 import {
@@ -182,8 +180,7 @@ import {
 } from "./utils/auto_layout";
 
 import { getFormatFromBase64 } from "../basic/utils";
-import { uniformScale, UniformScaleUnit } from "./asyncApiHandler";
-import { modifyRadius, modifyStartingAngle, modifySweep } from "./asyncApiHandler";
+import { modifyRadius, modifyStartingAngle, modifySweep, uniformScale, UniformScaleUnit } from "./asyncApiHandler";
 import { Path } from "@kcdesign/path";
 import { assign } from "./clipboard";
 
@@ -2710,6 +2707,58 @@ export class PageEditor {
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
+        }
+    }
+
+    setShapesFillAsImage(actions: {
+        shape: ShapeView,
+        ref: string,
+        width: number,
+        height: number,
+        media: { buff: Uint8Array, base64: string }
+    }[]) {
+        try {
+            const api = this.__repo.start('setShapesFillAsImage');
+            const page = this.__page;
+            const document = this.__document;
+            for (const action of actions) {
+                const { shape, ref, media, width, height } = action;
+                const target = shape4fill(api, this.__page, shape);
+                const fills = target instanceof Shape ? target.style.fills : target;
+                if (fills instanceof Variable) {
+                    const index = fills.value.length - 1;
+                    if (index < 0) continue;
+                    if (!fills.value[index].imageScaleMode) {
+                        api.setFillScaleMode(page, target, index, types.ImageScaleMode.Fill);
+                    }
+                    if (fills.value[index].fillType !== FillType.Pattern) {
+                        api.setFillType(page, target, index, FillType.Pattern);
+                    }
+                    api.setFillImageRef(document, page, target, index, ref, media);
+                    api.setFillImageOriginWidth(page, target, index, width);
+                    api.setFillImageOriginHeight(page, target, index, height);
+                } else {
+                    const index = fills.length - 1;
+                    if (index < 0) {
+                        const fill = new Fill([0] as BasicArray<number>, uuid(), true, FillType.Pattern, new Color(1, 217, 217, 217));
+                        fill.imageRef = ref;
+                        fill.setImageMgr(document.mediasMgr);
+                        fill.imageScaleMode = types.ImageScaleMode.Fill;
+                        api.addFillAt(page, target, fill, 0);
+                    } else {
+                        if (fills[index].fillType !== FillType.Pattern) {
+                            api.setFillType(page, target, index, FillType.Pattern);
+                        }
+                        api.setFillImageRef(document, page, target, index, ref, media);
+                        api.setFillImageOriginWidth(page, target, index, width);
+                        api.setFillImageOriginHeight(page, target, index, height);
+                    }
+                }
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+            throw error;
         }
     }
 
