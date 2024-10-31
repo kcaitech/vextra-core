@@ -643,7 +643,7 @@ export class PageEditor {
             return false;
         }
     }
-    hasFill(shape: Shape) {
+    hasFill(shape: Shape | ShapeView) {
         const fills = shape.getFills();
         if (fills.length === 0) return false;
         for (let i = 0, len = fills.length; i < len; ++i) {
@@ -1243,7 +1243,7 @@ export class PageEditor {
         const copyStyle = findUsableFillStyle(shapes[shapes.length - 1]);
         const style: Style = this.cloneStyle(copyStyle);
         const borderStyle = findUsableBorderStyle(shapes[shapes.length - 1]);
-        if (borderStyle !== copyStyle && (endShape instanceof PathShape && (!endShape.isClosed || !this.hasFill(endShape)))) {
+        if (borderStyle !== copyStyle && (endShape instanceof PathShapeView && (!endShape.data.isClosed || !this.hasFill(endShape)))) {
             style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
         }
 
@@ -1326,7 +1326,7 @@ export class PageEditor {
             const copyStyle = findUsableFillStyle(shape);
             const style: Style = this.cloneStyle(copyStyle);
             const borderStyle = findUsableBorderStyle(shape);
-            if (borderStyle !== copyStyle && (shape instanceof PathShape && (!shape.isClosed || !this.hasFill(shape)))) {
+            if (borderStyle !== copyStyle && (shape instanceof PathShapeView && (!shape.data.isClosed || !this.hasFill(shape)))) {
                 style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
             }
 
@@ -1384,7 +1384,7 @@ export class PageEditor {
         const copyStyle = findUsableFillStyle(shape);
         const style2: Style = this.cloneStyle(copyStyle);
         const borderStyle = findUsableBorderStyle(shape);
-        if (borderStyle !== copyStyle && (shape instanceof PathShape && (!shape.isClosed || !this.hasFill(shape)))) {
+        if (borderStyle !== copyStyle && (shape instanceof PathShapeView && (!shape.data.isClosed || !this.hasFill(shape)))) {
             style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
         }
 
