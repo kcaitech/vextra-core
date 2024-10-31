@@ -299,7 +299,6 @@ const getPath = (shape: ShapeView) => {
         for (let i = borders.length - 1; i > -1; i--) {
             const b = borders[i];
             if (!b.isEnabled) return;
-            const t = b.sideSetting.thicknessLeft;
             const path = border2path(shape, borders[i]);
             if (!p0) {
                 p0 = gPal.makePalPath(path.toSVGString());
