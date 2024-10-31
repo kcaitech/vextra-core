@@ -137,6 +137,7 @@ export class PathShapeView extends ShapeView {
         const els: EL[] = [];
         for (let i = 1; i < group.length; i++) {
             const __s = group[i];
+            if (!__s.isVisible) continue;
             const dom = __s.dom;
             (dom.elattr as any)['style'] = { 'transform': makeShapeTransform1By2(__s.transform2.clone().addTransform(inverse)).toString() };
             els.push(dom);
