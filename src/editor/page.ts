@@ -5,7 +5,7 @@ import {
     BoolShape,
     Border,
     BorderPosition,
-    Color,
+    Color, ContactShape,
     Document,
     ExportFileFormat,
     ExportFormatNameingScheme,
@@ -1765,7 +1765,9 @@ export class PageEditor {
                 } else {
                     if (shape.isVirtualShape || shape.radiusType === RadiusType.None) continue;
 
-                    if (shape instanceof PathShape) {
+                    if (shape instanceof ContactShape) {
+                        api.shapeModifyFixedRadius(page, shape as ContactShape, values[0]);
+                    } else if (shape instanceof PathShape) {
                         shape.pathsegs.forEach((seg, index) => {
                             for (let _i = 0; _i < seg.points.length; _i++) {
                                 if (seg.points[_i].radius === values[0]) {
@@ -4820,7 +4822,7 @@ export class PageEditor {
 
     modifyContainersFrameMaskStatus(shapes: ShapeView[], value: boolean) {
         try {
-            const api = this.__repo.start('modifyShapesRadius');
+            const api = this.__repo.start('modifyContainersFrameMaskStatus');
             const page = this.__page;
             for (const view of shapes) {
                 if (view.isVirtualShape) continue;
