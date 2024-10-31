@@ -310,7 +310,7 @@ export function newText(textAttr?: TextAttr): Text {
     const text = new Text(new BasicArray());
     const para = new Para('\n', new BasicArray());
     para.attr = new ParaAttr();
-    para.attr.minimumLineHeight = 24;
+    para.attr.autoLineHeight = true;
     text.paras.push(para);
     const span = new Span(para.length);
     span.fontName = is_mac() ? "PingFang SC" : "微软雅黑";
@@ -329,7 +329,7 @@ export function newText2(textAttr?: TextAttr, paraAttr?: ParaAttr, spanAttr?: Sp
     const text = new Text(new BasicArray());
     const para = new Para('\n', new BasicArray());
     para.attr = new ParaAttr();
-    para.attr.minimumLineHeight = 24;
+    para.attr.autoLineHeight = true;
     text.paras.push(para);
     const span = new Span(para.length);
     span.fontName = is_mac() ? "PingFang SC" : "微软雅黑";

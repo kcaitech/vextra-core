@@ -737,11 +737,11 @@ export function exportAutoLayout(source: types.AutoLayout, ctx?: IExportContext)
     ret.stackVerticalPadding = source.stackVerticalPadding
     ret.stackPaddingRight = source.stackPaddingRight
     ret.stackPaddingBottom = source.stackPaddingBottom
+    ret.stackPrimarySizing = exportStackSizing(source.stackPrimarySizing, ctx)
     if (source.stackMode) ret.stackMode = exportStackMode(source.stackMode, ctx)
     if (source.stackWrap) ret.stackWrap = exportStackWrap(source.stackWrap, ctx)
     if (source.stackHorizontalGapSizing) ret.stackHorizontalGapSizing = exportStackSizing(source.stackHorizontalGapSizing, ctx)
     if (source.stackVerticalGapSizing) ret.stackVerticalGapSizing = exportStackSizing(source.stackVerticalGapSizing, ctx)
-    if (source.stackPrimarySizing) ret.stackPrimarySizing = exportStackSizing(source.stackPrimarySizing, ctx)
     if (source.stackCounterSizing) ret.stackCounterSizing = exportStackSizing(source.stackCounterSizing, ctx)
     if (source.stackPrimaryAlignItems) ret.stackPrimaryAlignItems = exportStackAlign(source.stackPrimaryAlignItems, ctx)
     if (source.stackCounterAlignItems) ret.stackCounterAlignItems = exportStackAlign(source.stackCounterAlignItems, ctx)

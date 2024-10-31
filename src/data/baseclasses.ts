@@ -539,11 +539,11 @@ export class AutoLayout extends Basic {
     stackVerticalPadding: number
     stackPaddingRight: number
     stackPaddingBottom: number
+    stackPrimarySizing: StackSizing
     stackMode?: StackMode
     stackWrap?: StackWrap
     stackHorizontalGapSizing?: StackSizing
     stackVerticalGapSizing?: StackSizing
-    stackPrimarySizing?: StackSizing
     stackCounterSizing?: StackSizing
     stackPrimaryAlignItems?: StackAlign
     stackCounterAlignItems?: StackAlign
@@ -551,7 +551,7 @@ export class AutoLayout extends Basic {
     bordersTakeSpace?: boolean
     minSize?: StackSize
     maxSize?: StackSize
-    constructor(stackSpacing: number, stackCounterSpacing: number, stackHorizontalPadding: number, stackVerticalPadding: number, stackPaddingRight: number, stackPaddingBottom: number) {
+    constructor(stackSpacing: number, stackCounterSpacing: number, stackHorizontalPadding: number, stackVerticalPadding: number, stackPaddingRight: number, stackPaddingBottom: number, stackPrimarySizing: StackSizing) {
         super()
         this.stackSpacing = stackSpacing
         this.stackCounterSpacing = stackCounterSpacing
@@ -559,6 +559,7 @@ export class AutoLayout extends Basic {
         this.stackVerticalPadding = stackVerticalPadding
         this.stackPaddingRight = stackPaddingRight
         this.stackPaddingBottom = stackPaddingBottom
+        this.stackPrimarySizing = stackPrimarySizing
     }
 }
 /* blur */

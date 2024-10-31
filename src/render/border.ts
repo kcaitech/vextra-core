@@ -73,12 +73,12 @@ angularHandler[BorderPosition.Inner] = function (h: Function, frame: ShapeSize, 
         ]),
 
         h("foreignObject", {
-                x: 0,
-                y: 0,
-                width,
-                height,
-                mask: "url(#" + maskId + ")"
-            },
+            x: 0,
+            y: 0,
+            width,
+            height,
+            mask: "url(#" + maskId + ")"
+        },
             h("div", { width: "100%", height: "100%", style: g_.style }))
     ]);
 }
@@ -123,12 +123,12 @@ angularHandler[BorderPosition.Center] = function (h: Function, frame: ShapeSize,
             h("path", path_props)
         ]),
         h("foreignObject", {
-                width,
-                height,
-                x,
-                y,
-                mask: "url(#" + maskId + ")"
-            },
+            width,
+            height,
+            x,
+            y,
+            mask: "url(#" + maskId + ")"
+        },
             h("div", { width: "100%", height: "100%", style: g_.style })),
     ])
 }
@@ -173,19 +173,20 @@ angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, 
                 width,
                 height
             }, [
-                h("rect", { x: -thickness, y: -thickness, width, height, fill: "white" }),
-                h("path", { d: path, fill: "black" })
+                // h("rect", { x: -thickness, y: -thickness, width, height, fill: "white" }),
+                h("path", { d: path, fill: "black", 'stroke-width': 2 * thickness, stroke: 'white' }),
+                h("path", { d: path, fill: "black" }),
             ]),
             h("rect", { x, y, width, height, fill: "black" }),
             h('path', path_props)
         ]),
         h("foreignObject", {
-                width,
-                height,
-                x,
-                y,
-                mask: "url(#" + mask2Id + ")"
-            },
+            width: width + (6 * thickness),
+            height: height + (6 * thickness),
+            x: x - (3 * thickness),
+            y: y - (3 * thickness),
+            mask: "url(#" + mask2Id + ")"
+        },
             h("div", { width: "100%", height: "100%", style: g_.style })),
     ]);
 }
@@ -322,8 +323,9 @@ handler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, border:
         "mask",
         { id: maskId, x: -thickness, y: -thickness, width, height },
         [
-            h("rect", { x: -thickness, y: -thickness, width, height, fill: "white" }),
-            h("path", { d: path, fill: "black" })
+            // h("rect", { x: -thickness, y: -thickness, width, height, fill: "white" }),
+            h("path", { d: path, fill: "black", 'stroke-width': 2 * thickness, stroke: 'white' }),
+            h("path", { d: path, fill: "black" }),
         ]
     )
     const b_ = h('path', body_props);
@@ -358,7 +360,7 @@ export function render(h: Function, borders: Border[], frame: ShapeSize, path: s
 }
 
 export function renderWithVars(h: Function, shape: Shape, frame: ShapeSize, path: string,
-                               varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
     let borders = shape.style.borders;
     if (varsContainer) {
         const _vars = findOverrideAndVar(shape, OverrideType.Borders, varsContainer);

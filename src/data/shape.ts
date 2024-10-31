@@ -658,22 +658,6 @@ export function getPathOfRadius(frame: ShapeSize, cornerRadius?: CornerRadius, f
         lb = cornerRadius!.lb;
         rt = cornerRadius!.rt;
         rb = cornerRadius!.rb;
-        const lt_percent1 = (lt / (lt + lb)) * h;
-        const lt_percent2 = (lt / (lt + rt)) * w;
-
-        const lb_percent1 = (lb / (lt + lb)) * h;
-        const lb_percent2 = (lb / (lb + rb)) * w;
-
-        const rt_percent1 = (rt / (lt + rt)) * w;
-        const rt_percent2 = (rt / (rt + rb)) * h;
-
-        const rb_percent1 = (rb / (rt + rb)) * h;
-        const rb_percent2 = (rb / (lb + rb)) * w;
-
-        lt = Math.max(0, Math.min(lt_percent1, lt_percent2));
-        lb = Math.max(0, Math.min(lb_percent1, lb_percent2));
-        rt = Math.max(0, Math.min(rt_percent1, rt_percent2));
-        rb = Math.max(0, Math.min(rb_percent1, rb_percent2));
     }
 
     // const path = [];
