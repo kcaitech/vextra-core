@@ -1326,7 +1326,7 @@ export class PageEditor {
             const copyStyle = findUsableFillStyle(shape);
             const style: Style = this.cloneStyle(copyStyle);
             const borderStyle = findUsableBorderStyle(shape);
-            if (borderStyle !== copyStyle && (shape instanceof PathShapeView && (!shape.data.isClosed || !this.hasFill(shape)))) {
+            if (borderStyle !== copyStyle) {
                 style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
             }
 
