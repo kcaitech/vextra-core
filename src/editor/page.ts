@@ -584,9 +584,11 @@ export class PageEditor {
         if (shapes_rows.length === 1) {
             layoutInfo.stackWrap = types.StackWrap.NoWrap;
             layoutInfo.stackMode = types.StackMode.Horizontal;
+            layoutInfo.stackCounterSpacing = hor;
         } else if (shapes_rows.every(s => s.length === 1)) {
             layoutInfo.stackWrap = types.StackWrap.NoWrap;
             layoutInfo.stackMode = types.StackMode.Vertical;
+            layoutInfo.stackSpacing = ver;
         }
         let artboard = newAutoLayoutArtboard(artboardname, new ShapeFrame(0, 0, 100, 100), layoutInfo);
 

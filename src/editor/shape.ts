@@ -1502,9 +1502,11 @@ export class ShapeEditor {
             if (shapes_rows.length === 1) {
                 layoutInfo.stackWrap = StackWrap.NoWrap;
                 layoutInfo.stackMode = StackMode.Horizontal;
+                layoutInfo.stackCounterSpacing = hor;
             } else if (shapes_rows.every(s => s.length === 1)) {
                 layoutInfo.stackWrap = StackWrap.NoWrap;
                 layoutInfo.stackMode = StackMode.Vertical;
+                layoutInfo.stackSpacing = ver;
             }
             const shape = adapt2Shape(this.__shape);
             api.shapeAutoLayout(this.__page, shape, layoutInfo);
