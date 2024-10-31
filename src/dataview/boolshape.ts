@@ -73,13 +73,7 @@ export function render2path(shape: ShapeView, defaultOp = BoolOp.None): Path {
     let fixedRadius: number | undefined;
     if (shapeIsGroup) fixedRadius = shape.fixedRadius;
     if (!shapeIsGroup) {
-        if (!shape.isVisible) return new Path();
-        if (shape instanceof TextShapeView) return shape.getTextPath().clone();
-        // todo pathshape2
-        if (shape.data instanceof PathShape && (!shape.data.isClosed || !hasFill(shape))) {
-            return borders2path(shape, shape.getBorders());
-        }
-        return shape.getPath().clone();
+        return getPath(shape);
     } else if (shape.childs.length === 0) {
         return new Path();
     }
@@ -289,6 +283,7 @@ export class BoolShapeView extends GroupShapeView {
 }
 
 const getPath = (shape: ShapeView) => {
+    if (!shape.isVisible) return new Path();
     if (shape instanceof GroupShapeView && !(shape instanceof BoolShapeView)) {
         return render2path(shape, BoolOp.Union);
     } else if (shape instanceof TextShapeView) {
@@ -298,7 +293,7 @@ const getPath = (shape: ShapeView) => {
         let p0: IPalPath | undefined;
         for (let i = borders.length - 1; i > -1; i--) {
             const b = borders[i];
-            if (!b.isEnabled) return;
+            if (!b.isEnabled) continue;
             const path = border2path(shape, borders[i]);
             if (!p0) {
                 p0 = gPal.makePalPath(path.toSVGString());
