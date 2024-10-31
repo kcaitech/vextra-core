@@ -1,34 +1,51 @@
 import {
+    Artboard,
+    BasicArray,
+    BoolOp,
     BoolShape,
-    GroupShape, OvalShape,
+    Border,
+    BorderPosition,
+    Color,
+    Document,
+    ExportFileFormat,
+    ExportFormatNameingScheme,
+    Fill,
+    FillType,
+    Gradient,
+    GradientType,
+    GroupShape,
+    makeShapeTransform1By2,
+    makeShapeTransform2By1,
+    MarkerType,
     OverrideType,
+    Page,
+    PathShape,
     PathShape2,
     PolygonShape,
+    RadiusType,
     RectShape,
+    ResizingConstraints2,
+    ResourceMgr,
+    ShadowPosition,
     Shape,
     ShapeFrame,
     ShapeType,
+    SideType,
     StarShape,
+    Stop,
+    Style,
+    SymbolRefShape,
     SymbolShape,
     SymbolUnionShape,
+    Text,
     TextShape,
+    Transform,
+    updateShapeTransform1By2,
     Variable,
     VariableType
 } from "../data";
 import { ShapeEditor } from "./shape";
 import * as types from "../data/typesdefine";
-import {
-    BoolOp,
-    BorderPosition,
-    ExportFileFormat,
-    ExportFormatNameingScheme,
-    FillType,
-    GradientType,
-    MarkerType,
-    ShadowPosition,
-    SideType
-} from "../data";
-import { Page } from "../data";
 import {
     newArrowShape,
     newArtboard,
@@ -44,23 +61,8 @@ import {
     newSymbolRefShape,
     newSymbolShape
 } from "./creator";
-import { Document } from "../data";
 import { expand, translate, translateTo } from "./frame";
 import { uuid } from "../basic/uuid";
-import {
-    Artboard,
-    Border,
-    Color,
-    Fill,
-    Gradient,
-    PathShape,
-    Stop,
-    Style,
-    SymbolRefShape,
-    TableShape,
-    Text,
-    Transform
-} from "../data";
 import { TextShapeEditor } from "./textshape";
 import { set_childs_id, transform_data } from "../io/cilpboard";
 import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
@@ -88,11 +90,9 @@ import {
     importTransform
 } from "../data/baseimport";
 import { gPal } from "../basic/pal";
-import { BasicArray, ResourceMgr } from "../data";
 import { TableEditor } from "./table";
 import { exportArtboard, exportGradient, exportStop, exportSymbolShape, exportVariable } from "../data/baseexport";
 import {
-    adjust_selection_before_group,
     after_remove,
     clear_binds_effect,
     find_state_space,
@@ -101,8 +101,7 @@ import {
     init_state,
     make_union,
     modify_frame_after_inset_state,
-    modify_index,
-    trans_after_make_symbol
+    modify_index
 } from "./utils/other";
 import { v4 } from "uuid";
 import {
@@ -129,6 +128,7 @@ import {
     Point2D,
     PrototypeActions,
     PrototypeConnectionType,
+    PrototypeEasingBezier,
     PrototypeEasingType,
     PrototypeEvent,
     PrototypeEvents,
@@ -136,9 +136,8 @@ import {
     PrototypeNavigationType,
     PrototypeStartingPoint,
     PrototypeTransitionType,
-    ScrollDirection,
     ScrollBehavior,
-    PrototypeEasingBezier,
+    ScrollDirection,
     Shadow
 } from "../data/baseclasses";
 import {
@@ -149,9 +148,8 @@ import {
     update_frame_by_points
 } from "./utils/path";
 import { modify_shapes_height, modify_shapes_width } from "./utils/common";
-import { CoopRepository } from "../coop";
+import { CoopRepository, ISave4Restore, LocalCmd, SelectionState } from "../coop";
 import { Api, TextShapeLike } from "../coop/recordapi";
-import { ISave4Restore, LocalCmd, SelectionState } from "../coop";
 import { unable_to_migrate } from "./utils/migrate";
 import {
     adapt2Shape,
@@ -168,9 +166,7 @@ import {
     TableView,
     TextShapeView
 } from "../dataview";
-import { RadiusType, ResizingConstraints2 } from "../data";
 import { FMT_VER_latest } from "../data/fmtver";
-import { makeShapeTransform1By2, makeShapeTransform2By1, updateShapeTransform1By2 } from "../data";
 import { ColVector3D } from "../basic/matrix2";
 import { Transform as Transform2 } from "../basic/transform";
 import {
@@ -184,8 +180,7 @@ import {
 } from "./utils/auto_layout";
 
 import { getFormatFromBase64 } from "../basic/utils";
-import { uniformScale, UniformScaleUnit } from "./asyncApiHandler";
-import { modifyRadius, modifyStartingAngle, modifySweep } from "./asyncApiHandler";
+import { modifyRadius, modifyStartingAngle, modifySweep, uniformScale, UniformScaleUnit } from "./asyncApiHandler";
 import { Path } from "@kcdesign/path";
 import { assign } from "./clipboard";
 
@@ -759,6 +754,7 @@ export class PageEditor {
                 if (shape0.scrollDirection) symbolShape.scrollDirection = (shape0.scrollDirection);
                 if (shape0.scrollBehavior) symbolShape.scrollBehavior = (shape0.scrollBehavior);
                 if (shape0.autoLayout) symbolShape.autoLayout = importAutoLayout(shape0.autoLayout);
+                if (shape0.frameMaskDisabled) symbolShape.frameMaskDisabled = shape0.frameMaskDisabled;
             }
 
             const page = this.__page;
@@ -768,9 +764,6 @@ export class PageEditor {
                 else state.shapes = cmd.saveselection?.shapes || [];
                 selection.restore(state);
             });
-
-            const need_trans_data: Shape[] = [];
-            adjust_selection_before_group(document, page, shapes, api, need_trans_data);
 
             let sym: SymbolShape;
             if (replace) {
@@ -799,24 +792,64 @@ export class PageEditor {
                 }
             }
 
-            if (sym) {
-                const result = sym;
+            if (!sym) throw new Error('failed');
 
-                document.symbolsMgr.add(result.id, result);
+            const result = sym;
+            document.symbolsMgr.add(result.id, result);
 
-                if (need_trans_data.length) {
-                    trans_after_make_symbol(page, result, need_trans_data, api);
+            const innerSymbols: Shape[] = [];
+
+            function _find(group: GroupShape) {
+                for (const child of group.childs) {
+                    if (child instanceof SymbolShape || child instanceof SymbolUnionShape) {
+                        innerSymbols.push(child);
+                        continue;
+                    }
+                    if (child instanceof GroupShape) _find(child);
                 }
-
-                this.__repo.commit();
-                return result;
-            } else {
-                throw new Error('failed')
             }
 
+            _find(sym);
+
+            if (innerSymbols.length) { // replace
+                const offset = sym.boundingBox().width + 24;
+                const matrixToPage = new Matrix(page.matrix2Root().inverse);
+                for (const symbol of innerSymbols) {
+                    const frame = new ShapeFrame(symbol.transform.m02, symbol.transform.m12, symbol.size.width, symbol.size.height);
+                    let refId = symbol.id;
+                    if (symbol instanceof SymbolUnionShape) {
+                        const dlt = symbol.childs[0];
+                        if (!dlt) continue;
+                        refId = dlt.id;
+                        frame.width = dlt.size.width;
+                        frame.height = dlt.size.height;
+                    }
+                    const ref = newSymbolRefShape(symbol.name, frame, refId, document.symbolsMgr);
+                    if (ref) {
+                        const rt = ref.transform;
+                        const st = symbol.transform;
+                        rt.m00 = st.m00;
+                        rt.m01 = st.m01;
+                        rt.m10 = st.m10;
+                        rt.m11 = st.m11;
+                        ref.frameMaskDisabled = (symbol as SymbolShape).frameMaskDisabled;
+                    }
+                    const parent = symbol.parent as GroupShape;
+                    api.shapeInsert(document, page, parent, ref, parent.indexOfChild(symbol));
+                    const om = symbol.matrix2Root();
+                    om.trans(offset, 0);
+                    om.multiAtLeft(matrixToPage);
+
+                    api.shapeMove(page, parent, parent.indexOfChild(symbol), page, page.childs.length);
+                    api.shapeModifyTransform(page, symbol, makeShapeTransform1By2(makeShapeTransform2By1(om)));
+                }
+            }
+
+            this.__repo.commit();
+            return result;
         } catch (e) {
-            console.log(e)
             this.__repo.rollback();
+            throw e;
         }
     }
 
@@ -1000,8 +1033,9 @@ export class PageEditor {
         }
 
         const return_shapes: Shape[] = [];
-        for (let i = 0, len = shapes.length; i < len; i++) {
-            const shape: SymbolRefShape = adapt2Shape(shapes[i]) as SymbolRefShape;
+        for (const view of shapes) {
+
+            const shape: SymbolRefShape = adapt2Shape(view) as SymbolRefShape;
             if (shape.type !== ShapeType.SymbolRef) {
                 return_shapes.push(shape);
                 continue;
@@ -1029,10 +1063,16 @@ export class PageEditor {
             tmpArtboard.transform.m11 = shape.transform.m11;
             tmpArtboard.transform.m02 = shape.transform.m02;
             tmpArtboard.transform.m12 = shape.transform.m12;
-            tmpArtboard.cornerRadius = shape.cornerRadius;
-            const layoutInfo = (shapes[i] as SymbolRefView).autoLayout;
+
+            tmpArtboard.frameMaskDisabled = shape.frameMaskDisabled;
+
+            const layoutInfo = (view as SymbolRefView).autoLayout;
             if (layoutInfo) {
                 tmpArtboard.autoLayout = importAutoLayout(layoutInfo);
+            }
+            const radius = (view as SymbolRefView).cornerRadius
+            if (radius) {
+                tmpArtboard.cornerRadius = importCornerRadius(radius);
             }
 
             const symbolData = exportArtboard(tmpArtboard); // todo 如果symbol只有一个child时
@@ -2044,11 +2084,13 @@ export class PageEditor {
     }
 
     arrange(actions: PositonAdjust[]) {
-        const api = this.__repo.start('arrange');
         try {
-            for (let i = 0; i < actions.length; i++) {
-                const action = actions[i];
-                translate(api, this.__page, action.target, action.transX, action.transY);
+            const api = this.__repo.start('arrange');
+            const page = this.__page;
+            for (const action of actions) {
+                const {target, transX, transY} = action;
+                api.shapeModifyX(page, target, target.transform.translateX + transX);
+                api.shapeModifyY(page, target, target.transform.translateY + transY);
             }
             this.__repo.commit();
         } catch (error) {
@@ -2675,6 +2717,58 @@ export class PageEditor {
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
+        }
+    }
+
+    setShapesFillAsImage(actions: {
+        shape: ShapeView,
+        ref: string,
+        width: number,
+        height: number,
+        media: { buff: Uint8Array, base64: string }
+    }[]) {
+        try {
+            const api = this.__repo.start('setShapesFillAsImage');
+            const page = this.__page;
+            const document = this.__document;
+            for (const action of actions) {
+                const { shape, ref, media, width, height } = action;
+                const target = shape4fill(api, this.__page, shape);
+                const fills = target instanceof Shape ? target.style.fills : target;
+                if (fills instanceof Variable) {
+                    const index = fills.value.length - 1;
+                    if (index < 0) continue;
+                    if (!fills.value[index].imageScaleMode) {
+                        api.setFillScaleMode(page, target, index, types.ImageScaleMode.Fill);
+                    }
+                    if (fills.value[index].fillType !== FillType.Pattern) {
+                        api.setFillType(page, target, index, FillType.Pattern);
+                    }
+                    api.setFillImageRef(document, page, target, index, ref, media);
+                    api.setFillImageOriginWidth(page, target, index, width);
+                    api.setFillImageOriginHeight(page, target, index, height);
+                } else {
+                    const index = fills.length - 1;
+                    if (index < 0) {
+                        const fill = new Fill([0] as BasicArray<number>, uuid(), true, FillType.Pattern, new Color(1, 217, 217, 217));
+                        fill.imageRef = ref;
+                        fill.setImageMgr(document.mediasMgr);
+                        fill.imageScaleMode = types.ImageScaleMode.Fill;
+                        api.addFillAt(page, target, fill, 0);
+                    } else {
+                        if (fills[index].fillType !== FillType.Pattern) {
+                            api.setFillType(page, target, index, FillType.Pattern);
+                        }
+                        api.setFillImageRef(document, page, target, index, ref, media);
+                        api.setFillImageOriginWidth(page, target, index, width);
+                        api.setFillImageOriginHeight(page, target, index, height);
+                    }
+                }
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+            throw error;
         }
     }
 

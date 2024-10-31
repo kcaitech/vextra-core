@@ -66,11 +66,20 @@ export function modifyPathByArc(api: Api, page: Page, shape: Shape) {
     const parser = new OvalPathParser({ start, end, radius });
     const segments = parser.getPath();
     if (segments.length) {
-        while (shape.pathsegs.length) {
-            api.deleteSegmentAt(page, shape, shape.pathsegs.length - 1);
+        let cornerRadius = 0;
+        if (shape.pathsegs.length) {
+            const points = shape.pathsegs[0].points;
+            for (const point of points) {
+                if (point?.radius) {
+                    cornerRadius = point.radius;
+                    break;
+                }
+            }
         }
+        while (shape.pathsegs.length) api.deleteSegmentAt(page, shape, shape.pathsegs.length - 1);
         while (segments.length) {
             const { points, isClosed } = segments.pop()!;
+            if (cornerRadius) points.forEach(i => i.radius = cornerRadius);
             api.addSegmentAt(page, shape, 0, new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...points), isClosed));
         }
     }

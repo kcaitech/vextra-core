@@ -9,11 +9,10 @@ import { shape4border, shape4contextSettings, shape4cornerRadius, shape4fill, sh
 import { update_frame_by_points } from "../utils/path";
 import { GroupShape, PathShape2, SymbolShape, TextShape, Shape } from "../../data/shape";
 import { BatchAction, BatchAction2, BatchAction5, PageEditor } from "../page";
-import { IImportContext, importGradient, } from "../../data/baseimport";
+import { importGradient, } from "../../data/baseimport";
 import { exportGradient, } from "../../data/baseexport";
 import { TableEditor } from "../table";
 import { getAutoLayoutShapes, modifyAutoLayout, reLayoutBySort, TidyUpAlgin, tidyUpLayout } from "../utils/auto_layout";
-import { ShapeEditor } from "../shape";
 import { TextShapeEditor } from "../textshape";
 
 export class LinearApi {
@@ -158,7 +157,6 @@ export class LinearApi {
     /**
      * @description 修改图形X轴位置
      */
-
     modifyShapesX(actions: {
         target: ShapeView,
         x: number
@@ -176,7 +174,6 @@ export class LinearApi {
     /**
      * @description 修改图形Y轴位置
      */
-
     modifyShapesY(actions: {
         target: ShapeView,
         y: number
@@ -187,6 +184,26 @@ export class LinearApi {
             for (let i = 0; i < actions.length; i++) {
                 const action = actions[i];
                 api.shapeModifyY(page, adapt2Shape(action.target), action.y);
+            }
+        });
+    }
+
+    /**
+     * @description 偏移图形XY轴位置
+     */
+    modifyShapesXY(actions: {
+        target: ShapeView,
+        dx: number,
+        dy: number
+    }[]) {
+        this.execute('modify-shapes-xy', () => {
+            const api = this.api!;
+            const page = this.page;
+            for (const action of actions) {
+                const { target, dx, dy } = action;
+                if (target.isVirtualShape) continue;
+                api.shapeModifyX(page, adapt2Shape(target), target.transform.translateX + dx);
+                api.shapeModifyY(page, adapt2Shape(target), target.transform.translateY + dy);
             }
         });
     }

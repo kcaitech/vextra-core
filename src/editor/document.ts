@@ -164,7 +164,7 @@ export class DocEditor {
             }
             this.__repo.commit();
         } catch (e) {
-            console.log(e)
+            console.error(e)
             this.__repo.rollback();
         }
         return true;
@@ -204,6 +204,17 @@ export class DocEditor {
             console.log(error);
             this.__repo.rollback();
             return false;
+        }
+    }
+
+    rename(name: string) {
+        try {
+            const api = this.__repo.start('document-rename');
+            api.modifyDocumentName(this.__document, name)
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
         }
     }
 
