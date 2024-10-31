@@ -502,7 +502,7 @@ function deepProxy(data: any, h: ProxyHandler): any {
                 if (k.toString().startsWith("__")) {
                     // donothing
                 }
-                else if (typeof (v) === 'object') { // 还有array set map
+                else if (v && typeof (v) === 'object') { // 还有array set map
                     if (parent) {
                         v.__parent = parent;
                         v.__propKey = k;
@@ -520,7 +520,8 @@ function deepProxy(data: any, h: ProxyHandler): any {
                 if (k.toString().startsWith("__")) {
                     // donothing
                 }
-                else if (typeof (v) === 'object') { // 还有array set map
+                // todo 看一下什么场景下会出现null的属性值
+                else if (v && typeof (v) === 'object') { // 还有array set map
                     if (parent) {
                         v.__parent = parent;
                         v.__propKey = k;
