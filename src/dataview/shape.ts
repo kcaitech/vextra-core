@@ -1155,6 +1155,7 @@ export class ShapeView extends DataView {
         const els: EL[] = [];
         for (let i = 1; i < group.length; i++) {
             const __s = group[i];
+            if (!__s.isVisible) continue;
             const dom = __s.dom;
             if (!(dom.elattr as any)['style']) {
                 (dom.elattr as any)['style'] = {};
