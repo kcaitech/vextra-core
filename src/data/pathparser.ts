@@ -216,8 +216,7 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, width: number
             const pr = pre.radius || fixedRadius;
             const nr = next.radius || fixedRadius;
             const cr = cur.radius || fixedRadius;
-            console.log(pr, nr, cr);
-            
+
             const percent1 = (cr + pr) > lenAB ? lenAB * (cr / (cr + pr)) : cr;
             const percent2 = (cr + nr) > lenBC ? lenBC * (cr / (cr + nr)) : cr;
             return Math.max(0, Math.min(percent1, percent2));
