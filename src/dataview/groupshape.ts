@@ -38,7 +38,7 @@ export class GroupShapeView extends ShapeView {
         const maskShape: Shape[] = [];
         for (let i = 0; i < children.length; i++) {
             const child = children[i];
-            if (child.mask) {
+            if (child.mask && child.isVisible) {
                 mask = child;
                 maskShape.push(child);
             } else {

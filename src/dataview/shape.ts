@@ -401,7 +401,7 @@ export class ShapeView extends DataView {
     }
 
     onDataChange(...args: any[]): void {
-        if (args.includes('mask')) (this.parent as GroupShapeView).updateMaskMap();
+        if (args.includes('mask') || args.includes('isVisible')) (this.parent as GroupShapeView).updateMaskMap();
 
         if (args.includes('points')
             || args.includes('pathsegs')
