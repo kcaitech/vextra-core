@@ -34,6 +34,7 @@ import { Transform as Transform2 } from "../../../basic/transform";
 import { ColVector3D } from "../../../basic/matrix2";
 import { XYsBounding } from "../../../io/cilpboard";
 import { getAutoLayoutShapes, modifyAutoLayout } from "../../utils/auto_layout";
+import { is_straight } from "../../utils/path";
 
 export type RangeRecorder = Map<string, {
     toRight?: number,
@@ -388,6 +389,28 @@ export function reLayoutBySizeChanged(
     function getSize(s: ShapeView) {
         let size = sizeRecorder.get(s.id);
         if (!size) {
+            // if (is_straight(s.data)) {
+            //     const path = s.getPath().clone();
+            //     // path.transform(s.matrix2Parent());
+            //     const f = path.bbox();
+            //     size = {
+            //         x: 0,
+            //         y: 0,
+            //         width: f.w,
+            //         height: f.h
+            //     };
+            //     sizeRecorder.set(s.id, size);
+            // } else {
+            //     const f = s.frame;
+            //     size = {
+            //         x: f.x,
+            //         y: f.y,
+            //         width: f.width,
+            //         height: f.height
+            //     };
+            //     sizeRecorder.set(s.id, size);
+            // }
+
             const f = s.frame;
             size = {
                 x: f.x,
