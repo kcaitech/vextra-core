@@ -782,26 +782,33 @@ function get_direction_for_free_contact(start: CurvePoint, end: CurvePoint) {
 
     return dx > dy ? 'horizontal' : 'vertical';
 }
-const __handle: { [key: string]: (points: CurvePoint[], start: CurvePoint, end: CurvePoint) => void } = {};
-__handle['horizontal'] = function (points: CurvePoint[], start: CurvePoint, end: CurvePoint) {
+
+const __handle: { [key: string]: (points: CurvePoint[], start: CurvePoint, end: CurvePoint, width: number, height: number) => void } = {};
+__handle['horizontal'] = function (points: CurvePoint[], start: CurvePoint, end: CurvePoint, width: number, height: number) {
     points.length = 0;
-
-    const mid = (end.x + start.x) / 2;
-
-    const _p1 = new CurvePoint([1] as BasicArray<number>, v4(), mid, start.y, CurveMode.Straight);
-    const _p2 = new CurvePoint(([2] as BasicArray<number>), v4(), mid, end.y, CurveMode.Straight);
-
-    points.push(start, _p1, _p2, end);
+    if (Math.abs(start.x - end.x) * width < 5) {
+        points.push(start, new CurvePoint(([2] as BasicArray<number>), v4(), start.x, end.y, CurveMode.Straight));
+    } else if (Math.abs(start.y - end.y) * height < 5) {
+        points.push(start, new CurvePoint(([2] as BasicArray<number>), v4(), end.x, start.y, CurveMode.Straight));
+    } else {
+        const mid = (end.x + start.x) / 2;
+        const _p1 = new CurvePoint([1] as BasicArray<number>, v4(), mid, start.y, CurveMode.Straight);
+        const _p2 = new CurvePoint(([2] as BasicArray<number>), v4(), mid, end.y, CurveMode.Straight);
+        points.push(start, _p1, _p2, end);
+    }
 }
-__handle['vertical'] = function (points: CurvePoint[], start: CurvePoint, end: CurvePoint) {
+__handle['vertical'] = function (points: CurvePoint[], start: CurvePoint, end: CurvePoint, width: number, height: number) {
     points.length = 0;
-
-    const mid = (end.y + start.y) / 2;
-
-    const _p1 = new CurvePoint([1] as BasicArray<number>, v4(), start.x, mid, CurveMode.Straight);
-    const _p2 = new CurvePoint(([2] as BasicArray<number>), v4(), end.x, mid, CurveMode.Straight);
-
-    points.push(start, _p1, _p2, end);
+    if (Math.abs(start.x - end.x) * width < 5) {
+        points.push(start, new CurvePoint(([2] as BasicArray<number>), v4(), start.x, end.y, CurveMode.Straight));
+    } else if (Math.abs(start.y - end.y) * height < 5) {
+        points.push(start, new CurvePoint(([2] as BasicArray<number>), v4(), end.x, start.y, CurveMode.Straight));
+    } else {
+        const mid = (end.y + start.y) / 2;
+        const _p1 = new CurvePoint([1] as BasicArray<number>, v4(), start.x, mid, CurveMode.Straight);
+        const _p2 = new CurvePoint(([2] as BasicArray<number>), v4(), end.x, mid, CurveMode.Straight);
+        points.push(start, _p1, _p2, end);
+    }
 }
 export function path_for_free_contact(points: CurvePoint[], width: number, height: number) {
     const start = points[0];
@@ -815,7 +822,7 @@ export function path_for_free_contact(points: CurvePoint[], width: number, heigh
     const _end = {x: end.x * width, y: end.y * height};
     const direction = get_direction_for_free_contact(_start as CurvePoint, _end as CurvePoint);
 
-    __handle[direction](points, start, end);
+    __handle[direction](points, start, end, width, height);
 }
 export function path_for_free_end_contact(shape: ContactShape, points: CurvePoint[], start: PageXY | undefined) {
     if (!start) {
@@ -826,6 +833,8 @@ export function path_for_free_end_contact(shape: ContactShape, points: CurvePoin
 
     if (Math.abs(start.y - end.y) * shape.size.height < 5) {
         points.push(new CurvePoint(([points.length] as BasicArray<number>), v4(), end.x, start.y, CurveMode.Straight));
+    } else if (Math.abs(start.x - end.x) * shape.size.width < 5) {
+        points.push(new CurvePoint(([points.length] as BasicArray<number>), v4(), start.x, end.y, CurveMode.Straight));
     } else {
         points.push(new CurvePoint(([points.length] as BasicArray<number>), v4(), end.x, start.y, CurveMode.Straight), end);
     }
@@ -842,7 +851,7 @@ export function path_for_free_start_contact(points: CurvePoint[], end: PageXY | 
 
     const direction = get_direction_for_free_contact(_start as CurvePoint, __end as CurvePoint);
 
-    __handle[direction](points, start, _end);
+    __handle[direction](points, start, _end, width, height);
 }
 
 export function findVar(varId: string, ret: Variable[], varsContainer: (SymbolRefShape | SymbolShape)[], revertStart: number | undefined = undefined, fOverride: boolean = false) {
@@ -977,31 +986,6 @@ function get_bezier_c(pre: XY, cur: XY, next: XY, radius: number, minDist: numbe
     let nextHandle = add(multiply(vNext, -radius * kappa), nextTangent);
 
     return ['C', preHandle.x, preHandle.y, nextHandle.x, nextHandle.y, nextTangent.x, nextTangent.y];
-}
-
-export function _get_path(shape: types.Artboard) {
-    const f = shape.size;
-
-    const min = Math.min(f.width, f.height) / 2;
-
-    const radius = Math.min(min, shape.fixedRadius || 0);
-
-    const lt = { x: 0, y: 0 };
-    const rt = { x: f.width, y: 0 };
-    const rb = { x: f.width, y: f.height };
-    const lb = { x: 0, y: f.height };
-
-    const m = ['M', radius, 0];
-    const t = ['L', f.width - radius, 0];
-    const rtc = get_bezier_c(lt, rt, rb, radius, min);
-    const r = ['L', f.width, f.height - radius];
-    const rbc = get_bezier_c(rt, rb, lb, radius, min);
-    const b = ['L', radius, f.height];
-    const lbc = get_bezier_c(rb, lb, lt, radius, min);
-    const l = ['L', 0, radius];
-    const ltc = get_bezier_c(lb, lt, rt, radius, min);
-
-    return [m, t, rtc, r, rbc, b, lbc, l, ltc, ["z"]];
 }
 
 export function is_mac() {
