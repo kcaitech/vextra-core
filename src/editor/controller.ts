@@ -133,6 +133,7 @@ export interface AsyncPathEditor {
     addNode: (index: number) => void;
     execute: (index: number, end: PageXY) => void;
     execute2: (range: Map<number, number[]>, dx: number, dy: number) => void;
+    executeRadius: (range: Map<number, number[]>, r: number) => void;
     close: () => undefined;
     abort: () => void;
 }
@@ -785,6 +786,27 @@ export class Controller {
                 status = Status.Exception;
             }
         }
+        const executeRadius = (range: Map<number, number[]>, r: number) => {
+            status === Status.Pending
+            try {
+                const pathsegs = (shape as any as PathShape2).pathsegs;
+                range.forEach((indexes, segment) => {
+                    const points = pathsegs[segment].points;
+                    if (!points?.length) {
+                        return;
+                    }
+                    for (let i = indexes.length - 1; i > -1; i--) {
+                        const radius = points[indexes[i]].radius || 0;
+                        api.modifyPointCornerRadius(page, shape, indexes[i], radius + r, segment);
+                    }
+                });
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
         const close = () => {
             status = Status.Pending;
             try {
@@ -804,7 +826,7 @@ export class Controller {
         const abort = () => {
             this.__repo.rollback();
         }
-        return { addNode, execute, execute2, close, abort }
+        return { addNode, execute, execute2, close, abort, executeRadius }
     }
 
     public asyncContactEditor(_shape: ContactShape | ContactLineView, _page: Page | PageView): AsyncContactEditor {
