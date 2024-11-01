@@ -36,6 +36,7 @@ export class ContactLineView extends PathShapeView {
         this.m_path = undefined;
         this.m_pathstr = undefined;
         this.m_ctx.setDirty(this);
+        this.updateFrames();
     }
 
     private unwatchApex(shape: Shape, parents: Shape[]) {
@@ -198,6 +199,7 @@ export class ContactLineView extends PathShapeView {
 
         this.modify_from_side_watch(self.from);
         this.modify_to_side_watch(self.to)
+
     }
 
     onDestory(): void {
