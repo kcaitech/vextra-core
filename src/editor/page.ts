@@ -664,7 +664,10 @@ export class PageEditor {
             style.fills.push(newSolidColorFill()); // 自动添加个填充
         }
         const borderStyle = findUsableBorderStyle(endShape);
-        if (borderStyle !== copyStyle && (endShape instanceof PathShape && (!endShape.isClosed || !this.hasFill(endShape)))) {
+        if (endShape instanceof PathShape && (!endShape.isClosed || !this.hasFill(endShape))) {
+            style.borders = new BasicArray<Border>();
+        }
+        if (borderStyle !== copyStyle && !(endShape instanceof PathShape && (!endShape.isClosed || !this.hasFill(endShape)))) {
             style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
         }
         // 1、新建一个GroupShape
@@ -1240,10 +1243,18 @@ export class PageEditor {
 
         // copy fill and borders
         const endShape = shapes[shapes.length - 1];
-        const copyStyle = findUsableFillStyle(shapes[shapes.length - 1]);
+        const copyStyle = findUsableFillStyle(endShape);
         const style: Style = this.cloneStyle(copyStyle);
-        const borderStyle = findUsableBorderStyle(shapes[shapes.length - 1]);
-        if (borderStyle !== copyStyle && (endShape instanceof PathShapeView && (!endShape.data.isClosed || !this.hasFill(endShape)))) {
+        if (style.fills.length === 0) {
+            const fills = shapes.find(s => s.style.getFills())?.style.getFills();
+            fills ? style.fills.push(...fills) : style.fills.push(newSolidColorFill());
+        }
+
+        const borderStyle = findUsableBorderStyle(endShape);
+        if (endShape instanceof PathShapeView && (!endShape.data.isClosed || !this.hasFill(endShape))) {
+            style.borders = new BasicArray<Border>();
+        }
+        if (borderStyle !== copyStyle && !(endShape instanceof PathShapeView && (!endShape.data.isClosed || !this.hasFill(endShape)))) {
             style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
         }
 
@@ -1384,7 +1395,7 @@ export class PageEditor {
         const copyStyle = findUsableFillStyle(shape);
         const style2: Style = this.cloneStyle(copyStyle);
         const borderStyle = findUsableBorderStyle(shape);
-        if (borderStyle !== copyStyle && (shape instanceof PathShapeView && (!shape.data.isClosed || !this.hasFill(shape)))) {
+        if (borderStyle !== copyStyle) {
             style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
         }
 
