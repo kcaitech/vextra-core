@@ -354,7 +354,6 @@ export class ShapeEditor {
     public setName(name: string) {
         this._repoWrap('setName', (api) => {
             const __r = this.modifyVariable(VariableType.Name, OverrideType.Name, name, api);
-            console.log('--r--', __r);
             if (__r) return;
             api.shapeModifyName(this.__page, this.shape, name)
             api.shapeModifyNameFixed(this.__page, this.shape, true);
