@@ -162,8 +162,11 @@ export class ArtboradView extends GroupShapeView {
         }
 
         if (shadows.length) {
+            let filter: string = '';
             const inner_url = innerShadowId(filterId, this.getShadows());
-            if (inner_url.length) svgprops.filter = inner_url.join(' ');
+            filter = `url(#pd_outer-${filterId}) `;
+            if (inner_url.length) filter += inner_url.join(' ');
+            svgprops.filter = filter;
             children = [...shadows, ...children];
         }
 
