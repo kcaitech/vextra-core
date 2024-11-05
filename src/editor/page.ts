@@ -1573,11 +1573,44 @@ export class PageEditor {
         });
         try {
             api.shapeInsert(this.__document, this.__page, parent, shape, index);
-            shape = parent.childs[index]; // 需要把proxy代理之后的shape返回，否则无法触发notify
+            shape = parent.childs[index];
             this.__repo.commit();
             return shape;
         } catch (e) {
             console.log(e)
+            this.__repo.rollback();
+            return false;
+        }
+    }
+
+    insertShapes(actions: { parent: GroupShape; shape: Shape; index?: number }[], adjusted = true) {
+        try {
+            const ids: string[] = [];
+            const api = this.__repo.start("insertShapes", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+                const state = {} as SelectionState;
+                if (!isUndo) state.shapes = ids;
+                else state.shapes = cmd.saveselection?.shapes || [];
+                selection.restore(state);
+            });
+            const page = this.__page;
+            const document = this.__document;
+            for (const action of actions) {
+                const { parent, shape, } = action;
+                if (!adjusted) {
+                    const xy = parent.frame2Root();
+                    const transform2 = makeShapeTransform2By1(shape.transform);
+                    transform2.translate(new ColVector3D([-xy.x, -xy.y, 0]));
+                    updateShapeTransform1By2(shape.transform, transform2);
+                }
+                const s = api.shapeInsert(document, page, parent, shape, action.index ?? parent.childs.length);
+                ids.push(s.id);
+                const name = assign(s);
+                if (name !== shape.name) api.shapeModifyName(page, s, name);
+            }
+            this.__repo.commit();
+            return true;
+        } catch (e) {
+            console.error(e)
             this.__repo.rollback();
             return false;
         }
@@ -4661,10 +4694,7 @@ export class PageEditor {
         }
     }
 
-    insertImages(images: {
-        pack: ImagePack | SVGParseResult,
-        transform: Transform
-    }[], fixed: boolean, env: GroupShapeView) {
+    insertImages(images: { pack: ImagePack | SVGParseResult; transform: Transform; targetEnv: GroupShapeView; }[], fixed: boolean) {
         try {
             const ids: string[] = [];
             const imageShapes: { shape: Shape, upload: UploadAssets[] }[] = [];
@@ -4676,8 +4706,8 @@ export class PageEditor {
             });
             const document = this.__document;
             const page = this.__page;
-            const parent = adapt2Shape(env) as GroupShape;
             for (const item of images) {
+                const parent = adapt2Shape(item.targetEnv) as GroupShape;
                 if ((item.pack as ImagePack).size) {
                     const { size, name, buff, base64 } = item.pack as ImagePack;
                     const format = getFormatFromBase64(base64);
