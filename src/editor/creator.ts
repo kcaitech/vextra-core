@@ -619,7 +619,7 @@ export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm):
     const text = new Text(new BasicArray());
     const para = new Para('添加文本\n', new BasicArray());
     para.attr = new ParaAttr();
-    para.attr.minimumLineHeight = 24;
+    para.attr.autoLineHeight = true;
     text.paras.push(para);
     const span = new Span(para.length);
     span.fontName = is_mac() ? "PingFang SC" : "微软雅黑";

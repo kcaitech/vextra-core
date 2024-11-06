@@ -158,6 +158,7 @@ import {
     CutoutShapeView,
     GroupShapeView,
     PageView,
+    PathShapeView,
     render2path,
     ShapeView,
     SymbolRefView,
@@ -574,7 +575,17 @@ export class PageEditor {
         const savep = fshape.parent as GroupShape;
         const shapes_rows = layoutShapesOrder(shapes.map(s => adapt2Shape(s)), false);
         const { hor, ver } = layoutSpacing(shapes_rows);
-        const layoutInfo = new AutoLayout(hor, ver, 0, 0, 0, 0);
+        const ver_auto = shapes_rows.length === 1 || shapes_rows.every(s => s.length === 1) ? types.StackSizing.Auto : types.StackSizing.Fixed;
+        const layoutInfo = new AutoLayout(hor, ver, 0, 0, 0, 0, ver_auto);
+        if (shapes_rows.length === 1) {
+            layoutInfo.stackWrap = types.StackWrap.NoWrap;
+            layoutInfo.stackMode = types.StackMode.Horizontal;
+            layoutInfo.stackCounterSpacing = hor;
+        } else if (shapes_rows.every(s => s.length === 1)) {
+            layoutInfo.stackWrap = types.StackWrap.NoWrap;
+            layoutInfo.stackMode = types.StackMode.Vertical;
+            layoutInfo.stackSpacing = ver;
+        }
         let artboard = newAutoLayoutArtboard(artboardname, new ShapeFrame(0, 0, 100, 100), layoutInfo);
 
         const api = this.__repo.start("create_autolayout_artboard", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
@@ -632,20 +643,31 @@ export class PageEditor {
             return false;
         }
     }
-
+    hasFill(shape: Shape | ShapeView) {
+        const fills = shape.getFills();
+        if (fills.length === 0) return false;
+        for (let i = 0, len = fills.length; i < len; ++i) {
+            if (fills[i].isEnabled) return true;
+        }
+        return false;
+    }
     boolgroup(shapes: Shape[], groupname: string, op: BoolOp): false | BoolShape {
         if (shapes.length === 0) return false;
         if (shapes.find((v) => !v.parent)) return false;
         const fshape = shapes[0];
         const savep = fshape.parent as GroupShape;
         // copy fill and borders
-        const copyStyle = findUsableFillStyle(shapes[shapes.length - 1]);
+        const endShape = shapes[shapes.length - 1];
+        const copyStyle = findUsableFillStyle(endShape);
         const style: Style = this.cloneStyle(copyStyle);
         if (style.fills.length === 0) {
             style.fills.push(newSolidColorFill()); // 自动添加个填充
         }
-        const borderStyle = findUsableBorderStyle(shapes[shapes.length - 1]);
-        if (borderStyle !== copyStyle) {
+        const borderStyle = findUsableBorderStyle(endShape);
+        if (endShape instanceof PathShape && (!endShape.isClosed || !this.hasFill(endShape))) {
+            style.borders = new BasicArray<Border>();
+        }
+        if (borderStyle !== copyStyle && !(endShape instanceof PathShape && (!endShape.isClosed || !this.hasFill(endShape)))) {
             style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
         }
         // 1、新建一个GroupShape
@@ -1220,10 +1242,19 @@ export class PageEditor {
         if (!name) name = fshape.name;
 
         // copy fill and borders
-        const copyStyle = findUsableFillStyle(shapes[shapes.length - 1]);
+        const endShape = shapes[shapes.length - 1];
+        const copyStyle = findUsableFillStyle(endShape);
         const style: Style = this.cloneStyle(copyStyle);
-        const borderStyle = findUsableBorderStyle(shapes[shapes.length - 1]);
-        if (borderStyle !== copyStyle) {
+        if (style.fills.length === 0) {
+            const fills = shapes.find(s => s.style.getFills())?.style.getFills();
+            fills ? style.fills.push(...fills) : style.fills.push(newSolidColorFill());
+        }
+
+        const borderStyle = findUsableBorderStyle(endShape);
+        if (endShape instanceof PathShapeView && (!endShape.data.isClosed || !this.hasFill(endShape))) {
+            style.borders = new BasicArray<Border>();
+        }
+        if (borderStyle !== copyStyle && !(endShape instanceof PathShapeView && (!endShape.data.isClosed || !this.hasFill(endShape)))) {
             style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
         }
 
@@ -2113,7 +2144,7 @@ export class PageEditor {
             const api = this.__repo.start('arrange');
             const page = this.__page;
             for (const action of actions) {
-                const {target, transX, transY} = action;
+                const { target, transX, transY } = action;
                 api.shapeModifyX(page, target, target.transform.translateX + transX);
                 api.shapeModifyY(page, target, target.transform.translateY + transY);
             }
@@ -2663,7 +2694,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
-     setShapesFillOpacity(actions: BatchAction[]) {
+    setShapesFillOpacity(actions: BatchAction[]) {
         const api = this.__repo.start('setShapesFillOpacity');
         try {
             for (let i = 0; i < actions.length; i++) {
@@ -4229,7 +4260,7 @@ export class PageEditor {
         if (!host_parent || host_parent.isVirtualShape) {
             return false;
         }
-
+        let autoLayoutShape: Artboard | undefined;
         let pre: Shape[] = [];
         for (let i = 0, l = shapes.length; i < l; i++) {
             const item = shapes[i];
@@ -4257,7 +4288,6 @@ export class PageEditor {
         if (!pre.length) {
             return false;
         }
-
         try {
             const api = this.__repo.start('afterShapeListDrag');
             if (position === "inner") {
@@ -4277,6 +4307,14 @@ export class PageEditor {
                     let last = (host as GroupShape).childs.length;
                     if (parent.id === host.id) { // 同一父级
                         last--;
+                    } else {
+                        if (host instanceof BoolShape) {
+                            const op = host.getBoolOp().op;
+                            api.shapeModifyBoolOp(this.__page, item, op);
+                        }
+                        if (host instanceof Artboard) {
+                            autoLayoutShape = host;
+                        }
                     }
 
                     api.shapeMove(this.__page, parent, parent.indexOfChild(item), host as GroupShape, last);
@@ -4326,9 +4364,16 @@ export class PageEditor {
                     } else {
                         index = host_parent.indexOfChild(host);
                     }
-
                     if (parent.id === host_parent.id) { // 同一父级
                         index = modify_index((parent) as GroupShape, item, host, index);
+                    } else {
+                        if (host_parent instanceof BoolShape) {
+                            const op = host_parent.getBoolOp().op;
+                            api.shapeModifyBoolOp(this.__page, item, op);
+                        }
+                        if (host_parent instanceof Artboard) {
+                            autoLayoutShape = host_parent;
+                        }
                     }
 
                     if (position === "upper") {
@@ -4348,6 +4393,9 @@ export class PageEditor {
                         this.delete_inner(this.__page, parent, api);
                     }
                 }
+            }
+            if (autoLayoutShape) {
+                modifyAutoLayout(this.__page, api, autoLayoutShape);
             }
             this.__repo.commit();
             return true;
@@ -4568,6 +4616,7 @@ export class PageEditor {
                         const alphaAttr = __text.paras[0]?.attr;
                         if (alphaAttr) {
                             api.textModifyParaSpacing(page, __view, alphaAttr.paraSpacing || 0, 0, len); // 段落间距
+                            api.textModifyAutoLineHeight(page, __view, alphaAttr.autoLineHeight ?? true, 0, len)
                             api.textModifyMinLineHeight(page, __view, alphaAttr.minimumLineHeight!, 0, len); // 行高
                             api.textModifyMaxLineHeight(page, __view, alphaAttr.maximumLineHeight!, 0, len); // 行高
                             api.textModifyHorAlign(page, __view, alphaAttr.alignment!, 0, len); // 水平位置

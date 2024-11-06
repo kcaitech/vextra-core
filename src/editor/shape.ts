@@ -1498,12 +1498,38 @@ export class ShapeEditor {
             const { hor, ver } = layoutSpacing(shapes_rows);
             const h_padding = shapes_rows.length ? Math.max(Math.round(shapes_rows[0][0].x), 0) : 0;
             const v_padding = shapes_rows.length ? Math.max(Math.round(shapes_rows[0][0].y), 0) : 0;
-            const layoutInfo = new AutoLayout(hor, ver, h_padding, v_padding, h_padding, v_padding);
+            const ver_auto = shapes_rows.length === 1 || shapes_rows.every(s => s.length === 1) ? StackSizing.Auto : StackSizing.Fixed;
+            const layoutInfo = new AutoLayout(hor, ver, h_padding, v_padding, h_padding, v_padding, ver_auto);
+            let shape_width = h_padding * 2;
+            let shape_height = v_padding * 2;
+            if (shapes_rows.length === 1) {
+                layoutInfo.stackWrap = StackWrap.NoWrap;
+                layoutInfo.stackMode = StackMode.Horizontal;
+                layoutInfo.stackCounterSpacing = hor;
+                shape_height += Math.max(...this.__shape.childs.map(s => s._p_frame.height));
+                this.__shape.childs.forEach(s => {
+                    shape_width += s._p_frame.width + hor;
+                })
+                shape_width -= hor;
+            } else if (shapes_rows.every(s => s.length === 1)) {
+                layoutInfo.stackWrap = StackWrap.NoWrap;
+                layoutInfo.stackMode = StackMode.Vertical;
+                layoutInfo.stackSpacing = ver;
+                shape_width += Math.max(...this.__shape.childs.map(s => s._p_frame.width));
+                this.__shape.childs.forEach(s => {
+                    shape_height += s._p_frame.height + ver;
+                })
+                shape_height -= ver;
+            }
             const shape = adapt2Shape(this.__shape);
             api.shapeAutoLayout(this.__page, shape, layoutInfo);
             const frame = initAutoLayout(this.__page, api, shape, shapes_rows);
             if (frame && shapes_rows[0]) {
-                api.shapeModifyHeight(this.__page, shape, frame.container_hieght);
+                if (shapes_rows.length === 1 || shapes_rows.every(s => s.length === 1)) {
+                    modifyAutoLayout(this.__page, api, shape);
+                } else {
+                    api.shapeModifyHeight(this.__page, shape, frame.container_hieght);
+                }
             }
             this.__repo.commit();
         } catch (e) {

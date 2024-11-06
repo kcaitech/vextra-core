@@ -134,7 +134,6 @@ export class LockMouseHandler extends AsyncApiCaller {
                     }
                     fixTextShapeFrameByLayout(api, page, shape);
                 } else {
-                    api.shapeModifyWidth(page, shape, size.width + dw);
                     if ((shape as Artboard).autoLayout) {
                         api.shapeModifyAutoLayoutSizing(page, shape, StackSizing.Fixed, 'hor');
                     }
@@ -187,7 +186,6 @@ export class LockMouseHandler extends AsyncApiCaller {
                     }
                     fixTextShapeFrameByLayout(api, page, shape);
                 } else {
-                    api.shapeModifyHeight(page, shape, size.height + dh);
                     if ((shape as Artboard).autoLayout) {
                         api.shapeModifyAutoLayoutSizing(page, shape, StackSizing.Fixed, 'ver');
                     }
