@@ -248,10 +248,7 @@ export class Shape extends Basic implements classes.Shape {
         return this.frame2Root();
     }
 
-    /**
-     * root: page 往上一级
-     * @returns
-     */
+    // @deprecated
     frame2Root(): ShapeFrame {
         const frame = this.frame;
         const m = this.matrix2Root();
@@ -260,6 +257,7 @@ export class Shape extends Basic implements classes.Shape {
         return new ShapeFrame(lt.x, lt.y, rb.x - lt.x, rb.y - lt.y);
     }
 
+    // @deprecated
     frame2Parent(): ShapeFrame {
         const frame = this.frame;
         if (this.isNoTransform()) {
@@ -554,7 +552,7 @@ export class GroupShape extends Shape implements classes.GroupShape {
     }
 
     get frame(): ShapeFrame {
-        const childframes = this.childs.map((c) => c.frame2Parent());
+        const childframes = this.childs.map((c) => c.boundingBox());
         const reducer = (p: { minx: number, miny: number, maxx: number, maxy: number }, c: ShapeFrame, i: number) => {
             if (i === 0) {
                 p.minx = c.x;
