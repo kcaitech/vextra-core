@@ -515,10 +515,10 @@ export class GroupShape extends Shape implements classes.GroupShape {
         const w = frame.width;
         const h = frame.height;
         const path = [["M", x, y],
-            ["l", w, 0],
-            ["l", 0, h],
-            ["l", -w, 0],
-            ["z"]];
+        ["l", w, 0],
+        ["l", 0, h],
+        ["l", -w, 0],
+        ["z"]];
         return Path.fromSVGString(path.join(''));
     }
 
@@ -658,10 +658,6 @@ export function getPathOfRadius(frame: ShapeSize, cornerRadius?: CornerRadius, f
         lb = cornerRadius!.lb;
         rt = cornerRadius!.rt;
         rb = cornerRadius!.rb;
-        lt = Math.max(0, Math.min(lt, maxRadius));
-        lb = Math.max(0, Math.min(lb, maxRadius));
-        rt = Math.max(0, Math.min(rt, maxRadius));
-        rb = Math.max(0, Math.min(rb, maxRadius));
     }
 
     // const path = [];
@@ -1233,10 +1229,10 @@ export class TextShape extends Shape implements classes.TextShape {
         const x = 0;
         const y = 0;
         const path = [["M", x, y],
-            ["l", w, 0],
-            ["l", 0, h],
-            ["l", -w, 0],
-            ["z"]];
+        ["l", w, 0],
+        ["l", 0, h],
+        ["l", -w, 0],
+        ["z"]];
         return Path.fromSVGString(path.join(''));
     }
 

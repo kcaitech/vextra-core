@@ -50,11 +50,11 @@ export class FrameGrid {
         const xe = (frame.x + frame.width) - this._offsetx;
         const ys = (frame.y) - this._offsety;
         const ye = (frame.y + frame.height) - this._offsety;
-
+                
         const is = Math.max(0, xs / this._cellWidth);
         const ie = Math.max(1, xe / this._cellWidth);
-
-        for (let i = Math.floor(is); i < ie && i < this._cellColsCount; ++i) {
+        
+        for (let i = Math.floor(is); i <= ie && i <= this._cellColsCount; ++i) {
             const js = Math.max(0, ys / this._cellHeight);
             const je = Math.max(1, ye / this._cellHeight);
             let row = this._rows[i];
@@ -62,7 +62,7 @@ export class FrameGrid {
                 row = [];
                 this._rows[i] = row;
             }
-            for (let j = Math.floor(js); j < je && j < this._cellRowsCount; ++j) {
+            for (let j = Math.floor(js); j <= je && j <= this._cellRowsCount; ++j) {
                 let cell = row[j];
                 if (!preset && cell) preset = is_intersect(cell, frame);
                 if (!cell) {

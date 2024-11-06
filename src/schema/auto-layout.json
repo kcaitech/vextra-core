@@ -70,7 +70,8 @@
         "stackHorizontalPadding",
         "stackVerticalPadding",
         "stackPaddingRight",
-        "stackPaddingBottom"
+        "stackPaddingBottom",
+        "stackPrimarySizing"
     ],
     "additionalProperties": false
 }
