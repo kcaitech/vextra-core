@@ -111,7 +111,7 @@ export class PathShapeView extends ShapeView {
                     __props.opacity = props.opacity;
                     delete props.opacity;
                 }
-                if (props.style["mix-blend-mode"]) {
+                if (props.style?.["mix-blend-mode"]) {
                     __props["mix-blend-mode"] = props.style["mix-blend-mode"];
                     delete props.style["mix-blend-mode"];
                 }
