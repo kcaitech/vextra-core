@@ -34,7 +34,6 @@ import { Transform as Transform2 } from "../../../basic/transform";
 import { ColVector3D } from "../../../basic/matrix2";
 import { XYsBounding } from "../../../io/cilpboard";
 import { getAutoLayoutShapes, modifyAutoLayout } from "../../utils/auto_layout";
-import { is_straight } from "../../utils/path";
 
 export type RangeRecorder = Map<string, {
     toRight?: number,
@@ -97,7 +96,7 @@ export function reLayoutBySizeChanged(
             transform.addTransform(__p_transform);
 
             const _s = transform.decomposeScale();
-            const _scale = { x: _s.x, y: _s.y };
+            const _scale = { x: Math.abs(_s.x), y: Math.abs(_s.y) };
             const oSize = getSize(child);
             const width = oSize.width * Math.abs(_scale.x);
             const height = oSize.height * Math.abs(_scale.y);
@@ -107,7 +106,7 @@ export function reLayoutBySizeChanged(
                 api.shapeModifyWH(page, data, width, height)
             }
 
-            transform.clearScale();
+            transform.clearScaleSize();
             api.shapeModifyTransform(page, data, makeShapeTransform1By2(transform));
 
             if (child instanceof GroupShapeView) {
