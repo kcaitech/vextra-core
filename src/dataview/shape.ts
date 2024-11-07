@@ -981,12 +981,15 @@ export class ShapeView extends DataView {
             if (this.blur!.type === BlurType.Gaussian) {
                 children = [...blur, elh('g', { filter: `url(#${blurId})` }, children)];
             } else {
-                const __props: any = {
-                    opacity: props.opacity,
-                    ["mix-blend-mode"]: props.style["mix-blend-mode"]
-                };
-                delete props.opacity;
-                delete props.style["mix-blend-mode"];
+                const __props: any = {};
+                if (props.opacity) {
+                    __props.opacity = props.opacity;
+                    delete props.opacity;
+                }
+                if (props.style["mix-blend-mode"]) {
+                    __props["mix-blend-mode"] = props.style["mix-blend-mode"];
+                    delete props.style["mix-blend-mode"];
+                }
                 children = [...blur, elh('g', __props, children)];
             }
         }

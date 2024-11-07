@@ -176,7 +176,7 @@ export class ArtboradView extends GroupShapeView {
             const blurId = `blur_${objectId(this)}`;
             const blur = this.renderBlur(blurId);
             children = [...blur, ...children];
-            props['filter'] += `url(#${blurId})`
+            props['filter'] = props['filter'] ?? '' + `url(#${blurId})`;
         }
 
         const _mask_space = this.renderMask();
