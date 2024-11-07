@@ -960,8 +960,7 @@ export class ShapeView extends DataView {
 
         const filterId = `${objectId(this)}`;
         const shadows = this.renderShadows(filterId);
-        const blurId = `blur_${objectId(this)}`;
-        const blur = this.renderBlur(blurId);
+
 
         let props = this.renderProps();
         let children = [...fills, ...childs, ...borders];
@@ -976,10 +975,20 @@ export class ShapeView extends DataView {
         }
 
         // 模糊
+        const blurId = `blur_${objectId(this)}`;
+        const blur = this.renderBlur(blurId);
         if (blur.length) {
-            let filter: string = '';
-            filter = `url(#${blurId})`;
-            children = [...blur, elh('g', { filter }, children)];
+            if (this.blur!.type === BlurType.Gaussian) {
+                children = [...blur, elh('g', { filter: `url(#${blurId})` }, children)];
+            } else {
+                const __props: any = {
+                    opacity: props.opacity,
+                    ["mix-blend-mode"]: props.style["mix-blend-mode"]
+                };
+                delete props.opacity;
+                delete props.style["mix-blend-mode"];
+                children = [...blur, elh('g', __props, children)];
+            }
         }
 
         // 遮罩
