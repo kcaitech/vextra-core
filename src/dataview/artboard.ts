@@ -156,14 +156,19 @@ export class ArtboradView extends GroupShapeView {
             svgprops['overflow'] = 'visible';
             children = [elh("svg", svgprops, [...fills, ...borders, ...childs])];
         } else {
+            // 裁剪属性不能放在filter的外层
             const id = "clip-board-" + objectId(this);
-            const _svg_node = elh("svg", svgprops, [clippathR(elh, id, this.getPathStr()), ...children]);
-            children = [elh("g", {"clip-path": "url(#" + id + ")"}, [_svg_node]), ...borders];
+            svgprops['clip-path'] = "url(#" + id + ")";
+            const _svg_node = elh("svg", svgprops, [clippathR(elh, id, this.getPathStr()),...borders, ...children]);
+            children = [_svg_node];
         }
 
         if (shadows.length) {
+            let filter: string = '';
             const inner_url = innerShadowId(filterId, this.getShadows());
-            if (inner_url.length) svgprops.filter = inner_url.join(' ');
+            filter = `url(#pd_outer-${filterId}) `;
+            if (inner_url.length) filter += inner_url.join(' ');
+            props.filter = filter;
             children = [...shadows, ...children];
         }
 
@@ -171,7 +176,7 @@ export class ArtboradView extends GroupShapeView {
             const blurId = `blur_${objectId(this)}`;
             const blur = this.renderBlur(blurId);
             children = [...blur, ...children];
-            props['filter'] = `url(#${blurId})`
+            props['filter'] += `url(#${blurId})`
         }
 
         const _mask_space = this.renderMask();
