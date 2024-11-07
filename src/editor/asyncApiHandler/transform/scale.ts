@@ -107,7 +107,7 @@ export function reLayoutBySizeChanged(
                 api.shapeModifyWH(page, data, width, height)
             }
 
-            transform.clearScaleSize();
+            transform.clearScale();
             api.shapeModifyTransform(page, data, makeShapeTransform1By2(transform));
 
             if (child instanceof GroupShapeView) {
