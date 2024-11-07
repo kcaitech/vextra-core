@@ -283,7 +283,7 @@ export class BoolShapeView extends GroupShapeView {
 }
 
 const getPath = (shape: ShapeView) => {
-    if (!shape.isVisible) return new Path();
+    if (!shape?.isVisible) return new Path();
     if (shape instanceof GroupShapeView && !(shape instanceof BoolShapeView)) {
         return render2path(shape, BoolOp.Union);
     } else if (shape instanceof TextShapeView) {
