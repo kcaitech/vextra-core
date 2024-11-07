@@ -97,7 +97,7 @@ export function reLayoutBySizeChanged(
             transform.addTransform(__p_transform);
 
             const _s = transform.decomposeScale();
-            const _scale = { x: _s.x, y: _s.y };
+            const _scale = { x: Math.abs(_s.x), y: Math.abs(_s.y) };
             const oSize = getSize(child);
             const width = oSize.width * Math.abs(_scale.x);
             const height = oSize.height * Math.abs(_scale.y);
