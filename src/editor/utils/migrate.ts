@@ -26,6 +26,7 @@ export function unable_to_migrate(targetEnv: Shape, wander: Shape) {
         if (is_state(p)) {
             const tree = wander instanceof SymbolRefShape ? wander.symData : wander;
             if (!tree) return 4;
+            if (is_circular_ref2(tree, p.parent!.id)) return 5;
             for (const state of (p.parent as GroupShape).childs) {
                 if (is_circular_ref2(tree, state.id)) return 5;
             }
