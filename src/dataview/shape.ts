@@ -421,7 +421,7 @@ export class ShapeView extends DataView {
         if (masked) masked.notify('rerender-mask');
     }
 
-    protected _findOV(ot: OverrideType, vt: VariableType): Variable | undefined {
+    _findOV(ot: OverrideType, vt: VariableType): Variable | undefined {
         if (!this.varsContainer) return;
         const _vars = findOverrideAndVar(this.m_data, ot, this.varsContainer, true);
         if (!_vars) return;
