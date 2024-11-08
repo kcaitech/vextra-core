@@ -191,16 +191,18 @@ function setSize(page: Page, shape: Shape, w: number, h: number, api: Api): bool
             }
             api.shapeModifyWH(page, shape, w, h)
             fixTextShapeFrameByLayout(api, page, shape);
-        } else if (shape instanceof GroupShape) {
-            // const saveW = frame.width;
-            // const saveH = frame.height;
-            api.shapeModifyWH(page, shape, w, h)
-            // const scaleX = frame.width / saveW;
-            // const scaleY = frame.height / saveH;
-
-            // 这个scaleX, scaleY 不对
-            // afterModifyGroupShapeWH(api, page, shape, scaleX, scaleY, new ShapeFrame(frame.x, frame.y, saveW, saveH), recorder);
-        } else {
+        }
+        // else if (shape instanceof GroupShape) {
+        //     // const saveW = frame.width;
+        //     // const saveH = frame.height;
+        //     api.shapeModifyWH(page, shape, w, h)
+        //     // const scaleX = frame.width / saveW;
+        //     // const scaleY = frame.height / saveH;
+        //
+        //     // 这个scaleX, scaleY 不对
+        //     // afterModifyGroupShapeWH(api, page, shape, scaleX, scaleY, new ShapeFrame(frame.x, frame.y, saveW, saveH), recorder);
+        // }
+        else {
             api.shapeModifyWH(page, shape, w, h)
         }
         changed = true;
@@ -235,7 +237,7 @@ export function translate(api: Api, page: Page, shape: Shape, dx: number, dy: nu
 export function expandTo(api: Api, document: Document, page: Page, shape: Shape, w: number, h: number) {
     if (w < minimum_WH) w = minimum_WH;
     if (h < minimum_WH) h = minimum_WH;
-    let changed = false;
+    let changed;
     if (shape.isNoTransform()) {
         changed = setSize(page, shape, w, h, api);
     } else {

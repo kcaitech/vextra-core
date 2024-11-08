@@ -9,11 +9,10 @@ import { shape4border, shape4contextSettings, shape4cornerRadius, shape4fill, sh
 import { update_frame_by_points } from "../utils/path";
 import { GroupShape, PathShape2, SymbolShape, TextShape, Shape } from "../../data/shape";
 import { BatchAction, BatchAction2, BatchAction5, PageEditor } from "../page";
-import { IImportContext, importGradient, } from "../../data/baseimport";
+import { importGradient, } from "../../data/baseimport";
 import { exportGradient, } from "../../data/baseexport";
 import { TableEditor } from "../table";
 import { getAutoLayoutShapes, modifyAutoLayout, reLayoutBySort, TidyUpAlgin, tidyUpLayout } from "../utils/auto_layout";
-import { ShapeEditor } from "../shape";
 import { TextShapeEditor } from "../textshape";
 
 export class LinearApi {
@@ -158,7 +157,6 @@ export class LinearApi {
     /**
      * @description 修改图形X轴位置
      */
-
     modifyShapesX(actions: {
         target: ShapeView,
         x: number
@@ -176,7 +174,6 @@ export class LinearApi {
     /**
      * @description 修改图形Y轴位置
      */
-
     modifyShapesY(actions: {
         target: ShapeView,
         y: number
@@ -187,6 +184,26 @@ export class LinearApi {
             for (let i = 0; i < actions.length; i++) {
                 const action = actions[i];
                 api.shapeModifyY(page, adapt2Shape(action.target), action.y);
+            }
+        });
+    }
+
+    /**
+     * @description 偏移图形XY轴位置
+     */
+    modifyShapesXY(actions: {
+        target: ShapeView,
+        dx: number,
+        dy: number
+    }[]) {
+        this.execute('modify-shapes-xy', () => {
+            const api = this.api!;
+            const page = this.page;
+            for (const action of actions) {
+                const { target, dx, dy } = action;
+                if (target.isVirtualShape) continue;
+                api.shapeModifyX(page, adapt2Shape(target), target.transform.translateX + dx);
+                api.shapeModifyY(page, adapt2Shape(target), target.transform.translateY + dy);
             }
         });
     }
@@ -886,24 +903,20 @@ export class LinearApi {
      * @description 修改文本行高
      */
 
-    modifyTextLineHeight(lineHeight: number | 'auto', index: number, len: number, text: TextShapeView) {
+    modifyTextLineHeight(lineHeight: number | undefined, isAuto: boolean, index: number, len: number, text: TextShapeView) {
         const editor4text = this.getTextEditor(text)
         this.execute('modify-text-line-height', () => {
             const api = this.api!;
             const page = this.page;
             const shape = editor4text.shape4edit(api);
-            if (lineHeight === 'auto') {
-                api.textModifyAutoLineHeight(page, shape, true, index, len)
-            } else {
-                api.textModifyAutoLineHeight(page, shape, false, index, len)
-                api.textModifyMinLineHeight(page, shape, lineHeight, index, len)
-                api.textModifyMaxLineHeight(page, shape, lineHeight, index, len)
-            }
+            api.textModifyAutoLineHeight(page, shape, isAuto, index, len)
+            api.textModifyMinLineHeight(page, shape, lineHeight, index, len)
+            api.textModifyMaxLineHeight(page, shape, lineHeight, index, len)
             editor4text.fixFrameByLayout(api);
         })
     }
 
-    modifyTextLineHeightMulit(shapes: (TextShapeView | TableCellView)[], lineHeight: number | 'auto') {
+    modifyTextLineHeightMulit(shapes: (TextShapeView | TableCellView)[], lineHeight: number | undefined, isAuto: boolean) {
         this.execute('modify-text-line-height-mulit', () => {
             const api = this.api!;
             const page = this.page;
@@ -914,13 +927,9 @@ export class LinearApi {
                 const shape = editor4text.shape4edit(api, text_shape);
                 const text = shape instanceof ShapeView ? shape.text : shape.value as Text;
                 const text_length = text.length;
-                if (lineHeight === 'auto') {
-                    api.textModifyAutoLineHeight(page, shape, true, 0, text_length)
-                } else {
-                    api.textModifyAutoLineHeight(page, shape, false, 0, text_length)
-                    api.textModifyMinLineHeight(page, shape, lineHeight, 0, text_length)
-                    api.textModifyMaxLineHeight(page, shape, lineHeight, 0, text_length)
-                }
+                api.textModifyAutoLineHeight(page, shape, isAuto, 0, text_length)
+                api.textModifyMinLineHeight(page, shape, lineHeight, 0, text_length)
+                api.textModifyMaxLineHeight(page, shape, lineHeight, 0, text_length)
                 editor4text.fixFrameByLayout2(api, shape);
             }
         })

@@ -75,7 +75,7 @@ export class TextShapeEditor extends ShapeEditor {
         return this._cacheAttr;
     }
 
-    public setCachedSpanAttr(){
+    public setCachedSpanAttr() {
         this._cacheAttr = new SpanAttr();
     }
 
@@ -816,17 +816,13 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
-    public setLineHeight(lineHeight: number | 'auto', index: number, len: number) {
+    public setLineHeight(lineHeight: number | undefined, isAuto: boolean, index: number, len: number) {
         const api = this.__repo.start("setLineHeight");
         try {
             const shape = this.shape4edit(api);
-            if (lineHeight === 'auto') {
-                api.textModifyAutoLineHeight(this.__page, shape, true, index, len)
-            } else {
-                api.textModifyAutoLineHeight(this.__page, shape, false, index, len)
-                api.textModifyMinLineHeight(this.__page, shape, lineHeight, index, len)
-                api.textModifyMaxLineHeight(this.__page, shape, lineHeight, index, len)
-            }
+            api.textModifyAutoLineHeight(this.__page, shape, isAuto, index, len)
+            api.textModifyMinLineHeight(this.__page, shape, lineHeight, index, len)
+            api.textModifyMaxLineHeight(this.__page, shape, lineHeight, index, len)
             this.fixFrameByLayout(api);
             this.__repo.commit();
             return true;
@@ -836,7 +832,7 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
-    public setLineHeightMulit(shapes: (TextShapeView | TableCellView)[], lineHeight: number | 'auto') {
+    public setLineHeightMulit(shapes: (TextShapeView | TableCellView)[], lineHeight: number | undefined, isAuto: boolean) {
         const api = this.__repo.start("setLineHeightMulit");
         try {
             for (let i = 0; i < shapes.length; i++) {
@@ -845,13 +841,9 @@ export class TextShapeEditor extends ShapeEditor {
                 const shape = this.shape4edit(api, text_shape);
                 const text = shape instanceof ShapeView ? shape.text : shape.value as Text;
                 const text_length = text.length;
-                if (lineHeight === 'auto') {
-                    api.textModifyAutoLineHeight(this.__page, shape, true, 0, text_length)
-                } else {
-                    api.textModifyAutoLineHeight(this.__page, shape, false, 0, text_length)
-                    api.textModifyMinLineHeight(this.__page, shape, lineHeight, 0, text_length)
-                    api.textModifyMaxLineHeight(this.__page, shape, lineHeight, 0, text_length)
-                }
+                api.textModifyAutoLineHeight(this.__page, shape, isAuto, 0, text_length)
+                api.textModifyMinLineHeight(this.__page, shape, lineHeight, 0, text_length)
+                api.textModifyMaxLineHeight(this.__page, shape, lineHeight, 0, text_length)
                 this.fixFrameByLayout2(api, shape);
             }
             this.__repo.commit();
@@ -1057,7 +1049,7 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
 
-    public setTextWeight(weight: number,italic: boolean, index: number, len: number) {
+    public setTextWeight(weight: number, italic: boolean, index: number, len: number) {
         if (len === 0) {
             this.cacheAttr.weight = weight;
             this.cacheAttr.italic = italic;

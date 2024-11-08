@@ -261,6 +261,7 @@ export function update_frame_by_points(api: Api, page: Page, s: Shape, reLayout 
 
     if (dx || dy) {
         api.shapeModifyTransform(page, s, makeShapeTransform1By2(makeShapeTransform2By1(s.transform).setTranslate(ColVector3D.FromXY(targetXY.x, targetXY.y))));
+        frameChange = true;
     }
 
     if (!(frameChange || reLayout)) return; // 只有宽高被改变，才会需要重排2D points.

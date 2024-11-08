@@ -34,6 +34,7 @@ import { Transform as Transform2 } from "../../../basic/transform";
 import { ColVector3D } from "../../../basic/matrix2";
 import { XYsBounding } from "../../../io/cilpboard";
 import { getAutoLayoutShapes, modifyAutoLayout } from "../../utils/auto_layout";
+import { is_straight } from "../../utils/path";
 
 export type RangeRecorder = Map<string, {
     toRight?: number,
@@ -96,7 +97,7 @@ export function reLayoutBySizeChanged(
             transform.addTransform(__p_transform);
 
             const _s = transform.decomposeScale();
-            const _scale = { x: _s.x, y: _s.y };
+            const _scale = { x: Math.abs(_s.x), y: Math.abs(_s.y) };
             const oSize = getSize(child);
             const width = oSize.width * Math.abs(_scale.x);
             const height = oSize.height * Math.abs(_scale.y);
@@ -388,6 +389,28 @@ export function reLayoutBySizeChanged(
     function getSize(s: ShapeView) {
         let size = sizeRecorder.get(s.id);
         if (!size) {
+            // if (is_straight(s.data)) {
+            //     const path = s.getPath().clone();
+            //     // path.transform(s.matrix2Parent());
+            //     const f = path.bbox();
+            //     size = {
+            //         x: 0,
+            //         y: 0,
+            //         width: f.w,
+            //         height: f.h
+            //     };
+            //     sizeRecorder.set(s.id, size);
+            // } else {
+            //     const f = s.frame;
+            //     size = {
+            //         x: f.x,
+            //         y: f.y,
+            //         width: f.width,
+            //         height: f.height
+            //     };
+            //     sizeRecorder.set(s.id, size);
+            // }
+
             const f = s.frame;
             size = {
                 x: f.x,
@@ -672,11 +695,11 @@ export function uniformScale(
         for (let j = 0; j < text.text.paras.length; j++) {
             const para = text.text.paras[j];
             const pId = text.id + j;
-            const minimumLineHeight = getBaseValue(pId, 'minimumLineHeight', para.attr?.minimumLineHeight || 0);
+            const minimumLineHeight = getBaseValue(pId, 'minimumLineHeight', para.attr?.minimumLineHeight || 121);
             if (minimumLineHeight) {
                 api.textModifyMinLineHeight(page, text, minimumLineHeight * ratio, index, para.length);
             }
-            const maximumLineHeight = getBaseValue(pId, 'maximumLineHeight', para.attr?.maximumLineHeight || 0);
+            const maximumLineHeight = getBaseValue(pId, 'maximumLineHeight', para.attr?.maximumLineHeight || 121);
             if (maximumLineHeight) {
                 api.textModifyMaxLineHeight(page, text, maximumLineHeight * ratio, index, para.length);
             }
@@ -738,6 +761,8 @@ export class Scaler extends AsyncApiCaller {
         size: { width: number, height: number },
         scale: { x: number, y: number },
         transform2: Transform2,
+        w_change: boolean,
+        h_change: boolean
     }[]) {
         try {
             const api = this.api;
@@ -759,10 +784,10 @@ export class Scaler extends AsyncApiCaller {
                 }
                 api.shapeModifyTransform(page, shape, makeShapeTransform1By2(item.transform2));
                 if ((shape as Artboard).autoLayout) {
-                    if (item.size.width !== item.shape.size.width) {
+                    if (item.w_change) {
                         api.shapeModifyAutoLayoutSizing(page, shape, StackSizing.Fixed, 'hor');
                     }
-                    if (item.size.height !== item.shape.size.height) {
+                    if (item.h_change) {
                         api.shapeModifyAutoLayoutSizing(page, shape, StackSizing.Fixed, 'ver');
                     }
                 }
