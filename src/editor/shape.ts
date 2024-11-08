@@ -1,74 +1,19 @@
-import {
-    BoolShape, GroupShape, PathShape, PathShape2, RectShape, Shape, ShapeType,
-    SymbolShape, SymbolUnionShape, TextShape, Variable, VariableType,
-    Color, PathType, Document, SymbolRefShape, Text, Artboard, Page,
-    Border, BorderPosition, BorderStyle, Fill, MarkerType, Shadow,
-    BoolOp, CurvePoint, ExportFormat, ContactShape,
-    AutoLayout
-} from "../data";
+import { BoolShape, GroupShape, PathShape, PathShape2, RectShape, Shape, ShapeType, SymbolShape, SymbolUnionShape, TextShape, Variable, VariableType, Color, PathType, Document, SymbolRefShape, Text, Page, Border, BorderPosition, BorderStyle, Fill, MarkerType, Shadow, BoolOp, CurvePoint, ExportFormat, ContactShape, AutoLayout } from "../data";
 import { expand, expandTo, translate, translateTo } from "./frame";
 import { CoopRepository } from "../coop/cooprepo";
-import {
-    CurveMode,
-    ExportFileFormat,
-    ExportFormatNameingScheme,
-    ExportOptions,
-    OverrideType,
-    ShadowPosition,
-    StackAlign,
-    StackMode,
-    StackSizing,
-    StackWrap
-} from "../data/typesdefine";
+import { CurveMode, ExportFileFormat, ExportFormatNameingScheme, ExportOptions, OverrideType, ShadowPosition, StackAlign, StackMode, StackSizing, StackWrap } from "../data/typesdefine";
 import { Api } from "../coop/recordapi";
 import { importCurvePoint } from "../data/baseimport";
 import { v4 } from "uuid";
 import { uuid } from "../basic/uuid";
-import {
-    after_remove,
-    clear_binds_effect,
-    find_layers_by_varid,
-    get_symbol_by_layer,
-    is_default_state
-} from "./utils/other";
+import { after_remove, clear_binds_effect, find_layers_by_varid, get_symbol_by_layer, is_default_state } from "./utils/other";
 import { newText2 } from "./creator";
-import {
-    _typing_modify,
-    get_points_for_init,
-    modify_points_xy,
-    update_frame_by_points
-} from "./utils/path";
+import { _typing_modify, get_points_for_init, modify_points_xy, update_frame_by_points } from "./utils/path";
 import { adapt_for_artboard } from "./utils/common";
-import {
-    ShapeView,
-    SymbolRefView,
-    SymbolView,
-    TextShapeView,
-    adapt2Shape,
-    findOverride,
-    ArtboradView
-} from "../dataview";
-import {
-    is_part_of_symbol,
-    is_part_of_symbolref,
-    is_symbol_or_union,
-    modify_variable,
-    modify_variable_with_api,
-    override_variable,
-    shape4border,
-    shape4contextSettings,
-    shape4exportOptions,
-    shape4fill,
-    shape4shadow
-} from "./symbol";
+import { ShapeView, SymbolRefView, SymbolView, adapt2Shape, findOverride, ArtboradView } from "../dataview";
+import { is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union, modify_variable, modify_variable_with_api, override_variable, shape4border, shape4contextSettings, shape4exportOptions, shape4fill, shape4shadow } from "./symbol";
 import { ISave4Restore, LocalCmd, SelectionState } from "../coop/localcmd";
-import {
-    getAutoLayoutShapes,
-    initAutoLayout,
-    layoutShapesOrder,
-    layoutSpacing,
-    modifyAutoLayout
-} from "./utils/auto_layout";
+import { getAutoLayoutShapes, initAutoLayout, layoutShapesOrder, layoutSpacing, modifyAutoLayout } from "./utils/auto_layout";
 
 export type PaddingDir = 'ver' | 'hor' | 'top' | 'right' | 'bottom' | 'left';
 

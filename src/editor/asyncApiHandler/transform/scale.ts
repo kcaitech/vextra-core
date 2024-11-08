@@ -660,17 +660,20 @@ export function uniformScale(
         if (view instanceof PathShapeView) {
             const segments = view.segments;
             segments.forEach((segment, i) => {
+                const sid = view.id + '-segment-' + segment;
                 segment.points.forEach((point, j) => {
-                    const corner = point.radius;
+                    const pid = sid + '-point-' + j;
+                    const corner = getBaseValue(pid, 'radius', point.radius ?? 0);
                     corner && api.modifyPointCornerRadius(page, shape, j, corner * ratio, i);
                 });
             });
         }
         if (view.cornerRadius) {
-            const lt = view.cornerRadius.lt;
-            const rt = view.cornerRadius.rt;
-            const rb = view.cornerRadius.rb;
-            const lb = view.cornerRadius.lb;
+            const cornerId = view.id + 'cornerRadius';
+            const lt = getBaseValue(cornerId, 'lt', view.cornerRadius.lt);
+            const rt = getBaseValue(cornerId, 'rt', view.cornerRadius.rt);
+            const rb = getBaseValue(cornerId, 'rb', view.cornerRadius.rb);
+            const lb = getBaseValue(cornerId, 'lb', view.cornerRadius.lb);
             if (lt || rt || rb || lb) api.shapeModifyRadius2(page, shape as Artboard, lt * ratio, rt * ratio, rb * ratio, lb * ratio);
         }
     }
