@@ -10,7 +10,7 @@ import { after_remove, clear_binds_effect, find_layers_by_varid, get_symbol_by_l
 import { newText2 } from "./creator";
 import { _typing_modify, get_points_for_init, modify_points_xy, update_frame_by_points } from "./utils/path";
 import { adapt_for_artboard } from "./utils/common";
-import { ShapeView, SymbolRefView, SymbolView, adapt2Shape, findOverride, ArtboradView } from "../dataview";
+import { ShapeView, SymbolRefView, SymbolView, adapt2Shape, findOverride, ArtboradView, findVar, GroupShapeView } from "../dataview";
 import { is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union, modify_variable, modify_variable_with_api, override_variable, shape4border, shape4contextSettings, shape4exportOptions, shape4fill, shape4shadow } from "./symbol";
 import { ISave4Restore, LocalCmd, SelectionState } from "../coop/localcmd";
 import { getAutoLayoutShapes, initAutoLayout, layoutShapesOrder, layoutSpacing, modifyAutoLayout } from "./utils/auto_layout";
@@ -113,6 +113,33 @@ export class ShapeEditor {
     modifySymbolRefVariable(_var: Variable, value: any) {
         const api = this.__repo.start("modifySymbolRefVariable");
         try {
+            this.modifyVariable2(_var, value, api);
+            this.__repo.commit();
+        } catch (e) {
+            console.log(e);
+            this.__repo.rollback();
+        }
+    }
+
+    modifySymbolRefVisibleVariable(_var: Variable, value: any) {
+        try {
+            const api = this.__repo.start("modifySymbolRefVisibleVariable");
+            const clearOverride = (children: ShapeView[]) => {
+                for (const child of children) {
+                    if (child instanceof GroupShapeView) clearOverride(child.childs);
+                    const originOV = child._findOV(OverrideType.Visible, VariableType.Visible);
+                    if (!originOV) continue;
+                    const varbinds = child.varbinds;
+                    const varId = varbinds?.get(OverrideType.Visible);
+                    if (!varId) continue;
+                    const _vars: Variable[] = [];
+                    child.varsContainer && findVar(varId, _vars, child.varsContainer, undefined, false);
+                    if (_vars.find(i => i.id === _var.id) && !_vars.find(i => i.id === originOV.id)) {
+                        api.shapeRemoveVariable(this.__page, this.shape as SymbolRefShape, originOV.id);
+                    }
+                }
+            }
+            clearOverride((this.view as SymbolRefView).childs);
             this.modifyVariable2(_var, value, api);
             this.__repo.commit();
         } catch (e) {
