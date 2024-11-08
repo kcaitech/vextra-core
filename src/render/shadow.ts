@@ -201,14 +201,20 @@ function shadowShape(h: Function, shadows: Shadow[], frame: ShapeSize, id: strin
                            0 0 0 127 0`,
             }
             const fe_offset = { dx: offsetX, dy: offsetY, }
+            const fe_morphology = {
+                operator: "dilate",
+                radius: `${spread}`,
+                result: 'spread'
+            }
             const fe_gaussian_blur = {
                 stdDeviation: `${blurRadius / 2}`,
+                in: `spread`,
             }
             const fe_color_matrix2 = {
                 type: "matrix",
-                values: ` 0 0 0 ${color.red / 255} 0
-                               0 0 0 ${color.green / 255} 0
-                               0 0 0 ${color.blue / 255} 0
+                values: `0 0 0 0 ${color.red / 255}
+                              0 0 0 0 ${color.green / 255}
+                              0 0 0 0 ${color.blue / 255}
                                0 0 0 ${color.alpha} 0`,
             }
             const _in = i > 0 ? `effect${i}_dropShadow` : `BackgroundImageFix`;
@@ -220,6 +226,7 @@ function shadowShape(h: Function, shadows: Shadow[], frame: ShapeSize, id: strin
             const h_node = [
                 h('feColorMatrix', fe_color_matrix),
                 h('feOffset', fe_offset),
+                h('feMorphology', fe_morphology),
                 h('feGaussianBlur', fe_gaussian_blur),
                 h('feColorMatrix', fe_color_matrix2),
                 h('feBlend', fe_blend),
@@ -227,7 +234,7 @@ function shadowShape(h: Function, shadows: Shadow[], frame: ShapeSize, id: strin
             h_nodes.push(...h_node);
         }
     }
-    const filter_props = { id: 'pd_outer-' + id, x: '-20%', y: '-20%', height: '140%', width: '140%' };
+    const filter_props = { id: 'pd_outer-' + id, x: '-20%', y: '-20%', height: '140%', width: '140%', filterUnits: 'userSpaceOnUse', 'color-interpolation-filters': "sRGB" };
     const m_border = shapeType === ShapeType.Line ? max_border(borders) * 9 : max_border(borders);
     if (width !== 0 && height !== 0) {
         filter_props.width = ((Math.max(...f_props.props_w) + Math.max(...f_props.props_w) + (m_border * 2)) / width) * 100 + '%';
@@ -263,7 +270,7 @@ export function render(h: Function, id: string, shadows: Shadow[], path: string,
         const position = shadow.position;
         if (!shadow.isEnabled) continue;
         if (position === ShadowPosition.Outer) {
-            if (shapeType === ShapeType.Rectangle || shapeType === ShapeType.Artboard || shapeType === ShapeType.Oval) {
+            if (shapeType === ShapeType.Rectangle || shapeType === ShapeType.Oval) {
                 const {
                     filter,
                     p
@@ -276,7 +283,7 @@ export function render(h: Function, id: string, shadows: Shadow[], path: string,
             inner_f.push(filter);
         }
     }
-    if (shapeType !== ShapeType.Rectangle && shapeType !== ShapeType.Artboard && shapeType !== ShapeType.Oval) {
+    if (shapeType !== ShapeType.Rectangle && shapeType !== ShapeType.Oval) {
         const filter = shadowShape(h, shadows, frame, id, borders, shapeType);
         if (filter) elArr.push(filter);
     }
@@ -313,7 +320,7 @@ const getFilterPropsValue = (shadow: Shadow, frame: ShapeSize, f_props: any) => 
 }
 
 export function renderWithVars(h: Function, id: string, shape: Shape, frame: ShapeSize, path: string,
-                               varsContainer?: (SymbolRefShape | SymbolShape)[] | undefined
+    varsContainer?: (SymbolRefShape | SymbolShape)[] | undefined
 ) {
     let shadows = shape.style.shadows;
     if (varsContainer) {

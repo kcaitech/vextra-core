@@ -548,7 +548,7 @@ function clampLineHeight(pAttr: ParaAttr | undefined, maxFontSize: number) {
     if (!pAttr) return maxFontSize;
     if (pAttr.autoLineHeight) {
         // auto lineHeight
-        return autoLineHeight(maxFontSize)
+        return autoLineHeight(maxFontSize, pAttr.minimumLineHeight)
     }
 
     let lineHeight = maxFontSize;

@@ -401,7 +401,10 @@ export class ShapeView extends DataView {
     }
 
     onDataChange(...args: any[]): void {
-        if (args.includes('mask')) (this.parent as GroupShapeView).updateMaskMap();
+        if (args.includes('mask') || args.includes('isVisible')) {
+            (this.parent as GroupShapeView).updateMaskMap();
+            (this.parent as GroupShapeView).updateFrames(); // 遮罩图层会改变父级的frame结构
+        }
 
         if (args.includes('points')
             || args.includes('pathsegs')
@@ -957,8 +960,7 @@ export class ShapeView extends DataView {
 
         const filterId = `${objectId(this)}`;
         const shadows = this.renderShadows(filterId);
-        const blurId = `blur_${objectId(this)}`;
-        const blur = this.renderBlur(blurId);
+
 
         let props = this.renderProps();
         let children = [...fills, ...childs, ...borders];
@@ -973,10 +975,23 @@ export class ShapeView extends DataView {
         }
 
         // 模糊
+        const blurId = `blur_${objectId(this)}`;
+        const blur = this.renderBlur(blurId);
         if (blur.length) {
-            let filter: string = '';
-            filter = `url(#${blurId})`;
-            children = [...blur, elh('g', { filter }, children)];
+            if (this.blur!.type === BlurType.Gaussian) {
+                children = [...blur, elh('g', { filter: `url(#${blurId})` }, children)];
+            } else {
+                const __props: any = {};
+                if (props.opacity) {
+                    __props.opacity = props.opacity;
+                    delete props.opacity;
+                }
+                if (props.style?.["mix-blend-mode"]) {
+                    __props["mix-blend-mode"] = props.style["mix-blend-mode"];
+                    delete props.style["mix-blend-mode"];
+                }
+                children = [...blur, elh('g', __props, children)];
+            }
         }
 
         // 遮罩
@@ -1155,6 +1170,7 @@ export class ShapeView extends DataView {
         const els: EL[] = [];
         for (let i = 1; i < group.length; i++) {
             const __s = group[i];
+            if (!__s.isVisible) continue;
             const dom = __s.dom;
             if (!(dom.elattr as any)['style']) {
                 (dom.elattr as any)['style'] = {};

@@ -814,7 +814,6 @@ function importAutoLayoutOptional(tar: impl.AutoLayout, source: types.AutoLayout
     if (source.stackWrap) tar.stackWrap = importStackWrap(source.stackWrap, ctx)
     if (source.stackHorizontalGapSizing) tar.stackHorizontalGapSizing = importStackSizing(source.stackHorizontalGapSizing, ctx)
     if (source.stackVerticalGapSizing) tar.stackVerticalGapSizing = importStackSizing(source.stackVerticalGapSizing, ctx)
-    if (source.stackPrimarySizing) tar.stackPrimarySizing = importStackSizing(source.stackPrimarySizing, ctx)
     if (source.stackCounterSizing) tar.stackCounterSizing = importStackSizing(source.stackCounterSizing, ctx)
     if (source.stackPrimaryAlignItems) tar.stackPrimaryAlignItems = importStackAlign(source.stackPrimaryAlignItems, ctx)
     if (source.stackCounterAlignItems) tar.stackCounterAlignItems = importStackAlign(source.stackCounterAlignItems, ctx)
@@ -830,7 +829,8 @@ export function importAutoLayout(source: types.AutoLayout, ctx?: IImportContext)
         source.stackHorizontalPadding,
         source.stackVerticalPadding,
         source.stackPaddingRight,
-        source.stackPaddingBottom)
+        source.stackPaddingBottom,
+        importStackSizing(source.stackPrimarySizing, ctx))
     importAutoLayoutOptional(ret, source, ctx)
     return ret
 }

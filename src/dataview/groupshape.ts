@@ -38,7 +38,7 @@ export class GroupShapeView extends ShapeView {
         const maskShape: Shape[] = [];
         for (let i = 0; i < children.length; i++) {
             const child = children[i];
-            if (child.mask) {
+            if (child.mask && child.isVisible) {
                 mask = child;
                 maskShape.push(child);
             } else {
@@ -152,12 +152,16 @@ export class GroupShapeView extends ShapeView {
     // }
 
     updateFrames(): boolean {
+        let children = this.m_children;
+        if (this.maskMap.size && (this.type === ShapeType.Group || this.type === ShapeType.BoolShape)) {
+            children = this.m_children.filter(i => !this.maskMap.has(i.id));
+        }
 
-        const childcontentbounds = this.m_children.map(c => (c as ShapeView)._p_frame);
+        const childcontentbounds = children.map(c => (c as ShapeView)._p_frame);
 
-        const childvisiblebounds = this.m_children.map(c => (c as ShapeView)._p_visibleFrame);
+        const childvisiblebounds = children.map(c => (c as ShapeView)._p_visibleFrame);
 
-        const childouterbounds = this.m_children.map(c => (c as ShapeView)._p_outerFrame);
+        const childouterbounds = children.map(c => (c as ShapeView)._p_outerFrame);
 
         const reducer = (p: { minx: number, miny: number, maxx: number, maxy: number }, c: ShapeFrame, i: number) => {
             if (i === 0) {

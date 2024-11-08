@@ -248,10 +248,7 @@ export class Shape extends Basic implements classes.Shape {
         return this.frame2Root();
     }
 
-    /**
-     * root: page 往上一级
-     * @returns
-     */
+    // @deprecated
     frame2Root(): ShapeFrame {
         const frame = this.frame;
         const m = this.matrix2Root();
@@ -260,6 +257,7 @@ export class Shape extends Basic implements classes.Shape {
         return new ShapeFrame(lt.x, lt.y, rb.x - lt.x, rb.y - lt.y);
     }
 
+    // @deprecated
     frame2Parent(): ShapeFrame {
         const frame = this.frame;
         if (this.isNoTransform()) {
@@ -515,10 +513,10 @@ export class GroupShape extends Shape implements classes.GroupShape {
         const w = frame.width;
         const h = frame.height;
         const path = [["M", x, y],
-            ["l", w, 0],
-            ["l", 0, h],
-            ["l", -w, 0],
-            ["z"]];
+        ["l", w, 0],
+        ["l", 0, h],
+        ["l", -w, 0],
+        ["z"]];
         return Path.fromSVGString(path.join(''));
     }
 
@@ -554,7 +552,7 @@ export class GroupShape extends Shape implements classes.GroupShape {
     }
 
     get frame(): ShapeFrame {
-        const childframes = this.childs.map((c) => c.frame2Parent());
+        const childframes = this.childs.map((c) => c.boundingBox());
         const reducer = (p: { minx: number, miny: number, maxx: number, maxy: number }, c: ShapeFrame, i: number) => {
             if (i === 0) {
                 p.minx = c.x;
@@ -658,10 +656,6 @@ export function getPathOfRadius(frame: ShapeSize, cornerRadius?: CornerRadius, f
         lb = cornerRadius!.lb;
         rt = cornerRadius!.rt;
         rb = cornerRadius!.rb;
-        lt = Math.max(0, Math.min(lt, maxRadius));
-        lb = Math.max(0, Math.min(lb, maxRadius));
-        rt = Math.max(0, Math.min(rt, maxRadius));
-        rb = Math.max(0, Math.min(rb, maxRadius));
     }
 
     // const path = [];
@@ -1233,10 +1227,10 @@ export class TextShape extends Shape implements classes.TextShape {
         const x = 0;
         const y = 0;
         const path = [["M", x, y],
-            ["l", w, 0],
-            ["l", 0, h],
-            ["l", -w, 0],
-            ["z"]];
+        ["l", w, 0],
+        ["l", 0, h],
+        ["l", -w, 0],
+        ["z"]];
         return Path.fromSVGString(path.join(''));
     }
 

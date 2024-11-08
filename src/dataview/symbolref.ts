@@ -388,6 +388,11 @@ export class SymbolRefView extends ShapeView {
         return this.m_sym?.style.shadows || [];
     }
 
+    get name() {
+        const v = this._findOV2(OverrideType.Name, VariableType.Name);
+        return v ? v.value as string : this.data.name;
+    }
+
     render(): number {
         if (!this.checkAndResetDirty()) return this.m_render_version;
 
