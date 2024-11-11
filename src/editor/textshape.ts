@@ -41,6 +41,7 @@ type TextShapeLike = Shape & { text: Text }
 
 interface _Api {
     shapeModifyX(page: Page, shape: Shape, x: number): void;
+    shapeModifyY(page: Page, shape: Shape, y: number): void;
     shapeModifyWH(page: Page, shape: Shape, w: number, h: number): void;
 
     tableModifyRowHeight(page: Page, table: TableShape, idx: number, height: number): void;
@@ -650,6 +651,11 @@ export class TextShapeEditor extends ShapeEditor {
         const api = this.__repo.start("setTextFontSize");
         try {
             const shape = this.shape4edit(api);
+            const text = shape instanceof ShapeView ? shape.text : shape.value as Text;
+            const text_length = text.length;
+            if (len === text_length - 1) {
+                len = text_length;
+            }
             api.textModifyFontSize(this.__page, shape, index, len, fontSize)
             this.fixFrameByLayout(api);
             this.__repo.commit();
@@ -670,7 +676,7 @@ export class TextShapeEditor extends ShapeEditor {
                 const shape = this.shape4edit(api, text_shape);
                 const text = shape instanceof ShapeView ? shape.text : shape.value as Text;
                 const text_length = text.length;
-                if (text_length === 0) continue;
+                if (text_length === 0) continue;    
                 api.textModifyFontSize(this.__page, shape, 0, text_length, fontSize);
             }
             this.__repo.commit();
