@@ -297,8 +297,12 @@ function _locateRange(layout: TextLayout, pi: number, li: number, si: number, st
             const span0 = line[0];
             const span1 = line[line.length - 1];
             const graph0 = span0[0];
+            let offsetx = 0;
+            if(span0.attr?.placeholder && graph0) {
+                offsetx += graph0.cw;
+            }
             const graph1 = span1[span1.length - 1];
-            const x = layout.xOffset + graph0.x + line.x + p.xOffset;
+            const x = layout.xOffset + graph0.x + line.x + p.xOffset + offsetx;
             const w = graph1.x + graph1.cw - graph0.x;
 
             points.push(
@@ -307,7 +311,7 @@ function _locateRange(layout: TextLayout, pi: number, li: number, si: number, st
                 { x: x + w, y: y + h }, // right bottom
                 { x, y: y + h }, // left bottom
             );
-
+            
             count -= line.charCount;
             li++;
             if (li >= p.length) {
@@ -327,7 +331,6 @@ function _locateRange(layout: TextLayout, pi: number, li: number, si: number, st
             if(span.attr?.placeholder && span[0]) {
                 offsetx += span[0].cw;
             }
-            console.log(span, 'span');
             
             graphIndex = start;
         } else {
@@ -335,7 +338,6 @@ function _locateRange(layout: TextLayout, pi: number, li: number, si: number, st
                 graph = span[i];
                 graphIndex = i;
                 if(span.attr?.placeholder && span[0]) {
-                    console.log(span, 'span');
                     offsetx = span[0].cw;
                 }
                 if (c <= 0) {
@@ -347,7 +349,6 @@ function _locateRange(layout: TextLayout, pi: number, li: number, si: number, st
         }
         const lineX = layout.xOffset + p.xOffset + line.x;
         const lineY = layout.yOffset + p.yOffset + line.y;
-        console.log(offsetx, 'offsetx');
         
         let minX = lineX + graph.x + offsetx;
         const minY = lineY; // + (line.lineHeight - graph.ch) / 2;
@@ -385,7 +386,7 @@ function _locateRange(layout: TextLayout, pi: number, li: number, si: number, st
             li = 0;
         }
     }
-
+    
     return points;
 }
 
