@@ -74,6 +74,7 @@ export class TextShapeView extends ShapeView {
 
     getLayout() {
         const text = this.getText();
+        
         if (this.__preText && this.__layoutToken && objectId(this.__preText) !== objectId(text)) {
             this.__preText.dropLayout(this.__layoutToken, this.id);
         }

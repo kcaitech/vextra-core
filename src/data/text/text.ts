@@ -253,7 +253,6 @@ export class Text extends Basic implements classes.Text {
 
         const width = frame.width;
         const height = frame.height;
-
         const cur = [width, height].join(',');
         if (cur !== token) {
             let o = token && this.__layouts.get(token);
@@ -296,6 +295,7 @@ export class Text extends Basic implements classes.Text {
         const cur = [width, height].join(',');
 
         let o = this.__layouts.get(cur);
+        
         if (o) {
             return o.layout!;
         }

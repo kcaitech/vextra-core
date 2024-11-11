@@ -414,7 +414,6 @@ export function locateRange(layout: TextLayout, start: number, end: number): { x
                 start -= line.charCount;
                 continue;
             }
-            console.log(line, 'line');
             for (let si = 0, len = line.length; si < len; si++) {
                 const span = line[si];
                 const spanCharCount = span.charCount;
@@ -423,8 +422,6 @@ export function locateRange(layout: TextLayout, start: number, end: number): { x
                     continue;
                 }
                 // const gi = start;
-                console.log(pi, li, si, start, count);
-                
                 return _locateRange(layout, pi, li, si, start, count);
             }
             break;
