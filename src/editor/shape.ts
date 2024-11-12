@@ -148,6 +148,34 @@ export class ShapeEditor {
         }
     }
 
+    modifySymbolRefTextVariable(_var: Variable, value: any) {
+        try {
+            const api = this.__repo.start("modifySymbolRefTextVariable");
+            const page = this.__page;
+            const clearOverride = (children: ShapeView[]) => {
+                for (const child of children) {
+                    if (child instanceof GroupShapeView) clearOverride(child.childs);
+                    const originOV = child._findOV(OverrideType.Text, VariableType.Text);
+                    if (!originOV) continue;
+                    const varbinds = child.varbinds;
+                    const varId = varbinds?.get(OverrideType.Text);
+                    if (!varId) continue;
+                    const _vars: Variable[] = [];
+                    child.varsContainer && findVar(varId, _vars, child.varsContainer, undefined, false);
+                    if (_vars.find(i => i.id === _var.id) && !_vars.find(i => i.id === originOV.id)) {
+                        api.shapeRemoveVariable(page, this.shape as SymbolRefShape, originOV.id);
+                    }
+                }
+            }
+            clearOverride((this.view as SymbolRefView).childs);
+            this.modifyVariable2(_var, value, api);
+            this.__repo.commit();
+        } catch (e) {
+            console.log(e);
+            this.__repo.rollback();
+        }
+    }
+
     /**
      * @description 重置实例属性
      */
