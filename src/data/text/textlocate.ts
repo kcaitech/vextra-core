@@ -321,13 +321,23 @@ function _locateRange(layout: TextLayout, pi: number, li: number, si: number, st
         // const graph = span[gi];//todo
         let graph; // 不对
         let graphIndex = 0;
+        let offsetx = 0;
         if (line.charCount === line.graphCount) {
             graph = span[start];
+            if(span.attr?.placeholder && span[0]) {
+                offsetx += span[0].cw;
+            }
+            console.log(span, 'span');
+            
             graphIndex = start;
         } else {
             for (let i = 0, c = start; i < span.length; ++i) {
                 graph = span[i];
                 graphIndex = i;
+                if(span.attr?.placeholder && span[0]) {
+                    console.log(span, 'span');
+                    offsetx = span[0].cw;
+                }
                 if (c <= 0) {
                     break;
                 }
@@ -337,11 +347,13 @@ function _locateRange(layout: TextLayout, pi: number, li: number, si: number, st
         }
         const lineX = layout.xOffset + p.xOffset + line.x;
         const lineY = layout.yOffset + p.yOffset + line.y;
-        const minX = lineX + graph.x;
+        console.log(offsetx, 'offsetx');
+        
+        let minX = lineX + graph.x + offsetx;
         const minY = lineY; // + (line.lineHeight - graph.ch) / 2;
         const maxY = lineY + line.lineHeight;
         let maxX = lineX + graph.x + graph.cw;
-
+        
         for (let i = si, len = line.length; i < len && count > 0; i++) {
             const span = line[i];
 
@@ -394,7 +406,6 @@ export function locateRange(layout: TextLayout, start: number, end: number): { x
             start -= p.charCount;
             continue;
         }
-
         for (let li = 0, len = p.length; li < len; li++) {
             const line = p[li];
 
@@ -402,7 +413,7 @@ export function locateRange(layout: TextLayout, start: number, end: number): { x
                 start -= line.charCount;
                 continue;
             }
-
+            console.log(line, 'line');
             for (let si = 0, len = line.length; si < len; si++) {
                 const span = line[si];
                 const spanCharCount = span.charCount;
@@ -411,6 +422,8 @@ export function locateRange(layout: TextLayout, start: number, end: number): { x
                     continue;
                 }
                 // const gi = start;
+                console.log(pi, li, si, start, count);
+                
                 return _locateRange(layout, pi, li, si, start, count);
             }
             break;
