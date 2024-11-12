@@ -1,5 +1,5 @@
 import { CoopRepository } from "../../../coop/cooprepo";
-import { AsyncApiCaller } from "../AsyncApiCaller";
+import { AsyncApiCaller } from "../basic/asyncapi";
 import { Document } from "../../../data/document";
 import { PageView, ShapeView, adapt2Shape } from "../../../dataview";
 import { Transform as Transform2 } from "../../../basic/transform";

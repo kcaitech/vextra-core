@@ -1,5 +1,5 @@
 import { CoopRepository } from "../../../coop/cooprepo";
-import { AsyncApiCaller } from "../AsyncApiCaller";
+import { AsyncApiCaller } from "../basic/asyncapi";
 import {
     Artboard,
     BorderSideSetting,

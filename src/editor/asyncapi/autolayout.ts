@@ -1,4 +1,4 @@
-import { AsyncApiCaller } from "./AsyncApiCaller";
+import { AsyncApiCaller } from "./basic/asyncapi";
 import { Document } from "../../data/document";
 import { adapt2Shape, ArtboradView, GroupShapeView, PageView, ShapeView } from "../../dataview";
 import {

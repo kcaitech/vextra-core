@@ -181,7 +181,7 @@ import {
 } from "./utils/auto_layout";
 
 import { getFormatFromBase64 } from "../basic/utils";
-import { modifyRadius, modifyStartingAngle, modifySweep, uniformScale, UniformScaleUnit } from "./asyncApiHandler";
+import { modifyRadius, modifyStartingAngle, modifySweep, uniformScale, UniformScaleUnit } from "./asyncapi";
 import { Path } from "@kcdesign/path";
 import { assign } from "./clipboard";
 

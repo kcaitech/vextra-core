@@ -1,4 +1,4 @@
-import { AsyncApiCaller } from "./AsyncApiCaller";
+import { AsyncApiCaller } from "./basic/asyncapi";
 import { CoopRepository } from "../../coop/cooprepo";
 import { Document } from "../../data";
 import { adapt2Shape, GroupShapeView, PageView, ShapeView } from "../../dataview";

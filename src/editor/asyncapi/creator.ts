@@ -1,4 +1,4 @@
-import { AsyncApiCaller } from "./AsyncApiCaller";
+import { AsyncApiCaller } from "./basic/asyncapi";
 import { CoopRepository } from "../../coop";
 import {
     Document,
@@ -288,7 +288,7 @@ export class CreatorApiCaller extends AsyncApiCaller {
 
     private getCount(type: ShapeType) {
         let count = 1;
-        this.page.shapes.forEach(v => {
+        this.page.shapes.forEach((v:any) => {
             if (v.type === type) count++;
         });
         return count;

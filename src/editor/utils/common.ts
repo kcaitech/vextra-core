@@ -5,7 +5,7 @@ import { getHorizontalRadians } from "../page";
 import { Artboard, Document, PathShape, ShapeFrame, Page } from "../../data";
 import { Point2D, StackSizing } from "../../data/typesdefine";
 import { float_accuracy } from "../../basic/consts";
-import { reLayoutBySizeChanged } from "../asyncApiHandler";
+import { reLayoutBySizeChanged } from "../asyncapi";
 import { adapt2Shape, ArtboradView, GroupShapeView, ShapeView } from "../../dataview";
 import { getAutoLayoutShapes, modifyAutoLayout } from "./auto_layout";
 

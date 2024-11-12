@@ -1,6 +1,6 @@
 import { Document, OvalShape, Page } from "../../data";
 import { adapt2Shape, ArtboradView, PageView, ShapeView, SymbolRefView, SymbolView, TableCellView, TableView, TextShapeView } from "../../dataview";
-import { modifyPathByArc } from "../asyncApiHandler";
+import { modifyPathByArc } from "../asyncapi";
 import { Api, CoopRepository } from "../../coop";
 import { modify_shapes_height, modify_shapes_width } from "../utils/common";
 import { Artboard, BorderSideSetting, Color, FillType, PathShape, ShapeType, SideType, SymbolRefShape, Transform } from "../../data/classes";
@@ -15,6 +15,9 @@ import { TableEditor } from "../table";
 import { getAutoLayoutShapes, modifyAutoLayout, reLayoutBySort, TidyUpAlgin, tidyUpLayout } from "../utils/auto_layout";
 import { TextShapeEditor } from "../textshape";
 
+/**
+ * @description 合并同类型API，适用于键盘的连续动作，相较于asyncapi，linearapi是自动启停，所以无法跟asyncapi一样控制启停时机
+ */
 export class LinearApi {
     private readonly __repo: CoopRepository;
     private readonly __document: Document;
