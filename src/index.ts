@@ -171,7 +171,7 @@ export * from "./service/shapedirlist2"
 export * from "./service/taskmgr"
 export * from "./service/symbollist"
 
-export * from "./editor/asyncApiHandler"
+export * from "./editor/asyncapi"
 
 // coop
 export * from "./coop"
