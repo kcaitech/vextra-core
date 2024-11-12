@@ -173,7 +173,7 @@ export enum Status {
 }
 
 /**
- * @deprecated 处理鼠标拖拽编辑，该模式拓展性差，将不再维护，请使用asyncapi/linearapi实现同类API的合并
+ * @deprecated 处理鼠标拖拽编辑，该模式拓展性差，维护困难，将不再维护，请使用asyncapi/linearapi实现同类API的合并
  */
 export class Controller {
     private __repo: CoopRepository;
