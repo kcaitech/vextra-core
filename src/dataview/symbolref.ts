@@ -1,7 +1,7 @@
 import {
     AutoLayout, Border, ContextSettings, CornerRadius, Fill, MarkerType, OverrideType, PrototypeInterAction, Shadow,
     Shape, ShapeFrame, ShapeSize, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType, ShapeType,
-    BasicArray, getPathOfRadius, makeShapeTransform1By2, makeShapeTransform2By1
+    BasicArray, getPathOfRadius, makeShapeTransform1By2, makeShapeTransform2By1, Blur, BlurType
 } from "../data";
 import { ShapeView, fixFrameByConstrain, frame2Parent2 } from "./shape";
 import { DataView, RootView } from "./view";
@@ -387,6 +387,11 @@ export class SymbolRefView extends ShapeView {
         return this.m_sym?.style.shadows || [];
     }
 
+    get blur(): Blur | undefined {
+        const v = this._findOV2(OverrideType.Blur, VariableType.Blur);
+        return v ? v.value : this.m_sym?.style.blur;
+    }
+
     get name() {
         const v = this._findOV2(OverrideType.Name, VariableType.Name);
         return v ? v.value as string : this.data.name;
@@ -415,8 +420,6 @@ export class SymbolRefView extends ShapeView {
 
         const filterId = `${objectId(this)}`;
         const shadows = this.renderShadows(filterId);
-        const blurId = `blur_${objectId(this)}`;
-        const blur = this.renderBlur(blurId);
 
         let props = this.renderProps();
 
@@ -443,10 +446,23 @@ export class SymbolRefView extends ShapeView {
         }
 
         // 模糊
+        const blurId = `blur_${objectId(this)}`;
+        const blur = this.renderBlur(blurId);
         if (blur.length) {
-            let filter: string = '';
-            filter = `url(#${blurId})`;
-            children = [...blur, elh('g', {filter}, children)];
+            if (this.blur!.type === BlurType.Gaussian) {
+                children = [...blur, elh('g', { filter: `url(#${blurId})` }, children)];
+            } else {
+                const __props: any = {};
+                if (props.opacity) {
+                    __props.opacity = props.opacity;
+                    delete props.opacity;
+                }
+                if (props.style?.["mix-blend-mode"]) {
+                    __props["mix-blend-mode"] = props.style["mix-blend-mode"];
+                    delete props.style["mix-blend-mode"];
+                }
+                children = [...blur, elh('g', __props, children)];
+            }
         }
 
         // 遮罩

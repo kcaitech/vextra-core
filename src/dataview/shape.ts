@@ -538,7 +538,7 @@ export class ShapeView extends DataView {
 
     get blur(): Blur | undefined {
         const v = this._findOV(OverrideType.Blur, VariableType.Blur);
-        return v ? v.value : this.data.style.blur;
+        return v ? v.value : this.m_data.style.blur;
     }
 
     getPathStr() {
@@ -964,7 +964,6 @@ export class ShapeView extends DataView {
 
         let props = this.renderProps();
         let children = [...fills, ...childs, ...borders];
-
         // 阴影
         if (shadows.length) {
             let filter: string = '';
