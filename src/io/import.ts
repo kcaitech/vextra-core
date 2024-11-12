@@ -10,6 +10,7 @@ import { Document, DocumentMeta } from "../data/document";
 import * as storage from "./storage";
 import { base64Encode, base64ToDataUrl } from "../basic/utils";
 import { SymbolShape } from "../data/classes";
+import pako from "pako";
 
 interface IJSON {
     [key: string]: any
@@ -21,6 +22,15 @@ interface IDataLoader {
     loadPage(ctx: IImportContext, id: string): Promise<Page>
 
     loadMedia(ctx: IImportContext, id: string): Promise<{ buff: Uint8Array, base64: string }>
+}
+
+function isGzip(data: Uint8Array) {
+    // 检查前两个字节是否为 gzip 标志 (1f 8b)
+    return data[0] === 0x1f && data[1] === 0x8b;
+}
+
+function ungzip(data: Uint8Array) {
+    return isGzip(data) ? pako.ungzip(data) : data
 }
 
 class RemoteLoader {
@@ -37,6 +47,7 @@ class RemoteLoader {
     loadJson(uri: string, versionId?: string): Promise<IJSON> {
         return new Promise((resolve, reject) => {
             this.storage.get(uri, versionId).then((data: Uint8Array) => {
+                data = ungzip(data)
                 const json = JSON.parse(new TextDecoder().decode(data));
                 resolve(json);
             }).catch((err: any) => {

@@ -58,9 +58,8 @@ export class SymbolRefView extends ShapeView {
     }
 
     getSessionRefId(): boolean | string {
-        const pathname = window.location.pathname;
-        const jsonString = sessionStorage.getItem(sessionRefIdKey);
-        if (!pathname.includes("document") && jsonString) {
+        const jsonString =  this.m_ctx.sessionStorage.get(sessionRefIdKey);
+        if (!this.m_ctx.isDocument && jsonString) {
             const refIdArray = JSON.parse(jsonString);
             const maprefIdArray = new Map(refIdArray) as Map<string, string>;
             if (maprefIdArray.has(this.id)) {

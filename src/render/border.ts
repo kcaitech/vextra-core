@@ -253,7 +253,7 @@ handler[BorderPosition.Center] = function (h: Function, frame: ShapeSize, border
         "stroke-linejoin": border.cornerType,
         'stroke-width': thickness
     }
-    if (shape && Math.max(...shape.radius) > 0) body_props['stroke-linejoin'] = 'miter';
+    // if (shape && Math.max(...shape.radius) > 0) body_props['stroke-linejoin'] = 'miter';
     const { length, gap } = border.borderStyle;
     if (length || gap) {
         body_props['stroke-dasharray'] = `${length}, ${gap}`
@@ -292,7 +292,7 @@ handler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, border:
         "stroke-linejoin": border.cornerType,
         'stroke-width': 2 * thickness,
     }
-    if (shape && Math.max(...shape.radius) > 0) body_props['stroke-linejoin'] = 'miter';
+    // if (shape && Math.max(...shape.radius) > 0) body_props['stroke-linejoin'] = 'miter';
     const { length, gap } = border.borderStyle;
     if (length || gap) {
         body_props['stroke-dasharray'] = `${length}, ${gap}`;

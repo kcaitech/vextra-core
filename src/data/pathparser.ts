@@ -219,6 +219,7 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, width: number
 
             const percent1 = (cr + pr) > lenAB ? lenAB * (cr / (cr + pr)) : cr;
             const percent2 = (cr + nr) > lenBC ? lenBC * (cr / (cr + nr)) : cr;
+            
             return Math.max(0, Math.min(percent1, percent2));
         }
         // 校准 dist，用户设置的 cornerRadius 可能太大，而实际显示 cornerRadius 受到 AB BC 两边长度限制。
