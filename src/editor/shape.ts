@@ -152,6 +152,7 @@ export class ShapeEditor {
         try {
             const api = this.__repo.start("modifySymbolRefTextVariable");
             const page = this.__page;
+            const shape = this.shape as SymbolRefShape;
             const clearOverride = (children: ShapeView[]) => {
                 for (const child of children) {
                     if (child instanceof GroupShapeView) clearOverride(child.childs);
@@ -163,7 +164,7 @@ export class ShapeEditor {
                     const _vars: Variable[] = [];
                     child.varsContainer && findVar(varId, _vars, child.varsContainer, undefined, false);
                     if (_vars.find(i => i.id === _var.id) && !_vars.find(i => i.id === originOV.id)) {
-                        api.shapeRemoveVariable(page, this.shape as SymbolRefShape, originOV.id);
+                        api.shapeRemoveVariable(page, shape, originOV.id);
                     }
                 }
             }
