@@ -4,12 +4,11 @@ import { uuid } from "../basic/uuid";
 import { Page } from "../data/page";
 import { Api } from "../coop/recordapi";
 import { newText2 } from "./creator";
-import { BlendMode, Border, ContextSettings, Fill, Shadow, ShapeSize, Style, TableCell, TableCellType, Text, Transform } from "../data/classes";
+import { BlendMode, Border, ContextSettings, Fill, Shadow, ShapeSize, Style, TableCell, TableCellType, Text, Transform, Document, Blur, Point2D, BlurType } from "../data/classes";
 import { findOverride, findVar } from "../data/utils";
 import { BasicArray } from "../data/basic";
-import { IImportContext, importBorder, importColor, importContextSettings, importCornerRadius, importExportOptions, importFill, importGradient, importShadow, importStyle, importTableCell, importTableShape, importText } from "../data/baseimport";
+import { IImportContext, importBorder, importColor, importContextSettings, importCornerRadius, importExportOptions, importFill, importGradient, importShadow, importStyle, importTableCell, importTableShape, importText, importBlur } from "../data/baseimport";
 import { ArtboradView, ShapeView, SymbolRefView, SymbolView, TableCellView, TableView, isAdaptedShape } from "../dataview";
-import { Document, ShapeFrame } from "../data/classes";
 import { newTableCellText } from "../data/text/textutils";
 import { FMT_VER_latest } from "../data/fmtver";
 
@@ -270,6 +269,7 @@ function _ov(varType: VariableType, overrideType: OverrideType, valuefun: (_var:
             case OverrideType.Shadows:
             case OverrideType.StartMarkerType:
             case OverrideType.CornerRadius:
+            case OverrideType.Blur:
                 break;
             case OverrideType.ExportOptions:
             case OverrideType.Image:
@@ -409,6 +409,15 @@ export function shape4exportOptions(api: Api, _shape: ShapeView, page: Page) {
     return _var || _shape.data;
 }
 
+export function shape4blur(api: Api, _shape: ShapeView, page: Page) {
+    const valuefun = (_var: Variable | undefined) => {
+        const blur = _var?.value ?? _shape.blur;
+        return blur && importBlur(blur) || new Blur(true, new Point2D(0, 0), 10, BlurType.Gaussian);
+    };
+    const _var = _ov(VariableType.Blur, OverrideType.Blur, valuefun, _shape, page, api);
+    return _var || _shape.data;
+}
+
 // 变量可能的情况
 // 1. 存在于symbolref中，则变量一定是override某个属性或者变量的。此时如果symbolref非virtual，可以直接修改，否则要再override
 // 2. 存在于symbol中，则变量一定是用户定义的某个变量。当前环境如在ref中，则需要override，否则可直接修改。
@@ -472,6 +481,7 @@ export function modify_variable(document: Document, page: Page, view: ShapeView,
             case OverrideType.Text:
             case OverrideType.Visible:
             case OverrideType.ExportOptions:
+            case OverrideType.Blur:
             case OverrideType.CornerRadius:
                 ot = _overrideType as OverrideType;
                 break;

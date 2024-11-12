@@ -1,10 +1,9 @@
 import { AsyncApiCaller } from "./basic/asyncapi";
 import { CoopRepository } from "../../coop/cooprepo";
 import { Document } from "../../data/document";
-import { adapt2Shape, PageView, ShapeView } from "../../dataview";
-import {
-    Shape,
-} from "../../data/shape";
+import { PageView, ShapeView } from "../../dataview";
+import { Shape } from "../../data/shape";
+import { shape4blur } from "../symbol";
 
 export class blurModifyHandler extends AsyncApiCaller {
     updateFrameTargets: Set<Shape> = new Set();
@@ -22,9 +21,9 @@ export class blurModifyHandler extends AsyncApiCaller {
             const api = this.api;
             const page = this.page;
 
-            for (let i = 0; i < shapes.length; i++) {
-                const shape = shapes[i];
-                api.shapeModifyBlurSaturation(page, adapt2Shape(shape), saturation);
+            for (const view of shapes) {
+                const shape = shape4blur(api, view, page);
+                api.shapeModifyBlurSaturation(page, shape, saturation);
             }
             this.updateView();
         } catch (e) {

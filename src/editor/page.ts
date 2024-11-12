@@ -114,7 +114,7 @@ import {
     shape4border,
     shape4cornerRadius,
     shape4fill,
-    shape4shadow
+    shape4shadow, shape4contextSettings, shape4blur
 } from "./symbol";
 import { is_circular_ref2 } from "./utils/ref_check";
 import {
@@ -186,7 +186,7 @@ import { Path } from "@kcdesign/path";
 import { assign } from "./asyncapi";
 
 // 用于批量操作的单个操作类型
-export interface PositonAdjust { // 涉及属性：frame.x、frame.y
+export interface PositionAdjust { // 涉及属性：frame.x、frame.y
     target: Shape
     transX: number
     transY: number
@@ -254,7 +254,7 @@ export interface ExportFormatNameAction {
     value: string
 }
 
-export interface ExportFormatPerfixAction {
+export interface ExportFormatPrefixAction {
     target: Shape
     index: number
     value: ExportFormatNameingScheme
@@ -514,13 +514,14 @@ export class PageEditor {
         return false;
     }
 
-    modifyShapesContextSettingOpacity(shapes: Shape[], value: number) {
-        if (!shapes.length) return console.log('invalid data');
+    modifyShapesContextSettingOpacity(shapes: ShapeView[], value: number) {
+        if (!shapes.length) return false;
         try {
             const api = this.__repo.start("modifyShapesContextSettingOpacity");
-            for (let i = 0, l = shapes.length; i < l; i++) {
-                const item = shapes[i];
-                api.shapeModifyContextSettingsOpacity(this.__page, item, value);
+            const page = this.__page;
+            for (const view of shapes) {
+                const shape = shape4contextSettings(api, view, page);
+                api.shapeModifyContextSettingsOpacity(page, shape, value);
             }
             this.__repo.commit();
             return true;
@@ -2043,7 +2044,7 @@ export class PageEditor {
         }
     }
 
-    arrange(actions: PositonAdjust[]) {
+    arrange(actions: PositionAdjust[]) {
         try {
             const api = this.__repo.start('arrange');
             const page = this.__page;
@@ -2831,7 +2832,7 @@ export class PageEditor {
         }
     }
 
-    //boders
+    //borders
     setShapesBorderColor(actions: BatchAction[]) {
         const api = this.__repo.start('setShapesBorderColor');
         try {
@@ -3316,7 +3317,6 @@ export class PageEditor {
                     modify_variable_with_api(api, this.__page, target, VariableType.MarkerType, OverrideType.StartMarkerType, endMarkerType || MarkerType.Line)
                     continue;
                 }
-                ;
                 api.shapeModifyEndMarkerType(this.__page, adapt2Shape(target), startMarkerType || MarkerType.Line);
                 api.shapeModifyStartMarkerType(this.__page, adapt2Shape(target), endMarkerType || MarkerType.Line);
             }
@@ -3418,9 +3418,9 @@ export class PageEditor {
         }
     }
 
-    shapesDeleteShasow(actions: BatchAction3[]) {
+    shapesDeleteShadow(actions: BatchAction3[]) {
         try {
-            const api = this.__repo.start('shapesDeleteShasow');
+            const api = this.__repo.start('shapesDeleteShadow');
             for (let i = 0; i < actions.length; i++) {
                 const { target, index } = actions[i];
                 api.deleteShadowAt(this.__page, adapt2Shape(target), index);
@@ -3441,6 +3441,7 @@ export class PageEditor {
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
+            throw error;
         }
     }
 
@@ -3462,79 +3463,96 @@ export class PageEditor {
     shapesAddBlur(actions: BatchAction2[]) {
         try {
             const api = this.__repo.start('shapesAddBlur');
+            const page = this.__page;
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                api.addBlur(this.__page, adapt2Shape(target), value);
+                const shape = shape4blur(api, target, page);
+                api.addBlur(page, shape, value);
             }
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
+            throw error;
         }
     }
 
     shapesBlurUnify(actions: BatchAction2[]) {
         try {
             const api = this.__repo.start('shapesBlurUnify');
+            const page = this.__page;
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                api.deleteBlur(this.__page, adapt2Shape(target));
-                api.addBlur(this.__page, adapt2Shape(target), value);
+                const shape = shape4blur(api, target, page);
+                api.deleteBlur(page, shape);
+                api.addBlur(page, shape, value);
             }
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
+            throw error;
         }
     }
 
     shapeDeleteBlur(shapes: ShapeView[]) {
         try {
             const api = this.__repo.start('shapeDeleteBlur');
+            const page = this.__page;
             for (let i = 0; i < shapes.length; i++) {
-                const shape = shapes[i];
-                api.deleteBlur(this.__page, adapt2Shape(shape));
+                const shape = shape4blur(api, shapes[i], page);
+                api.deleteBlur(page, shape);
             }
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
+            throw error;
         }
     }
 
     setShapeBlurEnabled(actions: BatchAction2[]) {
         try {
             const api = this.__repo.start('setShapeBlurEnabled');
+            const page = this.__page;
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                api.shapeModifyBlurEdabled(this.__page, adapt2Shape(target), value);
+                const shape = shape4blur(api, target, page);
+                api.shapeModifyBlurEdabled(page, shape, value);
             }
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
+            throw error;
         }
     }
 
     setShapeBlurSaturation(actions: BatchAction2[]) {
         try {
             const api = this.__repo.start('setShapeBlurSaturation');
+            const page = this.__page;
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                api.shapeModifyBlurSaturation(this.__page, adapt2Shape(target), value);
+                const shape = shape4blur(api, target, page);
+                api.shapeModifyBlurSaturation(page, shape, value);
             }
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
+            throw error;
         }
     }
 
     setShapeBlurType(actions: BatchAction2[]) {
         try {
             const api = this.__repo.start('setShapeBlurType');
+            const page = this.__page;
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                api.shapeModifyBlurType(this.__page, adapt2Shape(target), value);
+                const shape = shape4blur(api, target, page);
+                api.shapeModifyBlurType(page, shape, value);
             }
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
+            throw error;
         }
     }
 
@@ -3668,7 +3686,7 @@ export class PageEditor {
         }
     }
 
-    setShapesExportFormatPerfix(actions: ExportFormatPerfixAction[]) {
+    setShapesExportFormatPerfix(actions: ExportFormatPrefixAction[]) {
         try {
             const api = this.__repo.start('setShapesExportFormatPerfix');
             for (let i = 0; i < actions.length; i++) {
