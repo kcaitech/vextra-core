@@ -968,7 +968,7 @@ export class PageEditor {
                 curPage: string = _this.__page.id;
                 fmtVer: string = FMT_VER_latest
             };
-            const tmpArtboard: Artboard = newArtboard(shape.name, shape.frame);
+            const tmpArtboard: Artboard = newArtboard(view.name, shape.frame);
 
             tmpArtboard.childs = shape.naviChilds! as BasicArray<Shape>;
             tmpArtboard.varbinds = shape.varbinds;
