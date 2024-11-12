@@ -21,7 +21,7 @@ import {
     makeShapeTransform2By1,
     makeShapeTransform1By2,
     StackSizing,
-    OvalShape
+    OvalShape, ContactShape
 } from "../../data";
 import {
     calculateInnerAnglePosition,
@@ -341,8 +341,9 @@ export class LockMouseHandler extends AsyncApiCaller {
                         api.shapeModifyRadius2(page, __shape, lt, rt, rb, lb)
                     }
                 } else {
-
-                    if (shape instanceof PathShape) {
+                    if (shape instanceof ContactShape) {
+                        api.shapeModifyFixedRadius(page, shape as ContactShape, values[0]);
+                    } else  if (shape instanceof PathShape) {
                         shape.pathsegs.forEach((seg, index) => {
                             for (let _i = 0; _i < seg.points.length; _i++) {
                                 if (seg.points[_i].radius === values[0]) continue;
