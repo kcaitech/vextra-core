@@ -404,7 +404,7 @@ export class LinearApi {
     private getTableEditor(table: TableView) {
         if (!this.editor4table) {
             this.editor4table = new PageEditor(this.__repo, this.page, this.__document).editor4Table(table)
-        };
+        }
         return this.editor4table!;
     }
     /**
@@ -632,12 +632,12 @@ export class LinearApi {
         return shape4shadow(api, this.page, this.shape!);
     }
 
-    modifyShadowOffSetX(idx: number, offserX: number, s: ShapeView) {
+    modifyShadowOffSetX(idx: number, offsetX: number, s: ShapeView) {
         this.execute('modify-shadow-offset-x', () => {
             const api = this.api!;
             const page = this.page;
             const shape = this.shape4shadow(api, s)
-            api.setShadowOffsetX(page, shape, idx, offserX);
+            api.setShadowOffsetX(page, shape, idx, offsetX);
         })
     }
 
@@ -656,12 +656,12 @@ export class LinearApi {
      * @description 修改图形阴影位置 Y
      */
 
-    modifyShadowOffSetY(idx: number, offserY: number, s: ShapeView) {
+    modifyShadowOffSetY(idx: number, offsetY: number, s: ShapeView) {
         this.execute('modify-shadow-offset-y', () => {
             const api = this.api!;
             const page = this.page;
             const shape = this.shape4shadow(api, s)
-            api.setShadowOffsetY(page, shape, idx, offserY);
+            api.setShadowOffsetY(page, shape, idx, offsetY);
         })
     }
 
@@ -777,7 +777,7 @@ export class LinearApi {
         if (!this.editor4text || this.TextShape !== text) {
             this.editor4text = new PageEditor(this.__repo, this.page, this.__document).editor4TextShape(text)
             this.TextShape = text
-        };
+        }
         return this.editor4text!;
     }
 
@@ -820,8 +820,6 @@ export class LinearApi {
             }
         })
     }
-
-
 
     /**
      * @description 修改文本高亮 alpha
@@ -916,7 +914,7 @@ export class LinearApi {
         })
     }
 
-    modifyTextLineHeightMulit(shapes: (TextShapeView | TableCellView)[], lineHeight: number | undefined, isAuto: boolean) {
+    modifyTextLineHeightMulti(shapes: (TextShapeView | TableCellView)[], lineHeight: number | undefined, isAuto: boolean) {
         this.execute('modify-text-line-height-mulit', () => {
             const api = this.api!;
             const page = this.page;
@@ -955,7 +953,7 @@ export class LinearApi {
         })
     }
 
-    modifyTextCharSpacingMulit(shapes: (TextShapeView | TableCellView)[], kerning: number) {
+    modifyTextCharSpacingMulti(shapes: (TextShapeView | TableCellView)[], kerning: number) {
         this.execute('modify-text-char-spacing-mulit', () => {
             const api = this.api!;
             const page = this.page;
