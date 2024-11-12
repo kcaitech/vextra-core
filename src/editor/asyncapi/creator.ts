@@ -303,8 +303,9 @@ export class CreatorApiCaller extends AsyncApiCaller {
         const parent = adapt2Shape(params.parent) as GroupShape;
 
         this.api.shapeInsert(this.__document, this.page, parent, shape, parent.childs.length);
-
         this.shape = parent.childs[parent.childs.length - 1];
+        const name = assign(this.shape);
+        this.api.shapeModifyName(this.page, this.shape, name);
     }
 
     private getCount(type: ShapeType) {
