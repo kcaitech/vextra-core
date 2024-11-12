@@ -62,6 +62,27 @@ export interface GeneratorParams {
     textFormat?: TextAttr;
 }
 
+/**
+ * @description 根据shape所属环境分配一个名称
+ */
+export function assign(shape: Shape) {
+    const parent = shape.parent as GroupShape;
+
+    const names: Set<string> = new Set();
+    for (const view of parent.childs) {
+        if (view.id === shape.id) continue;
+        names.add(view.name);
+    }
+
+    const reg = /\d+$/i;
+    let name = shape.name;
+    while (names.has(name)) {
+        const match = name.match(reg)
+        name = match ? name.slice(0, match.index) + (Number(match[0]) + 1) : name + ' 1';
+    }
+    return name;
+}
+
 export class CreatorApiCaller extends AsyncApiCaller {
     private shape: Shape | undefined;
     private __await = false;

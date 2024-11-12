@@ -183,7 +183,7 @@ import {
 import { getFormatFromBase64 } from "../basic/utils";
 import { modifyRadius, modifyStartingAngle, modifySweep, uniformScale, UniformScaleUnit } from "./asyncapi";
 import { Path } from "@kcdesign/path";
-import { assign } from "./clipboard";
+import { assign } from "./asyncapi";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y

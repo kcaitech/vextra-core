@@ -14,7 +14,7 @@ import { translate } from "../../frame";
 import { transform_data } from "../../../io/cilpboard";
 import { MossError } from "../../../basic/error";
 import { Transform } from "../../../basic/transform";
-import { assign } from "../../clipboard";
+import { assign } from "../creator";
 
 export type TranslateUnit = {
     shape: ShapeView;

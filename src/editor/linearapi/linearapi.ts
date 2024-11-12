@@ -7,7 +7,7 @@ import { Artboard, BorderSideSetting, Color, FillType, PathShape, ShapeType, Sid
 import { RadiusType } from "../../data/consts";
 import { shape4border, shape4contextSettings, shape4cornerRadius, shape4fill, shape4shadow } from "../symbol";
 import { update_frame_by_points } from "../utils/path";
-import { GroupShape, PathShape2, SymbolShape, TextShape, Shape } from "../../data/shape";
+import { GroupShape, PathShape2, SymbolShape, TextShape } from "../../data/shape";
 import { BatchAction, BatchAction2, BatchAction5, PageEditor } from "../page";
 import { importGradient, } from "../../data/baseimport";
 import { exportGradient, } from "../../data/baseexport";
