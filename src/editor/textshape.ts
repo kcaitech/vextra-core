@@ -19,7 +19,8 @@ import {
     Para,
     Span,
     ShapeType,
-    Variable, Document, TableShape, FillType, Gradient
+    Variable, Document, TableShape, FillType, Gradient,
+    ShapeSize
 } from "../data";
 import { CoopRepository } from "../coop/cooprepo";
 import { Api } from "../coop/recordapi";
@@ -36,6 +37,7 @@ import { uuid } from "../basic/uuid";
 import { SymbolRefShape, SymbolShape, GroupShape } from "../data";
 import { ParaAttr } from "../data";
 import { modifyAutoLayout } from "./utils/auto_layout";
+import { translate } from "./frame";
 
 type TextShapeLike = Shape & { text: Text }
 
@@ -94,6 +96,66 @@ export class TextShapeEditor extends ShapeEditor {
         if (shape.isVirtualShape) return; // api = basicapi;
         if (shape instanceof TextShapeView) fixTextShapeFrameByLayout(api, this.__page, shape);
         else if (shape instanceof TableCellView) fixTableShapeFrameByLayout(api, this.__page, shape, this.view.parent as TableView);
+    }
+
+    public frameXYByLayout(api: Api, frame: ShapeSize) {
+        const shape = (this.view instanceof TextShape ? this.view : adapt2Shape(this.view)) as TextShape;
+        const textBehaviour = shape.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
+        const parent = this.view.parent as ShapeView;
+
+        switch (textBehaviour) {
+            case TextBehaviour.FixWidthAndHeight:
+                break;
+            case TextBehaviour.Fixed: {
+                const layout = shape.getLayout();
+                const fontsize = shape.text.attr?.fontSize ?? Text.DefaultFontSize;
+
+                const targetHeight = Math.ceil(Math.max(fontsize, layout.contentHeight));
+                const verAlgin = shape.text.attr?.verAlign ?? TextVerAlign.Top;
+                const offsetY = targetHeight - frame.height;
+
+                if (verAlgin === TextVerAlign.Middle) {
+                    translate(api as Api, this.__page, shape, 0, -offsetY / 2);
+                } else if (verAlgin === TextVerAlign.Bottom) {
+                    translate(api as Api, this.__page, shape, 0, -offsetY);
+                }
+                if (parent && (parent as ArtboradView).autoLayout) {
+                    modifyAutoLayout(this.__page, api as Api, adapt2Shape(parent));
+                }
+                break;
+            }
+            case TextBehaviour.Flexible: {
+                const layout = shape.getLayout();
+                const targetWidth = Math.ceil(layout.contentWidth);
+                const targetHeight = Math.ceil(layout.contentHeight);
+                const verAlgin = shape.text.attr?.verAlign ?? TextVerAlign.Top;
+
+                const offsetY = targetHeight - frame.height;
+                const offsetX = targetWidth - frame.width;
+
+                for (let i = 0, pc = shape.text.paras.length; i < pc; i++) {
+                    const para = shape.text.paras[i];
+                    const horAlgin = para.attr?.alignment ?? TextHorAlign.Left;
+                    if (horAlgin === TextHorAlign.Centered && offsetX) {
+                        api.shapeModifyX(this.__page, shape, shape.transform.translateX - (offsetX / 2))
+                    } else if (horAlgin === TextHorAlign.Right) {
+                        api.shapeModifyX(this.__page, shape, shape.transform.translateX - offsetX)
+                    }
+                }
+
+                if (verAlgin === TextVerAlign.Middle) {
+                    translate(api as Api, this.__page, shape, 0, -offsetY / 2);
+                } else if (verAlgin === TextVerAlign.Bottom) {
+                    translate(api as Api, this.__page, shape, 0, -offsetY);
+                }
+
+                const parent = this.view.parent as ShapeView;
+                if (parent && (parent as ArtboradView).autoLayout) {
+                    modifyAutoLayout(this.__page, api as Api, adapt2Shape(parent));
+                }
+                break;
+            }
+        }
     }
 
     public shape4edit(api: Api, shape?: TextShapeView | TableCellView): Variable | TableCellView | TextShapeView {
@@ -188,6 +250,7 @@ export class TextShapeEditor extends ShapeEditor {
                 return 0;
             }
             this.fixFrameByLayout(api);
+            this.frameXYByLayout(api, this.view.size);
             this.updateName(api);
             this.__repo.commit(CmdMergeType.TextDelete);
             return count;
@@ -237,6 +300,7 @@ export class TextShapeEditor extends ShapeEditor {
             } else {
                 api.insertSimpleText(this.__page, shape, index, text, attr);
             }
+            this.frameXYByLayout(api, this.view.data.size);
             this.fixFrameByLayout(api);
             this.updateName(api);
             this.__repo.commit(CmdMergeType.TextInsert);
@@ -500,6 +564,7 @@ export class TextShapeEditor extends ShapeEditor {
             this.__preInputText = savetext;
             if (!this.view.isVirtualShape && this.view instanceof TextShapeView) this.view.forceUpdateOriginFrame();
             this.fixFrameByLayout(api);
+            this.frameXYByLayout(api, this.view.size);
             this.__repo.transactCtx.fireNotify(); // 会导致不断排版绘制
             return true;
         } catch (e) {
@@ -676,7 +741,7 @@ export class TextShapeEditor extends ShapeEditor {
                 const shape = this.shape4edit(api, text_shape);
                 const text = shape instanceof ShapeView ? shape.text : shape.value as Text;
                 const text_length = text.length;
-                if (text_length === 0) continue;    
+                if (text_length === 0) continue;
                 api.textModifyFontSize(this.__page, shape, 0, text_length, fontSize);
             }
             this.__repo.commit();
