@@ -1,8 +1,8 @@
-import { ShapeView, GroupShapeView, adapt2Shape, TextShapeView, SymbolRefView, ArtboradView } from "../dataview";
-import { Api } from "../coop";
-import { GroupShape, Page, SymbolShape, MarkerType, BlendMode, Artboard } from "../data";
-import { importFill, importBorder, importShadow, importExportOptions, importBlur, importPrototypeInterAction, importAutoLayout } from "../data/baseimport";
-import { exportFill, exportBorder, exportShadow, exportExportOptions, exportBlur, exportPrototypeInterAction, exportAutoLayout } from "../data/baseexport";
+import { ShapeView, GroupShapeView, adapt2Shape, TextShapeView, SymbolRefView, ArtboradView } from "../../dataview";
+import { Api } from "../../coop";
+import { GroupShape, Page, SymbolShape, MarkerType, BlendMode, Artboard, ShapeType } from "../../data";
+import { importFill, importBorder, importShadow, importExportOptions, importBlur, importPrototypeInterAction, importAutoLayout } from "../../data/baseimport";
+import { exportFill, exportBorder, exportShadow, exportExportOptions, exportBlur, exportPrototypeInterAction, exportAutoLayout } from "../../data/baseexport";
 
 /**
  * @description 调整图层的层级，调整层级的动作涉及多方面协调，不可以直接使用api进行调整
@@ -20,10 +20,15 @@ export class ShapePorter {
      * @description 循环检查
      */
     private circle(view: ShapeView, target: GroupShapeView) {
-        return false;
+        return false; // todo
     }
 
+    /**
+     * @description 检查是否可以进行层级调整
+     */
     private check(view: ShapeView, target: GroupShapeView) {
+        if (view.isVirtualShape || target.isVirtualShape) return false;
+        if (target.type === ShapeType.SymbolUnion) return false;
         if (this.circle(view, target)) return false;
 
         return false;
@@ -124,7 +129,7 @@ export class ShapePorter {
     }
 
     move(api: Api, page: Page, view: ShapeView, origin: GroupShapeView, target: GroupShapeView, toIndex: number) {
-        if (this.circle(view, target)) return;
+        if (this.check(view, target)) return;
         this.beforeMove(view, origin, target);
         const shape = adapt2Shape(view);
         const originData = adapt2Shape(origin) as GroupShape;
