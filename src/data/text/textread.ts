@@ -26,7 +26,7 @@ export function getTextWithFmt(shapetext: Text, index: number, length: number): 
         (span, index, length) => {
             const end = index + length;
             const span1 = new Span(end - index);
-            mergeSpanAttr(span1, span);
+            mergeSpanAttr(span1, span, true);
             text.paras.at(-1)?.spans.push(span1);
         })
     return text;
