@@ -1223,6 +1223,7 @@ export class PageEditor {
                     deleteEmptyGroupShape(this.__document, this.__page, p, api)
                 }
             }
+            update_frame_by_points(api, this.__page, pathShape);
             this.__repo.commit();
             return pathShape;
         } catch (e) {
@@ -1319,7 +1320,7 @@ export class PageEditor {
 
             api.shapeDelete(this.__document, this.__page, _parent, saveidx);
             pathShape = api.shapeInsert(this.__document, this.__page, _parent, pathShape, saveidx) as PathShape;
-
+            update_frame_by_points(api, this.__page, pathShape);
             this.__repo.commit();
             return pathShape;
         } catch (e) {
