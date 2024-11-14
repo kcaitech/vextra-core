@@ -1,8 +1,10 @@
-import { ShapeView, GroupShapeView, adapt2Shape, TextShapeView, SymbolRefView, ArtboradView } from "../../dataview";
-import { Api } from "../../coop";
-import { GroupShape, Page, SymbolShape, MarkerType, BlendMode, Artboard, ShapeType } from "../../data";
-import { importFill, importBorder, importShadow, importExportOptions, importBlur, importPrototypeInterAction, importAutoLayout } from "../../data/baseimport";
-import { exportFill, exportBorder, exportShadow, exportExportOptions, exportBlur, exportPrototypeInterAction, exportAutoLayout } from "../../data/baseexport";
+import { ShapeView, GroupShapeView, adapt2Shape, TextShapeView, SymbolRefView, ArtboradView } from "../../../dataview";
+import { Api } from "../../../coop";
+import { GroupShape, Page, SymbolShape, MarkerType, BlendMode, Artboard, ShapeType, TextShape } from "../../../data";
+import { importFill, importBorder, importShadow, importExportOptions, importBlur, importPrototypeInterAction, importAutoLayout } from "../../../data/baseimport";
+import { exportFill, exportBorder, exportShadow, exportExportOptions, exportBlur, exportPrototypeInterAction, exportAutoLayout } from "../../../data/baseexport";
+import { CircleChecker } from "./circle";
+import { modifyAutoLayout } from "../../utils/auto_layout";
 
 /**
  * @description 调整图层的层级，调整层级的动作涉及多方面协调，不可以直接使用api进行调整
@@ -11,27 +13,36 @@ export class ShapePorter {
     private readonly api: Api;
     private readonly page: Page;
 
+    private fromSet: Set<GroupShapeView>;
+    private toSet: Set<GroupShapeView>;
+    private envSet: Set<GroupShapeView>;
+
     constructor(api: Api, page: Page) {
         this.api = api;
         this.page = page;
+        this.fromSet = new Set();
+        this.toSet = new Set();
+        this.envSet = new Set();
     }
 
     /**
      * @description 循环检查
      */
     private circle(view: ShapeView, target: GroupShapeView) {
-        return false; // todo
+        return CircleChecker.assert4view(target, view);
+    }
+
+    private isVirtualShape(view: ShapeView, target: GroupShapeView) {
+        return view.isVirtualShape || target.isVirtualShape
     }
 
     /**
      * @description 检查是否可以进行层级调整
      */
     private check(view: ShapeView, target: GroupShapeView) {
-        if (view.isVirtualShape || target.isVirtualShape) return false;
+        if (this.isVirtualShape(view, target)) return false;
         if (target.type === ShapeType.SymbolUnion) return false;
-        if (this.circle(view, target)) return false;
-
-        return false;
+        return this.circle(view, target);
     }
 
     /**
@@ -104,9 +115,10 @@ export class ShapePorter {
         }
 
         if (view instanceof TextShapeView) {
-            // const text = view.getText();
-            // api.deleteText()
-            // api.insertComplexText(page, view, 0, text);
+            const text = view.getText();
+            const textShape = shape as TextShape;
+            api.deleteText2(page, textShape, 0, textShape.text.length);
+            api.insertComplexText(page, view, 0, text);
         }
         if (view instanceof SymbolRefView) {
             const refId = view.refId;
@@ -118,14 +130,39 @@ export class ShapePorter {
     }
 
     private beforeMove(view: ShapeView, origin: GroupShapeView, target: GroupShapeView) {
-        // 固定组件组成元素的变量属性
         this.solidifyVar(view, origin, target);
     }
 
-    private afterMove(view: ShapeView, origin: GroupShapeView, target: GroupShapeView) {
-        // 自动布局
-        // 整理原型交互
-        // 整理编组
+    /**
+     * @description 更新自动布局
+     * @private
+     */
+    private relayout() {
+        if (this.envSet.size) this.envSet.forEach(e => {
+            if ((e as ArtboradView).autoLayout) modifyAutoLayout(this.page, this.api, adapt2Shape(e));
+        })
+    }
+
+    /**
+     * @description 更新原型交互
+     */
+    private react() {
+    }
+
+    /**
+     * @description 清理空的编组
+     */
+    private clearNullGroup() {
+        if (this.fromSet.size) this.fromSet.forEach(e => {
+            if ((e.type === ShapeType.Group || e.type === ShapeType.BoolShape) && !e.childs.length) {
+            }
+        })
+    }
+
+    afterMove() {
+        this.relayout();
+        this.react();
+        this.clearNullGroup();
     }
 
     move(api: Api, page: Page, view: ShapeView, origin: GroupShapeView, target: GroupShapeView, toIndex: number) {
@@ -137,6 +174,26 @@ export class ShapePorter {
         const index = originData.indexOfChild(shape);
         if (originData.id === targetData.id && index < toIndex) toIndex--;
         api.shapeMove(page, originData, index, targetData, toIndex);
-        this.afterMove(view, origin, target);
+        this.fromSet.add(origin);
+        this.toSet.add(origin);
+        this.envSet.add(origin);
+        this.afterMove();
+    }
+
+    /**
+     * @description 需要自己定义结束时机并在结束时执行收尾任务
+     */
+    moveOneOf(api: Api, page: Page, view: ShapeView, origin: GroupShapeView, target: GroupShapeView, toIndex: number) {
+        if (this.check(view, target)) return;
+        this.beforeMove(view, origin, target);
+        const shape = adapt2Shape(view);
+        const originData = adapt2Shape(origin) as GroupShape;
+        const targetData = adapt2Shape(target) as GroupShape;
+        const index = originData.indexOfChild(shape);
+        if (originData.id === targetData.id && index < toIndex) toIndex--;
+        api.shapeMove(page, originData, index, targetData, toIndex);
+        this.fromSet.add(origin);
+        this.toSet.add(origin);
+        this.envSet.add(origin);
     }
 }

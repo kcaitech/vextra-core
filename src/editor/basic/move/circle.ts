@@ -1,5 +1,5 @@
-import { ShapeView, SymbolRefView, GroupShapeView } from "../../dataview";
-import { Shape } from "../../data";
+import { ShapeView, SymbolRefView, GroupShapeView } from "../../../dataview";
+import { Shape } from "../../../data";
 
 type Side = 'start' | 'end';
 type Path = {

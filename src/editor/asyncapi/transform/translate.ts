@@ -15,6 +15,7 @@ import { transform_data } from "../../../io/cilpboard";
 import { MossError } from "../../../basic/error";
 import { Transform } from "../../../basic/transform";
 import { assign } from "../creator";
+import { ShapePorter } from "../../basic/move";
 
 export type TranslateUnit = {
     shape: ShapeView;
@@ -79,6 +80,7 @@ export class Transporter extends AsyncApiCaller {
         try {
             const api = this.api;
             const page = this.page;
+            const porter = new ShapePorter(api, page);
             const document = this.__document;
 
             for (const item of items) {
