@@ -205,7 +205,9 @@ export class TextShapeEditor extends ShapeEditor {
         if (shape.nameIsFixed || shape.isVirtualShape) return;
         const name = (shape as TextShapeLike).text.getText(0, Infinity);
         const i = name.indexOf('\n');
-        api.shapeModifyName(this.__page, shape, name.slice(0, i));
+        const placeholder = shape.text.paras[0].spans[0].placeholder;
+
+        api.shapeModifyName(this.__page, shape, name.slice(placeholder ? 1 : 0, i));
     }
     public insertText2(text: string, index: number, del: number, attr?: SpanAttr): number {
         if (text.length === 0 && del === 0) return 0;
