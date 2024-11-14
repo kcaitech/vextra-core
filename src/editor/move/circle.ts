@@ -1,4 +1,5 @@
 import { ShapeView, SymbolRefView, GroupShapeView } from "../../dataview";
+import { Shape } from "../../data";
 
 type Side = 'start' | 'end';
 type Path = {
@@ -9,14 +10,22 @@ type Path = {
  * @description 检查组件是否循环依赖、图层之间是否倒转父子元素关系
  */
 export class CircleChecker {
+    private static getId(shape: ShapeView) {
+        return shape instanceof SymbolRefView ? shape.refId : shape.id;
+    }
+
+    private static getChildren(shape: ShapeView | Shape) {
+        return shape instanceof SymbolRefView ? shape.naviChilds : shape instanceof GroupShapeView ? shape.childs : undefined;
+    }
+
     private static get_topology_map(shape: ShapeView) {
         const deps: Path[] = [];
-        const children = (shape as GroupShapeView).childs;
+        const children = this.getChildren(shape);
         if (!children?.length) return [];
         for (const child of children) {
-            const end = child instanceof SymbolRefView ? child.refId : child.id;
-            deps.push({ start: shape.id, end });
-            if ((child as GroupShapeView).childs?.length) deps.push(...this.get_topology_map(child));
+            deps.push({ start: this.getId(shape), end: this.getId(child) });
+            const cc = this.getChildren(child);
+            cc?.length && deps.push(...this.get_topology_map(child));
         }
         return deps;
     }
@@ -66,17 +75,16 @@ export class CircleChecker {
     }
 
     /**
-     * @description alpha 包含 beta 即为 true 即产生了循环
+     * @description 若结果为true,则存在循环,则root不能接受leaf
      */
-    static assert4view(alpha: ShapeView, beta: ShapeView): boolean {
-        let deps: Path[] = [...this.get_topology_map(alpha), ...this.get_topology_map(beta)];
-        const start = alpha instanceof SymbolRefView ? alpha.refId : alpha.id;
-        const end = beta instanceof SymbolRefView ? beta.refId : beta.id;
-        deps.push({ start, end });
+    static assert4view(root: ShapeView, leaf: ShapeView): boolean {
+        let deps: Path[] = [...this.get_topology_map(root), ...this.get_topology_map(leaf)];
+        deps.push({ start: this.getId(root), end: this.getId(leaf) });
         console.log(JSON.parse(JSON.stringify(deps)));
         while (deps.length && this.is_exist_single_stick(deps)) {
             deps = this.filter_deps(deps, 'start', 'end');
             deps = this.filter_deps(deps, 'end', 'start');
+            console.log('while-circle');
         }
         return !!deps.length;
     }

@@ -3,6 +3,7 @@ import { Shape, GroupShape } from "../../data/shape";
 import { ShapeType } from "../../data/typesdefine";
 
 /**
+ * @deprecated 这个函数不好用,难维护,请使用CircleChecker
  * @description 检查symbol与symbol2之间是否存在循环引用
  * symbol2将包含symbol，若用symbol建一棵树，这颗树上不可以存在一条以symbol2为形的枝叶，若存在则存在循环
  */
