@@ -1,5 +1,8 @@
 import { Shape, ShapeType, GroupShape, SymbolRefShape } from "../../data";
 
+/**
+ * @description 检查组件是否循环依赖
+ */
 export class CircleChecker {
     private static get_topology_map(shape: Shape) {
         const deps: { shape: string, ref: string }[] = [];
