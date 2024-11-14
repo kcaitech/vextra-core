@@ -22,6 +22,8 @@ import {
     VariableType,
     ShapeFrame,
     SideType,
+    TextVerAlign,
+    TextHorAlign,
     BorderSideSetting,
 } from "../../data/classes";
 import { Api } from "../../coop/recordapi";
@@ -29,12 +31,13 @@ import { BasicArray, BasicMap } from "../../data/basic";
 import { newSymbolRefShape, newSymbolShapeUnion } from "../creator";
 import { uuid } from "../../basic/uuid";
 import * as types from "../../data/typesdefine";
-import { translateTo } from "../frame";
+import { translate, translateTo } from "../frame";
 import { ArtboradView, PageView, ShapeView, TableCellView, TableView, TextShapeView, adapt2Shape } from "../../dataview";
 import { modifyAutoLayout } from "./auto_layout";
 
 interface _Api {
     shapeModifyX(page: Page, shape: Shape, x: number): void;
+    shapeModifyY(page: Page, shape: Shape, y: number): void;
     shapeModifyWH(page: Page, shape: Shape, w: number, h: number): void;
 
     tableModifyRowHeight(page: Page, table: TableShape, idx: number, height: number): void;
@@ -46,6 +49,7 @@ export function fixTextShapeFrameByLayout(api: _Api, page: Page, shape: TextShap
     if (!shape.text || shape.isVirtualShape) return;
     const _shape = shape instanceof TextShape ? shape : adapt2Shape(shape);
     const textBehaviour = shape.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
+
     switch (textBehaviour) {
         case TextBehaviour.FixWidthAndHeight:
             break;
@@ -56,6 +60,7 @@ export function fixTextShapeFrameByLayout(api: _Api, page: Page, shape: TextShap
 
             const targetHeight = Math.ceil(Math.max(fontsize, layout.contentHeight));
             api.shapeModifyWH(page, _shape, shape.size.width, targetHeight);
+
             const parent = shape.parent as ShapeView;
             if (parent && (parent as ArtboradView).autoLayout) {
                 modifyAutoLayout(page, api as Api, adapt2Shape(parent));
@@ -68,11 +73,11 @@ export function fixTextShapeFrameByLayout(api: _Api, page: Page, shape: TextShap
             // if (xOffset !== 0) api.shapeModifyX(page, _shape, _shape.frame.x + xOffset);
             // const fontsize = shape.text.attr?.fontSize ?? Text.DefaultFontSize;
             // api.shapeModifyWH(page, _shape, Math.max(fontsize, layout.contentWidth), Math.max(fontsize, layout.contentHeight));
-
             const targetWidth = Math.ceil(layout.contentWidth);
             const targetHeight = Math.ceil(layout.contentHeight);
 
             api.shapeModifyWH(page, _shape, targetWidth, targetHeight);
+
             const parent = shape.parent as ShapeView;
             if (parent && (parent as ArtboradView).autoLayout) {
                 modifyAutoLayout(page, api as Api, adapt2Shape(parent));

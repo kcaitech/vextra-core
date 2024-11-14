@@ -19,7 +19,8 @@ import {
     Para,
     Span,
     ShapeType,
-    Variable, Document, TableShape, FillType, Gradient
+    Variable, Document, TableShape, FillType, Gradient,
+    ShapeSize
 } from "../data";
 import { CoopRepository } from "../coop/cooprepo";
 import { Api } from "../coop/recordapi";
@@ -36,11 +37,13 @@ import { uuid } from "../basic/uuid";
 import { SymbolRefShape, SymbolShape, GroupShape } from "../data";
 import { ParaAttr } from "../data";
 import { modifyAutoLayout } from "./utils/auto_layout";
+import { translate } from "./frame";
 
 type TextShapeLike = Shape & { text: Text }
 
 interface _Api {
     shapeModifyX(page: Page, shape: Shape, x: number): void;
+    shapeModifyY(page: Page, shape: Shape, y: number): void;
     shapeModifyWH(page: Page, shape: Shape, w: number, h: number): void;
 
     tableModifyRowHeight(page: Page, table: TableShape, idx: number, height: number): void;
@@ -650,6 +653,11 @@ export class TextShapeEditor extends ShapeEditor {
         const api = this.__repo.start("setTextFontSize");
         try {
             const shape = this.shape4edit(api);
+            const text = shape instanceof ShapeView ? shape.text : shape.value as Text;
+            const text_length = text.length;
+            if (len === text_length - 1) {
+                len = text_length;
+            }
             api.textModifyFontSize(this.__page, shape, index, len, fontSize)
             this.fixFrameByLayout(api);
             this.__repo.commit();

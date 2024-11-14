@@ -878,6 +878,11 @@ export class LinearApi {
             const api = this.api!;
             const page = this.page;
             const shape = editor4text.shape4edit(api);
+            const text = shape instanceof ShapeView ? shape.text : shape.value as Text;
+            const text_length = text.length;
+            if (len === text_length - 1) {
+                len = text_length;
+            }
             api.textModifyFontSize(page, shape, index, len, fontSize)
             editor4text.fixFrameByLayout(api);
         })
