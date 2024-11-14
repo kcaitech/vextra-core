@@ -183,5 +183,7 @@ export {exportBorder, exportFill, exportShadow, exportBlur} from './data/baseexp
 
 export {LinearApi} from './editor/linearapi/linearapi';
 
+export { CircleChecker } from "./editor/move/circle";
+
 
 export {Path} from '@kcdesign/path'
