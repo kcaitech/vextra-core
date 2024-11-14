@@ -33,7 +33,7 @@ import {
     SymbolShape,
     Transform,
     Variable,
-    VariableType
+    VariableType, ContextSettings, ExportOptions
 } from "../data";
 import { findOverrideAndVar } from "./basic";
 import { EL, elh } from "./el";
@@ -270,12 +270,12 @@ export class ShapeView extends DataView {
         return this.data.style;
     }
 
-    get exportOptions() {
+    get exportOptions(): ExportOptions | undefined {
         const v = this._findOV(OverrideType.ExportOptions, VariableType.ExportOptions);
         return v ? v.value : this.data.exportOptions;
     }
 
-    get contextSettings() {
+    get contextSettings(): ContextSettings | undefined {
         const v = this._findOV(OverrideType.ContextSettings, VariableType.ContextSettings);
         return v ? v.value : this.data.style.contextSettings;
     }
