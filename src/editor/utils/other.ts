@@ -61,6 +61,13 @@ export function fixTextShapeFrameByLayout(api: _Api, page: Page, shape: TextShap
             const targetHeight = Math.ceil(Math.max(fontsize, layout.contentHeight));
             api.shapeModifyWH(page, _shape, shape.size.width, targetHeight);
 
+            const verAlgin = shape.text.attr?.verAlign ?? TextVerAlign.Top;
+            if (verAlgin === TextVerAlign.Middle) {
+                //todo 文本垂直居中排版
+            } else if (verAlgin === TextVerAlign.Bottom) {
+                //todo 文本底部对齐排版
+            }
+
             const parent = shape.parent as ShapeView;
             if (parent && (parent as ArtboradView).autoLayout) {
                 modifyAutoLayout(page, api as Api, adapt2Shape(parent));
@@ -77,6 +84,25 @@ export function fixTextShapeFrameByLayout(api: _Api, page: Page, shape: TextShap
             const targetHeight = Math.ceil(layout.contentHeight);
 
             api.shapeModifyWH(page, _shape, targetWidth, targetHeight);
+
+            const verAlgin = shape.text.attr?.verAlign ?? TextVerAlign.Top;
+            if (verAlgin === TextVerAlign.Middle) {
+                //todo 文本垂直居中排版
+            } else if (verAlgin === TextVerAlign.Bottom) {
+                //todo 文本底部对齐排版
+            }
+            for (let i = 0, pc = shape.text.paras.length; i < pc; i++) {
+                const para = shape.text.paras[i];
+
+                const horAlgin = para.attr?.alignment ?? TextHorAlign.Left;
+
+                if (targetWidth === Math.ceil(layout.paras[i].paraWidth)) {
+                    // 段变化
+                    if (horAlgin === TextHorAlign.Centered) {
+                    } else if (horAlgin === TextHorAlign.Right) {
+                    }
+                }
+            }
 
             const parent = shape.parent as ShapeView;
             if (parent && (parent as ArtboradView).autoLayout) {
