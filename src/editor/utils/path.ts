@@ -807,6 +807,7 @@ export function border2path(shape: ShapeView, border: Border) {
                 if (isDash) dashPath(p0);
                 p0.stroke(Object.assign(basicParams, {width: thickness}));
                 __path_str = p0.toSVGString();
+                console.log('---outline---', __path_str);
             } else {
                 const path = shape.getPathStr();
                 const p0 = make(path);

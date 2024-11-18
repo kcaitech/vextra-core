@@ -4570,6 +4570,9 @@ export class PageEditor {
         }
     }
 
+    /**
+     * @description 轮廓化图层
+     */
     outlineShapes(shapes: ShapeView[], suffix?: string) {
         try {
             const document = this.__document;
