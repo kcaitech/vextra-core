@@ -12,7 +12,6 @@ type CornerCalcInfo = {
     nextSlices: Point2D[][];
 };
 
-
 function interpolate(p1: Point2D, p2: Point2D, t: number) {
     return {
         x: p1.x + (p2.x - p1.x) * t,
@@ -121,7 +120,6 @@ function add(p: Point2D, pt: Point2D) {
 export function parsePath(points: CurvePoint[], isClosed: boolean, width: number, height: number, fixedRadius: number = 0): Path {
     let hasBegin = false;
 
-
     const len = points.length;
     if (len < 2) return new Path();
 
@@ -160,15 +158,11 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, width: number
     function _isCornerRadius(idx: number) {
         const curvePoint = points[idx];
 
-        if (!isClosed && (idx === 0 || idx === len - 1)) {
-            return false;
-        }
+        if (!isClosed && (idx === 0 || idx === len - 1)) return false;
 
-        if (curvePoint.hasFrom && curvePoint.hasTo) {
-            return false;
-        }
+        if (curvePoint.hasFrom && curvePoint.hasTo) return false;
 
-        return ((curvePoint.radius || 0) > 0 || fixedRadius > 0);
+        return !!((curvePoint.radius || 0) || fixedRadius);
     }
 
     /**
