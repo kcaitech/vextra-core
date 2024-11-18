@@ -170,10 +170,6 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, width: number
      * sketch 可以设置并存储的 corner radius 可能非常大，绘制的时候需要加以限制。
      * 1.1 如果一个 corner 另外两端都没有 corner，那么 cornerRadius 实际最大值，以两侧较短一侧为准。
      * 1.2 如果 corner 另外两端也有 corner，那么 cornerRadius 实际最大值，要以较短一侧一半为准。
-     *
-     *
-     * @param idx
-     * @returns
      */
     function _getCornerInfo(idx: number): CornerCalcInfo | undefined {
         if (cacheCornerCalcInfo[idx]) {
