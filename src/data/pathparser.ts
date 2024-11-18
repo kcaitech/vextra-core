@@ -162,7 +162,7 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, width: number
 
         if (curvePoint.hasFrom && curvePoint.hasTo) return false;
 
-        return !!((curvePoint.radius || 0) || fixedRadius);
+        return !!(curvePoint.radius ?? fixedRadius);
     }
 
     /**
@@ -177,12 +177,10 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, width: number
         }
         const preIndex = idx === 0 ? len - 1 : idx - 1;
         const nextIndex = idx === len - 1 ? 0 : idx + 1;
-
         const pre = points[preIndex];
-        // if (pre.hasFrom && !pointEquals(pre.x, pre.y, pre.fromX || 0, pre.fromY || 0)) return;
         const cur = points[idx];
         const next = points[nextIndex];
-        // if (next.hasTo && !pointEquals(next.x, next.y, next.toX || 0, next.toY || 0)) return;
+
         // 拿到三个点
         const prePoint = transformedPoints[preIndex]; //pre.point; // A
         const curPoint = transformedPoints[idx]; //cur.point; // B
