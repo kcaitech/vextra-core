@@ -1,0 +1,7 @@
+{
+  "description": "style library type",
+  "enum": [
+    "color"
+  ],
+  "default": "color"
+}

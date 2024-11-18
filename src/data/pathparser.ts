@@ -78,7 +78,7 @@ function bezierLength(p0: Point2D, p1: Point2D, p2: Point2D, p3: Point2D, t: num
     return Math.sqrt(x * x + y * y);
 }
 
-// 通过二分法求解参数t
+// 通过二分法求解参数t // todo 检查一下，为什么是从末端开始的
 function findTByLength(p0: Point2D, p1: Point2D, p2: Point2D, p3: Point2D, targetLength: number, epsilon = 1e-5) {
     let t0 = 0;
     let t1 = 1;
@@ -119,7 +119,6 @@ function minus(p0: Point2D, p1: Point2D): Point2D {
 
 function norm(p: Point2D) {
     const d = Math.hypot(p.x, p.y);
-    // invariant(d !== 0, 'cant norm a vector whos len is zero');
     return { x: p.x / d, y: p.y / d };
 }
 
@@ -131,14 +130,6 @@ function add(p: Point2D, pt: Point2D) {
     return { x: p.x + pt.x, y: p.y + pt.y };
 }
 
-/**
- * 另外关于 curvePoint
- * curveMode 默认 1， 应该表示没有 curve，直来直去
- *    只有 curveMode = 1 的时候，cornerRadius 才有效
- * curveMode 2, 表示 control point 是对称的，长度一样
- * curveMode 4, disconnected, control point 位置随意
- * curveMode 3, 也是对称，长度可以不一样
- */
 export function parsePath(points: CurvePoint[], isClosed: boolean, width: number, height: number, fixedRadius: number = 0): Path {
     let hasBegin = false;
 
@@ -207,20 +198,53 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, width: number
         const curPoint = transformedPoints[idx];        //cur.point; // B
         const nextPoint = transformedPoints[nextIndex]  //next.point; // C
 
-        if (cur.hasFrom) {          // cur是曲线的起点
-            let radius = cur.radius ?? fixedRadius;
-            // 获取三次曲线的4个点
-            const [p0, p1, p2, p3] = getCubic(cur, next).map(p => transformPoint(p.x, p.y));
+        const lenAB = distanceTo(curPoint, prePoint);
+        const lenBC = distanceTo(curPoint, nextPoint);
+        // 三点之间的夹角
+        const radian = calcAngleABC(prePoint, curPoint, nextPoint); // todo 检查一下什么情况下会是NaN
+        if (Number.isNaN(radian)) return;
+        // 计算相切的点距离 curPoint 的距离， 在 radian 为 90 deg 的时候和 radius 相等。
+        const tangent = Math.tan(radian / 2);
+        let radius = cur.radius ?? fixedRadius;
+        let dist = radius / tangent;
+        const minDist = (() => {
+            const pr = pre.radius ?? fixedRadius;
+            const nr = next.radius ?? fixedRadius;
+            const cr = cur.radius ?? fixedRadius;
 
-            const t = findTByLength(p0, p1, p2, p3, radius);
-            if (!t) return;
-            const start = bezierCurvePoint(1 - t, p0, p1, p2, p3);
-            const slices = splitCubicBezierAtT(p0, p1, p2, p3, 1 - t);
-            cacheCornerCalcInfo[idx] = {
-                nextTangent: start,
-                nextSlices: slices
-            } as any;
-            return cacheCornerCalcInfo[idx];
+            const percent1 = (cr + pr) > lenAB ? lenAB * (cr / (cr + pr)) : cr;
+            const percent2 = (cr + nr) > lenBC ? lenBC * (cr / (cr + nr)) : cr;
+
+            return Math.min(percent1, percent2);
+        })();
+        if (dist > minDist) {
+            radius = minDist * tangent;
+            dist = minDist;
+        }
+
+        const kappa = (4 / 3) * Math.tan((Math.PI - radian) / 4);
+
+        if (cur.hasFrom) {          // cur是曲线的起点
+            // 获取三次曲线的4个点
+            // const [p0, p1, p2, p3] = getCubic(cur, next).map(p => transformPoint(p.x, p.y));
+            // const t = findTByLength(p0, p1, p2, p3, radius);
+            // if (!t) return;
+            // const start = bezierCurvePoint(1 - t, p0, p1, p2, p3);
+            // const slices = splitCubicBezierAtT(p0, p1, p2, p3, 1 - t);
+            // cacheCornerCalcInfo[idx] = {
+            //     nextTangent: start,
+            //     nextSlices: slices
+            // } as any;
+            // return cacheCornerCalcInfo[idx];
+            const vPre = norm(minus(prePoint, curPoint));
+            let preTangent = add(multiply(vPre, dist), curPoint);
+            let preHandle = add(multiply(vPre, -radius * kappa), preTangent);
+
+            const curveTo = getCubic(cur, next).map(p => transformPoint(p.x, p.y));
+            const fromT = findTByLength(curveTo[0], curveTo[1], curveTo[2], curveTo[3], radius);
+            if (!fromT) return;
+            let nextTangent = bezierCurvePoint(1 - fromT, curveTo[0], curveTo[1], curveTo[2], curveTo[3]);
+
         } else if (cur.hasTo) {     // cur是曲线的终点
             let radius = cur.radius ?? fixedRadius;
             const [p0, p1, p2, p3] = getCubic(pre, cur).map(p => transformPoint(p.x, p.y));
@@ -245,29 +269,6 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, width: number
             } as any;
             return cacheCornerCalcInfo[idx];
         } else {                    // 当hasFrom且hasTo是，不进行圆角绘制，所有这里的场景是cur本身是角
-            const lenAB = distanceTo(curPoint, prePoint);
-            const lenBC = distanceTo(curPoint, nextPoint);
-            // 三点之间的夹角
-            const radian = calcAngleABC(prePoint, curPoint, nextPoint);
-            if (Number.isNaN(radian)) return;
-            // 计算相切的点距离 curPoint 的距离， 在 radian 为 90 deg 的时候和 radius 相等。
-            const tangent = Math.tan(radian / 2);
-            let radius = cur.radius ?? fixedRadius;
-            let dist = radius / tangent;
-            const minDist = (() => {
-                const pr = pre.radius ?? fixedRadius;
-                const nr = next.radius ?? fixedRadius;
-                const cr = cur.radius ?? fixedRadius;
-
-                const percent1 = (cr + pr) > lenAB ? lenAB * (cr / (cr + pr)) : cr;
-                const percent2 = (cr + nr) > lenBC ? lenBC * (cr / (cr + nr)) : cr;
-
-                return Math.min(percent1, percent2);
-            })();
-            if (dist > minDist) {
-                radius = minDist * tangent;
-                dist = minDist;
-            }
             // 方向向量
             const vPre = norm(minus(prePoint, curPoint));
             const vNext = norm(minus(nextPoint, curPoint));
@@ -275,7 +276,6 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, width: number
             let preTangent = add(multiply(vPre, dist), curPoint);
             let nextTangent = add(multiply(vNext, dist), curPoint);
             // 计算 cubic handler 位置
-            const kappa = (4 / 3) * Math.tan((Math.PI - radian) / 4);
             let preHandle = add(multiply(vPre, -radius * kappa), preTangent);
             let nextHandle = add(multiply(vNext, -radius * kappa), nextTangent);
             let preSlices: Point2D[][] = [];
@@ -291,7 +291,7 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, width: number
                 }
             }
             if (next.hasTo) {
-                const _p2 = transformPoint(next.toX || 0, next.toY || 0);
+                const _p2 = transformPoint(next.toX ?? 0, next.toY ?? 0);
                 const t = findTByLength(curPoint, curPoint, _p2, nextPoint, dist);
                 if (t !== null) {
                     const nt = bezierCurvePoint(t, curPoint, curPoint, _p2, nextPoint);
