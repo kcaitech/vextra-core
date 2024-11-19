@@ -255,7 +255,6 @@ export function update_frame_by_points(api: Api, page: Page, s: Shape, reLayout 
 
     const rootXY = m.computeCoord3(box);
     const targetXY = s.parent!.matrix2Root().inverseCoord(rootXY);
-
     const dx = targetXY.x - s.transform.translateX;
     const dy = targetXY.y - s.transform.translateY;
 

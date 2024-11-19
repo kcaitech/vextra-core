@@ -11,7 +11,6 @@ import {
     Shape,
     ShapeType,
     SymbolUnionShape,
-    SymbolRefShape,
     SymbolShape,
     TableCell,
     TableShape,
@@ -26,26 +25,17 @@ import {
     TextHorAlign,
     BorderSideSetting,
 } from "../../data/classes";
-import { Api } from "../../coop/recordapi";
 import { BasicArray, BasicMap } from "../../data/basic";
-import { newSymbolRefShape, newSymbolShapeUnion } from "../creator";
+import { newSymbolShapeUnion } from "../creator";
 import { uuid } from "../../basic/uuid";
 import * as types from "../../data/typesdefine";
-import { translate, translateTo } from "../frame";
 import { ArtboradView, PageView, ShapeView, TableCellView, TableView, TextShapeView, adapt2Shape } from "../../dataview";
 import { modifyAutoLayout } from "./auto_layout";
+import { makeShapeTransform1By2, makeShapeTransform2By1 } from "../../data";
+import { ColVector3D } from "../../basic/matrix2";
+import { Api } from "../../coop";
 
-interface _Api {
-    shapeModifyX(page: Page, shape: Shape, x: number): void;
-    shapeModifyY(page: Page, shape: Shape, y: number): void;
-    shapeModifyWH(page: Page, shape: Shape, w: number, h: number): void;
-
-    tableModifyRowHeight(page: Page, table: TableShape, idx: number, height: number): void;
-}
-
-// const DefaultFontSize = Text.DefaultFontSize;
-
-export function fixTextShapeFrameByLayout(api: _Api, page: Page, shape: TextShapeView | TextShape) {
+export function fixTextShapeFrameByLayout(api: Api, page: Page, shape: TextShapeView | TextShape) {
     if (!shape.text || shape.isVirtualShape) return;
     const _shape = shape instanceof TextShape ? shape : adapt2Shape(shape);
     const textBehaviour = shape.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
@@ -56,18 +46,14 @@ export function fixTextShapeFrameByLayout(api: _Api, page: Page, shape: TextShap
         case TextBehaviour.Fixed: {
             const layout = shape.getLayout();
             const fontsize = shape.text.attr?.fontSize ?? Text.DefaultFontSize;
-            // expandTo(api as Api, page, shape, shape.frame.width, Math.max(fontsize, layout.contentHeight));
-
             const targetHeight = Math.ceil(Math.max(fontsize, layout.contentHeight));
             api.shapeModifyWH(page, _shape, shape.size.width, targetHeight);
-
-            const verAlgin = shape.text.attr?.verAlign ?? TextVerAlign.Top;
-            if (verAlgin === TextVerAlign.Middle) {
-                //todo 文本垂直居中排版
-            } else if (verAlgin === TextVerAlign.Bottom) {
-                //todo 文本底部对齐排版
+            const verAlign = shape.text.attr?.verAlign ?? TextVerAlign.Top;
+            if (verAlign === TextVerAlign.Middle) {
+                fixTransform(0, (_shape.size.height - targetHeight) / 2);
+            } else if (verAlign === TextVerAlign.Bottom) {
+                fixTransform(0, (_shape.size.height - targetHeight));
             }
-
             const parent = shape.parent as ShapeView;
             if (parent && (parent as ArtboradView).autoLayout) {
                 modifyAutoLayout(page, api as Api, adapt2Shape(parent));
@@ -76,45 +62,47 @@ export function fixTextShapeFrameByLayout(api: _Api, page: Page, shape: TextShap
         }
         case TextBehaviour.Flexible: {
             const layout = shape.getLayout();
-            // const xOffset = layout.alignX;
-            // if (xOffset !== 0) api.shapeModifyX(page, _shape, _shape.frame.x + xOffset);
-            // const fontsize = shape.text.attr?.fontSize ?? Text.DefaultFontSize;
-            // api.shapeModifyWH(page, _shape, Math.max(fontsize, layout.contentWidth), Math.max(fontsize, layout.contentHeight));
             const targetWidth = Math.ceil(layout.contentWidth);
             const targetHeight = Math.ceil(layout.contentHeight);
-
-            api.shapeModifyWH(page, _shape, targetWidth, targetHeight);
-
-            const verAlgin = shape.text.attr?.verAlign ?? TextVerAlign.Top;
-            if (verAlgin === TextVerAlign.Middle) {
-                //todo 文本垂直居中排版
-            } else if (verAlgin === TextVerAlign.Bottom) {
-                //todo 文本底部对齐排版
+            const verAlign = shape.text.attr?.verAlign ?? TextVerAlign.Top;
+            if (verAlign === TextVerAlign.Middle) {
+                fixTransform(0, (_shape.size.height - targetHeight) / 2);
+            } else if (verAlign === TextVerAlign.Bottom) {
+                fixTransform(0, (_shape.size.height - targetHeight));
             }
             for (let i = 0, pc = shape.text.paras.length; i < pc; i++) {
                 const para = shape.text.paras[i];
-
-                const horAlgin = para.attr?.alignment ?? TextHorAlign.Left;
-
+                const horAlign = para.attr?.alignment ?? TextHorAlign.Left;
                 if (targetWidth === Math.ceil(layout.paras[i].paraWidth)) {
-                    // 段变化
-                    if (horAlgin === TextHorAlign.Centered) {
-                    } else if (horAlgin === TextHorAlign.Right) {
+                    if (horAlign === TextHorAlign.Centered) {
+                        fixTransform((_shape.size.width - targetWidth) / 2, 0);
+                    } else if (horAlign === TextHorAlign.Right) {
+                        fixTransform(_shape.size.width - targetWidth, 0);
                     }
                 }
             }
-
+            api.shapeModifyWH(page, _shape, targetWidth, targetHeight);
             const parent = shape.parent as ShapeView;
             if (parent && (parent as ArtboradView).autoLayout) {
                 modifyAutoLayout(page, api as Api, adapt2Shape(parent));
             }
-            // expandTo(api as Api, page, shape, Math.max(fontsize, layout.contentWidth), Math.max(fontsize, layout.contentHeight));
             break;
+        }
+    }
+
+    function fixTransform(offsetX: number, offsetY: number) {
+        const m = _shape.matrix2Root();
+        const rootXY = m.computeCoord2(offsetX, offsetY);
+        const targetXY = _shape.parent!.matrix2Root().inverseCoord(rootXY);
+        const dx = targetXY.x - _shape.transform.translateX;
+        const dy = targetXY.y - _shape.transform.translateY;
+        if (dx || dy) {
+            api.shapeModifyTransform(page, _shape, makeShapeTransform1By2(makeShapeTransform2By1(_shape.transform).setTranslate(ColVector3D.FromXY(targetXY.x, targetXY.y))));
         }
     }
 }
 
-export function fixTableShapeFrameByLayout(api: _Api, page: Page, shape: TableCellView | TableCell, table: TableView) {
+export function fixTableShapeFrameByLayout(api: Api, page: Page, shape: TableCellView | TableCell, table: TableView) {
     if (!shape.text || shape.isVirtualShape) return;
     // const table = shape.parent as TableView;
     const indexCell = table.indexOfCell(shape);
