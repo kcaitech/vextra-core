@@ -1,6 +1,6 @@
 {
   "name": "@kcdesign/data",
-  "version": "1.0.96",
+  "version": "1.0.98",
   "private": false,
   "type": "module",
   "description": "kcdesign core module",
@@ -20,7 +20,7 @@
     "schema": "tsx src/schema/script"
   },
   "dependencies": {
-    "@kcdesign/path": "0.0.12",
+    "@kcdesign/path": "file:../kcdesign-path",
     "fzstd": "^0.1.1",
     "kiwi-schema": "^0.5.0",
     "pako": "^2.1.0",
