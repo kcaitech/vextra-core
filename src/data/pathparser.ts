@@ -77,7 +77,7 @@ function bezierLength(p0: Point2D, p1: Point2D, p2: Point2D, p3: Point2D, t: num
     return Math.sqrt(x * x + y * y);
 }
 
-// 通过二分法求解参数t
+// 二分法求解参数t
 function findTByLength(p0: Point2D, p1: Point2D, p2: Point2D, p3: Point2D, targetLength: number, epsilon = 1e-5) {
     let t0 = 0;
     let t1 = 1;
@@ -128,6 +128,9 @@ function multiply(p: Point2D, d: number): Point2D {
     return { x: p.x * d, y: p.y * d };
 }
 
+/**
+ * @require 分析函数之前，需要熟悉路径的表示、二次三次贝塞尔曲线的表示、圆角的表示、向量、三角函数
+ */
 export function parsePath(points: CurvePoint[], isClosed: boolean, width: number, height: number, fixedRadius: number = 0): Path {
     const len = points.length;
     if (len < 2) return new Path();
