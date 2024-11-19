@@ -312,13 +312,13 @@ export function getHorizontalAngle(A: {
 
 function findUsableFillStyle(shape: Shape | ShapeView): Style {
     if (shape.style.fills.length > 0) return shape.style;
-    if (shape instanceof BoolShape && shape.childs.length > 0) return findUsableFillStyle(shape.childs[0]);
+    if ((shape instanceof BoolShape || shape instanceof GroupShape) && shape.childs.length > 0) return findUsableFillStyle(shape.childs[0]);
     return shape.style;
 }
 
 function findUsableBorderStyle(shape: Shape | ShapeView): Style {
     if (shape.style.borders.length > 0) return shape.style;
-    if (shape instanceof BoolShape && shape.childs.length > 0) return findUsableBorderStyle(shape.childs[0]);
+    if ((shape instanceof BoolShape || shape instanceof GroupShape) && shape.childs.length > 0) return findUsableBorderStyle(shape.childs[0]);
     return shape.style;
 }
 
@@ -1152,7 +1152,7 @@ export class PageEditor {
         const style: Style = this.cloneStyle(copyStyle);
         if (style.fills.length === 0) {
             const fills = shapes.find(s => s.style.getFills())?.style.getFills();
-            fills ? style.fills.push(...fills) : style.fills.push(newSolidColorFill());
+            fills && fills.length > 0 ? style.fills.push(...fills) : style.fills.push(newSolidColorFill());
         }
 
         const borderStyle = findUsableBorderStyle(endShape);
@@ -1223,6 +1223,7 @@ export class PageEditor {
                     deleteEmptyGroupShape(this.__document, this.__page, p, api)
                 }
             }
+            update_frame_by_points(api, this.__page, pathShape);
             this.__repo.commit();
             return pathShape;
         } catch (e) {
@@ -1319,7 +1320,7 @@ export class PageEditor {
 
             api.shapeDelete(this.__document, this.__page, _parent, saveidx);
             pathShape = api.shapeInsert(this.__document, this.__page, _parent, pathShape, saveidx) as PathShape;
-
+            update_frame_by_points(api, this.__page, pathShape);
             this.__repo.commit();
             return pathShape;
         } catch (e) {
