@@ -157,7 +157,7 @@ export class ArtboradView extends GroupShapeView {
             // 裁剪属性不能放在filter的外层
             const id = "clip-board-" + objectId(this);
             svgprops['clip-path'] = "url(#" + id + ")";
-            const _svg_node = elh("svg", svgprops, [clippathR(elh, id, this.getPathStr()),...borders, ...children]);
+            const _svg_node = elh("svg", svgprops, [clippathR(elh, id, this.getPathStr()), ...children,...borders]);
             children = [_svg_node];
         }
 
