@@ -16,6 +16,8 @@ export * from "./utils/auto_layout"
 export { DocEditor } from "./document";
 export { PageEditor } from "./page";
 
+export { RefUnbind } from "./symbol"
+
 export class Editor {
     private m_data: Document;
     // private m_selection: Selection;
