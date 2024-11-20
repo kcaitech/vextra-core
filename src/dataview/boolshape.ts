@@ -1,16 +1,14 @@
-import { BoolOp, BoolShape, Border, BorderPosition, PathShape, ShapeFrame, parsePath } from "../data/classes";
+import { BoolOp, BoolShape, BorderPosition, ShapeFrame, parsePath } from "../data/classes";
 import { ShapeView, updateFrame } from "./shape";
-// import { IPalPath, gPal } from "../basic/pal";
 import { TextShapeView } from "./textshape";
 import { GroupShapeView } from "./groupshape";
 import { EL, elh } from "./el";
 import { renderBorders, renderFills } from "../render";
 import { FrameGrid } from "../basic/framegrid";
-import { border2path, borders2path } from "../editor/utils/path";
+import { border2path } from "../editor/utils/path";
 import { Path } from "@kcdesign/path";
 import { convertPath2CurvePoints } from "../data/pathconvert";
 import { OpType } from "@kcdesign/path";
-import { LineView } from "./line";
 import { gPal, IPalPath } from "../basic/pal";
 import { PathShapeView } from "./pathshape";
 
@@ -110,7 +108,6 @@ export function render2path(shape: ShapeView, defaultOp = BoolOp.None): Path {
 
     grid.push(frame0);
 
-    // let joinPath: IPalPath = gPal.makePalPath(path0.toSVGString());
     for (let i = fVisibleIdx + 1; i < cc; i++) {
         const child1 = shape.m_children[i] as ShapeView;
         if (!child1.isVisible) continue;
@@ -126,33 +123,26 @@ export function render2path(shape: ShapeView, defaultOp = BoolOp.None): Path {
             frame1 = new ShapeFrame(bounds.x, bounds.y, bounds.w, bounds.h);
         }
         const pathop = child1.m_data.boolOp ?? defaultOp;
-        // const palpath1 = gPal.makePalPath(path1.toSVGString());
 
         if (pathop === BoolOp.None) {
             grid.push(frame1);
-            // joinPath.addPath(palpath1);
             path0.addPath(path1)
         } else {
             const intersect = grid.checkIntersectAndPush(frame1);
             const path = opPath(pathop, path0, path1, intersect);
-
             if (path !== path0) {
                 path0 = path;
             }
         }
     }
-    // const pathstr = joinPath.toSVGString();
-    // joinPath.delete();
 
     let resultpath: Path | undefined;
-    // radius
     if (fixedRadius && fixedRadius > 0) {
-        const frame = shape.frame;
-        // const path =  Path.fromSVGString(pathstr);
-        const segs = convertPath2CurvePoints(path0, frame.width, frame.height);
+        const frame = path0.bbox();
+        const segs = convertPath2CurvePoints(path0, frame.w, frame.w);
         const ps = new Path();
         segs.forEach((seg) => {
-            ps.addPath(parsePath(seg.points, !!seg.isClosed, frame.width, frame.height, fixedRadius));
+            ps.addPath(parsePath(seg.points, seg.isClosed, frame.w, frame.w, fixedRadius));
         })
         resultpath = ps;
     } else {
@@ -198,8 +188,6 @@ export class BoolShapeView extends GroupShapeView {
     getPath() {
         if (this.m_path) return this.m_path;
         this.m_path = render2path(this);
-        // const frame = this.frame;
-        // if (frame.x !== 0 || frame.y !== 0) this.m_path.translate(frame.x, frame.y);
         this.m_path.freeze();
         return this.m_path;
     }
@@ -226,7 +214,6 @@ export class BoolShapeView extends GroupShapeView {
 
         let changed = this._save_frame.x !== this.m_frame.x || this._save_frame.y !== this.m_frame.y ||
             this._save_frame.width !== this.m_frame.width || this._save_frame.height !== this.m_frame.height;
-
         const bounds = this.getPath().bbox();
         if (updateFrame(this.m_frame, bounds.x, bounds.y, bounds.w, bounds.h)) {
             this._save_frame.x = this.m_frame.x;
