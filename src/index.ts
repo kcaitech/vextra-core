@@ -185,5 +185,4 @@ export {LinearApi} from './editor/linearapi/linearapi';
 
 export { CircleChecker } from "./editor/basic/move/circle";
 
-
 export {Path} from '@kcdesign/path'
