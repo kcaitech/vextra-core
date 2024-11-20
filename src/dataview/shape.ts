@@ -831,9 +831,11 @@ export class ShapeView extends DataView {
         let fills = this.getFills();
         if (this.mask) {
             fills = fills.map(f => {
-                const nf = importFill(exportFill(f));
-                if (nf.fillType === FillType.Gradient && nf.gradient?.gradientType === GradientType.Angular) nf.fillType = FillType.SolidColor;
-                return nf;
+                if (f.fillType === FillType.Gradient && f.gradient?.gradientType === GradientType.Angular) {
+                    const nf = importFill(exportFill(f));
+                    nf.fillType = FillType.SolidColor;
+                    return nf;
+                } else return f;
             })
         }
         return renderFills(elh, fills, this.size, this.getPathStr());
@@ -1217,8 +1219,12 @@ export class ShapeView extends DataView {
     }
 
     bleach(el: EL) {  // 漂白
-        if (el.elattr.fill && el.elattr.fill !== 'none' && !(el.elattr.fill as string).startsWith('url')) el.elattr.fill = '#FFF';
-        if (el.elattr.stroke && el.elattr.stroke !== 'none' && !(el.elattr.stroke as string).startsWith('url')) el.elattr.stroke = '#FFF';
+        if (el.elattr.fill && el.elattr.fill !== 'none' && !(el.elattr.fill as string).startsWith('url(#gradient')) {
+            el.elattr.fill = '#FFF';
+        }
+        if (el.elattr.stroke && el.elattr.stroke !== 'none' && !(el.elattr.stroke as string).startsWith('url(#gradient')) {
+            el.elattr.stroke = '#FFF';
+        }
         // 漂白阴影
         if (el.eltag === 'feColorMatrix' && el.elattr.result) {
             let values: any = el.elattr.values;

@@ -1,4 +1,4 @@
-import { BoolOp, BoolShape, BorderPosition, ShapeFrame, parsePath } from "../data/classes";
+import { BoolOp, BoolShape, BorderPosition, ShapeFrame, parsePath, FillType, GradientType } from "../data/classes";
 import { ShapeView, updateFrame } from "./shape";
 import { TextShapeView } from "./textshape";
 import { GroupShapeView } from "./groupshape";
@@ -11,6 +11,8 @@ import { convertPath2CurvePoints } from "../data/pathconvert";
 import { OpType } from "@kcdesign/path";
 import { gPal, IPalPath } from "../basic/pal";
 import { PathShapeView } from "./pathshape";
+import { importFill } from "../data/baseimport";
+import { exportFill } from "../data/baseexport";
 
 function opPath(bop: BoolOp, path0: Path, path1: Path, isIntersect: boolean): Path {
     switch (bop) {
@@ -178,7 +180,17 @@ export class BoolShapeView extends GroupShapeView {
     }
 
     protected renderFills(): EL[] {
-        return renderFills(elh, this.getFills(), this.frame, this.getPathStr());
+        let fills = this.getFills();
+        if (this.mask) {
+            fills = fills.map(f => {
+                if (f.fillType === FillType.Gradient && f.gradient?.gradientType === GradientType.Angular) {
+                    const nf = importFill(exportFill(f));
+                    nf.fillType = FillType.SolidColor;
+                    return nf;
+                } else return f;
+            })
+        }
+        return renderFills(elh, fills, this.size, this.getPathStr());
     }
 
     protected renderBorders(): EL[] {
