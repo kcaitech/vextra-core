@@ -448,17 +448,6 @@ export class LockMouseHandler extends AsyncApiCaller {
         }
     }
 
-
-    executeUniform(units: UniformScaleUnit[], ratio: number) {
-        try {
-            uniformScale(this.api, this.page, units, ratio, this.recorder, this.sizeRecorder, this.transformRecorder, this.valueRecorder);
-            this.updateView();
-        } catch (error) {
-            console.log('error:', error);
-            this.exception = true;
-        }
-    }
-
     modifyStartingAngleBy(shapes: ShapeView[], delta: number) {
         try {
             const round = Math.PI * 2;

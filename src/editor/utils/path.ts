@@ -255,7 +255,6 @@ export function update_frame_by_points(api: Api, page: Page, s: Shape, reLayout 
 
     const rootXY = m.computeCoord3(box);
     const targetXY = s.parent!.matrix2Root().inverseCoord(rootXY);
-
     const dx = targetXY.x - s.transform.translateX;
     const dy = targetXY.y - s.transform.translateY;
 
@@ -807,6 +806,7 @@ export function border2path(shape: ShapeView, border: Border) {
                 if (isDash) dashPath(p0);
                 p0.stroke(Object.assign(basicParams, {width: thickness}));
                 __path_str = p0.toSVGString();
+                console.log('---outline---', __path_str);
             } else {
                 const path = shape.getPathStr();
                 const p0 = make(path);

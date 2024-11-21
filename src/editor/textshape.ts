@@ -19,8 +19,7 @@ import {
     Para,
     Span,
     ShapeType,
-    Variable, Document, TableShape, FillType, Gradient,
-    ShapeSize
+    Variable, Document, FillType, Gradient,
 } from "../data";
 import { CoopRepository } from "../coop/cooprepo";
 import { Api } from "../coop/recordapi";
@@ -31,23 +30,13 @@ import { mergeParaAttr, mergeSpanAttr } from "../data/text/textutils";
 import { importGradient, importText } from "../data/baseimport";
 import { AsyncGradientEditor, Status } from "./controller";
 import { CmdMergeType } from "../coop/localcmd";
-import { ArtboradView, ShapeView, TableCellView, TableView, TextShapeView, adapt2Shape } from "../dataview";
+import { ShapeView, TableCellView, TableView, TextShapeView, adapt2Shape } from "../dataview";
 import { cell4edit2, varParent } from "./symbol";
 import { uuid } from "../basic/uuid";
 import { SymbolRefShape, SymbolShape, GroupShape } from "../data";
 import { ParaAttr } from "../data";
-import { modifyAutoLayout } from "./utils/auto_layout";
-import { translate } from "./frame";
 
 type TextShapeLike = Shape & { text: Text }
-
-interface _Api {
-    shapeModifyX(page: Page, shape: Shape, x: number): void;
-    shapeModifyY(page: Page, shape: Shape, y: number): void;
-    shapeModifyWH(page: Page, shape: Shape, w: number, h: number): void;
-
-    tableModifyRowHeight(page: Page, table: TableShape, idx: number, height: number): void;
-}
 
 export interface AsyncTextAttrEditor {
     execute_char_spacing: (kerning: number) => void;
@@ -86,12 +75,12 @@ export class TextShapeEditor extends ShapeEditor {
         return this.insertText2(text, index, 0, attr);
     }
 
-    public fixFrameByLayout(api: _Api) {
+    public fixFrameByLayout(api: Api) {
         if (this.shape.isVirtualShape) return; // api = basicapi;
         if (this.view instanceof TextShapeView) fixTextShapeFrameByLayout(api, this.__page, this.view);
         else if (this.view instanceof TableCellView) fixTableShapeFrameByLayout(api, this.__page, this.view, this.view.parent as TableView);
     }
-    public fixFrameByLayout2(api: _Api, shape: TextShapeView | TableCellView | Variable) {
+    public fixFrameByLayout2(api: Api, shape: TextShapeView | TableCellView | Variable) {
         if (shape instanceof Variable) return;
         if (shape.isVirtualShape) return; // api = basicapi;
         if (shape instanceof TextShapeView) fixTextShapeFrameByLayout(api, this.__page, shape);
