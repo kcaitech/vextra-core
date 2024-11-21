@@ -1706,7 +1706,10 @@ export class ShapeEditor {
                 if (last === originSegmentIndex) api.deleteSegmentAt(page, shape, originSegmentIndex);
             }
             if (!segments.length) this.delete(api);
-            else api.shapeEditPoints(page, shape, true);
+            else {
+                update_frame_by_points(api, page, shape);
+                api.shapeEditPoints(page, shape, true);
+            }
             this.__repo.commit();
             return segments.length;
         } catch (e) {
