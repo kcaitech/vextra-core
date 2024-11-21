@@ -969,8 +969,6 @@ export class PageEditor {
 
     flattenShapes(shapes: ShapeView[], name?: string): PathShape | PathShape2 | false {
         const _shapes = this._flattenShapes(shapes);
-        console.log(_shapes, '_shapes');
-        
         if (_shapes.length === 0) return false;
         if (_shapes.find((v) => !v.parent)) return false;
         const fshape = adapt2Shape(shapes[0]);
