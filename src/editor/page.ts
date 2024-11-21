@@ -3884,9 +3884,9 @@ export class PageEditor {
         }
     }
 
-    setscrollDirection(shape: ShapeView, value: ScrollDirection) {
+    setScrollDirection(shape: ShapeView, value: ScrollDirection) {
         try {
-            const api = this.__repo.start('setscrollDirection');
+            const api = this.__repo.start('setScrollDirection');
             const __shape = adapt2Shape(shape);
             api.shapeModifyscrollDirection(this.__page, __shape, value);
             this.__repo.commit();
