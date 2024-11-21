@@ -1,4 +1,4 @@
-import { BoolShape, GroupShape, PathShape, PathShape2, RectShape, Shape, ShapeType, SymbolShape, SymbolUnionShape, TextShape, Variable, VariableType, Color, PathType, Document, SymbolRefShape, Text, Page, Border, BorderPosition, BorderStyle, Fill, MarkerType, Shadow, BoolOp, CurvePoint, ExportFormat, ContactShape, AutoLayout } from "../data";
+import { BoolShape, GroupShape, PathShape, PathShape2, RectShape, Shape, ShapeType, SymbolShape, SymbolUnionShape, TextShape, Variable, VariableType, Color, PathType, Document, SymbolRefShape, Text, Page, Border, BorderPosition, BorderStyle, Fill, MarkerType, Shadow, BoolOp, CurvePoint, ExportFormat, ContactShape, AutoLayout, PathSegment, BasicArray } from "../data";
 import { expand, expandTo, translate, translateTo } from "./frame";
 import { CoopRepository } from "../coop/cooprepo";
 import { CurveMode, ExportFileFormat, ExportFormatNameingScheme, ExportOptions, OverrideType, ShadowPosition, StackAlign, StackMode, StackSizing, StackWrap } from "../data/typesdefine";
@@ -1029,7 +1029,7 @@ export class ShapeEditor {
     }
 
     // 删除图层
-    public delete() {
+    public delete(_api?: Api) {
         if (is_part_of_symbolref(this.shape)) {
             this.toggleVisible();
             return;
@@ -1040,7 +1040,7 @@ export class ShapeEditor {
             const index = childs.findIndex(s => s.id === this.shape.id);
             if (index >= 0) {
                 try {
-                    const api = this.__repo.start("deleteShape", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+                    const api = _api ?? this.__repo.start("deleteShape", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
                         const state = {} as SelectionState;
                         if (isUndo) state.shapes = [this.shape.id];
                         else state.shapes = cmd.saveselection?.shapes || [];
@@ -1065,10 +1065,10 @@ export class ShapeEditor {
                     if (this.shape.type === ShapeType.Symbol) {
                         this.__document.__correspondent.notify('update-symbol-list');
                     }
-                    this.__repo.commit();
+                    _api || this.__repo.commit();
                 } catch (error) {
                     this.__repo.rollback();
-                    console.log(error);
+                    throw error;
                 }
             }
         }
@@ -1682,6 +1682,36 @@ export class ShapeEditor {
         } catch (e) {
             console.error(e);
             this.__repo.rollback();
+        }
+    }
+
+    /**
+     * @description 裁剪路径，把第originSegmentIndex条路径裁成slices，slices不会存在闭合路径
+     */
+    clipPath(actions: { originSegmentIndex: number; slices: CurvePoint[][]; }[]) {
+        try {
+            const api = this.__repo.start("clipPath");
+            const page = this.__page;
+            const shape = adapt2Shape(this.__shape) as PathShape;
+            const segments = shape.pathsegs;
+            for (const action of actions) {
+                const {originSegmentIndex, slices} = action;
+                let last = originSegmentIndex;
+                for (let i = 0; i < slices.length; i++) {
+                    const slice = slices[i];
+                    if (slice.length < 2) continue;
+                    if (last === originSegmentIndex) api.deleteSegmentAt(page, shape, originSegmentIndex);
+                    api.insertSegmentAt(page, shape, last++, new PathSegment([0] as BasicArray<number>, uuid(), slice as any, false));
+                }
+                if (last === originSegmentIndex) api.deleteSegmentAt(page, shape, originSegmentIndex);
+            }
+            if (!segments.length) this.delete(api);
+            else api.shapeEditPoints(page, shape, true);
+            this.__repo.commit();
+            return segments.length;
+        } catch (e) {
+            this.__repo.rollback();
+            throw e;
         }
     }
 }

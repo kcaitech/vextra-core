@@ -114,7 +114,7 @@ import {
     shape4border,
     shape4cornerRadius,
     shape4fill,
-    shape4shadow, shape4contextSettings, shape4blur
+    shape4shadow, shape4contextSettings, shape4blur, RefUnbind
 } from "./symbol";
 import { is_circular_ref2 } from "./utils/ref_check";
 import {
@@ -880,126 +880,20 @@ export class PageEditor {
             self: Shape,
             insertIndex: number
         }[] = []
-        const replaceId = (shape: types.Shape) => {
-            shape.id = uuid();
-            if ((shape as types.GroupShape).childs) {
-                (shape as types.GroupShape).childs.forEach((c) => replaceId(c));
-            }
-        }
-
-        const clearBindvars = (shape: types.Shape) => {
-            if (shape.varbinds) shape.varbinds = undefined;
-            const g = shape as types.GroupShape;
-            if (Array.isArray(g.childs)) {
-                g.childs.forEach((c) => clearBindvars(c));
-            }
-        }
-
-        const transferVars = (rootRef: SymbolRefShape, g: {
-            childs: types.Shape[]
-        }) => {
-            const overrides = rootRef.overrides;
-            const vars = rootRef.variables;
-            if (!overrides) return;
-            for (let i = 0, childs = g.childs; i < childs.length; ++i) {
-                const c = childs[i];
-                if ((c as any).childs) { // group
-                    transferVars(rootRef, c as any);
-                    return;
-                }
-                if (c.typeId !== "symbol-ref-shape") continue;
-                let refId = c.id;
-                // 去掉头部rootref.id
-                refId = refId.substring(refId.indexOf('/') + 1);
-                if (refId.length === 0) throw new Error();
-
-                // 查找相关变量
-                overrides.forEach((v, k) => {
-                    if (!k.startsWith(refId)) return;
-
-                    const _v = vars.get(v);
-                    if (!_v) return;
-
-                    const _var = exportVariable(_v);
-                    _var.id = uuid();
-                    const override_id = k.substring(refId.length + 1);
-                    if (override_id.length === 0) throw new Error();
-
-                    const ref = c as types.SymbolRefShape;
-                    if ((ref.variables as any)[override_id]) {
-                        const origin_var = (ref.variables as any)[override_id] as types.Variable;
-                        origin_var.name = _var.name;
-                        origin_var.value = _var.value;
-                    } else if (ref.overrides && (ref.overrides as any)[override_id]) {
-                        const origin_ref = (ref.overrides as any)[override_id];
-                        const origin_var = (ref.variables as any)[origin_ref] as types.Variable;
-                        if (!origin_var) {
-                            (ref.variables as any)[_var.id] = _var;
-                            (ref.overrides as any)[override_id] = _var.id;
-                        } else {
-                            origin_var.name = _var.name;
-                            origin_var.value = _var.value;
-                        }
-                    } else {
-                        (ref.variables as any)[_var.id] = _var;
-                        if (!ref.overrides) (ref as any).overrides = {};
-                        (ref.overrides as any)[override_id] = _var.id;
-                    }
-                })
-            }
-        }
-
+        const _this = this;
+        const ctx: IImportContext = new class implements IImportContext {
+            document: Document = _this.__document;
+            curPage: string = _this.__page.id;
+            fmtVer: string = FMT_VER_latest
+        };
         const return_shapes: Shape[] = [];
         for (const view of shapes) {
-
             const shape: SymbolRefShape = adapt2Shape(view) as SymbolRefShape;
-            if (shape.type !== ShapeType.SymbolRef) {
+            const symbolData = RefUnbind.unbind(view as SymbolRefView);
+            if (!symbolData) {
                 return_shapes.push(shape);
                 continue;
             }
-            if (shape.isVirtualShape) { // 实例内引用组件
-                return_shapes.push(shape);
-                // todo 失去变量的情况下保持当前状态
-                continue;
-            }
-
-            const _this = this;
-            const ctx: IImportContext = new class implements IImportContext {
-                document: Document = _this.__document;
-                curPage: string = _this.__page.id;
-                fmtVer: string = FMT_VER_latest
-            };
-            const tmpArtboard: Artboard = newArtboard(view.name, shape.frame);
-
-            tmpArtboard.childs = shape.naviChilds! as BasicArray<Shape>;
-            tmpArtboard.varbinds = shape.varbinds;
-            tmpArtboard.style = shape.style;
-            tmpArtboard.transform.m00 = shape.transform.m00;
-            tmpArtboard.transform.m01 = shape.transform.m01;
-            tmpArtboard.transform.m10 = shape.transform.m10;
-            tmpArtboard.transform.m11 = shape.transform.m11;
-            tmpArtboard.transform.m02 = shape.transform.m02;
-            tmpArtboard.transform.m12 = shape.transform.m12;
-
-            tmpArtboard.frameMaskDisabled = shape.frameMaskDisabled;
-
-            const layoutInfo = (view as SymbolRefView).autoLayout;
-            if (layoutInfo) {
-                tmpArtboard.autoLayout = importAutoLayout(layoutInfo);
-            }
-            const radius = (view as SymbolRefView).cornerRadius
-            if (radius) {
-                tmpArtboard.cornerRadius = importCornerRadius(radius);
-            }
-
-            const symbolData = exportArtboard(tmpArtboard); // todo 如果symbol只有一个child时
-
-            if (shape.uniformScale && shape.uniformScale !== 1) solidify(symbolData as GroupShape, shape.uniformScale);
-
-            // 遍历symbolData,如有symbolref,则查找根shape是否有对应override的变量,如有则存到symbolref内
-            transferVars(shape, symbolData);
-            clearBindvars(symbolData);
-            replaceId(symbolData);
             const parent = shape.parent;
             if (!parent) {
                 return_shapes.push(shape);
@@ -1010,7 +904,6 @@ export class PageEditor {
                 return_shapes.push(shape);
                 continue;
             }
-
             const newShape = importArtboard(symbolData, ctx);
             actions.push({ parent, self: newShape, insertIndex });
         }
@@ -1034,84 +927,6 @@ export class PageEditor {
         } catch (e) {
             console.log(e)
             this.__repo.rollback();
-        }
-
-        function solidify(shape: GroupShape, uniformScale: number) {
-            const children = shape.childs;
-            for (const child of children) {
-                const t = makeShapeTransform2By1(child.transform);
-                const scale = new Transform2().setScale(ColVector3D.FromXYZ(uniformScale, uniformScale, 1));
-                t.addTransform(scale);
-                const __scale = t.decomposeScale();
-                child.size.width *= Math.abs(__scale.x);
-                child.size.height *= Math.abs(__scale.y);
-                t.clearScaleSize();
-                child.transform = makeShapeTransform1By2(t);
-                const borders = child.style.borders;
-                borders.forEach(b => {
-                    b.sideSetting = new BorderSideSetting(
-                        SideType.Normal,
-                        b.sideSetting.thicknessTop * uniformScale,
-                        b.sideSetting.thicknessLeft * uniformScale,
-                        b.sideSetting.thicknessBottom * uniformScale,
-                        b.sideSetting.thicknessRight * uniformScale
-                    );
-                });
-                const shadows = child.style.shadows;
-                shadows.forEach(s => {
-                    s.offsetX *= uniformScale;
-                    s.offsetY *= uniformScale;
-                    s.blurRadius *= uniformScale;
-                    s.spread *= uniformScale;
-                });
-                if (child.type === ShapeType.Text) {
-                    const text = (child as TextShape).text;
-                    scale4Text(text);
-                }
-                const blur = child.style.blur;
-                if (blur?.saturation) blur.saturation *= uniformScale;
-                if ((child as any).pathsegs?.length) {
-                    (child as any).pathsegs.forEach((segs: any) => {
-                        segs.points.forEach((point: any) => point.radius && (point.radius *= uniformScale));
-                    });
-                }
-                if (child.type === ShapeType.Table) {
-                    const cells = Object.values((child as any).cells);
-                    cells.forEach((cell: any) => {
-                        if (cell.text) scale4Text(cell.text);
-                    });
-                }
-                if ((child as any).cornerRadius) {
-                    const __corner: any = (child as any).cornerRadius;
-                    __corner.lt *= uniformScale;
-                    __corner.rt *= uniformScale;
-                    __corner.rb *= uniformScale;
-                    __corner.lb *= uniformScale;
-                }
-
-                if (child instanceof GroupShape) {
-                    let innerScale = uniformScale;
-                    if (child.uniformScale) innerScale *= child.uniformScale;
-                    solidify(child, innerScale);
-                }
-            }
-
-            function scale4Text(text: Text) {
-                const attr = text.attr;
-                if (attr?.paraSpacing) attr.paraSpacing *= uniformScale;
-                if (attr?.padding?.left) attr.padding.left *= uniformScale;
-                if (attr?.padding?.right) attr.padding.right *= uniformScale;
-                const paras = text.paras;
-                for (const para of paras) {
-                    const attr = para.attr;
-                    if (attr?.maximumLineHeight) attr.maximumLineHeight *= uniformScale;
-                    if (attr?.minimumLineHeight) attr.minimumLineHeight *= uniformScale;
-                    for (const span of para.spans) {
-                        if (span.fontSize) span.fontSize *= uniformScale;
-                        if (span.kerning) span.kerning *= uniformScale;
-                    }
-                }
-            }
         }
     }
 
@@ -4084,9 +3899,9 @@ export class PageEditor {
         }
     }
 
-    setscrollDirection(shape: ShapeView, value: ScrollDirection) {
+    setScrollDirection(shape: ShapeView, value: ScrollDirection) {
         try {
-            const api = this.__repo.start('setscrollDirection');
+            const api = this.__repo.start('setScrollDirection');
             const __shape = adapt2Shape(shape);
             api.shapeModifyscrollDirection(this.__page, __shape, value);
             this.__repo.commit();
@@ -4586,6 +4401,9 @@ export class PageEditor {
         }
     }
 
+    /**
+     * @description 轮廓化图层
+     */
     outlineShapes(shapes: ShapeView[], suffix?: string) {
         try {
             const document = this.__document;
