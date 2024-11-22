@@ -219,17 +219,7 @@ export class ContactLineView extends PathShapeView {
     }
 
     protected renderBorders(): EL[] {
-        if (this.m_data.style.borders.length > 0) {
-            return renderBorders(elh, this.m_data.style, this.getPathStr(), this.m_data);
-        } else {
-            // const props: any = {};
-            // props.stroke = '#808080';
-            // props['stroke-width'] = 2;
-            // props.d = this.getPathStr();
-            // props.fill = "none"
-            // return [elh('path', props)];
-            return [];
-        }
+        return renderBorders(elh, this.m_data.style, this.getPathStr(), this.m_data);
     }
 
     getPoints() {
