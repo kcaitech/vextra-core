@@ -197,8 +197,8 @@ export class TextShapeView extends ShapeView {
         if (Array.isArray(el.elchilds)) el.elchilds.forEach(el => this.bleach(el));
     }
 
-    onDestory(): void {
-        super.onDestory();
+    onDestroy(): void {
+        super.onDestroy();
         if (this.__layoutToken && this.__preText) this.__preText.dropLayout(this.__layoutToken, this.id);
     }
 }

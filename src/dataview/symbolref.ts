@@ -154,8 +154,8 @@ export class SymbolRefView extends ShapeView {
         this.m_ctx.setReLayout(this);
     }
 
-    onDestory(): void {
-        super.onDestory();
+    onDestroy(): void {
+        super.onDestroy();
         if (this.m_union) this.m_union.unwatch(this.symwatcher);
         if (this.m_sym) this.m_sym.unwatch(this.symwatcher);
     }

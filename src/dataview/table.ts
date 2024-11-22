@@ -56,8 +56,8 @@ export class TableView extends ShapeView {
         this.m_ctx.setDirty(this);
     }
 
-    // onDestory(): void {
-    //     super.onDestory();
+    // onDestroy(): void {
+    //     super.onDestroy();
     //     this.m_data.bubbleunwatch(this._bubblewatcher);
     // }
 

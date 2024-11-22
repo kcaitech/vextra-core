@@ -26,7 +26,7 @@ export class ContactLineView extends PathShapeView {
         return this.m_data as ContactShape;
     }
 
-    get fromAndto(): { from: Shape | undefined, to: Shape | undefined } {
+    get apexes(): { from: Shape | undefined, to: Shape | undefined } {
         return { from: this.from, to: this.to }
     }
 
@@ -202,8 +202,8 @@ export class ContactLineView extends PathShapeView {
 
     }
 
-    onDestory(): void {
-        super.onDestory();
+    onDestroy(): void {
+        super.onDestroy();
         if (this.from) {
             this.unwatchApex(this.from, this.fromparents);
             this.from = undefined;
