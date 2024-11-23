@@ -1,7 +1,19 @@
 import { BoolShape, GroupShape, PathShape, PathShape2, RectShape, Shape, ShapeType, SymbolShape, SymbolUnionShape, TextShape, Variable, VariableType, Color, PathType, Document, SymbolRefShape, Text, Page, Border, BorderPosition, BorderStyle, Fill, MarkerType, Shadow, BoolOp, CurvePoint, ExportFormat, ContactShape, AutoLayout, PathSegment, BasicArray } from "../data";
 import { expand, expandTo, translate, translateTo } from "./frame";
 import { CoopRepository } from "../coop/cooprepo";
-import { CurveMode, ExportFileFormat, ExportFormatNameingScheme, ExportOptions, OverrideType, ShadowPosition, StackAlign, StackMode, StackSizing, StackWrap } from "../data/typesdefine";
+import {
+    CurveMode,
+    ExportFileFormat,
+    ExportFormatNameingScheme,
+    ExportOptions,
+    OverrideType,
+    PathSegment_points,
+    ShadowPosition,
+    StackAlign,
+    StackMode,
+    StackSizing,
+    StackWrap
+} from "../data/typesdefine";
 import { Api } from "../coop/recordapi";
 import { importCurvePoint } from "../data/baseimport";
 import { v4 } from "uuid";
@@ -1686,7 +1698,7 @@ export class ShapeEditor {
     }
 
     /**
-     * @description 裁剪路径，把第originSegmentIndex条路径裁成slices，slices不会存在闭合路径
+     * @description 裁剪路径，把第originSegmentIndex条路径裁成slices，slices不会存在新的闭合路径
      */
     clipPath(actions: { originSegmentIndex: number; slices: CurvePoint[][]; }[]) {
         try {
@@ -1698,10 +1710,11 @@ export class ShapeEditor {
                 const {originSegmentIndex, slices} = action;
                 let last = originSegmentIndex;
                 for (let i = 0; i < slices.length; i++) {
-                    const slice = slices[i];
-                    if (slice.length < 2) continue;
+                    const slice = slices[i] as any;
+                    const origin = segments[originSegmentIndex];
+                    const closed = slices.length === 1 && origin.isClosed && slice.length !== origin.points.length;
                     if (last === originSegmentIndex) api.deleteSegmentAt(page, shape, originSegmentIndex);
-                    api.insertSegmentAt(page, shape, last++, new PathSegment([0] as BasicArray<number>, uuid(), slice as any, false));
+                    api.insertSegmentAt(page, shape, last++, new PathSegment([0] as BasicArray<number>, uuid(), slice, closed));
                 }
                 if (last === originSegmentIndex) api.deleteSegmentAt(page, shape, originSegmentIndex);
             }
