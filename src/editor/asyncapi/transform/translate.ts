@@ -156,7 +156,7 @@ export class Transporter extends AsyncApiCaller {
     reflect: Map<string, Shape> | undefined;
 
     drawn(
-        shapes: ShapeView[],
+        views: ShapeView[],
         transform: Map<string, TranslateBaseItem>,
         env?: Map<ShapeView, { parent: ShapeView, index: number }>
     ) {
@@ -168,12 +168,15 @@ export class Transporter extends AsyncApiCaller {
             const results: Shape[] = [];
             const layoutSet = this.need_layout_shape;
             const assignSet = this.need_assign;
-            for (const view of shapes) {
-                const shape = adapt2Shape(view);
+            const shapes = views.map(v => adapt2Shape(v))
+            const copy = transform_data(document, page, shapes);
+            for (let i = 0; i < views.length; i++) {
+                const view = views[i];
+                const shape = shapes[i];
                 const parent = shape.parent! as GroupShape;
                 const index = parent.indexOfChild(shape);
 
-                const source = transform_data(document, page, [shape]).pop()!;
+                const source = copy[i];
                 const __shape = api.shapeInsert(document, page, parent, source, index + 1);
                 results.push(__shape);
                 reflect.set(__shape.id, shape);
