@@ -11,8 +11,17 @@ import { PageView } from "./page";
 export class ArtboradView extends GroupShapeView {
 
     m_inner_transform: Transform | undefined;
+    m_fixed_transform: Transform | undefined;
     get innerTransform(): Transform | undefined {
         return this.m_inner_transform;
+    }
+    get fixedTransform(): Transform | undefined {
+        return this.m_fixed_transform;
+    }
+
+    setFixedTransform(transform: Transform) {
+        this.m_fixed_transform = transform;
+        this.m_ctx.setDirty(this);
     }
 
     initInnerTransform(transform: Transform) {
@@ -128,12 +137,20 @@ export class ArtboradView extends GroupShapeView {
             const innerEL = childs.map(c => {
                 const s = c as ShapeView;
                 const trans = new Transform();
+                // 有固定行为的图形抵消容器滚动的距离
                 if (s.scrollBehavior === ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME && this.innerTransform) {
                     trans.trans(-this.innerTransform.translateX, -this.innerTransform.translateY);
                     return elh("g", { transform: trans.toString() }, [c]);
                 } else if (s.scrollBehavior === ScrollBehavior.STICKYSCROLLS && this.innerTransform) {
-                    if (s._p_frame.y + this.innerTransform.translateY < 0) {
+                    if (s._p_frame.y + this.innerTransform.translateY < 0) { //图形吸顶父级容器
                         trans.trans(0, -(s._p_frame.y + this.innerTransform.translateY));
+                        if (this.fixedTransform && this.fixedTransform.translateY < 0) { // 图形超过视图时减去超出的距离  吸顶视图
+                            trans.trans(0, -this.fixedTransform.translateY);
+                        }
+                        return elh("g", { transform: trans.toString() }, [c]);
+                    } else if (this.fixedTransform && this.fixedTransform.translateY < -(s._p_frame.y + this.innerTransform.translateY)) {// 当前图形没有吸顶父级
+                        const viewTrans = (s._p_frame.y + this.innerTransform.translateY) + this.fixedTransform.translateY  //当前图形相对视图吸顶的距离
+                        trans.trans(0, -viewTrans);
                         return elh("g", { transform: trans.toString() }, [c]);
                     }
                 }
@@ -158,7 +175,7 @@ export class ArtboradView extends GroupShapeView {
             const id = "clip-board-" + objectId(this);
             svgprops['clip-path'] = "url(#" + id + ")";
             const _svg_node = elh("svg", svgprops, [clippathR(elh, id, this.getPathStr()), ...children]);
-            children = [_svg_node,...borders];
+            children = [_svg_node, ...borders];
         }
 
         if (shadows.length) {
