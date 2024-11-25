@@ -2018,6 +2018,9 @@ export class PageEditor {
         }
     }
 
+    /**
+     * @description 旋转图层
+     */
     setShapesRotate(actions: {
         shape: ShapeView,
         transform: Transform
@@ -2038,8 +2041,8 @@ export class PageEditor {
             }
             this.__repo.commit();
         } catch (error) {
-            console.log(error);
             this.__repo.rollback();
+            throw error;
         }
     }
 
