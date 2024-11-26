@@ -1,10 +1,7 @@
 import {
     OverrideType,
-    Para,
-    BasicArray,
     TextLayout,
     ShapeSize,
-    Span,
     Text,
     TextBehaviour,
     TextShape,
@@ -12,7 +9,8 @@ import {
     VariableType,
     ShapeFrame,
     GradientType,
-    FillType
+    FillType,
+    OverrideTextText
 } from "../data";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
@@ -21,12 +19,11 @@ import {
     CursorLocate, TextLocate, locateCursor,
     locateNextCursor, locatePrevCursor, locateRange, locateText
 } from "../data/text/textlocate";
-import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "../data/text/textutils";
 import { objectId } from "../basic/objectid";
 import { Path } from "@kcdesign/path";
 import { renderBorders } from "../render";
-import { importBorder, importFill } from "../data/baseimport";
-import { exportBorder, exportFill } from "../data/baseexport";
+import { importBorder } from "../data/baseimport";
+import { exportBorder } from "../data/baseexport";
 
 export class TextShapeView extends ShapeView {
     __str: string | undefined;
@@ -41,19 +38,7 @@ export class TextShapeView extends ShapeView {
             this.__str = v.value;
             const str = v.value.split('\n');
             const origin = (this.m_data as TextShape).text;
-            this.__strText = new Text(new BasicArray<Para>());
-            if (origin.attr) mergeTextAttr(this.__strText, origin.attr);
-            const originp = origin.paras[0];
-            const originspan = originp.spans[0];
-            for (let i = 0; i < str.length; ++i) {
-                let _str = str[i];
-                if (!_str.endsWith('\n')) _str += '\n';
-                const p = new Para(_str, new BasicArray<Span>());
-                p.spans.push(new Span(p.length));
-                mergeParaAttr(p, originp);
-                mergeSpanAttr(p.spans[0], originspan);
-                this.__strText.paras.push(p);
-            }
+            this.__strText = new OverrideTextText(str, origin);
             return this.__strText;
         }
 
@@ -139,6 +124,7 @@ export class TextShapeView extends ShapeView {
     onDataChange(...args: any[]): void {
         super.onDataChange(...args);
         this.m_textpath = undefined;
+        if (args.includes("text")) this.__str = undefined; // 属性变化后需要重新生成text
     }
 
     asyncRender() {

@@ -150,13 +150,13 @@ Object.freeze(EmptySpan)
 export type ParaIterItem = { char: string, span: Span, idx: number, spanIdx: number }
 
 export class ParaIter {
-    private _para: Para;
+    private _para: classes.Para;
     private _idx: number = 0;
     private _text: string;
 
     private _spanIdx: number = 0;
     private _spanOffset: number = 0;
-    constructor(para: Para) {
+    constructor(para: classes.Para) {
         this._para = para;
         this._text = para.text;
     }
@@ -197,7 +197,7 @@ export class ParaIter {
         const span = this._para.spans[this._spanIdx] ?? EmptySpan;
         const spanIdx = this._spanIdx;
         const idx = this._idx;
-        return { char, span, idx, spanIdx }
+        return { char, span: span as Span, idx, spanIdx }
     }
 }
 
@@ -223,6 +223,36 @@ export class Para extends Basic implements classes.Para {
 
     iter() {
         return new ParaIter(this)
+    }
+}
+
+export class OverrideTextPara extends Basic implements classes.Para {
+    text: string
+    origin: BasicArray<Para>
+    index: number
+    constructor(
+        text: string,
+        index: number,
+        origin: BasicArray<Para>
+    ) {
+        super()
+        this.text = text
+        this.index = index
+        this.origin = origin
+    }
+    get length() {
+        return this.text.length;
+    }
+    charAt(index: number): string {
+        return this.text.charAt(index);
+    }
+
+    iter() {
+        return new ParaIter(this)
+    }
+    get spans() {
+        const para = this.origin[this.index] ?? this.origin[this.origin.length - 1]
+        return para.spans
     }
 }
 
@@ -295,7 +325,7 @@ export class Text extends Basic implements classes.Text {
         const cur = [width, height].join(',');
 
         let o = this.__layouts.get(cur);
-        
+
         if (o) {
             return o.layout!;
         }
@@ -567,5 +597,20 @@ export class Text extends Basic implements classes.Text {
         if (!this.attr.padding) this.attr.padding = new Padding();
         if (right) this.attr.padding.right = right;
         this.reLayout(); // todo
+    }
+}
+
+export class OverrideTextText extends Text {
+    origin: Text
+    constructor(texts: string[], origin: Text) {
+        super(texts.map((str, index) => {
+            if (!str.endsWith('\n')) str += '\n'
+            return new OverrideTextPara(str, index, origin.paras)
+        }) as BasicArray<OverrideTextPara>)
+        this.origin = origin
+    }
+    // @ts-ignore
+    get attr() {
+        return this.origin.attr
     }
 }
