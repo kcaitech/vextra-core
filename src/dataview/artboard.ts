@@ -140,6 +140,9 @@ export class ArtboradView extends GroupShapeView {
                 // 有固定行为的图形抵消容器滚动的距离
                 if (s.scrollBehavior === ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME && this.innerTransform) {
                     trans.trans(-this.innerTransform.translateX, -this.innerTransform.translateY);
+                    if (this.fixedTransform && (this.fixedTransform.translateY < 0 || this.fixedTransform.translateX < 0)) {
+                        trans.trans(this.fixedTransform.translateX < 0 ? -this.fixedTransform.translateX : 0, this.fixedTransform.translateY < 0 ? -this.fixedTransform.translateY : 0);
+                    }
                     return elh("g", { transform: trans.toString() }, [c]);
                 } else if (s.scrollBehavior === ScrollBehavior.STICKYSCROLLS && this.innerTransform) {
                     if (s._p_frame.y + this.innerTransform.translateY < 0) { //图形吸顶父级容器
