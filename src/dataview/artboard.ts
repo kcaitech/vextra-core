@@ -157,8 +157,8 @@ export class ArtboradView extends GroupShapeView {
             // 裁剪属性不能放在filter的外层
             const id = "clip-board-" + objectId(this);
             svgprops['clip-path'] = "url(#" + id + ")";
-            const _svg_node = elh("svg", svgprops, [clippathR(elh, id, this.getPathStr()),...borders, ...children]);
-            children = [_svg_node];
+            const _svg_node = elh("svg", svgprops, [clippathR(elh, id, this.getPathStr()), ...children]);
+            children = [_svg_node,...borders];
         }
 
         if (shadows.length) {
@@ -185,9 +185,9 @@ export class ArtboradView extends GroupShapeView {
                     else svgprops.style = { 'mix-blend-mode': props.style['mix-blend-mode'] };
                     delete props.style['mix-blend-mode'];
                 }
-                svgprops['filter'] = svgprops['filter'] ?? '' + `url(#${blurId})`;
+                svgprops['filter'] = (svgprops['filter'] ?? '') + `url(#${blurId})`;
             } else {
-                props['filter'] = props['filter'] ?? '' + `url(#${blurId})`;
+                props['filter'] = (props['filter'] ?? '') + `url(#${blurId})`;
             }
         }
 

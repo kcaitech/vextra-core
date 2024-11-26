@@ -10,7 +10,9 @@ import {
     TextShape,
     Transform,
     VariableType,
-    ShapeFrame
+    ShapeFrame,
+    GradientType,
+    FillType
 } from "../data";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
@@ -22,6 +24,9 @@ import {
 import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "../data/text/textutils";
 import { objectId } from "../basic/objectid";
 import { Path } from "@kcdesign/path";
+import { renderBorders } from "../render";
+import { importBorder, importFill } from "../data/baseimport";
+import { exportBorder, exportFill } from "../data/baseexport";
 
 export class TextShapeView extends ShapeView {
     __str: string | undefined;
@@ -111,6 +116,17 @@ export class TextShapeView extends ShapeView {
 
     locateNextCursor(index: number): number {
         return locateNextCursor(this.getLayout(), index);
+    }
+    protected renderBorders(): EL[] {
+        let borders = this.getBorders();
+        if (this.mask) {
+            borders = borders.map(b => {
+                const nb = importBorder(exportBorder(b));
+                if (nb.fillType === FillType.Gradient && nb.gradient?.gradientType === GradientType.Angular) nb.fillType = FillType.SolidColor;
+                return nb;
+            })
+        }
+        return renderBorders(elh, borders, this.size, this.getTextPath().toSVGString(), this.m_data);
     }
 
     getTextPath() {
