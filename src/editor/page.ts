@@ -953,20 +953,35 @@ export class PageEditor {
         return importStyle(style, ctx);
     }
 
+    _flattenShapes(shapes: ShapeView[]): ShapeView[] {
+        return shapes.reduce((result: any, item: ShapeView) => {
+            if (item.type === ShapeType.Artboard) {
+                const childs = (item).childs as ShapeView[];
+                if (Array.isArray(childs)) {
+                    result = result.concat(this._flattenShapes(childs));
+                }
+            } else {
+                result = result.concat(item);
+            }
+            return result;
+        }, []);
+    }
+
     flattenShapes(shapes: ShapeView[], name?: string): PathShape | PathShape2 | false {
-        if (shapes.length === 0) return false;
-        if (shapes.find((v) => !v.parent)) return false;
+        const _shapes = this._flattenShapes(shapes);
+        if (_shapes.length === 0) return false;
+        if (_shapes.find((v) => !v.parent)) return false;
         const fshape = adapt2Shape(shapes[0]);
         const savep = fshape.parent as GroupShape;
         const saveidx = savep.indexOfChild(fshape);
         if (!name) name = fshape.name;
 
         // copy fill and borders
-        const endShape = shapes[shapes.length - 1];
+        const endShape = _shapes[_shapes.length - 1];
         const copyStyle = findUsableFillStyle(endShape);
         const style: Style = this.cloneStyle(copyStyle);
         if (style.fills.length === 0) {
-            const fills = shapes.find(s => s.style.getFills())?.style.getFills();
+            const fills = _shapes.find(s => s.style.getFills())?.style.getFills();
             fills && fills.length > 0 ? style.fills.push(...fills) : style.fills.push(newSolidColorFill());
         }
 
@@ -981,7 +996,7 @@ export class PageEditor {
         // bounds
         // 计算frame
         //   计算每个shape的绝对坐标
-        const boundsArr = shapes.map((s) => {
+        const boundsArr = _shapes.map((s) => {
             const box = s.boundingBox()
             const p = s.parent!;
             const m = p.matrix2Root();
@@ -1003,7 +1018,7 @@ export class PageEditor {
 
         const frame = new ShapeFrame(xy.x, xy.y, bounds.right - bounds.left, bounds.bottom - bounds.top);
         let pathstr = "";
-        shapes.forEach((shape) => {
+        _shapes.forEach((shape) => {
             const shapem = shape.matrix2Root();
             const shapepath = render2path(shape);
             shapem.multiAtLeft(m);
