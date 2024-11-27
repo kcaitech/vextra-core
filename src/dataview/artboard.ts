@@ -140,7 +140,7 @@ export class ArtboradView extends GroupShapeView {
                 // 有固定行为的图形抵消容器滚动的距离
                 if (s.scrollBehavior === ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME && this.innerTransform) {
                     trans.trans(-this.innerTransform.translateX, -this.innerTransform.translateY);
-                    if (this.fixedTransform && (this.fixedTransform.translateY < 0 || this.fixedTransform.translateX < 0)) {
+                    if (this.fixedTransform && (this.fixedTransform.translateY < 0 || this.fixedTransform.translateX < 0)) { //容器超出视图时，当前图形的定位相对于视图固定
                         trans.trans(this.fixedTransform.translateX < 0 ? -this.fixedTransform.translateX : 0, this.fixedTransform.translateY < 0 ? -this.fixedTransform.translateY : 0);
                     }
                     return elh("g", { transform: trans.toString() }, [c]);
@@ -151,7 +151,7 @@ export class ArtboradView extends GroupShapeView {
                             trans.trans(0, -this.fixedTransform.translateY);
                         }
                         return elh("g", { transform: trans.toString() }, [c]);
-                    } else if (this.fixedTransform && this.fixedTransform.translateY < -(s._p_frame.y + this.innerTransform.translateY)) {// 当前图形没有吸顶父级
+                    } else if (this.fixedTransform && this.fixedTransform.translateY < -(s._p_frame.y + this.innerTransform.translateY)) {// 父容器超出视图时， 当前图形吸顶视图
                         const viewTrans = (s._p_frame.y + this.innerTransform.translateY) + this.fixedTransform.translateY  //当前图形相对视图吸顶的距离
                         trans.trans(0, -viewTrans);
                         return elh("g", { transform: trans.toString() }, [c]);
