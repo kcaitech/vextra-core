@@ -1,4 +1,4 @@
-import { CoopRepository } from "../../../coop/cooprepo";
+import { CoopRepository } from "../../../coop";
 import { AsyncApiCaller } from "../basic/asyncapi";
 import {
     Artboard,
@@ -89,12 +89,10 @@ export function reLayoutBySizeChanged(
     if (shape.type === ShapeType.Group || shape.type === ShapeType.BoolShape) {
         // 编组
         const __p_transform = new Transform2().setScale(ColVector3D.FromXYZ(SX, SY, 1));
-
         for (const child of children) {
             const data = adapt2Shape(child);
             const transform = getTransform(child).clone();
             transform.addTransform(__p_transform);
-
             const _s = transform.decomposeScale();
             const _scale = { x: Math.abs(_s.x), y: Math.abs(_s.y) };
             const oSize = getSize(child);
@@ -388,28 +386,6 @@ export function reLayoutBySizeChanged(
     function getSize(s: ShapeView) {
         let size = sizeRecorder.get(s.id);
         if (!size) {
-            // if (is_straight(s.data)) {
-            //     const path = s.getPath().clone();
-            //     // path.transform(s.matrix2Parent());
-            //     const f = path.bbox();
-            //     size = {
-            //         x: 0,
-            //         y: 0,
-            //         width: f.w,
-            //         height: f.h
-            //     };
-            //     sizeRecorder.set(s.id, size);
-            // } else {
-            //     const f = s.frame;
-            //     size = {
-            //         x: f.x,
-            //         y: f.y,
-            //         width: f.width,
-            //         height: f.height
-            //     };
-            //     sizeRecorder.set(s.id, size);
-            // }
-
             const f = s.frame;
             size = {
                 x: f.x,

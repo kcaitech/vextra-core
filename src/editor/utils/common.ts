@@ -54,15 +54,15 @@ export function modify_shapes_width(api: Api, document: Document, page: Page, sh
             continue;
         }
 
-        const w = shape.size.width;
+        const w = view.frame.width;
 
-        let h = shape.size.height;
+        let h = view.frame.height;
 
         if (shape.constrainerProportions) {
             const rate = w / val;
             h = h / rate;
         }
-        const origin_h = shape.frame.height;
+        const origin_h = view.frame.height;
         expandTo(api, document, page, shape, val, h);
         if ((shape as Artboard).autoLayout) {
             api.shapeModifyAutoLayoutSizing(page, shape, StackSizing.Fixed, 'hor');
