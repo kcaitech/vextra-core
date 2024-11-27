@@ -566,6 +566,10 @@ export enum StrikethroughType {
     Single = "single",
     Double = "double",
 }
+/* style library type */
+export enum StyleLibType {
+    Color = "color",
+}
 export type Style_borders = Array<Border>
 export type Style_fills = Array<Fill>
 export type Style_shadows = Array<Shadow>
@@ -903,6 +907,7 @@ export type Text = {
     typeId: string,
     paras: Text_paras,
     attr?: TextAttr,
+    isPureString?: boolean,
 }
 /* shape */
 export type Shape = {

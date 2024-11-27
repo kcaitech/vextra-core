@@ -263,6 +263,7 @@ export class Text extends Basic implements classes.Text {
     typeId = 'text'
     paras: BasicArray<Para>
     attr?: TextAttr
+    isPureString?: boolean
 
     // layout与显示窗口大小有关
     // 尽量复用, layout缓存排版信息，进行update
@@ -598,6 +599,22 @@ export class Text extends Basic implements classes.Text {
         if (right) this.attr.padding.right = right;
         this.reLayout(); // todo
     }
+}
+
+// 仅文本忽略掉属性的Text
+export function pureStringText(text: string): Text {
+    const splits = text.split("\n")
+    const paras = new BasicArray<Para>()
+    for (let i = 0, len = splits.length; i < len; ++i) {
+        let s = splits[i];
+        if (!s.endsWith('\n')) s += "\n"
+        const p = new Para(s, new BasicArray<Span>())
+        p.spans.push(new Span(s.length))
+        paras.push(p)
+    }
+    const text1 = new Text(paras)
+    text1.isPureString = true;
+    return text1;
 }
 
 export class OverrideTextText extends Text {

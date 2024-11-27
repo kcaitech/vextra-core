@@ -1,6 +1,7 @@
 import {
     BoolShape, CurveMode, CurvePoint, ExportFormat, ExportOptions, GroupShape, TextShape, Variable,
-    OverrideType, PathSegment, PathShape, RectShape, Shape, SymbolShape, VariableType, CornerRadius
+    OverrideType, PathSegment, PathShape, RectShape, Shape, SymbolShape, VariableType, CornerRadius,
+    pureStringText
 } from "../../../data";
 import { importColor, importStyle, importXY } from "./styleio";
 import { importText } from "./textio";
@@ -135,7 +136,7 @@ function _createVar4Override(type: OverrideType, value: any) {
         case OverrideType.Image:
             return new Variable(uuid(), VariableType.ImageRef, "", value);
         case OverrideType.Text:
-            return new Variable(uuid(), VariableType.Text, "", value);
+            return new Variable(uuid(), VariableType.Text, "", pureStringText(value as string));
         case OverrideType.Visible:
             return new Variable(uuid(), VariableType.Visible, "", value);
         case OverrideType.Lock:

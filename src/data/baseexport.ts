@@ -584,6 +584,10 @@ export function exportStop(source: types.Stop, ctx?: IExportContext): types.Stop
 export function exportStrikethroughType(source: types.StrikethroughType, ctx?: IExportContext): types.StrikethroughType {
     return source
 }
+/* style library type */
+export function exportStyleLibType(source: types.StyleLibType, ctx?: IExportContext): types.StyleLibType {
+    return source
+}
 export function exportStyle_borders(source: types.Style_borders, ctx?: IExportContext): types.Style_borders {
     const ret: types.Style_borders = []
     source.forEach((source) => {
@@ -1029,6 +1033,7 @@ export function exportText(source: types.Text, ctx?: IExportContext): types.Text
     ret.typeId = source.typeId
     ret.paras = exportText_paras(source.paras, ctx)
     if (source.attr) ret.attr = exportTextAttr(source.attr, ctx)
+    if (source.isPureString) ret.isPureString = source.isPureString
     return ret
 }
 /* shape */

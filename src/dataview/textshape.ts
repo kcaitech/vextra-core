@@ -26,17 +26,18 @@ import { importBorder } from "../data/baseimport";
 import { exportBorder } from "../data/baseexport";
 
 export class TextShapeView extends ShapeView {
-    __str: string | undefined;
+    __str: string | Text | undefined;
     __strText: Text | undefined;
 
     getText(): Text {
         const v = this._findOV(OverrideType.Text, VariableType.Text);
-        if (v && typeof v.value === 'string') {
+        if (v && (typeof v.value === 'string' || v.value instanceof Text && v.value.isPureString)) {
             if (this.__str === v.value) {
                 return this.__strText!;
             }
             this.__str = v.value;
-            const str = v.value.split('\n');
+            const str0 = v.value instanceof Text ? v.value.toString() : v.value;
+            const str = str0.split('\n');
             const origin = (this.m_data as TextShape).text;
             this.__strText = new OverrideTextText(str, origin);
             return this.__strText;
