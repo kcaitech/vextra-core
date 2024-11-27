@@ -722,9 +722,7 @@ export class ShapeEditor {
         try {
             const api = this.__repo.start("modifyPointsCurveMode");
 
-            if (this.shape.pathType !== PathType.Editable) {
-                return;
-            }
+            if (this.shape.pathType !== PathType.Editable) return;
 
             range.forEach((indexes, segment) => {
                 for (let i = indexes.length - 1; i > -1; i--) {

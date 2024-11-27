@@ -331,15 +331,11 @@ export function init_curv(order: 2 | 3, shape: Shape, page: Page, api: Api, curv
     const __shape = shape as PathShape2;
     const points = __shape.pathsegs[segmentIndex]?.points;
 
-    if (!points?.length) {
-        return;
-    }
+    if (!points?.length) return;
 
     const apex = getApex(points, index);
 
-    if (!apex) {
-        return;
-    }
+    if (!apex) return;
 
     const {from, to} = apex;
 
@@ -357,15 +353,10 @@ export function init_curv(order: 2 | 3, shape: Shape, page: Page, api: Api, curv
         const round = __round_curve_point(points, index);
 
         const {previous, next} = round;
-        //
-        // if (new Set([previous.id, next.id, curve_point.id]).size !== 3) {
-        //     console.log('duplicate point');
-        //     return;
-        // }
-
+        const minL = Math.min(Math.hypot(curve_point.x - next.x, curve_point.y - next.y), Math.hypot(curve_point.x - previous.x, curve_point.y - previous.y));
         const k = Math.atan2(next.x - previous.x, next.y - previous.y);
-        const dx = init * Math.sin(k);
-        const dy = init * Math.cos(k);
+        const dx = minL * init * Math.sin(k);
+        const dy = minL * init * Math.cos(k);
         const from = {x: curve_point.x + dx, y: curve_point.y + dy};
         const to = {x: curve_point.x - dx, y: curve_point.y - dy};
 
@@ -394,9 +385,7 @@ export function _typing_modify(shape: Shape, page: Page, api: Api, index: number
 
     point = (shape as PathShape)?.pathsegs[segmentIndex]?.points[index];
 
-    if (!point) {
-        return;
-    }
+    if (!point) return;
 
     if (point.mode === CurveMode.Straight && to_mode !== CurveMode.Straight) {
         init_curv(3, shape, page, api, point, index, segmentIndex, (Math.sqrt(2) / 4));
