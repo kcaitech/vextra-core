@@ -1033,7 +1033,6 @@ export function exportText(source: types.Text, ctx?: IExportContext): types.Text
     ret.typeId = source.typeId
     ret.paras = exportText_paras(source.paras, ctx)
     if (source.attr) ret.attr = exportTextAttr(source.attr, ctx)
-    if (source.isPureString) ret.isPureString = source.isPureString
     return ret
 }
 /* shape */

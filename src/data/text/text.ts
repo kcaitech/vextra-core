@@ -226,36 +226,6 @@ export class Para extends Basic implements classes.Para {
     }
 }
 
-export class OverrideTextPara extends Basic implements classes.Para {
-    text: string
-    origin: BasicArray<Para>
-    index: number
-    constructor(
-        text: string,
-        index: number,
-        origin: BasicArray<Para>
-    ) {
-        super()
-        this.text = text
-        this.index = index
-        this.origin = origin
-    }
-    get length() {
-        return this.text.length;
-    }
-    charAt(index: number): string {
-        return this.text.charAt(index);
-    }
-
-    iter() {
-        return new ParaIter(this)
-    }
-    get spans() {
-        const para = this.origin[this.index] ?? this.origin[this.origin.length - 1]
-        return para.spans
-    }
-}
-
 export class Text extends Basic implements classes.Text {
 
     static DefaultFontSize = 12;
@@ -263,7 +233,7 @@ export class Text extends Basic implements classes.Text {
     typeId = 'text'
     paras: BasicArray<Para>
     attr?: TextAttr
-    isPureString?: boolean
+    // isPureString?: boolean
 
     // layout与显示窗口大小有关
     // 尽量复用, layout缓存排版信息，进行update
@@ -601,8 +571,7 @@ export class Text extends Basic implements classes.Text {
     }
 }
 
-// 仅文本忽略掉属性的Text
-export function pureStringText(text: string): Text {
+export function string2Text(text: string): Text {
     const splits = text.split("\n")
     const paras = new BasicArray<Para>()
     for (let i = 0, len = splits.length; i < len; ++i) {
@@ -613,21 +582,124 @@ export function pureStringText(text: string): Text {
         paras.push(p)
     }
     const text1 = new Text(paras)
-    text1.isPureString = true;
+    // text1.isPureString = true;
     return text1;
 }
 
-export class OverrideTextText extends Text {
-    origin: Text
-    constructor(texts: string[], origin: Text) {
-        super(texts.map((str, index) => {
-            if (!str.endsWith('\n')) str += '\n'
-            return new OverrideTextPara(str, index, origin.paras)
-        }) as BasicArray<OverrideTextPara>)
+function overrideSpan(span: Span, length: number, origin?: Span): Span {
+    return new Proxy<Span>(span, {
+        get: (target: Span, p: string | symbol, receiver: any): any => {
+            if (p.toString() === "length") return length;
+            let val = Reflect.get(target, p, receiver);
+            if (val === undefined && origin) {
+                val = Reflect.get(origin, p, receiver);
+            }
+            return val;
+        }
+    })
+}
+
+export class OverrideTextPara extends Basic implements classes.Para {
+    para: Para
+    origin: BasicArray<Para>
+    index: number
+    _spans?: BasicArray<Span>
+    constructor(
+        para: Para,
+        index: number,
+        origin: BasicArray<Para>
+    ) {
+        super()
+        this.para = para
+        this.index = index
         this.origin = origin
     }
-    // @ts-ignore
-    get attr() {
-        return this.origin.attr
+    get length() {
+        return this.para.length;
     }
+    get text() {
+        return this.para.text
+    }
+    charAt(index: number): string {
+        return this.para.charAt(index);
+    }
+
+    iter() {
+        return new ParaIter(this)
+    }
+    get spans() {
+        if (this._spans) return this._spans;
+        const originpara = this.origin[this.index]
+        const spans = this.para.spans;
+
+        if (!originpara) {
+            this._spans = spans;
+            return spans;
+        }
+
+
+        let remain = this.para.length;
+        const ret: BasicArray<Span> = new BasicArray()
+        this._spans = ret;
+
+        const ospans = originpara.spans;
+
+        let offset = 0
+
+        let oidx = 0
+        let ooffset = 0
+        for (let i = 0, len = spans.length; i < len && remain > 0;) {
+            const span = spans[i]
+            const ospan = ospans[oidx]
+            const length = Math.min(i === spans.length - 1 ? remain : span.length - offset, oidx === ospans.length - 1 ? remain : ospan.length - ooffset) || 1; // 至少是1
+            ret.push(overrideSpan(span, length, ospan))
+            offset += length
+            ooffset += length
+            remain -= length
+
+            if (oidx < ospans.length - 1 && ooffset >= ospan.length) {
+                ++oidx;
+                ooffset -= ospan.length
+            }
+
+            if (i < len && offset >= span.length) {
+                ++i;
+                offset -= span.length;
+            }
+        }
+        return ret;
+    }
+}
+
+export function overrideTextText(text: Text, origin: Text): Text {
+    let _paras: BasicArray<Para> | undefined
+    let __layouts: Map<string, LayoutItem> = new Map();
+    return new Proxy<Text>(text, {
+        get: (target: Span, p: string | symbol, receiver: any): any => {
+            const ps = p.toString();
+            if (ps === "attr") {
+                return origin.attr // todo merge?
+            }
+            if (ps === "paras") {
+                if (_paras) return _paras;
+                const paras = text.paras;
+
+                const ret = new BasicArray<Para>()
+                _paras = ret;
+                paras.forEach((p, i) => {
+                    ret.push(new OverrideTextPara(p, i, origin.paras))
+                })
+
+                return ret;
+            }
+            if (ps === "__layouts") {
+                return __layouts
+            }
+            let val = Reflect.get(target, p, receiver);
+            if (val === undefined && origin) {
+                val = Reflect.get(origin, p, receiver);
+            }
+            return val;
+        }
+    })
 }

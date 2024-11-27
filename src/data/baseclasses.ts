@@ -916,7 +916,6 @@ export class Text extends Basic {
     typeId = "text"
     paras: Text_paras
     attr?: TextAttr
-    isPureString?: boolean
     constructor(paras: Text_paras) {
         super()
         this.paras = paras

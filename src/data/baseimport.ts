@@ -1158,7 +1158,6 @@ export function importTextAttr(source: types.TextAttr, ctx?: IImportContext): im
 /* text */
 function importTextOptional(tar: impl.Text, source: types.Text, ctx?: IImportContext) {
     if (source.attr) tar.attr = importTextAttr(source.attr, ctx)
-    if (source.isPureString) tar.isPureString = source.isPureString
 }
 export function importText(source: types.Text, ctx?: IImportContext): impl.Text {
     const ret: impl.Text = new impl.Text (

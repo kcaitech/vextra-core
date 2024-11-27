@@ -907,7 +907,6 @@ export type Text = {
     typeId: string,
     paras: Text_paras,
     attr?: TextAttr,
-    isPureString?: boolean,
 }
 /* shape */
 export type Shape = {

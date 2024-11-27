@@ -10,8 +10,9 @@ import {
     ShapeFrame,
     GradientType,
     FillType,
-    OverrideTextText,
-    SymbolShape
+    overrideTextText,
+    SymbolShape,
+    string2Text
 } from "../data";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
@@ -32,34 +33,53 @@ export class TextShapeView extends ShapeView {
 
     getText(): Text {
         const v = this._findOV(OverrideType.Text, VariableType.Text);
-        if (v && (typeof v.value === 'string' || v.value instanceof Text && v.value.isPureString)) {
-            if (this.__str === v.value) {
-                return this.__strText!;
+        if (v) {
+            if (this.__str) {
+                if (typeof this.__str === "string") {
+                    if (this.__str === v.value) {
+                        return this.__strText!;
+                    }
+                } else if (typeof v.value === "string") {
+                    //
+                } else if (this.__str && v.value && objectId(this.__str) === objectId(v.value)) {
+                    return this.__strText!;
+                }
             }
+
             this.__str = v.value;
-            const str0 = v.value instanceof Text ? v.value.toString() : v.value;
-            const str = str0.split('\n');
+
+            let text: Text
+            if (v.value instanceof Text) {
+                text = v.value
+            } else {
+                text = string2Text(v.value)
+            }
+
             let origin = (this.m_data as TextShape).text;
-            // 可能是var
+            // 可能是var // 有个继承链条？
             if ((this.m_data as TextShape).varbinds?.has(OverrideType.Text)) {
+                let ovar: Text | undefined
                 const varid = (this.m_data as TextShape).varbinds?.get(OverrideType.Text)!
                 let p = this.m_data.parent;
                 while (p) {
                     if (p instanceof SymbolShape) {
                         const variable = p.variables.get(varid)
-                        if (variable && variable.value instanceof Text && !variable.value.isPureString) {
-                            origin = variable.value
+                        if (variable && variable.value instanceof Text) {
+                            ovar = variable.value
                             break;
                         }
                     }
                     p = p.parent;
                 }
+                if (ovar && ovar !== v.value) {
+                    origin = overrideTextText(ovar, origin)
+                }
             }
-            this.__strText = new OverrideTextText(str, origin);
+            this.__strText = overrideTextText(text, origin);
             return this.__strText;
         }
 
-        const text = v ? v.value : (this.m_data as TextShape).text;
+        const text = (this.m_data as TextShape).text;
         if (typeof text === 'string') throw new Error("");
         return text;
     }
@@ -81,7 +101,7 @@ export class TextShapeView extends ShapeView {
 
     getLayout() {
         const text = this.getText();
-        
+
         if (this.__preText && this.__layoutToken && objectId(this.__preText) !== objectId(text)) {
             this.__preText.dropLayout(this.__layoutToken, this.id);
         }
@@ -128,7 +148,7 @@ export class TextShapeView extends ShapeView {
                 return nb;
             })
         }
-        return renderBorders(elh, borders, this.size, this.getTextPath().toSVGString(), this.m_data);
+        return borders.length > 0 ? renderBorders(elh, borders, this.size, this.getTextPath().toSVGString(), this.m_data) : [];
     }
 
     getTextPath() {

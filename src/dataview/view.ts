@@ -106,6 +106,7 @@ export class DataView extends EventEL {
         this.varsContainer = (props.varsContainer);
 
         this.m_ctx.setDirty(this);
+        ctx.markRaw(this)
     }
 
     setData(data: Shape) {
