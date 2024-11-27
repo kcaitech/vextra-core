@@ -162,6 +162,7 @@ export const modifyAutoLayout = (page: Page, api: Api, shape: Shape, sort?: Map<
     const layoutInfo = target.autoLayout;
     if (!layoutInfo) return;
     const shape_rows = layoutShapesOrder(target.childs, !!layoutInfo.bordersTakeSpace, sort, cursort);
+    if (!shape_rows.length) return; // 没有子元素，不需要自动布局
     const shape_row: Shape[] = shape_rows.flat();
     const frame = {width: target.size.width, height: target.size.height}
     if (layoutInfo.stackPrimarySizing === StackSizing.Auto) {
