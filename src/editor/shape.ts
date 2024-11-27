@@ -308,10 +308,10 @@ export class ShapeEditor {
         }
         const api = this.__repo.start("makeTextVar");
         try {
-            const first = shapes[0]?.text instanceof Text ? shapes[0]?.text : undefined;
-            const text = newText2(first?.attr, first?.paras[0]?.attr, first?.paras[0]?.spans[0]);
-            text.insertText(dlt, 0);
-            const _var = new Variable(v4(), VariableType.Text, name, text);
+            // const first = shapes[0]?.text instanceof Text ? shapes[0]?.text : undefined;
+            // const text = newText2(first?.attr, first?.paras[0]?.attr, first?.paras[0]?.spans[0]);
+            // text.insertText(dlt, 0);
+            const _var = new Variable(v4(), VariableType.Text, name, dlt);
             api.shapeAddVariable(this.__page, symbol, _var);
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const item = shapes[i];

@@ -31,7 +31,8 @@ import {
     Blur,
     Point2D,
     BlurType,
-    Artboard, BorderSideSetting, SideType
+    Artboard, BorderSideSetting, SideType,
+    pureStringText
 } from "../data/classes";
 import { findOverride, findVar } from "../data/utils";
 import { BasicArray } from "../data/basic";
@@ -503,10 +504,10 @@ export function modify_variable(document: Document, page: Page, view: ShapeView,
     let value = attr.value;
     if (_var.type === VariableType.Text
         && typeof value === 'string') {
-        const origin = _var.value as Text;
-        const text = newText2(origin.attr, origin.paras[0]?.attr, origin.paras[0]?.spans[0]);
-        text.insertText(value, 0);
-        value = text;
+        // const origin = _var.value as Text;
+        // const text = newText2(origin.attr, origin.paras[0]?.attr, origin.paras[0]?.spans[0]);
+        // text.insertText(value, 0);
+        value = pureStringText(value);
     }
 
     // 到这需要override
