@@ -20,7 +20,7 @@ import {
     Span,
     ShapeType,
     Variable, Document, FillType, Gradient,
-    pureStringText,
+    string2Text,
 } from "../data";
 import { CoopRepository } from "../coop/cooprepo";
 import { Api } from "../coop/recordapi";
@@ -92,7 +92,7 @@ export class TextShapeEditor extends ShapeEditor {
         else if (shape instanceof TableCellView) fixTableShapeFrameByLayout(api, this.__page, shape, this.view.parent as TableView);
     }
 
-    public shape4edit(api: Api, shape?: TextShapeView | TableCellView, forFmt: boolean = true): Variable | TableCellView | TextShapeView {
+    public shape4edit(api: Api, shape?: TextShapeView | TableCellView): Variable | TableCellView | TextShapeView {
         const _shape = shape ?? this.__shape as (TextShapeView | TableCellView);
 
         if (_shape instanceof TableCellView) {
@@ -116,20 +116,18 @@ export class TextShapeEditor extends ShapeEditor {
                 if (_var) {
                     if (_var.value instanceof Text) return importText(_var.value);
                     if (typeof _var.value === 'string') {
-                        if (forFmt) return importText(_shape.text);
-                        else return pureStringText(_var.value)
+                        return string2Text(_var.value)
                     }
                 }
                 else {
-                    if (forFmt) return importText(_shape.text);
-                    else return pureStringText(_shape.text.toString())
+                    return string2Text(_shape.text.toString())
                 }
                 throw new Error();
             }, api, shape);
 
-            if (_var && (typeof _var.value === 'string' || forFmt && _var.value instanceof Text && _var.value.isPureString)) { // 这有问题！
+            if (_var && (typeof _var.value === 'string')) { // 这有问题！
                 const host = varParent(_var)! as SymbolRefShape | SymbolShape;
-                const textVar = new Variable(uuid(), VariableType.Text, _var.name, forFmt ? importText(_shape.text) : pureStringText(_shape.text.toString()));
+                const textVar = new Variable(uuid(), VariableType.Text, _var.name, string2Text(_shape.text.toString()));
                 if (host instanceof SymbolShape) {
                     // sketch不会走到这
                     // 更换var
@@ -180,7 +178,7 @@ export class TextShapeEditor extends ShapeEditor {
         if (count <= 0) return 0;
         const api = this.__repo.start("deleteText");
         try {
-            const shape = this.shape4edit(api, this.view, false);
+            const shape = this.shape4edit(api);
             api.deleteText(this.__page, shape, index, count);
             // count = deleted ? deleted.length : count;
             if (count <= 0) {
@@ -214,7 +212,7 @@ export class TextShapeEditor extends ShapeEditor {
         let count = text.length; // 插入字符数
         const api = this.__repo.start("insertText");
         try {
-            const shape = this.shape4edit(api, this.view, false);
+            const shape = this.shape4edit(api);
             this.__repo.updateTextSelectionRange(index, del);
             if (del > 0 && text.length === 0) {
                 api.deleteText(this.__page, shape, index, del);
@@ -338,7 +336,7 @@ export class TextShapeEditor extends ShapeEditor {
         const text = '\n';
         const api = this.__repo.start("insertTextForNewLine");
         try {
-            const shape = this.shape4edit(api, this.view, false);
+            const shape = this.shape4edit(api);
             let count = text.length;
             if (del > 0) api.deleteText(this.__page, shape, index, del);
             for (; ;) {
@@ -427,7 +425,7 @@ export class TextShapeEditor extends ShapeEditor {
         const api = this.__repo.start("composingInput");
         this.__composingApi = api;
         try {
-            const shape = this.shape4edit(api, this.view, false);
+            const shape = this.shape4edit(api);
             if (del > 0) {
                 const _text = shape instanceof Variable ? shape.value as Text : shape.text;
                 const span = _text.spanAt(index + del - 1);
@@ -451,7 +449,7 @@ export class TextShapeEditor extends ShapeEditor {
         if (!api) throw new Error();
         try {
             const savetext = text;
-            const shape = this.shape4edit(api, this.view, false);
+            const shape = this.shape4edit(api);
             let index = this.__composingIndex;
             if (this.__preInputText && this.__preInputText.length > 0) { // 删除之前的
                 const prelen = this.__preInputText.length;
