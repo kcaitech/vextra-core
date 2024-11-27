@@ -141,7 +141,7 @@ export class TextShapeView extends ShapeView {
     onDataChange(...args: any[]): void {
         super.onDataChange(...args);
         this.m_textpath = undefined;
-        if (args.includes("text")) this.__str = undefined; // 属性变化后需要重新生成text
+        if (args.includes("text") || args.includes("variables")) this.__str = undefined; // 属性变化后需要重新生成text
     }
 
     asyncRender() {
