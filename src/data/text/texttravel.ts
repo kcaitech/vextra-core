@@ -31,7 +31,8 @@ function __travelTextPara(paraArray: Para[],
     index: number,
     length: number,
     paratravel: (paraArray: Para[], paraIndex: number, para: Para, index: number, length: number) => void,
-    spantravel?: (span: Span, index: number, length: number) => void) {
+    spantravel?: (span: Span, index: number, length: number) => void,
+    paratravelEnd?: () => void) {
     while (length > 0 && paraIndex < paraArray.length) {
         const para = paraArray[paraIndex];
         const end = Math.min(para.length, index + length);
@@ -40,6 +41,7 @@ function __travelTextPara(paraArray: Para[],
 
         if (spantravel) _travelTextSpan(para.spans, index, length, spantravel);
 
+        if (paratravelEnd) paratravelEnd();
         length -= end - index;
         index = 0;
         paraIndex++;
@@ -58,11 +60,12 @@ export function _travelTextPara(paras: Para[],
     index: number,
     length: number,
     paratravel: (paraArray: Para[], paraIndex: number, para: Para, index: number, length: number) => void,
-    spantravel?: (span: Span, index: number, length: number) => void) {
+    spantravel?: (span: Span, index: number, length: number) => void,
+    paratravelEnd?: () => void) {
     for (let i = 0, len = paras.length; i < len; i++) {
         const p = paras[i];
         if (index < p.length) {
-            __travelTextPara(paras, i, index, length, paratravel, spantravel);
+            __travelTextPara(paras, i, index, length, paratravel, spantravel, paratravelEnd);
             break;
         }
         else {

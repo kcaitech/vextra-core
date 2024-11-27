@@ -365,19 +365,28 @@ export function getTextFormat(shapetext: Text, index: number, length: number, ca
 
     let _para: Para | undefined;
     let _paraIndex = 0;
+    let _hasSpan = false;
     _travelTextPara(shapetext.paras, index, length,
         (paraArray, paraIndex, para, index, length) => {
+            _hasSpan = false
             _para = para;
             _paraIndex = index;
             const attr = para.attr;
             if (attr) _getParaFormat(attr, parafmt, shapetext.attr);
         },
         (span, index, length) => {
+            _hasSpan = true
             _paraIndex += index;
             const isNewLineSpan = span.length === 1 && _paraIndex === _para!.length - 1;
             // 忽略回车属性
             if (!isNewLineSpan || _para!.spans.length <= 1) _getSpanFormat(span, spanfmt, _para!.attr, shapetext.attr);
             _paraIndex += length;
+        },
+        () => {
+            if (!_hasSpan) {
+                const span = _para!.spans[_para!.spans.length - 1];
+                _getSpanFormat(span, spanfmt, _para!.attr, shapetext.attr);
+            }
         })
 
     // merge

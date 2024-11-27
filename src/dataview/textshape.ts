@@ -10,7 +10,8 @@ import {
     ShapeFrame,
     GradientType,
     FillType,
-    OverrideTextText
+    OverrideTextText,
+    SymbolShape
 } from "../data";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
@@ -38,7 +39,22 @@ export class TextShapeView extends ShapeView {
             this.__str = v.value;
             const str0 = v.value instanceof Text ? v.value.toString() : v.value;
             const str = str0.split('\n');
-            const origin = (this.m_data as TextShape).text;
+            let origin = (this.m_data as TextShape).text;
+            // 可能是var
+            if ((this.m_data as TextShape).varbinds?.has(OverrideType.Text)) {
+                const varid = (this.m_data as TextShape).varbinds?.get(OverrideType.Text)!
+                let p = this.m_data.parent;
+                while (p) {
+                    if (p instanceof SymbolShape) {
+                        const variable = p.variables.get(varid)
+                        if (variable && variable.value instanceof Text && !variable.value.isPureString) {
+                            origin = variable.value
+                            break;
+                        }
+                    }
+                    p = p.parent;
+                }
+            }
             this.__strText = new OverrideTextText(str, origin);
             return this.__strText;
         }
