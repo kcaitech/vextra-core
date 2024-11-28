@@ -124,7 +124,7 @@ export function reLayoutBySizeChanged(
             const __scale = { x: 1, y: 1 };
 
             // 预备修改的值
-            let targetWidth: number = oSize.width;
+            let targetWidth: number = oSize.width;  // 初始化为固定宽高，下面会根据约束计算最终值
             let targetHeight: number = oSize.height;
             const transform = getTransform(child).clone();
 
@@ -311,10 +311,13 @@ export function reLayoutBySizeChanged(
             } else {
                 api.shapeModifyWH(page, data, targetWidth, targetHeight)
             }
+            if ((oSize.width !== targetWidth || oSize.height !== targetHeight) && child instanceof SymbolRefView && !child.isCustomSize) {
+                api.shapeModifyIsCustomSize(page, data as SymbolRefShape, true)
+            }
+
             api.shapeModifyTransform(page, data, makeShapeTransform1By2(transform));
 
-            if ((oSize.width !== targetWidth || oSize.height !== targetHeight) && (child instanceof GroupShapeView)) {
-                // 向下传递
+            if ((oSize.width !== targetWidth || oSize.height !== targetHeight) && child instanceof GroupShapeView) {
                 reLayoutBySizeChanged(api, page, child, __scale, rangeRecorder, sizeRecorder, transformRecorder);
             }
         }
