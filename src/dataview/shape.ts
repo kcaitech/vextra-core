@@ -1,47 +1,11 @@
 import { innerShadowId, renderBlur, renderBorders, renderFills, renderShadows } from "../render";
-import {
-    BasicArray,
-    Blur,
-    BlurType,
-    Border,
-    BorderPosition,
-    CornerRadius,
-    CurvePoint,
-    Fill,
-    FillType,
-    GradientType,
-    makeShapeTransform1By2,
-    makeShapeTransform2By1,
-    MarkerType,
-    OverlayBackgroundAppearance,
-    OverlayBackgroundInteraction,
-    OverlayPosition,
-    OverrideType,
-    PathShape,
-    Point2D,
-    PrototypeInterAction,
-    PrototypeStartingPoint,
-    ScrollBehavior,
-    ScrollDirection,
-    Shadow,
-    ShadowPosition,
-    Shape,
-    ShapeFrame,
-    ShapeSize,
-    ShapeType,
-    SymbolRefShape,
-    SymbolShape,
-    Transform,
-    Variable,
-    VariableType, ContextSettings, ExportOptions
-} from "../data";
+import { BasicArray, Blur, BlurType, Border, BorderPosition, ContextSettings, CornerRadius, CurvePoint, ExportOptions, Fill, FillType, GradientType, makeShapeTransform1By2, makeShapeTransform2By1, MarkerType, OverlayBackgroundAppearance, OverlayBackgroundInteraction, OverlayPosition, OverrideType, PathShape, Point2D, PrototypeInterAction, PrototypeStartingPoint, ResizingConstraints2, ScrollBehavior, ScrollDirection, Shadow, ShadowPosition, Shape, ShapeFrame, ShapeSize, ShapeType, SymbolRefShape, SymbolShape, Transform, Variable, VariableType } from "../data";
 import { findOverrideAndVar } from "./basic";
 import { EL, elh } from "./el";
 import { Matrix } from "../basic/matrix";
 import { DataView } from "./view"
 import { DViewCtx, PropsType } from "./viewctx";
 import { objectId } from "../basic/objectid";
-import { fixConstrainFrame } from "../data/constrain";
 import { Transform as Transform2 } from "../basic/transform";
 import { float_accuracy } from "../basic/consts";
 import { GroupShapeView } from "./groupshape";
@@ -51,6 +15,7 @@ import { PageView } from "./page";
 import { ArtboradView } from "./artboard";
 import { findOverrideAll } from "../data/utils";
 import { Path } from "@kcdesign/path";
+import { ColVector3D } from "../basic/matrix2";
 
 export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     return (
@@ -100,16 +65,17 @@ export function isNoScale(trans: { x: number, y: number } | undefined): boolean 
     return !trans || trans.x === 1 && trans.y === 1;
 }
 
-export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeSize, frame: ShapeFrame, scaleX: number, scaleY: number, uniformScale: number | undefined) {
-    if (shape.parent!.type === ShapeType.Page) return; // page不会有constrain
-    const originParentFrame = shape.parent!.size; // 至少有page!
-    if (shape.parent!.type === ShapeType.Group) { // 编组的子元素当忽略约束并跟随编组缩放
-        frame.x *= scaleX;
-        frame.y *= scaleY;
-        frame.width *= scaleX;
-        frame.height *= scaleY;
+export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeSize, scaleX: number, scaleY: number, uniformScale: number | undefined) {
+    const originParentFrame = shape.parent!.size;
+    if (shape.parent!.type === ShapeType.Group) {
+        const transform = makeShapeTransform2By1(shape.transform);
+        const __p_transform_scale = new Transform2().setScale(ColVector3D.FromXYZ(scaleX, scaleY, 1));
+        transform.addTransform(__p_transform_scale);
+        const __decompose_scale = transform.decomposeScale();
+        const size = shape.size;
+        transform.clearScaleSize();
+        return {transform, targetWidth: size.width * __decompose_scale.x, targetHeight: size.height * __decompose_scale.y};
     } else {
-        const resizingConstraint = shape.resizingConstraint ?? 0; // 默认值为靠左、靠顶、宽高固定
         const __cur_env = {
             width: parentFrame.width,
             height: parentFrame.height
@@ -122,11 +88,183 @@ export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeSize, frame:
             __cur_env.width /= uniformScale;
             __cur_env.height /= uniformScale;
         }
-        const __f = fixConstrainFrame(resizingConstraint, frame.x, frame.y, frame.width, frame.height, scaleX, scaleY, __cur_env, __pre_env);
-        frame.x = __f.x;
-        frame.y = __f.y;
-        frame.width = __f.width;
-        frame.height = __f.height;
+        return fixConstrainFrame2(shape, {x: scaleX, y: scaleY}, __cur_env as ShapeSize, __pre_env as ShapeSize);
+    }
+}
+
+export function fixConstrainFrame2(shape: Shape, scale: { x: number, y: number }, currentEnvSize: ShapeSize, originEnvSize: ShapeSize) {
+    const resizingConstraint = shape.resizingConstraint ?? 0;
+    const size = shape.size;
+
+    let targetWidth: number = size.width;
+    let targetHeight: number = size.height;
+
+    const transform = makeShapeTransform2By1(shape.transform);
+
+    const __scale = {x: 1, y: 1};
+
+    // 水平
+    if (ResizingConstraints2.isHorizontalScale(resizingConstraint)) {
+        // 跟随缩放
+        const __p_transform_hor_scale = new Transform2().setScale(ColVector3D.FromXYZ(scale.x, 1, 1));
+        transform.addTransform(__p_transform_hor_scale);
+
+        const __decompose_scale = transform.decomposeScale();
+        __scale.x *= Math.abs(__decompose_scale.x);
+        __scale.y *= Math.abs(__decompose_scale.y);
+
+        targetWidth = size.width * __scale.x;
+        targetHeight = size.height * __scale.y;
+
+        transform.clearScaleSize();
+    } else if (ResizingConstraints2.isFixedLeftAndRight(resizingConstraint)) {
+        const bounding = shape.boundingBox();
+        const __to_right = toRight(bounding);
+
+        const __target_width = currentEnvSize.width - bounding.x - __to_right;
+        const __target_sx = __target_width / bounding.width;
+
+        const __sec_transform = new Transform2()
+            .setTranslate(ColVector3D.FromXY(bounding.x, bounding.y));
+
+        transform.addTransform(__sec_transform.getInverse());
+
+        const __scale_trans = __sec_transform.setScale(ColVector3D.FromXYZ(__target_sx, 1, 1));
+
+        transform.addTransform(__scale_trans);
+
+        // 结算到size上
+        const __decompose_scale = transform.decomposeScale();
+        __scale.x *= Math.abs(__decompose_scale.x);
+        __scale.y *= Math.abs(__decompose_scale.y);
+
+        targetWidth = size.width * __scale.x;
+        targetHeight = size.height * __scale.y;
+
+        transform.clearScaleSize();
+    } else {
+        if (ResizingConstraints2.isFlexWidth(resizingConstraint)) {
+            const __p_transform_hor_scale = new Transform2().setScale(ColVector3D.FromXYZ(scale.x, 1, 1));
+            transform.addTransform(__p_transform_hor_scale);
+            const __decompose_scale = transform.decomposeScale();
+            __scale.x *= Math.abs(__decompose_scale.x);
+            __scale.y *= Math.abs(__decompose_scale.y);
+            targetWidth = size.width * __scale.x;
+            targetHeight = size.height * __scale.y;
+            transform.clearScaleSize();
+
+            if (ResizingConstraints2.isFixedToLeft(resizingConstraint)) {
+                const bounding = shape.boundingBox();
+                transform.translate(ColVector3D.FromXY(-(bounding.x * scale.x - bounding.x), 0));
+            } else if (ResizingConstraints2.isFixedToRight(resizingConstraint)) {
+                const bounding = shape.boundingBox();
+                const __to_right = toRight(bounding);
+                transform.translate(ColVector3D.FromXY(__to_right * scale.x - __to_right, 0));
+            } else if (ResizingConstraints2.isHorizontalJustifyCenter(resizingConstraint)) {
+                const __center_offset_left = centerOffsetLeft(shape.boundingBox());
+                transform.translate(ColVector3D.FromXY(-(__center_offset_left * scale.x - __center_offset_left), 0));
+            }
+        } else {
+            if (ResizingConstraints2.isFixedToRight(resizingConstraint)) {
+                transform.translate(ColVector3D.FromXY((scale.x - 1) * originEnvSize.width, 0));
+            } else if (ResizingConstraints2.isHorizontalJustifyCenter(resizingConstraint)) {
+                const delta = currentEnvSize.width / 2 - originEnvSize.width / 2;
+                transform.translate(ColVector3D.FromXY(delta, 0));
+            }
+        }
+    }
+
+    // 垂直
+    if (ResizingConstraints2.isVerticalScale(resizingConstraint)) {
+        const __p_transform_ver_scale = new Transform2().setScale(ColVector3D.FromXYZ(1, scale.y, 1));
+        transform.addTransform(__p_transform_ver_scale);
+
+        const __decompose_scale = transform.decomposeScale();
+        __scale.x *= Math.abs(__decompose_scale.x);
+        __scale.y *= Math.abs(__decompose_scale.y);
+
+        targetWidth = size.width * __scale.x;
+        targetHeight = size.height * __scale.y;
+        transform.clearScaleSize();
+    } else if (ResizingConstraints2.isFixedTopAndBottom(resizingConstraint)) {
+        const bounding = shape.boundingBox();
+        const __to_bottom = toBottom(bounding);
+        const __target_height = currentEnvSize.height - bounding.y - __to_bottom;
+        const __target_sy = __target_height / bounding.height;
+        const __sec_transform = new Transform2()
+            .setTranslate(ColVector3D.FromXY(bounding.x, bounding.y));
+
+        transform.addTransform(__sec_transform.getInverse());
+        const __scale_trans = __sec_transform.setScale(ColVector3D.FromXYZ(1, __target_sy, 1));
+
+        transform.addTransform(__scale_trans);
+        const __decompose_scale = transform.decomposeScale();
+        __scale.x *= Math.abs(__decompose_scale.x);
+        __scale.y *= Math.abs(__decompose_scale.y);
+
+        targetWidth = size.width * __scale.x;
+        targetHeight = size.height * __scale.y;
+
+        transform.clearScaleSize();
+    } else {
+        if (ResizingConstraints2.isFlexHeight(resizingConstraint)) {
+            // 高度不固定
+            const __p_transform_ver_scale = new Transform2().setScale(ColVector3D.FromXYZ(1, scale.y, 1));
+
+            transform.addTransform(__p_transform_ver_scale);
+
+            const __decompose_scale = transform.decomposeScale();
+            __scale.x *= Math.abs(__decompose_scale.x);
+            __scale.y *= Math.abs(__decompose_scale.y);
+
+            targetWidth = size.width * __scale.x;
+            targetHeight = size.height * __scale.y;
+
+            transform.clearScaleSize();
+
+            if (ResizingConstraints2.isFixedToTop(resizingConstraint)) {
+                // 靠顶部固定
+                const bounding = shape.boundingBox();
+                transform.translate(ColVector3D.FromXY(0, -(bounding.y * scale.y - bounding.y)));
+            } else if (ResizingConstraints2.isFixedToBottom(resizingConstraint)) {
+                // 靠底边固定
+                const __to_bottom = toBottom(shape.boundingBox());
+                transform.translate(ColVector3D.FromXY(0, __to_bottom * scale.y - __to_bottom));
+            } else if (ResizingConstraints2.isVerticalJustifyCenter(resizingConstraint)) {
+                // 居中
+                const __center_offset_top = centerOffsetTop(shape.boundingBox());
+                transform.translate(ColVector3D.FromXY(0, -(__center_offset_top * scale.y - __center_offset_top)));
+            }
+        } else {
+            // 高度固定
+            if (ResizingConstraints2.isFixedToBottom(resizingConstraint)) {
+                // 靠底边固定
+                transform.translate(ColVector3D.FromXY(0, (scale.y - 1) * originEnvSize.height));
+            } else if (ResizingConstraints2.isVerticalJustifyCenter(resizingConstraint)) {
+                // 居中
+                const delta = originEnvSize.height / 2 - currentEnvSize.height / 2;
+                transform.translate(ColVector3D.FromXY(0, delta));
+            }
+        }
+    }
+
+
+    return {transform, targetWidth, targetHeight};
+
+    function toRight(bounding: ShapeFrame) {
+        return originEnvSize.width - bounding.x - bounding.width;
+    }
+
+    function centerOffsetLeft(bounding: ShapeFrame) {
+        return (bounding.x + bounding.width / 2) - originEnvSize.width / 2;
+    }
+
+    function toBottom(bounding: ShapeFrame) {
+        return originEnvSize.height - bounding.y - bounding.height;
+    }
+
+    function centerOffsetTop(bounding: ShapeFrame) {
+        return (bounding.y + bounding.height / 2) - originEnvSize.height / 2;
     }
 }
 
@@ -740,38 +878,43 @@ export class ShapeView extends DataView {
             return;
         }
 
-        const size = this.data.frame; // 如果是group,实时计算的大小。view中此时可能没有
-        const frame = frame2Parent2(transform, size);
-        const saveW = frame.width;
-        const saveH = frame.height;
+        const size = this.data.size; // 如果是group,实时计算的大小。view中此时可能没有
+        const saveW = size.width;
+        const saveH = size.height;
 
         let scaleX = scale.x;
         let scaleY = scale.y;
 
         if (parentFrame && resizingConstraint !== 0) {
-            fixFrameByConstrain(shape, parentFrame, frame, scaleX, scaleY, uniformScale);
-            scaleX = frame.width / saveW;
-            scaleY = frame.height / saveH;
+            const {transform, targetWidth, targetHeight} = fixFrameByConstrain(shape, parentFrame, scaleX, scaleY, uniformScale);
+            this.updateLayoutArgs(makeShapeTransform1By2(transform), new ShapeFrame(0, 0, targetWidth, targetHeight), (shape as PathShape).fixedRadius);
+            this.layoutChilds(varsContainer, this.frame, {x: targetWidth / saveW, y: targetHeight / saveH});
         } else {
             if (uniformScale) {
                 scaleX /= uniformScale;
                 scaleY /= uniformScale;
             }
-            frame.x *= scaleX;
-            frame.y *= scaleY;
-            frame.width *= scaleX;
-            frame.height *= scaleY;
+            const transform = makeShapeTransform2By1(shape.transform);
+            const __p_transform_scale = new Transform2().setScale(ColVector3D.FromXYZ(scaleX, scaleY, 1));
+            transform.addTransform(__p_transform_scale);
+            const __decompose_scale = transform.decomposeScale();
+            const size = shape.size;
+            transform.clearScaleSize();
+            const frame = new ShapeFrame(0, 0, size.width * __decompose_scale.x, size.height * __decompose_scale.y);
+            this.updateLayoutArgs(makeShapeTransform1By2(transform), frame, (shape as PathShape).fixedRadius);
+            this.layoutChilds(varsContainer, this.frame, {x: frame.width / saveW, y: frame.height / saveH});
         }
 
-        const t = skewTransform(scaleX, scaleY).clone();
-        const cur = t.computeCoord(0, 0);
-        t.trans(frame.x - cur.x, frame.y - cur.y);
-        const inverse = t.inverse;
-        const rb = inverse.computeCoord(frame.x + frame.width, frame.y + frame.height);
-        const size2 = new ShapeFrame(0, 0, (rb.x), (rb.y));
+        // const t = skewTransform(scaleX, scaleY).clone();
+        // const cur = t.computeCoord(0, 0);
+        // t.trans(frame.x - cur.x, frame.y - cur.y);
+        // const inverse = t.inverse;
+        // const rb = inverse.computeCoord(frame.x + frame.width, frame.y + frame.height);
+        // const size2 = new ShapeFrame(0, 0, (rb.x), (rb.y));
 
-        this.updateLayoutArgs(t, size2, (shape as PathShape).fixedRadius);
-        this.layoutChilds(varsContainer, this.frame, { x: scaleX, y: scaleY });
+        // this.updateLayoutArgs(t, size2, (shape as PathShape).fixedRadius);
+        //
+        // this.layoutChilds(varsContainer, this.frame, { x: scaleX, y: scaleY });
     }
 
     protected updateLayoutProps(props: PropsType, needLayout: boolean) {
