@@ -1,6 +1,6 @@
 import { ShapeView, GroupShapeView, adapt2Shape, TextShapeView, SymbolRefView, ArtboradView } from "../../../dataview";
 import { Api } from "../../../coop";
-import { GroupShape, Page, SymbolShape, MarkerType, BlendMode, Artboard, ShapeType, TextShape } from "../../../data";
+import { GroupShape, Page, SymbolShape, MarkerType, BlendMode, Artboard, ShapeType, TextShape, Shape } from "../../../data";
 import { importFill, importBorder, importShadow, importExportOptions, importBlur, importPrototypeInterAction, importAutoLayout } from "../../../data/baseimport";
 import { exportFill, exportBorder, exportShadow, exportExportOptions, exportBlur, exportPrototypeInterAction, exportAutoLayout } from "../../../data/baseexport";
 import { CircleChecker } from "./circle";
@@ -32,17 +32,18 @@ export class ShapePorter {
         return CircleChecker.assert4view(target, view);
     }
 
-    private isVirtualShape(view: ShapeView, target: GroupShapeView) {
-        return view.isVirtualShape || target.isVirtualShape
+    private isVirtualShape(view: ShapeView | Shape, target: GroupShapeView | GroupShape) {
+        return !!(view.isVirtualShape || target.isVirtualShape)
     }
 
     /**
      * @description 检查是否可以进行层级调整
      */
+    // private check(view: ShapeView | Shape, target: GroupShapeView | GroupShape) {
     private check(view: ShapeView, target: GroupShapeView) {
         if (this.isVirtualShape(view, target)) return false;
         if (target.type === ShapeType.SymbolUnion) return false;
-        return this.circle(view, target);
+        return !this.circle(view, target);
     }
 
     /**
@@ -137,7 +138,7 @@ export class ShapePorter {
      * @description 更新自动布局
      * @private
      */
-    private relayout() {
+    private autolayout() {
         if (this.envSet.size) this.envSet.forEach(e => {
             if ((e as ArtboradView).autoLayout) modifyAutoLayout(this.page, this.api, adapt2Shape(e));
         })
@@ -160,7 +161,7 @@ export class ShapePorter {
     }
 
     afterMove() {
-        this.relayout();
+        this.autolayout();
         this.react();
         this.clearNullGroup();
     }

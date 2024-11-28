@@ -1041,7 +1041,7 @@ export class ShapeEditor {
 
     // 删除图层
     public delete(_api?: Api) {
-        if (is_part_of_symbolref(this.shape)) {
+        if (this.shape.isVirtualShape) {
             this.toggleVisible();
             return;
         }
