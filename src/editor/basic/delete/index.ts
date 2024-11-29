@@ -100,7 +100,7 @@ export class ShapeCleaner {
         }
     }
 
-    action(shape: Shape) {
+    action(shape: Shape, api?: Api) {
 
     }
 

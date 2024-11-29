@@ -1,6 +1,6 @@
 import { ShapeView, GroupShapeView, adapt2Shape, TextShapeView, SymbolRefView, ArtboradView } from "../../../dataview";
 import { Api } from "../../../coop";
-import { GroupShape, Page, SymbolShape, MarkerType, BlendMode, Artboard, ShapeType, TextShape, Shape } from "../../../data";
+import { GroupShape, Page, SymbolShape, MarkerType, BlendMode, Artboard, ShapeType, TextShape, Shape, makeShapeTransform1By2 } from "../../../data";
 import { importFill, importBorder, importShadow, importExportOptions, importBlur, importPrototypeInterAction, importAutoLayout } from "../../../data/baseimport";
 import { exportFill, exportBorder, exportShadow, exportExportOptions, exportBlur, exportPrototypeInterAction, exportAutoLayout } from "../../../data/baseexport";
 import { CircleChecker } from "./circle";
@@ -160,13 +160,20 @@ export class ShapePorter {
         })
     }
 
+    transform(view: ShapeView, target: GroupShapeView, shape?: Shape) {
+        const transform = view.transform2;
+        const parent2root = target.transform2;
+        transform.addTransform(parent2root.getInverse());
+        this.api.shapeModifyTransform(this.page, shape ?? adapt2Shape(view), makeShapeTransform1By2(transform));
+    }
+
     afterMove() {
         this.autolayout();
         this.react();
         this.clearNullGroup();
     }
 
-    move(api: Api, page: Page, view: ShapeView, origin: GroupShapeView, target: GroupShapeView, toIndex: number) {
+    move(view: ShapeView, origin: GroupShapeView, target: GroupShapeView, toIndex: number) {
         if (this.check(view, target)) return;
         this.beforeMove(view, origin, target);
         const shape = adapt2Shape(view);
@@ -174,7 +181,7 @@ export class ShapePorter {
         const targetData = adapt2Shape(target) as GroupShape;
         const index = originData.indexOfChild(shape);
         if (originData.id === targetData.id && index < toIndex) toIndex--;
-        api.shapeMove(page, originData, index, targetData, toIndex);
+        this.api.shapeMove(this.page, originData, index, targetData, toIndex);
         this.fromSet.add(origin);
         this.toSet.add(origin);
         this.envSet.add(origin);
