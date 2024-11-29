@@ -25,13 +25,6 @@ export class ShapePorter {
         this.envSet = new Set();
     }
 
-    /**
-     * @description 循环检查
-     */
-    private circle(view: ShapeView, target: GroupShapeView) {
-        return CircleChecker.assert4view(target, view);
-    }
-
     private isVirtualShape(view: ShapeView | Shape, target: GroupShapeView | GroupShape) {
         return !!(view.isVirtualShape || target.isVirtualShape)
     }
@@ -39,7 +32,6 @@ export class ShapePorter {
     /**
      * @description 检查是否可以进行层级调整
      */
-    // private check(view: ShapeView | Shape, target: GroupShapeView | GroupShape) {
     private check(view: ShapeView, target: GroupShapeView) {
         if (this.isVirtualShape(view, target)) return false;
         if (target.type === ShapeType.SymbolUnion) return false;
@@ -49,11 +41,11 @@ export class ShapePorter {
     /**
      * @description 固定变量： 组件中view的渲染依赖组件，离开组件后，渲染结果将受到影响，需要在离开之前将渲染结果携带在自己身上
      */
-    private solidifyVar(view: ShapeView, origin: GroupShapeView, target: GroupShapeView) {
+    private solidifyVar(view: ShapeView, target: GroupShapeView) {
         if (!view.varsContainer) return;
         const symbol = view.varsContainer[0];
         if (!(symbol instanceof SymbolShape)) return;
-        if (!target.varsContainer?.find(v => v.id === symbol.id) && target.id !== symbol.id) return;
+        if (target.varsContainer?.find(v => v.id === symbol.id)) return;
 
         // view 将要离开绑定变量所在的组件
         const api = this.api;
@@ -77,7 +69,9 @@ export class ShapePorter {
             api.addShadows(page, shape, shadows);
         }
         const visible = view.isVisible;
-        if (visible !== shape.isVisible) api.shapeModifyVisible(page, shape, visible);
+        if (visible !== shape.isVisible) {
+            api.shapeModifyVisible(page, shape, visible);
+        }
         const lock = view.isLocked;
         if (lock !== shape.isLocked) api.shapeModifyLock(page, shape, lock);
         const contextSettings = view.contextSettings;
@@ -130,10 +124,6 @@ export class ShapePorter {
         }
     }
 
-    private beforeMove(view: ShapeView, origin: GroupShapeView, target: GroupShapeView) {
-        this.solidifyVar(view, origin, target);
-    }
-
     /**
      * @description 更新自动布局
      * @private
@@ -160,22 +150,32 @@ export class ShapePorter {
         })
     }
 
+    // todo
+    private clearBindsEffect(view: ShapeView) {
+    }
+
     transform(view: ShapeView, target: GroupShapeView, shape?: Shape) {
-        const transform = view.transform2;
-        const parent2root = target.transform2;
+        const transform = view.transform2FromRoot;
+        const parent2root = target.transform2FromRoot;
         transform.addTransform(parent2root.getInverse());
         this.api.shapeModifyTransform(this.page, shape ?? adapt2Shape(view), makeShapeTransform1By2(transform));
     }
 
-    afterMove() {
-        this.autolayout();
-        this.react();
-        this.clearNullGroup();
+    /**
+     * @description 循环检查
+     */
+    circle(view: ShapeView, target: GroupShapeView) {
+        return CircleChecker.assert4view(target, view);
+    }
+
+    beforeMove(view: ShapeView, target: GroupShapeView) {
+        this.solidifyVar(view, target);
+        this.transform(view, target)
     }
 
     move(view: ShapeView, origin: GroupShapeView, target: GroupShapeView, toIndex: number) {
-        if (this.check(view, target)) return;
-        this.beforeMove(view, origin, target);
+        if (!this.check(view, target)) return;
+        this.beforeMove(view, target);
         const shape = adapt2Shape(view);
         const originData = adapt2Shape(origin) as GroupShape;
         const targetData = adapt2Shape(target) as GroupShape;
@@ -185,23 +185,11 @@ export class ShapePorter {
         this.fromSet.add(origin);
         this.toSet.add(origin);
         this.envSet.add(origin);
-        this.afterMove();
     }
 
-    /**
-     * @description 需要自己定义结束时机并在结束时执行收尾任务
-     */
-    moveOneOf(api: Api, page: Page, view: ShapeView, origin: GroupShapeView, target: GroupShapeView, toIndex: number) {
-        if (this.check(view, target)) return;
-        this.beforeMove(view, origin, target);
-        const shape = adapt2Shape(view);
-        const originData = adapt2Shape(origin) as GroupShape;
-        const targetData = adapt2Shape(target) as GroupShape;
-        const index = originData.indexOfChild(shape);
-        if (originData.id === targetData.id && index < toIndex) toIndex--;
-        api.shapeMove(page, originData, index, targetData, toIndex);
-        this.fromSet.add(origin);
-        this.toSet.add(origin);
-        this.envSet.add(origin);
+    afterMove() {
+        this.autolayout();
+        this.react();
+        this.clearNullGroup();
     }
 }
