@@ -190,7 +190,7 @@ export class BoolShapeView extends GroupShapeView {
                 } else return f;
             })
         }
-        return renderFills(elh, fills, this.size, this.getPathStr());
+        return renderFills(elh, fills, this.size, this.getPathStr(), 'fill-' + this.id);
     }
 
     protected renderBorders(): EL[] {

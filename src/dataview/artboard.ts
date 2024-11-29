@@ -47,7 +47,7 @@ export class ArtboradView extends GroupShapeView {
     }
 
     protected renderFills(): EL[] {
-        return renderFills(elh, this.getFills(), this.frame, this.getPathStr());
+        return renderFills(elh, this.getFills(), this.frame, this.getPathStr(), 'fill-' + this.id);
     }
 
     protected renderBorders(): EL[] {
