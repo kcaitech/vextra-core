@@ -62,7 +62,7 @@ import {
 } from "../../../data";
 import {uuid} from "../../../basic/uuid";
 import {IJSON, ImportFun, LoadContext} from "./basic";
-import * as shapeCreator from "../../../editor/creator";
+import * as shapeCreator from "../../../editor/creator/creator";
 import * as types from "../../../data/typesdefine";
 import {float_accuracy} from "../../../basic/consts";
 import {ColVector3D} from "../../../basic/matrix2";

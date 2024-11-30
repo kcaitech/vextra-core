@@ -164,7 +164,7 @@ export * from "./editor/shape"
 export * from "./editor/textshape"
 export * from "./editor/table"
 export * from "./editor/controller"
-export * as creator from "./editor/creator"
+export * as creator from "./editor/creator/creator"
 
 export * from "./service/shapedirlist"
 export * from "./service/shapedirlist2"
