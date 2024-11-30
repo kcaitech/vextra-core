@@ -34,7 +34,7 @@ import {
     newRectShape,
     newStellateShape,
     newTextShape
-} from "../creator";
+} from "../creator/creator";
 import { ISave4Restore, LocalCmd, SelectionState } from "../../coop";
 import { uuid } from "../../basic/uuid";
 import { Matrix } from "../../basic/matrix";

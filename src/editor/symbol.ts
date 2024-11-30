@@ -14,7 +14,7 @@ import { ExportOptions, SymbolRefShape } from "../data/symbolref";
 import { uuid } from "../basic/uuid";
 import { Page } from "../data/page";
 import { Api } from "../coop/recordapi";
-import { newArtboard, newText2 } from "./creator";
+import { newArtboard, newText2 } from "./creator/creator";
 import {
     BlendMode,
     Border,

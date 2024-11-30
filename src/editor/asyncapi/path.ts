@@ -7,7 +7,7 @@ import { BasicArray } from "../../data";
 import { uuid } from "../../basic/uuid";
 import { __pre_curve, after_insert_point, update_frame_by_points } from "../utils/path";
 import { PathType } from "../../data";
-import { addCommonAttr, newflatStyle } from "../creator";
+import { addCommonAttr, newflatStyle } from "../creator/creator";
 import { Border, BorderStyle, CornerType, Fill, FillType, Shadow, Style } from "../../data";
 import { Color } from "../../data";
 import * as types from "../../data/typesdefine";
