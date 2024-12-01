@@ -1,0 +1,11 @@
+{
+  "description": "shape types",
+  "enum": [
+    "color",
+    "round",
+    "shadow",
+    "thickness",
+    "blur"
+  ],
+  "default": "color"
+}
