@@ -1,11 +1,4 @@
-import {
-    BoolShape, GroupShape, PathShape, PathShape2, RectShape, Shape, ShapeType,
-    SymbolShape, SymbolUnionShape, TextShape, Variable, VariableType,
-    Color, PathType, Document, SymbolRefShape, Text, Artboard, Page,
-    Border, BorderPosition, BorderStyle, Fill, MarkerType, Shadow,
-    BoolOp, CurvePoint, ExportFormat, ContactShape,
-    AutoLayout
-} from "../data";
+import { BoolShape, GroupShape, PathShape, PathShape2, RectShape, Shape, ShapeType, SymbolShape, SymbolUnionShape, TextShape, Variable, VariableType, Color, PathType, Document, SymbolRefShape, Text, Page, Border, BorderPosition, BorderStyle, Fill, MarkerType, Shadow, BoolOp, CurvePoint, ExportFormat, ContactShape, AutoLayout, PathSegment, BasicArray, string2Text } from "../data";
 import { expand, expandTo, translate, translateTo } from "./frame";
 import { CoopRepository } from "../coop/cooprepo";
 import {
@@ -14,6 +7,7 @@ import {
     ExportFormatNameingScheme,
     ExportOptions,
     OverrideType,
+    PathSegment_points,
     ShadowPosition,
     StackAlign,
     StackMode,
@@ -24,51 +18,14 @@ import { Api } from "../coop/recordapi";
 import { importCurvePoint } from "../data/baseimport";
 import { v4 } from "uuid";
 import { uuid } from "../basic/uuid";
-import {
-    after_remove,
-    clear_binds_effect,
-    find_layers_by_varid,
-    get_symbol_by_layer,
-    is_default_state
-} from "./utils/other";
+import { after_remove, clear_binds_effect, find_layers_by_varid, get_symbol_by_layer, is_default_state } from "./utils/other";
 import { newText2 } from "./creator";
-import {
-    _typing_modify,
-    get_points_for_init,
-    modify_points_xy,
-    update_frame_by_points
-} from "./utils/path";
+import { _typing_modify, get_points_for_init, modify_points_xy, update_frame_by_points } from "./utils/path";
 import { adapt_for_artboard } from "./utils/common";
-import {
-    ShapeView,
-    SymbolRefView,
-    SymbolView,
-    TextShapeView,
-    adapt2Shape,
-    findOverride,
-    ArtboradView
-} from "../dataview";
-import {
-    is_part_of_symbol,
-    is_part_of_symbolref,
-    is_symbol_or_union,
-    modify_variable,
-    modify_variable_with_api,
-    override_variable,
-    shape4border,
-    shape4contextSettings,
-    shape4exportOptions,
-    shape4fill,
-    shape4shadow
-} from "./symbol";
+import { ShapeView, SymbolRefView, SymbolView, adapt2Shape, findOverride, ArtboradView, findVar, GroupShapeView } from "../dataview";
+import { is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union, modify_variable, modify_variable_with_api, override_variable, shape4border, shape4contextSettings, shape4exportOptions, shape4fill, shape4shadow } from "./symbol";
 import { ISave4Restore, LocalCmd, SelectionState } from "../coop/localcmd";
-import {
-    getAutoLayoutShapes,
-    initAutoLayout,
-    layoutShapesOrder,
-    layoutSpacing,
-    modifyAutoLayout
-} from "./utils/auto_layout";
+import { getAutoLayoutShapes, initAutoLayout, layoutShapesOrder, layoutSpacing, modifyAutoLayout } from "./utils/auto_layout";
 
 export type PaddingDir = 'ver' | 'hor' | 'top' | 'right' | 'bottom' | 'left';
 
@@ -168,6 +125,62 @@ export class ShapeEditor {
     modifySymbolRefVariable(_var: Variable, value: any) {
         const api = this.__repo.start("modifySymbolRefVariable");
         try {
+            this.modifyVariable2(_var, value, api);
+            this.__repo.commit();
+        } catch (e) {
+            console.log(e);
+            this.__repo.rollback();
+        }
+    }
+
+    modifySymbolRefVisibleVariable(_var: Variable, value: any) {
+        try {
+            const api = this.__repo.start("modifySymbolRefVisibleVariable");
+            const clearOverride = (children: ShapeView[]) => {
+                for (const child of children) {
+                    if (child instanceof GroupShapeView) clearOverride(child.childs);
+                    const originOV = child._findOV(OverrideType.Visible, VariableType.Visible);
+                    if (!originOV) continue;
+                    const varbinds = child.varbinds;
+                    const varId = varbinds?.get(OverrideType.Visible);
+                    if (!varId) continue;
+                    const _vars: Variable[] = [];
+                    child.varsContainer && findVar(varId, _vars, child.varsContainer, undefined, false);
+                    if (_vars.find(i => i.id === _var.id) && !_vars.find(i => i.id === originOV.id)) {
+                        api.shapeRemoveVariable(this.__page, this.shape as SymbolRefShape, originOV.id);
+                    }
+                }
+            }
+            clearOverride((this.view as SymbolRefView).childs);
+            this.modifyVariable2(_var, value, api);
+            this.__repo.commit();
+        } catch (e) {
+            console.log(e);
+            this.__repo.rollback();
+        }
+    }
+
+    modifySymbolRefTextVariable(_var: Variable, value: any) {
+        try {
+            const api = this.__repo.start("modifySymbolRefTextVariable");
+            const page = this.__page;
+            const shape = this.shape as SymbolRefShape;
+            const clearOverride = (children: ShapeView[]) => {
+                for (const child of children) {
+                    if (child instanceof GroupShapeView) clearOverride(child.childs);
+                    const originOV = child._findOV(OverrideType.Text, VariableType.Text);
+                    if (!originOV) continue;
+                    const varbinds = child.varbinds;
+                    const varId = varbinds?.get(OverrideType.Text);
+                    if (!varId) continue;
+                    const _vars: Variable[] = [];
+                    child.varsContainer && findVar(varId, _vars, child.varsContainer, undefined, false);
+                    if (_vars.find(i => i.id === _var.id) && !_vars.find(i => i.id === originOV.id)) {
+                        api.shapeRemoveVariable(page, shape, originOV.id);
+                    }
+                }
+            }
+            clearOverride((this.view as SymbolRefView).childs);
             this.modifyVariable2(_var, value, api);
             this.__repo.commit();
         } catch (e) {
@@ -295,9 +308,10 @@ export class ShapeEditor {
         }
         const api = this.__repo.start("makeTextVar");
         try {
-            const first = shapes[0]?.text instanceof Text ? shapes[0]?.text : undefined;
-            const text = newText2(first?.attr, first?.paras[0]?.attr, first?.paras[0]?.spans[0]);
-            text.insertText(dlt, 0);
+            // const first = shapes[0]?.text instanceof Text ? shapes[0]?.text : undefined;
+            // const text = newText2(first?.attr, first?.paras[0]?.attr, first?.paras[0]?.spans[0]);
+            // text.insertText(dlt, 0);
+            const text = string2Text(dlt)
             const _var = new Variable(v4(), VariableType.Text, name, text);
             api.shapeAddVariable(this.__page, symbol, _var);
             for (let i = 0, len = shapes.length; i < len; i++) {
@@ -709,9 +723,7 @@ export class ShapeEditor {
         try {
             const api = this.__repo.start("modifyPointsCurveMode");
 
-            if (this.shape.pathType !== PathType.Editable) {
-                return;
-            }
+            if (this.shape.pathType !== PathType.Editable) return;
 
             range.forEach((indexes, segment) => {
                 for (let i = indexes.length - 1; i > -1; i--) {
@@ -1028,8 +1040,8 @@ export class ShapeEditor {
     }
 
     // 删除图层
-    public delete() {
-        if (is_part_of_symbolref(this.shape)) {
+    public delete(_api?: Api) {
+        if (this.shape.isVirtualShape) {
             this.toggleVisible();
             return;
         }
@@ -1039,7 +1051,7 @@ export class ShapeEditor {
             const index = childs.findIndex(s => s.id === this.shape.id);
             if (index >= 0) {
                 try {
-                    const api = this.__repo.start("deleteShape", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+                    const api = _api ?? this.__repo.start("deleteShape", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
                         const state = {} as SelectionState;
                         if (isUndo) state.shapes = [this.shape.id];
                         else state.shapes = cmd.saveselection?.shapes || [];
@@ -1064,10 +1076,10 @@ export class ShapeEditor {
                     if (this.shape.type === ShapeType.Symbol) {
                         this.__document.__correspondent.notify('update-symbol-list');
                     }
-                    this.__repo.commit();
+                    _api || this.__repo.commit();
                 } catch (error) {
                     this.__repo.rollback();
-                    console.log(error);
+                    throw error;
                 }
             }
         }
@@ -1681,6 +1693,40 @@ export class ShapeEditor {
         } catch (e) {
             console.error(e);
             this.__repo.rollback();
+        }
+    }
+
+    /**
+     * @description 裁剪路径，把第originSegmentIndex条路径裁成slices，slices不会存在新的闭合路径
+     */
+    clipPath(actions: { originSegmentIndex: number; slices: CurvePoint[][]; }[]) {
+        try {
+            const api = this.__repo.start("clipPath");
+            const page = this.__page;
+            const shape = adapt2Shape(this.__shape) as PathShape;
+            const segments = shape.pathsegs;
+            for (const action of actions) {
+                const {originSegmentIndex, slices} = action;
+                let last = originSegmentIndex;
+                for (let i = 0; i < slices.length; i++) {
+                    const slice = slices[i] as any;
+                    const origin = segments[originSegmentIndex];
+                    const closed = slices.length === 1 && origin.isClosed && slice.length !== origin.points.length;
+                    if (last === originSegmentIndex) api.deleteSegmentAt(page, shape, originSegmentIndex);
+                    api.insertSegmentAt(page, shape, last++, new PathSegment([0] as BasicArray<number>, uuid(), slice, closed));
+                }
+                if (last === originSegmentIndex) api.deleteSegmentAt(page, shape, originSegmentIndex);
+            }
+            if (!segments.length) this.delete(api);
+            else {
+                update_frame_by_points(api, page, shape);
+                api.shapeEditPoints(page, shape, true);
+            }
+            this.__repo.commit();
+            return segments.length;
+        } catch (e) {
+            this.__repo.rollback();
+            throw e;
         }
     }
 }

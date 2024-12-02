@@ -1,8 +1,11 @@
-import { CoopRepository } from "../../coop/cooprepo";
-import { Document, Page } from "../../data";
-import { Api } from "../../coop/recordapi";
-import { PageView, adapt2Shape } from "../../dataview";
+import { CoopRepository } from "../../../coop/cooprepo";
+import { Document, Page } from "../../../data";
+import { Api } from "../../../coop/recordapi";
+import { PageView, adapt2Shape } from "../../../dataview";
 
+/**
+ * @description合并同类型API，适用于鼠标的拖拽动作
+ */
 export class AsyncApiCaller {
     __repo: CoopRepository;
     __document: Document;

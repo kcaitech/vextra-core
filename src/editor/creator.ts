@@ -260,7 +260,6 @@ export function newPathShape(name: string, frame: ShapeFrame, path: Path, style?
     transform.m02 = frame.x;
     transform.m12 = frame.y;
     const size = new ShapeSize(frame.width, frame.height);
-
     const shape = new PathShape(new BasicArray(), id, name, types.ShapeType.Path, transform, style, size, pathsegs);
     addCommonAttr(shape);
     return shape;

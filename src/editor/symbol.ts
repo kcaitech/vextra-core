@@ -1,17 +1,75 @@
-import { OverrideType, Shape, ShapeType, SymbolShape, Variable, VariableType, SymbolUnionShape, GroupShape, CornerRadius } from "../data/shape";
+import {
+    OverrideType,
+    Shape,
+    ShapeType,
+    SymbolShape,
+    Variable,
+    VariableType,
+    SymbolUnionShape,
+    GroupShape,
+    CornerRadius,
+    TextShape
+} from "../data/shape";
 import { ExportOptions, SymbolRefShape } from "../data/symbolref";
 import { uuid } from "../basic/uuid";
 import { Page } from "../data/page";
 import { Api } from "../coop/recordapi";
-import { newText2 } from "./creator";
-import { BlendMode, Border, ContextSettings, Fill, Shadow, ShapeSize, Style, TableCell, TableCellType, Text, Transform } from "../data/classes";
+import { newArtboard, newText2 } from "./creator";
+import {
+    BlendMode,
+    Border,
+    ContextSettings,
+    Fill,
+    Shadow,
+    ShapeSize,
+    Style,
+    TableCell,
+    TableCellType,
+    Text,
+    Transform,
+    Document,
+    Blur,
+    Point2D,
+    BlurType,
+    Artboard, BorderSideSetting, SideType,
+    string2Text
+} from "../data/classes";
 import { findOverride, findVar } from "../data/utils";
 import { BasicArray } from "../data/basic";
-import { IImportContext, importBorder, importColor, importContextSettings, importCornerRadius, importExportOptions, importFill, importGradient, importShadow, importStyle, importTableCell, importTableShape, importText } from "../data/baseimport";
-import { ArtboradView, ShapeView, SymbolRefView, SymbolView, TableCellView, TableView, isAdaptedShape } from "../dataview";
-import { Document, ShapeFrame } from "../data/classes";
+import {
+    IImportContext,
+    importBorder,
+    importColor,
+    importContextSettings,
+    importCornerRadius,
+    importExportOptions,
+    importFill,
+    importGradient,
+    importShadow,
+    importStyle,
+    importTableCell,
+    importTableShape,
+    importText,
+    importBlur,
+    importAutoLayout, importArtboard
+} from "../data/baseimport";
+import {
+    ArtboradView,
+    ShapeView,
+    SymbolRefView,
+    SymbolView,
+    TableCellView,
+    TableView,
+    isAdaptedShape,
+    adapt2Shape
+} from "../dataview";
 import { newTableCellText } from "../data/text/textutils";
 import { FMT_VER_latest } from "../data/fmtver";
+import * as types from "../data/typesdefine";
+import { exportArtboard, exportVariable } from "../data/baseexport";
+import { makeShapeTransform1By2, makeShapeTransform2By1 } from "../data";
+import { Transform as Transform2 } from "../basic/transform";
+import { ColVector3D } from "../basic/matrix2";
 
 /**
  * @description 图层是否为组件实例的引用部分
@@ -270,6 +328,7 @@ function _ov(varType: VariableType, overrideType: OverrideType, valuefun: (_var:
             case OverrideType.Shadows:
             case OverrideType.StartMarkerType:
             case OverrideType.CornerRadius:
+            case OverrideType.Blur:
                 break;
             case OverrideType.ExportOptions:
             case OverrideType.Image:
@@ -409,6 +468,15 @@ export function shape4exportOptions(api: Api, _shape: ShapeView, page: Page) {
     return _var || _shape.data;
 }
 
+export function shape4blur(api: Api, _shape: ShapeView, page: Page) {
+    const valuefun = (_var: Variable | undefined) => {
+        const blur = _var?.value ?? _shape.blur;
+        return blur && importBlur(blur) || new Blur(true, new Point2D(0, 0), 10, BlurType.Gaussian);
+    };
+    const _var = _ov(VariableType.Blur, OverrideType.Blur, valuefun, _shape, page, api);
+    return _var || _shape.data;
+}
+
 // 变量可能的情况
 // 1. 存在于symbolref中，则变量一定是override某个属性或者变量的。此时如果symbolref非virtual，可以直接修改，否则要再override
 // 2. 存在于symbol中，则变量一定是用户定义的某个变量。当前环境如在ref中，则需要override，否则可直接修改。
@@ -436,10 +504,10 @@ export function modify_variable(document: Document, page: Page, view: ShapeView,
     let value = attr.value;
     if (_var.type === VariableType.Text
         && typeof value === 'string') {
-        const origin = _var.value as Text;
-        const text = newText2(origin.attr, origin.paras[0]?.attr, origin.paras[0]?.spans[0]);
-        text.insertText(value, 0);
-        value = text;
+        // const origin = _var.value as Text;
+        // const text = newText2(origin.attr, origin.paras[0]?.attr, origin.paras[0]?.spans[0]);
+        // text.insertText(value, 0);
+        value = string2Text(value);
     }
 
     // 到这需要override
@@ -472,6 +540,7 @@ export function modify_variable(document: Document, page: Page, view: ShapeView,
             case OverrideType.Text:
             case OverrideType.Visible:
             case OverrideType.ExportOptions:
+            case OverrideType.Blur:
             case OverrideType.CornerRadius:
                 ot = _overrideType as OverrideType;
                 break;
@@ -646,8 +715,6 @@ export function get_state_name(state: SymbolShape, dlt: string) {
     return name_slice.toString();
 }
 
-
-
 export function cell4edit2(page: Page, view: TableView, _cell: TableCellView, api: Api): Variable | undefined {
     // cell id 要重新生成
     const index = view.indexOfCell(_cell);
@@ -711,4 +778,182 @@ export function cell4edit(page: Page, view: TableView, rowIdx: number, colIdx: n
         cell.setData(_cell);
     }
     return cell;
+}
+
+export class RefUnbind {
+    private static replaceId(shape: types.Shape) {
+        shape.id = uuid();
+        if ((shape as types.GroupShape).childs) {
+            (shape as types.GroupShape).childs.forEach((c) => this.replaceId(c));
+        }
+    }
+
+    private static clearBindVars(shape: types.Shape) {
+        if (shape.varbinds) shape.varbinds = undefined;
+        const g = shape as types.GroupShape;
+        if (Array.isArray(g.childs)) {
+            g.childs.forEach((c) => this.clearBindVars(c));
+        }
+    }
+
+    private static solidify(shape: GroupShape, uniformScale: number) {
+        const children = shape.childs;
+        for (const child of children) {
+            const t = makeShapeTransform2By1(child.transform);
+            const scale = new Transform2().setScale(ColVector3D.FromXYZ(uniformScale, uniformScale, 1));
+            t.addTransform(scale);
+            const __scale = t.decomposeScale();
+            child.size.width *= Math.abs(__scale.x);
+            child.size.height *= Math.abs(__scale.y);
+            t.clearScaleSize();
+            child.transform = makeShapeTransform1By2(t);
+            const borders = child.style.borders;
+            borders.forEach(b => {
+                b.sideSetting = new BorderSideSetting(
+                    SideType.Normal,
+                    b.sideSetting.thicknessTop * uniformScale,
+                    b.sideSetting.thicknessLeft * uniformScale,
+                    b.sideSetting.thicknessBottom * uniformScale,
+                    b.sideSetting.thicknessRight * uniformScale
+                );
+            });
+            const shadows = child.style.shadows;
+            shadows.forEach(s => {
+                s.offsetX *= uniformScale;
+                s.offsetY *= uniformScale;
+                s.blurRadius *= uniformScale;
+                s.spread *= uniformScale;
+            });
+            if (child.type === ShapeType.Text) {
+                const text = (child as TextShape).text;
+                scale4Text(text);
+            }
+            const blur = child.style.blur;
+            if (blur?.saturation) blur.saturation *= uniformScale;
+            if ((child as any).pathsegs?.length) {
+                (child as any).pathsegs.forEach((segs: any) => {
+                    segs.points.forEach((point: any) => point.radius && (point.radius *= uniformScale));
+                });
+            }
+            if (child.type === ShapeType.Table) {
+                const cells = Object.values((child as any).cells);
+                cells.forEach((cell: any) => {
+                    if (cell.text) scale4Text(cell.text);
+                });
+            }
+            if ((child as any).cornerRadius) {
+                const __corner: any = (child as any).cornerRadius;
+                __corner.lt *= uniformScale;
+                __corner.rt *= uniformScale;
+                __corner.rb *= uniformScale;
+                __corner.lb *= uniformScale;
+            }
+
+            if (child instanceof GroupShape) {
+                let innerScale = uniformScale;
+                if (child.uniformScale) innerScale *= child.uniformScale;
+                this.solidify(child, innerScale);
+            }
+        }
+
+        function scale4Text(text: Text) {
+            const attr = text.attr;
+            if (attr?.paraSpacing) attr.paraSpacing *= uniformScale;
+            if (attr?.padding?.left) attr.padding.left *= uniformScale;
+            if (attr?.padding?.right) attr.padding.right *= uniformScale;
+            const paras = text.paras;
+            for (const para of paras) {
+                const attr = para.attr;
+                if (attr?.maximumLineHeight) attr.maximumLineHeight *= uniformScale;
+                if (attr?.minimumLineHeight) attr.minimumLineHeight *= uniformScale;
+                for (const span of para.spans) {
+                    if (span.fontSize) span.fontSize *= uniformScale;
+                    if (span.kerning) span.kerning *= uniformScale;
+                }
+            }
+        }
+    }
+
+    private static transferVars(rootRef: SymbolRefShape, g: {
+        childs: types.Shape[]
+    }): void {
+        const overrides = rootRef.overrides;
+        const vars = rootRef.variables;
+        if (!overrides) return;
+        for (let i = 0, childs = g.childs; i < childs.length; ++i) {
+            const c = childs[i];
+            if ((c as any).childs) { // group
+                return this.transferVars(rootRef, c as any);
+            }
+            if (c.typeId !== "symbol-ref-shape") continue;
+            let refId = c.id;
+            refId = refId.substring(refId.indexOf('/') + 1);
+            if (refId.length === 0) throw new Error();
+            overrides.forEach((v, k) => {
+                if (!k.startsWith(refId)) return;
+                const _v = vars.get(v);
+                if (!_v) return;
+                const _var = exportVariable(_v);
+                _var.id = uuid();
+                const override_id = k.substring(refId.length + 1);
+                if (override_id.length === 0) throw new Error();
+                const ref = c as types.SymbolRefShape;
+                if ((ref.variables as any)[override_id]) {
+                    const origin_var = (ref.variables as any)[override_id] as types.Variable;
+                    origin_var.name = _var.name;
+                    origin_var.value = _var.value;
+                } else if (ref.overrides && (ref.overrides as any)[override_id]) {
+                    const origin_ref = (ref.overrides as any)[override_id];
+                    const origin_var = (ref.variables as any)[origin_ref] as types.Variable;
+                    if (!origin_var) {
+                        (ref.variables as any)[_var.id] = _var;
+                        (ref.overrides as any)[override_id] = _var.id;
+                    } else {
+                        origin_var.name = _var.name;
+                        origin_var.value = _var.value;
+                    }
+                } else {
+                    (ref.variables as any)[_var.id] = _var;
+                    if (!ref.overrides) (ref as any).overrides = {};
+                    (ref.overrides as any)[override_id] = _var.id;
+                }
+            })
+        }
+    }
+
+    static unbind(view: SymbolRefView) {
+        const shape: SymbolRefShape = adapt2Shape(view) as SymbolRefShape;
+        if (shape.isVirtualShape) return;
+        const tmpArtboard: Artboard = newArtboard(view.name, shape.frame);
+        tmpArtboard.childs = shape.naviChilds! as BasicArray<Shape>;
+        tmpArtboard.varbinds = shape.varbinds;
+        tmpArtboard.style = shape.style;
+        tmpArtboard.transform.m00 = shape.transform.m00;
+        tmpArtboard.transform.m01 = shape.transform.m01;
+        tmpArtboard.transform.m10 = shape.transform.m10;
+        tmpArtboard.transform.m11 = shape.transform.m11;
+        tmpArtboard.transform.m02 = shape.transform.m02;
+        tmpArtboard.transform.m12 = shape.transform.m12;
+
+        tmpArtboard.frameMaskDisabled = shape.frameMaskDisabled;
+
+        const layoutInfo = (view as SymbolRefView).autoLayout;
+        if (layoutInfo) {
+            tmpArtboard.autoLayout = importAutoLayout(layoutInfo);
+        }
+        const radius = (view as SymbolRefView).cornerRadius
+        if (radius) {
+            tmpArtboard.cornerRadius = importCornerRadius(radius);
+        }
+
+        const symbolData = exportArtboard(tmpArtboard); // todo 如果symbol只有一个child时
+
+        if (shape.uniformScale && shape.uniformScale !== 1) this.solidify(symbolData as GroupShape, shape.uniformScale);
+
+        // 遍历symbolData,如有symbolref,则查找根shape是否有对应override的变量,如有则存到symbolref内
+        this.transferVars(shape, symbolData);
+        this.clearBindVars(symbolData);
+        this.replaceId(symbolData);
+        return symbolData;
+    }
 }

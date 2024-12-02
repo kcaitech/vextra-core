@@ -1,13 +1,13 @@
 import { Document, OvalShape, Page } from "../../data";
 import { adapt2Shape, ArtboradView, PageView, ShapeView, SymbolRefView, SymbolView, TableCellView, TableView, TextShapeView } from "../../dataview";
-import { modifyPathByArc } from "../asyncApiHandler";
+import { modifyPathByArc } from "../asyncapi";
 import { Api, CoopRepository } from "../../coop";
 import { modify_shapes_height, modify_shapes_width } from "../utils/common";
 import { Artboard, BorderSideSetting, Color, FillType, PathShape, ShapeType, SideType, SymbolRefShape, Transform } from "../../data/classes";
 import { RadiusType } from "../../data/consts";
 import { shape4border, shape4contextSettings, shape4cornerRadius, shape4fill, shape4shadow } from "../symbol";
 import { update_frame_by_points } from "../utils/path";
-import { GroupShape, PathShape2, SymbolShape, TextShape, Shape } from "../../data/shape";
+import { GroupShape, PathShape2, SymbolShape, TextShape } from "../../data/shape";
 import { BatchAction, BatchAction2, BatchAction5, PageEditor } from "../page";
 import { importGradient, } from "../../data/baseimport";
 import { exportGradient, } from "../../data/baseexport";
@@ -15,6 +15,9 @@ import { TableEditor } from "../table";
 import { getAutoLayoutShapes, modifyAutoLayout, reLayoutBySort, TidyUpAlgin, tidyUpLayout } from "../utils/auto_layout";
 import { TextShapeEditor } from "../textshape";
 
+/**
+ * @description 合并同类型API，适用于键盘的连续动作，相较于asyncapi，linearapi是自动启停，所以无法跟asyncapi一样控制启停时机
+ */
 export class LinearApi {
     private readonly __repo: CoopRepository;
     private readonly __document: Document;
@@ -404,7 +407,7 @@ export class LinearApi {
     private getTableEditor(table: TableView) {
         if (!this.editor4table) {
             this.editor4table = new PageEditor(this.__repo, this.page, this.__document).editor4Table(table)
-        };
+        }
         return this.editor4table!;
     }
     /**
@@ -632,12 +635,12 @@ export class LinearApi {
         return shape4shadow(api, this.page, this.shape!);
     }
 
-    modifyShadowOffSetX(idx: number, offserX: number, s: ShapeView) {
+    modifyShadowOffSetX(idx: number, offsetX: number, s: ShapeView) {
         this.execute('modify-shadow-offset-x', () => {
             const api = this.api!;
             const page = this.page;
             const shape = this.shape4shadow(api, s)
-            api.setShadowOffsetX(page, shape, idx, offserX);
+            api.setShadowOffsetX(page, shape, idx, offsetX);
         })
     }
 
@@ -656,12 +659,12 @@ export class LinearApi {
      * @description 修改图形阴影位置 Y
      */
 
-    modifyShadowOffSetY(idx: number, offserY: number, s: ShapeView) {
+    modifyShadowOffSetY(idx: number, offsetY: number, s: ShapeView) {
         this.execute('modify-shadow-offset-y', () => {
             const api = this.api!;
             const page = this.page;
             const shape = this.shape4shadow(api, s)
-            api.setShadowOffsetY(page, shape, idx, offserY);
+            api.setShadowOffsetY(page, shape, idx, offsetY);
         })
     }
 
@@ -777,7 +780,7 @@ export class LinearApi {
         if (!this.editor4text || this.TextShape !== text) {
             this.editor4text = new PageEditor(this.__repo, this.page, this.__document).editor4TextShape(text)
             this.TextShape = text
-        };
+        }
         return this.editor4text!;
     }
 
@@ -820,8 +823,6 @@ export class LinearApi {
             }
         })
     }
-
-
 
     /**
      * @description 修改文本高亮 alpha
@@ -877,6 +878,11 @@ export class LinearApi {
             const api = this.api!;
             const page = this.page;
             const shape = editor4text.shape4edit(api);
+            const text = shape instanceof ShapeView ? shape.text : shape.value as Text;
+            const text_length = text.length;
+            if (len === text_length - 1) {
+                len = text_length;
+            }
             api.textModifyFontSize(page, shape, index, len, fontSize)
             editor4text.fixFrameByLayout(api);
         })
@@ -916,7 +922,7 @@ export class LinearApi {
         })
     }
 
-    modifyTextLineHeightMulit(shapes: (TextShapeView | TableCellView)[], lineHeight: number | undefined, isAuto: boolean) {
+    modifyTextLineHeightMulti(shapes: (TextShapeView | TableCellView)[], lineHeight: number | undefined, isAuto: boolean) {
         this.execute('modify-text-line-height-mulit', () => {
             const api = this.api!;
             const page = this.page;
@@ -955,7 +961,7 @@ export class LinearApi {
         })
     }
 
-    modifyTextCharSpacingMulit(shapes: (TextShapeView | TableCellView)[], kerning: number) {
+    modifyTextCharSpacingMulti(shapes: (TextShapeView | TableCellView)[], kerning: number) {
         this.execute('modify-text-char-spacing-mulit', () => {
             const api = this.api!;
             const page = this.page;

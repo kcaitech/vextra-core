@@ -5,7 +5,7 @@ import { getHorizontalRadians } from "../page";
 import { Artboard, Document, PathShape, ShapeFrame, Page } from "../../data";
 import { Point2D, StackSizing } from "../../data/typesdefine";
 import { float_accuracy } from "../../basic/consts";
-import { reLayoutBySizeChanged } from "../asyncApiHandler";
+import { reLayoutBySizeChanged } from "../asyncapi";
 import { adapt2Shape, ArtboradView, GroupShapeView, ShapeView } from "../../dataview";
 import { getAutoLayoutShapes, modifyAutoLayout } from "./auto_layout";
 
@@ -54,15 +54,15 @@ export function modify_shapes_width(api: Api, document: Document, page: Page, sh
             continue;
         }
 
-        const w = shape.size.width;
+        const w = view.frame.width;
 
-        let h = shape.size.height;
+        let h = view.frame.height;
 
         if (shape.constrainerProportions) {
             const rate = w / val;
             h = h / rate;
         }
-        const origin_h = shape.frame.height;
+        const origin_h = view.frame.height;
         expandTo(api, document, page, shape, val, h);
         if ((shape as Artboard).autoLayout) {
             api.shapeModifyAutoLayoutSizing(page, shape, StackSizing.Fixed, 'hor');
@@ -87,16 +87,16 @@ export function modify_shapes_height(api: Api, document: Document, page: Page, s
             continue; // 直线段的高度不可修改恒定为0.01
         }
 
-        let w = shape.size.width;
+        let w = view.frame.width;
 
-        const h = shape.size.height;
+        const h = view.frame.height;
 
         if (shape.constrainerProportions) {
             const rate = h / val;
             w = w / rate;
         }
 
-        const origin_w = shape.frame.width;
+        const origin_w = view.frame.width;
         expandTo(api, document, page, shape, w, val);
         if ((shape as Artboard).autoLayout) {
             api.shapeModifyAutoLayoutSizing(page, shape, StackSizing.Fixed, 'ver');

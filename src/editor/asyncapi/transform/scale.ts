@@ -1,5 +1,5 @@
-import { CoopRepository } from "../../../coop/cooprepo";
-import { AsyncApiCaller } from "../AsyncApiCaller";
+import { CoopRepository } from "../../../coop";
+import { AsyncApiCaller } from "../basic/asyncapi";
 import {
     Artboard,
     BorderSideSetting,
@@ -34,7 +34,6 @@ import { Transform as Transform2 } from "../../../basic/transform";
 import { ColVector3D } from "../../../basic/matrix2";
 import { XYsBounding } from "../../../io/cilpboard";
 import { getAutoLayoutShapes, modifyAutoLayout } from "../../utils/auto_layout";
-import { is_straight } from "../../utils/path";
 
 export type RangeRecorder = Map<string, {
     toRight?: number,
@@ -90,12 +89,10 @@ export function reLayoutBySizeChanged(
     if (shape.type === ShapeType.Group || shape.type === ShapeType.BoolShape) {
         // 编组
         const __p_transform = new Transform2().setScale(ColVector3D.FromXYZ(SX, SY, 1));
-
         for (const child of children) {
             const data = adapt2Shape(child);
             const transform = getTransform(child).clone();
             transform.addTransform(__p_transform);
-
             const _s = transform.decomposeScale();
             const _scale = { x: Math.abs(_s.x), y: Math.abs(_s.y) };
             const oSize = getSize(child);
@@ -127,7 +124,7 @@ export function reLayoutBySizeChanged(
             const __scale = { x: 1, y: 1 };
 
             // 预备修改的值
-            let targetWidth: number = oSize.width;
+            let targetWidth: number = oSize.width;  // 初始化为固定宽高，下面会根据约束计算最终值
             let targetHeight: number = oSize.height;
             const transform = getTransform(child).clone();
 
@@ -314,10 +311,13 @@ export function reLayoutBySizeChanged(
             } else {
                 api.shapeModifyWH(page, data, targetWidth, targetHeight)
             }
+            if ((oSize.width !== targetWidth || oSize.height !== targetHeight) && child instanceof SymbolRefView && !child.isCustomSize) {
+                api.shapeModifyIsCustomSize(page, data as SymbolRefShape, true)
+            }
+
             api.shapeModifyTransform(page, data, makeShapeTransform1By2(transform));
 
-            if ((oSize.width !== targetWidth || oSize.height !== targetHeight) && (child instanceof GroupShapeView)) {
-                // 向下传递
+            if ((oSize.width !== targetWidth || oSize.height !== targetHeight) && child instanceof GroupShapeView) {
                 reLayoutBySizeChanged(api, page, child, __scale, rangeRecorder, sizeRecorder, transformRecorder);
             }
         }
@@ -389,28 +389,6 @@ export function reLayoutBySizeChanged(
     function getSize(s: ShapeView) {
         let size = sizeRecorder.get(s.id);
         if (!size) {
-            // if (is_straight(s.data)) {
-            //     const path = s.getPath().clone();
-            //     // path.transform(s.matrix2Parent());
-            //     const f = path.bbox();
-            //     size = {
-            //         x: 0,
-            //         y: 0,
-            //         width: f.w,
-            //         height: f.h
-            //     };
-            //     sizeRecorder.set(s.id, size);
-            // } else {
-            //     const f = s.frame;
-            //     size = {
-            //         x: f.x,
-            //         y: f.y,
-            //         width: f.width,
-            //         height: f.height
-            //     };
-            //     sizeRecorder.set(s.id, size);
-            // }
-
             const f = s.frame;
             size = {
                 x: f.x,
@@ -661,17 +639,20 @@ export function uniformScale(
         if (view instanceof PathShapeView) {
             const segments = view.segments;
             segments.forEach((segment, i) => {
+                const sid = view.id + '-segment-' + segment;
                 segment.points.forEach((point, j) => {
-                    const corner = point.radius;
+                    const pid = sid + '-point-' + j;
+                    const corner = getBaseValue(pid, 'radius', point.radius ?? 0);
                     corner && api.modifyPointCornerRadius(page, shape, j, corner * ratio, i);
                 });
             });
         }
         if (view.cornerRadius) {
-            const lt = view.cornerRadius.lt;
-            const rt = view.cornerRadius.rt;
-            const rb = view.cornerRadius.rb;
-            const lb = view.cornerRadius.lb;
+            const cornerId = view.id + 'cornerRadius';
+            const lt = getBaseValue(cornerId, 'lt', view.cornerRadius.lt);
+            const rt = getBaseValue(cornerId, 'rt', view.cornerRadius.rt);
+            const rb = getBaseValue(cornerId, 'rb', view.cornerRadius.rb);
+            const lb = getBaseValue(cornerId, 'lb', view.cornerRadius.lb);
             if (lt || rt || rb || lb) api.shapeModifyRadius2(page, shape as Artboard, lt * ratio, rt * ratio, rb * ratio, lb * ratio);
         }
     }

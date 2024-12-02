@@ -1,4 +1,4 @@
-import { AsyncApiCaller } from "./AsyncApiCaller";
+import { AsyncApiCaller } from "./basic/asyncapi";
 import { CoopRepository } from "../../coop";
 import {
     Document,
@@ -60,6 +60,27 @@ export interface GeneratorParams {
     mark?: boolean;
     apex?: ContactForm;
     textFormat?: TextAttr;
+}
+
+/**
+ * @description 根据shape所属环境分配一个名称
+ */
+export function assign(shape: Shape) {
+    const parent = shape.parent as GroupShape;
+
+    const names: Set<string> = new Set();
+    for (const view of parent.childs) {
+        if (view.id === shape.id) continue;
+        names.add(view.name);
+    }
+
+    const reg = /\d+$/i;
+    let name = shape.name;
+    while (names.has(name)) {
+        const match = name.match(reg)
+        name = match ? name.slice(0, match.index) + (Number(match[0]) + 1) : name + ' 1';
+    }
+    return name;
 }
 
 export class CreatorApiCaller extends AsyncApiCaller {
@@ -282,13 +303,14 @@ export class CreatorApiCaller extends AsyncApiCaller {
         const parent = adapt2Shape(params.parent) as GroupShape;
 
         this.api.shapeInsert(this.__document, this.page, parent, shape, parent.childs.length);
-
         this.shape = parent.childs[parent.childs.length - 1];
+        const name = assign(this.shape);
+        this.api.shapeModifyName(this.page, this.shape, name);
     }
 
     private getCount(type: ShapeType) {
         let count = 1;
-        this.page.shapes.forEach(v => {
+        this.page.shapes.forEach((v:any) => {
             if (v.type === type) count++;
         });
         return count;

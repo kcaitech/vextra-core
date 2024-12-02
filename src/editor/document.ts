@@ -154,13 +154,12 @@ export class DocEditor {
 
     // 移动页面
     move(page: PageListItem, to: number): boolean {
-        const api = this.__repo.start('pagemove');
+        const api = this.__repo.start('page-move');
         try {
-            // const pagesmgr = this.__document.pagesMgr;
             const idx = this.__document.getPageIndexById(page.id);
             const descend = idx >= to ? to : to + 1;
             if (to !== idx) {
-                api.pageMove(this.__document, page.id, idx, descend)
+                api.pageMove(this.__document, idx, descend)
             }
             this.__repo.commit();
         } catch (e) {
@@ -171,20 +170,18 @@ export class DocEditor {
     }
 
     // 页面列表拖拽
-    pageListDrag(wandererId: string, hostId: string, offsetOverhalf: boolean) {
-        const pages = this.__document.pagesList;
-        const wandererIdx = pages.findIndex(i => i.id === wandererId);
-        let hostIdx = pages.findIndex(i => i.id === hostId);
-        if (wandererIdx < 0 || hostIdx < 0) return;
+    pageListDrag(wandererId: string, hostId: string, offsetOverHalf: boolean) {
         try {
-            const api = this.__repo.start('pagemove');
-            hostIdx = offsetOverhalf ? hostIdx + 1 : hostIdx;
-            // if (wandererIdx <= hostIdx) hostIdx--;
-            api.pageMove(this.__document, wandererId, wandererIdx, hostIdx);
+            const pages = this.__document.pagesList;
+            const wandererIdx = pages.findIndex(i => i.id === wandererId);
+            let hostIdx = pages.findIndex(i => i.id === hostId);
+            const api = this.__repo.start('page-move');
+            hostIdx = Math.max(0, offsetOverHalf ? hostIdx + 1 : hostIdx);
+            api.pageMove(this.__document, wandererIdx, hostIdx);
             this.__repo.commit();
         } catch (error) {
-            console.log(error)
             this.__repo.rollback();
+            throw error;
         }
     }
 

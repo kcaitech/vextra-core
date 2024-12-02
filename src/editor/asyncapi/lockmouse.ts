@@ -1,4 +1,4 @@
-import { AsyncApiCaller } from "./AsyncApiCaller";
+import { AsyncApiCaller } from "./basic/asyncapi";
 import { CoopRepository } from "../../coop/cooprepo";
 import { adapt2Shape, GroupShapeView, PageView, ShapeView, SymbolRefView } from "../../dataview";
 import { translate } from "../frame";
@@ -445,17 +445,6 @@ export class LockMouseHandler extends AsyncApiCaller {
         } catch (e) {
             this.exception = true;
             console.log('LockMouseHandler.executeHorTidyup', e);
-        }
-    }
-
-
-    executeUniform(units: UniformScaleUnit[], ratio: number) {
-        try {
-            uniformScale(this.api, this.page, units, ratio, this.recorder, this.sizeRecorder, this.transformRecorder, this.valueRecorder);
-            this.updateView();
-        } catch (error) {
-            console.log('error:', error);
-            this.exception = true;
         }
     }
 

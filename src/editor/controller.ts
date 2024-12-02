@@ -15,7 +15,6 @@ import {
     newCutoutShape,
     newDefaultTextShape,
     newImageFillShape,
-    newImageShape,
     newLineShape,
     newOvalShape,
     newPolygonShape,
@@ -107,28 +106,6 @@ export interface AsyncCreator {
     init_cutout: (page: Page, parent: GroupShape, name: string, frame: ShapeFrame) => Shape | undefined;
 }
 
-export interface AsyncBaseAction {
-    executeRotate: (deg: number) => void;
-    executeScale: (type: CtrlElementType, end: PageXY) => void;
-    executeErScale: (type: CtrlElementType, scale: number) => void;
-    executeForLine: (index: number, end: PageXY) => void;
-    close: () => undefined;
-}
-
-export interface AsyncMultiAction {
-    executeScale: (origin1: { x: number, y: number }, origin2: {
-        x: number,
-        y: number
-    }, sx: number, sy: number) => void;
-    executeRotate: (deg: number, m: Matrix) => void;
-    close: () => void;
-}
-
-export interface AsyncLineAction {
-    execute: (type: CtrlElementType, end: PageXY, deg: number, actionType?: 'rotate' | 'scale') => void;
-    close: () => undefined;
-}
-
 export interface AsyncPathEditor {
     addNode: (index: number) => void;
     execute: (index: number, end: PageXY) => void;
@@ -195,7 +172,9 @@ export enum Status {
     Exception = 'exception'
 }
 
-// 处理异步编辑
+/**
+ * @deprecated 处理鼠标拖拽编辑，该模式拓展性差，维护困难，将不再维护，请使用asyncapi/linearapi实现同类API的合并
+ */
 export class Controller {
     private __repo: CoopRepository;
     private __document: Document;

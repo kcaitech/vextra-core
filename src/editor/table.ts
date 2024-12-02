@@ -820,7 +820,7 @@ export class TableEditor extends ShapeEditor {
         return false;
     }
 
-    public setLineHeight(lineHeight: number, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
+    public setLineHeight(lineHeight: number | undefined, isAuto: boolean, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
         const api = this.__repo.start("setLineHeight");
         try {
             if (range) {
@@ -830,6 +830,7 @@ export class TableEditor extends ShapeEditor {
                     const cell = c.cell;
                     if (cell && cell.cellType === TableCellType.Text && cell.data.parent) {
                         const length = cell.text.length;
+                        api.textModifyAutoLineHeight(this.__page, cell as TextShapeLike, isAuto, 0, length)
                         api.textModifyMinLineHeight(this.__page, cell as TextShapeLike, lineHeight, 0, length);
                         api.textModifyMaxLineHeight(this.__page, cell as TextShapeLike, lineHeight, 0, length);
                         this.fixFrameByLayout(cell, this.view, api);
@@ -837,12 +838,14 @@ export class TableEditor extends ShapeEditor {
                 })
             }
             else {
+                api.tableModifyTextAutoLineHeight(this.__page, this.shape, isAuto);
                 api.tableModifyTextMinLineHeight(this.__page, this.shape, lineHeight);
                 api.tableModifyTextMaxLineHeight(this.__page, this.shape, lineHeight);
                 const cells = this.view.childs as TableCellView[];
                 cells.forEach((cell) => {
                     if (cell && cell.cellType === TableCellType.Text && cell.data.parent) {
                         const length = cell.text.length;
+                        api.textModifyAutoLineHeight(this.__page, cell as TextShapeLike, isAuto, 0, length)
                         api.textModifyMinLineHeight(this.__page, cell as TextShapeLike, lineHeight, 0, length);
                         api.textModifyMaxLineHeight(this.__page, cell as TextShapeLike, lineHeight, 0, length);
                         this.fixFrameByLayout(cell, this.view, api);

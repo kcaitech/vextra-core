@@ -3,7 +3,7 @@ import { adapt2Shape, PageView, PathShapeView, ShapeView } from "../../dataview"
 import { v4 } from "uuid";
 import { Matrix } from "../../basic/matrix";
 import { uuid } from "../../basic/uuid";
-import { AsyncApiCaller } from "./AsyncApiCaller";
+import { AsyncApiCaller } from "./basic/asyncapi";
 import { Api, CoopRepository } from "../../coop";
 
 export function modifySweep(api: Api, page: Page, shapes: ShapeView[], value: number) {
