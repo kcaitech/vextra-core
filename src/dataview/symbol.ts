@@ -1,5 +1,5 @@
 import { GroupShapeView } from "./groupshape";
-import { innerShadowId, renderBorders, renderFills } from "../render";
+import { innerShadowId, renderBorders, renderFills } from "../render/SVG";
 import { EL, elh } from "./el";
 import {
     CornerRadius, Shape, ShapeFrame, ShapeType, SymbolShape, AutoLayout, BorderPosition, Page, ShadowPosition, BlurType
@@ -10,7 +10,7 @@ import { getShapeViewId } from "./basic";
 import { ShapeView, updateFrame } from "./shape";
 import { PageView } from "./page";
 import { objectId } from "../basic/objectid";
-import { render as clippathR } from "../render/clippath";
+import { render as clippathR } from "../render/SVG/clippath";
 
 export class SymbolView extends GroupShapeView {
     get data() {

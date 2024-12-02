@@ -9,11 +9,11 @@ import {
     SymbolRefShape,
     SymbolShape,
     VariableType
-} from "../data/classes";
+} from "../../data/classes";
 import { render as renderGradient } from "./gradient";
 import { render as clippathR } from "./clippath"
-import { objectId } from "../basic/objectid";
-import { findOverrideAndVar } from "./basic";
+import { objectId } from "../../basic/objectid";
+import { findOverrideAndVar } from "../basic";
 import { patternRender } from "./pattern";
 
 function randomId() {

@@ -1,4 +1,4 @@
-import { render as renderBorders } from "../render/line_borders"
+import { render as renderBorders } from "../render/SVG/line_borders"
 import { EL, elh } from "./el";
 import { PathShapeView } from "./pathshape";
 export class LineView extends PathShapeView {

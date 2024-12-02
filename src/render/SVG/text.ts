@@ -1,11 +1,11 @@
 
 
-import { DefaultColor, randomId } from "./basic";
-import { Color, FillType, Gradient, UnderlineType, StrikethroughType, Blur, BlurType, SpanAttr, ShapeSize } from '../data/classes';
-import { GraphArray, TextLayout } from "../data/text/textlayout";
-import { gPal } from "../basic/pal";
+import { DefaultColor, randomId } from "../basic";
+import { Color, FillType, Gradient, UnderlineType, StrikethroughType, Blur, BlurType, SpanAttr, ShapeSize } from '../../data/classes';
+import { GraphArray, TextLayout } from "../../data/text/textlayout";
+import { gPal } from "../../basic/pal";
 import { render as renderGradient } from "./gradient";
-import { objectId } from "../basic/objectid";
+import { objectId } from "../../basic/objectid";
 import { Path } from "@kcdesign/path";
 
 // function toRGBA(color: Color): string {

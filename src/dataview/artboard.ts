@@ -1,8 +1,8 @@
 import { EL, elh } from "./el";
 import { GroupShapeView } from "./groupshape";
-import { innerShadowId, renderBorders, renderFills } from "../render";
+import { innerShadowId, renderBorders, renderFills } from "../render/SVG";
 import { objectId } from "../basic/objectid";
-import { render as clippathR } from "../render/clippath"
+import { render as clippathR } from "../render/SVG/clippath"
 import { AutoLayout, BorderPosition, CornerRadius, Page, ScrollBehavior, ShadowPosition, ShapeFrame, Transform, Artboard, BlurType } from "../data";
 import { ShapeView, updateFrame } from "./shape";
 import { PageView } from "./page";

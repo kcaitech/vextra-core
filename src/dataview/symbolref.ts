@@ -11,9 +11,9 @@ import { findOverride, findVar } from "./basic";
 import { objectId } from "../basic/objectid";
 import { findOverrideAll } from "../data/utils";
 import { PageView } from "./page";
-import { innerShadowId } from "../render";
+import { innerShadowId } from "../render/SVG";
 import { elh } from "./el";
-import { render as clippathR } from "../render/clippath";
+import { render as clippathR } from "../render/SVG/clippath";
 import { ColVector3D } from "../basic/matrix2";
 import { Transform as Transform2, Transform } from "../basic/transform";
 

@@ -1,4 +1,4 @@
-import { Border, FillType, MarkerType, Style } from "../data/style";
+import { Border, FillType, MarkerType, Style } from "../../data/style";
 
 const marker: { [key: string]: (h: Function, style: Style, border: Border, id: number | string) => any } = {};
 marker[MarkerType.FilledArrow] = function (h: Function, style: Style, border: Border, id: number | string) {

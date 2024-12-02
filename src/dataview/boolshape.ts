@@ -3,7 +3,7 @@ import { ShapeView, updateFrame } from "./shape";
 import { TextShapeView } from "./textshape";
 import { GroupShapeView } from "./groupshape";
 import { EL, elh } from "./el";
-import { renderBorders, renderFills } from "../render";
+import { renderBorders, renderFills } from "../render/SVG";
 import { FrameGrid } from "../basic/framegrid";
 import { border2path } from "../editor/utils/path";
 import { Path } from "@kcdesign/path";

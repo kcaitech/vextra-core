@@ -1,5 +1,5 @@
 import { EL, elh } from "./el";
-import { render as renderBorders } from "../render/contact_borders"
+import { render as renderBorders } from "../render/SVG/contact_borders"
 import { ContactForm, ContactShape, Page, Shape, ShapeFrame, ShapeType } from "../data/classes";
 import { DViewCtx, PropsType } from "./viewctx";
 import { PathShapeView } from "./pathshape";

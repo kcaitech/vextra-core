@@ -1,5 +1,5 @@
 import { render as renderGradient } from "./gradient";
-import { objectId } from '../basic/objectid';
+import { objectId } from '../../basic/objectid';
 import {
     Border,
     BorderPosition,
@@ -14,8 +14,8 @@ import {
     SymbolRefShape,
     SymbolShape,
     VariableType
-} from "../data";
-import { findOverrideAndVar, randomId } from "./basic";
+} from "../../data";
+import { findOverrideAndVar, randomId } from "../basic";
 import { renderCustomBorder } from "./border_custom";
 
 

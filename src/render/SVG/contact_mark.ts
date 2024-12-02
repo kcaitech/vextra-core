@@ -1,4 +1,4 @@
-import { Shape } from "../data/shape";
+import { Shape } from "../../data/shape";
 
 export function render(h: Function, shape: Shape, maskId: any, frame: { x: number, y: number, width: number, height: number }, locate: { x: number, y: number }): any {
     const mask_props: any = {

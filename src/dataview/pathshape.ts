@@ -13,10 +13,10 @@ import {
 } from "../data";
 import { ShapeView } from "./shape";
 import { EL, elh } from "./el";
-import { innerShadowId, renderBorders } from "../render";
+import { innerShadowId, renderBorders } from "../render/SVG";
 import { objectId } from "../basic/objectid";
 import { BlurType, PathSegment } from "../data/typesdefine";
-import { render as renderLineBorders } from "../render/line_borders"
+import { render as renderLineBorders } from "../render/SVG/line_borders"
 import { PageView } from "./page";
 import { importBorder } from "../data/baseimport";
 import { exportBorder } from "../data/baseexport";

@@ -1,6 +1,6 @@
 import { objectId } from "../basic/objectid";
 import { EL, elh } from "./el";
-import { patternRender } from "../render/pattern"
+import { patternRender } from "../render/SVG/pattern"
 import { DViewCtx, PropsType } from "./viewctx";
 import { CurvePoint, ImageShape } from "../data/shape";
 import { RectShapeView } from "./rect";

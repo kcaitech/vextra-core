@@ -1,4 +1,4 @@
-import { innerShadowId, renderBlur, renderBorders, renderFills, renderShadows } from "../render";
+import { innerShadowId, renderBlur, renderBorders, renderFills, renderShadows } from "../render/SVG";
 import { BasicArray, Blur, BlurType, Border, BorderPosition, ContextSettings, CornerRadius, CurvePoint, ExportOptions, Fill, FillType, GradientType, makeShapeTransform1By2, makeShapeTransform2By1, MarkerType, OverlayBackgroundAppearance, OverlayBackgroundInteraction, OverlayPosition, OverrideType, PathShape, Point2D, PrototypeInterAction, PrototypeStartingPoint, ResizingConstraints2, ScrollBehavior, ScrollDirection, Shadow, ShadowPosition, Shape, ShapeFrame, ShapeSize, ShapeType, SymbolRefShape, SymbolShape, Transform, Variable, VariableType } from "../data";
 import { findOverrideAndVar } from "./basic";
 import { EL, elh } from "./el";

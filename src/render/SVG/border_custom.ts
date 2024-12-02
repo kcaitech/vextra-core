@@ -1,9 +1,9 @@
-import { Border, BorderPosition, BorderSideSetting, CornerType, CurveMode, CurvePoint, FillType, Gradient, GradientType, Shape, ShapeSize, SideType, parsePath } from "../data/classes";
+import { Border, BorderPosition, BorderSideSetting, CornerType, CurveMode, CurvePoint, FillType, Gradient, GradientType, Shape, ShapeSize, SideType, parsePath } from "../../data/classes";
 import { render as renderGradient } from "./gradient";
-import { objectId } from '../basic/objectid';
-import { randomId } from "./basic";
-import { BasicArray } from "../data/basic";
-import { Matrix } from "../basic/matrix";
+import { objectId } from '../../basic/objectid';
+import { randomId } from "../basic";
+import { BasicArray } from "../../data/basic";
+import { Matrix } from "../../basic/matrix";
 
 const handler: { [key: string]: (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape) => any } = {};
 const angularHandler: { [key: string]: (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape) => any } = {};

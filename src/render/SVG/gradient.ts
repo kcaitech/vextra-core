@@ -1,5 +1,5 @@
-import { objectId } from "../basic/objectid";
-import { ShapeSize, Gradient, GradientType, Stop, Color } from "../data/classes";
+import { objectId } from "../../basic/objectid";
+import { ShapeSize, Gradient, GradientType, Stop, Color } from "../../data/classes";
 
 const defaultColor = Color.DefaultColor;
 
