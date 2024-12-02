@@ -658,6 +658,10 @@ export function importStop(source: types.Stop, ctx?: IImportContext): impl.Stop 
 export function importStrikethroughType(source: types.StrikethroughType, ctx?: IImportContext): impl.StrikethroughType {
     return source
 }
+/* style library type */
+export function importStyleLibType(source: types.StyleLibType, ctx?: IImportContext): impl.StyleLibType {
+    return source
+}
 export function importStyle_borders(source: types.Style_borders, ctx?: IImportContext): Style_borders {
     const ret: Style_borders = new BasicArray()
     source.forEach((source, i) => {

@@ -45,9 +45,9 @@ handler[BlurType.Gaussian] = (h: Function, blur: Blur, id: string, frame: ShapeS
 }
 
 handler[BlurType.Background] = (h: Function, blur: Blur, id: string, frame: ShapeSize, fills: Fill[], borders: Border[], path: string) => {
-    const alphaFill = opacity(fills);
+    // const alphaFill = opacity(fills);
     const alphaBorder = opacity(borders);
-    if (!alphaFill && !alphaBorder) return;
+    // if (!alphaFill && !alphaBorder) return;
     const _id = "mask-blur" + objectId(blur) + randomId();
     const width = frame.width;
     const height = frame.height;

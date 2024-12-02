@@ -1,16 +1,18 @@
 import {
     OverrideType,
-    Para,
-    BasicArray,
     TextLayout,
     ShapeSize,
-    Span,
     Text,
     TextBehaviour,
     TextShape,
     Transform,
     VariableType,
-    ShapeFrame
+    ShapeFrame,
+    GradientType,
+    FillType,
+    overrideTextText,
+    SymbolShape,
+    string2Text
 } from "../data";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
@@ -19,40 +21,65 @@ import {
     CursorLocate, TextLocate, locateCursor,
     locateNextCursor, locatePrevCursor, locateRange, locateText
 } from "../data/text/textlocate";
-import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "../data/text/textutils";
 import { objectId } from "../basic/objectid";
 import { Path } from "@kcdesign/path";
+import { renderBorders } from "../render";
+import { importBorder } from "../data/baseimport";
+import { exportBorder } from "../data/baseexport";
 
 export class TextShapeView extends ShapeView {
-    __str: string | undefined;
+    __str: string | Text | undefined;
     __strText: Text | undefined;
 
     getText(): Text {
         const v = this._findOV(OverrideType.Text, VariableType.Text);
-        if (v && typeof v.value === 'string') {
-            if (this.__str === v.value) {
-                return this.__strText!;
+        if (v) {
+            if (this.__str) {
+                if (typeof this.__str === "string") {
+                    if (this.__str === v.value) {
+                        return this.__strText!;
+                    }
+                } else if (typeof v.value === "string") {
+                    //
+                } else if (this.__str && v.value && objectId(this.__str) === objectId(v.value)) {
+                    return this.__strText!;
+                }
             }
+
             this.__str = v.value;
-            const str = v.value.split('\n');
-            const origin = (this.m_data as TextShape).text;
-            this.__strText = new Text(new BasicArray<Para>());
-            if (origin.attr) mergeTextAttr(this.__strText, origin.attr);
-            const originp = origin.paras[0];
-            const originspan = originp.spans[0];
-            for (let i = 0; i < str.length; ++i) {
-                let _str = str[i];
-                if (!_str.endsWith('\n')) _str += '\n';
-                const p = new Para(_str, new BasicArray<Span>());
-                p.spans.push(new Span(p.length));
-                mergeParaAttr(p, originp);
-                mergeSpanAttr(p.spans[0], originspan);
-                this.__strText.paras.push(p);
+
+            let text: Text
+            if (v.value instanceof Text) {
+                text = v.value
+            } else {
+                text = string2Text(v.value)
             }
+
+            let origin = (this.m_data as TextShape).text;
+            // 可能是var // 有个继承链条？
+            if ((this.m_data as TextShape).varbinds?.has(OverrideType.Text)) {
+                let ovar: Text | undefined
+                const varid = (this.m_data as TextShape).varbinds?.get(OverrideType.Text)!
+                let p = this.m_data.parent;
+                while (p) {
+                    if (p instanceof SymbolShape) {
+                        const variable = p.variables.get(varid)
+                        if (variable && variable.value instanceof Text) {
+                            ovar = variable.value
+                            break;
+                        }
+                    }
+                    p = p.parent;
+                }
+                if (ovar && ovar !== v.value) {
+                    origin = overrideTextText(ovar, origin)
+                }
+            }
+            this.__strText = overrideTextText(text, origin);
             return this.__strText;
         }
 
-        const text = v ? v.value : (this.m_data as TextShape).text;
+        const text = (this.m_data as TextShape).text;
         if (typeof text === 'string') throw new Error("");
         return text;
     }
@@ -74,6 +101,7 @@ export class TextShapeView extends ShapeView {
 
     getLayout() {
         const text = this.getText();
+
         if (this.__preText && this.__layoutToken && objectId(this.__preText) !== objectId(text)) {
             this.__preText.dropLayout(this.__layoutToken, this.id);
         }
@@ -111,6 +139,17 @@ export class TextShapeView extends ShapeView {
     locateNextCursor(index: number): number {
         return locateNextCursor(this.getLayout(), index);
     }
+    protected renderBorders(): EL[] {
+        let borders = this.getBorders();
+        if (this.mask) {
+            borders = borders.map(b => {
+                const nb = importBorder(exportBorder(b));
+                if (nb.fillType === FillType.Gradient && nb.gradient?.gradientType === GradientType.Angular) nb.fillType = FillType.SolidColor;
+                return nb;
+            })
+        }
+        return borders.length > 0 ? renderBorders(elh, borders, this.size, this.getTextPath().toSVGString(), this.m_data) : [];
+    }
 
     getTextPath() {
         if (!this.m_textpath) {
@@ -122,6 +161,7 @@ export class TextShapeView extends ShapeView {
     onDataChange(...args: any[]): void {
         super.onDataChange(...args);
         this.m_textpath = undefined;
+        if (args.includes("text") || args.includes("variables")) this.__str = undefined; // 属性变化后需要重新生成text
     }
 
     asyncRender() {
@@ -196,8 +236,8 @@ export class TextShapeView extends ShapeView {
         if (Array.isArray(el.elchilds)) el.elchilds.forEach(el => this.bleach(el));
     }
 
-    onDestory(): void {
-        super.onDestory();
+    onDestroy(): void {
+        super.onDestroy();
         if (this.__layoutToken && this.__preText) this.__preText.dropLayout(this.__layoutToken, this.id);
     }
 }

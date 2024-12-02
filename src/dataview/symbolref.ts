@@ -1,7 +1,7 @@
 import {
     AutoLayout, Border, ContextSettings, CornerRadius, Fill, MarkerType, OverrideType, PrototypeInterAction, Shadow,
     Shape, ShapeFrame, ShapeSize, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType, ShapeType,
-    BasicArray, getPathOfRadius, makeShapeTransform1By2, makeShapeTransform2By1
+    BasicArray, getPathOfRadius, makeShapeTransform1By2, makeShapeTransform2By1, Blur, BlurType, PathShape
 } from "../data";
 import { ShapeView, fixFrameByConstrain, frame2Parent2 } from "./shape";
 import { DataView, RootView } from "./view";
@@ -14,6 +14,8 @@ import { PageView } from "./page";
 import { innerShadowId } from "../render";
 import { elh } from "./el";
 import { render as clippathR } from "../render/clippath";
+import { ColVector3D } from "../basic/matrix2";
+import { Transform as Transform2, Transform } from "../basic/transform";
 
 // 播放页组件状态切换会话存储refId的key值；
 export const sessionRefIdKey = 'ref-id-cf76c6c6-beed-4c33-ae71-134ee876b990';
@@ -154,8 +156,8 @@ export class SymbolRefView extends ShapeView {
         this.m_ctx.setReLayout(this);
     }
 
-    onDestory(): void {
-        super.onDestory();
+    onDestroy(): void {
+        super.onDestroy();
         if (this.m_union) this.m_union.unwatch(this.symwatcher);
         if (this.m_sym) this.m_sym.unwatch(this.symwatcher);
     }
@@ -281,45 +283,50 @@ export class SymbolRefView extends ShapeView {
             return;
         }
 
-        const size = this.data.frame; // 如果是group,实时计算的大小。view中此时可能没有
-        const frame = frame2Parent2(transform, size);
-        const saveW = frame.width;
-        const saveH = frame.height;
+        const size = this.data.size; // 如果是group,实时计算的大小。view中此时可能没有
+        // const frame = frame2Parent2(transform, size);
+        const saveW = size.width;
+        const saveH = size.height;
 
         let scaleX = scale.x;
         let scaleY = scale.y;
 
         if (parentFrame && resizingConstraint !== 0) {
-            fixFrameByConstrain(shape, parentFrame, frame, scaleX, scaleY, this.m_uniform_scale);
-            scaleX = frame.width / saveW;
-            scaleY = frame.height / saveH;
+            const {transform, targetWidth, targetHeight} = fixFrameByConstrain(shape, parentFrame, scaleX, scaleY, uniformScale);
+            this.updateLayoutArgs(makeShapeTransform1By2(transform), new ShapeFrame(0, 0, targetWidth, targetHeight), (shape as PathShape).fixedRadius);
+            this.layoutChilds(varsContainer, this.frame, {x: targetWidth / saveW, y: targetHeight / saveH});
         } else {
             if (uniformScale) {
                 scaleX /= uniformScale;
                 scaleY /= uniformScale;
-                frame.x *= prescale.x / uniformScale;
-                frame.y *= prescale.y / uniformScale;
-            } else {
-                frame.x *= prescale.x;
-                frame.y *= prescale.y;
             }
-
-            frame.width *= scaleX;
-            frame.height *= scaleY;
+            const transform = makeShapeTransform2By1(shape.transform);
+            const __p_transform_scale = new Transform2().setScale(ColVector3D.FromXYZ(scaleX, scaleY, 1));
+            transform.addTransform(__p_transform_scale);
+            const __decompose_scale = transform.decomposeScale();
+            const size = shape.size;
+            transform.clearScaleSize();
+            const frame = new ShapeFrame(0, 0, size.width * __decompose_scale.x, size.height * __decompose_scale.y);
+            this.updateLayoutArgs(makeShapeTransform1By2(transform), frame, (shape as PathShape).fixedRadius);
+            this.layoutChilds(varsContainer, this.frame, {x: frame.width / saveW, y: frame.height / saveH});
         }
 
-        const t = skewTransform(scaleX, scaleY).clone();
-        const cur = t.computeCoord(0, 0);
-        t.trans(frame.x - cur.x, frame.y - cur.y);
+        // const t = skewTransform(scaleX, scaleY).clone();
+        // const cur = t.computeCoord(0, 0);
+        // t.trans(frame.x - cur.x, frame.y - cur.y);
+        //
+        // const inverse = t.inverse;
+        // const rb = inverse.computeCoord(frame.x + frame.width, frame.y + frame.height);
+        // const size2 = new ShapeFrame(0, 0, rb.x, rb.y);
+        // const transform2 = makeShapeTransform2By1(shape.transform);
+        // transform2.addTransform(new Transform().setScale(ColVector3D.FromXY(scale.x, scale.y)));
+        // const decomposeScale = transform2.decomposeScale();
 
-        const inverse = t.inverse;
-        const rb = inverse.computeCoord(frame.x + frame.width, frame.y + frame.height);
-        const size2 = new ShapeFrame(0, 0, rb.x, rb.y);
-        this.updateLayoutArgs(t, size2, 0);
+        // this.updateLayoutArgs(makeShapeTransform1By2(transform2), new ShapeFrame(0, 0, frame.width, frame.height), 0);
         // 重新计算 childscale
-        childscale.x = size2.width / this.m_sym.size.width;
-        childscale.y = size2.height / this.m_sym.size.height;
-        this.layoutChilds(varsContainer, this.frame, childscale, this.uniformScale);
+        // childscale.x = size2.width / this.m_sym.size.width;
+        // childscale.y = size2.height / this.m_sym.size.height;
+        // this.layoutChilds(varsContainer, this.frame, decomposeScale, this.uniformScale);
     }
 
     protected layoutChilds(
@@ -387,6 +394,11 @@ export class SymbolRefView extends ShapeView {
         return this.m_sym?.style.shadows || [];
     }
 
+    get blur(): Blur | undefined {
+        const v = this._findOV2(OverrideType.Blur, VariableType.Blur);
+        return v ? v.value : this.m_sym?.style.blur;
+    }
+
     get name() {
         const v = this._findOV2(OverrideType.Name, VariableType.Name);
         return v ? v.value as string : this.data.name;
@@ -415,8 +427,6 @@ export class SymbolRefView extends ShapeView {
 
         const filterId = `${objectId(this)}`;
         const shadows = this.renderShadows(filterId);
-        const blurId = `blur_${objectId(this)}`;
-        const blur = this.renderBlur(blurId);
 
         let props = this.renderProps();
 
@@ -443,10 +453,23 @@ export class SymbolRefView extends ShapeView {
         }
 
         // 模糊
+        const blurId = `blur_${objectId(this)}`;
+        const blur = this.renderBlur(blurId);
         if (blur.length) {
-            let filter: string = '';
-            filter = `url(#${blurId})`;
-            children = [...blur, elh('g', {filter}, children)];
+            if (this.blur!.type === BlurType.Gaussian) {
+                children = [...blur, elh('g', { filter: `url(#${blurId})` }, children)];
+            } else {
+                const __props: any = {};
+                if (props.opacity) {
+                    __props.opacity = props.opacity;
+                    delete props.opacity;
+                }
+                if (props.style?.["mix-blend-mode"]) {
+                    __props["mix-blend-mode"] = props.style["mix-blend-mode"];
+                    delete props.style["mix-blend-mode"];
+                }
+                children = [...blur, elh('g', __props, children)];
+            }
         }
 
         // 遮罩

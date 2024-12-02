@@ -4,6 +4,7 @@ import { gPal } from "../../basic/pal";
 import { BulletNumbers, BulletNumbersBehavior, BulletNumbersType, Para, Span, TextTransformType } from "./text";
 import { BulletNumbersLayout, IGraphy } from "./textlayout";
 import { transformText } from "./textlayouttransform";
+import * as classes from "../baseclasses"
 
 const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
 const letterRadix = letters.length;
@@ -128,7 +129,7 @@ function getBNMetrics(char: string, fontSize: number, span: Span) {
     return metrics;
 }
 
-export function layoutBulletNumber(para: Para, span: Span, bulletNumbers: BulletNumbers, preBulletNumbers: BulletNumbersLayout[]): BulletNumbersLayout {
+export function layoutBulletNumber(para: classes.Para, span: Span, bulletNumbers: BulletNumbers, preBulletNumbers: BulletNumbersLayout[]): BulletNumbersLayout {
     const indent = para.attr?.indent || 0;
     let text: string = '';
 

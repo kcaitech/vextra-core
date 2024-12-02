@@ -16,8 +16,7 @@ class HdlBase { // protect data
     }
 
     get(target: object, propertyKey: PropertyKey, receiver?: any): any {
-        const val = Reflect.get(target, propertyKey, receiver);
-        return val;
+        return Reflect.get(target, propertyKey, receiver);
     }
 
     has(target: object, propertyKey: PropertyKey): boolean {

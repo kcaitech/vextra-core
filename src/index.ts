@@ -171,7 +171,7 @@ export * from "./service/shapedirlist2"
 export * from "./service/taskmgr"
 export * from "./service/symbollist"
 
-export * from "./editor/asyncApiHandler"
+export * from "./editor/asyncapi"
 
 // coop
 export * from "./coop"
@@ -183,5 +183,6 @@ export {exportBorder, exportFill, exportShadow, exportBlur} from './data/baseexp
 
 export {LinearApi} from './editor/linearapi/linearapi';
 
+export { CircleChecker } from "./editor/basic/move/circle";
 
 export {Path} from '@kcdesign/path'
