@@ -1,0 +1,39 @@
+{
+  "description": "style sheet",
+  "type": "object",
+  "properties": {
+    "name": "string",
+    "variables": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "#"
+          },
+          {
+            "$ref": "./border-side-setting.json"
+          },
+          {
+            "$ref": "./fill.json"
+          },
+          {
+            "$ref": "./border.json"
+          },
+          {
+            "$ref": "./shadow.json"
+          },
+          {
+            "$ref": "./blur.json"
+          },
+          {
+            "$ref": "./corner-radius.json"
+          }
+        ]
+      }
+    }
+  },
+  "required": [
+    "variables"
+  ],
+  "additionalProperties": false
+}

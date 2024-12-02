@@ -34,6 +34,9 @@
         },
         "spread": {
             "type": "number"
+        },
+        "mask": {
+            "type": "string"
         }
     },
     "required": [

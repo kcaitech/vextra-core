@@ -103,6 +103,9 @@
         },
         "uniformScale": {
             "type": "number"
+        },
+        "roundMask": {
+            "type": "string"
         }
     },
     "required": [
