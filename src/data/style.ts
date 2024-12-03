@@ -25,6 +25,7 @@ import { Variable } from "./variable";
 import { Color } from "./color";
 import { ShapeView } from "../dataview";
 import { StyleSheet_variables } from "./typesdefine";
+import { v4 } from "uuid";
 
 export {
     GradientType,
@@ -372,25 +373,45 @@ export class StyleSheet extends Basic implements classes.StyleSheet {
     name: string
     variables: BasicArray<StyleMangerMember>
 
-    constructor(id: string, name: string, variables: BasicArray<StyleMangerMember>) {
+    constructor(id: string, name: string, variables: StyleSheet_variables) {
         super();
         this.id = id;
         this.name = name;
-        this.variables = variables;
+        this.variables = this.transform2notifiable(id, variables);
+    }
+
+    private transform2notifiable(sheetId: string, variables: StyleSheet_variables) {
+        const notifiable_variables = new BasicArray<StyleMangerMember>();
+        for (const v of variables) {
+            if (v instanceof classes.Fill) {
+                const color = new Color(v.color.alpha, v.color.red, v.color.green, v.color.blue);
+                const fillMask = new FillMask(v.crdtidx, sheetId, v4(), v.isEnabled, v.fillType, color);
+                // todo 把一些可选属性传过来
+                notifiable_variables.push(fillMask);
+            } else if (v instanceof classes.CornerRadius) {
+                const radiusMask = new CornerRadiusMask(sheetId, v.crdtidx, v.lt, v.rt, v.lb, v.lb);
+                notifiable_variables.push(radiusMask);
+            }
+            // 还有其他的一些类型
+        }
+        return notifiable_variables;
     }
 }
 
 interface Mask {
+    sheet: string;                          // 所属样式表
     subscribers: Set<ShapeView>;            // 被当前变量遮盖的对象集合
     add: (view: ShapeView) => () => void;   // 添加遮盖对象
     notify: (...args: any[]) => void;       // 当前变量改变，通知所有被遮盖的对象更新试图
 }
 
 export class FillMask extends Fill implements Mask {
+    sheet: string;
     subscribers: Set<ShapeView>;
 
-    constructor(crdtidx: BasicArray<number>, id: string, isEnabled: boolean, fillType: FillType, color: Color) {
+    constructor(crdtidx: BasicArray<number>, sheet: string, id: string, isEnabled: boolean, fillType: FillType, color: Color) {
         super(crdtidx, id, isEnabled, fillType, color);
+        this.sheet = sheet;
         this.subscribers = new Set<ShapeView>();
     }
 
@@ -411,10 +432,12 @@ export class FillMask extends Fill implements Mask {
 }
 
 export class CornerRadiusMask extends CornerRadius implements Mask {
+    sheet: string;
     subscribers: Set<ShapeView>;
 
-    constructor(crdtidx: Crdtidx, lt: number = 0, rt: number = 0, lb: number = 0, rb: number = 0) {
+    constructor(sheet: string, crdtidx: Crdtidx, lt: number = 0, rt: number = 0, lb: number = 0, rb: number = 0) {
         super(crdtidx, lt, rt, lb, rb);
+        this.sheet = sheet;
         this.subscribers = new Set<ShapeView>();
     }
 

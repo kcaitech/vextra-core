@@ -10,6 +10,7 @@ import { Border, Fill, Page, Shadow, Style } from "../data/classes";
 import * as types from "../data/typesdefine"
 import { exportDocumentMeta, exportPage, IExportContext } from "../data/baseexport";
 import { BasicArray } from "../data/basic";
+import { StyleSheet } from "../data/typesdefine";
 
 export function newStyle(): Style {
     const borders = new BasicArray<Border>();
@@ -21,7 +22,8 @@ export function newStyle(): Style {
 export interface ExFromJson {
     document_meta: types.DocumentMeta,
     pages: types.Page[],
-    media_names: string[]
+    media_names: string[],
+    style_lib: StyleSheet[]
 }
 
 class ExfContext implements IExportContext {
@@ -76,6 +78,7 @@ export async function exportExForm(document: Document): Promise<ExFromJson> {
     return {
         document_meta,
         pages,
-        media_names
+        media_names,
+        style_lib: document.stylelib || []
     }
 }

@@ -5,13 +5,13 @@ import {
     importPage
 } from "../data/baseimport";
 import * as types from "../data/typesdefine"
-import { BasicMap, IDataGuard } from "../data/basic";
+import { BasicArray, BasicMap, IDataGuard } from "../data/basic";
 import { Document, DocumentMeta } from "../data/document";
 import * as storage from "./storage";
 import { base64Encode, base64ToDataUrl } from "../basic/utils";
-import { SymbolShape } from "../data/classes";
+import { StyleMangerMember, SymbolShape } from "../data/classes";
 import pako from "pako";
-
+import { StyleSheet } from "../data/style"
 interface IJSON {
     [key: string]: any
 }
@@ -122,7 +122,23 @@ export async function importDocument(storage: storage.IStorage, documentPath: st
     const idToVersionId: Map<string, string | undefined> = new Map(meta.pagesList.map(p => [p.id, p.versionId]));
     const fmtVer = meta.fmtVer ?? 0;
 
-    const document = new Document(meta.id, meta.name, versionId ?? "", meta.lastCmdId, meta.pagesList, meta.symbolregist, gurad, meta.freesymbols as BasicMap<string, SymbolShape>);
+    const libs = new BasicArray<StyleSheet>()
+    if (meta.stylelib) {
+        // 包装一下sheet，让它变成可广播对象
+        for (const sheet of meta.stylelib) libs.push(new StyleSheet(sheet.id, sheet.name, sheet.variables));
+    }
+
+    const document = new Document(
+        meta.id,
+        meta.name,
+        versionId ?? "",
+        meta.lastCmdId,
+        meta.pagesList,
+        meta.symbolregist,
+        gurad,
+        meta.freesymbols as BasicMap<string, SymbolShape>,
+        libs
+    );
 
     document.pagesMgr.setLoader((id: string) => {
         const ctx: IImportContext = new class implements IImportContext {
@@ -130,8 +146,7 @@ export async function importDocument(storage: storage.IStorage, documentPath: st
             curPage: string = id;
             fmtVer: string = fmtVer
         };
-        const page = loader.loadPage(ctx, id, idToVersionId.get(id))
-        return page;
+        return loader.loadPage(ctx, id, idToVersionId.get(id))
     });
     document.mediasMgr.setLoader((id: string) => {
         const ctx: IImportContext = new class implements IImportContext {
@@ -147,7 +162,6 @@ export async function importDocument(storage: storage.IStorage, documentPath: st
         loader: loader,
     };
 }
-
 
 export class LocalDataLoader extends DataLoader {
     constructor(storage: storage.IStorage, documentPath: string) {
@@ -185,8 +199,21 @@ export async function importLocalDocument(storage: storage.IStorage, documentPat
     const meta = await loader.loadDocumentMeta(versionId);
     const idToVersionId: Map<string, string | undefined> = new Map(meta.pagesList.map(p => [p.id, p.versionId]));
     const fmtVer = meta.fmtVer ?? 0;
-
-    const document = new Document(meta.id, meta.name, versionId ?? "", meta.lastCmdId, meta.pagesList, meta.symbolregist, gurad, meta.freesymbols as BasicMap<string, SymbolShape>);
+    const libs = new BasicArray<StyleSheet>()
+    if (meta.stylelib) {
+        for (const sheet of meta.stylelib) libs.push(new StyleSheet(sheet.id, sheet.name, sheet.variables));
+    }
+    const document = new Document(
+        meta.id,
+        meta.name,
+        versionId ?? "",
+        meta.lastCmdId,
+        meta.pagesList,
+        meta.symbolregist,
+        gurad,
+        meta.freesymbols as BasicMap<string, SymbolShape>,
+        libs
+    );
 
     document.pagesMgr.setLoader((id: string) => {
         const ctx: IImportContext = new class implements IImportContext {
