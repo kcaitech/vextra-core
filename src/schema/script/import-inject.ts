@@ -366,8 +366,10 @@ inject['TextAttr']['before'] = `\
 inject['Border'] = {};
 inject['Border']['before'] = `\
     // inject code
-    if (!(source as any).sideSetting) {
+    if (!(source as any).sideSetting || !((source as any).sideSetting.crdtidx || (source as any).sideSetting.typeId)) {
         source.sideSetting = {
+            crdtidx: [0],
+            typeId:"border-side-setting",
             sideType: types.SideType.Normal,
             thicknessTop: source.thickness,
             thicknessLeft: source.thickness,

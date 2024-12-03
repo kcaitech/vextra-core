@@ -110,6 +110,7 @@ export class Border extends Basic implements classes.Border {
     originalImageHeight?: number
     paintFilter?: classes.PaintFilter
     transform?: classes.PatternTransform
+    colorMask?: string
 
     private __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
     private __cacheData?: { media: { buff: Uint8Array, base64: string }, ref: string };
@@ -179,7 +180,7 @@ export class Fill extends Basic implements classes.Fill {
     originalImageHeight?: number
     paintFilter?: classes.PaintFilter
     transform?: classes.PatternTransform
-
+    colorMask?: string
     private __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
     private __cacheData?: { media: { buff: Uint8Array, base64: string }, ref: string };
 
@@ -334,14 +335,17 @@ export class Style extends Basic implements classes.Style {
 
 export class Blur extends Basic implements classes.Blur {
     typeId = 'blur'
+    crdtidx: BasicArray<number>
     isEnabled: boolean
     center: Point2D
     motionAngle?: number
     radius?: number
     saturation: number
     type: BlurType
+    mask?: string
 
     constructor(
+        crdtidx: BasicArray<number>,
         isEnabled: boolean,
         center: Point2D,
         saturation: number,
@@ -350,6 +354,7 @@ export class Blur extends Basic implements classes.Blur {
         radius?: number
     ) {
         super()
+        this.crdtidx = crdtidx
         this.isEnabled = isEnabled
         this.center = center
         this.saturation = saturation

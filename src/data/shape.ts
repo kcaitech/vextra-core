@@ -150,6 +150,7 @@ export class Shape extends Basic implements classes.Shape {
     mask?: boolean;
     stackPositioning?: classes.StackPositioning;
     uniformScale?: number;
+    roundMask?: string;
 
     constructor(
         crdtidx: BasicArray<number>, id: string, name: string, type: ShapeType, transform: Transform, style: Style
@@ -754,7 +755,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
     getOpTarget(path: string[]): any {
         const id0 = path[0];
         if (id0 === 'symtags' && !this.symtags) this.symtags = new BasicMap<string, string>();
-        if (id0 === 'cornerRadius' && !this.cornerRadius) this.cornerRadius = new CornerRadius(0, 0, 0, 0);
+        if (id0 === 'cornerRadius' && !this.cornerRadius) this.cornerRadius = new CornerRadius(new BasicArray(),0, 0, 0, 0);
         if (id0 === "guides" && !this.guides) {
             this.guides = new BasicArray<Guide>();
         }

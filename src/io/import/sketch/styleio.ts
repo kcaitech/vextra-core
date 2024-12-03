@@ -185,7 +185,7 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
             }
             return bs
         })(data['borderOptions'] ? data['borderOptions'].dashPattern : undefined);
-        const side = new BorderSideSetting(SideType.Normal, thickness, thickness, thickness, thickness);
+        const side = new BorderSideSetting(new BasicArray(),SideType.Normal, thickness, thickness, thickness, thickness);
         const border = new Border([i] as BasicArray<number>, uuid(), isEnabled, fillType, color, position, thickness, borderStyle, corner, side);
         border.gradient = gradient;
         border.contextSettings = contextSettings;
@@ -294,7 +294,7 @@ function importBlur(data: IJSON): Blur | undefined {
             default: return BlurType.Gaussian;
         }
     }
-    return new Blur(isEnabled, new Point2D(0, 0), saturation, type(d['type']));
+    return new Blur(new BasicArray(),isEnabled, new Point2D(0, 0), saturation, type(d['type']));
 }
 
 function patternFillType(data: IJSON) {

@@ -44,6 +44,7 @@ export {
     StackWrap,
     StrikethroughType,
     StyleLibType,
+    StyleVarType,
     TableCellType,
     TextBehaviour,
     TextHorAlign,
@@ -99,6 +100,7 @@ import {
     StackWrap,
     StrikethroughType,
     StyleLibType,
+    StyleVarType,
     TableCellType,
     TextBehaviour,
     TextHorAlign,
@@ -176,21 +178,6 @@ export class ContextSettings extends Basic {
         this.opacity = opacity
     }
 }
-/* couner radius */
-export class CornerRadius extends Basic {
-    typeId = "corner-radius"
-    lt: number
-    rt: number
-    lb: number
-    rb: number
-    constructor(lt: number = 0, rt: number = 0, lb: number = 0, rb: number = 0) {
-        super()
-        this.lt = lt
-        this.rt = rt
-        this.lb = lb
-        this.rb = rb
-    }
-}
 /* crdtidx */
 export type Crdtidx = BasicArray<number>
 /* curve point */
@@ -218,6 +205,7 @@ export class CurvePoint extends Basic {
     }
 }
 type DocumentMeta_pagesList = BasicArray<PageListItem>
+type DocumentMeta_stylelib = BasicArray<StyleSheet>
 /* ellipse attributes */
 export class Ellipse extends Basic {
     typeId = "ellipse"
@@ -422,6 +410,7 @@ export class Shadow extends Basic {
     spread: number
     position: ShadowPosition
     contextSettings?: GraphicsContextSettings
+    mask?: string
     constructor(crdtidx: Crdtidx, id: string, isEnabled: boolean, blurRadius: number, color: Color, offsetX: number, offsetY: number, spread: number, position: ShadowPosition) {
         super()
         this.crdtidx = crdtidx
@@ -490,6 +479,7 @@ export class Stop extends Basic {
         this.color = color
     }
 }
+type StyleSheet_variables = BasicArray<BorderSideSetting | Fill | Border | Shadow | Blur | CornerRadius>
 type Style_borders = BasicArray<Border>
 type Style_fills = BasicArray<Fill>
 type Style_shadows = BasicArray<Shadow>
@@ -567,14 +557,17 @@ export class AutoLayout extends Basic {
 /* blur */
 export class Blur extends Basic {
     typeId = "blur"
+    crdtidx: Crdtidx
     isEnabled: boolean
     center: Point2D
     saturation: number
     type: BlurType
     motionAngle?: number
     radius?: number
-    constructor(isEnabled: boolean, center: Point2D, saturation: number, type: BlurType) {
+    mask?: string
+    constructor(crdtidx: Crdtidx, isEnabled: boolean, center: Point2D, saturation: number, type: BlurType) {
         super()
+        this.crdtidx = crdtidx
         this.isEnabled = isEnabled
         this.center = center
         this.saturation = saturation
@@ -597,13 +590,16 @@ export class BorderOptions extends Basic {
 /* border side setting */
 export class BorderSideSetting extends Basic {
     typeId = "border-side-setting"
+    crdtidx: Crdtidx
     sideType: SideType
     thicknessTop: number
     thicknessLeft: number
     thicknessBottom: number
     thicknessRight: number
-    constructor(sideType: SideType, thicknessTop: number = 1, thicknessLeft: number = 1, thicknessBottom: number = 1, thicknessRight: number = 1) {
+    mask?: string
+    constructor(crdtidx: Crdtidx, sideType: SideType, thicknessTop: number = 1, thicknessLeft: number = 1, thicknessBottom: number = 1, thicknessRight: number = 1) {
         super()
+        this.crdtidx = crdtidx
         this.sideType = sideType
         this.thicknessTop = thicknessTop
         this.thicknessLeft = thicknessLeft
@@ -635,6 +631,23 @@ export class ContactRole extends Basic {
         this.id = id
         this.roleType = roleType
         this.shapeId = shapeId
+    }
+}
+/* couner radius */
+export class CornerRadius extends Basic {
+    typeId = "corner-radius"
+    crdtidx: Crdtidx
+    lt: number
+    rt: number
+    lb: number
+    rb: number
+    constructor(crdtidx: Crdtidx, lt: number = 0, rt: number = 0, lb: number = 0, rb: number = 0) {
+        super()
+        this.crdtidx = crdtidx
+        this.lt = lt
+        this.rt = rt
+        this.lb = lb
+        this.rb = rb
     }
 }
 /* crdt number */
@@ -815,6 +828,7 @@ export class Border extends Basic {
     originalImageHeight?: number
     paintFilter?: PaintFilter
     transform?: PatternTransform
+    colorMask?: string
     constructor(crdtidx: Crdtidx, id: string, isEnabled: boolean, fillType: FillType, color: Color, position: BorderPosition, thickness: number, borderStyle: BorderStyle, cornerType: CornerType, sideSetting: BorderSideSetting) {
         super()
         this.crdtidx = crdtidx
@@ -848,6 +862,7 @@ export class Fill extends Basic {
     originalImageHeight?: number
     paintFilter?: PaintFilter
     transform?: PatternTransform
+    colorMask?: string
     constructor(crdtidx: Crdtidx, id: string, isEnabled: boolean, fillType: FillType, color: Color) {
         super()
         this.crdtidx = crdtidx
@@ -877,6 +892,16 @@ export class Para extends Basic {
         super()
         this.text = text
         this.spans = spans
+    }
+}
+/* style sheet */
+export class StyleSheet extends Basic {
+    typeId = "style-sheet"
+    variables: StyleSheet_variables
+    name?: string
+    constructor(variables: StyleSheet_variables) {
+        super()
+        this.variables = variables
     }
 }
 /* style */
@@ -954,6 +979,7 @@ export class Shape extends Basic {
     mask?: boolean
     stackPositioning?: StackPositioning
     uniformScale?: number
+    roundMask?: string
     constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style) {
         super()
         this.crdtidx = crdtidx
@@ -1217,6 +1243,7 @@ export class DocumentMeta extends Basic {
     lastCmdId: string
     symbolregist: BasicMap<string, string>
     freesymbols?: BasicMap<string, SymbolShape | SymbolUnionShape>
+    stylelib?: DocumentMeta_stylelib
     constructor(id: string, name: string, fmtVer: string, pagesList: DocumentMeta_pagesList, lastCmdId: string, symbolregist: BasicMap<string, string>) {
         super()
         this.id = id

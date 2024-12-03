@@ -15,6 +15,7 @@ function objkeys(obj: any) {
 }
 type Artboard_guides = BasicArray<impl.Guide>
 type DocumentMeta_pagesList = BasicArray<impl.PageListItem>
+type DocumentMeta_stylelib = BasicArray<impl.StyleSheet>
 type ExportOptions_exportFormats = BasicArray<impl.ExportFormat>
 type Gradient_stops = BasicArray<impl.Stop>
 type GroupShape_childs = BasicArray<impl.GroupShape | impl.ImageShape | impl.PathShape | impl.PathShape2 | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape | impl.PolygonShape | impl.StarShape>
@@ -26,6 +27,7 @@ type PathShape_pathsegs = BasicArray<impl.PathSegment>
 type PathShape2_pathsegs = BasicArray<impl.PathSegment>
 type PrototypeInterAction_crdtidx = BasicArray<number>
 type Shape_prototypeInteractions = BasicArray<impl.PrototypeInterAction>
+type StyleSheet_variables = BasicArray<impl.BorderSideSetting | impl.Fill | impl.Border | impl.Shadow | impl.Blur | impl.CornerRadius>
 type Style_borders = BasicArray<impl.Border>
 type Style_fills = BasicArray<impl.Fill>
 type Style_shadows = BasicArray<impl.Shadow>
@@ -119,15 +121,6 @@ export function importContextSettings(source: types.ContextSettings, ctx?: IImpo
         source.opacity)
     return ret
 }
-/* couner radius */
-export function importCornerRadius(source: types.CornerRadius, ctx?: IImportContext): impl.CornerRadius {
-    const ret: impl.CornerRadius = new impl.CornerRadius (
-        source.lt,
-        source.rt,
-        source.lb,
-        source.rb)
-    return ret
-}
 /* corner type */
 export function importCornerType(source: types.CornerType, ctx?: IImportContext): impl.CornerType {
     return source
@@ -190,6 +183,13 @@ export function importDocumentMeta_pagesList(source: types.DocumentMeta_pagesLis
     source.forEach((source, i) => {
         if (!source.crdtidx) source.crdtidx = [i]
         ret.push(importPageListItem(source, ctx))
+    })
+    return ret
+}
+export function importDocumentMeta_stylelib(source: types.DocumentMeta_stylelib, ctx?: IImportContext): DocumentMeta_stylelib {
+    const ret: DocumentMeta_stylelib = new BasicArray()
+    source.forEach((source, i) => {
+        ret.push(importStyleSheet(source, ctx))
     })
     return ret
 }
@@ -570,6 +570,7 @@ export function importShadowPosition(source: types.ShadowPosition, ctx?: IImport
 /* shadow */
 function importShadowOptional(tar: impl.Shadow, source: types.Shadow, ctx?: IImportContext) {
     if (source.contextSettings) tar.contextSettings = importGraphicsContextSettings(source.contextSettings, ctx)
+    if (source.mask) tar.mask = source.mask
 }
 export function importShadow(source: types.Shadow, ctx?: IImportContext): impl.Shadow {
     const ret: impl.Shadow = new impl.Shadow (
@@ -660,6 +661,43 @@ export function importStrikethroughType(source: types.StrikethroughType, ctx?: I
 }
 /* style library type */
 export function importStyleLibType(source: types.StyleLibType, ctx?: IImportContext): impl.StyleLibType {
+    return source
+}
+export function importStyleSheet_variables(source: types.StyleSheet_variables, ctx?: IImportContext): StyleSheet_variables {
+    const ret: StyleSheet_variables = new BasicArray()
+    source.forEach((source, i) => {
+        ret.push((() => {
+            if (typeof source !== "object") {
+                return source
+            }
+            if (source.typeId === "border-side-setting") {
+                return importBorderSideSetting(source as types.BorderSideSetting, ctx)
+            }
+            if (source.typeId === "fill") {
+                if (!source.crdtidx) source.crdtidx = [i]
+                return importFill(source as types.Fill, ctx)
+            }
+            if (source.typeId === "border") {
+                if (!source.crdtidx) source.crdtidx = [i]
+                return importBorder(source as types.Border, ctx)
+            }
+            if (source.typeId === "shadow") {
+                if (!source.crdtidx) source.crdtidx = [i]
+                return importShadow(source as types.Shadow, ctx)
+            }
+            if (source.typeId === "blur") {
+                return importBlur(source as types.Blur, ctx)
+            }
+            if (source.typeId === "corner-radius") {
+                return importCornerRadius(source as types.CornerRadius, ctx)
+            }
+            throw new Error("unknow typeId: " + source.typeId)
+        })())
+    })
+    return ret
+}
+/* shape types */
+export function importStyleVarType(source: types.StyleVarType, ctx?: IImportContext): impl.StyleVarType {
     return source
 }
 export function importStyle_borders(source: types.Style_borders, ctx?: IImportContext): Style_borders {
@@ -842,9 +880,11 @@ export function importAutoLayout(source: types.AutoLayout, ctx?: IImportContext)
 function importBlurOptional(tar: impl.Blur, source: types.Blur, ctx?: IImportContext) {
     if (source.motionAngle) tar.motionAngle = source.motionAngle
     if (source.radius) tar.radius = source.radius
+    if (source.mask) tar.mask = source.mask
 }
 export function importBlur(source: types.Blur, ctx?: IImportContext): impl.Blur {
     const ret: impl.Blur = new impl.Blur (
+        importCrdtidx(source.crdtidx, ctx),
         source.isEnabled,
         importPoint2D(source.center, ctx),
         source.saturation,
@@ -861,13 +901,18 @@ export function importBorderOptions(source: types.BorderOptions, ctx?: IImportCo
     return ret
 }
 /* border side setting */
+function importBorderSideSettingOptional(tar: impl.BorderSideSetting, source: types.BorderSideSetting, ctx?: IImportContext) {
+    if (source.mask) tar.mask = source.mask
+}
 export function importBorderSideSetting(source: types.BorderSideSetting, ctx?: IImportContext): impl.BorderSideSetting {
     const ret: impl.BorderSideSetting = new impl.BorderSideSetting (
+        importCrdtidx(source.crdtidx, ctx),
         importSideType(source.sideType, ctx),
         source.thicknessTop,
         source.thicknessLeft,
         source.thicknessBottom,
         source.thicknessRight)
+    importBorderSideSettingOptional(ret, source, ctx)
     return ret
 }
 /* contact form */
@@ -884,6 +929,16 @@ export function importContactRole(source: types.ContactRole, ctx?: IImportContex
         source.id,
         importContactRoleType(source.roleType, ctx),
         source.shapeId)
+    return ret
+}
+/* couner radius */
+export function importCornerRadius(source: types.CornerRadius, ctx?: IImportContext): impl.CornerRadius {
+    const ret: impl.CornerRadius = new impl.CornerRadius (
+        importCrdtidx(source.crdtidx, ctx),
+        source.lt,
+        source.rt,
+        source.lb,
+        source.rb)
     return ret
 }
 /* crdt number */
@@ -1023,11 +1078,14 @@ function importBorderOptional(tar: impl.Border, source: types.Border, ctx?: IImp
     if (source.originalImageHeight) tar.originalImageHeight = source.originalImageHeight
     if (source.paintFilter) tar.paintFilter = importPaintFilter(source.paintFilter, ctx)
     if (source.transform) tar.transform = importPatternTransform(source.transform, ctx)
+    if (source.colorMask) tar.colorMask = source.colorMask
 }
 export function importBorder(source: types.Border, ctx?: IImportContext): impl.Border {
         // inject code
-    if (!(source as any).sideSetting) {
+    if (!(source as any).sideSetting || !((source as any).sideSetting.crdtidx || (source as any).sideSetting.typeId)) {
         source.sideSetting = {
+            crdtidx: [0],
+            typeId:"border-side-setting",
             sideType: types.SideType.Normal,
             thicknessTop: source.thickness,
             thicknessLeft: source.thickness,
@@ -1063,6 +1121,7 @@ function importFillOptional(tar: impl.Fill, source: types.Fill, ctx?: IImportCon
     if (source.originalImageHeight) tar.originalImageHeight = source.originalImageHeight
     if (source.paintFilter) tar.paintFilter = importPaintFilter(source.paintFilter, ctx)
     if (source.transform) tar.transform = importPatternTransform(source.transform, ctx)
+    if (source.colorMask) tar.colorMask = source.colorMask
 }
 export function importFill(source: types.Fill, ctx?: IImportContext): impl.Fill {
     const ret: impl.Fill = new impl.Fill (
@@ -1101,6 +1160,16 @@ export function importPara(source: types.Para, ctx?: IImportContext): impl.Para 
         source.text,
         importPara_spans(source.spans, ctx))
     importParaOptional(ret, source, ctx)
+    return ret
+}
+/* style sheet */
+function importStyleSheetOptional(tar: impl.StyleSheet, source: types.StyleSheet, ctx?: IImportContext) {
+    if (source.name) tar.name = source.name
+}
+export function importStyleSheet(source: types.StyleSheet, ctx?: IImportContext): impl.StyleSheet {
+    const ret: impl.StyleSheet = new impl.StyleSheet (
+        importStyleSheet_variables(source.variables, ctx))
+    importStyleSheetOptional(ret, source, ctx)
     return ret
 }
 /* style */
@@ -1198,6 +1267,7 @@ function importShapeOptional(tar: impl.Shape, source: types.Shape, ctx?: IImport
     if (source.mask) tar.mask = source.mask
     if (source.stackPositioning) tar.stackPositioning = importStackPositioning(source.stackPositioning, ctx)
     if (source.uniformScale) tar.uniformScale = source.uniformScale
+    if (source.roundMask) tar.roundMask = source.roundMask
 }
 export function importShape(source: types.Shape, ctx?: IImportContext): impl.Shape {
     const ret: impl.Shape = new impl.Shape (
@@ -1877,6 +1947,7 @@ function importDocumentMetaOptional(tar: impl.DocumentMeta, source: types.Docume
         })
         return ret
     })()
+    if (source.stylelib) tar.stylelib = importDocumentMeta_stylelib(source.stylelib, ctx)
 }
 export function importDocumentMeta(source: types.DocumentMeta, ctx?: IImportContext): impl.DocumentMeta {
         // inject code

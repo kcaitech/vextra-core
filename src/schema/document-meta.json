@@ -42,6 +42,12 @@
                 ]
             }
         },
+        "stylelib": {
+            "type": "array",
+            "items": {
+                "$ref": "./style-sheet.json"
+            }
+        },
         "fmtVer": {
             "type": "string"
         }

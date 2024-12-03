@@ -2,6 +2,9 @@
     "description": "couner radius",
     "type": "object",
     "properties": {
+        "crdtidx": {
+            "$ref": "./crdtidx.json"
+        },
         "typeId": {
             "type": "string",
             "default": "shape"
@@ -24,6 +27,7 @@
         }
     },
     "required": [
+        "crdtidx",
         "typeId",
         "lt",
         "rt",
