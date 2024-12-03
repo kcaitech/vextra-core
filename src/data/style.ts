@@ -160,7 +160,6 @@ export class Border extends Basic implements classes.Border {
     }
 }
 
-
 export class Fill extends Basic implements classes.Fill {
     typeId = 'fill'
     crdtidx: BasicArray<number>
