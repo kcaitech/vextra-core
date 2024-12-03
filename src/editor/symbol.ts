@@ -70,6 +70,7 @@ import { exportArtboard, exportVariable } from "../data/baseexport";
 import { makeShapeTransform1By2, makeShapeTransform2By1 } from "../data";
 import { Transform as Transform2 } from "../basic/transform";
 import { ColVector3D } from "../basic/matrix2";
+import { v4 } from "uuid";
 
 /**
  * @description 图层是否为组件实例的引用部分
@@ -655,7 +656,7 @@ export function shape4shadow(api: Api, page: Page, shape: ShapeView) {
 export function shape4cornerRadius(api: Api, page: Page, shape: ArtboradView | SymbolView | SymbolRefView) {
     const _var = override_variable(page, VariableType.CornerRadius, OverrideType.CornerRadius, (_var) => {
         const cornerRadius = _var?.value ?? shape.cornerRadius;
-        return cornerRadius ? importCornerRadius(cornerRadius) : new CornerRadius(new BasicArray(),0, 0, 0, 0);
+        return cornerRadius ? importCornerRadius(cornerRadius) : new CornerRadius(v4(), new BasicArray(),0, 0, 0, 0);
     }, api, shape)
     const ret = _var || shape.data;
     if (ret instanceof SymbolRefShape) throw new Error();
