@@ -391,7 +391,7 @@ export function newLineShape(name: string, frame: ShapeFrame): LineShape {
     const ePoint = new CurvePoint([1] as BasicArray<number>, uuid(), 1, 0.5, CurveMode.Straight);
     frame.height = 1;
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
-    const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+    const side = new BorderSideSetting(new BasicArray(),SideType.Normal, 1, 1, 1, 1);
     const border = new Border([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), types.BorderPosition.Center, 1, new BorderStyle(0, 0), types.CornerType.Miter, side);
     style.borders.push(border);
     const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, false);
@@ -414,7 +414,7 @@ export function newArrowShape(name: string, frame: ShapeFrame): LineShape {
     const ePoint = new CurvePoint([1] as BasicArray<number>, uuid(), 1, 0.5, CurveMode.Straight);
     frame.height = 1;
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
-    const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+    const side = new BorderSideSetting(new BasicArray(),SideType.Normal, 1, 1, 1, 1);
     const border = new Border([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), types.BorderPosition.Center, 1, new BorderStyle(0, 0), types.CornerType.Miter, side);
     style.borders.push(border);
     const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, false);
@@ -590,7 +590,7 @@ export function newTable(name: string, frame: ShapeFrame, rowCount: number, colu
         new Color(0.5, 0, 0, 0),
         types.BorderPosition.Center,
         1,
-        new BorderStyle(0, 0), types.CornerType.Miter, new BorderSideSetting(SideType.Normal, 1, 1, 1, 1)));
+        new BorderStyle(0, 0), types.CornerType.Miter, new BorderSideSetting(new BasicArray(),SideType.Normal, 1, 1, 1, 1)));
     addCommonAttr(table)
     const fillColor = new Color(1, 255, 255, 255);
     const fill = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, fillColor);
@@ -610,7 +610,7 @@ export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm):
     const sPoint = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight);
     const ePoint = new CurvePoint([1] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight);
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
-    const side = new BorderSideSetting(SideType.Normal, 2, 2, 2, 2);
+    const side = new BorderSideSetting(new BasicArray(),SideType.Normal, 2, 2, 2, 2);
     const border = new Border([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 128, 128, 128), types.BorderPosition.Center, 2, new BorderStyle(0, 0), types.CornerType.Miter, side);
 
     style.borders.push(border);

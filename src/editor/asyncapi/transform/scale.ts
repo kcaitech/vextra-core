@@ -15,6 +15,7 @@ import {
     SymbolRefShape,
     TextBehaviour,
     TextShape,
+    BasicArray,
 } from "../../../data";
 import {
     ArtboradView,
@@ -600,6 +601,7 @@ export function uniformScale(
             const thicknessBottom = getBaseValue(bId, 'thicknessBottom', b.sideSetting.thicknessBottom);
             const thicknessRight = getBaseValue(bId, 'thicknessRight', b.sideSetting.thicknessRight);
             const setting = new BorderSideSetting(
+                new BasicArray(),
                 SideType.Normal,
                 thicknessTop * ratio,
                 thicknessLeft * ratio,

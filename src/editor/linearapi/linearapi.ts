@@ -1,4 +1,4 @@
-import { Document, OvalShape, Page } from "../../data";
+import { BasicArray, Document, OvalShape, Page } from "../../data";
 import { adapt2Shape, ArtboradView, PageView, ShapeView, SymbolRefView, SymbolView, TableCellView, TableView, TextShapeView } from "../../dataview";
 import { modifyPathByArc } from "../asyncapi";
 import { Api, CoopRepository } from "../../coop";
@@ -478,7 +478,7 @@ export class LinearApi {
                 const sideType = borders[index].sideSetting.sideType;
                 switch (sideType) {
                     case SideType.Normal:
-                        api.setBorderSide(page, s, index, new BorderSideSetting(sideType, value, value, value, value));
+                        api.setBorderSide(page, s, index, new BorderSideSetting(new BasicArray(),sideType, value, value, value, value));
                         break;
                     case SideType.Top:
                         api.setBorderThicknessTop(page, s, index, value);
@@ -493,7 +493,7 @@ export class LinearApi {
                         api.setBorderThicknessLeft(page, s, index, value);
                         break
                     default:
-                        api.setBorderSide(page, s, index, new BorderSideSetting(sideType, value, value, value, value));
+                        api.setBorderSide(page, s, index, new BorderSideSetting(new BasicArray(),sideType, value, value, value, value));
                         break;
                 }
 
@@ -604,7 +604,7 @@ export class LinearApi {
             editor.view._getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
                 if (cell.cell) {
                     const c = editor.cell4edit(cell.rowIdx, cell.colIdx, api);
-                    api.setBorderSide(page, c.data, idx, new BorderSideSetting(SideType.Normal, thickness, thickness, thickness, thickness));
+                    api.setBorderSide(page, c.data, idx, new BorderSideSetting(new BasicArray(),SideType.Normal, thickness, thickness, thickness, thickness));
                     // api.setBorderThickness(this.__page, c.data, idx, thickness);
                 }
             })

@@ -471,7 +471,7 @@ export function shape4exportOptions(api: Api, _shape: ShapeView, page: Page) {
 export function shape4blur(api: Api, _shape: ShapeView, page: Page) {
     const valuefun = (_var: Variable | undefined) => {
         const blur = _var?.value ?? _shape.blur;
-        return blur && importBlur(blur) || new Blur(true, new Point2D(0, 0), 10, BlurType.Gaussian);
+        return blur && importBlur(blur) || new Blur(new BasicArray(),true, new Point2D(0, 0), 10, BlurType.Gaussian);
     };
     const _var = _ov(VariableType.Blur, OverrideType.Blur, valuefun, _shape, page, api);
     return _var || _shape.data;
@@ -655,7 +655,7 @@ export function shape4shadow(api: Api, page: Page, shape: ShapeView) {
 export function shape4cornerRadius(api: Api, page: Page, shape: ArtboradView | SymbolView | SymbolRefView) {
     const _var = override_variable(page, VariableType.CornerRadius, OverrideType.CornerRadius, (_var) => {
         const cornerRadius = _var?.value ?? shape.cornerRadius;
-        return cornerRadius ? importCornerRadius(cornerRadius) : new CornerRadius(0, 0, 0, 0);
+        return cornerRadius ? importCornerRadius(cornerRadius) : new CornerRadius(new BasicArray(),0, 0, 0, 0);
     }, api, shape)
     const ret = _var || shape.data;
     if (ret instanceof SymbolRefShape) throw new Error();
@@ -810,6 +810,7 @@ export class RefUnbind {
             const borders = child.style.borders;
             borders.forEach(b => {
                 b.sideSetting = new BorderSideSetting(
+                    new BasicArray(),
                     SideType.Normal,
                     b.sideSetting.thicknessTop * uniformScale,
                     b.sideSetting.thicknessLeft * uniformScale,

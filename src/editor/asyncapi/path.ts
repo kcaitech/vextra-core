@@ -60,7 +60,7 @@ export class PathModifier extends AsyncApiCaller {
             const { thicknessBottom, thicknessTop, thicknessLeft, thicknessRight, sideType } = border.sideSetting;
             if (sideType === SideType.Normal) continue;
             const thickness = Math.max(thicknessBottom, thicknessTop, thicknessLeft, thicknessRight);
-            this.api.setBorderSide(this.page, this.shape, i, new BorderSideSetting(SideType.Normal, thickness, thickness, thickness, thickness));
+            this.api.setBorderSide(this.page, this.shape, i, new BorderSideSetting(new BasicArray(),SideType.Normal, thickness, thickness, thickness, thickness));
         }
         this.api.shapeEditPoints(this.page, this.shape, true);
     }
@@ -75,7 +75,7 @@ export class PathModifier extends AsyncApiCaller {
             const style = _style ? importStyle(exportStyle(_style)) : newflatStyle();
 
             if (!_style) {
-                const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+                const side = new BorderSideSetting(new BasicArray(),SideType.Normal, 1, 1, 1, 1);
                 const border = new Border([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), types.BorderPosition.Center, 1, new BorderStyle(0, 0), CornerType.Miter, side);
                 style.borders.push(border);
             } else {

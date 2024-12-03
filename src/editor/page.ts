@@ -2826,7 +2826,7 @@ export class PageEditor {
                 const sideType = borders[index].sideSetting.sideType;
                 switch (sideType) {
                     case SideType.Normal:
-                        api.setBorderSide(this.__page, s, index, new BorderSideSetting(sideType, value, value, value, value));
+                        api.setBorderSide(this.__page, s, index, new BorderSideSetting(new BasicArray(),sideType, value, value, value, value));
                         break;
                     case SideType.Top:
                         api.setBorderThicknessTop(this.__page, s, index, value);
@@ -2841,7 +2841,7 @@ export class PageEditor {
                         api.setBorderThicknessLeft(this.__page, s, index, value);
                         break
                     default:
-                        api.setBorderSide(this.__page, s, index, new BorderSideSetting(sideType, value, value, value, value));
+                        api.setBorderSide(this.__page, s, index, new BorderSideSetting(new BasicArray(),sideType, value, value, value, value));
                         break;
                 }
 
@@ -2943,7 +2943,7 @@ export class PageEditor {
                         border.gradient = gradient;
                         border.contextSettings = contextSettings;
                     } else {
-                        const sideSetting = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+                        const sideSetting = new BorderSideSetting(new BasicArray(),SideType.Normal, 1, 1, 1, 1);
                         border = new Border([i] as BasicArray<number>, uuid(), isEnabled, fill_type, color, BorderPosition.Inner, 1, new BorderStyle(0, 0), types.CornerType.Miter, sideSetting);
                         border.gradient = gradient;
                         border.contextSettings = contextSettings;

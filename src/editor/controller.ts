@@ -979,7 +979,7 @@ export class Controller {
                     const sideType = borders[index].sideSetting.sideType;
                     switch (sideType) {
                         case SideType.Normal:
-                            api.setBorderSide(page, s, index, new BorderSideSetting(sideType, thickness, thickness, thickness, thickness));
+                            api.setBorderSide(page, s, index, new BorderSideSetting(new BasicArray(),sideType, thickness, thickness, thickness, thickness));
                             break;
                         case SideType.Top:
                             api.setBorderThicknessTop(page, s, index, thickness);
@@ -994,7 +994,7 @@ export class Controller {
                             api.setBorderThicknessLeft(page, s, index, thickness);
                             break
                         default:
-                            api.setBorderSide(page, s, index, new BorderSideSetting(sideType, thickness, thickness, thickness, thickness));
+                            api.setBorderSide(page, s, index, new BorderSideSetting(new BasicArray(),sideType, thickness, thickness, thickness, thickness));
                             break;
                     }
                 }

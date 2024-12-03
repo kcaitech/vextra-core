@@ -252,7 +252,7 @@ export function make_union(api: Api, document: Document, page: Page, symbol: Sym
     });
 
     union.fixedRadius = 4;
-    const side = new BorderSideSetting(SideType.Normal, 2, 2, 2, 2);
+    const side = new BorderSideSetting(new BasicArray(),SideType.Normal, 2, 2, 2, 2);
     const border_style = new BorderStyle(5, 5);
     const border = new Border(
         ([union.style.borders.length] as BasicArray<number>),

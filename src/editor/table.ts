@@ -13,6 +13,7 @@ import { AsyncBorderThickness, AsyncGradientEditor, Status } from "./controller"
 import { TableCellView, TableView } from "../dataview";
 import { cell4edit } from "./symbol";
 import { AsyncTextAttrEditor } from "./textshape";
+import { BasicArray } from "../data/basic";
 
 const MinCellSize = TableShape.MinCellSize;
 const MaxColCount = TableShape.MaxColCount;
@@ -1357,7 +1358,7 @@ export class TableEditor extends ShapeEditor {
             this.view._getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
                 if (cell.cell) {
                     const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
-                    api.setBorderSide(this.__page, c.data, idx, new BorderSideSetting(SideType.Normal, thickness, thickness, thickness, thickness));
+                    api.setBorderSide(this.__page, c.data, idx, new BorderSideSetting(new BasicArray(), SideType.Normal, thickness, thickness, thickness, thickness));
                     // api.setBorderThickness(this.__page, c.data, idx, thickness);
                 }
             })
@@ -1376,7 +1377,7 @@ export class TableEditor extends ShapeEditor {
                 this.view._getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
                     if (cell.cell) {
                         const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
-                        api.setBorderSide(this.__page, c.data, idx, new BorderSideSetting(SideType.Normal, contextSettingThickness, contextSettingThickness, contextSettingThickness, contextSettingThickness));
+                        api.setBorderSide(this.__page, c.data, idx, new BorderSideSetting(new BasicArray(), SideType.Normal, contextSettingThickness, contextSettingThickness, contextSettingThickness, contextSettingThickness));
                         // api.setBorderThickness(this.__page, c.data, idx, contextSettingThickness);
                     }
                 })
