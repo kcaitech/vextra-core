@@ -284,7 +284,7 @@ function parseStroke(strokes: {
                 sideType = SideType.Custom;
             }
         }
-        const side = new BorderSideSetting(sideType, thicknessTop, thicknessLeft, thicknessBottom, thicknessRight);
+        const side = new BorderSideSetting(new BasicArray(),sideType, thicknessTop, thicknessLeft, thicknessBottom, thicknessRight);
 
         let cornerType: CornerType;
         if (strokeJoin) {
@@ -423,7 +423,7 @@ function importEffects(ctx: LoadContext, style: Style, data: IJSON) {
     if (!Array.isArray(effects1)) return;
     const gaussian = effects1.find(effect => effect.type === 'FOREGROUND_BLUR');
     if (!gaussian) return;
-    style.blur = new Blur(true, new Point2D(0, 0), gaussian.radius || 4, BlurType.Gaussian);
+    style.blur = new Blur(new BasicArray(),true, new Point2D(0, 0), gaussian.radius || 4, BlurType.Gaussian);
 }
 
 function importStyle(ctx: LoadContext, style: Style, data: IJSON) {

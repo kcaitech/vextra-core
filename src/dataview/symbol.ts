@@ -2,7 +2,7 @@ import { GroupShapeView } from "./groupshape";
 import { innerShadowId, renderBorders, renderFills } from "../render";
 import { EL, elh } from "./el";
 import {
-    CornerRadius, Shape, ShapeFrame, ShapeType, SymbolShape, AutoLayout, BorderPosition, Page, ShadowPosition
+    CornerRadius, Shape, ShapeFrame, ShapeType, SymbolShape, AutoLayout, BorderPosition, Page, ShadowPosition, BlurType
 } from "../data";
 import { VarsContainer } from "./viewctx";
 import { DataView, RootView } from "./view"
@@ -216,8 +216,6 @@ export class SymbolView extends GroupShapeView {
 
         const filterId = `${objectId(this)}`;
         const shadows = this.renderShadows(filterId);
-        const blurId = `blur_${objectId(this)}`;
-        const blur = this.renderBlur(blurId);
 
         let props = this.renderProps();
 
@@ -244,10 +242,23 @@ export class SymbolView extends GroupShapeView {
         }
 
         // 模糊
+        const blurId = `blur_${objectId(this)}`;
+        const blur = this.renderBlur(blurId);
         if (blur.length) {
-            let filter: string = '';
-            filter = `url(#${blurId})`;
-            children = [...blur, elh('g', {filter}, children)];
+            if (this.blur!.type === BlurType.Gaussian) {
+                children = [...blur, elh('g', { filter: `url(#${blurId})` }, children)];
+            } else {
+                const __props: any = {};
+                if (props.opacity) {
+                    __props.opacity = props.opacity;
+                    delete props.opacity;
+                }
+                if (props.style?.["mix-blend-mode"]) {
+                    __props["mix-blend-mode"] = props.style["mix-blend-mode"];
+                    delete props.style["mix-blend-mode"];
+                }
+                children = [...blur, elh('g', __props, children)];
+            }
         }
 
         // 遮罩

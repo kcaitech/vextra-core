@@ -66,23 +66,25 @@ function curveHandleBezier(seg: CurvSeg, x1: number, y1: number, x2: number, y2:
 
 function curveHandleQuaBezier(seg: CurvSeg, cx: number, cy: number, x: number, y: number) {
     const len = seg.points.length;
+    let pre: CurvePoint;
     if (len) {
-        const prePoint = seg.points[seg.points.length - 1];
-        prePoint.hasFrom = true;
-        prePoint.fromX = cx;
-        prePoint.fromY = cy;
+        pre = seg.points[seg.points.length - 1];
     } else {
-        const point = new CurvePoint([0] as BasicArray<number>, uuid(), seg.beginpoint.x, seg.beginpoint.y, CurveMode.Asymmetric);
-        point.hasFrom = true;
-        point.fromX = cx;
-        point.fromY = cy;
-        seg.points.push(point);
+        pre = new CurvePoint([0] as BasicArray<number>, uuid(), seg.beginpoint.x, seg.beginpoint.y, CurveMode.Asymmetric);
+        seg.points.push(pre);
     }
-
-    seg.prepoint = { x, y };
-    seg.preHandle = { x: cx, y: cy };
-
-    seg.points.push(new CurvePoint([len] as BasicArray<number>, uuid(), x, y, CurveMode.Asymmetric));
+    const hdl1 = {x: pre.x / 3 + 2 * cx / 3, y: pre.y / 3 + 2 * cy / 3};
+    const hdl2 = {x: x / 3 + 2 * cx / 3, y: y / 3 + 2 * cy / 3};
+    pre.hasFrom = true;
+    pre.fromX = hdl1.x;
+    pre.fromY = hdl1.y;
+    seg.preHandle = {x: hdl2.x, y: hdl2.y};
+    seg.prepoint = {x, y};
+    const point = new CurvePoint([len] as BasicArray<number>, uuid(), x, y, CurveMode.Asymmetric);
+    point.hasTo = true;
+    point.toX = hdl2.x;
+    point.toY = hdl2.y;
+    seg.points.push(point);
 }
 
 export function convertPath2CurvePoints(path: Path, width: number, height: number): {
@@ -140,7 +142,6 @@ export function convertPath2CurvePoints(path: Path, width: number, height: numbe
                 }
                 case "Q": {
                     const seg = ctx.segs[ctx.segs.length - 1];
-
 
                     curveHandleQuaBezier(seg, cmd.x1, cmd.y1, cmd.x, cmd.y);
 

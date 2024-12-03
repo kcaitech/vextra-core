@@ -124,7 +124,7 @@ marker[MarkerType.Round] = function (h: Function, style: Style, border: Border, 
         markerHeight: range,
         orient: "auto-start-reverse",
     }
-    if (range <= 1) {
+    if (range <= 2) {
         marker_props.markerWidth = 2;
         marker_props.markerHeight = 2
         marker_props.viewBox = `0 0 ${12} ${12}`;

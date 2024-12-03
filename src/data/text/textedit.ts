@@ -323,8 +323,10 @@ function __formatTextSpan(spans: Span[], spanIndex: number, index: number, lengt
     return ret;
 }
 
-function _formatTextSpan(spans: Span[], index: number, length: number, key: string, value: any, offset: number): { index: number, len: number, value: any }[] {
+function _formatTextSpan(para: Para, index: number, length: number, key: string, value: any, offset: number): { index: number, len: number, value: any }[] {
     // 定位到span
+    const spans: Span[] = para.spans;
+    let spanLen = 0
     for (let i = 0, len = spans.length; i < len; i++) {
         const span = spans[i];
         if (index < span.length) {
@@ -333,8 +335,21 @@ function _formatTextSpan(spans: Span[], index: number, length: number, key: stri
         else {
             offset += span.length;
             index -= span.length;
+            spanLen += span.length;
         }
     }
+    // fix
+    if (spanLen < para.length) {
+        const span = spans[spans.length - 1]
+        offset -= span.length;
+        index += span.length;
+
+        span.length += para.length - spanLen;
+        if (index < span.length) {
+            return __formatTextSpan(spans, spans.length - 1, index, length, key, value, offset);
+        }
+    }
+
     return [];
 }
 
@@ -343,7 +358,7 @@ export function formatText(shapetext: Text, index: number, length: number, key: 
     let offset = index;
     _travelTextPara(shapetext.paras, index, length, (paraArray, paraIndex, para, index, length) => {
         offset -= index;
-        ret.push(..._formatTextSpan(para.spans, index, length, key, value, offset));
+        ret.push(..._formatTextSpan(para, index, length, key, value, offset));
         offset += para.length;
     })
     return ret;

@@ -1,6 +1,7 @@
 import {
     BoolShape, CurveMode, CurvePoint, ExportFormat, ExportOptions, GroupShape, TextShape, Variable,
-    OverrideType, PathSegment, PathShape, RectShape, Shape, SymbolShape, VariableType, CornerRadius
+    OverrideType, PathSegment, PathShape, RectShape, Shape, SymbolShape, VariableType, CornerRadius,
+    string2Text
 } from "../../../data";
 import { importColor, importStyle, importXY } from "./styleio";
 import { importText } from "./textio";
@@ -135,7 +136,7 @@ function _createVar4Override(type: OverrideType, value: any) {
         case OverrideType.Image:
             return new Variable(uuid(), VariableType.ImageRef, "", value);
         case OverrideType.Text:
-            return new Variable(uuid(), VariableType.Text, "", value);
+            return new Variable(uuid(), VariableType.Text, "", string2Text(value as string));
         case OverrideType.Visible:
             return new Variable(uuid(), VariableType.Visible, "", value);
         case OverrideType.Lock:
@@ -570,7 +571,7 @@ function determineAsContainerRadiusShape(parent: Artboard | SymbolShape, childs:
         const drop = childs.splice(0, 1)[0];
         const points = (drop as PathShape).pathsegs[0].points;
         const radius = points.map(i => i.radius!);
-        parent.cornerRadius = new CornerRadius(radius[0], radius[1], radius[3], radius[2]);
+        parent.cornerRadius = new CornerRadius(new BasicArray(),radius[0], radius[1], radius[3], radius[2]);
         parent.childs = new BasicArray<Shape>(...childs);
         if (drop.style.fills.length) parent.style.fills = drop.style.fills;
         if (drop.style.borders.length) parent.style.borders = drop.style.borders;

@@ -2,24 +2,9 @@ import { CurvePoint } from "./baseclasses";
 import { Point2D } from "./typesdefine"
 import { Path, PathBuilder } from "@kcdesign/path"
 
-type CornerCalcInfo = {
-    curPoint: Point2D;
-    preTangent: Point2D;
-    nextTangent: Point2D;
-    preHandle: Point2D;
-    nextHandle: Point2D;
-    preSlices: Point2D[][];
-    nextSlices: Point2D[][];
-};
-
-
-function interpolate(p1: Point2D, p2: Point2D, t: number) {
-    return {
-        x: p1.x + (p2.x - p1.x) * t,
-        y: p1.y + (p2.y - p1.y) * t
-    }
-}
-
+/**
+ * @description 在t的位置切割曲线，得到两根曲线，这两根曲线若拼接会与原曲线轨迹一致
+ */
 function splitCubicBezierAtT(p0: Point2D, p1: Point2D, p2: Point2D, p3: Point2D, t: number) {
     const p01 = interpolate(p0, p1, t);
     const p12 = interpolate(p1, p2, t);
@@ -34,16 +19,50 @@ function splitCubicBezierAtT(p0: Point2D, p1: Point2D, p2: Point2D, p3: Point2D,
         [p0, p01, p012, p0123],
         [p0123, p123, p23, p3]
     ];
+
+    function interpolate(p1: Point2D, p2: Point2D, t: number) {
+        return {
+            x: p1.x + (p2.x - p1.x) * t,
+            y: p1.y + (p2.y - p1.y) * t
+        }
+    }
 }
 
-function bezierCurvePoint(t: number, p0: Point2D, p1: Point2D, p2: Point2D, p3: Point2D): Point2D {
+/**
+ * @description 曲线上t处的一点
+ */
+function bezierCurvePointAtT(p0: Point2D, p1: Point2D, p2: Point2D, p3: Point2D, t: number): Point2D {
     return {
         x: Math.pow(1 - t, 3) * p0.x + 3 * Math.pow(1 - t, 2) * t * p1.x + 3 * (1 - t) * Math.pow(t, 2) * p2.x + Math.pow(t, 3) * p3.x,
         y: Math.pow(1 - t, 3) * p0.y + 3 * Math.pow(1 - t, 2) * t * p1.y + 3 * (1 - t) * Math.pow(t, 2) * p2.y + Math.pow(t, 3) * p3.y
     };
 }
 
-// 计算三次贝塞尔曲线上某一点到起始点的长度
+/**
+ * @description 二次曲线转三次曲线
+ */
+function qua2cube(p0: Point2D, p1: Point2D, p2: Point2D) {
+    const p3 = {x: p0.x / 3 + 2 * p1.x / 3, y: p0.y / 3 + 2 * p1.y / 3}
+    const p4 = {x: p2.x / 3 + 2 * p1.x / 3, y: p2.y / 3 + 2 * p1.y / 3}
+    return [p0, p3, p4, p2];
+}
+
+function getCubic(start: CurvePoint, end: CurvePoint): Point2D[] {
+    if (start.hasFrom && end.hasTo) {
+        return [
+            start,
+            {x: start.fromX ?? 0, y: start.fromY ?? 0},
+            {x: end.toX ?? 0, y: end.toY ?? 0},
+            end,
+        ];
+    } else if (start.hasFrom) {
+        return qua2cube(start, {x: start.fromX ?? 0, y: start.fromY ?? 0}, end);
+    } else {
+        return qua2cube(start, {x: end.toX ?? 0, y: end.toY ?? 0}, end);
+    }
+}
+
+// 计算三次贝塞尔曲线上某一点到起始点的长度 todo 看一下什么情况下会得到NaN
 function bezierLength(p0: Point2D, p1: Point2D, p2: Point2D, p3: Point2D, t: number) {
     const dx = 3 * (p1.x - p0.x);
     const dy = 3 * (p1.y - p0.y);
@@ -58,8 +77,8 @@ function bezierLength(p0: Point2D, p1: Point2D, p2: Point2D, p3: Point2D, t: num
     return Math.sqrt(x * x + y * y);
 }
 
-// 通过二分法求解参数t
-function findTForLength(p0: Point2D, p1: Point2D, p2: Point2D, p3: Point2D, targetLength: number, epsilon = 1e-5) {
+// 二分法求解参数t
+function findTByLength(p0: Point2D, p1: Point2D, p2: Point2D, p3: Point2D, targetLength: number, epsilon = 1e-5) {
     let t0 = 0;
     let t1 = 1;
     let t = 0.5;
@@ -67,7 +86,7 @@ function findTForLength(p0: Point2D, p1: Point2D, p2: Point2D, p3: Point2D, targ
     while (t0 <= t1) {
         const currentLength = bezierLength(p0, p1, p2, p3, t);
 
-        if (Math.abs(currentLength - targetLength) < epsilon) return t;
+        if (Math.abs(currentLength - targetLength) < epsilon || Number.isNaN(currentLength)) return t;
 
         if (currentLength < targetLength) {
             t0 = t;
@@ -92,48 +111,38 @@ function calcAngleABC(A: Point2D, B: Point2D, C: Point2D) {
     return Math.acos((BC * BC + AB * AB - AC * AC) / (2 * BC * AB));
 }
 
+// 用向量表示坐标上的两个点
+function norm(p: Point2D) {
+    const d = Math.hypot(p.x, p.y);
+    return {x: p.x / d, y: p.y / d};
+}
+
+// add、minus、multiply为向量运算
+function add(p: Point2D, pt: Point2D) {
+    return {x: p.x + pt.x, y: p.y + pt.y};
+}
 function minus(p0: Point2D, p1: Point2D): Point2D {
     return { x: p0.x - p1.x, y: p0.y - p1.y };
 }
-
-function norm(p: Point2D) {
-    const d = Math.hypot(p.x, p.y);
-    // invariant(d !== 0, 'cant norm a vector whos len is zero');
-    return { x: p.x / d, y: p.y / d };
-}
-
 function multiply(p: Point2D, d: number): Point2D {
     return { x: p.x * d, y: p.y * d };
 }
 
-function add(p: Point2D, pt: Point2D) {
-    return { x: p.x + pt.x, y: p.y + pt.y };
-}
-
 /**
- * 另外关于 curvePoint
- * curveMode 默认 1， 应该表示没有 curve，直来直去
- *    只有 curveMode = 1 的时候，cornerRadius 才有效
- * curveMode 2, 表示 control point 是对称的，长度一样
- * curveMode 4, disconnected, control point 位置随意
- * curveMode 3, 也是对称，长度可以不一样
+ * @require 分析函数之前，需要熟悉路径的表示、二次三次贝塞尔曲线的表示、圆角的表示、向量、三角函数
  */
 export function parsePath(points: CurvePoint[], isClosed: boolean, width: number, height: number, fixedRadius: number = 0): Path {
-    let hasBegin = false;
-
-
     const len = points.length;
     if (len < 2) return new Path();
 
-    const cacheCornerCalcInfo: { [k: number]: CornerCalcInfo } = {};
+    const radiusCache: { [k: number]: { radius: number, offset: number } } = {};
+    const fromCache: { [k: number]: { apex: Point2D; handleForCorner: Point2D; curve?: Point2D[] } } = {};
+
+    let hasBegin = false;
 
     const builder = new PathBuilder();
-
-    const bezierCurveTo = (x1: number, y1: number, x2: number, y2: number, tx: number, ty: number) => {
-        builder.cubicTo(tx, ty, x1, y1, x2, y2)
-    }
-    const bezierQuaCurveTo = (x: number, y: number, tx: number, ty: number) => {
-        builder.quadTo(tx, ty, x, y)
+    const cubicTo = (handle1: Point2D, handle2: Point2D, end: Point2D) => {
+        builder.cubicTo(end.x, end.y, handle1.x, handle1.y, handle2.x, handle2.y);
     }
     const moveTo = (x: number, y: number) => {
         builder.moveTo(x, y);
@@ -146,208 +155,169 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, width: number
     }
 
     const transformPoint = (x: number, y: number): Point2D => ({ x: x * width, y: y * height });
-
     const transformedPoints = points.map((p) => transformPoint(p.x, p.y));
 
-    for (let i = 0; i < len - 1; i++) {
-        _connectTwo(i, i + 1);
-    }
+    for (let i = 0; i < len - 1; i++) connect(i, i + 1);
+
     if (isClosed) {
-        _connectTwo(len - 1, 0);
+        connect(len - 1, 0);
         closePath();
     }
 
-    function _isCornerRadius(idx: number) {
+    function isRound(idx: number) {
         const curvePoint = points[idx];
-
-        if (!isClosed && (idx === 0 || idx === len - 1)) {
-            return false;
-        }
-
-        if (curvePoint.hasFrom && curvePoint.hasTo) {
-            return false;
-        }
-
-        return ((curvePoint.radius || 0) > 0 || fixedRadius > 0);
+        if (!isClosed && (idx === 0 || idx === len - 1)) return false;
+        if (curvePoint.hasFrom && curvePoint.hasTo) return false;
+        return !!(curvePoint.radius ?? fixedRadius);
     }
 
+    function getBaseRadius(point: CurvePoint) {
+        return point.radius ?? fixedRadius;
+    }
     /**
-     * # Notice 1
-     * sketch 可以设置并存储的 corner radius 可能非常大，绘制的时候需要加以限制。
+     * corner radius 可能非常大，绘制的时候需要加以限制。
      * 1.1 如果一个 corner 另外两端都没有 corner，那么 cornerRadius 实际最大值，以两侧较短一侧为准。
      * 1.2 如果 corner 另外两端也有 corner，那么 cornerRadius 实际最大值，要以较短一侧一半为准。
-     *
-     *
-     * @param idx
-     * @returns
      */
-    function _getCornerInfo(idx: number): CornerCalcInfo | undefined {
-        if (cacheCornerCalcInfo[idx]) {
-            return cacheCornerCalcInfo[idx];
-        }
+    function getRadiusInfo(idx: number) {
+        if (radiusCache[idx]) return radiusCache[idx];
         const preIndex = idx === 0 ? len - 1 : idx - 1;
         const nextIndex = idx === len - 1 ? 0 : idx + 1;
-
         const pre = points[preIndex];
-        // if (pre.hasFrom && !pointEquals(pre.x, pre.y, pre.fromX || 0, pre.fromY || 0)) return;
         const cur = points[idx];
         const next = points[nextIndex];
-        // if (next.hasTo && !pointEquals(next.x, next.y, next.toX || 0, next.toY || 0)) return;
-        // 拿到三个点
-        const prePoint = transformedPoints[preIndex]; //pre.point; // A
-        const curPoint = transformedPoints[idx]; //cur.point; // B
-        const nextPoint = transformedPoints[nextIndex] //next.point; // C
-
+        const prePoint = transformedPoints[preIndex];
+        const curPoint = transformedPoints[idx];
+        const nextPoint = transformedPoints[nextIndex];
         const lenAB = distanceTo(curPoint, prePoint);
         const lenBC = distanceTo(curPoint, nextPoint);
-
-        // 三点之间的夹角
-        const radian = calcAngleABC(prePoint, curPoint, nextPoint);
-        if (Number.isNaN(radian)) {
-            return;
-        }
-
-        let radius = cur.radius || fixedRadius;
+        const radian = calcAngleABC(prePoint, curPoint, nextPoint); // todo 检查一下什么情况下会是NaN
+        if (Number.isNaN(radian)) return;
         // 计算相切的点距离 curPoint 的距离， 在 radian 为 90 deg 的时候和 radius 相等。
         const tangent = Math.tan(radian / 2);
+        let radius = getBaseRadius(cur);
         let dist = radius / tangent;
-
-        // 校准 dist，用户设置的 cornerRadius 可能太大，而实际显示 cornerRadius 受到 AB BC 两边长度限制。
-        // 如果 B C 端点设置了 cornerRadius，可用长度减半
-        const minDist = Math.min(
-            (pre.radius || fixedRadius) > 0 ? lenAB / 2 : lenAB,
-            (next.radius || fixedRadius) > 0 ? lenBC / 2 : lenBC
-        );
-
+        const minDist = (() => {
+            const pr = getBaseRadius(pre);
+            const nr = getBaseRadius(next);
+            const percent1 = (radius + pr) > lenAB ? lenAB * (radius / (radius + pr)) : radius;
+            const percent2 = (radius + nr) > lenBC ? lenBC * (radius / (radius + nr)) : radius;
+            return Math.min(percent1, percent2);
+        })();
         if (dist > minDist) {
+            radius = minDist * tangent;
             dist = minDist;
-            radius = dist * tangent;
         }
-
-        // 方向向量
-        const vPre = norm(minus(prePoint, curPoint));
-        const vNext = norm(minus(nextPoint, curPoint));
-
-        // 相切的点
-        let preTangent = add(multiply(vPre, dist), curPoint);
-        let nextTangent = add(multiply(vNext, dist), curPoint);
-
-        // 计算 cubic handler 位置
-        const kappa = (4 / 3) * Math.tan((Math.PI - radian) / 4);
-
-        let preHandle = add(multiply(vPre, -radius * kappa), preTangent);
-        let nextHandle = add(multiply(vNext, -radius * kappa), nextTangent);
-
-        let preSlices: Point2D[][] = [];
-        let nextSlices: Point2D[][] = [];
-
-        if (pre.hasFrom) {
-            const _p2 = transformPoint(pre.fromX || 0, pre.fromY || 0);
-            const t = findTForLength(curPoint, curPoint, _p2, prePoint, dist);
-            if (t !== null) {
-                const nt = bezierCurvePoint(t, curPoint, curPoint, _p2, prePoint);
-                preTangent = nt ? nt : preTangent;
-                preSlices = splitCubicBezierAtT(curPoint, curPoint, _p2, prePoint, t);
-                preHandle = preSlices[0][2];
-            }
-        }
-
-        if (next.hasTo) {
-            const _p2 = transformPoint(next.toX || 0, next.toY || 0);
-            const t = findTForLength(curPoint, curPoint, _p2, nextPoint, dist);
-            if (t !== null) {
-                const nt = bezierCurvePoint(t, curPoint, curPoint, _p2, nextPoint);
-                nextTangent = nt ? nt : nextTangent;
-                nextSlices = splitCubicBezierAtT(curPoint, curPoint, _p2, nextPoint, t);
-                nextHandle = nextSlices[0][2];
-            }
-        }
-
-        cacheCornerCalcInfo[idx] = {
-            curPoint,
-            preTangent,
-            nextTangent,
-            preHandle,
-            nextHandle,
-            preSlices,
-            nextSlices
-        };
-
-        return cacheCornerCalcInfo[idx];
+        const kappa = (4 / 3) * Math.tan((Math.PI - radian) / 4); // todo 这个值在非直线的情况下不准确
+        radiusCache[idx] = {radius: dist, offset: radius * kappa};
+        return radiusCache[idx];
     }
 
-    // #####
-    // curveFrom: 表示作为 from 点的时候的控制点
-    // curveTo: 表示作为 to 点的时候的控制点
-    // #####
-    function _connectTwo(fromIdx: number, toIdx: number) {
-        let startPt: Point2D;
-        let startHandle: Point2D | undefined;
-
-        let endPt: Point2D;
-        let endHandle: Point2D | undefined;
-
-        let cornerInfo;
-
-        let nee_update_end_handle: boolean = true;
-
-        // 获取起始点信息
-        if (_isCornerRadius(fromIdx) && (cornerInfo = _getCornerInfo(fromIdx))) {
-            const { nextTangent, nextSlices } = cornerInfo;
-            startPt = nextTangent;
-            if (nextSlices.length) {
-                startHandle = nextSlices[1][1];
-                endHandle = nextSlices[1][2];
-            }
-            nee_update_end_handle = false;
+    function getFromInfo(idx: number) {
+        if (fromCache[idx]) return fromCache[idx];
+        const radiusInfo = getRadiusInfo(idx);
+        if (!radiusInfo) return;
+        const {radius, offset} = radiusInfo;
+        const nextIndex = idx === len - 1 ? 0 : idx + 1;
+        const cur = points[idx];
+        const next = points[nextIndex];
+        if (cur.hasFrom || next.hasTo) { // 存在曲线
+            const [curPoint, handle1, handle2, nextPoint] = getCubic(cur, next).map(i => transformPoint(i.x, i.y));
+            const fromT = findTByLength(curPoint, handle1, handle2, nextPoint, radius);
+            if (!fromT) return;
+            const apex = bezierCurvePointAtT(curPoint, handle1, handle2, nextPoint, fromT);
+            const slices = splitCubicBezierAtT(curPoint, handle1, handle2, nextPoint, fromT);
+            const handle = slices[0][2];
+            const vec = norm(minus(handle, apex));                      // 方向为apex指向handle的向量
+            const handleForCorner = add(multiply(vec, offset), apex);   // 以apex为起点，与vec的方向相同，大小为offset的向量(从apex出发，往handle的方向偏移offset)
+            const curve = slices[1];
+            fromCache[idx] = {apex, handleForCorner, curve};
+            return fromCache[idx];
         } else {
-            const fromCurvePoint = points[fromIdx];
-            startPt = transformedPoints[fromIdx]
-            startHandle = fromCurvePoint.hasFrom ? transformPoint(fromCurvePoint.fromX || 0, fromCurvePoint.fromY || 0) : undefined;
+            const curPoint = transformedPoints[idx];
+            const nextPoint = transformedPoints[nextIndex];
+            const vec = norm(minus(nextPoint, curPoint));               // 方向为cur指向next的向量
+            const apex = add(multiply(vec, radius), curPoint);          // 以cur为起点与vec方向相同，大小为radius的向量，这个加法运算中vec起到指定方向的作用
+            const handleForCorner = add(multiply(vec, -offset), apex);  // 以apex为起点，与vec的方向相反，大小为offset的向量
+            fromCache[idx] = {apex, handleForCorner};
+            return fromCache[idx];
         }
+    }
+
+    function getToInfo(idx: number, curve?: Point2D[]) {
+        const radiusInfo = getRadiusInfo(idx);
+        if (!radiusInfo) return;
+        if (curve) {
+            const splitT = findTByLength(curve[0], curve[1], curve[2], curve[3], radiusInfo.radius);
+            if (!splitT) return;
+            const apex = bezierCurvePointAtT(curve[0], curve[1], curve[2], curve[3], 1 - splitT,);
+            const slices = splitCubicBezierAtT(curve[0], curve[1], curve[2], curve[3], 1 - splitT);
+            curve.forEach((_, i) => curve[i] = slices[0][i]);
+            const handle = slices[1][1];
+            const vec = norm(minus(handle, apex));
+            const handleForCorner = add(multiply(vec, radiusInfo.offset), apex);
+            return {apex, handleForCorner};
+        } else {
+            const curPoint = transformedPoints[idx];
+            const preIndex = idx === 0 ? len - 1 : idx - 1;
+            const prePoint = transformedPoints[preIndex];
+
+            const {radius, offset} = radiusInfo;
+            const vec = norm(minus(prePoint, curPoint));
+            const apex = add(multiply(vec, radius), curPoint);
+            const handleForCorner = add(multiply(vec, -offset), apex);
+
+            return {apex, handleForCorner};
+        }
+    }
+
+    function connect(fromIdx: number, toIdx: number) {
+        let start: Point2D;
+        let startHandle: Point2D | undefined;
+        let end: Point2D;
+        let endHandle: Point2D | undefined;
+        let curve: Point2D[] | undefined;
+
+        let from;
+        if (isRound(fromIdx) && (from = getFromInfo(fromIdx))) {
+            curve = from.curve; // 如果存在曲线(from.hasFrom || to.hasTo)，from的圆角值会影响曲线的参数
+            start = from.apex;  // from的圆角值会决定起点start
+        } else {
+            start = transformedPoints[fromIdx]; // 不存在圆角的情况下，起点start是固定的
+            const fromCurvePoint = points[fromIdx];
+            startHandle = fromCurvePoint.hasFrom ? transformPoint(fromCurvePoint.fromX ?? 0, fromCurvePoint.fromY ?? 0) : undefined;
+
+            end = transformedPoints[toIdx];
+            const toCurvePoint = points[toIdx];
+            endHandle = toCurvePoint.hasTo ? transformPoint(toCurvePoint.toX ?? 0, toCurvePoint.toY ?? 0) : undefined;
+            if (startHandle && endHandle) { // 存在三次曲线
+                curve = [start, startHandle, endHandle, end];
+            } else if (startHandle || endHandle) { // 存在二次曲线，转为三次
+                curve = [...qua2cube(start, (startHandle || endHandle) as Point2D, end)];
+            }
+        }
+        // 自此，会得到一个确定的起点start，有可能会得到一条曲线curve，这条曲线后续还可能受到终点圆角值的影响。
 
         if (!hasBegin) {
             hasBegin = true;
-            moveTo(startPt.x, startPt.y);
+            moveTo(start.x, start.y);
         }
 
-        // 获取终点信息
-        const isCorEnd = _isCornerRadius(toIdx);
-
-        if (isCorEnd && (cornerInfo = _getCornerInfo(toIdx))) {
-            const { preTangent, preSlices } = cornerInfo as any;
-            endPt = preTangent;
-            if (preSlices.length) {
-                startHandle = preSlices[1][2];
-                endHandle = preSlices[1][1];
-            }
+        let to;
+        let handleForCorner: Point2D | undefined;
+        if (isRound(toIdx) && (to = getToInfo(toIdx, curve))) {
+            handleForCorner = to.handleForCorner;
+            end = to.apex; // to的圆角值同样会影响终点end的取值，并且会影响曲线curve的参数
         } else {
-            const toCurvePoint = points[toIdx];
-            endPt = transformedPoints[toIdx];
-            if (nee_update_end_handle) {
-                endHandle = toCurvePoint.hasTo ? transformPoint(toCurvePoint.toX || 0, toCurvePoint.toY || 0) : undefined;
-            }
+            end = transformedPoints[toIdx];
         }
+        // 自此，会得到一个终点end，有可能得到一条的曲线，这条曲线的参数都已经确定
 
-        // 根据有没有 handle 选择 cubic 或者 line 连接
-        if (startHandle || endHandle) {
-            bezierCurveTo(
-                startHandle?.x ?? startPt?.x,
-                startHandle?.y ?? startPt.y,
-                endHandle?.x ?? endPt.x,
-                endHandle?.y ?? endPt.y,
-                endPt.x,
-                endPt.y
-            );
-        } else {
-            lineTo(endPt.x, endPt.y);
-        }
+        curve ? cubicTo(curve[1], curve[2], curve[3]) : lineTo(end.x, end.y);
 
-        // 如果 end 的时候是 corner，绘制圆角
-        if (isCorEnd && cornerInfo) {
-            const { nextTangent, preHandle, nextHandle } = cornerInfo as any;
-            bezierCurveTo(preHandle.x, preHandle.y, nextHandle.x, nextHandle.y, nextTangent.x, nextTangent.y);
-        }
+        // 如果终点处存在圆角，从end出发，拼接一条曲线表示圆角
+        let next;
+        if (handleForCorner && (next = getFromInfo(toIdx))) cubicTo(handleForCorner, next.handleForCorner, next.apex);
     }
 
     return builder.getPath();

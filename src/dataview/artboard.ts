@@ -3,9 +3,7 @@ import { GroupShapeView } from "./groupshape";
 import { innerShadowId, renderBorders, renderFills } from "../render";
 import { objectId } from "../basic/objectid";
 import { render as clippathR } from "../render/clippath"
-import {
-    AutoLayout, BorderPosition, CornerRadius, Page, ScrollBehavior, ShadowPosition, ShapeFrame, Transform, Artboard
-} from "../data";
+import { AutoLayout, BorderPosition, CornerRadius, Page, ScrollBehavior, ShadowPosition, ShapeFrame, Transform, Artboard, BlurType } from "../data";
 import { ShapeView, updateFrame } from "./shape";
 import { PageView } from "./page";
 
@@ -156,22 +154,41 @@ export class ArtboradView extends GroupShapeView {
             svgprops['overflow'] = 'visible';
             children = [elh("svg", svgprops, [...fills, ...borders, ...childs])];
         } else {
+            // 裁剪属性不能放在filter的外层
             const id = "clip-board-" + objectId(this);
+            svgprops['clip-path'] = "url(#" + id + ")";
             const _svg_node = elh("svg", svgprops, [clippathR(elh, id, this.getPathStr()), ...children]);
-            children = [elh("g", {"clip-path": "url(#" + id + ")"}, [_svg_node]), ...borders];
+            children = [_svg_node,...borders];
         }
 
         if (shadows.length) {
+            let filter: string = '';
             const inner_url = innerShadowId(filterId, this.getShadows());
-            if (inner_url.length) svgprops.filter = inner_url.join(' ');
+            filter = `url(#pd_outer-${filterId}) `;
+            if (inner_url.length) filter += inner_url.join(' ');
+            props.filter = filter;
             children = [...shadows, ...children];
         }
 
-        if (this.style.blur) {
+        const blur = this.blur;
+        if (blur) {
             const blurId = `blur_${objectId(this)}`;
-            const blur = this.renderBlur(blurId);
-            children = [...blur, ...children];
-            props['filter'] = `url(#${blurId})`
+            const blurEl = this.renderBlur(blurId);
+            children = [...blurEl, ...children];
+            if (blur.type === BlurType.Background) {
+                if (props.opacity) {
+                    svgprops.opacity = props.opacity;
+                    delete props.opacity;
+                }
+                if (props.style?.['mix-blend-mode']) {
+                    if (svgprops.style) svgprops.style['mix-blend-mode'] = props.style['mix-blend-mode'];
+                    else svgprops.style = { 'mix-blend-mode': props.style['mix-blend-mode'] };
+                    delete props.style['mix-blend-mode'];
+                }
+                svgprops['filter'] = (svgprops['filter'] ?? '') + `url(#${blurId})`;
+            } else {
+                props['filter'] = (props['filter'] ?? '') + `url(#${blurId})`;
+            }
         }
 
         const _mask_space = this.renderMask();

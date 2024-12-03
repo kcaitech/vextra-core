@@ -150,13 +150,13 @@ Object.freeze(EmptySpan)
 export type ParaIterItem = { char: string, span: Span, idx: number, spanIdx: number }
 
 export class ParaIter {
-    private _para: Para;
+    private _para: classes.Para;
     private _idx: number = 0;
     private _text: string;
 
     private _spanIdx: number = 0;
     private _spanOffset: number = 0;
-    constructor(para: Para) {
+    constructor(para: classes.Para) {
         this._para = para;
         this._text = para.text;
     }
@@ -197,7 +197,7 @@ export class ParaIter {
         const span = this._para.spans[this._spanIdx] ?? EmptySpan;
         const spanIdx = this._spanIdx;
         const idx = this._idx;
-        return { char, span, idx, spanIdx }
+        return { char, span: span as Span, idx, spanIdx }
     }
 }
 
@@ -233,6 +233,7 @@ export class Text extends Basic implements classes.Text {
     typeId = 'text'
     paras: BasicArray<Para>
     attr?: TextAttr
+    // isPureString?: boolean
 
     // layout与显示窗口大小有关
     // 尽量复用, layout缓存排版信息，进行update
@@ -253,7 +254,6 @@ export class Text extends Basic implements classes.Text {
 
         const width = frame.width;
         const height = frame.height;
-
         const cur = [width, height].join(',');
         if (cur !== token) {
             let o = token && this.__layouts.get(token);
@@ -296,6 +296,7 @@ export class Text extends Basic implements classes.Text {
         const cur = [width, height].join(',');
 
         let o = this.__layouts.get(cur);
+
         if (o) {
             return o.layout!;
         }
@@ -568,4 +569,155 @@ export class Text extends Basic implements classes.Text {
         if (right) this.attr.padding.right = right;
         this.reLayout(); // todo
     }
+}
+
+export function string2Text(text: string): Text {
+    const splits = text.split("\n")
+    const paras = new BasicArray<Para>()
+    for (let i = 0, len = splits.length; i < len; ++i) {
+        let s = splits[i];
+        if (!s.endsWith('\n')) s += "\n"
+        const p = new Para(s, new BasicArray<Span>())
+        p.spans.push(new Span(s.length))
+        paras.push(p)
+    }
+    const text1 = new Text(paras)
+    // text1.isPureString = true;
+    return text1;
+}
+
+function overrideSpan(span: Span, length: number, origin?: Span): Span {
+    return new Proxy<Span>(span, {
+        get: (target: Span, p: string | symbol, receiver: any): any => {
+            if (p.toString() === "length") return length;
+            let val = Reflect.get(target, p, receiver);
+            if (val === undefined && origin) {
+                val = Reflect.get(origin, p, receiver);
+            }
+            return val;
+        }
+    })
+}
+
+function overrideAttr<T extends {}>(attr: T | undefined, origin?: T): T {
+    return new Proxy<T>(attr ?? {} as T, {
+        get: (target: T, p: string | symbol, receiver: any): any => {
+            let val = Reflect.get(target, p, receiver);
+            if (val === undefined && origin) {
+                val = Reflect.get(origin, p, receiver);
+            }
+            return val;
+        }
+    })
+}
+
+export class OverrideTextPara extends Basic implements classes.Para {
+    para: Para
+    origin: BasicArray<Para>
+    index: number
+    _spans?: BasicArray<Span>
+    _attr?: ParaAttr
+    constructor(
+        para: Para,
+        index: number,
+        origin: BasicArray<Para>
+    ) {
+        super()
+        this.para = para
+        this.index = index
+        this.origin = origin
+    }
+    get length() {
+        return this.para.length;
+    }
+    get text() {
+        return this.para.text
+    }
+    get attr() {
+        if (this._attr) return this._attr;
+        this._attr = overrideAttr(this.para.attr, this.origin[this.index]?.attr)
+        return this._attr
+    }
+    charAt(index: number): string {
+        return this.para.charAt(index);
+    }
+
+    iter() {
+        return new ParaIter(this)
+    }
+    get spans() {
+        if (this._spans) return this._spans;
+        const originpara = this.origin[this.index]
+        const spans = this.para.spans;
+
+        if (!originpara) {
+            this._spans = spans;
+            return spans;
+        }
+
+
+        let remain = this.para.length;
+        const ret: BasicArray<Span> = new BasicArray()
+        this._spans = ret;
+
+        const ospans = originpara.spans;
+
+        let offset = 0
+
+        let oidx = 0
+        let ooffset = 0
+        for (let i = 0, len = spans.length; i < len && remain > 0;) {
+            const span = spans[i]
+            const ospan = ospans[oidx]
+            const length = Math.min(i === spans.length - 1 ? remain : span.length - offset, oidx === ospans.length - 1 ? remain : ospan.length - ooffset) || 1; // 至少是1
+            ret.push(overrideSpan(span, length, ospan))
+            offset += length
+            ooffset += length
+            remain -= length
+
+            if (oidx < ospans.length - 1 && ooffset >= ospan.length) {
+                ++oidx;
+                ooffset -= ospan.length
+            }
+
+            if (i < len && offset >= span.length) {
+                ++i;
+                offset -= span.length;
+            }
+        }
+        return ret;
+    }
+}
+
+export function overrideTextText(text: Text, origin: Text): Text {
+    let _paras: BasicArray<Para> | undefined
+    let __layouts: Map<string, LayoutItem> = new Map();
+    return new Proxy<Text>(text, {
+        get: (target: Span, p: string | symbol, receiver: any): any => {
+            const ps = p.toString();
+            if (ps === "attr") {
+                return origin.attr // todo merge?
+            }
+            if (ps === "paras") {
+                if (_paras) return _paras;
+                const paras = text.paras;
+
+                const ret = new BasicArray<Para>()
+                _paras = ret;
+                paras.forEach((p, i) => {
+                    ret.push(new OverrideTextPara(p, i, origin.paras))
+                })
+
+                return ret;
+            }
+            if (ps === "__layouts") {
+                return __layouts
+            }
+            let val = Reflect.get(target, p, receiver);
+            if (val === undefined && origin) {
+                val = Reflect.get(origin, p, receiver);
+            }
+            return val;
+        }
+    })
 }

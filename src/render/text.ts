@@ -50,7 +50,7 @@ export function renderText2Path(layout: TextLayout, offsetX: number, offsetY: nu
                 const weight = (span?.weight) || 400;
                 const italic = !!(span?.italic);
                 
-                garr.forEach((g) => {
+                if (fontSize > 0) garr.forEach((g) => {
                     if (isBlankChar(g.char.charCodeAt(0))) return;
                     const pathstr = getTextPath(font, fontSize, italic, weight, g.char.charCodeAt(0))
                     const path = Path.fromSVGString(pathstr)

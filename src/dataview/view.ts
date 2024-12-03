@@ -106,6 +106,7 @@ export class DataView extends EventEL {
         this.varsContainer = (props.varsContainer);
 
         this.m_ctx.setDirty(this);
+        ctx.markRaw(this)
     }
 
     setData(data: Shape) {
@@ -168,7 +169,7 @@ export class DataView extends EventEL {
         this.notify(...args);
     }
 
-    onDestory() {
+    onDestroy() {
 
     }
 
@@ -364,7 +365,7 @@ export class DataView extends EventEL {
         this.removeChilds(0, Number.MAX_VALUE).forEach((c) => c.destory());
         // --this.m_ctx.instanceCount;
         // remove first?
-        this.onDestory();
+        this.onDestroy();
         this.m_isdistroyed = true;
         this.notify('destroy');
         // destroy childs

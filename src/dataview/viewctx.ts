@@ -99,6 +99,8 @@ export class DViewCtx extends EventEmitter {
     static FRAME_TIME = 20; // 实际会有延迟
 
     comsMap: Map<ShapeType, ViewType> = new Map();
+
+    private is_document: boolean = false;
     // 选区
     // 缩放监听
 
@@ -108,6 +110,27 @@ export class DViewCtx extends EventEmitter {
     protected dirtyset: Map<number, DataView> = new Map();
 
     private needNotify: Map<number, DataView> = new Map();
+
+    private _sessionStorage: Map<string, string> = new Map();
+    get sessionStorage(): Map<string, string> {
+        return this._sessionStorage;
+    }
+
+    private _markRaw?: (v: any) => void
+    setMarkRawFun(markRaw: (v: any) => void) {
+        this._markRaw = markRaw; // vue markRaw
+    }
+    markRaw(v: any) {
+        if (this._markRaw) this._markRaw(v)
+    }
+
+    setIsDoc(v: boolean) {
+        this.is_document = v;
+    }
+
+    get isDocument() {
+        return this.is_document;
+    }
 
     setReLayout(v: DataView) {
         this.relayoutset.set(objectId(v), v);

@@ -89,17 +89,6 @@ export function exportContextSettings(source: types.ContextSettings, ctx?: IExpo
     ret.opacity = source.opacity
     return ret
 }
-/* couner radius */
-export function exportCornerRadius(source: types.CornerRadius, ctx?: IExportContext): types.CornerRadius {
-    const ret: types.CornerRadius = {} as types.CornerRadius
-    ret.typeId = "corner-radius"
-    ret.typeId = source.typeId
-    ret.lt = source.lt
-    ret.rt = source.rt
-    ret.lb = source.lb
-    ret.rb = source.rb
-    return ret
-}
 /* corner type */
 export function exportCornerType(source: types.CornerType, ctx?: IExportContext): types.CornerType {
     return source
@@ -137,6 +126,13 @@ export function exportDocumentMeta_pagesList(source: types.DocumentMeta_pagesLis
     const ret: types.DocumentMeta_pagesList = []
     source.forEach((source) => {
         ret.push(exportPageListItem(source, ctx))
+    })
+    return ret
+}
+export function exportDocumentMeta_stylelib(source: types.DocumentMeta_stylelib, ctx?: IExportContext): types.DocumentMeta_stylelib {
+    const ret: types.DocumentMeta_stylelib = []
+    source.forEach((source) => {
+        ret.push(exportStyleSheet(source, ctx))
     })
     return ret
 }
@@ -509,6 +505,7 @@ export function exportShadow(source: types.Shadow, ctx?: IExportContext): types.
     ret.spread = source.spread
     ret.position = exportShadowPosition(source.position, ctx)
     if (source.contextSettings) ret.contextSettings = exportGraphicsContextSettings(source.contextSettings, ctx)
+    if (source.mask) ret.mask = source.mask
     return ret
 }
 /* shape frame
@@ -582,6 +579,44 @@ export function exportStop(source: types.Stop, ctx?: IExportContext): types.Stop
 }
 /* strikethrough types */
 export function exportStrikethroughType(source: types.StrikethroughType, ctx?: IExportContext): types.StrikethroughType {
+    return source
+}
+/* style library type */
+export function exportStyleLibType(source: types.StyleLibType, ctx?: IExportContext): types.StyleLibType {
+    return source
+}
+export function exportStyleSheet_variables(source: types.StyleSheet_variables, ctx?: IExportContext): types.StyleSheet_variables {
+    const ret: types.StyleSheet_variables = []
+    source.forEach((source) => {
+        ret.push((() => {
+            if (typeof source !== "object") {
+                return source
+            }
+            if (source.typeId === "border-side-setting") {
+                return exportBorderSideSetting(source as types.BorderSideSetting, ctx)
+            }
+            if (source.typeId === "fill") {
+                return exportFill(source as types.Fill, ctx)
+            }
+            if (source.typeId === "border") {
+                return exportBorder(source as types.Border, ctx)
+            }
+            if (source.typeId === "shadow") {
+                return exportShadow(source as types.Shadow, ctx)
+            }
+            if (source.typeId === "blur") {
+                return exportBlur(source as types.Blur, ctx)
+            }
+            if (source.typeId === "corner-radius") {
+                return exportCornerRadius(source as types.CornerRadius, ctx)
+            }
+            throw new Error("unknow typeId: " + source.typeId)
+        })())
+    })
+    return ret
+}
+/* shape types */
+export function exportStyleVarType(source: types.StyleVarType, ctx?: IExportContext): types.StyleVarType {
     return source
 }
 export function exportStyle_borders(source: types.Style_borders, ctx?: IExportContext): types.Style_borders {
@@ -737,11 +772,11 @@ export function exportAutoLayout(source: types.AutoLayout, ctx?: IExportContext)
     ret.stackVerticalPadding = source.stackVerticalPadding
     ret.stackPaddingRight = source.stackPaddingRight
     ret.stackPaddingBottom = source.stackPaddingBottom
+    ret.stackPrimarySizing = exportStackSizing(source.stackPrimarySizing, ctx)
     if (source.stackMode) ret.stackMode = exportStackMode(source.stackMode, ctx)
     if (source.stackWrap) ret.stackWrap = exportStackWrap(source.stackWrap, ctx)
     if (source.stackHorizontalGapSizing) ret.stackHorizontalGapSizing = exportStackSizing(source.stackHorizontalGapSizing, ctx)
     if (source.stackVerticalGapSizing) ret.stackVerticalGapSizing = exportStackSizing(source.stackVerticalGapSizing, ctx)
-    if (source.stackPrimarySizing) ret.stackPrimarySizing = exportStackSizing(source.stackPrimarySizing, ctx)
     if (source.stackCounterSizing) ret.stackCounterSizing = exportStackSizing(source.stackCounterSizing, ctx)
     if (source.stackPrimaryAlignItems) ret.stackPrimaryAlignItems = exportStackAlign(source.stackPrimaryAlignItems, ctx)
     if (source.stackCounterAlignItems) ret.stackCounterAlignItems = exportStackAlign(source.stackCounterAlignItems, ctx)
@@ -755,6 +790,7 @@ export function exportAutoLayout(source: types.AutoLayout, ctx?: IExportContext)
 export function exportBlur(source: types.Blur, ctx?: IExportContext): types.Blur {
     const ret: types.Blur = {} as types.Blur
     ret.typeId = "blur"
+    ret.crdtidx = exportCrdtidx(source.crdtidx, ctx)
     ret.typeId = source.typeId
     ret.isEnabled = source.isEnabled
     ret.center = exportPoint2D(source.center, ctx)
@@ -762,6 +798,7 @@ export function exportBlur(source: types.Blur, ctx?: IExportContext): types.Blur
     ret.type = exportBlurType(source.type, ctx)
     if (source.motionAngle) ret.motionAngle = source.motionAngle
     if (source.radius) ret.radius = source.radius
+    if (source.mask) ret.mask = source.mask
     return ret
 }
 /* border options */
@@ -775,11 +812,15 @@ export function exportBorderOptions(source: types.BorderOptions, ctx?: IExportCo
 /* border side setting */
 export function exportBorderSideSetting(source: types.BorderSideSetting, ctx?: IExportContext): types.BorderSideSetting {
     const ret: types.BorderSideSetting = {} as types.BorderSideSetting
+    ret.typeId = "border-side-setting"
+    ret.crdtidx = exportCrdtidx(source.crdtidx, ctx)
+    ret.typeId = source.typeId
     ret.sideType = exportSideType(source.sideType, ctx)
     ret.thicknessTop = source.thicknessTop
     ret.thicknessLeft = source.thicknessLeft
     ret.thicknessBottom = source.thicknessBottom
     ret.thicknessRight = source.thicknessRight
+    if (source.mask) ret.mask = source.mask
     return ret
 }
 /* contact form */
@@ -796,6 +837,18 @@ export function exportContactRole(source: types.ContactRole, ctx?: IExportContex
     ret.id = source.id
     ret.roleType = exportContactRoleType(source.roleType, ctx)
     ret.shapeId = source.shapeId
+    return ret
+}
+/* couner radius */
+export function exportCornerRadius(source: types.CornerRadius, ctx?: IExportContext): types.CornerRadius {
+    const ret: types.CornerRadius = {} as types.CornerRadius
+    ret.typeId = "corner-radius"
+    ret.crdtidx = exportCrdtidx(source.crdtidx, ctx)
+    ret.typeId = source.typeId
+    ret.lt = source.lt
+    ret.rt = source.rt
+    ret.lb = source.lb
+    ret.rb = source.rb
     return ret
 }
 /* crdt number */
@@ -939,6 +992,7 @@ export function exportBorder(source: types.Border, ctx?: IExportContext): types.
     if (source.originalImageHeight) ret.originalImageHeight = source.originalImageHeight
     if (source.paintFilter) ret.paintFilter = exportPaintFilter(source.paintFilter, ctx)
     if (source.transform) ret.transform = exportPatternTransform(source.transform, ctx)
+    if (source.colorMask) ret.colorMask = source.colorMask
     return ret
 }
 /* fill */
@@ -962,6 +1016,7 @@ export function exportFill(source: types.Fill, ctx?: IExportContext): types.Fill
     if (source.originalImageHeight) ret.originalImageHeight = source.originalImageHeight
     if (source.paintFilter) ret.paintFilter = exportPaintFilter(source.paintFilter, ctx)
     if (source.transform) ret.transform = exportPatternTransform(source.transform, ctx)
+    if (source.colorMask) ret.colorMask = source.colorMask
         // inject code
     if (ctx?.medias && ret.imageRef) ctx.medias.add(ret.imageRef);
 
@@ -984,6 +1039,13 @@ export function exportPara(source: types.Para, ctx?: IExportContext): types.Para
     ret.text = source.text
     ret.spans = exportPara_spans(source.spans, ctx)
     if (source.attr) ret.attr = exportParaAttr(source.attr, ctx)
+    return ret
+}
+/* style sheet */
+export function exportStyleSheet(source: types.StyleSheet, ctx?: IExportContext): types.StyleSheet {
+    const ret: types.StyleSheet = {} as types.StyleSheet
+    ret.variables = exportStyleSheet_variables(source.variables, ctx)
+    if (source.name) ret.name = source.name
     return ret
 }
 /* style */
@@ -1072,6 +1134,7 @@ export function exportShape(source: types.Shape, ctx?: IExportContext): types.Sh
     if (source.mask) ret.mask = source.mask
     if (source.stackPositioning) ret.stackPositioning = exportStackPositioning(source.stackPositioning, ctx)
     if (source.uniformScale) ret.uniformScale = source.uniformScale
+    if (source.roundMask) ret.roundMask = source.roundMask
     return ret
 }
 /* table cell */
@@ -1336,6 +1399,7 @@ export function exportDocumentMeta(source: types.DocumentMeta, ctx?: IExportCont
         })
         return ret
     })()
+    if (source.stylelib) ret.stylelib = exportDocumentMeta_stylelib(source.stylelib, ctx)
     return ret
 }
 /* group shape */

@@ -2,14 +2,13 @@
   "description": "style sheet",
   "type": "object",
   "properties": {
-    "name": "string",
+    "name": {
+      "type": "string"
+    },
     "variables": {
       "type": "array",
       "items": {
         "oneOf": [
-          {
-            "$ref": "#"
-          },
           {
             "$ref": "./border-side-setting.json"
           },

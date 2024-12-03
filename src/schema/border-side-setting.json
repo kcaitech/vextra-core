@@ -2,6 +2,13 @@
     "description": "border side setting",
     "type": "object",
     "properties": {
+        "crdtidx": {
+            "$ref": "./crdtidx.json"
+        },
+        "typeId": {
+            "type": "string",
+            "default": "shape"
+        },
         "sideType": {
             "$ref": "./side-type.json"
         },
@@ -26,6 +33,8 @@
         }
     },
     "required": [
+        "crdtidx",
+        "typeId",
         "sideType",
         "thicknessTop",
         "thicknessLeft",

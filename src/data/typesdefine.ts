@@ -98,14 +98,6 @@ export type ContextSettings = {
     blenMode: BlendMode,
     opacity: number,
 }
-/* couner radius */
-export type CornerRadius = {
-    typeId: string,
-    lt: number,
-    rt: number,
-    lb: number,
-    rb: number,
-}
 /* corner type */
 export enum CornerType {
     Miter = "miter",
@@ -138,6 +130,7 @@ export type CurvePoint = {
     hasTo?: boolean,
 }
 export type DocumentMeta_pagesList = Array<PageListItem>
+export type DocumentMeta_stylelib = Array<StyleSheet>
 /* ellipse attributes */
 export type Ellipse = {
     cx: number,
@@ -472,6 +465,7 @@ export type Shadow = {
     spread: number,
     position: ShadowPosition,
     contextSettings?: GraphicsContextSettings,
+    mask?: string,
 }
 /* shape frame
  * x,y为parent坐标系里的点
@@ -565,6 +559,19 @@ export enum StrikethroughType {
     None = "none",
     Single = "single",
     Double = "double",
+}
+/* style library type */
+export enum StyleLibType {
+    Color = "color",
+}
+export type StyleSheet_variables = Array<BorderSideSetting | Fill | Border | Shadow | Blur | CornerRadius>
+/* shape types */
+export enum StyleVarType {
+    Color = "color",
+    Round = "round",
+    Shadow = "shadow",
+    Thickness = "thickness",
+    Blur = "blur",
 }
 export type Style_borders = Array<Border>
 export type Style_fills = Array<Fill>
@@ -673,11 +680,11 @@ export type AutoLayout = {
     stackVerticalPadding: number,
     stackPaddingRight: number,
     stackPaddingBottom: number,
+    stackPrimarySizing: StackSizing,
     stackMode?: StackMode,
     stackWrap?: StackWrap,
     stackHorizontalGapSizing?: StackSizing,
     stackVerticalGapSizing?: StackSizing,
-    stackPrimarySizing?: StackSizing,
     stackCounterSizing?: StackSizing,
     stackPrimaryAlignItems?: StackAlign,
     stackCounterAlignItems?: StackAlign,
@@ -688,6 +695,7 @@ export type AutoLayout = {
 }
 /* blur */
 export type Blur = {
+    crdtidx: Crdtidx,
     typeId: string,
     isEnabled: boolean,
     center: Point2D,
@@ -695,6 +703,7 @@ export type Blur = {
     type: BlurType,
     motionAngle?: number,
     radius?: number,
+    mask?: string,
 }
 /* border options */
 export type BorderOptions = {
@@ -704,11 +713,14 @@ export type BorderOptions = {
 }
 /* border side setting */
 export type BorderSideSetting = {
+    crdtidx: Crdtidx,
+    typeId: string,
     sideType: SideType,
     thicknessTop: number,
     thicknessLeft: number,
     thicknessBottom: number,
     thicknessRight: number,
+    mask?: string,
 }
 /* contact form */
 export type ContactForm = {
@@ -721,6 +733,15 @@ export type ContactRole = {
     id: string,
     roleType: ContactRoleType,
     shapeId: string,
+}
+/* couner radius */
+export type CornerRadius = {
+    crdtidx: Crdtidx,
+    typeId: string,
+    lt: number,
+    rt: number,
+    lb: number,
+    rb: number,
 }
 /* crdt number */
 export type CrdtNumber = {
@@ -837,6 +858,7 @@ export type Border = {
     originalImageHeight?: number,
     paintFilter?: PaintFilter,
     transform?: PatternTransform,
+    colorMask?: string,
 }
 /* fill */
 export type Fill = {
@@ -857,6 +879,7 @@ export type Fill = {
     originalImageHeight?: number,
     paintFilter?: PaintFilter,
     transform?: PatternTransform,
+    colorMask?: string,
 }
 /* span attr */
 export type ParaAttr = SpanAttr & {
@@ -872,6 +895,11 @@ export type Para = {
     text: string,
     spans: Para_spans,
     attr?: ParaAttr,
+}
+/* style sheet */
+export type StyleSheet = {
+    variables: StyleSheet_variables,
+    name?: string,
 }
 /* style */
 export type Style = {
@@ -937,6 +965,7 @@ export type Shape = {
     mask?: boolean,
     stackPositioning?: StackPositioning,
     uniformScale?: number,
+    roundMask?: string,
 }
 /* table cell */
 export type TableCell = Shape & {
@@ -1055,6 +1084,7 @@ export type DocumentMeta = {
     lastCmdId: string,
     symbolregist: Map<string, string>,
     freesymbols?: Map<string, SymbolShape | SymbolUnionShape>,
+    stylelib?: DocumentMeta_stylelib,
 }
 /* group shape */
 export type GroupShape = Shape & {

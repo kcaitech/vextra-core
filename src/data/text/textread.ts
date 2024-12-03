@@ -26,7 +26,7 @@ export function getTextWithFmt(shapetext: Text, index: number, length: number): 
         (span, index, length) => {
             const end = index + length;
             const span1 = new Span(end - index);
-            mergeSpanAttr(span1, span);
+            mergeSpanAttr(span1, span, true);
             text.paras.at(-1)?.spans.push(span1);
         })
     return text;
@@ -224,7 +224,7 @@ function _getParaFormat(attr: ParaAttr, attrGetter: AttrGetter, defaultAttr: Tex
         attrGetter.kerningIsMulti = true;
     }
 
-    const autoLineHeight = attr.autoLineHeight ?? (defaultAttr?.autoLineHeight) ?? false;
+    const autoLineHeight = attr.autoLineHeight ?? (defaultAttr?.autoLineHeight) ?? true;
     if (attrGetter.autoLineHeight === undefined) {
         attrGetter.autoLineHeight = autoLineHeight;
     }
@@ -232,7 +232,7 @@ function _getParaFormat(attr: ParaAttr, attrGetter: AttrGetter, defaultAttr: Tex
         attrGetter.autoLineHeightIsMulti = true;
     }
 
-    const maximumLineHeight = attr.maximumLineHeight ?? (defaultAttr?.maximumLineHeight) ?? 0;
+    const maximumLineHeight = attr.maximumLineHeight ?? (defaultAttr?.maximumLineHeight);
     if (attrGetter.maximumLineHeight === undefined) {
         attrGetter.maximumLineHeight = maximumLineHeight;
     }
@@ -240,7 +240,7 @@ function _getParaFormat(attr: ParaAttr, attrGetter: AttrGetter, defaultAttr: Tex
         attrGetter.maximumLineHeightIsMulti = true;
     }
 
-    const minimumLineHeight = attr.minimumLineHeight ?? (defaultAttr?.minimumLineHeight) ?? 0;
+    const minimumLineHeight = attr.minimumLineHeight ?? (defaultAttr?.minimumLineHeight);
     if (attrGetter.minimumLineHeight === undefined) {
         attrGetter.minimumLineHeight = minimumLineHeight;
     }
@@ -365,19 +365,28 @@ export function getTextFormat(shapetext: Text, index: number, length: number, ca
 
     let _para: Para | undefined;
     let _paraIndex = 0;
+    let _hasSpan = false;
     _travelTextPara(shapetext.paras, index, length,
         (paraArray, paraIndex, para, index, length) => {
+            _hasSpan = false
             _para = para;
             _paraIndex = index;
             const attr = para.attr;
             if (attr) _getParaFormat(attr, parafmt, shapetext.attr);
         },
         (span, index, length) => {
+            _hasSpan = true
             _paraIndex += index;
             const isNewLineSpan = span.length === 1 && _paraIndex === _para!.length - 1;
             // 忽略回车属性
             if (!isNewLineSpan || _para!.spans.length <= 1) _getSpanFormat(span, spanfmt, _para!.attr, shapetext.attr);
             _paraIndex += length;
+        },
+        () => {
+            if (!_hasSpan) {
+                const span = _para!.spans[_para!.spans.length - 1];
+                _getSpanFormat(span, spanfmt, _para!.attr, shapetext.attr);
+            }
         })
 
     // merge

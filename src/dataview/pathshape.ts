@@ -82,8 +82,6 @@ export class PathShapeView extends ShapeView {
 
         const filterId = `${objectId(this)}`;
         const shadows = this.renderShadows(filterId);
-        const blurId = `blur_${objectId(this)}`;
-        const blur = this.renderBlur(blurId);
 
         let props = this.renderProps();
         let children = [...fills, ...borders];
@@ -102,10 +100,23 @@ export class PathShapeView extends ShapeView {
         }
 
         // 模糊
+        const blurId = `blur_${objectId(this)}`;
+        const blur = this.renderBlur(blurId);
         if (blur.length) {
-            let filter: string = '';
-            if (this.blur?.type === BlurType.Gaussian) filter = `url(#${blurId})`;
-            children = [...blur, elh('g', { filter }, children)];
+            if (this.blur!.type === BlurType.Gaussian) {
+                children = [...blur, elh('g', { filter: `url(#${blurId})` }, children)];
+            } else {
+                const __props: any = {};
+                if (props.opacity) {
+                    __props.opacity = props.opacity;
+                    delete props.opacity;
+                }
+                if (props.style?.["mix-blend-mode"]) {
+                    __props["mix-blend-mode"] = props.style["mix-blend-mode"];
+                    delete props.style["mix-blend-mode"];
+                }
+                children = [...blur, elh('g', __props, children)];
+            }
         }
 
         // 遮罩
@@ -137,6 +148,7 @@ export class PathShapeView extends ShapeView {
         const els: EL[] = [];
         for (let i = 1; i < group.length; i++) {
             const __s = group[i];
+            if (!__s.isVisible) continue;
             const dom = __s.dom;
             (dom.elattr as any)['style'] = { 'transform': makeShapeTransform1By2(__s.transform2.clone().addTransform(inverse)).toString() };
             els.push(dom);
