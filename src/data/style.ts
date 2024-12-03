@@ -18,12 +18,13 @@ import {
     FillRule,
     CornerType,
     BorderSideSetting,
-    BlurType
+    BlurType, CornerRadius, Crdtidx
 } from "./baseclasses";
 import { Basic, BasicArray, BasicMap, ResourceMgr } from "./basic";
 import { Variable } from "./variable";
 import { Color } from "./color";
 import { ShapeView } from "../dataview";
+import { StyleSheet_variables } from "./typesdefine";
 
 export {
     GradientType,
@@ -361,16 +362,34 @@ export class Blur extends Basic implements classes.Blur {
     }
 }
 
-export class FillMask extends Fill {
-    private subscribers: Set<ShapeView>;
+/**
+ * @description 样式库管理器数据组成
+ */
+export type StyleMangerMember = FillMask | CornerRadiusMask;
 
-    constructor(
-        crdtidx: BasicArray<number>,
-        id: string,
-        isEnabled: boolean,
-        fillType: FillType,
-        color: Color
-    ) {
+export class StyleSheet extends Basic implements classes.StyleSheet {
+    id: string
+    name: string
+    variables: BasicArray<StyleMangerMember>
+
+    constructor(id: string, name: string, variables: BasicArray<StyleMangerMember>) {
+        super();
+        this.id = id;
+        this.name = name;
+        this.variables = variables;
+    }
+}
+
+interface Mask {
+    subscribers: Set<ShapeView>;            // 被当前变量遮盖的对象集合
+    add: (view: ShapeView) => () => void;   // 添加遮盖对象
+    notify: (...args: any[]) => void;       // 当前变量改变，通知所有被遮盖的对象更新试图
+}
+
+export class FillMask extends Fill implements Mask {
+    subscribers: Set<ShapeView>;
+
+    constructor(crdtidx: BasicArray<number>, id: string, isEnabled: boolean, fillType: FillType, color: Color) {
         super(crdtidx, id, isEnabled, fillType, color);
         this.subscribers = new Set<ShapeView>();
     }
@@ -378,12 +397,39 @@ export class FillMask extends Fill {
     notify(...args: any[]) {
         super.notify(...args);
         this.subscribers.forEach(view => {
-            if (view.isDistroyed) return; // view已经不存在了，不用通知它了
+            if (view.isDistroyed) return;
             view.m_ctx.setDirty(view);
         })
     }
 
-    bind(view: ShapeView) {
+    add(view: ShapeView) {
         this.subscribers.add(view);
+        return () => {
+            this.subscribers.delete(view)
+        }
+    }
+}
+
+export class CornerRadiusMask extends CornerRadius implements Mask {
+    subscribers: Set<ShapeView>;
+
+    constructor(crdtidx: Crdtidx, lt: number = 0, rt: number = 0, lb: number = 0, rb: number = 0) {
+        super(crdtidx, lt, rt, lb, rb);
+        this.subscribers = new Set<ShapeView>();
+    }
+
+    notify(...args: any[]) {
+        super.notify(...args);
+        this.subscribers.forEach(view => {
+            if (view.isDistroyed) return;
+            view.m_ctx.setDirty(view);
+        })
+    }
+
+    add(view: ShapeView) {
+        this.subscribers.add(view);
+        return () => {
+            this.subscribers.delete(view)
+        }
     }
 }

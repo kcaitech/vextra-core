@@ -897,10 +897,13 @@ export class Para extends Basic {
 /* style sheet */
 export class StyleSheet extends Basic {
     typeId = "style-sheet"
+    id: string
+    name: string
     variables: StyleSheet_variables
-    name?: string
-    constructor(variables: StyleSheet_variables) {
+    constructor(id: string, name: string, variables: StyleSheet_variables) {
         super()
+        this.id = id
+        this.name = name
         this.variables = variables
     }
 }

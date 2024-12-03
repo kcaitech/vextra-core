@@ -1163,13 +1163,11 @@ export function importPara(source: types.Para, ctx?: IImportContext): impl.Para 
     return ret
 }
 /* style sheet */
-function importStyleSheetOptional(tar: impl.StyleSheet, source: types.StyleSheet, ctx?: IImportContext) {
-    if (source.name) tar.name = source.name
-}
 export function importStyleSheet(source: types.StyleSheet, ctx?: IImportContext): impl.StyleSheet {
     const ret: impl.StyleSheet = new impl.StyleSheet (
+        source.id,
+        source.name,
         importStyleSheet_variables(source.variables, ctx))
-    importStyleSheetOptional(ret, source, ctx)
     return ret
 }
 /* style */

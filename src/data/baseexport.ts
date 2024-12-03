@@ -1044,8 +1044,9 @@ export function exportPara(source: types.Para, ctx?: IExportContext): types.Para
 /* style sheet */
 export function exportStyleSheet(source: types.StyleSheet, ctx?: IExportContext): types.StyleSheet {
     const ret: types.StyleSheet = {} as types.StyleSheet
+    ret.id = source.id
+    ret.name = source.name
     ret.variables = exportStyleSheet_variables(source.variables, ctx)
-    if (source.name) ret.name = source.name
     return ret
 }
 /* style */

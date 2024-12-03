@@ -898,8 +898,9 @@ export type Para = {
 }
 /* style sheet */
 export type StyleSheet = {
+    id: string,
+    name: string,
     variables: StyleSheet_variables,
-    name?: string,
 }
 /* style */
 export type Style = {
