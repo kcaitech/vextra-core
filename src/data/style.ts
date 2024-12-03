@@ -23,6 +23,7 @@ import {
 import { Basic, BasicArray, BasicMap, ResourceMgr } from "./basic";
 import { Variable } from "./variable";
 import { Color } from "./color";
+import { ShapeView } from "../dataview";
 
 export {
     GradientType,
@@ -58,9 +59,6 @@ export {
     PaintFilterType
 } from "./baseclasses"
 
-/**
- * gradient
- */
 export class Gradient extends Basic implements classes.Gradient {
     typeId = 'gradient'
     elipseLength?: number
@@ -159,7 +157,6 @@ export class Border extends Basic implements classes.Border {
         return this.__cacheData && this.__cacheData.media.base64 || "";
     }
 }
-
 
 export class Fill extends Basic implements classes.Fill {
     typeId = 'fill'
@@ -356,5 +353,32 @@ export class Blur extends Basic implements classes.Blur {
         this.type = type
         this.motionAngle = motionAngle
         this.radius = radius
+    }
+}
+
+export class FillMask extends Fill {
+    private subscribers: Set<ShapeView>;
+
+    constructor(
+        crdtidx: BasicArray<number>,
+        id: string,
+        isEnabled: boolean,
+        fillType: FillType,
+        color: Color
+    ) {
+        super(crdtidx, id, isEnabled, fillType, color);
+        this.subscribers = new Set<ShapeView>();
+    }
+
+    notify(...args: any[]) {
+        super.notify(...args);
+        this.subscribers.forEach(view => {
+            if (view.isDistroyed) return; // view已经不存在了，不用通知它了
+            view.m_ctx.setDirty(view);
+        })
+    }
+
+    bind(view: ShapeView) {
+        this.subscribers.add(view);
     }
 }
