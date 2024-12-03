@@ -397,6 +397,7 @@ export class StyleSheet extends Basic implements classes.StyleSheet {
                 const color = new Color(v.color.alpha, v.color.red, v.color.green, v.color.blue);
                 const fillMask = new FillMask(v.crdtidx, sheetId, v4(), v.isEnabled, v.fillType, color);
                 // todo 把一些可选属性传过来
+                fillMask.gradient = v.gradient;
                 notifiable_variables.push(fillMask);
             } else if (v instanceof classes.CornerRadius) {
                 const radiusMask = new CornerRadiusMask(sheetId, v.crdtidx, v.lt, v.rt, v.lb, v.lb);
