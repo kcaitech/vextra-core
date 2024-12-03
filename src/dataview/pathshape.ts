@@ -63,6 +63,7 @@ export class PathShapeView extends ShapeView {
     }
 
     render(): number {
+        console.log('--render--', this.name);
         if (!this.checkAndResetDirty()) return this.m_render_version;
 
         const masked = this.masked;
@@ -134,6 +135,16 @@ export class PathShapeView extends ShapeView {
         }
 
         this.reset("g", props, children);
+
+        return ++this.m_render_version;
+    }
+
+    render2(ctx: CanvasRenderingContext2D) {
+        ctx.save();
+        if (!this.checkAndResetDirty()) return this.m_render_version;
+
+
+        ctx.restore();
 
         return ++this.m_render_version;
     }
