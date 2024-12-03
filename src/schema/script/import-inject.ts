@@ -195,6 +195,7 @@ inject['Fill'] = {};
 inject['Fill']['after'] = `\
     // inject code
     if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
+    if (source["colorMask"] && ctx?.document) ret.setStylesMgr(ctx.document.stylesMgr);
 `
 inject['TableShape'] = {};
 inject['TableShape']['before'] = `\

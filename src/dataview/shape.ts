@@ -1,5 +1,5 @@
 import { innerShadowId, renderBlur, renderBorders, renderFills, renderShadows } from "../render";
-import { BasicArray, Blur, BlurType, Border, BorderPosition, ContextSettings, CornerRadius, CurvePoint, ExportOptions, Fill, FillType, GradientType, makeShapeTransform1By2, makeShapeTransform2By1, MarkerType, OverlayBackgroundAppearance, OverlayBackgroundInteraction, OverlayPosition, OverrideType, PathShape, Point2D, PrototypeInterAction, PrototypeStartingPoint, ResizingConstraints2, ScrollBehavior, ScrollDirection, Shadow, ShadowPosition, Shape, ShapeFrame, ShapeSize, ShapeType, SymbolRefShape, SymbolShape, Transform, Variable, VariableType } from "../data";
+import { BasicArray, Blur, BlurType, Border, BorderPosition, ContextSettings, CornerRadius, CurvePoint, ExportOptions, Fill, FillMask, FillType, GradientType, makeShapeTransform1By2, makeShapeTransform2By1, MarkerType, OverlayBackgroundAppearance, OverlayBackgroundInteraction, OverlayPosition, OverrideType, PathShape, Point2D, PrototypeInterAction, PrototypeStartingPoint, ResizingConstraints2, ScrollBehavior, ScrollDirection, Shadow, ShadowPosition, Shape, ShapeFrame, ShapeSize, ShapeType, SymbolRefShape, SymbolShape, Transform, Variable, VariableType } from "../data";
 import { findOverrideAndVar } from "./basic";
 import { EL, elh } from "./el";
 import { Matrix } from "../basic/matrix";
@@ -647,7 +647,31 @@ export class ShapeView extends DataView {
 
     getFills(): Fill[] {
         const v = this._findOV(OverrideType.Fills, VariableType.Fills);
-        return v ? v.value : this.m_data.style.fills;
+        const fills: Fill[] = v ? v.value : this.m_data.style.fills;
+        const __fills: Fill[] = [];
+        for (const fill of fills) {
+            if (!fill.colorMask) {
+                __fills.push(fill);
+                continue;
+            }
+            const mgr = fill.getStylesMgr();
+            if (!mgr) {
+                __fills.push(fill);
+                continue;
+            }
+            const mask = mgr.getSync(fill.colorMask) as FillMask;
+            if (!mask) {
+                __fills.push(fill);
+                continue;
+            }
+
+            const _f = importFill(exportFill(fill));
+            _f.color = mask.color;
+            _f.gradient = mask.gradient;
+            __fills.push(_f);
+        }
+        return __fills;
+        // todo cache for fill
     }
 
     getBorders(): Border[] {

@@ -183,6 +183,8 @@ export class Fill extends Basic implements classes.Fill {
     private __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
     private __cacheData?: { media: { buff: Uint8Array, base64: string }, ref: string };
 
+    private __styleMgr?: ResourceMgr<StyleMangerMember>;
+
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
@@ -204,6 +206,14 @@ export class Fill extends Basic implements classes.Fill {
 
     getImageMgr(): ResourceMgr<{ buff: Uint8Array, base64: string }> | undefined {
         return this.__imageMgr;
+    }
+
+    setStylesMgr(styleMgr: ResourceMgr<StyleMangerMember>) {
+        this.__styleMgr = styleMgr;
+    }
+
+    getStylesMgr(): ResourceMgr<StyleMangerMember> | undefined {
+        return this.__styleMgr;
     }
 
     private __startLoad: boolean = false;
@@ -416,10 +426,10 @@ export class FillMask extends Fill implements Mask {
     }
 
     notify(...args: any[]) {
-        super.notify(...args);
+        super.notify("style-mask-change", "fill", ...args);
         this.subscribers.forEach(view => {
             if (view.isDistroyed) return;
-            view.m_ctx.setDirty(view);
+            view.m_ctx.setDirty(view); // 将view设置为脏节点之后，下一帧会被更新
         })
     }
 
@@ -442,7 +452,7 @@ export class CornerRadiusMask extends CornerRadius implements Mask {
     }
 
     notify(...args: any[]) {
-        super.notify(...args);
+        super.notify("style-mask-change", "corner-radius", ...args);
         this.subscribers.forEach(view => {
             if (view.isDistroyed) return;
             view.m_ctx.setDirty(view);
