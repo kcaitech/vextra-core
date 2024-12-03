@@ -5,6 +5,9 @@
         "crdtidx": {
             "$ref": "./crdtidx.json"
         },
+        "id":{
+            "type": "string"
+        },
         "typeId": {
             "type": "string",
             "default": "shape"
@@ -27,6 +30,7 @@
         }
     },
     "required": [
+        "id",
         "crdtidx",
         "typeId",
         "lt",

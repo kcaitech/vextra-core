@@ -33,6 +33,7 @@ import { Variable } from "./variable";
 import { Transform } from "./transform";
 import { makeShapeTransform2By1 } from "./shape_transform_util";
 import { Path } from "@kcdesign/path";
+import { v4 } from "uuid";
 
 export { Transform } from "./transform";
 export {
@@ -755,7 +756,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
     getOpTarget(path: string[]): any {
         const id0 = path[0];
         if (id0 === 'symtags' && !this.symtags) this.symtags = new BasicMap<string, string>();
-        if (id0 === 'cornerRadius' && !this.cornerRadius) this.cornerRadius = new CornerRadius(new BasicArray(),0, 0, 0, 0);
+        if (id0 === 'cornerRadius' && !this.cornerRadius) this.cornerRadius = new CornerRadius(v4(), new BasicArray(),0, 0, 0, 0);
         if (id0 === "guides" && !this.guides) {
             this.guides = new BasicArray<Guide>();
         }

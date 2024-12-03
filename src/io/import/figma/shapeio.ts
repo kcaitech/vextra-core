@@ -70,6 +70,7 @@ import {Transform as Transform2} from "../../../basic/transform";
 import {getPolygonPoints, getPolygonVertices} from "../../../editor/utils/path";
 import {importText} from "./textio";
 import {importColor} from "./common";
+import { v4 } from "uuid";
 
 export function toStrId(id?: {
     localID: string,
@@ -604,7 +605,7 @@ function importRadius(ctx: LoadContext, data: IJSON, shape?: Shape) {
     const rectangleBottomRightCornerRadius = rectangleCornerRadiiIndependent ? data.rectangleBottomRightCornerRadius : cornerRadius;
     const rectangleBottomLeftCornerRadius = rectangleCornerRadiiIndependent ? data.rectangleBottomLeftCornerRadius : cornerRadius;
 
-    const _cornerRadius = new CornerRadius(rectangleTopLeftCornerRadius, rectangleTopRightCornerRadius, rectangleBottomRightCornerRadius, rectangleBottomLeftCornerRadius);
+    const _cornerRadius = new CornerRadius(v4(), rectangleTopLeftCornerRadius, rectangleTopRightCornerRadius, rectangleBottomRightCornerRadius, rectangleBottomLeftCornerRadius);
     if (!shape) return _cornerRadius;
 
     const pathsegs = (shape as PathShape).pathsegs;

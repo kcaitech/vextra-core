@@ -736,6 +736,7 @@ export type ContactRole = {
 }
 /* couner radius */
 export type CornerRadius = {
+    id: string,
     crdtidx: Crdtidx,
     typeId: string,
     lt: number,

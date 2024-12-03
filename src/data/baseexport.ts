@@ -843,6 +843,7 @@ export function exportContactRole(source: types.ContactRole, ctx?: IExportContex
 export function exportCornerRadius(source: types.CornerRadius, ctx?: IExportContext): types.CornerRadius {
     const ret: types.CornerRadius = {} as types.CornerRadius
     ret.typeId = "corner-radius"
+    ret.id = source.id
     ret.crdtidx = exportCrdtidx(source.crdtidx, ctx)
     ret.typeId = source.typeId
     ret.lt = source.lt

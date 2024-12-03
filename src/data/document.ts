@@ -124,7 +124,11 @@ export class Document extends (DocumentMeta) {
         this.__pages = new ResourceMgr<Page>([id, 'pages'], (data: Page) => guard.guard(data));
         this.__symbols = new SymbolMgr([id, 'symbols'], symbolregist, (data: Shape) => guard.guard(data));
         this.__medias = new ResourceMgr<{ buff: Uint8Array, base64: string }>([id, 'medias']);
+
         this.__styles = new ResourceMgr<StyleMangerMember>([id, 'styles']);
+        if (stylelib) {
+            for (const sheet of stylelib) for (const v of sheet.variables) this.__styles.add(v.id, v);
+        }
         this.__correspondent = new SpecialActionCorrespondent();
         this.freesymbols = freesymbols;
         this.stylelib = stylelib;

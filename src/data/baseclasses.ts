@@ -636,13 +636,15 @@ export class ContactRole extends Basic {
 /* couner radius */
 export class CornerRadius extends Basic {
     typeId = "corner-radius"
+    id: string
     crdtidx: Crdtidx
     lt: number
     rt: number
     lb: number
     rb: number
-    constructor(crdtidx: Crdtidx, lt: number = 0, rt: number = 0, lb: number = 0, rb: number = 0) {
+    constructor(id: string, crdtidx: Crdtidx, lt: number = 0, rt: number = 0, lb: number = 0, rb: number = 0) {
         super()
+        this.id = id
         this.crdtidx = crdtidx
         this.lt = lt
         this.rt = rt

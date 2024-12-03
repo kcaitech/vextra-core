@@ -400,7 +400,7 @@ export class StyleSheet extends Basic implements classes.StyleSheet {
                 fillMask.gradient = v.gradient;
                 notifiable_variables.push(fillMask);
             } else if (v instanceof classes.CornerRadius) {
-                const radiusMask = new CornerRadiusMask(sheetId, v.crdtidx, v.lt, v.rt, v.lb, v.lb);
+                const radiusMask = new CornerRadiusMask(v4(), sheetId, v.crdtidx, v.lt, v.rt, v.lb, v.lb);
                 notifiable_variables.push(radiusMask);
             }
             // 还有其他的一些类型
@@ -446,8 +446,8 @@ export class CornerRadiusMask extends CornerRadius implements Mask {
     sheet: string;
     subscribers: Set<ShapeView>;
 
-    constructor(sheet: string, crdtidx: Crdtidx, lt: number = 0, rt: number = 0, lb: number = 0, rb: number = 0) {
-        super(crdtidx, lt, rt, lb, rb);
+    constructor(id: string, sheet: string, crdtidx: Crdtidx, lt: number = 0, rt: number = 0, lb: number = 0, rb: number = 0) {
+        super(id, crdtidx, lt, rt, lb, rb);
         this.sheet = sheet;
         this.subscribers = new Set<ShapeView>();
     }

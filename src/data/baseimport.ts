@@ -934,6 +934,7 @@ export function importContactRole(source: types.ContactRole, ctx?: IImportContex
 /* couner radius */
 export function importCornerRadius(source: types.CornerRadius, ctx?: IImportContext): impl.CornerRadius {
     const ret: impl.CornerRadius = new impl.CornerRadius (
+        source.id,
         importCrdtidx(source.crdtidx, ctx),
         source.lt,
         source.rt,
@@ -1133,6 +1134,7 @@ export function importFill(source: types.Fill, ctx?: IImportContext): impl.Fill 
     importFillOptional(ret, source, ctx)
         // inject code
     if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
+    if (source["colorMask"] && ctx?.document) ret.setStylesMgr(ctx.document.stylesMgr);
 
     return ret
 }
