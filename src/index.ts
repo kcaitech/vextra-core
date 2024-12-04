@@ -133,7 +133,10 @@ export {
     ScrollDirection,
     ScrollBehavior,
 
-    StackPositioning
+    StackPositioning,
+
+    CornerRadiusMask,
+    FillMask
 } from "./data"
 
 export {

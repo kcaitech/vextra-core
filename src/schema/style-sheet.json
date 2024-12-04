@@ -16,7 +16,7 @@
             "$ref": "./border-side-setting.json"
           },
           {
-            "$ref": "./fill.json"
+            "$ref": "./fill-mask.json"
           },
           {
             "$ref": "./border.json"

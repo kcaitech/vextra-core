@@ -164,6 +164,13 @@ export function exportExportOptions_exportFormats(source: types.ExportOptions_ex
 export function exportExportVisibleScaleType(source: types.ExportVisibleScaleType, ctx?: IExportContext): types.ExportVisibleScaleType {
     return source
 }
+export function exportFillMask_fills(source: types.FillMask_fills, ctx?: IExportContext): types.FillMask_fills {
+    const ret: types.FillMask_fills = []
+    source.forEach((source) => {
+        ret.push(exportFill(source, ctx))
+    })
+    return ret
+}
 /* fill rule */
 export function exportFillRule(source: types.FillRule, ctx?: IExportContext): types.FillRule {
     return source
@@ -595,8 +602,8 @@ export function exportStyleSheet_variables(source: types.StyleSheet_variables, c
             if (source.typeId === "border-side-setting") {
                 return exportBorderSideSetting(source as types.BorderSideSetting, ctx)
             }
-            if (source.typeId === "fill") {
-                return exportFill(source as types.Fill, ctx)
+            if (source.typeId === "fill-mask") {
+                return exportFillMask(source as types.FillMask, ctx)
             }
             if (source.typeId === "border") {
                 return exportBorder(source as types.Border, ctx)
@@ -1017,7 +1024,6 @@ export function exportFill(source: types.Fill, ctx?: IExportContext): types.Fill
     if (source.originalImageHeight) ret.originalImageHeight = source.originalImageHeight
     if (source.paintFilter) ret.paintFilter = exportPaintFilter(source.paintFilter, ctx)
     if (source.transform) ret.transform = exportPatternTransform(source.transform, ctx)
-    if (source.colorMask) ret.colorMask = source.colorMask
         // inject code
     if (ctx?.medias && ret.imageRef) ctx.medias.add(ret.imageRef);
 
@@ -1040,14 +1046,6 @@ export function exportPara(source: types.Para, ctx?: IExportContext): types.Para
     ret.text = source.text
     ret.spans = exportPara_spans(source.spans, ctx)
     if (source.attr) ret.attr = exportParaAttr(source.attr, ctx)
-    return ret
-}
-/* style sheet */
-export function exportStyleSheet(source: types.StyleSheet, ctx?: IExportContext): types.StyleSheet {
-    const ret: types.StyleSheet = {} as types.StyleSheet
-    ret.id = source.id
-    ret.name = source.name
-    ret.variables = exportStyleSheet_variables(source.variables, ctx)
     return ret
 }
 /* style */
@@ -1075,6 +1073,7 @@ export function exportStyle(source: types.Style, ctx?: IExportContext): types.St
         })
         return ret
     })()
+    if (source.fillsMask) ret.fillsMask = source.fillsMask
     return ret
 }
 /* text attr */
@@ -1093,6 +1092,18 @@ export function exportText(source: types.Text, ctx?: IExportContext): types.Text
     ret.typeId = source.typeId
     ret.paras = exportText_paras(source.paras, ctx)
     if (source.attr) ret.attr = exportTextAttr(source.attr, ctx)
+    return ret
+}
+/* fill mask */
+export function exportFillMask(source: types.FillMask, ctx?: IExportContext): types.FillMask {
+    const ret: types.FillMask = {} as types.FillMask
+    ret.typeId = "fill-mask"
+    ret.crdtidx = exportCrdtidx(source.crdtidx, ctx)
+    ret.typeId = source.typeId
+    ret.id = source.id
+    ret.name = source.name
+    ret.description = source.description
+    ret.fills = exportFillMask_fills(source.fills, ctx)
     return ret
 }
 /* shape */
@@ -1137,6 +1148,14 @@ export function exportShape(source: types.Shape, ctx?: IExportContext): types.Sh
     if (source.stackPositioning) ret.stackPositioning = exportStackPositioning(source.stackPositioning, ctx)
     if (source.uniformScale) ret.uniformScale = source.uniformScale
     if (source.roundMask) ret.roundMask = source.roundMask
+    return ret
+}
+/* style sheet */
+export function exportStyleSheet(source: types.StyleSheet, ctx?: IExportContext): types.StyleSheet {
+    const ret: types.StyleSheet = {} as types.StyleSheet
+    ret.id = source.id
+    ret.name = source.name
+    ret.variables = exportStyleSheet_variables(source.variables, ctx)
     return ret
 }
 /* table cell */

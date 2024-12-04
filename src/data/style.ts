@@ -18,7 +18,9 @@ import {
     FillRule,
     CornerType,
     BorderSideSetting,
-    BlurType, CornerRadius, Crdtidx
+    BlurType, CornerRadius, Crdtidx,
+    PaintFilter,
+    PatternTransform,
 } from "./baseclasses";
 import { Basic, BasicArray, BasicMap, ResourceMgr } from "./basic";
 import { Variable } from "./variable";
@@ -26,6 +28,7 @@ import { Color } from "./color";
 import { ShapeView } from "../dataview";
 import { StyleSheet_variables } from "./typesdefine";
 import { v4 } from "uuid";
+import { cloneGradient } from "src/io/cilpboard";
 
 export {
     GradientType,
@@ -288,6 +291,9 @@ export class Style extends Basic implements classes.Style {
     startMarkerType?: MarkerType
     endMarkerType?: MarkerType
     varbinds?: BasicMap<string, string>
+    fillsMask?: string
+
+    private __styleMgr?: ResourceMgr<StyleMangerMember>;
 
     constructor(
         borders: BasicArray<Border>,
@@ -298,6 +304,14 @@ export class Style extends Basic implements classes.Style {
         this.borders = borders
         this.fills = fills
         this.shadows = shadows
+    }
+
+    setStylesMgr(styleMgr: ResourceMgr<StyleMangerMember>) {
+        this.__styleMgr = styleMgr;
+    }
+
+    getStylesMgr(): ResourceMgr<StyleMangerMember> | undefined {
+        return this.__styleMgr;
     }
 
     getOpTarget(path: string[]) {
@@ -393,11 +407,32 @@ export class StyleSheet extends Basic implements classes.StyleSheet {
     private transform2notifiable(sheetId: string, variables: StyleSheet_variables) {
         const notifiable_variables = new BasicArray<StyleMangerMember>();
         for (const v of variables) {
-            if (v instanceof classes.Fill) {
-                const color = new Color(v.color.alpha, v.color.red, v.color.green, v.color.blue);
-                const fillMask = new FillMask(v.crdtidx, sheetId, v4(), v.isEnabled, v.fillType, color);
-                // todo 把一些可选属性传过来
-                fillMask.gradient = v.gradient;
+            if (v instanceof classes.FillMask) {
+                const fills = new BasicArray<Fill>();
+                v.fills.forEach(s => {
+                    const { crdtidx, id, isEnabled, fillType, color, contextSettings, imageRef, imageScaleMode, rotation, scale, originalImageWidth, originalImageHeight, paintFilter, transform } = s;
+                    const new_fill = new Fill(crdtidx, id, isEnabled, fillType, new Color(color.alpha, color.red, color.green, color.blue))
+                    if (s.gradient) {
+                        const _g = cloneGradient(s.gradient);
+                        new_fill.gradient = _g;
+                    }
+                    new_fill.imageRef = imageRef;
+                    new_fill.imageScaleMode = imageScaleMode;
+                    new_fill.rotation = rotation;
+                    new_fill.scale = scale;
+                    new_fill.originalImageWidth = originalImageWidth;
+                    new_fill.originalImageHeight = originalImageHeight;
+                    new_fill.originalImageHeight = originalImageHeight;
+                    if (paintFilter) {
+                        new_fill.paintFilter = new PaintFilter(paintFilter.exposure, paintFilter.contrast, paintFilter.saturation, paintFilter.temperature, paintFilter.tint, paintFilter.shadow, paintFilter.hue);
+                    }
+                    if (transform) {
+                        new_fill.transform = new PatternTransform(transform.m00, transform.m01, transform.m02, transform.m10, transform.m11, transform.m12);
+                    }
+                    s.contextSettings = contextSettings;
+                    fills.push(new_fill)
+                })
+                const fillMask = new FillMask(v.crdtidx, sheetId, v4(), v.name, v.description, fills);
                 notifiable_variables.push(fillMask);
             } else if (v instanceof classes.CornerRadius) {
                 const radiusMask = new CornerRadiusMask(v4(), sheetId, v.crdtidx, v.lt, v.rt, v.lb, v.lb);
@@ -416,14 +451,25 @@ interface Mask {
     notify: (...args: any[]) => void;       // 当前变量改变，通知所有被遮盖的对象更新试图
 }
 
-export class FillMask extends Fill implements Mask {
+export class FillMask extends Basic implements Mask, classes.FillMask {
+    typeId = 'fill-mask';
+    crdtidx: BasicArray<number>;
+    id: string;
     sheet: string;
     subscribers: Set<ShapeView>;
+    name: string;
+    description: string;
+    fills: BasicArray<Fill>
 
-    constructor(crdtidx: BasicArray<number>, sheet: string, id: string, isEnabled: boolean, fillType: FillType, color: Color) {
-        super(crdtidx, id, isEnabled, fillType, color);
+    constructor(crdtidx: BasicArray<number>, sheet: string, id: string, name: string, description: string, fills: BasicArray<Fill>) {
+        super()
+        this.crdtidx = crdtidx
+        this.id = id
         this.sheet = sheet;
         this.subscribers = new Set<ShapeView>();
+        this.name = name;
+        this.description = description
+        this.fills = fills
     }
 
     notify(...args: any[]) {

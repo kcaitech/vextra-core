@@ -1,0 +1,36 @@
+{
+    "description": "fill mask",
+    "type": "object",
+    "properties": {
+        "crdtidx": {
+            "$ref": "./crdtidx.json"
+        },
+        "typeId": {
+            "type": "string"
+        },
+        "id": {
+            "type": "string"
+        },
+        "name": {
+            "type": "string"
+        },
+        "description": {
+            "type": "string"
+        },
+        "fills": {
+            "type": "array",
+            "items": {
+                "$ref": "./fill.json"
+            }
+        }
+    },
+    "required": [
+        "crdtidx",
+        "typeId",
+        "id",
+        "name",
+        "description",
+        "fills"
+    ],
+    "additionalProperties": false
+}

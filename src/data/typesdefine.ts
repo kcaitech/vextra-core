@@ -160,6 +160,7 @@ export enum ExportVisibleScaleType {
     Width = "width",
     Height = "height",
 }
+export type FillMask_fills = Array<Fill>
 /* fill rule */
 export enum FillRule {
     Nonzero = "nonzero",
@@ -564,7 +565,7 @@ export enum StrikethroughType {
 export enum StyleLibType {
     Color = "color",
 }
-export type StyleSheet_variables = Array<BorderSideSetting | Fill | Border | Shadow | Blur | CornerRadius>
+export type StyleSheet_variables = Array<BorderSideSetting | FillMask | Border | Shadow | Blur | CornerRadius>
 /* shape types */
 export enum StyleVarType {
     Color = "color",
@@ -880,7 +881,6 @@ export type Fill = {
     originalImageHeight?: number,
     paintFilter?: PaintFilter,
     transform?: PatternTransform,
-    colorMask?: string,
 }
 /* span attr */
 export type ParaAttr = SpanAttr & {
@@ -896,12 +896,6 @@ export type Para = {
     text: string,
     spans: Para_spans,
     attr?: ParaAttr,
-}
-/* style sheet */
-export type StyleSheet = {
-    id: string,
-    name: string,
-    variables: StyleSheet_variables,
 }
 /* style */
 export type Style = {
@@ -920,6 +914,7 @@ export type Style = {
     startMarkerType?: MarkerType,
     endMarkerType?: MarkerType,
     varbinds?: Map<string, string>,
+    fillsMask?: string,
 }
 /* text attr */
 export type TextAttr = ParaAttr & {
@@ -933,6 +928,15 @@ export type Text = {
     typeId: string,
     paras: Text_paras,
     attr?: TextAttr,
+}
+/* fill mask */
+export type FillMask = {
+    crdtidx: Crdtidx,
+    typeId: string,
+    id: string,
+    name: string,
+    description: string,
+    fills: FillMask_fills,
 }
 /* shape */
 export type Shape = {
@@ -968,6 +972,12 @@ export type Shape = {
     stackPositioning?: StackPositioning,
     uniformScale?: number,
     roundMask?: string,
+}
+/* style sheet */
+export type StyleSheet = {
+    id: string,
+    name: string,
+    variables: StyleSheet_variables,
 }
 /* table cell */
 export type TableCell = Shape & {

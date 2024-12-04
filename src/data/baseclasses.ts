@@ -222,6 +222,7 @@ export class Ellipse extends Basic {
     }
 }
 type ExportOptions_exportFormats = BasicArray<ExportFormat>
+type FillMask_fills = BasicArray<Fill>
 type Gradient_stops = BasicArray<Stop>
 /* graphics contex settings */
 export class GraphicsContextSettings extends Basic {
@@ -479,7 +480,7 @@ export class Stop extends Basic {
         this.color = color
     }
 }
-type StyleSheet_variables = BasicArray<BorderSideSetting | Fill | Border | Shadow | Blur | CornerRadius>
+type StyleSheet_variables = BasicArray<BorderSideSetting | FillMask | Border | Shadow | Blur | CornerRadius>
 type Style_borders = BasicArray<Border>
 type Style_fills = BasicArray<Fill>
 type Style_shadows = BasicArray<Shadow>
@@ -864,7 +865,6 @@ export class Fill extends Basic {
     originalImageHeight?: number
     paintFilter?: PaintFilter
     transform?: PatternTransform
-    colorMask?: string
     constructor(crdtidx: Crdtidx, id: string, isEnabled: boolean, fillType: FillType, color: Color) {
         super()
         this.crdtidx = crdtidx
@@ -896,19 +896,6 @@ export class Para extends Basic {
         this.spans = spans
     }
 }
-/* style sheet */
-export class StyleSheet extends Basic {
-    typeId = "style-sheet"
-    id: string
-    name: string
-    variables: StyleSheet_variables
-    constructor(id: string, name: string, variables: StyleSheet_variables) {
-        super()
-        this.id = id
-        this.name = name
-        this.variables = variables
-    }
-}
 /* style */
 export class Style extends Basic {
     typeId = "style"
@@ -926,6 +913,7 @@ export class Style extends Basic {
     startMarkerType?: MarkerType
     endMarkerType?: MarkerType
     varbinds?: BasicMap<string, string>
+    fillsMask?: string
     constructor(borders: Style_borders, fills: Style_fills, shadows: Style_shadows) {
         super()
         this.borders = borders
@@ -949,6 +937,23 @@ export class Text extends Basic {
     constructor(paras: Text_paras) {
         super()
         this.paras = paras
+    }
+}
+/* fill mask */
+export class FillMask extends Basic {
+    typeId = "fill-mask"
+    crdtidx: Crdtidx
+    id: string
+    name: string
+    description: string
+    fills: FillMask_fills
+    constructor(crdtidx: Crdtidx, id: string, name: string, description: string, fills: FillMask_fills) {
+        super()
+        this.crdtidx = crdtidx
+        this.id = id
+        this.name = name
+        this.description = description
+        this.fills = fills
     }
 }
 /* shape */
@@ -993,6 +998,19 @@ export class Shape extends Basic {
         this.type = type
         this.transform = transform
         this.style = style
+    }
+}
+/* style sheet */
+export class StyleSheet extends Basic {
+    typeId = "style-sheet"
+    id: string
+    name: string
+    variables: StyleSheet_variables
+    constructor(id: string, name: string, variables: StyleSheet_variables) {
+        super()
+        this.id = id
+        this.name = name
+        this.variables = variables
     }
 }
 /* table cell */

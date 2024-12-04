@@ -126,6 +126,8 @@ export async function importDocument(storage: storage.IStorage, documentPath: st
     if (meta.stylelib) {
         // 包装一下sheet，让它变成可广播对象
         for (const sheet of meta.stylelib) libs.push(new StyleSheet(sheet.id, sheet.name, sheet.variables));
+    }  else {
+        libs.push(new StyleSheet(meta.id, meta.name, []));
     }
 
     const document = new Document(
@@ -202,6 +204,8 @@ export async function importLocalDocument(storage: storage.IStorage, documentPat
     const libs = new BasicArray<StyleSheet>()
     if (meta.stylelib) {
         for (const sheet of meta.stylelib) libs.push(new StyleSheet(sheet.id, sheet.name, sheet.variables));
+    } else {
+        libs.push(new StyleSheet(meta.id, meta.name, []));
     }
     const document = new Document(
         meta.id,

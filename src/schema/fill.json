@@ -56,9 +56,6 @@
         },
         "transform": {
             "$ref": "./pattern-transform.json"
-        },
-        "colorMask": {
-            "type": "string"
         }
     },
     "required": [

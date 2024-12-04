@@ -17,6 +17,7 @@ type Artboard_guides = BasicArray<impl.Guide>
 type DocumentMeta_pagesList = BasicArray<impl.PageListItem>
 type DocumentMeta_stylelib = BasicArray<impl.StyleSheet>
 type ExportOptions_exportFormats = BasicArray<impl.ExportFormat>
+type FillMask_fills = BasicArray<impl.Fill>
 type Gradient_stops = BasicArray<impl.Stop>
 type GroupShape_childs = BasicArray<impl.GroupShape | impl.ImageShape | impl.PathShape | impl.PathShape2 | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape | impl.PolygonShape | impl.StarShape>
 type Guide_crdtidx = BasicArray<number>
@@ -27,7 +28,7 @@ type PathShape_pathsegs = BasicArray<impl.PathSegment>
 type PathShape2_pathsegs = BasicArray<impl.PathSegment>
 type PrototypeInterAction_crdtidx = BasicArray<number>
 type Shape_prototypeInteractions = BasicArray<impl.PrototypeInterAction>
-type StyleSheet_variables = BasicArray<impl.BorderSideSetting | impl.Fill | impl.Border | impl.Shadow | impl.Blur | impl.CornerRadius>
+type StyleSheet_variables = BasicArray<impl.BorderSideSetting | impl.FillMask | impl.Border | impl.Shadow | impl.Blur | impl.CornerRadius>
 type Style_borders = BasicArray<impl.Border>
 type Style_fills = BasicArray<impl.Fill>
 type Style_shadows = BasicArray<impl.Shadow>
@@ -221,6 +222,14 @@ export function importExportOptions_exportFormats(source: types.ExportOptions_ex
 /* visible scale type */
 export function importExportVisibleScaleType(source: types.ExportVisibleScaleType, ctx?: IImportContext): impl.ExportVisibleScaleType {
     return source
+}
+export function importFillMask_fills(source: types.FillMask_fills, ctx?: IImportContext): FillMask_fills {
+    const ret: FillMask_fills = new BasicArray()
+    source.forEach((source, i) => {
+        if (!source.crdtidx) source.crdtidx = [i]
+        ret.push(importFill(source, ctx))
+    })
+    return ret
 }
 /* fill rule */
 export function importFillRule(source: types.FillRule, ctx?: IImportContext): impl.FillRule {
@@ -673,9 +682,8 @@ export function importStyleSheet_variables(source: types.StyleSheet_variables, c
             if (source.typeId === "border-side-setting") {
                 return importBorderSideSetting(source as types.BorderSideSetting, ctx)
             }
-            if (source.typeId === "fill") {
-                if (!source.crdtidx) source.crdtidx = [i]
-                return importFill(source as types.Fill, ctx)
+            if (source.typeId === "fill-mask") {
+                return importFillMask(source as types.FillMask, ctx)
             }
             if (source.typeId === "border") {
                 if (!source.crdtidx) source.crdtidx = [i]
@@ -1122,7 +1130,6 @@ function importFillOptional(tar: impl.Fill, source: types.Fill, ctx?: IImportCon
     if (source.originalImageHeight) tar.originalImageHeight = source.originalImageHeight
     if (source.paintFilter) tar.paintFilter = importPaintFilter(source.paintFilter, ctx)
     if (source.transform) tar.transform = importPatternTransform(source.transform, ctx)
-    if (source.colorMask) tar.colorMask = source.colorMask
 }
 export function importFill(source: types.Fill, ctx?: IImportContext): impl.Fill {
     const ret: impl.Fill = new impl.Fill (
@@ -1134,7 +1141,6 @@ export function importFill(source: types.Fill, ctx?: IImportContext): impl.Fill 
     importFillOptional(ret, source, ctx)
         // inject code
     if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
-    if (source["colorMask"] && ctx?.document) ret.setStylesMgr(ctx.document.stylesMgr);
 
     return ret
 }
@@ -1164,14 +1170,6 @@ export function importPara(source: types.Para, ctx?: IImportContext): impl.Para 
     importParaOptional(ret, source, ctx)
     return ret
 }
-/* style sheet */
-export function importStyleSheet(source: types.StyleSheet, ctx?: IImportContext): impl.StyleSheet {
-    const ret: impl.StyleSheet = new impl.StyleSheet (
-        source.id,
-        source.name,
-        importStyleSheet_variables(source.variables, ctx))
-    return ret
-}
 /* style */
 function importStyleOptional(tar: impl.Style, source: types.Style, ctx?: IImportContext) {
     if (source.miterLimit) tar.miterLimit = source.miterLimit
@@ -1192,6 +1190,7 @@ function importStyleOptional(tar: impl.Style, source: types.Style, ctx?: IImport
         })
         return ret
     })()
+    if (source.fillsMask) tar.fillsMask = source.fillsMask
 }
 export function importStyle(source: types.Style, ctx?: IImportContext): impl.Style {
     const ret: impl.Style = new impl.Style (
@@ -1232,6 +1231,16 @@ export function importText(source: types.Text, ctx?: IImportContext): impl.Text 
     const ret: impl.Text = new impl.Text (
         importText_paras(source.paras, ctx))
     importTextOptional(ret, source, ctx)
+    return ret
+}
+/* fill mask */
+export function importFillMask(source: types.FillMask, ctx?: IImportContext): impl.FillMask {
+    const ret: impl.FillMask = new impl.FillMask (
+        importCrdtidx(source.crdtidx, ctx),
+        source.id,
+        source.name,
+        source.description,
+        importFillMask_fills(source.fills, ctx))
     return ret
 }
 /* shape */
@@ -1278,6 +1287,14 @@ export function importShape(source: types.Shape, ctx?: IImportContext): impl.Sha
         importTransform(source.transform, ctx),
         importStyle(source.style, ctx))
     importShapeOptional(ret, source, ctx)
+    return ret
+}
+/* style sheet */
+export function importStyleSheet(source: types.StyleSheet, ctx?: IImportContext): impl.StyleSheet {
+    const ret: impl.StyleSheet = new impl.StyleSheet (
+        source.id,
+        source.name,
+        importStyleSheet_variables(source.variables, ctx))
     return ret
 }
 /* table cell */

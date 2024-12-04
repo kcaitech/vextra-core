@@ -74,7 +74,7 @@ export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeSize, scaleX
         const __decompose_scale = transform.decomposeScale();
         const size = shape.size;
         transform.clearScaleSize();
-        return {transform, targetWidth: size.width * __decompose_scale.x, targetHeight: size.height * __decompose_scale.y};
+        return { transform, targetWidth: size.width * __decompose_scale.x, targetHeight: size.height * __decompose_scale.y };
     } else {
         const __cur_env = {
             width: parentFrame.width,
@@ -88,7 +88,7 @@ export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeSize, scaleX
             __cur_env.width /= uniformScale;
             __cur_env.height /= uniformScale;
         }
-        return fixConstrainFrame2(shape, {x: scaleX, y: scaleY}, __cur_env as ShapeSize, __pre_env as ShapeSize);
+        return fixConstrainFrame2(shape, { x: scaleX, y: scaleY }, __cur_env as ShapeSize, __pre_env as ShapeSize);
     }
 }
 
@@ -101,7 +101,7 @@ export function fixConstrainFrame2(shape: Shape, scale: { x: number, y: number }
 
     const transform = makeShapeTransform2By1(shape.transform);
 
-    const __scale = {x: 1, y: 1};
+    const __scale = { x: 1, y: 1 };
 
     // 水平
     if (ResizingConstraints2.isHorizontalScale(resizingConstraint)) {
@@ -249,7 +249,7 @@ export function fixConstrainFrame2(shape: Shape, scale: { x: number, y: number }
     }
 
 
-    return {transform, targetWidth, targetHeight};
+    return { transform, targetWidth, targetHeight };
 
     function toRight(bounding: ShapeFrame) {
         return originEnvSize.width - bounding.x - bounding.width;
@@ -647,10 +647,18 @@ export class ShapeView extends DataView {
 
     getFills(): Fill[] {
         const v = this._findOV(OverrideType.Fills, VariableType.Fills);
-        const fills: Fill[] = v ? v.value : this.m_data.style.fills;
+        let fills: Fill[];
         const __fills: Fill[] = [];
+        if (this.style.fillsMask) {
+            const mgr = this.style.getStylesMgr();
+            if (!mgr) return __fills;
+            const mask = mgr.getSync(this.style.fillsMask) as FillMask
+            fills=mask.fills
+        } else {
+            fills = v ? v.value : this.m_data.style.fills;
+        }
         for (const fill of fills) {
-            if (!fill.colorMask) {
+            if (!this.style.fillsMask) {
                 __fills.push(fill);
                 continue;
             }
@@ -910,9 +918,9 @@ export class ShapeView extends DataView {
         let scaleY = scale.y;
 
         if (parentFrame && resizingConstraint !== 0) {
-            const {transform, targetWidth, targetHeight} = fixFrameByConstrain(shape, parentFrame, scaleX, scaleY, uniformScale);
+            const { transform, targetWidth, targetHeight } = fixFrameByConstrain(shape, parentFrame, scaleX, scaleY, uniformScale);
             this.updateLayoutArgs(makeShapeTransform1By2(transform), new ShapeFrame(0, 0, targetWidth, targetHeight), (shape as PathShape).fixedRadius);
-            this.layoutChilds(varsContainer, this.frame, {x: targetWidth / saveW, y: targetHeight / saveH});
+            this.layoutChilds(varsContainer, this.frame, { x: targetWidth / saveW, y: targetHeight / saveH });
         } else {
             if (uniformScale) {
                 scaleX /= uniformScale;
@@ -926,7 +934,7 @@ export class ShapeView extends DataView {
             transform.clearScaleSize();
             const frame = new ShapeFrame(0, 0, size.width * __decompose_scale.x, size.height * __decompose_scale.y);
             this.updateLayoutArgs(makeShapeTransform1By2(transform), frame, (shape as PathShape).fixedRadius);
-            this.layoutChilds(varsContainer, this.frame, {x: frame.width / saveW, y: frame.height / saveH});
+            this.layoutChilds(varsContainer, this.frame, { x: frame.width / saveW, y: frame.height / saveH });
         }
 
         // const t = skewTransform(scaleX, scaleY).clone();
