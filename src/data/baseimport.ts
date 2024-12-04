@@ -1241,6 +1241,9 @@ export function importFillMask(source: types.FillMask, ctx?: IImportContext): im
         source.name,
         source.description,
         importFillMask_fills(source.fills, ctx))
+        // inject code
+    if (ctx?.document) ctx.document.stylesMgr.add(ret.id, ret);
+
     return ret
 }
 /* shape */

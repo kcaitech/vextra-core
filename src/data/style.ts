@@ -1,27 +1,29 @@
 import * as classes from "./baseclasses"
 import {
-    BorderOptions,
-    ColorControls,
-    ContextSettings,
-    Shadow,
-    WindingRule,
-    FillType,
-    BorderPosition,
-    BorderStyle,
-    MarkerType,
-    ContactRole,
-    VariableType,
-    Point2D,
-    GradientType,
-    Stop,
     BlendMode,
-    FillRule,
-    CornerType,
+    BlurType,
+    BorderOptions,
+    BorderPosition,
     BorderSideSetting,
-    BlurType, CornerRadius, Crdtidx,
+    BorderStyle,
+    ColorControls,
+    ContactRole,
+    ContextSettings,
+    CornerRadius,
+    CornerType,
+    Crdtidx,
+    FillRule,
+    FillType,
+    GradientType,
+    MarkerType,
     PaintFilter,
     PatternTransform,
-} from "./baseclasses";
+    Point2D,
+    Shadow,
+    Stop,
+    VariableType,
+    WindingRule
+} from "./baseclasses"
 import { Basic, BasicArray, BasicMap, ResourceMgr } from "./basic";
 import { Variable } from "./variable";
 import { Color } from "./color";
@@ -287,7 +289,7 @@ export class Style extends Basic implements classes.Style {
     fills: BasicArray<Fill>
     innerShadows?: BasicArray<Shadow>
     shadows: BasicArray<Shadow>
-    contacts?: BasicArray<ContactRole> // todo
+    contacts?: BasicArray<ContactRole>
     startMarkerType?: MarkerType
     endMarkerType?: MarkerType
     varbinds?: BasicMap<string, string>
@@ -413,8 +415,7 @@ export class StyleSheet extends Basic implements classes.StyleSheet {
                     const { crdtidx, id, isEnabled, fillType, color, contextSettings, imageRef, imageScaleMode, rotation, scale, originalImageWidth, originalImageHeight, paintFilter, transform } = s;
                     const new_fill = new Fill(crdtidx, id, isEnabled, fillType, new Color(color.alpha, color.red, color.green, color.blue))
                     if (s.gradient) {
-                        const _g = cloneGradient(s.gradient);
-                        new_fill.gradient = _g;
+                        new_fill.gradient = cloneGradient(s.gradient);
                     }
                     new_fill.imageRef = imageRef;
                     new_fill.imageScaleMode = imageScaleMode;
@@ -432,7 +433,7 @@ export class StyleSheet extends Basic implements classes.StyleSheet {
                     s.contextSettings = contextSettings;
                     fills.push(new_fill)
                 })
-                const fillMask = new FillMask(v.crdtidx, sheetId, v4(), v.name, v.description, fills);
+                const fillMask = new FillMask(v.crdtidx,/* sheetId,*/ v4(), v.name, v.description, fills);
                 notifiable_variables.push(fillMask);
             } else if (v instanceof classes.CornerRadius) {
                 const radiusMask = new CornerRadiusMask(v4(), sheetId, v.crdtidx, v.lt, v.rt, v.lb, v.lb);
@@ -445,27 +446,27 @@ export class StyleSheet extends Basic implements classes.StyleSheet {
 }
 
 interface Mask {
-    sheet: string;                          // 所属样式表
+    // sheet: string;                          // 所属样式表
     subscribers: Set<ShapeView>;            // 被当前变量遮盖的对象集合
     add: (view: ShapeView) => () => void;   // 添加遮盖对象
     notify: (...args: any[]) => void;       // 当前变量改变，通知所有被遮盖的对象更新试图
 }
 
 export class FillMask extends Basic implements Mask, classes.FillMask {
-    typeId = 'fill-mask';
+    typeId = 'fill-mask-living';
     crdtidx: BasicArray<number>;
     id: string;
-    sheet: string;
+    // sheet: string;
     subscribers: Set<ShapeView>;
     name: string;
     description: string;
     fills: BasicArray<Fill>
 
-    constructor(crdtidx: BasicArray<number>, sheet: string, id: string, name: string, description: string, fills: BasicArray<Fill>) {
+    constructor(crdtidx: BasicArray<number>, /*sheet: string,*/ id: string, name: string, description: string, fills: BasicArray<Fill>) {
         super()
         this.crdtidx = crdtidx
         this.id = id
-        this.sheet = sheet;
+        // this.sheet = sheet;
         this.subscribers = new Set<ShapeView>();
         this.name = name;
         this.description = description

@@ -378,3 +378,9 @@ inject['Border']['before'] = `\
         }
     }
 `
+
+inject['FillMask'] = {};
+inject['FillMask']['after'] = `\
+    // inject code
+    if (ctx?.document) ctx.document.stylesMgr.add(ret.id, ret);
+`

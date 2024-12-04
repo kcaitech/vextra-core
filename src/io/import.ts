@@ -122,9 +122,6 @@ export async function importDocument(storage: storage.IStorage, documentPath: st
     const idToVersionId: Map<string, string | undefined> = new Map(meta.pagesList.map(p => [p.id, p.versionId]));
     const fmtVer = meta.fmtVer ?? 0;
 
-    console.log('--meta--', meta);
-    
-
     const libs = new BasicArray<StyleSheet>()
     if (meta.stylelib) {
         // 包装一下sheet，让它变成可广播对象
