@@ -673,6 +673,9 @@ export class ShapeView extends DataView {
                 continue;
             }
 
+            // 检查图层是否在变量通知对象集合里
+            if (!mask.subscribers.has(this)) mask.subscribers.add(this);
+
             const _f = importFill(exportFill(fill));
             _f.color = mask.color;
             _f.gradient = mask.gradient;
