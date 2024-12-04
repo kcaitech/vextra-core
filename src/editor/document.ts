@@ -10,6 +10,7 @@ import { CoopRepository } from "../coop/cooprepo";
 import { Repository } from "../data/transact";
 import * as types from "../data/typesdefine";
 import { FMT_VER_latest } from "../data/fmtver";
+import { StyleMangerMember } from "src/data/style";
 
 export function createDocument(documentName: string, repo: Repository): Document {
     return newDocument(documentName, repo);
@@ -215,4 +216,15 @@ export class DocEditor {
         }
     }
 
+    insertStyleLib(style: StyleMangerMember) {
+        const api = this.__repo.start('insertstylelib');
+        try {
+            api.styleInsert(this.__document, style);
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return true;
+    }
 }
