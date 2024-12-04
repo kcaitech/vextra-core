@@ -28,7 +28,7 @@ import { Color } from "./color";
 import { ShapeView } from "../dataview";
 import { StyleSheet_variables } from "./typesdefine";
 import { v4 } from "uuid";
-import { cloneGradient } from "src/io/cilpboard";
+import { cloneGradient } from "../io/cilpboard";
 
 export {
     GradientType,
@@ -61,7 +61,7 @@ export {
     PatternTransform,
     ImageScaleMode,
     PaintFilter,
-    PaintFilterType
+    PaintFilterType,
 } from "./baseclasses"
 
 export class Gradient extends Basic implements classes.Gradient {

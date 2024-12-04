@@ -647,41 +647,18 @@ export class ShapeView extends DataView {
 
     getFills(): Fill[] {
         const v = this._findOV(OverrideType.Fills, VariableType.Fills);
-        let fills: Fill[];
-        const __fills: Fill[] = [];
+        let fills: Fill[] = [];
         if (this.style.fillsMask) {
             const mgr = this.style.getStylesMgr();
-            if (!mgr) return __fills;
+            if (!mgr) return fills;
             const mask = mgr.getSync(this.style.fillsMask) as FillMask
-            fills=mask.fills
+            fills = mask.fills
+            // 检查图层是否在变量通知对象集合里
+            if (!mask.subscribers.has(this)) mask.subscribers.add(this);
         } else {
             fills = v ? v.value : this.m_data.style.fills;
         }
-        for (const fill of fills) {
-            if (!this.style.fillsMask) {
-                __fills.push(fill);
-                continue;
-            }
-            const mgr = fill.getStylesMgr();
-            if (!mgr) {
-                __fills.push(fill);
-                continue;
-            }
-            const mask = mgr.getSync(fill.colorMask) as FillMask;
-            if (!mask) {
-                __fills.push(fill);
-                continue;
-            }
-
-            // 检查图层是否在变量通知对象集合里
-            if (!mask.subscribers.has(this)) mask.subscribers.add(this);
-
-            const _f = importFill(exportFill(fill));
-            _f.color = mask.color;
-            _f.gradient = mask.gradient;
-            __fills.push(_f);
-        }
-        return __fills;
+        return fills;
         // todo cache for fill
     }
 

@@ -136,7 +136,8 @@ export {
     StackPositioning,
 
     CornerRadiusMask,
-    FillMask
+    FillMask,
+    StyleMangerMember
 } from "./data"
 
 export {
