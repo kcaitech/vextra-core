@@ -372,6 +372,7 @@ export class ShapeView extends DataView {
     m_pathstr?: string;
 
     m_border_path?: Path;
+    m_border_path_box?: ShapeFrame;
 
     m_transform2: Transform2 | undefined;
     m_transform_form_mask?: Transform;
@@ -1459,5 +1460,9 @@ export class ShapeView extends DataView {
 
     get borderPath() {
         return this.m_border_path;
+    }
+
+    get borderPathBox() {
+        return this.m_border_path_box;
     }
 }

@@ -55,6 +55,8 @@ export class PathShapeView extends ShapeView {
         const fills = this.getFills();
         if (!fills.length && borders.length === 1) {
             this.m_border_path = border2path(this, borders[0]);
+            const bbox = this.m_border_path.bbox();
+            this.m_border_path_box = new ShapeFrame(bbox.x, bbox.y, bbox.w, bbox.h);
         }
     }
 
@@ -74,18 +76,21 @@ export class PathShapeView extends ShapeView {
             this.m_path = undefined;
             this.m_pathstr = undefined;
             this.m_border_path = undefined;
+            this.m_border_path_box = undefined;
             this.createBorderPath();
         }
 
         if (args.includes('fills')) {
             this.m_fills = undefined;
             this.m_border_path = undefined;
+            this.m_border_path_box = undefined;
             this.createBorderPath();
         }
 
         if (args.includes('borders')) {
             this.m_borders = undefined;
             this.m_border_path = undefined;
+            this.m_border_path_box = undefined;
             this.createBorderPath();
         }
 
