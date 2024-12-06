@@ -1,6 +1,6 @@
 import { Api } from "../../coop/recordapi";
 import { BorderPosition, ContactForm, CornerType, CurveMode, MarkerType, ShapeType } from "../../data/typesdefine";
-import { CurvePoint, PathShape, PathShape2, Shape } from "../../data/shape";
+import { CurvePoint, PathShape, PathShape2, Point2D, Shape } from "../../data/shape";
 import { Page } from "../../data/page";
 import { v4 } from "uuid";
 import { uuid } from "../../basic/uuid";
@@ -16,6 +16,7 @@ import { ContactLineView, PathShapeView, ShapeView } from "../../dataview";
 import { Cap, gPal, IPalPath, Join } from "../../basic/pal";
 import { Path } from "@kcdesign/path";
 import { modifyAutoLayout } from "./auto_layout";
+import { qua2cube, splitCubicBezierAtT } from "../../data/pathparser";
 
 interface XY {
     x: number
@@ -437,20 +438,26 @@ function get_curve(p: CurvePoint, n: CurvePoint) {
     const from = {x: 0, y: 0};
     const to = {x: 0, y: 0};
     const end = {x: n.x, y: n.y};
-    if (p.hasFrom) {
-        from.x = p.fromX || 0;
-        from.y = p.fromY || 0;
+
+    if (p.hasFrom && n.hasTo) {
+        from.x = p.fromX!;
+        from.y = p.fromY!;
+        to.x = n.toX!;
+        to.y = n.toY!;
+    } else if (p.hasFrom) {
+        const curve = qua2cube(start, {x: p.fromX!, y: p.fromY!}, end);
+        from.x = curve[1].x;
+        from.y = curve[1].y;
+        to.x = curve[2].x;
+        to.y = curve[2].y;
     } else {
-        from.x = p.x;
-        from.y = p.y;
+        const curve = qua2cube(start, {x: n.toX!, y: n.toY!}, end);
+        from.x = curve[1].x;
+        from.y = curve[1].y;
+        to.x = curve[2].x;
+        to.y = curve[2].y;
     }
-    if (n.hasTo) {
-        to.x = n.toX || 0;
-        to.y = n.toY || 0;
-    } else {
-        to.x = n.x;
-        to.y = n.y;
-    }
+
     return {start, from, to, end};
 }
 
@@ -494,7 +501,7 @@ function modify_current_handle_slices(page: Page, api: Api, path_shape: Shape, s
     api.shapeModifyCurvFromPoint(page, path_shape, index, slices[1][1], segmentIndex);
 }
 
-export function after_insert_point(page: Page, api: Api, path_shape: Shape, index: number, segmentIndex: number) {
+export function after_insert_point(page: Page, api: Api, path_shape: Shape, index: number, segmentIndex: number, apex?: { xy: Point2D, t?: number }) {
     let __segment = segmentIndex;
 
     let points: CurvePoint[] = (path_shape as PathShape)?.pathsegs[segmentIndex]?.points;
@@ -503,15 +510,15 @@ export function after_insert_point(page: Page, api: Api, path_shape: Shape, inde
 
     const {previous, next, previous_index, next_index} = __round_curve_point(points, index);
 
-    const xy = get_node_xy_by_round(previous, next);
+    const xy = apex?.xy ?? get_node_xy_by_round(previous, next);
     api.shapeModifyCurvPoint(page, path_shape, index, xy, __segment);
 
     if (!is_curve(previous, next)) return;
 
     api.modifyPointCurveMode(page, path_shape, index, CurveMode.Asymmetric, __segment);
     const {start, from, to, end} = get_curve(previous, next);
-    const slices = split_cubic_bezier(start, from, to, end);
-
+    // const slices = split_cubic_bezier(start, from, to, end);
+    const slices = splitCubicBezierAtT(start, from, to, end, apex?.t ?? 0.5);
     modify_previous_from_by_slice(page, api, path_shape, slices[0], previous, previous_index, __segment);
     modify_next_to_by_slice(page, api, path_shape, slices[1], next, next_index, __segment);
     modify_current_handle_slices(page, api, path_shape, slices, index, __segment);

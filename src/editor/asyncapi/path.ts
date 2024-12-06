@@ -1,6 +1,6 @@
 import { AsyncApiCaller } from "./basic/asyncapi";
 import { CoopRepository } from "../../coop/cooprepo";
-import { Document } from "../../data";
+import { Document, Point2D } from "../../data";
 import { adapt2Shape, GroupShapeView, PageView, ShapeView } from "../../dataview";
 import { CurveMode, CurvePoint, GroupShape, PathSegment, PathShape, Shape, ShapeFrame, ShapeType } from "../../data";
 import { BasicArray } from "../../data";
@@ -110,7 +110,7 @@ export class PathModifier extends AsyncApiCaller {
         }
     }
 
-    addPoint(shape: ShapeView, segment: number, index: number) {
+    addPoint(shape: ShapeView, segment: number, index: number, apex?: { xy: Point2D, t?: number }) {
         try {
             const _shape = adapt2Shape(shape);
             this.shape = _shape;
@@ -122,12 +122,10 @@ export class PathModifier extends AsyncApiCaller {
                 new CurvePoint(new BasicArray<number>(), uuid(), 0, 0, CurveMode.Straight),
                 segment
             );
-            after_insert_point(this.page, this.api, _shape, index, segment);
+            after_insert_point(this.page, this.api, _shape, index, segment, apex);
             this.updateView();
             return true;
         } catch (e) {
-            // console.error('PathModifier.addPoint:', e);
-            // return false
             this.exception = true;
             throw e;
         }
