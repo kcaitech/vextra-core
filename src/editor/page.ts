@@ -4448,6 +4448,7 @@ export class PageEditor {
                     pathShape.transform = shape.transform.clone();
                     pathShape.mask = shape.mask;
                     pathShape.resizingConstraint = shape.resizingConstraint;
+                    pathShape.constrainerProportions = shape.constrainerProportions;
                     const parent = shape.parent as GroupShape;
                     const index = parent.indexOfChild(shape);
                     api.shapeDelete(document, page, parent, index);
@@ -4488,7 +4489,7 @@ export class PageEditor {
                     for (let i = borders.length - 1; i > -1; i--) border2shape(borders[i]);
                     if (shape.style.fills.length) {
                         api.deleteBorders(page, shape, 0, borders.length);
-                        ids.push(view.data.id);
+                        ids.push(shape.id);
                         if (shape instanceof PathShape) update_frame_by_points(api, page, shape);
                     } else {
                         api.shapeDelete(document, page, parent, parent.indexOfChild(shape));
@@ -4497,8 +4498,8 @@ export class PageEditor {
             }
             this.__repo.commit();
         } catch (error) {
-            console.error('outlineShapes:', error);
             this.__repo.rollback();
+            throw error;
         }
     }
 

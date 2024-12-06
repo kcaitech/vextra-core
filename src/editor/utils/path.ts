@@ -725,6 +725,9 @@ export function border2path(shape: ShapeView, border: Border) {
     const width = shape.frame.width;
     const height = shape.frame.height;
 
+    // 尺寸小于或等于14，会出现线条走样😵，这里把它放到到20，返回出去的时候再等比例放回来
+    const radio = Math.min(width / 20, height / 20);
+
     const mark = (shape instanceof PathShapeView)
         && !!(startMarker || endMarker)
         && shape.segments.length === 1
@@ -754,8 +757,8 @@ export function border2path(shape: ShapeView, border: Border) {
         cap: {value: cap}
     };
 
-    const path = shape.getPathStr();
-    const thickness = setting.thicknessTop;
+    const path = getPathStr();
+    const thickness = getThickness();
 
     if (mark) {
         const p0 = make(path);
@@ -796,7 +799,7 @@ export function border2path(shape: ShapeView, border: Border) {
                 p0.stroke(Object.assign(basicParams, {width: thickness}));
                 __path_str = p0.toSVGString();
             } else {
-                const path = shape.getPathStr();
+                const path = getPathStr();
                 const p0 = make(path);
                 const p1 = make(path);
                 if (isDash) dashPath(p0);
@@ -814,7 +817,13 @@ export function border2path(shape: ShapeView, border: Border) {
 
     stack.forEach(i => i?.delete());
 
-    return Path.fromSVGString(__path_str);
+    const result = Path.fromSVGString(__path_str);
+    if (radio < 1) {
+        const matrix = new Matrix();
+        matrix.scale(radio);
+        result.transform(matrix);
+    }
+    return result;
 
     function getRadians(pre: CurvePoint, next: CurvePoint, isEnd?: boolean) {
         if (!pre.hasFrom && !next.hasTo) {
@@ -1032,7 +1041,7 @@ export function border2path(shape: ShapeView, border: Border) {
     function getOddSide(thickness: number, path: string) {
         if (!(thickness > 0)) return;
         if (position === BorderPosition.Inner) {
-            const p0 = make(shape.getPathStr());
+            const p0 = make(getPathStr());
             const p1 = make(path);
             if (isDash) dashPath(p1);
             p1.stroke(Object.assign(basicParams, {width: thickness * 2}));
@@ -1044,7 +1053,7 @@ export function border2path(shape: ShapeView, border: Border) {
             p1.stroke(Object.assign(basicParams, {width: thickness}));
             return p1;
         } else {
-            const p0 = make(shape.getPathStr());
+            const p0 = make(getPathStr());
             const p1 = make(path);
             if (isDash) dashPath(p1);
             p1.stroke(Object.assign(basicParams, {width: thickness * 2}));
@@ -1154,5 +1163,23 @@ export function border2path(shape: ShapeView, border: Border) {
         }
 
         if (cornerPathStr) return make(cornerPathStr);
+    }
+
+    function getPathStr() {
+        const path = shape.getPath().clone();
+        if (radio < 1) {
+            const matrix = new Matrix();
+            matrix.scale(1 / radio)
+            path.transform(matrix);
+            return path.toString();
+        } else {
+            return shape.getPathStr();
+        }
+    }
+
+    function getThickness() {
+        if (radio < 1) {
+            return setting.thicknessTop / radio;
+        } else return setting.thicknessTop;
     }
 }
