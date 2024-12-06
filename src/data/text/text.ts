@@ -599,11 +599,24 @@ function overrideSpan(span: Span, length: number, origin?: Span): Span {
     })
 }
 
+function overrideAttr<T extends {}>(attr: T | undefined, origin?: T): T {
+    return new Proxy<T>(attr ?? {} as T, {
+        get: (target: T, p: string | symbol, receiver: any): any => {
+            let val = Reflect.get(target, p, receiver);
+            if (val === undefined && origin) {
+                val = Reflect.get(origin, p, receiver);
+            }
+            return val;
+        }
+    })
+}
+
 export class OverrideTextPara extends Basic implements classes.Para {
     para: Para
     origin: BasicArray<Para>
     index: number
     _spans?: BasicArray<Span>
+    _attr?: ParaAttr
     constructor(
         para: Para,
         index: number,
@@ -619,6 +632,11 @@ export class OverrideTextPara extends Basic implements classes.Para {
     }
     get text() {
         return this.para.text
+    }
+    get attr() {
+        if (this._attr) return this._attr;
+        this._attr = overrideAttr(this.para.attr, this.origin[this.index]?.attr)
+        return this._attr
     }
     charAt(index: number): string {
         return this.para.charAt(index);
