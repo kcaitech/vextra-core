@@ -115,7 +115,6 @@ export class PathModifier extends AsyncApiCaller {
             const _shape = adapt2Shape(shape);
             this.shape = _shape;
             this.modifyBorderSetting();
-
             this.api.addPointAt(
                 this.page,
                 _shape,
@@ -123,22 +122,20 @@ export class PathModifier extends AsyncApiCaller {
                 new CurvePoint(new BasicArray<number>(), uuid(), 0, 0, CurveMode.Straight),
                 segment
             );
-
             after_insert_point(this.page, this.api, _shape, index, segment);
-
             this.updateView();
             return true;
         } catch (e) {
-            console.log('PathModifier.addPoint:', e);
-            return false
+            // console.error('PathModifier.addPoint:', e);
+            // return false
+            this.exception = true;
+            throw e;
         }
     }
 
     addPointForPen(shape: ShapeView, segment: number, index: number, xy: { x: number, y: number }) {
         try {
-            if (segment < 0 || index < 0) {
-                return false;
-            }
+            if (segment < 0 || index < 0) return false;
             const _shape = adapt2Shape(shape);
             this.shape = _shape;
             this.api.addPointAt(
