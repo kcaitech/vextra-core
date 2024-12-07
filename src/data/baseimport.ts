@@ -1198,6 +1198,9 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
         importStyle_fills(source.fills, ctx),
         importStyle_shadows(source.shadows, ctx))
     importStyleOptional(ret, source, ctx)
+        // inject code        
+    if (ctx?.document) ret.setStylesMgr(ctx.document.stylesMgr);
+
     return ret
 }
 /* text attr */
@@ -1237,6 +1240,7 @@ export function importText(source: types.Text, ctx?: IImportContext): impl.Text 
 export function importFillMask(source: types.FillMask, ctx?: IImportContext): impl.FillMask {
     const ret: impl.FillMask = new impl.FillMask (
         importCrdtidx(source.crdtidx, ctx),
+        source.sheet,
         source.id,
         source.name,
         source.description,

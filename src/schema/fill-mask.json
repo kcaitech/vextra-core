@@ -8,6 +8,9 @@
         "typeId": {
             "type": "string"
         },
+        "sheet": {
+            "type": "string"
+        },
         "id": {
             "type": "string"
         },
@@ -27,6 +30,7 @@
     "required": [
         "crdtidx",
         "typeId",
+        "sheet",
         "id",
         "name",
         "description",

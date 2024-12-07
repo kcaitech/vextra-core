@@ -933,6 +933,7 @@ export type Text = {
 export type FillMask = {
     crdtidx: Crdtidx,
     typeId: string,
+    sheet: string,
     id: string,
     name: string,
     description: string,

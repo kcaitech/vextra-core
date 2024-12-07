@@ -395,6 +395,7 @@ export class Blur extends Basic implements classes.Blur {
 export type StyleMangerMember = FillMask | CornerRadiusMask;
 
 export class StyleSheet extends Basic implements classes.StyleSheet {
+    typeId = "style-sheet"
     id: string
     name: string
     variables: BasicArray<StyleMangerMember>
@@ -433,7 +434,7 @@ export class StyleSheet extends Basic implements classes.StyleSheet {
                     s.contextSettings = contextSettings;
                     fills.push(new_fill)
                 })
-                const fillMask = new FillMask(v.crdtidx,/* sheetId,*/ v4(), v.name, v.description, fills);
+                const fillMask = new FillMask(v.crdtidx, sheetId, v4(), v.name, v.description, fills);
                 notifiable_variables.push(fillMask);
             } else if (v instanceof classes.CornerRadius) {
                 const radiusMask = new CornerRadiusMask(v4(), sheetId, v.crdtidx, v.lt, v.rt, v.lb, v.lb);
@@ -446,8 +447,8 @@ export class StyleSheet extends Basic implements classes.StyleSheet {
 }
 
 interface Mask {
-    // sheet: string;                          // 所属样式表
-    subscribers: Set<ShapeView>;            // 被当前变量遮盖的对象集合
+    sheet: string;                          // 所属样式表
+    __subscribers: Set<ShapeView>;            // 被当前变量遮盖的对象集合
     add: (view: ShapeView) => () => void;   // 添加遮盖对象
     notify: (...args: any[]) => void;       // 当前变量改变，通知所有被遮盖的对象更新试图
 }
@@ -456,18 +457,18 @@ export class FillMask extends Basic implements Mask, classes.FillMask {
     typeId = 'fill-mask-living';
     crdtidx: BasicArray<number>;
     id: string;
-    // sheet: string;
-    subscribers: Set<ShapeView>;
+    sheet: string;
+    __subscribers: Set<ShapeView>;
     name: string;
     description: string;
     fills: BasicArray<Fill>
 
-    constructor(crdtidx: BasicArray<number>, /*sheet: string,*/ id: string, name: string, description: string, fills: BasicArray<Fill>) {
+    constructor(crdtidx: BasicArray<number>, sheet: string, id: string, name: string, description: string, fills: BasicArray<Fill>) {
         super()
         this.crdtidx = crdtidx
         this.id = id
-        // this.sheet = sheet;
-        this.subscribers = new Set<ShapeView>();
+        this.sheet = sheet
+        this.__subscribers = new Set<ShapeView>();
         this.name = name;
         this.description = description
         this.fills = fills
@@ -475,42 +476,42 @@ export class FillMask extends Basic implements Mask, classes.FillMask {
 
     notify(...args: any[]) {
         super.notify("style-mask-change", "fill", ...args);
-        this.subscribers.forEach(view => {
+        this.__subscribers.forEach(view => {
             if (view.isDistroyed) return;
             view.m_ctx.setDirty(view); // 将view设置为脏节点之后，下一帧会被更新
         })
     }
 
     add(view: ShapeView) {
-        this.subscribers.add(view);
+        this.__subscribers.add(view);
         return () => {
-            this.subscribers.delete(view)
+            this.__subscribers.delete(view)
         }
     }
 }
 
 export class CornerRadiusMask extends CornerRadius implements Mask {
     sheet: string;
-    subscribers: Set<ShapeView>;
+    __subscribers: Set<ShapeView>;
 
     constructor(id: string, sheet: string, crdtidx: Crdtidx, lt: number = 0, rt: number = 0, lb: number = 0, rb: number = 0) {
         super(id, crdtidx, lt, rt, lb, rb);
         this.sheet = sheet;
-        this.subscribers = new Set<ShapeView>();
+        this.__subscribers = new Set<ShapeView>();
     }
 
     notify(...args: any[]) {
         super.notify("style-mask-change", "corner-radius", ...args);
-        this.subscribers.forEach(view => {
+        this.__subscribers.forEach(view => {
             if (view.isDistroyed) return;
             view.m_ctx.setDirty(view);
         })
     }
 
     add(view: ShapeView) {
-        this.subscribers.add(view);
+        this.__subscribers.add(view);
         return () => {
-            this.subscribers.delete(view)
+            this.__subscribers.delete(view)
         }
     }
 }

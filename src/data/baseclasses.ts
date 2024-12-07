@@ -943,13 +943,15 @@ export class Text extends Basic {
 export class FillMask extends Basic {
     typeId = "fill-mask"
     crdtidx: Crdtidx
+    sheet: string
     id: string
     name: string
     description: string
     fills: FillMask_fills
-    constructor(crdtidx: Crdtidx, id: string, name: string, description: string, fills: FillMask_fills) {
+    constructor(crdtidx: Crdtidx, sheet: string, id: string, name: string, description: string, fills: FillMask_fills) {
         super()
         this.crdtidx = crdtidx
+        this.sheet = sheet
         this.id = id
         this.name = name
         this.description = description

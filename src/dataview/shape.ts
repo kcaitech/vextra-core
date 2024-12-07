@@ -651,10 +651,10 @@ export class ShapeView extends DataView {
         if (this.style.fillsMask) {
             const mgr = this.style.getStylesMgr();
             if (!mgr) return fills;
-            const mask = mgr.getSync(this.style.fillsMask) as FillMask
+            const mask = mgr.getSync(this.style.fillsMask) as FillMask            
             fills = mask.fills
             // 检查图层是否在变量通知对象集合里
-            if (!mask.subscribers.has(this)) mask.subscribers.add(this);
+            if (!mask.__subscribers.has(this)) mask.__subscribers.add(this);
         } else {
             fills = v ? v.value : this.m_data.style.fills;
         }

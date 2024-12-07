@@ -384,3 +384,8 @@ inject['FillMask']['after'] = `\
     // inject code
     if (ctx?.document) ctx.document.stylesMgr.add(ret.id, ret);
 `
+inject['Style'] = {};
+inject['Style']['after'] = `\
+    // inject code
+    if (source.fillsMask && ctx?.document) ret.setStylesMgr(ctx.document.stylesMgr);
+`

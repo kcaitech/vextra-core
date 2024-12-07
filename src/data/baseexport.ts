@@ -1100,6 +1100,7 @@ export function exportFillMask(source: types.FillMask, ctx?: IExportContext): ty
     ret.typeId = "fill-mask"
     ret.crdtidx = exportCrdtidx(source.crdtidx, ctx)
     ret.typeId = source.typeId
+    ret.sheet = source.sheet
     ret.id = source.id
     ret.name = source.name
     ret.description = source.description
