@@ -474,8 +474,11 @@ function get_node_xy_by_round(p: CurvePoint, n: CurvePoint) {
 }
 
 function modify_previous_from_by_slice(page: Page, api: Api, path_shape: Shape, slice: XY[], previous: CurvePoint, index: number, segmentIndex: number) {
-    if (previous.mode === CurveMode.Straight || !previous.hasFrom) {
-        return;
+    if (!previous.hasTo) {
+        api.modifyPointHasFrom(page, path_shape, index, true, segmentIndex);
+    }
+    if (previous.mode === CurveMode.Straight) {
+        api.modifyPointCurveMode(page, path_shape, index, CurveMode.Disconnected, segmentIndex);
     }
     if (previous.mode === CurveMode.Mirrored) {
         api.modifyPointCurveMode(page, path_shape, index, CurveMode.Asymmetric, segmentIndex);
@@ -484,13 +487,15 @@ function modify_previous_from_by_slice(page: Page, api: Api, path_shape: Shape, 
 }
 
 function modify_next_to_by_slice(page: Page, api: Api, path_shape: Shape, slice: XY[], next: CurvePoint, index: number, segmentIndex: number) {
-    if (next.mode === CurveMode.Straight || !next.hasTo) {
-        return;
+    if (!next.hasTo) {
+        api.modifyPointHasTo(page, path_shape, index, true, segmentIndex);
+    }
+    if (next.mode === CurveMode.Straight) {
+        api.modifyPointCurveMode(page, path_shape, index, CurveMode.Disconnected, segmentIndex);
     }
     if (next.mode === CurveMode.Mirrored) {
         api.modifyPointCurveMode(page, path_shape, index, CurveMode.Asymmetric, segmentIndex);
     }
-
     api.shapeModifyCurvToPoint(page, path_shape, index, slice[2], segmentIndex);
 }
 
