@@ -10,6 +10,7 @@ import {
     ExportFileFormat,
     ExportFormatNameingScheme,
     Fill,
+    FillMask,
     FillType,
     Gradient,
     GradientType,
@@ -2635,6 +2636,38 @@ export class PageEditor {
         }
     }
 
+    shapesSetFillMask(actions: BatchAction2[]) {
+        const api = this.__repo.start("shapesSetFillMask");
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                api.addfillmask(this.__document, this.__page, adapt2Shape(target), value);
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+
+    shapesDelFillMask(actions: BatchAction2[]) {
+        const api = this.__repo.start("shapesDelFillMask");
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target,value } = actions[i];
+                const source = this.__document.stylesMgr.getSync(target.style.fillsMask ?? '');
+                source && source.__subscribers.delete(target);
+                api.deleteFills(this.__page, adapt2Shape(target), 0, target.style.fills.length);
+                api.addFills(this.__page, adapt2Shape(target), value);
+                api.delfillmask(this.__document, this.__page, adapt2Shape(target));
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+
     shapesDeleteFill(actions: BatchAction3[]) {
         const api = this.__repo.start('shapesDeleteFill');
         try {
@@ -2826,7 +2859,7 @@ export class PageEditor {
                 const sideType = borders[index].sideSetting.sideType;
                 switch (sideType) {
                     case SideType.Normal:
-                        api.setBorderSide(this.__page, s, index, new BorderSideSetting(new BasicArray(),sideType, value, value, value, value));
+                        api.setBorderSide(this.__page, s, index, new BorderSideSetting(new BasicArray(), sideType, value, value, value, value));
                         break;
                     case SideType.Top:
                         api.setBorderThicknessTop(this.__page, s, index, value);
@@ -2841,7 +2874,7 @@ export class PageEditor {
                         api.setBorderThicknessLeft(this.__page, s, index, value);
                         break
                     default:
-                        api.setBorderSide(this.__page, s, index, new BorderSideSetting(new BasicArray(),sideType, value, value, value, value));
+                        api.setBorderSide(this.__page, s, index, new BorderSideSetting(new BasicArray(), sideType, value, value, value, value));
                         break;
                 }
 
@@ -2943,7 +2976,7 @@ export class PageEditor {
                         border.gradient = gradient;
                         border.contextSettings = contextSettings;
                     } else {
-                        const sideSetting = new BorderSideSetting(new BasicArray(),SideType.Normal, 1, 1, 1, 1);
+                        const sideSetting = new BorderSideSetting(new BasicArray(), SideType.Normal, 1, 1, 1, 1);
                         border = new Border([i] as BasicArray<number>, uuid(), isEnabled, fill_type, color, BorderPosition.Inner, 1, new BorderStyle(0, 0), types.CornerType.Miter, sideSetting);
                         border.gradient = gradient;
                         border.contextSettings = contextSettings;

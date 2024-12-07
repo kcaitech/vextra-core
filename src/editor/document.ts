@@ -11,6 +11,7 @@ import { Repository } from "../data/transact";
 import * as types from "../data/typesdefine";
 import { FMT_VER_latest } from "../data/fmtver";
 import { StyleMangerMember } from "../data/style";
+import { adapt2Shape, PageView, ShapeView } from "../dataview";
 
 export function createDocument(documentName: string, repo: Repository): Document {
     return newDocument(documentName, repo);
@@ -216,10 +217,17 @@ export class DocEditor {
         }
     }
 
-    insertStyleLib(style: StyleMangerMember) {
+    insertStyleLib(style: StyleMangerMember, page: PageView, shapes?: ShapeView[]) {
         const api = this.__repo.start('insertstylelib');
         try {
             api.styleInsert(this.__document, style);
+            const p = this.__document.pagesMgr.getSync(page.id)
+            if (shapes && p) {
+                for (let i = 0; i < shapes.length; i++) {
+                    const shape = shapes[i];
+                    api.addfillmask(this.__document, p, adapt2Shape(shape), style.id);
+                }
+            }
             this.__repo.commit();
         } catch (error) {
             console.log(error)

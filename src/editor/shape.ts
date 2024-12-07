@@ -1706,7 +1706,7 @@ export class ShapeEditor {
             const shape = adapt2Shape(this.__shape) as PathShape;
             const segments = shape.pathsegs;
             for (const action of actions) {
-                const {originSegmentIndex, slices} = action;
+                const { originSegmentIndex, slices } = action;
                 let last = originSegmentIndex;
                 for (let i = 0; i < slices.length; i++) {
                     const slice = slices[i] as any;
