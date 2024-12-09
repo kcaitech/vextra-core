@@ -39,7 +39,7 @@ export class PathModifier extends AsyncApiCaller {
 
         if (needStoreSelection) {
             this.__repo.rollback();
-            this.api = this.__repo.start('path-modify', (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+            this.api = this.__repo.start('create-path', (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
                 const state = {} as SelectionState;
                 if (!isUndo) state.shapes = this.shape ? [this.shape.id] : [];
                 else state.shapes = cmd.saveselection?.shapes || [];
