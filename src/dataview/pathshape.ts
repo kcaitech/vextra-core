@@ -113,7 +113,6 @@ export class PathShapeView extends ShapeView {
     }
 
     render(): number {
-        console.log('--render--', this.name);
         if (!this.checkAndResetDirty()) return this.m_render_version;
 
         const masked = this.masked;

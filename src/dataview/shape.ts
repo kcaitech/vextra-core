@@ -9,13 +9,14 @@ import { objectId } from "../basic/objectid";
 import { Transform as Transform2 } from "../basic/transform";
 import { float_accuracy } from "../basic/consts";
 import { GroupShapeView } from "./groupshape";
-import { importBorder, importFill } from "../data/baseimport";
-import { exportBorder, exportFill } from "../data/baseexport";
+import { importBorder } from "../data/baseimport";
+import { exportBorder } from "../data/baseexport";
 import { PageView } from "./page";
 import { ArtboradView } from "./artboard";
 import { findOverrideAll } from "../data/utils";
 import { Path } from "@kcdesign/path";
 import { ColVector3D } from "../basic/matrix2";
+import { Renderer } from "../render/basic";
 
 export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     return (
@@ -342,7 +343,6 @@ export function frame2Parent2(t: Transform, size: ShapeFrame): ShapeFrame {
     return new ShapeFrame(lt.x, lt.y, rb.x - lt.x, rb.y - lt.y);
 }
 
-
 export function updateFrame(frame: ShapeFrame, x: number, y: number, w: number, h: number): boolean {
     if (frame.x !== x || frame.y !== y || frame.width !== w || frame.height !== h) {
         frame.x = x;
@@ -382,12 +382,16 @@ export class ShapeView extends DataView {
     m_fills: Fill[] | undefined;
     m_borders: Border[] | undefined;
 
+    renderer: Renderer;
+
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
         const shape = props.data;
         const t = shape.transform;
         this.m_transform = new Transform(t.m00, t.m01, t.m02, t.m10, t.m11, t.m12)
         this.m_fixedRadius = (shape as PathShape).fixedRadius; // rectangle
+
+        this.renderer = new Renderer(this);
     }
 
     hasSize() {
@@ -1033,6 +1037,9 @@ export class ShapeView extends DataView {
         return props;
     }
 
+    /**
+     * @deprecated
+     */
     protected renderStaticProps() {
         const frame = this.frame;
         const props: any = {};
@@ -1113,7 +1120,6 @@ export class ShapeView extends DataView {
 
         const filterId = `${objectId(this)}`;
         const shadows = this.renderShadows(filterId);
-
 
         let props = this.renderProps();
         let children = [...fills, ...childs, ...borders];

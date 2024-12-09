@@ -5,9 +5,7 @@ import { EventEmitter } from "../basic/event";
 import { objectId } from "../basic/objectid";
 import { Notifiable } from "../data/basic";
 
-
 export type VarsContainer = (SymbolRefShape | SymbolShape)[];
-
 
 export interface PropsType {
     data: Shape;
@@ -25,6 +23,8 @@ interface DataView extends Notifiable {
     updateFrames(): boolean;
     emit(name: string, ...args: any[]): void;
 }
+
+export type GraphicsLibrary = 'SVG' | 'Canvas' | 'H5';
 
 export interface ViewType {
     new(ctx: DViewCtx, props: PropsType, shapes?: Shape[]): DataView;
@@ -95,15 +95,20 @@ export function updateViewsFrame(updates: { data: DataView }[]) {
 
 
 export class DViewCtx extends EventEmitter {
-
     static FRAME_TIME = 20; // 实际会有延迟
+
+    gl: GraphicsLibrary;
 
     comsMap: Map<ShapeType, ViewType> = new Map();
 
     private is_document: boolean = false;
+
+    constructor(gl?: GraphicsLibrary) {
+        super();
+        this.gl = gl ?? "SVG"; // 默认用SVG渲染
+    }
     // 选区
     // 缩放监听
-
     // 先更新数据再绘制
     protected relayoutset: Map<number, DataView> = new Map();
     // 要由上往下更新
