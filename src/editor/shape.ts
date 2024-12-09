@@ -1699,19 +1699,19 @@ export class ShapeEditor {
     /**
      * @description 裁剪路径，把第originSegmentIndex条路径裁成slices，slices不会存在新的闭合路径
      */
-    clipPath(actions: { originSegmentIndex: number; slices: CurvePoint[][]; }[]) {
+    clipPath(actions: { originSegmentIndex: number; slices: CurvePoint[][]; closed: boolean }[]) {
         try {
             const api = this.__repo.start("clipPath");
             const page = this.__page;
             const shape = adapt2Shape(this.__shape) as PathShape;
             const segments = shape.pathsegs;
             for (const action of actions) {
-                const {originSegmentIndex, slices} = action;
+                const {originSegmentIndex, slices, closed} = action;
                 let last = originSegmentIndex;
                 for (let i = 0; i < slices.length; i++) {
                     const slice = slices[i] as any;
-                    const origin = segments[originSegmentIndex];
-                    const closed = slices.length === 1 && origin.isClosed && slice.length !== origin.points.length;
+                    // const origin = segments[originSegmentIndex];
+                    // const closed = slices.length === 1 && origin.isClosed && slice.length !== origin.points.length;
                     if (last === originSegmentIndex) api.deleteSegmentAt(page, shape, originSegmentIndex);
                     api.insertSegmentAt(page, shape, last++, new PathSegment([0] as BasicArray<number>, uuid(), slice, closed));
                 }
