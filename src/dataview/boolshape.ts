@@ -156,6 +156,11 @@ export function render2path(shape: ShapeView, defaultOp = BoolOp.None): Path {
 
 export class BoolShapeView extends GroupShapeView {
 
+    onMounted() {
+        super.onMounted();
+        this.createBorderPath();
+    }
+
     get data(): BoolShape {
         return this.m_data as BoolShape;
     }
@@ -173,9 +178,24 @@ export class BoolShapeView extends GroupShapeView {
 
     onDataChange(...args: any[]): void {
         super.onDataChange(...args);
+
         if (args.includes('variables') || args.includes('childs')) {
             this.m_path = undefined;
             this.m_pathstr = undefined;
+        }
+
+        if (args.includes('fills')) {
+            this.m_fills = undefined;
+            this.m_border_path = undefined;
+            this.m_border_path_box = undefined;
+            this.createBorderPath();
+        }
+
+        if (args.includes('borders')) {
+            this.m_borders = undefined;
+            this.m_border_path = undefined;
+            this.m_border_path_box = undefined;
+            this.createBorderPath();
         }
     }
 
@@ -279,6 +299,16 @@ export class BoolShapeView extends GroupShapeView {
         if (mapframe(this.m_visibleFrame, this._p_visibleFrame)) changed = true;
         if (mapframe(this.m_outerFrame, this._p_outerFrame)) changed = true;
         return changed;
+    }
+
+    createBorderPath() {
+        const borders = this.getBorders();
+        const fills = this.getFills();
+        if (!fills.length && borders.length === 1) {
+            this.m_border_path = border2path(this, borders[0]);
+            const bbox = this.m_border_path.bbox();
+            this.m_border_path_box = new ShapeFrame(bbox.x, bbox.y, bbox.w, bbox.h);
+        }
     }
 }
 

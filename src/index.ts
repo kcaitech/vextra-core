@@ -133,7 +133,9 @@ export {
     ScrollDirection,
     ScrollBehavior,
 
-    StackPositioning
+    StackPositioning,
+
+    PathSegment
 } from "./data"
 
 export {

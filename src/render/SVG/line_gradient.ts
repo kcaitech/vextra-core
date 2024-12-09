@@ -100,7 +100,8 @@ export function render(h: Function, value: Gradient, frame: ShapeSize, thickness
             gradient = gradient + "," + "rgba(" + r + "," + g + "," + b + "," + a + ")" + " 360deg";
         }
         const rotate = Math.atan2((value.to.y * frame.height - value.from.y * frame.height), (value.to.x * frame.width - value.from.x * frame.width)) / Math.PI * 180 + 90;
-        const from = "from " + rotate + "deg at " + ((value.from.x * frame.width) + (thickness * 6)) + "px " + ((value.from.y * frame.height) + (thickness * 6)) + "px";
+        // const from = "from " + rotate + "deg at " + ((value.from.x * frame.width) + (thickness * 6)) + "px " + ((value.from.y * frame.height) + (thickness * 6)) + "px";
+        const from = "from " + rotate + "deg at " + value.from.x * 100 + "% " + value.from.y * 100 + "%";
         style =
             "background: conic-gradient(" + from + "," + gradient + ");" +
             "height:-webkit-fill-available;" +
