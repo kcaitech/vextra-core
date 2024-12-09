@@ -9,12 +9,13 @@ import {
     SymbolRefShape,
     SymbolShape,
     VariableType
-} from "../../data/classes";
+} from "../../data";
 import { render as renderGradient } from "./gradient";
 import { render as clippathR } from "./clippath"
 import { objectId } from "../../basic/objectid";
 import { findOverrideAndVar } from "../basic";
 import { patternRender } from "./pattern";
+import { EL } from "../../dataview";
 
 function randomId() {
     return Math.floor((Math.random() * 10000) + 1);
@@ -77,9 +78,9 @@ handler[FillType.Pattern] = function (h: Function, frame: ShapeSize, fill: Fill,
     return h("g", [pattern, _path]);
 }
 
-export function render(h: Function, fills: Fill[], frame: ShapeSize, path: string): Array<any> {
+export function render(h: Function, fills: Fill[], frame: ShapeSize, path: string): EL[] {
     const fillsCount = fills.length;
-    const elArr = new Array();
+    const elArr = [];
     for (let i = 0; i < fillsCount; i++) {
         const fill = fills[i];
         if (!fill.isEnabled) continue;

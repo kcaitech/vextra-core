@@ -971,16 +971,7 @@ export class ShapeView extends DataView {
     // ================== render ===========================
 
     protected renderFills(): EL[] {
-        let fills = this.getFills();
-        if (this.mask) {
-            fills = fills.map(f => {
-                if (f.fillType === FillType.Gradient && f.gradient?.gradientType === GradientType.Angular) {
-                    const nf = importFill(exportFill(f));
-                    nf.fillType = FillType.SolidColor;
-                    return nf;
-                } else return f;
-            })
-        }
+        const fills = this.getFills();
         return renderFills(elh, fills, this.size, this.getPathStr());
     }
 

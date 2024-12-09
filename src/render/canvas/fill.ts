@@ -2,7 +2,7 @@ import { Fill, FillType, ShapeSize } from "../../data";
 
 export function render(ctx: CanvasRenderingContext2D, fills: Fill[], path2D: Path2D, frame: ShapeSize) {
     for (const fill of fills) {
-        painter[fill.fillType](ctx, fill, path2D);
+        painter[fill.fillType](ctx, fill, path2D, frame);
     }
 }
 
