@@ -1,7 +1,7 @@
-import { Blur, BlurType, BorderPosition } from "../../data/baseclasses";
-import { Border, Fill, ShapeSize } from "../../data";
-import { randomId } from "../basic";
-import { objectId } from '../../basic/objectid';
+import { Blur, BlurType, BorderPosition } from "../../../data/baseclasses";
+import { Border, Fill, ShapeSize } from "../../../data";
+import { randomId } from "../../basic";
+import { objectId } from '../../../basic/objectid';
 
 const handler: {
     [key: string]: (h: Function, blur: Blur, id: string, frame: ShapeSize, fills: Fill[], borders: Border[], path: string) => any

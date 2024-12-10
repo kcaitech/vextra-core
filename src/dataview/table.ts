@@ -25,7 +25,7 @@ import { getTableCells, getTableVisibleCells } from "../data/tableread";
 import { BasicArray } from "../data/basic";
 import { newTableCellText } from "../data/text/textutils";
 import { Point2D } from "../data/typesdefine";
-import { render as renderLine } from "../render/SVG/line_borders";
+import { render as renderLine } from "../render/SVG/effects/line_borders";
 
 export class TableView extends ShapeView {
 

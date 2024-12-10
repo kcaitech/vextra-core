@@ -1,4 +1,4 @@
-import { innerShadowId, renderBlur, renderBorders, renderFills, renderShadows } from "../render/SVG";
+import { innerShadowId, renderBlur, renderBorders, renderFills, renderShadows } from "../render/SVG/effects";
 import { BasicArray, Blur, BlurType, Border, BorderPosition, ContextSettings, CornerRadius, CurvePoint, ExportOptions, Fill, FillType, GradientType, makeShapeTransform1By2, makeShapeTransform2By1, MarkerType, OverlayBackgroundAppearance, OverlayBackgroundInteraction, OverlayPosition, OverrideType, PathShape, Point2D, PrototypeInterAction, PrototypeStartingPoint, ResizingConstraints2, ScrollBehavior, ScrollDirection, Shadow, ShadowPosition, Shape, ShapeFrame, ShapeSize, ShapeType, SymbolRefShape, SymbolShape, Transform, Variable, VariableType } from "../data";
 import { findOverrideAndVar } from "./basic";
 import { EL, elh } from "./el";
@@ -11,12 +11,10 @@ import { float_accuracy } from "../basic/consts";
 import { GroupShapeView } from "./groupshape";
 import { importBorder } from "../data/baseimport";
 import { exportBorder } from "../data/baseexport";
-import { PageView } from "./page";
 import { ArtboradView } from "./artboard";
 import { findOverrideAll } from "../data/utils";
 import { Path } from "@kcdesign/path";
 import { ColVector3D } from "../basic/matrix2";
-import { Renderer } from "../render/basic";
 
 export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     return (
@@ -382,16 +380,12 @@ export class ShapeView extends DataView {
     m_fills: Fill[] | undefined;
     m_borders: Border[] | undefined;
 
-    renderer: Renderer;
-
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
         const shape = props.data;
         const t = shape.transform;
         this.m_transform = new Transform(t.m00, t.m01, t.m02, t.m10, t.m11, t.m12)
         this.m_fixedRadius = (shape as PathShape).fixedRadius; // rectangle
-
-        this.renderer = new Renderer(this);
     }
 
     hasSize() {
@@ -707,6 +701,7 @@ export class ShapeView extends DataView {
     }
 
     getPath() {
+        console.log('--shape--',this.name);
         if (this.m_path) return this.m_path;
         const frame = this.frame;
         this.m_path = this.m_data.getPathOfSize(frame, this.m_fixedRadius); // todo fixedRadius
@@ -1096,79 +1091,80 @@ export class ShapeView extends DataView {
     }
 
     render(): number {
-        if (!this.checkAndResetDirty()) return this.m_render_version;
-
-        const masked = this.masked;
-        if (masked) {
-            (this.getPage() as PageView)?.getView(masked.id)?.render();
-            this.reset("g");
-            return ++this.m_render_version;
-        }
-
-        if (!this.isVisible) {
-            this.reset("g");
-            return ++this.m_render_version;
-        }
-
-        const fills = this.renderFills();
-        const borders = this.renderBorders();
-        let childs = this.renderContents();
-        const autoInfo = (this.m_data as SymbolShape).autoLayout;
-        if (autoInfo && autoInfo.stackReverseZIndex) {
-            childs = childs.reverse();
-        }
-
-        const filterId = `${objectId(this)}`;
-        const shadows = this.renderShadows(filterId);
-
-        let props = this.renderProps();
-        let children = [...fills, ...childs, ...borders];
-        // 阴影
-        if (shadows.length) {
-            let filter: string = '';
-            const inner_url = innerShadowId(filterId, this.getShadows());
-            filter = `url(#pd_outer-${filterId}) `;
-            if (inner_url.length) filter += inner_url.join(' ');
-            children = [...shadows, elh("g", { filter }, children)];
-        }
-
-        // 模糊
-        const blurId = `blur_${objectId(this)}`;
-        const blur = this.renderBlur(blurId);
-        if (blur.length) {
-            if (this.blur!.type === BlurType.Gaussian) {
-                children = [...blur, elh('g', { filter: `url(#${blurId})` }, children)];
-            } else {
-                const __props: any = {};
-                if (props.opacity) {
-                    __props.opacity = props.opacity;
-                    delete props.opacity;
-                }
-                if (props.style?.["mix-blend-mode"]) {
-                    __props["mix-blend-mode"] = props.style["mix-blend-mode"];
-                    delete props.style["mix-blend-mode"];
-                }
-                children = [...blur, elh('g', __props, children)];
-            }
-        }
-
-        // 遮罩
-        const _mask_space = this.renderMask();
-        if (_mask_space) {
-            Object.assign(props.style, { transform: _mask_space.toString() });
-            const id = `mask-base-${objectId(this)}`;
-            const __body_transform = this.transformFromMask;
-            const __body = elh("g", { style: { transform: __body_transform } }, children);
-            this.bleach(__body);
-            children = [__body];
-            const mask = elh('mask', { id }, children);
-            const rely = elh('g', { mask: `url(#${id})` }, this.relyLayers);
-            children = [mask, rely];
-        }
-
-        this.reset("g", props, children);
-
-        return ++this.m_render_version;
+        // if (!this.checkAndResetDirty()) return this.m_render_version;
+        //
+        // const masked = this.masked;
+        // if (masked) {
+        //     (this.getPage() as PageView)?.getView(masked.id)?.render();
+        //     this.reset("g");
+        //     return ++this.m_render_version;
+        // }
+        //
+        // if (!this.isVisible) {
+        //     this.reset("g");
+        //     return ++this.m_render_version;
+        // }
+        //
+        // const fills = this.renderFills();
+        // const borders = this.renderBorders();
+        // let childs = this.renderContents();
+        // const autoInfo = (this.m_data as SymbolShape).autoLayout;
+        // if (autoInfo && autoInfo.stackReverseZIndex) {
+        //     childs = childs.reverse();
+        // }
+        //
+        // const filterId = `${objectId(this)}`;
+        // const shadows = this.renderShadows(filterId);
+        //
+        // let props = this.renderProps();
+        // let children = [...fills, ...childs, ...borders];
+        // // 阴影
+        // if (shadows.length) {
+        //     let filter: string = '';
+        //     const inner_url = innerShadowId(filterId, this.getShadows());
+        //     filter = `url(#pd_outer-${filterId}) `;
+        //     if (inner_url.length) filter += inner_url.join(' ');
+        //     children = [...shadows, elh("g", { filter }, children)];
+        // }
+        //
+        // // 模糊
+        // const blurId = `blur_${objectId(this)}`;
+        // const blur = this.renderBlur(blurId);
+        // if (blur.length) {
+        //     if (this.blur!.type === BlurType.Gaussian) {
+        //         children = [...blur, elh('g', { filter: `url(#${blurId})` }, children)];
+        //     } else {
+        //         const __props: any = {};
+        //         if (props.opacity) {
+        //             __props.opacity = props.opacity;
+        //             delete props.opacity;
+        //         }
+        //         if (props.style?.["mix-blend-mode"]) {
+        //             __props["mix-blend-mode"] = props.style["mix-blend-mode"];
+        //             delete props.style["mix-blend-mode"];
+        //         }
+        //         children = [...blur, elh('g', __props, children)];
+        //     }
+        // }
+        //
+        // // 遮罩
+        // const _mask_space = this.renderMask();
+        // if (_mask_space) {
+        //     Object.assign(props.style, { transform: _mask_space.toString() });
+        //     const id = `mask-base-${objectId(this)}`;
+        //     const __body_transform = this.transformFromMask;
+        //     const __body = elh("g", { style: { transform: __body_transform } }, children);
+        //     this.bleach(__body);
+        //     children = [__body];
+        //     const mask = elh('mask', { id }, children);
+        //     const rely = elh('g', { mask: `url(#${id})` }, this.relyLayers);
+        //     children = [mask, rely];
+        // }
+        //
+        // this.reset("g", props, children);
+        //
+        // return ++this.m_render_version;
+        return this.m_renderer.render();
     }
 
     renderStatic() {

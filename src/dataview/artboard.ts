@@ -1,8 +1,8 @@
 import { EL, elh } from "./el";
 import { GroupShapeView } from "./groupshape";
-import { innerShadowId, renderBorders, renderFills } from "../render/SVG";
+import { innerShadowId, renderBorders, renderFills } from "../render/SVG/effects";
 import { objectId } from "../basic/objectid";
-import { render as clippathR } from "../render/SVG/clippath"
+import { render as clippathR } from "../render/SVG/effects/clippath"
 import { AutoLayout, BorderPosition, CornerRadius, Page, ScrollBehavior, ShadowPosition, ShapeFrame, Transform, Artboard, BlurType } from "../data";
 import { ShapeView, updateFrame } from "./shape";
 import { PageView } from "./page";
@@ -95,118 +95,119 @@ export class ArtboradView extends GroupShapeView {
     }
 
     render(): number {
-        if (!this.checkAndResetDirty()) return this.m_render_version;
-
-        const masked = this.masked;
-        if (masked) {
-            (this.getPage() as PageView)?.getView(masked.id)?.render();
-            this.reset("g");
-            return ++this.m_render_version;
-        }
-
-        if (!this.isVisible) {
-            this.reset("g");
-            return ++this.m_render_version;
-        }
-
-        const fills = this.renderFills();
-        const childs = this.renderContents();
-        if (this.autoLayout && this.autoLayout.stackReverseZIndex) childs.reverse();
-        const borders = this.renderBorders();
-
-        const svgprops = this.renderProps();
-        const filterId = `${objectId(this)}`;
-        const shadows = this.renderShadows(filterId);
-
-        const contextSettings = this.style.contextSettings;
-
-        let props: any = { style: { transform: this.transform.toString() } };
-
-        let children = [...fills, ...childs];
-
-        if (this.innerTransform) {
-            const innerEL = childs.map(c => {
-                const s = c as ShapeView;
-                const trans = new Transform();
-                if (s.scrollBehavior === ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME && this.innerTransform) {
-                    trans.trans(-this.innerTransform.translateX, -this.innerTransform.translateY);
-                    return elh("g", { transform: trans.toString() }, [c]);
-                } else if (s.scrollBehavior === ScrollBehavior.STICKYSCROLLS && this.innerTransform) {
-                    if (s._p_frame.y + this.innerTransform.translateY < 0) {
-                        trans.trans(0, -(s._p_frame.y + this.innerTransform.translateY));
-                        return elh("g", { transform: trans.toString() }, [c]);
-                    }
-                }
-                return c;
-            })
-            const child = elh("g", {
-                id: this.id,
-                transform: this.innerTransform.toString()
-            }, innerEL);
-            children = [...fills, child];
-        }
-        if (contextSettings) {
-            props.opacity = contextSettings.opacity;
-            props.style['mix-blend-mode'] = contextSettings.blenMode;
-        }
-
-        if (this.frameMaskDisabled) {
-            svgprops['overflow'] = 'visible';
-            children = [elh("svg", svgprops, [...fills, ...borders, ...childs])];
-        } else {
-            // 裁剪属性不能放在filter的外层
-            const id = "clip-board-" + objectId(this);
-            svgprops['clip-path'] = "url(#" + id + ")";
-            const _svg_node = elh("svg", svgprops, [clippathR(elh, id, this.getPathStr()), ...children]);
-            children = [_svg_node,...borders];
-        }
-
-        if (shadows.length) {
-            let filter: string = '';
-            const inner_url = innerShadowId(filterId, this.getShadows());
-            filter = `url(#pd_outer-${filterId}) `;
-            if (inner_url.length) filter += inner_url.join(' ');
-            props.filter = filter;
-            children = [...shadows, ...children];
-        }
-
-        const blur = this.blur;
-        if (blur) {
-            const blurId = `blur_${objectId(this)}`;
-            const blurEl = this.renderBlur(blurId);
-            children = [...blurEl, ...children];
-            if (blur.type === BlurType.Background) {
-                if (props.opacity) {
-                    svgprops.opacity = props.opacity;
-                    delete props.opacity;
-                }
-                if (props.style?.['mix-blend-mode']) {
-                    if (svgprops.style) svgprops.style['mix-blend-mode'] = props.style['mix-blend-mode'];
-                    else svgprops.style = { 'mix-blend-mode': props.style['mix-blend-mode'] };
-                    delete props.style['mix-blend-mode'];
-                }
-                svgprops['filter'] = (svgprops['filter'] ?? '') + `url(#${blurId})`;
-            } else {
-                props['filter'] = (props['filter'] ?? '') + `url(#${blurId})`;
-            }
-        }
-
-        const _mask_space = this.renderMask();
-        if (_mask_space) {
-            Object.assign(props.style, { transform: _mask_space.toString() });
-            const id = `mask-base-${objectId(this)}`;
-            const __body_transform = this.transformFromMask;
-            const __body = elh("g", { style: { transform: __body_transform } }, children);
-            this.bleach(__body);
-            children = [__body];
-            const mask = elh('mask', { id }, children);
-            const rely = elh('g', { mask: `url(#${id})` }, this.relyLayers);
-            children = [mask, rely];
-        }
-
-        this.reset("g", props, children);
-
-        return ++this.m_render_version;
+        // if (!this.checkAndResetDirty()) return this.m_render_version;
+        //
+        // const masked = this.masked;
+        // if (masked) {
+        //     (this.getPage() as PageView)?.getView(masked.id)?.render();
+        //     this.reset("g");
+        //     return ++this.m_render_version;
+        // }
+        //
+        // if (!this.isVisible) {
+        //     this.reset("g");
+        //     return ++this.m_render_version;
+        // }
+        //
+        // const fills = this.renderFills();
+        // const childs = this.renderContents();
+        // if (this.autoLayout && this.autoLayout.stackReverseZIndex) childs.reverse();
+        // const borders = this.renderBorders();
+        //
+        // const svgprops = this.renderProps();
+        // const filterId = `${objectId(this)}`;
+        // const shadows = this.renderShadows(filterId);
+        //
+        // const contextSettings = this.style.contextSettings;
+        //
+        // let props: any = { style: { transform: this.transform.toString() } };
+        //
+        // let children = [...fills, ...childs];
+        //
+        // if (this.innerTransform) {
+        //     const innerEL = childs.map(c => {
+        //         const s = c as ShapeView;
+        //         const trans = new Transform();
+        //         if (s.scrollBehavior === ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME && this.innerTransform) {
+        //             trans.trans(-this.innerTransform.translateX, -this.innerTransform.translateY);
+        //             return elh("g", { transform: trans.toString() }, [c]);
+        //         } else if (s.scrollBehavior === ScrollBehavior.STICKYSCROLLS && this.innerTransform) {
+        //             if (s._p_frame.y + this.innerTransform.translateY < 0) {
+        //                 trans.trans(0, -(s._p_frame.y + this.innerTransform.translateY));
+        //                 return elh("g", { transform: trans.toString() }, [c]);
+        //             }
+        //         }
+        //         return c;
+        //     })
+        //     const child = elh("g", {
+        //         id: this.id,
+        //         transform: this.innerTransform.toString()
+        //     }, innerEL);
+        //     children = [...fills, child];
+        // }
+        // if (contextSettings) {
+        //     props.opacity = contextSettings.opacity;
+        //     props.style['mix-blend-mode'] = contextSettings.blenMode;
+        // }
+        //
+        // if (this.frameMaskDisabled) {
+        //     svgprops['overflow'] = 'visible';
+        //     children = [elh("svg", svgprops, [...fills, ...borders, ...childs])];
+        // } else {
+        //     // 裁剪属性不能放在filter的外层
+        //     const id = "clip-board-" + objectId(this);
+        //     svgprops['clip-path'] = "url(#" + id + ")";
+        //     const _svg_node = elh("svg", svgprops, [clippathR(elh, id, this.getPathStr()), ...children]);
+        //     children = [_svg_node,...borders];
+        // }
+        //
+        // if (shadows.length) {
+        //     let filter: string = '';
+        //     const inner_url = innerShadowId(filterId, this.getShadows());
+        //     filter = `url(#pd_outer-${filterId}) `;
+        //     if (inner_url.length) filter += inner_url.join(' ');
+        //     props.filter = filter;
+        //     children = [...shadows, ...children];
+        // }
+        //
+        // const blur = this.blur;
+        // if (blur) {
+        //     const blurId = `blur_${objectId(this)}`;
+        //     const blurEl = this.renderBlur(blurId);
+        //     children = [...blurEl, ...children];
+        //     if (blur.type === BlurType.Background) {
+        //         if (props.opacity) {
+        //             svgprops.opacity = props.opacity;
+        //             delete props.opacity;
+        //         }
+        //         if (props.style?.['mix-blend-mode']) {
+        //             if (svgprops.style) svgprops.style['mix-blend-mode'] = props.style['mix-blend-mode'];
+        //             else svgprops.style = { 'mix-blend-mode': props.style['mix-blend-mode'] };
+        //             delete props.style['mix-blend-mode'];
+        //         }
+        //         svgprops['filter'] = (svgprops['filter'] ?? '') + `url(#${blurId})`;
+        //     } else {
+        //         props['filter'] = (props['filter'] ?? '') + `url(#${blurId})`;
+        //     }
+        // }
+        //
+        // const _mask_space = this.renderMask();
+        // if (_mask_space) {
+        //     Object.assign(props.style, { transform: _mask_space.toString() });
+        //     const id = `mask-base-${objectId(this)}`;
+        //     const __body_transform = this.transformFromMask;
+        //     const __body = elh("g", { style: { transform: __body_transform } }, children);
+        //     this.bleach(__body);
+        //     children = [__body];
+        //     const mask = elh('mask', { id }, children);
+        //     const rely = elh('g', { mask: `url(#${id})` }, this.relyLayers);
+        //     children = [mask, rely];
+        // }
+        //
+        // this.reset("g", props, children);
+        //
+        // return ++this.m_render_version;
+        return this.m_renderer.render(this.type);
     }
 
     get guides() {

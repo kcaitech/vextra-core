@@ -2,7 +2,7 @@
 // import { EL, h } from "./basic";
 
 // let g_clippath_id = 0; // 要用稳定的id，避免不必要的dom更新
-import {FillRule} from "../../data/typesdefine";
+import {FillRule} from "../../../data/typesdefine";
 
 /**
  * return a clipPath el

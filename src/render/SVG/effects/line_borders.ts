@@ -1,4 +1,4 @@
-import { objectId } from "../../basic/objectid";
+import { objectId } from "../../../basic/objectid";
 import {
     Border,
     FillType,
@@ -12,9 +12,9 @@ import {
     Gradient,
     GradientType,
     PathShape
-} from "../../data/classes";
-import { findOverrideAndVar } from "../../data/utils";
-import { randomId } from "../basic";
+} from "../../../data/classes";
+import { findOverrideAndVar } from "../../../data/utils";
+import { randomId } from "../../basic";
 import { render as marker } from "./marker";
 import { render as renderGradient } from "./gradient";
 import { render as lineGradient } from "./line_gradient";

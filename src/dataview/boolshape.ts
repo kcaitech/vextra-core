@@ -3,7 +3,7 @@ import { ShapeView, updateFrame } from "./shape";
 import { TextShapeView } from "./textshape";
 import { GroupShapeView } from "./groupshape";
 import { EL, elh } from "./el";
-import { renderBorders, renderFills } from "../render/SVG";
+import { renderBorders, renderFills } from "../render/SVG/effects";
 import { FrameGrid } from "../basic/framegrid";
 import { border2path } from "../editor/utils/path";
 import { Path } from "@kcdesign/path";
@@ -153,7 +153,6 @@ export function render2path(shape: ShapeView, defaultOp = BoolOp.None): Path {
     return resultpath;
 }
 
-
 export class BoolShapeView extends GroupShapeView {
 
     onMounted() {
@@ -231,6 +230,10 @@ export class BoolShapeView extends GroupShapeView {
 
     asyncRender() {
         return this.render();
+    }
+
+    render() {
+        return this.m_renderer.render(this.type);
     }
 
     updateFrames(): boolean {

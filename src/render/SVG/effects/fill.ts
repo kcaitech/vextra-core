@@ -9,13 +9,13 @@ import {
     SymbolRefShape,
     SymbolShape,
     VariableType
-} from "../../data";
+} from "../../../data";
 import { render as renderGradient } from "./gradient";
 import { render as clippathR } from "./clippath"
-import { objectId } from "../../basic/objectid";
-import { findOverrideAndVar } from "../basic";
+import { objectId } from "../../../basic/objectid";
+import { findOverrideAndVar } from "../../basic";
 import { patternRender } from "./pattern";
-import { EL } from "../../dataview";
+import { EL } from "../../../dataview";
 
 function randomId() {
     return Math.floor((Math.random() * 10000) + 1);

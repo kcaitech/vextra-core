@@ -2,13 +2,13 @@ import { TextLayout } from "../data/text/textlayout";
 import { BlurType, ShapeFrame, TableCell, TableCellType, Text } from "../data/classes";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
-import { renderText2Path, renderTextLayout } from "../render/SVG/text";
+import { renderText2Path, renderTextLayout } from "../render/SVG/effects/text";
 import { DViewCtx, PropsType } from "./viewctx";
 import { CursorLocate, TextLocate, locateCursor, locateNextCursor, locatePrevCursor, locateRange, locateText } from "../data/text/textlocate";
 import { newTableCellText } from "../data/text/textutils";
 import { objectId } from "../basic/objectid";
 import { TableView } from "./table";
-import { innerShadowId } from "../render/SVG";
+import { innerShadowId } from "../render/SVG/effects";
 import { Path } from "@kcdesign/path";
 
 export class TableCellView extends ShapeView {
@@ -234,43 +234,44 @@ export class TableCellView extends ShapeView {
     }
 
     render(): number {
-        if (!this.checkAndResetDirty()) return this.m_render_version;
-
-        if (!this.isVisible) {
-            this.reset("g");
-            return ++this.m_render_version;
-        }
-
-        const fills = this.renderFills();
-        const borders = this.renderBorders();
-        const childs = this.renderContents();
-
-        const filterId = `${objectId(this)}`;
-        const shadows = this.renderShadows(filterId);
-        const blurId = `blur_${objectId(this)}`;
-        const blur = this.renderBlur(blurId);
-
-        let props = this.renderProps();
-        let children = [...fills, ...childs, ...borders];
-
-        // 阴影
-        if (shadows.length) {
-            let filter: string = '';
-            const inner_url = innerShadowId(filterId, this.getShadows());
-            filter = `url(#pd_outer-${filterId}) `;
-            if (inner_url.length) filter += inner_url.join(' ');
-            children = [...shadows, elh("g", { filter }, children)];
-        }
-
-        // 模糊
-        if (blur.length) {
-            let filter: string = '';
-            if (this.blur?.type === BlurType.Gaussian) filter = `url(#${blurId})`;
-            children = [...blur, elh('g', { filter }, children)];
-        }
-
-        this.reset("g", props, children);
-
-        return ++this.m_render_version;
+        // if (!this.checkAndResetDirty()) return this.m_render_version;
+        //
+        // if (!this.isVisible) {
+        //     this.reset("g");
+        //     return ++this.m_render_version;
+        // }
+        //
+        // const fills = this.renderFills();
+        // const borders = this.renderBorders();
+        // const childs = this.renderContents();
+        //
+        // const filterId = `${objectId(this)}`;
+        // const shadows = this.renderShadows(filterId);
+        // const blurId = `blur_${objectId(this)}`;
+        // const blur = this.renderBlur(blurId);
+        //
+        // let props = this.renderProps();
+        // let children = [...fills, ...childs, ...borders];
+        //
+        // // 阴影
+        // if (shadows.length) {
+        //     let filter: string = '';
+        //     const inner_url = innerShadowId(filterId, this.getShadows());
+        //     filter = `url(#pd_outer-${filterId}) `;
+        //     if (inner_url.length) filter += inner_url.join(' ');
+        //     children = [...shadows, elh("g", { filter }, children)];
+        // }
+        //
+        // // 模糊
+        // if (blur.length) {
+        //     let filter: string = '';
+        //     if (this.blur?.type === BlurType.Gaussian) filter = `url(#${blurId})`;
+        //     children = [...blur, elh('g', { filter }, children)];
+        // }
+        //
+        // this.reset("g", props, children);
+        //
+        // return ++this.m_render_version;
+        return this.m_renderer.render(this.type);
     }
 }

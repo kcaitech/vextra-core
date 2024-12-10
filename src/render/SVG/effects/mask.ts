@@ -11,11 +11,11 @@ import {
     GradientType,
     Stop,
     Color
-} from "../../data";
+} from "../../../data";
 import { renderCustomBorder } from "./border_custom";
-import { randomId } from "../basic";
+import { randomId } from "../../basic";
 import { render as clippathR } from "./clippath";
-import { objectId } from "../../basic/objectid";
+import { objectId } from "../../../basic/objectid";
 
 // 渐变色 - 纯白色
 const defaultColor = Color.DefaultColor;

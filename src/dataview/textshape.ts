@@ -16,14 +16,14 @@ import {
 } from "../data";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
-import { renderText2Path, renderTextLayout } from "../render/SVG/text";
+import { renderText2Path, renderTextLayout } from "../render/SVG/effects/text";
 import {
     CursorLocate, TextLocate, locateCursor,
     locateNextCursor, locatePrevCursor, locateRange, locateText
 } from "../data/text/textlocate";
 import { objectId } from "../basic/objectid";
 import { Path } from "@kcdesign/path";
-import { renderBorders } from "../render/SVG";
+import { renderBorders } from "../render/SVG/effects";
 import { importBorder } from "../data/baseimport";
 import { exportBorder } from "../data/baseexport";
 

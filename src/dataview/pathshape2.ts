@@ -3,7 +3,7 @@ import { ShapeView } from "./shape";
 import { PathSegment } from "../data/typesdefine";
 import { DViewCtx, PropsType } from "./viewctx";
 import { EL, elh } from "./el";
-import { renderBorders } from "../render/SVG";
+import { renderBorders } from "../render/SVG/effects";
 
 /**
  * @deprecated 使用PathShapeView
