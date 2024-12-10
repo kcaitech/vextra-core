@@ -6,7 +6,7 @@ import { objectId } from "../basic/objectid";
 import { IRenderer } from "../render/basic";
 import { ShapeView } from "./shape";
 import { SVGRenderer } from "../render/SVG/painters/renderer";
-import { CanvasRenderer } from "../render/canvas/renderer";
+import { CanvasRenderer } from "../render/canvas/painters/renderer";
 
 // EventEmitter
 
@@ -92,6 +92,7 @@ export class DataView extends EventEL {
     m_uniform_scale?: number;
     private m_varsContainer?: (SymbolRefShape | SymbolShape)[];
     m_isVirtual?: boolean;
+    m_canvas_ctx?: CanvasRenderingContext2D;
 
     m_isdistroyed: boolean = false;
     m_nodeCount: number = 1;
@@ -123,6 +124,10 @@ export class DataView extends EventEL {
             case "Canvas": return new CanvasRenderer(view);
             default: return new SVGRenderer(view)
         }
+    }
+
+    get canvasRenderingContext2D(): CanvasRenderingContext2D {
+        return this.m_canvas_ctx!;
     }
 
     setData(data: Shape) {
