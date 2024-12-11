@@ -39,8 +39,7 @@ export class CanvasRenderer extends IRenderer {
     }
 
     renderBorders() {
-        const borders = this.view.getBorders();
-        renderBorders(this.getProps(), this.view.canvasRenderingContext2D, borders, this.getPath2D(), this.view.size);
+        renderBorders(this.view, this.getProps(), this.view.canvasRenderingContext2D, this.view.getBorders());
     }
 
     renderShadows() {
