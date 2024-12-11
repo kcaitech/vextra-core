@@ -1,6 +1,6 @@
 import { Api } from "../../coop/recordapi";
-import { BorderPosition, ContactForm, CornerType, CurveMode, MarkerType, ShapeType } from "../../data/typesdefine";
-import { CurvePoint, PathShape, PathShape2, Point2D, Shape } from "../../data/shape";
+import { BorderPosition, ContactForm, CornerType, CurveMode, MarkerType, ShapeType, SideType } from "../../data/typesdefine";
+import { CurvePoint, PathShape, PathShape2, Point2D, Shape, ShapeSize } from "../../data/shape";
 import { Page } from "../../data/page";
 import { v4 } from "uuid";
 import { uuid } from "../../basic/uuid";
@@ -10,7 +10,7 @@ import { ContactShape } from "../../data/contact";
 import { get_box_pagexy, get_nearest_border_point } from "../../data/utils";
 import { PathType } from "../../data/consts";
 import { importCurvePoint } from "../../data/baseimport";
-import { Artboard, Border, makeShapeTransform1By2, makeShapeTransform2By1 } from "../../data";
+import { Artboard, Border, BorderSideSetting, makeShapeTransform1By2, makeShapeTransform2By1, parsePath } from "../../data";
 import { ColVector3D } from "../../basic/matrix2";
 import { ContactLineView, PathShapeView, ShapeView } from "../../dataview";
 import { Cap, gPal, IPalPath, Join } from "../../basic/pal";
@@ -718,6 +718,112 @@ export function borders2path(shape: ShapeView, borders: Border[]): Path {
     }
 }
 
+function getCornerSize(r: number[], frame: ShapeSize) {
+    const {width, height} = frame;
+    const radius = [...r];
+    const min_side = Math.min(width, height);
+
+    if (r[0] > min_side / 2) {
+        if (r[1] > 0 || r[3] > 0) {
+            r[1] > 0 && r[3] > 0 ? radius[0] = min_side / 2 : r[1] > 0 ? radius[0] = Math.min(r[0], width / 2, height) : radius[0] = Math.min(r[0], width, height / 2);
+        } else {
+            r[0] > min_side ? radius[0] = min_side : radius[0] = r[0];
+        }
+    }
+    if (r[1] > min_side / 2) {
+        if (r[0] > 0 || r[2] > 0) {
+            r[0] > 0 && r[2] > 0 ? radius[1] = min_side / 2 : r[0] > 0 ? radius[1] = Math.min(r[1], width / 2, height) : radius[1] = Math.min(r[1], width, height / 2);
+        } else {
+            r[1] > min_side ? radius[1] = min_side : radius[1] = r[1];
+        }
+    }
+    if (r[2] > min_side / 2) {
+        if (r[3] > 0 || r[1] > 0) {
+            r[3] > 0 && r[1] > 0 ? radius[2] = min_side / 2 : r[3] > 0 ? radius[2] = Math.min(r[2], width / 2, height) : radius[2] = Math.min(r[2], width, height / 2);
+        } else {
+            r[2] > min_side ? radius[2] = min_side : radius[2] = r[2];
+        }
+    }
+    if (r[3] > min_side / 2) {
+        if (r[2] > 0 || r[0] > 0) {
+            r[2] > 0 && r[0] > 0 ? radius[3] = min_side / 2 : r[2] > 0 ? radius[3] = Math.min(r[3], width / 2, height) : radius[3] = Math.min(r[3], width, height / 2);
+        } else {
+            r[3] > min_side ? radius[3] = min_side : radius[3] = r[3];
+        }
+    }
+    return radius;
+}
+
+function outer_radius_border_path(radius: number[], frame: ShapeSize, side: BorderSideSetting, cornerType: CornerType, center: boolean) {
+    const {width, height} = frame
+    const {sideType, thicknessBottom, thicknessTop, thicknessLeft, thicknessRight} = side;
+    const p1 = new CurvePoint([] as any, '', 0, 0, CurveMode.Straight);
+    const p2 = new CurvePoint([] as any, '', 1, 0, CurveMode.Straight);
+    const p3 = new CurvePoint([] as any, '', 1, 1, CurveMode.Straight);
+    const p4 = new CurvePoint([] as any, '', 0, 1, CurveMode.Straight);
+    const t = center ? thicknessTop / 2 : thicknessTop;
+    const b = center ? thicknessBottom / 2 : thicknessBottom;
+    const l = center ? thicknessLeft / 2 : thicknessLeft;
+    const r = center ? thicknessRight / 2 : thicknessRight;
+    if (Math.max(...radius) > 0) {
+        const lt = l === 0 ? t : t === 0 ? l : Math.min(l, t);
+        const lb = l === 0 ? b : b === 0 ? l : Math.min(l, b);
+        const rt = r === 0 ? t : t === 0 ? r : Math.min(r, t);
+        const rb = r === 0 ? b : b === 0 ? r : Math.min(r, b);
+        const _r = getCornerSize(radius, frame);
+        p1.radius = _r[0] > 0 ? _r[0] + lt : 0
+        p2.radius = _r[1] > 0 ? _r[1] + rt : 0;
+        p3.radius = _r[2] > 0 ? _r[2] + rb : 0;
+        p4.radius = _r[3] > 0 ? _r[3] + lb : 0;
+    } else if (cornerType === CornerType.Round && sideType === SideType.Custom) {
+        const lt = l > 0 && t > 0 ? Math.min(l, t) : 0;
+        const rt = r > 0 && t > 0 ? Math.min(r, t) : 0;
+        const rb = r > 0 && b > 0 ? Math.min(r, b) : 0;
+        const lb = l > 0 && b > 0 ? Math.min(l, b) : 0;
+        p1.radius = lt;
+        p2.radius = rt;
+        p3.radius = rb;
+        p4.radius = lb;
+    }
+    const w = width + r + l;
+    const h = height + t + b
+
+    const path = parsePath([p1, p2, p3, p4], true, w, h);
+    path.translate(-l, -t);
+    return path.toString();
+}
+
+function roundCornerMaskPath(shape: ShapeView, border: Border, center: boolean) {
+    const cornerType = border.cornerType
+    const {width, height} = shape.size;
+    const radius = shape.radius;
+    const {sideType, thicknessBottom, thicknessTop, thicknessLeft, thicknessRight} = border.sideSetting;
+    const t = center ? thicknessTop / 2 : thicknessTop;
+    const b = center ? thicknessBottom / 2 : thicknessBottom;
+    const l = center ? thicknessLeft / 2 : thicknessLeft;
+    const r = center ? thicknessRight / 2 : thicknessRight;
+    if (Math.max(...radius) > 0 || sideType !== SideType.Custom || cornerType !== CornerType.Bevel) {
+        return outer_radius_border_path(radius, shape.size, border.sideSetting, cornerType, center);
+    } else {
+        //切角
+        const w = width + r + l;
+        const h = height + t + b;
+        const p1 = new CurvePoint([] as any, '', 0, -t, CurveMode.Straight);
+        const p2 = new CurvePoint([] as any, '', width, -t, CurveMode.Straight);
+        const p3 = new CurvePoint([] as any, '', width + r, 0, CurveMode.Straight);
+        const p4 = new CurvePoint([] as any, '', width + r, height, CurveMode.Straight);
+        const p5 = new CurvePoint([] as any, '', width, height + b, CurveMode.Straight);
+        const p6 = new CurvePoint([] as any, '', 0, height + b, CurveMode.Straight);
+        const p7 = new CurvePoint([] as any, '', -l, height, CurveMode.Straight);
+        const p8 = new CurvePoint([] as any, '', -l, 0, CurveMode.Straight);
+        const path = parsePath([p1, p2, p3, p4, p5, p6, p7, p8], true, w, h);
+        const transform = new Matrix();
+        transform.preScale(1 / w, 1 / h);
+        path.transform(transform);
+        return path.toString();
+    }
+}
+
 export function border2path(shape: ShapeView, border: Border) {
     const stack: IPalPath[] = [];
 
@@ -822,8 +928,13 @@ export function border2path(shape: ShapeView, border: Border) {
         }
     } else {
         if (!shape.data.haveEdit) {
-            const path = strokeOdd()
-            if (path) __path_str = path.toSVGString();
+            const path = strokeOdd()!;
+            if (shape.radius.some(i => i)) {
+                const pathRound = roundCornerMaskPath(shape, border, border.position === BorderPosition.Center);
+                const __pathRound = make(pathRound);
+                path.intersection(__pathRound);
+            }
+            __path_str = path.toSVGString();
         }
     }
 
