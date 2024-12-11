@@ -390,7 +390,7 @@ const outer_mask_path = (shape: Shape, border: Border, iscenter: boolean) => {
         const p6 = new CurvePoint([] as any, '', 0, height + b, CurveMode.Straight);
         const p7 = new CurvePoint([] as any, '', -l, height, CurveMode.Straight);
         const p8 = new CurvePoint([] as any, '', -l, 0, CurveMode.Straight);
-        const path = (parsePath(new BasicArray<CurvePoint>(p1, p2, p3, p4, p5, p6, p7, p8), true, w, h, undefined));
+        const path = parsePath(new BasicArray<CurvePoint>(p1, p2, p3, p4, p5, p6, p7, p8), true, w, h, undefined);
         const m = new Matrix();
         m.preScale(w, h);
         path.transform(new Matrix(m.inverse));
