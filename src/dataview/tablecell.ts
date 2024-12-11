@@ -225,8 +225,8 @@ export class TableCellView extends ShapeView {
         return [];
     }
 
-    onDestory(): void {
-        super.onDestory();
+    onDestroy(): void {
+        super.onDestroy();
         if (this.__layoutToken && this.__preText) this.__preText.dropLayout(this.__layoutToken, this.id);
     }
     asyncRender() {

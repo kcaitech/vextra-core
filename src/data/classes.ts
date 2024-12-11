@@ -19,4 +19,4 @@ export { layoutText, TextLayout } from './text/textlayout'
 export { getNextChar } from './text/basic'
 export { importGradient } from './baseimport'
 
-export { Crdtidx } from './baseclasses'
+export { Crdtidx, StyleLibType } from './baseclasses'

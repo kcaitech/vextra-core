@@ -233,114 +233,107 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
 
     const matched = match_for_contact(source);
 
-    try {
-        for (let i = 0, len = source.length; i < len; i++) {
-            const _s = source[i];
-            const type = _s.type;
-            let r: Shape | undefined = undefined;
+    for (let i = 0, len = source.length; i < len; i++) {
+        const _s = source[i];
+        const type = _s.type;
+        let r: Shape | undefined = undefined;
 
-            if (type === ShapeType.Symbol) {
-                const registed = document.symbolregist.get(_s.id);
-                const ref = document.symbolsMgr.get(_s.id);
-                // 剪切的一定有'freesymbols'，但复制或者外部粘贴进来的，不一定。
-                if ((!registed && !ref) || registed === 'freesymbols') {
-                    r = importSymbolShape(_s as any as types.SymbolShape, ctx);
-                    result.push(r);
-                    continue;
-                }
-                if (!ref) continue;
-
-                const f = new ShapeFrame(_s.transform.m02, _s.transform.m12, _s.size.width, _s.size.height);
-                if (_s instanceof SymbolUnionShape) {
-                    const dlt = (_s as any).childs[0];
-                    if (!dlt) continue;
-                    f.width = dlt.size.width;
-                    f.height = dlt.size.height;
-                }
-                r = newSymbolRefShape(_s.name, f, _s.id, document.symbolsMgr);
-                if (r) {
-                    const rt = r.transform;
-                    const st = _s.transform;
-                    rt.m00 = st.m00;
-                    rt.m01 = st.m01;
-                    rt.m10 = st.m10;
-                    rt.m11 = st.m11;
-                    (r as SymbolRefShape).frameMaskDisabled = (_s as SymbolShape).frameMaskDisabled;
-                    result.push(r);
-                }
+        if (type === ShapeType.Symbol) {
+            const registed = document.symbolregist.get(_s.id);
+            const ref = document.symbolsMgr.get(_s.id);
+            // 剪切的一定有'freesymbols'，但复制或者外部粘贴进来的，不一定。
+            if ((!registed && !ref) || registed === 'freesymbols') {
+                r = importSymbolShape(_s as any as types.SymbolShape, ctx);
+                result.push(r);
                 continue;
             }
+            if (!ref) continue;
 
-            if (!matched.has(_s.id)) {
-                _s.id = v4();
+            const f = new ShapeFrame(_s.transform.m02, _s.transform.m12, _s.size.width, _s.size.height);
+            if (_s instanceof SymbolUnionShape) {
+                const dlt = (_s as any).childs[0];
+                if (!dlt) continue;
+                f.width = dlt.size.width;
+                f.height = dlt.size.height;
             }
-
-            if (type === ShapeType.Rectangle) {
-                r = importRectShape(_s as any as types.RectShape, ctx);
-            } else if (type === ShapeType.Oval) {
-                r = importOvalShape(_s as any as types.OvalShape, ctx);
-            } else if (type === ShapeType.Line) {
-                r = importLineShape(_s as any as types.LineShape, ctx);
-            } else if (type === ShapeType.Image) {
-                r = importImageShape(_s as any as types.ImageShape, ctx);
-            } else if (type === ShapeType.Text) {
-                r = importTextShape(_s as any as types.TextShape, ctx);
-            } else if (type === ShapeType.Path) {
-                r = importPathShape(_s as any as types.PathShape, ctx);
-            } else if (type === ShapeType.Path2) {
-                r = importPathShape2(_s as any as types.PathShape2, ctx);
-            } else if (type === ShapeType.Artboard) {
-                const children = (_s as any).childs;
-                children && children.length && set_childs_id(children, matched);
-                r = importArtboard(_s as any, ctx);
-            } else if (type === ShapeType.Group) {
-                const children = (_s as GroupShape).childs;
-                children && children.length && set_childs_id(children, matched);
-                r = importGroupShape(_s as any, ctx);
-            } else if (type === ShapeType.Table) {
-                const children = (_s as any as GroupShape).childs;
-                children && children.length && set_childs_id(children, matched);
-                r = importTableShape(_s as any as types.TableShape, ctx);
-            } else if (type === ShapeType.SymbolRef) {
-                if (!document.symbolsMgr.get((_s as any as types.SymbolRefShape).refId)) continue;
-                r = importSymbolRefShape(_s as any as types.SymbolRefShape, ctx);
-            } else if (type === ShapeType.Contact) {
-                r = importContactShape(_s as any as types.ContactShape, ctx)
-            } else if (type === ShapeType.Cutout) {
-                r = importCutoutShape(_s as any as types.CutoutShape, ctx);
-            } else if (type === ShapeType.SymbolUnion) {
-                const children = (_s as any as SymbolUnionShape).childs;
-                if (!Array.isArray(children)) continue;
-                let isFree = true;
-                for (let i = 0; i < children.length; ++i) {
-                    const cid = children[i].id;
-                    const registed = document.symbolregist.get(cid);
-                    const ref = document.symbolsMgr.get(cid);
-                    if (registed && registed !== 'freesymbols' || (!registed && ref)) {
-                        isFree = false;
-                        break;
-                    }
-                }
-                if (!isFree) set_childs_id(children, matched);
-                r = importSymbolUnionShape(_s as any as SymbolUnionShape, ctx);
-            } else if (type === ShapeType.BoolShape) {
-                const children = (_s as any).childs;
-                children && children.length && set_childs_id(children, matched);
-                r = importBoolShape(_s as any as types.BoolShape, ctx);
-            } else if (type === ShapeType.Star) {
-                r = importStarShape(_s as any as types.StarShape, ctx)
-            } else if (type === ShapeType.Polygon) {
-                r = importPolygonShape(_s as any as types.PolygonShape, ctx)
-            }
-
+            r = newSymbolRefShape(_s.name, f, _s.id, document.symbolsMgr);
             if (r) {
+                const rt = r.transform;
+                const st = _s.transform;
+                rt.m00 = st.m00;
+                rt.m01 = st.m01;
+                rt.m10 = st.m10;
+                rt.m11 = st.m11;
+                (r as SymbolRefShape).frameMaskDisabled = (_s as SymbolShape).frameMaskDisabled;
                 result.push(r);
             }
+            continue;
         }
-        after_paster(document, medias);
-    } catch (error) {
-        console.log(error);
+
+        if (!matched.has(_s.id)) {
+            _s.id = v4();
+        }
+
+        if (type === ShapeType.Rectangle) {
+            r = importRectShape(_s as any as types.RectShape, ctx);
+        } else if (type === ShapeType.Oval) {
+            r = importOvalShape(_s as any as types.OvalShape, ctx);
+        } else if (type === ShapeType.Line) {
+            r = importLineShape(_s as any as types.LineShape, ctx);
+        } else if (type === ShapeType.Image) {
+            r = importImageShape(_s as any as types.ImageShape, ctx);
+        } else if (type === ShapeType.Text) {
+            r = importTextShape(_s as any as types.TextShape, ctx);
+        } else if (type === ShapeType.Path) {
+            r = importPathShape(_s as any as types.PathShape, ctx);
+        } else if (type === ShapeType.Path2) {
+            r = importPathShape2(_s as any as types.PathShape2, ctx);
+        } else if (type === ShapeType.Artboard) {
+            const children = (_s as any).childs;
+            children && children.length && set_childs_id(children, matched);
+            r = importArtboard(_s as any, ctx);
+        } else if (type === ShapeType.Group) {
+            const children = (_s as GroupShape).childs;
+            children && children.length && set_childs_id(children, matched);
+            r = importGroupShape(_s as any, ctx);
+        } else if (type === ShapeType.Table) {
+            const children = (_s as any as GroupShape).childs;
+            children && children.length && set_childs_id(children, matched);
+            r = importTableShape(_s as any as types.TableShape, ctx);
+        } else if (type === ShapeType.SymbolRef) {
+            if (!document.symbolsMgr.get((_s as any as types.SymbolRefShape).refId)) continue;
+            r = importSymbolRefShape(_s as any as types.SymbolRefShape, ctx);
+        } else if (type === ShapeType.Contact) {
+            r = importContactShape(_s as any as types.ContactShape, ctx)
+        } else if (type === ShapeType.Cutout) {
+            r = importCutoutShape(_s as any as types.CutoutShape, ctx);
+        } else if (type === ShapeType.SymbolUnion) {
+            const children = (_s as any as SymbolUnionShape).childs;
+            if (!Array.isArray(children)) continue;
+            let isFree = true;
+            for (let i = 0; i < children.length; ++i) {
+                const cid = children[i].id;
+                const registed = document.symbolregist.get(cid);
+                const ref = document.symbolsMgr.get(cid);
+                if (registed && registed !== 'freesymbols' || (!registed && ref)) {
+                    isFree = false;
+                    break;
+                }
+            }
+            if (!isFree) set_childs_id(children, matched);
+            r = importSymbolUnionShape(_s as any as SymbolUnionShape, ctx);
+        } else if (type === ShapeType.BoolShape) {
+            const children = (_s as any).childs;
+            children && children.length && set_childs_id(children, matched);
+            r = importBoolShape(_s as any as types.BoolShape, ctx);
+        } else if (type === ShapeType.Star) {
+            r = importStarShape(_s as any as types.StarShape, ctx)
+        } else if (type === ShapeType.Polygon) {
+            r = importPolygonShape(_s as any as types.PolygonShape, ctx)
+        }
+        if (r) result.push(r);
     }
+    after_paster(document, medias);
     return result;
 }
 

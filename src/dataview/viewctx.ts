@@ -116,6 +116,14 @@ export class DViewCtx extends EventEmitter {
         return this._sessionStorage;
     }
 
+    private _markRaw?: (v: any) => void
+    setMarkRawFun(markRaw: (v: any) => void) {
+        this._markRaw = markRaw; // vue markRaw
+    }
+    markRaw(v: any) {
+        if (this._markRaw) this._markRaw(v)
+    }
+
     setIsDoc(v: boolean) {
         this.is_document = v;
     }

@@ -26,7 +26,7 @@ export class ContactLineView extends PathShapeView {
         return this.m_data as ContactShape;
     }
 
-    get fromAndto(): { from: Shape | undefined, to: Shape | undefined } {
+    get apexes(): { from: Shape | undefined, to: Shape | undefined } {
         return { from: this.from, to: this.to }
     }
 
@@ -202,8 +202,8 @@ export class ContactLineView extends PathShapeView {
 
     }
 
-    onDestory(): void {
-        super.onDestory();
+    onDestroy(): void {
+        super.onDestroy();
         if (this.from) {
             this.unwatchApex(this.from, this.fromparents);
             this.from = undefined;
@@ -219,17 +219,7 @@ export class ContactLineView extends PathShapeView {
     }
 
     protected renderBorders(): EL[] {
-        if (this.m_data.style.borders.length > 0) {
-            return renderBorders(elh, this.m_data.style, this.getPathStr(), this.m_data);
-        } else {
-            // const props: any = {};
-            // props.stroke = '#808080';
-            // props['stroke-width'] = 2;
-            // props.d = this.getPathStr();
-            // props.fill = "none"
-            // return [elh('path', props)];
-            return [];
-        }
+        return renderBorders(elh, this.m_data.style, this.getPathStr(), this.m_data);
     }
 
     getPoints() {
