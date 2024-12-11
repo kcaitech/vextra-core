@@ -2,6 +2,7 @@ import { ShapeView } from "../../../dataview";
 import { IRenderer } from "../../basic";
 import { render as renderFills } from "../effects/fill";
 import { render as renderBorders } from "../effects/border";
+import { render as renderShadows } from "../effects/shadow";
 
 import { painter } from "./h";
 
@@ -43,6 +44,7 @@ export class CanvasRenderer extends IRenderer {
     }
 
     renderShadows() {
+        return renderShadows(this.view.canvasRenderingContext2D, this.view.getShadows());
     }
 
     renderBlur() {

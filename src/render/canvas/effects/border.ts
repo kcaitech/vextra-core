@@ -4,6 +4,9 @@ import { ShapeView } from "../../../dataview";
 import { border2path } from "../../../editor/utils/path";
 
 export function render(view: ShapeView, props: Props, ctx: CanvasRenderingContext2D, borders: Border[]) {
+    /**
+     * todo 1. 处理单边的圆角问题
+     */
     for (const border of borders) {
         ctx.save();
         const path2D = new Path2D(border2path(view, border).toString());
