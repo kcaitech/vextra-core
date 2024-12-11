@@ -701,7 +701,6 @@ export class ShapeView extends DataView {
     }
 
     getPath() {
-        console.log('--shape--',this.name);
         if (this.m_path) return this.m_path;
         const frame = this.frame;
         this.m_path = this.m_data.getPathOfSize(frame, this.m_fixedRadius); // todo fixedRadius

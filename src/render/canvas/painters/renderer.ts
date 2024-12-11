@@ -1,6 +1,8 @@
 import { ShapeView } from "../../../dataview";
 import { IRenderer } from "../../basic";
-import { render as renderFills } from "../effects/fill"
+import { render as renderFills } from "../effects/fill";
+import { render as renderBorders } from "../effects/border";
+
 import { painter } from "./h";
 
 export type Props = {
@@ -19,7 +21,8 @@ export class CanvasRenderer extends IRenderer {
     }
 
     getProps(): Props {
-        const props: Props = {transform: this.view.transform.toArray()};
+        const transform = this.view.matrix2Root();
+        const props: Props = {transform: transform.toArray()};
         const contextSettings = this.view.contextSettings;
         if (contextSettings) {
             if (contextSettings.opacity !== undefined) {
@@ -36,6 +39,8 @@ export class CanvasRenderer extends IRenderer {
     }
 
     renderBorders() {
+        const borders = this.view.getBorders();
+        renderBorders(this.getProps(), this.view.canvasRenderingContext2D, borders, this.getPath2D(), this.view.size);
     }
 
     renderShadows() {
@@ -56,6 +61,7 @@ export class CanvasRenderer extends IRenderer {
     m_render_version: number = 0;
 
     render(type?: string): number {
-        return painter[type ?? "base"](this.view, this);
+        return painter["base"](this.view, this);
+        // return painter[type ?? "base"](this.view, this);
     }
 }

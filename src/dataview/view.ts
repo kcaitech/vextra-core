@@ -92,7 +92,6 @@ export class DataView extends EventEL {
     m_uniform_scale?: number;
     private m_varsContainer?: (SymbolRefShape | SymbolShape)[];
     m_isVirtual?: boolean;
-    m_canvas_ctx?: CanvasRenderingContext2D;
 
     m_isdistroyed: boolean = false;
     m_nodeCount: number = 1;
@@ -127,7 +126,7 @@ export class DataView extends EventEL {
     }
 
     get canvasRenderingContext2D(): CanvasRenderingContext2D {
-        return this.m_canvas_ctx!;
+        return this.m_ctx.m_canvas!;
     }
 
     setData(data: Shape) {
