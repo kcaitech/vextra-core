@@ -1,4 +1,4 @@
-import { ShapeView } from "../../../dataview";
+import { ArtboradView, ShapeView } from "../../../dataview";
 import { IRenderer } from "../../basic";
 import { render as renderFills } from "../effects/fill";
 import { render as renderBorders } from "../effects/border";
@@ -17,13 +17,25 @@ export class CanvasRenderer extends IRenderer {
         super(view);
     }
 
-    private getPath2D(): Path2D {
-        return new Path2D(this.view.getPath().toString());
+    get ctx() {
+        return this.view.canvasRenderingContext2D;
     }
 
+    // 清除上次渲染产生的缓存
+    private __clear_cache() {
+        this.__path2D_cache = undefined;
+        this.__props_cache = undefined;
+    }
+
+    private __path2D_cache: Path2D | undefined = undefined;
+
+    private get path2D(): Path2D {
+        return this.__path2D_cache ?? (this.__path2D_cache = new Path2D(this.view.getPath().toString()));
+    }
+
+    private __props_cache: Props | undefined = undefined;
     getProps(): Props {
-        const transform = this.view.matrix2Root();
-        const props: Props = {transform: transform.toArray()};
+        const props: Props = {transform: this.view.transform.toArray()};
         const contextSettings = this.view.contextSettings;
         if (contextSettings) {
             if (contextSettings.opacity !== undefined) {
@@ -34,9 +46,13 @@ export class CanvasRenderer extends IRenderer {
         return props;
     }
 
+    get props(): Props {
+        return this.__props_cache ?? (this.__props_cache = this.getProps());
+    }
+
     renderFills() {
         const fills = this.view.getFills();
-        renderFills(this.getProps(), this.view.canvasRenderingContext2D, fills, this.getPath2D(), this.view.size);
+        renderFills(this.getProps(), this.view.canvasRenderingContext2D, fills, this.path2D, this.view.size);
     }
 
     renderBorders() {
@@ -52,17 +68,29 @@ export class CanvasRenderer extends IRenderer {
 
     renderContents() {
         const childs = this.view.m_children;
-        childs.forEach((c) => c.render());
+        if (childs.length) {
+            this.ctx.save();
+            this.ctx.transform(...this.props.transform);
+            childs.forEach((c) => c.render());
+            this.ctx.restore();
+        }
     }
 
-    checkAndResetDirty(): boolean {
-        return this.view.m_ctx.removeDirty(this.view);
+    clip(): Function | null {
+        if ((this.view as ArtboradView).frameMaskDisabled) return null;
+        this.ctx.save();
+        const ot = this.ctx.getTransform();
+        this.ctx.transform(...this.props.transform);
+        this.ctx.clip(this.path2D);
+        this.ctx.setTransform(ot);
+        return this.ctx.restore.bind(this.ctx);
     }
 
-    m_render_version: number = 0;
-
-    render(type?: string): number {
-        return painter["base"](this.view, this);
-        // return painter[type ?? "base"](this.view, this);
+    render(type = "base"): number {
+        // if (!this.checkAndResetDirty()) return this.m_render_version;
+        this.view.layout();
+        const ver = painter[type] ? painter[type](this.view, this) : painter["base"](this.view, this);
+        this.__clear_cache();
+        return ver;
     }
 }

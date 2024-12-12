@@ -5,13 +5,12 @@ import { border2path } from "../../../editor/utils/path";
 import { render as renderGradient } from "./gradient";
 
 export function render(view: ShapeView, props: Props, ctx: CanvasRenderingContext2D, borders: Border[], frame: ShapeSize) {
-    /**
-     * todo 1. 处理单边的圆角问题
-     */
     for (const border of borders) {
-        const path2D = new Path2D(border2path(view, border).toString());
-        const fillPath = new Path2D(view.getPathStr());
-        painter[border.fillType](props, ctx, border, path2D, frame, fillPath);
+        if (border.isEnabled) {
+            const path2D = new Path2D(border2path(view, border).toString());
+            const fillPath = new Path2D(view.getPathStr());
+            painter[border.fillType](props, ctx, border, path2D, frame, fillPath);
+        }
     }
 }
 

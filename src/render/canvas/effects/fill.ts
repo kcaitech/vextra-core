@@ -4,7 +4,7 @@ import { render as renderGradient } from "./gradient";
 
 export function render(props: Props, ctx: CanvasRenderingContext2D, fills: Fill[], path2D: Path2D, frame: ShapeSize) {
     for (const fill of fills) {
-        painter[fill.fillType](props, ctx, fill, path2D, frame);
+        if (fill.isEnabled) painter[fill.fillType](props, ctx, fill, path2D, frame);
     }
 }
 
