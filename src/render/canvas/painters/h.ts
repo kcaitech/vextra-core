@@ -2,7 +2,6 @@ import { CanvasRenderer } from "./renderer";
 import { ArtboradView, PageView, ShapeView, SymbolRefView } from "../../../dataview";
 import { ShapeType } from "../../../data";
 
-
 export const painter: { [key: string]: (view: any, renderer: CanvasRenderer) => number } = {};
 
 painter['base'] = (view: ShapeView, renderer: CanvasRenderer) => {
