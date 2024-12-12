@@ -1,5 +1,5 @@
 import { CanvasRenderer } from "./renderer";
-import { ArtboradView, ShapeView } from "../../../dataview";
+import { ArtboradView, PageView, ShapeView } from "../../../dataview";
 import { ShapeType } from "../../../data";
 
 
@@ -10,6 +10,21 @@ painter['base'] = (view: ShapeView, renderer: CanvasRenderer) => {
     renderer.renderContents();
     renderer.renderBorders();
     return ++renderer.m_render_version;
+}
+
+painter[ShapeType.BoolShape] = (view: ShapeView, renderer) => {
+    renderer.renderFills();
+    renderer.renderBorders();
+    return ++renderer.m_render_version;
+}
+
+painter[ShapeType.Page] = (view: PageView, renderer: CanvasRenderer) => {
+    const dpr = window.devicePixelRatio;
+    renderer.ctx.save();
+    renderer.ctx.transform(dpr, 0, 0, dpr, 0, 0);
+    const ver = painter['base'](view, renderer);
+    renderer.ctx.restore();
+    return ver;
 }
 
 painter[ShapeType.Artboard] = (view: ArtboradView, renderer: CanvasRenderer) => {
