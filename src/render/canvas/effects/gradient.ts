@@ -27,9 +27,6 @@ function getTransform(ctx: CanvasRenderingContext2D, size: ShapeSize, from: Poin
     const center = { x: width / 2, y: height / 2 } as Point2D;
     scaleOfOuter(transform, center, stretchx, stretchy);
     rotateOfOuter(transform, center, rotate90 ? angle + 90 : angle);
-    const offsetx = width / 2 - from.x;
-    const offsety = height / 2 - from.y;
-    translate(transform, -offsetx, -offsety)
     return transform
 }
 
@@ -50,12 +47,23 @@ export function render(ctx: CanvasRenderingContext2D, value: Gradient, frame: Sh
         toPoint(value.to, frame, realTo);
         // 渐变中心点
         const center = { x: frame.width / 2, y: frame.height / 2 } as Point2D;
+        const length = getDistance(frame.width, frame.height);
         const distance = getDistance(Math.abs(realTo.x - realFrom.x), Math.abs(realTo.y - realFrom.y));
-        const distance1 = getDistance(Math.abs(value.to.x - value.from.x), Math.abs(value.to.y - value.from.y));
-        const stretchx = value.elipseLength ? value.elipseLength * (frame.width / frame.height) : frame.width / frame.height;
-        const stretchy = distance1 / 0.5 * (frame.width / frame.height);
-        const transform = getTransform(ctx, frame, realFrom, realTo, stretchx * stretchy, stretchy, true);
-        const gradient = ctx.createRadialGradient(center.x, center.y, 0, center.x, center.y, distance / stretchy);
+        const stretchx = value.elipseLength ? Math.abs(value.elipseLength) * (frame.width / frame.height) : frame.width / frame.height;
+        const stretchy = distance / (frame.height / 2);
+
+        const diff = length / Math.min(stretchx * stretchy * frame.width, stretchy * frame.height);
+        const transform = getTransform(ctx, frame, realFrom, realTo, stretchx * stretchy * diff, stretchy * diff, true);
+
+        const angle = getAngle(realFrom, realTo);
+        const m = new Matrix();
+        m.trans(-center.x, -center.y);
+        m.rotate(-((angle + 90) * OneRadian));
+        m.scale(1 / (stretchx * stretchy * diff), 1 / (stretchy * diff));
+        m.trans(center.x, center.y);
+        const rt = m.computeCoord(realFrom);
+
+        const gradient = ctx.createRadialGradient(rt.x, rt.y, 0, rt.x, rt.y, distance / stretchy / diff);
         applyStops(gradient, value.stops);
         ctx.setTransform(transform);
         return gradient;

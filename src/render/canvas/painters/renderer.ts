@@ -40,7 +40,7 @@ export class CanvasRenderer extends IRenderer {
     }
 
     renderBorders() {
-        renderBorders(this.view, this.getProps(), this.view.canvasRenderingContext2D, this.view.getBorders());
+        renderBorders(this.view, this.getProps(), this.view.canvasRenderingContext2D, this.view.getBorders(), this.view.size);
     }
 
     renderShadows() {
