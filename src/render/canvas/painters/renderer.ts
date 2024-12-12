@@ -5,8 +5,6 @@ import { render as renderBorders } from "../effects/border";
 import { render as renderShadows } from "../effects/shadow";
 
 import { painter } from "./h";
-import { border2path } from "../../../editor/utils/path";
-import { ShapeType } from "../../../data";
 
 export type Props = {
     transform: [number, number, number, number, number, number];
@@ -37,8 +35,7 @@ export class CanvasRenderer extends IRenderer {
 
     private __props_cache: Props | undefined = undefined;
     getProps(): Props {
-        const transform = this.view.matrix2Root();
-        const props: Props = {transform: transform.toArray()};
+        const props: Props = {transform: this.view.transform.toArray()};
         const contextSettings = this.view.contextSettings;
         if (contextSettings) {
             if (contextSettings.opacity !== undefined) {
@@ -71,15 +68,21 @@ export class CanvasRenderer extends IRenderer {
 
     renderContents() {
         const childs = this.view.m_children;
-        childs.forEach((c) => c.render());
+        if (childs.length) {
+            this.ctx.save();
+            this.ctx.transform(...this.props.transform);
+            childs.forEach((c) => c.render());
+            this.ctx.restore();
+        }
     }
 
     clip(): Function | null {
         if ((this.view as ArtboradView).frameMaskDisabled) return null;
         this.ctx.save();
+        const ot = this.ctx.getTransform();
         this.ctx.transform(...this.props.transform);
         this.ctx.clip(this.path2D);
-        this.ctx.resetTransform();
+        this.ctx.setTransform(ot);
         return this.ctx.restore.bind(this.ctx);
     }
 
