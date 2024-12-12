@@ -6,15 +6,19 @@ import { ShapeType } from "../../../data";
 export const painter: { [key: string]: (view: any, renderer: CanvasRenderer) => number } = {};
 
 painter['base'] = (view: ShapeView, renderer: CanvasRenderer) => {
+    const blurEnd = renderer.renderBlur();
     renderer.renderFills();
     renderer.renderContents();
     renderer.renderBorders();
+    blurEnd && blurEnd();
     return ++renderer.m_render_version;
 }
 
 painter[ShapeType.BoolShape] = (view: ShapeView, renderer) => {
+    const blurEnd = renderer.renderBlur();
     renderer.renderFills();
     renderer.renderBorders();
+    blurEnd && blurEnd();
     return ++renderer.m_render_version;
 }
 
@@ -28,6 +32,7 @@ painter[ShapeType.Page] = (view: PageView, renderer: CanvasRenderer) => {
 }
 
 painter[ShapeType.Artboard] = (view: ArtboradView, renderer: CanvasRenderer) => {
+    const blurEnd = renderer.renderBlur();
     renderer.renderFills();
     const clipEnd = renderer.clip();
     if (clipEnd) { // 裁剪容器中的边框需要在内容的上层
@@ -38,7 +43,7 @@ painter[ShapeType.Artboard] = (view: ArtboradView, renderer: CanvasRenderer) => 
         renderer.renderBorders();
         renderer.renderContents();
     }
-
+    blurEnd && blurEnd();
     return ++renderer.m_render_version;
 }
 
@@ -50,6 +55,7 @@ painter[ShapeType.Contact] = (view: ArtboradView, renderer: CanvasRenderer) => {
 painter[ShapeType.Symbol] = painter[ShapeType.Artboard];
 
 painter[ShapeType.SymbolRef] = (view: SymbolRefView, renderer: CanvasRenderer) => {
+    const blurEnd = renderer.renderBlur();
     renderer.renderFills();
     const clipEnd = renderer.clip();
     if (clipEnd) { // 裁剪容器中的边框需要在内容的上层
@@ -60,7 +66,7 @@ painter[ShapeType.SymbolRef] = (view: SymbolRefView, renderer: CanvasRenderer) =
         renderer.renderBorders();
         renderContents();
     }
-
+    blurEnd && blurEnd();
     return ++renderer.m_render_version;
 
     function renderContents() {

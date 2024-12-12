@@ -3,6 +3,7 @@ import { IRenderer } from "../../basic";
 import { render as renderFills } from "../effects/fill";
 import { render as renderBorders } from "../effects/border";
 import { render as renderShadows } from "../effects/shadow";
+import { render as renderBlur } from "../effects/blur"
 
 import { painter } from "./h";
 
@@ -64,6 +65,7 @@ export class CanvasRenderer extends IRenderer {
     }
 
     renderBlur() {
+        return renderBlur(this.view, this.ctx);
     }
 
     renderContents() {
