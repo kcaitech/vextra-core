@@ -20,6 +20,8 @@ import { render as renderLineBorders } from "../render/line_borders"
 import { PageView } from "./page";
 import { importBorder } from "../data/baseimport";
 import { exportBorder } from "../data/baseexport";
+import { GroupShapeView } from "./groupshape";
+import { border2path } from "../editor/utils/path";
 
 export class PathShapeView extends ShapeView {
     m_pathsegs?: PathSegment[];
@@ -45,8 +47,56 @@ export class PathShapeView extends ShapeView {
     ): void {
         this.m_pathsegs = undefined;
         super._layout(shape, parentFrame, varsContainer, scale, uniformScale);
+        this.createBorderPath();
     }
 
+    createBorderPath() {
+        const borders = this.getBorders();
+        const fills = this.getFills();
+        if (!fills.length && borders.length === 1) {
+            this.m_border_path = border2path(this, borders[0]);
+            const bbox = this.m_border_path.bbox();
+            this.m_border_path_box = new ShapeFrame(bbox.x, bbox.y, bbox.w, bbox.h);
+        }
+    }
+
+    onDataChange(...args: any[]): void {
+        if (args.includes('mask') || args.includes('isVisible')) {
+            (this.parent as GroupShapeView).updateMaskMap();
+            (this.parent as GroupShapeView).updateFrames();
+        }
+
+        if (args.includes('points')
+            || args.includes('pathsegs')
+            || args.includes('isClosed')
+            || (this.m_fixedRadius || 0) !== ((this.m_data as any).fixedRadius || 0)
+            || args.includes('cornerRadius')
+            || args.includes('imageRef')
+        ) {
+            this.m_path = undefined;
+            this.m_pathstr = undefined;
+            this.m_border_path = undefined;
+            this.m_border_path_box = undefined;
+            this.createBorderPath();
+        }
+
+        if (args.includes('fills')) {
+            this.m_fills = undefined;
+            this.m_border_path = undefined;
+            this.m_border_path_box = undefined;
+            this.createBorderPath();
+        }
+
+        if (args.includes('borders')) {
+            this.m_borders = undefined;
+            this.m_border_path = undefined;
+            this.m_border_path_box = undefined;
+            this.createBorderPath();
+        }
+
+        const masked = this.masked;
+        if (masked) masked.notify('rerender-mask');
+    }
     protected renderBorders(): EL[] {
         let borders = this.getBorders();
         if (this.mask) {

@@ -5,7 +5,7 @@ import { Path, PathBuilder } from "@kcdesign/path"
 /**
  * @description 在t的位置切割曲线，得到两根曲线，这两根曲线若拼接会与原曲线轨迹一致
  */
-function splitCubicBezierAtT(p0: Point2D, p1: Point2D, p2: Point2D, p3: Point2D, t: number) {
+export function splitCubicBezierAtT(p0: Point2D, p1: Point2D, p2: Point2D, p3: Point2D, t: number) {
     const p01 = interpolate(p0, p1, t);
     const p12 = interpolate(p1, p2, t);
     const p23 = interpolate(p2, p3, t);
@@ -41,7 +41,7 @@ function bezierCurvePointAtT(p0: Point2D, p1: Point2D, p2: Point2D, p3: Point2D,
 /**
  * @description 二次曲线转三次曲线
  */
-function qua2cube(p0: Point2D, p1: Point2D, p2: Point2D) {
+export function qua2cube(p0: Point2D, p1: Point2D, p2: Point2D) {
     const p3 = {x: p0.x / 3 + 2 * p1.x / 3, y: p0.y / 3 + 2 * p1.y / 3}
     const p4 = {x: p2.x / 3 + 2 * p1.x / 3, y: p2.y / 3 + 2 * p1.y / 3}
     return [p0, p3, p4, p2];
