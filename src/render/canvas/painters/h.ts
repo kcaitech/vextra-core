@@ -47,15 +47,29 @@ painter[ShapeType.Contact] = (view: ArtboradView, renderer: CanvasRenderer) => {
     return ++renderer.m_render_version;
 }
 
+painter[ShapeType.Symbol] = painter[ShapeType.Artboard];
+
 painter[ShapeType.SymbolRef] = (view: SymbolRefView, renderer: CanvasRenderer) => {
-    let ver;
-    if (view.uniformScale) {
-        renderer.ctx.save();
-        renderer.ctx.scale(view.uniformScale, view.uniformScale);
-        ver = painter[ShapeType.Artboard](view, renderer);
-        renderer.ctx.restore();
+    renderer.renderFills();
+    const clipEnd = renderer.clip();
+    if (clipEnd) { // 裁剪容器中的边框需要在内容的上层
+        renderContents();
+        clipEnd();
+        renderer.renderBorders();
     } else {
-        ver = painter[ShapeType.Artboard](view, renderer);
+        renderer.renderBorders();
+        renderContents();
     }
-    return ver;
+
+    return ++renderer.m_render_version;
+
+    function renderContents() {
+        const childs = view.m_children;
+        if (!childs.length) return;
+        renderer.ctx.save();
+        renderer.ctx.transform(...renderer.props.transform);
+        if (view.uniformScale) renderer.ctx.scale(view.uniformScale, view.uniformScale);
+        childs.forEach((c) => c.render());
+        renderer.ctx.restore();
+    }
 }

@@ -52,11 +52,11 @@ export class CanvasRenderer extends IRenderer {
 
     renderFills() {
         const fills = this.view.getFills();
-        renderFills(this.getProps(), this.view.canvasRenderingContext2D, fills, this.path2D, this.view.size);
+        renderFills(this.props, this.view.canvasRenderingContext2D, fills, this.path2D, this.view.size);
     }
 
     renderBorders() {
-        renderBorders(this.view, this.getProps(), this.view.canvasRenderingContext2D, this.view.getBorders(), this.view.size);
+        renderBorders(this.view, this.props, this.view.canvasRenderingContext2D, this.view.getBorders(), this.view.size);
     }
 
     renderShadows() {
