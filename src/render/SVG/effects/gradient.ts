@@ -44,7 +44,7 @@ export function render(h: Function, value: Gradient, frame: ShapeSize): { id: st
         }
         const l = Math.sqrt((value.to.y * frame.height - value.from.y * frame.height) ** 2 + (value.to.x * frame.width - value.from.x * frame.width) ** 2);
         const scaleX = l;
-        const scaleY = value.elipseLength ? (value.elipseLength * l * frame.width / frame.height) : 0;
+        const scaleY = value.elipseLength ? (value.elipseLength * l * frame.width / frame.height) : 1;
         const rotate = Math.atan2((value.to.y * frame.height - value.from.y * frame.height), (value.to.x * frame.width - value.from.x * frame.width)) / Math.PI * 180;
 
         node = h("radialGradient", {
