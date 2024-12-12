@@ -14,7 +14,7 @@ painter[FillType.SolidColor] = function (props: Props, ctx: CanvasRenderingConte
     ctx.save();
     ctx.transform(...props.transform);
     ctx.fillStyle = `rgba(${fill.color.red}, ${fill.color.green}, ${fill.color.blue}, ${fill.color.alpha})`;
-    ctx.fill(path2D);
+    ctx.fill(path2D, "evenodd");
     ctx.restore();
 }
 

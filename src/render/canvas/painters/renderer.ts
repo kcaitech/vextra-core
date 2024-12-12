@@ -2,6 +2,7 @@ import { ShapeView } from "../../../dataview";
 import { IRenderer } from "../../basic";
 import { render as renderFills } from "../effects/fill";
 import { render as renderBorders } from "../effects/border";
+import { render as renderShadows } from "../effects/shadow";
 
 import { painter } from "./h";
 
@@ -39,11 +40,11 @@ export class CanvasRenderer extends IRenderer {
     }
 
     renderBorders() {
-        const borders = this.view.getBorders();
-        renderBorders(this.getProps(), this.view.canvasRenderingContext2D, borders, this.getPath2D(), this.view.size);
+        renderBorders(this.view, this.getProps(), this.view.canvasRenderingContext2D, this.view.getBorders());
     }
 
     renderShadows() {
+        return renderShadows(this.view.canvasRenderingContext2D, this.view.getShadows());
     }
 
     renderBlur() {
