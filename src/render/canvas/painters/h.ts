@@ -1,5 +1,5 @@
 import { CanvasRenderer } from "./renderer";
-import { ArtboradView, PageView, ShapeView } from "../../../dataview";
+import { ArtboradView, PageView, ShapeView, SymbolRefView } from "../../../dataview";
 import { ShapeType } from "../../../data";
 
 
@@ -21,7 +21,7 @@ painter[ShapeType.BoolShape] = (view: ShapeView, renderer) => {
 painter[ShapeType.Page] = (view: PageView, renderer: CanvasRenderer) => {
     const dpr = window.devicePixelRatio;
     renderer.ctx.save();
-    renderer.ctx.transform(dpr, 0, 0, dpr, 0, 0);
+    renderer.ctx.scale(dpr, dpr);
     const ver = painter['base'](view, renderer);
     renderer.ctx.restore();
     return ver;
@@ -40,4 +40,22 @@ painter[ShapeType.Artboard] = (view: ArtboradView, renderer: CanvasRenderer) => 
     }
 
     return ++renderer.m_render_version;
+}
+
+painter[ShapeType.Contact] = (view: ArtboradView, renderer: CanvasRenderer) => {
+    renderer.renderBorders();
+    return ++renderer.m_render_version;
+}
+
+painter[ShapeType.SymbolRef] = (view: SymbolRefView, renderer: CanvasRenderer) => {
+    let ver;
+    if (view.uniformScale) {
+        renderer.ctx.save();
+        renderer.ctx.scale(view.uniformScale, view.uniformScale);
+        ver = painter[ShapeType.Artboard](view, renderer);
+        renderer.ctx.restore();
+    } else {
+        ver = painter[ShapeType.Artboard](view, renderer);
+    }
+    return ver;
 }
