@@ -1025,7 +1025,6 @@ export function border2path(shape: ShapeView, border: Border) {
             const pathstr = `M${p1.x} ${p1.y} L${p2.x} ${p2.y} L${p3.x} ${p3.y}`;
             const __end = make(pathstr);
             const p = {
-                res_scale: 10000,
                 width: thickness,
                 cap: {value: Cap.ROUND} as any,
                 join: {value: Join.ROUND} as any,
