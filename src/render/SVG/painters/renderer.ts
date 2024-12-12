@@ -65,12 +65,6 @@ export class SVGRenderer extends IRenderer {
         return childs;
     }
 
-    checkAndResetDirty(): boolean {
-        return this.view.m_ctx.removeDirty(this.view);
-    }
-
-    m_render_version: number = 0;
-
     render(type?: string): number {
         return painter[type ?? "base"](this.view, this);
     }

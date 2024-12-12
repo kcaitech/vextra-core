@@ -1,18 +1,28 @@
 import { CanvasRenderer } from "./renderer";
-import { ShapeView } from "../../../dataview";
+import { ArtboradView, ShapeView } from "../../../dataview";
+import { ShapeType } from "../../../data";
 
 
 export const painter: { [key: string]: (view: any, renderer: CanvasRenderer) => number } = {};
 
 painter['base'] = (view: ShapeView, renderer: CanvasRenderer) => {
-    // if (!renderer.checkAndResetDirty()) return renderer.m_render_version;
-    const shadowTail = renderer.renderShadows();
-
     renderer.renderFills();
     renderer.renderContents();
     renderer.renderBorders();
-    // 阴影结尾
-    shadowTail && shadowTail();
+    return ++renderer.m_render_version;
+}
+
+painter[ShapeType.Artboard] = (view: ArtboradView, renderer: CanvasRenderer) => {
+    renderer.renderFills();
+    const clipEnd = renderer.clip();
+    if (clipEnd) { // 裁剪容器中的边框需要在内容的上层
+        renderer.renderContents();
+        clipEnd();
+        renderer.renderBorders();
+    } else {
+        renderer.renderBorders();
+        renderer.renderContents();
+    }
 
     return ++renderer.m_render_version;
 }
