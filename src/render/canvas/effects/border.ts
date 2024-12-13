@@ -28,18 +28,12 @@ painter[FillType.SolidColor] = function (props: Props, ctx: CanvasRenderingConte
 painter[FillType.Gradient] = function (props: Props, ctx: CanvasRenderingContext2D, border: Border, path2D: Path2D, frame: ShapeSize, outerFrame: ShapeFrame, fillPath: Path2D) {
     ctx.save();
     ctx.transform(...props.transform);
-    if (border.gradient?.gradientType === GradientType.Radial) {
+    if (border.gradient!.gradientType === GradientType.Radial) {
         ctx.clip(path2D, "evenodd");  // clip 要在gradient之前，不然会被gradient中的transform影响
-        const gradient = renderGradient(ctx, border.gradient as Gradient, frame, outerFrame);
-        if (gradient) {
-            ctx.fillStyle = gradient;
-        }
+        ctx.fillStyle = renderGradient(ctx, border.gradient!, frame, outerFrame);
         ctx.fill(fillPath, "evenodd");
     } else {
-        const gradient = renderGradient(ctx, border.gradient as Gradient, frame, outerFrame);
-        if (gradient) {
-            ctx.fillStyle = gradient;
-        }
+        ctx.fillStyle = renderGradient(ctx, border.gradient!, frame, outerFrame);
         ctx.fill(path2D, "evenodd");
     }
     ctx.restore();

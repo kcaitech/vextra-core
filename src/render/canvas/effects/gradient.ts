@@ -22,7 +22,7 @@ function getTransform(ctx: CanvasRenderingContext2D, size: ShapeSize, from: Poin
     return transform
 }
 
-export function render(ctx: CanvasRenderingContext2D, value: Gradient, frame: ShapeSize, outerFrame?: ShapeFrame): CanvasGradient | undefined {
+export function render(ctx: CanvasRenderingContext2D, value: Gradient, frame: ShapeSize, outerFrame?: ShapeFrame): CanvasGradient {
     if (value.gradientType === GradientType.Linear) {
         const x1 = value.from.x * frame.width;
         const y1 = value.from.y * frame.height;
@@ -69,6 +69,14 @@ export function render(ctx: CanvasRenderingContext2D, value: Gradient, frame: Sh
         const gradient = ctx.createConicGradient(angle * OneRadian, realFrom.x, realFrom.y);
         applyStops(gradient, value.stops);
         return gradient;
+    } else {
+        const x1 = value.from.x * frame.width;
+        const y1 = value.from.y * frame.height;
+        const x2 = value.to.x * frame.width;
+        const y2 = value.to.y * frame.height;
+        const gradient = ctx.createLinearGradient(x1, y1, x2, y2);
+        applyStops(gradient, value.stops);
+        return gradient;
     }
 }
 function getAngle(t1: Point2D, t2: Point2D) {
@@ -100,7 +108,7 @@ function translateInner(t: DOMMatrix, x: number, y: number) {
     t.f += t.b * x + t.d * y
 }
 
-function scale(t: DOMMatrix, scaleX: number, scaleY = scaleX) {
+function scale(t: DOMMatrix, scaleX: number, scaleY: number) {
     t.a *= scaleX
     t.b *= scaleX
     t.c *= scaleY

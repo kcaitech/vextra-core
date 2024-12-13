@@ -65,7 +65,7 @@ export class CanvasRenderer extends IRenderer {
     }
 
     renderBlur() {
-        return renderBlur(this.view, this.ctx);
+        return renderBlur(this.view);
     }
 
     renderContents() {
