@@ -35,7 +35,7 @@ export class CanvasRenderer extends IRenderer {
 
     private __props_cache: Props | undefined = undefined;
     getProps(): Props {
-        const props: Props = {transform: this.view.transform.toArray()};
+        const props: Props = { transform: this.view.transform.toArray() };
         const contextSettings = this.view.contextSettings;
         if (contextSettings) {
             if (contextSettings.opacity !== undefined) {
@@ -56,7 +56,7 @@ export class CanvasRenderer extends IRenderer {
     }
 
     renderBorders() {
-        renderBorders(this.view, this.getProps(), this.view.canvasRenderingContext2D, this.view.getBorders(), this.view.size);
+        renderBorders(this.view, this.getProps(), this.view.canvasRenderingContext2D, this.view.getBorders(), this.path2D);
     }
 
     renderShadows() {

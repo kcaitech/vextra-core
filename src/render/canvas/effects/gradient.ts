@@ -1,5 +1,5 @@
 import { Matrix } from "../../../basic/matrix";
-import { ShapeSize, Gradient, GradientType, Stop, Color, Point2D } from "../../../data/classes";
+import { ShapeSize, Gradient, GradientType, Stop, Color, Point2D, ShapeFrame } from "../../../data/classes";
 const OneRadian = Math.PI / 180;
 const defaultColor = Color.DefaultColor;
 interface IMatrixData {
@@ -30,8 +30,8 @@ function getTransform(ctx: CanvasRenderingContext2D, size: ShapeSize, from: Poin
     return transform
 }
 
-export function render(ctx: CanvasRenderingContext2D, value: Gradient, frame: ShapeSize): CanvasGradient | undefined {
-    if (value.gradientType == GradientType.Linear) {
+export function render(ctx: CanvasRenderingContext2D, value: Gradient, frame: ShapeSize, outerFrame?: ShapeFrame): CanvasGradient | undefined {
+    if (value.gradientType === GradientType.Linear) {
         const x1 = value.from.x * frame.width;
         const y1 = value.from.y * frame.height;
         const x2 = value.to.x * frame.width;
@@ -40,14 +40,14 @@ export function render(ctx: CanvasRenderingContext2D, value: Gradient, frame: Sh
         applyStops(gradient, value.stops);
         return gradient;
     }
-    else if (value.gradientType == GradientType.Radial) {
+    else if (value.gradientType === GradientType.Radial) {
         const realFrom = { x: 0, y: 0 } as Point2D;
         const realTo = { x: 0, y: 0 } as Point2D;
         toPoint(value.from, frame, realFrom);
         toPoint(value.to, frame, realTo);
         // 渐变中心点
         const center = { x: frame.width / 2, y: frame.height / 2 } as Point2D;
-        const length = getDistance(frame.width, frame.height);
+        const length = outerFrame ? getDistance(outerFrame.width, outerFrame.height) : getDistance(frame.width, frame.height);
         const distance = getDistance(Math.abs(realTo.x - realFrom.x), Math.abs(realTo.y - realFrom.y));
         const stretchx = value.elipseLength ? Math.abs(value.elipseLength) * (frame.width / frame.height) : frame.width / frame.height;
         const stretchy = distance / (frame.height / 2);
@@ -68,7 +68,7 @@ export function render(ctx: CanvasRenderingContext2D, value: Gradient, frame: Sh
         ctx.setTransform(transform);
         return gradient;
     }
-    else if (value.gradientType == GradientType.Angular) {
+    else if (value.gradientType === GradientType.Angular) {
         const realFrom = { x: 0, y: 0 } as Point2D;
         const realTo = { x: 0, y: 0 } as Point2D;
         toPoint(value.from, frame, realFrom);

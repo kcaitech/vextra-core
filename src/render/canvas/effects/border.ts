@@ -1,21 +1,21 @@
-import { Border, FillType, Gradient, ShapeSize } from "../../../data";
+import { Border, FillType, Gradient, GradientType, ShapeFrame, ShapeSize } from "../../../data";
 import { Props } from "../painters/renderer";
 import { ShapeView } from "../../../dataview";
 import { border2path } from "../../../editor/utils/path";
 import { render as renderGradient } from "./gradient";
+import { patternRender } from "./pattern";
 
-export function render(view: ShapeView, props: Props, ctx: CanvasRenderingContext2D, borders: Border[], frame: ShapeSize) {
+export function render(view: ShapeView, props: Props, ctx: CanvasRenderingContext2D, borders: Border[], fillPath: Path2D) {
     for (const border of borders) {
         if (border.isEnabled) {
             const path2D = new Path2D(border2path(view, border).toString());
-            const fillPath = new Path2D(view.getPathStr());
-            painter[border.fillType](props, ctx, border, path2D, frame, fillPath);
+            painter[border.fillType](props, ctx, border, path2D, view.size, view._p_outerFrame, fillPath);
         }
     }
 }
 
 
-const painter: { [key: string]: (props: Props, ctx: CanvasRenderingContext2D, border: Border, path2D: Path2D, frame: ShapeSize, fillPath: Path2D) => void } = {};
+const painter: { [key: string]: (props: Props, ctx: CanvasRenderingContext2D, border: Border, path2D: Path2D, frame: ShapeSize, outerFrame: ShapeFrame, fillPath: Path2D) => void } = {};
 
 painter[FillType.SolidColor] = function (props: Props, ctx: CanvasRenderingContext2D, border: Border, path2D: Path2D) {
     ctx.save();
@@ -25,21 +25,30 @@ painter[FillType.SolidColor] = function (props: Props, ctx: CanvasRenderingConte
     ctx.restore();
 }
 
-painter[FillType.Gradient] = function (props: Props, ctx: CanvasRenderingContext2D, border: Border, path2D: Path2D, frame: ShapeSize, fillPath: Path2D) {
+painter[FillType.Gradient] = function (props: Props, ctx: CanvasRenderingContext2D, border: Border, path2D: Path2D, frame: ShapeSize, outerFrame: ShapeFrame, fillPath: Path2D) {
     ctx.save();
     ctx.transform(...props.transform);
-    const gradient = renderGradient(ctx, border.gradient as Gradient, frame);
-    if (gradient) {
-        ctx.fillStyle = gradient;
+    if (border.gradient?.gradientType === GradientType.Radial) {
+        ctx.clip(path2D, "evenodd");  // clip 要在gradient之前，不然会被gradient中的transform影响
+        const gradient = renderGradient(ctx, border.gradient as Gradient, frame, outerFrame);
+        if (gradient) {
+            ctx.fillStyle = gradient;
+        }
+        ctx.fill(fillPath, "evenodd");
+    } else {
+        const gradient = renderGradient(ctx, border.gradient as Gradient, frame, outerFrame);
+        if (gradient) {
+            ctx.fillStyle = gradient;
+        }
+        ctx.fill(path2D, "evenodd");
     }
-    ctx.fill(path2D, "evenodd");
     ctx.restore();
 }
 
-painter[FillType.Pattern] = function (props: Props, ctx: CanvasRenderingContext2D, border: Border, path2D: Path2D) {
+painter[FillType.Pattern] = function (props: Props, ctx: CanvasRenderingContext2D, border: Border, path2D: Path2D, frame: ShapeSize, outerFrame: ShapeFrame) {
     ctx.save();
     ctx.transform(...props.transform);
-    ctx.fillStyle = `rgba(${border.color.red}, ${border.color.green}, ${border.color.blue}, ${border.color.alpha})`;
-    ctx.fill(path2D, "evenodd");
+    // patternRender(ctx, outerFrame, border);
+    ctx.fill(path2D);
     ctx.restore();
 }
