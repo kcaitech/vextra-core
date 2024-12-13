@@ -7,7 +7,7 @@ import { render as renderBlur } from "../effects/blur"
 
 import { painter } from "./h";
 import { Path } from "../../../../../kcdesign-path";
-import { border2path, borders2path } from "../../../editor/utils/path";
+import { border2path } from "../../../editor/utils/path";
 
 export type Props = {
     transform: [number, number, number, number, number, number];
