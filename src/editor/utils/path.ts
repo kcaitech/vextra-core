@@ -844,7 +844,7 @@ export function border2path(shape: ShapeView, border: Border) {
     const height = shape.frame.height;
 
     // 尺寸小于或等于14，会出现线条走样😵，这里把它放到到20，返回出去的时候再等比例放回来
-    const radio = Math.min(width / 20, height / 20);
+    const radio = shape instanceof ContactLineView ? 1 : Math.min(width / 20, height / 20);
 
     const mark = (shape instanceof PathShapeView)
         && !!(startMarker || endMarker)
