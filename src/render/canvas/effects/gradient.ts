@@ -100,7 +100,7 @@ function translateInner(t: DOMMatrix, x: number, y: number) {
     t.f += t.b * x + t.d * y
 }
 
-function scale(t: DOMMatrix, scaleX: number, scaleY = scaleX) {
+function scale(t: DOMMatrix, scaleX: number, scaleY: number) {
     t.a *= scaleX
     t.b *= scaleX
     t.c *= scaleY
