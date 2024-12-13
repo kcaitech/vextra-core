@@ -23,10 +23,7 @@ painter[FillType.Gradient] = function (props: Props, ctx: CanvasRenderingContext
     ctx.save();
     ctx.transform(...props.transform);
     ctx.clip(path2D);
-    const gradient = renderGradient(ctx, fill.gradient as Gradient, frame);
-    if (gradient) {
-        ctx.fillStyle = gradient;
-    }
+    ctx.fillStyle = renderGradient(ctx, fill.gradient as Gradient, frame);
     ctx.fill(path2D);
     ctx.restore();
 }

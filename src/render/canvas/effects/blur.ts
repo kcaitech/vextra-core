@@ -1,9 +1,10 @@
 import { ShapeView } from "../../../dataview";
 import { Blur, BlurType } from "../../../data";
 
-export function render(view: ShapeView, ctx: CanvasRenderingContext2D): Function | null {
+export function render(view: ShapeView): Function | null {
     const blur = view.blur;
     if (!blur || !blur.isEnabled) return null;
+    const ctx = view.m_ctx.m_canvas!;
     if (blur.type === BlurType.Gaussian) {
         ctx.save();
         ctx.filter = `blur(${blur.saturation / 2}px)`;
