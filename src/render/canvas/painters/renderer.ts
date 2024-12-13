@@ -64,7 +64,7 @@ export class CanvasRenderer extends IRenderer {
     }
 
     renderShadows() {
-        return renderShadows(this.view, this.props, this.view.canvasRenderingContext2D, this.view.getShadows(), this.view.getBorders(), this.view.getFills());
+        return renderShadows(this, this.view, this.props, this.view.canvasRenderingContext2D, this.view.getShadows(), this.view.getBorders(), this.view.getFills());
     }
 
     renderBlur() {
@@ -82,21 +82,22 @@ export class CanvasRenderer extends IRenderer {
     }
 
     private getFlatPath() {
-        const transform = this.view.matrix2Parent();
         const path = new Path();
         if (this.view.getFills().length) {
             const fillP = this.view.getPath().clone();
-            fillP.transform(transform);
             path.addPath(fillP);
         }
         if (this.view.getBorders().length) {
             const borderP = border2path(this.view, this.view.getBorders()[0]);
-            borderP.transform(transform);
             path.addPath(borderP);
         }
-        const childs = this.view.m_children;
+        const childs = this.view.m_children as ShapeView[];
         if (childs.length) {
-            childs.forEach((c) => path.addPath((c.m_renderer as CanvasRenderer).flat));
+            childs.forEach((c) => {
+                const flat = (c.m_renderer as CanvasRenderer).flat;
+                flat.transform(c.matrix2Parent());
+                path.addPath(flat);
+            });
         }
         return path;
     }

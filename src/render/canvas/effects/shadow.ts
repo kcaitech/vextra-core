@@ -2,10 +2,10 @@ import { Border, BorderPosition, Fill, FillType, Shadow, ShadowPosition } from "
 import { ArtboradView, BoolShapeView, ShapeView } from "../../../dataview";
 import { gPal } from "../../../basic/pal";
 import { border2path } from "../../../editor/utils/path";
-import { Props } from "../painters/renderer";
+import { CanvasRenderer, Props } from "../painters/renderer";
 
 
-export function render(view: ShapeView, props: Props, ctx: CanvasRenderingContext2D, shadows: Shadow[], borders: Border[], fills: Fill[]): Function | undefined {
+export function render(renderer: CanvasRenderer, view: ShapeView, props: Props, ctx: CanvasRenderingContext2D, shadows: Shadow[], borders: Border[], fills: Fill[]): Function | undefined {
     shadows = shadows.filter(i => i.isEnabled);
     if (!shadows.length) return;
 
@@ -13,6 +13,7 @@ export function render(view: ShapeView, props: Props, ctx: CanvasRenderingContex
     const outer = shadows.filter(i => i.position === ShadowPosition.Outer);
     if (outer.length) {
         if (isBlurOutlineShadow()) blurOutlineShadow(view, props, ctx, outer);
+        else complexBlurOutlineShadow(renderer, props, ctx, outer);
     }
 
     function isFrankShadow() {
@@ -48,10 +49,29 @@ function blurOutlineShadow(view: ShapeView, props: Props, ctx: CanvasRenderingCo
     const border = view.getBorders()[0];
     if (border && border.position !== BorderPosition.Inner) {
         const gPath = gPal.makePalPath(pathStr);
-        gPath.union(gPal.makePalPath(border2path(view, border).toString()));
+        const borderGPath = gPal.makePalPath(border2path(view, border).toString());
+        gPath.union(borderGPath);
         pathStr = gPath.toSVGString();
+        gPath.delete();
+        borderGPath.delete();
     }
     const path2D = new Path2D(pathStr);
+    ctx.save();
+    ctx.transform(...props.transform);
+    for (const os of outerShadows) {
+        const {offsetX, offsetY, blurRadius, color} = os;
+        ctx.save();
+        ctx.filter = `blur(${blurRadius}px)`;
+        ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, ${color.alpha * 0.8})`;
+        ctx.translate(offsetX, offsetY);
+        ctx.fill(path2D, 'evenodd');
+        ctx.restore();
+    }
+    ctx.restore();
+}
+
+function complexBlurOutlineShadow(renderer: CanvasRenderer, props: Props, ctx: CanvasRenderingContext2D, outerShadows: Shadow[]) {
+    const path2D = new Path2D(renderer.flat.toString());
     ctx.save();
     ctx.transform(...props.transform);
     for (const os of outerShadows) {
