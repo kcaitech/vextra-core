@@ -21,3 +21,16 @@ function complexShadow(ctx: CanvasRenderingContext2D, shadows: Shadow[]) {
 
     }
 }
+
+/**
+ * 外阴影
+ *  最简方案：ctx.shadowColor
+ *  模糊方案：将边框轮廓加本体Path取联级，模糊这个联集
+ *  离屏方案：OffScreen
+ *
+ * 单一路径图层，例如直线、单填充、单文本、没有子元素的只有边框或者填充的容器 => 最简方案
+ * PathShape、BoolShape => 模糊方案
+ * 其他复杂场景
+ *
+ *
+ */
