@@ -314,4 +314,8 @@ export class ArtboradView extends GroupShapeView {
     get frameMaskDisabled() {
         return (this.m_data as Artboard).frameMaskDisabled;
     }
+
+     getOutLine() {
+        return this.getPath();
+    }
 }

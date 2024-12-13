@@ -81,10 +81,12 @@ export class CanvasRenderer extends IRenderer {
         }
     }
 
+    private __flat_path_cache: Path | undefined;
+
     private getFlatPath() {
         const path = new Path();
         if (this.view.getFills().length) {
-            const fillP = this.view.getPath().clone();
+            const fillP = this.view.getOutLine().clone();
             path.addPath(fillP);
         }
         if (this.view.getBorders().length) {
@@ -101,8 +103,6 @@ export class CanvasRenderer extends IRenderer {
         }
         return path;
     }
-
-    private __flat_path_cache: Path | undefined;
 
     get flat() {
         return this.__flat_path_cache ?? (this.__flat_path_cache = this.getFlatPath())

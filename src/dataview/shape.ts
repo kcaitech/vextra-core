@@ -709,6 +709,10 @@ export class ShapeView extends DataView {
         return this.m_path;
     }
 
+    getOutLine(): Path {
+        return this.getPath();
+    }
+
     get isVisible(): boolean {
         const v = this._findOV(OverrideType.Visible, VariableType.Visible);
         return v ? v.value : !!this.m_data.isVisible;

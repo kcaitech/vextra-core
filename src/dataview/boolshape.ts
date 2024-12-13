@@ -223,6 +223,9 @@ export class BoolShapeView extends GroupShapeView {
         return this.m_path;
     }
 
+    getOutLine() {
+        return this.getPath();
+    }
     // childs
     protected renderContents(): EL[] {
         return [];

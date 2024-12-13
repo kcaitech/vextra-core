@@ -1,5 +1,5 @@
 import { Border, BorderPosition, Fill, FillType, Shadow, ShadowPosition } from "../../../data";
-import { ArtboradView, BoolShapeView, ShapeView } from "../../../dataview";
+import { ArtboradView, BoolShapeView, ShapeView, SymbolRefView, SymbolView } from "../../../dataview";
 import { gPal } from "../../../basic/pal";
 import { border2path } from "../../../editor/utils/path";
 import { CanvasRenderer, Props } from "../painters/renderer";
@@ -26,9 +26,8 @@ export function render(renderer: CanvasRenderer, view: ShapeView, props: Props, 
     }
 
     function isBlurOutlineShadow() {
-        return !view.childs.length
-            || view instanceof BoolShapeView
-            || !(view as ArtboradView).frameMaskDisabled;
+        return (!view.childs.length || view instanceof BoolShapeView)
+            || ((view instanceof ArtboradView || view instanceof SymbolView || view instanceof SymbolRefView) && !view.frameMaskDisabled);
     }
 }
 
