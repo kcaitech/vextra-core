@@ -3,6 +3,7 @@ import { IRenderer } from "../../basic";
 import { render as renderFills } from "../effects/fill";
 import { render as renderBorders } from "../effects/border";
 import { render as renderShadows } from "../effects/shadow";
+import { render as renderBlur } from "../effects/blur"
 
 import { painter } from "./h";
 
@@ -52,11 +53,11 @@ export class CanvasRenderer extends IRenderer {
 
     renderFills() {
         const fills = this.view.getFills();
-        renderFills(this.getProps(), this.view.canvasRenderingContext2D, fills, this.path2D, this.view.size);
+        renderFills(this.props, this.view.canvasRenderingContext2D, fills, this.path2D, this.view.size);
     }
 
     renderBorders() {
-        renderBorders(this.view, this.getProps(), this.view.canvasRenderingContext2D, this.view.getBorders(), this.path2D);
+        renderBorders(this.view, this.props, this.view.canvasRenderingContext2D, this.view.getBorders(), this.path2D);
     }
 
     renderShadows() {
@@ -64,6 +65,7 @@ export class CanvasRenderer extends IRenderer {
     }
 
     renderBlur() {
+        return renderBlur(this.view, this.ctx);
     }
 
     renderContents() {

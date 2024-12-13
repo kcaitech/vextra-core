@@ -2,14 +2,6 @@ import { Matrix } from "../../../basic/matrix";
 import { ShapeSize, Gradient, GradientType, Stop, Color, Point2D, ShapeFrame } from "../../../data/classes";
 const OneRadian = Math.PI / 180;
 const defaultColor = Color.DefaultColor;
-interface IMatrixData {
-    a: number
-    b: number
-    c: number
-    d: number
-    e: number
-    f: number
-}
 
 function applyStops(gradient: CanvasGradient, stops: Stop[]): any {
     for (let i = 0; i < stops.length; i++) {
@@ -21,7 +13,7 @@ function applyStops(gradient: CanvasGradient, stops: Stop[]): any {
 }
 
 function getTransform(ctx: CanvasRenderingContext2D, size: ShapeSize, from: Point2D, to: Point2D, stretchx: number, stretchy: number, rotate90: boolean) {
-    let transform: IMatrixData = ctx.getTransform();
+    let transform: DOMMatrix = ctx.getTransform();
     const { width, height } = size;
     const angle = getAngle(from, to);
     const center = { x: width / 2, y: height / 2 } as Point2D;
@@ -83,7 +75,7 @@ function getAngle(t1: Point2D, t2: Point2D) {
     return Math.atan2(t2.y - t1.y, t2.x - t1.x) / OneRadian;
 }
 
-function translate(t: IMatrixData, x: number, y: number) {
+function translate(t: DOMMatrix, x: number, y: number) {
     t.e += x
     t.f += y
 }
@@ -97,25 +89,25 @@ function toPoint(origin: Point2D, size: ShapeSize, real: Point2D) {
     real.y = origin.y * size.height;
 }
 
-function scaleOfOuter(t: IMatrixData, origin: Point2D, scaleX: number, scaleY: number) {
+function scaleOfOuter(t: DOMMatrix, origin: Point2D, scaleX: number, scaleY: number) {
     translateInner(t, origin.x, origin.y)
     scale(t, scaleX, scaleY)
     translateInner(t, -origin.x, -origin.y)
 }
 
-function translateInner(t: IMatrixData, x: number, y: number) {
+function translateInner(t: DOMMatrix, x: number, y: number) {
     t.e += t.a * x + t.c * y
     t.f += t.b * x + t.d * y
 }
 
-function scale(t: IMatrixData, scaleX: number, scaleY = scaleX) {
+function scale(t: DOMMatrix, scaleX: number, scaleY = scaleX) {
     t.a *= scaleX
     t.b *= scaleX
     t.c *= scaleY
     t.d *= scaleY
 }
 
-function rotate(t: IMatrixData, rotation: number) {
+function rotate(t: DOMMatrix, rotation: number) {
     const { a, b, c, d } = t
 
     rotation *= OneRadian
@@ -128,7 +120,7 @@ function rotate(t: IMatrixData, rotation: number) {
     t.d = c * sinR + d * cosR
 }
 
-function rotateOfOuter(t: IMatrixData, origin: Point2D, rotation: number) {
+function rotateOfOuter(t: DOMMatrix, origin: Point2D, rotation: number) {
     translateInner(t, origin.x, origin.y)
     rotate(t, rotation)
     translateInner(t, -origin.x, -origin.y)
