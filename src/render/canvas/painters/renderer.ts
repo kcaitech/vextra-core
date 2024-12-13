@@ -6,6 +6,8 @@ import { render as renderShadows } from "../effects/shadow";
 import { render as renderBlur } from "../effects/blur"
 
 import { painter } from "./h";
+import { Path } from "../../../../../kcdesign-path";
+import { border2path, borders2path } from "../../../editor/utils/path";
 
 export type Props = {
     transform: [number, number, number, number, number, number];
@@ -26,6 +28,7 @@ export class CanvasRenderer extends IRenderer {
     private __clear_cache() {
         this.__path2D_cache = undefined;
         this.__props_cache = undefined;
+        this.__flat_path_cache = undefined;
     }
 
     private __path2D_cache: Path2D | undefined = undefined;
@@ -61,7 +64,7 @@ export class CanvasRenderer extends IRenderer {
     }
 
     renderShadows() {
-        return renderShadows(this.view.canvasRenderingContext2D, this.view.getShadows());
+        return renderShadows(this.view, this.props, this.view.canvasRenderingContext2D, this.view.getShadows(), this.view.getBorders(), this.view.getFills());
     }
 
     renderBlur() {
@@ -76,6 +79,32 @@ export class CanvasRenderer extends IRenderer {
             childs.forEach((c) => c.render());
             this.ctx.restore();
         }
+    }
+
+    private getFlatPath() {
+        const transform = this.view.matrix2Parent();
+        const path = new Path();
+        if (this.view.getFills().length) {
+            const fillP = this.view.getPath().clone();
+            fillP.transform(transform);
+            path.addPath(fillP);
+        }
+        if (this.view.getBorders().length) {
+            const borderP = border2path(this.view, this.view.getBorders()[0]);
+            borderP.transform(transform);
+            path.addPath(borderP);
+        }
+        const childs = this.view.m_children;
+        if (childs.length) {
+            childs.forEach((c) => path.addPath((c.m_renderer as CanvasRenderer).flat));
+        }
+        return path;
+    }
+
+    private __flat_path_cache: Path | undefined;
+
+    get flat() {
+        return this.__flat_path_cache ?? (this.__flat_path_cache = this.getFlatPath())
     }
 
     clip(): Function | null {
