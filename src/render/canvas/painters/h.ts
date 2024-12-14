@@ -5,6 +5,12 @@ import { ShapeType } from "../../../data";
 export const painter: { [key: string]: (view: any, renderer: CanvasRenderer) => number } = {};
 
 painter['base'] = (view: ShapeView, renderer: CanvasRenderer) => {
+    const ctx = view.canvasRenderingContext2D;
+    ctx.save();
+    if (renderer.props.opacity) ctx.globalAlpha = renderer.props.opacity;
+    if (renderer.props.globalCompositeOperation) {
+        ctx.globalCompositeOperation = renderer.props.globalCompositeOperation as any;
+    }
     const blurEnd = renderer.renderBlur();
     const shadowEnd = renderer.renderShadows();
     renderer.renderFills();
@@ -12,16 +18,24 @@ painter['base'] = (view: ShapeView, renderer: CanvasRenderer) => {
     renderer.renderBorders();
     shadowEnd && shadowEnd();
     blurEnd && blurEnd();
+    ctx.restore();
     return ++renderer.m_render_version;
 }
 
 painter[ShapeType.BoolShape] = (view: ShapeView, renderer) => {
+    const ctx = view.canvasRenderingContext2D;
+    ctx.save();
+    if (renderer.props.opacity) ctx.globalAlpha = renderer.props.opacity;
+    if (renderer.props.globalCompositeOperation) {
+        ctx.globalCompositeOperation = renderer.props.globalCompositeOperation as any;
+    }
     const blurEnd = renderer.renderBlur();
     const shadowEnd = renderer.renderShadows();
     renderer.renderFills();
     renderer.renderBorders();
     shadowEnd && shadowEnd();
     blurEnd && blurEnd();
+    ctx.restore();
     return ++renderer.m_render_version;
 }
 
@@ -39,6 +53,12 @@ painter[ShapeType.Page] = (view: PageView, renderer: CanvasRenderer) => {
 }
 
 painter[ShapeType.Artboard] = (view: ArtboradView, renderer: CanvasRenderer) => {
+    const ctx = view.canvasRenderingContext2D;
+    ctx.save();
+    if (renderer.props.opacity) ctx.globalAlpha = renderer.props.opacity;
+    if (renderer.props.globalCompositeOperation) {
+        ctx.globalCompositeOperation = renderer.props.globalCompositeOperation as any;
+    }
     const blurEnd = renderer.renderBlur();
     const shadowEnd = renderer.renderShadows();
     renderer.renderFills();
@@ -53,17 +73,31 @@ painter[ShapeType.Artboard] = (view: ArtboradView, renderer: CanvasRenderer) => 
     }
     shadowEnd && shadowEnd();
     blurEnd && blurEnd();
+    ctx.restore();
     return ++renderer.m_render_version;
 }
 
 painter[ShapeType.Contact] = (view: ArtboradView, renderer: CanvasRenderer) => {
+    const ctx = view.canvasRenderingContext2D;
+    ctx.save();
+    if (renderer.props.opacity) ctx.globalAlpha = renderer.props.opacity;
+    if (renderer.props.globalCompositeOperation) {
+        ctx.globalCompositeOperation = renderer.props.globalCompositeOperation as any;
+    }
     renderer.renderBorders();
+    ctx.restore();
     return ++renderer.m_render_version;
 }
 
 painter[ShapeType.Symbol] = painter[ShapeType.Artboard];
 
 painter[ShapeType.SymbolRef] = (view: SymbolRefView, renderer: CanvasRenderer) => {
+    const ctx = view.canvasRenderingContext2D;
+    ctx.save();
+    if (renderer.props.opacity) ctx.globalAlpha = renderer.props.opacity;
+    if (renderer.props.globalCompositeOperation) {
+        ctx.globalCompositeOperation = renderer.props.globalCompositeOperation as any;
+    }
     const blurEnd = renderer.renderBlur();
     const shadowEnd = renderer.renderShadows();
     renderer.renderFills();
@@ -78,6 +112,7 @@ painter[ShapeType.SymbolRef] = (view: SymbolRefView, renderer: CanvasRenderer) =
     }
     shadowEnd && shadowEnd();
     blurEnd && blurEnd();
+    ctx.restore();
     return ++renderer.m_render_version;
 
     function renderContents() {

@@ -1,5 +1,5 @@
 import { ShapeView } from "../../../dataview";
-import { BlurType } from "../../../data";
+import { BlurType, Border, Fill } from "../../../data";
 import { Props } from "../painters/renderer";
 import { border2path } from "../../../editor/utils/path";
 
@@ -16,6 +16,11 @@ export function render(view: ShapeView, props: Props): Function | null {
 }
 
 function backgroundBlur(ctx: CanvasRenderingContext2D, view: ShapeView, props: Props) {
+    const borders = view.getBorders();
+    const fills = view.getFills();
+    const alphaBorder = opacity(borders);
+    const alphaFill = opacity(fills);
+    if (!alphaFill && !alphaBorder) return null;
     ctx.save();
     const blur = view.blur!;
     const offscreen = new OffscreenCanvas(ctx.canvas.width, ctx.canvas.height);
@@ -23,11 +28,15 @@ function backgroundBlur(ctx: CanvasRenderingContext2D, view: ShapeView, props: P
     offCtx.filter = `blur(${blur.saturation / 2}px)`;
     offCtx.drawImage(ctx.canvas, 0, 0);
 
-    // todo 边框未支持
-    const path = new Path2D(view.getPath().toString());
-    const borders = view.getBorders();
-    if (borders.length) {
-        // const path2D = new Path2D(border2path(view, borders[0]).toString());
+    const path = new Path2D();
+    if (fills.length && alphaFill) {
+        path.addPath(new Path2D(view.getPath().toString()));
+    }
+    if (borders.length && alphaBorder) {
+        const path2D = new Path2D(border2path(view, borders[0]).toString());
+        const transform = new DOMMatrix();
+        transform.translate(view.outerFrame.x, view.outerFrame.y);
+        path.addPath(path2D, transform);
     }
     ctx.save();
     ctx.transform(...props.transform);
@@ -37,4 +46,12 @@ function backgroundBlur(ctx: CanvasRenderingContext2D, view: ShapeView, props: P
     ctx.drawImage(offscreen, 0, 0);
     ctx.restore();
     return ctx.restore.bind(ctx);
-} 
+}
+
+const opacity = (t: (Fill | Border)[]) => {
+    for (let i = 0; i < t.length; i++) {
+        const __t = t[i];
+        if (__t.color.alpha > 0 && __t.color.alpha < 1 && __t.isEnabled) return true;
+    }
+    return false;
+}
