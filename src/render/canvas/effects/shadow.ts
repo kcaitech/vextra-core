@@ -11,12 +11,14 @@ export function render(renderer: CanvasRenderer, view: ShapeView, props: Props, 
     if (!shadows.length) return;
 
     if (isFrankShadow()) return frankShadow(ctx, shadows[0]);
-    const outer = shadows.filter(i => i.position === ShadowPosition.Outer);
+    const outer: Shadow[] = [];
+    const inner: Shadow[] = [];
+    for (const shadow of shadows) if (shadow.position === ShadowPosition.Outer) outer.push(shadow); else inner.push(shadow);
+
     if (outer.length) {
         if (isBlurOutlineShadow()) blurOutlineShadow(view, props, ctx, outer);
         else complexBlurOutlineShadow(renderer, props, ctx, outer);
     }
-    const inner = shadows.filter(i => i.position === ShadowPosition.Inner);
     if (inner.length) return innerShadow(view, props, ctx, inner);
 
     function isFrankShadow() {
@@ -101,7 +103,6 @@ function innerShadow(view: ShapeView, props: Props, ctx: CanvasRenderingContext2
             let y1 = outlineBox.y;
             let x2 = outlineBox.x2;
             let y2 = outlineBox.y2;
-
             const {offsetX, offsetY, color, spread} = inSd;
             const blur = inSd.blurRadius / 2;
             const paddingX = blur + Math.abs(offsetX);
@@ -110,7 +111,6 @@ function innerShadow(view: ShapeView, props: Props, ctx: CanvasRenderingContext2
             y1 -= paddingY;
             x2 += paddingX;
             y2 += paddingY;
-
             const box = {x: x1, y: y1, w: x2 - x1, h: y2 - y1};
             const inner = new Path(`M${box.x} ${box.y} h${box.w} v${box.h} h${-box.w} z`);
             inner.op(bodyIPath, OpType.Difference);
