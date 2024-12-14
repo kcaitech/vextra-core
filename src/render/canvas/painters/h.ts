@@ -27,7 +27,7 @@ painter[ShapeType.BoolShape] = (view: ShapeView, renderer) => {
 
 painter[ShapeType.Page] = (view: PageView, renderer: CanvasRenderer) => {
     const s = Date.now();
-    const dpr = Math.ceil(window.devicePixelRatio || 1);
+    const dpr = view.m_ctx.dpr;
     renderer.ctx.save();
     renderer.ctx.scale(dpr, dpr);
     const ver = painter['base'](view, renderer);

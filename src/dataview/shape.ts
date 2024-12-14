@@ -15,6 +15,7 @@ import { ArtboradView } from "./artboard";
 import { findOverrideAll } from "../data/utils";
 import { Path } from "@kcdesign/path";
 import { ColVector3D } from "../basic/matrix2";
+import { border2path } from "../editor/utils/path";
 
 export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     return (
@@ -1460,5 +1461,21 @@ export class ShapeView extends DataView {
 
     get borderPathBox() {
         return this.m_border_path_box;
+    }
+
+    private __outline: Path | undefined = undefined;
+    private __outline_box: { w: number, h: number } & { x: number, y: number } & { x2: number, y2: number } | undefined = undefined;
+
+    get outline() {
+        if (this.__outline) return this.__outline;
+        const path = new Path();
+        if (this.getFills().length) path.addPath(this.getPath());
+        const borders = this.getBorders();
+        if (borders[0] && borders[0].position !== BorderPosition.Inner) path.addPath(border2path(this, borders[0]));
+        return this.__outline = path;
+    }
+
+    get outlineBox(): { w: number, h: number } & { x: number, y: number } & { x2: number, y2: number } {
+        return this.__outline_box ?? (this.__outline_box = this.outline.bbox());
     }
 }

@@ -103,10 +103,12 @@ export class DViewCtx extends EventEmitter {
     comsMap: Map<ShapeType, ViewType> = new Map();
 
     private is_document: boolean = false;
+    dpr: number;
 
     constructor(gl?: GraphicsLibrary) {
         super();
         this.gl = gl ?? "SVG"; // 默认用SVG渲染
+        this.dpr = Math.ceil(window.devicePixelRatio || 1);
     }
     // 选区
     // 缩放监听
