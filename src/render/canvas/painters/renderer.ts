@@ -34,7 +34,7 @@ export class CanvasRenderer extends IRenderer {
     private __path2D_cache: Path2D | undefined = undefined;
 
     private get path2D(): Path2D {
-        return this.__path2D_cache ?? (this.__path2D_cache = new Path2D(this.view.getPath().toString()));
+        return this.__path2D_cache ?? (this.__path2D_cache = new Path2D(this.view.getOutLine().toString()));
     }
 
     private __props_cache: Props | undefined = undefined;
@@ -81,30 +81,30 @@ export class CanvasRenderer extends IRenderer {
         }
     }
 
-    private __flat_path_cache: Path | undefined;
+    private __flat_path_cache: Path2D | undefined;
 
-    private getFlatPath() {
-        const path = new Path();
+    private getFlatPath(): Path2D {
+        const path = new Path2D();
         if (this.view.getFills().length) {
-            const fillP = this.view.getOutLine().clone();
+            const fillP = this.path2D;
             path.addPath(fillP);
         }
         if (this.view.getBorders().length) {
             const borderP = border2path(this.view, this.view.getBorders()[0]);
-            path.addPath(borderP);
+            path.addPath(new Path2D(borderP.toString()));
         }
         const childs = this.view.m_children as ShapeView[];
         if (childs.length) {
             childs.forEach((c) => {
                 const flat = (c.m_renderer as CanvasRenderer).flat;
-                flat.transform(c.matrix2Parent());
-                path.addPath(flat);
+                const m = c.matrix2Parent().toArray();
+                path.addPath(flat, {a: m[0], b: m[1], c: m[2], d: m[3], e: m[4], f: m[5]});
             });
         }
         return path;
     }
 
-    get flat() {
+    get flat(): Path2D {
         return this.__flat_path_cache ?? (this.__flat_path_cache = this.getFlatPath())
     }
 

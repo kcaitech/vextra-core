@@ -60,9 +60,9 @@ function blurOutlineShadow(view: ShapeView, props: Props, ctx: CanvasRenderingCo
     for (const os of outerShadows) {
         const {offsetX, offsetY, blurRadius, color} = os;
         ctx.save();
-        ctx.filter = `blur(${blurRadius}px)`;
-        ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, ${color.alpha * 0.8})`;
-        ctx.translate(offsetX, offsetY);
+        ctx.filter = `blur(${blurRadius / 2}px)`;
+        ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, ${color.alpha})`;
+        ctx.translate(offsetX / 1.8, offsetY / 1.8);
         ctx.fill(path2D, 'evenodd');
         ctx.restore();
     }
@@ -70,14 +70,14 @@ function blurOutlineShadow(view: ShapeView, props: Props, ctx: CanvasRenderingCo
 }
 
 function complexBlurOutlineShadow(renderer: CanvasRenderer, props: Props, ctx: CanvasRenderingContext2D, outerShadows: Shadow[]) {
-    const path2D = new Path2D(renderer.flat.toString());
+    const path2D = renderer.flat;
     ctx.save();
     ctx.transform(...props.transform);
     for (const os of outerShadows) {
         const {offsetX, offsetY, blurRadius, color} = os;
         ctx.save();
-        ctx.filter = `blur(${blurRadius}px)`;
-        ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, ${color.alpha * 0.8})`;
+        ctx.filter = `blur(${blurRadius / 2}px)`;
+        ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, ${color.alpha})`;
         ctx.translate(offsetX, offsetY);
         ctx.fill(path2D, 'evenodd');
         ctx.restore();

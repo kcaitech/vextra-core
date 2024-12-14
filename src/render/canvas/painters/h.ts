@@ -26,11 +26,15 @@ painter[ShapeType.BoolShape] = (view: ShapeView, renderer) => {
 }
 
 painter[ShapeType.Page] = (view: PageView, renderer: CanvasRenderer) => {
-    const dpr = window.devicePixelRatio;
+    const s = Date.now();
+    const dpr = Math.ceil(window.devicePixelRatio || 1);
     renderer.ctx.save();
     renderer.ctx.scale(dpr, dpr);
     const ver = painter['base'](view, renderer);
     renderer.ctx.restore();
+    const t = Date.now() - s;
+    const fps = Math.floor(1000 / t);
+    console.log(`单帧绘制用时${t}, fps: ${fps}`);
     return ver;
 }
 
