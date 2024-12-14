@@ -6,32 +6,41 @@ export const painter: { [key: string]: (view: any, renderer: CanvasRenderer) => 
 
 painter['base'] = (view: ShapeView, renderer: CanvasRenderer) => {
     const blurEnd = renderer.renderBlur();
+    const shadowEnd = renderer.renderShadows();
     renderer.renderFills();
     renderer.renderContents();
     renderer.renderBorders();
+    shadowEnd && shadowEnd();
     blurEnd && blurEnd();
     return ++renderer.m_render_version;
 }
 
 painter[ShapeType.BoolShape] = (view: ShapeView, renderer) => {
     const blurEnd = renderer.renderBlur();
+    const shadowEnd = renderer.renderShadows();
     renderer.renderFills();
     renderer.renderBorders();
+    shadowEnd && shadowEnd();
     blurEnd && blurEnd();
     return ++renderer.m_render_version;
 }
 
 painter[ShapeType.Page] = (view: PageView, renderer: CanvasRenderer) => {
-    const dpr = window.devicePixelRatio;
+    const s = Date.now();
+    const dpr = Math.ceil(window.devicePixelRatio || 1);
     renderer.ctx.save();
     renderer.ctx.scale(dpr, dpr);
     const ver = painter['base'](view, renderer);
     renderer.ctx.restore();
+    const t = Date.now() - s;
+    const fps = Math.floor(1000 / t);
+    console.log(`单帧绘制用时${t}, fps: ${fps}`);
     return ver;
 }
 
 painter[ShapeType.Artboard] = (view: ArtboradView, renderer: CanvasRenderer) => {
     const blurEnd = renderer.renderBlur();
+    const shadowEnd = renderer.renderShadows();
     renderer.renderFills();
     const clipEnd = renderer.clip();
     if (clipEnd) { // 裁剪容器中的边框需要在内容的上层
@@ -42,6 +51,7 @@ painter[ShapeType.Artboard] = (view: ArtboradView, renderer: CanvasRenderer) => 
         renderer.renderBorders();
         renderer.renderContents();
     }
+    shadowEnd && shadowEnd();
     blurEnd && blurEnd();
     return ++renderer.m_render_version;
 }
@@ -55,6 +65,7 @@ painter[ShapeType.Symbol] = painter[ShapeType.Artboard];
 
 painter[ShapeType.SymbolRef] = (view: SymbolRefView, renderer: CanvasRenderer) => {
     const blurEnd = renderer.renderBlur();
+    const shadowEnd = renderer.renderShadows();
     renderer.renderFills();
     const clipEnd = renderer.clip();
     if (clipEnd) { // 裁剪容器中的边框需要在内容的上层
@@ -65,6 +76,7 @@ painter[ShapeType.SymbolRef] = (view: SymbolRefView, renderer: CanvasRenderer) =
         renderer.renderBorders();
         renderContents();
     }
+    shadowEnd && shadowEnd();
     blurEnd && blurEnd();
     return ++renderer.m_render_version;
 

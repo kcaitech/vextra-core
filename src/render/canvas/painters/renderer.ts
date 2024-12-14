@@ -6,6 +6,8 @@ import { render as renderShadows } from "../effects/shadow";
 import { render as renderBlur } from "../effects/blur"
 
 import { painter } from "./h";
+import { Path } from "../../../../../kcdesign-path";
+import { border2path } from "../../../editor/utils/path";
 
 export type Props = {
     transform: [number, number, number, number, number, number];
@@ -26,12 +28,13 @@ export class CanvasRenderer extends IRenderer {
     private __clear_cache() {
         this.__path2D_cache = undefined;
         this.__props_cache = undefined;
+        this.__flat_path_cache = undefined;
     }
 
     private __path2D_cache: Path2D | undefined = undefined;
 
     private get path2D(): Path2D {
-        return this.__path2D_cache ?? (this.__path2D_cache = new Path2D(this.view.getPath().toString()));
+        return this.__path2D_cache ?? (this.__path2D_cache = new Path2D(this.view.getOutLine().toString()));
     }
 
     private __props_cache: Props | undefined = undefined;
@@ -61,7 +64,7 @@ export class CanvasRenderer extends IRenderer {
     }
 
     renderShadows() {
-        return renderShadows(this.view.canvasRenderingContext2D, this.view.getShadows());
+        return renderShadows(this, this.view, this.props, this.view.canvasRenderingContext2D, this.view.getShadows(), this.view.getBorders(), this.view.getFills());
     }
 
     renderBlur() {
@@ -76,6 +79,33 @@ export class CanvasRenderer extends IRenderer {
             childs.forEach((c) => c.render());
             this.ctx.restore();
         }
+    }
+
+    private __flat_path_cache: Path2D | undefined;
+
+    private getFlatPath(): Path2D {
+        const path = new Path2D();
+        if (this.view.getFills().length) {
+            const fillP = this.path2D;
+            path.addPath(fillP);
+        }
+        if (this.view.getBorders().length) {
+            const borderP = border2path(this.view, this.view.getBorders()[0]);
+            path.addPath(new Path2D(borderP.toString()));
+        }
+        const childs = this.view.m_children as ShapeView[];
+        if (childs.length) {
+            childs.forEach((c) => {
+                const flat = (c.m_renderer as CanvasRenderer).flat;
+                const m = c.matrix2Parent().toArray();
+                path.addPath(flat, {a: m[0], b: m[1], c: m[2], d: m[3], e: m[4], f: m[5]});
+            });
+        }
+        return path;
+    }
+
+    get flat(): Path2D {
+        return this.__flat_path_cache ?? (this.__flat_path_cache = this.getFlatPath())
     }
 
     clip(): Function | null {

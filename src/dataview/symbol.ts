@@ -44,6 +44,10 @@ export class SymbolView extends GroupShapeView {
         return (this.m_data as SymbolShape).frameMaskDisabled;
     }
 
+    getOutLine() {
+        return this.getPath();
+    }
+
     // fills
     protected renderFills(): EL[] {
         return renderFills(elh, this.getFills(), this.frame, this.getPathStr());
