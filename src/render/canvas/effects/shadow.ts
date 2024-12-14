@@ -3,6 +3,7 @@ import { ArtboradView, BoolShapeView, ShapeView, SymbolRefView, SymbolView } fro
 import { gPal } from "../../../basic/pal";
 import { border2path } from "../../../editor/utils/path";
 import { CanvasRenderer, Props } from "../painters/renderer";
+import { OpType, Path } from "@kcdesign/path";
 
 
 export function render(renderer: CanvasRenderer, view: ShapeView, props: Props, ctx: CanvasRenderingContext2D, shadows: Shadow[], borders: Border[], fills: Fill[]): Function | undefined {
@@ -15,6 +16,8 @@ export function render(renderer: CanvasRenderer, view: ShapeView, props: Props, 
         if (isBlurOutlineShadow()) blurOutlineShadow(view, props, ctx, outer);
         else complexBlurOutlineShadow(renderer, props, ctx, outer);
     }
+    const inner = shadows.filter(i => i.position === ShadowPosition.Inner);
+    if (inner.length) return innerShadow(view, props, ctx, inner);
 
     function isFrankShadow() {
         return shadows.length === 1
@@ -31,7 +34,6 @@ export function render(renderer: CanvasRenderer, view: ShapeView, props: Props, 
     }
 }
 
-//外阴影·最简方案
 function frankShadow(ctx: CanvasRenderingContext2D, shadow: Shadow): Function {
     ctx.save();
     const color = shadow.color;
@@ -42,7 +44,6 @@ function frankShadow(ctx: CanvasRenderingContext2D, shadow: Shadow): Function {
     return ctx.restore.bind(ctx);
 }
 
-//外阴影·模糊方案
 function blurOutlineShadow(view: ShapeView, props: Props, ctx: CanvasRenderingContext2D, outerShadows: Shadow[]) {
     let pathStr = view.getPath().toString();
     const border = view.getBorders()[0];
@@ -85,15 +86,41 @@ function complexBlurOutlineShadow(renderer: CanvasRenderer, props: Props, ctx: C
     ctx.restore();
 }
 
-/**
- * 外阴影
- *  最简方案：ctx.shadowColor
- *  模糊方案：将边框轮廓加本体Path取联级，模糊这个联集
- *  离屏方案：OffScreen
- *
- * 只有一条阴影 单一路径图层，例如直线、纯色填充、单文本、没有子元素的只有边框或者填充的容器 => 最简方案
- * PathShape、BoolShape、裁剪的容器、组件 => 模糊方案
- * 其他复杂场景
- *
- *
- */
+function innerShadow(view: ShapeView, props: Props, ctx: CanvasRenderingContext2D, innerShadows: Shadow[]) {
+    return () => {
+        const outline = view.outline;
+        const outlineStr = outline.toSVGString();
+        const outlinePath2D = new Path2D(outlineStr);
+        const outlineBox = view.outlineBox;
+        const bodyIPath = new Path(outlineStr);
+        ctx.save();
+        ctx.transform(...props.transform);
+        ctx.clip(outlinePath2D, "evenodd");
+        for (const inSd of innerShadows) {
+            let x1 = outlineBox.x;
+            let y1 = outlineBox.y;
+            let x2 = outlineBox.x2;
+            let y2 = outlineBox.y2;
+
+            const {offsetX, offsetY, color, spread} = inSd;
+            const blur = inSd.blurRadius / 2;
+            const paddingX = blur + Math.abs(offsetX);
+            const paddingY = blur + Math.abs(offsetY);
+            x1 -= paddingX;
+            y1 -= paddingY;
+            x2 += paddingX;
+            y2 += paddingY;
+
+            const box = {x: x1, y: y1, w: x2 - x1, h: y2 - y1};
+            const inner = new Path(`M${box.x} ${box.y} h${box.w} v${box.h} h${-box.w} z`);
+            inner.op(bodyIPath, OpType.Difference);
+            ctx.save();
+            ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, ${color.alpha})`;
+            ctx.filter = `blur(${blur}px)`;
+            ctx.translate(offsetX, offsetY);
+            ctx.fill(new Path2D(inner.toSVGString()), "evenodd");
+            ctx.restore();
+        }
+        ctx.restore();
+    }
+}
