@@ -12,7 +12,7 @@ import { border2path } from "../../../editor/utils/path";
 export type Props = {
     transform: [number, number, number, number, number, number];
     opacity?: number;
-    globalCompositeOperation?: string;
+    globalCompositeOperation?: GlobalCompositeOperation;
 }
 
 export class CanvasRenderer extends IRenderer {
@@ -45,7 +45,7 @@ export class CanvasRenderer extends IRenderer {
             if (contextSettings.opacity !== undefined) {
                 props.opacity = contextSettings.opacity;
             }
-            props.globalCompositeOperation = contextSettings.blenMode;
+            props.globalCompositeOperation = contextSettings.blenMode as GlobalCompositeOperation;
         }
         return props;
     }

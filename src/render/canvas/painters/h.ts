@@ -9,7 +9,7 @@ painter['base'] = (view: ShapeView, renderer: CanvasRenderer) => {
     ctx.save();
     if (renderer.props.opacity) ctx.globalAlpha = renderer.props.opacity;
     if (renderer.props.globalCompositeOperation) {
-        ctx.globalCompositeOperation = renderer.props.globalCompositeOperation as any;
+        ctx.globalCompositeOperation = renderer.props.globalCompositeOperation;
     }
     const blurEnd = renderer.renderBlur();
     const shadowEnd = renderer.renderShadows();
@@ -27,7 +27,7 @@ painter[ShapeType.BoolShape] = (view: ShapeView, renderer) => {
     ctx.save();
     if (renderer.props.opacity) ctx.globalAlpha = renderer.props.opacity;
     if (renderer.props.globalCompositeOperation) {
-        ctx.globalCompositeOperation = renderer.props.globalCompositeOperation as any;
+        ctx.globalCompositeOperation = renderer.props.globalCompositeOperation;
     }
     const blurEnd = renderer.renderBlur();
     const shadowEnd = renderer.renderShadows();
@@ -57,7 +57,7 @@ painter[ShapeType.Artboard] = (view: ArtboradView, renderer: CanvasRenderer) => 
     ctx.save();
     if (renderer.props.opacity) ctx.globalAlpha = renderer.props.opacity;
     if (renderer.props.globalCompositeOperation) {
-        ctx.globalCompositeOperation = renderer.props.globalCompositeOperation as any;
+        ctx.globalCompositeOperation = renderer.props.globalCompositeOperation;
     }
     const blurEnd = renderer.renderBlur();
     const shadowEnd = renderer.renderShadows();
@@ -82,7 +82,7 @@ painter[ShapeType.Contact] = (view: ArtboradView, renderer: CanvasRenderer) => {
     ctx.save();
     if (renderer.props.opacity) ctx.globalAlpha = renderer.props.opacity;
     if (renderer.props.globalCompositeOperation) {
-        ctx.globalCompositeOperation = renderer.props.globalCompositeOperation as any;
+        ctx.globalCompositeOperation = renderer.props.globalCompositeOperation;
     }
     renderer.renderBorders();
     ctx.restore();
@@ -96,7 +96,7 @@ painter[ShapeType.SymbolRef] = (view: SymbolRefView, renderer: CanvasRenderer) =
     ctx.save();
     if (renderer.props.opacity) ctx.globalAlpha = renderer.props.opacity;
     if (renderer.props.globalCompositeOperation) {
-        ctx.globalCompositeOperation = renderer.props.globalCompositeOperation as any;
+        ctx.globalCompositeOperation = renderer.props.globalCompositeOperation;
     }
     const blurEnd = renderer.renderBlur();
     const shadowEnd = renderer.renderShadows();
