@@ -11,18 +11,16 @@ handler[ImageScaleMode.Fill] = function (ctx: CanvasRenderingContext2D, frame: S
     const m = ctx.getTransform();
     const img = new Image();
     img.src = url;
+    img.width = image_w;
+    img.height = image_h;
     img.onload = () => {
         ctx.save();
         ctx.setTransform(m)
-        const dpr = window.devicePixelRatio || 1;
+        ctx.clip(path2D, "evenodd");
         const offscreen = new OffscreenCanvas(frame.width, frame.height);
-        offscreen.width = frame.width * dpr;
-        offscreen.height = frame.height * dpr;
         const offCtx = offscreen.getContext('2d')!;
-        const pattern = ctx.createPattern(img, 'no-repeat');
+        const pattern = offCtx.createPattern(img, 'no-repeat');
         let matrix = new DOMMatrix();
-        img.width = image_w;
-        img.height = image_h;
         const rotatedDims = calculateRotatedDimensions(img.width, img.height, fill.rotation || 0);
         const fitScaleX = frame.width / rotatedDims.width;
         const fitScaleY = frame.height / rotatedDims.height;
@@ -54,14 +52,16 @@ handler[ImageScaleMode.Fit] = function (ctx: CanvasRenderingContext2D, frame: Sh
     const m = ctx.getTransform();
     const img = new Image();
     img.src = url;
+    img.width = image_w;
+    img.height = image_h;
     img.onload = () => {
         ctx.save();
         ctx.setTransform(m);
         ctx.clip(path2D, "evenodd");
+        const offscreen = new OffscreenCanvas(frame.width, frame.height);
+        const offCtx = offscreen.getContext('2d')!;
         let matrix = new DOMMatrix();
-        img.width = image_w;
-        img.height = image_h;
-        const pattern = ctx.createPattern(img, 'no-repeat');
+        const pattern = offCtx.createPattern(img, 'no-repeat');
         const containDims = calculateRotatedDimensions(img.width, img.height, fill.rotation || 0);
         const containScaleX = frame.width / containDims.width;
         const containScaleY = frame.height / containDims.height;
@@ -71,11 +71,23 @@ handler[ImageScaleMode.Fit] = function (ctx: CanvasRenderingContext2D, frame: Sh
             .rotate(fill.rotation || 0)
             .scale(containScale)
             .translate(-img.width / 2, -img.height / 2);
-        if (pattern) {
+        if (pattern && offCtx) {
+            offCtx.save();
             pattern.setTransform(matrix);
-            ctx.fillStyle = pattern;
+            offCtx.setTransform(matrix)
+            const path = new Path2D();
+            path.rect(0, 0, img.width, img.height);
+            offCtx.clip(path, "evenodd");
+            offCtx.resetTransform();
+            offCtx.fillStyle = pattern;
+            offCtx.fill(path2D);
+            offCtx.restore();
+            const imageData = offCtx.getImageData(0, 0, offscreen.width, offscreen.height);
+            const data = imageData.data;
+            paintFilter(data, fill);
+            offCtx.putImageData(imageData, 0, 0);
         }
-        ctx.fillRect(0, 0, frame.width, frame.height);
+        ctx.drawImage(offscreen, 0, 0);
         ctx.restore();
     }
 }
@@ -87,14 +99,16 @@ handler[ImageScaleMode.Stretch] = function (ctx: CanvasRenderingContext2D, frame
     const m = ctx.getTransform();
     const img = new Image();
     img.src = url;
+    img.width = image_w;
+    img.height = image_h;
     img.onload = () => {
         ctx.save();
         ctx.setTransform(m);
-        const pattern = ctx.createPattern(img, 'no-repeat');
+        ctx.clip(path2D, "evenodd");
+        const offscreen = new OffscreenCanvas(frame.width, frame.height);
+        const offCtx = offscreen.getContext('2d')!;
+        const pattern = offCtx.createPattern(img, 'no-repeat');
         let matrix = new DOMMatrix();
-        img.width = image_w;
-        img.height = image_h;
-
         const rad = (fill.rotation || 0) * Math.PI / 180;
         const cos = Math.abs(Math.cos(rad));
         const sin = Math.abs(Math.sin(rad));
@@ -108,11 +122,16 @@ handler[ImageScaleMode.Stretch] = function (ctx: CanvasRenderingContext2D, frame
             .rotate(fill.rotation || 0)
             .scale(baseScaleX, baseScaleY)
             .translate(-img.width / 2, -img.height / 2);
-        if (pattern) {
+        if (pattern && offCtx) {
             pattern.setTransform(matrix);
-            ctx.fillStyle = pattern;
+            offCtx.fillStyle = pattern;
+            offCtx.fill(path2D);
+            const imageData = offCtx.getImageData(0, 0, offscreen.width, offscreen.height);
+            const data = imageData.data;
+            paintFilter(data, fill);
+            offCtx.putImageData(imageData, 0, 0);
         }
-        ctx.fill(path2D);
+        ctx.drawImage(offscreen, 0, 0);
         ctx.restore();
     }
 }
@@ -129,24 +148,32 @@ handler[ImageScaleMode.Tile] = function (ctx: CanvasRenderingContext2D, frame: S
     const url = fill.peekImage(true) || default_url;
     const img = new Image();
     img.src = url;
+    img.width = image_w;
+    img.height = image_h;
     img.onload = () => {
         ctx.save();
         ctx.setTransform(m);
-        const pattern = ctx.createPattern(img, 'repeat');
+        ctx.clip(path2D, "evenodd");
+        const offscreen = new OffscreenCanvas(frame.width, frame.height);
+        const offCtx = offscreen.getContext('2d')!;
+        const pattern = offCtx.createPattern(img, 'repeat');
         let matrix = new DOMMatrix();
-        img.width = image_w;
-        img.height = image_h;
 
         const offset = calculateOffset(img, scale, fill.rotation || 0);
         matrix = matrix
             .translate(offset.x, offset.y)
             .rotate(fill.rotation || 0)
             .scale(scale);
-        if (pattern) {
+        if (pattern && offCtx) {
             pattern.setTransform(matrix);
-            ctx.fillStyle = pattern;
+            offCtx.fillStyle = pattern;
+            offCtx.fill(path2D);
+            const imageData = offCtx.getImageData(0, 0, offscreen.width, offscreen.height);
+            const data = imageData.data;
+            paintFilter(data, fill);
+            offCtx.putImageData(imageData, 0, 0);``
         }
-        ctx.fill(path2D);
+        ctx.drawImage(offscreen, 0, 0);
         ctx.restore();
     }
 }
@@ -193,23 +220,26 @@ function calculateRotatedDimensions(width: number, height: number, rotation: num
 const paintFilter = (data: Uint8ClampedArray, fill: Fill) => {
     const paintFilter = fill.paintFilter;
     if (!paintFilter) return;
+    if (paintFilter.hue) {
+        for (let i = 0; i < data.length; i += 4) {
+            const r = data[i] / 255;
+            const g = data[i + 1] / 255;
+            const b = data[i + 2] / 255;
+            let [h, s, l] = rgbToHsl(r, g, b);
+            h = (h + paintFilter.hue) % 360;
+            if (h < 0) h += 360;
+            const newData = hslToRgb(h, s, l);
+            data[i] = Math.min(255, Math.max(0, newData[0]));
+            data[i + 1] = Math.min(255, Math.max(0, newData[1]));
+            data[i + 2] = Math.min(255, Math.max(0, newData[2]));
+        }
+    }
     if (paintFilter.exposure) {
         for (let i = 0; i < data.length; i += 4) {
-            data[i] = Math.min(Math.max(data[i] + (paintFilter.exposure * 2), 0), 255);
-            data[i + 1] = Math.min(Math.max(data[i + 1] + (paintFilter.exposure * 2), 0), 255);
-            data[i + 2] = Math.min(Math.max(data[i + 2] + (paintFilter.exposure * 2), 0), 255);
+            data[i] = Math.min(Math.max(data[i] + (paintFilter.exposure * 1.6), 0), 255);
+            data[i + 1] = Math.min(Math.max(data[i + 1] + (paintFilter.exposure * 1.6), 0), 255);
+            data[i + 2] = Math.min(Math.max(data[i + 2] + (paintFilter.exposure * 1.6), 0), 255);
         }
-        // for (let i = 0; i < data.length; i += 4) {
-        //     const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
-        //     const highlightThreshold = 128;
-        //     if (brightness > highlightThreshold) {
-        //         const adjustmentStrength = (brightness - highlightThreshold) / (255 - highlightThreshold);
-        //         const adjustment = paintFilter.exposure * adjustmentStrength;
-        //         data[i] = Math.min(255, Math.max(0, data[i] + adjustment));
-        //         data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + adjustment));
-        //         data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + adjustment));
-        //     }
-        // }
     }
     if (paintFilter.contrast) {
         // 对比度
@@ -221,16 +251,7 @@ const paintFilter = (data: Uint8ClampedArray, fill: Fill) => {
             data[i + 2] = Math.min(255, Math.max(0, data[i + 2] * contrast + intercept));
         }
     }
-    if (paintFilter.saturation) {
-        // 饱和度
-        const saturationScale = 1 + (paintFilter.saturation / 100);
-        for (let i = 0; i < data.length; i += 4) {
-            const gray = 0.2989 * data[i] + 0.5870 * data[i + 1] + 0.1140 * data[i + 2];
-            data[i] = Math.min(255, Math.max(0, gray + (data[i] - gray) * saturationScale));
-            data[i + 1] = Math.min(255, Math.max(0, gray + (data[i + 1] - gray) * saturationScale));
-            data[i + 2] = Math.min(255, Math.max(0, gray + (data[i + 2] - gray) * saturationScale));
-        }
-    }
+
     if (paintFilter.temperature) {
         // 色温
         const scale = 0.8;
@@ -248,11 +269,21 @@ const paintFilter = (data: Uint8ClampedArray, fill: Fill) => {
             const b = data[i + 2];
             if (paintFilter.tint > 0) {
                 data[i] = Math.min(255, r + paintFilter.tint * intensity);
-                data[i + 1] = Math.max(0, g- paintFilter.tint * intensity);
+                data[i + 1] = Math.max(0, g - paintFilter.tint * intensity);
             } else {
                 data[i] = Math.max(0, r + paintFilter.tint * intensity);
                 data[i + 1] = Math.min(255, g - paintFilter.tint * intensity);
             }
+        }
+    }
+    if (paintFilter.saturation) {
+        // 饱和度
+        const saturationScale = 1 + (paintFilter.saturation / 100);
+        for (let i = 0; i < data.length; i += 4) {
+            const gray = 0.2989 * data[i] + 0.5870 * data[i + 1] + 0.1140 * data[i + 2];
+            data[i] = Math.min(255, Math.max(0, gray + (data[i] - gray) * saturationScale));
+            data[i + 1] = Math.min(255, Math.max(0, gray + (data[i + 1] - gray) * saturationScale));
+            data[i + 2] = Math.min(255, Math.max(0, gray + (data[i + 2] - gray) * saturationScale));
         }
     }
     if (paintFilter.shadow) {
@@ -269,43 +300,57 @@ const paintFilter = (data: Uint8ClampedArray, fill: Fill) => {
             }
         }
     }
-    if (paintFilter.hue) {
-        for (let i = 0; i < data.length; i += 4) {
-            const r = data[i] / 255;
-            const g = data[i + 1] / 255;
-            const b = data[i + 2] / 255;
-            const max = Math.max(r, g, b);
-            const min = Math.min(r, g, b);
-            const delta = max - min;
-            let h = 0;
-            const l = (max + min) / 2;
-            const s = delta === 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
-            if (delta !== 0) {
-                switch (max) {
-                    case r: h = ((g - b) / delta) % 6; break;
-                    case g: h = (b - r) / delta + 2; break;
-                    case b: h = (r - g) / delta + 4; break;
-                }
-                h *= 60;
-            }
-            h = (h + paintFilter.hue) % 360;
-            if (h < 0) h += 360;
-            const c = (1 - Math.abs(2 * l - 1)) * s;
-            const x = c * (1 - Math.abs((h / 60) % 2 - 1));
-            const m = l - c / 2;
-            let [r1, g1, b1] = [0, 0, 0];
-            const hSection = Math.floor(h / 60);
-            switch (hSection) {
-                case 0: [r1, g1, b1] = [c, x, 0]; break;
-                case 1: [r1, g1, b1] = [x, c, 0]; break;
-                case 2: [r1, g1, b1] = [0, c, x]; break;
-                case 3: [r1, g1, b1] = [0, x, c]; break;
-                case 4: [r1, g1, b1] = [x, 0, c]; break;
-                case 5: [r1, g1, b1] = [c, 0, x]; break;
-            }
-            data[i] = Math.round((r1 + m) * 255);
-            data[i + 1] = Math.round((g1 + m) * 255);
-            data[i + 2] = Math.round((b1 + m) * 255);
+
+}
+
+function rgbToHsl(r: number, g: number, b: number) {
+
+    let max = Math.max(r, g, b);
+    let min = Math.min(r, g, b);
+    let h = 0, s, l = (max + min) / 2;
+
+    if (max === min) {
+        h = s = 0; // achromatic
+    } else {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+            case g: h = (b - r) / d + 2; break;
+            case b: h = (r - g) / d + 4; break;
         }
+        h /= 6;
     }
+
+    return [h * 360, s * 100, l * 100];
+}
+
+function hslToRgb(h: number, s: number, l: number) {
+    s /= 100;
+    l /= 100;
+
+    const c = (1 - Math.abs(2 * l - 1)) * s;
+    const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+    const m = l - c / 2;
+
+    let r, g, b;
+    if (h < 60) {
+        r = c; g = x; b = 0;
+    } else if (h < 120) {
+        r = x; g = c; b = 0;
+    } else if (h < 180) {
+        r = 0; g = c; b = x;
+    } else if (h < 240) {
+        r = 0; g = x; b = c;
+    } else if (h < 300) {
+        r = x; g = 0; b = c;
+    } else {
+        r = c; g = 0; b = x;
+    }
+
+    return [
+        Math.round((r + m) * 255),
+        Math.round((g + m) * 255),
+        Math.round((b + m) * 255)
+    ];
 }
