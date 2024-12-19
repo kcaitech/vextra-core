@@ -1198,7 +1198,7 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
         importStyle_fills(source.fills, ctx),
         importStyle_shadows(source.shadows, ctx))
     importStyleOptional(ret, source, ctx)
-        // inject code        
+        // inject code
     if (ctx?.document) ret.setStylesMgr(ctx.document.stylesMgr);
 
     return ret

@@ -387,5 +387,5 @@ inject['FillMask']['after'] = `\
 inject['Style'] = {};
 inject['Style']['after'] = `\
     // inject code
-    if (source.fillsMask && ctx?.document) ret.setStylesMgr(ctx.document.stylesMgr);
+    if (ctx?.document) ret.setStylesMgr(ctx.document.stylesMgr);
 `
