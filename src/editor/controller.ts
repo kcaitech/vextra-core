@@ -51,7 +51,7 @@ import { Color } from "../data/color";
 import { adapt2Shape, ContactLineView, PageView, PathShapeView, ShapeView } from "../dataview";
 import { ISave4Restore, LocalCmd, SelectionState } from "../coop/localcmd";
 import { BasicArray } from "../data/basic";
-import { Fill } from "../data/style";
+import { Fill, FillMask } from "../data/style";
 import { TextAttr } from "../data/classes";
 import { getAutoLayoutShapes, layoutShapesOrder, modifyAutoLayout } from "./utils/auto_layout";
 
@@ -163,6 +163,7 @@ export interface AsyncGradientEditor {
     execute_to: (from: { x: number, y: number }) => void;
     execute_elipselength: (length: number) => void;
     execute_stop_position: (position: number, id: string) => void;
+    execute_fillmask_stop_position?: (sheetid: string, maskid: string, index: number, position: number, id: string) => void;
     close: () => undefined;
 }
 
@@ -979,7 +980,7 @@ export class Controller {
                     const sideType = borders[index].sideSetting.sideType;
                     switch (sideType) {
                         case SideType.Normal:
-                            api.setBorderSide(page, s, index, new BorderSideSetting(new BasicArray(),sideType, thickness, thickness, thickness, thickness));
+                            api.setBorderSide(page, s, index, new BorderSideSetting(new BasicArray(), sideType, thickness, thickness, thickness, thickness));
                             break;
                         case SideType.Top:
                             api.setBorderThicknessTop(page, s, index, thickness);
@@ -994,7 +995,7 @@ export class Controller {
                             api.setBorderThicknessLeft(page, s, index, thickness);
                             break
                         default:
-                            api.setBorderSide(page, s, index, new BorderSideSetting(new BasicArray(),sideType, thickness, thickness, thickness, thickness));
+                            api.setBorderSide(page, s, index, new BorderSideSetting(new BasicArray(), sideType, thickness, thickness, thickness, thickness));
                             break;
                     }
                 }
@@ -1231,6 +1232,48 @@ export class Controller {
                 status = Status.Exception;
             }
         }
+        const execute_fillmask_stop_position = (sheetid: string, maskid: string, index: number, position: number, id: string) => {
+            status = Status.Pending;
+            try {
+                let libs = this.__document.stylelib;
+                if (!libs) return
+                const lib = libs.find(s => s.id === sheetid);
+                if (!lib) return
+                const fillmask = lib.variables.find(s => (s as FillMask).id === maskid)
+                if (!(fillmask && fillmask instanceof FillMask)) return
+                const fills = fillmask.fills;
+                const f_stop = fills[index].gradient?.stops;
+                if (f_stop) {
+                    const idx = f_stop.findIndex((stop) => stop.id === id);
+                    const gradient = fills[index].gradient;
+                    if (!gradient) return;
+                    const new_gradient = importGradient(exportGradient(gradient));
+                    if (idx === -1) {
+                        console.warn(`gradient stop not found: ${id}`);
+                        return
+                    }
+                    new_gradient.stops[idx].position = position;
+                    const g_s = new_gradient.stops;
+                    g_s.sort((a, b) => {
+                        if (a.position > b.position) {
+                            return 1;
+                        } else if (a.position < b.position) {
+                            return -1;
+                        } else {
+                            return 0;
+                        }
+                    })
+                    const f = api.modifyFillGradient.bind(api)
+                    f(this.__document, sheetid, maskid, index, new_gradient);
+                }
+
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
         const close = () => {
             if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
                 this.__repo.commit();
@@ -1239,7 +1282,8 @@ export class Controller {
             }
             return undefined;
         }
-        return { execute_from, execute_to, execute_elipselength, execute_stop_position, close }
+        return { execute_from, execute_to, execute_elipselength, execute_stop_position, execute_fillmask_stop_position, close }
+ 
     }
 }
 

@@ -1,17 +1,20 @@
 import { Page } from "../data/page";
 import { Document } from "../data/document";
-import { PageListItem } from "../data/typesdefine";
+import { FillType, GradientType, ImageScaleMode, PageListItem } from "../data/typesdefine";
 import { newPage } from "./creator";
 import { v4 as uuid } from "uuid";
-import { exportPage } from "../data/baseexport";
-import { IImportContext, importPage } from "../data/baseimport";
+import { exportGradient, exportPage, exportStop } from "../data/baseexport";
+import { IImportContext, importGradient, importPage, importStop } from "../data/baseimport";
 import { newDocument } from "./creator";
 import { CoopRepository } from "../coop/cooprepo";
 import { Repository } from "../data/transact";
 import * as types from "../data/typesdefine";
 import { FMT_VER_latest } from "../data/fmtver";
-import { StyleMangerMember } from "../data/style";
+import { FillMask, StyleMangerMember } from "../data/style";
 import { adapt2Shape, PageView, ShapeView } from "../dataview";
+import { Color, Fill, } from "../data/classes";
+import { BasicArray, Stop, Gradient, Point2D } from "../data";
+import { Matrix } from "../basic/matrix";
 
 export function createDocument(documentName: string, repo: Repository): Document {
     return newDocument(documentName, repo);
@@ -228,6 +231,413 @@ export class DocEditor {
                     api.addfillmask(this.__document, p, adapt2Shape(shape), style.id);
                 }
             }
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return true;
+    }
+
+    modifyFillMaskFillColor(sheetid: string, maskid: string, index: number, color: Color) {
+        const api = this.__repo.start('modifyFillMaskColor');
+        try {
+            api.modifyFillMaskColor(this.__document, sheetid, maskid, index, color)
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return true;
+    }
+
+    modifyFillMaskFillOpacity(sheetid: string, maskid: string, index: number, color: Color) {
+        const api = this.__repo.start('modifyFillMaskFillOpacity');
+        try {
+            api.modifyFillMaskOpacity(this.__document, sheetid, maskid, index, color)
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return true;
+    }
+
+    modifyFillMaskFillEnabled(sheetid: string, maskid: string, index: number, isEnable: boolean) {
+        const api = this.__repo.start('modifyFillMaskFillEnabled');
+        try {
+            api.modifyFillMaskEnabled(this.__document, sheetid, maskid, index, isEnable)
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return true;
+    }
+
+    modifyFillMaskFillDelFill(sheetid: string, maskid: string, index: number) {
+        const api = this.__repo.start('modifyFillMaskFillDelFill');
+        try {
+            api.modifyFillMaskDelFill(this.__document, sheetid, maskid, index)
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return true;
+    }
+
+    modifyFillMaskFillAddFill(sheetid: string, maskid: string, fill: Fill) {
+        const api = this.__repo.start('modifyFillMaskFillAddFill');
+        try {
+            api.modifyFillMaskAddFill(this.__document, sheetid, maskid, fill)
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return true;
+    }
+
+    modifyFillMaskFillFillType(sheetid: string, maskid: string, index: number, fillType: FillType) {
+        const api = this.__repo.start('modifyFillMaskFillFillType');
+        try {
+            api.modifyFillMaskFillType(this.__document, sheetid, maskid, index, fillType)
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return true;
+    }
+
+    modifyFillMaskGradientType(sheetid: string, maskid: string, index: number, type: GradientType) {
+        const api = this.__repo.start('modifyFillMaskGradientType');
+        try {
+            let libs = this.__document.stylelib;
+            if (!libs) return
+            const lib = libs.find(s => s.id === sheetid);
+            if (!lib) return
+            const fillmask = lib.variables.find(s => (s as FillMask).id === maskid)
+            if (!(fillmask && fillmask instanceof FillMask)) return
+            const grad_type = fillmask.fills;
+            const gradient_container = grad_type[index];
+            const gradient = gradient_container.gradient;
+            if (gradient_container.fillType !== FillType.Gradient) {
+                const f = api.modifyFillMaskFillType.bind(api)
+                f(this.__document, sheetid, maskid, index, FillType.Gradient)
+            }
+            if (gradient) {
+                const new_gradient = importGradient(exportGradient(gradient));
+                new_gradient.gradientType = type;
+                if (type === GradientType.Linear && gradient.gradientType !== GradientType.Linear) {
+                    new_gradient.from.y = new_gradient.from.y - (new_gradient.to.y - new_gradient.from.y);
+                    new_gradient.from.x = new_gradient.from.x - (new_gradient.to.x - new_gradient.from.x);
+                } else if (gradient.gradientType === GradientType.Linear && type !== GradientType.Linear) {
+                    new_gradient.from.y = new_gradient.from.y + (new_gradient.to.y - new_gradient.from.y) / 2;
+                    new_gradient.from.x = new_gradient.from.x + (new_gradient.to.x - new_gradient.from.x) / 2;
+                }
+                if (type === GradientType.Radial && new_gradient.elipseLength === undefined) {
+                    new_gradient.elipseLength = 1;
+                }
+                new_gradient.stops[0].color = gradient_container.color;
+                const f = api.modifyFillGradient.bind(api)
+                f(this.__document, sheetid, maskid, index, new_gradient);
+            } else {
+                const stops = new BasicArray<Stop>();
+                // const frame = target.frame;
+                const { alpha, red, green, blue } = gradient_container.color;
+                stops.push(new Stop(new BasicArray(), uuid(), 0, new Color(alpha, red, green, blue)), new Stop(new BasicArray(), uuid(), 1, new Color(0, red, green, blue)))
+                const from = type === GradientType.Linear ? { x: 0.5, y: 0 } : { x: 0.5, y: 0.5 };
+                const to = { x: 0.5, y: 1 };
+                let elipseLength = undefined;
+                if (type === GradientType.Radial) {
+                    elipseLength = 1;
+                }
+                const new_gradient = new Gradient(from as Point2D, to as Point2D, type, stops, elipseLength);
+                new_gradient.stops.forEach((v, i) => {
+                    const idx = new BasicArray<number>();
+                    idx.push(i);
+                    v.crdtidx = idx;
+                })
+                const f = api.modifyFillGradient.bind(api)
+                f(this.__document, sheetid, maskid, index, new_gradient);
+            }
+
+            this.__repo.commit();
+        } catch (error) {
+            console.log('modifyFillMaskGradientType:', error);
+            this.__repo.rollback();
+        }
+    }
+
+    modifyFillMaskGradientStop(sheetid: string, maskid: string, index: number, value: Stop) {
+        const api = this.__repo.start('modifyFillMaskGradientStop');
+        try {
+            let libs = this.__document.stylelib;
+            if (!libs) return
+            const lib = libs.find(s => s.id === sheetid);
+            if (!lib) return
+            const fillmask = lib.variables.find(s => (s as FillMask).id === maskid)
+            if (!(fillmask && fillmask instanceof FillMask)) return
+            const grad_type = fillmask.fills;
+            const gradient_container = grad_type[index];
+            const gradient = gradient_container.gradient;
+            if (!gradient) return
+            const new_gradient = importGradient(exportGradient(gradient));
+            new_gradient.stops.push(importStop(exportStop(value)));
+            const s = new_gradient.stops;
+            s.sort((a, b) => {
+                if (a.position > b.position) {
+                    return 1;
+                } else if (a.position < b.position) {
+                    return -1;
+                } else {
+                    return 0;
+                }
+            })
+            new_gradient.stops.forEach((v, i) => {
+                const idx = new BasicArray<number>();
+                idx.push(i);
+                v.crdtidx = idx;
+            })
+            const f = api.modifyFillGradient.bind(api)
+            f(this.__document, sheetid, maskid, index, new_gradient)
+            this.__repo.commit();
+        } catch (error) {
+            console.log('modifyFillMaskGradientStop:', error);
+            this.__repo.rollback();
+        }
+    }
+
+    modifyFillMaskGradientStopColor(sheetid: string, maskid: string, index: number, value: any) {
+        const api = this.__repo.start('modifyFillMaskGradientStopColor');
+        try {
+            let libs = this.__document.stylelib;
+            if (!libs) return
+            const lib = libs.find(s => s.id === sheetid);
+            if (!lib) return
+            const fillmask = lib.variables.find(s => (s as FillMask).id === maskid)
+            if (!(fillmask && fillmask instanceof FillMask)) return
+            const grad_type = fillmask.fills;
+            const gradient_container = grad_type[index];
+            const gradient = gradient_container.gradient;
+            if (!gradient) return
+            const stops = gradient.stops;
+            if (!stops?.length) return
+            const { color, stop_i } = value;
+            const new_gradient = importGradient(exportGradient(gradient));
+            new_gradient.stops[stop_i].color = color;
+            const f_c = api.modifyFillMaskColor.bind(api)
+            f_c(this.__document, sheetid, maskid, index, color)
+            const s = new_gradient.stops;
+            s.sort((a, b) => {
+                if (a.position > b.position) {
+                    return 1;
+                } else if (a.position < b.position) {
+                    return -1;
+                } else {
+                    return 0;
+                }
+            })
+            new_gradient.stops.forEach((v, i) => {
+                const idx = new BasicArray<number>();
+                idx.push(i);
+                v.crdtidx = idx;
+            })
+            const f = api.modifyFillGradient.bind(api)
+            f(this.__document, sheetid, maskid, index, new_gradient)
+            this.__repo.commit();
+        } catch (error) {
+            console.log('modifyFillMaskGradientStopColor:', error);
+            this.__repo.rollback();
+        }
+    }
+
+    modifyFillMaskGradientReverse(sheetid: string, maskid: string, index: number) {
+        const api = this.__repo.start('modifyFillMaskGradientReverse');
+        try {
+            let libs = this.__document.stylelib;
+            if (!libs) return
+            const lib = libs.find(s => s.id === sheetid);
+            if (!lib) return
+            const fillmask = lib.variables.find(s => (s as FillMask).id === maskid)
+            if (!(fillmask && fillmask instanceof FillMask)) return
+            const grad_type = fillmask.fills;
+            const gradient_container = grad_type[index];
+            const gradient = gradient_container.gradient;
+            if (!gradient) return
+            const stops = gradient.stops;
+            if (!stops.length) return
+            const new_stops: BasicArray<Stop> = new BasicArray<Stop>();
+            for (let _i = 0, _l = stops.length; _i < _l; _i++) {
+                const _stop = stops[_i];
+                const inver_index = stops.length - 1 - _i;
+                new_stops.push(importStop(exportStop(new Stop(_stop.crdtidx, _stop.id, _stop.position, stops[inver_index].color))));
+            }
+            const f_c = api.modifyFillMaskColor.bind(api)
+            f_c(this.__document, sheetid, maskid, index, new_stops[0].color as Color)
+            const new_gradient = importGradient(exportGradient(gradient));
+            new_gradient.stops = new_stops;
+            const f = api.modifyFillGradient.bind(api)
+            f(this.__document, sheetid, maskid, index, new_gradient)
+            this.__repo.commit();
+        } catch (error) {
+            console.log('modifyFillMaskGradientOpacity:', error);
+            this.__repo.rollback();
+        }
+    }
+
+    modifyFillMaskGradientOpacity(sheetid: string, maskid: string, index: number, opacity: number) {
+        const api = this.__repo.start('modifyFillMaskGradientOpacity');
+        try {
+            let libs = this.__document.stylelib;
+            if (!libs) return
+            const lib = libs.find(s => s.id === sheetid);
+            if (!lib) return
+            const fillmask = lib.variables.find(s => (s as FillMask).id === maskid)
+            if (!(fillmask && fillmask instanceof FillMask)) return
+            const grad_type = fillmask.fills;
+            const gradient_container = grad_type[index];
+            const gradient = gradient_container.gradient;
+            if (!gradient) return
+            const new_gradient = importGradient(exportGradient(gradient));
+            new_gradient.gradientOpacity = opacity;
+            const f = api.modifyFillGradient.bind(api)
+            f(this.__document, sheetid, maskid, index, new_gradient)
+            this.__repo.commit();
+        } catch (error) {
+            console.log('modifyFillMaskGradientOpacity:', error);
+            this.__repo.rollback();
+        }
+    }
+
+    modifyFillMaskGradientRotate(sheetid: string, maskid: string, index: number) {
+        const api = this.__repo.start('modifyFillMaskGradientRotate');
+        try {
+            let libs = this.__document.stylelib;
+            if (!libs) return
+            const lib = libs.find(s => s.id === sheetid);
+            if (!lib) return
+            const fillmask = lib.variables.find(s => (s as FillMask).id === maskid)
+            if (!(fillmask && fillmask instanceof FillMask)) return
+            const grad_type = fillmask.fills;
+            const gradient_container = grad_type[index];
+            const gradient = gradient_container.gradient;
+            if (!gradient) return
+            const new_gradient = importGradient(exportGradient(gradient));
+            const { from, to } = new_gradient;
+            const gradientType = new_gradient.gradientType;
+            if (gradientType === types.GradientType.Linear) {
+                const midpoint = { x: (to.x + from.x) / 2, y: (to.y + from.y) / 2 };
+                const m = new Matrix();
+                m.trans(-midpoint.x, -midpoint.y);
+                m.rotate(Math.PI / 2);
+                m.trans(midpoint.x, midpoint.y);
+                new_gradient.to = m.computeCoord3(to) as any;
+                new_gradient.from = m.computeCoord3(from) as any;
+            } else if (gradientType === types.GradientType.Radial || gradientType === types.GradientType.Angular) {
+                const m = new Matrix();
+                m.trans(-from.x, -from.y);
+                m.rotate(Math.PI / 2);
+                m.trans(from.x, from.y);
+                new_gradient.to = m.computeCoord3(to) as any;
+            }
+            const f = api.modifyFillGradient.bind(api)
+            f(this.__document, sheetid, maskid, index, new_gradient)
+            this.__repo.commit();
+        } catch (error) {
+            console.log('modifyFillMaskGradientRotate:', error);
+            this.__repo.rollback();
+        }
+    }
+
+    modifyFillMaskImageScaleMode(sheetid: string, maskid: string, index: number, mode: ImageScaleMode) {
+        const api = this.__repo.start('modifyFillMaskImageScaleMode');
+        try {
+            let libs = this.__document.stylelib;
+            if (!libs) return
+            const lib = libs.find(s => s.id === sheetid);
+            if (!lib) return
+            const fillmask = lib.variables.find(s => (s as FillMask).id === maskid)
+            if (!(fillmask && fillmask instanceof FillMask)) return
+            const fill = fillmask.fills[index];
+            api.modifyFillMaskImageScaleMode(this.__document, sheetid, maskid, index, mode)
+            if (mode === types.ImageScaleMode.Tile) {
+                if (!fill.scale) {
+                    api.modifyFillMaskScale(this.__document, sheetid, maskid, index, 0.5)
+                }
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.log('modifyFillMaskImageScaleMode:', error);
+            this.__repo.rollback();
+        }
+    }
+
+    modifyFillMaskImageOpacity(sheetid: string, maskid: string, index: number, opacity: number) {
+        const api = this.__repo.start('modifyFillMaskImageOpacity');
+        try {
+            api.modifyFillMaskImageOpacity(this.__document, sheetid, maskid, index, opacity)
+            this.__repo.commit();
+        } catch (error) {
+            console.log('modifyFillMaskImageOpacity:', error);
+            this.__repo.rollback();
+        }
+    }
+
+    modifyFillMaskImageRotate(sheetid: string, maskid: string, index: number, rotate: number) {
+        const api = this.__repo.start('modifyFillMaskImageRotate');
+        try {
+            api.modifyFillMaskImageRotate(this.__document, sheetid, maskid, index, rotate)
+            this.__repo.commit();
+        } catch (error) {
+            console.log('modifyFillMaskImageRotate:', error);
+            this.__repo.rollback();
+        }
+    }
+
+    modifyFillMaskImageScale(sheetid: string, maskid: string, index: number, rotate: number) {
+        const api = this.__repo.start('modifyFillMaskImageScale');
+        try {
+            api.modifyFillMaskScale(this.__document, sheetid, maskid, index, rotate)
+            this.__repo.commit();
+        } catch (error) {
+            console.log('modifyFillMaskImageScale:', error);
+            this.__repo.rollback();
+        }
+    }
+
+    modifyFillMaskImageRef(sheetid: string, maskid: string, index: number, value: any) {
+        const api = this.__repo.start('modifyFillMaskImageRef');
+        try {
+            const { urlRef, origin, imageMgr } = value
+            api.modifyFillMaskImageRef(this.__document, sheetid, maskid, index, urlRef, imageMgr)
+            api.modifyFillMaskImageOriginWidth(this.__document, sheetid, maskid, index, origin.width)
+            api.modifyFillMaskImageOriginHeight(this.__document, sheetid, maskid, index, origin.height)
+            this.__repo.commit();
+        } catch (error) {
+            console.log('modifyFillMaskImageScale:', error);
+            this.__repo.rollback();
+        }
+    }
+
+    modifyStyleName(sheetid: string, maskid: string, name: string | undefined) {
+        const api = this.__repo.start('modifyStyleName');
+        try {
+            api.modifyStyleName(this.__document, sheetid, maskid, name)
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return true;
+    }
+
+    modifyStyleDescription(sheetid: string, maskid: string, des: string | undefined) {
+        const api = this.__repo.start('modifyStyleDescription');
+        try {
+            api.modifyStyleDescription(this.__document, sheetid, maskid, des)
             this.__repo.commit();
         } catch (error) {
             console.log(error)

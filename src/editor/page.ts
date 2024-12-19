@@ -2675,12 +2675,31 @@ export class PageEditor {
                 const { target, index } = actions[i];
                 const s = shape4fill(api, this.__page, target);
                 api.deleteFillAt(this.__page, s, index);
+                api.delfillmask(this.__document, this.__page, adapt2Shape(target));
             }
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
         }
     }
+
+    shapesDelStyleFill(actions: BatchAction2[]) {
+        const api = this.__repo.start("shapesDelStyleFill");
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target,value } = actions[i];
+                const source = this.__document.stylesMgr.getSync(target.style.fillsMask ?? '');
+                source && source.__subscribers.delete(target);
+                api.deleteFills(this.__page, adapt2Shape(target), 0, target.style.fills.length);
+                api.delfillmask(this.__document, this.__page, adapt2Shape(target));
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+
 
     shapesFillsUnify(actions: BatchAction2[]) {
         const api = this.__repo.start('shapesFillsUnify'); // 统一多个shape的填充设置。eg:[red, red], [green], [blue, blue, blue] => [red, red], [red, red], [red, red];

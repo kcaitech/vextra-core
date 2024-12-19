@@ -39,7 +39,7 @@ export class ColorPicker extends AsyncApiCaller {
             console.log('ColorPicker.executeImageScale', e);
         }
     }
-    executeImageFilter(shapes: ShapeView[],key: PaintFilterType, value: number, index: number) {
+    executeImageFilter(shapes: ShapeView[], key: PaintFilterType, value: number, index: number) {
         try {
             const api = this.api;
             const page = this.page;
@@ -52,6 +52,17 @@ export class ColorPicker extends AsyncApiCaller {
         } catch (e) {
             this.exception = true;
             console.log('ColorPicker.executeImageFilter', e);
+        }
+    }
+
+    execute_fillmask_ImageFilter(sheetid: string, maskid: string, key: PaintFilterType, value: number, index: number) {
+        try {
+            const api = this.api;
+            api.modifyFillMaskImageFilter(this.__document, sheetid, maskid, index, key, value)
+            this.updateView();
+        } catch (e) {
+            this.exception = true;
+            console.log('ColorPicker.execute_fillmask_ImageFilter', e);
         }
     }
     commit() {
