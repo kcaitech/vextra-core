@@ -1,5 +1,5 @@
 import { Border, BorderPosition, Fill, FillType, Shadow, ShadowPosition } from "../../../data";
-import { ArtboradView, BoolShapeView, ShapeView, SymbolRefView, SymbolView } from "../../../dataview";
+import { ArtboradView, BoolShapeView, ShapeView, SymbolRefView, SymbolView, TextShapeView } from "../../../dataview";
 import { gPal } from "../../../basic/pal";
 import { border2path } from "../../../editor/utils/path";
 import { CanvasRenderer, Props } from "../painters/renderer";
@@ -47,7 +47,7 @@ function frankShadow(ctx: CanvasRenderingContext2D, shadow: Shadow): Function {
 }
 
 function blurOutlineShadow(view: ShapeView, props: Props, ctx: CanvasRenderingContext2D, outerShadows: Shadow[]) {
-    let pathStr = view.getPath().toString();
+    let pathStr = view instanceof TextShapeView ? view.getTextPath().toString() :  view.getPath().toString();
     const border = view.getBorders()[0];
     if (border && border.position !== BorderPosition.Inner) {
         const gPath = gPal.makePalPath(pathStr);

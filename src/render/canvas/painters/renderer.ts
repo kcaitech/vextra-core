@@ -1,4 +1,4 @@
-import { ArtboradView, ShapeView } from "../../../dataview";
+import { ArtboradView, ShapeView, TextShapeView } from "../../../dataview";
 import { IRenderer } from "../../basic";
 import { render as renderFills } from "../effects/fill";
 import { render as renderBorders } from "../effects/border";
@@ -8,6 +8,7 @@ import { render as renderBlur } from "../effects/blur"
 import { painter } from "./h";
 import { Path } from "../../../../../kcdesign-path";
 import { border2path } from "../../../editor/utils/path";
+import { renderTextLayout } from "../effects/text";
 
 export type Props = {
     transform: [number, number, number, number, number, number];
@@ -67,6 +68,11 @@ export class CanvasRenderer extends IRenderer {
         return renderShadows(this, this.view, this.props, this.view.canvasRenderingContext2D, this.view.getShadows(), this.view.getBorders(), this.view.getFills());
     }
 
+    renderTextLayout() {
+        const layout = (this.view as TextShapeView).getLayout();
+        return renderTextLayout(this.props, this.view.canvasRenderingContext2D, layout, this.view as TextShapeView);
+    }
+
     renderBlur() {
         return renderBlur(this.view, this.props);
     }
@@ -98,7 +104,7 @@ export class CanvasRenderer extends IRenderer {
             childs.forEach((c) => {
                 const flat = (c.m_renderer as CanvasRenderer).flat;
                 const m = c.matrix2Parent().toArray();
-                path.addPath(flat, {a: m[0], b: m[1], c: m[2], d: m[3], e: m[4], f: m[5]});
+                path.addPath(flat, { a: m[0], b: m[1], c: m[2], d: m[3], e: m[4], f: m[5] });
             });
         }
         return path;

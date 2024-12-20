@@ -171,7 +171,7 @@ handler[ImageScaleMode.Tile] = function (ctx: CanvasRenderingContext2D, frame: S
             const imageData = offCtx.getImageData(0, 0, offscreen.width, offscreen.height);
             const data = imageData.data;
             paintFilter(data, fill);
-            offCtx.putImageData(imageData, 0, 0);``
+            offCtx.putImageData(imageData, 0, 0);
         }
         ctx.drawImage(offscreen, 0, 0);
         ctx.restore();

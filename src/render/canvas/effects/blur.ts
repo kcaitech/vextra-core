@@ -1,4 +1,4 @@
-import { ShapeView } from "../../../dataview";
+import { ShapeView, TextShapeView } from "../../../dataview";
 import { BlurType, Border, Fill } from "../../../data";
 import { Props } from "../painters/renderer";
 import { border2path } from "../../../editor/utils/path";
@@ -30,7 +30,7 @@ function backgroundBlur(ctx: CanvasRenderingContext2D, view: ShapeView, props: P
 
     const path = new Path2D();
     if (fills.length && alphaFill) {
-        path.addPath(new Path2D(view.getPath().toString()));
+        path.addPath(new Path2D(view instanceof TextShapeView ? view.getTextPath().toString() : view.getPath().toString()));
     }
     if (borders.length && alphaBorder) {
         const path2D = new Path2D(border2path(view, borders[0]).toString());

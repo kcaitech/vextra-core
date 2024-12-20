@@ -167,10 +167,13 @@ export class TextShapeView extends ShapeView {
     asyncRender() {
         return this.render();
     }
-
+    render(): number {
+        return this.m_renderer.render(this.type);
+    }
     renderContents(): EL[] {
-        const layout = this.getLayout();
-        return renderTextLayout(elh, layout, this.frame, this.blur);
+        // const layout = this.getLayout();
+        // return renderTextLayout(elh, layout, this.frame, this.blur);
+        return [];
     }
 
     __origin_frame: ShapeSize = new ShapeSize();

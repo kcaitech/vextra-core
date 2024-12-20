@@ -125,3 +125,20 @@ painter[ShapeType.SymbolRef] = (view: SymbolRefView, renderer: CanvasRenderer) =
         renderer.ctx.restore();
     }
 }
+
+painter[ShapeType.Text] = (view: ShapeView, renderer) => {
+    const ctx = view.canvasRenderingContext2D;
+    ctx.save();
+    if (renderer.props.opacity) ctx.globalAlpha = renderer.props.opacity;
+    if (renderer.props.globalCompositeOperation) {
+        ctx.globalCompositeOperation = renderer.props.globalCompositeOperation;
+    }
+    const blurEnd = renderer.renderBlur();
+    const shadowEnd = renderer.renderShadows();
+    renderer.renderTextLayout();
+    renderer.renderBorders();
+    shadowEnd && shadowEnd();
+    blurEnd && blurEnd();
+    ctx.restore();
+    return ++renderer.m_render_version;
+}
