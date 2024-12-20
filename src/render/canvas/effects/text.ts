@@ -133,17 +133,24 @@ export function renderTextLayout(props: Props, ctx: CanvasRenderingContext2D, te
                 if (gText.length > 0) {
                     if (span && span.gradient && span.fillType === FillType.Gradient && frame) {
                         if (span.gradient.gradientType === GradientType.Radial) {
-                            ctx.clip(new Path2D(getTextPath), "evenodd"); //裁剪文字路径
+                            const dpr = Math.ceil(window.devicePixelRatio || 1);
+                            const offscreen = new OffscreenCanvas(frame.width * dpr, frame.height * dpr);
+                            const offctx = offscreen.getContext("2d")!;
+                            offctx.scale(dpr, dpr);
+                            offctx.clip(new Path2D(getTextPath), "evenodd"); //裁剪文字路径
                             const rect = new Path2D();
                             rect.rect(gX[0], lineY, lineWidth, line.lineHeight);
-                            ctx.clip(rect); 
-                            gradient = renderGradient(ctx, span.gradient as Gradient, frame);
-                            ctx.fillStyle = gradient;
-                            ctx.fillRect(0, 0, frame.width, frame.height);
+                            offctx.clip(rect);
+                            gradient = renderGradient(offctx, span.gradient as Gradient, frame);
+                            offctx.fillStyle = gradient;
+                            offctx.fillRect(0, 0, frame.width, frame.height);
+                            ctx.imageSmoothingEnabled = true; // 开启抗锯齿
+                            // ctx.imageSmoothingQuality = "high"; // 优化抗锯齿
+                            ctx.drawImage(offscreen, 0, 0, frame.width, frame.height);
                         } else {
                             gradient = renderGradient(ctx, span.gradient as Gradient, frame);
-                                ctx.fillStyle = gradient;
-                            for (let i = 0; i < gX.length; i++) {
+                            ctx.fillStyle = gradient;
+                            for (let i = 0; i < gX.length; i++) { 
                                 const x = gX[i];
                                 ctx.fillText(gText[i], x, baseY);
                             }

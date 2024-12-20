@@ -29,9 +29,12 @@ painter[FillType.Gradient] = function (props: Props, ctx: CanvasRenderingContext
     ctx.save();
     ctx.transform(...props.transform);
     if (border.gradient!.gradientType === GradientType.Radial) {
-        ctx.clip(path2D, "evenodd");  // clip 要在gradient之前，不然会被gradient中的transform影响
-        ctx.fillStyle = renderGradient(ctx, border.gradient!, frame, outerFrame);
-        ctx.fill(fillPath, "evenodd");
+        const offscreen = new OffscreenCanvas(frame.width, frame.height);
+        const offctx = offscreen.getContext("2d")!;
+        offctx.clip(path2D, "evenodd");  // clip 要在gradient之前，不然会被gradient中的transform影响
+        offctx.fillStyle = renderGradient(offctx, border.gradient!, frame, outerFrame);
+        offctx.fill(fillPath, "evenodd");
+        ctx.drawImage(offscreen, 0, 0);
     } else {
         ctx.fillStyle = renderGradient(ctx, border.gradient!, frame, outerFrame);
         ctx.fill(path2D, "evenodd");

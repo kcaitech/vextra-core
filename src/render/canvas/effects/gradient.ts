@@ -12,7 +12,7 @@ function applyStops(gradient: CanvasGradient, stops: Stop[]): any {
     }
 }
 
-function getTransform(ctx: CanvasRenderingContext2D, size: ShapeSize, from: Point2D, to: Point2D, stretchx: number, stretchy: number, rotate90: boolean) {
+function getTransform(ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, size: ShapeSize, from: Point2D, to: Point2D, stretchx: number, stretchy: number, rotate90: boolean) {
     let transform: DOMMatrix = ctx.getTransform();
     const { width, height } = size;
     const angle = getAngle(from, to);
@@ -22,7 +22,7 @@ function getTransform(ctx: CanvasRenderingContext2D, size: ShapeSize, from: Poin
     return transform
 }
 
-export function render(ctx: CanvasRenderingContext2D, value: Gradient, frame: ShapeSize, outerFrame?: ShapeFrame): CanvasGradient {
+export function render(ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, value: Gradient, frame: ShapeSize, outerFrame?: ShapeFrame): CanvasGradient {
     if (value.gradientType === GradientType.Linear) {
         const x1 = value.from.x * frame.width;
         const y1 = value.from.y * frame.height;
