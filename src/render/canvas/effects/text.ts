@@ -133,18 +133,16 @@ export function renderTextLayout(props: Props, ctx: CanvasRenderingContext2D, te
                 if (gText.length > 0) {
                     if (span && span.gradient && span.fillType === FillType.Gradient && frame) {
                         if (span.gradient.gradientType === GradientType.Radial) {
-                            ctx.save();
-                            ctx.clip(new Path2D(getTextPath)); //裁剪文字路径
+                            ctx.clip(new Path2D(getTextPath), "evenodd"); //裁剪文字路径
                             const rect = new Path2D();
                             rect.rect(gX[0], lineY, lineWidth, line.lineHeight);
                             ctx.clip(rect); 
                             gradient = renderGradient(ctx, span.gradient as Gradient, frame);
                             ctx.fillStyle = gradient;
                             ctx.fillRect(0, 0, frame.width, frame.height);
-                            ctx.restore();
                         } else {
                             gradient = renderGradient(ctx, span.gradient as Gradient, frame);
-                            ctx.fillStyle = gradient;
+                                ctx.fillStyle = gradient;
                             for (let i = 0; i < gX.length; i++) {
                                 const x = gX[i];
                                 ctx.fillText(gText[i], x, baseY);

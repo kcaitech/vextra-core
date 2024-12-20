@@ -128,6 +128,9 @@ painter[ShapeType.SymbolRef] = (view: SymbolRefView, renderer: CanvasRenderer) =
 
 painter[ShapeType.Text] = (view: ShapeView, renderer) => {
     const ctx = view.canvasRenderingContext2D;
+    if (!view.isVisible) {
+        return ++renderer.m_render_version;
+    }
     ctx.save();
     if (renderer.props.opacity) ctx.globalAlpha = renderer.props.opacity;
     if (renderer.props.globalCompositeOperation) {
