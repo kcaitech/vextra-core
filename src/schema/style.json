@@ -72,6 +72,9 @@
         },
         "fillsMask": {
             "type": "string"
+        },
+        "shadowsMask": {
+            "type": "string"
         }
     },
     "required": [

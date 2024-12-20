@@ -493,6 +493,13 @@ export function exportScrollBehavior(source: types.ScrollBehavior, ctx?: IExport
 export function exportScrollDirection(source: types.ScrollDirection, ctx?: IExportContext): types.ScrollDirection {
     return source
 }
+export function exportShadowMask_shadows(source: types.ShadowMask_shadows, ctx?: IExportContext): types.ShadowMask_shadows {
+    const ret: types.ShadowMask_shadows = []
+    source.forEach((source) => {
+        ret.push(exportShadow(source, ctx))
+    })
+    return ret
+}
 /* shadow position */
 export function exportShadowPosition(source: types.ShadowPosition, ctx?: IExportContext): types.ShadowPosition {
     return source
@@ -608,8 +615,8 @@ export function exportStyleSheet_variables(source: types.StyleSheet_variables, c
             if (source.typeId === "border") {
                 return exportBorder(source as types.Border, ctx)
             }
-            if (source.typeId === "shadow") {
-                return exportShadow(source as types.Shadow, ctx)
+            if (source.typeId === "shadow-mask") {
+                return exportShadowMask(source as types.ShadowMask, ctx)
             }
             if (source.typeId === "blur") {
                 return exportBlur(source as types.Blur, ctx)
@@ -950,6 +957,19 @@ export function exportPrototypeInterAction(source: types.PrototypeInterAction, c
     if (source.isDeleted) ret.isDeleted = source.isDeleted
     return ret
 }
+/* shadow mask */
+export function exportShadowMask(source: types.ShadowMask, ctx?: IExportContext): types.ShadowMask {
+    const ret: types.ShadowMask = {} as types.ShadowMask
+    ret.typeId = "shadow-mask"
+    ret.crdtidx = exportCrdtidx(source.crdtidx, ctx)
+    ret.typeId = source.typeId
+    ret.sheet = source.sheet
+    ret.id = source.id
+    ret.name = source.name
+    ret.description = source.description
+    ret.shadows = exportShadowMask_shadows(source.shadows, ctx)
+    return ret
+}
 /* span attr */
 export function exportSpanAttr(source: types.SpanAttr, ctx?: IExportContext): types.SpanAttr {
     const ret: types.SpanAttr = {} as types.SpanAttr
@@ -1074,6 +1094,7 @@ export function exportStyle(source: types.Style, ctx?: IExportContext): types.St
         return ret
     })()
     if (source.fillsMask) ret.fillsMask = source.fillsMask
+    if (source.shadowsMask) ret.shadowsMask = source.shadowsMask
     return ret
 }
 /* text attr */

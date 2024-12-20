@@ -1,5 +1,5 @@
 import { innerShadowId, renderBlur, renderBorders, renderFills, renderShadows } from "../render";
-import { BasicArray, Blur, BlurType, Border, BorderPosition, ContextSettings, CornerRadius, CurvePoint, ExportOptions, Fill, FillMask, FillType, GradientType, makeShapeTransform1By2, makeShapeTransform2By1, MarkerType, OverlayBackgroundAppearance, OverlayBackgroundInteraction, OverlayPosition, OverrideType, PathShape, Point2D, PrototypeInterAction, PrototypeStartingPoint, ResizingConstraints2, ScrollBehavior, ScrollDirection, Shadow, ShadowPosition, Shape, ShapeFrame, ShapeSize, ShapeType, SymbolRefShape, SymbolShape, Transform, Variable, VariableType } from "../data";
+import { BasicArray, Blur, BlurType, Border, BorderPosition, ContextSettings, CornerRadius, CurvePoint, ExportOptions, Fill, FillMask, FillType, GradientType, makeShapeTransform1By2, makeShapeTransform2By1, MarkerType, OverlayBackgroundAppearance, OverlayBackgroundInteraction, OverlayPosition, OverrideType, PathShape, Point2D, PrototypeInterAction, PrototypeStartingPoint, ResizingConstraints2, ScrollBehavior, ScrollDirection, Shadow, ShadowMask, ShadowPosition, Shape, ShapeFrame, ShapeSize, ShapeType, SymbolRefShape, SymbolShape, Transform, Variable, VariableType } from "../data";
 import { findOverrideAndVar } from "./basic";
 import { EL, elh } from "./el";
 import { Matrix } from "../basic/matrix";
@@ -683,7 +683,22 @@ export class ShapeView extends DataView {
 
     getShadows(): Shadow[] {
         const v = this._findOV(OverrideType.Shadows, VariableType.Shadows);
-        return v ? v.value : this.m_data.style.shadows;
+        let shadows: Shadow[] = [];
+        if (this.style.shadowsMask) {
+            const mgr = this.style.getStylesMgr();
+            console.log(mgr,'11111');
+            
+            if (!mgr) return shadows;
+            const mask = mgr.getSync(this.style.shadowsMask) as ShadowMask     
+            console.log(mask,'2222222');
+                   
+            shadows = mask.shadows
+            // 检查图层是否在变量通知对象集合里
+            if (!mask.__subscribers.has(this)) mask.__subscribers.add(this);
+        } else {
+            shadows = v ? v.value : this.m_data.style.shadows;
+        }
+        return shadows;
     }
 
     get blur(): Blur | undefined {

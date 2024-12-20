@@ -27,8 +27,9 @@ type PathSegment_points = BasicArray<impl.CurvePoint>
 type PathShape_pathsegs = BasicArray<impl.PathSegment>
 type PathShape2_pathsegs = BasicArray<impl.PathSegment>
 type PrototypeInterAction_crdtidx = BasicArray<number>
+type ShadowMask_shadows = BasicArray<impl.Shadow>
 type Shape_prototypeInteractions = BasicArray<impl.PrototypeInterAction>
-type StyleSheet_variables = BasicArray<impl.BorderSideSetting | impl.FillMask | impl.Border | impl.Shadow | impl.Blur | impl.CornerRadius>
+type StyleSheet_variables = BasicArray<impl.BorderSideSetting | impl.FillMask | impl.Border | impl.ShadowMask | impl.Blur | impl.CornerRadius>
 type Style_borders = BasicArray<impl.Border>
 type Style_fills = BasicArray<impl.Fill>
 type Style_shadows = BasicArray<impl.Shadow>
@@ -572,6 +573,14 @@ export function importScrollBehavior(source: types.ScrollBehavior, ctx?: IImport
 export function importScrollDirection(source: types.ScrollDirection, ctx?: IImportContext): impl.ScrollDirection {
     return source
 }
+export function importShadowMask_shadows(source: types.ShadowMask_shadows, ctx?: IImportContext): ShadowMask_shadows {
+    const ret: ShadowMask_shadows = new BasicArray()
+    source.forEach((source, i) => {
+        if (!source.crdtidx) source.crdtidx = [i]
+        ret.push(importShadow(source, ctx))
+    })
+    return ret
+}
 /* shadow position */
 export function importShadowPosition(source: types.ShadowPosition, ctx?: IImportContext): impl.ShadowPosition {
     return source
@@ -689,9 +698,8 @@ export function importStyleSheet_variables(source: types.StyleSheet_variables, c
                 if (!source.crdtidx) source.crdtidx = [i]
                 return importBorder(source as types.Border, ctx)
             }
-            if (source.typeId === "shadow") {
-                if (!source.crdtidx) source.crdtidx = [i]
-                return importShadow(source as types.Shadow, ctx)
+            if (source.typeId === "shadow-mask") {
+                return importShadowMask(source as types.ShadowMask, ctx)
             }
             if (source.typeId === "blur") {
                 return importBlur(source as types.Blur, ctx)
@@ -1045,6 +1053,20 @@ export function importPrototypeInterAction(source: types.PrototypeInterAction, c
     importPrototypeInterActionOptional(ret, source, ctx)
     return ret
 }
+/* shadow mask */
+export function importShadowMask(source: types.ShadowMask, ctx?: IImportContext): impl.ShadowMask {
+    const ret: impl.ShadowMask = new impl.ShadowMask (
+        importCrdtidx(source.crdtidx, ctx),
+        source.sheet,
+        source.id,
+        source.name,
+        source.description,
+        importShadowMask_shadows(source.shadows, ctx))
+        // inject code
+    if (ctx?.document) ctx.document.stylesMgr.add(ret.id, ret);
+
+    return ret
+}
 /* span attr */
 function importSpanAttrOptional(tar: impl.SpanAttr, source: types.SpanAttr, ctx?: IImportContext) {
     if (source.fontName) tar.fontName = source.fontName
@@ -1191,6 +1213,7 @@ function importStyleOptional(tar: impl.Style, source: types.Style, ctx?: IImport
         return ret
     })()
     if (source.fillsMask) tar.fillsMask = source.fillsMask
+    if (source.shadowsMask) tar.shadowsMask = source.shadowsMask
 }
 export function importStyle(source: types.Style, ctx?: IImportContext): impl.Style {
     const ret: impl.Style = new impl.Style (

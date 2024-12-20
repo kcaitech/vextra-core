@@ -398,6 +398,7 @@ export class PrototypeStartingPoint extends Basic {
         this.desc = desc
     }
 }
+type ShadowMask_shadows = BasicArray<Shadow>
 /* shadow */
 export class Shadow extends Basic {
     typeId = "shadow"
@@ -480,7 +481,7 @@ export class Stop extends Basic {
         this.color = color
     }
 }
-type StyleSheet_variables = BasicArray<BorderSideSetting | FillMask | Border | Shadow | Blur | CornerRadius>
+type StyleSheet_variables = BasicArray<BorderSideSetting | FillMask | Border | ShadowMask | Blur | CornerRadius>
 type Style_borders = BasicArray<Border>
 type Style_fills = BasicArray<Fill>
 type Style_shadows = BasicArray<Shadow>
@@ -781,6 +782,25 @@ export class PrototypeInterAction extends Basic {
         this.actions = actions
     }
 }
+/* shadow mask */
+export class ShadowMask extends Basic {
+    typeId = "shadow-mask"
+    crdtidx: Crdtidx
+    sheet: string
+    id: string
+    name: string
+    description: string
+    shadows: ShadowMask_shadows
+    constructor(crdtidx: Crdtidx, sheet: string, id: string, name: string, description: string, shadows: ShadowMask_shadows) {
+        super()
+        this.crdtidx = crdtidx
+        this.sheet = sheet
+        this.id = id
+        this.name = name
+        this.description = description
+        this.shadows = shadows
+    }
+}
 /* span attr */
 export class SpanAttr extends Basic {
     typeId = "span-attr"
@@ -914,6 +934,7 @@ export class Style extends Basic {
     endMarkerType?: MarkerType
     varbinds?: BasicMap<string, string>
     fillsMask?: string
+    shadowsMask?: string
     constructor(borders: Style_borders, fills: Style_fills, shadows: Style_shadows) {
         super()
         this.borders = borders

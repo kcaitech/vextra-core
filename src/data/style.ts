@@ -294,6 +294,7 @@ export class Style extends Basic implements classes.Style {
     endMarkerType?: MarkerType
     varbinds?: BasicMap<string, string>
     fillsMask?: string
+    shadowsMask?: string
 
     private __styleMgr?: ResourceMgr<StyleMangerMember>;
 
@@ -309,6 +310,8 @@ export class Style extends Basic implements classes.Style {
     }
 
     setStylesMgr(styleMgr: ResourceMgr<StyleMangerMember>) {
+        console.log(styleMgr,'*****************');
+        
         this.__styleMgr = styleMgr;
     }
 
@@ -392,7 +395,7 @@ export class Blur extends Basic implements classes.Blur {
 /**
  * @description 样式库管理器数据组成
  */
-export type StyleMangerMember = FillMask | CornerRadiusMask;
+export type StyleMangerMember = FillMask | ShadowMask;
 
 export class StyleSheet extends Basic implements classes.StyleSheet {
     typeId = "style-sheet"
@@ -436,9 +439,16 @@ export class StyleSheet extends Basic implements classes.StyleSheet {
                 })
                 const fillMask = new FillMask(v.crdtidx, sheetId, v4(), v.name, v.description, fills);
                 notifiable_variables.push(fillMask);
-            } else if (v instanceof classes.CornerRadius) {
-                const radiusMask = new CornerRadiusMask(v4(), sheetId, v.crdtidx, v.lt, v.rt, v.lb, v.lb);
-                notifiable_variables.push(radiusMask);
+            } else if (v instanceof classes.ShadowMask) {
+                const shadows = new BasicArray<Shadow>();
+                v.shadows.forEach(i => {
+                    const { crdtidx, id, isEnabled, blurRadius, color, offsetX, offsetY, spread, position, contextSettings } = i
+                    const new_shadow = new Shadow(crdtidx, id, isEnabled, blurRadius, new Color(color.alpha, color.red, color.green, color.blue), offsetX, offsetY, spread, position)
+                    new_shadow.contextSettings = contextSettings
+                    shadows.push(new_shadow)
+                })
+                const shadowMask = new ShadowMask(v.crdtidx, sheetId, v4(), v.name, v.description, shadows);
+                notifiable_variables.push(shadowMask);
             }
             // 还有其他的一些类型
         }
@@ -464,18 +474,55 @@ export class FillMask extends Basic implements Mask, classes.FillMask {
     fills: BasicArray<Fill>
 
     constructor(crdtidx: BasicArray<number>, sheet: string, id: string, name: string, description: string, fills: BasicArray<Fill>) {
-        super()
-        this.crdtidx = crdtidx
-        this.id = id
-        this.sheet = sheet
+        super();
+        this.crdtidx = crdtidx;
+        this.id = id;
+        this.sheet = sheet;
         this.__subscribers = new Set<ShapeView>();
         this.name = name;
-        this.description = description
-        this.fills = fills
+        this.description = description;
+        this.fills = fills;
     }
 
     notify(...args: any[]) {
         super.notify("style-mask-change", "fill", ...args);
+        this.__subscribers.forEach(view => {
+            if (view.isDistroyed) return;
+            view.m_ctx.setDirty(view); // 将view设置为脏节点之后，下一帧会被更新
+        })
+    }
+
+    add(view: ShapeView) {
+        this.__subscribers.add(view);
+        return () => {
+            this.__subscribers.delete(view)
+        }
+    }
+}
+
+export class ShadowMask extends Basic implements Mask, classes.ShadowMask {
+    typeId = 'shadow-mask-living';
+    crdtidx: BasicArray<number>;
+    id: string;
+    sheet: string;
+    __subscribers: Set<ShapeView>;
+    name: string;
+    description: string;
+    shadows: BasicArray<Shadow>;
+
+    constructor(crdtidx: BasicArray<number>, sheet: string, id: string, name: string, description: string, shadows: BasicArray<Shadow>) {
+        super();
+        this.crdtidx = crdtidx;
+        this.id = id;
+        this.sheet = sheet;
+        this.__subscribers = new Set<ShapeView>();
+        this.name = name;
+        this.description = description;
+        this.shadows = shadows;
+    }
+
+    notify(...args: any[]) {
+        super.notify("style-mask-change", "shadow", ...args);
         this.__subscribers.forEach(view => {
             if (view.isDistroyed) return;
             view.m_ctx.setDirty(view); // 将view设置为脏节点之后，下一帧会被更新

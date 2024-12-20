@@ -1,0 +1,40 @@
+{
+    "description": "shadow mask",
+    "type": "object",
+    "properties": {
+        "crdtidx": {
+            "$ref": "./crdtidx.json"
+        },
+        "typeId": {
+            "type": "string"
+        },
+        "sheet": {
+            "type": "string"
+        },
+        "id": {
+            "type": "string"
+        },
+        "name": {
+            "type": "string"
+        },
+        "description": {
+            "type": "string"
+        },
+        "shadows": {
+            "type": "array",
+            "items": {
+                "$ref": "./shadow.json"
+            }
+        }
+    },
+    "required": [
+        "crdtidx",
+        "typeId",
+        "sheet",
+        "id",
+        "name",
+        "description",
+        "shadows"
+    ],
+    "additionalProperties": false
+}

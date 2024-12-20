@@ -22,7 +22,7 @@
             "$ref": "./border.json"
           },
           {
-            "$ref": "./shadow.json"
+            "$ref": "./shadow-mask.json"
           },
           {
             "$ref": "./blur.json"

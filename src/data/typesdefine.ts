@@ -448,6 +448,7 @@ export enum ScrollDirection {
     VERTICAL = "VERTICAL",
     BOTH = "BOTH",
 }
+export type ShadowMask_shadows = Array<Shadow>
 /* shadow position */
 export enum ShadowPosition {
     Inner = "inner",
@@ -565,7 +566,7 @@ export enum StrikethroughType {
 export enum StyleLibType {
     Color = "color",
 }
-export type StyleSheet_variables = Array<BorderSideSetting | FillMask | Border | Shadow | Blur | CornerRadius>
+export type StyleSheet_variables = Array<BorderSideSetting | FillMask | Border | ShadowMask | Blur | CornerRadius>
 /* shape types */
 export enum StyleVarType {
     Color = "color",
@@ -816,6 +817,16 @@ export type PrototypeInterAction = {
     typeId?: string,
     isDeleted?: boolean,
 }
+/* shadow mask */
+export type ShadowMask = {
+    crdtidx: Crdtidx,
+    typeId: string,
+    sheet: string,
+    id: string,
+    name: string,
+    description: string,
+    shadows: ShadowMask_shadows,
+}
 /* span attr */
 export type SpanAttr = {
     fontName?: string,
@@ -915,6 +926,7 @@ export type Style = {
     endMarkerType?: MarkerType,
     varbinds?: Map<string, string>,
     fillsMask?: string,
+    shadowsMask?: string,
 }
 /* text attr */
 export type TextAttr = ParaAttr & {
