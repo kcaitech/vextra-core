@@ -10,7 +10,7 @@ import { CoopRepository } from "../coop/cooprepo";
 import { Repository } from "../data/transact";
 import * as types from "../data/typesdefine";
 import { FMT_VER_latest } from "../data/fmtver";
-import { FillMask, StyleMangerMember } from "../data/style";
+import { FillMask,ShadowMask, StyleMangerMember } from "../data/style";
 import { adapt2Shape, PageView, ShapeView } from "../dataview";
 import { Color, Fill, } from "../data/classes";
 import { BasicArray, Stop, Gradient, Point2D } from "../data";
@@ -226,9 +226,17 @@ export class DocEditor {
             api.styleInsert(this.__document, style);
             const p = this.__document.pagesMgr.getSync(page.id)
             if (shapes && p) {
-                for (let i = 0; i < shapes.length; i++) {
-                    const shape = shapes[i];
-                    api.addfillmask(this.__document, p, adapt2Shape(shape), style.id);
+                if (style instanceof FillMask) {
+                    for (let i = 0; i < shapes.length; i++) {
+                        const shape = shapes[i];
+                        api.addfillmask(this.__document, p, adapt2Shape(shape), style.id);
+                    }
+                }
+                if (style instanceof ShadowMask) {
+                    for (let i = 0; i < shapes.length; i++) {
+                        const shape = shapes[i];
+                        api.addshadowmask(this.__document, p, adapt2Shape(shape), style.id);
+                    }
                 }
             }
             this.__repo.commit();

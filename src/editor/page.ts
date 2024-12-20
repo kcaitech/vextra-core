@@ -2700,6 +2700,56 @@ export class PageEditor {
         }
     }
 
+    shapesSetShadowMask(actions: BatchAction2[]) {
+        const api = this.__repo.start("shapesSetShadowMask");
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                api.addshadowmask(this.__document, this.__page, adapt2Shape(target), value);
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+
+    shapesDelShadowMask(actions: BatchAction2[]) {
+        const api = this.__repo.start("shapesDelShadowMask");
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target,value } = actions[i];
+                const source = this.__document.stylesMgr.getSync(target.style.shadowsMask ?? '');
+                source && source.__subscribers.delete(target);
+                api.deleteShadows(this.__page, adapt2Shape(target), 0, target.style.shadows.length);
+                api.addShadows(this.__page, adapt2Shape(target), value);
+                api.delshadowmask(this.__document, this.__page, adapt2Shape(target));
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+
+    shapesDelStyleShadow(actions: BatchAction2[]) {
+        const api = this.__repo.start("shapesDelStyleShadow");
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target,value } = actions[i];
+                const source = this.__document.stylesMgr.getSync(target.style.shadowsMask ?? '');
+                source && source.__subscribers.delete(target);
+                api.deleteShadows(this.__page, adapt2Shape(target), 0, target.style.shadows.length);
+                api.delshadowmask(this.__document, this.__page, adapt2Shape(target));
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+
+
 
     shapesFillsUnify(actions: BatchAction2[]) {
         const api = this.__repo.start('shapesFillsUnify'); // 统一多个shape的填充设置。eg:[red, red], [green], [blue, blue, blue] => [red, red], [red, red], [red, red];
