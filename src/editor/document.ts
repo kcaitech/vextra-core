@@ -10,9 +10,10 @@ import { CoopRepository } from "../coop/cooprepo";
 import { Repository } from "../data/transact";
 import * as types from "../data/typesdefine";
 import { FMT_VER_latest } from "../data/fmtver";
-import { FillMask,ShadowMask, StyleMangerMember } from "../data/style";
+import { ShadowPosition } from "../data/baseclasses"
+import { FillMask, ShadowMask, StyleMangerMember } from "../data/style";
 import { adapt2Shape, PageView, ShapeView } from "../dataview";
-import { Color, Fill, } from "../data/classes";
+import { Color, Fill, Shadow, } from "../data/classes";
 import { BasicArray, Stop, Gradient, Point2D } from "../data";
 import { Matrix } from "../basic/matrix";
 
@@ -628,6 +629,114 @@ export class DocEditor {
             console.log('modifyFillMaskImageScale:', error);
             this.__repo.rollback();
         }
+    }
+
+    modifyShadowMaskShadowEnabled(sheetid: string, maskid: string, index: number, isEnable: boolean) {
+        const api = this.__repo.start('modifyShadowMaskShadowEnabled');
+        try {
+            api.modifyShadowMaskEnabled(this.__document, sheetid, maskid, index, isEnable)
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return true;
+    }
+
+    modifyShadowMaskShadowAddShadow(sheetid: string, maskid: string, shadow: Shadow) {
+        const api = this.__repo.start('modifyShadowMaskShadowAddShadow');
+        try {
+            api.modifyShadowMaskAddShadow(this.__document, sheetid, maskid, shadow)
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return true;
+    }
+
+    modifyShadowMaskShadowRemoveShadow(sheetid: string, maskid: string, index: number) {
+        const api = this.__repo.start('modifyShadowMaskShadowRemoveShadow');
+        try {
+            api.modifyShadowMaskDelShadow(this.__document, sheetid, maskid, index)
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return true;
+    }
+
+    modifyShadowMaskShadowPosition(sheetid: string, maskid: string, index: number, position: ShadowPosition) {
+        const api = this.__repo.start('modifyShadowMaskShadowRemoveShadow');
+        try {
+            api.modifyShadowMaskShadowPosition(this.__document, sheetid, maskid, index, position)
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return true;
+    }
+
+    modifyShadowMaskShadowOffsetX(sheetid: string, maskid: string, index: number, offsetX: number) {
+        const api = this.__repo.start('modifyShadowMaskShadowOffsetX');
+        try {
+            api.modifyShadowMaskShadowOffsetX(this.__document, sheetid, maskid, index, offsetX)
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return true;
+    }
+
+    modifyShadowMaskShadowOffsetY(sheetid: string, maskid: string, index: number, offsetY: number) {
+        const api = this.__repo.start('modifyShadowMaskShadowOffsetY');
+        try {
+            api.modifyShadowMaskShadowOffsetY(this.__document, sheetid, maskid, index, offsetY)
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return true;
+    }
+
+    modifyShadowMaskShadowBlur(sheetid: string, maskid: string, index: number, blur: number) {
+        const api = this.__repo.start('modifyShadowMaskShadowBlurRadius');
+        try {
+            api.modifyShadowMaskShadowBlur(this.__document, sheetid, maskid, index, blur)
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return true;
+    }
+
+    modifyShadowMaskShadowSpread(sheetid: string, maskid: string, index: number, spread: number) {
+        const api = this.__repo.start('modifyShadowMaskShadowSpread');
+        try {
+            api.modifyShadowMaskShadowSpread(this.__document, sheetid, maskid, index, spread)
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return true;
+    }
+
+    modifyShadowMaskShadowColor(sheetid: string, maskid: string, index: number, color: Color) {
+        const api = this.__repo.start('modifyShadowMaskShadowColor');
+        try {
+            api.modifyShadowMaskShadowColor(this.__document, sheetid, maskid, index, color)
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return true;
     }
 
     modifyStyleName(sheetid: string, maskid: string, name: string | undefined) {

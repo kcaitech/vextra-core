@@ -977,4 +977,32 @@ export class LinearApi {
             }
         })
     }
+
+    modifyShadowMaskShadowOffsetX(sheetid: string, maskid: string, index: number, offsetX: number) {
+        this.execute('modify-shadow-mask-shadow-offset-x', () => {
+            const api = this.api!;
+            api.modifyShadowMaskShadowOffsetX(this.__document, sheetid, maskid, index, offsetX);
+        })
+    }
+
+    modifyShadowMaskShadowOffsetY(sheetid: string, maskid: string, index: number, offsetY: number) {
+        this.execute('modify-shadow-mask-shadow-offset-y', () => {
+            const api = this.api!;
+            api.modifyShadowMaskShadowOffsetY(this.__document, sheetid, maskid, index, offsetY);
+        })
+    }
+
+    modifyShadowMaskShadowBlur(sheetid: string, maskid: string, index: number, blur: number) {
+        this.execute('modify-shadow-mask-shadow-blur', () => {
+            const api = this.api!;
+            api.modifyShadowMaskShadowBlur(this.__document, sheetid, maskid, index, blur);
+        })
+    }
+
+    modifyShadowMaskShadowSpread(sheetid: string, maskid: string, index: number, spread: number) {
+        this.execute('modify-shadow-mask-shadow-spread', () => {
+            const api = this.api!;
+            api.modifyShadowMaskShadowSpread(this.__document, sheetid, maskid, index, spread);
+        })
+    }
 }
