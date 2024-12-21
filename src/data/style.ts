@@ -310,8 +310,6 @@ export class Style extends Basic implements classes.Style {
     }
 
     setStylesMgr(styleMgr: ResourceMgr<StyleMangerMember>) {
-        console.log(styleMgr,'*****************');
-        
         this.__styleMgr = styleMgr;
     }
 

@@ -155,8 +155,6 @@ export class Document extends (DocumentMeta) {
     }
 
     get stylesMgr() {
-        console.log('--mgr--', this.__styles);
-        
         return this.__styles;
     }
 

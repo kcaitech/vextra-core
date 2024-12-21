@@ -686,12 +686,8 @@ export class ShapeView extends DataView {
         let shadows: Shadow[] = [];
         if (this.style.shadowsMask) {
             const mgr = this.style.getStylesMgr();
-            console.log(mgr,'11111');
-            
             if (!mgr) return shadows;
             const mask = mgr.getSync(this.style.shadowsMask) as ShadowMask     
-            console.log(mask,'2222222');
-                   
             shadows = mask.shadows
             // 检查图层是否在变量通知对象集合里
             if (!mask.__subscribers.has(this)) mask.__subscribers.add(this);
