@@ -385,6 +385,17 @@ export class LockMouseHandler extends AsyncApiCaller {
         }
     }
 
+    executeShadowMaskX(sheetid: string, maskid: string, index: number, offsetX: number) {
+        try {
+            const api = this.api;
+            api.modifyShadowMaskShadowOffsetX(this.__document, sheetid, maskid, index, offsetX);
+            this.updateView();
+        } catch (e) {
+            this.exception = true;
+            console.log('LockMouseHandler.executeShadowMaskX');
+        }
+    }
+
     executeShadowY(shapes: ShapeView[], idx: number, val: number) {
         try {
             const api = this.api;
@@ -399,6 +410,17 @@ export class LockMouseHandler extends AsyncApiCaller {
         } catch (e) {
             this.exception = true;
             console.log('LockMouseHandler.executeShadowY');
+        }
+    }
+
+    executeShadowMaskY(sheetid: string, maskid: string, index: number, offsetY: number) {
+        try {
+            const api = this.api;
+            api.modifyShadowMaskShadowOffsetY(this.__document, sheetid, maskid, index, offsetY);
+            this.updateView();
+        } catch (e) {
+            this.exception = true;
+            console.log('LockMouseHandler.executeShadowMaskY');
         }
     }
 
@@ -419,6 +441,17 @@ export class LockMouseHandler extends AsyncApiCaller {
         }
     }
 
+    executeShadowMaskB(sheetid: string, maskid: string, index: number, blur: number) {
+        try {
+            const api = this.api;
+            api.modifyShadowMaskShadowBlur(this.__document, sheetid, maskid, index, blur);
+            this.updateView();
+        } catch (e) {
+            this.exception = true;
+            console.log('LockMouseHandler.executeShadowMaskB');
+        }
+    }
+
     executeShadowS(shapes: ShapeView[], idx: number, val: number) {
         try {
             const api = this.api;
@@ -433,6 +466,17 @@ export class LockMouseHandler extends AsyncApiCaller {
         } catch (e) {
             this.exception = true;
             console.log('LockMouseHandler.executeShadowS');
+        }
+    }
+
+    executeShadowMaskS(sheetid: string, maskid: string, index: number, spread: number) {
+        try {
+            const api = this.api;
+            api.modifyShadowMaskShadowSpread(this.__document, sheetid, maskid, index, spread);
+            this.updateView();
+        } catch (e) {
+            this.exception = true;
+            console.log('LockMouseHandler.executeShadowMaskS');
         }
     }
 

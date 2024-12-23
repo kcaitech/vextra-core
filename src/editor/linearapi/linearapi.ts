@@ -1005,4 +1005,11 @@ export class LinearApi {
             api.modifyShadowMaskShadowSpread(this.__document, sheetid, maskid, index, spread);
         })
     }
+
+    modifyShadowMaskShadowColor(sheetid: string, maskid: string, index: number, color: Color) {
+        this.execute('modify-shadow-mask-shadow-color', () => {
+            const api = this.api!;
+            api.modifyShadowMaskShadowColor(this.__document, sheetid, maskid, index, color);
+        })
+    }
 }
