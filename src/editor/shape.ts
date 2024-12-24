@@ -1709,10 +1709,9 @@ export class ShapeEditor {
                 const {originSegmentIndex, slices, closed} = action;
                 let last = originSegmentIndex;
                 for (let i = 0; i < slices.length; i++) {
-                    const slice = slices[i] as any;
-                    // const origin = segments[originSegmentIndex];
-                    // const closed = slices.length === 1 && origin.isClosed && slice.length !== origin.points.length;
+                    const slice = slices[i] as BasicArray<CurvePoint>;
                     if (last === originSegmentIndex) api.deleteSegmentAt(page, shape, originSegmentIndex);
+                    slice.forEach((i, index) => i.crdtidx = new BasicArray<number>(index));
                     api.insertSegmentAt(page, shape, last++, new PathSegment([0] as BasicArray<number>, uuid(), slice, closed));
                 }
                 if (last === originSegmentIndex) api.deleteSegmentAt(page, shape, originSegmentIndex);
