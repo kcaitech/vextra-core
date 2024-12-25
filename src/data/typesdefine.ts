@@ -47,6 +47,7 @@ export type BorderStyle = {
     length: number,
     gap: number,
 }
+export type Border_strokePaints = Array<StrokePaint>
 /* bullet & item number behavior */
 export enum BulletNumbersBehavior {
     Inherit = "inherit",
@@ -570,7 +571,6 @@ export enum StrikethroughType {
 export enum StyleLibType {
     Color = "color",
 }
-export type Style_borders = Array<Border>
 export type Style_fills = Array<Fill>
 export type Style_shadows = Array<Shadow>
 export type Style_innerShadows = Array<Shadow>
@@ -662,7 +662,7 @@ export enum VariableType {
     ProtoInteractions = "protoInteractions",
     AutoLayout = "autoLayout",
 }
-export type Variable_0 = Array<Border | Fill | Shadow | PrototypeInterAction>
+export type Variable_0 = Array<Fill | Shadow | PrototypeInterAction>
 /* winding rule */
 export enum WindingRule {
     NonZero = "non-zero",
@@ -818,20 +818,14 @@ export type SpanAttr = {
 export type Span = SpanAttr & {
     length: number,
 }
-/* border */
-export type Border = {
+/* stroke paint */
+export type StrokePaint = {
     crdtidx: Crdtidx,
     typeId: string,
     id: string,
     isEnabled: boolean,
     fillType: FillType,
     color: Color,
-    position: BorderPosition,
-    thickness: number,
-    borderStyle: BorderStyle,
-    cornerType: CornerType,
-    sideSetting: BorderSideSetting,
-    contextSettings?: ContextSettings,
     gradient?: Gradient,
     imageRef?: string,
     imageScaleMode?: ImageScaleMode,
@@ -841,6 +835,15 @@ export type Border = {
     originalImageHeight?: number,
     paintFilter?: PaintFilter,
     transform?: PatternTransform,
+}
+/* border */
+export type Border = {
+    typeId: string,
+    position: BorderPosition,
+    borderStyle: BorderStyle,
+    cornerType: CornerType,
+    sideSetting: BorderSideSetting,
+    strokePaints: Border_strokePaints,
 }
 /* fill */
 export type Fill = {
@@ -880,9 +883,9 @@ export type Para = {
 /* style */
 export type Style = {
     typeId: string,
-    borders: Style_borders,
     fills: Style_fills,
     shadows: Style_shadows,
+    borders: Border,
     miterLimit?: number,
     windingRule?: WindingRule,
     blur?: Blur,
@@ -969,7 +972,7 @@ export type Variable = {
     id: string,
     type: VariableType,
     name: string,
-    value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur | AutoLayout,
+    value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | Border | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur | AutoLayout,
 }
 /* comment */
 export type Comment = {

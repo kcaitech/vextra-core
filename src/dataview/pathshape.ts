@@ -18,8 +18,8 @@ import { objectId } from "../basic/objectid";
 import { BlurType, PathSegment } from "../data/typesdefine";
 import { render as renderLineBorders } from "../render/line_borders"
 import { PageView } from "./page";
-import { importBorder } from "../data/baseimport";
-import { exportBorder } from "../data/baseexport";
+import { importBorder, importStrokePaint } from "../data/baseimport";
+import { exportBorder, exportStrokePaint } from "../data/baseexport";
 import { GroupShapeView } from "./groupshape";
 import { border2path } from "../editor/utils/path";
 
@@ -53,8 +53,8 @@ export class PathShapeView extends ShapeView {
     createBorderPath() {
         const borders = this.getBorders();
         const fills = this.getFills();
-        if (!fills.length && borders.length === 1) {
-            this.m_border_path = border2path(this, borders[0]);
+        if (!fills.length && borders && borders.strokePaints.some(p => p.isEnabled)) {
+            this.m_border_path = border2path(this, borders);
             const bbox = this.m_border_path.bbox();
             this.m_border_path_box = new ShapeFrame(bbox.x, bbox.y, bbox.w, bbox.h);
         }
@@ -99,12 +99,12 @@ export class PathShapeView extends ShapeView {
     }
     protected renderBorders(): EL[] {
         let borders = this.getBorders();
-        if (this.mask) {
-            borders = borders.map(b => {
-                const nb = importBorder(exportBorder(b));
+        if (this.mask && borders) {
+            borders.strokePaints.map(b => {
+                const nb = importStrokePaint(exportStrokePaint(b));
                 if (nb.fillType === FillType.Gradient && nb.gradient?.gradientType === GradientType.Angular) nb.fillType = FillType.SolidColor;
                 return nb;
-            })
+            });
         }
         if ((this.segments.length === 1 && !this.segments[0].isClosed) || this.segments.length > 1) {
             return renderLineBorders(elh, this.data.style, borders, this.startMarkerType, this.endMarkerType, this.getPathStr(), this.m_data);

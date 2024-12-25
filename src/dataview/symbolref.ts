@@ -383,10 +383,10 @@ export class SymbolRefView extends ShapeView {
         return this.m_fills;
     }
 
-    getBorders(): Border[] {
+    getBorders(): Border {
         if (this.m_borders) return this.m_borders;
         const v = this._findOV2(OverrideType.Borders, VariableType.Borders);
-        this.m_borders = v ? v.value as Border[] : this.m_sym?.style.borders || [];
+        this.m_borders = v ? v.value as Border : this.m_sym!.style.borders;
         return this.m_borders;
     }
 

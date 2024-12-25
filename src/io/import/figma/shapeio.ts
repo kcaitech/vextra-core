@@ -49,6 +49,7 @@ import {
     SideType,
     StarShape,
     Stop,
+    StrokePaint,
     Style,
     SymbolRefShape,
     SymbolShape,
@@ -60,16 +61,16 @@ import {
     Variable,
     VariableType,
 } from "../../../data";
-import {uuid} from "../../../basic/uuid";
-import {IJSON, ImportFun, LoadContext} from "./basic";
+import { uuid } from "../../../basic/uuid";
+import { IJSON, ImportFun, LoadContext } from "./basic";
 import * as shapeCreator from "../../../editor/creator";
 import * as types from "../../../data/typesdefine";
-import {float_accuracy} from "../../../basic/consts";
-import {ColVector3D} from "../../../basic/matrix2";
-import {Transform as Transform2} from "../../../basic/transform";
-import {getPolygonPoints, getPolygonVertices} from "../../../editor/utils/path";
-import {importText} from "./textio";
-import {importColor} from "./common";
+import { float_accuracy } from "../../../basic/consts";
+import { ColVector3D } from "../../../basic/matrix2";
+import { Transform as Transform2 } from "../../../basic/transform";
+import { getPolygonPoints, getPolygonVertices } from "../../../editor/utils/path";
+import { importText } from "./textio";
+import { importColor } from "./common";
 
 export function toStrId(id?: {
     localID: string,
@@ -81,7 +82,7 @@ export function toStrId(id?: {
 
 export function parseGradient(
     data: IJSON,
-    size = {x: 1, y: 1},
+    size = { x: 1, y: 1 },
 ) {
     const type = data.type;
     const transform = data.transform ? makeShapeTransform2By1(data.transform).getInverse() : new Transform2();
@@ -97,7 +98,7 @@ export function parseGradient(
     const opacity = data.opacity;
 
     if (type === 'GRADIENT_LINEAR') {
-        const {col0: from, col1: to} = transform.transform([
+        const { col0: from, col1: to } = transform.transform([
             ColVector3D.FromXY(0, 0.5),
             ColVector3D.FromXY(1, 0.5),
         ]);
@@ -111,7 +112,7 @@ export function parseGradient(
 
         return new Gradient(from1, to1, colorType, stops1 as BasicArray<Stop>, undefined, opacity);
     } else if (type === 'GRADIENT_RADIAL' || type === 'GRADIENT_ANGULAR') {
-        const {col0: from, col1: to} = transform.transform([
+        const { col0: from, col1: to } = transform.transform([
             ColVector3D.FromXY(0.5, 0.5),
             ColVector3D.FromXY(1, 0.5),
         ]);
@@ -132,7 +133,7 @@ export function parseGradient(
 function setGradient(
     data: IJSON,
     size: any,
-    item: Fill | Border,
+    item: Fill | StrokePaint,
 ) {
     const gradient = parseGradient(data, size);
     if (gradient) {
@@ -159,7 +160,7 @@ function parseFills(
 ) {
     const fillPaints = fills.fillPaints;
     if (!Array.isArray(fillPaints)) return;
-    size = size || {x: 1, y: 1};
+    size = size || { x: 1, y: 1 };
 
     const result = new BasicArray<Fill>();
     for (let i = 0; i < fillPaints.length; i++) {
@@ -247,14 +248,42 @@ function parseStroke(strokes: {
     const strokeWeight = strokes.strokeWeight;
     const strokeJoin = strokes.strokeJoin;
     const dashPattern = strokes.dashPattern || [0, 0];
+    let position: BorderPosition;
+    if (strokeAlign === "INSIDE") position = BorderPosition.Inner;
+    else if (strokeAlign === "CENTER") position = BorderPosition.Center;
+    else position = BorderPosition.Outer;
 
-    const result = new BasicArray<Border>();
+    const borderStyle = new BorderStyle(dashPattern[0], dashPattern[1]);
+    const thicknessTop = strokes.borderStrokeWeightsIndependent ? (strokes.borderTopWeight || 0) : strokeWeight;
+    const thicknessBottom = strokes.borderStrokeWeightsIndependent ? (strokes.borderBottomWeight || 0) : strokeWeight;
+    const thicknessLeft = strokes.borderStrokeWeightsIndependent ? (strokes.borderLeftWeight || 0) : strokeWeight;
+    const thicknessRight = strokes.borderStrokeWeightsIndependent ? (strokes.borderRightWeight || 0) : strokeWeight;
+    let sideType = SideType.Normal;
+    if (strokes.borderStrokeWeightsIndependent) {
+        if ([thicknessTop, thicknessBottom, thicknessLeft, thicknessRight].filter(item => item !== 0).length === 1) {
+            if (thicknessTop !== 0) sideType = SideType.Top;
+            else if (thicknessBottom !== 0) sideType = SideType.Bottom;
+            else if (thicknessLeft !== 0) sideType = SideType.Left;
+            else if (thicknessRight !== 0) sideType = SideType.Right;
+        } else {
+            sideType = SideType.Custom;
+        }
+    }
+    const side = new BorderSideSetting(sideType, thicknessTop, thicknessLeft, thicknessBottom, thicknessRight);
+
+    let cornerType: CornerType;
+    if (strokeJoin) {
+        if (strokeJoin === "MITER") cornerType = CornerType.Miter;
+        else if (strokeJoin === "ROUND") cornerType = CornerType.Round;
+        else cornerType = CornerType.Bevel;
+    } else {
+        cornerType = CornerType.Miter;
+    }
+    const result = new BasicArray<StrokePaint>();
     for (let i = 0; i < strokePaints.length; i++) {
         const stroke = strokePaints[i];
-
         const visible = stroke.visible;
         const blendMode = stroke.blendMode;
-
         const color = stroke.color || {
             r: 1,
             g: 1,
@@ -263,62 +292,31 @@ function parseStroke(strokes: {
         }
         const opacity = stroke.opacity;
 
-        let position: BorderPosition;
-        if (strokeAlign === "INSIDE") position = BorderPosition.Inner;
-        else if (strokeAlign === "CENTER") position = BorderPosition.Center;
-        else position = BorderPosition.Outer;
-
-        const borderStyle = new BorderStyle(dashPattern[0], dashPattern[1]);
-        const thicknessTop = strokes.borderStrokeWeightsIndependent ? (strokes.borderTopWeight || 0) : strokeWeight;
-        const thicknessBottom = strokes.borderStrokeWeightsIndependent ? (strokes.borderBottomWeight || 0) : strokeWeight;
-        const thicknessLeft = strokes.borderStrokeWeightsIndependent ? (strokes.borderLeftWeight || 0) : strokeWeight;
-        const thicknessRight = strokes.borderStrokeWeightsIndependent ? (strokes.borderRightWeight || 0) : strokeWeight;
-        let sideType = SideType.Normal;
-        if (strokes.borderStrokeWeightsIndependent) {
-            if ([thicknessTop, thicknessBottom, thicknessLeft, thicknessRight].filter(item => item !== 0).length === 1) {
-                if (thicknessTop !== 0) sideType = SideType.Top;
-                else if (thicknessBottom !== 0) sideType = SideType.Bottom;
-                else if (thicknessLeft !== 0) sideType = SideType.Left;
-                else if (thicknessRight !== 0) sideType = SideType.Right;
-            } else {
-                sideType = SideType.Custom;
-            }
-        }
-        const side = new BorderSideSetting(sideType, thicknessTop, thicknessLeft, thicknessBottom, thicknessRight);
-
-        let cornerType: CornerType;
-        if (strokeJoin) {
-            if (strokeJoin === "MITER") cornerType = CornerType.Miter;
-            else if (strokeJoin === "ROUND") cornerType = CornerType.Round;
-            else cornerType = CornerType.Bevel;
-        } else {
-            cornerType = CornerType.Miter;
-        }
-
-        const border = new Border(
+        const strokePaint = new StrokePaint(
             [strokesIndex + i] as BasicArray<number>,
             uuid(),
             visible,
             FillType.SolidColor,
             importColor(color, opacity),
-            position,
-            strokeWeight,
-            borderStyle,
-            cornerType,
-            side,
         );
 
-        setGradient(stroke, size, border);
+        setGradient(stroke, size, strokePaint);
 
-        result.push(border);
+        result.push(strokePaint);
     }
 
-    return result;
+    return new Border(
+        position,
+        borderStyle,
+        cornerType,
+        side,
+        result
+    );
 }
 
 function importStroke(ctx: LoadContext, style: Style, data: IJSON) {
     const strokes = parseStroke(data as any, style.fills.length, data.size);
-    if (strokes) style.borders.push(...strokes);
+    if (strokes) style.borders = strokes;
 }
 
 
@@ -433,8 +431,8 @@ function importStyle(ctx: LoadContext, style: Style, data: IJSON) {
 }
 
 function importShapeFrame(data: IJSON) {
-    const size = data.size || {x: 1, y: 1};
-    const trans = data.transform || {m00: 1, m10: 0, m01: 0, m11: 1, m02: 0, m12: 0};
+    const size = data.size || { x: 1, y: 1 };
+    const trans = data.transform || { m00: 1, m10: 0, m01: 0, m11: 1, m02: 0, m12: 0 };
     return {
         size: new ShapeSize(size.x, size.y),
         trans: new Transform(trans.m00, trans.m01, trans.m02, trans.m10, trans.m11, trans.m12)
@@ -732,8 +730,10 @@ function importShapeProperty(ctx: LoadContext, data: IJSON, shape: Shape, nodeCh
 export function importPage(ctx: LoadContext, data: IJSON, f: ImportFun, nodeChangesMap: Map<string, IJSON>, nodeKeyMap: Map<string, IJSON>): Page {
     const visible = data.visible;
     const frame = importShapeFrame(data);
-
-    const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
+    const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+    const strokePaints = new BasicArray<StrokePaint>();
+    const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
+    const style = new Style(new BasicArray(), new BasicArray(), border);
     importStyle(ctx, style, data);
 
     const childs: Shape[] = (data.childs as IJSON[] || []).map((d: IJSON, i: number) => f(ctx, d, i)).filter(item => item) as Shape[];
@@ -786,7 +786,7 @@ function importSegments(data: IJSON): {
         dx?: number,
         dy?: number,
     }) {
-        const vertex = {...vertices[index.vertex]};
+        const vertex = { ...vertices[index.vertex] };
         vertex.x += (index.dx || 0);
         vertex.y += (index.dy || 0);
         vertex.x /= (normalizedSize.x || 1);
@@ -799,7 +799,7 @@ function importSegments(data: IJSON): {
         to?: any,
     }[]) {
         return points.map((item, i) => {
-            const basePoint = getVertex({vertex: item.from ? item.from.vertex : item.to.vertex});
+            const basePoint = getVertex({ vertex: item.from ? item.from.vertex : item.to.vertex });
             const p = new CurvePoint([i] as BasicArray<number>, uuid(), basePoint.x, basePoint.y, CurveMode.Straight);
             const hasCurveFrom = item.from && (Math.abs(item.from.dx) > float_accuracy || Math.abs(item.from.dy) > float_accuracy);
             const hasCurveTo = item.to && (Math.abs(item.to.dx) > float_accuracy || Math.abs(item.to.dy) > float_accuracy);
@@ -854,7 +854,7 @@ function importSegments(data: IJSON): {
                     isEqualLastPoint = currentSegment.end.vertex === nextSegment.start.vertex;
 
                     if (i !== length - 1 || !isEqualLastPoint) {
-                        const point1 = {to: currentSegment.end} as any;
+                        const point1 = { to: currentSegment.end } as any;
                         if (isEqualLastPoint) point1.from = nextSegment.start;
                         points.push(point1);
                     } else { // 是最后一个且isEqualLastPoint为true
@@ -870,8 +870,8 @@ function importSegments(data: IJSON): {
         for (let i = 0; i < segments.length; i++) {
             const segment = segments[i];
             const points = toCurvePoints([
-                {from: segment.start},
-                {to: segment.end},
+                { from: segment.start },
+                { to: segment.end },
             ]);
             segments1.push(new PathSegment([i] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...points), false))
         }
@@ -904,7 +904,10 @@ function importSegments(data: IJSON): {
 export function importPathShape(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>, nodeKeyMap: Map<string, IJSON>): PathShape {
     const frame = importShapeFrame(data);
     const visible = data.visible;
-    const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
+    const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+    const strokePaints = new BasicArray<StrokePaint>();
+    const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
+    const style = new Style(new BasicArray(), new BasicArray(), border);
     importStyle(ctx, style, data);
     const id = data.kcId || uuid();
 
@@ -915,7 +918,7 @@ export function importPathShape(ctx: LoadContext, data: IJSON, f: ImportFun, ind
 
     let cls = PathShape;
     let shapeType = types.ShapeType.Path;
-    let {segments, startStrokeCap, endStrokeCap} = importSegments(data);
+    let { segments, startStrokeCap, endStrokeCap } = importSegments(data);
     if (segments.length === 0) {
         segments = [new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(
             new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight), // lt
@@ -943,7 +946,10 @@ export function importPathShape(ctx: LoadContext, data: IJSON, f: ImportFun, ind
 export function importPolygon(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>, nodeKeyMap: Map<string, IJSON>): PathShape {
     const frame = importShapeFrame(data);
     const visible = data.visible;
-    const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
+    const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+    const strokePaints = new BasicArray<StrokePaint>();
+    const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
+    const style = new Style(new BasicArray(), new BasicArray(), border);
     importStyle(ctx, style, data);
     const id = data.kcId || uuid();
 
@@ -967,7 +973,10 @@ export function importPolygon(ctx: LoadContext, data: IJSON, f: ImportFun, index
 export function importStar(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>, nodeKeyMap: Map<string, IJSON>): PathShape {
     const frame = importShapeFrame(data);
     const visible = data.visible;
-    const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
+    const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+    const strokePaints = new BasicArray<StrokePaint>();
+    const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
+    const style = new Style(new BasicArray(), new BasicArray(), border);
     importStyle(ctx, style, data);
     const id = data.kcId || uuid();
 
@@ -993,7 +1002,10 @@ export function importStar(ctx: LoadContext, data: IJSON, f: ImportFun, index: n
 export function importLine(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>, nodeKeyMap: Map<string, IJSON>): PathShape {
     const frame = importShapeFrame(data);
     const visible = data.visible;
-    const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
+    const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+    const strokePaints = new BasicArray<StrokePaint>();
+    const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
+    const style = new Style(new BasicArray(), new BasicArray(), border);
     importStyle(ctx, style, data);
     const id = data.kcId || uuid();
 
@@ -1019,7 +1031,10 @@ export function importLine(ctx: LoadContext, data: IJSON, f: ImportFun, index: n
 export function importEllipse(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>, nodeKeyMap: Map<string, IJSON>): OvalShape {
     const frame = importShapeFrame(data);
     const visible = data.visible;
-    const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
+    const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+    const strokePaints = new BasicArray<StrokePaint>();
+    const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
+    const style = new Style(new BasicArray(), new BasicArray(), border);
     importStyle(ctx, style, data);
 
     const shape = shapeCreator.newOvalShape(data.name, new ShapeFrame(frame.trans.translateX, frame.trans.translateY, frame.size.width, frame.size.height));
@@ -1042,7 +1057,10 @@ export function importGroup(ctx: LoadContext, data: IJSON, f: ImportFun, index: 
 
     const frame = importShapeFrame(data);
     const visible = data.visible;
-    const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
+    const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+    const strokePaints = new BasicArray<StrokePaint>();
+    const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
+    const style = new Style(new BasicArray(), new BasicArray(), border);
     importStyle(ctx, style, data);
     const id = data.kcId || uuid();
 
@@ -1078,7 +1096,10 @@ export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun, inde
 
     const frame = importShapeFrame(data);
     const visible = data.visible;
-    const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
+    const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+    const strokePaints = new BasicArray<StrokePaint>();
+    const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
+    const style = new Style(new BasicArray(), new BasicArray(), border);
     importStyle(ctx, style, data);
     const id = data.kcId || uuid();
 
@@ -1096,7 +1117,10 @@ export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun, inde
 export function importTextShape(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>, nodeKeyMap: Map<string, IJSON>): TextShape {
     const frame = importShapeFrame(data);
     const visible = data.visible;
-    const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
+    const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+    const strokePaints = new BasicArray<StrokePaint>();
+    const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
+    const style = new Style(new BasicArray(), new BasicArray(), border);
     // importStyle(ctx, style, data);
     importEffects(ctx, style, data); // FILL,BORDERS都是应用到文本上的
     const id = data.kcId || uuid();
@@ -1179,7 +1203,10 @@ function importVariables(rawVariables: Map<string, IJSON>, variables: BasicMap<s
 export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>, nodeKeyMap: Map<string, IJSON>): SymbolShape {
     const frame = importShapeFrame(data);
     const visible = data.visible;
-    const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
+    const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+    const strokePaints = new BasicArray<StrokePaint>();
+    const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
+    const style = new Style(new BasicArray(), new BasicArray(), border);
     importStyle(ctx, style, data);
     const id = data.kcId || uuid();
 
@@ -1199,7 +1226,10 @@ export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun, index:
 export function importSymbolRef(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>, nodeKeyMap: Map<string, IJSON>): SymbolRefShape {
     const frame = importShapeFrame(data);
     const visible = data.visible;
-    const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
+    const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+    const strokePaints = new BasicArray<StrokePaint>();
+    const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
+    const style = new Style(new BasicArray(), new BasicArray(), border);
     importStyle(ctx, style, data);
     const id = data.kcId || uuid();
 
@@ -1223,7 +1253,10 @@ export function importSymbolRef(ctx: LoadContext, data: IJSON, f: ImportFun, ind
 export function importSymbolUnion(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>, nodeKeyMap: Map<string, IJSON>): SymbolUnionShape {
     const frame = importShapeFrame(data);
     const visible = data.visible;
-    const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
+    const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+    const strokePaints = new BasicArray<StrokePaint>();
+    const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
+    const style = new Style(new BasicArray(), new BasicArray(), border);
     importStyle(ctx, style, data);
     const id = data.kcId || uuid();
 
@@ -1265,7 +1298,10 @@ export function importSymbolUnion(ctx: LoadContext, data: IJSON, f: ImportFun, i
 export function importSlice(ctx: LoadContext, data: IJSON, f: ImportFun, index: number, nodeChangesMap: Map<string, IJSON>, nodeKeyMap: Map<string, IJSON>): CutoutShape {
     const frame = importShapeFrame(data);
     const visible = data.visible;
-    const style = new Style(new BasicArray(), new BasicArray(), new BasicArray());
+    const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+    const strokePaints = new BasicArray<StrokePaint>();
+    const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
+    const style = new Style(new BasicArray(), new BasicArray(), border);
     importStyle(ctx, style, data);
     const id = data.kcId || uuid();
 

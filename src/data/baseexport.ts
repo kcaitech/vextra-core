@@ -35,6 +35,13 @@ export function exportBorderStyle(source: types.BorderStyle, ctx?: IExportContex
     ret.gap = source.gap
     return ret
 }
+export function exportBorder_strokePaints(source: types.Border_strokePaints, ctx?: IExportContext): types.Border_strokePaints {
+    const ret: types.Border_strokePaints = []
+    source.forEach((source) => {
+        ret.push(exportStrokePaint(source, ctx))
+    })
+    return ret
+}
 /* bullet & item number behavior */
 export function exportBulletNumbersBehavior(source: types.BulletNumbersBehavior, ctx?: IExportContext): types.BulletNumbersBehavior {
     return source
@@ -588,13 +595,6 @@ export function exportStrikethroughType(source: types.StrikethroughType, ctx?: I
 export function exportStyleLibType(source: types.StyleLibType, ctx?: IExportContext): types.StyleLibType {
     return source
 }
-export function exportStyle_borders(source: types.Style_borders, ctx?: IExportContext): types.Style_borders {
-    const ret: types.Style_borders = []
-    source.forEach((source) => {
-        ret.push(exportBorder(source, ctx))
-    })
-    return ret
-}
 export function exportStyle_fills(source: types.Style_fills, ctx?: IExportContext): types.Style_fills {
     const ret: types.Style_fills = []
     source.forEach((source) => {
@@ -708,9 +708,6 @@ export function exportVariable_0(source: types.Variable_0, ctx?: IExportContext)
         ret.push((() => {
             if (typeof source !== "object") {
                 return source
-            }
-            if (source.typeId === "border") {
-                return exportBorder(source as types.Border, ctx)
             }
             if (source.typeId === "fill") {
                 return exportFill(source as types.Fill, ctx)
@@ -918,22 +915,16 @@ export function exportSpan(source: types.Span, ctx?: IExportContext): types.Span
     ret.length = source.length
     return ret
 }
-/* border */
-export function exportBorder(source: types.Border, ctx?: IExportContext): types.Border {
-    const ret: types.Border = {} as types.Border
-    ret.typeId = "border"
+/* stroke paint */
+export function exportStrokePaint(source: types.StrokePaint, ctx?: IExportContext): types.StrokePaint {
+    const ret: types.StrokePaint = {} as types.StrokePaint
+    ret.typeId = "stroke-paint"
     ret.crdtidx = exportCrdtidx(source.crdtidx, ctx)
     ret.typeId = source.typeId
     ret.id = source.id
     ret.isEnabled = source.isEnabled
     ret.fillType = exportFillType(source.fillType, ctx)
     ret.color = exportColor(source.color, ctx)
-    ret.position = exportBorderPosition(source.position, ctx)
-    ret.thickness = source.thickness
-    ret.borderStyle = exportBorderStyle(source.borderStyle, ctx)
-    ret.cornerType = exportCornerType(source.cornerType, ctx)
-    ret.sideSetting = exportBorderSideSetting(source.sideSetting, ctx)
-    if (source.contextSettings !== undefined) ret.contextSettings = exportContextSettings(source.contextSettings, ctx)
     if (source.gradient !== undefined) ret.gradient = exportGradient(source.gradient, ctx)
     if (source.imageRef !== undefined) ret.imageRef = source.imageRef
     if (source.imageScaleMode !== undefined) ret.imageScaleMode = exportImageScaleMode(source.imageScaleMode, ctx)
@@ -943,6 +934,18 @@ export function exportBorder(source: types.Border, ctx?: IExportContext): types.
     if (source.originalImageHeight !== undefined) ret.originalImageHeight = source.originalImageHeight
     if (source.paintFilter !== undefined) ret.paintFilter = exportPaintFilter(source.paintFilter, ctx)
     if (source.transform !== undefined) ret.transform = exportPatternTransform(source.transform, ctx)
+    return ret
+}
+/* border */
+export function exportBorder(source: types.Border, ctx?: IExportContext): types.Border {
+    const ret: types.Border = {} as types.Border
+    ret.typeId = "border"
+    ret.typeId = source.typeId
+    ret.position = exportBorderPosition(source.position, ctx)
+    ret.borderStyle = exportBorderStyle(source.borderStyle, ctx)
+    ret.cornerType = exportCornerType(source.cornerType, ctx)
+    ret.sideSetting = exportBorderSideSetting(source.sideSetting, ctx)
+    ret.strokePaints = exportBorder_strokePaints(source.strokePaints, ctx)
     return ret
 }
 /* fill */
@@ -995,9 +998,9 @@ export function exportStyle(source: types.Style, ctx?: IExportContext): types.St
     const ret: types.Style = {} as types.Style
     ret.typeId = "style"
     ret.typeId = source.typeId
-    ret.borders = exportStyle_borders(source.borders, ctx)
     ret.fills = exportStyle_fills(source.fills, ctx)
     ret.shadows = exportStyle_shadows(source.shadows, ctx)
+    ret.borders = exportBorder(source.borders, ctx)
     if (source.miterLimit !== undefined) ret.miterLimit = source.miterLimit
     if (source.windingRule !== undefined) ret.windingRule = exportWindingRule(source.windingRule, ctx)
     if (source.blur !== undefined) ret.blur = exportBlur(source.blur, ctx)
@@ -1142,6 +1145,9 @@ export function exportVariable(source: types.Variable, ctx?: IExportContext): ty
         }
         if (source.value.typeId === "style") {
             return exportStyle(source.value as types.Style, ctx)
+        }
+        if (source.value.typeId === "border") {
+            return exportBorder(source.value as types.Border, ctx)
         }
         if (source.value.typeId === "context-settings") {
             return exportContextSettings(source.value as types.ContextSettings, ctx)

@@ -14,6 +14,7 @@ function objkeys(obj: any) {
     return obj instanceof Map ? obj : { forEach: (f: (v: any, k: string) => void) => Object.keys(obj).forEach((k) => f(obj[k], k)) };
 }
 type Artboard_guides = BasicArray<impl.Guide>
+type Border_strokePaints = BasicArray<impl.StrokePaint>
 type DocumentMeta_pagesList = BasicArray<impl.PageListItem>
 type ExportOptions_exportFormats = BasicArray<impl.ExportFormat>
 type Gradient_stops = BasicArray<impl.Stop>
@@ -26,7 +27,6 @@ type PathShape_pathsegs = BasicArray<impl.PathSegment>
 type PathShape2_pathsegs = BasicArray<impl.PathSegment>
 type PrototypeInterAction_crdtidx = BasicArray<number>
 type Shape_prototypeInteractions = BasicArray<impl.PrototypeInterAction>
-type Style_borders = BasicArray<impl.Border>
 type Style_fills = BasicArray<impl.Fill>
 type Style_shadows = BasicArray<impl.Shadow>
 type Style_innerShadows = BasicArray<impl.Shadow>
@@ -35,7 +35,7 @@ type SymbolShape_guides = BasicArray<impl.Guide>
 type TableShape_rowHeights = BasicArray<impl.CrdtNumber>
 type TableShape_colWidths = BasicArray<impl.CrdtNumber>
 type Text_paras = BasicArray<impl.Para>
-type Variable_0 = BasicArray<impl.Border | impl.Fill | impl.Shadow | impl.PrototypeInterAction>
+type Variable_0 = BasicArray<impl.Fill | impl.Shadow | impl.PrototypeInterAction>
 export function importArtboard_guides(source: types.Artboard_guides, ctx?: IImportContext): Artboard_guides {
     const ret: Artboard_guides = new BasicArray()
     source.forEach((source, i) => {
@@ -64,6 +64,13 @@ export function importBorderStyle(source: types.BorderStyle, ctx?: IImportContex
     const ret: impl.BorderStyle = new impl.BorderStyle (
         source.length,
         source.gap)
+    return ret
+}
+export function importBorder_strokePaints(source: types.Border_strokePaints, ctx?: IImportContext): Border_strokePaints {
+    const ret: Border_strokePaints = new BasicArray()
+    source.forEach((source, i) => {
+        ret.push(importStrokePaint(source, ctx))
+    })
     return ret
 }
 /* bullet & item number behavior */
@@ -662,14 +669,6 @@ export function importStrikethroughType(source: types.StrikethroughType, ctx?: I
 export function importStyleLibType(source: types.StyleLibType, ctx?: IImportContext): impl.StyleLibType {
     return source
 }
-export function importStyle_borders(source: types.Style_borders, ctx?: IImportContext): Style_borders {
-    const ret: Style_borders = new BasicArray()
-    source.forEach((source, i) => {
-        if (!source.crdtidx) source.crdtidx = [i]
-        ret.push(importBorder(source, ctx))
-    })
-    return ret
-}
 export function importStyle_fills(source: types.Style_fills, ctx?: IImportContext): Style_fills {
     const ret: Style_fills = new BasicArray()
     source.forEach((source, i) => {
@@ -787,10 +786,6 @@ export function importVariable_0(source: types.Variable_0, ctx?: IImportContext)
         ret.push((() => {
             if (typeof source !== "object") {
                 return source
-            }
-            if (source.typeId === "border") {
-                if (!source.crdtidx) source.crdtidx = [i]
-                return importBorder(source as types.Border, ctx)
             }
             if (source.typeId === "fill") {
                 if (!source.crdtidx) source.crdtidx = [i]
@@ -1011,9 +1006,8 @@ export function importSpan(source: types.Span, ctx?: IImportContext): impl.Span 
     importSpanOptional(ret, source, ctx)
     return ret
 }
-/* border */
-function importBorderOptional(tar: impl.Border, source: types.Border, ctx?: IImportContext) {
-    if (source.contextSettings !== undefined) tar.contextSettings = importContextSettings(source.contextSettings, ctx)
+/* stroke paint */
+function importStrokePaintOptional(tar: impl.StrokePaint, source: types.StrokePaint, ctx?: IImportContext) {
     if (source.gradient !== undefined) tar.gradient = importGradient(source.gradient, ctx)
     if (source.imageRef !== undefined) tar.imageRef = source.imageRef
     if (source.imageScaleMode !== undefined) tar.imageScaleMode = importImageScaleMode(source.imageScaleMode, ctx)
@@ -1024,30 +1018,24 @@ function importBorderOptional(tar: impl.Border, source: types.Border, ctx?: IImp
     if (source.paintFilter !== undefined) tar.paintFilter = importPaintFilter(source.paintFilter, ctx)
     if (source.transform !== undefined) tar.transform = importPatternTransform(source.transform, ctx)
 }
-export function importBorder(source: types.Border, ctx?: IImportContext): impl.Border {
-        // inject code
-    if (!(source as any).sideSetting) {
-        source.sideSetting = {
-            sideType: types.SideType.Normal,
-            thicknessTop: source.thickness,
-            thicknessLeft: source.thickness,
-            thicknessBottom: source.thickness,
-            thicknessRight: source.thickness,
-        }
-    }
-
-    const ret: impl.Border = new impl.Border (
+export function importStrokePaint(source: types.StrokePaint, ctx?: IImportContext): impl.StrokePaint {
+    const ret: impl.StrokePaint = new impl.StrokePaint (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
         source.isEnabled,
         importFillType(source.fillType, ctx),
-        importColor(source.color, ctx),
+        importColor(source.color, ctx))
+    importStrokePaintOptional(ret, source, ctx)
+    return ret
+}
+/* border */
+export function importBorder(source: types.Border, ctx?: IImportContext): impl.Border {
+    const ret: impl.Border = new impl.Border (
         importBorderPosition(source.position, ctx),
-        source.thickness,
         importBorderStyle(source.borderStyle, ctx),
         importCornerType(source.cornerType, ctx),
-        importBorderSideSetting(source.sideSetting, ctx))
-    importBorderOptional(ret, source, ctx)
+        importBorderSideSetting(source.sideSetting, ctx),
+        importBorder_strokePaints(source.strokePaints, ctx))
     return ret
 }
 /* fill */
@@ -1126,9 +1114,9 @@ function importStyleOptional(tar: impl.Style, source: types.Style, ctx?: IImport
 }
 export function importStyle(source: types.Style, ctx?: IImportContext): impl.Style {
     const ret: impl.Style = new impl.Style (
-        importStyle_borders(source.borders, ctx),
         importStyle_fills(source.fills, ctx),
-        importStyle_shadows(source.shadows, ctx))
+        importStyle_shadows(source.shadows, ctx),
+        importBorder(source.borders, ctx))
     importStyleOptional(ret, source, ctx)
     return ret
 }
@@ -1374,6 +1362,9 @@ export function importVariable(source: types.Variable, ctx?: IImportContext): im
             }
             if (source.value.typeId === "style") {
                 return importStyle(source.value as types.Style, ctx)
+            }
+            if (source.value.typeId === "border") {
+                return importBorder(source.value as types.Border, ctx)
             }
             if (source.value.typeId === "context-settings") {
                 return importContextSettings(source.value as types.ContextSettings, ctx)

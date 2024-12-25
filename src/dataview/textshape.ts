@@ -24,8 +24,8 @@ import {
 import { objectId } from "../basic/objectid";
 import { Path } from "@kcdesign/path";
 import { renderBorders } from "../render";
-import { importBorder } from "../data/baseimport";
-import { exportBorder } from "../data/baseexport";
+import { importBorder, importStrokePaint } from "../data/baseimport";
+import { exportBorder, exportStrokePaint } from "../data/baseexport";
 
 export class TextShapeView extends ShapeView {
     __str: string | Text | undefined;
@@ -140,15 +140,15 @@ export class TextShapeView extends ShapeView {
         return locateNextCursor(this.getLayout(), index);
     }
     protected renderBorders(): EL[] {
-        let borders = this.getBorders();
-        if (this.mask) {
-            borders = borders.map(b => {
-                const nb = importBorder(exportBorder(b));
+        let border = this.getBorders();
+        if (this.mask && border) {
+            border.strokePaints.map(b => {
+                const nb = importStrokePaint(exportStrokePaint(b));
                 if (nb.fillType === FillType.Gradient && nb.gradient?.gradientType === GradientType.Angular) nb.fillType = FillType.SolidColor;
                 return nb;
-            })
+            });
         }
-        return borders.length > 0 ? renderBorders(elh, borders, this.size, this.getTextPath().toSVGString(), this.m_data) : [];
+        return border && border.strokePaints.some(p => p.isEnabled) ? renderBorders(elh, border, this.size, this.getTextPath().toSVGString(), this.m_data) : [];
     }
 
     getTextPath() {

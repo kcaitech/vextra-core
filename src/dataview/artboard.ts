@@ -158,7 +158,7 @@ export class ArtboradView extends GroupShapeView {
             const id = "clip-board-" + objectId(this);
             svgprops['clip-path'] = "url(#" + id + ")";
             const _svg_node = elh("svg", svgprops, [clippathR(elh, id, this.getPathStr()), ...children]);
-            children = [_svg_node,...borders];
+            children = [_svg_node, ...borders];
         }
 
         if (shadows.length) {
@@ -224,27 +224,19 @@ export class ArtboradView extends GroupShapeView {
             this._save_frame.height = this.m_frame.height;
         }
 
-        const borders = this.getBorders();
+        const border = this.getBorders();
         let maxtopborder = 0;
         let maxleftborder = 0;
         let maxrightborder = 0;
         let maxbottomborder = 0;
-        borders.forEach(b => {
-            if (b.isEnabled) {
-                if (b.position === BorderPosition.Outer) {
-                    maxtopborder = Math.max(b.sideSetting.thicknessTop, maxtopborder);
-                    maxleftborder = Math.max(b.sideSetting.thicknessLeft, maxleftborder);
-                    maxrightborder = Math.max(b.sideSetting.thicknessRight, maxrightborder);
-                    maxbottomborder = Math.max(b.sideSetting.thicknessBottom, maxbottomborder);
-                } else if (b.position === BorderPosition.Center) {
-                    maxtopborder = Math.max(b.sideSetting.thicknessTop / 2, maxtopborder);
-                    maxleftborder = Math.max(b.sideSetting.thicknessLeft / 2, maxleftborder);
-                    maxrightborder = Math.max(b.sideSetting.thicknessRight / 2, maxrightborder);
-                    maxbottomborder = Math.max(b.sideSetting.thicknessBottom / 2, maxbottomborder);
-                }
-            }
-        })
-
+        const isEnabled = border.strokePaints.some(p => p.isEnabled);
+        if (isEnabled) {
+            const outer = border.position === BorderPosition.Outer;
+            maxtopborder = outer ? border.sideSetting.thicknessTop : border.sideSetting.thicknessTop / 2;
+            maxleftborder = outer ? border.sideSetting.thicknessLeft : border.sideSetting.thicknessLeft / 2;
+            maxrightborder = outer ? border.sideSetting.thicknessRight : border.sideSetting.thicknessRight / 2;
+            maxbottomborder = outer ? border.sideSetting.thicknessBottom : border.sideSetting.thicknessBottom / 2;
+        }
         // 阴影
         const shadows = this.getShadows();
         let st = 0, sb = 0, sl = 0, sr = 0;

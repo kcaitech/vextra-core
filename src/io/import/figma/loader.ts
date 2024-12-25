@@ -1,5 +1,5 @@
-import {BasicArray, Document, Page, Shape, ShapeType, Style, SymbolShape, Transform} from "../../../data";
-import {IJSON, LoadContext} from "./basic";
+import { BasicArray, Border, BorderPosition, BorderSideSetting, BorderStyle, CornerType, Document, Page, Shape, ShapeType, SideType, StrokePaint, Style, SymbolShape, Transform } from "../../../data";
+import { IJSON, LoadContext } from "./basic";
 import {
     importEllipse,
     importGroup,
@@ -13,8 +13,8 @@ import {
     importSymbolRef,
     importTextShape,
 } from "./shapeio";
-import {UZIPFiles} from "uzip";
-import {base64Encode} from "../../../basic/utils";
+import { UZIPFiles } from "uzip";
+import { base64Encode } from "../../../basic/utils";
 
 const __handler: { [ket: string]: (ctx: LoadContext, data: IJSON, i: number) => Shape } = {}
 
@@ -61,8 +61,11 @@ export function startLoader(file: IJSON, pages: IJSON[], document: Document, nod
     const loadPage = async (ctx: LoadContext, id: string): Promise<Page> => {
         const json: IJSON | undefined = pages.find(p => p.id === id);
         if (!json) {
+            const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+            const strokePaints = new BasicArray<StrokePaint>();
+            const border = new Border(BorderPosition.Center, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
             const trans = new Transform();
-            return new Page(new BasicArray(), id, "", ShapeType.Page, trans, new Style(new BasicArray(), new BasicArray(), new BasicArray()), new BasicArray());
+            return new Page(new BasicArray(), id, "", ShapeType.Page, trans, new Style(new BasicArray(), new BasicArray(), border), new BasicArray());
         }
         const page = importPage(ctx, json, importer, nodeChangesMap, nodeKeyMap);
         // updatePageFrame(page);
@@ -75,7 +78,7 @@ export function startLoader(file: IJSON, pages: IJSON[], document: Document, nod
         const ext = extIndex !== -1 ? id.substring(extIndex + 1) : '';
 
         const buffer = unzipped[`images/${idWithoutExt}`];
-        if (!buffer) return {buff: new Uint8Array(), base64: ""};
+        if (!buffer) return { buff: new Uint8Array(), base64: "" };
 
         const uInt8Array = buffer;
         let i = uInt8Array.length;
@@ -96,7 +99,7 @@ export function startLoader(file: IJSON, pages: IJSON[], document: Document, nod
             console.log("imageExt", ext);
         }
 
-        return {buff: buffer, base64: url}
+        return { buff: buffer, base64: url }
     }
 
     document.mediasMgr.setLoader((id) => loadMedia(id))

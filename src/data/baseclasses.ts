@@ -122,6 +122,7 @@ export class BorderStyle extends Basic {
         this.gap = gap
     }
 }
+type Border_strokePaints = BasicArray<StrokePaint>
 /* bullet numbers */
 export class BulletNumbers extends Basic {
     typeId = "bullet-numbers"
@@ -490,7 +491,6 @@ export class Stop extends Basic {
         this.color = color
     }
 }
-type Style_borders = BasicArray<Border>
 type Style_fills = BasicArray<Fill>
 type Style_shadows = BasicArray<Shadow>
 type Style_innerShadows = BasicArray<Shadow>
@@ -531,7 +531,7 @@ export class UserInfo extends Basic {
         this.avatar = avatar
     }
 }
-type Variable_0 = BasicArray<Border | Fill | Shadow | PrototypeInterAction>
+type Variable_0 = BasicArray<Fill | Shadow | PrototypeInterAction>
 /* auto layout */
 export class AutoLayout extends Basic {
     typeId = "auto-layout"
@@ -792,20 +792,14 @@ export class Span extends SpanAttr {
         this.length = length
     }
 }
-/* border */
-export class Border extends Basic {
-    typeId = "border"
+/* stroke paint */
+export class StrokePaint extends Basic {
+    typeId = "stroke-paint"
     crdtidx: Crdtidx
     id: string
     isEnabled: boolean
     fillType: FillType
     color: Color
-    position: BorderPosition
-    thickness: number
-    borderStyle: BorderStyle
-    cornerType: CornerType
-    sideSetting: BorderSideSetting
-    contextSettings?: ContextSettings
     gradient?: Gradient
     imageRef?: string
     imageScaleMode?: ImageScaleMode
@@ -815,18 +809,30 @@ export class Border extends Basic {
     originalImageHeight?: number
     paintFilter?: PaintFilter
     transform?: PatternTransform
-    constructor(crdtidx: Crdtidx, id: string, isEnabled: boolean, fillType: FillType, color: Color, position: BorderPosition, thickness: number, borderStyle: BorderStyle, cornerType: CornerType, sideSetting: BorderSideSetting) {
+    constructor(crdtidx: Crdtidx, id: string, isEnabled: boolean, fillType: FillType, color: Color) {
         super()
         this.crdtidx = crdtidx
         this.id = id
         this.isEnabled = isEnabled
         this.fillType = fillType
         this.color = color
+    }
+}
+/* border */
+export class Border extends Basic {
+    typeId = "border"
+    position: BorderPosition
+    borderStyle: BorderStyle
+    cornerType: CornerType
+    sideSetting: BorderSideSetting
+    strokePaints: Border_strokePaints
+    constructor(position: BorderPosition, borderStyle: BorderStyle, cornerType: CornerType, sideSetting: BorderSideSetting, strokePaints: Border_strokePaints) {
+        super()
         this.position = position
-        this.thickness = thickness
         this.borderStyle = borderStyle
         this.cornerType = cornerType
         this.sideSetting = sideSetting
+        this.strokePaints = strokePaints
     }
 }
 /* fill */
@@ -882,9 +888,9 @@ export class Para extends Basic {
 /* style */
 export class Style extends Basic {
     typeId = "style"
-    borders: Style_borders
     fills: Style_fills
     shadows: Style_shadows
+    borders: Border
     miterLimit?: number
     windingRule?: WindingRule
     blur?: Blur
@@ -896,11 +902,11 @@ export class Style extends Basic {
     startMarkerType?: MarkerType
     endMarkerType?: MarkerType
     varbinds?: BasicMap<string, string>
-    constructor(borders: Style_borders, fills: Style_fills, shadows: Style_shadows) {
+    constructor(fills: Style_fills, shadows: Style_shadows, borders: Border) {
         super()
-        this.borders = borders
         this.fills = fills
         this.shadows = shadows
+        this.borders = borders
     }
 }
 /* text attr */
@@ -1012,8 +1018,8 @@ export class Variable extends Basic {
     id: string
     type: VariableType
     name: string
-    value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur | AutoLayout
-    constructor(id: string, type: VariableType, name: string, value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur | AutoLayout) {
+    value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | Border | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur | AutoLayout
+    constructor(id: string, type: VariableType, name: string, value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | Border | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur | AutoLayout) {
         super()
         this.id = id
         this.type = type

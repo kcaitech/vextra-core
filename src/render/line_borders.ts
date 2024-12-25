@@ -11,14 +11,15 @@ import {
     VariableType,
     Gradient,
     GradientType,
-    PathShape
+    PathShape,
+    StrokePaint
 } from "../data/classes";
 import { findOverrideAndVar } from "../data/utils";
 import { randomId } from "./basic";
 import { render as marker } from "./marker";
 import { render as renderGradient } from "./gradient";
 import { render as lineGradient } from "./line_gradient";
-function handler(h: Function, style: Style, border: Border, path: string, shape: Shape, startMarkerType?: MarkerType, endMarkerType?: MarkerType): any {
+function handler(h: Function, style: Style, border: Border, path: string, shape: Shape,strokePaint: StrokePaint, startMarkerType?: MarkerType, endMarkerType?: MarkerType): any {
     const thickness = border.sideSetting.thicknessTop;
     const body_props: any = {
         d: path,
@@ -37,34 +38,34 @@ function handler(h: Function, style: Style, border: Border, path: string, shape:
     let g_;
     const { length, gap } = border.borderStyle;
     if (length || gap) body_props['stroke-dasharray'] = `${length}, ${gap}`;
-    const fillType = border.fillType;
+    const fillType = strokePaint.fillType;
     if (fillType === FillType.SolidColor) {
-        const color = border.color;
+        const color = strokePaint.color;
         body_props.stroke = "rgb(" + color.red + "," + color.green + "," + color.blue + ")";
-        body_props['opacity'] = border.color.alpha;
+        body_props['opacity'] = strokePaint.color.alpha;
     } else {
-        g_ = renderGradient(h, border.gradient as Gradient, shape.size);
-        const opacity = border.gradient?.gradientOpacity;
+        g_ = renderGradient(h, strokePaint.gradient as Gradient, shape.size);
+        const opacity = strokePaint.gradient?.gradientOpacity;
         body_props.opacity = opacity === undefined ? 1 : opacity; ``
         body_props.stroke = "url(#" + g_.id + ")";
     }
     if ((endMarkerType && endMarkerType !== MarkerType.Line) || (startMarkerType && startMarkerType !== MarkerType.Line)) {
         delete body_props.opacity;
         let line_g;
-        if (border.fillType === FillType.Gradient) {
-            line_g = lineGradient(h, border.gradient as Gradient, shape.size, thickness);
+        if (strokePaint.fillType === FillType.Gradient) {
+            line_g = lineGradient(h, strokePaint.gradient as Gradient, shape.size, thickness);
         }
         const g_cs: any[] = [h('path', body_props)];
         if (endMarkerType && endMarkerType !== MarkerType.Line) {
             const rId = randomId();
             const id = "e-" + objectId(shape) + "-" + rId;
-            g_cs.unshift(marker(h, style, border, endMarkerType, id));
+            g_cs.unshift(marker(h, style, border, endMarkerType, id, strokePaint));
             body_props['marker-end'] = `url(#arrow-${id})`;
         }
         if (startMarkerType && startMarkerType !== MarkerType.Line) {
             const rId = randomId();
             const id = "s-" + objectId(shape) + "-" + rId;
-            g_cs.unshift(marker(h, style, border, startMarkerType, id));
+            g_cs.unshift(marker(h, style, border, startMarkerType, id, strokePaint));
             body_props['marker-start'] = `url(#arrow-${id})`;
         }
         if (line_g) {
@@ -85,7 +86,7 @@ function handler(h: Function, style: Style, border: Border, path: string, shape:
             })
             return h('g', [line_g.node, mk, rect_h]);
         } else {
-            return h('g', { opacity: border.color.alpha }, g_cs);
+            return h('g', { opacity: strokePaint.color.alpha }, g_cs);
         }
     }
     if (g_ && g_.node) {
@@ -100,10 +101,10 @@ function handler(h: Function, style: Style, border: Border, path: string, shape:
 
 
 
-function angular_handler(h: Function, style: Style, border: Border, path: string, shape: Shape, startMarkerType?: MarkerType, endMarkerType?: MarkerType): any {
+function angular_handler(h: Function, style: Style, border: Border, path: string, shape: Shape,strokePaint: StrokePaint, startMarkerType?: MarkerType, endMarkerType?: MarkerType): any {
     const thickness = border.sideSetting.thicknessTop;
-    const opacity = border.gradient?.gradientOpacity;
-    let line_g = lineGradient(h, border.gradient as Gradient, shape.size, thickness);
+    const opacity = strokePaint.gradient?.gradientOpacity;
+    let line_g = lineGradient(h, strokePaint.gradient as Gradient, shape.size, thickness);
     const id = "mask-line-" + objectId(border) + randomId();
     const body_props: any = {
         d: path,
@@ -138,13 +139,13 @@ function angular_handler(h: Function, style: Style, border: Border, path: string
         if (endMarkerType && endMarkerType !== MarkerType.Line) {
             const rId = randomId();
             const id = "e-" + objectId(shape) + "-" + rId;
-            g_cs.unshift(marker(h, style, border, endMarkerType, id));
+            g_cs.unshift(marker(h, style, border, endMarkerType, id, strokePaint));
             body_props['marker-end'] = `url(#arrow-${id})`;
         }
         if (startMarkerType && startMarkerType !== MarkerType.Line) {
             const rId = randomId();
             const id = "s-" + objectId(shape) + "-" + rId;
-            g_cs.unshift(marker(h, style, border, startMarkerType, id));
+            g_cs.unshift(marker(h, style, border, startMarkerType, id, strokePaint));
             body_props['marker-start'] = `url(#arrow-${id})`;
         }
         if (line_g && line_g.style) {
@@ -153,7 +154,7 @@ function angular_handler(h: Function, style: Style, border: Border, path: string
 
             return h('g', [mk, fg]);
         } else {
-            const color = border.color;
+            const color = strokePaint.color;
             body_props['stroke'] = "rgb(" + color.red + "," + color.green + "," + color.blue + ")";
             return h('g', g_cs);
         }
@@ -162,19 +163,20 @@ function angular_handler(h: Function, style: Style, border: Border, path: string
 }
 
 
-export function render(h: Function, style: Style, borders: Border[], startMarkerType: MarkerType | undefined, endMarkerType: MarkerType | undefined, path: string, shape: Shape): Array<any> {
-    const bc = borders.length;
+export function render(h: Function, style: Style, border: Border | undefined, startMarkerType: MarkerType | undefined, endMarkerType: MarkerType | undefined, path: string, shape: Shape): Array<any> {
     let elArr = new Array();
+    if(!border) return elArr;
+    const bc = border.strokePaints.length;
     const sm = startMarkerType, em = endMarkerType;
     for (let i = 0; i < bc; i++) {
-        const border: Border = borders[i];
-        if (!border.isEnabled) continue;
-        const fillType = border.fillType;
-        const gradientType = border.gradient && border.gradient.gradientType;
+        const strokePaint: StrokePaint = border.strokePaints[i];
+        if (!strokePaint.isEnabled) continue;
+        const fillType = strokePaint.fillType;
+        const gradientType = strokePaint.gradient && strokePaint.gradient.gradientType;
         fillType == FillType.Gradient && gradientType == GradientType.Angular && (() => {
-            elArr.push(angular_handler(h, style, border, path, shape, sm, em));
+            elArr.push(angular_handler(h, style, border, path, shape,strokePaint, sm, em));
         })() || (fillType == FillType.SolidColor || (fillType == FillType.Gradient && gradientType !== GradientType.Angular)) && (() => {
-            elArr.push(handler(h, style, border, path, shape, sm, em));
+            elArr.push(handler(h, style, border, path, shape,strokePaint, sm, em));
         })()
     }
     return elArr;
