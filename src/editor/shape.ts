@@ -1,4 +1,4 @@
-import { BoolShape, GroupShape, PathShape, PathShape2, RectShape, Shape, ShapeType, SymbolShape, SymbolUnionShape, TextShape, Variable, VariableType, Color, PathType, Document, SymbolRefShape, Text, Page, Border, BorderPosition, BorderStyle, Fill, MarkerType, Shadow, BoolOp, CurvePoint, ExportFormat, ContactShape, AutoLayout, PathSegment, BasicArray, string2Text } from "../data";
+import { BoolShape, GroupShape, PathShape, PathShape2, RectShape, Shape, ShapeType, SymbolShape, SymbolUnionShape, TextShape, Variable, VariableType, Color, PathType, Document, SymbolRefShape, Text, Page, Border, BorderPosition, BorderStyle, Fill, MarkerType, Shadow, BoolOp, CurvePoint, ExportFormat, ContactShape, AutoLayout, PathSegment, BasicArray, string2Text, StrokePaint } from "../data";
 import { expand, expandTo, translate, translateTo } from "./frame";
 import { CoopRepository } from "../coop/cooprepo";
 import {
@@ -562,24 +562,17 @@ export class ShapeEditor {
         });
     }
 
-    public setBorderThickness(idx: number, thickness: number) {
-        this._repoWrap("setBorderThickness", (api) => {
-            const shape = this.shape4border(api);
-            api.setBorderThickness(this.__page, shape, idx, thickness);
-        });
-    }
-
-    public setBorderPosition(idx: number, position: BorderPosition) {
+    public setBorderPosition(position: BorderPosition) {
         this._repoWrap("setBorderPosition", (api) => {
             const shape = this.shape4border(api);
-            api.setBorderPosition(this.__page, shape, idx, position);
+            api.setBorderPosition(this.__page, shape, position);
         });
     }
 
-    public setBorderStyle(idx: number, borderStyle: BorderStyle) {
+    public setBorderStyle(borderStyle: BorderStyle) {
         this._repoWrap("setBorderStyle", (api) => {
             const shape = this.shape4border(api);
-            api.setBorderStyle(this.__page, shape, idx, borderStyle);
+            api.setBorderStyle(this.__page, shape, borderStyle);
         });
     }
 
@@ -613,16 +606,16 @@ export class ShapeEditor {
 
         this._repoWrap("deleteBorder", (api) => {
             const shape = this.shape4border(api);
-            api.deleteBorderAt(this.__page, shape, idx)
+            api.deleteStrokePaintAt(this.__page, shape, idx)
         });
 
     }
 
-    public addBorder(border: Border) {
-        this._repoWrap("addBorder", (api) => {
+    public addStrokePaint(strokePaint: StrokePaint) {
+        this._repoWrap("addStrokePaint", (api) => {
             const shape = this.shape4border(api);
-            const l = shape instanceof Shape ? shape.style.borders.length : shape.value.length;
-            api.addBorderAt(this.__page, shape, border, l);
+            const borders = shape instanceof Shape ? shape.style.borders : shape.value;
+            api.addStrokePaint(this.__page, shape, strokePaint, borders.strokePaints.length);
         });
     }
 

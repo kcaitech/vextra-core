@@ -58,10 +58,11 @@ export class ShapePorter {
             if (shape.style.fills.length) api.deleteFills(page, shape, 0, shape.style.fills.length);
             api.addFills(page, shape, fills); // 填入新的值
         }
-        const borders = view.getBorders().map(i => importBorder(exportBorder(i)));
+        let borders = view.getBorders();
         {
-            if (shape.style.borders.length) api.deleteBorders(page, shape, 0, shape.style.borders.length);
-            api.addBorders(page, shape, borders);
+            if(borders) importBorder(exportBorder(borders))
+            if (shape.style.borders?.strokePaints.length) api.deleteStrokePaints(page, shape, 0, shape.style.borders.strokePaints.length);
+            api.addStrokePaints(page, shape, borders.strokePaints);
         }
         const shadows = view.getShadows().map(i => importShadow(exportShadow(i)));
         {

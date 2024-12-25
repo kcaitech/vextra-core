@@ -32,7 +32,9 @@ import {
     Point2D,
     BlurType,
     Artboard, BorderSideSetting, SideType,
-    string2Text
+    string2Text,
+    StrokePaint,
+    BorderStyle
 } from "../data/classes";
 import { findOverride, findVar } from "../data/utils";
 import { BasicArray } from "../data/basic";
@@ -407,10 +409,7 @@ function _clone_value(_var: Variable, document: Document, page: Page) {
         case VariableType.MarkerType:
             return _var.value;
         case VariableType.Borders:
-            return (_var.value as Border[]).reduce((arr, v) => {
-                arr.push(importBorder(v, ctx));
-                return arr;
-            }, new BasicArray<Border>());
+            return importBorder(_var.value, ctx);
         case VariableType.Color:
             return importColor(_var.value);
         case VariableType.ContextSettings:
@@ -616,10 +615,7 @@ export function modify_variable_with_api(api: Api, page: Page, shape: ShapeView,
 export function shape4border(api: Api, page: Page, shape: ShapeView) {
     const _var = override_variable(page, VariableType.Borders, OverrideType.Borders, (_var) => {
         const bordors = _var?.value ?? shape.getBorders();
-        return new BasicArray(...(bordors as Array<Border>).map((v) => {
-            return importBorder(v);
-        }
-        ))
+        return importBorder(bordors);
     }, api, shape)
     return _var || shape.data;
 }
@@ -726,12 +722,15 @@ export function cell4edit2(page: Page, view: TableView, _cell: TableCellView, ap
         if (cell) return importTableCell(cell);
         const size = new ShapeSize();
         const trans = new Transform();
+        const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+        const strokePaints = new BasicArray<StrokePaint>();
+        const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
         return new TableCell(new BasicArray(),
             cellId,
             "",
             ShapeType.TableCell,
             trans,
-            new Style(new BasicArray(), new BasicArray(), new BasicArray()),
+            new Style(new BasicArray(), new BasicArray(), border),
             TableCellType.Text,
             newTableCellText(view.data.textAttr));
     };
@@ -753,12 +752,15 @@ export function cell4edit(page: Page, view: TableView, rowIdx: number, colIdx: n
         if (cell) return importTableCell(cell);
         const size = new ShapeSize();
         const trans = new Transform();
+        const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+        const strokePaints = new BasicArray<StrokePaint>();
+        const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
         return new TableCell(new BasicArray(),
             cellId,
             "",
             ShapeType.TableCell,
             trans,
-            new Style(new BasicArray(), new BasicArray(), new BasicArray()),
+            new Style(new BasicArray(), new BasicArray(), border),
             TableCellType.Text,
             newTableCellText(view.data.textAttr));
     };
@@ -808,15 +810,13 @@ export class RefUnbind {
             t.clearScaleSize();
             child.transform = makeShapeTransform1By2(t);
             const borders = child.style.borders;
-            borders.forEach(b => {
-                b.sideSetting = new BorderSideSetting(
-                    SideType.Normal,
-                    b.sideSetting.thicknessTop * uniformScale,
-                    b.sideSetting.thicknessLeft * uniformScale,
-                    b.sideSetting.thicknessBottom * uniformScale,
-                    b.sideSetting.thicknessRight * uniformScale
-                );
-            });
+            borders.sideSetting = new BorderSideSetting(
+                SideType.Normal,
+                borders.sideSetting.thicknessTop * uniformScale,
+                borders.sideSetting.thicknessLeft * uniformScale,
+                borders.sideSetting.thicknessBottom * uniformScale,
+                borders.sideSetting.thicknessRight * uniformScale
+            );
             const shadows = child.style.shadows;
             shadows.forEach(s => {
                 s.offsetX *= uniformScale;

@@ -1,6 +1,6 @@
 import { AsyncApiCaller } from "./basic/asyncapi";
 import { CoopRepository } from "../../coop/cooprepo";
-import { Document, Point2D } from "../../data";
+import { Document, Point2D, StrokePaint } from "../../data";
 import { adapt2Shape, GroupShapeView, PageView, ShapeView } from "../../dataview";
 import { CurveMode, CurvePoint, GroupShape, PathSegment, PathShape, Shape, ShapeFrame, ShapeType } from "../../data";
 import { BasicArray } from "../../data";
@@ -54,14 +54,11 @@ export class PathModifier extends AsyncApiCaller {
 
     private modifyBorderSetting() {
         if (this.haveEdit || !this.shape) return;
-        const borders = this.shape.getBorders() || [];
-        for (let i = 0; i < borders.length; i++) {
-            const border = borders[i];
-            const { thicknessBottom, thicknessTop, thicknessLeft, thicknessRight, sideType } = border.sideSetting;
-            if (sideType === SideType.Normal) continue;
-            const thickness = Math.max(thicknessBottom, thicknessTop, thicknessLeft, thicknessRight);
-            this.api.setBorderSide(this.page, this.shape, i, new BorderSideSetting(SideType.Normal, thickness, thickness, thickness, thickness));
-        }
+        const border = this.shape.getBorders();
+        const { thicknessBottom, thicknessTop, thicknessLeft, thicknessRight, sideType } = border.sideSetting;
+        if (sideType === SideType.Normal) return;
+        const thickness = Math.max(thicknessBottom, thicknessTop, thicknessLeft, thicknessRight);
+        this.api.setBorderSide(this.page, this.shape, new BorderSideSetting(SideType.Normal, thickness, thickness, thickness, thickness));
         this.api.shapeEditPoints(this.page, this.shape, true);
     }
 
@@ -76,8 +73,11 @@ export class PathModifier extends AsyncApiCaller {
 
             if (!_style) {
                 const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
-                const border = new Border([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), types.BorderPosition.Center, 1, new BorderStyle(0, 0), CornerType.Miter, side);
-                style.borders.push(border);
+                const strokePaints = new BasicArray<StrokePaint>();
+                const strokePaint = new StrokePaint([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0));
+                strokePaints.push(strokePaint);
+                const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
+                style.borders = border;
             } else {
                 style.fills = new BasicArray<Fill>();
                 style.shadows = new BasicArray<Shadow>();
@@ -268,9 +268,9 @@ export class PathModifier extends AsyncApiCaller {
     }
 
     execute4handle(_shape: ShapeView, index: number, side: 'from' | 'to',
-                   from: { x: number, y: number },
-                   to: { x: number, y: number },
-                   segmentIndex: number) {
+        from: { x: number, y: number },
+        to: { x: number, y: number },
+        segmentIndex: number) {
         try {
             const api = this.api;
             const page = this.page;

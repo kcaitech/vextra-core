@@ -368,7 +368,7 @@ export class LinearApi {
             const page = this.page;
             for (let i = 0, l = actions.length; i < l; i++) {
                 const { target, index, type, value } = actions[i];
-                const grad_type = type === 'fills' ? target.getFills() : target.getBorders();
+                const grad_type = type === 'fills' ? target.getFills() : target.getBorders().strokePaints;
                 if (!grad_type?.length) {
                     continue;
                 }
@@ -465,35 +465,35 @@ export class LinearApi {
      *  @description 修改边框粗细
      */
 
-    modifyShapesBorderThickness(actions: BatchAction[]) {
+    modifyShapesBorderThickness(actions: BatchAction2[]) {
         this.execute('modify-shapes-border-Thickness', () => {
             const api = this.api!;
             const page = this.page;
             const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
-                const { target, value, index } = actions[i];
+                const { target, value } = actions[i];
                 shapes.push(target);
                 const s = shape4border(api, page, target);
                 const borders = target.getBorders();
-                const sideType = borders[index].sideSetting.sideType;
+                const sideType = borders.sideSetting.sideType;
                 switch (sideType) {
                     case SideType.Normal:
-                        api.setBorderSide(page, s, index, new BorderSideSetting(sideType, value, value, value, value));
+                        api.setBorderSide(page, s, new BorderSideSetting(sideType, value, value, value, value));
                         break;
                     case SideType.Top:
-                        api.setBorderThicknessTop(page, s, index, value);
+                        api.setBorderThicknessTop(page, s, value);
                         break
                     case SideType.Right:
-                        api.setBorderThicknessRight(page, s, index, value);
+                        api.setBorderThicknessRight(page, s, value);
                         break
                     case SideType.Bottom:
-                        api.setBorderThicknessBottom(page, s, index, value);
+                        api.setBorderThicknessBottom(page, s, value);
                         break
                     case SideType.Left:
-                        api.setBorderThicknessLeft(page, s, index, value);
+                        api.setBorderThicknessLeft(page, s, value);
                         break
                     default:
-                        api.setBorderSide(page, s, index, new BorderSideSetting(sideType, value, value, value, value));
+                        api.setBorderSide(page, s, new BorderSideSetting(sideType, value, value, value, value));
                         break;
                 }
 
@@ -508,16 +508,16 @@ export class LinearApi {
         });
     }
 
-    modifyBorderThicknessTop(actions: BatchAction[]) {
+    modifyBorderThicknessTop(actions: BatchAction2[]) {
         this.execute('modify-border-thickness-top', () => {
             const api = this.api!;
             const page = this.page;
             const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
-                const { target, value, index } = actions[i];
+                const { target, value } = actions[i];
                 shapes.push(target);
                 const s = shape4border(api, page, target);
-                api.setBorderThicknessTop(page, s, index, value);
+                api.setBorderThicknessTop(page, s, value);
             }
             const parents = getAutoLayoutShapes(shapes);
             for (let i = 0; i < parents.length; i++) {
@@ -529,16 +529,16 @@ export class LinearApi {
         })
     }
 
-    modifyBorderThicknessBottom(actions: BatchAction[]) {
+    modifyBorderThicknessBottom(actions: BatchAction2[]) {
         this.execute('modify-border-thickness-bottom', () => {
             const api = this.api!;
             const page = this.page;
             const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
-                const { target, value, index } = actions[i];
+                const { target, value } = actions[i];
                 shapes.push(target);
                 const s = shape4border(api, page, target);
-                api.setBorderThicknessBottom(page, s, index, value);
+                api.setBorderThicknessBottom(page, s, value);
             }
             const parents = getAutoLayoutShapes(shapes);
             for (let i = 0; i < parents.length; i++) {
@@ -550,16 +550,16 @@ export class LinearApi {
         })
     }
 
-    modifyBorderThicknessLeft(actions: BatchAction[]) {
+    modifyBorderThicknessLeft(actions: BatchAction2[]) {
         this.execute('modify-border-thickness-left', () => {
             const api = this.api!;
             const page = this.page;
             const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
-                const { target, value, index } = actions[i];
+                const { target, value } = actions[i];
                 shapes.push(target);
                 const s = shape4border(api, page, target);
-                api.setBorderThicknessLeft(page, s, index, value);
+                api.setBorderThicknessLeft(page, s, value);
             }
             const parents = getAutoLayoutShapes(shapes);
             for (let i = 0; i < parents.length; i++) {
@@ -571,16 +571,16 @@ export class LinearApi {
         })
     }
 
-    modifyBorderThicknessRight(actions: BatchAction[]) {
+    modifyBorderThicknessRight(actions: BatchAction2[]) {
         this.execute('modify-border-thickness-right', () => {
             const api = this.api!;
             const page = this.page;
             const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
-                const { target, value, index } = actions[i];
+                const { target, value } = actions[i];
                 shapes.push(target);
                 const s = shape4border(api, page, target);
-                api.setBorderThicknessRight(page, s, index, value);
+                api.setBorderThicknessRight(page, s, value);
             }
             const parents = getAutoLayoutShapes(shapes);
             for (let i = 0; i < parents.length; i++) {
@@ -596,7 +596,7 @@ export class LinearApi {
      * @description 修改边框粗细 table
      */
 
-    modifyBorderThickness4Cell(idx: number, thickness: number, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }, table: TableView) {
+    modifyBorderThickness4Cell(thickness: number, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }, table: TableView) {
         const editor = this.getTableEditor(table);
         this.execute('modify-border-thickness-4Cell', () => {
             const api = this.api!;
@@ -604,8 +604,7 @@ export class LinearApi {
             editor.view._getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
                 if (cell.cell) {
                     const c = editor.cell4edit(cell.rowIdx, cell.colIdx, api);
-                    api.setBorderSide(page, c.data, idx, new BorderSideSetting(SideType.Normal, thickness, thickness, thickness, thickness));
-                    // api.setBorderThickness(this.__page, c.data, idx, thickness);
+                    api.setBorderSide(page, c.data, new BorderSideSetting(SideType.Normal, thickness, thickness, thickness, thickness));
                 }
             })
         });

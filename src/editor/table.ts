@@ -2,17 +2,18 @@ import { TableCell, TableShape } from "../data/table";
 import { ShapeEditor } from "./shape";
 import { Page } from "../data/page";
 import { CoopRepository } from "../coop/cooprepo";
-import { BorderPosition, BorderStyle, StrikethroughType, TableCellType, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType, FillType, ImageScaleMode, BorderSideSetting, SideType } from "../data/baseclasses";
+import { BorderPosition, BorderStyle, StrikethroughType, TableCellType, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType, FillType, ImageScaleMode, BorderSideSetting, SideType, CornerType } from "../data/baseclasses";
 import { adjColum, adjRow } from "./tableadjust";
-import { Border, Fill, Gradient } from "../data/style";
+import { Border, Fill, Gradient, StrokePaint } from "../data/style";
 import { fixTableShapeFrameByLayout } from "./utils/other";
 import { Api, TextShapeLike } from "../coop/recordapi";
-import { importBorder, importFill, importGradient } from "../data/baseimport";
+import { importBorder, importFill, importGradient, importStrokePaint } from "../data/baseimport";
 import { Document, Color } from "../data/classes";
 import { AsyncBorderThickness, AsyncGradientEditor, Status } from "./controller";
 import { TableCellView, TableView } from "../dataview";
 import { cell4edit } from "./symbol";
 import { AsyncTextAttrEditor } from "./textshape";
+import { BasicArray } from "../data";
 
 const MinCellSize = TableShape.MinCellSize;
 const MaxColCount = TableShape.MaxColCount;
@@ -1351,14 +1352,13 @@ export class TableEditor extends ShapeEditor {
             this.__repo.rollback();
         }
     }
-    public setBorderThickness4Cell(idx: number, thickness: number, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        const api = this.__repo.start("setBorderThickness");
+    public setBorderThickness4Cell(thickness: number, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
+        const api = this.__repo.start("setBorderThickness4Cell");
         try {
             this.view._getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
                 if (cell.cell) {
                     const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
-                    api.setBorderSide(this.__page, c.data, idx, new BorderSideSetting(SideType.Normal, thickness, thickness, thickness, thickness));
-                    // api.setBorderThickness(this.__page, c.data, idx, thickness);
+                    api.setBorderSide(this.__page, c.data, new BorderSideSetting(SideType.Normal, thickness, thickness, thickness, thickness));
                 }
             })
             this.__repo.commit();
@@ -1368,16 +1368,15 @@ export class TableEditor extends ShapeEditor {
         }
     }
     public asyncBorderThickness4Cell(range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }): AsyncBorderThickness {
-        const api = this.__repo.start("setBorderThickness");
+        const api = this.__repo.start("asyncBorderThickness4Cell");
         let status: Status = Status.Pending
-        const execute = (contextSettingThickness: number, idx: number) => {
+        const execute = (contextSettingThickness: number) => {
             status = Status.Pending;
             try {
                 this.view._getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
                     if (cell.cell) {
                         const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
-                        api.setBorderSide(this.__page, c.data, idx, new BorderSideSetting(SideType.Normal, contextSettingThickness, contextSettingThickness, contextSettingThickness, contextSettingThickness));
-                        // api.setBorderThickness(this.__page, c.data, idx, contextSettingThickness);
+                        api.setBorderSide(this.__page, c.data, new BorderSideSetting(SideType.Normal, contextSettingThickness, contextSettingThickness, contextSettingThickness, contextSettingThickness));
                     }
                 })
                 this.__repo.transactCtx.fireNotify();
@@ -1397,13 +1396,13 @@ export class TableEditor extends ShapeEditor {
         }
         return { execute, close }
     }
-    public setBorderStyle4Cell(idx: number, borderStyle: BorderStyle, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
+    public setBorderStyle4Cell(borderStyle: BorderStyle, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
         const api = this.__repo.start("setBorderStyle");
         try {
             this.view._getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
                 if (cell.cell) {
                     const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
-                    api.setBorderStyle(this.__page, c.data, idx, borderStyle);
+                    api.setBorderStyle(this.__page, c.data, borderStyle);
                 }
             })
             this.__repo.commit();
@@ -1419,7 +1418,7 @@ export class TableEditor extends ShapeEditor {
             this.view._getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
                 if (cell.cell) {
                     const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
-                    api.deleteBorderAt(this.__page, c.data, idx)
+                    api.deleteStrokePaintAt(this.__page, c.data, idx)
                 }
             })
             this.__repo.commit();
@@ -1428,18 +1427,40 @@ export class TableEditor extends ShapeEditor {
             this.__repo.rollback();
         }
     }
-    public addBorder4Cell(border: Border, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }, delOlds: boolean) {
-        border.position = BorderPosition.Center; // 只支持居中
+    public deleteBorders4Cell(range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
+        const api = this.__repo.start("deleteBorders4Cell");
+        try {
+            this.view._getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
+                if (cell.cell) {
+                    const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
+                    api.deleteStrokePaints(this.__page, c.data, 0, c.style.borders.strokePaints.length)
+                }
+            })
+            this.__repo.commit();
+        } catch (error) {
+            console.error(error);
+            this.__repo.rollback();
+        }
+    }
+    public addBorder4Cell(strokePaint: StrokePaint, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }, delOlds: boolean) {
         const api = this.__repo.start("addBorder");
         try {
             this._initCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd, api);
             const cells = this.view.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd);
             cells.forEach((cell) => {
-                const newborder = importBorder(border);
+                const newPaint = importStrokePaint(strokePaint);
                 if (cell.cell) {
                     const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
-                    if (delOlds) api.deleteBorders(this.__page, c.data, 0, c.style.borders.length);
-                    api.addBorderAt(this.__page, c.data, newborder, c.style.borders.length);
+                    if (delOlds) api.deleteStrokePaints(this.__page, c.data, 0, c.style.borders.strokePaints.length);
+                    const len = c.style.borders.strokePaints.length;
+                    if (len > 0) {
+                        api.addStrokePaint(this.__page, c.data, newPaint, c.style.borders.strokePaints.length);
+                    } else {
+                        const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+                        const strokePaints = new BasicArray<StrokePaint>(newPaint);
+                        const border = new Border(BorderPosition.Center, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
+                        api.addBorder(this.__page, c.data, border);
+                    }
                 }
                 else {
                     throw new Error("init cell fail?");

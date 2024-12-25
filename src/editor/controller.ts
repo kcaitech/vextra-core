@@ -147,7 +147,7 @@ export interface AsyncOpacityEditor {
 }
 
 export interface AsyncBorderThickness {
-    execute: (contextSettingThickness: number, index: number) => void;
+    execute: (contextSettingThickness: number) => void;
     close: () => undefined;
 }
 
@@ -970,31 +970,31 @@ export class Controller {
 
         const api = this.__repo.start("asyncBorderThickness");
         let status: Status = Status.Pending;
-        const execute = (thickness: number, index: number) => {
+        const execute = (thickness: number) => {
             status = Status.Pending;
             try {
                 for (let i = 0, l = shapes.length; i < l; i++) {
                     const s = shape4border(api, page, shapes[i]);
                     const borders = shapes[i].getBorders();
-                    const sideType = borders[index].sideSetting.sideType;
+                    const sideType = borders.sideSetting.sideType;
                     switch (sideType) {
                         case SideType.Normal:
-                            api.setBorderSide(page, s, index, new BorderSideSetting(sideType, thickness, thickness, thickness, thickness));
+                            api.setBorderSide(page, s, new BorderSideSetting(sideType, thickness, thickness, thickness, thickness));
                             break;
                         case SideType.Top:
-                            api.setBorderThicknessTop(page, s, index, thickness);
+                            api.setBorderThicknessTop(page, s, thickness);
                             break
                         case SideType.Right:
-                            api.setBorderThicknessRight(page, s, index, thickness);
+                            api.setBorderThicknessRight(page, s, thickness);
                             break
                         case SideType.Bottom:
-                            api.setBorderThicknessBottom(page, s, index, thickness);
+                            api.setBorderThicknessBottom(page, s, thickness);
                             break
                         case SideType.Left:
-                            api.setBorderThicknessLeft(page, s, index, thickness);
+                            api.setBorderThicknessLeft(page, s, thickness);
                             break
                         default:
-                            api.setBorderSide(page, s, index, new BorderSideSetting(sideType, thickness, thickness, thickness, thickness));
+                            api.setBorderSide(page, s, new BorderSideSetting(sideType, thickness, thickness, thickness, thickness));
                             break;
                     }
                 }
@@ -1028,23 +1028,23 @@ export class Controller {
 
         const api = this.__repo.start("asyncBorderSideThickness");
         let status: Status = Status.Pending;
-        const execute = (thickness: number, index: number) => {
+        const execute = (thickness: number) => {
             status = Status.Pending;
             try {
                 for (let i = 0, l = shapes.length; i < l; i++) {
                     const s = shape4border(api, page, shapes[i]);
                     switch (type) {
                         case SideType.Top:
-                            api.setBorderThicknessTop(page, s, index, thickness);
+                            api.setBorderThicknessTop(page, s, thickness);
                             break
                         case SideType.Right:
-                            api.setBorderThicknessRight(page, s, index, thickness);
+                            api.setBorderThicknessRight(page, s, thickness);
                             break
                         case SideType.Bottom:
-                            api.setBorderThicknessBottom(page, s, index, thickness);
+                            api.setBorderThicknessBottom(page, s, thickness);
                             break
                         case SideType.Left:
-                            api.setBorderThicknessLeft(page, s, index, thickness);
+                            api.setBorderThicknessLeft(page, s, thickness);
                             break
                         default:
                             break;
@@ -1115,7 +1115,7 @@ export class Controller {
             try {
                 for (let i = 0, l = shapes.length; i < l; i++) {
                     const shape = shapes[i];
-                    const grad_type = type === 'fills' ? shape.getFills() : shape.getBorders();
+                    const grad_type = type === 'fills' ? shape.getFills() : shape.getBorders().strokePaints;
                     if (!grad_type?.length) {
                         continue;
                     }
@@ -1141,7 +1141,7 @@ export class Controller {
             try {
                 for (let i = 0, l = shapes.length; i < l; i++) {
                     const shape = shapes[i];
-                    const grad_type = type === 'fills' ? shape.getFills() : shape.getBorders();
+                    const grad_type = type === 'fills' ? shape.getFills() : shape.getBorders().strokePaints;
                     if (!grad_type?.length) {
                         continue;
                     }
@@ -1167,7 +1167,7 @@ export class Controller {
             try {
                 for (let i = 0, l = shapes.length; i < l; i++) {
                     const shape = shapes[i];
-                    const grad_type = type === 'fills' ? shape.getFills() : shape.getBorders();
+                    const grad_type = type === 'fills' ? shape.getFills() : shape.getBorders().strokePaints;
                     if (!grad_type?.length) {
                         continue;
                     }
@@ -1190,13 +1190,13 @@ export class Controller {
         const execute_stop_position = (position: number, id: string) => {
             status = Status.Pending;
             try {
-                const grad_color_type = type === 'fills' ? shapes[0].getFills() : shapes[0].getBorders();
+                const grad_color_type = type === 'fills' ? shapes[0].getFills() : shapes[0].getBorders().strokePaints;
                 const f_stop = grad_color_type[index].gradient?.stops;
                 if (f_stop) {
                     const idx = f_stop.findIndex((stop) => stop.id === id);
                     for (let i = 0, l = shapes.length; i < l; i++) {
                         const shape = shapes[i];
-                        const grad_type = type === 'fills' ? shape.getFills() : shape.getBorders();
+                        const grad_type = type === 'fills' ? shape.getFills() : shape.getBorders().strokePaints;
                         if (!grad_type?.length) {
                             continue;
                         }
