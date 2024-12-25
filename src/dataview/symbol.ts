@@ -46,7 +46,7 @@ export class SymbolView extends GroupShapeView {
 
     // fills
     protected renderFills(): EL[] {
-        return renderFills(elh, this.getFills(), this.frame, this.getPathStr());
+        return renderFills(elh, this.getFills(), this.frame, this.getPathStr(), 'fill-' + this.id);
     }
     // borders
     protected renderBorders(): EL[] {

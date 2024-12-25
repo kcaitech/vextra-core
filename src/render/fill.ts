@@ -20,10 +20,11 @@ function randomId() {
     return Math.floor((Math.random() * 10000) + 1);
 }
 
-const handler: { [key: string]: (h: Function, frame: ShapeSize, fill: Fill, path: string) => any } = {};
-handler[FillType.SolidColor] = function (h: Function, frame: ShapeSize, fill: Fill, path: string): any {
+const handler: { [key: string]: (h: Function, frame: ShapeSize, fill: Fill, path: string, id: string) => any } = {};
+handler[FillType.SolidColor] = function (h: Function, frame: ShapeSize, fill: Fill, path: string, id: string): any {
     const color = fill.color;
     return h("path", {
+        class: id.replace(/\//g, '-'),
         d: path,
         fill: "rgb(" + color.red + "," + color.green + "," + color.blue + ")",
         "fill-opacity": (color ? color.alpha : 1),
@@ -33,7 +34,7 @@ handler[FillType.SolidColor] = function (h: Function, frame: ShapeSize, fill: Fi
     });
 }
 
-handler[FillType.Gradient] = function (h: Function, frame: ShapeSize, fill: Fill, path: string): any {
+handler[FillType.Gradient] = function (h: Function, frame: ShapeSize, fill: Fill, path: string, id: string): any {
     const opacity = fill.gradient?.gradientOpacity;
     const elArr = [];
     const g_ = renderGradient(h, fill.gradient as Gradient, frame);
@@ -45,13 +46,14 @@ handler[FillType.Gradient] = function (h: Function, frame: ShapeSize, fill: Fill
         const cp = clippathR(h, id, path);
         elArr.push(cp);
         elArr.push(h("foreignObject", {
-                width: frame.width, height: frame.height, x: 0, y: 0,
-                "clip-path": "url(#" + id + ")",
-                opacity: opacity === undefined ? 1 : opacity
-            },
+            width: frame.width, height: frame.height, x: 0, y: 0,
+            "clip-path": "url(#" + id + ")",
+            opacity: opacity === undefined ? 1 : opacity
+        },
             h("div", { width: "100%", height: "100%", style: gStyle })));
     } else {
         elArr.push(h('path', {
+            class: id.replace(/\//g, '-'),
             d: path,
             fill: "url(#" + gid + ")",
             "fill-opacity": opacity === undefined ? 1 : opacity,
@@ -77,26 +79,26 @@ handler[FillType.Pattern] = function (h: Function, frame: ShapeSize, fill: Fill,
     return h("g", [pattern, _path]);
 }
 
-export function render(h: Function, fills: Fill[], frame: ShapeSize, path: string): Array<any> {
+export function render(h: Function, fills: Fill[], frame: ShapeSize, path: string, id: string): Array<any> {
     const fillsCount = fills.length;
     const elArr = new Array();
     for (let i = 0; i < fillsCount; i++) {
         const fill = fills[i];
         if (!fill.isEnabled) continue;
         const fillType = fill.fillType;
-        elArr.push(handler[fillType](h, frame, fill, path));
+        elArr.push(handler[fillType](h, frame, fill, path, id));
     }
     return elArr;
 }
 
-const handler2: { [key: string]: (h: Function, frame: ShapeSize, fill: Fill, path: string) => any } = {};
-handler2[FillType.SolidColor] = function (h: Function, frame: ShapeSize, fill: Fill, path: string): any {
-    return handler[FillType.SolidColor](h, frame, fill, path)
+const handler2: { [key: string]: (h: Function, frame: ShapeSize, fill: Fill, path: string, id: string) => any } = {};
+handler2[FillType.SolidColor] = function (h: Function, frame: ShapeSize, fill: Fill, path: string, id: string): any {
+    return handler[FillType.SolidColor](h, frame, fill, path, id)
 }
 
-handler2[FillType.Gradient] = function (h: Function, frame: ShapeSize, fill: Fill, path: string): any {
+handler2[FillType.Gradient] = function (h: Function, frame: ShapeSize, fill: Fill, path: string, id: string): any {
     if (fill.gradient?.gradientType === GradientType.Angular) {
-        return handler[FillType.SolidColor](h, frame, fill, path);
+        return handler[FillType.SolidColor](h, frame, fill, path, id);
     }
     const opacity = fill.gradient?.gradientOpacity;
     const elArr = [];
@@ -109,13 +111,14 @@ handler2[FillType.Gradient] = function (h: Function, frame: ShapeSize, fill: Fil
         const cp = clippathR(h, id, path);
         elArr.push(cp);
         elArr.push(h("foreignObject", {
-                width: frame.width, height: frame.height, x: 0, y: 0,
-                "clip-path": "url(#" + id + ")",
-                opacity: opacity === undefined ? 1 : opacity
-            },
+            width: frame.width, height: frame.height, x: 0, y: 0,
+            "clip-path": "url(#" + id + ")",
+            opacity: opacity === undefined ? 1 : opacity
+        },
             h("div", { width: "100%", height: "100%", style: gStyle })));
     } else {
         elArr.push(h('path', {
+            class: id.replace(/\//g, '-'),
             d: path,
             fill: "url(#" + gid + ")",
             "fill-opacity": opacity === undefined ? 1 : opacity,
@@ -127,11 +130,11 @@ handler2[FillType.Gradient] = function (h: Function, frame: ShapeSize, fill: Fil
     return h("g", elArr);
 }
 
-handler2[FillType.Pattern] = function (h: Function, frame: ShapeSize, fill: Fill, path: string): any {
-    return handler[FillType.Pattern](h, frame, fill, path)
+handler2[FillType.Pattern] = function (h: Function, frame: ShapeSize, fill: Fill, path: string, id: string): any {
+    return handler[FillType.Pattern](h, frame, fill, path, id)
 }
 
-export function render2(h: Function, fills: Fill[], frame: ShapeSize, path: string): Array<any> {
+export function render2(h: Function, fills: Fill[], frame: ShapeSize, path: string, id: string): Array<any> {
     const fillsCount = fills.length;
     const elArr = [];
     for (let i = 0; i < fillsCount; i++) {
@@ -140,13 +143,13 @@ export function render2(h: Function, fills: Fill[], frame: ShapeSize, path: stri
             continue;
         }
         const fillType = fill.fillType;
-        elArr.push(handler2[fillType](h, frame, fill, path));
+        elArr.push(handler2[fillType](h, frame, fill, path, id));
     }
     return elArr;
 }
 
 export function renderWithVars(h: Function, shape: Shape, frame: ShapeSize, path: string,
-                               varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
     let fills = shape.style.fills;
     if (varsContainer) {
         const _vars = findOverrideAndVar(shape, OverrideType.Fills, varsContainer);
@@ -159,5 +162,5 @@ export function renderWithVars(h: Function, shape: Shape, frame: ShapeSize, path
             }
         }
     }
-    return render(h, fills, frame, path);
+    return render(h, fills, frame, path, 'fill-' + shape.id);
 }

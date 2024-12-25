@@ -1,4 +1,4 @@
-import { BoolOp, BoolShape, BorderPosition, ShapeFrame, parsePath, FillType, GradientType } from "../data/classes";
+import { BoolOp, BoolShape, BorderPosition, ShapeFrame, parsePath, FillType, GradientType, ShapeType } from "../data/classes";
 import { ShapeView, updateFrame } from "./shape";
 import { TextShapeView } from "./textshape";
 import { GroupShapeView } from "./groupshape";
@@ -210,7 +210,7 @@ export class BoolShapeView extends GroupShapeView {
                 } else return f;
             })
         }
-        return renderFills(elh, fills, this.size, this.getPathStr());
+        return renderFills(elh, fills, this.size, this.getPathStr(), 'fill-' + this.id);
     }
 
     protected renderBorders(): EL[] {
