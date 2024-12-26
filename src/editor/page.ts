@@ -2654,7 +2654,7 @@ export class PageEditor {
         const api = this.__repo.start("shapesDelFillMask");
         try {
             for (let i = 0; i < actions.length; i++) {
-                const { target,value } = actions[i];
+                const { target, value } = actions[i];
                 const source = this.__document.stylesMgr.getSync(target.style.fillsMask ?? '');
                 source && source.__subscribers.delete(target);
                 api.deleteFills(this.__page, adapt2Shape(target), 0, target.style.fills.length);
@@ -2687,7 +2687,7 @@ export class PageEditor {
         const api = this.__repo.start("shapesDelStyleFill");
         try {
             for (let i = 0; i < actions.length; i++) {
-                const { target,value } = actions[i];
+                const { target, value } = actions[i];
                 const source = this.__document.stylesMgr.getSync(target.style.fillsMask ?? '');
                 source && source.__subscribers.delete(target);
                 api.deleteFills(this.__page, adapt2Shape(target), 0, target.style.fills.length);
@@ -2718,7 +2718,7 @@ export class PageEditor {
         const api = this.__repo.start("shapesDelShadowMask");
         try {
             for (let i = 0; i < actions.length; i++) {
-                const { target,value } = actions[i];
+                const { target, value } = actions[i];
                 const source = this.__document.stylesMgr.getSync(target.style.shadowsMask ?? '');
                 source && source.__subscribers.delete(target);
                 api.deleteShadows(this.__page, adapt2Shape(target), 0, target.style.shadows.length);
@@ -2732,11 +2732,43 @@ export class PageEditor {
         }
     }
 
+    shapesSetBlurMask(actions: BatchAction2[]) {
+        const api = this.__repo.start("shapesSetBlurMask");
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                api.addblurmask(this.__document, this.__page, adapt2Shape(target), value);
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+
+    shapesDelBlurMask(actions: BatchAction2[]) {
+        const api = this.__repo.start("shapesDelBlurMask");
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                const source = this.__document.stylesMgr.getSync(target.style.blursMask ?? '');
+                source && source.__subscribers.delete(target);
+                api.deleteBlur(this.__page, adapt2Shape(target));
+                api.addBlur(this.__page, adapt2Shape(target), value);
+                api.delblurmask(this.__document, this.__page, adapt2Shape(target));
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+
     shapesDelStyleShadow(actions: BatchAction2[]) {
         const api = this.__repo.start("shapesDelStyleShadow");
         try {
             for (let i = 0; i < actions.length; i++) {
-                const { target,value } = actions[i];
+                const { target } = actions[i];
                 const source = this.__document.stylesMgr.getSync(target.style.shadowsMask ?? '');
                 source && source.__subscribers.delete(target);
                 api.deleteShadows(this.__page, adapt2Shape(target), 0, target.style.shadows.length);
@@ -2749,7 +2781,22 @@ export class PageEditor {
         }
     }
 
-
+    shapesDelStyleBlur(actions: BatchAction2[]) {
+        const api = this.__repo.start("shapesDelStyleBlur");
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target } = actions[i];
+                const source = this.__document.stylesMgr.getSync(target.style.blursMask ?? '');
+                source && source.__subscribers.delete(target);
+                api.deleteBlur(this.__page, adapt2Shape(target));
+                api.delblurmask(this.__document, this.__page, adapt2Shape(target));
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
 
     shapesFillsUnify(actions: BatchAction2[]) {
         const api = this.__repo.start('shapesFillsUnify'); // 统一多个shape的填充设置。eg:[red, red], [green], [blue, blue, blue] => [red, red], [red, red], [red, red];

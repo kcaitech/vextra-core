@@ -11,9 +11,9 @@ import { Repository } from "../data/transact";
 import * as types from "../data/typesdefine";
 import { FMT_VER_latest } from "../data/fmtver";
 import { ShadowPosition } from "../data/baseclasses"
-import { FillMask, ShadowMask, StyleMangerMember } from "../data/style";
+import { FillMask, ShadowMask, StyleMangerMember, BlurMask } from "../data/style";
 import { adapt2Shape, PageView, ShapeView } from "../dataview";
-import { Color, Fill, Shadow, } from "../data/classes";
+import { Color, Fill, Shadow, BlurType } from "../data/classes";
 import { BasicArray, Stop, Gradient, Point2D } from "../data";
 import { Matrix } from "../basic/matrix";
 
@@ -237,6 +237,12 @@ export class DocEditor {
                     for (let i = 0; i < shapes.length; i++) {
                         const shape = shapes[i];
                         api.addshadowmask(this.__document, p, adapt2Shape(shape), style.id);
+                    }
+                }
+                if (style instanceof BlurMask) {
+                    for (let i = 0; i < shapes.length; i++) {
+                        const shape = shapes[i];
+                        api.addblurmask(this.__document, p, adapt2Shape(shape), style.id);
                     }
                 }
             }
@@ -731,6 +737,42 @@ export class DocEditor {
         const api = this.__repo.start('modifyShadowMaskShadowColor');
         try {
             api.modifyShadowMaskShadowColor(this.__document, sheetid, maskid, index, color)
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return true;
+    }
+
+    modifyBlurMaskBlurEnabled(sheetid: string, maskid: string, isEnable: boolean) {
+        const api = this.__repo.start('modifyBlurMaskBlurEnabled');
+        try {
+            api.modifyBlurMaskBlurEnabled(this.__document, sheetid, maskid, isEnable)
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return true;
+    }
+
+    modifyBlurMaskBlurType(sheetid: string, maskid: string, type: BlurType) {
+        const api = this.__repo.start('modifyBlurMaskBlurType');
+        try {
+            api.modifyBlurMaskBlurType(this.__document, sheetid, maskid, type)
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return true;
+    }
+
+    modifyBlurMaskBlurSaturation(sheetid: string, maskid: string, saturation: number) {
+        const api = this.__repo.start('modifyBlurMaskBlurSaturation');
+        try {
+            api.modifyBlurMaskBlurSaturation(this.__document, sheetid, maskid, saturation)
             this.__repo.commit();
         } catch (error) {
             console.log(error)
