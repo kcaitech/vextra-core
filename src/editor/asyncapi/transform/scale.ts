@@ -594,23 +594,19 @@ export function uniformScale(
     for (const view of container4modifyStyle) {
         const shape = adapt2Shape(view);
         const borders = shape.getBorders();
-        borders.forEach((b, i) => {
-            const bId = b.id + shape.id;
-            const thicknessTop = getBaseValue(bId, 'thicknessTop', b.sideSetting.thicknessTop);
-            const thicknessLeft = getBaseValue(bId, 'thicknessLeft', b.sideSetting.thicknessLeft);
-            const thicknessBottom = getBaseValue(bId, 'thicknessBottom', b.sideSetting.thicknessBottom);
-            const thicknessRight = getBaseValue(bId, 'thicknessRight', b.sideSetting.thicknessRight);
-            const setting = new BorderSideSetting(
-                new BasicArray(),
-                SideType.Normal,
-                thicknessTop * ratio,
-                thicknessLeft * ratio,
-                thicknessBottom * ratio,
-                thicknessRight * ratio
-            );
-
-            api.setBorderSide(page, shape, i, setting);
-        });
+        const bId = shape.id;
+        const thicknessTop = getBaseValue(bId, 'thicknessTop', borders.sideSetting.thicknessTop);
+        const thicknessLeft = getBaseValue(bId, 'thicknessLeft', borders.sideSetting.thicknessLeft);
+        const thicknessBottom = getBaseValue(bId, 'thicknessBottom', borders.sideSetting.thicknessBottom);
+        const thicknessRight = getBaseValue(bId, 'thicknessRight', borders.sideSetting.thicknessRight);
+        const setting = new BorderSideSetting(
+            SideType.Normal,
+            thicknessTop * ratio,
+            thicknessLeft * ratio,
+            thicknessBottom * ratio,
+            thicknessRight * ratio
+        );
+        api.setBorderSide(page, shape, setting);
         const shadows = shape.getShadows();
         shadows.forEach((s, i) => {
             const sId = s.id + shape.id;

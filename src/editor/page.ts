@@ -34,6 +34,7 @@ import {
     SideType,
     StarShape,
     Stop,
+    StrokePaint,
     Style,
     SymbolRefShape,
     SymbolShape,
@@ -318,7 +319,7 @@ function findUsableFillStyle(shape: Shape | ShapeView): Style {
 }
 
 function findUsableBorderStyle(shape: Shape | ShapeView): Style {
-    if (shape.style.borders.length > 0) return shape.style;
+    if (shape.style.borders && shape.style.borders.strokePaints.length) return shape.style;
     if ((shape instanceof BoolShape || shape instanceof GroupShape) && shape.childs.length > 0) return findUsableBorderStyle(shape.childs[0]);
     return shape.style;
 }
@@ -557,48 +558,55 @@ export class PageEditor {
         }
         return false;
     }
-    boolgroup(shapes: Shape[], groupname: string, op: BoolOp): false | BoolShape {
-        if (shapes.length === 0) return false;
-        if (shapes.find((v) => !v.parent)) return false;
+
+    boolgroup(shapes: Shape[], groupname: string, op: BoolOp) {
+        if (shapes.length === 0) throw new Error();
+        if (shapes.find((v) => !v.parent)) throw new Error();
         const fshape = shapes[0];
         const savep = fshape.parent as GroupShape;
         // copy fill and borders
         const endShape = shapes[shapes.length - 1];
         const copyStyle = findUsableFillStyle(endShape);
         const style: Style = this.cloneStyle(copyStyle);
-        if (style.fills.length === 0) {
-            style.fills.push(newSolidColorFill()); // 自动添加个填充
+        if (!style.fills.length) {
+            if (style.borders && style.borders.strokePaints.length) {
+                style.borders.strokePaints.forEach(border => {
+                    const color = new Color(border.color.alpha, border.color.red, border.color.green, border.color.blue);
+                    style.fills.push(newSolidColorFill(color));
+                })
+            } else {
+                style.fills.push(newSolidColorFill()); // 自动添加个填充
+            }
         }
         const borderStyle = findUsableBorderStyle(endShape);
         if (endShape instanceof PathShape && (!endShape.isClosed || !this.hasFill(endShape))) {
-            style.borders = new BasicArray<Border>();
+            const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+            const strokePaints = new BasicArray<StrokePaint>();
+            const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
+            style.borders = border;
         }
         if (borderStyle !== copyStyle && !(endShape instanceof PathShape && (!endShape.isClosed || !this.hasFill(endShape)))) {
-            style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
+            style.borders = importBorder(style.borders as Border);
         }
         // 1、新建一个GroupShape
         let gshape = newBoolShape(groupname, style);
-
-        const api = this.__repo.start("boolgroup", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-            const state = {} as SelectionState;
-            if (!isUndo) state.shapes = [gshape.id];
-            else state.shapes = cmd.saveselection?.shapes || [];
-            selection.restore(state);
-        });
         try {
+            const api = this.__repo.start("boolgroup", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+                const state = {} as SelectionState;
+                if (!isUndo) state.shapes = [gshape.id];
+                else state.shapes = cmd.saveselection?.shapes || [];
+                selection.restore(state);
+            });
             // 0、save shapes[0].parent？最外层shape？位置？  层级最高图形的parent
             const saveidx = savep.indexOfChild(shapes[0]);
-            // gshape.isBoolOpShape = true;
             gshape = group(this.__document, this.__page, shapes, gshape, savep, saveidx, api);
             shapes.forEach((shape) => api.shapeModifyBoolOp(this.__page, shape, op))
-
             this.__repo.commit();
             return gshape;
         } catch (e) {
-            console.log(e)
             this.__repo.rollback();
+            throw e;
         }
-        return false;
     }
 
     boolgroup2(savep: GroupShape, groupname: string, op: BoolOp): false | BoolShape {
@@ -955,44 +963,46 @@ export class PageEditor {
     }
 
     _flattenShapes(shapes: ShapeView[]): ShapeView[] {
-        return shapes.reduce((result: any, item: ShapeView) => {
-            if (item.type === ShapeType.Artboard) {
+        return shapes.reduce((result: ShapeView[], item: ShapeView) => {
+            if (item instanceof ArtboradView) {
                 const childs = (item).childs as ShapeView[];
-                if (Array.isArray(childs)) {
-                    result = result.concat(this._flattenShapes(childs));
-                }
+                if (Array.isArray(childs)) result = result.concat(this._flattenShapes(childs));
             } else {
-                result = result.concat(item);
+                if (item instanceof TextShapeView
+                    || item instanceof PathShapeView
+                    || item instanceof ArtboradView
+                    || item instanceof BoolShapeView
+                ) result = result.concat(item);
             }
             return result;
         }, []);
     }
 
-    flattenShapes(shapes: ShapeView[], name?: string): PathShape | PathShape2 | false {
+    flattenShapes(shapes: ShapeView[], name?: string) {
         const _shapes = this._flattenShapes(shapes);
-        if (_shapes.length === 0) return false;
-        if (_shapes.find((v) => !v.parent)) return false;
+        if (_shapes.length === 0) throw new Error();
+        if (_shapes.find((v) => !v.parent)) throw new Error();
         const fshape = adapt2Shape(shapes[0]);
         const savep = fshape.parent as GroupShape;
         const saveidx = savep.indexOfChild(fshape);
         if (!name) name = fshape.name;
 
         // copy fill and borders
-        const endShape = _shapes[_shapes.length - 1];
-        const copyStyle = findUsableFillStyle(endShape);
+        const firstShape = _shapes[0];
+        const copyStyle = findUsableFillStyle(firstShape);
         const style: Style = this.cloneStyle(copyStyle);
-        if (style.fills.length === 0) {
-            const fills = _shapes.find(s => s.style.getFills())?.style.getFills();
-            fills && fills.length > 0 ? style.fills.push(...fills) : style.fills.push(newSolidColorFill());
-        }
 
-        const borderStyle = findUsableBorderStyle(endShape);
-        if (endShape instanceof PathShapeView && (!endShape.data.isClosed || !this.hasFill(endShape))) {
-            style.borders = new BasicArray<Border>();
-        }
-        if (borderStyle !== copyStyle && !(endShape instanceof PathShapeView && (!endShape.data.isClosed || !this.hasFill(endShape)))) {
-            style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
-        }
+        // if (style.fills.length === 0) {
+        //     const fills = _shapes.find(s => this.hasFill(s))?.style.getFills();
+        //     fills ? style.fills.push(...fills) : style.fills.push(newSolidColorFill());
+        // }
+        // const borderStyle = findUsableBorderStyle(endShape);
+        // if (endShape instanceof PathShapeView && (!endShape.data.isClosed || !this.hasFill(endShape))) {
+        //     style.borders = new BasicArray<Border>();
+        // }
+        // if (borderStyle !== copyStyle && !(endShape instanceof PathShapeView && (!endShape.data.isClosed || !this.hasFill(endShape)))) {
+        //     style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
+        // }
 
         // bounds
         // 计算frame
@@ -1021,7 +1031,16 @@ export class PageEditor {
         let pathstr = "";
         _shapes.forEach((shape) => {
             const shapem = shape.matrix2Root();
-            const shapepath = render2path(shape);
+            // const shapepath = render2path(shape);
+            // const shapepath = shape.getPath().clone();
+
+            let shapepath: Path;
+            if (shape instanceof TextShapeView) {
+                shapepath = shape.getTextPath().clone();
+            } else {
+                shapepath = shape.getPath().clone();
+            }
+
             shapem.multiAtLeft(m);
             shapepath.transform(shapem);
 
@@ -1036,15 +1055,14 @@ export class PageEditor {
 
         let pathShape = newPathShape(name, frame, path, style);
 
-        const api = this.__repo.start("flattenShapes", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-            const state = {} as SelectionState;
-            if (!isUndo) state.shapes = [pathShape.id];
-            else state.shapes = cmd.saveselection?.shapes || [];
-            selection.restore(state);
-        });
         try {
+            const api = this.__repo.start("flattenShapes", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+                const state = {} as SelectionState;
+                if (!isUndo) state.shapes = [pathShape.id];
+                else state.shapes = cmd.saveselection?.shapes || [];
+                selection.restore(state);
+            });
             pathShape = api.shapeInsert(this.__document, this.__page, savep, pathShape, saveidx) as PathShape | PathShape2;
-
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const s = adapt2Shape(shapes[i]);
                 const p = s.parent as GroupShape;
@@ -1058,10 +1076,9 @@ export class PageEditor {
             this.__repo.commit();
             return pathShape;
         } catch (e) {
-            console.log(e)
             this.__repo.rollback();
+            throw e;
         }
-        return false;
     }
 
     flattenBoolShape(shape: BoolShapeView): PathShape | false {
@@ -1075,7 +1092,7 @@ export class PageEditor {
             const style: Style = this.cloneStyle(copyStyle);
             const borderStyle = findUsableBorderStyle(shape);
             if (borderStyle !== copyStyle) {
-                style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
+                style.borders = importBorder(style.borders as Border);
             }
 
             const gframe = shape.frame;
@@ -1133,7 +1150,7 @@ export class PageEditor {
         const style2: Style = this.cloneStyle(copyStyle);
         const borderStyle = findUsableBorderStyle(shape);
         if (borderStyle !== copyStyle) {
-            style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
+            style.borders = importBorder(style.borders as Border);
         }
 
         let pathShape = newPathShape(shape.name, shape.frame, path, style2);
@@ -2136,7 +2153,7 @@ export class PageEditor {
             const api = this.__repo.start('reverseShapesGradient');
             for (let i = 0, l = actions.length; i < l; i++) {
                 const { target, index, type } = actions[i];
-                const arr = type === 'fills' ? target.getFills() : target.getBorders();
+                const arr = type === 'fills' ? target.getFills() : target.getBorders()?.strokePaints;
                 if (!arr?.length) {
                     continue;
                 }
@@ -2179,7 +2196,7 @@ export class PageEditor {
             const api = this.__repo.start('rotateShapesGradient');
             for (let i = 0, l = actions.length; i < l; i++) {
                 const { target, index, type } = actions[i];
-                const arr = type === 'fills' ? target.getFills() : target.getBorders();
+                const arr = type === 'fills' ? target.getFills() : target.getBorders()?.strokePaints;
                 if (!arr?.length) {
                     continue;
                 }
@@ -2223,7 +2240,7 @@ export class PageEditor {
             const api = this.__repo.start('addShapesGradientStop');
             for (let i = 0, l = actions.length; i < l; i++) {
                 const { target, index, type, value } = actions[i];
-                const grad_type = type === 'fills' ? target.getFills() : target.getBorders();
+                const grad_type = type === 'fills' ? target.getFills() : target.getBorders()?.strokePaints;
                 if (!grad_type?.length) {
                     continue;
                 }
@@ -2268,7 +2285,7 @@ export class PageEditor {
             const api = this.__repo.start('toggerShapeGradientType');
             for (let i = 0, l = actions.length; i < l; i++) {
                 const { target, index, type, value } = actions[i];
-                const grad_type = type === 'fills' ? target.getFills() : target.getBorders();
+                const grad_type = type === 'fills' ? target.getFills() : target.getBorders()?.strokePaints;
                 if (!grad_type?.length) {
                     continue;
                 }
@@ -2330,7 +2347,7 @@ export class PageEditor {
             const api = this.__repo.start('setShapesGradientStopColor');
             for (let i = 0, l = actions.length; i < l; i++) {
                 const { target, index, type, value } = actions[i];
-                const grad_type = type === 'fills' ? target.getFills() : target.getBorders();
+                const grad_type = type === 'fills' ? target.getFills() : target.getBorders()?.strokePaints;
                 if (!grad_type?.length) {
                     continue;
                 }
@@ -2367,7 +2384,7 @@ export class PageEditor {
             const api = this.__repo.start('setShapesGradientStopColor');
             for (let i = 0, l = actions.length; i < l; i++) {
                 const { target, index, type, value } = actions[i];
-                const grad_type = type === 'fills' ? target.getFills() : target.getBorders();
+                const grad_type = type === 'fills' ? target.getFills() : target.getBorders()?.strokePaints;
                 if (!grad_type?.length) {
                     continue;
                 }
@@ -2398,7 +2415,7 @@ export class PageEditor {
             const api = this.__repo.start('setGradientOpacity');
             for (let i = 0, l = actions.length; i < l; i++) {
                 const { target, index, type, value } = actions[i];
-                const grad_type = type === 'fills' ? target.getFills() : target.getBorders();
+                const grad_type = type === 'fills' ? target.getFills() : target.getBorders()?.strokePaints;
                 if (!grad_type?.length) {
                     continue;
                 }
@@ -2875,8 +2892,15 @@ export class PageEditor {
                 const { target, value } = actions[i];
                 shapes.push(target);
                 const s = shape4border(api, this.__page, target);
-                const l = s instanceof Shape ? s.style.borders.length : s.value.length;
-                api.addBorderAt(this.__page, s, value, l);
+                const l = s instanceof Shape ? s.style.borders?.strokePaints.length : s.value.length;
+                if (l > 0) {
+                    api.addStrokePaint(this.__page, s, value, l);
+                } else {
+                    const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+                    const strokePaints = new BasicArray<StrokePaint>(value);
+                    const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
+                    api.addBorder(this.__page, s, border);
+                }
             }
             const parents = getAutoLayoutShapes(shapes);
             for (let i = 0; i < parents.length; i++) {
@@ -2900,7 +2924,27 @@ export class PageEditor {
                 const { target, index } = actions[i];
                 shapes.push(target);
                 const s = shape4border(api, this.__page, target);
-                api.deleteBorderAt(this.__page, s, index);
+                api.deleteStrokePaintAt(this.__page, s, index);
+            }
+            const parents = getAutoLayoutShapes(shapes);
+            for (let i = 0; i < parents.length; i++) {
+                const parent = parents[i];
+                if (parent.autoLayout?.bordersTakeSpace) {
+                    modifyAutoLayout(this.__page, api, parent);
+                }
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    shapesDeleteAllBorder(shapes: ShapeView[]) {
+        const api = this.__repo.start('shapesDeleteAllBorder');
+        try {
+            for (let i = 0; i < shapes.length; i++) {
+                const shape = shapes[i];
+                const s = shape4border(api, this.__page, shape);
+                api.deleteStrokePaints(this.__page, s, 0, shape.style.borders.strokePaints.length);
             }
             const parents = getAutoLayoutShapes(shapes);
             for (let i = 0; i < parents.length; i++) {
@@ -2923,8 +2967,8 @@ export class PageEditor {
                 const { target, value } = actions[i];
                 shapes.push(target);
                 const s = shape4border(api, this.__page, target);
-                api.deleteBorders(this.__page, s, 0, target.style.borders.length);
-                api.addBorders(this.__page, s, value);
+                api.deleteStrokePaints(this.__page, s, 0, target.style.borders.strokePaints.length);
+                api.addStrokePaints(this.__page, s, value);
             }
             const parents = getAutoLayoutShapes(shapes);
             for (let i = 0; i < parents.length; i++) {
@@ -2939,16 +2983,16 @@ export class PageEditor {
         }
     }
 
-    setShapesBorderPosition(actions: BatchAction[]) {
+    setShapesBorderPosition(actions: BatchAction2[]) {
         const api = this.__repo.start('setShapesBorderPosition');
         try {
             const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
-                const { target, value, index } = actions[i];
+                const { target, value } = actions[i];
                 shapes.push(target);
                 if (target.type === ShapeType.Table) continue;
                 const s = shape4border(api, this.__page, target);
-                api.setBorderPosition(this.__page, s, index, value);
+                api.setBorderPosition(this.__page, s, value);
             }
             const parents = getAutoLayoutShapes(shapes);
             for (let i = 0; i < parents.length; i++) {
@@ -2963,34 +3007,35 @@ export class PageEditor {
         }
     }
 
-    setShapesBorderThickness(actions: BatchAction[]) {
+    setShapesBorderThickness(actions: BatchAction2[]) {
         const api = this.__repo.start('setShapesBorderThickness');
         try {
             const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
-                const { target, value, index } = actions[i];
+                const { target, value } = actions[i];
                 shapes.push(target);
                 const s = shape4border(api, this.__page, target);
                 const borders = target.getBorders();
-                const sideType = borders[index].sideSetting.sideType;
+                if (!borders) continue;
+                const sideType = borders.sideSetting.sideType;
                 switch (sideType) {
                     case SideType.Normal:
-                        api.setBorderSide(this.__page, s, index, new BorderSideSetting(new BasicArray(), sideType, value, value, value, value));
+                        api.setBorderSide(this.__page, s, new BorderSideSetting(sideType, value, value, value, value));
                         break;
                     case SideType.Top:
-                        api.setBorderThicknessTop(this.__page, s, index, value);
+                        api.setBorderThicknessTop(this.__page, s, value);
                         break
                     case SideType.Right:
-                        api.setBorderThicknessRight(this.__page, s, index, value);
+                        api.setBorderThicknessRight(this.__page, s, value);
                         break
                     case SideType.Bottom:
-                        api.setBorderThicknessBottom(this.__page, s, index, value);
+                        api.setBorderThicknessBottom(this.__page, s, value);
                         break
                     case SideType.Left:
-                        api.setBorderThicknessLeft(this.__page, s, index, value);
+                        api.setBorderThicknessLeft(this.__page, s, value);
                         break
                     default:
-                        api.setBorderSide(this.__page, s, index, new BorderSideSetting(new BasicArray(), sideType, value, value, value, value));
+                        api.setBorderSide(this.__page, s, new BorderSideSetting(sideType, value, value, value, value));
                         break;
                 }
 
@@ -3008,13 +3053,13 @@ export class PageEditor {
         }
     }
 
-    setShapesBorderStyle(actions: BatchAction[]) {
+    setShapesBorderStyle(actions: BatchAction2[]) {
         const api = this.__repo.start('setShapesBorderStyle');
         try {
             for (let i = 0; i < actions.length; i++) {
-                const { target, value, index } = actions[i];
+                const { target, value } = actions[i];
                 const s = shape4border(api, this.__page, target);
-                api.setBorderStyle(this.__page, s, index, value);
+                api.setBorderStyle(this.__page, s, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -3029,15 +3074,16 @@ export class PageEditor {
                 const shape = shapes[i];
                 const b = shape.getBorders();
                 const f = shape.getFills();
-                let borders: BasicArray<Border> = new BasicArray<Border>();
+                let strokePaints: BasicArray<StrokePaint> = new BasicArray<StrokePaint>();
                 let fills: BasicArray<Fill> = new BasicArray<Fill>();
-                for (let b_i = 0; b_i < b.length; b_i++) {
+                const _strokePaints = b?.strokePaints || [];
+
+                for (let b_i = 0; b_i < _strokePaints.length; b_i++) {
                     const {
                         isEnabled,
                         color,
                         fillType,
                         gradient,
-                        contextSettings,
                         imageRef,
                         transform,
                         paintFilter,
@@ -3046,10 +3092,9 @@ export class PageEditor {
                         rotation,
                         originalImageHeight,
                         originalImageWidth
-                    } = b[b_i];
+                    } = _strokePaints[b_i];
                     const fill = new Fill([i] as BasicArray<number>, uuid(), isEnabled, fillType, color);
                     fill.gradient = gradient;
-                    fill.contextSettings = contextSettings;
                     if (f.length > b_i) {
                         fill.fillRule = f[b_i].fillRule;
                     }
@@ -3061,7 +3106,7 @@ export class PageEditor {
                     fill.rotation = rotation;
                     fill.originalImageHeight = originalImageHeight;
                     fill.originalImageWidth = originalImageWidth;
-                    const imageMgr = b[b_i].getImageMgr();
+                    const imageMgr = _strokePaints[b_i].getImageMgr();
                     imageMgr && fill.setImageMgr(imageMgr);
                     fills.unshift(fill);
                 }
@@ -3071,7 +3116,6 @@ export class PageEditor {
                         color,
                         fillType,
                         gradient,
-                        contextSettings,
                         imageRef,
                         transform,
                         paintFilter,
@@ -3081,40 +3125,31 @@ export class PageEditor {
                         originalImageHeight,
                         originalImageWidth
                     } = f[f_i];
-                    let border: Border;
                     let fill_type = fillType;
+                    let strokePaint: StrokePaint;
                     if (fillType === FillType.Pattern) {
                         fill_type = FillType.SolidColor
                     }
-                    if (b.length > f_i) {
-                        const { position, borderStyle, thickness, cornerType, sideSetting } = b[f_i];
-                        border = new Border([i] as BasicArray<number>, uuid(), isEnabled, fill_type, color, position, thickness, borderStyle, cornerType, sideSetting);
-                        border.gradient = gradient;
-                        border.contextSettings = contextSettings;
-                    } else {
-                        const sideSetting = new BorderSideSetting(new BasicArray(), SideType.Normal, 1, 1, 1, 1);
-                        border = new Border([i] as BasicArray<number>, uuid(), isEnabled, fill_type, color, BorderPosition.Inner, 1, new BorderStyle(0, 0), types.CornerType.Miter, sideSetting);
-                        border.gradient = gradient;
-                        border.contextSettings = contextSettings;
-                    }
-                    border.imageRef = imageRef;
-                    border.transform = transform;
-                    border.paintFilter = paintFilter;
-                    border.imageScaleMode = imageScaleMode;
-                    border.scale = scale;
-                    border.rotation = rotation;
-                    border.originalImageHeight = originalImageHeight;
-                    border.originalImageWidth = originalImageWidth;
+                    strokePaint = new StrokePaint([i] as BasicArray<number>, uuid(), isEnabled, fill_type, color);
+                    strokePaint.gradient = gradient;
+                    strokePaint.imageRef = imageRef;
+                    strokePaint.transform = transform;
+                    strokePaint.paintFilter = paintFilter;
+                    strokePaint.imageScaleMode = imageScaleMode;
+                    strokePaint.scale = scale;
+                    strokePaint.rotation = rotation;
+                    strokePaint.originalImageHeight = originalImageHeight;
+                    strokePaint.originalImageWidth = originalImageWidth;
                     const imageMgr = f[f_i].getImageMgr();
-                    imageMgr && border.setImageMgr(imageMgr);
-                    borders.unshift(border);
+                    imageMgr && strokePaint.setImageMgr(imageMgr);
+                    strokePaints.unshift(strokePaint);
                 }
                 const f_s = shape4fill(api, this.__page, shape);
                 api.deleteFills(this.__page, f_s, 0, shape.style.fills.length);
                 api.addFills(this.__page, f_s, fills);
                 const b_s = shape4border(api, this.__page, shape);
-                api.deleteBorders(this.__page, b_s, 0, shape.style.borders.length);
-                api.addBorders(this.__page, b_s, borders);
+                api.deleteStrokePaints(this.__page, b_s, 0, b.strokePaints.length);
+                api.addStrokePaints(this.__page, b_s, strokePaints);
             }
             this.__repo.commit();
         } catch (error) {
@@ -3123,13 +3158,13 @@ export class PageEditor {
         }
     }
 
-    setShapesBorderCornerType(actions: BatchAction[]) {
+    setShapesBorderCornerType(actions: BatchAction2[]) {
         const api = this.__repo.start('setShapesBorderCornerType');
         try {
             for (let i = 0; i < actions.length; i++) {
-                const { target, value, index } = actions[i];
+                const { target, value } = actions[i];
                 const s = shape4border(api, this.__page, target);
-                api.setBorderCornerType(this.__page, s, index, value);
+                api.setBorderCornerType(this.__page, s, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -3137,15 +3172,15 @@ export class PageEditor {
         }
     }
 
-    setShapesBorderSide(actions: BatchAction[]) {
+    setShapesBorderSide(actions: BatchAction2[]) {
         const api = this.__repo.start('setShapesBorderSide');
         try {
             const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
-                const { target, value, index } = actions[i];
+                const { target, value } = actions[i];
                 shapes.push(target);
                 const s = shape4border(api, this.__page, target);
-                api.setBorderSide(this.__page, s, index, value);
+                api.setBorderSide(this.__page, s, value);
             }
             const parents = getAutoLayoutShapes(shapes);
             for (let i = 0; i < parents.length; i++) {
@@ -3160,15 +3195,15 @@ export class PageEditor {
         }
     }
 
-    setShapeBorderThicknessTop(actions: BatchAction[]) {
+    setShapeBorderThicknessTop(actions: BatchAction2[]) {
         const api = this.__repo.start('setShapeBorderThicknessTop');
         try {
             const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
-                const { target, value, index } = actions[i];
+                const { target, value } = actions[i];
                 shapes.push(target);
                 const s = shape4border(api, this.__page, target);
-                api.setBorderThicknessTop(this.__page, s, index, value);
+                api.setBorderThicknessTop(this.__page, s, value);
             }
             const parents = getAutoLayoutShapes(shapes);
             for (let i = 0; i < parents.length; i++) {
@@ -3183,15 +3218,15 @@ export class PageEditor {
         }
     }
 
-    setShapeBorderThicknessRight(actions: BatchAction[]) {
+    setShapeBorderThicknessRight(actions: BatchAction2[]) {
         const api = this.__repo.start('setShapeBorderThicknessRight');
         try {
             const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
-                const { target, value, index } = actions[i];
+                const { target, value } = actions[i];
                 shapes.push(target);
                 const s = shape4border(api, this.__page, target);
-                api.setBorderThicknessRight(this.__page, s, index, value);
+                api.setBorderThicknessRight(this.__page, s, value);
             }
             const parents = getAutoLayoutShapes(shapes);
             for (let i = 0; i < parents.length; i++) {
@@ -3206,15 +3241,15 @@ export class PageEditor {
         }
     }
 
-    setShapeBorderThicknessBottom(actions: BatchAction[]) {
+    setShapeBorderThicknessBottom(actions: BatchAction2[]) {
         const api = this.__repo.start('setShapeBorderThicknessBottom');
         try {
             const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
-                const { target, value, index } = actions[i];
+                const { target, value } = actions[i];
                 shapes.push(target);
                 const s = shape4border(api, this.__page, target);
-                api.setBorderThicknessBottom(this.__page, s, index, value);
+                api.setBorderThicknessBottom(this.__page, s, value);
             }
             const parents = getAutoLayoutShapes(shapes);
             for (let i = 0; i < parents.length; i++) {
@@ -3229,15 +3264,15 @@ export class PageEditor {
         }
     }
 
-    setShapeBorderThicknessLeft(action: BatchAction[]) {
+    setShapeBorderThicknessLeft(action: BatchAction2[]) {
         const api = this.__repo.start('setShapeBorderThicknessLeft');
         try {
             const shapes: ShapeView[] = [];
             for (let i = 0; i < action.length; i++) {
-                const { target, value, index } = action[i];
+                const { target, value } = action[i];
                 shapes.push(target);
                 const s = shape4border(api, this.__page, target);
-                api.setBorderThicknessLeft(this.__page, s, index, value);
+                api.setBorderThicknessLeft(this.__page, s, value);
             }
             const parents = getAutoLayoutShapes(shapes);
             for (let i = 0; i < parents.length; i++) {
@@ -4357,9 +4392,9 @@ export class PageEditor {
                     api.setFillColor(page, s, style.fills.length - 1, _color);
                     continue;
                 }
-                if (style.borders.length) {
+                if (style.borders && style.borders.strokePaints.length) {
                     const s = shape4border(api, page, shapes[i]);
-                    api.setBorderColor(page, s, style.borders.length - 1, _color);
+                    api.setBorderColor(page, s, style.borders.strokePaints.length - 1, _color);
                     continue;
                 }
                 const s = shape4fill(api, page, shapes[i]);
@@ -4407,10 +4442,10 @@ export class PageEditor {
                     // borders
                     {
                         const s = shape4border(api, page, view);
-                        api.deleteBorders(page, s, 0, view.style.borders.length);
-                        if (borders?.length) {
-                            const __borders = borders.map((i: Border) => importBorder(i));
-                            api.addBorders(page, s, __borders);
+                        api.deleteStrokePaints(page, s, 0, view.style.borders.strokePaints.length);
+                        if (borders) {
+                            const __borders = importBorder(borders);
+                            api.addStrokePaints(page, s, __borders.strokePaints);
                         }
                     }
                 }
@@ -4597,6 +4632,7 @@ export class PageEditor {
                     pathShape.transform = shape.transform.clone();
                     pathShape.mask = shape.mask;
                     pathShape.resizingConstraint = shape.resizingConstraint;
+                    pathShape.constrainerProportions = shape.constrainerProportions;
                     const parent = shape.parent as GroupShape;
                     const index = parent.indexOfChild(shape);
                     api.shapeDelete(document, page, parent, index);
@@ -4606,7 +4642,7 @@ export class PageEditor {
                 } else {
                     const borders = view.getBorders();
                     const shape = adapt2Shape(view);
-                    if (!borders.length) {
+                    if (!borders || !borders.strokePaints.length) {
                         if ((shape instanceof StarShape || shape instanceof PolygonShape) && !shape.haveEdit) {
                             update_frame_by_points(api, page, shape);
                             api.shapeEditPoints(page, shape, true);
@@ -4619,11 +4655,13 @@ export class PageEditor {
                     const border2shape = (border: Border) => {
                         const copyStyle = findUsableFillStyle(view);
                         const style: Style = this.cloneStyle(copyStyle);
-                        const fill = new Fill([0] as BasicArray<number>, uuid(), true, border.fillType, border.color);
-                        fill.gradient = border.gradient;
-                        if (fill.fillType === FillType.Pattern) fill.fillType = FillType.SolidColor;
-                        style.fills = new BasicArray<Fill>(fill);
-                        style.borders.length = 0;
+                        for (let i = 0; i < border.strokePaints.length; i++) {
+                            const strokePaint = border.strokePaints[i];
+                            const fill = new Fill([0] as BasicArray<number>, uuid(), true, strokePaint.fillType, strokePaint.color);
+                            fill.gradient = strokePaint.gradient;
+                            if (fill.fillType === FillType.Pattern) fill.fillType = FillType.SolidColor;
+                            style.fills = new BasicArray<Fill>(fill);
+                        }
                         const path = border2path(view, border);
                         let pathshape = newPathShape(view.name + suffix, view.frame, path, style);
                         pathshape.transform = shape.transform.clone();
@@ -4634,10 +4672,10 @@ export class PageEditor {
                         update_frame_by_points(api, page, pathshape);
                         ids.push(pathshape.id);
                     }
-                    for (let i = borders.length - 1; i > -1; i--) border2shape(borders[i]);
+                    border2shape(borders);
                     if (shape.style.fills.length) {
-                        api.deleteBorders(page, shape, 0, borders.length);
-                        ids.push(view.data.id);
+                        api.deleteStrokePaints(page, shape, 0, borders.strokePaints.length);
+                        ids.push(shape.id);
                         if (shape instanceof PathShape) update_frame_by_points(api, page, shape);
                     } else {
                         api.shapeDelete(document, page, parent, parent.indexOfChild(shape));
@@ -4646,8 +4684,8 @@ export class PageEditor {
             }
             this.__repo.commit();
         } catch (error) {
-            console.error('outlineShapes:', error);
             this.__repo.rollback();
+            throw error;
         }
     }
 

@@ -19,30 +19,42 @@
     },
     "style": {
         "typeId": "style",
-        "borders": [
-            {
-                "typeId": "border",
-                "id": "4f0e6459-9d3c-4e71-9f60-3f11b2db7d0e",
-                "crdtidx": [0],
-                "isEnabled": true,
-                "fillType": "solid-color",
-                "color": {
-                    "typeId": "color",
-                    "alpha": 0.5,
-                    "red": 0,
-                    "green": 0,
-                    "blue": 0
-                },
-                "position": "center",
-                "thickness": 1,
-                "borderStyle": {
-                    "length": 0,
-                    "gap": 0
-                }
-            }
-        ],
         "fills": [],
-        "shadows": []
+        "shadows": [],
+        "borders": {
+            "typeId": "border",
+            "position": "center",
+            "borderStyle": {
+                "length": 0,
+                "gap": 0
+            },
+            "cornerType": "miter",
+            "sideSetting": {
+                "sideType": "normal",
+                "thicknessTop": 1,
+                "thicknessLeft": 1,
+                "thicknessBottom": 1,
+                "thicknessRight": 1
+            },
+            "strokePaints": [
+                {
+                    "typeId": "strokePaint",
+                    "id": "4f0e6459-9d3c-4e71-9f60-3f11b2db7d0e",
+                    "crdtidx": [
+                        0
+                    ],
+                    "isEnabled": true,
+                    "fillType": "solid-color",
+                    "color": {
+                        "typeId": "color",
+                        "alpha": 0.5,
+                        "red": 0,
+                        "green": 0,
+                        "blue": 0
+                    }
+                }
+            ]
+        }
     },
     "cells": {},
     "rowHeights": [],

@@ -19,9 +19,25 @@
 },
   "style": {
       "typeId": "style",
-      "borders": [],
       "fills": [],
-      "shadows": []
+      "shadows": [],
+      "borders": {
+        "typeId": "border",
+        "position": "center",
+        "borderStyle": {
+            "length": 0,
+            "gap": 0
+        },
+        "cornerType": "miter",
+        "sideSetting": {
+            "sideType": "normal",
+            "thicknessTop": 1,
+            "thicknessLeft": 1,
+            "thicknessBottom": 1,
+            "thicknessRight": 1
+        },
+        "strokePaints": []
+    }
   },
   "pathsegs": [],
   "isClosed": true

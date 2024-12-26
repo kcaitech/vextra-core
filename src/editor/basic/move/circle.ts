@@ -80,11 +80,9 @@ export class CircleChecker {
     static assert4view(root: ShapeView, leaf: ShapeView): boolean {
         let deps: Path[] = [...this.get_topology_map(root), ...this.get_topology_map(leaf)];
         deps.push({ start: this.getId(root), end: this.getId(leaf) });
-        console.log(JSON.parse(JSON.stringify(deps)));
         while (deps.length && this.is_exist_single_stick(deps)) {
             deps = this.filter_deps(deps, 'start', 'end');
             deps = this.filter_deps(deps, 'end', 'start');
-            console.log('while-circle');
         }
         return !!deps.length;
     }
