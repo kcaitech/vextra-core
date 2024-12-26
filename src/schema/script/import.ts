@@ -150,7 +150,7 @@ function exportObject(n: Node, $: Writer) {
         $.nl('function import', n.name, 'Optional(tar: ', (n.inner ? '' : 'impl.'), n.name, ', source: types.', n.name, ', ctx?: IImportContext) ').sub(() => {
             if (extend && superoptional.length > 0) $.nl('import', extend, 'Optional(tar, source)')
             localoptional.forEach((v) => {
-                $.nl('if (source.', v.name, ') ', 'tar.', v.name, ' = ');
+                $.nl('if (source.', v.name, ' !== undefined) ', 'tar.', v.name, ' = ');
                 exportBaseProp(v, 'source.' + v.name, $, false);
             })
         })

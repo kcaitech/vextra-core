@@ -11,9 +11,9 @@ import { render as borderR } from "./border";
 import { findOverrideAndVar } from "../data/utils";
 
 const shadowOri: {
-    [key: string]: (h: Function, shadow: Shadow, frame: ShapeSize, id: string, i: number, path: string, fills: Fill[], borders: Border[], shapeType: ShapeType, blur?: Blur) => any
+    [key: string]: (h: Function, shadow: Shadow, frame: ShapeSize, id: string, i: number, path: string, fills: Fill[], borders: Border | undefined, shapeType: ShapeType, shape: Shape, blur?: Blur) => any
 } = {};
-shadowOri[ShadowPosition.Outer] = function (h: Function, shadow: Shadow, frame: ShapeSize, id: string, i: number, path: string, fills: Fill[], borders: Border[], shapeType: ShapeType, blur?: Blur): any {
+shadowOri[ShadowPosition.Outer] = function (h: Function, shadow: Shadow, frame: ShapeSize, id: string, i: number, path: string, fills: Fill[], borders: Border | undefined, shapeType: ShapeType, shape: Shape, blur?: Blur): any {
     const { width, height } = frame;
     const f_props: any = {
         props_w: [width * 1.4],
@@ -89,7 +89,7 @@ shadowOri[ShadowPosition.Outer] = function (h: Function, shadow: Shadow, frame: 
     //         }
     //     }
     // }
-    const border = borderR(h, borders, frame, path, undefined)
+    const border = borderR(h, borders, frame, path, shape)
 
     const body_props: any = {
         d: path,
@@ -102,7 +102,7 @@ shadowOri[ShadowPosition.Outer] = function (h: Function, shadow: Shadow, frame: 
     const p = h('g', g_props, [h('path', body_props), ...border]);
     return { filter, p }
 }
-shadowOri[ShadowPosition.Inner] = function (h: Function, shadow: Shadow, frame: ShapeSize, id: string, i: number, path: string, fills: Fill[], borders: Border[], shapeType: ShapeType): any {
+shadowOri[ShadowPosition.Inner] = function (h: Function, shadow: Shadow, frame: ShapeSize, id: string, i: number, path: string, fills: Fill[], borders: Border | undefined, shapeType: ShapeType): any {
     const f_id = `inner-shadow-${id + i}`;
     // const shadow = style.shadows[i];
     const { width, height } = frame;
@@ -174,7 +174,7 @@ shadowOri[ShadowPosition.Inner] = function (h: Function, shadow: Shadow, frame: 
     return h('filter', filter_props, h_node);
 }
 
-function shadowShape(h: Function, shadows: Shadow[], frame: ShapeSize, id: string, borders: Border[], shapeType: ShapeType): any {
+function shadowShape(h: Function, shadows: Shadow[], frame: ShapeSize, id: string, borders: Border | undefined, shapeType: ShapeType): any {
     shadows = shadows.filter(s => s.position === ShadowPosition.Outer);
     const { width, height } = frame;
     const f_props: any = {
@@ -259,12 +259,12 @@ function shadowShape(h: Function, shadows: Shadow[], frame: ShapeSize, id: strin
     ])
 }
 
-export function render(h: Function, id: string, shadows: Shadow[], path: string, frame: ShapeSize, fills: Fill[], borders: Border[], shapeType: ShapeType, blur?: Blur) {
+export function render(h: Function, id: string, shadows: Shadow[], path: string, frame: ShapeSize, fills: Fill[], borders: Border | undefined, shape: Shape, blur?: Blur) {
     const elArr = [];
     const inner_f = [];
     let filters: any[] = [];
     let paths: any[] = [];
-
+    const shapeType = shape.type;
     for (let i = 0; i < shadows.length; i++) {
         const shadow = shadows[i];
         const position = shadow.position;
@@ -274,12 +274,12 @@ export function render(h: Function, id: string, shadows: Shadow[], path: string,
                 const {
                     filter,
                     p
-                } = shadowOri[position](h, shadow, frame, id, i, path, fills, borders, shapeType, blur);
+                } = shadowOri[position](h, shadow, frame, id, i, path, fills, borders, shapeType, shape, blur);
                 filters.push(filter);
                 paths.push(p);
             }
         } else if (position === ShadowPosition.Inner) {
-            const filter = shadowOri[position](h, shadow, frame, id, i, path, fills, borders, shapeType);
+            const filter = shadowOri[position](h, shadow, frame, id, i, path, fills, borders, shapeType, shape);
             inner_f.push(filter);
         }
     }
@@ -358,20 +358,13 @@ export function renderWithVars(h: Function, id: string, shape: Shape, frame: Sha
             }
         }
     }
-    return render(h, id, shadows, path, frame, fills, borders, shape.type);
+    return render(h, id, shadows, path, frame, fills, borders, shape);
 }
 
-const max_border = (borders: Border[]) => {
-    if (!borders.length) return 0;
-    let max = 0;
-    for (let i = 0; i < borders.length; i++) {
-        const border = borders[i];
-        if (!border.isEnabled || border.position === BorderPosition.Inner) continue;
-        const { thicknessBottom, thicknessTop, thicknessLeft, thicknessRight } = border.sideSetting;
-        const max_border = Math.max(thicknessBottom, thicknessTop, thicknessLeft, thicknessRight);
-        if (max_border > max) {
-            max = border.position === BorderPosition.Center ? max_border / 2 : max_border;
-        }
-    }
-    return max;
+const max_border = (border: Border | undefined) => {
+    if(!border) return 0;
+    if (!border.strokePaints.length || border.position === BorderPosition.Inner) return 0;
+    const { thicknessBottom, thicknessTop, thicknessLeft, thicknessRight } = border.sideSetting;
+    const max_border = Math.max(thicknessBottom, thicknessTop, thicknessLeft, thicknessRight);
+    return border.position === BorderPosition.Center ? max_border / 2 : max_border;
 }

@@ -10,7 +10,8 @@ import {
     SideType,
     GradientType,
     Stop,
-    Color
+    Color,
+    StrokePaint
 } from "../data";
 import { renderCustomBorder } from "./border_custom";
 import { randomId } from "./basic";
@@ -176,18 +177,18 @@ function is_side_custom(sideType: SideType, shape: Shape) {
 }
 
 const borderHandler: {
-    [key: string]: (h: Function, frame: ShapeSize, border: Border, path: string, shape?: Shape) => any
+    [key: string]: (h: Function, frame: ShapeSize, border: Border, path: string, strokePaint: StrokePaint, shape?: Shape) => any
 } = {};
-borderHandler[BorderPosition.Center] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape?: Shape): any {
+borderHandler[BorderPosition.Center] = function (h: Function, frame: ShapeSize, border: Border, path: string, strokePaint: StrokePaint, shape?: Shape): any {
     if (shape && is_side_custom(border.sideSetting.sideType, shape)) {
-        return renderCustomBorder(h, frame, border, path, shape);
+        return renderCustomBorder(h, frame, border, path, shape, strokePaint);
     }
     const thickness = border.sideSetting.thicknessTop;
     let g_;
     const body_props: any = {
         d: path,
         fill: "none",
-        stroke: `rgb(255, 255, 255, ${border.color.alpha})`,
+        stroke: `rgb(255, 255, 255, ${strokePaint.color.alpha})`,
         "stroke-linejoin": border.cornerType,
         'stroke-width': thickness
     }
@@ -197,10 +198,10 @@ borderHandler[BorderPosition.Center] = function (h: Function, frame: ShapeSize, 
         body_props['stroke-dasharray'] = `${length}, ${gap}`
     }
 
-    const fillType = border.fillType;
+    const fillType = strokePaint.fillType;
     if (fillType !== FillType.SolidColor) {
-        g_ = renderGradient(h, border.gradient as Gradient, frame);
-        const opacity = border.gradient?.gradientOpacity;
+        g_ = renderGradient(h, strokePaint.gradient as Gradient, frame);
+        const opacity = strokePaint.gradient?.gradientOpacity;
         body_props.opacity = opacity === undefined ? 1 : opacity;
         body_props.stroke = "url(#" + g_.id + ")";
     }
@@ -211,9 +212,9 @@ borderHandler[BorderPosition.Center] = function (h: Function, frame: ShapeSize, 
         return body;
     }
 }
-borderHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape?: Shape): any {
+borderHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, border: Border, path: string, strokePaint: StrokePaint, shape?: Shape): any {
     if (shape && is_side_custom(border.sideSetting.sideType, shape)) {
-        return renderCustomBorder(h, frame, border, path, shape);
+        return renderCustomBorder(h, frame, border, path, shape, strokePaint);
     }
     const thickness = border.sideSetting.thicknessTop;
 
@@ -221,7 +222,7 @@ borderHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, b
     const body_props: any = {
         d: path,
         fill: "none",
-        stroke: `rgb(255, 255, 255, ${border.color.alpha})`,
+        stroke: `rgb(255, 255, 255, ${strokePaint.color.alpha})`,
         "stroke-linejoin": border.cornerType,
         'stroke-width': 2 * thickness,
     }
@@ -230,16 +231,16 @@ borderHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, b
     if (length || gap) {
         body_props['stroke-dasharray'] = `${length}, ${gap}`;
     }
-    const fillType = border.fillType;
+    const fillType = strokePaint.fillType;
     if (fillType == FillType.SolidColor) {
-        g_ = renderGradient(h, border.gradient as Gradient, frame);
-        const opacity = border.gradient?.gradientOpacity;
+        g_ = renderGradient(h, strokePaint.gradient as Gradient, frame);
+        const opacity = strokePaint.gradient?.gradientOpacity;
         body_props.opacity = opacity === undefined ? 1 : opacity;
         body_props.stroke = "url(#" + g_.id + ")";
     }
 
     const rId = randomId();
-    const maskId = "mask-border" + objectId(border) + rId;
+    const maskId = "mask-border" + objectId(strokePaint) + rId;
     body_props.mask = "url(#" + maskId + ")";
 
     const width = frame.width + 2 * thickness;

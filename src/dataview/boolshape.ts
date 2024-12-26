@@ -1,4 +1,4 @@
-import { BoolOp, BoolShape, BorderPosition, ShapeFrame, parsePath, FillType, GradientType } from "../data/classes";
+import { BoolOp, BoolShape, BorderPosition, ShapeFrame, parsePath, FillType, GradientType, ShapeType } from "../data/classes";
 import { ShapeView, updateFrame } from "./shape";
 import { TextShapeView } from "./textshape";
 import { GroupShapeView } from "./groupshape";
@@ -67,7 +67,6 @@ function boundsFrame(shape: ShapeView): ShapeFrame {
     })
     return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
 }
-
 export function render2path(shape: ShapeView, defaultOp = BoolOp.None): Path {
     const shapeIsGroup = shape instanceof GroupShapeView;
     let fixedRadius: number | undefined;
@@ -88,12 +87,12 @@ export function render2path(shape: ShapeView, defaultOp = BoolOp.None): Path {
 
     const cc = shape.m_children.length;
     if (fVisibleIdx >= cc) return new Path();
-    
+
     const child0 = shape.m_children[fVisibleIdx] as ShapeView;
     let frame0: ShapeFrame;
     let path0 = getPath(child0);
     if (!path0) return new Path();
-    
+
     if (child0.isNoTransform()) {
         path0.translate(child0.transform.translateX, child0.transform.translateY);
         frame0 = new ShapeFrame(child0.transform.translateX, child0.transform.translateY, child0.frame.width, child0.frame.height);
@@ -102,7 +101,6 @@ export function render2path(shape: ShapeView, defaultOp = BoolOp.None): Path {
         const bounds = path0.bbox();
         frame0 = new ShapeFrame(bounds.x, bounds.y, bounds.w, bounds.h);
     }
-
     const pframe = boundsFrame(shape);
     const gridSize = Math.ceil(Math.sqrt(cc));
 
@@ -156,6 +154,11 @@ export function render2path(shape: ShapeView, defaultOp = BoolOp.None): Path {
 
 export class BoolShapeView extends GroupShapeView {
 
+    onMounted() {
+        super.onMounted();
+        this.createBorderPath();
+    }
+
     get data(): BoolShape {
         return this.m_data as BoolShape;
     }
@@ -173,9 +176,24 @@ export class BoolShapeView extends GroupShapeView {
 
     onDataChange(...args: any[]): void {
         super.onDataChange(...args);
+
         if (args.includes('variables') || args.includes('childs')) {
             this.m_path = undefined;
             this.m_pathstr = undefined;
+        }
+
+        if (args.includes('fills')) {
+            this.m_fills = undefined;
+            this.m_border_path = undefined;
+            this.m_border_path_box = undefined;
+            this.createBorderPath();
+        }
+
+        if (args.includes('borders')) {
+            this.m_borders = undefined;
+            this.m_border_path = undefined;
+            this.m_border_path_box = undefined;
+            this.createBorderPath();
         }
     }
 
@@ -190,7 +208,7 @@ export class BoolShapeView extends GroupShapeView {
                 } else return f;
             })
         }
-        return renderFills(elh, fills, this.size, this.getPathStr());
+        return renderFills(elh, fills, this.size, this.getPathStr(), 'fill-' + this.id);
     }
 
     protected renderBorders(): EL[] {
@@ -198,9 +216,12 @@ export class BoolShapeView extends GroupShapeView {
     }
 
     getPath() {
+        // const s = Date.now();
         if (this.m_path) return this.m_path;
         this.m_path = render2path(this);
         this.m_path.freeze();
+        // const e = Date.now();
+        // console.log(e - s, 'time');
         return this.m_path;
     }
 
@@ -214,15 +235,22 @@ export class BoolShapeView extends GroupShapeView {
     }
 
     updateFrames(): boolean {
-        const borders = this.getBorders();
-        let maxborder = 0;
-        borders.forEach(b => {
-            if (b.position === BorderPosition.Outer) {
-                maxborder = Math.max(b.thickness, maxborder);
-            } else if (b.position === BorderPosition.Center) {
-                maxborder = Math.max(b.thickness / 2, maxborder);
+        const border = this.getBorders();
+        let maxtopborder = 0;
+        let maxleftborder = 0;
+        let maxrightborder = 0;
+        let maxbottomborder = 0;
+        if (border) {
+            const isEnabled = border.strokePaints.some(p => p.isEnabled);
+            if (isEnabled) {
+                const outer = border.position === BorderPosition.Outer;
+                maxtopborder = outer ? border.sideSetting.thicknessTop : border.sideSetting.thicknessTop / 2;
+                maxleftborder = outer ? border.sideSetting.thicknessLeft : border.sideSetting.thicknessLeft / 2;
+                maxrightborder = outer ? border.sideSetting.thicknessRight : border.sideSetting.thicknessRight / 2;
+                maxbottomborder = outer ? border.sideSetting.thicknessBottom : border.sideSetting.thicknessBottom / 2;
             }
-        })
+
+        }
 
         let changed = this._save_frame.x !== this.m_frame.x || this._save_frame.y !== this.m_frame.y ||
             this._save_frame.width !== this.m_frame.width || this._save_frame.height !== this.m_frame.height;
@@ -235,7 +263,7 @@ export class BoolShapeView extends GroupShapeView {
             changed = true;
         }
         // update visible
-        if (updateFrame(this.m_visibleFrame, this.frame.x - maxborder, this.frame.y - maxborder, this.frame.width + maxborder * 2, this.frame.height + maxborder * 2)) changed = true;
+        if (updateFrame(this.m_visibleFrame, this.frame.x - maxleftborder, this.frame.y - maxtopborder, this.frame.width + maxleftborder + maxrightborder, this.frame.height + maxtopborder + maxbottomborder)) changed = true;
 
         const childouterbounds = this.m_children.map(c => (c as ShapeView)._p_outerFrame);
         const reducer = (p: { minx: number, miny: number, maxx: number, maxy: number }, c: ShapeFrame, i: number) => {
@@ -280,6 +308,16 @@ export class BoolShapeView extends GroupShapeView {
         if (mapframe(this.m_outerFrame, this._p_outerFrame)) changed = true;
         return changed;
     }
+
+    createBorderPath() {
+        const borders = this.getBorders();
+        const fills = this.getFills();
+        if (!fills.length && borders) {
+            this.m_border_path = border2path(this, borders);
+            const bbox = this.m_border_path.bbox();
+            this.m_border_path_box = new ShapeFrame(bbox.x, bbox.y, bbox.w, bbox.h);
+        }
+    }
 }
 
 const getPath = (shape: ShapeView) => {
@@ -289,20 +327,14 @@ const getPath = (shape: ShapeView) => {
     } else if (shape instanceof TextShapeView) {
         return shape.getTextPath().clone();
     } else if (shape instanceof PathShapeView && (!shape.data.isClosed || !hasFill(shape))) {
-        const borders = shape.getBorders();
-        let p0: IPalPath | undefined;
-        for (let i = borders.length - 1; i > -1; i--) {
-            const b = borders[i];
-            if (!b.isEnabled) continue;
-            const path = border2path(shape, borders[i]);
-            if (!p0) {
-                p0 = gPal.makePalPath(path.toSVGString());
-            } else {
-                const p1 = gPal.makePalPath(path.toSVGString());
-                p0.union(p1);
-            }
+        const border = shape.getBorders();
+        const isEnabled = border.strokePaints.some(p => p.isEnabled);
+        if (isEnabled) {
+            const path = border2path(shape, border);
+            const p0 = gPal.makePalPath(path.toSVGString());
+            return Path.fromSVGString(p0.toSVGString());
         }
-        return p0 ? Path.fromSVGString(p0.toSVGString()) : new Path();
+        return new Path();
     } else {
         return shape.getPath().clone();
     }

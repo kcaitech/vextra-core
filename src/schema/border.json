@@ -2,35 +2,11 @@
     "description": "border",
     "type": "object",
     "properties": {
-        "crdtidx": {
-            "$ref": "./crdtidx.json"
-        },
         "typeId": {
             "type": "string"
         },
-        "id": {
-            "type": "string"
-        },
-        "isEnabled": {
-            "type": "boolean"
-        },
-        "fillType": {
-            "$ref": "./fill-type.json"
-        },
-        "color": {
-            "$ref": "./color.json"
-        },
-        "contextSettings": {
-            "$ref": "./context-settings.json"
-        },
         "position": {
             "$ref": "./border-position.json"
-        },
-        "thickness": {
-            "type": "number"
-        },
-        "gradient": {
-            "$ref": "./gradient.json"
         },
         "borderStyle": {
             "$ref": "./border-style.json"
@@ -41,50 +17,20 @@
         "sideSetting": {
             "$ref": "./border-side-setting.json"
         },
-        "imageRef": {
-            "type": "string"
-        },
-        "imageScaleMode": {
-            "$ref": "./image-scale-mode.json"
-        },
-        "rotation": {
-            "type": "number",
-            "default": 0
-        },
-        "scale": {
-            "type": "number",
-            "default": 0
-        },
-        "originalImageWidth": {
-            "type": "number",
-            "default": 0
-        },
-        "originalImageHeight": {
-            "type": "number",
-            "default": 0
-        },
-        "paintFilter": {
-            "$ref": "./paint-filter.json"
-        },
-        "transform": {
-            "$ref": "./pattern-transform.json"
-        },
-        "colorMask": {
-            "type": "string"
+        "strokePaints": {
+            "type": "array",
+            "items": {
+                "$ref": "./stroke-paint.json"
+            }
         }
     },
     "required": [
-        "crdtidx",
         "typeId",
-        "id",
-        "isEnabled",
-        "fillType",
-        "color",
         "position",
-        "thickness",
         "borderStyle",
         "cornerType",
-        "sideSetting"
+        "sideSetting",
+        "strokePaints"
     ],
     "additionalProperties": false
 }

@@ -1,10 +1,10 @@
 
 
 import { objectId } from "../basic/objectid";
-import { Border, FillType, MarkerType, Shape, Style } from "../data/classes";
+import { Border, FillType, MarkerType, Shape, StrokePaint, Style } from "../data/classes";
 import { render as rm } from "./marker";
 
-function handler(h: Function, style: Style, border: Border, path: string, shape: Shape,  startMarkerType?: MarkerType, endMarkerType?: MarkerType): any {
+function handler(h: Function, style: Style, border: Border, path: string, shape: Shape, strokePaint: StrokePaint, startMarkerType?: MarkerType, endMarkerType?: MarkerType): any {
     const thickness = border.sideSetting.thicknessTop;
     const body_props: any = {
         d: path,
@@ -14,24 +14,24 @@ function handler(h: Function, style: Style, border: Border, path: string, shape:
     }
     const { length, gap } = border.borderStyle;
     if (length || gap) body_props['stroke-dasharray'] = `${length}, ${gap}`;
-    const fillType = border.fillType;
+    const fillType = strokePaint.fillType;
     if (fillType === FillType.SolidColor) {
-        const color = border.color;
+        const color = strokePaint.color;
         body_props.stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + (color.alpha) + ")";
-    }else if (fillType === FillType.Gradient) {
-        const color = border.color;
+    } else if (fillType === FillType.Gradient) {
+        const color = strokePaint.color;
         body_props.stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + (color.alpha) + ")";
     }
     const g_cs: any[] = [h('path', body_props)];
     if (endMarkerType !== MarkerType.Line || startMarkerType !== MarkerType.Line) {
         if (endMarkerType && endMarkerType !== MarkerType.Line) {
             const id = "e-" + objectId(shape);
-            g_cs.unshift(rm(h, style, border, endMarkerType, id));
+            g_cs.unshift(rm(h, style, border, endMarkerType, id, strokePaint));
             body_props['marker-end'] = `url(#arrow-${id})`;
         }
         if (startMarkerType && startMarkerType !== MarkerType.Line) {
             const id = "s-" + objectId(shape);
-            g_cs.unshift(rm(h, style, border, startMarkerType, id));
+            g_cs.unshift(rm(h, style, border, startMarkerType, id, strokePaint));
             body_props['marker-start'] = `url(#arrow-${id})`;
         }
         return g_cs;
@@ -42,15 +42,16 @@ function handler(h: Function, style: Style, border: Border, path: string, shape:
 
 
 export function render(h: Function, style: Style, path: string, shape: Shape): Array<any> {
-    const bc = style.borders.length;
+    const border = style.borders;
     let elArr = new Array();
+    if (!border) return elArr;
+    const bc = border.strokePaints.length;
     const sm = style.startMarkerType, em = style.endMarkerType;
     for (let i = 0; i < bc; i++) {
-        const border: Border = style.borders[i];
-        if (!border.isEnabled) continue;
-        const fillType = border.fillType;
+        const strokePaint: StrokePaint = border.strokePaints[i];
+        if (!strokePaint.isEnabled) continue;
         (() => {
-            elArr = elArr.concat(handler(h, style, border, path, shape, sm, em));
+            elArr = elArr.concat(handler(h, style, border, path, shape, strokePaint, sm, em));
         })()
     }
     return elArr;

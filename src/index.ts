@@ -31,6 +31,7 @@ export {
     PaintFilter,
     PaintFilterType,
     Border,
+    StrokePaint,
     Fill,
     Stop,
     Shadow,
@@ -138,7 +139,8 @@ export {
     ShadowMask,
     FillMask,
     BlurMask,
-    StyleMangerMember
+    StyleMangerMember,
+    PathSegment
 } from "./data"
 
 export {

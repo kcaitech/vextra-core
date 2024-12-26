@@ -6,17 +6,19 @@
 */
 
 import { Document } from "../data/document";
-import { Border, Fill, Page, Shadow, Style } from "../data/classes";
+import { Border, BorderSideSetting, BorderStyle, Fill, Page, Shadow, StrokePaint, Style } from "../data/classes";
 import * as types from "../data/typesdefine"
 import { exportDocumentMeta, exportPage, IExportContext } from "../data/baseexport";
 import { BasicArray } from "../data/basic";
 import { StyleSheet } from "../data/typesdefine";
 
 export function newStyle(): Style {
-    const borders = new BasicArray<Border>();
+    const side = new BorderSideSetting(types.SideType.Normal, 1, 1, 1, 1);
+    const strokePaints = new BasicArray<StrokePaint>();
+    const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
     const fills = new BasicArray<Fill>();
     const shadows = new BasicArray<Shadow>();
-    return new Style(borders, fills, shadows);
+    return new Style(fills, shadows, border);
 }
 
 export interface ExFromJson {

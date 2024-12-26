@@ -39,9 +39,6 @@
                     "items": {
                         "oneOf": [
                             {
-                                "$ref": "./border.json"
-                            },
-                            {
                                 "$ref": "./fill.json"
                             },
                             {
@@ -52,6 +49,9 @@
                             }
                         ]
                     }
+                },
+                {
+                    "$ref": "./border.json"
                 },
                 {
                     "$ref": "./context-settings.json"

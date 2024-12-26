@@ -46,7 +46,7 @@ export class SymbolView extends GroupShapeView {
 
     // fills
     protected renderFills(): EL[] {
-        return renderFills(elh, this.getFills(), this.frame, this.getPathStr());
+        return renderFills(elh, this.getFills(), this.frame, this.getPathStr(), 'fill-' + this.id);
     }
     // borders
     protected renderBorders(): EL[] {
@@ -91,26 +91,21 @@ export class SymbolView extends GroupShapeView {
             this._save_frame.height = this.m_frame.height;
         }
 
-        const borders = this.getBorders();
+        const border = this.getBorders();
         let maxtopborder = 0;
         let maxleftborder = 0;
         let maxrightborder = 0;
         let maxbottomborder = 0;
-        borders.forEach(b => {
-            if (b.isEnabled) {
-                if (b.position === BorderPosition.Outer) {
-                    maxtopborder = Math.max(b.sideSetting.thicknessTop, maxtopborder);
-                    maxleftborder = Math.max(b.sideSetting.thicknessLeft, maxleftborder);
-                    maxrightborder = Math.max(b.sideSetting.thicknessRight, maxrightborder);
-                    maxbottomborder = Math.max(b.sideSetting.thicknessBottom, maxbottomborder);
-                } else if (b.position === BorderPosition.Center) {
-                    maxtopborder = Math.max(b.sideSetting.thicknessTop / 2, maxtopborder);
-                    maxleftborder = Math.max(b.sideSetting.thicknessLeft / 2, maxleftborder);
-                    maxrightborder = Math.max(b.sideSetting.thicknessRight / 2, maxrightborder);
-                    maxbottomborder = Math.max(b.sideSetting.thicknessBottom / 2, maxbottomborder);
-                }
+        if (border) {
+            const isEnabled = border.strokePaints.some(p => p.isEnabled);
+            if (isEnabled) {
+                const outer = border.position === BorderPosition.Outer;
+                maxtopborder = outer ? border.sideSetting.thicknessTop : border.sideSetting.thicknessTop / 2;
+                maxleftborder = outer ? border.sideSetting.thicknessLeft : border.sideSetting.thicknessLeft / 2;
+                maxrightborder = outer ? border.sideSetting.thicknessRight : border.sideSetting.thicknessRight / 2;
+                maxbottomborder = outer ? border.sideSetting.thicknessBottom : border.sideSetting.thicknessBottom / 2;
             }
-        })
+        }
 
         // 阴影
         const shadows = this.getShadows();

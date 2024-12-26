@@ -142,7 +142,6 @@ export function export_shape(shapes: Shape[]) {
  * @description 导入之前匹配连接线
  */
 function match_for_contact(source: Shape[]) {
-    console.log('--source--', source);
     const already_change = new Set<string>();
 
     const all = new Map<string, Shape>();

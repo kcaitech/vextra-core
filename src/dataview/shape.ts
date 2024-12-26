@@ -9,8 +9,8 @@ import { objectId } from "../basic/objectid";
 import { Transform as Transform2 } from "../basic/transform";
 import { float_accuracy } from "../basic/consts";
 import { GroupShapeView } from "./groupshape";
-import { importBorder, importFill } from "../data/baseimport";
-import { exportBorder, exportFill } from "../data/baseexport";
+import { importBorder, importFill, importStrokePaint } from "../data/baseimport";
+import { exportBorder, exportFill, exportStrokePaint } from "../data/baseexport";
 import { PageView } from "./page";
 import { ArtboradView } from "./artboard";
 import { findOverrideAll } from "../data/utils";
@@ -355,7 +355,6 @@ export function updateFrame(frame: ShapeFrame, x: number, y: number, w: number, 
 }
 
 export class ShapeView extends DataView {
-
     m_transform: Transform;
 
     _save_frame: ShapeFrame = new ShapeFrame(); // 对象内坐标系的大小 // 用于updateFrames判断frame是否变更
@@ -372,10 +371,16 @@ export class ShapeView extends DataView {
     m_path?: Path;
     m_pathstr?: string;
 
-    m_transform2: Transform2 | undefined;
+    m_border_path?: Path;
+    m_border_path_box?: ShapeFrame;
 
+    m_transform2: Transform2 | undefined;
     m_transform_form_mask?: Transform;
     m_mask_group?: ShapeView[];
+
+    // fill、border等属性随着变量、遮罩、样式库等因素的加入，获取路径不断加长。现在缓存fill和border，不至于每次都重新通过长的路径获取
+    m_fills: Fill[] | undefined;
+    m_borders: Border | undefined;
 
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
@@ -555,6 +560,14 @@ export class ShapeView extends DataView {
             this.m_pathstr = undefined;
         }
 
+        if (args.includes('fills')) {
+            this.m_fills = undefined;
+        }
+
+        if (args.includes('borders')) {
+            this.m_borders = undefined;
+        }
+
         const masked = this.masked;
         if (masked) masked.notify('rerender-mask');
     }
@@ -646,6 +659,7 @@ export class ShapeView extends DataView {
     }
 
     getFills(): Fill[] {
+        if (this.m_fills) return this.m_fills;
         const v = this._findOV(OverrideType.Fills, VariableType.Fills);
         let fills: Fill[] = [];
         if (this.style.fillsMask) {
@@ -662,9 +676,11 @@ export class ShapeView extends DataView {
         // todo cache for fill
     }
 
-    getBorders(): Border[] {
+    getBorders(): Border {
+        if (this.m_borders) return this.m_borders;
         const v = this._findOV(OverrideType.Borders, VariableType.Borders);
-        return v ? v.value : this.m_data.style.borders;
+        this.m_borders = v ? v.value as Border : this.m_data.style.borders
+        return this.m_borders;
     }
 
     get cornerRadius(): CornerRadius | undefined {
@@ -782,26 +798,21 @@ export class ShapeView extends DataView {
             this._save_frame.height = this.m_frame.height;
         }
 
-        const borders = this.getBorders();
+        const border = this.getBorders();
         let maxtopborder = 0;
         let maxleftborder = 0;
         let maxrightborder = 0;
         let maxbottomborder = 0;
-        borders.forEach(b => {
-            if (b.isEnabled) {
-                if (b.position === BorderPosition.Outer) {
-                    maxtopborder = Math.max(b.sideSetting.thicknessTop, maxtopborder);
-                    maxleftborder = Math.max(b.sideSetting.thicknessLeft, maxleftborder);
-                    maxrightborder = Math.max(b.sideSetting.thicknessRight, maxrightborder);
-                    maxbottomborder = Math.max(b.sideSetting.thicknessBottom, maxbottomborder);
-                } else if (b.position === BorderPosition.Center) {
-                    maxtopborder = Math.max(b.sideSetting.thicknessTop / 2, maxtopborder);
-                    maxleftborder = Math.max(b.sideSetting.thicknessLeft / 2, maxleftborder);
-                    maxrightborder = Math.max(b.sideSetting.thicknessRight / 2, maxrightborder);
-                    maxbottomborder = Math.max(b.sideSetting.thicknessBottom / 2, maxbottomborder);
-                }
+        if (border) {
+            const isEnabled = border.strokePaints.some(p => p.isEnabled);
+            if (isEnabled) {
+                const outer = border.position === BorderPosition.Outer;
+                maxtopborder = outer ? border.sideSetting.thicknessTop : border.sideSetting.thicknessTop / 2;
+                maxleftborder = outer ? border.sideSetting.thicknessLeft : border.sideSetting.thicknessLeft / 2;
+                maxrightborder = outer ? border.sideSetting.thicknessRight : border.sideSetting.thicknessRight / 2;
+                maxbottomborder = outer ? border.sideSetting.thicknessBottom : border.sideSetting.thicknessBottom / 2;
             }
-        })
+        }
         // 阴影
         const shadows = this.getShadows();
         let st = 0, sb = 0, sl = 0, sr = 0;
@@ -1015,23 +1026,23 @@ export class ShapeView extends DataView {
                 } else return f;
             })
         }
-        return renderFills(elh, fills, this.size, this.getPathStr());
+        return renderFills(elh, fills, this.size, this.getPathStr(), 'fill-' + this.id);
     }
 
     protected renderBorders(): EL[] {
-        let borders = this.getBorders();
-        if (this.mask) {
-            borders = borders.map(b => {
-                const nb = importBorder(exportBorder(b));
+        let border = this.getBorders();
+        if (this.mask && border) {
+            border.strokePaints.map(b => {
+                const nb = importStrokePaint(exportStrokePaint(b));
                 if (nb.fillType === FillType.Gradient && nb.gradient?.gradientType === GradientType.Angular) nb.fillType = FillType.SolidColor;
                 return nb;
-            })
+            });
         }
-        return renderBorders(elh, borders, this.size, this.getPathStr(), this.m_data);
+        return renderBorders(elh, border, this.size, this.getPathStr(), this.m_data);
     }
 
     protected renderShadows(filterId: string): EL[] {
-        return renderShadows(elh, filterId, this.getShadows(), this.getPathStr(), this.frame, this.getFills(), this.getBorders(), this.m_data.type, this.blur);
+        return renderShadows(elh, filterId, this.getShadows(), this.getPathStr(), this.frame, this.getFills(), this.getBorders(), this.m_data, this.blur);
     }
 
     protected renderBlur(blurId: string): EL[] {
@@ -1473,5 +1484,13 @@ export class ShapeView extends DataView {
     }
     get uniformScale() {
         return this.data.uniformScale;
+    }
+
+    get borderPath() {
+        return this.m_border_path;
+    }
+
+    get borderPathBox() {
+        return this.m_border_path_box;
     }
 }

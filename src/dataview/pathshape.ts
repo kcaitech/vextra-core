@@ -18,8 +18,10 @@ import { objectId } from "../basic/objectid";
 import { BlurType, PathSegment } from "../data/typesdefine";
 import { render as renderLineBorders } from "../render/line_borders"
 import { PageView } from "./page";
-import { importBorder } from "../data/baseimport";
-import { exportBorder } from "../data/baseexport";
+import { importBorder, importStrokePaint } from "../data/baseimport";
+import { exportBorder, exportStrokePaint } from "../data/baseexport";
+import { GroupShapeView } from "./groupshape";
+import { border2path } from "../editor/utils/path";
 
 export class PathShapeView extends ShapeView {
     m_pathsegs?: PathSegment[];
@@ -45,16 +47,64 @@ export class PathShapeView extends ShapeView {
     ): void {
         this.m_pathsegs = undefined;
         super._layout(shape, parentFrame, varsContainer, scale, uniformScale);
+        this.createBorderPath();
     }
 
+    createBorderPath() {
+        const borders = this.getBorders();
+        const fills = this.getFills();
+        if (!fills.length && borders && borders.strokePaints.some(p => p.isEnabled)) {
+            this.m_border_path = border2path(this, borders);
+            const bbox = this.m_border_path.bbox();
+            this.m_border_path_box = new ShapeFrame(bbox.x, bbox.y, bbox.w, bbox.h);
+        }
+    }
+
+    onDataChange(...args: any[]): void {
+        if (args.includes('mask') || args.includes('isVisible')) {
+            (this.parent as GroupShapeView).updateMaskMap();
+            (this.parent as GroupShapeView).updateFrames();
+        }
+
+        if (args.includes('points')
+            || args.includes('pathsegs')
+            || args.includes('isClosed')
+            || (this.m_fixedRadius || 0) !== ((this.m_data as any).fixedRadius || 0)
+            || args.includes('cornerRadius')
+            || args.includes('imageRef')
+        ) {
+            this.m_path = undefined;
+            this.m_pathstr = undefined;
+            this.m_border_path = undefined;
+            this.m_border_path_box = undefined;
+            this.createBorderPath();
+        }
+
+        if (args.includes('fills')) {
+            this.m_fills = undefined;
+            this.m_border_path = undefined;
+            this.m_border_path_box = undefined;
+            this.createBorderPath();
+        }
+
+        if (args.includes('borders')) {
+            this.m_borders = undefined;
+            this.m_border_path = undefined;
+            this.m_border_path_box = undefined;
+            this.createBorderPath();
+        }
+
+        const masked = this.masked;
+        if (masked) masked.notify('rerender-mask');
+    }
     protected renderBorders(): EL[] {
         let borders = this.getBorders();
-        if (this.mask) {
-            borders = borders.map(b => {
-                const nb = importBorder(exportBorder(b));
+        if (this.mask && borders) {
+            borders.strokePaints.map(b => {
+                const nb = importStrokePaint(exportStrokePaint(b));
                 if (nb.fillType === FillType.Gradient && nb.gradient?.gradientType === GradientType.Angular) nb.fillType = FillType.SolidColor;
                 return nb;
-            })
+            });
         }
         if ((this.segments.length === 1 && !this.segments[0].isClosed) || this.segments.length > 1) {
             return renderLineBorders(elh, this.data.style, borders, this.startMarkerType, this.endMarkerType, this.getPathStr(), this.m_data);

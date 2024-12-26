@@ -1,10 +1,10 @@
 import { Blur, BlurType, BorderPosition } from "../data/baseclasses";
-import { Border, Fill, ShapeSize } from "../data";
+import { Border, Fill, ShapeSize, StrokePaint } from "../data";
 import { randomId } from "./basic";
 import { objectId } from '../basic/objectid';
 
 const handler: {
-    [key: string]: (h: Function, blur: Blur, id: string, frame: ShapeSize, fills: Fill[], borders: Border[], path: string) => any
+    [key: string]: (h: Function, blur: Blur, id: string, frame: ShapeSize, fills: Fill[], borders: Border | undefined, path: string) => any
 } = {};
 
 handler[BlurType.Gaussian] = (h: Function, blur: Blur, id: string, frame: ShapeSize) => {
@@ -44,9 +44,9 @@ handler[BlurType.Gaussian] = (h: Function, blur: Blur, id: string, frame: ShapeS
     ]);
 }
 
-handler[BlurType.Background] = (h: Function, blur: Blur, id: string, frame: ShapeSize, fills: Fill[], borders: Border[], path: string) => {
+handler[BlurType.Background] = (h: Function, blur: Blur, id: string, frame: ShapeSize, fills: Fill[], border: Border | undefined, path: string) => {
     // const alphaFill = opacity(fills);
-    const alphaBorder = opacity(borders);
+    const alphaBorder = opacity(border ? border.strokePaints : []);
     // if (!alphaFill && !alphaBorder) return;
     const _id = "mask-blur" + objectId(blur) + randomId();
     const width = frame.width;
@@ -60,11 +60,10 @@ handler[BlurType.Background] = (h: Function, blur: Blur, id: string, frame: Shap
         x: 0, y: 0, width, height
     }
     const children = [h("path", { d: path, fill: "white" })];
-    if (alphaBorder) {
-        for (let i = 0; i < borders.length; i++) {
-            const border = borders[i];
+    if (alphaBorder && border) {
+        const isEnabled = border.strokePaints.some(p => p.isEnabled);
+        if (isEnabled && border.position !== BorderPosition.Inner) {
             let sw = border.sideSetting.thicknessTop;
-            if (border.position === BorderPosition.Inner) continue;
             if (border.position === BorderPosition.Outer) sw *= 2;
             const props: any = { d: path, fill: 'white', stroke: 'white', 'stroke-width': sw };
             if (border.borderStyle.gap) props['stroke-dasharray'] = 10
@@ -81,14 +80,14 @@ handler[BlurType.Background] = (h: Function, blur: Blur, id: string, frame: Shap
     return h('g', elArr);
 }
 
-export function render(h: Function, blur: Blur, id: string, frame: ShapeSize, fills: Fill[], borders: Border[], path: string) {
+export function render(h: Function, blur: Blur, id: string, frame: ShapeSize, fills: Fill[], borders: Border | undefined, path: string) {
     if (!blur || !blur.isEnabled) return [];
     const el = handler[blur.type](h, blur, id, frame, fills, borders, path);
     if (!el) return [];
     return [el];
 }
 
-const opacity = (t: (Fill | Border)[]) => {
+const opacity = (t: (Fill | StrokePaint)[]) => {
     for (let i = 0; i < t.length; i++) {
         const __t = t[i];
         if (__t.color.alpha > 0 && __t.isEnabled) return true;

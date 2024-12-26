@@ -22,8 +22,9 @@ import {
     Shadow,
     Stop,
     VariableType,
-    WindingRule
-} from "./baseclasses"
+    WindingRule,
+    SideType
+} from "./baseclasses";
 import { Basic, BasicArray, BasicMap, ResourceMgr } from "./basic";
 import { Variable } from "./variable";
 import { Color } from "./color";
@@ -95,18 +96,36 @@ export class Gradient extends Basic implements classes.Gradient {
 
 export class Border extends Basic implements classes.Border {
     typeId = 'border'
+    position: BorderPosition
+    borderStyle: BorderStyle
+    cornerType: CornerType
+    sideSetting: BorderSideSetting
+    strokePaints: BasicArray<StrokePaint>
+
+    constructor(
+        position: BorderPosition,
+        borderStyle: BorderStyle,
+        cornerType: CornerType,
+        sideSetting: BorderSideSetting,
+        strokePaints: BasicArray<StrokePaint>
+    ) {
+        super()
+        this.position = position
+        this.borderStyle = borderStyle
+        this.cornerType = cornerType
+        this.sideSetting = sideSetting
+        this.strokePaints = strokePaints
+    }
+}
+
+export class StrokePaint extends Basic implements classes.StrokePaint {
+    typeId = 'stroke-paint'
     crdtidx: BasicArray<number>
     id: string
     isEnabled: boolean
     fillType: FillType
     color: Color
-    contextSettings?: ContextSettings
-    position: BorderPosition
-    thickness: number
     gradient?: Gradient
-    borderStyle: BorderStyle
-    cornerType: CornerType
-    sideSetting: BorderSideSetting
     imageRef?: string
     imageScaleMode?: classes.ImageScaleMode
     rotation?: number
@@ -126,11 +145,6 @@ export class Border extends Basic implements classes.Border {
         isEnabled: boolean,
         fillType: FillType,
         color: Color,
-        position: BorderPosition,
-        thickness: number,
-        borderStyle: BorderStyle,
-        cornerType: CornerType,
-        sideSetting: BorderSideSetting
     ) {
         super()
         this.crdtidx = crdtidx
@@ -138,11 +152,6 @@ export class Border extends Basic implements classes.Border {
         this.isEnabled = isEnabled
         this.fillType = fillType
         this.color = color
-        this.position = position
-        this.thickness = thickness
-        this.borderStyle = borderStyle
-        this.cornerType = cornerType
-        this.sideSetting = sideSetting
     }
 
     setImageMgr(imageMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>) {
@@ -165,6 +174,8 @@ export class Border extends Basic implements classes.Border {
         return this.__cacheData && this.__cacheData.media.base64 || "";
     }
 }
+
+
 
 export class Fill extends Basic implements classes.Fill {
     typeId = 'fill'
@@ -283,7 +294,7 @@ export class Style extends Basic implements classes.Style {
     windingRule?: WindingRule
     blur?: Blur
     borderOptions?: BorderOptions
-    borders: BasicArray<Border>
+    borders: Border
     colorControls?: ColorControls
     contextSettings?: ContextSettings
     fills: BasicArray<Fill>
@@ -300,14 +311,14 @@ export class Style extends Basic implements classes.Style {
     private __styleMgr?: ResourceMgr<StyleMangerMember>;
 
     constructor(
-        borders: BasicArray<Border>,
         fills: BasicArray<Fill>,
         shadows: BasicArray<Shadow>,
+        border: Border
     ) {
         super()
-        this.borders = borders
         this.fills = fills
         this.shadows = shadows
+        this.borders = border
     }
 
     setStylesMgr(styleMgr: ResourceMgr<StyleMangerMember>) {
@@ -344,7 +355,7 @@ export class Style extends Basic implements classes.Style {
         return this.fills;
     }
 
-    getBorders(): BasicArray<Border> {
+    getBorders(): Border {
         if (!this.varbinds) return this.borders;
 
         const bordersVar = this.varbinds.get(classes.OverrideType.Borders);

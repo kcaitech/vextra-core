@@ -20,10 +20,7 @@
             "$ref": "./border-options.json"
         },
         "borders": {
-            "type": "array",
-            "items": {
-                "$ref": "./border.json"
-            }
+            "$ref": "./border.json"
         },
         "colorControls": {
             "$ref": "./color-controls.json"
@@ -82,9 +79,9 @@
     },
     "required": [
         "typeId",
-        "borders",
         "fills",
-        "shadows"
+        "shadows",
+        "borders"
     ],
     "additionalProperties": false
 }

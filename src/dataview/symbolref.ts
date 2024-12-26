@@ -377,15 +377,17 @@ export class SymbolRefView extends ShapeView {
     }
 
     getFills(): Fill[] {
+        if (this.m_fills) return this.m_fills;
         const v = this._findOV2(OverrideType.Fills, VariableType.Fills);
-        if (v) return v.value;
-        return this.m_sym?.style.fills || [];
+        this.m_fills = v ? v.value as Fill[] : this.m_sym?.style.fills || [];
+        return this.m_fills;
     }
 
-    getBorders(): Border[] {
+    getBorders(): Border {
+        if (this.m_borders) return this.m_borders;
         const v = this._findOV2(OverrideType.Borders, VariableType.Borders);
-        if (v) return v.value;
-        return this.m_sym?.style.borders || [];
+        this.m_borders = v ? v.value as Border : this.m_sym!.style.borders;
+        return this.m_borders;
     }
 
     getShadows(): Shadow[] {

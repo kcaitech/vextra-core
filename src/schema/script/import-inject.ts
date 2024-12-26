@@ -363,22 +363,6 @@ inject['TextAttr']['before'] = `\
     }
 `
 
-inject['Border'] = {};
-inject['Border']['before'] = `\
-    // inject code
-    if (!(source as any).sideSetting || !((source as any).sideSetting.crdtidx || (source as any).sideSetting.typeId)) {
-        source.sideSetting = {
-            crdtidx: [0],
-            typeId:"border-side-setting",
-            sideType: types.SideType.Normal,
-            thicknessTop: source.thickness,
-            thicknessLeft: source.thickness,
-            thicknessBottom: source.thickness,
-            thicknessRight: source.thickness,
-        }
-    }
-`
-
 inject['FillMask'] = {};
 inject['FillMask']['after'] = `\
     // inject code
@@ -400,3 +384,4 @@ inject['Style']['after'] = `\
     // inject code
     if (ctx?.document) ret.setStylesMgr(ctx.document.stylesMgr);
 `
+

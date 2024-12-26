@@ -11,7 +11,8 @@ export class LineView extends PathShapeView {
     }
 
     protected renderBorders(): EL[] {
-        if (this.m_data.style.borders.length > 0) {
+        const border = this.m_data.style.borders;
+        if (border && border.strokePaints.some(p => p.isEnabled)) {
             return renderBorders(elh, this.m_data.style, this.getBorders(), this.startMarkerType, this.endMarkerType, this.getPathStr(), this.m_data);
         } else {
             // const props: any = {};

@@ -1,7 +1,8 @@
 import {
     BoolShape, CurveMode, CurvePoint, ExportFormat, ExportOptions, GroupShape, TextShape, Variable,
     OverrideType, PathSegment, PathShape, RectShape, Shape, SymbolShape, VariableType, CornerRadius,
-    string2Text
+    string2Text,
+    StrokePaint
 } from "../../../data";
 import { importColor, importStyle, importXY } from "./styleio";
 import { importText } from "./textio";
@@ -207,9 +208,9 @@ const hasFill = (fills: Fill[]) => {
     if (fills.length === 0) return false;
     return fills.some(f => f.isEnabled);
 }
-const hasBorder = (borders: Border[]) => {
-    if (borders.length === 0) return false;
-    return borders.some(b => b.isEnabled);
+const hasBorder = (strokePaint: StrokePaint[]) => {
+    if (strokePaint.length === 0) return false;
+    return strokePaint.some(b => b.isEnabled);
 }
 
 export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun, i: number): Artboard {
@@ -533,7 +534,7 @@ function addMaskRect(childs: Shape[], ctx: LoadContext, data: IJSON[]) {
             if (!hasFill(shape.style.fills)) {
                 const fill = new Fill([shape.style.fills.length] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0));
                 shape.style.fills.push(fill);
-                if (hasBorder(shape.style.borders)) {
+                if (hasBorder(shape.style.borders.strokePaints)) {
                     const points: CurvePoint[] = importPoints(d);
                     const segment: PathSegment = new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...points), d['isClosed']);
                     const s = new RectShape([i] as BasicArray<number>, uuid(), shape.name, ShapeType.Rectangle, shape.transform, style, shape.size, new BasicArray<PathSegment>(segment));
@@ -575,7 +576,7 @@ function determineAsContainerRadiusShape(parent: Artboard | SymbolShape, childs:
         parent.cornerRadius = new CornerRadius(v4(), new BasicArray(),radius[0], radius[1], radius[3], radius[2]);
         parent.childs = new BasicArray<Shape>(...childs);
         if (drop.style.fills.length) parent.style.fills = drop.style.fills;
-        if (drop.style.borders.length) parent.style.borders = drop.style.borders;
+        if (drop.style.borders.strokePaints.length) parent.style.borders = drop.style.borders;
         if (drop.style.shadows.length) parent.style.shadows = drop.style.shadows;
     }
 }

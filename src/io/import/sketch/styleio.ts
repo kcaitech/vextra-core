@@ -8,6 +8,7 @@ import {
     Gradient,
     Shadow,
     Stop,
+    StrokePaint,
     Style
 } from "../../../data/style";
 import { BlendMode, GradientType, MarkerType, WindingRule, BlurType, LineCapStyle, LineJoinStyle, FillType, BorderPosition, Point2D, Color } from "../../../data/classes"
@@ -103,7 +104,10 @@ function importGradient(data: IJSON): Gradient {
 export function importStyle(ctx: LoadContext, data: IJSON): Style {
 
     if (!data) { // 存在数据没有style
-        const style: Style = new Style(new BasicArray<Border>(), new BasicArray<Fill>(), new BasicArray<Shadow>());
+        const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+        const strokePaints = new BasicArray<StrokePaint>();
+        const border = new Border(BorderPosition.Center, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
+        const style: Style = new Style(new BasicArray<Fill>(), new BasicArray<Shadow>(), border);
         return style;
     }
 
@@ -126,8 +130,7 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
             LineJoinStyle.Miter
         )
     })(data['borderOptions']);
-
-    const borders: Border[] = (data['borders'] || []).map((d: IJSON, i: number) => {
+    const strokePaints: BasicArray<StrokePaint> = (data['borders'] || []).map((d: IJSON, i: number) => {
         const isEnabled: boolean = d['isEnabled'];
         const fillType: FillType = ((t) => {
             switch (t) {
@@ -150,7 +153,30 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
             // gradientId = genGradientId(gradient);
             // gradients.set(gradientId, gradient);
         }
+        const strokePaint = new StrokePaint([i] as BasicArray<number>, uuid(), isEnabled, fillType, color);
+        strokePaint.gradient = gradient;
+        return strokePaint;
+    });
 
+    const borderStyle: BorderStyle = ((dashPattern: number[] | undefined) => {
+        const bs = new BorderStyle(0, 0);
+        if (!dashPattern) {
+            //
+        }
+        else if (dashPattern.length === 1) {
+            bs.length = dashPattern[0];
+            bs.gap = 0;
+        } else if (dashPattern.length === 2) {
+            bs.length = dashPattern[0];
+            bs.gap = dashPattern[1];
+        }
+        return bs
+    })(data['borderOptions'] ? data['borderOptions'].dashPattern : undefined);
+    const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+    let border = new Border(BorderPosition.Center, borderStyle, CornerType.Miter, side, strokePaints);
+    
+    if (data['borders'] && data['borders'].length) {
+        const d = data['borders'][0];
         const position: BorderPosition = ((p: number) => {
             switch (p) {
                 case 0: return BorderPosition.Center;
@@ -159,7 +185,6 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
                 default: return BorderPosition.Center;
             }
         })(d['position']);
-
         const corner: CornerType = ((p: number) => {
             switch (p) {
                 case 0: return CornerType.Miter;
@@ -168,29 +193,10 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
                 default: return CornerType.Miter;
             }
         })(d['cornerType']);
-
         const thickness: number = d['thickness'];
-
-        const borderStyle: BorderStyle = ((dashPattern: number[] | undefined) => {
-            const bs = new BorderStyle(0, 0);
-            if (!dashPattern) {
-                //
-            }
-            else if (dashPattern.length === 1) {
-                bs.length = dashPattern[0];
-                bs.gap = 0;
-            } else if (dashPattern.length === 2) {
-                bs.length = dashPattern[0];
-                bs.gap = dashPattern[1];
-            }
-            return bs
-        })(data['borderOptions'] ? data['borderOptions'].dashPattern : undefined);
-        const side = new BorderSideSetting(new BasicArray(),SideType.Normal, thickness, thickness, thickness, thickness);
-        const border = new Border([i] as BasicArray<number>, uuid(), isEnabled, fillType, color, position, thickness, borderStyle, corner, side);
-        border.gradient = gradient;
-        border.contextSettings = contextSettings;
-        return border;
-    });
+        const side = new BorderSideSetting(SideType.Normal, thickness, thickness, thickness, thickness);
+        border = new Border(position, borderStyle, corner, side, strokePaints);
+    }
     const getMarkerType = (st: number): MarkerType => {
         switch (st) {
             case 0: return MarkerType.Line;
@@ -267,7 +273,7 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
         shadows.push(shadow);
     })
 
-    const style: Style = new Style(new BasicArray<Border>(...borders), new BasicArray<Fill>(...fills), new BasicArray<Shadow>(...shadows));
+    const style: Style = new Style(new BasicArray<Fill>(...fills), new BasicArray<Shadow>(...shadows), border);
 
     style.blur = importBlur(data);
 

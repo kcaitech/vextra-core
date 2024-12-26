@@ -1,6 +1,13 @@
 import {
     BasicArray, IDataGuard, PageListItem, Document,
-    BasicMap, Transform, Page, ShapeType, Style
+    BasicMap, Transform, Page, ShapeType, Style,
+    BorderSideSetting,
+    SideType,
+    StrokePaint,
+    Border,
+    BorderPosition,
+    BorderStyle,
+    CornerType
 } from "../../../data";
 import { uuid } from "../../../basic/uuid";
 import { IImportContext, importPage, importDocumentMeta } from "../../../data/baseimport";
@@ -49,7 +56,10 @@ function setLoader(pack: { [p: string]: string | Uint8Array; }, document: Docume
         const page = JSON.parse(pack[id] as string) as Page;
         if (!page) {
             const trans = new Transform();
-            return new Page(new BasicArray(), id, "", ShapeType.Page, trans, new Style(new BasicArray(), new BasicArray(), new BasicArray()), new BasicArray());
+            const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+            const strokePaints = new BasicArray<StrokePaint>();
+            const border = new Border(BorderPosition.Center, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
+            return new Page(new BasicArray(), id, "", ShapeType.Page, trans, new Style(new BasicArray(), new BasicArray(), border), new BasicArray());
         }
         return importPage(page, ctx);
     }
@@ -57,7 +67,7 @@ function setLoader(pack: { [p: string]: string | Uint8Array; }, document: Docume
 
 export function importDocument(name: string, mdd: { [p: string]: string | Uint8Array }, guard: IDataGuard) {
     const meta = JSON.parse(mdd['document-meta.json'] as string);
-    const pageList = importDocumentMeta(meta,undefined).pagesList;
+    const pageList = importDocumentMeta(meta, undefined).pagesList;
     const document = new Document(uuid(), name, "", "", pageList, new BasicMap(), guard);
     setLoader(mdd, document);
     return document;

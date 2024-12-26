@@ -124,6 +124,7 @@ export class BorderStyle extends Basic {
         this.gap = gap
     }
 }
+type Border_strokePaints = BasicArray<StrokePaint>
 /* bullet numbers */
 export class BulletNumbers extends Basic {
     typeId = "bullet-numbers"
@@ -482,7 +483,6 @@ export class Stop extends Basic {
     }
 }
 type StyleSheet_variables = BasicArray<BorderSideSetting | FillMask | Border | ShadowMask | BlurMask | CornerRadius>
-type Style_borders = BasicArray<Border>
 type Style_fills = BasicArray<Fill>
 type Style_shadows = BasicArray<Shadow>
 type Style_innerShadows = BasicArray<Shadow>
@@ -523,7 +523,7 @@ export class UserInfo extends Basic {
         this.avatar = avatar
     }
 }
-type Variable_0 = BasicArray<Border | Fill | Shadow | PrototypeInterAction>
+type Variable_0 = BasicArray<Fill | Shadow | PrototypeInterAction>
 /* auto layout */
 export class AutoLayout extends Basic {
     typeId = "auto-layout"
@@ -592,16 +592,14 @@ export class BorderOptions extends Basic {
 /* border side setting */
 export class BorderSideSetting extends Basic {
     typeId = "border-side-setting"
-    crdtidx: Crdtidx
     sideType: SideType
     thicknessTop: number
     thicknessLeft: number
     thicknessBottom: number
     thicknessRight: number
     mask?: string
-    constructor(crdtidx: Crdtidx, sideType: SideType, thicknessTop: number = 1, thicknessLeft: number = 1, thicknessBottom: number = 1, thicknessRight: number = 1) {
+    constructor(sideType: SideType, thicknessTop: number = 1, thicknessLeft: number = 1, thicknessBottom: number = 1, thicknessRight: number = 1) {
         super()
-        this.crdtidx = crdtidx
         this.sideType = sideType
         this.thicknessTop = thicknessTop
         this.thicknessLeft = thicknessLeft
@@ -828,6 +826,32 @@ export class Span extends SpanAttr {
         this.length = length
     }
 }
+/* stroke paint */
+export class StrokePaint extends Basic {
+    typeId = "stroke-paint"
+    crdtidx: Crdtidx
+    id: string
+    isEnabled: boolean
+    fillType: FillType
+    color: Color
+    gradient?: Gradient
+    imageRef?: string
+    imageScaleMode?: ImageScaleMode
+    rotation?: number
+    scale?: number
+    originalImageWidth?: number
+    originalImageHeight?: number
+    paintFilter?: PaintFilter
+    transform?: PatternTransform
+    constructor(crdtidx: Crdtidx, id: string, isEnabled: boolean, fillType: FillType, color: Color) {
+        super()
+        this.crdtidx = crdtidx
+        this.id = id
+        this.isEnabled = isEnabled
+        this.fillType = fillType
+        this.color = color
+    }
+}
 /* blur mask */
 export class BlurMask extends Basic {
     typeId = "blur-mask"
@@ -850,39 +874,18 @@ export class BlurMask extends Basic {
 /* border */
 export class Border extends Basic {
     typeId = "border"
-    crdtidx: Crdtidx
-    id: string
-    isEnabled: boolean
-    fillType: FillType
-    color: Color
     position: BorderPosition
-    thickness: number
     borderStyle: BorderStyle
     cornerType: CornerType
     sideSetting: BorderSideSetting
-    contextSettings?: ContextSettings
-    gradient?: Gradient
-    imageRef?: string
-    imageScaleMode?: ImageScaleMode
-    rotation?: number
-    scale?: number
-    originalImageWidth?: number
-    originalImageHeight?: number
-    paintFilter?: PaintFilter
-    transform?: PatternTransform
-    colorMask?: string
-    constructor(crdtidx: Crdtidx, id: string, isEnabled: boolean, fillType: FillType, color: Color, position: BorderPosition, thickness: number, borderStyle: BorderStyle, cornerType: CornerType, sideSetting: BorderSideSetting) {
+    strokePaints: Border_strokePaints
+    constructor(position: BorderPosition, borderStyle: BorderStyle, cornerType: CornerType, sideSetting: BorderSideSetting, strokePaints: Border_strokePaints) {
         super()
-        this.crdtidx = crdtidx
-        this.id = id
-        this.isEnabled = isEnabled
-        this.fillType = fillType
-        this.color = color
         this.position = position
-        this.thickness = thickness
         this.borderStyle = borderStyle
         this.cornerType = cornerType
         this.sideSetting = sideSetting
+        this.strokePaints = strokePaints
     }
 }
 /* fill */
@@ -938,9 +941,9 @@ export class Para extends Basic {
 /* style */
 export class Style extends Basic {
     typeId = "style"
-    borders: Style_borders
     fills: Style_fills
     shadows: Style_shadows
+    borders: Border
     miterLimit?: number
     windingRule?: WindingRule
     blur?: Blur
@@ -955,11 +958,11 @@ export class Style extends Basic {
     fillsMask?: string
     shadowsMask?: string
     blursMask?: string
-    constructor(borders: Style_borders, fills: Style_fills, shadows: Style_shadows) {
+    constructor(fills: Style_fills, shadows: Style_shadows, borders: Border) {
         super()
-        this.borders = borders
         this.fills = fills
         this.shadows = shadows
+        this.borders = borders
     }
 }
 /* text attr */
@@ -1104,8 +1107,8 @@ export class Variable extends Basic {
     id: string
     type: VariableType
     name: string
-    value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur | AutoLayout
-    constructor(id: string, type: VariableType, name: string, value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur | AutoLayout) {
+    value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | Border | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur | AutoLayout
+    constructor(id: string, type: VariableType, name: string, value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | Border | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur | AutoLayout) {
         super()
         this.id = id
         this.type = type
