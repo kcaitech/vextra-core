@@ -41,7 +41,7 @@ export class SymbolRefView extends ShapeView {
         varsContainer.push(this.m_sym);
         // let refframe;
         const parent = this.parent;
-        const parentFrame = parent?.hasSize() ? parent.frame : undefined;
+        const parentFrame = parent?.hasSize() ? parent.frame : undefined; // 判断父级是否有确定的大小
         this._layout(this.m_data, parentFrame, varsContainer, this.m_scale, this.m_uniform_scale);
         this.updateFrames();
     }

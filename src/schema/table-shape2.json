@@ -1,0 +1,55 @@
+{
+    "description": "table shape2",
+    "type": "object",
+    "properties": {
+        "size": {
+            "$ref": "./shape-size.json"
+        },
+        "cells": {
+            "type": "map",
+            "key": {
+                "type": "string"
+            },
+            "value": {
+                "$ref": "./artboard.json"
+            }
+        },
+        "cellAttrs": {
+            "type": "map",
+            "key": {
+                "type": "string"
+            },
+            "value": {
+                "$ref": "./table-cell-attr.json"
+            }
+        },
+        "rowHeights": {
+            "type": "array",
+            "items": {
+                "$ref": "./crdt-number.json"
+            }
+        },
+        "colWidths": {
+            "type": "array",
+            "items": {
+                "$ref": "./crdt-number.json"
+            }
+        },
+        "textAttr": {
+            "$ref": "./text-attr.json"
+        }
+    },
+    "required": [
+        "size",
+        "cells",
+        "cellsInfo",
+        "rowHeights",
+        "colWidths"
+    ],
+    "allOf": [
+        {
+            "$ref": "./shape.json"
+        }
+    ],
+    "additionalProperties": false
+}

@@ -14,7 +14,7 @@ import { exportSymbolRefShape } from "./baseexport";
 import { Path } from "@kcdesign/path";
 
 function genRefId(refId: string, type: OverrideType) {
-    if (type === OverrideType.Variable) return refId;
+    if (type === OverrideType.Variable || type === OverrideType.TableCell) return refId;
     return refId.length > 0 ? refId + '/' + type : type;
 }
 

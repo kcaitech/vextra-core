@@ -1,0 +1,17 @@
+{
+    "description": "table cell info",
+    "type": "object",
+    "properties": {
+        "rowSpan": {
+            "type": "number",
+            "default": 1
+        },
+        "colSpan": {
+            "type": "number",
+            "default": 1
+        }
+    },
+    "required": [],
+    "allOf": [],
+    "additionalProperties": false
+}
