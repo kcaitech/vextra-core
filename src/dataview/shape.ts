@@ -1,5 +1,5 @@
 import { innerShadowId, renderBlur, renderBorders, renderFills, renderShadows } from "../render";
-import { BasicArray, Blur, BlurType, Border, BorderPosition, ContextSettings, CornerRadius, CurvePoint, ExportOptions, Fill, FillMask, FillType, GradientType, makeShapeTransform1By2, makeShapeTransform2By1, MarkerType, OverlayBackgroundAppearance, OverlayBackgroundInteraction, OverlayPosition, OverrideType, PathShape, Point2D, PrototypeInterAction, PrototypeStartingPoint, ResizingConstraints2, ScrollBehavior, ScrollDirection, Shadow, ShadowMask, ShadowPosition, Shape, ShapeFrame, ShapeSize, ShapeType, SymbolRefShape, SymbolShape, Transform, Variable, VariableType } from "../data";
+import { BasicArray, Blur, BlurMask, BlurType, Border, BorderPosition, ContextSettings, CornerRadius, CurvePoint, ExportOptions, Fill, FillMask, FillType, GradientType, makeShapeTransform1By2, makeShapeTransform2By1, MarkerType, OverlayBackgroundAppearance, OverlayBackgroundInteraction, OverlayPosition, OverrideType, PathShape, Point2D, PrototypeInterAction, PrototypeStartingPoint, ResizingConstraints2, ScrollBehavior, ScrollDirection, Shadow, ShadowMask, ShadowPosition, Shape, ShapeFrame, ShapeSize, ShapeType, SymbolRefShape, SymbolShape, Transform, Variable, VariableType } from "../data";
 import { findOverrideAndVar } from "./basic";
 import { EL, elh } from "./el";
 import { Matrix } from "../basic/matrix";
@@ -699,7 +699,18 @@ export class ShapeView extends DataView {
 
     get blur(): Blur | undefined {
         const v = this._findOV(OverrideType.Blur, VariableType.Blur);
-        return v ? v.value : this.m_data.style.blur;
+        let blur: Blur;
+        if (this.style.blursMask) {
+            const mgr = this.style.getStylesMgr();
+            if (!mgr) return undefined;
+            const mask = mgr.getSync(this.style.blursMask) as BlurMask     
+            blur = mask.blur
+            // 检查图层是否在变量通知对象集合里
+            if (!mask.__subscribers.has(this)) mask.__subscribers.add(this);
+        } else {
+            blur = v ? v.value : this.m_data.style.blur;
+        }
+        return blur;
     }
 
     getPathStr() {

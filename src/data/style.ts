@@ -295,6 +295,7 @@ export class Style extends Basic implements classes.Style {
     varbinds?: BasicMap<string, string>
     fillsMask?: string
     shadowsMask?: string
+    blursMask?: string
 
     private __styleMgr?: ResourceMgr<StyleMangerMember>;
 
@@ -393,7 +394,7 @@ export class Blur extends Basic implements classes.Blur {
 /**
  * @description 样式库管理器数据组成
  */
-export type StyleMangerMember = FillMask | ShadowMask;
+export type StyleMangerMember = FillMask | ShadowMask | BlurMask;
 
 export class StyleSheet extends Basic implements classes.StyleSheet {
     typeId = "style-sheet"
@@ -447,6 +448,14 @@ export class StyleSheet extends Basic implements classes.StyleSheet {
                 })
                 const shadowMask = new ShadowMask(v.crdtidx, sheetId, v4(), v.name, v.description, shadows);
                 notifiable_variables.push(shadowMask);
+            } else if (v instanceof classes.BlurMask) {
+                const { crdtidx, isEnabled, center, saturation, type } = v.blur;
+                const blur = new Blur(crdtidx, isEnabled, center, saturation, type);
+                blur.motionAngle = v.blur.motionAngle;
+                blur.radius = v.blur.radius;
+                blur.mask = v.blur.mask;
+                const blurmask = new BlurMask(v.crdtidx, sheetId, v4(), v.name, v.description, blur);
+                notifiable_variables.push(blurmask);
             }
             // 还有其他的一些类型
         }
@@ -521,6 +530,43 @@ export class ShadowMask extends Basic implements Mask, classes.ShadowMask {
 
     notify(...args: any[]) {
         super.notify("style-mask-change", "shadow", ...args);
+        this.__subscribers.forEach(view => {
+            if (view.isDistroyed) return;
+            view.m_ctx.setDirty(view); // 将view设置为脏节点之后，下一帧会被更新
+        })
+    }
+
+    add(view: ShapeView) {
+        this.__subscribers.add(view);
+        return () => {
+            this.__subscribers.delete(view)
+        }
+    }
+}
+
+export class BlurMask extends Basic implements Mask, classes.BlurMask {
+    typeId = 'blur-mask-living';
+    crdtidx: BasicArray<number>;
+    id: string;
+    sheet: string;
+    __subscribers: Set<ShapeView>;
+    name: string;
+    description: string;
+    blur: Blur;
+
+    constructor(crdtidx: BasicArray<number>, sheet: string, id: string, name: string, description: string, blur: Blur) {
+        super();
+        this.crdtidx = crdtidx;
+        this.id = id;
+        this.sheet = sheet;
+        this.__subscribers = new Set<ShapeView>();
+        this.name = name;
+        this.description = description;
+        this.blur = blur;
+    }
+
+    notify(...args: any[]) {
+        super.notify("style-mask-change", "blur", ...args);
         this.__subscribers.forEach(view => {
             if (view.isDistroyed) return;
             view.m_ctx.setDirty(view); // 将view设置为脏节点之后，下一帧会被更新

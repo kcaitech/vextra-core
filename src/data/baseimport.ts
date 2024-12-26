@@ -29,7 +29,7 @@ type PathShape2_pathsegs = BasicArray<impl.PathSegment>
 type PrototypeInterAction_crdtidx = BasicArray<number>
 type ShadowMask_shadows = BasicArray<impl.Shadow>
 type Shape_prototypeInteractions = BasicArray<impl.PrototypeInterAction>
-type StyleSheet_variables = BasicArray<impl.BorderSideSetting | impl.FillMask | impl.Border | impl.ShadowMask | impl.Blur | impl.CornerRadius>
+type StyleSheet_variables = BasicArray<impl.BorderSideSetting | impl.FillMask | impl.Border | impl.ShadowMask | impl.BlurMask | impl.CornerRadius>
 type Style_borders = BasicArray<impl.Border>
 type Style_fills = BasicArray<impl.Fill>
 type Style_shadows = BasicArray<impl.Shadow>
@@ -701,8 +701,8 @@ export function importStyleSheet_variables(source: types.StyleSheet_variables, c
             if (source.typeId === "shadow-mask") {
                 return importShadowMask(source as types.ShadowMask, ctx)
             }
-            if (source.typeId === "blur") {
-                return importBlur(source as types.Blur, ctx)
+            if (source.typeId === "blur-mask") {
+                return importBlurMask(source as types.BlurMask, ctx)
             }
             if (source.typeId === "corner-radius") {
                 return importCornerRadius(source as types.CornerRadius, ctx)
@@ -1097,6 +1097,20 @@ export function importSpan(source: types.Span, ctx?: IImportContext): impl.Span 
     importSpanOptional(ret, source, ctx)
     return ret
 }
+/* blur mask */
+export function importBlurMask(source: types.BlurMask, ctx?: IImportContext): impl.BlurMask {
+    const ret: impl.BlurMask = new impl.BlurMask (
+        importCrdtidx(source.crdtidx, ctx),
+        source.sheet,
+        source.id,
+        source.name,
+        source.description,
+        importBlur(source.blur, ctx))
+        // inject code
+    if (ctx?.document) ctx.document.stylesMgr.add(ret.id, ret);
+
+    return ret
+}
 /* border */
 function importBorderOptional(tar: impl.Border, source: types.Border, ctx?: IImportContext) {
     if (source.contextSettings) tar.contextSettings = importContextSettings(source.contextSettings, ctx)
@@ -1214,6 +1228,7 @@ function importStyleOptional(tar: impl.Style, source: types.Style, ctx?: IImport
     })()
     if (source.fillsMask) tar.fillsMask = source.fillsMask
     if (source.shadowsMask) tar.shadowsMask = source.shadowsMask
+    if (source.blursMask) tar.blursMask = source.blursMask
 }
 export function importStyle(source: types.Style, ctx?: IImportContext): impl.Style {
     const ret: impl.Style = new impl.Style (

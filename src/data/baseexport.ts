@@ -618,8 +618,8 @@ export function exportStyleSheet_variables(source: types.StyleSheet_variables, c
             if (source.typeId === "shadow-mask") {
                 return exportShadowMask(source as types.ShadowMask, ctx)
             }
-            if (source.typeId === "blur") {
-                return exportBlur(source as types.Blur, ctx)
+            if (source.typeId === "blur-mask") {
+                return exportBlurMask(source as types.BlurMask, ctx)
             }
             if (source.typeId === "corner-radius") {
                 return exportCornerRadius(source as types.CornerRadius, ctx)
@@ -995,6 +995,19 @@ export function exportSpan(source: types.Span, ctx?: IExportContext): types.Span
     ret.length = source.length
     return ret
 }
+/* blur mask */
+export function exportBlurMask(source: types.BlurMask, ctx?: IExportContext): types.BlurMask {
+    const ret: types.BlurMask = {} as types.BlurMask
+    ret.typeId = "blur-mask"
+    ret.crdtidx = exportCrdtidx(source.crdtidx, ctx)
+    ret.typeId = source.typeId
+    ret.sheet = source.sheet
+    ret.id = source.id
+    ret.name = source.name
+    ret.description = source.description
+    ret.blur = exportBlur(source.blur, ctx)
+    return ret
+}
 /* border */
 export function exportBorder(source: types.Border, ctx?: IExportContext): types.Border {
     const ret: types.Border = {} as types.Border
@@ -1095,6 +1108,7 @@ export function exportStyle(source: types.Style, ctx?: IExportContext): types.St
     })()
     if (source.fillsMask) ret.fillsMask = source.fillsMask
     if (source.shadowsMask) ret.shadowsMask = source.shadowsMask
+    if (source.blursMask) ret.blursMask = source.blursMask
     return ret
 }
 /* text attr */

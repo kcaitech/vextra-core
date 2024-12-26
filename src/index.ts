@@ -137,6 +137,7 @@ export {
 
     ShadowMask,
     FillMask,
+    BlurMask,
     StyleMangerMember
 } from "./data"
 

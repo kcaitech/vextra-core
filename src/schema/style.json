@@ -75,6 +75,9 @@
         },
         "shadowsMask": {
             "type": "string"
+        },
+        "blursMask": {
+            "type": "string"
         }
     },
     "required": [

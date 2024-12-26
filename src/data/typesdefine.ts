@@ -566,7 +566,7 @@ export enum StrikethroughType {
 export enum StyleLibType {
     Color = "color",
 }
-export type StyleSheet_variables = Array<BorderSideSetting | FillMask | Border | ShadowMask | Blur | CornerRadius>
+export type StyleSheet_variables = Array<BorderSideSetting | FillMask | Border | ShadowMask | BlurMask | CornerRadius>
 /* shape types */
 export enum StyleVarType {
     Color = "color",
@@ -848,6 +848,16 @@ export type SpanAttr = {
 export type Span = SpanAttr & {
     length: number,
 }
+/* blur mask */
+export type BlurMask = {
+    crdtidx: Crdtidx,
+    typeId: string,
+    sheet: string,
+    id: string,
+    name: string,
+    description: string,
+    blur: Blur,
+}
 /* border */
 export type Border = {
     crdtidx: Crdtidx,
@@ -927,6 +937,7 @@ export type Style = {
     varbinds?: Map<string, string>,
     fillsMask?: string,
     shadowsMask?: string,
+    blursMask?: string,
 }
 /* text attr */
 export type TextAttr = ParaAttr & {
