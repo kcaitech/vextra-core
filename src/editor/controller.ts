@@ -952,7 +952,7 @@ export class Controller {
         return { pre, modify_contact_from, modify_contact_to, before, modify_sides, migrate, close }
     }
 
-    public asyncBorderThickness(_shapes: ShapeView[], _page: Page | PageView): AsyncBorderThickness {
+    public asyncBorderThickness(_shapes: ShapeView[], _page: PageView): AsyncBorderThickness {
         const sort: Map<string, number> = new Map();
         const parents = getAutoLayoutShapes(_shapes);
         for (let i = 0; i < parents.length; i++) {
@@ -966,7 +966,7 @@ export class Controller {
             }
         }
         const shapes: ShapeView[] = _shapes;
-        const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
+        const page = _page.data;
 
         const api = this.__repo.start("asyncBorderThickness");
         let status: Status = Status.Pending;
@@ -974,7 +974,7 @@ export class Controller {
             status = Status.Pending;
             try {
                 for (let i = 0, l = shapes.length; i < l; i++) {
-                    const s = shape4border(api, page, shapes[i]);
+                    const s = shape4border(api, _page, shapes[i]);
                     const borders = shapes[i].getBorders();
                     const sideType = borders[index].sideSetting.sideType;
                     switch (sideType) {
@@ -1022,9 +1022,9 @@ export class Controller {
         }
         return { execute, close }
     }
-    public asyncBorderSideThickness(_shapes: ShapeView[], _page: Page | PageView, type: SideType): AsyncBorderThickness {
+    public asyncBorderSideThickness(_shapes: ShapeView[], _page: PageView, type: SideType): AsyncBorderThickness {
         const shapes: ShapeView[] = _shapes;
-        const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
+        const page = _page.data;
 
         const api = this.__repo.start("asyncBorderSideThickness");
         let status: Status = Status.Pending;
@@ -1032,7 +1032,7 @@ export class Controller {
             status = Status.Pending;
             try {
                 for (let i = 0, l = shapes.length; i < l; i++) {
-                    const s = shape4border(api, page, shapes[i]);
+                    const s = shape4border(api, _page, shapes[i]);
                     switch (type) {
                         case SideType.Top:
                             api.setBorderThicknessTop(page, s, index, thickness);
@@ -1075,9 +1075,9 @@ export class Controller {
         return { execute, close }
     }
 
-    public asyncOpacityEditor(_shapes: ShapeView[], _page: Page | PageView): AsyncOpacityEditor {
+    public asyncOpacityEditor(_shapes: ShapeView[], _page: PageView): AsyncOpacityEditor {
         const shapes: ShapeView[] = _shapes;
-        const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
+        const page = _page.data
 
         const api = this.__repo.start("asyncOpacityEditor");
         let status: Status = Status.Pending;
@@ -1085,7 +1085,7 @@ export class Controller {
             status = Status.Pending;
             try {
                 for (let i = 0, l = shapes.length; i < l; i++) {
-                    const shape = shape4contextSettings(api, shapes[i], page);
+                    const shape = shape4contextSettings(api, shapes[i], _page);
                     api.shapeModifyContextSettingsOpacity(page, shape, contextSettingOpacity);
                 }
                 this.__repo.transactCtx.fireNotify();
@@ -1106,8 +1106,8 @@ export class Controller {
         return { execute, close }
     }
 
-    public asyncGradientEditor(shapes: ShapeView[], _page: Page | PageView, index: number, type: 'fills' | 'borders'): AsyncGradientEditor {
-        const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
+    public asyncGradientEditor(shapes: ShapeView[], _page: PageView, index: number, type: 'fills' | 'borders'): AsyncGradientEditor {
+        const page = _page.data;
         const api = this.__repo.start("asyncGradientEditor");
         let status: Status = Status.Pending;
         const execute_from = (from: { x: number, y: number }) => {
@@ -1126,7 +1126,7 @@ export class Controller {
                     new_gradient.from.x = from.x;
                     new_gradient.from.y = from.y;
                     const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
-                    const s = shape4fill(api, page, shape);
+                    const s = shape4fill(api, _page, shape);
                     f(page, s, index, new_gradient);
                 }
                 this.__repo.transactCtx.fireNotify();
@@ -1152,7 +1152,7 @@ export class Controller {
                     new_gradient.to.x = to.x;
                     new_gradient.to.y = to.y;
                     const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
-                    const s = shape4fill(api, page, shape);
+                    const s = shape4fill(api, _page, shape);
                     f(page, s, index, new_gradient);
                 }
                 this.__repo.transactCtx.fireNotify();
@@ -1177,7 +1177,7 @@ export class Controller {
                     const new_gradient = importGradient(exportGradient(gradient));
                     new_gradient.elipseLength = length;
                     const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
-                    const s = shape4fill(api, page, shape);
+                    const s = shape4fill(api, _page, shape);
                     f(page, s, index, new_gradient);
                 }
                 this.__repo.transactCtx.fireNotify();
@@ -1220,7 +1220,7 @@ export class Controller {
                             }
                         })
                         const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
-                        const s = shape4fill(api, page, shape);
+                        const s = shape4fill(api, _page, shape);
                         f(page, s, index, new_gradient);
                     }
                 }

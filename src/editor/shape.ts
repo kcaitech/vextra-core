@@ -22,8 +22,8 @@ import { after_remove, clear_binds_effect, find_layers_by_varid, get_symbol_by_l
 import { newText2 } from "./creator";
 import { _typing_modify, get_points_for_init, modify_points_xy, update_frame_by_points } from "./utils/path";
 import { adapt_for_artboard } from "./utils/common";
-import { ShapeView, SymbolRefView, SymbolView, adapt2Shape, findOverride, ArtboradView, findVar, GroupShapeView } from "../dataview";
-import { is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union, modify_variable, modify_variable_with_api, override_variable, shape4border, shape4contextSettings, shape4exportOptions, shape4fill, shape4shadow } from "./symbol";
+import { ShapeView, SymbolRefView, SymbolView, adapt2Shape, findOverride, ArtboradView, findVar, GroupShapeView, PageView } from "../dataview";
+import { is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union, modify_variable, modify_variable_with_api, shape4border, shape4contextSettings, shape4exportOptions, shape4fill, shape4shadow } from "./symbol";
 import { ISave4Restore, LocalCmd, SelectionState } from "../coop/localcmd";
 import { getAutoLayoutShapes, initAutoLayout, layoutShapesOrder, layoutSpacing, modifyAutoLayout } from "./utils/auto_layout";
 
@@ -32,13 +32,13 @@ export type PaddingDir = 'ver' | 'hor' | 'top' | 'right' | 'bottom' | 'left';
 export class ShapeEditor {
     protected __shape: ShapeView;
     protected __repo: CoopRepository;
-    protected __page: Page;
+    protected _page: PageView;
     protected __document: Document
 
-    constructor(shape: ShapeView, page: Page, repo: CoopRepository, document: Document) {
+    constructor(shape: ShapeView, page: PageView, repo: CoopRepository, document: Document) {
         // check
         if (!(shape instanceof ShapeView)) throw new Error("shape wrong");
-        if (!(page instanceof Page)) {
+        if (!(page instanceof PageView)) {
             console.error("page wrong", page ? JSON.stringify(page, (k, v) => k.startsWith('__')) : page)
             throw new Error("page wrong");
         }
@@ -46,8 +46,12 @@ export class ShapeEditor {
         if (!(document instanceof Document)) throw new Error("document wrong");
         this.__shape = shape;
         this.__repo = repo;
-        this.__page = page;
+        this._page = page;
         this.__document = document;
+    }
+
+    get __page() {
+        return this._page.data
     }
 
     get view(): ShapeView {
@@ -80,17 +84,17 @@ export class ShapeEditor {
      * @param shape
      * @returns
      */
-    protected overrideVariable(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, api: Api, view?: ShapeView) {
-        view = view ?? this.__shape;
-        return override_variable(this.__page, varType, overrideType, valuefun, api, view);
-    }
+    // private overrideVariable(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, api: Api, view?: ShapeView) {
+    //     view = view ?? this.__shape;
+    //     return override_variable(this.__page, varType, overrideType, valuefun, api, view);
+    // }
 
     /**
      * 检查当前shape的overrideType对应的属性值是否由变量起作用，如果是则判断var是否可以修改，如可以则「修改」var，否则先override再「修改」新的var
      * @returns
      */
     modifyVariable(varType: VariableType, overrideType: OverrideType, value: any, api: Api): boolean {
-        return modify_variable_with_api(api, this.__page, this.__shape, varType, overrideType, value);
+        return modify_variable_with_api(api, this._page, this.__shape, varType, overrideType, value);
     }
 
     /**
@@ -442,7 +446,7 @@ export class ShapeEditor {
     public contextSettingOpacity(value: number) {
         const api = this.__repo.start("contextSettingOpacity");
         try {
-            const shape = shape4contextSettings(api, this.__shape, this.__page);
+            const shape = shape4contextSettings(api, this.__shape, this._page);
             api.shapeModifyContextSettingsOpacity(this.__page, shape, value);
             this.__repo.commit();
         } catch (error) {
@@ -507,7 +511,7 @@ export class ShapeEditor {
      * @description 已提出到 "editor/utils/symbol"
      */
     private shape4fill(api: Api, shape?: ShapeView) {
-        return shape4fill(api, this.__page, shape ?? this.__shape);
+        return shape4fill(api, this._page, shape ?? this.__shape);
     }
 
     // fill
@@ -544,7 +548,7 @@ export class ShapeEditor {
      * @description 已提出到 "editor/utils/symbol"
      */
     private shape4border(api: Api, shape?: ShapeView) {
-        return shape4border(api, this.__page, shape ?? this.__shape);
+        return shape4border(api, this._page, shape ?? this.__shape);
     }
 
     // border
@@ -784,7 +788,7 @@ export class ShapeEditor {
     }
 
     private shape4shadow(api: Api, shape?: ShapeView) {
-        return shape4shadow(api, this.__page, shape ?? this.__shape);
+        return shape4shadow(api, this._page, shape ?? this.__shape);
     }
 
     // shadow
@@ -901,7 +905,7 @@ export class ShapeEditor {
     public addExportFormat(formats: ExportFormat[]) {
         const api = this.__repo.start("addExportFormat");
         try {
-            const shape = shape4exportOptions(api, this.__shape, this.__page);
+            const shape = shape4exportOptions(api, this.__shape, this._page);
             const options = shape instanceof Shape ? shape.exportOptions : shape.value as ExportOptions;
             const len = options?.exportFormats.length || 0;
             for (let i = 0; i < formats.length; i++) {
@@ -921,7 +925,7 @@ export class ShapeEditor {
         if (format) {
             const api = this.__repo.start("deleteExportFormat");
             try {
-                const shape = shape4exportOptions(api, this.__shape, this.__page);
+                const shape = shape4exportOptions(api, this.__shape, this._page);
                 api.deleteExportFormatAt(this.__page, shape, idx)
                 this.__repo.commit();
             } catch (e) {
@@ -936,7 +940,7 @@ export class ShapeEditor {
         if (format) {
             const api = this.__repo.start("setExportFormatScale");
             try {
-                const shape = shape4exportOptions(api, this.__shape, this.__page);
+                const shape = shape4exportOptions(api, this.__shape, this._page);
                 api.setExportFormatScale(this.__page, shape, idx, scale);
                 this.__repo.commit();
             } catch (e) {
@@ -951,7 +955,7 @@ export class ShapeEditor {
         if (format) {
             const api = this.__repo.start("setExportFormatName");
             try {
-                const shape = shape4exportOptions(api, this.__shape, this.__page);
+                const shape = shape4exportOptions(api, this.__shape, this._page);
                 api.setExportFormatName(this.__page, shape, idx, name);
                 this.__repo.commit();
             } catch (e) {
@@ -966,7 +970,7 @@ export class ShapeEditor {
         if (format) {
             const api = this.__repo.start("setExportFormatFileFormat");
             try {
-                const shape = shape4exportOptions(api, this.__shape, this.__page);
+                const shape = shape4exportOptions(api, this.__shape, this._page);
                 api.setExportFormatFileFormat(this.__page, shape, idx, fileFormat);
                 this.__repo.commit();
             } catch (e) {
@@ -981,7 +985,7 @@ export class ShapeEditor {
         if (format) {
             const api = this.__repo.start("setExportFormatPerfix");
             try {
-                const shape = shape4exportOptions(api, this.__shape, this.__page);
+                const shape = shape4exportOptions(api, this.__shape, this._page);
                 api.setExportFormatPerfix(this.__page, shape, idx, perfix);
                 this.__repo.commit();
             } catch (e) {
@@ -994,7 +998,7 @@ export class ShapeEditor {
     public setExportTrimTransparent(trim: boolean) {
         const api = this.__repo.start("setExportTrimTransparent");
         try {
-            const shape = shape4exportOptions(api, this.__shape, this.__page);
+            const shape = shape4exportOptions(api, this.__shape, this._page);
             api.setExportTrimTransparent(this.__page, shape, trim);
             this.__repo.commit();
         } catch (e) {
@@ -1006,7 +1010,7 @@ export class ShapeEditor {
     public setExportCanvasBackground(background: boolean) {
         const api = this.__repo.start("setExportTrimTransparent");
         try {
-            const shape = shape4exportOptions(api, this.__shape, this.__page);
+            const shape = shape4exportOptions(api, this.__shape, this._page);
             api.setExportCanvasBackground(this.__page, shape, background);
             this.__repo.commit();
         } catch (e) {
@@ -1018,7 +1022,7 @@ export class ShapeEditor {
     public setExportPreviewUnfold(unfold: boolean) {
         const api = this.__repo.start("setExportTrimTransparent");
         try {
-            const shape = shape4exportOptions(api, this.__shape, this.__page);
+            const shape = shape4exportOptions(api, this.__shape, this._page);
             api.setExportPreviewUnfold(this.__page, shape, unfold);
             this.__repo.commit();
         } catch (e) {
