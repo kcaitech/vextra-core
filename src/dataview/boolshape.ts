@@ -67,7 +67,6 @@ function boundsFrame(shape: ShapeView): ShapeFrame {
     })
     return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
 }
-
 export function render2path(shape: ShapeView, defaultOp = BoolOp.None): Path {
     const shapeIsGroup = shape instanceof GroupShapeView;
     let fixedRadius: number | undefined;
@@ -102,7 +101,6 @@ export function render2path(shape: ShapeView, defaultOp = BoolOp.None): Path {
         const bounds = path0.bbox();
         frame0 = new ShapeFrame(bounds.x, bounds.y, bounds.w, bounds.h);
     }
-
     const pframe = boundsFrame(shape);
     const gridSize = Math.ceil(Math.sqrt(cc));
 
@@ -218,9 +216,12 @@ export class BoolShapeView extends GroupShapeView {
     }
 
     getPath() {
+        // const s = Date.now();
         if (this.m_path) return this.m_path;
         this.m_path = render2path(this);
         this.m_path.freeze();
+        // const e = Date.now();
+        // console.log(e - s, 'time');
         return this.m_path;
     }
 

@@ -174,7 +174,8 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
     })(data['borderOptions'] ? data['borderOptions'].dashPattern : undefined);
     const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
     let border = new Border(BorderPosition.Center, borderStyle, CornerType.Miter, side, strokePaints);
-    if (data['borders'].length) {
+    
+    if (data['borders'] && data['borders'].length) {
         const d = data['borders'][0];
         const position: BorderPosition = ((p: number) => {
             switch (p) {
