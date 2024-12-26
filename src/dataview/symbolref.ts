@@ -1,7 +1,13 @@
 import {
     AutoLayout, Border, ContextSettings, CornerRadius, Fill, MarkerType, OverrideType, PrototypeInterAction, Shadow,
     Shape, ShapeFrame, ShapeSize, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType, ShapeType,
-    BasicArray, getPathOfRadius, makeShapeTransform1By2, makeShapeTransform2By1, Blur, BlurType, PathShape
+    BasicArray, getPathOfRadius, makeShapeTransform1By2, makeShapeTransform2By1, Blur, BlurType, PathShape,
+    BorderSideSetting,
+    SideType,
+    StrokePaint,
+    BorderPosition,
+    BorderStyle,
+    CornerType
 } from "../data";
 import { ShapeView, fixFrameByConstrain, frame2Parent2 } from "./shape";
 import { DataView, RootView } from "./view";
@@ -60,7 +66,7 @@ export class SymbolRefView extends ShapeView {
     }
 
     getSessionRefId(): boolean | string {
-        const jsonString =  this.m_ctx.sessionStorage.get(sessionRefIdKey);
+        const jsonString = this.m_ctx.sessionStorage.get(sessionRefIdKey);
         if (!this.m_ctx.isDocument && jsonString) {
             const refIdArray = JSON.parse(jsonString);
             const maprefIdArray = new Map(refIdArray) as Map<string, string>;
@@ -292,9 +298,9 @@ export class SymbolRefView extends ShapeView {
         let scaleY = scale.y;
 
         if (parentFrame && resizingConstraint !== 0) {
-            const {transform, targetWidth, targetHeight} = fixFrameByConstrain(shape, parentFrame, scaleX, scaleY, uniformScale);
+            const { transform, targetWidth, targetHeight } = fixFrameByConstrain(shape, parentFrame, scaleX, scaleY, uniformScale);
             this.updateLayoutArgs(makeShapeTransform1By2(transform), new ShapeFrame(0, 0, targetWidth, targetHeight), (shape as PathShape).fixedRadius);
-            this.layoutChilds(varsContainer, this.frame, {x: targetWidth / saveW, y: targetHeight / saveH});
+            this.layoutChilds(varsContainer, this.frame, { x: targetWidth / saveW, y: targetHeight / saveH });
         } else {
             if (uniformScale) {
                 scaleX /= uniformScale;
@@ -308,7 +314,7 @@ export class SymbolRefView extends ShapeView {
             transform.clearScaleSize();
             const frame = new ShapeFrame(0, 0, size.width * __decompose_scale.x, size.height * __decompose_scale.y);
             this.updateLayoutArgs(makeShapeTransform1By2(transform), frame, (shape as PathShape).fixedRadius);
-            this.layoutChilds(varsContainer, this.frame, {x: frame.width / saveW, y: frame.height / saveH});
+            this.layoutChilds(varsContainer, this.frame, { x: frame.width / saveW, y: frame.height / saveH });
         }
 
         // const t = skewTransform(scaleX, scaleY).clone();
@@ -386,8 +392,11 @@ export class SymbolRefView extends ShapeView {
     getBorders(): Border {
         if (this.m_borders) return this.m_borders;
         const v = this._findOV2(OverrideType.Borders, VariableType.Borders);
-        this.m_borders = v ? v.value as Border : this.m_sym!.style.borders;
-        return this.m_borders;
+        const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+        const strokePaints = new BasicArray<StrokePaint>();
+        const border = new Border(BorderPosition.Center, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
+        this.m_borders = v ? v.value as Border : this.m_sym?.style.borders;
+        return this.m_borders || border;
     }
 
     getShadows(): Shadow[] {
@@ -425,7 +434,7 @@ export class SymbolRefView extends ShapeView {
         const borders = this.renderBorders();
         let childs = this.renderContents();
 
-        if (this.uniformScale) childs = [elh('g', {transform: `scale(${this.uniformScale})`}, childs)];
+        if (this.uniformScale) childs = [elh('g', { transform: `scale(${this.uniformScale})` }, childs)];
 
         const filterId = `${objectId(this)}`;
         const shadows = this.renderShadows(filterId);
@@ -440,7 +449,7 @@ export class SymbolRefView extends ShapeView {
             const clip = clippathR(elh, id, this.getPathStr());
             children = [
                 clip,
-                elh("g", {"clip-path": "url(#" + id + ")"}, [...fills, ...childs]),
+                elh("g", { "clip-path": "url(#" + id + ")" }, [...fills, ...childs]),
                 ...borders
             ];
         }
@@ -451,7 +460,7 @@ export class SymbolRefView extends ShapeView {
             const inner_url = innerShadowId(filterId, this.getShadows());
             filter = `url(#pd_outer-${filterId}) `;
             if (inner_url.length) filter += inner_url.join(' ');
-            children = [...shadows, elh("g", {filter}, children)];
+            children = [...shadows, elh("g", { filter }, children)];
         }
 
         // 模糊
@@ -477,14 +486,14 @@ export class SymbolRefView extends ShapeView {
         // 遮罩
         const _mask_space = this.renderMask();
         if (_mask_space) {
-            Object.assign(props.style, {transform: _mask_space.toString()});
+            Object.assign(props.style, { transform: _mask_space.toString() });
             const id = `mask-base-${objectId(this)}`;
             const __body_transform = this.transformFromMask;
-            const __body = elh("g", {style: {transform: __body_transform}}, children);
+            const __body = elh("g", { style: { transform: __body_transform } }, children);
             this.bleach(__body);
             children = [__body];
-            const mask = elh('mask', {id}, children);
-            const rely = elh('g', {mask: `url(#${id})`}, this.relyLayers);
+            const mask = elh('mask', { id }, children);
+            const rely = elh('g', { mask: `url(#${id})` }, this.relyLayers);
             children = [mask, rely];
         }
 
