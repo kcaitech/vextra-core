@@ -18,6 +18,129 @@ function __multi(lhs: number[], rhs: number[]): number[] {
 }
 const float_accuracy = 1e-7;
 
+function transpose2x2(m: number[]) {
+    return [
+        m[0], m[2],
+        m[1], m[3],
+    ]
+}
+
+function multi2x2(m1: number[], m2: number[]) {
+    return [
+        m1[0] * m2[0] + m1[2] * m2[1],
+        m1[1] * m2[0] + m1[3] * m2[1],
+        m1[0] * m2[2] + m1[2] * m2[3],
+        m1[1] * m2[2] + m1[3] * m2[3],
+    ]
+}
+
+function eigenDecomposition(A: number[]) {
+    // A 是一个 2x2 对称矩阵 [[a, b], [b, d]]
+    const a = A[0];
+    const b = A[1]; // 因为是对称矩阵，A[1][0] == A[0][1]
+    const d = A[3];
+
+    // 特征多项式的系数
+    const trace = a + d; // 迹
+    const det = a * d - b * b; // 行列式
+
+    // 计算特征值 (lambda)
+    const discriminant = Math.sqrt(trace * trace - 4 * det);
+    const lambda1 = (trace + discriminant) / 2;
+    const lambda2 = (trace - discriminant) / 2;
+
+    // 计算特征向量
+    let v1: number[];
+    let v2: number[];
+
+    if (Math.abs(b) < float_accuracy) {
+        v1 = [1, 0];
+        v2 = [0, 1];
+    } else {
+        v1 = [lambda1 - d, b];
+        v2 = [lambda2 - d, b];
+    }
+
+    // 归一化特征向量
+    const norm1 = Math.sqrt(v1[0] * v1[0] + v1[1] * v1[1]);
+    const norm2 = Math.sqrt(v2[0] * v2[0] + v2[1] * v2[1]);
+    v1 = [v1[0] / norm1, v1[1] / norm1];
+    v2 = [v2[0] / norm2, v2[1] / norm2];
+
+    // 构建 V 和 Lambda
+    const V = [
+        v1[0], v1[1], v2[0], v2[1]
+    ];
+    const Lambda = [lambda1, lambda2];
+
+    return { V, Lambda };
+}
+
+function polarDecomposition(A: number[]) {
+    // 计算A的转置
+    const AT = transpose2x2(A);
+
+    // 计算ATA
+    const ATA = multi2x2(AT, A);
+
+    // 计算ATA的特征值分解（Eigendecomposition）
+    const eigen = eigenDecomposition(ATA);
+    const V = eigen.V;
+    const Lambda = eigen.Lambda;
+
+    // 构建对角矩阵的平方根
+    const sqrtLambdaMatrix = [
+        Math.sqrt(Lambda[0]), 0, 0, Math.sqrt(Lambda[1])
+    ];
+
+    const S = multi2x2(
+        multi2x2(V, sqrtLambdaMatrix),
+        transpose2x2(V)
+    );
+
+    const R = multi2x2(
+        A,
+        inverse2x2(S)
+    );
+
+    const scale = { x: sqrtLambdaMatrix[0], y: sqrtLambdaMatrix[3] }
+
+    return { S, R, scale, sqrtLambdaMatrix, eigen };
+}
+
+function inverse2x2(m: number[]) {
+    const d = m[0] * m[3] - m[1] * m[2];
+    return [
+        m[3] / d, - m[1] / d,
+        - m[2] / d, m[0] / d,
+    ]
+}
+
+type Decompose = {
+    T: number[];
+    S: number[];
+    R: number[];
+    eigen: { V: number[], Lambda: number[] };
+    sqrtLambdaMatrix: number[];
+    scale: { x: number, y: number };
+    translate: { x: number, y: number };
+    rotate: number;
+}
+
+function decomposition(A: number[]): Decompose {
+    const { S, R, scale, sqrtLambdaMatrix, eigen } = polarDecomposition(A);
+    const T = [1, 0, 0, 1, A[4], A[5]];
+    S[4] = 0;
+    S[5] = 0;
+    R[4] = 0;
+    R[5] = 0;
+    // S2[4] = 0;
+    // S2[5] = 0;
+    // A = TRS
+    const rotate = Math.atan2(R[1], R[0])
+    return { T, S, R, scale, sqrtLambdaMatrix, eigen, translate: { x: A[4], y: A[5] }, rotate };
+}
+
 export class Matrix {
     private m_matrix: number[];
 
@@ -30,20 +153,22 @@ export class Matrix {
                 (args[0] instanceof Matrix ? this.m_matrix = args[0].toArray() : [...args]));
     }
 
-    multiAtLeft(m: number[]): void
-    multiAtLeft(m: Matrix): void
-    multiAtLeft(m: any): void { // 左乘 this = m * this
+    multiAtLeft(m: number[]): Matrix
+    multiAtLeft(m: Matrix): Matrix
+    multiAtLeft(m: any): Matrix { // 左乘 this = m * this
         const m0 = this.m_matrix;
         const mm = m instanceof Matrix ? m.m_matrix : m;
         this.m_matrix = __multi(mm, m0);
+        return this
     }
 
-    multi(m: number[]): void
-    multi(m: Matrix): void
-    multi(m: any): void { // 右乘 this = this * m
+    multi(m: number[]): Matrix
+    multi(m: Matrix): Matrix
+    multi(m: any): Matrix { // 右乘 this = this * m
         const m0 = this.m_matrix;
         const mm = m instanceof Matrix ? m.m_matrix : m;
         this.m_matrix = __multi(m0, mm);
+        return this;
     }
 
     trans(x: number, y: number) {
@@ -52,10 +177,11 @@ export class Matrix {
     preTrans(x: number, y: number) {
         this.multi([1, 0, 0, 1, x, y]);
     }
-    scale(s: number): void;
-    scale(sx: number, sy: number): void;
+    scale(s: number): Matrix;
+    scale(sx: number, sy: number): Matrix;
     scale(sx: number, sy?: number) {
         this.multiAtLeft([sx, 0, 0, sy ?? sx, 0, 0]);
+        return this
     }
     preScale(s: number): void;
     preScale(sx: number, sy: number): void;
@@ -75,14 +201,15 @@ export class Matrix {
      * @radians x轴向右，y轴坐标向下，顺时针方向，0-2pi 
      * @x @y 旋转中心点
      * */
-    rotate(radians: number): void;
-    rotate(radians: number, x: number, y: number): void;
+    rotate(radians: number): Matrix;
+    rotate(radians: number, x: number, y: number): Matrix;
     rotate(radians: number, x?: number, y?: number) {
         if (x || y) this.trans(-(x || 0), -(y || 0));
         const cos = Math.cos(radians);
         const sin = Math.sin(radians);
         this.multiAtLeft([cos, sin, -sin, cos, 0, 0])
         if (x || y) this.trans(x || 0, y || 0);
+        return this;
     }
     computeCoord(point: { x: number, y: number }): { x: number, y: number };
     computeCoord(x: number, y: number): { x: number, y: number };
@@ -220,4 +347,50 @@ export class Matrix {
     clone() {
         return new Matrix(this)
     }
+
+    decompose(): Decompose {
+        return decomposition(this.m_matrix);
+    }
+
+    // static clearScale(d: Decompose): Matrix {
+    //     // TRS
+    //     const sqrtLambdaMatrix = d.sqrtLambdaMatrix
+    //     const V = d.eigen.V
+    //     const savg = Math.sqrt(sqrtLambdaMatrix[0] * sqrtLambdaMatrix[3]);
+    //     const S2 = multi2x2(
+    //         multi2x2(V, [sqrtLambdaMatrix[0] / savg, 0, 0, sqrtLambdaMatrix[3] / savg]),
+    //         transpose2x2(V)
+    //     );
+    //     const SR = multi2x2(d.R, S2)
+    //     return new Matrix([SR[0], SR[1], SR[2], SR[3], d.T[4], d.T[5]])
+    // }
+
+    // static clearSkew(d: Decompose): Matrix {
+    //     // TRS
+    //     const sqrtLambdaMatrix = d.sqrtLambdaMatrix
+    //     const V = d.eigen.V
+    //     const savg = Math.sqrt(sqrtLambdaMatrix[0] * sqrtLambdaMatrix[3]);
+    //     const S2 = multi2x2(
+    //         multi2x2(V, [savg, 0, 0, savg]),
+    //         transpose2x2(V)
+    //     );
+    //     const SR = multi2x2(d.R, S2)
+    //     return new Matrix([SR[0], SR[1], SR[2], SR[3], d.T[4], d.T[5]])
+    // }
+
+    // static clearSkewAndScale(d: Decompose): Matrix {
+    //     // TRS
+    //     const SR = d.R; // multi2x2(d.R, S2)
+    //     return new Matrix([SR[0], SR[1], SR[2], SR[3], d.T[4], d.T[5]])
+    // }
+
+    // static setScale(d: Decompose, scale: {x: number, y: number}): Matrix {
+    //     const V = d.eigen.V
+    //     const S2 = multi2x2(
+    //         multi2x2(V, [scale.x, 0, 0, scale.y]),
+    //         transpose2x2(V)
+    //     );
+    //     const SR = multi2x2(d.R, S2)
+    //     return new Matrix([SR[0], SR[1], SR[2], SR[3], d.T[4], d.T[5]])
+    // }
 }
