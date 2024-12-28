@@ -306,6 +306,11 @@ export class SymbolRefView extends ShapeView {
             const __decompose_scale = transform.decomposeScale();
             const size = shape.size;
             transform.clearScaleSize();
+            // 保持对象位置不变
+            const p0 = shape.transform.computeCoord(0, 0);
+            const p1 = transform.transform(ColVector3D.FromXY(0, 0)).col0;
+            transform.translate(ColVector3D.FromXY(p0.x - p1.x, p0.y - p1.y));
+
             const frame = new ShapeFrame(0, 0, size.width * __decompose_scale.x, size.height * __decompose_scale.y);
             this.updateLayoutArgs(makeShapeTransform1By2(transform), frame, (shape as PathShape).fixedRadius);
             this.layoutChilds(varsContainer, this.frame, {x: frame.width / saveW, y: frame.height / saveH});
