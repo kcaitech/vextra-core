@@ -140,6 +140,7 @@ export {
     FillMask,
     BlurMask,
     StyleMangerMember,
+    CornerRadius,
     PathSegment
 } from "./data"
 

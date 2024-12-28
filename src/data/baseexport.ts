@@ -613,14 +613,8 @@ export function exportStyleSheet_variables(source: types.StyleSheet_variables, c
             if (typeof source !== "object") {
                 return source
             }
-            if (source.typeId === "border-side-setting") {
-                return exportBorderSideSetting(source as types.BorderSideSetting, ctx)
-            }
             if (source.typeId === "fill-mask") {
                 return exportFillMask(source as types.FillMask, ctx)
-            }
-            if (source.typeId === "border") {
-                return exportBorder(source as types.Border, ctx)
             }
             if (source.typeId === "shadow-mask") {
                 return exportShadowMask(source as types.ShadowMask, ctx)

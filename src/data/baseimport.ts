@@ -30,7 +30,7 @@ type PathShape2_pathsegs = BasicArray<impl.PathSegment>
 type PrototypeInterAction_crdtidx = BasicArray<number>
 type ShadowMask_shadows = BasicArray<impl.Shadow>
 type Shape_prototypeInteractions = BasicArray<impl.PrototypeInterAction>
-type StyleSheet_variables = BasicArray<impl.BorderSideSetting | impl.FillMask | impl.Border | impl.ShadowMask | impl.BlurMask | impl.CornerRadius>
+type StyleSheet_variables = BasicArray<impl.FillMask | impl.ShadowMask | impl.BlurMask | impl.CornerRadius>
 type Style_fills = BasicArray<impl.Fill>
 type Style_shadows = BasicArray<impl.Shadow>
 type Style_innerShadows = BasicArray<impl.Shadow>
@@ -695,15 +695,8 @@ export function importStyleSheet_variables(source: types.StyleSheet_variables, c
             if (typeof source !== "object") {
                 return source
             }
-            if (source.typeId === "border-side-setting") {
-                return importBorderSideSetting(source as types.BorderSideSetting, ctx)
-            }
             if (source.typeId === "fill-mask") {
                 return importFillMask(source as types.FillMask, ctx)
-            }
-            if (source.typeId === "border") {
-                if (!source.crdtidx) source.crdtidx = [i]
-                return importBorder(source as types.Border, ctx)
             }
             if (source.typeId === "shadow-mask") {
                 return importShadowMask(source as types.ShadowMask, ctx)

@@ -482,7 +482,7 @@ export class Stop extends Basic {
         this.color = color
     }
 }
-type StyleSheet_variables = BasicArray<BorderSideSetting | FillMask | Border | ShadowMask | BlurMask | CornerRadius>
+type StyleSheet_variables = BasicArray<FillMask | ShadowMask | BlurMask | CornerRadius>
 type Style_fills = BasicArray<Fill>
 type Style_shadows = BasicArray<Shadow>
 type Style_innerShadows = BasicArray<Shadow>

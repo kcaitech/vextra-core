@@ -567,7 +567,7 @@ export enum StrikethroughType {
 export enum StyleLibType {
     Color = "color",
 }
-export type StyleSheet_variables = Array<BorderSideSetting | FillMask | Border | ShadowMask | BlurMask | CornerRadius>
+export type StyleSheet_variables = Array<FillMask | ShadowMask | BlurMask | CornerRadius>
 /* shape types */
 export enum StyleVarType {
     Color = "color",
