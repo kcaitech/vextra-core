@@ -560,11 +560,14 @@ export class ShapeView extends DataView {
             this.m_pathstr = undefined;
         }
 
-        if (args.includes('fills')) {
+        if (args.includes('variables')) {
+            this.m_fills = undefined;
+            this.m_borders = undefined;
+        }
+        else if (args.includes('fills')) {
             this.m_fills = undefined;
         }
-
-        if (args.includes('borders')) {
+        else if (args.includes('borders')) {
             this.m_borders = undefined;
         }
 
