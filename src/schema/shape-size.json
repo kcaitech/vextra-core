@@ -3,25 +3,11 @@
     "type": "object",
     "properties": {
         "width": {
-            "oneOf": [
-                {
-                    "type": "number"
-                },
-                {
-                    "type": "string"
-                }
-            ],
+            "type": "number",
             "default": 0
         },
         "height": {
-            "oneOf": [
-                {
-                    "type": "number"
-                },
-                {
-                    "type": "string"
-                }
-            ],
+            "type": "number",
             "default": 0
         }
     },

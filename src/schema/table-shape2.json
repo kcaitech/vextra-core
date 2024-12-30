@@ -42,7 +42,7 @@
     "required": [
         "size",
         "cells",
-        "cellsInfo",
+        "cellAttrs",
         "rowHeights",
         "colWidths"
     ],

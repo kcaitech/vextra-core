@@ -12,6 +12,7 @@ export * from './symbolref'
 export * from './color'
 export * from './guide'
 export * from './prototype'
+export * from './table2'
 
 export { parsePath } from './pathparser'
 export { layoutTable } from './tablelayout'
@@ -19,4 +20,4 @@ export { layoutText, TextLayout } from './text/textlayout'
 export { getNextChar } from './text/basic'
 export { importGradient } from './baseimport'
 
-export { Crdtidx, StyleLibType } from './baseclasses'
+export { Crdtidx, StyleLibType, TableCellAttr } from './baseclasses'
