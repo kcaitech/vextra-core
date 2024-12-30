@@ -98,8 +98,8 @@ export class ShapePorter {
         }
         const blur = view.blur ? importBlur(exportBlur(view.blur)) : undefined;
         {
-            if (shape.style.blur) api.deleteBlur(page, shape);
             if (blur) api.addBlur(page, shape, blur);
+            else if (shape.style.blur) api.deleteBlur(page, shape);
         }
         const protoInteractions = view.prototypeInterActions
             ? view.prototypeInterActions.map(i => importPrototypeInterAction(exportPrototypeInterAction(i)))
