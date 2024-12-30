@@ -61,7 +61,7 @@ export class SymbolRefView extends ShapeView {
     }
 
     getSessionRefId(): boolean | string {
-        const jsonString =  this.m_ctx.sessionStorage.get(sessionRefIdKey);
+        const jsonString = this.m_ctx.sessionStorage.get(sessionRefIdKey);
         if (!this.m_ctx.isDocument && jsonString) {
             const refIdArray = JSON.parse(jsonString);
             const maprefIdArray = new Map(refIdArray) as Map<string, string>;
@@ -232,7 +232,7 @@ export class SymbolRefView extends ShapeView {
         }
         const prescale = { x: _scale?.x ?? 1, y: _scale?.y ?? 1 }
         const scale = { x: prescale.x, y: prescale.y }
-        const childscale = { x: scale.x, y: scale.y }
+        const childscale = { x: scale.x, y: scale.y } // 传递给子对象的缩放值
 
         // 调整过大小的，使用用户调整的大小，否则跟随symbol大小
         if ((this.m_data as SymbolRefShape).isCustomSize) {
@@ -241,6 +241,7 @@ export class SymbolRefView extends ShapeView {
             childscale.y *= this.m_data.size.height / this.m_sym.size.height;
         } else {
             // 跟随symbol大小
+            // 此时childscale不需要变化
             scale.x *= this.m_sym.size.width / this.m_data.size.width;
             scale.y *= this.m_sym.size.height / this.m_data.size.height;
         }
@@ -282,29 +283,21 @@ export class SymbolRefView extends ShapeView {
             return;
         }
 
-        const size = this.data.size; // 如果是group,实时计算的大小。view中此时可能没有
-        // const frame = frame2Parent2(transform, size);
-        const saveW = size.width;
-        const saveH = size.height;
-
         let scaleX = scale.x;
         let scaleY = scale.y;
 
         if (parentFrame && resizingConstraint !== 0) {
-            const {transform, targetWidth, targetHeight} = fixFrameByConstrain(shape, parentFrame, scaleX, scaleY, uniformScale);
+            const { transform, targetWidth, targetHeight } = fixFrameByConstrain(shape, parentFrame, scaleX, scaleY, uniformScale);
             this.updateLayoutArgs(makeShapeTransform1By2(transform), new ShapeFrame(0, 0, targetWidth, targetHeight), (shape as PathShape).fixedRadius);
-            this.layoutChilds(varsContainer, this.frame, {x: targetWidth / saveW, y: targetHeight / saveH});
         } else {
             if (uniformScale) {
                 scaleX /= uniformScale;
                 scaleY /= uniformScale;
             }
             const transform = shape.transform.clone();
-            // const __p_transform_scale = new Transform2().setScale(ColVector3D.FromXYZ(scaleX, scaleY, 1));
             transform.scale(scaleX, scaleY);
             const __decompose_scale = transform.clearScale();
             const size = shape.size;
-            // transform.clearScaleSize();
             // 保持对象位置不变
             const p0 = shape.transform.computeCoord(0, 0);
             const p1 = transform.computeCoord(0, 0);
@@ -312,25 +305,15 @@ export class SymbolRefView extends ShapeView {
 
             const frame = new ShapeFrame(0, 0, size.width * __decompose_scale.x, size.height * __decompose_scale.y);
             this.updateLayoutArgs((transform), frame, (shape as PathShape).fixedRadius);
-            this.layoutChilds(varsContainer, this.frame, {x: frame.width / saveW, y: frame.height / saveH});
         }
-
-        // const t = skewTransform(scaleX, scaleY).clone();
-        // const cur = t.computeCoord(0, 0);
-        // t.trans(frame.x - cur.x, frame.y - cur.y);
-        //
-        // const inverse = t.inverse;
-        // const rb = inverse.computeCoord(frame.x + frame.width, frame.y + frame.height);
-        // const size2 = new ShapeFrame(0, 0, rb.x, rb.y);
-        // const transform2 = makeShapeTransform2By1(shape.transform);
-        // transform2.addTransform(new Transform().setScale(ColVector3D.FromXY(scale.x, scale.y)));
-        // const decomposeScale = transform2.decomposeScale();
-
-        // this.updateLayoutArgs(makeShapeTransform1By2(transform2), new ShapeFrame(0, 0, frame.width, frame.height), 0);
         // 重新计算 childscale
-        // childscale.x = size2.width / this.m_sym.size.width;
-        // childscale.y = size2.height / this.m_sym.size.height;
-        // this.layoutChilds(varsContainer, this.frame, decomposeScale, this.uniformScale);
+        childscale.x = this.frame.width / this.m_sym.size.width;
+        childscale.y = this.frame.height / this.m_sym.size.height;
+        if (uniformScale) {
+            childscale.x /= uniformScale;
+            childscale.y /= uniformScale;
+        }
+        this.layoutChilds(varsContainer, this.frame, childscale);
     }
 
     protected layoutChilds(

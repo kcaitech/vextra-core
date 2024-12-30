@@ -873,9 +873,7 @@ export class ShapeView extends DataView {
                 t = t.clone();
                 t.scale(scalex, scaley);
                 // 保留skew去除scale
-                const t2 = makeShapeTransform2By1(t);
-                t2.clearScaleSize();
-                t = makeShapeTransform1By2(t2);
+                t.clearScale();
             }
             return t;
         }

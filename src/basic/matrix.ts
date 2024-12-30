@@ -467,8 +467,8 @@ export class Matrix {
 
         // 旋转
         const rotateMatrix = new Matrix([this.m00, this.m10, this.m01, this.m11, 0, 0])
-        if (!scaleMatrix.isIdentity) rotateMatrix.multi(scaleMatrix.inverse);    // ·(S^-1)
-        if (!skewMatrix.isIdentity) rotateMatrix.multi(skewMatrix.inverse);      // ·(K^-1)
+        if (!scaleMatrix.isIdentity()) rotateMatrix.multi(scaleMatrix.inverse);    // ·(S^-1)
+        if (!skewMatrix.isIdentity()) rotateMatrix.multi(skewMatrix.inverse);      // ·(K^-1)
 
         // 平移
         const translateMatrix = new Matrix([1, 0, 0, 1, this.m02, this.m12])
