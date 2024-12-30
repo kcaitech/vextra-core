@@ -487,6 +487,14 @@ export class ShapeView extends DataView {
         return this.m_data.isClosed;
     }
 
+    get x(): number {
+        return this.transform.m02
+    }
+
+    get y(): number {
+        return this.transform.m12
+    }
+
     boundingBox(): ShapeFrame {
         if (this.isNoTransform()) {
             const tx = this.transform.translateX;
@@ -730,6 +738,10 @@ export class ShapeView extends DataView {
 
     get masked() {
         return (this.parent as GroupShapeView)?.maskMap.get(this.m_data.id);
+    }
+
+    indexOfChild(view: ShapeView) {
+        return this.childs.indexOf(view)
     }
 
     // =================== update ========================
