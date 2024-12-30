@@ -180,7 +180,7 @@ export class Shape extends Basic implements classes.Shape {
      * @deprecated
      */
     get rotation(): number {
-        return makeShapeTransform2By1(this.transform).decomposeEuler().z * 180 / Math.PI;
+        return (this.transform).decomposeEuler().z * 180 / Math.PI;
     }
 
     get x(): number {

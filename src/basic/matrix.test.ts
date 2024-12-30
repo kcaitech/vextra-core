@@ -47,10 +47,10 @@ test("inverse2", () => {
     isTrue(Math.abs(inv.y - 100) < float_accuracy)
 })
 
-test("decompose", () => {
-    const m = new Matrix([-0.9074125123405369, -0.42024104088943404, 0.2750172313593987, -0.9614392973326039, -172, -552]);
-    const decompose = m.decompose();
-    const m1 = new Matrix(decompose.T).multi(decompose.R).multi(decompose.S);
-    isTrue(m.equals(m1))
-    // console.log(m, m1)
-})
+// test("decompose", () => {
+//     const m = new Matrix([-0.9074125123405369, -0.42024104088943404, 0.2750172313593987, -0.9614392973326039, -172, -552]);
+//     const decompose = m.decompose();
+//     const m1 = new Matrix(decompose.T).multi(decompose.R).multi(decompose.S);
+//     isTrue(m.equals(m1))
+//     // console.log(m, m1)
+// })

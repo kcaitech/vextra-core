@@ -1,6 +1,8 @@
 import { Matrix } from "../basic/matrix";
 import * as classes from "./baseclasses"
 import { float_accuracy } from "../basic/consts";
+import { ColVector3D } from "../basic/matrix2";
+
 function __multi(lhs: classes.Transform | Matrix, rhs: classes.Transform | Matrix, result: classes.Transform): void {
     const m00 = lhs.m00 * rhs.m00 + lhs.m01 * rhs.m10;
     const m10 = lhs.m10 * rhs.m00 + lhs.m11 * rhs.m10;
@@ -220,5 +222,28 @@ export class Transform extends classes.Transform {
     }
     checkValid() {
         if (!this.isValid()) throw new Error("Wrong Matrix: " + this.toString());
+    }
+
+    decompose() {
+        return this.toMatrix().decompose()
+    }
+
+    decomposeEuler() { // 通过旋转矩阵分解出欧拉角（ZXY序），返回值的单位为弧度
+        const matrix = this.decompose().rotate
+        const z = Math.atan2(-matrix.m01, matrix.m11)
+        return new ColVector3D([0, 0, z])
+    }
+
+    clearScaleSize() {
+        const d = this.decompose()
+        const m = d.translate.multiAtLeft(d.rotate).multiAtLeft(d.skew).multiAtLeft(d.scale)
+        this.reset(m)
+    }
+
+    clearScale(): { x: number, y: number } {
+        const d = this.decompose()
+        const m = d.translate.multiAtLeft(d.rotate).multiAtLeft(d.skew)
+        this.reset(m)
+        return { x: d.scale.m00, y: d.scale.m11 }
     }
 }

@@ -468,7 +468,7 @@ export class ShapeView extends DataView {
     }
 
     get rotation(): number {
-        return makeShapeTransform2By1(this.transform).decomposeEuler().z * 180 / Math.PI;
+        return (this.transform).decomposeEuler().z * 180 / Math.PI;
     }
 
     get fixedRadius() {
@@ -915,8 +915,8 @@ export class ShapeView extends DataView {
                 scaleY /= uniformScale;
             }
             const transform = makeShapeTransform2By1(shape.transform);
-            const __p_transform_scale = new Transform2().setScale(ColVector3D.FromXYZ(scaleX, scaleY, 1));
-            transform.addTransform(__p_transform_scale);
+            // const __p_transform_scale = new Transform2().setScale(ColVector3D.FromXYZ(scaleX, scaleY, 1));
+            transform.scale({ vector: ColVector3D.FromXYZ(scaleX, scaleY, 1)});
             const __decompose_scale = transform.decomposeScale();
             const size = shape.size;
             transform.clearScaleSize();

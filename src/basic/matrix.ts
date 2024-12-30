@@ -127,6 +127,7 @@ type Decompose = {
     rotate: number;
 }
 
+// 极分解，
 function decomposition(A: number[]): Decompose {
     const { S, R, scale, sqrtLambdaMatrix, eigen } = polarDecomposition(A);
     const T = [1, 0, 0, 1, A[4], A[5]];
@@ -139,6 +140,33 @@ function decomposition(A: number[]): Decompose {
     // A = TRS
     const rotate = Math.atan2(R[1], R[0])
     return { T, S, R, scale, sqrtLambdaMatrix, eigen, translate: { x: A[4], y: A[5] }, rotate };
+}
+
+function vector_dot(vector1: number[], vector2: number[]) { // 点积
+    if (vector1.length !== vector2.length) throw new Error("dimension not match")
+    let result = 0
+    for (let i = 0, len = vector1.length; i < len; ++i) result += vector1[i] * vector2[i];
+    return result
+}
+
+function vector_cross3(vector1: number[], vector2: number[]) { // 叉积
+    if (vector1.length !== vector2.length) throw new Error("dimension not match")
+    if (vector1.length !== 3) throw new Error("dimension not support")
+    return [
+        vector1[1] * vector2[2] - vector1[2] * vector2[1],
+        vector1[2] * vector2[0] - vector1[0] * vector2[2],
+        vector1[0] * vector2[1] - vector1[1] * vector2[0]
+    ]
+}
+
+function vector_norm(vector: number[]) { // 模
+    return Math.sqrt(vector_dot(vector, vector))
+}
+
+function vector_angleTo(vector1: number[], vector2: number[]) { // 本向量与目标向量的夹角（0 ~ π）
+    if (vector1.length !== vector2.length) throw new Error("dimension not match")
+    const dot = vector_dot(vector1, vector2) // 本向量与目标向量的点积
+    return Math.acos(dot / (vector_norm(vector1) * vector_norm(vector2)))
 }
 
 export class Matrix {
@@ -309,6 +337,16 @@ export class Matrix {
         return this.m_matrix[5];
     }
 
+    // get col0() {
+    //     return [this.m_matrix[0], this.m_matrix[1], 0];
+    // }
+    // get col1() {
+    //     return [this.m_matrix[2], this.m_matrix[3], 0];
+    // }
+    // get col2() {
+    //     return [this.m_matrix[4], this.m_matrix[5], 1];
+    // }
+
     flipVert(cy?: number) {
         if (cy) this.trans(0, -cy);
         this.multiAtLeft([1, 0, 0, -1, 0, 0]) // y = -y
@@ -348,9 +386,9 @@ export class Matrix {
         return new Matrix(this)
     }
 
-    decompose(): Decompose {
-        return decomposition(this.m_matrix);
-    }
+    // decompose(): Decompose {
+    //     return decomposition(this.m_matrix);
+    // }
 
     // static clearScale(d: Decompose): Matrix {
     //     // TRS
@@ -393,4 +431,53 @@ export class Matrix {
     //     const SR = multi2x2(d.R, S2)
     //     return new Matrix([SR[0], SR[1], SR[2], SR[3], d.T[4], d.T[5]])
     // }
+
+
+    decompose() {
+
+        const col0 = [this.m00, this.m10, 0]
+        const col1 = [this.m01, this.m11, 0]
+        const col2 = [0, 0, 1]
+
+        // z轴预期方向（x轴与y轴的叉积，为xoy平面的法向量，其方向与z轴预期方向一致）
+        const expectedZ = vector_cross3(col0, col1)
+        // z轴与z轴预期方向的点积
+        const zDot = vector_dot(expectedZ, col2)
+        // z轴与预期方向相反，说明有一个或有三个坐标轴反向，这里认为是y轴反向，后续通过旋转来对齐
+        // 反向会在后续被算入缩放矩阵中
+        const isYFlipped = zDot < 0
+        // x轴与y轴的夹角（0 ~ π）
+        let angleXY = vector_angleTo(col0, col1)
+        if (isYFlipped) {
+            angleXY = Math.PI - angleXY // 反向前的夹角
+        }
+
+        // 斜切
+        const yAngle = angleXY - 0.5 * Math.PI // y轴（绕z轴预期方向）旋转角度（-π/2 ~ π/2）
+        const skewMatrix = new Matrix([
+            1, 0, -Math.sin(yAngle), Math.cos(yAngle), 0, 0
+        ])
+
+        // 缩放
+        const xNorm = vector_norm(col0)
+        const yNorm = vector_norm(col1) * (isYFlipped ? -1 : 1)
+        const scaleMatrix = (new Matrix([
+            xNorm, 0, 0, yNorm, 0, 0
+        ]))
+
+        // 旋转
+        const rotateMatrix = new Matrix([this.m00, this.m10, this.m01, this.m11, 0, 0])
+        if (!scaleMatrix.isIdentity) rotateMatrix.multi(scaleMatrix.inverse);    // ·(S^-1)
+        if (!skewMatrix.isIdentity) rotateMatrix.multi(skewMatrix.inverse);      // ·(K^-1)
+
+        // 平移
+        const translateMatrix = new Matrix([1, 0, 0, 1, this.m02, this.m12])
+        
+        return {
+            translate: translateMatrix,
+            rotate: rotateMatrix,
+            skew: skewMatrix,
+            scale: scaleMatrix,
+        }
+    }
 }
