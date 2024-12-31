@@ -556,17 +556,25 @@ export class PageEditor {
         }
         return false;
     }
-    boolgroup(shapes: Shape[], groupname: string, op: BoolOp): false | BoolShape {
-        if (shapes.length === 0) return false;
-        if (shapes.find((v) => !v.parent)) return false;
+
+    boolgroup(shapes: Shape[], groupname: string, op: BoolOp) {
+        if (shapes.length === 0) throw new Error();
+        if (shapes.find((v) => !v.parent)) throw new Error();
         const fshape = shapes[0];
         const savep = fshape.parent as GroupShape;
         // copy fill and borders
         const endShape = shapes[shapes.length - 1];
         const copyStyle = findUsableFillStyle(endShape);
         const style: Style = this.cloneStyle(copyStyle);
-        if (style.fills.length === 0) {
-            style.fills.push(newSolidColorFill()); // 自动添加个填充
+        if (!style.fills.length) {
+            if (style.borders) {
+                style.borders.forEach(border => {
+                    const color = new Color(border.color.alpha, border.color.red, border.color.green, border.color.blue);
+                    style.fills.push(newSolidColorFill(color));
+                })
+            } else {
+                style.fills.push(newSolidColorFill()); // 自动添加个填充
+            }
         }
         const borderStyle = findUsableBorderStyle(endShape);
         if (endShape instanceof PathShape && (!endShape.isClosed || !this.hasFill(endShape))) {
@@ -577,27 +585,23 @@ export class PageEditor {
         }
         // 1、新建一个GroupShape
         let gshape = newBoolShape(groupname, style);
-
-        const api = this.__repo.start("boolgroup", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-            const state = {} as SelectionState;
-            if (!isUndo) state.shapes = [gshape.id];
-            else state.shapes = cmd.saveselection?.shapes || [];
-            selection.restore(state);
-        });
         try {
+            const api = this.__repo.start("boolgroup", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+                const state = {} as SelectionState;
+                if (!isUndo) state.shapes = [gshape.id];
+                else state.shapes = cmd.saveselection?.shapes || [];
+                selection.restore(state);
+            });
             // 0、save shapes[0].parent？最外层shape？位置？  层级最高图形的parent
             const saveidx = savep.indexOfChild(shapes[0]);
-            // gshape.isBoolOpShape = true;
             gshape = group(this.__document, this.__page, shapes, gshape, savep, saveidx, api);
             shapes.forEach((shape) => api.shapeModifyBoolOp(this.__page, shape, op))
-
             this.__repo.commit();
             return gshape;
         } catch (e) {
-            console.log(e)
             this.__repo.rollback();
+            throw e;
         }
-        return false;
     }
 
     boolgroup2(savep: GroupShape, groupname: string, op: BoolOp): false | BoolShape {
@@ -954,44 +958,46 @@ export class PageEditor {
     }
 
     _flattenShapes(shapes: ShapeView[]): ShapeView[] {
-        return shapes.reduce((result: any, item: ShapeView) => {
-            if (item.type === ShapeType.Artboard) {
+        return shapes.reduce((result: ShapeView[], item: ShapeView) => {
+            if (item instanceof ArtboradView) {
                 const childs = (item).childs as ShapeView[];
-                if (Array.isArray(childs)) {
-                    result = result.concat(this._flattenShapes(childs));
-                }
+                if (Array.isArray(childs)) result = result.concat(this._flattenShapes(childs));
             } else {
-                result = result.concat(item);
+                if (item instanceof TextShapeView
+                    || item instanceof PathShapeView
+                    || item instanceof ArtboradView
+                    || item instanceof BoolShapeView
+                ) result = result.concat(item);
             }
             return result;
         }, []);
     }
 
-    flattenShapes(shapes: ShapeView[], name?: string): PathShape | PathShape2 | false {
+    flattenShapes(shapes: ShapeView[], name?: string) {
         const _shapes = this._flattenShapes(shapes);
-        if (_shapes.length === 0) return false;
-        if (_shapes.find((v) => !v.parent)) return false;
+        if (_shapes.length === 0) throw new Error();
+        if (_shapes.find((v) => !v.parent)) throw new Error();
         const fshape = adapt2Shape(shapes[0]);
         const savep = fshape.parent as GroupShape;
         const saveidx = savep.indexOfChild(fshape);
         if (!name) name = fshape.name;
 
         // copy fill and borders
-        const endShape = _shapes[_shapes.length - 1];
-        const copyStyle = findUsableFillStyle(endShape);
+        const firstShape = _shapes[0];
+        const copyStyle = findUsableFillStyle(firstShape);
         const style: Style = this.cloneStyle(copyStyle);
-        if (style.fills.length === 0) {
-            const fills = _shapes.find(s => s.style.getFills())?.style.getFills();
-            fills && fills.length > 0 ? style.fills.push(...fills) : style.fills.push(newSolidColorFill());
-        }
 
-        const borderStyle = findUsableBorderStyle(endShape);
-        if (endShape instanceof PathShapeView && (!endShape.data.isClosed || !this.hasFill(endShape))) {
-            style.borders = new BasicArray<Border>();
-        }
-        if (borderStyle !== copyStyle && !(endShape instanceof PathShapeView && (!endShape.data.isClosed || !this.hasFill(endShape)))) {
-            style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
-        }
+        // if (style.fills.length === 0) {
+        //     const fills = _shapes.find(s => this.hasFill(s))?.style.getFills();
+        //     fills ? style.fills.push(...fills) : style.fills.push(newSolidColorFill());
+        // }
+        // const borderStyle = findUsableBorderStyle(endShape);
+        // if (endShape instanceof PathShapeView && (!endShape.data.isClosed || !this.hasFill(endShape))) {
+        //     style.borders = new BasicArray<Border>();
+        // }
+        // if (borderStyle !== copyStyle && !(endShape instanceof PathShapeView && (!endShape.data.isClosed || !this.hasFill(endShape)))) {
+        //     style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
+        // }
 
         // bounds
         // 计算frame
@@ -1020,7 +1026,16 @@ export class PageEditor {
         let pathstr = "";
         _shapes.forEach((shape) => {
             const shapem = shape.matrix2Root();
-            const shapepath = render2path(shape);
+            // const shapepath = render2path(shape);
+            // const shapepath = shape.getPath().clone();
+
+            let shapepath: Path;
+            if (shape instanceof TextShapeView) {
+                shapepath = shape.getTextPath().clone();
+            } else {
+                shapepath = shape.getPath().clone();
+            }
+
             shapem.multiAtLeft(m);
             shapepath.transform(shapem);
 
@@ -1035,15 +1050,14 @@ export class PageEditor {
 
         let pathShape = newPathShape(name, frame, path, style);
 
-        const api = this.__repo.start("flattenShapes", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-            const state = {} as SelectionState;
-            if (!isUndo) state.shapes = [pathShape.id];
-            else state.shapes = cmd.saveselection?.shapes || [];
-            selection.restore(state);
-        });
         try {
+            const api = this.__repo.start("flattenShapes", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+                const state = {} as SelectionState;
+                if (!isUndo) state.shapes = [pathShape.id];
+                else state.shapes = cmd.saveselection?.shapes || [];
+                selection.restore(state);
+            });
             pathShape = api.shapeInsert(this.__document, this.__page, savep, pathShape, saveidx) as PathShape | PathShape2;
-
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const s = adapt2Shape(shapes[i]);
                 const p = s.parent as GroupShape;
@@ -1057,10 +1071,9 @@ export class PageEditor {
             this.__repo.commit();
             return pathShape;
         } catch (e) {
-            console.log(e)
             this.__repo.rollback();
+            throw e;
         }
-        return false;
     }
 
     flattenBoolShape(shape: BoolShapeView): PathShape | false {
@@ -4448,6 +4461,7 @@ export class PageEditor {
                     pathShape.transform = shape.transform.clone();
                     pathShape.mask = shape.mask;
                     pathShape.resizingConstraint = shape.resizingConstraint;
+                    pathShape.constrainerProportions = shape.constrainerProportions;
                     const parent = shape.parent as GroupShape;
                     const index = parent.indexOfChild(shape);
                     api.shapeDelete(document, page, parent, index);
@@ -4488,7 +4502,7 @@ export class PageEditor {
                     for (let i = borders.length - 1; i > -1; i--) border2shape(borders[i]);
                     if (shape.style.fills.length) {
                         api.deleteBorders(page, shape, 0, borders.length);
-                        ids.push(view.data.id);
+                        ids.push(shape.id);
                         if (shape instanceof PathShape) update_frame_by_points(api, page, shape);
                     } else {
                         api.shapeDelete(document, page, parent, parent.indexOfChild(shape));
@@ -4497,8 +4511,8 @@ export class PageEditor {
             }
             this.__repo.commit();
         } catch (error) {
-            console.error('outlineShapes:', error);
             this.__repo.rollback();
+            throw error;
         }
     }
 

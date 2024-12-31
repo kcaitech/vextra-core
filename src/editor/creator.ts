@@ -151,8 +151,7 @@ export function initFrame(shape: Shape, frame: ShapeFrame) {
     shape.size.height = frame.height;
 }
 
-export function newSolidColorFill(): Fill {
-    const fillColor = new Color(1, 216, 216, 216);
+export function newSolidColorFill(fillColor = new Color(1, 216, 216, 216)): Fill {
     return new Fill(new BasicArray(), uuid(), true, FillType.SolidColor, fillColor);
 }
 

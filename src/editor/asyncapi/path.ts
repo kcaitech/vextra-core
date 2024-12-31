@@ -1,6 +1,6 @@
 import { AsyncApiCaller } from "./basic/asyncapi";
 import { CoopRepository } from "../../coop/cooprepo";
-import { Document } from "../../data";
+import { Document, Point2D } from "../../data";
 import { adapt2Shape, GroupShapeView, PageView, ShapeView } from "../../dataview";
 import { CurveMode, CurvePoint, GroupShape, PathSegment, PathShape, Shape, ShapeFrame, ShapeType } from "../../data";
 import { BasicArray } from "../../data";
@@ -110,12 +110,11 @@ export class PathModifier extends AsyncApiCaller {
         }
     }
 
-    addPoint(shape: ShapeView, segment: number, index: number) {
+    addPoint(shape: ShapeView, segment: number, index: number, apex?: { xy: Point2D, t?: number }) {
         try {
             const _shape = adapt2Shape(shape);
             this.shape = _shape;
             this.modifyBorderSetting();
-
             this.api.addPointAt(
                 this.page,
                 _shape,
@@ -123,22 +122,18 @@ export class PathModifier extends AsyncApiCaller {
                 new CurvePoint(new BasicArray<number>(), uuid(), 0, 0, CurveMode.Straight),
                 segment
             );
-
-            after_insert_point(this.page, this.api, _shape, index, segment);
-
+            after_insert_point(this.page, this.api, _shape, index, segment, apex);
             this.updateView();
             return true;
         } catch (e) {
-            console.log('PathModifier.addPoint:', e);
-            return false
+            this.exception = true;
+            throw e;
         }
     }
 
     addPointForPen(shape: ShapeView, segment: number, index: number, xy: { x: number, y: number }) {
         try {
-            if (segment < 0 || index < 0) {
-                return false;
-            }
+            if (segment < 0 || index < 0) return false;
             const _shape = adapt2Shape(shape);
             this.shape = _shape;
             this.api.addPointAt(
@@ -338,7 +333,7 @@ export class PathModifier extends AsyncApiCaller {
             const pointsContainer = new BasicArray<CurvePoint>();
 
             let __points: CurvePoint[] = [];
-            let activeIndex = 0;
+            let activeIndex;
             if (at === 'start') {
                 __points = [...segment.points, ...toSegment.points];
                 activeIndex = segment.points.length;
@@ -386,6 +381,9 @@ export class PathModifier extends AsyncApiCaller {
             api.deleteSegmentAt(page, shape, segmentIndex);
             api.deleteSegmentAt(page, shape, toSegmentIndex);
 
+            // crdtidx重排
+            pointsContainer.forEach((i, index) => i.crdtidx = new BasicArray<number>(index));
+
             // 生成合并过后的线条
             const newSegment = new PathSegment([shape.pathsegs.length] as BasicArray<number>, uuid(), pointsContainer, false);
             api.addSegmentAt(page, shape, shape.pathsegs.length, newSegment);
@@ -394,9 +392,8 @@ export class PathModifier extends AsyncApiCaller {
 
             return { segment: shape.pathsegs.length - 1, activeIndex };
         } catch (e) {
-            console.error('PathModifier.mergeSegmentFromStart:', e);
             this.exception = true;
-            return false;
+            throw e;
         }
     }
 
@@ -550,6 +547,7 @@ export class PathModifier extends AsyncApiCaller {
 
             api.deleteSegmentAt(page, shape, segmentIndex);
             const l = shape.pathsegs.length;
+            container.forEach((i, index) => i.crdtidx = new BasicArray<number>(index));
             const newSegment = new PathSegment([l] as BasicArray<number>, uuid(), container, segment.isClosed);
 
             api.addSegmentAt(page, shape, l, newSegment);
@@ -617,7 +615,8 @@ export class PathModifier extends AsyncApiCaller {
                         }
 
                         api.deleteSegmentAt(page, shape, segmentIndex);
-
+                        pointsA.forEach((i, index) => i.crdtidx = new BasicArray<number>(index));
+                        pointsB.forEach((i, index) => i.crdtidx = new BasicArray<number>(index));
                         const segmentA = new PathSegment([shape.pathsegs.length] as BasicArray<number>, uuid(), pointsA, false);
                         api.addSegmentAt(page, shape, shape.pathsegs.length, segmentA);
                         const segmentB = new PathSegment([shape.pathsegs.length] as BasicArray<number>, uuid(), pointsB, false);
@@ -635,6 +634,7 @@ export class PathModifier extends AsyncApiCaller {
                 }
 
                 api.deleteSegmentAt(page, shape, segmentIndex);
+                newPoints.forEach((i, index) => i.crdtidx = new BasicArray<number>(index));
                 const newSegment = new PathSegment([shape.pathsegs.length] as BasicArray<number>, uuid(), newPoints, false);
                 api.addSegmentAt(page, shape, shape.pathsegs.length, newSegment);
             }
