@@ -436,55 +436,6 @@ export class Matrix {
     //     return new Matrix([SR[0], SR[1], SR[2], SR[3], d.T[4], d.T[5]])
     // }
 
-
-    decompose() {
-
-        const col0 = [this.m00, this.m10, 0]
-        const col1 = [this.m01, this.m11, 0]
-        const col2 = [0, 0, 1]
-
-        // z轴预期方向（x轴与y轴的叉积，为xoy平面的法向量，其方向与z轴预期方向一致）
-        const expectedZ = vector_cross3(col0, col1)
-        // z轴与z轴预期方向的点积
-        const zDot = vector_dot(expectedZ, col2)
-        // z轴与预期方向相反，说明有一个或有三个坐标轴反向，这里认为是y轴反向，后续通过旋转来对齐
-        // 反向会在后续被算入缩放矩阵中
-        const isYFlipped = zDot < 0
-        // x轴与y轴的夹角（0 ~ π）
-        let angleXY = vector_angleTo(col0, col1)
-        if (isYFlipped) {
-            angleXY = Math.PI - angleXY // 反向前的夹角
-        }
-
-        // 斜切
-        const yAngle = angleXY - 0.5 * Math.PI // y轴（绕z轴预期方向）旋转角度（-π/2 ~ π/2）
-        const skewMatrix = new Matrix([
-            1, 0, -Math.sin(yAngle), Math.cos(yAngle), 0, 0
-        ])
-
-        // 缩放
-        const xNorm = vector_norm(col0)
-        const yNorm = vector_norm(col1) * (isYFlipped ? -1 : 1)
-        const scaleMatrix = (new Matrix([
-            xNorm, 0, 0, yNorm, 0, 0
-        ]))
-
-        // 旋转
-        const rotateMatrix = new Matrix([this.m00, this.m10, this.m01, this.m11, 0, 0])
-        if (!scaleMatrix.isIdentity()) rotateMatrix.multi(scaleMatrix.inverse);    // ·(S^-1)
-        if (!skewMatrix.isIdentity()) rotateMatrix.multi(skewMatrix.inverse);      // ·(K^-1)
-
-        // 平移
-        const translateMatrix = new Matrix([1, 0, 0, 1, this.m02, this.m12])
-
-        return {
-            translate: translateMatrix,
-            rotate: rotateMatrix,
-            skew: skewMatrix,
-            scale: scaleMatrix,
-        }
-    }
-
     transform(point: { x: number, y: number }): { x: number, y: number }
     transform(point: { x: number, y: number }[]): { x: number, y: number }[]
     transform(point: { x: number, y: number } | { x: number, y: number }[]) {

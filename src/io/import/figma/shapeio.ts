@@ -67,7 +67,6 @@ import {ColVector3D} from "../../../basic/matrix2";
 import {getPolygonPoints, getPolygonVertices} from "../../../editor/utils/path";
 import {importText} from "./textio";
 import {importColor} from "./common";
-import { Matrix } from "../../../basic/matrix";
 
 export function toStrId(id?: {
     localID: string,
@@ -77,8 +76,8 @@ export function toStrId(id?: {
     return [id.localID, id.sessionID].join(',');
 }
 
-function makeMatrixFromTransform(transform: IJSON) {
-    return new Matrix([transform.m00,transform.m10, transform.m01, transform.m11,, transform.m02,transform.m12])
+function makeTransform(transform: IJSON) {
+    return new Transform(transform.m00, transform.m01, transform.m02, transform.m10, transform.m11, transform.m12)
 }
 
 export function parseGradient(
@@ -86,7 +85,7 @@ export function parseGradient(
     size = {x: 1, y: 1},
 ) {
     const type = data.type;
-    const transform = data.transform ? makeMatrixFromTransform(data.transform).getInverse() : new Matrix();
+    const transform = data.transform ? makeTransform(data.transform).getInverse() : new Transform();
     const stops = data.stops as {
         color: {
             r: number,
