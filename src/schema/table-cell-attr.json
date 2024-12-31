@@ -12,6 +12,5 @@
         }
     },
     "required": [],
-    "allOf": [],
     "additionalProperties": false
 }

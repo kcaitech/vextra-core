@@ -373,7 +373,7 @@ export class ShapeView extends DataView {
     m_border_path?: Path;
     m_border_path_box?: ShapeFrame;
 
-    m_transform2: Transform2 | undefined;
+    // m_transform2: Transform2 | undefined;
     m_transform_form_mask?: Transform;
     m_mask_group?: ShapeView[];
 
@@ -767,7 +767,7 @@ export class ShapeView extends DataView {
             this.m_transform.reset(trans);
             this.m_pathstr = undefined; // need update
             this.m_path = undefined;
-            this.m_transform2 = undefined;
+            // this.m_transform2 = undefined;
         }
     }
 
