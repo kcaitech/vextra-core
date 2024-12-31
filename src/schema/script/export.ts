@@ -125,7 +125,7 @@ function exportObject(n: Node, $: Writer) {
             $.nl('ret.', p.name, ' = ')
             exportBaseProp(p, 'source.' + p.name, $);
         } else {
-            $.nl('if (source.', p.name, ') ret.', p.name, ' = ');
+            $.nl('if (source.', p.name, ' !== undefined) ret.', p.name, ' = ');
             exportBaseProp(p, 'source.' + p.name, $);
         }
     }

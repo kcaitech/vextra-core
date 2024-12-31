@@ -76,8 +76,8 @@ export function importBulletNumbersType(source: types.BulletNumbersType, ctx?: I
 }
 /* bullet numbers */
 function importBulletNumbersOptional(tar: impl.BulletNumbers, source: types.BulletNumbers, ctx?: IImportContext) {
-    if (source.behavior) tar.behavior = importBulletNumbersBehavior(source.behavior, ctx)
-    if (source.offset) tar.offset = source.offset
+    if (source.behavior !== undefined) tar.behavior = importBulletNumbersBehavior(source.behavior, ctx)
+    if (source.offset !== undefined) tar.offset = source.offset
 }
 export function importBulletNumbers(source: types.BulletNumbers, ctx?: IImportContext): impl.BulletNumbers {
     const ret: impl.BulletNumbers = new impl.BulletNumbers (
@@ -146,13 +146,13 @@ export function importCurveMode(source: types.CurveMode, ctx?: IImportContext): 
 }
 /* curve point */
 function importCurvePointOptional(tar: impl.CurvePoint, source: types.CurvePoint, ctx?: IImportContext) {
-    if (source.radius) tar.radius = source.radius
-    if (source.fromX) tar.fromX = source.fromX
-    if (source.fromY) tar.fromY = source.fromY
-    if (source.toX) tar.toX = source.toX
-    if (source.toY) tar.toY = source.toY
-    if (source.hasFrom) tar.hasFrom = source.hasFrom
-    if (source.hasTo) tar.hasTo = source.hasTo
+    if (source.radius !== undefined) tar.radius = source.radius
+    if (source.fromX !== undefined) tar.fromX = source.fromX
+    if (source.fromY !== undefined) tar.fromY = source.fromY
+    if (source.toX !== undefined) tar.toX = source.toX
+    if (source.toY !== undefined) tar.toY = source.toY
+    if (source.hasFrom !== undefined) tar.hasFrom = source.hasFrom
+    if (source.hasTo !== undefined) tar.hasTo = source.hasTo
 }
 export function importCurvePoint(source: types.CurvePoint, ctx?: IImportContext): impl.CurvePoint {
         // inject code
@@ -405,10 +405,10 @@ export function importOverrideType(source: types.OverrideType, ctx?: IImportCont
 }
 /* padding */
 function importPaddingOptional(tar: impl.Padding, source: types.Padding, ctx?: IImportContext) {
-    if (source.left) tar.left = source.left
-    if (source.top) tar.top = source.top
-    if (source.right) tar.right = source.right
-    if (source.bottom) tar.bottom = source.bottom
+    if (source.left !== undefined) tar.left = source.left
+    if (source.top !== undefined) tar.top = source.top
+    if (source.right !== undefined) tar.right = source.right
+    if (source.bottom !== undefined) tar.bottom = source.bottom
 }
 export function importPadding(source: types.Padding, ctx?: IImportContext): impl.Padding {
     const ret: impl.Padding = new impl.Padding ()
@@ -417,7 +417,7 @@ export function importPadding(source: types.Padding, ctx?: IImportContext): impl
 }
 /* page list item */
 function importPageListItemOptional(tar: impl.PageListItem, source: types.PageListItem, ctx?: IImportContext) {
-    if (source.versionId) tar.versionId = source.versionId
+    if (source.versionId !== undefined) tar.versionId = source.versionId
 }
 export function importPageListItem(source: types.PageListItem, ctx?: IImportContext): impl.PageListItem {
     const ret: impl.PageListItem = new impl.PageListItem (
@@ -569,7 +569,7 @@ export function importShadowPosition(source: types.ShadowPosition, ctx?: IImport
 }
 /* shadow */
 function importShadowOptional(tar: impl.Shadow, source: types.Shadow, ctx?: IImportContext) {
-    if (source.contextSettings) tar.contextSettings = importGraphicsContextSettings(source.contextSettings, ctx)
+    if (source.contextSettings !== undefined) tar.contextSettings = importGraphicsContextSettings(source.contextSettings, ctx)
 }
 export function importShadow(source: types.Shadow, ctx?: IImportContext): impl.Shadow {
     const ret: impl.Shadow = new impl.Shadow (
@@ -814,17 +814,17 @@ export function importWindingRule(source: types.WindingRule, ctx?: IImportContex
 }
 /* auto layout */
 function importAutoLayoutOptional(tar: impl.AutoLayout, source: types.AutoLayout, ctx?: IImportContext) {
-    if (source.stackMode) tar.stackMode = importStackMode(source.stackMode, ctx)
-    if (source.stackWrap) tar.stackWrap = importStackWrap(source.stackWrap, ctx)
-    if (source.stackHorizontalGapSizing) tar.stackHorizontalGapSizing = importStackSizing(source.stackHorizontalGapSizing, ctx)
-    if (source.stackVerticalGapSizing) tar.stackVerticalGapSizing = importStackSizing(source.stackVerticalGapSizing, ctx)
-    if (source.stackCounterSizing) tar.stackCounterSizing = importStackSizing(source.stackCounterSizing, ctx)
-    if (source.stackPrimaryAlignItems) tar.stackPrimaryAlignItems = importStackAlign(source.stackPrimaryAlignItems, ctx)
-    if (source.stackCounterAlignItems) tar.stackCounterAlignItems = importStackAlign(source.stackCounterAlignItems, ctx)
-    if (source.stackReverseZIndex) tar.stackReverseZIndex = source.stackReverseZIndex
-    if (source.bordersTakeSpace) tar.bordersTakeSpace = source.bordersTakeSpace
-    if (source.minSize) tar.minSize = importStackSize(source.minSize, ctx)
-    if (source.maxSize) tar.maxSize = importStackSize(source.maxSize, ctx)
+    if (source.stackMode !== undefined) tar.stackMode = importStackMode(source.stackMode, ctx)
+    if (source.stackWrap !== undefined) tar.stackWrap = importStackWrap(source.stackWrap, ctx)
+    if (source.stackHorizontalGapSizing !== undefined) tar.stackHorizontalGapSizing = importStackSizing(source.stackHorizontalGapSizing, ctx)
+    if (source.stackVerticalGapSizing !== undefined) tar.stackVerticalGapSizing = importStackSizing(source.stackVerticalGapSizing, ctx)
+    if (source.stackCounterSizing !== undefined) tar.stackCounterSizing = importStackSizing(source.stackCounterSizing, ctx)
+    if (source.stackPrimaryAlignItems !== undefined) tar.stackPrimaryAlignItems = importStackAlign(source.stackPrimaryAlignItems, ctx)
+    if (source.stackCounterAlignItems !== undefined) tar.stackCounterAlignItems = importStackAlign(source.stackCounterAlignItems, ctx)
+    if (source.stackReverseZIndex !== undefined) tar.stackReverseZIndex = source.stackReverseZIndex
+    if (source.bordersTakeSpace !== undefined) tar.bordersTakeSpace = source.bordersTakeSpace
+    if (source.minSize !== undefined) tar.minSize = importStackSize(source.minSize, ctx)
+    if (source.maxSize !== undefined) tar.maxSize = importStackSize(source.maxSize, ctx)
 }
 export function importAutoLayout(source: types.AutoLayout, ctx?: IImportContext): impl.AutoLayout {
     const ret: impl.AutoLayout = new impl.AutoLayout (
@@ -840,8 +840,8 @@ export function importAutoLayout(source: types.AutoLayout, ctx?: IImportContext)
 }
 /* blur */
 function importBlurOptional(tar: impl.Blur, source: types.Blur, ctx?: IImportContext) {
-    if (source.motionAngle) tar.motionAngle = source.motionAngle
-    if (source.radius) tar.radius = source.radius
+    if (source.motionAngle !== undefined) tar.motionAngle = source.motionAngle
+    if (source.radius !== undefined) tar.radius = source.radius
 }
 export function importBlur(source: types.Blur, ctx?: IImportContext): impl.Blur {
     const ret: impl.Blur = new impl.Blur (
@@ -920,8 +920,8 @@ export function importExportOptions(source: types.ExportOptions, ctx?: IImportCo
 }
 /* gradient */
 function importGradientOptional(tar: impl.Gradient, source: types.Gradient, ctx?: IImportContext) {
-    if (source.elipseLength) tar.elipseLength = source.elipseLength
-    if (source.gradientOpacity) tar.gradientOpacity = source.gradientOpacity
+    if (source.elipseLength !== undefined) tar.elipseLength = source.elipseLength
+    if (source.gradientOpacity !== undefined) tar.gradientOpacity = source.gradientOpacity
 }
 export function importGradient(source: types.Gradient, ctx?: IImportContext): impl.Gradient {
     const ret: impl.Gradient = new impl.Gradient (
@@ -941,14 +941,14 @@ export function importOverlayBackgroundAppearance(source: types.OverlayBackgroun
 }
 /* actions */
 function importPrototypeActionsOptional(tar: impl.PrototypeActions, source: types.PrototypeActions, ctx?: IImportContext) {
-    if (source.targetNodeID) tar.targetNodeID = source.targetNodeID
-    if (source.transitionType) tar.transitionType = importPrototypeTransitionType(source.transitionType, ctx)
-    if (source.transitionDuration) tar.transitionDuration = source.transitionDuration
-    if (source.easingType) tar.easingType = importPrototypeEasingType(source.easingType, ctx)
-    if (source.connectionURL) tar.connectionURL = source.connectionURL
-    if (source.navigationType) tar.navigationType = importPrototypeNavigationType(source.navigationType, ctx)
-    if (source.easingFunction) tar.easingFunction = importPrototypeEasingBezier(source.easingFunction, ctx)
-    if (source.extraScrollOffset) tar.extraScrollOffset = importPoint2D(source.extraScrollOffset, ctx)
+    if (source.targetNodeID !== undefined) tar.targetNodeID = source.targetNodeID
+    if (source.transitionType !== undefined) tar.transitionType = importPrototypeTransitionType(source.transitionType, ctx)
+    if (source.transitionDuration !== undefined) tar.transitionDuration = source.transitionDuration
+    if (source.easingType !== undefined) tar.easingType = importPrototypeEasingType(source.easingType, ctx)
+    if (source.connectionURL !== undefined) tar.connectionURL = source.connectionURL
+    if (source.navigationType !== undefined) tar.navigationType = importPrototypeNavigationType(source.navigationType, ctx)
+    if (source.easingFunction !== undefined) tar.easingFunction = importPrototypeEasingBezier(source.easingFunction, ctx)
+    if (source.extraScrollOffset !== undefined) tar.extraScrollOffset = importPoint2D(source.extraScrollOffset, ctx)
 }
 export function importPrototypeActions(source: types.PrototypeActions, ctx?: IImportContext): impl.PrototypeActions {
     const ret: impl.PrototypeActions = new impl.PrototypeActions (
@@ -959,7 +959,7 @@ export function importPrototypeActions(source: types.PrototypeActions, ctx?: IIm
 }
 /* event */
 function importPrototypeEventOptional(tar: impl.PrototypeEvent, source: types.PrototypeEvent, ctx?: IImportContext) {
-    if (source.transitionTimeout) tar.transitionTimeout = source.transitionTimeout
+    if (source.transitionTimeout !== undefined) tar.transitionTimeout = source.transitionTimeout
 }
 export function importPrototypeEvent(source: types.PrototypeEvent, ctx?: IImportContext): impl.PrototypeEvent {
     const ret: impl.PrototypeEvent = new impl.PrototypeEvent (
@@ -969,8 +969,8 @@ export function importPrototypeEvent(source: types.PrototypeEvent, ctx?: IImport
 }
 /* prototypeInteraction */
 function importPrototypeInterActionOptional(tar: impl.PrototypeInterAction, source: types.PrototypeInterAction, ctx?: IImportContext) {
-    if (source.typeId) tar.typeId = source.typeId
-    if (source.isDeleted) tar.isDeleted = source.isDeleted
+    if (source.typeId !== undefined) tar.typeId = source.typeId
+    if (source.isDeleted !== undefined) tar.isDeleted = source.isDeleted
 }
 export function importPrototypeInterAction(source: types.PrototypeInterAction, ctx?: IImportContext): impl.PrototypeInterAction {
     const ret: impl.PrototypeInterAction = new impl.PrototypeInterAction (
@@ -983,20 +983,20 @@ export function importPrototypeInterAction(source: types.PrototypeInterAction, c
 }
 /* span attr */
 function importSpanAttrOptional(tar: impl.SpanAttr, source: types.SpanAttr, ctx?: IImportContext) {
-    if (source.fontName) tar.fontName = source.fontName
-    if (source.fontSize) tar.fontSize = source.fontSize
-    if (source.color) tar.color = importColor(source.color, ctx)
-    if (source.strikethrough) tar.strikethrough = importStrikethroughType(source.strikethrough, ctx)
-    if (source.underline) tar.underline = importUnderlineType(source.underline, ctx)
-    if (source.weight) tar.weight = source.weight
-    if (source.italic) tar.italic = source.italic
-    if (source.bulletNumbers) tar.bulletNumbers = importBulletNumbers(source.bulletNumbers, ctx)
-    if (source.highlight) tar.highlight = importColor(source.highlight, ctx)
-    if (source.kerning) tar.kerning = source.kerning
-    if (source.transform) tar.transform = importTextTransformType(source.transform, ctx)
-    if (source.placeholder) tar.placeholder = source.placeholder
-    if (source.fillType) tar.fillType = importFillType(source.fillType, ctx)
-    if (source.gradient) tar.gradient = importGradient(source.gradient, ctx)
+    if (source.fontName !== undefined) tar.fontName = source.fontName
+    if (source.fontSize !== undefined) tar.fontSize = source.fontSize
+    if (source.color !== undefined) tar.color = importColor(source.color, ctx)
+    if (source.strikethrough !== undefined) tar.strikethrough = importStrikethroughType(source.strikethrough, ctx)
+    if (source.underline !== undefined) tar.underline = importUnderlineType(source.underline, ctx)
+    if (source.weight !== undefined) tar.weight = source.weight
+    if (source.italic !== undefined) tar.italic = source.italic
+    if (source.bulletNumbers !== undefined) tar.bulletNumbers = importBulletNumbers(source.bulletNumbers, ctx)
+    if (source.highlight !== undefined) tar.highlight = importColor(source.highlight, ctx)
+    if (source.kerning !== undefined) tar.kerning = source.kerning
+    if (source.transform !== undefined) tar.transform = importTextTransformType(source.transform, ctx)
+    if (source.placeholder !== undefined) tar.placeholder = source.placeholder
+    if (source.fillType !== undefined) tar.fillType = importFillType(source.fillType, ctx)
+    if (source.gradient !== undefined) tar.gradient = importGradient(source.gradient, ctx)
 }
 export function importSpanAttr(source: types.SpanAttr, ctx?: IImportContext): impl.SpanAttr {
     const ret: impl.SpanAttr = new impl.SpanAttr ()
@@ -1013,16 +1013,16 @@ export function importSpan(source: types.Span, ctx?: IImportContext): impl.Span 
 }
 /* border */
 function importBorderOptional(tar: impl.Border, source: types.Border, ctx?: IImportContext) {
-    if (source.contextSettings) tar.contextSettings = importContextSettings(source.contextSettings, ctx)
-    if (source.gradient) tar.gradient = importGradient(source.gradient, ctx)
-    if (source.imageRef) tar.imageRef = source.imageRef
-    if (source.imageScaleMode) tar.imageScaleMode = importImageScaleMode(source.imageScaleMode, ctx)
-    if (source.rotation) tar.rotation = source.rotation
-    if (source.scale) tar.scale = source.scale
-    if (source.originalImageWidth) tar.originalImageWidth = source.originalImageWidth
-    if (source.originalImageHeight) tar.originalImageHeight = source.originalImageHeight
-    if (source.paintFilter) tar.paintFilter = importPaintFilter(source.paintFilter, ctx)
-    if (source.transform) tar.transform = importPatternTransform(source.transform, ctx)
+    if (source.contextSettings !== undefined) tar.contextSettings = importContextSettings(source.contextSettings, ctx)
+    if (source.gradient !== undefined) tar.gradient = importGradient(source.gradient, ctx)
+    if (source.imageRef !== undefined) tar.imageRef = source.imageRef
+    if (source.imageScaleMode !== undefined) tar.imageScaleMode = importImageScaleMode(source.imageScaleMode, ctx)
+    if (source.rotation !== undefined) tar.rotation = source.rotation
+    if (source.scale !== undefined) tar.scale = source.scale
+    if (source.originalImageWidth !== undefined) tar.originalImageWidth = source.originalImageWidth
+    if (source.originalImageHeight !== undefined) tar.originalImageHeight = source.originalImageHeight
+    if (source.paintFilter !== undefined) tar.paintFilter = importPaintFilter(source.paintFilter, ctx)
+    if (source.transform !== undefined) tar.transform = importPatternTransform(source.transform, ctx)
 }
 export function importBorder(source: types.Border, ctx?: IImportContext): impl.Border {
         // inject code
@@ -1052,17 +1052,17 @@ export function importBorder(source: types.Border, ctx?: IImportContext): impl.B
 }
 /* fill */
 function importFillOptional(tar: impl.Fill, source: types.Fill, ctx?: IImportContext) {
-    if (source.contextSettings) tar.contextSettings = importContextSettings(source.contextSettings, ctx)
-    if (source.gradient) tar.gradient = importGradient(source.gradient, ctx)
-    if (source.imageRef) tar.imageRef = source.imageRef
-    if (source.fillRule) tar.fillRule = importFillRule(source.fillRule, ctx)
-    if (source.imageScaleMode) tar.imageScaleMode = importImageScaleMode(source.imageScaleMode, ctx)
-    if (source.rotation) tar.rotation = source.rotation
-    if (source.scale) tar.scale = source.scale
-    if (source.originalImageWidth) tar.originalImageWidth = source.originalImageWidth
-    if (source.originalImageHeight) tar.originalImageHeight = source.originalImageHeight
-    if (source.paintFilter) tar.paintFilter = importPaintFilter(source.paintFilter, ctx)
-    if (source.transform) tar.transform = importPatternTransform(source.transform, ctx)
+    if (source.contextSettings !== undefined) tar.contextSettings = importContextSettings(source.contextSettings, ctx)
+    if (source.gradient !== undefined) tar.gradient = importGradient(source.gradient, ctx)
+    if (source.imageRef !== undefined) tar.imageRef = source.imageRef
+    if (source.fillRule !== undefined) tar.fillRule = importFillRule(source.fillRule, ctx)
+    if (source.imageScaleMode !== undefined) tar.imageScaleMode = importImageScaleMode(source.imageScaleMode, ctx)
+    if (source.rotation !== undefined) tar.rotation = source.rotation
+    if (source.scale !== undefined) tar.scale = source.scale
+    if (source.originalImageWidth !== undefined) tar.originalImageWidth = source.originalImageWidth
+    if (source.originalImageHeight !== undefined) tar.originalImageHeight = source.originalImageHeight
+    if (source.paintFilter !== undefined) tar.paintFilter = importPaintFilter(source.paintFilter, ctx)
+    if (source.transform !== undefined) tar.transform = importPatternTransform(source.transform, ctx)
 }
 export function importFill(source: types.Fill, ctx?: IImportContext): impl.Fill {
     const ret: impl.Fill = new impl.Fill (
@@ -1080,12 +1080,12 @@ export function importFill(source: types.Fill, ctx?: IImportContext): impl.Fill 
 /* span attr */
 function importParaAttrOptional(tar: impl.ParaAttr, source: types.ParaAttr, ctx?: IImportContext) {
     importSpanAttrOptional(tar, source)
-    if (source.alignment) tar.alignment = importTextHorAlign(source.alignment, ctx)
-    if (source.paraSpacing) tar.paraSpacing = source.paraSpacing
-    if (source.minimumLineHeight) tar.minimumLineHeight = source.minimumLineHeight
-    if (source.maximumLineHeight) tar.maximumLineHeight = source.maximumLineHeight
-    if (source.autoLineHeight) tar.autoLineHeight = source.autoLineHeight
-    if (source.indent) tar.indent = source.indent
+    if (source.alignment !== undefined) tar.alignment = importTextHorAlign(source.alignment, ctx)
+    if (source.paraSpacing !== undefined) tar.paraSpacing = source.paraSpacing
+    if (source.minimumLineHeight !== undefined) tar.minimumLineHeight = source.minimumLineHeight
+    if (source.maximumLineHeight !== undefined) tar.maximumLineHeight = source.maximumLineHeight
+    if (source.autoLineHeight !== undefined) tar.autoLineHeight = source.autoLineHeight
+    if (source.indent !== undefined) tar.indent = source.indent
 }
 export function importParaAttr(source: types.ParaAttr, ctx?: IImportContext): impl.ParaAttr {
     const ret: impl.ParaAttr = new impl.ParaAttr ()
@@ -1094,7 +1094,7 @@ export function importParaAttr(source: types.ParaAttr, ctx?: IImportContext): im
 }
 /* para */
 function importParaOptional(tar: impl.Para, source: types.Para, ctx?: IImportContext) {
-    if (source.attr) tar.attr = importParaAttr(source.attr, ctx)
+    if (source.attr !== undefined) tar.attr = importParaAttr(source.attr, ctx)
 }
 export function importPara(source: types.Para, ctx?: IImportContext): impl.Para {
     const ret: impl.Para = new impl.Para (
@@ -1105,17 +1105,17 @@ export function importPara(source: types.Para, ctx?: IImportContext): impl.Para 
 }
 /* style */
 function importStyleOptional(tar: impl.Style, source: types.Style, ctx?: IImportContext) {
-    if (source.miterLimit) tar.miterLimit = source.miterLimit
-    if (source.windingRule) tar.windingRule = importWindingRule(source.windingRule, ctx)
-    if (source.blur) tar.blur = importBlur(source.blur, ctx)
-    if (source.borderOptions) tar.borderOptions = importBorderOptions(source.borderOptions, ctx)
-    if (source.colorControls) tar.colorControls = importColorControls(source.colorControls, ctx)
-    if (source.contextSettings) tar.contextSettings = importContextSettings(source.contextSettings, ctx)
-    if (source.innerShadows) tar.innerShadows = importStyle_innerShadows(source.innerShadows, ctx)
-    if (source.contacts) tar.contacts = importStyle_contacts(source.contacts, ctx)
-    if (source.startMarkerType) tar.startMarkerType = importMarkerType(source.startMarkerType, ctx)
-    if (source.endMarkerType) tar.endMarkerType = importMarkerType(source.endMarkerType, ctx)
-    if (source.varbinds) tar.varbinds = (() => {
+    if (source.miterLimit !== undefined) tar.miterLimit = source.miterLimit
+    if (source.windingRule !== undefined) tar.windingRule = importWindingRule(source.windingRule, ctx)
+    if (source.blur !== undefined) tar.blur = importBlur(source.blur, ctx)
+    if (source.borderOptions !== undefined) tar.borderOptions = importBorderOptions(source.borderOptions, ctx)
+    if (source.colorControls !== undefined) tar.colorControls = importColorControls(source.colorControls, ctx)
+    if (source.contextSettings !== undefined) tar.contextSettings = importContextSettings(source.contextSettings, ctx)
+    if (source.innerShadows !== undefined) tar.innerShadows = importStyle_innerShadows(source.innerShadows, ctx)
+    if (source.contacts !== undefined) tar.contacts = importStyle_contacts(source.contacts, ctx)
+    if (source.startMarkerType !== undefined) tar.startMarkerType = importMarkerType(source.startMarkerType, ctx)
+    if (source.endMarkerType !== undefined) tar.endMarkerType = importMarkerType(source.endMarkerType, ctx)
+    if (source.varbinds !== undefined) tar.varbinds = (() => {
         const ret = new BasicMap<string, string>()
         const _val = source.varbinds as any
         objkeys(_val).forEach((val, k) => {
@@ -1135,10 +1135,10 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
 /* text attr */
 function importTextAttrOptional(tar: impl.TextAttr, source: types.TextAttr, ctx?: IImportContext) {
     importParaAttrOptional(tar, source)
-    if (source.verAlign) tar.verAlign = importTextVerAlign(source.verAlign, ctx)
-    if (source.orientation) tar.orientation = importTextOrientation(source.orientation, ctx)
-    if (source.textBehaviour) tar.textBehaviour = importTextBehaviour(source.textBehaviour, ctx)
-    if (source.padding) tar.padding = importPadding(source.padding, ctx)
+    if (source.verAlign !== undefined) tar.verAlign = importTextVerAlign(source.verAlign, ctx)
+    if (source.orientation !== undefined) tar.orientation = importTextOrientation(source.orientation, ctx)
+    if (source.textBehaviour !== undefined) tar.textBehaviour = importTextBehaviour(source.textBehaviour, ctx)
+    if (source.padding !== undefined) tar.padding = importPadding(source.padding, ctx)
 }
 export function importTextAttr(source: types.TextAttr, ctx?: IImportContext): impl.TextAttr {
         // inject code
@@ -1157,7 +1157,7 @@ export function importTextAttr(source: types.TextAttr, ctx?: IImportContext): im
 }
 /* text */
 function importTextOptional(tar: impl.Text, source: types.Text, ctx?: IImportContext) {
-    if (source.attr) tar.attr = importTextAttr(source.attr, ctx)
+    if (source.attr !== undefined) tar.attr = importTextAttr(source.attr, ctx)
 }
 export function importText(source: types.Text, ctx?: IImportContext): impl.Text {
     const ret: impl.Text = new impl.Text (
@@ -1167,19 +1167,19 @@ export function importText(source: types.Text, ctx?: IImportContext): impl.Text 
 }
 /* shape */
 function importShapeOptional(tar: impl.Shape, source: types.Shape, ctx?: IImportContext) {
-    if (source.boolOp) tar.boolOp = importBoolOp(source.boolOp, ctx)
-    if (source.isFixedToViewport) tar.isFixedToViewport = source.isFixedToViewport
-    if (source.isLocked) tar.isLocked = source.isLocked
-    if (source.isVisible) tar.isVisible = source.isVisible
-    if (source.exportOptions) tar.exportOptions = importExportOptions(source.exportOptions, ctx)
-    if (source.nameIsFixed) tar.nameIsFixed = source.nameIsFixed
-    if (source.resizingConstraint) tar.resizingConstraint = source.resizingConstraint
-    if (source.resizingType) tar.resizingType = importResizeType(source.resizingType, ctx)
-    if (source.constrainerProportions) tar.constrainerProportions = source.constrainerProportions
-    if (source.clippingMaskMode) tar.clippingMaskMode = source.clippingMaskMode
-    if (source.hasClippingMask) tar.hasClippingMask = source.hasClippingMask
-    if (source.shouldBreakMaskChain) tar.shouldBreakMaskChain = source.shouldBreakMaskChain
-    if (source.varbinds) tar.varbinds = (() => {
+    if (source.boolOp !== undefined) tar.boolOp = importBoolOp(source.boolOp, ctx)
+    if (source.isFixedToViewport !== undefined) tar.isFixedToViewport = source.isFixedToViewport
+    if (source.isLocked !== undefined) tar.isLocked = source.isLocked
+    if (source.isVisible !== undefined) tar.isVisible = source.isVisible
+    if (source.exportOptions !== undefined) tar.exportOptions = importExportOptions(source.exportOptions, ctx)
+    if (source.nameIsFixed !== undefined) tar.nameIsFixed = source.nameIsFixed
+    if (source.resizingConstraint !== undefined) tar.resizingConstraint = source.resizingConstraint
+    if (source.resizingType !== undefined) tar.resizingType = importResizeType(source.resizingType, ctx)
+    if (source.constrainerProportions !== undefined) tar.constrainerProportions = source.constrainerProportions
+    if (source.clippingMaskMode !== undefined) tar.clippingMaskMode = source.clippingMaskMode
+    if (source.hasClippingMask !== undefined) tar.hasClippingMask = source.hasClippingMask
+    if (source.shouldBreakMaskChain !== undefined) tar.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) tar.varbinds = (() => {
         const ret = new BasicMap<string, string>()
         const _val = source.varbinds as any
         objkeys(_val).forEach((val, k) => {
@@ -1187,17 +1187,17 @@ function importShapeOptional(tar: impl.Shape, source: types.Shape, ctx?: IImport
         })
         return ret
     })()
-    if (source.haveEdit) tar.haveEdit = source.haveEdit
-    if (source.prototypeStartingPoint) tar.prototypeStartingPoint = importPrototypeStartingPoint(source.prototypeStartingPoint, ctx)
-    if (source.prototypeInteractions) tar.prototypeInteractions = importShape_prototypeInteractions(source.prototypeInteractions, ctx)
-    if (source.overlayPosition) tar.overlayPosition = importOverlayPosition(source.overlayPosition, ctx)
-    if (source.overlayBackgroundInteraction) tar.overlayBackgroundInteraction = importOverlayBackgroundInteraction(source.overlayBackgroundInteraction, ctx)
-    if (source.overlayBackgroundAppearance) tar.overlayBackgroundAppearance = importOverlayBackgroundAppearance(source.overlayBackgroundAppearance, ctx)
-    if (source.scrollDirection) tar.scrollDirection = importScrollDirection(source.scrollDirection, ctx)
-    if (source.scrollBehavior) tar.scrollBehavior = importScrollBehavior(source.scrollBehavior, ctx)
-    if (source.mask) tar.mask = source.mask
-    if (source.stackPositioning) tar.stackPositioning = importStackPositioning(source.stackPositioning, ctx)
-    if (source.uniformScale) tar.uniformScale = source.uniformScale
+    if (source.haveEdit !== undefined) tar.haveEdit = source.haveEdit
+    if (source.prototypeStartingPoint !== undefined) tar.prototypeStartingPoint = importPrototypeStartingPoint(source.prototypeStartingPoint, ctx)
+    if (source.prototypeInteractions !== undefined) tar.prototypeInteractions = importShape_prototypeInteractions(source.prototypeInteractions, ctx)
+    if (source.overlayPosition !== undefined) tar.overlayPosition = importOverlayPosition(source.overlayPosition, ctx)
+    if (source.overlayBackgroundInteraction !== undefined) tar.overlayBackgroundInteraction = importOverlayBackgroundInteraction(source.overlayBackgroundInteraction, ctx)
+    if (source.overlayBackgroundAppearance !== undefined) tar.overlayBackgroundAppearance = importOverlayBackgroundAppearance(source.overlayBackgroundAppearance, ctx)
+    if (source.scrollDirection !== undefined) tar.scrollDirection = importScrollDirection(source.scrollDirection, ctx)
+    if (source.scrollBehavior !== undefined) tar.scrollBehavior = importScrollBehavior(source.scrollBehavior, ctx)
+    if (source.mask !== undefined) tar.mask = source.mask
+    if (source.stackPositioning !== undefined) tar.stackPositioning = importStackPositioning(source.stackPositioning, ctx)
+    if (source.uniformScale !== undefined) tar.uniformScale = source.uniformScale
 }
 export function importShape(source: types.Shape, ctx?: IImportContext): impl.Shape {
     const ret: impl.Shape = new impl.Shape (
@@ -1213,9 +1213,9 @@ export function importShape(source: types.Shape, ctx?: IImportContext): impl.Sha
 /* table cell */
 function importTableCellOptional(tar: impl.TableCell, source: types.TableCell, ctx?: IImportContext) {
     importShapeOptional(tar, source)
-    if (source.imageRef) tar.imageRef = source.imageRef
-    if (source.rowSpan) tar.rowSpan = source.rowSpan
-    if (source.colSpan) tar.colSpan = source.colSpan
+    if (source.imageRef !== undefined) tar.imageRef = source.imageRef
+    if (source.rowSpan !== undefined) tar.rowSpan = source.rowSpan
+    if (source.colSpan !== undefined) tar.colSpan = source.colSpan
 }
 export function importTableCell(source: types.TableCell, ctx?: IImportContext): impl.TableCell {
         // inject code
@@ -1272,7 +1272,7 @@ export function importTableCell(source: types.TableCell, ctx?: IImportContext): 
 /* table shape */
 function importTableShapeOptional(tar: impl.TableShape, source: types.TableShape, ctx?: IImportContext) {
     importShapeOptional(tar, source)
-    if (source.textAttr) tar.textAttr = importTextAttr(source.textAttr, ctx)
+    if (source.textAttr !== undefined) tar.textAttr = importTextAttr(source.textAttr, ctx)
 }
 export function importTableShape(source: types.TableShape, ctx?: IImportContext): impl.TableShape {
         // inject code
@@ -1334,7 +1334,7 @@ export function importTableShape(source: types.TableShape, ctx?: IImportContext)
 /* text shape */
 function importTextShapeOptional(tar: impl.TextShape, source: types.TextShape, ctx?: IImportContext) {
     importShapeOptional(tar, source)
-    if (source.fixedRadius) tar.fixedRadius = source.fixedRadius
+    if (source.fixedRadius !== undefined) tar.fixedRadius = source.fixedRadius
 }
 export function importTextShape(source: types.TextShape, ctx?: IImportContext): impl.TextShape {
     compatibleOldData(source, ctx)
@@ -1399,8 +1399,8 @@ export function importVariable(source: types.Variable, ctx?: IImportContext): im
 }
 /* comment */
 function importCommentOptional(tar: impl.Comment, source: types.Comment, ctx?: IImportContext) {
-    if (source.parentId) tar.parentId = source.parentId
-    if (source.rootId) tar.rootId = source.rootId
+    if (source.parentId !== undefined) tar.parentId = source.parentId
+    if (source.rootId !== undefined) tar.rootId = source.rootId
 }
 export function importComment(source: types.Comment, ctx?: IImportContext): impl.Comment {
     const ret: impl.Comment = new impl.Comment (
@@ -1417,7 +1417,7 @@ export function importComment(source: types.Comment, ctx?: IImportContext): impl
 /* path shape */
 function importPathShapeOptional(tar: impl.PathShape, source: types.PathShape, ctx?: IImportContext) {
     importShapeOptional(tar, source)
-    if (source.fixedRadius) tar.fixedRadius = source.fixedRadius
+    if (source.fixedRadius !== undefined) tar.fixedRadius = source.fixedRadius
 }
 export function importPathShape(source: types.PathShape, ctx?: IImportContext): impl.PathShape {
         // inject code
@@ -1452,7 +1452,7 @@ export function importPathShape(source: types.PathShape, ctx?: IImportContext): 
 /* path shape */
 function importPathShape2Optional(tar: impl.PathShape2, source: types.PathShape2, ctx?: IImportContext) {
     importShapeOptional(tar, source)
-    if (source.fixedRadius) tar.fixedRadius = source.fixedRadius
+    if (source.fixedRadius !== undefined) tar.fixedRadius = source.fixedRadius
 }
 export function importPathShape2(source: types.PathShape2, ctx?: IImportContext): impl.PathShape2 {
     compatibleOldData(source, ctx)
@@ -1538,7 +1538,7 @@ export function importStarShape(source: types.StarShape, ctx?: IImportContext): 
 /* symbol ref shape */
 function importSymbolRefShapeOptional(tar: impl.SymbolRefShape, source: types.SymbolRefShape, ctx?: IImportContext) {
     importShapeOptional(tar, source)
-    if (source.overrides) tar.overrides = (() => {
+    if (source.overrides !== undefined) tar.overrides = (() => {
         const ret = new BasicMap<string, string>()
         const _val = source.overrides as any
         objkeys(_val).forEach((val, k) => {
@@ -1546,10 +1546,10 @@ function importSymbolRefShapeOptional(tar: impl.SymbolRefShape, source: types.Sy
         })
         return ret
     })()
-    if (source.isCustomSize) tar.isCustomSize = source.isCustomSize
-    if (source.cornerRadius) tar.cornerRadius = importCornerRadius(source.cornerRadius, ctx)
-    if (source.innerEnvScale) tar.innerEnvScale = source.innerEnvScale
-    if (source.frameMaskDisabled) tar.frameMaskDisabled = source.frameMaskDisabled
+    if (source.isCustomSize !== undefined) tar.isCustomSize = source.isCustomSize
+    if (source.cornerRadius !== undefined) tar.cornerRadius = importCornerRadius(source.cornerRadius, ctx)
+    if (source.innerEnvScale !== undefined) tar.innerEnvScale = source.innerEnvScale
+    if (source.frameMaskDisabled !== undefined) tar.frameMaskDisabled = source.frameMaskDisabled
 }
 export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImportContext): impl.SymbolRefShape {
         // inject code
@@ -1590,8 +1590,8 @@ export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImport
 /* contact shape */
 function importContactShapeOptional(tar: impl.ContactShape, source: types.ContactShape, ctx?: IImportContext) {
     importPathShapeOptional(tar, source)
-    if (source.from) tar.from = importContactForm(source.from, ctx)
-    if (source.to) tar.to = importContactForm(source.to, ctx)
+    if (source.from !== undefined) tar.from = importContactForm(source.from, ctx)
+    if (source.to !== undefined) tar.to = importContactForm(source.to, ctx)
 }
 export function importContactShape(source: types.ContactShape, ctx?: IImportContext): impl.ContactShape {
         // inject code
@@ -1784,9 +1784,9 @@ export function importLineShape(source: types.LineShape, ctx?: IImportContext): 
 /* oval shape */
 function importOvalShapeOptional(tar: impl.OvalShape, source: types.OvalShape, ctx?: IImportContext) {
     importPathShapeOptional(tar, source)
-    if (source.startingAngle) tar.startingAngle = source.startingAngle
-    if (source.endingAngle) tar.endingAngle = source.endingAngle
-    if (source.innerRadius) tar.innerRadius = source.innerRadius
+    if (source.startingAngle !== undefined) tar.startingAngle = source.startingAngle
+    if (source.endingAngle !== undefined) tar.endingAngle = source.endingAngle
+    if (source.innerRadius !== undefined) tar.innerRadius = source.innerRadius
 }
 export function importOvalShape(source: types.OvalShape, ctx?: IImportContext): impl.OvalShape {
         // inject code
@@ -1822,10 +1822,10 @@ export function importOvalShape(source: types.OvalShape, ctx?: IImportContext): 
 /* artboard shape */
 function importArtboardOptional(tar: impl.Artboard, source: types.Artboard, ctx?: IImportContext) {
     importGroupShapeOptional(tar, source)
-    if (source.cornerRadius) tar.cornerRadius = importCornerRadius(source.cornerRadius, ctx)
-    if (source.guides) tar.guides = importArtboard_guides(source.guides, ctx)
-    if (source.autoLayout) tar.autoLayout = importAutoLayout(source.autoLayout, ctx)
-    if (source.frameMaskDisabled) tar.frameMaskDisabled = source.frameMaskDisabled
+    if (source.cornerRadius !== undefined) tar.cornerRadius = importCornerRadius(source.cornerRadius, ctx)
+    if (source.guides !== undefined) tar.guides = importArtboard_guides(source.guides, ctx)
+    if (source.autoLayout !== undefined) tar.autoLayout = importAutoLayout(source.autoLayout, ctx)
+    if (source.frameMaskDisabled !== undefined) tar.frameMaskDisabled = source.frameMaskDisabled
 }
 export function importArtboard(source: types.Artboard, ctx?: IImportContext): impl.Artboard {
     compatibleOldData(source, ctx)
@@ -1858,7 +1858,7 @@ export function importBoolShape(source: types.BoolShape, ctx?: IImportContext): 
 }
 /* document meta */
 function importDocumentMetaOptional(tar: impl.DocumentMeta, source: types.DocumentMeta, ctx?: IImportContext) {
-    if (source.freesymbols) tar.freesymbols = (() => {
+    if (source.freesymbols !== undefined) tar.freesymbols = (() => {
         const ret = new BasicMap<string, impl.SymbolShape | impl.SymbolUnionShape>()
         const _val = source.freesymbols as any
         objkeys(_val).forEach((val, k) => {
@@ -1902,7 +1902,7 @@ export function importDocumentMeta(source: types.DocumentMeta, ctx?: IImportCont
 /* group shape */
 function importGroupShapeOptional(tar: impl.GroupShape, source: types.GroupShape, ctx?: IImportContext) {
     importShapeOptional(tar, source)
-    if (source.fixedRadius) tar.fixedRadius = source.fixedRadius
+    if (source.fixedRadius !== undefined) tar.fixedRadius = source.fixedRadius
 }
 export function importGroupShape(source: types.GroupShape, ctx?: IImportContext): impl.GroupShape {
         // inject code
@@ -1927,8 +1927,8 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
 /* page */
 function importPageOptional(tar: impl.Page, source: types.Page, ctx?: IImportContext) {
     importGroupShapeOptional(tar, source)
-    if (source.backgroundColor) tar.backgroundColor = importColor(source.backgroundColor, ctx)
-    if (source.guides) tar.guides = importPage_guides(source.guides, ctx)
+    if (source.backgroundColor !== undefined) tar.backgroundColor = importColor(source.backgroundColor, ctx)
+    if (source.guides !== undefined) tar.guides = importPage_guides(source.guides, ctx)
 }
 export function importPage(source: types.Page, ctx?: IImportContext): impl.Page {
         // inject code
@@ -1950,7 +1950,7 @@ export function importPage(source: types.Page, ctx?: IImportContext): impl.Page 
 /* symbol shape */
 function importSymbolShapeOptional(tar: impl.SymbolShape, source: types.SymbolShape, ctx?: IImportContext) {
     importGroupShapeOptional(tar, source)
-    if (source.symtags) tar.symtags = (() => {
+    if (source.symtags !== undefined) tar.symtags = (() => {
         const ret = new BasicMap<string, string>()
         const _val = source.symtags as any
         objkeys(_val).forEach((val, k) => {
@@ -1958,10 +1958,10 @@ function importSymbolShapeOptional(tar: impl.SymbolShape, source: types.SymbolSh
         })
         return ret
     })()
-    if (source.cornerRadius) tar.cornerRadius = importCornerRadius(source.cornerRadius, ctx)
-    if (source.guides) tar.guides = importSymbolShape_guides(source.guides, ctx)
-    if (source.autoLayout) tar.autoLayout = importAutoLayout(source.autoLayout, ctx)
-    if (source.frameMaskDisabled) tar.frameMaskDisabled = source.frameMaskDisabled
+    if (source.cornerRadius !== undefined) tar.cornerRadius = importCornerRadius(source.cornerRadius, ctx)
+    if (source.guides !== undefined) tar.guides = importSymbolShape_guides(source.guides, ctx)
+    if (source.autoLayout !== undefined) tar.autoLayout = importAutoLayout(source.autoLayout, ctx)
+    if (source.frameMaskDisabled !== undefined) tar.frameMaskDisabled = source.frameMaskDisabled
 }
 export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContext): impl.SymbolShape {
     compatibleOldData(source, ctx)

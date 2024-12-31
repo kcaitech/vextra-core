@@ -355,7 +355,6 @@ export function updateFrame(frame: ShapeFrame, x: number, y: number, w: number, 
 }
 
 export class ShapeView extends DataView {
-
     m_transform: Transform;
 
     _save_frame: ShapeFrame = new ShapeFrame(); // 对象内坐标系的大小 // 用于updateFrames判断frame是否变更
@@ -372,10 +371,16 @@ export class ShapeView extends DataView {
     m_path?: Path;
     m_pathstr?: string;
 
-    m_transform2: Transform2 | undefined;
+    m_border_path?: Path;
+    m_border_path_box?: ShapeFrame;
 
+    m_transform2: Transform2 | undefined;
     m_transform_form_mask?: Transform;
     m_mask_group?: ShapeView[];
+
+    // fill、border等属性随着变量、遮罩、样式库等因素的加入，获取路径不断加长。现在缓存fill和border，不至于每次都重新通过长的路径获取
+    m_fills: Fill[] | undefined;
+    m_borders: Border[] | undefined;
 
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
@@ -555,6 +560,14 @@ export class ShapeView extends DataView {
             this.m_pathstr = undefined;
         }
 
+        if (args.includes('fills')) {
+            this.m_fills = undefined;
+        }
+
+        if (args.includes('borders')) {
+            this.m_borders = undefined;
+        }
+
         const masked = this.masked;
         if (masked) masked.notify('rerender-mask');
     }
@@ -646,13 +659,17 @@ export class ShapeView extends DataView {
     }
 
     getFills(): Fill[] {
+        if (this.m_fills) return this.m_fills;
         const v = this._findOV(OverrideType.Fills, VariableType.Fills);
-        return v ? v.value : this.m_data.style.fills;
+        this.m_fills = v ? v.value as Fill[] : this.m_data.style.fills
+        return this.m_fills;
     }
 
     getBorders(): Border[] {
+        if (this.m_borders) return this.m_borders;
         const v = this._findOV(OverrideType.Borders, VariableType.Borders);
-        return v ? v.value : this.m_data.style.borders;
+        this.m_borders = v ? v.value as Border[] : this.m_data.style.borders
+        return this.m_borders;
     }
 
     get cornerRadius(): CornerRadius | undefined {
@@ -1439,5 +1456,13 @@ export class ShapeView extends DataView {
     }
     get uniformScale() {
         return this.data.uniformScale;
+    }
+
+    get borderPath() {
+        return this.m_border_path;
+    }
+
+    get borderPathBox() {
+        return this.m_border_path_box;
     }
 }
