@@ -948,7 +948,6 @@ export type Shape = {
     scrollBehavior?: ScrollBehavior,
     mask?: boolean,
     stackPositioning?: StackPositioning,
-    uniformScale?: number,
 }
 /* table cell */
 export type TableCell = Shape & {
@@ -1024,6 +1023,7 @@ export type SymbolRefShape = Shape & {
     cornerRadius?: CornerRadius,
     innerEnvScale?: number,
     frameMaskDisabled?: boolean,
+    uniformScale?: number,
 }
 /* contact shape */
 export type ContactShape = PathShape & {

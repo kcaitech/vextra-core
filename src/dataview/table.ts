@@ -97,10 +97,9 @@ export class TableView extends ShapeView {
         parentFrame: ShapeFrame | undefined,
         varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
         scale: { x: number, y: number } | undefined,
-        uniformScale: number | undefined
     ): void {
 
-        super._layout(shape, parentFrame, varsContainer, scale, uniformScale);
+        super._layout(shape, parentFrame, varsContainer, scale);
         // if (this.m_need_updatechilds) {
         //     this.m_need_updatechilds = false;
         this.updateChildren();

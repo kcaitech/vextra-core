@@ -1223,7 +1223,6 @@ function importShapeOptional(tar: impl.Shape, source: types.Shape, ctx?: IImport
     if (source.scrollBehavior !== undefined) tar.scrollBehavior = importScrollBehavior(source.scrollBehavior, ctx)
     if (source.mask !== undefined) tar.mask = source.mask
     if (source.stackPositioning !== undefined) tar.stackPositioning = importStackPositioning(source.stackPositioning, ctx)
-    if (source.uniformScale !== undefined) tar.uniformScale = source.uniformScale
 }
 export function importShape(source: types.Shape, ctx?: IImportContext): impl.Shape {
     const ret: impl.Shape = new impl.Shape (
@@ -1576,6 +1575,7 @@ function importSymbolRefShapeOptional(tar: impl.SymbolRefShape, source: types.Sy
     if (source.cornerRadius !== undefined) tar.cornerRadius = importCornerRadius(source.cornerRadius, ctx)
     if (source.innerEnvScale !== undefined) tar.innerEnvScale = source.innerEnvScale
     if (source.frameMaskDisabled !== undefined) tar.frameMaskDisabled = source.frameMaskDisabled
+    if (source.uniformScale !== undefined) tar.uniformScale = source.uniformScale
 }
 export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImportContext): impl.SymbolRefShape {
         // inject code

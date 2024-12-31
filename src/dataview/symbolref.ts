@@ -14,6 +14,7 @@ import { PageView } from "./page";
 import { innerShadowId } from "../render";
 import { elh } from "./el";
 import { render as clippathR } from "../render/clippath";
+import { isEqual } from "../basic/number_utils";
 
 // 播放页组件状态切换会话存储refId的key值；
 export const sessionRefIdKey = 'ref-id-cf76c6c6-beed-4c33-ae71-134ee876b990';
@@ -25,6 +26,10 @@ export class SymbolRefView extends ShapeView {
         this.symwatcher = this.symwatcher.bind(this);
         this.loadsym();
         this.updateMaskMap();
+    }
+
+    get uniformScale() {
+        return this.data.uniformScale;
     }
 
     onMounted(): void {
@@ -40,7 +45,7 @@ export class SymbolRefView extends ShapeView {
         // let refframe;
         const parent = this.parent;
         const parentFrame = parent?.hasSize() ? parent.frame : undefined; // 判断父级是否有确定的大小
-        this._layout(this.m_data, parentFrame, varsContainer, this.m_scale, this.m_uniform_scale);
+        this._layout(this.m_data, parentFrame, varsContainer, this.m_scale);
         this.updateFrames();
     }
 
@@ -166,11 +171,10 @@ export class SymbolRefView extends ShapeView {
         scale: { x: number, y: number } | undefined,
         varsContainer: VarsContainer | undefined,
         resue: Map<string, DataView>,
-        rView: RootView | undefined,
-        uniformScale: number | undefined
+        rView: RootView | undefined
     ): boolean {
         let cdom: DataView | undefined = resue.get(child.id);
-        const props = { data: child, scale, varsContainer, isVirtual: true, uniformScale };
+        const props = { data: child, scale, varsContainer, isVirtual: true };
 
         if (cdom) {
             const changed = this.moveChild(cdom, idx);
@@ -212,15 +216,14 @@ export class SymbolRefView extends ShapeView {
 
         const parent = this.parent;
         const parentFrame = parent?.hasSize() ? parent.frame : undefined;
-        this._layout(this.data, parentFrame, varsContainer, this.m_scale, this.m_uniform_scale)
+        this._layout(this.data, parentFrame, varsContainer, this.m_scale)
     }
 
     protected _layout(
         shape: Shape,
         parentFrame: ShapeSize | undefined,
         varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
-        _scale: { x: number; y: number; } | undefined,
-        uniformScale: number | undefined
+        _scale: { x: number; y: number; } | undefined
     ): void {
         if (!this.m_sym) {
             this.updateLayoutArgs(shape.transform, shape.frame, 0);
@@ -229,65 +232,94 @@ export class SymbolRefView extends ShapeView {
         }
         const prescale = { x: _scale?.x ?? 1, y: _scale?.y ?? 1 }
         const scale = { x: prescale.x, y: prescale.y }
-        const childscale = { x: scale.x, y: scale.y } // 传递给子对象的缩放值
 
+        const isCustomSize = this.isCustomSize
+        const uniformScale = this.uniformScale
+        // 计算自身大小
+        let size = new ShapeSize();
+        
+        // 计算排版空间大小
+        let layoutSize = new ShapeSize();
         // 调整过大小的，使用用户调整的大小，否则跟随symbol大小
-        if ((this.m_data as SymbolRefShape).isCustomSize) {
-            // 使用自己大小
-            childscale.x *= this.m_data.size.width / this.m_sym.size.width;
-            childscale.y *= this.m_data.size.height / this.m_sym.size.height;
+        if (isCustomSize) {
+            size.width = this.m_data.size.width
+            size.height = this.m_data.size.height
         } else {
-            // 跟随symbol大小
-            // 此时childscale不需要变化
-            scale.x *= this.m_sym.size.width / this.m_data.size.width;
-            scale.y *= this.m_sym.size.height / this.m_data.size.height;
+            size.width = this.m_sym.size.width
+            size.height = this.m_sym.size.height
+            if (uniformScale) {
+                size.width *= uniformScale
+                size.height *= uniformScale
+            }
         }
-        const transform = shape.transform;
+
+        const selfframe = new ShapeFrame(0, 0, size.width, size.height)
+        const childscale = { x: scale.x, y: scale.y } // 传递给子对象的缩放值
         // case 1 不需要变形
-        if (scale.x === 1 && scale.y === 1) {
-            let frame = this.m_data.frame;
-            this.updateLayoutArgs(transform, frame, 0);
-            this.layoutChilds(varsContainer, frame, childscale, this.uniformScale);
+        if (isEqual(scale.x, 1) && isEqual(scale.y, 1)) {
+            layoutSize.width = size.width
+            layoutSize.height = size.height
+            if (uniformScale) {
+                // 放大layoutSize
+                layoutSize.width /= uniformScale
+                layoutSize.height /= uniformScale
+            }
+            const transform = shape.transform;
+            childscale.x = layoutSize.width / this.m_sym.size.width;
+            childscale.y = layoutSize.height / this.m_sym.size.height;
+            // let frame = this.m_data.frame;
+            this.updateLayoutArgs(transform, selfframe, 0);
+            this.layoutChilds(varsContainer, layoutSize, childscale);
             return;
         }
 
         let scaleX = scale.x;
         let scaleY = scale.y;
         const resizingConstraint = shape.resizingConstraint ?? 0; // 默认值为靠左、靠顶、宽高固定
-        // if (uniformScale) {
-        //     scaleX /= uniformScale;
-        //     scaleY /= uniformScale;
-        // }
+
         if (parentFrame && resizingConstraint !== 0) {
-            const { transform, targetWidth, targetHeight } = fixFrameByConstrain(shape, parentFrame, scaleX, scaleY, uniformScale);
-            this.updateLayoutArgs((transform), new ShapeFrame(0, 0, targetWidth, targetHeight), (shape as PathShape).fixedRadius);
-        } else {
+            // 要调整下scale
+            const _size = shape.size
+            scaleX *= size.width / _size.width
+            scaleY *= size.height / _size.height
+            // 在parentFrame的排版空间内,根据缩放后的大小布局自己
+            const { transform, targetWidth, targetHeight } = fixFrameByConstrain(shape, parentFrame, scaleX, scaleY);
+            // 计算出自身大小
+            selfframe.width = targetWidth
+            selfframe.height = targetHeight
+            this.updateLayoutArgs((transform), selfframe, (shape as PathShape).fixedRadius);
+        } else { // 没有约束
             const transform = shape.transform.clone();
             transform.scale(scaleX, scaleY);
             const __decompose_scale = transform.clearScale();
-            const size = shape.size;
             // 保持对象位置不变
             const p0 = shape.transform.computeCoord(0, 0);
             const p1 = transform.computeCoord(0, 0);
             transform.trans(p0.x - p1.x, p0.y - p1.y);
-            const frame = new ShapeFrame(0, 0, size.width * __decompose_scale.x, size.height * __decompose_scale.y);
-            this.updateLayoutArgs((transform), frame, (shape as PathShape).fixedRadius);
+
+            selfframe.width = size.width * __decompose_scale.x
+            selfframe.height = size.height * __decompose_scale.y
+
+            this.updateLayoutArgs((transform), selfframe, (shape as PathShape).fixedRadius);
         }
+        layoutSize.width = selfframe.width
+        layoutSize.height = selfframe.height
+        if (uniformScale) {
+            // 放大layoutSize
+            layoutSize.width /= uniformScale
+            layoutSize.height /= uniformScale
+        }
+        // 不对的
         // 重新计算 childscale
-        childscale.x = this.frame.width / this.m_sym.size.width;
-        childscale.y = this.frame.height / this.m_sym.size.height;
-        // if (uniformScale) {
-        //     childscale.x /= uniformScale;
-        //     childscale.y /= uniformScale;
-        // }
-        this.layoutChilds(varsContainer, this.frame, childscale);
+        childscale.x = layoutSize.width / this.m_sym.size.width;
+        childscale.y = layoutSize.height / this.m_sym.size.height;
+        this.layoutChilds(varsContainer, layoutSize, childscale);
     }
 
     protected layoutChilds(
         varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
         parentFrame: ShapeSize | undefined,
-        scale?: { x: number, y: number },
-        uniformScale?: number
+        scale?: { x: number, y: number }
     ): void {
         const childs = this.getDataChilds();
         const resue: Map<string, DataView> = new Map();
@@ -297,7 +329,7 @@ export class SymbolRefView extends ShapeView {
         for (let i = 0, len = childs.length; i < len; i++) {
             const cc = childs[i];
             // update childs
-            if (this.layoutChild(cc, i, scale, varsContainer, resue, rootView, uniformScale)) changed = true;
+            if (this.layoutChild(cc, i, scale, varsContainer, resue, rootView)) changed = true;
         }
 
         // 删除多余的

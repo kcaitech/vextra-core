@@ -1096,7 +1096,6 @@ export function exportShape(source: types.Shape, ctx?: IExportContext): types.Sh
     if (source.scrollBehavior !== undefined) ret.scrollBehavior = exportScrollBehavior(source.scrollBehavior, ctx)
     if (source.mask !== undefined) ret.mask = source.mask
     if (source.stackPositioning !== undefined) ret.stackPositioning = exportStackPositioning(source.stackPositioning, ctx)
-    if (source.uniformScale !== undefined) ret.uniformScale = source.uniformScale
     return ret
 }
 /* table cell */
@@ -1263,6 +1262,7 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
     if (source.cornerRadius !== undefined) ret.cornerRadius = exportCornerRadius(source.cornerRadius, ctx)
     if (source.innerEnvScale !== undefined) ret.innerEnvScale = source.innerEnvScale
     if (source.frameMaskDisabled !== undefined) ret.frameMaskDisabled = source.frameMaskDisabled
+    if (source.uniformScale !== undefined) ret.uniformScale = source.uniformScale
         // inject code
     if (ctx?.refsymbols) ctx.refsymbols.add(ret.refId);
 

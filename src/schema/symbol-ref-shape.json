@@ -37,6 +37,9 @@
         },
         "frameMaskDisabled": {
             "type": "boolean"
+        },
+        "uniformScale": {
+            "type": "number"
         }
     },
     "required": [

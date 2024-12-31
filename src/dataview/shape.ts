@@ -64,7 +64,7 @@ export function isNoScale(trans: { x: number, y: number } | undefined): boolean 
     return !trans || trans.x === 1 && trans.y === 1;
 }
 
-export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeSize, scaleX: number, scaleY: number, uniformScale: number | undefined) {
+export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeSize, scaleX: number, scaleY: number) {
     const originParentFrame = shape.parent!.size; // frame
     if (shape.parent!.type === ShapeType.Group) {
         const transform = (shape.transform.clone());
@@ -81,10 +81,10 @@ export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeSize, scaleX
             width: originParentFrame.width,
             height: originParentFrame.height
         }
-        if (uniformScale) {
-            __cur_env.width /= uniformScale;
-            __cur_env.height /= uniformScale;
-        }
+        // if (uniformScale) {
+        //     __cur_env.width /= uniformScale;
+        //     __cur_env.height /= uniformScale;
+        // }
         return fixConstrainFrame2(shape, {x: scaleX, y: scaleY}, __cur_env as ShapeSize, __pre_env as ShapeSize);
     }
 }
@@ -396,7 +396,7 @@ export class ShapeView extends DataView {
     onMounted() {
         const parent = this.parent;
         const parentFrame = parent?.hasSize() ? parent.frame : undefined;
-        this._layout(this.m_data, parentFrame, this.varsContainer, this.m_scale, this.m_uniform_scale);
+        this._layout(this.m_data, parentFrame, this.varsContainer, this.m_scale);
         this.updateFrames();
     }
 
@@ -868,8 +868,7 @@ export class ShapeView extends DataView {
         shape: Shape,
         parentFrame: ShapeSize | undefined,
         varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
-        scale: { x: number, y: number } | undefined,
-        uniformScale: number | undefined
+        scale: { x: number, y: number } | undefined
     ) {
         const transform = shape.transform;
         // case 1 不需要变形
@@ -918,14 +917,14 @@ export class ShapeView extends DataView {
         let scaleY = scale.y;
 
         if (parentFrame && resizingConstraint !== 0) {
-            const {transform, targetWidth, targetHeight} = fixFrameByConstrain(shape, parentFrame, scaleX, scaleY, uniformScale);
+            const {transform, targetWidth, targetHeight} = fixFrameByConstrain(shape, parentFrame, scaleX, scaleY);
             this.updateLayoutArgs((transform), new ShapeFrame(0, 0, targetWidth, targetHeight), (shape as PathShape).fixedRadius);
             this.layoutChilds(varsContainer, this.frame, {x: targetWidth / saveW, y: targetHeight / saveH});
         } else {
-            if (uniformScale) {
-                scaleX /= uniformScale;
-                scaleY /= uniformScale;
-            }
+            // if (uniformScale) {
+            //     scaleX /= uniformScale;
+            //     scaleY /= uniformScale;
+            // }
             const transform = (shape.transform.clone());
             // const __p_transform_scale = new Transform2().setScale(ColVector3D.FromXYZ(scaleX, scaleY, 1));
             transform.scale(scaleX, scaleY);
@@ -970,7 +969,7 @@ export class ShapeView extends DataView {
             // update transform
             this.m_scale = props.scale;
         }
-        this.m_uniform_scale = props.uniformScale;
+        // this.m_uniform_scale = props.uniformScale;
         if (diffVars) {
             // update varscontainer
             this.m_ctx.removeDirty(this);
@@ -995,7 +994,7 @@ export class ShapeView extends DataView {
         const parent = this.parent;
         const parentFrame = parent?.hasSize() ? parent.frame : undefined;
         this.m_ctx.setDirty(this);
-        this._layout(this.m_data, parentFrame, this.varsContainer, this.m_scale, this.m_uniform_scale);
+        this._layout(this.m_data, parentFrame, this.varsContainer, this.m_scale);
         this.m_ctx.addNotifyLayout(this);
     }
 
@@ -1468,8 +1467,8 @@ export class ShapeView extends DataView {
     get stackPositioning() {
         return this.m_data.stackPositioning;
     }
-    get uniformScale() {
-        return this.data.uniformScale;
+    get uniformScale(): number | undefined {
+        return undefined;
     }
 
     get borderPath() {

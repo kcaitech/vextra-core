@@ -76,10 +76,9 @@ export class GroupShapeView extends ShapeView {
         shape: Shape,
         parentFrame: ShapeSize | undefined,
         varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
-        scale: { x: number, y: number } | undefined,
-        uniformScale: number | undefined
+        scale: { x: number, y: number } | undefined
     ): void {
-        super._layout(shape, parentFrame, varsContainer, scale, uniformScale);
+        super._layout(shape, parentFrame, varsContainer, scale);
         if (this.m_need_updatechilds) {
             this.notify("childs"); // notify childs change
             this.m_need_updatechilds = false;
