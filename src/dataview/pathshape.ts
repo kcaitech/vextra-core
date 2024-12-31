@@ -1,7 +1,6 @@
 import {
     FillType, GradientType,
-    makeShapeTransform1By2,
-    makeShapeTransform2By1, OvalShape,
+    OvalShape,
     PathShape,
     PathShape2,
     Shape,
@@ -200,13 +199,13 @@ export class PathShapeView extends ShapeView {
 
         const group = this.m_mask_group || [];
         if (group.length < 2) return;
-        const inverse = makeShapeTransform2By1(this.m_transform_form_mask).getInverse();
+        const inverse = (this.m_transform_form_mask).inverse;
         const els: EL[] = [];
         for (let i = 1; i < group.length; i++) {
             const __s = group[i];
             if (!__s.isVisible) continue;
             const dom = __s.dom;
-            (dom.elattr as any)['style'] = { 'transform': makeShapeTransform1By2(__s.transform2.clone().addTransform(inverse)).toString() };
+            (dom.elattr as any)['style'] = { 'transform': (__s.transform.clone().multi(inverse)).toString() };
             els.push(dom);
         }
 
@@ -217,9 +216,9 @@ export class PathShapeView extends ShapeView {
         this.m_transform_form_mask = this.renderMask();
         if (!this.m_transform_form_mask) return;
 
-        const space = makeShapeTransform2By1(this.m_transform_form_mask).getInverse();
+        const space = (this.m_transform_form_mask).getInverse();
 
-        return makeShapeTransform1By2(this.transform2.clone().addTransform(space)).toString()
+        return (this.transform.clone().multi(space)).toString()
     }
 
     renderMask() {

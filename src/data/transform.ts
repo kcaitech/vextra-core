@@ -87,12 +87,14 @@ export class Transform extends classes.Transform {
     }
 
     // matrix
-    multiAtLeft(m: classes.Transform | Matrix): void { // 左乘 this = m * this
+    multiAtLeft(m: classes.Transform | Matrix): Transform { // 左乘 this = m * this
         __multi(m, this, this);
+        return this
     }
 
-    multi(m: classes.Transform | Matrix): void { // 右乘 this = this * m
+    multi(m: classes.Transform | Matrix): Transform { // 右乘 this = this * m
         __multi(this, m, this);
+        return this
     }
 
     trans(x: number, y: number) {
@@ -156,6 +158,17 @@ export class Transform extends classes.Transform {
     }
     computeRef(dx: number, dy: number) {
         return { x: this.m00 * dx + this.m01 * dy, y: this.m10 * dx + this.m11 * dy };
+    }
+    transform(point: { x: number, y: number }): { x: number, y: number }
+    transform(point: { x: number, y: number }[]): { x: number, y: number }[]
+    transform(point: { x: number, y: number } | { x: number, y: number }[]) {
+        const map = (p: { x: number, y: number }) => ({ x: this.m00 * p.x + this.m01 * p.y + this.m02, y: this.m10 * p.x + this.m11 * p.y + this.m12 });
+        if (Array.isArray(point)) return point.map(map);
+        else return map(point);
+    }
+
+    getInverse() {
+        return this.inverse
     }
 
     get inverse() {
@@ -234,11 +247,11 @@ export class Transform extends classes.Transform {
         return new ColVector3D([0, 0, z])
     }
 
-    clearScaleSize() {
-        const d = this.decompose()
-        const m = d.translate.multiAtLeft(d.rotate).multiAtLeft(d.skew).multiAtLeft(d.scale)
-        this.reset(m)
-    }
+    // clearScaleSize() {
+    //     const d = this.decompose()
+    //     const m = d.translate.multiAtLeft(d.rotate).multiAtLeft(d.skew)
+    //     this.reset(m)
+    // }
 
     clearScale(): { x: number, y: number } {
         const d = this.decompose()

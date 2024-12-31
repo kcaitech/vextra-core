@@ -2,9 +2,8 @@ import {
     AutoLayout, Border, ContextSettings, CornerRadius, Fill, MarkerType, OverrideType, PrototypeInterAction, Shadow,
     Shape, ShapeFrame, ShapeSize, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType, ShapeType,
     BasicArray, getPathOfRadius, Blur, BlurType, PathShape,
-    makeShapeTransform1By2
 } from "../data";
-import { ShapeView, fixFrameByConstrain, frame2Parent2, updateFrame } from "./shape";
+import { ShapeView, fixFrameByConstrain } from "./shape";
 import { DataView, RootView } from "./view";
 import { getShapeViewId } from "./basic";
 import { DViewCtx, PropsType, VarsContainer } from "./viewctx";
@@ -15,8 +14,6 @@ import { PageView } from "./page";
 import { innerShadowId } from "../render";
 import { elh } from "./el";
 import { render as clippathR } from "../render/clippath";
-import { ColVector3D } from "../basic/matrix2";
-import { Transform as Transform2, Transform } from "../basic/transform";
 
 // 播放页组件状态切换会话存储refId的key值；
 export const sessionRefIdKey = 'ref-id-cf76c6c6-beed-4c33-ae71-134ee876b990';
@@ -254,46 +251,17 @@ export class SymbolRefView extends ShapeView {
             return;
         }
 
-        const skewTransform = (scalex: number, scaley: number) => {
-            let t = transform;
-            if (scalex !== scaley) {
-                t = t.clone();
-                t.scale(scalex, scaley);
-                // 保留skew去除scale
-                t.clearScaleSize();
-            }
-            return t;
-        }
-
-        const resizingConstraint = shape.resizingConstraint ?? 0; // 默认值为靠左、靠顶、宽高固定
-        // 当前对象如果没有frame,需要childs layout完成后才有
-        // 但如果有constrain,则需要提前计算出frame?当前是直接不需要constrain
-        if (!this.hasSize() && (resizingConstraint === 0 || !parentFrame)) {
-            let frame = this.frame; // 不需要更新
-            const t0 = transform.clone();
-            t0.scale(scale.x, scale.y);
-            const save1 = t0.computeCoord(0, 0);
-            const t = skewTransform(scale.x, scale.y).clone();
-            const save2 = t.computeCoord(0, 0)
-            const dx = save1.x - save2.x;
-            const dy = save1.y - save2.y;
-            t.trans(dx, dy);
-            this.updateLayoutArgs(t, frame, 0);
-            this.layoutChilds(varsContainer, undefined, childscale, this.uniformScale);
-            return;
-        }
-
         let scaleX = scale.x;
         let scaleY = scale.y;
-
+        const resizingConstraint = shape.resizingConstraint ?? 0; // 默认值为靠左、靠顶、宽高固定
+        // if (uniformScale) {
+        //     scaleX /= uniformScale;
+        //     scaleY /= uniformScale;
+        // }
         if (parentFrame && resizingConstraint !== 0) {
             const { transform, targetWidth, targetHeight } = fixFrameByConstrain(shape, parentFrame, scaleX, scaleY, uniformScale);
-            this.updateLayoutArgs(makeShapeTransform1By2(transform), new ShapeFrame(0, 0, targetWidth, targetHeight), (shape as PathShape).fixedRadius);
+            this.updateLayoutArgs((transform), new ShapeFrame(0, 0, targetWidth, targetHeight), (shape as PathShape).fixedRadius);
         } else {
-            if (uniformScale) {
-                scaleX /= uniformScale;
-                scaleY /= uniformScale;
-            }
             const transform = shape.transform.clone();
             transform.scale(scaleX, scaleY);
             const __decompose_scale = transform.clearScale();
@@ -302,17 +270,16 @@ export class SymbolRefView extends ShapeView {
             const p0 = shape.transform.computeCoord(0, 0);
             const p1 = transform.computeCoord(0, 0);
             transform.trans(p0.x - p1.x, p0.y - p1.y);
-
             const frame = new ShapeFrame(0, 0, size.width * __decompose_scale.x, size.height * __decompose_scale.y);
             this.updateLayoutArgs((transform), frame, (shape as PathShape).fixedRadius);
         }
         // 重新计算 childscale
         childscale.x = this.frame.width / this.m_sym.size.width;
         childscale.y = this.frame.height / this.m_sym.size.height;
-        if (uniformScale) {
-            childscale.x /= uniformScale;
-            childscale.y /= uniformScale;
-        }
+        // if (uniformScale) {
+        //     childscale.x /= uniformScale;
+        //     childscale.y /= uniformScale;
+        // }
         this.layoutChilds(varsContainer, this.frame, childscale);
     }
 

@@ -261,6 +261,10 @@ export class Matrix {
         return { x: m[0] * dx + m[2] * dy, y: m[1] * dx + m[3] * dy };
     }
 
+    getInverse() {
+        return new Matrix(this.inverse)
+    }
+
     get inverse() {
         const m = this.m_matrix;
         const d = m[0] * m[3] - m[1] * m[2];
@@ -472,12 +476,21 @@ export class Matrix {
 
         // 平移
         const translateMatrix = new Matrix([1, 0, 0, 1, this.m02, this.m12])
-        
+
         return {
             translate: translateMatrix,
             rotate: rotateMatrix,
             skew: skewMatrix,
             scale: scaleMatrix,
         }
+    }
+
+    transform(point: { x: number, y: number }): { x: number, y: number }
+    transform(point: { x: number, y: number }[]): { x: number, y: number }[]
+    transform(point: { x: number, y: number } | { x: number, y: number }[]) {
+        const m = this.m_matrix
+        const map = (p: { x: number, y: number }) => ({ x: m[0] * p.x + m[2] * p.y + m[4], y: m[1] * p.x + m[3] * p.y + m[5] });
+        if (Array.isArray(point)) return point.map(map);
+        else return map(point);
     }
 }
