@@ -104,11 +104,14 @@ function distanceTo(p0: Point2D, p1: Point2D) {
     return Math.hypot(p0.x - p1.x, p0.y - p1.y);
 }
 
-function calcAngleABC(A: Point2D, B: Point2D, C: Point2D) {
-    const AB = distanceTo(A, B);
-    const BC = distanceTo(B, C);
-    const AC = distanceTo(C, A);
-    return Math.acos((BC * BC + AB * AB - AC * AC) / (2 * BC * AB));
+function calcAngleABC(A: CurvePoint, B: CurvePoint, C: CurvePoint, size: { width: number, height: number }) {
+    const a: Point2D = {x: (B.toX ?? A.x) * size.width, y: (B.toY ?? A.y) * size.height};
+    const b: Point2D = {x: B.x * size.width, y: B.y * size.height};
+    const c: Point2D = {x: (B.fromX ?? C.x) * size.width, y: (B.fromY ?? C.y) * size.height};
+    const ab = distanceTo(a, b);
+    const bc = distanceTo(b, c);
+    const ac = distanceTo(c, a);
+    return Math.acos((bc * bc + ab * ab - ac * ac) / (2 * bc * ab));
 }
 
 // 用向量表示坐标上的两个点
@@ -191,7 +194,7 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, width: number
         const nextPoint = transformedPoints[nextIndex];
         const lenAB = distanceTo(curPoint, prePoint);
         const lenBC = distanceTo(curPoint, nextPoint);
-        const radian = calcAngleABC(prePoint, curPoint, nextPoint); // todo 检查一下什么情况下会是NaN
+        const radian = calcAngleABC(pre, cur, next,{width,height}); // todo 检查一下什么情况下会是NaN
         if (Number.isNaN(radian)) return;
         // 计算相切的点距离 curPoint 的距离， 在 radian 为 90 deg 的时候和 radius 相等。
         const tangent = Math.tan(radian / 2);
