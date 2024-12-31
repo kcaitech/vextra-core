@@ -15,6 +15,7 @@ import {
     SymbolRefShape,
     TextBehaviour,
     TextShape,
+    makeShapeTransform2By1,
 } from "../../../data";
 import {
     ArtboradView,
@@ -404,7 +405,7 @@ export function reLayoutBySizeChanged(
     function getTransform(s: ShapeView) {
         let transform = transformRecorder.get(s.id);
         if (!transform) {
-            transform = s.transform2.clone();
+            transform = makeShapeTransform2By1(s.transform);
             transformRecorder.set(s.id, transform);
         }
         return transform;
@@ -550,7 +551,7 @@ export function reLayoutByUniformScale(
         function getTransform(s: ShapeView) {
             let transform = transformRecorder.get(s.id);
             if (!transform) {
-                transform = s.transform2.clone();
+                transform = makeShapeTransform2By1(s.transform);
                 transformRecorder.set(s.id, transform);
             }
             return transform;

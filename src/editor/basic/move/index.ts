@@ -1,6 +1,6 @@
 import { ShapeView, GroupShapeView, adapt2Shape, TextShapeView, SymbolRefView, ArtboradView } from "../../../dataview";
 import { Api } from "../../../coop";
-import { GroupShape, Page, SymbolShape, MarkerType, BlendMode, Artboard, ShapeType, TextShape, Shape, makeShapeTransform1By2 } from "../../../data";
+import { GroupShape, Page, SymbolShape, MarkerType, BlendMode, Artboard, ShapeType, TextShape, Shape, makeShapeTransform1By2, Transform } from "../../../data";
 import { importFill, importBorder, importShadow, importExportOptions, importBlur, importPrototypeInterAction, importAutoLayout } from "../../../data/baseimport";
 import { exportFill, exportBorder, exportShadow, exportExportOptions, exportBlur, exportPrototypeInterAction, exportAutoLayout } from "../../../data/baseexport";
 import { CircleChecker } from "./circle";
@@ -155,10 +155,10 @@ export class ShapePorter {
     }
 
     transform(view: ShapeView, target: GroupShapeView, shape?: Shape) {
-        const transform = view.transform2FromRoot;
-        const parent2root = target.transform2FromRoot;
-        transform.addTransform(parent2root.getInverse());
-        this.api.shapeModifyTransform(this.page, shape ?? adapt2Shape(view), makeShapeTransform1By2(transform));
+        const transform = view.matrix2Root();
+        const parent2root = target.matrix2Root();
+        transform.multi(parent2root.inverse);
+        this.api.shapeModifyTransform(this.page, shape ?? adapt2Shape(view), Transform.from(transform));
     }
 
     /**
