@@ -329,13 +329,18 @@ export class Transform extends classes.Transform {
 
     // clearScaleSize() {
     //     const d = this.decompose()
-    //     const m = d.translate.multiAtLeft(d.rotate).multiAtLeft(d.skew)
+    //     const m = d.translate.multi(d.rotate).multi(d.skew)
     //     this.reset(m)
     // }
 
     clearScale(): { x: number, y: number } {
         const d = this.decompose()
-        const m = d.translate.multiAtLeft(d.rotate).multiAtLeft(d.skew)
+        let m: Transform
+        if (d.scale.m00 < 0 || d.scale.m11 < 0) {
+            m = d.translate.multi(d.rotate).multi(d.skew).multi(new Matrix(d.scale.m00 < 0 ? -1 : 1, 0, 0, d.scale.m11 < 0 ? -1 : 1, 0, 0))
+        } else {
+            m = d.translate.multi(d.rotate).multi(d.skew)
+        }
         this.reset(m)
         return { x: d.scale.m00, y: d.scale.m11 }
     }
