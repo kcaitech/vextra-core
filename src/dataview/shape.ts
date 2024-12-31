@@ -15,6 +15,7 @@ import { PageView } from "./page";
 import { ArtboradView } from "./artboard";
 import { findOverrideAll } from "../data/utils";
 import { Path } from "@kcdesign/path";
+import { isEqual } from "../basic/number_utils";
 
 export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     return (
@@ -872,7 +873,7 @@ export class ShapeView extends DataView {
     ) {
         const transform = shape.transform;
         // case 1 不需要变形
-        if (!scale || scale.x === 1 && scale.y === 1) {
+        if (!scale || isEqual(scale.x, 1) && isEqual(scale.y, 1)) {
             let frame = this.frame;
             if (this.hasSize()) frame = this.data.frame;
             this.updateLayoutArgs(transform, frame, (shape as PathShape).fixedRadius);
