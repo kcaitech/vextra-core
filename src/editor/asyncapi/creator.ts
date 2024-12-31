@@ -257,7 +257,7 @@ export class CreatorApiCaller extends AsyncApiCaller {
                 }
             }
             const realXY = shapes.map((s) => s.matrix2Root().computeCoord(0, 0));
-            const m = new Matrix(shape.matrix2Root().inverse);
+            const m = (shape.matrix2Root().getInverse());
             for (let i = 0; i < shapes.length; i++) {
                 const c = (shapes[i]);
                 const r = realXY[i]

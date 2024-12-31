@@ -54,6 +54,7 @@ import { BasicArray } from "../data/basic";
 import { Fill } from "../data/style";
 import { TextAttr } from "../data/classes";
 import { getAutoLayoutShapes, layoutShapesOrder, modifyAutoLayout } from "./utils/auto_layout";
+import { Transform } from "../data/transform";
 
 interface PageXY { // 页面坐标系的xy
     x: number
@@ -478,7 +479,7 @@ export class Controller {
                     const realXY = shapes.map((s) => s.frame2Root());
                     const t_xy = target.frame;
                     const savep = shapes[0].parent as GroupShape;
-                    const m = new Matrix(savep.matrix2Root().inverse);
+                    const m = (savep.matrix2Root().inverse);
                     for (let i = 0; i < shapes.length; i++) {
                         const c = shapes[i];
                         const r = realXY[i]
@@ -720,9 +721,9 @@ export class Controller {
         const api = this.__repo.start("asyncPathEditor");
         let status: Status = Status.Pending;
         const w = shape.size.width, h = shape.size.height;
-        let m = new Matrix(shape.matrix2Root());
+        let m = (shape.matrix2Root());
         m.preScale(w, h);
-        m = new Matrix(m.inverse); // root -> 1
+        m = (m.inverse); // root -> 1
         const addNode = (index: number) => {
             status === Status.Pending
             try {
@@ -1255,7 +1256,7 @@ function deleteEmptyGroupShape(document: Document, page: Page, shape: Shape, api
 
 function __migrate(document: Document,
     api: Api, page: Page, targetParent: GroupShape, shape: Shape, dlt: string, index: number,
-    transform: { ohflip: boolean, ovflip: boolean, pminverse: number[] }
+    transform: { ohflip: boolean, ovflip: boolean, pminverse: Transform }
 ) {
     const error = unable_to_migrate(targetParent, shape);
     if (error) {

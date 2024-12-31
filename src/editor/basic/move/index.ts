@@ -158,7 +158,7 @@ export class ShapePorter {
         const transform = view.matrix2Root();
         const parent2root = target.matrix2Root();
         transform.multi(parent2root.inverse);
-        this.api.shapeModifyTransform(this.page, shape ?? adapt2Shape(view), Transform.from(transform));
+        this.api.shapeModifyTransform(this.page, shape ?? adapt2Shape(view), (transform));
     }
 
     /**

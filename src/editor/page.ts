@@ -742,7 +742,7 @@ export class PageEditor {
 
             if (innerSymbols.length) { // replace
                 const offset = sym.boundingBox().width + 24;
-                const matrixToPage = new Matrix(page.matrix2Root().inverse);
+                const matrixToPage = (page.matrix2Root().inverse);
                 for (const symbol of innerSymbols) {
                     const frame = new ShapeFrame(symbol.transform.m02, symbol.transform.m12, symbol.size.width, symbol.size.height);
                     let refId = symbol.id;
@@ -1027,7 +1027,7 @@ export class PageEditor {
             return pre;
         }, bounds)
 
-        const m = new Matrix(savep.matrix2Root().inverse)
+        const m = (savep.matrix2Root().inverse)
         const xy = m.computeCoord(bounds.left, bounds.top)
 
         const frame = new ShapeFrame(xy.x, xy.y, bounds.right - bounds.left, bounds.bottom - bounds.top);

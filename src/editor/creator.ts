@@ -793,7 +793,7 @@ export function getTransformByEnv(env: GroupShape) {
     const pm = env.matrix2Root();
     const pminverse = pm.inverse;
 
-    const m = new Matrix(pminverse);
+    const m = (pminverse);
 
     let sina = m.m10;
     let cosa = m.m00;
