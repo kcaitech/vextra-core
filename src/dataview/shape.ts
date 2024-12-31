@@ -267,10 +267,10 @@ export function fixConstrainFrame2(shape: Shape, scale: { x: number, y: number }
     }
 }
 
-export function matrix2parent(t: Transform, matrix?: Matrix) {
+export function matrix2parent(t: Transform, matrix?: Transform) {
     // const t = this.transform;
-    const m = t.toMatrix();
-    if (!matrix) return m;
+    const m = t;
+    if (!matrix) return m.clone();
     matrix.multiAtLeft(m);
     return matrix;
 }
@@ -607,11 +607,11 @@ export class ShapeView extends DataView {
     }
 
     matrix2Root() {
-        const m = this.transform.toMatrix();
+        const m = this.transform.clone()
         const p = this.parent;
         if (p) {
             const offset = (p as ArtboradView).innerTransform;
-            offset && m.multiAtLeft(offset.toMatrix())
+            offset && m.multiAtLeft(offset)
             p.uniformScale && m.scale(p.uniformScale);
             m.multiAtLeft(p.matrix2Root())
         }
@@ -665,7 +665,7 @@ export class ShapeView extends DataView {
         return Math.abs(m00 - 1) < float_accuracy && Math.abs(m01) < float_accuracy && Math.abs(m10) < float_accuracy && Math.abs(m11 - 1) < float_accuracy;
     }
 
-    matrix2Parent(matrix?: Matrix) {
+    matrix2Parent(matrix?: Transform) {
         const m = matrix2parent(this.transform, matrix);
         if (this.parent?.uniformScale) m.scale(this.parent.uniformScale);
         return m;

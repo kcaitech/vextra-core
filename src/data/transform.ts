@@ -28,6 +28,33 @@ function _tmp(m00: number, m10: number, m01: number, m11: number, m02: number, m
     return __tmp;
 }
 
+function vector_dot(vector1: number[], vector2: number[]) { // 点积
+    if (vector1.length !== vector2.length) throw new Error("dimension not match")
+    let result = 0
+    for (let i = 0, len = vector1.length; i < len; ++i) result += vector1[i] * vector2[i];
+    return result
+}
+
+function vector_cross3(vector1: number[], vector2: number[]) { // 叉积
+    if (vector1.length !== vector2.length) throw new Error("dimension not match")
+    if (vector1.length !== 3) throw new Error("dimension not support")
+    return [
+        vector1[1] * vector2[2] - vector1[2] * vector2[1],
+        vector1[2] * vector2[0] - vector1[0] * vector2[2],
+        vector1[0] * vector2[1] - vector1[1] * vector2[0]
+    ]
+}
+
+function vector_norm(vector: number[]) { // 模
+    return Math.sqrt(vector_dot(vector, vector))
+}
+
+function vector_angleTo(vector1: number[], vector2: number[]) { // 本向量与目标向量的夹角（0 ~ π）
+    if (vector1.length !== vector2.length) throw new Error("dimension not match")
+    const dot = vector_dot(vector1, vector2) // 本向量与目标向量的点积
+    return Math.acos(dot / (vector_norm(vector1) * vector_norm(vector2)))
+}
+
 export class Transform extends classes.Transform {
 
     static from = function (m: Matrix | number[]) {
@@ -80,6 +107,7 @@ export class Transform extends classes.Transform {
             this.m11 = 1;
             this.m12 = 0;
         }
+        return this
     }
     clone(): Transform {
         const m = this;
@@ -99,47 +127,56 @@ export class Transform extends classes.Transform {
 
     trans(x: number, y: number) {
         this.multiAtLeft(_tmp(1, 0, 0, 1, x, y));
+        return this
     }
     preTrans(x: number, y: number) {
         this.multi(_tmp(1, 0, 0, 1, x, y));
+        return this
     }
     transTo(x: number, y: number) {
         const origin = this.computeCoord(0, 0);
         const dx = x - origin.x;
         const dy = y - origin.y;
         this.trans(dx, dy);
+        return this
     }
-    scale(s: number): void;
-    scale(sx: number, sy: number): void;
+    scale(s: number): Transform;
+    scale(sx: number, sy: number): Transform;
     scale(sx: number, sy?: number) {
         this.multiAtLeft(_tmp(sx, 0, 0, sy ?? sx, 0, 0));
+        return this
     }
-    preScale(s: number): void;
-    preScale(sx: number, sy: number): void;
+    preScale(s: number): Transform;
+    preScale(sx: number, sy: number): Transform;
     preScale(sx: number, sy?: number) {
         this.multi(_tmp(sx, 0, 0, sy ?? sx, 0, 0));
+        return this
     }
     skewX(radians: number) {
         this.multiAtLeft(_tmp(1, 0, Math.tan(radians), 1, 0, 0));
+        return this
     }
     scaleX(sx: number) {
         this.multiAtLeft(_tmp(sx, 0, 0, 1, 0, 0));
+        return this
     }
     scaleY(sy: number) {
         this.multiAtLeft(_tmp(1, 0, 0, sy, 0, 0));
+        return this
     }
     /** 
      * @radians x轴向右，y轴坐标向下，顺时针方向，0-2pi 
      * @x @y 旋转中心点
      * */
-    rotate(radians: number): void;
-    rotate(radians: number, x: number, y: number): void;
+    rotate(radians: number): Transform;
+    rotate(radians: number, x: number, y: number): Transform;
     rotate(radians: number, x?: number, y?: number) {
         if (x || y) this.trans(-(x || 0), -(y || 0));
         const cos = Math.cos(radians);
         const sin = Math.sin(radians);
         this.multiAtLeft(_tmp(cos, sin, -sin, cos, 0, 0))
         if (x || y) this.trans(x || 0, y || 0);
+        return this
     }
     computeCoord(point: { x: number, y: number }): { x: number, y: number };
     computeCoord(x: number, y: number): { x: number, y: number };
@@ -206,12 +243,14 @@ export class Transform extends classes.Transform {
         if (cy) this.trans(0, -cy);
         this.multiAtLeft(_tmp(1, 0, 0, -1, 0, 0)) // y = -y
         if (cy) this.trans(0, cy);
+        return this
     }
 
     flipHoriz(cx?: number) {
         if (cx) this.trans(-cx, 0);
         this.multiAtLeft(_tmp(-1, 0, 0, 1, 0, 0)) // x = -x
         if (cx) this.trans(cx, 0);
+        return this
     }
 
     get identity() {
@@ -237,8 +276,49 @@ export class Transform extends classes.Transform {
         if (!this.isValid()) throw new Error("Wrong Matrix: " + this.toString());
     }
 
+    
     decompose() {
-        return this.toMatrix().decompose()
+
+        const col0 = [this.m00, this.m10, 0]
+        const col1 = [this.m01, this.m11, 0]
+        const col2 = [0, 0, 1]
+
+        // z轴预期方向（x轴与y轴的叉积，为xoy平面的法向量，其方向与z轴预期方向一致）
+        const expectedZ = vector_cross3(col0, col1)
+        // z轴与z轴预期方向的点积
+        const zDot = vector_dot(expectedZ, col2)
+        // z轴与预期方向相反，说明有一个或有三个坐标轴反向，这里认为是y轴反向，后续通过旋转来对齐
+        // 反向会在后续被算入缩放矩阵中
+        const isYFlipped = zDot < 0
+        // x轴与y轴的夹角（0 ~ π）
+        let angleXY = vector_angleTo(col0, col1)
+        if (isYFlipped) {
+            angleXY = Math.PI - angleXY // 反向前的夹角
+        }
+
+        // 斜切
+        const yAngle = angleXY - 0.5 * Math.PI // y轴（绕z轴预期方向）旋转角度（-π/2 ~ π/2）
+        const skewMatrix = new Transform(1, -Math.sin(yAngle), 0, 0, Math.cos(yAngle), 0)
+
+        // 缩放
+        const xNorm = vector_norm(col0)
+        const yNorm = vector_norm(col1) * (isYFlipped ? -1 : 1)
+        const scaleMatrix = (new Transform(xNorm, 0, 0, 0, yNorm, 0))
+
+        // 旋转
+        const rotateMatrix = new Transform(this.m00, this.m01, 0, this.m10, this.m11, 0)
+        if (!scaleMatrix.isIdentity()) rotateMatrix.multi(scaleMatrix.inverse);    // ·(S^-1)
+        if (!skewMatrix.isIdentity()) rotateMatrix.multi(skewMatrix.inverse);      // ·(K^-1)
+
+        // 平移
+        const translateMatrix = new Transform(1, 0, this.m02, 0, 1, this.m12)
+
+        return {
+            translate: translateMatrix,
+            rotate: rotateMatrix,
+            skew: skewMatrix,
+            scale: scaleMatrix,
+        }
     }
 
     decomposeEuler() { // 通过旋转矩阵分解出欧拉角（ZXY序），返回值的单位为弧度
