@@ -597,7 +597,7 @@ export class RefUnbind {
 
             if (child instanceof GroupShape) {
                 let innerScale = uniformScale;
-                if (child.uniformScale) innerScale *= child.uniformScale;
+                // if (child.uniformScale) innerScale *= child.uniformScale;
                 this.solidify(child, innerScale);
             }
         }

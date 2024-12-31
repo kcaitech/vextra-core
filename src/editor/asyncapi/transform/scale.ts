@@ -581,7 +581,7 @@ export function uniformScale(
         api.shapeModifyTransform(page, shape, makeShapeTransform1By2(transform));
 
         if (shape instanceof SymbolRefShape) {
-            if (!shape.isCustomSize) api.shapeModifyIsCustomSize(page, shape, true);
+            // if (!shape.isCustomSize) api.shapeModifyIsCustomSize(page, shape, true);
             const scale = getScale(view);
             api.modifyShapeScale(page, shape, scale * ratio);
         }
