@@ -1,12 +1,23 @@
 import { innerShadowId, renderBlur, renderBorders, renderFills, renderShadows } from "../render";
-import { BasicArray, Blur, BlurType, Border, BorderPosition, ContextSettings, CornerRadius, CurvePoint, ExportOptions, Fill, FillType, GradientType, makeShapeTransform2By1, MarkerType, OverlayBackgroundAppearance, OverlayBackgroundInteraction, OverlayPosition, OverrideType, PathShape, Point2D, PrototypeInterAction, PrototypeStartingPoint, ResizingConstraints2, ScrollBehavior, ScrollDirection, Shadow, ShadowPosition, Shape, ShapeFrame, ShapeSize, ShapeType, SymbolRefShape, SymbolShape, Transform, Variable, VariableType } from "../data";
+import {
+    BasicArray, Blur, BlurType, Border,
+    BorderPosition, ContextSettings, CornerRadius,
+    CurvePoint, ExportOptions, Fill, FillType,
+    GradientType, MarkerType, OverlayBackgroundAppearance,
+    OverlayBackgroundInteraction, OverlayPosition,
+    OverrideType, PathShape, Point2D,
+    PrototypeInterAction, PrototypeStartingPoint,
+    ResizingConstraints2, ScrollBehavior,
+    ScrollDirection, Shadow, ShadowPosition, Shape,
+    ShapeFrame, ShapeSize, ShapeType, SymbolRefShape,
+    SymbolShape, Transform, Variable, VariableType
+} from "../data";
 import { findOverrideAndVar } from "./basic";
 import { EL, elh } from "./el";
 import { Matrix } from "../basic/matrix";
 import { DataView } from "./view"
 import { DViewCtx, PropsType } from "./viewctx";
 import { objectId } from "../basic/objectid";
-import { Transform as Transform2 } from "../basic/transform";
 import { float_accuracy } from "../basic/consts";
 import { GroupShapeView } from "./groupshape";
 import { importBorder, importFill } from "../data/baseimport";
@@ -72,7 +83,7 @@ export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeSize, scaleX
         transform.scale(scaleX, scaleY);
         const __decompose_scale = transform.clearScaleSize();
         const size = shape.size;
-        return {transform, targetWidth: size.width * __decompose_scale.x, targetHeight: size.height * __decompose_scale.y};
+        return { transform, targetWidth: size.width * __decompose_scale.x, targetHeight: size.height * __decompose_scale.y };
     } else {
         const __cur_env = {
             width: parentFrame.width,
@@ -86,7 +97,7 @@ export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeSize, scaleX
         //     __cur_env.width /= uniformScale;
         //     __cur_env.height /= uniformScale;
         // }
-        return fixConstrainFrame2(shape, {x: scaleX, y: scaleY}, __cur_env as ShapeSize, __pre_env as ShapeSize);
+        return fixConstrainFrame2(shape, { x: scaleX, y: scaleY }, __cur_env as ShapeSize, __pre_env as ShapeSize);
     }
 }
 
@@ -99,7 +110,7 @@ export function fixConstrainFrame2(shape: Shape, scale: { x: number, y: number }
 
     const transform = (shape.transform.clone());
 
-    const __scale = {x: 1, y: 1};
+    const __scale = { x: 1, y: 1 };
 
     // 水平
     if (ResizingConstraints2.isHorizontalScale(resizingConstraint)) {
@@ -249,7 +260,7 @@ export function fixConstrainFrame2(shape: Shape, scale: { x: number, y: number }
     }
 
 
-    return {transform, targetWidth, targetHeight};
+    return { transform, targetWidth, targetHeight };
 
     function toRight(bounding: ShapeFrame) {
         return originEnvSize.width - bounding.x - bounding.width;
@@ -918,9 +929,9 @@ export class ShapeView extends DataView {
         let scaleY = scale.y;
 
         if (parentFrame && resizingConstraint !== 0) {
-            const {transform, targetWidth, targetHeight} = fixFrameByConstrain(shape, parentFrame, scaleX, scaleY);
+            const { transform, targetWidth, targetHeight } = fixFrameByConstrain(shape, parentFrame, scaleX, scaleY);
             this.updateLayoutArgs((transform), new ShapeFrame(0, 0, targetWidth, targetHeight), (shape as PathShape).fixedRadius);
-            this.layoutChilds(this.frame, {x: targetWidth / saveW, y: targetHeight / saveH});
+            this.layoutChilds(this.frame, { x: targetWidth / saveW, y: targetHeight / saveH });
         } else {
             const transform = (shape.transform.clone());
             // const __p_transform_scale = new Transform2().setScale(ColVector3D.FromXYZ(scaleX, scaleY, 1));
@@ -931,7 +942,7 @@ export class ShapeView extends DataView {
             const size = shape.size;
             const frame = new ShapeFrame(0, 0, size.width * __decompose_scale.x, size.height * __decompose_scale.y);
             this.updateLayoutArgs((transform), frame, (shape as PathShape).fixedRadius);
-            this.layoutChilds(this.frame, {x: frame.width / saveW, y: frame.height / saveH});
+            this.layoutChilds(this.frame, { x: frame.width / saveW, y: frame.height / saveH });
         }
         this.updateFrames();
 
