@@ -46,7 +46,7 @@ export class SymbolRefView extends ShapeView {
         const parent = this.parent;
         const parentFrame = parent?.hasSize() ? parent.frame : undefined; // 判断父级是否有确定的大小
         this._layout(this.m_data, parentFrame, varsContainer, this.m_scale);
-        this.updateFrames();
+        // this.updateFrames();
     }
 
     getDataChilds(): Shape[] {
@@ -228,6 +228,7 @@ export class SymbolRefView extends ShapeView {
         if (!this.m_sym) {
             this.updateLayoutArgs(shape.transform, shape.frame, 0);
             this.removeChilds(0, this.m_children.length).forEach((c) => c.destory());
+            this.updateFrames();
             return;
         }
         const prescale = { x: _scale?.x ?? 1, y: _scale?.y ?? 1 }
@@ -237,7 +238,7 @@ export class SymbolRefView extends ShapeView {
         const uniformScale = this.uniformScale
         // 计算自身大小
         let size = new ShapeSize();
-        
+
         // 计算排版空间大小
         let layoutSize = new ShapeSize();
         // 调整过大小的，使用用户调整的大小，否则跟随symbol大小
@@ -253,6 +254,7 @@ export class SymbolRefView extends ShapeView {
             }
         }
 
+        const autoLayout = this.autoLayout
         const selfframe = new ShapeFrame(0, 0, size.width, size.height)
         const childscale = { x: scale.x, y: scale.y } // 传递给子对象的缩放值
         // case 1 不需要变形
@@ -270,14 +272,15 @@ export class SymbolRefView extends ShapeView {
             // let frame = this.m_data.frame;
             this.updateLayoutArgs(transform, selfframe, 0);
             this.layoutChilds(varsContainer, layoutSize, childscale);
+            if (autoLayout) this._autoLayout(autoLayout, layoutSize)
+            this.updateFrames();
             return;
         }
 
         let scaleX = scale.x;
         let scaleY = scale.y;
         const resizingConstraint = shape.resizingConstraint ?? 0; // 默认值为靠左、靠顶、宽高固定
-
-        if (parentFrame && resizingConstraint !== 0) {
+        if (parentFrame && resizingConstraint !== 0 && !autoLayout) {
             // 要调整下scale
             const _size = shape.size
             scaleX *= size.width / _size.width
@@ -312,6 +315,12 @@ export class SymbolRefView extends ShapeView {
         childscale.x = layoutSize.width / this.m_sym.size.width;
         childscale.y = layoutSize.height / this.m_sym.size.height;
         this.layoutChilds(varsContainer, layoutSize, childscale);
+        if (autoLayout) this._autoLayout(autoLayout, layoutSize)
+        this.updateFrames();
+    }
+
+    private _autoLayout(autoLayout: AutoLayout, layoutSize: ShapeSize) {
+        // todo
     }
 
     protected layoutChilds(
@@ -409,7 +418,7 @@ export class SymbolRefView extends ShapeView {
         const borders = this.renderBorders();
         let childs = this.renderContents();
 
-        if (this.uniformScale) childs = [elh('g', {transform: `scale(${this.uniformScale})`}, childs)];
+        if (this.uniformScale) childs = [elh('g', { transform: `scale(${this.uniformScale})` }, childs)];
 
         const filterId = `${objectId(this)}`;
         const shadows = this.renderShadows(filterId);
@@ -424,7 +433,7 @@ export class SymbolRefView extends ShapeView {
             const clip = clippathR(elh, id, this.getPathStr());
             children = [
                 clip,
-                elh("g", {"clip-path": "url(#" + id + ")"}, [...fills, ...childs]),
+                elh("g", { "clip-path": "url(#" + id + ")" }, [...fills, ...childs]),
                 ...borders
             ];
         }
@@ -435,7 +444,7 @@ export class SymbolRefView extends ShapeView {
             const inner_url = innerShadowId(filterId, this.getShadows());
             filter = `url(#pd_outer-${filterId}) `;
             if (inner_url.length) filter += inner_url.join(' ');
-            children = [...shadows, elh("g", {filter}, children)];
+            children = [...shadows, elh("g", { filter }, children)];
         }
 
         // 模糊
@@ -461,14 +470,14 @@ export class SymbolRefView extends ShapeView {
         // 遮罩
         const _mask_space = this.renderMask();
         if (_mask_space) {
-            Object.assign(props.style, {transform: _mask_space.toString()});
+            Object.assign(props.style, { transform: _mask_space.toString() });
             const id = `mask-base-${objectId(this)}`;
             const __body_transform = this.transformFromMask;
-            const __body = elh("g", {style: {transform: __body_transform}}, children);
+            const __body = elh("g", { style: { transform: __body_transform } }, children);
             this.bleach(__body);
             children = [__body];
-            const mask = elh('mask', {id}, children);
-            const rely = elh('g', {mask: `url(#${id})`}, this.relyLayers);
+            const mask = elh('mask', { id }, children);
+            const rely = elh('g', { mask: `url(#${id})` }, this.relyLayers);
             children = [mask, rely];
         }
 

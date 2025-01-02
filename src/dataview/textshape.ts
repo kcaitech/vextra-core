@@ -248,6 +248,7 @@ export class TextShapeView extends ShapeView {
     protected _layout(shape: Shape, parentFrame: ShapeSize | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scale: { x: number; y: number; } | undefined): void {
         if (!this.isVirtualShape) {
             this.updateLayoutArgs(this.data.transform, this.data.frame, undefined)
+            this.updateFrames();
             return
         }
 
@@ -315,5 +316,6 @@ export class TextShapeView extends ShapeView {
                 this.updateLayoutArgs(this.data.transform, frame, undefined);
                 break;
         }
+        this.updateFrames();
     }
 }

@@ -398,7 +398,7 @@ export class ShapeView extends DataView {
         const parent = this.parent;
         const parentFrame = parent?.hasSize() ? parent.frame : undefined;
         this._layout(this.m_data, parentFrame, this.varsContainer, this.m_scale);
-        this.updateFrames();
+        // this.updateFrames();
     }
 
     get parent(): ShapeView | undefined {
@@ -878,6 +878,7 @@ export class ShapeView extends DataView {
             if (this.hasSize()) frame = this.data.frame;
             this.updateLayoutArgs(transform, frame, (shape as PathShape).fixedRadius);
             this.layoutChilds(varsContainer, this.frame);
+            this.updateFrames();
             return;
         }
 
@@ -907,6 +908,7 @@ export class ShapeView extends DataView {
             t.trans(dx, dy);
             this.updateLayoutArgs(t, frame, (shape as PathShape).fixedRadius);
             this.layoutChilds(varsContainer, undefined, scale);
+            this.updateFrames();
             return;
         }
 
@@ -933,6 +935,7 @@ export class ShapeView extends DataView {
             this.updateLayoutArgs((transform), frame, (shape as PathShape).fixedRadius);
             this.layoutChilds(varsContainer, this.frame, {x: frame.width / saveW, y: frame.height / saveH});
         }
+        this.updateFrames();
 
         // const t = skewTransform(scaleX, scaleY).clone();
         // const cur = t.computeCoord(0, 0);
