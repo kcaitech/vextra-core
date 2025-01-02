@@ -120,12 +120,12 @@ export function parseGradient(
         ]);
         const from = ps[0]
         const to = ps[1]
-        const decompose = transform.decompose();
+        const decompose = transform.decomposeScale();
 
         const from1 = new Point2D(from.x, from.y);
         const to1 = new Point2D(to.x, to.y);
         const colorType = type === 'GRADIENT_RADIAL' ? GradientType.Radial : GradientType.Angular;
-        const elipseLength = decompose.scale.m11 / decompose.scale.m00 * size.y / size.x;
+        const elipseLength = decompose.y / decompose.x * size.y / size.x;
         const stops1 = stops.map((item, i) => {
             return new Stop([i] as BasicArray<number>, uuid(), item.position, importColor(item.color))
         }) as BasicArray<Stop>;

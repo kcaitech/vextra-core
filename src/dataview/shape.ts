@@ -70,7 +70,7 @@ export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeSize, scaleX
     if (shape.parent!.type === ShapeType.Group) {
         const transform = (shape.transform.clone());
         transform.scale(scaleX, scaleY);
-        const __decompose_scale = transform.clearScale();
+        const __decompose_scale = transform.clearScaleSize();
         const size = shape.size;
         return {transform, targetWidth: size.width * __decompose_scale.x, targetHeight: size.height * __decompose_scale.y};
     } else {
@@ -107,7 +107,7 @@ export function fixConstrainFrame2(shape: Shape, scale: { x: number, y: number }
         // const __p_transform_hor_scale = new Transform2().setScale(ColVector3D.FromXYZ(scale.x, 1, 1));
         transform.scale(scale.x, 1);
 
-        const __decompose_scale = transform.clearScale();
+        const __decompose_scale = transform.clearScaleSize();
         __scale.x *= Math.abs(__decompose_scale.x);
         __scale.y *= Math.abs(__decompose_scale.y);
 
@@ -133,7 +133,7 @@ export function fixConstrainFrame2(shape: Shape, scale: { x: number, y: number }
         transform.scale(__target_sx, 1);
 
         // 结算到size上
-        const __decompose_scale = transform.clearScale();
+        const __decompose_scale = transform.clearScaleSize();
         __scale.x *= Math.abs(__decompose_scale.x);
         __scale.y *= Math.abs(__decompose_scale.y);
 
@@ -145,7 +145,7 @@ export function fixConstrainFrame2(shape: Shape, scale: { x: number, y: number }
         if (ResizingConstraints2.isFlexWidth(resizingConstraint)) {
             // const __p_transform_hor_scale = new Transform2().setScale(ColVector3D.FromXYZ(scale.x, 1, 1));
             transform.scale(scale.x, 1);
-            const __decompose_scale = transform.clearScale();
+            const __decompose_scale = transform.clearScaleSize();
             __scale.x *= Math.abs(__decompose_scale.x);
             __scale.y *= Math.abs(__decompose_scale.y);
             targetWidth = size.width * __scale.x;
@@ -178,7 +178,7 @@ export function fixConstrainFrame2(shape: Shape, scale: { x: number, y: number }
         // const __p_transform_ver_scale = new Transform2().setScale(ColVector3D.FromXYZ(1, scale.y, 1));
         transform.scale(1, scale.y);
 
-        const __decompose_scale = transform.clearScale();
+        const __decompose_scale = transform.clearScaleSize();
         __scale.x *= Math.abs(__decompose_scale.x);
         __scale.y *= Math.abs(__decompose_scale.y);
 
@@ -198,7 +198,7 @@ export function fixConstrainFrame2(shape: Shape, scale: { x: number, y: number }
         // const __scale_trans = __sec_transform.setScale(ColVector3D.FromXYZ(1, __target_sy, 1));
 
         transform.scale(1, __target_sy);
-        const __decompose_scale = transform.clearScale();
+        const __decompose_scale = transform.clearScaleSize();
         __scale.x *= Math.abs(__decompose_scale.x);
         __scale.y *= Math.abs(__decompose_scale.y);
 
@@ -213,7 +213,7 @@ export function fixConstrainFrame2(shape: Shape, scale: { x: number, y: number }
 
             transform.scale(1, scale.y);
 
-            const __decompose_scale = transform.clearScale();
+            const __decompose_scale = transform.clearScaleSize();
             __scale.x *= Math.abs(__decompose_scale.x);
             __scale.y *= Math.abs(__decompose_scale.y);
 
@@ -471,7 +471,7 @@ export class ShapeView extends DataView {
     }
 
     get rotation(): number {
-        return (this.transform).decomposeEuler().z * 180 / Math.PI;
+        return (this.transform).decomposeRotate() * 180 / Math.PI;
     }
 
     get fixedRadius() {
@@ -887,7 +887,7 @@ export class ShapeView extends DataView {
                 t = t.clone();
                 t.scale(scalex, scaley);
                 // 保留skew去除scale
-                t.clearScale();
+                t.clearScaleSize();
             }
             return t;
         }
@@ -922,14 +922,12 @@ export class ShapeView extends DataView {
             this.updateLayoutArgs((transform), new ShapeFrame(0, 0, targetWidth, targetHeight), (shape as PathShape).fixedRadius);
             this.layoutChilds(varsContainer, this.frame, {x: targetWidth / saveW, y: targetHeight / saveH});
         } else {
-            // if (uniformScale) {
-            //     scaleX /= uniformScale;
-            //     scaleY /= uniformScale;
-            // }
             const transform = (shape.transform.clone());
             // const __p_transform_scale = new Transform2().setScale(ColVector3D.FromXYZ(scaleX, scaleY, 1));
             transform.scale(scaleX, scaleY);
-            const __decompose_scale = transform.clearScale();
+            const __decompose_scale = transform.clearScaleSize();
+            // 保持对象位置不变
+            transform.trans(transform.translateX - shape.transform.translateX, transform.translateY - shape.transform.translateY);
             const size = shape.size;
             const frame = new ShapeFrame(0, 0, size.width * __decompose_scale.x, size.height * __decompose_scale.y);
             this.updateLayoutArgs((transform), frame, (shape as PathShape).fixedRadius);

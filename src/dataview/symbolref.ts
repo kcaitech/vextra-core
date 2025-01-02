@@ -291,11 +291,9 @@ export class SymbolRefView extends ShapeView {
         } else { // 没有约束
             const transform = shape.transform.clone();
             transform.scale(scaleX, scaleY);
-            const __decompose_scale = transform.clearScale();
+            const __decompose_scale = transform.clearScaleSize();
             // 保持对象位置不变
-            const p0 = shape.transform.computeCoord(0, 0);
-            const p1 = transform.computeCoord(0, 0);
-            transform.trans(p0.x - p1.x, p0.y - p1.y);
+            transform.trans(transform.translateX - shape.transform.translateX, transform.translateY - shape.transform.translateY);
 
             selfframe.width = size.width * __decompose_scale.x
             selfframe.height = size.height * __decompose_scale.y

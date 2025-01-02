@@ -43,7 +43,7 @@ test("transform", () => {
     // 1
     isTrue(o.equals(makeShapeTransform1By2(t)))
 
-    const ox = o.clearScale()
+    const ox = o.clearScaleSize()
     const tx = t.decomposeScale()
     t.clearScaleSize()
 
@@ -72,7 +72,7 @@ test("transform2", () => {
     // 1
     isTrue(o.equals(makeShapeTransform1By2(t)))
 
-    const ox = o.clearScale()
+    const ox = o.clearScaleSize()
     const tx = t.decomposeScale()
     t.clearScaleSize()
 

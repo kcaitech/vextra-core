@@ -134,9 +134,9 @@ export class Transform extends classes.Transform {
         return this
     }
     transTo(x: number, y: number) {
-        const origin = this.computeCoord(0, 0);
-        const dx = x - origin.x;
-        const dy = y - origin.y;
+        // const origin = this.computeCoord(0, 0); // m02, m12
+        const dx = x - this.m02;
+        const dy = y - this.m12;
         this.trans(dx, dy);
         return this
     }
@@ -321,19 +321,19 @@ export class Transform extends classes.Transform {
         }
     }
 
-    decomposeEuler() { // 通过旋转矩阵分解出欧拉角（ZXY序），返回值的单位为弧度
+    decomposeRotate() { // 通过旋转矩阵分解出欧拉角（ZXY序），返回值的单位为弧度
         const matrix = this.decompose().rotate
         const z = Math.atan2(-matrix.m01, matrix.m11)
-        return new ColVector3D([0, 0, z])
+        // return new ColVector3D([0, 0, z])
+        return z
     }
 
-    // clearScaleSize() {
-    //     const d = this.decompose()
-    //     const m = d.translate.multi(d.rotate).multi(d.skew)
-    //     this.reset(m)
-    // }
+    decomposeScale() {
+        const matrix = this.decompose().scale
+        return {x: Math.abs(matrix.m00), y: Math.abs(matrix.m11)}
+    }
 
-    clearScale(): { x: number, y: number } {
+    clearScaleSize(): { x: number, y: number } {
         const d = this.decompose()
         let m: Transform
         if (d.scale.m00 < 0 || d.scale.m11 < 0) {
@@ -342,6 +342,6 @@ export class Transform extends classes.Transform {
             m = d.translate.multi(d.rotate).multi(d.skew)
         }
         this.reset(m)
-        return { x: d.scale.m00, y: d.scale.m11 }
+        return { x: Math.abs(d.scale.m00), y: Math.abs(d.scale.m11) }
     }
 }
