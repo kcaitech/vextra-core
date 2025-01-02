@@ -38,13 +38,11 @@ export class PathShapeView extends ShapeView {
     }
 
     protected _layout(
-        shape: Shape,
         parentFrame: ShapeFrame | undefined,
-        varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
         scale: { x: number, y: number } | undefined
     ): void {
         this.m_pathsegs = undefined;
-        super._layout(shape, parentFrame, varsContainer, scale);
+        super._layout(parentFrame, scale);
         this.createBorderPath();
     }
 

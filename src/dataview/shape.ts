@@ -397,7 +397,7 @@ export class ShapeView extends DataView {
     onMounted() {
         const parent = this.parent;
         const parentFrame = parent?.hasSize() ? parent.frame : undefined;
-        this._layout(this.m_data, parentFrame, this.varsContainer, this.m_scale);
+        this._layout(parentFrame, this.m_scale);
         // this.updateFrames();
     }
 
@@ -859,25 +859,23 @@ export class ShapeView extends DataView {
     }
 
     protected layoutChilds(
-        varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
         parentFrame: ShapeSize | undefined,
         scale?: { x: number, y: number }
     ) {
     }
 
     protected _layout(
-        shape: Shape,
         parentFrame: ShapeSize | undefined,
-        varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
         scale: { x: number, y: number } | undefined
     ) {
+        const shape = this.data;
         const transform = shape.transform;
         // case 1 不需要变形
         if (!scale || isEqual(scale.x, 1) && isEqual(scale.y, 1)) {
             let frame = this.frame;
             if (this.hasSize()) frame = this.data.frame;
             this.updateLayoutArgs(transform, frame, (shape as PathShape).fixedRadius);
-            this.layoutChilds(varsContainer, this.frame);
+            this.layoutChilds(this.frame);
             this.updateFrames();
             return;
         }
@@ -907,7 +905,7 @@ export class ShapeView extends DataView {
             const dy = save1.y - save2.y;
             t.trans(dx, dy);
             this.updateLayoutArgs(t, frame, (shape as PathShape).fixedRadius);
-            this.layoutChilds(varsContainer, undefined, scale);
+            this.layoutChilds(undefined, scale);
             this.updateFrames();
             return;
         }
@@ -922,7 +920,7 @@ export class ShapeView extends DataView {
         if (parentFrame && resizingConstraint !== 0) {
             const {transform, targetWidth, targetHeight} = fixFrameByConstrain(shape, parentFrame, scaleX, scaleY);
             this.updateLayoutArgs((transform), new ShapeFrame(0, 0, targetWidth, targetHeight), (shape as PathShape).fixedRadius);
-            this.layoutChilds(varsContainer, this.frame, {x: targetWidth / saveW, y: targetHeight / saveH});
+            this.layoutChilds(this.frame, {x: targetWidth / saveW, y: targetHeight / saveH});
         } else {
             const transform = (shape.transform.clone());
             // const __p_transform_scale = new Transform2().setScale(ColVector3D.FromXYZ(scaleX, scaleY, 1));
@@ -933,7 +931,7 @@ export class ShapeView extends DataView {
             const size = shape.size;
             const frame = new ShapeFrame(0, 0, size.width * __decompose_scale.x, size.height * __decompose_scale.y);
             this.updateLayoutArgs((transform), frame, (shape as PathShape).fixedRadius);
-            this.layoutChilds(varsContainer, this.frame, {x: frame.width / saveW, y: frame.height / saveH});
+            this.layoutChilds(this.frame, {x: frame.width / saveW, y: frame.height / saveH});
         }
         this.updateFrames();
 
@@ -996,7 +994,7 @@ export class ShapeView extends DataView {
         const parent = this.parent;
         const parentFrame = parent?.hasSize() ? parent.frame : undefined;
         this.m_ctx.setDirty(this);
-        this._layout(this.m_data, parentFrame, this.varsContainer, this.m_scale);
+        this._layout(parentFrame, this.m_scale);
         this.m_ctx.addNotifyLayout(this);
     }
 

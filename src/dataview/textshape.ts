@@ -245,7 +245,7 @@ export class TextShapeView extends ShapeView {
         if (this.__layoutToken && this.__preText) this.__preText.dropLayout(this.__layoutToken, this.id);
     }
 
-    protected _layout(shape: Shape, parentFrame: ShapeSize | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scale: { x: number; y: number; } | undefined): void {
+    protected _layout(parentFrame: ShapeSize | undefined, scale: { x: number; y: number; } | undefined): void {
         if (!this.isVirtualShape) {
             this.updateLayoutArgs(this.data.transform, this.data.frame, undefined)
             this.updateFrames();
