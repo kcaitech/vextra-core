@@ -1261,7 +1261,6 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
     if (source.isCustomSize !== undefined) ret.isCustomSize = source.isCustomSize
     if (source.cornerRadius !== undefined) ret.cornerRadius = exportCornerRadius(source.cornerRadius, ctx)
     if (source.innerEnvScale !== undefined) ret.innerEnvScale = source.innerEnvScale
-    if (source.frameMaskDisabled !== undefined) ret.frameMaskDisabled = source.frameMaskDisabled
     if (source.uniformScale !== undefined) ret.uniformScale = source.uniformScale
         // inject code
     if (ctx?.refsymbols) ctx.refsymbols.add(ret.refId);

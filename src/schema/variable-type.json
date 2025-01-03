@@ -21,6 +21,7 @@
         "cornerRadius",
         "blur",
         "protoInteractions",
-        "autoLayout"
+        "autoLayout",
+        "frameMaskDisabled"
     ]
 }

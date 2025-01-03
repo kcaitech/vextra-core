@@ -1574,7 +1574,6 @@ function importSymbolRefShapeOptional(tar: impl.SymbolRefShape, source: types.Sy
     if (source.isCustomSize !== undefined) tar.isCustomSize = source.isCustomSize
     if (source.cornerRadius !== undefined) tar.cornerRadius = importCornerRadius(source.cornerRadius, ctx)
     if (source.innerEnvScale !== undefined) tar.innerEnvScale = source.innerEnvScale
-    if (source.frameMaskDisabled !== undefined) tar.frameMaskDisabled = source.frameMaskDisabled
     if (source.uniformScale !== undefined) tar.uniformScale = source.uniformScale
 }
 export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImportContext): impl.SymbolRefShape {

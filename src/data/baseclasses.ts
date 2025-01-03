@@ -1109,7 +1109,6 @@ export class SymbolRefShape extends Shape {
     isCustomSize?: boolean
     cornerRadius?: CornerRadius
     innerEnvScale?: number
-    frameMaskDisabled?: boolean
     uniformScale?: number
     constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style, size: ShapeSize, refId: string, variables: BasicMap<string, Variable>) {
         super(crdtidx, id, name, type, transform, style)

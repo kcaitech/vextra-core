@@ -122,6 +122,7 @@ export class SymbolRefView extends ShapeView {
     symwatcher(...args: any[]) {
         // todo
         this.m_ctx.setReLayout(this);
+        super.onDataChange(...args);
     }
 
     findOverride(refId: string, type: OverrideType): Variable[] | undefined {
@@ -588,6 +589,8 @@ export class SymbolRefView extends ShapeView {
     }
 
     get frameMaskDisabled() {
-        return (this.m_data as SymbolRefShape).frameMaskDisabled;
+        const v = this._findOV2(OverrideType.FrameMaskDisabled, VariableType.FrameMaskDisabled);
+        if (v) return v.value;
+        return this.m_sym?.frameMaskDisabled;
     }
 }

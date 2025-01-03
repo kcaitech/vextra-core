@@ -35,7 +35,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     isCustomSize?: boolean
     cornerRadius?: CornerRadius
     innerEnvScale?: number
-    frameMaskDisabled?: boolean
+    // frameMaskDisabled?: boolean
     uniformScale?: number
     constructor(
         crdtidx: BasicArray<number>,

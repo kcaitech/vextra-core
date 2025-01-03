@@ -35,9 +35,6 @@
         "innerEnvScale": {
             "type": "number"
         },
-        "frameMaskDisabled": {
-            "type": "boolean"
-        },
         "uniformScale": {
             "type": "number"
         }

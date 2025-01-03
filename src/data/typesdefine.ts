@@ -670,6 +670,7 @@ export enum VariableType {
     Blur = "blur",
     ProtoInteractions = "protoInteractions",
     AutoLayout = "autoLayout",
+    FrameMaskDisabled = "frameMaskDisabled",
 }
 export type Variable_0 = Array<Border | Fill | Shadow | PrototypeInterAction>
 /* winding rule */
@@ -1023,7 +1024,6 @@ export type SymbolRefShape = Shape & {
     isCustomSize?: boolean,
     cornerRadius?: CornerRadius,
     innerEnvScale?: number,
-    frameMaskDisabled?: boolean,
     uniformScale?: number,
 }
 /* contact shape */

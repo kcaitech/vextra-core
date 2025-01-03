@@ -568,7 +568,7 @@ export class ShapeView extends DataView {
     onDataChange(...args: any[]): void {
         if (args.includes('mask') || args.includes('isVisible')) {
             (this.parent as GroupShapeView).updateMaskMap();
-            (this.parent as GroupShapeView).updateFrames(); // 遮罩图层会改变父级的frame结构
+            (this.parent as GroupShapeView).updateFrames(); // 遮罩图层会改变父级的frame结构 // todo 等排版更新就行？
         }
 
         if (args.includes('points')
