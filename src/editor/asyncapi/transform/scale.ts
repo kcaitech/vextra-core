@@ -18,7 +18,7 @@ import {
     makeShapeTransform2By1,
 } from "../../../data";
 import {
-    ArtboradView,
+    ArtboardView,
     adapt2Shape,
     GroupShapeView,
     PageView,
@@ -112,7 +112,7 @@ export function reLayoutBySizeChanged(
                 reLayoutBySizeChanged(api, page, child, _scale, rangeRecorder, sizeRecorder, transformRecorder);
             }
         }
-    } else if ((shape as ArtboradView).autoLayout) {
+    } else if ((shape as ArtboardView).autoLayout) {
         const __shape = adapt2Shape(shape);
         modifyAutoLayout(page, api, __shape);
     } else {

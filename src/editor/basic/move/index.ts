@@ -1,4 +1,4 @@
-import { ShapeView, GroupShapeView, adapt2Shape, TextShapeView, SymbolRefView, ArtboradView } from "../../../dataview";
+import { ShapeView, GroupShapeView, adapt2Shape, TextShapeView, SymbolRefView, ArtboardView } from "../../../dataview";
 import { Api } from "../../../coop";
 import { GroupShape, Page, SymbolShape, MarkerType, BlendMode, Artboard, ShapeType, TextShape, Shape, makeShapeTransform1By2, Transform } from "../../../data";
 import { importFill, importBorder, importShadow, importExportOptions, importBlur, importPrototypeInterAction, importAutoLayout } from "../../../data/baseimport";
@@ -118,7 +118,7 @@ export class ShapePorter {
         if (view instanceof SymbolRefView) {
             const refId = view.refId;
         }
-        if (view instanceof ArtboradView) {
+        if (view instanceof ArtboardView) {
             const autoLayout = view.autoLayout ? importAutoLayout(exportAutoLayout(view.autoLayout)) : undefined;
             autoLayout && api.shapeAutoLayout(page, shape, autoLayout);
         }
@@ -130,7 +130,7 @@ export class ShapePorter {
      */
     private autolayout() {
         if (this.envSet.size) this.envSet.forEach(e => {
-            if ((e as ArtboradView).autoLayout) modifyAutoLayout(this.page, this.api, adapt2Shape(e));
+            if ((e as ArtboardView).autoLayout) modifyAutoLayout(this.page, this.api, adapt2Shape(e));
         })
     }
 

@@ -1,5 +1,5 @@
 import { Document, OvalShape, Page } from "../../data";
-import { adapt2Shape, ArtboradView, PageView, ShapeView, SymbolRefView, SymbolView, TableCellView, TableView, TextShapeView } from "../../dataview";
+import { adapt2Shape, ArtboardView, PageView, ShapeView, SymbolRefView, SymbolView, TableCellView, TableView, TextShapeView } from "../../dataview";
 import { modifyPathByArc } from "../asyncapi";
 import { Api, CoopRepository } from "../../coop";
 import { modify_shapes_height, modify_shapes_width } from "../utils/common";
@@ -772,7 +772,7 @@ export class LinearApi {
      *  @description 自动布局内重新布局
      */
 
-    reLayout(env: ArtboradView | SymbolView, sort: Map<string, number>) {
+    reLayout(env: ArtboardView | SymbolView, sort: Map<string, number>) {
         this.execute('re-layout-linear', () => {
             reLayoutBySort(this.page, this.api!, adapt2Shape(env) as Artboard, sort);
         });

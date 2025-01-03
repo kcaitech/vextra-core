@@ -1,6 +1,6 @@
 import { CoopRepository } from "../../../coop";
 import { AsyncApiCaller } from "../basic/asyncapi";
-import { adapt2Shape, ArtboradView, GroupShapeView, PageView, ShapeView } from "../../../dataview";
+import { adapt2Shape, ArtboardView, GroupShapeView, PageView, ShapeView } from "../../../dataview";
 import {
     Artboard, Document, GroupShape, Page, Shape, ShapeType, StackMode, Transform as TransformRaw,
     makeShapeTransform1By2, makeShapeTransform2By1,
@@ -284,7 +284,7 @@ export class Transporter extends AsyncApiCaller {
 
     insert(layout: ShapeView, placement: ShapeView | undefined, position: -1 | 1, sel: ShapeView[]) {
         try {
-            const container = layout as ArtboradView;
+            const container = layout as ArtboardView;
             const envData = adapt2Shape(container) as Artboard;
 
             const isHor = (container.autoLayout?.stackMode || StackMode.Horizontal) === StackMode.Horizontal;

@@ -152,7 +152,7 @@ import { Api, TextShapeLike } from "../coop/recordapi";
 import { unable_to_migrate } from "./utils/migrate";
 import {
     adapt2Shape,
-    ArtboradView,
+    ArtboardView,
     BoolShapeView,
     CutoutShapeView,
     GroupShapeView,
@@ -450,7 +450,7 @@ export class PageEditor {
         return false;
     }
 
-    dissolution_artboard(shapes: ArtboradView[]): false | Shape[] {
+    dissolution_artboard(shapes: ArtboardView[]): false | Shape[] {
         const childrens: Shape[] = [];
         const api = this.__repo.start("dissolution_artboard", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
             const state = {} as SelectionState;
@@ -967,13 +967,13 @@ export class PageEditor {
 
     _flattenShapes(shapes: ShapeView[]): ShapeView[] {
         return shapes.reduce((result: ShapeView[], item: ShapeView) => {
-            if (item instanceof ArtboradView) {
+            if (item instanceof ArtboardView) {
                 const childs = (item).childs as ShapeView[];
                 if (Array.isArray(childs)) result = result.concat(this._flattenShapes(childs));
             } else {
                 if (item instanceof TextShapeView
                     || item instanceof PathShapeView
-                    || item instanceof ArtboradView
+                    || item instanceof ArtboardView
                     || item instanceof BoolShapeView
                 ) result = result.concat(item);
             }
@@ -4444,7 +4444,7 @@ export class PageEditor {
                 for (const view of shapes) {
                     if (view instanceof TableView) continue;
                     if (view instanceof CutoutShapeView) continue;
-                    if (view.type === ShapeType.Group || view instanceof ArtboradView || view instanceof SymbolView) {
+                    if (view.type === ShapeType.Group || view instanceof ArtboardView || view instanceof SymbolView) {
                         res.push(...__flatten((view as GroupShapeView).childs));
                         continue;
                     }
@@ -4591,7 +4591,7 @@ export class PageEditor {
                         virtualSelection = true;
                         break;
                     }
-                    if (view instanceof ArtboradView || view instanceof SymbolView || view.type === ShapeType.Group) {
+                    if (view instanceof ArtboardView || view instanceof SymbolView || view.type === ShapeType.Group) {
                         result.push(...deep(view.childs));
                         continue;
                     }
@@ -4686,7 +4686,7 @@ export class PageEditor {
             const page = this.page;
             for (const view of shapes) {
                 if (view.isVirtualShape) continue;
-                if (view instanceof ArtboradView || view instanceof SymbolView || view instanceof SymbolRefView) {
+                if (view instanceof ArtboardView || view instanceof SymbolView || view instanceof SymbolRefView) {
                     const shape = adapt2Shape(view);
                     api.modifyContainersFrameMaskStatus(page, shape, value);
                 }

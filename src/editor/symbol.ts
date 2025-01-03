@@ -54,7 +54,7 @@ import {
     importAutoLayout, importArtboard
 } from "../data/baseimport";
 import {
-    ArtboradView,
+    ArtboardView,
     ShapeView,
     SymbolRefView,
     SymbolView,
@@ -398,7 +398,7 @@ export function shape4shadow(api: Api, page: PageView, shape: ShapeView) {
     return _var || shape.data;
 }
 
-export function shape4cornerRadius(api: Api, page: PageView, shape: ArtboradView | SymbolView | SymbolRefView) {
+export function shape4cornerRadius(api: Api, page: PageView, shape: ArtboardView | SymbolView | SymbolRefView) {
     const _var = override_variable(page, VariableType.CornerRadius, OverrideType.CornerRadius, (_var) => {
         const cornerRadius = _var?.value ?? shape.cornerRadius;
         return cornerRadius ? importCornerRadius(cornerRadius) : new CornerRadius(0, 0, 0, 0);

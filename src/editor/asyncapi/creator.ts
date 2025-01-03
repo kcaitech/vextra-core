@@ -21,7 +21,7 @@ import {
     makeShapeTransform1By2,
     updateShapeTransform1By2
 } from "../../data";
-import { adapt2Shape, ArtboradView, GroupShapeView, PageView, ShapeView } from "../../dataview";
+import { adapt2Shape, ArtboardView, GroupShapeView, PageView, ShapeView } from "../../dataview";
 import {
     newArrowShape,
     newArtboard,
@@ -289,7 +289,7 @@ export class CreatorApiCaller extends AsyncApiCaller {
                 update_frame_by_points(this.api, this.page, this.shape, true);
             }
             const parent = this.__params?.parent;
-            if (parent && (parent as ArtboradView).autoLayout) {
+            if (parent && (parent as ArtboardView).autoLayout) {
                 const __shape = adapt2Shape(parent) as GroupShape;
                 modifyAutoLayout(this.page, this.api, __shape);
             }

@@ -22,7 +22,7 @@ import { after_remove, clear_binds_effect, find_layers_by_varid, get_symbol_by_l
 import { newText2 } from "./creator";
 import { _typing_modify, get_points_for_init, modify_points_xy, update_frame_by_points } from "./utils/path";
 import { adapt_for_artboard } from "./utils/common";
-import { ShapeView, SymbolRefView, SymbolView, adapt2Shape, findOverride, ArtboradView, findVar, GroupShapeView, PageView } from "../dataview";
+import { ShapeView, SymbolRefView, SymbolView, adapt2Shape, findOverride, ArtboardView, findVar, GroupShapeView, PageView } from "../dataview";
 import { is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union, modify_variable, modify_variable_with_api, shape4border, shape4contextSettings, shape4exportOptions, shape4fill, shape4shadow } from "./symbol";
 import { ISave4Restore, LocalCmd, SelectionState } from "../coop/localcmd";
 import { getAutoLayoutShapes, initAutoLayout, layoutShapesOrder, layoutSpacing, modifyAutoLayout } from "./utils/auto_layout";
@@ -1034,7 +1034,7 @@ export class ShapeEditor {
     // 容器自适应大小
     public adapt() {
         try {
-            if (!(this.view instanceof ArtboradView)) return;
+            if (!(this.view instanceof ArtboardView)) return;
             const api = this.__repo.start('adapt');
             if (adapt_for_artboard(api, this.__page, this.view)) this.__repo.commit();
         } catch (error) {

@@ -29,7 +29,7 @@ import { BasicArray, BasicMap } from "../../data/basic";
 import { newSymbolShapeUnion } from "../creator";
 import { uuid } from "../../basic/uuid";
 import * as types from "../../data/typesdefine";
-import { ArtboradView, PageView, ShapeView, TableCellView, TableView, TextShapeView, adapt2Shape } from "../../dataview";
+import { ArtboardView, PageView, ShapeView, TableCellView, TableView, TextShapeView, adapt2Shape } from "../../dataview";
 import { modifyAutoLayout } from "./auto_layout";
 import { Api } from "../../coop";
 
@@ -53,7 +53,7 @@ export function fixTextShapeFrameByLayout(api: Api, page: Page, shape: TextShape
                 fixTransform(0, (_shape.size.height - targetHeight));
             }
             const parent = shape.parent as ShapeView;
-            if (parent && (parent as ArtboradView).autoLayout) {
+            if (parent && (parent as ArtboardView).autoLayout) {
                 modifyAutoLayout(page, api as Api, adapt2Shape(parent));
             }
             break;
@@ -81,7 +81,7 @@ export function fixTextShapeFrameByLayout(api: Api, page: Page, shape: TextShape
             }
             api.shapeModifyWH(page, _shape, targetWidth, targetHeight);
             const parent = shape.parent as ShapeView;
-            if (parent && (parent as ArtboradView).autoLayout) {
+            if (parent && (parent as ArtboardView).autoLayout) {
                 modifyAutoLayout(page, api as Api, adapt2Shape(parent));
             }
             break;
