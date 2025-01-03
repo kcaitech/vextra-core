@@ -482,7 +482,7 @@ export function cell4edit2(page: PageView, view: TableView, _cell: TableCellView
             newTableCellText(view.data.textAttr));
     };
     // const refId = view.data.id + '/' + cellId;
-    const _var = overrideTableCell(api, page, _cell, valuefun);
+    const _var = overrideTableCell(api, page, view, _cell, valuefun);
     if (_var?.var) return _var.var;
     api.tableInitCell(page.data, view.data, rowIdx, colIdx);
     // return _cell.data;
@@ -510,7 +510,7 @@ export function cell4edit(page: PageView, view: TableView, rowIdx: number, colId
     };
     // const refId = view.data.id + '/' + cellId;
     // const _var = override_variable2(page, VariableType.TableCell, OverrideType.TableCell, refId, valuefun, api, view);
-    const _var = overrideTableCell(api, page, cell, valuefun);
+    const _var = overrideTableCell(api, page, view, cell, valuefun);
     if (_var?.var) {
         cell.setData(_var.var.value);
         // return _var;

@@ -1,7 +1,7 @@
 import { Api } from "../coop";
 import { uuid } from "../basic/uuid";
 import { OverrideType, SymbolRefShape, SymbolShape, SymbolUnionShape, TableCell, Variable, VariableType } from "../data";
-import { PageView, ShapeView, TableCellView } from "../dataview";
+import { PageView, ShapeView, TableCellView, TableView } from "../dataview";
 
 // 查看说明symbol_utils.png
 
@@ -254,7 +254,7 @@ export function prepareVar(api: Api, page: PageView, view: ShapeView, overrideTy
 }
 
 // override shape?
-export function overrideTableCell(api: Api, page: PageView, view: TableCellView, varValue: (_var: Variable | undefined) => any): {
+export function overrideTableCell(api: Api, page: PageView, table: TableView, view: TableCellView, varValue: (_var: Variable | undefined) => any): {
     view: ShapeView,
     var: Variable,
     isNew: boolean
@@ -267,7 +267,7 @@ export function overrideTableCell(api: Api, page: PageView, view: TableCellView,
     // override的优先级高于varbind
     // todo 当view是tablecell时，refId要是tablecell的id，同variable
     // 即，refId跟overridetype相关
-    const override = _findOverride(view, OverrideType.TableCell, view.data.id)
+    const override = _findOverride(view, OverrideType.TableCell, table.data.id + '/' + view.data.id)
     if (override) {
         if (override.view.isVirtualShape) {
             const _var = _newVar(VariableType.TableCell, varValue(override.var))
@@ -289,7 +289,7 @@ export function overrideTableCell(api: Api, page: PageView, view: TableCellView,
         }
     } else {
         const _var = _newVar(VariableType.TableCell, varValue(undefined))
-        const _ref = _getRefView(view, view.data.id)
+        const _ref = _getRefView(table, table.data.id + '/' + view.data.id)
         api.shapeAddVariable(page.data, _ref.view.data as SymbolRefShape, _var)
         const refId = _ref.refId
         api.shapeAddOverride(page.data, _ref.view.data as SymbolRefShape, refId, _var.id)
