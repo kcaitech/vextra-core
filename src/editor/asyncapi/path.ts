@@ -95,10 +95,16 @@ export class PathModifier extends AsyncApiCaller {
             addCommonAttr(vec);
 
             const env = adapt2Shape(parent) as GroupShape;
+            const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+            let targetIndex = env.childs.length;
+            if (_types.includes(env.type)) {
+                const Fixed = types.ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                const fixed_index = env.childs.findIndex(s => s.scrollBehavior === Fixed);
+                targetIndex = fixed_index === -1 ? env.childs.length : fixed_index;
+            }
+            this.api.shapeInsert(this.__document, this.page, env, vec, targetIndex);
 
-            this.api.shapeInsert(this.__document, this.page, env, vec, env.childs.length);
-
-            this.shape = env.childs[env.childs.length - 1];
+            this.shape = env.childs[targetIndex];
 
             this.updateView();
 

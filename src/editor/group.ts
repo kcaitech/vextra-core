@@ -3,7 +3,7 @@
 // 2. 画板
 // 3. BOOL
 
-import { GroupShape, Shape, Document, Page, makeShapeTransform1By2, makeShapeTransform2By1 } from "../data";
+import { GroupShape, Shape, Document, Page, makeShapeTransform1By2, makeShapeTransform2By1, ShapeType, ScrollBehavior } from "../data";
 import { Api } from "../coop/recordapi";
 import { ColVector3D } from "../basic/matrix2";
 import { Transform } from "../basic/transform";
@@ -129,6 +129,25 @@ export function group<T extends GroupShape>(document: Document, page: Page, shap
         api.shapeModifyTransform(page, shapes[i], makeShapeTransform1By2(shapes2rootTransform[i].addTransform(inverse2)));
     }
 
+    const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+    if (_types.includes(gshape.type)) {
+        const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+        const sortedArr = [...gshape.childs].sort((a, b) => {
+            if (a.scrollBehavior !== Fixed && b.scrollBehavior === Fixed) {
+                return -1;
+            } else if (a.scrollBehavior === Fixed && b.scrollBehavior !== Fixed) {
+                return 1;
+            }
+            return 0;
+        });
+        for (let j = 0; j < sortedArr.length; j++) {
+            const s = sortedArr[j];
+            const currentIndex = gshape.childs.indexOf(s);
+            if (currentIndex !== j) {
+                api.shapeMove(page, gshape, currentIndex, gshape, j);
+            }
+        }
+    }
     return gshape;
 }
 

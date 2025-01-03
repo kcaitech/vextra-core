@@ -39,7 +39,7 @@ import { ISave4Restore, LocalCmd, SelectionState } from "../../coop";
 import { uuid } from "../../basic/uuid";
 import { Matrix } from "../../basic/matrix";
 import { Api } from "../../coop";
-import { Point2D } from "../../data/typesdefine";
+import { Point2D, ScrollBehavior } from "../../data/typesdefine";
 import { update_frame_by_points } from "../utils/path";
 import { translateTo } from "../frame";
 import { Transform as Transform2 } from "../../basic/transform";
@@ -301,16 +301,22 @@ export class CreatorApiCaller extends AsyncApiCaller {
 
     private insert(params: GeneratorParams, shape: Shape) {
         const parent = adapt2Shape(params.parent) as GroupShape;
-
-        this.api.shapeInsert(this.__document, this.page, parent, shape, parent.childs.length);
-        this.shape = parent.childs[parent.childs.length - 1];
+        const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+        let targetIndex = parent.childs.length;
+        if (_types.includes(parent.type)) {
+            const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+            const fixed_index = parent.childs.findIndex(s => s.scrollBehavior === Fixed);
+            targetIndex = fixed_index === -1 ? parent.childs.length : fixed_index;
+        }
+        this.api.shapeInsert(this.__document, this.page, parent, shape, targetIndex);
+        this.shape = parent.childs[targetIndex];
         const name = assign(this.shape);
         this.api.shapeModifyName(this.page, this.shape, name);
     }
 
     private getCount(type: ShapeType) {
         let count = 1;
-        this.page.shapes.forEach((v:any) => {
+        this.page.shapes.forEach((v: any) => {
             if (v.type === type) count++;
         });
         return count;

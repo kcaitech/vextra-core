@@ -2,7 +2,7 @@ import { CoopRepository } from "../../../coop";
 import { AsyncApiCaller } from "../basic/asyncapi";
 import { adapt2Shape, ArtboradView, GroupShapeView, PageView, ShapeView } from "../../../dataview";
 import {
-    Artboard, Document, GroupShape, Page, Shape, ShapeType, StackMode, Transform as TransformRaw,
+    Artboard, Document, GroupShape, Page, ScrollBehavior, Shape, ShapeType, StackMode, Transform as TransformRaw,
     makeShapeTransform1By2, makeShapeTransform2By1,
 } from "../../../data";
 import { after_migrate, unable_to_migrate } from "../../utils/migrate";
@@ -91,6 +91,26 @@ export class Transporter extends AsyncApiCaller {
                 const maxL = toParent.childs.length;
                 const index = Math.min(item.index ?? maxL, maxL);
                 this.__migrate(document, api, page, toParent, shape, dlt, index);
+
+                const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                if (_types.includes(toParent.type)) {
+                    const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                    const sortedArr = [...(toParent).childs].sort((a, b) => {
+                        if (a.scrollBehavior !== Fixed && b.scrollBehavior === Fixed) {
+                            return -1;
+                        } else if (a.scrollBehavior === Fixed && b.scrollBehavior !== Fixed) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+                    for (let j = 0; j < sortedArr.length; j++) {
+                        const s = sortedArr[j];
+                        const currentIndex = (toParent).childs.indexOf(s);
+                        if (currentIndex !== j) {
+                            api.shapeMove(page, toParent, currentIndex, toParent, j);
+                        }
+                    }
+                }
             }
 
             this.updateView();
@@ -298,7 +318,7 @@ export class Transporter extends AsyncApiCaller {
                 else return -1;
             });
 
-            const frame = placement ? placement._p_frame : {x: 0, y: 0};
+            const frame = placement ? placement._p_frame : { x: 0, y: 0 };
 
             const api = this.api;
             const page = this.page;

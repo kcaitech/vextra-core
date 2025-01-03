@@ -6,7 +6,7 @@ import {
 } from "./frame";
 import { CurvePoint, GroupShape, PathShape, PathShape2, Shape, ShapeFrame, ShapeType } from "../data/shape";
 import { getFormatFromBase64 } from "../basic/utils";
-import { ContactRoleType, CurveMode, FillType, SideType } from "../data/typesdefine";
+import { ContactRoleType, CurveMode, FillType, ScrollBehavior, SideType } from "../data/typesdefine";
 import {
     modifyTransformByEnv,
     newArrowShape,
@@ -231,8 +231,14 @@ export class Controller {
                 }
 
                 modifyTransformByEnv(shape, parent);
-
-                api.shapeInsert(this.__document, page, parent, shape, parent.childs.length);
+                const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                let targetIndex = parent.childs.length;
+                if (_types.includes(parent.type)) {
+                    const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                    const fixed_index = parent.childs.findIndex(s => s.scrollBehavior === Fixed);
+                    targetIndex = fixed_index === -1 ? parent.childs.length : fixed_index;
+                }
+                api.shapeInsert(this.__document, page, parent, shape, targetIndex);
 
                 newShape = parent.childs[parent.childs.length - 1];
 
@@ -258,9 +264,15 @@ export class Controller {
                 const shape = newArrowShape(name, frame);
 
                 modifyTransformByEnv(shape, parent);
-
-                api.shapeInsert(this.__document, page, parent, shape, parent.childs.length);
-                newShape = parent.childs[parent.childs.length - 1];
+                const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                let targetIndex = parent.childs.length;
+                if (_types.includes(parent.type)) {
+                    const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                    const fixed_index = parent.childs.findIndex(s => s.scrollBehavior === Fixed);
+                    targetIndex = fixed_index === -1 ? parent.childs.length : fixed_index;
+                }
+                api.shapeInsert(this.__document, page, parent, shape, targetIndex);
+                newShape = parent.childs[targetIndex];
 
                 translateTo(api, savepage, newShape, frame.x, frame.y);
 
@@ -287,8 +299,16 @@ export class Controller {
                     const xy = parent.frame2Root();
                     shape.transform.translateX -= xy.x;
                     shape.transform.translateY -= xy.y;
-                    api.shapeInsert(this.__document, page, parent, shape, parent.childs.length)
-                    newShape = parent.childs.at(-1);
+                    const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                    let targetIndex = parent.childs.length;
+                    if (_types.includes(parent.type)) {
+                        const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                        const fixed_index = parent.childs.findIndex(s => s.scrollBehavior === Fixed);
+                        targetIndex = fixed_index === -1 ? parent.childs.length : fixed_index;
+                    }
+                    api.shapeInsert(this.__document, page, parent, shape, targetIndex)
+                    newShape = parent.childs[targetIndex];
+
                     this.__repo.transactCtx.fireNotify();
                     status = Status.Fulfilled;
                     return newShape
@@ -306,8 +326,16 @@ export class Controller {
                 const xy = parent.frame2Root();
                 shape.transform.translateX -= xy.x;
                 shape.transform.translateY -= xy.y;
-                api.shapeInsert(this.__document, page, parent, shape, parent.childs.length);
-                newShape = parent.childs.at(-1);
+                const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                let targetIndex = parent.childs.length;
+                if (_types.includes(parent.type)) {
+                    const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                    const fixed_index = parent.childs.findIndex(s => s.scrollBehavior === Fixed);
+                    targetIndex = fixed_index === -1 ? parent.childs.length : fixed_index;
+                }
+                api.shapeInsert(this.__document, page, parent, shape, targetIndex);
+                newShape = parent.childs[targetIndex];
+
                 if (newShape?.type === ShapeType.Artboard) api.setFillColor(page, newShape, 0, new Color(0, 0, 0, 0));
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
@@ -336,9 +364,15 @@ export class Controller {
                     const layout = shape.getLayout();
                     shape.size.width = layout.contentWidth;
                     shape.size.height = layout.contentHeight;
-
-                    api.shapeInsert(this.__document, page, parent, shape, parent.childs.length)
-                    newShape = parent.childs[parent.childs.length - 1];
+                    const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                    let targetIndex = parent.childs.length;
+                    if (_types.includes(parent.type)) {
+                        const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                        const fixed_index = parent.childs.findIndex(s => s.scrollBehavior === Fixed);
+                        targetIndex = fixed_index === -1 ? parent.childs.length : fixed_index;
+                    }
+                    api.shapeInsert(this.__document, page, parent, shape, targetIndex)
+                    newShape = parent.childs[targetIndex];
 
                     translateTo(api, page, newShape, frame.x, frame.y);
 
@@ -359,8 +393,15 @@ export class Controller {
                 const xy = parent.frame2Root();
                 shape.transform.translateX -= xy.x;
                 shape.transform.translateY -= xy.y;
-                api.shapeInsert(this.__document, page, parent, shape, parent.childs.length);
-                newShape = parent.childs.at(-1);
+                const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                let targetIndex = parent.childs.length;
+                if (_types.includes(parent.type)) {
+                    const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                    const fixed_index = parent.childs.findIndex(s => s.scrollBehavior === Fixed);
+                    targetIndex = fixed_index === -1 ? parent.childs.length : fixed_index;
+                }
+                api.shapeInsert(this.__document, page, parent, shape, targetIndex);
+                newShape = parent.childs[targetIndex];
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
                 return newShape
@@ -379,9 +420,15 @@ export class Controller {
                 shape.constrainerProportions = !!isLockSizeRatio;
 
                 modifyTransformByEnv(shape, parent);
-
-                api.shapeInsert(this.__document, page, parent, shape, parent.childs.length);
-                newShape = parent.childs[parent.childs.length - 1];
+                const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                let targetIndex = parent.childs.length;
+                if (_types.includes(parent.type)) {
+                    const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                    const fixed_index = parent.childs.findIndex(s => s.scrollBehavior === Fixed);
+                    targetIndex = fixed_index === -1 ? parent.childs.length : fixed_index;
+                }
+                api.shapeInsert(this.__document, page, parent, shape, targetIndex);
+                newShape = parent.childs[targetIndex];
 
                 translateTo(api, page, newShape, frame.x, frame.y);
 

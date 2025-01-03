@@ -767,6 +767,26 @@ export class PageEditor {
 
                     api.shapeMove(page, parent, parent.indexOfChild(symbol), page, page.childs.length);
                     api.shapeModifyTransform(page, symbol, makeShapeTransform1By2(makeShapeTransform2By1(om)));
+
+                    const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                    if (_types.includes(parent.type)) {
+                        const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                        const sortedArr = [...parent.childs].sort((a, b) => {
+                            if (a.scrollBehavior !== Fixed && b.scrollBehavior === Fixed) {
+                                return -1;
+                            } else if (a.scrollBehavior === Fixed && b.scrollBehavior !== Fixed) {
+                                return 1;
+                            }
+                            return 0;
+                        });
+                        for (let j = 0; j < sortedArr.length; j++) {
+                            const s = sortedArr[j];
+                            const currentIndex = parent.childs.indexOf(s);
+                            if (currentIndex !== j) {
+                                api.shapeMove(this.__page, parent, currentIndex, parent, j);
+                            }
+                        }
+                    }
                 }
             }
 
@@ -858,6 +878,25 @@ export class PageEditor {
             modify_frame_after_inset_state(this.__page, api, union);
             init_state(api, this.__page, new_state as SymbolShape, dlt);
 
+            const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+            if (_types.includes(union.type)) {
+                const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                const sortedArr = [...union.childs].sort((a, b) => {
+                    if (a.scrollBehavior !== Fixed && b.scrollBehavior === Fixed) {
+                        return -1;
+                    } else if (a.scrollBehavior === Fixed && b.scrollBehavior !== Fixed) {
+                        return 1;
+                    }
+                    return 0;
+                });
+                for (let j = 0; j < sortedArr.length; j++) {
+                    const s = sortedArr[j];
+                    const currentIndex = union.childs.indexOf(s);
+                    if (currentIndex !== j) {
+                        api.shapeMove(this.__page, union, currentIndex, union, j);
+                    }
+                }
+            }
             if (new_state) {
                 this.__repo.commit();
                 return new_state as any as SymbolShape;
@@ -928,6 +967,27 @@ export class PageEditor {
                 const { parent, self, insertIndex } = actions[i];
                 const ret = api.shapeInsert(this.__document, this.__page, parent as GroupShape, self, insertIndex);
                 api.shapeDelete(this.__document, this.__page, parent as GroupShape, insertIndex + 1);
+
+                const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                if (_types.includes(parent.type)) {
+                    const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                    const sortedArr = [...(parent as GroupShape).childs].sort((a, b) => {
+                        if (a.scrollBehavior !== Fixed && b.scrollBehavior === Fixed) {
+                            return -1;
+                        } else if (a.scrollBehavior === Fixed && b.scrollBehavior !== Fixed) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+                    for (let j = 0; j < sortedArr.length; j++) {
+                        const s = sortedArr[j];
+                        const currentIndex = (parent as GroupShape).childs.indexOf(s);
+                        if (currentIndex !== j) {
+                            api.shapeMove(this.__page, parent as GroupShape, currentIndex, parent as GroupShape, j);
+                        }
+                    }
+                }
+
                 results.push(ret);
             }
             this.__repo.commit();
@@ -1072,6 +1132,25 @@ export class PageEditor {
                 }
             }
             update_frame_by_points(api, this.__page, pathShape);
+            const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+            if (_types.includes(savep.type)) {
+                const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                const sortedArr = [...savep.childs].sort((a, b) => {
+                    if (a.scrollBehavior !== Fixed && b.scrollBehavior === Fixed) {
+                        return -1;
+                    } else if (a.scrollBehavior === Fixed && b.scrollBehavior !== Fixed) {
+                        return 1;
+                    }
+                    return 0;
+                });
+                for (let j = 0; j < sortedArr.length; j++) {
+                    const s = sortedArr[j];
+                    const currentIndex = savep.childs.indexOf(s);
+                    if (currentIndex !== j) {
+                        api.shapeMove(this.__page, savep, currentIndex, savep, j);
+                    }
+                }
+            }
             this.__repo.commit();
             return pathShape;
         } catch (e) {
@@ -1118,7 +1197,25 @@ export class PageEditor {
 
             api.shapeDelete(this.__document, this.__page, parent, index);
             pathShape = api.shapeInsert(this.__document, this.__page, parent, pathShape, index) as PathShape;
-
+            const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+            if (_types.includes(parent.type)) {
+                const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                const sortedArr = [...parent.childs].sort((a, b) => {
+                    if (a.scrollBehavior !== Fixed && b.scrollBehavior === Fixed) {
+                        return -1;
+                    } else if (a.scrollBehavior === Fixed && b.scrollBehavior !== Fixed) {
+                        return 1;
+                    }
+                    return 0;
+                });
+                for (let j = 0; j < sortedArr.length; j++) {
+                    const s = sortedArr[j];
+                    const currentIndex = parent.childs.indexOf(s);
+                    if (currentIndex !== j) {
+                        api.shapeMove(this.__page, parent, currentIndex, parent, j);
+                    }
+                }
+            }
             this.__repo.commit();
             return pathShape;
         } catch (e) {
@@ -1168,6 +1265,25 @@ export class PageEditor {
             api.shapeDelete(this.__document, this.__page, _parent, saveidx);
             pathShape = api.shapeInsert(this.__document, this.__page, _parent, pathShape, saveidx) as PathShape;
             update_frame_by_points(api, this.__page, pathShape);
+            const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+            if (_types.includes(_parent.type)) {
+                const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                const sortedArr = [..._parent.childs].sort((a, b) => {
+                    if (a.scrollBehavior !== Fixed && b.scrollBehavior === Fixed) {
+                        return -1;
+                    } else if (a.scrollBehavior === Fixed && b.scrollBehavior !== Fixed) {
+                        return 1;
+                    }
+                    return 0;
+                });
+                for (let j = 0; j < sortedArr.length; j++) {
+                    const s = sortedArr[j];
+                    const currentIndex = _parent.childs.indexOf(s);
+                    if (currentIndex !== j) {
+                        api.shapeMove(this.__page, _parent, currentIndex, _parent, j);
+                    }
+                }
+            }
             this.__repo.commit();
             return pathShape;
         } catch (e) {
@@ -1358,6 +1474,25 @@ export class PageEditor {
         try {
             api.shapeInsert(this.__document, this.__page, parent, shape, index);
             shape = parent.childs[index];
+            const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+            if (_types.includes(parent.type)) {
+                const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                const sortedArr = [...parent.childs].sort((a, b) => {
+                    if (a.scrollBehavior !== Fixed && b.scrollBehavior === Fixed) {
+                        return -1;
+                    } else if (a.scrollBehavior === Fixed && b.scrollBehavior !== Fixed) {
+                        return 1;
+                    }
+                    return 0;
+                });
+                for (let j = 0; j < sortedArr.length; j++) {
+                    const s = sortedArr[j];
+                    const currentIndex = parent.childs.indexOf(s);
+                    if (currentIndex !== j) {
+                        api.shapeMove(this.__page, parent, currentIndex, parent, j);
+                    }
+                }
+            }
             this.__repo.commit();
             return shape;
         } catch (e) {
@@ -1387,6 +1522,25 @@ export class PageEditor {
                     updateShapeTransform1By2(shape.transform, transform2);
                 }
                 const s = api.shapeInsert(document, page, parent, shape, action.index ?? parent.childs.length);
+                const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                if (_types.includes(parent.type)) {
+                    const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                    const sortedArr = [...parent.childs].sort((a, b) => {
+                        if (a.scrollBehavior !== Fixed && b.scrollBehavior === Fixed) {
+                            return -1;
+                        } else if (a.scrollBehavior === Fixed && b.scrollBehavior !== Fixed) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+                    for (let j = 0; j < sortedArr.length; j++) {
+                        const s = sortedArr[j];
+                        const currentIndex = parent.childs.indexOf(s);
+                        if (currentIndex !== j) {
+                            api.shapeMove(this.__page, parent, currentIndex, parent, j);
+                        }
+                    }
+                }
                 ids.push(s.id);
                 const name = assign(s);
                 if (name !== shape.name) api.shapeModifyName(page, s, name);
@@ -1424,6 +1578,25 @@ export class PageEditor {
                 result.push(parent.childs[index]);
                 index++;
             }
+            const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+            if (_types.includes(parent.type)) {
+                const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                const sortedArr = [...parent.childs].sort((a, b) => {
+                    if (a.scrollBehavior !== Fixed && b.scrollBehavior === Fixed) {
+                        return -1;
+                    } else if (a.scrollBehavior === Fixed && b.scrollBehavior !== Fixed) {
+                        return 1;
+                    }
+                    return 0;
+                });
+                for (let j = 0; j < sortedArr.length; j++) {
+                    const s = sortedArr[j];
+                    const currentIndex = parent.childs.indexOf(s);
+                    if (currentIndex !== j) {
+                        api.shapeMove(this.__page, parent, currentIndex, parent, j);
+                    }
+                }
+            }
             // modify_frame_after_insert(api, this.__page, result);
             // const frame = get_frame(result);
             this.__repo.commit();
@@ -1459,7 +1632,28 @@ export class PageEditor {
                 const name = assign(__shape);
                 api.shapeModifyName(this.__page, __shape, name);
                 result.push(parent.childs[index]);
+
+                const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                if (_types.includes(parent.type)) {
+                    const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                    const sortedArr = [...parent.childs].sort((a, b) => {
+                        if (a.scrollBehavior !== Fixed && b.scrollBehavior === Fixed) {
+                            return -1;
+                        } else if (a.scrollBehavior === Fixed && b.scrollBehavior !== Fixed) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+                    for (let j = 0; j < sortedArr.length; j++) {
+                        const s = sortedArr[j];
+                        const currentIndex = parent.childs.indexOf(s);
+                        if (currentIndex !== j) {
+                            api.shapeMove(this.__page, parent, currentIndex, parent, j);
+                        }
+                    }
+                }
             }
+
             this.__repo.commit();
             return result;
         } catch (error) {
@@ -1494,7 +1688,12 @@ export class PageEditor {
                 const { env, shapes } = actions[i];
                 for (let j = 0; j < shapes.length; j++) {
                     let index = env.childs.length;
-
+                    const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                    if (_types.includes(env.type)) {
+                        const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                        const fixed_index = env.childs.findIndex(s => s.scrollBehavior === Fixed);
+                        index = fixed_index === -1 ? env.childs.length : fixed_index;
+                    }
                     const __shape = api.shapeInsert(this.__document, this.__page, env, shapes[j], index);
                     const name = assign(__shape);
                     api.shapeModifyName(this.__page, __shape, name);
@@ -1648,7 +1847,6 @@ export class PageEditor {
         const m_p2r = parent.matrix2Root();
         const api = this.__repo.start("create2");
         try {
-            const index = parent.childs.length;
             const xy = m_p2r.computeCoord2(0, 0);
             const transform2 = makeShapeTransform2By1(new_s.transform);
             transform2.translate(new ColVector3D([-xy.x, -xy.y, 0]))
@@ -1658,7 +1856,14 @@ export class PageEditor {
                 transform2.setRotateZ((rotation % 360) / 180 * Math.PI);
                 updateShapeTransform1By2(new_s.transform, transform2);
             }
-            new_s = api.shapeInsert(this.__document, this.__page, parent, new_s, index);
+            const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+            let targetIndex = parent.childs.length;
+            if (_types.includes(parent.type)) {
+                const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                const fixed_index = parent.childs.findIndex(s => s.scrollBehavior === Fixed);
+                targetIndex = fixed_index === -1 ? parent.childs.length : fixed_index;
+            }
+            new_s = api.shapeInsert(this.__document, this.__page, parent, new_s, targetIndex);
             if (target_xy) {
                 translateTo(api, page, new_s, target_xy.x, target_xy.y);
             }
@@ -1741,6 +1946,26 @@ export class PageEditor {
                     adjusted = true;
                     api.shapeMove(this.__page, parent, currentIndex, parent, targetIndex);
                 }
+
+                const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                if (_types.includes(parent.type)) {
+                    const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                    const sortedArr = [...parent.childs].sort((a, b) => {
+                        if (a.scrollBehavior !== Fixed && b.scrollBehavior === Fixed) {
+                            return -1;
+                        } else if (a.scrollBehavior === Fixed && b.scrollBehavior !== Fixed) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+                    for (let j = 0; j < sortedArr.length; j++) {
+                        const s = sortedArr[j];
+                        const currentIndex = parent.childs.indexOf(s);
+                        if (currentIndex !== j) {
+                            api.shapeMove(this.__page, parent, currentIndex, parent, j);
+                        }
+                    }
+                }
             }
 
             this.__repo.commit();
@@ -1797,6 +2022,26 @@ export class PageEditor {
                 if (targetIndex !== currentIndex) {
                     adjusted = true;
                     api.shapeMove(this.__page, parent, currentIndex, parent, targetIndex);
+                }
+
+                const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                if (_types.includes(parent.type)) {
+                    const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                    const sortedArr = [...parent.childs].sort((a, b) => {
+                        if (a.scrollBehavior !== Fixed && b.scrollBehavior === Fixed) {
+                            return -1;
+                        } else if (a.scrollBehavior === Fixed && b.scrollBehavior !== Fixed) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+                    for (let j = 0; j < sortedArr.length; j++) {
+                        const s = sortedArr[j];
+                        const currentIndex = parent.childs.indexOf(s);
+                        if (currentIndex !== j) {
+                            api.shapeMove(this.__page, parent, currentIndex, parent, j);
+                        }
+                    }
                 }
             }
 
@@ -3951,11 +4196,25 @@ export class PageEditor {
     setScrollBehavior(shapes: ShapeView[], value: ScrollBehavior) {
         const api = this.__repo.start('setScrollBehavior');
         try {
+            const parent = shapes[0].data.parent! as GroupShape;
+            const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+            const fixed_index = parent.childs.findIndex(s => s.scrollBehavior === Fixed);
+            const targetIndex = fixed_index === -1 ? parent.childs.length - 1 : fixed_index - 1;
             for (let i = 0; i < shapes.length; i++) {
                 const shape = shapes[i];
                 const __shape = adapt2Shape(shape);
                 const types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
                 if (!types.includes(__shape.parent!.type)) continue;
+                // 找到固定位置
+                const currentIndex = parent.indexOfChild(__shape);
+                console.log(currentIndex, targetIndex);
+
+                if (value === Fixed && __shape.scrollBehavior !== Fixed) {
+                    api.shapeMove(this.__page, parent, currentIndex, parent, targetIndex);
+                } else if (value !== Fixed && __shape.scrollBehavior === Fixed) {
+                    api.shapeMove(this.__page, parent, currentIndex, parent, fixed_index);
+                }
+
                 api.shapeModifyScrollBehavior(this.__page, __shape, value);
             }
             this.__repo.commit();
@@ -4484,6 +4743,7 @@ export class PageEditor {
                     pathShape.mask = shape.mask;
                     pathShape.resizingConstraint = shape.resizingConstraint;
                     pathShape.constrainerProportions = shape.constrainerProportions;
+                    pathShape.scrollBehavior = shape.scrollBehavior;
                     const parent = shape.parent as GroupShape;
                     const index = parent.indexOfChild(shape);
                     api.shapeDelete(document, page, parent, index);
@@ -4518,6 +4778,7 @@ export class PageEditor {
                         pathshape.transform = shape.transform.clone();
                         pathshape.mask = shape.mask;
                         pathshape.resizingConstraint = shape.resizingConstraint;
+                        pathshape.scrollBehavior = shape.scrollBehavior;
                         const index = parent.indexOfChild(shape);
                         pathshape = api.shapeInsert(document, page, parent, pathshape, index + 1) as PathShape;
                         update_frame_by_points(api, page, pathshape);
@@ -4563,8 +4824,14 @@ export class PageEditor {
                     const shape = newImageFillShape(name.replace(reg, '') || 'image', new ShapeFrame(0, 0, size.width, size.height), document.mediasMgr, size, ref);
                     shape.transform = item.transform;
                     if (fixed) shape.constrainerProportions = true;
-                    const index = parent.childs.length;
-                    const __s = api.shapeInsert(document, page, parent, shape, index);
+                    const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                    let targetIndex = parent.childs.length;
+                    if (_types.includes(parent.type)) {
+                        const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                        const fixed_index = parent.childs.findIndex(s => s.scrollBehavior === Fixed);
+                        targetIndex = fixed_index === -1 ? parent.childs.length : fixed_index;
+                    }
+                    const __s = api.shapeInsert(document, page, parent, shape, targetIndex);
                     if (__s) {
                         ids.push(__s.id);
                         imageShapes.push({ shape: __s, upload: [{ ref, buff }] });
@@ -4573,8 +4840,14 @@ export class PageEditor {
                     const shape = (item.pack as SVGParseResult).shape;
                     shape.transform = item.transform;
                     if (fixed) shape.constrainerProportions = true;
-                    const index = parent.childs.length;
-                    const __s = api.shapeInsert(document, page, parent, shape, index);
+                    const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                    let targetIndex = parent.childs.length;
+                    if (_types.includes(parent.type)) {
+                        const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                        const fixed_index = parent.childs.findIndex(s => s.scrollBehavior === Fixed);
+                        targetIndex = fixed_index === -1 ? parent.childs.length : fixed_index;
+                    }
+                    const __s = api.shapeInsert(document, page, parent, shape, targetIndex);
                     if (__s) {
                         ids.push(__s.id);
                         const upload: UploadAssets[] = [];
