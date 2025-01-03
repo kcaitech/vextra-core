@@ -511,6 +511,7 @@ export enum ShapeType {
     Contact = "contact",
     Cutout = "cutout",
     BoolShape = "bool-shape",
+    Table2 = "table2",
 }
 export type Shape_prototypeInteractions = Array<PrototypeInterAction>
 /* side type */

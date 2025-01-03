@@ -1,4 +1,6 @@
 import { TableShape, TableCell, TableLayout } from "./table";
+import { TableShape2 } from "./table2";
+import { TableCellAttr } from "./typesdefine";
 /**
  * 
  * @param table 
@@ -8,19 +10,19 @@ import { TableShape, TableCell, TableLayout } from "./table";
  * @param colEnd 
  * @param visible 
  */
-export function getTableCells(table: TableShape,
-    cellGetter: (ri: number, ci: number) => TableCell | undefined,
+export function getTableCells<T>(table: TableShape | TableShape2,
+    cellGetter: (ri: number, ci: number) => T | undefined,
     rowStart: number,
     rowEnd: number,
     colStart: number,
-    colEnd: number): { cell: TableCell | undefined, rowIdx: number, colIdx: number }[] {
+    colEnd: number): { cell: T | undefined, rowIdx: number, colIdx: number }[] {
     const rowHeights = table.rowHeights;
     const colWidths = table.colWidths;
 
     // const cells = table.cells;
     let celli = 0;
 
-    const ret: { cell: TableCell | undefined, rowIdx: number, colIdx: number }[] = [];
+    const ret: { cell: T | undefined, rowIdx: number, colIdx: number }[] = [];
     celli += rowStart * colWidths.length;
 
     for (let ri = rowStart, rowLen = rowHeights.length; ri < rowLen && ri <= rowEnd; ++ri) {
@@ -82,19 +84,18 @@ export function getTableNotCoveredCells(table: TableShape,
 }
 
 // 获取用户实际看见的单元格
-export function getTableVisibleCells(table: TableShape,
-    cellGetter: (ri: number, ci: number) => TableCell | undefined,
+export function getTableVisibleCells<T>(cellGetter: (ri: number, ci: number) => T | undefined,
     layout: TableLayout,
     rowStart: number,
     rowEnd: number,
     colStart: number,
     colEnd: number): {
-        cell: TableCell | undefined,
+        cell: T | undefined,
         rowIdx: number,
         colIdx: number
     }[] {
     const ret: {
-        cell: TableCell | undefined,
+        cell: T | undefined,
         rowIdx: number,
         colIdx: number
     }[] = [];
@@ -112,13 +113,14 @@ export function getTableVisibleCells(table: TableShape,
                 });
             }
             else {
-                if (added.has(cell.id)) continue;
+                const cid = '' + c.index.row + ',' + c.index.col
+                if (added.has(cid)) continue;
                 ret.push({
                     cell,
                     rowIdx: c.index.row,
                     colIdx: c.index.col
                 });
-                added.add(cell.id);
+                added.add(cid);
             }
         }
     }

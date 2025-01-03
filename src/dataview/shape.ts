@@ -23,7 +23,7 @@ import { GroupShapeView } from "./groupshape";
 import { importBorder, importFill } from "../data/baseimport";
 import { exportBorder, exportFill } from "../data/baseexport";
 import { PageView } from "./page";
-import { ArtboradView } from "./artboard";
+import { ArtboardView } from "./artboard";
 import { findOverrideAll } from "../data/utils";
 import { Path } from "@kcdesign/path";
 import { isEqual } from "../basic/number_utils";
@@ -622,7 +622,7 @@ export class ShapeView extends DataView {
         const m = this.transform.clone()
         const p = this.parent;
         if (p) {
-            const offset = (p as ArtboradView).innerTransform;
+            const offset = (p as ArtboardView).innerTransform;
             offset && m.multiAtLeft(offset)
             p.uniformScale && m.scale(p.uniformScale);
             m.multiAtLeft(p.matrix2Root())
@@ -751,7 +751,7 @@ export class ShapeView extends DataView {
     }
 
     get masked() {
-        return (this.parent as GroupShapeView)?.maskMap.get(this.m_data.id);
+        return this.parent ? (this.parent as GroupShapeView).maskMap?.get(this.m_data.id) : undefined;
     }
 
     indexOfChild(view: ShapeView) {

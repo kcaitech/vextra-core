@@ -8,7 +8,7 @@ import { ShapeView, updateFrame } from "./shape";
 import { PageView } from "./page";
 
 
-export class ArtboradView extends GroupShapeView {
+export class ArtboardView extends GroupShapeView {
 
     m_inner_transform: Transform | undefined;
     get innerTransform(): Transform | undefined {

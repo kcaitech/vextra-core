@@ -1,15 +1,12 @@
 import { Style } from "./style";
 import * as classes from "./baseclasses"
-import { BasicArray, BasicMap, ResourceMgr } from "./basic";
-import { ShapeType, TableCellType, CrdtNumber, ShapeFrame, TableCellAttr } from "./baseclasses"
+import { BasicArray, BasicMap } from "./basic";
+import { ShapeType, CrdtNumber, ShapeFrame, TableCellAttr } from "./baseclasses"
 import {Shape, Transform, ShapeSize} from "./shape";
-import { Text, TextAttr } from "./text/text"
+import { TextAttr } from "./text/text"
 import { PathType } from "./consts";
-import { newTableCellText } from "./text/textutils";
 import { Path } from "@kcdesign/path";
 import { Artboard } from "./baseclasses";
-export { TableLayout, TableGridItem } from "./tablelayout";
-export { TableCellType } from "./baseclasses";
 export { CrdtNumber } from "./baseclasses";
 
 export class TableShape2 extends Shape implements classes.TableShape2 {
@@ -23,7 +20,7 @@ export class TableShape2 extends Shape implements classes.TableShape2 {
     hasSize(): boolean {
         return true;
     }
-    typeId = 'table-shape'
+    typeId = "table-shape2"
     // @ts-ignore
     size: ShapeSize
     cells: BasicMap<string, Artboard>
@@ -31,11 +28,8 @@ export class TableShape2 extends Shape implements classes.TableShape2 {
     colWidths: BasicArray<CrdtNumber>
     textAttr?: TextAttr // 文本默认属性
 
-    __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
-    // private __layout: LayoutItem = new LayoutItem();
-    // private __heightTotalWeights: number;
-    // private __widthTotalWeights: number;
-// crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style, size: ShapeSize, cells: BasicMap<string, Artboard>, cellAttrs: BasicMap<string, TableCellAttr>, rowHeights: TableShape2_rowHeights, colWidths: TableShape2_colWidths
+    // __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
+
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
@@ -53,7 +47,7 @@ export class TableShape2 extends Shape implements classes.TableShape2 {
             crdtidx,
             id,
             name,
-            ShapeType.Table,
+            ShapeType.Table2,
             transform,
             style,
         )
@@ -61,8 +55,6 @@ export class TableShape2 extends Shape implements classes.TableShape2 {
         this.rowHeights = rowHeights
         this.colWidths = colWidths
         this.cells = cells;
-        // this.__heightTotalWeights = rowHeights.reduce((pre, cur) => pre + cur.value, 0);
-        // this.__widthTotalWeights = colWidths.reduce((pre, cur) => pre + cur.value, 0);
         this.cellAttrs = cellAttrs;
     }
     cellAttrs: BasicMap<string, TableCellAttr>;
@@ -78,9 +70,9 @@ export class TableShape2 extends Shape implements classes.TableShape2 {
         return super.getOpTarget(path);
     }
 
-    setImageMgr(imageMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>) {
-        this.__imageMgr = imageMgr;
-    }
+    // setImageMgr(imageMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>) {
+    //     this.__imageMgr = imageMgr;
+    // }
 
     get naviChilds(): Shape[] | undefined {
         return undefined;
@@ -93,17 +85,6 @@ export class TableShape2 extends Shape implements classes.TableShape2 {
         return this.cells;
     }
 
-    // updateTotalWeights() {
-    //     this.__heightTotalWeights = this.rowHeights.reduce((pre, cur) => pre + cur.value, 0);
-    //     this.__widthTotalWeights = this.colWidths.reduce((pre, cur) => pre + cur.value, 0);
-    // }
-
-    // get widthTotalWeights() {
-    //     return this.__widthTotalWeights;
-    // }
-    // get heightTotalWeights() {
-    //     return this.__heightTotalWeights;
-    // }
     get rowCount() {
         return this.rowHeights.length;
     }
@@ -123,147 +104,6 @@ export class TableShape2 extends Shape implements classes.TableShape2 {
         ["z"]];
         return Path.fromSVGString(path.join(''));
     }
-    // getLayout(): TableLayout {
-    //     this.__layout.update(this);
-    //     if (!this.__layout.layout) this.__layout.layout = layoutTable(this);
-    //     return this.__layout.layout;
-    // }
-    // getColWidths() {
-    //     const frame = this.frame;
-    //     const width = frame.width;
-    //     const colWidths = this.colWidths;
-    //     const colWBase = colWidths.reduce((sum, cur) => sum + cur.value, 0);
-    //     return colWidths.map((val) => val.value / colWBase * width);
-    // }
-    // getRowHeights() {
-    //     const frame = this.frame;
-    //     const height = frame.height;
-    //     const rowHeights = this.rowHeights;
-    //     const rowHBase = this.heightTotalWeights;
-    //     return rowHeights.map((val) => val.value / rowHBase * height);
-    // }
-
-    // onRollback(from: string): void {
-    //     if (from !== "composingInput") {
-    //         this.reLayout();
-    //         return;
-    //     }
-    //     const widthTotalWeights = this.colWidths.reduce((p, c) => p + c.value, 0);
-    //     const heightTotalWeights = this.rowHeights.reduce((p, c) => p + c.value, 0);
-    //     if (this.__widthTotalWeights !== widthTotalWeights ||
-    //         this.__heightTotalWeights !== heightTotalWeights) {
-    //         this.__widthTotalWeights = widthTotalWeights;
-    //         this.__heightTotalWeights = heightTotalWeights;
-    //         this.__layout.layout = undefined;
-    //     }
-    // }
-
-    // reLayout() {
-    //     this.__widthTotalWeights = this.colWidths.reduce((p, c) => p + c.value, 0);
-    //     this.__heightTotalWeights = this.rowHeights.reduce((p, c) => p + c.value, 0);
-    //     this.__layout.layout = undefined;
-    // }
-
-    // locateCell(x: number, y: number): (TableGridItem & { cell: TableCell | undefined }) | undefined {
-    //     const item = locateCell(this.getLayout(), x, y) as (TableGridItem & { cell: TableCell | undefined }) | undefined;
-    //     if (item) item.cell = this.getCellAt(item.index.row, item.index.col);
-    //     return item;
-    // }
-
-    // locateCellIndex(x: number, y: number): { row: number, col: number } | undefined {
-    //     return locateCellIndex(this.getLayout(), x, y);
-    // }
-
-    // locateCell2(cell: TableCell): (TableGridItem & { cell: TableCell | undefined }) | undefined {
-    //     const index = this.indexOfCell(cell);
-    //     if (!index || !index.visible) return;
-    //     const item = this.getLayout().grid.get(index.rowIdx, index.colIdx);
-    //     if (!item) return;
-    //     return {
-    //         index: item.index,
-    //         frame: item.frame,
-    //         span: item.span,
-    //         cell
-    //     }
-    // }
-
-    // indexOfCell2(cell: TableCell): { rowIdx: number, colIdx: number } | undefined {
-    //     // cell indexs
-    //     const ids = cell.id.split(',');
-    //     if (ids.length !== 2) throw new Error("cell index error");
-    //     const rowIdx = this.rowHeights.findIndex(v => v.id === ids[0]);
-    //     const colIdx = this.colWidths.findIndex(v => v.id === ids[1]);
-    //     if (rowIdx < 0 || colIdx < 0) return;
-    //     return { rowIdx, colIdx }
-    // }
-
-    // indexOfCell(cell: TableCell): { rowIdx: number, colIdx: number, visible: boolean } | undefined {
-    //     // cell indexs
-    //     const cellIdx = this.indexOfCell2(cell);
-    //     if (!cellIdx) return;
-    //     const { rowIdx, colIdx } = cellIdx;
-    //     const layout = this.getLayout();
-    //     const item = layout.grid.get(rowIdx, colIdx);
-    //     const visible = item.index.row === rowIdx && item.index.col === colIdx;
-    //     return { rowIdx, colIdx, visible }
-    // }
-
-    // /**
-    //  * [rowStart, rowEnd], [colStart, colEnd] 左闭右闭区间
-    //  * @param rowStart 
-    //  * @param rowEnd 
-    //  * @param colStart 
-    //  * @param colEnd 
-    //  * @param visible 
-    //  * @returns 
-    //  */
-    // getCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number): { cell: TableCell | undefined, rowIdx: number, colIdx: number }[] {
-    //     return getTableCells(this, rowStart, rowEnd, colStart, colEnd);
-    // }
-
-    // getCellAt(rowIdx: number, colIdx: number): (TableCell | undefined) {
-    //     if (rowIdx < 0 || colIdx < 0 || rowIdx >= this.rowCount || colIdx >= this.colCount) {
-    //         throw new Error("cell index outof range: " + rowIdx + " " + colIdx)
-    //     }
-    //     const cellId = this.rowHeights[rowIdx].id + "," + this.colWidths[colIdx].id;
-    //     return this.cells.get(cellId);
-    // }
-
-    // /**
-    //  * 获取未被覆盖的单元格
-    //  * @param rowStart 
-    //  * @param rowEnd 
-    //  * @param colStart 
-    //  * @param colEnd 
-    //  * @returns 
-    //  */
-    // getNotCoveredCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number): { cell: TableCell | undefined, rowIdx: number, colIdx: number }[] {
-    //     return getTableNotCoveredCells(this, this.getLayout(), rowStart, rowEnd, colStart, colEnd);
-    // }
-
-    // /**
-    //  * 获取用户可见的单元格
-    //  * @param rowStart 
-    //  * @param rowEnd 
-    //  * @param colStart 
-    //  * @param colEnd 
-    //  * @returns 
-    //  */
-    // getVisibleCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number): {
-    //     cell: TableCell | undefined,
-    //     rowIdx: number,
-    //     colIdx: number
-    // }[] {
-    //     return getTableVisibleCells(this, this.getLayout(), rowStart, rowEnd, colStart, colEnd);
-    // }
-
-    // get isNoSupportDiamondScale() {
-    //     return true;
-    // }
-
-    // get frameType() {
-    //     return FrameType.Rect;
-    // }
 
     get pathType() {
         return PathType.Fixed;
