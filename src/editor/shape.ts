@@ -26,6 +26,7 @@ import { ShapeView, SymbolRefView, SymbolView, adapt2Shape, findOverride, Artboa
 import { is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union, modify_variable, modify_variable_with_api, shape4border, shape4contextSettings, shape4exportOptions, shape4fill, shape4shadow } from "./symbol";
 import { ISave4Restore, LocalCmd, SelectionState } from "../coop/localcmd";
 import { getAutoLayoutShapes, initAutoLayout, layoutShapesOrder, layoutSpacing, modifyAutoLayout } from "./utils/auto_layout";
+import { exportCurvePoint } from "../data/baseexport";
 
 export type PaddingDir = 'ver' | 'hor' | 'top' | 'right' | 'bottom' | 'left';
 
@@ -1670,7 +1671,7 @@ export class ShapeEditor {
                 const {originSegmentIndex, slices, closed} = action;
                 let last = originSegmentIndex;
                 for (let i = 0; i < slices.length; i++) {
-                    const slice = slices[i] as BasicArray<CurvePoint>;
+                    const slice = slices[i].map(p => importCurvePoint(exportCurvePoint((p)))) as BasicArray<CurvePoint>;
                     if (last === originSegmentIndex) api.deleteSegmentAt(page, shape, originSegmentIndex);
                     slice.forEach((i, index) => i.crdtidx = new BasicArray<number>(index));
                     api.insertSegmentAt(page, shape, last++, new PathSegment([0] as BasicArray<number>, uuid(), slice, closed));
