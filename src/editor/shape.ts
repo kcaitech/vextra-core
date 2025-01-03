@@ -1453,48 +1453,6 @@ export class ShapeEditor {
         const varsContainer = view.varsContainer;
         if (!varsContainer) throw new Error();
         if (view.isVirtualShape) throw new Error();
-        // check varId
-        // const _vars: Variable[] = [];
-        // if (varsContainer) findVar(varId, _vars, varsContainer);
-        // if (_vars.length === 0) throw new Error();
-
-        // const _var = _vars[_vars.length - 1];
-
-        // 1. 如果是普通shape，直接修改varbinds
-        // 2. 如果是virtual，看varbinds是否绑定了一个变量，如果是找到最终的var，并override var 到新变量？或者修改var??
-        // 2.1 如果varbinds未绑定变量，如何？
-
-        // const shape = this.shape;
-        // check virtual
-        // if (view.isVirtualShape) {
-        //     const _vars: Variable[] = [];
-        //     if (view.varbinds && view.varbinds.has(slot)) findVar(view.varbinds.get(slot)!, _vars, varsContainer);
-        //     const _var = _vars[_vars.length - 1];
-        //     const host = varsContainer.find((v) => v instanceof SymbolRefShape) as SymbolRefShape | undefined;
-        //     if (!host) throw new Error();
-        //     // override
-        //     if (_var) {
-        //         const api = this.__repo.start("bindVar");
-        //         try {
-        //             _ov_3_1_2(_vars, varId, host, view, this.__page, api);
-        //             this.__repo.commit();
-        //         } catch (e) {
-        //             console.error(e);
-        //             this.__repo.rollback();
-        //         }
-        //     } else {
-        //         // override to variable // todo slot要与override相同！
-        //         const api = this.__repo.start("bindVar");
-        //         try {
-        //             // this._override2Variable(varId, slot, api);
-        //             _ov_2_2(host, slot, varId, view, this.__page, api);
-        //             this.__repo.commit();
-        //         } catch (e) {
-        //             console.error(e);
-        //             this.__repo.rollback();
-        //         }
-        //     }
-        // } else {
         const api = this.__repo.start("bindVar");
         try {
             api.shapeBindVar(this.__page, this.shape, slot, varId);
@@ -1503,7 +1461,6 @@ export class ShapeEditor {
             console.error(e);
             this.__repo.rollback();
         }
-        // }
 
     }
 

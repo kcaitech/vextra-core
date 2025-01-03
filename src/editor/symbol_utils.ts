@@ -40,7 +40,7 @@ function _newVar(type: VariableType, value: any, name?: string): Variable {
 
 function _getRefView(view: ShapeView, _refId?: string): { view: ShapeView, refId: string } {
 
-    let refId = _refId?? ''
+    let refId = _refId ?? ''
     if (!_refId && !(view.data instanceof SymbolRefShape)) {
         refId = view.data.id
     }
@@ -102,6 +102,7 @@ function _isNeedOverride4SymbolRef(overrideType: OverrideType) {
         case OverrideType.StartMarkerType:
         case OverrideType.CornerRadius:
         case OverrideType.Blur:
+        case OverrideType.FrameMaskDisabled:
             return true
         case OverrideType.ExportOptions:
         case OverrideType.Image:

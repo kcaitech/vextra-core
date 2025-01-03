@@ -681,7 +681,7 @@ export class RefUnbind {
         tmpArtboard.transform.m02 = shape.transform.m02;
         tmpArtboard.transform.m12 = shape.transform.m12;
 
-        tmpArtboard.frameMaskDisabled = shape.frameMaskDisabled;
+        tmpArtboard.frameMaskDisabled = view.frameMaskDisabled;
 
         const layoutInfo = (view as SymbolRefView).autoLayout;
         if (layoutInfo) {

@@ -761,7 +761,7 @@ export class PageEditor {
                         rt.m01 = st.m01;
                         rt.m10 = st.m10;
                         rt.m11 = st.m11;
-                        ref.frameMaskDisabled = (symbol as SymbolShape).frameMaskDisabled;
+                        // ref.frameMaskDisabled = (symbol as SymbolShape).frameMaskDisabled;
                     }
                     const parent = symbol.parent as GroupShape;
                     api.shapeInsert(document, page, parent, ref, parent.indexOfChild(symbol));
@@ -950,7 +950,7 @@ export class PageEditor {
             ref.transform.m01 = sym.transform.m01;
             ref.transform.m10 = sym.transform.m10;
             ref.transform.m11 = sym.transform.m11;
-            ref.frameMaskDisabled = sym.frameMaskDisabled;
+            // ref.frameMaskDisabled = sym.frameMaskDisabled;
         }
         return ref;
     }
@@ -4685,6 +4685,9 @@ export class PageEditor {
             const api = this.__repo.start('modifyContainersFrameMaskStatus');
             const page = this.page;
             for (const view of shapes) {
+                if (modify_variable_with_api(api, this.__page, view, VariableType.FrameMaskDisabled, OverrideType.FrameMaskDisabled, value)) {
+                    continue;
+                }
                 if (view.isVirtualShape) continue;
                 if (view instanceof ArtboardView || view instanceof SymbolView || view instanceof SymbolRefView) {
                     const shape = adapt2Shape(view);
