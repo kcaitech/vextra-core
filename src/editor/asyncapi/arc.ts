@@ -107,10 +107,12 @@ export class OvalPathParser {
         const segments: { points: CurvePoint[], isClosed: boolean }[] = [];
 
         const sweep = Number(((end - start) / round).toFixed(4));
+
         if (!sweep) {
             const points = [this.__p(start, 1), this.__p(start, (1 + (1 - radius)) / 2), this.__p(start, 1 - radius)];
             if (radius === 1) points.pop();
             segments.push({ points, isClosed: false });
+
         } else if (Math.abs(sweep) === 1) {
             if (radius) {
                 const points = this.getQuarters(1);
@@ -124,7 +126,8 @@ export class OvalPathParser {
             const matrix = new Matrix();
             matrix.rotate(start, 0.5, 0.5);
             const points = []
-            const arc = this.getArcPoints(start, end, 1);
+            const arc = this.getArcPoints(start, end, 1);//获取外层圆弧
+
             if (arc.length) {
                 const alpha = arc[0];
                 alpha.mode = CurveMode.Disconnected;
@@ -135,7 +138,7 @@ export class OvalPathParser {
                 points.push(...arc);
             }
 
-            const arc2 = this.getArcPoints(start, end, radius);
+            const arc2 = this.getArcPoints(start, end, radius); //获取内层圆弧
             if (arc2.length > 1) {
                 const alpha = arc2[0];
                 alpha.mode = CurveMode.Disconnected;
@@ -147,6 +150,7 @@ export class OvalPathParser {
             } else points.push(arc2[0]);
 
             segments.push({ points, isClosed: true });
+
         }
 
         return segments;
@@ -200,27 +204,28 @@ export class OvalPathParser {
 
         return [right, bottom, left, top];
     }
-
+    
     private getArcPoints(start: number, end: number, radius: number) {
         if (!radius) return [new CurvePoint([0] as BasicArray<number>, v4(), 0.5, 0.5, CurveMode.Straight)];
         const points = this.getQuarters(radius);
+        
+
         const arcPoints: CurvePoint[] = [];
 
         const __sweep = (end - start) / (Math.PI * 2) * 100;
         const sweep = Math.abs(__sweep);
+        const fragmentsList: CurvePoint[] = [];
+
         if (sweep > 0 && sweep < 25) {
-            const part = sweep < 25 / 2 ? 1 : 2;
+
             const t = sweep / 25;
             const [right, bottom] = points;
             const fragment = this.cubicBezierFragment(right, bottom, t);
-            if (part === 1) {
-                arcPoints.push(fragment.start, fragment.end);
-            } else {
-                const t1 = t / 2;
-                arcPoints.push(fragment.start, fragment.end);
-            }
+       
+            arcPoints.push(fragment.start, fragment.end);
+
         } else if (sweep === 25) {
-            let part = 4;
+
             const [right, bottom] = points;
             bottom.fromX = undefined;
             bottom.fromY = undefined;
@@ -228,13 +233,13 @@ export class OvalPathParser {
             bottom.hasFrom = undefined;
             arcPoints.push(right, bottom);
         } else if (sweep > 25 && sweep < 50) {
-            const part = 4;
+
             const t = (sweep - 25) / 25;
             const [right, bottom, left] = points;
             const fragment = this.cubicBezierFragment(bottom, left, t);
             arcPoints.push(right, fragment.start, fragment.end);
         } else if (sweep === 50) {
-            const part = 8;
+
             const [right, bottom, left] = points;
             left.fromX = undefined;
             left.fromY = undefined;
@@ -242,13 +247,13 @@ export class OvalPathParser {
             left.hasFrom = undefined;
             arcPoints.push(right, bottom, left);
         } else if (sweep > 50 && sweep < 75) {
-            const part = 8;
+
             const t = (sweep - 50) / 25;
             const [right, bottom, left, top] = points;
             const fragment = this.cubicBezierFragment(left, top, t);
             arcPoints.push(right, bottom, fragment.start, fragment.end);
         } else if (sweep === 75) {
-            const part = 8;
+
             const [right, bottom, left, top] = points;
             top.fromX = undefined;
             top.fromY = undefined;
@@ -256,7 +261,7 @@ export class OvalPathParser {
             top.hasFrom = undefined;
             arcPoints.push(right, bottom, left, top);
         } else if (sweep > 75 && sweep < 100) {
-            const part = 8;
+
             const t = (sweep - 75) / 25;
             const [right, bottom, left, top] = points;
             const fragment = this.cubicBezierFragment(top, right, t);
