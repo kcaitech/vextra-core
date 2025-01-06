@@ -1,5 +1,5 @@
 import { Document, OvalShape, Page } from "../../data";
-import { adapt2Shape, ArtboradView, PageView, ShapeView, SymbolRefView, SymbolView, TableCellView, TableView, TextShapeView } from "../../dataview";
+import { adapt2Shape, ArtboardView, PageView, ShapeView, SymbolRefView, SymbolView, TableCellView, TableView, TextShapeView } from "../../dataview";
 import { modifyPathByArc } from "../asyncapi";
 import { Api, CoopRepository } from "../../coop";
 import { modify_shapes_height, modify_shapes_width } from "../utils/common";
@@ -22,7 +22,7 @@ export class LinearApi {
     private readonly __repo: CoopRepository;
     private readonly __document: Document;
 
-    private readonly page: Page;
+    private readonly _page: PageView;
 
     private exception: boolean = false;
 
@@ -32,7 +32,11 @@ export class LinearApi {
         this.__repo = repo;
         this.__document = document;
 
-        this.page = adapt2Shape(page) as Page;
+        this._page = page;
+    }
+
+    get page() {
+        return this._page.data
     }
 
     private __timer: any = null;
@@ -276,7 +280,7 @@ export class LinearApi {
                     const [lt, rt, rb, lb] = values;
 
                     if (shape instanceof SymbolRefShape) {
-                        const _shape = shape4cornerRadius(api, page, shapes[i] as SymbolRefView);
+                        const _shape = shape4cornerRadius(api, this._page, shapes[i] as SymbolRefView);
                         api.shapeModifyRadius2(page, _shape, lt, rt, rb, lb);
                     }
 
@@ -352,7 +356,7 @@ export class LinearApi {
             const api = this.api!;
             const page = this.page;
             for (let i = 0, l = shapes.length; i < l; i++) {
-                const shape = shape4contextSettings(api, shapes[i], page);
+                const shape = shape4contextSettings(api, shapes[i], this._page);
                 api.shapeModifyContextSettingsOpacity(page, shape, value);
             }
         });
@@ -380,7 +384,7 @@ export class LinearApi {
                 const new_gradient = importGradient(exportGradient(gradient));
                 new_gradient.gradientOpacity = value;
                 const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
-                const shape = shape4fill(api, page, target);
+                const shape = shape4fill(api, this._page, target);
                 f(page, shape, index, new_gradient);
             }
         });
@@ -396,7 +400,7 @@ export class LinearApi {
             const page = this.page;
             for (let i = 0; i < actions.length; i++) {
                 const { target, index, value } = actions[i];
-                const s = shape4fill(api, page, target);
+                const s = shape4fill(api, this._page, target);
                 api.setFillColor(page, s, index, value);
             }
         });
@@ -406,7 +410,7 @@ export class LinearApi {
     private TableShape: undefined | TableView;
     private getTableEditor(table: TableView) {
         if (!this.editor4table) {
-            this.editor4table = new PageEditor(this.__repo, this.page, this.__document).editor4Table(table)
+            this.editor4table = new PageEditor(this.__repo, this._page, this.__document).editor4Table(table)
         }
         return this.editor4table!;
     }
@@ -437,7 +441,7 @@ export class LinearApi {
             const page = this.page;
             for (let i = 0; i < actions.length; i++) {
                 const { target, index, value } = actions[i];
-                const s = shape4border(api, page, target);
+                const s = shape4border(api, this._page, target);
                 api.setBorderColor(page, s, index, value);
             }
         });
@@ -473,7 +477,7 @@ export class LinearApi {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
                 shapes.push(target);
-                const s = shape4border(api, page, target);
+                const s = shape4border(api, this._page, target);
                 const borders = target.getBorders();
                 const sideType = borders.sideSetting.sideType;
                 switch (sideType) {
@@ -516,7 +520,7 @@ export class LinearApi {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
                 shapes.push(target);
-                const s = shape4border(api, page, target);
+                const s = shape4border(api, this._page, target);
                 api.setBorderThicknessTop(page, s, value);
             }
             const parents = getAutoLayoutShapes(shapes);
@@ -537,7 +541,7 @@ export class LinearApi {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
                 shapes.push(target);
-                const s = shape4border(api, page, target);
+                const s = shape4border(api, this._page, target);
                 api.setBorderThicknessBottom(page, s, value);
             }
             const parents = getAutoLayoutShapes(shapes);
@@ -558,7 +562,7 @@ export class LinearApi {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
                 shapes.push(target);
-                const s = shape4border(api, page, target);
+                const s = shape4border(api, this._page, target);
                 api.setBorderThicknessLeft(page, s, value);
             }
             const parents = getAutoLayoutShapes(shapes);
@@ -579,7 +583,7 @@ export class LinearApi {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
                 shapes.push(target);
-                const s = shape4border(api, page, target);
+                const s = shape4border(api, this._page, target);
                 api.setBorderThicknessRight(page, s, value);
             }
             const parents = getAutoLayoutShapes(shapes);
@@ -631,7 +635,7 @@ export class LinearApi {
     private shape: undefined | ShapeView
     private shape4shadow(api: Api, shape?: ShapeView) {
         if (!this.shape || this.shape !== shape) this.shape = shape;
-        return shape4shadow(api, this.page, this.shape!);
+        return shape4shadow(api, this._page, this.shape!);
     }
 
     modifyShadowOffSetX(idx: number, offsetX: number, s: ShapeView) {
@@ -767,7 +771,7 @@ export class LinearApi {
      *  @description 自动布局内重新布局
      */
 
-    reLayout(env: ArtboradView | SymbolView, sort: Map<string, number>) {
+    reLayout(env: ArtboardView | SymbolView, sort: Map<string, number>) {
         this.execute('re-layout-linear', () => {
             reLayoutBySort(this.page, this.api!, adapt2Shape(env) as Artboard, sort);
         });
@@ -777,7 +781,7 @@ export class LinearApi {
     private TextShape: undefined | TextShapeView;
     private getTextEditor(text: TextShapeView) {
         if (!this.editor4text || this.TextShape !== text) {
-            this.editor4text = new PageEditor(this.__repo, this.page, this.__document).editor4TextShape(text)
+            this.editor4text = new PageEditor(this.__repo, this._page, this.__document).editor4TextShape(text)
             this.TextShape = text
         }
         return this.editor4text!;

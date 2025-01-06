@@ -31,11 +31,12 @@ import { mergeParaAttr, mergeSpanAttr } from "../data/text/textutils";
 import { importGradient, importText } from "../data/baseimport";
 import { AsyncGradientEditor, Status } from "./controller";
 import { CmdMergeType } from "../coop/localcmd";
-import { ShapeView, TableCellView, TableView, TextShapeView, adapt2Shape } from "../dataview";
+import { PageView, ShapeView, TableCellView, TableView, TextShapeView, adapt2Shape } from "../dataview";
 import { cell4edit2, varParent } from "./symbol";
 import { uuid } from "../basic/uuid";
 import { SymbolRefShape, SymbolShape, GroupShape } from "../data";
 import { ParaAttr } from "../data";
+import { prepareVar } from "./symbol_utils";
 
 type TextShapeLike = Shape & { text: Text }
 
@@ -53,7 +54,7 @@ export class TextShapeEditor extends ShapeEditor {
         return this._cacheAttr;
     }
 
-    constructor(shape: TextShapeView | TableCellView, page: Page, repo: CoopRepository, document: Document) {
+    constructor(shape: TextShapeView | TableCellView, page: PageView, repo: CoopRepository, document: Document) {
         super(shape, page, repo, document);
     }
     get shape(): TextShapeLike {
@@ -92,11 +93,16 @@ export class TextShapeEditor extends ShapeEditor {
         else if (shape instanceof TableCellView) fixTableShapeFrameByLayout(api, this.__page, shape, this.view.parent as TableView);
     }
 
+    private overrideVariable(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, api: Api, view?: ShapeView) {
+        view = view ?? this.__shape;
+        return prepareVar(api, this._page, view, overrideType, varType, valuefun)?.var;
+    }
+
     public shape4edit(api: Api, shape?: TextShapeView | TableCellView): Variable | TableCellView | TextShapeView {
         const _shape = shape ?? this.__shape as (TextShapeView | TableCellView);
 
         if (_shape instanceof TableCellView) {
-            const _var = cell4edit2(this.__page, _shape.parent as TableView, _shape, api);
+            const _var = cell4edit2(this._page, _shape.parent as TableView, _shape, api);
             let cell: TableCell;
             if (_var) {
                 cell = _var.value;

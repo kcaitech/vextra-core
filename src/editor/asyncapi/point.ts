@@ -111,7 +111,7 @@ export class PointModifyHandler extends AsyncApiCaller {
                     const [lt, rt, rb, lb] = values;
 
                     if (shape instanceof SymbolRefShape) {
-                        const _shape = shape4cornerRadius(api, page, shapes[i] as SymbolRefView);
+                        const _shape = shape4cornerRadius(api, this.pageView, shapes[i] as SymbolRefView);
                         api.shapeModifyRadius2(page, _shape, lt, rt, rb, lb);
                     }
 

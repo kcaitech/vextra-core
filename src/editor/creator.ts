@@ -1,5 +1,5 @@
 import { v4 as uuid } from "uuid";
-import { AutoLayout, Page, Artboard, Document, PageListItem, StrokePaint } from "../data";
+import { AutoLayout, Page, Artboard, Document, PageListItem, StrokePaint, TableShape } from "../data";
 import {
     GroupShape,
     LineShape,
@@ -57,7 +57,7 @@ import { BasicArray, BasicMap } from "../data";
 import { Repository } from "../data";
 import { Comment } from "../data";
 import { ResourceMgr } from "../data";
-import { TableShape } from "../data";
+import { TableShape2 } from "../data";
 
 export { newText, newText2 } from "../data/text/textutils";
 import {
@@ -71,7 +71,6 @@ import {
     ExportVisibleScaleType,
     SideType
 } from "../data";
-import { Matrix } from "../basic/matrix";
 import { ResizingConstraints2 } from "../data";
 import { SymbolMgr } from "../data/symbolmgr";
 import { newText } from "../data/text/textutils";
@@ -609,6 +608,64 @@ export function newTable(name: string, frame: ShapeFrame, rowCount: number, colu
     return table;
 }
 
+export function newTable2(name: string, frame: ShapeFrame, rowCount: number, columCount: number, mediasMgr: ResourceMgr<{
+    buff: Uint8Array,
+    base64: string
+}>): TableShape2 {
+    _checkFrame(frame);
+    // template_table_shape.id = uuid();
+    // template_table_shape.name = name // i18n
+    // template_table_shape.rowHeights.length = 0;
+    // template_table_shape.colWidths.length = 0;
+
+    const transform = new Transform();
+    transform.m02 = frame.x;
+    transform.m12 = frame.y;
+    const size = new ShapeSize(frame.width, frame.height);
+
+    const table = new TableShape2(
+        new BasicArray(),
+        uuid(),
+        name,
+        types.ShapeType.Table2,
+        transform,
+        newStyle(),
+        size,
+        new BasicMap(),
+        new BasicMap(),
+        new BasicArray(),
+        new BasicArray());// importTableShape(template_table_shape as types.TableShape);
+    // 行高
+    for (let ri = 0; ri < rowCount; ri++) {
+        table.rowHeights.push(new CrdtNumber(uuid(), [ri] as BasicArray<number>, 1));
+    }
+    // 列宽
+    for (let ci = 0; ci < columCount; ci++) {
+        table.colWidths.push(new CrdtNumber(uuid(), [ci] as BasicArray<number>, 1));
+    }
+    // table.updateTotalWeights();
+
+    table.transform.m02 = frame.x;
+    table.transform.m12 = frame.y;
+    table.size.width = frame.width;
+    table.size.height = frame.height;
+    const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+    const strokePaints = new BasicArray<StrokePaint>();
+    const strokePaint = new StrokePaint([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(0.5, 0, 0, 0))
+    strokePaints.push(strokePaint);
+    const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
+    table.style.borders = border;
+
+    addCommonAttr(table)
+    const fillColor = new Color(1, 255, 255, 255);
+    const fill = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, fillColor);
+    const fills = new BasicArray<Fill>();
+    fills.push(fill);
+    table.style.fills = fills;
+    // table.setImageMgr(mediasMgr);
+    return table;
+}
+
 export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm): ContactShape {
     _checkFrame(frame);
     const style = newflatStyle();
@@ -806,7 +863,7 @@ export function getTransformByEnv(env: GroupShape) {
     const pm = env.matrix2Root();
     const pminverse = pm.inverse;
 
-    const m = new Matrix(pminverse);
+    const m = (pminverse);
 
     let sina = m.m10;
     let cosa = m.m00;
