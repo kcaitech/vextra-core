@@ -39,7 +39,7 @@ export function exportSvg(shape: Shape): string {
 
     const ViewClass = adaptCtx.comsMap.get(shape.type);
     if (!ViewClass) throw new Error("export svg, unknow shape type : " + shape.type)
-    const view = new ViewClass(adaptCtx, { data: shape, scale: undefined }) as DataView;
+    const view = new ViewClass(adaptCtx, { data: shape, scale: undefined, layoutSize: undefined, varsContainer: undefined, isVirtual: undefined }) as DataView;
 
     adaptCtx.layoutAll();
     view.render();

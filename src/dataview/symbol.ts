@@ -65,10 +65,10 @@ export class SymbolView extends GroupShapeView {
         super._layout(parentFrame, scale);
     }
 
-    protected layoutChild(child: Shape, idx: number, scale: { x: number, y: number } | undefined, varsContainer: VarsContainer | undefined, resue: Map<string, DataView>, rView: RootView | undefined) {
+    protected layoutChild(parentFrame: ShapeSize, child: Shape, idx: number, scale: { x: number, y: number } | undefined, varsContainer: VarsContainer | undefined, resue: Map<string, DataView>, rView: RootView | undefined) {
         let cdom: DataView | undefined = resue.get(child.id);
         varsContainer = [...(varsContainer || []), this.data as SymbolShape];
-        const props = { data: child, scale, varsContainer, isVirtual: this.m_isVirtual };
+        const props = { data: child, scale, varsContainer, isVirtual: this.m_isVirtual, layoutSize: parentFrame };
 
         if (cdom) {
             this.moveChild(cdom, idx);

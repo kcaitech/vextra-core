@@ -160,7 +160,15 @@ export class TableView2 extends ShapeView {
                 // if (cellLayout.index.row === i && cellLayout.index.col === j) {
                 const cellId = this.rowHeights[rowIdx].id + "," + this.colWidths[colIdx].id;
                 const cdom = reuse.get(cellId) as ArtboardView | undefined;
-                const props = { data: cdom?.data as Artboard, scale: this.m_scale, varsContainer: this.varsContainer, frame: cellLayout.frame, isVirtual: this.m_isVirtual, index: cellLayout.index };
+                const props = {
+                    data: cdom?.data as Artboard,
+                    scale: this.m_props.scale,
+                    varsContainer: this.varsContainer,
+                    frame: cellLayout.frame,
+                    isVirtual: this.m_isVirtual,
+                    index: cellLayout.index,
+                    layoutSize: this.size
+                };
                 if (cdom) {
                     const cell = this._getCellAt2(rowIdx, colIdx);
                     if (cell) props.data = cell;
