@@ -1,44 +1,44 @@
 import {
     OverrideType,
     Shape,
-    ShapeFrame, 
+    ShapeFrame,
     ShapeType,
     Style,
-    TableCell,
-    TableCellType,
     TableGridItem,
     TableLayout,
-    TableShape,
-    Transform
+    TableShape2,
+    Transform,
+    Artboard,
+    ShapeSize,
+    TableCellAttr
 } from "../data/classes";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
 import { DataView } from "./view"
 import { DViewCtx, PropsType } from "./viewctx";
 import { locateCell, locateCellIndex } from "../data/tablelocate";
-import { TableCellView } from "./tablecell";
 import { findOverride, getShapeViewId } from "./basic";
 import { layoutTable } from "../data/tablelayout";
 import { getTableCells, getTableVisibleCells } from "../data/tableread";
 import { BasicArray } from "../data/basic";
-import { newTableCellText } from "../data/text/textutils";
 import { Point2D } from "../data/typesdefine";
 import { render as renderLine } from "../render/line_borders";
+import { ArtboardView } from "./artboard";
 
-export class TableView extends ShapeView {
+export class TableView2 extends ShapeView {
 
-    private m_cells: Map<string, TableCellView> = new Map();
+    private m_cells: Map<string, ArtboardView> = new Map();
 
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
         this.updateChildren();
     }
 
-    get data(): TableShape {
-        return this.m_data as TableShape;
+    get data(): TableShape2 {
+        return this.m_data as TableShape2;
     }
 
-    get cells(): Map<string, TableCellView> {
+    get cells(): Map<string, ArtboardView> {
         return this.m_cells;
     }
 
@@ -73,12 +73,24 @@ export class TableView extends ShapeView {
         parentFrame: ShapeFrame | undefined,
         scale: { x: number, y: number } | undefined,
     ): void {
-
         super._layout(parentFrame, scale);
         this.updateChildren();
     }
 
-    _getCellAt2(rowIdx: number, colIdx: number): TableCell | undefined {
+    _getCellAttr(rowIdx: number, colIdx: number): TableCellAttr | undefined {
+        if (rowIdx < 0 || colIdx < 0 || rowIdx >= this.rowCount || colIdx >= this.colCount) {
+            throw new Error("cell index outof range: " + rowIdx + " " + colIdx)
+        }
+        const cellId = this.rowHeights[rowIdx].id + "," + this.colWidths[colIdx].id;
+        const refId = this.data.id + '/' + cellId;
+        const _vars = findOverride(refId, OverrideType.TableCell, this.varsContainer || []); // todo
+        if (_vars && _vars.length > 0) {
+            return _vars[_vars.length - 1].value;
+        }
+        return this.data.cellAttrs.get(cellId);
+    }
+
+    _getCellAt2(rowIdx: number, colIdx: number): Artboard | undefined {
         if (rowIdx < 0 || colIdx < 0 || rowIdx >= this.rowCount || colIdx >= this.colCount) {
             throw new Error("cell index outof range: " + rowIdx + " " + colIdx)
         }
@@ -88,10 +100,10 @@ export class TableView extends ShapeView {
         if (_vars && _vars.length > 0) {
             return _vars[_vars.length - 1].value;
         }
-        return this.data.cells.get(cellId);
+        return this.data.cells.get(cellId) as Artboard;
     }
 
-    _getCellAt(rowIdx: number, colIdx: number): TableCell {
+    _getCellAt(rowIdx: number, colIdx: number): Artboard {
         if (rowIdx < 0 || colIdx < 0 || rowIdx >= this.rowCount || colIdx >= this.colCount) {
             throw new Error("cell index outof range: " + rowIdx + " " + colIdx)
         }
@@ -102,26 +114,26 @@ export class TableView extends ShapeView {
             return _vars[_vars.length - 1].value;
         }
         let cell = this.data.cells.get(cellId);
-        if (cell) return cell;
+        if (cell) return cell as Artboard;
 
         // 构造一个
 
-        cell = new TableCell(new BasicArray(),
+        cell = new Artboard(new BasicArray(),
             cellId,
             "",
-            ShapeType.TableCell,
+            ShapeType.Artboard,
             new Transform(),
             new Style(new BasicArray(), new BasicArray(), new BasicArray()),
-            TableCellType.Text,
-            newTableCellText(this.data.textAttr));
+            new BasicArray(),
+            new ShapeSize());
 
-        return cell;
+        return cell as Artboard;
     }
 
     getLayout(): TableLayout {
         const frame = this.frame;
         if (this.m_layout && this.m_saveheight === frame.height && this.m_savewidth === frame.width) return this.m_layout;
-        this.m_layout = layoutTable(this.data, frame, (ri: number, ci: number) => (this._getCellAt(ri, ci)));
+        this.m_layout = layoutTable(this.data, frame, (ri: number, ci: number) => (this._getCellAttr(ri, ci)));
         this.m_saveheight = frame.height;
         this.m_savewidth = frame.width;
         return this.m_layout;
@@ -135,7 +147,6 @@ export class TableView extends ShapeView {
             reuse.set(c.m_data.id, c);
         });
 
-        // const shape = this.m_data as TableShape;
         const comsMap = this.m_ctx.comsMap;
         const layout = this.getLayout();
 
@@ -148,9 +159,9 @@ export class TableView extends ShapeView {
                 if (rowIdx !== i || colIdx !== j) continue;
                 // if (cellLayout.index.row === i && cellLayout.index.col === j) {
                 const cellId = this.rowHeights[rowIdx].id + "," + this.colWidths[colIdx].id;
-                const cdom = reuse.get(cellId) as TableCellView | undefined;
-                const props: PropsType & {frame: ShapeFrame, index: {row: number, col: number}} = {
-                    data: cdom?.data as TableCell,
+                const cdom = reuse.get(cellId) as ArtboardView | undefined;
+                const props = {
+                    data: cdom?.data as Artboard,
                     scale: this.m_props.scale,
                     varsContainer: this.varsContainer,
                     frame: cellLayout.frame,
@@ -171,7 +182,7 @@ export class TableView extends ShapeView {
                     const Com = comsMap.get(cell.type) || comsMap.get(ShapeType.Rectangle)!;
                     const ins = new Com(this.m_ctx, props) as DataView;
                     this.addChild(ins, idx);
-                    this.m_cells.set(ins.id, ins as TableCellView);
+                    this.m_cells.set(ins.id, ins as ArtboardView);
                 }
                 ++idx;
                 // }
@@ -186,7 +197,7 @@ export class TableView extends ShapeView {
     }
 
     protected renderBorders(): EL[] {
-        const shape = this.m_data as TableShape;
+        const shape = this.m_data as TableShape2;
         const layout = this.getLayout();
 
         type PathSeg = { from: Point2D, to: Point2D, style: Style }[];
@@ -362,7 +373,7 @@ export class TableView extends ShapeView {
     }
 
     _getVisibleCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number): {
-        cell: TableCell | undefined,
+        cell: Artboard | undefined,
         rowIdx: number,
         colIdx: number
     }[] {
@@ -377,7 +388,7 @@ export class TableView extends ShapeView {
         }));
     }
 
-    _getCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number): { cell: TableCell | undefined, rowIdx: number, colIdx: number }[] {
+    _getCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number): { cell: Artboard | undefined, rowIdx: number, colIdx: number }[] {
         return getTableCells(this.data, (ri: number, ci: number) => (this._getCellAt(ri, ci)), rowStart, rowEnd, colStart, colEnd);
     }
 
@@ -407,17 +418,20 @@ export class TableView extends ShapeView {
     get colWidths() {
         return this.data.colWidths;
     }
-    getCellAt(rowIdx: number, colIdx: number): TableCellView | undefined {
+    getCellAt(rowIdx: number, colIdx: number): ArtboardView | undefined {
         if (rowIdx < 0 || colIdx < 0 || rowIdx >= this.rowCount || colIdx >= this.colCount) {
             throw new Error("cell index outof range: " + rowIdx + " " + colIdx)
         }
         const cellId = this.rowHeights[rowIdx].id + "," + this.colWidths[colIdx].id;
+        // const cell = this._getCellAt(rowIdx, colIdx);
+        // if (cell) {
         const _cellId = getShapeViewId(cellId, this.varsContainer);
         return this.cells.get(_cellId);
+        // }
     }
 
-    locateCell(x: number, y: number): (TableGridItem & { cell: TableCellView | undefined }) | undefined {
-        const item = locateCell(this.getLayout(), x, y) as (TableGridItem & { cell: TableCellView | undefined }) | undefined;
+    locateCell(x: number, y: number): (TableGridItem & { cell: ArtboardView | undefined }) | undefined {
+        const item = locateCell(this.getLayout(), x, y) as (TableGridItem & { cell: ArtboardView | undefined }) | undefined;
         if (item) {
             const cell = this.getCellAt(item.index.row, item.index.col);
             if (cell) {
@@ -431,7 +445,7 @@ export class TableView extends ShapeView {
         return locateCellIndex(this.getLayout(), x, y);
     }
 
-    _indexOfCell2(cell: TableCell): { rowIdx: number, colIdx: number } | undefined {
+    _indexOfCell2(cell: Artboard): { rowIdx: number, colIdx: number } | undefined {
         // cell indexs
         const ids = cell.id.split(',');
         if (ids.length !== 2) throw new Error("cell index error");
@@ -440,7 +454,7 @@ export class TableView extends ShapeView {
         if (rowIdx < 0 || colIdx < 0) return;
         return { rowIdx, colIdx }
     }
-    _indexOfCell(cell: TableCell): { rowIdx: number, colIdx: number, visible: boolean } | undefined {
+    _indexOfCell(cell: Artboard): { rowIdx: number, colIdx: number, visible: boolean } | undefined {
         // cell indexs
         const cellIdx = this._indexOfCell2(cell);
         if (!cellIdx) return;
@@ -451,7 +465,7 @@ export class TableView extends ShapeView {
         return { rowIdx, colIdx, visible }
     }
 
-    indexOfCell(cell: TableCell | TableCellView): { rowIdx: number, colIdx: number, visible: boolean } | undefined {
-        return cell instanceof TableCellView ? this._indexOfCell(cell.data) : this._indexOfCell(cell);
+    indexOfCell(cell: Artboard | ArtboardView): { rowIdx: number, colIdx: number, visible: boolean } | undefined {
+        return cell instanceof ArtboardView ? this._indexOfCell(cell.data) : this._indexOfCell(cell);
     }
 }

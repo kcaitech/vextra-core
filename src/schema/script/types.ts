@@ -6,6 +6,7 @@ function exportBaseProp(p: BaseProp, $: Writer) {
         case 'string':
         case 'number':
         case 'boolean':
+        case 'undefined':
             $.append(p.type);
             break;
         case 'node':

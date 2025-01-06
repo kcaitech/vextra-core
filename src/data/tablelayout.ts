@@ -1,6 +1,7 @@
 import { Grid } from "../basic/grid";
 import { ShapeFrame, ShapeSize } from "./shape";
 import { TableCell, TableShape } from "./table";
+import { TableCellAttr, TableShape2 } from "./typesdefine";
 
 export type TableGridItem = { index: { row: number, col: number }, span: { row: number, col: number }, frame: ShapeFrame }
 
@@ -12,30 +13,7 @@ export type TableLayout = {
     colWidths: number[],
 }
 
-// export class LayoutItem {
-//     layout: TableLayout | undefined;
-
-//     width: number = 0;
-//     height: number = 0;
-//     tatalWidth: number = 0;
-//     totalHeight: number = 0;
-
-//     update(table: TableShape) {
-//         const frame = table.frame;
-//         table.updateTotalWeights();
-//         if (frame.width !== this.width || frame.height !== this.height) {
-//             this.layout = undefined;
-//         } else if (table.widthTotalWeights !== this.tatalWidth || table.heightTotalWeights !== this.totalHeight) {
-//             this.layout = undefined;
-//         }
-//         this.width = frame.width;
-//         this.height = frame.height;
-//         this.tatalWidth = table.widthTotalWeights;
-//         this.totalHeight = table.heightTotalWeights;
-//     }
-// }
-
-export function layoutTable(table: TableShape, frame: ShapeSize, cellGetter: (ri: number, ci: number) => TableCell | undefined): TableLayout {
+export function layoutTable(table: TableShape | TableShape2, frame: ShapeSize, cellGetter: (ri: number, ci: number) => TableCell | TableCellAttr | undefined): TableLayout {
     // const frame = table.frame;
     const grid: Grid<TableGridItem> = new Grid<TableGridItem>(table.rowHeights.length, table.colWidths.length);
     // const cells = table.cells;

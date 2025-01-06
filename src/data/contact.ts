@@ -4,7 +4,6 @@ import * as classes from "./baseclasses"
 import { BasicArray } from "./basic";
 export { CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint, ShapeFrame, Ellipse, PathSegment } from "./baseclasses"
 import { ShapeType, CurvePoint, ShapeFrame } from "./baseclasses"
-import { Matrix } from "../basic/matrix";
 import { parsePath } from "./pathparser";
 import { ContactForm, ContactType, PathSegment } from "./baseclasses";
 import { gen_matrix1, gen_path, handle_contact_from, handle_contact_to, path_for_edited, path_for_free_contact, path_for_free_end_contact, path_for_free_start_contact, slice_invalid_point } from "./utils";
@@ -70,7 +69,7 @@ export class ContactShape extends PathShape implements classes.ContactShape {
     /**
      * @description 根据连接类型，在图形身上找一个点。该点的坐标系为页面坐标系
      */
-    get_pagexy(shape: Shape, type: ContactType, m2r: Matrix) {
+    get_pagexy(shape: Shape, type: ContactType, m2r: Transform) {
         const f = shape.size;
         switch (type) {
             case ContactType.Top: return m2r.computeCoord2(f.width / 2, 0);
@@ -139,9 +138,9 @@ export class ContactShape extends PathShape implements classes.ContactShape {
         let s1: undefined | { x: number, y: number } = undefined; // 外围点：s1出发图形的外围点，s2目的图形的外围点
         let s2: undefined | { x: number, y: number } = undefined;
 
-        let self_matrix: undefined | Matrix; // 一些可复用矩阵 self_matrix：连接线自身的坐标系，单位为宽高比例系数(0-1)
-        let from_matrix: undefined | Matrix;
-        let to_matrix: undefined | Matrix;
+        let self_matrix: undefined | Transform; // 一些可复用矩阵 self_matrix：连接线自身的坐标系，单位为宽高比例系数(0-1)
+        let from_matrix: undefined | Transform;
+        let to_matrix: undefined | Transform;
 
         let fromShape: undefined | Shape; // 出发图形、目的图形
         let toShape: undefined | Shape;

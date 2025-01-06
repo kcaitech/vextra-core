@@ -3,12 +3,12 @@ import { GroupShapeView } from "./groupshape";
 import { innerShadowId, renderBorders, renderFills } from "../render";
 import { objectId } from "../basic/objectid";
 import { render as clippathR } from "../render/clippath"
-import { AutoLayout, BorderPosition, CornerRadius, Page, ScrollBehavior, ShadowPosition, ShapeFrame, Transform, Artboard, BlurType } from "../data";
+import { AutoLayout, BorderPosition, CornerRadius, Page, ScrollBehavior, ShadowPosition, ShapeFrame, Transform, Artboard, BlurType, Shape, ShapeSize, SymbolRefShape, SymbolShape } from "../data";
 import { ShapeView, updateFrame } from "./shape";
 import { PageView } from "./page";
 
 
-export class ArtboradView extends GroupShapeView {
+export class ArtboardView extends GroupShapeView {
 
     m_inner_transform: Transform | undefined;
     get innerTransform(): Transform | undefined {
@@ -35,6 +35,17 @@ export class ArtboradView extends GroupShapeView {
 
     get autoLayout(): AutoLayout | undefined {
         return this.data.autoLayout;
+    }
+
+    protected _layout(parentFrame: ShapeSize | undefined, scale: { x: number; y: number; } | undefined): void {
+        const autoLayout = this.autoLayout;
+        if (!autoLayout) {
+            super._layout(parentFrame, scale);
+            return
+        }
+        // todo autoLayout
+        // 
+        super._layout(parentFrame, scale);
     }
 
     protected renderFills(): EL[] {
