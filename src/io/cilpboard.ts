@@ -264,7 +264,7 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
                 rt.m01 = st.m01;
                 rt.m10 = st.m10;
                 rt.m11 = st.m11;
-                (r as SymbolRefShape).frameMaskDisabled = (_s as SymbolShape).frameMaskDisabled;
+                // (r as SymbolRefShape).frameMaskDisabled = (_s as SymbolShape).frameMaskDisabled;
                 result.push(r);
             }
             continue;

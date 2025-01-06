@@ -514,7 +514,7 @@ export function importSymbolRef(ctx: LoadContext, data: IJSON, f: ImportFun, i: 
         style.fills.push(fill);
     }
     const shape = new SymbolRefShape([i] as BasicArray<number>, id, name, ShapeType.SymbolRef, frame.trans, style, frame.size, data['symbolID'], new BasicMap());
-    shape['frameMaskDisabled'] = !data['hasClippingMask'];
+    // shape['frameMaskDisabled'] = !data['hasClippingMask'];
     shape['isCustomSize'] = true; // 因为无法判定是否修改了尺寸，默认都给已经修改了尺寸
     if (data['overrideValues']) importOverrides(shape, data['overrideValues']);
     importShapePropertys(shape, data);

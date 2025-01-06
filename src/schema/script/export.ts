@@ -24,14 +24,26 @@ function exportBaseProp(p: BaseProp, source: string, $: Writer) {
             break;
         case 'oneOf':
             $.append('(() => ').sub(() => {
-                $.nl('if (typeof ', source, ' !== "object") ').sub(() => {
+                // 先处理undefined
+                const prop = Array.from(p.val);
+                let hasUndefined = false;
+                for (let i = 0; i < prop.length; ++i) {
+                    const v = prop[i];
+                    if (v.type === 'undefined') {
+                        $.nl(`if (typeof ${source} !== "object" || ${source} == null) `).sub(() => {
+                            $.nl(`return ${source} == null ? undefined : ${source}`)
+                        })
+                        hasUndefined = true
+                        break;
+                    }
+                }
+                if (!hasUndefined) $.nl('if (typeof ', source, ' !== "object") ').sub(() => {
                     $.nl('return ', source)
                 })
-                const prop = Array.from(p.val);
                 // 特定类型先处理
                 for (let i = 0, usedArray = false; i < prop.length;) {
                     const v = prop[i];
-                    if (v.type === 'string' || v.type === 'number' || v.type === 'boolean') {
+                    if (v.type === 'string' || v.type === 'number' || v.type === 'boolean' || v.type === 'undefined') {
                         prop.splice(i, 1);
                         continue;
                     }

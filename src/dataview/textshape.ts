@@ -12,7 +12,11 @@ import {
     FillType,
     overrideTextText,
     SymbolShape,
-    string2Text
+    string2Text,
+    Shape,
+    SymbolRefShape,
+    TextVerAlign,
+    TextHorAlign
 } from "../data";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
@@ -112,9 +116,9 @@ export class TextShapeView extends ShapeView {
             this.m_textpath = undefined;
         }
         this.m_layout = layout.layout;
-        if (this.isVirtualShape && this.__preText !== text) {
-            this.updateFrameByLayout(frame);
-        }
+        // if (this.isVirtualShape && this.__preText !== text) {
+        //     this.updateFrameByLayout(frame);
+        // }
         this.__preText = text;
         return layout.layout;
     }
@@ -194,21 +198,21 @@ export class TextShapeView extends ShapeView {
         this.__origin_frame.height = size.height;
         // update frame by layout
         this.getLayout(); // 要提前排版，不然frame不对，填充不对。也可以考虑先renderContents，再renderFills。
-        this.updateFrameByLayout(size);
+        // this.updateFrameByLayout(size);
     }
 
-    private updateFrameByLayout(origin: ShapeSize) {
-        if (!this.isVirtualShape || !this.m_layout) return;
-        const text = this.getText();
-        const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
-        if (textBehaviour !== TextBehaviour.Flexible) return;
-        let notify = false;
-        if (notify) {
-            this.m_pathstr = undefined; // need update
-            this.m_path = undefined;
-            this.notify("shape-frame");
-        }
-    }
+    // private updateFrameByLayout(origin: ShapeSize) {
+    //     if (!this.isVirtualShape || !this.m_layout) return;
+    //     const text = this.getText();
+    //     const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
+    //     if (textBehaviour !== TextBehaviour.Flexible) return;
+    //     let notify = false;
+    //     if (notify) {
+    //         this.m_pathstr = undefined; // need update
+    //         this.m_path = undefined;
+    //         this.notify("shape-frame");
+    //     }
+    // }
 
     bleach(el: EL) {  // 漂白
         if (el.elattr.fill) el.elattr.fill = '#FFF';
@@ -239,5 +243,79 @@ export class TextShapeView extends ShapeView {
     onDestroy(): void {
         super.onDestroy();
         if (this.__layoutToken && this.__preText) this.__preText.dropLayout(this.__layoutToken, this.id);
+    }
+
+    protected _layout(parentFrame: ShapeSize | undefined, scale: { x: number; y: number; } | undefined): void {
+        if (!this.isVirtualShape) {
+            this.updateLayoutArgs(this.data.transform, this.data.frame, undefined)
+            this.updateFrames();
+            return
+        }
+
+        function fixTransform(offsetX: number, offsetY: number, transform: Transform) {
+            const targetXY = transform.computeCoord(offsetX, offsetY)
+            const dx = targetXY.x - transform.translateX;
+            const dy = targetXY.y - transform.translateY;
+            if (dx || dy) {
+                transform = transform.clone().trans(dx, dy)
+            }
+            return transform;
+        }
+        const size = this.data.size
+        const frame = this.data.frame;
+        // 根据排版结果更新frame
+        const text = this.getText();
+        const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
+        switch (textBehaviour) {
+
+            case TextBehaviour.Fixed: {
+                const layout = this.getLayout();
+                const fontsize = text.attr?.fontSize ?? Text.DefaultFontSize;
+                const targetHeight = Math.ceil(Math.max(fontsize, layout.contentHeight));
+                frame.height = targetHeight
+                const verAlign = text.attr?.verAlign ?? TextVerAlign.Top;
+
+                if (verAlign === TextVerAlign.Middle) {
+                    this.updateLayoutArgs(fixTransform(0, (size.height - targetHeight) / 2, this.data.transform), frame, undefined);
+                } else if (verAlign === TextVerAlign.Bottom) {
+                    this.updateLayoutArgs(fixTransform(0, (size.height - targetHeight), this.data.transform), frame, undefined);
+                }
+                else {
+                    this.updateLayoutArgs(this.data.transform, frame, undefined);
+                }
+                break;
+            }
+            case TextBehaviour.Flexible: {
+                const layout = this.getLayout();
+                const targetWidth = Math.ceil(layout.contentWidth);
+                const targetHeight = Math.ceil(layout.contentHeight);
+                frame.width = targetWidth
+                frame.height = targetHeight
+                const verAlign = text.attr?.verAlign ?? TextVerAlign.Top;
+                let transform = this.data.transform;
+                if (verAlign === TextVerAlign.Middle) {
+                    transform = fixTransform(0, (size.height - targetHeight) / 2, transform);
+                } else if (verAlign === TextVerAlign.Bottom) {
+                    transform = fixTransform(0, (size.height - targetHeight), transform);
+                }
+                for (let i = 0, pc = text.paras.length; i < pc; i++) {
+                    const para = text.paras[i];
+                    const horAlign = para.attr?.alignment ?? TextHorAlign.Left;
+                    if (targetWidth === Math.ceil(layout.paras[i].paraWidth)) {
+                        if (horAlign === TextHorAlign.Centered) {
+                            transform = fixTransform((size.width - targetWidth) / 2, 0, transform);
+                        } else if (horAlign === TextHorAlign.Right) {
+                            transform = fixTransform(size.width - targetWidth, 0, transform);
+                        }
+                    }
+                }
+                this.updateLayoutArgs(transform, frame, undefined);
+                break;
+            }
+            default:
+                this.updateLayoutArgs(this.data.transform, frame, undefined);
+                break;
+        }
+        this.updateFrames();
     }
 }

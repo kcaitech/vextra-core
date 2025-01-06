@@ -11,6 +11,7 @@ export * from "./symbol";
 export * from "./symbolref";
 export * from "./table";
 export * from "./tablecell";
+export * from "./table2";
 export * from "./textshape";
 export * from "./page"
 export * from "./el"

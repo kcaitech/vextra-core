@@ -292,6 +292,7 @@ export enum OverrideType {
     Blur = "blur",
     ProtoInteractions = "protoInteractions",
     AutoLayout = "autoLayout",
+    FrameMaskDisabled = "frameMaskDisabled",
 }
 /* padding */
 export type Padding = {
@@ -511,6 +512,7 @@ export enum ShapeType {
     Contact = "contact",
     Cutout = "cutout",
     BoolShape = "bool-shape",
+    Table2 = "table2",
 }
 export type Shape_prototypeInteractions = Array<PrototypeInterAction>
 /* side type */
@@ -576,6 +578,11 @@ export type Style_shadows = Array<Shadow>
 export type Style_innerShadows = Array<Shadow>
 export type Style_contacts = Array<ContactRole>
 export type SymbolShape_guides = Array<Guide>
+/* table cell info */
+export type TableCellAttr = {
+    rowSpan?: number,
+    colSpan?: number,
+}
 /* table cell types */
 export enum TableCellType {
     None = "none",
@@ -584,6 +591,8 @@ export enum TableCellType {
 }
 export type TableShape_rowHeights = Array<CrdtNumber>
 export type TableShape_colWidths = Array<CrdtNumber>
+export type TableShape2_rowHeights = Array<CrdtNumber>
+export type TableShape2_colWidths = Array<CrdtNumber>
 /* text behaviour */
 export enum TextBehaviour {
     Flexible = "flexible",
@@ -661,6 +670,7 @@ export enum VariableType {
     Blur = "blur",
     ProtoInteractions = "protoInteractions",
     AutoLayout = "autoLayout",
+    FrameMaskDisabled = "frameMaskDisabled",
 }
 export type Variable_0 = Array<Fill | Shadow | PrototypeInterAction>
 /* winding rule */
@@ -943,7 +953,6 @@ export type Shape = {
     scrollBehavior?: ScrollBehavior,
     mask?: boolean,
     stackPositioning?: StackPositioning,
-    uniformScale?: number,
 }
 /* table cell */
 export type TableCell = Shape & {
@@ -972,7 +981,7 @@ export type Variable = {
     id: string,
     type: VariableType,
     name: string,
-    value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | Border | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur | AutoLayout,
+    value: undefined | number | string | boolean | Color | Text | Gradient | Style | Variable_0 | Border | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur | AutoLayout,
 }
 /* comment */
 export type Comment = {
@@ -1018,7 +1027,7 @@ export type SymbolRefShape = Shape & {
     isCustomSize?: boolean,
     cornerRadius?: CornerRadius,
     innerEnvScale?: number,
-    frameMaskDisabled?: boolean,
+    uniformScale?: number,
 }
 /* contact shape */
 export type ContactShape = PathShape & {
@@ -1085,3 +1094,12 @@ export type SymbolShape = GroupShape & {
 }
 /* symbol union shape */
 export type SymbolUnionShape = SymbolShape
+/* table shape2 */
+export type TableShape2 = Shape & {
+    size: ShapeSize,
+    cells: Map<string, Artboard>,
+    cellAttrs: Map<string, TableCellAttr>,
+    rowHeights: TableShape2_rowHeights,
+    colWidths: TableShape2_colWidths,
+    textAttr?: TextAttr,
+}

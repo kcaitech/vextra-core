@@ -28,7 +28,6 @@ import {
     Gradient,
     GradientType,
     GroupShape, ImageScaleMode,
-    makeShapeTransform2By1,
     MarkerType,
     OvalShape,
     OverrideType,
@@ -55,7 +54,6 @@ import {
     SymbolShape,
     SymbolUnionShape,
     Text,
-    TextBehaviour,
     TextShape,
     Transform,
     Variable,
@@ -67,7 +65,6 @@ import * as shapeCreator from "../../../editor/creator";
 import * as types from "../../../data/typesdefine";
 import { float_accuracy } from "../../../basic/consts";
 import { ColVector3D } from "../../../basic/matrix2";
-import { Transform as Transform2 } from "../../../basic/transform";
 import { getPolygonPoints, getPolygonVertices } from "../../../editor/utils/path";
 import { importText } from "./textio";
 import { importColor } from "./common";
@@ -80,12 +77,16 @@ export function toStrId(id?: {
     return [id.localID, id.sessionID].join(',');
 }
 
+function makeTransform(transform: IJSON) {
+    return new Transform(transform.m00, transform.m01, transform.m02, transform.m10, transform.m11, transform.m12)
+}
+
 export function parseGradient(
     data: IJSON,
     size = { x: 1, y: 1 },
 ) {
     const type = data.type;
-    const transform = data.transform ? makeShapeTransform2By1(data.transform).getInverse() : new Transform2();
+    const transform = data.transform ? makeTransform(data.transform).getInverse() : new Transform();
     const stops = data.stops as {
         color: {
             r: number,
@@ -98,10 +99,12 @@ export function parseGradient(
     const opacity = data.opacity;
 
     if (type === 'GRADIENT_LINEAR') {
-        const { col0: from, col1: to } = transform.transform([
+        const ps = transform.transform([
             ColVector3D.FromXY(0, 0.5),
             ColVector3D.FromXY(1, 0.5),
         ]);
+        const from = ps[0]
+        const to = ps[1]
 
         const from1 = new Point2D(from.x, from.y);
         const to1 = new Point2D(to.x, to.y);
@@ -112,16 +115,18 @@ export function parseGradient(
 
         return new Gradient(from1, to1, colorType, stops1 as BasicArray<Stop>, undefined, opacity);
     } else if (type === 'GRADIENT_RADIAL' || type === 'GRADIENT_ANGULAR') {
-        const { col0: from, col1: to } = transform.transform([
+        const ps = transform.transform([
             ColVector3D.FromXY(0.5, 0.5),
             ColVector3D.FromXY(1, 0.5),
         ]);
-        const decompose = transform.decompose();
+        const from = ps[0]
+        const to = ps[1]
+        const decompose = transform.decomposeScale();
 
         const from1 = new Point2D(from.x, from.y);
         const to1 = new Point2D(to.x, to.y);
         const colorType = type === 'GRADIENT_RADIAL' ? GradientType.Radial : GradientType.Angular;
-        const elipseLength = decompose.scale.y / decompose.scale.x * size.y / size.x;
+        const elipseLength = decompose.y / decompose.x * size.y / size.x;
         const stops1 = stops.map((item, i) => {
             return new Stop([i] as BasicArray<number>, uuid(), item.position, importColor(item.color))
         }) as BasicArray<Stop>;

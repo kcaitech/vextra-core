@@ -22,6 +22,8 @@ export type BaseProp = {
 } | {
     type: 'oneOf',
     val: BaseProp[]
+} | {
+    type: 'undefined'
 }
 
 export type NamedProp = {
@@ -194,6 +196,9 @@ function initValue(schema: any): NodeValue {
 
 function extractBaseProp(schema: any, name: string | undefined, n: Node): BaseProp {
     if (schema.type) switch (schema.type) {
+        case 'undefined': return {
+            type: 'undefined'
+        }
         case 'boolean':
             return {
                 type: 'boolean'

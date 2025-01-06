@@ -21,7 +21,8 @@
         "table-cell",
         "contact",
         "cutout",
-        "bool-shape"
+        "bool-shape",
+        "table2"
     ],
     "default": "path"
 }

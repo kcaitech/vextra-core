@@ -30,12 +30,13 @@ export interface ViewType {
     new(ctx: DViewCtx, props: PropsType, shapes?: Shape[]): DataView;
 }
 
-export function updateViewsFrame(updates: { data: DataView }[]) {
+export function updateViewsFrame(updates: DataView[]) {
     if (updates.length === 0) return;
     type Node = { view: DataView, childs: Node[], needupdate: boolean, parent: Node | undefined, visited: boolean }
     const updatetree: Map<number, Node> = new Map();
     updates.forEach((_s) => {
-        const s = _s.data;
+        const s = _s.parent;
+        if (!s) return;
         let n: Node | undefined = updatetree.get(objectId(s));
         if (n) {
             n.needupdate = true;
@@ -190,15 +191,17 @@ export class DViewCtx extends EventEmitter {
             return a.level - b.level;
         });
 
+        const update2: DataView[] = []
         for (let i = 0; i < update.length; i++) {
             const d = update[i].data;
             if (this.relayoutset.has(objectId(d))) { // 再次判断，可能已经更新过了
                 d.layout();
+                update2.push(d);
             }
         }
 
         // update frames
-        updateViewsFrame(update);
+        updateViewsFrame(update2);
     }
 
     private updateFocus() {
@@ -217,17 +220,15 @@ export class DViewCtx extends EventEmitter {
             needupdate.push(v);
         });
         // 由高向下更新
+        const updated: DataView[] = [];
         for (let i = focusdepends.length - 1; i >= 0; i--) {
             const d = this.relayoutset.get(focusdepends[i]);
-            if (d) d.layout();
-        }
-
-        const updated: { data: DataView }[] = [];
-        for (let i = 0, len = needupdate.length; i < len; ++i) {
-            if (!this.relayoutset.get(objectId(needupdate[i]))) {
-                updated.push({ data: needupdate[i] })
+            if (d) {
+                d.layout();
+                updated.push(d)
             }
         }
+
         // update frames
         updateViewsFrame(updated);
 

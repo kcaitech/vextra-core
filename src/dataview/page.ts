@@ -1,5 +1,5 @@
 import { Page } from "../data";
-import { ArtboradView } from "./artboard";
+import { ArtboardView } from "./artboard";
 import { CutoutShapeView } from "./cutout";
 import { GroupShapeView } from "./groupshape";
 import { ShapeView } from "./shape";
@@ -27,7 +27,7 @@ function checkPath(v: ShapeView) {
 export class PageView extends GroupShapeView implements RootView {
 
     private m_views: Map<string, ShapeView> = new Map();
-    private m_artboards: Map<string, ArtboradView> = new Map();
+    private m_artboards: Map<string, ArtboardView> = new Map();
     private m_cutouts: Map<string, CutoutShapeView> = new Map();
     private m_delaydestorys: Map<string, ShapeView> = new Map();
 
@@ -48,7 +48,7 @@ export class PageView extends GroupShapeView implements RootView {
     onAddView(view: ShapeView | ShapeView[]): void {
         const add = (v: ShapeView) => {
             this.m_views.set(v.id, v);
-            if (v instanceof ArtboradView) this.m_artboards.set(v.id, v);
+            if (v instanceof ArtboardView) this.m_artboards.set(v.id, v);
             if (v instanceof CutoutShapeView) this.m_cutouts.set(v.id, v);
             v.m_children.forEach((c) => add(c as ShapeView));
         }
@@ -61,7 +61,7 @@ export class PageView extends GroupShapeView implements RootView {
             const cur = this.m_views.get(v.id);
             if (cur && cur.parent?.id !== parent.id) return; // 已经不是同一个了(被复用)
             this.m_views.delete(v.id);
-            if (v instanceof ArtboradView) this.m_artboards.delete(v.id);
+            if (v instanceof ArtboardView) this.m_artboards.delete(v.id);
             if (v instanceof CutoutShapeView) this.m_cutouts.delete(v.id);
             v.m_children.forEach((c) => remove(v, c as ShapeView));
         }

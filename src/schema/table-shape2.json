@@ -1,48 +1,50 @@
 {
-    "description": "symbol ref shape",
+    "description": "table shape2",
     "type": "object",
     "properties": {
         "size": {
             "$ref": "./shape-size.json"
         },
-        "refId": {
-            "type": "string"
-        },
-        "overrides": {
+        "cells": {
             "type": "map",
             "key": {
                 "type": "string"
             },
             "value": {
-                "type": "string"
+                "$ref": "./artboard.json"
             }
         },
-        "variables": {
+        "cellAttrs": {
             "type": "map",
             "key": {
                 "type": "string"
             },
             "value": {
-                "$ref": "./variable.json"
+                "$ref": "./table-cell-attr.json"
             }
         },
-        "isCustomSize": {
-            "type": "boolean"
+        "rowHeights": {
+            "type": "array",
+            "items": {
+                "$ref": "./crdt-number.json"
+            }
         },
-        "cornerRadius": {
-            "$ref": "./corner-radius.json"
+        "colWidths": {
+            "type": "array",
+            "items": {
+                "$ref": "./crdt-number.json"
+            }
         },
-        "innerEnvScale": {
-            "type": "number"
-        },
-        "uniformScale": {
-            "type": "number"
+        "textAttr": {
+            "$ref": "./text-attr.json"
         }
     },
     "required": [
         "size",
-        "refId",
-        "variables"
+        "cells",
+        "cellAttrs",
+        "rowHeights",
+        "colWidths"
     ],
     "allOf": [
         {

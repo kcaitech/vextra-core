@@ -21,14 +21,11 @@ export class PathShapeView2 extends ShapeView {
     }
 
     protected _layout(
-        shape: Shape,
         parentFrame: ShapeFrame | undefined,
-        varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
-        scale: { x: number, y: number } | undefined,
-        uniformScale: number | undefined
+        scale: { x: number, y: number } | undefined
     ): void {
         this.m_pathsegs = undefined;
-        super._layout(shape, parentFrame, varsContainer, scale, uniformScale);
+        super._layout(parentFrame, scale);
     }
 
     protected renderBorders(): EL[] {
