@@ -11,7 +11,7 @@ import { Repository } from "../data/transact";
 import * as types from "../data/typesdefine";
 import { FMT_VER_latest } from "../data/fmtver";
 import { ShadowPosition } from "../data/baseclasses"
-import { FillMask, ShadowMask, StyleMangerMember, BlurMask } from "../data/style";
+import { FillMask, ShadowMask, StyleMangerMember, BlurMask,BorderMask } from "../data/style";
 import { adapt2Shape, PageView, ShapeView } from "../dataview";
 import { Color, Fill, Shadow, BlurType } from "../data/classes";
 import { BasicArray, Stop, Gradient, Point2D } from "../data";
@@ -243,6 +243,12 @@ export class DocEditor {
                     for (let i = 0; i < shapes.length; i++) {
                         const shape = shapes[i];
                         api.addblurmask(this.__document, p, adapt2Shape(shape), style.id);
+                    }
+                }
+                if (style instanceof BorderMask) {
+                    for (let i = 0; i < shapes.length; i++) {
+                        const shape = shapes[i];
+                        api.addbordermask(this.__document, p, adapt2Shape(shape), style.id);
                     }
                 }
             }
