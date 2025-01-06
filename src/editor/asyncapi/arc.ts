@@ -216,53 +216,6 @@ export class OvalPathParser {
         const sweep = Math.abs(__sweep);
         const fragmentsList: CurvePoint[] = [];
 
-        // if (sweep > 0 && sweep < 25) {
-
-        //     for (let i = 2; i >= 1; i--) {
-            
-        //         const arc = sweep * 3.6 / i;
-        //         const t = sweep / 25;
-        //         if (arc >= 0 && arc <= 90) {
-        //             if (i == 2) {
-        //                 const [right,bottom] = points;
-        //                 const fragment = this.cubicBezierFragment(right, bottom, t);
-        //                 arcPoints.push(fragment.start, fragment.end);
-        //             }
-        //             else {
-        //                 const [right,bottom] = points;
-        //                 const fragment = this.cubicBezierFragment(right, bottom, t);
-        //                // const fragment2=this.cubicBezierFragment(fragment.end,bottom,t);
-        //                // arcPoints.push(fragment2.end);
-        //             }
-        //         }
-
-        //     }
-        //     // arcPoints.push(...fragmentsList);
-        //     console.log("arcPoints",arcPoints);
-
-           
-
-
-        // }
-        // else if (sweep === 25) {
-        //     // for (let i = 2; i >=1; i--) {
-        //     //     const t = sweep * 0.04 / i;
-        //     //     const arc = sweep * 3.6 / i;
-
-        //     //     if (arc >= 0 && arc <= 90) {
-        //     //         const fragment = this.cubicBezierFragment(right, bottom, t)
-        //     //         if (i == 2)
-        //     //             fragmentsList.push(fragment.start,fragment.end);
-        //     //         else
-        //     //         {
-        //     //             fragmentsList.push(fragment.end)
-
-        //     //         }
-        //     //     }
-
-        //     // }
-
-        // }
         if (sweep > 0 && sweep < 25) {
 
             const t = sweep / 25;
