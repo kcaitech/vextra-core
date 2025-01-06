@@ -56,14 +56,15 @@ import {
     importAutoLayout, importArtboard
 } from "../data/baseimport";
 import {
-    ArtboradView,
+    ArtboardView,
     ShapeView,
     SymbolRefView,
     SymbolView,
     TableCellView,
     TableView,
     isAdaptedShape,
-    adapt2Shape
+    adapt2Shape,
+    PageView
 } from "../dataview";
 import { newTableCellText } from "../data/text/textutils";
 import { FMT_VER_latest } from "../data/fmtver";
@@ -73,6 +74,7 @@ import { makeShapeTransform1By2, makeShapeTransform2By1 } from "../data";
 import { Transform as Transform2 } from "../basic/transform";
 import { ColVector3D } from "../basic/matrix2";
 import { v4 } from "uuid";
+import { overrideTableCell, prepareVar } from "./symbol_utils";
 
 /**
  * @description 图层是否为组件实例的引用部分
@@ -126,21 +128,6 @@ export function varParent(_var: Variable) {
     return p;
 }
 
-
-// 修改对象属性
-// 1. 如果普通对象(非virtual、非symbolref)
-// 1.1 varbind, 则到3
-// 1.2 正常修改. 
-// 2. 如果对象为virtual或者symbolref, 将属性值override到var再修改
-// 2.1 创建新var
-// 2.2 将属性 override到新var
-// 2.3 如果已级override到var，但不可修改，仍然override到新var再修改
-// 3. 如果为var，判断var是否属于virtual对象:
-// 3.1 如果是则override到新var再修改;(仅override原始varid)
-// 3.1.1 创建新var 同2.1
-// 3.1.2 将var override到新var
-// 3.2 否则正常修改var
-
 function _varsContainer(view: ShapeView) {
     let varsContainer = view.varsContainer;
     if (view.data instanceof SymbolRefShape) {
@@ -149,256 +136,15 @@ function _varsContainer(view: ShapeView) {
     return varsContainer;
 }
 
-/**
- * 
- */
-function _ov_2(type: OverrideType, name: string, value: any, varType: VariableType, view: ShapeView, refId: string, page: Page, api: Api) {
-    // const view = this.__shape;
-    const varsContainer = _varsContainer(view);
-    if (!varsContainer || varsContainer.length === 0) throw new Error();
-    const host = varsContainer.find((v) => v instanceof SymbolRefShape);
-    if (!host || !(host instanceof SymbolRefShape)) throw new Error();
-
-    let override_id: string = refId.length > 0 ? (refId + '/' + type) : type;
-    for (let i = varsContainer.length - 1; i >= 0; --i) {
-        const c = varsContainer[i];
-        if (c === host) break;
-        if (c instanceof SymbolRefShape) override_id = c.id + '/' + override_id;
-    }
-
-    if (varType === VariableType.Text
-        && typeof value === 'string') {
-        throw new Error();
-    }
-
-    const _var2 = _ov_newvar(host, name, value, varType, page, api);
-
-    api.shapeAddOverride(page, host, override_id, _var2.id);
-    // _ov_2_2(host, type, _var2.id, view, page, api);
-    return _var2;
-}
-
-// /**
-//  * 将当前shape的overridetype对应的属性，override到varid的变量
-//  * @param type
-//  * @param varId
-//  * @param api
-//  */
-// function _ov_2_2(host: SymbolRefShape, type: OverrideType, varId: string, view: ShapeView, page: Page, api: Api) {
-
-//     // const view = this.__shape;
-//     const varsContainer = _varsContainer(view);
-//     if (!varsContainer || varsContainer.length === 0) throw new Error();
-//     // const host = varsContainer.find((v) => v instanceof SymbolRefShape);
-//     // if (!host || !(host instanceof SymbolRefShape)) throw new Error();
-
-//     let override_id: string = (view.data instanceof SymbolRefShape) ? type : (view.data.id + '/' + type);
-//     for (let i = varsContainer.length - 1; i >= 0; --i) {
-//         const c = varsContainer[i];
-//         if (c === host) break;
-//         if (c instanceof SymbolRefShape) override_id = c.id + '/' + override_id;
-//     }
-
-//     api.shapeAddOverride(page, host, override_id, type, varId);
-// }
-
 function _ov_newvar(host: SymbolRefShape | SymbolShape, name: string, value: any, type: VariableType, page: Page, api: Api) {
     const _var2 = new Variable(uuid(), type, name, value);
     api.shapeAddVariable(page, host, _var2); // create var
     return _var2;
 }
 
-/**
- * 
- * @param _var 0: 原始var，1: 当前起作用的var。原始var所在的view能不能拿到？
- * @param name 
- * @param valuefun 
- * @param view 
- * @param page 
- * @param api 
- * @returns 
- */
-function _ov_3(_var: Variable[], name: string, valuefun: (_var: Variable | undefined) => any, view: ShapeView, page: Page, api: Api) {
-    if (_var.length === 0) throw new Error();
-    const p = varParent(_var[_var.length - 1]);
-    if (!p) throw new Error();
-    const varsContainer = _varsContainer(view);
-    if (!varsContainer || varsContainer.length === 0) {
-        // p.isVirtual??
-        return _var[_var.length - 1]; // symbolshape?
-    }
 
-    const pIdx = varsContainer.findIndex((v) => v.id === p.id);
-    // if (pIdx < 0) throw new Error(); // 可能的，当前view为symbolref，正在修改组件变量
-    const hostIdx = varsContainer.findIndex((v) => v instanceof SymbolRefShape);
-    if (hostIdx < 0) return _var[_var.length - 1]; // 可直接修改;
-    if (pIdx >= 0 && pIdx <= hostIdx) return _var[_var.length - 1]; // 可直接修改
-
-    const value = valuefun(_var[_var.length - 1]);
-    const host = varsContainer[hostIdx] as SymbolRefShape;
-    return _ov_3_1(_var, name, value, host, view, page, api);
-}
-
-function _ov_3_1(_var: Variable[], name: string, value: any, host: SymbolRefShape, view: ShapeView, page: Page, api: Api) { // 3.1
-    // override text
-    if (_var[0].type === VariableType.Text
-        && typeof value === 'string') {
-        const origin = _var[_var.length - 1].value as Text;
-        const text = newText2(origin.attr, origin.paras[0]?.attr, origin.paras[0]?.spans[0]);
-        text.insertText(value, 0);
-        value = text;
-    }
-    // const view = this.__shape;
-    const varsContainer = _varsContainer(view);
-    if (!varsContainer || varsContainer.length === 0) throw new Error();
-    // const host = varsContainer.find((v) => v instanceof SymbolRefShape);
-    // if (!host || !(host instanceof SymbolRefShape)) throw new Error();
-
-    let p = varParent(_var[0]);
-    if (!p) throw new Error();
-    // if (!p.isVirtualShape) throw new Error(); // 不一定,可能是symbolshape??然后也不在view结构里？
-
-    if (isAdaptedShape(p)) throw new Error(); // 不用adapted的
-    let pIdx = varsContainer.findIndex((v) => v.id === p!.id);// 不对？虚拟对象的id？
-    if (pIdx < 0) { // 可能的，当前view为symbolref，正在修改组件变量
-        // 组件中的变量，不在ref中也不在view的子view中
-        pIdx = varsContainer.length - 1;
-    }
-
-    let override_id = _var[0].id;
-    for (let i = pIdx; i >= 0; --i) {
-        const c = varsContainer[i];
-        if (c === host) break;
-        if (c instanceof SymbolRefShape) override_id = c.id + '/' + override_id;
-    }
-
-    const _var2 = _ov_newvar(host, name, value, _var[0].type, page, api);
-    // _ov_3_1_2(_var, _var2.id, host, view, page, api); // override
-
-    api.shapeAddOverride(page, host, override_id, _var2.id);
-    return _var2;
-}
-
-// function _ov_3_1_2(fromVar: Variable[], toVarId: string, host: SymbolRefShape | SymbolShape, view: ShapeView, page: Page, api: Api) {
-//     let p = varParent(fromVar[0]);
-//     if (!p) throw new Error();
-//     // if (!p.isVirtualShape) throw new Error(); // 不一定,可能是symbolshape??然后也不在view结构里？
-
-//     // const view = this.__shape;
-//     const varsContainer = _varsContainer(view);
-//     if (!varsContainer || varsContainer.length === 0) throw new Error();
-
-//     if (isAdaptedShape(p)) throw new Error(); // 不用adapted的
-//     let pIdx = varsContainer.findIndex((v) => v.id === p!.id);// 不对？虚拟对象的id？
-//     if (pIdx < 0) { // 可能的，当前view为symbolref，正在修改组件变量
-//         // 组件中的变量，不在ref中也不在view的子view中
-//         pIdx = varsContainer.length - 1;
-//     }
-
-//     let override_id = fromVar[0].id;
-//     for (let i = pIdx; i >= 0; --i) {
-//         const c = varsContainer[i];
-//         if (c === host) break;
-//         if (c instanceof SymbolRefShape) override_id = c.id + '/' + override_id;
-//     }
-
-//     api.shapeAddOverride(page, host, override_id, OverrideType.Variable, toVarId);
-// }
-
-function _ov(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, view: ShapeView, page: Page, api: Api) {
-    const varsContainer = _varsContainer(view);
-    if (!varsContainer || varsContainer.length === 0) return;
-
-    if (!view.isVirtualShape && !(view.data instanceof SymbolRefShape)) {
-        if (view.varbinds && view.varbinds.has(overrideType)) { // 走var
-            const _vars: Variable[] = [];
-            findVar(view.varbinds.get(overrideType)!, _vars, varsContainer);
-            const _var = _vars[_vars.length - 1];
-            if (_var && _var.type === varType) {
-                return _ov_3(_vars, _var.name, valuefun, view, page, api);
-            }
-        }
-        return;
-    }
-
-    if (!view.isVirtualShape) {
-        // if (!(view.data instanceof SymbolRefShape)) return;
-        switch (overrideType) {
-            case OverrideType.Borders:
-            case OverrideType.ContextSettings:
-            case OverrideType.EndMarkerType:
-            case OverrideType.Fills:
-            case OverrideType.Shadows:
-            case OverrideType.StartMarkerType:
-            case OverrideType.CornerRadius:
-            case OverrideType.Blur:
-                break;
-            case OverrideType.ExportOptions:
-            case OverrideType.Image:
-            case OverrideType.Lock:
-            case OverrideType.SymbolID:
-            case OverrideType.TableCell:
-            case OverrideType.Text:
-            case OverrideType.Variable:
-            case OverrideType.Visible:
-                return;
-        }
-    }
-
-    const refId = view.data instanceof SymbolRefShape ? "" : view.data.id;
-    const _vars = findOverride(refId, overrideType, varsContainer);
-    if (_vars) {
-        const _var = _vars[_vars.length - 1];
-        if (_var && _var.type === varType) {
-            // 判断是否可修改
-            const p = varParent(_var);
-            if (!p) throw new Error();
-            const pIdx = varsContainer.findIndex((v) => v.id === p.id);
-            // if (pIdx < 0) throw new Error(); // 可能的，当前view为symbolref，正在修改组件变量
-            const hostIdx = varsContainer.findIndex((v) => v instanceof SymbolRefShape);
-            // if (hostIdx < 0) throw new Error();
-            if (hostIdx < 0 || pIdx >= 0 && pIdx <= hostIdx) return _var; // 可直接修改
-            // return _ov_3(_var, _var.name, valuefun, view, page, api);
-            // 否则重新override
-        }
-    }
-
-    if (view.varbinds && view.varbinds.has(overrideType)) { // 走var
-        const _vars: Variable[] = [];
-        findVar(view.varbinds.get(overrideType)!, _vars, varsContainer);
-        const _var = _vars[_vars.length - 1];
-        if (_var && _var.type === varType) {
-            return _ov_3(_vars, _var.name, valuefun, view, page, api);
-        }
-    }
-
-    return _ov_2(overrideType, "", valuefun(undefined), varType, view, refId, page, api);
-}
-
-
-export function override_variable2(page: Page, varType: VariableType, overrideType: OverrideType, refId: string, valuefun: (_var: Variable | undefined) => any, api: Api, view: ShapeView) {
-    const varsContainer = _varsContainer(view);
-    if (!varsContainer || varsContainer.length === 0) return;
-    if (!view.isVirtualShape) return;
-    // const refId = view.data instanceof SymbolRefShape ? "" : view.data.id;
-    const _vars = findOverride(refId, overrideType, varsContainer);
-    if (_vars) {
-        const _var = _vars[_vars.length - 1];
-        if (_var && _var.type === varType) {
-            // 判断是否可修改
-            const p = varParent(_var);
-            if (!p) throw new Error();
-            const pIdx = varsContainer.findIndex((v) => v.id === p.id);
-            // if (pIdx < 0) throw new Error(); // 可能的，当前view为symbolref，正在修改组件变量
-            const hostIdx = varsContainer.findIndex((v) => v instanceof SymbolRefShape);
-            // if (hostIdx < 0) throw new Error();
-            if (hostIdx < 0 || pIdx >= 0 && pIdx <= hostIdx) return _var; // 可直接修改
-            // return _ov_3(_var, _var.name, valuefun, view, page, api);
-            // 否则重新override
-        }
-    }
-
-    return _ov_2(overrideType, "", valuefun(undefined), varType, view, refId, page, api);
+function _ov(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, view: ShapeView, page: PageView, api: Api) {
+    return prepareVar(api, page, view, overrideType, varType, valuefun)?.var
 }
 
 function _clone_value(_var: Variable, document: Document, page: Page) {
@@ -450,7 +196,7 @@ function _clone_value(_var: Variable, document: Document, page: Page) {
     }
 }
 
-export function shape4contextSettings(api: Api, _shape: ShapeView, page: Page) {
+export function shape4contextSettings(api: Api, _shape: ShapeView, page: PageView) {
     const valuefun = (_var: Variable | undefined) => {
         const contextSettings = _var?.value ?? _shape.contextSettings;
         return contextSettings && importContextSettings(contextSettings) || new ContextSettings(BlendMode.Normal, 1);
@@ -459,7 +205,7 @@ export function shape4contextSettings(api: Api, _shape: ShapeView, page: Page) {
     return _var || _shape.data;
 }
 
-export function shape4exportOptions(api: Api, _shape: ShapeView, page: Page) {
+export function shape4exportOptions(api: Api, _shape: ShapeView, page: PageView) {
     const valuefun = (_var: Variable | undefined) => {
         const options = _var?.value ?? _shape.exportOptions;
         return options && importExportOptions(options) || new ExportOptions(new BasicArray(), 0, false, false, false, false);
@@ -468,7 +214,7 @@ export function shape4exportOptions(api: Api, _shape: ShapeView, page: Page) {
     return _var || _shape.data;
 }
 
-export function shape4blur(api: Api, _shape: ShapeView, page: Page) {
+export function shape4blur(api: Api, _shape: ShapeView, page: PageView) {
     const valuefun = (_var: Variable | undefined) => {
         const blur = _var?.value ?? _shape.blur;
         return blur && importBlur(blur) || new Blur(new BasicArray(),true, new Point2D(0, 0), 10, BlurType.Gaussian);
@@ -594,7 +340,7 @@ export function modify_variable(document: Document, page: Page, view: ShapeView,
 /**
  * @description override "editor/shape/overrideVariable"
  */
-export function override_variable(page: Page, varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, api: Api, view: ShapeView) {
+function override_variable(page: PageView, varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, api: Api, view: ShapeView) {
     // view = view ?? this.__shape;
     return _ov(varType, overrideType, valuefun, view, page, api);
 }
@@ -602,10 +348,10 @@ export function override_variable(page: Page, varType: VariableType, overrideTyp
 /**
  * @description 由外引入api的变量修改函数
  */
-export function modify_variable_with_api(api: Api, page: Page, shape: ShapeView, varType: VariableType, overrideType: OverrideType, value: any) {
+export function modify_variable_with_api(api: Api, page: PageView, shape: ShapeView, varType: VariableType, overrideType: OverrideType, value: any) {
     const _var = _ov(varType, overrideType, () => value, shape, page, api);
     if (_var && _var.value !== value) {
-        api.shapeModifyVariable(page, _var, value);
+        api.shapeModifyVariable(page.data, _var, value);
     }
     return !!_var;
 }
@@ -613,7 +359,7 @@ export function modify_variable_with_api(api: Api, page: Page, shape: ShapeView,
 /**
  * @description override "editor/shape/shape4border"
  */
-export function shape4border(api: Api, page: Page, shape: ShapeView) {
+export function shape4border(api: Api, page: PageView, shape: ShapeView) {
     const _var = override_variable(page, VariableType.Borders, OverrideType.Borders, (_var) => {
         const bordors = _var?.value ?? shape.getBorders();
         return importBorder(bordors);
@@ -624,7 +370,7 @@ export function shape4border(api: Api, page: Page, shape: ShapeView) {
 /**
  * @description override "editor/shape/shape4fill"
  */
-export function shape4fill(api: Api, page: Page, shape: ShapeView) {
+export function shape4fill(api: Api, page: PageView, shape: ShapeView) {
     const _var = override_variable(page, VariableType.Fills, OverrideType.Fills, (_var) => {
         const fills = _var?.value ?? shape.getFills();
         return new BasicArray(...(fills as Array<Fill>).map((v) => {
@@ -638,7 +384,7 @@ export function shape4fill(api: Api, page: Page, shape: ShapeView) {
     return _var || shape.data;
 }
 
-export function shape4shadow(api: Api, page: Page, shape: ShapeView) {
+export function shape4shadow(api: Api, page: PageView, shape: ShapeView) {
     const _var = override_variable(page, VariableType.Shadows, OverrideType.Shadows, (_var) => {
         const shadows = _var?.value ?? shape.getShadows();
         return new BasicArray(...(shadows as Array<Shadow>).map((v) => {
@@ -649,7 +395,7 @@ export function shape4shadow(api: Api, page: Page, shape: ShapeView) {
     return _var || shape.data;
 }
 
-export function shape4cornerRadius(api: Api, page: Page, shape: ArtboradView | SymbolView | SymbolRefView) {
+export function shape4cornerRadius(api: Api, page: PageView, shape: ArtboardView | SymbolView | SymbolRefView) {
     const _var = override_variable(page, VariableType.CornerRadius, OverrideType.CornerRadius, (_var) => {
         const cornerRadius = _var?.value ?? shape.cornerRadius;
         return cornerRadius ? importCornerRadius(cornerRadius) : new CornerRadius(v4(), new BasicArray(),0, 0, 0, 0);
@@ -712,7 +458,7 @@ export function get_state_name(state: SymbolShape, dlt: string) {
     return name_slice.toString();
 }
 
-export function cell4edit2(page: Page, view: TableView, _cell: TableCellView, api: Api): Variable | undefined {
+export function cell4edit2(page: PageView, view: TableView, _cell: TableCellView, api: Api): Variable | undefined {
     // cell id 要重新生成
     const index = view.indexOfCell(_cell);
     if (!index) throw new Error();
@@ -735,15 +481,15 @@ export function cell4edit2(page: Page, view: TableView, _cell: TableCellView, ap
             TableCellType.Text,
             newTableCellText(view.data.textAttr));
     };
-    const refId = view.data.id + '/' + cellId;
-    const _var = override_variable2(page, VariableType.TableCell, OverrideType.TableCell, refId, valuefun, api, view);
-    if (_var) return _var;
-    api.tableInitCell(page, view.data, rowIdx, colIdx);
+    // const refId = view.data.id + '/' + cellId;
+    const _var = overrideTableCell(api, page, view, _cell, valuefun);
+    if (_var?.var) return _var.var;
+    api.tableInitCell(page.data, view.data, rowIdx, colIdx);
     // return _cell.data;
     // return _var;
 }
 
-export function cell4edit(page: Page, view: TableView, rowIdx: number, colIdx: number, api: Api): TableCellView {
+export function cell4edit(page: PageView, view: TableView, rowIdx: number, colIdx: number, api: Api): TableCellView {
     const cell = view.getCellAt(rowIdx, colIdx);
     if (!cell) throw new Error("cell init fail?");
 
@@ -765,16 +511,16 @@ export function cell4edit(page: Page, view: TableView, rowIdx: number, colIdx: n
             TableCellType.Text,
             newTableCellText(view.data.textAttr));
     };
-    const refId = view.data.id + '/' + cellId;
-    const _var = override_variable2(page, VariableType.TableCell, OverrideType.TableCell, refId, valuefun, api, view);
-    if (_var) {
-        cell.setData(_var.value);
+    // const refId = view.data.id + '/' + cellId;
+    // const _var = override_variable2(page, VariableType.TableCell, OverrideType.TableCell, refId, valuefun, api, view);
+    const _var = overrideTableCell(api, page, view, cell, valuefun);
+    if (_var?.var) {
+        cell.setData(_var.var.value);
         // return _var;
         return cell;
     }
 
-
-    if (api.tableInitCell(page, view.data, rowIdx, colIdx)) {
+    if (api.tableInitCell(page.data, view.data, rowIdx, colIdx)) {
         // 更新下data
         const _cell = view._getCellAt2(rowIdx, colIdx);
         if (!_cell) throw new Error();
@@ -852,7 +598,7 @@ export class RefUnbind {
 
             if (child instanceof GroupShape) {
                 let innerScale = uniformScale;
-                if (child.uniformScale) innerScale *= child.uniformScale;
+                // if (child.uniformScale) innerScale *= child.uniformScale;
                 this.solidify(child, innerScale);
             }
         }
@@ -936,7 +682,7 @@ export class RefUnbind {
         tmpArtboard.transform.m02 = shape.transform.m02;
         tmpArtboard.transform.m12 = shape.transform.m12;
 
-        tmpArtboard.frameMaskDisabled = shape.frameMaskDisabled;
+        tmpArtboard.frameMaskDisabled = view.frameMaskDisabled;
 
         const layoutInfo = (view as SymbolRefView).autoLayout;
         if (layoutInfo) {

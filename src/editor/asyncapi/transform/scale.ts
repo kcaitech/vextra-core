@@ -16,9 +16,10 @@ import {
     TextBehaviour,
     TextShape,
     BasicArray,
+    makeShapeTransform2By1,
 } from "../../../data";
 import {
-    ArtboradView,
+    ArtboardView,
     adapt2Shape,
     GroupShapeView,
     PageView,
@@ -112,7 +113,7 @@ export function reLayoutBySizeChanged(
                 reLayoutBySizeChanged(api, page, child, _scale, rangeRecorder, sizeRecorder, transformRecorder);
             }
         }
-    } else if ((shape as ArtboradView).autoLayout) {
+    } else if ((shape as ArtboardView).autoLayout) {
         const __shape = adapt2Shape(shape);
         modifyAutoLayout(page, api, __shape);
     } else {
@@ -405,7 +406,7 @@ export function reLayoutBySizeChanged(
     function getTransform(s: ShapeView) {
         let transform = transformRecorder.get(s.id);
         if (!transform) {
-            transform = s.transform2.clone();
+            transform = makeShapeTransform2By1(s.transform);
             transformRecorder.set(s.id, transform);
         }
         return transform;
@@ -551,7 +552,7 @@ export function reLayoutByUniformScale(
         function getTransform(s: ShapeView) {
             let transform = transformRecorder.get(s.id);
             if (!transform) {
-                transform = s.transform2.clone();
+                transform = makeShapeTransform2By1(s.transform);
                 transformRecorder.set(s.id, transform);
             }
             return transform;
@@ -581,7 +582,7 @@ export function uniformScale(
         api.shapeModifyTransform(page, shape, makeShapeTransform1By2(transform));
 
         if (shape instanceof SymbolRefShape) {
-            if (!shape.isCustomSize) api.shapeModifyIsCustomSize(page, shape, true);
+            // if (!shape.isCustomSize) api.shapeModifyIsCustomSize(page, shape, true);
             const scale = getScale(view);
             api.modifyShapeScale(page, shape, scale * ratio);
         }

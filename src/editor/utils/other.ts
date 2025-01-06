@@ -30,10 +30,8 @@ import { BasicArray, BasicMap } from "../../data/basic";
 import { newSymbolShapeUnion } from "../creator";
 import { uuid } from "../../basic/uuid";
 import * as types from "../../data/typesdefine";
-import { ArtboradView, PageView, ShapeView, TableCellView, TableView, TextShapeView, adapt2Shape } from "../../dataview";
+import { ArtboardView, PageView, ShapeView, TableCellView, TableView, TextShapeView, adapt2Shape } from "../../dataview";
 import { modifyAutoLayout } from "./auto_layout";
-import { makeShapeTransform1By2, makeShapeTransform2By1 } from "../../data";
-import { ColVector3D } from "../../basic/matrix2";
 import { Api } from "../../coop";
 
 export function fixTextShapeFrameByLayout(api: Api, page: Page, shape: TextShapeView | TextShape) {
@@ -56,7 +54,7 @@ export function fixTextShapeFrameByLayout(api: Api, page: Page, shape: TextShape
                 fixTransform(0, (_shape.size.height - targetHeight));
             }
             const parent = shape.parent as ShapeView;
-            if (parent && (parent as ArtboradView).autoLayout) {
+            if (parent && (parent as ArtboardView).autoLayout) {
                 modifyAutoLayout(page, api as Api, adapt2Shape(parent));
             }
             break;
@@ -84,7 +82,7 @@ export function fixTextShapeFrameByLayout(api: Api, page: Page, shape: TextShape
             }
             api.shapeModifyWH(page, _shape, targetWidth, targetHeight);
             const parent = shape.parent as ShapeView;
-            if (parent && (parent as ArtboradView).autoLayout) {
+            if (parent && (parent as ArtboardView).autoLayout) {
                 modifyAutoLayout(page, api as Api, adapt2Shape(parent));
             }
             break;
@@ -92,13 +90,12 @@ export function fixTextShapeFrameByLayout(api: Api, page: Page, shape: TextShape
     }
 
     function fixTransform(offsetX: number, offsetY: number) {
-        const m = _shape.matrix2Root();
-        const rootXY = m.computeCoord2(offsetX, offsetY);
-        const targetXY = _shape.parent!.matrix2Root().inverseCoord(rootXY);
+        const targetXY = _shape.transform.computeCoord(offsetX, offsetY)
         const dx = targetXY.x - _shape.transform.translateX;
         const dy = targetXY.y - _shape.transform.translateY;
         if (dx || dy) {
-            api.shapeModifyTransform(page, _shape, makeShapeTransform1By2(makeShapeTransform2By1(_shape.transform).setTranslate(ColVector3D.FromXY(targetXY.x, targetXY.y))));
+            const trans = _shape.transform.clone().trans(dx, dy)
+            api.shapeModifyTransform(page, _shape, trans);
         }
     }
 }

@@ -1,6 +1,6 @@
-import { ShapeView, GroupShapeView, adapt2Shape, TextShapeView, SymbolRefView, ArtboradView } from "../../../dataview";
+import { ShapeView, GroupShapeView, adapt2Shape, TextShapeView, SymbolRefView, ArtboardView } from "../../../dataview";
 import { Api } from "../../../coop";
-import { GroupShape, Page, SymbolShape, MarkerType, BlendMode, Artboard, ShapeType, TextShape, Shape, makeShapeTransform1By2 } from "../../../data";
+import { GroupShape, Page, SymbolShape, MarkerType, BlendMode, Artboard, ShapeType, TextShape, Shape, makeShapeTransform1By2, Transform } from "../../../data";
 import { importFill, importBorder, importShadow, importExportOptions, importBlur, importPrototypeInterAction, importAutoLayout } from "../../../data/baseimport";
 import { exportFill, exportBorder, exportShadow, exportExportOptions, exportBlur, exportPrototypeInterAction, exportAutoLayout } from "../../../data/baseexport";
 import { CircleChecker } from "./circle";
@@ -99,8 +99,8 @@ export class ShapePorter {
         }
         const blur = view.blur ? importBlur(exportBlur(view.blur)) : undefined;
         {
-            if (shape.style.blur) api.deleteBlur(page, shape);
             if (blur) api.addBlur(page, shape, blur);
+            else if (shape.style.blur) api.deleteBlur(page, shape);
         }
         const protoInteractions = view.prototypeInterActions
             ? view.prototypeInterActions.map(i => importPrototypeInterAction(exportPrototypeInterAction(i)))
@@ -119,7 +119,7 @@ export class ShapePorter {
         if (view instanceof SymbolRefView) {
             const refId = view.refId;
         }
-        if (view instanceof ArtboradView) {
+        if (view instanceof ArtboardView) {
             const autoLayout = view.autoLayout ? importAutoLayout(exportAutoLayout(view.autoLayout)) : undefined;
             autoLayout && api.shapeAutoLayout(page, shape, autoLayout);
         }
@@ -131,7 +131,7 @@ export class ShapePorter {
      */
     private autolayout() {
         if (this.envSet.size) this.envSet.forEach(e => {
-            if ((e as ArtboradView).autoLayout) modifyAutoLayout(this.page, this.api, adapt2Shape(e));
+            if ((e as ArtboardView).autoLayout) modifyAutoLayout(this.page, this.api, adapt2Shape(e));
         })
     }
 
@@ -156,10 +156,10 @@ export class ShapePorter {
     }
 
     transform(view: ShapeView, target: GroupShapeView, shape?: Shape) {
-        const transform = view.transform2FromRoot;
-        const parent2root = target.transform2FromRoot;
-        transform.addTransform(parent2root.getInverse());
-        this.api.shapeModifyTransform(this.page, shape ?? adapt2Shape(view), makeShapeTransform1By2(transform));
+        const transform = view.matrix2Root();
+        const parent2root = target.matrix2Root();
+        transform.multi(parent2root.inverse);
+        this.api.shapeModifyTransform(this.page, shape ?? adapt2Shape(view), (transform));
     }
 
     /**

@@ -17,6 +17,7 @@ import { Cap, gPal, IPalPath, Join } from "../../basic/pal";
 import { Path } from "@kcdesign/path";
 import { modifyAutoLayout } from "./auto_layout";
 import { qua2cube, splitCubicBezierAtT } from "../../data/pathparser";
+import { Transform } from "../../data/transform";
 
 interface XY {
     x: number
@@ -30,15 +31,15 @@ const minimum_WH = 1; // 用户可设置最小宽高值。以防止宽高在缩�
  * @param index 点的数组索引
  * @param end 点的目标🎯位置（root）
  */
-export function pathEdit(api: Api, page: Page, s: PathShape, index: number, end: XY, matrix?: Matrix) {
+export function pathEdit(api: Api, page: Page, s: PathShape, index: number, end: XY, matrix?: Transform) {
     // todo 连接线相关操作
-    let m = matrix ? matrix : new Matrix();
+    let m = matrix ? matrix : new Transform();
     if (!matrix) {
         const w = s.size.width, h = s.size.height;
         if (w === 0 || h === 0) throw new Error(); // 不可以为0
         m.multiAtLeft(s.matrix2Root());
         m.preScale(w, h);
-        m = new Matrix(m.inverse);
+        m = (m.inverse);
     }
 
     const p = (s as PathShape).pathsegs[0].points[index];
@@ -103,12 +104,12 @@ export function pointsEdit(api: Api, page: Page, s: Shape, points: CurvePoint[],
  */
 export function contact_edit(api: Api, page: Page, s: ContactShape, index1: number, index2: number, dx: number, dy: number) { // 以边为操作目标编辑路径
     // todo 连接线相关操作
-    const m = new Matrix(s.matrix2Root());
+    const m = (s.matrix2Root());
     const w = s.size.width, h = s.size.height;
 
     m.preScale(w, h);
 
-    const m_in = new Matrix(m.inverse);  // 图形单位坐标系，0-1
+    const m_in = (m.inverse);  // 图形单位坐标系，0-1
 
     let p1: { x: number, y: number } = s.points[index1];
     let p2: { x: number, y: number } = s.points[index2];
@@ -171,7 +172,7 @@ export function get_points_for_init(page: Page, shape: ContactShape, index: numb
         const m1 = shape.matrix2Root();
         const f = shape.size;
         m1.preScale(f.width, f.height);
-        const m2 = new Matrix(m1.inverse);
+        const m2 = (m1.inverse);
 
         p = m2.computeCoord3(p);
         const cp = new CurvePoint([1] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight);
@@ -212,7 +213,7 @@ export function get_points_for_init(page: Page, shape: ContactShape, index: numb
         const m1 = shape.matrix2Root();
         const f = shape.size;
         m1.preScale(f.width, f.height);
-        const m2 = new Matrix(m1.inverse);
+        const m2 = (m1.inverse);
 
         p = m2.computeCoord3(p);
         const cp = new CurvePoint([len - 1] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight);
@@ -242,7 +243,7 @@ export function update_frame_by_points(api: Api, page: Page, s: Shape, reLayout 
     const w = f.width;
     const h = f.height;
 
-    const m1 = new Matrix(s.matrix2Parent());
+    const m1 = (s.matrix2Parent());
     m1.preScale(w, h);
 
     const targetWidth = Math.max(box.width, minimum_WH);
@@ -266,7 +267,7 @@ export function update_frame_by_points(api: Api, page: Page, s: Shape, reLayout 
 
     if (!(frameChange || reLayout)) return; // 只有宽高被改变，才会需要重排2D points.
 
-    const m3 = new Matrix(s.matrix2Parent());
+    const m3 = (s.matrix2Parent());
     m3.preScale(s.size.width, s.size.height);
     m1.multiAtLeft(m3.inverse);
 
@@ -280,7 +281,7 @@ export function update_frame_by_points(api: Api, page: Page, s: Shape, reLayout 
         }
     }
 
-    function exe(segment: number, m: Matrix, points: CurvePoint[]) {
+    function exe(segment: number, m: Transform, points: CurvePoint[]) {
         if (!points || !points.length) return false;
 
         for (let i = 0, len = points.length; i < len; i++) {
@@ -568,11 +569,11 @@ export function modify_points_xy(api: Api, page: Page, s: Shape, actions: {
     x: number;
     y: number;
 }[]) {
-    let m = new Matrix(s.matrix2Parent());
+    let m = (s.matrix2Parent());
     const f = s.size;
     m.preScale(f.width, f.height);
 
-    m = new Matrix(m.inverse);
+    m = (m.inverse);
 
     if (s.pathType !== PathType.Editable) {
         return;

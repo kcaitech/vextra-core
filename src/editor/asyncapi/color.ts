@@ -30,7 +30,7 @@ export class ColorPicker extends AsyncApiCaller {
             const page = this.page;
             for (let i = 0; i < shapes.length; i++) {
                 const shape = shapes[i];
-                const s = shape4fill(api, page, shape);
+                const s = shape4fill(api, this.pageView, shape);
                 api.setFillImageScale(page, s, index, scale);
             }
             this.updateView();
@@ -45,7 +45,7 @@ export class ColorPicker extends AsyncApiCaller {
             const page = this.page;
             for (let i = 0; i < shapes.length; i++) {
                 const shape = shapes[i];
-                const s = shape4fill(api, page, shape);
+                const s = shape4fill(api, this.pageView, shape);
                 api.setFillImageFilter(page, s, index, key, value);
             }
             this.updateView();
