@@ -9,13 +9,12 @@ import { ShapeSize } from "../data/baseclasses";
 
 export type VarsContainer = (SymbolRefShape | SymbolShape)[];
 
-
 export interface PropsType {
     data: Shape;
-    scale: { x: number, y: number } | undefined;
-    varsContainer: VarsContainer | undefined;
-    isVirtual: boolean | undefined;
-    layoutSize: ShapeSize | undefined
+    scale?: { x: number, y: number };
+    varsContainer?: VarsContainer;
+    isVirtual?: boolean;
+    layoutSize?: ShapeSize
 }
 
 interface DataView extends Notifiable {
