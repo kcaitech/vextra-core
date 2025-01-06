@@ -1,5 +1,5 @@
 import { innerShadowId, renderBlur, renderBorders, renderFills, renderShadows } from "../render";
-import { BasicArray, Blur, BlurMask, BlurType, Border, BorderPosition, ContextSettings, CornerRadius, CurvePoint, ExportOptions, Fill, FillMask, FillType, GradientType, makeShapeTransform1By2, makeShapeTransform2By1, MarkerType, OverlayBackgroundAppearance, OverlayBackgroundInteraction, OverlayPosition, OverrideType, PathShape, Point2D, PrototypeInterAction, PrototypeStartingPoint, ResizingConstraints2, ScrollBehavior, ScrollDirection, Shadow, ShadowMask, ShadowPosition, Shape, ShapeFrame, ShapeSize, ShapeType, SymbolRefShape, SymbolShape, Transform, Variable, VariableType } from "../data";
+import { BasicArray, Blur, BlurMask, BlurType, Border, BorderMask, BorderPosition, ContextSettings, CornerRadius, CurvePoint, ExportOptions, Fill, FillMask, FillType, GradientType, makeShapeTransform1By2, makeShapeTransform2By1, MarkerType, OverlayBackgroundAppearance, OverlayBackgroundInteraction, OverlayPosition, OverrideType, PathShape, Point2D, PrototypeInterAction, PrototypeStartingPoint, ResizingConstraints2, ScrollBehavior, ScrollDirection, Shadow, ShadowMask, ShadowPosition, Shape, ShapeFrame, ShapeSize, ShapeType, SymbolRefShape, SymbolShape, Transform, Variable, VariableType } from "../data";
 import { findOverrideAndVar } from "./basic";
 import { EL, elh } from "./el";
 import { Matrix } from "../basic/matrix";
@@ -665,7 +665,7 @@ export class ShapeView extends DataView {
         if (this.style.fillsMask) {
             const mgr = this.style.getStylesMgr();
             if (!mgr) return fills;
-            const mask = mgr.getSync(this.style.fillsMask) as FillMask            
+            const mask = mgr.getSync(this.style.fillsMask) as FillMask
             fills = mask.fills
             // 检查图层是否在变量通知对象集合里
             if (!mask.__subscribers.has(this)) mask.__subscribers.add(this);
@@ -679,8 +679,22 @@ export class ShapeView extends DataView {
     getBorders(): Border {
         if (this.m_borders) return this.m_borders;
         const v = this._findOV(OverrideType.Borders, VariableType.Borders);
-        this.m_borders = v ? v.value as Border : this.m_data.style.borders
-        return this.m_borders;
+        let Border: Border;
+        if (this.style.bordersMask) {
+            const mgr = this.style.getStylesMgr();
+            if (!mgr) return this.m_data.style.borders;
+            const mask = mgr.getSync(this.style.bordersMask) as BorderMask
+            let border = { ...this.m_data.style.borders }
+            border.position = mask.border.position
+            border.sideSetting = mask.border.sideSetting
+            Border = border as Border
+            // 检查图层是否在变量通知对象集合里
+            if (!mask.__subscribers.has(this)) mask.__subscribers.add(this);
+        } else {
+            Border = v ? v.value as Border : this.m_data.style.borders
+        }
+
+        return Border;
     }
 
     get cornerRadius(): CornerRadius | undefined {
@@ -703,7 +717,7 @@ export class ShapeView extends DataView {
         if (this.style.shadowsMask) {
             const mgr = this.style.getStylesMgr();
             if (!mgr) return shadows;
-            const mask = mgr.getSync(this.style.shadowsMask) as ShadowMask     
+            const mask = mgr.getSync(this.style.shadowsMask) as ShadowMask
             shadows = mask.shadows
             // 检查图层是否在变量通知对象集合里
             if (!mask.__subscribers.has(this)) mask.__subscribers.add(this);
@@ -719,7 +733,7 @@ export class ShapeView extends DataView {
         if (this.style.blursMask) {
             const mgr = this.style.getStylesMgr();
             if (!mgr) return undefined;
-            const mask = mgr.getSync(this.style.blursMask) as BlurMask     
+            const mask = mgr.getSync(this.style.blursMask) as BlurMask
             blur = mask.blur
             // 检查图层是否在变量通知对象集合里
             if (!mask.__subscribers.has(this)) mask.__subscribers.add(this);

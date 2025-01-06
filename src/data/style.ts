@@ -23,7 +23,7 @@ import {
     Stop,
     VariableType,
     WindingRule,
-    SideType
+    SideType,
 } from "./baseclasses";
 import { Basic, BasicArray, BasicMap, ResourceMgr } from "./basic";
 import { Variable } from "./variable";
@@ -115,6 +115,21 @@ export class Border extends Basic implements classes.Border {
         this.cornerType = cornerType
         this.sideSetting = sideSetting
         this.strokePaints = strokePaints
+    }
+}
+
+export class BorderMaskType extends Basic implements classes.BorderMaskType {
+    typeId = 'border-mask-type'
+    position: BorderPosition
+    sideSetting: BorderSideSetting
+
+    constructor(
+        position: BorderPosition,
+        sideSetting: BorderSideSetting,
+    ) {
+        super()
+        this.position = position
+        this.sideSetting = sideSetting
     }
 }
 
@@ -307,6 +322,7 @@ export class Style extends Basic implements classes.Style {
     fillsMask?: string
     shadowsMask?: string
     blursMask?: string
+    bordersMask?: string
 
     private __styleMgr?: ResourceMgr<StyleMangerMember>;
 
@@ -405,7 +421,7 @@ export class Blur extends Basic implements classes.Blur {
 /**
  * @description 样式库管理器数据组成
  */
-export type StyleMangerMember = FillMask | ShadowMask | BlurMask;
+export type StyleMangerMember = FillMask | ShadowMask | BlurMask | BorderMask;
 
 export class StyleSheet extends Basic implements classes.StyleSheet {
     typeId = "style-sheet"
@@ -467,6 +483,12 @@ export class StyleSheet extends Basic implements classes.StyleSheet {
                 blur.mask = v.blur.mask;
                 const blurmask = new BlurMask(v.crdtidx, sheetId, v4(), v.name, v.description, blur);
                 notifiable_variables.push(blurmask);
+            } else if (v instanceof classes.BorderMask) {
+                const { position, sideSetting } = v.border;
+                const side = new BorderSideSetting(sideSetting.sideType, sideSetting.thicknessTop, sideSetting.thicknessLeft, sideSetting.thicknessBottom, sideSetting.thicknessRight);
+                const border = new BorderMaskType(position, side);
+                const borderMask = new BorderMask(v.crdtidx,sheetId, v4(), v.name, v.description, border);
+                notifiable_variables.push(borderMask);
             }
             // 还有其他的一些类型
         }
@@ -578,6 +600,43 @@ export class BlurMask extends Basic implements Mask, classes.BlurMask {
 
     notify(...args: any[]) {
         super.notify("style-mask-change", "blur", ...args);
+        this.__subscribers.forEach(view => {
+            if (view.isDistroyed) return;
+            view.m_ctx.setDirty(view); // 将view设置为脏节点之后，下一帧会被更新
+        })
+    }
+
+    add(view: ShapeView) {
+        this.__subscribers.add(view);
+        return () => {
+            this.__subscribers.delete(view)
+        }
+    }
+}
+
+export class BorderMask extends Basic implements Mask, classes.BorderMask {
+    typeId = 'border-mask-living';
+    crdtidx: BasicArray<number>;
+    id: string;
+    sheet: string;
+    __subscribers: Set<ShapeView>;
+    name: string;
+    description: string;
+    border: BorderMaskType;
+
+    constructor(crdtidx: BasicArray<number>,sheet: string, id: string, name: string, description: string, border: BorderMaskType) {
+        super();
+        this.crdtidx = crdtidx;
+        this.id = id;
+        this.sheet = sheet;
+        this.__subscribers = new Set<ShapeView>();
+        this.name = name;
+        this.description = description;
+        this.border = border;
+    }
+
+    notify(...args: any[]) {
+        super.notify("style-mask-change", "border", ...args);
         this.__subscribers.forEach(view => {
             if (view.isDistroyed) return;
             view.m_ctx.setDirty(view); // 将view设置为脏节点之后，下一帧会被更新

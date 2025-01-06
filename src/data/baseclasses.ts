@@ -482,7 +482,7 @@ export class Stop extends Basic {
         this.color = color
     }
 }
-type StyleSheet_variables = BasicArray<FillMask | ShadowMask | BlurMask | CornerRadius>
+type StyleSheet_variables = BasicArray<FillMask | ShadowMask | BlurMask | BorderMask | CornerRadius>
 type Style_fills = BasicArray<Fill>
 type Style_shadows = BasicArray<Shadow>
 type Style_innerShadows = BasicArray<Shadow>
@@ -871,6 +871,36 @@ export class BlurMask extends Basic {
         this.blur = blur
     }
 }
+/* border mask type */
+export class BorderMaskType extends Basic {
+    typeId = "border-mask-type"
+    position: BorderPosition
+    sideSetting: BorderSideSetting
+    constructor(position: BorderPosition, sideSetting: BorderSideSetting) {
+        super()
+        this.position = position
+        this.sideSetting = sideSetting
+    }
+}
+/* border mask */
+export class BorderMask extends Basic {
+    typeId = "border-mask"
+    crdtidx: Crdtidx
+    sheet: string
+    id: string
+    name: string
+    description: string
+    border: BorderMaskType
+    constructor(crdtidx: Crdtidx, sheet: string, id: string, name: string, description: string, border: BorderMaskType) {
+        super()
+        this.crdtidx = crdtidx
+        this.sheet = sheet
+        this.id = id
+        this.name = name
+        this.description = description
+        this.border = border
+    }
+}
 /* border */
 export class Border extends Basic {
     typeId = "border"
@@ -958,6 +988,7 @@ export class Style extends Basic {
     fillsMask?: string
     shadowsMask?: string
     blursMask?: string
+    bordersMask?: string
     constructor(fills: Style_fills, shadows: Style_shadows, borders: Border) {
         super()
         this.fills = fills

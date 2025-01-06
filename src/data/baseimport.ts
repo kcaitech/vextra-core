@@ -30,7 +30,7 @@ type PathShape2_pathsegs = BasicArray<impl.PathSegment>
 type PrototypeInterAction_crdtidx = BasicArray<number>
 type ShadowMask_shadows = BasicArray<impl.Shadow>
 type Shape_prototypeInteractions = BasicArray<impl.PrototypeInterAction>
-type StyleSheet_variables = BasicArray<impl.FillMask | impl.ShadowMask | impl.BlurMask | impl.CornerRadius>
+type StyleSheet_variables = BasicArray<impl.FillMask | impl.ShadowMask | impl.BlurMask | impl.BorderMask | impl.CornerRadius>
 type Style_fills = BasicArray<impl.Fill>
 type Style_shadows = BasicArray<impl.Shadow>
 type Style_innerShadows = BasicArray<impl.Shadow>
@@ -704,6 +704,9 @@ export function importStyleSheet_variables(source: types.StyleSheet_variables, c
             if (source.typeId === "blur-mask") {
                 return importBlurMask(source as types.BlurMask, ctx)
             }
+            if (source.typeId === "border-mask") {
+                return importBorderMask(source as types.BorderMask, ctx)
+            }
             if (source.typeId === "corner-radius") {
                 return importCornerRadius(source as types.CornerRadius, ctx)
             }
@@ -1120,6 +1123,27 @@ export function importBlurMask(source: types.BlurMask, ctx?: IImportContext): im
 
     return ret
 }
+/* border mask type */
+export function importBorderMaskType(source: types.BorderMaskType, ctx?: IImportContext): impl.BorderMaskType {
+    const ret: impl.BorderMaskType = new impl.BorderMaskType (
+        importBorderPosition(source.position, ctx),
+        importBorderSideSetting(source.sideSetting, ctx))
+    return ret
+}
+/* border mask */
+export function importBorderMask(source: types.BorderMask, ctx?: IImportContext): impl.BorderMask {
+    const ret: impl.BorderMask = new impl.BorderMask (
+        importCrdtidx(source.crdtidx, ctx),
+        source.sheet,
+        source.id,
+        source.name,
+        source.description,
+        importBorderMaskType(source.border, ctx))
+        // inject code
+    if (ctx?.document) ctx.document.stylesMgr.add(ret.id, ret);
+
+    return ret
+}
 /* border */
 export function importBorder(source: types.Border, ctx?: IImportContext): impl.Border {
     const ret: impl.Border = new impl.Border (
@@ -1206,6 +1230,7 @@ function importStyleOptional(tar: impl.Style, source: types.Style, ctx?: IImport
     if (source.fillsMask !== undefined) tar.fillsMask = source.fillsMask
     if (source.shadowsMask !== undefined) tar.shadowsMask = source.shadowsMask
     if (source.blursMask !== undefined) tar.blursMask = source.blursMask
+    if (source.bordersMask !== undefined) tar.bordersMask = source.bordersMask
 }
 export function importStyle(source: types.Style, ctx?: IImportContext): impl.Style {
     const ret: impl.Style = new impl.Style (

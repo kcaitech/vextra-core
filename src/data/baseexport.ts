@@ -622,6 +622,9 @@ export function exportStyleSheet_variables(source: types.StyleSheet_variables, c
             if (source.typeId === "blur-mask") {
                 return exportBlurMask(source as types.BlurMask, ctx)
             }
+            if (source.typeId === "border-mask") {
+                return exportBorderMask(source as types.BorderMask, ctx)
+            }
             if (source.typeId === "corner-radius") {
                 return exportCornerRadius(source as types.CornerRadius, ctx)
             }
@@ -1017,6 +1020,28 @@ export function exportBlurMask(source: types.BlurMask, ctx?: IExportContext): ty
     ret.blur = exportBlur(source.blur, ctx)
     return ret
 }
+/* border mask type */
+export function exportBorderMaskType(source: types.BorderMaskType, ctx?: IExportContext): types.BorderMaskType {
+    const ret: types.BorderMaskType = {} as types.BorderMaskType
+    ret.typeId = "border-mask-type"
+    ret.typeId = source.typeId
+    ret.position = exportBorderPosition(source.position, ctx)
+    ret.sideSetting = exportBorderSideSetting(source.sideSetting, ctx)
+    return ret
+}
+/* border mask */
+export function exportBorderMask(source: types.BorderMask, ctx?: IExportContext): types.BorderMask {
+    const ret: types.BorderMask = {} as types.BorderMask
+    ret.typeId = "border-mask"
+    ret.crdtidx = exportCrdtidx(source.crdtidx, ctx)
+    ret.typeId = source.typeId
+    ret.sheet = source.sheet
+    ret.id = source.id
+    ret.name = source.name
+    ret.description = source.description
+    ret.border = exportBorderMaskType(source.border, ctx)
+    return ret
+}
 /* border */
 export function exportBorder(source: types.Border, ctx?: IExportContext): types.Border {
     const ret: types.Border = {} as types.Border
@@ -1102,6 +1127,7 @@ export function exportStyle(source: types.Style, ctx?: IExportContext): types.St
     if (source.fillsMask !== undefined) ret.fillsMask = source.fillsMask
     if (source.shadowsMask !== undefined) ret.shadowsMask = source.shadowsMask
     if (source.blursMask !== undefined) ret.blursMask = source.blursMask
+    if (source.bordersMask !== undefined) ret.bordersMask = source.bordersMask
     return ret
 }
 /* text attr */

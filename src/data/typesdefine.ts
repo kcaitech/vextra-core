@@ -567,7 +567,7 @@ export enum StrikethroughType {
 export enum StyleLibType {
     Color = "color",
 }
-export type StyleSheet_variables = Array<FillMask | ShadowMask | BlurMask | CornerRadius>
+export type StyleSheet_variables = Array<FillMask | ShadowMask | BlurMask | BorderMask | CornerRadius>
 /* shape types */
 export enum StyleVarType {
     Color = "color",
@@ -874,6 +874,22 @@ export type BlurMask = {
     description: string,
     blur: Blur,
 }
+/* border mask type */
+export type BorderMaskType = {
+    typeId: string,
+    position: BorderPosition,
+    sideSetting: BorderSideSetting,
+}
+/* border mask */
+export type BorderMask = {
+    crdtidx: Crdtidx,
+    typeId: string,
+    sheet: string,
+    id: string,
+    name: string,
+    description: string,
+    border: BorderMaskType,
+}
 /* border */
 export type Border = {
     typeId: string,
@@ -938,6 +954,7 @@ export type Style = {
     fillsMask?: string,
     shadowsMask?: string,
     blursMask?: string,
+    bordersMask?: string,
 }
 /* text attr */
 export type TextAttr = ParaAttr & {

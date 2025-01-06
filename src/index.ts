@@ -141,7 +141,10 @@ export {
     BlurMask,
     StyleMangerMember,
     CornerRadius,
-    PathSegment
+    PathSegment,
+    BorderMask,
+    BorderMaskType,
+    StyleSheet
 } from "./data"
 
 export {

@@ -378,7 +378,11 @@ inject['BlurMask']['after'] = `\
     // inject code
     if (ctx?.document) ctx.document.stylesMgr.add(ret.id, ret);
 `
-
+inject['BorderMask'] = {};
+inject['BorderMask']['after'] = `\
+    // inject code
+    if (ctx?.document) ctx.document.stylesMgr.add(ret.id, ret);
+`
 inject['Style'] = {};
 inject['Style']['after'] = `\
     // inject code

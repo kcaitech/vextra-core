@@ -22,6 +22,9 @@
             "$ref": "./blur-mask.json"
           },
           {
+            "$ref": "./border-mask.json"
+          },
+          {
             "$ref": "./corner-radius.json"
           }
         ]
