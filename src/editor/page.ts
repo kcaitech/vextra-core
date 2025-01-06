@@ -4374,6 +4374,25 @@ export class PageEditor {
                     if (after_remove(parent)) {
                         this.delete_inner(this.__page, parent, api);
                     }
+                    const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                    if (_types.includes(host.type)) {
+                        const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                        const sortedArr = [...(host as GroupShape).childs].sort((a, b) => {
+                            if (a.scrollBehavior !== Fixed && b.scrollBehavior === Fixed) {
+                                return -1;
+                            } else if (a.scrollBehavior === Fixed && b.scrollBehavior !== Fixed) {
+                                return 1;
+                            }
+                            return 0;
+                        });
+                        for (let j = 0; j < sortedArr.length; j++) {
+                            const s = sortedArr[j];
+                            const currentIndex = (host as GroupShape).childs.indexOf(s);
+                            if (currentIndex !== j) {
+                                api.shapeMove(this.__page, host as GroupShape, currentIndex, host as GroupShape, j);
+                            }
+                        }
+                    }
                 }
             } else {
                 if (position === 'lower') {
@@ -4441,6 +4460,25 @@ export class PageEditor {
 
                     if (after_remove(parent)) {
                         this.delete_inner(this.__page, parent, api);
+                    }
+                    const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                    if (_types.includes(host_parent.type)) {
+                        const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                        const sortedArr = [...host_parent.childs].sort((a, b) => {
+                            if (a.scrollBehavior !== Fixed && b.scrollBehavior === Fixed) {
+                                return -1;
+                            } else if (a.scrollBehavior === Fixed && b.scrollBehavior !== Fixed) {
+                                return 1;
+                            }
+                            return 0;
+                        });
+                        for (let j = 0; j < sortedArr.length; j++) {
+                            const s = sortedArr[j];
+                            const currentIndex = host_parent.childs.indexOf(s);
+                            if (currentIndex !== j) {
+                                api.shapeMove(this.__page, host_parent, currentIndex, host_parent, j);
+                            }
+                        }
                     }
                 }
             }
