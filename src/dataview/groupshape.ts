@@ -101,6 +101,7 @@ export class GroupShapeView extends ShapeView {
     }
 
     protected layoutChild(
+        parentFrame: ShapeSize,
         child: Shape, idx: number,
         scale: { x: number, y: number } | undefined,
         varsContainer: VarsContainer | undefined,
@@ -108,7 +109,7 @@ export class GroupShapeView extends ShapeView {
         rView: RootView | undefined
     ) {
         let cdom: DataView | undefined = resue.get(child.id);
-        const props = { data: child, scale, varsContainer, isVirtual: this.m_isVirtual };
+        const props = { data: child, scale, varsContainer, isVirtual: this.m_isVirtual, layoutSize: parentFrame };
         if (cdom) {
             this.moveChild(cdom, idx);
             return cdom.layout(props);
@@ -136,7 +137,7 @@ export class GroupShapeView extends ShapeView {
         this.m_children.forEach((c) => resue.set(c.data.id, c));
         const rootView = this.getRootView();
         for (let i = 0, len = childs.length; i < len; i++) {
-            this.layoutChild(childs[i], i, scale, varsContainer, resue, rootView);
+            this.layoutChild(parentFrame, childs[i], i, scale, varsContainer, resue, rootView);
         }
         // 删除多余的
         const removes = this.removeChilds(childs.length, Number.MAX_VALUE);
