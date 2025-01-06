@@ -182,14 +182,20 @@ export class BoolShapeView extends GroupShapeView {
             this.m_pathstr = undefined;
         }
 
-        if (args.includes('fills')) {
+        if (args.includes('variables')) {
+            this.m_fills = undefined;
+            this.m_borders = undefined;
+            this.m_border_path = undefined;
+            this.m_border_path_box = undefined;
+            this.createBorderPath();
+        }
+        else if (args.includes('fills')) {
             this.m_fills = undefined;
             this.m_border_path = undefined;
             this.m_border_path_box = undefined;
             this.createBorderPath();
         }
-
-        if (args.includes('borders')) {
+        else if (args.includes('borders')) {
             this.m_borders = undefined;
             this.m_border_path = undefined;
             this.m_border_path_box = undefined;

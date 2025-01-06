@@ -1,7 +1,7 @@
 import { Shape } from "../../../data/shape";
 import { ShapeType } from "../../../data/classes";
 import {
-    ArtboradView, ContactLineView, CutoutShapeView, DViewCtx,
+    ArtboardView, ContactLineView, CutoutShapeView, DViewCtx,
     GroupShapeView, ImageShapeView,
     LineView, PageView, PathShapeView, PathShapeView2,
     RectShapeView, SymbolRefView, SymbolView,
@@ -11,7 +11,7 @@ import { BoolShapeView } from "../../../dataview/boolshape";
 import { DataView } from "../../../dataview/view"
 
 function initComsMap(comsMap: Map<ShapeType, any>) {
-    comsMap.set(ShapeType.Artboard, ArtboradView);
+    comsMap.set(ShapeType.Artboard, ArtboardView);
     comsMap.set(ShapeType.Group, GroupShapeView);
     comsMap.set(ShapeType.Image, ImageShapeView);
     comsMap.set(ShapeType.BoolShape, BoolShapeView);

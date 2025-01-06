@@ -2,7 +2,8 @@ import { GroupShapeView } from "./groupshape";
 import { innerShadowId, renderBorders, renderFills } from "../render";
 import { EL, elh } from "./el";
 import {
-    CornerRadius, Shape, ShapeFrame, ShapeType, SymbolShape, AutoLayout, BorderPosition, Page, ShadowPosition, BlurType
+    CornerRadius, Shape, ShapeFrame, ShapeType, SymbolShape, AutoLayout, BorderPosition, Page, ShadowPosition, BlurType,
+    ShapeSize
 } from "../data";
 import { VarsContainer } from "./viewctx";
 import { DataView, RootView } from "./view"
@@ -51,6 +52,17 @@ export class SymbolView extends GroupShapeView {
     // borders
     protected renderBorders(): EL[] {
         return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.data);
+    }
+
+    protected _layout(parentFrame: ShapeSize | undefined, scale: { x: number; y: number; } | undefined): void {
+        const autoLayout = this.autoLayout;
+        if (!autoLayout) {
+            super._layout(parentFrame, scale);
+            return
+        }
+        // todo autoLayout
+        // 
+        super._layout(parentFrame, scale);
     }
 
     protected layoutChild(child: Shape, idx: number, scale: { x: number, y: number } | undefined, varsContainer: VarsContainer | undefined, resue: Map<string, DataView>, rView: RootView | undefined) {
@@ -222,7 +234,7 @@ export class SymbolView extends GroupShapeView {
             const clip = clippathR(elh, id, this.getPathStr());
             children = [
                 clip,
-                elh("g", {"clip-path": "url(#" + id + ")"}, [...fills, ...childs]),
+                elh("g", { "clip-path": "url(#" + id + ")" }, [...fills, ...childs]),
                 ...borders
             ];
         }
@@ -233,7 +245,7 @@ export class SymbolView extends GroupShapeView {
             const inner_url = innerShadowId(filterId, this.getShadows());
             filter = `url(#pd_outer-${filterId}) `;
             if (inner_url.length) filter += inner_url.join(' ');
-            children = [...shadows, elh("g", {filter}, children)];
+            children = [...shadows, elh("g", { filter }, children)];
         }
 
         // 模糊
@@ -259,14 +271,14 @@ export class SymbolView extends GroupShapeView {
         // 遮罩
         const _mask_space = this.renderMask();
         if (_mask_space) {
-            Object.assign(props.style, {transform: _mask_space.toString()});
+            Object.assign(props.style, { transform: _mask_space.toString() });
             const id = `mask-base-${objectId(this)}`;
             const __body_transform = this.transformFromMask;
-            const __body = elh("g", {style: {transform: __body_transform}}, children);
+            const __body = elh("g", { style: { transform: __body_transform } }, children);
             this.bleach(__body);
             children = [__body];
-            const mask = elh('mask', {id}, children);
-            const rely = elh('g', {mask: `url(#${id})`}, this.relyLayers);
+            const mask = elh('mask', { id }, children);
+            const rely = elh('g', { mask: `url(#${id})` }, this.relyLayers);
             children = [mask, rely];
         }
 

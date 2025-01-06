@@ -100,12 +100,6 @@
         },
         "stackPositioning": {
             "$ref": "./stack-positioning.json"
-        },
-        "uniformScale": {
-            "type": "number"
-        },
-        "roundMask": {
-            "type": "string"
         }
     },
     "required": [

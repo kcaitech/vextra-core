@@ -672,6 +672,13 @@ export function exportSymbolShape_guides(source: types.SymbolShape_guides, ctx?:
     })
     return ret
 }
+/* table cell info */
+export function exportTableCellAttr(source: types.TableCellAttr, ctx?: IExportContext): types.TableCellAttr {
+    const ret: types.TableCellAttr = {} as types.TableCellAttr
+    if (source.rowSpan !== undefined) ret.rowSpan = source.rowSpan
+    if (source.colSpan !== undefined) ret.colSpan = source.colSpan
+    return ret
+}
 /* table cell types */
 export function exportTableCellType(source: types.TableCellType, ctx?: IExportContext): types.TableCellType {
     return source
@@ -685,6 +692,20 @@ export function exportTableShape_rowHeights(source: types.TableShape_rowHeights,
 }
 export function exportTableShape_colWidths(source: types.TableShape_colWidths, ctx?: IExportContext): types.TableShape_colWidths {
     const ret: types.TableShape_colWidths = []
+    source.forEach((source) => {
+        ret.push(exportCrdtNumber(source, ctx))
+    })
+    return ret
+}
+export function exportTableShape2_rowHeights(source: types.TableShape2_rowHeights, ctx?: IExportContext): types.TableShape2_rowHeights {
+    const ret: types.TableShape2_rowHeights = []
+    source.forEach((source) => {
+        ret.push(exportCrdtNumber(source, ctx))
+    })
+    return ret
+}
+export function exportTableShape2_colWidths(source: types.TableShape2_colWidths, ctx?: IExportContext): types.TableShape2_colWidths {
+    const ret: types.TableShape2_colWidths = []
     source.forEach((source) => {
         ret.push(exportCrdtNumber(source, ctx))
     })
@@ -1201,8 +1222,6 @@ export function exportShape(source: types.Shape, ctx?: IExportContext): types.Sh
     if (source.scrollBehavior !== undefined) ret.scrollBehavior = exportScrollBehavior(source.scrollBehavior, ctx)
     if (source.mask !== undefined) ret.mask = source.mask
     if (source.stackPositioning !== undefined) ret.stackPositioning = exportStackPositioning(source.stackPositioning, ctx)
-    if (source.uniformScale !== undefined) ret.uniformScale = source.uniformScale
-    if (source.roundMask !== undefined) ret.roundMask = source.roundMask
     return ret
 }
 /* style sheet */
@@ -1260,8 +1279,8 @@ export function exportVariable(source: types.Variable, ctx?: IExportContext): ty
     ret.type = exportVariableType(source.type, ctx)
     ret.name = source.name
     ret.value = (() => {
-        if (typeof source.value !== "object") {
-            return source.value
+        if (typeof source.value !== "object" || source.value == null) {
+            return source.value == null ? undefined : source.value
         }
         if (Array.isArray(source.value)) {
             return exportVariable_0(source.value, ctx)
@@ -1379,7 +1398,7 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
     if (source.isCustomSize !== undefined) ret.isCustomSize = source.isCustomSize
     if (source.cornerRadius !== undefined) ret.cornerRadius = exportCornerRadius(source.cornerRadius, ctx)
     if (source.innerEnvScale !== undefined) ret.innerEnvScale = source.innerEnvScale
-    if (source.frameMaskDisabled !== undefined) ret.frameMaskDisabled = source.frameMaskDisabled
+    if (source.uniformScale !== undefined) ret.uniformScale = source.uniformScale
         // inject code
     if (ctx?.refsymbols) ctx.refsymbols.add(ret.refId);
 
@@ -1529,5 +1548,29 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
 export function exportSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IExportContext): types.SymbolUnionShape {
     const ret: types.SymbolUnionShape = exportSymbolShape(source, ctx) as types.SymbolUnionShape
     ret.typeId = "symbol-union-shape"
+    return ret
+}
+/* table shape2 */
+export function exportTableShape2(source: types.TableShape2, ctx?: IExportContext): types.TableShape2 {
+    const ret: types.TableShape2 = exportShape(source, ctx) as types.TableShape2
+    ret.typeId = "table-shape2"
+    ret.size = exportShapeSize(source.size, ctx)
+    ret.cells = (() => {
+        const ret: any = {}
+        source.cells.forEach((source, k) => {
+            ret[k] = exportArtboard(source, ctx)
+        })
+        return ret
+    })()
+    ret.cellAttrs = (() => {
+        const ret: any = {}
+        source.cellAttrs.forEach((source, k) => {
+            ret[k] = exportTableCellAttr(source, ctx)
+        })
+        return ret
+    })()
+    ret.rowHeights = exportTableShape2_rowHeights(source.rowHeights, ctx)
+    ret.colWidths = exportTableShape2_colWidths(source.colWidths, ctx)
+    if (source.textAttr !== undefined) ret.textAttr = exportTextAttr(source.textAttr, ctx)
     return ret
 }

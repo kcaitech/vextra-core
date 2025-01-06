@@ -1,5 +1,4 @@
 import { v4 } from "uuid";
-import { Matrix } from "../basic/matrix";
 import { CurvePoint, Shape, SymbolShape, Variable } from "./shape";
 import { ContactType, CurveMode, OverrideType } from "./typesdefine";
 import { Page } from "./page";
@@ -8,15 +7,16 @@ import { importArtboard, importContactShape, importBoolShape, importGroupShape, 
 import * as types from "./typesdefine"
 import { ContactShape, SymbolRefShape } from "./classes";
 import { BasicArray } from "./basic";
+import { Transform } from "./transform";
 
 /**
  * @description root -> 图形自身上且单位为比例系数的矩阵
  */
-export function gen_matrix1(shape: Shape, prem?: Matrix) {
+export function gen_matrix1(shape: Shape, prem?: Transform) {
     const f = shape.size;
     let m = prem || shape.matrix2Root();
     m.preScale(f.width, f.height);
-    m = new Matrix(m.inverse);
+    m = m.getInverse();
     return m;
 }
 interface PageXY {
@@ -30,7 +30,7 @@ interface XY {
 /**
  * @description 根据连接类型获取页面坐标系上的连接点
  */
-function get_pagexy(shape: Shape, type: ContactType, m2r: Matrix) {
+function get_pagexy(shape: Shape, type: ContactType, m2r: Transform) {
     const f = shape.size;
     switch (type) {
         case ContactType.Top: return m2r.computeCoord2(f.width / 2, 0);
@@ -49,7 +49,7 @@ export function get_box_pagexy(shape: Shape) {
     const xy2 = p2r.computeCoord2(box.x + box.width, box.y + box.height);
     return { xy1, xy2 }
 }
-export function get_nearest_border_point(shape: Shape, contactType: ContactType, m2r: Matrix, xy1: PageXY, xy2: PageXY) { // 寻找距离外围最近的一个点
+export function get_nearest_border_point(shape: Shape, contactType: ContactType, m2r: Transform, xy1: PageXY, xy2: PageXY) { // 寻找距离外围最近的一个点
     const box = { left: xy1.x, right: xy2.x, top: xy1.y, bottom: xy2.y };
     const offset = AStar.OFFSET;
     box.left -= offset, box.right += offset, box.top -= offset, box.bottom += offset;
@@ -127,7 +127,7 @@ function remove_duplicate_point(points: PageXY[]) {
 /**
  * @description 生成寻路计算的必要参数，其中确定点位(绘制寻路地图)是关键😫
  */
-export function gen_baisc_params(shape1: Shape, type1: ContactType, shape2: Shape, type2: ContactType, m1: Matrix, m2: Matrix) {
+export function gen_baisc_params(shape1: Shape, type1: ContactType, shape2: Shape, type2: ContactType, m1: Transform, m2: Transform) {
     const OFFSET = 20;
     const p1 = shape1.parent, p2 = shape2.parent;
     if (!p1 || !p2) return false;
@@ -183,7 +183,7 @@ export function gen_baisc_params(shape1: Shape, type1: ContactType, shape2: Shap
 
     return { start_point, end_point, b_start_point, b_end_point, preparation_point, ff1, ff2 };
 }
-export function gen_raw(shape1: Shape, type1: ContactType, shape2: Shape, type2: ContactType, m1: Matrix, m2: Matrix) {
+export function gen_raw(shape1: Shape, type1: ContactType, shape2: Shape, type2: ContactType, m1: Transform, m2: Transform) {
     const OFFSET = 20;
     const p1 = shape1.parent;
     const p2 = shape2.parent;
@@ -507,7 +507,7 @@ class AStar {
         )
     }
 }
-export function gen_path(shape1: Shape, type1: ContactType, shape2: Shape, type2: ContactType, m1: Matrix, m2: Matrix, m3: Matrix) {
+export function gen_path(shape1: Shape, type1: ContactType, shape2: Shape, type2: ContactType, m1: Transform, m2: Transform, m3: Transform) {
     const params = gen_baisc_params(shape1, type1, shape2, type2, m1, m2);
 
     if (!params) {
@@ -633,7 +633,7 @@ export function copyShape(source: types.Shape) {
     throw new Error("unknow shape type: " + source.typeId)
 }
 
-export function handle_contact_from(page: Page, shape: ContactShape, points: CurvePoint[], self_matrix: Matrix) {
+export function handle_contact_from(page: Page, shape: ContactShape, points: CurvePoint[], self_matrix: Transform) {
     if (!shape.from) {
         return;
     }
@@ -675,7 +675,7 @@ export function handle_contact_from(page: Page, shape: ContactShape, points: Cur
     return { page, fromShape, type1, self_matrix, from_matrix, start_point, s1 };
 }
 
-export function handle_contact_to(page: Page, shape: ContactShape, points: CurvePoint[], self_matrix: Matrix) {
+export function handle_contact_to(page: Page, shape: ContactShape, points: CurvePoint[], self_matrix: Transform) {
     if (!shape.to) {
         return;
     }

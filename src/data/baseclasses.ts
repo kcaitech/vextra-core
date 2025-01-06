@@ -488,8 +488,16 @@ type Style_shadows = BasicArray<Shadow>
 type Style_innerShadows = BasicArray<Shadow>
 type Style_contacts = BasicArray<ContactRole>
 type SymbolShape_guides = BasicArray<Guide>
+/* table cell info */
+export class TableCellAttr extends Basic {
+    typeId = "table-cell-attr"
+    rowSpan?: number
+    colSpan?: number
+}
 type TableShape_rowHeights = BasicArray<CrdtNumber>
 type TableShape_colWidths = BasicArray<CrdtNumber>
+type TableShape2_rowHeights = BasicArray<CrdtNumber>
+type TableShape2_colWidths = BasicArray<CrdtNumber>
 type Text_paras = BasicArray<Para>
 /* transform */
 export class Transform extends Basic {
@@ -1065,8 +1073,6 @@ export class Shape extends Basic {
     scrollBehavior?: ScrollBehavior
     mask?: boolean
     stackPositioning?: StackPositioning
-    uniformScale?: number
-    roundMask?: string
     constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style) {
         super()
         this.crdtidx = crdtidx
@@ -1138,8 +1144,8 @@ export class Variable extends Basic {
     id: string
     type: VariableType
     name: string
-    value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | Border | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur | AutoLayout
-    constructor(id: string, type: VariableType, name: string, value: number | string | boolean | Color | Text | Gradient | Style | Variable_0 | Border | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur | AutoLayout) {
+    value:  | number | string | boolean | Color | Text | Gradient | Style | Variable_0 | Border | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur | AutoLayout
+    constructor(id: string, type: VariableType, name: string, value:  | number | string | boolean | Color | Text | Gradient | Style | Variable_0 | Border | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur | AutoLayout) {
         super()
         this.id = id
         this.type = type
@@ -1228,7 +1234,7 @@ export class SymbolRefShape extends Shape {
     isCustomSize?: boolean
     cornerRadius?: CornerRadius
     innerEnvScale?: number
-    frameMaskDisabled?: boolean
+    uniformScale?: number
     constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style, size: ShapeSize, refId: string, variables: BasicMap<string, Variable>) {
         super(crdtidx, id, name, type, transform, style)
         this.size = size
@@ -1315,6 +1321,24 @@ export class SymbolShape extends GroupShape {
 /* symbol union shape */
 export class SymbolUnionShape extends SymbolShape {
     typeId = "symbol-union-shape"
+}
+/* table shape2 */
+export class TableShape2 extends Shape {
+    typeId = "table-shape2"
+    size: ShapeSize
+    cells: BasicMap<string, Artboard>
+    cellAttrs: BasicMap<string, TableCellAttr>
+    rowHeights: TableShape2_rowHeights
+    colWidths: TableShape2_colWidths
+    textAttr?: TextAttr
+    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style, size: ShapeSize, cells: BasicMap<string, Artboard>, cellAttrs: BasicMap<string, TableCellAttr>, rowHeights: TableShape2_rowHeights, colWidths: TableShape2_colWidths) {
+        super(crdtidx, id, name, type, transform, style)
+        this.size = size
+        this.cells = cells
+        this.cellAttrs = cellAttrs
+        this.rowHeights = rowHeights
+        this.colWidths = colWidths
+    }
 }
 /* artboard shape */
 export class Artboard extends GroupShape {

@@ -73,13 +73,10 @@ export class GroupShapeView extends ShapeView {
     }
 
     protected _layout(
-        shape: Shape,
         parentFrame: ShapeSize | undefined,
-        varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
-        scale: { x: number, y: number } | undefined,
-        uniformScale: number | undefined
+        scale: { x: number, y: number } | undefined
     ): void {
-        super._layout(shape, parentFrame, varsContainer, scale, uniformScale);
+        super._layout(parentFrame, scale);
         if (this.m_need_updatechilds) {
             this.notify("childs"); // notify childs change
             this.m_need_updatechilds = false;
@@ -131,9 +128,9 @@ export class GroupShapeView extends ShapeView {
     }
 
     protected layoutChilds(
-        varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
         parentFrame: ShapeSize,
         scale?: { x: number, y: number }): void {
+        const varsContainer = this.varsContainer;
         const childs = this.getDataChilds();
         const resue: Map<string, DataView> = new Map();
         this.m_children.forEach((c) => resue.set(c.data.id, c));

@@ -38,6 +38,8 @@ type Style_contacts = BasicArray<impl.ContactRole>
 type SymbolShape_guides = BasicArray<impl.Guide>
 type TableShape_rowHeights = BasicArray<impl.CrdtNumber>
 type TableShape_colWidths = BasicArray<impl.CrdtNumber>
+type TableShape2_rowHeights = BasicArray<impl.CrdtNumber>
+type TableShape2_colWidths = BasicArray<impl.CrdtNumber>
 type Text_paras = BasicArray<impl.Para>
 type Variable_0 = BasicArray<impl.Fill | impl.Shadow | impl.PrototypeInterAction>
 export function importArtboard_guides(source: types.Artboard_guides, ctx?: IImportContext): Artboard_guides {
@@ -758,6 +760,16 @@ export function importSymbolShape_guides(source: types.SymbolShape_guides, ctx?:
     })
     return ret
 }
+/* table cell info */
+function importTableCellAttrOptional(tar: impl.TableCellAttr, source: types.TableCellAttr, ctx?: IImportContext) {
+    if (source.rowSpan !== undefined) tar.rowSpan = source.rowSpan
+    if (source.colSpan !== undefined) tar.colSpan = source.colSpan
+}
+export function importTableCellAttr(source: types.TableCellAttr, ctx?: IImportContext): impl.TableCellAttr {
+    const ret: impl.TableCellAttr = new impl.TableCellAttr ()
+    importTableCellAttrOptional(ret, source, ctx)
+    return ret
+}
 /* table cell types */
 export function importTableCellType(source: types.TableCellType, ctx?: IImportContext): impl.TableCellType {
     return source
@@ -771,6 +783,20 @@ export function importTableShape_rowHeights(source: types.TableShape_rowHeights,
 }
 export function importTableShape_colWidths(source: types.TableShape_colWidths, ctx?: IImportContext): TableShape_colWidths {
     const ret: TableShape_colWidths = new BasicArray()
+    source.forEach((source, i) => {
+        ret.push(importCrdtNumber(source, ctx))
+    })
+    return ret
+}
+export function importTableShape2_rowHeights(source: types.TableShape2_rowHeights, ctx?: IImportContext): TableShape2_rowHeights {
+    const ret: TableShape2_rowHeights = new BasicArray()
+    source.forEach((source, i) => {
+        ret.push(importCrdtNumber(source, ctx))
+    })
+    return ret
+}
+export function importTableShape2_colWidths(source: types.TableShape2_colWidths, ctx?: IImportContext): TableShape2_colWidths {
+    const ret: TableShape2_colWidths = new BasicArray()
     source.forEach((source, i) => {
         ret.push(importCrdtNumber(source, ctx))
     })
@@ -1322,8 +1348,6 @@ function importShapeOptional(tar: impl.Shape, source: types.Shape, ctx?: IImport
     if (source.scrollBehavior !== undefined) tar.scrollBehavior = importScrollBehavior(source.scrollBehavior, ctx)
     if (source.mask !== undefined) tar.mask = source.mask
     if (source.stackPositioning !== undefined) tar.stackPositioning = importStackPositioning(source.stackPositioning, ctx)
-    if (source.uniformScale !== undefined) tar.uniformScale = source.uniformScale
-    if (source.roundMask !== undefined) tar.roundMask = source.roundMask
 }
 export function importShape(source: types.Shape, ctx?: IImportContext): impl.Shape {
     const ret: impl.Shape = new impl.Shape (
@@ -1491,8 +1515,8 @@ export function importVariable(source: types.Variable, ctx?: IImportContext): im
         importVariableType(source.type, ctx),
         source.name,
         (() => {
-            if (typeof source.value !== "object") {
-                return source.value
+            if (typeof source.value!== "object" || source.value == null) {
+                return source.value == null? undefined : source.value
             }
             if (Array.isArray(source.value)) {
                 return importVariable_0(source.value, ctx)
@@ -1686,7 +1710,7 @@ function importSymbolRefShapeOptional(tar: impl.SymbolRefShape, source: types.Sy
     if (source.isCustomSize !== undefined) tar.isCustomSize = source.isCustomSize
     if (source.cornerRadius !== undefined) tar.cornerRadius = importCornerRadius(source.cornerRadius, ctx)
     if (source.innerEnvScale !== undefined) tar.innerEnvScale = source.innerEnvScale
-    if (source.frameMaskDisabled !== undefined) tar.frameMaskDisabled = source.frameMaskDisabled
+    if (source.uniformScale !== undefined) tar.uniformScale = source.uniformScale
 }
 export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImportContext): impl.SymbolRefShape {
         // inject code
@@ -2153,5 +2177,40 @@ export function importSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IIm
             return ret
         })())
     importSymbolUnionShapeOptional(ret, source, ctx)
+    return ret
+}
+/* table shape2 */
+function importTableShape2Optional(tar: impl.TableShape2, source: types.TableShape2, ctx?: IImportContext) {
+    importShapeOptional(tar, source)
+    if (source.textAttr !== undefined) tar.textAttr = importTextAttr(source.textAttr, ctx)
+}
+export function importTableShape2(source: types.TableShape2, ctx?: IImportContext): impl.TableShape2 {
+    const ret: impl.TableShape2 = new impl.TableShape2 (
+        importCrdtidx(source.crdtidx, ctx),
+        source.id,
+        source.name,
+        importShapeType(source.type, ctx),
+        importTransform(source.transform, ctx),
+        importStyle(source.style, ctx),
+        importShapeSize(source.size, ctx),
+        (() => {
+            const ret = new BasicMap<string, impl.Artboard>()
+            const _val = source.cells as any
+            objkeys(_val).forEach((val, k) => {
+                ret.set(k, importArtboard(val, ctx))
+            })
+            return ret
+        })(),
+        (() => {
+            const ret = new BasicMap<string, impl.TableCellAttr>()
+            const _val = source.cellAttrs as any
+            objkeys(_val).forEach((val, k) => {
+                ret.set(k, importTableCellAttr(val, ctx))
+            })
+            return ret
+        })(),
+        importTableShape2_rowHeights(source.rowHeights, ctx),
+        importTableShape2_colWidths(source.colWidths, ctx))
+    importTableShape2Optional(ret, source, ctx)
     return ret
 }

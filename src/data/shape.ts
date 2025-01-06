@@ -150,8 +150,7 @@ export class Shape extends Basic implements classes.Shape {
     scrollBehavior?: classes.ScrollBehavior;
     mask?: boolean;
     stackPositioning?: classes.StackPositioning;
-    uniformScale?: number;
-    roundMask?: string;
+    // uniformScale?: number;
 
     constructor(
         crdtidx: BasicArray<number>, id: string, name: string, type: ShapeType, transform: Transform, style: Style
@@ -182,7 +181,7 @@ export class Shape extends Basic implements classes.Shape {
      * @deprecated
      */
     get rotation(): number {
-        return makeShapeTransform2By1(this.transform).decomposeEuler().z * 180 / Math.PI;
+        return (this.transform).decomposeRotate() * 180 / Math.PI;
     }
 
     get x(): number {
@@ -277,7 +276,7 @@ export class Shape extends Basic implements classes.Shape {
      */
     matrix2Root() {
         let s: Shape | undefined = this;
-        const m = new Matrix();
+        const m = new Transform();
         while (s) {
             s.matrix2Parent(m);
             s = s.parent;
@@ -290,9 +289,9 @@ export class Shape extends Basic implements classes.Shape {
         return t.m00 == 1 && t.m01 === 0 && t.m10 === 0 && t.m11 === 1;
     }
 
-    matrix2Parent(matrix?: Matrix) {
-        const m = this.transform.toMatrix();
-        if (!matrix) return m;
+    matrix2Parent(matrix?: Transform) {
+        const m = this.transform;
+        if (!matrix) return m.clone();
         matrix.multiAtLeft(m);
         return matrix;
     }
