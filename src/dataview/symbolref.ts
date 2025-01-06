@@ -278,7 +278,8 @@ export class SymbolRefView extends ShapeView {
             transform.scale(scaleX, scaleY);
             const __decompose_scale = transform.clearScaleSize();
             // 保持对象位置不变
-            transform.trans(transform.translateX - shape.transform.translateX, transform.translateY - shape.transform.translateY);
+            // virtual是整体缩放，位置是会变化的，不需要trans
+            if (!this.m_isVirtual) transform.trans(transform.translateX - shape.transform.translateX, transform.translateY - shape.transform.translateY);
 
             selfframe.width = size.width * __decompose_scale.x
             selfframe.height = size.height * __decompose_scale.y

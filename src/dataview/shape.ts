@@ -945,8 +945,9 @@ export class ShapeView extends DataView {
             // const __p_transform_scale = new Transform2().setScale(ColVector3D.FromXYZ(scaleX, scaleY, 1));
             transform.scale(scaleX, scaleY);
             const __decompose_scale = transform.clearScaleSize();
+            // 这里应该是virtual，irtual是整体缩放，位置是会变化的，不需要trans
             // 保持对象位置不变
-            transform.trans(transform.translateX - shape.transform.translateX, transform.translateY - shape.transform.translateY);
+            // transform.trans(transform.translateX - shape.transform.translateX, transform.translateY - shape.transform.translateY);
             const size = shape.size;
             const frame = new ShapeFrame(0, 0, size.width * __decompose_scale.x, size.height * __decompose_scale.y);
             this.updateLayoutArgs((transform), frame, (shape as PathShape).fixedRadius);
@@ -987,6 +988,7 @@ export class ShapeView extends DataView {
         }
 
         this.m_props = props
+        this.m_isVirtual = props.isVirtual
         // this.m_uniform_scale = props.uniformScale;
         if (diffVars) {
             // update varscontainer
