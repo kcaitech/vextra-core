@@ -10,7 +10,7 @@ import { Api, TextShapeLike } from "../coop/recordapi";
 import { importBorder, importFill, importGradient } from "../data/baseimport";
 import { Document, Color } from "../data/classes";
 import { AsyncBorderThickness, AsyncGradientEditor, Status } from "./controller";
-import { TableCellView, TableView } from "../dataview";
+import { PageView, TableCellView, TableView } from "../dataview";
 import { cell4edit } from "./symbol";
 import { AsyncTextAttrEditor } from "./textshape";
 
@@ -21,7 +21,7 @@ const MaxRowCount = TableShape.MaxRowCount;
 
 export class TableEditor extends ShapeEditor {
 
-    constructor(shape: TableView, page: Page, repo: CoopRepository, document: Document) {
+    constructor(shape: TableView, page: PageView, repo: CoopRepository, document: Document) {
         super(shape, page, repo, document)
     }
 
@@ -34,7 +34,7 @@ export class TableEditor extends ShapeEditor {
     }
 
     cell4edit(rowIdx: number, colIdx: number, api: Api): TableCellView {
-        return cell4edit(this.__page, this.view, rowIdx, colIdx, api);
+        return cell4edit(this._page, this.view, rowIdx, colIdx, api);
     }
 
     // 水平拆分单元格

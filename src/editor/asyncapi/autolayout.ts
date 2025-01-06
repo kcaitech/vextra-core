@@ -1,6 +1,6 @@
 import { AsyncApiCaller } from "./basic/asyncapi";
 import { Document } from "../../data/document";
-import { adapt2Shape, ArtboradView, GroupShapeView, PageView, ShapeView } from "../../dataview";
+import { adapt2Shape, ArtboardView, GroupShapeView, PageView, ShapeView } from "../../dataview";
 import {
     GroupShape,
     Shape,
@@ -29,7 +29,7 @@ export class AutoLayoutModify extends AsyncApiCaller {
 
     executePadding(shape: GroupShapeView, value: number, direction: PaddingDir) {
         try {
-            const layoutShape = (shape as ArtboradView);
+            const layoutShape = (shape as ArtboardView);
             if (!layoutShape.autoLayout) return;
             const api = this.api;
             const page = this.page;
@@ -46,7 +46,7 @@ export class AutoLayoutModify extends AsyncApiCaller {
 
     executeHorPadding(shape: GroupShapeView, value: number, right: number) {
         try {
-            const layoutShape = (shape as ArtboradView);
+            const layoutShape = (shape as ArtboardView);
             if (!layoutShape.autoLayout) return;
             const api = this.api;
             const page = this.page;
@@ -64,7 +64,7 @@ export class AutoLayoutModify extends AsyncApiCaller {
 
     executeVerPadding(shape: GroupShapeView, value: number, bottom: number) {
         try {
-            const layoutShape = (shape as ArtboradView);
+            const layoutShape = (shape as ArtboardView);
             if (!layoutShape.autoLayout) return;
             const api = this.api;
             const page = this.page;
@@ -82,7 +82,7 @@ export class AutoLayoutModify extends AsyncApiCaller {
 
     executeSpace(shape: GroupShapeView, value: number, direction: PaddingDir) {
         try {
-            const layoutShape = (shape as ArtboradView);
+            const layoutShape = (shape as ArtboardView);
             if (!layoutShape.autoLayout) return;
             const api = this.api;
             const page = this.page;
@@ -100,7 +100,7 @@ export class AutoLayoutModify extends AsyncApiCaller {
 
     swapShapeLayout(shape: GroupShapeView, targets: ShapeView[], x: number, y: number) {
         try {
-            const layoutShape = (shape as ArtboradView);
+            const layoutShape = (shape as ArtboardView);
             if (!layoutShape.autoLayout) return;
             const api = this.api;
             const page = this.page;

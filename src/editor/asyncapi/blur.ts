@@ -22,7 +22,7 @@ export class blurModifyHandler extends AsyncApiCaller {
             const page = this.page;
 
             for (const view of shapes) {
-                const shape = shape4blur(api, view, page);
+                const shape = shape4blur(api, view, this.pageView);
                 api.shapeModifyBlurSaturation(page, shape, saturation);
             }
             this.updateView();

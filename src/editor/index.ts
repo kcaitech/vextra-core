@@ -48,7 +48,7 @@ export class Editor {
         // this.m_pageEditors.set(page.id, e);
         // return e;
         if ((!page.data) || (!(page.data instanceof Page))) throw Error("page.data is not Page!")
-        return new PageEditor(this.m_repo, page.data, this.m_data);
+        return new PageEditor(this.m_repo, page, this.m_data);
     }
 
     editor4Shape(page: PageView, shape: ShapeView): ShapeEditor {
@@ -57,7 +57,7 @@ export class Editor {
         // if ((!p) || (!(p instanceof PageView))) throw Error("shape has not parent Page!")
         // const pe = this.editor4Page(p);
         // return pe.editor4Shape(shape);
-        return new ShapeEditor(shape, page.data, this.m_repo, this.m_data);
+        return new ShapeEditor(shape, page, this.m_repo, this.m_data);
     }
 
     editor4TextShape(page: PageView, shape: TextShapeView | TableCellView): TextShapeEditor {
@@ -66,7 +66,7 @@ export class Editor {
         // if ((!p) || (!(p instanceof PageView))) throw Error("shape has not parent Page!")
         // const pe = this.editor4Page(p);
         // return pe.editor4TextShape(shape);
-        return new TextShapeEditor(shape, page.data, this.m_repo, this.m_data);
+        return new TextShapeEditor(shape, page, this.m_repo, this.m_data);
     }
     editor4Table(page: PageView, shape: TableView): TableEditor {
         // get page
@@ -74,7 +74,7 @@ export class Editor {
         // if ((!p) || (!(p instanceof PageView))) throw Error("shape has not parent Page!")
         // const pe = this.editor4Page(p);
         // return pe.editor4Table(shape);
-        return new TableEditor(shape, page.data, this.m_repo, this.m_data);
+        return new TableEditor(shape, page, this.m_repo, this.m_data);
     }
     controller(): Controller {
         const e = new Controller(this.m_repo, this.data);

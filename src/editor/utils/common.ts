@@ -6,7 +6,7 @@ import { Artboard, Document, PathShape, ShapeFrame, Page } from "../../data";
 import { Point2D, StackSizing } from "../../data/typesdefine";
 import { float_accuracy } from "../../basic/consts";
 import { reLayoutBySizeChanged } from "../asyncapi";
-import { adapt2Shape, ArtboradView, GroupShapeView, ShapeView } from "../../dataview";
+import { adapt2Shape, ArtboardView, GroupShapeView, ShapeView } from "../../dataview";
 import { getAutoLayoutShapes, modifyAutoLayout } from "./auto_layout";
 
 function equal_with_mean(a: number, b: number) {
@@ -118,7 +118,7 @@ export function modify_shapes_height(api: Api, document: Document, page: Page, s
 /**
  * @description 裁剪容器空白区域(保留自身transform)
  */
-export function adapt_for_artboard(api: Api, page: Page, artboard: ArtboradView) {
+export function adapt_for_artboard(api: Api, page: Page, artboard: ArtboardView) {
     const minimum_WH = 1;
     const children = artboard.childs;
     if (!children.length) throw new Error('!children.length') ;
