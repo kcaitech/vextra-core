@@ -285,9 +285,9 @@ function figToBinaryParts(fileBuffer: ArrayBuffer | Buffer): Uint8Array[] {
         fileByte[6] !== 119 ||
         fileByte[7] !== 105
     ) {
-      //  const unzipped = UZIP.parse(fileBuffer)
-       // const file = unzipped["canvas.fig"]
-     //   fileBuffer = file.buffer
+        const unzipped = UZIP.parse(fileBuffer)
+        const file = unzipped["canvas.fig"]
+        fileBuffer = file.buffer
         fileByte = new Uint8Array(fileBuffer)
     }
 
@@ -310,9 +310,9 @@ function figToBinaryParts(fileBuffer: ArrayBuffer | Buffer): Uint8Array[] {
         // WARN: it is possible this byte is not png, maybe I need to check a few more bytes?
         if (!(fileByte[index] == 137 && fileByte[index + 1] == 80)) {
             try {
-          //      byteTemp = fzstd.decompress(byteTemp);
+                byteTemp = fzstd.decompress(byteTemp);
             } catch (err) {
-            //    byteTemp = pako.inflateRaw(byteTemp);
+                byteTemp = pako.inflateRaw(byteTemp);
             }
         }
 
