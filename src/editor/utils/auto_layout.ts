@@ -741,3 +741,123 @@ export const tidyUpLayout = (page: Page, api: Api, shape_rows: ShapeView[][], ho
         }
     }
 }
+
+export function getShapeAutoLayoutXY(layoutInfo: AutoLayout, shape: Shape) {
+    const target = shape as Artboard;
+    const shape_rows = layoutShapesOrder(target.childs, !!layoutInfo.bordersTakeSpace);
+    if (!shape_rows.length) return []; // 没有子元素，不需要自动布局
+    const shape_row: Shape[] = shape_rows.flat();
+    const frame = { width: target.size.width, height: target.size.height }
+    return autoWrapLayoutFrom(layoutInfo, shape_row, frame);
+}
+
+
+
+const autoWrapLayoutFrom = (layoutInfo: AutoLayout, shape_row: Shape[], container: {
+    width: number,
+    height: number
+}) => {
+    const xys: { x: number, y: number }[] = [];
+    const minShapeWidth = Math.min(...shape_row.map(s => boundingBox(s, layoutInfo.bordersTakeSpace).width));
+    let horSpacing = Math.max(layoutInfo.stackSpacing, -minShapeWidth); // 水平间距
+    let verSpacing = Math.max(layoutInfo.stackCounterSpacing, 0); //垂直间距
+    let topPadding = layoutInfo.stackVerticalPadding; //上边距
+
+    const container_width = container.width - layoutInfo.stackPaddingRight - layoutInfo.stackHorizontalPadding;
+    const container_height = container.height - layoutInfo.stackPaddingBottom - layoutInfo.stackVerticalPadding;
+
+    // 计算每行的总宽度和最大高度，并计算布局总高度
+    let rowShapes: Shape[] = [];
+    let rowHeights: number[] = [];
+    let layoutHeight = 0;
+
+    if (layoutInfo.stackHorizontalGapSizing === StackSizing.Auto) {
+        horSpacing = 0;
+    }
+
+    shape_row.forEach((shape, index) => {
+        rowShapes.push(shape);
+        let maxHeightInRow = Math.max(...rowShapes.map(s => boundingBox(s, layoutInfo.bordersTakeSpace).height));
+
+        // 检查是否需要换行
+        if (index === shape_row.length - 1 || ((rowShapes.reduce((sum, s) => sum + boundingBox(s, layoutInfo.bordersTakeSpace).width, 0) + ((rowShapes.length - 1) * horSpacing) + boundingBox(shape_row[index + 1], layoutInfo.bordersTakeSpace).width + horSpacing) > container_width)) {
+            layoutHeight += maxHeightInRow + verSpacing;
+            rowHeights.push(maxHeightInRow);
+            rowShapes = [];
+        }
+    });
+
+    let rowIndex = 0;
+    // 去掉最后一行多加的垂直间距
+    layoutHeight -= verSpacing;
+
+    // 计算整体垂直居中的起始 y 坐标
+    if (layoutInfo.stackCounterSizing === StackSizing.Fixed) {
+        if (layoutInfo.stackVerticalGapSizing === StackSizing.Auto) {
+            const allShapeHeight = rowHeights.reduce((sum, height) => sum + height, 0);
+            verSpacing = Math.max(0, (container_height - allShapeHeight) / Math.max(1, (rowHeights.length - 1)));
+        } else {
+            if (layoutInfo.stackPrimaryAlignItems === StackAlign.Center) {
+                topPadding += (container_height - layoutHeight) / 2;
+            } else if (layoutInfo.stackPrimaryAlignItems === StackAlign.Max) {
+                topPadding += container_height - layoutHeight;
+            }
+        }
+    }
+    let container_auto_height = layoutInfo.stackPaddingBottom + layoutInfo.stackVerticalPadding;
+    rowShapes = [];
+    for (let i = 0; i < shape_row.length; i++) {
+        const shape = shape_row[i];
+        rowShapes.push(shape);
+        let maxHeightInRow = rowHeights[rowIndex];
+        const rowWidth = rowShapes.reduce((sum, s) => sum + boundingBox(s, layoutInfo.bordersTakeSpace).width, 0) + ((rowShapes.length - 1) * horSpacing);
+
+        // 检查是否需要换行
+        if (i === shape_row.length - 1 || ((rowWidth + boundingBox(shape_row[i + 1], layoutInfo.bordersTakeSpace).width + horSpacing) > container_width)) {
+            container_auto_height += maxHeightInRow + verSpacing;
+            // 计算行的总宽度
+            let startX = layoutInfo.stackHorizontalPadding;
+            let horHeight = 0;
+            // 计算左侧边距以居中
+            if (layoutInfo.stackHorizontalGapSizing === StackSizing.Auto) {
+                horHeight = (container_width - rowWidth) / Math.max(1, (rowShapes.length - 1));
+                // if (rowShapes.length === 1) {
+                //     startX += (container_width / 2) - (rowWidth / 2);
+                // }
+            } else {
+                if (layoutInfo.stackCounterAlignItems === StackAlign.Center) {
+                    startX += (container_width - rowWidth) / 2;
+                } else if (layoutInfo.stackCounterAlignItems === StackAlign.Max) {
+                    startX += container_width - rowWidth;
+                }
+            }
+
+            // 布局当前行的矩形并垂直居中
+            rowShapes.forEach((s, i) => {
+                const frame = boundingBox(s, layoutInfo.bordersTakeSpace);
+
+                let verticalOffset = 0;
+                if (layoutInfo.stackPrimaryAlignItems === StackAlign.Center) {
+                    verticalOffset = (maxHeightInRow - frame.height) / 2;
+                } else if (layoutInfo.stackPrimaryAlignItems === StackAlign.Max) {
+                    verticalOffset = maxHeightInRow - frame.height;
+                }
+                const transx = startX - frame.x;
+                const transy = topPadding + verticalOffset - frame.y;
+                const x = s.transform.translateX + transx;
+                const y = s.transform.translateY + transy;
+
+                xys.push({ x, y });
+
+                startX += frame.width + horHeight + horSpacing;
+            });
+
+            // 准备下一行
+            rowShapes = [];
+            topPadding += maxHeightInRow + verSpacing; // 换行，增加 y 坐标
+            rowIndex++;
+        }
+    }
+    container_auto_height -= verSpacing;
+    return xys;
+}
