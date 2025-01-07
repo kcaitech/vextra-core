@@ -10,7 +10,11 @@ import {
     Transform,
     Artboard,
     ShapeSize,
-    TableCellAttr
+    TableCellAttr,
+    BorderSideSetting,
+    StrokePaint,
+    Border,
+    BorderStyle
 } from "../data/classes";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
@@ -21,7 +25,7 @@ import { findOverride, getShapeViewId } from "./basic";
 import { layoutTable } from "../data/tablelayout";
 import { getTableCells, getTableVisibleCells } from "../data/tableread";
 import { BasicArray } from "../data/basic";
-import { Point2D } from "../data/typesdefine";
+import { BorderPosition, CornerType, Point2D, SideType } from "../data/typesdefine";
 import { render as renderLine } from "../render/line_borders";
 import { ArtboardView } from "./artboard";
 
@@ -118,12 +122,16 @@ export class TableView2 extends ShapeView {
 
         // 构造一个
 
+        const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+        const strokePaints = new BasicArray<StrokePaint>();
+        const border = new Border(BorderPosition.Center, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
+
         cell = new Artboard(new BasicArray(),
             cellId,
             "",
             ShapeType.Artboard,
             new Transform(),
-            new Style(new BasicArray(), new BasicArray(), new BasicArray()),
+            new Style(new BasicArray(), new BasicArray(), border),
             new BasicArray(),
             new ShapeSize());
 
@@ -320,7 +328,7 @@ export class TableView2 extends ShapeView {
                 const child = this._getCellAt2(cellLayout.index.row, cellLayout.index.col);
 
                 const frame = cellLayout.frame;
-                if (child && child.style.borders.length > 0) {
+                if (child && child.style.borders.strokePaints.length > 0) {
                     cellsinfos.push({ frame, style: child.style });
                     continue;
                 }
