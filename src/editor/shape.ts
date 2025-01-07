@@ -1671,9 +1671,9 @@ export class ShapeEditor {
                 const {originSegmentIndex, slices, closed} = action;
                 let last = originSegmentIndex;
                 for (let i = 0; i < slices.length; i++) {
-                    const slice = slices[i].map(p => importCurvePoint(exportCurvePoint((p)))) as BasicArray<CurvePoint>;
+                    const slice = new BasicArray(...slices[i].map(p => importCurvePoint(exportCurvePoint((p)))));
                     if (last === originSegmentIndex) api.deleteSegmentAt(page, shape, originSegmentIndex);
-                    slice.forEach((i, index) => i.crdtidx = new BasicArray<number>(index));
+                    slice.forEach((i, index) => i.crdtidx = [index] as BasicArray<number>);
                     api.insertSegmentAt(page, shape, last++, new PathSegment([0] as BasicArray<number>, uuid(), slice, closed));
                 }
                 if (last === originSegmentIndex) api.deleteSegmentAt(page, shape, originSegmentIndex);

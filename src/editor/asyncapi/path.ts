@@ -382,7 +382,7 @@ export class PathModifier extends AsyncApiCaller {
             api.deleteSegmentAt(page, shape, toSegmentIndex);
 
             // crdtidx重排
-            pointsContainer.forEach((i, index) => i.crdtidx = new BasicArray<number>(index));
+            pointsContainer.forEach((i, index) => i.crdtidx = [index] as BasicArray<number>);
 
             // 生成合并过后的线条
             const newSegment = new PathSegment([shape.pathsegs.length] as BasicArray<number>, uuid(), pointsContainer, false);
@@ -547,7 +547,7 @@ export class PathModifier extends AsyncApiCaller {
 
             api.deleteSegmentAt(page, shape, segmentIndex);
             const l = shape.pathsegs.length;
-            container.forEach((i, index) => i.crdtidx = new BasicArray<number>(index));
+            container.forEach((i, index) => i.crdtidx = [index] as BasicArray<number>);
             const newSegment = new PathSegment([l] as BasicArray<number>, uuid(), container, segment.isClosed);
 
             api.addSegmentAt(page, shape, l, newSegment);
@@ -615,8 +615,8 @@ export class PathModifier extends AsyncApiCaller {
                         }
 
                         api.deleteSegmentAt(page, shape, segmentIndex);
-                        pointsA.forEach((i, index) => i.crdtidx = new BasicArray<number>(index));
-                        pointsB.forEach((i, index) => i.crdtidx = new BasicArray<number>(index));
+                        pointsA.forEach((i, index) => i.crdtidx = [index] as BasicArray<number>);
+                        pointsB.forEach((i, index) => i.crdtidx = [index] as BasicArray<number>);
                         const segmentA = new PathSegment([shape.pathsegs.length] as BasicArray<number>, uuid(), pointsA, false);
                         api.addSegmentAt(page, shape, shape.pathsegs.length, segmentA);
                         const segmentB = new PathSegment([shape.pathsegs.length] as BasicArray<number>, uuid(), pointsB, false);
@@ -634,7 +634,7 @@ export class PathModifier extends AsyncApiCaller {
                 }
 
                 api.deleteSegmentAt(page, shape, segmentIndex);
-                newPoints.forEach((i, index) => i.crdtidx = new BasicArray<number>(index));
+                newPoints.forEach((i, index) => i.crdtidx = [index] as BasicArray<number>);
                 const newSegment = new PathSegment([shape.pathsegs.length] as BasicArray<number>, uuid(), newPoints, false);
                 api.addSegmentAt(page, shape, shape.pathsegs.length, newSegment);
             }
