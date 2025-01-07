@@ -106,7 +106,7 @@ export class GroupShapeView extends ShapeView {
         scale: { x: number, y: number } | undefined,
         varsContainer: VarsContainer | undefined,
         resue: Map<string, DataView>,
-        rView: RootView | undefined
+        rView: RootView | undefined,
     ) {
         let cdom: DataView | undefined = resue.get(child.id);
         const props = { data: child, scale, varsContainer, isVirtual: this.m_isVirtual, layoutSize: parentFrame };

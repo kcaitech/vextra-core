@@ -3,9 +3,13 @@ import { GroupShapeView } from "./groupshape";
 import { innerShadowId, renderBorders, renderFills } from "../render";
 import { objectId } from "../basic/objectid";
 import { render as clippathR } from "../render/clippath"
-import { AutoLayout, BorderPosition, CornerRadius, Page, ScrollBehavior, ShadowPosition, ShapeFrame, Transform, Artboard, BlurType, Shape, ShapeSize, SymbolRefShape, SymbolShape } from "../data";
+import { AutoLayout, BorderPosition, CornerRadius, Page, ScrollBehavior, ShadowPosition, ShapeFrame, Transform, Artboard, BlurType, Shape, ShapeSize, SymbolRefShape, SymbolShape, ShapeType } from "../data";
 import { ShapeView, updateFrame } from "./shape";
 import { PageView } from "./page";
+import { DataView, RootView } from "./view";
+import { VarsContainer } from "./viewctx";
+import { getShapeViewId } from "./basic";
+import { getShapeAutoLayoutXY } from "../editor";
 
 
 export class ArtboardView extends GroupShapeView {
@@ -55,6 +59,56 @@ export class ArtboardView extends GroupShapeView {
         // todo autoLayout
         // 
         super._layout(parentFrame, scale);
+    }
+    protected layoutChild(
+        parentFrame: ShapeSize,
+        child: Shape, idx: number,
+        scale: { x: number, y: number } | undefined,
+        varsContainer: VarsContainer | undefined,
+        resue: Map<string, DataView>,
+        rView: RootView | undefined,
+        xy?: { x: number, y: number } | undefined
+    ) {
+        let cdom: DataView | undefined = resue.get(child.id);
+        const props = { data: child, scale, varsContainer, isVirtual: this.m_isVirtual, layoutSize: parentFrame };
+        if (cdom) {
+            this.moveChild(cdom, idx);
+            return cdom.layout(props);
+        }
+        cdom = rView && rView.getView(getShapeViewId(child.id, varsContainer));
+        if (cdom) {
+            // 将cdom移除再add到当前group
+            const p = cdom.parent;
+            if (p) p.removeChild(cdom);
+            this.addChild(cdom, idx);
+            return cdom.layout(props);
+        }
+        const comsMap = this.m_ctx.comsMap;
+        const Com = comsMap.get(child.type) || comsMap.get(ShapeType.Rectangle)!;
+        cdom = new Com(this.m_ctx, props) as DataView;
+        this.addChild(cdom, idx);
+    }
+
+    protected layoutChilds(
+        parentFrame: ShapeSize,
+        scale?: { x: number, y: number }): void {
+        if (!this.autoLayout) return;
+
+        const varsContainer = this.varsContainer;
+        const childs = this.getDataChilds();
+        const resue: Map<string, DataView> = new Map();
+        this.m_children.forEach((c) => resue.set(c.data.id, c));
+        const rootView = this.getRootView();
+        const layoutXY = getShapeAutoLayoutXY(this.autoLayout, this.data);
+        
+        for (let i = 0, len = childs.length; i < len; i++) {
+            const xy = layoutXY[i];
+            this.layoutChild(parentFrame, childs[i], i, scale, varsContainer, resue, rootView, xy);
+        }
+        // 删除多余的
+        const removes = this.removeChilds(childs.length, Number.MAX_VALUE);
+        if (rootView) rootView.addDelayDestory(removes);
+        else removes.forEach((c => c.destory()));
     }
 
     protected renderFills(): EL[] {
