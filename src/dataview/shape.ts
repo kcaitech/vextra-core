@@ -30,12 +30,26 @@ import { isEqual } from "../basic/number_utils";
 
 export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     return (
-        lsh.x !== rsh.x ||
-        lsh.y !== rsh.y ||
-        lsh.width !== rsh.width ||
-        lsh.height !== rsh.height
+        !isEqual(lsh.x, rsh.x) ||
+        !isEqual(lsh.y, rsh.y) ||
+        !isEqual(lsh.width, rsh.width) ||
+        !isEqual(lsh.height, rsh.height)
     );
 }
+
+export function isDiffShapeSize(lsh: ShapeSize | undefined, rsh: ShapeSize | undefined) {
+    if (lsh === rsh) { // both undefined
+        return false;
+    }
+    if (lsh === undefined || rsh === undefined) {
+        return true;
+    }
+    return (
+        !isEqual(lsh.width, rsh.width) ||
+        !isEqual(lsh.height, rsh.height)
+    );
+}
+
 
 export function isDiffScale(lhs: { x: number, y: number } | undefined, rhs: {
     x: number,
@@ -47,10 +61,7 @@ export function isDiffScale(lhs: { x: number, y: number } | undefined, rhs: {
     if (lhs === undefined || rhs === undefined) {
         return true;
     }
-    // return (!lhs.matrix.equals(rhs.matrix) ||
-    //     isDiffShapeFrame(lhs.parentFrame, rhs.parentFrame)
-    // )
-    return lhs.x !== rhs.x || lhs.y !== rhs.y;
+    return !isEqual(lhs.x, rhs.x) || !isEqual(lhs.y, rhs.y);
 }
 
 export function isDiffVarsContainer(lhs: (SymbolRefShape | SymbolShape)[] | undefined, rhs: (SymbolRefShape | SymbolShape)[] | undefined): boolean {
@@ -73,7 +84,7 @@ export function isDiffVarsContainer(lhs: (SymbolRefShape | SymbolShape)[] | unde
 
 export function isNoScale(trans: { x: number, y: number } | undefined): boolean {
     // return !trans || trans.matrix.isIdentity()
-    return !trans || trans.x === 1 && trans.y === 1;
+    return !trans || isEqual(trans.x, 1) && isEqual(trans.y, 1);
 }
 
 export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeSize, scaleX: number, scaleY: number) {
@@ -406,10 +417,7 @@ export class ShapeView extends DataView {
     }
 
     onMounted() {
-        const parent = this.parent;
-        const parentFrame = parent?.hasSize() ? parent.frame : undefined;
-        this._layout(parentFrame, this.m_scale);
-        // this.updateFrames();
+        this._layout(this.m_props.layoutSize, this.m_props.scale);
     }
 
     get parent(): ShapeView | undefined {
@@ -979,8 +987,9 @@ export class ShapeView extends DataView {
             // const __p_transform_scale = new Transform2().setScale(ColVector3D.FromXYZ(scaleX, scaleY, 1));
             transform.scale(scaleX, scaleY);
             const __decompose_scale = transform.clearScaleSize();
+            // 这里应该是virtual，irtual是整体缩放，位置是会变化的，不需要trans
             // 保持对象位置不变
-            transform.trans(transform.translateX - shape.transform.translateX, transform.translateY - shape.transform.translateY);
+            // transform.trans(transform.translateX - shape.transform.translateX, transform.translateY - shape.transform.translateY);
             const size = shape.size;
             const frame = new ShapeFrame(0, 0, size.width * __decompose_scale.x, size.height * __decompose_scale.y);
             this.updateLayoutArgs((transform), frame, (shape as PathShape).fixedRadius);
@@ -1009,19 +1018,19 @@ export class ShapeView extends DataView {
             this.setData(props.data);
         }
         // check
-        const diffTransform = isDiffScale(props.scale, this.m_scale);
+        const diffScale = isDiffScale(props.scale, this.m_props.scale);
+        const diffLayoutSize = isDiffShapeSize(props.layoutSize, this.m_props.layoutSize)
         const diffVars = isDiffVarsContainer(props.varsContainer, this.varsContainer);
         if (!needLayout &&
             !dataChanged &&
-            !diffTransform &&
-            !diffVars) {
+            !diffScale &&
+            !diffVars &&
+            !diffLayoutSize) {
             return false;
         }
 
-        if (diffTransform) {
-            // update transform
-            this.m_scale = props.scale;
-        }
+        this.m_props = props
+        this.m_isVirtual = props.isVirtual
         // this.m_uniform_scale = props.uniformScale;
         if (diffVars) {
             // update varscontainer
@@ -1044,10 +1053,8 @@ export class ShapeView extends DataView {
         const needLayout = this.m_ctx.removeReLayout(this); // remove from changeset
         if (props && !this.updateLayoutProps(props, needLayout)) return;
 
-        const parent = this.parent;
-        const parentFrame = parent?.hasSize() ? parent.frame : undefined;
         this.m_ctx.setDirty(this);
-        this._layout(parentFrame, this.m_scale);
+        this._layout(this.m_props.layoutSize, this.m_props.scale);
         this.m_ctx.addNotifyLayout(this);
     }
 

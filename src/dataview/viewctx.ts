@@ -4,17 +4,17 @@ import { SymbolRefShape } from "../data/classes";
 import { EventEmitter } from "../basic/event";
 import { objectId } from "../basic/objectid";
 import { Notifiable } from "../data/basic";
+import { ShapeSize } from "../data/baseclasses";
 
 
 export type VarsContainer = (SymbolRefShape | SymbolShape)[];
-
 
 export interface PropsType {
     data: Shape;
     scale?: { x: number, y: number };
     varsContainer?: VarsContainer;
     isVirtual?: boolean;
-    uniformScale?: number | undefined;
+    layoutSize?: ShapeSize
 }
 
 interface DataView extends Notifiable {

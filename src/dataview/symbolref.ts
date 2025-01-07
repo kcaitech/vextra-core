@@ -37,16 +37,7 @@ export class SymbolRefView extends ShapeView {
             super.onMounted();
             return;
         }
-        // const varsContainer = (this.varsContainer || []).concat(this.m_data as SymbolRefShape);
-        // if (this.m_sym.parent instanceof SymbolUnionShape) {
-        //     varsContainer.push(this.m_sym.parent);
-        // }
-        // varsContainer.push(this.m_sym);
-        // let refframe;
-        const parent = this.parent;
-        const parentFrame = parent?.hasSize() ? parent.frame : undefined; // 判断父级是否有确定的大小
-        this._layout(parentFrame, this.m_scale);
-        // this.updateFrames();
+        this._layout(this.m_props.layoutSize, this.m_props.scale);
     }
 
     getDataChilds(): Shape[] {
@@ -167,6 +158,7 @@ export class SymbolRefView extends ShapeView {
     }
 
     private layoutChild(
+        parentFrame: ShapeSize,
         child: Shape,
         idx: number,
         scale: { x: number, y: number } | undefined,
@@ -175,7 +167,7 @@ export class SymbolRefView extends ShapeView {
         rView: RootView | undefined
     ): boolean {
         let cdom: DataView | undefined = resue.get(child.id);
-        const props = { data: child, scale, varsContainer, isVirtual: true };
+        const props = { data: child, scale, varsContainer, isVirtual: true, layoutSize: parentFrame };
 
         if (cdom) {
             const changed = this.moveChild(cdom, idx);
@@ -207,17 +199,7 @@ export class SymbolRefView extends ShapeView {
         this.m_ctx.setDirty(this);
         this.m_ctx.addNotifyLayout(this);
 
-        // const varsContainer = (this.varsContainer || []).concat(this.m_data as SymbolRefShape);
-        // if (this.m_sym) {
-        //     if (this.m_sym.parent instanceof SymbolUnionShape) {
-        //         varsContainer.push(this.m_sym.parent);
-        //     }
-        //     varsContainer.push(this.m_sym);
-        // }
-
-        const parent = this.parent;
-        const parentFrame = parent?.hasSize() ? parent.frame : undefined;
-        this._layout(parentFrame, this.m_scale)
+        this._layout(this.m_props.layoutSize, this.m_props.scale)
     }
 
     protected _layout(
@@ -296,7 +278,8 @@ export class SymbolRefView extends ShapeView {
             transform.scale(scaleX, scaleY);
             const __decompose_scale = transform.clearScaleSize();
             // 保持对象位置不变
-            transform.trans(transform.translateX - shape.transform.translateX, transform.translateY - shape.transform.translateY);
+            // virtual是整体缩放，位置是会变化的，不需要trans
+            if (!this.m_isVirtual) transform.trans(transform.translateX - shape.transform.translateX, transform.translateY - shape.transform.translateY);
 
             selfframe.width = size.width * __decompose_scale.x
             selfframe.height = size.height * __decompose_scale.y
@@ -324,7 +307,7 @@ export class SymbolRefView extends ShapeView {
     }
 
     protected layoutChilds(
-        parentFrame: ShapeSize | undefined,
+        parentFrame: ShapeSize,
         scale?: { x: number, y: number }
     ): void {
         const varsContainer = (this.varsContainer || []).concat(this.m_data as SymbolRefShape);
@@ -341,7 +324,7 @@ export class SymbolRefView extends ShapeView {
         for (let i = 0, len = childs.length; i < len; i++) {
             const cc = childs[i];
             // update childs
-            if (this.layoutChild(cc, i, scale, varsContainer, resue, rootView)) changed = true;
+            if (this.layoutChild(parentFrame, cc, i, scale, varsContainer, resue, rootView)) changed = true;
         }
 
         // 删除多余的

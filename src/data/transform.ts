@@ -1,7 +1,6 @@
 import { Matrix } from "../basic/matrix";
 import * as classes from "./baseclasses"
 import { float_accuracy } from "../basic/consts";
-import { ColVector3D } from "../basic/matrix2";
 
 function __multi(lhs: classes.Transform | Matrix, rhs: classes.Transform | Matrix, result: classes.Transform): void {
     const m00 = lhs.m00 * rhs.m00 + lhs.m01 * rhs.m10;
@@ -57,7 +56,7 @@ function vector_angleTo(vector1: number[], vector2: number[]) { // 本向量与�
 
 export class Transform extends classes.Transform {
 
-    static from = function (m: Matrix | number[]) {
+    static from = function (m: Matrix | classes.Transform | number[]) {
         if (Array.isArray(m)) return new Transform(m[0], m[2], m[4], m[1], m[3], m[5]);
         return new Transform(m.m00, m.m01, m.m02, m.m10, m.m11, m.m12);
     }
