@@ -566,7 +566,6 @@ export class Controller {
         const migrate = (targetParent: GroupShape, sortedShapes: Shape[], dlt: string) => {
             try {
                 if (targetParent.id === current_env_id) {
-                    // console.log('targetParent.id === current_env_id');
                     return;
                 }
 
@@ -591,7 +590,6 @@ export class Controller {
         const backToStartEnv = (emit_by: Shape, dlt: string) => { // 特殊的migrate，让所有图层回到原环境
             try {
                 if (emit_by.id === current_env_id) {
-                    // console.log('emit_by.id === current_env_id');
                     return;
                 }
 
