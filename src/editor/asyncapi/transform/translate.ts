@@ -105,9 +105,9 @@ export class Transporter extends AsyncApiCaller {
 
     private __migrateText(api: Api, page: Page, shape: ShapeView) {
         if (shape instanceof TextShapeView && shape.getText() !== shape.data.text) {
-            const text = shape.getText()
+            const text = shape.getText();
             api.deleteText2(page, (shape.data), 0, shape.data.text.length)
-            api.insertComplexText2(page, shape.data, 0, text)
+            api.insertComplexText2(page, shape.data, 0, text.getTextWithFormat(0, text.length - 1)) // 去掉最后个回车
             // size也要
             const size = shape.size
             api.shapeModifyWH(page, shape.data, size.width, size.height)
