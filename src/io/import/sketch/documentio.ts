@@ -23,14 +23,11 @@ async function importPageList(lzData: LzData, pageIds: string[]): Promise<BasicA
 
     for (let i = 0, len = pageIds.length; i < len; i++) {
         const id = pageIds[i];
-        console.log(id, 'id');
-        
+
         // if (id === LibType.Symbol) continue; // 组件库页面
         let name = metaMap.get(id);
         if (!name) {
             const p = await lzData.loadJson(`pages/${id}.json`);
-            console.log(p, 'page');
-            
             name = p['name'];
         }
         pageList.push(new PageListItem([i] as BasicArray<number>, id, name || 'Unknow'))
