@@ -10,7 +10,7 @@ import {
     ResizingConstraints2, ScrollBehavior,
     ScrollDirection, Shadow, ShadowPosition, Shape,
     ShapeFrame, ShapeSize, ShapeType, SymbolRefShape,
-    SymbolShape, Transform, Variable, VariableType,BlurMask,BorderMask,FillMask,ShadowMask
+    SymbolShape, Transform, Variable, VariableType, BlurMask, BorderMask, FillMask, ShadowMask
 } from "../data";
 import { findOverrideAndVar } from "./basic";
 import { EL, elh } from "./el";
@@ -718,7 +718,11 @@ export class ShapeView extends DataView {
             if (!mgr) return this.m_data.style.borders;
             const mask = mgr.getSync(this.style.bordersMask) as BorderMask
             let border = { ...this.m_data.style.borders }
-            border.position = mask.border.position
+            if (this.type === ShapeType.Line) {
+                border.position = BorderPosition.Center
+            } else {
+                border.position = mask.border.position
+            }
             border.sideSetting = mask.border.sideSetting
             Border = border as Border
             // 检查图层是否在变量通知对象集合里
