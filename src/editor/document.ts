@@ -11,9 +11,9 @@ import { Repository } from "../data/transact";
 import * as types from "../data/typesdefine";
 import { FMT_VER_latest } from "../data/fmtver";
 import { ShadowPosition } from "../data/baseclasses"
-import { FillMask, ShadowMask, StyleMangerMember, BlurMask,BorderMask } from "../data/style";
+import { FillMask, ShadowMask, StyleMangerMember, BlurMask, BorderMask } from "../data/style";
 import { adapt2Shape, PageView, ShapeView } from "../dataview";
-import { Color, Fill, Shadow, BlurType } from "../data/classes";
+import { Color, Fill, Shadow, BlurType, BorderPosition,BorderSideSetting } from "../data/classes";
 import { BasicArray, Stop, Gradient, Point2D } from "../data";
 import { Matrix } from "../basic/matrix";
 
@@ -779,6 +779,30 @@ export class DocEditor {
         const api = this.__repo.start('modifyBlurMaskBlurSaturation');
         try {
             api.modifyBlurMaskBlurSaturation(this.__document, sheetid, maskid, saturation)
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return true;
+    }
+
+    modifyBorderMaskBorderPosition(sheetid: string, maskid: string, position: BorderPosition) {
+        const api = this.__repo.start('modifyBorderMaskBorderPosition');
+        try {
+            api.modifyBorderMaskBorderPosition(this.__document, sheetid, maskid, position)
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return true;
+    }
+
+    modifyBorderMaskBorderSideSetting(sheetid: string, maskid: string, side: BorderSideSetting) {
+        const api = this.__repo.start('modifyBorderMaskBorderSideSetting');
+        try {
+            api.modifyBorderMaskBorderSideSetting(this.__document, sheetid, maskid, side)
             this.__repo.commit();
         } catch (error) {
             console.log(error)

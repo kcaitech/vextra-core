@@ -4,6 +4,7 @@ import {
     BoolOp,
     BoolShape,
     Border,
+    BorderMaskType,
     BorderPosition,
     Color, ContactShape,
     Document,
@@ -2823,6 +2824,71 @@ export class PageEditor {
         }
     }
 
+    shapesSetBorderMask(actions: BatchAction2[]) {
+        const api = this.__repo.start("shapesSetBorderMask");
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                api.addbordermask(this.__document, this.page, adapt2Shape(target), value);
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+
+    shapesDelBorderMask(actions: BatchAction2[]) {
+        const api = this.__repo.start("shapesDelBorderMask");
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                const source = this.__document.stylesMgr.getSync(target.style.bordersMask ?? '');
+                source && source.__subscribers.delete(target);
+                const { position, sideSetting } = value as BorderMaskType
+                const side = new BorderSideSetting(sideSetting.sideType, sideSetting.thicknessTop, sideSetting.thicknessLeft, sideSetting.thicknessBottom, sideSetting.thicknessRight);
+                const s = shape4border(api, this.view, target);
+                if (s.type !== ShapeType.Rectangle) {
+                    side.sideType = SideType.Normal;
+                    let number = Math.min(sideSetting.thicknessTop, sideSetting.thicknessLeft, sideSetting.thicknessBottom, sideSetting.thicknessRight)
+                    number = number > 0 ? number : 1;
+                    side.thicknessTop = number;
+                    side.thicknessRight = number;
+                    side.thicknessBottom = number;
+                    side.thicknessLeft = number;
+                }
+                if (target.type === ShapeType.Line) {
+                    api.setBorderPosition(this.page, s, BorderPosition.Center);
+                } else {
+                    api.setBorderPosition(this.page, s, position);
+                }
+                api.setBorderSide(this.page, s, side);
+                api.delbordermask(this.__document, this.page, adapt2Shape(target));
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+
+    shapesDelStyleBorder(actions: BatchAction2[]) {
+        const api = this.__repo.start("shapesDelStyleBorder");
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target } = actions[i];
+                const source = this.__document.stylesMgr.getSync(target.style.bordersMask ?? '');
+                source && source.__subscribers.delete(target);
+                api.deleteBlur(this.page, adapt2Shape(target));
+                api.delblurmask(this.__document, this.page, adapt2Shape(target));
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+
     shapesFillsUnify(actions: BatchAction2[]) {
         const api = this.__repo.start('shapesFillsUnify'); // 统一多个shape的填充设置。eg:[red, red], [green], [blue, blue, blue] => [red, red], [red, red], [red, red];
         try {
@@ -2953,6 +3019,7 @@ export class PageEditor {
                 const shape = shapes[i];
                 const s = shape4border(api, this.view, shape);
                 api.deleteStrokePaints(this.page, s, 0, shape.style.borders.strokePaints.length);
+                api.delbordermask(this.__document, this.page, s);
             }
             const parents = getAutoLayoutShapes(shapes);
             for (let i = 0; i < parents.length; i++) {
