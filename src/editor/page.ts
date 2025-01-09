@@ -1627,7 +1627,7 @@ export class PageEditor {
             }
             this.__repo.commit();
         } catch (error) {
-            console.log('shapesModifyRadius', error);
+            console.error('shapesModifyRadius', error);
             this.__repo.rollback();
         }
     }
