@@ -3,7 +3,9 @@ import { innerShadowId, renderBorders, renderFills } from "../render";
 import { EL, elh } from "./el";
 import {
     CornerRadius, Shape, ShapeFrame, ShapeType, SymbolShape, AutoLayout, BorderPosition, Page, ShadowPosition, BlurType,
-    ShapeSize
+    ShapeSize,
+    OverrideType,
+    VariableType
 } from "../data";
 import { VarsContainer } from "./viewctx";
 import { DataView, RootView } from "./view"
@@ -12,6 +14,7 @@ import { ShapeView, updateFrame } from "./shape";
 import { PageView } from "./page";
 import { objectId } from "../basic/objectid";
 import { render as clippathR } from "../render/clippath";
+import { updateAutoLayout } from "../editor/utils/auto_layout2";
 
 export class SymbolView extends GroupShapeView {
     get data() {
@@ -34,7 +37,8 @@ export class SymbolView extends GroupShapeView {
     }
 
     get autoLayout(): AutoLayout | undefined {
-        return (this.data).autoLayout;
+        const v = this._findOV(OverrideType.AutoLayout, VariableType.AutoLayout);
+        return v ? v.value : this.data.autoLayout;
     }
 
     get guides() {
@@ -60,9 +64,27 @@ export class SymbolView extends GroupShapeView {
             super._layout(parentFrame, scale);
             return
         }
-        // todo autoLayout
-        // 
+
         super._layout(parentFrame, scale);
+        const childs = this.childs.filter(c => c.isVisible);
+        if (childs.length) this._autoLayout(autoLayout, this.m_frame);
+    }
+
+    private _autoLayout(autoLayout: AutoLayout, layoutSize: ShapeSize) {
+        const childs = this.childs.filter(c => c.isVisible);
+        const layout = updateAutoLayout(childs, autoLayout, layoutSize);
+        for (let i = 0, len = childs.length; i < len; i++) {
+            const cc = childs[i];
+            if (!cc.isVisible) continue;
+            const newTransform = cc.transform.clone();
+            newTransform.translateX = layout[i].x;
+            newTransform.translateY = layout[i].y;
+            cc.updateLayoutArgs(newTransform, cc.frame, cc.fixedRadius);
+            cc.updateFrames();
+        }
+        const selfframe = new ShapeFrame(0, 0, layoutSize.width, layoutSize.height);
+        this.updateLayoutArgs(this.transform, selfframe, this.fixedRadius);
+        this.updateFrames();
     }
 
     protected layoutChild(parentFrame: ShapeSize, child: Shape, idx: number, scale: { x: number, y: number } | undefined, varsContainer: VarsContainer | undefined, resue: Map<string, DataView>, rView: RootView | undefined) {

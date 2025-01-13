@@ -152,6 +152,8 @@ function _createVar4Override(type: OverrideType, value: any) {
             return new Variable(uuid(), VariableType.ContextSettings, "", value);
         case OverrideType.Shadows:
             return new Variable(uuid(), VariableType.Shadows, "", value);
+        case OverrideType.AutoLayout:
+            return new Variable(uuid(), VariableType.AutoLayout, "", value);
         default:
             // throw new Error("unknow override type: " + type)
             console.error("unknow override: " + type, value)

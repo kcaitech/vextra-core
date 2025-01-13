@@ -3,14 +3,10 @@ import { GroupShapeView } from "./groupshape";
 import { innerShadowId, renderBorders, renderFills } from "../render";
 import { objectId } from "../basic/objectid";
 import { render as clippathR } from "../render/clippath"
-import { AutoLayout, BorderPosition, CornerRadius, Page, ScrollBehavior, ShadowPosition, ShapeFrame, Transform, Artboard, BlurType, Shape, ShapeSize, SymbolRefShape, SymbolShape, ShapeType } from "../data";
+import { AutoLayout, BorderPosition, CornerRadius, Page, ScrollBehavior, ShadowPosition, ShapeFrame, Transform, Artboard, BlurType, Shape, ShapeSize, SymbolRefShape, SymbolShape, ShapeType, OverrideType, VariableType } from "../data";
 import { ShapeView, updateFrame } from "./shape";
 import { PageView } from "./page";
-import { DataView, RootView } from "./view";
-import { VarsContainer } from "./viewctx";
-import { getShapeViewId } from "./basic";
-import { getShapeAutoLayoutXY } from "../editor";
-
+import { updateAutoLayout } from "../editor/utils/auto_layout2";
 
 export class ArtboardView extends GroupShapeView {
 
@@ -47,7 +43,8 @@ export class ArtboardView extends GroupShapeView {
     }
 
     get autoLayout(): AutoLayout | undefined {
-        return this.data.autoLayout;
+        const v = this._findOV(OverrideType.AutoLayout, VariableType.AutoLayout);
+        return v ? v.value : this.data.autoLayout;
     }
 
     protected _layout(parentFrame: ShapeSize | undefined, scale: { x: number; y: number; } | undefined): void {
@@ -56,60 +53,29 @@ export class ArtboardView extends GroupShapeView {
             super._layout(parentFrame, scale);
             return
         }
-        // todo autoLayout
-        // 
         super._layout(parentFrame, scale);
-    }
-    protected layoutChild(
-        parentFrame: ShapeSize,
-        child: Shape, idx: number,
-        scale: { x: number, y: number } | undefined,
-        varsContainer: VarsContainer | undefined,
-        resue: Map<string, DataView>,
-        rView: RootView | undefined,
-        xy?: { x: number, y: number } | undefined
-    ) {
-        let cdom: DataView | undefined = resue.get(child.id);
-        const props = { data: child, scale, varsContainer, isVirtual: this.m_isVirtual, layoutSize: parentFrame };
-        if (cdom) {
-            this.moveChild(cdom, idx);
-            return cdom.layout(props);
-        }
-        cdom = rView && rView.getView(getShapeViewId(child.id, varsContainer));
-        if (cdom) {
-            // 将cdom移除再add到当前group
-            const p = cdom.parent;
-            if (p) p.removeChild(cdom);
-            this.addChild(cdom, idx);
-            return cdom.layout(props);
-        }
-        const comsMap = this.m_ctx.comsMap;
-        const Com = comsMap.get(child.type) || comsMap.get(ShapeType.Rectangle)!;
-        cdom = new Com(this.m_ctx, props) as DataView;
-        this.addChild(cdom, idx);
+        const childs = this.childs.filter(c => c.isVisible);
+        if (childs.length) this._autoLayout(autoLayout, this.m_frame);
     }
 
-    protected layoutChilds(
-        parentFrame: ShapeSize,
-        scale?: { x: number, y: number }): void {
-        if (!this.autoLayout) return;
-
-        const varsContainer = this.varsContainer;
-        const childs = this.getDataChilds();
-        const resue: Map<string, DataView> = new Map();
-        this.m_children.forEach((c) => resue.set(c.data.id, c));
-        const rootView = this.getRootView();
-        const layoutXY = getShapeAutoLayoutXY(this.autoLayout, this.data);
-        
+    private _autoLayout(autoLayout: AutoLayout, layoutSize: ShapeSize) {
+        const childs = this.childs.filter(c => c.isVisible);
+        const layout = updateAutoLayout(childs, autoLayout, layoutSize);
         for (let i = 0, len = childs.length; i < len; i++) {
-            const xy = layoutXY[i];
-            this.layoutChild(parentFrame, childs[i], i, scale, varsContainer, resue, rootView, xy);
+            const cc = childs[i];
+            if (!cc.isVisible) continue;
+            const newTransform = cc.transform.clone();
+            newTransform.translateX = layout[i].x;
+            newTransform.translateY = layout[i].y;
+            cc.m_ctx.setDirty(cc);
+            cc.updateLayoutArgs(newTransform, cc.frame, cc.fixedRadius);
+            cc.updateFrames();
         }
-        // 删除多余的
-        const removes = this.removeChilds(childs.length, Number.MAX_VALUE);
-        if (rootView) rootView.addDelayDestory(removes);
-        else removes.forEach((c => c.destory()));
+        const selfframe = new ShapeFrame(0, 0, layoutSize.width, layoutSize.height);
+        this.updateLayoutArgs(this.transform, selfframe, this.fixedRadius);
+        this.updateFrames();
     }
+
 
     protected renderFills(): EL[] {
         return renderFills(elh, this.getFills(), this.frame, this.getPathStr(), 'fill-' + this.id);

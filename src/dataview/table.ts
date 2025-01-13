@@ -77,7 +77,6 @@ export class TableView extends ShapeView {
         parentFrame: ShapeFrame | undefined,
         scale: { x: number, y: number } | undefined,
     ): void {
-
         super._layout(parentFrame, scale);
         this.updateChildren();
     }

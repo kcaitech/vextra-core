@@ -21,6 +21,7 @@ import { innerShadowId } from "../render";
 import { elh } from "./el";
 import { render as clippathR } from "../render/clippath";
 import { isEqual } from "../basic/number_utils";
+import { updateAutoLayout } from "../editor/utils/auto_layout2";
 
 // 播放页组件状态切换会话存储refId的key值；
 export const sessionRefIdKey = 'ref-id-cf76c6c6-beed-4c33-ae71-134ee876b990';
@@ -164,7 +165,7 @@ export class SymbolRefView extends ShapeView {
     }
 
     private layoutChild(
-        parentFrame: ShapeSize,
+        parentFrame: ShapeSize | undefined,
         child: Shape,
         idx: number,
         scale: { x: number, y: number } | undefined,
@@ -304,16 +305,29 @@ export class SymbolRefView extends ShapeView {
         childscale.x = layoutSize.width / this.m_sym.size.width;
         childscale.y = layoutSize.height / this.m_sym.size.height;
         this.layoutChilds(layoutSize, childscale);
-        if (autoLayout) this._autoLayout(autoLayout, layoutSize)
+        const childs = this.childs.filter(c => c.isVisible);
+        if (autoLayout && childs.length) this._autoLayout(autoLayout, layoutSize)
         this.updateFrames();
     }
 
     private _autoLayout(autoLayout: AutoLayout, layoutSize: ShapeSize) {
-        // todo
+        const childs = this.childs.filter(c => c.isVisible);
+        const layout = updateAutoLayout(childs, autoLayout, layoutSize);
+        for (let i = 0, len = childs.length; i < len; i++) {
+            const cc = childs[i];
+            if (!cc.isVisible) continue;
+            const newTransform = cc.transform.clone();
+            newTransform.translateX = layout[i].x;
+            newTransform.translateY = layout[i].y;
+            cc.updateLayoutArgs(newTransform, cc.frame, cc.fixedRadius);
+            cc.updateFrames();
+        }
+        const selfframe = new ShapeFrame(0, 0, layoutSize.width, layoutSize.height);
+        this.updateLayoutArgs(this.transform, selfframe, this.fixedRadius);
     }
 
     protected layoutChilds(
-        parentFrame: ShapeSize,
+        parentFrame: ShapeSize | undefined,
         scale?: { x: number, y: number }
     ): void {
         const varsContainer = (this.varsContainer || []).concat(this.m_data as SymbolRefShape);

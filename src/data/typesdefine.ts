@@ -1028,6 +1028,7 @@ export type SymbolRefShape = Shape & {
     cornerRadius?: CornerRadius,
     innerEnvScale?: number,
     uniformScale?: number,
+    autoLayout?: AutoLayout,
 }
 /* contact shape */
 export type ContactShape = PathShape & {

@@ -1566,6 +1566,7 @@ function importSymbolRefShapeOptional(tar: impl.SymbolRefShape, source: types.Sy
     if (source.cornerRadius !== undefined) tar.cornerRadius = importCornerRadius(source.cornerRadius, ctx)
     if (source.innerEnvScale !== undefined) tar.innerEnvScale = source.innerEnvScale
     if (source.uniformScale !== undefined) tar.uniformScale = source.uniformScale
+    if (source.autoLayout !== undefined) tar.autoLayout = importAutoLayout(source.autoLayout, ctx)
 }
 export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImportContext): impl.SymbolRefShape {
         // inject code

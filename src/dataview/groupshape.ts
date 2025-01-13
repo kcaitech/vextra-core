@@ -74,7 +74,7 @@ export class GroupShapeView extends ShapeView {
 
     protected _layout(
         parentFrame: ShapeSize | undefined,
-        scale: { x: number, y: number } | undefined
+        scale: { x: number, y: number } | undefined,
     ): void {
         super._layout(parentFrame, scale);
         if (this.m_need_updatechilds) {
