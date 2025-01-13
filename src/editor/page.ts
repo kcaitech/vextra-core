@@ -2889,6 +2889,42 @@ export class PageEditor {
         }
     }
 
+    shapesSetBorderFillMask(actions: BatchAction2[]) {
+        const api = this.__repo.start("shapesSetBorderFillMask");
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                api.setBorderFillMask(this.__document, this.page, adapt2Shape(target), value);
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+
+    shapesDelBorderFillMask(actions: BatchAction2[]) {
+        const api = this.__repo.start("shapesDelBorderFillMask");
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                console.log(value,'222222222333333333333');
+                
+                const source = this.__document.stylesMgr.getSync(target.style.borders.fillsMask ?? '');
+                source && source.__subscribers.delete(target);
+                api.deleteStrokePaints(this.page, adapt2Shape(target), 0, target.style.borders.strokePaints.length)
+                for (let i = 0; i < value.length; i++) {
+                    api.addStrokePaint(this.page, adapt2Shape(target), value[i], i)
+                }
+                api.delBorderFillMask(this.__document, this.page, adapt2Shape(target), undefined);
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+
     shapesFillsUnify(actions: BatchAction2[]) {
         const api = this.__repo.start('shapesFillsUnify'); // 统一多个shape的填充设置。eg:[red, red], [green], [blue, blue, blue] => [red, red], [red, red], [red, red];
         try {
@@ -3018,8 +3054,9 @@ export class PageEditor {
             for (let i = 0; i < shapes.length; i++) {
                 const shape = shapes[i];
                 const s = shape4border(api, this.view, shape);
-                api.deleteStrokePaints(this.page, s, 0, shape.style.borders.strokePaints.length);
                 api.delbordermask(this.__document, this.page, s);
+                api.delBorderFillMask(this.__document, this.page, adapt2Shape(shape), undefined);
+                api.deleteStrokePaints(this.page, s, 0, shape.style.borders.strokePaints.length);
             }
             const parents = getAutoLayoutShapes(shapes);
             for (let i = 0; i < parents.length; i++) {
