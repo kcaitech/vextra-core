@@ -908,6 +908,7 @@ export type Border = {
     cornerType: CornerType,
     sideSetting: BorderSideSetting,
     strokePaints: Border_strokePaints,
+    fillsMask?: string,
 }
 /* fill */
 export type Fill = {

@@ -1073,6 +1073,7 @@ export function exportBorder(source: types.Border, ctx?: IExportContext): types.
     ret.cornerType = exportCornerType(source.cornerType, ctx)
     ret.sideSetting = exportBorderSideSetting(source.sideSetting, ctx)
     ret.strokePaints = exportBorder_strokePaints(source.strokePaints, ctx)
+    if (source.fillsMask !== undefined) ret.fillsMask = source.fillsMask
     return ret
 }
 /* fill */

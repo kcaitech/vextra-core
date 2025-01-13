@@ -22,6 +22,9 @@
             "items": {
                 "$ref": "./stroke-paint.json"
             }
+        },
+        "fillsMask": {
+            "type": "string"
         }
     },
     "required": [

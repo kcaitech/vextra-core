@@ -101,6 +101,7 @@ export class Border extends Basic implements classes.Border {
     cornerType: CornerType
     sideSetting: BorderSideSetting
     strokePaints: BasicArray<StrokePaint>
+    fillsMask?: string
 
     constructor(
         position: BorderPosition,

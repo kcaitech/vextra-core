@@ -917,6 +917,7 @@ export class Border extends Basic {
     cornerType: CornerType
     sideSetting: BorderSideSetting
     strokePaints: Border_strokePaints
+    fillsMask?: string
     constructor(position: BorderPosition, borderStyle: BorderStyle, cornerType: CornerType, sideSetting: BorderSideSetting, strokePaints: Border_strokePaints) {
         super()
         this.position = position

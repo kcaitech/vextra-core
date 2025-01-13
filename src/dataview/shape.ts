@@ -10,7 +10,7 @@ import {
     ResizingConstraints2, ScrollBehavior,
     ScrollDirection, Shadow, ShadowPosition, Shape,
     ShapeFrame, ShapeSize, ShapeType, SymbolRefShape,
-    SymbolShape, Transform, Variable, VariableType, BlurMask, BorderMask, FillMask, ShadowMask
+    SymbolShape, Transform, Variable, VariableType, BlurMask, BorderMask, FillMask, ShadowMask, StrokePaint
 } from "../data";
 import { findOverrideAndVar } from "./basic";
 import { EL, elh } from "./el";
@@ -713,11 +713,12 @@ export class ShapeView extends DataView {
         if (this.m_borders) return this.m_borders;
         const v = this._findOV(OverrideType.Borders, VariableType.Borders);
         let Border: Border;
+        Border = v ? v.value as Border : this.m_data.style.borders
         if (this.style.bordersMask) {
             const mgr = this.style.getStylesMgr();
             if (!mgr) return this.m_data.style.borders;
             const mask = mgr.getSync(this.style.bordersMask) as BorderMask
-            let border = { ...this.m_data.style.borders }
+            let border = { ...Border }
             if (this.type === ShapeType.Line) {
                 border.position = BorderPosition.Center
             } else {
@@ -727,10 +728,21 @@ export class ShapeView extends DataView {
             Border = border as Border
             // 检查图层是否在变量通知对象集合里
             if (!mask.__subscribers.has(this)) mask.__subscribers.add(this);
-        } else {
-            Border = v ? v.value as Border : this.m_data.style.borders
         }
-
+        if (this.style.borders.fillsMask) {
+            const mgr = this.style.getStylesMgr();
+            const mask = mgr?.getSync(this.style.borders.fillsMask) as FillMask
+            let strokePaints = new BasicArray<StrokePaint>;
+            mask.fills.forEach((i) => {
+                const { crdtidx, id, isEnabled, fillType, color } = i
+                const s = new StrokePaint(crdtidx, id, isEnabled, fillType, color)
+                strokePaints.push(s)
+            })
+            let border = { ...Border };
+            border.strokePaints=strokePaints;
+            Border = border as Border;
+            if (!mask.__subscribers.has(this)) mask.__subscribers.add(this);
+        }
         return Border;
     }
 

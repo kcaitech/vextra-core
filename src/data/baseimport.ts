@@ -1171,6 +1171,9 @@ export function importBorderMask(source: types.BorderMask, ctx?: IImportContext)
     return ret
 }
 /* border */
+function importBorderOptional(tar: impl.Border, source: types.Border, ctx?: IImportContext) {
+    if (source.fillsMask !== undefined) tar.fillsMask = source.fillsMask
+}
 export function importBorder(source: types.Border, ctx?: IImportContext): impl.Border {
     const ret: impl.Border = new impl.Border (
         importBorderPosition(source.position, ctx),
@@ -1178,6 +1181,7 @@ export function importBorder(source: types.Border, ctx?: IImportContext): impl.B
         importCornerType(source.cornerType, ctx),
         importBorderSideSetting(source.sideSetting, ctx),
         importBorder_strokePaints(source.strokePaints, ctx))
+    importBorderOptional(ret, source, ctx)
     return ret
 }
 /* fill */
