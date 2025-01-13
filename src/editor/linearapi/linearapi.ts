@@ -12,7 +12,7 @@ import { BatchAction, BatchAction2, BatchAction5, PageEditor } from "../page";
 import { importGradient, } from "../../data/baseimport";
 import { exportGradient, } from "../../data/baseexport";
 import { TableEditor } from "../table";
-import { getAutoLayoutShapes, modifyAutoLayout, reLayoutBySort, TidyUpAlgin, tidyUpLayout } from "../utils/auto_layout";
+import { reLayoutBySort, TidyUpAlgin, tidyUpLayout } from "../utils/auto_layout";
 import { TextShapeEditor } from "../textshape";
 
 /**
@@ -473,10 +473,8 @@ export class LinearApi {
         this.execute('modify-shapes-border-Thickness', () => {
             const api = this.api!;
             const page = this.page;
-            const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                shapes.push(target);
                 const s = shape4border(api, this._page, target);
                 const borders = target.getBorders();
                 const sideType = borders.sideSetting.sideType;
@@ -502,13 +500,6 @@ export class LinearApi {
                 }
 
             }
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                if (parent.autoLayout?.bordersTakeSpace) {
-                    modifyAutoLayout(page, api, parent);
-                }
-            }
         });
     }
 
@@ -516,19 +507,10 @@ export class LinearApi {
         this.execute('modify-border-thickness-top', () => {
             const api = this.api!;
             const page = this.page;
-            const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                shapes.push(target);
                 const s = shape4border(api, this._page, target);
                 api.setBorderThicknessTop(page, s, value);
-            }
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                if (parent.autoLayout?.bordersTakeSpace) {
-                    modifyAutoLayout(page, api, parent);
-                }
             }
         })
     }
@@ -537,19 +519,10 @@ export class LinearApi {
         this.execute('modify-border-thickness-bottom', () => {
             const api = this.api!;
             const page = this.page;
-            const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                shapes.push(target);
                 const s = shape4border(api, this._page, target);
                 api.setBorderThicknessBottom(page, s, value);
-            }
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                if (parent.autoLayout?.bordersTakeSpace) {
-                    modifyAutoLayout(page, api, parent);
-                }
             }
         })
     }
@@ -558,19 +531,10 @@ export class LinearApi {
         this.execute('modify-border-thickness-left', () => {
             const api = this.api!;
             const page = this.page;
-            const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                shapes.push(target);
                 const s = shape4border(api, this._page, target);
                 api.setBorderThicknessLeft(page, s, value);
-            }
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                if (parent.autoLayout?.bordersTakeSpace) {
-                    modifyAutoLayout(page, api, parent);
-                }
             }
         })
     }
@@ -579,19 +543,10 @@ export class LinearApi {
         this.execute('modify-border-thickness-right', () => {
             const api = this.api!;
             const page = this.page;
-            const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                shapes.push(target);
                 const s = shape4border(api, this._page, target);
                 api.setBorderThicknessRight(page, s, value);
-            }
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                if (parent.autoLayout?.bordersTakeSpace) {
-                    modifyAutoLayout(page, api, parent);
-                }
             }
         })
     }

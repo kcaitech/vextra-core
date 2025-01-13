@@ -53,7 +53,7 @@ import { ISave4Restore, LocalCmd, SelectionState } from "../coop/localcmd";
 import { BasicArray } from "../data/basic";
 import { Fill } from "../data/style";
 import { TextAttr } from "../data/classes";
-import { getAutoLayoutShapes, layoutShapesOrder, modifyAutoLayout } from "./utils/auto_layout";
+import { getAutoLayoutShapes, layoutShapesOrder } from "./utils/auto_layout";
 import { Transform } from "../data/transform";
 
 interface PageXY { // 页面坐标系的xy
@@ -1013,7 +1013,6 @@ export class Controller {
                 })
             }
         }
-        const shapes: ShapeView[] = _shapes;
         const page = _page.data;
 
         const api = this.__repo.start("asyncBorderThickness");
@@ -1021,9 +1020,9 @@ export class Controller {
         const execute = (thickness: number) => {
             status = Status.Pending;
             try {
-                for (let i = 0, l = shapes.length; i < l; i++) {
-                    const s = shape4border(api, _page, shapes[i]);
-                    const borders = shapes[i].getBorders();
+                for (let i = 0, l = _shapes.length; i < l; i++) {
+                    const s = shape4border(api, _page, _shapes[i]);
+                    const borders = _shapes[i].getBorders();
                     const sideType = borders.sideSetting.sideType;
                     switch (sideType) {
                         case SideType.Normal:
@@ -1052,13 +1051,6 @@ export class Controller {
                 console.error(e);
                 status = Status.Exception;
             }
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                if (parent.autoLayout?.bordersTakeSpace) {
-                    modifyAutoLayout(page, api, parent, sort, true);
-                }
-            }
         }
         const close = () => {
             if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
@@ -1071,7 +1063,6 @@ export class Controller {
         return { execute, close }
     }
     public asyncBorderSideThickness(_shapes: ShapeView[], _page: PageView, type: SideType): AsyncBorderThickness {
-        const shapes: ShapeView[] = _shapes;
         const page = _page.data;
 
         const api = this.__repo.start("asyncBorderSideThickness");
@@ -1079,8 +1070,8 @@ export class Controller {
         const execute = (thickness: number) => {
             status = Status.Pending;
             try {
-                for (let i = 0, l = shapes.length; i < l; i++) {
-                    const s = shape4border(api, _page, shapes[i]);
+                for (let i = 0, l = _shapes.length; i < l; i++) {
+                    const s = shape4border(api, _page, _shapes[i]);
                     switch (type) {
                         case SideType.Top:
                             api.setBorderThicknessTop(page, s, thickness);
@@ -1103,13 +1094,6 @@ export class Controller {
             } catch (e) {
                 console.error(e);
                 status = Status.Exception;
-            }
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                if (parent.autoLayout?.bordersTakeSpace) {
-                    modifyAutoLayout(page, api, parent);
-                }
             }
         }
         const close = () => {

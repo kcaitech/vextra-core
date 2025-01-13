@@ -103,6 +103,7 @@ function _isNeedOverride4SymbolRef(overrideType: OverrideType) {
         case OverrideType.CornerRadius:
         case OverrideType.Blur:
         case OverrideType.FrameMaskDisabled:
+        case OverrideType.AutoLayout:
             return true
         case OverrideType.ExportOptions:
         case OverrideType.Image:

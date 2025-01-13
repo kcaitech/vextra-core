@@ -7,36 +7,33 @@ import {
     ShapeType,
 } from "../../data/shape";
 import { PaddingDir } from "../shape";
-import { modifyAutoLayout } from "../utils/auto_layout";
 import { translate } from "../frame";
 import { makeShapeTransform1By2, makeShapeTransform2By1, Page, StackSizing } from "../..//data";
 import { after_migrate, unable_to_migrate } from "../utils/migrate";
-import { get_state_name, is_state } from "../symbol";
+import { get_state_name, is_state, shape4Autolayout } from "../symbol";
 import { CoopRepository } from "../../coop/cooprepo";
 import { Api } from "../../coop/recordapi";
 
 export class AutoLayoutModify extends AsyncApiCaller {
     updateFrameTargets: Set<Shape> = new Set();
     prototype = new Map<string, Shape>()
-
+    protected _page: PageView;
     constructor(repo: CoopRepository, document: Document, page: PageView) {
         super(repo, document, page);
+        this._page = page;
     }
 
     start() {
         return this.__repo.start('auto-layout-modify');
     }
 
-    executePadding(shape: GroupShapeView, value: number, direction: PaddingDir) {
+    executePadding(shape: ArtboardView, value: number, direction: PaddingDir) {
         try {
-            const layoutShape = (shape as ArtboardView);
-            if (!layoutShape.autoLayout) return;
             const api = this.api;
             const page = this.page;
             const padding = Math.max(0, Math.round(value));
-            const __shape = adapt2Shape(layoutShape);
+            const __shape = shape4Autolayout(api, shape, this._page);
             api.shapeModifyAutoLayoutPadding(page, __shape, padding, direction);
-            modifyAutoLayout(page, api, __shape);
             this.updateView();
         } catch (e) {
             this.exception = true;
@@ -44,17 +41,14 @@ export class AutoLayoutModify extends AsyncApiCaller {
         }
     }
 
-    executeHorPadding(shape: GroupShapeView, value: number, right: number) {
+    executeHorPadding(shape: ArtboardView, value: number, right: number) {
         try {
-            const layoutShape = (shape as ArtboardView);
-            if (!layoutShape.autoLayout) return;
             const api = this.api;
             const page = this.page;
             const padding = Math.max(0, Math.round(value));
             const r_padding = Math.max(0, Math.round(right));
-            const __shape = adapt2Shape(layoutShape);
+            const __shape = shape4Autolayout(api, shape, this._page);
             api.shapeModifyAutoLayoutHorPadding(page, __shape, padding, r_padding);
-            modifyAutoLayout(page, api, __shape);
             this.updateView();
         } catch (e) {
             this.exception = true;
@@ -62,17 +56,14 @@ export class AutoLayoutModify extends AsyncApiCaller {
         }
     }
 
-    executeVerPadding(shape: GroupShapeView, value: number, bottom: number) {
+    executeVerPadding(shape: ArtboardView, value: number, bottom: number) {
         try {
-            const layoutShape = (shape as ArtboardView);
-            if (!layoutShape.autoLayout) return;
             const api = this.api;
             const page = this.page;
             const padding = Math.max(0, Math.round(value));
             const b_padding = Math.max(0, Math.round(bottom));
-            const __shape = adapt2Shape(layoutShape);
+            const __shape = shape4Autolayout(api, shape, this._page);
             api.shapeModifyAutoLayoutVerPadding(page, __shape, padding, b_padding);
-            modifyAutoLayout(page, api, __shape);
             this.updateView();
         } catch (e) {
             this.exception = true;
@@ -80,17 +71,14 @@ export class AutoLayoutModify extends AsyncApiCaller {
         }
     }
 
-    executeSpace(shape: GroupShapeView, value: number, direction: PaddingDir) {
+    executeSpace(shape: ArtboardView, value: number, direction: PaddingDir) {
         try {
-            const layoutShape = (shape as ArtboardView);
-            if (!layoutShape.autoLayout) return;
             const api = this.api;
             const page = this.page;
             const space = Math.round(value);
-            const __shape = adapt2Shape(layoutShape);
+            const __shape = shape4Autolayout(api, shape, this._page);
             api.shapeModifyAutoLayoutSpace(page, __shape, space, direction);
             api.shapeModifyAutoLayoutGapSizing(page, __shape, StackSizing.Fixed, direction);
-            modifyAutoLayout(page, api, __shape);
             this.updateView();
         } catch (e) {
             this.exception = true;
@@ -98,10 +86,8 @@ export class AutoLayoutModify extends AsyncApiCaller {
         }
     }
 
-    swapShapeLayout(shape: GroupShapeView, targets: ShapeView[], x: number, y: number) {
+    swapShapeLayout(shape: ArtboardView, targets: ShapeView[], x: number, y: number) {
         try {
-            const layoutShape = (shape as ArtboardView);
-            if (!layoutShape.autoLayout) return;
             const api = this.api;
             const page = this.page;
             for (let index = 0; index < targets.length; index++) {
@@ -109,8 +95,6 @@ export class AutoLayoutModify extends AsyncApiCaller {
                 const frame = target._p_frame;
                 translate(api, page, adapt2Shape(target), x - frame.x, y - frame.y);
             }
-
-            modifyAutoLayout(page, api,  adapt2Shape(shape));
             this.updateView();
         } catch (e) {
             this.exception = true;

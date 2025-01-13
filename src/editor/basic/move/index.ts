@@ -4,7 +4,6 @@ import { GroupShape, Page, SymbolShape, MarkerType, BlendMode, Artboard, ShapeTy
 import { importFill, importBorder, importShadow, importExportOptions, importBlur, importPrototypeInterAction, importAutoLayout } from "../../../data/baseimport";
 import { exportFill, exportBorder, exportShadow, exportExportOptions, exportBlur, exportPrototypeInterAction, exportAutoLayout } from "../../../data/baseexport";
 import { CircleChecker } from "./circle";
-import { modifyAutoLayout } from "../../utils/auto_layout";
 
 /**
  * @description 调整图层的层级，调整层级的动作涉及多方面协调，不可以直接使用api进行调整
@@ -126,16 +125,6 @@ export class ShapePorter {
     }
 
     /**
-     * @description 更新自动布局
-     * @private
-     */
-    private autolayout() {
-        if (this.envSet.size) this.envSet.forEach(e => {
-            if ((e as ArtboardView).autoLayout) modifyAutoLayout(this.page, this.api, adapt2Shape(e));
-        })
-    }
-
-    /**
      * @description 更新原型交互
      */
     private react() {
@@ -189,7 +178,6 @@ export class ShapePorter {
     }
 
     afterMove() {
-        this.autolayout();
         this.react();
         this.clearNullGroup();
     }

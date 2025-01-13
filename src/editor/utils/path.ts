@@ -15,7 +15,6 @@ import { ColVector3D } from "../../basic/matrix2";
 import { ContactLineView, PathShapeView, ShapeView } from "../../dataview";
 import { Cap, gPal, IPalPath, Join } from "../../basic/pal";
 import { Path } from "@kcdesign/path";
-import { modifyAutoLayout } from "./auto_layout";
 import { qua2cube, splitCubicBezierAtT } from "../../data/pathparser";
 import { Transform } from "../../data/transform";
 
@@ -272,14 +271,6 @@ export function update_frame_by_points(api: Api, page: Page, s: Shape, reLayout 
     m1.multiAtLeft(m3.inverse);
 
     (s as PathShape).pathsegs.forEach((segment, index) => exe(index, m1, segment.points));
-
-    if (frameChange) {
-        let p = s.parent;
-        while (p) {
-            if ((p as Artboard).autoLayout) modifyAutoLayout(page, api, p);
-            p = p.parent;
-        }
-    }
 
     function exe(segment: number, m: Transform, points: CurvePoint[]) {
         if (!points || !points.length) return false;

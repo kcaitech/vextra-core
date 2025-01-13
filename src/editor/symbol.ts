@@ -34,7 +34,8 @@ import {
     Artboard, BorderSideSetting, SideType,
     string2Text,
     StrokePaint,
-    BorderStyle
+    BorderStyle,
+    AutoLayout
 } from "../data/classes";
 import { findOverride, findVar } from "../data/utils";
 import { BasicArray } from "../data/basic";
@@ -190,6 +191,8 @@ function _clone_value(_var: Variable, document: Document, page: Page) {
             return _var.value;
         case VariableType.ExportOptions:
             return importExportOptions(_var.value, ctx);
+        case VariableType.AutoLayout:
+            return importAutoLayout(_var.value, ctx);
         default:
             throw new Error();
     }
@@ -219,6 +222,15 @@ export function shape4blur(api: Api, _shape: ShapeView, page: PageView) {
         return blur && importBlur(blur) || new Blur(true, new Point2D(0, 0), 10, BlurType.Gaussian);
     };
     const _var = _ov(VariableType.Blur, OverrideType.Blur, valuefun, _shape, page, api);
+    return _var || _shape.data;
+}
+
+export function shape4Autolayout(api: Api, _shape: ShapeView, page: PageView) {
+    const valuefun = (_var: Variable | undefined) => {
+        const autolayout = _var?.value ?? (_shape as ArtboardView).autoLayout;
+        return autolayout && importAutoLayout(autolayout) || new AutoLayout(10, 10, 0, 0, 0, 0, types.StackSizing.Auto);
+    };
+    const _var = _ov(VariableType.AutoLayout, OverrideType.AutoLayout, valuefun, _shape, page, api);
     return _var || _shape.data;
 }
 
@@ -286,6 +298,7 @@ export function modify_variable(document: Document, page: Page, view: ShapeView,
             case OverrideType.Visible:
             case OverrideType.ExportOptions:
             case OverrideType.Blur:
+            case OverrideType.AutoLayout:
             case OverrideType.CornerRadius:
                 ot = _overrideType as OverrideType;
                 break;

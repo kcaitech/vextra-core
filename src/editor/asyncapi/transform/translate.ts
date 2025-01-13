@@ -9,7 +9,7 @@ import { after_migrate, unable_to_migrate } from "../../utils/migrate";
 import { get_state_name, is_state } from "../../symbol";
 import { Api } from "../../../coop";
 import { ISave4Restore, LocalCmd, SelectionState } from "../../../coop";
-import { TidyUpAlgin, modifyAutoLayout, tidyUpLayout } from "../../utils/auto_layout";
+import { TidyUpAlgin, tidyUpLayout } from "../../utils/auto_layout";
 import { translate } from "../../frame";
 import { transform_data } from "../../../io/cilpboard";
 import { MossError } from "../../../basic/error";
@@ -165,7 +165,6 @@ export class Transporter extends AsyncApiCaller {
                 translate(api, page, adapt2Shape(target), x - frame.x, y - frame.y);
             }
 
-            modifyAutoLayout(page, api, adapt2Shape(shape), sort);
             this.updateView();
         } catch (e) {
             this.exception = true;
@@ -336,8 +335,6 @@ export class Transporter extends AsyncApiCaller {
                 api.shapeModifyX(page, shape, x);
                 api.shapeModifyY(page, shape, y);
             }
-
-            modifyAutoLayout(page, api, envData);
         } catch (e) {
             this.exception = true;
             console.error(e);
@@ -356,9 +353,6 @@ export class Transporter extends AsyncApiCaller {
                 this.api.shapeModifyName(this.page, shape, assign(shape));
             })
         }
-        this.need_layout_shape.forEach(parent => {
-            modifyAutoLayout(this.page, this.api, parent);
-        })
 
         super.commit();
     }

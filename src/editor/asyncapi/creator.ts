@@ -37,13 +37,11 @@ import {
 } from "../creator";
 import { ISave4Restore, LocalCmd, SelectionState } from "../../coop";
 import { uuid } from "../../basic/uuid";
-import { Matrix } from "../../basic/matrix";
 import { Api } from "../../coop";
 import { Point2D, ScrollBehavior } from "../../data/typesdefine";
 import { update_frame_by_points } from "../utils/path";
 import { translateTo } from "../frame";
 import { Transform as Transform2 } from "../../basic/transform";
-import { modifyAutoLayout } from "../utils/auto_layout";
 
 export interface GeneratorParams {
     parent: GroupShapeView;
@@ -287,11 +285,6 @@ export class CreatorApiCaller extends AsyncApiCaller {
         if (this.__repo.isNeedCommit() && !this.exception) {
             if (this.shape instanceof LineShape) { // 线条的宽高最后根据两个点的位置计算
                 update_frame_by_points(this.api, this.page, this.shape, true);
-            }
-            const parent = this.__params?.parent;
-            if (parent && (parent as ArtboardView).autoLayout) {
-                const __shape = adapt2Shape(parent) as GroupShape;
-                modifyAutoLayout(this.page, this.api, __shape);
             }
             this.__repo.commit();
         } else {

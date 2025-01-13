@@ -39,7 +39,7 @@ import {
     UniformScaleUnit
 } from "./transform";
 import { fixTextShapeFrameByLayout } from "../utils/other";
-import { getAutoLayoutShapes, modifyAutoLayout, TidyUpAlgin, tidyUpLayout } from "../utils/auto_layout";
+import { TidyUpAlgin, tidyUpLayout } from "../utils/auto_layout";
 import { modifyPathByArc } from "./arc";
 
 export class LockMouseHandler extends AsyncApiCaller {
@@ -70,11 +70,6 @@ export class LockMouseHandler extends AsyncApiCaller {
                 if (shape.isVirtualShape) continue;
                 translate(api, page, shape, dx, 0);
             }
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                modifyAutoLayout(this.page, api, parent);
-            }
             this.updateView();
         } catch (e) {
             this.exception = true;
@@ -93,11 +88,6 @@ export class LockMouseHandler extends AsyncApiCaller {
                 if (parent && (parent as Artboard).autoLayout) continue;
                 if (shape.isVirtualShape) continue;
                 translate(api, page, shape, 0, dy);
-            }
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                modifyAutoLayout(this.page, api, parent);
             }
             this.updateView();
         } catch (e) {
@@ -146,11 +136,6 @@ export class LockMouseHandler extends AsyncApiCaller {
                     });
                 }
             }
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                modifyAutoLayout(this.page, api, parent);
-            }
             this.updateView();
         } catch (e) {
             this.exception = true;
@@ -196,11 +181,6 @@ export class LockMouseHandler extends AsyncApiCaller {
                         y: Math.abs(size.height / (size.height - dh))
                     });
                 }
-            }
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                modifyAutoLayout(this.page, api, parent);
             }
             this.updateView();
         } catch (e) {
@@ -289,11 +269,6 @@ export class LockMouseHandler extends AsyncApiCaller {
 
                 const transform = makeShapeTransform1By2(t) as Transform;
                 api.shapeModifyRotate(page, adapt2Shape(shape), transform)
-            }
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                modifyAutoLayout(this.page, api, parent);
             }
             this.updateView();
         } catch (e) {
