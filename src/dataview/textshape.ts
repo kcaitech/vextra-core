@@ -246,7 +246,8 @@ export class TextShapeView extends ShapeView {
     }
 
     protected _layout(parentFrame: ShapeSize | undefined, scale: { x: number; y: number; } | undefined): void {
-        if (!this.isVirtualShape) {
+        // 当是组件中的变量时，也需要重新计算大小
+        if (!this.isVirtualShape && this.getText() === this.data.text) {
             this.updateLayoutArgs(this.data.transform, this.data.frame, undefined)
             this.updateFrames();
             return
