@@ -470,7 +470,7 @@ export function cell4edit2(page: PageView, view: TableView, _cell: TableCellView
         const trans = new Transform();
         const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
         const strokePaints = new BasicArray<StrokePaint>();
-        const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
+        const border = new Border(types.BorderPosition.Inner, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
         return new TableCell(new BasicArray(),
             cellId,
             "",
@@ -500,7 +500,7 @@ export function cell4edit(page: PageView, view: TableView, rowIdx: number, colId
         const trans = new Transform();
         const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
         const strokePaints = new BasicArray<StrokePaint>();
-        const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
+        const border = new Border(types.BorderPosition.Inner, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
         return new TableCell(new BasicArray(),
             cellId,
             "",

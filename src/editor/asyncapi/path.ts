@@ -76,7 +76,7 @@ export class PathModifier extends AsyncApiCaller {
                 const strokePaints = new BasicArray<StrokePaint>();
                 const strokePaint = new StrokePaint([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0));
                 strokePaints.push(strokePaint);
-                const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
+                const border = new Border(types.BorderPosition.Inner, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
                 style.borders = border;
             } else {
                 style.fills = new BasicArray<Fill>();
