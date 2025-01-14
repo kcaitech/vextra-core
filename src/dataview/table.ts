@@ -111,7 +111,7 @@ export class TableView extends ShapeView {
         // 构造一个
         const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
         const strokePaints = new BasicArray<StrokePaint>();
-        const border = new Border(BorderPosition.Center, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
+        const border = new Border(BorderPosition.Inner, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
         cell = new TableCell(new BasicArray(),
             cellId,
             "",

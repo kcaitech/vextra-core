@@ -106,7 +106,7 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
     if (!data) { // 存在数据没有style
         const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
         const strokePaints = new BasicArray<StrokePaint>();
-        const border = new Border(BorderPosition.Center, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
+        const border = new Border(BorderPosition.Inner, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
         const style: Style = new Style(new BasicArray<Fill>(), new BasicArray<Shadow>(), border);
         return style;
     }
@@ -173,7 +173,7 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
         return bs
     })(data['borderOptions'] ? data['borderOptions'].dashPattern : undefined);
     const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
-    let border = new Border(BorderPosition.Center, borderStyle, CornerType.Miter, side, strokePaints);
+    let border = new Border(BorderPosition.Inner, borderStyle, CornerType.Miter, side, strokePaints);
     
     if (data['borders'] && data['borders'].length) {
         const d = data['borders'][0];
@@ -182,7 +182,7 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
                 case 0: return BorderPosition.Center;
                 case 1: return BorderPosition.Inner;
                 case 2: return BorderPosition.Outer;
-                default: return BorderPosition.Center;
+                default: return BorderPosition.Inner;
             }
         })(d['position']);
         const corner: CornerType = ((p: number) => {

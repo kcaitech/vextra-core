@@ -127,7 +127,7 @@ export class TableView2 extends ShapeView {
         const strokePaints = new BasicArray<StrokePaint>();
         const strokePaint = new StrokePaint([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(0.5, 0, 0, 0))
         strokePaints.push(strokePaint);
-        const border = new Border(BorderPosition.Center, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
+        const border = new Border(BorderPosition.Inner, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
 
         cell = new Artboard(new BasicArray(),
             cellId,
