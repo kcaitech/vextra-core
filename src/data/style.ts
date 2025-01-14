@@ -525,11 +525,22 @@ export class FillMask extends Basic implements Mask, classes.FillMask {
         this.fills = fills;
     }
 
+    private __callback_set: Set<any> = new Set()
+
+    watch(cb: any) {
+        this.__callback_set.add(cb);
+    }
+    unwatch(cb: any) {
+        this.__callback_set.delete(cb);
+    }
+
     notify(...args: any[]) {
         super.notify("style-mask-change", "fill", ...args);
+        this.__callback_set.forEach(f => f());
+
         this.__subscribers.forEach(view => {
             if (view.isDistroyed) return;
-            view.m_ctx.setDirty(view); // 将view设置为脏节点之后，下一帧会被更新
+            view.m_ctx.setDirty(view);
         })
     }
 
