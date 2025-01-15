@@ -2681,8 +2681,6 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                const source = this.__document.stylesMgr.getSync(target.style.fillsMask ?? '');
-                source && source.__subscribers.delete(target);
                 api.deleteFills(this.page, adapt2Shape(target), 0, target.style.fills.length);
                 api.addFills(this.page, adapt2Shape(target), value);
                 api.delfillmask(this.__document, this.page, adapt2Shape(target));
@@ -2714,8 +2712,6 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                const source = this.__document.stylesMgr.getSync(target.style.fillsMask ?? '');
-                source && source.__subscribers.delete(target);
                 api.deleteFills(this.page, adapt2Shape(target), 0, target.style.fills.length);
                 api.delfillmask(this.__document, this.page, adapt2Shape(target));
             }
@@ -2745,8 +2741,6 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                const source = this.__document.stylesMgr.getSync(target.style.shadowsMask ?? '');
-                source && source.__subscribers.delete(target);
                 api.deleteShadows(this.page, adapt2Shape(target), 0, target.style.shadows.length);
                 api.addShadows(this.page, adapt2Shape(target), value);
                 api.delshadowmask(this.__document, this.page, adapt2Shape(target));
@@ -2777,8 +2771,6 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                const source = this.__document.stylesMgr.getSync(target.style.blursMask ?? '');
-                source && source.__subscribers.delete(target);
                 api.deleteBlur(this.page, adapt2Shape(target));
                 api.addBlur(this.page, adapt2Shape(target), value);
                 api.delblurmask(this.__document, this.page, adapt2Shape(target));
@@ -2795,8 +2787,6 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const { target } = actions[i];
-                const source = this.__document.stylesMgr.getSync(target.style.shadowsMask ?? '');
-                source && source.__subscribers.delete(target);
                 api.deleteShadows(this.page, adapt2Shape(target), 0, target.style.shadows.length);
                 api.delshadowmask(this.__document, this.page, adapt2Shape(target));
             }
@@ -2812,8 +2802,6 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const { target } = actions[i];
-                const source = this.__document.stylesMgr.getSync(target.style.blursMask ?? '');
-                source && source.__subscribers.delete(target);
                 api.deleteBlur(this.page, adapt2Shape(target));
                 api.delblurmask(this.__document, this.page, adapt2Shape(target));
             }
@@ -2843,8 +2831,6 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                const source = this.__document.stylesMgr.getSync(target.style.bordersMask ?? '');
-                source && source.__subscribers.delete(target);
                 const { position, sideSetting } = value as BorderMaskType
                 const side = new BorderSideSetting(sideSetting.sideType, sideSetting.thicknessTop, sideSetting.thicknessLeft, sideSetting.thicknessBottom, sideSetting.thicknessRight);
                 const s = shape4border(api, this.view, target);
@@ -2877,8 +2863,6 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const { target } = actions[i];
-                const source = this.__document.stylesMgr.getSync(target.style.bordersMask ?? '');
-                source && source.__subscribers.delete(target);
                 api.deleteBlur(this.page, adapt2Shape(target));
                 api.delblurmask(this.__document, this.page, adapt2Shape(target));
             }
@@ -2908,10 +2892,6 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                console.log(value,'222222222333333333333');
-                
-                const source = this.__document.stylesMgr.getSync(target.style.borders.fillsMask ?? '');
-                source && source.__subscribers.delete(target);
                 api.deleteStrokePaints(this.page, adapt2Shape(target), 0, target.style.borders.strokePaints.length)
                 for (let i = 0; i < value.length; i++) {
                     api.addStrokePaint(this.page, adapt2Shape(target), value[i], i)
