@@ -25,7 +25,7 @@ import {
     WindingRule,
     SideType,
 } from "./baseclasses";
-import { Basic, BasicArray, BasicMap, ResourceMgr } from "./basic";
+import { Basic, BasicArray, BasicMap, ResourceMgr, WatchableObject } from "./basic";
 import { Variable } from "./variable";
 import { Color } from "./color";
 import { ShapeView } from "../dataview";
@@ -504,12 +504,11 @@ interface Mask {
     notify: (...args: any[]) => void;       // 当前变量改变，通知所有被遮盖的对象更新试图
 }
 
-export class FillMask extends Basic implements Mask, classes.FillMask {
+export class FillMask extends WatchableObject implements classes.FillMask {
     typeId = 'fill-mask-living';
     crdtidx: BasicArray<number>;
     id: string;
     sheet: string;
-    __subscribers: Set<ShapeView>;
     name: string;
     description: string;
     fills: BasicArray<Fill>
@@ -519,45 +518,21 @@ export class FillMask extends Basic implements Mask, classes.FillMask {
         this.crdtidx = crdtidx;
         this.id = id;
         this.sheet = sheet;
-        this.__subscribers = new Set<ShapeView>();
         this.name = name;
         this.description = description;
         this.fills = fills;
     }
 
-    private __callback_set: Set<any> = new Set()
-
-    watch(cb: any) {
-        this.__callback_set.add(cb);
-    }
-    unwatch(cb: any) {
-        this.__callback_set.delete(cb);
-    }
-
     notify(...args: any[]) {
         super.notify("style-mask-change", "fill", ...args);
-        this.__callback_set.forEach(f => f());
-
-        this.__subscribers.forEach(view => {
-            if (view.isDistroyed) return;
-            view.m_ctx.setDirty(view);
-        })
-    }
-
-    add(view: ShapeView) {
-        this.__subscribers.add(view);
-        return () => {
-            this.__subscribers.delete(view)
-        }
     }
 }
 
-export class ShadowMask extends Basic implements Mask, classes.ShadowMask {
+export class ShadowMask extends WatchableObject implements classes.ShadowMask {
     typeId = 'shadow-mask-living';
     crdtidx: BasicArray<number>;
     id: string;
     sheet: string;
-    __subscribers: Set<ShapeView>;
     name: string;
     description: string;
     shadows: BasicArray<Shadow>;
@@ -567,7 +542,6 @@ export class ShadowMask extends Basic implements Mask, classes.ShadowMask {
         this.crdtidx = crdtidx;
         this.id = id;
         this.sheet = sheet;
-        this.__subscribers = new Set<ShapeView>();
         this.name = name;
         this.description = description;
         this.shadows = shadows;
@@ -575,26 +549,14 @@ export class ShadowMask extends Basic implements Mask, classes.ShadowMask {
 
     notify(...args: any[]) {
         super.notify("style-mask-change", "shadow", ...args);
-        this.__subscribers.forEach(view => {
-            if (view.isDistroyed) return;
-            view.m_ctx.setDirty(view); // 将view设置为脏节点之后，下一帧会被更新
-        })
-    }
-
-    add(view: ShapeView) {
-        this.__subscribers.add(view);
-        return () => {
-            this.__subscribers.delete(view)
-        }
     }
 }
 
-export class BlurMask extends Basic implements Mask, classes.BlurMask {
+export class BlurMask extends WatchableObject implements classes.BlurMask {
     typeId = 'blur-mask-living';
     crdtidx: BasicArray<number>;
     id: string;
     sheet: string;
-    __subscribers: Set<ShapeView>;
     name: string;
     description: string;
     blur: Blur;
@@ -604,7 +566,6 @@ export class BlurMask extends Basic implements Mask, classes.BlurMask {
         this.crdtidx = crdtidx;
         this.id = id;
         this.sheet = sheet;
-        this.__subscribers = new Set<ShapeView>();
         this.name = name;
         this.description = description;
         this.blur = blur;
@@ -612,26 +573,14 @@ export class BlurMask extends Basic implements Mask, classes.BlurMask {
 
     notify(...args: any[]) {
         super.notify("style-mask-change", "blur", ...args);
-        this.__subscribers.forEach(view => {
-            if (view.isDistroyed) return;
-            view.m_ctx.setDirty(view); // 将view设置为脏节点之后，下一帧会被更新
-        })
-    }
-
-    add(view: ShapeView) {
-        this.__subscribers.add(view);
-        return () => {
-            this.__subscribers.delete(view)
-        }
     }
 }
 
-export class BorderMask extends Basic implements Mask, classes.BorderMask {
+export class BorderMask extends WatchableObject implements classes.BorderMask {
     typeId = 'border-mask-living';
     crdtidx: BasicArray<number>;
     id: string;
     sheet: string;
-    __subscribers: Set<ShapeView>;
     name: string;
     description: string;
     border: BorderMaskType;
@@ -641,7 +590,6 @@ export class BorderMask extends Basic implements Mask, classes.BorderMask {
         this.crdtidx = crdtidx;
         this.id = id;
         this.sheet = sheet;
-        this.__subscribers = new Set<ShapeView>();
         this.name = name;
         this.description = description;
         this.border = border;
@@ -649,17 +597,6 @@ export class BorderMask extends Basic implements Mask, classes.BorderMask {
 
     notify(...args: any[]) {
         super.notify("style-mask-change", "border", ...args);
-        this.__subscribers.forEach(view => {
-            if (view.isDistroyed) return;
-            view.m_ctx.setDirty(view); // 将view设置为脏节点之后，下一帧会被更新
-        })
-    }
-
-    add(view: ShapeView) {
-        this.__subscribers.add(view);
-        return () => {
-            this.__subscribers.delete(view)
-        }
     }
 }
 

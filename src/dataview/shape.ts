@@ -2,10 +2,10 @@ import { innerShadowId, renderBlur, renderBorders, renderFills, renderShadows } 
 import {
     BasicArray, Blur, BlurType, Border,
     BorderPosition, ContextSettings, CornerRadius,
-    CurvePoint, ExportOptions, Fill, FillType,
+    ExportOptions, Fill, FillType,
     GradientType, MarkerType, OverlayBackgroundAppearance,
     OverlayBackgroundInteraction, OverlayPosition,
-    OverrideType, PathShape, Point2D,
+    OverrideType, PathShape,
     PrototypeInterAction, PrototypeStartingPoint,
     ResizingConstraints2, ScrollBehavior,
     ScrollDirection, Shadow, ShadowPosition, Shape,
@@ -14,28 +14,18 @@ import {
 } from "../data";
 import { findOverrideAndVar } from "./basic";
 import { EL, elh } from "./el";
-import { Matrix } from "../basic/matrix";
 import { DataView } from "./view"
 import { DViewCtx, PropsType } from "./viewctx";
 import { objectId } from "../basic/objectid";
 import { float_accuracy } from "../basic/consts";
 import { GroupShapeView } from "./groupshape";
-import { importBorder, importFill, importStrokePaint } from "../data/baseimport";
-import { exportBorder, exportFill, exportStrokePaint } from "../data/baseexport";
+import { importFill, importStrokePaint } from "../data/baseimport";
+import { exportFill, exportStrokePaint } from "../data/baseexport";
 import { PageView } from "./page";
 import { ArtboardView } from "./artboard";
 import { findOverrideAll } from "../data/utils";
 import { Path } from "@kcdesign/path";
 import { isEqual } from "../basic/number_utils";
-
-export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
-    return (
-        !isEqual(lsh.x, rsh.x) ||
-        !isEqual(lsh.y, rsh.y) ||
-        !isEqual(lsh.width, rsh.width) ||
-        !isEqual(lsh.height, rsh.height)
-    );
-}
 
 export function isDiffShapeSize(lsh: ShapeSize | undefined, rsh: ShapeSize | undefined) {
     if (lsh === rsh) { // both undefined
@@ -49,7 +39,6 @@ export function isDiffShapeSize(lsh: ShapeSize | undefined, rsh: ShapeSize | und
         !isEqual(lsh.height, rsh.height)
     );
 }
-
 
 export function isDiffScale(lhs: { x: number, y: number } | undefined, rhs: {
     x: number,
@@ -80,11 +69,6 @@ export function isDiffVarsContainer(lhs: (SymbolRefShape | SymbolShape)[] | unde
         }
     }
     return false;
-}
-
-export function isNoScale(trans: { x: number, y: number } | undefined): boolean {
-    // return !trans || trans.matrix.isIdentity()
-    return !trans || isEqual(trans.x, 1) && isEqual(trans.y, 1);
 }
 
 export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeSize, scaleX: number, scaleY: number) {
@@ -298,72 +282,6 @@ export function matrix2parent(t: Transform, matrix?: Transform) {
     return matrix;
 }
 
-export function boundingBox(frame: ShapeSize, shape: Shape): ShapeFrame {
-    let _minx = 0, _maxx = frame.width, _miny = 0, _maxy = frame.height;
-    if (shape.isNoTransform()) {
-        return new ShapeFrame(_minx, _miny, _maxx, _maxy);
-    }
-
-    const path = shape.getPathOfSize(frame);
-    if (path.length > 0) {
-        const bounds = path.bbox();
-        _minx = bounds.x;
-        _maxx = bounds.x2;
-        _miny = bounds.y;
-        _maxy = bounds.y2;
-    }
-
-    const m = shape.matrix2Parent();
-    const corners = [{ x: _minx, y: _miny }, { x: _maxx, y: _miny }, { x: _maxx, y: _maxy }, { x: _minx, y: _maxy }]
-        .map((p) => m.computeCoord(p));
-    const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
-    const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
-    const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
-    const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
-
-    return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
-}
-
-export function transformPoints(points: CurvePoint[], matrix: Matrix) {
-    const ret: CurvePoint[] = [];
-    for (let i = 0, len = points.length; i < len; i++) {
-        const p = points[i];
-        const point: Point2D = matrix.computeCoord(p.x, p.y) as Point2D;
-        const transp = new CurvePoint(([i] as BasicArray<number>), "", point.x, point.y, p.mode);
-
-        if (p.hasFrom) {
-            transp.hasFrom = true;
-            const fromp = matrix.computeCoord(p.fromX || 0, p.fromY || 0);
-            transp.fromX = fromp.x;
-            transp.fromY = fromp.y;
-        }
-        if (p.hasTo) {
-            transp.hasTo = true;
-            const top = matrix.computeCoord(p.toX || 0, p.toY || 0);
-            transp.toX = top.x;
-            transp.toY = top.y;
-        }
-        transp.radius = p.radius;
-
-        ret.push(transp);
-    }
-    return ret;
-}
-
-export function frame2Parent(t: Transform, size: ShapeSize): ShapeFrame {
-    if (t.m00 == 1 && t.m01 === 0 && t.m10 === 0 && t.m11 === 1) return new ShapeFrame(t.m02, t.m12, size.width, size.height)
-    const lt = t.computeCoord(0, 0);
-    const rb = t.computeCoord(size.width, size.height);
-    return new ShapeFrame(lt.x, lt.y, rb.x - lt.x, rb.y - lt.y);
-}
-
-export function frame2Parent2(t: Transform, size: ShapeFrame): ShapeFrame {
-    if (t.m00 == 1 && t.m01 === 0 && t.m10 === 0 && t.m11 === 1) return new ShapeFrame(t.m02, t.m12, size.width, size.height)
-    const lt = t.computeCoord(size.x, size.y);
-    const rb = t.computeCoord(size.x + size.width, size.y + size.height);
-    return new ShapeFrame(lt.x, lt.y, rb.x - lt.x, rb.y - lt.y);
-}
-
 
 export function updateFrame(frame: ShapeFrame, x: number, y: number, w: number, h: number): boolean {
     if (frame.x !== x || frame.y !== y || frame.width !== w || frame.height !== h) {
@@ -396,7 +314,6 @@ export class ShapeView extends DataView {
     m_border_path?: Path;
     m_border_path_box?: ShapeFrame;
 
-    // m_transform2: Transform2 | undefined;
     m_transform_form_mask?: Transform;
     m_mask_group?: ShapeView[];
 
@@ -449,20 +366,6 @@ export class ShapeView extends DataView {
     get transform() {
         return this.m_transform
     }
-
-    /**
-     * @deplecated
-     */
-    // get transform2() {
-    //     if (!this.m_transform2) this.m_transform2 = makeShapeTransform2By1(this.m_transform);
-    //     return this.m_transform2;
-    // }
-
-    // get transform2FromRoot(): Transform2 {
-    //     const t = this.transform2.clone();
-    //     if (!this.parent) return t;
-    //     return t.addTransform(this.parent!.transform2FromRoot);
-    // }
 
     get size(): ShapeSize {
         return this.frame;
@@ -638,10 +541,6 @@ export class ShapeView extends DataView {
         return m;
     }
 
-    /**
-     * root: page 往上一级
-     * @returns
-     */
     frame2Root(): ShapeFrame {
         const frame = this.frame;
         const m = this.matrix2Root();
@@ -691,43 +590,96 @@ export class ShapeView extends DataView {
         return m;
     }
 
+    private _onFillMaskChange() {
+        this.m_fills = undefined;
+        this.m_ctx.setDirty(this);
+    }
+
+    private m_unbind_fill: undefined | (() => void) = undefined;
+
+    private onFillMaskChange = this._onFillMaskChange.bind(this);
+
+    private watchFillMask(mask: FillMask) {
+        this.m_unbind_fill?.();
+        this.m_unbind_fill = mask.watch(this.onFillMaskChange);
+    }
+
+    private unwatchFillMask() {
+        this.m_unbind_fill?.();
+    }
+
     getFills(): Fill[] {
         if (this.m_fills) return this.m_fills;
-        const v = this._findOV(OverrideType.Fills, VariableType.Fills);
         let fills: Fill[] = [];
         if (this.style.fillsMask) {
             const mgr = this.style.getStylesMgr();
             if (!mgr) return fills;
             const mask = mgr.getSync(this.style.fillsMask) as FillMask
             fills = mask.fills
-            // 检查图层是否在变量通知对象集合里
-            if (!mask.__subscribers.has(this)) mask.__subscribers.add(this);
+            this.watchFillMask(mask)
         } else {
+            this.unwatchFillMask();
+            const v = this._findOV(OverrideType.Fills, VariableType.Fills);
             fills = v ? v.value : this.m_data.style.fills;
         }
         return fills;
-        // todo cache for fill
     }
 
+    private _onBorderMaskChange() {
+        this.m_borders = undefined;
+        this.m_ctx.setDirty(this);
+    }
+
+    private m_unbind_border: undefined | (() => void) = undefined;
+
+    private onBorderMaskChange = this._onBorderMaskChange.bind(this);
+
+    private watchBorderMask(mask: BorderMask) {
+        this.m_unbind_border?.();
+        this.m_unbind_border = mask.watch(this.onBorderMaskChange);
+    }
+
+    private unwatchBorderMask() {
+        this.m_unbind_border?.();
+    }
+
+    private _onBorderFillMaskChange() {
+        this.m_borders = undefined;
+        this.m_ctx.setDirty(this);
+    }
+
+    private m_unbind_border_fill: undefined | (() => void) = undefined;
+
+    private onBorderFillMaskChange = this._onBorderFillMaskChange.bind(this);
+
+    private watchBorderFillMask(mask: FillMask) {
+        this.m_unbind_border_fill?.();
+        this.m_unbind_border_fill = mask.watch(this.onBorderFillMaskChange);
+    }
+
+    private unwatchBorderFillMask() {
+        this.m_unbind_border_fill?.();
+    }
     getBorders(): Border {
         if (this.m_borders) return this.m_borders;
         const v = this._findOV(OverrideType.Borders, VariableType.Borders);
-        let Border: Border;
-        Border = v ? v.value as Border : this.m_data.style.borders
+        let border: Border;
+        border = v ? v.value as Border : this.m_data.style.borders
         if (this.style.bordersMask) {
             const mgr = this.style.getStylesMgr();
             if (!mgr) return this.m_data.style.borders;
             const mask = mgr.getSync(this.style.bordersMask) as BorderMask
-            let border = { ...Border }
+            let _border = {...border}
             if (this.type === ShapeType.Line) {
-                border.position = BorderPosition.Center
+                _border.position = BorderPosition.Center
             } else {
-                border.position = mask.border.position
+                _border.position = mask.border.position
             }
-            border.sideSetting = mask.border.sideSetting
-            Border = border as Border
-            // 检查图层是否在变量通知对象集合里
-            if (!mask.__subscribers.has(this)) mask.__subscribers.add(this);
+            _border.sideSetting = mask.border.sideSetting
+            border = _border as Border;
+            this.watchBorderMask(mask);
+        } else {
+            this.unwatchBorderMask();
         }
         if (this.style.borders.fillsMask) {
             const mgr = this.style.getStylesMgr();
@@ -738,12 +690,14 @@ export class ShapeView extends DataView {
                 const s = new StrokePaint(crdtidx, id, isEnabled, fillType, color)
                 strokePaints.push(s)
             })
-            let border = { ...Border };
-            border.strokePaints=strokePaints;
-            Border = border as Border;
-            if (!mask.__subscribers.has(this)) mask.__subscribers.add(this);
+            let _border = {...border};
+            _border.strokePaints = strokePaints;
+            border = _border as Border;
+            this.watchBorderFillMask(mask);
+        } else {
+            this.unwatchBorderFillMask();
         }
-        return Border;
+        return border;
     }
 
     get cornerRadius(): CornerRadius | undefined {
@@ -760,34 +714,64 @@ export class ShapeView extends DataView {
         return v ? v.value : this.m_data.style.endMarkerType;
     }
 
+    private _onShadowMaskChange() {
+        this.m_ctx.setDirty(this);
+    }
+
+    private m_unbind_shadow: undefined | (() => void) = undefined;
+    private onShadowMaskChange = this._onShadowMaskChange.bind(this);
+
+    private watchShadowMask(mask: ShadowMask) {
+        this.m_unbind_shadow?.();
+        this.m_unbind_shadow = mask.watch(this.onShadowMaskChange);
+    }
+
+    private unwatchShadowMask() {
+        this.m_unbind_shadow?.();
+    }
     getShadows(): Shadow[] {
-        const v = this._findOV(OverrideType.Shadows, VariableType.Shadows);
         let shadows: Shadow[] = [];
         if (this.style.shadowsMask) {
             const mgr = this.style.getStylesMgr();
             if (!mgr) return shadows;
             const mask = mgr.getSync(this.style.shadowsMask) as ShadowMask
-            shadows = mask.shadows
-            // 检查图层是否在变量通知对象集合里
-            if (!mask.__subscribers.has(this)) mask.__subscribers.add(this);
+            shadows = mask.shadows;
+            this.watchShadowMask(mask);
         } else {
+            const v = this._findOV(OverrideType.Shadows, VariableType.Shadows);
             shadows = v ? v.value : this.m_data.style.shadows;
+            this.unwatchShadowMask()
         }
         return shadows;
     }
 
+    private _onBlurMaskChange() {
+        this.m_ctx.setDirty(this);
+    }
+
+    private m_unbind_blur: undefined | (() => void) = undefined;
+    private onBlurMaskChange = this._onBlurMaskChange.bind(this);
+
+    private watchBlurMask(mask: BlurMask) {
+        this.m_unbind_blur?.();
+        this.m_unbind_blur = mask.watch(this.onBlurMaskChange);
+    }
+
+    private unwatchBlurMask() {
+        this.m_unbind_blur?.();
+    }
+
     get blur(): Blur | undefined {
-        const v = this._findOV(OverrideType.Blur, VariableType.Blur);
         let blur: Blur;
         if (this.style.blursMask) {
-            const mgr = this.style.getStylesMgr();
-            if (!mgr) return undefined;
+            const mgr = this.style.getStylesMgr()!;
             const mask = mgr.getSync(this.style.blursMask) as BlurMask
-            blur = mask.blur
-            // 检查图层是否在变量通知对象集合里
-            if (!mask.__subscribers.has(this)) mask.__subscribers.add(this);
+            blur = mask.blur;
+            this.watchBlurMask(mask);
         } else {
+            const v = this._findOV(OverrideType.Blur, VariableType.Blur);
             blur = v ? v.value : this.m_data.style.blur;
+            this.unwatchBlurMask();
         }
         return blur;
     }
