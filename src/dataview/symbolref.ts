@@ -32,6 +32,10 @@ export class SymbolRefView extends ShapeView {
         return this.data.uniformScale;
     }
 
+    get isImageFill() {
+        return false;
+    }
+
     onMounted(): void {
         if (!this.m_sym) {
             super.onMounted();

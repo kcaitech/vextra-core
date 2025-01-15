@@ -359,25 +359,33 @@ export class Shape extends Basic implements classes.Shape {
         }
     }
 
-    findVar(varId: string, ret: Variable[]) {
-        this.parent?.findVar(varId, ret);
-    }
+    // findVar(varId: string, ret: Variable[]) {
+    //     this.parent?.findVar(varId, ret);
+    // }
 
+    // getVisible(): boolean {
+    //     if (!this.varbinds) return !!this.isVisible;
+    //     if (this.isVirtualShape) return !!this.isVisible; // 由proxy处理
+
+    //     const visibleVar = this.varbinds.get(OverrideType.Visible);
+    //     if (!visibleVar) return !!this.isVisible;
+
+    //     const _vars: Variable[] = [];
+    //     this.findVar(visibleVar, _vars);
+    //     // watch vars
+    //     const _var = _vars[_vars.length - 1];
+    //     if (_var && _var.type === VariableType.Visible) {
+    //         return !!_var.value;
+    //     }
+    //     return !!this.isVisible;
+    // }
+
+    /**
+     * @deprecated
+     */
     getVisible(): boolean {
-        if (!this.varbinds) return !!this.isVisible;
-        if (this.isVirtualShape) return !!this.isVisible; // 由proxy处理
-
-        const visibleVar = this.varbinds.get(OverrideType.Visible);
-        if (!visibleVar) return !!this.isVisible;
-
-        const _vars: Variable[] = [];
-        this.findVar(visibleVar, _vars);
-        // watch vars
-        const _var = _vars[_vars.length - 1];
-        if (_var && _var.type === VariableType.Visible) {
-            return !!_var.value;
-        }
-        return !!this.isVisible;
+        // 使用shapeview
+        throw new Error()
     }
 
     onAdded() {
@@ -426,9 +434,9 @@ export class Shape extends Basic implements classes.Shape {
         return false;
     }
 
-    get isImageFill() {
-        return this.getFills().some(fill => fill.fillType === classes.FillType.Pattern);
-    }
+    // get isImageFill() {
+    //     return this.getFills().some(fill => fill.fillType === classes.FillType.Pattern);
+    // }
 }
 
 export class GroupShape extends Shape implements classes.GroupShape {
@@ -541,9 +549,9 @@ export class GroupShape extends Shape implements classes.GroupShape {
         return RadiusType.Fixed;
     }
 
-    get isImageFill() {
-        return false;
-    }
+    // get isImageFill() {
+    //     return false;
+    // }
 
     get size(): ShapeSize {
         return this.frame;
@@ -614,9 +622,9 @@ export class BoolShape extends GroupShape implements classes.BoolShape {
         return true;
     }
 
-    get isImageFill() {
-        return this.style.getFills().some(fill => fill.fillType === classes.FillType.Pattern);
-    }
+    // get isImageFill() {
+    //     return this.style.getFills().some(fill => fill.fillType === classes.FillType.Pattern);
+    // }
 }
 
 // export function genRefId(refId: string, type: OverrideType) {
@@ -1104,9 +1112,9 @@ export class ImageShape extends RectShape implements classes.ImageShape {
         return false;
     }
 
-    get isImageFill() {
-        return true;
-    }
+    // get isImageFill() {
+    //     return true;
+    // }
 }
 
 export class OvalShape extends PathShape implements classes.OvalShape {
@@ -1255,9 +1263,9 @@ export class TextShape extends Shape implements classes.TextShape {
         return false;
     }
 
-    get isImageFill() {
-        return false;
-    }
+    // get isImageFill() {
+    //     return false;
+    // }
 }
 
 export class CutoutShape extends PathShape implements classes.CutoutShape {
@@ -1308,9 +1316,9 @@ export class CutoutShape extends PathShape implements classes.CutoutShape {
         return RadiusType.None;
     }
 
-    get isImageFill() {
-        return false;
-    }
+    // get isImageFill() {
+    //     return false;
+    // }
 }
 
 export class PolygonShape extends PathShape implements classes.PolygonShape {

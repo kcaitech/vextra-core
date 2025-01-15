@@ -53,6 +53,10 @@ export class GroupShapeView extends ShapeView {
         this.notify('mask-env-change');
     }
 
+    get isImageFill() {
+        return false;
+    }
+
     onDestroy(): void {
         super.onDestroy();
         this.m_data.bubbleunwatch(this._bubblewatcher);

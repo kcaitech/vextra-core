@@ -225,4 +225,8 @@ export class ContactLineView extends PathShapeView {
     getPoints() {
         return this.data.getPoints(); // todo 缓存
     }
+
+    get isImageFill() {
+        return false;
+    }
 }
