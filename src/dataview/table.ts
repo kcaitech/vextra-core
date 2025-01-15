@@ -46,6 +46,10 @@ export class TableView extends ShapeView {
         return this.m_cells;
     }
 
+    get isImageFill() {
+        return false;
+    }
+
     bubblewatcher(...args: any[]) {
         if (args.includes('text')) {
             return;

@@ -176,7 +176,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         return RadiusType.Rect;
     }
 
-    get isImageFill() {
-        return false;
-    }
+    // get isImageFill() {
+    //     return false;
+    // }
 }

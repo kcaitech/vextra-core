@@ -112,7 +112,7 @@ export class TableShape2 extends Shape implements classes.TableShape2 {
     get isPathIcon() {
         return false;
     }
-    get isImageFill() {
-        return false;
-    }
+    // get isImageFill() {
+    //     return false;
+    // }
 }

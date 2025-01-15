@@ -96,6 +96,10 @@ export class TextShapeView extends ShapeView {
         return this.getText();
     }
 
+    get isImageFill() {
+        return false;
+    }
+
     private m_layout?: TextLayout;
     // private m_layoutText?: Text;
     private m_textpath?: Path;

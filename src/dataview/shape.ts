@@ -1350,7 +1350,7 @@ export class ShapeView extends DataView {
     }
 
     get isImageFill() {
-        return this.m_data.isImageFill;
+        return this.getFills().some(fill => fill.fillType === FillType.Pattern);
     }
 
     get prototypeStartPoint(): PrototypeStartingPoint | undefined {
