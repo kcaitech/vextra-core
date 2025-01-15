@@ -524,7 +524,7 @@ export class FillMask extends WatchableObject implements classes.FillMask {
     }
 
     notify(...args: any[]) {
-        super.notify("style-mask-change", "fill", ...args);
+        super.notify("style-mask-change", ...args);
     }
 }
 
@@ -548,7 +548,7 @@ export class ShadowMask extends WatchableObject implements classes.ShadowMask {
     }
 
     notify(...args: any[]) {
-        super.notify("style-mask-change", "shadow", ...args);
+        super.notify("style-mask-change", ...args);
     }
 }
 
@@ -572,7 +572,7 @@ export class BlurMask extends WatchableObject implements classes.BlurMask {
     }
 
     notify(...args: any[]) {
-        super.notify("style-mask-change", "blur", ...args);
+        super.notify("style-mask-change", ...args);
     }
 }
 
@@ -596,7 +596,7 @@ export class BorderMask extends WatchableObject implements classes.BorderMask {
     }
 
     notify(...args: any[]) {
-        super.notify("style-mask-change", "border", ...args);
+        super.notify("style-mask-change", ...args);
     }
 }
 
