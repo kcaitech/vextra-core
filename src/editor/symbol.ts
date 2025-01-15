@@ -34,7 +34,7 @@ import {
     Artboard, BorderSideSetting, SideType,
     string2Text,
     StrokePaint,
-    BorderStyle
+    BorderStyle, FillMask
 } from "../data/classes";
 import { findOverride, findVar } from "../data/utils";
 import { BasicArray } from "../data/basic";
@@ -367,10 +367,8 @@ export function shape4border(api: Api, page: PageView, shape: ShapeView) {
     return _var || shape.data;
 }
 
-/**
- * @description override "editor/shape/shape4fill"
- */
 export function shape4fill(api: Api, page: PageView, shape: ShapeView) {
+    if (shape.style.fillsMask) return shape.style.getStylesMgr()!.getSync(shape.style.fillsMask) as any;
     const _var = override_variable(page, VariableType.Fills, OverrideType.Fills, (_var) => {
         const fills = _var?.value ?? shape.getFills();
         return new BasicArray(...(fills as Array<Fill>).map((v) => {
