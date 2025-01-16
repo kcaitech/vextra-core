@@ -438,3 +438,31 @@ inject['Border']['before'] = `\
         }
     }
 `
+
+inject['Variable'] = {};
+inject['Variable']['before'] = `\
+    // inject code
+    if (Array.isArray(source.value) && source.value[0].typeId === "border") {
+        const strokePaints: any = [];
+        for (let i = 0; i < source.value.length; ++i) {
+            const strokePaint = { ...source.value[i] } as any;
+            if (!strokePaint.crdtidx) strokePaint.crdtidx = [i];
+            strokePaint.typeId = 'stroke-paint';
+            delete strokePaint.borderStyle;
+            delete strokePaint.cornerType;
+            delete strokePaint.position;
+            delete strokePaint.sideSetting;
+            delete strokePaint.thickness;
+            delete strokePaint.contextSettings;
+            strokePaints.push(strokePaint);
+        }
+        const border = source.value[0] as any;
+        source.value = {
+            borderStyle: border.borderStyle,
+            cornerType: border.cornerType,
+            position: border.position,
+            sideSetting: border.sideSetting,
+            strokePaints: strokePaints,
+        } as types.Border
+    }
+`
