@@ -392,6 +392,7 @@ inject['Style']['before'] = `\
                 strokePaints.push(strokePaint);
             }
             (source as any).borders = {
+                typeId: "border",
                 borderStyle: border.borderStyle,
                 cornerType: border.cornerType,
                 position: border.position,
@@ -400,6 +401,7 @@ inject['Style']['before'] = `\
             }
         } else {
             (source.borders as any) = {
+                typeId: "border",
                 borderStyle: { gap: 0, length: 0 },
                 cornerType: types.CornerType.Miter,
                 position: types.BorderPosition.Inner,
@@ -430,6 +432,7 @@ inject['Border']['before'] = `\
         delete strokePaint.thickness;
         delete strokePaint.contextSettings;
         (source as any) = {
+            typeId: "border",
             borderStyle: source.borderStyle,
             cornerType: source.cornerType,
             position: source.position,
@@ -458,6 +461,7 @@ inject['Variable']['before'] = `\
         }
         const border = source.value[0] as any;
         source.value = {
+            typeId: "border",
             borderStyle: border.borderStyle,
             cornerType: border.cornerType,
             position: border.position,
