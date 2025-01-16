@@ -362,3 +362,107 @@ inject['TextAttr']['before'] = `\
         _source.weight = _source.bold;
     }
 `
+
+inject['Style'] = {};
+inject['Style']['before'] = `\
+    // inject code
+    if (Array.isArray(source.borders)) {
+        if ((source.borders as any).length > 0) {
+            const border = (source.borders as any)[0] as any;
+            if (!border.sideSetting) {
+                border.sideSetting = {
+                    sideType: types.SideType.Normal,
+                    thicknessTop: border.thickness || 1,
+                    thicknessLeft: border.thickness || 1,
+                    thicknessBottom: border.thickness || 1,
+                    thicknessRight: border.thickness || 1,
+                }
+            }
+            const strokePaints: any = [];
+            for (let i = 0; i < (source.borders as any).length; ++i) {
+                const strokePaint = { ...(source.borders as any)[i] };
+                if (!strokePaint.crdtidx) strokePaint.crdtidx = [i];
+                strokePaint.typeId = 'stroke-paint';
+                delete strokePaint.borderStyle;
+                delete strokePaint.cornerType;
+                delete strokePaint.position;
+                delete strokePaint.sideSetting;
+                delete strokePaint.thickness;
+                delete strokePaint.contextSettings;
+                strokePaints.push(strokePaint);
+            }
+            (source as any).borders = {
+                borderStyle: border.borderStyle,
+                cornerType: border.cornerType,
+                position: border.position,
+                sideSetting: border.sideSetting,
+                strokePaints: strokePaints,
+            }
+        } else {
+            (source.borders as any) = {
+                borderStyle: { gap: 0, length: 0 },
+                cornerType: types.CornerType.Miter,
+                position: types.BorderPosition.Inner,
+                sideSetting: {
+                    sideType: types.SideType.Normal,
+                    thicknessTop: 1,
+                    thicknessLeft: 1,
+                    thicknessBottom: 1,
+                    thicknessRight: 1,
+                },
+                strokePaints: [],
+            }
+        }
+    }
+`
+
+inject['Border'] = {};
+inject['Border']['before'] = `\
+    // inject code
+    if (!source.strokePaints) {
+        const strokePaint = { ...(source as any) };
+        if (!strokePaint.crdtidx) strokePaint.crdtidx = [0];
+        strokePaint.typeId = 'stroke-paint';
+        delete strokePaint.borderStyle;
+        delete strokePaint.cornerType;
+        delete strokePaint.position;
+        delete strokePaint.sideSetting;
+        delete strokePaint.thickness;
+        delete strokePaint.contextSettings;
+        (source as any) = {
+            borderStyle: source.borderStyle,
+            cornerType: source.cornerType,
+            position: source.position,
+            sideSetting: source.sideSetting,
+            strokePaints: [strokePaint],
+        }
+    }
+`
+
+inject['Variable'] = {};
+inject['Variable']['before'] = `\
+    // inject code
+    if (Array.isArray(source.value) && source.value[0]?.typeId === "border") {
+        const strokePaints: any = [];
+        for (let i = 0; i < source.value.length; ++i) {
+            const strokePaint = { ...source.value[i] } as any;
+            if (!strokePaint.crdtidx) strokePaint.crdtidx = [i];
+            strokePaint.typeId = 'stroke-paint';
+            delete strokePaint.borderStyle;
+            delete strokePaint.cornerType;
+            delete strokePaint.position;
+            delete strokePaint.sideSetting;
+            delete strokePaint.thickness;
+            delete strokePaint.contextSettings;
+            strokePaints.push(strokePaint);
+        }
+        const border = source.value[0] as any;
+        source.value = {
+            borderStyle: border.borderStyle,
+            cornerType: border.cornerType,
+            position: border.position,
+            sideSetting: border.sideSetting,
+            strokePaints: strokePaints,
+        } as types.Border
+    }
+`

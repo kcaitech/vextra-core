@@ -14,7 +14,7 @@ import { BasicArray } from "../data/basic";
 export function newStyle(): Style {
     const side = new BorderSideSetting(types.SideType.Normal, 1, 1, 1, 1);
     const strokePaints = new BasicArray<StrokePaint>();
-    const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
+    const border = new Border(types.BorderPosition.Inner, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
     const fills = new BasicArray<Fill>();
     const shadows = new BasicArray<Shadow>();
     return new Style(fills, shadows, border);

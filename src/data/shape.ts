@@ -17,21 +17,16 @@ import {
     ShapeSize,
     PrototypeInterAction,
     OverlayPosition,
-    ScrollDirection,
-    ScrollBehavior,
     OverlayPositionType,
     OverlayBackgroundAppearance,
     OverlayBackgroundType,
     OverlayMargin,
-    Color, StackPositioning
-} from "./baseclasses"
-import { Matrix } from "../basic/matrix";
+    Color} from "./baseclasses"
 import { TextLayout } from "./text/textlayout";
 import { parsePath } from "./pathparser";
 import { PathType, RadiusType, RECT_POINTS } from "./consts";
 import { Variable } from "./variable";
 import { Transform } from "./transform";
-import { makeShapeTransform2By1 } from "./shape_transform_util";
 import { Path } from "@kcdesign/path";
 
 export { Transform } from "./transform";

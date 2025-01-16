@@ -5,8 +5,9 @@
 // 副版本号ｂ变更，表示局部结构变更，强行读写会丢失对象数据
 // 修订版本号ｃ变更，表示数据有微小变化，强行读写仅丢失极小数据
 export const FMT_VER_transfrom = "1"; // 同1.0.0
+export const FMT_VER_border = "1.0.1"
 
-export const FMT_VER_latest = FMT_VER_transfrom;
+export const FMT_VER_latest = FMT_VER_border;
 
 export function destruct(version: string) {
     const splits = version.toString().split('.') // toString是因为历史版本记录了number

@@ -453,20 +453,6 @@ export class ShapeView extends DataView {
         return this.m_transform
     }
 
-    /**
-     * @deplecated
-     */
-    // get transform2() {
-    //     if (!this.m_transform2) this.m_transform2 = makeShapeTransform2By1(this.m_transform);
-    //     return this.m_transform2;
-    // }
-
-    // get transform2FromRoot(): Transform2 {
-    //     const t = this.transform2.clone();
-    //     if (!this.parent) return t;
-    //     return t.addTransform(this.parent!.transform2FromRoot);
-    // }
-
     get size(): ShapeSize {
         return this.frame;
     }

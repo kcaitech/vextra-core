@@ -253,7 +253,7 @@ export class TextShapeView extends ShapeView {
             transform.translateX = this.m_transform.translateX;
             transform.translateY = this.m_transform.translateY;
         }
-        if (!this.isVirtualShape) {
+        if (!this.isVirtualShape && this.getText() === this.data.text) {
             this.updateLayoutArgs(transform, this.data.frame, undefined)
             this.updateFrames();
             return
