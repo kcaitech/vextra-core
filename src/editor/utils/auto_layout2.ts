@@ -10,18 +10,10 @@ import {
 } from "../../data";
 import { GroupShapeView, ShapeView } from "../../dataview";
 
-export function layoutShapesOrder(shapes: ShapeView[], includedBorder: boolean, sort?: Map<string, number>, cursort = false) {
+export function layoutShapesOrder2(shapes: ShapeView[], includedBorder: boolean) {
     let shape_rows: ShapeView[][] = [];
     let unassignedShapes: ShapeView[] = [...shapes].filter(shape => shape.isVisible);
-    if (sort && cursort) {
-        const shapeMap = new Map(shapes.map(s => [s.id, s]));
-        const shapesRow: ShapeView[] = [];
-        sort.forEach((v, k) => {
-            const shape = shapeMap.get(k);
-            shape && shapesRow.push(shape);
-        });
-        return [shapesRow];
-    }
+
     while (unassignedShapes.length > 0) {
         // 找出 y + height 最小的图形作为基准图形
         const baseShape = unassignedShapes.reduce((minShape, shape) => {
@@ -47,14 +39,7 @@ export function layoutShapesOrder(shapes: ShapeView[], includedBorder: boolean, 
             } else if (a_frame.x < b_frame.x) {
                 return -1;
             } else {
-                if (sort) {
-                    const _a = sort.get(a.id);
-                    const _b = sort.get(b.id);
-                    if (typeof _a !== 'number' || typeof _b !== 'number') return -1;
-                    return _a > _b ? 1 : -1;
-                } else {
-                    return 1;
-                }
+                return 1;
             }
         })
         // 保存当前行的图形
@@ -315,7 +300,7 @@ const autoHorizontalLayout = (layoutInfo: AutoLayout, shape_row: ShapeView[], co
         const { width, height } = boundingBox(s, layoutInfo.bordersTakeSpace);
         return { width, height };
     });
-    
+
     const minShapeWidth = Math.min(...shapeDimensions.map(d => d.width));
     let horSpacing = Math.max(layoutInfo.stackSpacing, -minShapeWidth); // 水平间距
     let leftPadding = layoutInfo.stackHorizontalPadding; //左边距
@@ -338,7 +323,7 @@ const autoHorizontalLayout = (layoutInfo: AutoLayout, shape_row: ShapeView[], co
         horSpacing = 0;
     }
     // 计算行的总宽度
-    
+
     const maxWeightInRow = shapeDimensions.reduce((sum, d) => sum + d.width, 0) + ((shape_row.length - 1) * horSpacing);
     let maxHorSpacing = 0;
     // 计算左侧边距以居中

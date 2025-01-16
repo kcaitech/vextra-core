@@ -3,7 +3,7 @@ import { adapt2Shape, ArtboardView, PageView, ShapeView, SymbolRefView, SymbolVi
 import { modifyPathByArc } from "../asyncapi";
 import { Api, CoopRepository } from "../../coop";
 import { modify_shapes_height, modify_shapes_width } from "../utils/common";
-import { Artboard, BorderSideSetting, Color, FillType, PathShape, ShapeType, SideType, SymbolRefShape, Transform } from "../../data/classes";
+import { Artboard, BorderSideSetting, Color, FillType, PathShape, Shape, ShapeType, SideType, SymbolRefShape, Transform } from "../../data/classes";
 import { RadiusType } from "../../data/consts";
 import { shape4border, shape4contextSettings, shape4cornerRadius, shape4fill, shape4shadow } from "../symbol";
 import { update_frame_by_points } from "../utils/path";
@@ -12,7 +12,7 @@ import { BatchAction, BatchAction2, BatchAction5, PageEditor } from "../page";
 import { importGradient, } from "../../data/baseimport";
 import { exportGradient, } from "../../data/baseexport";
 import { TableEditor } from "../table";
-import { reLayoutBySort, TidyUpAlgin, tidyUpLayout } from "../utils/auto_layout";
+import { TidyUpAlgin, tidyUpLayout } from "../utils/auto_layout";
 import { TextShapeEditor } from "../textshape";
 
 /**
@@ -728,7 +728,15 @@ export class LinearApi {
 
     reLayout(env: ArtboardView | SymbolView, sort: Map<string, number>) {
         this.execute('re-layout-linear', () => {
-            reLayoutBySort(this.page, this.api!, adapt2Shape(env) as Artboard, sort);
+            const parent = adapt2Shape(env) as GroupShape;
+            const shapesSorted: Shape[] = [...parent.childs].sort((a, b) => sort.get(a.id)! < sort.get(b.id)! ? -1 : 1);
+            for (let i = 0; i < shapesSorted.length; i++) {
+                const s = shapesSorted[i];
+                const currentIndex = parent.indexOfChild(s);
+                if(currentIndex === i) continue;
+                console.log(currentIndex, i);
+                this.api!.shapeMove(this.page, parent, currentIndex, parent, i);
+            }
         });
     }
 
