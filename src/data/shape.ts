@@ -8,30 +8,24 @@ import {
     CurveMode,
     CurvePoint,
     ExportOptions, Guide,
-    OverrideType,
     PathSegment,
     ResizeType,
     ShapeFrame,
     ShapeType,
-    VariableType,
     ShapeSize,
     PrototypeInterAction,
     OverlayPosition,
-    ScrollDirection,
-    ScrollBehavior,
     OverlayPositionType,
     OverlayBackgroundAppearance,
     OverlayBackgroundType,
     OverlayMargin,
-    Color, StackPositioning
+    Color
 } from "./baseclasses"
-import { Matrix } from "../basic/matrix";
 import { TextLayout } from "./text/textlayout";
 import { parsePath } from "./pathparser";
 import { PathType, RadiusType, RECT_POINTS } from "./consts";
 import { Variable } from "./variable";
 import { Transform } from "./transform";
-import { makeShapeTransform2By1 } from "./shape_transform_util";
 import { Path } from "@kcdesign/path";
 import { v4 } from "uuid";
 
@@ -117,15 +111,12 @@ export class Shape extends Basic implements classes.Shape {
         return super.getOpTarget(path);
     }
 
-    // shape
     typeId = 'shape'
     crdtidx: BasicArray<number>
     id: string
     type: ShapeType
-    // frame: ShapeFrame
     style: Style
     transform: Transform
-    // size: ShapeSize
     boolOp?: BoolOp
     isFixedToViewport?: boolean
     isLocked?: boolean
@@ -150,7 +141,6 @@ export class Shape extends Basic implements classes.Shape {
     scrollBehavior?: classes.ScrollBehavior;
     mask?: boolean;
     stackPositioning?: classes.StackPositioning;
-    // uniformScale?: number;
 
     constructor(
         crdtidx: BasicArray<number>, id: string, name: string, type: ShapeType, transform: Transform, style: Style
@@ -239,14 +229,6 @@ export class Shape extends Basic implements classes.Shape {
         let p = this.__parent;
         while (p && !(p instanceof Shape)) p = p.parent;
         return p;
-    }
-
-    /**
-     * @deprecated 这个坐标是没有经过旋转变换的
-     * @returns
-     */
-    realXY(): { x: number, y: number, width: number, height: number } {
-        return this.frame2Root();
     }
 
     // @deprecated
@@ -359,32 +341,10 @@ export class Shape extends Basic implements classes.Shape {
         }
     }
 
-    // findVar(varId: string, ret: Variable[]) {
-    //     this.parent?.findVar(varId, ret);
-    // }
-
-    // getVisible(): boolean {
-    //     if (!this.varbinds) return !!this.isVisible;
-    //     if (this.isVirtualShape) return !!this.isVisible; // 由proxy处理
-
-    //     const visibleVar = this.varbinds.get(OverrideType.Visible);
-    //     if (!visibleVar) return !!this.isVisible;
-
-    //     const _vars: Variable[] = [];
-    //     this.findVar(visibleVar, _vars);
-    //     // watch vars
-    //     const _var = _vars[_vars.length - 1];
-    //     if (_var && _var.type === VariableType.Visible) {
-    //         return !!_var.value;
-    //     }
-    //     return !!this.isVisible;
-    // }
-
     /**
      * @deprecated
      */
     getVisible(): boolean {
-        // 使用shapeview
         throw new Error()
     }
 
@@ -418,10 +378,6 @@ export class Shape extends Basic implements classes.Shape {
         return true;
     }
 
-    get radius(): number[] {
-        return [0];
-    }
-
     get radiusType() {
         return RadiusType.None;
     }
@@ -433,10 +389,6 @@ export class Shape extends Basic implements classes.Shape {
     get isStraight() {
         return false;
     }
-
-    // get isImageFill() {
-    //     return this.getFills().some(fill => fill.fillType === classes.FillType.Pattern);
-    // }
 }
 
 export class GroupShape extends Shape implements classes.GroupShape {
@@ -813,15 +765,6 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         return getPathOfRadius(frame, this.cornerRadius, fixedRadius);
     }
 
-    get radius(): number[] {
-        return [
-            this.cornerRadius?.lt || 0,
-            this.cornerRadius?.rt || 0,
-            this.cornerRadius?.rb || 0,
-            this.cornerRadius?.lb || 0,
-        ];
-    }
-
     get radiusType() {
         return RadiusType.Rect;
     }
@@ -917,21 +860,6 @@ export class PathShape extends Shape implements classes.PathShape {
         return path
     }
 
-    // setRadius(radius: number): void {
-    //     this.points.forEach((p) => p.radius = radius);
-    // }
-
-    // get radius(): number[] {
-    //     return this.points.map((p) => p.radius || 0);
-    // }
-
-    get radius(): number[] {
-        return this.pathsegs.reduce((radius: number[], seg) => seg.points.reduce((radius, p) => {
-            radius.push(p.radius || 0);
-            return radius;
-        }, radius), []);
-    }
-
     get radiusType(): RadiusType {
         return RadiusType.Fixed;
     }
@@ -998,13 +926,6 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
         });
 
         return path
-    }
-
-    get radius(): number[] {
-        return this.pathsegs.reduce((radius: number[], seg) => seg.points.reduce((radius, p) => {
-            radius.push(p.radius || 0);
-            return radius;
-        }, radius), []);
     }
 
     get pathType() {

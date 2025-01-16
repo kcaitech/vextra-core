@@ -30,7 +30,7 @@ type PathShape2_pathsegs = BasicArray<impl.PathSegment>
 type PrototypeInterAction_crdtidx = BasicArray<number>
 type ShadowMask_shadows = BasicArray<impl.Shadow>
 type Shape_prototypeInteractions = BasicArray<impl.PrototypeInterAction>
-type StyleSheet_variables = BasicArray<impl.FillMask | impl.ShadowMask | impl.BlurMask | impl.BorderMask | impl.CornerRadius>
+type StyleSheet_variables = BasicArray<impl.FillMask | impl.ShadowMask | impl.BlurMask | impl.BorderMask | impl.RadiusMask>
 type Style_fills = BasicArray<impl.Fill>
 type Style_shadows = BasicArray<impl.Shadow>
 type Style_innerShadows = BasicArray<impl.Shadow>
@@ -570,6 +570,14 @@ export function importPrototypeStartingPoint(source: types.PrototypeStartingPoin
 export function importPrototypeTransitionType(source: types.PrototypeTransitionType, ctx?: IImportContext): impl.PrototypeTransitionType {
     return source
 }
+/* crdtidx */
+export function importRadius(source: types.Radius, ctx?: IImportContext): impl.Radius {
+    const ret: impl.Radius = new BasicArray()
+    source.forEach((source, i) => {
+        ret.push(source)
+    })
+    return ret
+}
 /* resize type */
 export function importResizeType(source: types.ResizeType, ctx?: IImportContext): impl.ResizeType {
     return source
@@ -709,8 +717,8 @@ export function importStyleSheet_variables(source: types.StyleSheet_variables, c
             if (source.typeId === "border-mask") {
                 return importBorderMask(source as types.BorderMask, ctx)
             }
-            if (source.typeId === "corner-radius") {
-                return importCornerRadius(source as types.CornerRadius, ctx)
+            if (source.typeId === "radius-mask") {
+                return importRadiusMask(source as types.RadiusMask, ctx)
             }
             throw new Error("unknow typeId: " + source.typeId)
         })())
@@ -1069,6 +1077,17 @@ export function importPrototypeInterAction(source: types.PrototypeInterAction, c
     importPrototypeInterActionOptional(ret, source, ctx)
     return ret
 }
+/* radius mask */
+export function importRadiusMask(source: types.RadiusMask, ctx?: IImportContext): impl.RadiusMask {
+    const ret: impl.RadiusMask = new impl.RadiusMask (
+        importCrdtidx(source.crdtidx, ctx),
+        source.sheet,
+        source.id,
+        source.name,
+        source.description,
+        importRadius(source.radius, ctx))
+    return ret
+}
 /* shadow mask */
 export function importShadowMask(source: types.ShadowMask, ctx?: IImportContext): impl.ShadowMask {
     const ret: impl.ShadowMask = new impl.ShadowMask (
@@ -1352,6 +1371,7 @@ function importShapeOptional(tar: impl.Shape, source: types.Shape, ctx?: IImport
     if (source.scrollBehavior !== undefined) tar.scrollBehavior = importScrollBehavior(source.scrollBehavior, ctx)
     if (source.mask !== undefined) tar.mask = source.mask
     if (source.stackPositioning !== undefined) tar.stackPositioning = importStackPositioning(source.stackPositioning, ctx)
+    if (source.radiusMask !== undefined) tar.radiusMask = source.radiusMask
 }
 export function importShape(source: types.Shape, ctx?: IImportContext): impl.Shape {
     const ret: impl.Shape = new impl.Shape (

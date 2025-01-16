@@ -99,15 +99,6 @@ export class Artboard extends GroupShape implements classes.Artboard {
         return true;
     }
 
-    get radius(): number[] {
-        return [
-            this.cornerRadius?.lt || 0,
-            this.cornerRadius?.rt || 0,
-            this.cornerRadius?.rb || 0,
-            this.cornerRadius?.lb || 0,
-        ];
-    }
-
     get radiusType() {
         return RadiusType.Rect;
     }

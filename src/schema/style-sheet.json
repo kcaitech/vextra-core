@@ -25,7 +25,7 @@
             "$ref": "./border-mask.json"
           },
           {
-            "$ref": "./corner-radius.json"
+            "$ref": "./radius-mask.json"
           }
         ]
       }

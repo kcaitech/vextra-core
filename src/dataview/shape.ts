@@ -295,6 +295,7 @@ export function updateFrame(frame: ShapeFrame, x: number, y: number, w: number, 
 }
 
 export class ShapeView extends DataView {
+    radiusMask?: string;
     m_transform: Transform;
 
     _save_frame: ShapeFrame = new ShapeFrame(); // 对象内坐标系的大小 // 用于updateFrames判断frame是否变更
@@ -314,7 +315,7 @@ export class ShapeView extends DataView {
     m_border_path?: Path;
     m_border_path_box?: ShapeFrame;
 
-    m_transform_form_mask?: Transform;
+    m_transform_from_mask?: Transform;
     m_mask_group?: ShapeView[];
 
     // fill、border等属性随着变量、遮罩、样式库等因素的加入，获取路径不断加长。现在缓存fill和border，不至于每次都重新通过长的路径获取
@@ -1321,8 +1322,9 @@ export class ShapeView extends DataView {
         return this.m_data.isPathIcon;
     }
 
-    get radius() {
-        return this.m_data.radius;
+    get radius(): number[] {
+        // todo if (this.radiusMask) {}
+        return [this.fixedRadius ?? 0];
     }
 
     get radiusType() {
@@ -1395,12 +1397,12 @@ export class ShapeView extends DataView {
     }
 
     get relyLayers() {
-        if (!this.m_transform_form_mask) this.m_transform_form_mask = this.renderMask();
-        if (!this.m_transform_form_mask) return;
+        if (!this.m_transform_from_mask) this.m_transform_from_mask = this.renderMask();
+        if (!this.m_transform_from_mask) return;
 
         const group = this.m_mask_group || [];
         if (group.length < 2) return;
-        const inverse = (this.m_transform_form_mask).inverse;
+        const inverse = (this.m_transform_from_mask).inverse;
         const els: EL[] = [];
         for (let i = 1; i < group.length; i++) {
             const __s = group[i];
@@ -1417,10 +1419,10 @@ export class ShapeView extends DataView {
     }
 
     get transformFromMask() {
-        this.m_transform_form_mask = this.renderMask();
-        if (!this.m_transform_form_mask) return;
+        this.m_transform_from_mask = this.renderMask();
+        if (!this.m_transform_from_mask) return;
 
-        const space = (this.m_transform_form_mask).inverse;
+        const space = (this.m_transform_from_mask).inverse;
 
         return (this.transform.clone().multi(space)).toString()
     }

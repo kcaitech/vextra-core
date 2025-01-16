@@ -399,6 +399,8 @@ export class PrototypeStartingPoint extends Basic {
         this.desc = desc
     }
 }
+/* crdtidx */
+export type Radius = BasicArray<number>
 type ShadowMask_shadows = BasicArray<Shadow>
 /* shadow */
 export class Shadow extends Basic {
@@ -482,7 +484,7 @@ export class Stop extends Basic {
         this.color = color
     }
 }
-type StyleSheet_variables = BasicArray<FillMask | ShadowMask | BlurMask | BorderMask | CornerRadius>
+type StyleSheet_variables = BasicArray<FillMask | ShadowMask | BlurMask | BorderMask | RadiusMask>
 type Style_fills = BasicArray<Fill>
 type Style_shadows = BasicArray<Shadow>
 type Style_innerShadows = BasicArray<Shadow>
@@ -788,6 +790,25 @@ export class PrototypeInterAction extends Basic {
         this.actions = actions
     }
 }
+/* radius mask */
+export class RadiusMask extends Basic {
+    typeId = "radius-mask"
+    crdtidx: Crdtidx
+    sheet: string
+    id: string
+    name: string
+    description: string
+    radius: Radius
+    constructor(crdtidx: Crdtidx, sheet: string, id: string, name: string, description: string, radius: Radius) {
+        super()
+        this.crdtidx = crdtidx
+        this.sheet = sheet
+        this.id = id
+        this.name = name
+        this.description = description
+        this.radius = radius
+    }
+}
 /* shadow mask */
 export class ShadowMask extends Basic {
     typeId = "shadow-mask"
@@ -1074,6 +1095,7 @@ export class Shape extends Basic {
     scrollBehavior?: ScrollBehavior
     mask?: boolean
     stackPositioning?: StackPositioning
+    radiusMask?: string
     constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style) {
         super()
         this.crdtidx = crdtidx

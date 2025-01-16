@@ -336,4 +336,13 @@ export class ArtboardView extends GroupShapeView {
     get frameMaskDisabled() {
         return (this.m_data as Artboard).frameMaskDisabled;
     }
+
+    get radius(): number[] {
+        return [
+            this.cornerRadius?.lt ?? 0,
+            this.cornerRadius?.rt ?? 0,
+            this.cornerRadius?.rb ?? 0,
+            this.cornerRadius?.lb ?? 0,
+        ];
+    }
 }

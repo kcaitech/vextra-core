@@ -430,6 +430,8 @@ export enum PrototypeTransitionType {
     SCROLLANIMATE = "SCROLL_ANIMATE",
     SMARTANIMATE = "SMART_ANIMATE",
 }
+/* crdtidx */
+export type Radius = Array<number>
 /* resize type */
 export enum ResizeType {
     Stretch = "stretch",
@@ -569,7 +571,7 @@ export enum StrikethroughType {
 export enum StyleLibType {
     Color = "color",
 }
-export type StyleSheet_variables = Array<FillMask | ShadowMask | BlurMask | BorderMask | CornerRadius>
+export type StyleSheet_variables = Array<FillMask | ShadowMask | BlurMask | BorderMask | RadiusMask>
 /* shape types */
 export enum StyleVarType {
     Color = "color",
@@ -825,6 +827,16 @@ export type PrototypeInterAction = {
     typeId?: string,
     isDeleted?: boolean,
 }
+/* radius mask */
+export type RadiusMask = {
+    crdtidx: Crdtidx,
+    typeId: string,
+    sheet: string,
+    id: string,
+    name: string,
+    description: string,
+    radius: Radius,
+}
 /* shadow mask */
 export type ShadowMask = {
     crdtidx: Crdtidx,
@@ -1022,6 +1034,7 @@ export type Shape = {
     scrollBehavior?: ScrollBehavior,
     mask?: boolean,
     stackPositioning?: StackPositioning,
+    radiusMask?: string,
 }
 /* style sheet */
 export type StyleSheet = {

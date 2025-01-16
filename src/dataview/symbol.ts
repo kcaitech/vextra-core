@@ -18,7 +18,7 @@ export class SymbolView extends GroupShapeView {
         return this.m_data as SymbolShape;
     }
     get cornerRadius(): CornerRadius | undefined {
-        return (this.data).cornerRadius;
+        return this.data.cornerRadius;
     }
 
     get variables() {
@@ -198,6 +198,15 @@ export class SymbolView extends GroupShapeView {
         }
 
         return changed;
+    }
+
+    get radius(): number[] { // todo 实例的圆角
+        return [
+            this.cornerRadius?.lt ?? 0,
+            this.cornerRadius?.rt ?? 0,
+            this.cornerRadius?.rb ?? 0,
+            this.cornerRadius?.lb ?? 0,
+        ];
     }
 
     render(): number {

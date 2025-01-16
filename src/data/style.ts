@@ -422,7 +422,7 @@ export class Blur extends Basic implements classes.Blur {
 /**
  * @description 样式库管理器数据组成
  */
-export type StyleMangerMember = FillMask | ShadowMask | BlurMask | BorderMask;
+export type StyleMangerMember = FillMask | ShadowMask | BlurMask | BorderMask | RadiusMask;
 
 export class StyleSheet extends Basic implements classes.StyleSheet {
     typeId = "style-sheet"
@@ -495,13 +495,6 @@ export class StyleSheet extends Basic implements classes.StyleSheet {
         }
         return notifiable_variables;
     }
-}
-
-interface Mask {
-    sheet: string;                          // 所属样式表
-    __subscribers: Set<ShapeView>;            // 被当前变量遮盖的对象集合
-    add: (view: ShapeView) => () => void;   // 添加遮盖对象
-    notify: (...args: any[]) => void;       // 当前变量改变，通知所有被遮盖的对象更新试图
 }
 
 export class FillMask extends WatchableObject implements classes.FillMask {
@@ -600,28 +593,22 @@ export class BorderMask extends WatchableObject implements classes.BorderMask {
     }
 }
 
-export class CornerRadiusMask extends CornerRadius implements Mask {
+export class RadiusMask extends WatchableObject implements classes.RadiusMask {
+    typeId = 'radius-mask-living';
+    crdtidx: BasicArray<number>;
+    id: string;
     sheet: string;
-    __subscribers: Set<ShapeView>;
+    name: string;
+    description: string;
+    radius: BasicArray<number>;
 
-    constructor(id: string, sheet: string, crdtidx: Crdtidx, lt: number = 0, rt: number = 0, lb: number = 0, rb: number = 0) {
-        super(id, crdtidx, lt, rt, lb, rb);
+    constructor(crdtidx: BasicArray<number>, sheet: string, id: string, name: string, description: string, radius: BasicArray<number>) {
+        super();
+        this.crdtidx = crdtidx;
+        this.id = id;
         this.sheet = sheet;
-        this.__subscribers = new Set<ShapeView>();
-    }
-
-    notify(...args: any[]) {
-        super.notify("style-mask-change", "corner-radius", ...args);
-        this.__subscribers.forEach(view => {
-            if (view.isDistroyed) return;
-            view.m_ctx.setDirty(view);
-        })
-    }
-
-    add(view: ShapeView) {
-        this.__subscribers.add(view);
-        return () => {
-            this.__subscribers.delete(view)
-        }
+        this.name = name;
+        this.description = description;
+        this.radius = radius;
     }
 }

@@ -1,13 +1,11 @@
 import {
+    CurvePoint,
     FillType, GradientType,
     OvalShape,
     PathShape,
     PathShape2,
-    Shape,
     ShapeFrame,
     ShapeType,
-    SymbolRefShape,
-    SymbolShape,
     Transform
 } from "../data";
 import { ShapeView } from "./shape";
@@ -17,8 +15,8 @@ import { objectId } from "../basic/objectid";
 import { BlurType, PathSegment } from "../data/typesdefine";
 import { render as renderLineBorders } from "../render/line_borders"
 import { PageView } from "./page";
-import { importBorder, importStrokePaint } from "../data/baseimport";
-import { exportBorder, exportStrokePaint } from "../data/baseexport";
+import { importStrokePaint } from "../data/baseimport";
+import { exportStrokePaint } from "../data/baseexport";
 import { GroupShapeView } from "./groupshape";
 import { border2path } from "../editor/utils/path";
 
@@ -191,12 +189,12 @@ export class PathShapeView extends ShapeView {
     }
 
     get relyLayers() {
-        if (!this.m_transform_form_mask) this.m_transform_form_mask = this.renderMask();
-        if (!this.m_transform_form_mask) return;
+        if (!this.m_transform_from_mask) this.m_transform_from_mask = this.renderMask();
+        if (!this.m_transform_from_mask) return;
 
         const group = this.m_mask_group || [];
         if (group.length < 2) return;
-        const inverse = (this.m_transform_form_mask).inverse;
+        const inverse = (this.m_transform_from_mask).inverse;
         const els: EL[] = [];
         for (let i = 1; i < group.length; i++) {
             const __s = group[i];
@@ -210,10 +208,10 @@ export class PathShapeView extends ShapeView {
     }
 
     get transformFromMask() {
-        this.m_transform_form_mask = this.renderMask();
-        if (!this.m_transform_form_mask) return;
+        this.m_transform_from_mask = this.renderMask();
+        if (!this.m_transform_from_mask) return;
 
-        const space = (this.m_transform_form_mask).getInverse();
+        const space = (this.m_transform_from_mask).getInverse();
 
         return (this.transform.clone().multi(space)).toString()
     }
@@ -316,5 +314,16 @@ export class PathShapeView extends ShapeView {
 
     get haveEdit() {
         return this.data.haveEdit;
+    }
+
+    get radius(): number[] {
+        let points: CurvePoint[] = [];
+        this.segments.forEach(i => points = points.slice(0).concat(i.points as CurvePoint[]));
+        const firstR = points[0]?.radius ?? 0;
+        for (const p of points) {
+            const radius = p.radius ?? 0;
+            if (radius !== p.radius) return [-1];
+        }
+        return [firstR || (this.fixedRadius ?? 0)];
     }
 }

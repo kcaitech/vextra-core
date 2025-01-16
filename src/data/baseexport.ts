@@ -488,6 +488,14 @@ export function exportPrototypeStartingPoint(source: types.PrototypeStartingPoin
 export function exportPrototypeTransitionType(source: types.PrototypeTransitionType, ctx?: IExportContext): types.PrototypeTransitionType {
     return source
 }
+/* crdtidx */
+export function exportRadius(source: types.Radius, ctx?: IExportContext): types.Radius {
+    const ret: types.Radius = []
+    source.forEach((source) => {
+        ret.push(source)
+    })
+    return ret
+}
 /* resize type */
 export function exportResizeType(source: types.ResizeType, ctx?: IExportContext): types.ResizeType {
     return source
@@ -625,8 +633,8 @@ export function exportStyleSheet_variables(source: types.StyleSheet_variables, c
             if (source.typeId === "border-mask") {
                 return exportBorderMask(source as types.BorderMask, ctx)
             }
-            if (source.typeId === "corner-radius") {
-                return exportCornerRadius(source as types.CornerRadius, ctx)
+            if (source.typeId === "radius-mask") {
+                return exportRadiusMask(source as types.RadiusMask, ctx)
             }
             throw new Error("unknow typeId: " + source.typeId)
         })())
@@ -969,6 +977,19 @@ export function exportPrototypeInterAction(source: types.PrototypeInterAction, c
     if (source.isDeleted !== undefined) ret.isDeleted = source.isDeleted
     return ret
 }
+/* radius mask */
+export function exportRadiusMask(source: types.RadiusMask, ctx?: IExportContext): types.RadiusMask {
+    const ret: types.RadiusMask = {} as types.RadiusMask
+    ret.typeId = "radius-mask"
+    ret.crdtidx = exportCrdtidx(source.crdtidx, ctx)
+    ret.typeId = source.typeId
+    ret.sheet = source.sheet
+    ret.id = source.id
+    ret.name = source.name
+    ret.description = source.description
+    ret.radius = exportRadius(source.radius, ctx)
+    return ret
+}
 /* shadow mask */
 export function exportShadowMask(source: types.ShadowMask, ctx?: IExportContext): types.ShadowMask {
     const ret: types.ShadowMask = {} as types.ShadowMask
@@ -1223,6 +1244,7 @@ export function exportShape(source: types.Shape, ctx?: IExportContext): types.Sh
     if (source.scrollBehavior !== undefined) ret.scrollBehavior = exportScrollBehavior(source.scrollBehavior, ctx)
     if (source.mask !== undefined) ret.mask = source.mask
     if (source.stackPositioning !== undefined) ret.stackPositioning = exportStackPositioning(source.stackPositioning, ctx)
+    if (source.radiusMask !== undefined) ret.radiusMask = source.radiusMask
     return ret
 }
 /* style sheet */
