@@ -2942,7 +2942,7 @@ export class PageEditor {
                 } else {
                     const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
                     const strokePaints = new BasicArray<StrokePaint>(value);
-                    const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
+                    const border = new Border(types.BorderPosition.Inner, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
                     api.addBorder(this.page, s, border);
                 }
             }

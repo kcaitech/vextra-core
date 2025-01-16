@@ -159,7 +159,7 @@ export function newStyle(): Style {
     const fills = new BasicArray<Fill>();
     const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
     const strokePaints = new BasicArray<StrokePaint>();
-    const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
+    const border = new Border(types.BorderPosition.Inner, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
     const style = new Style(fills, new BasicArray<Shadow>(), border);
     style.fills.push(fill);
     // style.contextSettings = new ContextSettings(BlendMode.Normal, 1);
@@ -171,7 +171,7 @@ export function newflatStyle(): Style {
     const shadows = new BasicArray<Shadow>();
     const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
     const strokePaints = new BasicArray<StrokePaint>();
-    const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
+    const border = new Border(types.BorderPosition.Inner, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
     const style = new Style(fills, shadows, border);
     // style.contextSettings = new ContextSettings(BlendMode.Normal, 1);
     return style;
@@ -595,7 +595,7 @@ export function newTable(name: string, frame: ShapeFrame, rowCount: number, colu
     const strokePaints = new BasicArray<StrokePaint>();
     const strokePaint = new StrokePaint([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(0.5, 0, 0, 0))
     strokePaints.push(strokePaint);
-    const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
+    const border = new Border(types.BorderPosition.Inner, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
     table.style.borders = border;
 
     addCommonAttr(table)
@@ -653,7 +653,7 @@ export function newTable2(name: string, frame: ShapeFrame, rowCount: number, col
     const strokePaints = new BasicArray<StrokePaint>();
     const strokePaint = new StrokePaint([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(0.5, 0, 0, 0))
     strokePaints.push(strokePaint);
-    const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
+    const border = new Border(types.BorderPosition.Inner, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
     table.style.borders = border;
 
     addCommonAttr(table)
@@ -716,7 +716,7 @@ export function newCutoutShape(name: string, frame: ShapeFrame): CutoutShape {
     const fills = new BasicArray<Fill>();
     const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
     const strokePaints = new BasicArray<StrokePaint>();
-    const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
+    const border = new Border(types.BorderPosition.Inner, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
     const style = new Style(fills, new BasicArray<Shadow>(), border);
     const curvePoint = new BasicArray<CurvePoint>();
     const id = uuid();

@@ -1458,7 +1458,7 @@ export class TableEditor extends ShapeEditor {
                     } else {
                         const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
                         const strokePaints = new BasicArray<StrokePaint>(newPaint);
-                        const border = new Border(BorderPosition.Center, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
+                        const border = new Border(BorderPosition.Inner, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
                         api.addBorder(this.__page, c.data, border);
                     }
                 }
