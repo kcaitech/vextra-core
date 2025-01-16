@@ -970,10 +970,6 @@ export class ShapeView extends DataView {
             this.layoutChilds(this.frame, { x: targetWidth / saveW, y: targetHeight / saveH });
         } else {
             const transform = (shape.transform.clone());
-            if (this.parent && (this.parent as ArtboardView).autoLayout) {
-                transform.translateX = this.m_transform.translateX;
-                transform.translateY = this.m_transform.translateY;
-            }
             // const __p_transform_scale = new Transform2().setScale(ColVector3D.FromXYZ(scaleX, scaleY, 1));
             transform.scale(scaleX, scaleY);
             const __decompose_scale = transform.clearScaleSize();
@@ -983,6 +979,12 @@ export class ShapeView extends DataView {
             const size = shape.size;
             let layoutSize = new ShapeSize();
             const frame = new ShapeFrame(0, 0, size.width * __decompose_scale.x, size.height * __decompose_scale.y);
+
+            if (this.parent && (this.parent as ArtboardView).autoLayout) {
+                transform.translateX = this.m_transform.translateX;
+                transform.translateY = this.m_transform.translateY;
+            }
+
             layoutSize.width = frame.width
             layoutSize.height = frame.height
             this.updateLayoutArgs((transform), frame, (shape as PathShape).fixedRadius);

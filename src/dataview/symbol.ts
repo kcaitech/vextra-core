@@ -77,8 +77,9 @@ export class SymbolView extends GroupShapeView {
         for (let i = 0, len = this.childs.length; i < len; i++) {
             const cc = this.childs[i];
             const newTransform = cc.transform.clone();
-            newTransform.translateX = layout[i - hidden].x;
-            newTransform.translateY = layout[i - hidden].y;
+            const index = Math.min(i - hidden, layout.length - 1);
+            newTransform.translateX = layout[index].x;
+            newTransform.translateY = layout[index].y;
             if (!cc.isVisible) { 
                 hidden += 1;
             }

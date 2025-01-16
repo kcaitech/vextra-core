@@ -287,15 +287,16 @@ export class SymbolRefView extends ShapeView {
             this.updateLayoutArgs((transform), selfframe, this.fixedRadius);
         } else { // 没有约束
             const transform = shape.transform.clone();
-            if (this.parent && (this.parent as ArtboardView).autoLayout) {
-                transform.translateX = this.m_transform.translateX;
-                transform.translateY = this.m_transform.translateY;
-            }
             transform.scale(scaleX, scaleY);
             const __decompose_scale = transform.clearScaleSize();
             // 保持对象位置不变
             // virtual是整体缩放，位置是会变化的，不需要trans
             if (!this.m_isVirtual) transform.trans(transform.translateX - shape.transform.translateX, transform.translateY - shape.transform.translateY);
+            
+            if (this.parent && (this.parent as ArtboardView).autoLayout) {
+                transform.translateX = this.m_transform.translateX;
+                transform.translateY = this.m_transform.translateY;
+            }
 
             selfframe.width = size.width * __decompose_scale.x
             selfframe.height = size.height * __decompose_scale.y
@@ -326,8 +327,9 @@ export class SymbolRefView extends ShapeView {
         for (let i = 0, len = this.childs.length; i < len; i++) {
             const cc = this.childs[i];
             const newTransform = cc.transform.clone();
-            newTransform.translateX = layout[i - hidden].x;
-            newTransform.translateY = layout[i - hidden].y;
+            const index = Math.min(i - hidden, layout.length - 1);
+            newTransform.translateX = layout[index].x;
+            newTransform.translateY = layout[index].y;
             if (!cc.isVisible) { 
                 hidden += 1;
             }
