@@ -51,7 +51,7 @@ export class SymbolView extends GroupShapeView {
     }
     // borders
     protected renderBorders(): EL[] {
-        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.data);
+        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.data,this.radius);
     }
 
     protected _layout(parentFrame: ShapeSize | undefined, scale: { x: number; y: number; } | undefined): void {

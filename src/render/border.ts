@@ -19,17 +19,16 @@ import {
 import { findOverrideAndVar, randomId } from "./basic";
 import { renderCustomBorder } from "./border_custom";
 
-
 const handler: {
-    [key: string]: (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: StrokePaint) => any
+    [key: string]: (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: StrokePaint, radius: number[]) => any
 } = {};
 const angularHandler: {
-    [key: string]: (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: StrokePaint) => any
+    [key: string]: (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: StrokePaint, radius: number[]) => any
 } = {};
 
-angularHandler[BorderPosition.Inner] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: StrokePaint): any {
+angularHandler[BorderPosition.Inner] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: StrokePaint, radius: number[]): any {
     if (shape && is_side_custom(border.sideSetting.sideType, shape)) {
-        return renderCustomBorder(h, frame, border, path, shape, strokePaints);
+        return renderCustomBorder(h, frame, border, path, shape, strokePaints, radius);
     }
     const rId = randomId();
     const clipId = "clippath-border" + objectId(strokePaints) + rId;
@@ -84,9 +83,9 @@ angularHandler[BorderPosition.Inner] = function (h: Function, frame: ShapeSize, 
     ]);
 }
 
-angularHandler[BorderPosition.Center] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: StrokePaint): any {
+angularHandler[BorderPosition.Center] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: StrokePaint, radius: number[]): any {
     if (shape && is_side_custom(border.sideSetting.sideType, shape)) {
-        return renderCustomBorder(h, frame, border, path, shape, strokePaints);
+        return renderCustomBorder(h, frame, border, path, shape, strokePaints, radius);
     }
     const rId = randomId();
     const maskId = "mask-border" + objectId(strokePaints) + rId;
@@ -134,11 +133,11 @@ angularHandler[BorderPosition.Center] = function (h: Function, frame: ShapeSize,
     ])
 }
 
-angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: StrokePaint): any {
+angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: StrokePaint, radius: number[]): any {
     // const frame = shape.frame;
     const thickness = border.sideSetting.thicknessTop;
     if (shape && is_side_custom(border.sideSetting.sideType, shape)) {
-        return renderCustomBorder(h, frame, border, path, shape, strokePaints);
+        return renderCustomBorder(h, frame, border, path, shape, strokePaints, radius);
     }
     const g_ = renderGradient(h, strokePaints.gradient as Gradient, frame);
     const width = frame.width + 2 * thickness;
@@ -192,9 +191,9 @@ angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, 
     ]);
 }
 
-handler[BorderPosition.Inner] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: StrokePaint): any {
+handler[BorderPosition.Inner] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: StrokePaint, radius: number[]): any {
     if (shape && is_side_custom(border.sideSetting.sideType, shape)) {
-        return renderCustomBorder(h, frame, border, path, shape, strokePaints);
+        return renderCustomBorder(h, frame, border, path, shape, strokePaints, radius);
     }
     const rId = randomId();
     const clipId = "clippath-border" + objectId(strokePaints) + rId;
@@ -210,7 +209,7 @@ handler[BorderPosition.Inner] = function (h: Function, frame: ShapeSize, border:
         "stroke-linejoin": border.cornerType,
         'clip-path': "url(#" + clipId + ")"
     }
-    if (shape && Math.max(...shape.radius) > 0) body_props['stroke-linejoin'] = 'miter';
+    if (shape && Math.max(...radius) > 0) body_props['stroke-linejoin'] = 'miter';
     const { length, gap } = border.borderStyle;
     if (length || gap) {
         body_props['stroke-dasharray'] = `${length}, ${gap}`
@@ -240,10 +239,10 @@ handler[BorderPosition.Inner] = function (h: Function, frame: ShapeSize, border:
     return h("g", elArr);
 }
 
-handler[BorderPosition.Center] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: StrokePaint): any {
+handler[BorderPosition.Center] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: StrokePaint, radius: number[]): any {
     // const frame = shape.frame;
     if (shape && is_side_custom(border.sideSetting.sideType, shape)) {
-        return renderCustomBorder(h, frame, border, path, shape, strokePaints);
+        return renderCustomBorder(h, frame, border, path, shape, strokePaints, radius);
     }
     const thickness = border.sideSetting.thicknessTop;
     let g_;
@@ -278,10 +277,10 @@ handler[BorderPosition.Center] = function (h: Function, frame: ShapeSize, border
     }
 }
 
-handler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: StrokePaint): any {
+handler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: StrokePaint, radius: number[]): any {
     // const frame = shape.frame;
     if (shape && is_side_custom(border.sideSetting.sideType, shape)) {
-        return renderCustomBorder(h, frame, border, path, shape, strokePaints);
+        return renderCustomBorder(h, frame, border, path, shape, strokePaints, radius);
     }
     const thickness = border.sideSetting.thicknessTop;
 
@@ -334,7 +333,7 @@ handler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, border:
     return (h("g", elArr));
 }
 
-export function render(h: Function, border: Border | undefined, frame: ShapeSize, path: string, shape: Shape, isClosed = true): Array<any> {
+export function render(h: Function, border: Border | undefined, frame: ShapeSize, path: string, shape: Shape, radius: number[],isClosed = true): Array<any> {
     if(!border) return [];
     const bc = border.strokePaints.length;
     const elArr = [];
@@ -349,31 +348,14 @@ export function render(h: Function, border: Border | undefined, frame: ShapeSize
         const gradientType = strokePaints.gradient && strokePaints.gradient.gradientType;
 
         fillType == FillType.Gradient && gradientType == GradientType.Angular && (() => {
-            elArr.push(angularHandler[position](h, frame, border, path, shape, strokePaints));
+            elArr.push(angularHandler[position](h, frame, border, path, shape, strokePaints,radius));
         })() || (fillType == FillType.SolidColor || fillType == FillType.Gradient) && (() => {
-            elArr.push(handler[position](h, frame, border, path, shape, strokePaints));
+            elArr.push(handler[position](h, frame, border, path, shape, strokePaints, radius));
         })() || fillType == FillType.Pattern && (() => {
             return true; // todo
         })
     }
     return elArr;
-}
-
-export function renderWithVars(h: Function, shape: Shape, frame: ShapeSize, path: string,
-    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
-    let border = shape.style.borders;
-    if (varsContainer) {
-        const _vars = findOverrideAndVar(shape, OverrideType.Borders, varsContainer);
-        if (_vars) {
-            // (hdl as any as VarWatcher)._watch_vars(propertyKey.toString(), _vars);
-            const _var = _vars[_vars.length - 1];
-            if (_var && _var.type === VariableType.Borders) {
-                // return _var.value;
-                border = _var.value;
-            }
-        }
-    }
-    return render(h, border, frame, path, shape, shape.isClosed);
 }
 
 function is_side_custom(sideType: SideType, shape: Shape) {

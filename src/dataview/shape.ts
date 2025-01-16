@@ -1084,11 +1084,11 @@ export class ShapeView extends DataView {
                 return nb;
             });
         }
-        return renderBorders(elh, border, this.size, this.getPathStr(), this.m_data);
+        return renderBorders(elh, border, this.size, this.getPathStr(), this.m_data, this.radius);
     }
 
     protected renderShadows(filterId: string): EL[] {
-        return renderShadows(elh, filterId, this.getShadows(), this.getPathStr(), this.frame, this.getFills(), this.getBorders(), this.m_data, this.blur);
+        return renderShadows(elh, filterId, this.getShadows(), this.getPathStr(), this.frame, this.getBorders(), this.m_data, this.radius,this.blur);
     }
 
     protected renderBlur(blurId: string): EL[] {

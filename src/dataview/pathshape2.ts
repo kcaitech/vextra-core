@@ -29,6 +29,6 @@ export class PathShapeView2 extends ShapeView {
     }
 
     protected renderBorders(): EL[] {
-        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.m_data, false);
+        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.m_data, this.radius,false);
     }
 }

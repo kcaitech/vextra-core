@@ -156,7 +156,7 @@ export class TextShapeView extends ShapeView {
                 return nb;
             });
         }
-        return border && border.strokePaints.some(p => p.isEnabled) ? renderBorders(elh, border, this.size, this.getTextPath().toSVGString(), this.m_data) : [];
+        return border && border.strokePaints.some(p => p.isEnabled) ? renderBorders(elh, border, this.size, this.getTextPath().toSVGString(), this.m_data,this.radius) : [];
     }
 
     getTextPath() {

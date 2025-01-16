@@ -33,7 +33,7 @@ export { Transform } from "./transform";
 export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D,
     CurvePoint, ShapeFrame, Ellipse, PathSegment, OverrideType, VariableType,
-    FillRule, CornerRadius, ShapeSize, StackPositioning
+    FillRule, CornerRadius, ShapeSize, StackPositioning, Radius
 } from "./baseclasses";
 
 export { Variable } from "./variable";
@@ -141,6 +141,7 @@ export class Shape extends Basic implements classes.Shape {
     scrollBehavior?: classes.ScrollBehavior;
     mask?: boolean;
     stackPositioning?: classes.StackPositioning;
+    radiusMask?: string;
 
     constructor(
         crdtidx: BasicArray<number>, id: string, name: string, type: ShapeType, transform: Transform, style: Style
