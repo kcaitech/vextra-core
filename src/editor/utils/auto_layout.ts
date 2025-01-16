@@ -50,43 +50,6 @@ export function layoutShapesOrder(shapes: Shape[], includedBorder: boolean) {
     return shape_rows;
 }
 
-export function layoutSpacing(shape_rows: Shape[][]) {
-    let totalHorSpacing = 0; // 用于累计所有水平间距
-    let totalVerSpacing = 0; // 用于累计所有垂直间距
-    let horSpacingCount = 0; // 记录水平间距的总数
-    let verSpacingCount = 0; // 记录垂直间距的总数
-
-    shape_rows.forEach((row, rowIndex) => {
-        row.forEach((shape, index) => {
-            let spacing = 0;
-            if (index > 0) {
-                const previousShape = row[index - 1];
-                spacing = boundingBox(shape).x - (boundingBox(previousShape).x + boundingBox(previousShape).width);
-                totalHorSpacing += spacing; // 累加水平间距
-                horSpacingCount += 1; // 增加水平间距计数
-            }
-        });
-        if (rowIndex > 0) {
-            // 计算当前行与上一行之间的垂直间距
-            const previousRow = shape_rows[rowIndex - 1];
-            const minYOfCurrentRow = Math.min(...row.map(shape => boundingBox(shape).y));
-            const maxYOfPreviousRow = Math.max(...previousRow.map(shape => boundingBox(shape).y + boundingBox(shape).height));
-            const verSpacing = minYOfCurrentRow - maxYOfPreviousRow;
-
-            totalVerSpacing += verSpacing; // 累加垂直间距
-            verSpacingCount += 1; // 增加垂直间距计数
-        }
-    });
-    // 计算平均水平间距并向下取整
-    const averageHorSpacing = horSpacingCount > 0 ? Math.floor(totalHorSpacing / horSpacingCount) : 0;
-
-    // 计算平均垂直间距并向下取整
-    let averageVerSpacing = verSpacingCount > 0 ? Math.floor(totalVerSpacing / verSpacingCount) : 0;
-    averageVerSpacing = averageVerSpacing > 0 ? averageVerSpacing : 0;
-
-    return { hor: averageHorSpacing, ver: averageVerSpacing }
-}
-
 export const initAutoLayout = (page: Page, api: Api, container: Shape, shape_rows: Shape[][]) => {
     const shape_row: Shape[] = [];
     shape_rows.forEach(item => shape_row.push(...item));

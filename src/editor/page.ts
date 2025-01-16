@@ -171,8 +171,6 @@ import { FMT_VER_latest } from "../data/fmtver";
 import { ColVector3D } from "../basic/matrix2";
 import { Transform as Transform2 } from "../basic/transform";
 import {
-    layoutShapesOrder,
-    layoutSpacing,
     TidyUpAlgin,
     tidyUpLayout
 } from "./utils/auto_layout";
@@ -182,6 +180,7 @@ import { modifyRadius, modifyStartingAngle, modifySweep, uniformScale, UniformSc
 import { Path } from "@kcdesign/path";
 import { assign } from "./asyncapi";
 import { prepareVar } from "./symbol_utils";
+import { layoutShapesOrder2, layoutSpacing } from "./utils/auto_layout2";
 
 // 用于批量操作的单个操作类型
 export interface PositionAdjust { // 涉及属性：frame.x、frame.y
@@ -463,10 +462,10 @@ export class PageEditor {
         if (shapes.find((v) => !v.parent)) return false;
         const fshape = adapt2Shape(shapes[0]);
         const savep = fshape.parent as GroupShape;
-        const shapes_rows = layoutShapesOrder(shapes.map(s => adapt2Shape(s)), false);
+        const shapes_rows = layoutShapesOrder2(shapes, false);
         const { hor, ver } = layoutSpacing(shapes_rows);
         const ver_auto = shapes_rows.length === 1 || shapes_rows.every(s => s.length === 1) ? types.StackSizing.Auto : types.StackSizing.Fixed;
-        const layoutInfo = new AutoLayout(hor, ver, 0, 0, 0, 0, ver_auto);
+        const layoutInfo = new AutoLayout(hor, ver, 10, 10, 10, 10, ver_auto);
         if (shapes_rows.length === 1) {
             layoutInfo.stackWrap = types.StackWrap.NoWrap;
             layoutInfo.stackMode = types.StackMode.Horizontal;
@@ -486,7 +485,12 @@ export class PageEditor {
         });
         try {
             const saveidx = savep.indexOfChild(adapt2Shape(shapes[0]));
-            artboard = group(this.__document, this.page, shapes.map(s => adapt2Shape(s)), artboard, savep, saveidx, api) as Artboard;
+            const childs = shapes_rows.flat();
+            if(shapes.length !== childs.length) {
+                const hiddenChilds = shapes.filter(c => !c.isVisible);
+                childs.push(...hiddenChilds);
+            }
+            artboard = group(this.__document, this.page, childs.map(s => adapt2Shape(s)), artboard, savep, saveidx, api) as Artboard;
             this.__repo.commit();
             return artboard;
         } catch (e) {

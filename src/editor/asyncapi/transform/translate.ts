@@ -155,16 +155,15 @@ export class Transporter extends AsyncApiCaller {
         return true;
     }
 
-    swap(shape: GroupShapeView, targets: ShapeView[], x: number, y: number, sort: Map<string, number>) {
+    swap(shape: GroupShapeView, targets: ShapeView[], targetIndex: number) {
         try {
             const api = this.api;
-            const page = this.page;
+            const parent = adapt2Shape(shape) as GroupShape;
             for (let index = 0; index < targets.length; index++) {
-                const target = targets[index];
-                const frame = target._p_frame;
-                translate(api, page, adapt2Shape(target), x - frame.x, y - frame.y);
+                const target = adapt2Shape(targets[index]);
+                const currentIndex = parent.indexOfChild(target);
+                api.shapeMove(this.page, parent, currentIndex, parent, targetIndex);
             }
-
             this.updateView();
         } catch (e) {
             this.exception = true;

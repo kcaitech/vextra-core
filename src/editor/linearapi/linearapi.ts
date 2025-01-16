@@ -729,12 +729,14 @@ export class LinearApi {
     reLayout(env: ArtboardView | SymbolView, sort: Map<string, number>) {
         this.execute('re-layout-linear', () => {
             const parent = adapt2Shape(env) as GroupShape;
-            const shapesSorted: Shape[] = [...parent.childs].sort((a, b) => sort.get(a.id)! < sort.get(b.id)! ? -1 : 1);
+            const childs = parent.childs.filter(s => s.isVisible);
+            const hidden_childs = parent.childs.filter(s => !s.isVisible);
+            const shapesSorted: Shape[] = [...childs].sort((a, b) => sort.get(a.id)! < sort.get(b.id)! ? -1 : 1);
+            shapesSorted.unshift(...hidden_childs);
             for (let i = 0; i < shapesSorted.length; i++) {
                 const s = shapesSorted[i];
                 const currentIndex = parent.indexOfChild(s);
-                if(currentIndex === i) continue;
-                console.log(currentIndex, i);
+                if(currentIndex === i || !s.isVisible) continue;
                 this.api!.shapeMove(this.page, parent, currentIndex, parent, i);
             }
         });

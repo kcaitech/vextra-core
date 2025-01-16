@@ -25,8 +25,8 @@ import { adapt_for_artboard } from "./utils/common";
 import { ShapeView, SymbolRefView, SymbolView, adapt2Shape, findOverride, ArtboardView, findVar, GroupShapeView, PageView } from "../dataview";
 import { is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union, modify_variable, modify_variable_with_api, shape4Autolayout, shape4border, shape4contextSettings, shape4exportOptions, shape4fill, shape4shadow } from "./symbol";
 import { ISave4Restore, LocalCmd, SelectionState } from "../coop/localcmd";
-import { layoutShapesOrder, layoutSpacing } from "./utils/auto_layout";
 import { exportCurvePoint } from "../data/baseexport";
+import { layoutShapesOrder2, layoutSpacing } from "./utils/auto_layout2";
 
 export type PaddingDir = 'ver' | 'hor' | 'top' | 'right' | 'bottom' | 'left';
 
@@ -1456,10 +1456,12 @@ export class ShapeEditor {
     addAutoLayout() {
         const api = this.__repo.start("addAutoLayout");
         try {
-            const shapes_rows = layoutShapesOrder(this.__shape.childs.map(s => adapt2Shape(s)), false);
+            const parent = adapt2Shape(this.__shape) as GroupShape;
+            const shapes_rows = layoutShapesOrder2(this.__shape.childs, false);
+            const rows = shapes_rows.flat();
             const { hor, ver } = layoutSpacing(shapes_rows);
-            const h_padding = shapes_rows.length ? Math.max(Math.round(shapes_rows[0][0].x), 0) : 0;
-            const v_padding = shapes_rows.length ? Math.max(Math.round(shapes_rows[0][0].y), 0) : 0;
+            const h_padding = shapes_rows.length ? Math.max(Math.round(Math.min(...rows.map(s => s.x))), 0) : 10;
+            const v_padding = shapes_rows.length ? Math.max(Math.round(Math.min(...shapes_rows[0].map(s => s.y))), 0) : 10;
             const ver_auto = shapes_rows.length === 1 || shapes_rows.every(s => s.length === 1) ? StackSizing.Auto : StackSizing.Fixed;
             const layoutInfo = new AutoLayout(hor, ver, h_padding, v_padding, h_padding, v_padding, ver_auto);
             let shape_width = h_padding * 2;
@@ -1468,8 +1470,8 @@ export class ShapeEditor {
                 layoutInfo.stackWrap = StackWrap.NoWrap;
                 layoutInfo.stackMode = StackMode.Horizontal;
                 layoutInfo.stackCounterSpacing = hor;
-                shape_height += Math.max(...this.__shape.childs.map(s => s._p_frame.height));
-                this.__shape.childs.forEach(s => {
+                shape_height += Math.max(...rows.map(s => s._p_frame.height));
+                rows.forEach(s => {
                     shape_width += s._p_frame.width + hor;
                 })
                 shape_width -= hor;
@@ -1477,12 +1479,24 @@ export class ShapeEditor {
                 layoutInfo.stackWrap = StackWrap.NoWrap;
                 layoutInfo.stackMode = StackMode.Vertical;
                 layoutInfo.stackSpacing = ver;
-                shape_width += Math.max(...this.__shape.childs.map(s => s._p_frame.width));
-                this.__shape.childs.forEach(s => {
+                shape_width += Math.max(...rows.map(s => s._p_frame.width));
+                rows.forEach(s => {
                     shape_height += s._p_frame.height + ver;
                 })
                 shape_height -= ver;
             }
+            // 给自动布局中的子元素进行排序
+            if (this.__shape.childs.length !== rows.length) {
+                const hiddenChilds = this.__shape.childs.filter(c => !c.isVisible); // 隐藏的元素放在前面
+                rows.unshift(...hiddenChilds);
+            }
+            for (let i = 0; i < rows.length; i++) {
+                const s = adapt2Shape(rows[i]);
+                const currentIndex = parent.indexOfChild(s);
+                if (currentIndex === i) continue;
+                api.shapeMove(this.__page, parent, currentIndex, parent, i);
+            }
+
             const _shape = shape4Autolayout(api, this.__shape, this._page);
             api.shapeAutoLayout(this.__page, _shape, layoutInfo);
             this.__repo.commit();
@@ -1638,7 +1652,7 @@ export class ShapeEditor {
             const shape = adapt2Shape(this.__shape) as PathShape;
             const segments = shape.pathsegs;
             for (const action of actions) {
-                const {originSegmentIndex, slices, closed} = action;
+                const { originSegmentIndex, slices, closed } = action;
                 let last = originSegmentIndex;
                 for (let i = 0; i < slices.length; i++) {
                     const slice = new BasicArray(...slices[i].map(p => importCurvePoint(exportCurvePoint((p)))));
