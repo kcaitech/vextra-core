@@ -442,7 +442,7 @@ inject['Border']['before'] = `\
 inject['Variable'] = {};
 inject['Variable']['before'] = `\
     // inject code
-    if (Array.isArray(source.value) && source.value[0].typeId === "border") {
+    if (Array.isArray(source.value) && source.value[0]?.typeId === "border") {
         const strokePaints: any = [];
         for (let i = 0; i < source.value.length; ++i) {
             const strokePaint = { ...source.value[i] } as any;
