@@ -10,7 +10,8 @@ import {
     ResizingConstraints2, ScrollBehavior,
     ScrollDirection, Shadow, ShadowPosition, Shape,
     ShapeFrame, ShapeSize, ShapeType, SymbolRefShape,
-    SymbolShape, Transform, Variable, VariableType, BlurMask, BorderMask, FillMask, ShadowMask, StrokePaint
+    SymbolShape, Transform, Variable, VariableType, BlurMask, BorderMask, FillMask, ShadowMask, StrokePaint,
+    RadiusMask
 } from "../data";
 import { findOverrideAndVar } from "./basic";
 import { EL, elh } from "./el";
@@ -670,7 +671,7 @@ export class ShapeView extends DataView {
             const mgr = this.style.getStylesMgr();
             if (!mgr) return this.m_data.style.borders;
             const mask = mgr.getSync(this.style.bordersMask) as BorderMask
-            let _border = {...border}
+            let _border = { ...border }
             if (this.type === ShapeType.Line) {
                 _border.position = BorderPosition.Center
             } else {
@@ -691,7 +692,7 @@ export class ShapeView extends DataView {
                 const s = new StrokePaint(crdtidx, id, isEnabled, fillType, color)
                 strokePaints.push(s)
             })
-            let _border = {...border};
+            let _border = { ...border };
             _border.strokePaints = strokePaints;
             border = _border as Border;
             this.watchBorderFillMask(mask);
@@ -1088,7 +1089,7 @@ export class ShapeView extends DataView {
     }
 
     protected renderShadows(filterId: string): EL[] {
-        return renderShadows(elh, filterId, this.getShadows(), this.getPathStr(), this.frame, this.getBorders(), this.m_data, this.radius,this.blur);
+        return renderShadows(elh, filterId, this.getShadows(), this.getPathStr(), this.frame, this.getBorders(), this.m_data, this.radius, this.blur);
     }
 
     protected renderBlur(blurId: string): EL[] {
@@ -1322,9 +1323,35 @@ export class ShapeView extends DataView {
         return this.m_data.isPathIcon;
     }
 
+    private _onRadiusMaskChange() {
+        this.m_ctx.setDirty(this);
+    }
+
+    private m_unbind_Radius: undefined | (() => void) = undefined;
+    private onRadiusMaskChange = this._onRadiusMaskChange.bind(this);
+
+    private watchRadiusMask(mask: RadiusMask) {
+        this.m_unbind_Radius?.();
+        this.m_unbind_Radius = mask.watch(this.onRadiusMaskChange);
+    }
+
+    private unwatchRadiusMask() {
+        this.m_unbind_Radius?.();
+    }
+
     get radius(): number[] {
+        let _radius: number[];
+        if (this.radiusMask) {
+            const mgr = this.style.getStylesMgr()!;
+            const mask = mgr.getSync(this.radiusMask) as RadiusMask
+            _radius = mask.radius;
+            this.watchRadiusMask(mask);
+        } else {
+            _radius = [this.fixedRadius ?? 0]
+            this.unwatchRadiusMask();
+        }
         // todo if (this.radiusMask) {}
-        return [this.fixedRadius ?? 0];
+        return _radius
     }
 
     get radiusType() {
