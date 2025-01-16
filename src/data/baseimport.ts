@@ -1436,7 +1436,7 @@ export function importTextShape(source: types.TextShape, ctx?: IImportContext): 
 /* color */
 export function importVariable(source: types.Variable, ctx?: IImportContext): impl.Variable {
         // inject code
-    if (Array.isArray(source.value) && source.value[0].typeId === "border") {
+    if (Array.isArray(source.value) && source.value[0]?.typeId === "border") {
         const strokePaints: any = [];
         for (let i = 0; i < source.value.length; ++i) {
             const strokePaint = { ...source.value[i] } as any;
