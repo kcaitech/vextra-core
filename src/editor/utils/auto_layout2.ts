@@ -515,7 +515,7 @@ function boundingBox(shape: ShapeView, includedBorder?: boolean): ShapeFrame {
     return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
 }
 
-const getShapeFrame = (shape: ShapeView) => {
+export const getShapeFrame = (shape: ShapeView) => {
     if (shape.type !== ShapeType.Group) return shape.frame;
     const childframes = (shape as GroupShapeView).childs.map((c) => c.boundingBox());
     const reducer = (p: { minx: number, miny: number, maxx: number, maxy: number }, c: ShapeFrame, i: number) => {
