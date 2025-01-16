@@ -1,4 +1,5 @@
 import {
+    AutoLayout,
     FillType, GradientType,
     OvalShape,
     PathShape,
@@ -21,6 +22,7 @@ import { importBorder, importStrokePaint } from "../data/baseimport";
 import { exportBorder, exportStrokePaint } from "../data/baseexport";
 import { GroupShapeView } from "./groupshape";
 import { border2path } from "../editor/utils/path";
+import { ArtboardView } from "./artboard";
 
 export class PathShapeView extends ShapeView {
     m_pathsegs?: PathSegment[];
@@ -61,6 +63,19 @@ export class PathShapeView extends ShapeView {
             (this.parent as GroupShapeView).updateMaskMap();
             (this.parent as GroupShapeView).updateFrames();
         }
+        
+        if (args.includes('transform') || args.includes('size') || args.includes('isVisible')) {
+            // 执行父级自动布局
+            const autoLayout = (this.parent as ArtboardView).autoLayout;
+            if (autoLayout && this.parent) {
+                this.parentAutoLayout(autoLayout);
+            }
+        } else if (args.includes('borders')) {
+            const autoLayout = (this.parent as ArtboardView).autoLayout;
+            if (this.parent && autoLayout?.bordersTakeSpace) {
+                this.parentAutoLayout(autoLayout);
+            }
+        }
 
         if (args.includes('points')
             || args.includes('pathsegs')
@@ -99,6 +114,17 @@ export class PathShapeView extends ShapeView {
         const masked = this.masked;
         if (masked) masked.notify('rerender-mask');
     }
+
+    parentAutoLayout(autoLayout: AutoLayout) {
+            const childs = this.parent!.childs.filter(c => c.isVisible);
+            if (childs.length) {
+                const parentFrame = this.parent!.frame;
+                const frame = new ShapeFrame(parentFrame.x, parentFrame.y, parentFrame.width, parentFrame.height);
+                (this.parent as ArtboardView)._autoLayout(autoLayout, frame);
+                this.parent!.m_ctx.setDirty(this.parent!);
+            }
+        }
+
     protected renderBorders(): EL[] {
         let borders = this.getBorders();
         if (this.mask && borders) {

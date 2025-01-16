@@ -55,18 +55,22 @@ export class ArtboardView extends GroupShapeView {
         }
         super._layout(parentFrame, scale);
         const childs = this.childs.filter(c => c.isVisible);
-        if (childs.length) this._autoLayout(autoLayout, this.m_frame);
+        const frame = new ShapeFrame(this.m_frame.x, this.m_frame.y, this.m_frame.width, this.m_frame.height);
+        if (childs.length) this._autoLayout(autoLayout, frame);
     }
 
-    private _autoLayout(autoLayout: AutoLayout, layoutSize: ShapeSize) {
+    _autoLayout(autoLayout: AutoLayout, layoutSize: ShapeSize) {
         const childs = this.childs.filter(c => c.isVisible);
         const layout = updateAutoLayout(childs, autoLayout, layoutSize);
-        for (let i = 0, len = childs.length; i < len; i++) {
-            const cc = childs[i];
-            if (!cc.isVisible) continue;
+        let hidden = 0;
+        for (let i = 0, len = this.childs.length; i < len; i++) {
+            const cc = this.childs[i];
             const newTransform = cc.transform.clone();
-            newTransform.translateX = layout[i].x;
-            newTransform.translateY = layout[i].y;
+            newTransform.translateX = layout[i - hidden].x;
+            newTransform.translateY = layout[i - hidden].y;
+            if (!cc.isVisible) { 
+                hidden += 1;
+            }
             cc.m_ctx.setDirty(cc);
             cc.updateLayoutArgs(newTransform, cc.frame, cc.fixedRadius);
             cc.updateFrames();
@@ -75,7 +79,6 @@ export class ArtboardView extends GroupShapeView {
         this.updateLayoutArgs(this.transform, selfframe, this.fixedRadius);
         this.updateFrames();
     }
-
 
     protected renderFills(): EL[] {
         return renderFills(elh, this.getFills(), this.frame, this.getPathStr(), 'fill-' + this.id);

@@ -30,6 +30,7 @@ import { Path } from "@kcdesign/path";
 import { renderBorders } from "../render";
 import { importBorder, importStrokePaint } from "../data/baseimport";
 import { exportBorder, exportStrokePaint } from "../data/baseexport";
+import { ArtboardView } from "./artboard";
 
 export class TextShapeView extends ShapeView {
     __str: string | Text | undefined;
@@ -246,18 +247,28 @@ export class TextShapeView extends ShapeView {
     }
 
     protected _layout(parentFrame: ShapeSize | undefined, scale: { x: number; y: number; } | undefined): void {
+        const shape = this.data;
+        const transform = shape.transform.clone();
+        if (this.parent && (this.parent as ArtboardView).autoLayout) {
+            transform.translateX = this.m_transform.translateX;
+            transform.translateY = this.m_transform.translateY;
+        }
         if (!this.isVirtualShape) {
-            this.updateLayoutArgs(this.data.transform, this.data.frame, undefined)
+            this.updateLayoutArgs(transform, this.data.frame, undefined)
             this.updateFrames();
             return
         }
 
-        function fixTransform(offsetX: number, offsetY: number, transform: Transform) {
+        function fixTransform(offsetX: number, offsetY: number, transform: Transform, s: ShapeView) {
             const targetXY = transform.computeCoord(offsetX, offsetY)
             const dx = targetXY.x - transform.translateX;
             const dy = targetXY.y - transform.translateY;
             if (dx || dy) {
                 transform = transform.clone().trans(dx, dy)
+            }
+            if (s.parent && (s.parent as ArtboardView).autoLayout) {
+                transform.translateX = s.m_transform.translateX;
+                transform.translateY = s.m_transform.translateY;
             }
             return transform;
         }
@@ -267,7 +278,6 @@ export class TextShapeView extends ShapeView {
         const text = this.getText();
         const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
         switch (textBehaviour) {
-
             case TextBehaviour.Fixed: {
                 const layout = this.getLayout();
                 const fontsize = text.attr?.fontSize ?? Text.DefaultFontSize;
@@ -276,12 +286,12 @@ export class TextShapeView extends ShapeView {
                 const verAlign = text.attr?.verAlign ?? TextVerAlign.Top;
 
                 if (verAlign === TextVerAlign.Middle) {
-                    this.updateLayoutArgs(fixTransform(0, (size.height - targetHeight) / 2, this.data.transform), frame, undefined);
+                    this.updateLayoutArgs(fixTransform(0, (size.height - targetHeight) / 2, this.data.transform, this), frame, undefined);
                 } else if (verAlign === TextVerAlign.Bottom) {
-                    this.updateLayoutArgs(fixTransform(0, (size.height - targetHeight), this.data.transform), frame, undefined);
+                    this.updateLayoutArgs(fixTransform(0, (size.height - targetHeight), this.data.transform, this), frame, undefined);
                 }
                 else {
-                    this.updateLayoutArgs(this.data.transform, frame, undefined);
+                    this.updateLayoutArgs(transform, frame, undefined);
                 }
                 break;
             }
@@ -294,18 +304,18 @@ export class TextShapeView extends ShapeView {
                 const verAlign = text.attr?.verAlign ?? TextVerAlign.Top;
                 let transform = this.data.transform;
                 if (verAlign === TextVerAlign.Middle) {
-                    transform = fixTransform(0, (size.height - targetHeight) / 2, transform);
+                    transform = fixTransform(0, (size.height - targetHeight) / 2, transform, this);
                 } else if (verAlign === TextVerAlign.Bottom) {
-                    transform = fixTransform(0, (size.height - targetHeight), transform);
+                    transform = fixTransform(0, (size.height - targetHeight), transform, this);
                 }
                 for (let i = 0, pc = text.paras.length; i < pc; i++) {
                     const para = text.paras[i];
                     const horAlign = para.attr?.alignment ?? TextHorAlign.Left;
                     if (targetWidth === Math.ceil(layout.paras[i].paraWidth)) {
                         if (horAlign === TextHorAlign.Centered) {
-                            transform = fixTransform((size.width - targetWidth) / 2, 0, transform);
+                            transform = fixTransform((size.width - targetWidth) / 2, 0, transform, this);
                         } else if (horAlign === TextHorAlign.Right) {
-                            transform = fixTransform(size.width - targetWidth, 0, transform);
+                            transform = fixTransform(size.width - targetWidth, 0, transform, this);
                         }
                     }
                 }
@@ -313,7 +323,7 @@ export class TextShapeView extends ShapeView {
                 break;
             }
             default:
-                this.updateLayoutArgs(this.data.transform, frame, undefined);
+                this.updateLayoutArgs(transform, frame, undefined);
                 break;
         }
         this.updateFrames();

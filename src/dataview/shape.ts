@@ -582,6 +582,19 @@ export class ShapeView extends DataView {
             (this.parent as GroupShapeView).updateFrames(); // 遮罩图层会改变父级的frame结构 // todo 等排版更新就行？
         }
 
+        if (args.includes('transform') || args.includes('size') || args.includes('isVisible')) {
+            // 执行父级自动布局
+            const autoLayout = (this.parent as ArtboardView).autoLayout;
+            if (autoLayout && this.parent) {
+                this.parentAutoLayout(autoLayout);
+            }
+        } else if (args.includes('borders')) {
+            const autoLayout = (this.parent as ArtboardView).autoLayout;
+            if (this.parent && autoLayout?.bordersTakeSpace) {
+                this.parentAutoLayout(autoLayout);
+            }
+        }
+
         if (args.includes('points')
             || args.includes('pathsegs')
             || args.includes('isClosed')
@@ -606,6 +619,16 @@ export class ShapeView extends DataView {
 
         const masked = this.masked;
         if (masked) masked.notify('rerender-mask');
+    }
+
+    parentAutoLayout(autoLayout: AutoLayout) {
+        const childs = this.parent!.childs.filter(c => c.isVisible);
+        if (childs.length) {
+            const parentFrame = this.parent!.frame;
+            const frame = new ShapeFrame(parentFrame.x, parentFrame.y, parentFrame.width, parentFrame.height);
+            (this.parent as ArtboardView)._autoLayout(autoLayout, frame);
+            this.parent!.m_ctx.setDirty(this.parent!);
+        }
     }
 
     _findOV(ot: OverrideType, vt: VariableType): Variable | undefined {
@@ -887,7 +910,10 @@ export class ShapeView extends DataView {
     ) {
         const shape = this.data;
         const transform = shape.transform.clone();
-
+        if (this.parent && (this.parent as ArtboardView).autoLayout) {
+            transform.translateX = this.m_transform.translateX;
+            transform.translateY = this.m_transform.translateY;
+        }
         // case 1 不需要变形
         if (!scale || isEqual(scale.x, 1) && isEqual(scale.y, 1)) {
             let frame = this.frame;
@@ -895,6 +921,9 @@ export class ShapeView extends DataView {
             this.updateLayoutArgs(transform, frame, (shape as PathShape).fixedRadius);
             this.layoutChilds(this.frame);
             this.updateFrames();
+            if (this.parent && (this.parent as ArtboardView).autoLayout) {
+
+            }
             return;
         }
 
@@ -941,6 +970,10 @@ export class ShapeView extends DataView {
             this.layoutChilds(this.frame, { x: targetWidth / saveW, y: targetHeight / saveH });
         } else {
             const transform = (shape.transform.clone());
+            if (this.parent && (this.parent as ArtboardView).autoLayout) {
+                transform.translateX = this.m_transform.translateX;
+                transform.translateY = this.m_transform.translateY;
+            }
             // const __p_transform_scale = new Transform2().setScale(ColVector3D.FromXYZ(scaleX, scaleY, 1));
             transform.scale(scaleX, scaleY);
             const __decompose_scale = transform.clearScaleSize();

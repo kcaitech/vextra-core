@@ -22,6 +22,7 @@ import { elh } from "./el";
 import { render as clippathR } from "../render/clippath";
 import { isEqual } from "../basic/number_utils";
 import { updateAutoLayout } from "../editor/utils/auto_layout2";
+import { ArtboardView } from "./artboard";
 
 // 播放页组件状态切换会话存储refId的key值；
 export const sessionRefIdKey = 'ref-id-cf76c6c6-beed-4c33-ae71-134ee876b990';
@@ -214,8 +215,13 @@ export class SymbolRefView extends ShapeView {
         _scale: { x: number; y: number; } | undefined
     ): void {
         const shape = this.data as SymbolRefShape;
+        const transform = shape.transform.clone();
+        if ((this.parent as ArtboardView).autoLayout) {
+            transform.translateX = this.m_transform.translateX;
+            transform.translateY = this.m_transform.translateY;
+        }
         if (!this.m_sym) {
-            this.updateLayoutArgs(shape.transform, shape.frame, 0);
+            this.updateLayoutArgs(transform, shape.frame, 0);
             this.removeChilds(0, this.m_children.length).forEach((c) => c.destory());
             this.updateFrames();
             return;
@@ -255,7 +261,6 @@ export class SymbolRefView extends ShapeView {
                 layoutSize.width /= uniformScale
                 layoutSize.height /= uniformScale
             }
-            const transform = shape.transform;
             childscale.x = layoutSize.width / this.m_sym.size.width;
             childscale.y = layoutSize.height / this.m_sym.size.height;
             // let frame = this.m_data.frame;
@@ -282,6 +287,10 @@ export class SymbolRefView extends ShapeView {
             this.updateLayoutArgs((transform), selfframe, this.fixedRadius);
         } else { // 没有约束
             const transform = shape.transform.clone();
+            if (this.parent && (this.parent as ArtboardView).autoLayout) {
+                transform.translateX = this.m_transform.translateX;
+                transform.translateY = this.m_transform.translateY;
+            }
             transform.scale(scaleX, scaleY);
             const __decompose_scale = transform.clearScaleSize();
             // 保持对象位置不变
@@ -313,12 +322,16 @@ export class SymbolRefView extends ShapeView {
     private _autoLayout(autoLayout: AutoLayout, layoutSize: ShapeSize) {
         const childs = this.childs.filter(c => c.isVisible);
         const layout = updateAutoLayout(childs, autoLayout, layoutSize);
-        for (let i = 0, len = childs.length; i < len; i++) {
-            const cc = childs[i];
-            if (!cc.isVisible) continue;
+        let hidden = 0;
+        for (let i = 0, len = this.childs.length; i < len; i++) {
+            const cc = this.childs[i];
             const newTransform = cc.transform.clone();
-            newTransform.translateX = layout[i].x;
-            newTransform.translateY = layout[i].y;
+            newTransform.translateX = layout[i - hidden].x;
+            newTransform.translateY = layout[i - hidden].y;
+            if (!cc.isVisible) { 
+                hidden += 1;
+            }
+            cc.m_ctx.setDirty(cc);
             cc.updateLayoutArgs(newTransform, cc.frame, cc.fixedRadius);
             cc.updateFrames();
         }
