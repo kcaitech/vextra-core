@@ -80,7 +80,7 @@ export function modifyPathByArc(api: Api, page: Page, shape: Shape) {
         while (segments.length) {
             const { points, isClosed } = segments.pop()!;
             if (cornerRadius) points.forEach(i => i.radius = cornerRadius);
-            points.forEach((i, index) => i.crdtidx = new BasicArray<number>(index));
+            points.forEach((i, index) => i.crdtidx = [index] as BasicArray<number>);
             api.addSegmentAt(page, shape, 0, new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...points), isClosed));
         }
     }
