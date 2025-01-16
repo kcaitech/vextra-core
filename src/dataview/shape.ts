@@ -594,6 +594,7 @@ export class ShapeView extends DataView {
     private _onFillMaskChange() {
         this.m_fills = undefined;
         this.m_ctx.setDirty(this);
+        this.notify(['style', 'fills', 'mask']);
     }
 
     private m_unbind_fill: undefined | (() => void) = undefined;
@@ -629,6 +630,7 @@ export class ShapeView extends DataView {
     private _onBorderMaskChange() {
         this.m_borders = undefined;
         this.m_ctx.setDirty(this);
+        this.notify(['style', 'fills', 'mask']);
     }
 
     private m_unbind_border: undefined | (() => void) = undefined;
@@ -647,6 +649,7 @@ export class ShapeView extends DataView {
     private _onBorderFillMaskChange() {
         this.m_borders = undefined;
         this.m_ctx.setDirty(this);
+        this.notify(['style', 'fills', 'mask']);
     }
 
     private m_unbind_border_fill: undefined | (() => void) = undefined;
@@ -717,6 +720,7 @@ export class ShapeView extends DataView {
 
     private _onShadowMaskChange() {
         this.m_ctx.setDirty(this);
+        this.notify(['style', 'fills', 'mask']);
     }
 
     private m_unbind_shadow: undefined | (() => void) = undefined;
@@ -748,6 +752,7 @@ export class ShapeView extends DataView {
 
     private _onBlurMaskChange() {
         this.m_ctx.setDirty(this);
+        this.notify(['style', 'fills', 'mask']);
     }
 
     private m_unbind_blur: undefined | (() => void) = undefined;
