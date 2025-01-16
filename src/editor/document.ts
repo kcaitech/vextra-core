@@ -222,7 +222,7 @@ export class DocEditor {
     }
 
     insertStyleLib(style: StyleMangerMember, page: PageView, shapes?: ShapeView[]) {
-        const api = this.__repo.start('insertstylelib');
+        const api = this.__repo.start('insertStyleLib');
         try {
             api.styleInsert(this.__document, style);
             const p = this.__document.pagesMgr.getSync(page.id)
