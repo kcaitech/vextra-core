@@ -1551,6 +1551,10 @@ export class PageEditor {
 
                 let needUpdateFrame = false;
 
+                if (shape.radiusMask) {
+                    api.delradiusmask(this.__document, this.page, shape);
+                }
+
                 if (isRect) {
                     if (values.length !== 4) {
                         values = [values[0], values[0], values[0], values[0]];
@@ -2758,6 +2762,20 @@ export class PageEditor {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
                 api.addblurmask(this.__document, this.page, adapt2Shape(target), value);
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+
+    shapesSetRadiusMask(actions: BatchAction2[]) {
+        const api = this.__repo.start("shapesSetRadiusMask");
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                api.addradiusmask(this.__document, this.page, adapt2Shape(target), value);
             }
             this.__repo.commit();
         } catch (e) {
