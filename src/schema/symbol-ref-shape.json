@@ -37,9 +37,6 @@
         },
         "uniformScale": {
             "type": "number"
-        },
-        "autoLayout": {
-            "$ref": "./auto-layout.json"
         }
     },
     "required": [

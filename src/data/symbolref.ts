@@ -37,7 +37,6 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     innerEnvScale?: number
     // frameMaskDisabled?: boolean
     uniformScale?: number
-    autoLayout?: classes.AutoLayout
     constructor(
         crdtidx: BasicArray<number>,
         id: string,

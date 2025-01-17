@@ -1116,7 +1116,6 @@ export class SymbolRefShape extends Shape {
     cornerRadius?: CornerRadius
     innerEnvScale?: number
     uniformScale?: number
-    autoLayout?: AutoLayout
     constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style, size: ShapeSize, refId: string, variables: BasicMap<string, Variable>) {
         super(crdtidx, id, name, type, transform, style)
         this.size = size

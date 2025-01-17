@@ -1268,7 +1268,6 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
     if (source.cornerRadius !== undefined) ret.cornerRadius = exportCornerRadius(source.cornerRadius, ctx)
     if (source.innerEnvScale !== undefined) ret.innerEnvScale = source.innerEnvScale
     if (source.uniformScale !== undefined) ret.uniformScale = source.uniformScale
-    if (source.autoLayout !== undefined) ret.autoLayout = exportAutoLayout(source.autoLayout, ctx)
         // inject code
     if (ctx?.refsymbols) ctx.refsymbols.add(ret.refId);
 
