@@ -252,9 +252,11 @@ export class DocEditor {
                     }
                 }
                 if (style instanceof RadiusMask) {
+                    console.log('1111111222222');
+                    
                     for (let i = 0; i < shapes.length; i++) {
                         const shape = shapes[i];
-                        api.addbordermask(this.__document, p, adapt2Shape(shape), style.id);
+                        api.addradiusmask(this.__document, p, adapt2Shape(shape), style.id);
                     }
                 }
             }
