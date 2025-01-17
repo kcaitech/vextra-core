@@ -5,7 +5,7 @@ import { Api, CoopRepository } from "../../coop";
 import { modify_shapes_height, modify_shapes_width } from "../utils/common";
 import { Artboard, BorderSideSetting, Color, FillType, PathShape, Shape, ShapeType, SideType, SymbolRefShape, Transform } from "../../data/classes";
 import { RadiusType } from "../../data/consts";
-import { shape4border, shape4contextSettings, shape4cornerRadius, shape4fill, shape4shadow } from "../symbol";
+import { shape4Autolayout, shape4border, shape4contextSettings, shape4cornerRadius, shape4fill, shape4shadow } from "../symbol";
 import { update_frame_by_points } from "../utils/path";
 import { GroupShape, PathShape2, SymbolShape, TextShape } from "../../data/shape";
 import { BatchAction, BatchAction2, BatchAction5, PageEditor } from "../page";
@@ -728,7 +728,7 @@ export class LinearApi {
 
     reLayout(env: ArtboardView | SymbolView, sort: Map<string, number>) {
         this.execute('re-layout-linear', () => {
-            const parent = adapt2Shape(env) as GroupShape;
+            const parent = shape4Autolayout(this.api!, env, this._page) as GroupShape;
             const childs = parent.childs.filter(s => s.isVisible);
             const hidden_childs = parent.childs.filter(s => !s.isVisible);
             const shapesSorted: Shape[] = [...childs].sort((a, b) => sort.get(a.id)! < sort.get(b.id)! ? -1 : 1);

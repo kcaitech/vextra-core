@@ -1509,6 +1509,12 @@ export class ShapeEditor {
     deleteAutoLayout() {
         const api = this.__repo.start("deleteAutoLayout");
         try {
+            const childs = this.__shape.childs;
+            for (let i = 0; i < childs.length; i++) {
+                const child = childs[i];
+                api.shapeModifyX(this.__page, adapt2Shape(child), child.transform.translateX);
+                api.shapeModifyY(this.__page, adapt2Shape(child), child.transform.translateY);
+            }
             const shape = shape4Autolayout(api, this.__shape, this._page);
             api.shapeAutoLayout(this.__page, shape, undefined);
             this.__repo.commit();
