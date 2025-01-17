@@ -63,17 +63,17 @@ export class PathShapeView extends ShapeView {
             (this.parent as GroupShapeView).updateMaskMap();
             (this.parent as GroupShapeView).updateFrames();
         }
-        
+
         if (args.includes('transform') || args.includes('size') || args.includes('isVisible')) {
             // 执行父级自动布局
             const autoLayout = (this.parent as ArtboardView).autoLayout;
             if (autoLayout && this.parent) {
-                this.parentAutoLayout(autoLayout);
+                this.parent.m_ctx.setReLayout(this.parent);
             }
         } else if (args.includes('borders')) {
             const autoLayout = (this.parent as ArtboardView).autoLayout;
             if (this.parent && autoLayout?.bordersTakeSpace) {
-                this.parentAutoLayout(autoLayout);
+                this.parent.m_ctx.setReLayout(this.parent);
             }
         }
 
@@ -114,16 +114,6 @@ export class PathShapeView extends ShapeView {
         const masked = this.masked;
         if (masked) masked.notify('rerender-mask');
     }
-
-    parentAutoLayout(autoLayout: AutoLayout) {
-            const childs = this.parent!.childs.filter(c => c.isVisible);
-            if (childs.length) {
-                const parentFrame = this.parent!.frame;
-                const frame = new ShapeFrame(parentFrame.x, parentFrame.y, parentFrame.width, parentFrame.height);
-                (this.parent as ArtboardView)._autoLayout(autoLayout, frame);
-                this.parent!.m_ctx.setDirty(this.parent!);
-            }
-        }
 
     protected renderBorders(): EL[] {
         let borders = this.getBorders();
