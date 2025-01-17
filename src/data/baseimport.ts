@@ -1068,6 +1068,7 @@ export function importBorder(source: types.Border, ctx?: IImportContext): impl.B
         delete strokePaint.thickness;
         delete strokePaint.contextSettings;
         (source as any) = {
+            typeId: "border",
             borderStyle: source.borderStyle,
             cornerType: source.cornerType,
             position: source.position,
@@ -1186,6 +1187,7 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
                 strokePaints.push(strokePaint);
             }
             (source as any).borders = {
+                typeId: "border",
                 borderStyle: border.borderStyle,
                 cornerType: border.cornerType,
                 position: border.position,
@@ -1194,6 +1196,7 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
             }
         } else {
             (source.borders as any) = {
+                typeId: "border",
                 borderStyle: { gap: 0, length: 0 },
                 cornerType: types.CornerType.Miter,
                 position: types.BorderPosition.Inner,
@@ -1452,6 +1455,7 @@ export function importVariable(source: types.Variable, ctx?: IImportContext): im
         }
         const border = source.value[0] as any;
         source.value = {
+            typeId: "border",
             borderStyle: border.borderStyle,
             cornerType: border.cornerType,
             position: border.position,
