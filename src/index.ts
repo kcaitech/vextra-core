@@ -144,7 +144,8 @@ export {
     PathSegment,
     BorderMask,
     BorderMaskType,
-    StyleSheet
+    StyleSheet,
+    RadiusMask
 } from "./data"
 
 export {

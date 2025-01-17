@@ -32,6 +32,7 @@ import { ShapeView } from "../dataview";
 import { StyleSheet_variables } from "./typesdefine";
 import { v4 } from "uuid";
 import { cloneGradient } from "../io/cilpboard";
+import { RadiusType } from "./consts";
 
 export {
     GradientType,
@@ -488,8 +489,12 @@ export class StyleSheet extends Basic implements classes.StyleSheet {
                 const { position, sideSetting } = v.border;
                 const side = new BorderSideSetting(sideSetting.sideType, sideSetting.thicknessTop, sideSetting.thicknessLeft, sideSetting.thicknessBottom, sideSetting.thicknessRight);
                 const border = new BorderMaskType(position, side);
-                const borderMask = new BorderMask(v.crdtidx,sheetId, v4(), v.name, v.description, border);
+                const borderMask = new BorderMask(v.crdtidx, sheetId, v4(), v.name, v.description, border);
                 notifiable_variables.push(borderMask);
+            } else if (v instanceof classes.RadiusMask) {
+                const value = v.radius
+                const radiusmask = new RadiusMask(v.crdtidx, sheetId, v4(), v.name, v.description, value)
+                notifiable_variables.push(radiusmask)
             }
             // 还有其他的一些类型
         }
@@ -578,7 +583,7 @@ export class BorderMask extends WatchableObject implements classes.BorderMask {
     description: string;
     border: BorderMaskType;
 
-    constructor(crdtidx: BasicArray<number>,sheet: string, id: string, name: string, description: string, border: BorderMaskType) {
+    constructor(crdtidx: BasicArray<number>, sheet: string, id: string, name: string, description: string, border: BorderMaskType) {
         super();
         this.crdtidx = crdtidx;
         this.id = id;
