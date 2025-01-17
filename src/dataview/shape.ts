@@ -296,7 +296,6 @@ export function updateFrame(frame: ShapeFrame, x: number, y: number, w: number, 
 }
 
 export class ShapeView extends DataView {
-    radiusMask?: string;
     m_transform: Transform;
 
     _save_frame: ShapeFrame = new ShapeFrame(); // 对象内坐标系的大小 // 用于updateFrames判断frame是否变更
@@ -1564,6 +1563,10 @@ export class ShapeView extends DataView {
     }
     get uniformScale(): number | undefined {
         return undefined;
+    }
+
+    get radiusMask() {
+        return this.data.radiusMask;
     }
 
     get borderPath() {
