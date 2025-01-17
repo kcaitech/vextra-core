@@ -4,6 +4,7 @@ import {
     OvalShape,
     PathShape,
     PathShape2,
+    RadiusMask,
     ShapeFrame,
     ShapeType,
     Transform
@@ -109,7 +110,7 @@ export class PathShapeView extends ShapeView {
         if ((this.segments.length === 1 && !this.segments[0].isClosed) || this.segments.length > 1) {
             return renderLineBorders(elh, this.data.style, borders, this.startMarkerType, this.endMarkerType, this.getPathStr(), this.m_data);
         }
-        return renderBorders(elh, borders, this.frame, this.getPathStr(), this.m_data,this.radius);
+        return renderBorders(elh, borders, this.frame, this.getPathStr(), this.m_data, this.radius);
     }
 
     render(): number {
@@ -317,13 +318,25 @@ export class PathShapeView extends ShapeView {
     }
 
     get radius(): number[] {
-        let points: CurvePoint[] = [];
-        this.segments.forEach(i => points = points.slice(0).concat(i.points as CurvePoint[]));
-        const firstR = points[0]?.radius ?? 0;
-        for (const p of points) {
-            const radius = p.radius ?? 0;
-            if (radius !== p.radius) return [-1];
+        let _radius: number[];
+        if (this.radiusMask) {
+            const mgr = this.style.getStylesMgr()!;
+            const mask = mgr.getSync(this.radiusMask) as RadiusMask
+            _radius = [mask.radius[0]];
+            this.watchRadiusMask(mask);
+        } else {
+            this.unwatchRadiusMask();
+
+            let points: CurvePoint[] = [];
+            this.segments.forEach(i => points = points.slice(0).concat(i.points as CurvePoint[]));
+            const firstR = points[0]?.radius ?? 0;
+            for (const p of points) {
+                const radius = p.radius ?? 0;
+                if (radius !== p.radius) return _radius = [-1];
+            }
+            _radius = [firstR || (this.fixedRadius ?? 0)];
         }
-        return [firstR || (this.fixedRadius ?? 0)];
+        return _radius
+
     }
 }

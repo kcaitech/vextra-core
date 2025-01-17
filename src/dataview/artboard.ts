@@ -3,7 +3,7 @@ import { GroupShapeView } from "./groupshape";
 import { innerShadowId, renderBorders, renderFills } from "../render";
 import { objectId } from "../basic/objectid";
 import { render as clippathR } from "../render/clippath"
-import { AutoLayout, BorderPosition, CornerRadius, Page, ScrollBehavior, ShadowPosition, ShapeFrame, Transform, Artboard, BlurType, Shape, ShapeSize, SymbolRefShape, SymbolShape } from "../data";
+import { AutoLayout, BorderPosition, CornerRadius, Page, ScrollBehavior, ShadowPosition, ShapeFrame, Transform, Artboard, BlurType, Shape, ShapeSize, SymbolRefShape, SymbolShape, RadiusMask } from "../data";
 import { ShapeView, updateFrame } from "./shape";
 import { PageView } from "./page";
 
@@ -338,11 +338,21 @@ export class ArtboardView extends GroupShapeView {
     }
 
     get radius(): number[] {
-        return [
-            this.cornerRadius?.lt ?? 0,
-            this.cornerRadius?.rt ?? 0,
-            this.cornerRadius?.rb ?? 0,
-            this.cornerRadius?.lb ?? 0,
-        ];
+        let _radius: number[];
+        if (this.radiusMask) {
+            const mgr = this.style.getStylesMgr()!;
+            const mask = mgr.getSync(this.radiusMask) as RadiusMask
+            _radius = mask.radius;
+            this.watchRadiusMask(mask);
+        } else {
+            _radius = [
+                this.cornerRadius?.lt ?? 0,
+                this.cornerRadius?.rt ?? 0,
+                this.cornerRadius?.rb ?? 0,
+                this.cornerRadius?.lb ?? 0,
+            ]
+            this.unwatchRadiusMask();
+        }
+        return _radius
     }
 }

@@ -3,7 +3,8 @@ import { innerShadowId, renderBorders, renderFills } from "../render";
 import { EL, elh } from "./el";
 import {
     CornerRadius, Shape, ShapeFrame, ShapeType, SymbolShape, AutoLayout, BorderPosition, Page, ShadowPosition, BlurType,
-    ShapeSize
+    ShapeSize,
+    RadiusMask
 } from "../data";
 import { VarsContainer } from "./viewctx";
 import { DataView, RootView } from "./view"
@@ -51,7 +52,7 @@ export class SymbolView extends GroupShapeView {
     }
     // borders
     protected renderBorders(): EL[] {
-        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.data,this.radius);
+        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.data, this.radius);
     }
 
     protected _layout(parentFrame: ShapeSize | undefined, scale: { x: number; y: number; } | undefined): void {
@@ -200,13 +201,24 @@ export class SymbolView extends GroupShapeView {
         return changed;
     }
 
-    get radius(): number[] { // todo 实例的圆角
-        return [
-            this.cornerRadius?.lt ?? 0,
-            this.cornerRadius?.rt ?? 0,
-            this.cornerRadius?.rb ?? 0,
-            this.cornerRadius?.lb ?? 0,
-        ];
+    get radius(): number[] {
+        let _radius: number[];
+        if (this.radiusMask) {
+            const mgr = this.style.getStylesMgr()!;
+            const mask = mgr.getSync(this.radiusMask) as RadiusMask
+            _radius = mask.radius;
+            this.watchRadiusMask(mask);
+        } else {
+            _radius = [
+                this.cornerRadius?.lt ?? 0,
+                this.cornerRadius?.rt ?? 0,
+                this.cornerRadius?.rb ?? 0,
+                this.cornerRadius?.lb ?? 0,
+            ]
+            this.unwatchRadiusMask();
+        }
+        return _radius
+
     }
 
     render(): number {

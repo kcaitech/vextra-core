@@ -1335,12 +1335,12 @@ export class ShapeView extends DataView {
     private m_unbind_Radius: undefined | (() => void) = undefined;
     private onRadiusMaskChange = this._onRadiusMaskChange.bind(this);
 
-    private watchRadiusMask(mask: RadiusMask) {
+    protected watchRadiusMask(mask: RadiusMask) {
         this.m_unbind_Radius?.();
         this.m_unbind_Radius = mask.watch(this.onRadiusMaskChange);
     }
 
-    private unwatchRadiusMask() {
+    protected unwatchRadiusMask() {
         this.m_unbind_Radius?.();
     }
 
@@ -1355,7 +1355,6 @@ export class ShapeView extends DataView {
             _radius = [this.fixedRadius ?? 0]
             this.unwatchRadiusMask();
         }
-        // todo if (this.radiusMask) {}
         return _radius
     }
 

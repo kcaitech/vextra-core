@@ -1086,6 +1086,9 @@ export function importRadiusMask(source: types.RadiusMask, ctx?: IImportContext)
         source.name,
         source.description,
         importRadius(source.radius, ctx))
+        // inject code
+    if (ctx?.document) ctx.document.stylesMgr.add(ret.id, ret);
+
     return ret
 }
 /* shadow mask */
