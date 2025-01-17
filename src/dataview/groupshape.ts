@@ -1,9 +1,10 @@
-import { GroupShape, Shape, ShapeFrame, ShapeSize, ShapeType, SymbolRefShape, SymbolShape } from "../data";
+import { Artboard, GroupShape, Shape, ShapeFrame, ShapeSize, ShapeType, SymbolRefShape, SymbolShape } from "../data";
 import { ShapeView, updateFrame } from "./shape";
 import { getShapeViewId } from "./basic";
 import { EL } from "./el";
 import { DataView, RootView } from "./view";
 import { DViewCtx, PropsType, VarsContainer } from "./viewctx";
+import { ArtboardView } from "./artboard";
 
 export class GroupShapeView extends ShapeView {
 
@@ -69,6 +70,15 @@ export class GroupShapeView extends ShapeView {
         if (args.includes('childs')) {
             this.updateMaskMap();
             this.m_need_updatechilds = true;
+        }
+
+        if (args.includes('autoLayout') && !(this.data as Artboard).autoLayout) {
+            this.childs.forEach(c => {
+                c.m_ctx.setDirty(c);
+                const newTransform = c.data.transform.clone();
+                c.updateLayoutArgs(newTransform, c.frame, c.fixedRadius);
+                c.updateFrames();
+            });
         }
     }
 

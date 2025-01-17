@@ -292,7 +292,7 @@ export class SymbolRefView extends ShapeView {
             // 保持对象位置不变
             // virtual是整体缩放，位置是会变化的，不需要trans
             if (!this.m_isVirtual) transform.trans(transform.translateX - shape.transform.translateX, transform.translateY - shape.transform.translateY);
-            
+
             if (this.parent && (this.parent as ArtboardView).autoLayout) {
                 transform.translateX = this.m_transform.translateX;
                 transform.translateY = this.m_transform.translateY;
@@ -316,11 +316,12 @@ export class SymbolRefView extends ShapeView {
         childscale.y = layoutSize.height / this.m_sym.size.height;
         this.layoutChilds(layoutSize, childscale);
         const childs = this.childs.filter(c => c.isVisible);
-        if (autoLayout && childs.length) this._autoLayout(autoLayout, layoutSize)
+        if (autoLayout && childs.length && this.m_sym.autoLayout) this._autoLayout(autoLayout, layoutSize);
         this.updateFrames();
     }
 
-    private _autoLayout(autoLayout: AutoLayout, layoutSize: ShapeSize) {
+    _autoLayout(autoLayout: AutoLayout, layoutSize: ShapeSize) {
+        if (this instanceof SymbolRefView && !this.symData?.autoLayout) return;
         const childs = this.childs.filter(c => c.isVisible);
         const layout = updateAutoLayout(childs, autoLayout, layoutSize);
         let hidden = 0;
@@ -330,7 +331,7 @@ export class SymbolRefView extends ShapeView {
             const index = Math.min(i - hidden, layout.length - 1);
             newTransform.translateX = layout[index].x;
             newTransform.translateY = layout[index].y;
-            if (!cc.isVisible) { 
+            if (!cc.isVisible) {
                 hidden += 1;
             }
             cc.m_ctx.setDirty(cc);

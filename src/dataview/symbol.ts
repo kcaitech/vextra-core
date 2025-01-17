@@ -67,7 +67,8 @@ export class SymbolView extends GroupShapeView {
 
         super._layout(parentFrame, scale);
         const childs = this.childs.filter(c => c.isVisible);
-        if (childs.length) this._autoLayout(autoLayout, this.m_frame);
+        const frame = new ShapeFrame(this.m_frame.x, this.m_frame.y, this.m_frame.width, this.m_frame.height);
+        if (childs.length) this._autoLayout(autoLayout, frame);
     }
 
     private _autoLayout(autoLayout: AutoLayout, layoutSize: ShapeSize) {

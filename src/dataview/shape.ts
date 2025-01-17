@@ -900,6 +900,7 @@ export class ShapeView extends DataView {
             transform.translateX = this.m_transform.translateX;
             transform.translateY = this.m_transform.translateY;
         }
+        
         // case 1 不需要变形
         if (!scale || isEqual(scale.x, 1) && isEqual(scale.y, 1)) {
             let frame = this.frame;
@@ -907,9 +908,6 @@ export class ShapeView extends DataView {
             this.updateLayoutArgs(transform, frame, (shape as PathShape).fixedRadius);
             this.layoutChilds(this.frame);
             this.updateFrames();
-            if (this.parent && (this.parent as ArtboardView).autoLayout) {
-
-            }
             return;
         }
 
