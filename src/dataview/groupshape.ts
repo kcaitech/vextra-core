@@ -74,10 +74,7 @@ export class GroupShapeView extends ShapeView {
 
         if (args.includes('autoLayout') && !(this.data as Artboard).autoLayout) {
             this.childs.forEach(c => {
-                c.m_ctx.setDirty(c);
-                const newTransform = c.data.transform.clone();
-                c.updateLayoutArgs(newTransform, c.frame, c.fixedRadius);
-                c.updateFrames();
+                c.m_ctx.setReLayout(c);
             });
         }
     }
