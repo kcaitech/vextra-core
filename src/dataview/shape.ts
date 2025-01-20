@@ -1156,7 +1156,7 @@ export class ShapeView extends DataView {
         const fills = this.renderFills();
         const borders = this.renderBorders();
         let childs = this.renderContents();
-        const autoInfo = (this.m_data as SymbolShape).autoLayout;
+        const autoInfo = (this as any).autoLayout;
         if (autoInfo && autoInfo.stackReverseZIndex) {
             childs = childs.reverse();
         }
@@ -1218,7 +1218,7 @@ export class ShapeView extends DataView {
     renderStatic() {
         const fills = this.renderFills() || [];
         let childs = this.renderContents();
-        const autoInfo = (this.m_data as SymbolShape).autoLayout;
+        const autoInfo = (this as any).autoLayout;
         if (autoInfo && autoInfo.stackReverseZIndex) {
             childs = childs.reverse();
         }
