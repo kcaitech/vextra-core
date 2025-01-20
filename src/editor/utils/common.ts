@@ -6,8 +6,8 @@ import { Artboard, Document, PathShape, ShapeFrame, Page } from "../../data";
 import { Point2D, StackSizing } from "../../data/typesdefine";
 import { float_accuracy } from "../../basic/consts";
 import { reLayoutBySizeChanged } from "../asyncapi";
-import { adapt2Shape, ArtboardView, GroupShapeView, ShapeView } from "../../dataview";
-import { getAutoLayoutShapes, modifyAutoLayout } from "./auto_layout";
+import { adapt2Shape, ArtboardView, GroupShapeView, PageView, ShapeView } from "../../dataview";
+import { shape4Autolayout } from "../symbol";
 
 function equal_with_mean(a: number, b: number) {
     return Math.abs(a - b) < float_accuracy;
@@ -64,17 +64,13 @@ export function modify_shapes_width(api: Api, document: Document, page: Page, sh
         }
         const origin_h = view.frame.height;
         expandTo(api, document, page, shape, val, h);
-        if ((shape as Artboard).autoLayout) {
-            api.shapeModifyAutoLayoutSizing(page, shape, StackSizing.Fixed, 'hor');
+        if ((view as ArtboardView).autoLayout) {
+            const _shape = shape4Autolayout(api, view, view.getPage() as PageView);
+            api.shapeModifyAutoLayoutSizing(page, _shape, StackSizing.Fixed, 'hor');
         }
         if (view instanceof GroupShapeView) {
             reLayoutBySizeChanged(api, page, view, { x: val / w, y: h / origin_h });
         }
-    }
-    const parents = getAutoLayoutShapes(shapes);
-    for (let i = 0; i < parents.length; i++) {
-        const parent = parents[i];
-        modifyAutoLayout(page, api, parent);
     }
 }
 
@@ -98,8 +94,9 @@ export function modify_shapes_height(api: Api, document: Document, page: Page, s
 
         const origin_w = view.frame.width;
         expandTo(api, document, page, shape, w, val);
-        if ((shape as Artboard).autoLayout) {
-            api.shapeModifyAutoLayoutSizing(page, shape, StackSizing.Fixed, 'ver');
+        if ((view as ArtboardView).autoLayout) {
+            const _shape = shape4Autolayout(api, view, view.getPage() as PageView);
+            api.shapeModifyAutoLayoutSizing(page, _shape, StackSizing.Fixed, 'ver');
         }
         if (view instanceof GroupShapeView) {
             reLayoutBySizeChanged(api, page, view, {
@@ -107,11 +104,6 @@ export function modify_shapes_height(api: Api, document: Document, page: Page, s
                 y: val / h
             });
         }
-    }
-    const parents = getAutoLayoutShapes(shapes);
-    for (let i = 0; i < parents.length; i++) {
-        const parent = parents[i];
-        modifyAutoLayout(page, api, parent);
     }
 }
 

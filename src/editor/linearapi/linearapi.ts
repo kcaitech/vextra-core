@@ -3,16 +3,16 @@ import { adapt2Shape, ArtboardView, PageView, ShapeView, SymbolRefView, SymbolVi
 import { modifyPathByArc } from "../asyncapi";
 import { Api, CoopRepository } from "../../coop";
 import { modify_shapes_height, modify_shapes_width } from "../utils/common";
-import { Artboard, BorderSideSetting, Color, FillType, PathShape, ShapeType, SideType, SymbolRefShape, Transform } from "../../data/classes";
+import { Artboard, BorderSideSetting, Color, FillType, PathShape, Shape, ShapeType, SideType, SymbolRefShape, Transform } from "../../data/classes";
 import { RadiusType } from "../../data/consts";
-import { shape4border, shape4contextSettings, shape4cornerRadius, shape4fill, shape4shadow } from "../symbol";
+import { shape4Autolayout, shape4border, shape4contextSettings, shape4cornerRadius, shape4fill, shape4shadow } from "../symbol";
 import { update_frame_by_points } from "../utils/path";
 import { GroupShape, PathShape2, SymbolShape, TextShape } from "../../data/shape";
 import { BatchAction, BatchAction2, BatchAction5, PageEditor } from "../page";
 import { importGradient, } from "../../data/baseimport";
 import { exportGradient, } from "../../data/baseexport";
 import { TableEditor } from "../table";
-import { getAutoLayoutShapes, modifyAutoLayout, reLayoutBySort, TidyUpAlgin, tidyUpLayout } from "../utils/auto_layout";
+import { TidyUpAlgin, tidyUpLayout } from "../utils/auto_layout";
 import { TextShapeEditor } from "../textshape";
 
 /**
@@ -473,10 +473,8 @@ export class LinearApi {
         this.execute('modify-shapes-border-Thickness', () => {
             const api = this.api!;
             const page = this.page;
-            const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                shapes.push(target);
                 const s = shape4border(api, this._page, target);
                 const borders = target.getBorders();
                 const sideType = borders.sideSetting.sideType;
@@ -502,13 +500,6 @@ export class LinearApi {
                 }
 
             }
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                if (parent.autoLayout?.bordersTakeSpace) {
-                    modifyAutoLayout(page, api, parent);
-                }
-            }
         });
     }
 
@@ -516,19 +507,10 @@ export class LinearApi {
         this.execute('modify-border-thickness-top', () => {
             const api = this.api!;
             const page = this.page;
-            const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                shapes.push(target);
                 const s = shape4border(api, this._page, target);
                 api.setBorderThicknessTop(page, s, value);
-            }
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                if (parent.autoLayout?.bordersTakeSpace) {
-                    modifyAutoLayout(page, api, parent);
-                }
             }
         })
     }
@@ -537,19 +519,10 @@ export class LinearApi {
         this.execute('modify-border-thickness-bottom', () => {
             const api = this.api!;
             const page = this.page;
-            const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                shapes.push(target);
                 const s = shape4border(api, this._page, target);
                 api.setBorderThicknessBottom(page, s, value);
-            }
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                if (parent.autoLayout?.bordersTakeSpace) {
-                    modifyAutoLayout(page, api, parent);
-                }
             }
         })
     }
@@ -558,19 +531,10 @@ export class LinearApi {
         this.execute('modify-border-thickness-left', () => {
             const api = this.api!;
             const page = this.page;
-            const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                shapes.push(target);
                 const s = shape4border(api, this._page, target);
                 api.setBorderThicknessLeft(page, s, value);
-            }
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                if (parent.autoLayout?.bordersTakeSpace) {
-                    modifyAutoLayout(page, api, parent);
-                }
             }
         })
     }
@@ -579,19 +543,10 @@ export class LinearApi {
         this.execute('modify-border-thickness-right', () => {
             const api = this.api!;
             const page = this.page;
-            const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                shapes.push(target);
                 const s = shape4border(api, this._page, target);
                 api.setBorderThicknessRight(page, s, value);
-            }
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                if (parent.autoLayout?.bordersTakeSpace) {
-                    modifyAutoLayout(page, api, parent);
-                }
             }
         })
     }
@@ -773,7 +728,17 @@ export class LinearApi {
 
     reLayout(env: ArtboardView | SymbolView, sort: Map<string, number>) {
         this.execute('re-layout-linear', () => {
-            reLayoutBySort(this.page, this.api!, adapt2Shape(env) as Artboard, sort);
+            const parent = shape4Autolayout(this.api!, env, this._page) as GroupShape;
+            const childs = parent.childs.filter(s => s.isVisible);
+            const hidden_childs = parent.childs.filter(s => !s.isVisible);
+            const shapesSorted: Shape[] = [...childs].sort((a, b) => sort.get(a.id)! < sort.get(b.id)! ? -1 : 1);
+            shapesSorted.unshift(...hidden_childs);
+            for (let i = 0; i < shapesSorted.length; i++) {
+                const s = shapesSorted[i];
+                const currentIndex = parent.indexOfChild(s);
+                if(currentIndex === i || !s.isVisible) continue;
+                this.api!.shapeMove(this.page, parent, currentIndex, parent, i);
+            }
         });
     }
 

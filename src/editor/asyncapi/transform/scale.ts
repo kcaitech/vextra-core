@@ -35,7 +35,6 @@ import { fixTextShapeFrameByLayout } from "../../utils/other";
 import { Transform as Transform2 } from "../../../basic/transform";
 import { ColVector3D } from "../../../basic/matrix2";
 import { XYsBounding } from "../../../io/cilpboard";
-import { getAutoLayoutShapes, modifyAutoLayout } from "../../utils/auto_layout";
 
 export type RangeRecorder = Map<string, {
     toRight?: number,
@@ -113,10 +112,7 @@ export function reLayoutBySizeChanged(
                 reLayoutBySizeChanged(api, page, child, _scale, rangeRecorder, sizeRecorder, transformRecorder);
             }
         }
-    } else if ((shape as ArtboardView).autoLayout) {
-        const __shape = adapt2Shape(shape);
-        modifyAutoLayout(page, api, __shape);
-    } else {
+    } else if (!(shape as ArtboardView).autoLayout) {
         // 除去编组，其他容器级别的图层需要根据具体是约束状态进行重新布局
         for (const child of children) {
             const resizingConstraint = child.resizingConstraint ?? 0;
@@ -751,10 +747,8 @@ export class Scaler extends AsyncApiCaller {
             const recorder = this.recorder;
             const sizeRecorder = this.sizeRecorder;
             const transformRecorder = this.transformRecorder;
-            const shapes: ShapeView[] = [];
             for (let i = 0; i < params.length; i++) {
                 const item = params[i];
-                shapes.push(item.shape);
                 const shape = adapt2Shape(item.shape);
                 if (shape instanceof TextShape) {
                     this.fixTextSize(item.shape as TextShapeView, item.size as ShapeSize);
@@ -779,11 +773,6 @@ export class Scaler extends AsyncApiCaller {
                 if (shape instanceof SymbolRefShape && !shape.isCustomSize) {
                     api.shapeModifyIsCustomSize(page, shape, true);
                 }
-            }
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                modifyAutoLayout(this.page, api, parent);
             }
             this.updateView();
         } catch (error) {

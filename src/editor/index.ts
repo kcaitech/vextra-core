@@ -12,6 +12,7 @@ import { PageView, ShapeView, TableCellView, TableView, TextShapeView } from "..
 import { Page } from "../data/page";
 
 export * from "./utils/auto_layout"
+export * from "./utils/auto_layout2"
 
 export { DocEditor } from "./document";
 export { PageEditor } from "./page";

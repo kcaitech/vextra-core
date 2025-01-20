@@ -173,11 +173,6 @@ import { FMT_VER_latest } from "../data/fmtver";
 import { ColVector3D } from "../basic/matrix2";
 import { Transform as Transform2 } from "../basic/transform";
 import {
-    getAutoLayoutShapes,
-    initAutoLayout,
-    layoutShapesOrder,
-    layoutSpacing,
-    modifyAutoLayout,
     TidyUpAlgin,
     tidyUpLayout
 } from "./utils/auto_layout";
@@ -187,6 +182,7 @@ import { modifyRadius, modifyStartingAngle, modifySweep, uniformScale, UniformSc
 import { Path } from "@kcdesign/path";
 import { assign } from "./asyncapi";
 import { prepareVar } from "./symbol_utils";
+import { layoutShapesOrder2, layoutSpacing } from "./utils/auto_layout2";
 
 // 用于批量操作的单个操作类型
 export interface PositionAdjust { // 涉及属性：frame.x、frame.y
@@ -371,11 +367,6 @@ export class PageEditor {
             const saveidx = savep.indexOfChild(adapt2Shape(shapes[0]));
 
             gshape = group(this.__document, this.page, shapes.map(s => adapt2Shape(s)), gshape, savep, saveidx, api);
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                modifyAutoLayout(this.page, api, parent);
-            }
             this.__repo.commit();
             return gshape;
         } catch (e) {
@@ -387,7 +378,6 @@ export class PageEditor {
 
     ungroup(shapes: GroupShapeView[]): false | Shape[] {
         const childrens: Shape[] = [];
-        const parents = getAutoLayoutShapes(shapes);
         const api = this.__repo.start("ungroup", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
             const state = {} as SelectionState;
             if (!isUndo) state.shapes = childrens.map(s => s.id);
@@ -401,10 +391,6 @@ export class PageEditor {
                 if (!shape.parent) continue;
                 const childs = ungroup(this.__document, this.page, adapt2Shape(shape) as GroupShape, api);
                 childrens.push(...childs);
-            }
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                modifyAutoLayout(this.page, api, parent);
             }
             this.__repo.commit();
             return childrens.length > 0 ? childrens : false;
@@ -439,11 +425,6 @@ export class PageEditor {
             const saveidx = savep.indexOfChild(adapt2Shape(shapes[0]));
             // 1、新建一个GroupShape
             artboard = group(this.__document, this.page, shapes.map(s => adapt2Shape(s)), artboard, savep, saveidx, api) as Artboard;
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                modifyAutoLayout(this.page, api, parent);
-            }
             this.__repo.commit();
             return artboard;
         } catch (e) {
@@ -462,17 +443,12 @@ export class PageEditor {
             selection.restore(state);
         });
         try {
-            const parents = getAutoLayoutShapes(shapes);
             for (let i = 0; i < shapes.length; i++) {
                 const shape = shapes[i];
                 if (shape.isVirtualShape) continue;
                 if (!shape.parent) continue;
                 const childs = ungroup(this.__document, this.page, adapt2Shape(shape) as Artboard, api);
                 childrens.push(...childs);
-            }
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                modifyAutoLayout(this.page, api, parent);
             }
             this.__repo.commit();
             return childrens.length > 0 ? childrens : false;
@@ -488,10 +464,10 @@ export class PageEditor {
         if (shapes.find((v) => !v.parent)) return false;
         const fshape = adapt2Shape(shapes[0]);
         const savep = fshape.parent as GroupShape;
-        const shapes_rows = layoutShapesOrder(shapes.map(s => adapt2Shape(s)), false);
+        const shapes_rows = layoutShapesOrder2(shapes, false);
         const { hor, ver } = layoutSpacing(shapes_rows);
         const ver_auto = shapes_rows.length === 1 || shapes_rows.every(s => s.length === 1) ? types.StackSizing.Auto : types.StackSizing.Fixed;
-        const layoutInfo = new AutoLayout(hor, ver, 0, 0, 0, 0, ver_auto);
+        const layoutInfo = new AutoLayout(hor, ver, 10, 10, 10, 10, ver_auto);
         if (shapes_rows.length === 1) {
             layoutInfo.stackWrap = types.StackWrap.NoWrap;
             layoutInfo.stackMode = types.StackMode.Horizontal;
@@ -511,11 +487,12 @@ export class PageEditor {
         });
         try {
             const saveidx = savep.indexOfChild(adapt2Shape(shapes[0]));
-            artboard = group(this.__document, this.page, shapes.map(s => adapt2Shape(s)), artboard, savep, saveidx, api) as Artboard;
-            const frame = initAutoLayout(this.page, api, artboard, shapes_rows);
-            if (frame) {
-                api.shapeModifyWH(this.page, artboard, frame.width, frame.height);
+            const childs = shapes_rows.flat();
+            if(shapes.length !== childs.length) {
+                const hiddenChilds = shapes.filter(c => !c.isVisible);
+                childs.push(...hiddenChilds);
             }
+            artboard = group(this.__document, this.page, childs.map(s => adapt2Shape(s)), artboard, savep, saveidx, api) as Artboard;
             this.__repo.commit();
             return artboard;
         } catch (e) {
@@ -777,6 +754,26 @@ export class PageEditor {
 
                     api.shapeMove(page, parent, parent.indexOfChild(symbol), page, page.childs.length);
                     api.shapeModifyTransform(page, symbol, makeShapeTransform1By2(makeShapeTransform2By1(om)));
+
+                    const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                    if (_types.includes(parent.type)) {
+                        const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                        const sortedArr = [...parent.childs].sort((a, b) => {
+                            if (a.scrollBehavior !== Fixed && b.scrollBehavior === Fixed) {
+                                return -1;
+                            } else if (a.scrollBehavior === Fixed && b.scrollBehavior !== Fixed) {
+                                return 1;
+                            }
+                            return 0;
+                        });
+                        for (let j = 0; j < sortedArr.length; j++) {
+                            const s = sortedArr[j];
+                            const currentIndex = parent.childs.indexOf(s);
+                            if (currentIndex !== j) {
+                                api.shapeMove(this.page, parent, currentIndex, parent, j);
+                            }
+                        }
+                    }
                 }
             }
 
@@ -868,6 +865,25 @@ export class PageEditor {
             modify_frame_after_inset_state(this.page, api, union);
             init_state(api, this.page, new_state as SymbolShape, dlt);
 
+            const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+            if (_types.includes(union.type)) {
+                const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                const sortedArr = [...union.childs].sort((a, b) => {
+                    if (a.scrollBehavior !== Fixed && b.scrollBehavior === Fixed) {
+                        return -1;
+                    } else if (a.scrollBehavior === Fixed && b.scrollBehavior !== Fixed) {
+                        return 1;
+                    }
+                    return 0;
+                });
+                for (let j = 0; j < sortedArr.length; j++) {
+                    const s = sortedArr[j];
+                    const currentIndex = union.childs.indexOf(s);
+                    if (currentIndex !== j) {
+                        api.shapeMove(this.page, union, currentIndex, union, j);
+                    }
+                }
+            }
             if (new_state) {
                 this.__repo.commit();
                 return new_state as any as SymbolShape;
@@ -938,6 +954,27 @@ export class PageEditor {
                 const { parent, self, insertIndex } = actions[i];
                 const ret = api.shapeInsert(this.__document, this.page, parent as GroupShape, self, insertIndex);
                 api.shapeDelete(this.__document, this.page, parent as GroupShape, insertIndex + 1);
+
+                const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                if (_types.includes(parent.type)) {
+                    const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                    const sortedArr = [...(parent as GroupShape).childs].sort((a, b) => {
+                        if (a.scrollBehavior !== Fixed && b.scrollBehavior === Fixed) {
+                            return -1;
+                        } else if (a.scrollBehavior === Fixed && b.scrollBehavior !== Fixed) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+                    for (let j = 0; j < sortedArr.length; j++) {
+                        const s = sortedArr[j];
+                        const currentIndex = (parent as GroupShape).childs.indexOf(s);
+                        if (currentIndex !== j) {
+                            api.shapeMove(this.page, parent as GroupShape, currentIndex, parent as GroupShape, j);
+                        }
+                    }
+                }
+
                 results.push(ret);
             }
             this.__repo.commit();
@@ -1082,6 +1119,25 @@ export class PageEditor {
                 }
             }
             update_frame_by_points(api, this.page, pathShape);
+            const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+            if (_types.includes(savep.type)) {
+                const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                const sortedArr = [...savep.childs].sort((a, b) => {
+                    if (a.scrollBehavior !== Fixed && b.scrollBehavior === Fixed) {
+                        return -1;
+                    } else if (a.scrollBehavior === Fixed && b.scrollBehavior !== Fixed) {
+                        return 1;
+                    }
+                    return 0;
+                });
+                for (let j = 0; j < sortedArr.length; j++) {
+                    const s = sortedArr[j];
+                    const currentIndex = savep.childs.indexOf(s);
+                    if (currentIndex !== j) {
+                        api.shapeMove(this.page, savep, currentIndex, savep, j);
+                    }
+                }
+            }
             this.__repo.commit();
             return pathShape;
         } catch (e) {
@@ -1128,7 +1184,25 @@ export class PageEditor {
 
             api.shapeDelete(this.__document, this.page, parent, index);
             pathShape = api.shapeInsert(this.__document, this.page, parent, pathShape, index) as PathShape;
-
+            const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+            if (_types.includes(parent.type)) {
+                const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                const sortedArr = [...parent.childs].sort((a, b) => {
+                    if (a.scrollBehavior !== Fixed && b.scrollBehavior === Fixed) {
+                        return -1;
+                    } else if (a.scrollBehavior === Fixed && b.scrollBehavior !== Fixed) {
+                        return 1;
+                    }
+                    return 0;
+                });
+                for (let j = 0; j < sortedArr.length; j++) {
+                    const s = sortedArr[j];
+                    const currentIndex = parent.childs.indexOf(s);
+                    if (currentIndex !== j) {
+                        api.shapeMove(this.page, parent, currentIndex, parent, j);
+                    }
+                }
+            }
             this.__repo.commit();
             return pathShape;
         } catch (e) {
@@ -1178,6 +1252,25 @@ export class PageEditor {
             api.shapeDelete(this.__document, this.page, _parent, saveidx);
             pathShape = api.shapeInsert(this.__document, this.page, _parent, pathShape, saveidx) as PathShape;
             update_frame_by_points(api, this.page, pathShape);
+            const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+            if (_types.includes(_parent.type)) {
+                const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                const sortedArr = [..._parent.childs].sort((a, b) => {
+                    if (a.scrollBehavior !== Fixed && b.scrollBehavior === Fixed) {
+                        return -1;
+                    } else if (a.scrollBehavior === Fixed && b.scrollBehavior !== Fixed) {
+                        return 1;
+                    }
+                    return 0;
+                });
+                for (let j = 0; j < sortedArr.length; j++) {
+                    const s = sortedArr[j];
+                    const currentIndex = _parent.childs.indexOf(s);
+                    if (currentIndex !== j) {
+                        api.shapeMove(this.page, _parent, currentIndex, _parent, j);
+                    }
+                }
+            }
             this.__repo.commit();
             return pathShape;
         } catch (e) {
@@ -1337,11 +1430,6 @@ export class PageEditor {
                 return false;
             }
         }
-        const parents = getAutoLayoutShapes(shapes);
-        for (let i = 0; i < parents.length; i++) {
-            const parent = parents[i];
-            modifyAutoLayout(this.page, api, parent);
-        }
         if (need_special_notify) {
             this.__document.__correspondent.notify('update-symbol-list');
         }
@@ -1368,6 +1456,25 @@ export class PageEditor {
         try {
             api.shapeInsert(this.__document, this.page, parent, shape, index);
             shape = parent.childs[index];
+            const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+            if (_types.includes(parent.type)) {
+                const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                const sortedArr = [...parent.childs].sort((a, b) => {
+                    if (a.scrollBehavior !== Fixed && b.scrollBehavior === Fixed) {
+                        return -1;
+                    } else if (a.scrollBehavior === Fixed && b.scrollBehavior !== Fixed) {
+                        return 1;
+                    }
+                    return 0;
+                });
+                for (let j = 0; j < sortedArr.length; j++) {
+                    const s = sortedArr[j];
+                    const currentIndex = parent.childs.indexOf(s);
+                    if (currentIndex !== j) {
+                        api.shapeMove(this.page, parent, currentIndex, parent, j);
+                    }
+                }
+            }
             this.__repo.commit();
             return shape;
         } catch (e) {
@@ -1397,6 +1504,25 @@ export class PageEditor {
                     updateShapeTransform1By2(shape.transform, transform2);
                 }
                 const s = api.shapeInsert(document, page, parent, shape, action.index ?? parent.childs.length);
+                const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                if (_types.includes(parent.type)) {
+                    const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                    const sortedArr = [...parent.childs].sort((a, b) => {
+                        if (a.scrollBehavior !== Fixed && b.scrollBehavior === Fixed) {
+                            return -1;
+                        } else if (a.scrollBehavior === Fixed && b.scrollBehavior !== Fixed) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+                    for (let j = 0; j < sortedArr.length; j++) {
+                        const s = sortedArr[j];
+                        const currentIndex = parent.childs.indexOf(s);
+                        if (currentIndex !== j) {
+                            api.shapeMove(this.page, parent, currentIndex, parent, j);
+                        }
+                    }
+                }
                 ids.push(s.id);
                 const name = assign(s);
                 if (name !== shape.name) api.shapeModifyName(page, s, name);
@@ -1434,6 +1560,25 @@ export class PageEditor {
                 result.push(parent.childs[index]);
                 index++;
             }
+            const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+            if (_types.includes(parent.type)) {
+                const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                const sortedArr = [...parent.childs].sort((a, b) => {
+                    if (a.scrollBehavior !== Fixed && b.scrollBehavior === Fixed) {
+                        return -1;
+                    } else if (a.scrollBehavior === Fixed && b.scrollBehavior !== Fixed) {
+                        return 1;
+                    }
+                    return 0;
+                });
+                for (let j = 0; j < sortedArr.length; j++) {
+                    const s = sortedArr[j];
+                    const currentIndex = parent.childs.indexOf(s);
+                    if (currentIndex !== j) {
+                        api.shapeMove(this.page, parent, currentIndex, parent, j);
+                    }
+                }
+            }
             // modify_frame_after_insert(api, this.__page, result);
             // const frame = get_frame(result);
             this.__repo.commit();
@@ -1469,7 +1614,28 @@ export class PageEditor {
                 const name = assign(__shape);
                 api.shapeModifyName(this.page, __shape, name);
                 result.push(parent.childs[index]);
+
+                const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                if (_types.includes(parent.type)) {
+                    const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                    const sortedArr = [...parent.childs].sort((a, b) => {
+                        if (a.scrollBehavior !== Fixed && b.scrollBehavior === Fixed) {
+                            return -1;
+                        } else if (a.scrollBehavior === Fixed && b.scrollBehavior !== Fixed) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+                    for (let j = 0; j < sortedArr.length; j++) {
+                        const s = sortedArr[j];
+                        const currentIndex = parent.childs.indexOf(s);
+                        if (currentIndex !== j) {
+                            api.shapeMove(this.page, parent, currentIndex, parent, j);
+                        }
+                    }
+                }
             }
+
             this.__repo.commit();
             return result;
         } catch (error) {
@@ -1504,7 +1670,12 @@ export class PageEditor {
                 const { env, shapes } = actions[i];
                 for (let j = 0; j < shapes.length; j++) {
                     let index = env.childs.length;
-
+                    const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                    if (_types.includes(env.type)) {
+                        const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                        const fixed_index = env.childs.findIndex(s => s.scrollBehavior === Fixed);
+                        index = fixed_index === -1 ? env.childs.length : fixed_index;
+                    }
                     const __shape = api.shapeInsert(this.__document, this.page, env, shapes[j], index);
                     const name = assign(__shape);
                     api.shapeModifyName(this.page, __shape, name);
@@ -1662,7 +1833,6 @@ export class PageEditor {
         const m_p2r = parent.matrix2Root();
         const api = this.__repo.start("create2");
         try {
-            const index = parent.childs.length;
             const xy = m_p2r.computeCoord2(0, 0);
             const transform2 = makeShapeTransform2By1(new_s.transform);
             transform2.translate(new ColVector3D([-xy.x, -xy.y, 0]))
@@ -1672,7 +1842,14 @@ export class PageEditor {
                 transform2.setRotateZ((rotation % 360) / 180 * Math.PI);
                 updateShapeTransform1By2(new_s.transform, transform2);
             }
-            new_s = api.shapeInsert(this.__document, this.page, parent, new_s, index);
+            const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+            let targetIndex = parent.childs.length;
+            if (_types.includes(parent.type)) {
+                const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                const fixed_index = parent.childs.findIndex(s => s.scrollBehavior === Fixed);
+                targetIndex = fixed_index === -1 ? parent.childs.length : fixed_index;
+            }
+            new_s = api.shapeInsert(this.__document, this.page, parent, new_s, targetIndex);
             if (target_xy) {
                 translateTo(api, page, new_s, target_xy.x, target_xy.y);
             }
@@ -1755,6 +1932,26 @@ export class PageEditor {
                     adjusted = true;
                     api.shapeMove(this.page, parent, currentIndex, parent, targetIndex);
                 }
+
+                const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                if (_types.includes(parent.type)) {
+                    const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                    const sortedArr = [...parent.childs].sort((a, b) => {
+                        if (a.scrollBehavior !== Fixed && b.scrollBehavior === Fixed) {
+                            return -1;
+                        } else if (a.scrollBehavior === Fixed && b.scrollBehavior !== Fixed) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+                    for (let j = 0; j < sortedArr.length; j++) {
+                        const s = sortedArr[j];
+                        const currentIndex = parent.childs.indexOf(s);
+                        if (currentIndex !== j) {
+                            api.shapeMove(this.page, parent, currentIndex, parent, j);
+                        }
+                    }
+                }
             }
 
             this.__repo.commit();
@@ -1811,6 +2008,26 @@ export class PageEditor {
                 if (targetIndex !== currentIndex) {
                     adjusted = true;
                     api.shapeMove(this.page, parent, currentIndex, parent, targetIndex);
+                }
+
+                const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                if (_types.includes(parent.type)) {
+                    const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                    const sortedArr = [...parent.childs].sort((a, b) => {
+                        if (a.scrollBehavior !== Fixed && b.scrollBehavior === Fixed) {
+                            return -1;
+                        } else if (a.scrollBehavior === Fixed && b.scrollBehavior !== Fixed) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+                    for (let j = 0; j < sortedArr.length; j++) {
+                        const s = sortedArr[j];
+                        const currentIndex = parent.childs.indexOf(s);
+                        if (currentIndex !== j) {
+                            api.shapeMove(this.page, parent, currentIndex, parent, j);
+                        }
+                    }
                 }
             }
 
@@ -1928,16 +2145,9 @@ export class PageEditor {
         try {
             const api = this.__repo.start('modifyShapesX');
             const page = this.page;
-            const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
                 const action = actions[i];
-                shapes.push(action.target);
                 api.shapeModifyX(page, adapt2Shape(action.target), action.x);
-            }
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                modifyAutoLayout(page, api, parent);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1952,16 +2162,9 @@ export class PageEditor {
         try {
             const api = this.__repo.start('modifyShapesY');
             const page = this.page;
-            const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
                 const action = actions[i];
-                shapes.push(action.target);
                 api.shapeModifyY(page, adapt2Shape(action.target), action.y);
-            }
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                modifyAutoLayout(page, api, parent);
             }
             this.__repo.commit();
         } catch (error) {
@@ -2072,18 +2275,11 @@ export class PageEditor {
         transform: Transform
     }[]) {
         try {
-            const shapes: ShapeView[] = [];
             const api = this.__repo.start('setShapesRotate');
             for (const action of actions) {
                 const { shape: shapeView, transform } = action;
-                shapes.push(shapeView);
                 const s = adapt2Shape(shapeView);
                 api.shapeModifyRotate(this.page, s, transform);
-            }
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                modifyAutoLayout(this.page, api, parent);
             }
             this.__repo.commit();
         } catch (error) {
@@ -2958,19 +3154,10 @@ export class PageEditor {
     setShapesBorderEnabled(actions: BatchAction[]) {
         const api = this.__repo.start('setShapesBorderEnabled');
         try {
-            const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
                 const { target, index, value } = actions[i];
-                shapes.push(target);
                 const s = shape4border(api, this.view, target);
                 api.setBorderEnable(this.page, s, index, value);
-            }
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                if (parent.autoLayout?.bordersTakeSpace) {
-                    modifyAutoLayout(this.page, api, parent);
-                }
             }
             this.__repo.commit();
         } catch (error) {
@@ -2995,26 +3182,17 @@ export class PageEditor {
     shapesAddBorder(actions: BatchAction2[]) {
         const api = this.__repo.start('shapesAddBorder');
         try {
-            const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                shapes.push(target);
-                const s = shape4border(api, this.__page, target);
+                const s = shape4border(api, this.view, target);
                 const l = s instanceof Shape ? s.style.borders?.strokePaints.length : s.value.length;
                 if (l > 0) {
                     api.addStrokePaint(this.page, s, value, l);
                 } else {
                     const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
                     const strokePaints = new BasicArray<StrokePaint>(value);
-                    const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
+                    const border = new Border(types.BorderPosition.Inner, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
                     api.addBorder(this.page, s, border);
-                }
-            }
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                if (parent.autoLayout?.bordersTakeSpace) {
-                    modifyAutoLayout(this.page, api, parent);
                 }
             }
             this.__repo.commit();
@@ -3027,19 +3205,10 @@ export class PageEditor {
     shapesDeleteBorder(actions: BatchAction3[]) {
         const api = this.__repo.start('shapesDeleteBorder');
         try {
-            const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
                 const { target, index } = actions[i];
-                shapes.push(target);
                 const s = shape4border(api, this.view, target);
                 api.deleteStrokePaintAt(this.page, s, index);
-            }
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                if (parent.autoLayout?.bordersTakeSpace) {
-                    modifyAutoLayout(this.page, api, parent);
-                }
             }
             this.__repo.commit();
         } catch (error) {
@@ -3056,13 +3225,6 @@ export class PageEditor {
                 api.delBorderFillMask(this.__document, this.page, adapt2Shape(shape), undefined);
                 api.deleteStrokePaints(this.page, s, 0, shape.style.borders.strokePaints.length);
             }
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                if (parent.autoLayout?.bordersTakeSpace) {
-                    modifyAutoLayout(this.page, api, parent);
-                }
-            }
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
@@ -3072,20 +3234,11 @@ export class PageEditor {
     shapesBordersUnify(actions: BatchAction2[]) {
         const api = this.__repo.start('shapesBordersUnify');
         try {
-            const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                shapes.push(target);
                 const s = shape4border(api, this.view, target);
                 api.deleteStrokePaints(this.page, s, 0, target.style.borders.strokePaints.length);
                 api.addStrokePaints(this.page, s, value);
-            }
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                if (parent.autoLayout?.bordersTakeSpace) {
-                    modifyAutoLayout(this.page, api, parent);
-                }
             }
             this.__repo.commit();
         } catch (error) {
@@ -3096,20 +3249,11 @@ export class PageEditor {
     setShapesBorderPosition(actions: BatchAction2[]) {
         const api = this.__repo.start('setShapesBorderPosition');
         try {
-            const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                shapes.push(target);
                 if (target.type === ShapeType.Table) continue;
                 const s = shape4border(api, this.view, target);
                 api.setBorderPosition(this.page, s, value);
-            }
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                if (parent.autoLayout?.bordersTakeSpace) {
-                    modifyAutoLayout(this.page, api, parent);
-                }
             }
             this.__repo.commit();
         } catch (error) {
@@ -3120,10 +3264,8 @@ export class PageEditor {
     setShapesBorderThickness(actions: BatchAction2[]) {
         const api = this.__repo.start('setShapesBorderThickness');
         try {
-            const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                shapes.push(target);
                 const s = shape4border(api, this.view, target);
                 const borders = target.getBorders();
                 if (!borders) continue;
@@ -3149,13 +3291,6 @@ export class PageEditor {
                         break;
                 }
 
-            }
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                if (parent.autoLayout?.bordersTakeSpace) {
-                    modifyAutoLayout(this.page, api, parent);
-                }
             }
             this.__repo.commit();
         } catch (error) {
@@ -3285,19 +3420,10 @@ export class PageEditor {
     setShapesBorderSide(actions: BatchAction2[]) {
         const api = this.__repo.start('setShapesBorderSide');
         try {
-            const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                shapes.push(target);
                 const s = shape4border(api, this.view, target);
                 api.setBorderSide(this.page, s, value);
-            }
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                if (parent.autoLayout?.bordersTakeSpace) {
-                    modifyAutoLayout(this.page, api, parent);
-                }
             }
             this.__repo.commit();
         } catch (error) {
@@ -3308,19 +3434,10 @@ export class PageEditor {
     setShapeBorderThicknessTop(actions: BatchAction2[]) {
         const api = this.__repo.start('setShapeBorderThicknessTop');
         try {
-            const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                shapes.push(target);
                 const s = shape4border(api, this.view, target);
                 api.setBorderThicknessTop(this.page, s, value);
-            }
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                if (parent.autoLayout?.bordersTakeSpace) {
-                    modifyAutoLayout(this.page, api, parent);
-                }
             }
             this.__repo.commit();
         } catch (error) {
@@ -3331,19 +3448,10 @@ export class PageEditor {
     setShapeBorderThicknessRight(actions: BatchAction2[]) {
         const api = this.__repo.start('setShapeBorderThicknessRight');
         try {
-            const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                shapes.push(target);
                 const s = shape4border(api, this.view, target);
                 api.setBorderThicknessRight(this.page, s, value);
-            }
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                if (parent.autoLayout?.bordersTakeSpace) {
-                    modifyAutoLayout(this.page, api, parent);
-                }
             }
             this.__repo.commit();
         } catch (error) {
@@ -3354,19 +3462,10 @@ export class PageEditor {
     setShapeBorderThicknessBottom(actions: BatchAction2[]) {
         const api = this.__repo.start('setShapeBorderThicknessBottom');
         try {
-            const shapes: ShapeView[] = [];
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                shapes.push(target);
                 const s = shape4border(api, this.view, target);
                 api.setBorderThicknessBottom(this.page, s, value);
-            }
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                if (parent.autoLayout?.bordersTakeSpace) {
-                    modifyAutoLayout(this.page, api, parent);
-                }
             }
             this.__repo.commit();
         } catch (error) {
@@ -3377,19 +3476,10 @@ export class PageEditor {
     setShapeBorderThicknessLeft(action: BatchAction2[]) {
         const api = this.__repo.start('setShapeBorderThicknessLeft');
         try {
-            const shapes: ShapeView[] = [];
             for (let i = 0; i < action.length; i++) {
                 const { target, value } = action[i];
-                shapes.push(target);
                 const s = shape4border(api, this.view, target);
                 api.setBorderThicknessLeft(this.page, s, value);
-            }
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                if (parent.autoLayout?.bordersTakeSpace) {
-                    modifyAutoLayout(this.page, api, parent);
-                }
             }
             this.__repo.commit();
         } catch (error) {
@@ -4210,11 +4300,24 @@ export class PageEditor {
     setScrollBehavior(shapes: ShapeView[], value: ScrollBehavior) {
         const api = this.__repo.start('setScrollBehavior');
         try {
+            const parent = shapes[0].data.parent! as GroupShape;
+            const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+            const fixed_index = parent.childs.findIndex(s => s.scrollBehavior === Fixed);
+            const targetIndex = fixed_index === -1 ? parent.childs.length - 1 : fixed_index - 1;
             for (let i = 0; i < shapes.length; i++) {
                 const shape = shapes[i];
                 const __shape = adapt2Shape(shape);
                 const types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
                 if (!types.includes(__shape.parent!.type)) continue;
+                // 找到固定位置
+                const currentIndex = parent.indexOfChild(__shape);
+
+                if (value === Fixed && __shape.scrollBehavior !== Fixed) {
+                    api.shapeMove(this.page, parent, currentIndex, parent, targetIndex);
+                } else if (value !== Fixed && __shape.scrollBehavior === Fixed) {
+                    api.shapeMove(this.page, parent, currentIndex, parent, fixed_index);
+                }
+
                 api.shapeModifyScrollBehavior(this.page, __shape, value);
             }
             this.__repo.commit();
@@ -4239,11 +4342,6 @@ export class PageEditor {
                 //     if (!shape) continue;
                 // }
                 api.shapeModifyVisible(this.page, shape.data, isVisible);
-            }
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                modifyAutoLayout(this.page, api, parent);
             }
             this.__repo.commit();
         } catch (error) {
@@ -4310,7 +4408,6 @@ export class PageEditor {
         if (!host_parent || host_parent.isVirtualShape) {
             return false;
         }
-        let autoLayoutShape: Artboard | undefined;
         let pre: Shape[] = [];
         for (let i = 0, l = shapes.length; i < l; i++) {
             const item = shapes[i];
@@ -4362,9 +4459,6 @@ export class PageEditor {
                             const op = host.getBoolOp().op;
                             api.shapeModifyBoolOp(this.page, item, op);
                         }
-                        if (host instanceof Artboard) {
-                            autoLayoutShape = host;
-                        }
                     }
 
                     api.shapeMove(this.page, parent, parent.indexOfChild(item), host as GroupShape, last);
@@ -4373,6 +4467,25 @@ export class PageEditor {
 
                     if (after_remove(parent)) {
                         this.delete_inner(this.page, parent, api);
+                    }
+                    const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                    if (_types.includes(host.type)) {
+                        const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                        const sortedArr = [...(host as GroupShape).childs].sort((a, b) => {
+                            if (a.scrollBehavior !== Fixed && b.scrollBehavior === Fixed) {
+                                return -1;
+                            } else if (a.scrollBehavior === Fixed && b.scrollBehavior !== Fixed) {
+                                return 1;
+                            }
+                            return 0;
+                        });
+                        for (let j = 0; j < sortedArr.length; j++) {
+                            const s = sortedArr[j];
+                            const currentIndex = (host as GroupShape).childs.indexOf(s);
+                            if (currentIndex !== j) {
+                                api.shapeMove(this.page, host as GroupShape, currentIndex, host as GroupShape, j);
+                            }
+                        }
                     }
                 }
             } else {
@@ -4421,9 +4534,6 @@ export class PageEditor {
                             const op = host_parent.getBoolOp().op;
                             api.shapeModifyBoolOp(this.page, item, op);
                         }
-                        if (host_parent instanceof Artboard) {
-                            autoLayoutShape = host_parent;
-                        }
                     }
 
                     if (position === "upper") {
@@ -4442,10 +4552,26 @@ export class PageEditor {
                     if (after_remove(parent)) {
                         this.delete_inner(this.page, parent, api);
                     }
+                    const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                    if (_types.includes(host_parent.type)) {
+                        const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                        const sortedArr = [...host_parent.childs].sort((a, b) => {
+                            if (a.scrollBehavior !== Fixed && b.scrollBehavior === Fixed) {
+                                return -1;
+                            } else if (a.scrollBehavior === Fixed && b.scrollBehavior !== Fixed) {
+                                return 1;
+                            }
+                            return 0;
+                        });
+                        for (let j = 0; j < sortedArr.length; j++) {
+                            const s = sortedArr[j];
+                            const currentIndex = host_parent.childs.indexOf(s);
+                            if (currentIndex !== j) {
+                                api.shapeMove(this.page, host_parent, currentIndex, host_parent, j);
+                            }
+                        }
+                    }
                 }
-            }
-            if (autoLayoutShape) {
-                modifyAutoLayout(this.page, api, autoLayoutShape);
             }
             this.__repo.commit();
             return true;
@@ -4743,6 +4869,7 @@ export class PageEditor {
                     pathShape.mask = shape.mask;
                     pathShape.resizingConstraint = shape.resizingConstraint;
                     pathShape.constrainerProportions = shape.constrainerProportions;
+                    pathShape.scrollBehavior = shape.scrollBehavior;
                     const parent = shape.parent as GroupShape;
                     const index = parent.indexOfChild(shape);
                     api.shapeDelete(document, page, parent, index);
@@ -4777,6 +4904,7 @@ export class PageEditor {
                         pathshape.transform = shape.transform.clone();
                         pathshape.mask = shape.mask;
                         pathshape.resizingConstraint = shape.resizingConstraint;
+                        pathshape.scrollBehavior = shape.scrollBehavior;
                         const index = parent.indexOfChild(shape);
                         pathshape = api.shapeInsert(document, page, parent, pathshape, index + 1) as PathShape;
                         update_frame_by_points(api, page, pathshape);
@@ -4822,8 +4950,14 @@ export class PageEditor {
                     const shape = newImageFillShape(name.replace(reg, '') || 'image', new ShapeFrame(0, 0, size.width, size.height), document.mediasMgr, size, ref);
                     shape.transform = item.transform;
                     if (fixed) shape.constrainerProportions = true;
-                    const index = parent.childs.length;
-                    const __s = api.shapeInsert(document, page, parent, shape, index);
+                    const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                    let targetIndex = parent.childs.length;
+                    if (_types.includes(parent.type)) {
+                        const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                        const fixed_index = parent.childs.findIndex(s => s.scrollBehavior === Fixed);
+                        targetIndex = fixed_index === -1 ? parent.childs.length : fixed_index;
+                    }
+                    const __s = api.shapeInsert(document, page, parent, shape, targetIndex);
                     if (__s) {
                         ids.push(__s.id);
                         imageShapes.push({ shape: __s, upload: [{ ref, buff }] });
@@ -4832,8 +4966,14 @@ export class PageEditor {
                     const shape = (item.pack as SVGParseResult).shape;
                     shape.transform = item.transform;
                     if (fixed) shape.constrainerProportions = true;
-                    const index = parent.childs.length;
-                    const __s = api.shapeInsert(document, page, parent, shape, index);
+                    const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                    let targetIndex = parent.childs.length;
+                    if (_types.includes(parent.type)) {
+                        const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                        const fixed_index = parent.childs.findIndex(s => s.scrollBehavior === Fixed);
+                        targetIndex = fixed_index === -1 ? parent.childs.length : fixed_index;
+                    }
+                    const __s = api.shapeInsert(document, page, parent, shape, targetIndex);
                     if (__s) {
                         ids.push(__s.id);
                         const upload: UploadAssets[] = [];

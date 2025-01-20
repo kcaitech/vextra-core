@@ -23,10 +23,10 @@ import { newText2 } from "./creator";
 import { _typing_modify, get_points_for_init, modify_points_xy, update_frame_by_points } from "./utils/path";
 import { adapt_for_artboard } from "./utils/common";
 import { ShapeView, SymbolRefView, SymbolView, adapt2Shape, findOverride, ArtboardView, findVar, GroupShapeView, PageView } from "../dataview";
-import { is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union, modify_variable, modify_variable_with_api, shape4border, shape4contextSettings, shape4exportOptions, shape4fill, shape4shadow } from "./symbol";
+import { is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union, modify_variable, modify_variable_with_api, shape4Autolayout, shape4border, shape4contextSettings, shape4exportOptions, shape4fill, shape4shadow } from "./symbol";
 import { ISave4Restore, LocalCmd, SelectionState } from "../coop/localcmd";
-import { getAutoLayoutShapes, initAutoLayout, layoutShapesOrder, layoutSpacing, modifyAutoLayout } from "./utils/auto_layout";
 import { exportCurvePoint } from "../data/baseexport";
+import { layoutShapesOrder2, layoutSpacing } from "./utils/auto_layout2";
 
 export type PaddingDir = 'ver' | 'hor' | 'top' | 'right' | 'bottom' | 'left';
 
@@ -385,11 +385,6 @@ export class ShapeEditor {
             const isVisible = !this.view.isVisible;
             if (this.modifyVariable(VariableType.Visible, OverrideType.Visible, isVisible, api)) return;
             api.shapeModifyVisible(this.__page, this.shape, isVisible);
-            const parents = getAutoLayoutShapes([this.__shape]);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                modifyAutoLayout(this.__page, api, parent);
-            }
         })
     }
 
@@ -1461,10 +1456,12 @@ export class ShapeEditor {
     addAutoLayout() {
         const api = this.__repo.start("addAutoLayout");
         try {
-            const shapes_rows = layoutShapesOrder(this.__shape.childs.map(s => adapt2Shape(s)), false);
+            const parent = adapt2Shape(this.__shape) as GroupShape;
+            const shapes_rows = layoutShapesOrder2(this.__shape.childs, false);
+            const rows = shapes_rows.flat();
             const { hor, ver } = layoutSpacing(shapes_rows);
-            const h_padding = shapes_rows.length ? Math.max(Math.round(shapes_rows[0][0].x), 0) : 0;
-            const v_padding = shapes_rows.length ? Math.max(Math.round(shapes_rows[0][0].y), 0) : 0;
+            const h_padding = shapes_rows.length ? Math.max(Math.round(Math.min(...rows.map(s => s.x))), 0) : 10;
+            const v_padding = shapes_rows.length ? Math.max(Math.round(Math.min(...shapes_rows[0].map(s => s.y))), 0) : 10;
             const ver_auto = shapes_rows.length === 1 || shapes_rows.every(s => s.length === 1) ? StackSizing.Auto : StackSizing.Fixed;
             const layoutInfo = new AutoLayout(hor, ver, h_padding, v_padding, h_padding, v_padding, ver_auto);
             let shape_width = h_padding * 2;
@@ -1473,8 +1470,8 @@ export class ShapeEditor {
                 layoutInfo.stackWrap = StackWrap.NoWrap;
                 layoutInfo.stackMode = StackMode.Horizontal;
                 layoutInfo.stackCounterSpacing = hor;
-                shape_height += Math.max(...this.__shape.childs.map(s => s._p_frame.height));
-                this.__shape.childs.forEach(s => {
+                shape_height += Math.max(...rows.map(s => s._p_frame.height));
+                rows.forEach(s => {
                     shape_width += s._p_frame.width + hor;
                 })
                 shape_width -= hor;
@@ -1482,22 +1479,26 @@ export class ShapeEditor {
                 layoutInfo.stackWrap = StackWrap.NoWrap;
                 layoutInfo.stackMode = StackMode.Vertical;
                 layoutInfo.stackSpacing = ver;
-                shape_width += Math.max(...this.__shape.childs.map(s => s._p_frame.width));
-                this.__shape.childs.forEach(s => {
+                shape_width += Math.max(...rows.map(s => s._p_frame.width));
+                rows.forEach(s => {
                     shape_height += s._p_frame.height + ver;
                 })
                 shape_height -= ver;
             }
-            const shape = adapt2Shape(this.__shape);
-            api.shapeAutoLayout(this.__page, shape, layoutInfo);
-            const frame = initAutoLayout(this.__page, api, shape, shapes_rows);
-            if (frame && shapes_rows[0]) {
-                if (shapes_rows.length === 1 || shapes_rows.every(s => s.length === 1)) {
-                    modifyAutoLayout(this.__page, api, shape);
-                } else {
-                    api.shapeModifyHeight(this.__page, shape, frame.container_hieght);
-                }
+            // 给自动布局中的子元素进行排序
+            if (this.__shape.childs.length !== rows.length) {
+                const hiddenChilds = this.__shape.childs.filter(c => !c.isVisible); // 隐藏的元素放在前面
+                rows.unshift(...hiddenChilds);
             }
+            for (let i = 0; i < rows.length; i++) {
+                const s = adapt2Shape(rows[i]);
+                const currentIndex = parent.indexOfChild(s);
+                if (currentIndex === i) continue;
+                api.shapeMove(this.__page, parent, currentIndex, parent, i);
+            }
+
+            const _shape = shape4Autolayout(api, this.__shape, this._page);
+            api.shapeAutoLayout(this.__page, _shape, layoutInfo);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -1508,7 +1509,13 @@ export class ShapeEditor {
     deleteAutoLayout() {
         const api = this.__repo.start("deleteAutoLayout");
         try {
-            const shape = adapt2Shape(this.__shape);
+            const childs = this.__shape.childs;
+            for (let i = 0; i < childs.length; i++) {
+                const child = childs[i];
+                api.shapeModifyX(this.__page, adapt2Shape(child), child.transform.translateX);
+                api.shapeModifyY(this.__page, adapt2Shape(child), child.transform.translateY);
+            }
+            const shape = shape4Autolayout(api, this.__shape, this._page);
             api.shapeAutoLayout(this.__page, shape, undefined);
             this.__repo.commit();
         } catch (e) {
@@ -1520,9 +1527,8 @@ export class ShapeEditor {
     modifyAutoLayoutPadding(padding: number, direction: PaddingDir) {
         const api = this.__repo.start("modifyAutoLayoutPadding");
         try {
-            const shape = adapt2Shape(this.__shape);
+            const shape = shape4Autolayout(api, this.__shape, this._page);
             api.shapeModifyAutoLayoutPadding(this.__page, shape, Math.max(padding, 0), direction);
-            modifyAutoLayout(this.__page, api, shape);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -1533,9 +1539,8 @@ export class ShapeEditor {
     modifyAutoLayoutHorPadding(hor: number, right: number) {
         const api = this.__repo.start("modifyAutoLayoutHorPadding");
         try {
-            const shape = adapt2Shape(this.__shape);
+            const shape = shape4Autolayout(api, this.__shape, this._page);
             api.shapeModifyAutoLayoutHorPadding(this.__page, shape, Math.max(hor, 0), Math.max(right, 0));
-            modifyAutoLayout(this.__page, api, shape);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -1546,9 +1551,8 @@ export class ShapeEditor {
     modifyAutoLayoutVerPadding(ver: number, bottom: number) {
         const api = this.__repo.start("modifyAutoLayoutVerPadding");
         try {
-            const shape = adapt2Shape(this.__shape);
+            const shape = shape4Autolayout(api, this.__shape, this._page);
             api.shapeModifyAutoLayoutVerPadding(this.__page, shape, Math.max(ver, 0), Math.max(bottom, 0));
-            modifyAutoLayout(this.__page, api, shape);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -1559,10 +1563,9 @@ export class ShapeEditor {
     modifyAutoLayoutDispersed(wrap: StackWrap, mode: StackMode) {
         const api = this.__repo.start("modifyAutoLayoutDispersed");
         try {
-            const shape = adapt2Shape(this.__shape);
+            const shape = shape4Autolayout(api, this.__shape, this._page);
             api.shapeModifyAutoLayoutWrap(this.__page, shape, wrap);
             api.shapeModifyAutoLayoutMode(this.__page, shape, mode);
-            modifyAutoLayout(this.__page, api, shape);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -1573,10 +1576,9 @@ export class ShapeEditor {
     modifyAutoLayoutSpace(space: number, direction: PaddingDir) {
         const api = this.__repo.start("modifyAutoLayoutSpace");
         try {
-            const shape = adapt2Shape(this.__shape);
+            const shape = shape4Autolayout(api, this.__shape, this._page);
             api.shapeModifyAutoLayoutSpace(this.__page, shape, space, direction);
             api.shapeModifyAutoLayoutGapSizing(this.__page, shape, StackSizing.Fixed, direction);
-            modifyAutoLayout(this.__page, api, shape);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -1587,9 +1589,8 @@ export class ShapeEditor {
     modifyAutoLayoutAlignItems(primary: StackAlign, counter: StackAlign) {
         const api = this.__repo.start("modifyAutoLayoutAlignItems");
         try {
-            const shape = adapt2Shape(this.__shape);
+            const shape = shape4Autolayout(api, this.__shape, this._page);
             api.shapeModifyAutoLayoutAlignItems(this.__page, shape, primary, counter);
-            modifyAutoLayout(this.__page, api, shape);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -1600,10 +1601,9 @@ export class ShapeEditor {
     modifyAutoLayoutSizing(sizing: StackSizing, direction: PaddingDir) {
         const api = this.__repo.start("modifyAutoLayoutSizing");
         try {
-            const shape = adapt2Shape(this.__shape);
+            const shape = shape4Autolayout(api, this.__shape, this._page);
             api.shapeModifyAutoLayoutSizing(this.__page, shape, sizing, direction);
             api.shapeModifyAutoLayoutGapSizing(this.__page, shape, StackSizing.Fixed, direction);
-            modifyAutoLayout(this.__page, api, shape);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -1614,10 +1614,9 @@ export class ShapeEditor {
     modifyAutoLayoutGapSizing(sizing: StackSizing, direction: PaddingDir) {
         const api = this.__repo.start("modifyAutoLayoutGapSizing");
         try {
-            const shape = adapt2Shape(this.__shape);
+            const shape = shape4Autolayout(api, this.__shape, this._page);
             api.shapeModifyAutoLayoutGapSizing(this.__page, shape, sizing, direction);
             api.shapeModifyAutoLayoutSizing(this.__page, shape, StackSizing.Fixed, direction);
-            modifyAutoLayout(this.__page, api, shape);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -1628,9 +1627,8 @@ export class ShapeEditor {
     modifyAutoLayoutZIndex(stack: boolean) {
         const api = this.__repo.start("modifyAutoLayoutZIndex");
         try {
-            const shape = adapt2Shape(this.__shape);
+            const shape = shape4Autolayout(api, this.__shape, this._page);
             api.shapeModifyAutoLayoutStackZIndex(this.__page, shape, stack);
-            modifyAutoLayout(this.__page, api, shape);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -1641,9 +1639,8 @@ export class ShapeEditor {
     modifyAutoLayoutStroke(included: boolean) {
         const api = this.__repo.start("modifyAutoLayoutStroke");
         try {
-            const shape = adapt2Shape(this.__shape);
+            const shape = shape4Autolayout(api, this.__shape, this._page);
             api.shapeModifyAutoLayoutStroke(this.__page, shape, included);
-            modifyAutoLayout(this.__page, api, shape);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -1664,9 +1661,9 @@ export class ShapeEditor {
                 const { originSegmentIndex, slices, closed } = action;
                 let last = originSegmentIndex;
                 for (let i = 0; i < slices.length; i++) {
-                    const slice = slices[i].map(p => importCurvePoint(exportCurvePoint((p)))) as BasicArray<CurvePoint>;
+                    const slice = new BasicArray(...slices[i].map(p => importCurvePoint(exportCurvePoint((p)))));
                     if (last === originSegmentIndex) api.deleteSegmentAt(page, shape, originSegmentIndex);
-                    slice.forEach((i, index) => i.crdtidx = new BasicArray<number>(index));
+                    slice.forEach((i, index) => i.crdtidx = [index] as BasicArray<number>);
                     api.insertSegmentAt(page, shape, last++, new PathSegment([0] as BasicArray<number>, uuid(), slice, closed));
                 }
                 if (last === originSegmentIndex) api.deleteSegmentAt(page, shape, originSegmentIndex);

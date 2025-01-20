@@ -76,7 +76,7 @@ export class PathModifier extends AsyncApiCaller {
                 const strokePaints = new BasicArray<StrokePaint>();
                 const strokePaint = new StrokePaint([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0));
                 strokePaints.push(strokePaint);
-                const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
+                const border = new Border(types.BorderPosition.Inner, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
                 style.borders = border;
             } else {
                 style.fills = new BasicArray<Fill>();
@@ -95,10 +95,16 @@ export class PathModifier extends AsyncApiCaller {
             addCommonAttr(vec);
 
             const env = adapt2Shape(parent) as GroupShape;
+            const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+            let targetIndex = env.childs.length;
+            if (_types.includes(env.type)) {
+                const Fixed = types.ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                const fixed_index = env.childs.findIndex(s => s.scrollBehavior === Fixed);
+                targetIndex = fixed_index === -1 ? env.childs.length : fixed_index;
+            }
+            this.api.shapeInsert(this.__document, this.page, env, vec, targetIndex);
 
-            this.api.shapeInsert(this.__document, this.page, env, vec, env.childs.length);
-
-            this.shape = env.childs[env.childs.length - 1];
+            this.shape = env.childs[targetIndex];
 
             this.updateView();
 
@@ -382,7 +388,7 @@ export class PathModifier extends AsyncApiCaller {
             api.deleteSegmentAt(page, shape, toSegmentIndex);
 
             // crdtidx重排
-            pointsContainer.forEach((i, index) => i.crdtidx = new BasicArray<number>(index));
+            pointsContainer.forEach((i, index) => i.crdtidx = [index] as BasicArray<number>);
 
             // 生成合并过后的线条
             const newSegment = new PathSegment([shape.pathsegs.length] as BasicArray<number>, uuid(), pointsContainer, false);
@@ -547,7 +553,7 @@ export class PathModifier extends AsyncApiCaller {
 
             api.deleteSegmentAt(page, shape, segmentIndex);
             const l = shape.pathsegs.length;
-            container.forEach((i, index) => i.crdtidx = new BasicArray<number>(index));
+            container.forEach((i, index) => i.crdtidx = [index] as BasicArray<number>);
             const newSegment = new PathSegment([l] as BasicArray<number>, uuid(), container, segment.isClosed);
 
             api.addSegmentAt(page, shape, l, newSegment);
@@ -615,8 +621,8 @@ export class PathModifier extends AsyncApiCaller {
                         }
 
                         api.deleteSegmentAt(page, shape, segmentIndex);
-                        pointsA.forEach((i, index) => i.crdtidx = new BasicArray<number>(index));
-                        pointsB.forEach((i, index) => i.crdtidx = new BasicArray<number>(index));
+                        pointsA.forEach((i, index) => i.crdtidx = [index] as BasicArray<number>);
+                        pointsB.forEach((i, index) => i.crdtidx = [index] as BasicArray<number>);
                         const segmentA = new PathSegment([shape.pathsegs.length] as BasicArray<number>, uuid(), pointsA, false);
                         api.addSegmentAt(page, shape, shape.pathsegs.length, segmentA);
                         const segmentB = new PathSegment([shape.pathsegs.length] as BasicArray<number>, uuid(), pointsB, false);
@@ -634,7 +640,7 @@ export class PathModifier extends AsyncApiCaller {
                 }
 
                 api.deleteSegmentAt(page, shape, segmentIndex);
-                newPoints.forEach((i, index) => i.crdtidx = new BasicArray<number>(index));
+                newPoints.forEach((i, index) => i.crdtidx = [index] as BasicArray<number>);
                 const newSegment = new PathSegment([shape.pathsegs.length] as BasicArray<number>, uuid(), newPoints, false);
                 api.addSegmentAt(page, shape, shape.pathsegs.length, newSegment);
             }

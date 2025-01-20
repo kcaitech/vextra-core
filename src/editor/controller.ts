@@ -6,7 +6,7 @@ import {
 } from "./frame";
 import { CurvePoint, GroupShape, PathShape, PathShape2, Shape, ShapeFrame, ShapeType } from "../data/shape";
 import { getFormatFromBase64 } from "../basic/utils";
-import { ContactRoleType, CurveMode, FillType, SideType } from "../data/typesdefine";
+import { ContactRoleType, CurveMode, FillType, ScrollBehavior, SideType } from "../data/typesdefine";
 import {
     modifyTransformByEnv,
     newArrowShape,
@@ -29,7 +29,6 @@ import { CoopRepository } from "../coop/cooprepo";
 import { v4 } from "uuid";
 import { Document } from "../data/document";
 import { Api } from "../coop/recordapi";
-import { Matrix } from "../basic/matrix";
 import { Artboard } from "../data/artboard";
 import { uuid } from "../basic/uuid";
 import { BorderSideSetting, ContactForm, ContactRole } from "../data/baseclasses";
@@ -53,7 +52,6 @@ import { ISave4Restore, LocalCmd, SelectionState } from "../coop/localcmd";
 import { BasicArray } from "../data/basic";
 import { Fill, FillMask } from "../data/style";
 import { TextAttr } from "../data/classes";
-import { getAutoLayoutShapes, layoutShapesOrder, modifyAutoLayout } from "./utils/auto_layout";
 import { Transform } from "../data/transform";
 
 interface PageXY { // 页面坐标系的xy
@@ -233,8 +231,14 @@ export class Controller {
                 }
 
                 modifyTransformByEnv(shape, parent);
-
-                api.shapeInsert(this.__document, page, parent, shape, parent.childs.length);
+                const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                let targetIndex = parent.childs.length;
+                if (_types.includes(parent.type)) {
+                    const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                    const fixed_index = parent.childs.findIndex(s => s.scrollBehavior === Fixed);
+                    targetIndex = fixed_index === -1 ? parent.childs.length : fixed_index;
+                }
+                api.shapeInsert(this.__document, page, parent, shape, targetIndex);
 
                 newShape = parent.childs[parent.childs.length - 1];
 
@@ -260,9 +264,15 @@ export class Controller {
                 const shape = newArrowShape(name, frame);
 
                 modifyTransformByEnv(shape, parent);
-
-                api.shapeInsert(this.__document, page, parent, shape, parent.childs.length);
-                newShape = parent.childs[parent.childs.length - 1];
+                const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                let targetIndex = parent.childs.length;
+                if (_types.includes(parent.type)) {
+                    const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                    const fixed_index = parent.childs.findIndex(s => s.scrollBehavior === Fixed);
+                    targetIndex = fixed_index === -1 ? parent.childs.length : fixed_index;
+                }
+                api.shapeInsert(this.__document, page, parent, shape, targetIndex);
+                newShape = parent.childs[targetIndex];
 
                 translateTo(api, savepage, newShape, frame.x, frame.y);
 
@@ -289,8 +299,16 @@ export class Controller {
                     const xy = parent.frame2Root();
                     shape.transform.translateX -= xy.x;
                     shape.transform.translateY -= xy.y;
-                    api.shapeInsert(this.__document, page, parent, shape, parent.childs.length)
-                    newShape = parent.childs.at(-1);
+                    const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                    let targetIndex = parent.childs.length;
+                    if (_types.includes(parent.type)) {
+                        const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                        const fixed_index = parent.childs.findIndex(s => s.scrollBehavior === Fixed);
+                        targetIndex = fixed_index === -1 ? parent.childs.length : fixed_index;
+                    }
+                    api.shapeInsert(this.__document, page, parent, shape, targetIndex)
+                    newShape = parent.childs[targetIndex];
+
                     this.__repo.transactCtx.fireNotify();
                     status = Status.Fulfilled;
                     return newShape
@@ -308,8 +326,16 @@ export class Controller {
                 const xy = parent.frame2Root();
                 shape.transform.translateX -= xy.x;
                 shape.transform.translateY -= xy.y;
-                api.shapeInsert(this.__document, page, parent, shape, parent.childs.length);
-                newShape = parent.childs.at(-1);
+                const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                let targetIndex = parent.childs.length;
+                if (_types.includes(parent.type)) {
+                    const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                    const fixed_index = parent.childs.findIndex(s => s.scrollBehavior === Fixed);
+                    targetIndex = fixed_index === -1 ? parent.childs.length : fixed_index;
+                }
+                api.shapeInsert(this.__document, page, parent, shape, targetIndex);
+                newShape = parent.childs[targetIndex];
+
                 if (newShape?.type === ShapeType.Artboard) api.setFillColor(page, newShape, 0, new Color(0, 0, 0, 0));
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
@@ -338,9 +364,15 @@ export class Controller {
                     const layout = shape.getLayout();
                     shape.size.width = layout.contentWidth;
                     shape.size.height = layout.contentHeight;
-
-                    api.shapeInsert(this.__document, page, parent, shape, parent.childs.length)
-                    newShape = parent.childs[parent.childs.length - 1];
+                    const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                    let targetIndex = parent.childs.length;
+                    if (_types.includes(parent.type)) {
+                        const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                        const fixed_index = parent.childs.findIndex(s => s.scrollBehavior === Fixed);
+                        targetIndex = fixed_index === -1 ? parent.childs.length : fixed_index;
+                    }
+                    api.shapeInsert(this.__document, page, parent, shape, targetIndex)
+                    newShape = parent.childs[targetIndex];
 
                     translateTo(api, page, newShape, frame.x, frame.y);
 
@@ -361,8 +393,15 @@ export class Controller {
                 const xy = parent.frame2Root();
                 shape.transform.translateX -= xy.x;
                 shape.transform.translateY -= xy.y;
-                api.shapeInsert(this.__document, page, parent, shape, parent.childs.length);
-                newShape = parent.childs.at(-1);
+                const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                let targetIndex = parent.childs.length;
+                if (_types.includes(parent.type)) {
+                    const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                    const fixed_index = parent.childs.findIndex(s => s.scrollBehavior === Fixed);
+                    targetIndex = fixed_index === -1 ? parent.childs.length : fixed_index;
+                }
+                api.shapeInsert(this.__document, page, parent, shape, targetIndex);
+                newShape = parent.childs[targetIndex];
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
                 return newShape
@@ -381,9 +420,15 @@ export class Controller {
                 shape.constrainerProportions = !!isLockSizeRatio;
 
                 modifyTransformByEnv(shape, parent);
-
-                api.shapeInsert(this.__document, page, parent, shape, parent.childs.length);
-                newShape = parent.childs[parent.childs.length - 1];
+                const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                let targetIndex = parent.childs.length;
+                if (_types.includes(parent.type)) {
+                    const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                    const fixed_index = parent.childs.findIndex(s => s.scrollBehavior === Fixed);
+                    targetIndex = fixed_index === -1 ? parent.childs.length : fixed_index;
+                }
+                api.shapeInsert(this.__document, page, parent, shape, targetIndex);
+                newShape = parent.childs[targetIndex];
 
                 translateTo(api, page, newShape, frame.x, frame.y);
 
@@ -953,29 +998,15 @@ export class Controller {
     }
 
     public asyncBorderThickness(_shapes: ShapeView[], _page: PageView): AsyncBorderThickness {
-        const sort: Map<string, number> = new Map();
-        const parents = getAutoLayoutShapes(_shapes);
-        for (let i = 0; i < parents.length; i++) {
-            const parent = parents[i];
-            if (parent.autoLayout?.bordersTakeSpace) {
-                const shape_rows = layoutShapesOrder(parent.childs, !!parent.autoLayout?.bordersTakeSpace);
-                const shape_row: Shape[] = shape_rows.flat();
-                shape_row.forEach((item, index) => {
-                    sort.set(item.id, index);
-                })
-            }
-        }
-        const shapes: ShapeView[] = _shapes;
         const page = _page.data;
-
         const api = this.__repo.start("asyncBorderThickness");
         let status: Status = Status.Pending;
         const execute = (thickness: number) => {
             status = Status.Pending;
             try {
-                for (let i = 0, l = shapes.length; i < l; i++) {
-                    const s = shape4border(api, _page, shapes[i]);
-                    const borders = shapes[i].getBorders();
+                for (let i = 0, l = _shapes.length; i < l; i++) {
+                    const s = shape4border(api, _page, _shapes[i]);
+                    const borders = _shapes[i].getBorders();
                     const sideType = borders.sideSetting.sideType;
                     switch (sideType) {
                         case SideType.Normal:
@@ -1004,13 +1035,6 @@ export class Controller {
                 console.error(e);
                 status = Status.Exception;
             }
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                if (parent.autoLayout?.bordersTakeSpace) {
-                    modifyAutoLayout(page, api, parent, sort, true);
-                }
-            }
         }
         const close = () => {
             if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
@@ -1023,7 +1047,6 @@ export class Controller {
         return { execute, close }
     }
     public asyncBorderSideThickness(_shapes: ShapeView[], _page: PageView, type: SideType): AsyncBorderThickness {
-        const shapes: ShapeView[] = _shapes;
         const page = _page.data;
 
         const api = this.__repo.start("asyncBorderSideThickness");
@@ -1031,8 +1054,8 @@ export class Controller {
         const execute = (thickness: number) => {
             status = Status.Pending;
             try {
-                for (let i = 0, l = shapes.length; i < l; i++) {
-                    const s = shape4border(api, _page, shapes[i]);
+                for (let i = 0, l = _shapes.length; i < l; i++) {
+                    const s = shape4border(api, _page, _shapes[i]);
                     switch (type) {
                         case SideType.Top:
                             api.setBorderThicknessTop(page, s, thickness);
@@ -1055,13 +1078,6 @@ export class Controller {
             } catch (e) {
                 console.error(e);
                 status = Status.Exception;
-            }
-            const parents = getAutoLayoutShapes(shapes);
-            for (let i = 0; i < parents.length; i++) {
-                const parent = parents[i];
-                if (parent.autoLayout?.bordersTakeSpace) {
-                    modifyAutoLayout(page, api, parent);
-                }
             }
         }
         const close = () => {

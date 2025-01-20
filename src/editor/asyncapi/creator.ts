@@ -37,13 +37,11 @@ import {
 } from "../creator";
 import { ISave4Restore, LocalCmd, SelectionState } from "../../coop";
 import { uuid } from "../../basic/uuid";
-import { Matrix } from "../../basic/matrix";
 import { Api } from "../../coop";
-import { Point2D } from "../../data/typesdefine";
+import { Point2D, ScrollBehavior } from "../../data/typesdefine";
 import { update_frame_by_points } from "../utils/path";
 import { translateTo } from "../frame";
 import { Transform as Transform2 } from "../../basic/transform";
-import { modifyAutoLayout } from "../utils/auto_layout";
 
 export interface GeneratorParams {
     parent: GroupShapeView;
@@ -288,11 +286,6 @@ export class CreatorApiCaller extends AsyncApiCaller {
             if (this.shape instanceof LineShape) { // 线条的宽高最后根据两个点的位置计算
                 update_frame_by_points(this.api, this.page, this.shape, true);
             }
-            const parent = this.__params?.parent;
-            if (parent && (parent as ArtboardView).autoLayout) {
-                const __shape = adapt2Shape(parent) as GroupShape;
-                modifyAutoLayout(this.page, this.api, __shape);
-            }
             this.__repo.commit();
         } else {
             this.__repo.rollback();
@@ -301,16 +294,22 @@ export class CreatorApiCaller extends AsyncApiCaller {
 
     private insert(params: GeneratorParams, shape: Shape) {
         const parent = adapt2Shape(params.parent) as GroupShape;
-
-        this.api.shapeInsert(this.__document, this.page, parent, shape, parent.childs.length);
-        this.shape = parent.childs[parent.childs.length - 1];
+        const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+        let targetIndex = parent.childs.length;
+        if (_types.includes(parent.type)) {
+            const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+            const fixed_index = parent.childs.findIndex(s => s.scrollBehavior === Fixed);
+            targetIndex = fixed_index === -1 ? parent.childs.length : fixed_index;
+        }
+        this.api.shapeInsert(this.__document, this.page, parent, shape, targetIndex);
+        this.shape = parent.childs[targetIndex];
         const name = assign(this.shape);
         this.api.shapeModifyName(this.page, this.shape, name);
     }
 
     private getCount(type: ShapeType) {
         let count = 1;
-        this.page.shapes.forEach((v:any) => {
+        this.page.shapes.forEach((v: any) => {
             if (v.type === type) count++;
         });
         return count;

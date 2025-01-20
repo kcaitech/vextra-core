@@ -1,15 +1,15 @@
 import { CoopRepository } from "../../../coop";
 import { AsyncApiCaller } from "../basic/asyncapi";
-import { adapt2Shape, ArtboardView, GroupShapeView, PageView, ShapeView } from "../../../dataview";
+import { adapt2Shape, ArtboardView, GroupShapeView, PageView, ShapeView, TextShapeView } from "../../../dataview";
 import {
-    Artboard, Document, GroupShape, Page, Shape, ShapeType, StackMode, Transform as TransformRaw,
-    makeShapeTransform1By2, makeShapeTransform2By1,
+    Artboard, Document, GroupShape, Page, ScrollBehavior, Shape, ShapeType, StackMode, Transform as TransformRaw,
+     TextShape, makeShapeTransform1By2, makeShapeTransform2By1,
 } from "../../../data";
 import { after_migrate, unable_to_migrate } from "../../utils/migrate";
 import { get_state_name, is_state } from "../../symbol";
 import { Api } from "../../../coop";
 import { ISave4Restore, LocalCmd, SelectionState } from "../../../coop";
-import { TidyUpAlgin, modifyAutoLayout, tidyUpLayout } from "../../utils/auto_layout";
+import { TidyUpAlgin, tidyUpLayout } from "../../utils/auto_layout";
 import { translate } from "../../frame";
 import { transform_data } from "../../../io/cilpboard";
 import { MossError } from "../../../basic/error";
@@ -80,17 +80,37 @@ export class Transporter extends AsyncApiCaller {
         try {
             const api = this.api;
             const page = this.page;
-            const porter = new ShapePorter(api, page);
+            // const porter = new ShapePorter(api, page);
             const document = this.__document;
 
             for (const item of items) {
                 if (item.toParent === item.view.parent && !item.allowSameEnv) continue;
 
-                const toParent = adapt2Shape(item.toParent) as GroupShape;
-                const shape = adapt2Shape(item.view);
+                const toParent = (item.toParent);
+                const shape = (item.view);
                 const maxL = toParent.childs.length;
                 const index = Math.min(item.index ?? maxL, maxL);
                 this.__migrate(document, api, page, toParent, shape, dlt, index);
+
+                const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+                if (_types.includes(toParent.type)) {
+                    const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
+                    const sortedArr = [...(toParent).childs].sort((a, b) => {
+                        if (a.scrollBehavior !== Fixed && b.scrollBehavior === Fixed) {
+                            return -1;
+                        } else if (a.scrollBehavior === Fixed && b.scrollBehavior !== Fixed) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+                    for (let j = 0; j < sortedArr.length; j++) {
+                        const s = sortedArr[j];
+                        const currentIndex = (toParent).childs.indexOf(s);
+                        if (currentIndex !== j) {
+                            api.shapeMove(page, adapt2Shape(toParent) as GroupShape, currentIndex, adapt2Shape(toParent) as GroupShape, j);
+                        }
+                    }
+                }
             }
 
             this.updateView();
@@ -103,24 +123,44 @@ export class Transporter extends AsyncApiCaller {
         }
     }
 
-    private __migrate(document: Document, api: Api, page: Page, targetParent: GroupShape, shape: Shape, dlt: string, index: number) {
+    private __migrateText(api: Api, page: Page, shape: ShapeView) {
+        if (shape instanceof TextShapeView && shape.getText() !== shape.data.text) {
+            const text = shape.getText();
+            api.deleteText2(page, (shape.data), 0, shape.data.text.length)
+            api.insertComplexText2(page, shape.data, 0, text.getTextWithFormat(0, text.length - 1)) // 去掉最后个回车
+            // size也要
+            const size = shape.size
+            api.shapeModifyWH(page, shape.data, size.width, size.height)
+        } else {
+            shape.childs.forEach(c => this.__migrateText(api, page, c))
+        }
+    }
+
+    private __migrate(document: Document, api: Api, page: Page, target: ShapeView, view: ShapeView, dlt: string, index: number) {
+        // todo 尽量用shapeview，而不是用data的shape
+        const targetParent = adapt2Shape(target) as GroupShape
+        const shape = adapt2Shape(view)
         const error = unable_to_migrate(targetParent, shape);
         if (error) throw new MossError(`error type ${error}`);
 
-        const origin: GroupShape = shape.parent as GroupShape;
+        const viewparent: ShapeView = view.parent!;
+        const origin = adapt2Shape(viewparent) as GroupShape
         if (is_state(shape)) {
             const name = get_state_name(shape as any, dlt);
             api.shapeModifyName(page, shape, `${origin.name}/${name}`);
         }
-        const transform = makeShapeTransform2By1(shape.matrix2Root());
-        const __t = makeShapeTransform2By1(targetParent.matrix2Root());
+        const transform = (shape.matrix2Root());
+        const __t = (targetParent.matrix2Root());
 
-        transform.addTransform(__t.getInverse());
+        transform.multi(__t.getInverse());
 
-        api.shapeModifyTransform(page, shape, makeShapeTransform1By2(transform));
+        api.shapeModifyTransform(page, shape, (transform));
 
         let originIndex = origin.indexOfChild(shape)
         if (origin.id === targetParent.id && originIndex < index) index--;
+        // 如果是textshape，需要同步text内容（可能是变量）
+        // 遍历shape及其子shape，如果是text且与data的text不同，则进行修改
+        this.__migrateText(api, page, view)
         api.shapeMove(page, origin, originIndex, targetParent, index);
 
         //标记容器是否被移动到其他容器
@@ -135,17 +175,15 @@ export class Transporter extends AsyncApiCaller {
         return true;
     }
 
-    swap(shape: GroupShapeView, targets: ShapeView[], x: number, y: number, sort: Map<string, number>) {
+    swap(shape: GroupShapeView, targets: ShapeView[], targetIndex: number) {
         try {
             const api = this.api;
-            const page = this.page;
+            const parent = adapt2Shape(shape) as GroupShape;
             for (let index = 0; index < targets.length; index++) {
-                const target = targets[index];
-                const frame = target._p_frame;
-                translate(api, page, adapt2Shape(target), x - frame.x, y - frame.y);
+                const target = adapt2Shape(targets[index]);
+                const currentIndex = parent.indexOfChild(target);
+                api.shapeMove(this.page, parent, currentIndex, parent, targetIndex);
             }
-
-            modifyAutoLayout(page, api, adapt2Shape(shape), sort);
             this.updateView();
         } catch (e) {
             this.exception = true;
@@ -298,7 +336,7 @@ export class Transporter extends AsyncApiCaller {
                 else return -1;
             });
 
-            const frame = placement ? placement._p_frame : {x: 0, y: 0};
+            const frame = placement ? placement._p_frame : { x: 0, y: 0 };
 
             const api = this.api;
             const page = this.page;
@@ -316,8 +354,6 @@ export class Transporter extends AsyncApiCaller {
                 api.shapeModifyX(page, shape, x);
                 api.shapeModifyY(page, shape, y);
             }
-
-            modifyAutoLayout(page, api, envData);
         } catch (e) {
             this.exception = true;
             console.error(e);
@@ -336,9 +372,6 @@ export class Transporter extends AsyncApiCaller {
                 this.api.shapeModifyName(this.page, shape, assign(shape));
             })
         }
-        this.need_layout_shape.forEach(parent => {
-            modifyAutoLayout(this.page, this.api, parent);
-        })
 
         super.commit();
     }
