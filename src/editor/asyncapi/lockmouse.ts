@@ -1,8 +1,8 @@
 import { AsyncApiCaller } from "./basic/asyncapi";
 import { CoopRepository } from "../../coop/cooprepo";
-import { adapt2Shape, GroupShapeView, PageView, ShapeView, SymbolRefView } from "../../dataview";
+import { adapt2Shape, ArtboardView, GroupShapeView, PageView, ShapeView, SymbolRefView } from "../../dataview";
 import { translate } from "../frame";
-import { shape4cornerRadius } from "../symbol";
+import { shape4Autolayout, shape4cornerRadius } from "../symbol";
 import {
     GroupShape,
     PathShape,
@@ -49,9 +49,11 @@ export class LockMouseHandler extends AsyncApiCaller {
     private valueRecorder: Map<string, number> = new Map();
     private whRatioMap = new Map<string, number>();
     updateFrameTargets: Set<Shape> = new Set();
+    protected _page: PageView;
 
     constructor(repo: CoopRepository, document: Document, page: PageView) {
         super(repo, document, page);
+        this._page = page;
     }
 
     start() {
@@ -64,11 +66,11 @@ export class LockMouseHandler extends AsyncApiCaller {
             const page = this.page;
 
             for (let i = 0; i < shapes.length; i++) {
-                const shape = adapt2Shape(shapes[i]);
+                const shape = shapes[i];
                 const parent = shape.parent;
-                if (parent && (parent as Artboard).autoLayout) continue;
+                if (parent && (parent as ArtboardView).autoLayout) continue;
                 if (shape.isVirtualShape) continue;
-                translate(api, page, shape, dx, 0);
+                translate(api, page, adapt2Shape(shape), dx, 0);
             }
             this.updateView();
         } catch (e) {
@@ -83,11 +85,11 @@ export class LockMouseHandler extends AsyncApiCaller {
             const page = this.page;
 
             for (let i = 0; i < shapes.length; i++) {
-                const shape = adapt2Shape(shapes[i]);
+                const shape = shapes[i];
                 const parent = shape.parent;
-                if (parent && (parent as Artboard).autoLayout) continue;
+                if (parent && (parent as ArtboardView).autoLayout) continue;
                 if (shape.isVirtualShape) continue;
-                translate(api, page, shape, 0, dy);
+                translate(api, page, adapt2Shape(shape), 0, dy);
             }
             this.updateView();
         } catch (e) {
@@ -124,8 +126,9 @@ export class LockMouseHandler extends AsyncApiCaller {
                     }
                     fixTextShapeFrameByLayout(api, page, shape);
                 } else {
-                    if ((shape as Artboard).autoLayout) {
-                        api.shapeModifyAutoLayoutSizing(page, shape, StackSizing.Fixed, 'hor');
+                    if ((view as ArtboardView).autoLayout) {
+                        const _shape = shape4Autolayout(api, view, this._page);
+                        api.shapeModifyAutoLayoutSizing(page, _shape, StackSizing.Fixed, 'hor');
                     }
                 }
 
@@ -171,8 +174,9 @@ export class LockMouseHandler extends AsyncApiCaller {
                     }
                     fixTextShapeFrameByLayout(api, page, shape);
                 } else {
-                    if ((shape as Artboard).autoLayout) {
-                        api.shapeModifyAutoLayoutSizing(page, shape, StackSizing.Fixed, 'ver');
+                    if ((view as ArtboardView).autoLayout) {
+                        const _shape = shape4Autolayout(api, view, this._page);
+                        api.shapeModifyAutoLayoutSizing(page, _shape, StackSizing.Fixed, 'ver');
                     }
                 }
                 if (view instanceof GroupShapeView) {

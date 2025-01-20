@@ -99,23 +99,6 @@ export const initAutoLayout = (page: Page, api: Api, container: Shape, shape_row
     return { width: max_row_width, height: max_row_height, container_hieght: container_auto_height }
 }
 
-export const getAutoLayoutShapes = (shapes: ShapeView[]) => {
-    const parents: Artboard[] = [];
-    for (let i = 0; i < shapes.length; i++) {
-        const shape = adapt2Shape(shapes[i]);
-        let parent = shape.parent;
-        if (!parent || parent.type === ShapeType.Page) continue;
-        while (parent && (parent.type === ShapeType.BoolShape || parent.type === ShapeType.Group)) {
-            parent = parent?.parent;
-        }
-        if (parent && (parent as Artboard).autoLayout) {
-            const hasP = parents.some(item => item.id === parent.id);
-            if (!hasP) parents.push(parent as Artboard);
-        }
-    }
-    return parents;
-}
-
 function boundingBox(shape: Shape, includedBorder?: boolean): ShapeFrame {
     let frame = { ...getShapeFrame(shape) };
     frame.height = Math.max(frame.height, 1);
