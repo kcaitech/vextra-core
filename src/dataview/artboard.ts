@@ -3,10 +3,10 @@ import { GroupShapeView } from "./groupshape";
 import { innerShadowId, renderBorders, renderFills } from "../render";
 import { objectId } from "../basic/objectid";
 import { render as clippathR } from "../render/clippath"
-import { AutoLayout, BorderPosition, CornerRadius, Page, ScrollBehavior, ShadowPosition, ShapeFrame, Transform, Artboard, BlurType, Shape, ShapeSize, SymbolRefShape, SymbolShape, RadiusMask } from "../data";
+import { AutoLayout, BorderPosition, CornerRadius, Page, ScrollBehavior, ShadowPosition, ShapeFrame, Transform, Artboard, BlurType, ShapeSize, RadiusMask, OverrideType, VariableType } from "../data";
 import { ShapeView, updateFrame } from "./shape";
 import { PageView } from "./page";
-
+import { updateAutoLayout } from "../editor/utils/auto_layout2";
 
 export class ArtboardView extends GroupShapeView {
 
@@ -43,7 +43,8 @@ export class ArtboardView extends GroupShapeView {
     }
 
     get autoLayout(): AutoLayout | undefined {
-        return this.data.autoLayout;
+        const v = this._findOV(OverrideType.AutoLayout, VariableType.AutoLayout);
+        return v ? v.value : this.data.autoLayout;
     }
 
     protected _layout(parentFrame: ShapeSize | undefined, scale: { x: number; y: number; } | undefined): void {
@@ -52,9 +53,32 @@ export class ArtboardView extends GroupShapeView {
             super._layout(parentFrame, scale);
             return
         }
-        // todo autoLayout
-        // 
         super._layout(parentFrame, scale);
+        const childs = this.childs.filter(c => c.isVisible);
+        const frame = new ShapeFrame(this.m_frame.x, this.m_frame.y, this.m_frame.width, this.m_frame.height);
+        if (childs.length) this._autoLayout(autoLayout, frame);
+    }
+
+    _autoLayout(autoLayout: AutoLayout, layoutSize: ShapeSize) {
+        const childs = this.childs.filter(c => c.isVisible);
+        const layout = updateAutoLayout(childs, autoLayout, layoutSize);
+        let hidden = 0;
+        for (let i = 0, len = this.childs.length; i < len; i++) {
+            const cc = this.childs[i];
+            const newTransform = cc.transform.clone();
+            const index = Math.min(i - hidden, layout.length - 1);
+            newTransform.translateX = layout[index].x;
+            newTransform.translateY = layout[index].y;
+            if (!cc.isVisible) {
+                hidden += 1;
+            }
+            cc.m_ctx.setDirty(cc);
+            cc.updateLayoutArgs(newTransform, cc.frame, cc.fixedRadius);
+            cc.updateFrames();
+        }
+        const selfframe = new ShapeFrame(0, 0, layoutSize.width, layoutSize.height);
+        this.updateLayoutArgs(this.transform, selfframe, this.fixedRadius);
+        this.updateFrames();
     }
 
     protected renderFills(): EL[] {

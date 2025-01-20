@@ -14,7 +14,8 @@ import {
     BorderSideSetting,
     StrokePaint,
     Border,
-    BorderStyle
+    BorderStyle,
+    Color,
 } from "../data/classes";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
@@ -25,9 +26,10 @@ import { findOverride, getShapeViewId } from "./basic";
 import { layoutTable } from "../data/tablelayout";
 import { getTableCells, getTableVisibleCells } from "../data/tableread";
 import { BasicArray } from "../data/basic";
-import { BorderPosition, CornerType, Point2D, SideType } from "../data/typesdefine";
+import { BorderPosition, CornerType, FillType, Point2D, SideType } from "../data/typesdefine";
 import { render as renderLine } from "../render/line_borders";
 import { ArtboardView } from "./artboard";
+import { v4 as uuid } from "uuid";
 
 export class TableView2 extends ShapeView {
 
@@ -125,9 +127,10 @@ export class TableView2 extends ShapeView {
         if (cell) return cell as Artboard;
 
         // 构造一个
-
+        const strokePaint = new StrokePaint([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(0.5, 0, 0, 0))
         const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
         const strokePaints = new BasicArray<StrokePaint>();
+        strokePaints.push(strokePaint);
         const border = new Border(BorderPosition.Center, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
 
         cell = new Artboard(new BasicArray(),

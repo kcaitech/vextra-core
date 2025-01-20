@@ -20,6 +20,7 @@ import { importStrokePaint } from "../data/baseimport";
 import { exportStrokePaint } from "../data/baseexport";
 import { GroupShapeView } from "./groupshape";
 import { border2path } from "../editor/utils/path";
+import { ArtboardView } from "./artboard";
 
 export class PathShapeView extends ShapeView {
     m_pathsegs?: PathSegment[];
@@ -38,7 +39,7 @@ export class PathShapeView extends ShapeView {
 
     protected _layout(
         parentFrame: ShapeFrame | undefined,
-        scale: { x: number, y: number } | undefined
+        scale: { x: number, y: number } | undefined,
     ): void {
         this.m_pathsegs = undefined;
         super._layout(parentFrame, scale);
@@ -59,6 +60,19 @@ export class PathShapeView extends ShapeView {
         if (args.includes('mask') || args.includes('isVisible')) {
             (this.parent as GroupShapeView).updateMaskMap();
             (this.parent as GroupShapeView).updateFrames();
+        }
+
+        if (args.includes('transform') || args.includes('size') || args.includes('isVisible')) {
+            // 执行父级自动布局
+            const autoLayout = (this.parent as ArtboardView).autoLayout;
+            if (autoLayout && this.parent) {
+                this.parent.m_ctx.setReLayout(this.parent);
+            }
+        } else if (args.includes('borders')) {
+            const autoLayout = (this.parent as ArtboardView).autoLayout;
+            if (this.parent && autoLayout?.bordersTakeSpace) {
+                this.parent.m_ctx.setReLayout(this.parent);
+            }
         }
 
         if (args.includes('points')
@@ -98,6 +112,7 @@ export class PathShapeView extends ShapeView {
         const masked = this.masked;
         if (masked) masked.notify('rerender-mask');
     }
+
     protected renderBorders(): EL[] {
         let borders = this.getBorders();
         if (this.mask && borders) {

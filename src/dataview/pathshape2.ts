@@ -22,7 +22,7 @@ export class PathShapeView2 extends ShapeView {
 
     protected _layout(
         parentFrame: ShapeFrame | undefined,
-        scale: { x: number, y: number } | undefined
+        scale: { x: number, y: number } | undefined,
     ): void {
         this.m_pathsegs = undefined;
         super._layout(parentFrame, scale);

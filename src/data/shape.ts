@@ -795,7 +795,7 @@ export class SymbolUnionShape extends SymbolShape implements classes.SymbolUnion
             style,
             childs,
             size,
-            variables
+            variables,
         )
     }
 

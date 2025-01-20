@@ -63,7 +63,7 @@ export function startLoader(file: IJSON, pages: IJSON[], document: Document, nod
         if (!json) {
             const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
             const strokePaints = new BasicArray<StrokePaint>();
-            const border = new Border(BorderPosition.Center, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
+            const border = new Border(BorderPosition.Inner, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
             const trans = new Transform();
             return new Page(new BasicArray(), id, "", ShapeType.Page, trans, new Style(new BasicArray(), new BasicArray(), border), new BasicArray());
         }

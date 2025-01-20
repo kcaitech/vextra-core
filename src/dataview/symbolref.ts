@@ -1,7 +1,13 @@
 import {
     AutoLayout, Border, ContextSettings, CornerRadius, Fill, MarkerType, OverrideType, PrototypeInterAction, Shadow,
     Shape, ShapeFrame, ShapeSize, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType, ShapeType,
-    BasicArray, getPathOfRadius, Blur, BlurType, PathShape,
+    BasicArray, getPathOfRadius, makeShapeTransform1By2, makeShapeTransform2By1, Blur, BlurType, PathShape,
+    BorderSideSetting,
+    SideType,
+    StrokePaint,
+    BorderPosition,
+    BorderStyle,
+    CornerType
 } from "../data";
 import { ShapeView, fixFrameByConstrain } from "./shape";
 import { DataView, RootView } from "./view";
@@ -15,6 +21,8 @@ import { innerShadowId } from "../render";
 import { elh } from "./el";
 import { render as clippathR } from "../render/clippath";
 import { isEqual } from "../basic/number_utils";
+import { updateAutoLayout } from "../editor/utils/auto_layout2";
+import { ArtboardView } from "./artboard";
 
 // 播放页组件状态切换会话存储refId的key值；
 export const sessionRefIdKey = 'ref-id-cf76c6c6-beed-4c33-ae71-134ee876b990';
@@ -162,7 +170,7 @@ export class SymbolRefView extends ShapeView {
     }
 
     private layoutChild(
-        parentFrame: ShapeSize,
+        parentFrame: ShapeSize | undefined,
         child: Shape,
         idx: number,
         scale: { x: number, y: number } | undefined,
@@ -211,8 +219,13 @@ export class SymbolRefView extends ShapeView {
         _scale: { x: number; y: number; } | undefined
     ): void {
         const shape = this.data as SymbolRefShape;
+        const transform = shape.transform.clone();
+        if ((this.parent as ArtboardView).autoLayout) {
+            transform.translateX = this.m_transform.translateX;
+            transform.translateY = this.m_transform.translateY;
+        }
         if (!this.m_sym) {
-            this.updateLayoutArgs(shape.transform, shape.frame, 0);
+            this.updateLayoutArgs(transform, shape.frame, 0);
             this.removeChilds(0, this.m_children.length).forEach((c) => c.destory());
             this.updateFrames();
             return;
@@ -252,7 +265,6 @@ export class SymbolRefView extends ShapeView {
                 layoutSize.width /= uniformScale
                 layoutSize.height /= uniformScale
             }
-            const transform = shape.transform;
             childscale.x = layoutSize.width / this.m_sym.size.width;
             childscale.y = layoutSize.height / this.m_sym.size.height;
             // let frame = this.m_data.frame;
@@ -285,6 +297,11 @@ export class SymbolRefView extends ShapeView {
             // virtual是整体缩放，位置是会变化的，不需要trans
             if (!this.m_isVirtual) transform.trans(transform.translateX - shape.transform.translateX, transform.translateY - shape.transform.translateY);
 
+            if (this.parent && (this.parent as ArtboardView).autoLayout) {
+                transform.translateX = this.m_transform.translateX;
+                transform.translateY = this.m_transform.translateY;
+            }
+
             selfframe.width = size.width * __decompose_scale.x
             selfframe.height = size.height * __decompose_scale.y
 
@@ -302,16 +319,35 @@ export class SymbolRefView extends ShapeView {
         childscale.x = layoutSize.width / this.m_sym.size.width;
         childscale.y = layoutSize.height / this.m_sym.size.height;
         this.layoutChilds(layoutSize, childscale);
-        if (autoLayout) this._autoLayout(autoLayout, layoutSize)
+        const childs = this.childs.filter(c => c.isVisible);
+        if (autoLayout && childs.length && this.m_sym.autoLayout) this._autoLayout(autoLayout, layoutSize);
         this.updateFrames();
     }
 
-    private _autoLayout(autoLayout: AutoLayout, layoutSize: ShapeSize) {
-        // todo
+    _autoLayout(autoLayout: AutoLayout, layoutSize: ShapeSize) {
+        if (this instanceof SymbolRefView && !this.symData?.autoLayout) return;
+        const childs = this.childs.filter(c => c.isVisible);
+        const layout = updateAutoLayout(childs, autoLayout, layoutSize);
+        let hidden = 0;
+        for (let i = 0, len = this.childs.length; i < len; i++) {
+            const cc = this.childs[i];
+            const newTransform = cc.transform.clone();
+            const index = Math.min(i - hidden, layout.length - 1);
+            newTransform.translateX = layout[index].x;
+            newTransform.translateY = layout[index].y;
+            if (!cc.isVisible) {
+                hidden += 1;
+            }
+            cc.m_ctx.setDirty(cc);
+            cc.updateLayoutArgs(newTransform, cc.frame, cc.fixedRadius);
+            cc.updateFrames();
+        }
+        const selfframe = new ShapeFrame(0, 0, layoutSize.width, layoutSize.height);
+        this.updateLayoutArgs(this.transform, selfframe, this.fixedRadius);
     }
 
     protected layoutChilds(
-        parentFrame: ShapeSize,
+        parentFrame: ShapeSize | undefined,
         scale?: { x: number, y: number }
     ): void {
         const varsContainer = (this.varsContainer || []).concat(this.m_data as SymbolRefShape);
@@ -371,8 +407,11 @@ export class SymbolRefView extends ShapeView {
     getBorders(): Border {
         if (this.m_borders) return this.m_borders;
         const v = this._findOV2(OverrideType.Borders, VariableType.Borders);
-        this.m_borders = v ? v.value as Border : this.m_sym!.style.borders;
-        return this.m_borders;
+        const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+        const strokePaints = new BasicArray<StrokePaint>();
+        const border = new Border(BorderPosition.Inner, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
+        this.m_borders = v ? v.value as Border : this.m_sym?.style.borders;
+        return this.m_borders || border;
     }
 
     getShadows(): Shadow[] {

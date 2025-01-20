@@ -14,7 +14,7 @@ export interface PropsType {
     scale?: { x: number, y: number };
     varsContainer?: VarsContainer;
     isVirtual?: boolean;
-    layoutSize?: ShapeSize
+    layoutSize?: ShapeSize,
 }
 
 interface DataView extends Notifiable {

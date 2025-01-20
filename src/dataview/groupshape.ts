@@ -1,9 +1,10 @@
-import { GroupShape, Shape, ShapeFrame, ShapeSize, ShapeType, SymbolRefShape, SymbolShape } from "../data";
+import { Artboard, GroupShape, Shape, ShapeFrame, ShapeSize, ShapeType, SymbolRefShape, SymbolShape } from "../data";
 import { ShapeView, updateFrame } from "./shape";
 import { getShapeViewId } from "./basic";
 import { EL } from "./el";
 import { DataView, RootView } from "./view";
 import { DViewCtx, PropsType, VarsContainer } from "./viewctx";
+import { ArtboardView } from "./artboard";
 
 export class GroupShapeView extends ShapeView {
 
@@ -74,11 +75,17 @@ export class GroupShapeView extends ShapeView {
             this.updateMaskMap();
             this.m_need_updatechilds = true;
         }
+
+        if (args.includes('autoLayout') && !(this.data as Artboard).autoLayout) {
+            this.childs.forEach(c => {
+                c.m_ctx.setReLayout(c);
+            });
+        }
     }
 
     protected _layout(
         parentFrame: ShapeSize | undefined,
-        scale: { x: number, y: number } | undefined
+        scale: { x: number, y: number } | undefined,
     ): void {
         super._layout(parentFrame, scale);
         if (this.m_need_updatechilds) {
@@ -110,7 +117,7 @@ export class GroupShapeView extends ShapeView {
         scale: { x: number, y: number } | undefined,
         varsContainer: VarsContainer | undefined,
         resue: Map<string, DataView>,
-        rView: RootView | undefined
+        rView: RootView | undefined,
     ) {
         let cdom: DataView | undefined = resue.get(child.id);
         const props = { data: child, scale, varsContainer, isVirtual: this.m_isVirtual, layoutSize: parentFrame };

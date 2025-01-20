@@ -1,5 +1,7 @@
 import { innerShadowId, renderBlur, renderBorders, renderFills, renderShadows } from "../render";
 import {
+    Artboard,
+    AutoLayout,
     BasicArray, Blur, BlurType, Border,
     BorderPosition, ContextSettings, CornerRadius,
     ExportOptions, Fill, FillType,
@@ -27,6 +29,7 @@ import { ArtboardView } from "./artboard";
 import { findOverrideAll } from "../data/utils";
 import { Path } from "@kcdesign/path";
 import { isEqual } from "../basic/number_utils";
+import { updateAutoLayout } from "src/editor/utils/auto_layout2";
 
 export function isDiffShapeSize(lsh: ShapeSize | undefined, rsh: ShapeSize | undefined) {
     if (lsh === rsh) { // both undefined
@@ -483,6 +486,19 @@ export class ShapeView extends DataView {
             (this.parent as GroupShapeView).updateFrames(); // 遮罩图层会改变父级的frame结构 // todo 等排版更新就行？
         }
 
+        if (args.includes('transform') || args.includes('size') || args.includes('isVisible')) {
+            // 执行父级自动布局
+            const autoLayout = (this.parent as ArtboardView).autoLayout;
+            if (autoLayout && this.parent) {
+                this.parent.m_ctx.setReLayout(this.parent);
+            }
+        } else if (args.includes('borders')) {
+            const autoLayout = (this.parent as ArtboardView).autoLayout;
+            if (this.parent && autoLayout?.bordersTakeSpace) {
+                this.parent.m_ctx.setReLayout(this.parent);
+            }
+        }
+
         if (args.includes('points')
             || args.includes('pathsegs')
             || args.includes('isClosed')
@@ -933,10 +949,15 @@ export class ShapeView extends DataView {
 
     protected _layout(
         parentFrame: ShapeSize | undefined,
-        scale: { x: number, y: number } | undefined
+        scale: { x: number, y: number } | undefined,
     ) {
         const shape = this.data;
-        const transform = shape.transform;
+        const transform = shape.transform.clone();
+        if (this.parent && (this.parent as ArtboardView).autoLayout) {
+            transform.translateX = this.m_transform.translateX;
+            transform.translateY = this.m_transform.translateY;
+        }
+        
         // case 1 不需要变形
         if (!scale || isEqual(scale.x, 1) && isEqual(scale.y, 1)) {
             let frame = this.frame;
@@ -997,7 +1018,16 @@ export class ShapeView extends DataView {
             // 保持对象位置不变
             // transform.trans(transform.translateX - shape.transform.translateX, transform.translateY - shape.transform.translateY);
             const size = shape.size;
+            let layoutSize = new ShapeSize();
             const frame = new ShapeFrame(0, 0, size.width * __decompose_scale.x, size.height * __decompose_scale.y);
+
+            if (this.parent && (this.parent as ArtboardView).autoLayout) {
+                transform.translateX = this.m_transform.translateX;
+                transform.translateY = this.m_transform.translateY;
+            }
+
+            layoutSize.width = frame.width
+            layoutSize.height = frame.height
             this.updateLayoutArgs((transform), frame, (shape as PathShape).fixedRadius);
             this.layoutChilds(this.frame, { x: frame.width / saveW, y: frame.height / saveH });
         }
@@ -1034,7 +1064,6 @@ export class ShapeView extends DataView {
             !diffLayoutSize) {
             return false;
         }
-
         this.m_props = props
         this.m_isVirtual = props.isVirtual
         // this.m_uniform_scale = props.uniformScale;
