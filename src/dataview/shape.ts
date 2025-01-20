@@ -568,15 +568,15 @@ export class ShapeView extends DataView {
             (this.parent as GroupShapeView).updateFrames(); // 遮罩图层会改变父级的frame结构 // todo 等排版更新就行？
         }
 
-        if (args.includes('transform') || args.includes('size') || args.includes('isVisible')) {
+        if (this.parent && (args.includes('transform') || args.includes('size') || args.includes('isVisible'))) {
             // 执行父级自动布局
             const autoLayout = (this.parent as ArtboardView).autoLayout;
-            if (autoLayout && this.parent) {
+            if (autoLayout) {
                 this.parent.m_ctx.setReLayout(this.parent);
             }
-        } else if (args.includes('borders')) {
+        } else if (args.includes('borders') && this.parent) {
             const autoLayout = (this.parent as ArtboardView).autoLayout;
-            if (this.parent && autoLayout?.bordersTakeSpace) {
+            if (autoLayout?.bordersTakeSpace) {
                 this.parent.m_ctx.setReLayout(this.parent);
             }
         }
