@@ -20,7 +20,7 @@
         "strokePaints": {
             "type": "array",
             "items": {
-                "$ref": "./stroke-paint.json"
+                "$ref": "./fill.json"
             }
         },
         "fillsMask": {

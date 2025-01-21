@@ -38,7 +38,7 @@ export function exportBorderStyle(source: types.BorderStyle, ctx?: IExportContex
 export function exportBorder_strokePaints(source: types.Border_strokePaints, ctx?: IExportContext): types.Border_strokePaints {
     const ret: types.Border_strokePaints = []
     source.forEach((source) => {
-        ret.push(exportStrokePaint(source, ctx))
+        ret.push(exportFill(source, ctx))
     })
     return ret
 }
@@ -1028,27 +1028,6 @@ export function exportSpan(source: types.Span, ctx?: IExportContext): types.Span
     ret.length = source.length
     return ret
 }
-/* stroke paint */
-export function exportStrokePaint(source: types.StrokePaint, ctx?: IExportContext): types.StrokePaint {
-    const ret: types.StrokePaint = {} as types.StrokePaint
-    ret.typeId = "stroke-paint"
-    ret.crdtidx = exportCrdtidx(source.crdtidx, ctx)
-    ret.typeId = source.typeId
-    ret.id = source.id
-    ret.isEnabled = source.isEnabled
-    ret.fillType = exportFillType(source.fillType, ctx)
-    ret.color = exportColor(source.color, ctx)
-    if (source.gradient !== undefined) ret.gradient = exportGradient(source.gradient, ctx)
-    if (source.imageRef !== undefined) ret.imageRef = source.imageRef
-    if (source.imageScaleMode !== undefined) ret.imageScaleMode = exportImageScaleMode(source.imageScaleMode, ctx)
-    if (source.rotation !== undefined) ret.rotation = source.rotation
-    if (source.scale !== undefined) ret.scale = source.scale
-    if (source.originalImageWidth !== undefined) ret.originalImageWidth = source.originalImageWidth
-    if (source.originalImageHeight !== undefined) ret.originalImageHeight = source.originalImageHeight
-    if (source.paintFilter !== undefined) ret.paintFilter = exportPaintFilter(source.paintFilter, ctx)
-    if (source.transform !== undefined) ret.transform = exportPatternTransform(source.transform, ctx)
-    return ret
-}
 /* blur mask */
 export function exportBlurMask(source: types.BlurMask, ctx?: IExportContext): types.BlurMask {
     const ret: types.BlurMask = {} as types.BlurMask
@@ -1082,19 +1061,6 @@ export function exportBorderMask(source: types.BorderMask, ctx?: IExportContext)
     ret.name = source.name
     ret.description = source.description
     ret.border = exportBorderMaskType(source.border, ctx)
-    return ret
-}
-/* border */
-export function exportBorder(source: types.Border, ctx?: IExportContext): types.Border {
-    const ret: types.Border = {} as types.Border
-    ret.typeId = "border"
-    ret.typeId = source.typeId
-    ret.position = exportBorderPosition(source.position, ctx)
-    ret.borderStyle = exportBorderStyle(source.borderStyle, ctx)
-    ret.cornerType = exportCornerType(source.cornerType, ctx)
-    ret.sideSetting = exportBorderSideSetting(source.sideSetting, ctx)
-    ret.strokePaints = exportBorder_strokePaints(source.strokePaints, ctx)
-    if (source.fillsMask !== undefined) ret.fillsMask = source.fillsMask
     return ret
 }
 /* fill */
@@ -1142,6 +1108,58 @@ export function exportPara(source: types.Para, ctx?: IExportContext): types.Para
     if (source.attr !== undefined) ret.attr = exportParaAttr(source.attr, ctx)
     return ret
 }
+/* text attr */
+export function exportTextAttr(source: types.TextAttr, ctx?: IExportContext): types.TextAttr {
+    const ret: types.TextAttr = exportParaAttr(source, ctx) as types.TextAttr
+    if (source.verAlign !== undefined) ret.verAlign = exportTextVerAlign(source.verAlign, ctx)
+    if (source.orientation !== undefined) ret.orientation = exportTextOrientation(source.orientation, ctx)
+    if (source.textBehaviour !== undefined) ret.textBehaviour = exportTextBehaviour(source.textBehaviour, ctx)
+    if (source.padding !== undefined) ret.padding = exportPadding(source.padding, ctx)
+    return ret
+}
+/* text */
+export function exportText(source: types.Text, ctx?: IExportContext): types.Text {
+    const ret: types.Text = {} as types.Text
+    ret.typeId = "text"
+    ret.typeId = source.typeId
+    ret.paras = exportText_paras(source.paras, ctx)
+    if (source.attr !== undefined) ret.attr = exportTextAttr(source.attr, ctx)
+    return ret
+}
+/* border */
+export function exportBorder(source: types.Border, ctx?: IExportContext): types.Border {
+    const ret: types.Border = {} as types.Border
+    ret.typeId = "border"
+    ret.typeId = source.typeId
+    ret.position = exportBorderPosition(source.position, ctx)
+    ret.borderStyle = exportBorderStyle(source.borderStyle, ctx)
+    ret.cornerType = exportCornerType(source.cornerType, ctx)
+    ret.sideSetting = exportBorderSideSetting(source.sideSetting, ctx)
+    ret.strokePaints = exportBorder_strokePaints(source.strokePaints, ctx)
+    if (source.fillsMask !== undefined) ret.fillsMask = source.fillsMask
+    return ret
+}
+/* fill mask */
+export function exportFillMask(source: types.FillMask, ctx?: IExportContext): types.FillMask {
+    const ret: types.FillMask = {} as types.FillMask
+    ret.typeId = "fill-mask"
+    ret.crdtidx = exportCrdtidx(source.crdtidx, ctx)
+    ret.typeId = source.typeId
+    ret.sheet = source.sheet
+    ret.id = source.id
+    ret.name = source.name
+    ret.description = source.description
+    ret.fills = exportFillMask_fills(source.fills, ctx)
+    return ret
+}
+/* style sheet */
+export function exportStyleSheet(source: types.StyleSheet, ctx?: IExportContext): types.StyleSheet {
+    const ret: types.StyleSheet = {} as types.StyleSheet
+    ret.id = source.id
+    ret.name = source.name
+    ret.variables = exportStyleSheet_variables(source.variables, ctx)
+    return ret
+}
 /* style */
 export function exportStyle(source: types.Style, ctx?: IExportContext): types.Style {
     const ret: types.Style = {} as types.Style
@@ -1171,37 +1189,6 @@ export function exportStyle(source: types.Style, ctx?: IExportContext): types.St
     if (source.shadowsMask !== undefined) ret.shadowsMask = source.shadowsMask
     if (source.blursMask !== undefined) ret.blursMask = source.blursMask
     if (source.bordersMask !== undefined) ret.bordersMask = source.bordersMask
-    return ret
-}
-/* text attr */
-export function exportTextAttr(source: types.TextAttr, ctx?: IExportContext): types.TextAttr {
-    const ret: types.TextAttr = exportParaAttr(source, ctx) as types.TextAttr
-    if (source.verAlign !== undefined) ret.verAlign = exportTextVerAlign(source.verAlign, ctx)
-    if (source.orientation !== undefined) ret.orientation = exportTextOrientation(source.orientation, ctx)
-    if (source.textBehaviour !== undefined) ret.textBehaviour = exportTextBehaviour(source.textBehaviour, ctx)
-    if (source.padding !== undefined) ret.padding = exportPadding(source.padding, ctx)
-    return ret
-}
-/* text */
-export function exportText(source: types.Text, ctx?: IExportContext): types.Text {
-    const ret: types.Text = {} as types.Text
-    ret.typeId = "text"
-    ret.typeId = source.typeId
-    ret.paras = exportText_paras(source.paras, ctx)
-    if (source.attr !== undefined) ret.attr = exportTextAttr(source.attr, ctx)
-    return ret
-}
-/* fill mask */
-export function exportFillMask(source: types.FillMask, ctx?: IExportContext): types.FillMask {
-    const ret: types.FillMask = {} as types.FillMask
-    ret.typeId = "fill-mask"
-    ret.crdtidx = exportCrdtidx(source.crdtidx, ctx)
-    ret.typeId = source.typeId
-    ret.sheet = source.sheet
-    ret.id = source.id
-    ret.name = source.name
-    ret.description = source.description
-    ret.fills = exportFillMask_fills(source.fills, ctx)
     return ret
 }
 /* shape */
@@ -1245,14 +1232,6 @@ export function exportShape(source: types.Shape, ctx?: IExportContext): types.Sh
     if (source.mask !== undefined) ret.mask = source.mask
     if (source.stackPositioning !== undefined) ret.stackPositioning = exportStackPositioning(source.stackPositioning, ctx)
     if (source.radiusMask !== undefined) ret.radiusMask = source.radiusMask
-    return ret
-}
-/* style sheet */
-export function exportStyleSheet(source: types.StyleSheet, ctx?: IExportContext): types.StyleSheet {
-    const ret: types.StyleSheet = {} as types.StyleSheet
-    ret.id = source.id
-    ret.name = source.name
-    ret.variables = exportStyleSheet_variables(source.variables, ctx)
     return ret
 }
 /* table cell */

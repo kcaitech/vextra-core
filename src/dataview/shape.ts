@@ -12,7 +12,7 @@ import {
     ResizingConstraints2, ScrollBehavior,
     ScrollDirection, Shadow, ShadowPosition, Shape,
     ShapeFrame, ShapeSize, ShapeType, SymbolRefShape,
-    SymbolShape, Transform, Variable, VariableType, BlurMask, BorderMask, FillMask, ShadowMask, StrokePaint,
+    SymbolShape, Transform, Variable, VariableType, BlurMask, BorderMask, FillMask, ShadowMask,
     RadiusMask
 } from "../data";
 import { findOverrideAndVar } from "./basic";
@@ -22,8 +22,8 @@ import { DViewCtx, PropsType } from "./viewctx";
 import { objectId } from "../basic/objectid";
 import { float_accuracy } from "../basic/consts";
 import { GroupShapeView } from "./groupshape";
-import { importFill, importStrokePaint } from "../data/baseimport";
-import { exportFill, exportStrokePaint } from "../data/baseexport";
+import { importFill } from "../data/baseimport";
+import { exportFill } from "../data/baseexport";
 import { PageView } from "./page";
 import { ArtboardView } from "./artboard";
 import { findOverrideAll } from "../data/utils";
@@ -627,7 +627,9 @@ export class ShapeView extends DataView {
     }
 
     getFills(): Fill[] {
-        if (this.m_fills) return this.m_fills;
+        if (this.m_fills) {
+            return this.m_fills;
+        }
         let fills: Fill[] = [];
         if (this.style.fillsMask) {
             const mgr = this.style.getStylesMgr();
@@ -704,14 +706,8 @@ export class ShapeView extends DataView {
         if (this.style.borders.fillsMask) {
             const mgr = this.style.getStylesMgr();
             const mask = mgr?.getSync(this.style.borders.fillsMask) as FillMask
-            let strokePaints = new BasicArray<StrokePaint>;
-            mask.fills.forEach((i) => {
-                const { crdtidx, id, isEnabled, fillType, color } = i
-                const s = new StrokePaint(crdtidx, id, isEnabled, fillType, color)
-                strokePaints.push(s)
-            })
             let _border = { ...border };
-            _border.strokePaints = strokePaints;
+            _border.strokePaints = mask.fills;
             border = _border as Border;
             this.watchBorderFillMask(mask);
         } else {
@@ -957,7 +953,7 @@ export class ShapeView extends DataView {
             transform.translateX = this.m_transform.translateX;
             transform.translateY = this.m_transform.translateY;
         }
-        
+
         // case 1 不需要变形
         if (!scale || isEqual(scale.x, 1) && isEqual(scale.y, 1)) {
             let frame = this.frame;
@@ -1113,7 +1109,7 @@ export class ShapeView extends DataView {
         let border = this.getBorders();
         if (this.mask && border) {
             border.strokePaints.map(b => {
-                const nb = importStrokePaint(exportStrokePaint(b));
+                const nb = importFill(exportFill(b));
                 if (nb.fillType === FillType.Gradient && nb.gradient?.gradientType === GradientType.Angular) nb.fillType = FillType.SolidColor;
                 return nb;
             });

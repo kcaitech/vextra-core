@@ -31,7 +31,6 @@ export {
     PaintFilter,
     PaintFilterType,
     Border,
-    StrokePaint,
     Fill,
     Stop,
     Shadow,

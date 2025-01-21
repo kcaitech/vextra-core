@@ -12,10 +12,10 @@ import {
     ShapeSize,
     TableCellAttr,
     BorderSideSetting,
-    StrokePaint,
     Border,
     BorderStyle,
     Color,
+    Fill,
 } from "../data/classes";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
@@ -127,9 +127,9 @@ export class TableView2 extends ShapeView {
         if (cell) return cell as Artboard;
 
         // 构造一个
-        const strokePaint = new StrokePaint([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(0.5, 0, 0, 0))
+        const strokePaint = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(0.5, 0, 0, 0))
         const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
-        const strokePaints = new BasicArray<StrokePaint>();
+        const strokePaints = new BasicArray<Fill>();
         strokePaints.push(strokePaint);
         const border = new Border(BorderPosition.Center, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
 

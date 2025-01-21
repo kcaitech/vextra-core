@@ -3,6 +3,7 @@ import { objectId } from '../basic/objectid';
 import {
     Border,
     BorderPosition,
+    Fill,
     FillType,
     Gradient,
     GradientType,
@@ -11,7 +12,6 @@ import {
     ShapeSize,
     ShapeType,
     SideType,
-    StrokePaint,
     SymbolRefShape,
     SymbolShape,
     VariableType
@@ -20,13 +20,13 @@ import { findOverrideAndVar, randomId } from "./basic";
 import { renderCustomBorder } from "./border_custom";
 
 const handler: {
-    [key: string]: (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: StrokePaint, radius: number[]) => any
+    [key: string]: (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: Fill, radius: number[]) => any
 } = {};
 const angularHandler: {
-    [key: string]: (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: StrokePaint, radius: number[]) => any
+    [key: string]: (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: Fill, radius: number[]) => any
 } = {};
 
-angularHandler[BorderPosition.Inner] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: StrokePaint, radius: number[]): any {
+angularHandler[BorderPosition.Inner] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: Fill, radius: number[]): any {
     if (shape && is_side_custom(border.sideSetting.sideType, shape)) {
         return renderCustomBorder(h, frame, border, path, shape, strokePaints, radius);
     }
@@ -83,7 +83,7 @@ angularHandler[BorderPosition.Inner] = function (h: Function, frame: ShapeSize, 
     ]);
 }
 
-angularHandler[BorderPosition.Center] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: StrokePaint, radius: number[]): any {
+angularHandler[BorderPosition.Center] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: Fill, radius: number[]): any {
     if (shape && is_side_custom(border.sideSetting.sideType, shape)) {
         return renderCustomBorder(h, frame, border, path, shape, strokePaints, radius);
     }
@@ -133,7 +133,7 @@ angularHandler[BorderPosition.Center] = function (h: Function, frame: ShapeSize,
     ])
 }
 
-angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: StrokePaint, radius: number[]): any {
+angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: Fill, radius: number[]): any {
     // const frame = shape.frame;
     const thickness = border.sideSetting.thicknessTop;
     if (shape && is_side_custom(border.sideSetting.sideType, shape)) {
@@ -191,7 +191,7 @@ angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, 
     ]);
 }
 
-handler[BorderPosition.Inner] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: StrokePaint, radius: number[]): any {
+handler[BorderPosition.Inner] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: Fill, radius: number[]): any {
     if (shape && is_side_custom(border.sideSetting.sideType, shape)) {
         return renderCustomBorder(h, frame, border, path, shape, strokePaints, radius);
     }
@@ -239,7 +239,7 @@ handler[BorderPosition.Inner] = function (h: Function, frame: ShapeSize, border:
     return h("g", elArr);
 }
 
-handler[BorderPosition.Center] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: StrokePaint, radius: number[]): any {
+handler[BorderPosition.Center] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: Fill, radius: number[]): any {
     // const frame = shape.frame;
     if (shape && is_side_custom(border.sideSetting.sideType, shape)) {
         return renderCustomBorder(h, frame, border, path, shape, strokePaints, radius);
@@ -277,7 +277,7 @@ handler[BorderPosition.Center] = function (h: Function, frame: ShapeSize, border
     }
 }
 
-handler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: StrokePaint, radius: number[]): any {
+handler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: Fill, radius: number[]): any {
     // const frame = shape.frame;
     if (shape && is_side_custom(border.sideSetting.sideType, shape)) {
         return renderCustomBorder(h, frame, border, path, shape, strokePaints, radius);
@@ -340,7 +340,7 @@ export function render(h: Function, border: Border | undefined, frame: ShapeSize
     // 不闭合的图层的边框默认以居中效果来渲染
     const position = isClosed ? border.position : BorderPosition.Center;
     for (let i = 0; i < bc; i++) {
-        const strokePaints: StrokePaint = border.strokePaints[i];
+        const strokePaints: Fill = border.strokePaints[i];
         if (!strokePaints.isEnabled) {
             continue;
         }

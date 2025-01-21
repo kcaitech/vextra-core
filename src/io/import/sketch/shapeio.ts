@@ -1,8 +1,7 @@
 import {
     BoolShape, CurveMode, CurvePoint, ExportFormat, ExportOptions, GroupShape, TextShape, Variable,
     OverrideType, PathSegment, PathShape, RectShape, Shape, SymbolShape, VariableType, CornerRadius,
-    string2Text,
-    StrokePaint
+    string2Text
 } from "../../../data";
 import { importColor, importStyle, importXY } from "./styleio";
 import { importText } from "./textio";
@@ -210,7 +209,7 @@ const hasFill = (fills: Fill[]) => {
     if (fills.length === 0) return false;
     return fills.some(f => f.isEnabled);
 }
-const hasBorder = (strokePaint: StrokePaint[]) => {
+const hasBorder = (strokePaint: Fill[]) => {
     if (strokePaint.length === 0) return false;
     return strokePaint.some(b => b.isEnabled);
 }

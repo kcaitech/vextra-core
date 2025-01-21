@@ -101,7 +101,7 @@ export class Border extends Basic implements classes.Border {
     borderStyle: BorderStyle
     cornerType: CornerType
     sideSetting: BorderSideSetting
-    strokePaints: BasicArray<StrokePaint>
+    strokePaints: BasicArray<Fill>
     fillsMask?: string
 
     constructor(
@@ -109,7 +109,7 @@ export class Border extends Basic implements classes.Border {
         borderStyle: BorderStyle,
         cornerType: CornerType,
         sideSetting: BorderSideSetting,
-        strokePaints: BasicArray<StrokePaint>
+        strokePaints: BasicArray<Fill>
     ) {
         super()
         this.position = position
@@ -134,65 +134,6 @@ export class BorderMaskType extends Basic implements classes.BorderMaskType {
         this.sideSetting = sideSetting
     }
 }
-
-export class StrokePaint extends Basic implements classes.StrokePaint {
-    typeId = 'stroke-paint'
-    crdtidx: BasicArray<number>
-    id: string
-    isEnabled: boolean
-    fillType: FillType
-    color: Color
-    gradient?: Gradient
-    imageRef?: string
-    imageScaleMode?: classes.ImageScaleMode
-    rotation?: number
-    scale?: number
-    originalImageWidth?: number
-    originalImageHeight?: number
-    paintFilter?: classes.PaintFilter
-    transform?: classes.PatternTransform
-    colorMask?: string
-
-    private __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
-    private __cacheData?: { media: { buff: Uint8Array, base64: string }, ref: string };
-
-    constructor(
-        crdtidx: BasicArray<number>,
-        id: string,
-        isEnabled: boolean,
-        fillType: FillType,
-        color: Color,
-    ) {
-        super()
-        this.crdtidx = crdtidx
-        this.id = id
-        this.isEnabled = isEnabled
-        this.fillType = fillType
-        this.color = color
-    }
-
-    setImageMgr(imageMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>) {
-        this.__imageMgr = imageMgr;
-    }
-
-    getImageMgr(): ResourceMgr<{ buff: Uint8Array, base64: string }> | undefined {
-        return this.__imageMgr;
-    }
-
-    async loadImage(): Promise<string> {
-        if (this.__cacheData) return this.__cacheData.media.base64;
-        if (!this.imageRef) return "";
-        const mediaMgr = this.__imageMgr;
-        const val = mediaMgr && await mediaMgr.get(this.imageRef);
-        if (val) {
-            this.__cacheData = { media: val, ref: this.imageRef }
-            this.notify();
-        }
-        return this.__cacheData && this.__cacheData.media.base64 || "";
-    }
-}
-
-
 
 export class Fill extends Basic implements classes.Fill {
     typeId = 'fill'

@@ -14,7 +14,7 @@ function objkeys(obj: any) {
     return obj instanceof Map ? obj : { forEach: (f: (v: any, k: string) => void) => Object.keys(obj).forEach((k) => f(obj[k], k)) };
 }
 type Artboard_guides = BasicArray<impl.Guide>
-type Border_strokePaints = BasicArray<impl.StrokePaint>
+type Border_strokePaints = BasicArray<impl.Fill>
 type DocumentMeta_pagesList = BasicArray<impl.PageListItem>
 type DocumentMeta_stylelib = BasicArray<impl.StyleSheet>
 type ExportOptions_exportFormats = BasicArray<impl.ExportFormat>
@@ -75,7 +75,8 @@ export function importBorderStyle(source: types.BorderStyle, ctx?: IImportContex
 export function importBorder_strokePaints(source: types.Border_strokePaints, ctx?: IImportContext): Border_strokePaints {
     const ret: Border_strokePaints = new BasicArray()
     source.forEach((source, i) => {
-        ret.push(importStrokePaint(source, ctx))
+        if (!source.crdtidx) source.crdtidx = [i]
+        ret.push(importFill(source, ctx))
     })
     return ret
 }
@@ -1135,28 +1136,6 @@ export function importSpan(source: types.Span, ctx?: IImportContext): impl.Span 
     importSpanOptional(ret, source, ctx)
     return ret
 }
-/* stroke paint */
-function importStrokePaintOptional(tar: impl.StrokePaint, source: types.StrokePaint, ctx?: IImportContext) {
-    if (source.gradient !== undefined) tar.gradient = importGradient(source.gradient, ctx)
-    if (source.imageRef !== undefined) tar.imageRef = source.imageRef
-    if (source.imageScaleMode !== undefined) tar.imageScaleMode = importImageScaleMode(source.imageScaleMode, ctx)
-    if (source.rotation !== undefined) tar.rotation = source.rotation
-    if (source.scale !== undefined) tar.scale = source.scale
-    if (source.originalImageWidth !== undefined) tar.originalImageWidth = source.originalImageWidth
-    if (source.originalImageHeight !== undefined) tar.originalImageHeight = source.originalImageHeight
-    if (source.paintFilter !== undefined) tar.paintFilter = importPaintFilter(source.paintFilter, ctx)
-    if (source.transform !== undefined) tar.transform = importPatternTransform(source.transform, ctx)
-}
-export function importStrokePaint(source: types.StrokePaint, ctx?: IImportContext): impl.StrokePaint {
-    const ret: impl.StrokePaint = new impl.StrokePaint (
-        importCrdtidx(source.crdtidx, ctx),
-        source.id,
-        source.isEnabled,
-        importFillType(source.fillType, ctx),
-        importColor(source.color, ctx))
-    importStrokePaintOptional(ret, source, ctx)
-    return ret
-}
 /* blur mask */
 export function importBlurMask(source: types.BlurMask, ctx?: IImportContext): impl.BlurMask {
     const ret: impl.BlurMask = new impl.BlurMask (
@@ -1190,41 +1169,6 @@ export function importBorderMask(source: types.BorderMask, ctx?: IImportContext)
         // inject code
     if (ctx?.document) ctx.document.stylesMgr.add(ret.id, ret);
 
-    return ret
-}
-/* border */
-function importBorderOptional(tar: impl.Border, source: types.Border, ctx?: IImportContext) {
-    if (source.fillsMask !== undefined) tar.fillsMask = source.fillsMask
-}
-export function importBorder(source: types.Border, ctx?: IImportContext): impl.Border {
-        // inject code
-    if (!source.strokePaints) {
-        const strokePaint = { ...(source as any) };
-        if (!strokePaint.crdtidx) strokePaint.crdtidx = [0];
-        strokePaint.typeId = 'stroke-paint';
-        delete strokePaint.borderStyle;
-        delete strokePaint.cornerType;
-        delete strokePaint.position;
-        delete strokePaint.sideSetting;
-        delete strokePaint.thickness;
-        delete strokePaint.contextSettings;
-        (source as any) = {
-            typeId: "border",
-            borderStyle: source.borderStyle,
-            cornerType: source.cornerType,
-            position: source.position,
-            sideSetting: source.sideSetting,
-            strokePaints: [strokePaint],
-        }
-    }
-
-    const ret: impl.Border = new impl.Border (
-        importBorderPosition(source.position, ctx),
-        importBorderStyle(source.borderStyle, ctx),
-        importCornerType(source.cornerType, ctx),
-        importBorderSideSetting(source.sideSetting, ctx),
-        importBorder_strokePaints(source.strokePaints, ctx))
-    importBorderOptional(ret, source, ctx)
     return ret
 }
 /* fill */
@@ -1280,6 +1224,95 @@ export function importPara(source: types.Para, ctx?: IImportContext): impl.Para 
     importParaOptional(ret, source, ctx)
     return ret
 }
+/* text attr */
+function importTextAttrOptional(tar: impl.TextAttr, source: types.TextAttr, ctx?: IImportContext) {
+    importParaAttrOptional(tar, source)
+    if (source.verAlign !== undefined) tar.verAlign = importTextVerAlign(source.verAlign, ctx)
+    if (source.orientation !== undefined) tar.orientation = importTextOrientation(source.orientation, ctx)
+    if (source.textBehaviour !== undefined) tar.textBehaviour = importTextBehaviour(source.textBehaviour, ctx)
+    if (source.padding !== undefined) tar.padding = importPadding(source.padding, ctx)
+}
+export function importTextAttr(source: types.TextAttr, ctx?: IImportContext): impl.TextAttr {
+        // inject code
+    // 兼容旧数据
+    const _source = source as any;
+    if (typeof _source.bold === 'boolean') {
+        _source.bold = _source.bold ? 700 : 400;
+    }
+    if (_source.bold) {
+        _source.weight = _source.bold;
+    }
+
+    const ret: impl.TextAttr = new impl.TextAttr ()
+    importTextAttrOptional(ret, source, ctx)
+    return ret
+}
+/* text */
+function importTextOptional(tar: impl.Text, source: types.Text, ctx?: IImportContext) {
+    if (source.attr !== undefined) tar.attr = importTextAttr(source.attr, ctx)
+}
+export function importText(source: types.Text, ctx?: IImportContext): impl.Text {
+    const ret: impl.Text = new impl.Text (
+        importText_paras(source.paras, ctx))
+    importTextOptional(ret, source, ctx)
+    return ret
+}
+/* border */
+function importBorderOptional(tar: impl.Border, source: types.Border, ctx?: IImportContext) {
+    if (source.fillsMask !== undefined) tar.fillsMask = source.fillsMask
+}
+export function importBorder(source: types.Border, ctx?: IImportContext): impl.Border {
+        // inject code
+    if (!source.strokePaints) {
+        const strokePaint = { ...(source as any) };
+        if (!strokePaint.crdtidx) strokePaint.crdtidx = [0];
+        strokePaint.typeId = 'fill';
+        delete strokePaint.borderStyle;
+        delete strokePaint.cornerType;
+        delete strokePaint.position;
+        delete strokePaint.sideSetting;
+        delete strokePaint.thickness;
+        (source as any) = {
+            typeId: "border",
+            borderStyle: source.borderStyle,
+            cornerType: source.cornerType,
+            position: source.position,
+            sideSetting: source.sideSetting,
+            strokePaints: [strokePaint],
+        }
+    }
+
+    const ret: impl.Border = new impl.Border (
+        importBorderPosition(source.position, ctx),
+        importBorderStyle(source.borderStyle, ctx),
+        importCornerType(source.cornerType, ctx),
+        importBorderSideSetting(source.sideSetting, ctx),
+        importBorder_strokePaints(source.strokePaints, ctx))
+    importBorderOptional(ret, source, ctx)
+    return ret
+}
+/* fill mask */
+export function importFillMask(source: types.FillMask, ctx?: IImportContext): impl.FillMask {
+    const ret: impl.FillMask = new impl.FillMask (
+        importCrdtidx(source.crdtidx, ctx),
+        source.sheet,
+        source.id,
+        source.name,
+        source.description,
+        importFillMask_fills(source.fills, ctx))
+        // inject code
+    if (ctx?.document) ctx.document.stylesMgr.add(ret.id, ret);
+
+    return ret
+}
+/* style sheet */
+export function importStyleSheet(source: types.StyleSheet, ctx?: IImportContext): impl.StyleSheet {
+    const ret: impl.StyleSheet = new impl.StyleSheet (
+        source.id,
+        source.name,
+        importStyleSheet_variables(source.variables, ctx))
+    return ret
+}
 /* style */
 function importStyleOptional(tar: impl.Style, source: types.Style, ctx?: IImportContext) {
     if (source.miterLimit !== undefined) tar.miterLimit = source.miterLimit
@@ -1323,13 +1356,12 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
             for (let i = 0; i < (source.borders as any).length; ++i) {
                 const strokePaint = { ...(source.borders as any)[i] };
                 if (!strokePaint.crdtidx) strokePaint.crdtidx = [i];
-                strokePaint.typeId = 'stroke-paint';
+                strokePaint.typeId = 'fill';
                 delete strokePaint.borderStyle;
                 delete strokePaint.cornerType;
                 delete strokePaint.position;
                 delete strokePaint.sideSetting;
                 delete strokePaint.thickness;
-                delete strokePaint.contextSettings;
                 strokePaints.push(strokePaint);
             }
             (source as any).borders = {
@@ -1365,53 +1397,6 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
     importStyleOptional(ret, source, ctx)
         // inject code
     if (ctx?.document) ret.setStylesMgr(ctx.document.stylesMgr);
-
-    return ret
-}
-/* text attr */
-function importTextAttrOptional(tar: impl.TextAttr, source: types.TextAttr, ctx?: IImportContext) {
-    importParaAttrOptional(tar, source)
-    if (source.verAlign !== undefined) tar.verAlign = importTextVerAlign(source.verAlign, ctx)
-    if (source.orientation !== undefined) tar.orientation = importTextOrientation(source.orientation, ctx)
-    if (source.textBehaviour !== undefined) tar.textBehaviour = importTextBehaviour(source.textBehaviour, ctx)
-    if (source.padding !== undefined) tar.padding = importPadding(source.padding, ctx)
-}
-export function importTextAttr(source: types.TextAttr, ctx?: IImportContext): impl.TextAttr {
-        // inject code
-    // 兼容旧数据
-    const _source = source as any;
-    if (typeof _source.bold === 'boolean') {
-        _source.bold = _source.bold ? 700 : 400;
-    }
-    if (_source.bold) {
-        _source.weight = _source.bold;
-    }
-
-    const ret: impl.TextAttr = new impl.TextAttr ()
-    importTextAttrOptional(ret, source, ctx)
-    return ret
-}
-/* text */
-function importTextOptional(tar: impl.Text, source: types.Text, ctx?: IImportContext) {
-    if (source.attr !== undefined) tar.attr = importTextAttr(source.attr, ctx)
-}
-export function importText(source: types.Text, ctx?: IImportContext): impl.Text {
-    const ret: impl.Text = new impl.Text (
-        importText_paras(source.paras, ctx))
-    importTextOptional(ret, source, ctx)
-    return ret
-}
-/* fill mask */
-export function importFillMask(source: types.FillMask, ctx?: IImportContext): impl.FillMask {
-    const ret: impl.FillMask = new impl.FillMask (
-        importCrdtidx(source.crdtidx, ctx),
-        source.sheet,
-        source.id,
-        source.name,
-        source.description,
-        importFillMask_fills(source.fills, ctx))
-        // inject code
-    if (ctx?.document) ctx.document.stylesMgr.add(ret.id, ret);
 
     return ret
 }
@@ -1458,14 +1443,6 @@ export function importShape(source: types.Shape, ctx?: IImportContext): impl.Sha
         importTransform(source.transform, ctx),
         importStyle(source.style, ctx))
     importShapeOptional(ret, source, ctx)
-    return ret
-}
-/* style sheet */
-export function importStyleSheet(source: types.StyleSheet, ctx?: IImportContext): impl.StyleSheet {
-    const ret: impl.StyleSheet = new impl.StyleSheet (
-        source.id,
-        source.name,
-        importStyleSheet_variables(source.variables, ctx))
     return ret
 }
 /* table cell */
@@ -1616,13 +1593,12 @@ export function importVariable(source: types.Variable, ctx?: IImportContext): im
         for (let i = 0; i < source.value.length; ++i) {
             const strokePaint = { ...source.value[i] } as any;
             if (!strokePaint.crdtidx) strokePaint.crdtidx = [i];
-            strokePaint.typeId = 'stroke-paint';
+            strokePaint.typeId = 'fill';
             delete strokePaint.borderStyle;
             delete strokePaint.cornerType;
             delete strokePaint.position;
             delete strokePaint.sideSetting;
             delete strokePaint.thickness;
-            delete strokePaint.contextSettings;
             strokePaints.push(strokePaint);
         }
         const border = source.value[0] as any;

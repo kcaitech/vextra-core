@@ -47,7 +47,7 @@ export type BorderStyle = {
     length: number,
     gap: number,
 }
-export type Border_strokePaints = Array<StrokePaint>
+export type Border_strokePaints = Array<Fill>
 /* bullet & item number behavior */
 export enum BulletNumbersBehavior {
     Inherit = "inherit",
@@ -868,24 +868,6 @@ export type SpanAttr = {
 export type Span = SpanAttr & {
     length: number,
 }
-/* stroke paint */
-export type StrokePaint = {
-    crdtidx: Crdtidx,
-    typeId: string,
-    id: string,
-    isEnabled: boolean,
-    fillType: FillType,
-    color: Color,
-    gradient?: Gradient,
-    imageRef?: string,
-    imageScaleMode?: ImageScaleMode,
-    rotation?: number,
-    scale?: number,
-    originalImageWidth?: number,
-    originalImageHeight?: number,
-    paintFilter?: PaintFilter,
-    transform?: PatternTransform,
-}
 /* blur mask */
 export type BlurMask = {
     crdtidx: Crdtidx,
@@ -911,16 +893,6 @@ export type BorderMask = {
     name: string,
     description: string,
     border: BorderMaskType,
-}
-/* border */
-export type Border = {
-    typeId: string,
-    position: BorderPosition,
-    borderStyle: BorderStyle,
-    cornerType: CornerType,
-    sideSetting: BorderSideSetting,
-    strokePaints: Border_strokePaints,
-    fillsMask?: string,
 }
 /* fill */
 export type Fill = {
@@ -957,6 +929,45 @@ export type Para = {
     spans: Para_spans,
     attr?: ParaAttr,
 }
+/* text attr */
+export type TextAttr = ParaAttr & {
+    verAlign?: TextVerAlign,
+    orientation?: TextOrientation,
+    textBehaviour?: TextBehaviour,
+    padding?: Padding,
+}
+/* text */
+export type Text = {
+    typeId: string,
+    paras: Text_paras,
+    attr?: TextAttr,
+}
+/* border */
+export type Border = {
+    typeId: string,
+    position: BorderPosition,
+    borderStyle: BorderStyle,
+    cornerType: CornerType,
+    sideSetting: BorderSideSetting,
+    strokePaints: Border_strokePaints,
+    fillsMask?: string,
+}
+/* fill mask */
+export type FillMask = {
+    crdtidx: Crdtidx,
+    typeId: string,
+    sheet: string,
+    id: string,
+    name: string,
+    description: string,
+    fills: FillMask_fills,
+}
+/* style sheet */
+export type StyleSheet = {
+    id: string,
+    name: string,
+    variables: StyleSheet_variables,
+}
 /* style */
 export type Style = {
     typeId: string,
@@ -978,29 +989,6 @@ export type Style = {
     shadowsMask?: string,
     blursMask?: string,
     bordersMask?: string,
-}
-/* text attr */
-export type TextAttr = ParaAttr & {
-    verAlign?: TextVerAlign,
-    orientation?: TextOrientation,
-    textBehaviour?: TextBehaviour,
-    padding?: Padding,
-}
-/* text */
-export type Text = {
-    typeId: string,
-    paras: Text_paras,
-    attr?: TextAttr,
-}
-/* fill mask */
-export type FillMask = {
-    crdtidx: Crdtidx,
-    typeId: string,
-    sheet: string,
-    id: string,
-    name: string,
-    description: string,
-    fills: FillMask_fills,
 }
 /* shape */
 export type Shape = {
@@ -1035,12 +1023,6 @@ export type Shape = {
     mask?: boolean,
     stackPositioning?: StackPositioning,
     radiusMask?: string,
-}
-/* style sheet */
-export type StyleSheet = {
-    id: string,
-    name: string,
-    variables: StyleSheet_variables,
 }
 /* table cell */
 export type TableCell = Shape & {

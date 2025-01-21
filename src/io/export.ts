@@ -6,7 +6,7 @@
 */
 
 import { Document } from "../data/document";
-import { Border, BorderSideSetting, BorderStyle, Fill, Page, Shadow, StrokePaint, Style } from "../data/classes";
+import { Border, BorderSideSetting, BorderStyle, Fill, Page, Shadow, Style } from "../data/classes";
 import * as types from "../data/typesdefine"
 import { exportDocumentMeta, exportPage, IExportContext } from "../data/baseexport";
 import { BasicArray } from "../data/basic";
@@ -14,7 +14,7 @@ import { StyleSheet } from "../data/typesdefine";
 
 export function newStyle(): Style {
     const side = new BorderSideSetting(types.SideType.Normal, 1, 1, 1, 1);
-    const strokePaints = new BasicArray<StrokePaint>();
+    const strokePaints = new BasicArray<Fill>();
     const border = new Border(types.BorderPosition.Inner, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
     const fills = new BasicArray<Fill>();
     const shadows = new BasicArray<Shadow>();

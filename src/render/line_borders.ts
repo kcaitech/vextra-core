@@ -12,14 +12,14 @@ import {
     Gradient,
     GradientType,
     PathShape,
-    StrokePaint
+    Fill
 } from "../data/classes";
 import { findOverrideAndVar } from "../data/utils";
 import { randomId } from "./basic";
 import { render as marker } from "./marker";
 import { render as renderGradient } from "./gradient";
 import { render as lineGradient } from "./line_gradient";
-function handler(h: Function, style: Style, border: Border, path: string, shape: Shape,strokePaint: StrokePaint, startMarkerType?: MarkerType, endMarkerType?: MarkerType): any {
+function handler(h: Function, style: Style, border: Border, path: string, shape: Shape,strokePaint: Fill, startMarkerType?: MarkerType, endMarkerType?: MarkerType): any {
     const thickness = border.sideSetting.thicknessTop;
     const body_props: any = {
         d: path,
@@ -101,7 +101,7 @@ function handler(h: Function, style: Style, border: Border, path: string, shape:
 
 
 
-function angular_handler(h: Function, style: Style, border: Border, path: string, shape: Shape,strokePaint: StrokePaint, startMarkerType?: MarkerType, endMarkerType?: MarkerType): any {
+function angular_handler(h: Function, style: Style, border: Border, path: string, shape: Shape,strokePaint: Fill, startMarkerType?: MarkerType, endMarkerType?: MarkerType): any {
     const thickness = border.sideSetting.thicknessTop;
     const opacity = strokePaint.gradient?.gradientOpacity;
     let line_g = lineGradient(h, strokePaint.gradient as Gradient, shape.size, thickness);
@@ -169,7 +169,7 @@ export function render(h: Function, style: Style, border: Border | undefined, st
     const bc = border.strokePaints.length;
     const sm = startMarkerType, em = endMarkerType;
     for (let i = 0; i < bc; i++) {
-        const strokePaint: StrokePaint = border.strokePaints[i];
+        const strokePaint: Fill = border.strokePaints[i];
         if (!strokePaint.isEnabled) continue;
         const fillType = strokePaint.fillType;
         const gradientType = strokePaint.gradient && strokePaint.gradient.gradientType;

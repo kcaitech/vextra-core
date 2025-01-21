@@ -390,12 +390,6 @@ inject['RadiusMask']['after'] = `\
 `
 
 inject['Style'] = {};
-inject['Style']['after'] = `\
-    // inject code
-    if (ctx?.document) ret.setStylesMgr(ctx.document.stylesMgr);
-`
-
-inject['Style'] = {};
 inject['Style']['before'] = `\
     // inject code
     if (Array.isArray(source.borders)) {
@@ -414,13 +408,12 @@ inject['Style']['before'] = `\
             for (let i = 0; i < (source.borders as any).length; ++i) {
                 const strokePaint = { ...(source.borders as any)[i] };
                 if (!strokePaint.crdtidx) strokePaint.crdtidx = [i];
-                strokePaint.typeId = 'stroke-paint';
+                strokePaint.typeId = 'fill';
                 delete strokePaint.borderStyle;
                 delete strokePaint.cornerType;
                 delete strokePaint.position;
                 delete strokePaint.sideSetting;
                 delete strokePaint.thickness;
-                delete strokePaint.contextSettings;
                 strokePaints.push(strokePaint);
             }
             (source as any).borders = {
@@ -449,20 +442,22 @@ inject['Style']['before'] = `\
         }
     }
 `
-
+inject['Style']['after'] = `\
+    // inject code
+    if (ctx?.document) ret.setStylesMgr(ctx.document.stylesMgr);
+`
 inject['Border'] = {};
 inject['Border']['before'] = `\
     // inject code
     if (!source.strokePaints) {
         const strokePaint = { ...(source as any) };
         if (!strokePaint.crdtidx) strokePaint.crdtidx = [0];
-        strokePaint.typeId = 'stroke-paint';
+        strokePaint.typeId = 'fill';
         delete strokePaint.borderStyle;
         delete strokePaint.cornerType;
         delete strokePaint.position;
         delete strokePaint.sideSetting;
         delete strokePaint.thickness;
-        delete strokePaint.contextSettings;
         (source as any) = {
             typeId: "border",
             borderStyle: source.borderStyle,
@@ -482,13 +477,12 @@ inject['Variable']['before'] = `\
         for (let i = 0; i < source.value.length; ++i) {
             const strokePaint = { ...source.value[i] } as any;
             if (!strokePaint.crdtidx) strokePaint.crdtidx = [i];
-            strokePaint.typeId = 'stroke-paint';
+            strokePaint.typeId = 'fill';
             delete strokePaint.borderStyle;
             delete strokePaint.cornerType;
             delete strokePaint.position;
             delete strokePaint.sideSetting;
             delete strokePaint.thickness;
-            delete strokePaint.contextSettings;
             strokePaints.push(strokePaint);
         }
         const border = source.value[0] as any;

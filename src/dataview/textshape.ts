@@ -28,8 +28,8 @@ import {
 import { objectId } from "../basic/objectid";
 import { Path } from "@kcdesign/path";
 import { renderBorders } from "../render";
-import { importBorder, importStrokePaint } from "../data/baseimport";
-import { exportBorder, exportStrokePaint } from "../data/baseexport";
+import { importBorder, importFill } from "../data/baseimport";
+import { exportBorder, exportFill } from "../data/baseexport";
 import { ArtboardView } from "./artboard";
 
 export class TextShapeView extends ShapeView {
@@ -152,7 +152,7 @@ export class TextShapeView extends ShapeView {
         let border = this.getBorders();
         if (this.mask && border) {
             border.strokePaints.map(b => {
-                const nb = importStrokePaint(exportStrokePaint(b));
+                const nb = importFill(exportFill(b));
                 if (nb.fillType === FillType.Gradient && nb.gradient?.gradientType === GradientType.Angular) nb.fillType = FillType.SolidColor;
                 return nb;
             });

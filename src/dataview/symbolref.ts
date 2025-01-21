@@ -4,7 +4,6 @@ import {
     BasicArray, getPathOfRadius, makeShapeTransform1By2, makeShapeTransform2By1, Blur, BlurType, PathShape,
     BorderSideSetting,
     SideType,
-    StrokePaint,
     BorderPosition,
     BorderStyle,
     CornerType
@@ -408,7 +407,7 @@ export class SymbolRefView extends ShapeView {
         if (this.m_borders) return this.m_borders;
         const v = this._findOV2(OverrideType.Borders, VariableType.Borders);
         const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
-        const strokePaints = new BasicArray<StrokePaint>();
+        const strokePaints = new BasicArray<Fill>();
         const border = new Border(BorderPosition.Inner, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
         this.m_borders = v ? v.value as Border : this.m_sym?.style.borders;
         return this.m_borders || border;
