@@ -4,10 +4,10 @@ import { Page } from "../data/page";
 import { CoopRepository } from "../coop/cooprepo";
 import { BorderPosition, BorderStyle, StrikethroughType, TableCellType, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType, FillType, ImageScaleMode, BorderSideSetting, SideType, CornerType } from "../data/baseclasses";
 import { adjColum, adjRow } from "./tableadjust";
-import { Border, Fill, Gradient, StrokePaint } from "../data/style";
+import { Border, Fill, Gradient } from "../data/style";
 import { fixTableShapeFrameByLayout } from "./utils/other";
 import { Api, TextShapeLike } from "../coop/recordapi";
-import { importBorder, importFill, importGradient, importStrokePaint } from "../data/baseimport";
+import { importBorder, importFill, importGradient } from "../data/baseimport";
 import { Document, Color } from "../data/classes";
 import { AsyncBorderThickness, AsyncGradientEditor, Status } from "./controller";
 import { PageView, TableCellView, TableView } from "../dataview";
@@ -1442,13 +1442,13 @@ export class TableEditor extends ShapeEditor {
             this.__repo.rollback();
         }
     }
-    public addBorder4Cell(strokePaint: StrokePaint, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }, delOlds: boolean) {
+    public addBorder4Cell(strokePaint: Fill, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }, delOlds: boolean) {
         const api = this.__repo.start("addBorder");
         try {
             this._initCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd, api);
             const cells = this.view.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd);
             cells.forEach((cell) => {
-                const newPaint = importStrokePaint(strokePaint);
+                const newPaint = importFill(strokePaint);
                 if (cell.cell) {
                     const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
                     if (delOlds) api.deleteStrokePaints(this.__page, c.data, 0, c.style.borders.strokePaints.length);
@@ -1457,7 +1457,7 @@ export class TableEditor extends ShapeEditor {
                         api.addStrokePaint(this.__page, c.data, newPaint, c.style.borders.strokePaints.length);
                     } else {
                         const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
-                        const strokePaints = new BasicArray<StrokePaint>(newPaint);
+                        const strokePaints = new BasicArray<Fill>(newPaint);
                         const border = new Border(BorderPosition.Inner, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
                         api.addBorder(this.__page, c.data, border);
                     }

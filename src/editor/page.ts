@@ -35,7 +35,6 @@ import {
     SideType,
     StarShape,
     Stop,
-    StrokePaint,
     Style,
     SymbolRefShape,
     SymbolShape,
@@ -567,7 +566,7 @@ export class PageEditor {
         const borderStyle = findUsableBorderStyle(endShape);
         if (endShape instanceof PathShape && (!endShape.isClosed || !this.hasFill(endShape))) {
             const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
-            const strokePaints = new BasicArray<StrokePaint>();
+            const strokePaints = new BasicArray<Fill>();
             const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
             style.borders = border;
         }
@@ -3077,8 +3076,8 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const { target } = actions[i];
-                api.deleteBlur(this.page, adapt2Shape(target));
-                api.delblurmask(this.__document, this.page, adapt2Shape(target));
+                api.deleteStrokePaints(this.page, adapt2Shape(target), 0, target.style.borders.strokePaints.length)
+                api.delBorderFillMask(this.__document, this.page, adapt2Shape(target), undefined);
             }
             this.__repo.commit();
         } catch (e) {
@@ -3107,9 +3106,7 @@ export class PageEditor {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
                 api.deleteStrokePaints(this.page, adapt2Shape(target), 0, target.style.borders.strokePaints.length)
-                for (let i = 0; i < value.length; i++) {
-                    api.addStrokePaint(this.page, adapt2Shape(target), value[i], i)
-                }
+                api.addStrokePaints(this.page, adapt2Shape(target), value);
                 api.delBorderFillMask(this.__document, this.page, adapt2Shape(target), undefined);
             }
             this.__repo.commit();
@@ -3190,7 +3187,7 @@ export class PageEditor {
                     api.addStrokePaint(this.page, s, value, l);
                 } else {
                     const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
-                    const strokePaints = new BasicArray<StrokePaint>(value);
+                    const strokePaints = new BasicArray<Fill>(value);
                     const border = new Border(types.BorderPosition.Inner, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
                     api.addBorder(this.page, s, border);
                 }
@@ -3319,7 +3316,7 @@ export class PageEditor {
                 const shape = shapes[i];
                 const b = shape.getBorders();
                 const f = shape.getFills();
-                let strokePaints: BasicArray<StrokePaint> = new BasicArray<StrokePaint>();
+                let strokePaints: BasicArray<Fill> = new BasicArray<Fill>();
                 let fills: BasicArray<Fill> = new BasicArray<Fill>();
                 const _strokePaints = b?.strokePaints || [];
 
@@ -3371,11 +3368,11 @@ export class PageEditor {
                         originalImageWidth
                     } = f[f_i];
                     let fill_type = fillType;
-                    let strokePaint: StrokePaint;
+                    let strokePaint: Fill;
                     if (fillType === FillType.Pattern) {
                         fill_type = FillType.SolidColor
                     }
-                    strokePaint = new StrokePaint([i] as BasicArray<number>, uuid(), isEnabled, fill_type, color);
+                    strokePaint = new Fill([i] as BasicArray<number>, uuid(), isEnabled, fill_type, color);
                     strokePaint.gradient = gradient;
                     strokePaint.imageRef = imageRef;
                     strokePaint.transform = transform;

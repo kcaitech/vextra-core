@@ -24,7 +24,7 @@ import {
     TextVerAlign,
     TextHorAlign,
     BorderSideSetting,
-    StrokePaint,
+    Fill,
 } from "../../data/classes";
 import { BasicArray, BasicMap } from "../../data/basic";
 import { newSymbolShapeUnion } from "../creator";
@@ -244,8 +244,8 @@ export function make_union(api: Api, document: Document, page: Page, symbol: Sym
     const side = new BorderSideSetting(SideType.Normal, 2, 2, 2, 2);
     const border_style = new BorderStyle(5, 5);
 
-    const strokePaints = new BasicArray<StrokePaint>();
-    const strokePaint = new StrokePaint([0] as BasicArray<number>, uuid(), true, types.FillType.SolidColor, new Color(1, 127, 88, 249))
+    const strokePaints = new BasicArray<Fill>();
+    const strokePaint = new Fill([0] as BasicArray<number>, uuid(), true, types.FillType.SolidColor, new Color(1, 127, 88, 249))
     strokePaints.push(strokePaint);
     const border = new Border(BorderPosition.Inner, border_style, types.CornerType.Miter, side, strokePaints);
     union.style.borders = border;

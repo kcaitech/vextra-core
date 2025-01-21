@@ -1,6 +1,6 @@
 import { AsyncApiCaller } from "./basic/asyncapi";
 import { CoopRepository } from "../../coop/cooprepo";
-import { Document, Point2D, StrokePaint } from "../../data";
+import { Document, Point2D } from "../../data";
 import { adapt2Shape, GroupShapeView, PageView, ShapeView } from "../../dataview";
 import { CurveMode, CurvePoint, GroupShape, PathSegment, PathShape, Shape, ShapeFrame, ShapeType } from "../../data";
 import { BasicArray } from "../../data";
@@ -73,8 +73,8 @@ export class PathModifier extends AsyncApiCaller {
 
             if (!_style) {
                 const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
-                const strokePaints = new BasicArray<StrokePaint>();
-                const strokePaint = new StrokePaint([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0));
+                const strokePaints = new BasicArray<Fill>();
+                const strokePaint = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0));
                 strokePaints.push(strokePaint);
                 const border = new Border(types.BorderPosition.Inner, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
                 style.borders = border;
