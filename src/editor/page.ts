@@ -1744,7 +1744,7 @@ export class PageEditor {
                         const points = shape.pathsegs[0].points;
                         for (let _i = 0; _i < 4; _i++) {
                             const val = values[_i];
-                            if (points[_i].radius === val || val < 0) continue;
+                            if ( val < 0) continue;
 
                             api.modifyPointCornerRadius(page, shape, _i, val, 0);
                         }
