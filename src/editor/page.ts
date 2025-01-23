@@ -4,6 +4,7 @@ import {
     BoolOp,
     BoolShape,
     Border,
+    BorderMask,
     BorderMaskType,
     BorderPosition,
     Color, ContactShape,
@@ -487,7 +488,7 @@ export class PageEditor {
         try {
             const saveidx = savep.indexOfChild(adapt2Shape(shapes[0]));
             const childs = shapes_rows.flat();
-            if(shapes.length !== childs.length) {
+            if (shapes.length !== childs.length) {
                 const hiddenChilds = shapes.filter(c => !c.isVisible);
                 childs.push(...hiddenChilds);
             }
@@ -3139,7 +3140,10 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const { target, index, value } = actions[i];
-                const s = shape4border(api, this.view, target);
+                let s = shape4border(api, this.view, target);
+                if (target.style.borders.fillsMask) {
+                    s = target.style.getStylesMgr()!.getSync(target.style.borders.fillsMask) as any;
+                }
                 api.setBorderColor(this.page, s, index, value);
             }
             this.__repo.commit();
@@ -3249,7 +3253,13 @@ export class PageEditor {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
                 if (target.type === ShapeType.Table) continue;
+                const id = target.style.bordersMask!;
                 const s = shape4border(api, this.view, target);
+                if (id) {
+                    const borderMask = (target.style.getStylesMgr()?.getSync(id) as BorderMask).border;
+                    api.setBorderSide(this.page, s, borderMask.sideSetting);
+                    api.delbordermask(this.__document, this.page, s);
+                }
                 api.setBorderPosition(this.page, s, value);
             }
             this.__repo.commit();
@@ -3266,6 +3276,12 @@ export class PageEditor {
                 const s = shape4border(api, this.view, target);
                 const borders = target.getBorders();
                 if (!borders) continue;
+                const id = target.style.bordersMask!;
+                if (id) {
+                    const borderMask = (target.style.getStylesMgr()?.getSync(id) as BorderMask).border;
+                    api.setBorderPosition(this.page, s, borderMask.position);
+                    api.delbordermask(this.__document, this.page, s);
+                }
                 const sideType = borders.sideSetting.sideType;
                 switch (sideType) {
                     case SideType.Normal:
@@ -3287,7 +3303,6 @@ export class PageEditor {
                         api.setBorderSide(this.page, s, new BorderSideSetting(sideType, value, value, value, value));
                         break;
                 }
-
             }
             this.__repo.commit();
         } catch (error) {
