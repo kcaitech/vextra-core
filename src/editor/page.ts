@@ -2489,19 +2489,15 @@ export class PageEditor {
         }
     }
 
-    toggerShapeGradientType(actions: BatchAction5[]) {
+    modifyShapeGradientType(actions: BatchAction5[]) {
         try {
-            const api = this.__repo.start('toggerShapeGradientType');
+            const api = this.__repo.start('modifyShapeGradientType');
             for (let i = 0, l = actions.length; i < l; i++) {
                 const { target, index, type, value } = actions[i];
                 const grad_type = type === 'fills' ? target.getFills() : target.getBorders()?.strokePaints;
-                if (!grad_type?.length) {
-                    continue;
-                }
+                if (!grad_type?.length) continue;
                 const gradient_container = grad_type[index];
-                if (!gradient_container) {
-                    continue;
-                }
+                if (!gradient_container) continue;
                 const gradient = gradient_container.gradient;
                 const s = shape4fill(api, this.view, target);
                 if (gradient_container.fillType !== FillType.Gradient) {
@@ -2546,8 +2542,8 @@ export class PageEditor {
             }
             this.__repo.commit();
         } catch (error) {
-            console.log('toggerShapeGradientType:', error);
             this.__repo.rollback();
+            console.error(error);
         }
     }
 
