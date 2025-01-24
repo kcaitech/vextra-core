@@ -1,5 +1,5 @@
 import { v4 as uuid } from "uuid";
-import { AutoLayout, Page, Artboard, Document, PageListItem, StrokePaint, TableShape } from "../data";
+import { AutoLayout, Page, Artboard, Document, PageListItem, TableShape } from "../data";
 import {
     GroupShape,
     LineShape,
@@ -158,7 +158,7 @@ export function newStyle(): Style {
     const fill = newSolidColorFill();
     const fills = new BasicArray<Fill>();
     const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
-    const strokePaints = new BasicArray<StrokePaint>();
+    const strokePaints = new BasicArray<Fill>();
     const border = new Border(types.BorderPosition.Inner, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
     const style = new Style(fills, new BasicArray<Shadow>(), border);
     style.fills.push(fill);
@@ -170,7 +170,7 @@ export function newflatStyle(): Style {
     const fills = new BasicArray<Fill>();
     const shadows = new BasicArray<Shadow>();
     const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
-    const strokePaints = new BasicArray<StrokePaint>();
+    const strokePaints = new BasicArray<Fill>();
     const border = new Border(types.BorderPosition.Inner, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
     const style = new Style(fills, shadows, border);
     // style.contextSettings = new ContextSettings(BlendMode.Normal, 1);
@@ -395,8 +395,8 @@ export function newLineShape(name: string, frame: ShapeFrame): LineShape {
 
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
     const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
-    const strokePaints = new BasicArray<StrokePaint>();
-    const strokePaint = new StrokePaint([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0))
+    const strokePaints = new BasicArray<Fill>();
+    const strokePaint = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0))
     strokePaints.push(strokePaint);
     const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
     style.borders = border;
@@ -421,8 +421,8 @@ export function newArrowShape(name: string, frame: ShapeFrame): LineShape {
     frame.height = 1;
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
     const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
-    const strokePaints = new BasicArray<StrokePaint>();
-    const strokePaint = new StrokePaint([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0))
+    const strokePaints = new BasicArray<Fill>();
+    const strokePaint = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0))
     strokePaints.push(strokePaint);
     const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
     style.borders = border;
@@ -592,8 +592,8 @@ export function newTable(name: string, frame: ShapeFrame, rowCount: number, colu
     table.size.width = frame.width;
     table.size.height = frame.height;
     const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
-    const strokePaints = new BasicArray<StrokePaint>();
-    const strokePaint = new StrokePaint([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(0.5, 0, 0, 0))
+    const strokePaints = new BasicArray<Fill>();
+    const strokePaint = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(0.5, 0, 0, 0))
     strokePaints.push(strokePaint);
     const border = new Border(types.BorderPosition.Inner, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
     table.style.borders = border;
@@ -650,8 +650,8 @@ export function newTable2(name: string, frame: ShapeFrame, rowCount: number, col
     table.size.width = frame.width;
     table.size.height = frame.height;
     const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
-    const strokePaints = new BasicArray<StrokePaint>();
-    const strokePaint = new StrokePaint([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(0.5, 0, 0, 0))
+    const strokePaints = new BasicArray<Fill>();
+    const strokePaint = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(0.5, 0, 0, 0))
     strokePaints.push(strokePaint);
     const border = new Border(types.BorderPosition.Inner, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
     table.style.borders = border;
@@ -676,8 +676,8 @@ export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm):
     const ePoint = new CurvePoint([1] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight);
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
     const side = new BorderSideSetting(SideType.Normal, 2, 2, 2, 2);
-    const strokePaints = new BasicArray<StrokePaint>();
-    const strokePaint = new StrokePaint([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 128, 128, 128))
+    const strokePaints = new BasicArray<Fill>();
+    const strokePaint = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 128, 128, 128))
     strokePaints.push(strokePaint);
     const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
     style.borders = border;
@@ -715,7 +715,7 @@ export function newCutoutShape(name: string, frame: ShapeFrame): CutoutShape {
     _checkFrame(frame);
     const fills = new BasicArray<Fill>();
     const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
-    const strokePaints = new BasicArray<StrokePaint>();
+    const strokePaints = new BasicArray<Fill>();
     const border = new Border(types.BorderPosition.Inner, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
     const style = new Style(fills, new BasicArray<Shadow>(), border);
     const curvePoint = new BasicArray<CurvePoint>();

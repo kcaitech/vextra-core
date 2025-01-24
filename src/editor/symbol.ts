@@ -33,7 +33,6 @@ import {
     BlurType,
     Artboard, BorderSideSetting, SideType,
     string2Text,
-    StrokePaint,
     BorderStyle, FillMask,
     AutoLayout
 } from "../data/classes";
@@ -481,7 +480,7 @@ export function cell4edit2(page: PageView, view: TableView, _cell: TableCellView
         const size = new ShapeSize();
         const trans = new Transform();
         const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
-        const strokePaints = new BasicArray<StrokePaint>();
+        const strokePaints = new BasicArray<Fill>();
         const border = new Border(types.BorderPosition.Inner, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
         return new TableCell(new BasicArray(),
             cellId,
@@ -511,7 +510,7 @@ export function cell4edit(page: PageView, view: TableView, rowIdx: number, colId
         const size = new ShapeSize();
         const trans = new Transform();
         const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
-        const strokePaints = new BasicArray<StrokePaint>();
+        const strokePaints = new BasicArray<Fill>();
         const border = new Border(types.BorderPosition.Inner, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
         return new TableCell(new BasicArray(),
             cellId,
