@@ -26,13 +26,10 @@ import {
     SideType,
 } from "./baseclasses";
 import { Basic, BasicArray, BasicMap, ResourceMgr, WatchableObject } from "./basic";
-import { Variable } from "./variable";
 import { Color } from "./color";
-import { ShapeView } from "../dataview";
 import { StyleSheet_variables } from "./typesdefine";
 import { v4 } from "uuid";
 import { cloneGradient } from "../io/cilpboard";
-import { RadiusType } from "./consts";
 
 export {
     GradientType,
