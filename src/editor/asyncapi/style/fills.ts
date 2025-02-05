@@ -1,8 +1,11 @@
 import { AsyncApiCaller } from "../basic/asyncapi";
-import { BasicArray, Color, Fill, FillMask, importGradient, Shape, Variable } from "../../../data";
+import { BasicArray, Color, Fill, FillMask, importGradient, Point2D, Shape, Stop, Variable } from "../../../data";
 import { ShapeView } from "../../../dataview";
 import { shape4fill } from "../../symbol";
-import { exportGradient } from "../../../data/baseexport";
+import { exportGradient, exportStop } from "../../../data/baseexport";
+import { importStop } from "../../../data/baseimport";
+import * as types from "../../../data/typesdefine";
+import { Matrix } from "../../../basic/matrix";
 
 export class FillsAsyncApi extends AsyncApiCaller {
     start() {
@@ -28,6 +31,15 @@ export class FillsAsyncApi extends AsyncApiCaller {
         }
     }
 
+    modifyStopColor(shapes: ShapeView[], index: number, color: Color, stopAt: number) {
+        try {
+            this.modifyStopColorOnce(shapes, index, color, stopAt);
+            this.updateView();
+        } catch (err) {
+            this.exception = true;
+            console.error(err);
+        }
+    }
     commit() {
         if (this.__repo.isNeedCommit() && !this.exception) {
             this.__repo.commit();
@@ -57,6 +69,70 @@ export class FillsAsyncApi extends AsyncApiCaller {
 
         function getFills(target: Shape | FillMask | Variable): Fill[] {
             return target instanceof Shape ? target.getFills() : target instanceof FillMask ? target.fills : target.value;
+        }
+    }
+
+    reverseGradientStops(shapes: ShapeView[], index: number) {
+        try {
+            const targets = this.getTargets(shapes);
+            for (const target of targets) {
+                const fills = getFills(target);
+                const fill = fills[index];
+                const gradient = fill.gradient!;
+                const stops = gradient.stops;
+                const reversedStops: BasicArray<Stop> = new BasicArray<Stop>();
+                for (let _i = 0, _l = stops.length; _i < _l; _i++) {
+                    const _stop = stops[_i];
+                    const inverseIndex = stops.length - 1 - _i;
+                    reversedStops.push(importStop(exportStop(new Stop(_stop.crdtidx, _stop.id, _stop.position, stops[inverseIndex].color))));
+                }
+                this.api.setFillColor(this.page, target as any, index, reversedStops[0].color as Color);
+                const gradientCopy = importGradient(exportGradient(gradient));
+                gradientCopy.stops = reversedStops;
+                this.api.setFillGradient(this.page, target as any, index, gradientCopy);
+            }
+
+            function getFills(target: Shape | FillMask | Variable): Fill[] {
+                return target instanceof Shape ? target.getFills() : target instanceof FillMask ? target.fills : target.value;
+            }
+        } catch (error) {
+            console.log(error);
+            this.__repo.rollback();
+        }
+    }
+
+    rotateGradientStops(shapes: ShapeView[], index: number) {
+        try {
+            const targets = this.getTargets(shapes);
+            for (const target of targets) {
+                const fills = getFills(target);
+                const gradientCopy = importGradient(exportGradient(fills[index].gradient!));
+                const {from, to} = gradientCopy;
+                const gradientType = gradientCopy.gradientType;
+                if (gradientType === types.GradientType.Linear) {
+                    const midpoint = {x: (to.x + from.x) / 2, y: (to.y + from.y) / 2};
+                    const m = new Matrix();
+                    m.trans(-midpoint.x, -midpoint.y);
+                    m.rotate(Math.PI / 2);
+                    m.trans(midpoint.x, midpoint.y);
+                    gradientCopy.to = m.computeCoord3(to) as Point2D;
+                    gradientCopy.from = m.computeCoord3(from) as Point2D;
+                } else if (gradientType === types.GradientType.Radial || gradientType === types.GradientType.Angular) {
+                    const m = new Matrix();
+                    m.trans(-from.x, -from.y);
+                    m.rotate(Math.PI / 2);
+                    m.trans(from.x, from.y);
+                    gradientCopy.to = m.computeCoord3(to) as any;
+                }
+                this.api.setFillGradient(this.page, target as any, index, gradientCopy);
+            }
+
+            function getFills(target: Shape | FillMask | Variable): Fill[] {
+                return target instanceof Shape ? target.getFills() : target instanceof FillMask ? target.fills : target.value;
+            }
+        } catch (error) {
+            console.log(error);
+            this.__repo.rollback();
         }
     }
 }

@@ -2431,7 +2431,6 @@ export class PageEditor {
                     m.trans(from.x, from.y);
                     gradient.to = m.computeCoord3(to) as any;
                 }
-                // todo 旋转渐变
                 const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
                 const shape = shape4fill(api, this.view, target);
                 f(this.page, shape, index, gradient);
