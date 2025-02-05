@@ -1,5 +1,5 @@
 import { AsyncApiCaller } from "../basic/asyncapi";
-import { BasicArray, Color, Fill, FillMask, ImageScaleMode, importGradient, Point2D, Shape, Stop, Variable } from "../../../data";
+import { BasicArray, Color, Fill, FillMask, ImageScaleMode, importGradient, PaintFilterType, Point2D, Shape, Stop, Variable } from "../../../data";
 import { ShapeView } from "../../../dataview";
 import { shape4fill } from "../../symbol";
 import { exportGradient, exportStop } from "../../../data/baseexport";
@@ -42,6 +42,19 @@ export class FillsAsyncApi extends AsyncApiCaller {
         } catch (err) {
             this.exception = true;
             console.error(err);
+        }
+    }
+
+    modifyFillImageFilter(key: PaintFilterType, value: number, index: number, shapes: ShapeView[]) {
+        try {
+            const targets = this.getTargets(shapes);
+            for (const target of targets) {
+                this.api.setFillImageFilter(this.page, target as any, index, key, value);
+                this.updateView();
+            }
+        } catch (error) {
+            console.error(error);
+            this.__repo.rollback();
         }
     }
     commit() {
