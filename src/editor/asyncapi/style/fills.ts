@@ -1,5 +1,5 @@
 import { AsyncApiCaller } from "../basic/asyncapi";
-import { BasicArray, Color, Fill, FillMask, importGradient, Point2D, Shape, Stop, Variable } from "../../../data";
+import { BasicArray, Color, Fill, FillMask, ImageScaleMode, importGradient, Point2D, Shape, Stop, Variable } from "../../../data";
 import { ShapeView } from "../../../dataview";
 import { shape4fill } from "../../symbol";
 import { exportGradient, exportStop } from "../../../data/baseexport";
@@ -18,6 +18,10 @@ export class FillsAsyncApi extends AsyncApiCaller {
         return this.m_targets ?? (this.m_targets = ((shapes: ShapeView[]) => {
             return shapes.map(i => shape4fill(this.api, this.pageView, i));
         })(shapes))
+    }
+
+    private getFills(target: Shape | FillMask | Variable): Fill[] {
+        return target instanceof Shape ? target.getFills() : target instanceof FillMask ? target.fills : target.value;
     }
 
     modifySolidColor(shapes: ShapeView[], index: number, color: Color) {
@@ -53,7 +57,7 @@ export class FillsAsyncApi extends AsyncApiCaller {
     modifyStopColorOnce(shapes: ShapeView[], index: number, color: Color, stopAt: number) {
         const targets = this.getTargets(shapes);
         for (const target of targets) {
-            const fills = getFills(target);
+            const fills = this.getFills(target);
             const fill = fills[index];
             const gradient = fill.gradient!;
             const gradientCopy = importGradient(exportGradient(gradient));
@@ -66,17 +70,13 @@ export class FillsAsyncApi extends AsyncApiCaller {
             })
             this.api.setFillGradient(this.page, target as any, index, gradientCopy);
         }
-
-        function getFills(target: Shape | FillMask | Variable): Fill[] {
-            return target instanceof Shape ? target.getFills() : target instanceof FillMask ? target.fills : target.value;
-        }
     }
 
     reverseGradientStops(shapes: ShapeView[], index: number) {
         try {
             const targets = this.getTargets(shapes);
             for (const target of targets) {
-                const fills = getFills(target);
+                const fills = this.getFills(target);
                 const fill = fills[index];
                 const gradient = fill.gradient!;
                 const stops = gradient.stops;
@@ -91,10 +91,6 @@ export class FillsAsyncApi extends AsyncApiCaller {
                 gradientCopy.stops = reversedStops;
                 this.api.setFillGradient(this.page, target as any, index, gradientCopy);
             }
-
-            function getFills(target: Shape | FillMask | Variable): Fill[] {
-                return target instanceof Shape ? target.getFills() : target instanceof FillMask ? target.fills : target.value;
-            }
         } catch (error) {
             console.log(error);
             this.__repo.rollback();
@@ -105,7 +101,7 @@ export class FillsAsyncApi extends AsyncApiCaller {
         try {
             const targets = this.getTargets(shapes);
             for (const target of targets) {
-                const fills = getFills(target);
+                const fills = this.getFills(target);
                 const gradientCopy = importGradient(exportGradient(fills[index].gradient!));
                 const {from, to} = gradientCopy;
                 const gradientType = gradientCopy.gradientType;
@@ -126,12 +122,62 @@ export class FillsAsyncApi extends AsyncApiCaller {
                 }
                 this.api.setFillGradient(this.page, target as any, index, gradientCopy);
             }
-
-            function getFills(target: Shape | FillMask | Variable): Fill[] {
-                return target instanceof Shape ? target.getFills() : target instanceof FillMask ? target.fills : target.value;
-            }
         } catch (error) {
             console.log(error);
+            this.__repo.rollback();
+        }
+    }
+
+    modifyObjectFit(shapes: ShapeView[], index: number, type: ImageScaleMode) {
+        try {
+            const targets = this.getTargets(shapes);
+            for (const target of targets) {
+                this.api.setFillScaleMode(this.page, target as any, index, type);
+                if (type === types.ImageScaleMode.Tile) {
+                    const fills = this.getFills(target);
+                    if (!fills[index].scale) this.api.setFillImageScale(this.page, target as any, index, 0.5);
+                }
+            }
+        } catch (error) {
+            console.error(error);
+            this.__repo.rollback();
+        }
+    }
+
+    modifyTileScale(index: number, scale: number, shapes: ShapeView[]) {
+        try {
+            const targets = this.getTargets(shapes);
+            for (const target of targets) {
+                this.api.setFillImageScale(this.page, target as any, index, scale);
+            }
+        } catch (error) {
+            console.error(error);
+            this.__repo.rollback();
+        }
+    }
+
+    rotateImg(index: number, rotate: number, shapes: ShapeView[]) {
+        try {
+            const targets = this.getTargets(shapes);
+            for (const target of targets) {
+                this.api.setFillImageRotate(this.page, target as any, index, rotate);
+            }
+        } catch (error) {
+            console.error(error);
+            this.__repo.rollback();
+        }
+    }
+
+    modifyFillImageRef(index: number, ref: string, media: { buff: Uint8Array, base64: string }, width: number, height: number, shapes: ShapeView[]) {
+        try {
+            const targets = this.getTargets(shapes);
+            for (const target of targets) {
+                this.api.setFillImageRef(this.__document, this.page, target as any, index, ref, media);
+                this.api.setFillImageOriginWidth(this.page, target as any, index, width);
+                this.api.setFillImageOriginHeight(this.page, target as any, index, height);
+            }
+        } catch (error) {
+            console.error(error);
             this.__repo.rollback();
         }
     }
