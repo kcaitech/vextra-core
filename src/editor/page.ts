@@ -2450,17 +2450,11 @@ export class PageEditor {
             for (let i = 0, l = actions.length; i < l; i++) {
                 const { target, index, type, value } = actions[i];
                 const grad_type = type === 'fills' ? target.getFills() : target.getBorders()?.strokePaints;
-                if (!grad_type?.length) {
-                    continue;
-                }
+                if (!grad_type?.length) continue;
                 const gradient_container = grad_type[index];
-                if (!gradient_container) {
-                    continue;
-                }
+                if (!gradient_container) continue;
                 const gradient = gradient_container.gradient;
-                if (!gradient) {
-                    continue;
-                }
+                if (!gradient) continue;
                 const new_gradient = importGradient(exportGradient(gradient));
                 new_gradient.stops.push(importStop(exportStop(value)));
                 const s = new_gradient.stops;
@@ -2484,7 +2478,7 @@ export class PageEditor {
             }
             this.__repo.commit();
         } catch (error) {
-            console.log('addShapesGradientStop:', error);
+            console.error('addShapesGradientStop:', error);
             this.__repo.rollback();
         }
     }
@@ -2579,7 +2573,7 @@ export class PageEditor {
             }
             this.__repo.commit();
         } catch (error) {
-            console.log('setShapesGradientStopColor:', error);
+            console.error('setShapesGradientStopColor:', error);
             this.__repo.rollback();
         }
     }
