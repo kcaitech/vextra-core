@@ -2572,14 +2572,14 @@ export class PageEditor {
             }
             this.__repo.commit();
         } catch (error) {
-            console.error('setShapesGradientStopColor:', error);
+            console.error(error);
             this.__repo.rollback();
         }
     }
 
     deleteShapesGradientStop(actions: BatchAction5[]) {
         try {
-            const api = this.__repo.start('setShapesGradientStopColor');
+            const api = this.__repo.start('deleteShapesGradientStop');
             for (let i = 0, l = actions.length; i < l; i++) {
                 const { target, index, type, value } = actions[i];
                 const grad_type = type === 'fills' ? target.getFills() : target.getBorders()?.strokePaints;
@@ -2603,7 +2603,7 @@ export class PageEditor {
             }
             this.__repo.commit();
         } catch (error) {
-            console.log('setShapesGradientStopColor:', error);
+            console.error(error);
             this.__repo.rollback();
         }
     }

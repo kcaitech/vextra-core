@@ -373,8 +373,8 @@ export function modify_variable_with_api(api: Api, page: PageView, shape: ShapeV
  */
 export function shape4border(api: Api, page: PageView, shape: ShapeView) {
     const _var = override_variable(page, VariableType.Borders, OverrideType.Borders, (_var) => {
-        const bordors = _var?.value ?? shape.getBorders();
-        return importBorder(bordors);
+        const borders = _var?.value ?? shape.getBorders();
+        return importBorder(borders);
     }, api, shape)
     return _var || shape.data;
 }

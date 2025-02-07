@@ -67,6 +67,7 @@ export class FillsAsyncApi extends AsyncApiCaller {
     }
 
     /*非连续性指令*/
+    /* 修改一次站点颜色 */
     modifyStopColorOnce(shapes: ShapeView[], index: number, color: Color, stopAt: number) {
         const targets = this.getTargets(shapes);
         for (const target of targets) {
@@ -85,6 +86,7 @@ export class FillsAsyncApi extends AsyncApiCaller {
         }
     }
 
+    /* 逆转站点 */
     reverseGradientStops(shapes: ShapeView[], index: number) {
         try {
             const targets = this.getTargets(shapes);
@@ -105,11 +107,12 @@ export class FillsAsyncApi extends AsyncApiCaller {
                 this.api.setFillGradient(this.page, target as any, index, gradientCopy);
             }
         } catch (error) {
-            console.log(error);
+            console.error(error);
             this.__repo.rollback();
         }
     }
 
+    /* 旋转站点 */
     rotateGradientStops(shapes: ShapeView[], index: number) {
         try {
             const targets = this.getTargets(shapes);
@@ -136,11 +139,12 @@ export class FillsAsyncApi extends AsyncApiCaller {
                 this.api.setFillGradient(this.page, target as any, index, gradientCopy);
             }
         } catch (error) {
-            console.log(error);
+            console.error(error);
             this.__repo.rollback();
         }
     }
 
+    /* 修改图片的填充方式 */
     modifyObjectFit(shapes: ShapeView[], index: number, type: ImageScaleMode) {
         try {
             const targets = this.getTargets(shapes);
@@ -157,6 +161,7 @@ export class FillsAsyncApi extends AsyncApiCaller {
         }
     }
 
+    /* 修改平铺状态下，图片的原始比例 */
     modifyTileScale(index: number, scale: number, shapes: ShapeView[]) {
         try {
             const targets = this.getTargets(shapes);
@@ -169,6 +174,7 @@ export class FillsAsyncApi extends AsyncApiCaller {
         }
     }
 
+    /* 旋转图片 */
     rotateImg(index: number, rotate: number, shapes: ShapeView[]) {
         try {
             const targets = this.getTargets(shapes);
@@ -181,6 +187,7 @@ export class FillsAsyncApi extends AsyncApiCaller {
         }
     }
 
+    /* 修改图片的引用 */
     modifyFillImageRef(index: number, ref: string, media: { buff: Uint8Array, base64: string }, width: number, height: number, shapes: ShapeView[]) {
         try {
             const targets = this.getTargets(shapes);
