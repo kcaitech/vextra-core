@@ -1,7 +1,5 @@
 import { innerShadowId, renderBlur, renderBorders, renderFills, renderShadows } from "../render";
 import {
-    Artboard,
-    AutoLayout,
     BasicArray, Blur, BlurType, Border,
     BorderPosition, ContextSettings, CornerRadius,
     ExportOptions, Fill, FillType,
@@ -29,7 +27,6 @@ import { ArtboardView } from "./artboard";
 import { findOverrideAll } from "../data/utils";
 import { Path } from "@kcdesign/path";
 import { isEqual } from "../basic/number_utils";
-import { updateAutoLayout } from "src/editor/utils/auto_layout2";
 
 export function isDiffShapeSize(lsh: ShapeSize | undefined, rsh: ShapeSize | undefined) {
     if (lsh === rsh) { // both undefined
@@ -530,20 +527,12 @@ export class ShapeView extends DataView {
         const _vars = findOverrideAndVar(this.m_data, ot, this.varsContainer, true);
         if (!_vars) return;
         const _var = _vars[_vars.length - 1];
-        if (_var && _var.type === vt) {
-            return _var;
-        }
+        if (_var && _var.type === vt) return _var;
     }
 
     protected _findOVAll(ot: OverrideType, vt: VariableType): Variable[] | undefined {
         if (!this.varsContainer) return;
-        const _vars = findOverrideAll(this.m_data.id, ot, this.varsContainer);
-        // if (!_vars) return;
-        // const _var = _vars[_vars.length - 1];
-        // if (_var && _var.type === vt) {
-        //     return _var;
-        // }
-        return _vars;
+        return findOverrideAll(this.m_data.id, ot, this.varsContainer);
     }
 
     matrix2Root() {
@@ -627,20 +616,18 @@ export class ShapeView extends DataView {
     }
 
     getFills(): Fill[] {
-        if (this.m_fills) {
-            return this.m_fills;
-        }
+        if (this.m_fills) return this.m_fills;
         let fills: Fill[] = [];
         if (this.style.fillsMask) {
             const mgr = this.style.getStylesMgr();
             if (!mgr) return fills;
-            const mask = mgr.getSync(this.style.fillsMask) as FillMask
-            fills = mask.fills
-            this.watchFillMask(mask)
+            const mask = mgr.getSync(this.style.fillsMask) as FillMask;
+            fills = mask.fills;
+            this.watchFillMask(mask);
         } else {
-            this.unwatchFillMask();
             const v = this._findOV(OverrideType.Fills, VariableType.Fills);
             fills = v ? v.value : this.m_data.style.fills;
+            this.unwatchFillMask();
         }
         return fills;
     }
@@ -1042,7 +1029,6 @@ export class ShapeView extends DataView {
     }
 
     protected updateLayoutProps(props: PropsType, needLayout: boolean) {
-        // const needLayout = this.m_ctx.removeReLayout(this); // remove from changeset
         if (props.data.id !== this.m_data.id) throw new Error('id not match');
         const dataChanged = objectId(props.data) !== objectId(this.m_data);
         if (dataChanged) {
@@ -1062,15 +1048,9 @@ export class ShapeView extends DataView {
         }
         this.m_props = props
         this.m_isVirtual = props.isVirtual
-        // this.m_uniform_scale = props.uniformScale;
         if (diffVars) {
-            // update varscontainer
             this.m_ctx.removeDirty(this);
             this.varsContainer = props.varsContainer;
-            const _id = this.id;
-            // if (_id !== tid) {
-            //     // tid = _id;
-            // }
         }
         return true;
     }
