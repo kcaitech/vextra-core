@@ -12,7 +12,6 @@ import {
     ExportFileFormat,
     ExportFormatNameingScheme,
     Fill,
-    FillMask,
     FillType,
     Gradient,
     GradientType,
@@ -29,7 +28,6 @@ import {
     RectShape,
     ResizingConstraints2,
     ResourceMgr,
-    ShadowPosition,
     Shape,
     ShapeFrame,
     ShapeType,
@@ -40,7 +38,6 @@ import {
     SymbolRefShape,
     SymbolShape,
     SymbolUnionShape,
-    Text,
     TextShape,
     Transform,
     updateShapeTransform1By2,
@@ -94,7 +91,7 @@ import {
 } from "../data/baseimport";
 import { gPal } from "../basic/pal";
 import { TableEditor } from "./table";
-import { exportArtboard, exportGradient, exportStop, exportSymbolShape, exportVariable } from "../data/baseexport";
+import { exportGradient, exportStop, exportSymbolShape } from "../data/baseexport";
 import {
     after_remove,
     clear_binds_effect,
@@ -197,7 +194,7 @@ export interface FrameAdjust { // frame.width、frame.height
     heightExtend: number
 }
 
-export interface BatchAction { // targer、index、value
+export interface BatchAction { // target,index,value
     target: ShapeView
     index: number
     value: any
@@ -293,20 +290,6 @@ export function getHorizontalRadians(A: {
     y: number
 }) {
     return Math.atan2(B.y - A.y, B.x - A.x)
-}
-
-export function getHorizontalAngle(A: {
-    x: number,
-    y: number
-}, B: {
-    x: number,
-    y: number
-}) {
-    const deltaX = B.x - A.x;
-    const deltaY = B.y - A.y;
-    const angleInDegrees = Math.atan2(deltaY, deltaX) * 180 / Math.PI;
-    const angle = (angleInDegrees + 360) % 360;
-    return angle;
 }
 
 function findUsableFillStyle(shape: Shape | ShapeView): Style {
@@ -2636,7 +2619,7 @@ export class PageEditor {
     }
 
     // 填充
-    setShapesFillColor(actions: BatchAction[]) {
+    setShapesFillColor(actions: { target: ShapeView, index: number, value: any }[]) {
         const api = this.__repo.start('setShapesFillColor');
         try {
             for (let i = 0; i < actions.length; i++) {
@@ -3905,7 +3888,7 @@ export class PageEditor {
         }
     }
 
-    setShapesExportFormatPerfix(actions: ExportFormatPrefixAction[]) {
+    setShapesExportFormatPrefix(actions: ExportFormatPrefixAction[]) {
         try {
             const api = this.__repo.start('setShapesExportFormatPerfix');
             for (let i = 0; i < actions.length; i++) {
@@ -3918,7 +3901,7 @@ export class PageEditor {
         }
     }
 
-    setPageExportFormatPerfix(idx: number, name: ExportFormatNameingScheme) {
+    setPageExportFormatPrefix(idx: number, name: ExportFormatNameingScheme) {
         try {
             const api = this.__repo.start('setPageExportFormatPerfix');
             api.setPageExportFormatPerfix(this.page, idx, name);
