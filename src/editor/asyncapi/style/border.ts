@@ -47,6 +47,26 @@ export class BorderPaintsAsyncApi extends AsyncApiCaller {
         }
     }
 
+    /* 修改站点位置 */
+    modifyStopPosition(index: number, stopAt: number, position: number, shapes: ShapeView[]) {
+        try {
+            const targets = this.getTargets(shapes);
+            for (const target of targets) {
+                const fills = this.getFills(target);
+                const fill = fills[index];
+                const gradient = fill.gradient!;
+                const gradientCopy = importGradient(exportGradient(gradient));
+                gradientCopy.stops[stopAt].position = position;
+                gradientCopy.stops.sort((a, b) => a.position > b.position ? 1 : -1);
+                this.api.setBorderGradient(this.page, target as any, index, gradientCopy);
+            }
+            this.updateView();
+        } catch (error) {
+            this.exception = true;
+            console.error(error);
+        }
+    }
+
     commit() {
         if (this.__repo.isNeedCommit() && !this.exception) {
             this.__repo.commit();
