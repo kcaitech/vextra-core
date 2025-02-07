@@ -67,6 +67,22 @@ export class FillsAsyncApi extends AsyncApiCaller {
     }
 
     /*非连续性指令*/
+    removeGradientStop(index: number, stopAt: number, shapes: ShapeView[]) {
+        try {
+            const targets = this.getTargets(shapes);
+            for (const target of targets) {
+                const fills = this.getFills(target);
+                const fill = fills[index];
+                const gradient = fill.gradient!;
+                const gradientCopy = importGradient(exportGradient(gradient));
+                gradientCopy.stops.splice(stopAt, 1);
+                this.api.setFillGradient(this.page, target as any, index, gradientCopy);
+            }
+        } catch (error) {
+            console.error(error);
+            this.__repo.rollback();
+        }
+    }
     /* 修改一次站点颜色 */
     modifyStopColorOnce(shapes: ShapeView[], index: number, color: Color, stopAt: number) {
         const targets = this.getTargets(shapes);
