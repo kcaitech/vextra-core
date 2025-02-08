@@ -21,7 +21,8 @@ import {
     makeShapeTransform2By1,
     makeShapeTransform1By2,
     StackSizing,
-    OvalShape, ContactShape
+    OvalShape, ContactShape,
+    Shadow
 } from "../../data";
 import {
     calculateInnerAnglePosition,
@@ -257,7 +258,7 @@ export class LockMouseHandler extends AsyncApiCaller {
                 const d = (shape.rotation || 0) + deg;
 
                 const t = makeShapeTransform2By1(shape.transform);
-                const {width, height} = shape.frame;
+                const { width, height } = shape.frame;
 
                 const angle = d % 360 * Math.PI / 180;
                 const os = t.decomposeEuler().z;
@@ -319,7 +320,7 @@ export class LockMouseHandler extends AsyncApiCaller {
                 } else {
                     if (shape instanceof ContactShape) {
                         api.shapeModifyFixedRadius(page, shape as ContactShape, values[0]);
-                    } else  if (shape instanceof PathShape) {
+                    } else if (shape instanceof PathShape) {
                         shape.pathsegs.forEach((seg, index) => {
                             for (let _i = 0; _i < seg.points.length; _i++) {
                                 if (seg.points[_i].radius === values[0]) continue;
@@ -342,16 +343,12 @@ export class LockMouseHandler extends AsyncApiCaller {
         }
     }
 
-    executeShadowX(shapes: ShapeView[], idx: number, val: number) {
+    executeShadowX(actions: { shadow: Shadow, value: number }[]) {
         try {
             const api = this.api;
-            const page = this.page;
-            for (let i = 0; i < shapes.length; i++) {
-                const shape = adapt2Shape(shapes[i]);
-                if (shape.isVirtualShape) {
-                    continue;
-                }
-                api.setShadowOffsetX(page, shape, idx, val);
+            for (let i = 0; i < actions.length; i++) {
+                const { shadow, value } = actions[i];
+                api.setShadowOffsetX(shadow, value);
             }
 
             this.updateView();
@@ -361,25 +358,12 @@ export class LockMouseHandler extends AsyncApiCaller {
         }
     }
 
-    executeShadowMaskX(sheetid: string, maskid: string, index: number, offsetX: number) {
+    executeShadowY(actions: { shadow: Shadow, value: number }[]) {
         try {
             const api = this.api;
-            api.modifyShadowMaskShadowOffsetX(this.__document, sheetid, maskid, index, offsetX);
-            this.updateView();
-        } catch (e) {
-            this.exception = true;
-            console.log('LockMouseHandler.executeShadowMaskX');
-        }
-    }
-
-    executeShadowY(shapes: ShapeView[], idx: number, val: number) {
-        try {
-            const api = this.api;
-            const page = this.page;
-            for (let i = 0; i < shapes.length; i++) {
-                const shape = adapt2Shape(shapes[i]);
-                if (shape.isVirtualShape) continue;
-                api.setShadowOffsetY(page, shape, idx, val);
+            for (let i = 0; i < actions.length; i++) {
+                const { shadow, value } = actions[i];
+                api.setShadowOffsetY(shadow, value);
             }
 
             this.updateView();
@@ -389,25 +373,12 @@ export class LockMouseHandler extends AsyncApiCaller {
         }
     }
 
-    executeShadowMaskY(sheetid: string, maskid: string, index: number, offsetY: number) {
+    executeShadowB(actions: { shadow: Shadow, value: number }[]) {
         try {
             const api = this.api;
-            api.modifyShadowMaskShadowOffsetY(this.__document, sheetid, maskid, index, offsetY);
-            this.updateView();
-        } catch (e) {
-            this.exception = true;
-            console.log('LockMouseHandler.executeShadowMaskY');
-        }
-    }
-
-    executeShadowB(shapes: ShapeView[], idx: number, val: number) {
-        try {
-            const api = this.api;
-            const page = this.page;
-            for (let i = 0; i < shapes.length; i++) {
-                const shape = adapt2Shape(shapes[i]);
-                if (shape.isVirtualShape) continue;
-                api.setShadowBlur(page, shape, idx, val);
+            for (let i = 0; i < actions.length; i++) {
+                const { shadow, value } = actions[i];
+                api.setShadowBlur(shadow, value);
             }
 
             this.updateView();
@@ -417,42 +388,19 @@ export class LockMouseHandler extends AsyncApiCaller {
         }
     }
 
-    executeShadowMaskB(sheetid: string, maskid: string, index: number, blur: number) {
-        try {
-            const api = this.api;
-            api.modifyShadowMaskShadowBlur(this.__document, sheetid, maskid, index, blur);
-            this.updateView();
-        } catch (e) {
-            this.exception = true;
-            console.log('LockMouseHandler.executeShadowMaskB');
-        }
-    }
 
-    executeShadowS(shapes: ShapeView[], idx: number, val: number) {
+    executeShadowS(actions: { shadow: Shadow, value: number }[]) {
         try {
             const api = this.api;
-            const page = this.page;
-            for (let i = 0; i < shapes.length; i++) {
-                const shape = adapt2Shape(shapes[i]);
-                if (shape.isVirtualShape) continue;
-                api.setShadowSpread(page, shape, idx, val);
+            for (let i = 0; i < actions.length; i++) {
+                const { shadow, value } = actions[i];
+                api.setShadowSpread(shadow, value);
             }
 
             this.updateView();
         } catch (e) {
             this.exception = true;
             console.log('LockMouseHandler.executeShadowS');
-        }
-    }
-
-    executeShadowMaskS(sheetid: string, maskid: string, index: number, spread: number) {
-        try {
-            const api = this.api;
-            api.modifyShadowMaskShadowSpread(this.__document, sheetid, maskid, index, spread);
-            this.updateView();
-        } catch (e) {
-            this.exception = true;
-            console.log('LockMouseHandler.executeShadowMaskS');
         }
     }
 

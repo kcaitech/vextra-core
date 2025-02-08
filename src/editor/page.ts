@@ -3274,12 +3274,12 @@ export class PageEditor {
     }
 
     // shadow
-    setShapesShadowOffsetY(actions: BatchAction[]) {
+    setShapesShadowOffsetY(actions: { shadow: Shadow, value: number }[]) {
         try {
             const api = this.__repo.start('setShapesShadowOffsetY');
             for (let i = 0; i < actions.length; i++) {
-                const { target, value, index } = actions[i];
-                api.setShadowOffsetY(this.page, adapt2Shape(target), index, value);
+                const { shadow, value } = actions[i];
+                api.setShadowOffsetY(shadow, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -3287,12 +3287,12 @@ export class PageEditor {
         }
     }
 
-    setShapesShadowOffsetX(actions: BatchAction[]) {
+    setShapesShadowOffsetX(actions: { shadow: Shadow, value: number }[]) {
         try {
             const api = this.__repo.start('setShapesShadowOffsetX');
             for (let i = 0; i < actions.length; i++) {
-                const { target, value, index } = actions[i];
-                api.setShadowOffsetX(this.page, adapt2Shape(target), index, value);
+                const { shadow, value } = actions[i];
+                api.setShadowOffsetX(shadow, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -3300,12 +3300,12 @@ export class PageEditor {
         }
     }
 
-    setShapesShadowSpread(actions: BatchAction[]) {
+    setShapesShadowSpread(actions: { shadow: Shadow, value: number }[]) {
         try {
             const api = this.__repo.start('setShapesShadowSpread');
             for (let i = 0; i < actions.length; i++) {
-                const { target, value, index } = actions[i];
-                api.setShadowSpread(this.page, adapt2Shape(target), index, value);
+                const { shadow, value } = actions[i];
+                api.setShadowSpread(shadow, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -3313,12 +3313,12 @@ export class PageEditor {
         }
     }
 
-    setShapesShadowBlurRadius(actions: BatchAction[]) {
+    setShapesShadowBlurRadius(actions: { shadow: Shadow, value: number }[]) {
         try {
             const api = this.__repo.start('setShapesShadowBlurRadius');
             for (let i = 0; i < actions.length; i++) {
-                const { target, value, index } = actions[i];
-                api.setShadowBlur(this.page, adapt2Shape(target), index, value);
+                const { shadow, value } = actions[i];
+                api.setShadowBlur(shadow, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -3326,12 +3326,12 @@ export class PageEditor {
         }
     }
 
-    setShapesShadowColor(actions: BatchAction[]) {
+    setShapesShadowColor(actions: { shadow: Shadow, color: Color }[]) {
         try {
             const api = this.__repo.start('setShapesShadowColor');
             for (let i = 0; i < actions.length; i++) {
-                const { target, index, value } = actions[i];
-                api.setShadowColor(this.page, adapt2Shape(target), index, value);
+                const { shadow, color } = actions[i];
+                api.setShadowColor(shadow, color);
             }
             this.__repo.commit();
         } catch (error) {
@@ -3339,12 +3339,12 @@ export class PageEditor {
         }
     }
 
-    setShapesShadowPosition(actions: BatchAction[]) {
+    setShapesShadowPosition(actions: { shadow: Shadow, position: types.ShadowPosition }[]) {
         try {
             const api = this.__repo.start('setShapesShadowPosition');
             for (let i = 0; i < actions.length; i++) {
-                const { target, value, index } = actions[i];
-                api.setShadowPosition(this.page, adapt2Shape(target), index, value);
+                const { shadow, position } = actions[i];
+                api.setShadowPosition(shadow, position);
             }
             this.__repo.commit();
         } catch (error) {
@@ -3352,12 +3352,12 @@ export class PageEditor {
         }
     }
 
-    setShapesShadowEnabled(actions: BatchAction[]) {
+    setShapesShadowEnabled(actions: { shadow: Shadow, value: boolean }[]) {
         try {
             const api = this.__repo.start('setShapesShadowEnabled');
             for (let i = 0; i < actions.length; i++) {
-                const { target, index, value } = actions[i];
-                api.setShadowEnable(this.page, adapt2Shape(target), index, value);
+                const { shadow, value } = actions[i];
+                api.setShadowEnable(shadow, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -3365,12 +3365,12 @@ export class PageEditor {
         }
     }
 
-    shapesDeleteShadow(actions: BatchAction3[]) {
+    shapesDeleteShadow(actions: { shadows: Shadow[], index: number }[]) {
         try {
             const api = this.__repo.start('shapesDeleteShadow');
             for (let i = 0; i < actions.length; i++) {
-                const { target, index } = actions[i];
-                api.deleteShadowAt(this.page, adapt2Shape(target), index);
+                const { shadows, index } = actions[i];
+                api.deleteShadowAt(shadows, index);
             }
             this.__repo.commit();
         } catch (error) {
@@ -3378,12 +3378,12 @@ export class PageEditor {
         }
     }
 
-    shapesAddShadow(actions: BatchAction2[]) {
+    shapesAddShadow(actions: { shadows: Shadow[], shadow: Shadow }[]) {
         try {
             const api = this.__repo.start('shapesAddShadow');
             for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                api.addShadow(this.page, adapt2Shape(target), value, target.style.shadows.length);
+                const { shadows, shadow } = actions[i];
+                api.addShadow(shadows, shadow);
             }
             this.__repo.commit();
         } catch (error) {
