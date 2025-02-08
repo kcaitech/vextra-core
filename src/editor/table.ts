@@ -1247,8 +1247,8 @@ export class TableEditor extends ShapeEditor {
                 if (imageMgr) newfill.setImageMgr(imageMgr);
                 if (!cell.cell) throw new Error("init cell fail?");
                 const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
-                if (delOlds) api.deleteFills(this.__page, c.data, 0, c.style.fills.length);
-                api.addFillAt(this.__page, c.data, newfill, cell.cell.style.fills.length);
+                // if (delOlds) api.deleteFills(this.__page, c.data, 0, c.style.fills.length);
+                // api.addFillAt(this.__page, c.data, newfill, cell.cell.style.fills.length);
             })
             this.__repo.commit();
         } catch (error) {
@@ -1311,7 +1311,7 @@ export class TableEditor extends ShapeEditor {
             this.view._getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
                 if (cell.cell) {
                     const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
-                    api.deleteFillAt(this.__page, c.data, idx);
+                    // api.deleteFillAt(this.__page, c.data, idx);
                 }
             })
             this.__repo.commit();

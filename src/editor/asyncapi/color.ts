@@ -39,21 +39,6 @@ export class ColorPicker extends AsyncApiCaller {
             console.log('ColorPicker.executeImageScale', e);
         }
     }
-    executeImageFilter(shapes: ShapeView[], key: PaintFilterType, value: number, index: number) {
-        try {
-            const api = this.api;
-            const page = this.page;
-            for (let i = 0; i < shapes.length; i++) {
-                const shape = shapes[i];
-                const s = shape4fill(api, this.pageView, shape);
-                api.setFillImageFilter(page, s, index, key, value);
-            }
-            this.updateView();
-        } catch (e) {
-            this.exception = true;
-            console.log('ColorPicker.executeImageFilter', e);
-        }
-    }
 
     execute_fillmask_ImageFilter(sheetid: string, maskid: string, key: PaintFilterType, value: number, index: number) {
         try {

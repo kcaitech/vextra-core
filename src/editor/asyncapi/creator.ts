@@ -237,7 +237,7 @@ export class CreatorApiCaller extends AsyncApiCaller {
             if (this.__params?.parent.type === ShapeType.Page) {
                 const color = new Color(1, 255, 255, 255);
                 const fill = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, color);
-                this.api.addFillAt(this.page, shape, fill, 0);
+                this.api.addFillAt(shape.style.fills, fill, 0);
             }
 
             if (!shape || !shapes.length) return;

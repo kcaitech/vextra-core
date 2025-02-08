@@ -502,12 +502,14 @@ export class ShapeEditor {
         return shape4fill(api, this._page, shape ?? this.__shape);
     }
 
-    // fill
+    /**
+     * @deprecated 单个图层修改局限性大，应该使用批量修改接口
+     */
     public addFill(fill: Fill) {
         this._repoWrap("addFill", (api) => {
             const shape = this.shape4fill(api);
-            const l = shape instanceof Shape ? shape.style.fills.length : shape.value.length;
-            api.addFillAt(this.__page, shape, fill, l);
+            const fills = shape instanceof Shape ? shape.style.fills : shape.value;
+            api.addFillAt(fills, fill, fills.length);
         });
     }
 
@@ -526,10 +528,9 @@ export class ShapeEditor {
         });
     }
 
-    public deleteFill(idx: number) {
+    public deleteFill(fills: BasicArray<Fill>, idx: number) {
         this._repoWrap("deleteFill", (api) => {
-            const shape = this.shape4fill(api);
-            api.deleteFillAt(this.__page, shape, idx);
+            api.deleteFillAt(fills, idx);
         });
     }
 
