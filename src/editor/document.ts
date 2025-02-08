@@ -696,19 +696,6 @@ export class DocEditor {
         }
         return true;
     }
-
-    modifyBorderMaskBorderSideSetting(sheetid: string, maskid: string, side: BorderSideSetting) {
-        const api = this.__repo.start('modifyBorderMaskBorderSideSetting');
-        try {
-            api.modifyBorderMaskBorderSideSetting(this.__document, sheetid, maskid, side)
-            this.__repo.commit();
-        } catch (error) {
-            console.log(error)
-            this.__repo.rollback();
-        }
-        return true;
-    }
-
     modifyRadiusMaskRadiusSetting(sheetid: string, maskid: string, value: number[]) {
         const api = this.__repo.start('modifyRadiusMaskRadiusSetting');
         try {

@@ -475,11 +475,11 @@ export class LinearApi {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
                 const s = shape4border(api, this._page, target);
-                const borders = target.getBorders();
-                const sideType = borders.sideSetting.sideType;
+                const sideType = target.getBorders().sideSetting.sideType;
+                const border = s instanceof Shape ? s.style.borders : s.value;
                 switch (sideType) {
                     case SideType.Normal:
-                        api.setBorderSide(page, s, new BorderSideSetting(sideType, value, value, value, value));
+                        api.setBorderSide(border, new BorderSideSetting(sideType, value, value, value, value));
                         break;
                     case SideType.Top:
                         api.setBorderThicknessTop(page, s, value);
@@ -494,7 +494,7 @@ export class LinearApi {
                         api.setBorderThicknessLeft(page, s, value);
                         break
                     default:
-                        api.setBorderSide(page, s, new BorderSideSetting(sideType, value, value, value, value));
+                        api.setBorderSide(border, new BorderSideSetting(sideType, value, value, value, value));
                         break;
                 }
 
@@ -562,7 +562,7 @@ export class LinearApi {
             editor.view._getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
                 if (cell.cell) {
                     const c = editor.cell4edit(cell.rowIdx, cell.colIdx, api);
-                    api.setBorderSide(page, c.data, new BorderSideSetting(SideType.Normal, thickness, thickness, thickness, thickness));
+                    api.setBorderSide(c.data.getBorders(), new BorderSideSetting(SideType.Normal, thickness, thickness, thickness, thickness));
                 }
             })
         });
