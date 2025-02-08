@@ -31,7 +31,7 @@ export class ColorPicker extends AsyncApiCaller {
             for (let i = 0; i < shapes.length; i++) {
                 const shape = shapes[i];
                 const s = shape4fill(api, this.pageView, shape);
-                api.setFillImageScale(page, s, index, scale);
+                // api.setFillImageScale(page, s, index, scale);
             }
             this.updateView();
         } catch (e) {

@@ -7,7 +7,8 @@ import {
     BorderMask,
     BorderMaskType,
     BorderPosition,
-    Color, ContactShape,
+    Color,
+    ContactShape,
     Document,
     ExportFileFormat,
     ExportFormatNameingScheme,
@@ -46,138 +47,35 @@ import {
 } from "../data";
 import { ShapeEditor } from "./shape";
 import * as types from "../data/typesdefine";
-import {
-    newArrowShape,
-    newArtboard,
-    newAutoLayoutArtboard,
-    newBoolShape,
-    newGroupShape,
-    newImageFillShape,
-    newLineShape,
-    newOvalShape,
-    newPathShape,
-    newRectShape,
-    newSolidColorFill,
-    newSymbolRefShape,
-    newSymbolShape
-} from "./creator";
+import { newArrowShape, newArtboard, newAutoLayoutArtboard, newBoolShape, newGroupShape, newImageFillShape, newLineShape, newOvalShape, newPathShape, newRectShape, newSolidColorFill, newSymbolRefShape, newSymbolShape } from "./creator";
 import { expand, translate, translateTo } from "./frame";
 import { uuid } from "../basic/uuid";
 import { TextShapeEditor } from "./textshape";
 import { set_childs_id, transform_data } from "../io/cilpboard";
 import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
-import { Matrix } from "../basic/matrix";
-import {
-    IImportContext,
-    importArtboard,
-    importAutoLayout,
-    importBlur,
-    importBorder,
-    importContextSettings,
-    importCornerRadius,
-    importFill,
-    importGradient,
-    importMarkerType,
-    importOverlayBackgroundAppearance,
-    importOverlayPosition,
-    importPrototypeInterAction,
-    importPrototypeStartingPoint,
-    importShadow,
-    importStop,
-    importStyle,
-    importSymbolShape,
-    importText,
-    importTransform
-} from "../data/baseimport";
+import { IImportContext, importArtboard, importAutoLayout, importBlur, importBorder, importContextSettings, importCornerRadius, importFill, importGradient, importMarkerType, importOverlayBackgroundAppearance, importOverlayPosition, importPrototypeInterAction, importPrototypeStartingPoint, importShadow, importStop, importStyle, importSymbolShape, importText, importTransform } from "../data/baseimport";
 import { gPal } from "../basic/pal";
 import { TableEditor } from "./table";
 import { exportGradient, exportStop, exportSymbolShape } from "../data/baseexport";
-import {
-    after_remove,
-    clear_binds_effect,
-    find_state_space,
-    fixTextShapeFrameByLayout,
-    get_symbol_by_layer,
-    init_state,
-    make_union,
-    modify_frame_after_inset_state,
-    modify_index
-} from "./utils/other";
+import { after_remove, clear_binds_effect, find_state_space, fixTextShapeFrameByLayout, get_symbol_by_layer, init_state, make_union, modify_frame_after_inset_state, modify_index } from "./utils/other";
 import { v4 } from "uuid";
-import {
-    is_exist_invalid_shape2,
-    is_part_of_symbol,
-    is_part_of_symbolref,
-    is_state,
-    modify_variable_with_api,
-    shape4border,
-    shape4cornerRadius,
-    shape4fill,
-    shape4shadow, shape4contextSettings, shape4blur, RefUnbind
-} from "./symbol";
+import { is_exist_invalid_shape2, is_part_of_symbol, is_part_of_symbolref, is_state, modify_variable_with_api, shape4border, shape4cornerRadius, shape4fill, shape4shadow, shape4contextSettings, shape4blur, RefUnbind } from "./symbol";
 import { is_circular_ref2 } from "./utils/ref_check";
-import {
-    AutoLayout,
-    BorderSideSetting,
-    BorderStyle,
-    ExportFormat,
-    OverlayBackgroundAppearance,
-    OverlayBackgroundInteraction,
-    OverlayPositionType,
-    Point2D,
-    PrototypeActions,
-    PrototypeConnectionType,
-    PrototypeEasingBezier,
-    PrototypeEasingType,
-    PrototypeEvent,
-    PrototypeEvents,
-    PrototypeInterAction,
-    PrototypeNavigationType,
-    PrototypeStartingPoint,
-    PrototypeTransitionType,
-    ScrollBehavior,
-    ScrollDirection,
-    Shadow
-} from "../data/baseclasses";
-import {
-    border2path,
-    calculateInnerAnglePosition,
-    getPolygonPoints,
-    getPolygonVertices,
-    update_frame_by_points
-} from "./utils/path";
+import { AutoLayout, BorderSideSetting, BorderStyle, ExportFormat, OverlayBackgroundAppearance, OverlayBackgroundInteraction, OverlayPositionType, Point2D, PrototypeActions, PrototypeConnectionType, PrototypeEasingBezier, PrototypeEasingType, PrototypeEvent, PrototypeEvents, PrototypeInterAction, PrototypeNavigationType, PrototypeStartingPoint, PrototypeTransitionType, ScrollBehavior, ScrollDirection, Shadow } from "../data/baseclasses";
+import { border2path, calculateInnerAnglePosition, getPolygonPoints, getPolygonVertices, update_frame_by_points } from "./utils/path";
 import { modify_shapes_height, modify_shapes_width } from "./utils/common";
 import { CoopRepository, ISave4Restore, LocalCmd, SelectionState } from "../coop";
 import { Api, TextShapeLike } from "../coop/recordapi";
 import { unable_to_migrate } from "./utils/migrate";
-import {
-    adapt2Shape,
-    ArtboardView,
-    BoolShapeView,
-    CutoutShapeView,
-    GroupShapeView,
-    PageView,
-    PathShapeView,
-    render2path,
-    ShapeView,
-    SymbolRefView,
-    SymbolView,
-    TableCellView,
-    TableView,
-    TextShapeView
-} from "../dataview";
+import { adapt2Shape, ArtboardView, BoolShapeView, CutoutShapeView, GroupShapeView, PageView, PathShapeView, render2path, ShapeView, SymbolRefView, SymbolView, TableCellView, TableView, TextShapeView } from "../dataview";
 import { FMT_VER_latest } from "../data/fmtver";
 import { ColVector3D } from "../basic/matrix2";
 import { Transform as Transform2 } from "../basic/transform";
-import {
-    TidyUpAlgin,
-    tidyUpLayout
-} from "./utils/auto_layout";
+import { TidyUpAlgin, tidyUpLayout } from "./utils/auto_layout";
 
 import { getFormatFromBase64 } from "../basic/utils";
-import { modifyRadius, modifyStartingAngle, modifySweep, uniformScale, UniformScaleUnit } from "./asyncapi";
+import { modifyRadius, modifyStartingAngle, modifySweep, uniformScale, UniformScaleUnit, assign } from "./asyncapi";
 import { Path } from "@kcdesign/path";
-import { assign } from "./asyncapi";
 import { prepareVar } from "./symbol_utils";
 import { layoutShapesOrder2, layoutSpacing } from "./utils/auto_layout2";
 
@@ -2338,93 +2236,6 @@ export class PageEditor {
         }
     }
 
-    // 渐变
-    //翻转
-    reverseShapesGradient(actions: BatchAction4[]) {
-        try {
-            const api = this.__repo.start('reverseShapesGradient');
-            for (let i = 0, l = actions.length; i < l; i++) {
-                const { target, index, type } = actions[i];
-                const arr = type === 'fills' ? target.getFills() : target.getBorders()?.strokePaints;
-                if (!arr?.length) {
-                    continue;
-                }
-                const gradient_container = arr[index];
-                if (!gradient_container || !gradient_container.gradient) {
-                    continue;
-                }
-                const gradient = gradient_container.gradient;
-                const stops = gradient.stops;
-                if (!stops?.length) {
-                    continue;
-                }
-                const new_stops: BasicArray<Stop> = new BasicArray<Stop>();
-                for (let _i = 0, _l = stops.length; _i < _l; _i++) {
-                    const _stop = stops[_i];
-                    const inver_index = stops.length - 1 - _i;
-                    new_stops.push(importStop(exportStop(new Stop(_stop.crdtidx, _stop.id, _stop.position, stops[inver_index].color))));
-                }
-                const s = shape4fill(api, this.view, target);
-                if (type === 'fills') {
-                    api.setFillColor(this.page, s, index, new_stops[0].color as Color);
-                } else {
-                    api.setBorderColor(this.page, s, index, new_stops[0].color as Color);
-                }
-                const ng = importGradient(exportGradient(gradient));
-                ng.stops = new_stops;
-                const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
-                f(this.page, s, index, ng);
-            }
-            this.__repo.commit();
-        } catch (error) {
-            console.log('reverseShapesGradient:', error);
-            this.__repo.rollback();
-        }
-    }
-
-    //旋转90度
-    rotateShapesGradient(actions: BatchAction4[]) {
-        try {
-            const api = this.__repo.start('rotateShapesGradient');
-            for (let i = 0, l = actions.length; i < l; i++) {
-                const { target, index, type } = actions[i];
-                const arr = type === 'fills' ? target.getFills() : target.getBorders()?.strokePaints;
-                if (!arr?.length) {
-                    continue;
-                }
-                const gradient_container = arr[index];
-                if (!gradient_container || !gradient_container.gradient) {
-                    continue;
-                }
-                const gradient = importGradient(exportGradient(gradient_container.gradient));
-                const { from, to } = gradient;
-                const gradientType = gradient.gradientType;
-                if (gradientType === types.GradientType.Linear) {
-                    const midpoint = { x: (to.x + from.x) / 2, y: (to.y + from.y) / 2 };
-                    const m = new Matrix();
-                    m.trans(-midpoint.x, -midpoint.y);
-                    m.rotate(Math.PI / 2);
-                    m.trans(midpoint.x, midpoint.y);
-                    gradient.to = m.computeCoord3(to) as any;
-                    gradient.from = m.computeCoord3(from) as any;
-                } else if (gradientType === types.GradientType.Radial || gradientType === types.GradientType.Angular) {
-                    const m = new Matrix();
-                    m.trans(-from.x, -from.y);
-                    m.rotate(Math.PI / 2);
-                    m.trans(from.x, from.y);
-                    gradient.to = m.computeCoord3(to) as any;
-                }
-                const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
-                const shape = shape4fill(api, this.view, target);
-                f(this.page, shape, index, gradient);
-            }
-            this.__repo.commit();
-        } catch (error) {
-            console.log('rotateShapesGradient:', error);
-            this.__repo.rollback();
-        }
-    }
-
     // 添加节点
     addShapesGradientStop(actions: BatchAction5[]) {
         try {
@@ -2456,7 +2267,7 @@ export class PageEditor {
                 })
                 const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
                 const shape = shape4fill(api, this.view, target);
-                f(this.page, shape, index, new_gradient);
+                // f(this.page, shape, index, new_gradient); todo setFillGradient
             }
             this.__repo.commit();
         } catch (error) {
@@ -2465,99 +2276,60 @@ export class PageEditor {
         }
     }
 
-    modifyShapeGradientType(actions: BatchAction5[]) {
-        try {
-            const api = this.__repo.start('modifyShapeGradientType');
-            for (let i = 0, l = actions.length; i < l; i++) {
-                const { target, index, type, value } = actions[i];
-                const grad_type = type === 'fills' ? target.getFills() : target.getBorders()?.strokePaints;
-                if (!grad_type?.length) continue;
-                const gradient_container = grad_type[index];
-                if (!gradient_container) continue;
-                const gradient = gradient_container.gradient;
-                const s = shape4fill(api, this.view, target);
-                if (gradient_container.fillType !== FillType.Gradient) {
-                    type === 'fills' ? api.setFillType(this.page, s, index, FillType.Gradient) : api.setBorderFillType(this.page, s, index, FillType.Gradient);
-                }
-                if (gradient) {
-                    const new_gradient = importGradient(exportGradient(gradient));
-                    new_gradient.gradientType = value;
-                    if (value === GradientType.Linear && gradient.gradientType !== GradientType.Linear) {
-                        new_gradient.from.y = new_gradient.from.y - (new_gradient.to.y - new_gradient.from.y);
-                        new_gradient.from.x = new_gradient.from.x - (new_gradient.to.x - new_gradient.from.x);
-                    } else if (gradient.gradientType === GradientType.Linear && value !== GradientType.Linear) {
-                        new_gradient.from.y = new_gradient.from.y + (new_gradient.to.y - new_gradient.from.y) / 2;
-                        new_gradient.from.x = new_gradient.from.x + (new_gradient.to.x - new_gradient.from.x) / 2;
-                    }
-                    if (value === GradientType.Radial && new_gradient.elipseLength === undefined) {
-                        new_gradient.elipseLength = 1;
-                    }
-                    new_gradient.stops[0].color = gradient_container.color;
-                    const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
-                    f(this.page, s, index, new_gradient);
-                } else {
-                    const stops = new BasicArray<Stop>();
-                    // const frame = target.frame;
-                    const { alpha, red, green, blue } = gradient_container.color;
-                    stops.push(new Stop(new BasicArray(), uuid(), 0, new Color(alpha, red, green, blue)), new Stop(new BasicArray(), uuid(), 1, new Color(0, red, green, blue)))
-                    const from = value === GradientType.Linear ? { x: 0.5, y: 0 } : { x: 0.5, y: 0.5 };
-                    const to = { x: 0.5, y: 1 };
-                    let elipseLength = undefined;
-                    if (value === GradientType.Radial) {
-                        elipseLength = 1;
-                    }
-                    const new_gradient = new Gradient(from as Point2D, to as Point2D, value, stops, elipseLength);
-                    new_gradient.stops.forEach((v, i) => {
-                        const idx = new BasicArray<number>();
-                        idx.push(i);
-                        v.crdtidx = idx;
-                    })
-                    const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
-                    f(this.page, s, index, new_gradient);
-                }
-            }
-            this.__repo.commit();
-        } catch (error) {
-            this.__repo.rollback();
-            console.error(error);
-        }
-    }
-
-    setShapesGradientStopColor(actions: BatchAction5[]) {
-        try {
-            const api = this.__repo.start('setShapesGradientStopColor');
-            for (let i = 0, l = actions.length; i < l; i++) {
-                const { target, index, type, value } = actions[i];
-                const grad_type = type === 'fills' ? target.getFills() : target.getBorders()?.strokePaints;
-                if (!grad_type?.length) {
-                    continue;
-                }
-                const gradient_container = grad_type[index];
-                if (!gradient_container || !gradient_container.gradient || gradient_container.fillType !== FillType.Gradient) {
-                    continue;
-                }
-                const gradient = gradient_container.gradient;
-                const stops = gradient.stops;
-                if (!stops?.length) {
-                    continue;
-                }
-                const { color, stop_i } = value;
-                const new_gradient = importGradient(exportGradient(gradient));
-                new_gradient.stops[stop_i].color = color;
-                const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
-                const shape = shape4fill(api, this.view, target);
-                if (type === 'fills') {
-                    api.setFillColor(this.page, shape, index, new_gradient.stops[0].color as Color);
-                } else {
-                    api.setBorderColor(this.page, shape, index, new_gradient.stops[0].color as Color);
-                }
-                f(this.page, shape, index, new_gradient);
-            }
-            this.__repo.commit();
-        } catch (error) {
-            console.error(error);
-            this.__repo.rollback();
-        }
+    modifyShapeGradientType(actions: { fill: Fill, type: string }[]) {
+        // todo modifyShapeGradientType
+        // try {
+        //     const api = this.__repo.start('modifyShapeGradientType');
+        //     for (let i = 0, l = actions.length; i < l; i++) {
+        //         const { fill, type } = actions[i];
+        //
+        //         if (fill.fillType !== FillType.Gradient) {
+        //             api.setFillType(fill, FillType.Gradient);
+        //         }
+        //         if (fill.gradient) {
+        //
+        //         } else {
+        //
+        //         }
+        //         if (gradient) {
+        //             const new_gradient = importGradient(exportGradient(gradient));
+        //             new_gradient.gradientType = value;
+        //             if (value === GradientType.Linear && gradient.gradientType !== GradientType.Linear) {
+        //                 new_gradient.from.y = new_gradient.from.y - (new_gradient.to.y - new_gradient.from.y);
+        //                 new_gradient.from.x = new_gradient.from.x - (new_gradient.to.x - new_gradient.from.x);
+        //             } else if (gradient.gradientType === GradientType.Linear && value !== GradientType.Linear) {
+        //                 new_gradient.from.y = new_gradient.from.y + (new_gradient.to.y - new_gradient.from.y) / 2;
+        //                 new_gradient.from.x = new_gradient.from.x + (new_gradient.to.x - new_gradient.from.x) / 2;
+        //             }
+        //             if (value === GradientType.Radial && new_gradient.elipseLength === undefined) {
+        //                 new_gradient.elipseLength = 1;
+        //             }
+        //             new_gradient.stops[0].color = gradient_container.color;
+        //             const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
+        //             f(this.page, s, index, new_gradient);
+        //         } else {
+        //             const stops = new BasicArray<Stop>();
+        //             const { alpha, red, green, blue } = gradient_container.color;
+        //             stops.push(new Stop(new BasicArray(), uuid(), 0, new Color(alpha, red, green, blue)), new Stop(new BasicArray(), uuid(), 1, new Color(0, red, green, blue)))
+        //             const from = value === GradientType.Linear ? { x: 0.5, y: 0 } : { x: 0.5, y: 0.5 };
+        //             const to = { x: 0.5, y: 1 };
+        //             let ellipseLength;
+        //             if (value === GradientType.Radial) ellipseLength = 1;
+        //             const new_gradient = new Gradient(from as Point2D, to as Point2D, value, stops, ellipseLength);
+        //             new_gradient.stops.forEach((v, i) => {
+        //                 const idx = new BasicArray<number>();
+        //                 idx.push(i);
+        //                 v.crdtidx = idx;
+        //             })
+        //             const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
+        //             f(this.page, s, index, new_gradient);
+        //         }
+        //     }
+        //     this.__repo.commit();
+        // } catch (error) {
+        //     this.__repo.rollback();
+        //     console.error(error);
+        // }
     }
 
     deleteShapesGradientStop(actions: BatchAction5[]) {
@@ -2582,7 +2354,7 @@ export class PageEditor {
                 new_gradient.stops.splice(value, 1);
                 const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
                 const shape = shape4fill(api, this.view, target);
-                f(this.page, shape, index, new_gradient);
+                // f(this.page, shape, index, new_gradient); // todo setFillGradient
             }
             this.__repo.commit();
         } catch (error) {
@@ -2609,7 +2381,7 @@ export class PageEditor {
                 new_gradient.gradientOpacity = value;
                 const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
                 const shape = shape4fill(api, this.view, target);
-                f(this.page, shape, index, new_gradient);
+                // f(this.page, shape, index, new_gradient); // todo setFillGradient
             }
             this.__repo.commit();
         } catch (error) {
@@ -2618,95 +2390,82 @@ export class PageEditor {
         }
     }
 
-    // 填充
-    setShapesFillColor(actions: { target: ShapeView, index: number, value: any }[]) {
-        const api = this.__repo.start('setShapesFillColor');
+    /* 修改填充类型 */
+    setFillsType(actions: { fill: Fill, type: string }[]) {
+        const api = this.__repo.start('setFillsType');
         try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, index, value } = actions[i];
-                const s = shape4fill(api, this.view, target);
-                api.setFillColor(this.page, s, index, value);
-            }
-            this.__repo.commit();
-        } catch (error) {
-            this.__repo.rollback();
-        }
-    }
-    setShapesFillOpacity(actions: BatchAction[]) {
-        const api = this.__repo.start('setShapesFillOpacity');
-        try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, index, value } = actions[i];
-                const s = shape4fill(api, this.view, target);
-                api.setFillOpacity(this.page, s, index, value);
-            }
-            this.__repo.commit();
-        } catch (error) {
-            this.__repo.rollback();
-        }
-    }
-
-    setShapesFillEnabled(actions: BatchAction[]) {
-        const api = this.__repo.start('setShapesFillEnabled');
-        try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, index, value } = actions[i];
-                const s = shape4fill(api, this.view, target);
-                api.setFillEnable(this.page, s, index, value);
-            }
-            this.__repo.commit();
-        } catch (error) {
-            this.__repo.rollback();
-        }
-    }
-
-    setShapesFillType(actions: BatchAction[]) {
-        const api = this.__repo.start('setShapesFillType');
-        try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, index, value } = actions[i];
-                const s = shape4fill(api, this.view, target);
-                const fills = s instanceof Shape ? s.style.fills : s.value;
-                api.setFillType(this.page, s, index, value);
-                if (!fills[index].imageScaleMode) {
-                    api.setFillScaleMode(this.page, s, index, types.ImageScaleMode.Fill);
+            for (const action of actions) {
+                if (action.type === FillType.SolidColor) {
+                    api.setFillType(action.fill, FillType.SolidColor);
+                } else if (action.type === FillType.Pattern) {
+                    api.setFillType(action.fill, FillType.Pattern);
+                    // if (!action.fill.imageScaleMode) {
+                    //     api.setFillScaleMode(this.page, s, index, types.ImageScaleMode.Fill);
+                    // }
+                } else {
+                    api.setFillType(action.fill, FillType.Gradient);
+                    initGradient(action);
                 }
             }
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
         }
+
+        function initGradient(action: { fill: Fill, type: string }) {
+            const gradient = action.fill.gradient;
+            if (gradient) {
+                const gCopy = importGradient(exportGradient(gradient));
+                if (action.type === GradientType.Linear && gradient.gradientType !== GradientType.Linear) {
+                    gCopy.from.y = gCopy.from.y - (gCopy.to.y - gCopy.from.y);
+                    gCopy.from.x = gCopy.from.x - (gCopy.to.x - gCopy.from.x);
+                } else if (action.type !== GradientType.Linear && gradient.gradientType === GradientType.Linear) {
+                    gCopy.from.y = gCopy.from.y + (gCopy.to.y - gCopy.from.y) / 2;
+                    gCopy.from.x = gCopy.from.x + (gCopy.to.x - gCopy.from.x) / 2;
+                }
+                if (action.type === GradientType.Radial && gCopy.elipseLength === undefined) {
+                    gCopy.elipseLength = 1;
+                }
+                gCopy.stops[0].color = action.fill.color;
+            } else {
+                const stops = new BasicArray<Stop>();
+                const { alpha, red, green, blue } = action.fill.color;
+                stops.push(
+                    new Stop(new BasicArray(), uuid(), 0, new Color(alpha, red, green, blue)),
+                    new Stop(new BasicArray(), uuid(), 1, new Color(0, red, green, blue))
+                );
+                const from = action.type === GradientType.Linear ? { x: 0.5, y: 0 } : { x: 0.5, y: 0.5 };
+                const to = { x: 0.5, y: 1 };
+                let ellipseLength;
+                if (action.type === GradientType.Radial) ellipseLength = 1;
+                const gradient = new Gradient(from as Point2D, to as Point2D, action.type as GradientType, stops, ellipseLength);
+                gradient.stops.forEach((v, i) => {
+                    const idx = new BasicArray<number>();
+                    idx.push(i);
+                    v.crdtidx = idx;
+                })
+                api.setFillGradient(action.fill, gradient);
+            }
+        }
     }
 
-    setShapesFillImageScaleMode(actions: BatchAction[]) {
-        const api = this.__repo.start('setShapesFillImageScaleMode');
+    /* 修改填充纯色 */
+    setFillsColor(actions: { fill: Fill, color: Color }[]) {
+        const api = this.__repo.start('setFillsColor');
         try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, index, value } = actions[i];
-                const s = shape4fill(api, this.view, target);
-                api.setFillScaleMode(this.page, s, index, value);
-                if (value === types.ImageScaleMode.Tile) {
-                    const fills = s instanceof Shape ? s.style.fills : s.value;
-                    if (!fills[index].scale) {
-                        api.setFillImageScale(this.page, s, index, 0.5);
-                    }
-                }
-            }
+            for (const action of actions) api.setFillColor(action.fill, action.color);
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
         }
     }
 
-    setShapesFillImageRef(actions: BatchAction[]) {
-        const api = this.__repo.start('setShapesFillImageRef');
+    /* 隐藏与显示一条填充 */
+    setFillsEnabled(fills: Fill[], enable: boolean) {
+        const api = this.__repo.start('setFillsEnabled');
         try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, index, value } = actions[i];
-                const s = shape4fill(api, this.view, target);
-                api.setFillImageRef(this.__document, this.page, s, index, value.urlRef, value.imageMgr);
-                api.setFillImageOriginWidth(this.page, s, index, value.origin.width);
-                api.setFillImageOriginHeight(this.page, s, index, value.origin.height);
+            for (const fill of fills) {
+                api.setFillEnable(fill, enable);
             }
             this.__repo.commit();
         } catch (error) {
@@ -2733,14 +2492,14 @@ export class PageEditor {
                     const index = fills.value.length - 1;
                     if (index < 0) continue;
                     if (!fills.value[index].imageScaleMode) {
-                        api.setFillScaleMode(page, target, index, types.ImageScaleMode.Fill);
+                        api.setFillScaleMode(fills.value[index], types.ImageScaleMode.Fill);
                     }
                     if (fills.value[index].fillType !== FillType.Pattern) {
-                        api.setFillType(page, target, index, FillType.Pattern);
+                        api.setFillType(fills.value[index], FillType.Pattern);
                     }
-                    api.setFillImageRef(document, page, target, index, ref, media);
-                    api.setFillImageOriginWidth(page, target, index, width);
-                    api.setFillImageOriginHeight(page, target, index, height);
+                    api.setFillImageRef(document, fills.value[index], ref, media);
+                    api.setFillImageOriginWidth(fills.value[index], width);
+                    api.setFillImageOriginHeight(fills.value[index], height);
                 } else {
                     const index = fills.length - 1;
                     if (index < 0) {
@@ -2751,11 +2510,11 @@ export class PageEditor {
                         api.addFillAt(page, target, fill, 0);
                     } else {
                         if (fills[index].fillType !== FillType.Pattern) {
-                            api.setFillType(page, target, index, FillType.Pattern);
+                            api.setFillType(fills[index], FillType.Pattern);
                         }
-                        api.setFillImageRef(document, page, target, index, ref, media);
-                        api.setFillImageOriginWidth(page, target, index, width);
-                        api.setFillImageOriginHeight(page, target, index, height);
+                        api.setFillImageRef(document, fills[index], ref, media);
+                        api.setFillImageOriginWidth(fills[index], width);
+                        api.setFillImageOriginHeight(fills[index], height);
                     }
                 }
             }
@@ -2773,20 +2532,6 @@ export class PageEditor {
                 const { target, index, value } = actions[i];
                 const s = shape4fill(api, this.view, target);
                 api.setFillImageRotate(this.page, s, index, value);
-            }
-            this.__repo.commit();
-        } catch (error) {
-            this.__repo.rollback();
-        }
-    }
-
-    setShapesFillImageScale(actions: BatchAction[]) {
-        const api = this.__repo.start('setShapesFillImageScale');
-        try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, index, value } = actions[i];
-                const s = shape4fill(api, this.view, target);
-                api.setFillImageScale(this.page, s, index, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -4609,7 +4354,7 @@ export class PageEditor {
                 const style = shape.style;
                 if (style.fills.length) {
                     const s = shape4fill(api, this.view, shapes[i]);
-                    api.setFillColor(page, s, style.fills.length - 1, _color);
+                    // api.setFillColor(style.fills.length - 1, _color);
                     continue;
                 }
                 if (style.borders && style.borders.strokePaints.length) {

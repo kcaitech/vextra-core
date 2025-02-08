@@ -25,10 +25,9 @@ export class FillsAsyncApi extends AsyncApiCaller {
     }
 
     /* 修改纯色 */
-    modifySolidColor(shapes: ShapeView[], index: number, color: Color) {
+    modifySolidColor(actions: { fill: Fill, color: Color }[]) {
         try {
-            const targets = this.getTargets(shapes);
-            for (const t of targets) this.api.setFillColor(this.page, t, index, color);
+            for (const action of actions) this.api.setFillColor(action.fill, action.color);
             this.updateView();
         } catch (err) {
             this.exception = true;
@@ -37,9 +36,9 @@ export class FillsAsyncApi extends AsyncApiCaller {
     }
 
     /* 修改站点颜色 */
-    modifyStopColor(shapes: ShapeView[], index: number, color: Color, stopAt: number) {
+    modifyStopColor(actions: { fill: Fill, color: Color, stopAt: number }[]): void {
         try {
-            this.modifyStopColorOnce(shapes, index, color, stopAt);
+            this.modifyStopColorOnce(actions);
             this.updateView();
         } catch (err) {
             this.exception = true;
@@ -62,17 +61,15 @@ export class FillsAsyncApi extends AsyncApiCaller {
     }
 
     /* 修改站点位置 */
-    modifyStopPosition(index: number, stopAt: number, position: number, shapes: ShapeView[]) {
+    modifyStopPosition(actions: { fill: Fill, position: number, stopAt: number }[]): void {
         try {
-            const targets = this.getTargets(shapes);
-            for (const target of targets) {
-                const fills = this.getFills(target);
-                const fill = fills[index];
+            for (const action of actions) {
+                const { fill, position, stopAt } = action;
                 const gradient = fill.gradient!;
                 const gradientCopy = importGradient(exportGradient(gradient));
                 gradientCopy.stops[stopAt].position = position;
                 gradientCopy.stops.sort((a, b) => a.position > b.position ? 1 : -1);
-                this.api.setFillGradient(this.page, target as any, index, gradientCopy);
+                this.api.setFillGradient(fill, gradientCopy);
             }
             this.updateView();
         } catch (error) {
@@ -91,16 +88,14 @@ export class FillsAsyncApi extends AsyncApiCaller {
     }
 
     /*非连续性指令*/
-    removeGradientStop(index: number, stopAt: number, shapes: ShapeView[]) {
+    removeGradientStop(actions: { fill: Fill, stopAt: number }[]) {
         try {
-            const targets = this.getTargets(shapes);
-            for (const target of targets) {
-                const fills = this.getFills(target);
-                const fill = fills[index];
+            for (const action of actions) {
+                const { fill, stopAt } = action;
                 const gradient = fill.gradient!;
                 const gradientCopy = importGradient(exportGradient(gradient));
                 gradientCopy.stops.splice(stopAt, 1);
-                this.api.setFillGradient(this.page, target as any, index, gradientCopy);
+                this.api.setFillGradient(fill, gradientCopy);
             }
         } catch (error) {
             console.error(error);
@@ -108,31 +103,20 @@ export class FillsAsyncApi extends AsyncApiCaller {
         }
     }
     /* 修改一次站点颜色 */
-    modifyStopColorOnce(shapes: ShapeView[], index: number, color: Color, stopAt: number) {
-        const targets = this.getTargets(shapes);
-        for (const target of targets) {
-            const fills = this.getFills(target);
-            const fill = fills[index];
+    modifyStopColorOnce(actions: { fill: Fill, color: Color, stopAt: number }[]) {
+        for (const action of actions) {
+            const { fill, color, stopAt } = action;
             const gradient = fill.gradient!;
             const gradientCopy = importGradient(exportGradient(gradient));
             gradientCopy.stops[stopAt].color = color;
-            gradientCopy.stops.sort((a, b) => a.position > b.position ? 1 : -1);
-            gradientCopy.stops.forEach((v, i) => {
-                const idx = new BasicArray<number>();
-                idx.push(i);
-                v.crdtidx = idx;
-            })
-            this.api.setFillGradient(this.page, target as any, index, gradientCopy);
+            this.api.setFillGradient(fill, gradient);
         }
     }
 
     /* 逆转站点 */
-    reverseGradientStops(shapes: ShapeView[], index: number) {
+    reverseGradientStops(fills: Fill[]) {
         try {
-            const targets = this.getTargets(shapes);
-            for (const target of targets) {
-                const fills = this.getFills(target);
-                const fill = fills[index];
+            for (const fill of fills) {
                 const gradient = fill.gradient!;
                 const stops = gradient.stops;
                 const reversedStops: BasicArray<Stop> = new BasicArray<Stop>();
@@ -141,10 +125,10 @@ export class FillsAsyncApi extends AsyncApiCaller {
                     const inverseIndex = stops.length - 1 - _i;
                     reversedStops.push(importStop(exportStop(new Stop(_stop.crdtidx, _stop.id, _stop.position, stops[inverseIndex].color))));
                 }
-                this.api.setFillColor(this.page, target as any, index, reversedStops[0].color as Color);
+                this.api.setFillColor(fill, reversedStops[0].color as Color);
                 const gradientCopy = importGradient(exportGradient(gradient));
                 gradientCopy.stops = reversedStops;
-                this.api.setFillGradient(this.page, target as any, index, gradientCopy);
+                this.api.setFillGradient(fill, gradientCopy);
             }
         } catch (error) {
             console.error(error);
@@ -153,12 +137,10 @@ export class FillsAsyncApi extends AsyncApiCaller {
     }
 
     /* 旋转站点 */
-    rotateGradientStops(shapes: ShapeView[], index: number) {
+    rotateGradientStops(fills: Fill[]) {
         try {
-            const targets = this.getTargets(shapes);
-            for (const target of targets) {
-                const fills = this.getFills(target);
-                const gradientCopy = importGradient(exportGradient(fills[index].gradient!));
+            for (const fill of fills) {
+                const gradientCopy = importGradient(exportGradient(fill.gradient!));
                 const {from, to} = gradientCopy;
                 const gradientType = gradientCopy.gradientType;
                 if (gradientType === types.GradientType.Linear) {
@@ -176,7 +158,7 @@ export class FillsAsyncApi extends AsyncApiCaller {
                     m.trans(from.x, from.y);
                     gradientCopy.to = m.computeCoord3(to) as any;
                 }
-                this.api.setFillGradient(this.page, target as any, index, gradientCopy);
+                this.api.setFillGradient(fill, gradientCopy);
             }
         } catch (error) {
             console.error(error);
@@ -185,15 +167,14 @@ export class FillsAsyncApi extends AsyncApiCaller {
     }
 
     /* 修改图片的填充方式 */
-    modifyObjectFit(shapes: ShapeView[], index: number, type: ImageScaleMode) {
+    modifyObjectFit(fills: Fill[], type: ImageScaleMode) {
         try {
-            const targets = this.getTargets(shapes);
-            for (const target of targets) {
-                this.api.setFillScaleMode(this.page, target as any, index, type);
-                if (type === types.ImageScaleMode.Tile) {
-                    const fills = this.getFills(target);
-                    if (!fills[index].scale) this.api.setFillImageScale(this.page, target as any, index, 0.5);
-                }
+            for (const fill of fills) {
+                this.api.setFillScaleMode(fill, type);
+                // if (type === types.ImageScaleMode.Tile) {
+                //     const fills = this.getFills(target);
+                //     if (!fills[index].scale) this.api.setFillImageScale(this.page, target as any, index, 0.5);
+                // }
             }
         } catch (error) {
             console.error(error);
@@ -202,12 +183,9 @@ export class FillsAsyncApi extends AsyncApiCaller {
     }
 
     /* 修改平铺状态下，图片的原始比例 */
-    modifyTileScale(index: number, scale: number, shapes: ShapeView[]) {
+    modifyTileScale(fills: Fill[], scale: number) {
         try {
-            const targets = this.getTargets(shapes);
-            for (const target of targets) {
-                this.api.setFillImageScale(this.page, target as any, index, scale);
-            }
+            for (const fill of fills) this.api.setFillImageScale(fill, scale);
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
@@ -228,13 +206,12 @@ export class FillsAsyncApi extends AsyncApiCaller {
     }
 
     /* 修改图片的引用 */
-    modifyFillImageRef(index: number, ref: string, media: { buff: Uint8Array, base64: string }, width: number, height: number, shapes: ShapeView[]) {
+    modifyFillImageRef(fills: Fill[], ref: string, media: { buff: Uint8Array, base64: string }, width: number, height: number) {
         try {
-            const targets = this.getTargets(shapes);
-            for (const target of targets) {
-                this.api.setFillImageRef(this.__document, this.page, target as any, index, ref, media);
-                this.api.setFillImageOriginWidth(this.page, target as any, index, width);
-                this.api.setFillImageOriginHeight(this.page, target as any, index, height);
+            for (const fill of fills) {
+                this.api.setFillImageRef(this.__document, fill, ref, media);
+                this.api.setFillImageOriginWidth(fill, width);
+                this.api.setFillImageOriginHeight(fill, height);
             }
         } catch (error) {
             console.error(error);

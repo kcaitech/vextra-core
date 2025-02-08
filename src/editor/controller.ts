@@ -59,13 +59,6 @@ interface PageXY { // 页面坐标系的xy
     y: number
 }
 
-interface XY {
-    x: number
-    y: number
-}
-
-type Side = 'from' | 'to'
-
 export enum CtrlElementType { // 控制元素类型
     RectLeft = 'rect-left',
     RectRight = 'rect-right',
@@ -147,13 +140,6 @@ export interface AsyncOpacityEditor {
 
 export interface AsyncBorderThickness {
     execute: (contextSettingThickness: number) => void;
-    close: () => undefined;
-}
-
-export interface AsyncPathHandle {
-    pre: (index: number) => void;
-    execute: (side: Side, from: XY, to: XY) => void;
-    abort: () => undefined;
     close: () => undefined;
 }
 
@@ -336,7 +322,7 @@ export class Controller {
                 api.shapeInsert(this.__document, page, parent, shape, targetIndex);
                 newShape = parent.childs[targetIndex];
 
-                if (newShape?.type === ShapeType.Artboard) api.setFillColor(page, newShape, 0, new Color(0, 0, 0, 0));
+                // if (newShape?.type === ShapeType.Artboard) api.setFillColor(page, newShape, 0, new Color(0, 0, 0, 0));
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
                 return newShape
@@ -432,7 +418,7 @@ export class Controller {
 
                 translateTo(api, page, newShape, frame.x, frame.y);
 
-                newShape && api.setFillColor(page, newShape, 0, new Color(0, 0, 0, 0));
+                // newShape && api.setFillColor(page, newShape, 0, new Color(0, 0, 0, 0));
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
                 return newShape
@@ -547,7 +533,7 @@ export class Controller {
             if (status == Status.Fulfilled && newShape && this.__repo.isNeedCommit()) {
                 try {
                     if (newShape.type === ShapeType.Artboard && newShape.parent instanceof Page) {
-                        api.setFillColor(savepage!, newShape, 0, new Color(1, 255, 255, 255));
+                        // api.setFillColor(savepage!, newShape, 0, new Color(1, 255, 255, 255));
                     }
 
                     if (newShape.type === ShapeType.Contact) {
@@ -1123,7 +1109,6 @@ export class Controller {
     }
 
     public asyncGradientEditor(shapes: ShapeView[], _page: PageView, index: number, type: 'fills' | 'borders'): AsyncGradientEditor {
-        const page = _page.data;
         const api = this.__repo.start("asyncGradientEditor");
         let status: Status = Status.Pending;
         const execute_from = (from: { x: number, y: number }) => {
@@ -1143,7 +1128,7 @@ export class Controller {
                     new_gradient.from.y = from.y;
                     const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
                     const s = shape4fill(api, _page, shape);
-                    f(page, s, index, new_gradient);
+                    // f(page, s, index, new_gradient); // todo setFillGradient
                 }
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
@@ -1169,7 +1154,7 @@ export class Controller {
                     new_gradient.to.y = to.y;
                     const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
                     const s = shape4fill(api, _page, shape);
-                    f(page, s, index, new_gradient);
+                    // f(page, s, index, new_gradient); todo setFillGradient
                 }
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
@@ -1194,7 +1179,7 @@ export class Controller {
                     new_gradient.elipseLength = length;
                     const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
                     const s = shape4fill(api, _page, shape);
-                    f(page, s, index, new_gradient);
+                    // f(page, s, index, new_gradient); todo setFillGradient
                 }
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
@@ -1237,7 +1222,7 @@ export class Controller {
                         })
                         const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
                         const s = shape4fill(api, _page, shape);
-                        f(page, s, index, new_gradient);
+                        // f(page, s, index, new_gradient); todo setFillGradient
                     }
                 }
                 this.__repo.transactCtx.fireNotify();
@@ -1298,7 +1283,6 @@ export class Controller {
             return undefined;
         }
         return { execute_from, execute_to, execute_elipselength, execute_stop_position, execute_fillmask_stop_position, close }
- 
     }
 }
 

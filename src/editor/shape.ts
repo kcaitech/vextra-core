@@ -492,16 +492,8 @@ export class ShapeEditor {
             shape.childs.forEach((child) => {
                 api.shapeModifyBoolOp(this.__page, child, op);
             })
-            // api.shapeModifyBoolOpShape(this.__page, shape, op !== BoolOp.None);
         });
     }
-
-    // public setIsBoolOpShape(isOpShape: boolean) {
-    //     if (!(this.shape instanceof GroupShape)) return;
-    //     this._repoWrap("setIsBoolOpShape", (api) => {
-    //         api.shapeModifyBoolOpShape(this.__page, this.shape as GroupShape, isOpShape);
-    //     });
-    // }
 
     /**
      * @description 已提出到 "editor/utils/symbol"
@@ -519,17 +511,18 @@ export class ShapeEditor {
         });
     }
 
-    public setFillColor(idx: number, color: Color) {
+    /**
+     * @deprecated 单个图层修改局限性大，应该使用批量修改接口
+     */
+    public setFillColor(fill: Fill, color: Color) {
         this._repoWrap("setFillColor", (api) => {
-            const shape = this.shape4fill(api);
-            api.setFillColor(this.__page, shape, idx, color)
+            api.setFillColor(fill, color);
         });
     }
 
-    public setFillEnable(idx: number, value: boolean) {
+    public setFillEnable(fill: Fill, value: boolean) {
         this._repoWrap("setFillEnable", (api) => {
-            const shape = this.shape4fill(api);
-            api.setFillEnable(this.__page, shape, idx, value);
+            api.setFillEnable(fill, value);
         });
     }
 

@@ -1,4 +1,4 @@
-import { Document, OvalShape, Page } from "../../data";
+import { Document, OvalShape, Page, Fill } from "../../data";
 import { adapt2Shape, ArtboardView, PageView, ShapeView, SymbolRefView, SymbolView, TableCellView, TableView, TextShapeView } from "../../dataview";
 import { modifyPathByArc } from "../asyncapi";
 import { Api, CoopRepository } from "../../coop";
@@ -385,7 +385,7 @@ export class LinearApi {
                 new_gradient.gradientOpacity = value;
                 const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
                 const shape = shape4fill(api, this._page, target);
-                f(page, shape, index, new_gradient);
+                // f(page, shape, index, new_gradient);
             }
         });
     }
@@ -393,15 +393,12 @@ export class LinearApi {
     /**
     * @description 修改图形填充透明度-solid
     */
-
-    modifyFillOpacity(actions: BatchAction[]) {
+    modifyFillOpacity(actions: { fill: Fill, color: Color }[]) {
         this.execute('modify-fill-opacity', () => {
             const api = this.api!;
-            const page = this.page;
-            for (let i = 0; i < actions.length; i++) {
-                const { target, index, value } = actions[i];
-                const s = shape4fill(api, this._page, target);
-                api.setFillColor(page, s, index, value);
+            for (const action of actions) {
+                const { fill, color } = action;
+                api.setFillColor(fill, color);
             }
         });
     }
@@ -414,9 +411,11 @@ export class LinearApi {
         }
         return this.editor4table!;
     }
+
     /**
-   * @description 修改图形填充透明度-table
-   */
+     * @deprecated 表格功能模块已经被遗弃
+     * @description 修改图形填充透明度-table
+     */
     modifyFillOpacity4Cell(idx: number, color: Color, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }, table: TableView) {
         const editor = this.getTableEditor(table);
         this.execute('modify-fill-opacity-4Cell', () => {
@@ -425,7 +424,7 @@ export class LinearApi {
             editor.view._getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
                 if (cell.cell) {
                     const c = editor.cell4edit(cell.rowIdx, cell.colIdx, api);
-                    api.setFillColor(page, c.data, idx, color)
+                    // api.setFillColor(page, c.data, idx, color);
                 }
             })
         });

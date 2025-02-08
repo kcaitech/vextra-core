@@ -1261,8 +1261,8 @@ export class TableEditor extends ShapeEditor {
         try {
             this.view._getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
                 if (cell.cell) {
-                    const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
-                    api.setFillColor(this.__page, c.data, idx, color)
+                    // const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
+                    // api.setFillColor(this.__page, c.data, idx, color)
                 }
             })
             this.__repo.commit();
@@ -1277,7 +1277,7 @@ export class TableEditor extends ShapeEditor {
             this.view._getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
                 if (cell.cell) {
                     const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
-                    api.setFillEnable(this.__page, c.data, idx, value);
+                    // api.setFillEnable(this.__page, c.data, idx, value);
                 }
             })
             this.__repo.commit();
@@ -1292,9 +1292,9 @@ export class TableEditor extends ShapeEditor {
             this.view._getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
                 if (cell.cell) {
                     const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
-                    api.setFillType(this.__page, c.data, idx, type);
+                    // api.setFillType(this.__page, c.data, idx, type);
                     if (!c.data.style.fills[idx].imageScaleMode) {
-                        api.setFillScaleMode(this.__page, c.data, idx, ImageScaleMode.Fill);
+                        // api.setFillScaleMode(this.__page, c.data, idx, ImageScaleMode.Fill);
                     }
                 }
             })
