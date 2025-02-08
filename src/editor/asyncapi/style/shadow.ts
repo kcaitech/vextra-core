@@ -1,25 +1,14 @@
 import { AsyncApiCaller } from "../basic/asyncapi";
-import { ShapeView } from "../../../dataview";
-import { Color, Shape, Variable } from "../../../data";
-import { shape4shadow } from "../../symbol";
+import { Color, Shadow } from "../../../data";
 
 export class ShadowAsyncApi extends AsyncApiCaller {
     start() {
         return this.__repo.start('modify-fills-color');
     }
 
-    private m_targets: any;
-
-    private getTargets(shapes: ShapeView[]): (Shape | Variable)[] {
-        return this.m_targets ?? (this.m_targets = ((shapes: ShapeView[]) => {
-            return shapes.map(i => shape4shadow(this.api, this.pageView, i));
-        })(shapes))
-    }
-
-    modifySolidColor(shapes: ShapeView[], index: number, color: Color) {
+    modifySolidColor(actions: { shadow: Shadow, color: Color }[]) {
         try {
-            const targets = this.getTargets(shapes);
-            for (const t of targets) this.api.setShadowColor(this.page, t, index, color);
+            for (const t of actions) this.api.setShadowColor(t.shadow, t.color);
             this.updateView();
         } catch (err) {
             this.exception = true;
@@ -33,6 +22,5 @@ export class ShadowAsyncApi extends AsyncApiCaller {
         } else {
             this.__repo.rollback();
         }
-        this.m_targets = undefined;
     }
 }

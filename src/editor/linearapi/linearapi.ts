@@ -3,7 +3,7 @@ import { adapt2Shape, ArtboardView, PageView, ShapeView, SymbolRefView, SymbolVi
 import { modifyPathByArc } from "../asyncapi";
 import { Api, CoopRepository } from "../../coop";
 import { modify_shapes_height, modify_shapes_width } from "../utils/common";
-import { Artboard, BorderSideSetting, Color, FillType, PathShape, Shape, ShapeType, SideType, SymbolRefShape, Transform } from "../../data/classes";
+import { Artboard, BorderSideSetting, Color, FillType, PathShape, Shadow, Shape, ShapeType, SideType, SymbolRefShape, Transform } from "../../data/classes";
 import { RadiusType } from "../../data/consts";
 import { shape4Autolayout, shape4border, shape4contextSettings, shape4cornerRadius, shape4fill, shape4shadow } from "../symbol";
 import { update_frame_by_points } from "../utils/path";
@@ -592,23 +592,12 @@ export class LinearApi {
         if (!this.shape || this.shape !== shape) this.shape = shape;
         return shape4shadow(api, this._page, this.shape!);
     }
-
-    modifyShadowOffSetX(idx: number, offsetX: number, s: ShapeView) {
-        this.execute('modify-shadow-offset-x', () => {
-            const api = this.api!;
-            const page = this.page;
-            const shape = this.shape4shadow(api, s)
-            api.setShadowOffsetX(page, shape, idx, offsetX);
-        })
-    }
-
-    modifyShapesShadowOffsetX(actions: BatchAction[]) {
+    modifyShapesShadowOffsetX(actions: { shadow: Shadow, value: number }[]) {
         this.execute('modify-shapes-shadow-offset-x', () => {
             const api = this.api!;
-            const page = this.page;
             for (let i = 0; i < actions.length; i++) {
-                const { target, value, index } = actions[i];
-                api.setShadowOffsetX(page, adapt2Shape(target), index, value);
+                const { shadow, value } = actions[i];
+                api.setShadowOffsetX(shadow, value);
             }
         })
     }
@@ -617,22 +606,12 @@ export class LinearApi {
      * @description 修改图形阴影位置 Y
      */
 
-    modifyShadowOffSetY(idx: number, offsetY: number, s: ShapeView) {
-        this.execute('modify-shadow-offset-y', () => {
-            const api = this.api!;
-            const page = this.page;
-            const shape = this.shape4shadow(api, s)
-            api.setShadowOffsetY(page, shape, idx, offsetY);
-        })
-    }
-
-    modifyShapesShadowOffsetY(actions: BatchAction[]) {
+    modifyShapesShadowOffsetY(actions: { shadow: Shadow, value: number }[]) {
         this.execute('modify-shapes-shadow-offset-y', () => {
             const api = this.api!;
-            const page = this.page;
             for (let i = 0; i < actions.length; i++) {
-                const { target, value, index } = actions[i];
-                api.setShadowOffsetY(page, adapt2Shape(target), index, value);
+                const { shadow, value } = actions[i];
+                api.setShadowOffsetY(shadow, value);
             }
         })
     }
@@ -640,23 +619,12 @@ export class LinearApi {
     /**
      * @description 修改图形阴影blur
      */
-
-    modifyShadowBlur(idx: number, blur: number, s: ShapeView) {
-        this.execute('modify-shadow-blur', () => {
-            const api = this.api!;
-            const page = this.page;
-            const shape = this.shape4shadow(api, s)
-            api.setShadowBlur(page, shape, idx, blur);
-        })
-    }
-
-    modifyShapesShadowBlur(actions: BatchAction[]) {
+    modifyShapesShadowBlur(actions: { shadow: Shadow, value: number }[]) {
         this.execute('modify-shapes-shadow-blur', () => {
             const api = this.api!;
-            const page = this.page;
             for (let i = 0; i < actions.length; i++) {
-                const { target, value, index } = actions[i];
-                api.setShadowBlur(page, adapt2Shape(target), index, value);
+                const { shadow, value } = actions[i];
+                api.setShadowBlur(shadow, value);
             }
         })
     }
@@ -664,23 +632,12 @@ export class LinearApi {
     /**
     * @description 修改图形阴影spread
     */
-
-    modifyShadowSpread(idx: number, spread: number, s: ShapeView) {
-        this.execute('modify-shadow-spread', () => {
-            const api = this.api!;
-            const page = this.page;
-            const shape = this.shape4shadow(api, s)
-            api.setShadowSpread(page, shape, idx, spread);
-        })
-    }
-
-    modifyShapesShadowSpread(actions: BatchAction[]) {
+    modifyShapesShadowSpread(actions: { shadow: Shadow, value: number }[]) {
         this.execute('modify-shapes-shadow-spread', () => {
             const api = this.api!;
-            const page = this.page;
             for (let i = 0; i < actions.length; i++) {
-                const { target, value, index } = actions[i];
-                api.setShadowSpread(page, adapt2Shape(target), index, value);
+                const { shadow, value } = actions[i];
+                api.setShadowSpread(shadow, value);
             }
         })
     }
@@ -694,7 +651,7 @@ export class LinearApi {
             const api = this.api!;
             const page = this.page;
             const shape = this.shape4shadow(api, s);
-            api.setShadowColor(page, shape, idx, color);
+            // api.setShadowColor(page, shape, idx, color);
         })
     }
 
@@ -704,7 +661,7 @@ export class LinearApi {
             const page = this.page;
             for (let i = 0; i < actions.length; i++) {
                 const { target, value, index } = actions[i];
-                api.setShadowColor(page, adapt2Shape(target), index, value);
+                // api.setShadowColor(page, adapt2Shape(target), index, value);
             }
         })
     }
@@ -736,7 +693,7 @@ export class LinearApi {
             for (let i = 0; i < shapesSorted.length; i++) {
                 const s = shapesSorted[i];
                 const currentIndex = parent.indexOfChild(s);
-                if(currentIndex === i || !s.isVisible) continue;
+                if (currentIndex === i || !s.isVisible) continue;
                 this.api!.shapeMove(this.page, parent, currentIndex, parent, i);
             }
         });
@@ -943,41 +900,6 @@ export class LinearApi {
                 api.textModifyKerning(page, shape, kerning, 0, text_length);
                 editor4text.fixFrameByLayout2(api, shape);
             }
-        })
-    }
-
-    modifyShadowMaskShadowOffsetX(sheetid: string, maskid: string, index: number, offsetX: number) {
-        this.execute('modify-shadow-mask-shadow-offset-x', () => {
-            const api = this.api!;
-            api.modifyShadowMaskShadowOffsetX(this.__document, sheetid, maskid, index, offsetX);
-        })
-    }
-
-    modifyShadowMaskShadowOffsetY(sheetid: string, maskid: string, index: number, offsetY: number) {
-        this.execute('modify-shadow-mask-shadow-offset-y', () => {
-            const api = this.api!;
-            api.modifyShadowMaskShadowOffsetY(this.__document, sheetid, maskid, index, offsetY);
-        })
-    }
-
-    modifyShadowMaskShadowBlur(sheetid: string, maskid: string, index: number, blur: number) {
-        this.execute('modify-shadow-mask-shadow-blur', () => {
-            const api = this.api!;
-            api.modifyShadowMaskShadowBlur(this.__document, sheetid, maskid, index, blur);
-        })
-    }
-
-    modifyShadowMaskShadowSpread(sheetid: string, maskid: string, index: number, spread: number) {
-        this.execute('modify-shadow-mask-shadow-spread', () => {
-            const api = this.api!;
-            api.modifyShadowMaskShadowSpread(this.__document, sheetid, maskid, index, spread);
-        })
-    }
-
-    modifyShadowMaskShadowColor(sheetid: string, maskid: string, index: number, color: Color) {
-        this.execute('modify-shadow-mask-shadow-color', () => {
-            const api = this.api!;
-            api.modifyShadowMaskShadowColor(this.__document, sheetid, maskid, index, color);
         })
     }
 

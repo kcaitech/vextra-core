@@ -1277,7 +1277,7 @@ export class TableEditor extends ShapeEditor {
             this.view._getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
                 if (cell.cell) {
                     const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
-                    api.setFillEnable(this.__page, c.data, idx, value);
+                    // api.setFillEnable(this.__page, c.data, idx, value);
                 }
             })
             this.__repo.commit();

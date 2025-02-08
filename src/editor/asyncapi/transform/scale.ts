@@ -608,13 +608,13 @@ export function uniformScale(
         shadows.forEach((s, i) => {
             const sId = s.id + shape.id;
             const blurRadius = getBaseValue(sId, 'blurRadius', s.blurRadius);
-            api.setShadowBlur(page, shape, i, blurRadius * ratio);
+            api.setShadowBlur(s, blurRadius * ratio);
             const offsetX = getBaseValue(sId, 'offsetX', s.offsetX);
-            api.setShadowOffsetX(page, shape, i, offsetX * ratio);
+            api.setShadowOffsetX(s, offsetX * ratio);
             const offsetY = getBaseValue(sId, 'offsetY', s.offsetY);
-            api.setShadowOffsetY(page, shape, i, offsetY * ratio);
+            api.setShadowOffsetY(s, offsetY * ratio);
             const spread = getBaseValue(sId, 'spread', s.spread);
-            api.setShadowSpread(page, shape, i, spread * ratio)
+            api.setShadowSpread(s, spread * ratio)
         });
         const blur = view.blur;
         if (blur?.saturation) api.shapeModifyBlurSaturation(page, shape, blur.saturation * ratio);

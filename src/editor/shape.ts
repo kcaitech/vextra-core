@@ -529,7 +529,7 @@ export class ShapeEditor {
     public setFillEnable(idx: number, value: boolean) {
         this._repoWrap("setFillEnable", (api) => {
             const shape = this.shape4fill(api);
-            api.setFillEnable(this.__page, shape, idx, value);
+            // api.setFillEnable(this.__page, shape, idx, value);
         });
     }
 
@@ -773,120 +773,6 @@ export class ShapeEditor {
             console.log('modifyPointsXY:', e);
             this.__repo.rollback();
             return false;
-        }
-    }
-
-    private shape4shadow(api: Api, shape?: ShapeView) {
-        return shape4shadow(api, this._page, shape ?? this.__shape);
-    }
-
-    // shadow
-    public addShadow(shadow: Shadow) {
-        const api = this.__repo.start("addShadow");
-        try {
-            const shape = this.shape4shadow(api);
-            const l = shape instanceof Shape ? shape.style.shadows.length : shape.value.length;
-            api.addShadow(this.__page, shape, shadow, l);
-            this.__repo.commit();
-        } catch (e) {
-            console.error(e);
-            this.__repo.rollback();
-        }
-    }
-
-    public deleteShadow(idx: number) {
-        const api = this.__repo.start("deleteShadow");
-        try {
-            const shape = this.shape4shadow(api);
-            api.deleteShadowAt(this.__page, shape, idx)
-            this.__repo.commit();
-        } catch (e) {
-            console.error(e);
-            this.__repo.rollback();
-        }
-    }
-
-    public setShadowPosition(idx: number, position: ShadowPosition) {
-        const api = this.__repo.start("setShadowPosition");
-        try {
-            const shape = this.shape4shadow(api);
-            api.setShadowPosition(this.__page, shape, idx, position);
-            this.__repo.commit();
-        } catch (e) {
-            console.error(e);
-            this.__repo.rollback();
-        }
-    }
-
-    public setShadowEnable(idx: number, isEnabled: boolean) {
-        const api = this.__repo.start("setShadowEnable");
-        try {
-            const shape = this.shape4shadow(api);
-            api.setShadowEnable(this.__page, shape, idx, isEnabled);
-            this.__repo.commit();
-        } catch (e) {
-            console.error(e);
-            this.__repo.rollback();
-        }
-    }
-
-    public setShadowColor(idx: number, color: Color) {
-        const api = this.__repo.start("setShadowColor");
-        try {
-            const shape = this.shape4shadow(api);
-            api.setShadowColor(this.__page, shape, idx, color);
-            this.__repo.commit();
-        } catch (e) {
-            console.error(e);
-            this.__repo.rollback();
-        }
-    }
-
-    public setShadowOffsetX(idx: number, offserX: number) {
-        const api = this.__repo.start("setShadowOffsetX");
-        try {
-            const shape = this.shape4shadow(api);
-            api.setShadowOffsetX(this.__page, shape, idx, offserX);
-            this.__repo.commit();
-        } catch (e) {
-            console.error(e);
-            this.__repo.rollback();
-        }
-    }
-
-    public setShadowOffsetY(idx: number, offsetY: number) {
-        const api = this.__repo.start("setShadowOffsetY");
-        try {
-            const shape = this.shape4shadow(api);
-            api.setShadowOffsetY(this.__page, shape, idx, offsetY);
-            this.__repo.commit();
-        } catch (e) {
-            console.error(e);
-            this.__repo.rollback();
-        }
-    }
-
-    public setShadowBlur(idx: number, blur: number) {
-        const api = this.__repo.start("setShadowBlur");
-        try {
-            const shape = this.shape4shadow(api);
-            api.setShadowBlur(this.__page, shape, idx, blur);
-            this.__repo.commit();
-        } catch (e) {
-            console.error(e);
-            this.__repo.rollback();
-        }
-    }
-
-    public setShadowSpread(idx: number, spread: number) {
-        const api = this.__repo.start("setShadowSpread");
-        try {
-            const shape = this.shape4shadow(api);
-            api.setShadowSpread(this.__page, this.shape, idx, spread);
-            this.__repo.commit();
-        } catch (e) {
-            console.error(e);
-            this.__repo.rollback();
         }
     }
 
