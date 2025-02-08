@@ -47,13 +47,10 @@ export class FillsAsyncApi extends AsyncApiCaller {
     }
 
     /* 修改图片填充的滤镜 */
-    modifyFillImageFilter(key: PaintFilterType, value: number, index: number, shapes: ShapeView[]) {
+    modifyFillImageFilter(fills: Fill[], key: PaintFilterType, value: number) {
         try {
-            const targets = this.getTargets(shapes);
-            for (const target of targets) {
-                this.api.setFillImageFilter(this.page, target as any, index, key, value);
-                this.updateView();
-            }
+            fills.forEach(fill => this.api.setFillImageFilter(fill, key, value));
+            this.updateView();
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
@@ -193,12 +190,9 @@ export class FillsAsyncApi extends AsyncApiCaller {
     }
 
     /* 旋转图片 */
-    rotateImg(index: number, rotate: number, shapes: ShapeView[]) {
+    rotateImg(fills: Fill[], rotate: number) {
         try {
-            const targets = this.getTargets(shapes);
-            for (const target of targets) {
-                this.api.setFillImageRotate(this.page, target as any, index, rotate);
-            }
+            fills.forEach(fill => this.api.setFillImageRotate(fill, rotate));
         } catch (error) {
             console.error(error);
             this.__repo.rollback();

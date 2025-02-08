@@ -229,7 +229,7 @@ export class Controller {
                 newShape = parent.childs[parent.childs.length - 1];
 
                 if (newShape.type === ShapeType.Artboard && parent instanceof Page) {
-                    api.addFillAt(page, newShape, new Fill(new BasicArray(), uuid(), true, FillType.SolidColor, new Color(0, 0, 0, 0)), 0);
+                    api.addFillAt(newShape.style.fills, new Fill(new BasicArray(), uuid(), true, FillType.SolidColor, new Color(0, 0, 0, 0)), 0);
                 }
 
                 translateTo(api, savepage, newShape, frame.x, frame.y);

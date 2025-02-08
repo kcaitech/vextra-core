@@ -2507,7 +2507,7 @@ export class PageEditor {
                         fill.imageRef = ref;
                         fill.setImageMgr(document.mediasMgr);
                         fill.imageScaleMode = types.ImageScaleMode.Fill;
-                        api.addFillAt(page, target, fill, 0);
+                        api.addFillAt(fills, fill, 0);
                     } else {
                         if (fills[index].fillType !== FillType.Pattern) {
                             api.setFillType(fills[index], FillType.Pattern);
@@ -2525,54 +2525,20 @@ export class PageEditor {
         }
     }
 
-    setShapesFillImageRotate(actions: BatchAction[]) {
-        const api = this.__repo.start('setShapesFillImageRotate');
-        try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, index, value } = actions[i];
-                const s = shape4fill(api, this.view, target);
-                api.setFillImageRotate(this.page, s, index, value);
-            }
-            this.__repo.commit();
-        } catch (error) {
-            this.__repo.rollback();
-        }
-    }
-
-    setShapesFillEdit(shape: ShapeView, idx: number, edit: boolean) {
+    setShapesFillEdit(fills: Fill[], edit: boolean) {
         const api = this.__repo.start('setShapesFillEdit');
         try {
-            const s = shape4fill(api, this.view, shape);
-            api.setFillEdit(this.page, s, idx, edit);
+            fills.forEach(fill => api.setFillEdit(fill, edit));
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
         }
     }
 
-    setShapesFillFilter(actions: BatchAction[]) {
-        const api = this.__repo.start('setShapesFillFilter');
-        try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, index, value } = actions[i];
-                const s = shape4fill(api, this.view, target);
-                api.setFillImageFilter(this.page, s, index, value.key, value.value);
-            }
-            this.__repo.commit();
-        } catch (error) {
-            this.__repo.rollback();
-        }
-    }
-
-    shapesAddFill(actions: BatchAction2[]) {
+    createFill(actions: { fills: BasicArray<Fill>, fill: Fill, index: number }[]) {
         const api = this.__repo.start('shapesAddFill');
         try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                const s = shape4fill(api, this.view, target);
-                const l = s instanceof Shape ? s.style.fills.length : s.value.length;
-                api.addFillAt(this.page, s, value, l);
-            }
+            actions.forEach(action => api.addFillAt(action.fills, action.fill, action.index));
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
@@ -2598,8 +2564,8 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                api.deleteFills(this.page, adapt2Shape(target), 0, target.style.fills.length);
-                api.addFills(this.page, adapt2Shape(target), value);
+                api.deleteFills(target.style.fills, 0, target.style.fills.length);
+                api.addFills(target.style.fills, value);
                 api.delfillmask(this.__document, this.page, adapt2Shape(target));
             }
             this.__repo.commit();
@@ -2609,15 +2575,10 @@ export class PageEditor {
         }
     }
 
-    shapesDeleteFill(actions: BatchAction3[]) {
+    shapesDeleteFill(actions: { fills: BasicArray<Fill>, index: number }[]) {
         const api = this.__repo.start('shapesDeleteFill');
         try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, index } = actions[i];
-                const s = shape4fill(api, this.view, target);
-                api.deleteFillAt(this.page, s, index);
-                api.delfillmask(this.__document, this.page, adapt2Shape(target));
-            }
+            actions.forEach(action => api.deleteFillAt(action.fills, action.index));
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
@@ -2628,8 +2589,7 @@ export class PageEditor {
         const api = this.__repo.start("shapesDelStyleFill");
         try {
             for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                api.deleteFills(this.page, adapt2Shape(target), 0, target.style.fills.length);
+                const { target } = actions[i];
                 api.delfillmask(this.__document, this.page, adapt2Shape(target));
             }
             this.__repo.commit();
@@ -2834,20 +2794,18 @@ export class PageEditor {
         }
     }
 
-    shapesFillsUnify(actions: BatchAction2[]) {
+    shapesFillsUnify(actions: { fills: BasicArray<Fill>, value: Fill[] }[]) {
         const api = this.__repo.start('shapesFillsUnify'); // 统一多个shape的填充设置。eg:[red, red], [green], [blue, blue, blue] => [red, red], [red, red], [red, red];
         try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                const s = shape4fill(api, this.view, target);
-                // 先清空再填入
-                api.deleteFills(this.page, s, 0, target.style.fills.length); // 清空
-                api.addFills(this.page, s, value); // 填入新的值
+            for (const action of actions) {
+                const { fills, value } = action;
+                api.deleteFills(fills, 0, fills.length); // 清空原有填充
+                api.addFills(fills, value); // 填入新的值
             }
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
-            // throw new Error(`${error}`);
+            throw error;
         }
     }
 
@@ -3119,8 +3077,8 @@ export class PageEditor {
                     strokePaints.unshift(strokePaint);
                 }
                 const f_s = shape4fill(api, this.view, shape);
-                api.deleteFills(this.page, f_s, 0, shape.style.fills.length);
-                api.addFills(this.page, f_s, fills);
+                api.deleteFills(shape.style.fills, 0, shape.style.fills.length);
+                api.addFills(f_s instanceof Shape ? f_s.style.fills : f_s.value, fills);
                 const b_s = shape4border(api, this.view, shape);
                 api.deleteStrokePaints(this.page, b_s, 0, b.strokePaints.length);
                 api.addStrokePaints(this.page, b_s, strokePaints);
@@ -4364,7 +4322,7 @@ export class PageEditor {
                 }
                 const s = shape4fill(api, this.view, shapes[i]);
                 const fill = new Fill(new BasicArray(), uuid(), true, FillType.SolidColor, _color)
-                api.addFillAt(page, s, fill, 0);
+                // api.addFillAt(page, s, fill, 0);
             }
             this.__repo.commit();
         } catch (error) {
@@ -4398,10 +4356,10 @@ export class PageEditor {
                     // fills
                     {
                         const s = shape4fill(api, this.view, view);
-                        api.deleteFills(page, s, 0, view.style.fills.length);
+                        api.deleteFills(view.style.fills, 0, view.style.fills.length);
                         if (fills?.length) {
                             const __fills = fills.map((i: Fill) => importFill(i, ctx));
-                            api.addFills(page, s, __fills);
+                            api.addFills(s.style.fills, __fills);
                         }
                     }
                     // borders
