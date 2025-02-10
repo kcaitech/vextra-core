@@ -4337,11 +4337,10 @@ export class PageEditor {
                 for (const view of flatten) {
                     // fills
                     {
-                        const s = shape4fill(api, this.view, view);
                         api.deleteFills(view.style.fills, 0, view.style.fills.length);
                         if (fills?.length) {
                             const __fills = fills.map((i: Fill) => importFill(i, ctx));
-                            api.addFills(s.style.fills, __fills);
+                            api.addFills(view.getFills(), __fills);
                         }
                     }
                     // borders
