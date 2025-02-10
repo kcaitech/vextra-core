@@ -617,7 +617,7 @@ export function uniformScale(
             api.setShadowSpread(s, spread * ratio)
         });
         const blur = view.blur;
-        if (blur?.saturation) api.shapeModifyBlurSaturation(page, shape, blur.saturation * ratio);
+        if (blur?.saturation) api.shapeModifyBlurSaturation(blur, blur.saturation * ratio);
 
         if (view instanceof TextShapeView) textSet.push(view);
         if (view instanceof TableView) {

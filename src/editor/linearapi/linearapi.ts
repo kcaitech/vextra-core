@@ -1,4 +1,4 @@
-import { Document, OvalShape, Page, Fill } from "../../data";
+import { Document, OvalShape, Page, Fill, Blur } from "../../data";
 import { adapt2Shape, ArtboardView, PageView, ShapeView, SymbolRefView, SymbolView, TableCellView, TableView, TextShapeView } from "../../dataview";
 import { modifyPathByArc } from "../asyncapi";
 import { Api, CoopRepository } from "../../coop";
@@ -373,13 +373,9 @@ export class LinearApi {
             for (let i = 0, l = actions.length; i < l; i++) {
                 const { target, index, type, value } = actions[i];
                 const grad_type = type === 'fills' ? target.getFills() : target.getBorders().strokePaints;
-                if (!grad_type?.length) {
-                    continue;
-                }
+                if (!grad_type?.length) continue;
                 const gradient_container = grad_type[index];
-                if (!gradient_container || !gradient_container.gradient || gradient_container.fillType !== FillType.Gradient) {
-                    continue;
-                }
+                if (!gradient_container || !gradient_container.gradient || gradient_container.fillType !== FillType.Gradient) continue;
                 const gradient = gradient_container.gradient;
                 const new_gradient = importGradient(exportGradient(gradient));
                 new_gradient.gradientOpacity = value;
@@ -572,13 +568,12 @@ export class LinearApi {
      * @description 修改图形模糊样式
      */
 
-    modifyShapeBlurSaturation(actions: BatchAction2[]) {
+    modifyShapeBlurSaturation(actions: { blur: Blur, value: number }[]) {
         this.execute('modify-shape-blur-saturation', () => {
             const api = this.api!;
-            const page = this.page;
             for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                api.shapeModifyBlurSaturation(page, adapt2Shape(target), value);
+                const { blur, value } = actions[i];
+                api.shapeModifyBlurSaturation(blur, value);
             }
         })
     }

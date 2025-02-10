@@ -4,6 +4,7 @@ import { Document } from "../../data/document";
 import { PageView, ShapeView } from "../../dataview";
 import { Shape } from "../../data/shape";
 import { shape4blur } from "../symbol";
+import { Blur } from "../../data";
 
 export class blurModifyHandler extends AsyncApiCaller {
     updateFrameTargets: Set<Shape> = new Set();
@@ -16,14 +17,11 @@ export class blurModifyHandler extends AsyncApiCaller {
         return this.__repo.start('blur-modify');
     }
 
-    executeSaturation(shapes: ShapeView[], saturation: number) {
+    executeSaturation(blurs: Blur[], saturation: number) {
         try {
             const api = this.api;
-            const page = this.page;
-
-            for (const view of shapes) {
-                const shape = shape4blur(api, view, this.pageView);
-                api.shapeModifyBlurSaturation(page, shape, saturation);
+            for (const blur of blurs) {
+                api.shapeModifyBlurSaturation(blur, saturation);
             }
             this.updateView();
         } catch (e) {
