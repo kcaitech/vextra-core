@@ -16,6 +16,7 @@ export * from "./basic/error"
 export {
     IWatchable,
     WatchableObject,
+    Basic,
     BasicArray,
     GradientType,
     ShapeType,
