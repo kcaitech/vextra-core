@@ -76,7 +76,7 @@ export class GroupShapeView extends ShapeView {
             this.m_need_updatechilds = true;
         }
 
-        if (args.includes('autoLayout') && !(this.data as Artboard).autoLayout) {
+        if (args.includes('autoLayout') && !(this as any).autoLayout) {
             this.childs.forEach(c => {
                 c.m_ctx.setReLayout(c);
             });

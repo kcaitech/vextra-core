@@ -9,7 +9,7 @@ import { border2path } from "../editor/utils/path";
 import { Path } from "@kcdesign/path";
 import { convertPath2CurvePoints } from "../data/pathconvert";
 import { OpType } from "@kcdesign/path";
-import { gPal, IPalPath } from "../basic/pal";
+import { gPal } from "../basic/pal";
 import { PathShapeView } from "./pathshape";
 import { importFill } from "../data/baseimport";
 import { exportFill } from "../data/baseexport";
@@ -17,9 +17,9 @@ import { exportFill } from "../data/baseexport";
 function opPath(bop: BoolOp, path0: Path, path1: Path, isIntersect: boolean): Path {
     switch (bop) {
         case BoolOp.Diff:
-            // if (isIntersect) path0.op(path1, OpType.Xor);
-            // else path0.addPath(path1);
-            path0.op(path1, OpType.Xor);
+            if (isIntersect) path0.op(path1, OpType.Xor);
+            else path0.addPath(path1);
+            // path0.op(path1, OpType.Xor);
             break;
         case BoolOp.Intersect:
             if (isIntersect) {
@@ -32,9 +32,9 @@ function opPath(bop: BoolOp, path0: Path, path1: Path, isIntersect: boolean): Pa
             if (isIntersect) path0.op(path1, OpType.Difference);
             break;
         case BoolOp.Union:
-            // if (!isIntersect) path0.addPath(path1)
-            // else path0.op(path1, OpType.Union);
-            path0.op(path1, OpType.Union);
+            if (!isIntersect) path0.addPath(path1)
+            else path0.op(path1, OpType.Union);
+            // path0.op(path1, OpType.Union);
             break;
     }
     return path0;

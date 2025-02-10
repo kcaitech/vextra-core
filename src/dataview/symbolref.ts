@@ -219,7 +219,7 @@ export class SymbolRefView extends ShapeView {
     ): void {
         const shape = this.data as SymbolRefShape;
         const transform = shape.transform.clone();
-        if ((this.parent as ArtboardView).autoLayout) {
+        if ((this.parent as ArtboardView)?.autoLayout) {
             transform.translateX = this.m_transform.translateX;
             transform.translateY = this.m_transform.translateY;
         }
