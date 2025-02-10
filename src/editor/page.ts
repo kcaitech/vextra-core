@@ -2524,11 +2524,11 @@ export class PageEditor {
                     stops.push(new Stop(new BasicArray(), uuid(), 0, new Color(alpha, red, green, blue)), new Stop(new BasicArray(), uuid(), 1, new Color(0, red, green, blue)))
                     const from = value === GradientType.Linear ? { x: 0.5, y: 0 } : { x: 0.5, y: 0.5 };
                     const to = { x: 0.5, y: 1 };
-                    let elipseLength = undefined;
+                    let ellipseLength = undefined;
                     if (value === GradientType.Radial) {
-                        elipseLength = 1;
+                        ellipseLength = 1;
                     }
-                    const new_gradient = new Gradient(from as Point2D, to as Point2D, value, stops, elipseLength);
+                    const new_gradient = new Gradient(from as Point2D, to as Point2D, value, stops, ellipseLength);
                     new_gradient.stops.forEach((v, i) => {
                         const idx = new BasicArray<number>();
                         idx.push(i);
@@ -2540,8 +2540,8 @@ export class PageEditor {
             }
             this.__repo.commit();
         } catch (error) {
-            console.log('toggerShapeGradientType:', error);
             this.__repo.rollback();
+            throw error;
         }
     }
 
