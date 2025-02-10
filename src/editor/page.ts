@@ -2717,31 +2717,29 @@ export class PageEditor {
         }
     }
 
-    shapesDelBorderMask(actions: BatchAction2[]) {
+    shapesDelBorderMask(actions: { border: BorderMaskType, type: ShapeType, style: Style }[]) {
         const api = this.__repo.start("shapesDelBorderMask");
         try {
             for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                const { position, sideSetting } = value as BorderMaskType
-                const side = new BorderSideSetting(sideSetting.sideType, sideSetting.thicknessTop, sideSetting.thicknessLeft, sideSetting.thicknessBottom, sideSetting.thicknessRight);
-                const s = shape4border(api, this.view, target);
-                const border = s instanceof Shape ? s.style.borders : s.value;
-                if (s.type !== ShapeType.Rectangle) {
-                    side.sideType = SideType.Normal;
+                const { border, type, style } = actions[i];
+                const sideSetting = new BorderSideSetting(border.sideSetting.sideType, border.sideSetting.thicknessTop, border.sideSetting.thicknessLeft, border.sideSetting.thicknessBottom, border.sideSetting.thicknessRight);
+                if (type !== ShapeType.Rectangle) {
+                    sideSetting.sideType = SideType.Normal;
                     let number = Math.min(sideSetting.thicknessTop, sideSetting.thicknessLeft, sideSetting.thicknessBottom, sideSetting.thicknessRight)
                     number = number > 0 ? number : 1;
-                    side.thicknessTop = number;
-                    side.thicknessRight = number;
-                    side.thicknessBottom = number;
-                    side.thicknessLeft = number;
+                    sideSetting.thicknessTop = number;
+                    sideSetting.thicknessRight = number;
+                    sideSetting.thicknessBottom = number;
+                    sideSetting.thicknessLeft = number;
                 }
-                if (target.type === ShapeType.Line) {
-                    api.setBorderPosition(this.page, s, BorderPosition.Center);
+                if (type === ShapeType.Line) {
+                    api.setBorderPosition(border, BorderPosition.Center);
                 } else {
-                    api.setBorderPosition(this.page, s, position);
+                    api.setBorderPosition(border, border.position);
                 }
-                api.setBorderSide(border, side);
-                api.delbordermask(this.__document, this.page, adapt2Shape(target));
+                api.setBorderPosition(border, border.position);
+                api.setBorderSide(border, border.sideSetting);
+                api.delbordermask(this.__document, style);
             }
             this.__repo.commit();
         } catch (e) {
@@ -2856,12 +2854,12 @@ export class PageEditor {
         }
     }
 
-    shapesAddBorder(actions: { fills: Fill[], fill: Fill }[]) {
+    shapesAddBorder(actions: { fills: BasicArray<Fill>, fill: Fill }[]) {
         const api = this.__repo.start('shapesAddBorder');
         try {
             for (let i = 0; i < actions.length; i++) {
                 const { fills, fill } = actions[i];
-                api.addStrokePaint(fills, fill);
+                api.addFillAt(fills, fill, fills.length);
             }
             this.__repo.commit();
         } catch (error) {
@@ -2870,12 +2868,12 @@ export class PageEditor {
         }
     }
 
-    shapesDeleteBorder(actions:  { fills: Fill[], index: number }[]) {
+    shapesDeleteBorder(actions: { fills: BasicArray<Fill>, index: number }[]) {
         const api = this.__repo.start('shapesDeleteBorder');
         try {
             for (let i = 0; i < actions.length; i++) {
                 const { fills, index } = actions[i];
-                api.deleteStrokePaintAt(fills, index);
+                api.deleteFillAt(fills, index);
             }
             this.__repo.commit();
         } catch (error) {
@@ -2888,7 +2886,8 @@ export class PageEditor {
             for (let i = 0; i < shapes.length; i++) {
                 const shape = shapes[i];
                 const s = shape4border(api, this.view, shape);
-                api.delbordermask(this.__document, this.page, s);
+                const style: Style = s instanceof Shape ? s.style : s.value;
+                api.delbordermask(this.__document, style);
                 api.delBorderFillMask(this.__document, this.page, adapt2Shape(shape), undefined);
                 api.deleteStrokePaints(this.page, s, 0, shape.style.borders.strokePaints.length);
             }
@@ -2904,6 +2903,7 @@ export class PageEditor {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
                 const s = shape4border(api, this.view, target);
+                api.delBorderFillMask(this.__document, this.page, s, undefined);
                 api.deleteStrokePaints(this.page, s, 0, target.style.borders.strokePaints.length);
                 api.addStrokePaints(this.page, s, value);
             }
@@ -2913,21 +2913,29 @@ export class PageEditor {
         }
     }
 
-    setShapesBorderPosition(actions: BatchAction2[]) {
+    setShapesBorderPosition(actions: { shape: ShapeView, position: BorderPosition }[]) {
         const api = this.__repo.start('setShapesBorderPosition');
-        try {
+        try {            
             for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                if (target.type === ShapeType.Table) continue;
-                const id = target.style.bordersMask!;
-                const s = shape4border(api, this.view, target);
-                const border = s instanceof Shape ? s.style.borders : s.value;
-                if (id) {
-                    const borderMask = (target.style.getStylesMgr()?.getSync(id) as BorderMask).border;
-                    api.setBorderSide(border, borderMask.sideSetting);
-                    api.delbordermask(this.__document, this.page, s);
-                }
-                api.setBorderPosition(this.page, s, value);
+                const { shape, position } = actions[i];
+                const s = shape4border(api, this.view, shape);
+                const border = shape.getBorders();
+                const b = s instanceof Shape ? s.style.borders : s.value;
+                api.delbordermask(this.__document, shape.style);
+                api.setBorderSide(b, border.sideSetting);
+                api.setBorderPosition(b, position);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapesBorderMaskPosition(actions: { border: BorderMaskType, position: BorderPosition }[]) {
+        const api = this.__repo.start('setShapesBorderPosition');
+        try {            
+            for (let i = 0; i < actions.length; i++) {
+                const { border, position } = actions[i];
+                api.setBorderPosition(border, position);
             }
             this.__repo.commit();
         } catch (error) {
@@ -2947,8 +2955,8 @@ export class PageEditor {
                 const id = target.style.bordersMask!;
                 if (id) {
                     const borderMask = (target.style.getStylesMgr()?.getSync(id) as BorderMask).border;
-                    api.setBorderPosition(this.page, s, borderMask.position);
-                    api.delbordermask(this.__document, this.page, s);
+                    api.setBorderPosition(borderMask, borderMask.position);
+                    api.delbordermask(this.__document, target.style);
                 }
                 const sideType = borders.sideSetting.sideType;
                 switch (sideType) {
@@ -3097,7 +3105,7 @@ export class PageEditor {
         }
     }
 
-    setShapesBorderSide(actions: {border: Border | BorderMaskType, side: BorderSideSetting}[]) {
+    setShapesBorderSide(actions: { border: Border | BorderMaskType, side: BorderSideSetting }[]) {
         const api = this.__repo.start('setShapesBorderSide');
         try {
             for (let i = 0; i < actions.length; i++) {

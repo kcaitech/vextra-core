@@ -556,13 +556,6 @@ export class ShapeEditor {
         });
     }
 
-    public setBorderPosition(position: BorderPosition) {
-        this._repoWrap("setBorderPosition", (api) => {
-            const shape = this.shape4border(api);
-            api.setBorderPosition(this.__page, shape, position);
-        });
-    }
-
     public setBorderStyle(borderStyle: BorderStyle) {
         this._repoWrap("setBorderStyle", (api) => {
             const shape = this.shape4border(api);

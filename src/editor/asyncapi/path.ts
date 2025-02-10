@@ -58,7 +58,7 @@ export class PathModifier extends AsyncApiCaller {
         const { thicknessBottom, thicknessTop, thicknessLeft, thicknessRight, sideType } = border.sideSetting;
         if (sideType === SideType.Normal) return;
         const thickness = Math.max(thicknessBottom, thicknessTop, thicknessLeft, thicknessRight);
-        this.api.setBorderSide(this.page, this.shape, new BorderSideSetting(SideType.Normal, thickness, thickness, thickness, thickness));
+        this.api.setBorderSide(this.shape.getBorders(), new BorderSideSetting(SideType.Normal, thickness, thickness, thickness, thickness));
         this.api.shapeEditPoints(this.page, this.shape, true);
     }
 

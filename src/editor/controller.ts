@@ -993,10 +993,11 @@ export class Controller {
                 for (let i = 0, l = _shapes.length; i < l; i++) {
                     const s = shape4border(api, _page, _shapes[i]);
                     const borders = _shapes[i].getBorders();
+                    const border = s instanceof Shape ? s.style.borders : s.value;
                     const sideType = borders.sideSetting.sideType;
                     switch (sideType) {
                         case SideType.Normal:
-                            api.setBorderSide(page, s, new BorderSideSetting(sideType, thickness, thickness, thickness, thickness));
+                            api.setBorderSide(border, new BorderSideSetting(sideType, thickness, thickness, thickness, thickness));
                             break;
                         case SideType.Top:
                             api.setBorderThicknessTop(page, s, thickness);
@@ -1011,7 +1012,7 @@ export class Controller {
                             api.setBorderThicknessLeft(page, s, thickness);
                             break
                         default:
-                            api.setBorderSide(page, s, new BorderSideSetting(sideType, thickness, thickness, thickness, thickness));
+                            api.setBorderSide(border, new BorderSideSetting(sideType, thickness, thickness, thickness, thickness));
                             break;
                     }
                 }

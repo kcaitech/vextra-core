@@ -603,7 +603,7 @@ export function uniformScale(
             thicknessBottom * ratio,
             thicknessRight * ratio
         );
-        api.setBorderSide(page, shape, setting);
+        api.setBorderSide(shape.getBorders(), setting);
         const shadows = shape.getShadows();
         shadows.forEach((s, i) => {
             const sId = s.id + shape.id;

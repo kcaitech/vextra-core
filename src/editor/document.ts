@@ -685,17 +685,6 @@ export class DocEditor {
         return true;
     }
 
-    modifyBorderMaskBorderPosition(sheetid: string, maskid: string, position: BorderPosition) {
-        const api = this.__repo.start('modifyBorderMaskBorderPosition');
-        try {
-            api.modifyBorderMaskBorderPosition(this.__document, sheetid, maskid, position)
-            this.__repo.commit();
-        } catch (error) {
-            console.log(error)
-            this.__repo.rollback();
-        }
-        return true;
-    }
     modifyRadiusMaskRadiusSetting(sheetid: string, maskid: string, value: number[]) {
         const api = this.__repo.start('modifyRadiusMaskRadiusSetting');
         try {
