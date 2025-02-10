@@ -169,8 +169,8 @@ export class Transporter extends AsyncApiCaller {
         } else {
             this.prototype.clear()
         }
-        if ((origin as Artboard).autoLayout) this.need_layout_shape.add(origin);
-        if ((targetParent as Artboard).autoLayout) this.need_layout_shape.add(targetParent);
+        if ((viewparent as ArtboardView).autoLayout) this.need_layout_shape.add(origin);
+        if ((target as ArtboardView).autoLayout) this.need_layout_shape.add(targetParent);
         after_migrate(document, page, api, origin);
         return true;
     }
@@ -231,8 +231,8 @@ export class Transporter extends AsyncApiCaller {
 
                     api.shapeMove(page, parent, index, originalParent, targetIndex);
 
-                    if ((originalParent as Artboard).autoLayout) layoutSet.add(originalParent);
-                    if ((parent as Artboard).autoLayout) layoutSet.add(parent);
+                    if ((original.parent as ArtboardView)?.autoLayout) layoutSet.add(originalParent);
+                    if ((view.parent as ArtboardView)?.autoLayout) layoutSet.add(parent);
                 }
 
                 api.shapeModifyTransform(page, shape, transform.get(view.id)!.transformRaw);
@@ -268,7 +268,6 @@ export class Transporter extends AsyncApiCaller {
                     const indexT = currentParent.indexOfChild(shape);
 
                     api.shapeMove(page, originParent, indexF, currentParent, indexT);
-
                     if (originParent.autoLayout) layoutSet.add(originParent);
                     if (currentParent.autoLayout) layoutSet.add(currentParent);
                 }
