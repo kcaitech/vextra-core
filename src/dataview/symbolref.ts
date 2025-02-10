@@ -396,10 +396,10 @@ export class SymbolRefView extends ShapeView {
         return findOverrideAll(id, ot, varsContainer);
     }
 
-    getFills(): Fill[] {
+    getFills(): BasicArray<Fill> {
         if (this.m_fills) return this.m_fills;
         const v = this._findOV2(OverrideType.Fills, VariableType.Fills);
-        this.m_fills = v ? v.value as Fill[] : this.m_sym?.style.fills || [];
+        this.m_fills = v ? v.value as BasicArray<Fill> : this.m_sym?.style.fills || new BasicArray();
         return this.m_fills;
     }
 
@@ -413,10 +413,10 @@ export class SymbolRefView extends ShapeView {
         return this.m_borders || border;
     }
 
-    getShadows(): Shadow[] {
+    getShadows(): BasicArray<Shadow> {
         const v = this._findOV2(OverrideType.Shadows, VariableType.Shadows);
         if (v) return v.value;
-        return this.m_sym?.style.shadows || [];
+        return this.m_sym?.style.shadows || new BasicArray();
     }
 
     get blur(): Blur | undefined {

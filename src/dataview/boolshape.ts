@@ -1,4 +1,4 @@
-import { BoolOp, BoolShape, BorderPosition, ShapeFrame, parsePath, FillType, GradientType, ShapeType } from "../data/classes";
+import { BoolOp, BoolShape, BorderPosition, ShapeFrame, parsePath, FillType, GradientType, ShapeType, Fill } from "../data/classes";
 import { ShapeView, updateFrame } from "./shape";
 import { TextShapeView } from "./textshape";
 import { GroupShapeView } from "./groupshape";
@@ -204,7 +204,7 @@ export class BoolShapeView extends GroupShapeView {
     }
 
     protected renderFills(): EL[] {
-        let fills = this.getFills();
+        let fills = this.getFills() as Fill[];
         if (this.mask) {
             fills = fills.map(f => {
                 if (f.fillType === FillType.Gradient && f.gradient?.gradientType === GradientType.Angular) {

@@ -319,7 +319,7 @@ export class ShapeView extends DataView {
     m_mask_group?: ShapeView[];
 
     // fill、border等属性随着变量、遮罩、样式库等因素的加入，获取路径不断加长。现在缓存fill和border，不至于每次都重新通过长的路径获取
-    m_fills: Fill[] | undefined;
+    m_fills: BasicArray<Fill> | undefined;
     m_borders: Border | undefined;
 
     constructor(ctx: DViewCtx, props: PropsType) {
@@ -615,13 +615,11 @@ export class ShapeView extends DataView {
         this.m_unbind_fill?.();
     }
 
-    getFills(): Fill[] {
+    getFills(): BasicArray<Fill> {
         if (this.m_fills) return this.m_fills;
-        let fills: Fill[] = [];
+        let fills: BasicArray<Fill>;
         if (this.style.fillsMask) {
-            const mgr = this.style.getStylesMgr();
-            if (!mgr) return fills;
-            const mask = mgr.getSync(this.style.fillsMask) as FillMask;
+            const mask = this.style.getStylesMgr()!.getSync(this.style.fillsMask) as FillMask;
             fills = mask.fills;
             this.watchFillMask(mask);
         } else {
@@ -733,8 +731,9 @@ export class ShapeView extends DataView {
     private unwatchShadowMask() {
         this.m_unbind_shadow?.();
     }
-    getShadows(): Shadow[] {
-        let shadows: Shadow[] = [];
+
+    getShadows(): BasicArray<Shadow> {
+        let shadows: BasicArray<Shadow> = new BasicArray();
         if (this.style.shadowsMask) {
             const mgr = this.style.getStylesMgr();
             if (!mgr) return shadows;
@@ -1072,7 +1071,7 @@ export class ShapeView extends DataView {
     // ================== render ===========================
 
     protected renderFills(): EL[] {
-        let fills = this.getFills();
+        let fills = this.getFills() as Fill[];
         if (this.mask) {
             fills = fills.map(f => {
                 if (f.fillType === FillType.Gradient && f.gradient?.gradientType === GradientType.Angular) {
