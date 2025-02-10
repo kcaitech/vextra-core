@@ -43,7 +43,7 @@ import {
     Transform,
     updateShapeTransform1By2,
     Variable,
-    VariableType
+    VariableType, Blur, Basic, BlurType
 } from "../data";
 import { ShapeEditor } from "./shape";
 import * as types from "../data/typesdefine";
@@ -417,6 +417,7 @@ export class PageEditor {
             return false;
         }
     }
+
     hasFill(shape: Shape | ShapeView) {
         const fills = shape.getFills();
         if (fills.length === 0) return false;
@@ -2662,8 +2663,8 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                api.deleteBlur(this.page, adapt2Shape(target));
-                api.addBlur(this.page, adapt2Shape(target), value);
+                api.deleteBlur(target.style);
+                api.addBlur(target.style, value);
                 api.delblurmask(this.__document, this.page, adapt2Shape(target));
             }
             this.__repo.commit();
@@ -2688,14 +2689,10 @@ export class PageEditor {
         }
     }
 
-    shapesDelStyleBlur(actions: BatchAction2[]) {
-        const api = this.__repo.start("shapesDelStyleBlur");
+    shapesDelStyleBlur(blurContainers: (Basic & { blur?: Blur })[]) {
         try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target } = actions[i];
-                api.deleteBlur(this.page, adapt2Shape(target));
-                api.delblurmask(this.__document, this.page, adapt2Shape(target));
-            }
+            const api = this.__repo.start("shapesDelStyleBlur");
+            for (let i = 0; i < blurContainers.length; i++) api.deleteBlur(blurContainers[i]);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -2891,6 +2888,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     shapesDeleteAllBorder(shapes: ShapeView[]) {
         const api = this.__repo.start('shapesDeleteAllBorder');
         try {
@@ -3365,14 +3363,12 @@ export class PageEditor {
     }
 
     // shape blur
-    shapesAddBlur(actions: BatchAction2[]) {
+    shapesAddBlur(actions: { style: Basic & { blur?: Blur; }, blur: Blur }[]) {
         try {
             const api = this.__repo.start('shapesAddBlur');
-            const page = this.page;
             for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                const shape = shape4blur(api, target, this.view);
-                api.addBlur(page, shape, value);
+                const { style, blur } = actions[i];
+                api.addBlur(style, blur);
             }
             this.__repo.commit();
         } catch (error) {
@@ -3381,15 +3377,13 @@ export class PageEditor {
         }
     }
 
-    shapesBlurUnify(actions: BatchAction2[]) {
+    shapesBlurUnify(actions: { style: Basic & { blur: Blur | undefined; }, blur: Blur }[]) {
         try {
             const api = this.__repo.start('shapesBlurUnify');
-            const page = this.page;
             for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                const shape = shape4blur(api, target, this.view);
-                api.deleteBlur(page, shape);
-                api.addBlur(page, shape, value);
+                const { style, blur } = actions[i];
+                api.deleteBlur(style);
+                api.addBlur(style, blur);
             }
             this.__repo.commit();
         } catch (error) {
@@ -3398,14 +3392,10 @@ export class PageEditor {
         }
     }
 
-    shapeDeleteBlur(shapes: ShapeView[]) {
+    shapeDeleteBlur(blurContainers: any[]) {
         try {
             const api = this.__repo.start('shapeDeleteBlur');
-            const page = this.page;
-            for (let i = 0; i < shapes.length; i++) {
-                const shape = shape4blur(api, shapes[i], this.view);
-                api.deleteBlur(page, shape);
-            }
+            for (let i = 0; i < blurContainers.length; i++) api.deleteBlur(blurContainers[i]);
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
@@ -3413,14 +3403,11 @@ export class PageEditor {
         }
     }
 
-    setShapeBlurEnabled(actions: BatchAction2[]) {
+    setShapeBlurEnabled(blurs: Blur[], value: boolean) {
         try {
             const api = this.__repo.start('setShapeBlurEnabled');
-            const page = this.page;
-            for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                const shape = shape4blur(api, target, this.view);
-                api.shapeModifyBlurEdabled(page, shape, value);
+            for (let i = 0; i < blurs.length; i++) {
+                api.shapeModifyBlurEnabled(blurs[i], value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -3429,14 +3416,12 @@ export class PageEditor {
         }
     }
 
-    setShapeBlurSaturation(actions: BatchAction2[]) {
+    setShapeBlurSaturation(actions: { blur: Blur, value: number }[]) {
         try {
             const api = this.__repo.start('setShapeBlurSaturation');
-            const page = this.page;
             for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                const shape = shape4blur(api, target, this.view);
-                api.shapeModifyBlurSaturation(page, shape, value);
+                const { blur, value } = actions[i];
+                api.shapeModifyBlurSaturation(blur, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -3445,14 +3430,11 @@ export class PageEditor {
         }
     }
 
-    setShapeBlurType(actions: BatchAction2[]) {
+    setShapeBlurType(blurs: Blur[], value: BlurType) {
         try {
             const api = this.__repo.start('setShapeBlurType');
-            const page = this.page;
-            for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                const shape = shape4blur(api, target, this.view);
-                api.shapeModifyBlurType(page, shape, value);
+            for (let i = 0; i < blurs.length; i++) {
+                api.shapeModifyBlurType(blurs[i], value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -4389,9 +4371,9 @@ export class PageEditor {
                 }
                 // blur
                 {
-                    api.deleteBlur(this.page, shape);
+                    api.deleteBlur(shape.style);
                     if (blur) {
-                        api.addBlur(this.page, shape, importBlur(blur));
+                        api.addBlur(shape.style, importBlur(blur));
                     }
                 }
                 // radius
