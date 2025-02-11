@@ -122,7 +122,7 @@ export function render2path(shape: ShapeView, defaultOp = BoolOp.None): Path {
             frame1 = child1._p_frame
         } else {
             path1.transform(child1.matrix2Parent());
-            const bounds = path0.bbox();
+            const bounds = path1.bbox();
             frame1 = new ShapeFrame(bounds.x, bounds.y, bounds.w, bounds.h);
         }
         const pathop = child1.m_data.boolOp ?? defaultOp;
@@ -225,12 +225,12 @@ export class BoolShapeView extends GroupShapeView {
     }
 
     getPath() {
-        const s = Date.now();
+        // const s = Date.now();
         if (this.m_path) return this.m_path;
         this.m_path = render2path(this);
         this.m_path.freeze();
-        const e = Date.now();
-        console.log(e - s, 'time');
+        // const e = Date.now();
+        // console.log(e - s, 'time');
         return this.m_path;
     }
 
