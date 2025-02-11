@@ -1,16 +1,40 @@
 import { innerShadowId, renderBlur, renderBorders, renderFills, renderShadows } from "../render";
 import {
-    BasicArray, Blur, BlurType, Border,
-    BorderPosition, ContextSettings, CornerRadius,
-    CurvePoint, ExportOptions, Fill, FillType,
-    GradientType, MarkerType, OverlayBackgroundAppearance,
-    OverlayBackgroundInteraction, OverlayPosition,
-    OverrideType, PathShape, Point2D,
-    PrototypeInterAction, PrototypeStartingPoint,
-    ResizingConstraints2, ScrollBehavior,
-    ScrollDirection, Shadow, ShadowPosition, Shape,
-    ShapeFrame, ShapeSize, ShapeType, SymbolRefShape,
-    SymbolShape, Transform, Variable, VariableType
+    BasicArray,
+    Blur,
+    BlurType,
+    Border,
+    BorderPosition,
+    ContextSettings,
+    CornerRadius,
+    CurvePoint,
+    ExportOptions,
+    Fill,
+    FillType,
+    GradientType,
+    MarkerType,
+    OverlayBackgroundAppearance,
+    OverlayBackgroundInteraction,
+    OverlayPosition,
+    OverrideType,
+    PathShape,
+    Point2D,
+    PrototypeInterAction,
+    PrototypeStartingPoint,
+    ResizingConstraints2,
+    ScrollBehavior,
+    ScrollDirection,
+    Shadow,
+    ShadowPosition,
+    Shape,
+    ShapeFrame,
+    ShapeSize,
+    ShapeType,
+    SymbolRefShape,
+    SymbolShape,
+    Transform,
+    Variable,
+    VariableType
 } from "../data";
 import { findOverrideAndVar } from "./basic";
 import { EL, elh } from "./el";
@@ -500,6 +524,36 @@ export class ShapeView extends DataView {
         return this.transform.m12
     }
 
+    /**
+     *  transform -> clientXY
+     *  数据里的值(transform)并不一定是用户直观上的值(clientXY)，需要通过计算来简化或转换
+     *  需要注意的是，frame的偏移目前来看下只发生编组类图形和页面上。而页面的坐标系需要帮用户隐藏掉，取而代之的是一个固定的Root坐标系
+     *  所以在处理页面下的直接子元素时，也应该忽略掉frame的偏移；
+     */
+    protected m_client_x: number | undefined = undefined;
+
+    get clientX(): number {
+        return this.m_client_x ?? (this.m_client_x = (() => {
+            let offset = 0;
+            if (this.parent?.type !== ShapeType.Page) {
+                offset = this.parent?.frame.x ?? 0;
+            }
+            return this._p_frame.x - offset;
+        })());
+    }
+
+    protected m_client_y: number | undefined = undefined;
+
+    get clientY(): number {
+        return this.m_client_y ?? (this.m_client_y = (() => {
+            let offset = 0;
+            if (this.parent?.type !== ShapeType.Page) {
+                offset = this.parent?.frame.y ?? 0;
+            }
+            return this._p_frame.y - offset;
+        })());
+    }
+
     boundingBox(): ShapeFrame {
         if (this.isNoTransform()) {
             const tx = this.transform.translateX;
@@ -863,6 +917,7 @@ export class ShapeView extends DataView {
 
         if (changed) {
             this.m_ctx.addNotifyLayout(this);
+            this.m_client_x = this.m_client_y = undefined;
         }
 
         return changed;
