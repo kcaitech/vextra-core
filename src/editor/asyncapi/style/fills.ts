@@ -106,7 +106,7 @@ export class FillsAsyncApi extends AsyncApiCaller {
             const gradient = fill.gradient!;
             const gradientCopy = importGradient(exportGradient(gradient));
             gradientCopy.stops[stopAt].color = color;
-            this.api.setFillGradient(fill, gradient);
+            this.api.setFillGradient(fill, gradientCopy);
         }
     }
 

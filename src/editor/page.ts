@@ -43,7 +43,7 @@ import {
     Transform,
     updateShapeTransform1By2,
     Variable,
-    VariableType, Blur, Basic, BlurType
+    VariableType, Blur, Basic, BlurType, ImageScaleMode
 } from "../data";
 import { ShapeEditor } from "./shape";
 import * as types from "../data/typesdefine";
@@ -2393,27 +2393,26 @@ export class PageEditor {
 
     /* 修改填充类型 */
     setFillsType(actions: { fill: Fill, type: string }[]) {
-        const api = this.__repo.start('setFillsType');
         try {
+            const api = this.__repo.start('setFillsType');
             for (const action of actions) {
                 if (action.type === FillType.SolidColor) {
                     api.setFillType(action.fill, FillType.SolidColor);
                 } else if (action.type === FillType.Pattern) {
                     api.setFillType(action.fill, FillType.Pattern);
-                    // if (!action.fill.imageScaleMode) {
-                    //     api.setFillScaleMode(this.page, s, index, types.ImageScaleMode.Fill);
-                    // }
+                    if (!action.fill.imageScaleMode) api.setFillScaleMode(action.fill, ImageScaleMode.Fill);
                 } else {
                     api.setFillType(action.fill, FillType.Gradient);
-                    initGradient(action);
+                    initGradient(api, action);
                 }
             }
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
+            throw error;
         }
 
-        function initGradient(action: { fill: Fill, type: string }) {
+        function initGradient(api: Api, action: { fill: Fill, type: string }) {
             const gradient = action.fill.gradient;
             if (gradient) {
                 const gCopy = importGradient(exportGradient(gradient));
@@ -2424,10 +2423,10 @@ export class PageEditor {
                     gCopy.from.y = gCopy.from.y + (gCopy.to.y - gCopy.from.y) / 2;
                     gCopy.from.x = gCopy.from.x + (gCopy.to.x - gCopy.from.x) / 2;
                 }
-                if (action.type === GradientType.Radial && gCopy.elipseLength === undefined) {
-                    gCopy.elipseLength = 1;
-                }
+                if (action.type === GradientType.Radial && gCopy.elipseLength === undefined) gCopy.elipseLength = 1;
                 gCopy.stops[0].color = action.fill.color;
+                gCopy.gradientType = action.type as GradientType;
+                api.setFillGradient(action.fill, gCopy);
             } else {
                 const stops = new BasicArray<Stop>();
                 const { alpha, red, green, blue } = action.fill.color;
@@ -2445,6 +2444,7 @@ export class PageEditor {
                     idx.push(i);
                     v.crdtidx = idx;
                 })
+                gradient.gradientType = action.type as GradientType;
                 api.setFillGradient(action.fill, gradient);
             }
         }
