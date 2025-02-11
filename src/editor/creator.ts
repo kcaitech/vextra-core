@@ -151,7 +151,7 @@ export function initFrame(shape: Shape, frame: ShapeFrame) {
 }
 
 export function newSolidColorFill(fillColor = new Color(1, 216, 216, 216)): Fill {
-    return new Fill(new BasicArray(), uuid(), true, FillType.SolidColor, fillColor);
+    return new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, fillColor);
 }
 
 export function newStyle(): Style {
@@ -162,7 +162,6 @@ export function newStyle(): Style {
     const border = new Border(types.BorderPosition.Inner, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
     const style = new Style(fills, new BasicArray<Shadow>(), border);
     style.fills.push(fill);
-    // style.contextSettings = new ContextSettings(BlendMode.Normal, 1);
     return style;
 }
 
@@ -172,9 +171,7 @@ export function newflatStyle(): Style {
     const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
     const strokePaints = new BasicArray<Fill>();
     const border = new Border(types.BorderPosition.Inner, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
-    const style = new Style(fills, shadows, border);
-    // style.contextSettings = new ContextSettings(BlendMode.Normal, 1);
-    return style;
+    return new Style(fills, shadows, border);
 }
 
 export function newArtboard(name: string, frame: ShapeFrame, fill?: Fill): Artboard {
@@ -214,7 +211,7 @@ export function newArtboard2(name: string, frame: ShapeFrame): Artboard {
     const artboard = importArtboard(template_artboard as types.Artboard);
 
     const fillColor = new Color(1, 255, 255, 255);
-    const fill = new Fill(new BasicArray(), uuid(), true, FillType.SolidColor, fillColor);
+    const fill = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, fillColor);
     artboard.style.fills.push(fill);
 
     addCommonAttr(artboard);
@@ -398,8 +395,7 @@ export function newLineShape(name: string, frame: ShapeFrame): LineShape {
     const strokePaints = new BasicArray<Fill>();
     const strokePaint = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0))
     strokePaints.push(strokePaint);
-    const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
-    style.borders = border;
+    style.borders = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
     const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, false);
 
     const transform = new Transform();
@@ -538,7 +534,7 @@ export function newImageFillShape(name: string, frame: ShapeFrame, mediasMgr: Re
     const shape = new RectShape(new BasicArray(), id, name, types.ShapeType.Rectangle, transform, style, size, new BasicArray<PathSegment>(segment));
     addCommonAttr(shape);
     const fillColor = new Color(1, 216, 216, 216);
-    const fill = new Fill(new BasicArray(), uuid(), true, FillType.Pattern, fillColor);
+    const fill = new Fill([0] as BasicArray<number>, uuid(), true, FillType.Pattern, fillColor);
     fill.imageRef = ref;
     fill.originalImageWidth = originFrame.width;
     fill.originalImageHeight = originFrame.height;
