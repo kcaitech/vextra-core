@@ -176,7 +176,6 @@ export class ContactShape extends PathShape implements classes.ContactShape {
         }
 
         if (points.length <= 1) {
-            console.log(this.name, ': points.length <= 1');
             return points;
         }
 

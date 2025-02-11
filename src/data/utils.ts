@@ -31,12 +31,12 @@ interface XY {
  * @description 根据连接类型获取页面坐标系上的连接点
  */
 function get_pagexy(shape: Shape, type: ContactType, m2r: Transform) {
-    const f = shape.size;
+    const f = shape.frame;
     switch (type) {
-        case ContactType.Top: return m2r.computeCoord2(f.width / 2, 0);
-        case ContactType.Right: return m2r.computeCoord2(f.width, f.height / 2);
-        case ContactType.Bottom: return m2r.computeCoord2(f.width / 2, f.height);
-        case ContactType.Left: return m2r.computeCoord2(0, f.height / 2);
+        case ContactType.Top: return m2r.computeCoord2(f.x + f.width / 2, f.y);
+        case ContactType.Right: return m2r.computeCoord2(f.x + f.width, f.y + f.height / 2);
+        case ContactType.Bottom: return m2r.computeCoord2(f.x + f.width / 2, f.y + f.height);
+        case ContactType.Left: return m2r.computeCoord2(f.x, f.y + f.height / 2);
         default: return false
     }
 }

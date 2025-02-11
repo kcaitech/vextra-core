@@ -1,7 +1,5 @@
 import { innerShadowId, renderBlur, renderBorders, renderFills, renderShadows } from "../render";
 import {
-    Artboard,
-    AutoLayout,
     BasicArray, Blur, BlurType, Border,
     BorderPosition, ContextSettings, CornerRadius,
     CurvePoint, ExportOptions, Fill, FillType,
@@ -22,14 +20,13 @@ import { DViewCtx, PropsType } from "./viewctx";
 import { objectId } from "../basic/objectid";
 import { float_accuracy } from "../basic/consts";
 import { GroupShapeView } from "./groupshape";
-import { importBorder, importFill, importStrokePaint } from "../data/baseimport";
-import { exportBorder, exportFill, exportStrokePaint } from "../data/baseexport";
+import { importFill, importStrokePaint } from "../data/baseimport";
+import { exportFill, exportStrokePaint } from "../data/baseexport";
 import { PageView } from "./page";
 import { ArtboardView } from "./artboard";
 import { findOverrideAll } from "../data/utils";
 import { Path } from "@kcdesign/path";
 import { isEqual } from "../basic/number_utils";
-import { updateAutoLayout } from "src/editor/utils/auto_layout2";
 
 export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     return (
@@ -107,10 +104,7 @@ export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeSize, scaleX
             width: originParentFrame.width,
             height: originParentFrame.height
         }
-        // if (uniformScale) {
-        //     __cur_env.width /= uniformScale;
-        //     __cur_env.height /= uniformScale;
-        // }
+
         return fixConstrainFrame2(shape, { x: scaleX, y: scaleY }, __cur_env as ShapeSize, __pre_env as ShapeSize);
     }
 }
