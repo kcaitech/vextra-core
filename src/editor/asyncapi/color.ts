@@ -40,16 +40,6 @@ export class ColorPicker extends AsyncApiCaller {
         }
     }
 
-    execute_fillmask_ImageFilter(sheetid: string, maskid: string, key: PaintFilterType, value: number, index: number) {
-        try {
-            const api = this.api;
-            api.modifyFillMaskImageFilter(this.__document, sheetid, maskid, index, key, value)
-            this.updateView();
-        } catch (e) {
-            this.exception = true;
-            console.log('ColorPicker.execute_fillmask_ImageFilter', e);
-        }
-    }
     commit() {
         if (this.__repo.isNeedCommit() && !this.exception) {
             this.__repo.commit();

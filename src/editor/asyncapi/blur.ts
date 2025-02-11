@@ -30,17 +30,6 @@ export class blurModifyHandler extends AsyncApiCaller {
         }
     }
 
-    executeBlurMaskSaturation(sheetid: string, maskid: string, saturation: number) {
-        try {
-            const api = this.api;
-            api.modifyBlurMaskBlurSaturation(this.__document, sheetid, maskid, saturation);
-            this.updateView();
-        } catch (e) {
-            this.exception = true;
-            console.log('blurModifyHandler.executeBlurMaskSaturation', e);
-        }
-    }
-
     commit() {
         if (this.__repo.isNeedCommit() && !this.exception) {
             this.__repo.commit();

@@ -896,11 +896,4 @@ export class LinearApi {
             }
         })
     }
-
-    modifyBlurMaskBlurSaturation(sheetid: string, maskid: string, value: number) {
-        this.execute('modify-blur-mask-blur-saturation', () => {
-            const api = this.api!;
-            api.modifyBlurMaskBlurSaturation(this.__document, sheetid, maskid, value);
-        })
-    }
 }

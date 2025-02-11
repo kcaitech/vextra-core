@@ -1264,8 +1264,8 @@ export class Controller {
                             return 0;
                         }
                     })
-                    const f = api.modifyFillGradient.bind(api)
-                    f(this.__document, sheetid, maskid, index, new_gradient);
+                    // const f = api.modifyFillGradient.bind(api)
+                    // f(this.__document, sheetid, maskid, index, new_gradient);
                 }
 
                 this.__repo.transactCtx.fireNotify();

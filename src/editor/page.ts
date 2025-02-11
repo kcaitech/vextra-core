@@ -2397,11 +2397,17 @@ export class PageEditor {
             const api = this.__repo.start('setFillsType');
             for (const action of actions) {
                 if (action.type === FillType.SolidColor) {
+                    console.log(111, action.fill);
+                    
                     api.setFillType(action.fill, FillType.SolidColor);
                 } else if (action.type === FillType.Pattern) {
+                    console.log(222, action.fill);
+                    
                     api.setFillType(action.fill, FillType.Pattern);
                     if (!action.fill.imageScaleMode) api.setFillScaleMode(action.fill, ImageScaleMode.Fill);
                 } else {
+                    console.log(333, action.fill);
+                    
                     api.setFillType(action.fill, FillType.Gradient);
                     initGradient(api, action);
                 }
@@ -2806,78 +2812,6 @@ export class PageEditor {
     }
 
     //borders
-    setShapesBorderColor(actions: BatchAction[]) {
-        const api = this.__repo.start('setShapesBorderColor');
-        try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, index, value } = actions[i];
-                let s = shape4border(api, this.view, target);
-                if (target.style.borders.fillsMask) {
-                    s = target.style.getStylesMgr()!.getSync(target.style.borders.fillsMask) as any;
-                }
-                api.setBorderColor(this.page, s, index, value);
-            }
-            this.__repo.commit();
-        } catch (error) {
-            this.__repo.rollback();
-        }
-    }
-
-    setShapesBorderEnabled(actions: BatchAction[]) {
-        const api = this.__repo.start('setShapesBorderEnabled');
-        try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, index, value } = actions[i];
-                const s = shape4border(api, this.view, target);
-                api.setBorderEnable(this.page, s, index, value);
-            }
-            this.__repo.commit();
-        } catch (error) {
-            this.__repo.rollback();
-        }
-    }
-
-    setShapesBorderType(actions: BatchAction[]) {
-        const api = this.__repo.start('setShapesBorderType');
-        try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, index, value } = actions[i];
-                const s = shape4border(api, this.view, target);
-                api.setBorderFillType(this.page, s, index, value);
-            }
-            this.__repo.commit();
-        } catch (error) {
-            this.__repo.rollback();
-        }
-    }
-
-    shapesAddBorder(actions: { fills: BasicArray<Fill>, fill: Fill }[]) {
-        const api = this.__repo.start('shapesAddBorder');
-        try {
-            for (let i = 0; i < actions.length; i++) {
-                const { fills, fill } = actions[i];
-                api.addFillAt(fills, fill, fills.length);
-            }
-            this.__repo.commit();
-        } catch (error) {
-            console.log(error);
-            this.__repo.rollback();
-        }
-    }
-
-    shapesDeleteBorder(actions: { fills: BasicArray<Fill>, index: number }[]) {
-        const api = this.__repo.start('shapesDeleteBorder');
-        try {
-            for (let i = 0; i < actions.length; i++) {
-                const { fills, index } = actions[i];
-                api.deleteFillAt(fills, index);
-            }
-            this.__repo.commit();
-        } catch (error) {
-            this.__repo.rollback();
-        }
-    }
-
     shapesDeleteAllBorder(shapes: ShapeView[]) {
         const api = this.__repo.start('shapesDeleteAllBorder');
         try {
