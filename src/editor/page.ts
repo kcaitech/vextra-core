@@ -2238,19 +2238,15 @@ export class PageEditor {
     }
 
     // 添加节点
-    addShapesGradientStop(actions: BatchAction5[]) {
+    addShapesGradientStop(actions: { fill: Fill, stop: Stop }[]) {
         try {
             const api = this.__repo.start('addShapesGradientStop');
             for (let i = 0, l = actions.length; i < l; i++) {
-                const { target, index, type, value } = actions[i];
-                const grad_type = type === 'fills' ? target.getFills() : target.getBorders()?.strokePaints;
-                if (!grad_type?.length) continue;
-                const gradient_container = grad_type[index];
-                if (!gradient_container) continue;
-                const gradient = gradient_container.gradient;
+                const { fill, stop } = actions[i];
+                const gradient = fill.gradient;
                 if (!gradient) continue;
                 const new_gradient = importGradient(exportGradient(gradient));
-                new_gradient.stops.push(importStop(exportStop(value)));
+                new_gradient.stops.push(importStop(exportStop(stop)));
                 const s = new_gradient.stops;
                 s.sort((a, b) => {
                     if (a.position > b.position) {
@@ -2266,9 +2262,7 @@ export class PageEditor {
                     idx.push(i);
                     v.crdtidx = idx;
                 })
-                const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
-                const shape = shape4fill(api, this.view, target);
-                // f(this.page, shape, index, new_gradient); todo setFillGradient
+                api.setFillGradient(fill, new_gradient);
             }
             this.__repo.commit();
         } catch (error) {
@@ -2398,16 +2392,16 @@ export class PageEditor {
             for (const action of actions) {
                 if (action.type === FillType.SolidColor) {
                     console.log(111, action.fill);
-                    
+
                     api.setFillType(action.fill, FillType.SolidColor);
                 } else if (action.type === FillType.Pattern) {
                     console.log(222, action.fill);
-                    
+
                     api.setFillType(action.fill, FillType.Pattern);
                     if (!action.fill.imageScaleMode) api.setFillScaleMode(action.fill, ImageScaleMode.Fill);
                 } else {
                     console.log(333, action.fill);
-                    
+
                     api.setFillType(action.fill, FillType.Gradient);
                     initGradient(api, action);
                 }
@@ -2597,7 +2591,9 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const { target } = actions[i];
-                api.delfillmask(this.__document, this.page, adapt2Shape(target));
+                const s = shape4fill(api, this.view, target);
+                api.delfillmask(this.__document, this.page, s);
+                api.deleteFills(target.style.fills, 0, target.getFills().length);
             }
             this.__repo.commit();
         } catch (e) {
@@ -2695,10 +2691,13 @@ export class PageEditor {
         }
     }
 
-    shapesDelStyleBlur(blurContainers: (Basic & { blur?: Blur })[]) {
+    shapesDelStyleBlur(shapes: ShapeView[]) {
         try {
             const api = this.__repo.start("shapesDelStyleBlur");
-            for (let i = 0; i < blurContainers.length; i++) api.deleteBlur(blurContainers[i]);
+            for (let i = 0; i < shapes.length; i++) {
+                api.deleteBlur(shapes[i].style);
+                api.delblurmask(this.__document, this.page, adapt2Shape(shapes[i]));
+            }
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -2796,13 +2795,15 @@ export class PageEditor {
         }
     }
 
-    shapesFillsUnify(actions: { fills: BasicArray<Fill>, value: Fill[] }[]) {
+    shapesFillsUnify(actions: { shape: ShapeView, fills: BasicArray<Fill>, value: Fill[] }[]) {
         const api = this.__repo.start('shapesFillsUnify'); // 统一多个shape的填充设置。eg:[red, red], [green], [blue, blue, blue] => [red, red], [red, red], [red, red];
         try {
             for (const action of actions) {
-                const { fills, value } = action;
+                const { shape, fills, value } = action;
+                const s = shape4fill(api, this.view, shape);
                 api.deleteFills(fills, 0, fills.length); // 清空原有填充
                 api.addFills(fills, value); // 填入新的值
+                api.delfillmask(this.__document, this.page, s);
             }
             this.__repo.commit();
         } catch (error) {
@@ -2847,7 +2848,7 @@ export class PageEditor {
 
     setShapesBorderPosition(actions: { shape: ShapeView, position: BorderPosition }[]) {
         const api = this.__repo.start('setShapesBorderPosition');
-        try {            
+        try {
             for (let i = 0; i < actions.length; i++) {
                 const { shape, position } = actions[i];
                 const s = shape4border(api, this.view, shape);
@@ -2864,7 +2865,7 @@ export class PageEditor {
     }
     setShapesBorderMaskPosition(actions: { border: BorderMaskType, position: BorderPosition }[]) {
         const api = this.__repo.start('setShapesBorderPosition');
-        try {            
+        try {
             for (let i = 0; i < actions.length; i++) {
                 const { border, position } = actions[i];
                 api.setBorderPosition(border, position);
@@ -3285,10 +3286,13 @@ export class PageEditor {
     shapesShadowsUnify(actions: BatchAction2[]) {
         try {
             const api = this.__repo.start('shapesShadowsUnify');
+            console.log(actions, 'actions');
+            
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
                 api.deleteShadows(this.page, adapt2Shape(target), 0, target.style.shadows.length);
                 api.addShadows(this.page, adapt2Shape(target), value);
+                api.delshadowmask(this.__document, this.page, adapt2Shape(target));
             }
             this.__repo.commit();
         } catch (error) {
@@ -3311,11 +3315,12 @@ export class PageEditor {
         }
     }
 
-    shapesBlurUnify(actions: { style: Basic & { blur: Blur | undefined; }, blur: Blur }[]) {
+    shapesBlurUnify(actions: { shape: ShapeView, style: Basic & { blur: Blur | undefined; }, blur: Blur }[]) {
         try {
             const api = this.__repo.start('shapesBlurUnify');
             for (let i = 0; i < actions.length; i++) {
-                const { style, blur } = actions[i];
+                const { shape, style, blur } = actions[i];
+                api.delblurmask(this.__document, this.page, adapt2Shape(shape));
                 api.deleteBlur(style);
                 api.addBlur(style, blur);
             }
@@ -3326,10 +3331,10 @@ export class PageEditor {
         }
     }
 
-    shapeDeleteBlur(blurContainers: any[]) {
+    shapeDeleteBlur(blurContainers: { style: Basic & { blur?: Blur; } }[]) {
         try {
             const api = this.__repo.start('shapeDeleteBlur');
-            for (let i = 0; i < blurContainers.length; i++) api.deleteBlur(blurContainers[i]);
+            for (let i = 0; i < blurContainers.length; i++) api.deleteBlur(blurContainers[i].style);
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
@@ -3337,11 +3342,12 @@ export class PageEditor {
         }
     }
 
-    setShapeBlurEnabled(blurs: Blur[], value: boolean) {
+    setShapeBlurEnabled(actions: { blur: Blur, value: boolean }[]) {
         try {
             const api = this.__repo.start('setShapeBlurEnabled');
-            for (let i = 0; i < blurs.length; i++) {
-                api.shapeModifyBlurEnabled(blurs[i], value);
+            for (let i = 0; i < actions.length; i++) {
+                const { blur, value } = actions[i];
+                api.shapeModifyBlurEnabled(blur, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -3364,11 +3370,12 @@ export class PageEditor {
         }
     }
 
-    setShapeBlurType(blurs: Blur[], value: BlurType) {
+    setShapeBlurType(actions: { blur: Blur, value: BlurType }[]) {
         try {
             const api = this.__repo.start('setShapeBlurType');
-            for (let i = 0; i < blurs.length; i++) {
-                api.shapeModifyBlurType(blurs[i], value);
+            for (let i = 0; i < actions.length; i++) {
+                const { blur, value } = actions[i];
+                api.shapeModifyBlurType(blur, value);
             }
             this.__repo.commit();
         } catch (error) {

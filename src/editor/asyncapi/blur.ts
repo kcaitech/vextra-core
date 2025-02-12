@@ -1,9 +1,8 @@
 import { AsyncApiCaller } from "./basic/asyncapi";
 import { CoopRepository } from "../../coop/cooprepo";
 import { Document } from "../../data/document";
-import { PageView, ShapeView } from "../../dataview";
+import { PageView } from "../../dataview";
 import { Shape } from "../../data/shape";
-import { shape4blur } from "../symbol";
 import { Blur } from "../../data";
 
 export class blurModifyHandler extends AsyncApiCaller {
@@ -17,11 +16,11 @@ export class blurModifyHandler extends AsyncApiCaller {
         return this.__repo.start('blur-modify');
     }
 
-    executeSaturation(blurs: Blur[], saturation: number) {
+    executeSaturation(actions: { blur: Blur, value: number }[]) {
         try {
             const api = this.api;
-            for (const blur of blurs) {
-                api.shapeModifyBlurSaturation(blur, saturation);
+            for (const blur of actions) {
+                api.shapeModifyBlurSaturation(blur.blur, blur.value);
             }
             this.updateView();
         } catch (e) {
