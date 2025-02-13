@@ -35,6 +35,7 @@ import { fixTextShapeFrameByLayout } from "../../utils/other";
 import { Transform as Transform2 } from "../../../basic/transform";
 import { ColVector3D } from "../../../basic/matrix2";
 import { XYsBounding } from "../../../io/cilpboard";
+import { shape4Autolayout } from "../../../editor/symbol";
 
 export type RangeRecorder = Map<string, {
     toRight?: number,
@@ -603,21 +604,21 @@ export function uniformScale(
             thicknessBottom * ratio,
             thicknessRight * ratio
         );
-        api.setBorderSide(page, shape, setting);
+        api.setBorderSide(shape.getBorders(), setting);
         const shadows = shape.getShadows();
         shadows.forEach((s, i) => {
             const sId = s.id + shape.id;
             const blurRadius = getBaseValue(sId, 'blurRadius', s.blurRadius);
-            api.setShadowBlur(page, shape, i, blurRadius * ratio);
+            api.setShadowBlur(s, blurRadius * ratio);
             const offsetX = getBaseValue(sId, 'offsetX', s.offsetX);
-            api.setShadowOffsetX(page, shape, i, offsetX * ratio);
+            api.setShadowOffsetX(s, offsetX * ratio);
             const offsetY = getBaseValue(sId, 'offsetY', s.offsetY);
-            api.setShadowOffsetY(page, shape, i, offsetY * ratio);
+            api.setShadowOffsetY(s, offsetY * ratio);
             const spread = getBaseValue(sId, 'spread', s.spread);
-            api.setShadowSpread(page, shape, i, spread * ratio)
+            api.setShadowSpread(s, spread * ratio)
         });
         const blur = view.blur;
-        if (blur?.saturation) api.shapeModifyBlurSaturation(page, shape, blur.saturation * ratio);
+        if (blur?.saturation) api.shapeModifyBlurSaturation(blur, blur.saturation * ratio);
 
         if (view instanceof TextShapeView) textSet.push(view);
         if (view instanceof TableView) {
@@ -723,9 +724,11 @@ export class Scaler extends AsyncApiCaller {
     private sizeRecorder: SizeRecorder = new Map();
     private transformRecorder: TransformRecorder = new Map();
     private valueRecorder: Map<string, number> = new Map();
+    protected _page: PageView;
 
     constructor(repo: CoopRepository, document: Document, page: PageView) {
         super(repo, document, page);
+        this._page = page;
     }
 
     start() {
@@ -757,12 +760,13 @@ export class Scaler extends AsyncApiCaller {
                     api.shapeModifyWH(page, shape, size.width, size.height)
                 }
                 api.shapeModifyTransform(page, shape, makeShapeTransform1By2(item.transform2));
-                if ((shape as Artboard).autoLayout) {
+                if ((item.shape as ArtboardView).autoLayout) {
+                    const _shape = shape4Autolayout(api, item.shape, this._page);
                     if (item.w_change) {
-                        api.shapeModifyAutoLayoutSizing(page, shape, StackSizing.Fixed, 'hor');
+                        api.shapeModifyAutoLayoutSizing(page, _shape, StackSizing.Fixed, 'hor');
                     }
                     if (item.h_change) {
-                        api.shapeModifyAutoLayoutSizing(page, shape, StackSizing.Fixed, 'ver');
+                        api.shapeModifyAutoLayoutSizing(page, _shape, StackSizing.Fixed, 'ver');
                     }
                 }
                 if (item.shape instanceof GroupShapeView) {

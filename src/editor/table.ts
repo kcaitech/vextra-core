@@ -1247,8 +1247,8 @@ export class TableEditor extends ShapeEditor {
                 if (imageMgr) newfill.setImageMgr(imageMgr);
                 if (!cell.cell) throw new Error("init cell fail?");
                 const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
-                if (delOlds) api.deleteFills(this.__page, c.data, 0, c.style.fills.length);
-                api.addFillAt(this.__page, c.data, newfill, cell.cell.style.fills.length);
+                // if (delOlds) api.deleteFills(this.__page, c.data, 0, c.style.fills.length);
+                // api.addFillAt(this.__page, c.data, newfill, cell.cell.style.fills.length);
             })
             this.__repo.commit();
         } catch (error) {
@@ -1261,8 +1261,8 @@ export class TableEditor extends ShapeEditor {
         try {
             this.view._getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
                 if (cell.cell) {
-                    const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
-                    api.setFillColor(this.__page, c.data, idx, color)
+                    // const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
+                    // api.setFillColor(this.__page, c.data, idx, color)
                 }
             })
             this.__repo.commit();
@@ -1277,7 +1277,7 @@ export class TableEditor extends ShapeEditor {
             this.view._getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
                 if (cell.cell) {
                     const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
-                    api.setFillEnable(this.__page, c.data, idx, value);
+                    // api.setFillEnable(this.__page, c.data, idx, value);
                 }
             })
             this.__repo.commit();
@@ -1292,9 +1292,9 @@ export class TableEditor extends ShapeEditor {
             this.view._getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
                 if (cell.cell) {
                     const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
-                    api.setFillType(this.__page, c.data, idx, type);
+                    // api.setFillType(this.__page, c.data, idx, type);
                     if (!c.data.style.fills[idx].imageScaleMode) {
-                        api.setFillScaleMode(this.__page, c.data, idx, ImageScaleMode.Fill);
+                        // api.setFillScaleMode(this.__page, c.data, idx, ImageScaleMode.Fill);
                     }
                 }
             })
@@ -1311,7 +1311,7 @@ export class TableEditor extends ShapeEditor {
             this.view._getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
                 if (cell.cell) {
                     const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
-                    api.deleteFillAt(this.__page, c.data, idx);
+                    // api.deleteFillAt(this.__page, c.data, idx);
                 }
             })
             this.__repo.commit();
@@ -1358,7 +1358,7 @@ export class TableEditor extends ShapeEditor {
             this.view._getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
                 if (cell.cell) {
                     const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
-                    api.setBorderSide(this.__page, c.data, new BorderSideSetting(SideType.Normal, thickness, thickness, thickness, thickness));
+                    api.setBorderSide(c.data.getBorders(), new BorderSideSetting(SideType.Normal, thickness, thickness, thickness, thickness));
                 }
             })
             this.__repo.commit();
@@ -1376,7 +1376,7 @@ export class TableEditor extends ShapeEditor {
                 this.view._getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
                     if (cell.cell) {
                         const c = this.cell4edit(cell.rowIdx, cell.colIdx, api);
-                        api.setBorderSide(this.__page, c.data, new BorderSideSetting(SideType.Normal, contextSettingThickness, contextSettingThickness, contextSettingThickness, contextSettingThickness));
+                        api.setBorderSide(c.data.getBorders(), new BorderSideSetting(SideType.Normal, contextSettingThickness, contextSettingThickness, contextSettingThickness, contextSettingThickness));
                     }
                 })
                 this.__repo.transactCtx.fireNotify();
@@ -1459,7 +1459,7 @@ export class TableEditor extends ShapeEditor {
                         const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
                         const strokePaints = new BasicArray<Fill>(newPaint);
                         const border = new Border(BorderPosition.Inner, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
-                        api.addBorder(this.__page, c.data, border);
+                        // api.addBorder(this.__page, c.data, border);
                     }
                 }
                 else {

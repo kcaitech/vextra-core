@@ -31,7 +31,7 @@ export class ColorPicker extends AsyncApiCaller {
             for (let i = 0; i < shapes.length; i++) {
                 const shape = shapes[i];
                 const s = shape4fill(api, this.pageView, shape);
-                api.setFillImageScale(page, s, index, scale);
+                // api.setFillImageScale(page, s, index, scale);
             }
             this.updateView();
         } catch (e) {
@@ -39,32 +39,7 @@ export class ColorPicker extends AsyncApiCaller {
             console.log('ColorPicker.executeImageScale', e);
         }
     }
-    executeImageFilter(shapes: ShapeView[], key: PaintFilterType, value: number, index: number) {
-        try {
-            const api = this.api;
-            const page = this.page;
-            for (let i = 0; i < shapes.length; i++) {
-                const shape = shapes[i];
-                const s = shape4fill(api, this.pageView, shape);
-                api.setFillImageFilter(page, s, index, key, value);
-            }
-            this.updateView();
-        } catch (e) {
-            this.exception = true;
-            console.log('ColorPicker.executeImageFilter', e);
-        }
-    }
 
-    execute_fillmask_ImageFilter(sheetid: string, maskid: string, key: PaintFilterType, value: number, index: number) {
-        try {
-            const api = this.api;
-            api.modifyFillMaskImageFilter(this.__document, sheetid, maskid, index, key, value)
-            this.updateView();
-        } catch (e) {
-            this.exception = true;
-            console.log('ColorPicker.execute_fillmask_ImageFilter', e);
-        }
-    }
     commit() {
         if (this.__repo.isNeedCommit() && !this.exception) {
             this.__repo.commit();

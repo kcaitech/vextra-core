@@ -94,20 +94,28 @@ export const updateAutoLayout = (childs: ShapeView[], layoutInfo: AutoLayout, si
     if (layoutInfo.stackPrimarySizing === StackSizing.Auto) {
         const autoFrame = autoWidthLayout(layoutInfo, childs, frame);
         size.width = autoFrame.width;
-        size.height = autoFrame.height;
+        if (layoutInfo.stackCounterSizing !== StackSizing.Fixed) {
+            size.height = autoFrame.height;
+        }
         return autoFrame.layout;
     } else {
         if (!layoutInfo.stackWrap || layoutInfo.stackWrap === StackWrap.Wrap) {
             const autoFrame = autoWrapLayout(layoutInfo, childs, frame);
-            size.height = autoFrame.height;
+            if (layoutInfo.stackCounterSizing !== StackSizing.Fixed) {
+                size.height = autoFrame.height;
+            }
             return autoFrame.layout;
         } else if (layoutInfo.stackMode === StackMode.Vertical) {
             const autoFrame = autoVerticalLayout(layoutInfo, childs, frame);
-            size.height = autoFrame.height;
+            if (layoutInfo.stackCounterSizing !== StackSizing.Fixed) {
+                size.height = autoFrame.height;
+            }
             return autoFrame.layout;
         } else {
             const autoFrame = autoHorizontalLayout(layoutInfo, childs, frame);
-            size.height = autoFrame.height;
+            if (layoutInfo.stackCounterSizing !== StackSizing.Fixed) {
+                size.height = autoFrame.height;
+            }
             return autoFrame.layout;
         }
     }

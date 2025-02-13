@@ -1,6 +1,6 @@
 import { ShapeView, GroupShapeView, adapt2Shape, TextShapeView, SymbolRefView, ArtboardView } from "../../../dataview";
 import { Api } from "../../../coop";
-import { GroupShape, Page, SymbolShape, MarkerType, BlendMode, Artboard, ShapeType, TextShape, Shape, makeShapeTransform1By2, Transform } from "../../../data";
+import { GroupShape, Page, SymbolShape, MarkerType, BlendMode, Artboard, ShapeType, TextShape, Shape, makeShapeTransform1By2, Transform, Basic, Blur } from "../../../data";
 import { importFill, importBorder, importShadow, importExportOptions, importBlur, importPrototypeInterAction, importAutoLayout } from "../../../data/baseimport";
 import { exportFill, exportBorder, exportShadow, exportExportOptions, exportBlur, exportPrototypeInterAction, exportAutoLayout } from "../../../data/baseexport";
 import { CircleChecker } from "./circle";
@@ -54,8 +54,8 @@ export class ShapePorter {
         if (name === shape.name) api.shapeModifyName(page, shape, name);
         const fills = view.getFills().map(i => importFill(exportFill(i)));
         {
-            if (shape.style.fills.length) api.deleteFills(page, shape, 0, shape.style.fills.length);
-            api.addFills(page, shape, fills); // 填入新的值
+            if (shape.style.fills.length) api.deleteFills(shape.style.fills, 0, shape.style.fills.length);
+            api.addFills(shape.style.fills, fills); // 填入新的值
         }
         let borders = view.getBorders();
         {
@@ -98,8 +98,8 @@ export class ShapePorter {
         }
         const blur = view.blur ? importBlur(exportBlur(view.blur)) : undefined;
         {
-            if (blur) api.addBlur(page, shape, blur);
-            else if (shape.style.blur) api.deleteBlur(page, shape);
+            if (blur) api.addBlur(shape.style, blur);
+            else if (shape.style.blur) api.deleteBlur(shape.style);
         }
         const protoInteractions = view.prototypeInterActions
             ? view.prototypeInterActions.map(i => importPrototypeInterAction(exportPrototypeInterAction(i)))

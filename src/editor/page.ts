@@ -7,12 +7,12 @@ import {
     BorderMask,
     BorderMaskType,
     BorderPosition,
-    Color, ContactShape,
+    Color,
+    ContactShape,
     Document,
     ExportFileFormat,
     ExportFormatNameingScheme,
     Fill,
-    FillMask,
     FillType,
     Gradient,
     GradientType,
@@ -29,7 +29,6 @@ import {
     RectShape,
     ResizingConstraints2,
     ResourceMgr,
-    ShadowPosition,
     Shape,
     ShapeFrame,
     ShapeType,
@@ -40,147 +39,43 @@ import {
     SymbolRefShape,
     SymbolShape,
     SymbolUnionShape,
-    Text,
     TextShape,
     Transform,
     updateShapeTransform1By2,
     Variable,
-    VariableType
+    VariableType, Blur, Basic, BlurType, ImageScaleMode
 } from "../data";
 import { ShapeEditor } from "./shape";
 import * as types from "../data/typesdefine";
-import {
-    newArrowShape,
-    newArtboard,
-    newAutoLayoutArtboard,
-    newBoolShape,
-    newGroupShape,
-    newImageFillShape,
-    newLineShape,
-    newOvalShape,
-    newPathShape,
-    newRectShape,
-    newSolidColorFill,
-    newSymbolRefShape,
-    newSymbolShape
-} from "./creator";
+import { newArrowShape, newArtboard, newAutoLayoutArtboard, newBoolShape, newGroupShape, newImageFillShape, newLineShape, newOvalShape, newPathShape, newRectShape, newSolidColorFill, newSymbolRefShape, newSymbolShape } from "./creator";
 import { expand, translate, translateTo } from "./frame";
 import { uuid } from "../basic/uuid";
 import { TextShapeEditor } from "./textshape";
 import { set_childs_id, transform_data } from "../io/cilpboard";
 import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
-import { Matrix } from "../basic/matrix";
-import {
-    IImportContext,
-    importArtboard,
-    importAutoLayout,
-    importBlur,
-    importBorder,
-    importContextSettings,
-    importCornerRadius,
-    importFill,
-    importGradient,
-    importMarkerType,
-    importOverlayBackgroundAppearance,
-    importOverlayPosition,
-    importPrototypeInterAction,
-    importPrototypeStartingPoint,
-    importShadow,
-    importStop,
-    importStyle,
-    importSymbolShape,
-    importText,
-    importTransform
-} from "../data/baseimport";
+import { IImportContext, importArtboard, importAutoLayout, importBlur, importBorder, importContextSettings, importCornerRadius, importFill, importGradient, importMarkerType, importOverlayBackgroundAppearance, importOverlayPosition, importPrototypeInterAction, importPrototypeStartingPoint, importShadow, importStop, importStyle, importSymbolShape, importText, importTransform } from "../data/baseimport";
 import { gPal } from "../basic/pal";
 import { TableEditor } from "./table";
-import { exportArtboard, exportGradient, exportStop, exportSymbolShape, exportVariable } from "../data/baseexport";
-import {
-    after_remove,
-    clear_binds_effect,
-    find_state_space,
-    fixTextShapeFrameByLayout,
-    get_symbol_by_layer,
-    init_state,
-    make_union,
-    modify_frame_after_inset_state,
-    modify_index
-} from "./utils/other";
+import { exportGradient, exportStop, exportSymbolShape } from "../data/baseexport";
+import { after_remove, clear_binds_effect, find_state_space, fixTextShapeFrameByLayout, get_symbol_by_layer, init_state, make_union, modify_frame_after_inset_state, modify_index } from "./utils/other";
 import { v4 } from "uuid";
-import {
-    is_exist_invalid_shape2,
-    is_part_of_symbol,
-    is_part_of_symbolref,
-    is_state,
-    modify_variable_with_api,
-    shape4border,
-    shape4cornerRadius,
-    shape4fill,
-    shape4shadow, shape4contextSettings, shape4blur, RefUnbind
-} from "./symbol";
+import { is_exist_invalid_shape2, is_part_of_symbol, is_part_of_symbolref, is_state, modify_variable_with_api, shape4border, shape4cornerRadius, shape4fill, shape4shadow, shape4contextSettings, shape4blur, RefUnbind } from "./symbol";
 import { is_circular_ref2 } from "./utils/ref_check";
-import {
-    AutoLayout,
-    BorderSideSetting,
-    BorderStyle,
-    ExportFormat,
-    OverlayBackgroundAppearance,
-    OverlayBackgroundInteraction,
-    OverlayPositionType,
-    Point2D,
-    PrototypeActions,
-    PrototypeConnectionType,
-    PrototypeEasingBezier,
-    PrototypeEasingType,
-    PrototypeEvent,
-    PrototypeEvents,
-    PrototypeInterAction,
-    PrototypeNavigationType,
-    PrototypeStartingPoint,
-    PrototypeTransitionType,
-    ScrollBehavior,
-    ScrollDirection,
-    Shadow
-} from "../data/baseclasses";
-import {
-    border2path,
-    calculateInnerAnglePosition,
-    getPolygonPoints,
-    getPolygonVertices,
-    update_frame_by_points
-} from "./utils/path";
+import { AutoLayout, BorderSideSetting, BorderStyle, ExportFormat, OverlayBackgroundAppearance, OverlayBackgroundInteraction, OverlayPositionType, Point2D, PrototypeActions, PrototypeConnectionType, PrototypeEasingBezier, PrototypeEasingType, PrototypeEvent, PrototypeEvents, PrototypeInterAction, PrototypeNavigationType, PrototypeStartingPoint, PrototypeTransitionType, ScrollBehavior, ScrollDirection, Shadow } from "../data/baseclasses";
+import { border2path, calculateInnerAnglePosition, getPolygonPoints, getPolygonVertices, update_frame_by_points } from "./utils/path";
 import { modify_shapes_height, modify_shapes_width } from "./utils/common";
 import { CoopRepository, ISave4Restore, LocalCmd, SelectionState } from "../coop";
 import { Api, TextShapeLike } from "../coop/recordapi";
 import { unable_to_migrate } from "./utils/migrate";
-import {
-    adapt2Shape,
-    ArtboardView,
-    BoolShapeView,
-    CutoutShapeView,
-    GroupShapeView,
-    PageView,
-    PathShapeView,
-    render2path,
-    ShapeView,
-    SymbolRefView,
-    SymbolView,
-    TableCellView,
-    TableView,
-    TextShapeView
-} from "../dataview";
+import { adapt2Shape, ArtboardView, BoolShapeView, CutoutShapeView, GroupShapeView, PageView, PathShapeView, render2path, ShapeView, SymbolRefView, SymbolView, TableCellView, TableView, TextShapeView } from "../dataview";
 import { FMT_VER_latest } from "../data/fmtver";
 import { ColVector3D } from "../basic/matrix2";
 import { Transform as Transform2 } from "../basic/transform";
-import {
-    TidyUpAlgin,
-    tidyUpLayout
-} from "./utils/auto_layout";
+import { TidyUpAlgin, tidyUpLayout } from "./utils/auto_layout";
 
 import { getFormatFromBase64 } from "../basic/utils";
-import { modifyRadius, modifyStartingAngle, modifySweep, uniformScale, UniformScaleUnit } from "./asyncapi";
+import { modifyRadius, modifyStartingAngle, modifySweep, uniformScale, UniformScaleUnit, assign } from "./asyncapi";
 import { Path } from "@kcdesign/path";
-import { assign } from "./asyncapi";
 import { prepareVar } from "./symbol_utils";
 import { layoutShapesOrder2, layoutSpacing } from "./utils/auto_layout2";
 
@@ -197,7 +92,7 @@ export interface FrameAdjust { // frame.width、frame.height
     heightExtend: number
 }
 
-export interface BatchAction { // targer、index、value
+export interface BatchAction { // target,index,value
     target: ShapeView
     index: number
     value: any
@@ -293,20 +188,6 @@ export function getHorizontalRadians(A: {
     y: number
 }) {
     return Math.atan2(B.y - A.y, B.x - A.x)
-}
-
-export function getHorizontalAngle(A: {
-    x: number,
-    y: number
-}, B: {
-    x: number,
-    y: number
-}) {
-    const deltaX = B.x - A.x;
-    const deltaY = B.y - A.y;
-    const angleInDegrees = Math.atan2(deltaY, deltaX) * 180 / Math.PI;
-    const angle = (angleInDegrees + 360) % 360;
-    return angle;
 }
 
 function findUsableFillStyle(shape: Shape | ShapeView): Style {
@@ -536,6 +417,7 @@ export class PageEditor {
             return false;
         }
     }
+
     hasFill(shape: Shape | ShapeView) {
         const fills = shape.getFills();
         if (fills.length === 0) return false;
@@ -2355,114 +2237,16 @@ export class PageEditor {
         }
     }
 
-    // 渐变
-    //翻转
-    reverseShapesGradient(actions: BatchAction4[]) {
-        try {
-            const api = this.__repo.start('reverseShapesGradient');
-            for (let i = 0, l = actions.length; i < l; i++) {
-                const { target, index, type } = actions[i];
-                const arr = type === 'fills' ? target.getFills() : target.getBorders()?.strokePaints;
-                if (!arr?.length) {
-                    continue;
-                }
-                const gradient_container = arr[index];
-                if (!gradient_container || !gradient_container.gradient) {
-                    continue;
-                }
-                const gradient = gradient_container.gradient;
-                const stops = gradient.stops;
-                if (!stops?.length) {
-                    continue;
-                }
-                const new_stops: BasicArray<Stop> = new BasicArray<Stop>();
-                for (let _i = 0, _l = stops.length; _i < _l; _i++) {
-                    const _stop = stops[_i];
-                    const inver_index = stops.length - 1 - _i;
-                    new_stops.push(importStop(exportStop(new Stop(_stop.crdtidx, _stop.id, _stop.position, stops[inver_index].color))));
-                }
-                const s = shape4fill(api, this.view, target);
-                if (type === 'fills') {
-                    api.setFillColor(this.page, s, index, new_stops[0].color as Color);
-                } else {
-                    api.setBorderColor(this.page, s, index, new_stops[0].color as Color);
-                }
-                const ng = importGradient(exportGradient(gradient));
-                ng.stops = new_stops;
-                const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
-                f(this.page, s, index, ng);
-            }
-            this.__repo.commit();
-        } catch (error) {
-            console.log('reverseShapesGradient:', error);
-            this.__repo.rollback();
-        }
-    }
-
-    //旋转90度
-    rotateShapesGradient(actions: BatchAction4[]) {
-        try {
-            const api = this.__repo.start('rotateShapesGradient');
-            for (let i = 0, l = actions.length; i < l; i++) {
-                const { target, index, type } = actions[i];
-                const arr = type === 'fills' ? target.getFills() : target.getBorders()?.strokePaints;
-                if (!arr?.length) {
-                    continue;
-                }
-                const gradient_container = arr[index];
-                if (!gradient_container || !gradient_container.gradient) {
-                    continue;
-                }
-                const gradient = importGradient(exportGradient(gradient_container.gradient));
-                const { from, to } = gradient;
-                const gradientType = gradient.gradientType;
-                if (gradientType === types.GradientType.Linear) {
-                    const midpoint = { x: (to.x + from.x) / 2, y: (to.y + from.y) / 2 };
-                    const m = new Matrix();
-                    m.trans(-midpoint.x, -midpoint.y);
-                    m.rotate(Math.PI / 2);
-                    m.trans(midpoint.x, midpoint.y);
-                    gradient.to = m.computeCoord3(to) as any;
-                    gradient.from = m.computeCoord3(from) as any;
-                } else if (gradientType === types.GradientType.Radial || gradientType === types.GradientType.Angular) {
-                    const m = new Matrix();
-                    m.trans(-from.x, -from.y);
-                    m.rotate(Math.PI / 2);
-                    m.trans(from.x, from.y);
-                    gradient.to = m.computeCoord3(to) as any;
-                }
-                // todo 旋转渐变
-                const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
-                const shape = shape4fill(api, this.view, target);
-                f(this.page, shape, index, gradient);
-            }
-            this.__repo.commit();
-        } catch (error) {
-            console.log('rotateShapesGradient:', error);
-            this.__repo.rollback();
-        }
-    }
-
     // 添加节点
-    addShapesGradientStop(actions: BatchAction5[]) {
+    addShapesGradientStop(actions: { fill: Fill, stop: Stop }[]) {
         try {
             const api = this.__repo.start('addShapesGradientStop');
             for (let i = 0, l = actions.length; i < l; i++) {
-                const { target, index, type, value } = actions[i];
-                const grad_type = type === 'fills' ? target.getFills() : target.getBorders()?.strokePaints;
-                if (!grad_type?.length) {
-                    continue;
-                }
-                const gradient_container = grad_type[index];
-                if (!gradient_container) {
-                    continue;
-                }
-                const gradient = gradient_container.gradient;
-                if (!gradient) {
-                    continue;
-                }
+                const { fill, stop } = actions[i];
+                const gradient = fill.gradient;
+                if (!gradient) continue;
                 const new_gradient = importGradient(exportGradient(gradient));
-                new_gradient.stops.push(importStop(exportStop(value)));
+                new_gradient.stops.push(importStop(exportStop(stop)));
                 const s = new_gradient.stops;
                 s.sort((a, b) => {
                     if (a.position > b.position) {
@@ -2478,119 +2262,74 @@ export class PageEditor {
                     idx.push(i);
                     v.crdtidx = idx;
                 })
-                const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
-                const shape = shape4fill(api, this.view, target);
-                f(this.page, shape, index, new_gradient);
+                api.setFillGradient(fill, new_gradient);
             }
             this.__repo.commit();
         } catch (error) {
-            console.log('addShapesGradientStop:', error);
+            console.error('addShapesGradientStop:', error);
             this.__repo.rollback();
         }
     }
 
-    toggerShapeGradientType(actions: BatchAction5[]) {
-        try {
-            const api = this.__repo.start('toggerShapeGradientType');
-            for (let i = 0, l = actions.length; i < l; i++) {
-                const { target, index, type, value } = actions[i];
-                const grad_type = type === 'fills' ? target.getFills() : target.getBorders()?.strokePaints;
-                if (!grad_type?.length) {
-                    continue;
-                }
-                const gradient_container = grad_type[index];
-                if (!gradient_container) {
-                    continue;
-                }
-                const gradient = gradient_container.gradient;
-                const s = shape4fill(api, this.view, target);
-                if (gradient_container.fillType !== FillType.Gradient) {
-                    type === 'fills' ? api.setFillType(this.page, s, index, FillType.Gradient) : api.setBorderFillType(this.page, s, index, FillType.Gradient);
-                }
-                if (gradient) {
-                    const new_gradient = importGradient(exportGradient(gradient));
-                    new_gradient.gradientType = value;
-                    if (value === GradientType.Linear && gradient.gradientType !== GradientType.Linear) {
-                        new_gradient.from.y = new_gradient.from.y - (new_gradient.to.y - new_gradient.from.y);
-                        new_gradient.from.x = new_gradient.from.x - (new_gradient.to.x - new_gradient.from.x);
-                    } else if (gradient.gradientType === GradientType.Linear && value !== GradientType.Linear) {
-                        new_gradient.from.y = new_gradient.from.y + (new_gradient.to.y - new_gradient.from.y) / 2;
-                        new_gradient.from.x = new_gradient.from.x + (new_gradient.to.x - new_gradient.from.x) / 2;
-                    }
-                    if (value === GradientType.Radial && new_gradient.elipseLength === undefined) {
-                        new_gradient.elipseLength = 1;
-                    }
-                    new_gradient.stops[0].color = gradient_container.color;
-                    const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
-                    f(this.page, s, index, new_gradient);
-                } else {
-                    const stops = new BasicArray<Stop>();
-                    // const frame = target.frame;
-                    const { alpha, red, green, blue } = gradient_container.color;
-                    stops.push(new Stop(new BasicArray(), uuid(), 0, new Color(alpha, red, green, blue)), new Stop(new BasicArray(), uuid(), 1, new Color(0, red, green, blue)))
-                    const from = value === GradientType.Linear ? { x: 0.5, y: 0 } : { x: 0.5, y: 0.5 };
-                    const to = { x: 0.5, y: 1 };
-                    let elipseLength = undefined;
-                    if (value === GradientType.Radial) {
-                        elipseLength = 1;
-                    }
-                    const new_gradient = new Gradient(from as Point2D, to as Point2D, value, stops, elipseLength);
-                    new_gradient.stops.forEach((v, i) => {
-                        const idx = new BasicArray<number>();
-                        idx.push(i);
-                        v.crdtidx = idx;
-                    })
-                    const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
-                    f(this.page, s, index, new_gradient);
-                }
-            }
-            this.__repo.commit();
-        } catch (error) {
-            console.log('toggerShapeGradientType:', error);
-            this.__repo.rollback();
-        }
-    }
-
-    setShapesGradientStopColor(actions: BatchAction5[]) {
-        try {
-            const api = this.__repo.start('setShapesGradientStopColor');
-            for (let i = 0, l = actions.length; i < l; i++) {
-                const { target, index, type, value } = actions[i];
-                const grad_type = type === 'fills' ? target.getFills() : target.getBorders()?.strokePaints;
-                if (!grad_type?.length) {
-                    continue;
-                }
-                const gradient_container = grad_type[index];
-                if (!gradient_container || !gradient_container.gradient || gradient_container.fillType !== FillType.Gradient) {
-                    continue;
-                }
-                const gradient = gradient_container.gradient;
-                const stops = gradient.stops;
-                if (!stops?.length) {
-                    continue;
-                }
-                const { color, stop_i } = value;
-                const new_gradient = importGradient(exportGradient(gradient));
-                new_gradient.stops[stop_i].color = color;
-                const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
-                const shape = shape4fill(api, this.view, target);
-                if (type === 'fills') {
-                    api.setFillColor(this.page, shape, index, new_gradient.stops[0].color as Color);
-                } else {
-                    api.setBorderColor(this.page, shape, index, new_gradient.stops[0].color as Color);
-                }
-                f(this.page, shape, index, new_gradient);
-            }
-            this.__repo.commit();
-        } catch (error) {
-            console.log('setShapesGradientStopColor:', error);
-            this.__repo.rollback();
-        }
+    modifyShapeGradientType(actions: { fill: Fill, type: string }[]) {
+        // todo modifyShapeGradientType
+        // try {
+        //     const api = this.__repo.start('modifyShapeGradientType');
+        //     for (let i = 0, l = actions.length; i < l; i++) {
+        //         const { fill, type } = actions[i];
+        //
+        //         if (fill.fillType !== FillType.Gradient) {
+        //             api.setFillType(fill, FillType.Gradient);
+        //         }
+        //         if (fill.gradient) {
+        //
+        //         } else {
+        //
+        //         }
+        //         if (gradient) {
+        //             const new_gradient = importGradient(exportGradient(gradient));
+        //             new_gradient.gradientType = value;
+        //             if (value === GradientType.Linear && gradient.gradientType !== GradientType.Linear) {
+        //                 new_gradient.from.y = new_gradient.from.y - (new_gradient.to.y - new_gradient.from.y);
+        //                 new_gradient.from.x = new_gradient.from.x - (new_gradient.to.x - new_gradient.from.x);
+        //             } else if (gradient.gradientType === GradientType.Linear && value !== GradientType.Linear) {
+        //                 new_gradient.from.y = new_gradient.from.y + (new_gradient.to.y - new_gradient.from.y) / 2;
+        //                 new_gradient.from.x = new_gradient.from.x + (new_gradient.to.x - new_gradient.from.x) / 2;
+        //             }
+        //             if (value === GradientType.Radial && new_gradient.elipseLength === undefined) {
+        //                 new_gradient.elipseLength = 1;
+        //             }
+        //             new_gradient.stops[0].color = gradient_container.color;
+        //             const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
+        //             f(this.page, s, index, new_gradient);
+        //         } else {
+        //             const stops = new BasicArray<Stop>();
+        //             const { alpha, red, green, blue } = gradient_container.color;
+        //             stops.push(new Stop(new BasicArray(), uuid(), 0, new Color(alpha, red, green, blue)), new Stop(new BasicArray(), uuid(), 1, new Color(0, red, green, blue)))
+        //             const from = value === GradientType.Linear ? { x: 0.5, y: 0 } : { x: 0.5, y: 0.5 };
+        //             const to = { x: 0.5, y: 1 };
+        //             let ellipseLength;
+        //             if (value === GradientType.Radial) ellipseLength = 1;
+        //             const new_gradient = new Gradient(from as Point2D, to as Point2D, value, stops, ellipseLength);
+        //             new_gradient.stops.forEach((v, i) => {
+        //                 const idx = new BasicArray<number>();
+        //                 idx.push(i);
+        //                 v.crdtidx = idx;
+        //             })
+        //             const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
+        //             f(this.page, s, index, new_gradient);
+        //         }
+        //     }
+        //     this.__repo.commit();
+        // } catch (error) {
+        //     this.__repo.rollback();
+        //     console.error(error);
+        // }
     }
 
     deleteShapesGradientStop(actions: BatchAction5[]) {
         try {
-            const api = this.__repo.start('setShapesGradientStopColor');
+            const api = this.__repo.start('deleteShapesGradientStop');
             for (let i = 0, l = actions.length; i < l; i++) {
                 const { target, index, type, value } = actions[i];
                 const grad_type = type === 'fills' ? target.getFills() : target.getBorders()?.strokePaints;
@@ -2610,11 +2349,11 @@ export class PageEditor {
                 new_gradient.stops.splice(value, 1);
                 const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
                 const shape = shape4fill(api, this.view, target);
-                f(this.page, shape, index, new_gradient);
+                // f(this.page, shape, index, new_gradient); // todo setFillGradient
             }
             this.__repo.commit();
         } catch (error) {
-            console.log('setShapesGradientStopColor:', error);
+            console.error(error);
             this.__repo.rollback();
         }
     }
@@ -2637,7 +2376,7 @@ export class PageEditor {
                 new_gradient.gradientOpacity = value;
                 const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
                 const shape = shape4fill(api, this.view, target);
-                f(this.page, shape, index, new_gradient);
+                // f(this.page, shape, index, new_gradient); // todo setFillGradient
             }
             this.__repo.commit();
         } catch (error) {
@@ -2646,95 +2385,88 @@ export class PageEditor {
         }
     }
 
-    // 填充
-    setShapesFillColor(actions: BatchAction[]) {
-        const api = this.__repo.start('setShapesFillColor');
+    /* 修改填充类型 */
+    setFillsType(actions: { fill: Fill, type: string }[]) {
         try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, index, value } = actions[i];
-                const s = shape4fill(api, this.view, target);
-                api.setFillColor(this.page, s, index, value);
-            }
-            this.__repo.commit();
-        } catch (error) {
-            this.__repo.rollback();
-        }
-    }
-    setShapesFillOpacity(actions: BatchAction[]) {
-        const api = this.__repo.start('setShapesFillOpacity');
-        try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, index, value } = actions[i];
-                const s = shape4fill(api, this.view, target);
-                api.setFillOpacity(this.page, s, index, value);
-            }
-            this.__repo.commit();
-        } catch (error) {
-            this.__repo.rollback();
-        }
-    }
+            const api = this.__repo.start('setFillsType');
+            for (const action of actions) {
+                if (action.type === FillType.SolidColor) {
+                    console.log(111, action.fill);
 
-    setShapesFillEnabled(actions: BatchAction[]) {
-        const api = this.__repo.start('setShapesFillEnabled');
-        try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, index, value } = actions[i];
-                const s = shape4fill(api, this.view, target);
-                api.setFillEnable(this.page, s, index, value);
-            }
-            this.__repo.commit();
-        } catch (error) {
-            this.__repo.rollback();
-        }
-    }
+                    api.setFillType(action.fill, FillType.SolidColor);
+                } else if (action.type === FillType.Pattern) {
+                    console.log(222, action.fill);
 
-    setShapesFillType(actions: BatchAction[]) {
-        const api = this.__repo.start('setShapesFillType');
-        try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, index, value } = actions[i];
-                const s = shape4fill(api, this.view, target);
-                const fills = s instanceof Shape ? s.style.fills : s.value;
-                api.setFillType(this.page, s, index, value);
-                if (!fills[index].imageScaleMode) {
-                    api.setFillScaleMode(this.page, s, index, types.ImageScaleMode.Fill);
+                    api.setFillType(action.fill, FillType.Pattern);
+                    if (!action.fill.imageScaleMode) api.setFillScaleMode(action.fill, ImageScaleMode.Fill);
+                } else {
+                    console.log(333, action.fill);
+
+                    api.setFillType(action.fill, FillType.Gradient);
+                    initGradient(api, action);
                 }
             }
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
+            throw error;
+        }
+
+        function initGradient(api: Api, action: { fill: Fill, type: string }) {
+            const gradient = action.fill.gradient;
+            if (gradient) {
+                const gCopy = importGradient(exportGradient(gradient));
+                if (action.type === GradientType.Linear && gradient.gradientType !== GradientType.Linear) {
+                    gCopy.from.y = gCopy.from.y - (gCopy.to.y - gCopy.from.y);
+                    gCopy.from.x = gCopy.from.x - (gCopy.to.x - gCopy.from.x);
+                } else if (action.type !== GradientType.Linear && gradient.gradientType === GradientType.Linear) {
+                    gCopy.from.y = gCopy.from.y + (gCopy.to.y - gCopy.from.y) / 2;
+                    gCopy.from.x = gCopy.from.x + (gCopy.to.x - gCopy.from.x) / 2;
+                }
+                if (action.type === GradientType.Radial && gCopy.elipseLength === undefined) gCopy.elipseLength = 1;
+                gCopy.stops[0].color = action.fill.color;
+                gCopy.gradientType = action.type as GradientType;
+                api.setFillGradient(action.fill, gCopy);
+            } else {
+                const stops = new BasicArray<Stop>();
+                const { alpha, red, green, blue } = action.fill.color;
+                stops.push(
+                    new Stop(new BasicArray(), uuid(), 0, new Color(alpha, red, green, blue)),
+                    new Stop(new BasicArray(), uuid(), 1, new Color(0, red, green, blue))
+                );
+                const from = action.type === GradientType.Linear ? { x: 0.5, y: 0 } : { x: 0.5, y: 0.5 };
+                const to = { x: 0.5, y: 1 };
+                let ellipseLength;
+                if (action.type === GradientType.Radial) ellipseLength = 1;
+                const gradient = new Gradient(from as Point2D, to as Point2D, action.type as GradientType, stops, ellipseLength);
+                gradient.stops.forEach((v, i) => {
+                    const idx = new BasicArray<number>();
+                    idx.push(i);
+                    v.crdtidx = idx;
+                })
+                gradient.gradientType = action.type as GradientType;
+                api.setFillGradient(action.fill, gradient);
+            }
         }
     }
 
-    setShapesFillImageScaleMode(actions: BatchAction[]) {
-        const api = this.__repo.start('setShapesFillImageScaleMode');
+    /* 修改填充纯色 */
+    setFillsColor(actions: { fill: Fill, color: Color }[]) {
+        const api = this.__repo.start('setFillsColor');
         try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, index, value } = actions[i];
-                const s = shape4fill(api, this.view, target);
-                api.setFillScaleMode(this.page, s, index, value);
-                if (value === types.ImageScaleMode.Tile) {
-                    const fills = s instanceof Shape ? s.style.fills : s.value;
-                    if (!fills[index].scale) {
-                        api.setFillImageScale(this.page, s, index, 0.5);
-                    }
-                }
-            }
+            for (const action of actions) api.setFillColor(action.fill, action.color);
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
         }
     }
 
-    setShapesFillImageRef(actions: BatchAction[]) {
-        const api = this.__repo.start('setShapesFillImageRef');
+    /* 隐藏与显示一条填充 */
+    setFillsEnabled(fills: Fill[], enable: boolean) {
+        const api = this.__repo.start('setFillsEnabled');
         try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, index, value } = actions[i];
-                const s = shape4fill(api, this.view, target);
-                api.setFillImageRef(this.__document, this.page, s, index, value.urlRef, value.imageMgr);
-                api.setFillImageOriginWidth(this.page, s, index, value.origin.width);
-                api.setFillImageOriginHeight(this.page, s, index, value.origin.height);
+            for (const fill of fills) {
+                api.setFillEnable(fill, enable);
             }
             this.__repo.commit();
         } catch (error) {
@@ -2761,14 +2493,14 @@ export class PageEditor {
                     const index = fills.value.length - 1;
                     if (index < 0) continue;
                     if (!fills.value[index].imageScaleMode) {
-                        api.setFillScaleMode(page, target, index, types.ImageScaleMode.Fill);
+                        api.setFillScaleMode(fills.value[index], types.ImageScaleMode.Fill);
                     }
                     if (fills.value[index].fillType !== FillType.Pattern) {
-                        api.setFillType(page, target, index, FillType.Pattern);
+                        api.setFillType(fills.value[index], FillType.Pattern);
                     }
-                    api.setFillImageRef(document, page, target, index, ref, media);
-                    api.setFillImageOriginWidth(page, target, index, width);
-                    api.setFillImageOriginHeight(page, target, index, height);
+                    api.setFillImageRef(document, fills.value[index], ref, media);
+                    api.setFillImageOriginWidth(fills.value[index], width);
+                    api.setFillImageOriginHeight(fills.value[index], height);
                 } else {
                     const index = fills.length - 1;
                     if (index < 0) {
@@ -2776,14 +2508,14 @@ export class PageEditor {
                         fill.imageRef = ref;
                         fill.setImageMgr(document.mediasMgr);
                         fill.imageScaleMode = types.ImageScaleMode.Fill;
-                        api.addFillAt(page, target, fill, 0);
+                        api.addFillAt(fills, fill, 0);
                     } else {
                         if (fills[index].fillType !== FillType.Pattern) {
-                            api.setFillType(page, target, index, FillType.Pattern);
+                            api.setFillType(fills[index], FillType.Pattern);
                         }
-                        api.setFillImageRef(document, page, target, index, ref, media);
-                        api.setFillImageOriginWidth(page, target, index, width);
-                        api.setFillImageOriginHeight(page, target, index, height);
+                        api.setFillImageRef(document, fills[index], ref, media);
+                        api.setFillImageOriginWidth(fills[index], width);
+                        api.setFillImageOriginHeight(fills[index], height);
                     }
                 }
             }
@@ -2794,68 +2526,20 @@ export class PageEditor {
         }
     }
 
-    setShapesFillImageRotate(actions: BatchAction[]) {
-        const api = this.__repo.start('setShapesFillImageRotate');
-        try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, index, value } = actions[i];
-                const s = shape4fill(api, this.view, target);
-                api.setFillImageRotate(this.page, s, index, value);
-            }
-            this.__repo.commit();
-        } catch (error) {
-            this.__repo.rollback();
-        }
-    }
-
-    setShapesFillImageScale(actions: BatchAction[]) {
-        const api = this.__repo.start('setShapesFillImageScale');
-        try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, index, value } = actions[i];
-                const s = shape4fill(api, this.view, target);
-                api.setFillImageScale(this.page, s, index, value);
-            }
-            this.__repo.commit();
-        } catch (error) {
-            this.__repo.rollback();
-        }
-    }
-
-    setShapesFillEdit(shape: ShapeView, idx: number, edit: boolean) {
+    setShapesFillEdit(fills: Fill[], edit: boolean) {
         const api = this.__repo.start('setShapesFillEdit');
         try {
-            const s = shape4fill(api, this.view, shape);
-            api.setFillEdit(this.page, s, idx, edit);
+            fills.forEach(fill => api.setFillEdit(fill, edit));
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
         }
     }
 
-    setShapesFillFilter(actions: BatchAction[]) {
-        const api = this.__repo.start('setShapesFillFilter');
-        try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, index, value } = actions[i];
-                const s = shape4fill(api, this.view, target);
-                api.setFillImageFilter(this.page, s, index, value.key, value.value);
-            }
-            this.__repo.commit();
-        } catch (error) {
-            this.__repo.rollback();
-        }
-    }
-
-    shapesAddFill(actions: BatchAction2[]) {
+    createFill(actions: { fills: BasicArray<Fill>, fill: Fill, index: number }[]) {
         const api = this.__repo.start('shapesAddFill');
         try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                const s = shape4fill(api, this.view, target);
-                const l = s instanceof Shape ? s.style.fills.length : s.value.length;
-                api.addFillAt(this.page, s, value, l);
-            }
+            actions.forEach(action => api.addFillAt(action.fills, action.fill, action.index));
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
@@ -2881,8 +2565,8 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                api.deleteFills(this.page, adapt2Shape(target), 0, target.style.fills.length);
-                api.addFills(this.page, adapt2Shape(target), value);
+                api.deleteFills(target.style.fills, 0, target.style.fills.length);
+                api.addFills(target.style.fills, value);
                 api.delfillmask(this.__document, this.page, adapt2Shape(target));
             }
             this.__repo.commit();
@@ -2892,15 +2576,10 @@ export class PageEditor {
         }
     }
 
-    shapesDeleteFill(actions: BatchAction3[]) {
+    shapesDeleteFill(actions: { fills: BasicArray<Fill>, index: number }[]) {
         const api = this.__repo.start('shapesDeleteFill');
         try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, index } = actions[i];
-                const s = shape4fill(api, this.view, target);
-                api.deleteFillAt(this.page, s, index);
-                api.delfillmask(this.__document, this.page, adapt2Shape(target));
-            }
+            actions.forEach(action => api.deleteFillAt(action.fills, action.index));
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
@@ -2911,9 +2590,10 @@ export class PageEditor {
         const api = this.__repo.start("shapesDelStyleFill");
         try {
             for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                api.deleteFills(this.page, adapt2Shape(target), 0, target.style.fills.length);
-                api.delfillmask(this.__document, this.page, adapt2Shape(target));
+                const { target } = actions[i];
+                const s = shape4fill(api, this.view, target);
+                api.delfillmask(this.__document, this.page, s);
+                api.deleteFills(target.style.fills, 0, target.getFills().length);
             }
             this.__repo.commit();
         } catch (e) {
@@ -2985,8 +2665,8 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                api.deleteBlur(this.page, adapt2Shape(target));
-                api.addBlur(this.page, adapt2Shape(target), value);
+                api.deleteBlur(target.style);
+                api.addBlur(target.style, value);
                 api.delblurmask(this.__document, this.page, adapt2Shape(target));
             }
             this.__repo.commit();
@@ -3011,13 +2691,12 @@ export class PageEditor {
         }
     }
 
-    shapesDelStyleBlur(actions: BatchAction2[]) {
-        const api = this.__repo.start("shapesDelStyleBlur");
+    shapesDelStyleBlur(shapes: ShapeView[]) {
         try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target } = actions[i];
-                api.deleteBlur(this.page, adapt2Shape(target));
-                api.delblurmask(this.__document, this.page, adapt2Shape(target));
+            const api = this.__repo.start("shapesDelStyleBlur");
+            for (let i = 0; i < shapes.length; i++) {
+                api.deleteBlur(shapes[i].style);
+                api.delblurmask(this.__document, this.page, adapt2Shape(shapes[i]));
             }
             this.__repo.commit();
         } catch (e) {
@@ -3040,30 +2719,29 @@ export class PageEditor {
         }
     }
 
-    shapesDelBorderMask(actions: BatchAction2[]) {
+    shapesDelBorderMask(actions: { border: BorderMaskType, type: ShapeType, style: Style }[]) {
         const api = this.__repo.start("shapesDelBorderMask");
         try {
             for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                const { position, sideSetting } = value as BorderMaskType
-                const side = new BorderSideSetting(sideSetting.sideType, sideSetting.thicknessTop, sideSetting.thicknessLeft, sideSetting.thicknessBottom, sideSetting.thicknessRight);
-                const s = shape4border(api, this.view, target);
-                if (s.type !== ShapeType.Rectangle) {
-                    side.sideType = SideType.Normal;
+                const { border, type, style } = actions[i];
+                const sideSetting = new BorderSideSetting(border.sideSetting.sideType, border.sideSetting.thicknessTop, border.sideSetting.thicknessLeft, border.sideSetting.thicknessBottom, border.sideSetting.thicknessRight);
+                if (type !== ShapeType.Rectangle) {
+                    sideSetting.sideType = SideType.Normal;
                     let number = Math.min(sideSetting.thicknessTop, sideSetting.thicknessLeft, sideSetting.thicknessBottom, sideSetting.thicknessRight)
                     number = number > 0 ? number : 1;
-                    side.thicknessTop = number;
-                    side.thicknessRight = number;
-                    side.thicknessBottom = number;
-                    side.thicknessLeft = number;
+                    sideSetting.thicknessTop = number;
+                    sideSetting.thicknessRight = number;
+                    sideSetting.thicknessBottom = number;
+                    sideSetting.thicknessLeft = number;
                 }
-                if (target.type === ShapeType.Line) {
-                    api.setBorderPosition(this.page, s, BorderPosition.Center);
+                if (type === ShapeType.Line) {
+                    api.setBorderPosition(border, BorderPosition.Center);
                 } else {
-                    api.setBorderPosition(this.page, s, position);
+                    api.setBorderPosition(border, border.position);
                 }
-                api.setBorderSide(this.page, s, side);
-                api.delbordermask(this.__document, this.page, adapt2Shape(target));
+                api.setBorderPosition(border, border.position);
+                api.setBorderSide(border, border.sideSetting);
+                api.delbordermask(this.__document, style);
             }
             this.__repo.commit();
         } catch (e) {
@@ -3117,112 +2795,32 @@ export class PageEditor {
         }
     }
 
-    shapesFillsUnify(actions: BatchAction2[]) {
+    shapesFillsUnify(actions: { shape: ShapeView, fills: BasicArray<Fill>, value: Fill[] }[]) {
         const api = this.__repo.start('shapesFillsUnify'); // 统一多个shape的填充设置。eg:[red, red], [green], [blue, blue, blue] => [red, red], [red, red], [red, red];
         try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                const s = shape4fill(api, this.view, target);
-                // 先清空再填入
-                api.deleteFills(this.page, s, 0, target.style.fills.length); // 清空
-                api.addFills(this.page, s, value); // 填入新的值
+            for (const action of actions) {
+                const { shape, fills, value } = action;
+                const s = shape4fill(api, this.view, shape);
+                api.deleteFills(fills, 0, fills.length); // 清空原有填充
+                api.addFills(fills, value); // 填入新的值
+                api.delfillmask(this.__document, this.page, s);
             }
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
-            // throw new Error(`${error}`);
+            throw error;
         }
     }
 
     //borders
-    setShapesBorderColor(actions: BatchAction[]) {
-        const api = this.__repo.start('setShapesBorderColor');
-        try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, index, value } = actions[i];
-                let s = shape4border(api, this.view, target);
-                if (target.style.borders.fillsMask) {
-                    s = target.style.getStylesMgr()!.getSync(target.style.borders.fillsMask) as any;
-                }
-                api.setBorderColor(this.page, s, index, value);
-            }
-            this.__repo.commit();
-        } catch (error) {
-            this.__repo.rollback();
-        }
-    }
-
-    setShapesBorderEnabled(actions: BatchAction[]) {
-        const api = this.__repo.start('setShapesBorderEnabled');
-        try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, index, value } = actions[i];
-                const s = shape4border(api, this.view, target);
-                api.setBorderEnable(this.page, s, index, value);
-            }
-            this.__repo.commit();
-        } catch (error) {
-            this.__repo.rollback();
-        }
-    }
-
-    setShapesBorderType(actions: BatchAction[]) {
-        const api = this.__repo.start('setShapesBorderType');
-        try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, index, value } = actions[i];
-                const s = shape4border(api, this.view, target);
-                api.setBorderFillType(this.page, s, index, value);
-            }
-            this.__repo.commit();
-        } catch (error) {
-            this.__repo.rollback();
-        }
-    }
-
-    shapesAddBorder(actions: BatchAction2[]) {
-        const api = this.__repo.start('shapesAddBorder');
-        try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                const s = shape4border(api, this.view, target);
-                const l = s instanceof Shape ? s.style.borders?.strokePaints.length : s.value.length;
-                if (l > 0) {
-                    api.addStrokePaint(this.page, s, value, l);
-                } else {
-                    const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
-                    const strokePaints = new BasicArray<Fill>(value);
-                    const border = new Border(types.BorderPosition.Inner, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
-                    api.addBorder(this.page, s, border);
-                }
-            }
-            this.__repo.commit();
-        } catch (error) {
-            console.log(error);
-            this.__repo.rollback();
-        }
-    }
-
-    shapesDeleteBorder(actions: BatchAction3[]) {
-        const api = this.__repo.start('shapesDeleteBorder');
-        try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, index } = actions[i];
-                const s = shape4border(api, this.view, target);
-                api.deleteStrokePaintAt(this.page, s, index);
-            }
-            this.__repo.commit();
-        } catch (error) {
-            this.__repo.rollback();
-        }
-    }
     shapesDeleteAllBorder(shapes: ShapeView[]) {
         const api = this.__repo.start('shapesDeleteAllBorder');
         try {
             for (let i = 0; i < shapes.length; i++) {
                 const shape = shapes[i];
                 const s = shape4border(api, this.view, shape);
-                api.delbordermask(this.__document, this.page, s);
+                const style: Style = s instanceof Shape ? s.style : s.value;
+                api.delbordermask(this.__document, style);
                 api.delBorderFillMask(this.__document, this.page, adapt2Shape(shape), undefined);
                 api.deleteStrokePaints(this.page, s, 0, shape.style.borders.strokePaints.length);
             }
@@ -3238,6 +2836,7 @@ export class PageEditor {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
                 const s = shape4border(api, this.view, target);
+                api.delBorderFillMask(this.__document, this.page, s, undefined);
                 api.deleteStrokePaints(this.page, s, 0, target.style.borders.strokePaints.length);
                 api.addStrokePaints(this.page, s, value);
             }
@@ -3247,20 +2846,29 @@ export class PageEditor {
         }
     }
 
-    setShapesBorderPosition(actions: BatchAction2[]) {
+    setShapesBorderPosition(actions: { shape: ShapeView, position: BorderPosition }[]) {
         const api = this.__repo.start('setShapesBorderPosition');
         try {
             for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                if (target.type === ShapeType.Table) continue;
-                const id = target.style.bordersMask!;
-                const s = shape4border(api, this.view, target);
-                if (id) {
-                    const borderMask = (target.style.getStylesMgr()?.getSync(id) as BorderMask).border;
-                    api.setBorderSide(this.page, s, borderMask.sideSetting);
-                    api.delbordermask(this.__document, this.page, s);
-                }
-                api.setBorderPosition(this.page, s, value);
+                const { shape, position } = actions[i];
+                const s = shape4border(api, this.view, shape);
+                const border = shape.getBorders();
+                const b = s instanceof Shape ? s.style.borders : s.value;
+                api.delbordermask(this.__document, shape.style);
+                api.setBorderSide(b, border.sideSetting);
+                api.setBorderPosition(b, position);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapesBorderMaskPosition(actions: { border: BorderMaskType, position: BorderPosition }[]) {
+        const api = this.__repo.start('setShapesBorderPosition');
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { border, position } = actions[i];
+                api.setBorderPosition(border, position);
             }
             this.__repo.commit();
         } catch (error) {
@@ -3276,16 +2884,17 @@ export class PageEditor {
                 const s = shape4border(api, this.view, target);
                 const borders = target.getBorders();
                 if (!borders) continue;
+                const border = s instanceof Shape ? s.style.borders : s.value;
                 const id = target.style.bordersMask!;
                 if (id) {
                     const borderMask = (target.style.getStylesMgr()?.getSync(id) as BorderMask).border;
-                    api.setBorderPosition(this.page, s, borderMask.position);
-                    api.delbordermask(this.__document, this.page, s);
+                    api.setBorderPosition(borderMask, borderMask.position);
+                    api.delbordermask(this.__document, target.style);
                 }
                 const sideType = borders.sideSetting.sideType;
                 switch (sideType) {
                     case SideType.Normal:
-                        api.setBorderSide(this.page, s, new BorderSideSetting(sideType, value, value, value, value));
+                        api.setBorderSide(border, new BorderSideSetting(sideType, value, value, value, value));
                         break;
                     case SideType.Top:
                         api.setBorderThicknessTop(this.page, s, value);
@@ -3300,7 +2909,7 @@ export class PageEditor {
                         api.setBorderThicknessLeft(this.page, s, value);
                         break
                     default:
-                        api.setBorderSide(this.page, s, new BorderSideSetting(sideType, value, value, value, value));
+                        api.setBorderSide(border, new BorderSideSetting(sideType, value, value, value, value));
                         break;
                 }
             }
@@ -3402,8 +3011,8 @@ export class PageEditor {
                     strokePaints.unshift(strokePaint);
                 }
                 const f_s = shape4fill(api, this.view, shape);
-                api.deleteFills(this.page, f_s, 0, shape.style.fills.length);
-                api.addFills(this.page, f_s, fills);
+                api.deleteFills(shape.style.fills, 0, shape.style.fills.length);
+                api.addFills(f_s instanceof Shape ? f_s.style.fills : f_s.value, fills);
                 const b_s = shape4border(api, this.view, shape);
                 api.deleteStrokePaints(this.page, b_s, 0, b.strokePaints.length);
                 api.addStrokePaints(this.page, b_s, strokePaints);
@@ -3429,13 +3038,12 @@ export class PageEditor {
         }
     }
 
-    setShapesBorderSide(actions: BatchAction2[]) {
+    setShapesBorderSide(actions: { border: Border | BorderMaskType, side: BorderSideSetting }[]) {
         const api = this.__repo.start('setShapesBorderSide');
         try {
             for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                const s = shape4border(api, this.view, target);
-                api.setBorderSide(this.page, s, value);
+                const { border, side } = actions[i];
+                api.setBorderSide(border, side);
             }
             this.__repo.commit();
         } catch (error) {
@@ -3557,12 +3165,12 @@ export class PageEditor {
     }
 
     // shadow
-    setShapesShadowOffsetY(actions: BatchAction[]) {
+    setShapesShadowOffsetY(actions: { shadow: Shadow, value: number }[]) {
         try {
             const api = this.__repo.start('setShapesShadowOffsetY');
             for (let i = 0; i < actions.length; i++) {
-                const { target, value, index } = actions[i];
-                api.setShadowOffsetY(this.page, adapt2Shape(target), index, value);
+                const { shadow, value } = actions[i];
+                api.setShadowOffsetY(shadow, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -3570,12 +3178,12 @@ export class PageEditor {
         }
     }
 
-    setShapesShadowOffsetX(actions: BatchAction[]) {
+    setShapesShadowOffsetX(actions: { shadow: Shadow, value: number }[]) {
         try {
             const api = this.__repo.start('setShapesShadowOffsetX');
             for (let i = 0; i < actions.length; i++) {
-                const { target, value, index } = actions[i];
-                api.setShadowOffsetX(this.page, adapt2Shape(target), index, value);
+                const { shadow, value } = actions[i];
+                api.setShadowOffsetX(shadow, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -3583,12 +3191,12 @@ export class PageEditor {
         }
     }
 
-    setShapesShadowSpread(actions: BatchAction[]) {
+    setShapesShadowSpread(actions: { shadow: Shadow, value: number }[]) {
         try {
             const api = this.__repo.start('setShapesShadowSpread');
             for (let i = 0; i < actions.length; i++) {
-                const { target, value, index } = actions[i];
-                api.setShadowSpread(this.page, adapt2Shape(target), index, value);
+                const { shadow, value } = actions[i];
+                api.setShadowSpread(shadow, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -3596,12 +3204,12 @@ export class PageEditor {
         }
     }
 
-    setShapesShadowBlurRadius(actions: BatchAction[]) {
+    setShapesShadowBlurRadius(actions: { shadow: Shadow, value: number }[]) {
         try {
             const api = this.__repo.start('setShapesShadowBlurRadius');
             for (let i = 0; i < actions.length; i++) {
-                const { target, value, index } = actions[i];
-                api.setShadowBlur(this.page, adapt2Shape(target), index, value);
+                const { shadow, value } = actions[i];
+                api.setShadowBlur(shadow, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -3609,12 +3217,12 @@ export class PageEditor {
         }
     }
 
-    setShapesShadowColor(actions: BatchAction[]) {
+    setShapesShadowColor(actions: { shadow: Shadow, color: Color }[]) {
         try {
             const api = this.__repo.start('setShapesShadowColor');
             for (let i = 0; i < actions.length; i++) {
-                const { target, index, value } = actions[i];
-                api.setShadowColor(this.page, adapt2Shape(target), index, value);
+                const { shadow, color } = actions[i];
+                api.setShadowColor(shadow, color);
             }
             this.__repo.commit();
         } catch (error) {
@@ -3622,12 +3230,12 @@ export class PageEditor {
         }
     }
 
-    setShapesShadowPosition(actions: BatchAction[]) {
+    setShapesShadowPosition(actions: { shadow: Shadow, position: types.ShadowPosition }[]) {
         try {
             const api = this.__repo.start('setShapesShadowPosition');
             for (let i = 0; i < actions.length; i++) {
-                const { target, value, index } = actions[i];
-                api.setShadowPosition(this.page, adapt2Shape(target), index, value);
+                const { shadow, position } = actions[i];
+                api.setShadowPosition(shadow, position);
             }
             this.__repo.commit();
         } catch (error) {
@@ -3635,12 +3243,12 @@ export class PageEditor {
         }
     }
 
-    setShapesShadowEnabled(actions: BatchAction[]) {
+    setShapesShadowEnabled(actions: { shadow: Shadow, value: boolean }[]) {
         try {
             const api = this.__repo.start('setShapesShadowEnabled');
             for (let i = 0; i < actions.length; i++) {
-                const { target, index, value } = actions[i];
-                api.setShadowEnable(this.page, adapt2Shape(target), index, value);
+                const { shadow, value } = actions[i];
+                api.setShadowEnable(shadow, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -3648,12 +3256,12 @@ export class PageEditor {
         }
     }
 
-    shapesDeleteShadow(actions: BatchAction3[]) {
+    shapesDeleteShadow(actions: { shadows: Shadow[], index: number }[]) {
         try {
             const api = this.__repo.start('shapesDeleteShadow');
             for (let i = 0; i < actions.length; i++) {
-                const { target, index } = actions[i];
-                api.deleteShadowAt(this.page, adapt2Shape(target), index);
+                const { shadows, index } = actions[i];
+                api.deleteShadowAt(shadows, index);
             }
             this.__repo.commit();
         } catch (error) {
@@ -3661,12 +3269,12 @@ export class PageEditor {
         }
     }
 
-    shapesAddShadow(actions: BatchAction2[]) {
+    shapesAddShadow(actions: { shadows: Shadow[], shadow: Shadow }[]) {
         try {
             const api = this.__repo.start('shapesAddShadow');
             for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                api.addShadow(this.page, adapt2Shape(target), value, target.style.shadows.length);
+                const { shadows, shadow } = actions[i];
+                api.addShadow(shadows, shadow);
             }
             this.__repo.commit();
         } catch (error) {
@@ -3678,10 +3286,13 @@ export class PageEditor {
     shapesShadowsUnify(actions: BatchAction2[]) {
         try {
             const api = this.__repo.start('shapesShadowsUnify');
+            console.log(actions, 'actions');
+            
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
                 api.deleteShadows(this.page, adapt2Shape(target), 0, target.style.shadows.length);
                 api.addShadows(this.page, adapt2Shape(target), value);
+                api.delshadowmask(this.__document, this.page, adapt2Shape(target));
             }
             this.__repo.commit();
         } catch (error) {
@@ -3690,14 +3301,12 @@ export class PageEditor {
     }
 
     // shape blur
-    shapesAddBlur(actions: BatchAction2[]) {
+    shapesAddBlur(actions: { style: Basic & { blur?: Blur; }, blur: Blur }[]) {
         try {
             const api = this.__repo.start('shapesAddBlur');
-            const page = this.page;
             for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                const shape = shape4blur(api, target, this.view);
-                api.addBlur(page, shape, value);
+                const { style, blur } = actions[i];
+                api.addBlur(style, blur);
             }
             this.__repo.commit();
         } catch (error) {
@@ -3706,15 +3315,14 @@ export class PageEditor {
         }
     }
 
-    shapesBlurUnify(actions: BatchAction2[]) {
+    shapesBlurUnify(actions: { shape: ShapeView, style: Basic & { blur: Blur | undefined; }, blur: Blur }[]) {
         try {
             const api = this.__repo.start('shapesBlurUnify');
-            const page = this.page;
             for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                const shape = shape4blur(api, target, this.view);
-                api.deleteBlur(page, shape);
-                api.addBlur(page, shape, value);
+                const { shape, style, blur } = actions[i];
+                api.delblurmask(this.__document, this.page, adapt2Shape(shape));
+                api.deleteBlur(style);
+                api.addBlur(style, blur);
             }
             this.__repo.commit();
         } catch (error) {
@@ -3723,14 +3331,10 @@ export class PageEditor {
         }
     }
 
-    shapeDeleteBlur(shapes: ShapeView[]) {
+    shapeDeleteBlur(blurContainers: { style: Basic & { blur?: Blur; } }[]) {
         try {
             const api = this.__repo.start('shapeDeleteBlur');
-            const page = this.page;
-            for (let i = 0; i < shapes.length; i++) {
-                const shape = shape4blur(api, shapes[i], this.view);
-                api.deleteBlur(page, shape);
-            }
+            for (let i = 0; i < blurContainers.length; i++) api.deleteBlur(blurContainers[i].style);
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
@@ -3738,14 +3342,12 @@ export class PageEditor {
         }
     }
 
-    setShapeBlurEnabled(actions: BatchAction2[]) {
+    setShapeBlurEnabled(actions: { blur: Blur, value: boolean }[]) {
         try {
             const api = this.__repo.start('setShapeBlurEnabled');
-            const page = this.page;
             for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                const shape = shape4blur(api, target, this.view);
-                api.shapeModifyBlurEdabled(page, shape, value);
+                const { blur, value } = actions[i];
+                api.shapeModifyBlurEnabled(blur, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -3754,14 +3356,12 @@ export class PageEditor {
         }
     }
 
-    setShapeBlurSaturation(actions: BatchAction2[]) {
+    setShapeBlurSaturation(actions: { blur: Blur, value: number }[]) {
         try {
             const api = this.__repo.start('setShapeBlurSaturation');
-            const page = this.page;
             for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                const shape = shape4blur(api, target, this.view);
-                api.shapeModifyBlurSaturation(page, shape, value);
+                const { blur, value } = actions[i];
+                api.shapeModifyBlurSaturation(blur, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -3770,14 +3370,12 @@ export class PageEditor {
         }
     }
 
-    setShapeBlurType(actions: BatchAction2[]) {
+    setShapeBlurType(actions: { blur: Blur, value: BlurType }[]) {
         try {
             const api = this.__repo.start('setShapeBlurType');
-            const page = this.page;
             for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                const shape = shape4blur(api, target, this.view);
-                api.shapeModifyBlurType(page, shape, value);
+                const { blur, value } = actions[i];
+                api.shapeModifyBlurType(blur, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -3916,7 +3514,7 @@ export class PageEditor {
         }
     }
 
-    setShapesExportFormatPerfix(actions: ExportFormatPrefixAction[]) {
+    setShapesExportFormatPrefix(actions: ExportFormatPrefixAction[]) {
         try {
             const api = this.__repo.start('setShapesExportFormatPerfix');
             for (let i = 0; i < actions.length; i++) {
@@ -3929,7 +3527,7 @@ export class PageEditor {
         }
     }
 
-    setPageExportFormatPerfix(idx: number, name: ExportFormatNameingScheme) {
+    setPageExportFormatPrefix(idx: number, name: ExportFormatNameingScheme) {
         try {
             const api = this.__repo.start('setPageExportFormatPerfix');
             api.setPageExportFormatPerfix(this.page, idx, name);
@@ -4637,7 +4235,7 @@ export class PageEditor {
                 const style = shape.style;
                 if (style.fills.length) {
                     const s = shape4fill(api, this.view, shapes[i]);
-                    api.setFillColor(page, s, style.fills.length - 1, _color);
+                    // api.setFillColor(style.fills.length - 1, _color);
                     continue;
                 }
                 if (style.borders && style.borders.strokePaints.length) {
@@ -4647,7 +4245,7 @@ export class PageEditor {
                 }
                 const s = shape4fill(api, this.view, shapes[i]);
                 const fill = new Fill(new BasicArray(), uuid(), true, FillType.SolidColor, _color)
-                api.addFillAt(page, s, fill, 0);
+                // api.addFillAt(page, s, fill, 0);
             }
             this.__repo.commit();
         } catch (error) {
@@ -4680,11 +4278,10 @@ export class PageEditor {
                 for (const view of flatten) {
                     // fills
                     {
-                        const s = shape4fill(api, this.view, view);
-                        api.deleteFills(page, s, 0, view.style.fills.length);
+                        api.deleteFills(view.style.fills, 0, view.style.fills.length);
                         if (fills?.length) {
                             const __fills = fills.map((i: Fill) => importFill(i, ctx));
-                            api.addFills(page, s, __fills);
+                            api.addFills(view.getFills(), __fills);
                         }
                     }
                     // borders
@@ -4714,9 +4311,9 @@ export class PageEditor {
                 }
                 // blur
                 {
-                    api.deleteBlur(this.page, shape);
+                    api.deleteBlur(shape.style);
                     if (blur) {
-                        api.addBlur(this.page, shape, importBlur(blur));
+                        api.addBlur(shape.style, importBlur(blur));
                     }
                 }
                 // radius
