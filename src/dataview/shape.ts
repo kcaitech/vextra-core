@@ -385,7 +385,6 @@ export function frame2Parent2(t: Transform, size: ShapeFrame): ShapeFrame {
     return new ShapeFrame(lt.x, lt.y, rb.x - lt.x, rb.y - lt.y);
 }
 
-
 export function updateFrame(frame: ShapeFrame, x: number, y: number, w: number, h: number): boolean {
     if (frame.x !== x || frame.y !== y || frame.width !== w || frame.height !== h) {
         frame.x = x;

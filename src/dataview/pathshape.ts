@@ -52,7 +52,7 @@ export class PathShapeView extends ShapeView {
         const borders = this.getBorders();
         const fills = this.getFills();
         if (!fills.length && borders && borders.strokePaints.some(p => p.isEnabled)) {
-            this.m_border_path = border2path(this, borders);
+            this.m_border_path = border2path(this, borders, this.frame.width, this.frame.height);
             const bbox = this.m_border_path.bbox();
             this.m_border_path_box = new ShapeFrame(bbox.x, bbox.y, bbox.w, bbox.h);
         }

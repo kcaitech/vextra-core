@@ -325,7 +325,7 @@ export class BoolShapeView extends GroupShapeView {
         const borders = this.getBorders();
         const fills = this.getFills();
         if (!fills.length && borders) {
-            this.m_border_path = border2path(this, borders);
+            this.m_border_path = border2path(this, borders, this.frame.width, this.frame.height);
             const bbox = this.m_border_path.bbox();
             this.m_border_path_box = new ShapeFrame(bbox.x, bbox.y, bbox.w, bbox.h);
         }
@@ -342,7 +342,7 @@ const getPath = (shape: ShapeView) => {
         const border = shape.getBorders();
         const isEnabled = border.strokePaints.some(p => p.isEnabled);
         if (isEnabled) {
-            const path = border2path(shape, border);
+            const path = border2path(shape, border, shape.frame.width, shape.frame.height);
             const p0 = gPal.makePalPath(path.toSVGString());
             return Path.fromSVGString(p0.toSVGString());
         }
