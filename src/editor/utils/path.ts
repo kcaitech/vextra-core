@@ -1,16 +1,14 @@
 import { Api } from "../../coop/recordapi";
-import { BorderPosition, ContactForm, CornerType, CurveMode, MarkerType, ShapeType } from "../../data/typesdefine";
+import { BorderPosition, CornerType, CurveMode, MarkerType, ShapeType } from "../../data/typesdefine";
 import { CurvePoint, PathShape, PathShape2, Point2D, Shape } from "../../data/shape";
 import { Page } from "../../data/page";
 import { v4 } from "uuid";
 import { uuid } from "../../basic/uuid";
 import { BasicArray } from "../../data/basic";
 import { Matrix } from "../../basic/matrix";
-import { ContactShape } from "../../data/contact";
-import { get_box_pagexy, get_nearest_border_point } from "../../data/utils";
 import { PathType } from "../../data/consts";
 import { importCurvePoint } from "../../data/baseimport";
-import { Artboard, Border, makeShapeTransform1By2, makeShapeTransform2By1 } from "../../data";
+import { Border, makeShapeTransform1By2, makeShapeTransform2By1 } from "../../data";
 import { ColVector3D } from "../../basic/matrix2";
 import { ContactLineView, PathShapeView, ShapeView } from "../../dataview";
 import { Cap, gPal, IPalPath, Join } from "../../basic/pal";
@@ -18,219 +16,7 @@ import { Path } from "@kcdesign/path";
 import { qua2cube, splitCubicBezierAtT } from "../../data/pathparser";
 import { Transform } from "../../data/transform";
 
-interface XY {
-    x: number
-    y: number
-}
-
 const minimum_WH = 1; // 用户可设置最小宽高值。以防止宽高在缩放后为0
-
-/**
- * @description 以点为操作目标编辑路径
- * @param index 点的数组索引
- * @param end 点的目标🎯位置（root）
- */
-export function pathEdit(api: Api, page: Page, s: PathShape, index: number, end: XY, matrix?: Transform) {
-    // todo 连接线相关操作
-    let m = matrix ? matrix : new Transform();
-    if (!matrix) {
-        const w = s.size.width, h = s.size.height;
-        if (w === 0 || h === 0) throw new Error(); // 不可以为0
-        m.multiAtLeft(s.matrix2Root());
-        m.preScale(w, h);
-        m = (m.inverse);
-    }
-
-    const p = (s as PathShape).pathsegs[0].points[index];
-    if (!p) {
-        return false;
-    }
-    const save = { x: p.x, y: p.y };
-    const _val = m.computeCoord3(end);
-    api.shapeModifyCurvPoint(page, s as PathShape, index, _val, 0);
-    const delta = { x: _val.x - save.x, y: _val.y - save.y };
-    if (!delta.x && !delta.y) {
-        return;
-    }
-    if (p.hasFrom) {
-        api.shapeModifyCurvFromPoint(page, s as PathShape, index, {
-            x: (p.fromX || 0) + delta.x,
-            y: (p.fromY || 0) + delta.y
-        }, 0);
-    }
-    if (p.hasTo) {
-        api.shapeModifyCurvToPoint(page, s as PathShape, index, {
-            x: (p.toX || 0) + delta.x,
-            y: (p.toY || 0) + delta.y
-        }, 0);
-    }
-}
-
-/**
- * @description 多点编辑
- */
-export function pointsEdit(api: Api, page: Page, s: Shape, points: CurvePoint[], indexes: number[], dx: number, dy: number, segment = -1) {
-    for (let i = 0, l = indexes.length; i < l; i++) {
-        const index = indexes[i];
-        const __p = points[index];
-        if (!__p) {
-            continue;
-        }
-        api.shapeModifyCurvPoint(page, s, index, { x: __p.x + dx, y: __p.y + dy }, segment);
-        if (__p.hasFrom) {
-            api.shapeModifyCurvFromPoint(page, s as PathShape, index,
-                {
-                    x: (__p.fromX || 0) + dx,
-                    y: (__p.fromY || 0) + dy
-                },
-                segment
-            );
-        }
-        if (__p.hasTo) {
-            api.shapeModifyCurvToPoint(page, s as PathShape, index,
-                {
-                    x: (__p.toX || 0) + dx,
-                    y: (__p.toY || 0) + dy
-                },
-                segment
-            );
-        }
-    }
-}
-
-/**
- * @description 连接线编辑
- */
-export function contact_edit(api: Api, page: Page, s: ContactShape, index1: number, index2: number, dx: number, dy: number) { // 以边为操作目标编辑路径
-    // todo 连接线相关操作
-    const m = (s.matrix2Root());
-    const w = s.size.width, h = s.size.height;
-
-    m.preScale(w, h);
-
-    const m_in = (m.inverse);  // 图形单位坐标系，0-1
-
-    let p1: { x: number, y: number } = s.points[index1];
-    let p2: { x: number, y: number } = s.points[index2];
-
-    if (!p1 || !p2) {
-        return false;
-    }
-
-    p1 = m.computeCoord2(p1.x, p1.y);
-    p2 = m.computeCoord2(p2.x, p2.y);
-
-    if (dx) {
-        p1.x = p1.x + dx, p2.x = p2.x + dx;
-    }
-    if (dy) {
-        p1.y = p1.y + dy, p2.y = p2.y + dy;
-    }
-
-    p1 = m_in.computeCoord3(p1);
-    p2 = m_in.computeCoord3(p2);
-
-    api.shapeModifyCurvPoint(page, s, index1, p1, 0);
-    api.shapeModifyCurvPoint(page, s, index2, p2, 0);
-}
-
-export function get_points_for_init(page: Page, shape: ContactShape, index: number, points: CurvePoint[]) {
-    let len = points.length;
-    let result = [...points];
-
-    if (index === 0) { // 如果编辑的线为第一根线；
-        const from = shape.from;
-        if (!from) {
-            const p = result[0];
-            result.splice(1, 0, new CurvePoint([1] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight));
-            return result;
-        }
-
-        const fromShape = page.getShape((from as ContactForm).shapeId);
-        if (!fromShape) {
-            const p = result[0];
-            result.splice(1, 0, new CurvePoint([1] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight));
-            return result;
-        }
-
-        const xy_result = get_box_pagexy(fromShape);
-        if (!xy_result) {
-            const p = result[0];
-            result.splice(1, 0, new CurvePoint([1] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight));
-            return result;
-        }
-
-        const { xy1, xy2 } = xy_result;
-        let p = get_nearest_border_point(fromShape, from.contactType, fromShape.matrix2Root(), xy1, xy2);
-        if (!p) {
-            const p = result[0];
-            result.splice(1, 0, new CurvePoint([1] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight));
-            return result
-        }
-
-        const m1 = shape.matrix2Root();
-        const f = shape.size;
-        m1.preScale(f.width, f.height);
-        const m2 = (m1.inverse);
-
-        p = m2.computeCoord3(p);
-        const cp = new CurvePoint([1] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight);
-        const cp2 = new CurvePoint([2] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight);
-        result.splice(1, 0, cp, cp2);
-    }
-    if (index === len - 2) { // 编辑的线为最后一根线；
-        len = result.length; // 更新一下长度，因为部分场景下，编辑的线会同时为第一根线和最后一根线，若是第一根线的话，原数据已经更改，需要在下次更改数据前并判定为最后一根线后去更新result长度。
-        const to = shape.to;
-        if (!to) {
-            const p = points[points.length - 1];
-            result.splice(len - 1, 0, new CurvePoint([len - 1] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight));
-            return result;
-        }
-
-        const toShape = page.getShape((to as ContactForm).shapeId);
-        if (!toShape) {
-            const p = points[points.length - 1];
-            result.splice(len - 1, 0, new CurvePoint([len - 1] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight));
-            return result;
-        }
-
-        const xy_result = get_box_pagexy(toShape);
-        if (!xy_result) {
-            const p = points[points.length - 1];
-            result.splice(len - 1, 0, new CurvePoint([len - 1] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight));
-            return result;
-        }
-
-        const { xy1, xy2 } = xy_result;
-        let p = get_nearest_border_point(toShape, to.contactType, toShape.matrix2Root(), xy1, xy2);
-        if (!p) {
-            const p = points[points.length - 1];
-            result.splice(len - 1, 0, new CurvePoint([len - 1] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight));
-            return result;
-        }
-
-        const m1 = shape.matrix2Root();
-        const f = shape.size;
-        m1.preScale(f.width, f.height);
-        const m2 = (m1.inverse);
-
-        p = m2.computeCoord3(p);
-        const cp = new CurvePoint([len - 1] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight);
-        const cp2 = new CurvePoint([len] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight);
-        result.splice(len - 1, 0, cp, cp2)
-    }
-    return result;
-}
-
-export function before_modify_side(api: Api, page: Page, shape: ContactShape, index: number) {
-    const points = get_points_for_init(page, shape, index, shape.getPoints());
-
-    replace_path_shape_points(page, shape, api, points);
-
-    update_frame_by_points(api, page, shape);
-
-    api.contactModifyEditState(page, shape, true);
-}
 
 export function update_frame_by_points(api: Api, page: Page, s: Shape, reLayout = false) {
     const box = s.boundingBox3();
@@ -301,13 +87,12 @@ export function update_frame_by_points(api: Api, page: Page, s: Shape, reLayout 
  * @param p3 终点
  * @returns
  */
-export function bezierCurvePoint(t: number, p0: XY, p1: XY, p2: XY, p3: XY): XY {
+export function bezierCurvePoint(t: number, p0: Point2D, p1: Point2D, p2: Point2D, p3: Point2D): Point2D {
     return {
         x: Math.pow(1 - t, 3) * p0.x + 3 * Math.pow(1 - t, 2) * t * p1.x + 3 * (1 - t) * Math.pow(t, 2) * p2.x + Math.pow(t, 3) * p3.x,
         y: Math.pow(1 - t, 3) * p0.y + 3 * Math.pow(1 - t, 2) * t * p1.y + 3 * (1 - t) * Math.pow(t, 2) * p2.y + Math.pow(t, 3) * p3.y
-    };
+    } as Point2D;
 }
-
 
 export function __round_curve_point(points: CurvePoint[], index: number) {
     const previous_index = index === 0 ? points.length - 1 : index - 1;
@@ -320,7 +105,7 @@ export function __round_curve_point(points: CurvePoint[], index: number) {
     }
 }
 
-export function init_curv(order: 2 | 3, shape: Shape, page: Page, api: Api, curve_point: CurvePoint, index: number, segmentIndex: number, init = (Math.sqrt(2) / 4)) {
+export function init_curve(order: 2 | 3, shape: Shape, page: Page, api: Api, curve_point: CurvePoint, index: number, segmentIndex: number, init = (Math.sqrt(2) / 4)) {
     const __shape = shape as PathShape2;
     const points = __shape.pathsegs[segmentIndex]?.points;
 
@@ -381,7 +166,7 @@ export function _typing_modify(shape: Shape, page: Page, api: Api, index: number
     if (!point) return;
 
     if (point.mode === CurveMode.Straight && to_mode !== CurveMode.Straight) {
-        init_curv(3, shape, page, api, point, index, segmentIndex, (Math.sqrt(2) / 4));
+        init_curve(3, shape, page, api, point, index, segmentIndex, (Math.sqrt(2) / 4));
         return;
     }
 
@@ -408,28 +193,15 @@ export function _typing_modify(shape: Shape, page: Page, api: Api, index: number
     }
 }
 
-export function split_cubic_bezier(p0: XY, p1: XY, p2: XY, p3: XY) {
-    const p01 = { x: (p0.x + p1.x) / 2, y: (p0.y + p1.y) / 2 };
-    const p12 = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
-    const p23 = { x: (p2.x + p3.x) / 2, y: (p2.y + p3.y) / 2 };
-    const p012 = { x: (p01.x + p12.x) / 2, y: (p01.y + p12.y) / 2 };
-    const p123 = { x: (p12.x + p23.x) / 2, y: (p12.y + p23.y) / 2 };
-    const p0123 = { x: (p012.x + p123.x) / 2, y: (p012.y + p123.y) / 2 };
-    return [
-        [p0, p01, p012, p0123],
-        [p0123, p123, p23, p3]
-    ];
-}
-
 function is_curve(p: CurvePoint, n: CurvePoint) {
     return p.hasFrom || n.hasTo;
 }
 
 function get_curve(p: CurvePoint, n: CurvePoint) {
-    const start = { x: p.x, y: p.y };
-    const from = { x: 0, y: 0 };
-    const to = { x: 0, y: 0 };
-    const end = { x: n.x, y: n.y };
+    const start = { x: p.x, y: p.y } as Point2D;
+    const from = { x: 0, y: 0 } as Point2D;
+    const to = { x: 0, y: 0 } as Point2D;
+    const end = { x: n.x, y: n.y } as Point2D;
 
     if (p.hasFrom && n.hasTo) {
         from.x = p.fromX!;
@@ -465,7 +237,7 @@ function get_node_xy_by_round(p: CurvePoint, n: CurvePoint) {
     }
 }
 
-function modify_previous_from_by_slice(page: Page, api: Api, path_shape: Shape, slice: XY[], previous: CurvePoint, index: number, segmentIndex: number) {
+function modify_previous_from_by_slice(page: Page, api: Api, path_shape: Shape, slice: Point2D[], previous: CurvePoint, index: number, segmentIndex: number) {
     if (!previous.hasTo) {
         api.modifyPointHasFrom(page, path_shape, index, true, segmentIndex);
     }
@@ -478,7 +250,7 @@ function modify_previous_from_by_slice(page: Page, api: Api, path_shape: Shape, 
     api.shapeModifyCurvFromPoint(page, path_shape, index, slice[1], segmentIndex);
 }
 
-function modify_next_to_by_slice(page: Page, api: Api, path_shape: Shape, slice: XY[], next: CurvePoint, index: number, segmentIndex: number) {
+function modify_next_to_by_slice(page: Page, api: Api, path_shape: Shape, slice: Point2D[], next: CurvePoint, index: number, segmentIndex: number) {
     if (!next.hasTo) {
         api.modifyPointHasTo(page, path_shape, index, true, segmentIndex);
     }
@@ -491,7 +263,7 @@ function modify_next_to_by_slice(page: Page, api: Api, path_shape: Shape, slice:
     api.shapeModifyCurvToPoint(page, path_shape, index, slice[2], segmentIndex);
 }
 
-function modify_current_handle_slices(page: Page, api: Api, path_shape: Shape, slices: XY[][], index: number, segmentIndex: number) {
+function modify_current_handle_slices(page: Page, api: Api, path_shape: Shape, slices: Point2D[][], index: number, segmentIndex: number) {
     api.modifyPointHasTo(page, path_shape, index, true, segmentIndex);
     api.modifyPointHasFrom(page, path_shape, index, true, segmentIndex);
     api.shapeModifyCurvToPoint(page, path_shape, index, slices[0][2], segmentIndex);
@@ -514,8 +286,7 @@ export function after_insert_point(page: Page, api: Api, path_shape: Shape, inde
 
     api.modifyPointCurveMode(page, path_shape, index, CurveMode.Asymmetric, __segment);
     const { start, from, to, end } = get_curve(previous, next);
-    // const slices = split_cubic_bezier(start, from, to, end);
-    const slices = splitCubicBezierAtT(start, from, to, end, apex?.t ?? 0.5);
+    const slices = splitCubicBezierAtT(start, from, to, end, apex?.t ?? 0.5) as Point2D[][];
     modify_previous_from_by_slice(page, api, path_shape, slices[0], previous, previous_index, __segment);
     modify_next_to_by_slice(page, api, path_shape, slices[1], next, next_index, __segment);
     modify_current_handle_slices(page, api, path_shape, slices, index, __segment);
@@ -540,18 +311,7 @@ export function __pre_curve(order: 2 | 3, page: Page, api: Api, path_shape: Shap
         }
     }
 
-    init_curv(order, path_shape, page, api, point, index, segmentIndex, 0.01);
-}
-
-export function replace_path_shape_points(page: Page, shape: PathShape, api: Api, points: CurvePoint[]) {
-    // todo 连接线相关操作
-    api.deletePoints(page, shape as PathShape, 0, shape.pathsegs[0].points.length, 0);
-    for (let i = 0, len = points.length; i < len; i++) {
-        const p = importCurvePoint((points[i]));
-        p.id = v4();
-        points[i] = p;
-    }
-    api.addPoints(page, shape as PathShape, points, 0);
+    init_curve(order, path_shape, page, api, point, index, segmentIndex, 0.01);
 }
 
 export function modify_points_xy(api: Api, page: Page, s: Shape, actions: {
@@ -613,7 +373,7 @@ export function getPolygonVertices(sidesCount: number, offsetPercent?: number) {
     return vertices;
 }
 
-export function getPolygonPoints(counts: XY[], radius?: number) {
+export function getPolygonPoints(counts: { x: number, y: number }[], radius?: number) {
     const curvePoint = new BasicArray<CurvePoint>();
     for (let i = 0; i < counts.length; i++) {
         const count = counts[i];
@@ -637,81 +397,7 @@ export function calculateInnerAnglePosition(percent: number, angle: number) {
     return { x: newX, y: newY };
 }
 
-export function borders2path(shape: ShapeView, border: Border | undefined): Path {
-    // 还要判断边框的位置
-    let insidewidth = 0;
-    let outsidewidth = 0;
-    if (border) {
-        const isEnabled = border.strokePaints.some(p => p.isEnabled);
-        if (isEnabled) {
-            const sideSetting = border.sideSetting;
-            // todo
-            const thickness = (sideSetting.thicknessBottom + sideSetting.thicknessLeft + sideSetting.thicknessTop + sideSetting.thicknessRight) / 4;
-            if (border.position === BorderPosition.Center) {
-                insidewidth = Math.max(insidewidth, thickness / 2);
-                outsidewidth = Math.max(outsidewidth, thickness / 2);
-            } else if (border.position === BorderPosition.Inner) {
-                insidewidth = Math.max(insidewidth, thickness);
-            } else if (border.position === BorderPosition.Outer) {
-                outsidewidth = Math.max(outsidewidth, thickness);
-            }
-        }
-    }
-
-    if (insidewidth === 0 && outsidewidth === 0) return new Path();
-
-    if (insidewidth === outsidewidth) {
-        const path = shape.getPath();
-        const p0 = gPal.makePalPath(path.toString());
-        const newpath = p0.stroke({ width: (insidewidth + outsidewidth) });
-        p0.delete();
-        return Path.fromSVGString(newpath);
-    }
-    if (insidewidth === 0) {
-        const path = shape.getPathStr();
-        const p0 = gPal.makePalPath(path);
-        const p1 = gPal.makePalPath(path);
-        p0.stroke({ width: outsidewidth * 2 });
-        p0.subtract(p1);
-        const newpath = p0.toSVGString();
-        p0.delete();
-        p1.delete();
-        return Path.fromSVGString(newpath);
-    } else if (outsidewidth === 0) {
-        const path = shape.getPathStr();
-        const p0 = gPal.makePalPath(path);
-        const p1 = gPal.makePalPath(path);
-        // p0.dash(10, 10, 1);
-        p0.stroke({ width: insidewidth * 2 });
-        p0.intersection(p1);
-        const newpath = p0.toSVGString();
-        p0.delete();
-        p1.delete();
-        return Path.fromSVGString(newpath);
-    } else {
-        const path = shape.getPathStr();
-        const p0 = gPal.makePalPath(path);
-        const p1 = gPal.makePalPath(path);
-        const p2 = gPal.makePalPath(path);
-
-        p0.stroke({ width: insidewidth * 2 });
-        p1.stroke({ width: outsidewidth * 2 });
-
-        if (insidewidth > outsidewidth) {
-            p0.intersection(p2);
-        } else {
-            p1.subtract(p2);
-        }
-        p0.union(p1);
-        const newpath = p0.toSVGString();
-        p0.delete();
-        p1.delete();
-        p2.delete();
-        return Path.fromSVGString(newpath);
-    }
-}
-
-export function border2path(shape: ShapeView, border: Border) {
+export function border2path(shape: ShapeView, border: Border, width: number, height: number) {
     const stack: IPalPath[] = [];
 
     const make = (path: string) => {
@@ -727,10 +413,7 @@ export function border2path(shape: ShapeView, border: Border) {
     const startMarker = shape.startMarkerType;
     const endMarker = shape.endMarkerType;
 
-    const width = shape.frame.width;
-    const height = shape.frame.height;
-
-    // 尺寸小于或等于14，会出现线条走样😵，这里把它放到到20，返回出去的时候再等比例放回来
+    // 尺寸小于或等于14，会出现线条走样，这里把它放到到20，返回出去的时候再等比例放回来
     const radio = Math.min(width / 20, height / 20);
 
     const mark = (shape instanceof PathShapeView)
@@ -836,16 +519,16 @@ export function border2path(shape: ShapeView, border: Border) {
             const deltaY = (next.y - pre.y) * height;
             return Math.atan2(deltaY, deltaX);
         } else {
-            const p0 = { x: pre.x * width, y: pre.y * height };
-            const p3 = { x: next.x * width, y: next.y * height };
+            const p0 = { x: pre.x * width, y: pre.y * height } as Point2D;
+            const p3 = { x: next.x * width, y: next.y * height } as Point2D;
 
-            const p1 = { x: (pre.fromX || pre.x) * width, y: (pre.fromY || pre.y) * height };
-            const p2 = { x: (next.toX || next.x) * width, y: (next.toY || next.y) * height }
+            const p1 = { x: (pre.fromX || pre.x) * width, y: (pre.fromY || pre.y) * height } as Point2D;
+            const p2 = { x: (next.toX || next.x) * width, y: (next.toY || next.y) * height } as Point2D;
 
             return tangent(p0, p1, p2, p3, isEnd ? 1 : 0);
         }
 
-        function tangent(p0: XY, p1: XY, p2: XY, p3: XY, t: number) {
+        function tangent(p0: Point2D, p1: Point2D, p2: Point2D, p3: Point2D, t: number) {
             if (pre.fromX !== undefined && next.toX !== undefined) {
                 const tangent = {
                     x: 3 * (1 - t) ** 2 * (p1.x - p0.x) + 6 * (1 - t) * t * (p2.x - p1.x) + 3 * t ** 2 * (p3.x - p2.x),

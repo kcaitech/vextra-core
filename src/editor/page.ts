@@ -154,7 +154,7 @@ import { unable_to_migrate } from "./utils/migrate";
 import {
     adapt2Shape,
     ArtboardView,
-    BoolShapeView,
+    BoolShapeView, ContactLineView,
     CutoutShapeView,
     GroupShapeView,
     PageView,
@@ -4603,6 +4603,7 @@ export class PageEditor {
             const __shapes = __flatten(shapes);
 
             for (const view of __shapes) {
+                if (view instanceof ContactLineView) continue;
                 if (view instanceof TextShapeView) {
                     const shape = adapt2Shape(view) as TextShape;
                     const path = view.getTextPath();
@@ -4648,7 +4649,7 @@ export class PageEditor {
                             if (fill.fillType === FillType.Pattern) fill.fillType = FillType.SolidColor;
                             style.fills = new BasicArray<Fill>(fill);
                         }
-                        const path = border2path(view, border);
+                        const path = border2path(view, border, view.frame.width, view.frame.height);
                         let pathshape = newPathShape(view.name + suffix, view.frame, path, style);
                         pathshape.transform = shape.transform.clone();
                         pathshape.mask = shape.mask;
