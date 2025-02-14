@@ -263,12 +263,8 @@ function getPointForSolid(pageView: PageView, view: ContactLineView, index: numb
             return result
         }
 
-        const m1 = view.matrix2Root();
-        const f = view.size;
-        m1.preScale(f.width, f.height);
-        const m2 = (m1.inverse);
-
-        p = m2.computeCoord3(p);
+        const m1 = view.matrix2Root().inverse;
+        p = m1.computeCoord3(p);
         const cp = new CurvePoint([1] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight);
         const cp2 = new CurvePoint([2] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight);
         result.splice(1, 0, cp, cp2);
