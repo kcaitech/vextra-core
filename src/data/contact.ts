@@ -1,4 +1,4 @@
-import { Style } from "./style";
+import { BorderPosition, Style } from "./style";
 import { Text } from "./text/text";
 import * as classes from "./baseclasses"
 import { BasicArray } from "./basic";
