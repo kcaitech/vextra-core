@@ -11,7 +11,8 @@ import {
     ScrollDirection, Shadow, ShadowPosition, Shape,
     ShapeFrame, ShapeSize, ShapeType, SymbolRefShape,
     SymbolShape, Transform, Variable, VariableType, BlurMask, BorderMask, FillMask, ShadowMask,
-    RadiusMask
+    RadiusMask,
+    RadiusType
 } from "../data";
 import { findOverrideAndVar } from "./basic";
 import { EL, elh } from "./el";
@@ -1353,13 +1354,24 @@ export class ShapeView extends DataView {
         if (this.radiusMask) {
             const mgr = this.style.getStylesMgr()!;
             const mask = mgr.getSync(this.radiusMask) as RadiusMask
-            _radius = mask.radius;
+            _radius = [...mask.radius];
             this.watchRadiusMask(mask);
         } else {
             _radius = [this.fixedRadius ?? 0]
             this.unwatchRadiusMask();
+            if (this.radiusType === RadiusType.Rect && _radius.length === 1) {
+                _radius = [_radius[0], _radius[0], _radius[0], _radius[0]];
+            }
         }
         return _radius
+    }
+
+    get maskRadius(): number[] | undefined {
+        if (this.radiusMask) {
+            const mgr = this.style.getStylesMgr()!;
+            const mask = mgr.getSync(this.radiusMask) as RadiusMask
+            return mask.radius;
+        }
     }
 
     get radiusType() {

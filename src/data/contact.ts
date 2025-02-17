@@ -1,4 +1,4 @@
-import { Style } from "./style";
+import { RadiusMask, Style } from "./style";
 import { Text } from "./text/text";
 import * as classes from "./baseclasses"
 import { BasicArray } from "./basic";
@@ -7,7 +7,7 @@ import { ShapeType, CurvePoint, ShapeFrame } from "./baseclasses"
 import { parsePath } from "./pathparser";
 import { ContactForm, ContactType, PathSegment } from "./baseclasses";
 import { gen_matrix1, gen_path, handle_contact_from, handle_contact_to, path_for_edited, path_for_free_contact, path_for_free_end_contact, path_for_free_start_contact, slice_invalid_point } from "./utils";
-import {PathShape, Shape, Transform, ShapeSize} from "./shape";
+import { PathShape, Shape, Transform, ShapeSize } from "./shape";
 import { Page } from "./page";
 import { RadiusType } from "./consts";
 import { Path } from "@kcdesign/path";

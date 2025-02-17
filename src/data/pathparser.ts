@@ -42,8 +42,8 @@ function bezierCurvePointAtT(p0: Point2D, p1: Point2D, p2: Point2D, p3: Point2D,
  * @description 二次曲线转三次曲线
  */
 export function qua2cube(p0: Point2D, p1: Point2D, p2: Point2D) {
-    const p3 = {x: p0.x / 3 + 2 * p1.x / 3, y: p0.y / 3 + 2 * p1.y / 3}
-    const p4 = {x: p2.x / 3 + 2 * p1.x / 3, y: p2.y / 3 + 2 * p1.y / 3}
+    const p3 = { x: p0.x / 3 + 2 * p1.x / 3, y: p0.y / 3 + 2 * p1.y / 3 }
+    const p4 = { x: p2.x / 3 + 2 * p1.x / 3, y: p2.y / 3 + 2 * p1.y / 3 }
     return [p0, p3, p4, p2];
 }
 
@@ -51,14 +51,14 @@ function getCubic(start: CurvePoint, end: CurvePoint): Point2D[] {
     if (start.hasFrom && end.hasTo) {
         return [
             start,
-            {x: start.fromX ?? 0, y: start.fromY ?? 0},
-            {x: end.toX ?? 0, y: end.toY ?? 0},
+            { x: start.fromX ?? 0, y: start.fromY ?? 0 },
+            { x: end.toX ?? 0, y: end.toY ?? 0 },
             end,
         ];
     } else if (start.hasFrom) {
-        return qua2cube(start, {x: start.fromX ?? 0, y: start.fromY ?? 0}, end);
+        return qua2cube(start, { x: start.fromX ?? 0, y: start.fromY ?? 0 }, end);
     } else {
-        return qua2cube(start, {x: end.toX ?? 0, y: end.toY ?? 0}, end);
+        return qua2cube(start, { x: end.toX ?? 0, y: end.toY ?? 0 }, end);
     }
 }
 
@@ -105,9 +105,9 @@ function distanceTo(p0: Point2D, p1: Point2D) {
 }
 
 function calcAngleABC(A: CurvePoint, B: CurvePoint, C: CurvePoint, size: { width: number, height: number }) {
-    const a: Point2D = {x: (B.toX ?? A.x) * size.width, y: (B.toY ?? A.y) * size.height};
-    const b: Point2D = {x: B.x * size.width, y: B.y * size.height};
-    const c: Point2D = {x: (B.fromX ?? C.x) * size.width, y: (B.fromY ?? C.y) * size.height};
+    const a: Point2D = { x: (B.toX ?? A.x) * size.width, y: (B.toY ?? A.y) * size.height };
+    const b: Point2D = { x: B.x * size.width, y: B.y * size.height };
+    const c: Point2D = { x: (B.fromX ?? C.x) * size.width, y: (B.fromY ?? C.y) * size.height };
     const ab = distanceTo(a, b);
     const bc = distanceTo(b, c);
     const ac = distanceTo(c, a);
@@ -117,12 +117,12 @@ function calcAngleABC(A: CurvePoint, B: CurvePoint, C: CurvePoint, size: { width
 // 用向量表示坐标上的两个点
 function norm(p: Point2D) {
     const d = Math.hypot(p.x, p.y);
-    return {x: p.x / d, y: p.y / d};
+    return { x: p.x / d, y: p.y / d };
 }
 
 // add、minus、multiply为向量运算
 function add(p: Point2D, pt: Point2D) {
-    return {x: p.x + pt.x, y: p.y + pt.y};
+    return { x: p.x + pt.x, y: p.y + pt.y };
 }
 function minus(p0: Point2D, p1: Point2D): Point2D {
     return { x: p0.x - p1.x, y: p0.y - p1.y };
@@ -134,7 +134,7 @@ function multiply(p: Point2D, d: number): Point2D {
 /**
  * @require 分析函数之前，需要熟悉路径的表示、二次三次贝塞尔曲线的表示、圆角的表示、向量、三角函数
  */
-export function parsePath(points: CurvePoint[], isClosed: boolean, width: number, height: number, fixedRadius: number = 0): Path {
+export function parsePath(points: CurvePoint[], isClosed: boolean, width: number, height: number, fixedRadius: number = 0, maskRadius?: number[]): Path {
     const len = points.length;
     if (len < 2) return new Path();
 
@@ -174,8 +174,8 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, width: number
         return !!(curvePoint.radius ?? fixedRadius);
     }
 
-    function getBaseRadius(point: CurvePoint) {
-        return point.radius ?? fixedRadius;
+    function getBaseRadius(point: CurvePoint, mask_radius?: number) {
+        return mask_radius ?? point.radius ?? fixedRadius;
     }
     /**
      * corner radius 可能非常大，绘制的时候需要加以限制。
@@ -194,11 +194,18 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, width: number
         const nextPoint = transformedPoints[nextIndex];
         const lenAB = distanceTo(curPoint, prePoint);
         const lenBC = distanceTo(curPoint, nextPoint);
-        const radian = calcAngleABC(pre, cur, next,{width,height}); // todo 检查一下什么情况下会是NaN
+        const radian = calcAngleABC(pre, cur, next, { width, height }); // todo 检查一下什么情况下会是NaN
         if (Number.isNaN(radian)) return;
         // 计算相切的点距离 curPoint 的距离， 在 radian 为 90 deg 的时候和 radius 相等。
         const tangent = Math.tan(radian / 2);
-        let radius = getBaseRadius(cur);
+
+        // 圆角样式
+        let mask_radius = maskRadius ? maskRadius[0] : undefined;
+        if (maskRadius && maskRadius.length > 1) {
+            mask_radius = maskRadius[idx];
+        }
+
+        let radius = getBaseRadius(cur, mask_radius);
         let dist = radius / tangent;
         const minDist = (() => {
             const pr = getBaseRadius(pre);
@@ -212,7 +219,7 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, width: number
             dist = minDist;
         }
         const kappa = (4 / 3) * Math.tan((Math.PI - radian) / 4); // todo 这个值在非直线的情况下不准确
-        radiusCache[idx] = {radius: dist, offset: radius * kappa};
+        radiusCache[idx] = { radius: dist, offset: radius * kappa };
         return radiusCache[idx];
     }
 
@@ -220,7 +227,7 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, width: number
         if (fromCache[idx]) return fromCache[idx];
         const radiusInfo = getRadiusInfo(idx);
         if (!radiusInfo) return;
-        const {radius, offset} = radiusInfo;
+        const { radius, offset } = radiusInfo;
         const nextIndex = idx === len - 1 ? 0 : idx + 1;
         const cur = points[idx];
         const next = points[nextIndex];
@@ -234,7 +241,7 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, width: number
             const vec = norm(minus(handle, apex));                      // 方向为apex指向handle的向量
             const handleForCorner = add(multiply(vec, offset), apex);   // 以apex为起点，与vec的方向相同，大小为offset的向量(从apex出发，往handle的方向偏移offset)
             const curve = slices[1];
-            fromCache[idx] = {apex, handleForCorner, curve};
+            fromCache[idx] = { apex, handleForCorner, curve };
             return fromCache[idx];
         } else {
             const curPoint = transformedPoints[idx];
@@ -242,7 +249,7 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, width: number
             const vec = norm(minus(nextPoint, curPoint));               // 方向为cur指向next的向量
             const apex = add(multiply(vec, radius), curPoint);          // 以cur为起点与vec方向相同，大小为radius的向量，这个加法运算中vec起到指定方向的作用
             const handleForCorner = add(multiply(vec, -offset), apex);  // 以apex为起点，与vec的方向相反，大小为offset的向量
-            fromCache[idx] = {apex, handleForCorner};
+            fromCache[idx] = { apex, handleForCorner };
             return fromCache[idx];
         }
     }
@@ -259,18 +266,18 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, width: number
             const handle = slices[1][1];
             const vec = norm(minus(handle, apex));
             const handleForCorner = add(multiply(vec, radiusInfo.offset), apex);
-            return {apex, handleForCorner};
+            return { apex, handleForCorner };
         } else {
             const curPoint = transformedPoints[idx];
             const preIndex = idx === 0 ? len - 1 : idx - 1;
             const prePoint = transformedPoints[preIndex];
 
-            const {radius, offset} = radiusInfo;
+            const { radius, offset } = radiusInfo;
             const vec = norm(minus(prePoint, curPoint));
             const apex = add(multiply(vec, radius), curPoint);
             const handleForCorner = add(multiply(vec, -offset), apex);
 
-            return {apex, handleForCorner};
+            return { apex, handleForCorner };
         }
     }
 

@@ -5,6 +5,7 @@ import {
     PathShape,
     PathShape2,
     RadiusMask,
+    RadiusType,
     ShapeFrame,
     ShapeType,
     Transform
@@ -333,11 +334,11 @@ export class PathShapeView extends ShapeView {
     }
 
     get radius(): number[] {
-        let _radius: number[];
+        let _radius: number[] = [];
         if (this.radiusMask) {
             const mgr = this.style.getStylesMgr()!;
             const mask = mgr.getSync(this.radiusMask) as RadiusMask
-            _radius = [mask.radius[0]];
+            _radius = [...mask.radius];
             this.watchRadiusMask(mask);
         } else {
             this.unwatchRadiusMask();
@@ -347,9 +348,14 @@ export class PathShapeView extends ShapeView {
             const firstR = points[0]?.radius ?? 0;
             for (const p of points) {
                 const radius = p.radius ?? 0;
-                if (radius !== p.radius) return _radius = [-1];
+                if (radius !== firstR && this.radiusType !== RadiusType.Rect) return _radius = [-1];
+
+                if (this.radiusType === RadiusType.Rect) {
+                    _radius.push(radius);
+                } else {
+                    _radius = [firstR ?? (this.fixedRadius ?? 0)];
+                }
             }
-            _radius = [firstR || (this.fixedRadius ?? 0)];
         }
         return _radius
 
