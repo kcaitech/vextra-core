@@ -1626,7 +1626,7 @@ export class PageEditor {
                         const points = shape.pathsegs[0].points;
                         for (let _i = 0; _i < 4; _i++) {
                             const val = values[_i];
-                            if (points[_i].radius === val || val < 0) continue;
+                            if (val < 0) continue;
 
                             api.modifyPointCornerRadius(page, shape, _i, val, 0);
                         }
@@ -2719,15 +2719,15 @@ export class PageEditor {
         }
     }
 
-    shapesDelBorderMask(actions: { border: BorderMaskType, type: ShapeType, style: Style }[]) {
+    shapesDelBorderMask(actions: { target: ShapeView, border: BorderMaskType, type: ShapeType, style: Style }[]) {
         const api = this.__repo.start("shapesDelBorderMask");
         try {
             for (let i = 0; i < actions.length; i++) {
-                const { border, type, style } = actions[i];
+                const { target, border, type, style } = actions[i];
                 const sideSetting = new BorderSideSetting(border.sideSetting.sideType, border.sideSetting.thicknessTop, border.sideSetting.thicknessLeft, border.sideSetting.thicknessBottom, border.sideSetting.thicknessRight);
                 if (type !== ShapeType.Rectangle) {
                     sideSetting.sideType = SideType.Normal;
-                    let number = Math.min(sideSetting.thicknessTop, sideSetting.thicknessLeft, sideSetting.thicknessBottom, sideSetting.thicknessRight)
+                    let number = sideSetting.thicknessTop || sideSetting.thicknessLeft || sideSetting.thicknessBottom || sideSetting.thicknessRight;
                     number = number > 0 ? number : 1;
                     sideSetting.thicknessTop = number;
                     sideSetting.thicknessRight = number;
@@ -2735,12 +2735,12 @@ export class PageEditor {
                     sideSetting.thicknessLeft = number;
                 }
                 if (type === ShapeType.Line) {
-                    api.setBorderPosition(border, BorderPosition.Center);
+                    api.setBorderPosition(target.style.borders, BorderPosition.Center);
                 } else {
-                    api.setBorderPosition(border, border.position);
+                    api.setBorderPosition(target.style.borders, border.position);
                 }
-                api.setBorderPosition(border, border.position);
-                api.setBorderSide(border, border.sideSetting);
+                api.setBorderPosition(target.style.borders, border.position);
+                api.setBorderSide(target.style.borders, sideSetting);
                 api.delbordermask(this.__document, style);
             }
             this.__repo.commit();
@@ -2909,7 +2909,7 @@ export class PageEditor {
                         api.setBorderThicknessLeft(this.page, s, value);
                         break
                     default:
-                        api.setBorderSide(border, new BorderSideSetting(sideType, value, value, value, value));
+                        api.setBorderSide(border, new BorderSideSetting(SideType.Normal, value, value, value, value));
                         break;
                 }
             }
@@ -3287,7 +3287,7 @@ export class PageEditor {
         try {
             const api = this.__repo.start('shapesShadowsUnify');
             console.log(actions, 'actions');
-            
+
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
                 api.deleteShadows(this.page, adapt2Shape(target), 0, target.style.shadows.length);
