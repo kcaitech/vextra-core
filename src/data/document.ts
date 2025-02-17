@@ -37,7 +37,6 @@ function getTextFromGroupShape(shape: GroupShape | undefined): string {
 }
 
 export class Document extends DocumentMeta {
-
     // watchable
     public __watcher: Set<((...args: any[]) => void)> = new Set();
     public watch(watcher: ((...args: any[]) => void)): (() => void) {
@@ -61,9 +60,7 @@ export class Document extends DocumentMeta {
         return [this.id];
     }
 
-    /**
-     * for command
-     */
+    /* for command */
     getOpTarget(path: string[]): any {
         if (path.length === 0) throw new Error("path is empty");
         const path0 = path[0];
@@ -111,21 +108,32 @@ export class Document extends DocumentMeta {
     constructor(
         id: string,
         name: string,
-        versionId: string, // 版本id
-        lastCmdId: string, // 此版本最后一个cmd的id
-        pagesList: BasicArray<PageListItem>,
-        symbolregist: BasicMap<string, string>,
         guard: IDataGuard,
-        freesymbols?: BasicMap<string, SymbolShape>
+        source?: {
+            versionId?: string, /* 版本id */
+            lastCmdId?: string, /* 此版本最后一个cmd的id */
+            pageList?: BasicArray<PageListItem>,
+            symbolRegister?: BasicMap<string, string>,
+            freeSymbols?: BasicMap<string, SymbolShape>,
+            connection?: ResourceMgr<Shape>
+        }
     ) {
-        super(id, name, FMT_VER_latest, pagesList ?? new BasicArray(), lastCmdId, symbolregist)
+        const pagesList = source?.pageList ?? new BasicArray();
+        const symbolRegister = source?.symbolRegister ?? new BasicMap<string, string>();
+        const freesymbols = source?.freeSymbols ?? new BasicMap<string, SymbolShape>();
+        const connection = source?.connection ?? new ResourceMgr<Shape>([id, 'connection']);
+        const versionId = source?.versionId ?? "";
+        const lastCmdId = source?.lastCmdId ?? "";
+
+        super(id, name, FMT_VER_latest, pagesList, lastCmdId, symbolRegister)
+
         this.__versionId = versionId;
         this.__name = name;
         this.__pages = new ResourceMgr<Page>([id, 'pages'], (data: Page) => guard.guard(data));
-        this.__symbols = new SymbolMgr([id, 'symbols'], symbolregist, (data: Shape) => guard.guard(data));
+        this.__symbols = new SymbolMgr([id, 'symbols'], symbolRegister, (data: Shape) => guard.guard(data));
         this.__medias = new ResourceMgr<{ buff: Uint8Array, base64: string }>([id, 'medias']);
         this.__styles = new ResourceMgr<Style>([id, 'styles']);
-        this.__connection = new ResourceMgr<Shape>([id, 'connection']);
+        this.__connection = connection;
         this.__correspondent = new SpecialActionCorrespondent();
         this.freesymbols = freesymbols;
         return guard.guard(this);
