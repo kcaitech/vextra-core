@@ -234,7 +234,7 @@ export class SymbolView extends GroupShapeView {
         if (this.radiusMask) {
             const mgr = this.style.getStylesMgr()!;
             const mask = mgr.getSync(this.radiusMask) as RadiusMask
-            _radius = mask.radius;
+            _radius = [...mask.radius];
             this.watchRadiusMask(mask);
         } else {
             _radius = [

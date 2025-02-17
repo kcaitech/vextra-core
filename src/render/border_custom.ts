@@ -514,7 +514,6 @@ const mask_surplus_path = (frame: ShapeSize, r: number[], side: BorderSideSettin
 
 const inner_mask_path = (shape: Shape, sideSetting: BorderSideSetting, iscenter: boolean, radius: number[]) => {
     const { width, height } = shape.size;
-    const r = radius;
     const {thicknessBottom, thicknessTop, thicknessLeft, thicknessRight} = sideSetting;
     const tt = iscenter ? thicknessTop / 2 : thicknessTop;
     const tb = iscenter ? thicknessBottom / 2 : thicknessBottom;
@@ -524,7 +523,7 @@ const inner_mask_path = (shape: Shape, sideSetting: BorderSideSetting, iscenter:
     const p2 = new CurvePoint([] as any, '', 1, 0, CurveMode.Straight);
     const p3 = new CurvePoint([] as any, '', 1, 1, CurveMode.Straight);
     const p4 = new CurvePoint([] as any, '', 0, 1, CurveMode.Straight);
-    const _radius = getCornerSize(r, shape.size);
+    const _radius = getCornerSize(radius, shape.size);
 
     if (_radius[0] > 0) {
         const side = Math.max(tl, tt);
