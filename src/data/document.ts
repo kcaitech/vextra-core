@@ -2,7 +2,7 @@ import { DocumentMeta, PageListItem } from "./baseclasses";
 import { Page } from "./page";
 import { BasicArray, BasicMap, IDataGuard, ResourceMgr, WatchableObject } from "./basic";
 import { Style } from "./style";
-import { GroupShape, Shape, SymbolShape, SymbolUnionShape, TextShape } from "./shape";
+import { GroupShape, Shape, SymbolShape, TextShape } from "./shape";
 import { TableShape } from "./table";
 import { SymbolRefShape } from "./symbolref";
 import { SymbolMgr } from "./symbolmgr";
@@ -36,7 +36,7 @@ function getTextFromGroupShape(shape: GroupShape | undefined): string {
     return result;
 }
 
-export class Document extends (DocumentMeta) {
+export class Document extends DocumentMeta {
 
     // watchable
     public __watcher: Set<((...args: any[]) => void)> = new Set();
@@ -103,6 +103,7 @@ export class Document extends (DocumentMeta) {
     private __symbols: SymbolMgr
     private __styles: ResourceMgr<Style>
     private __medias: ResourceMgr<{ buff: Uint8Array, base64: string }>
+    private __connection: ResourceMgr<Shape>
     private __versionId: string;
     private __name: string;
     __correspondent: SpecialActionCorrespondent; // 额外动作通信
@@ -124,6 +125,7 @@ export class Document extends (DocumentMeta) {
         this.__symbols = new SymbolMgr([id, 'symbols'], symbolregist, (data: Shape) => guard.guard(data));
         this.__medias = new ResourceMgr<{ buff: Uint8Array, base64: string }>([id, 'medias']);
         this.__styles = new ResourceMgr<Style>([id, 'styles']);
+        this.__connection = new ResourceMgr<Shape>([id, 'connection']);
         this.__correspondent = new SpecialActionCorrespondent();
         this.freesymbols = freesymbols;
         return guard.guard(this);
@@ -136,10 +138,6 @@ export class Document extends (DocumentMeta) {
     get pagesMgr() {
         return this.__pages;
     }
-
-    // get artboardMgr() {
-    //     return this.__artboards;
-    // }
 
     get symbolsMgr() {
         return this.__symbols;

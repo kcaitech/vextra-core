@@ -112,13 +112,13 @@ export class ContactLineView extends PathShapeView {
     }
 
     /* ===protected=== */
-    protected renderFills(): EL[] {
-        return [];
-    }
-
-    protected renderBorders(): EL[] {
-        return renderBorders(elh, this.m_data.style, this.getPathStr(), this.m_data);
-    }
+    // protected renderFills(): EL[] {
+    //     return [];
+    // }
+    //
+    // protected renderBorders(): EL[] {
+    //     return renderBorders(elh, this.m_data.style, this.getPathStr(), this.m_data);
+    // }
 
     /* ===public=== */
     fromShape: Shape | undefined;
