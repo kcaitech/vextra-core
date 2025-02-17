@@ -294,6 +294,10 @@ export class LockMouseHandler extends AsyncApiCaller {
 
                 if (shape.isVirtualShape) continue;
 
+                if (shape.radiusMask) {
+                    api.delradiusmask(this.__document, this.page, shape);
+                }
+
                 const isRect = shape.radiusType === RadiusType.Rect;
 
                 if (isRect) {

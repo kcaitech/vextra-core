@@ -270,6 +270,10 @@ export class LinearApi {
                 const shape = adapt2Shape(shapes[i]);
                 const isRect = shape.radiusType === RadiusType.Rect;
 
+                if (shape.radiusMask) {
+                    api.delradiusmask(this.__document, this.page, shape);
+                }
+
                 let needUpdateFrame = false;
 
                 if (isRect) {
