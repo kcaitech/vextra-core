@@ -7,7 +7,6 @@ import {
     BorderPosition,
     ContextSettings,
     CornerRadius,
-    CurvePoint,
     ExportOptions,
     Fill,
     FillType,
@@ -18,7 +17,6 @@ import {
     OverlayPosition,
     OverrideType,
     PathShape,
-    Point2D,
     PrototypeInterAction,
     PrototypeStartingPoint,
     ResizingConstraints2,
@@ -38,7 +36,6 @@ import {
 } from "../data";
 import { findOverrideAndVar } from "./basic";
 import { EL, elh } from "./el";
-import { Matrix } from "../basic/matrix";
 import { DataView } from "./view"
 import { DViewCtx, PropsType } from "./viewctx";
 import { objectId } from "../basic/objectid";
@@ -52,15 +49,6 @@ import { findOverrideAll } from "../data/utils";
 import { Path } from "@kcdesign/path";
 import { isEqual } from "../basic/number_utils";
 
-export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
-    return (
-        !isEqual(lsh.x, rsh.x) ||
-        !isEqual(lsh.y, rsh.y) ||
-        !isEqual(lsh.width, rsh.width) ||
-        !isEqual(lsh.height, rsh.height)
-    );
-}
-
 export function isDiffShapeSize(lsh: ShapeSize | undefined, rsh: ShapeSize | undefined) {
     if (lsh === rsh) { // both undefined
         return false;
@@ -73,7 +61,6 @@ export function isDiffShapeSize(lsh: ShapeSize | undefined, rsh: ShapeSize | und
         !isEqual(lsh.height, rsh.height)
     );
 }
-
 
 export function isDiffScale(lhs: { x: number, y: number } | undefined, rhs: {
     x: number,
@@ -104,11 +91,6 @@ export function isDiffVarsContainer(lhs: (SymbolRefShape | SymbolShape)[] | unde
         }
     }
     return false;
-}
-
-export function isNoScale(trans: { x: number, y: number } | undefined): boolean {
-    // return !trans || trans.matrix.isIdentity()
-    return !trans || isEqual(trans.x, 1) && isEqual(trans.y, 1);
 }
 
 export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeSize, scaleX: number, scaleY: number) {
@@ -317,72 +299,6 @@ export function matrix2parent(t: Transform, matrix?: Transform) {
     if (!matrix) return m.clone();
     matrix.multiAtLeft(m);
     return matrix;
-}
-
-export function boundingBox(frame: ShapeSize, shape: Shape): ShapeFrame {
-    let _minx = 0, _maxx = frame.width, _miny = 0, _maxy = frame.height;
-    if (shape.isNoTransform()) {
-        return new ShapeFrame(_minx, _miny, _maxx, _maxy);
-    }
-
-    const path = shape.getPathOfSize(frame);
-    if (path.length > 0) {
-        const bounds = path.bbox();
-        _minx = bounds.x;
-        _maxx = bounds.x2;
-        _miny = bounds.y;
-        _maxy = bounds.y2;
-    }
-
-    const m = shape.matrix2Parent();
-    const corners = [{ x: _minx, y: _miny }, { x: _maxx, y: _miny }, { x: _maxx, y: _maxy }, { x: _minx, y: _maxy }]
-        .map((p) => m.computeCoord(p));
-    const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
-    const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
-    const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
-    const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
-
-    return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
-}
-
-export function transformPoints(points: CurvePoint[], matrix: Matrix) {
-    const ret: CurvePoint[] = [];
-    for (let i = 0, len = points.length; i < len; i++) {
-        const p = points[i];
-        const point: Point2D = matrix.computeCoord(p.x, p.y) as Point2D;
-        const transp = new CurvePoint(([i] as BasicArray<number>), "", point.x, point.y, p.mode);
-
-        if (p.hasFrom) {
-            transp.hasFrom = true;
-            const fromp = matrix.computeCoord(p.fromX || 0, p.fromY || 0);
-            transp.fromX = fromp.x;
-            transp.fromY = fromp.y;
-        }
-        if (p.hasTo) {
-            transp.hasTo = true;
-            const top = matrix.computeCoord(p.toX || 0, p.toY || 0);
-            transp.toX = top.x;
-            transp.toY = top.y;
-        }
-        transp.radius = p.radius;
-
-        ret.push(transp);
-    }
-    return ret;
-}
-
-export function frame2Parent(t: Transform, size: ShapeSize): ShapeFrame {
-    if (t.m00 == 1 && t.m01 === 0 && t.m10 === 0 && t.m11 === 1) return new ShapeFrame(t.m02, t.m12, size.width, size.height)
-    const lt = t.computeCoord(0, 0);
-    const rb = t.computeCoord(size.width, size.height);
-    return new ShapeFrame(lt.x, lt.y, rb.x - lt.x, rb.y - lt.y);
-}
-
-export function frame2Parent2(t: Transform, size: ShapeFrame): ShapeFrame {
-    if (t.m00 == 1 && t.m01 === 0 && t.m10 === 0 && t.m11 === 1) return new ShapeFrame(t.m02, t.m12, size.width, size.height)
-    const lt = t.computeCoord(size.x, size.y);
-    const rb = t.computeCoord(size.x + size.width, size.y + size.height);
-    return new ShapeFrame(lt.x, lt.y, rb.x - lt.x, rb.y - lt.y);
 }
 
 export function updateFrame(frame: ShapeFrame, x: number, y: number, w: number, h: number): boolean {
@@ -666,13 +582,7 @@ export class ShapeView extends DataView {
 
     protected _findOVAll(ot: OverrideType, vt: VariableType): Variable[] | undefined {
         if (!this.varsContainer) return;
-        const _vars = findOverrideAll(this.m_data.id, ot, this.varsContainer);
-        // if (!_vars) return;
-        // const _var = _vars[_vars.length - 1];
-        // if (_var && _var.type === vt) {
-        //     return _var;
-        // }
-        return _vars;
+        return findOverrideAll(this.m_data.id, ot, this.varsContainer);
     }
 
     matrix2Root() {
