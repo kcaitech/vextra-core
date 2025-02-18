@@ -2358,25 +2358,14 @@ export class PageEditor {
         }
     }
 
-    setGradientOpacity(actions: BatchAction5[]) {
+    setGradientOpacity(actions: { fill: Fill, opacity: number }[]) {
         try {
             const api = this.__repo.start('setGradientOpacity');
             for (let i = 0, l = actions.length; i < l; i++) {
-                const { target, index, type, value } = actions[i];
-                const grad_type = type === 'fills' ? target.getFills() : target.getBorders()?.strokePaints;
-                if (!grad_type?.length) {
-                    continue;
-                }
-                const gradient_container = grad_type[index];
-                if (!gradient_container || !gradient_container.gradient || gradient_container.fillType !== FillType.Gradient) {
-                    continue;
-                }
-                const gradient = gradient_container.gradient;
-                const new_gradient = importGradient(exportGradient(gradient));
-                new_gradient.gradientOpacity = value;
-                const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
-                const shape = shape4fill(api, this.view, target);
-                // f(this.page, shape, index, new_gradient); // todo setFillGradient
+                const { fill, opacity } = actions[i];
+                const gradient = fill.gradient;
+                if (!gradient) continue;
+                api.setGradientOpacity(gradient, opacity);
             }
             this.__repo.commit();
         } catch (error) {
