@@ -7,16 +7,12 @@ import {
     FillType,
     Gradient,
     GradientType,
-    OverrideType,
     Shape,
     ShapeSize,
     ShapeType,
     SideType,
-    SymbolRefShape,
-    SymbolShape,
-    VariableType
 } from "../data";
-import { findOverrideAndVar, randomId } from "./basic";
+import { randomId } from "./basic";
 import { renderCustomBorder } from "./border_custom";
 
 const handler: {
