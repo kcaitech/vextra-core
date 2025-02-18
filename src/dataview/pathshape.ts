@@ -58,10 +58,7 @@ export class PathShapeView extends ShapeView {
     }
 
     onDataChange(...args: any[]): void {
-        if (args.includes('mask') || args.includes('isVisible')) {
-            (this.parent as GroupShapeView).updateMaskMap();
-            (this.parent as GroupShapeView).updateFrames();
-        }
+        if (args.includes('mask') || args.includes('isVisible')) (this.parent as GroupShapeView).updateMaskMap();
 
         if (this.parent && (args.includes('transform') || args.includes('size') || args.includes('isVisible'))) {
             // 执行父级自动布局

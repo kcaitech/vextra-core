@@ -451,37 +451,9 @@ export class ShapeView extends DataView {
         return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
     }
 
-    /**
-     * @description 无论是否transform都进行Bounds计算并返回
-     */
-    boundingBox2(): ShapeFrame {
-        const path = this.getPath().clone();
-        if (path.length > 0) {
-            const m = this.matrix2Parent();
-            path.transform(m);
-            const bounds = path.bbox();
-            return new ShapeFrame(bounds.x, bounds.y, bounds.w, bounds.h);
-        }
-
-        const frame = this.frame;
-        const m = this.transform;
-        const corners = [
-            { x: frame.x, y: frame.y },
-            { x: frame.x + frame.width, y: frame.y },
-            { x: frame.x + frame.width, y: frame.y + frame.height },
-            { x: frame.x, y: frame.y + frame.height }]
-            .map((p) => m.computeCoord(p));
-        const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
-        const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
-        const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
-        const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
-        return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
-    }
-
     onDataChange(...args: any[]): void {
         if (args.includes('mask') || args.includes('isVisible')) {
             (this.parent as GroupShapeView).updateMaskMap();
-            (this.parent as GroupShapeView).updateFrames(); // 遮罩图层会改变父级的frame结构 // todo 等排版更新就行？
         }
 
         if (this.parent && (args.includes('transform') || args.includes('size') || args.includes('isVisible'))) {
@@ -811,7 +783,7 @@ export class ShapeView extends DataView {
     }
 
     get masked() {
-        return this.parent ? (this.parent as GroupShapeView).maskMap?.get(this.m_data.id) : undefined;
+        return (this.parent as GroupShapeView)?.maskMap?.get(this.m_data.id);
     }
 
     indexOfChild(view: ShapeView) {
@@ -839,7 +811,6 @@ export class ShapeView extends DataView {
             this.m_transform.reset(trans);
             this.m_pathstr = undefined; // need update
             this.m_path = undefined;
-            // this.m_transform2 = undefined;
         }
     }
 
@@ -994,12 +965,10 @@ export class ShapeView extends DataView {
             this.layoutChilds(this.frame, { x: targetWidth / saveW, y: targetHeight / saveH });
         } else {
             const transform = (shape.transform.clone());
-            // const __p_transform_scale = new Transform2().setScale(ColVector3D.FromXYZ(scaleX, scaleY, 1));
             transform.scale(scaleX, scaleY);
             const __decompose_scale = transform.clearScaleSize();
-            // 这里应该是virtual，irtual是整体缩放，位置是会变化的，不需要trans
+            // 这里应该是virtual，是整体缩放，位置是会变化的，不需要trans
             // 保持对象位置不变
-            // transform.trans(transform.translateX - shape.transform.translateX, transform.translateY - shape.transform.translateY);
             const size = shape.size;
             let layoutSize = new ShapeSize();
             const frame = new ShapeFrame(0, 0, size.width * __decompose_scale.x, size.height * __decompose_scale.y);
@@ -1015,17 +984,6 @@ export class ShapeView extends DataView {
             this.layoutChilds(this.frame, { x: frame.width / saveW, y: frame.height / saveH });
         }
         this.updateFrames();
-
-        // const t = skewTransform(scaleX, scaleY).clone();
-        // const cur = t.computeCoord(0, 0);
-        // t.trans(frame.x - cur.x, frame.y - cur.y);
-        // const inverse = t.inverse;
-        // const rb = inverse.computeCoord(frame.x + frame.width, frame.y + frame.height);
-        // const size2 = new ShapeFrame(0, 0, (rb.x), (rb.y));
-
-        // this.updateLayoutArgs(t, size2, (shape as PathShape).fixedRadius);
-        //
-        // this.layoutChilds(varsContainer, this.frame, { x: scaleX, y: scaleY });
     }
 
     protected updateLayoutProps(props: PropsType, needLayout: boolean) {
