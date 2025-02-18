@@ -2472,7 +2472,6 @@ export class PageEditor {
     }[]) {
         try {
             const api = this.__repo.start('setShapesFillAsImage');
-            const page = this.page;
             const document = this.__document;
             for (const action of actions) {
                 const { shape, ref, media, width, height } = action;
