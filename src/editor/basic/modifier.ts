@@ -21,5 +21,4 @@ export class Modifier {
         this.__repo.commit();
         this.m_api = undefined;
     }
-
 }
