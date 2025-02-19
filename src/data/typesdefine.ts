@@ -288,6 +288,10 @@ export enum OverrideType {
     AutoLayout = "autoLayout",
     FrameMaskDisabled = "frameMaskDisabled",
     FillsMask = "fillsMask",
+    BordersMask = "bordersMask",
+    ShadowsMask = "shadowsMask",
+    BlursMask = "blursMask",
+    RadiusMask = "radiusMask",
 }
 /* padding */
 export type Padding = {
@@ -680,6 +684,10 @@ export enum VariableType {
     AutoLayout = "autoLayout",
     FrameMaskDisabled = "frameMaskDisabled",
     FillsMask = "fillsMask",
+    BordersMask = "bordersMask",
+    ShadowsMask = "shadowsMask",
+    BlursMask = "blursMask",
+    RadiusMask = "radiusMask",
 }
 export type Variable_0 = Array<Fill | Shadow | PrototypeInterAction>
 /* winding rule */
