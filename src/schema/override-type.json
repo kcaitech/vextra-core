@@ -20,6 +20,7 @@
         "blur",
         "protoInteractions",
         "autoLayout",
-        "frameMaskDisabled"
+        "frameMaskDisabled",
+        "fillsMask"
     ]
 }

@@ -1,18 +1,44 @@
 import { innerShadowId, renderBlur, renderBorders, renderFills, renderShadows } from "../render";
 import {
-    BasicArray, Blur, BlurType, Border,
-    BorderPosition, ContextSettings, CornerRadius,
-    ExportOptions, Fill, FillType,
-    GradientType, MarkerType, OverlayBackgroundAppearance,
-    OverlayBackgroundInteraction, OverlayPosition,
-    OverrideType, PathShape,
-    PrototypeInterAction, PrototypeStartingPoint,
-    ResizingConstraints2, ScrollBehavior,
-    ScrollDirection, Shadow, ShadowPosition, Shape,
-    ShapeFrame, ShapeSize, ShapeType, SymbolRefShape,
-    SymbolShape, Transform, Variable, VariableType, BlurMask, BorderMask, FillMask, ShadowMask,
+    BasicArray,
+    Blur,
+    BlurMask,
+    BlurType,
+    Border,
+    BorderMask,
+    BorderPosition,
+    ContextSettings,
+    CornerRadius,
+    ExportOptions,
+    Fill,
+    FillMask,
+    FillType,
+    GradientType,
+    MarkerType,
+    OverlayBackgroundAppearance,
+    OverlayBackgroundInteraction,
+    OverlayPosition,
+    OverrideType,
+    PathShape,
+    PrototypeInterAction,
+    PrototypeStartingPoint,
     RadiusMask,
-    RadiusType
+    RadiusType,
+    ResizingConstraints2,
+    ScrollBehavior,
+    ScrollDirection,
+    Shadow,
+    ShadowMask,
+    ShadowPosition,
+    Shape,
+    ShapeFrame,
+    ShapeSize,
+    ShapeType,
+    SymbolRefShape,
+    SymbolShape,
+    Transform,
+    Variable,
+    VariableType
 } from "../data";
 import { findOverrideAndVar } from "./basic";
 import { EL, elh } from "./el";
@@ -569,6 +595,11 @@ export class ShapeView extends DataView {
         return m;
     }
 
+    get fillsMask(): string | undefined {
+        const v = this._findOV(OverrideType.FillsMask, VariableType.FillsMask);
+        return v ? v.value : this.m_data.style.fillsMask;
+    }
+
     private _onFillMaskChange() {
         this.m_fills = undefined;
         this.m_ctx.setDirty(this);
@@ -591,8 +622,10 @@ export class ShapeView extends DataView {
     getFills(): BasicArray<Fill> {
         if (this.m_fills) return this.m_fills;
         let fills: BasicArray<Fill>;
-        if (this.style.fillsMask) {
-            const mask = this.style.getStylesMgr()!.getSync(this.style.fillsMask) as FillMask;
+
+        const fillsMask: string | undefined = this.fillsMask;
+        if (fillsMask) {
+            const mask = this.style.getStylesMgr()!.getSync(fillsMask) as FillMask;
             fills = mask.fills;
             this.watchFillMask(mask);
         } else {
@@ -600,6 +633,7 @@ export class ShapeView extends DataView {
             fills = v ? v.value : this.m_data.style.fills;
             this.unwatchFillMask();
         }
+
         return fills;
     }
 

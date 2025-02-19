@@ -287,6 +287,7 @@ export enum OverrideType {
     ProtoInteractions = "protoInteractions",
     AutoLayout = "autoLayout",
     FrameMaskDisabled = "frameMaskDisabled",
+    FillsMask = "fillsMask",
 }
 /* padding */
 export type Padding = {
@@ -678,6 +679,7 @@ export enum VariableType {
     ProtoInteractions = "protoInteractions",
     AutoLayout = "autoLayout",
     FrameMaskDisabled = "frameMaskDisabled",
+    FillsMask = "fillsMask",
 }
 export type Variable_0 = Array<Fill | Shadow | PrototypeInterAction>
 /* winding rule */
