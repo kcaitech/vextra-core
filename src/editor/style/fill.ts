@@ -3,23 +3,72 @@ import { Modifier } from "../basic/modifier";
 import {
     BasicArray,
     Color,
-    Fill,
-    FillType, Gradient,
+    Document,
+    Fill, FillMask,
+    FillType,
+    Gradient,
     GradientType,
     ImageScaleMode,
     importGradient,
-    Page, Point2D,
-    Stop
+    OverrideType,
+    Page,
+    Point2D,
+    Shape,
+    Stop,
+    Variable,
+    VariableType
 } from "../../data";
 import { adapt2Shape, PageView, ShapeView } from "../../dataview";
-import { Document } from "../../data";
 import { exportGradient } from "../../data/baseexport";
 import { uuid } from "../../basic/uuid";
+import { _ov, override_variable } from "../symbol";
+import { importFill } from "../../data/baseimport";
 
 /* 填充修改器 */
 export class FillModifier extends Modifier {
     constructor(repo: CoopRepository) {
         super(repo);
+    }
+
+    private getFillsMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
+        return _ov(VariableType.FillsMask, OverrideType.FillsMask, () => value, view, page, api);
+    }
+
+    private getFillsVariable(api: Api, page: PageView, view: ShapeView) {
+        return override_variable(page, VariableType.Fills, OverrideType.Fills, (_var) => {
+            const fills = _var?.value ?? view.getFills();
+            return new BasicArray(...(fills as Array<Fill>).map((v) => {
+                    const ret = importFill(v);
+                    const imgmgr = v.getImageMgr();
+                    if (imgmgr) ret.setImageMgr(imgmgr)
+                    return ret;
+                }
+            ))
+        }, api, view);
+    }
+
+    /* 创建一个填充 */
+    createFill(actions: { fills: BasicArray<Fill>, fill: Fill, index: number }[]) {
+        try {
+            const api = this.getApi('createFill');
+            actions.forEach(action => api.addFillAt(action.fills, action.fill, action.index));
+            this.commit();
+        } catch (error) {
+            this.rollback();
+            throw error;
+        }
+    }
+
+    /* 隐藏与显示一条填充 */
+    setFillsEnabled(fills: Fill[], enable: boolean) {
+        try {
+            const api = this.getApi('setFillsEnabled');
+            for (const fill of fills) api.setFillEnable(fill, enable);
+            this.commit();
+        } catch (error) {
+            this.rollback();
+            throw error;
+        }
     }
 
     /* 修改填充类型 */
@@ -81,18 +130,6 @@ export class FillModifier extends Modifier {
         }
     }
 
-    /* 隐藏与显示一条填充 */
-    setFillsEnabled(fills: Fill[], enable: boolean) {
-        try {
-            const api = this.getApi('setFillsEnabled');
-            for (const fill of fills) api.setFillEnable(fill, enable);
-            this.commit();
-        } catch (error) {
-            this.rollback();
-            throw error;
-        }
-    }
-
     /* 修改填充颜色 */
     setFillsColor(actions: { fill: Fill, color: Color }[]) {
         try {
@@ -105,11 +142,15 @@ export class FillModifier extends Modifier {
         }
     }
 
-    /* 创建一个填充 */
-    createFill(actions: { fills: BasicArray<Fill>, fill: Fill, index: number }[]) {
+    /* 修改渐变色透明度 */
+    setGradientOpacity(actions: { fill: Fill, opacity: number }[]) {
         try {
-            const api = this.getApi('createFill');
-            actions.forEach(action => api.addFillAt(action.fills, action.fill, action.index));
+            const api = this.getApi('setGradientOpacity');
+            for (const action of actions) {
+                const { fill, opacity } = action;
+                const gradient = fill.gradient!;
+                api.setGradientOpacity(gradient, opacity);
+            }
             this.commit();
         } catch (error) {
             this.rollback();
@@ -128,15 +169,83 @@ export class FillModifier extends Modifier {
         }
     }
 
+    /* 统一多个fills */
+    unifyShapesFills(fillContainers: BasicArray<Fill>[]) {
+        if (!fillContainers.length) return;
+        try {
+            const api = this.getApi('unifyShapesFills');
+            const master = fillContainers[0].map(i => importFill(i));
+            for (const fillContainer of fillContainers) {
+                api.deleteFills(fillContainer, 0, fillContainer.length);
+                api.addFills(fillContainer, master.map(i => importFill(i)));
+            }
+            this.commit();
+        } catch (error) {
+            this.rollback();
+            throw error;
+        }
+    }
+
+    /* 统一多个图层的fillsMask */
+    unifyShapesFillsMask(document: Document, views: ShapeView[], fillsMask: string) {
+        if (!views.length) return;
+        try {
+            const api = this.getApi('unifyShapesFillsMask');
+            const pageView = views[0].getPage() as PageView;
+            const page = pageView.data;
+            for (const view of views) {
+                const linked = this.getFillsMaskVariable(api, pageView, view, fillsMask);
+                linked ? api.shapeModifyVariable(page, linked, fillsMask) : api.addfillmask(document, page, adapt2Shape(view), fillsMask);
+            }
+            this.commit();
+        } catch (error) {
+            this.rollback();
+            throw error;
+        }
+    }
+
+    /* 创建一个填充遮罩 */
+    createFillsMask(document: Document, mask: FillMask, pageView: PageView, views?: ShapeView[]) {
+        try {
+            const api = this.getApi('createFillsMask');
+            api.styleInsert(document, mask);
+            if (views) {
+                const variables: Variable[] = [];
+                const shapes: Shape[] = [];
+                for (const view of views) {
+                    const variable = this.getFillsMaskVariable(api, pageView, view, mask.id);
+                    variable ? variables.push(variable) : shapes.push(adapt2Shape(view));
+                }
+                const page = pageView.data;
+                for (const variable of variables) {
+                    if (variable.value !== mask.id) api.shapeModifyVariable(page, variable, mask.id);
+                }
+                for (const shape of shapes) api.addfillmask(document, page, shape, mask.id);
+            }
+            this.commit();
+            return true;
+        } catch (error) {
+            this.rollback();
+            throw error;
+        }
+    }
+
     /* 修改图层的填充遮罩 */
-    setShapesFillMask(document: Document, pageView: PageView, actions: { target: ShapeView, value: string }[]) {
+    setShapesFillMask(document: Document, pageView: PageView, views: ShapeView[], value: string) {
         try {
             const page = adapt2Shape(pageView) as Page;
             const api = this.getApi('setShapesFillMask');
-            for (const action of actions) {
-                const { target, value } = action;
-                api.addfillmask(document, page, adapt2Shape(target), value);
+            const variables: Variable[] = [];
+            const shapes: Shape[] = [];
+            for (const view of views) {
+                const variable = this.getFillsMaskVariable(api, pageView, view, value);
+                variable ? variables.push(variable) : shapes.push(adapt2Shape(view));
             }
+            for (const variable of variables) {
+                if (variable.value !== value) api.shapeModifyVariable(page, variable, value);
+            }
+            for (const shape of shapes) api.addfillmask(document, page, shape, value);
+            this.commit();
         } catch (error) {
             this.rollback();
             throw error;
@@ -144,16 +253,37 @@ export class FillModifier extends Modifier {
     }
 
     /* 解绑图层上的填充遮罩 */
-    unbindShapesFillMask(document: Document, pageView: PageView, actions: { target: ShapeView, value: Fill[] }[]) {
+    unbindShapesFillMask(document: Document, pageView: PageView, views: ShapeView[]) {
         try {
-            const api = this.getApi('removeShapesFillMask');
-            const page = adapt2Shape(pageView) as Page;
-            for (const action of actions) {
-                const { target, value } = action;
-                api.deleteFills(target.style.fills, 0, target.style.fills.length);
-                api.addFills(target.style.fills, value);
-                api.delfillmask(document, page, adapt2Shape(target));
+            if (!views.length) return;
+
+            const api = this.getApi('unbindShapesFillMask');
+            const fillsCopy = views[0].getFills().map(i => importFill(i));
+
+            // 处理遮罩
+            const fillMaskVariables: Variable[] = [];
+            const shapes4mask: Shape[] = [];
+            for (const view of views) {
+                const linkedFillMaskVariable = this.getFillsMaskVariable(api, pageView, view, undefined);
+                linkedFillMaskVariable ? fillMaskVariables.push(linkedFillMaskVariable) : shapes4mask.push(adapt2Shape(view));
             }
+            const page = adapt2Shape(pageView) as Page;
+            fillMaskVariables.forEach(variable => api.shapeModifyVariable(page, variable, undefined));
+            shapes4mask.forEach(shape => api.delfillmask(document, page, shape));
+
+            // 固定现有填充到本地
+            const fillsContainer: BasicArray<Fill>[] = [];
+            for (const view of views) {
+                const linkedVariable = this.getFillsVariable(api, pageView, view);
+                fillsContainer.push(linkedVariable ? linkedVariable.value : adapt2Shape(view).style.fills);
+            }
+
+            fillsContainer.forEach(source => {
+                const __fillsCopy = fillsCopy.map(i => importFill(i));
+                api.deleteFills(source, 0, source.length);
+                api.addFills(source, __fillsCopy);
+            });
+            this.commit();
         } catch (error) {
             this.rollback();
             throw error;
@@ -164,16 +294,27 @@ export class FillModifier extends Modifier {
     removeShapesFillMask(document: Document, pageView: PageView, views: ShapeView[]) {
         try {
             const api = this.getApi('removeShapesFillMask');
-            const page = adapt2Shape(pageView) as Page;
+            const fillMaskVariables: Variable[] = [];
+            const shapes4mask: Shape[] = [];
             for (const view of views) {
-                const shape = adapt2Shape(view);
-                api.delfillmask(document, page, shape);
-                api.deleteFills(shape.style.fills, 0, shape.getFills().length);
+                const linkedFillMaskVariable = this.getFillsMaskVariable(api, pageView, view, undefined);
+                linkedFillMaskVariable ? fillMaskVariables.push(linkedFillMaskVariable) : shapes4mask.push(adapt2Shape(view));
             }
+            const page = adapt2Shape(pageView) as Page;
+            fillMaskVariables.forEach(variable => api.shapeModifyVariable(page, variable, undefined));
+            shapes4mask.forEach(shape => api.delfillmask(document, page, shape));
+
+            const fillsContainer: BasicArray<Fill>[] = [];
+            for (const view of views) {
+                const linkedVariable = this.getFillsVariable(api, pageView, view);
+                fillsContainer.push(linkedVariable ? linkedVariable.value : adapt2Shape(view).style.fills);
+            }
+            fillsContainer.forEach(source => api.deleteFills(source, 0, source.length));
             this.commit();
         } catch (error) {
             this.rollback();
             throw error;
         }
     }
+
 }

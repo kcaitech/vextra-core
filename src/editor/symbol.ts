@@ -143,7 +143,7 @@ function _ov_newvar(host: SymbolRefShape | SymbolShape, name: string, value: any
 }
 
 
-function _ov(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, view: ShapeView, page: PageView, api: Api) {
+export function _ov(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, view: ShapeView, page: PageView, api: Api) {
     return prepareVar(api, page, view, overrideType, varType, valuefun)?.var
 }
 
@@ -352,7 +352,7 @@ export function modify_variable(document: Document, page: Page, view: ShapeView,
 /**
  * @description override "editor/shape/overrideVariable"
  */
-function override_variable(page: PageView, varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, api: Api, view: ShapeView) {
+export function override_variable(page: PageView, varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, api: Api, view: ShapeView) {
     // view = view ?? this.__shape;
     return _ov(varType, overrideType, valuefun, view, page, api);
 }
