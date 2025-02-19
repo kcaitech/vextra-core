@@ -2380,22 +2380,21 @@ export class PageEditor {
             const api = this.__repo.start('setFillsType');
             for (const action of actions) {
                 if (action.type === FillType.SolidColor) {
-                    console.log(111, action.fill);
-
                     api.setFillType(action.fill, FillType.SolidColor);
+                    if (action.fill.gradient) {
+                        const { red, green, blue, alpha } = action.fill.gradient.stops[0].color;
+                        const color = new Color(alpha, red, green, blue);
+                        api.setFillColor(action.fill, color);
+                    }
                 } else if (action.type === FillType.Pattern) {
-                    console.log(222, action.fill);
-
                     api.setFillType(action.fill, FillType.Pattern);
                     if (!action.fill.imageScaleMode) api.setFillScaleMode(action.fill, ImageScaleMode.Fill);
                 } else {
-                    console.log(333, action.fill);
-
                     api.setFillType(action.fill, FillType.Gradient);
                     initGradient(api, action);
                 }
             }
-            this.__repo.commit();
+            this.__repo.commit(); 
         } catch (error) {
             this.__repo.rollback();
             throw error;
@@ -2413,7 +2412,7 @@ export class PageEditor {
                     gCopy.from.x = gCopy.from.x + (gCopy.to.x - gCopy.from.x) / 2;
                 }
                 if (action.type === GradientType.Radial && gCopy.elipseLength === undefined) gCopy.elipseLength = 1;
-                gCopy.stops[0].color = action.fill.color;
+                // gCopy.stops[0].color = action.fill.color;
                 gCopy.gradientType = action.type as GradientType;
                 api.setFillGradient(action.fill, gCopy);
             } else {
