@@ -3217,8 +3217,6 @@ export class PageEditor {
     shapesShadowsUnify(actions: BatchAction2[]) {
         try {
             const api = this.__repo.start('shapesShadowsUnify');
-            console.log(actions, 'actions');
-
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
                 api.deleteShadows(this.page, adapt2Shape(target), 0, target.style.shadows.length);
