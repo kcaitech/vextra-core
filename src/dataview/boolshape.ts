@@ -222,12 +222,9 @@ export class BoolShapeView extends GroupShapeView {
     }
 
     getPath() {
-        const s = Date.now();
         if (this.m_path) return this.m_path;
         this.m_path = render2path(this);
         this.m_path.freeze();
-        const e = Date.now();
-        console.log(e - s, 'time');
         return this.m_path;
     }
 
