@@ -30,7 +30,7 @@ export class FillModifier extends Modifier {
         super(repo);
     }
 
-    private getFillsMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
+    private getMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
         return _ov(VariableType.FillsMask, OverrideType.FillsMask, () => value, view, page, api);
     }
 
@@ -194,7 +194,7 @@ export class FillModifier extends Modifier {
             const pageView = views[0].getPage() as PageView;
             const page = pageView.data;
             for (const view of views) {
-                const linked = this.getFillsMaskVariable(api, pageView, view, fillsMask);
+                const linked = this.getMaskVariable(api, pageView, view, fillsMask);
                 linked ? api.shapeModifyVariable(page, linked, fillsMask) : api.addfillmask(document, page, adapt2Shape(view), fillsMask);
             }
             this.commit();
@@ -213,7 +213,7 @@ export class FillModifier extends Modifier {
                 const variables: Variable[] = [];
                 const shapes: Shape[] = [];
                 for (const view of views) {
-                    const variable = this.getFillsMaskVariable(api, pageView, view, mask.id);
+                    const variable = this.getMaskVariable(api, pageView, view, mask.id);
                     variable ? variables.push(variable) : shapes.push(adapt2Shape(view));
                 }
                 const page = pageView.data;
@@ -238,7 +238,7 @@ export class FillModifier extends Modifier {
             const variables: Variable[] = [];
             const shapes: Shape[] = [];
             for (const view of views) {
-                const variable = this.getFillsMaskVariable(api, pageView, view, value);
+                const variable = this.getMaskVariable(api, pageView, view, value);
                 variable ? variables.push(variable) : shapes.push(adapt2Shape(view));
             }
             for (const variable of variables) {
@@ -264,7 +264,7 @@ export class FillModifier extends Modifier {
             const fillMaskVariables: Variable[] = [];
             const shapes4mask: Shape[] = [];
             for (const view of views) {
-                const linkedFillMaskVariable = this.getFillsMaskVariable(api, pageView, view, undefined);
+                const linkedFillMaskVariable = this.getMaskVariable(api, pageView, view, undefined);
                 linkedFillMaskVariable ? fillMaskVariables.push(linkedFillMaskVariable) : shapes4mask.push(adapt2Shape(view));
             }
             const page = adapt2Shape(pageView) as Page;
@@ -297,7 +297,7 @@ export class FillModifier extends Modifier {
             const fillMaskVariables: Variable[] = [];
             const shapes4mask: Shape[] = [];
             for (const view of views) {
-                const linkedFillMaskVariable = this.getFillsMaskVariable(api, pageView, view, undefined);
+                const linkedFillMaskVariable = this.getMaskVariable(api, pageView, view, undefined);
                 linkedFillMaskVariable ? fillMaskVariables.push(linkedFillMaskVariable) : shapes4mask.push(adapt2Shape(view));
             }
             const page = adapt2Shape(pageView) as Page;
