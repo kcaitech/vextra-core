@@ -24,6 +24,7 @@ export class GradientEditor {
         try {
             for (const fill of fills) {
                 const gradient = fill.gradient!;
+                if (!gradient) continue;
                 const gradientCopy = importGradient(exportGradient(gradient));
                 gradientCopy.from.x = from.x;
                 gradientCopy.from.y = from.y;
@@ -40,6 +41,7 @@ export class GradientEditor {
         try {
             for (const fill of fills) {
                 const gradient = fill.gradient!;
+                if (!gradient) continue;
                 const gradientCopy = importGradient(exportGradient(gradient));
                 gradientCopy.to.x = to.x;
                 gradientCopy.to.y = to.y;
@@ -56,6 +58,7 @@ export class GradientEditor {
         try {
             for (const fill of fills) {
                 const gradient = fill.gradient!;
+                if (!gradient) continue;
                 const gradientCopy = importGradient(exportGradient(gradient));
                 gradientCopy.elipseLength = length;
                 this.api.setFillGradient(fill, gradientCopy);
@@ -66,12 +69,26 @@ export class GradientEditor {
         }
     }
 
-    modifyStopPosition(fills: Fill[], position: number, stopAt: number) {
+    modifyStopPosition(fills: Fill[], position: number, id: string) {
         try {
             for (const fill of fills) {
                 const gradient = fill.gradient!;
+                if (!gradient) continue;
                 const gradientCopy = importGradient(exportGradient(gradient));
-
+                const idx = gradientCopy.stops.findIndex((stop) => stop.id === id);
+                if (idx === -1) continue;
+                gradientCopy.stops[idx].position = position;
+                const g_s = gradientCopy.stops;
+                g_s.sort((a, b) => {
+                    if (a.position > b.position) {
+                        return 1;
+                    } else if (a.position < b.position) {
+                        return -1;
+                    } else {
+                        return 0;
+                    }
+                })
+                this.api.setFillGradient(fill, gradientCopy);
             }
         } catch (error) {
             this.exception = true;
