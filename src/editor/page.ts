@@ -2271,62 +2271,6 @@ export class PageEditor {
         }
     }
 
-    modifyShapeGradientType(actions: { fill: Fill, type: string }[]) {
-        // todo modifyShapeGradientType
-        // try {
-        //     const api = this.__repo.start('modifyShapeGradientType');
-        //     for (let i = 0, l = actions.length; i < l; i++) {
-        //         const { fill, type } = actions[i];
-        //
-        //         if (fill.fillType !== FillType.Gradient) {
-        //             api.setFillType(fill, FillType.Gradient);
-        //         }
-        //         if (fill.gradient) {
-        //
-        //         } else {
-        //
-        //         }
-        //         if (gradient) {
-        //             const new_gradient = importGradient(exportGradient(gradient));
-        //             new_gradient.gradientType = value;
-        //             if (value === GradientType.Linear && gradient.gradientType !== GradientType.Linear) {
-        //                 new_gradient.from.y = new_gradient.from.y - (new_gradient.to.y - new_gradient.from.y);
-        //                 new_gradient.from.x = new_gradient.from.x - (new_gradient.to.x - new_gradient.from.x);
-        //             } else if (gradient.gradientType === GradientType.Linear && value !== GradientType.Linear) {
-        //                 new_gradient.from.y = new_gradient.from.y + (new_gradient.to.y - new_gradient.from.y) / 2;
-        //                 new_gradient.from.x = new_gradient.from.x + (new_gradient.to.x - new_gradient.from.x) / 2;
-        //             }
-        //             if (value === GradientType.Radial && new_gradient.elipseLength === undefined) {
-        //                 new_gradient.elipseLength = 1;
-        //             }
-        //             new_gradient.stops[0].color = gradient_container.color;
-        //             const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
-        //             f(this.page, s, index, new_gradient);
-        //         } else {
-        //             const stops = new BasicArray<Stop>();
-        //             const { alpha, red, green, blue } = gradient_container.color;
-        //             stops.push(new Stop(new BasicArray(), uuid(), 0, new Color(alpha, red, green, blue)), new Stop(new BasicArray(), uuid(), 1, new Color(0, red, green, blue)))
-        //             const from = value === GradientType.Linear ? { x: 0.5, y: 0 } : { x: 0.5, y: 0.5 };
-        //             const to = { x: 0.5, y: 1 };
-        //             let ellipseLength;
-        //             if (value === GradientType.Radial) ellipseLength = 1;
-        //             const new_gradient = new Gradient(from as Point2D, to as Point2D, value, stops, ellipseLength);
-        //             new_gradient.stops.forEach((v, i) => {
-        //                 const idx = new BasicArray<number>();
-        //                 idx.push(i);
-        //                 v.crdtidx = idx;
-        //             })
-        //             const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
-        //             f(this.page, s, index, new_gradient);
-        //         }
-        //     }
-        //     this.__repo.commit();
-        // } catch (error) {
-        //     this.__repo.rollback();
-        //     console.error(error);
-        // }
-    }
-
     deleteShapesGradientStop(actions: BatchAction5[]) {
         try {
             const api = this.__repo.start('deleteShapesGradientStop');
@@ -2471,7 +2415,6 @@ export class PageEditor {
     }[]) {
         try {
             const api = this.__repo.start('setShapesFillAsImage');
-            const page = this.page;
             const document = this.__document;
             for (const action of actions) {
                 const { shape, ref, media, width, height } = action;
