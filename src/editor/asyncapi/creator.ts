@@ -21,7 +21,7 @@ import {
     makeShapeTransform1By2,
     updateShapeTransform1By2
 } from "../../data";
-import { adapt2Shape, ArtboardView, GroupShapeView, PageView, ShapeView } from "../../dataview";
+import { adapt2Shape, GroupShapeView, PageView, ShapeView } from "../../dataview";
 import {
     newArrowShape,
     newArtboard,
@@ -327,7 +327,7 @@ export class CreatorApiCaller extends AsyncApiCaller {
         if (type === ShapeType.Rectangle) {
             const count = this.getCount(type);
 
-            const rect = newRectShape(`${namePrefix} ${count}`, frame);
+            const rect = newRectShape(`${namePrefix} ${count}`, frame, this.__document.stylesMgr);
             this.setTransform(rect, transform2, frame);
 
             rect.constrainerProportions = isFixedRatio;
@@ -336,7 +336,7 @@ export class CreatorApiCaller extends AsyncApiCaller {
         } else if (type === ShapeType.Oval) {
             const count = this.getCount(type);
 
-            const oval = newOvalShape(`${namePrefix} ${count}`, frame);
+            const oval = newOvalShape(`${namePrefix} ${count}`, frame, this.__document.stylesMgr);
             this.setTransform(oval, transform2, frame);
 
             oval.constrainerProportions = isFixedRatio;
@@ -345,7 +345,7 @@ export class CreatorApiCaller extends AsyncApiCaller {
         } else if (type === ShapeType.Polygon) {
             const count = this.getCount(type);
 
-            const polygon = newPolygonShape(`${namePrefix} ${count}`, frame);
+            const polygon = newPolygonShape(`${namePrefix} ${count}`, frame, this.__document.stylesMgr);
             this.setTransform(polygon, transform2, frame);
 
             polygon.constrainerProportions = isFixedRatio;
@@ -354,7 +354,7 @@ export class CreatorApiCaller extends AsyncApiCaller {
         } else if (type === ShapeType.Star) {
             const count = this.getCount(type);
 
-            const star = newStellateShape(`${namePrefix} ${count}`, frame);
+            const star = newStellateShape(`${namePrefix} ${count}`, frame, this.__document.stylesMgr);
             this.setTransform(star, transform2, frame);
 
             star.constrainerProportions = isFixedRatio;
@@ -400,9 +400,9 @@ export class CreatorApiCaller extends AsyncApiCaller {
 
             let line;
             if (params.mark) {
-                line = newArrowShape(`${namePrefix} ${count}`, frame);
+                line = newArrowShape(`${namePrefix} ${count}`, frame, this.__document.stylesMgr);
             } else {
-                line = newLineShape(`${namePrefix} ${count}`, frame);
+                line = newLineShape(`${namePrefix} ${count}`, frame, this.__document.stylesMgr);
             }
 
             this.setTransform(line, transform2, frame);
@@ -411,7 +411,7 @@ export class CreatorApiCaller extends AsyncApiCaller {
         } else if (type === ShapeType.Contact) {
             const count = this.getCount(type);
 
-            const contact = newContact(`${namePrefix} ${count}`, frame, params.apex);
+            const contact = newContact(`${namePrefix} ${count}`, frame, this.__document.stylesMgr, params.apex);
 
             this.setTransform(contact, transform2, frame);
 

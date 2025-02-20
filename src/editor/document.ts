@@ -230,31 +230,31 @@ export class DocEditor {
                 if (style instanceof FillMask) {
                     for (let i = 0; i < shapes.length; i++) {
                         const shape = shapes[i];
-                        api.addfillmask(this.__document, p, adapt2Shape(shape), style.id);
+                        api.modifyFillsMask(p, adapt2Shape(shape), style.id);
                     }
                 }
                 if (style instanceof ShadowMask) {
                     for (let i = 0; i < shapes.length; i++) {
                         const shape = shapes[i];
-                        api.addshadowmask(this.__document, p, adapt2Shape(shape), style.id);
+                        api.modifyShadowsMask(p, adapt2Shape(shape), style.id);
                     }
                 }
                 if (style instanceof BlurMask) {
                     for (let i = 0; i < shapes.length; i++) {
                         const shape = shapes[i];
-                        api.addblurmask(this.__document, p, adapt2Shape(shape), style.id);
+                        api.modifyBlurMask(p, adapt2Shape(shape), style.id);
                     }
                 }
                 if (style instanceof BorderMask) {
                     for (let i = 0; i < shapes.length; i++) {
                         const shape = shapes[i];
-                        api.addbordermask(this.__document, adapt2Shape(shape).style, style.id);
+                        api.modifyBorderMask(adapt2Shape(shape).style, style.id);
                     }
                 }
                 if (style instanceof RadiusMask) {
                     for (let i = 0; i < shapes.length; i++) {
                         const shape = shapes[i];
-                        api.addradiusmask(this.__document, p, adapt2Shape(shape), style.id);
+                        api.modifyRadiusMask(p, adapt2Shape(shape), style.id);
                     }
                 }
             }

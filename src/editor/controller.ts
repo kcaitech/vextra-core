@@ -174,21 +174,21 @@ export class Controller {
             case ShapeType.Artboard:
                 return newArtboard(name, frame);
             case ShapeType.Rectangle:
-                return newRectShape(name, frame);
+                return newRectShape(name, frame, this.__document.stylesMgr);
             case ShapeType.Oval:
-                return newOvalShape(name, frame);
+                return newOvalShape(name, frame, this.__document.stylesMgr);
             case ShapeType.Line:
-                return newLineShape(name, frame);
+                return newLineShape(name, frame, this.__document.stylesMgr);
             case ShapeType.Polygon:
-                return newPolygonShape(name, frame);
+                return newPolygonShape(name, frame, this.__document.stylesMgr);
             case ShapeType.Star:
-                return newStellateShape(name, frame);
+                return newStellateShape(name, frame, this.__document.stylesMgr);
             case ShapeType.Text: {
                 if (attr) return newDefaultTextShape(name, attr, frame);
                 return newTextShape(name, frame);
             }
             default:
-                return newRectShape(name, frame);
+                return newRectShape(name, frame, this.__document.stylesMgr);
         }
     }
 
@@ -246,7 +246,7 @@ export class Controller {
                 savepage = page;
                 status = Status.Pending;
 
-                const shape = newArrowShape(name, frame);
+                const shape = newArrowShape(name, frame, this.__document.stylesMgr);
 
                 modifyTransformByEnv(shape, parent);
                 const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
@@ -280,7 +280,7 @@ export class Controller {
                     const format = getFormatFromBase64(media.base64);
                     const ref = `${v4()}.${format}`;
                     this.__document.mediasMgr.add(ref, media);
-                    const shape = newImageFillShape(name, frame, this.__document.mediasMgr, originFrame, ref);
+                    const shape = newImageFillShape(name, frame, this.__document.mediasMgr, originFrame, this.__document.stylesMgr, ref);
                     const xy = parent.frame2Root();
                     shape.transform.translateX -= xy.x;
                     shape.transform.translateY -= xy.y;
@@ -307,7 +307,7 @@ export class Controller {
             try {
                 savepage = page;
                 status = Status.Pending;
-                const shape = newTable(name, frame, row, col, this.__document.mediasMgr);
+                const shape = newTable(name, frame, row, col, this.__document.mediasMgr, this.__document.stylesMgr);
                 const xy = parent.frame2Root();
                 shape.transform.translateX -= xy.x;
                 shape.transform.translateY -= xy.y;
@@ -374,7 +374,7 @@ export class Controller {
             try {
                 savepage = page;
                 status = Status.Pending;
-                const shape = newContact(name, frame, apex);
+                const shape = newContact(name, frame, this.__document.stylesMgr, apex);
                 const xy = parent.frame2Root();
                 shape.transform.translateX -= xy.x;
                 shape.transform.translateY -= xy.y;

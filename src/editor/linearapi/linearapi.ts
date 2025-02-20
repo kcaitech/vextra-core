@@ -271,7 +271,7 @@ export class LinearApi {
                 const isRect = shape.radiusType === RadiusType.Rect;
 
                 if (shape.radiusMask) {
-                    api.delradiusmask(this.__document, this.page, shape);
+                    api.delradiusmask(shape);
                 }
 
                 let needUpdateFrame = false;
@@ -491,7 +491,7 @@ export class LinearApi {
                     if (linkedBorderMaskVariable) {
                         api.shapeModifyVariable(this.page, linkedBorderMaskVariable, undefined);
                     } else {
-                        api.delbordermask(this.__document, adapt2Shape(view).style);
+                        api.modifyBorderMask(adapt2Shape(view).style, undefined);
                     }
                     api.setBorderPosition(source, border.position);
                 }

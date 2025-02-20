@@ -1,6 +1,14 @@
 import { Api } from "../coop";
 import { uuid } from "../basic/uuid";
-import { OverrideType, SymbolRefShape, SymbolShape, SymbolUnionShape, TableCell, Variable, VariableType } from "../data";
+import {
+    OverrideType,
+    SymbolRefShape,
+    SymbolShape,
+    SymbolUnionShape,
+    TableCell,
+    Variable,
+    VariableType
+} from "../data";
 import { PageView, ShapeView, TableCellView, TableView } from "../dataview";
 
 // 查看说明symbol_utils.png
@@ -104,6 +112,12 @@ function _isNeedOverride4SymbolRef(overrideType: OverrideType) {
         case OverrideType.Blur:
         case OverrideType.FrameMaskDisabled:
         case OverrideType.AutoLayout:
+        case OverrideType.FillsMask:
+        case OverrideType.BorderFillsMask:
+        case OverrideType.BordersMask:
+        case OverrideType.ShadowsMask:
+        case OverrideType.BlursMask:
+        case OverrideType.RadiusMask:
             return true
         case OverrideType.ExportOptions:
         case OverrideType.Image:

@@ -103,7 +103,7 @@ export class PointModifyHandler extends AsyncApiCaller {
                 if (shape.isVirtualShape) continue;
 
                 if (shape.radiusMask) {
-                    api.delradiusmask(this.__document, this.page, shape);
+                    api.delradiusmask(shape);
                 }
 
                 const isRect = shape.radiusType === RadiusType.Rect;

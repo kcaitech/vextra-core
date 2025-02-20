@@ -28,7 +28,7 @@ import { adapt2Shape, PageView, ShapeView } from "../../dataview";
 import { exportGradient } from "../../data/baseexport";
 import { uuid } from "../../basic/uuid";
 import { _ov, override_variable } from "../symbol";
-import { importBorder, importFill } from "../../data/baseimport";
+import { importFill } from "../../data/baseimport";
 
 /* 填充修改器 */
 export class BorderModifier extends Modifier {
@@ -167,6 +167,7 @@ export class BorderModifier extends Modifier {
         try {
             const api = this.getApi('removeFill');
             actions.forEach(action => api.deleteFillAt(action.fills, action.index));
+            this.commit();
         } catch (error) {
             this.rollback();
             throw error;
@@ -195,13 +196,14 @@ export class BorderModifier extends Modifier {
         try {
             const api = this.getApi('setBorderMaskSide');
             actions.forEach(action => api.setBorderSide(action.border, action.side));
+            this.commit();
         } catch (error) {
             this.rollback();
             throw error;
         }
     }
     /* 修改边框粗细 */
-    setBorderThickness(document: Document, pageView: PageView, views: ShapeView[], thickness: number) {
+    setBorderThickness(pageView: PageView, views: ShapeView[], thickness: number) {
         try {
             const api = this.getApi('setBorderThickness');
             const page = adapt2Shape(pageView) as Page;
@@ -214,14 +216,14 @@ export class BorderModifier extends Modifier {
                     if (linkedBorderMaskVariable) {
                         api.shapeModifyVariable(page, linkedBorderMaskVariable, undefined);
                     } else {
-                        api.delbordermask(document, adapt2Shape(view).style);
+                        api.modifyBorderMask(adapt2Shape(view).style, undefined);
                     }
                     api.setBorderPosition(source, border.position);
                 }
                 const sideType = border.sideSetting.sideType;
                 switch (sideType) {
                     case SideType.Normal:
-                        console.log(source, 'thickness');
+                        console.log(333333333, thickness);
                         
                         api.setBorderSide(source, new BorderSideSetting(sideType, thickness, thickness, thickness, thickness));
                         break;
@@ -242,6 +244,7 @@ export class BorderModifier extends Modifier {
                         break;
                 }
             }
+            this.commit();
         } catch (error) {
             this.rollback();
             throw error;
@@ -271,6 +274,7 @@ export class BorderModifier extends Modifier {
                         break;
                 }
             }
+            this.commit();
         } catch (error) {
             this.rollback();
             throw error;
@@ -281,13 +285,14 @@ export class BorderModifier extends Modifier {
         try {
             const api = this.getApi('setBorderMaskPosition');
             actions.forEach(action => api.setBorderPosition(action.border, action.position));
+            this.commit();
         } catch (error) {
             this.rollback();
             throw error;
         }
     }
     /* 修改边框位置 */
-    setBorderPosition(document: Document, pageView: PageView, views: ShapeView[], position: BorderPosition) {
+    setBorderPosition(pageView: PageView, views: ShapeView[], position: BorderPosition) {
         try {
             const api = this.getApi('setBorderPosition');
             const page = adapt2Shape(pageView) as Page;
@@ -300,12 +305,13 @@ export class BorderModifier extends Modifier {
                     if (linkedBorderMaskVariable) {
                         api.shapeModifyVariable(page, linkedBorderMaskVariable, undefined);
                     } else {
-                        api.delbordermask(document, adapt2Shape(view).style);
+                        api.modifyBorderMask(adapt2Shape(view).style, undefined);
                     }
                     api.setBorderSide(source, border.sideSetting);
                 }
                 api.setBorderPosition(source, position);
             }
+            this.commit();
         } catch (error) {
             this.rollback();
             throw error;
@@ -378,7 +384,7 @@ export class BorderModifier extends Modifier {
         }
     }
     /* 修改图层的边框遮罩 */
-    setShapesStrokeMask(document: Document, pageView: PageView, views: ShapeView[], value: string) {
+    setShapesStrokeMask(pageView: PageView, views: ShapeView[], value: string) {
         try {
             const page = adapt2Shape(pageView) as Page;
             const api = this.getApi('setShapesStrokeMask');
@@ -391,7 +397,7 @@ export class BorderModifier extends Modifier {
             for (const variable of variables) {
                 if (variable.value !== value) api.shapeModifyVariable(page, variable, value);
             }
-            for (const shape of shapes) api.addbordermask(document, shape.style, value);
+            for (const shape of shapes) api.modifyBorderMask(shape.style, value);
             this.commit();
         } catch (error) {
             this.rollback();
@@ -437,7 +443,7 @@ export class BorderModifier extends Modifier {
         }
     }
     /* 解绑图层上的边框遮罩 */
-    unbindShapesBorderMask(document: Document, pageView: PageView, views: ShapeView[]) {
+    unbindShapesBorderMask(pageView: PageView, views: ShapeView[]) {
         try {
             if (!views.length) return;
 
@@ -450,7 +456,7 @@ export class BorderModifier extends Modifier {
                 if (linkedBorderMaskVariable) {
                     api.shapeModifyVariable(page, linkedBorderMaskVariable, undefined);
                 } else {
-                    api.delbordermask(document, adapt2Shape(view).style);
+                    api.modifyBorderMask(adapt2Shape(view).style, undefined);
                 }
             }
 
@@ -519,7 +525,7 @@ export class BorderModifier extends Modifier {
                 if (linkedBorderMaskVariable) {
                     api.shapeModifyVariable(page, linkedBorderMaskVariable, undefined);
                 } else {
-                    api.delbordermask(document, adapt2Shape(view).style);
+                    api.modifyBorderMask(adapt2Shape(view).style, undefined);
                 }
             }
 
