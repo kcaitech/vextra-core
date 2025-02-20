@@ -180,6 +180,11 @@ export class PathShapeView extends ShapeView {
             this.m_border_path = undefined;
             this.m_border_path_box = undefined;
             this.createBorderPath();
+        } else if (args.includes('fillsMask')) {
+            this.m_fills = undefined;
+            this.m_border_path = undefined;
+            this.m_border_path_box = undefined;
+            this.createBorderPath();
         }
 
         const masked = this.masked;

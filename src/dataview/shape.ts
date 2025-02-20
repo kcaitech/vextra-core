@@ -514,6 +514,8 @@ export class ShapeView extends DataView {
         }
         else if (args.includes('borders')) {
             this.m_borders = undefined;
+        } else if (args.includes('fillsMask')) {
+            this.m_fills = undefined;
         }
 
         const masked = this.masked;
