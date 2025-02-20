@@ -610,12 +610,12 @@ export class ShapeView extends DataView {
 
     private onFillMaskChange = this._onFillMaskChange.bind(this);
 
-    private watchFillMask(mask: FillMask) {
+    protected watchFillMask(mask: FillMask) {
         this.m_unbind_fill?.();
         this.m_unbind_fill = mask.watch(this.onFillMaskChange);
     }
 
-    private unwatchFillMask() {
+    protected unwatchFillMask() {
         this.m_unbind_fill?.();
     }
 
@@ -634,7 +634,7 @@ export class ShapeView extends DataView {
             this.unwatchFillMask();
         }
 
-        return fills;
+        return this.m_fills = fills;
     }
 
     private _onBorderMaskChange() {

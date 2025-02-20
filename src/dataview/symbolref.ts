@@ -6,7 +6,7 @@ import {
     SideType,
     BorderPosition,
     BorderStyle,
-    CornerType
+    CornerType, FillMask
 } from "../data";
 import { ShapeView, fixFrameByConstrain } from "./shape";
 import { DataView, RootView } from "./view";
@@ -396,11 +396,26 @@ export class SymbolRefView extends ShapeView {
         return findOverrideAll(id, ot, varsContainer);
     }
 
+    get fillsMask(): string | undefined {
+        const v = this._findOV2(OverrideType.FillsMask, VariableType.FillsMask);
+        return v ? v.value as string : this.m_sym?.style.fillsMask;
+    }
+
     getFills(): BasicArray<Fill> {
         if (this.m_fills) return this.m_fills;
-        const v = this._findOV2(OverrideType.Fills, VariableType.Fills);
-        this.m_fills = v ? v.value as BasicArray<Fill> : this.m_sym?.style.fills || new BasicArray();
-        return this.m_fills;
+
+        let fills: BasicArray<Fill>;
+        const fillsMask = this.fillsMask;
+        if (fillsMask) {
+            const mask = this.style.getStylesMgr()!.getSync(fillsMask) as FillMask;
+            fills = mask.fills;
+            this.watchFillMask(mask);
+        } else {
+            const v = this._findOV2(OverrideType.Fills, VariableType.Fills);
+            fills = v ? v.value as BasicArray<Fill> : this.m_sym?.style.fills || new BasicArray();
+            this.unwatchFillMask();
+        }
+        return this.m_fills = fills;
     }
 
     getBorders(): Border {
