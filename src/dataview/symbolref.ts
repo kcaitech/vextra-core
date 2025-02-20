@@ -1,12 +1,12 @@
 import {
     AutoLayout, Border, ContextSettings, CornerRadius, Fill, MarkerType, OverrideType, PrototypeInterAction, Shadow,
     Shape, ShapeFrame, ShapeSize, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType, ShapeType,
-    BasicArray, getPathOfRadius, makeShapeTransform1By2, makeShapeTransform2By1, Blur, BlurType, PathShape,
+    BasicArray, getPathOfRadius, Blur, BlurType,
     BorderSideSetting,
     SideType,
     BorderPosition,
     BorderStyle,
-    CornerType, FillMask
+    CornerType, FillMask, CurvePoint, CurveMode, parsePath
 } from "../data";
 import { ShapeView, fixFrameByConstrain } from "./shape";
 import { DataView, RootView } from "./view";
@@ -632,5 +632,18 @@ export class SymbolRefView extends ShapeView {
         const v = this._findOV2(OverrideType.FrameMaskDisabled, VariableType.FrameMaskDisabled);
         if (v) return v.value;
         return this.m_sym?.frameMaskDisabled;
+    }
+
+    getPathOfSize() {
+        const p1 = new CurvePoint([] as any, '', 0, 0, CurveMode.Straight);
+        const p2 = new CurvePoint([] as any, '', 1, 0, CurveMode.Straight);
+        const p3 = new CurvePoint([] as any, '', 1, 1, CurveMode.Straight);
+        const p4 = new CurvePoint([] as any, '', 0, 1, CurveMode.Straight);
+        const radius = this.radius;
+        p1.radius = radius[0];
+        p2.radius = radius[1] ?? radius[0];
+        p3.radius = radius[2] ?? radius[0];
+        p4.radius = radius[3] ?? radius[0];
+        return parsePath([p1, p2, p3, p4], true, this.frame.width, this.frame.height);
     }
 }

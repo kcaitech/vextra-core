@@ -3,13 +3,27 @@ import { GroupShapeView } from "./groupshape";
 import { innerShadowId, renderBorders, renderFills } from "../render";
 import { objectId } from "../basic/objectid";
 import { render as clippathR } from "../render/clippath"
-import { AutoLayout, BorderPosition, CornerRadius, Page, ScrollBehavior, ShadowPosition, ShapeFrame, Transform, Artboard, BlurType, ShapeSize, RadiusMask, OverrideType, VariableType } from "../data";
+import {
+    AutoLayout,
+    BorderPosition,
+    CornerRadius,
+    Page,
+    ScrollBehavior,
+    ShadowPosition,
+    ShapeFrame,
+    Transform,
+    Artboard,
+    BlurType,
+    ShapeSize,
+    RadiusMask,
+    OverrideType,
+    VariableType,parsePath, CurvePoint, CurveMode
+} from "../data";
 import { ShapeView, updateFrame } from "./shape";
 import { PageView } from "./page";
 import { updateAutoLayout } from "../editor/utils/auto_layout2";
 
 export class ArtboardView extends GroupShapeView {
-
     m_inner_transform: Transform | undefined;
     m_fixed_transform: Transform | undefined;
     get innerTransform(): Transform | undefined {
@@ -39,7 +53,7 @@ export class ArtboardView extends GroupShapeView {
     }
 
     get cornerRadius(): CornerRadius | undefined {
-        return (this.data).cornerRadius;
+        return this.data.cornerRadius;
     }
 
     get autoLayout(): AutoLayout | undefined {
@@ -378,5 +392,18 @@ export class ArtboardView extends GroupShapeView {
             this.unwatchRadiusMask();
         }
         return _radius
+    }
+
+    getPathOfSize() {
+        const p1 = new CurvePoint([] as any, '', 0, 0, CurveMode.Straight);
+        const p2 = new CurvePoint([] as any, '', 1, 0, CurveMode.Straight);
+        const p3 = new CurvePoint([] as any, '', 1, 1, CurveMode.Straight);
+        const p4 = new CurvePoint([] as any, '', 0, 1, CurveMode.Straight);
+        const radius = this.radius;
+        p1.radius = radius[0];
+        p2.radius = radius[1] ?? radius[0];
+        p3.radius = radius[2] ?? radius[0];
+        p4.radius = radius[3] ?? radius[0];
+        return parsePath([p1, p2, p3, p4], true, this.frame.width, this.frame.height);
     }
 }
