@@ -2641,7 +2641,7 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                api.addbordermask(this.__document, this.page, adapt2Shape(target), value);
+                api.addbordermask(this.__document, adapt2Shape(target).style, value);
             }
             this.__repo.commit();
         } catch (e) {
@@ -2687,7 +2687,7 @@ export class PageEditor {
             for (let i = 0; i < actions.length; i++) {
                 const { target } = actions[i];
                 api.deleteStrokePaints(this.page, adapt2Shape(target), 0, target.style.borders.strokePaints.length)
-                api.delBorderFillMask(this.__document, this.page, adapt2Shape(target), undefined);
+                api.delBorderFillMask(this.__document, adapt2Shape(target).style);
             }
             this.__repo.commit();
         } catch (e) {
@@ -2701,7 +2701,7 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                api.setBorderFillMask(this.__document, this.page, adapt2Shape(target), value);
+                api.setBorderFillMask(this.__document, adapt2Shape(target).style, value);
             }
             this.__repo.commit();
         } catch (e) {
@@ -2717,7 +2717,7 @@ export class PageEditor {
                 const { target, value } = actions[i];
                 api.deleteStrokePaints(this.page, adapt2Shape(target), 0, target.style.borders.strokePaints.length)
                 api.addStrokePaints(this.page, adapt2Shape(target), value);
-                api.delBorderFillMask(this.__document, this.page, adapt2Shape(target), undefined);
+                api.delBorderFillMask(this.__document, adapt2Shape(target).style);
             }
             this.__repo.commit();
         } catch (e) {
@@ -2752,7 +2752,7 @@ export class PageEditor {
                 const s = shape4border(api, this.view, shape);
                 const style: Style = s instanceof Shape ? s.style : s.value;
                 api.delbordermask(this.__document, style);
-                api.delBorderFillMask(this.__document, this.page, adapt2Shape(shape), undefined);
+                api.delBorderFillMask(this.__document, adapt2Shape(shape).style);
                 api.deleteStrokePaints(this.page, s, 0, shape.style.borders.strokePaints.length);
             }
             this.__repo.commit();
@@ -2767,7 +2767,7 @@ export class PageEditor {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
                 const s = shape4border(api, this.view, target);
-                api.delBorderFillMask(this.__document, this.page, s, undefined);
+                api.delBorderFillMask(this.__document, adapt2Shape(target).style);
                 api.deleteStrokePaints(this.page, s, 0, target.style.borders.strokePaints.length);
                 api.addStrokePaints(this.page, s, value);
             }
@@ -2816,7 +2816,7 @@ export class PageEditor {
                 const borders = target.getBorders();
                 if (!borders) continue;
                 const border = s instanceof Shape ? s.style.borders : s.value;
-                const id = target.style.bordersMask!;
+                const id = target.bordersMask!;
                 if (id) {
                     const borderMask = (target.style.getStylesMgr()?.getSync(id) as BorderMask).border;
                     api.setBorderPosition(borderMask, borderMask.position);
@@ -2828,19 +2828,19 @@ export class PageEditor {
                         api.setBorderSide(border, new BorderSideSetting(sideType, value, value, value, value));
                         break;
                     case SideType.Top:
-                        api.setBorderThicknessTop(this.page, s, value);
+                        api.setBorderThicknessTop(border, value);
                         break
                     case SideType.Right:
-                        api.setBorderThicknessRight(this.page, s, value);
+                        api.setBorderThicknessRight(border, value);
                         break
                     case SideType.Bottom:
-                        api.setBorderThicknessBottom(this.page, s, value);
+                        api.setBorderThicknessBottom(border, value);
                         break
                     case SideType.Left:
-                        api.setBorderThicknessLeft(this.page, s, value);
+                        api.setBorderThicknessLeft(border, value);
                         break
                     default:
-                        api.setBorderSide(border, new BorderSideSetting(SideType.Normal, value, value, value, value));
+                        api.setBorderSide(border, new BorderSideSetting(SideType.Custom, value, value, value, value));
                         break;
                 }
             }
@@ -2987,8 +2987,8 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                const s = shape4border(api, this.view, target);
-                api.setBorderThicknessTop(this.page, s, value);
+                const border = target.getBorders();
+                api.setBorderThicknessTop(border, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -3001,8 +3001,8 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                const s = shape4border(api, this.view, target);
-                api.setBorderThicknessRight(this.page, s, value);
+                const border = target.getBorders();
+                api.setBorderThicknessRight(border, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -3015,8 +3015,8 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                const s = shape4border(api, this.view, target);
-                api.setBorderThicknessBottom(this.page, s, value);
+                const border = target.getBorders();
+                api.setBorderThicknessBottom(border, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -3029,8 +3029,8 @@ export class PageEditor {
         try {
             for (let i = 0; i < action.length; i++) {
                 const { target, value } = action[i];
-                const s = shape4border(api, this.view, target);
-                api.setBorderThicknessLeft(this.page, s, value);
+                const border = target.getBorders();
+                api.setBorderThicknessLeft(border, value);
             }
             this.__repo.commit();
         } catch (error) {

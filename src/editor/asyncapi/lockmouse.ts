@@ -2,7 +2,7 @@ import { AsyncApiCaller } from "./basic/asyncapi";
 import { CoopRepository } from "../../coop/cooprepo";
 import { adapt2Shape, ArtboardView, GroupShapeView, PageView, ShapeView, SymbolRefView } from "../../dataview";
 import { translate } from "../frame";
-import { shape4Autolayout, shape4cornerRadius } from "../symbol";
+import { _ov, override_variable, shape4Autolayout, shape4cornerRadius } from "../symbol";
 import {
     GroupShape,
     PathShape,
@@ -22,7 +22,12 @@ import {
     makeShapeTransform1By2,
     StackSizing,
     OvalShape, ContactShape,
-    Shadow
+    Shadow,
+    VariableType,
+    OverrideType,
+    Border,
+    SideType,
+    BorderSideSetting
 } from "../../data";
 import {
     calculateInnerAnglePosition,
@@ -36,12 +41,12 @@ import {
     reLayoutBySizeChanged,
     SizeRecorder,
     TransformRecorder,
-    uniformScale,
-    UniformScaleUnit
 } from "./transform";
 import { fixTextShapeFrameByLayout } from "../utils/other";
 import { TidyUpAlgin, tidyUpLayout } from "../utils/auto_layout";
 import { modifyPathByArc } from "./arc";
+import { Api } from "../../coop";
+import { importBorder } from "../../data/baseimport";
 
 export class LockMouseHandler extends AsyncApiCaller {
     private recorder: RangeRecorder = new Map();
@@ -505,6 +510,91 @@ export class LockMouseHandler extends AsyncApiCaller {
                 modifyPathByArc(api, page, shape);
             }
 
+            this.updateView();
+        } catch (error) {
+            console.error(error);
+            this.exception = true;
+        }
+    }
+
+    private getBorderVariable(api: Api, page: PageView, view: ShapeView) {
+        return override_variable(page, VariableType.Borders, OverrideType.Borders, (_var) => {
+            const border = _var?.value ?? view.getBorders();
+            return border;
+        }, api, view);
+    }
+
+    private getStrokeMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
+        return _ov(VariableType.BordersMask, OverrideType.BordersMask, () => value, view, page, api);
+    }
+
+    modifyBorderThickness(shapes: ShapeView[], thickness: number) {
+        try {
+            const api = this.api;
+            for (const view of shapes) {
+                const border = view.getBorders();
+                const linkedVariable = this.getBorderVariable(api, this._page, view);
+                const source = linkedVariable ? (linkedVariable.value as Border) : adapt2Shape(view).style.borders;
+                if (view.bordersMask) {
+                    const linkedBorderMaskVariable = this.getStrokeMaskVariable(api, this._page, view, undefined);
+                    if (linkedBorderMaskVariable) {
+                        api.shapeModifyVariable(this.page, linkedBorderMaskVariable, undefined);
+                    } else {
+                        api.delbordermask(this.__document, adapt2Shape(view).style);
+                    }
+                    api.setBorderPosition(source, border.position);
+                }
+                const sideType = border.sideSetting.sideType;
+                switch (sideType) {
+                    case SideType.Normal:
+                        api.setBorderSide(source, new BorderSideSetting(sideType, thickness, thickness, thickness, thickness));
+                        break;
+                    case SideType.Top:
+                        api.setBorderThicknessTop(source, thickness);
+                        break
+                    case SideType.Right:
+                        api.setBorderThicknessRight(source, thickness);
+                        break
+                    case SideType.Bottom:
+                        api.setBorderThicknessBottom(source, thickness);
+                        break
+                    case SideType.Left:
+                        api.setBorderThicknessLeft(source, thickness);
+                        break
+                    default:
+                        api.setBorderSide(source, new BorderSideSetting(SideType.Custom, thickness, thickness, thickness, thickness));
+                        break;
+                }
+            }
+            this.updateView();
+        } catch (error) {
+            console.error(error);
+            this.exception = true;
+        }
+    }
+    modifyBorderCustomThickness(shapes: ShapeView[], thickness: number, type: SideType) {
+        try {
+            const api = this.api;
+            for (const view of shapes) {
+                const linkedVariable = this.getBorderVariable(api, this._page, view);
+                const source = linkedVariable ? (linkedVariable.value as Border) : adapt2Shape(view).style.borders;
+                switch (type) {
+                    case SideType.Top:
+                        api.setBorderThicknessTop(source, thickness);
+                        break
+                    case SideType.Right:
+                        api.setBorderThicknessRight(source, thickness);
+                        break
+                    case SideType.Bottom:
+                        api.setBorderThicknessBottom(source, thickness);
+                        break
+                    case SideType.Left:
+                        api.setBorderThicknessLeft(source, thickness);
+                        break
+                    default:
+                        break;
+                }
+            }
             this.updateView();
         } catch (error) {
             console.error(error);
