@@ -7,18 +7,18 @@ export class Modifier {
         this.__repo = repo;
     }
 
-    private m_api: Api | undefined;
+    api: Api | undefined;
     protected getApi(desc: string): Api {
-        return this.m_api ?? (this.m_api = this.__repo.start(desc));
+        return this.api ?? (this.api = this.__repo.start(desc));
     }
 
     protected rollback() {
         this.__repo.rollback();
-        this.m_api = undefined;
+        this.api = undefined;
     }
 
     protected commit() {
         this.__repo.commit();
-        this.m_api = undefined;
+        this.api = undefined;
     }
 }
