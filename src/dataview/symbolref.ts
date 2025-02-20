@@ -6,7 +6,8 @@ import {
     SideType,
     BorderPosition,
     BorderStyle,
-    CornerType, FillMask, CurvePoint, CurveMode, parsePath
+    CornerType, FillMask, CurvePoint, CurveMode, parsePath,
+    BorderMask
 } from "../data";
 import { ShapeView, fixFrameByConstrain } from "./shape";
 import { DataView, RootView } from "./view";
@@ -422,11 +423,36 @@ export class SymbolRefView extends ShapeView {
     getBorders(): Border {
         if (this.m_borders) return this.m_borders;
         const v = this._findOV2(OverrideType.Borders, VariableType.Borders);
-        const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
-        const strokePaints = new BasicArray<Fill>();
-        const border = new Border(BorderPosition.Inner, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
-        this.m_borders = v ? v.value as Border : this.m_sym?.style.borders;
-        return this.m_borders || border;
+        const border = v ? { ...v.value } : { ...this.m_data.style.borders };
+        const bordersMask = this.bordersMask;
+        const mgr = this.style.getStylesMgr() || this.m_sym?.style.getStylesMgr();
+        if (bordersMask && mgr) {
+            const mask = mgr.getSync(bordersMask) as BorderMask
+            border.position = mask.border.position;
+            border.sideSetting = mask.border.sideSetting;
+            this.watchBorderMask(mask);
+        } else {
+            this.unwatchBorderMask();
+        }
+        const fillsMask: string | undefined = this.borderFillsMask;
+        if (fillsMask && mgr) {
+            const mask = mgr.getSync(fillsMask) as FillMask;
+            border.strokePaints = mask.fills;
+            this.watchBorderFillMask(mask);
+        } else {
+            this.unwatchBorderFillMask();
+        }
+        return border;
+    }
+
+    get bordersMask(): string | undefined {
+        const v = this._findOV2(OverrideType.BordersMask, VariableType.BordersMask);
+        return v ? v.value : this.m_sym?.style.bordersMask;
+    }
+
+    get borderFillsMask(): string | undefined {
+        const v = this._findOV2(OverrideType.BorderFillsMask, VariableType.BorderFillsMask);
+        return v ? v.value : this.m_sym?.style.borders.fillsMask;
     }
 
     getShadows(): BasicArray<Shadow> {
