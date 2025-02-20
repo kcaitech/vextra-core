@@ -211,4 +211,4 @@ export {
     _ov as getBasicContainer
 } from './editor/symbol';
 
-export { FillModifier } from "./editor/style/fill";
+export { FillModifier, RefFillModifier } from "./editor/style/fill";
