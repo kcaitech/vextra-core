@@ -438,18 +438,17 @@ export class SymbolRefView extends ShapeView {
     getShadows(): BasicArray<Shadow> {
         let shadows: BasicArray<Shadow>;
         const shadowsMask = this.shadowsMask;
-        if (shadowsMask) {
-            const mask = this.style.getStylesMgr()!.getSync(shadowsMask) as ShadowMask;
+        const mgr = this.style.getStylesMgr() || this.m_sym?.style.getStylesMgr();
+        if (shadowsMask && mgr) {
+            const mask = mgr.getSync(shadowsMask) as ShadowMask;
             shadows = mask.shadows;
             this.watchShadowMask(mask);
         } else {
             const v = this._findOV2(OverrideType.Shadows, VariableType.Shadows);
-            shadows = v ? v.value : this.m_data.style.shadows;
+            shadows = v ? v.value : this.m_sym?.style.shadows || new BasicArray();
             this.unwatchShadowMask()
         }
-        const v = this._findOV2(OverrideType.Shadows, VariableType.Shadows);
-        if (v) return v.value;
-        return this.m_sym?.style.shadows || new BasicArray();
+        return shadows;
     }
 
     get blur(): Blur | undefined {
