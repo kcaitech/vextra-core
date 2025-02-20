@@ -52,7 +52,7 @@ export class BorderModifier extends Modifier {
     }
 
     /* 创建一个填充 */
-    createFill(actions: { fills: BasicArray<Fill>, fill: Fill, index: number }[]) {
+    addFill(actions: { fills: BasicArray<Fill>, fill: Fill, index: number }[]) {
         try {
             const api = this.getApi('createFill');
             actions.forEach(action => api.addFillAt(action.fills, action.fill, action.index));
@@ -179,7 +179,7 @@ export class BorderModifier extends Modifier {
         if (!fillContainers.length) return;
         try {
             const api = this.getApi('unifyShapesFills');
-            const master = fillContainers[0].map(i => importFill(i));
+            const master = fillContainers.find(i => i.length > 0)!;
             for (const fillContainer of fillContainers) {
                 api.deleteFills(fillContainer, 0, fillContainer.length);
                 api.addFills(fillContainer, master.map(i => importFill(i)));
