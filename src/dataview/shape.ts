@@ -721,6 +721,11 @@ export class ShapeView extends DataView {
         return v ? v.value : this.m_data.style.endMarkerType;
     }
 
+    get shadowsMask(): string | undefined {
+        const v = this._findOV(OverrideType.ShadowsMask, VariableType.ShadowsMask);
+        return v ? v.value : this.m_data.style.shadowsMask;
+    }
+
     private _onShadowMaskChange() {
         this.m_ctx.setDirty(this);
         this.notify('style', 'shadows', 'mask');
@@ -729,21 +734,21 @@ export class ShapeView extends DataView {
     private m_unbind_shadow: undefined | (() => void) = undefined;
     private onShadowMaskChange = this._onShadowMaskChange.bind(this);
 
-    private watchShadowMask(mask: ShadowMask) {
+    protected watchShadowMask(mask: ShadowMask) {
         this.m_unbind_shadow?.();
         this.m_unbind_shadow = mask.watch(this.onShadowMaskChange);
     }
 
-    private unwatchShadowMask() {
+    protected unwatchShadowMask() {
         this.m_unbind_shadow?.();
     }
 
     getShadows(): BasicArray<Shadow> {
         let shadows: BasicArray<Shadow> = new BasicArray();
-        if (this.style.shadowsMask) {
+        if (this.shadowsMask) {
             const mgr = this.style.getStylesMgr();
             if (!mgr) return shadows;
-            const mask = mgr.getSync(this.style.shadowsMask) as ShadowMask
+            const mask = mgr.getSync(this.shadowsMask) as ShadowMask
             shadows = mask.shadows;
             this.watchShadowMask(mask);
         } else {

@@ -6,7 +6,8 @@ import {
     SideType,
     BorderPosition,
     BorderStyle,
-    CornerType, FillMask, CurvePoint, CurveMode, parsePath
+    CornerType, FillMask, CurvePoint, CurveMode, parsePath,
+    ShadowMask
 } from "../data";
 import { ShapeView, fixFrameByConstrain } from "./shape";
 import { DataView, RootView } from "./view";
@@ -428,7 +429,23 @@ export class SymbolRefView extends ShapeView {
         return this.m_borders || border;
     }
 
+    get shadowsMask(): string | undefined {
+        const v = this._findOV2(OverrideType.ShadowsMask, VariableType.ShadowsMask);
+        return v ? v.value as string : this.m_sym?.style.shadowsMask;
+    }
+
     getShadows(): BasicArray<Shadow> {
+        let shadows: BasicArray<Shadow>;
+        const shadowsMask = this.shadowsMask;
+        if (shadowsMask) {
+            const mask = this.style.getStylesMgr()!.getSync(shadowsMask) as ShadowMask;
+            shadows = mask.shadows;
+            this.watchShadowMask(mask);
+        } else {
+            const v = this._findOV2(OverrideType.Shadows, VariableType.Shadows);
+            shadows = v ? v.value : this.m_data.style.shadows;
+            this.unwatchShadowMask()
+        }
         const v = this._findOV2(OverrideType.Shadows, VariableType.Shadows);
         if (v) return v.value;
         return this.m_sym?.style.shadows || new BasicArray();
