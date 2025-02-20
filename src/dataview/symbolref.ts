@@ -407,8 +407,9 @@ export class SymbolRefView extends ShapeView {
 
         let fills: BasicArray<Fill>;
         const fillsMask = this.fillsMask;
-        if (fillsMask) {
-            const mask = this.style.getStylesMgr()!.getSync(fillsMask) as FillMask;
+        const mgr = this.style.getStylesMgr() || this.m_sym?.style.getStylesMgr();
+        if (fillsMask && mgr) {
+            const mask = mgr.getSync(fillsMask) as FillMask;
             fills = mask.fills;
             this.watchFillMask(mask);
         } else {
