@@ -163,6 +163,7 @@ export class FillModifier extends Modifier {
         try {
             const api = this.getApi('removeFill');
             actions.forEach(action => api.deleteFillAt(action.fills, action.index));
+            this.commit();
         } catch (error) {
             this.rollback();
             throw error;
