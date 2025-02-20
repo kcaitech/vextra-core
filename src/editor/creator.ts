@@ -1,5 +1,5 @@
 import { v4 as uuid } from "uuid";
-import { AutoLayout, Page, Artboard, Document, PageListItem, TableShape } from "../data";
+import { AutoLayout, Page, Artboard, Document, PageListItem, TableShape, StyleMangerMember } from "../data";
 import {
     GroupShape,
     LineShape,
@@ -9,7 +9,6 @@ import {
     RectShape,
     Shape,
     TextShape,
-    ImageShape,
     PathSegment,
     CutoutShape,
     SymbolUnionShape,
@@ -30,7 +29,7 @@ import {
 } from "../data/baseimport";
 import template_group_shape from "./template/group-shape.json";
 import template_bool_shape from "./template/bool-shape.json";
-import templage_page from "./template/page.json";
+import template_page from "./template/page.json";
 import template_artboard from "./template/artboard.json"
 import template_text_shape from "./template/text-shape.json"
 import {
@@ -55,7 +54,6 @@ import {
 } from "../data";
 import { BasicArray, BasicMap } from "../data";
 import { Repository } from "../data";
-import { Comment } from "../data";
 import { ResourceMgr } from "../data";
 import { TableShape2 } from "../data";
 
@@ -80,15 +78,12 @@ import { is_mac } from "../data/utils";
 import { Path } from "@kcdesign/path";
 import { convertPath2CurvePoints } from "../data/pathconvert";
 
-function _checkNum(x: number) {
-    // check
-    if (Number.isNaN(x) || (!Number.isFinite(x))) throw new Error(String(x));
+function _checkNum(num: number) {
+    if (Number.isNaN(num) || (!Number.isFinite(num))) throw new Error(String(num));
 }
 
 function _checkFrame(frame: ShapeSize) {
     if (frame.width === 0 || frame.height === 0) throw new Error();
-    // _checkNum(frame.x);
-    // _checkNum(frame.y);
     _checkNum(frame.width);
     _checkNum(frame.height);
 }
@@ -111,12 +106,9 @@ export function newDocument(documentName: string, repo: Repository): Document {
 }
 
 export function newPage(name: string): Page {
-    templage_page.id = uuid();
-    templage_page.name = name;
-    // const fillColor = new Color(1, 239, 239, 239);
-    // const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor);
-    const page = importPage(templage_page as types.Page)
-    // page.style.fills.push(fill);
+    template_page.id = uuid();
+    template_page.name = name;
+    const page = importPage(template_page as types.Page)
     page.backgroundColor = new Color(1, 239, 239, 239);
     return page;
 }
@@ -139,39 +131,31 @@ export function newBoolShape(name: string, style?: Style): BoolShape {
     return group;
 }
 
-/**
- * @description 给未进入文档(guard之前)的图形设置frame
- */
-export function initFrame(shape: Shape, frame: ShapeFrame) {
-    _checkFrame(frame);
-    shape.transform.m02 = frame.x;
-    shape.transform.m12 = frame.y;
-    shape.size.width = frame.width;
-    shape.size.height = frame.height;
-}
-
 export function newSolidColorFill(fillColor = new Color(1, 216, 216, 216)): Fill {
     return new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, fillColor);
 }
 
-export function newStyle(): Style {
+export function newStyle(styleMgr: ResourceMgr<StyleMangerMember>): Style {
     const fill = newSolidColorFill();
     const fills = new BasicArray<Fill>();
     const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
     const strokePaints = new BasicArray<Fill>();
     const border = new Border(types.BorderPosition.Inner, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
     const style = new Style(fills, new BasicArray<Shadow>(), border);
+    style.setStylesMgr(styleMgr);
     style.fills.push(fill);
     return style;
 }
 
-export function newflatStyle(): Style {
+export function newFlatStyle(styleMgr: ResourceMgr<StyleMangerMember>): Style {
     const fills = new BasicArray<Fill>();
     const shadows = new BasicArray<Shadow>();
     const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
     const strokePaints = new BasicArray<Fill>();
     const border = new Border(types.BorderPosition.Inner, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
-    return new Style(fills, shadows, border);
+    const style = new Style(fills, shadows, border);
+    style.setStylesMgr(styleMgr)
+    return style;
 }
 
 export function newArtboard(name: string, frame: ShapeFrame, fill?: Fill): Artboard {
@@ -240,11 +224,11 @@ export function newAutoLayoutArtboard(name: string, frame: ShapeFrame, autoLayou
     return artboard
 }
 
-export function newPathShape(name: string, frame: ShapeFrame, path: Path, style?: Style): PathShape {
+export function newPathShape(name: string, frame: ShapeFrame, path: Path, styleMgr: ResourceMgr<StyleMangerMember>, style?: Style): PathShape {
     frame.width = frame.width || 1;
     frame.height = frame.height || 1;
 
-    style = style || newStyle();
+    style = style || newStyle(styleMgr);
     const id = uuid();
     const segs = convertPath2CurvePoints(path, frame.width, frame.height);
     const pathsegs = new BasicArray<PathSegment>();
@@ -264,9 +248,9 @@ export function newPathShape(name: string, frame: ShapeFrame, path: Path, style?
     return shape;
 }
 
-export function newRectShape(name: string, frame: ShapeFrame): RectShape {
+export function newRectShape(name: string, frame: ShapeFrame, styleMgr: ResourceMgr<StyleMangerMember>): RectShape {
     _checkFrame(frame);
-    const style = newStyle();
+    const style = newStyle(styleMgr);
     const curvePoint = new BasicArray<CurvePoint>();
     const id = uuid();
     const p1 = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight); // lt
@@ -288,12 +272,9 @@ export function newRectShape(name: string, frame: ShapeFrame): RectShape {
 }
 
 // 三次贝塞尔曲线绘制椭圆
-// https://juejin.cn/post/7212650952532459578
-// https://pomax.github.io/bezierinfo/#circles_cubic
-// kappa = 4 * (Math.sqrt(2) - 1) / 3;
-export function newOvalShape(name: string, frame: ShapeFrame): OvalShape {
+export function newOvalShape(name: string, frame: ShapeFrame, styleMgr: ResourceMgr<StyleMangerMember>): OvalShape {
     _checkFrame(frame);
-    const style = newStyle();
+    const style = newStyle(styleMgr);
     const curvePoint = new BasicArray<CurvePoint>();
     const id = uuid();
     const ellipse = new Ellipse(0, 0, 0, 0);
@@ -339,16 +320,16 @@ export function newOvalShape(name: string, frame: ShapeFrame): OvalShape {
     transform.m12 = frame.y;
     const size = new ShapeSize(frame.width, frame.height);
 
-    const shape = new OvalShape([4] as BasicArray<number>, id, name, types.ShapeType.Oval, transform, style, size, new BasicArray<PathSegment>(segment), ellipse);
+    const shape = new OvalShape([0] as BasicArray<number>, id, name, types.ShapeType.Oval, transform, style, size, new BasicArray<PathSegment>(segment), ellipse);
 
     addCommonAttr(shape);
     return shape;
 }
 
 // 多边形--默认三条边
-export function newPolygonShape(name: string, frame: ShapeFrame): PolygonShape {
+export function newPolygonShape(name: string, frame: ShapeFrame, styleMgr: ResourceMgr<StyleMangerMember>): PolygonShape {
     _checkFrame(frame);
-    const style = newStyle();
+    const style = newStyle(styleMgr);
     const id = uuid();
     const vertices = getPolygonVertices(3);
     const curvePoint = getPolygonPoints(vertices);
@@ -365,9 +346,9 @@ export function newPolygonShape(name: string, frame: ShapeFrame): PolygonShape {
 }
 
 // 五角星
-export function newStellateShape(name: string, frame: ShapeFrame): StarShape {
+export function newStellateShape(name: string, frame: ShapeFrame, styleMgr: ResourceMgr<StyleMangerMember>): StarShape {
     _checkFrame(frame);
-    const style = newStyle();
+    const style = newStyle(styleMgr);
     const vertices = getPolygonVertices(10, 0.382);
     const id = uuid();
     const curvePoint = getPolygonPoints(vertices);
@@ -383,9 +364,9 @@ export function newStellateShape(name: string, frame: ShapeFrame): StarShape {
     return shape;
 }
 
-export function newLineShape(name: string, frame: ShapeFrame): LineShape {
+export function newLineShape(name: string, frame: ShapeFrame, styleMgr: ResourceMgr<StyleMangerMember>): LineShape {
     _checkFrame(frame);
-    const style = newflatStyle();
+    const style = newFlatStyle(styleMgr);
     const sPoint = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0.5, CurveMode.Straight);
     const ePoint = new CurvePoint([1] as BasicArray<number>, uuid(), 1, 0.5, CurveMode.Straight);
     frame.height = 1;
@@ -408,9 +389,9 @@ export function newLineShape(name: string, frame: ShapeFrame): LineShape {
     return shape;
 }
 
-export function newArrowShape(name: string, frame: ShapeFrame): LineShape {
+export function newArrowShape(name: string, frame: ShapeFrame, styleMgr: ResourceMgr<StyleMangerMember>): LineShape {
     _checkFrame(frame);
-    const style = newflatStyle();
+    const style = newFlatStyle(styleMgr);
     style.endMarkerType = types.MarkerType.OpenArrow;
     const sPoint = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0.5, CurveMode.Straight);
     const ePoint = new CurvePoint([1] as BasicArray<number>, uuid(), 1, 0.5, CurveMode.Straight);
@@ -420,8 +401,7 @@ export function newArrowShape(name: string, frame: ShapeFrame): LineShape {
     const strokePaints = new BasicArray<Fill>();
     const strokePaint = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0))
     strokePaints.push(strokePaint);
-    const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
-    style.borders = border;
+    style.borders = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
     const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, false);
 
     const transform = new Transform();
@@ -477,45 +457,12 @@ export function newTextShapeByText(name: string, text: types.Text): TextShape {
     return textshape;
 }
 
-export function newComment(user: UserInfo, createAt: string, pageId: string, frame: ShapeFrame, content: string, parasiticBody: Shape, rootId?: string, parentId?: string): Comment {
-    const id = uuid();
-    const comment = new Comment(pageId, id, frame, user, createAt, content, parasiticBody, rootId, parentId);
-    return comment;
-}
-
-export function newImageShape(name: string, frame: ShapeFrame, mediasMgr: ResourceMgr<{
-    buff: Uint8Array,
-    base64: string
-}>, ref?: string): ImageShape {
-    _checkFrame(frame);
-    const id = uuid();
-    const style = newStyle();
-    const curvePoint = new BasicArray<CurvePoint>();
-    const p1 = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight); // lt
-    const p2 = new CurvePoint([1] as BasicArray<number>, uuid(), 1, 0, CurveMode.Straight); // rt
-    const p3 = new CurvePoint([2] as BasicArray<number>, uuid(), 1, 1, CurveMode.Straight); // rb
-    const p4 = new CurvePoint([3] as BasicArray<number>, uuid(), 0, 1, CurveMode.Straight); // lb
-    curvePoint.push(p1, p2, p3, p4);
-    const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, true);
-
-    const transform = new Transform();
-    transform.m02 = frame.x;
-    transform.m12 = frame.y;
-    const size = new ShapeSize(frame.width, frame.height);
-
-    const img = new ImageShape(new BasicArray(), id, name, types.ShapeType.Image, transform, style, size, new BasicArray<PathSegment>(segment), ref || '');
-    img.setImageMgr(mediasMgr);
-    addCommonAttr(img);
-    img.style.fills.length = 0;
-    return img;
-}
-
 export function newImageFillShape(name: string, frame: ShapeFrame, mediasMgr: ResourceMgr<{
     buff: Uint8Array,
     base64: string
-}>, originFrame: { width: number, height: number }, ref?: string): RectShape {
+}>, originFrame: { width: number, height: number }, styleMgr: ResourceMgr<StyleMangerMember>, ref?: string): RectShape {
     _checkFrame(frame);
-    const style = newStyle();
+    const style = newStyle(styleMgr);
     const curvePoint = new BasicArray<CurvePoint>();
     const id = uuid();
     const p1 = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight); // lt
@@ -550,12 +497,8 @@ export function newImageFillShape(name: string, frame: ShapeFrame, mediasMgr: Re
 export function newTable(name: string, frame: ShapeFrame, rowCount: number, columCount: number, mediasMgr: ResourceMgr<{
     buff: Uint8Array,
     base64: string
-}>): TableShape {
+}>, styleMgr: ResourceMgr<StyleMangerMember>): TableShape {
     _checkFrame(frame);
-    // template_table_shape.id = uuid();
-    // template_table_shape.name = name // i18n
-    // template_table_shape.rowHeights.length = 0;
-    // template_table_shape.colWidths.length = 0;
 
     const transform = new Transform();
     transform.m02 = frame.x;
@@ -568,7 +511,7 @@ export function newTable(name: string, frame: ShapeFrame, rowCount: number, colu
         name,
         types.ShapeType.Table,
         transform,
-        newStyle(),
+        newStyle(styleMgr),
         size,
         new BasicMap(),
         new BasicArray(),
@@ -607,7 +550,7 @@ export function newTable(name: string, frame: ShapeFrame, rowCount: number, colu
 export function newTable2(name: string, frame: ShapeFrame, rowCount: number, columCount: number, mediasMgr: ResourceMgr<{
     buff: Uint8Array,
     base64: string
-}>): TableShape2 {
+}>, styleMgr: ResourceMgr<StyleMangerMember>): TableShape2 {
     _checkFrame(frame);
     // template_table_shape.id = uuid();
     // template_table_shape.name = name // i18n
@@ -625,7 +568,7 @@ export function newTable2(name: string, frame: ShapeFrame, rowCount: number, col
         name,
         types.ShapeType.Table2,
         transform,
-        newStyle(),
+        newStyle(styleMgr),
         size,
         new BasicMap(),
         new BasicMap(),
@@ -662,9 +605,9 @@ export function newTable2(name: string, frame: ShapeFrame, rowCount: number, col
     return table;
 }
 
-export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm): ContactShape {
+export function newContact(name: string, frame: ShapeFrame, styleMgr: ResourceMgr<StyleMangerMember>, apex?: ContactForm): ContactShape {
     _checkFrame(frame);
-    const style = newflatStyle();
+    const style = newFlatStyle(styleMgr);
 
     style.endMarkerType = types.MarkerType.OpenArrow;
 
@@ -675,8 +618,7 @@ export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm):
     const strokePaints = new BasicArray<Fill>();
     const strokePaint = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 128, 128, 128))
     strokePaints.push(strokePaint);
-    const border = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
-    style.borders = border;
+    style.borders = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
 
     const text = new Text(new BasicArray());
     const para = new Para('添加文本\n', new BasicArray());
@@ -737,7 +679,7 @@ export function newCutoutShape(name: string, frame: ShapeFrame): CutoutShape {
     return shape;
 }
 
-export function newSymbolShape(name: string, frame: ShapeFrame, style?: Style): SymbolShape {
+export function newSymbolShape(name: string, frame: ShapeFrame, styleMgr: ResourceMgr<StyleMangerMember>, style?: Style): SymbolShape {
     _checkFrame(frame);
 
     const transform = new Transform();
@@ -751,7 +693,7 @@ export function newSymbolShape(name: string, frame: ShapeFrame, style?: Style): 
         name,
         types.ShapeType.Symbol,
         transform,
-        newflatStyle(),
+        newFlatStyle(styleMgr),
         new BasicArray(),
         size,
         new BasicMap(),
@@ -762,9 +704,9 @@ export function newSymbolShape(name: string, frame: ShapeFrame, style?: Style): 
     return compo;
 }
 
-export function newSymbolShapeUnion(name: string, frame: ShapeFrame): SymbolUnionShape {
+export function newSymbolShapeUnion(name: string, frame: ShapeFrame, styleMgr: ResourceMgr<StyleMangerMember>): SymbolUnionShape {
     _checkFrame(frame);
-    const style = newflatStyle();
+    const style = newFlatStyle(styleMgr);
 
     const transform = new Transform();
     transform.m02 = frame.x;
@@ -787,7 +729,7 @@ export function newSymbolShapeUnion(name: string, frame: ShapeFrame): SymbolUnio
     return union;
 }
 
-export function newSymbolRefShape(name: string, frame: ShapeFrame, refId: string, symbol_mgr: SymbolMgr): SymbolRefShape {
+export function newSymbolRefShape(name: string, frame: ShapeFrame, refId: string, symbol_mgr: SymbolMgr, styleMgr: ResourceMgr<StyleMangerMember>): SymbolRefShape {
     _checkFrame(frame);
 
     const transform = new Transform();
@@ -795,7 +737,7 @@ export function newSymbolRefShape(name: string, frame: ShapeFrame, refId: string
     transform.m12 = frame.y;
     const size = new ShapeSize(frame.width, frame.height);
 
-    const ref = new SymbolRefShape(new BasicArray(), uuid(), name, types.ShapeType.SymbolRef, transform, newflatStyle(), size, refId, new BasicMap());
+    const ref = new SymbolRefShape(new BasicArray(), uuid(), name, types.ShapeType.SymbolRef, transform, newFlatStyle(styleMgr), size, refId, new BasicMap());
     addCommonAttr(ref);
     ref.setSymbolMgr(symbol_mgr);
     return ref;
@@ -805,7 +747,6 @@ export function newSymbolRefShape(name: string, frame: ShapeFrame, refId: string
  * @description 将SVG中的<polygon />、<polyline />中的points属性值转换为Path的d属性值
  * @param pointsString <polygon />、<polyline />中的points属性值
  * @param isLine 元素为<polyline />，否则为<polygon />
- * @param style
  */
 export function polylinePointsToPathD(pointsString: string, isLine: boolean) {
     const regex = /(-?\d*\.?\d+)[,\s]+(-?\d*\.?\d+)/g;

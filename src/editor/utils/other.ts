@@ -233,7 +233,7 @@ export function make_union(api: Api, document: Document, page: Page, symbol: Sym
     const box = symbol.boundingBox();
     const state_frame = new ShapeFrame(box.x - 20, box.y - 20, box.width + 40, box.height + 40);
 
-    let union = newSymbolShapeUnion(symbol.name, state_frame);
+    let union = newSymbolShapeUnion(symbol.name, state_frame, document.stylesMgr);
 
     const _origin_vars = symbol.variables;
     _origin_vars.forEach((v, k) => {

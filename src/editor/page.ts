@@ -531,7 +531,7 @@ export class PageEditor {
 
             const style = replace ? importStyle((shape0.style)) : undefined;
 
-            const symbolShape = newSymbolShape(replace ? shape0.name : (name ?? shape0.name), frame, style);
+            const symbolShape = newSymbolShape(replace ? shape0.name : (name ?? shape0.name), frame, document.stylesMgr, style);
 
             if (replace && shape0 instanceof Artboard) {
                 if (shape0.cornerRadius) symbolShape.cornerRadius = importCornerRadius(shape0.cornerRadius);
@@ -618,7 +618,7 @@ export class PageEditor {
                         frame.width = dlt.size.width;
                         frame.height = dlt.size.height;
                     }
-                    const ref = newSymbolRefShape(symbol.name, frame, refId, document.symbolsMgr);
+                    const ref = newSymbolRefShape(symbol.name, frame, refId, document.symbolsMgr, document.stylesMgr);
                     if (ref) {
                         const rt = ref.transform;
                         const st = symbol.transform;
@@ -868,7 +868,7 @@ export class PageEditor {
     }
 
     refSymbol(document: Document, name: string, frame: ShapeFrame, refId: string) {
-        const ref = newSymbolRefShape(name, frame, refId, document.symbolsMgr);
+        const ref = newSymbolRefShape(name, frame, refId, document.symbolsMgr, document.stylesMgr);
         const sym = document.symbolsMgr.get(refId);
         if (sym) {
             ref.transform.m00 = sym.transform.m00;
@@ -981,7 +981,7 @@ export class PageEditor {
         const path = Path.fromSVGString(pathstr);
         path.translate(-frame.x, -frame.y);
 
-        let pathShape = newPathShape(name, frame, path, style);
+        let pathShape = newPathShape(name, frame, path, this.__document.stylesMgr, style);
 
         try {
             const api = this.__repo.start("flattenShapes", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
@@ -1050,7 +1050,7 @@ export class PageEditor {
             const h = boundingBox.h;
             const frame = new ShapeFrame(gframe.x, gframe.y, w, h);
             path.translate(-boundingBox.x, -boundingBox.y);
-            let pathShape = newPathShape(shape.name, frame, path, style);
+            let pathShape = newPathShape(shape.name, frame, path, this.__document.stylesMgr, style);
             pathShape.fixedRadius = shape.fixedRadius;
             pathShape.transform = makeShapeTransform1By2(new Transform2() // shape图层坐标系
                 .setTranslate(ColVector3D.FromXY(x, y)) // pathShape图层坐标系
@@ -1118,7 +1118,7 @@ export class PageEditor {
             style.borders = importBorder(style.borders as Border);
         }
 
-        let pathShape = newPathShape(shape.name, shape.frame, path, style2);
+        let pathShape = newPathShape(shape.name, shape.frame, path, this.__document.stylesMgr, style2);
         pathShape.fixedRadius = shape.fixedRadius;
         pathShape.transform = importTransform(shape.transform);
         pathShape.style = style;
@@ -1573,22 +1573,6 @@ export class PageEditor {
         }
     }
 
-    // 创建一个shape
-    create(type: ShapeType, name: string, frame: ShapeFrame): Shape {
-        switch (type) {
-            case ShapeType.Artboard:
-                return newArtboard(name, frame);
-            case ShapeType.Rectangle:
-                return newRectShape(name, frame);
-            case ShapeType.Oval:
-                return newOvalShape(name, frame);
-            case ShapeType.Line:
-                return newLineShape(name, frame);
-            default:
-                return newRectShape(name, frame);
-        }
-    }
-
     createArtboard(name: string, frame: ShapeFrame, fill: Fill) { // todo 新建图层存在代码冗余
         return newArtboard(name, frame, fill);
     }
@@ -1686,61 +1670,6 @@ export class PageEditor {
         } catch (error) {
             console.error('shapesModifyRadius', error);
             this.__repo.rollback();
-        }
-    }
-
-    /**
-     * @description 参数可选的创建并插入图形
-     */
-    create2(page: Page, parent: GroupShape, type: ShapeType, name: string, frame: ShapeFrame, ex_params: any) {
-        const { is_arrow, rotation, target_xy } = ex_params;
-        let new_s: Shape | undefined;
-        switch (type) {
-            case ShapeType.Artboard:
-                new_s = newArtboard(name, frame);
-                break;
-            case ShapeType.Rectangle:
-                new_s = newRectShape(name, frame);
-                break;
-            case ShapeType.Oval:
-                new_s = newOvalShape(name, frame);
-                break;
-            case ShapeType.Line:
-                new_s = is_arrow ? newArrowShape(name, frame) : newLineShape(name, frame);
-                break;
-            default:
-                new_s = newRectShape(name, frame);
-        }
-        if (!new_s) return false;
-        const m_p2r = parent.matrix2Root();
-        const api = this.__repo.start("create2");
-        try {
-            const xy = m_p2r.computeCoord2(0, 0);
-            const transform2 = makeShapeTransform2By1(new_s.transform);
-            transform2.translate(new ColVector3D([-xy.x, -xy.y, 0]))
-            updateShapeTransform1By2(new_s.transform, transform2);
-            if (rotation) {
-                const transform2 = makeShapeTransform2By1(new_s.transform);
-                transform2.setRotateZ((rotation % 360) / 180 * Math.PI);
-                updateShapeTransform1By2(new_s.transform, transform2);
-            }
-            const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
-            let targetIndex = parent.childs.length;
-            if (_types.includes(parent.type)) {
-                const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
-                const fixed_index = parent.childs.findIndex(s => s.scrollBehavior === Fixed);
-                targetIndex = fixed_index === -1 ? parent.childs.length : fixed_index;
-            }
-            new_s = api.shapeInsert(this.__document, this.page, parent, new_s, targetIndex);
-            if (target_xy) {
-                translateTo(api, page, new_s, target_xy.x, target_xy.y);
-            }
-            this.__repo.commit();
-            return new_s;
-        } catch (error) {
-            console.log(error)
-            this.__repo.rollback();
-            return false;
         }
     }
 
@@ -3875,11 +3804,6 @@ export class PageEditor {
                 if (modify_variable_with_api(api, this.view, shape, VariableType.Visible, OverrideType.Visible, isVisible)) {
                     continue;
                 }
-                // ?
-                // if (shape.type === ShapeType.Group) {
-                //     shape = this.page.shapes.get(shape.id)!;
-                //     if (!shape) continue;
-                // }
                 api.shapeModifyVisible(this.page, shape.data, isVisible);
             }
             this.__repo.commit();
@@ -4402,7 +4326,7 @@ export class PageEditor {
                         const len = style.fills.length;
                         style.fills.push(new Fill([len] as BasicArray<number>, uuid(), true, FillType.SolidColor, mainColor));
                     }
-                    let pathShape = newPathShape(view.name, view.frame, path, style);
+                    let pathShape = newPathShape(view.name, view.frame, path, this.__document.stylesMgr, style);
                     pathShape.transform = shape.transform.clone();
                     pathShape.mask = shape.mask;
                     pathShape.resizingConstraint = shape.resizingConstraint;
@@ -4438,7 +4362,7 @@ export class PageEditor {
                             style.fills = new BasicArray<Fill>(fill);
                         }
                         const path = border2path(view, border);
-                        let pathshape = newPathShape(view.name + suffix, view.frame, path, style);
+                        let pathshape = newPathShape(view.name + suffix, view.frame, path, this.__document.stylesMgr, style);
                         pathshape.transform = shape.transform.clone();
                         pathshape.mask = shape.mask;
                         pathshape.resizingConstraint = shape.resizingConstraint;
@@ -4485,7 +4409,8 @@ export class PageEditor {
                     const ref = `${v4()}.${format}`;
                     document.mediasMgr.add(ref, { buff, base64 });
                     const reg = new RegExp(`.${format}|.jpg$`, 'img');
-                    const shape = newImageFillShape(name.replace(reg, '') || 'image', new ShapeFrame(0, 0, size.width, size.height), document.mediasMgr, size, ref);
+                    const frame = new ShapeFrame(0, 0, size.width, size.height);
+                    const shape = newImageFillShape(name.replace(reg, '') || 'image', frame, document.mediasMgr, size, document.stylesMgr, ref);
                     shape.transform = item.transform;
                     if (fixed) shape.constrainerProportions = true;
                     const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];

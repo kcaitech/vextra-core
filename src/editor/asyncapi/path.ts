@@ -7,7 +7,7 @@ import { BasicArray } from "../../data";
 import { uuid } from "../../basic/uuid";
 import { __pre_curve, after_insert_point, update_frame_by_points } from "../utils/path";
 import { PathType } from "../../data";
-import { addCommonAttr, newflatStyle } from "../creator";
+import { addCommonAttr, newFlatStyle } from "../creator";
 import { Border, BorderStyle, CornerType, Fill, FillType, Shadow, Style } from "../../data";
 import { Color } from "../../data";
 import * as types from "../../data/typesdefine";
@@ -69,15 +69,14 @@ export class PathModifier extends AsyncApiCaller {
     createVec(name: string, frame: ShapeFrame, parent: GroupShapeView, _style?: Style) {
         try {
 
-            const style = _style ? importStyle(exportStyle(_style)) : newflatStyle();
+            const style = _style ? importStyle(exportStyle(_style)) : newFlatStyle(this.__document.stylesMgr);
 
             if (!_style) {
                 const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
                 const strokePaints = new BasicArray<Fill>();
                 const strokePaint = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0));
                 strokePaints.push(strokePaint);
-                const border = new Border(types.BorderPosition.Inner, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
-                style.borders = border;
+                style.borders = new Border(types.BorderPosition.Inner, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
             } else {
                 style.fills = new BasicArray<Fill>();
                 style.shadows = new BasicArray<Shadow>();
