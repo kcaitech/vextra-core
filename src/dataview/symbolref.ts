@@ -1,12 +1,13 @@
 import {
     AutoLayout, Border, ContextSettings, CornerRadius, Fill, MarkerType, OverrideType, PrototypeInterAction, Shadow,
     Shape, ShapeFrame, ShapeSize, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType, ShapeType,
-    BasicArray, getPathOfRadius, makeShapeTransform1By2, makeShapeTransform2By1, Blur, BlurType, PathShape,
+    BasicArray, getPathOfRadius, Blur, BlurType,
     BorderSideSetting,
     SideType,
     BorderPosition,
     BorderStyle,
-    CornerType
+    CornerType, FillMask, CurvePoint, CurveMode, parsePath,
+    BorderMask
 } from "../data";
 import { ShapeView, fixFrameByConstrain } from "./shape";
 import { DataView, RootView } from "./view";
@@ -396,21 +397,62 @@ export class SymbolRefView extends ShapeView {
         return findOverrideAll(id, ot, varsContainer);
     }
 
+    get fillsMask(): string | undefined {
+        const v = this._findOV2(OverrideType.FillsMask, VariableType.FillsMask);
+        return v ? v.value as string : this.m_sym?.style.fillsMask;
+    }
+
     getFills(): BasicArray<Fill> {
         if (this.m_fills) return this.m_fills;
-        const v = this._findOV2(OverrideType.Fills, VariableType.Fills);
-        this.m_fills = v ? v.value as BasicArray<Fill> : this.m_sym?.style.fills || new BasicArray();
-        return this.m_fills;
+
+        let fills: BasicArray<Fill>;
+        const fillsMask = this.fillsMask;
+        const mgr = this.style.getStylesMgr() || this.m_sym?.style.getStylesMgr();
+        if (fillsMask && mgr) {
+            const mask = mgr.getSync(fillsMask) as FillMask;
+            fills = mask.fills;
+            this.watchFillMask(mask);
+        } else {
+            const v = this._findOV2(OverrideType.Fills, VariableType.Fills);
+            fills = v ? v.value as BasicArray<Fill> : this.m_sym?.style.fills || new BasicArray();
+            this.unwatchFillMask();
+        }
+        return this.m_fills = fills;
     }
 
     getBorders(): Border {
         if (this.m_borders) return this.m_borders;
         const v = this._findOV2(OverrideType.Borders, VariableType.Borders);
-        const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
-        const strokePaints = new BasicArray<Fill>();
-        const border = new Border(BorderPosition.Inner, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
-        this.m_borders = v ? v.value as Border : this.m_sym?.style.borders;
-        return this.m_borders || border;
+        const border = v ? v.value : this.m_sym?.style.borders;
+        const bordersMask = this.bordersMask;
+        const mgr = this.style.getStylesMgr() || this.m_sym?.style.getStylesMgr();
+        if (bordersMask && mgr) {
+            const mask = mgr.getSync(bordersMask) as BorderMask
+            border.position = mask.border.position;
+            border.sideSetting = mask.border.sideSetting;
+            this.watchBorderMask(mask);
+        } else {
+            this.unwatchBorderMask();
+        }
+        const fillsMask: string | undefined = this.borderFillsMask;
+        if (fillsMask && mgr) {
+            const mask = mgr.getSync(fillsMask) as FillMask;
+            border.strokePaints = mask.fills;
+            this.watchBorderFillMask(mask);
+        } else {
+            this.unwatchBorderFillMask();
+        }
+        return border;
+    }
+
+    get bordersMask(): string | undefined {
+        const v = this._findOV2(OverrideType.BordersMask, VariableType.BordersMask);
+        return v ? v.value : this.m_sym?.style.bordersMask;
+    }
+
+    get borderFillsMask(): string | undefined {
+        const v = this._findOV2(OverrideType.BorderFillsMask, VariableType.BorderFillsMask);
+        return v ? v.value : this.m_sym?.style.borders.fillsMask;
     }
 
     getShadows(): BasicArray<Shadow> {
@@ -617,5 +659,18 @@ export class SymbolRefView extends ShapeView {
         const v = this._findOV2(OverrideType.FrameMaskDisabled, VariableType.FrameMaskDisabled);
         if (v) return v.value;
         return this.m_sym?.frameMaskDisabled;
+    }
+
+    getPathOfSize() {
+        const p1 = new CurvePoint([] as any, '', 0, 0, CurveMode.Straight);
+        const p2 = new CurvePoint([] as any, '', 1, 0, CurveMode.Straight);
+        const p3 = new CurvePoint([] as any, '', 1, 1, CurveMode.Straight);
+        const p4 = new CurvePoint([] as any, '', 0, 1, CurveMode.Straight);
+        const radius = this.radius;
+        p1.radius = radius[0];
+        p2.radius = radius[1] ?? radius[0];
+        p3.radius = radius[2] ?? radius[0];
+        p4.radius = radius[3] ?? radius[0];
+        return parsePath([p1, p2, p3, p4], true, this.frame.width, this.frame.height);
     }
 }

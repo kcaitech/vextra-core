@@ -234,12 +234,10 @@ export class ContactShape extends PathShape implements classes.ContactShape {
     }
 
     getPathOfSize(frame: ShapeSize, fixedRadius?: number): Path {
-        // const offsetX = 0;
-        // const offsetY = 0;
         const width = frame.width;
         const height = frame.height;
         const points = this.getPoints();
-        this.__pathCache = parsePath(points, !!this.isClosed, width, height, fixedRadius);
+        this.__pathCache = parsePath(points, this.isClosed, width, height, fixedRadius);
         return this.__pathCache;
     }
 
@@ -251,14 +249,6 @@ export class ContactShape extends PathShape implements classes.ContactShape {
         return this.__page;
     }
 
-    // get isNoSupportDiamondScale() {
-    //     return true;
-    // }
-
-    // get frameType() {
-    //     return FrameType.None;
-    // }
-
     get isPathIcon() {
         return false;
     }
@@ -266,7 +256,4 @@ export class ContactShape extends PathShape implements classes.ContactShape {
     get radiusType() {
         return RadiusType.Fixed;
     }
-    // get isImageFill() {
-    //     return false;
-    // }
 }

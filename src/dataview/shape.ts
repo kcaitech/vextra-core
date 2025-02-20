@@ -349,7 +349,6 @@ export class ShapeView extends DataView {
     m_transform_from_mask?: Transform;
     m_mask_group?: ShapeView[];
 
-    // fill、border等属性随着变量、遮罩、样式库等因素的加入，获取路径不断加长。现在缓存fill和border，不至于每次都重新通过长的路径获取
     m_fills: BasicArray<Fill> | undefined;
     m_borders: Border | undefined;
 
@@ -358,7 +357,7 @@ export class ShapeView extends DataView {
         const shape = props.data;
         const t = shape.transform;
         this.m_transform = new Transform(t.m00, t.m01, t.m02, t.m10, t.m11, t.m12)
-        this.m_fixedRadius = (shape as PathShape).fixedRadius; // rectangle
+        this.m_fixedRadius = (shape as PathShape).fixedRadius;
     }
 
     hasSize() {
@@ -519,6 +518,8 @@ export class ShapeView extends DataView {
         }
         else if (args.includes('borders')) {
             this.m_borders = undefined;
+        } else if (args.includes('fillsMask')) {
+            this.m_fills = undefined;
         }
 
         const masked = this.masked;
@@ -614,12 +615,12 @@ export class ShapeView extends DataView {
 
     private onFillMaskChange = this._onFillMaskChange.bind(this);
 
-    private watchFillMask(mask: FillMask) {
+    protected watchFillMask(mask: FillMask) {
         this.m_unbind_fill?.();
         this.m_unbind_fill = mask.watch(this.onFillMaskChange);
     }
 
-    private unwatchFillMask() {
+    protected unwatchFillMask() {
         this.m_unbind_fill?.();
     }
 
@@ -638,7 +639,7 @@ export class ShapeView extends DataView {
             this.unwatchFillMask();
         }
 
-        return fills;
+        return this.m_fills = fills;
     }
 
     private _onBorderMaskChange() {
@@ -651,12 +652,12 @@ export class ShapeView extends DataView {
 
     private onBorderMaskChange = this._onBorderMaskChange.bind(this);
 
-    private watchBorderMask(mask: BorderMask) {
+    protected watchBorderMask(mask: BorderMask) {
         this.m_unbind_border?.();
         this.m_unbind_border = mask.watch(this.onBorderMaskChange);
     }
 
-    private unwatchBorderMask() {
+    protected unwatchBorderMask() {
         this.m_unbind_border?.();
     }
 
@@ -670,19 +671,19 @@ export class ShapeView extends DataView {
 
     private onBorderFillMaskChange = this._onBorderFillMaskChange.bind(this);
 
-    private watchBorderFillMask(mask: FillMask) {
+    protected watchBorderFillMask(mask: FillMask) {
         this.m_unbind_border_fill?.();
         this.m_unbind_border_fill = mask.watch(this.onBorderFillMaskChange);
     }
 
-    private unwatchBorderFillMask() {
+    protected unwatchBorderFillMask() {
         this.m_unbind_border_fill?.();
     }
     getBorders(): Border {
         if (this.m_borders) return this.m_borders;
         const v = this._findOV(OverrideType.Borders, VariableType.Borders);
         const border = v ? v.value : this.m_data.style.borders;
-        const bordersMask: string | undefined = this.borderFillsMask
+        const bordersMask: string | undefined = this.bordersMask
         if (bordersMask) {
             const mask = this.style.getStylesMgr()!.getSync(bordersMask) as BorderMask
             border.position = mask.border.position;
@@ -791,19 +792,31 @@ export class ShapeView extends DataView {
         return blur;
     }
 
+    getPathOfSize() {
+        return new Path();
+    }
+
     getPathStr() {
         if (this.m_pathstr) return this.m_pathstr;
-        this.m_pathstr = this.getPath().toString(); // todo fixedRadius
+        this.m_pathstr = this.getPath().toString();
         return this.m_pathstr;
     }
 
     getPath() {
         if (this.m_path) return this.m_path;
+        this.m_path = this.getPathOfSize();
         const frame = this.frame;
-        this.m_path = this.m_data.getPathOfSize(frame, this.m_fixedRadius); // todo fixedRadius
-        if (frame.x !== 0 || frame.y !== 0) this.m_path.translate(frame.x, frame.y);
+        if (frame.x || frame.y) this.m_path.translate(frame.x, frame.y);
         this.m_path.freeze();
         return this.m_path;
+    }
+
+    get borderPath() {
+        return this.m_border_path;
+    }
+
+    get borderPathBox() {
+        return this.m_border_path_box;
     }
 
     get isVisible(): boolean {
@@ -933,16 +946,10 @@ export class ShapeView extends DataView {
         return changed;
     }
 
-    protected layoutChilds(
-        parentFrame: ShapeSize | undefined,
-        scale?: { x: number, y: number }
-    ) {
+    protected layoutChilds(parentFrame: ShapeSize | undefined, scale?: { x: number, y: number }) {
     }
 
-    protected _layout(
-        parentFrame: ShapeSize | undefined,
-        scale: { x: number, y: number } | undefined,
-    ) {
+    protected _layout(parentFrame: ShapeSize | undefined, scale: { x: number, y: number } | undefined,) {
         const shape = this.data;
         const transform = shape.transform.clone();
         if (this.parent && (this.parent as ArtboardView).autoLayout) {
@@ -1064,9 +1071,7 @@ export class ShapeView extends DataView {
         this._layout(this.m_props.layoutSize, this.m_props.scale);
         this.m_ctx.addNotifyLayout(this);
     }
-
-    // ================== render ===========================
-
+    
     protected renderFills(): EL[] {
         let fills = this.getFills() as Fill[];
         if (this.mask) {
@@ -1578,13 +1583,5 @@ export class ShapeView extends DataView {
 
     get radiusMask() {
         return this.data.radiusMask;
-    }
-
-    get borderPath() {
-        return this.m_border_path;
-    }
-
-    get borderPathBox() {
-        return this.m_border_path_box;
     }
 }

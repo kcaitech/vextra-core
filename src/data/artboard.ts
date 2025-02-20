@@ -26,9 +26,7 @@ export {
     StackWrap,
     AutoLayout
 } from "./baseclasses"
-import { exportArtboard, IExportContext } from "./baseexport";
 import { v4 } from "uuid";
-
 
 export class Artboard extends GroupShape implements classes.Artboard {
     get frame(): ShapeFrame {

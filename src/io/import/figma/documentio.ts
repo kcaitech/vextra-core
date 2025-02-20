@@ -117,7 +117,7 @@ export async function importDocument(file: File, gurad: IDataGuard /*inflateRawS
 
     const document = new Document(uuid(), file.name.replace(/.fig$/, ''), "", "", pageList, new BasicMap(), gurad, freesymbols as any);
 
-    const ctx: LoadContext = new LoadContext(document.mediasMgr);
+    const ctx: LoadContext = new LoadContext(document.mediasMgr, document.stylesMgr);
     startLoader(json, pages, document, nodeChangesMap, nodeKeyMap, ctx, unzipped);
 
     const internalPage = nodeChanges.find(node => !node.visible && node.name === 'Internal Only Canvas');

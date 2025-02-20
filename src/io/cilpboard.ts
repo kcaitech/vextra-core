@@ -256,7 +256,7 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
                 f.width = dlt.size.width;
                 f.height = dlt.size.height;
             }
-            r = newSymbolRefShape(_s.name, f, _s.id, document.symbolsMgr);
+            r = newSymbolRefShape(_s.name, f, _s.id, document.symbolsMgr, document.stylesMgr);
             if (r) {
                 const rt = r.transform;
                 const st = _s.transform;

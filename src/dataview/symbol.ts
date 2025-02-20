@@ -6,7 +6,7 @@ import {
     ShapeSize,
     RadiusMask,
     OverrideType,
-    VariableType
+    VariableType, CurvePoint, CurveMode, parsePath
 } from "../data";
 import { VarsContainer } from "./viewctx";
 import { DataView, RootView } from "./view"
@@ -122,7 +122,6 @@ export class SymbolView extends GroupShapeView {
     }
 
     updateFrames() {
-
         let changed = this._save_frame.x !== this.m_frame.x || this._save_frame.y !== this.m_frame.y ||
             this._save_frame.width !== this.m_frame.width || this._save_frame.height !== this.m_frame.height;
         if (changed) {
@@ -247,6 +246,19 @@ export class SymbolView extends GroupShapeView {
         }
         return _radius
 
+    }
+
+    getPathOfSize() {
+        const p1 = new CurvePoint([] as any, '', 0, 0, CurveMode.Straight);
+        const p2 = new CurvePoint([] as any, '', 1, 0, CurveMode.Straight);
+        const p3 = new CurvePoint([] as any, '', 1, 1, CurveMode.Straight);
+        const p4 = new CurvePoint([] as any, '', 0, 1, CurveMode.Straight);
+        const radius = this.radius;
+        p1.radius = radius[0];
+        p2.radius = radius[1] ?? radius[0];
+        p3.radius = radius[2] ?? radius[0];
+        p4.radius = radius[3] ?? radius[0];
+        return parsePath([p1, p2, p3, p4], true, this.frame.width, this.frame.height);
     }
 
     render(): number {

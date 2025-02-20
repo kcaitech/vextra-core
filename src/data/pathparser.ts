@@ -62,7 +62,7 @@ function getCubic(start: CurvePoint, end: CurvePoint): Point2D[] {
     }
 }
 
-// 计算三次贝塞尔曲线上某一点到起始点的长度 todo 看一下什么情况下会得到NaN
+// 计算三次贝塞尔曲线上某一点到起始点的长度
 function bezierLength(p0: Point2D, p1: Point2D, p2: Point2D, p3: Point2D, t: number) {
     const dx = 3 * (p1.x - p0.x);
     const dy = 3 * (p1.y - p0.y);
@@ -134,7 +134,7 @@ function multiply(p: Point2D, d: number): Point2D {
 /**
  * @require 分析函数之前，需要熟悉路径的表示、二次三次贝塞尔曲线的表示、圆角的表示、向量、三角函数
  */
-export function parsePath(points: CurvePoint[], isClosed: boolean, width: number, height: number, fixedRadius: number = 0, maskRadius?: number[]): Path {
+export function parsePath(points: CurvePoint[], isClosed: boolean, width: number, height: number, fixedRadius: number = 0): Path {
     const len = points.length;
     if (len < 2) return new Path();
 
@@ -174,8 +174,8 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, width: number
         return !!(curvePoint.radius ?? fixedRadius);
     }
 
-    function getBaseRadius(point: CurvePoint, mask_radius?: number) {
-        return mask_radius ?? point.radius ?? fixedRadius;
+    function getBaseRadius(point: CurvePoint) {
+        return point.radius ?? fixedRadius;
     }
     /**
      * corner radius 可能非常大，绘制的时候需要加以限制。
@@ -194,18 +194,12 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, width: number
         const nextPoint = transformedPoints[nextIndex];
         const lenAB = distanceTo(curPoint, prePoint);
         const lenBC = distanceTo(curPoint, nextPoint);
-        const radian = calcAngleABC(pre, cur, next, { width, height }); // todo 检查一下什么情况下会是NaN
+        const radian = calcAngleABC(pre, cur, next, { width, height });
         if (Number.isNaN(radian)) return;
         // 计算相切的点距离 curPoint 的距离， 在 radian 为 90 deg 的时候和 radius 相等。
         const tangent = Math.tan(radian / 2);
 
-        // 圆角样式
-        let mask_radius = maskRadius ? maskRadius[0] : undefined;
-        if (maskRadius && maskRadius.length > 1) {
-            mask_radius = maskRadius[idx];
-        }
-
-        let radius = getBaseRadius(cur, mask_radius);
+        let radius = getBaseRadius(cur);
         let dist = radius / tangent;
         const minDist = (() => {
             const pr = getBaseRadius(pre);
@@ -218,7 +212,7 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, width: number
             radius = minDist * tangent;
             dist = minDist;
         }
-        const kappa = (4 / 3) * Math.tan((Math.PI - radian) / 4); // todo 这个值在非直线的情况下不准确
+        const kappa = (4 / 3) * Math.tan((Math.PI - radian) / 4);
         radiusCache[idx] = { radius: dist, offset: radius * kappa };
         return radiusCache[idx];
     }

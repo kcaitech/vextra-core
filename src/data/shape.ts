@@ -35,7 +35,6 @@ export {
     CurvePoint, ShapeFrame, Ellipse, PathSegment, OverrideType, VariableType,
     FillRule, CornerRadius, ShapeSize, StackPositioning, Radius
 } from "./baseclasses";
-
 export { Variable } from "./variable";
 
 
@@ -168,9 +167,6 @@ export class Shape extends Basic implements classes.Shape {
         return false;
     }
 
-    /**
-     * @deprecated
-     */
     get rotation(): number {
         return (this.transform).decomposeRotate() * 180 / Math.PI;
     }
@@ -208,16 +204,16 @@ export class Shape extends Basic implements classes.Shape {
         return false;
     }
 
-    getPathOfSize(frame: ShapeSize, fixedRadius?: number): Path {
+    getPathOfSize(frame: ShapeSize): Path {
         return new Path();
     }
 
-    getPath(fixedRadius?: number): Path {
-        return this.getPathOfSize(this.frame, fixedRadius);
+    getPath(): Path {
+        return this.getPathOfSize(this.frame);
     }
 
-    getPathStr(fixedRadius?: number): string {
-        return this.getPath(fixedRadius).toString();
+    getPathStr(): string {
+        return this.getPath().toString();
     }
 
     getPage(): Shape | undefined {
@@ -580,23 +576,18 @@ export class BoolShape extends GroupShape implements classes.BoolShape {
     // }
 }
 
-// export function genRefId(refId: string, type: OverrideType) {
-//     if (type === OverrideType.Variable) return refId;
-//     return refId + '/' + type;
-// }
-
 export function getPathOfRadius(frame: ShapeSize, cornerRadius?: CornerRadius, fixedRadius?: number): Path {
     const w = frame.width;
     const h = frame.height;
 
-    const haRadius = fixedRadius ||
+    const hasRadius = fixedRadius ||
         (cornerRadius &&
             (cornerRadius.lt > 0 ||
                 cornerRadius.lb > 0 ||
                 cornerRadius.rb > 0 ||
                 cornerRadius.rt > 0))
 
-    if (!haRadius) {
+    if (!hasRadius) {
         const path = [
             ["M", 0, 0],
             ["l", w, 0],
@@ -607,11 +598,8 @@ export function getPathOfRadius(frame: ShapeSize, cornerRadius?: CornerRadius, f
         return Path.fromSVGString(path.join(''));
     }
 
-    const maxRadius = Math.min(w / 2, h / 2);
     let lt, lb, rt, rb;
     if (fixedRadius) {
-        fixedRadius = Math.min(fixedRadius, maxRadius);
-        fixedRadius = Math.max(0, fixedRadius);
         lt = lb = rt = rb = fixedRadius;
     } else {
         lt = cornerRadius!.lt;
@@ -620,47 +608,17 @@ export function getPathOfRadius(frame: ShapeSize, cornerRadius?: CornerRadius, f
         rb = cornerRadius!.rb;
     }
 
-    // const path = [];
-    // path.push(["M", lt, 0]);
-    // path.push(["l", w - lt - rt, 0]);
-    // if (rt > 0) {
-    //     path.push(["c", rt, 0, 0, 0, 0, rt]);
-    // }
-    // path.push(["l", 0, h - rt - rb]);
-    // if (rb > 0) {
-    //     path.push(["c", 0, rb, 0, 0, -rb, 0]);
-    // }
-    // path.push(["l", -w + lb + rb, 0]);
-    // if (lb > 0) {
-    //     path.push(["c", -lb, 0, 0, 0, 0, -lb]);
-    // }
-    //
-    // if (lt > 0) {
-    //     path.push(["l", 0, -h + lt + lb]);
-    //     path.push(["c", 0, -lt, 0, 0, lt, 0]);
-    // }
-    //
-    // path.push(["z"]);
-
     const p1 = new CurvePoint([] as any, '', 0, 0, CurveMode.Straight);
     const p2 = new CurvePoint([] as any, '', 1, 0, CurveMode.Straight);
     const p3 = new CurvePoint([] as any, '', 1, 1, CurveMode.Straight);
     const p4 = new CurvePoint([] as any, '', 0, 1, CurveMode.Straight);
 
-    if (lt > 0) {
-        p1.radius = lt;
-    }
-    if (rt > 0) {
-        p2.radius = rt;
-    }
-    if (rb > 0) {
-        p3.radius = rb;
-    }
-    if (lb > 0) {
-        p4.radius = lb;
-    }
+    if (lt > 0) p1.radius = lt;
+    if (rt > 0) p2.radius = rt;
+    if (rb > 0) p3.radius = rb;
+    if (lb > 0) p4.radius = lb;
 
-    return (parsePath(new BasicArray<CurvePoint>(p1, p2, p3, p4), true, w, h, fixedRadius));
+    return parsePath(new BasicArray<CurvePoint>(p1, p2, p3, p4), true, w, h, fixedRadius);
 }
 
 export class SymbolShape extends GroupShape implements classes.SymbolShape {
@@ -846,8 +804,6 @@ export class PathShape extends Shape implements classes.PathShape {
     }
 
     getPathOfSize(frame: ShapeSize, fixedRadius?: number): Path {
-        // const offsetX = 0;
-        // const offsetY = 0;
         const width = frame.width;
         const height = frame.height;
 
