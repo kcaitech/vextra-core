@@ -682,7 +682,7 @@ export class ShapeView extends DataView {
     getBorders(): Border {
         if (this.m_borders) return this.m_borders;
         const v = this._findOV(OverrideType.Borders, VariableType.Borders);
-        const border = v ? v.value : this.m_data.style.borders;
+        const border = v ? { ...v.value } : { ...this.m_data.style.borders };
         const bordersMask: string | undefined = this.bordersMask
         if (bordersMask) {
             const mask = this.style.getStylesMgr()!.getSync(bordersMask) as BorderMask
@@ -1071,7 +1071,7 @@ export class ShapeView extends DataView {
         this._layout(this.m_props.layoutSize, this.m_props.scale);
         this.m_ctx.addNotifyLayout(this);
     }
-    
+
     protected renderFills(): EL[] {
         let fills = this.getFills() as Fill[];
         if (this.mask) {
