@@ -7,8 +7,11 @@ import {
     Border,
     BorderMask,
     BorderPosition,
+    BorderSideSetting,
+    BorderStyle,
     ContextSettings,
     CornerRadius,
+    CornerType,
     ExportOptions,
     Fill,
     FillMask,
@@ -34,6 +37,7 @@ import {
     ShapeFrame,
     ShapeSize,
     ShapeType,
+    SideType,
     SymbolRefShape,
     SymbolShape,
     Transform,
@@ -677,35 +681,35 @@ export class ShapeView extends DataView {
     getBorders(): Border {
         if (this.m_borders) return this.m_borders;
         const v = this._findOV(OverrideType.Borders, VariableType.Borders);
-        let border: Border;
-        border = v ? v.value as Border : this.m_data.style.borders
-        if (this.style.bordersMask) {
-            const mgr = this.style.getStylesMgr();
-            if (!mgr) return this.m_data.style.borders;
-            const mask = mgr.getSync(this.style.bordersMask) as BorderMask
-            let _border = { ...border }
-            if (this.type === ShapeType.Line) {
-                _border.position = BorderPosition.Center
-            } else {
-                _border.position = mask.border.position
-            }
-            _border.sideSetting = mask.border.sideSetting
-            border = _border as Border;
+        const border = v ? v.value : this.m_data.style.borders;
+        const bordersMask: string | undefined = this.borderFillsMask
+        if (bordersMask) {
+            const mask = this.style.getStylesMgr()!.getSync(bordersMask) as BorderMask
+            border.position = mask.border.position;
+            border.sideSetting = mask.border.sideSetting;
             this.watchBorderMask(mask);
         } else {
             this.unwatchBorderMask();
         }
-        if (this.style.borders.fillsMask) {
-            const mgr = this.style.getStylesMgr();
-            const mask = mgr?.getSync(this.style.borders.fillsMask) as FillMask
-            let _border = { ...border };
-            _border.strokePaints = mask.fills;
-            border = _border as Border;
+        const fillsMask: string | undefined = this.borderFillsMask;
+        if (fillsMask) {
+            const mask = this.style.getStylesMgr()!.getSync(fillsMask) as FillMask;
+            border.strokePaints = mask.fills;
             this.watchBorderFillMask(mask);
         } else {
             this.unwatchBorderFillMask();
         }
         return border;
+    }
+
+    get bordersMask(): string | undefined {
+        const v = this._findOV(OverrideType.BordersMask, VariableType.BordersMask);
+        return v ? v.value : this.m_data.style.bordersMask;
+    }
+
+    get borderFillsMask(): string | undefined {
+        const v = this._findOV(OverrideType.BorderFillsMask, VariableType.BorderFillsMask);
+        return v ? v.value : this.m_data.style.borders.fillsMask;
     }
 
     get cornerRadius(): CornerRadius | undefined {

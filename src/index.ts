@@ -212,3 +212,4 @@ export {
 } from './editor/symbol';
 
 export { FillModifier } from "./editor/style/fill";
+export { BorderModifier } from "./editor/style/border";
