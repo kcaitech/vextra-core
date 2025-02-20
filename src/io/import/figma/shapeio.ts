@@ -1041,8 +1041,8 @@ export function importEllipse(ctx: LoadContext, data: IJSON, f: ImportFun, index
     const border = new Border(types.BorderPosition.Inner, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
     const style = new Style(new BasicArray(), new BasicArray(), border);
     importStyle(ctx, style, data);
-
-    const shape = shapeCreator.newOvalShape(data.name, new ShapeFrame(frame.trans.translateX, frame.trans.translateY, frame.size.width, frame.size.height));
+    const __frame = new ShapeFrame(frame.trans.translateX, frame.trans.translateY, frame.size.width, frame.size.height)
+    const shape = shapeCreator.newOvalShape(data.name, __frame, ctx.styleMgr);
 
     shape.isVisible = visible;
     shape.style = style;

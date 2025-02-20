@@ -58,7 +58,7 @@ export function startLoader(lzdata: LzData, document: Document) {
     }
 
     const symbolsSet = new Map<string, SymbolShape>()
-    const ctx: LoadContext = new LoadContext(document.mediasMgr);
+    const ctx: LoadContext = new LoadContext(document.mediasMgr, document.stylesMgr);
 
     // const importer = this.importer = this.importer.bind(this)
     __handler['rectangle'] = (ctx: LoadContext, data: IJSON, i: number) => importRectShape(ctx, data, importer, i)
