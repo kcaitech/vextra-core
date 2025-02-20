@@ -195,7 +195,7 @@ export class FillModifier extends Modifier {
             const page = pageView.data;
             for (const view of views) {
                 const linked = this.getMaskVariable(api, pageView, view, fillsMask);
-                linked ? api.shapeModifyVariable(page, linked, fillsMask) : api.addfillmask(document, page, adapt2Shape(view), fillsMask);
+                linked ? api.shapeModifyVariable(page, linked, fillsMask) : api.modifyFillsMask(page, adapt2Shape(view), fillsMask);
             }
             this.commit();
         } catch (error) {
@@ -220,7 +220,7 @@ export class FillModifier extends Modifier {
                 for (const variable of variables) {
                     if (variable.value !== mask.id) api.shapeModifyVariable(page, variable, mask.id);
                 }
-                for (const shape of shapes) api.addfillmask(document, page, shape, mask.id);
+                for (const shape of shapes) api.modifyFillsMask(page, shape, mask.id);
             }
             this.commit();
             return true;
@@ -244,7 +244,7 @@ export class FillModifier extends Modifier {
             for (const variable of variables) {
                 if (variable.value !== value) api.shapeModifyVariable(page, variable, value);
             }
-            for (const shape of shapes) api.addfillmask(document, page, shape, value);
+            for (const shape of shapes) api.modifyFillsMask(page, shape, value);
             this.commit();
         } catch (error) {
             this.rollback();

@@ -2411,7 +2411,7 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                api.addfillmask(this.__document, this.page, adapt2Shape(target), value);
+                api.modifyFillsMask(this.page, adapt2Shape(target), value);
             }
             this.__repo.commit();
         } catch (e) {
@@ -2427,7 +2427,7 @@ export class PageEditor {
                 const { target, value } = actions[i];
                 api.deleteFills(target.style.fills, 0, target.style.fills.length);
                 api.addFills(target.style.fills, value);
-                api.delfillmask(this.__document, this.page, adapt2Shape(target));
+                api.modifyFillsMask(this.page, adapt2Shape(target), undefined);
             }
             this.__repo.commit();
         } catch (e) {
@@ -2467,7 +2467,7 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                api.addshadowmask(this.__document, this.page, adapt2Shape(target), value);
+                api.modifyShadowsMask(this.page, adapt2Shape(target), value);
             }
             this.__repo.commit();
         } catch (e) {
@@ -2497,7 +2497,7 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                api.addblurmask(this.__document, this.page, adapt2Shape(target), value);
+                api.modifyBlurMask(this.page, adapt2Shape(target), value);
             }
             this.__repo.commit();
         } catch (e) {
@@ -2511,7 +2511,7 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                api.addradiusmask(this.__document, this.page, adapt2Shape(target), value);
+                api.modifyRadiusMask(this.page, adapt2Shape(target), value);
             }
             this.__repo.commit();
         } catch (e) {
@@ -2570,7 +2570,7 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                api.addbordermask(this.__document, this.page, adapt2Shape(target), value);
+                api.modifyBorderMask(this.page, adapt2Shape(target), value);
             }
             this.__repo.commit();
         } catch (e) {
