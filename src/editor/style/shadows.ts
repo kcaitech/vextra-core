@@ -16,7 +16,9 @@ import {
     Shape,
     Stop,
     Variable,
-    VariableType
+    VariableType,
+    Shadow,
+    ShadowPosition
 } from "../../data";
 import { adapt2Shape, PageView, ShapeView } from "../../dataview";
 import { exportGradient } from "../../data/baseexport";
@@ -25,33 +27,33 @@ import { _ov, override_variable } from "../symbol";
 import { importFill } from "../../data/baseimport";
 
 /* 填充修改器 */
-export class FillModifier extends Modifier {
+export class ShadowsModifier extends Modifier {
     constructor(repo: CoopRepository) {
         super(repo);
     }
 
     private getMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
-        return _ov(VariableType.FillsMask, OverrideType.FillsMask, () => value, view, page, api);
+        return _ov(VariableType.ShadowsMask, OverrideType.ShadowsMask, () => value, view, page, api);
     }
 
-    private getFillsVariable(api: Api, page: PageView, view: ShapeView) {
-        return override_variable(page, VariableType.Fills, OverrideType.Fills, (_var) => {
-            const fills = _var?.value ?? view.getFills();
+    private getShadowsVariable(api: Api, page: PageView, view: ShapeView) {
+        return override_variable(page, VariableType.Shadows, OverrideType.Shadows, (_var) => {
+            const fills = _var?.value ?? view.getShadows();
             return new BasicArray(...(fills as Array<Fill>).map((v) => {
-                    const ret = importFill(v);
-                    const imgmgr = v.getImageMgr();
-                    if (imgmgr) ret.setImageMgr(imgmgr)
-                    return ret;
-                }
+                const ret = importFill(v);
+                const imgmgr = v.getImageMgr();
+                if (imgmgr) ret.setImageMgr(imgmgr)
+                return ret;
+            }
             ))
         }, api, view);
     }
 
-    /* 创建一个填充 */
-    createFill(actions: { fills: BasicArray<Fill>, fill: Fill, index: number }[]) {
+    /* 创建一个阴影 */
+    createShadows(actions: { shadows: Shadow[], shadow: Shadow, index: number }[]) {
         try {
-            const api = this.getApi('createFill');
-            actions.forEach(action => api.addFillAt(action.fills, action.fill, action.index));
+            const api = this.getApi('createShadows');
+            actions.forEach(action => api.addShadow(action.shadows, action.shadow, action.index));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -59,11 +61,11 @@ export class FillModifier extends Modifier {
         }
     }
 
-    /* 隐藏与显示一条填充 */
-    setFillsEnabled(fills: Fill[], enable: boolean) {
+    /* 隐藏与显示一条阴影 */
+    setShadowEnabled(shadows: Shadow[], enable: boolean) {
         try {
-            const api = this.getApi('setFillsEnabled');
-            for (const fill of fills) api.setFillEnable(fill, enable);
+            const api = this.getApi('setShadowEnabled');
+            for (const shadow of shadows) api.setShadowEnable(shadow, enable);
             this.commit();
         } catch (error) {
             this.rollback();
@@ -71,70 +73,11 @@ export class FillModifier extends Modifier {
         }
     }
 
-    /* 修改填充类型 */
-    setFillsType(actions: { fill: Fill, type: string }[]) {
+    /* 修改阴影位置 */
+    setShadowsPosition(actions: { shadow: Shadow, type: ShadowPosition }[]) {
         try {
-            const api = this.getApi('setFillsType');
-            for (const action of actions) {
-                if (action.type === FillType.SolidColor) {
-                    api.setFillType(action.fill, FillType.SolidColor);
-                } else if (action.type === FillType.Pattern) {
-                    api.setFillType(action.fill, FillType.Pattern);
-                    if (!action.fill.imageScaleMode) api.setFillScaleMode(action.fill, ImageScaleMode.Fill);
-                } else {
-                    api.setFillType(action.fill, FillType.Gradient);
-                    initGradient(api, action);
-                }
-            }
-            this.commit();
-        } catch (error) {
-            this.rollback();
-            throw error;
-        }
-
-        function initGradient(api: Api, action: { fill: Fill, type: string }) {
-            const gradient = action.fill.gradient;
-            if (gradient) {
-                const gCopy = importGradient(exportGradient(gradient));
-                if (action.type === GradientType.Linear && gradient.gradientType !== GradientType.Linear) {
-                    gCopy.from.y = gCopy.from.y - (gCopy.to.y - gCopy.from.y);
-                    gCopy.from.x = gCopy.from.x - (gCopy.to.x - gCopy.from.x);
-                } else if (action.type !== GradientType.Linear && gradient.gradientType === GradientType.Linear) {
-                    gCopy.from.y = gCopy.from.y + (gCopy.to.y - gCopy.from.y) / 2;
-                    gCopy.from.x = gCopy.from.x + (gCopy.to.x - gCopy.from.x) / 2;
-                }
-                if (action.type === GradientType.Radial && gCopy.elipseLength === undefined) gCopy.elipseLength = 1;
-                gCopy.stops[0].color = action.fill.color;
-                gCopy.gradientType = action.type as GradientType;
-                api.setFillGradient(action.fill, gCopy);
-            } else {
-                const stops = new BasicArray<Stop>();
-                const { alpha, red, green, blue } = action.fill.color;
-                stops.push(
-                    new Stop(new BasicArray(), uuid(), 0, new Color(alpha, red, green, blue)),
-                    new Stop(new BasicArray(), uuid(), 1, new Color(0, red, green, blue))
-                );
-                const from = action.type === GradientType.Linear ? { x: 0.5, y: 0 } : { x: 0.5, y: 0.5 };
-                const to = { x: 0.5, y: 1 };
-                let ellipseLength;
-                if (action.type === GradientType.Radial) ellipseLength = 1;
-                const gradient = new Gradient(from as Point2D, to as Point2D, action.type as GradientType, stops, ellipseLength);
-                gradient.stops.forEach((v, i) => {
-                    const idx = new BasicArray<number>();
-                    idx.push(i);
-                    v.crdtidx = idx;
-                })
-                gradient.gradientType = action.type as GradientType;
-                api.setFillGradient(action.fill, gradient);
-            }
-        }
-    }
-
-    /* 修改填充颜色 */
-    setFillsColor(actions: { fill: Fill, color: Color }[]) {
-        try {
-            const api = this.getApi('setFillsColor');
-            for (const action of actions) api.setFillColor(action.fill, action.color);
+            const api = this.getApi('setShadowsPosition');
+            actions.forEach(action => api.setShadowPosition(action.shadow, action.type));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -142,15 +85,11 @@ export class FillModifier extends Modifier {
         }
     }
 
-    /* 修改渐变色透明度 */
-    setGradientOpacity(actions: { fill: Fill, opacity: number }[]) {
+    /* 修改阴影X轴 */
+    setShadowOffsetX(actions: { shadow: Shadow, value: number }[]) {
         try {
-            const api = this.getApi('setGradientOpacity');
-            for (const action of actions) {
-                const { fill, opacity } = action;
-                const gradient = fill.gradient!;
-                api.setGradientOpacity(gradient, opacity);
-            }
+            const api = this.getApi('setShadowOffsetX');
+            for (const action of actions) api.setShadowOffsetX(action.shadow, action.value);
             this.commit();
         } catch (error) {
             this.rollback();
@@ -158,11 +97,11 @@ export class FillModifier extends Modifier {
         }
     }
 
-    /* 删除一个填充 */
-    removeFill(actions: { fills: BasicArray<Fill>, index: number }[]) {
+    /* 修改阴影Y轴 */
+    setShadowOffsetY(actions: { shadow: Shadow, value: number }[]) {
         try {
-            const api = this.getApi('removeFill');
-            actions.forEach(action => api.deleteFillAt(action.fills, action.index));
+            const api = this.getApi('setShadowOffsetY');
+            for (const action of actions) api.setShadowOffsetY(action.shadow, action.value);
             this.commit();
         } catch (error) {
             this.rollback();
@@ -170,13 +109,62 @@ export class FillModifier extends Modifier {
         }
     }
 
-    /* 统一多个fills */
-    unifyShapesFills(fillContainers: BasicArray<Fill>[]) {
-        if (!fillContainers.length) return;
+    /* 修改阴影扩散半径 */
+    setShadowSpread(actions: { shadow: Shadow, value: number }[]) {
         try {
-            const api = this.getApi('unifyShapesFills');
-            const master = fillContainers[0].map(i => importFill(i));
-            for (const fillContainer of fillContainers) {
+            const api = this.getApi('setShadowSpread');
+            for (const action of actions) api.setShadowSpread(action.shadow, action.value);
+            this.commit();
+        } catch (error) {
+            this.rollback();
+            throw error;
+        }
+    }
+
+    /* 修改阴影模糊半径 */
+    setShadowsBlur(actions: { shadow: Shadow, value: number }[]) {
+        try {
+            const api = this.getApi('setShadowsBlur');
+            for (const action of actions) api.setShadowBlur(action.shadow, action.value);
+            this.commit();
+        } catch (error) {
+            this.rollback();
+            throw error;
+        }
+    }
+
+    /* 修改阴影颜色 */
+    setShadowsColor(actions: { shadow: Shadow, color: Color }[]) {
+        try {
+            const api = this.getApi('setShadowsColor');
+            for (const action of actions) api.setShadowColor(action.shadow, action.color);
+            this.commit();
+        } catch (error) {
+            this.rollback();
+            throw error;
+        }
+    }
+
+    /* 删除一个阴影 */
+    removeShadows(actions: { shadows: Shadow[], index: number }[]) {
+        try {
+            const api = this.getApi('removeShadows');
+            for (const action of actions) api.deleteShadowAt(action.shadows, action.index);
+            this.commit();
+        } catch (error) {
+            this.rollback();
+            throw error;
+        }
+    }
+
+    /* 统一多个shadows */
+    unifyShapesShadows(shadowsContainers:Shadow[]) {
+        if (!shadowsContainers.length) return;
+        try {
+            const api = this.getApi('unifyShapesShadows');
+         
+            for (const shadowContainer of shadowsContainers) {
+                api.deleteShadows(this.page, adapt2Shape(target), 0, target.style.shadows.length);
                 api.deleteFills(fillContainer, 0, fillContainer.length);
                 api.addFills(fillContainer, master.map(i => importFill(i)));
             }
