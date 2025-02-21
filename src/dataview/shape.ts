@@ -754,7 +754,7 @@ export class ShapeView extends DataView {
         if (this.shadowsMask) {
             const mgr = this.style.getStylesMgr();
             if (!mgr) return shadows;
-            const mask = mgr.getSync(this.shadowsMask) as ShadowMask
+            const mask = mgr.getSync(this.shadowsMask) as ShadowMask;
             shadows = mask.shadows;
             this.watchShadowMask(mask);
         } else {
