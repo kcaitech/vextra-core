@@ -469,8 +469,8 @@ export class SymbolRefView extends ShapeView {
 
     get radius(): number[] {
         let _radius: number[];
-        if (this.radiusMask) {
-            const mgr = this.style.getStylesMgr()!;
+        const mgr = this.style.getStylesMgr() || this.m_sym?.style.getStylesMgr();
+        if (this.radiusMask && mgr) {
             const mask = mgr.getSync(this.radiusMask) as RadiusMask
             _radius = [...mask.radius];
             this.watchRadiusMask(mask);
