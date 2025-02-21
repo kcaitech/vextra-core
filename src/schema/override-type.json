@@ -22,6 +22,7 @@
         "autoLayout",
         "frameMaskDisabled",
         "fillsMask",
+        "borderFillsMask",
         "bordersMask",
         "shadowsMask",
         "blursMask",
