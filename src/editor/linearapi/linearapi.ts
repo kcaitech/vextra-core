@@ -261,28 +261,32 @@ export class LinearApi {
     /**
      * @description 修改图形圆角
      */
-
+    getRadiusMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
+        return _ov(VariableType.RadiusMask, OverrideType.RadiusMask, () => value, view, page, api);
+    }
     shapesModifyRadius(shapes: ShapeView[], values: number[]) {
         this.execute('set-shapes-rotate', () => {
             const api = this.api!;
             const page = this.page;
             for (let i = 0; i < shapes.length; i++) {
                 const shape = adapt2Shape(shapes[i]);
-                const isRect = shape.radiusType === RadiusType.Rect;
 
                 if (shape.radiusMask) {
-                    api.delradiusmask(shape);
+                    const variable = this.getRadiusMaskVariable(api, this._page, shapes[i], undefined);
+                    if (variable) {
+                        api.shapeModifyVariable(page, variable, undefined);
+                    } else {
+                        api.delradiusmask(shape);
+                    }
                 }
-
                 let needUpdateFrame = false;
 
-                if (isRect) {
+                if (shape.radiusType === RadiusType.Rect) {
                     if (values.length !== 4) {
                         values = [values[0], values[0], values[0], values[0]];
                     }
 
                     const [lt, rt, rb, lb] = values;
-
                     if (shape instanceof SymbolRefShape) {
                         const _shape = shape4cornerRadius(api, this._page, shapes[i] as SymbolRefView);
                         api.shapeModifyRadius2(page, _shape, lt, rt, rb, lb);
@@ -290,23 +294,11 @@ export class LinearApi {
 
                     if (shape.isVirtualShape) continue;
 
-                    if (shape instanceof PathShape) {
+                    if (shape instanceof PathShape || shape instanceof PathShape2) {
                         const points = shape.pathsegs[0].points;
                         for (let _i = 0; _i < 4; _i++) {
                             const val = values[_i];
                             if (points[_i].radius === val || val < 0) continue;
-
-                            api.modifyPointCornerRadius(page, shape, _i, val, 0);
-                        }
-                        needUpdateFrame = true;
-                    } else if (shape instanceof PathShape2) {
-                        const points = shape.pathsegs[0].points;
-                        for (let _i = 0; _i < 4; _i++) {
-                            const val = values[_i];
-                            if (points[_i].radius === val || val < 0) {
-                                continue;
-                            }
-
                             api.modifyPointCornerRadius(page, shape, _i, val, 0);
                         }
                         needUpdateFrame = true;
@@ -316,25 +308,10 @@ export class LinearApi {
                     }
                 } else {
                     if (shape.isVirtualShape || shape.radiusType === RadiusType.None) continue;
-
-                    if (shape instanceof PathShape) {
+                    if (shape instanceof PathShape || shape instanceof PathShape2) {
                         shape.pathsegs.forEach((seg, index) => {
                             for (let _i = 0; _i < seg.points.length; _i++) {
-                                if (seg.points[_i].radius === values[0]) {
-                                    continue;
-                                }
-
-                                api.modifyPointCornerRadius(page, shape, _i, values[0], index);
-                            }
-                        });
-                        needUpdateFrame = true;
-                    } else if (shape instanceof PathShape2) {
-                        shape.pathsegs.forEach((seg, index) => {
-                            for (let _i = 0; _i < seg.points.length; _i++) {
-                                if (seg.points[_i].radius === values[0]) {
-                                    continue;
-                                }
-
+                                if (seg.points[_i].radius === values[0]) continue;
                                 api.modifyPointCornerRadius(page, shape, _i, values[0], index);
                             }
                         });
@@ -343,7 +320,6 @@ export class LinearApi {
                         api.shapeModifyFixedRadius(page, shape as GroupShape | TextShape, values[0]);
                     }
                 }
-
                 if (needUpdateFrame) {
                     update_frame_by_points(api, page, shape);
                 }
