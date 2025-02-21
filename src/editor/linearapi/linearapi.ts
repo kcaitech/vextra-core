@@ -3,13 +3,13 @@ import { adapt2Shape, ArtboardView, PageView, ShapeView, SymbolRefView, SymbolVi
 import { modifyPathByArc } from "../asyncapi";
 import { Api, CoopRepository } from "../../coop";
 import { modify_shapes_height, modify_shapes_width } from "../utils/common";
-import { Artboard, BorderSideSetting, Color, FillType, PathShape, Shadow, Shape, ShapeType, SideType, SymbolRefShape, Transform } from "../../data/classes";
+import { Artboard, Border, BorderSideSetting, Color, FillType, OverrideType, PathShape, Shadow, Shape, ShapeType, SideType, SymbolRefShape, Transform, VariableType } from "../../data/classes";
 import { RadiusType } from "../../data/consts";
-import { shape4Autolayout, shape4border, shape4contextSettings, shape4cornerRadius, shape4fill, shape4shadow } from "../symbol";
+import { _ov, override_variable, shape4Autolayout, shape4border, shape4contextSettings, shape4cornerRadius, shape4fill, shape4shadow } from "../symbol";
 import { update_frame_by_points } from "../utils/path";
 import { GroupShape, PathShape2, SymbolShape, TextShape } from "../../data/shape";
 import { BatchAction, BatchAction2, BatchAction5, PageEditor } from "../page";
-import { importGradient, } from "../../data/baseimport";
+import { importBorder, importGradient, } from "../../data/baseimport";
 import { exportGradient, } from "../../data/baseexport";
 import { TableEditor } from "../table";
 import { TidyUpAlgin, tidyUpLayout } from "../utils/auto_layout";
@@ -271,7 +271,7 @@ export class LinearApi {
                 const isRect = shape.radiusType === RadiusType.Rect;
 
                 if (shape.radiusMask) {
-                    api.delradiusmask(this.__document, this.page, shape);
+                    api.delradiusmask(shape);
                 }
 
                 let needUpdateFrame = false;
@@ -468,86 +468,82 @@ export class LinearApi {
      *  @description 修改边框粗细
      */
 
-    modifyShapesBorderThickness(actions: BatchAction2[]) {
+    private getBorderVariable(api: Api, page: PageView, view: ShapeView) {
+        return override_variable(page, VariableType.Borders, OverrideType.Borders, (_var) => {
+            const border = _var?.value ?? view.getBorders();
+            return border;
+        }, api, view);
+    }
+
+    private getStrokeMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
+        return _ov(VariableType.BordersMask, OverrideType.BordersMask, () => value, view, page, api);
+    }
+
+    modifyShapesBorderThickness(shapes: ShapeView[], thickness: number) {
         this.execute('modify-shapes-border-Thickness', () => {
             const api = this.api!;
-            const page = this.page;
-            for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                const s = shape4border(api, this._page, target);
-                const sideType = target.getBorders().sideSetting.sideType;
-                const border = s instanceof Shape ? s.style.borders : s.value;
+            for (const view of shapes) {
+                const border = view.getBorders();
+                const linkedVariable = this.getBorderVariable(api, this._page, view);
+                const source = linkedVariable ? (linkedVariable.value as Border) : adapt2Shape(view).style.borders;
+                if (view.bordersMask) {
+                    const linkedBorderMaskVariable = this.getStrokeMaskVariable(api, this._page, view, undefined);
+                    if (linkedBorderMaskVariable) {
+                        api.shapeModifyVariable(this.page, linkedBorderMaskVariable, undefined);
+                    } else {
+                        api.modifyBorderMask(adapt2Shape(view).style, undefined);
+                    }
+                    api.setBorderPosition(source, border.position);
+                }
+                const sideType = border.sideSetting.sideType;
                 switch (sideType) {
                     case SideType.Normal:
-                        api.setBorderSide(border, new BorderSideSetting(sideType, value, value, value, value));
+                        api.setBorderSide(source, new BorderSideSetting(sideType, thickness, thickness, thickness, thickness));
                         break;
                     case SideType.Top:
-                        api.setBorderThicknessTop(page, s, value);
+                        api.setBorderThicknessTop(source, thickness);
                         break
                     case SideType.Right:
-                        api.setBorderThicknessRight(page, s, value);
+                        api.setBorderThicknessRight(source, thickness);
                         break
                     case SideType.Bottom:
-                        api.setBorderThicknessBottom(page, s, value);
+                        api.setBorderThicknessBottom(source, thickness);
                         break
                     case SideType.Left:
-                        api.setBorderThicknessLeft(page, s, value);
+                        api.setBorderThicknessLeft(source, thickness);
                         break
                     default:
-                        api.setBorderSide(border, new BorderSideSetting(sideType, value, value, value, value));
+                        api.setBorderSide(source, new BorderSideSetting(SideType.Custom, thickness, thickness, thickness, thickness));
                         break;
                 }
-
             }
         });
     }
 
-    modifyBorderThicknessTop(actions: BatchAction2[]) {
-        this.execute('modify-border-thickness-top', () => {
+    modifyBorderCustomThickness(shapes: ShapeView[], thickness: number, sideType: SideType) {
+        this.execute('modify-shapes-border-Thickness', () => {
             const api = this.api!;
-            const page = this.page;
-            for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                const s = shape4border(api, this._page, target);
-                api.setBorderThicknessTop(page, s, value);
+            for (const view of shapes) {
+                const linkedVariable = this.getBorderVariable(api, this._page, view);
+                const source = linkedVariable ? (linkedVariable.value as Border) : adapt2Shape(view).style.borders;
+                switch (sideType) {
+                    case SideType.Top:
+                        api.setBorderThicknessTop(source, thickness);
+                        break
+                    case SideType.Right:
+                        api.setBorderThicknessRight(source, thickness);
+                        break
+                    case SideType.Bottom:
+                        api.setBorderThicknessBottom(source, thickness);
+                        break
+                    case SideType.Left:
+                        api.setBorderThicknessLeft(source, thickness);
+                        break
+                    default:
+                        break;
+                }
             }
-        })
-    }
-
-    modifyBorderThicknessBottom(actions: BatchAction2[]) {
-        this.execute('modify-border-thickness-bottom', () => {
-            const api = this.api!;
-            const page = this.page;
-            for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                const s = shape4border(api, this._page, target);
-                api.setBorderThicknessBottom(page, s, value);
-            }
-        })
-    }
-
-    modifyBorderThicknessLeft(actions: BatchAction2[]) {
-        this.execute('modify-border-thickness-left', () => {
-            const api = this.api!;
-            const page = this.page;
-            for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                const s = shape4border(api, this._page, target);
-                api.setBorderThicknessLeft(page, s, value);
-            }
-        })
-    }
-
-    modifyBorderThicknessRight(actions: BatchAction2[]) {
-        this.execute('modify-border-thickness-right', () => {
-            const api = this.api!;
-            const page = this.page;
-            for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                const s = shape4border(api, this._page, target);
-                api.setBorderThicknessRight(page, s, value);
-            }
-        })
+        });
     }
 
     /**

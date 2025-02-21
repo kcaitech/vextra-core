@@ -113,6 +113,7 @@ function _isNeedOverride4SymbolRef(overrideType: OverrideType) {
         case OverrideType.FrameMaskDisabled:
         case OverrideType.AutoLayout:
         case OverrideType.FillsMask:
+        case OverrideType.BorderFillsMask:
         case OverrideType.BordersMask:
         case OverrideType.ShadowsMask:
         case OverrideType.BlursMask:

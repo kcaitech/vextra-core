@@ -248,7 +248,7 @@ export class DocEditor {
                 if (style instanceof BorderMask) {
                     for (let i = 0; i < shapes.length; i++) {
                         const shape = shapes[i];
-                        api.modifyBorderMask(p, adapt2Shape(shape), style.id);
+                        api.modifyBorderMask(adapt2Shape(shape).style, style.id);
                     }
                 }
                 if (style instanceof RadiusMask) {

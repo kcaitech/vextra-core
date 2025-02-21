@@ -392,6 +392,18 @@ export function shape4fill(api: Api, page: PageView, shape: ShapeView) {
     }, api, shape)
     return _var || shape.data;
 }
+export function shape4fill2(api: Api, page: PageView, shape: ShapeView) {
+    return override_variable(page, VariableType.Fills, OverrideType.Fills, (_var) => {
+        const fills = _var?.value ?? shape.getFills();
+        return new BasicArray(...(fills as Array<Fill>).map((v) => {
+                const ret = importFill(v);
+                const imgmgr = v.getImageMgr();
+                if (imgmgr) ret.setImageMgr(imgmgr)
+                return ret;
+            }
+        ))
+    }, api, shape)!;
+}
 
 export function shape4shadow(api: Api, page: PageView, shape: ShapeView) {
     const _var = override_variable(page, VariableType.Shadows, OverrideType.Shadows, (_var) => {

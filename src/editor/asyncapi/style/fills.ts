@@ -12,18 +12,6 @@ export class FillsAsyncApi extends AsyncApiCaller {
         return this.__repo.start('modify-fills-color');
     }
 
-    private m_targets: any;
-
-    private getTargets(shapes: ShapeView[]): (Shape | FillMask | Variable)[] {
-        return this.m_targets ?? (this.m_targets = ((shapes: ShapeView[]) => {
-            return shapes.map(i => shape4fill(this.api, this.pageView, i));
-        })(shapes))
-    }
-
-    private getFills(target: Shape | FillMask | Variable): Fill[] {
-        return target instanceof Shape ? target.getFills() : target instanceof FillMask ? target.fills : target.value;
-    }
-
     /* 修改纯色 */
     modifySolidColor(actions: { fill: Fill, color: Color }[]) {
         try {
@@ -81,7 +69,6 @@ export class FillsAsyncApi extends AsyncApiCaller {
         } else {
             this.__repo.rollback();
         }
-        this.m_targets = undefined;
     }
 
     /*非连续性指令*/
@@ -168,10 +155,9 @@ export class FillsAsyncApi extends AsyncApiCaller {
         try {
             for (const fill of fills) {
                 this.api.setFillScaleMode(fill, type);
-                // if (type === types.ImageScaleMode.Tile) {
-                //     const fills = this.getFills(target);
-                //     if (!fills[index].scale) this.api.setFillImageScale(this.page, target as any, index, 0.5);
-                // }
+                if (type === types.ImageScaleMode.Tile) {
+                    if (!fill.scale) this.api.setFillImageScale(fill, 0.5);
+                }
             }
         } catch (error) {
             console.error(error);
