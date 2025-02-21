@@ -51,6 +51,48 @@ export class BlurModifier extends Modifier {
         }
     }
 
+    modifyBlurType(missions: Function[]) {
+        try {
+            const api = this.getApi('modifyBlurType');
+            missions.forEach(call => call(api));
+            this.commit();
+        } catch (error) {
+            this.rollback();
+            throw error;
+        }
+    }
+    modifyBlurEnabled(missions: Function[]) {
+        try {
+            const api = this.getApi('modifyBlurEnabled');
+            missions.forEach(call => call(api));
+            this.commit();
+        } catch (error) {
+            this.rollback();
+            throw error;
+        }
+    }
+    modifyBlurSaturation(missions: Function[]) {
+        try {
+            const api = this.getApi('modifyBlurSaturation');
+            missions.forEach(call => call(api));
+            this.commit();
+        } catch (error) {
+            this.rollback();
+            throw error;
+        }
+    }
+
+    removeBlur(missions: Function[]) {
+        try {
+            const api = this.getApi('removeBlur');
+            missions.forEach(call => call(api));
+            this.commit();
+        } catch (error) {
+            this.rollback();
+            throw error;
+        }
+    }
+
     unifyShapesBlurMask(views: ShapeView[], mask: string) {
         if (!views.length) return;
         try {

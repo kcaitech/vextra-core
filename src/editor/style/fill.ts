@@ -175,7 +175,7 @@ export class FillModifier extends Modifier {
     }
 
     /* 解绑图层上的填充遮罩 */
-    unbindShapesFillMask(document: Document, pageView: PageView, views: ShapeView[]) {
+    unbindShapesFillMask(pageView: PageView, views: ShapeView[]) {
         try {
             if (!views.length) return;
 
@@ -213,7 +213,7 @@ export class FillModifier extends Modifier {
     }
 
     /* 删除填充遮罩(与解绑有所不同) */
-    removeShapesFillMask(document: Document, pageView: PageView, views: ShapeView[]) {
+    removeShapesFillMask(pageView: PageView, views: ShapeView[]) {
         try {
             const api = this.getApi('removeShapesFillMask');
             const fillMaskVariables: Variable[] = [];
@@ -224,7 +224,7 @@ export class FillModifier extends Modifier {
             }
             const page = adapt2Shape(pageView) as Page;
             fillMaskVariables.forEach(variable => api.shapeModifyVariable(page, variable, undefined));
-            shapes4mask.forEach(shape => api.delfillmask(document, page, shape));
+            shapes4mask.forEach(shape => api.modifyFillsMask(page, shape, undefined));
 
             const fillsContainer: BasicArray<Fill>[] = [];
             for (const view of views) {
