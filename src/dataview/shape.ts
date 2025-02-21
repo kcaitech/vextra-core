@@ -1364,20 +1364,12 @@ export class ShapeView extends DataView {
             this.watchRadiusMask(mask);
         } else {
             _radius = [this.fixedRadius ?? 0]
-            this.unwatchRadiusMask();
             if (this.radiusType === RadiusType.Rect && _radius.length === 1) {
                 _radius = [_radius[0], _radius[0], _radius[0], _radius[0]];
             }
+            this.unwatchRadiusMask();
         }
         return _radius
-    }
-
-    get maskRadius(): number[] | undefined {
-        if (this.radiusMask) {
-            const mgr = this.style.getStylesMgr()!;
-            const mask = mgr.getSync(this.radiusMask) as RadiusMask
-            return mask.radius;
-        }
     }
 
     get radiusType() {
@@ -1586,7 +1578,8 @@ export class ShapeView extends DataView {
         return undefined;
     }
 
-    get radiusMask() {
-        return this.data.radiusMask;
+    get radiusMask(): string | undefined {
+        const v = this._findOV(OverrideType.RadiusMask, VariableType.RadiusMask);
+        return v ? v.value : this.m_data.radiusMask;
     }
 }

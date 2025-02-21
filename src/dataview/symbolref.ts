@@ -8,7 +8,8 @@ import {
     BorderStyle,
     CornerType, FillMask, CurvePoint, CurveMode, parsePath,
     ShadowMask,
-    BorderMask
+    BorderMask,
+    RadiusMask
 } from "../data";
 import { ShapeView, fixFrameByConstrain } from "./shape";
 import { DataView, RootView } from "./view";
@@ -461,6 +462,29 @@ export class SymbolRefView extends ShapeView {
         return v ? v.value as string : this.m_sym?.style.shadowsMask;
     }
 
+    get radiusMask(): string | undefined {
+        const v = this._findOV2(OverrideType.RadiusMask, VariableType.RadiusMask);
+        return v ? v.value : this.m_sym?.radiusMask;
+    }
+
+    get radius(): number[] {
+        let _radius: number[];
+        if (this.radiusMask) {
+            const mgr = this.style.getStylesMgr()!;
+            const mask = mgr.getSync(this.radiusMask) as RadiusMask
+            _radius = [...mask.radius];
+            this.watchRadiusMask(mask);
+        } else {
+            _radius = [
+                this.cornerRadius?.lt ?? 0,
+                this.cornerRadius?.rt ?? 0,
+                this.cornerRadius?.rb ?? 0,
+                this.cornerRadius?.lb ?? 0,
+            ]
+            this.unwatchRadiusMask();
+        }
+        return _radius
+    }
     getShadows(): BasicArray<Shadow> {
         let shadows: BasicArray<Shadow>;
         const shadowsMask = this.shadowsMask;
