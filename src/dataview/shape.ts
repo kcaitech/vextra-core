@@ -11,7 +11,7 @@ import {
     BorderStyle,
     ContextSettings,
     CornerRadius,
-    CornerType,
+    CornerType, CurveMode, CurvePoint,
     ExportOptions,
     Fill,
     FillMask,
@@ -21,7 +21,7 @@ import {
     OverlayBackgroundAppearance,
     OverlayBackgroundInteraction,
     OverlayPosition,
-    OverrideType,
+    OverrideType, parsePath,
     PathShape,
     PrototypeInterAction,
     PrototypeStartingPoint,
@@ -803,7 +803,16 @@ export class ShapeView extends DataView {
     }
 
     getPathOfSize() {
-        return new Path();
+        const p1 = new CurvePoint([] as any, '', 0, 0, CurveMode.Straight);
+        const p2 = new CurvePoint([] as any, '', 1, 0, CurveMode.Straight);
+        const p3 = new CurvePoint([] as any, '', 1, 1, CurveMode.Straight);
+        const p4 = new CurvePoint([] as any, '', 0, 1, CurveMode.Straight);
+        const radius = this.radius;
+        p1.radius = radius[0];
+        p2.radius = radius[1] ?? radius[0];
+        p3.radius = radius[2] ?? radius[0];
+        p4.radius = radius[3] ?? radius[0];
+        return parsePath([p1, p2, p3, p4], true, this.frame.width, this.frame.height);
     }
 
     getPathStr() {
