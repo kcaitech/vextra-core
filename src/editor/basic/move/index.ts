@@ -65,8 +65,8 @@ export class ShapePorter {
         }
         const shadows = view.getShadows().map(i => importShadow(exportShadow(i)));
         {
-            if (shape.style.shadows.length) api.deleteShadows(page, shape, 0, shape.style.shadows.length);
-            api.addShadows(page, shape, shadows);
+            if (shape.style.shadows.length) api.deleteShadows(shape.style.shadows, 0, shape.style.shadows.length);
+            api.addShadows(shape.style.shadows, shadows);
         }
         const visible = view.isVisible;
         if (visible !== shape.isVisible) {

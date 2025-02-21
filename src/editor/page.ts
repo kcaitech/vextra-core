@@ -2462,35 +2462,7 @@ export class PageEditor {
         }
     }
 
-    shapesSetShadowMask(actions: BatchAction2[]) {
-        const api = this.__repo.start("shapesSetShadowMask");
-        try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                api.modifyShadowsMask(this.page, adapt2Shape(target), value);
-            }
-            this.__repo.commit();
-        } catch (e) {
-            console.error(e);
-            this.__repo.rollback();
-        }
-    }
 
-    shapesDelShadowMask(actions: BatchAction2[]) {
-        const api = this.__repo.start("shapesDelShadowMask");
-        try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                api.deleteShadows(this.page, adapt2Shape(target), 0, target.style.shadows.length);
-                api.addShadows(this.page, adapt2Shape(target), value);
-                api.delshadowmask(this.__document, this.page, adapt2Shape(target));
-            }
-            this.__repo.commit();
-        } catch (e) {
-            console.error(e);
-            this.__repo.rollback();
-        }
-    }
 
     shapesSetBlurMask(actions: BatchAction2[]) {
         const api = this.__repo.start("shapesSetBlurMask");
@@ -2528,21 +2500,6 @@ export class PageEditor {
                 api.deleteBlur(target.style);
                 api.addBlur(target.style, value);
                 api.delblurmask(this.__document, this.page, adapt2Shape(target));
-            }
-            this.__repo.commit();
-        } catch (e) {
-            console.error(e);
-            this.__repo.rollback();
-        }
-    }
-
-    shapesDelStyleShadow(actions: BatchAction2[]) {
-        const api = this.__repo.start("shapesDelStyleShadow");
-        try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target } = actions[i];
-                api.deleteShadows(this.page, adapt2Shape(target), 0, target.style.shadows.length);
-                api.delshadowmask(this.__document, this.page, adapt2Shape(target));
             }
             this.__repo.commit();
         } catch (e) {
@@ -3129,34 +3086,7 @@ export class PageEditor {
         }
     }
 
-    shapesAddShadow(actions: { shadows: Shadow[], shadow: Shadow }[]) {
-        try {
-            const api = this.__repo.start('shapesAddShadow');
-            for (let i = 0; i < actions.length; i++) {
-                const { shadows, shadow } = actions[i];
-                api.addShadow(shadows, shadow,shadows.length);
-            }
-            this.__repo.commit();
-        } catch (error) {
-            this.__repo.rollback();
-            throw error;
-        }
-    }
 
-    shapesShadowsUnify(actions: BatchAction2[]) {
-        try {
-            const api = this.__repo.start('shapesShadowsUnify');
-            for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                api.deleteShadows(this.page, adapt2Shape(target), 0, target.style.shadows.length);
-                api.addShadows(this.page, adapt2Shape(target), value);
-                api.delshadowmask(this.__document, this.page, adapt2Shape(target));
-            }
-            this.__repo.commit();
-        } catch (error) {
-            this.__repo.rollback();
-        }
-    }
 
     // shape blur
     shapesAddBlur(actions: { style: Basic & { blur?: Blur; }, blur: Blur }[]) {
@@ -4156,10 +4086,10 @@ export class PageEditor {
                 // shadows
                 {
                     const s = shape4shadow(api, this.view, view);
-                    api.deleteShadows(page, s, 0, view.style.shadows.length);
+                    api.deleteShadows(view.style.shadows, 0, view.style.shadows.length);
                     if (shadows?.length) {
                         const __shadows = shadows.map((i: Shadow) => importShadow(i));
-                        api.addShadows(page, s, __shadows);
+                        api.addShadows(view.style.shadows, __shadows);
                     }
                 }
                 // blur
