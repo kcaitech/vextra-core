@@ -191,7 +191,7 @@ export class FillModifier extends Modifier {
             }
             const page = adapt2Shape(pageView) as Page;
             fillMaskVariables.forEach(variable => api.shapeModifyVariable(page, variable, undefined));
-            shapes4mask.forEach(shape => api.delfillmask(document, page, shape));
+            shapes4mask.forEach(shape => api.modifyFillsMask(page, shape, undefined));
 
             // 固定现有填充到本地
             const fillsContainer: BasicArray<Fill>[] = [];
