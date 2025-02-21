@@ -199,17 +199,5 @@ export { CircleChecker } from "./editor/basic/move/circle";
 
 export {Path} from '@kcdesign/path'
 
-export {
-    shape4fill as getFillContainer,
-    shape4border as getBorderContainer,
-    shape4blur as getBlurContainer,
-    shape4contextSettings as getContextSettingsContainer,
-    shape4cornerRadius as getCornerRadiusContainer,
-    shape4exportOptions as getExportOptionsContainer,
-    shape4Autolayout as getLayoutContainer,
-    shape4shadow as getShadowsContainer,
-    _ov as getBasicContainer
-} from './editor/symbol';
-
-export { FillModifier, RefFillModifier } from "./editor/style/fill";
+export { FillModifier } from "./editor/style/fill";
 export { BorderModifier } from "./editor/style/border";
