@@ -9,7 +9,7 @@ import {
     CornerType, FillMask, CurvePoint, CurveMode, parsePath,
     ShadowMask,
     BorderMask,
-    RadiusMask
+    RadiusMask, BlurMask
 } from "../data";
 import { ShapeView, fixFrameByConstrain } from "./shape";
 import { DataView, RootView } from "./view";
@@ -501,9 +501,25 @@ export class SymbolRefView extends ShapeView {
         return shadows;
     }
 
+    get blurMask(): string | undefined {
+        const v = this._findOV2(OverrideType.BlursMask, VariableType.BlursMask);
+        return v ? v.value : this.m_sym?.style.blursMask;
+    }
+
     get blur(): Blur | undefined {
-        const v = this._findOV2(OverrideType.Blur, VariableType.Blur);
-        return v ? v.value : this.m_sym?.style.blur;
+        let blur: Blur;
+        const blurMask = this.blurMask;
+        const mgr = this.style.getStylesMgr() || this.m_sym?.style.getStylesMgr();
+        if (blurMask && mgr) {
+            const mask = mgr.getSync(blurMask) as BlurMask;
+            blur = mask.blur;
+            this.watchBlurMask(mask);
+        } else {
+            const v = this._findOV2(OverrideType.Blur, VariableType.Blur);
+            blur = v ? v.value : this.m_sym?.style.blur;
+            this.unwatchBlurMask()
+        }
+        return blur;
     }
 
     get name() {

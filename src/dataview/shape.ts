@@ -770,23 +770,28 @@ export class ShapeView extends DataView {
         this.notify('style', 'blur', 'mask');
     }
 
+    get blurMask(): string | undefined {
+        const v = this._findOV(OverrideType.BlursMask, VariableType.BlursMask);
+        return v ? v.value : this.m_data.style.blursMask;
+    }
+
     private m_unbind_blur: undefined | (() => void) = undefined;
     private onBlurMaskChange = this._onBlurMaskChange.bind(this);
 
-    private watchBlurMask(mask: BlurMask) {
+     watchBlurMask(mask: BlurMask) {
         this.m_unbind_blur?.();
         this.m_unbind_blur = mask.watch(this.onBlurMaskChange);
     }
 
-    private unwatchBlurMask() {
+     unwatchBlurMask() {
         this.m_unbind_blur?.();
     }
 
     get blur(): Blur | undefined {
         let blur: Blur;
-        if (this.style.blursMask) {
+        if (this.blurMask) {
             const mgr = this.style.getStylesMgr()!;
-            const mask = mgr.getSync(this.style.blursMask) as BlurMask
+            const mask = mgr.getSync(this.blurMask) as BlurMask
             blur = mask.blur;
             this.watchBlurMask(mask);
         } else {

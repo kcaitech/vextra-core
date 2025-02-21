@@ -203,3 +203,4 @@ export { FillModifier } from "./editor/style/fill";
 export { BorderModifier } from "./editor/style/border";
 export { RadiusModifier } from "./editor/style/radius";
 export { ShadowsModifier } from "./editor/style/shadows";
+export { BlurModifier } from "./editor/style/blur";
