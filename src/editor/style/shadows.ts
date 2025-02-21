@@ -1,46 +1,59 @@
-import { Api } from "../../coop";
+import { Api, CoopRepository } from "../../coop";
 import { Modifier } from "../basic/modifier";
 import {
     BasicArray,
+    Color,
     Document,
     Fill, FillMask,
+    FillType,
+    Gradient,
+    GradientType,
+    ImageScaleMode,
+    importGradient,
     OverrideType,
     Page,
+    Point2D,
     Shape,
+    Stop,
     Variable,
-    VariableType
+    VariableType,
+    Shadow,
+    ShadowPosition
 } from "../../data";
 import { adapt2Shape, PageView, ShapeView } from "../../dataview";
-
+import { exportGradient } from "../../data/baseexport";
+import { uuid } from "../../basic/uuid";
 import { _ov, override_variable } from "../symbol";
 import { importFill } from "../../data/baseimport";
 
 /* 填充修改器 */
-export class FillModifier extends Modifier {
-    importFill = importFill;
-
-    getMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
-        return _ov(VariableType.FillsMask, OverrideType.FillsMask, () => value, view, page, api);
+export class ShadowsModifier extends Modifier {
+    constructor(repo: CoopRepository) {
+        super(repo);
     }
 
-    getFillsVariable(api: Api, page: PageView, view: ShapeView) {
-        return override_variable(page, VariableType.Fills, OverrideType.Fills, (_var) => {
-            const fills = _var?.value ?? view.getFills();
+    private getMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
+        return _ov(VariableType.ShadowsMask, OverrideType.ShadowsMask, () => value, view, page, api);
+    }
+
+    private getShadowsVariable(api: Api, page: PageView, view: ShapeView) {
+        return override_variable(page, VariableType.Shadows, OverrideType.Shadows, (_var) => {
+            const fills = _var?.value ?? view.getShadows();
             return new BasicArray(...(fills as Array<Fill>).map((v) => {
-                    const ret = importFill(v);
-                    const imgmgr = v.getImageMgr();
-                    if (imgmgr) ret.setImageMgr(imgmgr)
-                    return ret;
-                }
+                const ret = importFill(v);
+                const imgmgr = v.getImageMgr();
+                if (imgmgr) ret.setImageMgr(imgmgr)
+                return ret;
+            }
             ))
-        }, api, view)!;
+        }, api, view);
     }
 
-    /* 创建一个填充 */
-    createFill(missions: Function[]) {
+    /* 创建一个阴影 */
+    createShadows(actions: { shadows: Shadow[], shadow: Shadow, index: number }[]) {
         try {
-            const api = this.getApi('createFill');
-            missions.forEach(call => call(api));
+            const api = this.getApi('createShadows');
+            actions.forEach(action => api.addShadow(action.shadows, action.shadow, action.index));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -48,11 +61,11 @@ export class FillModifier extends Modifier {
         }
     }
 
-    /* 隐藏与显示一条填充 */
-    setFillsEnabled(missions: Function[]) {
+    /* 隐藏与显示一条阴影 */
+    setShadowEnabled(shadows: Shadow[], enable: boolean) {
         try {
-            const api = this.getApi('setFillsEnabled');
-            missions.forEach(call => call(api));
+            const api = this.getApi('setShadowEnabled');
+            for (const shadow of shadows) api.setShadowEnable(shadow, enable);
             this.commit();
         } catch (error) {
             this.rollback();
@@ -60,11 +73,11 @@ export class FillModifier extends Modifier {
         }
     }
 
-    /* 修改填充颜色 */
-    setFillsColor(missions: Function[]) {
+    /* 修改阴影位置 */
+    setShadowsPosition(actions: { shadow: Shadow, type: ShadowPosition }[]) {
         try {
-            const api = this.getApi('setFillsColor');
-            missions.forEach(call => call(api));
+            const api = this.getApi('setShadowsPosition');
+            actions.forEach(action => api.setShadowPosition(action.shadow, action.type));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -72,11 +85,11 @@ export class FillModifier extends Modifier {
         }
     }
 
-    /* 修改渐变色透明度 */
-    setGradientOpacity(missions: Function[]) {
+    /* 修改阴影X轴 */
+    setShadowOffsetX(actions: { shadow: Shadow, value: number }[]) {
         try {
-            const api = this.getApi('setGradientOpacity');
-            missions.forEach(call => call(api));
+            const api = this.getApi('setShadowOffsetX');
+            for (const action of actions) api.setShadowOffsetX(action.shadow, action.value);
             this.commit();
         } catch (error) {
             this.rollback();
@@ -84,11 +97,11 @@ export class FillModifier extends Modifier {
         }
     }
 
-    /* 删除一个填充 */
-    removeFill(missions: Function[]) {
+    /* 修改阴影Y轴 */
+    setShadowOffsetY(actions: { shadow: Shadow, value: number }[]) {
         try {
-            const api = this.getApi('removeFill');
-            missions.forEach(call => call(api));
+            const api = this.getApi('setShadowOffsetY');
+            for (const action of actions) api.setShadowOffsetY(action.shadow, action.value);
             this.commit();
         } catch (error) {
             this.rollback();
@@ -96,11 +109,65 @@ export class FillModifier extends Modifier {
         }
     }
 
-    /* 统一多个fills */
-    unifyShapesFills(missions: Function[]) {
+    /* 修改阴影扩散半径 */
+    setShadowSpread(actions: { shadow: Shadow, value: number }[]) {
         try {
-            const api = this.getApi('unifyShapesFills');
-            missions.forEach(call => call(api));
+            const api = this.getApi('setShadowSpread');
+            for (const action of actions) api.setShadowSpread(action.shadow, action.value);
+            this.commit();
+        } catch (error) {
+            this.rollback();
+            throw error;
+        }
+    }
+
+    /* 修改阴影模糊半径 */
+    setShadowsBlur(actions: { shadow: Shadow, value: number }[]) {
+        try {
+            const api = this.getApi('setShadowsBlur');
+            for (const action of actions) api.setShadowBlur(action.shadow, action.value);
+            this.commit();
+        } catch (error) {
+            this.rollback();
+            throw error;
+        }
+    }
+
+    /* 修改阴影颜色 */
+    setShadowsColor(actions: { shadow: Shadow, color: Color }[]) {
+        try {
+            const api = this.getApi('setShadowsColor');
+            for (const action of actions) api.setShadowColor(action.shadow, action.color);
+            this.commit();
+        } catch (error) {
+            this.rollback();
+            throw error;
+        }
+    }
+
+    /* 删除一个阴影 */
+    removeShadows(actions: { shadows: Shadow[], index: number }[]) {
+        try {
+            const api = this.getApi('removeShadows');
+            for (const action of actions) api.deleteShadowAt(action.shadows, action.index);
+            this.commit();
+        } catch (error) {
+            this.rollback();
+            throw error;
+        }
+    }
+
+    /* 统一多个shadows */
+    unifyShapesShadows(shadowsContainers:Shadow[]) {
+        if (!shadowsContainers.length) return;
+        try {
+            const api = this.getApi('unifyShapesShadows');
+         
+            for (const shadowContainer of shadowsContainers) {
+                api.deleteShadows(this.page, adapt2Shape(target), 0, target.style.shadows.length);
+                api.deleteFills(fillContainer, 0, fillContainer.length);
+                api.addFills(fillContainer, master.map(i => importFill(i)));
+            }
             this.commit();
         } catch (error) {
             this.rollback();
@@ -109,7 +176,7 @@ export class FillModifier extends Modifier {
     }
 
     /* 统一多个图层的fillsMask */
-    unifyShapesFillsMask(views: ShapeView[], fillsMask: string) {
+    unifyShapesFillsMask(document: Document, views: ShapeView[], fillsMask: string) {
         if (!views.length) return;
         try {
             const api = this.getApi('unifyShapesFillsMask');
@@ -153,7 +220,7 @@ export class FillModifier extends Modifier {
     }
 
     /* 修改图层的填充遮罩 */
-    setShapesFillMask(pageView: PageView, views: ShapeView[], value: string) {
+    setShapesFillMask(document: Document, pageView: PageView, views: ShapeView[], value: string) {
         try {
             const page = adapt2Shape(pageView) as Page;
             const api = this.getApi('setShapesFillMask');
@@ -238,4 +305,5 @@ export class FillModifier extends Modifier {
             throw error;
         }
     }
+
 }
