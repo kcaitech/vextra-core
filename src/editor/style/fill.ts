@@ -2,35 +2,28 @@ import { Api } from "../../coop";
 import { Modifier } from "../basic/modifier";
 import {
     BasicArray,
-    Color,
     Document,
     Fill, FillMask,
-    FillType,
-    Gradient,
-    GradientType,
-    ImageScaleMode,
-    importGradient,
     OverrideType,
     Page,
-    Point2D,
     Shape,
-    Stop,
     Variable,
     VariableType
 } from "../../data";
 import { adapt2Shape, PageView, ShapeView } from "../../dataview";
-import { exportGradient } from "../../data/baseexport";
-import { uuid } from "../../basic/uuid";
-import { _ov, override_variable, shape4fill2 } from "../symbol";
+
+import { _ov, override_variable } from "../symbol";
 import { importFill } from "../../data/baseimport";
 
 /* 填充修改器 */
 export class FillModifier extends Modifier {
-    private getMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
+    importFill = importFill;
+
+    getMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
         return _ov(VariableType.FillsMask, OverrideType.FillsMask, () => value, view, page, api);
     }
 
-    private getFillsVariable(api: Api, page: PageView, view: ShapeView) {
+    getFillsVariable(api: Api, page: PageView, view: ShapeView) {
         return override_variable(page, VariableType.Fills, OverrideType.Fills, (_var) => {
             const fills = _var?.value ?? view.getFills();
             return new BasicArray(...(fills as Array<Fill>).map((v) => {
@@ -40,14 +33,14 @@ export class FillModifier extends Modifier {
                     return ret;
                 }
             ))
-        }, api, view);
+        }, api, view)!;
     }
 
     /* 创建一个填充 */
-    createFill(actions: { fills: BasicArray<Fill>, fill: Fill }[]) {
+    createFill(missions: Function[]) {
         try {
             const api = this.getApi('createFill');
-            actions.forEach(action => api.addFillAt(action.fills, action.fill, action.fills.length));
+            missions.forEach(call => call(api));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -56,32 +49,10 @@ export class FillModifier extends Modifier {
     }
 
     /* 隐藏与显示一条填充 */
-    setFillsEnabled(fills: Fill[], enable: boolean) {
+    setFillsEnabled(missions: Function[]) {
         try {
             const api = this.getApi('setFillsEnabled');
-            for (const fill of fills) api.setFillEnable(fill, enable);
-            this.commit();
-        } catch (error) {
-            this.rollback();
-            throw error;
-        }
-    }
-
-    /* 修改填充类型 */
-    setFillsType(actions: { fill: Fill, type: string }[]) {
-        try {
-            const api = this.getApi('setFillsType');
-            for (const action of actions) {
-                if (action.type === FillType.SolidColor) {
-                    api.setFillType(action.fill, FillType.SolidColor);
-                } else if (action.type === FillType.Pattern) {
-                    api.setFillType(action.fill, FillType.Pattern);
-                    if (!action.fill.imageScaleMode) api.setFillScaleMode(action.fill, ImageScaleMode.Fill);
-                } else {
-                    api.setFillType(action.fill, FillType.Gradient);
-                    initGradient(api, action);
-                }
-            }
+            missions.forEach(call => call(api));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -90,10 +61,10 @@ export class FillModifier extends Modifier {
     }
 
     /* 修改填充颜色 */
-    setFillsColor(actions: { fill: Fill, color: Color }[]) {
+    setFillsColor(missions: Function[]) {
         try {
             const api = this.getApi('setFillsColor');
-            for (const action of actions) api.setFillColor(action.fill, action.color);
+            missions.forEach(call => call(api));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -102,13 +73,10 @@ export class FillModifier extends Modifier {
     }
 
     /* 修改渐变色透明度 */
-    setGradientOpacity(fills: Fill[], opacity: number) {
+    setGradientOpacity(missions: Function[]) {
         try {
             const api = this.getApi('setGradientOpacity');
-            for (const fill of fills) {
-                const gradient = fill.gradient!;
-                api.setGradientOpacity(gradient, opacity);
-            }
+            missions.forEach(call => call(api));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -117,10 +85,10 @@ export class FillModifier extends Modifier {
     }
 
     /* 删除一个填充 */
-    removeFill(actions: { fills: BasicArray<Fill>, index: number }[]) {
+    removeFill(missions: Function[]) {
         try {
             const api = this.getApi('removeFill');
-            actions.forEach(action => api.deleteFillAt(action.fills, action.index));
+            missions.forEach(call => call(api));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -129,15 +97,10 @@ export class FillModifier extends Modifier {
     }
 
     /* 统一多个fills */
-    unifyShapesFills(fillContainers: BasicArray<Fill>[]) {
-        if (!fillContainers.length) return;
+    unifyShapesFills(missions: Function[]) {
         try {
             const api = this.getApi('unifyShapesFills');
-            const master = fillContainers[0].map(i => importFill(i));
-            for (const fillContainer of fillContainers) {
-                api.deleteFills(fillContainer, 0, fillContainer.length);
-                api.addFills(fillContainer, master.map(i => importFill(i)));
-            }
+            missions.forEach(call => call(api));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -274,158 +237,5 @@ export class FillModifier extends Modifier {
             this.rollback();
             throw error;
         }
-    }
-}
-
-/* 实例填充修改器，与FillModifier同名修改器但操作针对实例 */
-export class RefFillModifier extends Modifier {
-    createFill(pageView: PageView, actions: { view: ShapeView, fill: Fill }[]) {
-        try {
-            const api = this.getApi('createFill');
-            for (const action of actions) {
-                const variable = shape4fill2(api, pageView, action.view);
-                api.addFillAt(variable.value, importFill(action.fill), variable.value.length);
-            }
-            this.commit();
-        } catch (error) {
-            this.rollback();
-            throw error;
-        }
-    }
-
-    setFillsEnabled(pageView: PageView, views: ShapeView[], index: number, enable: boolean) {
-        try {
-            const api = this.getApi('setFillsEnabled');
-            for (const view of views) {
-                const variable = shape4fill2(api, pageView, view);
-                api.setFillEnable(variable.value[index], enable)
-            }
-            this.commit();
-        } catch (error) {
-            this.rollback();
-            throw error;
-        }
-    }
-
-    setFillsType(pageView: PageView, views: ShapeView[], index: number, type: string) {
-        try {
-            const api = this.getApi('createFill');
-            for (const view of views) {
-                const variable = shape4fill2(api, pageView, view);
-                const fill = variable.value[index];
-                if (type === FillType.SolidColor) {
-                    api.setFillType(fill, FillType.SolidColor);
-                } else if (type === FillType.Pattern) {
-                    api.setFillType(fill, FillType.Pattern);
-                    if (!fill.imageScaleMode) api.setFillScaleMode(fill, ImageScaleMode.Fill);
-                } else {
-                    api.setFillType(fill, FillType.Gradient);
-                    initGradient(api, { fill, type });
-                }
-            }
-            this.commit();
-        } catch (error) {
-            this.rollback();
-            throw error;
-        }
-    }
-
-    setFillsColor(pageView: PageView, views: ShapeView[], index: number, color: Color) {
-        try {
-            if (!views.length) return;
-            const api = this.getApi('setFillsColor');
-            for (const view of views) {
-                const variable = shape4fill2(api, pageView, view);
-                api.setFillColor(variable.value[index], color);
-            }
-            this.commit();
-        } catch (error) {
-            this.rollback();
-            throw error;
-        }
-    }
-
-    setGradientOpacity(pageView: PageView, views: ShapeView[], index: number, opacity: number) {
-        try {
-            const api = this.getApi('setGradientOpacity');
-            for (const view of views) {
-                const variable = shape4fill2(api, pageView, view);
-                const fill = variable.value[index];
-                const gradient = fill.gradient!;
-                api.setGradientOpacity(gradient, opacity);
-            }
-            this.commit();
-        } catch (error) {
-            this.rollback();
-            throw error;
-        }
-    }
-
-    removeFill(pageView: PageView, views: ShapeView[], index: number) {
-        try {
-            const api = this.getApi('removeFill');
-            for (const view of views) {
-                const variable = shape4fill2(api, pageView, view);
-                api.deleteFillAt(variable.value, index);
-            }
-            this.commit();
-        } catch (error) {
-            this.rollback();
-            throw error;
-        }
-    }
-
-    unifyShapesFills(pageView: PageView, views: ShapeView[]) {
-        if (!views.length) return;
-        try {
-            const api = this.getApi('unifyShapesFills');
-            const master: Fill[] = shape4fill2(api, pageView, views[0]).value.map((i: Fill) => importFill(i));
-            for (const view of views) {
-                const fillContainer = shape4fill2(api, pageView, view).value;
-                api.deleteFills(fillContainer, 0, fillContainer.length);
-                api.addFills(fillContainer, master.map(i => importFill(i)));
-            }
-            this.commit();
-        } catch (error) {
-            this.rollback();
-            throw error;
-        }
-    }
-}
-
-function initGradient(api: Api, action: { fill: Fill, type: string }) {
-    const gradient = action.fill.gradient;
-    if (gradient) {
-        const gCopy = importGradient(exportGradient(gradient));
-        if (action.type === GradientType.Linear && gradient.gradientType !== GradientType.Linear) {
-            gCopy.from.y = gCopy.from.y - (gCopy.to.y - gCopy.from.y);
-            gCopy.from.x = gCopy.from.x - (gCopy.to.x - gCopy.from.x);
-        } else if (action.type !== GradientType.Linear && gradient.gradientType === GradientType.Linear) {
-            gCopy.from.y = gCopy.from.y + (gCopy.to.y - gCopy.from.y) / 2;
-            gCopy.from.x = gCopy.from.x + (gCopy.to.x - gCopy.from.x) / 2;
-        }
-        if (action.type === GradientType.Radial && gCopy.elipseLength === undefined) gCopy.elipseLength = 1;
-        gCopy.stops[0].color = action.fill.color;
-        gCopy.gradientType = action.type as GradientType;
-        api.setFillGradient(action.fill, gCopy);
-    } else {
-        const stops = new BasicArray<Stop>();
-        const { alpha, red, green, blue } = action.fill.color;
-        stops.push(
-            new Stop(new BasicArray(), uuid(), 0, new Color(alpha, red, green, blue)),
-            new Stop(new BasicArray(), uuid(), 1, new Color(0, red, green, blue))
-        );
-        const from = action.type === GradientType.Linear ? { x: 0.5, y: 0 } : { x: 0.5, y: 0.5 };
-        const to = { x: 0.5, y: 1 };
-        let ellipseLength;
-        if (action.type === GradientType.Radial) ellipseLength = 1;
-        const gradient = new Gradient(from as Point2D, to as Point2D, action.type as GradientType, stops, ellipseLength);
-        gradient.stops.forEach((v, i) => {
-            const idx = new BasicArray<number>();
-            idx.push(i);
-            v.crdtidx = idx;
-        })
-        gradient.gradientType = action.type as GradientType;
-        api.setFillGradient(action.fill, gradient);
     }
 }
