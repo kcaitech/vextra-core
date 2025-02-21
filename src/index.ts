@@ -202,3 +202,4 @@ export {Path} from '@kcdesign/path'
 export { FillModifier } from "./editor/style/fill";
 export { BorderModifier } from "./editor/style/border";
 export { RadiusModifier } from "./editor/style/radius";
+export { ShadowsModifier } from "./editor/style/shadows";
