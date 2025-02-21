@@ -59,7 +59,7 @@ import { TableEditor } from "./table";
 import { exportGradient, exportStop, exportSymbolShape } from "../data/baseexport";
 import { after_remove, clear_binds_effect, find_state_space, fixTextShapeFrameByLayout, get_symbol_by_layer, init_state, make_union, modify_frame_after_inset_state, modify_index } from "./utils/other";
 import { v4 } from "uuid";
-import { is_exist_invalid_shape2, is_part_of_symbol, is_part_of_symbolref, is_state, modify_variable_with_api, shape4border, shape4cornerRadius, shape4fill, shape4shadow, shape4contextSettings, shape4blur, RefUnbind } from "./symbol";
+import { is_exist_invalid_shape2, is_part_of_symbol, is_part_of_symbolref, is_state, modify_variable_with_api, shape4border, shape4cornerRadius, shape4fill, shape4shadow, shape4contextSettings, shape4blur, RefUnbind, _ov } from "./symbol";
 import { is_circular_ref2 } from "./utils/ref_check";
 import { AutoLayout, BorderSideSetting, BorderStyle, ExportFormat, OverlayBackgroundAppearance, OverlayBackgroundInteraction, OverlayPositionType, Point2D, PrototypeActions, PrototypeConnectionType, PrototypeEasingBezier, PrototypeEasingType, PrototypeEvent, PrototypeEvents, PrototypeInterAction, PrototypeNavigationType, PrototypeStartingPoint, PrototypeTransitionType, ScrollBehavior, ScrollDirection, Shadow } from "../data/baseclasses";
 import { border2path, calculateInnerAnglePosition, getPolygonPoints, getPolygonVertices, update_frame_by_points } from "./utils/path";
@@ -1581,18 +1581,24 @@ export class PageEditor {
         try {
             const api = this.__repo.start("shapesModifyRadius");
             const page = this.page;
+            function getMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
+                return _ov(VariableType.RadiusMask, OverrideType.RadiusMask, () => value, view, page, api);
+            }
 
             for (let i = 0; i < shapes.length; i++) {
                 const shape = adapt2Shape(shapes[i]);
-                const isRect = shape.radiusType === RadiusType.Rect;
-
                 let needUpdateFrame = false;
 
                 if (shape.radiusMask) {
-                    api.delradiusmask(shape);
+                    const variable = getMaskVariable(api, this.__page, shapes[i], undefined);
+                    if (variable) {
+                        api.shapeModifyVariable(page, variable, undefined);
+                    } else {
+                        api.delradiusmask(shape);
+                    }
                 }
-
-                if (isRect) {
+                
+                if (shape.radiusType === RadiusType.Rect) {
                     if (values.length !== 4) {
                         values = [values[0], values[0], values[0], values[0]];
                     }
@@ -1606,23 +1612,11 @@ export class PageEditor {
 
                     if (shape.isVirtualShape) continue;
 
-                    if (shape instanceof PathShape) {
+                    if (shape instanceof PathShape || shape instanceof PathShape2) {
                         const points = shape.pathsegs[0].points;
                         for (let _i = 0; _i < 4; _i++) {
                             const val = values[_i];
-                            if (val < 0) continue;
-
-                            api.modifyPointCornerRadius(page, shape, _i, val, 0);
-                        }
-                        needUpdateFrame = true;
-                    } else if (shape instanceof PathShape2) {
-                        const points = shape.pathsegs[0].points;
-                        for (let _i = 0; _i < 4; _i++) {
-                            const val = values[_i];
-                            if (points[_i].radius === val || val < 0) {
-                                continue;
-                            }
-
+                            if (points[_i].radius === val || val < 0) continue;
                             api.modifyPointCornerRadius(page, shape, _i, val, 0);
                         }
                         needUpdateFrame = true;
@@ -1632,27 +1626,12 @@ export class PageEditor {
                     }
                 } else {
                     if (shape.isVirtualShape || shape.radiusType === RadiusType.None) continue;
-
                     if (shape instanceof ContactShape) {
                         api.shapeModifyFixedRadius(page, shape as ContactShape, values[0]);
-                    } else if (shape instanceof PathShape) {
+                    } else if (shape instanceof PathShape || shape instanceof PathShape2) {
                         shape.pathsegs.forEach((seg, index) => {
                             for (let _i = 0; _i < seg.points.length; _i++) {
-                                if (seg.points[_i].radius === values[0]) {
-                                    continue;
-                                }
-
-                                api.modifyPointCornerRadius(page, shape, _i, values[0], index);
-                            }
-                        });
-                        needUpdateFrame = true;
-                    } else if (shape instanceof PathShape2) {
-                        shape.pathsegs.forEach((seg, index) => {
-                            for (let _i = 0; _i < seg.points.length; _i++) {
-                                if (seg.points[_i].radius === values[0]) {
-                                    continue;
-                                }
-
+                                if (seg.points[_i].radius === values[0]) continue;
                                 api.modifyPointCornerRadius(page, shape, _i, values[0], index);
                             }
                         });
@@ -2267,7 +2246,7 @@ export class PageEditor {
                     initGradient(api, action);
                 }
             }
-            this.__repo.commit(); 
+            this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
             throw error;
@@ -3134,7 +3113,7 @@ export class PageEditor {
             const api = this.__repo.start('shapesAddShadow');
             for (let i = 0; i < actions.length; i++) {
                 const { shadows, shadow } = actions[i];
-                api.addShadow(shadows, shadow,shadows.length);
+                api.addShadow(shadows, shadow, shadows.length);
             }
             this.__repo.commit();
         } catch (error) {

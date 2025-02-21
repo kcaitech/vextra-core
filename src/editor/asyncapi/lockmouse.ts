@@ -287,25 +287,28 @@ export class LockMouseHandler extends AsyncApiCaller {
             this.exception = true;
         }
     }
-
+    getRadiusMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
+        return _ov(VariableType.RadiusMask, OverrideType.RadiusMask, () => value, view, page, api);
+    }
     executeRadius(shapes: ShapeView[], values: number[]) {
         try {
             const api = this.api;
             const page = this.page;
 
-            const updateFrameTargets = this.updateFrameTargets;
             for (let i = 0; i < shapes.length; i++) {
                 const shape = adapt2Shape(shapes[i]);
 
                 if (shape.isVirtualShape) continue;
-
                 if (shape.radiusMask) {
-                    api.delradiusmask(shape);
+                    const variable = this.getRadiusMaskVariable(api, this._page, shapes[i], undefined);
+                    if (variable) {
+                        api.shapeModifyVariable(page, variable, undefined);
+                    } else {
+                        api.delradiusmask(shape);
+                    }
                 }
 
-                const isRect = shape.radiusType === RadiusType.Rect;
-
-                if (isRect) {
+                if (shape.radiusType === RadiusType.Rect) {
                     if (values.length !== 4) {
                         values = [values[0], values[0], values[0], values[0]];
                     }
@@ -322,33 +325,27 @@ export class LockMouseHandler extends AsyncApiCaller {
                         for (let _i = 0; _i < 4; _i++) {
                             const val = values[_i];
                             if (points[_i].radius === val || val < 0) continue;
-
                             api.modifyPointCornerRadius(page, shape, _i, val, 0);
                         }
-                        updateFrameTargets.add(shape);
+                        this.updateFrameTargets.add(shape);
                     } else {
                         const __shape = shape as Artboard | SymbolShape;
                         api.shapeModifyRadius2(page, __shape, lt, rt, rb, lb)
                     }
                 } else {
-                    if (shape instanceof ContactShape) {
-                        api.shapeModifyFixedRadius(page, shape as ContactShape, values[0]);
-                    } else if (shape instanceof PathShape) {
+                    if (shape instanceof ContactShape || !(shape instanceof PathShape)) {
+                        api.shapeModifyFixedRadius(page, shape as ContactShape | GroupShape | TextShape, values[0]);
+                    } else {
                         shape.pathsegs.forEach((seg, index) => {
                             for (let _i = 0; _i < seg.points.length; _i++) {
                                 if (seg.points[_i].radius === values[0]) continue;
-
                                 api.modifyPointCornerRadius(page, shape, _i, values[0], index);
                             }
                         });
-                        updateFrameTargets.add(shape);
-                    } else {
-                        api.shapeModifyFixedRadius(page, shape as GroupShape | TextShape, values[0]);
+                        this.updateFrameTargets.add(shape);
                     }
                 }
-
             }
-
             this.updateView();
         } catch (e) {
             this.exception = true;
