@@ -9,9 +9,7 @@ import {
     ColorControls,
     ContactRole,
     ContextSettings,
-    CornerRadius,
     CornerType,
-    Crdtidx,
     FillRule,
     FillType,
     GradientType,
@@ -21,9 +19,7 @@ import {
     Point2D,
     Shadow,
     Stop,
-    VariableType,
     WindingRule,
-    SideType,
 } from "./baseclasses";
 import { Basic, BasicArray, BasicMap, ResourceMgr, WatchableObject } from "./basic";
 import { Color } from "./color";
@@ -291,40 +287,6 @@ export class Style extends Basic implements classes.Style {
         if (path0 === 'contextSettings' && !this.contextSettings) this.contextSettings = new ContextSettings(BlendMode.Normal, 1)
         return super.getOpTarget(path);
     }
-
-    // private findVar(varId: string, ret: Variable[]): boolean {
-    //     return !!(this.__parent as any)?.findVar(varId, ret);
-    // }
-
-    // getFills(): BasicArray<Fill> {
-    //     if (!this.varbinds) return this.fills;
-
-    //     const fillsVar = this.varbinds.get(classes.OverrideType.Fills);
-    //     if (!fillsVar) return this.fills;
-
-    //     const _vars: Variable[] = [];
-    //     this.findVar(fillsVar, _vars);
-    //     const _var = _vars[_vars.length - 1];
-    //     if (_var && _var.type === VariableType.Fills) {
-    //         return _var.value;
-    //     }
-    //     return this.fills;
-    // }
-
-    // getBorders(): Border {
-    //     if (!this.varbinds) return this.borders;
-
-    //     const bordersVar = this.varbinds.get(classes.OverrideType.Borders);
-    //     if (!bordersVar) return this.borders;
-
-    //     const _vars: Variable[] = [];
-    //     this.findVar(bordersVar, _vars);
-    //     const _var = _vars[_vars.length - 1];
-    //     if (_var && _var.type === VariableType.Borders) {
-    //         return _var.value;
-    //     }
-    //     return this.borders;
-    // }
 }
 
 export class Blur extends Basic implements classes.Blur {
