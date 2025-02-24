@@ -5,7 +5,7 @@ import {
     OverrideType,
     Page,
     RadiusMask,
-    Shape,
+    Shape, StyleMangerMember,
     Variable,
     VariableType
 } from "../../data";
@@ -73,6 +73,17 @@ export class RadiusModifier extends Modifier {
                 if (variable.value !== value) api.shapeModifyVariable(page, variable, value);
             }
             for (const shape of shapes) api.modifyRadiusMask(page, shape, value);
+            this.commit();
+        } catch (error) {
+            this.rollback();
+            throw error;
+        }
+    }
+
+    disableMask(mask: StyleMangerMember) {
+        try {
+            const api = this.getApi('disableMask');
+            api.disableMask(mask);
             this.commit();
         } catch (error) {
             this.rollback();

@@ -9,7 +9,7 @@ import {
     Variable,
     VariableType,
     Shadow,
-    ShadowMask
+    ShadowMask, StyleMangerMember
 } from "../../data";
 import { adapt2Shape, PageView, ShapeView } from "../../dataview";
 import { _ov, override_variable } from "../symbol";
@@ -277,6 +277,17 @@ export class ShadowsModifier extends Modifier {
                 shadowsContainer.push(linkedVariable ? linkedVariable.value : adapt2Shape(view).style.shadows);
             }
             shadowsContainer.forEach(source => api.deleteShadows(source, 0, source.length));
+            this.commit();
+        } catch (error) {
+            this.rollback();
+            throw error;
+        }
+    }
+
+    disableMask(mask: StyleMangerMember) {
+        try {
+            const api = this.getApi('disableMask');
+            api.disableMask(mask);
             this.commit();
         } catch (error) {
             this.rollback();

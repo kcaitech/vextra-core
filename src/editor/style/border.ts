@@ -13,7 +13,7 @@ import {
     Page,
     RadiusType,
     Shape,
-    SideType,
+    SideType, StyleMangerMember,
     Variable,
     VariableType
 } from "../../data";
@@ -483,6 +483,17 @@ export class BorderModifier extends Modifier {
                 const source = linkedVariable ? (linkedVariable.value as Border).strokePaints : adapt2Shape(view).style.borders.strokePaints;
                 api.deleteFills(source, 0, source.length);
             }
+            this.commit();
+        } catch (error) {
+            this.rollback();
+            throw error;
+        }
+    }
+
+    disableMask(mask: StyleMangerMember) {
+        try {
+            const api = this.getApi('disableMask');
+            api.disableMask(mask);
             this.commit();
         } catch (error) {
             this.rollback();
