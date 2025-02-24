@@ -22,6 +22,9 @@
         },
         "blur": {
             "$ref": "./blur.json"
+        },
+        "disabled": {
+            "type": "boolean"
         }
     },
     "required": [

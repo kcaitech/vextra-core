@@ -799,6 +799,7 @@ export class RadiusMask extends Basic {
     name: string
     description: string
     radius: Radius
+    disabled?: boolean
     constructor(crdtidx: Crdtidx, sheet: string, id: string, name: string, description: string, radius: Radius) {
         super()
         this.crdtidx = crdtidx
@@ -818,6 +819,7 @@ export class ShadowMask extends Basic {
     name: string
     description: string
     shadows: ShadowMask_shadows
+    disabled?: boolean
     constructor(crdtidx: Crdtidx, sheet: string, id: string, name: string, description: string, shadows: ShadowMask_shadows) {
         super()
         this.crdtidx = crdtidx
@@ -864,6 +866,7 @@ export class BlurMask extends Basic {
     name: string
     description: string
     blur: Blur
+    disabled?: boolean
     constructor(crdtidx: Crdtidx, sheet: string, id: string, name: string, description: string, blur: Blur) {
         super()
         this.crdtidx = crdtidx
@@ -894,6 +897,7 @@ export class BorderMask extends Basic {
     name: string
     description: string
     border: BorderMaskType
+    disabled?: boolean
     constructor(crdtidx: Crdtidx, sheet: string, id: string, name: string, description: string, border: BorderMaskType) {
         super()
         this.crdtidx = crdtidx
@@ -999,6 +1003,7 @@ export class FillMask extends Basic {
     name: string
     description: string
     fills: FillMask_fills
+    disabled?: boolean
     constructor(crdtidx: Crdtidx, sheet: string, id: string, name: string, description: string, fills: FillMask_fills) {
         super()
         this.crdtidx = crdtidx

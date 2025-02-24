@@ -22,6 +22,9 @@
         },
         "border": {
             "$ref": "./border-mask-type.json"
+        },
+        "disabled": {
+            "type": "boolean"
         }
     },
     "required": [

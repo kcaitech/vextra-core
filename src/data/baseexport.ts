@@ -988,6 +988,7 @@ export function exportRadiusMask(source: types.RadiusMask, ctx?: IExportContext)
     ret.name = source.name
     ret.description = source.description
     ret.radius = exportRadius(source.radius, ctx)
+    if (source.disabled !== undefined) ret.disabled = source.disabled
     return ret
 }
 /* shadow mask */
@@ -1001,6 +1002,7 @@ export function exportShadowMask(source: types.ShadowMask, ctx?: IExportContext)
     ret.name = source.name
     ret.description = source.description
     ret.shadows = exportShadowMask_shadows(source.shadows, ctx)
+    if (source.disabled !== undefined) ret.disabled = source.disabled
     return ret
 }
 /* span attr */
@@ -1039,6 +1041,7 @@ export function exportBlurMask(source: types.BlurMask, ctx?: IExportContext): ty
     ret.name = source.name
     ret.description = source.description
     ret.blur = exportBlur(source.blur, ctx)
+    if (source.disabled !== undefined) ret.disabled = source.disabled
     return ret
 }
 /* border mask type */
@@ -1061,6 +1064,7 @@ export function exportBorderMask(source: types.BorderMask, ctx?: IExportContext)
     ret.name = source.name
     ret.description = source.description
     ret.border = exportBorderMaskType(source.border, ctx)
+    if (source.disabled !== undefined) ret.disabled = source.disabled
     return ret
 }
 /* fill */
@@ -1150,6 +1154,7 @@ export function exportFillMask(source: types.FillMask, ctx?: IExportContext): ty
     ret.name = source.name
     ret.description = source.description
     ret.fills = exportFillMask_fills(source.fills, ctx)
+    if (source.disabled !== undefined) ret.disabled = source.disabled
     return ret
 }
 /* style sheet */

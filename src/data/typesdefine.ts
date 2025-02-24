@@ -848,6 +848,7 @@ export type RadiusMask = {
     name: string,
     description: string,
     radius: Radius,
+    disabled?: boolean,
 }
 /* shadow mask */
 export type ShadowMask = {
@@ -858,6 +859,7 @@ export type ShadowMask = {
     name: string,
     description: string,
     shadows: ShadowMask_shadows,
+    disabled?: boolean,
 }
 /* span attr */
 export type SpanAttr = {
@@ -889,6 +891,7 @@ export type BlurMask = {
     name: string,
     description: string,
     blur: Blur,
+    disabled?: boolean,
 }
 /* border mask type */
 export type BorderMaskType = {
@@ -905,6 +908,7 @@ export type BorderMask = {
     name: string,
     description: string,
     border: BorderMaskType,
+    disabled?: boolean,
 }
 /* fill */
 export type Fill = {
@@ -973,6 +977,7 @@ export type FillMask = {
     name: string,
     description: string,
     fills: FillMask_fills,
+    disabled?: boolean,
 }
 /* style sheet */
 export type StyleSheet = {

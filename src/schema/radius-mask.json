@@ -22,6 +22,9 @@
     },
     "radius": {
       "$ref": "./radius.json"
+    },
+    "disabled": {
+      "type": "boolean"
     }
   },
   "required": [

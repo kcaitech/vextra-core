@@ -25,6 +25,9 @@
             "items": {
                 "$ref": "./fill.json"
             }
+        },
+        "disabled": {
+            "type": "boolean"
         }
     },
     "required": [

@@ -447,9 +447,10 @@ export class FillMask extends WatchableObject implements classes.FillMask {
     sheet: string;
     name: string;
     description: string;
-    fills: BasicArray<Fill>
+    fills: BasicArray<Fill>;
+    disabled?: boolean;
 
-    constructor(crdtidx: BasicArray<number>, sheet: string, id: string, name: string, description: string, fills: BasicArray<Fill>) {
+    constructor(crdtidx: BasicArray<number>, sheet: string, id: string, name: string, description: string, fills: BasicArray<Fill>, disabled?: boolean) {
         super();
         this.crdtidx = crdtidx;
         this.id = id;
@@ -457,6 +458,7 @@ export class FillMask extends WatchableObject implements classes.FillMask {
         this.name = name;
         this.description = description;
         this.fills = fills;
+        this.disabled = disabled;
     }
 
     notify(...args: any[]) {
@@ -472,8 +474,9 @@ export class ShadowMask extends WatchableObject implements classes.ShadowMask {
     name: string;
     description: string;
     shadows: BasicArray<Shadow>;
+    disabled?: boolean;
 
-    constructor(crdtidx: BasicArray<number>, sheet: string, id: string, name: string, description: string, shadows: BasicArray<Shadow>) {
+    constructor(crdtidx: BasicArray<number>, sheet: string, id: string, name: string, description: string, shadows: BasicArray<Shadow>, disabled?: boolean) {
         super();
         this.crdtidx = crdtidx;
         this.id = id;
@@ -481,6 +484,7 @@ export class ShadowMask extends WatchableObject implements classes.ShadowMask {
         this.name = name;
         this.description = description;
         this.shadows = shadows;
+        this.disabled = disabled;
     }
 
     notify(...args: any[]) {
@@ -496,8 +500,9 @@ export class BlurMask extends WatchableObject implements classes.BlurMask {
     name: string;
     description: string;
     blur: Blur;
+    disabled?: boolean;
 
-    constructor(crdtidx: BasicArray<number>, sheet: string, id: string, name: string, description: string, blur: Blur) {
+    constructor(crdtidx: BasicArray<number>, sheet: string, id: string, name: string, description: string, blur: Blur, disabled?: boolean) {
         super();
         this.crdtidx = crdtidx;
         this.id = id;
@@ -505,6 +510,7 @@ export class BlurMask extends WatchableObject implements classes.BlurMask {
         this.name = name;
         this.description = description;
         this.blur = blur;
+        this.disabled = disabled;
     }
 
     notify(...args: any[]) {
@@ -520,8 +526,9 @@ export class BorderMask extends WatchableObject implements classes.BorderMask {
     name: string;
     description: string;
     border: BorderMaskType;
+    disabled?: boolean;
 
-    constructor(crdtidx: BasicArray<number>, sheet: string, id: string, name: string, description: string, border: BorderMaskType) {
+    constructor(crdtidx: BasicArray<number>, sheet: string, id: string, name: string, description: string, border: BorderMaskType, disabled?: boolean) {
         super();
         this.crdtidx = crdtidx;
         this.id = id;
@@ -529,6 +536,7 @@ export class BorderMask extends WatchableObject implements classes.BorderMask {
         this.name = name;
         this.description = description;
         this.border = border;
+        this.disabled = disabled;
     }
 
     notify(...args: any[]) {
@@ -544,8 +552,9 @@ export class RadiusMask extends WatchableObject implements classes.RadiusMask {
     name: string;
     description: string;
     radius: BasicArray<number>;
+    disabled?: boolean;
 
-    constructor(crdtidx: BasicArray<number>, sheet: string, id: string, name: string, description: string, radius: BasicArray<number>) {
+    constructor(crdtidx: BasicArray<number>, sheet: string, id: string, name: string, description: string, radius: BasicArray<number>, disabled?: boolean) {
         super();
         this.crdtidx = crdtidx;
         this.id = id;
@@ -553,5 +562,6 @@ export class RadiusMask extends WatchableObject implements classes.RadiusMask {
         this.name = name;
         this.description = description;
         this.radius = radius;
+        this.disabled = disabled;
     }
 }

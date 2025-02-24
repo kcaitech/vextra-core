@@ -1079,6 +1079,9 @@ export function importPrototypeInterAction(source: types.PrototypeInterAction, c
     return ret
 }
 /* radius mask */
+function importRadiusMaskOptional(tar: impl.RadiusMask, source: types.RadiusMask, ctx?: IImportContext) {
+    if (source.disabled !== undefined) tar.disabled = source.disabled
+}
 export function importRadiusMask(source: types.RadiusMask, ctx?: IImportContext): impl.RadiusMask {
     const ret: impl.RadiusMask = new impl.RadiusMask (
         importCrdtidx(source.crdtidx, ctx),
@@ -1087,12 +1090,16 @@ export function importRadiusMask(source: types.RadiusMask, ctx?: IImportContext)
         source.name,
         source.description,
         importRadius(source.radius, ctx))
+    importRadiusMaskOptional(ret, source, ctx)
         // inject code
     if (ctx?.document) ctx.document.stylesMgr.add(ret.id, ret);
 
     return ret
 }
 /* shadow mask */
+function importShadowMaskOptional(tar: impl.ShadowMask, source: types.ShadowMask, ctx?: IImportContext) {
+    if (source.disabled !== undefined) tar.disabled = source.disabled
+}
 export function importShadowMask(source: types.ShadowMask, ctx?: IImportContext): impl.ShadowMask {
     const ret: impl.ShadowMask = new impl.ShadowMask (
         importCrdtidx(source.crdtidx, ctx),
@@ -1101,6 +1108,7 @@ export function importShadowMask(source: types.ShadowMask, ctx?: IImportContext)
         source.name,
         source.description,
         importShadowMask_shadows(source.shadows, ctx))
+    importShadowMaskOptional(ret, source, ctx)
         // inject code
     if (ctx?.document) ctx.document.stylesMgr.add(ret.id, ret);
 
@@ -1137,6 +1145,9 @@ export function importSpan(source: types.Span, ctx?: IImportContext): impl.Span 
     return ret
 }
 /* blur mask */
+function importBlurMaskOptional(tar: impl.BlurMask, source: types.BlurMask, ctx?: IImportContext) {
+    if (source.disabled !== undefined) tar.disabled = source.disabled
+}
 export function importBlurMask(source: types.BlurMask, ctx?: IImportContext): impl.BlurMask {
     const ret: impl.BlurMask = new impl.BlurMask (
         importCrdtidx(source.crdtidx, ctx),
@@ -1145,6 +1156,7 @@ export function importBlurMask(source: types.BlurMask, ctx?: IImportContext): im
         source.name,
         source.description,
         importBlur(source.blur, ctx))
+    importBlurMaskOptional(ret, source, ctx)
         // inject code
     if (ctx?.document) ctx.document.stylesMgr.add(ret.id, ret);
 
@@ -1158,6 +1170,9 @@ export function importBorderMaskType(source: types.BorderMaskType, ctx?: IImport
     return ret
 }
 /* border mask */
+function importBorderMaskOptional(tar: impl.BorderMask, source: types.BorderMask, ctx?: IImportContext) {
+    if (source.disabled !== undefined) tar.disabled = source.disabled
+}
 export function importBorderMask(source: types.BorderMask, ctx?: IImportContext): impl.BorderMask {
     const ret: impl.BorderMask = new impl.BorderMask (
         importCrdtidx(source.crdtidx, ctx),
@@ -1166,6 +1181,7 @@ export function importBorderMask(source: types.BorderMask, ctx?: IImportContext)
         source.name,
         source.description,
         importBorderMaskType(source.border, ctx))
+    importBorderMaskOptional(ret, source, ctx)
         // inject code
     if (ctx?.document) ctx.document.stylesMgr.add(ret.id, ret);
 
@@ -1292,6 +1308,9 @@ export function importBorder(source: types.Border, ctx?: IImportContext): impl.B
     return ret
 }
 /* fill mask */
+function importFillMaskOptional(tar: impl.FillMask, source: types.FillMask, ctx?: IImportContext) {
+    if (source.disabled !== undefined) tar.disabled = source.disabled
+}
 export function importFillMask(source: types.FillMask, ctx?: IImportContext): impl.FillMask {
     const ret: impl.FillMask = new impl.FillMask (
         importCrdtidx(source.crdtidx, ctx),
@@ -1300,6 +1319,7 @@ export function importFillMask(source: types.FillMask, ctx?: IImportContext): im
         source.name,
         source.description,
         importFillMask_fills(source.fills, ctx))
+    importFillMaskOptional(ret, source, ctx)
         // inject code
     if (ctx?.document) ctx.document.stylesMgr.add(ret.id, ret);
 
