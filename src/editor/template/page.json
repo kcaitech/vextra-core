@@ -5,19 +5,15 @@
     "type": "page",
     "boolOp": "none",
     "isFixedToViewport": false,
-    "isFlippedHorizontal": false,
-    "isFlippedVertical": false,
     "isLocked": false,
     "isVisible": true,
     "name": "页面 1",
     "nameIsFixed": false,
     "resizingConstraint": 63,
     "resizingType": "stretch",
-    "rotation": 0,
     "shouldBreakMaskChain": false,
     "exportOptions": {
         "typeId": "export-options",
-        "includedChildIds": [],
         "childOptions": 0,
         "shouldTrim": false,
         "exportFormats": [],
@@ -32,10 +28,6 @@
         "m10": 0,
         "m11": 1,
         "m12": 0
-    },
-    "size": {
-        "width": 600,
-        "height": 800
     },
     "clippingMaskMode": 0,
     "hasClippingMask": false,
