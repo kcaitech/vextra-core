@@ -664,7 +664,7 @@ export class ShapeView extends DataView {
     private _onBorderFillMaskChange() {
         this.m_borders = undefined;
         this.m_ctx.setDirty(this);
-        this.notify('style', 'borderfill', 'mask');
+        this.notify('style', 'paints', 'mask');
     }
 
     private m_unbind_border_fill: undefined | (() => void) = undefined;
