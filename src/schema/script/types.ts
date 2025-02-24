@@ -1,4 +1,4 @@
-import { BaseProp, Node, allDepsIsGen, allNodes, fmtTypeName } from "./basic";
+import { BaseProp, Node, allDepsIsGen, toPascalCase } from "./basic";
 import { Writer } from "./writer";
 
 function exportBaseProp(p: BaseProp, $: Writer) {
@@ -39,7 +39,7 @@ function exportNode(n: Node, $: Writer) {
         $.nl(('export ') + 'enum ' + n.name + ' ').sub(() => {
             for (let i = 0; i < _enum.length; ++i) {
                 const e = _enum[i];
-                $.nl(fmtTypeName(e) + ' = "' + e + '",');
+                $.nl(toPascalCase(e) + ' = "' + e + '",');
             }
         })
     }
@@ -69,21 +69,23 @@ function exportNode(n: Node, $: Writer) {
     }
 }
 
-export function gen(out: string) {
+export function gen(allNodes: Map<string, Node>, out: string) {
     const $ = new Writer(out);
     const nodes = Array.from(allNodes.values());
 
     let checkExport = allDepsIsGen;
-    const genType = 'tys'
+    const gented = new Set<string>()
+    // const genType = 'tys'
     while (nodes.length > 0) {
         let count = 0;
         for (let i = 0; i < nodes.length;) {
             const n = nodes[i];
-            if (checkExport(n, genType)) {
+            if (checkExport(n, gented)) {
                 exportNode(n, $);
                 ++count;
                 nodes.splice(i, 1);
-                n.gented[genType] = true;
+                // n.gented[genType] = true;
+                gented.add(n.name)
             } else {
                 ++i;
             }

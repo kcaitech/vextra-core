@@ -1,4 +1,4 @@
-import { BaseProp, NamedProp, Node, allDepsIsGen, allNodes, fmtTypeName } from "./basic";
+import { BaseProp, NamedProp, Node, allDepsIsGen, toPascalCase } from "./basic";
 import { Writer } from "./writer";
 
 function exportBaseProp(p: BaseProp, $: Writer) {
@@ -37,7 +37,7 @@ function exportObject(n: Node, $: Writer) {
     const chain: Node[] = [];
     let p = n;
     while (p.extend) {
-        const n = allNodes.get(p.extend);
+        const n = p.root.get(p.extend);
         if (!n) throw new Error('extend not find: ' + p.extend);
         chain.push(n);
         p = n;
@@ -160,7 +160,7 @@ function exportNode(n: Node, $: Writer) {
     }
 }
 
-export function gen(out: string) {
+export function gen(allNodes: Map<string, Node>, out: string) {
     const $ = new Writer(out);
     const nodes = Array.from(allNodes.values());
 
@@ -190,17 +190,18 @@ export function gen(out: string) {
     const order = [
         'GroupShape',
     ]
-    const genType = 'cls'
+    // const genType = 'cls'
     let checkExport = allDepsIsGen;
+    const gented = new Set<string>()
     while (nodes.length > 0) {
         let count = 0;
         for (let i = 0; i < nodes.length;) {
             const n = nodes[i];
-            if (checkExport(n, genType)) {
+            if (checkExport(n, gented)) {
                 exportNode(n, $);
                 ++count;
                 nodes.splice(i, 1);
-                n.gented[genType] = true;
+                gented.add(n.name)
             } else {
                 ++i;
             }

@@ -1,8 +1,8 @@
-import { BaseProp, NamedProp, Node, allDepsIsGen, allNodes, fmtTypeName } from "./basic";
+import { BaseProp, NamedProp, Node, allDepsIsGen, toPascalCase } from "./basic";
 import { Writer } from "./writer";
 import { inject } from "./export-inject"
 
-function exportBaseProp(p: BaseProp, source: string, $: Writer) {
+function exportBaseProp(p: BaseProp, source: string, $: Writer, allNodes: Map<string, Node>) {
     switch (p.type) {
         case 'string':
         case 'number':
@@ -17,7 +17,7 @@ function exportBaseProp(p: BaseProp, source: string, $: Writer) {
                 $.nl('const ret: any = {}')
                 $.nl(source, '.forEach((source, k) => ').sub(() => {
                     $.nl('ret[k] = ')
-                    exportBaseProp(p.val, 'source', $)
+                    exportBaseProp(p.val, 'source', $, allNodes)
                 }).append(')')
                 $.nl('return ret')
             }).append(')()')
@@ -54,7 +54,7 @@ function exportBaseProp(p: BaseProp, source: string, $: Writer) {
                             usedArray = true;
                             $.nl('if (Array.isArray(', source, ')) ').sub(() => {
                                 $.nl('return ')
-                                exportBaseProp(v, source, $)
+                                exportBaseProp(v, source, $, allNodes)
                             })
                             prop.splice(i, 1);
                             continue;
@@ -94,7 +94,7 @@ function exportObject(n: Node, $: Writer) {
     const chain: Node[] = [n];
     let p = n;
     while (p.extend) {
-        const n = allNodes.get(p.extend);
+        const n = p.root.get(p.extend);
         if (!n) throw new Error('extend not find: ' + p.extend);
         chain.push(n);
         p = n;
@@ -135,10 +135,10 @@ function exportObject(n: Node, $: Writer) {
         const p = props[i];
         if (p.required) {
             $.nl('ret.', p.name, ' = ')
-            exportBaseProp(p, 'source.' + p.name, $);
+            exportBaseProp(p, 'source.' + p.name, $, n.root);
         } else {
             $.nl('if (source.', p.name, ' !== undefined) ret.', p.name, ' = ');
-            exportBaseProp(p, 'source.' + p.name, $);
+            exportBaseProp(p, 'source.' + p.name, $, n.root);
         }
     }
 
@@ -162,7 +162,7 @@ function exportNode(n: Node, $: Writer) {
             $.nl('const ret: types.', n.name, ' = []')
             $.nl('source.forEach((source) => ').sub(() => {
                 $.nl('ret.push(')
-                exportBaseProp(item, 'source', $)
+                exportBaseProp(item, 'source', $, n.root)
                 $.append(')')
             }).append(')')
             $.nl('return ret')
@@ -176,7 +176,7 @@ function exportNode(n: Node, $: Writer) {
     })
 }
 
-export function gen(out: string) {
+export function gen(allNodes: Map<string, Node>, out: string) {
     const $ = new Writer(out);
     const nodes = Array.from(allNodes.values());
 
@@ -188,16 +188,18 @@ export function gen(out: string) {
     })
 
     let checkExport = allDepsIsGen;
-    const genType = 'exp'
+    // const genType = 'exp'
+    const gented = new Set<string>()
     while (nodes.length > 0) {
         let count = 0;
         for (let i = 0; i < nodes.length;) {
             const n = nodes[i];
-            if (checkExport(n, genType)) {
+            if (checkExport(n, gented)) {
                 exportNode(n, $);
                 ++count;
                 nodes.splice(i, 1);
-                n.gented[genType] = true;
+                // n.gented[genType] = true;
+                gented.add(n.name)
             } else {
                 ++i;
             }

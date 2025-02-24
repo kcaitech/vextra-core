@@ -7,12 +7,12 @@ import { gen as genImp} from "./import";
 
 const scriptdir = './src/schema/script2'
 
-loadSchemas(path.join(scriptdir, '../'));
+const allNodes = loadSchemas(path.join(scriptdir, '../'));
 
-genTypes(path.join(scriptdir, '../../data/typesdefine.ts'));
+genTypes(allNodes, path.join(scriptdir, '../../data/typesdefine.ts'));
 
-genClass(path.join(scriptdir, '../../data/baseclasses.ts'));
+genClass(allNodes, path.join(scriptdir, '../../data/baseclasses.ts'));
 
-genExp(path.join(scriptdir, '../../data/baseexport.ts'));
+genExp(allNodes, path.join(scriptdir, '../../data/baseexport.ts'));
 
-genImp(path.join(scriptdir, '../../data/baseimport.ts'))
+genImp(allNodes, path.join(scriptdir, '../../data/baseimport.ts'))
