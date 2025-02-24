@@ -1,4 +1,4 @@
-import { BaseProp, NamedProp, Node, allDepsIsGen, toPascalCase } from "./basic";
+import { BaseProp, NamedProp, Node, allDepsIsGen } from "./basic";
 import { Writer } from "./writer";
 import { exportBaseProp as exportBasePropType, exportNode as exportNodeClass } from "./import_class"
 import { inject } from "./import-inject"

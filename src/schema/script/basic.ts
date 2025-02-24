@@ -1,7 +1,3 @@
-
-import path from 'path';
-import fs from 'fs';
-
 export type BaseProp = {
     type: 'node',
     val: string
@@ -349,6 +345,8 @@ function getFileName(path: string) {
     return match && match[1] || ''
 }
 
+import path from 'path';
+import fs from 'fs';
 export function loadSchemas(schemadir: string, schemaext = '.json'): Map<string, Node> {
     const files = fs.readdirSync(schemadir)
     const allNodes = new Map<string, Node>()
@@ -385,7 +383,7 @@ export function loadSchemas(schemadir: string, schemaext = '.json'): Map<string,
 
         // extends
         if (schema && schema.allOf) {
-            if (schema.allOf.length > 1) throw new Error('not support many allOf')
+            if (schema.allOf.length > 1) throw new Error('not support multi allOf')
             if (schema.allOf.length > 0) {
                 const ref = schema.allOf[0]['$ref']
                 if (ref.endsWith(schemaext)) {
