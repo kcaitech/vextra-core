@@ -48,7 +48,7 @@ export class RadiusModifier extends Modifier {
                 for (const variable of variables) {
                     if (variable.value !== mask.id) api.shapeModifyVariable(page, variable, mask.id);
                 }
-                for (const shape of shapes) api.modifyRadiusMask(page, shape, mask.id);
+                for (const shape of shapes) api.modifyRadiusMask(shape, mask.id);
             }
             this.commit();
             return true;
@@ -72,7 +72,7 @@ export class RadiusModifier extends Modifier {
             for (const variable of variables) {
                 if (variable.value !== value) api.shapeModifyVariable(page, variable, value);
             }
-            for (const shape of shapes) api.modifyRadiusMask(page, shape, value);
+            for (const shape of shapes) api.modifyRadiusMask(shape, value);
             this.commit();
         } catch (error) {
             this.rollback();

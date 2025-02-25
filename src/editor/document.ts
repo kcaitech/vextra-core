@@ -254,7 +254,7 @@ export class DocEditor {
                 if (style instanceof RadiusMask) {
                     for (let i = 0; i < shapes.length; i++) {
                         const shape = shapes[i];
-                        api.modifyRadiusMask(p, adapt2Shape(shape), style.id);
+                        api.modifyRadiusMask(adapt2Shape(shape), style.id);
                     }
                 }
             }
