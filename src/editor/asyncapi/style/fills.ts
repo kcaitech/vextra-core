@@ -92,20 +92,10 @@ export class FillsAsyncApi extends AsyncApiCaller {
         }
     }
 
-    /* 修改纯色 */
-    modifySolidColor(actions: { fill: Fill, color: Color }[]) {
-        try {
-            for (const action of actions) this.api.setFillColor(action.fill, action.color);
-            this.updateView();
-        } catch (err) {
-            this.exception = true;
-            console.error(err);
-        }
-    }
-
-    modifySolidColor2(missions: Function[]) {
+    modifySolidColor(missions: Function[]) {
         try {
             missions.forEach((call) => call(this.api));
+            this.updateView();
         } catch (error) {
             this.exception = true;
             console.error(error);
