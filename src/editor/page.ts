@@ -2431,7 +2431,7 @@ export class PageEditor {
             for (let i = 0; i < actions.length; i++) {
                 const { target } = actions[i];
                 const s = shape4fill(api, this.view, target);
-                api.delfillmask(this.__document, this.page, s);
+                api.delfillmask(this.page, s);
                 api.deleteFills(target.style.fills, 0, target.getFills().length);
             }
             this.__repo.commit();
@@ -2478,7 +2478,7 @@ export class PageEditor {
                 const { target, value } = actions[i];
                 api.deleteBlur(target.style);
                 api.addBlur(target.style, value);
-                api.delblurmask(this.__document, this.page, adapt2Shape(target));
+                api.delblurmask(this.page, adapt2Shape(target));
             }
             this.__repo.commit();
         } catch (e) {
@@ -2492,7 +2492,7 @@ export class PageEditor {
             const api = this.__repo.start("shapesDelStyleBlur");
             for (let i = 0; i < shapes.length; i++) {
                 api.deleteBlur(shapes[i].style);
-                api.delblurmask(this.__document, this.page, adapt2Shape(shapes[i]));
+                api.delblurmask(this.page, adapt2Shape(shapes[i]));
             }
             this.__repo.commit();
         } catch (e) {
@@ -2552,7 +2552,7 @@ export class PageEditor {
             for (let i = 0; i < actions.length; i++) {
                 const { target } = actions[i];
                 api.deleteStrokePaints(this.page, adapt2Shape(target), 0, target.style.borders.strokePaints.length)
-                api.delBorderFillMask(this.__document, adapt2Shape(target).style);
+                api.delBorderFillMask(adapt2Shape(target).style);
             }
             this.__repo.commit();
         } catch (e) {
@@ -2566,7 +2566,7 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                api.setBorderFillMask(this.__document, adapt2Shape(target).style, value);
+                api.setBorderFillMask(adapt2Shape(target).style, value);
             }
             this.__repo.commit();
         } catch (e) {
@@ -2582,7 +2582,7 @@ export class PageEditor {
                 const { target, value } = actions[i];
                 api.deleteStrokePaints(this.page, adapt2Shape(target), 0, target.style.borders.strokePaints.length)
                 api.addStrokePaints(this.page, adapt2Shape(target), value);
-                api.delBorderFillMask(this.__document, adapt2Shape(target).style);
+                api.delBorderFillMask(adapt2Shape(target).style);
             }
             this.__repo.commit();
         } catch (e) {
@@ -2599,7 +2599,7 @@ export class PageEditor {
                 const s = shape4fill(api, this.view, shape);
                 api.deleteFills(fills, 0, fills.length); // 清空原有填充
                 api.addFills(fills, value); // 填入新的值
-                api.delfillmask(this.__document, this.page, s);
+                api.delfillmask(this.page, s);
             }
             this.__repo.commit();
         } catch (error) {
@@ -2617,7 +2617,7 @@ export class PageEditor {
                 const s = shape4border(api, this.view, shape);
                 const style: Style = s instanceof Shape ? s.style : s.value;
                 api.modifyBorderMask(style, undefined);
-                api.delBorderFillMask(this.__document, adapt2Shape(shape).style);
+                api.delBorderFillMask(adapt2Shape(shape).style);
                 api.deleteStrokePaints(this.page, s, 0, shape.style.borders.strokePaints.length);
             }
             this.__repo.commit();
@@ -2632,7 +2632,7 @@ export class PageEditor {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
                 const s = shape4border(api, this.view, target);
-                api.delBorderFillMask(this.__document, adapt2Shape(target).style);
+                api.delBorderFillMask(adapt2Shape(target).style);
                 api.deleteStrokePaints(this.page, s, 0, target.style.borders.strokePaints.length);
                 api.addStrokePaints(this.page, s, value);
             }
@@ -2732,86 +2732,49 @@ export class PageEditor {
     setShapeBorderFillExchange(shapes: ShapeView[]) {
         try {
             const api = this.__repo.start('setShapeBorderFillExchange');
+            function getFillMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
+                return _ov(VariableType.FillsMask, OverrideType.FillsMask, () => value, view, page, api);
+            }
+            function getBorderMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
+                return _ov(VariableType.BorderFillsMask, OverrideType.BorderFillsMask, () => value, view, page, api);
+            }
             for (let i = 0; i < shapes.length; i++) {
                 const shape = shapes[i];
-                const b = shape.getBorders();
-                const f = shape.getFills();
-                let strokePaints: BasicArray<Fill> = new BasicArray<Fill>();
-                let fills: BasicArray<Fill> = new BasicArray<Fill>();
-                const _strokePaints = b?.strokePaints || [];
+                const fillMask = shape.fillsMask;
+                const borderFillMask = shape.borderFillsMask;
 
-                for (let b_i = 0; b_i < _strokePaints.length; b_i++) {
-                    const {
-                        isEnabled,
-                        color,
-                        fillType,
-                        gradient,
-                        imageRef,
-                        transform,
-                        paintFilter,
-                        imageScaleMode,
-                        scale,
-                        rotation,
-                        originalImageHeight,
-                        originalImageWidth
-                    } = _strokePaints[b_i];
-                    const fill = new Fill([i] as BasicArray<number>, uuid(), isEnabled, fillType, color);
-                    fill.gradient = gradient;
-                    if (f.length > b_i) {
-                        fill.fillRule = f[b_i].fillRule;
+                const fillShape = shape4fill(api, this.view, shape);
+                const borderShape = shape4border(api, this.view, shape);
+
+                const fills = fillShape instanceof Shape ? fillShape.style.fills : fillShape.value as BasicArray<Fill>;
+                const borderFills = borderShape instanceof Shape ? borderShape.style.borders.strokePaints : borderShape.value.strokePaints as BasicArray<Fill>;
+                const variableFill = getFillMaskVariable(api, this.__page, shape, fillMask);
+                const variableBorder = getBorderMaskVariable(api, this.__page, shape, borderFillMask);
+
+                if (borderFillMask) {
+                    if (variableFill) {
+                        api.shapeModifyVariable(this.page, variableFill, borderFillMask);
+                        if (!fillMask && variableBorder) api.shapeModifyVariable(this.page, variableBorder, undefined);
+                    } else {
+                        api.modifyFillsMask(this.page, adapt2Shape(shape), borderFillMask);
+                        if (!fillMask) api.setBorderFillMask(adapt2Shape(shape).style, undefined);
                     }
-                    fill.imageRef = imageRef;
-                    fill.transform = transform;
-                    fill.paintFilter = paintFilter;
-                    fill.imageScaleMode = imageScaleMode;
-                    fill.scale = scale;
-                    fill.rotation = rotation;
-                    fill.originalImageHeight = originalImageHeight;
-                    fill.originalImageWidth = originalImageWidth;
-                    const imageMgr = _strokePaints[b_i].getImageMgr();
-                    imageMgr && fill.setImageMgr(imageMgr);
-                    fills.unshift(fill);
+                } else {
+                    api.deleteFills(fills, 0, fills.length);
+                    api.addFills(fills, borderFills.map(i => importFill(i)));
                 }
-                for (let f_i = 0; f_i < f.length; f_i++) {
-                    const {
-                        isEnabled,
-                        color,
-                        fillType,
-                        gradient,
-                        imageRef,
-                        transform,
-                        paintFilter,
-                        imageScaleMode,
-                        scale,
-                        rotation,
-                        originalImageHeight,
-                        originalImageWidth
-                    } = f[f_i];
-                    let fill_type = fillType;
-                    let strokePaint: Fill;
-                    if (fillType === FillType.Pattern) {
-                        fill_type = FillType.SolidColor
+                if (fillMask) {
+                    if (variableBorder) {
+                        api.shapeModifyVariable(this.page, variableBorder, fillMask);
+                        if (!borderFillMask && variableFill) api.shapeModifyVariable(this.page, variableFill, undefined);
+                    } else {
+                        api.setBorderFillMask(adapt2Shape(shape).style, fillMask);
+                        if (!borderFillMask) api.modifyFillsMask(this.page, adapt2Shape(shape), undefined);
                     }
-                    strokePaint = new Fill([i] as BasicArray<number>, uuid(), isEnabled, fill_type, color);
-                    strokePaint.gradient = gradient;
-                    strokePaint.imageRef = imageRef;
-                    strokePaint.transform = transform;
-                    strokePaint.paintFilter = paintFilter;
-                    strokePaint.imageScaleMode = imageScaleMode;
-                    strokePaint.scale = scale;
-                    strokePaint.rotation = rotation;
-                    strokePaint.originalImageHeight = originalImageHeight;
-                    strokePaint.originalImageWidth = originalImageWidth;
-                    const imageMgr = f[f_i].getImageMgr();
-                    imageMgr && strokePaint.setImageMgr(imageMgr);
-                    strokePaints.unshift(strokePaint);
+                } else {
+                    api.deleteFills(borderFills, 0, borderFills.length);
+                    api.addFills(borderFills, fills.map(i => importFill(i)));
                 }
-                const f_s = shape4fill(api, this.view, shape);
-                api.deleteFills(shape.style.fills, 0, shape.style.fills.length);
-                api.addFills(f_s instanceof Shape ? f_s.style.fills : f_s.value, fills);
-                const b_s = shape4border(api, this.view, shape);
-                api.deleteStrokePaints(this.page, b_s, 0, b.strokePaints.length);
-                api.addStrokePaints(this.page, b_s, strokePaints);
             }
             this.__repo.commit();
         } catch (error) {
@@ -3100,7 +3063,7 @@ export class PageEditor {
             const api = this.__repo.start('shapesBlurUnify');
             for (let i = 0; i < actions.length; i++) {
                 const { shape, style, blur } = actions[i];
-                api.delblurmask(this.__document, this.page, adapt2Shape(shape));
+                api.delblurmask(this.page, adapt2Shape(shape));
                 api.deleteBlur(style);
                 api.addBlur(style, blur);
             }
