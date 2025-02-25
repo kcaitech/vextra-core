@@ -1581,16 +1581,13 @@ export class PageEditor {
         try {
             const api = this.__repo.start("shapesModifyRadius");
             const page = this.page;
-            function getMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
-                return _ov(VariableType.RadiusMask, OverrideType.RadiusMask, () => value, view, page, api);
-            }
 
             for (let i = 0; i < shapes.length; i++) {
                 const shape = adapt2Shape(shapes[i]);
                 let needUpdateFrame = false;
 
                 if (shape.radiusMask) {
-                    const variable = getMaskVariable(api, this.__page, shapes[i], undefined);
+                    const variable = getRadiusMaskVariable(api, this.__page, shapes[i], undefined);
                     if (variable) {
                         api.shapeModifyVariable(page, variable, undefined);
                     } else {
@@ -2295,12 +2292,6 @@ export class PageEditor {
     setShapeBorderFillExchange(shapes: ShapeView[]) {
         try {
             const api = this.__repo.start('setShapeBorderFillExchange');
-            function getFillMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
-                return _ov(VariableType.FillsMask, OverrideType.FillsMask, () => value, view, page, api);
-            }
-            function getBorderMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
-                return _ov(VariableType.BorderFillsMask, OverrideType.BorderFillsMask, () => value, view, page, api);
-            }
             for (let i = 0; i < shapes.length; i++) {
                 const shape = shapes[i];
                 const fillMask = shape.fillsMask;
@@ -2311,8 +2302,8 @@ export class PageEditor {
 
                 const fills = fillShape instanceof Shape ? fillShape.style.fills : fillShape.value as BasicArray<Fill>;
                 const borderFills = borderShape instanceof Shape ? borderShape.style.borders.strokePaints : borderShape.value.strokePaints as BasicArray<Fill>;
-                const variableFill = getFillMaskVariable(api, this.__page, shape, fillMask);
-                const variableBorder = getBorderMaskVariable(api, this.__page, shape, borderFillMask);
+                const variableFill = getFillMaskVariable(api, this.view, shape, fillMask);
+                const variableBorder = getBorderMaskVariable(api, this.view, shape, borderFillMask);
 
                 if (borderFillMask) {
                     if (variableFill) {
@@ -3355,159 +3346,180 @@ export class PageEditor {
         try {
             const api = this.__repo.start('pasteProperties');
             const page = this.page;
-            const fills = source.fills;
-            const borders = source.borders;
-            const shadows = source.shadows;
+            const fills = source.fills as Fill[];
+            const fillsMask = source.fillsMask;
+            const borders = source.borders as Border;
+            const bordersMask = source.bordersMask;
+            const borderFillsMask = source.borderFillsMask;
+            const shadows = source.shadows as Shadow[];
+            const shadowsMask = source.shadowsMask;
             const blur = source.blur;
+            const blurMask = source.blurMask;
+            const radiusMask = source.radiusMask;
             const radius = source.radius;
             const contextSetting = source.contextSetting;
             const mark = source.mark;
             const text = source.text;
-            if (fills.length || borders.length) {
-                const document = this.__document;
-                const ctx = new class {
-                    document = document;
-                    curPage = page.id;
-                    fmtVer = FMT_VER_latest;
-                };
 
-                const flatten = flattenShapes(shapes);
-                for (const view of flatten) {
-                    // fills
-                    {
-                        api.deleteFills(view.style.fills, 0, view.style.fills.length);
-                        if (fills?.length) {
-                            const __fills = fills.map((i: Fill) => importFill(i, ctx));
-                            api.addFills(view.getFills(), __fills);
-                        }
-                    }
-                    // borders
-                    {
-                        const s = shape4border(api, this.view, view);
-                        api.deleteStrokePaints(page, s, 0, view.style.borders.strokePaints.length);
-                        if (borders) {
-                            const __borders = importBorder(borders);
-                            api.addStrokePaints(page, s, __borders.strokePaints);
-                        }
-                    }
+            const document = this.__document;
+            const ctx = new class {
+                document = document;
+                curPage = page.id;
+                fmtVer = FMT_VER_latest;
+            }
+
+            const flatten = flattenShapes(shapes);
+            for (const view of flatten) {
+                const fillShape = shape4fill(api, this.view, view);
+                const borderShape = shape4border(api, this.view, view);
+                const v_fills = fillShape instanceof Shape ? fillShape.style.fills : fillShape.value as BasicArray<Fill>;
+                const v_border = borderShape instanceof Shape ? borderShape.style.borders : borderShape.value as Border;
+                api.deleteFills(v_fills, 0, v_fills.length);
+                api.addFills(v_fills, fills.map(i => importFill(i, ctx)));
+                api.deleteFills(v_border.strokePaints, 0, v_border.strokePaints.length);
+                api.addFills(v_border.strokePaints, borders.strokePaints.map(i => importFill(i, ctx)));
+                api.setBorderSide(v_border, borders.sideSetting);
+                api.setBorderPosition(v_border, borders.position);
+
+                const variableFill = getFillMaskVariable(api, this.view, view, fillsMask);
+                const variableBorder = getBorderMaskVariable(api, this.view, view, bordersMask);
+                const variableBorderFill = getBorderFillMaskVariable(api, this.view, view, borderFillsMask);
+                if (variableFill) {
+                    api.shapeModifyVariable(this.page, variableFill, fillsMask);
+                } else {
+                    api.modifyFillsMask(this.page, adapt2Shape(view), fillsMask);
+                }
+                if (variableBorder) {
+                    api.shapeModifyVariable(this.page, variableBorder, bordersMask);
+                } else {
+                    api.modifyBorderMask(adapt2Shape(view).style, bordersMask);
+                }
+                if (variableBorderFill) {
+                    api.shapeModifyVariable(this.page, variableBorderFill, borderFillsMask);
+                } else {
+                    api.setBorderFillMask(adapt2Shape(view).style, borderFillsMask);
                 }
             }
             for (let i = 0; i < shapes.length; i++) {
                 const view = shapes[i];
                 const shape = adapt2Shape(view);
-
                 if (shape.isVirtualShape) continue;
                 // shadows
-                {
-                    const s = shape4shadow(api, this.view, view);
-                    api.deleteShadows(view.style.shadows, 0, view.style.shadows.length);
-                    if (shadows?.length) {
-                        const __shadows = shadows.map((i: Shadow) => importShadow(i));
-                        api.addShadows(view.style.shadows, __shadows);
-                    }
+                const shadowShadow = shape4shadow(api, this.view, view);
+                const v_shadows = shadowShadow instanceof Shape ? shadowShadow.style.shadows : shadowShadow.value as BasicArray<Shadow>;
+                api.deleteShadows(v_shadows, 0, v_shadows.length);
+                api.addShadows(v_shadows, shadows.map((i) => importShadow(i)));
+                const variableShadow = getShadowMaskVariable(api, this.view, view, shadowsMask);
+                if (variableShadow) {
+                    api.shapeModifyVariable(this.page, variableShadow, shadowsMask);
+                } else {
+                    api.modifyShadowsMask(this.page, adapt2Shape(view), shadowsMask);
                 }
                 // blur
-                {
-                    api.deleteBlur(shape.style);
-                    if (blur) {
+                const blurShape = shape4blur(api, view, this.view);
+                api.deleteBlur(shape.style);
+                if (blur) {
+                    if (blurShape instanceof Shape) {
                         api.addBlur(shape.style, importBlur(blur));
+                    } else {
+                        api.shapeModifyVariable(this.page, blurShape, importBlur(blur));
                     }
+                }
+                const variableBlur = getBlurMaskVariable(api, this.view, view, blurMask);
+                if (variableBlur) {
+                    api.shapeModifyVariable(this.page, variableBlur, blurMask);
+                } else {
+                    api.modifyBlurMask(this.page, adapt2Shape(view), blurMask);
                 }
                 // radius
-                {
-                    if (radius) {
-                        let needUpdateFrame = false;
-                        if (shape instanceof SymbolRefShape) {
-                            const _shape = shape4cornerRadius(api, this.view, shapes[i] as SymbolRefView);
-                            api.shapeModifyRadius2(page, _shape, radius[0], radius[1], radius[2], radius[3]);
-                        } else if (shape instanceof Artboard || shape instanceof SymbolShape) {
-                            api.shapeModifyRadius2(page, shape, radius[0], radius[1], radius[2], radius[3]);
-                        } else if (shape instanceof PathShape || shape instanceof PathShape2) {
-                            const isRect = shape.radiusType === RadiusType.Rect;
-                            if (isRect) {
-                                const points = shape.pathsegs[0].points;
-                                for (let _i = 0; _i < 4; _i++) {
-                                    const val = radius[_i];
-                                    if (points[_i].radius === val || val < 0) continue;
-                                    api.modifyPointCornerRadius(page, shape, _i, val, 0);
-                                    needUpdateFrame = true;
-                                }
-                            } else {
-                                shape.pathsegs.forEach((seg, index) => {
-                                    for (let _i = 0; _i < seg.points.length; _i++) {
-                                        if ((seg.points[_i].radius ?? 0) === radius[0]) continue;
-                                        api.modifyPointCornerRadius(page, shape, _i, radius[0], index);
-                                        needUpdateFrame = true;
-                                    }
-                                });
+                const variableRadius = getRadiusMaskVariable(api, this.__page, shapes[i], radiusMask);
+                if (variableRadius) {
+                    api.shapeModifyVariable(page, variableRadius, radiusMask);
+                } else {
+                    api.modifyRadiusMask(shape, radiusMask);
+                }
+                let needUpdateFrame = false;
+                if (shape instanceof SymbolRefShape) {
+                    const _shape = shape4cornerRadius(api, this.view, shapes[i] as SymbolRefView);
+                    api.shapeModifyRadius2(page, _shape, radius[0], radius[1], radius[2], radius[3]);
+                } else if (shape instanceof Artboard || shape instanceof SymbolShape) {
+                    api.shapeModifyRadius2(page, shape, radius[0], radius[1], radius[2], radius[3]);
+                } else if (shape instanceof PathShape || shape instanceof PathShape2) {
+                    const isRect = shape.radiusType === RadiusType.Rect;
+                    if (isRect) {
+                        const points = shape.pathsegs[0].points;
+                        for (let _i = 0; _i < 4; _i++) {
+                            const val = radius[_i];
+                            if (points[_i].radius === val || val < 0) continue;
+                            api.modifyPointCornerRadius(page, shape, _i, val, 0);
+                            needUpdateFrame = true;
+                        }
+                    } else {
+                        shape.pathsegs.forEach((seg, index) => {
+                            for (let _i = 0; _i < seg.points.length; _i++) {
+                                if ((seg.points[_i].radius ?? 0) === radius[0]) continue;
+                                api.modifyPointCornerRadius(page, shape, _i, radius[0], index);
+                                needUpdateFrame = true;
                             }
-                        } else {
-                            api.shapeModifyFixedRadius(page, shape as GroupShape | TextShape, radius[0]);
-                        }
+                        });
+                    }
+                } else {
+                    api.shapeModifyFixedRadius(page, shape as GroupShape | TextShape, radius[0]);
+                }
 
-                        if (needUpdateFrame && !((shape instanceof StarShape || shape instanceof PolygonShape) && !shape.haveEdit)) {
-                            update_frame_by_points(api, this.page, shape);
-                        }
-                    }
+                if (needUpdateFrame && !((shape instanceof StarShape || shape instanceof PolygonShape) && !shape.haveEdit)) {
+                    update_frame_by_points(api, this.page, shape);
                 }
+
                 // contextSetting
-                {
-                    if (contextSetting) {
-                        const __cs = importContextSettings(contextSetting);
-                        api.shapeModifyContextSettingsOpacity(page, shape, __cs.opacity ?? 1);
-                        api.shapeModifyContextSettingsBlendMode(page, shape, __cs.blenMode);
-                    }
-                }
+                const csShape = shape4contextSettings(api, view, this.view);
+                api.shapeModifyContextSettingsOpacity(page, csShape, contextSetting?.opacity ?? 1);
+                api.shapeModifyContextSettingsBlendMode(page, csShape, contextSetting?.blenMode ?? types.BlendMode.Normal);
                 // mark
-                {
-                    if (mark?.start) {
-                        const __start = importMarkerType(mark.start);
-                        api.shapeModifyStartMarkerType(page, shape, __start);
-                    }
-                    if (mark?.end) {
-                        const __end = importMarkerType(mark.end);
-                        api.shapeModifyEndMarkerType(page, shape, __end);
-                    }
+                if (mark?.start) {
+                    const __start = importMarkerType(mark.start);
+                    api.shapeModifyStartMarkerType(page, shape, __start);
+                }
+                if (mark?.end) {
+                    const __end = importMarkerType(mark.end);
+                    api.shapeModifyEndMarkerType(page, shape, __end);
                 }
                 // text
-                {
-                    if (text && shape instanceof TextShape) {
-                        const __text = importText(text);
-                        const alpha = __text.paras[0]?.spans[0];
-                        const len = shape.text.length;
-                        const __view = view as TextShapeView;
-                        let needFixFrame = false;
-                        const attr = __text.attr;
-                        if (attr) {
-                            api.shapeModifyTextVerAlign(page, __view, attr.verAlign!); // 垂直位置
-                            api.shapeModifyTextBehaviour(page, __view.text, attr.textBehaviour!); // 宽高表现
-                        }
-                        if (alpha) {
-                            api.textModifyColor(page, __view, 0, len, alpha.color); // 字体颜色
-                            api.textModifyFontName(page, __view, 0, len, alpha.fontName!); // 字体
-                            api.textModifyFontSize(page, __view, 0, len, alpha.fontSize!); // 字号
-                            api.textModifyItalic(page, __view, !!alpha.italic, 0, len); // 斜体
-                            api.textModifyKerning(page, __view, alpha.kerning || 0, 0, len); // 字间距
-                            api.textModifyUnderline(page, __view, alpha.underline, 0, len); // 下划线
-                            api.textModifyStrikethrough(page, __view, alpha.strikethrough, 0, len); // 删除线
-                            api.textModifyWeight(page, __view, alpha.weight!, 0, len); // 字重
-                            api.textModifyHighlightColor(page, __view, 0, len, alpha.highlight); // 高亮底色
-                            needFixFrame = true;
-                        }
-
-                        const alphaAttr = __text.paras[0]?.attr;
-                        if (alphaAttr) {
-                            api.textModifyParaSpacing(page, __view, alphaAttr.paraSpacing || 0, 0, len); // 段落间距
-                            api.textModifyAutoLineHeight(page, __view, alphaAttr.autoLineHeight ?? true, 0, len)
-                            api.textModifyMinLineHeight(page, __view, alphaAttr.minimumLineHeight!, 0, len); // 行高
-                            api.textModifyMaxLineHeight(page, __view, alphaAttr.maximumLineHeight!, 0, len); // 行高
-                            api.textModifyHorAlign(page, __view, alphaAttr.alignment!, 0, len); // 水平位置
-
-                            needFixFrame = true;
-                        }
-
-                        needFixFrame && fixTextShapeFrameByLayout(api, page, __view);
+                if (text && shape instanceof TextShape) {
+                    const __text = importText(text);
+                    const alpha = __text.paras[0]?.spans[0];
+                    const len = shape.text.length;
+                    const __view = view as TextShapeView;
+                    let needFixFrame = false;
+                    const attr = __text.attr;
+                    if (attr) {
+                        api.shapeModifyTextVerAlign(page, __view, attr.verAlign!); // 垂直位置
+                        api.shapeModifyTextBehaviour(page, __view.text, attr.textBehaviour!); // 宽高表现
                     }
+                    if (alpha) {
+                        api.textModifyColor(page, __view, 0, len, alpha.color); // 字体颜色
+                        api.textModifyFontName(page, __view, 0, len, alpha.fontName!); // 字体
+                        api.textModifyFontSize(page, __view, 0, len, alpha.fontSize!); // 字号
+                        api.textModifyItalic(page, __view, !!alpha.italic, 0, len); // 斜体
+                        api.textModifyKerning(page, __view, alpha.kerning || 0, 0, len); // 字间距
+                        api.textModifyUnderline(page, __view, alpha.underline, 0, len); // 下划线
+                        api.textModifyStrikethrough(page, __view, alpha.strikethrough, 0, len); // 删除线
+                        api.textModifyWeight(page, __view, alpha.weight!, 0, len); // 字重
+                        api.textModifyHighlightColor(page, __view, 0, len, alpha.highlight); // 高亮底色
+                        needFixFrame = true;
+                    }
+
+                    const alphaAttr = __text.paras[0]?.attr;
+                    if (alphaAttr) {
+                        api.textModifyParaSpacing(page, __view, alphaAttr.paraSpacing || 0, 0, len); // 段落间距
+                        api.textModifyAutoLineHeight(page, __view, alphaAttr.autoLineHeight ?? true, 0, len)
+                        api.textModifyMinLineHeight(page, __view, alphaAttr.minimumLineHeight!, 0, len); // 行高
+                        api.textModifyMaxLineHeight(page, __view, alphaAttr.maximumLineHeight!, 0, len); // 行高
+                        api.textModifyHorAlign(page, __view, alphaAttr.alignment!, 0, len); // 水平位置
+                        needFixFrame = true;
+                    }
+
+                    needFixFrame && fixTextShapeFrameByLayout(api, page, __view);
                 }
             }
             this.__repo.commit();
@@ -3844,4 +3856,23 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+}
+
+function getFillMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
+    return _ov(VariableType.FillsMask, OverrideType.FillsMask, () => value, view, page, api);
+}
+function getBorderFillMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
+    return _ov(VariableType.BorderFillsMask, OverrideType.BorderFillsMask, () => value, view, page, api);
+}
+function getBorderMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
+    return _ov(VariableType.BordersMask, OverrideType.BordersMask, () => value, view, page, api);
+}
+function getRadiusMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
+    return _ov(VariableType.RadiusMask, OverrideType.RadiusMask, () => value, view, page, api);
+}
+function getShadowMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
+    return _ov(VariableType.ShadowsMask, OverrideType.ShadowsMask, () => value, view, page, api);
+}
+function getBlurMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
+    return _ov(VariableType.BlursMask, OverrideType.BlursMask, () => value, view, page, api);
 }
