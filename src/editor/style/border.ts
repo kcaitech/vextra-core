@@ -248,7 +248,7 @@ export class BorderModifier extends Modifier {
             const page = pageView.data;
             for (const view of views) {
                 const linked = this.getFillMaskVariable(api, pageView, view, fillsMask);
-                linked ? api.shapeModifyVariable(page, linked, fillsMask) : api.setBorderFillMask(document, adapt2Shape(view).style, fillsMask);
+                linked ? api.shapeModifyVariable(page, linked, fillsMask) : api.setBorderFillMask(adapt2Shape(view).style, fillsMask);
             }
             this.commit();
         } catch (error) {
@@ -275,7 +275,7 @@ export class BorderModifier extends Modifier {
                 for (const variable of variables) {
                     if (variable.value !== mask.id) api.shapeModifyVariable(page, variable, mask.id);
                 }
-                for (const shape of shapes) api.setBorderFillMask(document, shape.style, mask.id);
+                for (const shape of shapes) api.setBorderFillMask(shape.style, mask.id);
             }
             this.commit();
             return true;
@@ -325,7 +325,7 @@ export class BorderModifier extends Modifier {
             for (const variable of variables) {
                 if (variable.value !== value) api.shapeModifyVariable(page, variable, value);
             }
-            for (const shape of shapes) api.setBorderFillMask(document, shape.style, value);
+            for (const shape of shapes) api.setBorderFillMask(shape.style, value);
             this.commit();
         } catch (error) {
             this.rollback();
@@ -371,7 +371,7 @@ export class BorderModifier extends Modifier {
             }
             const page = adapt2Shape(pageView) as Page;
             fillMaskVariables.forEach(variable => api.shapeModifyVariable(page, variable, undefined));
-            shapes4mask.forEach(shape => api.delBorderFillMask(document, shape.style));
+            shapes4mask.forEach(shape => api.delBorderFillMask(shape.style));
 
             // 固定现有填充到本地
             const fillsContainer: BasicArray<Fill>[] = [];
@@ -442,7 +442,7 @@ export class BorderModifier extends Modifier {
             }
             const page = adapt2Shape(pageView) as Page;
             fillMaskVariables.forEach(variable => api.shapeModifyVariable(page, variable, undefined));
-            shapes4mask.forEach(shape => api.delBorderFillMask(document, shape.style));
+            shapes4mask.forEach(shape => api.delBorderFillMask(shape.style));
 
             const fillsContainer: BasicArray<Fill>[] = [];
             for (const view of views) {
@@ -457,7 +457,7 @@ export class BorderModifier extends Modifier {
         }
     }
     /* 删除边框 */
-    removeShapesBorder(document: Document, pageView: PageView, views: ShapeView[]) {
+    removeShapesBorder(pageView: PageView, views: ShapeView[]) {
         try {
             const api = this.getApi('removeShapesBorder');
             const page = adapt2Shape(pageView) as Page;
@@ -468,7 +468,7 @@ export class BorderModifier extends Modifier {
                 if (linkedFillMaskVariable) {
                     api.shapeModifyVariable(page, linkedFillMaskVariable, undefined);
                 } else {
-                    api.delBorderFillMask(document, adapt2Shape(view).style);
+                    api.delBorderFillMask(adapt2Shape(view).style);
                 }
 
                 if (linkedBorderMaskVariable) {
