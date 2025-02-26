@@ -157,7 +157,12 @@ export class FillsAsyncApi extends AsyncApiCaller {
 
     /* 修改一次站点颜色 */
     modifyStopColorOnce(missions: Function[]) {
-        missions.forEach((call) => call(this.api));
+        try {
+            missions.forEach((call) => call(this.api));
+        } catch (error) {
+            console.error(error);
+            this.__repo.rollback();
+        }
     }
 
     /* 逆转站点 */
@@ -171,29 +176,9 @@ export class FillsAsyncApi extends AsyncApiCaller {
     }
 
     /* 旋转站点 */
-    rotateGradientStops(fills: Fill[]) {
+    rotateGradientStops(missions: Function[]) {
         try {
-            for (const fill of fills) {
-                const gradientCopy = importGradient(exportGradient(fill.gradient!));
-                const { from, to } = gradientCopy;
-                const gradientType = gradientCopy.gradientType;
-                if (gradientType === types.GradientType.Linear) {
-                    const midpoint = { x: (to.x + from.x) / 2, y: (to.y + from.y) / 2 };
-                    const m = new Matrix();
-                    m.trans(-midpoint.x, -midpoint.y);
-                    m.rotate(Math.PI / 2);
-                    m.trans(midpoint.x, midpoint.y);
-                    gradientCopy.to = m.computeCoord3(to) as Point2D;
-                    gradientCopy.from = m.computeCoord3(from) as Point2D;
-                } else if (gradientType === types.GradientType.Radial || gradientType === types.GradientType.Angular) {
-                    const m = new Matrix();
-                    m.trans(-from.x, -from.y);
-                    m.rotate(Math.PI / 2);
-                    m.trans(from.x, from.y);
-                    gradientCopy.to = m.computeCoord3(to) as any;
-                }
-                this.api.setFillGradient(fill, gradientCopy);
-            }
+            missions.forEach((call) => call(this.api));
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
