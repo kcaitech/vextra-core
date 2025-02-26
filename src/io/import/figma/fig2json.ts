@@ -140,7 +140,7 @@ function parseBlob(key: string, bytes: Uint8Array) {
     }
 }
 
-export const figToJson = (fileBuffer: Buffer | ArrayBuffer): object => {
+export const figToJson = (fileBuffer: ArrayBuffer): object => {
     const [schemaByte, dataByte] = figToBinaryParts(fileBuffer)
 
     const schemaBB = new ByteBuffer(schemaByte)
@@ -271,7 +271,7 @@ function convertBase64ToBlobs(json: any): object {
 // }
 
 // note fileBuffer is mutated inside
-function figToBinaryParts(fileBuffer: ArrayBuffer | Buffer): Uint8Array[] {
+function figToBinaryParts(fileBuffer: ArrayBuffer): Uint8Array[] {
     let fileByte: Uint8Array = new Uint8Array(fileBuffer)
 
     // check bytes for figma comment "fig-kiwi" if doesn't exist, we first need to unzip the file
@@ -287,8 +287,8 @@ function figToBinaryParts(fileBuffer: ArrayBuffer | Buffer): Uint8Array[] {
     ) {
         const unzipped = UZIP.parse(fileBuffer)
         const file = unzipped["canvas.fig"]
-        fileBuffer = file.buffer
-        fileByte = new Uint8Array(fileBuffer)
+        // fileBuffer = file.buffer
+        fileByte = new Uint8Array(file.buffer)
     }
 
     // 8 bytes for figma comment "fig-kiwi"
@@ -297,13 +297,13 @@ function figToBinaryParts(fileBuffer: ArrayBuffer | Buffer): Uint8Array[] {
     // jumps 4 bytes over delimiter
     start += 4
 
-    const result = []
+    const result: Uint8Array[] = []
     while (start < fileByte.length) {
         let end = calcEnd(fileByte, start)
         const index = start + 4;
         start += 4 + end;
 
-        let byteTemp = fileByte.slice(index, index + end)
+        let byteTemp: Uint8Array = fileByte.slice(index, index + end)
 
         // TODO: we might not need to check for this
         // Decompress everything other than PNG bytes (they remain compressed and are handled by image-loaders)
