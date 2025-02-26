@@ -504,6 +504,7 @@ export class ShapeView extends DataView {
             || (this.m_fixedRadius || 0) !== ((this.m_data as any).fixedRadius || 0)
             || args.includes('cornerRadius')
             || args.includes('imageRef')
+            || args.includes('radiusMask')
         ) {
             this.m_path = undefined;
             this.m_pathstr = undefined;
@@ -1354,7 +1355,8 @@ export class ShapeView extends DataView {
 
     private _onRadiusMaskChange() {
         this.m_ctx.setDirty(this);
-        this.notify('style', 'radius', 'mask');
+        this.onDataChange('radiusMask');
+        this.notify('radiusMask');
     }
 
     private m_unbind_Radius: undefined | (() => void) = undefined;

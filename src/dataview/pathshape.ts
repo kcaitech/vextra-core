@@ -149,13 +149,13 @@ export class PathShapeView extends ShapeView {
                 this.parent.m_ctx.setReLayout(this.parent);
             }
         }
-
         if (args.includes('points')
             || args.includes('pathsegs')
             || args.includes('isClosed')
             || (this.m_fixedRadius || 0) !== ((this.m_data as any).fixedRadius || 0)
             || args.includes('cornerRadius')
             || args.includes('imageRef')
+            || args.includes('radiusMask')
         ) {
             this.m_path = undefined;
             this.m_pathstr = undefined;
