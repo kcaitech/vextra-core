@@ -6,7 +6,7 @@ import {
     Fill, FillMask,
     OverrideType,
     Page,
-    Shape,
+    Shape, StyleMangerMember,
     Variable,
     VariableType
 } from "../../data";
@@ -130,6 +130,8 @@ export class FillModifier extends Modifier {
     createFillsMask(document: Document, mask: FillMask, pageView: PageView, views?: ShapeView[]) {
         try {
             const api = this.getApi('createFillsMask');
+            const fills = new BasicArray(...mask.fills.map(i => importFill(i)));
+            mask.fills = fills;
             api.styleInsert(document, mask);
             if (views) {
                 const variables: Variable[] = [];
@@ -232,6 +234,18 @@ export class FillModifier extends Modifier {
                 fillsContainer.push(linkedVariable ? linkedVariable.value : adapt2Shape(view).style.fills);
             }
             fillsContainer.forEach(source => api.deleteFills(source, 0, source.length));
+            this.commit();
+        } catch (error) {
+            this.rollback();
+            throw error;
+        }
+    }
+
+    // 修改填充遮罩状态(弱删除)
+    disableMask(mask: StyleMangerMember) {
+        try {
+            const api = this.getApi('disableMask');
+            api.disableMask(mask);
             this.commit();
         } catch (error) {
             this.rollback();

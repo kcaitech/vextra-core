@@ -563,32 +563,6 @@ export class ShapeEditor {
         });
     }
 
-    public setMarkerType(mt: MarkerType, isEnd: boolean) {
-        this._repoWrap('setMarkerType', (api) => {
-            if (this.modifyVariable(VariableType.MarkerType, isEnd ? OverrideType.EndMarkerType : OverrideType.StartMarkerType, mt, api)) return;
-            if (isEnd) {
-                api.shapeModifyEndMarkerType(this.__page, this.shape, mt);
-            } else {
-                api.shapeModifyStartMarkerType(this.__page, this.shape, mt);
-            }
-        });
-    }
-
-    public exchangeMarkerType() {
-        const startMarkerType = this.__shape.startMarkerType;
-        const endMarkerType = this.__shape.endMarkerType;
-        if (endMarkerType !== startMarkerType) {
-            this._repoWrap("exchangeMarkerType", (api) => {
-                if (this.modifyVariable(VariableType.MarkerType, OverrideType.EndMarkerType, startMarkerType || MarkerType.Line, api)) {
-                    this.modifyVariable(VariableType.MarkerType, OverrideType.StartMarkerType, endMarkerType || MarkerType.Line, api)
-                    return;
-                }
-                api.shapeModifyEndMarkerType(this.__page, this.shape, startMarkerType || MarkerType.Line);
-                api.shapeModifyStartMarkerType(this.__page, this.shape, endMarkerType || MarkerType.Line);
-            });
-        }
-    }
-
     public deleteBorder(idx: number) {
 
         this._repoWrap("deleteBorder", (api) => {

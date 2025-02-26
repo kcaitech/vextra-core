@@ -1,70 +1,28 @@
 import { AsyncApiCaller } from "../basic/asyncapi";
-import { ShapeView } from "../../../dataview";
-import { Color, FillMask, Shape, Variable, Fill, importGradient, BasicArray, Stop, Point2D } from "../../../data";
-import { shape4border } from "../../symbol";
-import { exportGradient, exportStop } from "../../../data/baseexport";
-import { importStop } from "../../../data/baseimport";
+import { PageView, ShapeView } from "../../../dataview";
+import {
+    Color,
+    Fill,
+    importGradient,
+    BasicArray,
+    Stop,
+    Point2D,
+    VariableType, OverrideType, GradientType, Gradient
+} from "../../../data";
+import { override_variable } from "../../symbol";
+import { exportGradient } from "../../../data/baseexport";
+import { importBorder, importStop } from "../../../data/baseimport";
 import * as types from "../../../data/typesdefine";
 import { Matrix } from "../../../basic/matrix";
+import { Api } from "../../../coop";
+import { uuid } from "../../../basic/uuid";
 
 export class BorderPaintsAsyncApi extends AsyncApiCaller {
+    importGradient = importGradient;
+    importStop = importStop;
+
     start() {
-        return this.__repo.start('modify-paints-color');
-    }
-
-    private m_targets: any;
-
-    private getTargets(shapes: ShapeView[]): (Shape | FillMask | Variable)[] {
-        return this.m_targets ?? (this.m_targets = ((shapes: ShapeView[]) => {
-            return shapes.map(i => shape4border(this.api, this.pageView, i));
-        })(shapes))
-    }
-
-    private getFills(target: Shape | FillMask | Variable): Fill[] {
-        return target instanceof Shape ? target.getBorders().strokePaints : target instanceof FillMask ? target.fills : target.value;
-    }
-
-    /* 修改纯色 */
-    modifySolidColor(shapes: ShapeView[], index: number, color: Color) {
-        try {
-            const targets = this.getTargets(shapes);
-            for (const t of targets) this.api.setBorderColor(this.page, t, index, color);
-            this.updateView();
-        } catch (err) {
-            this.exception = true;
-            console.error(err);
-        }
-    }
-
-    /* 修改站点颜色 */
-    modifyStopColor(shapes: ShapeView[], index: number, color: Color, stopAt: number) {
-        try {
-            this.modifyStopColorOnce(shapes, index, color, stopAt);
-            this.updateView();
-        } catch (err) {
-            this.exception = true;
-            console.error(err);
-        }
-    }
-
-    /* 修改站点位置 */
-    modifyStopPosition(index: number, stopAt: number, position: number, shapes: ShapeView[]) {
-        try {
-            const targets = this.getTargets(shapes);
-            for (const target of targets) {
-                const fills = this.getFills(target);
-                const fill = fills[index];
-                const gradient = fill.gradient!;
-                const gradientCopy = importGradient(exportGradient(gradient));
-                gradientCopy.stops[stopAt].position = position;
-                gradientCopy.stops.sort((a, b) => a.position > b.position ? 1 : -1);
-                this.api.setBorderGradient(this.page, target as any, index, gradientCopy);
-            }
-            this.updateView();
-        } catch (error) {
-            this.exception = true;
-            console.error(error);
-        }
+        return this.__repo.start('modify-fills-color');
     }
 
     commit() {
@@ -73,66 +31,132 @@ export class BorderPaintsAsyncApi extends AsyncApiCaller {
         } else {
             this.__repo.rollback();
         }
-        this.m_targets = undefined;
     }
 
-    /*非连续性指令*/
+    getBorderVariable(api: Api, page: PageView, view: ShapeView) {
+        return override_variable(page, VariableType.Borders, OverrideType.Borders, (_var) => {
+            return importBorder(_var?.value ?? view.getBorders());
+        }, api, view)!;
+    }
 
-    /* 修改一次站点颜色 */
-    removeGradientStop(index: number, stopAt: number, shapes: ShapeView[]) {
+    // 修改填充类型
+    modifyFillType(mission: Function[]) {
         try {
-            const targets = this.getTargets(shapes);
-            for (const target of targets) {
-                const fills = this.getFills(target);
-                const fill = fills[index];
-                const gradient = fill.gradient!;
-                const gradientCopy = importGradient(exportGradient(gradient));
-                gradientCopy.stops.splice(stopAt, 1);
-                this.api.setBorderGradient(this.page, target as any, index, gradientCopy);
-            }
+            mission.forEach((call) => call(this.api));
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
         }
     }
-    modifyStopColorOnce(shapes: ShapeView[], index: number, color: Color, stopAt: number) {
-        const targets = this.getTargets(shapes);
-        for (const target of targets) {
-            const fills = this.getFills(target);
-            const fill = fills[index];
-            const gradient = fill.gradient!;
-            const gradientCopy = importGradient(exportGradient(gradient));
-            gradientCopy.stops[stopAt].color = color;
-            gradientCopy.stops.sort((a, b) => a.position > b.position ? 1 : -1);
-            gradientCopy.stops.forEach((v, i) => {
+
+    initGradient(api: Api, action: { fill: Fill, type: string }) {
+        const gradient = action.fill.gradient;
+        if (gradient) {
+            const gCopy = importGradient(exportGradient(gradient));
+            if (action.type === GradientType.Linear && gradient.gradientType !== GradientType.Linear) {
+                gCopy.from.y = gCopy.from.y - (gCopy.to.y - gCopy.from.y);
+                gCopy.from.x = gCopy.from.x - (gCopy.to.x - gCopy.from.x);
+            } else if (action.type !== GradientType.Linear && gradient.gradientType === GradientType.Linear) {
+                gCopy.from.y = gCopy.from.y + (gCopy.to.y - gCopy.from.y) / 2;
+                gCopy.from.x = gCopy.from.x + (gCopy.to.x - gCopy.from.x) / 2;
+            }
+            if (action.type === GradientType.Radial && gCopy.elipseLength === undefined) gCopy.elipseLength = 1;
+            gCopy.gradientType = action.type as GradientType;
+            api.setFillGradient(action.fill, gCopy);
+        } else {
+            const stops = new BasicArray<Stop>();
+            const { alpha, red, green, blue } = action.fill.color;
+            stops.push(
+                new Stop(new BasicArray(), uuid(), 0, new Color(alpha, red, green, blue)),
+                new Stop(new BasicArray(), uuid(), 1, new Color(0, red, green, blue))
+            );
+            const from = action.type === GradientType.Linear ? { x: 0.5, y: 0 } : { x: 0.5, y: 0.5 };
+            const to = { x: 0.5, y: 1 };
+            let ellipseLength;
+            if (action.type === GradientType.Radial) ellipseLength = 1;
+            const gradient = new Gradient(from as Point2D, to as Point2D, action.type as GradientType, stops, ellipseLength);
+            gradient.stops.forEach((v, i) => {
                 const idx = new BasicArray<number>();
                 idx.push(i);
                 v.crdtidx = idx;
             })
-            this.api.setBorderGradient(this.page, target as any, index, gradientCopy);
+            gradient.gradientType = action.type as GradientType;
+            api.setFillGradient(action.fill, gradient);
         }
     }
 
-    /* 逆转站点 */
-    reverseGradientStops(shapes: ShapeView[], index: number) {
+    modifySolidColor(missions: Function[]) {
         try {
-            const targets = this.getTargets(shapes);
-            for (const target of targets) {
-                const fills = this.getFills(target);
-                const fill = fills[index];
-                const gradient = fill.gradient!;
-                const stops = gradient.stops;
-                const reversedStops: BasicArray<Stop> = new BasicArray<Stop>();
-                for (let _i = 0, _l = stops.length; _i < _l; _i++) {
-                    const _stop = stops[_i];
-                    const inverseIndex = stops.length - 1 - _i;
-                    reversedStops.push(importStop(exportStop(new Stop(_stop.crdtidx, _stop.id, _stop.position, stops[inverseIndex].color))));
-                }
-                this.api.setBorderColor(this.page, target as any, index, reversedStops[0].color as Color);
-                const gradientCopy = importGradient(exportGradient(gradient));
-                gradientCopy.stops = reversedStops;
-                this.api.setBorderGradient(this.page, target as any, index, gradientCopy);
-            }
+            missions.forEach((call) => call(this.api));
+            this.updateView();
+        } catch (error) {
+            this.exception = true;
+            console.error(error);
+        }
+    }
+
+    // 新增一个渐变色站点
+    createGradientStop(missions: Function[]) {
+        try {
+            missions.forEach((call) => call(this.api));
+        } catch (error) {
+            console.error(error);
+            this.__repo.rollback();
+        }
+    }
+
+    // 删除一个渐变色站点
+    removeGradientStop(missions: Function[]) {
+        try {
+            missions.forEach((call) => call(this.api));
+        } catch (error) {
+            console.error(error);
+            this.__repo.rollback();
+        }
+    }
+
+    /* 修改站点颜色 */
+    modifyStopColor(missions: Function[]): void {
+        try {
+            this.modifyStopColorOnce(missions);
+            this.updateView();
+        } catch (err) {
+            this.exception = true;
+            console.error(err);
+        }
+    }
+
+    /* 修改图片填充的滤镜 */
+    modifyFillImageFilter(missions: Function[]): void {
+        try {
+            missions.forEach((call) => call(this.api));
+            this.updateView();
+        } catch (error) {
+            console.error(error);
+            this.__repo.rollback();
+        }
+    }
+
+    /* 修改站点位置 */
+    modifyStopPosition(missions: Function[]): void {
+        try {
+            missions.forEach((call) => call(this.api));
+            this.updateView();
+        } catch (error) {
+            this.exception = true;
+            console.error(error);
+        }
+    }
+
+    /* 修改一次站点颜色 */
+    modifyStopColorOnce(missions: Function[]) {
+        missions.forEach((call) => call(this.api));
+    }
+
+    /* 逆转站点 */
+    reverseGradientStops(missions: Function[]) {
+        try {
+            missions.forEach((call) => call(this.api));
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
@@ -140,12 +164,10 @@ export class BorderPaintsAsyncApi extends AsyncApiCaller {
     }
 
     /* 旋转站点 */
-    rotateGradientStops(shapes: ShapeView[], index: number) {
+    rotateGradientStops(fills: Fill[]) {
         try {
-            const targets = this.getTargets(shapes);
-            for (const target of targets) {
-                const fills = this.getFills(target);
-                const gradientCopy = importGradient(exportGradient(fills[index].gradient!));
+            for (const fill of fills) {
+                const gradientCopy = importGradient(exportGradient(fill.gradient!));
                 const { from, to } = gradientCopy;
                 const gradientType = gradientCopy.gradientType;
                 if (gradientType === types.GradientType.Linear) {
@@ -163,7 +185,7 @@ export class BorderPaintsAsyncApi extends AsyncApiCaller {
                     m.trans(from.x, from.y);
                     gradientCopy.to = m.computeCoord3(to) as any;
                 }
-                this.api.setBorderGradient(this.page, target as any, index, gradientCopy);
+                this.api.setFillGradient(fill, gradientCopy);
             }
         } catch (error) {
             console.error(error);

@@ -5,7 +5,7 @@ import {
     Document,
     OverrideType,
     Page, Point2D,
-    Shape,
+    Shape, StyleMangerMember,
     Variable,
     VariableType
 } from "../../data";
@@ -211,6 +211,17 @@ export class BlurModifier extends Modifier {
                     api.deleteBlur(view.style);
                 }
             }
+            this.commit();
+        } catch (error) {
+            this.rollback();
+            throw error;
+        }
+    }
+
+    disableMask(mask: StyleMangerMember) {
+        try {
+            const api = this.getApi('modifyMaskStatus');
+            api.disableMask(mask);
             this.commit();
         } catch (error) {
             this.rollback();

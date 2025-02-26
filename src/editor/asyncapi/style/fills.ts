@@ -1,66 +1,28 @@
 import { AsyncApiCaller } from "../basic/asyncapi";
-import { BasicArray, Color, Fill, FillMask, ImageScaleMode, importGradient, PaintFilterType, Point2D, Shape, Stop, Variable } from "../../../data";
-import { ShapeView } from "../../../dataview";
-import { shape4fill } from "../../symbol";
-import { exportGradient, exportStop } from "../../../data/baseexport";
-import { importStop } from "../../../data/baseimport";
+import {
+    BasicArray,
+    Color,
+    Fill, Gradient, GradientType,
+    importGradient, OverrideType,
+    Point2D,
+    Stop,
+    VariableType
+} from "../../../data";
+import { exportGradient } from "../../../data/baseexport";
+import { importFill, importStop } from "../../../data/baseimport";
 import * as types from "../../../data/typesdefine";
 import { Matrix } from "../../../basic/matrix";
+import { Api } from "../../../coop";
+import { PageView, ShapeView } from "../../../dataview";
+import { override_variable } from "../../symbol";
+import { uuid } from "../../../basic/uuid";
 
 export class FillsAsyncApi extends AsyncApiCaller {
+    importGradient = importGradient;
+    importStop = importStop;
+
     start() {
         return this.__repo.start('modify-fills-color');
-    }
-
-    /* 修改纯色 */
-    modifySolidColor(actions: { fill: Fill, color: Color }[]) {
-        try {
-            for (const action of actions) this.api.setFillColor(action.fill, action.color);
-            this.updateView();
-        } catch (err) {
-            this.exception = true;
-            console.error(err);
-        }
-    }
-
-    /* 修改站点颜色 */
-    modifyStopColor(actions: { fill: Fill, color: Color, stopAt: number }[]): void {
-        try {
-            this.modifyStopColorOnce(actions);
-            this.updateView();
-        } catch (err) {
-            this.exception = true;
-            console.error(err);
-        }
-    }
-
-    /* 修改图片填充的滤镜 */
-    modifyFillImageFilter(fills: Fill[], key: PaintFilterType, value: number) {
-        try {
-            fills.forEach(fill => this.api.setFillImageFilter(fill, key, value));
-            this.updateView();
-        } catch (error) {
-            console.error(error);
-            this.__repo.rollback();
-        }
-    }
-
-    /* 修改站点位置 */
-    modifyStopPosition(actions: { fill: Fill, position: number, stopAt: number }[]): void {
-        try {
-            for (const action of actions) {
-                const { fill, position, stopAt } = action;
-                const gradient = fill.gradient!;
-                const gradientCopy = importGradient(exportGradient(gradient));
-                gradientCopy.stops[stopAt].position = position;
-                gradientCopy.stops.sort((a, b) => a.position > b.position ? 1 : -1);
-                this.api.setFillGradient(fill, gradientCopy);
-            }
-            this.updateView();
-        } catch (error) {
-            this.exception = true;
-            console.error(error);
-        }
     }
 
     commit() {
@@ -71,49 +33,137 @@ export class FillsAsyncApi extends AsyncApiCaller {
         }
     }
 
-    /*非连续性指令*/
-    removeGradientStop(actions: { fill: Fill, stopAt: number }[]) {
+    getFillsVariable(api: Api, page: PageView, view: ShapeView) {
+        return override_variable(page, VariableType.Fills, OverrideType.Fills, (_var) => {
+            const fills = _var?.value ?? view.getFills();
+            return new BasicArray(...(fills as Array<Fill>).map((v) => {
+                    const ret = importFill(v);
+                    const imgmgr = v.getImageMgr();
+                    if (imgmgr) ret.setImageMgr(imgmgr)
+                    return ret;
+                }
+            ))
+        }, api, view)!;
+    }
+
+    // 修改填充类型
+    modifyFillType(mission: Function[]) {
         try {
-            for (const action of actions) {
-                const { fill, stopAt } = action;
-                const gradient = fill.gradient!;
-                const gradientCopy = importGradient(exportGradient(gradient));
-                gradientCopy.stops.splice(stopAt, 1);
-                this.api.setFillGradient(fill, gradientCopy);
-            }
+            mission.forEach((call) => call(this.api));
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
         }
     }
-    /* 修改一次站点颜色 */
-    modifyStopColorOnce(actions: { fill: Fill, color: Color, stopAt: number }[]) {
-        for (const action of actions) {
-            const { fill, color, stopAt } = action;
-            const gradient = fill.gradient!;
-            const gradientCopy = importGradient(exportGradient(gradient));
-            gradientCopy.stops[stopAt].color = color;
-            this.api.setFillGradient(fill, gradientCopy);
+
+    initGradient(api: Api, action: { fill: Fill, type: string }) {
+        const gradient = action.fill.gradient;
+        if (gradient) {
+            const gCopy = importGradient(exportGradient(gradient));
+            if (action.type === GradientType.Linear && gradient.gradientType !== GradientType.Linear) {
+                gCopy.from.y = gCopy.from.y - (gCopy.to.y - gCopy.from.y);
+                gCopy.from.x = gCopy.from.x - (gCopy.to.x - gCopy.from.x);
+            } else if (action.type !== GradientType.Linear && gradient.gradientType === GradientType.Linear) {
+                gCopy.from.y = gCopy.from.y + (gCopy.to.y - gCopy.from.y) / 2;
+                gCopy.from.x = gCopy.from.x + (gCopy.to.x - gCopy.from.x) / 2;
+            }
+            if (action.type === GradientType.Radial && gCopy.elipseLength === undefined) gCopy.elipseLength = 1;
+            gCopy.gradientType = action.type as GradientType;
+            api.setFillGradient(action.fill, gCopy);
+        } else {
+            const stops = new BasicArray<Stop>();
+            const { alpha, red, green, blue } = action.fill.color;
+            stops.push(
+                new Stop(new BasicArray(), uuid(), 0, new Color(alpha, red, green, blue)),
+                new Stop(new BasicArray(), uuid(), 1, new Color(0, red, green, blue))
+            );
+            const from = action.type === GradientType.Linear ? { x: 0.5, y: 0 } : { x: 0.5, y: 0.5 };
+            const to = { x: 0.5, y: 1 };
+            let ellipseLength;
+            if (action.type === GradientType.Radial) ellipseLength = 1;
+            const gradient = new Gradient(from as Point2D, to as Point2D, action.type as GradientType, stops, ellipseLength);
+            gradient.stops.forEach((v, i) => {
+                const idx = new BasicArray<number>();
+                idx.push(i);
+                v.crdtidx = idx;
+            })
+            gradient.gradientType = action.type as GradientType;
+            api.setFillGradient(action.fill, gradient);
         }
     }
 
-    /* 逆转站点 */
-    reverseGradientStops(fills: Fill[]) {
+    modifySolidColor(missions: Function[]) {
         try {
-            for (const fill of fills) {
-                const gradient = fill.gradient!;
-                const stops = gradient.stops;
-                const reversedStops: BasicArray<Stop> = new BasicArray<Stop>();
-                for (let _i = 0, _l = stops.length; _i < _l; _i++) {
-                    const _stop = stops[_i];
-                    const inverseIndex = stops.length - 1 - _i;
-                    reversedStops.push(importStop(exportStop(new Stop(_stop.crdtidx, _stop.id, _stop.position, stops[inverseIndex].color))));
-                }
-                this.api.setFillColor(fill, reversedStops[0].color as Color);
-                const gradientCopy = importGradient(exportGradient(gradient));
-                gradientCopy.stops = reversedStops;
-                this.api.setFillGradient(fill, gradientCopy);
-            }
+            missions.forEach((call) => call(this.api));
+            this.updateView();
+        } catch (error) {
+            this.exception = true;
+            console.error(error);
+        }
+    }
+
+    // 新增一个渐变色站点
+    createGradientStop(missions: Function[]) {
+        try {
+            missions.forEach((call) => call(this.api));
+        } catch (error) {
+            console.error(error);
+            this.__repo.rollback();
+        }
+    }
+
+    // 删除一个渐变色站点
+    removeGradientStop(missions: Function[]) {
+        try {
+            missions.forEach((call) => call(this.api));
+        } catch (error) {
+            console.error(error);
+            this.__repo.rollback();
+        }
+    }
+
+    /* 修改站点颜色 */
+    modifyStopColor(missions: Function[]): void {
+        try {
+            this.modifyStopColorOnce(missions);
+            this.updateView();
+        } catch (err) {
+            this.exception = true;
+            console.error(err);
+        }
+    }
+
+    /* 修改图片填充的滤镜 */
+    modifyFillImageFilter(missions: Function[]): void {
+        try {
+            missions.forEach((call) => call(this.api));
+            this.updateView();
+        } catch (error) {
+            console.error(error);
+            this.__repo.rollback();
+        }
+    }
+
+    /* 修改站点位置 */
+    modifyStopPosition(missions: Function[]): void {
+        try {
+            missions.forEach((call) => call(this.api));
+            this.updateView();
+        } catch (error) {
+            this.exception = true;
+            console.error(error);
+        }
+    }
+
+    /* 修改一次站点颜色 */
+    modifyStopColorOnce(missions: Function[]) {
+        missions.forEach((call) => call(this.api));
+    }
+
+    /* 逆转站点 */
+    reverseGradientStops(missions: Function[]) {
+        try {
+            missions.forEach((call) => call(this.api));
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
@@ -125,10 +175,10 @@ export class FillsAsyncApi extends AsyncApiCaller {
         try {
             for (const fill of fills) {
                 const gradientCopy = importGradient(exportGradient(fill.gradient!));
-                const {from, to} = gradientCopy;
+                const { from, to } = gradientCopy;
                 const gradientType = gradientCopy.gradientType;
                 if (gradientType === types.GradientType.Linear) {
-                    const midpoint = {x: (to.x + from.x) / 2, y: (to.y + from.y) / 2};
+                    const midpoint = { x: (to.x + from.x) / 2, y: (to.y + from.y) / 2 };
                     const m = new Matrix();
                     m.trans(-midpoint.x, -midpoint.y);
                     m.rotate(Math.PI / 2);
@@ -151,14 +201,9 @@ export class FillsAsyncApi extends AsyncApiCaller {
     }
 
     /* 修改图片的填充方式 */
-    modifyObjectFit(fills: Fill[], type: ImageScaleMode) {
+    modifyObjectFit(missions: Function[]) {
         try {
-            for (const fill of fills) {
-                this.api.setFillScaleMode(fill, type);
-                if (type === types.ImageScaleMode.Tile) {
-                    if (!fill.scale) this.api.setFillImageScale(fill, 0.5);
-                }
-            }
+            missions.forEach((call) => call(this.api));
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
@@ -166,9 +211,9 @@ export class FillsAsyncApi extends AsyncApiCaller {
     }
 
     /* 修改平铺状态下，图片的原始比例 */
-    modifyTileScale(fills: Fill[], scale: number) {
+    modifyTileScale(missions: Function[]) {
         try {
-            for (const fill of fills) this.api.setFillImageScale(fill, scale);
+            missions.forEach((call) => call(this.api));
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
@@ -176,9 +221,9 @@ export class FillsAsyncApi extends AsyncApiCaller {
     }
 
     /* 旋转图片 */
-    rotateImg(fills: Fill[], rotate: number) {
+    rotateImg(mission: Function[]) {
         try {
-            fills.forEach(fill => this.api.setFillImageRotate(fill, rotate));
+            mission.forEach((call) => call(this.api));
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
@@ -186,13 +231,9 @@ export class FillsAsyncApi extends AsyncApiCaller {
     }
 
     /* 修改图片的引用 */
-    modifyFillImageRef(fills: Fill[], ref: string, media: { buff: Uint8Array, base64: string }, width: number, height: number) {
+    modifyFillImageRef(missions: Function[]) {
         try {
-            for (const fill of fills) {
-                this.api.setFillImageRef(this.__document, fill, ref, media);
-                this.api.setFillImageOriginWidth(fill, width);
-                this.api.setFillImageOriginHeight(fill, height);
-            }
+            missions.forEach((call) => call(this.api));
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
