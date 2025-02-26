@@ -350,8 +350,7 @@ export class Transporter extends AsyncApiCaller {
                 const shape = adapt2Shape(view);
                 const oIndex = oParent.indexOfChild(shape);
                 api.shapeMove(page, oParent, oIndex, envData, index);
-                api.shapeModifyX(page, shape, x);
-                api.shapeModifyY(page, shape, y);
+                api.shapeModifyXY(page, shape, x, y);
             }
         } catch (e) {
             this.exception = true;

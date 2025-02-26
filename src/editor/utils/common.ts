@@ -177,8 +177,7 @@ export function adapt_for_artboard(api: Api, page: Page, artboard: ArtboardView)
     function re_children_layout() {
         children.forEach(c => {
             const d = adapt2Shape(c);
-            api.shapeModifyX(page, d, c.transform.translateX - box.x);
-            api.shapeModifyY(page, d, c.transform.translateY - box.y);
+            api.shapeModifyXY(page, d, c.transform.translateX - box.x, c.transform.translateY - box.y);
         });
     }
 }

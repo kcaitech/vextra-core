@@ -262,8 +262,7 @@ export class CreatorApiCaller extends AsyncApiCaller {
                 const target = m.computeCoord(r.x, r.y);
                 const cur = c.data.matrix2Parent().computeCoord(0, 0);
                 const transform = c.data.transform;
-                api.shapeModifyX(page, c.data, transform.translateX + target.x - cur.x);
-                api.shapeModifyY(page, c.data, transform.translateY + target.y - cur.y);
+                api.shapeModifyXY(page, c.data, transform.translateX + target.x - cur.x, transform.translateY + target.y - cur.y);
             }
 
             function deleteEmptyGroupShape(document: Document, page: Page, shape: Shape, api: Api): boolean {

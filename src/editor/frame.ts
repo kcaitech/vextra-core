@@ -219,8 +219,7 @@ export function translateTo(api: Api, page: Page, shape: Shape, x: number, y: nu
     const cur = m0.computeCoord(0, 0);
     const dx = target.x - cur.x;
     const dy = target.y - cur.y;
-    api.shapeModifyX(page, shape, shape.transform.translateX + dx)
-    api.shapeModifyY(page, shape, shape.transform.translateY + dy)
+    api.shapeModifyXY(page, shape, shape.transform.translateX + dx, shape.transform.translateY + dy)
 }
 
 export function translate(api: Api, page: Page, shape: Shape, dx: number, dy: number, round: boolean = true) {
@@ -333,8 +332,7 @@ export function adjustRB2(api: Api, document: Document, page: Page, shape: Shape
 
     dx = target.x - xy1.x;
     dy = target.y - xy1.y;
-    api.shapeModifyX(page, shape, shape.transform.translateX + dx)
-    api.shapeModifyY(page, shape, shape.transform.translateY + dy)
+    api.shapeModifyXY(page, shape, shape.transform.translateX + dx, shape.transform.translateY + dy)
     setSize(page, shape, w, h, api);
     afterShapeSizeChange(api, document, page, shape);
 }
