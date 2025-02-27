@@ -140,7 +140,7 @@ export class FillsAsyncApi extends AsyncApiCaller {
             this.updateView();
         } catch (error) {
             console.error(error);
-            this.__repo.rollback();
+            this.exception = true;
         }
     }
 
@@ -202,6 +202,16 @@ export class FillsAsyncApi extends AsyncApiCaller {
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
+        }
+    }
+
+    modifyTileScale2(missions: Function[]) {
+        try {
+            missions.forEach((call) => call(this.api));
+            this.updateView();
+        } catch (error) {
+            console.error(error);
+            this.exception = true;
         }
     }
 
