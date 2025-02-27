@@ -140,12 +140,13 @@ export class TextAsyncApi extends AsyncApiCaller {
         }
     }
 
-    modifySolidColor2(missions: Function[]) {
+    modifySolidColor(missions: Function[]) {
         try {
             missions.forEach((call) => call(this.api));
-        } catch (error) {
+            this.updateView();
+        } catch (err) {
             this.exception = true;
-            console.error(error);
+            console.error(err);
         }
     }
 
