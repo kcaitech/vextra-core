@@ -1,3 +1,4 @@
+import { float_accuracy } from "./consts";
 
 interface Rect {
     x: number,
@@ -7,10 +8,11 @@ interface Rect {
 }
 
 function _is_intersect(frame0: Rect, frame1: Rect) {
-    return !(frame0.x > frame1.x + frame1.width ||
-        frame0.x + frame0.width < frame1.x ||
-        frame0.y > frame1.y + frame1.height ||
-        frame0.y + frame0.height < frame1.y);
+    // 考虑float误差
+    return !(frame0.x - (frame1.x + frame1.width) > float_accuracy ||
+        frame0.x + frame0.width - frame1.x < -float_accuracy ||
+        frame0.y - (frame1.y + frame1.height) > float_accuracy ||
+        frame0.y + frame0.height - frame1.y < -float_accuracy);
 }
 function is_intersect(arr: Rect[], frame: Rect) {
     for (let i = 0; i < arr.length; i++) {

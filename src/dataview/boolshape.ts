@@ -95,7 +95,9 @@ export function render2path(shape: ShapeView, defaultOp = BoolOp.None): Path {
 
     if (child0.isNoTransform()) {
         path0.translate(child0.transform.translateX, child0.transform.translateY);
-        frame0 = new ShapeFrame(child0.transform.translateX, child0.transform.translateY, child0.frame.width, child0.frame.height);
+        // frame0 = new ShapeFrame(child0.transform.translateX, child0.transform.translateY, child0.frame.width, child0.frame.height);
+        // 上面个计算方式对于group类shape不对
+        frame0 = child0._p_frame
     } else {
         path0.transform(child0.matrix2Parent());
         const bounds = path0.bbox();
@@ -116,10 +118,11 @@ export function render2path(shape: ShapeView, defaultOp = BoolOp.None): Path {
         if (!path1) continue;
         if (child1.isNoTransform()) {
             path1.translate(child1.transform.translateX, child1.transform.translateY);
-            frame1 = new ShapeFrame(child1.transform.translateX, child1.transform.translateY, child1.frame.width, child1.frame.height);
+            // frame1 = new ShapeFrame(child1.transform.translateX, child1.transform.translateY, child1.frame.width, child1.frame.height);
+            frame1 = child1._p_frame
         } else {
             path1.transform(child1.matrix2Parent());
-            const bounds = path0.bbox();
+            const bounds = path1.bbox();
             frame1 = new ShapeFrame(bounds.x, bounds.y, bounds.w, bounds.h);
         }
         const pathop = child1.m_data.boolOp ?? defaultOp;
