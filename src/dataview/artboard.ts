@@ -17,7 +17,7 @@ import {
     ShapeSize,
     RadiusMask,
     OverrideType,
-    VariableType,parsePath, CurvePoint, CurveMode
+    VariableType
 } from "../data";
 import { ShapeView, updateFrame } from "./shape";
 import { PageView } from "./page";

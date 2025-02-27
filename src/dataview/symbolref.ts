@@ -2,11 +2,7 @@ import {
     AutoLayout, Border, ContextSettings, CornerRadius, Fill, MarkerType, OverrideType, PrototypeInterAction, Shadow,
     Shape, ShapeFrame, ShapeSize, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType, ShapeType,
     BasicArray, getPathOfRadius, Blur, BlurType,
-    BorderSideSetting,
-    SideType,
-    BorderPosition,
-    BorderStyle,
-    CornerType, FillMask, CurvePoint, CurveMode, parsePath,
+    FillMask,
     ShadowMask,
     BorderMask,
     RadiusMask, BlurMask

@@ -6,7 +6,7 @@ import {
     ShapeSize,
     RadiusMask,
     OverrideType,
-    VariableType, CurvePoint, CurveMode, parsePath
+    VariableType
 } from "../data";
 import { VarsContainer } from "./viewctx";
 import { DataView, RootView } from "./view"

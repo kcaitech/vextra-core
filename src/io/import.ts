@@ -9,7 +9,7 @@ import { BasicArray, BasicMap, IDataGuard } from "../data/basic";
 import { Document, DocumentMeta } from "../data/document";
 import * as storage from "./storage";
 import { base64Encode, base64ToDataUrl } from "../basic/utils";
-import { StyleMangerMember, SymbolShape } from "../data/classes";
+import { SymbolShape } from "../data/classes";
 import pako from "pako";
 import { StyleSheet } from "../data/style"
 interface IJSON {
