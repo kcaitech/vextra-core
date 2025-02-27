@@ -21,7 +21,6 @@ import { adapt2Shape, PageView, ShapeView } from "../../dataview";
 import { _ov, override_variable } from "../symbol";
 import { importFill } from "../../data/baseimport";
 
-/* 填充修改器 */
 export class BorderModifier extends Modifier {
     importFill = importFill;
     constructor(repo: CoopRepository) {
