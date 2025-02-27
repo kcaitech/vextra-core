@@ -279,7 +279,7 @@ export class DocEditor {
         return true;
     }
 
-    modifyStyleName(sheetid: string, maskid: string, name: string | undefined) {
+    modifyStyleName(sheetid: string, maskid: string, name: string) {
         const api = this.__repo.start('modifyStyleName');
         try {
             api.modifyStyleName(this.__document, sheetid, maskid, name)
