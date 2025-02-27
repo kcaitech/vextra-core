@@ -130,8 +130,7 @@ export class FillModifier extends Modifier {
     createFillsMask(document: Document, mask: FillMask, pageView: PageView, views?: ShapeView[]) {
         try {
             const api = this.getApi('createFillsMask');
-            const fills = new BasicArray(...mask.fills.map(i => importFill(i)));
-            mask.fills = fills;
+            mask.fills = new BasicArray(...mask.fills.map(i => importFill(i)));
             api.styleInsert(document, mask);
             if (views) {
                 const variables: Variable[] = [];
@@ -177,13 +176,12 @@ export class FillModifier extends Modifier {
     }
 
     /* 解绑图层上的填充遮罩 */
-    unbindShapesFillMask(pageView: PageView, views: ShapeView[]) {
+    unbindShapesFillMask(document: Document, pageView: PageView, views: ShapeView[]) {
         try {
             if (!views.length) return;
 
             const api = this.getApi('unbindShapesFillMask');
             const fillsCopy = views[0].getFills().map(i => importFill(i));
-
             // 处理遮罩
             const fillMaskVariables: Variable[] = [];
             const shapes4mask: Shape[] = [];
@@ -203,7 +201,11 @@ export class FillModifier extends Modifier {
             }
 
             fillsContainer.forEach(source => {
-                const __fillsCopy = fillsCopy.map(i => importFill(i));
+                const __fillsCopy = fillsCopy.map(i => {
+                    const fill = importFill(i);
+                    fill.setImageMgr(document.mediasMgr);
+                    return fill;
+                });
                 api.deleteFills(source, 0, source.length);
                 api.addFills(source, __fillsCopy);
             });
