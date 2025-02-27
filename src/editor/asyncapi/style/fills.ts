@@ -10,8 +10,6 @@ import {
 } from "../../../data";
 import { exportGradient } from "../../../data/baseexport";
 import { importFill, importStop } from "../../../data/baseimport";
-import * as types from "../../../data/typesdefine";
-import { Matrix } from "../../../basic/matrix";
 import { Api } from "../../../coop";
 import { PageView, ShapeView } from "../../../dataview";
 import { override_variable } from "../../symbol";
