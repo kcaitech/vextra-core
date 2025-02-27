@@ -14,7 +14,7 @@ import { ExportOptions, SymbolRefShape } from "../data/symbolref";
 import { uuid } from "../basic/uuid";
 import { Page } from "../data/page";
 import { Api } from "../coop/recordapi";
-import { newArtboard, newText2 } from "./creator";
+import { newArtboard } from "./creator";
 import {
     BlendMode,
     Border,
@@ -33,10 +33,10 @@ import {
     BlurType,
     Artboard, BorderSideSetting, SideType,
     string2Text,
-    BorderStyle, FillMask,
+    BorderStyle,
     AutoLayout
 } from "../data/classes";
-import { findOverride, findVar } from "../data/utils";
+import { findOverride } from "../data/utils";
 import { BasicArray } from "../data/basic";
 import {
     IImportContext,

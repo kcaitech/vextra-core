@@ -126,17 +126,6 @@ export class BorderPaintsAsyncApi extends AsyncApiCaller {
         }
     }
 
-    /* 修改图片填充的滤镜 */
-    modifyFillImageFilter(missions: Function[]): void {
-        try {
-            missions.forEach((call) => call(this.api));
-            this.updateView();
-        } catch (error) {
-            console.error(error);
-            this.__repo.rollback();
-        }
-    }
-
     /* 修改站点位置 */
     modifyStopPosition(missions: Function[]): void {
         try {
