@@ -2,14 +2,12 @@ import { AsyncApiCaller } from "./basic/asyncapi";
 import { CoopRepository } from "../../coop/cooprepo";
 import { Document } from "../../data/document";
 import { adapt2Shape, PageView, ShapeView, SymbolRefView } from "../../dataview";
-import { expand, translate } from "../frame";
 import { RadiusType } from "../../data/consts";
 import { OverrideType, ShapeType, SymbolRefShape } from "../../data/symbolref";
 import { _ov, shape4cornerRadius } from "../symbol";
 import {
     GroupShape,
     PathShape,
-    PathShape2,
     PolygonShape,
     Shape,
     StarShape,
@@ -22,9 +20,7 @@ import {
     calculateInnerAnglePosition,
     getPolygonPoints,
     getPolygonVertices,
-    update_frame_by_points
 } from "../utils/path";
-import { TableShape } from "../../data";
 import { Api } from "src/coop";
 
 export class PointModifyHandler extends AsyncApiCaller {

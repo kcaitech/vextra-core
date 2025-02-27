@@ -1,4 +1,4 @@
-import { Document, OvalShape, Page, Fill, Blur } from "../../data";
+import { Document, OvalShape, Fill, Blur, Variable } from "../../data";
 import { adapt2Shape, ArtboardView, PageView, ShapeView, SymbolRefView, SymbolView, TableCellView, TableView, TextShapeView } from "../../dataview";
 import { modifyPathByArc } from "../asyncapi";
 import { Api, CoopRepository } from "../../coop";
@@ -8,8 +8,8 @@ import { RadiusType } from "../../data/consts";
 import { _ov, override_variable, shape4Autolayout, shape4border, shape4contextSettings, shape4cornerRadius, shape4fill, shape4shadow } from "../symbol";
 import { update_frame_by_points } from "../utils/path";
 import { GroupShape, PathShape2, SymbolShape, TextShape } from "../../data/shape";
-import { BatchAction, BatchAction2, BatchAction5, PageEditor } from "../page";
-import { importBorder, importGradient, } from "../../data/baseimport";
+import { BatchAction, BatchAction5, PageEditor } from "../page";
+import { importGradient, } from "../../data/baseimport";
 import { exportGradient, } from "../../data/baseexport";
 import { TableEditor } from "../table";
 import { TidyUpAlgin, tidyUpLayout } from "../utils/auto_layout";
@@ -349,7 +349,6 @@ export class LinearApi {
     modifyGradientOpacity(actions: BatchAction5[]) {
         this.execute('modify-gradient-opacity', () => {
             const api = this.api!;
-            const page = this.page;
             for (let i = 0, l = actions.length; i < l; i++) {
                 const { target, index, type, value } = actions[i];
                 const grad_type = type === 'fills' ? target.getFills() : target.getBorders().strokePaints;
@@ -357,11 +356,17 @@ export class LinearApi {
                 const gradient_container = grad_type[index];
                 if (!gradient_container || !gradient_container.gradient || gradient_container.fillType !== FillType.Gradient) continue;
                 const gradient = gradient_container.gradient;
-                const new_gradient = importGradient(exportGradient(gradient));
+                const new_gradient = importGradient(gradient);
                 new_gradient.gradientOpacity = value;
-                const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
-                const shape = shape4fill(api, this._page, target);
-                // f(page, shape, index, new_gradient);
+                if (type === "fills") {
+                    const _tar = shape4fill(api, this._page, target);
+                    const fills = _tar instanceof Variable ? _tar.value : target.getFills();
+                    api.setFillGradient(fills[index], new_gradient);
+                } else {
+                    const _tar = shape4border(api, this._page, target);
+                    const fills = _tar instanceof Variable ? _tar.value.strokePaints : target.getBorders().strokePaints;
+                    api.setFillGradient(fills[index], new_gradient);
+                }
             }
         });
     }
@@ -619,9 +624,9 @@ export class LinearApi {
     modifyShadowColor(idx: number, color: Color, s: ShapeView) {
         this.execute('modify-shadow-color', () => {
             const api = this.api!;
-            const page = this.page;
-            const shape = this.shape4shadow(api, s);
-            // api.setShadowColor(page, shape, idx, color);
+            const target = this.shape4shadow(api, s);
+            const shadow = target instanceof Variable ? target.value[idx] : s.getShadows()[idx];
+            api.setShadowColor(shadow, color);
         })
     }
 
@@ -631,7 +636,9 @@ export class LinearApi {
             const page = this.page;
             for (let i = 0; i < actions.length; i++) {
                 const { target, value, index } = actions[i];
-                // api.setShadowColor(page, adapt2Shape(target), index, value);
+                const _tar = this.shape4shadow(api, target);
+                const shadow = _tar instanceof Variable ? _tar.value[index] : target.getShadows()[index];
+                api.setShadowColor(shadow, value);
             }
         })
     }

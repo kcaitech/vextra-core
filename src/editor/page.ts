@@ -4,9 +4,7 @@ import {
     BoolOp,
     BoolShape,
     Border,
-    BorderMask,
     BorderMaskType,
-    BorderPosition,
     Color,
     ContactShape,
     Document,
@@ -14,8 +12,6 @@ import {
     ExportFormatNameingScheme,
     Fill,
     FillType,
-    Gradient,
-    GradientType,
     GroupShape,
     makeShapeTransform1By2,
     makeShapeTransform2By1,
@@ -43,17 +39,17 @@ import {
     Transform,
     updateShapeTransform1By2,
     Variable,
-    VariableType, Blur, Basic, BlurType, ImageScaleMode
+    VariableType
 } from "../data";
 import { ShapeEditor } from "./shape";
 import * as types from "../data/typesdefine";
-import { newArrowShape, newArtboard, newAutoLayoutArtboard, newBoolShape, newGroupShape, newImageFillShape, newLineShape, newOvalShape, newPathShape, newRectShape, newSolidColorFill, newSymbolRefShape, newSymbolShape } from "./creator";
+import { newArtboard, newAutoLayoutArtboard, newBoolShape, newGroupShape, newImageFillShape, newPathShape, newSolidColorFill, newSymbolRefShape, newSymbolShape } from "./creator";
 import { expand, translate, translateTo } from "./frame";
 import { uuid } from "../basic/uuid";
 import { TextShapeEditor } from "./textshape";
 import { set_childs_id, transform_data } from "../io/cilpboard";
 import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
-import { IImportContext, importArtboard, importAutoLayout, importBlur, importBorder, importContextSettings, importCornerRadius, importFill, importGradient, importMarkerType, importOverlayBackgroundAppearance, importOverlayPosition, importPrototypeInterAction, importPrototypeStartingPoint, importShadow, importStop, importStyle, importSymbolShape, importText, importTransform } from "../data/baseimport";
+import { IImportContext, importArtboard, importAutoLayout, importBlur, importBorder, importCornerRadius, importFill, importGradient, importMarkerType, importOverlayBackgroundAppearance, importOverlayPosition, importPrototypeInterAction, importPrototypeStartingPoint, importShadow, importStop, importStyle, importSymbolShape, importText, importTransform } from "../data/baseimport";
 import { gPal } from "../basic/pal";
 import { TableEditor } from "./table";
 import { exportGradient, exportStop, exportSymbolShape } from "../data/baseexport";
@@ -61,7 +57,7 @@ import { after_remove, clear_binds_effect, find_state_space, fixTextShapeFrameBy
 import { v4 } from "uuid";
 import { is_exist_invalid_shape2, is_part_of_symbol, is_part_of_symbolref, is_state, modify_variable_with_api, shape4border, shape4cornerRadius, shape4fill, shape4shadow, shape4contextSettings, shape4blur, RefUnbind, _ov } from "./symbol";
 import { is_circular_ref2 } from "./utils/ref_check";
-import { AutoLayout, BorderSideSetting, BorderStyle, ExportFormat, OverlayBackgroundAppearance, OverlayBackgroundInteraction, OverlayPositionType, Point2D, PrototypeActions, PrototypeConnectionType, PrototypeEasingBezier, PrototypeEasingType, PrototypeEvent, PrototypeEvents, PrototypeInterAction, PrototypeNavigationType, PrototypeStartingPoint, PrototypeTransitionType, ScrollBehavior, ScrollDirection, Shadow } from "../data/baseclasses";
+import { AutoLayout, BorderSideSetting, BorderStyle, ExportFormat, OverlayBackgroundAppearance, OverlayBackgroundInteraction, OverlayPositionType, PrototypeActions, PrototypeConnectionType, PrototypeEasingBezier, PrototypeEasingType, PrototypeEvent, PrototypeEvents, PrototypeInterAction, PrototypeNavigationType, PrototypeStartingPoint, PrototypeTransitionType, ScrollBehavior, ScrollDirection, Shadow } from "../data/baseclasses";
 import { border2path, calculateInnerAnglePosition, getPolygonPoints, getPolygonVertices, update_frame_by_points } from "./utils/path";
 import { modify_shapes_height, modify_shapes_width } from "./utils/common";
 import { CoopRepository, ISave4Restore, LocalCmd, SelectionState } from "../coop";

@@ -7,8 +7,6 @@ import {
     ExportFormatNameingScheme,
     ExportOptions,
     OverrideType,
-    PathSegment_points,
-    ShadowPosition,
     StackAlign,
     StackMode,
     StackSizing,
@@ -19,11 +17,10 @@ import { importCurvePoint } from "../data/baseimport";
 import { v4 } from "uuid";
 import { uuid } from "../basic/uuid";
 import { after_remove, clear_binds_effect, find_layers_by_varid, get_symbol_by_layer, is_default_state } from "./utils/other";
-import { newText2 } from "./creator";
 import { _typing_modify, get_points_for_init, modify_points_xy, update_frame_by_points } from "./utils/path";
 import { adapt_for_artboard } from "./utils/common";
 import { ShapeView, SymbolRefView, SymbolView, adapt2Shape, findOverride, ArtboardView, findVar, GroupShapeView, PageView } from "../dataview";
-import { is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union, modify_variable, modify_variable_with_api, shape4Autolayout, shape4border, shape4contextSettings, shape4exportOptions, shape4fill, shape4shadow } from "./symbol";
+import { is_part_of_symbol, is_symbol_or_union, modify_variable, modify_variable_with_api, shape4Autolayout, shape4border, shape4contextSettings, shape4exportOptions, shape4fill, shape4shadow } from "./symbol";
 import { ISave4Restore, LocalCmd, SelectionState } from "../coop/localcmd";
 import { exportCurvePoint } from "../data/baseexport";
 import { layoutShapesOrder2, layoutSpacing } from "./utils/auto_layout2";
