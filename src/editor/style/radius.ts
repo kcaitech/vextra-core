@@ -13,7 +13,6 @@ import { adapt2Shape, PageView, ShapeView } from "../../dataview";
 
 import { _ov } from "../symbol";
 
-/* 填充修改器 */
 export class RadiusModifier extends Modifier {
 
     getMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
