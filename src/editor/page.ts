@@ -3307,13 +3307,11 @@ export class PageEditor {
      */
     modifyStyleByEyeDropper(shapes: ShapeView[], color: Color) {
         try {
-            const api = this.__repo.start('setLinesLength');
+            const api = this.__repo.start('modifyStyleByEyeDropper');
             const page = this.page;
             for (let i = 0; i < shapes.length; i++) {
                 const shape = adapt2Shape(shapes[i]);
-                if (shape.isVirtualShape) {
-                    continue;
-                }
+                if (shape.isVirtualShape) continue;
                 const _color = new Color(color.alpha, color.red, color.green, color.blue);
                 if (shape.type === ShapeType.Text) {
                     const __textShape = shapes[i] as any as TextShapeLike;
@@ -3323,22 +3321,25 @@ export class PageEditor {
                 const style = shape.style;
                 if (style.fills.length) {
                     const s = shape4fill(api, this.view, shapes[i]);
-                    // api.setFillColor(style.fills.length - 1, _color);
+                    const fills = s instanceof Variable ? s.value : s.getFills();
+                    api.setFillColor(fills[fills.length - 1], _color);
                     continue;
                 }
                 if (style.borders && style.borders.strokePaints.length) {
                     const s = shape4border(api, this.view, shapes[i]);
-                    api.setBorderColor(page, s, style.borders.strokePaints.length - 1, _color);
+                    const fills = s instanceof Variable ? s.value.strokePaints : s.getFills();
+                    api.setFillColor(fills[fills.length - 1], _color);
                     continue;
                 }
                 const s = shape4fill(api, this.view, shapes[i]);
-                const fill = new Fill(new BasicArray(), uuid(), true, FillType.SolidColor, _color)
-                // api.addFillAt(page, s, fill, 0);
+                const fill = new Fill(new BasicArray(), uuid(), true, FillType.SolidColor, _color);
+                const fills = s instanceof Variable ? s.value : s.getFills();
+                api.addFillAt(fills, fill, 0);
             }
             this.__repo.commit();
         } catch (error) {
-            console.error('modifyStyleByEyeDropper:', error);
             this.__repo.rollback();
+            throw error;
         }
     }
 
