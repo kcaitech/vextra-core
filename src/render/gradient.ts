@@ -7,16 +7,15 @@ function renderStop(h: Function, d: Stop): any {
     const position = d.position;
     const color = d.color || defaultColor;
     const rgbColor = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";
-    const n = h("stop", {
+    return h("stop", {
         offset: "" + (position * 100) + "%",
         "stop-color": rgbColor,
         "stop-opacity": color.alpha
     });
-    return n;
 }
 
 export function render(h: Function, value: Gradient, frame: ShapeSize): { id: string, style: string | undefined, node: any } {
-    const id = "gradient" + objectId(value);
+    const id = "gradient" + objectId(value) + frame.height + '-' + frame.width;
     let style;
     let node: any;
     if (value.gradientType == GradientType.Linear) {
