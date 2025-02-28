@@ -1,26 +1,27 @@
 import {
-    GroupShape,
+    BlurMask,
+    BorderMask,
+    FillMask,
+    GroupShape, ShadowMask,
     Shape,
     ShapeFrame,
-    ShapeType,
-    SymbolRefShape,
-    SymbolShape,
+    ShapeType, StyleMangerMember,
     SymbolUnionShape,
     TextShape
 } from "../data";
 import {
-    exportArtboard,
-    exportBoolShape,
+    exportArtboard, exportBlurMask,
+    exportBoolShape, exportBorderMask,
     exportContactShape,
-    exportCutoutShape,
+    exportCutoutShape, exportFillMask,
     exportGradient,
     exportGroupShape,
     exportImageShape,
     exportLineShape,
     exportOvalShape,
     exportPathShape,
-    exportPathShape2, exportPolygonShape,
-    exportRectShape,
+    exportPathShape2, exportPolygonShape, exportRadiusMask,
+    exportRectShape, exportShadowMask,
     exportStarShape,
     exportSymbolRefShape,
     exportSymbolShape,
@@ -77,14 +78,18 @@ export function set_childs_id(shapes: Shape[], matched?: Set<string>) {
 }
 
 class ExfContext implements IExportContext {
+    symbols = new Set<string>();
+    medias = new Set<string>();
+    referenced = new Set<string>();
+    styles = new Set<string>();
+}
 
-    symbols = new Set<string>()
-    // artboards = new Set<string>()
-
-    medias = new Set<string>()
-    referenced = new Set<string>()
-    // allartboards = new Set<string>();
-    // allsymbols = new Set<string>();
+export function exportMask(mask: StyleMangerMember) {
+    if (mask instanceof FillMask) return exportFillMask(mask);
+    else if (mask instanceof BorderMask) return exportBorderMask(mask);
+    else if (mask instanceof BlurMask) return exportBlurMask(mask);
+    else if (mask instanceof ShadowMask) return exportShadowMask(mask);
+    else return exportRadiusMask(mask);
 }
 
 // 导出图形到剪切板
@@ -92,7 +97,14 @@ export function export_shape(shapes: Shape[]) {
     const ctx = new ExfContext();
     const result: Shape[] = []
     for (let i = 0; i < shapes.length; i++) {
-        const shape = shapes[i], type = shape.type;
+        const shape = shapes[i];
+        if (shape.radiusMask) ctx.styles.add(shape.radiusMask);
+        if (shape.style.fillsMask) ctx.styles.add(shape.style.fillsMask);
+        if (shape.style.bordersMask) ctx.styles.add(shape.style.bordersMask);
+        if (shape.style.shadowsMask) ctx.styles.add(shape.style.shadowsMask);
+        if (shape.style.blursMask) ctx.styles.add(shape.style.blursMask);
+
+        const type = shape.type;
         let content: any;
         if (type === ShapeType.Rectangle) {
             content = exportRectShape(shape as unknown as types.RectShape, ctx);
