@@ -2,19 +2,26 @@ import { Page } from "../data/page";
 import { Document } from "../data/document";
 import { FillType, GradientType, ImageScaleMode, PageListItem } from "../data/typesdefine";
 import { newPage } from "./creator";
-import { v4 as uuid } from "uuid";
+import { v4, v4 as uuid } from "uuid";
 import { exportGradient, exportPage, exportStop } from "../data/baseexport";
-import { IImportContext, importGradient, importPage, importStop } from "../data/baseimport";
+import {
+    IImportContext,
+    importBlur,
+    importBorderMaskType, importFill,
+    importGradient,
+    importPage, importShadow,
+    importStop
+} from "../data/baseimport";
 import { newDocument } from "./creator";
 import { CoopRepository } from "../coop/cooprepo";
 import { Repository } from "../data/transact";
 import * as types from "../data/typesdefine";
 import { FMT_VER_latest } from "../data/fmtver";
 import { ShadowPosition } from "../data/baseclasses"
-import { FillMask, ShadowMask, StyleMangerMember, BlurMask, BorderMask,RadiusMask } from "../data/style";
+import { FillMask, ShadowMask, StyleMangerMember, BlurMask, BorderMask, RadiusMask, Blur } from "../data/style";
 import { adapt2Shape, PageView, ShapeView } from "../dataview";
 import { Color, Fill, Shadow, BlurType, BorderPosition,BorderSideSetting } from "../data/classes";
-import { BasicArray, Stop, Gradient, Point2D } from "../data";
+import { BasicArray, Stop, Gradient, Point2D, ResourceMgr } from "../data";
 import { Matrix } from "../basic/matrix";
 
 export function createDocument(documentName: string, repo: Repository): Document {
@@ -266,6 +273,46 @@ export class DocEditor {
         return true;
     }
 
+    insertStyles(masks: StyleMangerMember[]) {
+        try {
+            const api = this.__repo.start('insertStyleLib');
+            const styles = getStylesFromMasks(masks, this.__document.stylesMgr, this.__document.id);
+            styles.forEach(style => api.styleInsert(this.__document, style));
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+            throw error;
+        }
+
+        function getStylesFromMasks(masks: StyleMangerMember[], manger: ResourceMgr<StyleMangerMember>, sheetId: string) {
+            const styles: StyleMangerMember[] = [];
+            for (const mask of masks) {
+                if (manger.has(mask.id)) continue;
+                let m: StyleMangerMember;
+                if (mask.typeId === 'fill-mask-living') {
+                    const fills = new BasicArray<Fill>(...(mask as FillMask).fills.map(i => importFill(i)));
+                    m = new FillMask([0] as BasicArray<number>, sheetId, mask.id, mask.name, mask.description, fills, mask.disabled);
+                } else if (mask.typeId === 'shadow-mask-living') {
+                    const shadows = new BasicArray<Shadow>(...(mask as ShadowMask).shadows.map(i => importShadow(i)));
+                    m = new ShadowMask([0] as BasicArray<number>, sheetId, mask.id, mask.name, mask.description, shadows, mask.disabled)
+                } else if (mask.typeId === 'blur-mask-living') {
+                    const __mask = mask as BlurMask;
+                    const frank = new Blur(new BasicArray(), true, new Point2D(0, 0), 10, BlurType.Gaussian);
+                    const blur = __mask.blur ? importBlur(__mask.blur) : frank;
+                    m = new BlurMask([0] as BasicArray<number>, sheetId, mask.id, mask.name, mask.description, blur, mask.disabled);
+                } else if (mask.typeId === 'border-mask-living') {
+                    const __mask = mask as BorderMask;
+                    const border = importBorderMaskType(__mask.border);
+                    m = new BorderMask([0] as BasicArray<number>, sheetId, mask.id, mask.name, mask.description, border, mask.disabled);
+                } else {
+                    const __mask = mask as RadiusMask;
+                    m = new RadiusMask([0] as BasicArray<number>, sheetId, mask.id, mask.name, mask.description, new BasicArray<number>(...__mask.radius), mask.disabled)
+                }
+                styles.push(m);
+            }
+            return styles;
+        }
+    }
 
     modifyRadiusMaskRadiusSetting(sheetid: string, maskid: string, value: number[]) {
         const api = this.__repo.start('modifyRadiusMaskRadiusSetting');
