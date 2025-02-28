@@ -107,7 +107,11 @@ export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeSize, scaleX
         transform.scale(scaleX, scaleY);
         const __decompose_scale = transform.clearScaleSize();
         const size = shape.size;
-        return { transform, targetWidth: size.width * __decompose_scale.x, targetHeight: size.height * __decompose_scale.y };
+        return {
+            transform,
+            targetWidth: size.width * __decompose_scale.x,
+            targetHeight: size.height * __decompose_scale.y
+        };
     } else {
         const __cur_env = {
             width: parentFrame.width,
@@ -125,7 +129,10 @@ export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeSize, scaleX
     }
 }
 
-export function fixConstrainFrame2(shape: Shape, scale: { x: number, y: number }, currentEnvSize: ShapeSize, originEnvSize: ShapeSize) {
+export function fixConstrainFrame2(shape: Shape, scale: {
+    x: number,
+    y: number
+}, currentEnvSize: ShapeSize, originEnvSize: ShapeSize) {
     const resizingConstraint = shape.resizingConstraint ?? 0;
     const size = shape.size;
 
@@ -510,11 +517,9 @@ export class ShapeView extends DataView {
         if (args.includes('variables')) {
             this.m_fills = undefined;
             this.m_borders = undefined;
-        }
-        else if (args.includes('fills')) {
+        } else if (args.includes('fills')) {
             this.m_fills = undefined;
-        }
-        else if (args.includes('borders')) {
+        } else if (args.includes('borders')) {
             this.m_borders = undefined;
         } else if (args.includes('fillsMask')) {
             this.m_fills = undefined;
@@ -677,6 +682,7 @@ export class ShapeView extends DataView {
     protected unwatchBorderFillMask() {
         this.m_unbind_border_fill?.();
     }
+
     getBorders(): Border {
         if (this.m_borders) return this.m_borders;
         const v = this._findOV(OverrideType.Borders, VariableType.Borders);
@@ -698,7 +704,7 @@ export class ShapeView extends DataView {
         } else {
             this.unwatchBorderFillMask();
         }
-        return border;
+        return this.m_borders = border;
     }
 
     get bordersMask(): string | undefined {
@@ -776,12 +782,12 @@ export class ShapeView extends DataView {
     private m_unbind_blur: undefined | (() => void) = undefined;
     private onBlurMaskChange = this._onBlurMaskChange.bind(this);
 
-     watchBlurMask(mask: BlurMask) {
+    watchBlurMask(mask: BlurMask) {
         this.m_unbind_blur?.();
         this.m_unbind_blur = mask.watch(this.onBlurMaskChange);
     }
 
-     unwatchBlurMask() {
+    unwatchBlurMask() {
         this.m_unbind_blur?.();
     }
 
@@ -1587,6 +1593,7 @@ export class ShapeView extends DataView {
     get stackPositioning() {
         return this.m_data.stackPositioning;
     }
+
     get uniformScale(): number | undefined {
         return undefined;
     }
