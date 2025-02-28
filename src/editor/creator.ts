@@ -697,7 +697,6 @@ export function newSymbolShape(name: string, frame: ShapeFrame, styleMgr: Resour
         new BasicArray(),
         size,
         new BasicMap(),
-        // createNormalPoints()
     );
     if (style) compo.style = style;
     addCommonAttr(compo);

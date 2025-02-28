@@ -526,8 +526,10 @@ export class PageEditor {
                 && ((shape0 instanceof GroupShape && !(shape0 instanceof BoolShape)) || shape0 instanceof Artboard);
 
             const style = replace ? importStyle((shape0.style)) : undefined;
+            style?.setStylesMgr(document.stylesMgr);
+            const __name = replace ? shape0.name : (name ?? shape0.name);
 
-            const symbolShape = newSymbolShape(replace ? shape0.name : (name ?? shape0.name), frame, document.stylesMgr, style);
+            const symbolShape = newSymbolShape(__name, frame, document.stylesMgr, style);
 
             if (replace && shape0 instanceof Artboard) {
                 if (shape0.cornerRadius) symbolShape.cornerRadius = importCornerRadius(shape0.cornerRadius);
@@ -581,8 +583,6 @@ export class PageEditor {
                     api.shapeModifyResizingConstraint(page, __shape, new_rc);
                 }
             }
-
-            if (!sym) throw new Error('failed');
 
             const result = sym;
             document.symbolsMgr.add(result.id, result);
