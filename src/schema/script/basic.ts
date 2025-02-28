@@ -1,11 +1,3 @@
-
-// const path = require("path")
-// const fs = require("fs")
-import path from 'path';
-import fs from 'fs';
-
-// type PropType = 'node' | 'string' | 'boolean' | 'number' | 'oneOf' | 'map'
-
 export type BaseProp = {
     type: 'node',
     val: string
@@ -46,70 +38,60 @@ type NodeValue = {
 }
 
 export class Node {
-    inner: boolean = false;
-    parent?: Node;
+    root: Map<string, Node>; // 所有的node所在的map
+
+    parent?: Node; // 非用户定义的类型（程序内部生成）才有parent?
+    get inner() {
+        return this.parent !== undefined
+    }
+    // 继承，allOf
     extend?: string;
+    // 引用了其它的schema
     depends: Set<string> = new Set();
+    // 一般对应文件名的帕斯卡命名法，唯一不重复
     name: string;
     description?: string;
+    // 文件名 rename to typeId?
     schemaId?: string;
-
     value: NodeValue;
+
     noNameChildCount: number = 0; // 给没有属性名的子node命名
 
-    gented: {
-        tys: boolean,
-        cls: boolean,
-        exp: boolean,
-        imp: boolean,
-    } = {
-            tys: false,
-            cls: false,
-            exp: false,
-            imp: false
-        };
-
-    constructor(name: string, value: NodeValue, parent?: Node) {
+    constructor(root: Map<string, Node>, name: string, value: NodeValue)
+    constructor(parent: Node, name: string, value: NodeValue)
+    constructor(a1: Map<string, Node> | Node, name: string, value: NodeValue) {
+        this.root = a1 instanceof Map ? a1 : a1.root
         this.name = name;
         this.value = value;
-        this.parent = parent;
-        this.inner = parent !== undefined;
+        this.parent = a1 instanceof Map ? undefined : a1
     }
 }
 
-export const allNodes = new Map<string, Node>();
-const schemaext = '.json'
-export function allDepsIsGen(n: Node, gentype: 'tys' | 'cls' | 'exp' | 'imp') {
-    for (let d of n.depends) {
-        const n = allNodes.get(d);
+export function allDepsIsGen(node: Node, gented: Set<string>) {
+    for (let d of node.depends) {
+        const n = node.root.get(d);
         if (!n) throw new Error('depends not exist: ' + d);
-        if (!n.gented[gentype]) return false;
+        if (!gented.has(n.name)) return false
     }
     return true;
 }
 
-export function fmtTypeName(name: string) {
-    let ret = ''
-    for (let i = 0, len = name.length; i < len; i++) {
-        if (i === 0) {
-            ret += name[0].toUpperCase()
-        } else if (name[i] == '-' || name[i] == '_') {
-            i++
-            let c = name[i]
-            while (i < len && (c == '-' || c == '_' || (c >= '0' && c <= '9'))) {
-                if ((c >= '0' && c <= '9')) ret += c
-                i++
-                c = name[i]
-            }
-            if (i < len) ret += name[i].toUpperCase()
-        } else {
-            ret += name[i]
-        }
-    }
-    return ret
+// 将文件名转换为帕斯卡命名法的类名
+export function toPascalCase(str: string): string {
+    return str
+        // 将下划线 _ 和短横线 - 统一替换为空格，方便后续处理
+        .replace(/[_-]/g, ' ')
+        // 将空格后的字母或数字转为大写
+        .replace(/\s+([a-zA-Z0-9])/g, (_, char) => char.toUpperCase())
+        // 将数字后的字母转为大写（例如 2d -> 2D）
+        .replace(/([0-9])([a-z])/g, (_, num, letter) => num + letter.toUpperCase())
+        // 将首字母转为大写
+        .replace(/^[a-z]/, (firstChar) => firstChar.toUpperCase())
+        // 移除所有空格
+        .replace(/\s+/g, '');
 }
 
-function collectDepends(val: any, set: Set<string>) {
+function collectDepends(val: any, set: Set<string>, schemaext: string) {
     if (typeof val != 'object') return;
     const valkeys = Object.keys(val)
     for (let i = 0, len = valkeys.length; i < len; i++) {
@@ -117,13 +99,13 @@ function collectDepends(val: any, set: Set<string>) {
         let v = val[k]
         if (k == "$ref") {
             if (v.endsWith(schemaext)) {
-                const filename = v.substring(0, v.length - schemaext.length)
-                const name = fmtTypeName(extractFileName(filename));
+                const filename = getFileName(v)
+                const name = toPascalCase(filename);
                 set.add(name);
             }
         }
         else if (typeof v == 'object') {
-            collectDepends(v, set);
+            collectDepends(v, set, schemaext);
         }
     }
 }
@@ -143,7 +125,7 @@ function transSchemaType(type: string): 'node' | 'string' | 'boolean' | 'number'
     throw new Error('trans schema type fail: ' + type);
 }
 
-function initValue(schema: any): NodeValue {
+function parseNodeValue(schema: any): NodeValue {
     if (schema.enum) {
         if (!Array.isArray(schema.enum)) throw new Error('wrong enum: ' + schema.enum)
         return {
@@ -194,7 +176,8 @@ function initValue(schema: any): NodeValue {
     throw new Error('unknow schema type: ' + schema.type);
 }
 
-function extractBaseProp(schema: any, name: string | undefined, n: Node): BaseProp {
+// 转换schema的基础类型为ts类型
+function extractBaseProp(schema: any, name: string | undefined, parent: Node): BaseProp {
     if (schema.type) switch (schema.type) {
         case 'undefined': return {
             type: 'undefined'
@@ -214,13 +197,13 @@ function extractBaseProp(schema: any, name: string | undefined, n: Node): BasePr
             }
         case 'array':
             {
-                name = name ? name : ('' + n.noNameChildCount++);
-                const subnode = new Node(n.name + '_' + name, initValue(schema), n);
-                if (allNodes.has(subnode.name)) throw new Error('node name duplicate: ' + subnode.name);
+                name = name ? name : ('' + parent.noNameChildCount++);
+                const subnode = new Node(parent, parent.name + '_' + name, parseNodeValue(schema));
+                if (parent.root.has(subnode.name)) throw new Error('node name duplicate: ' + subnode.name);
                 if (subnode.value.type !== 'array') throw new Error("subnode type error");
                 extractArrayValue(schema.items, subnode.value.item, subnode);
-                allNodes.set(subnode.name, subnode);
-                n.depends.add(subnode.name);
+                parent.root.set(subnode.name, subnode);
+                parent.depends.add(subnode.name);
                 return {
                     type: 'node',
                     val: subnode.name
@@ -241,18 +224,18 @@ function extractBaseProp(schema: any, name: string | undefined, n: Node): BasePr
                 return {
                     type: 'map',
                     key,
-                    val: extractBaseProp(v, name, n)
+                    val: extractBaseProp(v, name, parent)
                 }
             }
         case 'object':
             {
-                name = name ? name : ('' + n.noNameChildCount++);
-                const subnode = new Node(n.name + '_' + name, initValue(schema), n);
-                if (allNodes.has(subnode.name)) throw new Error('node name duplicate: ' + subnode.name);
+                name = name ? name : ('' + parent.noNameChildCount++);
+                const subnode = new Node(parent, parent.name + '_' + name, parseNodeValue(schema));
+                if (parent.root.has(subnode.name)) throw new Error('node name duplicate: ' + subnode.name);
                 if (subnode.value.type !== 'object') throw new Error("subnode type error");
                 extractObjectValue(schema.properties, schema.required || [], subnode.value.props, subnode);
-                allNodes.set(subnode.name, subnode);
-                n.depends.add(subnode.name);
+                parent.root.set(subnode.name, subnode);
+                parent.depends.add(subnode.name);
                 return {
                     type: 'node',
                     val: subnode.name
@@ -266,7 +249,7 @@ function extractBaseProp(schema: any, name: string | undefined, n: Node): BasePr
         if (!Array.isArray(oneOf)) throw new Error('oneOf must be array');
         const val: BaseProp[] = [];
         for (let i = 0; i < oneOf.length; ++i) {
-            val.push(extractBaseProp(oneOf[i], undefined, n))
+            val.push(extractBaseProp(oneOf[i], undefined, parent))
         }
         return {
             type: 'oneOf',
@@ -281,15 +264,15 @@ function extractBaseProp(schema: any, name: string | undefined, n: Node): BasePr
         // 'path to file'
         const ref = schema['$ref'];
         if (ref === '#') {
-            let p = n;
+            let p = parent;
             while (p.inner) p = p.parent!;
             return {
                 type: 'node',
                 val: p.name
             }
         }
-        const filename = ref.substring(0, ref.length - schemaext.length)
-        const name = fmtTypeName(extractFileName(filename));
+        const filename = getFileName(ref) //ref.substring(0, ref.length - schemaext.length)
+        const name = toPascalCase(filename);
         return {
             type: 'node',
             val: name
@@ -298,7 +281,7 @@ function extractBaseProp(schema: any, name: string | undefined, n: Node): BasePr
     throw new Error('unknow prop ' + schema);
 }
 
-function extractObjectValue(schema: any, required: string[], props: NamedProp[], n: Node) {
+function extractObjectValue(schema: any, required: string[], props: NamedProp[], parent: Node) {
     // schema <- properties
     // {key: {}}
 
@@ -306,7 +289,7 @@ function extractObjectValue(schema: any, required: string[], props: NamedProp[],
     for (let k of required) {
         const v = schema[k];
         if (!v) throw new Error('required not in properties: ' + k);
-        const p = extractBaseProp(v, k, n) as NamedProp;
+        const p = extractBaseProp(v, k, parent) as NamedProp;
         p.name = k;
         p.required = true;
         if (v.default !== undefined) p.default = v.default;
@@ -317,7 +300,7 @@ function extractObjectValue(schema: any, required: string[], props: NamedProp[],
     for (let k of keys) {
         if (required.indexOf(k) >= 0) continue;
         const v = schema[k];
-        const p = extractBaseProp(v, k, n) as NamedProp;
+        const p = extractBaseProp(v, k, parent) as NamedProp;
         p.name = k;
         if (v.default !== undefined) p.default = v.default;
         props.push(p);
@@ -335,8 +318,8 @@ function extractArrayValue(schema: any, item: ItemProp, n: Node) {
             while (p.inner) p = p.parent!;
             item.val = p.name;
         } else {
-            const filename = ref.substring(0, ref.length - schemaext.length)
-            const name = fmtTypeName(extractFileName(filename));
+            const filename = getFileName(ref) //ref.substring(0, ref.length - schemaext.length)
+            const name = toPascalCase(filename);
             item.val = name;
         }
     }
@@ -356,21 +339,17 @@ function extractArrayValue(schema: any, item: ItemProp, n: Node) {
     }
 }
 
-function extractFileName(ref: string): string {
-    // const m = ref.match(/^.+[\/\\]([^.]+)\..*$/)
-    // if (!m || m.length !== 2) {
-    //     throw new Error("wrong file path? " + ref)
-    // }
-    // return m[1]
-    const idx = ref.lastIndexOf('/');
-    if (idx < 0) return ref;
-    return ref.substring(idx + 1);
+function getFileName(path: string) {
+    // 使用正则表达式匹配文件名部分
+    const match = path.match(/([^\/]+)\./);
+    return match && match[1] || ''
 }
 
-export function loadSchemas(schemadir: string) {
+import path from 'path';
+import fs from 'fs';
+export function loadSchemas(schemadir: string, schemaext = '.json'): Map<string, Node> {
     const files = fs.readdirSync(schemadir)
-
-
+    const allNodes = new Map<string, Node>()
     for (let index = 0; index < files.length; index++) {
         const file = files[index]
         if (!file.endsWith(schemaext)) continue;
@@ -379,10 +358,11 @@ export function loadSchemas(schemadir: string) {
         const raw = fs.readFileSync(filepath, "utf8") as string;
 
         const schema = JSON.parse(raw)
-        const filename = extractFileName(file.substring(0, file.length - schemaext.length))
+        const filename = getFileName(file)
 
-        const name = fmtTypeName((filename));
-        const node = new Node(name, initValue(schema));
+        // console.log('filename:', filename, file)
+        const name = toPascalCase((filename));
+        const node = new Node(allNodes, name, parseNodeValue(schema));
         node.schemaId = filename;
 
         if (schema.description) node.description = schema.description;
@@ -399,16 +379,16 @@ export function loadSchemas(schemadir: string) {
             extractArrayValue(items, node.value.item, node);
         }
 
-        collectDepends(schema, node.depends);
+        collectDepends(schema, node.depends, schemaext);
 
         // extends
         if (schema && schema.allOf) {
-            if (schema.allOf.length > 1) throw new Error('not support many allOf')
+            if (schema.allOf.length > 1) throw new Error('not support multi allOf')
             if (schema.allOf.length > 0) {
                 const ref = schema.allOf[0]['$ref']
                 if (ref.endsWith(schemaext)) {
-                    const filename = ref.substring(0, ref.length - schemaext.length)
-                    const name = fmtTypeName(extractFileName(filename));
+                    const filename = getFileName(ref) // ref.substring(0, ref.length - schemaext.length)
+                    const name = toPascalCase(filename);
                     node.extend = name;
                 }
             }
@@ -416,4 +396,5 @@ export function loadSchemas(schemadir: string) {
 
         allNodes.set(name, node);
     }
+    return allNodes
 }
