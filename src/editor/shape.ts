@@ -1,4 +1,4 @@
-import { BoolShape, GroupShape, PathShape, PathShape2, RectShape, Shape, ShapeType, SymbolShape, SymbolUnionShape, TextShape, Variable, VariableType, Color, PathType, Document, SymbolRefShape, Text, Page, Border, BorderPosition, BorderStyle, Fill, MarkerType, Shadow, BoolOp, CurvePoint, ExportFormat, ContactShape, AutoLayout, PathSegment, BasicArray, string2Text } from "../data";
+import { BoolShape, GroupShape, PathShape, PathShape2, RectShape, Shape, ShapeType, SymbolShape, SymbolUnionShape, TextShape, Variable, VariableType, Color, PathType, Document, SymbolRefShape, Text, Page, Border, BorderPosition, BorderStyle, Fill, MarkerType, Shadow, BoolOp, CurvePoint, ExportFormat, ContactShape, AutoLayout, PathSegment, BasicArray, string2Text, Artboard, ShapeFrame } from "../data";
 import { expand, expandTo, translate, translateTo } from "./frame";
 import { CoopRepository } from "../coop/cooprepo";
 import {
@@ -24,6 +24,8 @@ import { is_part_of_symbol, is_symbol_or_union, modify_variable, modify_variable
 import { ISave4Restore, LocalCmd, SelectionState } from "../coop/localcmd";
 import { exportCurvePoint } from "../data/baseexport";
 import { layoutShapesOrder2, layoutSpacing } from "./utils/auto_layout2";
+import { group, ungroup } from "./group";
+import { newArtboard } from "./creator";
 
 export type PaddingDir = 'ver' | 'hor' | 'top' | 'right' | 'bottom' | 'left';
 
@@ -1298,9 +1300,24 @@ export class ShapeEditor {
     }
 
     addAutoLayout() {
-        const api = this.__repo.start("addAutoLayout");
+        let api: Api;
+        const parent = adapt2Shape(this.__shape) as GroupShape;
+        const id = parent.id;
+        let artboard: Artboard | undefined = undefined;
+        const p = parent.parent! as GroupShape;
+        if (parent.type === ShapeType.Group) {
+            artboard = newArtboard(parent.name, new ShapeFrame(0, 0, 100, 100));
+            api = this.__repo.start("addAutoLayout", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+                const state = {} as SelectionState;
+                if (!isUndo) state.shapes = [id];
+                else state.shapes = cmd.saveselection?.shapes || [];
+                selection.restore(state);
+            });
+            artboard.style = parent.style;
+        } else {
+            api = this.__repo.start("addAutoLayout");
+        }
         try {
-            const parent = adapt2Shape(this.__shape) as GroupShape;
             const shapes_rows = layoutShapesOrder2(this.__shape.childs, false);
             const rows = shapes_rows.flat();
             const { hor, ver } = layoutSpacing(shapes_rows);
@@ -1338,12 +1355,16 @@ export class ShapeEditor {
                 const s = adapt2Shape(rows[i]);
                 const currentIndex = parent.indexOfChild(s);
                 if (currentIndex === i) continue;
-                api.shapeMove(this.__page, parent, currentIndex, parent, i);
+                api!.shapeMove(this.__page, parent, currentIndex, parent, i);
             }
-
-            const _shape = shape4Autolayout(api, this.__shape, this._page);
-            api.shapeAutoLayout(this.__page, _shape, layoutInfo);
+            if (parent.type === ShapeType.Group) {
+                const saveidx = p.indexOfChild(parent);
+                const childs = ungroup(this.__document, this.__page, parent, api!);
+                artboard = group(this.__document, this.__page, childs.map(s => s), artboard!, p, saveidx, api!);
+            }
+            api!.shapeAutoLayout(this.__page, artboard || parent, layoutInfo);
             this.__repo.commit();
+            return artboard;
         } catch (e) {
             console.error(e);
             this.__repo.rollback();
