@@ -19,7 +19,7 @@ import {
 } from "../../data";
 import { adapt2Shape, PageView, ShapeView } from "../../dataview";
 import { _ov, override_variable } from "../symbol";
-import { importFill } from "../../data/baseimport";
+import { importBorder, importFill } from "../../data/baseimport";
 
 /* 填充修改器 */
 export class BorderModifier extends Modifier {
@@ -38,8 +38,7 @@ export class BorderModifier extends Modifier {
 
     getBorderVariable(api: Api, page: PageView, view: ShapeView) {
         return override_variable(page, VariableType.Borders, OverrideType.Borders, (_var) => {
-            const border = _var?.value ?? view.getBorders();
-            return border;
+            return importBorder(_var?.value ?? view.getBorders());
         }, api, view)!;
     }
 
@@ -133,7 +132,7 @@ export class BorderModifier extends Modifier {
             for (const view of views) {
                 const border = view.getBorders();
                 const linkedVariable = this.getBorderVariable(api, pageView, view);
-                const source = linkedVariable ? (linkedVariable.value as Border) : adapt2Shape(view).style.borders;
+                const source = linkedVariable ? linkedVariable.value as Border : view.data.style.borders;
                 if (view.bordersMask) {
                     const linkedBorderMaskVariable = this.getStrokeMaskVariable(api, pageView, view, undefined);
                     if (linkedBorderMaskVariable) {
@@ -146,7 +145,8 @@ export class BorderModifier extends Modifier {
                 const sideType = border.sideSetting.sideType;
                 switch (sideType) {
                     case SideType.Normal:
-                        api.setBorderSide(source, new BorderSideSetting(sideType, thickness, thickness, thickness, thickness));
+                        const sides = new BorderSideSetting(sideType, thickness, thickness, thickness, thickness);
+                        api.setBorderSide(source, sides);
                         break;
                     case SideType.Top:
                         api.setBorderThicknessTop(source, thickness);
@@ -161,7 +161,8 @@ export class BorderModifier extends Modifier {
                         api.setBorderThicknessLeft(source, thickness);
                         break
                     default:
-                        api.setBorderSide(source, new BorderSideSetting(SideType.Custom, thickness, thickness, thickness, thickness));
+                        const customSides = new BorderSideSetting(SideType.Custom, thickness, thickness, thickness, thickness);
+                        api.setBorderSide(source, customSides);
                         break;
                 }
             }
