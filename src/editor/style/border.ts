@@ -261,8 +261,7 @@ export class BorderModifier extends Modifier {
     createFillsMask(document: Document, mask: FillMask, pageView: PageView, views?: ShapeView[]) {
         try {
             const api = this.getApi('createFillsMask');
-            const fills = new BasicArray(...mask.fills.map(i => importFill(i)));
-            mask.fills = fills;
+            mask.fills = new BasicArray(...mask.fills.map(i => importFill(i)));
             api.styleInsert(document, mask);
             if (views) {
                 const variables: Variable[] = [];
