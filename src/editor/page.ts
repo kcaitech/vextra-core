@@ -2352,7 +2352,6 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const { border, side } = actions[i];
-                console.log('--side--', side, border);
                 api.setBorderSide(importBorder(border), side);
             }
             this.__repo.commit();
