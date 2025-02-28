@@ -173,7 +173,8 @@ export class LinearApi {
             const page = this.page;
             for (let i = 0; i < actions.length; i++) {
                 const action = actions[i];
-                api.shapeModifyX(page, adapt2Shape(action.target), action.x);
+                const shape = adapt2Shape(action.target)
+                api.shapeModifyXY(page, shape, action.x, shape.transform.translateY);
             }
         });
     }
@@ -190,7 +191,8 @@ export class LinearApi {
             const page = this.page;
             for (let i = 0; i < actions.length; i++) {
                 const action = actions[i];
-                api.shapeModifyY(page, adapt2Shape(action.target), action.y);
+                const shape = adapt2Shape(action.target)
+                api.shapeModifyXY(page, shape, shape.transform.translateX, action.y);
             }
         });
     }
@@ -209,8 +211,7 @@ export class LinearApi {
             for (const action of actions) {
                 const { target, dx, dy } = action;
                 if (target.isVirtualShape) continue;
-                api.shapeModifyX(page, adapt2Shape(target), target.transform.translateX + dx);
-                api.shapeModifyY(page, adapt2Shape(target), target.transform.translateY + dy);
+                api.shapeModifyXY(page, adapt2Shape(target), target.transform.translateX + dx, target.transform.translateY + dy);
             }
         });
     }

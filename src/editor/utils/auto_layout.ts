@@ -76,8 +76,7 @@ export const initAutoLayout = (page: Page, api: Api, container: Shape, shape_row
 
         const x = shape.transform.translateX + transx;
         const y = shape.transform.translateY + transy;
-        api.shapeModifyX(page, (shape), x);
-        api.shapeModifyY(page, (shape), y);
+        api.shapeModifyXY(page, (shape), x, y);
 
         max_row_width = Math.max(leftPadding + frame.width, max_row_width);
         max_row_height = Math.max(topPadding + frame.height, max_row_height);
@@ -201,8 +200,7 @@ export const tidyUpLayout = (page: Page, api: Api, shape_rows: ShapeView[][], ho
                 }
                 const x = shape.transform.translateX + transx;
                 const y = shape.transform.translateY + transy;
-                api.shapeModifyX(page, adapt2Shape(shape), x);
-                api.shapeModifyY(page, adapt2Shape(shape), y);
+                api.shapeModifyXY(page, adapt2Shape(shape), x, y);
 
                 // 更新下一个图形的 x 坐标
                 leftTrans += frame.width + horSpacing;
@@ -242,8 +240,7 @@ export const tidyUpLayout = (page: Page, api: Api, shape_rows: ShapeView[][], ho
 
                 const x = shape.transform.translateX + transx;
                 const y = shape.transform.translateY + transy;
-                api.shapeModifyX(page, adapt2Shape(shape), x);
-                api.shapeModifyY(page, adapt2Shape(shape), y);
+                api.shapeModifyXY(page, adapt2Shape(shape), x, y);
 
                 // 更新下一个图形的 y 坐标
                 topTrans += frame.height + verSpacing;
