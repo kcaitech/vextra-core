@@ -172,7 +172,7 @@ export class Controller {
     create(type: ShapeType, name: string, frame: ShapeFrame, attr?: TextAttr): Shape {
         switch (type) {
             case ShapeType.Artboard:
-                return newArtboard(name, frame);
+                // return newArtboard(name, frame);
             case ShapeType.Rectangle:
                 return newRectShape(name, frame, this.__document.stylesMgr);
             case ShapeType.Oval:

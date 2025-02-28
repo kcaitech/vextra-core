@@ -372,7 +372,7 @@ export class CreatorApiCaller extends AsyncApiCaller {
         } else if (type === ShapeType.Artboard) {
             const count = this.getCount(type);
 
-            const artboard = newArtboard(`${namePrefix} ${count}`, frame);
+            const artboard = newArtboard(`${namePrefix} ${count}`, frame, this.__document.stylesMgr);
             this.setTransform(artboard, transform2, frame);
 
             artboard.constrainerProportions = isFixedRatio;

@@ -158,7 +158,7 @@ export function newFlatStyle(styleMgr: ResourceMgr<StyleMangerMember>): Style {
     return style;
 }
 
-export function newArtboard(name: string, frame: ShapeFrame, fill?: Fill): Artboard {
+export function newArtboard(name: string, frame: ShapeFrame, styleMgr: ResourceMgr<StyleMangerMember>, fill?: Fill): Artboard {
     _checkFrame(frame);
     template_artboard.id = uuid();
     template_artboard.name = name;
@@ -170,7 +170,7 @@ export function newArtboard(name: string, frame: ShapeFrame, fill?: Fill): Artbo
     template_artboard.transform = trans;
 
     const artboard = importArtboard(template_artboard as types.Artboard);
-
+    artboard.style.setStylesMgr(styleMgr);
     if (fill) {
         artboard.style.fills.push(fill);
     }
