@@ -509,6 +509,7 @@ export class ShapeView extends DataView {
             || args.includes('cornerRadius')
             || args.includes('imageRef')
             || args.includes('radiusMask')
+            || args.includes('variables')
         ) {
             this.m_path = undefined;
             this.m_pathstr = undefined;
