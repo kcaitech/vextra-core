@@ -107,13 +107,6 @@ export class SymbolRefView extends ShapeView {
     private m_sym: SymbolShape | undefined;
     private m_union: SymbolShape | undefined;
 
-    getPath() {
-        if (this.m_path) return this.m_path;
-        this.m_path = getPathOfRadius(this.frame, this.cornerRadius, this.m_fixedRadius);
-        this.m_path.freeze();
-        return this.m_path;
-    }
-
     onDataChange(...args: any[]): void {
         super.onDataChange(...args);
         this.loadsym();
@@ -471,11 +464,12 @@ export class SymbolRefView extends ShapeView {
             _radius = [...mask.radius];
             this.watchRadiusMask(mask);
         } else {
+            const corner = this.cornerRadius;
             _radius = [
-                this.cornerRadius?.lt ?? 0,
-                this.cornerRadius?.rt ?? 0,
-                this.cornerRadius?.rb ?? 0,
-                this.cornerRadius?.lb ?? 0,
+                corner?.lt ?? 0,
+                corner?.rt ?? 0,
+                corner?.rb ?? 0,
+                corner?.lb ?? 0,
             ]
             this.unwatchRadiusMask();
         }
