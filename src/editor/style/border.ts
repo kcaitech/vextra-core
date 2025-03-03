@@ -37,7 +37,7 @@ export class BorderModifier extends Modifier {
 
     getBorderVariable(api: Api, page: PageView, view: ShapeView) {
         return override_variable(page, VariableType.Borders, OverrideType.Borders, (_var) => {
-            return importBorder(_var?.value ?? view.getBorders());
+            return importBorder(_var?.value ?? view.style.borders);
         }, api, view)!;
     }
 
@@ -112,6 +112,19 @@ export class BorderModifier extends Modifier {
             throw error;
         }
     }
+
+    // 设置单边类型
+    modifyBorderSideSetting(missions: Function[]) {
+        try {
+            const api = this.getApi('modifyBorderSideSetting');
+            missions.forEach(call => call(api));
+            this.commit();
+        } catch (error) {
+            this.rollback();
+            throw error;
+        }
+    }
+
     /* 修改mask边框 */
     setBorderMaskSide(actions: { border: Border, side: BorderSideSetting }[]) {
         try {
