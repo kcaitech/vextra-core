@@ -21,6 +21,5 @@ export { layoutTable } from './tablelayout'
 export { layoutText, TextLayout } from './text/textlayout'
 export { getNextChar } from './text/basic'
 export { importGradient } from './baseimport'
-export { exportGradient } from './baseexport'
 
 export * from './shape_transform_util'
