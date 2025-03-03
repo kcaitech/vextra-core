@@ -2348,11 +2348,11 @@ export class PageEditor {
     }
 
     setShapesBorderSide(actions: { border: Border, side: BorderSideSetting }[]) {
-        const api = this.__repo.start('setShapesBorderSide');
         try {
+            const api = this.__repo.start('setShapesBorderSide');
             for (let i = 0; i < actions.length; i++) {
                 const { border, side } = actions[i];
-                api.setBorderSide(importBorder(border), side);
+                api.setBorderSide(border, side);
             }
             this.__repo.commit();
         } catch (error) {

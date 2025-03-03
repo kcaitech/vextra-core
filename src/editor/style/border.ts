@@ -113,7 +113,7 @@ export class BorderModifier extends Modifier {
         }
     }
     /* 修改mask边框 */
-    setBorderMaskSide(actions: { border: BorderMaskType, side: BorderSideSetting }[]) {
+    setBorderMaskSide(actions: { border: Border, side: BorderSideSetting }[]) {
         try {
             const api = this.getApi('setBorderMaskSide');
             actions.forEach(action => api.setBorderSide(action.border, action.side));
