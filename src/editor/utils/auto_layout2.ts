@@ -502,7 +502,6 @@ function boundingBox(shape: ShapeView, includedBorder?: boolean): ShapeFrame {
                 maxrightborder = outer ? border.sideSetting.thicknessRight : border.sideSetting.thicknessRight / 2;
                 maxbottomborder = outer ? border.sideSetting.thicknessBottom : border.sideSetting.thicknessBottom / 2;
             }
-
         }
         frame.x -= maxleftborder;
         frame.y -= maxtopborder;
@@ -524,7 +523,10 @@ function boundingBox(shape: ShapeView, includedBorder?: boolean): ShapeFrame {
 }
 
 export const getShapeFrame = (shape: ShapeView) => {
-    if (shape.type !== ShapeType.Group) return shape.frame;
+    if (shape.type !== ShapeType.Group) {
+        const { x, y, height, width } = shape.frame;
+        return new ShapeFrame(x, y, width, height);
+    }
     const childframes = (shape as GroupShapeView).childs.map((c) => c.boundingBox());
     const reducer = (p: { minx: number, miny: number, maxx: number, maxy: number }, c: ShapeFrame, i: number) => {
         if (i === 0) {
