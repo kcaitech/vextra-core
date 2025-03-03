@@ -130,7 +130,11 @@ export class FillModifier extends Modifier {
     createFillsMask(document: Document, mask: FillMask, pageView: PageView, views?: ShapeView[]) {
         try {
             const api = this.getApi('createFillsMask');
-            mask.fills = new BasicArray(...mask.fills.map(i => importFill(i)));
+            mask.fills = new BasicArray(...mask.fills.map(i => {
+                const fill = importFill(i);
+                fill.setImageMgr(document.mediasMgr);
+                return fill;
+            }));
             api.styleInsert(document, mask);
             if (views) {
                 const variables: Variable[] = [];
