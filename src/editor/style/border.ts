@@ -190,7 +190,7 @@ export class BorderModifier extends Modifier {
             const api = this.getApi('setBorderCustomThickness');
             for (const view of shapes) {
                 const linkedVariable = this.getBorderVariable(api, pageView, view);
-                const source = linkedVariable ? (linkedVariable.value as Border) : adapt2Shape(view).style.borders;
+                const source = linkedVariable ? linkedVariable.value : view.style.borders;
                 switch (type) {
                     case SideType.Top:
                         api.setBorderThicknessTop(source, thickness);

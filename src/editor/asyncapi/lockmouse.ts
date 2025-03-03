@@ -25,7 +25,6 @@ import {
     Shadow,
     VariableType,
     OverrideType,
-    Border,
     SideType,
     BorderSideSetting
 } from "../../data";
@@ -287,9 +286,11 @@ export class LockMouseHandler extends AsyncApiCaller {
             this.exception = true;
         }
     }
+
     getRadiusMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
         return _ov(VariableType.RadiusMask, OverrideType.RadiusMask, () => value, view, page, api);
     }
+
     executeRadius(shapes: ShapeView[], values: number[]) {
         try {
             const api = this.api;
@@ -397,7 +398,6 @@ export class LockMouseHandler extends AsyncApiCaller {
             console.log('LockMouseHandler.executeShadowB');
         }
     }
-
 
     executeShadowS(actions: { shadow: Shadow, value: number }[]) {
         try {
@@ -516,8 +516,7 @@ export class LockMouseHandler extends AsyncApiCaller {
 
     private getBorderVariable(api: Api, page: PageView, view: ShapeView) {
         return override_variable(page, VariableType.Borders, OverrideType.Borders, (_var) => {
-            const border = _var?.value ?? view.getBorders();
-            return border;
+            return importBorder(_var?.value ?? view.style.borders);
         }, api, view);
     }
 
@@ -531,7 +530,7 @@ export class LockMouseHandler extends AsyncApiCaller {
             for (const view of shapes) {
                 const border = view.getBorders();
                 const linkedVariable = this.getBorderVariable(api, this._page, view);
-                const source = linkedVariable ? (linkedVariable.value as Border) : adapt2Shape(view).style.borders;
+                const source = linkedVariable ? linkedVariable.value : view.style.borders;
                 if (view.bordersMask) {
                     const linkedBorderMaskVariable = this.getStrokeMaskVariable(api, this._page, view, undefined);
                     if (linkedBorderMaskVariable) {
@@ -569,12 +568,13 @@ export class LockMouseHandler extends AsyncApiCaller {
             this.exception = true;
         }
     }
+
     modifyBorderCustomThickness(shapes: ShapeView[], thickness: number, type: SideType) {
         try {
             const api = this.api;
             for (const view of shapes) {
                 const linkedVariable = this.getBorderVariable(api, this._page, view);
-                const source = linkedVariable ? (linkedVariable.value as Border) : adapt2Shape(view).style.borders;
+                const source = linkedVariable ? linkedVariable.value : view.style.borders;
                 switch (type) {
                     case SideType.Top:
                         api.setBorderThicknessTop(source, thickness);

@@ -506,7 +506,7 @@ export class LinearApi {
             const api = this.api!;
             for (const view of shapes) {
                 const linkedVariable = this.getBorderVariable(api, this._page, view);
-                const source = linkedVariable ? (linkedVariable.value as Border) : adapt2Shape(view).style.borders;
+                const source = linkedVariable ? linkedVariable.value : view.style.borders;
                 switch (sideType) {
                     case SideType.Top:
                         api.setBorderThicknessTop(source, thickness);
