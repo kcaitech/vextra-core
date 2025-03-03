@@ -1,28 +1,24 @@
 import { Page } from "../data/page";
 import { Document } from "../data/document";
-import { FillType, GradientType, ImageScaleMode, PageListItem } from "../data/typesdefine";
+import { PageListItem } from "../data/typesdefine";
 import { newPage } from "./creator";
-import { v4, v4 as uuid } from "uuid";
-import { exportGradient, exportPage, exportStop } from "../data/baseexport";
+import { v4 as uuid } from "uuid";
+import { exportPage } from "../data/baseexport";
 import {
     IImportContext,
     importBlur,
     importBorderMaskType, importFill,
-    importGradient,
     importPage, importShadow,
-    importStop
 } from "../data/baseimport";
 import { newDocument } from "./creator";
 import { CoopRepository } from "../coop/cooprepo";
 import { Repository } from "../data/transact";
 import * as types from "../data/typesdefine";
 import { FMT_VER_latest } from "../data/fmtver";
-import { ShadowPosition } from "../data/baseclasses"
 import { FillMask, ShadowMask, StyleMangerMember, BlurMask, BorderMask, RadiusMask, Blur } from "../data/style";
 import { adapt2Shape, PageView, ShapeView } from "../dataview";
-import { Color, Fill, Shadow, BlurType, BorderPosition,BorderSideSetting } from "../data/classes";
-import { BasicArray, Stop, Gradient, Point2D, ResourceMgr } from "../data";
-import { Matrix } from "../basic/matrix";
+import { Fill, Shadow, BlurType } from "../data/classes";
+import { BasicArray, Point2D, ResourceMgr } from "../data";
 
 export function createDocument(documentName: string, repo: Repository): Document {
     return newDocument(documentName, repo);
