@@ -1577,29 +1577,28 @@ export class PageEditor {
         try {
             const api = this.__repo.start("shapesModifyRadius");
             const page = this.page;
+            const pageView = this.__page;
 
-            for (let i = 0; i < shapes.length; i++) {
-                const shape = adapt2Shape(shapes[i]);
+            for (const view of shapes) {
+                const shape = adapt2Shape(view);
                 let needUpdateFrame = false;
 
-                if (shape.radiusMask) {
-                    const variable = getRadiusMaskVariable(api, this.__page, shapes[i], undefined);
+                if (view.radiusMask) {
+                    const variable = getRadiusMaskVariable(api, pageView, view, undefined);
                     if (variable) {
                         api.shapeModifyVariable(page, variable, undefined);
                     } else {
-                        api.delradiusmask(shape);
+                        api.modifyRadiusMask(shape, undefined);
                     }
                 }
 
                 if (shape.radiusType === RadiusType.Rect) {
-                    if (values.length !== 4) {
-                        values = [values[0], values[0], values[0], values[0]];
-                    }
+                    if (values.length !== 4) values = [values[0], values[0], values[0], values[0]];
 
                     const [lt, rt, rb, lb] = values;
 
                     if (shape instanceof SymbolRefShape) {
-                        const _shape = shape4cornerRadius(api, this.view, shapes[i] as SymbolRefView);
+                        const _shape = shape4cornerRadius(api, this.view, view as SymbolRefView);
                         api.shapeModifyRadius2(page, _shape, lt, rt, rb, lb);
                     }
 
@@ -1634,14 +1633,12 @@ export class PageEditor {
                     }
                 }
 
-                if (needUpdateFrame) {
-                    update_frame_by_points(api, this.page, shape);
-                }
+                if (needUpdateFrame) update_frame_by_points(api, this.page, shape);
             }
             this.__repo.commit();
         } catch (error) {
-            console.error('shapesModifyRadius', error);
             this.__repo.rollback();
+            throw error;
         }
     }
 
