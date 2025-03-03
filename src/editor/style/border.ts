@@ -18,7 +18,7 @@ import {
     VariableType
 } from "../../data";
 import { adapt2Shape, PageView, ShapeView } from "../../dataview";
-import { _ov, override_variable } from "../symbol";
+import { _ov, override_variable, shape4border } from "../symbol";
 import { importBorder, importFill } from "../../data/baseimport";
 
 export class BorderModifier extends Modifier {
@@ -262,6 +262,40 @@ export class BorderModifier extends Modifier {
             for (const view of views) {
                 const linked = this.getFillMaskVariable(api, pageView, view, fillsMask);
                 linked ? api.shapeModifyVariable(page, linked, fillsMask) : api.setBorderFillMask(adapt2Shape(view).style, fillsMask);
+            }
+            this.commit();
+        } catch (error) {
+            this.rollback();
+            throw error;
+        }
+    }
+
+    // 修改边框样式（虚线/实线）
+    modifyStrokeStyle(pageView: PageView, actions: { target: ShapeView, value: any }[]) {
+        try {
+            const api = this.getApi('modifyStrokeStyle');
+            const page = pageView.data;
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                const s = shape4border(api, pageView, target);
+                api.setBorderStyle(page, s, value);
+            }
+            this.commit();
+        } catch (error) {
+            this.rollback();
+            throw error;
+        }
+    }
+
+    // 修改边框拐角样式
+    modifyCornerType(pageView: PageView, actions: { target: ShapeView, value: any }[]) {
+        try {
+            const api = this.getApi('modifyCornerType');
+            const page = pageView.data;
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                const s = shape4border(api, pageView, target);
+                api.setBorderCornerType(page, s, value);
             }
             this.commit();
         } catch (error) {

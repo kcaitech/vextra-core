@@ -2271,20 +2271,6 @@ export class PageEditor {
     }
 
     //borders
-    setShapesBorderStyle(actions: BatchAction2[]) {
-        const api = this.__repo.start('setShapesBorderStyle');
-        try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                const s = shape4border(api, this.view, target);
-                api.setBorderStyle(this.page, s, value);
-            }
-            this.__repo.commit();
-        } catch (error) {
-            this.__repo.rollback();
-        }
-    }
-
     setShapeBorderFillExchange(shapes: ShapeView[]) {
         try {
             const api = this.__repo.start('setShapeBorderFillExchange');
@@ -2329,20 +2315,6 @@ export class PageEditor {
             this.__repo.commit();
         } catch (error) {
             console.log(error, 'error');
-            this.__repo.rollback();
-        }
-    }
-
-    setShapesBorderCornerType(actions: BatchAction2[]) {
-        const api = this.__repo.start('setShapesBorderCornerType');
-        try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                const s = shape4border(api, this.view, target);
-                api.setBorderCornerType(this.page, s, value);
-            }
-            this.__repo.commit();
-        } catch (error) {
             this.__repo.rollback();
         }
     }
