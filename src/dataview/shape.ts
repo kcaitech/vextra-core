@@ -523,6 +523,10 @@ export class ShapeView extends DataView {
             this.m_borders = undefined;
         } else if (args.includes('fillsMask')) {
             this.m_fills = undefined;
+        } else if (args.includes('bordersMask')) {
+            this.m_borders = undefined;
+            this.m_border_path = undefined;
+            this.m_border_path_box = undefined;
         }
 
         const masked = this.masked;
@@ -685,20 +689,25 @@ export class ShapeView extends DataView {
 
     getBorders(): Border {
         if (this.m_borders) return this.m_borders;
+        const mgr = this.style.getStylesMgr();
+        if (!mgr) return this.m_borders ?? this.m_data.style.borders;
+
         const v = this._findOV(OverrideType.Borders, VariableType.Borders);
         const border = v ? { ...v.value } : { ...this.m_data.style.borders };
+
         const bordersMask: string | undefined = this.bordersMask;
         if (bordersMask) {
-            const mask = this.style.getStylesMgr()!.getSync(bordersMask) as BorderMask
+            const mask = mgr.getSync(bordersMask) as BorderMask
             border.position = mask.border.position;
             border.sideSetting = mask.border.sideSetting;
             this.watchBorderMask(mask);
         } else {
             this.unwatchBorderMask();
         }
+
         const fillsMask: string | undefined = this.borderFillsMask;
         if (fillsMask) {
-            const mask = this.style.getStylesMgr()!.getSync(fillsMask) as FillMask;
+            const mask = mgr.getSync(fillsMask) as FillMask;
             border.strokePaints = mask.fills;
             this.watchBorderFillMask(mask);
         } else {
