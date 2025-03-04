@@ -1909,8 +1909,7 @@ export class PageEditor {
             const page = this.page;
             for (const action of actions) {
                 const { target, transX, transY } = action;
-                api.shapeModifyX(page, target, target.transform.translateX + transX);
-                api.shapeModifyY(page, target, target.transform.translateY + transY);
+                api.shapeModifyXY(page, target, target.transform.translateX + transX, target.transform.translateY + transY);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1927,7 +1926,8 @@ export class PageEditor {
             const page = this.page;
             for (let i = 0; i < actions.length; i++) {
                 const action = actions[i];
-                api.shapeModifyX(page, adapt2Shape(action.target), action.x);
+                const shape = adapt2Shape(action.target)
+                api.shapeModifyXY(page, shape, action.x, shape.transform.translateY);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1944,7 +1944,8 @@ export class PageEditor {
             const page = this.page;
             for (let i = 0; i < actions.length; i++) {
                 const action = actions[i];
-                api.shapeModifyY(page, adapt2Shape(action.target), action.y);
+                const shape = adapt2Shape(action.target)
+                api.shapeModifyXY(page, shape, shape.transform.translateX, action.y);
             }
             this.__repo.commit();
         } catch (error) {

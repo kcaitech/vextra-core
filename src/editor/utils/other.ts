@@ -265,8 +265,7 @@ export function make_union(api: Api, document: Document, page: Page, symbol: Sym
     union = insert_result as SymbolUnionShape;
 
     api.shapeMove(page, p as GroupShape, symIndex + 1, union, 0);
-    api.shapeModifyX(page, symbol, 20);
-    api.shapeModifyY(page, symbol, 20);
+    api.shapeModifyXY(page, symbol, 20, 20);
 
     return union;
 }

@@ -516,8 +516,7 @@ export class Controller {
                         const r = realXY[i]
                         const target = m.computeCoord(r.x, r.y);
                         const cur = c.matrix2Parent().computeCoord(0, 0);
-                        api.shapeModifyX(page, c, c.frame.x + target.x - cur.x - t_xy.x);
-                        api.shapeModifyY(page, c, c.frame.y + target.y - cur.y - t_xy.y);
+                        api.shapeModifyXY(page, c, c.frame.x + target.x - cur.x - t_xy.x, c.frame.y + target.y - cur.y - t_xy.y);
                     }
                 }
 
