@@ -1,7 +1,10 @@
+import { Path } from "@kcdesign/path"
+import { gPal, MeasureFun, TextPathFun } from "./basic/pal"
+
 // basic
 export * from "./basic/matrix"
 export * from "./basic/objectid"
-export * from "./basic/pal"
+// export * from "./basic/pal"
 export * from "./basic/utils"
 export {IEventEmitter, EventEmitter} from "./basic/event"
 export {Transform, TransformMode, Line, LineThrough0, Plane, PlaneThrough0} from './basic/transform'
@@ -186,6 +189,7 @@ export * from "./service/symbollist"
 export * from "./editor/asyncapi"
 
 // coop
+export { PaddingDir } from "./coop/recordapi"
 export * from "./coop"
 
 export {Transform as TransformRaw} from "./data/transform"
@@ -204,3 +208,10 @@ export { BorderModifier } from "./editor/style/border";
 export { RadiusModifier } from "./editor/style/radius";
 export { ShadowsModifier } from "./editor/style/shadows";
 export { BlurModifier } from "./editor/style/blur";
+
+
+export async function initModule(textMeasure: MeasureFun, text2path: TextPathFun) {
+    gPal.text.textMeasure = textMeasure
+    gPal.text.getTextPath = text2path
+    await Path.init()
+}

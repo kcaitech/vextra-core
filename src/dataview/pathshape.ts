@@ -20,7 +20,7 @@ import { PageView } from "./page";
 import { importCurvePoint, importFill } from "../data/baseimport";
 import { exportFill } from "../data/baseexport";
 import { GroupShapeView } from "./groupshape";
-import { border2path } from "../editor/utils/path";
+import { border2path } from "./border2path";
 import { ArtboardView } from "./artboard";
 import { Path } from "@kcdesign/path";
 

@@ -129,7 +129,7 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
             LineJoinStyle.Miter
         )
     })(data['borderOptions']);
-    const strokePaints: BasicArray<Fill> = (data['borders'] || []).map((d: IJSON, i: number) => {
+    const strokePaints: Array<Fill> = (data['borders'] || []).map((d: IJSON, i: number) => {
         const isEnabled: boolean = d['isEnabled'];
         const fillType: FillType = ((t) => {
             switch (t) {
@@ -172,7 +172,7 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
         return bs
     })(data['borderOptions'] ? data['borderOptions'].dashPattern : undefined);
     const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
-    let border = new Border(BorderPosition.Inner, borderStyle, CornerType.Miter, side, strokePaints);
+    let border = new Border(BorderPosition.Inner, borderStyle, CornerType.Miter, side, new BasicArray(...strokePaints));
     
     if (data['borders'] && data['borders'].length) {
         const d = data['borders'][0];
@@ -194,7 +194,7 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
         })(d['cornerType']);
         const thickness: number = d['thickness'];
         const side = new BorderSideSetting(SideType.Normal, thickness, thickness, thickness, thickness);
-        border = new Border(position, borderStyle, corner, side, strokePaints);
+        border = new Border(position, borderStyle, corner, side, new BasicArray(...strokePaints));
     }
     const getMarkerType = (st: number): MarkerType => {
         switch (st) {

@@ -239,14 +239,23 @@ export class Matrix {
         if (x || y) this.trans(x || 0, y || 0);
         return this;
     }
-    computeCoord(point: { x: number, y: number }): { x: number, y: number };
-    computeCoord(x: number, y: number): { x: number, y: number };
-    computeCoord(pointOrX: number | { x: number, y: number }, _y?: number) {
+    map(point: { x: number, y: number }): { x: number, y: number };
+    map(x: number, y: number): { x: number, y: number };
+    map(pointOrX: number | { x: number, y: number }, _y?: number) {
         const isPoint = typeof pointOrX === 'object';
         const x = isPoint ? pointOrX.x : pointOrX;
         const y = isPoint ? pointOrX.y : _y!;
         const m = this.m_matrix
         return { x: m[0] * x + m[2] * y + m[4], y: m[1] * x + m[3] * y + m[5] };
+    }
+    /**
+     * @deprecated use map instead
+     * @param point 
+     */
+    computeCoord(point: { x: number, y: number }): { x: number, y: number };
+    computeCoord(x: number, y: number): { x: number, y: number };
+    computeCoord(pointOrX: number | { x: number, y: number }, _y?: number) {
+        return this.map(pointOrX as any, _y as any)
     }
     computeCoord2(x: number, y: number): { x: number, y: number } {
         const m = this.m_matrix

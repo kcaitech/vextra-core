@@ -178,13 +178,22 @@ export class Transform extends classes.Transform {
         if (x || y) this.trans(x || 0, y || 0);
         return this
     }
-    computeCoord(point: { x: number, y: number }): { x: number, y: number };
-    computeCoord(x: number, y: number): { x: number, y: number };
-    computeCoord(pointOrX: number | { x: number, y: number }, _y?: number) {
+    map(point: { x: number, y: number }): { x: number, y: number };
+    map(x: number, y: number): { x: number, y: number };
+    map(pointOrX: number | { x: number, y: number }, _y?: number) {
         const isPoint = typeof pointOrX === 'object';
         const x = isPoint ? pointOrX.x : pointOrX;
         const y = isPoint ? pointOrX.y : _y!;
         return { x: this.m00 * x + this.m01 * y + this.m02, y: this.m10 * x + this.m11 * y + this.m12 };
+    }
+    /**
+     * @deprecated use map instead
+     * @param point 
+     */
+    computeCoord(point: { x: number, y: number }): { x: number, y: number };
+    computeCoord(x: number, y: number): { x: number, y: number };
+    computeCoord(pointOrX: number | { x: number, y: number }, _y?: number) {
+        return this.map(pointOrX as any, _y as any)
     }
     computeCoord2(x: number, y: number): { x: number, y: number } {
         return { x: this.m00 * x + this.m01 * y + this.m02, y: this.m10 * x + this.m11 * y + this.m12 };
