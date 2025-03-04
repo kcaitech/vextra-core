@@ -574,7 +574,7 @@ function determineAsContainerRadiusShape(parent: Artboard | SymbolShape, childs:
         const drop = childs.splice(0, 1)[0];
         const points = (drop as PathShape).pathsegs[0].points;
         const radius = points.map(i => i.radius!);
-        parent.cornerRadius = new CornerRadius(v4(), new BasicArray(),radius[0], radius[1], radius[3], radius[2]);
+        parent.cornerRadius = new CornerRadius(v4(),radius[0], radius[1], radius[3], radius[2]);
         parent.childs = new BasicArray<Shape>(...childs);
         if (drop.style.fills.length) parent.style.fills = drop.style.fills;
         if (drop.style.borders.strokePaints.length) parent.style.borders = drop.style.borders;

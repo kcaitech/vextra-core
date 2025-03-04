@@ -291,7 +291,6 @@ export class Style extends Basic implements classes.Style {
 
 export class Blur extends Basic implements classes.Blur {
     typeId = 'blur'
-    crdtidx: BasicArray<number>
     isEnabled: boolean
     center: Point2D
     motionAngle?: number
@@ -301,7 +300,6 @@ export class Blur extends Basic implements classes.Blur {
     mask?: string
 
     constructor(
-        crdtidx: BasicArray<number>,
         isEnabled: boolean,
         center: Point2D,
         saturation: number,
@@ -310,7 +308,6 @@ export class Blur extends Basic implements classes.Blur {
         radius?: number
     ) {
         super()
-        this.crdtidx = crdtidx
         this.isEnabled = isEnabled
         this.center = center
         this.saturation = saturation
@@ -378,8 +375,8 @@ export class StyleSheet extends Basic implements classes.StyleSheet {
                 const shadowMask = new ShadowMask(v.crdtidx, sheetId, v4(), v.name, v.description, shadows);
                 notifiable_variables.push(shadowMask);
             } else if (v instanceof classes.BlurMask) {
-                const { crdtidx, isEnabled, center, saturation, type } = v.blur;
-                const blur = new Blur(crdtidx, isEnabled, center, saturation, type);
+                const { isEnabled, center, saturation, type } = v.blur;
+                const blur = new Blur(isEnabled, center, saturation, type);
                 blur.motionAngle = v.blur.motionAngle;
                 blur.radius = v.blur.radius;
                 blur.mask = v.blur.mask;

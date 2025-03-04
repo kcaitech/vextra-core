@@ -2,9 +2,6 @@
     "description": "blur",
     "type": "object",
     "properties": {
-        "crdtidx": {
-            "$ref": "./crdtidx.json"
-        },
         "typeId": {
             "type": "string",
             "default": "shape"
@@ -32,7 +29,6 @@
         }
     },
     "required": [
-        "crdtidx",
         "typeId",
         "isEnabled",
         "center",

@@ -99,6 +99,15 @@ export type ContextSettings = {
     blenMode: BlendMode,
     opacity: number,
 }
+/* couner radius */
+export type CornerRadius = {
+    id: string,
+    typeId: string,
+    lt: number,
+    rt: number,
+    lb: number,
+    rb: number,
+}
 /* corner type */
 export enum CornerType {
     Miter = "miter",
@@ -721,7 +730,6 @@ export type AutoLayout = {
 }
 /* blur */
 export type Blur = {
-    crdtidx: Crdtidx,
     typeId: string,
     isEnabled: boolean,
     center: Point2D,
@@ -757,16 +765,6 @@ export type ContactRole = {
     id: string,
     roleType: ContactRoleType,
     shapeId: string,
-}
-/* couner radius */
-export type CornerRadius = {
-    id: string,
-    crdtidx: Crdtidx,
-    typeId: string,
-    lt: number,
-    rt: number,
-    lb: number,
-    rb: number,
 }
 /* crdt number */
 export type CrdtNumber = {

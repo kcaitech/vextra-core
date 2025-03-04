@@ -133,6 +133,16 @@ export function importContextSettings(source: types.ContextSettings, ctx?: IImpo
         source.opacity)
     return ret
 }
+/* couner radius */
+export function importCornerRadius(source: types.CornerRadius, ctx?: IImportContext): impl.CornerRadius {
+    const ret: impl.CornerRadius = new impl.CornerRadius (
+        source.id,
+        source.lt,
+        source.rt,
+        source.lb,
+        source.rb)
+    return ret
+}
 /* corner type */
 export function importCornerType(source: types.CornerType, ctx?: IImportContext): impl.CornerType {
     return source
@@ -926,7 +936,6 @@ function importBlurOptional(tar: impl.Blur, source: types.Blur, ctx?: IImportCon
 }
 export function importBlur(source: types.Blur, ctx?: IImportContext): impl.Blur {
     const ret: impl.Blur = new impl.Blur (
-        importCrdtidx(source.crdtidx, ctx),
         source.isEnabled,
         importPoint2D(source.center, ctx),
         source.saturation,
@@ -970,17 +979,6 @@ export function importContactRole(source: types.ContactRole, ctx?: IImportContex
         source.id,
         importContactRoleType(source.roleType, ctx),
         source.shapeId)
-    return ret
-}
-/* couner radius */
-export function importCornerRadius(source: types.CornerRadius, ctx?: IImportContext): impl.CornerRadius {
-    const ret: impl.CornerRadius = new impl.CornerRadius (
-        source.id,
-        importCrdtidx(source.crdtidx, ctx),
-        source.lt,
-        source.rt,
-        source.lb,
-        source.rb)
     return ret
 }
 /* crdt number */

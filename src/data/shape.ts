@@ -674,7 +674,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
     getOpTarget(path: string[]): any {
         const id0 = path[0];
         if (id0 === 'symtags' && !this.symtags) this.symtags = new BasicMap<string, string>();
-        if (id0 === 'cornerRadius' && !this.cornerRadius) this.cornerRadius = new CornerRadius(v4(), new BasicArray(),0, 0, 0, 0);
+        if (id0 === 'cornerRadius' && !this.cornerRadius) this.cornerRadius = new CornerRadius(v4(), 0, 0, 0, 0);
         if (id0 === "guides" && !this.guides) {
             this.guides = new BasicArray<Guide>();
         }

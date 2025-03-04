@@ -426,7 +426,7 @@ function importEffects(ctx: LoadContext, style: Style, data: IJSON) {
     if (!Array.isArray(effects1)) return;
     const gaussian = effects1.find(effect => effect.type === 'FOREGROUND_BLUR');
     if (!gaussian) return;
-    style.blur = new Blur(new BasicArray(), true, new Point2D(0, 0), gaussian.radius || 4, BlurType.Gaussian);
+    style.blur = new Blur(true, new Point2D(0, 0), gaussian.radius || 4, BlurType.Gaussian);
 }
 
 function importStyle(ctx: LoadContext, style: Style, data: IJSON) {

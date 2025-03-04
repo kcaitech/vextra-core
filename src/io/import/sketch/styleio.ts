@@ -299,7 +299,7 @@ function importBlur(data: IJSON): Blur | undefined {
             default: return BlurType.Gaussian;
         }
     }
-    return new Blur(new BasicArray(),isEnabled, new Point2D(0, 0), saturation, type(d['type']));
+    return new Blur(isEnabled, new Point2D(0, 0), saturation, type(d['type']));
 }
 
 function patternFillType(data: IJSON) {

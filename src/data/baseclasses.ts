@@ -179,6 +179,23 @@ export class ContextSettings extends Basic {
         this.opacity = opacity
     }
 }
+/* couner radius */
+export class CornerRadius extends Basic {
+    typeId = "corner-radius"
+    id: string
+    lt: number
+    rt: number
+    lb: number
+    rb: number
+    constructor(id: string, lt: number = 0, rt: number = 0, lb: number = 0, rb: number = 0) {
+        super()
+        this.id = id
+        this.lt = lt
+        this.rt = rt
+        this.lb = lb
+        this.rb = rb
+    }
+}
 /* crdtidx */
 export type Crdtidx = BasicArray<number>
 /* curve point */
@@ -569,7 +586,6 @@ export class AutoLayout extends Basic {
 /* blur */
 export class Blur extends Basic {
     typeId = "blur"
-    crdtidx: Crdtidx
     isEnabled: boolean
     center: Point2D
     saturation: number
@@ -577,9 +593,8 @@ export class Blur extends Basic {
     motionAngle?: number
     radius?: number
     mask?: string
-    constructor(crdtidx: Crdtidx, isEnabled: boolean, center: Point2D, saturation: number, type: BlurType) {
+    constructor(isEnabled: boolean, center: Point2D, saturation: number, type: BlurType) {
         super()
-        this.crdtidx = crdtidx
         this.isEnabled = isEnabled
         this.center = center
         this.saturation = saturation
@@ -641,25 +656,6 @@ export class ContactRole extends Basic {
         this.id = id
         this.roleType = roleType
         this.shapeId = shapeId
-    }
-}
-/* couner radius */
-export class CornerRadius extends Basic {
-    typeId = "corner-radius"
-    id: string
-    crdtidx: Crdtidx
-    lt: number
-    rt: number
-    lb: number
-    rb: number
-    constructor(id: string, crdtidx: Crdtidx, lt: number = 0, rt: number = 0, lb: number = 0, rb: number = 0) {
-        super()
-        this.id = id
-        this.crdtidx = crdtidx
-        this.lt = lt
-        this.rt = rt
-        this.lb = lb
-        this.rb = rb
     }
 }
 /* crdt number */

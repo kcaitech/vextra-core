@@ -96,6 +96,18 @@ export function exportContextSettings(source: types.ContextSettings, ctx?: IExpo
     ret.opacity = source.opacity
     return ret
 }
+/* couner radius */
+export function exportCornerRadius(source: types.CornerRadius, ctx?: IExportContext): types.CornerRadius {
+    const ret: types.CornerRadius = {} as types.CornerRadius
+    ret.typeId = "corner-radius"
+    ret.id = source.id
+    ret.typeId = source.typeId
+    ret.lt = source.lt
+    ret.rt = source.rt
+    ret.lb = source.lb
+    ret.rb = source.rb
+    return ret
+}
 /* corner type */
 export function exportCornerType(source: types.CornerType, ctx?: IExportContext): types.CornerType {
     return source
@@ -827,7 +839,6 @@ export function exportAutoLayout(source: types.AutoLayout, ctx?: IExportContext)
 export function exportBlur(source: types.Blur, ctx?: IExportContext): types.Blur {
     const ret: types.Blur = {} as types.Blur
     ret.typeId = "blur"
-    ret.crdtidx = exportCrdtidx(source.crdtidx, ctx)
     ret.typeId = source.typeId
     ret.isEnabled = source.isEnabled
     ret.center = exportPoint2D(source.center, ctx)
@@ -871,19 +882,6 @@ export function exportContactRole(source: types.ContactRole, ctx?: IExportContex
     ret.id = source.id
     ret.roleType = exportContactRoleType(source.roleType, ctx)
     ret.shapeId = source.shapeId
-    return ret
-}
-/* couner radius */
-export function exportCornerRadius(source: types.CornerRadius, ctx?: IExportContext): types.CornerRadius {
-    const ret: types.CornerRadius = {} as types.CornerRadius
-    ret.typeId = "corner-radius"
-    ret.id = source.id
-    ret.crdtidx = exportCrdtidx(source.crdtidx, ctx)
-    ret.typeId = source.typeId
-    ret.lt = source.lt
-    ret.rt = source.rt
-    ret.lb = source.lb
-    ret.rb = source.rb
     return ret
 }
 /* crdt number */
