@@ -1,7 +1,11 @@
-import { BaseProp, NamedProp, Node, allDepsIsGen, allNodes, fmtTypeName } from "./basic";
+import { BaseProp, NamedProp, Node, allDepsIsGen } from "./basic";
 import { Writer } from "./writer";
 
-function exportBaseProp(p: BaseProp, $: Writer) {
+function exportBaseProp(p: BaseProp, $: Writer, baseClass: {
+    array: string,
+    map: string,
+    extends?: string
+}) {
     switch (p.type) {
         case 'string':
         case 'number':
@@ -12,14 +16,14 @@ function exportBaseProp(p: BaseProp, $: Writer) {
             $.append(p.val);
             break;
         case 'map':
-            $.append('BasicMap<' + p.key + ', ');
-            exportBaseProp(p.val, $);
+            $.append(`${baseClass.map}<${p.key}, `)
+            exportBaseProp(p.val, $, baseClass);
             $.append('>');
             break;
         case 'oneOf':
             for (let i = 0, len = p.val.length; i < len; ++i) {
                 const v = p.val[i];
-                exportBaseProp(v, $);
+                exportBaseProp(v, $, baseClass);
                 if (i !== len - 1) {
                     $.append(' | ')
                 }
@@ -28,16 +32,20 @@ function exportBaseProp(p: BaseProp, $: Writer) {
     }
 }
 
-function exportObject(n: Node, $: Writer) {
+function exportObject(n: Node, $: Writer, baseClass: {
+    array: string,
+    map: string,
+    extends?: string
+}) {
     if (n.value.type !== 'object') throw new Error();
     const exp = n.inner ? '' : 'export ';
-    const extend = n.extend ? n.extend : 'Basic'
+    const extend = n.extend ? n.extend : baseClass.extends
     const props = n.value.props;
 
     const chain: Node[] = [];
     let p = n;
     while (p.extend) {
-        const n = allNodes.get(p.extend);
+        const n = p.root.get(p.extend);
         if (!n) throw new Error('extend not find: ' + p.extend);
         chain.push(n);
         p = n;
@@ -71,13 +79,13 @@ function exportObject(n: Node, $: Writer) {
     // 而正常的export不会给没有声明typeId的class导出typeId的，所以正常文档数据里这些数据是没typeId.
     const needTypeId = true;
 
-    if (props.length > 0) $.nl(exp + 'class ' + n.name + ' extends ' + extend + ' ').sub(() => {
+    if (props.length > 0) $.nl(`${exp}class ${n.name} ${extend ? 'extends ' + extend + ' ': ''}`).sub(() => {
         if (needTypeId && n.schemaId) $.nl('typeId = "', n.schemaId, '"')
         props.forEach(p => {
             if (p.name === 'typeId') return;
             $.newline();
             $.indent().append(p.name + (p.required ? ': ' : '?: '));
-            exportBaseProp(p, $);
+            exportBaseProp(p, $, baseClass);
         })
 
         const needConstructor = localrequired.length > 0 && (!(localrequired.length === 1 && localrequired[0].name === 'typeId'))
@@ -89,7 +97,7 @@ function exportObject(n: Node, $: Writer) {
                 if (prop.name === 'typeId') continue;
                 if (j > 0) $.append(', ');
                 $.append(prop.name + ': ');
-                exportBaseProp(prop, $);
+                exportBaseProp(prop, $, baseClass);
                 if (prop.default !== undefined) {
                     if (prop.type === 'boolean' || prop.type === 'number') $.append(' = ' + prop.default);
                     else if (prop.type === 'string') $.append(' = "' + prop.default + '"');
@@ -110,7 +118,7 @@ function exportObject(n: Node, $: Writer) {
                         ++j;
                     }
                     $.append(')')
-                } else {
+                } else if (extend) {
                     $.nl('super()')
                 }
 
@@ -134,7 +142,11 @@ function exportObject(n: Node, $: Writer) {
     else throw new Error('wrong object: ' + n);
 }
 
-function exportNode(n: Node, $: Writer) {
+function exportNode(n: Node, $: Writer, baseClass: {
+    array: string,
+    map: string,
+    extends?: string
+}) {
     if (n.value.type === 'enum') {
         // 不需要输出
         return;
@@ -148,19 +160,28 @@ function exportNode(n: Node, $: Writer) {
         const exp = n.inner ? '' : 'export ';
         if (n.extend) throw new Error('array can\'t extend class')
         const item = n.value.item;
-        $.nl(exp + 'type ' + n.name + ' = ' + 'BasicArray<');
-        exportBaseProp(item, $);
+        $.nl(`${exp}type ${n.name} = ${baseClass.array}<`)
+        exportBaseProp(item, $, baseClass);
         $.append('>')
     }
     else if (n.value.type === 'object') {
-        exportObject(n, $);
+        exportObject(n, $, baseClass);
     }
     else {
         throw new Error("wrong value type: " + n.value)
     }
 }
 
-export function gen(out: string) {
+export function gen(allNodes: Map<string, Node>, out: string, customs: {
+    extraHeader?(w: Writer): void;
+    typesPath: string;
+    baseClass?: {
+        array?: string,
+        map?: string,
+        extends?: string
+    },
+    extraOrder?: string[]
+}) {
     const $ = new Writer(out);
     const nodes = Array.from(allNodes.values());
 
@@ -182,25 +203,29 @@ export function gen(out: string) {
         })
         return ret;
     })()
-    $.nl('export {\n', enums, '\n} from "./typesdefine"');
-    $.nl('import {\n', enums, '\n} from "./typesdefine"');
-    $.nl('import { Basic, BasicArray, BasicMap } from "./basic"');
+
+    $.nl(`export {\n${enums}\n} from "${customs.typesPath}"`);
+    $.nl(`import {\n${enums}\n} from "${customs.typesPath}"`);
+    if (customs.extraHeader) customs.extraHeader($)
 
     // 按顺序输出下列class
-    const order = [
-        'GroupShape',
-    ]
-    const genType = 'cls'
+    const order = customs.extraOrder ?? []
+    // const genType = 'cls'
     let checkExport = allDepsIsGen;
+    const gented = new Set<string>()
     while (nodes.length > 0) {
         let count = 0;
         for (let i = 0; i < nodes.length;) {
             const n = nodes[i];
-            if (checkExport(n, genType)) {
-                exportNode(n, $);
+            if (checkExport(n, gented)) {
+                exportNode(n, $, {
+                    array: customs.baseClass?.array ?? 'Array',
+                    map: customs.baseClass?.map ?? 'Map',
+                    extends: customs.baseClass?.extends
+                });
                 ++count;
                 nodes.splice(i, 1);
-                n.gented[genType] = true;
+                gented.add(n.name)
             } else {
                 ++i;
             }

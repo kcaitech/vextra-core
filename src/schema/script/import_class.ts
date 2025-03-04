@@ -1,7 +1,7 @@
-import { BaseProp, NamedProp, Node, allDepsIsGen, allNodes, fmtTypeName } from "./basic";
+import { BaseProp, NamedProp, Node } from "./basic";
 import { Writer } from "./writer";
 
-export function exportBaseProp(p: BaseProp, $: Writer) {
+export function exportBaseProp(p: BaseProp, $: Writer, allNodes: Map<string, Node>) {
     switch (p.type) {
         case 'string':
         case 'number':
@@ -15,13 +15,13 @@ export function exportBaseProp(p: BaseProp, $: Writer) {
             break;
         case 'map':
             $.append('BasicMap<' + p.key + ', ');
-            exportBaseProp(p.val, $);
+            exportBaseProp(p.val, $, allNodes);
             $.append('>');
             break;
         case 'oneOf':
             for (let i = 0, len = p.val.length; i < len; ++i) {
                 const v = p.val[i];
-                exportBaseProp(v, $);
+                exportBaseProp(v, $, allNodes);
                 if (i !== len - 1) {
                     $.append(' | ')
                 }
@@ -39,7 +39,7 @@ function exportObject(n: Node, $: Writer) {
     const chain: Node[] = [];
     let p = n;
     while (p.extend) {
-        const n = allNodes.get(p.extend);
+        const n = p.root.get(p.extend);
         if (!n) throw new Error('extend not find: ' + p.extend);
         chain.push(n);
         p = n;
@@ -75,7 +75,7 @@ function exportObject(n: Node, $: Writer) {
             if (p.name === 'typeId') return;
             $.newline();
             $.indent().append(p.name + (p.required ? ': ' : '?: '));
-            exportBaseProp(p, $);
+            exportBaseProp(p, $, n.root);
         })
 
         const needConstructor = localrequired.length > 0 && (!(localrequired.length === 1 && localrequired[0].name === 'typeId'))
@@ -87,7 +87,7 @@ function exportObject(n: Node, $: Writer) {
                 if (prop.name === 'typeId') continue;
                 if (j > 0) $.append(', ');
                 $.append(prop.name + ': ');
-                exportBaseProp(prop, $);
+                exportBaseProp(prop, $, n.root);
                 ++j;
             }
 
@@ -142,7 +142,7 @@ export function exportNode(n: Node, $: Writer) {
         if (n.extend) throw new Error('array can\'t extend class')
         const item = n.value.item;
         $.nl(exp + 'type ' + n.name + ' = ' + 'BasicArray<');
-        exportBaseProp(item, $);
+        exportBaseProp(item, $, n.root);
         $.append('>')
     }
     else if (n.value.type === 'object') {

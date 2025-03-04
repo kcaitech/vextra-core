@@ -1,4 +1,4 @@
-import { BaseProp, NamedProp, Node, allDepsIsGen, allNodes, fmtTypeName } from "./basic";
+import { BaseProp, NamedProp, Node, allDepsIsGen } from "./basic";
 import { Writer } from "./writer";
 import { exportBaseProp as exportBasePropType, exportNode as exportNodeClass } from "./import_class"
 import { inject } from "./import-inject"
@@ -34,7 +34,7 @@ const needCompatibleSet = new Set([
     'star-shape',
 ]);
 
-function exportBaseProp(p: BaseProp, source: string, $: Writer, insideArr: boolean) {
+function exportBaseProp(p: BaseProp, source: string, $: Writer, insideArr: boolean, allNodes: Map<string, Node>) {
     switch (p.type) {
         case 'string':
         case 'number':
@@ -49,12 +49,12 @@ function exportBaseProp(p: BaseProp, source: string, $: Writer, insideArr: boole
             const valType = p.val;
             $.append('(() => ').sub(() => {
                 $.nl('const ret = new BasicMap<', keyType, ', ')
-                exportBasePropType(valType, $)
+                exportBasePropType(valType, $, allNodes)
                 $.append('>()')
                 $.nl('const _val = ', source, ' as any')
                 $.nl('objkeys(_val).forEach((val, k) => ').sub(() => {
                     $.nl('ret.set(k, ')
-                    exportBaseProp(p.val, 'val', $, insideArr)
+                    exportBaseProp(p.val, 'val', $, insideArr, allNodes)
                     $.append(')')
                 }).append(')')
                 $.nl('return ret')
@@ -92,7 +92,7 @@ function exportBaseProp(p: BaseProp, source: string, $: Writer, insideArr: boole
                             usedArray = true;
                             $.nl('if (Array.isArray(', source, ')) ').sub(() => {
                                 $.nl('return ')
-                                exportBaseProp(v, source, $, insideArr)
+                                exportBaseProp(v, source, $, insideArr, allNodes)
                             })
                             prop.splice(i, 1);
                             continue;
@@ -132,7 +132,7 @@ function exportObject(n: Node, $: Writer) {
     const chain: Node[] = [];
     let p = n;
     while (p.extend) {
-        const n = allNodes.get(p.extend);
+        const n = p.root.get(p.extend);
         if (!n) throw new Error('extend not find: ' + p.extend);
         chain.push(n);
         p = n;
@@ -163,7 +163,7 @@ function exportObject(n: Node, $: Writer) {
             if (extend && superoptional.length > 0) $.nl('import', extend, 'Optional(tar, source)')
             localoptional.forEach((v) => {
                 $.nl('if (source.', v.name, ' !== undefined) ', 'tar.', v.name, ' = ');
-                exportBaseProp(v, 'source.' + v.name, $, false);
+                exportBaseProp(v, 'source.' + v.name, $, false, n.root);
             })
         })
     } else if (extend && superoptional.length > 0) {
@@ -188,7 +188,7 @@ function exportObject(n: Node, $: Writer) {
                 if (v.name === 'typeId') return;
                 if (j > 0) $.append(',').newline();
                 $.indent();
-                exportBaseProp(v, 'source.' + v.name, $, false);
+                exportBaseProp(v, 'source.' + v.name, $, false, n.root);
                 ++j;
             })
         });
@@ -222,13 +222,13 @@ function exportNode(n: Node, $: Writer) {
             $.nl('const ret: ', (n.inner ? '' : 'impl.'), n.name, ' = new BasicArray()')
             $.nl('source.forEach((source, i) => ').sub(() => {
                 if (item.type === 'node') {
-                    const n = allNodes.get(item.val);
-                    if (n && n.schemaId && needCompatibleSet.has(n.schemaId)) {
+                    const _n = n.root.get(item.val);
+                    if (_n && _n.schemaId && needCompatibleSet.has(_n.schemaId)) {
                         $.nl('if (!source.crdtidx) source.crdtidx = [i]')
                     }
                 }
                 $.nl('ret.push(')
-                exportBaseProp(item, 'source', $, true)
+                exportBaseProp(item, 'source', $, true, n.root)
                 $.append(')')
             }).append(')')
             $.nl('return ret')
@@ -265,7 +265,7 @@ const compatibleList = new Set([
     "BoolShape"
 ])
 
-export function gen(out: string) {
+export function gen(allNodes: Map<string, Node>, out: string) {
     const $ = new Writer(out);
     const nodes = Array.from(allNodes.values());
 
@@ -294,16 +294,18 @@ export function gen(out: string) {
     }
 
     let checkExport = allDepsIsGen;
-    const genType = 'imp'
+    // const genType = 'imp'
+    const gented = new Set<string>()
     while (nodes.length > 0) {
         let count = 0;
         for (let i = 0; i < nodes.length;) {
             const n = nodes[i];
-            if (checkExport(n, genType)) {
+            if (checkExport(n, gented)) {
                 exportNode(n, $);
                 ++count;
                 nodes.splice(i, 1);
-                n.gented[genType] = true;
+                // n.gented[genType] = true;
+                gented.add(n.name)
             } else {
                 ++i;
             }
