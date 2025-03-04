@@ -24,7 +24,7 @@ export class BlurModifier extends Modifier {
     getBlurVariable(api: Api, page: PageView, view: ShapeView) {
         const valueFun = (_var: Variable | undefined) => {
             const blur = _var?.value ?? view.blur;
-            return blur && importBlur(blur) || new Blur(new BasicArray(), true, new Point2D(0, 0), 10, BlurType.Gaussian);
+            return blur && importBlur(blur) || new Blur(true, new Point2D(0, 0), 10, BlurType.Gaussian);
         };
         return _ov(VariableType.Blur, OverrideType.Blur, valueFun, view, page, api)!;
     }

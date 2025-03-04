@@ -293,7 +293,7 @@ export class DocEditor {
                     m = new ShadowMask([0] as BasicArray<number>, sheetId, mask.id, mask.name, mask.description, shadows, mask.disabled)
                 } else if (mask.typeId === 'blur-mask-living') {
                     const __mask = mask as BlurMask;
-                    const frank = new Blur(new BasicArray(), true, new Point2D(0, 0), 10, BlurType.Gaussian);
+                    const frank = new Blur(true, new Point2D(0, 0), 10, BlurType.Gaussian);
                     const blur = __mask.blur ? importBlur(__mask.blur) : frank;
                     m = new BlurMask([0] as BasicArray<number>, sheetId, mask.id, mask.name, mask.description, blur, mask.disabled);
                 } else if (mask.typeId === 'border-mask-living') {

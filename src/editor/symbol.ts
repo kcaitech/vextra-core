@@ -219,7 +219,7 @@ export function shape4exportOptions(api: Api, _shape: ShapeView, page: PageView)
 export function shape4blur(api: Api, _shape: ShapeView, page: PageView) {
     const valuefun = (_var: Variable | undefined) => {
         const blur = _var?.value ?? _shape.blur;
-        return blur && importBlur(blur) || new Blur(new BasicArray(),true, new Point2D(0, 0), 10, BlurType.Gaussian);
+        return blur && importBlur(blur) || new Blur(true, new Point2D(0, 0), 10, BlurType.Gaussian);
     };
     const _var = _ov(VariableType.Blur, OverrideType.Blur, valuefun, _shape, page, api);
     return _var || _shape.data;
@@ -419,7 +419,7 @@ export function shape4shadow(api: Api, page: PageView, shape: ShapeView) {
 export function shape4cornerRadius(api: Api, page: PageView, shape: ArtboardView | SymbolView | SymbolRefView) {
     const _var = override_variable(page, VariableType.CornerRadius, OverrideType.CornerRadius, (_var) => {
         const cornerRadius = _var?.value ?? shape.cornerRadius;
-        return cornerRadius ? importCornerRadius(cornerRadius) : new CornerRadius(v4(), new BasicArray(),0, 0, 0, 0);
+        return cornerRadius ? importCornerRadius(cornerRadius) : new CornerRadius(v4(),0, 0, 0, 0);
     }, api, shape)
     const ret = _var || shape.data;
     if (ret instanceof SymbolRefShape) throw new Error();
