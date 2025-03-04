@@ -2,7 +2,7 @@ import { DocumentMeta, PageListItem } from "./baseclasses";
 import { Page } from "./page";
 import { BasicArray, BasicMap, IDataGuard, ResourceMgr, WatchableObject } from "./basic";
 import { Style } from "./style";
-import { GroupShape, Shape, SymbolShape, SymbolUnionShape, TextShape } from "./shape";
+import { GroupShape, Shape, SymbolShape, TextShape } from "./shape";
 import { TableShape } from "./table";
 import { SymbolRefShape } from "./symbolref";
 import { SymbolMgr } from "./symbolmgr";
@@ -136,10 +136,6 @@ export class Document extends (DocumentMeta) {
     get pagesMgr() {
         return this.__pages;
     }
-
-    // get artboardMgr() {
-    //     return this.__artboards;
-    // }
 
     get symbolsMgr() {
         return this.__symbols;
