@@ -1,4 +1,4 @@
-// import { is_mac } from "../../data/utils";
+import { importGroupShape_childs, importGuide } from "../../data/baseimport";
 
 export const inject: any = {};
 inject['ImageShape'] = {} as any;
@@ -496,3 +496,50 @@ inject['Variable']['before'] = `\
         } as types.Border
     }
 `
+
+inject['PathShape2'] = {};
+inject['PathShape2']['before'] = `\
+    // inject code
+     if (!source.pathsegs?.length) { // 兼容旧数据
+        const seg: types.PathSegment = {
+            crdtidx: [0],
+            id: '39e508e8-a1bb-4b55-ad68-aa2a9b3b447a',
+            points:[],
+            isClosed: true
+        }
+        
+        if ((source as any)?.points?.length) {
+            seg.points.push(...(source as any)?.points);
+        } 
+        
+        source.pathsegs = [seg];
+    }
+`
+inject['PathShape2']['content'] = `\
+source.type = types.ShapeType.Path;
+    const ret: impl.PathShape = new impl.PathShape (
+    importCrdtidx(source.crdtidx, ctx),
+    source.id,
+    source.name,
+    importShapeType(source.type, ctx),
+    importTransform(source.transform, ctx),
+    importStyle(source.style, ctx),
+    importShapeSize(source.size, ctx),
+    importPathShape_pathsegs(source.pathsegs, ctx));
+    importPathShapeOptional(ret, source, ctx)
+`
+inject['PathShape2']['force-type'] = 'as unknown as impl.PathShape2;';
+
+inject['Artboard'] = {};
+inject['Artboard']['before'] = `\
+// inject code
+    if (source.fixedRadius) {
+        let cornerRadius = source.cornerRadius;
+        if (!cornerRadius) {
+            source.cornerRadius = new impl.CornerRadius('39e508e8-a1bb-4b55-ad68-aa2a9b3b447a', 0, 0, 0, 0);
+            cornerRadius = source.cornerRadius;
+        }
+        cornerRadius.lt = cornerRadius.rt = cornerRadius.rb = cornerRadius.lb = source.fixedRadius;
+        source.fixedRadius = undefined;
+    }
+`;

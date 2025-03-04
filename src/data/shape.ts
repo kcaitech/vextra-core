@@ -870,8 +870,6 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
     }
 
     getPathOfSize(frame: ShapeSize, fixedRadius?: number): Path {
-        // const offsetX = 0;
-        // const offsetY = 0;
         const width = frame.width;
         const height = frame.height;
 
