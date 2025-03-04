@@ -6,13 +6,12 @@ import {
     Shape,
     ShapeType,
 } from "../../data/shape";
-import { PaddingDir } from "../shape";
 import { translate } from "../frame";
 import { makeShapeTransform1By2, makeShapeTransform2By1, Page, StackSizing } from "../..//data";
 import { after_migrate, unable_to_migrate } from "../utils/migrate";
 import { get_state_name, is_state, shape4Autolayout } from "../symbol";
 import { CoopRepository } from "../../coop/cooprepo";
-import { Api } from "../../coop/recordapi";
+import { Api, PaddingDir } from "../../coop/recordapi";
 
 export class AutoLayoutModify extends AsyncApiCaller {
     updateFrameTargets: Set<Shape> = new Set();

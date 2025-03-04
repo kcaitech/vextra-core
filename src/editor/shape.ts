@@ -12,7 +12,7 @@ import {
     StackSizing,
     StackWrap
 } from "../data/typesdefine";
-import { Api } from "../coop/recordapi";
+import { Api, PaddingDir } from "../coop/recordapi";
 import { importCurvePoint } from "../data/baseimport";
 import { v4 } from "uuid";
 import { uuid } from "../basic/uuid";
@@ -25,7 +25,6 @@ import { ISave4Restore, LocalCmd, SelectionState } from "../coop/localcmd";
 import { exportCurvePoint } from "../data/baseexport";
 import { layoutShapesOrder2, layoutSpacing } from "./utils/auto_layout2";
 
-export type PaddingDir = 'ver' | 'hor' | 'top' | 'right' | 'bottom' | 'left';
 
 export class ShapeEditor {
     protected __shape: ShapeView;

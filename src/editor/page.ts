@@ -58,7 +58,7 @@ import { v4 } from "uuid";
 import { is_exist_invalid_shape2, is_part_of_symbol, is_part_of_symbolref, is_state, modify_variable_with_api, shape4border, shape4cornerRadius, shape4fill, shape4shadow, shape4contextSettings, shape4blur, RefUnbind, _ov } from "./symbol";
 import { is_circular_ref2 } from "./utils/ref_check";
 import { AutoLayout, BorderSideSetting, BorderStyle, ExportFormat, OverlayBackgroundAppearance, OverlayBackgroundInteraction, OverlayPositionType, PrototypeActions, PrototypeConnectionType, PrototypeEasingBezier, PrototypeEasingType, PrototypeEvent, PrototypeEvents, PrototypeInterAction, PrototypeNavigationType, PrototypeStartingPoint, PrototypeTransitionType, ScrollBehavior, ScrollDirection, Shadow } from "../data/baseclasses";
-import { border2path, calculateInnerAnglePosition, getPolygonPoints, getPolygonVertices, update_frame_by_points } from "./utils/path";
+import { calculateInnerAnglePosition, getPolygonPoints, getPolygonVertices, update_frame_by_points } from "./utils/path";
 import { modify_shapes_height, modify_shapes_width } from "./utils/common";
 import { CoopRepository, ISave4Restore, LocalCmd, SelectionState } from "../coop";
 import { Api, TextShapeLike } from "../coop/recordapi";
@@ -74,6 +74,7 @@ import { modifyRadius, modifyStartingAngle, modifySweep, uniformScale, UniformSc
 import { Path } from "@kcdesign/path";
 import { prepareVar } from "./symbol_utils";
 import { layoutShapesOrder2, layoutSpacing } from "./utils/auto_layout2";
+import { border2path } from "../dataview/border2path";
 
 // 用于批量操作的单个操作类型
 export interface PositionAdjust { // 涉及属性：frame.x、frame.y
@@ -952,7 +953,7 @@ export class PageEditor {
         const xy = m.computeCoord(bounds.left, bounds.top)
 
         const frame = new ShapeFrame(xy.x, xy.y, bounds.right - bounds.left, bounds.bottom - bounds.top);
-        let pathstr = "";
+        let path: Path | undefined;
         _shapes.forEach((shape) => {
             const shapem = shape.matrix2Root();
             // const shapepath = render2path(shape);
@@ -968,13 +969,14 @@ export class PageEditor {
             shapem.multiAtLeft(m);
             shapepath.transform(shapem);
 
-            if (pathstr.length > 0) {
-                pathstr = gPal.boolop.union(pathstr, shapepath.toString())
+            if (path) {
+                path.union(shapepath)
             } else {
-                pathstr = shapepath.toString();
+                path = shapepath
             }
         })
-        const path = Path.fromSVGString(pathstr);
+        // const path = Path.fromSVGString(pathstr);
+        if (path === undefined) throw new Error()
         path.translate(-frame.x, -frame.y);
 
         let pathShape = newPathShape(name, frame, path, this.__document.stylesMgr, style);
