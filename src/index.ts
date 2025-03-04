@@ -150,6 +150,8 @@ export {
     StyleSheet,
     RadiusMask
 } from "./data"
+export * from "./data/shapedirlist"
+export * from "./data/shapedirlist2"
 
 export {
     makeMatrixByTransform2,
@@ -181,10 +183,6 @@ export * from "./editor/table"
 export * from "./editor/controller"
 export * as creator from "./editor/creator"
 
-export * from "./service/shapedirlist"
-export * from "./service/shapedirlist2"
-export * from "./service/taskmgr"
-export * from "./service/symbollist"
 
 export * from "./editor/asyncapi"
 
