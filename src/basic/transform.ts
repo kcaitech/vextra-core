@@ -1464,6 +1464,7 @@ export class Transform { // 变换
         return !this.hasTranslate() && !this.hasRotation() && !this.hasScale()
     }
 
+    // 左乘 同multiAtLeft
     addTransform(transform: Transform) { // 叠加另一个变换（先执行本变换，再执行另一个变换）
         if (!transform.isMatrixLatest) transform.updateMatrix();
         if (!this.isMatrixLatest) this.updateMatrix();
@@ -1475,6 +1476,7 @@ export class Transform { // 变换
         return this
     }
 
+    // 右乘 同multi
     addPreTransform(transform: Transform) { // 叠加另一个变换（先执行另一个变换，再执行本变换）
         if (!transform.isMatrixLatest) transform.updateMatrix();
         if (!this.isMatrixLatest) this.updateMatrix();

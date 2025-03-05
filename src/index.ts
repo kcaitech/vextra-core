@@ -7,7 +7,7 @@ export * from "./basic/objectid"
 // export * from "./basic/pal"
 export * from "./basic/utils"
 export {IEventEmitter, EventEmitter} from "./basic/event"
-export {Transform, TransformMode, Line, LineThrough0, Plane, PlaneThrough0} from './basic/transform'
+// export {Transform, TransformMode, Line, LineThrough0, Plane, PlaneThrough0} from './basic/transform'
 export {Vector, ColVector2D, ColVector3D, Matrix as Matrix2} from "./basic/matrix2"
 export {NumberArray2D} from "./basic/number_array"
 
@@ -154,10 +154,10 @@ export * from "./data/shapedirlist"
 export * from "./data/shapedirlist2"
 
 export {
-    makeMatrixByTransform2,
-    makeShapeTransform2By1,
-    makeShapeTransform1By2,
-    updateShapeTransform1By2,
+    // makeMatrixByTransform2,
+    // makeShapeTransform2By1,
+    // makeShapeTransform1By2,
+    // updateShapeTransform1By2,
     importGradient
 } from "./data"
 
@@ -172,6 +172,7 @@ export * from "./io/import/sketch/lzdata"
 export * from "./io/cilpboard"
 // export
 export * from "./io/export/svg"
+export * as svgParser from "./io/svg_parser";
 
 // editor
 export * from "./editor"

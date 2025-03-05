@@ -993,8 +993,10 @@ export class ColVector3D extends ColVector { // 三维列向量
         return new ColVector3D(matrix.data.resize([3, 1]))
     }
 
-    static FromXY(x: number, y: number) {
-        return new ColVector3D([x, y, 0])
+    static FromXY(x: number, y: number): ColVector3D
+    static FromXY(xy: {x: number, y: number}): ColVector3D
+    static FromXY(xy: {x: number, y: number} | number, y?: number) {
+        return typeof xy === 'number' ? new ColVector3D([xy, y ?? 0, 0]) : new ColVector3D([xy.x, xy.y, 0])
     }
 
     static FromXYZ(x: number, y: number, z: number) {
