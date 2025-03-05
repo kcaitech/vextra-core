@@ -127,7 +127,7 @@ export class Validator {
             }
         }
 
-        const required = props.values().filter((p) => p.required)
+        const required = Array.from(props.values()).filter((p) => p.required)
 
         // const required = schema.mergedrequired;
         required.forEach((v) => {
