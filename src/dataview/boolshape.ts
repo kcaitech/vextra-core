@@ -1,4 +1,4 @@
-import { BoolOp, BoolShape, BorderPosition, ShapeFrame, parsePath, FillType, GradientType, ShapeType } from "../data/classes";
+import { BoolOp, BoolShape, BorderPosition, ShapeFrame, parsePath, FillType, GradientType, ShapeType, Fill } from "../data/classes";
 import { ShapeView, updateFrame } from "./shape";
 import { TextShapeView } from "./textshape";
 import { GroupShapeView } from "./groupshape";
@@ -207,7 +207,7 @@ export class BoolShapeView extends GroupShapeView {
     }
 
     protected renderFills(): EL[] {
-        let fills = this.getFills();
+        let fills = this.getFills() as Fill[];
         if (this.mask) {
             fills = fills.map(f => {
                 if (f.fillType === FillType.Gradient && f.gradient?.gradientType === GradientType.Angular) {
@@ -221,16 +221,13 @@ export class BoolShapeView extends GroupShapeView {
     }
 
     protected renderBorders(): EL[] {
-        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.data);
+        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.data, this.radius);
     }
 
     getPath() {
-        // const s = Date.now();
         if (this.m_path) return this.m_path;
         this.m_path = render2path(this);
         this.m_path.freeze();
-        // const e = Date.now();
-        // console.log(e - s, 'time');
         return this.m_path;
     }
 

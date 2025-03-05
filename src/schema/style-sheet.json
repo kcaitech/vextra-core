@@ -1,0 +1,40 @@
+{
+  "description": "style sheet",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "variables": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "./fill-mask.json"
+          },
+          {
+            "$ref": "./shadow-mask.json"
+          },
+          {
+            "$ref": "./blur-mask.json"
+          },
+          {
+            "$ref": "./border-mask.json"
+          },
+          {
+            "$ref": "./radius-mask.json"
+          }
+        ]
+      }
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "variables"
+  ],
+  "additionalProperties": false
+}

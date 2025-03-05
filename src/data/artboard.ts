@@ -26,8 +26,7 @@ export {
     StackWrap,
     AutoLayout
 } from "./baseclasses"
-import { exportArtboard, IExportContext } from "./baseexport";
-
+import { v4 } from "uuid";
 
 export class Artboard extends GroupShape implements classes.Artboard {
     get frame(): ShapeFrame {
@@ -79,7 +78,7 @@ export class Artboard extends GroupShape implements classes.Artboard {
 
     getOpTarget(path: string[]) {
         const id0 = path[0];
-        if (id0 === 'cornerRadius' && !this.cornerRadius) this.cornerRadius = new CornerRadius(0, 0, 0, 0);
+        if (id0 === 'cornerRadius' && !this.cornerRadius) this.cornerRadius = new CornerRadius(v4(), 0, 0, 0, 0);
         if (id0 === "guides" && !this.guides) {
             this.guides = new BasicArray<Guide>();
         }
@@ -96,15 +95,6 @@ export class Artboard extends GroupShape implements classes.Artboard {
 
     get isContainer() {
         return true;
-    }
-
-    get radius(): number[] {
-        return [
-            this.cornerRadius?.lt || 0,
-            this.cornerRadius?.rt || 0,
-            this.cornerRadius?.rb || 0,
-            this.cornerRadius?.lb || 0,
-        ];
     }
 
     get radiusType() {

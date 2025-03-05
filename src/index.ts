@@ -16,6 +16,7 @@ export * from "./basic/error"
 export {
     IWatchable,
     WatchableObject,
+    Basic,
     BasicArray,
     GradientType,
     ShapeType,
@@ -31,7 +32,6 @@ export {
     PaintFilter,
     PaintFilterType,
     Border,
-    StrokePaint,
     Fill,
     Stop,
     Shadow,
@@ -136,7 +136,16 @@ export {
 
     StackPositioning,
 
-    PathSegment
+    ShadowMask,
+    FillMask,
+    BlurMask,
+    StyleMangerMember,
+    CornerRadius,
+    PathSegment,
+    BorderMask,
+    BorderMaskType,
+    StyleSheet,
+    RadiusMask
 } from "./data"
 
 export {
@@ -182,10 +191,16 @@ export * from "./coop"
 export {Transform as TransformRaw} from "./data/transform"
 
 // properties
-export {exportBorder, exportFill, exportShadow, exportBlur} from './data/baseexport';
+export { exportBorder, exportFill, exportShadow, exportBlur, exportContextSettings } from './data/baseexport';
 
 export {LinearApi} from './editor/linearapi/linearapi';
 
 export { CircleChecker } from "./editor/basic/move/circle";
 
 export {Path} from '@kcdesign/path'
+
+export { FillModifier } from "./editor/style/fill";
+export { BorderModifier } from "./editor/style/border";
+export { RadiusModifier } from "./editor/style/radius";
+export { ShadowsModifier } from "./editor/style/shadows";
+export { BlurModifier } from "./editor/style/blur";

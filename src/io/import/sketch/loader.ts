@@ -15,9 +15,9 @@ export function startLoader(lzdata: LzData, document: Document) {
         const _class = data['_class']
         const f = __handler[_class] || ((ctx, data, i: number) => importRectShape(ctx, data, importer, i))
         const ret: Shape = f(ctx, data, i);
-        if (data['sharedStyleID']) {
-            __document.stylesMgr.add(data['sharedStyleID'], ret.style)
-        }
+        // if (data['sharedStyleID']) {
+        //     __document.stylesMgr.add(data['sharedStyleID'], ret.style)
+        // }
         return ret
     }
 
@@ -58,7 +58,7 @@ export function startLoader(lzdata: LzData, document: Document) {
     }
 
     const symbolsSet = new Map<string, SymbolShape>()
-    const ctx: LoadContext = new LoadContext(document.mediasMgr);
+    const ctx: LoadContext = new LoadContext(document.mediasMgr, document.stylesMgr);
 
     // const importer = this.importer = this.importer.bind(this)
     __handler['rectangle'] = (ctx: LoadContext, data: IJSON, i: number) => importRectShape(ctx, data, importer, i)

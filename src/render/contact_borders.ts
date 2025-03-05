@@ -1,10 +1,10 @@
 
 
 import { objectId } from "../basic/objectid";
-import { Border, FillType, MarkerType, Shape, StrokePaint, Style } from "../data/classes";
+import { Border, FillType, MarkerType, Shape, Fill, Style } from "../data/classes";
 import { render as rm } from "./marker";
 
-function handler(h: Function, style: Style, border: Border, path: string, shape: Shape, strokePaint: StrokePaint, startMarkerType?: MarkerType, endMarkerType?: MarkerType): any {
+function handler(h: Function, style: Style, border: Border, path: string, shape: Shape, strokePaint: Fill, startMarkerType?: MarkerType, endMarkerType?: MarkerType): any {
     const thickness = border.sideSetting.thicknessTop;
     const body_props: any = {
         d: path,
@@ -48,7 +48,7 @@ export function render(h: Function, style: Style, path: string, shape: Shape): A
     const bc = border.strokePaints.length;
     const sm = style.startMarkerType, em = style.endMarkerType;
     for (let i = 0; i < bc; i++) {
-        const strokePaint: StrokePaint = border.strokePaints[i];
+        const strokePaint: Fill = border.strokePaints[i];
         if (!strokePaint.isEnabled) continue;
         (() => {
             elArr = elArr.concat(handler(h, style, border, path, shape, strokePaint, sm, em));

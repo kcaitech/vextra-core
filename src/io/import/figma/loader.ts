@@ -1,4 +1,4 @@
-import { BasicArray, Border, BorderPosition, BorderSideSetting, BorderStyle, CornerType, Document, Page, Shape, ShapeType, SideType, StrokePaint, Style, SymbolShape, Transform } from "../../../data";
+import { BasicArray, Border, BorderPosition, BorderSideSetting, BorderStyle, CornerType, Document, Fill, Page, Shape, ShapeType, SideType, Style, SymbolShape, Transform } from "../../../data";
 import { IJSON, LoadContext } from "./basic";
 import {
     importEllipse,
@@ -62,7 +62,7 @@ export function startLoader(file: IJSON, pages: IJSON[], document: Document, nod
         const json: IJSON | undefined = pages.find(p => p.id === id);
         if (!json) {
             const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
-            const strokePaints = new BasicArray<StrokePaint>();
+            const strokePaints = new BasicArray<Fill>();
             const border = new Border(BorderPosition.Inner, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
             const trans = new Transform();
             return new Page(new BasicArray(), id, "", ShapeType.Page, trans, new Style(new BasicArray(), new BasicArray(), border), new BasicArray());

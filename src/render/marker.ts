@@ -1,7 +1,7 @@
-import { Border, FillType, MarkerType, StrokePaint, Style } from "../data/style";
+import { Border, FillType, MarkerType, Fill, Style } from "../data/style";
 
-const marker: { [key: string]: (h: Function, style: Style, border: Border, id: number | string, strokePaint: StrokePaint) => any } = {};
-marker[MarkerType.FilledArrow] = function (h: Function, style: Style, border: Border, id: number | string, strokePaint: StrokePaint) {
+const marker: { [key: string]: (h: Function, style: Style, border: Border, id: number | string, strokePaint: Fill) => any } = {};
+marker[MarkerType.FilledArrow] = function (h: Function, style: Style, border: Border, id: number | string, strokePaint: Fill) {
     const color = strokePaint.color;
     const marker_props: any = {
         id: "arrow-" + id,
@@ -20,7 +20,7 @@ marker[MarkerType.FilledArrow] = function (h: Function, style: Style, border: Bo
     }
     return h('marker', marker_props, [h("path", marker_content_props)]);
 }
-marker[MarkerType.OpenArrow] = function (h: Function, style: Style, border: Border, id: number | string, strokePaint: StrokePaint) {
+marker[MarkerType.OpenArrow] = function (h: Function, style: Style, border: Border, id: number | string, strokePaint: Fill) {
     const color = strokePaint.color;
     let marker_props: any = {
         id: "arrow-" + id,
@@ -41,7 +41,7 @@ marker[MarkerType.OpenArrow] = function (h: Function, style: Style, border: Bord
     }
     return h('marker', marker_props, [h("polyline", marker_content_props)]);
 }
-marker[MarkerType.FilledCircle] = function (h: Function, style: Style, border: Border, id: number | string, strokePaint: StrokePaint) {
+marker[MarkerType.FilledCircle] = function (h: Function, style: Style, border: Border, id: number | string, strokePaint: Fill) {
     const color = strokePaint.color;
     const range = border.sideSetting.thicknessTop;
     const marker_props: any = {
@@ -66,7 +66,7 @@ marker[MarkerType.FilledCircle] = function (h: Function, style: Style, border: B
     }
     return h('marker', marker_props, [h("circle", marker_content_props)]);
 }
-marker[MarkerType.FilledSquare] = function (h: Function, style: Style, border: Border, id: number | string, strokePaint: StrokePaint) {
+marker[MarkerType.FilledSquare] = function (h: Function, style: Style, border: Border, id: number | string, strokePaint: Fill) {
     const color = strokePaint.color;
     const marker_props: any = {
         id: "arrow-" + id,
@@ -86,7 +86,7 @@ marker[MarkerType.FilledSquare] = function (h: Function, style: Style, border: B
     }
     return h('marker', marker_props, [h("path", marker_content_props)]);
 }
-marker[MarkerType.Square] = function (h: Function, style: Style, border: Border, id: number | string, strokePaint: StrokePaint) {
+marker[MarkerType.Square] = function (h: Function, style: Style, border: Border, id: number | string, strokePaint: Fill) {
     const color = strokePaint.color;
     const range = border.sideSetting.thicknessTop;
     const marker_props: any = {
@@ -112,7 +112,7 @@ marker[MarkerType.Square] = function (h: Function, style: Style, border: Border,
     }
     return h('marker', marker_props, [h("rect", marker_content_props)]);
 }
-marker[MarkerType.Round] = function (h: Function, style: Style, border: Border, id: number | string, strokePaint: StrokePaint) {
+marker[MarkerType.Round] = function (h: Function, style: Style, border: Border, id: number | string, strokePaint: Fill) {
     const color = strokePaint.color;
     const range = border.sideSetting.thicknessTop;
     const marker_props: any = {
@@ -139,6 +139,6 @@ marker[MarkerType.Round] = function (h: Function, style: Style, border: Border, 
     return h('marker', marker_props, [h("circle", marker_content_props)]);
 }
 
-export function render(h: Function, style: Style, border: Border, markerType: MarkerType, id: number | string, strokePaint: StrokePaint): any {
+export function render(h: Function, style: Style, border: Border, markerType: MarkerType, id: number | string, strokePaint: Fill): any {
     return marker[markerType](h, style, border, id, strokePaint);
 }

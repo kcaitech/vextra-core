@@ -4,6 +4,7 @@ import { EL, elh } from "./el";
 import {
     CornerRadius, Shape, ShapeFrame, ShapeType, SymbolShape, AutoLayout, BorderPosition, Page, ShadowPosition, BlurType,
     ShapeSize,
+    RadiusMask,
     OverrideType,
     VariableType
 } from "../data";
@@ -21,7 +22,7 @@ export class SymbolView extends GroupShapeView {
         return this.m_data as SymbolShape;
     }
     get cornerRadius(): CornerRadius | undefined {
-        return (this.data).cornerRadius;
+        return this.data.cornerRadius;
     }
 
     get variables() {
@@ -55,7 +56,7 @@ export class SymbolView extends GroupShapeView {
     }
     // borders
     protected renderBorders(): EL[] {
-        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.data);
+        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.data, this.radius);
     }
 
     protected _layout(parentFrame: ShapeSize | undefined, scale: { x: number; y: number; } | undefined): void {
@@ -81,7 +82,7 @@ export class SymbolView extends GroupShapeView {
             const index = Math.min(i - hidden, layout.length - 1);
             newTransform.translateX = layout[index].x;
             newTransform.translateY = layout[index].y;
-            if (!cc.isVisible) { 
+            if (!cc.isVisible) {
                 hidden += 1;
             }
             cc.m_ctx.setDirty(cc);
@@ -121,7 +122,6 @@ export class SymbolView extends GroupShapeView {
     }
 
     updateFrames() {
-
         let changed = this._save_frame.x !== this.m_frame.x || this._save_frame.y !== this.m_frame.y ||
             this._save_frame.width !== this.m_frame.width || this._save_frame.height !== this.m_frame.height;
         if (changed) {
@@ -226,6 +226,26 @@ export class SymbolView extends GroupShapeView {
         }
 
         return changed;
+    }
+
+    get radius(): number[] {
+        let _radius: number[];
+        if (this.radiusMask) {
+            const mgr = this.style.getStylesMgr()!;
+            const mask = mgr.getSync(this.radiusMask) as RadiusMask
+            _radius = [...mask.radius];
+            this.watchRadiusMask(mask);
+        } else {
+            _radius = [
+                this.cornerRadius?.lt ?? 0,
+                this.cornerRadius?.rt ?? 0,
+                this.cornerRadius?.rb ?? 0,
+                this.cornerRadius?.lb ?? 0,
+            ]
+            this.unwatchRadiusMask();
+        }
+        return _radius
+
     }
 
     render(): number {

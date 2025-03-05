@@ -3,11 +3,11 @@ import {
     BasicMap, Transform, Page, ShapeType, Style,
     BorderSideSetting,
     SideType,
-    StrokePaint,
     Border,
     BorderPosition,
     BorderStyle,
-    CornerType
+    CornerType,
+    Fill
 } from "../../../data";
 import { uuid } from "../../../basic/uuid";
 import { IImportContext, importPage, importDocumentMeta } from "../../../data/baseimport";
@@ -57,7 +57,7 @@ function setLoader(pack: { [p: string]: string | Uint8Array; }, document: Docume
         if (!page) {
             const trans = new Transform();
             const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
-            const strokePaints = new BasicArray<StrokePaint>();
+            const strokePaints = new BasicArray<Fill>();
             const border = new Border(BorderPosition.Inner, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
             return new Page(new BasicArray(), id, "", ShapeType.Page, trans, new Style(new BasicArray(), new BasicArray(), border), new BasicArray());
         }

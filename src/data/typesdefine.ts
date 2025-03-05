@@ -47,7 +47,7 @@ export type BorderStyle = {
     length: number,
     gap: number,
 }
-export type Border_strokePaints = Array<StrokePaint>
+export type Border_strokePaints = Array<Fill>
 /* bullet & item number behavior */
 export enum BulletNumbersBehavior {
     Inherit = "inherit",
@@ -101,6 +101,7 @@ export type ContextSettings = {
 }
 /* couner radius */
 export type CornerRadius = {
+    id: string,
     typeId: string,
     lt: number,
     rt: number,
@@ -139,6 +140,7 @@ export type CurvePoint = {
     hasTo?: boolean,
 }
 export type DocumentMeta_pagesList = Array<PageListItem>
+export type DocumentMeta_stylelib = Array<StyleSheet>
 /* ellipse attributes */
 export type Ellipse = {
     cx: number,
@@ -168,6 +170,7 @@ export enum ExportVisibleScaleType {
     Width = "width",
     Height = "height",
 }
+export type FillMask_fills = Array<Fill>
 /* fill rule */
 export enum FillRule {
     Nonzero = "nonzero",
@@ -293,6 +296,12 @@ export enum OverrideType {
     ProtoInteractions = "protoInteractions",
     AutoLayout = "autoLayout",
     FrameMaskDisabled = "frameMaskDisabled",
+    FillsMask = "fillsMask",
+    BorderFillsMask = "borderFillsMask",
+    BordersMask = "bordersMask",
+    ShadowsMask = "shadowsMask",
+    BlursMask = "blursMask",
+    RadiusMask = "radiusMask",
 }
 /* padding */
 export type Padding = {
@@ -436,6 +445,8 @@ export enum PrototypeTransitionType {
     SCROLLANIMATE = "SCROLL_ANIMATE",
     SMARTANIMATE = "SMART_ANIMATE",
 }
+/* crdtidx */
+export type Radius = Array<number>
 /* resize type */
 export enum ResizeType {
     Stretch = "stretch",
@@ -456,6 +467,7 @@ export enum ScrollDirection {
     VERTICAL = "VERTICAL",
     BOTH = "BOTH",
 }
+export type ShadowMask_shadows = Array<Shadow>
 /* shadow position */
 export enum ShadowPosition {
     Inner = "inner",
@@ -474,6 +486,7 @@ export type Shadow = {
     spread: number,
     position: ShadowPosition,
     contextSettings?: GraphicsContextSettings,
+    mask?: string,
 }
 /* shape frame
  * x,y为parent坐标系里的点
@@ -573,6 +586,15 @@ export enum StrikethroughType {
 export enum StyleLibType {
     Color = "color",
 }
+export type StyleSheet_variables = Array<FillMask | ShadowMask | BlurMask | BorderMask | RadiusMask>
+/* shape types */
+export enum StyleVarType {
+    Color = "color",
+    Round = "round",
+    Shadow = "shadow",
+    Thickness = "thickness",
+    Blur = "blur",
+}
 export type Style_fills = Array<Fill>
 export type Style_shadows = Array<Shadow>
 export type Style_innerShadows = Array<Shadow>
@@ -671,6 +693,12 @@ export enum VariableType {
     ProtoInteractions = "protoInteractions",
     AutoLayout = "autoLayout",
     FrameMaskDisabled = "frameMaskDisabled",
+    FillsMask = "fillsMask",
+    BorderFillsMask = "borderFillsMask",
+    BordersMask = "bordersMask",
+    ShadowsMask = "shadowsMask",
+    BlursMask = "blursMask",
+    RadiusMask = "radiusMask",
 }
 export type Variable_0 = Array<Fill | Shadow | PrototypeInterAction>
 /* winding rule */
@@ -709,6 +737,7 @@ export type Blur = {
     type: BlurType,
     motionAngle?: number,
     radius?: number,
+    mask?: string,
 }
 /* border options */
 export type BorderOptions = {
@@ -723,6 +752,7 @@ export type BorderSideSetting = {
     thicknessLeft: number,
     thicknessBottom: number,
     thicknessRight: number,
+    mask?: string,
 }
 /* contact form */
 export type ContactForm = {
@@ -807,6 +837,28 @@ export type PrototypeInterAction = {
     typeId?: string,
     isDeleted?: boolean,
 }
+/* radius mask */
+export type RadiusMask = {
+    crdtidx: Crdtidx,
+    typeId: string,
+    sheet: string,
+    id: string,
+    name: string,
+    description: string,
+    radius: Radius,
+    disabled?: boolean,
+}
+/* shadow mask */
+export type ShadowMask = {
+    crdtidx: Crdtidx,
+    typeId: string,
+    sheet: string,
+    id: string,
+    name: string,
+    description: string,
+    shadows: ShadowMask_shadows,
+    disabled?: boolean,
+}
 /* span attr */
 export type SpanAttr = {
     fontName?: string,
@@ -828,32 +880,33 @@ export type SpanAttr = {
 export type Span = SpanAttr & {
     length: number,
 }
-/* stroke paint */
-export type StrokePaint = {
+/* blur mask */
+export type BlurMask = {
     crdtidx: Crdtidx,
     typeId: string,
+    sheet: string,
     id: string,
-    isEnabled: boolean,
-    fillType: FillType,
-    color: Color,
-    gradient?: Gradient,
-    imageRef?: string,
-    imageScaleMode?: ImageScaleMode,
-    rotation?: number,
-    scale?: number,
-    originalImageWidth?: number,
-    originalImageHeight?: number,
-    paintFilter?: PaintFilter,
-    transform?: PatternTransform,
+    name: string,
+    description: string,
+    blur: Blur,
+    disabled?: boolean,
 }
-/* border */
-export type Border = {
+/* border mask type */
+export type BorderMaskType = {
     typeId: string,
     position: BorderPosition,
-    borderStyle: BorderStyle,
-    cornerType: CornerType,
     sideSetting: BorderSideSetting,
-    strokePaints: Border_strokePaints,
+}
+/* border mask */
+export type BorderMask = {
+    crdtidx: Crdtidx,
+    typeId: string,
+    sheet: string,
+    id: string,
+    name: string,
+    description: string,
+    border: BorderMaskType,
+    disabled?: boolean,
 }
 /* fill */
 export type Fill = {
@@ -890,6 +943,46 @@ export type Para = {
     spans: Para_spans,
     attr?: ParaAttr,
 }
+/* text attr */
+export type TextAttr = ParaAttr & {
+    verAlign?: TextVerAlign,
+    orientation?: TextOrientation,
+    textBehaviour?: TextBehaviour,
+    padding?: Padding,
+}
+/* text */
+export type Text = {
+    typeId: string,
+    paras: Text_paras,
+    attr?: TextAttr,
+}
+/* border */
+export type Border = {
+    typeId: string,
+    position: BorderPosition,
+    borderStyle: BorderStyle,
+    cornerType: CornerType,
+    sideSetting: BorderSideSetting,
+    strokePaints: Border_strokePaints,
+    fillsMask?: string,
+}
+/* fill mask */
+export type FillMask = {
+    crdtidx: Crdtidx,
+    typeId: string,
+    sheet: string,
+    id: string,
+    name: string,
+    description: string,
+    fills: FillMask_fills,
+    disabled?: boolean,
+}
+/* style sheet */
+export type StyleSheet = {
+    id: string,
+    name: string,
+    variables: StyleSheet_variables,
+}
 /* style */
 export type Style = {
     typeId: string,
@@ -907,19 +1000,10 @@ export type Style = {
     startMarkerType?: MarkerType,
     endMarkerType?: MarkerType,
     varbinds?: Map<string, string>,
-}
-/* text attr */
-export type TextAttr = ParaAttr & {
-    verAlign?: TextVerAlign,
-    orientation?: TextOrientation,
-    textBehaviour?: TextBehaviour,
-    padding?: Padding,
-}
-/* text */
-export type Text = {
-    typeId: string,
-    paras: Text_paras,
-    attr?: TextAttr,
+    fillsMask?: string,
+    shadowsMask?: string,
+    blursMask?: string,
+    bordersMask?: string,
 }
 /* shape */
 export type Shape = {
@@ -953,6 +1037,7 @@ export type Shape = {
     scrollBehavior?: ScrollBehavior,
     mask?: boolean,
     stackPositioning?: StackPositioning,
+    radiusMask?: string,
 }
 /* table cell */
 export type TableCell = Shape & {
@@ -1071,6 +1156,7 @@ export type DocumentMeta = {
     lastCmdId: string,
     symbolregist: Map<string, string>,
     freesymbols?: Map<string, SymbolShape | SymbolUnionShape>,
+    stylelib?: DocumentMeta_stylelib,
 }
 /* group shape */
 export type GroupShape = Shape & {

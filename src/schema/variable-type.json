@@ -22,6 +22,12 @@
         "blur",
         "protoInteractions",
         "autoLayout",
-        "frameMaskDisabled"
+        "frameMaskDisabled",
+        "fillsMask",
+        "borderFillsMask",
+        "bordersMask",
+        "shadowsMask",
+        "blursMask",
+        "radiusMask"
     ]
 }

@@ -1,5 +1,5 @@
 import { Blur, BlurType, BorderPosition } from "../data/baseclasses";
-import { Border, Fill, ShapeSize, StrokePaint } from "../data";
+import { Border, Fill, ShapeSize } from "../data";
 import { randomId } from "./basic";
 import { objectId } from '../basic/objectid';
 
@@ -87,7 +87,7 @@ export function render(h: Function, blur: Blur, id: string, frame: ShapeSize, fi
     return [el];
 }
 
-const opacity = (t: (Fill | StrokePaint)[]) => {
+const opacity = (t: (Fill)[]) => {
     for (let i = 0; i < t.length; i++) {
         const __t = t[i];
         if (__t.color.alpha > 0 && __t.isEnabled) return true;

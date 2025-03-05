@@ -12,10 +12,10 @@ import {
     ShapeSize,
     TableCellAttr,
     BorderSideSetting,
-    StrokePaint,
-    Color,
+    Border,
     BorderStyle,
-    Border
+    Color,
+    Fill,
 } from "../data/classes";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
@@ -46,6 +46,10 @@ export class TableView2 extends ShapeView {
 
     get cells(): Map<string, ArtboardView> {
         return this.m_cells;
+    }
+
+    get isImageFill() {
+        return false;
     }
 
     bubblewatcher(...args: any[]) {
@@ -123,11 +127,11 @@ export class TableView2 extends ShapeView {
         if (cell) return cell as Artboard;
 
         // 构造一个
+        const strokePaint = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(0.5, 0, 0, 0))
         const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
-        const strokePaints = new BasicArray<StrokePaint>();
-        const strokePaint = new StrokePaint([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(0.5, 0, 0, 0))
+        const strokePaints = new BasicArray<Fill>();
         strokePaints.push(strokePaint);
-        const border = new Border(BorderPosition.Inner, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
+        const border = new Border(BorderPosition.Center, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
 
         cell = new Artboard(new BasicArray(),
             cellId,

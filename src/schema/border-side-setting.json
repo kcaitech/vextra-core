@@ -20,6 +20,9 @@
         "thicknessRight": {
             "type": "number",
             "default": 1
+        },
+        "mask": {
+            "type": "string"
         }
     },
     "required": [

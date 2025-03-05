@@ -2,6 +2,9 @@
     "description": "couner radius",
     "type": "object",
     "properties": {
+        "id":{
+            "type": "string"
+        },
         "typeId": {
             "type": "string",
             "default": "shape"
@@ -24,6 +27,7 @@
         }
     },
     "required": [
+        "id",
         "typeId",
         "lt",
         "rt",

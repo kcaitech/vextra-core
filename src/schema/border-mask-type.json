@@ -1,0 +1,21 @@
+{
+    "description": "border mask type",
+    "type": "object",
+    "properties": {
+        "typeId": {
+            "type": "string"
+        },
+        "position": {
+            "$ref": "./border-position.json"
+        },
+        "sideSetting": {
+            "$ref": "./border-side-setting.json"
+        }
+    },
+    "required": [
+        "typeId",
+        "position",
+        "sideSetting"
+    ],
+    "additionalProperties": false
+}

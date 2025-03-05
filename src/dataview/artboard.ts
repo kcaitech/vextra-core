@@ -3,13 +3,27 @@ import { GroupShapeView } from "./groupshape";
 import { innerShadowId, renderBorders, renderFills } from "../render";
 import { objectId } from "../basic/objectid";
 import { render as clippathR } from "../render/clippath"
-import { AutoLayout, BorderPosition, CornerRadius, Page, ScrollBehavior, ShadowPosition, ShapeFrame, Transform, Artboard, BlurType, Shape, ShapeSize, SymbolRefShape, SymbolShape, ShapeType, OverrideType, VariableType } from "../data";
+import {
+    AutoLayout,
+    BorderPosition,
+    CornerRadius,
+    Page,
+    ScrollBehavior,
+    ShadowPosition,
+    ShapeFrame,
+    Transform,
+    Artboard,
+    BlurType,
+    ShapeSize,
+    RadiusMask,
+    OverrideType,
+    VariableType
+} from "../data";
 import { ShapeView, updateFrame } from "./shape";
 import { PageView } from "./page";
 import { updateAutoLayout } from "../editor/utils/auto_layout2";
 
 export class ArtboardView extends GroupShapeView {
-
     m_inner_transform: Transform | undefined;
     m_fixed_transform: Transform | undefined;
     get innerTransform(): Transform | undefined {
@@ -39,7 +53,7 @@ export class ArtboardView extends GroupShapeView {
     }
 
     get cornerRadius(): CornerRadius | undefined {
-        return (this.data).cornerRadius;
+        return this.data.cornerRadius;
     }
 
     get autoLayout(): AutoLayout | undefined {
@@ -86,7 +100,7 @@ export class ArtboardView extends GroupShapeView {
     }
 
     protected renderBorders(): EL[] {
-        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.data);
+        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.data, this.radius);
     }
 
     protected renderProps(): { [key: string]: string } & { style: any } {
@@ -360,4 +374,24 @@ export class ArtboardView extends GroupShapeView {
     get frameMaskDisabled() {
         return (this.m_data as Artboard).frameMaskDisabled;
     }
+
+    get radius(): number[] {
+        let _radius: number[];
+        if (this.radiusMask) {
+            const mgr = this.style.getStylesMgr()!;
+            const mask = mgr.getSync(this.radiusMask) as RadiusMask
+            _radius = [...mask.radius];
+            this.watchRadiusMask(mask);
+        } else {
+            _radius = [
+                this.cornerRadius?.lt ?? 0,
+                this.cornerRadius?.rt ?? 0,
+                this.cornerRadius?.rb ?? 0,
+                this.cornerRadius?.lb ?? 0,
+            ]
+            this.unwatchRadiusMask();
+        }
+        return _radius
+    }
+
 }

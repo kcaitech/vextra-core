@@ -1,13 +1,11 @@
 import {
     AutoLayout, Border, ContextSettings, CornerRadius, Fill, MarkerType, OverrideType, PrototypeInterAction, Shadow,
     Shape, ShapeFrame, ShapeSize, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType, ShapeType,
-    BasicArray, getPathOfRadius, makeShapeTransform1By2, makeShapeTransform2By1, Blur, BlurType, PathShape,
-    BorderSideSetting,
-    SideType,
-    StrokePaint,
-    BorderPosition,
-    BorderStyle,
-    CornerType
+    BasicArray, getPathOfRadius, Blur, BlurType,
+    FillMask,
+    ShadowMask,
+    BorderMask,
+    RadiusMask, BlurMask
 } from "../data";
 import { ShapeView, fixFrameByConstrain } from "./shape";
 import { DataView, RootView } from "./view";
@@ -38,6 +36,10 @@ export class SymbolRefView extends ShapeView {
 
     get uniformScale() {
         return this.data.uniformScale;
+    }
+
+    get isImageFill() {
+        return false;
     }
 
     onMounted(): void {
@@ -104,13 +106,6 @@ export class SymbolRefView extends ShapeView {
 
     private m_sym: SymbolShape | undefined;
     private m_union: SymbolShape | undefined;
-
-    getPath() {
-        if (this.m_path) return this.m_path;
-        this.m_path = getPathOfRadius(this.frame, this.cornerRadius, this.m_fixedRadius);
-        this.m_path.freeze();
-        return this.m_path;
-    }
 
     onDataChange(...args: any[]): void {
         super.onDataChange(...args);
@@ -393,32 +388,128 @@ export class SymbolRefView extends ShapeView {
         return findOverrideAll(id, ot, varsContainer);
     }
 
-    getFills(): Fill[] {
+    get fillsMask(): string | undefined {
+        const v = this._findOV2(OverrideType.FillsMask, VariableType.FillsMask);
+        return v ? v.value as string : this.m_sym?.style.fillsMask;
+    }
+
+    getFills(): BasicArray<Fill> {
         if (this.m_fills) return this.m_fills;
-        const v = this._findOV2(OverrideType.Fills, VariableType.Fills);
-        this.m_fills = v ? v.value as Fill[] : this.m_sym?.style.fills || [];
-        return this.m_fills;
+
+        let fills: BasicArray<Fill>;
+        const fillsMask = this.fillsMask;
+        const mgr = this.style.getStylesMgr() || this.m_sym?.style.getStylesMgr();
+        if (fillsMask && mgr) {
+            const mask = mgr.getSync(fillsMask) as FillMask;
+            fills = mask.fills;
+            this.watchFillMask(mask);
+        } else {
+            const v = this._findOV2(OverrideType.Fills, VariableType.Fills);
+            fills = v ? v.value as BasicArray<Fill> : this.m_sym?.style.fills || new BasicArray();
+            this.unwatchFillMask();
+        }
+        return this.m_fills = fills;
     }
 
     getBorders(): Border {
         if (this.m_borders) return this.m_borders;
         const v = this._findOV2(OverrideType.Borders, VariableType.Borders);
-        const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
-        const strokePaints = new BasicArray<StrokePaint>();
-        const border = new Border(BorderPosition.Inner, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
-        this.m_borders = v ? v.value as Border : this.m_sym?.style.borders;
-        return this.m_borders || border;
+        const border = v ? { ...v.value } : { ...this.m_data.style.borders };
+        const bordersMask = this.bordersMask;
+        const mgr = this.style.getStylesMgr() || this.m_sym?.style.getStylesMgr();
+        if (bordersMask && mgr) {
+            const mask = mgr.getSync(bordersMask) as BorderMask
+            border.position = mask.border.position;
+            border.sideSetting = mask.border.sideSetting;
+            this.watchBorderMask(mask);
+        } else {
+            this.unwatchBorderMask();
+        }
+        const fillsMask: string | undefined = this.borderFillsMask;
+        if (fillsMask && mgr) {
+            const mask = mgr.getSync(fillsMask) as FillMask;
+            border.strokePaints = mask.fills;
+            this.watchBorderFillMask(mask);
+        } else {
+            this.unwatchBorderFillMask();
+        }
+        return border;
     }
 
-    getShadows(): Shadow[] {
-        const v = this._findOV2(OverrideType.Shadows, VariableType.Shadows);
-        if (v) return v.value;
-        return this.m_sym?.style.shadows || [];
+    get bordersMask(): string | undefined {
+        const v = this._findOV2(OverrideType.BordersMask, VariableType.BordersMask);
+        return v ? v.value : this.m_sym?.style.bordersMask;
+    }
+
+    get borderFillsMask(): string | undefined {
+        const v = this._findOV2(OverrideType.BorderFillsMask, VariableType.BorderFillsMask);
+        return v ? v.value : this.m_sym?.style.borders.fillsMask;
+    }
+
+    get shadowsMask(): string | undefined {
+        const v = this._findOV2(OverrideType.ShadowsMask, VariableType.ShadowsMask);
+        return v ? v.value as string : this.m_sym?.style.shadowsMask;
+    }
+
+    get radiusMask(): string | undefined {
+        const v = this._findOV2(OverrideType.RadiusMask, VariableType.RadiusMask);
+        return v ? v.value : this.m_sym?.radiusMask;
+    }
+
+    get radius(): number[] {
+        let _radius: number[];
+        const mgr = this.style.getStylesMgr() || this.m_sym?.style.getStylesMgr();
+        if (this.radiusMask && mgr) {
+            const mask = mgr.getSync(this.radiusMask) as RadiusMask
+            _radius = [...mask.radius];
+            this.watchRadiusMask(mask);
+        } else {
+            const corner = this.cornerRadius;
+            _radius = [
+                corner?.lt ?? 0,
+                corner?.rt ?? 0,
+                corner?.rb ?? 0,
+                corner?.lb ?? 0,
+            ]
+            this.unwatchRadiusMask();
+        }
+        return _radius
+    }
+    getShadows(): BasicArray<Shadow> {
+        let shadows: BasicArray<Shadow>;
+        const shadowsMask = this.shadowsMask;
+        const mgr = this.style.getStylesMgr() || this.m_sym?.style.getStylesMgr();
+        if (shadowsMask && mgr) {
+            const mask = mgr.getSync(shadowsMask) as ShadowMask;
+            shadows = mask.shadows;
+            this.watchShadowMask(mask);
+        } else {
+            const v = this._findOV2(OverrideType.Shadows, VariableType.Shadows);
+            shadows = v ? v.value : this.m_sym?.style.shadows || new BasicArray();
+            this.unwatchShadowMask()
+        }
+        return shadows;
+    }
+
+    get blurMask(): string | undefined {
+        const v = this._findOV2(OverrideType.BlursMask, VariableType.BlursMask);
+        return v ? v.value : this.m_sym?.style.blursMask;
     }
 
     get blur(): Blur | undefined {
-        const v = this._findOV2(OverrideType.Blur, VariableType.Blur);
-        return v ? v.value : this.m_sym?.style.blur;
+        let blur: Blur;
+        const blurMask = this.blurMask;
+        const mgr = this.style.getStylesMgr() || this.m_sym?.style.getStylesMgr();
+        if (blurMask && mgr) {
+            const mask = mgr.getSync(blurMask) as BlurMask;
+            blur = mask.blur;
+            this.watchBlurMask(mask);
+        } else {
+            const v = this._findOV2(OverrideType.Blur, VariableType.Blur);
+            blur = v ? v.value : this.m_sym?.style.blur;
+            this.unwatchBlurMask()
+        }
+        return blur;
     }
 
     get name() {

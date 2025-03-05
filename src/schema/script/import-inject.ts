@@ -1,4 +1,4 @@
-// import { is_mac } from "../../data/utils";
+import { importGroupShape_childs, importGuide } from "../../data/baseimport";
 
 export const inject: any = {};
 inject['ImageShape'] = {} as any;
@@ -363,6 +363,32 @@ inject['TextAttr']['before'] = `\
     }
 `
 
+inject['FillMask'] = {};
+inject['FillMask']['after'] = `\
+    // inject code
+    if (ctx?.document) ctx.document.stylesMgr.add(ret.id, ret);
+`
+inject['ShadowMask'] = {};
+inject['ShadowMask']['after'] = `\
+    // inject code
+    if (ctx?.document) ctx.document.stylesMgr.add(ret.id, ret);
+`
+inject['BlurMask'] = {};
+inject['BlurMask']['after'] = `\
+    // inject code
+    if (ctx?.document) ctx.document.stylesMgr.add(ret.id, ret);
+`
+inject['BorderMask'] = {};
+inject['BorderMask']['after'] = `\
+    // inject code
+    if (ctx?.document) ctx.document.stylesMgr.add(ret.id, ret);
+`
+inject['RadiusMask'] = {};
+inject['RadiusMask']['after'] = `\
+    // inject code
+    if (ctx?.document) ctx.document.stylesMgr.add(ret.id, ret);
+`
+
 inject['Style'] = {};
 inject['Style']['before'] = `\
     // inject code
@@ -382,13 +408,12 @@ inject['Style']['before'] = `\
             for (let i = 0; i < (source.borders as any).length; ++i) {
                 const strokePaint = { ...(source.borders as any)[i] };
                 if (!strokePaint.crdtidx) strokePaint.crdtidx = [i];
-                strokePaint.typeId = 'stroke-paint';
+                strokePaint.typeId = 'fill';
                 delete strokePaint.borderStyle;
                 delete strokePaint.cornerType;
                 delete strokePaint.position;
                 delete strokePaint.sideSetting;
                 delete strokePaint.thickness;
-                delete strokePaint.contextSettings;
                 strokePaints.push(strokePaint);
             }
             (source as any).borders = {
@@ -417,20 +442,22 @@ inject['Style']['before'] = `\
         }
     }
 `
-
+inject['Style']['after'] = `\
+    // inject code
+    if (ctx?.document) ret.setStylesMgr(ctx.document.stylesMgr);
+`
 inject['Border'] = {};
 inject['Border']['before'] = `\
     // inject code
     if (!source.strokePaints) {
         const strokePaint = { ...(source as any) };
         if (!strokePaint.crdtidx) strokePaint.crdtidx = [0];
-        strokePaint.typeId = 'stroke-paint';
+        strokePaint.typeId = 'fill';
         delete strokePaint.borderStyle;
         delete strokePaint.cornerType;
         delete strokePaint.position;
         delete strokePaint.sideSetting;
         delete strokePaint.thickness;
-        delete strokePaint.contextSettings;
         (source as any) = {
             typeId: "border",
             borderStyle: source.borderStyle,
@@ -450,13 +477,12 @@ inject['Variable']['before'] = `\
         for (let i = 0; i < source.value.length; ++i) {
             const strokePaint = { ...source.value[i] } as any;
             if (!strokePaint.crdtidx) strokePaint.crdtidx = [i];
-            strokePaint.typeId = 'stroke-paint';
+            strokePaint.typeId = 'fill';
             delete strokePaint.borderStyle;
             delete strokePaint.cornerType;
             delete strokePaint.position;
             delete strokePaint.sideSetting;
             delete strokePaint.thickness;
-            delete strokePaint.contextSettings;
             strokePaints.push(strokePaint);
         }
         const border = source.value[0] as any;
@@ -470,3 +496,50 @@ inject['Variable']['before'] = `\
         } as types.Border
     }
 `
+
+inject['PathShape2'] = {};
+inject['PathShape2']['before'] = `\
+    // inject code
+     if (!source.pathsegs?.length) { // 兼容旧数据
+        const seg: types.PathSegment = {
+            crdtidx: [0],
+            id: '39e508e8-a1bb-4b55-ad68-aa2a9b3b447a',
+            points:[],
+            isClosed: true
+        }
+        
+        if ((source as any)?.points?.length) {
+            seg.points.push(...(source as any)?.points);
+        } 
+        
+        source.pathsegs = [seg];
+    }
+`
+inject['PathShape2']['content'] = `\
+source.type = types.ShapeType.Path;
+    const ret: impl.PathShape = new impl.PathShape (
+    importCrdtidx(source.crdtidx, ctx),
+    source.id,
+    source.name,
+    importShapeType(source.type, ctx),
+    importTransform(source.transform, ctx),
+    importStyle(source.style, ctx),
+    importShapeSize(source.size, ctx),
+    importPathShape_pathsegs(source.pathsegs, ctx));
+    importPathShapeOptional(ret, source, ctx)
+`
+inject['PathShape2']['force-type'] = 'as unknown as impl.PathShape2;';
+
+inject['Artboard'] = {};
+inject['Artboard']['before'] = `\
+// inject code
+    if (source.fixedRadius) {
+        let cornerRadius = source.cornerRadius;
+        if (!cornerRadius) {
+            source.cornerRadius = new impl.CornerRadius('39e508e8-a1bb-4b55-ad68-aa2a9b3b447a', 0, 0, 0, 0);
+            cornerRadius = source.cornerRadius;
+        }
+        cornerRadius.lt = cornerRadius.rt = cornerRadius.rb = cornerRadius.lb = source.fixedRadius;
+        source.fixedRadius = undefined;
+    }
+`;

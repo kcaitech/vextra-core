@@ -1,7 +1,7 @@
 import { DocumentMeta, PageListItem } from "./baseclasses";
 import { Page } from "./page";
 import { BasicArray, BasicMap, IDataGuard, ResourceMgr, WatchableObject } from "./basic";
-import { Style } from "./style";
+import { StyleSheet, StyleMangerMember } from "./style";
 import { GroupShape, Shape, SymbolShape, TextShape } from "./shape";
 import { TableShape } from "./table";
 import { SymbolRefShape } from "./symbolref";
@@ -101,7 +101,7 @@ export class Document extends (DocumentMeta) {
 
     private __pages: ResourceMgr<Page>;
     private __symbols: SymbolMgr
-    private __styles: ResourceMgr<Style>
+    private __styles: ResourceMgr<StyleMangerMember>
     private __medias: ResourceMgr<{ buff: Uint8Array, base64: string }>
     private __versionId: string;
     private __name: string;
@@ -115,7 +115,8 @@ export class Document extends (DocumentMeta) {
         pagesList: BasicArray<PageListItem>,
         symbolregist: BasicMap<string, string>,
         guard: IDataGuard,
-        freesymbols?: BasicMap<string, SymbolShape>
+        freesymbols?: BasicMap<string, SymbolShape>,
+        stylelib?: BasicArray<StyleSheet>,
     ) {
         super(id, name, FMT_VER_latest, pagesList ?? new BasicArray(), lastCmdId, symbolregist)
         this.__versionId = versionId;
@@ -123,9 +124,10 @@ export class Document extends (DocumentMeta) {
         this.__pages = new ResourceMgr<Page>([id, 'pages'], (data: Page) => guard.guard(data));
         this.__symbols = new SymbolMgr([id, 'symbols'], symbolregist, (data: Shape) => guard.guard(data));
         this.__medias = new ResourceMgr<{ buff: Uint8Array, base64: string }>([id, 'medias']);
-        this.__styles = new ResourceMgr<Style>([id, 'styles']);
+        this.__styles = new ResourceMgr<StyleMangerMember>([id, 'styles']);
         this.__correspondent = new SpecialActionCorrespondent();
         this.freesymbols = freesymbols;
+        this.stylelib = stylelib;
         return guard.guard(this);
     }
 

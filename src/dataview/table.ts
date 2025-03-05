@@ -2,11 +2,11 @@ import {
     Border,
     BorderSideSetting,
     BorderStyle,
+    Fill,
     OverrideType,
     Shape,
     ShapeFrame, 
     ShapeType,
-    StrokePaint,
     Style,
     TableCell,
     TableCellType,
@@ -44,6 +44,10 @@ export class TableView extends ShapeView {
 
     get cells(): Map<string, TableCellView> {
         return this.m_cells;
+    }
+
+    get isImageFill() {
+        return false;
     }
 
     bubblewatcher(...args: any[]) {
@@ -109,7 +113,7 @@ export class TableView extends ShapeView {
 
         // 构造一个
         const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
-        const strokePaints = new BasicArray<StrokePaint>();
+        const strokePaints = new BasicArray<Fill>();
         const border = new Border(BorderPosition.Inner, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
         cell = new TableCell(new BasicArray(),
             cellId,

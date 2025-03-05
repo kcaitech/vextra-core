@@ -1,9 +1,10 @@
 import { EL, elh } from "./el";
 import { render as renderBorders } from "../render/contact_borders"
-import { ContactForm, ContactShape, Page, Shape, ShapeFrame, ShapeType } from "../data/classes";
+import { ContactForm, ContactShape, Page, Shape, ShapeFrame, ShapeType, Fill, Blur } from "../data/classes";
 import { DViewCtx, PropsType } from "./viewctx";
 import { PathShapeView } from "./pathshape";
 import { updateFrame } from "./shape";
+import { BasicArray } from "../data";
 
 export class ContactLineView extends PathShapeView {
 
@@ -224,5 +225,17 @@ export class ContactLineView extends PathShapeView {
 
     getPoints() {
         return this.data.getPoints(); // todo 缓存
+    }
+
+    get isImageFill() {
+        return false;
+    }
+
+    getFills(): BasicArray<Fill> {
+        return new BasicArray();
+    }
+
+    get blur(): Blur | undefined {
+        return undefined;
     }
 }

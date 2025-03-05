@@ -1,10 +1,15 @@
-import { Artboard, GroupShape, Shape, ShapeFrame, ShapeSize, ShapeType, SymbolRefShape, SymbolShape } from "../data";
+import {
+    GroupShape,
+    Shape,
+    ShapeFrame,
+    ShapeSize,
+    ShapeType
+} from "../data";
 import { ShapeView, updateFrame } from "./shape";
 import { getShapeViewId } from "./basic";
 import { EL } from "./el";
 import { DataView, RootView } from "./view";
 import { DViewCtx, PropsType, VarsContainer } from "./viewctx";
-import { ArtboardView } from "./artboard";
 
 export class GroupShapeView extends ShapeView {
 
@@ -54,6 +59,10 @@ export class GroupShapeView extends ShapeView {
         this.notify('mask-env-change');
     }
 
+    get isImageFill() {
+        return false;
+    }
+
     onDestroy(): void {
         super.onDestroy();
         this.m_data.bubbleunwatch(this._bubblewatcher);
@@ -90,17 +99,14 @@ export class GroupShapeView extends ShapeView {
         }
     }
 
-    // fills
     protected renderFills(): EL[] {
         return []; // group无fill
     }
 
-    // borders
     protected renderBorders(): EL[] {
         return []; // group无border
     }
 
-    // childs
     protected renderContents(): EL[] {
         const childs = this.m_children;
         childs.forEach((c) => c.render());
@@ -151,10 +157,6 @@ export class GroupShapeView extends ShapeView {
         if (rootView) rootView.addDelayDestory(removes);
         else removes.forEach((c => c.destory()));
     }
-
-    // super_updateFrames(): boolean {
-    //     return super.updateFrames();
-    // }
 
     updateFrames(): boolean {
         let children = this.m_children;

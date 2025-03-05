@@ -76,7 +76,6 @@ function findTForLength(p0: Point2D, p1: Point2D, p2: Point2D, p3: Point2D, targ
 function findCtrlPoint(p0: Point2D, p1: Point2D, p2: Point2D, p3: Point2D, radius: number) {
     const t = findTForLength(p0, p1, p2, p3, radius);
     if (t === null) {
-        console.log('!t');
         return t;
     }
     return bezierCurvePoint(t, p0, p1, p2, p3);

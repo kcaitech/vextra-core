@@ -8,12 +8,10 @@ import {
     CurveMode,
     CurvePoint,
     ExportOptions, Guide,
-    OverrideType,
     PathSegment,
     ResizeType,
     ShapeFrame,
     ShapeType,
-    VariableType,
     ShapeSize,
     PrototypeInterAction,
     OverlayPosition,
@@ -21,21 +19,22 @@ import {
     OverlayBackgroundAppearance,
     OverlayBackgroundType,
     OverlayMargin,
-    Color} from "./baseclasses"
+    Color
+} from "./baseclasses"
 import { TextLayout } from "./text/textlayout";
 import { parsePath } from "./pathparser";
 import { PathType, RadiusType, RECT_POINTS } from "./consts";
 import { Variable } from "./variable";
 import { Transform } from "./transform";
 import { Path } from "@kcdesign/path";
+import { v4 } from "uuid";
 
 export { Transform } from "./transform";
 export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D,
     CurvePoint, ShapeFrame, Ellipse, PathSegment, OverrideType, VariableType,
-    FillRule, CornerRadius, ShapeSize, StackPositioning
+    FillRule, CornerRadius, ShapeSize, StackPositioning, Radius
 } from "./baseclasses";
-
 export { Variable } from "./variable";
 
 
@@ -111,15 +110,12 @@ export class Shape extends Basic implements classes.Shape {
         return super.getOpTarget(path);
     }
 
-    // shape
     typeId = 'shape'
     crdtidx: BasicArray<number>
     id: string
     type: ShapeType
-    // frame: ShapeFrame
     style: Style
     transform: Transform
-    // size: ShapeSize
     boolOp?: BoolOp
     isFixedToViewport?: boolean
     isLocked?: boolean
@@ -144,7 +140,7 @@ export class Shape extends Basic implements classes.Shape {
     scrollBehavior?: classes.ScrollBehavior;
     mask?: boolean;
     stackPositioning?: classes.StackPositioning;
-    // uniformScale?: number;
+    radiusMask?: string;
 
     constructor(
         crdtidx: BasicArray<number>, id: string, name: string, type: ShapeType, transform: Transform, style: Style
@@ -171,9 +167,6 @@ export class Shape extends Basic implements classes.Shape {
         return false;
     }
 
-    /**
-     * @deprecated
-     */
     get rotation(): number {
         return (this.transform).decomposeRotate() * 180 / Math.PI;
     }
@@ -211,16 +204,16 @@ export class Shape extends Basic implements classes.Shape {
         return false;
     }
 
-    getPathOfSize(frame: ShapeSize, fixedRadius?: number): Path {
+    getPathOfSize(frame: ShapeSize): Path {
         return new Path();
     }
 
-    getPath(fixedRadius?: number): Path {
-        return this.getPathOfSize(this.frame, fixedRadius);
+    getPath(): Path {
+        return this.getPathOfSize(this.frame);
     }
 
-    getPathStr(fixedRadius?: number): string {
-        return this.getPath(fixedRadius).toString();
+    getPathStr(): string {
+        return this.getPath().toString();
     }
 
     getPage(): Shape | undefined {
@@ -233,14 +226,6 @@ export class Shape extends Basic implements classes.Shape {
         let p = this.__parent;
         while (p && !(p instanceof Shape)) p = p.parent;
         return p;
-    }
-
-    /**
-     * @deprecated 这个坐标是没有经过旋转变换的
-     * @returns
-     */
-    realXY(): { x: number, y: number, width: number, height: number } {
-        return this.frame2Root();
     }
 
     // @deprecated
@@ -353,25 +338,11 @@ export class Shape extends Basic implements classes.Shape {
         }
     }
 
-    findVar(varId: string, ret: Variable[]) {
-        this.parent?.findVar(varId, ret);
-    }
-
+    /**
+     * @deprecated
+     */
     getVisible(): boolean {
-        if (!this.varbinds) return !!this.isVisible;
-        if (this.isVirtualShape) return !!this.isVisible; // 由proxy处理
-
-        const visibleVar = this.varbinds.get(OverrideType.Visible);
-        if (!visibleVar) return !!this.isVisible;
-
-        const _vars: Variable[] = [];
-        this.findVar(visibleVar, _vars);
-        // watch vars
-        const _var = _vars[_vars.length - 1];
-        if (_var && _var.type === VariableType.Visible) {
-            return !!_var.value;
-        }
-        return !!this.isVisible;
+        throw new Error()
     }
 
     onAdded() {
@@ -404,10 +375,6 @@ export class Shape extends Basic implements classes.Shape {
         return true;
     }
 
-    get radius(): number[] {
-        return [0];
-    }
-
     get radiusType() {
         return RadiusType.None;
     }
@@ -418,10 +385,6 @@ export class Shape extends Basic implements classes.Shape {
 
     get isStraight() {
         return false;
-    }
-
-    get isImageFill() {
-        return this.getFills().some(fill => fill.fillType === classes.FillType.Pattern);
     }
 }
 
@@ -535,9 +498,9 @@ export class GroupShape extends Shape implements classes.GroupShape {
         return RadiusType.Fixed;
     }
 
-    get isImageFill() {
-        return false;
-    }
+    // get isImageFill() {
+    //     return false;
+    // }
 
     get size(): ShapeSize {
         return this.frame;
@@ -608,28 +571,23 @@ export class BoolShape extends GroupShape implements classes.BoolShape {
         return true;
     }
 
-    get isImageFill() {
-        return this.style.getFills().some(fill => fill.fillType === classes.FillType.Pattern);
-    }
+    // get isImageFill() {
+    //     return this.style.getFills().some(fill => fill.fillType === classes.FillType.Pattern);
+    // }
 }
-
-// export function genRefId(refId: string, type: OverrideType) {
-//     if (type === OverrideType.Variable) return refId;
-//     return refId + '/' + type;
-// }
 
 export function getPathOfRadius(frame: ShapeSize, cornerRadius?: CornerRadius, fixedRadius?: number): Path {
     const w = frame.width;
     const h = frame.height;
 
-    const haRadius = fixedRadius ||
+    const hasRadius = fixedRadius ||
         (cornerRadius &&
             (cornerRadius.lt > 0 ||
                 cornerRadius.lb > 0 ||
                 cornerRadius.rb > 0 ||
                 cornerRadius.rt > 0))
 
-    if (!haRadius) {
+    if (!hasRadius) {
         const path = [
             ["M", 0, 0],
             ["l", w, 0],
@@ -640,11 +598,8 @@ export function getPathOfRadius(frame: ShapeSize, cornerRadius?: CornerRadius, f
         return Path.fromSVGString(path.join(''));
     }
 
-    const maxRadius = Math.min(w / 2, h / 2);
     let lt, lb, rt, rb;
     if (fixedRadius) {
-        fixedRadius = Math.min(fixedRadius, maxRadius);
-        fixedRadius = Math.max(0, fixedRadius);
         lt = lb = rt = rb = fixedRadius;
     } else {
         lt = cornerRadius!.lt;
@@ -653,47 +608,17 @@ export function getPathOfRadius(frame: ShapeSize, cornerRadius?: CornerRadius, f
         rb = cornerRadius!.rb;
     }
 
-    // const path = [];
-    // path.push(["M", lt, 0]);
-    // path.push(["l", w - lt - rt, 0]);
-    // if (rt > 0) {
-    //     path.push(["c", rt, 0, 0, 0, 0, rt]);
-    // }
-    // path.push(["l", 0, h - rt - rb]);
-    // if (rb > 0) {
-    //     path.push(["c", 0, rb, 0, 0, -rb, 0]);
-    // }
-    // path.push(["l", -w + lb + rb, 0]);
-    // if (lb > 0) {
-    //     path.push(["c", -lb, 0, 0, 0, 0, -lb]);
-    // }
-    //
-    // if (lt > 0) {
-    //     path.push(["l", 0, -h + lt + lb]);
-    //     path.push(["c", 0, -lt, 0, 0, lt, 0]);
-    // }
-    //
-    // path.push(["z"]);
-
     const p1 = new CurvePoint([] as any, '', 0, 0, CurveMode.Straight);
     const p2 = new CurvePoint([] as any, '', 1, 0, CurveMode.Straight);
     const p3 = new CurvePoint([] as any, '', 1, 1, CurveMode.Straight);
     const p4 = new CurvePoint([] as any, '', 0, 1, CurveMode.Straight);
 
-    if (lt > 0) {
-        p1.radius = lt;
-    }
-    if (rt > 0) {
-        p2.radius = rt;
-    }
-    if (rb > 0) {
-        p3.radius = rb;
-    }
-    if (lb > 0) {
-        p4.radius = lb;
-    }
+    if (lt > 0) p1.radius = lt;
+    if (rt > 0) p2.radius = rt;
+    if (rb > 0) p3.radius = rb;
+    if (lb > 0) p4.radius = lb;
 
-    return (parsePath(new BasicArray<CurvePoint>(p1, p2, p3, p4), true, w, h, fixedRadius));
+    return parsePath(new BasicArray<CurvePoint>(p1, p2, p3, p4), true, w, h, fixedRadius);
 }
 
 export class SymbolShape extends GroupShape implements classes.SymbolShape {
@@ -749,7 +674,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
     getOpTarget(path: string[]): any {
         const id0 = path[0];
         if (id0 === 'symtags' && !this.symtags) this.symtags = new BasicMap<string, string>();
-        if (id0 === 'cornerRadius' && !this.cornerRadius) this.cornerRadius = new CornerRadius(0, 0, 0, 0);
+        if (id0 === 'cornerRadius' && !this.cornerRadius) this.cornerRadius = new CornerRadius(v4(), 0, 0, 0, 0);
         if (id0 === "guides" && !this.guides) {
             this.guides = new BasicArray<Guide>();
         }
@@ -797,15 +722,6 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
 
     getPathOfSize(frame: ShapeSize, fixedRadius?: number | undefined): Path {
         return getPathOfRadius(frame, this.cornerRadius, fixedRadius);
-    }
-
-    get radius(): number[] {
-        return [
-            this.cornerRadius?.lt || 0,
-            this.cornerRadius?.rt || 0,
-            this.cornerRadius?.rb || 0,
-            this.cornerRadius?.lb || 0,
-        ];
     }
 
     get radiusType() {
@@ -888,8 +804,6 @@ export class PathShape extends Shape implements classes.PathShape {
     }
 
     getPathOfSize(frame: ShapeSize, fixedRadius?: number): Path {
-        // const offsetX = 0;
-        // const offsetY = 0;
         const width = frame.width;
         const height = frame.height;
 
@@ -901,21 +815,6 @@ export class PathShape extends Shape implements classes.PathShape {
         });
 
         return path
-    }
-
-    // setRadius(radius: number): void {
-    //     this.points.forEach((p) => p.radius = radius);
-    // }
-
-    // get radius(): number[] {
-    //     return this.points.map((p) => p.radius || 0);
-    // }
-
-    get radius(): number[] {
-        return this.pathsegs.reduce((radius: number[], seg) => seg.points.reduce((radius, p) => {
-            radius.push(p.radius || 0);
-            return radius;
-        }, radius), []);
     }
 
     get radiusType(): RadiusType {
@@ -971,8 +870,6 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
     }
 
     getPathOfSize(frame: ShapeSize, fixedRadius?: number): Path {
-        // const offsetX = 0;
-        // const offsetY = 0;
         const width = frame.width;
         const height = frame.height;
 
@@ -984,13 +881,6 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
         });
 
         return path
-    }
-
-    get radius(): number[] {
-        return this.pathsegs.reduce((radius: number[], seg) => seg.points.reduce((radius, p) => {
-            radius.push(p.radius || 0);
-            return radius;
-        }, radius), []);
     }
 
     get pathType() {
@@ -1098,9 +988,9 @@ export class ImageShape extends RectShape implements classes.ImageShape {
         return false;
     }
 
-    get isImageFill() {
-        return true;
-    }
+    // get isImageFill() {
+    //     return true;
+    // }
 }
 
 export class OvalShape extends PathShape implements classes.OvalShape {
@@ -1249,9 +1139,9 @@ export class TextShape extends Shape implements classes.TextShape {
         return false;
     }
 
-    get isImageFill() {
-        return false;
-    }
+    // get isImageFill() {
+    //     return false;
+    // }
 }
 
 export class CutoutShape extends PathShape implements classes.CutoutShape {
@@ -1302,9 +1192,9 @@ export class CutoutShape extends PathShape implements classes.CutoutShape {
         return RadiusType.None;
     }
 
-    get isImageFill() {
-        return false;
-    }
+    // get isImageFill() {
+    //     return false;
+    // }
 }
 
 export class PolygonShape extends PathShape implements classes.PolygonShape {

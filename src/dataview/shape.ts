@@ -1,44 +1,60 @@
 import { innerShadowId, renderBlur, renderBorders, renderFills, renderShadows } from "../render";
 import {
-    Artboard,
-    AutoLayout,
-    BasicArray, Blur, BlurType, Border,
-    BorderPosition, ContextSettings, CornerRadius,
-    CurvePoint, ExportOptions, Fill, FillType,
-    GradientType, MarkerType, OverlayBackgroundAppearance,
-    OverlayBackgroundInteraction, OverlayPosition,
-    OverrideType, PathShape, Point2D,
-    PrototypeInterAction, PrototypeStartingPoint,
-    ResizingConstraints2, ScrollBehavior,
-    ScrollDirection, Shadow, ShadowPosition, Shape,
-    ShapeFrame, ShapeSize, ShapeType, SymbolRefShape,
-    SymbolShape, Transform, Variable, VariableType
+    BasicArray,
+    Blur,
+    BlurMask,
+    BlurType,
+    Border,
+    BorderMask,
+    BorderPosition,
+    ContextSettings,
+    CornerRadius,
+    CurveMode, CurvePoint,
+    ExportOptions,
+    Fill,
+    FillMask,
+    FillType,
+    GradientType,
+    MarkerType,
+    OverlayBackgroundAppearance,
+    OverlayBackgroundInteraction,
+    OverlayPosition,
+    OverrideType, parsePath,
+    PathShape,
+    PrototypeInterAction,
+    PrototypeStartingPoint,
+    RadiusMask,
+    RadiusType,
+    ResizingConstraints2,
+    ScrollBehavior,
+    ScrollDirection,
+    Shadow,
+    ShadowMask,
+    ShadowPosition,
+    Shape,
+    ShapeFrame,
+    ShapeSize,
+    ShapeType,
+    SymbolRefShape,
+    SymbolShape,
+    Transform,
+    Variable,
+    VariableType
 } from "../data";
 import { findOverrideAndVar } from "./basic";
 import { EL, elh } from "./el";
-import { Matrix } from "../basic/matrix";
 import { DataView } from "./view"
 import { DViewCtx, PropsType } from "./viewctx";
 import { objectId } from "../basic/objectid";
 import { float_accuracy } from "../basic/consts";
 import { GroupShapeView } from "./groupshape";
-import { importBorder, importFill, importStrokePaint } from "../data/baseimport";
-import { exportBorder, exportFill, exportStrokePaint } from "../data/baseexport";
+import { importFill } from "../data/baseimport";
+import { exportFill } from "../data/baseexport";
 import { PageView } from "./page";
 import { ArtboardView } from "./artboard";
 import { findOverrideAll } from "../data/utils";
 import { Path } from "@kcdesign/path";
 import { isEqual } from "../basic/number_utils";
-import { updateAutoLayout } from "src/editor/utils/auto_layout2";
-
-export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
-    return (
-        !isEqual(lsh.x, rsh.x) ||
-        !isEqual(lsh.y, rsh.y) ||
-        !isEqual(lsh.width, rsh.width) ||
-        !isEqual(lsh.height, rsh.height)
-    );
-}
 
 export function isDiffShapeSize(lsh: ShapeSize | undefined, rsh: ShapeSize | undefined) {
     if (lsh === rsh) { // both undefined
@@ -52,7 +68,6 @@ export function isDiffShapeSize(lsh: ShapeSize | undefined, rsh: ShapeSize | und
         !isEqual(lsh.height, rsh.height)
     );
 }
-
 
 export function isDiffScale(lhs: { x: number, y: number } | undefined, rhs: {
     x: number,
@@ -85,11 +100,6 @@ export function isDiffVarsContainer(lhs: (SymbolRefShape | SymbolShape)[] | unde
     return false;
 }
 
-export function isNoScale(trans: { x: number, y: number } | undefined): boolean {
-    // return !trans || trans.matrix.isIdentity()
-    return !trans || isEqual(trans.x, 1) && isEqual(trans.y, 1);
-}
-
 export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeSize, scaleX: number, scaleY: number) {
     const originParentFrame = shape.parent!.size; // frame
     if (shape.parent!.type === ShapeType.Group) {
@@ -97,7 +107,11 @@ export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeSize, scaleX
         transform.scale(scaleX, scaleY);
         const __decompose_scale = transform.clearScaleSize();
         const size = shape.size;
-        return { transform, targetWidth: size.width * __decompose_scale.x, targetHeight: size.height * __decompose_scale.y };
+        return {
+            transform,
+            targetWidth: size.width * __decompose_scale.x,
+            targetHeight: size.height * __decompose_scale.y
+        };
     } else {
         const __cur_env = {
             width: parentFrame.width,
@@ -115,7 +129,10 @@ export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeSize, scaleX
     }
 }
 
-export function fixConstrainFrame2(shape: Shape, scale: { x: number, y: number }, currentEnvSize: ShapeSize, originEnvSize: ShapeSize) {
+export function fixConstrainFrame2(shape: Shape, scale: {
+    x: number,
+    y: number
+}, currentEnvSize: ShapeSize, originEnvSize: ShapeSize) {
     const resizingConstraint = shape.resizingConstraint ?? 0;
     const size = shape.size;
 
@@ -301,72 +318,6 @@ export function matrix2parent(t: Transform, matrix?: Transform) {
     return matrix;
 }
 
-export function boundingBox(frame: ShapeSize, shape: Shape): ShapeFrame {
-    let _minx = 0, _maxx = frame.width, _miny = 0, _maxy = frame.height;
-    if (shape.isNoTransform()) {
-        return new ShapeFrame(_minx, _miny, _maxx, _maxy);
-    }
-
-    const path = shape.getPathOfSize(frame);
-    if (path.length > 0) {
-        const bounds = path.bbox();
-        _minx = bounds.x;
-        _maxx = bounds.x2;
-        _miny = bounds.y;
-        _maxy = bounds.y2;
-    }
-
-    const m = shape.matrix2Parent();
-    const corners = [{ x: _minx, y: _miny }, { x: _maxx, y: _miny }, { x: _maxx, y: _maxy }, { x: _minx, y: _maxy }]
-        .map((p) => m.computeCoord(p));
-    const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
-    const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
-    const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
-    const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
-
-    return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
-}
-
-export function transformPoints(points: CurvePoint[], matrix: Matrix) {
-    const ret: CurvePoint[] = [];
-    for (let i = 0, len = points.length; i < len; i++) {
-        const p = points[i];
-        const point: Point2D = matrix.computeCoord(p.x, p.y) as Point2D;
-        const transp = new CurvePoint(([i] as BasicArray<number>), "", point.x, point.y, p.mode);
-
-        if (p.hasFrom) {
-            transp.hasFrom = true;
-            const fromp = matrix.computeCoord(p.fromX || 0, p.fromY || 0);
-            transp.fromX = fromp.x;
-            transp.fromY = fromp.y;
-        }
-        if (p.hasTo) {
-            transp.hasTo = true;
-            const top = matrix.computeCoord(p.toX || 0, p.toY || 0);
-            transp.toX = top.x;
-            transp.toY = top.y;
-        }
-        transp.radius = p.radius;
-
-        ret.push(transp);
-    }
-    return ret;
-}
-
-export function frame2Parent(t: Transform, size: ShapeSize): ShapeFrame {
-    if (t.m00 == 1 && t.m01 === 0 && t.m10 === 0 && t.m11 === 1) return new ShapeFrame(t.m02, t.m12, size.width, size.height)
-    const lt = t.computeCoord(0, 0);
-    const rb = t.computeCoord(size.width, size.height);
-    return new ShapeFrame(lt.x, lt.y, rb.x - lt.x, rb.y - lt.y);
-}
-
-export function frame2Parent2(t: Transform, size: ShapeFrame): ShapeFrame {
-    if (t.m00 == 1 && t.m01 === 0 && t.m10 === 0 && t.m11 === 1) return new ShapeFrame(t.m02, t.m12, size.width, size.height)
-    const lt = t.computeCoord(size.x, size.y);
-    const rb = t.computeCoord(size.x + size.width, size.y + size.height);
-    return new ShapeFrame(lt.x, lt.y, rb.x - lt.x, rb.y - lt.y);
-}
-
 
 export function updateFrame(frame: ShapeFrame, x: number, y: number, w: number, h: number): boolean {
     if (frame.x !== x || frame.y !== y || frame.width !== w || frame.height !== h) {
@@ -399,12 +350,10 @@ export class ShapeView extends DataView {
     m_border_path?: Path;
     m_border_path_box?: ShapeFrame;
 
-    // m_transform2: Transform2 | undefined;
-    m_transform_form_mask?: Transform;
+    m_transform_from_mask?: Transform;
     m_mask_group?: ShapeView[];
 
-    // fill、border等属性随着变量、遮罩、样式库等因素的加入，获取路径不断加长。现在缓存fill和border，不至于每次都重新通过长的路径获取
-    m_fills: Fill[] | undefined;
+    m_fills: BasicArray<Fill> | undefined;
     m_borders: Border | undefined;
 
     constructor(ctx: DViewCtx, props: PropsType) {
@@ -412,7 +361,7 @@ export class ShapeView extends DataView {
         const shape = props.data;
         const t = shape.transform;
         this.m_transform = new Transform(t.m00, t.m01, t.m02, t.m10, t.m11, t.m12)
-        this.m_fixedRadius = (shape as PathShape).fixedRadius; // rectangle
+        this.m_fixedRadius = (shape as PathShape).fixedRadius;
     }
 
     hasSize() {
@@ -535,37 +484,9 @@ export class ShapeView extends DataView {
         return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
     }
 
-    /**
-     * @description 无论是否transform都进行Bounds计算并返回
-     */
-    boundingBox2(): ShapeFrame {
-        const path = this.getPath().clone();
-        if (path.length > 0) {
-            const m = this.matrix2Parent();
-            path.transform(m);
-            const bounds = path.bbox();
-            return new ShapeFrame(bounds.x, bounds.y, bounds.w, bounds.h);
-        }
-
-        const frame = this.frame;
-        const m = this.transform;
-        const corners = [
-            { x: frame.x, y: frame.y },
-            { x: frame.x + frame.width, y: frame.y },
-            { x: frame.x + frame.width, y: frame.y + frame.height },
-            { x: frame.x, y: frame.y + frame.height }]
-            .map((p) => m.computeCoord(p));
-        const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
-        const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
-        const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
-        const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
-        return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
-    }
-
     onDataChange(...args: any[]): void {
         if (args.includes('mask') || args.includes('isVisible')) {
             (this.parent as GroupShapeView).updateMaskMap();
-            (this.parent as GroupShapeView).updateFrames(); // 遮罩图层会改变父级的frame结构 // todo 等排版更新就行？
         }
 
         if (this.parent && (args.includes('transform') || args.includes('size') || args.includes('isVisible'))) {
@@ -587,6 +508,8 @@ export class ShapeView extends DataView {
             || (this.m_fixedRadius || 0) !== ((this.m_data as any).fixedRadius || 0)
             || args.includes('cornerRadius')
             || args.includes('imageRef')
+            || args.includes('radiusMask')
+            || args.includes('variables')
         ) {
             this.m_path = undefined;
             this.m_pathstr = undefined;
@@ -595,12 +518,16 @@ export class ShapeView extends DataView {
         if (args.includes('variables')) {
             this.m_fills = undefined;
             this.m_borders = undefined;
-        }
-        else if (args.includes('fills')) {
+        } else if (args.includes('fills')) {
             this.m_fills = undefined;
-        }
-        else if (args.includes('borders')) {
+        } else if (args.includes('borders')) {
             this.m_borders = undefined;
+        } else if (args.includes('fillsMask')) {
+            this.m_fills = undefined;
+        } else if (args.includes('bordersMask')) {
+            this.m_borders = undefined;
+            this.m_border_path = undefined;
+            this.m_border_path_box = undefined;
         }
 
         const masked = this.masked;
@@ -612,20 +539,12 @@ export class ShapeView extends DataView {
         const _vars = findOverrideAndVar(this.m_data, ot, this.varsContainer, true);
         if (!_vars) return;
         const _var = _vars[_vars.length - 1];
-        if (_var && _var.type === vt) {
-            return _var;
-        }
+        if (_var && _var.type === vt) return _var;
     }
 
     protected _findOVAll(ot: OverrideType, vt: VariableType): Variable[] | undefined {
         if (!this.varsContainer) return;
-        const _vars = findOverrideAll(this.m_data.id, ot, this.varsContainer);
-        // if (!_vars) return;
-        // const _var = _vars[_vars.length - 1];
-        // if (_var && _var.type === vt) {
-        //     return _var;
-        // }
-        return _vars;
+        return findOverrideAll(this.m_data.id, ot, this.varsContainer);
     }
 
     matrix2Root() {
@@ -640,10 +559,6 @@ export class ShapeView extends DataView {
         return m;
     }
 
-    /**
-     * root: page 往上一级
-     * @returns
-     */
     frame2Root(): ShapeFrame {
         const frame = this.frame;
         const m = this.matrix2Root();
@@ -693,18 +608,123 @@ export class ShapeView extends DataView {
         return m;
     }
 
-    getFills(): Fill[] {
+    get fillsMask(): string | undefined {
+        const v = this._findOV(OverrideType.FillsMask, VariableType.FillsMask);
+        return v ? v.value : this.m_data.style.fillsMask;
+    }
+
+    private _onFillMaskChange() {
+        this.m_fills = undefined;
+        this.m_ctx.setDirty(this);
+        this.notify('style', 'fills', 'mask');
+    }
+
+    private m_unbind_fill: undefined | (() => void) = undefined;
+
+    private onFillMaskChange = this._onFillMaskChange.bind(this);
+
+    protected watchFillMask(mask: FillMask) {
+        this.m_unbind_fill?.();
+        this.m_unbind_fill = mask.watch(this.onFillMaskChange);
+    }
+
+    protected unwatchFillMask() {
+        this.m_unbind_fill?.();
+    }
+
+    getFills(): BasicArray<Fill> {
         if (this.m_fills) return this.m_fills;
-        const v = this._findOV(OverrideType.Fills, VariableType.Fills);
-        this.m_fills = v ? v.value as Fill[] : this.m_data.style.fills
-        return this.m_fills;
+        let fills: BasicArray<Fill>;
+
+        const fillsMask: string | undefined = this.fillsMask;
+        if (fillsMask) {
+            const mask = this.style.getStylesMgr()!.getSync(fillsMask) as FillMask;
+            fills = mask.fills;
+            this.watchFillMask(mask);
+        } else {
+            const v = this._findOV(OverrideType.Fills, VariableType.Fills);
+            fills = v ? v.value : this.m_data.style.fills;
+            this.unwatchFillMask();
+        }
+
+        return this.m_fills = fills;
+    }
+
+    private _onBorderMaskChange() {
+        this.m_borders = undefined;
+        this.m_ctx.setDirty(this);
+        this.notify('style', 'border', 'mask');
+    }
+
+    private m_unbind_border: undefined | (() => void) = undefined;
+
+    private onBorderMaskChange = this._onBorderMaskChange.bind(this);
+
+    protected watchBorderMask(mask: BorderMask) {
+        this.m_unbind_border?.();
+        this.m_unbind_border = mask.watch(this.onBorderMaskChange);
+    }
+
+    protected unwatchBorderMask() {
+        this.m_unbind_border?.();
+    }
+
+    private _onBorderFillMaskChange() {
+        this.m_borders = undefined;
+        this.m_ctx.setDirty(this);
+        this.notify('style', 'paints', 'mask');
+    }
+
+    private m_unbind_border_fill: undefined | (() => void) = undefined;
+
+    private onBorderFillMaskChange = this._onBorderFillMaskChange.bind(this);
+
+    protected watchBorderFillMask(mask: FillMask) {
+        this.m_unbind_border_fill?.();
+        this.m_unbind_border_fill = mask.watch(this.onBorderFillMaskChange);
+    }
+
+    protected unwatchBorderFillMask() {
+        this.m_unbind_border_fill?.();
     }
 
     getBorders(): Border {
         if (this.m_borders) return this.m_borders;
+        const mgr = this.style.getStylesMgr();
+        if (!mgr) return this.m_borders ?? this.m_data.style.borders;
+
         const v = this._findOV(OverrideType.Borders, VariableType.Borders);
-        this.m_borders = v ? v.value as Border : this.m_data.style.borders
-        return this.m_borders;
+        const border = v ? { ...v.value } : { ...this.m_data.style.borders };
+
+        const bordersMask: string | undefined = this.bordersMask;
+        if (bordersMask) {
+            const mask = mgr.getSync(bordersMask) as BorderMask
+            border.position = mask.border.position;
+            border.sideSetting = mask.border.sideSetting;
+            this.watchBorderMask(mask);
+        } else {
+            this.unwatchBorderMask();
+        }
+
+        const fillsMask: string | undefined = this.borderFillsMask;
+        if (fillsMask) {
+            const mask = mgr.getSync(fillsMask) as FillMask;
+            border.strokePaints = mask.fills;
+            this.watchBorderFillMask(mask);
+        } else {
+            this.unwatchBorderFillMask();
+        }
+        return this.m_borders = border;
+    }
+
+    get bordersMask(): string | undefined {
+        const v = this._findOV(OverrideType.BordersMask, VariableType.BordersMask);
+        return v ? v.value : this.m_data.style.bordersMask;
+    }
+
+    get borderFillsMask(): string | undefined {
+        const v = this._findOV(OverrideType.BorderFillsMask, VariableType.BorderFillsMask);
+        return v ? v.value : this.m_data.style.borders.fillsMask;
     }
 
     get cornerRadius(): CornerRadius | undefined {
@@ -721,29 +741,115 @@ export class ShapeView extends DataView {
         return v ? v.value : this.m_data.style.endMarkerType;
     }
 
-    getShadows(): Shadow[] {
-        const v = this._findOV(OverrideType.Shadows, VariableType.Shadows);
-        return v ? v.value : this.m_data.style.shadows;
+    get shadowsMask(): string | undefined {
+        const v = this._findOV(OverrideType.ShadowsMask, VariableType.ShadowsMask);
+        return v ? v.value : this.m_data.style.shadowsMask;
+    }
+
+    private _onShadowMaskChange() {
+        this.m_ctx.setDirty(this);
+        this.notify('style', 'shadows', 'mask');
+    }
+
+    private m_unbind_shadow: undefined | (() => void) = undefined;
+    private onShadowMaskChange = this._onShadowMaskChange.bind(this);
+
+    protected watchShadowMask(mask: ShadowMask) {
+        this.m_unbind_shadow?.();
+        this.m_unbind_shadow = mask.watch(this.onShadowMaskChange);
+    }
+
+    protected unwatchShadowMask() {
+        this.m_unbind_shadow?.();
+    }
+
+    getShadows(): BasicArray<Shadow> {
+        let shadows: BasicArray<Shadow> = new BasicArray();
+        if (this.shadowsMask) {
+            const mgr = this.style.getStylesMgr();
+            if (!mgr) return shadows;
+            const mask = mgr.getSync(this.shadowsMask) as ShadowMask;
+            shadows = mask.shadows;
+            this.watchShadowMask(mask);
+        } else {
+            const v = this._findOV(OverrideType.Shadows, VariableType.Shadows);
+            shadows = v ? v.value : this.m_data.style.shadows;
+            this.unwatchShadowMask()
+        }
+        return shadows;
+    }
+
+    private _onBlurMaskChange() {
+        this.m_ctx.setDirty(this);
+        this.notify('style', 'blur', 'mask');
+    }
+
+    get blurMask(): string | undefined {
+        const v = this._findOV(OverrideType.BlursMask, VariableType.BlursMask);
+        return v ? v.value : this.m_data.style.blursMask;
+    }
+
+    private m_unbind_blur: undefined | (() => void) = undefined;
+    private onBlurMaskChange = this._onBlurMaskChange.bind(this);
+
+    watchBlurMask(mask: BlurMask) {
+        this.m_unbind_blur?.();
+        this.m_unbind_blur = mask.watch(this.onBlurMaskChange);
+    }
+
+    unwatchBlurMask() {
+        this.m_unbind_blur?.();
     }
 
     get blur(): Blur | undefined {
-        const v = this._findOV(OverrideType.Blur, VariableType.Blur);
-        return v ? v.value : this.m_data.style.blur;
+        let blur: Blur;
+        if (this.blurMask) {
+            const mgr = this.style.getStylesMgr()!;
+            const mask = mgr.getSync(this.blurMask) as BlurMask
+            blur = mask.blur;
+            this.watchBlurMask(mask);
+        } else {
+            const v = this._findOV(OverrideType.Blur, VariableType.Blur);
+            blur = v ? v.value : this.m_data.style.blur;
+            this.unwatchBlurMask();
+        }
+        return blur;
+    }
+
+    getPathOfSize() {
+        const p1 = new CurvePoint([] as any, '', 0, 0, CurveMode.Straight);
+        const p2 = new CurvePoint([] as any, '', 1, 0, CurveMode.Straight);
+        const p3 = new CurvePoint([] as any, '', 1, 1, CurveMode.Straight);
+        const p4 = new CurvePoint([] as any, '', 0, 1, CurveMode.Straight);
+        const radius = this.radius;
+        p1.radius = radius[0];
+        p2.radius = radius[1] ?? radius[0];
+        p3.radius = radius[2] ?? radius[0];
+        p4.radius = radius[3] ?? radius[0];
+        return parsePath([p1, p2, p3, p4], true, this.frame.width, this.frame.height);
     }
 
     getPathStr() {
         if (this.m_pathstr) return this.m_pathstr;
-        this.m_pathstr = this.getPath().toString(); // todo fixedRadius
+        this.m_pathstr = this.getPath().toString();
         return this.m_pathstr;
     }
 
     getPath() {
         if (this.m_path) return this.m_path;
+        this.m_path = this.getPathOfSize();
         const frame = this.frame;
-        this.m_path = this.m_data.getPathOfSize(frame, this.m_fixedRadius); // todo fixedRadius
-        if (frame.x !== 0 || frame.y !== 0) this.m_path.translate(frame.x, frame.y);
+        if (frame.x || frame.y) this.m_path.translate(frame.x, frame.y);
         this.m_path.freeze();
         return this.m_path;
+    }
+
+    get borderPath() {
+        return this.m_border_path;
+    }
+
+    get borderPathBox() {
+        return this.m_border_path_box;
     }
 
     get isVisible(): boolean {
@@ -761,7 +867,7 @@ export class ShapeView extends DataView {
     }
 
     get masked() {
-        return this.parent ? (this.parent as GroupShapeView).maskMap?.get(this.m_data.id) : undefined;
+        return (this.parent as GroupShapeView)?.maskMap?.get(this.m_data.id);
     }
 
     indexOfChild(view: ShapeView) {
@@ -789,7 +895,6 @@ export class ShapeView extends DataView {
             this.m_transform.reset(trans);
             this.m_pathstr = undefined; // need update
             this.m_path = undefined;
-            // this.m_transform2 = undefined;
         }
     }
 
@@ -874,23 +979,17 @@ export class ShapeView extends DataView {
         return changed;
     }
 
-    protected layoutChilds(
-        parentFrame: ShapeSize | undefined,
-        scale?: { x: number, y: number }
-    ) {
+    protected layoutChilds(parentFrame: ShapeSize | undefined, scale?: { x: number, y: number }) {
     }
 
-    protected _layout(
-        parentFrame: ShapeSize | undefined,
-        scale: { x: number, y: number } | undefined,
-    ) {
+    protected _layout(parentFrame: ShapeSize | undefined, scale: { x: number, y: number } | undefined,) {
         const shape = this.data;
         const transform = shape.transform.clone();
         if (this.parent && (this.parent as ArtboardView).autoLayout) {
             transform.translateX = this.m_transform.translateX;
             transform.translateY = this.m_transform.translateY;
         }
-        
+
         // case 1 不需要变形
         if (!scale || isEqual(scale.x, 1) && isEqual(scale.y, 1)) {
             let frame = this.frame;
@@ -944,12 +1043,10 @@ export class ShapeView extends DataView {
             this.layoutChilds(this.frame, { x: targetWidth / saveW, y: targetHeight / saveH });
         } else {
             const transform = (shape.transform.clone());
-            // const __p_transform_scale = new Transform2().setScale(ColVector3D.FromXYZ(scaleX, scaleY, 1));
             transform.scale(scaleX, scaleY);
             const __decompose_scale = transform.clearScaleSize();
-            // 这里应该是virtual，irtual是整体缩放，位置是会变化的，不需要trans
+            // 这里应该是virtual，是整体缩放，位置是会变化的，不需要trans
             // 保持对象位置不变
-            // transform.trans(transform.translateX - shape.transform.translateX, transform.translateY - shape.transform.translateY);
             const size = shape.size;
             let layoutSize = new ShapeSize();
             const frame = new ShapeFrame(0, 0, size.width * __decompose_scale.x, size.height * __decompose_scale.y);
@@ -965,21 +1062,9 @@ export class ShapeView extends DataView {
             this.layoutChilds(this.frame, { x: frame.width / saveW, y: frame.height / saveH });
         }
         this.updateFrames();
-
-        // const t = skewTransform(scaleX, scaleY).clone();
-        // const cur = t.computeCoord(0, 0);
-        // t.trans(frame.x - cur.x, frame.y - cur.y);
-        // const inverse = t.inverse;
-        // const rb = inverse.computeCoord(frame.x + frame.width, frame.y + frame.height);
-        // const size2 = new ShapeFrame(0, 0, (rb.x), (rb.y));
-
-        // this.updateLayoutArgs(t, size2, (shape as PathShape).fixedRadius);
-        //
-        // this.layoutChilds(varsContainer, this.frame, { x: scaleX, y: scaleY });
     }
 
     protected updateLayoutProps(props: PropsType, needLayout: boolean) {
-        // const needLayout = this.m_ctx.removeReLayout(this); // remove from changeset
         if (props.data.id !== this.m_data.id) throw new Error('id not match');
         const dataChanged = objectId(props.data) !== objectId(this.m_data);
         if (dataChanged) {
@@ -999,15 +1084,9 @@ export class ShapeView extends DataView {
         }
         this.m_props = props
         this.m_isVirtual = props.isVirtual
-        // this.m_uniform_scale = props.uniformScale;
         if (diffVars) {
-            // update varscontainer
             this.m_ctx.removeDirty(this);
             this.varsContainer = props.varsContainer;
-            const _id = this.id;
-            // if (_id !== tid) {
-            //     // tid = _id;
-            // }
         }
         return true;
     }
@@ -1026,10 +1105,8 @@ export class ShapeView extends DataView {
         this.m_ctx.addNotifyLayout(this);
     }
 
-    // ================== render ===========================
-
     protected renderFills(): EL[] {
-        let fills = this.getFills();
+        let fills = this.getFills() as Fill[];
         if (this.mask) {
             fills = fills.map(f => {
                 if (f.fillType === FillType.Gradient && f.gradient?.gradientType === GradientType.Angular) {
@@ -1046,16 +1123,16 @@ export class ShapeView extends DataView {
         let border = this.getBorders();
         if (this.mask && border) {
             border.strokePaints.map(b => {
-                const nb = importStrokePaint(exportStrokePaint(b));
+                const nb = importFill(exportFill(b));
                 if (nb.fillType === FillType.Gradient && nb.gradient?.gradientType === GradientType.Angular) nb.fillType = FillType.SolidColor;
                 return nb;
             });
         }
-        return renderBorders(elh, border, this.size, this.getPathStr(), this.m_data);
+        return renderBorders(elh, border, this.size, this.getPathStr(), this.m_data, this.radius);
     }
 
     protected renderShadows(filterId: string): EL[] {
-        return renderShadows(elh, filterId, this.getShadows(), this.getPathStr(), this.frame, this.getFills(), this.getBorders(), this.m_data, this.blur);
+        return renderShadows(elh, filterId, this.getShadows(), this.getPathStr(), this.frame, this.getBorders(), this.m_data, this.radius, this.blur);
     }
 
     protected renderBlur(blurId: string): EL[] {
@@ -1289,8 +1366,39 @@ export class ShapeView extends DataView {
         return this.m_data.isPathIcon;
     }
 
-    get radius() {
-        return this.m_data.radius;
+    private _onRadiusMaskChange() {
+        this.m_ctx.setDirty(this);
+        this.onDataChange('radiusMask');
+        this.notify('radiusMask');
+    }
+
+    private m_unbind_Radius: undefined | (() => void) = undefined;
+    private onRadiusMaskChange = this._onRadiusMaskChange.bind(this);
+
+    protected watchRadiusMask(mask: RadiusMask) {
+        this.m_unbind_Radius?.();
+        this.m_unbind_Radius = mask.watch(this.onRadiusMaskChange);
+    }
+
+    protected unwatchRadiusMask() {
+        this.m_unbind_Radius?.();
+    }
+
+    get radius(): number[] {
+        let _radius: number[];
+        if (this.radiusMask) {
+            const mgr = this.style.getStylesMgr()!;
+            const mask = mgr.getSync(this.radiusMask) as RadiusMask
+            _radius = [...mask.radius];
+            this.watchRadiusMask(mask);
+        } else {
+            _radius = [this.fixedRadius ?? 0]
+            if (this.radiusType === RadiusType.Rect && _radius.length === 1) {
+                _radius = [_radius[0], _radius[0], _radius[0], _radius[0]];
+            }
+            this.unwatchRadiusMask();
+        }
+        return _radius
     }
 
     get radiusType() {
@@ -1302,7 +1410,7 @@ export class ShapeView extends DataView {
     }
 
     get isImageFill() {
-        return this.m_data.isImageFill;
+        return this.getFills().some(fill => fill.fillType === FillType.Pattern);
     }
 
     get prototypeStartPoint(): PrototypeStartingPoint | undefined {
@@ -1363,12 +1471,12 @@ export class ShapeView extends DataView {
     }
 
     get relyLayers() {
-        if (!this.m_transform_form_mask) this.m_transform_form_mask = this.renderMask();
-        if (!this.m_transform_form_mask) return;
+        if (!this.m_transform_from_mask) this.m_transform_from_mask = this.renderMask();
+        if (!this.m_transform_from_mask) return;
 
         const group = this.m_mask_group || [];
         if (group.length < 2) return;
-        const inverse = (this.m_transform_form_mask).inverse;
+        const inverse = (this.m_transform_from_mask).inverse;
         const els: EL[] = [];
         for (let i = 1; i < group.length; i++) {
             const __s = group[i];
@@ -1385,10 +1493,10 @@ export class ShapeView extends DataView {
     }
 
     get transformFromMask() {
-        this.m_transform_form_mask = this.renderMask();
-        if (!this.m_transform_form_mask) return;
+        this.m_transform_from_mask = this.renderMask();
+        if (!this.m_transform_from_mask) return;
 
-        const space = (this.m_transform_form_mask).inverse;
+        const space = (this.m_transform_from_mask).inverse;
 
         return (this.transform.clone().multi(space)).toString()
     }
@@ -1495,15 +1603,13 @@ export class ShapeView extends DataView {
     get stackPositioning() {
         return this.m_data.stackPositioning;
     }
+
     get uniformScale(): number | undefined {
         return undefined;
     }
 
-    get borderPath() {
-        return this.m_border_path;
-    }
-
-    get borderPathBox() {
-        return this.m_border_path_box;
+    get radiusMask(): string | undefined {
+        const v = this._findOV(OverrideType.RadiusMask, VariableType.RadiusMask);
+        return v ? v.value : this.m_data.radiusMask;
     }
 }

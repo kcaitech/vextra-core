@@ -178,31 +178,37 @@ function exportObject(n: Node, $: Writer) {
         if (compatibleList.has(n.name)) {
             $.nl('compatibleOldData(source, ctx)')
         }
+        if (inject[n.name] && inject[n.name]['content']) {
+            $.nl(inject[n.name]['content']);
+        } else {
+            $.nl('const ret: ', (n.inner ? '' : 'impl.'), n.name, ' = new ', (n.inner ? '' : 'impl.'), n.name, ' (')
+            const hasArgs = required.length > 0 && (!(required.length === 1 && required[0].name === 'typeId'));
+            if (hasArgs) $.indent(1, () => {
+                let j = 0;
+                $.newline();
+                required.forEach((v, i) => {
+                    if (v.name === 'typeId') return;
+                    if (j > 0) $.append(',').newline();
+                    $.indent();
+                    exportBaseProp(v, 'source.' + v.name, $, false, n.root);
+                    ++j;
+                })
+            });
+            $.append(')');
 
-        $.nl('const ret: ', (n.inner ? '' : 'impl.'), n.name, ' = new ', (n.inner ? '' : 'impl.'), n.name, ' (')
-        const hasArgs = required.length > 0 && (!(required.length === 1 && required[0].name === 'typeId'));
-        if (hasArgs) $.indent(1, () => {
-            let j = 0;
-            $.newline();
-            required.forEach((v, i) => {
-                if (v.name === 'typeId') return;
-                if (j > 0) $.append(',').newline();
-                $.indent();
-                exportBaseProp(v, 'source.' + v.name, $, false, n.root);
-                ++j;
-            })
-        });
-        $.append(')');
-
-        if (localoptional.length > 0 || extend && superoptional.length > 0) {
-            $.nl('import', n.name, 'Optional(ret, source, ctx)')
+            if (localoptional.length > 0 || extend && superoptional.length > 0) {
+                $.nl('import', n.name, 'Optional(ret, source, ctx)')
+            }
         }
 
         if (inject[n.name] && inject[n.name]['after']) {
             $.nl(inject[n.name]['after'])
         }
-
-        $.nl('return ret')
+        if (inject[n.name] && inject[n.name]['force-type']) {
+            $.nl('return ret ' + inject[n.name]['force-type']);
+        } else {
+            $.nl('return ret');
+        }
     })
 }
 

@@ -20,4 +20,5 @@ export { layoutText, TextLayout } from './text/textlayout'
 export { getNextChar } from './text/basic'
 export { importGradient } from './baseimport'
 
-export { Crdtidx, StyleLibType, TableCellAttr } from './baseclasses'
+export { Crdtidx, StyleLibType, StyleVarType, BorderMaskType,TableCellAttr } from './baseclasses'
+

@@ -8,7 +8,6 @@ import {
     Gradient,
     Shadow,
     Stop,
-    StrokePaint,
     Style
 } from "../../../data/style";
 import { BlendMode, GradientType, MarkerType, WindingRule, BlurType, LineCapStyle, LineJoinStyle, FillType, BorderPosition, Point2D, Color } from "../../../data/classes"
@@ -105,7 +104,7 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
 
     if (!data) { // 存在数据没有style
         const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
-        const strokePaints = new BasicArray<StrokePaint>();
+        const strokePaints = new BasicArray<Fill>();
         const border = new Border(BorderPosition.Inner, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
         const style: Style = new Style(new BasicArray<Fill>(), new BasicArray<Shadow>(), border);
         return style;
@@ -130,7 +129,7 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
             LineJoinStyle.Miter
         )
     })(data['borderOptions']);
-    const strokePaints: BasicArray<StrokePaint> = (data['borders'] || []).map((d: IJSON, i: number) => {
+    const strokePaints: BasicArray<Fill> = (data['borders'] || []).map((d: IJSON, i: number) => {
         const isEnabled: boolean = d['isEnabled'];
         const fillType: FillType = ((t) => {
             switch (t) {
@@ -153,7 +152,7 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
             // gradientId = genGradientId(gradient);
             // gradients.set(gradientId, gradient);
         }
-        const strokePaint = new StrokePaint([i] as BasicArray<number>, uuid(), isEnabled, fillType, color);
+        const strokePaint = new Fill([i] as BasicArray<number>, uuid(), isEnabled, fillType, color);
         strokePaint.gradient = gradient;
         return strokePaint;
     });

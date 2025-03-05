@@ -13,6 +13,7 @@ export class Color extends C {
     }
     toHex(): string {
         const toHex = (n: number) => {
+            n = Math.round(n);
             return n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
         }
         return "#" + toHex(this.red) + toHex(this.green) + toHex(this.blue);

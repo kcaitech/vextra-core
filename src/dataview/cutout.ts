@@ -25,4 +25,7 @@ export class CutoutShapeView extends PathShapeView {
         return ++this.m_render_version;
     }
 
+    get isImageFill() {
+        return false;
+    }
 }

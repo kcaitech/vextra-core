@@ -66,6 +66,18 @@
             "value": {
                 "type": "string"
             }
+        },
+        "fillsMask": {
+            "type": "string"
+        },
+        "shadowsMask": {
+            "type": "string"
+        },
+        "blursMask": {
+            "type": "string"
+        },
+        "bordersMask": {
+            "type": "string"
         }
     },
     "required": [
