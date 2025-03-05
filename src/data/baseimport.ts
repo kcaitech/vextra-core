@@ -1802,6 +1802,9 @@ export function importRectShape(source: types.RectShape, ctx?: IImportContext): 
         
         source.pathsegs = [seg];
     }
+    if ((source.pathsegs.length !== 1 || source.pathsegs[0].points.length !== 4) && !source.haveEdit) {
+        source.haveEdit = true;
+    }
 
     compatibleOldData(source, ctx)
     const ret: impl.RectShape = new impl.RectShape (
