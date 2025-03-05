@@ -191,7 +191,7 @@ export * from "./editor/asyncapi"
 export { PaddingDir } from "./coop/recordapi"
 export * from "./coop"
 
-export {Transform as TransformRaw} from "./data/transform"
+export {Transform} from "./data/transform"
 
 // properties
 export { exportBorder, exportFill, exportShadow, exportBlur, exportContextSettings } from './data/baseexport';
