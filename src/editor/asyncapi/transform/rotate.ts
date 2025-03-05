@@ -2,8 +2,7 @@ import { CoopRepository } from "../../../coop/cooprepo";
 import { AsyncApiCaller } from "../basic/asyncapi";
 import { Document } from "../../../data/document";
 import { PageView, ShapeView, adapt2Shape } from "../../../dataview";
-import { Transform as Transform2 } from "../../../basic/transform";
-import { makeShapeTransform1By2 } from "../../../data";
+import { Transform } from "../../../data/transform";
 
 export type RotateUnit = {
     shape: ShapeView;
@@ -23,13 +22,13 @@ export class Rotator extends AsyncApiCaller {
 
     execute(params: {
         shape: ShapeView;
-        transform2: Transform2,
+        transform2: Transform,
     }[]) {
         try {
             for (let i = 0; i < params.length; i++) {
                 const item = params[i];
                 const shape = adapt2Shape(item.shape);
-                this.api.shapeModifyTransform(this.page, shape, makeShapeTransform1By2(params[i].transform2));
+                this.api.shapeModifyTransform(this.page, shape, (params[i].transform2.clone()));
             }
             this.updateView();
         } catch (error) {

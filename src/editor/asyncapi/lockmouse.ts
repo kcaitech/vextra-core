@@ -18,8 +18,6 @@ import {
     Document,
     RadiusType,
     TextBehaviour,
-    makeShapeTransform2By1,
-    makeShapeTransform1By2,
     StackSizing,
     OvalShape, ContactShape,
     Shadow,
@@ -33,8 +31,6 @@ import {
     getPolygonPoints,
     getPolygonVertices
 } from "../utils/path";
-import { ColVector3D } from "../../basic/matrix2";
-import { Line, TransformMode } from "../../basic/transform";
 import {
     RangeRecorder,
     reLayoutBySizeChanged,
@@ -265,19 +261,15 @@ export class LockMouseHandler extends AsyncApiCaller {
 
                 const d = (shape.rotation || 0) + deg;
 
-                const t = makeShapeTransform2By1(shape.transform);
+                const t = (shape.transform.clone());
                 const { width, height } = shape.frame;
 
                 const angle = d % 360 * Math.PI / 180;
-                const os = t.decomposeEuler().z;
+                const os = t.decomposeRotate();
 
-                t.rotateAt({
-                    axis: Line.FromParallelZ(ColVector3D.FromXYZ(width / 2, height / 2, 0)),
-                    angle: angle - os,
-                    mode: TransformMode.Local,
-                });
+                t.rotateInLocal(angle - os, width / 2, height / 2);
 
-                const transform = makeShapeTransform1By2(t) as Transform;
+                const transform = (t);
                 api.shapeModifyRotate(page, adapt2Shape(shape), transform)
             }
             this.updateView();

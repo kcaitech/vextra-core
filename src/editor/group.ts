@@ -3,10 +3,10 @@
 // 2. 画板
 // 3. BOOL
 
-import { GroupShape, Shape, Document, Page, makeShapeTransform1By2, makeShapeTransform2By1, ShapeType, ScrollBehavior } from "../data";
+import { GroupShape, Shape, Document, Page, ShapeType, ScrollBehavior } from "../data";
 import { Api } from "../coop/recordapi";
 import { ColVector3D } from "../basic/matrix2";
-import { Transform } from "../basic/transform";
+import { Transform } from "../data/transform";
 
 export function expandBounds(bounds: {
     left: number,
@@ -32,10 +32,10 @@ export function deleteEmptyGroupShape(document: Document, page: Page, shape: Sha
 
 export function group<T extends GroupShape>(document: Document, page: Page, shapes: Shape[], gshape: T, savep: GroupShape, saveidx: number, api: Api): T {
     // 图层在root上的transform
-    const shapes2rootTransform = shapes.map(s => makeShapeTransform2By1(s.matrix2Root()));
+    const shapes2rootTransform = shapes.map(s => (s.matrix2Root()));
 
     // gshape在root上的transform 或 单位矩阵
-    const groupTransform = makeShapeTransform2By1(gshape.transform);
+    const groupTransform = (gshape.transform);
     const groupInverseTransform = groupTransform.getInverse();
 
     const shapes2groupTransform = shapes2rootTransform.map(t => t.clone().addTransform(groupInverseTransform));
@@ -49,12 +49,10 @@ export function group<T extends GroupShape>(document: Document, page: Page, shap
         const shape = shapes[index];
         const size = shape.size;
 
-        const { col0, col1, col2, col3 } = t.transform([
-            ColVector3D.FromXY(0, 0),
-            ColVector3D.FromXY(size.width, 0),
-            ColVector3D.FromXY(size.width, size.height),
-            ColVector3D.FromXY(0, size.height)
-        ]);
+        const col0 = t.transform(ColVector3D.FromXY(0, 0))
+        const col1 = t.transform(ColVector3D.FromXY(size.width, 0))
+        const col2 = t.transform(ColVector3D.FromXY(size.width, size.height))
+        const col3 = t.transform(ColVector3D.FromXY(0, size.height))
 
         if (col0.x < left) {
             left = col0.x;
@@ -104,12 +102,11 @@ export function group<T extends GroupShape>(document: Document, page: Page, shap
     const __bounds = { left, top, right, bottom };
 
     groupTransform
-        .translate(ColVector3D.FromXY(__bounds.left, __bounds.top))
-        .addTransform((makeShapeTransform2By1(savep.matrix2Root()).getInverse()));
+        .translate(__bounds.left, __bounds.top)
+        .addTransform(((savep.matrix2Root()).getInverse()));
 
     gshape.size.width = __bounds.right - __bounds.left;
     gshape.size.height = __bounds.bottom - __bounds.top;
-    gshape.transform = makeShapeTransform1By2(groupTransform);
 
     // 将GroupShape加入到save parent(层级最高图形的parent)中
     gshape = api.shapeInsert(document, page, savep, gshape, saveidx) as T;
@@ -124,9 +121,9 @@ export function group<T extends GroupShape>(document: Document, page: Page, shap
         if (p.childs.length <= 0) deleteEmptyGroupShape(document, page, p, api);
     }
 
-    const inverse2 = makeShapeTransform2By1(gshape.matrix2Root()).getInverse();
+    const inverse2 = (gshape.matrix2Root()).getInverse();
     for (let i = 0, len = shapes.length; i < len; i++) {
-        api.shapeModifyTransform(page, shapes[i], makeShapeTransform1By2(shapes2rootTransform[i].addTransform(inverse2)));
+        api.shapeModifyTransform(page, shapes[i], (shapes2rootTransform[i].addTransform(inverse2)));
     }
 
     const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
@@ -159,14 +156,14 @@ export function ungroup(document: Document, page: Page, shape: GroupShape, api: 
     const transformMap: Map<string, Transform> = new Map<string, Transform>();
     for (let i = 0, len = shape.childs.length; i < len; i++) {
         const c = shape.childs[i];
-        transformMap.set(c.id, makeShapeTransform2By1(c.matrix2Root()));
+        transformMap.set(c.id, (c.matrix2Root()));
     }
-    const env_transform = makeShapeTransform2By1(savep.matrix2Root()).getInverse(); // 目标父级的transform
+    const env_transform = (savep.matrix2Root()).getInverse(); // 目标父级的transform
     for (let len = shape.childs.length; len > 0; len--) {
         const c = shape.childs[0];
         const transform = transformMap.get(c.id)!;
         api.shapeMove(page, shape, 0, savep, idx);
-        api.shapeModifyTransform(page, c, makeShapeTransform1By2(transform.addTransform(env_transform)));
+        api.shapeModifyTransform(page, c, (transform.addTransform(env_transform)));
         idx++;
         childs.push(c);
     }

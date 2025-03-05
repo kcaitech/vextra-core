@@ -1,13 +1,13 @@
 import { AsyncApiCaller } from "./basic/asyncapi";
 import { Document } from "../../data/document";
-import { adapt2Shape, ArtboardView, GroupShapeView, PageView, ShapeView } from "../../dataview";
+import { adapt2Shape, ArtboardView, PageView, ShapeView } from "../../dataview";
 import {
     GroupShape,
     Shape,
     ShapeType,
 } from "../../data/shape";
 import { translate } from "../frame";
-import { makeShapeTransform1By2, makeShapeTransform2By1, Page, StackSizing } from "../..//data";
+import { Page, StackSizing } from "../..//data";
 import { after_migrate, unable_to_migrate } from "../utils/migrate";
 import { get_state_name, is_state, shape4Autolayout } from "../symbol";
 import { CoopRepository } from "../../coop/cooprepo";
@@ -115,12 +115,12 @@ export class AutoLayoutModify extends AsyncApiCaller {
             const name = get_state_name(shape as any, dlt);
             api.shapeModifyName(page, shape, `${origin.name}/${name}`);
         }
-        const transform = makeShapeTransform2By1(shape.matrix2Root());
-        const __t = makeShapeTransform2By1(targetParent.matrix2Root());
+        const transform = (shape.matrix2Root());
+        const __t = (targetParent.matrix2Root());
 
         transform.addTransform(__t.getInverse());
 
-        api.shapeModifyTransform(page, shape, makeShapeTransform1By2(transform));
+        api.shapeModifyTransform(page, shape, (transform));
         api.shapeMove(page, origin, origin.indexOfChild(shape), targetParent, index++);
 
         //标记容器是否被移动到其他容器

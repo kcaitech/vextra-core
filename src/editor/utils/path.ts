@@ -9,7 +9,7 @@ import { ContactShape } from "../../data/contact";
 import { get_box_pagexy, get_nearest_border_point } from "../../data/utils";
 import { PathType } from "../../data/consts";
 import { importCurvePoint } from "../../data/baseimport";
-import { Border, makeShapeTransform1By2, makeShapeTransform2By1 } from "../../data";
+import { Border } from "../../data";
 import { ColVector3D } from "../../basic/matrix2";
 import { ShapeView } from "../../dataview";
 import { Path } from "@kcdesign/path";
@@ -258,7 +258,7 @@ export function update_frame_by_points(api: Api, page: Page, s: Shape, reLayout 
     const dy = targetXY.y - s.transform.translateY;
 
     if (dx || dy) {
-        api.shapeModifyTransform(page, s, makeShapeTransform1By2(makeShapeTransform2By1(s.transform).setTranslate(ColVector3D.FromXY(targetXY.x, targetXY.y))));
+        api.shapeModifyTransform(page, s, ((s.transform.clone()).setTranslate(ColVector3D.FromXY(targetXY.x, targetXY.y))));
         frameChange = true;
     }
 

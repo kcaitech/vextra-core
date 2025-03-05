@@ -2,8 +2,7 @@ import { CoopRepository } from "../../../coop";
 import { AsyncApiCaller } from "../basic/asyncapi";
 import { adapt2Shape, ArtboardView, GroupShapeView, PageView, ShapeView, TextShapeView } from "../../../dataview";
 import {
-    Artboard, Document, GroupShape, Page, ScrollBehavior, Shape, ShapeType, StackMode, Transform as TransformRaw,
-     TextShape, makeShapeTransform1By2, makeShapeTransform2By1,
+    Artboard, Document, GroupShape, Page, ScrollBehavior, Shape, ShapeType, StackMode, Transform,
 } from "../../../data";
 import { after_migrate, unable_to_migrate } from "../../utils/migrate";
 import { get_state_name, is_state } from "../../symbol";
@@ -13,13 +12,11 @@ import { TidyUpAlgin, tidyUpLayout } from "../../utils/auto_layout";
 import { translate } from "../../frame";
 import { transform_data } from "../../../io/cilpboard";
 import { MossError } from "../../../basic/error";
-import { Transform } from "../../../basic/transform";
 import { assign } from "../creator";
-import { ShapePorter } from "../../basic/move";
 
 export type TranslateUnit = {
     shape: ShapeView;
-    transform: TransformRaw
+    transform: Transform
 }
 export type TidyUpInfo = {
     shapes: ShapeView[][]
@@ -29,7 +26,7 @@ export type TidyUpInfo = {
 }
 
 export interface TranslateBaseItem {
-    transformRaw: TransformRaw,
+    transformRaw: Transform,
     transform: Transform;
     view: ShapeView;
 }

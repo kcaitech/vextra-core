@@ -1,4 +1,5 @@
-import {ColVector3D, Transform} from "../../index";
+import { ColVector3D } from "../../basic/matrix2";
+import { Transform } from "../../basic/transform";
 
 export function getRectBox(transform: Transform, w: number, h: number) { // 获取一个矩形的包围盒
     // 矩形的四个顶点坐标
