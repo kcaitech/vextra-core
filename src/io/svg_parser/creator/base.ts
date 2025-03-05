@@ -16,10 +16,38 @@ import {
     RadialGradient
 } from "../utils"
 import { BaseTreeNode, TreeNodeTraverseHandler } from "../tree"
-import { Artboard, BasicArray, BlendMode, Border, BorderPosition, BorderSideSetting, BorderStyle, ContextSettings, CornerType, Fill, FillRule, FillType, Gradient, GradientType, makeShapeTransform2By1, Point2D, ResourceMgr, Shadow, Shape, ShapeFrame, SideType, Stop, Style, StyleMangerMember, updateShapeTransform1By2 } from "../../../data"
+import {
+    Artboard, BasicArray, BlendMode, Border,
+    BorderPosition, BorderSideSetting,
+    BorderStyle, ContextSettings, CornerType, Fill, FillRule,
+    FillType, Gradient, GradientType, Point2D, ResourceMgr,
+    Shadow, Shape, ShapeFrame, SideType, Stop, Style,
+    StyleMangerMember
+} from "../../../data"
 import { Transform } from "../../../basic/transform"
 import * as shapeCreator from "../../../editor/creator"
-import { ColVector3D } from "../../../basic/matrix2"
+import { ColVector3D, Matrix } from "../../../basic/matrix2"
+import { Transform as ShapeTransform } from "../../../data"
+
+export function castTransform(transform: ShapeTransform): Transform {
+    return new Transform({
+        matrix: new Matrix([4, 4], [
+            transform.m00, transform.m01, 0, transform.m02,
+            transform.m10, transform.m11, 0, transform.m12,
+            0, 0, 1, 0,
+            0, 0, 0, 1,
+        ], true),
+    });
+}
+
+export function assignTransform(transform: ShapeTransform, transform2: Transform) {
+    transform.m00 = transform2.m00;
+    transform.m10 = transform2.m10;
+    transform.m01 = transform2.m01;
+    transform.m11 = transform2.m11;
+    transform.m02 = transform2.m03;
+    transform.m12 = transform2.m13;
+}
 
 export type ContextType = {
     styleMgr: ResourceMgr<StyleMangerMember>
@@ -602,12 +630,12 @@ export class BaseCreator extends BaseTreeNode {
         // shape.isFlippedVertical = this.transform.isFlipV
         // shape.isFlippedHorizontal = this.transform.isFlipH
 
-        const transform2 = makeShapeTransform2By1(shape.transform)
+        const transform2 = castTransform(shape.transform)
         transform2.setTranslate(new ColVector3D([translate.x, translate.y, 0]))
         transform2.setRotateZ(rotate.z)
         transform2.setSkew({ skew: skew })
         transform2.setScale(new ColVector3D([scale.x, scale.y, scale.z]))
-        updateShapeTransform1By2(shape.transform, transform2)
+        assignTransform(shape.transform, transform2)
     }
 
     updateShapeStyle() { // 设置shape的样式
