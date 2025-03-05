@@ -6,10 +6,10 @@ export * from "./basic/matrix"
 export * from "./basic/objectid"
 // export * from "./basic/pal"
 export * from "./basic/utils"
-export {IEventEmitter, EventEmitter} from "./basic/event"
+export { IEventEmitter, EventEmitter } from "./basic/event"
 // export {Transform, TransformMode, Line, LineThrough0, Plane, PlaneThrough0} from './basic/transform'
-export {Vector, ColVector2D, ColVector3D, Matrix as Matrix2} from "./basic/matrix2"
-export {NumberArray2D} from "./basic/number_array"
+export { ColVector2D, ColVector3D } from "./basic/matrix2"
+export { NumberArray2D } from "./basic/number_array"
 
 export * from "./basic/error"
 
@@ -191,16 +191,16 @@ export * from "./editor/asyncapi"
 export { PaddingDir } from "./coop/recordapi"
 export * from "./coop"
 
-export {Transform} from "./data/transform"
+export { Transform } from "./data/transform"
 
 // properties
 export { exportBorder, exportFill, exportShadow, exportBlur, exportContextSettings } from './data/baseexport';
 
-export {LinearApi} from './editor/linearapi/linearapi';
+export { LinearApi } from './editor/linearapi/linearapi';
 
 export { CircleChecker } from "./editor/basic/move/circle";
 
-export {Path} from '@kcdesign/path'
+export { Path } from '@kcdesign/path'
 
 export { FillModifier } from "./editor/style/fill";
 export { BorderModifier } from "./editor/style/border";
