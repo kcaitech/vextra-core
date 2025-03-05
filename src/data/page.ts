@@ -1,30 +1,22 @@
 import {
+    CutoutShape,
     GroupShape,
-    Shape,
-    ShapeFrame,
-    ShapeType,
     ImageShape,
     PathShape,
     RectShape,
-    TextShape,
+    Shape,
+    ShapeType,
     SymbolShape,
-    CutoutShape,
+    TextShape,
     Transform,
-    ShapeSize
 } from "./shape";
 import { Style } from "./style";
 import * as classes from "./baseclasses"
-import { BasicArray, WatchableObject } from "./basic";
+import { Guide } from "./baseclasses"
+import { BasicArray } from "./basic";
 import { Artboard } from "./artboard";
 import { Color } from "./color";
 import { TableCell } from "./table";
-import { Guide } from "./baseclasses";
-
-class PageCollectNotify extends WatchableObject {
-    constructor() {
-        super();
-    }
-}
 
 export class Page extends GroupShape implements classes.Page {
 
@@ -35,11 +27,10 @@ export class Page extends GroupShape implements classes.Page {
     artboards: Map<string, Artboard> = new Map();
     shapes: Map<string, Shape> = new Map();
     __allshapes: Map<string, WeakRef<Shape>> = new Map(); // 包含被删除的
-    __collect: PageCollectNotify = new PageCollectNotify();
     __symbolshapes: Map<string, SymbolShape> = new Map();
-    isReserveLib: boolean;
     cutouts: Map<string, CutoutShape> = new Map();
     guides?: BasicArray<Guide>;
+    connections: BasicArray<Shape>;
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
@@ -48,10 +39,8 @@ export class Page extends GroupShape implements classes.Page {
         transform: Transform,
         style: Style,
         childs: BasicArray<(GroupShape | Shape | ImageShape | PathShape | RectShape | TextShape)>,
-        isReserveLib?: boolean,
-        // horReferLines?: BasicArray<ReferLine>,
-        // verReferLines?: BasicArray<ReferLine>,
-        guides?: BasicArray<Guide>
+        guides?: BasicArray<Guide>,
+        connections?: BasicArray<Shape>
     ) {
         super(
             crdtidx,
@@ -62,12 +51,9 @@ export class Page extends GroupShape implements classes.Page {
             style,
             childs,
         )
-        // this.onAddShape(this); // 不能add 自己
         childs.forEach((c) => this.onAddShape(c));
-        this.isReserveLib = !!isReserveLib;
-        // this.horReferLines = horReferLines;
-        // this.verReferLines = verReferLines;
         this.guides = guides;
+        this.connections = connections ?? new BasicArray<Shape>();
     }
 
     getOpTarget(path: string[]): any {
@@ -97,6 +83,9 @@ export class Page extends GroupShape implements classes.Page {
         }
         if (shape.type === ShapeType.Cutout) {
             this.cutouts.set(shape.id, shape as CutoutShape);
+        }
+        if (shape.type === ShapeType.Contact) {
+            this.connections.push(shape);
         }
         shape.onAdded();
         if (recursive && (shape instanceof GroupShape)) {

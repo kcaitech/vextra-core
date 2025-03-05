@@ -136,6 +136,7 @@ export {
 
     StackPositioning,
 
+    parsePath,
     ShadowMask,
     FillMask,
     BlurMask,

@@ -73,7 +73,7 @@ export class PageView extends GroupShapeView implements RootView {
         return this.m_views.get(id) || this.m_delaydestorys.get(id);
     }
 
-    addDelayDestory(view: ShapeView | ShapeView[]): void {
+    addDelayDestroy(view: ShapeView | ShapeView[]): void {
         const add = (v: ShapeView) => {
             if (v.parent) throw new Error("view has parent, not removed?");
             this.m_delaydestorys.set(v.id, v);
@@ -110,7 +110,6 @@ export class PageView extends GroupShapeView implements RootView {
         return (this.m_data as Page).guides;
     }
 
-
     protected renderProps() {
         // let width = Math.ceil(Math.max(100, this.m_data.frame.width));
         // let height = Math.ceil(Math.max(100, this.m_data.frame.height));
@@ -142,16 +141,15 @@ export class PageView extends GroupShapeView implements RootView {
         return r;
     }
 
-    // for debug
-    // dbgCheckFrame() {
-    //     checkFrame(this);
-    // }
-
     dbgCheckPath() {
         checkPath(this);
     }
 
     get backgroundColor() {
         return this.data.backgroundColor;
+    }
+
+    get connections() {
+        return this.data.connections;
     }
 }

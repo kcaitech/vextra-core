@@ -1,10 +1,4 @@
-import {
-    GroupShape,
-    Shape,
-    ShapeFrame,
-    ShapeSize,
-    ShapeType
-} from "../data";
+import { GroupShape, Shape, ShapeFrame, ShapeSize, ShapeType } from "../data";
 import { ShapeView, updateFrame } from "./shape";
 import { getShapeViewId } from "./basic";
 import { EL } from "./el";
@@ -150,11 +144,13 @@ export class GroupShapeView extends ShapeView {
         this.m_children.forEach((c) => resue.set(c.data.id, c));
         const rootView = this.getRootView();
         for (let i = 0, len = childs.length; i < len; i++) {
-            this.layoutChild(parentFrame, childs[i], i, scale, varsContainer, resue, rootView);
+            const child = childs[i];
+            if (child.type === ShapeType.Contact) continue; // todo 有没有更好的办法把连接线过滤出去
+            this.layoutChild(parentFrame, child, i, scale, varsContainer, resue, rootView);
         }
         // 删除多余的
         const removes = this.removeChilds(childs.length, Number.MAX_VALUE);
-        if (rootView) rootView.addDelayDestory(removes);
+        if (rootView) rootView.addDelayDestroy(removes);
         else removes.forEach((c => c.destory()));
     }
 

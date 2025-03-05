@@ -319,6 +319,7 @@ export class PageListItem extends Basic {
     }
 }
 type Page_guides = BasicArray<Guide>
+type Page_connections = BasicArray<Shape>
 /* paint filter */
 export class PaintFilter extends Basic {
     typeId = "paint-filter"
@@ -1299,6 +1300,7 @@ export class Page extends GroupShape {
     typeId = "page"
     backgroundColor?: Color
     guides?: Page_guides
+    connections?: Page_connections
 }
 /* symbol shape */
 export class SymbolShape extends GroupShape {

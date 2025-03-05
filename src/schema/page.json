@@ -10,6 +10,12 @@
             "items": {
                 "$ref": "./guide.json"
             }
+        },
+        "connections": {
+            "type": "array",
+            "items": {
+                "$ref": "./shape.json"
+            }
         }
     },
     "required": [],

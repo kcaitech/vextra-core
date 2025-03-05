@@ -361,7 +361,7 @@ export class SymbolRefView extends ShapeView {
         // 删除多余的
         if (this.m_children.length > childs.length) {
             const removes = this.removeChilds(childs.length, Number.MAX_VALUE);
-            if (rootView) rootView.addDelayDestory(removes);
+            if (rootView) rootView.addDelayDestroy(removes);
             else removes.forEach((c => c.destory()));
             changed = true;
         }

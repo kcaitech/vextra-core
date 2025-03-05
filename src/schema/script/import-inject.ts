@@ -1,5 +1,3 @@
-import { importGroupShape_childs, importGuide } from "../../data/baseimport";
-
 export const inject: any = {};
 inject['ImageShape'] = {} as any;
 inject['ImageShape']['before'] = `\
@@ -304,9 +302,16 @@ inject['DocumentMeta']['before'] = `\
 
 inject['Page'] = {};
 inject['Page']['before'] = `\
-    // inject code
+// inject code
     // 兼容旧数据
-    if (!(source as any).crdtidx) (source as any).crdtidx = []
+    if (!(source as any).crdtidx) (source as any).crdtidx = [];
+    if (!source.connections) source.connections = new BasicArray();
+    if (source.childs.length) {
+        for (const child of source.childs) {
+            if (child.typeId !== 'contact-shape') continue;
+            source.connections.push(child);
+        }
+    }
 `
 
 inject['TableCell'] = {};

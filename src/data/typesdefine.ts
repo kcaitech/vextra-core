@@ -318,6 +318,7 @@ export type PageListItem = {
     versionId?: string,
 }
 export type Page_guides = Array<Guide>
+export type Page_connections = Array<Shape>
 /* paint filter */
 export type PaintFilter = {
     exposure: number,
@@ -1167,6 +1168,7 @@ export type GroupShape = Shape & {
 export type Page = GroupShape & {
     backgroundColor?: Color,
     guides?: Page_guides,
+    connections?: Page_connections,
 }
 /* symbol shape */
 export type SymbolShape = GroupShape & {

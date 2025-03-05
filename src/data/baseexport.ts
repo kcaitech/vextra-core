@@ -382,6 +382,13 @@ export function exportPage_guides(source: types.Page_guides, ctx?: IExportContex
     })
     return ret
 }
+export function exportPage_connections(source: types.Page_connections, ctx?: IExportContext): types.Page_connections {
+    const ret: types.Page_connections = []
+    source.forEach((source) => {
+        ret.push(exportShape(source, ctx))
+    })
+    return ret
+}
 /* paint filter */
 export function exportPaintFilter(source: types.PaintFilter, ctx?: IExportContext): types.PaintFilter {
     const ret: types.PaintFilter = {} as types.PaintFilter
@@ -1519,6 +1526,7 @@ export function exportPage(source: types.Page, ctx?: IExportContext): types.Page
     ret.typeId = "page"
     if (source.backgroundColor !== undefined) ret.backgroundColor = exportColor(source.backgroundColor, ctx)
     if (source.guides !== undefined) ret.guides = exportPage_guides(source.guides, ctx)
+    if (source.connections !== undefined) ret.connections = exportPage_connections(source.connections, ctx)
     return ret
 }
 /* symbol shape */
