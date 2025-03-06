@@ -159,6 +159,8 @@ export class GroupShapeView extends ShapeView {
             children = this.m_children.filter(i => !this.maskMap.has(i.id));
         }
 
+        children = children.filter(i => i.type !== ShapeType.Contact);
+
         const childcontentbounds = children.map(c => (c as ShapeView)._p_frame);
 
         const childvisiblebounds = children.map(c => (c as ShapeView)._p_visibleFrame);
