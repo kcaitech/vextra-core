@@ -23,7 +23,7 @@ type Gradient_stops = BasicArray<impl.Stop>
 type GroupShape_childs = BasicArray<impl.GroupShape | impl.ImageShape | impl.PathShape | impl.PathShape2 | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape | impl.PolygonShape | impl.StarShape>
 type Guide_crdtidx = BasicArray<number>
 type Page_guides = BasicArray<impl.Guide>
-type Page_connections = BasicArray<impl.Shape>
+type Page_connections = BasicArray<impl.Connection>
 type Para_spans = BasicArray<impl.Span>
 type PathSegment_points = BasicArray<impl.CurvePoint>
 type PathShape_pathsegs = BasicArray<impl.PathSegment>
@@ -468,8 +468,7 @@ export function importPage_guides(source: types.Page_guides, ctx?: IImportContex
 export function importPage_connections(source: types.Page_connections, ctx?: IImportContext): Page_connections {
     const ret: Page_connections = new BasicArray()
     source.forEach((source, i) => {
-        if (!source.crdtidx) source.crdtidx = [i]
-        ret.push(importShape(source, ctx))
+        ret.push(importConnection(source, ctx))
     })
     return ret
 }
@@ -2278,13 +2277,6 @@ export function importPage(source: types.Page, ctx?: IImportContext): impl.Page 
     // inject code
     // 兼容旧数据
     if (!(source as any).crdtidx) (source as any).crdtidx = [];
-    if (!source.connections) source.connections = new BasicArray();
-    if (source.childs.length) {
-        for (const child of source.childs) {
-            if (child.typeId !== 'contact-shape') continue;
-            source.connections.push(child);
-        }
-    }
 
     compatibleOldData(source, ctx)
     const ret: impl.Page = new impl.Page (

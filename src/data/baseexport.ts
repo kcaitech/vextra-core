@@ -385,7 +385,7 @@ export function exportPage_guides(source: types.Page_guides, ctx?: IExportContex
 export function exportPage_connections(source: types.Page_connections, ctx?: IExportContext): types.Page_connections {
     const ret: types.Page_connections = []
     source.forEach((source) => {
-        ret.push(exportShape(source, ctx))
+        ret.push(exportConnection(source, ctx))
     })
     return ret
 }

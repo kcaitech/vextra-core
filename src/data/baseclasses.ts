@@ -319,7 +319,7 @@ export class PageListItem extends Basic {
     }
 }
 type Page_guides = BasicArray<Guide>
-type Page_connections = BasicArray<Shape>
+type Page_connections = BasicArray<Connection>
 /* paint filter */
 export class PaintFilter extends Basic {
     typeId = "paint-filter"

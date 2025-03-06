@@ -318,7 +318,7 @@ export type PageListItem = {
     versionId?: string,
 }
 export type Page_guides = Array<Guide>
-export type Page_connections = Array<Shape>
+export type Page_connections = Array<Connection>
 /* paint filter */
 export type PaintFilter = {
     exposure: number,

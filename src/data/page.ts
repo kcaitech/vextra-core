@@ -1,4 +1,5 @@
 import {
+    Connection,
     CutoutShape,
     GroupShape,
     ImageShape,
@@ -30,7 +31,7 @@ export class Page extends GroupShape implements classes.Page {
     __symbolshapes: Map<string, SymbolShape> = new Map();
     cutouts: Map<string, CutoutShape> = new Map();
     guides?: BasicArray<Guide>;
-    connections: BasicArray<Shape>;
+    connections: BasicArray<Connection>;
     constructor(
         crdtidx: BasicArray<number>,
         id: string,
@@ -40,7 +41,7 @@ export class Page extends GroupShape implements classes.Page {
         style: Style,
         childs: BasicArray<(GroupShape | Shape | ImageShape | PathShape | RectShape | TextShape)>,
         guides?: BasicArray<Guide>,
-        connections?: BasicArray<Shape>
+        connections?: BasicArray<Connection>
     ) {
         super(
             crdtidx,
@@ -53,7 +54,7 @@ export class Page extends GroupShape implements classes.Page {
         )
         childs.forEach((c) => this.onAddShape(c));
         this.guides = guides;
-        this.connections = connections ?? new BasicArray<Shape>();
+        this.connections = connections ?? new BasicArray<Connection>();
     }
 
     getOpTarget(path: string[]): any {
@@ -83,9 +84,6 @@ export class Page extends GroupShape implements classes.Page {
         }
         if (shape.type === ShapeType.Cutout) {
             this.cutouts.set(shape.id, shape as CutoutShape);
-        }
-        if (shape.type === ShapeType.Contact) {
-            this.connections.push(shape);
         }
         shape.onAdded();
         if (recursive && (shape instanceof GroupShape)) {
