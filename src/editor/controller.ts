@@ -1,52 +1,36 @@
 import {
-    adjustRB2,
-    expandTo,
     translate,
     translateTo,
 } from "./frame";
 import { CurvePoint, GroupShape, PathShape, PathShape2, Shape, ShapeFrame, ShapeType } from "../data/shape";
-import { getFormatFromBase64 } from "../basic/utils";
-import { ContactRoleType, CurveMode, FillType, ScrollBehavior, SideType } from "../data/typesdefine";
+import { CurveMode } from "../data/typesdefine";
 import {
-    modifyTransformByEnv,
-    newArrowShape,
-    newArtboard,
-    newContact,
-    newCutoutShape,
     newDefaultTextShape,
-    newImageFillShape,
     newLineShape,
     newOvalShape,
     newPolygonShape,
     newRectShape,
     newStellateShape,
-    newTable,
     newTextShape
 } from "./creator";
 
 import { Page } from "../data/page";
 import { CoopRepository } from "../coop/cooprepo";
-import { v4 } from "uuid";
 import { Document } from "../data/document";
 import { Api } from "../coop/recordapi";
-import { Artboard } from "../data/artboard";
 import { uuid } from "../basic/uuid";
-import { BorderSideSetting, ContactForm, ContactRole } from "../data/baseclasses";
-import { ContactShape } from "../data/contact";
 import { importGradient } from "../data/baseimport";
 import { exportGradient } from "../data/baseexport";
 import { is_state } from "./utils/other";
 import { after_migrate, unable_to_migrate } from "./utils/migrate";
-import { get_state_name, shape4border, shape4contextSettings, shape4fill } from "./symbol";
+import { get_state_name, shape4contextSettings } from "./symbol";
 import {
     after_insert_point,
     update_frame_by_points
 } from "./utils/path";
-import { Color } from "../data/color";
 import { adapt2Shape, PageView, PathShapeView, ShapeView } from "../dataview";
-import { ISave4Restore, LocalCmd, SelectionState } from "../coop/localcmd";
 import { BasicArray } from "../data/basic";
-import { Fill, FillMask } from "../data/style";
+import { Fill } from "../data/style";
 import { TextAttr } from "../data/classes";
 import { Transform } from "../data/transform";
 
@@ -415,100 +399,6 @@ export class Controller {
             this.__repo.rollback();
         }
         return { addNode, execute, execute2, close, abort, executeRadius }
-    }
-
-    public asyncBorderThickness(_shapes: ShapeView[], _page: PageView): AsyncBorderThickness {
-        const page = _page.data;
-        const api = this.__repo.start("asyncBorderThickness");
-        let status: Status = Status.Pending;
-        const execute = (thickness: number) => {
-            status = Status.Pending;
-            try {
-                for (let i = 0, l = _shapes.length; i < l; i++) {
-                    const s = shape4border(api, _page, _shapes[i]);
-                    const borders = _shapes[i].getBorders();
-                    const sideType = borders.sideSetting.sideType;
-                    switch (sideType) {
-                        case SideType.Normal:
-                            api.setBorderSide(page, s, new BorderSideSetting(sideType, thickness, thickness, thickness, thickness));
-                            break;
-                        case SideType.Top:
-                            api.setBorderThicknessTop(page, s, thickness);
-                            break
-                        case SideType.Right:
-                            api.setBorderThicknessRight(page, s, thickness);
-                            break
-                        case SideType.Bottom:
-                            api.setBorderThicknessBottom(page, s, thickness);
-                            break
-                        case SideType.Left:
-                            api.setBorderThicknessLeft(page, s, thickness);
-                            break
-                        default:
-                            api.setBorderSide(page, s, new BorderSideSetting(sideType, thickness, thickness, thickness, thickness));
-                            break;
-                    }
-                }
-                this.__repo.transactCtx.fireNotify();
-                status = Status.Fulfilled;
-            } catch (e) {
-                console.error(e);
-                status = Status.Exception;
-            }
-        }
-        const close = () => {
-            if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
-                this.__repo.commit();
-            } else {
-                this.__repo.rollback();
-            }
-            return undefined;
-        }
-        return { execute, close }
-    }
-    public asyncBorderSideThickness(_shapes: ShapeView[], _page: PageView, type: SideType): AsyncBorderThickness {
-        const page = _page.data;
-
-        const api = this.__repo.start("asyncBorderSideThickness");
-        let status: Status = Status.Pending;
-        const execute = (thickness: number) => {
-            status = Status.Pending;
-            try {
-                for (let i = 0, l = _shapes.length; i < l; i++) {
-                    const s = shape4border(api, _page, _shapes[i]);
-                    switch (type) {
-                        case SideType.Top:
-                            api.setBorderThicknessTop(page, s, thickness);
-                            break
-                        case SideType.Right:
-                            api.setBorderThicknessRight(page, s, thickness);
-                            break
-                        case SideType.Bottom:
-                            api.setBorderThicknessBottom(page, s, thickness);
-                            break
-                        case SideType.Left:
-                            api.setBorderThicknessLeft(page, s, thickness);
-                            break
-                        default:
-                            break;
-                    }
-                }
-                this.__repo.transactCtx.fireNotify();
-                status = Status.Fulfilled;
-            } catch (e) {
-                console.error(e);
-                status = Status.Exception;
-            }
-        }
-        const close = () => {
-            if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
-                this.__repo.commit();
-            } else {
-                this.__repo.rollback();
-            }
-            return undefined;
-        }
-        return { execute, close }
     }
 
     public asyncOpacityEditor(_shapes: ShapeView[], _page: PageView): AsyncOpacityEditor {
