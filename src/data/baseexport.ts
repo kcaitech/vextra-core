@@ -1416,6 +1416,15 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
 
     return ret
 }
+/* connection */
+export function exportConnection(source: types.Connection, ctx?: IExportContext): types.Connection {
+    const ret: types.Connection = exportPathShape(source, ctx) as types.Connection
+    ret.typeId = "connection"
+    ret.isEdited = source.isEdited
+    if (source.from !== undefined) ret.from = exportContactForm(source.from, ctx)
+    if (source.to !== undefined) ret.to = exportContactForm(source.to, ctx)
+    return ret
+}
 /* contact shape */
 export function exportContactShape(source: types.ContactShape, ctx?: IExportContext): types.ContactShape {
     const ret: types.ContactShape = exportPathShape(source, ctx) as types.ContactShape

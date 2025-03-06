@@ -1895,6 +1895,26 @@ export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImport
 
     return ret
 }
+/* connection */
+function importConnectionOptional(tar: impl.Connection, source: types.Connection, ctx?: IImportContext) {
+    importPathShapeOptional(tar, source)
+    if (source.from !== undefined) tar.from = importContactForm(source.from, ctx)
+    if (source.to !== undefined) tar.to = importContactForm(source.to, ctx)
+}
+export function importConnection(source: types.Connection, ctx?: IImportContext): impl.Connection {
+    const ret: impl.Connection = new impl.Connection (
+        importCrdtidx(source.crdtidx, ctx),
+        source.id,
+        source.name,
+        importShapeType(source.type, ctx),
+        importTransform(source.transform, ctx),
+        importStyle(source.style, ctx),
+        importShapeSize(source.size, ctx),
+        importPathShape_pathsegs(source.pathsegs, ctx),
+        source.isEdited)
+    importConnectionOptional(ret, source, ctx)
+    return ret
+}
 /* contact shape */
 function importContactShapeOptional(tar: impl.ContactShape, source: types.ContactShape, ctx?: IImportContext) {
     importPathShapeOptional(tar, source)

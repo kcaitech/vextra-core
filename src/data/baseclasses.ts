@@ -1241,6 +1241,17 @@ export class SymbolRefShape extends Shape {
         this.variables = variables
     }
 }
+/* connection */
+export class Connection extends PathShape {
+    typeId = "connection"
+    isEdited: boolean
+    from?: ContactForm
+    to?: ContactForm
+    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style, size: ShapeSize, pathsegs: PathShape_pathsegs, isEdited: boolean) {
+        super(crdtidx, id, name, type, transform, style, size, pathsegs)
+        this.isEdited = isEdited
+    }
+}
 /* contact shape */
 export class ContactShape extends PathShape {
     typeId = "contact-shape"

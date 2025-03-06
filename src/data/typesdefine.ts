@@ -1115,6 +1115,12 @@ export type SymbolRefShape = Shape & {
     innerEnvScale?: number,
     uniformScale?: number,
 }
+/* connection */
+export type Connection = PathShape & {
+    isEdited: boolean,
+    from?: ContactForm,
+    to?: ContactForm,
+}
 /* contact shape */
 export type ContactShape = PathShape & {
     isEdited: boolean,
