@@ -1,56 +1,36 @@
 import {
-    adjustRB2,
-    expandTo,
     translate,
     translateTo,
 } from "./frame";
 import { CurvePoint, GroupShape, PathShape, PathShape2, Shape, ShapeFrame, ShapeType } from "../data/shape";
-import { getFormatFromBase64 } from "../basic/utils";
-import { ContactRoleType, CurveMode, FillType, ScrollBehavior, SideType } from "../data/typesdefine";
+import { CurveMode } from "../data/typesdefine";
 import {
-    modifyTransformByEnv,
-    newArrowShape,
-    newArtboard,
-    newContact,
-    newCutoutShape,
     newDefaultTextShape,
-    newImageFillShape,
     newLineShape,
     newOvalShape,
     newPolygonShape,
     newRectShape,
     newStellateShape,
-    newTable,
     newTextShape
 } from "./creator";
 
 import { Page } from "../data/page";
 import { CoopRepository } from "../coop/cooprepo";
-import { v4 } from "uuid";
 import { Document } from "../data/document";
 import { Api } from "../coop/recordapi";
-import { Artboard } from "../data/artboard";
 import { uuid } from "../basic/uuid";
-import { BorderSideSetting, ContactForm, ContactRole } from "../data/baseclasses";
-import { ContactShape } from "../data/contact";
-import { importCurvePoint, importGradient } from "../data/baseimport";
+import { importGradient } from "../data/baseimport";
 import { exportGradient } from "../data/baseexport";
 import { is_state } from "./utils/other";
 import { after_migrate, unable_to_migrate } from "./utils/migrate";
-import { get_state_name, shape4border, shape4contextSettings, shape4fill } from "./symbol";
+import { get_state_name, shape4contextSettings } from "./symbol";
 import {
     after_insert_point,
-    before_modify_side,
-    contact_edit,
-    pathEdit,
-    pointsEdit,
     update_frame_by_points
 } from "./utils/path";
-import { Color } from "../data/color";
-import { adapt2Shape, ContactLineView, PageView, PathShapeView, ShapeView } from "../dataview";
-import { ISave4Restore, LocalCmd, SelectionState } from "../coop/localcmd";
+import { adapt2Shape, PageView, PathShapeView, ShapeView } from "../dataview";
 import { BasicArray } from "../data/basic";
-import { Fill, FillMask } from "../data/style";
+import { Fill } from "../data/style";
 import { TextAttr } from "../data/classes";
 import { Transform } from "../data/transform";
 
@@ -79,25 +59,6 @@ export enum CtrlElementType { // 控制元素类型
     Text = 'text'
 }
 
-export interface AsyncCreator {
-    init: (page: Page, parent: GroupShape, type: ShapeType, name: string, frame: ShapeFrame, attr?: TextAttr) => Shape | undefined;
-    init_media: (page: Page, parent: GroupShape, name: string, frame: ShapeFrame, media: {
-        buff: Uint8Array,
-        base64: string
-    }, originFrame: { width: number, height: number }) => Shape | undefined;
-    init_text: (page: Page, parent: GroupShape, frame: ShapeFrame, content: string, attr?: TextAttr) => Shape | undefined;
-    init_arrow: (page: Page, parent: GroupShape, name: string, frame: ShapeFrame) => Shape | undefined;
-    init_contact: (page: Page, parent: GroupShape, frame: ShapeFrame, name: string, apex?: ContactForm) => Shape | undefined;
-    setFrame: (point: PageXY) => void;
-    setFrameByWheel: (point: PageXY) => void;
-    collect: (page: Page | PageView, shapes: Shape[], target: Artboard) => void;
-    init_table: (page: Page, parent: GroupShape, name: string, frame: ShapeFrame, row: number, col: number) => Shape | undefined;
-    contact_to: (p: PageXY, to?: ContactForm) => void;
-    migrate: (targetParent: GroupShape) => void;
-    close: () => undefined;
-    init_cutout: (page: Page, parent: GroupShape, name: string, frame: ShapeFrame) => Shape | undefined;
-}
-
 export interface AsyncPathEditor {
     addNode: (index: number) => void;
     execute: (index: number, end: PageXY) => void;
@@ -121,16 +82,6 @@ export interface AsyncTransfer {
     setCurrentEnv: (cv: Shape | Page) => void;
     close: () => undefined;
     abort: () => void;
-}
-
-export interface AsyncContactEditor {
-    pre: () => void;
-    modify_contact_from: (m_target: PageXY, clear_target?: { apex: ContactForm, p: PageXY }) => void;
-    modify_contact_to: (m_target: PageXY, clear_target?: { apex: ContactForm, p: PageXY }) => void;
-    before: (index: number) => void;
-    modify_sides: (index: number, dx: number, dy: number) => void;
-    migrate: (targetParent: GroupShape) => void;
-    close: () => undefined;
 }
 
 export interface AsyncOpacityEditor {
@@ -189,393 +140,6 @@ export class Controller {
             }
             default:
                 return newRectShape(name, frame, this.__document.stylesMgr);
-        }
-    }
-
-    // 创建自定义frame的图形
-    public asyncCreator(mousedownOnPage: PageXY, isLockSizeRatio?: boolean): AsyncCreator {
-        const anchor: PageXY = mousedownOnPage;
-        let status: Status = Status.Pending;
-        let newShape: Shape | undefined;
-        let savepage: Page | undefined;
-        const api = this.__repo.start("createshape", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-            const state = {} as SelectionState;
-            if (!isUndo) state.shapes = newShape ? [newShape.id] : [];
-            else state.shapes = cmd.saveselection?.shapes || [];
-            selection.restore(state);
-        });
-        const init = (page: Page, parent: GroupShape, type: ShapeType, name: string, frame: ShapeFrame, attr?: TextAttr): Shape | undefined => {
-            try {
-                savepage = page;
-                status = Status.Pending;
-
-                const shape = this.create(type, name, frame, attr);
-
-                if (shape.type !== ShapeType.Line) {
-                    shape.constrainerProportions = !!isLockSizeRatio;
-                }
-
-                modifyTransformByEnv(shape, parent);
-                const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
-                let targetIndex = parent.childs.length;
-                if (_types.includes(parent.type)) {
-                    const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
-                    const fixed_index = parent.childs.findIndex(s => s.scrollBehavior === Fixed);
-                    targetIndex = fixed_index === -1 ? parent.childs.length : fixed_index;
-                }
-                api.shapeInsert(this.__document, page, parent, shape, targetIndex);
-
-                newShape = parent.childs[parent.childs.length - 1];
-
-                if (newShape.type === ShapeType.Artboard && parent instanceof Page) {
-                    api.addFillAt(newShape.style.fills, new Fill(new BasicArray(), uuid(), true, FillType.SolidColor, new Color(0, 0, 0, 0)), 0);
-                }
-
-                translateTo(api, savepage, newShape, frame.x, frame.y);
-
-                this.__repo.transactCtx.fireNotify();
-                status = Status.Fulfilled;
-                return newShape
-            } catch (e) {
-                console.error(e);
-                status = Status.Exception;
-            }
-        }
-        const init_arrow = (page: Page, parent: GroupShape, name: string, frame: ShapeFrame): Shape | undefined => {
-            try {
-                savepage = page;
-                status = Status.Pending;
-
-                const shape = newArrowShape(name, frame, this.__document.stylesMgr);
-
-                modifyTransformByEnv(shape, parent);
-                const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
-                let targetIndex = parent.childs.length;
-                if (_types.includes(parent.type)) {
-                    const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
-                    const fixed_index = parent.childs.findIndex(s => s.scrollBehavior === Fixed);
-                    targetIndex = fixed_index === -1 ? parent.childs.length : fixed_index;
-                }
-                api.shapeInsert(this.__document, page, parent, shape, targetIndex);
-                newShape = parent.childs[targetIndex];
-
-                translateTo(api, savepage, newShape, frame.x, frame.y);
-
-                this.__repo.transactCtx.fireNotify();
-                status = Status.Fulfilled;
-                return newShape
-            } catch (e) {
-                console.error(e);
-                status = Status.Exception;
-            }
-        }
-        const init_media = (page: Page, parent: GroupShape, name: string, frame: ShapeFrame, media: {
-            buff: Uint8Array,
-            base64: string
-        }, originFrame: { width: number, height: number }): Shape | undefined => {
-            status = Status.Pending;
-            if (this.__document) { // media文件处理
-                try {
-                    savepage = page;
-                    const format = getFormatFromBase64(media.base64);
-                    const ref = `${v4()}.${format}`;
-                    this.__document.mediasMgr.add(ref, media);
-                    const shape = newImageFillShape(name, frame, this.__document.mediasMgr, originFrame, this.__document.stylesMgr, ref);
-                    const xy = parent.frame2Root();
-                    shape.transform.translateX -= xy.x;
-                    shape.transform.translateY -= xy.y;
-                    const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
-                    let targetIndex = parent.childs.length;
-                    if (_types.includes(parent.type)) {
-                        const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
-                        const fixed_index = parent.childs.findIndex(s => s.scrollBehavior === Fixed);
-                        targetIndex = fixed_index === -1 ? parent.childs.length : fixed_index;
-                    }
-                    api.shapeInsert(this.__document, page, parent, shape, targetIndex)
-                    newShape = parent.childs[targetIndex];
-
-                    this.__repo.transactCtx.fireNotify();
-                    status = Status.Fulfilled;
-                    return newShape
-                } catch (e) {
-                    console.error(e);
-                    status = Status.Exception;
-                }
-            }
-        }
-        const init_table = (page: Page, parent: GroupShape, name: string, frame: ShapeFrame, row: number, col: number): Shape | undefined => {
-            try {
-                savepage = page;
-                status = Status.Pending;
-                const shape = newTable(name, frame, row, col, this.__document.mediasMgr, this.__document.stylesMgr);
-                const xy = parent.frame2Root();
-                shape.transform.translateX -= xy.x;
-                shape.transform.translateY -= xy.y;
-                const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
-                let targetIndex = parent.childs.length;
-                if (_types.includes(parent.type)) {
-                    const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
-                    const fixed_index = parent.childs.findIndex(s => s.scrollBehavior === Fixed);
-                    targetIndex = fixed_index === -1 ? parent.childs.length : fixed_index;
-                }
-                api.shapeInsert(this.__document, page, parent, shape, targetIndex);
-                newShape = parent.childs[targetIndex];
-
-                // if (newShape?.type === ShapeType.Artboard) api.setFillColor(page, newShape, 0, new Color(0, 0, 0, 0));
-                this.__repo.transactCtx.fireNotify();
-                status = Status.Fulfilled;
-                return newShape
-            } catch (e) {
-                console.error(e);
-                status = Status.Exception;
-            }
-        }
-        const init_text = (page: Page, parent: GroupShape, frame: ShapeFrame, content: string, attr?: TextAttr): Shape | undefined => {
-            status = Status.Pending;
-            if (this.__document) {
-                try {
-                    let name = content;
-                    if (content.length > 19) {
-                        name = name.slice(0, 19) + '...';
-                    }
-                    const shape = attr ? newDefaultTextShape(name, attr) : newTextShape(name);
-
-                    shape.constrainerProportions = !!isLockSizeRatio;
-
-                    modifyTransformByEnv(shape, parent);
-
-                    shape.text.insertText(content, 0);
-
-                    const layout = shape.getLayout();
-                    shape.size.width = layout.contentWidth;
-                    shape.size.height = layout.contentHeight;
-                    const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
-                    let targetIndex = parent.childs.length;
-                    if (_types.includes(parent.type)) {
-                        const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
-                        const fixed_index = parent.childs.findIndex(s => s.scrollBehavior === Fixed);
-                        targetIndex = fixed_index === -1 ? parent.childs.length : fixed_index;
-                    }
-                    api.shapeInsert(this.__document, page, parent, shape, targetIndex)
-                    newShape = parent.childs[targetIndex];
-
-                    translateTo(api, page, newShape, frame.x, frame.y);
-
-                    this.__repo.transactCtx.fireNotify();
-                    status = Status.Fulfilled;
-                    return newShape
-                } catch (e) {
-                    console.error(e);
-                    status = Status.Exception;
-                }
-            }
-        }
-        const init_contact = (page: Page, parent: GroupShape, frame: ShapeFrame, name: string, apex?: ContactForm): Shape | undefined => {
-            try {
-                savepage = page;
-                status = Status.Pending;
-                const shape = newContact(name, frame, this.__document.stylesMgr, apex);
-                const xy = parent.frame2Root();
-                shape.transform.translateX -= xy.x;
-                shape.transform.translateY -= xy.y;
-                const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
-                let targetIndex = parent.childs.length;
-                if (_types.includes(parent.type)) {
-                    const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
-                    const fixed_index = parent.childs.findIndex(s => s.scrollBehavior === Fixed);
-                    targetIndex = fixed_index === -1 ? parent.childs.length : fixed_index;
-                }
-                api.shapeInsert(this.__document, page, parent, shape, targetIndex);
-                newShape = parent.childs[targetIndex];
-                this.__repo.transactCtx.fireNotify();
-                status = Status.Fulfilled;
-                return newShape
-            } catch (e) {
-                console.error(e);
-                status = Status.Exception;
-            }
-        }
-        const init_cutout = (page: Page, parent: GroupShape, name: string, frame: ShapeFrame): Shape | undefined => {
-            try {
-                savepage = page;
-                status = Status.Pending;
-
-                const shape = newCutoutShape(name, frame);
-
-                shape.constrainerProportions = !!isLockSizeRatio;
-
-                modifyTransformByEnv(shape, parent);
-                const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
-                let targetIndex = parent.childs.length;
-                if (_types.includes(parent.type)) {
-                    const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
-                    const fixed_index = parent.childs.findIndex(s => s.scrollBehavior === Fixed);
-                    targetIndex = fixed_index === -1 ? parent.childs.length : fixed_index;
-                }
-                api.shapeInsert(this.__document, page, parent, shape, targetIndex);
-                newShape = parent.childs[targetIndex];
-
-                translateTo(api, page, newShape, frame.x, frame.y);
-
-                // newShape && api.setFillColor(page, newShape, 0, new Color(0, 0, 0, 0));
-                this.__repo.transactCtx.fireNotify();
-                status = Status.Fulfilled;
-                return newShape
-            } catch (e) {
-                console.error(e);
-                status = Status.Exception;
-            }
-        }
-        const contact_to = (p: PageXY, to?: ContactForm) => {
-            if (!newShape || !savepage) return;
-            try {
-                status = Status.Pending;
-                pathEdit(api, savepage, newShape as PathShape, 1, p);
-                api.shapeModifyContactTo(savepage, newShape as ContactShape, to);
-                this.__repo.transactCtx.fireNotify();
-                status = Status.Fulfilled;
-            } catch (e) {
-                console.error(e);
-                status = Status.Exception;
-            }
-        }
-        const migrate = (targetParent: GroupShape) => {
-            if (!newShape || !savepage) return;
-            try {
-                status = Status.Pending;
-                const origin: GroupShape = newShape.parent as GroupShape;
-                const { x, y } = newShape.frame2Root();
-                let toIdx = targetParent.childs.length;
-                if (origin.id === targetParent.id) --toIdx;
-                api.shapeMove(savepage, origin, origin.indexOfChild(newShape), targetParent, toIdx);
-                translateTo(api, savepage, newShape, x, y);
-                this.__repo.transactCtx.fireNotify();
-                status = Status.Fulfilled;
-            } catch (e) {
-                console.error(e);
-                status = Status.Exception;
-            }
-        }
-        const setFrame = (point: PageXY) => {
-            if (!newShape || !savepage) {
-                return;
-            }
-            status = Status.Pending;
-            try {
-                if (newShape.type === ShapeType.Line) {
-                    pathEdit(api, savepage, newShape as PathShape, 1, point); // 线条的创建过程由路径编辑来完成
-                } else {
-                    adjustRB2(api, this.__document, savepage, newShape, point.x, point.y);
-                }
-                this.__repo.transactCtx.fireNotify();
-                status = Status.Fulfilled;
-            } catch (e) {
-                console.error(e);
-                status = Status.Exception;
-            }
-        }
-        const setFrameByWheel = (point: PageXY) => {
-            if (!newShape || !savepage) return;
-            try {
-                status = Status.Pending;
-                const { x: sx, y: sy } = anchor;
-                const { x: px, y: py } = point;
-                const x1 = { x: Math.min(sx, px), y: Math.min(sy, py) };
-                const x2 = { x: Math.max(sx, px), y: Math.max(sy, py) };
-                const height = x2.y - x1.y;
-                const width = x2.x - x1.x;
-                expandTo(api, this.__document, savepage, newShape, width, height);
-                translateTo(api, savepage, newShape, x1.x, x1.y);
-                this.__repo.transactCtx.fireNotify();
-                status = Status.Fulfilled;
-            } catch (e) {
-                console.error(e);
-                status = Status.Exception;
-            }
-        }
-        const collect = (page: Page | PageView, shapes: Shape[], target: Artboard) => { // 容器收束
-            page = page instanceof PageView ? page.data : page;
-            status = Status.Pending;
-            try {
-                if (shapes.length) {
-                    for (let i = 0; i < shapes.length; i++) {
-                        const s = shapes[i];
-                        const p = s.parent as GroupShape;
-                        const idx = p.indexOfChild(s);
-                        api.shapeMove(page, p, idx, target, 0);
-                        if (p.childs.length <= 0) {
-                            deleteEmptyGroupShape(this.__document, page, s, api);
-                        }
-                    }
-                    const realXY = shapes.map((s) => s.frame2Root());
-                    const t_xy = target.frame;
-                    const savep = shapes[0].parent as GroupShape;
-                    const m = (savep.matrix2Root().inverse);
-                    for (let i = 0; i < shapes.length; i++) {
-                        const c = shapes[i];
-                        const r = realXY[i]
-                        const target = m.computeCoord(r.x, r.y);
-                        const cur = c.matrix2Parent().computeCoord(0, 0);
-                        api.shapeModifyXY(page, c, c.frame.x + target.x - cur.x - t_xy.x, c.frame.y + target.y - cur.y - t_xy.y);
-                    }
-                }
-
-                this.__repo.transactCtx.fireNotify();
-                status = Status.Fulfilled;
-            } catch (e) {
-                console.error(e);
-                status = Status.Exception;
-            }
-        }
-        const close = () => {
-            if (status == Status.Fulfilled && newShape && this.__repo.isNeedCommit()) {
-                try {
-                    if (newShape.type === ShapeType.Artboard && newShape.parent instanceof Page) {
-                        // api.setFillColor(savepage!, newShape, 0, new Color(1, 255, 255, 255));
-                    }
-
-                    if (newShape.type === ShapeType.Contact) {
-                        if ((newShape as ContactShape).from) {
-                            const shape1 = savepage?.getShape((newShape as ContactShape).from!.shapeId);
-                            if (shape1) {
-                                api.addContactAt(savepage!, shape1, new ContactRole(new BasicArray<number>(), v4(), ContactRoleType.From, newShape.id), shape1.style.contacts?.length || 0);
-                            }
-                        }
-                        if ((newShape as ContactShape).to) {
-                            const shape1 = savepage?.getShape((newShape as ContactShape).to!.shapeId);
-                            if (shape1) {
-                                api.addContactAt(savepage!, shape1, new ContactRole(new BasicArray<number>(), v4(), ContactRoleType.To, newShape.id), shape1.style.contacts?.length || 0);
-                            }
-                        }
-                    }
-
-                    if (newShape.type === ShapeType.Line && savepage) {
-                        update_frame_by_points(api, savepage, newShape as PathShape)
-                    }
-                    this.__repo.commit();
-                } catch (e) {
-                    console.error(e);
-                    this.__repo.rollback();
-                }
-            } else {
-                this.__repo.rollback();
-            }
-            return undefined;
-        }
-        return {
-            init,
-            init_media,
-            init_text,
-            init_arrow,
-            init_contact,
-            setFrame,
-            setFrameByWheel,
-            collect,
-            init_table,
-            contact_to,
-            migrate,
-            close,
-            init_cutout
         }
     }
 
@@ -768,7 +332,7 @@ export class Controller {
         const execute = (index: number, end: PageXY) => {
             status === Status.Pending
             try {
-                pathEdit(api, page, shape, index, end, m);
+                // pathEdit(api, page, shape, index, end, m);
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
@@ -785,7 +349,7 @@ export class Controller {
                     if (!points?.length) {
                         return;
                     }
-                    pointsEdit(api, page, shape, points, indexes, dx, dy, segment);
+                    // pointsEdit(api, page, shape, points, indexes, dx, dy, segment);
                 });
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
@@ -835,150 +399,6 @@ export class Controller {
             this.__repo.rollback();
         }
         return { addNode, execute, execute2, close, abort, executeRadius }
-    }
-
-    public asyncContactEditor(_shape: ContactShape | ContactLineView, _page: Page | PageView): AsyncContactEditor {
-        const shape: ContactShape = _shape instanceof ShapeView ? adapt2Shape(_shape) as ContactShape : _shape as ContactShape;
-        const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
-
-        const api = this.__repo.start("action");
-        let status: Status = Status.Pending;
-        const pre = () => {
-            try {
-                status = Status.Pending
-                const p = shape.getPoints();
-                if (p.length === 0) {
-                    throw new Error('none point');
-                }
-
-                const points = [p[0], p[p.length - 1]];
-                for (let i = 0, len = points.length; i < len; i++) {
-                    const p = importCurvePoint((points[i]));
-                    p.id = v4();
-                    points[i] = p;
-                }
-
-                const len = shape.points.length;
-                api.deletePoints(page, shape as PathShape, 0, len, 0);
-
-                api.contactModifyEditState(page, shape, false);
-
-                api.addPoints(page, shape, points, 0);
-
-                status = Status.Fulfilled;
-            } catch (e) {
-                console.error(e);
-                status = Status.Exception;
-            }
-        }
-        const modify_contact_from = (m_target: PageXY, clear_target?: { apex: ContactForm, p: PageXY }) => {
-            status = Status.Pending;
-            try {
-                if (clear_target) {
-                    if (!shape.from) {
-                        api.shapeModifyContactFrom(page, shape as ContactShape, clear_target.apex);
-                        const shape1 = page.getShape(clear_target.apex.shapeId);
-                        if (shape1) {
-                            api.addContactAt(page, shape1, new ContactRole(new BasicArray<number>(), v4(), ContactRoleType.From, shape.id), shape1.style.contacts?.length || 0);
-                        }
-                    }
-
-                    pathEdit(api, page, shape as PathShape, 0, clear_target.p);
-                } else {
-                    if (shape.from) {
-                        const shape2 = page.getShape(shape.from.shapeId);
-                        const index = shape2?.style?.contacts?.findIndex(i => i.shapeId === shape.id);
-                        if (shape2 && index !== undefined && index > -1) {
-                            api.removeContactRoleAt(page, shape2, index);
-                        }
-                        api.shapeModifyContactFrom(page, shape as ContactShape, undefined);
-                    }
-
-                    pathEdit(api, page, shape as PathShape, 0, m_target);
-                }
-                this.__repo.transactCtx.fireNotify();
-                status = Status.Fulfilled;
-            } catch (e) {
-                console.error(e);
-                status = Status.Exception;
-            }
-        }
-        const modify_contact_to = (m_target: PageXY, clear_target?: { apex: ContactForm, p: PageXY }) => {
-            status = Status.Pending;
-            try {
-                const idx = shape.points?.length;
-                if (!idx) return false;
-                if (clear_target) {
-                    if (!shape.to) {
-                        api.shapeModifyContactTo(page, shape as ContactShape, clear_target.apex);
-                        const shape1 = page.getShape(clear_target.apex.shapeId);
-                        if (shape1) {
-                            api.addContactAt(page, shape1, new ContactRole(new BasicArray<number>(), v4(), ContactRoleType.To, shape.id), shape1.style.contacts?.length || 0);
-                        }
-                    }
-                    pathEdit(api, page, shape as PathShape, idx - 1, clear_target.p);
-                } else {
-                    if (shape.to) {
-                        const shape2 = page.getShape(shape.to.shapeId);
-                        const index = shape2?.style?.contacts?.findIndex(i => i.shapeId === shape.id);
-                        if (shape2 && index !== undefined && index > -1) {
-                            api.removeContactRoleAt(page, shape2, index);
-                        }
-
-                        api.shapeModifyContactTo(page, shape as ContactShape, undefined);
-                    }
-                    pathEdit(api, page, shape as PathShape, idx - 1, m_target);
-                }
-                this.__repo.transactCtx.fireNotify();
-                status = Status.Fulfilled;
-            } catch (e) {
-                console.error(e);
-                status = Status.Exception;
-            }
-        }
-        const migrate = (targetParent: GroupShape) => {
-            status = Status.Pending;
-            try {
-                const origin: GroupShape = shape.parent as GroupShape;
-                const { x, y } = shape.frame2Root();
-                api.shapeMove(page, origin, origin.indexOfChild(shape), targetParent, targetParent.childs.length);
-                translateTo(api, page, shape, x, y);
-                this.__repo.transactCtx.fireNotify();
-                status = Status.Fulfilled;
-            } catch (e) {
-                console.error(e);
-                status = Status.Exception;
-            }
-        }
-        const before = (index: number) => {
-            try {
-                status === Status.Pending;
-                before_modify_side(api, page, shape, index);
-                status === Status.Fulfilled;
-            } catch (error) {
-                console.log(error);
-            }
-        }
-        const modify_sides = (index: number, dx: number, dy: number) => {
-            try {
-                status = Status.Pending;
-                contact_edit(api, page, shape, index, index + 1, dx, dy);
-                this.__repo.transactCtx.fireNotify();
-                status = Status.Fulfilled;
-            } catch (e) {
-                console.error(e);
-                status = Status.Exception;
-            }
-        }
-        const close = () => {
-            if (status === Status.Fulfilled && this.__repo.isNeedCommit()) {
-                this.__repo.commit();
-            } else {
-                this.__repo.rollback();
-            }
-            return undefined;
-        }
-        return { pre, modify_contact_from, modify_contact_to, before, modify_sides, migrate, close }
     }
 
     public asyncOpacityEditor(_shapes: ShapeView[], _page: PageView): AsyncOpacityEditor {
