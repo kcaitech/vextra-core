@@ -107,6 +107,9 @@ inject['RectShape']['before'] = `\
         
         source.pathsegs = [seg];
     }
+    if ((source.pathsegs.length !== 1 || source.pathsegs[0].points.length !== 4) && !source.haveEdit) {
+        source.haveEdit = true;
+    }
 `
 
 inject['OvalShape'] = {} as any;

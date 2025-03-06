@@ -285,10 +285,10 @@ function figToBinaryParts(fileBuffer: ArrayBuffer): Uint8Array[] {
         fileByte[6] !== 119 ||
         fileByte[7] !== 105
     ) {
-        const unzipped = UZIP.parse(fileBuffer as unknown as any)
+        const unzipped = UZIP.parse(fileBuffer as ArrayBuffer)
         const file = unzipped["canvas.fig"]
-        // fileBuffer = file.buffer
-        fileByte = new Uint8Array(file.buffer)
+        fileBuffer = file.buffer as ArrayBuffer;
+        fileByte = new Uint8Array(fileBuffer)
     }
 
     // 8 bytes for figma comment "fig-kiwi"
@@ -310,9 +310,9 @@ function figToBinaryParts(fileBuffer: ArrayBuffer): Uint8Array[] {
         // WARN: it is possible this byte is not png, maybe I need to check a few more bytes?
         if (!(fileByte[index] == 137 && fileByte[index + 1] == 80)) {
             try {
-                byteTemp = fzstd.decompress(byteTemp) as any;
+                byteTemp = fzstd.decompress(byteTemp) as Uint8Array<ArrayBuffer>;
             } catch (err) {
-                byteTemp = pako.inflateRaw(byteTemp) as any;
+                byteTemp = pako.inflateRaw(byteTemp) as Uint8Array<ArrayBuffer>;
             }
         }
 

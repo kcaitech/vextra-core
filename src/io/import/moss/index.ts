@@ -68,7 +68,7 @@ function setLoader(pack: { [p: string]: string | Uint8Array; }, document: Docume
 export function importDocument(name: string, mdd: { [p: string]: string | Uint8Array }, guard: IDataGuard) {
     const meta = JSON.parse(mdd['document-meta.json'] as string);
     const pageList = importDocumentMeta(meta, undefined).pagesList;
-    const document = new Document(uuid(), name, "", "", pageList, new BasicMap(), guard);
+    const document = new Document(uuid(), name, guard, { pageList });
     setLoader(mdd, document);
     return document;
 }
