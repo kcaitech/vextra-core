@@ -130,17 +130,16 @@ export async function importDocument(storage: storage.IStorage, documentPath: st
         libs.push(new StyleSheet(meta.id, meta.name, []));
     }
 
-    const document = new Document(
-        meta.id,
-        meta.name,
-        versionId ?? "",
-        meta.lastCmdId,
-        meta.pagesList,
-        meta.symbolregist,
-        gurad,
-        meta.freesymbols as BasicMap<string, SymbolShape>,
-        libs
-    );
+    const { id, name, lastCmdId, pagesList, symbolregist, freesymbols } = meta;
+
+    const document = new Document(id, name, gurad, {
+        versionId,
+        lastCmdId,
+        pageList: pagesList,
+        freeSymbols: freesymbols as BasicMap<string, SymbolShape>,
+        symbolRegister: symbolregist,
+        stylelib: libs
+    });
 
     document.pagesMgr.setLoader((id: string) => {
         const ctx: IImportContext = new class implements IImportContext {
@@ -207,17 +206,17 @@ export async function importLocalDocument(storage: storage.IStorage, documentPat
     } else {
         libs.push(new StyleSheet(meta.id, meta.name, []));
     }
-    const document = new Document(
-        meta.id,
-        meta.name,
-        versionId ?? "",
-        meta.lastCmdId,
-        meta.pagesList,
-        meta.symbolregist,
-        gurad,
-        meta.freesymbols as BasicMap<string, SymbolShape>,
-        libs
-    );
+
+    const { id, name, lastCmdId, pagesList, symbolregist, freesymbols } = meta;
+
+    const document = new Document(id, name, gurad, {
+        versionId,
+        symbolRegister: symbolregist,
+        lastCmdId,
+        pageList: pagesList,
+        freeSymbols: freesymbols as BasicMap<string, SymbolShape>,
+        stylelib: libs
+    });
 
     document.pagesMgr.setLoader((id: string) => {
         const ctx: IImportContext = new class implements IImportContext {

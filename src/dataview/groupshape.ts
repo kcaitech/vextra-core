@@ -1,10 +1,4 @@
-import {
-    GroupShape,
-    Shape,
-    ShapeFrame,
-    ShapeSize,
-    ShapeType
-} from "../data";
+import { GroupShape, Shape, ShapeFrame, ShapeSize, ShapeType } from "../data";
 import { ShapeView, updateFrame } from "./shape";
 import { getShapeViewId } from "./basic";
 import { EL } from "./el";
@@ -189,9 +183,9 @@ export class GroupShapeView extends ShapeView {
         const visiblebounds = childvisiblebounds.reduce(reducer, { minx: 0, miny: 0, maxx: 0, maxy: 0 });
         const outerbounds = childouterbounds.reduce(reducer, { minx: 0, miny: 0, maxx: 0, maxy: 0 });
 
-        // todo
         let changed = this._save_frame.x !== this.m_frame.x || this._save_frame.y !== this.m_frame.y ||
             this._save_frame.width !== this.m_frame.width || this._save_frame.height !== this.m_frame.height;
+
         if (updateFrame(this.m_frame, contentbounds.minx, contentbounds.miny, contentbounds.maxx - contentbounds.minx, contentbounds.maxy - contentbounds.miny)) {
             this.m_pathstr = undefined; // need update
             this.m_path = undefined;
@@ -233,6 +227,7 @@ export class GroupShapeView extends ShapeView {
 
         if (changed) {
             this.m_ctx.addNotifyLayout(this);
+            this.m_client_x = this.m_client_y = undefined;
         }
         return changed;
     }

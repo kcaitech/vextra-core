@@ -6,15 +6,6 @@ import { ShapeView } from "./shape";
 import { RootView } from "./view";
 import { DViewCtx, PropsType } from "./viewctx";
 
-// function checkFrame(v: ShapeView) {
-//     const lhs = v.frame;
-//     const rhs = v.m_data.frame;
-//     if (isDiffShapeFrame(lhs, rhs)) {
-//         console.error(`frame not match: ${lhs} vs ${rhs}`, v.name)
-//     }
-//     v.m_children.forEach((c) => checkFrame(c as ShapeView));
-// }
-
 function checkPath(v: ShapeView) {
     const lhs = v.getPathStr();
     const rhs = v.m_data.getPath().toString();

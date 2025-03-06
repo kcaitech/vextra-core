@@ -121,10 +121,7 @@ export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeSize, scaleX
             width: originParentFrame.width,
             height: originParentFrame.height
         }
-        // if (uniformScale) {
-        //     __cur_env.width /= uniformScale;
-        //     __cur_env.height /= uniformScale;
-        // }
+
         return fixConstrainFrame2(shape, { x: scaleX, y: scaleY }, __cur_env as ShapeSize, __pre_env as ShapeSize);
     }
 }
@@ -318,7 +315,6 @@ export function matrix2parent(t: Transform, matrix?: Transform) {
     return matrix;
 }
 
-
 export function updateFrame(frame: ShapeFrame, x: number, y: number, w: number, h: number): boolean {
     if (frame.x !== x || frame.y !== y || frame.width !== w || frame.height !== h) {
         frame.x = x;
@@ -453,6 +449,36 @@ export class ShapeView extends DataView {
 
     get y(): number {
         return this.transform.m12
+    }
+
+    /**
+     *  transform -> clientXY
+     *  数据里的值(transform)并不一定是用户直观上的值(clientXY)，需要通过计算来简化或转换
+     *  需要注意的是，frame的偏移目前只发生编组类图形和页面上，其中页面的坐标系需要帮用户隐藏掉，取而代之的是一个固定的Root坐标系
+     *  所以在处理页面下的直接子元素时，也应该忽略掉frame的偏移；
+     */
+    protected m_client_x: number | undefined = undefined;
+
+    get clientX(): number {
+        return this.m_client_x ?? (this.m_client_x = (() => {
+            let offset = 0;
+            if (this.parent?.type !== ShapeType.Page) {
+                offset = this.parent?.frame.x ?? 0;
+            }
+            return this._p_frame.x - offset;
+        })());
+    }
+
+    protected m_client_y: number | undefined = undefined;
+
+    get clientY(): number {
+        return this.m_client_y ?? (this.m_client_y = (() => {
+            let offset = 0;
+            if (this.parent?.type !== ShapeType.Page) {
+                offset = this.parent?.frame.y ?? 0;
+            }
+            return this._p_frame.y - offset;
+        })());
     }
 
     boundingBox(): ShapeFrame {
@@ -974,6 +1000,7 @@ export class ShapeView extends DataView {
 
         if (changed) {
             this.m_ctx.addNotifyLayout(this);
+            this.m_client_x = this.m_client_y = undefined;
         }
 
         return changed;

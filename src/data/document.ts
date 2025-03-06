@@ -1,12 +1,12 @@
 import { DocumentMeta, PageListItem } from "./baseclasses";
 import { Page } from "./page";
 import { BasicArray, BasicMap, IDataGuard, ResourceMgr, WatchableObject } from "./basic";
-import { StyleSheet, StyleMangerMember } from "./style";
 import { GroupShape, Shape, SymbolShape, TextShape } from "./shape";
 import { TableShape } from "./table";
 import { SymbolRefShape } from "./symbolref";
 import { SymbolMgr } from "./symbolmgr";
 import { FMT_VER_latest } from "./fmtver";
+import { StyleMangerMember, StyleSheet } from "./style";
 
 export { DocumentMeta, PageListItem } from "./baseclasses";
 
@@ -36,8 +36,7 @@ function getTextFromGroupShape(shape: GroupShape | undefined): string {
     return result;
 }
 
-export class Document extends (DocumentMeta) {
-
+export class Document extends DocumentMeta {
     // watchable
     public __watcher: Set<((...args: any[]) => void)> = new Set();
     public watch(watcher: ((...args: any[]) => void)): (() => void) {
@@ -61,9 +60,7 @@ export class Document extends (DocumentMeta) {
         return [this.id];
     }
 
-    /**
-     * for command
-     */
+    /* for command */
     getOpTarget(path: string[]): any {
         if (path.length === 0) throw new Error("path is empty");
         const path0 = path[0];
@@ -110,24 +107,34 @@ export class Document extends (DocumentMeta) {
     constructor(
         id: string,
         name: string,
-        versionId: string, // 版本id
-        lastCmdId: string, // 此版本最后一个cmd的id
-        pagesList: BasicArray<PageListItem>,
-        symbolregist: BasicMap<string, string>,
         guard: IDataGuard,
-        freesymbols?: BasicMap<string, SymbolShape>,
-        stylelib?: BasicArray<StyleSheet>,
+        source?: {
+            versionId?: string, /* 版本id */
+            lastCmdId?: string, /* 此版本最后一个cmd的id */
+            pageList?: BasicArray<PageListItem>,
+            symbolRegister?: BasicMap<string, string>,
+            freeSymbols?: BasicMap<string, SymbolShape>,
+            connection?: ResourceMgr<Shape>,
+            stylelib?: BasicArray<StyleSheet>,
+        }
     ) {
-        super(id, name, FMT_VER_latest, pagesList ?? new BasicArray(), lastCmdId, symbolregist)
+        const pagesList = source?.pageList ?? new BasicArray();
+        const symbolRegister = source?.symbolRegister ?? new BasicMap<string, string>();
+        const freesymbols = source?.freeSymbols ?? new BasicMap<string, SymbolShape>();
+        const versionId = source?.versionId ?? "";
+        const lastCmdId = source?.lastCmdId ?? "";
+
+        super(id, name, FMT_VER_latest, pagesList, lastCmdId, symbolRegister)
+
         this.__versionId = versionId;
         this.__name = name;
         this.__pages = new ResourceMgr<Page>([id, 'pages'], (data: Page) => guard.guard(data));
-        this.__symbols = new SymbolMgr([id, 'symbols'], symbolregist, (data: Shape) => guard.guard(data));
+        this.__symbols = new SymbolMgr([id, 'symbols'], symbolRegister, (data: Shape) => guard.guard(data));
         this.__medias = new ResourceMgr<{ buff: Uint8Array, base64: string }>([id, 'medias']);
         this.__styles = new ResourceMgr<StyleMangerMember>([id, 'styles']);
         this.__correspondent = new SpecialActionCorrespondent();
         this.freesymbols = freesymbols;
-        this.stylelib = stylelib;
+        this.stylelib = source?.stylelib ?? new BasicArray<StyleSheet>();
         return guard.guard(this);
     }
 
@@ -138,10 +145,6 @@ export class Document extends (DocumentMeta) {
     get pagesMgr() {
         return this.__pages;
     }
-
-    // get artboardMgr() {
-    //     return this.__artboards;
-    // }
 
     get symbolsMgr() {
         return this.__symbols;

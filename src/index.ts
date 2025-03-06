@@ -188,7 +188,7 @@ export * from "./editor/asyncapi"
 // coop
 export * from "./coop"
 
-export {Transform as TransformRaw} from "./data/transform"
+export {Transform as TransformRaw} from "./data/transform";
 
 // properties
 export { exportBorder, exportFill, exportShadow, exportBlur, exportContextSettings } from './data/baseexport';
