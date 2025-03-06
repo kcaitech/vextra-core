@@ -1,11 +1,9 @@
-
 import { Shape, ShapeType, SymbolShape } from "../data/shape";
 import { SymbolRefShape } from "../data/classes";
 import { EventEmitter } from "../basic/event";
 import { objectId } from "../basic/objectid";
 import { Notifiable } from "../data/basic";
 import { ShapeSize } from "../data/baseclasses";
-
 
 export type VarsContainer = (SymbolRefShape | SymbolShape)[];
 
@@ -18,7 +16,6 @@ export interface PropsType {
 }
 
 interface DataView extends Notifiable {
-    // id: string;
     layout(props?: PropsType): void;
     asyncRender(): number;
     parent?: DataView;
@@ -94,9 +91,7 @@ export function updateViewsFrame(updates: DataView[]) {
     }
 }
 
-
 export class DViewCtx extends EventEmitter {
-
     static FRAME_TIME = 20; // 实际会有延迟
 
     comsMap: Map<ShapeType, ViewType> = new Map();
@@ -109,6 +104,8 @@ export class DViewCtx extends EventEmitter {
     protected relayoutset: Map<number, DataView> = new Map();
     // 要由上往下更新
     protected dirtyset: Map<number, DataView> = new Map();
+
+    tails: Set<DataView & { updateAtLast: () => void }> = new Set();
 
     private needNotify: Map<number, DataView> = new Map();
 
@@ -148,18 +145,10 @@ export class DViewCtx extends EventEmitter {
 
     removeReLayout(v: DataView) {
         const vid = objectId(v);
-        // const ov = this.relayoutset.get(vid);
-        // if (ov !== v) {
-        //     return false;
-        // }
         return this.relayoutset.delete(vid);
     }
     removeDirty(v: DataView) {
         const vid = objectId(v);
-        // const ov = this.dirtyset.get(vid);
-        // if (ov !== v) {
-        //     return false;
-        // }
         return this.dirtyset.delete(vid);
     }
 
@@ -202,6 +191,8 @@ export class DViewCtx extends EventEmitter {
 
         // update frames
         updateViewsFrame(update2);
+
+        this.tails.forEach(v => v.updateAtLast());
     }
 
     private updateFocus() {
@@ -231,6 +222,8 @@ export class DViewCtx extends EventEmitter {
 
         // update frames
         updateViewsFrame(updated);
+
+        this.tails.forEach(v => v.updateAtLast());
 
         for (let i = 0, len = focusdepends.length; i < len; ++i) {
             const d = this.dirtyset.get(focusdepends[i]);
@@ -281,12 +274,6 @@ export class DViewCtx extends EventEmitter {
         if (Date.now() - emitStartTime > DViewCtx.FRAME_TIME) {
             console.error("!!! nextTick too long !!!");
         }
-        // { // check time
-        //     const expendsTime = Date.now() - startTime;
-        //     if (expendsTime > DViewCtx.FRAME_TIME) {
-        //         return true;
-        //     }
-        // }
 
         // 渲染
         for (let [k, v] of this.dirtyset) {

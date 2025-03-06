@@ -24,6 +24,20 @@ export class ContactLineView extends PathShapeView {
         this.update = this.update.bind(this);
     }
 
+    layout(props?: PropsType) {
+        const needLayout = this.m_ctx.removeReLayout(this);
+        if (props && !this.updateLayoutProps(props, needLayout)) return;
+        this.m_ctx.tails.add(this);
+    }
+
+    updateAtLast() {
+        this.updateApex();
+        this.m_path = undefined;
+        this.m_pathstr = undefined;
+        this.updateFrames();
+        this.createBorderPath();
+    }
+
     /* ===private=== */
     /* 两端的环境，环境中改变会影响到连接线的路径生成 */
     private fromparents: Shape[] = [];
