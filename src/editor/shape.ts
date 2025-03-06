@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { BoolShape, GroupShape, PathShape, PathShape2, RectShape, Shape, ShapeType, SymbolShape, SymbolUnionShape, TextShape, Variable, VariableType, Color, PathType, Document, SymbolRefShape, Text, Page, Border, BorderPosition, BorderStyle, Fill, MarkerType, Shadow, BoolOp, CurvePoint, ExportFormat, ContactShape, AutoLayout, PathSegment, BasicArray, string2Text } from "../data";
 import { expand, expandTo, translate, translateTo } from "./frame";
 import { CoopRepository } from "../coop/cooprepo";
