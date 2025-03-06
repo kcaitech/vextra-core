@@ -145,7 +145,6 @@ export class GroupShapeView extends ShapeView {
         const rootView = this.getRootView();
         for (let i = 0, len = childs.length; i < len; i++) {
             const child = childs[i];
-            if (child.type === ShapeType.Contact) continue; // todo 有没有更好的办法把连接线过滤出去
             this.layoutChild(parentFrame, child, i, scale, varsContainer, resue, rootView);
         }
         // 删除多余的
