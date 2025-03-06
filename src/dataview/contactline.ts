@@ -19,8 +19,6 @@ export class ContactLineView extends PathShapeView {
         this.watcher_sides = this.watcher_sides.bind(this);
 
         this.updateApex();
-
-        // this.afterInit();
     }
 
     get data(): ContactShape {
@@ -31,8 +29,7 @@ export class ContactLineView extends PathShapeView {
         return { from: this.from, to: this.to }
     }
 
-    private watcher_sides(...args: any) {
-        // todo 可以再精细点
+    private watcher_sides() {
         this.updateApex();
         this.m_path = undefined;
         this.m_pathstr = undefined;
@@ -148,13 +145,10 @@ export class ContactLineView extends PathShapeView {
         const path = this.getPath().clone();
         const bounds = path.bbox();
 
-        // update visible
         if (updateFrame(this.m_visibleFrame, bounds.x, bounds.y, bounds.w, bounds.h)) changed = true;
 
-        // update outer
         if (updateFrame(this.m_outerFrame, this.m_visibleFrame.x, this.m_visibleFrame.y, this.m_visibleFrame.width, this.m_visibleFrame.height)) changed = true;
 
-        // to parent frame
         const mapframe = (i: ShapeFrame, out: ShapeFrame) => {
             const transform = this.transform;
             if (this.isNoTransform()) {
@@ -188,9 +182,7 @@ export class ContactLineView extends PathShapeView {
     onDataChange(...args: any[]): void {
         super.onDataChange(...args);
 
-        if (args.includes('points') || args.includes('shape-frame')) {
-            return;
-        }
+        if (args.includes('points') || args.includes('shape-frame')) return;
 
         this.updateApex();
     }
@@ -224,7 +216,7 @@ export class ContactLineView extends PathShapeView {
     }
 
     getPoints() {
-        return this.data.getPoints(); // todo 缓存
+        return this.data.getPoints();
     }
 
     get isImageFill() {
