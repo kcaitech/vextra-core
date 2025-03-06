@@ -110,15 +110,6 @@ export class ContactLineView extends PathShapeView {
         this.watchToApex(this.contactTo)
     }
 
-    /* ===protected=== */
-    // protected renderFills(): EL[] {
-    //     return [];
-    // }
-    //
-    // protected renderBorders(): EL[] {
-    //     return renderBorders(elh, this.m_data.style, this.getPathStr(), this.m_data);
-    // }
-
     /* ===public=== */
     fromShape: Shape | undefined;
     toShape: Shape | undefined;
