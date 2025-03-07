@@ -7,9 +7,6 @@
  * For more information about the AGPL-3.0 license, please visit:
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
-
-import { EL, elh } from "./el";
-import { render as renderBorders } from "../render/contact_borders"
 import { ContactForm, ContactShape, Page, Shape, ShapeFrame, ShapeType, Fill, Blur } from "../data/classes";
 import {
     ContactType, CurveMode,
@@ -161,12 +158,12 @@ export class ContactLineView extends PathShapeView {
     }
 
     createBorderPath() {
-        const borders = this.getBorders();
-        if (borders && borders.strokePaints.some(p => p.isEnabled)) {
-            this.m_border_path = border2path(this, borders);
-            const bbox = this.m_border_path.bbox();
-            this.m_border_path_box = new ShapeFrame(bbox.x, bbox.y, bbox.w, bbox.h);
-        }
+        // const borders = this.getBorders();
+        // if (borders && borders.strokePaints.some(p => p.isEnabled)) {
+        //     this.m_border_path = border2path(this, borders);
+        //     const bbox = this.m_border_path.bbox();
+        //     this.m_border_path_box = new ShapeFrame(bbox.x, bbox.y, bbox.w, bbox.h);
+        // }
     }
 
     onMounted() {
