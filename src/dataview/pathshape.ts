@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import {
     CurvePoint,
     FillType, GradientType,
@@ -20,7 +30,7 @@ import { PageView } from "./page";
 import { importCurvePoint, importFill } from "../data/baseimport";
 import { exportFill } from "../data/baseexport";
 import { GroupShapeView } from "./groupshape";
-import { border2path } from "../editor/utils/path";
+import { border2path } from "./border2path";
 import { ArtboardView } from "./artboard";
 import { Path } from "@kcdesign/path";
 

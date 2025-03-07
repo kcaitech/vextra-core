@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import {ColVector3D, Matrix, Matrix3DKeysType} from "./matrix2"
 import {NumberArray2D} from "./number_array"
 import {isZero} from "./number_utils"
@@ -1464,6 +1474,7 @@ export class Transform { // 变换
         return !this.hasTranslate() && !this.hasRotation() && !this.hasScale()
     }
 
+    // 左乘 同multiAtLeft
     addTransform(transform: Transform) { // 叠加另一个变换（先执行本变换，再执行另一个变换）
         if (!transform.isMatrixLatest) transform.updateMatrix();
         if (!this.isMatrixLatest) this.updateMatrix();
@@ -1475,6 +1486,7 @@ export class Transform { // 变换
         return this
     }
 
+    // 右乘 同multi
     addPreTransform(transform: Transform) { // 叠加另一个变换（先执行另一个变换，再执行本变换）
         if (!transform.isMatrixLatest) transform.updateMatrix();
         if (!this.isMatrixLatest) this.updateMatrix();
