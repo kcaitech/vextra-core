@@ -22,11 +22,11 @@ export class ContactLineView extends PathShapeView {
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
         this.update = this.update.bind(this);
+        this.m_ctx.tails.add(this);
     }
 
     layout(props?: PropsType) {
-        const needLayout = this.m_ctx.removeReLayout(this);
-        if (props && !this.updateLayoutProps(props, needLayout)) return;
+        this.m_ctx.removeReLayout(this);
         this.m_ctx.tails.add(this);
     }
 
