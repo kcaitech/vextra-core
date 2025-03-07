@@ -16,15 +16,6 @@ import { ShapeView } from "./shape";
 import { RootView } from "./view";
 import { DViewCtx, PropsType } from "./viewctx";
 
-// function checkFrame(v: ShapeView) {
-//     const lhs = v.frame;
-//     const rhs = v.m_data.frame;
-//     if (isDiffShapeFrame(lhs, rhs)) {
-//         console.error(`frame not match: ${lhs} vs ${rhs}`, v.name)
-//     }
-//     v.m_children.forEach((c) => checkFrame(c as ShapeView));
-// }
-
 function checkPath(v: ShapeView) {
     const lhs = v.getPathStr();
     const rhs = v.m_data.getPath().toString();
@@ -45,14 +36,14 @@ export class PageView extends GroupShapeView implements RootView {
         super(ctx, props);
         this.onMounted();
 
-        const destoryDelayDestorys = () => {
+        const destroyDelayDestroys = () => {
             this.m_delaydestorys.forEach((v) => {
                 if (v.parent) return; // 已复用
                 v.destory();
             });
             this.m_delaydestorys.clear();
         }
-        ctx.on("nextTick", destoryDelayDestorys);
+        ctx.on("nextTick", destroyDelayDestroys);
     }
 
     onAddView(view: ShapeView | ShapeView[]): void {
@@ -83,7 +74,7 @@ export class PageView extends GroupShapeView implements RootView {
         return this.m_views.get(id) || this.m_delaydestorys.get(id);
     }
 
-    addDelayDestory(view: ShapeView | ShapeView[]): void {
+    addDelayDestroy(view: ShapeView | ShapeView[]): void {
         const add = (v: ShapeView) => {
             if (v.parent) throw new Error("view has parent, not removed?");
             this.m_delaydestorys.set(v.id, v);
@@ -120,13 +111,7 @@ export class PageView extends GroupShapeView implements RootView {
         return (this.m_data as Page).guides;
     }
 
-
     protected renderProps() {
-        // let width = Math.ceil(Math.max(100, this.m_data.frame.width));
-        // let height = Math.ceil(Math.max(100, this.m_data.frame.height));
-        // if (width % 2) width++;
-        // if (height % 2) height++;
-
         const prop: any = {
             version: "1.1",
             xmlns: "http://www.w3.org/2000/svg",
@@ -135,12 +120,6 @@ export class PageView extends GroupShapeView implements RootView {
             preserveAspectRatio: "xMinYMin meet",
             overflow: "visible"
         }
-        // prop.viewBox = `0 0 ${width} ${height}`;
-        // todo
-        // prop.style = { transform: matrixWithFrame.toString() };
-        // prop['data-area'] = rootId.value;
-        // prop.width = width;
-        // prop.height = height;
         return prop;
     }
 
@@ -152,16 +131,15 @@ export class PageView extends GroupShapeView implements RootView {
         return r;
     }
 
-    // for debug
-    // dbgCheckFrame() {
-    //     checkFrame(this);
-    // }
-
     dbgCheckPath() {
         checkPath(this);
     }
 
     get backgroundColor() {
         return this.data.backgroundColor;
+    }
+
+    get connections() {
+        return this.data.connections;
     }
 }

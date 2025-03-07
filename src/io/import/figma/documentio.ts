@@ -125,7 +125,7 @@ export async function importDocument(file: File, gurad: IDataGuard /*inflateRawS
 
     const freesymbols = new BasicMap();
 
-    const document = new Document(uuid(), file.name.replace(/.fig$/, ''), "", "", pageList, new BasicMap(), gurad, freesymbols as any);
+    const document = new Document(uuid(), file.name.replace(/.fig$/, ''), gurad, { pageList });
 
     const ctx: LoadContext = new LoadContext(document.mediasMgr, document.stylesMgr);
     startLoader(json, pages, document, nodeChangesMap, nodeKeyMap, ctx, unzipped);

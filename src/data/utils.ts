@@ -9,13 +9,13 @@
  */
 
 import { v4 } from "uuid";
-import { CurvePoint, Shape, SymbolShape, Variable } from "./shape";
-import { ContactType, CurveMode, OverrideType } from "./typesdefine";
+import { CurvePoint } from "./shape";
+import { ContactType, CurveMode } from "./typesdefine";
 import { Page } from "./page";
 import { importPolygonShape, importStarShape } from "./baseimport";
 import { importArtboard, importContactShape, importBoolShape, importGroupShape, importImageShape, importLineShape, importOvalShape, importPathShape, importPathShape2, importRectShape, importSymbolRefShape, importTableCell, importTableShape, importTextShape } from "./baseimport";
 import * as types from "./typesdefine"
-import { ContactShape, SymbolRefShape } from "./classes";
+import { ContactShape } from "./classes";
 import { BasicArray } from "./basic";
 import { Transform } from "./transform";
 
@@ -602,149 +602,6 @@ export function copyShape(source: types.Shape) {
     throw new Error("unknow shape type: " + source.typeId)
 }
 
-export function handle_contact_from(page: Page, shape: ContactShape, points: CurvePoint[], self_matrix: Transform) {
-    if (!shape.from) {
-        return;
-    }
-
-    const fromShape = page.getShape(shape.from.shapeId);
-
-    if (!fromShape) {
-        return;
-    }
-
-    const type1 = shape.from.contactType;
-
-    const from_matrix = fromShape.matrix2Root();
-
-    let p = shape.get_pagexy(fromShape, type1, from_matrix);
-
-    if (!p) {
-        return;
-    }
-
-    p = self_matrix.computeCoord3(p);
-
-    const start_point = p;
-
-    points[0] = new CurvePoint([0] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight);
-
-    let border_p = shape.get_nearest_border_point(fromShape, type1);
-
-    if (!border_p) {
-        return;
-    }
-
-    border_p = self_matrix.computeCoord3(border_p);
-
-    points.splice(1, 0, new CurvePoint([1] as BasicArray<number>, v4(), border_p.x, border_p.y, CurveMode.Straight));
-
-    const s1 = border_p;
-
-    return { page, fromShape, type1, self_matrix, from_matrix, start_point, s1 };
-}
-
-export function handle_contact_to(page: Page, shape: ContactShape, points: CurvePoint[], self_matrix: Transform) {
-    if (!shape.to) {
-        return;
-    }
-
-    const toShape = page.getShape(shape.to.shapeId);
-
-    if (!toShape) {
-        return;
-    }
-
-    const type2 = shape.to.contactType;
-
-    const to_matrix = toShape.matrix2Root();
-
-    let p = shape.get_pagexy(toShape, type2, to_matrix);
-
-    if (!p) {
-        return;
-    }
-
-    p = self_matrix.computeCoord3(p);
-    const end_point = p;
-    points[points.length - 1] = new CurvePoint(([points.length - 1] as BasicArray<number>), v4(), p.x, p.y, CurveMode.Straight);
-
-    let border_p = shape.get_nearest_border_point(toShape, type2);
-
-    if (!border_p) {
-        return;
-    }
-
-    border_p = self_matrix.computeCoord3(border_p);
-    points.push(new CurvePoint(([points.length] as BasicArray<number>), v4(), border_p.x, border_p.y, CurveMode.Straight));
-
-    const s2 = border_p;
-
-    return { page, toShape, type2, self_matrix, to_matrix, end_point, s2 }
-}
-
-export function path_for_edited(points: CurvePoint[], start_point: PageXY, end_point: PageXY, s1: PageXY | undefined, s2: PageXY | undefined) {
-    const result: CurvePoint[] = [...points];
-
-    // 编辑过后，不需要外围点再做为活点
-    if (s1) {
-        result.splice(1, 1);
-    } else {
-        s1 = result[1];
-    }
-
-    if (s2) {
-        result.splice(result.length - 2, 1);
-    } else {
-        s2 = result[result.length - 2];
-    }
-
-    { // 在第一个点后面再寻找一个新的活点
-        const flex_point1 = start_point;
-        let p: undefined | CurvePoint;
-
-        const _d = d(flex_point1, s1 as PageXY);
-
-        if (_d === 'hor') {
-            const f2 = result[1];
-            if (f2) {
-                p = new CurvePoint([] as any, '--', f2.x, flex_point1.y, CurveMode.Straight);
-            }
-        } else if (_d === 'ver') {
-            const f3 = result[2];
-            if (f3) {
-                p = new CurvePoint([] as any, '--', flex_point1.x, f3.y, CurveMode.Straight);
-            }
-        }
-
-        if (p) {
-            result.splice(1, 1, p);
-        }
-    }
-
-    {
-        const len = result.length;
-        const flex_point1 = end_point;
-        const _d = d(flex_point1, s2 as PageXY);
-        if (_d === 'hor') {
-            const last2 = result[len - 2];
-            if (last2) {
-                const p = new CurvePoint([] as any, '--', last2.x, flex_point1.y, CurveMode.Straight);
-                result.splice(len - 2, 1, p);
-            }
-        } else if (_d === 'ver') {
-            const last3 = result[len - 3];
-            if (last3) {
-                const p = new CurvePoint([] as any, '--', flex_point1.x, last3.y, CurveMode.Straight);
-                result.splice(len - 2, 1, p);
-            }
-        }
-        result[result.length - 1] = new CurvePoint([] as any, '--', flex_point1.x, flex_point1.y, CurveMode.Straight);
-    }
-
-    return slice_invalid_point(result); // 最后削减无效点
-}
-
 function get_direction_for_free_contact(start: CurvePoint, end: CurvePoint) {
     const dx = Math.abs(end.x - start.x);
     const dy = Math.abs(end.y - start.y);
@@ -822,6 +679,9 @@ export function path_for_free_start_contact(points: CurvePoint[], end: PageXY | 
 
     __handle[direction](points, start, _end, width, height);
 }
+import { Shape, SymbolShape, Variable } from "./shape";
+import { OverrideType } from "./typesdefine";
+import { SymbolRefShape } from "./classes";
 
 export function findVar(varId: string, ret: Variable[], varsContainer: (SymbolRefShape | SymbolShape)[], revertStart: number | undefined = undefined, fOverride: boolean = false) {
     let i = revertStart === undefined ? varsContainer.length - 1 : revertStart;
@@ -896,65 +756,6 @@ export function findOverrideAndVar(
         findVar(varId, _vars, varsContainer, undefined, fOverride);
         if (_vars && _vars.length > 0) return _vars;
     }
-}
-
-function distanceTo(p0: XY, p1: XY) {
-    return Math.hypot(p0.x - p1.x, p0.y - p1.y);
-}
-
-function calcAngleABC(A: XY, B: XY, C: XY) {
-    const AB = distanceTo(A, B);
-    const BC = distanceTo(B, C);
-    const AC = distanceTo(C, A);
-    return Math.acos((BC * BC + AB * AB - AC * AC) / (2 * BC * AB));
-}
-
-function minus(p0: XY, p1: XY): XY {
-    return { x: p0.x - p1.x, y: p0.y - p1.y };
-}
-
-function norm(p: XY) {
-    const d = Math.hypot(p.x, p.y);
-    // invariant(d !== 0, 'cant norm a vector whos len is zero');
-    return { x: p.x / d, y: p.y / d };
-}
-
-function multiply(p: XY, d: number): XY {
-    return { x: p.x * d, y: p.y * d };
-}
-
-function add(p: XY, pt: XY) {
-    return { x: p.x + pt.x, y: p.y + pt.y };
-}
-
-function get_bezier_c(pre: XY, cur: XY, next: XY, radius: number, minDist: number) {
-    const radian = calcAngleABC(pre, cur, next);
-
-    if (Number.isNaN(radian)) {
-        return ["l", 0, 0];
-    }
-
-    const tangent = Math.tan(radian / 2);
-
-    let dist = radius / tangent;
-
-    if (dist > minDist) {
-        dist = minDist;
-        radius = dist * tangent;
-    }
-
-    const vPre = norm(minus(pre, cur));
-    const vNext = norm(minus(next, cur));
-
-    let preTangent = add(multiply(vPre, dist), cur);
-    let nextTangent = add(multiply(vNext, dist), cur);
-
-    const kappa = (4 / 3) * Math.tan((Math.PI - radian) / 4);
-
-    let preHandle = add(multiply(vPre, -radius * kappa), preTangent);
-    let nextHandle = add(multiply(vNext, -radius * kappa), nextTangent);
-
-    return ['C', preHandle.x, preHandle.y, nextHandle.x, nextHandle.y, nextTangent.x, nextTangent.y];
 }
 
 export function is_mac() {

@@ -160,11 +160,12 @@ export class GroupShapeView extends ShapeView {
         this.m_children.forEach((c) => resue.set(c.data.id, c));
         const rootView = this.getRootView();
         for (let i = 0, len = childs.length; i < len; i++) {
-            this.layoutChild(parentFrame, childs[i], i, scale, varsContainer, resue, rootView);
+            const child = childs[i];
+            this.layoutChild(parentFrame, child, i, scale, varsContainer, resue, rootView);
         }
         // 删除多余的
         const removes = this.removeChilds(childs.length, Number.MAX_VALUE);
-        if (rootView) rootView.addDelayDestory(removes);
+        if (rootView) rootView.addDelayDestroy(removes);
         else removes.forEach((c => c.destory()));
     }
 
@@ -173,6 +174,8 @@ export class GroupShapeView extends ShapeView {
         if (this.maskMap.size && (this.type === ShapeType.Group || this.type === ShapeType.BoolShape)) {
             children = this.m_children.filter(i => !this.maskMap.has(i.id));
         }
+
+        children = children.filter(i => i.type !== ShapeType.Contact);
 
         const childcontentbounds = children.map(c => (c as ShapeView)._p_frame);
 
@@ -199,9 +202,9 @@ export class GroupShapeView extends ShapeView {
         const visiblebounds = childvisiblebounds.reduce(reducer, { minx: 0, miny: 0, maxx: 0, maxy: 0 });
         const outerbounds = childouterbounds.reduce(reducer, { minx: 0, miny: 0, maxx: 0, maxy: 0 });
 
-        // todo
         let changed = this._save_frame.x !== this.m_frame.x || this._save_frame.y !== this.m_frame.y ||
             this._save_frame.width !== this.m_frame.width || this._save_frame.height !== this.m_frame.height;
+
         if (updateFrame(this.m_frame, contentbounds.minx, contentbounds.miny, contentbounds.maxx - contentbounds.minx, contentbounds.maxy - contentbounds.miny)) {
             this.m_pathstr = undefined; // need update
             this.m_path = undefined;
@@ -243,6 +246,7 @@ export class GroupShapeView extends ShapeView {
 
         if (changed) {
             this.m_ctx.addNotifyLayout(this);
+            this.m_client_x = this.m_client_y = undefined;
         }
         return changed;
     }

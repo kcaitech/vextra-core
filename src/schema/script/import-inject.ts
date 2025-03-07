@@ -317,9 +317,9 @@ inject['DocumentMeta']['before'] = `\
 
 inject['Page'] = {};
 inject['Page']['before'] = `\
-    // inject code
+// inject code
     // 兼容旧数据
-    if (!(source as any).crdtidx) (source as any).crdtidx = []
+    if (!(source as any).crdtidx) (source as any).crdtidx = [];
 `
 
 inject['TableCell'] = {};

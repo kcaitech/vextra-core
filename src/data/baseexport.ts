@@ -392,6 +392,13 @@ export function exportPage_guides(source: types.Page_guides, ctx?: IExportContex
     })
     return ret
 }
+export function exportPage_connections(source: types.Page_connections, ctx?: IExportContext): types.Page_connections {
+    const ret: types.Page_connections = []
+    source.forEach((source) => {
+        ret.push(exportConnection(source, ctx))
+    })
+    return ret
+}
 /* paint filter */
 export function exportPaintFilter(source: types.PaintFilter, ctx?: IExportContext): types.PaintFilter {
     const ret: types.PaintFilter = {} as types.PaintFilter
@@ -1419,6 +1426,15 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
 
     return ret
 }
+/* connection */
+export function exportConnection(source: types.Connection, ctx?: IExportContext): types.Connection {
+    const ret: types.Connection = exportPathShape(source, ctx) as types.Connection
+    ret.typeId = "connection"
+    ret.isEdited = source.isEdited
+    if (source.from !== undefined) ret.from = exportContactForm(source.from, ctx)
+    if (source.to !== undefined) ret.to = exportContactForm(source.to, ctx)
+    return ret
+}
 /* contact shape */
 export function exportContactShape(source: types.ContactShape, ctx?: IExportContext): types.ContactShape {
     const ret: types.ContactShape = exportPathShape(source, ctx) as types.ContactShape
@@ -1529,6 +1545,7 @@ export function exportPage(source: types.Page, ctx?: IExportContext): types.Page
     ret.typeId = "page"
     if (source.backgroundColor !== undefined) ret.backgroundColor = exportColor(source.backgroundColor, ctx)
     if (source.guides !== undefined) ret.guides = exportPage_guides(source.guides, ctx)
+    if (source.connections !== undefined) ret.connections = exportPage_connections(source.connections, ctx)
     return ret
 }
 /* symbol shape */

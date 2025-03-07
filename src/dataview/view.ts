@@ -84,7 +84,7 @@ export interface RootView {
     onAddView(view: DataView | DataView[]): void;
     onRemoveView(parent: DataView, view: DataView | DataView[]): void;
     getView(id: string): DataView | undefined;
-    addDelayDestory(view: DataView | DataView[]): void;
+    addDelayDestroy(view: DataView | DataView[]): void;
     get isRootView(): boolean;
 }
 

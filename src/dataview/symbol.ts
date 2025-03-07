@@ -233,6 +233,7 @@ export class SymbolView extends GroupShapeView {
 
         if (changed) {
             this.m_ctx.addNotifyLayout(this);
+            this.m_client_x = this.m_client_y = undefined;
         }
 
         return changed;

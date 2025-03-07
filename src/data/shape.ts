@@ -9,7 +9,7 @@
  */
 
 import { Basic, BasicArray, BasicMap, ResourceMgr } from "./basic";
-import { Style } from "./style";
+import { ContactForm, Style } from "./style";
 import { Text } from "./text/text";
 import * as classes from "./baseclasses"
 import {
@@ -1265,5 +1265,35 @@ export class StarShape extends PathShape implements classes.StarShape {
         )
         this.counts = counts;
         this.innerAngle = innerAngle;
+    }
+}
+
+export class Connection extends PathShape implements classes.Connection {
+    isEdited: boolean;
+    from?: ContactForm;
+    to?: ContactForm;
+
+    constructor(
+        crdtidx: BasicArray<number>,
+        id: string,
+        name: string,
+        type: ShapeType,
+        transform: Transform,
+        style: Style,
+        size: ShapeSize,
+        pathsegs: BasicArray<PathSegment>,
+        isEdited: boolean
+    ) {
+        super(
+            crdtidx,
+            id,
+            name,
+            type,
+            transform,
+            style,
+            size,
+            pathsegs
+        )
+        this.isEdited = isEdited;
     }
 }

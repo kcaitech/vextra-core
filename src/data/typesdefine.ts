@@ -328,6 +328,7 @@ export type PageListItem = {
     versionId?: string,
 }
 export type Page_guides = Array<Guide>
+export type Page_connections = Array<Connection>
 /* paint filter */
 export type PaintFilter = {
     exposure: number,
@@ -1124,6 +1125,12 @@ export type SymbolRefShape = Shape & {
     innerEnvScale?: number,
     uniformScale?: number,
 }
+/* connection */
+export type Connection = PathShape & {
+    isEdited: boolean,
+    from?: ContactForm,
+    to?: ContactForm,
+}
 /* contact shape */
 export type ContactShape = PathShape & {
     isEdited: boolean,
@@ -1177,6 +1184,7 @@ export type GroupShape = Shape & {
 export type Page = GroupShape & {
     backgroundColor?: Color,
     guides?: Page_guides,
+    connections?: Page_connections,
 }
 /* symbol shape */
 export type SymbolShape = GroupShape & {

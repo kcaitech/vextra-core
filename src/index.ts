@@ -14,10 +14,8 @@ import { gPal, MeasureFun, TextPathFun } from "./basic/pal"
 // basic
 export * from "./basic/matrix"
 export * from "./basic/objectid"
-// export * from "./basic/pal"
 export * from "./basic/utils"
 export { IEventEmitter, EventEmitter } from "./basic/event"
-// export {Transform, TransformMode, Line, LineThrough0, Plane, PlaneThrough0} from './basic/transform'
 export { ColVector2D, ColVector3D } from "./basic/matrix2"
 export { NumberArray2D } from "./basic/number_array"
 
@@ -149,6 +147,7 @@ export {
 
     StackPositioning,
 
+    parsePath,
     ShadowMask,
     FillMask,
     BlurMask,
@@ -164,10 +163,6 @@ export * from "./data/shapedirlist"
 export * from "./data/shapedirlist2"
 
 export {
-    // makeMatrixByTransform2,
-    // makeShapeTransform2By1,
-    // makeShapeTransform1By2,
-    // updateShapeTransform1By2,
     importGradient
 } from "./data"
 

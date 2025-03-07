@@ -34,7 +34,7 @@ export function border2path(shape: ShapeView, border: Border) {
     const width = shape.frame.width;
     const height = shape.frame.height;
 
-    // 尺寸小于或等于14，会出现线条走样😵，这里把它放到到20，返回出去的时候再等比例放回来
+    // 尺寸小于或等于14，会出现线条走样，这里把它放到到20，返回出去的时候再等比例放回来
     const radio = Math.min(width / 20, height / 20);
 
     const mark = (shape instanceof PathShapeView)
@@ -44,7 +44,6 @@ export function border2path(shape: ShapeView, border: Border) {
 
     const isEven = (setting.thicknessTop + setting.thicknessRight + setting.thicknessBottom + setting.thicknessLeft) / 4 === setting.thicknessLeft;
 
-    // let __path_str = '';
     let result: Path | undefined;
 
     const join = (() => {
@@ -87,7 +86,6 @@ export function border2path(shape: ShapeView, border: Border) {
         const __end = getEndMarkPath();
         if (__end) p0.union(__end);
 
-        // __path_str = p0.toSVGString();
         result = p0
     } else if (isEven) {
         const __open = (shape instanceof PathShapeView) && shape.segments.some(i => !i.isClosed);
@@ -126,9 +124,7 @@ export function border2path(shape: ShapeView, border: Border) {
         }
     }
 
-    // stack.forEach(i => i?.delete());
-    if (!result) result = new Path() 
-    // const result = Path.fromSVGString(__path_str);
+    if (!result) result = new Path()
     if (radio < 1) {
         const matrix = new Matrix();
         matrix.scale(radio);

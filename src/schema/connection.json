@@ -1,0 +1,24 @@
+{
+  "description": "connection",
+  "type": "object",
+  "properties": {
+    "from": {
+      "$ref": "./contact-form.json"
+    },
+    "to": {
+      "$ref": "./contact-form.json"
+    },
+    "isEdited": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "isEdited"
+  ],
+  "allOf": [
+    {
+      "$ref": "./path-shape.json"
+    }
+  ],
+  "additionalProperties": false
+}

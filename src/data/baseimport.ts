@@ -33,6 +33,7 @@ type Gradient_stops = BasicArray<impl.Stop>
 type GroupShape_childs = BasicArray<impl.GroupShape | impl.ImageShape | impl.PathShape | impl.PathShape2 | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape | impl.PolygonShape | impl.StarShape>
 type Guide_crdtidx = BasicArray<number>
 type Page_guides = BasicArray<impl.Guide>
+type Page_connections = BasicArray<impl.Connection>
 type Para_spans = BasicArray<impl.Span>
 type PathSegment_points = BasicArray<impl.CurvePoint>
 type PathShape_pathsegs = BasicArray<impl.PathSegment>
@@ -471,6 +472,13 @@ export function importPage_guides(source: types.Page_guides, ctx?: IImportContex
     const ret: Page_guides = new BasicArray()
     source.forEach((source, i) => {
         ret.push(importGuide(source, ctx))
+    })
+    return ret
+}
+export function importPage_connections(source: types.Page_connections, ctx?: IImportContext): Page_connections {
+    const ret: Page_connections = new BasicArray()
+    source.forEach((source, i) => {
+        ret.push(importConnection(source, ctx))
     })
     return ret
 }
@@ -1899,6 +1907,26 @@ export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImport
 
     return ret
 }
+/* connection */
+function importConnectionOptional(tar: impl.Connection, source: types.Connection, ctx?: IImportContext) {
+    importPathShapeOptional(tar, source)
+    if (source.from !== undefined) tar.from = importContactForm(source.from, ctx)
+    if (source.to !== undefined) tar.to = importContactForm(source.to, ctx)
+}
+export function importConnection(source: types.Connection, ctx?: IImportContext): impl.Connection {
+    const ret: impl.Connection = new impl.Connection (
+        importCrdtidx(source.crdtidx, ctx),
+        source.id,
+        source.name,
+        importShapeType(source.type, ctx),
+        importTransform(source.transform, ctx),
+        importStyle(source.style, ctx),
+        importShapeSize(source.size, ctx),
+        importPathShape_pathsegs(source.pathsegs, ctx),
+        source.isEdited)
+    importConnectionOptional(ret, source, ctx)
+    return ret
+}
 /* contact shape */
 function importContactShapeOptional(tar: impl.ContactShape, source: types.ContactShape, ctx?: IImportContext) {
     importPathShapeOptional(tar, source)
@@ -2253,11 +2281,12 @@ function importPageOptional(tar: impl.Page, source: types.Page, ctx?: IImportCon
     importGroupShapeOptional(tar, source)
     if (source.backgroundColor !== undefined) tar.backgroundColor = importColor(source.backgroundColor, ctx)
     if (source.guides !== undefined) tar.guides = importPage_guides(source.guides, ctx)
+    if (source.connections !== undefined) tar.connections = importPage_connections(source.connections, ctx)
 }
 export function importPage(source: types.Page, ctx?: IImportContext): impl.Page {
-        // inject code
+    // inject code
     // 兼容旧数据
-    if (!(source as any).crdtidx) (source as any).crdtidx = []
+    if (!(source as any).crdtidx) (source as any).crdtidx = [];
 
     compatibleOldData(source, ctx)
     const ret: impl.Page = new impl.Page (

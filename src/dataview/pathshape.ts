@@ -28,7 +28,6 @@ import { BlurType, PathSegment } from "../data/typesdefine";
 import { render as renderLineBorders } from "../render/line_borders"
 import { PageView } from "./page";
 import { importCurvePoint, importFill } from "../data/baseimport";
-import { exportFill } from "../data/baseexport";
 import { GroupShapeView } from "./groupshape";
 import { border2path } from "./border2path";
 import { ArtboardView } from "./artboard";
@@ -50,7 +49,7 @@ export class PathShapeView extends ShapeView {
         let borders = this.getBorders();
         if (this.mask && borders) {
             borders.strokePaints.map(b => {
-                const nb = importFill(exportFill(b));
+                const nb = importFill(b);
                 if (nb.fillType === FillType.Gradient && nb.gradient?.gradientType === GradientType.Angular) nb.fillType = FillType.SolidColor;
                 return nb;
             });

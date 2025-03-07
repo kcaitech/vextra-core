@@ -329,6 +329,7 @@ export class PageListItem extends Basic {
     }
 }
 type Page_guides = BasicArray<Guide>
+type Page_connections = BasicArray<Connection>
 /* paint filter */
 export class PaintFilter extends Basic {
     typeId = "paint-filter"
@@ -1250,6 +1251,17 @@ export class SymbolRefShape extends Shape {
         this.variables = variables
     }
 }
+/* connection */
+export class Connection extends PathShape {
+    typeId = "connection"
+    isEdited: boolean
+    from?: ContactForm
+    to?: ContactForm
+    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style, size: ShapeSize, pathsegs: PathShape_pathsegs, isEdited: boolean) {
+        super(crdtidx, id, name, type, transform, style, size, pathsegs)
+        this.isEdited = isEdited
+    }
+}
 /* contact shape */
 export class ContactShape extends PathShape {
     typeId = "contact-shape"
@@ -1309,6 +1321,7 @@ export class Page extends GroupShape {
     typeId = "page"
     backgroundColor?: Color
     guides?: Page_guides
+    connections?: Page_connections
 }
 /* symbol shape */
 export class SymbolShape extends GroupShape {
