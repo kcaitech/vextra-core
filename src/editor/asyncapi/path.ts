@@ -18,7 +18,7 @@ import { uuid } from "../../basic/uuid";
 import { __pre_curve, after_insert_point, update_frame_by_points } from "../utils/path";
 import { PathType } from "../../data";
 import { addCommonAttr, newFlatStyle } from "../creator";
-import { Border, BorderStyle, CornerType, Fill, FillType, Shadow, Style } from "../../data";
+import { Border, BorderStyle, Fill, FillType, Shadow, Style } from "../../data";
 import { Color } from "../../data";
 import * as types from "../../data/typesdefine";
 import { ISave4Restore, LocalCmd, SelectionState } from "../../coop/localcmd";
@@ -26,8 +26,7 @@ import { BorderSideSetting, ShapeSize, SideType, Transform } from "../../data";
 import { importStyle } from "../../data/baseimport";
 import { exportStyle } from "../../data/baseexport";
 
-export type ModifyUnits = Map<number,
-    {
+export type ModifyUnits = Map<number, {
         index: number;
         x: number;
         y: number;
@@ -35,8 +34,7 @@ export type ModifyUnits = Map<number,
         fromY: number;
         toX: number;
         toY: number;
-    }[]
->;
+}[]>;
 
 /**
  * @description 路径处理器
@@ -727,7 +725,11 @@ export class PathModifier extends AsyncApiCaller {
 
     commit() {
         if (this.__repo.isNeedCommit() && !this.exception) {
-            update_frame_by_points(this.api, this.page, this.shape!);
+            if (this.shape) {
+                update_frame_by_points(this.api, this.page, this.shape);
+                if (!this.shape.haveEdit) this.api.shapeEditPoints(this.page, this.shape, true);
+            }
+
             this.__repo.commit();
         } else {
             this.__repo.rollback();
