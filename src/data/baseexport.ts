@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 /* 代码生成，勿手动修改 */
 import * as types from "./typesdefine"
 export interface IExportContext {
@@ -94,6 +104,18 @@ export function exportContextSettings(source: types.ContextSettings, ctx?: IExpo
     ret.typeId = source.typeId
     ret.blenMode = exportBlendMode(source.blenMode, ctx)
     ret.opacity = source.opacity
+    return ret
+}
+/* couner radius */
+export function exportCornerRadius(source: types.CornerRadius, ctx?: IExportContext): types.CornerRadius {
+    const ret: types.CornerRadius = {} as types.CornerRadius
+    ret.typeId = "corner-radius"
+    ret.id = source.id
+    ret.typeId = source.typeId
+    ret.lt = source.lt
+    ret.rt = source.rt
+    ret.lb = source.lb
+    ret.rb = source.rb
     return ret
 }
 /* corner type */
@@ -827,7 +849,6 @@ export function exportAutoLayout(source: types.AutoLayout, ctx?: IExportContext)
 export function exportBlur(source: types.Blur, ctx?: IExportContext): types.Blur {
     const ret: types.Blur = {} as types.Blur
     ret.typeId = "blur"
-    ret.crdtidx = exportCrdtidx(source.crdtidx, ctx)
     ret.typeId = source.typeId
     ret.isEnabled = source.isEnabled
     ret.center = exportPoint2D(source.center, ctx)
@@ -871,19 +892,6 @@ export function exportContactRole(source: types.ContactRole, ctx?: IExportContex
     ret.id = source.id
     ret.roleType = exportContactRoleType(source.roleType, ctx)
     ret.shapeId = source.shapeId
-    return ret
-}
-/* couner radius */
-export function exportCornerRadius(source: types.CornerRadius, ctx?: IExportContext): types.CornerRadius {
-    const ret: types.CornerRadius = {} as types.CornerRadius
-    ret.typeId = "corner-radius"
-    ret.id = source.id
-    ret.crdtidx = exportCrdtidx(source.crdtidx, ctx)
-    ret.typeId = source.typeId
-    ret.lt = source.lt
-    ret.rt = source.rt
-    ret.lb = source.lb
-    ret.rb = source.rb
     return ret
 }
 /* crdt number */

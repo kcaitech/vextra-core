@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import {
     Blur,
     Border,
@@ -129,7 +139,7 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
             LineJoinStyle.Miter
         )
     })(data['borderOptions']);
-    const strokePaints: BasicArray<Fill> = (data['borders'] || []).map((d: IJSON, i: number) => {
+    const strokePaints: Array<Fill> = (data['borders'] || []).map((d: IJSON, i: number) => {
         const isEnabled: boolean = d['isEnabled'];
         const fillType: FillType = ((t) => {
             switch (t) {
@@ -172,7 +182,7 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
         return bs
     })(data['borderOptions'] ? data['borderOptions'].dashPattern : undefined);
     const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
-    let border = new Border(BorderPosition.Inner, borderStyle, CornerType.Miter, side, strokePaints);
+    let border = new Border(BorderPosition.Inner, borderStyle, CornerType.Miter, side, new BasicArray(...strokePaints));
     
     if (data['borders'] && data['borders'].length) {
         const d = data['borders'][0];
@@ -194,7 +204,7 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
         })(d['cornerType']);
         const thickness: number = d['thickness'];
         const side = new BorderSideSetting(SideType.Normal, thickness, thickness, thickness, thickness);
-        border = new Border(position, borderStyle, corner, side, strokePaints);
+        border = new Border(position, borderStyle, corner, side, new BasicArray(...strokePaints));
     }
     const getMarkerType = (st: number): MarkerType => {
         switch (st) {
@@ -299,7 +309,7 @@ function importBlur(data: IJSON): Blur | undefined {
             default: return BlurType.Gaussian;
         }
     }
-    return new Blur(new BasicArray(),isEnabled, new Point2D(0, 0), saturation, type(d['type']));
+    return new Blur(isEnabled, new Point2D(0, 0), saturation, type(d['type']));
 }
 
 function patternFillType(data: IJSON) {

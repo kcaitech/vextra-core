@@ -1,7 +1,18 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { Matrix } from "../basic/matrix";
 import * as classes from "./baseclasses"
 import * as types from "./typesdefine"
 import { float_accuracy } from "../basic/consts";
+import { isEqual } from "../basic/number_utils";
 
 function __multi(lhs: classes.Transform | Matrix, rhs: classes.Transform | Matrix, result: classes.Transform): void {
     const m00 = lhs.m00 * rhs.m00 + lhs.m01 * rhs.m10;
@@ -125,6 +136,19 @@ export class Transform extends classes.Transform {
         return this
     }
 
+    addTransform(transform: Transform | Matrix) { // 叠加另一个变换（先执行本变换，再执行另一个变换）
+        return this.multiAtLeft(transform)
+    }
+    addPreTransform(transform: Transform | Matrix) {
+        return this.multi(transform)
+    }
+
+    translate(p: { x: number, y: number }): Transform
+    translate(x: number, y: number): Transform
+    translate(p: { x: number, y: number } | number, y?: number) {
+        return typeof p === 'number' ? this.trans(p, y!) : this.trans(p.x, p.y)
+    }
+
     trans(x: number, y: number) {
         this.multiAtLeft(_tmp(1, 0, 0, 1, x, y));
         return this
@@ -178,13 +202,22 @@ export class Transform extends classes.Transform {
         if (x || y) this.trans(x || 0, y || 0);
         return this
     }
-    computeCoord(point: { x: number, y: number }): { x: number, y: number };
-    computeCoord(x: number, y: number): { x: number, y: number };
-    computeCoord(pointOrX: number | { x: number, y: number }, _y?: number) {
+    map(point: { x: number, y: number }): { x: number, y: number };
+    map(x: number, y: number): { x: number, y: number };
+    map(pointOrX: number | { x: number, y: number }, _y?: number) {
         const isPoint = typeof pointOrX === 'object';
         const x = isPoint ? pointOrX.x : pointOrX;
         const y = isPoint ? pointOrX.y : _y!;
         return { x: this.m00 * x + this.m01 * y + this.m02, y: this.m10 * x + this.m11 * y + this.m12 };
+    }
+    /**
+     * @deprecated use map instead
+     * @param point 
+     */
+    computeCoord(point: { x: number, y: number }): { x: number, y: number };
+    computeCoord(x: number, y: number): { x: number, y: number };
+    computeCoord(pointOrX: number | { x: number, y: number }, _y?: number) {
+        return this.map(pointOrX as any, _y as any)
     }
     computeCoord2(x: number, y: number): { x: number, y: number } {
         return { x: this.m00 * x + this.m01 * y + this.m02, y: this.m10 * x + this.m11 * y + this.m12 };
@@ -276,9 +309,7 @@ export class Transform extends classes.Transform {
         if (!this.isValid()) throw new Error("Wrong Matrix: " + this.toString());
     }
 
-    
     decompose() {
-
         const col0 = [this.m00, this.m10, 0]
         const col1 = [this.m01, this.m11, 0]
         const col2 = [0, 0, 1]
@@ -313,6 +344,7 @@ export class Transform extends classes.Transform {
         // 平移
         const translateMatrix = new Transform(1, 0, this.m02, 0, 1, this.m12)
 
+        // M = T*R*K*S
         return {
             translate: translateMatrix,
             rotate: rotateMatrix,
@@ -330,7 +362,12 @@ export class Transform extends classes.Transform {
 
     decomposeScale() {
         const matrix = this.decompose().scale
-        return {x: Math.abs(matrix.m00), y: Math.abs(matrix.m11)}
+        return { x: Math.abs(matrix.m00), y: Math.abs(matrix.m11) }
+    }
+
+    decomposeTranslate() {
+        const matrix = this.decompose().translate
+        return { x: matrix.m02, y: matrix.m12 }
     }
 
     clearScaleSize(): { x: number, y: number } {
@@ -343,5 +380,98 @@ export class Transform extends classes.Transform {
         }
         this.reset(m)
         return { x: Math.abs(d.scale.m00), y: Math.abs(d.scale.m11) }
+    }
+
+    clearSkew() {
+        const d = this.decompose()
+        if (!d.skew.isIdentity()) {
+            const m = d.translate.multi(d.rotate).multi(d.scale)
+            this.reset(m)
+            return true
+        }
+        return false
+    }
+
+    setRotateZ(z: number) {
+        const d = this.decompose()
+        const m = d.translate.multi(new Matrix().rotate(z)).multi(d.skew).multi(d.scale)
+        this.reset(m)
+        return this
+    }
+
+    setTranslate(xy: { x: number, y: number }) {
+        this.m02 = xy.x
+        this.m12 = xy.y
+        return this
+    }
+    clearTranslate() {
+        const ret = { x: this.m02, y: this.m12 }
+        this.m02 = 0
+        this.m12 = 0
+        return ret
+    }
+
+    rotateInLocal(radians: number): Transform;
+    rotateInLocal(radians: number, x: number, y: number): Transform;
+    rotateInLocal(radians: number, x?: number, y?: number) {
+        const d = this.decompose()
+        let p: { x: number, y: number } | undefined
+        if (x || y) p = { x: x ?? 0, y: y ?? 0 }
+        if (p && !d.scale.isIdentity()) p = d.scale.map(p);
+        if (p && !d.skew.isIdentity()) p = d.skew.map(p);
+        let p0 = p && d.rotate.map(p)
+        d.rotate.rotate(radians, x ?? 0, y ?? 0)
+        const m = d.translate.multi(d.rotate).multi(d.skew).multi(d.scale)
+        if (p && p0) {
+            const p1 = d.rotate.map(p)
+            m.trans(p0.x - p1.x, p0.y - p1.y)
+        }
+        this.reset(m)
+        return this
+    }
+
+    setScale(xy: { x: number, y: number }) {
+        const d = this.decompose()
+        const m = d.translate.multi(d.rotate).multi(d.skew).multi(new Matrix().scale(xy.x, xy.y))
+        this.reset(m)
+        return this
+    }
+
+    normalize() { // 将矩阵的每一列化为单位向量
+        const col0 = Math.sqrt(this.m00 ** 2 + this.m10 ** 2)
+        const col1 = Math.sqrt(this.m01 ** 2 + this.m11 ** 2)
+        // const col2 = Math.sqrt(this.m02 ** 2 + this.m12 ** 2 + 1)
+        if (!isEqual(col0, 0)) {
+            this.m00 /= col0
+            this.m10 /= col0
+        }
+        if (!isEqual(col1, 0)) {
+            this.m01 /= col1
+            this.m11 /= col1
+        }
+        // if (!float_eq(col2, 0)) { // 这不对
+        //     this.m02 /= col2
+        //     this.m12 /= col2
+        // }
+        this.m02 = 0
+        this.m12 = 0
+        return this
+    }
+
+    translateInLocal(p: { x: number, y: number }) {
+        const m = this.clone().normalize()
+        return this.translate(m.map(p))
+    }
+
+    translateAt(params: {
+        axis: { x: number, y: number },
+        distance: number,
+    }) {
+        // normalize
+        const d = Math.sqrt(params.axis.x ** 2 + params.axis.y ** 2)
+        if (isEqual(d, 0)) return this
+        const x = params.axis.x / d
+        const y = params.axis.y / d
+        return this.translate(x * params.distance, y * params.distance)
     }
 }

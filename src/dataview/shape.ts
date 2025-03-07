@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { innerShadowId, renderBlur, renderBorders, renderFills, renderShadows } from "../render";
 import {
     BasicArray,
@@ -107,7 +117,11 @@ export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeSize, scaleX
         transform.scale(scaleX, scaleY);
         const __decompose_scale = transform.clearScaleSize();
         const size = shape.size;
-        return { transform, targetWidth: size.width * __decompose_scale.x, targetHeight: size.height * __decompose_scale.y };
+        return {
+            transform,
+            targetWidth: size.width * __decompose_scale.x,
+            targetHeight: size.height * __decompose_scale.y
+        };
     } else {
         const __cur_env = {
             width: parentFrame.width,
@@ -125,7 +139,10 @@ export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeSize, scaleX
     }
 }
 
-export function fixConstrainFrame2(shape: Shape, scale: { x: number, y: number }, currentEnvSize: ShapeSize, originEnvSize: ShapeSize) {
+export function fixConstrainFrame2(shape: Shape, scale: {
+    x: number,
+    y: number
+}, currentEnvSize: ShapeSize, originEnvSize: ShapeSize) {
     const resizingConstraint = shape.resizingConstraint ?? 0;
     const size = shape.size;
 
@@ -502,6 +519,7 @@ export class ShapeView extends DataView {
             || args.includes('cornerRadius')
             || args.includes('imageRef')
             || args.includes('radiusMask')
+            || args.includes('variables')
         ) {
             this.m_path = undefined;
             this.m_pathstr = undefined;
@@ -510,14 +528,16 @@ export class ShapeView extends DataView {
         if (args.includes('variables')) {
             this.m_fills = undefined;
             this.m_borders = undefined;
-        }
-        else if (args.includes('fills')) {
+        } else if (args.includes('fills')) {
             this.m_fills = undefined;
-        }
-        else if (args.includes('borders')) {
+        } else if (args.includes('borders')) {
             this.m_borders = undefined;
         } else if (args.includes('fillsMask')) {
             this.m_fills = undefined;
+        } else if (args.includes('bordersMask')) {
+            this.m_borders = undefined;
+            this.m_border_path = undefined;
+            this.m_border_path_box = undefined;
         }
 
         const masked = this.masked;
@@ -677,28 +697,34 @@ export class ShapeView extends DataView {
     protected unwatchBorderFillMask() {
         this.m_unbind_border_fill?.();
     }
+
     getBorders(): Border {
         if (this.m_borders) return this.m_borders;
+        const mgr = this.style.getStylesMgr();
+        if (!mgr) return this.m_borders ?? this.m_data.style.borders;
+
         const v = this._findOV(OverrideType.Borders, VariableType.Borders);
         const border = v ? { ...v.value } : { ...this.m_data.style.borders };
+
         const bordersMask: string | undefined = this.bordersMask;
         if (bordersMask) {
-            const mask = this.style.getStylesMgr()!.getSync(bordersMask) as BorderMask
+            const mask = mgr.getSync(bordersMask) as BorderMask
             border.position = mask.border.position;
             border.sideSetting = mask.border.sideSetting;
             this.watchBorderMask(mask);
         } else {
             this.unwatchBorderMask();
         }
+
         const fillsMask: string | undefined = this.borderFillsMask;
         if (fillsMask) {
-            const mask = this.style.getStylesMgr()!.getSync(fillsMask) as FillMask;
+            const mask = mgr.getSync(fillsMask) as FillMask;
             border.strokePaints = mask.fills;
             this.watchBorderFillMask(mask);
         } else {
             this.unwatchBorderFillMask();
         }
-        return border;
+        return this.m_borders = border;
     }
 
     get bordersMask(): string | undefined {
@@ -776,12 +802,12 @@ export class ShapeView extends DataView {
     private m_unbind_blur: undefined | (() => void) = undefined;
     private onBlurMaskChange = this._onBlurMaskChange.bind(this);
 
-     watchBlurMask(mask: BlurMask) {
+    watchBlurMask(mask: BlurMask) {
         this.m_unbind_blur?.();
         this.m_unbind_blur = mask.watch(this.onBlurMaskChange);
     }
 
-     unwatchBlurMask() {
+    unwatchBlurMask() {
         this.m_unbind_blur?.();
     }
 
@@ -1587,6 +1613,7 @@ export class ShapeView extends DataView {
     get stackPositioning() {
         return this.m_data.stackPositioning;
     }
+
     get uniformScale(): number | undefined {
         return undefined;
     }

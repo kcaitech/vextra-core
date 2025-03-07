@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 /* 代码生成，勿手动修改 */
 export {
     BlendMode,
@@ -177,6 +187,23 @@ export class ContextSettings extends Basic {
         super()
         this.blenMode = blenMode
         this.opacity = opacity
+    }
+}
+/* couner radius */
+export class CornerRadius extends Basic {
+    typeId = "corner-radius"
+    id: string
+    lt: number
+    rt: number
+    lb: number
+    rb: number
+    constructor(id: string, lt: number = 0, rt: number = 0, lb: number = 0, rb: number = 0) {
+        super()
+        this.id = id
+        this.lt = lt
+        this.rt = rt
+        this.lb = lb
+        this.rb = rb
     }
 }
 /* crdtidx */
@@ -569,7 +596,6 @@ export class AutoLayout extends Basic {
 /* blur */
 export class Blur extends Basic {
     typeId = "blur"
-    crdtidx: Crdtidx
     isEnabled: boolean
     center: Point2D
     saturation: number
@@ -577,9 +603,8 @@ export class Blur extends Basic {
     motionAngle?: number
     radius?: number
     mask?: string
-    constructor(crdtidx: Crdtidx, isEnabled: boolean, center: Point2D, saturation: number, type: BlurType) {
+    constructor(isEnabled: boolean, center: Point2D, saturation: number, type: BlurType) {
         super()
-        this.crdtidx = crdtidx
         this.isEnabled = isEnabled
         this.center = center
         this.saturation = saturation
@@ -641,25 +666,6 @@ export class ContactRole extends Basic {
         this.id = id
         this.roleType = roleType
         this.shapeId = shapeId
-    }
-}
-/* couner radius */
-export class CornerRadius extends Basic {
-    typeId = "corner-radius"
-    id: string
-    crdtidx: Crdtidx
-    lt: number
-    rt: number
-    lb: number
-    rb: number
-    constructor(id: string, crdtidx: Crdtidx, lt: number = 0, rt: number = 0, lb: number = 0, rb: number = 0) {
-        super()
-        this.id = id
-        this.crdtidx = crdtidx
-        this.lt = lt
-        this.rt = rt
-        this.lb = lb
-        this.rb = rb
     }
 }
 /* crdt number */

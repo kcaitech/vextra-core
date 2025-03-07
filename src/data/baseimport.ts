@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 /* 代码生成，勿手动修改 */
 import * as impl from "./classes"
 import * as types from "./typesdefine"
@@ -131,6 +141,16 @@ export function importContextSettings(source: types.ContextSettings, ctx?: IImpo
     const ret: impl.ContextSettings = new impl.ContextSettings (
         importBlendMode(source.blenMode, ctx),
         source.opacity)
+    return ret
+}
+/* couner radius */
+export function importCornerRadius(source: types.CornerRadius, ctx?: IImportContext): impl.CornerRadius {
+    const ret: impl.CornerRadius = new impl.CornerRadius (
+        source.id,
+        source.lt,
+        source.rt,
+        source.lb,
+        source.rb)
     return ret
 }
 /* corner type */
@@ -926,7 +946,6 @@ function importBlurOptional(tar: impl.Blur, source: types.Blur, ctx?: IImportCon
 }
 export function importBlur(source: types.Blur, ctx?: IImportContext): impl.Blur {
     const ret: impl.Blur = new impl.Blur (
-        importCrdtidx(source.crdtidx, ctx),
         source.isEnabled,
         importPoint2D(source.center, ctx),
         source.saturation,
@@ -970,17 +989,6 @@ export function importContactRole(source: types.ContactRole, ctx?: IImportContex
         source.id,
         importContactRoleType(source.roleType, ctx),
         source.shapeId)
-    return ret
-}
-/* couner radius */
-export function importCornerRadius(source: types.CornerRadius, ctx?: IImportContext): impl.CornerRadius {
-    const ret: impl.CornerRadius = new impl.CornerRadius (
-        source.id,
-        importCrdtidx(source.crdtidx, ctx),
-        source.lt,
-        source.rt,
-        source.lb,
-        source.rb)
     return ret
 }
 /* crdt number */

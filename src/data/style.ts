@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import * as classes from "./baseclasses"
 import {
     BlendMode,
@@ -291,7 +301,6 @@ export class Style extends Basic implements classes.Style {
 
 export class Blur extends Basic implements classes.Blur {
     typeId = 'blur'
-    crdtidx: BasicArray<number>
     isEnabled: boolean
     center: Point2D
     motionAngle?: number
@@ -301,7 +310,6 @@ export class Blur extends Basic implements classes.Blur {
     mask?: string
 
     constructor(
-        crdtidx: BasicArray<number>,
         isEnabled: boolean,
         center: Point2D,
         saturation: number,
@@ -310,7 +318,6 @@ export class Blur extends Basic implements classes.Blur {
         radius?: number
     ) {
         super()
-        this.crdtidx = crdtidx
         this.isEnabled = isEnabled
         this.center = center
         this.saturation = saturation
@@ -378,8 +385,8 @@ export class StyleSheet extends Basic implements classes.StyleSheet {
                 const shadowMask = new ShadowMask(v.crdtidx, sheetId, v4(), v.name, v.description, shadows);
                 notifiable_variables.push(shadowMask);
             } else if (v instanceof classes.BlurMask) {
-                const { crdtidx, isEnabled, center, saturation, type } = v.blur;
-                const blur = new Blur(crdtidx, isEnabled, center, saturation, type);
+                const { isEnabled, center, saturation, type } = v.blur;
+                const blur = new Blur(isEnabled, center, saturation, type);
                 blur.motionAngle = v.blur.motionAngle;
                 blur.radius = v.blur.radius;
                 blur.mask = v.blur.mask;

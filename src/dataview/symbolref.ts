@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import {
     AutoLayout, Border, ContextSettings, CornerRadius, Fill, MarkerType, OverrideType, PrototypeInterAction, Shadow,
     Shape, ShapeFrame, ShapeSize, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType, ShapeType,
@@ -106,13 +116,6 @@ export class SymbolRefView extends ShapeView {
 
     private m_sym: SymbolShape | undefined;
     private m_union: SymbolShape | undefined;
-
-    getPath() {
-        if (this.m_path) return this.m_path;
-        this.m_path = getPathOfRadius(this.frame, this.cornerRadius, this.m_fixedRadius);
-        this.m_path.freeze();
-        return this.m_path;
-    }
 
     onDataChange(...args: any[]): void {
         super.onDataChange(...args);
@@ -471,11 +474,12 @@ export class SymbolRefView extends ShapeView {
             _radius = [...mask.radius];
             this.watchRadiusMask(mask);
         } else {
+            const corner = this.cornerRadius;
             _radius = [
-                this.cornerRadius?.lt ?? 0,
-                this.cornerRadius?.rt ?? 0,
-                this.cornerRadius?.rb ?? 0,
-                this.cornerRadius?.lb ?? 0,
+                corner?.lt ?? 0,
+                corner?.rt ?? 0,
+                corner?.rb ?? 0,
+                corner?.lb ?? 0,
             ]
             this.unwatchRadiusMask();
         }

@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 /* 代码生成，勿手动修改 */
 export type Artboard_guides = Array<Guide>
 /* blend mode */
@@ -98,6 +108,15 @@ export type ContextSettings = {
     typeId: string,
     blenMode: BlendMode,
     opacity: number,
+}
+/* couner radius */
+export type CornerRadius = {
+    id: string,
+    typeId: string,
+    lt: number,
+    rt: number,
+    lb: number,
+    rb: number,
 }
 /* corner type */
 export enum CornerType {
@@ -721,7 +740,6 @@ export type AutoLayout = {
 }
 /* blur */
 export type Blur = {
-    crdtidx: Crdtidx,
     typeId: string,
     isEnabled: boolean,
     center: Point2D,
@@ -757,16 +775,6 @@ export type ContactRole = {
     id: string,
     roleType: ContactRoleType,
     shapeId: string,
-}
-/* couner radius */
-export type CornerRadius = {
-    id: string,
-    crdtidx: Crdtidx,
-    typeId: string,
-    lt: number,
-    rt: number,
-    lb: number,
-    rb: number,
 }
 /* crdt number */
 export type CrdtNumber = {

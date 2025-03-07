@@ -1,12 +1,25 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
+import { Path } from "@kcdesign/path"
+import { gPal, MeasureFun, TextPathFun } from "./basic/pal"
+
 // basic
 export * from "./basic/matrix"
 export * from "./basic/objectid"
-export * from "./basic/pal"
+// export * from "./basic/pal"
 export * from "./basic/utils"
-export {IEventEmitter, EventEmitter} from "./basic/event"
-export {Transform, TransformMode, Line, LineThrough0, Plane, PlaneThrough0} from './basic/transform'
-export {Vector, ColVector2D, ColVector3D, Matrix as Matrix2} from "./basic/matrix2"
-export {NumberArray2D} from "./basic/number_array"
+export { IEventEmitter, EventEmitter } from "./basic/event"
+// export {Transform, TransformMode, Line, LineThrough0, Plane, PlaneThrough0} from './basic/transform'
+export { ColVector2D, ColVector3D } from "./basic/matrix2"
+export { NumberArray2D } from "./basic/number_array"
 
 export * from "./basic/error"
 
@@ -147,12 +160,14 @@ export {
     StyleSheet,
     RadiusMask
 } from "./data"
+export * from "./data/shapedirlist"
+export * from "./data/shapedirlist2"
 
 export {
-    makeMatrixByTransform2,
-    makeShapeTransform2By1,
-    makeShapeTransform1By2,
-    updateShapeTransform1By2,
+    // makeMatrixByTransform2,
+    // makeShapeTransform2By1,
+    // makeShapeTransform1By2,
+    // updateShapeTransform1By2,
     importGradient
 } from "./data"
 
@@ -167,6 +182,7 @@ export * from "./io/import/sketch/lzdata"
 export * from "./io/cilpboard"
 // export
 export * from "./io/export/svg"
+export * as svgParser from "./io/svg_parser";
 
 // editor
 export * from "./editor"
@@ -178,29 +194,33 @@ export * from "./editor/table"
 export * from "./editor/controller"
 export * as creator from "./editor/creator"
 
-export * from "./service/shapedirlist"
-export * from "./service/shapedirlist2"
-export * from "./service/taskmgr"
-export * from "./service/symbollist"
 
 export * from "./editor/asyncapi"
 
 // coop
+export { PaddingDir } from "./coop/recordapi"
 export * from "./coop"
 
-export {Transform as TransformRaw} from "./data/transform"
+export { Transform } from "./data/transform"
 
 // properties
 export { exportBorder, exportFill, exportShadow, exportBlur, exportContextSettings } from './data/baseexport';
 
-export {LinearApi} from './editor/linearapi/linearapi';
+export { LinearApi } from './editor/linearapi/linearapi';
 
 export { CircleChecker } from "./editor/basic/move/circle";
 
-export {Path} from '@kcdesign/path'
+export { Path } from '@kcdesign/path'
 
 export { FillModifier } from "./editor/style/fill";
 export { BorderModifier } from "./editor/style/border";
 export { RadiusModifier } from "./editor/style/radius";
 export { ShadowsModifier } from "./editor/style/shadows";
 export { BlurModifier } from "./editor/style/blur";
+
+
+export async function initModule(textMeasure: MeasureFun, text2path: TextPathFun) {
+    gPal.text.textMeasure = textMeasure
+    gPal.text.getTextPath = text2path
+    await Path.init()
+}

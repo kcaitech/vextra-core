@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { Basic, BasicArray, BasicMap, ResourceMgr } from "./basic";
 import { Style } from "./style";
 import { Text } from "./text/text";
@@ -674,7 +684,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
     getOpTarget(path: string[]): any {
         const id0 = path[0];
         if (id0 === 'symtags' && !this.symtags) this.symtags = new BasicMap<string, string>();
-        if (id0 === 'cornerRadius' && !this.cornerRadius) this.cornerRadius = new CornerRadius(v4(), new BasicArray(),0, 0, 0, 0);
+        if (id0 === 'cornerRadius' && !this.cornerRadius) this.cornerRadius = new CornerRadius(v4(), 0, 0, 0, 0);
         if (id0 === "guides" && !this.guides) {
             this.guides = new BasicArray<Guide>();
         }

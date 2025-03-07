@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import {
     Artboard,
     BasicArray,
@@ -426,7 +436,7 @@ function importEffects(ctx: LoadContext, style: Style, data: IJSON) {
     if (!Array.isArray(effects1)) return;
     const gaussian = effects1.find(effect => effect.type === 'FOREGROUND_BLUR');
     if (!gaussian) return;
-    style.blur = new Blur(new BasicArray(), true, new Point2D(0, 0), gaussian.radius || 4, BlurType.Gaussian);
+    style.blur = new Blur(true, new Point2D(0, 0), gaussian.radius || 4, BlurType.Gaussian);
 }
 
 function importStyle(ctx: LoadContext, style: Style, data: IJSON) {
