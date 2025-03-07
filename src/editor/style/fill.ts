@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { Api } from "../../coop";
 import { Modifier } from "../basic/modifier";
 import {
@@ -130,7 +140,11 @@ export class FillModifier extends Modifier {
     createFillsMask(document: Document, mask: FillMask, pageView: PageView, views?: ShapeView[]) {
         try {
             const api = this.getApi('createFillsMask');
-            mask.fills = new BasicArray(...mask.fills.map(i => importFill(i)));
+            mask.fills = new BasicArray(...mask.fills.map(i => {
+                const fill = importFill(i);
+                fill.setImageMgr(document.mediasMgr);
+                return fill;
+            }));
             api.styleInsert(document, mask);
             if (views) {
                 const variables: Variable[] = [];

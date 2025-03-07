@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { AsyncApiCaller } from "./basic/asyncapi";
 import { CoopRepository } from "../../coop/cooprepo";
 import { adapt2Shape, ArtboardView, GroupShapeView, PageView, ShapeView, SymbolRefView } from "../../dataview";
@@ -18,14 +28,11 @@ import {
     Document,
     RadiusType,
     TextBehaviour,
-    makeShapeTransform2By1,
-    makeShapeTransform1By2,
     StackSizing,
     OvalShape, ContactShape,
     Shadow,
     VariableType,
     OverrideType,
-    Border,
     SideType,
     BorderSideSetting
 } from "../../data";
@@ -34,8 +41,6 @@ import {
     getPolygonPoints,
     getPolygonVertices
 } from "../utils/path";
-import { ColVector3D } from "../../basic/matrix2";
-import { Line, TransformMode } from "../../basic/transform";
 import {
     RangeRecorder,
     reLayoutBySizeChanged,
@@ -266,19 +271,15 @@ export class LockMouseHandler extends AsyncApiCaller {
 
                 const d = (shape.rotation || 0) + deg;
 
-                const t = makeShapeTransform2By1(shape.transform);
+                const t = (shape.transform.clone());
                 const { width, height } = shape.frame;
 
                 const angle = d % 360 * Math.PI / 180;
-                const os = t.decomposeEuler().z;
+                const os = t.decomposeRotate();
 
-                t.rotateAt({
-                    axis: Line.FromParallelZ(ColVector3D.FromXYZ(width / 2, height / 2, 0)),
-                    angle: angle - os,
-                    mode: TransformMode.Local,
-                });
+                t.rotateInLocal(angle - os, width / 2, height / 2);
 
-                const transform = makeShapeTransform1By2(t) as Transform;
+                const transform = (t);
                 api.shapeModifyRotate(page, adapt2Shape(shape), transform)
             }
             this.updateView();
@@ -287,9 +288,11 @@ export class LockMouseHandler extends AsyncApiCaller {
             this.exception = true;
         }
     }
+
     getRadiusMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
         return _ov(VariableType.RadiusMask, OverrideType.RadiusMask, () => value, view, page, api);
     }
+
     executeRadius(shapes: ShapeView[], values: number[]) {
         try {
             const api = this.api;
@@ -397,7 +400,6 @@ export class LockMouseHandler extends AsyncApiCaller {
             console.log('LockMouseHandler.executeShadowB');
         }
     }
-
 
     executeShadowS(actions: { shadow: Shadow, value: number }[]) {
         try {
@@ -516,8 +518,7 @@ export class LockMouseHandler extends AsyncApiCaller {
 
     private getBorderVariable(api: Api, page: PageView, view: ShapeView) {
         return override_variable(page, VariableType.Borders, OverrideType.Borders, (_var) => {
-            const border = _var?.value ?? view.getBorders();
-            return border;
+            return importBorder(_var?.value ?? view.style.borders);
         }, api, view);
     }
 
@@ -531,7 +532,7 @@ export class LockMouseHandler extends AsyncApiCaller {
             for (const view of shapes) {
                 const border = view.getBorders();
                 const linkedVariable = this.getBorderVariable(api, this._page, view);
-                const source = linkedVariable ? (linkedVariable.value as Border) : adapt2Shape(view).style.borders;
+                const source = linkedVariable ? linkedVariable.value : view.style.borders;
                 if (view.bordersMask) {
                     const linkedBorderMaskVariable = this.getStrokeMaskVariable(api, this._page, view, undefined);
                     if (linkedBorderMaskVariable) {
@@ -569,12 +570,13 @@ export class LockMouseHandler extends AsyncApiCaller {
             this.exception = true;
         }
     }
+
     modifyBorderCustomThickness(shapes: ShapeView[], thickness: number, type: SideType) {
         try {
             const api = this.api;
             for (const view of shapes) {
                 const linkedVariable = this.getBorderVariable(api, this._page, view);
-                const source = linkedVariable ? (linkedVariable.value as Border) : adapt2Shape(view).style.borders;
+                const source = linkedVariable ? linkedVariable.value : view.style.borders;
                 switch (type) {
                     case SideType.Top:
                         api.setBorderThicknessTop(source, thickness);

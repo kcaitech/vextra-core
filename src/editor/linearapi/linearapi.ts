@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { Document, OvalShape, Fill, Blur, Variable } from "../../data";
 import { adapt2Shape, ArtboardView, PageView, ShapeView, SymbolRefView, SymbolView, TableCellView, TableView, TextShapeView } from "../../dataview";
 import { modifyPathByArc } from "../asyncapi";
@@ -507,7 +517,7 @@ export class LinearApi {
             const api = this.api!;
             for (const view of shapes) {
                 const linkedVariable = this.getBorderVariable(api, this._page, view);
-                const source = linkedVariable ? (linkedVariable.value as Border) : adapt2Shape(view).style.borders;
+                const source = linkedVariable ? linkedVariable.value : view.style.borders;
                 switch (sideType) {
                     case SideType.Top:
                         api.setBorderThicknessTop(source, thickness);

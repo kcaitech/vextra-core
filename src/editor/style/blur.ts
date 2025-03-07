@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { Modifier } from "../basic/modifier";
 import {
     BasicArray, Blur,
@@ -24,7 +34,7 @@ export class BlurModifier extends Modifier {
     getBlurVariable(api: Api, page: PageView, view: ShapeView) {
         const valueFun = (_var: Variable | undefined) => {
             const blur = _var?.value ?? view.blur;
-            return blur && importBlur(blur) || new Blur(new BasicArray(), true, new Point2D(0, 0), 10, BlurType.Gaussian);
+            return blur && importBlur(blur) || new Blur(true, new Point2D(0, 0), 10, BlurType.Gaussian);
         };
         return _ov(VariableType.Blur, OverrideType.Blur, valueFun, view, page, api)!;
     }

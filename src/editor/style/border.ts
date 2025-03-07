@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { Api, CoopRepository } from "../../coop";
 import { Modifier } from "../basic/modifier";
 import {
@@ -18,8 +28,8 @@ import {
     VariableType
 } from "../../data";
 import { adapt2Shape, PageView, ShapeView } from "../../dataview";
-import { _ov, override_variable } from "../symbol";
-import { importFill } from "../../data/baseimport";
+import { _ov, override_variable, shape4border } from "../symbol";
+import { importBorder, importFill } from "../../data/baseimport";
 
 export class BorderModifier extends Modifier {
     importFill = importFill;
@@ -37,8 +47,7 @@ export class BorderModifier extends Modifier {
 
     getBorderVariable(api: Api, page: PageView, view: ShapeView) {
         return override_variable(page, VariableType.Borders, OverrideType.Borders, (_var) => {
-            const border = _var?.value ?? view.getBorders();
-            return border;
+            return importBorder(_var?.value ?? view.style.borders);
         }, api, view)!;
     }
 
@@ -113,8 +122,21 @@ export class BorderModifier extends Modifier {
             throw error;
         }
     }
+
+    // 设置单边类型
+    modifyBorderSideSetting(missions: Function[]) {
+        try {
+            const api = this.getApi('modifyBorderSideSetting');
+            missions.forEach(call => call(api));
+            this.commit();
+        } catch (error) {
+            this.rollback();
+            throw error;
+        }
+    }
+
     /* 修改mask边框 */
-    setBorderMaskSide(actions: { border: BorderMaskType, side: BorderSideSetting }[]) {
+    setBorderMaskSide(actions: { border: Border, side: BorderSideSetting }[]) {
         try {
             const api = this.getApi('setBorderMaskSide');
             actions.forEach(action => api.setBorderSide(action.border, action.side));
@@ -132,7 +154,7 @@ export class BorderModifier extends Modifier {
             for (const view of views) {
                 const border = view.getBorders();
                 const linkedVariable = this.getBorderVariable(api, pageView, view);
-                const source = linkedVariable ? (linkedVariable.value as Border) : adapt2Shape(view).style.borders;
+                const source = linkedVariable ? linkedVariable.value as Border : view.data.style.borders;
                 if (view.bordersMask) {
                     const linkedBorderMaskVariable = this.getStrokeMaskVariable(api, pageView, view, undefined);
                     if (linkedBorderMaskVariable) {
@@ -145,7 +167,8 @@ export class BorderModifier extends Modifier {
                 const sideType = border.sideSetting.sideType;
                 switch (sideType) {
                     case SideType.Normal:
-                        api.setBorderSide(source, new BorderSideSetting(sideType, thickness, thickness, thickness, thickness));
+                        const sides = new BorderSideSetting(sideType, thickness, thickness, thickness, thickness);
+                        api.setBorderSide(source, sides);
                         break;
                     case SideType.Top:
                         api.setBorderThicknessTop(source, thickness);
@@ -160,7 +183,8 @@ export class BorderModifier extends Modifier {
                         api.setBorderThicknessLeft(source, thickness);
                         break
                     default:
-                        api.setBorderSide(source, new BorderSideSetting(SideType.Custom, thickness, thickness, thickness, thickness));
+                        const customSides = new BorderSideSetting(SideType.Custom, thickness, thickness, thickness, thickness);
+                        api.setBorderSide(source, customSides);
                         break;
                 }
             }
@@ -176,7 +200,7 @@ export class BorderModifier extends Modifier {
             const api = this.getApi('setBorderCustomThickness');
             for (const view of shapes) {
                 const linkedVariable = this.getBorderVariable(api, pageView, view);
-                const source = linkedVariable ? (linkedVariable.value as Border) : adapt2Shape(view).style.borders;
+                const source = linkedVariable ? linkedVariable.value : view.style.borders;
                 switch (type) {
                     case SideType.Top:
                         api.setBorderThicknessTop(source, thickness);
@@ -256,12 +280,49 @@ export class BorderModifier extends Modifier {
         }
     }
 
+    // 修改边框样式（虚线/实线）
+    modifyStrokeStyle(pageView: PageView, actions: { target: ShapeView, value: any }[]) {
+        try {
+            const api = this.getApi('modifyStrokeStyle');
+            const page = pageView.data;
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                const s = shape4border(api, pageView, target);
+                api.setBorderStyle(page, s, value);
+            }
+            this.commit();
+        } catch (error) {
+            this.rollback();
+            throw error;
+        }
+    }
+
+    // 修改边框拐角样式
+    modifyCornerType(pageView: PageView, actions: { target: ShapeView, value: any }[]) {
+        try {
+            const api = this.getApi('modifyCornerType');
+            const page = pageView.data;
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                const s = shape4border(api, pageView, target);
+                api.setBorderCornerType(page, s, value);
+            }
+            this.commit();
+        } catch (error) {
+            this.rollback();
+            throw error;
+        }
+    }
+
     /* 创建一个填充遮罩 */
     createFillsMask(document: Document, mask: FillMask, pageView: PageView, views?: ShapeView[]) {
         try {
             const api = this.getApi('createFillsMask');
-            const fills = new BasicArray(...mask.fills.map(i => importFill(i)));
-            mask.fills = fills;
+            mask.fills = new BasicArray(...mask.fills.map(i => {
+                const fill = importFill(i);
+                fill.setImageMgr(document.mediasMgr);
+                return fill;
+            }));
             api.styleInsert(document, mask);
             if (views) {
                 const variables: Variable[] = [];

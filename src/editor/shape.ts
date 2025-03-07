@@ -1,4 +1,14 @@
-import { BoolShape, GroupShape, PathShape, PathShape2, RectShape, Shape, ShapeType, SymbolShape, SymbolUnionShape, TextShape, Variable, VariableType, Color, PathType, Document, SymbolRefShape, Text, Page, Border, BorderPosition, BorderStyle, Fill, MarkerType, Shadow, BoolOp, CurvePoint, ExportFormat, ContactShape, AutoLayout, PathSegment, BasicArray, string2Text, Artboard, ShapeFrame } from "../data";
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
+import { BoolShape, GroupShape, PathShape, PathShape2, RectShape, Shape, ShapeType, SymbolShape, SymbolUnionShape, TextShape, Variable, VariableType, Color, PathType, Document, SymbolRefShape, Text, Page, BorderStyle, Fill, BoolOp, CurvePoint, ExportFormat, ContactShape, AutoLayout, PathSegment, BasicArray, string2Text, Artboard, ShapeFrame } from "../data";
 import { expand, expandTo, translate, translateTo } from "./frame";
 import { CoopRepository } from "../coop/cooprepo";
 import {
@@ -12,7 +22,7 @@ import {
     StackSizing,
     StackWrap
 } from "../data/typesdefine";
-import { Api } from "../coop/recordapi";
+import { Api, PaddingDir } from "../coop/recordapi";
 import { importCurvePoint } from "../data/baseimport";
 import { v4 } from "uuid";
 import { uuid } from "../basic/uuid";
@@ -25,9 +35,8 @@ import { ISave4Restore, LocalCmd, SelectionState } from "../coop/localcmd";
 import { exportCurvePoint } from "../data/baseexport";
 import { layoutShapesOrder2, layoutSpacing } from "./utils/auto_layout2";
 import { group, ungroup } from "./group";
-import { newArtboard } from "./creator";
+import { newArtboard, newArtboard2 } from "./creator";
 
-export type PaddingDir = 'ver' | 'hor' | 'top' | 'right' | 'bottom' | 'left';
 
 export class ShapeEditor {
     protected __shape: ShapeView;
@@ -1306,7 +1315,7 @@ export class ShapeEditor {
         let artboard: Artboard | undefined = undefined;
         const p = parent.parent! as GroupShape;
         if (parent.type === ShapeType.Group) {
-            artboard = newArtboard(parent.name, new ShapeFrame(0, 0, 100, 100));
+            artboard = newArtboard2(parent.name, new ShapeFrame(0, 0, 100, 100));
             api = this.__repo.start("addAutoLayout", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
                 const state = {} as SelectionState;
                 if (!isUndo) state.shapes = [id];

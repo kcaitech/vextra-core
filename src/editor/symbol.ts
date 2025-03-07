@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import {
     OverrideType,
     Shape,
@@ -53,8 +63,7 @@ import {
     importTableShape,
     importText,
     importBlur,
-    importAutoLayout, importArtboard
-} from "../data/baseimport";
+    importAutoLayout} from "../data/baseimport";
 import {
     ArtboardView,
     ShapeView,
@@ -62,7 +71,6 @@ import {
     SymbolView,
     TableCellView,
     TableView,
-    isAdaptedShape,
     adapt2Shape,
     PageView
 } from "../dataview";
@@ -70,9 +78,6 @@ import { newTableCellText } from "../data/text/textutils";
 import { FMT_VER_latest } from "../data/fmtver";
 import * as types from "../data/typesdefine";
 import { exportArtboard, exportVariable } from "../data/baseexport";
-import { makeShapeTransform1By2, makeShapeTransform2By1 } from "../data";
-import { Transform as Transform2 } from "../basic/transform";
-import { ColVector3D } from "../basic/matrix2";
 import { v4 } from "uuid";
 import { overrideTableCell, prepareVar } from "./symbol_utils";
 
@@ -219,7 +224,7 @@ export function shape4exportOptions(api: Api, _shape: ShapeView, page: PageView)
 export function shape4blur(api: Api, _shape: ShapeView, page: PageView) {
     const valuefun = (_var: Variable | undefined) => {
         const blur = _var?.value ?? _shape.blur;
-        return blur && importBlur(blur) || new Blur(new BasicArray(),true, new Point2D(0, 0), 10, BlurType.Gaussian);
+        return blur && importBlur(blur) || new Blur(true, new Point2D(0, 0), 10, BlurType.Gaussian);
     };
     const _var = _ov(VariableType.Blur, OverrideType.Blur, valuefun, _shape, page, api);
     return _var || _shape.data;
@@ -419,7 +424,7 @@ export function shape4shadow(api: Api, page: PageView, shape: ShapeView) {
 export function shape4cornerRadius(api: Api, page: PageView, shape: ArtboardView | SymbolView | SymbolRefView) {
     const _var = override_variable(page, VariableType.CornerRadius, OverrideType.CornerRadius, (_var) => {
         const cornerRadius = _var?.value ?? shape.cornerRadius;
-        return cornerRadius ? importCornerRadius(cornerRadius) : new CornerRadius(v4(), new BasicArray(),0, 0, 0, 0);
+        return cornerRadius ? importCornerRadius(cornerRadius) : new CornerRadius(v4(),0, 0, 0, 0);
     }, api, shape)
     const ret = _var || shape.data;
     if (ret instanceof SymbolRefShape) throw new Error();
@@ -569,14 +574,14 @@ export class RefUnbind {
     private static solidify(shape: GroupShape, uniformScale: number) {
         const children = shape.childs;
         for (const child of children) {
-            const t = makeShapeTransform2By1(child.transform);
-            const scale = new Transform2().setScale(ColVector3D.FromXYZ(uniformScale, uniformScale, 1));
-            t.addTransform(scale);
+            const t = (child.transform.clone());
+            // const scale = new Transform2().setScale(ColVector3D.FromXYZ(uniformScale, uniformScale, 1));
+            t.scale(uniformScale, uniformScale);
             const __scale = t.decomposeScale();
             child.size.width *= Math.abs(__scale.x);
             child.size.height *= Math.abs(__scale.y);
             t.clearScaleSize();
-            child.transform = makeShapeTransform1By2(t);
+            child.transform = (t);
             const borders = child.style.borders;
             borders.sideSetting = new BorderSideSetting(
                 SideType.Normal,
@@ -692,7 +697,7 @@ export class RefUnbind {
     static unbind(view: SymbolRefView) {
         const shape: SymbolRefShape = adapt2Shape(view) as SymbolRefShape;
         if (shape.isVirtualShape) return;
-        const tmpArtboard: Artboard = newArtboard(view.name, shape.frame);
+        const tmpArtboard: Artboard = newArtboard(view.name, shape.frame, view.style.getStylesMgr()!);
         tmpArtboard.childs = shape.naviChilds! as BasicArray<Shape>;
         tmpArtboard.varbinds = shape.varbinds;
         tmpArtboard.style = shape.style;
