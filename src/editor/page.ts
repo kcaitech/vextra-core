@@ -41,10 +41,10 @@ import {
     Variable,
     VariableType
 } from "../data";
-import { ShapeEditor } from "./shape";
+import { PaddingDir, ShapeEditor } from "./shape";
 import * as types from "../data/typesdefine";
 import { newArtboard, newAutoLayoutArtboard, newBoolShape, newGroupShape, newImageFillShape, newPathShape, newSolidColorFill, newSymbolRefShape, newSymbolShape } from "./creator";
-import { expand, translate, translateTo } from "./frame";
+import { expand, expandTo, translate, translateTo } from "./frame";
 import { uuid } from "../basic/uuid";
 import { TextShapeEditor } from "./textshape";
 import { set_childs_id, transform_data } from "../io/cilpboard";
@@ -55,7 +55,7 @@ import { TableEditor } from "./table";
 import { exportGradient, exportStop, exportSymbolShape } from "../data/baseexport";
 import { after_remove, clear_binds_effect, find_state_space, fixTextShapeFrameByLayout, get_symbol_by_layer, init_state, make_union, modify_frame_after_inset_state, modify_index } from "./utils/other";
 import { v4 } from "uuid";
-import { is_exist_invalid_shape2, is_part_of_symbol, is_part_of_symbolref, is_state, modify_variable_with_api, shape4border, shape4cornerRadius, shape4fill, shape4shadow, shape4contextSettings, shape4blur, RefUnbind, _ov } from "./symbol";
+import { is_exist_invalid_shape2, is_part_of_symbol, is_part_of_symbolref, is_state, modify_variable_with_api, shape4border, shape4cornerRadius, shape4fill, shape4shadow, shape4contextSettings, shape4blur, RefUnbind, _ov, shape4Autolayout } from "./symbol";
 import { is_circular_ref2 } from "./utils/ref_check";
 import { AutoLayout, BorderSideSetting, BorderStyle, ExportFormat, OverlayBackgroundAppearance, OverlayBackgroundInteraction, OverlayPositionType, PrototypeActions, PrototypeConnectionType, PrototypeEasingBezier, PrototypeEasingType, PrototypeEvent, PrototypeEvents, PrototypeInterAction, PrototypeNavigationType, PrototypeStartingPoint, PrototypeTransitionType, ScrollBehavior, ScrollDirection, Shadow } from "../data/baseclasses";
 import { border2path, calculateInnerAnglePosition, getPolygonPoints, getPolygonVertices, update_frame_by_points } from "./utils/path";
@@ -3785,6 +3785,175 @@ export class PageEditor {
             tidyUpLayout(this.page, api, shape_rows, hor, ver, dir, algin);
             this.__repo.commit();
         } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    deleteAutoLayout(shapes: ShapeView[]) {
+        const api = this.__repo.start("deleteAutoLayout");
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const childs = shapes[i].childs;
+                for (let i = 0; i < childs.length; i++) {
+                    const child = childs[i];
+                    api.shapeModifyXY(this.page, adapt2Shape(child), child.transform.translateX, child.transform.translateY);
+                }
+                const shape = shape4Autolayout(api, shapes[i], this.view);
+                api.shapeAutoLayout(this.page, shape, undefined);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error);
+            this.__repo.rollback();
+        }
+    }
+
+    modifyAutoLayoutPadding(shapes: ShapeView[], padding: number, direction: PaddingDir) {
+        const api = this.__repo.start("modifyAutoLayoutPadding");
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const shape = shape4Autolayout(api, shapes[i], this.view);
+                api.shapeModifyAutoLayoutPadding(this.page, shape, Math.max(padding, 0), direction);
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+
+    modifyAutoLayoutHorPadding(shapes: ShapeView[], hor: number, right: number) {
+        const api = this.__repo.start("modifyAutoLayoutHorPadding");
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const shape = shape4Autolayout(api, shapes[i], this.view);
+                api.shapeModifyAutoLayoutHorPadding(this.page, shape, Math.max(hor, 0), Math.max(right, 0));
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+
+    modifyAutoLayoutVerPadding(shapes: ShapeView[], ver: number, bottom: number) {
+        const api = this.__repo.start("modifyAutoLayoutVerPadding");
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const shape = shape4Autolayout(api, shapes[i], this.view);
+                api.shapeModifyAutoLayoutVerPadding(this.page, shape, Math.max(ver, 0), Math.max(bottom, 0));
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+
+    modifyAutoLayoutDispersed(shapes: ShapeView[], wrap: types.StackWrap, mode: types.StackMode) {
+        const api = this.__repo.start("modifyAutoLayoutDispersed");
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const shape = shape4Autolayout(api, shapes[i], this.view);
+                api.shapeModifyAutoLayoutWrap(this.page, shape, wrap);
+                api.shapeModifyAutoLayoutMode(this.page, shape, mode);
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+
+    modifyAutoLayoutSpace(shapes: ShapeView[], space: number, direction: PaddingDir) {
+        const api = this.__repo.start("modifyAutoLayoutSpace");
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const shape = shape4Autolayout(api, shapes[i], this.view);
+                api.shapeModifyAutoLayoutSpace(this.page, shape, space, direction);
+                api.shapeModifyAutoLayoutGapSizing(this.page, shape, types.StackSizing.Fixed, direction);
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+
+    modifyAutoLayoutAlignItems(shapes: ShapeView[], primary: types.StackAlign, counter: types.StackAlign) {
+        const api = this.__repo.start("modifyAutoLayoutAlignItems");
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const shape = shape4Autolayout(api, shapes[i], this.view);
+                api.shapeModifyAutoLayoutAlignItems(this.page, shape, primary, counter);
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+
+    modifyAutoLayoutSizing(shapes: ShapeView[], sizing: types.StackSizing, direction: PaddingDir) {
+        const api = this.__repo.start("modifyAutoLayoutSizing");
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const view = shapes[i];
+                const shape = shape4Autolayout(api, view, this.view);
+                api.shapeModifyAutoLayoutSizing(this.page, shape, sizing, direction);
+                api.shapeModifyAutoLayoutGapSizing(this.page, shape, types.StackSizing.Fixed, direction);
+                if (sizing === types.StackSizing.Fixed) {
+                    const w = view.frame.width;
+                    const h = view.frame.height;
+                    expandTo(api, this.__document, this.page, adapt2Shape(view), w, h);
+                }
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+
+    modifyAutoLayoutGapSizing(shapes: ShapeView[], sizing: types.StackSizing, direction: PaddingDir) {
+        const api = this.__repo.start("modifyAutoLayoutGapSizing");
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const shape = shape4Autolayout(api, shapes[i], this.view);
+                api.shapeModifyAutoLayoutGapSizing(this.page, shape, sizing, direction);
+                api.shapeModifyAutoLayoutSizing(this.page, shape, types.StackSizing.Fixed, direction);
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+
+    modifyAutoLayoutZIndex(shapes: ShapeView[], stack: boolean) {
+        const api = this.__repo.start("modifyAutoLayoutZIndex");
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const shape = shape4Autolayout(api, shapes[i], this.view);
+                api.shapeModifyAutoLayoutStackZIndex(this.page, shape, stack);
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+
+    modifyAutoLayoutStroke(shapes: ShapeView[], included: boolean) {
+        const api = this.__repo.start("modifyAutoLayoutStroke");
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const shape = shape4Autolayout(api, shapes[i], this.view);
+                api.shapeModifyAutoLayoutStroke(this.page, shape, included);
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
             this.__repo.rollback();
         }
     }
