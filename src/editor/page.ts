@@ -1818,17 +1818,18 @@ export class PageEditor {
      * @param src 即将被替代的图形
      * @returns 如果成功替换则返回所有替代品
      */
-    replace(document: Document, replacement: Shape[], src: Shape[]): false | Shape[] {
-        // 收集被替换上去的元素
-        const src_replacement: Shape[] = [];
-
-        const api = this.__repo.start("replace", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-            const state = {} as SelectionState;
-            if (!isUndo) state.shapes = src_replacement.map(s => s.id);
-            else state.shapes = cmd.saveselection?.shapes || [];
-            selection.restore(state);
-        });
+    replace(document: Document, replacement: Shape[], src: Shape[]): Shape[] {
         try {
+            // 收集被替换上去的元素
+            const src_replacement: Shape[] = [];
+
+            const api = this.__repo.start("replace", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+                const state = {} as SelectionState;
+                if (!isUndo) state.shapes = src_replacement.map(s => s.id);
+                else state.shapes = cmd.saveselection?.shapes || [];
+                selection.restore(state);
+            });
+
             const len = replacement.length;
             // 寻找replacement的左上角(lt_point)，该点将和src中每个图形的左上角重合
             const any_r_f = replacement[0].transform;
@@ -1887,9 +1888,8 @@ export class PageEditor {
             this.__repo.commit();
             return src_replacement;
         } catch (error) {
-            console.log(error);
             this.__repo.rollback();
-            return false;
+            throw error;
         }
     }
 
