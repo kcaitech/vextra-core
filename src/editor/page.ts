@@ -68,7 +68,22 @@ import { modify_shapes_height, modify_shapes_width } from "./utils/common";
 import { CoopRepository, ISave4Restore, LocalCmd, SelectionState } from "../coop";
 import { Api, PaddingDir, TextShapeLike } from "../coop/recordapi";
 import { unable_to_migrate } from "./utils/migrate";
-import { adapt2Shape, ArtboardView, BoolShapeView, CutoutShapeView, GroupShapeView, PageView, PathShapeView, render2path, ShapeView, SymbolRefView, SymbolView, TableCellView, TableView, TextShapeView } from "../dataview";
+import {
+    adapt2Shape,
+    ArtboardView,
+    BoolShapeView, ContactLineView,
+    CutoutShapeView,
+    GroupShapeView,
+    PageView,
+    PathShapeView,
+    render2path,
+    ShapeView,
+    SymbolRefView,
+    SymbolView,
+    TableCellView,
+    TableView,
+    TextShapeView
+} from "../dataview";
 import { FMT_VER_latest } from "../data/fmtver";
 import { ColVector3D } from "../basic/matrix2";
 import { Transform as Transform2 } from "../basic/transform";
@@ -3500,6 +3515,7 @@ export class PageEditor {
             const __shapes = __flatten(shapes);
 
             for (const view of __shapes) {
+                if (view instanceof ContactLineView) continue;
                 if (view instanceof TextShapeView) {
                     const shape = adapt2Shape(view) as TextShape;
                     const path = view.getTextPath();

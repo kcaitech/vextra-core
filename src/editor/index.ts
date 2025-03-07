@@ -12,7 +12,7 @@ import { Document } from "../data/document";
 import { DocEditor } from "./document";
 import { PageEditor } from "./page";
 import { ShapeEditor } from "./shape";
-import { Controller } from "./controller";
+import { Controller } from "./controller"; /* 逐步取消Controller */
 import { CoopRepository } from "../coop/cooprepo";
 import { TextShapeEditor } from "./textshape";
 import { TableEditor } from "./table";
@@ -28,6 +28,8 @@ export { DocEditor } from "./document";
 export { PageEditor } from "./page";
 
 export { RefUnbind } from "./symbol"
+
+export { ContactLineModifier } from "./contact";
 
 export class Editor {
     private m_data: Document;

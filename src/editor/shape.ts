@@ -27,7 +27,7 @@ import { importCurvePoint } from "../data/baseimport";
 import { v4 } from "uuid";
 import { uuid } from "../basic/uuid";
 import { after_remove, clear_binds_effect, find_layers_by_varid, get_symbol_by_layer, is_default_state } from "./utils/other";
-import { _typing_modify, get_points_for_init, modify_points_xy, update_frame_by_points } from "./utils/path";
+import { _typing_modify, modify_points_xy, update_frame_by_points } from "./utils/path";
 import { adapt_for_artboard } from "./utils/common";
 import { ShapeView, SymbolRefView, SymbolView, adapt2Shape, findOverride, ArtboardView, findVar, GroupShapeView, PageView } from "../dataview";
 import { is_part_of_symbol, is_symbol_or_union, modify_variable, modify_variable_with_api, shape4Autolayout, shape4border, shape4contextSettings, shape4exportOptions, shape4fill, shape4shadow } from "./symbol";
@@ -1006,7 +1006,7 @@ export class ShapeEditor {
         });
     }
 
-    public reset_contact_path() {
+    public reset_contact_path(visiblePoints: CurvePoint[]) {
         if (!(this.shape instanceof ContactShape)) {
             return false;
         }
@@ -1014,20 +1014,17 @@ export class ShapeEditor {
         this._repoWrap("reset_contact_path", (api) => {
             api.contactModifyEditState(this.__page, shape, false);
 
-            const points = get_points_for_init(this.__page, shape, 1, shape.getPoints());
-
             const len = shape.points.length;
 
             api.deletePoints(this.__page, shape, 0, len, 0);
 
-            for (let i = 0, len = points.length; i < len; i++) {
-                const p = importCurvePoint((points[i]));
+            for (let i = 0, len = visiblePoints.length; i < len; i++) {
+                const p = importCurvePoint((visiblePoints[i]));
                 p.id = v4();
-                points[i] = p;
+                visiblePoints[i] = p;
             }
 
-            api.addPoints(this.__page, shape, points, 0);
-            update_frame_by_points(api, this.__page, shape);
+            api.addPoints(this.__page, shape, visiblePoints, 0);
         });
     }
 
