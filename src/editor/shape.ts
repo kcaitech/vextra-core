@@ -1306,7 +1306,7 @@ export class ShapeEditor {
         let artboard: Artboard | undefined = undefined;
         const p = parent.parent! as GroupShape;
         if (parent.type === ShapeType.Group) {
-            artboard = newArtboard(parent.name, new ShapeFrame(0, 0, 100, 100));
+            artboard = newArtboard(parent.name, new ShapeFrame(0, 0, 100, 100), this.__document.stylesMgr);
             api = this.__repo.start("addAutoLayout", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
                 const state = {} as SelectionState;
                 if (!isUndo) state.shapes = [id];

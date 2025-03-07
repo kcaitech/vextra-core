@@ -284,31 +284,25 @@ export class PageEditor {
      * @param artboardname
      * @returns { false | Artboard } 成功则返回容器
      */
-    create_artboard(shapes: ShapeView[], artboardname: string): false | Artboard {
-        // if (shapes.length === 0) return false;
-        // if (shapes.find((v) => !v.parent)) return false;
-        // const fshape = adapt2Shape(shapes[0]);
-        // const savep = fshape.parent as GroupShape;
-        // let artboard = newArtboard(artboardname, new ShapeFrame(0, 0, 100, 100));
-        //
-        // const api = this.__repo.start("create_artboard", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-        //     const state = {} as SelectionState;
-        //     if (!isUndo) state.shapes = [artboard.id];
-        //     else state.shapes = cmd.saveselection?.shapes || [];
-        //     selection.restore(state);
-        // });
-        // try {
-        //     // 0、save shapes[0].parent？最外层shape？位置？  层级最高图形的parent
-        //     const saveidx = savep.indexOfChild(adapt2Shape(shapes[0]));
-        //     // 1、新建一个GroupShape
-        //     artboard = group(this.__document, this.page, shapes.map(s => adapt2Shape(s)), artboard, savep, saveidx, api) as Artboard;
-        //     this.__repo.commit();
-        //     return artboard;
-        // } catch (e) {
-        //     console.log(e)
-        //     this.__repo.rollback();
-        // }
-        return false;
+    createArtboard(shapes: ShapeView[], artboardname: string): Artboard {
+        try {
+            const api = this.__repo.start("createArtboard", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+                const state = {} as SelectionState;
+                if (!isUndo) state.shapes = [artboard.id];
+                else state.shapes = cmd.saveselection?.shapes || [];
+                selection.restore(state);
+            });
+            const fshape = adapt2Shape(shapes[0]);
+            const savep = fshape.parent as GroupShape;
+            let artboard = newArtboard(artboardname, new ShapeFrame(0, 0, 100, 100), this.__document.stylesMgr);
+            const saveidx = savep.indexOfChild(adapt2Shape(shapes[0]));
+            artboard = group(this.__document, this.page, shapes.map(s => adapt2Shape(s)), artboard, savep, saveidx, api) as Artboard;
+            this.__repo.commit();
+            return artboard;
+        } catch (e) {
+            this.__repo.rollback();
+            throw e;
+        }
     }
 
     dissolution_artboard(shapes: ArtboardView[]): false | Shape[] {
@@ -1567,10 +1561,6 @@ export class PageEditor {
             this.__repo.rollback();
             return false;
         }
-    }
-
-    createArtboard(name: string, frame: ShapeFrame, fill: Fill, mgr: ResourceMgr<StyleMangerMember>) { // todo 新建图层存在代码冗余
-        return newArtboard(name, frame, mgr, fill);
     }
 
     shapesModifyRadius(shapes: ShapeView[], values: number[]) {
