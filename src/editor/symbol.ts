@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import {
     OverrideType,
     Shape,
@@ -53,8 +63,7 @@ import {
     importTableShape,
     importText,
     importBlur,
-    importAutoLayout, importArtboard
-} from "../data/baseimport";
+    importAutoLayout} from "../data/baseimport";
 import {
     ArtboardView,
     ShapeView,
@@ -62,7 +71,6 @@ import {
     SymbolView,
     TableCellView,
     TableView,
-    isAdaptedShape,
     adapt2Shape,
     PageView
 } from "../dataview";
@@ -70,9 +78,6 @@ import { newTableCellText } from "../data/text/textutils";
 import { FMT_VER_latest } from "../data/fmtver";
 import * as types from "../data/typesdefine";
 import { exportArtboard, exportVariable } from "../data/baseexport";
-import { makeShapeTransform1By2, makeShapeTransform2By1 } from "../data";
-import { Transform as Transform2 } from "../basic/transform";
-import { ColVector3D } from "../basic/matrix2";
 import { v4 } from "uuid";
 import { overrideTableCell, prepareVar } from "./symbol_utils";
 
@@ -569,14 +574,14 @@ export class RefUnbind {
     private static solidify(shape: GroupShape, uniformScale: number) {
         const children = shape.childs;
         for (const child of children) {
-            const t = makeShapeTransform2By1(child.transform);
-            const scale = new Transform2().setScale(ColVector3D.FromXYZ(uniformScale, uniformScale, 1));
-            t.addTransform(scale);
+            const t = (child.transform.clone());
+            // const scale = new Transform2().setScale(ColVector3D.FromXYZ(uniformScale, uniformScale, 1));
+            t.scale(uniformScale, uniformScale);
             const __scale = t.decomposeScale();
             child.size.width *= Math.abs(__scale.x);
             child.size.height *= Math.abs(__scale.y);
             t.clearScaleSize();
-            child.transform = makeShapeTransform1By2(t);
+            child.transform = (t);
             const borders = child.style.borders;
             borders.sideSetting = new BorderSideSetting(
                 SideType.Normal,

@@ -1,11 +1,27 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { AsyncApiCaller } from "./basic/asyncapi";
 import { Document } from "../../data/document";
-import { ArtboardView, PageView } from "../../dataview";
-import { Shape } from "../../data/shape";
-import { PaddingDir } from "../shape";
-import { StackSizing } from "../..//data";
-import { shape4Autolayout } from "../symbol";
+import { adapt2Shape, ArtboardView, PageView, ShapeView } from "../../dataview";
+import {
+    GroupShape,
+    Shape,
+    ShapeType,
+} from "../../data/shape";
+import { translate } from "../frame";
+import { Page, StackSizing } from "../..//data";
+import { after_migrate, unable_to_migrate } from "../utils/migrate";
+import { get_state_name, is_state, shape4Autolayout } from "../symbol";
 import { CoopRepository } from "../../coop/cooprepo";
+import { Api, PaddingDir } from "../../coop/recordapi";
 
 export class AutoLayoutModify extends AsyncApiCaller {
     updateFrameTargets: Set<Shape> = new Set();

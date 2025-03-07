@@ -1,6 +1,16 @@
+/*
+ * Copyright (c) 2023-2024 vextra.io. All rights reserved.
+ *
+ * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { ShapeView, GroupShapeView, adapt2Shape, TextShapeView, SymbolRefView, ArtboardView } from "../../../dataview";
 import { Api } from "../../../coop";
-import { GroupShape, Page, SymbolShape, MarkerType, BlendMode, Artboard, ShapeType, TextShape, Shape, makeShapeTransform1By2, Transform, Basic, Blur } from "../../../data";
+import { GroupShape, Page, SymbolShape, MarkerType, BlendMode, Artboard, ShapeType, TextShape, Shape, Transform } from "../../../data";
 import { importFill, importBorder, importShadow, importExportOptions, importBlur, importPrototypeInterAction, importAutoLayout } from "../../../data/baseimport";
 import { exportFill, exportBorder, exportShadow, exportExportOptions, exportBlur, exportPrototypeInterAction, exportAutoLayout } from "../../../data/baseexport";
 import { CircleChecker } from "./circle";
