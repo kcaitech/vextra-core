@@ -320,9 +320,9 @@ function figToBinaryParts(fileBuffer: ArrayBuffer): Uint8Array[] {
         // WARN: it is possible this byte is not png, maybe I need to check a few more bytes?
         if (!(fileByte[index] == 137 && fileByte[index + 1] == 80)) {
             try {
-                byteTemp = fzstd.decompress(byteTemp) as Uint8Array<ArrayBuffer>;
+                byteTemp = fzstd.decompress(byteTemp) as any;
             } catch (err) {
-                byteTemp = pako.inflateRaw(byteTemp) as Uint8Array<ArrayBuffer>;
+                byteTemp = pako.inflateRaw(byteTemp) as any;
             }
         }
 
