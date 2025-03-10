@@ -706,7 +706,6 @@ export class RefUnbind {
     static unbind(view: SymbolRefView, ctx?: IExportContext) {
         if (view.isVirtualShape) return;
         const shape: SymbolRefShape = adapt2Shape(view) as SymbolRefShape;
-        if (shape.isVirtualShape) return;
         const tmpArtboard: Artboard = newArtboard(view.name, shape.frame, view.style.getStylesMgr()!);
         tmpArtboard.childs = shape.naviChilds! as BasicArray<Shape>;
         tmpArtboard.varbinds = shape.varbinds;
