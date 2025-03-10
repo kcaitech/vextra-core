@@ -198,7 +198,7 @@ export * as creator from "./editor/creator"
 export * from "./editor/asyncapi"
 
 // coop
-export { PaddingDir } from "./coop/recordapi"
+export { PaddingDir } from "./coop/recordop"
 export * from "./coop"
 
 export { Transform } from "./data/transform"
