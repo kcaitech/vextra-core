@@ -10,7 +10,7 @@
 
 import { Modifier } from "../basic/modifier";
 import {
-    BasicArray, Blur,
+    Blur,
     BlurMask, BlurType,
     Document,
     OverrideType,
