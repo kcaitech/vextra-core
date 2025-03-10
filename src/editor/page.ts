@@ -86,7 +86,6 @@ import {
 } from "../dataview";
 import { FMT_VER_latest } from "../data/fmtver";
 import { ColVector3D } from "../basic/matrix2";
-import { Transform as Transform2 } from "../basic/transform";
 import { TidyUpAlgin, tidyUpLayout } from "./utils/auto_layout";
 
 import { getFormatFromBase64 } from "../basic/utils";
@@ -1273,9 +1272,6 @@ export class PageEditor {
                 if (after_remove(savep)) {
                     this.delete_inner(page.data, savep, api);
                 }
-                if (shape.type === ShapeType.Symbol) {
-                    this.__document.__correspondent.notify('update-symbol-list');
-                }
                 this.__repo.commit()
                 return true;
             } else {
@@ -1323,9 +1319,6 @@ export class PageEditor {
                 this.__repo.rollback();
                 return false;
             }
-        }
-        if (need_special_notify) {
-            this.__document.__correspondent.notify('update-symbol-list');
         }
         this.__repo.commit();
         return true;
@@ -3285,6 +3278,7 @@ export class PageEditor {
         }
     }
 
+    // 粘贴属性
     pasteProperties(shapes: ShapeView[], source: any) {
         try {
             const api = this.__repo.start('pasteProperties');

@@ -574,8 +574,7 @@ export class RefUnbind {
     private static solidify(shape: GroupShape, uniformScale: number) {
         const children = shape.childs;
         for (const child of children) {
-            const t = (child.transform.clone());
-            // const scale = new Transform2().setScale(ColVector3D.FromXYZ(uniformScale, uniformScale, 1));
+            const t = child.transform.clone();
             t.scale(uniformScale, uniformScale);
             const __scale = t.decomposeScale();
             child.size.width *= Math.abs(__scale.x);
@@ -623,9 +622,7 @@ export class RefUnbind {
             }
 
             if (child instanceof GroupShape) {
-                let innerScale = uniformScale;
-                // if (child.uniformScale) innerScale *= child.uniformScale;
-                this.solidify(child, innerScale);
+                this.solidify(child, uniformScale);
             }
         }
 

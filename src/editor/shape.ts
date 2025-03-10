@@ -921,9 +921,6 @@ export class ShapeEditor {
                         const _idx = (_p as GroupShape).childs.findIndex(c => c.id === parent.id);
                         api.shapeDelete(this.__document, this.__page, (_p as GroupShape), _idx);
                     }
-                    if (this.shape.type === ShapeType.Symbol) {
-                        this.__document.__correspondent.notify('update-symbol-list');
-                    }
                     _api || this.__repo.commit();
                 } catch (error) {
                     this.__repo.rollback();

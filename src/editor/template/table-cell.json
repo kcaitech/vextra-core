@@ -25,6 +25,7 @@
             },
             "cornerType": "miter",
             "sideSetting": {
+                "typeId": "border-side-setting",
                 "sideType": "normal",
                 "thicknessTop": 1,
                 "thicknessLeft": 1,
