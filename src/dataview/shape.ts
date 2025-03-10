@@ -524,17 +524,21 @@ export class ShapeView extends DataView {
         if (args.includes('mask') || args.includes('isVisible')) {
             (this.parent as GroupShapeView).updateMaskMap();
         }
-
-        if (this.parent && (args.includes('transform') || args.includes('size') || args.includes('isVisible'))) {
+        
+        if (this.parent && (args.includes('transform') || args.includes('size') || args.includes('isVisible') || args.includes('autoLayout'))) {
             // 执行父级自动布局
-            const autoLayout = (this.parent as ArtboardView).autoLayout;
-            if (autoLayout) {
-                this.parent.m_ctx.setReLayout(this.parent);
+            let p = this.parent as ArtboardView;
+            while (p && p.autoLayout) {
+                p.m_ctx.setReLayout(p);
+                p = p.parent as ArtboardView;
             }
         } else if (args.includes('borders') && this.parent) {
-            const autoLayout = (this.parent as ArtboardView).autoLayout;
-            if (autoLayout?.bordersTakeSpace) {
-                this.parent.m_ctx.setReLayout(this.parent);
+            let p = this.parent as ArtboardView;
+            while (p && p.autoLayout) {
+                if (p.autoLayout?.bordersTakeSpace) {
+                    p.m_ctx.setReLayout(p);
+                }
+                p = p.parent as ArtboardView;
             }
         }
 
