@@ -10,7 +10,7 @@
 
 import { CoopRepository } from "../../../coop/cooprepo";
 import { Document, Page } from "../../../data";
-import { Api } from "../../../coop/recordapi";
+import { Operator } from "../../../coop/recordop";
 import { PageView, adapt2Shape } from "../../../dataview";
 
 /**
@@ -19,7 +19,7 @@ import { PageView, adapt2Shape } from "../../../dataview";
 export class AsyncApiCaller {
     __repo: CoopRepository;
     __document: Document;
-    api: Api;
+    api: Operator;
     page: Page;
     pageView: PageView;
 

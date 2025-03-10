@@ -19,7 +19,7 @@ import {
 import { TextBehaviour } from "../data/typesdefine";
 import { fixTextShapeFrameByLayout } from "./utils/other";
 import { ResizingConstraints2 } from "../data/consts";
-import { Api } from "../coop/recordapi";
+import { Operator } from "../coop/recordop";
 import { Document } from "../data/document";
 import { ShapeSize, SymbolUnionShape } from "../data/classes";
 import { SymbolRefShape } from "../data/symbolref";
@@ -173,7 +173,7 @@ function fixHeightByRecorder(shape: Shape, height: number, origin_d_to_bottom: n
     }
 }
 
-function setSize(page: Page, shape: Shape, w: number, h: number, api: Api): boolean {
+function setSize(page: Page, shape: Shape, w: number, h: number, api: Operator): boolean {
     if (!shape.hasSize()) {
         return false;
     }
@@ -220,7 +220,7 @@ function setSize(page: Page, shape: Shape, w: number, h: number, api: Api): bool
     return changed;
 }
 
-export function translateTo(api: Api, page: Page, shape: Shape, x: number, y: number) {
+export function translateTo(api: Operator, page: Page, shape: Shape, x: number, y: number) {
     const p = shape.parent;
     if (!p) return;
     const m1 = p.matrix2Root();
@@ -232,7 +232,7 @@ export function translateTo(api: Api, page: Page, shape: Shape, x: number, y: nu
     api.shapeModifyXY(page, shape, shape.transform.translateX + dx, shape.transform.translateY + dy)
 }
 
-export function translate(api: Api, page: Page, shape: Shape, dx: number, dy: number, round: boolean = true) {
+export function translate(api: Operator, page: Page, shape: Shape, dx: number, dy: number, round: boolean = true) {
     const xy = shape.frame2Root();
     let x = xy.x + dx;
     let y = xy.y + dy;
@@ -243,7 +243,7 @@ export function translate(api: Api, page: Page, shape: Shape, dx: number, dy: nu
     translateTo(api, page, shape, x, y);
 }
 
-export function expandTo(api: Api, document: Document, page: Page, shape: Shape, w: number, h: number) {
+export function expandTo(api: Operator, document: Document, page: Page, shape: Shape, w: number, h: number) {
     if (w < minimum_WH) w = minimum_WH;
     if (h < minimum_WH) h = minimum_WH;
     let changed;
@@ -275,7 +275,7 @@ export function expandTo(api: Api, document: Document, page: Page, shape: Shape,
     if (changed || !shape.hasSize()) afterShapeSizeChange(api, document, page, shape);
 }
 
-export function expand(api: Api, document: Document, page: Page, shape: Shape, dw: number, dh: number, round: boolean = true) {
+export function expand(api: Operator, document: Document, page: Page, shape: Shape, dw: number, dh: number, round: boolean = true) {
     const frame = shape.size;
     let w = frame.width + dw;
     let h = frame.height + dh;
@@ -290,7 +290,7 @@ export function expand(api: Api, document: Document, page: Page, shape: Shape, d
 /**
  * @deprecated
  */
-export function adjustRB2(api: Api, document: Document, page: Page, shape: Shape, x: number, y: number, recorder?: SizeRecorder) {
+export function adjustRB2(api: Operator, document: Document, page: Page, shape: Shape, x: number, y: number, recorder?: SizeRecorder) {
     const p = shape.parent;
     if (!p) return;
     // 需要满足左下(lt)不动
@@ -347,7 +347,7 @@ export function adjustRB2(api: Api, document: Document, page: Page, shape: Shape
     afterShapeSizeChange(api, document, page, shape);
 }
 
-function afterShapeSizeChange(api: Api, document: Document, page: Page, shape: Shape) {
+function afterShapeSizeChange(api: Operator, document: Document, page: Page, shape: Shape) {
     if (shape instanceof SymbolShape && !(shape instanceof SymbolUnionShape)) {
         const symId = shape.id;
         const refs = document.symbolsMgr.getRefs(symId);

@@ -13,7 +13,7 @@ import { DataGuard } from '../data/notransact';
 import { ShapeFrame } from '../data/shape';
 import { newPage, newRectShape } from './creator';
 // import { updateShapesFrame } from './coop/utils';
-import * as api from '../coop/basicapi'
+import * as api from '../coop/basicop'
 import { Point2D } from '../data/typesdefine';
 
 const {

@@ -38,7 +38,7 @@ import { Page } from "../data/page";
 import { CoopRepository } from "../coop/cooprepo";
 import { v4 } from "uuid";
 import { Document } from "../data/document";
-import { Api } from "../coop/recordapi";
+import { Operator } from "../coop/recordop";
 import { Artboard } from "../data/artboard";
 import { uuid } from "../basic/uuid";
 import { BorderSideSetting, ContactForm, ContactRole } from "../data/baseclasses";
@@ -1113,7 +1113,7 @@ export class Controller {
     }
 }
 
-function deleteEmptyGroupShape(document: Document, page: Page, shape: Shape, api: Api): boolean {
+function deleteEmptyGroupShape(document: Document, page: Page, shape: Shape, api: Operator): boolean {
     const p = shape.parent as GroupShape;
     if (!p) return false;
     api.shapeDelete(document, page, p, p.indexOfChild(shape))
@@ -1124,7 +1124,7 @@ function deleteEmptyGroupShape(document: Document, page: Page, shape: Shape, api
 }
 
 function __migrate(document: Document,
-    api: Api, page: Page, targetParent: GroupShape, shape: Shape, dlt: string, index: number,
+    api: Operator, page: Page, targetParent: GroupShape, shape: Shape, dlt: string, index: number,
     transform: { ohflip: boolean, ovflip: boolean, pminverse: Transform }
 ) {
     const error = unable_to_migrate(targetParent, shape);

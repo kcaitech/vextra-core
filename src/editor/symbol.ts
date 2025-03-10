@@ -23,7 +23,7 @@ import {
 import { ExportOptions, SymbolRefShape } from "../data/symbolref";
 import { uuid } from "../basic/uuid";
 import { Page } from "../data/page";
-import { Api } from "../coop/recordapi";
+import { Operator } from "../coop/recordop";
 import { newArtboard } from "./creator";
 import {
     BlendMode,
@@ -141,14 +141,14 @@ function _varsContainer(view: ShapeView) {
     return varsContainer;
 }
 
-function _ov_newvar(host: SymbolRefShape | SymbolShape, name: string, value: any, type: VariableType, page: Page, api: Api) {
+function _ov_newvar(host: SymbolRefShape | SymbolShape, name: string, value: any, type: VariableType, page: Page, api: Operator) {
     const _var2 = new Variable(uuid(), type, name, value);
     api.shapeAddVariable(page, host, _var2); // create var
     return _var2;
 }
 
 
-export function _ov(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, view: ShapeView, page: PageView, api: Api) {
+export function _ov(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, view: ShapeView, page: PageView, api: Operator) {
     return prepareVar(api, page, view, overrideType, varType, valuefun)?.var
 }
 
@@ -203,7 +203,7 @@ function _clone_value(_var: Variable, document: Document, page: Page) {
     }
 }
 
-export function shape4contextSettings(api: Api, _shape: ShapeView, page: PageView) {
+export function shape4contextSettings(api: Operator, _shape: ShapeView, page: PageView) {
     const valuefun = (_var: Variable | undefined) => {
         const contextSettings = _var?.value ?? _shape.contextSettings;
         return contextSettings && importContextSettings(contextSettings) || new ContextSettings(BlendMode.Normal, 1);
@@ -212,7 +212,7 @@ export function shape4contextSettings(api: Api, _shape: ShapeView, page: PageVie
     return _var || _shape.data;
 }
 
-export function shape4exportOptions(api: Api, _shape: ShapeView, page: PageView) {
+export function shape4exportOptions(api: Operator, _shape: ShapeView, page: PageView) {
     const valuefun = (_var: Variable | undefined) => {
         const options = _var?.value ?? _shape.exportOptions;
         return options && importExportOptions(options) || new ExportOptions(new BasicArray(), 0, false, false, false, false);
@@ -221,7 +221,7 @@ export function shape4exportOptions(api: Api, _shape: ShapeView, page: PageView)
     return _var || _shape.data;
 }
 
-export function shape4blur(api: Api, _shape: ShapeView, page: PageView) {
+export function shape4blur(api: Operator, _shape: ShapeView, page: PageView) {
     const valuefun = (_var: Variable | undefined) => {
         const blur = _var?.value ?? _shape.blur;
         return blur && importBlur(blur) || new Blur(true, new Point2D(0, 0), 10, BlurType.Gaussian);
@@ -230,7 +230,7 @@ export function shape4blur(api: Api, _shape: ShapeView, page: PageView) {
     return _var || _shape.data;
 }
 
-export function shape4Autolayout(api: Api, _shape: ShapeView, page: PageView) {
+export function shape4Autolayout(api: Operator, _shape: ShapeView, page: PageView) {
     const valuefun = (_var: Variable | undefined) => {
         const autolayout = _var?.value ?? (_shape as ArtboardView).autoLayout;
         return autolayout && importAutoLayout(autolayout) || new AutoLayout(10, 10, 0, 0, 0, 0, types.StackSizing.Auto);
@@ -242,7 +242,7 @@ export function shape4Autolayout(api: Api, _shape: ShapeView, page: PageView) {
 // 变量可能的情况
 // 1. 存在于symbolref中，则变量一定是override某个属性或者变量的。此时如果symbolref非virtual，可以直接修改，否则要再override
 // 2. 存在于symbol中，则变量一定是用户定义的某个变量。当前环境如在ref中，则需要override，否则可直接修改。
-export function modify_variable(document: Document, page: Page, view: ShapeView, _var: Variable, attr: { name?: string, value?: any }, api: Api) {
+export function modify_variable(document: Document, page: Page, view: ShapeView, _var: Variable, attr: { name?: string, value?: any }, api: Operator) {
     const p = varParent(_var);
     if (!p) throw new Error();
     const varsContainer = _varsContainer(view);
@@ -357,7 +357,7 @@ export function modify_variable(document: Document, page: Page, view: ShapeView,
 /**
  * @description override "editor/shape/overrideVariable"
  */
-export function override_variable(page: PageView, varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, api: Api, view: ShapeView) {
+export function override_variable(page: PageView, varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, api: Operator, view: ShapeView) {
     // view = view ?? this.__shape;
     return _ov(varType, overrideType, valuefun, view, page, api);
 }
@@ -365,7 +365,7 @@ export function override_variable(page: PageView, varType: VariableType, overrid
 /**
  * @description 由外引入api的变量修改函数
  */
-export function modify_variable_with_api(api: Api, page: PageView, shape: ShapeView, varType: VariableType, overrideType: OverrideType, value: any) {
+export function modify_variable_with_api(api: Operator, page: PageView, shape: ShapeView, varType: VariableType, overrideType: OverrideType, value: any) {
     const _var = _ov(varType, overrideType, () => value, shape, page, api);
     if (_var && _var.value !== value) {
         api.shapeModifyVariable(page.data, _var, value);
@@ -376,7 +376,7 @@ export function modify_variable_with_api(api: Api, page: PageView, shape: ShapeV
 /**
  * @description override "editor/shape/shape4border"
  */
-export function shape4border(api: Api, page: PageView, shape: ShapeView) {
+export function shape4border(api: Operator, page: PageView, shape: ShapeView) {
     const _var = override_variable(page, VariableType.Borders, OverrideType.Borders, (_var) => {
         const borders = _var?.value ?? shape.getBorders();
         return importBorder(borders);
@@ -384,7 +384,7 @@ export function shape4border(api: Api, page: PageView, shape: ShapeView) {
     return _var || shape.data;
 }
 
-export function shape4fill(api: Api, page: PageView, shape: ShapeView) {
+export function shape4fill(api: Operator, page: PageView, shape: ShapeView) {
     const _var = override_variable(page, VariableType.Fills, OverrideType.Fills, (_var) => {
         const fills = _var?.value ?? shape.getFills();
         return new BasicArray(...(fills as Array<Fill>).map((v) => {
@@ -397,7 +397,7 @@ export function shape4fill(api: Api, page: PageView, shape: ShapeView) {
     }, api, shape)
     return _var || shape.data;
 }
-export function shape4fill2(api: Api, page: PageView, shape: ShapeView) {
+export function shape4fill2(api: Operator, page: PageView, shape: ShapeView) {
     return override_variable(page, VariableType.Fills, OverrideType.Fills, (_var) => {
         const fills = _var?.value ?? shape.getFills();
         return new BasicArray(...(fills as Array<Fill>).map((v) => {
@@ -410,7 +410,7 @@ export function shape4fill2(api: Api, page: PageView, shape: ShapeView) {
     }, api, shape)!;
 }
 
-export function shape4shadow(api: Api, page: PageView, shape: ShapeView) {
+export function shape4shadow(api: Operator, page: PageView, shape: ShapeView) {
     const _var = override_variable(page, VariableType.Shadows, OverrideType.Shadows, (_var) => {
         const shadows = _var?.value ?? shape.getShadows();
         return new BasicArray(...(shadows as Array<Shadow>).map((v) => {
@@ -421,7 +421,7 @@ export function shape4shadow(api: Api, page: PageView, shape: ShapeView) {
     return _var || shape.data;
 }
 
-export function shape4cornerRadius(api: Api, page: PageView, shape: ArtboardView | SymbolView | SymbolRefView) {
+export function shape4cornerRadius(api: Operator, page: PageView, shape: ArtboardView | SymbolView | SymbolRefView) {
     const _var = override_variable(page, VariableType.CornerRadius, OverrideType.CornerRadius, (_var) => {
         const cornerRadius = _var?.value ?? shape.cornerRadius;
         return cornerRadius ? importCornerRadius(cornerRadius) : new CornerRadius(v4(),0, 0, 0, 0);
@@ -484,7 +484,7 @@ export function get_state_name(state: SymbolShape, dlt: string) {
     return name_slice.toString();
 }
 
-export function cell4edit2(page: PageView, view: TableView, _cell: TableCellView, api: Api): Variable | undefined {
+export function cell4edit2(page: PageView, view: TableView, _cell: TableCellView, api: Operator): Variable | undefined {
     // cell id 要重新生成
     const index = view.indexOfCell(_cell);
     if (!index) throw new Error();
@@ -515,7 +515,7 @@ export function cell4edit2(page: PageView, view: TableView, _cell: TableCellView
     // return _var;
 }
 
-export function cell4edit(page: PageView, view: TableView, rowIdx: number, colIdx: number, api: Api): TableCellView {
+export function cell4edit(page: PageView, view: TableView, rowIdx: number, colIdx: number, api: Operator): TableCellView {
     const cell = view.getCellAt(rowIdx, colIdx);
     if (!cell) throw new Error("cell init fail?");
 

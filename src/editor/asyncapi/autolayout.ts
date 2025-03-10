@@ -21,7 +21,7 @@ import { Page, StackSizing } from "../..//data";
 import { after_migrate, unable_to_migrate } from "../utils/migrate";
 import { get_state_name, is_state, shape4Autolayout } from "../symbol";
 import { CoopRepository } from "../../coop/cooprepo";
-import { Api, PaddingDir } from "../../coop/recordapi";
+import { Operator, PaddingDir } from "../../coop/recordop";
 
 export class AutoLayoutModify extends AsyncApiCaller {
     updateFrameTargets: Set<Shape> = new Set();
@@ -111,7 +111,7 @@ export class AutoLayoutModify extends AsyncApiCaller {
         }
     }
 
-    private __migrate(document: Document, api: Api, page: Page, targetParent: GroupShape, shape: Shape, dlt: string, index: number) {
+    private __migrate(document: Document, api: Operator, page: Page, targetParent: GroupShape, shape: Shape, dlt: string, index: number) {
         const error = unable_to_migrate(targetParent, shape);
         if (error) {
             console.log('migrate error:', error);
