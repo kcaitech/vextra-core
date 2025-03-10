@@ -10,7 +10,7 @@
 
 import * as chai from 'chai'
 import { BasicArray } from './basic';
-import { Repository } from './transact';
+import { TransactDataGuard } from './transact';
 
 const assert = chai.assert;
 
@@ -20,7 +20,7 @@ test("map", () => {
     map.set(0, 0);
     map.set(2, 2);
 
-    const repo = new Repository({ settrap: false, needundo: true });
+    const repo = new TransactDataGuard({ settrap: false, needundo: true });
     const tmap = repo.guard(map);
 
     assert.Throw(() => { tmap.set(3, 3) });
@@ -60,7 +60,7 @@ test("map", () => {
 test("BasicArray", () => { // push(x)、push(...xxx)、unshift(x)、splice(0, 1)、splice(0, multi)、length、pop(x)
     const array = new BasicArray();
     array.push(...['alpha', 'beta', 'gamma']); // len 3
-    const repo = new Repository({ settrap: false, needundo: true });
+    const repo = new TransactDataGuard({ settrap: false, needundo: true });
     const tarray = repo.guard(array);
     assert.equal(tarray.length, 3);
 

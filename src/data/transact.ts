@@ -386,7 +386,7 @@ class Transact extends Array<Rec> {
     }
 }
 
-export class Repository extends WatchableObject implements IDataGuard {
+export class TransactDataGuard extends WatchableObject implements IDataGuard {
     private __context: TContext;
     private __ph: ProxyHandler;
     private __trans: Transact[] = [];

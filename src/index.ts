@@ -118,7 +118,7 @@ export {
     StarShape,
 
     Document,
-    Repository,
+    TransactDataGuard,
 
     AutoLayout,
     StackMode,
