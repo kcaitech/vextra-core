@@ -389,7 +389,6 @@ export class StyleSheet extends Basic implements classes.StyleSheet {
                 const blur = new Blur(isEnabled, center, saturation, type);
                 blur.motionAngle = v.blur.motionAngle;
                 blur.radius = v.blur.radius;
-                blur.mask = v.blur.mask;
                 const blurmask = new BlurMask(v.crdtidx, sheetId, v4(), v.name, v.description, blur);
                 notifiable_variables.push(blurmask);
             } else if (v instanceof classes.BorderMask) {

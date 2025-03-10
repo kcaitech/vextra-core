@@ -108,11 +108,6 @@ export function export_shape(shapes: Shape[]) {
     const result: Shape[] = []
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
-        if (shape.radiusMask) ctx.styles.add(shape.radiusMask);
-        if (shape.style.fillsMask) ctx.styles.add(shape.style.fillsMask);
-        if (shape.style.bordersMask) ctx.styles.add(shape.style.bordersMask);
-        if (shape.style.shadowsMask) ctx.styles.add(shape.style.shadowsMask);
-        if (shape.style.blursMask) ctx.styles.add(shape.style.blursMask);
 
         const type = shape.type;
         let content: any;

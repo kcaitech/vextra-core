@@ -23,9 +23,6 @@
         },
         "type": {
             "$ref": "./blur-type.json"
-        },
-        "mask": {
-            "type": "string"
         }
     },
     "required": [

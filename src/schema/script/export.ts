@@ -195,6 +195,7 @@ export function gen(allNodes: Map<string, Node>, out: string) {
         $.nl('symbols?: Set<string>')
         $.nl('medias?: Set<string>')
         $.nl('refsymbols?: Set<string>')
+        $.nl('styles?: Set<string>')
     })
 
     let checkExport = allDepsIsGen;

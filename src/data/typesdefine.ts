@@ -1,13 +1,3 @@
-/*
- * Copyright (c) 2023-2024 vextra.io. All rights reserved.
- *
- * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
- * The full license text can be found in the LICENSE file in the root directory of this source tree.
- *
- * For more information about the AGPL-3.0 license, please visit:
- * https://www.gnu.org/licenses/agpl-3.0.html
- */
-
 /* 代码生成，勿手动修改 */
 export type Artboard_guides = Array<Guide>
 /* blend mode */
@@ -748,7 +738,6 @@ export type Blur = {
     type: BlurType,
     motionAngle?: number,
     radius?: number,
-    mask?: string,
 }
 /* border options */
 export type BorderOptions = {
@@ -758,12 +747,12 @@ export type BorderOptions = {
 }
 /* border side setting */
 export type BorderSideSetting = {
+    typeId: string,
     sideType: SideType,
     thicknessTop: number,
     thicknessLeft: number,
     thicknessBottom: number,
     thicknessRight: number,
-    mask?: string,
 }
 /* contact form */
 export type ContactForm = {

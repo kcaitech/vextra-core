@@ -1,19 +1,10 @@
-/*
- * Copyright (c) 2023-2024 vextra.io. All rights reserved.
- *
- * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
- * The full license text can be found in the LICENSE file in the root directory of this source tree.
- *
- * For more information about the AGPL-3.0 license, please visit:
- * https://www.gnu.org/licenses/agpl-3.0.html
- */
-
 /* 代码生成，勿手动修改 */
 import * as types from "./typesdefine"
 export interface IExportContext {
     symbols?: Set<string>
     medias?: Set<string>
     refsymbols?: Set<string>
+    styles?: Set<string>
 }
 export function exportArtboard_guides(source: types.Artboard_guides, ctx?: IExportContext): types.Artboard_guides {
     const ret: types.Artboard_guides = []
@@ -863,7 +854,6 @@ export function exportBlur(source: types.Blur, ctx?: IExportContext): types.Blur
     ret.type = exportBlurType(source.type, ctx)
     if (source.motionAngle !== undefined) ret.motionAngle = source.motionAngle
     if (source.radius !== undefined) ret.radius = source.radius
-    if (source.mask !== undefined) ret.mask = source.mask
     return ret
 }
 /* border options */
@@ -877,12 +867,13 @@ export function exportBorderOptions(source: types.BorderOptions, ctx?: IExportCo
 /* border side setting */
 export function exportBorderSideSetting(source: types.BorderSideSetting, ctx?: IExportContext): types.BorderSideSetting {
     const ret: types.BorderSideSetting = {} as types.BorderSideSetting
+    ret.typeId = "border-side-setting"
+    ret.typeId = source.typeId
     ret.sideType = exportSideType(source.sideType, ctx)
     ret.thicknessTop = source.thicknessTop
     ret.thicknessLeft = source.thicknessLeft
     ret.thicknessBottom = source.thicknessBottom
     ret.thicknessRight = source.thicknessRight
-    if (source.mask !== undefined) ret.mask = source.mask
     return ret
 }
 /* contact form */
@@ -1156,6 +1147,9 @@ export function exportBorder(source: types.Border, ctx?: IExportContext): types.
     ret.sideSetting = exportBorderSideSetting(source.sideSetting, ctx)
     ret.strokePaints = exportBorder_strokePaints(source.strokePaints, ctx)
     if (source.fillsMask !== undefined) ret.fillsMask = source.fillsMask
+        // inject code
+    if (ctx?.styles && ret.fillsMask) ctx.styles.add(ret.fillsMask);
+
     return ret
 }
 /* fill mask */
@@ -1209,6 +1203,14 @@ export function exportStyle(source: types.Style, ctx?: IExportContext): types.St
     if (source.shadowsMask !== undefined) ret.shadowsMask = source.shadowsMask
     if (source.blursMask !== undefined) ret.blursMask = source.blursMask
     if (source.bordersMask !== undefined) ret.bordersMask = source.bordersMask
+        // inject code
+    if (ctx?.styles) {
+        if (ret.fillsMask) ctx.styles.add(ret.fillsMask);
+        if (ret.bordersMask) ctx.styles.add(ret.bordersMask);
+        if (ret.shadowsMask) ctx.styles.add(ret.shadowsMask);
+        if (ret.blursMask) ctx.styles.add(ret.blursMask);
+    }
+
     return ret
 }
 /* shape */
@@ -1252,6 +1254,9 @@ export function exportShape(source: types.Shape, ctx?: IExportContext): types.Sh
     if (source.mask !== undefined) ret.mask = source.mask
     if (source.stackPositioning !== undefined) ret.stackPositioning = exportStackPositioning(source.stackPositioning, ctx)
     if (source.radiusMask !== undefined) ret.radiusMask = source.radiusMask
+        // inject code
+    if (ctx?.styles && ret.radiusMask) ctx.styles.add(ret.radiusMask);
+
     return ret
 }
 /* table cell */

@@ -1,13 +1,3 @@
-/*
- * Copyright (c) 2023-2024 vextra.io. All rights reserved.
- *
- * This file is part of the vextra.io project, which is licensed under the AGPL-3.0 license.
- * The full license text can be found in the LICENSE file in the root directory of this source tree.
- *
- * For more information about the AGPL-3.0 license, please visit:
- * https://www.gnu.org/licenses/agpl-3.0.html
- */
-
 /* 代码生成，勿手动修改 */
 export {
     BlendMode,
@@ -603,7 +593,6 @@ export class Blur extends Basic {
     type: BlurType
     motionAngle?: number
     radius?: number
-    mask?: string
     constructor(isEnabled: boolean, center: Point2D, saturation: number, type: BlurType) {
         super()
         this.isEnabled = isEnabled
@@ -633,7 +622,6 @@ export class BorderSideSetting extends Basic {
     thicknessLeft: number
     thicknessBottom: number
     thicknessRight: number
-    mask?: string
     constructor(sideType: SideType, thicknessTop: number = 1, thicknessLeft: number = 1, thicknessBottom: number = 1, thicknessRight: number = 1) {
         super()
         this.sideType = sideType

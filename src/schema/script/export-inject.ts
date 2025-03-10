@@ -9,6 +9,13 @@
  */
 
 export const inject: any = {};
+
+inject['Shape'] = {};
+inject['Shape']['after'] = `\
+    // inject code
+    if (ctx?.styles && ret.radiusMask) ctx.styles.add(ret.radiusMask);
+`
+
 inject['SymbolShape'] = {};
 inject['SymbolShape']['after'] = `\
     // inject code
@@ -27,10 +34,27 @@ inject['ImageShape']['after'] = `\
     if (ctx?.medias) ctx.medias.add(ret.imageRef);
 `
 
+inject['Style'] = {};
+inject['Style']['after'] = `\
+    // inject code
+    if (ctx?.styles) {
+        if (ret.fillsMask) ctx.styles.add(ret.fillsMask);
+        if (ret.bordersMask) ctx.styles.add(ret.bordersMask);
+        if (ret.shadowsMask) ctx.styles.add(ret.shadowsMask);
+        if (ret.blursMask) ctx.styles.add(ret.blursMask);
+    }
+`
+
 inject['Fill'] = {};
 inject['Fill']['after'] = `\
     // inject code
     if (ctx?.medias && ret.imageRef) ctx.medias.add(ret.imageRef);
+`
+
+inject['Border'] = {};
+inject['Border']['after'] = `\
+    // inject code
+    if (ctx?.styles && ret.fillsMask) ctx.styles.add(ret.fillsMask);
 `
 
 inject['TableCell'] = {};
