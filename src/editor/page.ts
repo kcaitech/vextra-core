@@ -3806,10 +3806,14 @@ export class PageEditor {
         try {
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const childs = shapes[i].childs;
+                const view = shapes[i];
                 for (let i = 0; i < childs.length; i++) {
                     const child = childs[i];
                     api.shapeModifyXY(this.page, adapt2Shape(child), child.transform.translateX, child.transform.translateY);
                 }
+                const w = view.frame.width;
+                const h = view.frame.height;
+                expandTo(api, this.__document, this.page, adapt2Shape(view), w, h);
                 const shape = shape4Autolayout(api, shapes[i], this.view);
                 api.shapeAutoLayout(this.page, shape, undefined);
             }
