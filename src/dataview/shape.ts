@@ -558,16 +558,21 @@ export class ShapeView extends DataView {
         if (args.includes('variables')) {
             this.m_fills = undefined;
             this.m_borders = undefined;
+            this.m_is_border_shape = undefined;
         } else if (args.includes('fills')) {
             this.m_fills = undefined;
+            this.m_is_border_shape = undefined;
         } else if (args.includes('borders')) {
             this.m_borders = undefined;
+            this.m_is_border_shape = undefined;
         } else if (args.includes('fillsMask')) {
             this.m_fills = undefined;
+            this.m_is_border_shape = undefined;
         } else if (args.includes('bordersMask')) {
             this.m_borders = undefined;
             this.m_border_path = undefined;
             this.m_border_path_box = undefined;
+            this.m_is_border_shape = undefined;
         }
 
         const masked = this.masked;
@@ -885,11 +890,14 @@ export class ShapeView extends DataView {
     }
 
     get borderPath() {
-        return this.m_border_path;
+        return this.m_border_path ?? (this.m_border_path = (() => new Path())());
     }
 
     get borderPathBox() {
-        return this.m_border_path_box;
+        return this.m_border_path_box ?? (this.m_border_path_box = (() => {
+            const bbox = this.borderPath.bbox();
+            return new ShapeFrame(bbox.x, bbox.y, bbox.w, bbox.h);
+        })());
     }
 
     get isVisible(): boolean {
@@ -1652,5 +1660,14 @@ export class ShapeView extends DataView {
     get radiusMask(): string | undefined {
         const v = this._findOV(OverrideType.RadiusMask, VariableType.RadiusMask);
         return v ? v.value : this.m_data.radiusMask;
+    }
+
+    protected m_is_border_shape: boolean | undefined = undefined;
+
+    get isBorderShape() {
+        return this.m_is_border_shape ?? (this.m_is_border_shape = (() => {
+            const borders = this.getBorders();
+            return !this.getFills().length && borders && borders.strokePaints.some(p => p.isEnabled);
+        })());
     }
 }

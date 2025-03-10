@@ -21,7 +21,6 @@ import { BasicArray } from "../data";
 import { PageView } from "./page";
 import { v4 } from "uuid";
 import { Point2D } from "../data/typesdefine";
-import { border2path } from "./border2path";
 
 export class ContactLineView extends PathShapeView {
     constructor(ctx: DViewCtx, props: PropsType) {
@@ -40,7 +39,6 @@ export class ContactLineView extends PathShapeView {
         this.m_path = undefined;
         this.m_pathstr = undefined;
         this.updateFrames();
-        this.createBorderPath();
     }
 
     /* ===private=== */
@@ -54,7 +52,6 @@ export class ContactLineView extends PathShapeView {
         this.m_pathstr = undefined;
         this.m_ctx.setDirty(this);
         this.updateFrames();
-        this.createBorderPath();
     }
 
     /* 监听端点view以及其所处环境 */
@@ -155,15 +152,6 @@ export class ContactLineView extends PathShapeView {
 
     get points() {
         return (this.segments[0]?.points ?? new BasicArray<CurvePoint>()) as CurvePoint[];
-    }
-
-    createBorderPath() {
-        // const borders = this.getBorders();
-        // if (borders && borders.strokePaints.some(p => p.isEnabled)) {
-        //     this.m_border_path = border2path(this, borders);
-        //     const bbox = this.m_border_path.bbox();
-        //     this.m_border_path_box = new ShapeFrame(bbox.x, bbox.y, bbox.w, bbox.h);
-        // }
     }
 
     onMounted() {

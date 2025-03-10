@@ -29,9 +29,9 @@ import { render as renderLineBorders } from "../render/line_borders"
 import { PageView } from "./page";
 import { importCurvePoint, importFill } from "../data/baseimport";
 import { GroupShapeView } from "./groupshape";
-import { border2path } from "./border2path";
 import { ArtboardView } from "./artboard";
 import { Path } from "@kcdesign/path";
+import { border2path } from "./border2path";
 
 export class PathShapeView extends ShapeView {
     m_pathsegs?: PathSegment[];
@@ -42,7 +42,6 @@ export class PathShapeView extends ShapeView {
     ): void {
         this.m_pathsegs = undefined;
         super._layout(parentFrame, scale);
-        this.createBorderPath();
     }
 
     protected renderBorders(): EL[] {
@@ -58,6 +57,13 @@ export class PathShapeView extends ShapeView {
             return renderLineBorders(elh, this.data.style, borders, this.startMarkerType, this.endMarkerType, this.getPathStr(), this.m_data);
         }
         return renderBorders(elh, borders, this.frame, this.getPathStr(), this.m_data, this.radius);
+    }
+
+    get borderPath(): Path {
+        return this.m_border_path ?? (this.m_border_path = (() => {
+            const borders = this.getBorders();
+            return border2path(this, borders);
+        })());
     }
 
     get segments() {
@@ -175,7 +181,6 @@ export class PathShapeView extends ShapeView {
             this.m_pathstr = undefined;
             this.m_border_path = undefined;
             this.m_border_path_box = undefined;
-            this.createBorderPath();
         }
 
         if (args.includes('variables')) {
@@ -183,27 +188,27 @@ export class PathShapeView extends ShapeView {
             this.m_borders = undefined;
             this.m_border_path = undefined;
             this.m_border_path_box = undefined;
-            this.createBorderPath();
+            this.m_is_border_shape = undefined;
         } else if (args.includes('fills')) {
             this.m_fills = undefined;
             this.m_border_path = undefined;
             this.m_border_path_box = undefined;
-            this.createBorderPath();
+            this.m_is_border_shape = undefined;
         } else if (args.includes('borders')) {
             this.m_borders = undefined;
             this.m_border_path = undefined;
             this.m_border_path_box = undefined;
-            this.createBorderPath();
+            this.m_is_border_shape = undefined;
         } else if (args.includes('fillsMask')) {
             this.m_fills = undefined;
             this.m_border_path = undefined;
             this.m_border_path_box = undefined;
-            this.createBorderPath();
+            this.m_is_border_shape = undefined;
         } else if (args.includes('bordersMask')) {
             this.m_borders = undefined;
             this.m_border_path = undefined;
             this.m_border_path_box = undefined;
-            this.createBorderPath();
+            this.m_is_border_shape = undefined;
         }
 
         const masked = this.masked;
@@ -315,16 +320,6 @@ export class PathShapeView extends ShapeView {
         } else {
             if (blur.length && this.blur?.type === BlurType.Gaussian) props.filter = `url(#${blurId})`;
             return elh("g", props, [...blur, ...fills, ...childs, ...borders]);
-        }
-    }
-
-    createBorderPath() {
-        const borders = this.getBorders();
-        const fills = this.getFills();
-        if (!fills.length && borders && borders.strokePaints.some(p => p.isEnabled)) {
-            this.m_border_path = border2path(this, borders);
-            const bbox = this.m_border_path.bbox();
-            this.m_border_path_box = new ShapeFrame(bbox.x, bbox.y, bbox.w, bbox.h);
         }
     }
 
