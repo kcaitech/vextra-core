@@ -136,7 +136,7 @@ export class Document extends DocumentMeta {
         this.__medias = new ResourceMgr<{ buff: Uint8Array, base64: string }>([id, 'medias']);
         this.__styles = new ResourceMgr<StyleMangerMember>([id, 'styles']);
         this.freesymbols = freesymbols;
-        this.stylelib = source?.stylelib ?? new BasicArray<StyleSheet>();
+        this.stylelib = source?.stylelib;
         return guard.guard(this);
     }
 
