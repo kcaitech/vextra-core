@@ -9,16 +9,16 @@
  */
 
 import {
+    CornerRadius,
+    GroupShape,
     OverrideType,
     Shape,
     ShapeType,
     SymbolShape,
-    Variable,
-    VariableType,
     SymbolUnionShape,
-    GroupShape,
-    CornerRadius,
-    TextShape
+    TextShape,
+    Variable,
+    VariableType
 } from "../data/shape";
 import { ExportOptions, SymbolRefShape } from "../data/symbolref";
 import { uuid } from "../basic/uuid";
@@ -26,30 +26,34 @@ import { Page } from "../data/page";
 import { Api } from "../coop/recordapi";
 import { newArtboard } from "./creator";
 import {
+    Artboard,
+    AutoLayout,
     BlendMode,
+    Blur,
+    BlurType,
     Border,
+    BorderSideSetting,
+    BorderStyle,
     ContextSettings,
+    Document,
     Fill,
+    Point2D,
     Shadow,
     ShapeSize,
+    SideType,
+    string2Text,
     Style,
     TableCell,
     TableCellType,
     Text,
-    Transform,
-    Document,
-    Blur,
-    Point2D,
-    BlurType,
-    Artboard, BorderSideSetting, SideType,
-    string2Text,
-    BorderStyle,
-    AutoLayout
+    Transform
 } from "../data/classes";
 import { findOverride } from "../data/utils";
 import { BasicArray } from "../data/basic";
 import {
     IImportContext,
+    importAutoLayout,
+    importBlur,
     importBorder,
     importColor,
     importContextSettings,
@@ -61,23 +65,22 @@ import {
     importStyle,
     importTableCell,
     importTableShape,
-    importText,
-    importBlur,
-    importAutoLayout} from "../data/baseimport";
+    importText
+} from "../data/baseimport";
 import {
+    adapt2Shape,
     ArtboardView,
+    PageView,
     ShapeView,
     SymbolRefView,
     SymbolView,
     TableCellView,
-    TableView,
-    adapt2Shape,
-    PageView
+    TableView
 } from "../dataview";
 import { newTableCellText } from "../data/text/textutils";
 import { FMT_VER_latest } from "../data/fmtver";
 import * as types from "../data/typesdefine";
-import { exportArtboard, exportVariable } from "../data/baseexport";
+import { exportArtboard, exportVariable, IExportContext } from "../data/baseexport";
 import { v4 } from "uuid";
 import { overrideTableCell, prepareVar } from "./symbol_utils";
 
@@ -644,16 +647,25 @@ export class RefUnbind {
         }
     }
 
-    private static transferVars(rootRef: SymbolRefShape, g: {
-        childs: types.Shape[]
-    }): void {
+    private static transferVars(rootRef: SymbolRefShape, g: { childs: types.Shape[] }, ctx?: IExportContext): void {
         const overrides = rootRef.overrides;
         const vars = rootRef.variables;
+        if (ctx) {
+            vars.forEach(v => {
+                if (v.type === VariableType.BlursMask
+                    || v.type === VariableType.FillsMask
+                    || v.type === VariableType.RadiusMask
+                    || v.type === VariableType.BorderFillsMask
+                    || v.type === VariableType.ShadowsMask
+                    || v.type === VariableType.BordersMask
+                ) ctx.styles?.add(v.value);
+            })
+        }
         if (!overrides) return;
         for (let i = 0, childs = g.childs; i < childs.length; ++i) {
             const c = childs[i];
             if ((c as any).childs) { // group
-                return this.transferVars(rootRef, c as any);
+                return this.transferVars(rootRef, c as any, ctx);
             }
             if (c.typeId !== "symbol-ref-shape") continue;
             let refId = c.id;
@@ -691,7 +703,8 @@ export class RefUnbind {
         }
     }
 
-    static unbind(view: SymbolRefView) {
+    static unbind(view: SymbolRefView, ctx?: IExportContext) {
+        if (view.isVirtualShape) return;
         const shape: SymbolRefShape = adapt2Shape(view) as SymbolRefShape;
         if (shape.isVirtualShape) return;
         const tmpArtboard: Artboard = newArtboard(view.name, shape.frame, view.style.getStylesMgr()!);
@@ -715,13 +728,12 @@ export class RefUnbind {
         if (radius) {
             tmpArtboard.cornerRadius = importCornerRadius(radius);
         }
-
-        const symbolData = exportArtboard(tmpArtboard); // todo 如果symbol只有一个child时
+        const symbolData = exportArtboard(tmpArtboard, ctx); // todo 如果symbol只有一个child时
 
         if (shape.uniformScale && shape.uniformScale !== 1) this.solidify(symbolData as GroupShape, shape.uniformScale);
 
         // 遍历symbolData,如有symbolref,则查找根shape是否有对应override的变量,如有则存到symbolref内
-        this.transferVars(shape, symbolData);
+        this.transferVars(shape, symbolData, ctx);
         this.clearBindVars(symbolData);
         this.replaceId(symbolData);
         return symbolData;

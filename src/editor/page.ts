@@ -872,8 +872,8 @@ export class PageEditor {
             this.__repo.commit();
             return [...return_shapes, ...results];
         } catch (e) {
-            console.log(e)
             this.__repo.rollback();
+            throw e;
         }
     }
 
