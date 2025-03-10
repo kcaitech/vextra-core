@@ -589,13 +589,13 @@ export class ShapeEditor {
     // points
     public setPathClosedStatus(val: boolean, segmentIndex: number) {
         this._repoWrap("setPathClosedStatus", (api) => {
-            api.setCloseStatus(this.__page, this.shape, val, segmentIndex);
+            api.setCloseStatus(this.__page, this.shape as PathShape, val, segmentIndex);
         });
     }
 
     public addPointAt(point: CurvePoint, idx: number, segmentIndex: number) {
         this._repoWrap("addPointAt", (api) => {
-            api.addPointAt(this.__page, this.shape, idx, point, segmentIndex);
+            api.addPointAt(this.__page, this.shape as PathShape, idx, point, segmentIndex);
         });
     }
 
@@ -688,12 +688,12 @@ export class ShapeEditor {
             range.forEach((indexes, segment) => {
                 for (let i = indexes.length - 1; i > -1; i--) {
                     const index = indexes[i];
-                    _typing_modify(this.shape, this.__page, api, index, curve_mode, segment);
-                    api.modifyPointCurveMode(this.__page, this.shape, index, curve_mode, segment);
+                    _typing_modify(this.shape as PathShape, this.__page, api, index, curve_mode, segment);
+                    api.modifyPointCurveMode(this.__page, this.shape as PathShape, index, curve_mode, segment);
                 }
             });
 
-            update_frame_by_points(api, this.__page, this.shape);
+            update_frame_by_points(api, this.__page, this.shape as PathShape);
             this.__repo.commit();
             return true;
         } catch (e) {
@@ -713,7 +713,7 @@ export class ShapeEditor {
 
             range.forEach((indexes, segment) => {
                 for (let i = indexes.length - 1; i > -1; i--) {
-                    api.modifyPointCornerRadius(this.__page, this.shape, indexes[i], cornerRadius, segment);
+                    api.modifyPointCornerRadius(this.__page, this.shape as PathShape, indexes[i], cornerRadius, segment);
                 }
             });
 
@@ -733,7 +733,7 @@ export class ShapeEditor {
             }
 
             const api = this.__repo.start("modifyPointsXY");
-            modify_points_xy(api, this.__page, this.shape, actions);
+            modify_points_xy(api, this.__page, this.shape as PathShape, actions);
             this.__repo.commit();
             return true;
         } catch (e) {
@@ -1516,7 +1516,7 @@ export class ShapeEditor {
                     const slice = new BasicArray(...slices[i].map(p => importCurvePoint(exportCurvePoint((p)))));
                     if (last === originSegmentIndex) api.deleteSegmentAt(page, shape, originSegmentIndex);
                     slice.forEach((i, index) => i.crdtidx = [index] as BasicArray<number>);
-                    api.insertSegmentAt(page, shape, last++, new PathSegment([0] as BasicArray<number>, uuid(), slice, closed));
+                    api.addSegmentAt(page, shape, last++, new PathSegment([0] as BasicArray<number>, uuid(), slice, closed));
                 }
                 if (last === originSegmentIndex) api.deleteSegmentAt(page, shape, originSegmentIndex);
             }

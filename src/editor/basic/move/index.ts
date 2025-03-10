@@ -130,7 +130,7 @@ export class ShapePorter {
         }
         if (view instanceof ArtboardView) {
             const autoLayout = view.autoLayout ? importAutoLayout(exportAutoLayout(view.autoLayout)) : undefined;
-            autoLayout && api.shapeAutoLayout(page, shape, autoLayout);
+            autoLayout && api.shapeAutoLayout(page, shape as Artboard, autoLayout);
         }
     }
 

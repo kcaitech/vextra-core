@@ -55,7 +55,7 @@ export class LineHandleApiCaller extends AsyncApiCaller {
 
     commit() {
         if (this.__repo.isNeedCommit() && !this.exception) {
-            update_frame_by_points(this.api, this.page, adapt2Shape(this.line), true);
+            update_frame_by_points(this.api, this.page, adapt2Shape(this.line) as PathShape, true);
             this.__repo.commit();
         } else {
             this.__repo.rollback();

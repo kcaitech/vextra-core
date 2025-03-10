@@ -1639,7 +1639,7 @@ export class PageEditor {
                     }
                 }
 
-                if (needUpdateFrame) update_frame_by_points(api, this.page, shape);
+                if (needUpdateFrame) update_frame_by_points(api, this.page, shape as PathShape);
             }
             this.__repo.commit();
         } catch (error) {
@@ -3406,7 +3406,7 @@ export class PageEditor {
                 }
 
                 if (needUpdateFrame && !((shape instanceof StarShape || shape instanceof PolygonShape) && !shape.haveEdit)) {
-                    update_frame_by_points(api, this.page, shape);
+                    update_frame_by_points(api, this.page, shape as PathShape);
                 }
 
                 // contextSetting

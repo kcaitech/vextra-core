@@ -332,7 +332,7 @@ export class LinearApi {
                     }
                 }
                 if (needUpdateFrame) {
-                    update_frame_by_points(api, page, shape);
+                    update_frame_by_points(api, page, shape as PathShape);
                 }
             }
         });

@@ -25,6 +25,7 @@ import {
     TextBehaviour,
     TextShape,
     Transform,
+    PathShape,
 } from "../../../data";
 import {
     ArtboardView,
@@ -647,7 +648,7 @@ export function uniformScale(
                 segment.points.forEach((point, j) => {
                     const pid = sid + '-point-' + j;
                     const corner = getBaseValue(pid, 'radius', point.radius ?? 0);
-                    corner && api.modifyPointCornerRadius(page, shape, j, corner * ratio, i);
+                    corner && api.modifyPointCornerRadius(page, shape as PathShape, j, corner * ratio, i);
                 });
             });
         }
