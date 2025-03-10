@@ -86,6 +86,7 @@ export class GroupShapeView extends ShapeView {
 
     onDataChange(...args: any[]): void {
         super.onDataChange(...args);
+        
         if (args.includes('childs')) {
             this.updateMaskMap();
             this.m_need_updatechilds = true;
