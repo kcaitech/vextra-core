@@ -1023,6 +1023,9 @@ export class ShapeView extends DataView {
         if (changed) {
             this.m_ctx.addNotifyLayout(this);
             this.m_client_x = this.m_client_y = undefined;
+            this.m_border_path = undefined;
+            this.m_is_border_shape = undefined;
+            this.m_border_path_box = undefined;
         }
 
         return changed;

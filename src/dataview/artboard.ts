@@ -293,7 +293,6 @@ export class ArtboardView extends GroupShapeView {
     }
 
     updateFrames() {
-
         let changed = this._save_frame.x !== this.m_frame.x || this._save_frame.y !== this.m_frame.y ||
             this._save_frame.width !== this.m_frame.width || this._save_frame.height !== this.m_frame.height;
         if (changed) {

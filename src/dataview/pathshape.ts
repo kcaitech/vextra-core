@@ -61,8 +61,12 @@ export class PathShapeView extends ShapeView {
 
     get borderPath(): Path {
         return this.m_border_path ?? (this.m_border_path = (() => {
-            const borders = this.getBorders();
-            return border2path(this, borders);
+            if (this.isBorderShape) {
+                const borders = this.getBorders();
+                return border2path(this, borders);
+            } else {
+                return new Path();
+            }
         })());
     }
 
@@ -150,6 +154,9 @@ export class PathShapeView extends ShapeView {
     }
 
     onDataChange(...args: any[]): void {
+        this.m_border_path = undefined;
+        this.m_border_path_box = undefined;
+        this.m_is_border_shape = undefined;
         if (args.includes('mask') || args.includes('isVisible')) (this.parent as GroupShapeView).updateMaskMap();
 
         if (this.parent && (args.includes('transform') || args.includes('size') || args.includes('isVisible') || args.includes('autoLayout'))) {
@@ -179,36 +186,19 @@ export class PathShapeView extends ShapeView {
         ) {
             this.m_path = undefined;
             this.m_pathstr = undefined;
-            this.m_border_path = undefined;
-            this.m_border_path_box = undefined;
         }
 
         if (args.includes('variables')) {
             this.m_fills = undefined;
             this.m_borders = undefined;
-            this.m_border_path = undefined;
-            this.m_border_path_box = undefined;
-            this.m_is_border_shape = undefined;
         } else if (args.includes('fills')) {
             this.m_fills = undefined;
-            this.m_border_path = undefined;
-            this.m_border_path_box = undefined;
-            this.m_is_border_shape = undefined;
         } else if (args.includes('borders')) {
             this.m_borders = undefined;
-            this.m_border_path = undefined;
-            this.m_border_path_box = undefined;
-            this.m_is_border_shape = undefined;
         } else if (args.includes('fillsMask')) {
             this.m_fills = undefined;
-            this.m_border_path = undefined;
-            this.m_border_path_box = undefined;
-            this.m_is_border_shape = undefined;
         } else if (args.includes('bordersMask')) {
             this.m_borders = undefined;
-            this.m_border_path = undefined;
-            this.m_border_path_box = undefined;
-            this.m_is_border_shape = undefined;
         }
 
         const masked = this.masked;
