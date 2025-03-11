@@ -337,9 +337,11 @@ export class StyleSheet extends Basic implements classes.StyleSheet {
     id: string
     name: string
     variables: BasicArray<StyleMangerMember>
+    crdtidx: BasicArray<number>
 
-    constructor(id: string, name: string, variables: StyleSheet_variables) {
+    constructor(crdtidx: BasicArray<number>, id: string, name: string, variables: StyleSheet_variables) {
         super();
+        this.crdtidx = crdtidx;
         this.id = id;
         this.name = name;
         this.variables = this.transform2notifiable(id, variables);
@@ -409,7 +411,7 @@ export class StyleSheet extends Basic implements classes.StyleSheet {
 }
 
 export class FillMask extends WatchableObject implements classes.FillMask {
-    typeId = 'fill-mask-living';
+    typeId = 'fill-mask';
     crdtidx: BasicArray<number>;
     id: string;
     sheet: string;
@@ -435,7 +437,7 @@ export class FillMask extends WatchableObject implements classes.FillMask {
 }
 
 export class ShadowMask extends WatchableObject implements classes.ShadowMask {
-    typeId = 'shadow-mask-living';
+    typeId = 'shadow-mask';
     crdtidx: BasicArray<number>;
     id: string;
     sheet: string;
@@ -461,7 +463,7 @@ export class ShadowMask extends WatchableObject implements classes.ShadowMask {
 }
 
 export class BlurMask extends WatchableObject implements classes.BlurMask {
-    typeId = 'blur-mask-living';
+    typeId = 'blur-mask';
     crdtidx: BasicArray<number>;
     id: string;
     sheet: string;
@@ -487,7 +489,7 @@ export class BlurMask extends WatchableObject implements classes.BlurMask {
 }
 
 export class BorderMask extends WatchableObject implements classes.BorderMask {
-    typeId = 'border-mask-living';
+    typeId = 'border-mask';
     crdtidx: BasicArray<number>;
     id: string;
     sheet: string;
@@ -513,7 +515,7 @@ export class BorderMask extends WatchableObject implements classes.BorderMask {
 }
 
 export class RadiusMask extends WatchableObject implements classes.RadiusMask {
-    typeId = 'radius-mask-living';
+    typeId = 'radius-mask';
     crdtidx: BasicArray<number>;
     id: string;
     sheet: string;

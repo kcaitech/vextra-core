@@ -1169,6 +1169,7 @@ export function exportFillMask(source: types.FillMask, ctx?: IExportContext): ty
 /* style sheet */
 export function exportStyleSheet(source: types.StyleSheet, ctx?: IExportContext): types.StyleSheet {
     const ret: types.StyleSheet = {} as types.StyleSheet
+    ret.crdtidx = exportCrdtidx(source.crdtidx, ctx)
     ret.id = source.id
     ret.name = source.name
     ret.variables = exportStyleSheet_variables(source.variables, ctx)

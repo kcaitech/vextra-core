@@ -979,6 +979,7 @@ export type FillMask = {
 }
 /* style sheet */
 export type StyleSheet = {
+    crdtidx: Crdtidx,
     id: string,
     name: string,
     variables: StyleSheet_variables,

@@ -1329,6 +1329,7 @@ export function importFillMask(source: types.FillMask, ctx?: IImportContext): im
 /* style sheet */
 export function importStyleSheet(source: types.StyleSheet, ctx?: IImportContext): impl.StyleSheet {
     const ret: impl.StyleSheet = new impl.StyleSheet (
+        importCrdtidx(source.crdtidx, ctx),
         source.id,
         source.name,
         importStyleSheet_variables(source.variables, ctx))
