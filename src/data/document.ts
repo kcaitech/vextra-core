@@ -81,7 +81,10 @@ export class Document extends DocumentMeta {
             if (!this.freesymbols) this.freesymbols = new BasicMap();
             target = this.freesymbols;
         } else if (path1 === 'stylelib') {
-            if (!this.stylelib) this.stylelib = new BasicArray<StyleSheet>();
+            if (!this.stylelib?.length) {
+                this.stylelib = new BasicArray<StyleSheet>();
+                this.stylelib.push(new StyleSheet([0] as BasicArray<number>, this.id, this.__name, []));
+            }
             target = this.stylelib;
         } else {
             i = 1;
