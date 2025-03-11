@@ -80,6 +80,9 @@ export class Document extends DocumentMeta {
         } else if (path1 === 'freesymbols') {
             if (!this.freesymbols) this.freesymbols = new BasicMap();
             target = this.freesymbols;
+        } else if (path1 === 'stylelib') {
+            if (!this.stylelib) this.stylelib = new BasicArray<StyleSheet>();
+            target = this.stylelib;
         } else {
             i = 1;
         }
