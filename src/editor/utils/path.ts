@@ -62,7 +62,7 @@ export function update_frame_by_points(api: Api, page: Page, s: Shape, reLayout 
 
     if (!(frameChange || reLayout)) return; // 只有宽高被改变，才会需要重排2D points.
 
-    const m3 = (s.matrix2Parent());
+    const m3 = s.matrix2Parent();
     m3.preScale(s.size.width, s.size.height);
     m1.multiAtLeft(m3.inverse);
 

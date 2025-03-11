@@ -24,7 +24,7 @@ export class LineHandleApiCaller extends AsyncApiCaller {
     }
 
     start() {
-        return this.__repo.start('path-modify');
+        return this.__repo.start('straight-line-modify');
     }
 
     execute(start: { x: number, y: number }, end: { x: number, y: number }) {
@@ -48,7 +48,7 @@ export class LineHandleApiCaller extends AsyncApiCaller {
 
             this.updateView();
         } catch (e) {
-            console.log('LineHandleApiCaller.execute:', e);
+            console.error(e);
             this.exception = true;
         }
     }
