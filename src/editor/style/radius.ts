@@ -60,7 +60,6 @@ export class RadiusModifier extends Modifier {
                 for (const shape of shapes) api.modifyRadiusMask(shape, mask.id);
             }
             this.commit();
-            return true;
         } catch (error) {
             this.rollback();
             throw error;

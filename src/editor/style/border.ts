@@ -338,7 +338,6 @@ export class BorderModifier extends Modifier {
                 for (const shape of shapes) api.setBorderFillMask(shape.style, mask.id);
             }
             this.commit();
-            return true;
         } catch (error) {
             this.rollback();
             throw error;

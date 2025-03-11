@@ -235,8 +235,8 @@ export class DocEditor {
     }
 
     insertStyleLib(style: StyleMangerMember, page: PageView, shapes?: ShapeView[]) {
-        const api = this.__repo.start('insertStyleLib');
         try {
+            const api = this.__repo.start('insertStyleLib');
             api.styleInsert(this.__document, style);
             const p = this.__document.pagesMgr.getSync(page.id)
             if (shapes && p) {
@@ -273,10 +273,9 @@ export class DocEditor {
             }
             this.__repo.commit();
         } catch (error) {
-            console.log(error)
             this.__repo.rollback();
+            throw error;
         }
-        return true;
     }
 
     insertStyles(masks: StyleMangerMember[]) {
@@ -295,18 +294,18 @@ export class DocEditor {
             for (const mask of masks) {
                 if (manger.has(mask.id)) continue;
                 let m: StyleMangerMember;
-                if (mask.typeId === 'fill-mask-living') {
+                if (mask.typeId === 'fill-mask') {
                     const fills = new BasicArray<Fill>(...(mask as FillMask).fills.map(i => importFill(i)));
                     m = new FillMask([0] as BasicArray<number>, sheetId, mask.id, mask.name, mask.description, fills, mask.disabled);
-                } else if (mask.typeId === 'shadow-mask-living') {
+                } else if (mask.typeId === 'shadow-mask') {
                     const shadows = new BasicArray<Shadow>(...(mask as ShadowMask).shadows.map(i => importShadow(i)));
                     m = new ShadowMask([0] as BasicArray<number>, sheetId, mask.id, mask.name, mask.description, shadows, mask.disabled)
-                } else if (mask.typeId === 'blur-mask-living') {
+                } else if (mask.typeId === 'blur-mask') {
                     const __mask = mask as BlurMask;
                     const frank = new Blur(true, new Point2D(0, 0), 10, BlurType.Gaussian);
                     const blur = __mask.blur ? importBlur(__mask.blur) : frank;
                     m = new BlurMask([0] as BasicArray<number>, sheetId, mask.id, mask.name, mask.description, blur, mask.disabled);
-                } else if (mask.typeId === 'border-mask-living') {
+                } else if (mask.typeId === 'border-mask') {
                     const __mask = mask as BorderMask;
                     const border = importBorderMaskType(__mask.border);
                     m = new BorderMask([0] as BasicArray<number>, sheetId, mask.id, mask.name, mask.description, border, mask.disabled);

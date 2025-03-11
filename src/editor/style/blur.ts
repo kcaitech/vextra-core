@@ -138,7 +138,6 @@ export class BlurModifier extends Modifier {
                 for (const shape of shapes) api.modifyBlurMask(page, shape, mask.id);
             }
             this.commit();
-            return true;
         } catch (error) {
             this.rollback();
             throw error;

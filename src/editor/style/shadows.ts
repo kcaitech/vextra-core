@@ -184,8 +184,7 @@ export class ShadowsModifier extends Modifier {
     createShadowsMask(document: Document, mask: ShadowMask, pageView: PageView, views?: ShapeView[]) {
         try {
             const api = this.getApi('createShadowsMask');
-            const shadows = new BasicArray(...mask.shadows.map(i => importShadow(i)));
-            mask.shadows = shadows;
+            mask.shadows = new BasicArray(...mask.shadows.map(i => importShadow(i)));
             api.styleInsert(document, mask);
             if (views) {
                 const variables: Variable[] = [];
@@ -201,7 +200,6 @@ export class ShadowsModifier extends Modifier {
                 for (const shape of shapes) api.modifyShadowsMask(page, shape, mask.id);
             }
             this.commit();
-            return true;
         } catch (error) {
             this.rollback();
             throw error;

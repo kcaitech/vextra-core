@@ -160,7 +160,6 @@ export class FillModifier extends Modifier {
                 for (const shape of shapes) api.modifyFillsMask(page, shape, mask.id);
             }
             this.commit();
-            return true;
         } catch (error) {
             this.rollback();
             throw error;
