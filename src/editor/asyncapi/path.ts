@@ -125,7 +125,7 @@ export class PathModifier extends AsyncApiCaller {
 
     addPoint(shape: ShapeView, segment: number, index: number, apex?: { xy: Point2D, t?: number }) {
         try {
-            const _shape = adapt2Shape(shape);
+            const _shape = adapt2Shape(shape) as PathShape;
             this.shape = _shape;
             this.modifyBorderSetting();
             this.api.addPointAt(
@@ -147,7 +147,7 @@ export class PathModifier extends AsyncApiCaller {
     addPointForPen(shape: ShapeView, segment: number, index: number, xy: { x: number, y: number }) {
         try {
             if (segment < 0 || index < 0) return false;
-            const _shape = adapt2Shape(shape);
+            const _shape = adapt2Shape(shape) as PathShape;
             this.shape = _shape;
             this.api.addPointAt(
                 this.page,
@@ -167,7 +167,7 @@ export class PathModifier extends AsyncApiCaller {
 
     addSegmentForPen(shape: ShapeView, xy: { x: number, y: number }) {
         try {
-            const _shape = adapt2Shape(shape);
+            const _shape = adapt2Shape(shape) as PathShape;;
             this.shape = _shape;
             const index = (this.shape as PathShape).pathsegs.length;
             const point = new CurvePoint([0] as BasicArray<number>, uuid(), xy.x, xy.y, CurveMode.Straight);
@@ -188,7 +188,7 @@ export class PathModifier extends AsyncApiCaller {
         try {
             const api = this.api;
             const page = this.page;
-            const shape = adapt2Shape(_shape);
+            const shape = adapt2Shape(_shape) as PathShape;
             this.shape = shape;
 
             if (shape.pathType !== PathType.Editable) {
@@ -196,7 +196,7 @@ export class PathModifier extends AsyncApiCaller {
             }
             this.modifyBorderSetting();
             units.forEach((actions, segment) => {
-                const points = (shape as PathShape).pathsegs[segment].points;
+                const points = (shape).pathsegs[segment].points;
 
                 for (let i = 0; i < actions.length; i++) {
                     const unit = actions[i];
@@ -232,7 +232,7 @@ export class PathModifier extends AsyncApiCaller {
     preCurve(order: 2 | 3, shape: ShapeView, index: number, segmentIndex: number) {
         this.modifyBorderSetting();
         this.shape = adapt2Shape(shape);
-        __pre_curve(order, this.page, this.api, this.shape, index, segmentIndex);
+        __pre_curve(order, this.page, this.api, this.shape as PathShape, index, segmentIndex);
     }
 
     preCurve2(order: 2 | 3, shape: ShapeView, index: number, segmentIndex: number) {
@@ -253,7 +253,7 @@ export class PathModifier extends AsyncApiCaller {
 
             const api = this.api;
             const page = this.page;
-            const __shape = this.shape;
+            const __shape = this.shape as PathShape;
             if (order === 2) { // 二次曲线
                 if (point.mode !== CurveMode.Disconnected) {
                     api.modifyPointCurveMode(page, __shape, index, CurveMode.Disconnected, segmentIndex);
@@ -288,7 +288,7 @@ export class PathModifier extends AsyncApiCaller {
             const api = this.api;
             const page = this.page;
             this.shape = adapt2Shape(_shape);
-            const shape = this.shape;
+            const shape = this.shape as PathShape;
             let mode: CurveMode | undefined = undefined;
             this.modifyBorderSetting();
             if (shape.pathType === PathType.Editable) {
@@ -726,10 +726,9 @@ export class PathModifier extends AsyncApiCaller {
     commit() {
         if (this.__repo.isNeedCommit() && !this.exception) {
             if (this.shape) {
-                update_frame_by_points(this.api, this.page, this.shape);
+                update_frame_by_points(this.api, this.page, this.shape as PathShape);
                 if (!this.shape.haveEdit) this.api.shapeEditPoints(this.page, this.shape, true);
             }
-
             this.__repo.commit();
         } else {
             this.__repo.rollback();

@@ -11,7 +11,7 @@
 import { TableView } from "../dataview";
 import { Page } from "../data/page";
 import { TableShape } from "../data/table";
-import { Api } from "../coop/recordapi";
+import { Operator } from "../coop/recordop";
 
 const MinCellSize = TableShape.MinCellSize;
 
@@ -24,7 +24,7 @@ const MinCellSize = TableShape.MinCellSize;
  * @param api 
  * @returns 
  */
-export function adjColum(page: Page, table: TableView, fromIdx: number, toIdx: number, dx: number, api: Api) {
+export function adjColum(page: Page, table: TableView, fromIdx: number, toIdx: number, dx: number, api: Operator) {
     if (dx === 0 || fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) {
         return;
     }
@@ -64,7 +64,7 @@ export function adjColum(page: Page, table: TableView, fromIdx: number, toIdx: n
 }
 
 
-export function adjRow(page: Page, table: TableView, fromIdx: number, toIdx: number, dx: number, api: Api) {
+export function adjRow(page: Page, table: TableView, fromIdx: number, toIdx: number, dx: number, api: Operator) {
     if (dx === 0 || fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) {
         return;
     }

@@ -16,7 +16,7 @@ import { BorderPosition, BorderStyle, StrikethroughType, TableCellType, TextHorA
 import { adjColum, adjRow } from "./tableadjust";
 import { Border, Fill, Gradient } from "../data/style";
 import { fixTableShapeFrameByLayout } from "./utils/other";
-import { Api, TextShapeLike } from "../coop/recordapi";
+import { Operator, TextShapeLike } from "../coop/recordop";
 import { importBorder, importFill, importGradient } from "../data/baseimport";
 import { Document, Color } from "../data/classes";
 import { AsyncBorderThickness, AsyncGradientEditor, Status } from "./controller";
@@ -44,7 +44,7 @@ export class TableEditor extends ShapeEditor {
         return this.__shape.data as TableShape;
     }
 
-    cell4edit(rowIdx: number, colIdx: number, api: Api): TableCellView {
+    cell4edit(rowIdx: number, colIdx: number, api: Operator): TableCellView {
         return cell4edit(this._page, this.view, rowIdx, colIdx, api);
     }
 
@@ -302,7 +302,7 @@ export class TableEditor extends ShapeEditor {
     }
 
     // 批量初始化单元格
-    private _initCells(rs: number, re: number, cs: number, ce: number, api: Api) {
+    private _initCells(rs: number, re: number, cs: number, ce: number, api: Operator) {
         for (let r = rs; r <= re; r++) {
             for (let c = cs; c <= ce; c++) {
                 const cell = this.view._getCellAt2(r, c);
@@ -334,7 +334,7 @@ export class TableEditor extends ShapeEditor {
         }
     }
 
-    private _resetCells(rs: number, re: number, cs: number, ce: number, api: Api) {
+    private _resetCells(rs: number, re: number, cs: number, ce: number, api: Operator) {
         for (let r = rs; r <= re; r++) {
             for (let c = cs; c <= ce; c++) {
                 const cell = this.view.getCellAt(r, c);
@@ -353,7 +353,7 @@ export class TableEditor extends ShapeEditor {
         }
     }
 
-    private _resetTextCells(rs: number, re: number, cs: number, ce: number, api: Api) {
+    private _resetTextCells(rs: number, re: number, cs: number, ce: number, api: Operator) {
         for (let r = rs; r <= re; r++) {
             for (let c = cs; c <= ce; c++) {
                 const cell = this.view.getCellAt(r, c);
@@ -640,7 +640,7 @@ export class TableEditor extends ShapeEditor {
         }
     }
 
-    private fixFrameByLayout(cell: TableCellView | TableCell, table: TableView, api: Api) {
+    private fixFrameByLayout(cell: TableCellView | TableCell, table: TableView, api: Operator) {
         fixTableShapeFrameByLayout(api, this.__page, cell, table);
     }
 

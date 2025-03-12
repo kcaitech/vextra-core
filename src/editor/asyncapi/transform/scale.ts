@@ -25,6 +25,7 @@ import {
     TextBehaviour,
     TextShape,
     Transform,
+    PathShape,
 } from "../../../data";
 import {
     ArtboardView,
@@ -38,7 +39,7 @@ import {
     TableView,
     TextShapeView
 } from "../../../dataview";
-import { Api, TextShapeLike } from "../../../coop/recordapi";
+import { Operator, TextShapeLike } from "../../../coop/recordop";
 import { fixTextShapeFrameByLayout } from "../../utils/other";
 import { Transform as Transform2 } from "../../../basic/transform";
 import { ColVector3D } from "../../../basic/matrix2";
@@ -80,7 +81,7 @@ export type TransformRecorder = Map<string, Transform>;
  * @param _transformRecorder
  */
 export function reLayoutBySizeChanged(
-    api: Api,
+    api: Operator,
     page: Page,
     shape: GroupShapeView,
     scale: { x: number, y: number },
@@ -482,7 +483,7 @@ export interface UniformScaleUnit {
 }
 
 export function reLayoutByUniformScale(
-    api: Api,
+    api: Operator,
     page: Page,
     shape: GroupShapeView,
     scale: { x: number, y: number },
@@ -566,7 +567,7 @@ export function reLayoutByUniformScale(
 }
 
 export function uniformScale(
-    api: Api,
+    api: Operator,
     page: Page,
     units: UniformScaleUnit[],
     ratio: number,
@@ -647,7 +648,7 @@ export function uniformScale(
                 segment.points.forEach((point, j) => {
                     const pid = sid + '-point-' + j;
                     const corner = getBaseValue(pid, 'radius', point.radius ?? 0);
-                    corner && api.modifyPointCornerRadius(page, shape, j, corner * ratio, i);
+                    corner && api.modifyPointCornerRadius(page, shape as PathShape, j, corner * ratio, i);
                 });
             });
         }

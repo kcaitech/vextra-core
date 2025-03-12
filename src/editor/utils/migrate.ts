@@ -10,7 +10,7 @@
 
 import { SymbolRefShape, Document, Page, GroupShape, Shape, ShapeType, SymbolUnionShape } from "../../data";
 import { is_circular_ref2 } from "./ref_check";
-import { Api } from "../../coop/recordapi";
+import { Operator } from "../../coop/recordop";
 import { is_exist_invalid_shape2, is_state } from "../symbol";
 
 /**
@@ -53,7 +53,7 @@ export function unable_to_migrate(targetEnv: Shape, wander: Shape) {
     return 0;
 }
 
-export function after_migrate(document: Document, page: Page, api: Api, origin: Shape) {
+export function after_migrate(document: Document, page: Page, api: Operator, origin: Shape) {
     if (origin instanceof SymbolUnionShape && !origin.childs?.length) {
         const origin_parent = origin.parent;
         if (!origin_parent) return;

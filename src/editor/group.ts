@@ -14,7 +14,7 @@
 // 3. BOOL
 
 import { GroupShape, Shape, Document, Page, ShapeType, ScrollBehavior } from "../data";
-import { Api } from "../coop/recordapi";
+import { Operator } from "../coop/recordop";
 import { ColVector3D } from "../basic/matrix2";
 import { Transform } from "../data/transform";
 
@@ -30,7 +30,7 @@ export function expandBounds(bounds: {
     else if (y > bounds.bottom) bounds.bottom = y;
 }
 
-export function deleteEmptyGroupShape(document: Document, page: Page, shape: Shape, api: Api): boolean {
+export function deleteEmptyGroupShape(document: Document, page: Page, shape: Shape, api: Operator): boolean {
     const p = shape.parent as GroupShape;
     if (!p) return false;
     api.shapeDelete(document, page, p, p.indexOfChild(shape))
@@ -40,7 +40,7 @@ export function deleteEmptyGroupShape(document: Document, page: Page, shape: Sha
     return true;
 }
 
-export function group<T extends GroupShape>(document: Document, page: Page, shapes: Shape[], gshape: T, savep: GroupShape, saveidx: number, api: Api): T {
+export function group<T extends GroupShape>(document: Document, page: Page, shapes: Shape[], gshape: T, savep: GroupShape, saveidx: number, api: Operator): T {
     // 图层在root上的transform
     const shapes2rootTransform = shapes.map(s => (s.matrix2Root()));
 
@@ -158,7 +158,7 @@ export function group<T extends GroupShape>(document: Document, page: Page, shap
     return gshape;
 }
 
-export function ungroup(document: Document, page: Page, shape: GroupShape, api: Api): Shape[] {
+export function ungroup(document: Document, page: Page, shape: GroupShape, api: Operator): Shape[] {
     const savep = shape.parent as GroupShape;
     let idx = savep.indexOfChild(shape);
     const saveidx = idx;

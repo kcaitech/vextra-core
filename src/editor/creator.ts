@@ -63,7 +63,7 @@ import {
     TextAttr,
 } from "../data";
 import { BasicArray, BasicMap } from "../data";
-import { Repository } from "../data";
+import { TransactDataGuard } from "../data";
 import { ResourceMgr } from "../data";
 import { TableShape2 } from "../data";
 
@@ -108,7 +108,7 @@ export function addCommonAttr(shape: Shape) {
     shape.resizingConstraint = ResizingConstraints2.Default;
 }
 
-export function newDocument(documentName: string, repo: Repository): Document {
+export function newDocument(documentName: string, repo: TransactDataGuard): Document {
     const dId = uuid();
     const pageList = new BasicArray<PageListItem>();
     return new Document(dId, documentName, repo, { pageList });

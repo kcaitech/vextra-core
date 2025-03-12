@@ -66,7 +66,7 @@ import { AutoLayout, BorderSideSetting, BorderStyle, ExportFormat, OverlayBackgr
 import { calculateInnerAnglePosition, getPolygonPoints, getPolygonVertices, update_frame_by_points } from "./utils/path";
 import { modify_shapes_height, modify_shapes_width } from "./utils/common";
 import { CoopRepository, ISave4Restore, LocalCmd, SelectionState } from "../coop";
-import { Api, PaddingDir, TextShapeLike } from "../coop/recordapi";
+import { Operator, PaddingDir, TextShapeLike } from "../coop/recordop";
 import { unable_to_migrate } from "./utils/migrate";
 import {
     adapt2Shape,
@@ -1173,7 +1173,7 @@ export class PageEditor {
         }
     }
 
-    private removeContactSides(api: Api, page: Page, shape: types.ContactShape) {
+    private removeContactSides(api: Operator, page: Page, shape: types.ContactShape) {
         if (shape.from) {
             const fromShape = page.getShape(shape.from.shapeId);
             const contacts = fromShape?.style.contacts;
@@ -1210,7 +1210,7 @@ export class PageEditor {
         }
     }
 
-    private removeContact(api: Api, page: Page, shape: Shape) {
+    private removeContact(api: Operator, page: Page, shape: Shape) {
         const contacts = shape.style.contacts;
         if (contacts && contacts.length) {
             for (let i = 0, len = contacts.length; i < len; i++) {
@@ -1230,7 +1230,7 @@ export class PageEditor {
         }
     }
 
-    private delete_inner(page: Page, _shape: ShapeView | Shape, api: Api): boolean {
+    private delete_inner(page: Page, _shape: ShapeView | Shape, api: Operator): boolean {
         const shape = _shape instanceof Shape ? _shape : _shape.data;
         const p = shape.parent as GroupShape;
         if (!p) return false;
@@ -1637,7 +1637,7 @@ export class PageEditor {
                     }
                 }
 
-                if (needUpdateFrame) update_frame_by_points(api, this.page, shape);
+                if (needUpdateFrame) update_frame_by_points(api, this.page, shape as PathShape);
             }
             this.__repo.commit();
         } catch (error) {
@@ -2595,7 +2595,7 @@ export class PageEditor {
         }
     }
 
-    private shape4protoActions(api: Api, shape: ShapeView, id: string | undefined) {
+    private shape4protoActions(api: Operator, shape: ShapeView, id: string | undefined) {
         const _var = prepareVar(api, this.view, shape, OverrideType.ProtoInteractions, VariableType.ProtoInteractions, (_var) => {
             const ret = new BasicArray();
             if (id) {
@@ -3405,7 +3405,7 @@ export class PageEditor {
                 }
 
                 if (needUpdateFrame && !((shape instanceof StarShape || shape instanceof PolygonShape) && !shape.haveEdit)) {
-                    update_frame_by_points(api, this.page, shape);
+                    update_frame_by_points(api, this.page, shape as PathShape);
                 }
 
                 // contextSetting
@@ -3969,21 +3969,21 @@ export class PageEditor {
     }
 }
 
-function getFillMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
+function getFillMaskVariable(api: Operator, page: PageView, view: ShapeView, value: any) {
     return _ov(VariableType.FillsMask, OverrideType.FillsMask, () => value, view, page, api);
 }
-function getBorderFillMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
+function getBorderFillMaskVariable(api: Operator, page: PageView, view: ShapeView, value: any) {
     return _ov(VariableType.BorderFillsMask, OverrideType.BorderFillsMask, () => value, view, page, api);
 }
-function getBorderMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
+function getBorderMaskVariable(api: Operator, page: PageView, view: ShapeView, value: any) {
     return _ov(VariableType.BordersMask, OverrideType.BordersMask, () => value, view, page, api);
 }
-function getRadiusMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
+function getRadiusMaskVariable(api: Operator, page: PageView, view: ShapeView, value: any) {
     return _ov(VariableType.RadiusMask, OverrideType.RadiusMask, () => value, view, page, api);
 }
-function getShadowMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
+function getShadowMaskVariable(api: Operator, page: PageView, view: ShapeView, value: any) {
     return _ov(VariableType.ShadowsMask, OverrideType.ShadowsMask, () => value, view, page, api);
 }
-function getBlurMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
+function getBlurMaskVariable(api: Operator, page: PageView, view: ShapeView, value: any) {
     return _ov(VariableType.BlursMask, OverrideType.BlursMask, () => value, view, page, api);
 }

@@ -9,7 +9,7 @@
  */
 
 import { expandTo, translateTo } from "../frame";
-import { Api } from "../../coop/recordapi";
+import { Operator } from "../../coop/recordop";
 import { is_straight, update_frame_by_points } from "./path";
 import { getHorizontalRadians } from "../page";
 import { Artboard, Document, PathShape, ShapeFrame, Page } from "../../data";
@@ -26,7 +26,7 @@ function equal_with_mean(a: number, b: number) {
 /**
  * @description 修改直线的width，操作的是直线段的第二个CurvePoint
  */
-function modify_straight_length(api: Api, page: Page, shape: PathShape, val: number) {
+function modify_straight_length(api: Operator, page: Page, shape: PathShape, val: number) {
     const points = shape.pathsegs[0].points;
     const p1 = points[0];
     const p2 = points[1];
@@ -54,7 +54,7 @@ function modify_straight_length(api: Api, page: Page, shape: PathShape, val: num
 /**
  * @description 主动修改图形的宽度为指定宽度val，这个函数因直线段而存在🤯
  */
-export function modify_shapes_width(api: Api, document: Document, page: Page, shapes: ShapeView[], val: number) {
+export function modify_shapes_width(api: Operator, document: Document, page: Page, shapes: ShapeView[], val: number) {
     for (let i = 0, l = shapes.length; i < l; i++) {
         const view = shapes[i];
         const shape = adapt2Shape(view);
@@ -84,7 +84,7 @@ export function modify_shapes_width(api: Api, document: Document, page: Page, sh
     }
 }
 
-export function modify_shapes_height(api: Api, document: Document, page: Page, shapes: ShapeView[], val: number) {
+export function modify_shapes_height(api: Operator, document: Document, page: Page, shapes: ShapeView[], val: number) {
     for (let i = 0, l = shapes.length; i < l; i++) {
         const view = shapes[i];
         const shape = adapt2Shape(view);
@@ -120,7 +120,7 @@ export function modify_shapes_height(api: Api, document: Document, page: Page, s
 /**
  * @description 裁剪容器空白区域(保留自身transform)
  */
-export function adapt_for_artboard(api: Api, page: Page, artboard: ArtboardView) {
+export function adapt_for_artboard(api: Operator, page: Page, artboard: ArtboardView) {
     const minimum_WH = 1;
     const children = artboard.childs;
     if (!children.length) throw new Error('!children.length') ;
