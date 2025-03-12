@@ -424,9 +424,9 @@ export class SymbolRefView extends ShapeView {
     getBorders(): Border {
         if (this.m_borders) return this.m_borders;
         const v = this._findOV2(OverrideType.Borders, VariableType.Borders);
-        const border = v ? { ...v.value } : { ...this.m_data.style.borders };
+        const border = v ? { ...v.value } : { ...this.m_sym?.style.borders };
         const bordersMask = this.bordersMask;
-        const mgr = this.style.getStylesMgr() || this.m_sym?.style.getStylesMgr();
+        const mgr = this.style.getStylesMgr();
         if (bordersMask && mgr) {
             const mask = mgr.getSync(bordersMask) as BorderMask
             border.position = mask.border.position;
