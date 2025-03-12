@@ -2148,8 +2148,8 @@ export class PageEditor {
                 const { fill, stop } = actions[i];
                 const gradient = fill.gradient;
                 if (!gradient) continue;
-                const new_gradient = importGradient(exportGradient(gradient));
-                new_gradient.stops.push(importStop(exportStop(stop)));
+                const new_gradient = importGradient(gradient);
+                new_gradient.stops.push(importStop(stop));
                 const s = new_gradient.stops;
                 s.sort((a, b) => {
                     if (a.position > b.position) {

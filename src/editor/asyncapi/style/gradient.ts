@@ -9,12 +9,36 @@
  */
 
 import { CoopRepository, Api } from "../../../coop";
-import { Fill, importGradient } from "../../../data";
-import { exportGradient } from "../../../data/baseexport";
+import { BasicArray, Fill, importGradient, OverrideType, VariableType } from "../../../data";
+import { PageView, ShapeView } from "../../../dataview";
+import { override_variable } from "../../symbol";
+import { importBorder, importFill, importStop } from "../../../data/baseimport";
 
 export class GradientEditor {
     private __repo: CoopRepository;
     private exception: boolean = false;
+
+    importGradient = importGradient;
+    importStop = importStop;
+
+    getFillsVariable(api: Api, page: PageView, view: ShapeView) {
+        return override_variable(page, VariableType.Fills, OverrideType.Fills, (_var) => {
+            const fills = _var?.value ?? view.getFills();
+            return new BasicArray(...(fills as Array<Fill>).map((v) => {
+                    const ret = importFill(v);
+                    const imgmgr = v.getImageMgr();
+                    if (imgmgr) ret.setImageMgr(imgmgr)
+                    return ret;
+                }
+            ))
+        }, api, view)!;
+    }
+
+    getBorderVariable(api: Api, page: PageView, view: ShapeView) {
+        return override_variable(page, VariableType.Borders, OverrideType.Borders, (_var) => {
+            return importBorder(_var?.value ?? view.getBorders());
+        }, api, view)!;
+    }
 
     constructor(repo: CoopRepository) {
         this.__repo = repo;
@@ -30,16 +54,9 @@ export class GradientEditor {
         return this.m_api ?? (this.m_api = this.__repo.start('async-gradient-editor'));
     }
 
-    modifyFrom(fills: Fill[], from: { x: number, y: number }) {
+    createStop(missions: Function[]) {
         try {
-            for (const fill of fills) {
-                const gradient = fill.gradient!;
-                if (!gradient) continue;
-                const gradientCopy = importGradient(exportGradient(gradient));
-                gradientCopy.from.x = from.x;
-                gradientCopy.from.y = from.y;
-                this.api.setFillGradient(fill, gradientCopy);
-            }
+            missions.forEach((call) => call(this.api));
             this.updateView();
         } catch (error) {
             this.exception = true;
@@ -47,16 +64,9 @@ export class GradientEditor {
         }
     }
 
-    modifyTo(fills: Fill[], to: { x: number, y: number }) {
+    modifyFrom(missions: Function[]) {
         try {
-            for (const fill of fills) {
-                const gradient = fill.gradient!;
-                if (!gradient) continue;
-                const gradientCopy = importGradient(exportGradient(gradient));
-                gradientCopy.to.x = to.x;
-                gradientCopy.to.y = to.y;
-                this.api.setFillGradient(fill, gradientCopy);
-            }
+            missions.forEach((call) => call(this.api));
             this.updateView();
         } catch (error) {
             this.exception = true;
@@ -64,15 +74,9 @@ export class GradientEditor {
         }
     }
 
-    modifyEllipseLength(fills: Fill[], length: number) {
+    modifyTo(missions: Function[]) {
         try {
-            for (const fill of fills) {
-                const gradient = fill.gradient!;
-                if (!gradient) continue;
-                const gradientCopy = importGradient(exportGradient(gradient));
-                gradientCopy.elipseLength = length;
-                this.api.setFillGradient(fill, gradientCopy);
-            }
+            missions.forEach((call) => call(this.api));
             this.updateView();
         } catch (error) {
             this.exception = true;
@@ -80,19 +84,19 @@ export class GradientEditor {
         }
     }
 
-    modifyStopPosition(fills: Fill[], position: number, id: string) {
+    modifyEllipseLength(missions: Function[]) {
         try {
-            for (const fill of fills) {
-                const gradient = fill.gradient!;
-                if (!gradient) continue;
-                const gradientCopy = importGradient(exportGradient(gradient));
-                const idx = gradientCopy.stops.findIndex((stop) => stop.id === id);
-                if (idx === -1) continue;
-                gradientCopy.stops[idx].position = position;
-                const g_s = gradientCopy.stops;
-                g_s.sort((a, b) => a.position > b.position ? 1 : -1);
-                this.api.setFillGradient(fill, gradientCopy);
-            }
+            missions.forEach((call) => call(this.api));
+            this.updateView();
+        } catch (error) {
+            this.exception = true;
+            console.error(error);
+        }
+    }
+
+    modifyStopPosition(missions: Function[]) {
+        try {
+            missions.forEach((call) => call(this.api));
             this.updateView();
         } catch (error) {
             this.exception = true;
