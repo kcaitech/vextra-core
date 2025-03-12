@@ -73,6 +73,7 @@ export class GradientEditor {
                 gradientCopy.elipseLength = length;
                 this.api.setFillGradient(fill, gradientCopy);
             }
+            this.updateView();
         } catch (error) {
             this.exception = true;
             console.error(error);
@@ -89,17 +90,10 @@ export class GradientEditor {
                 if (idx === -1) continue;
                 gradientCopy.stops[idx].position = position;
                 const g_s = gradientCopy.stops;
-                g_s.sort((a, b) => {
-                    if (a.position > b.position) {
-                        return 1;
-                    } else if (a.position < b.position) {
-                        return -1;
-                    } else {
-                        return 0;
-                    }
-                })
+                g_s.sort((a, b) => a.position > b.position ? 1 : -1);
                 this.api.setFillGradient(fill, gradientCopy);
             }
+            this.updateView();
         } catch (error) {
             this.exception = true;
             console.error(error);
