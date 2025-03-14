@@ -8,8 +8,6 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-// import { is_mac } from "../../data/utils";
-
 export const inject: any = {};
 inject['ImageShape'] = {} as any;
 inject['ImageShape']['before'] = `\
@@ -556,3 +554,12 @@ inject['Artboard']['before'] = `\
         source.fixedRadius = undefined;
     }
 `;
+
+inject['StyleSheet'] = {};
+inject['StyleSheet']['before'] = `\
+// inject code
+    if (!source.crdtidx) {
+        source.crdtidx = [0];
+    }
+`
+

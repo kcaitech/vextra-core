@@ -1328,6 +1328,11 @@ export function importFillMask(source: types.FillMask, ctx?: IImportContext): im
 }
 /* style sheet */
 export function importStyleSheet(source: types.StyleSheet, ctx?: IImportContext): impl.StyleSheet {
+    // inject code
+    if (!source.crdtidx) {
+        source.crdtidx = [0];
+    }
+
     const ret: impl.StyleSheet = new impl.StyleSheet (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
