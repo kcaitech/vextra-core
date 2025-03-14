@@ -660,7 +660,7 @@ export class OverrideTextPara extends Basic implements classes.Para {
         const originpara = this.origin[this.index]
         const spans = this.para.spans;
 
-        if (!originpara) {
+        if (!originpara || originpara.spans.length <= 0) {
             this._spans = spans;
             return spans;
         }
