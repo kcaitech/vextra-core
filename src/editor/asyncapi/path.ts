@@ -10,19 +10,37 @@
 
 import { AsyncApiCaller } from "./basic/asyncapi";
 import { CoopRepository } from "../../coop/cooprepo";
-import { Document, Point2D } from "../../data";
-import { adapt2Shape, GroupShapeView, PageView, ShapeView } from "../../dataview";
-import { CurveMode, CurvePoint, GroupShape, PathSegment, PathShape, Shape, ShapeFrame, ShapeType } from "../../data";
-import { BasicArray } from "../../data";
+import {
+    BasicArray,
+    Border,
+    BorderSideSetting,
+    BorderStyle,
+    Color,
+    CurveMode,
+    CurvePoint,
+    Document,
+    Fill,
+    FillType,
+    GroupShape,
+    PathSegment,
+    PathShape,
+    PathType,
+    Point2D,
+    Shadow,
+    Shape,
+    ShapeFrame,
+    ShapeSize,
+    ShapeType,
+    SideType,
+    Style,
+    Transform
+} from "../../data";
+import { adapt2Shape, GroupShapeView, PageView, PathShapeView, ShapeView } from "../../dataview";
 import { uuid } from "../../basic/uuid";
 import { __pre_curve, after_insert_point, update_frame_by_points } from "../utils/path";
-import { PathType } from "../../data";
 import { addCommonAttr, newFlatStyle } from "../creator";
-import { Border, BorderStyle, Fill, FillType, Shadow, Style } from "../../data";
-import { Color } from "../../data";
 import * as types from "../../data/typesdefine";
 import { ISave4Restore, LocalCmd, SelectionState } from "../../coop/localcmd";
-import { BorderSideSetting, ShapeSize, SideType, Transform } from "../../data";
 import { importStyle } from "../../data/baseimport";
 import { exportStyle } from "../../data/baseexport";
 
@@ -308,8 +326,111 @@ export class PathModifier extends AsyncApiCaller {
 
             this.updateView();
         } catch (e) {
-            console.log('PathModifier.execute4handle:', e);
+            console.error(e);
             this.exception = true;
+        }
+    }
+
+    initCurveBeforeCurveModify(view: PathShapeView, segmentIndex: number, previousIndex: number, nextIndex: number) {
+        try {
+            const api = this.api;
+            const page = this.page;
+            const pathShape = adapt2Shape(view) as PathShape;
+            const previous = view.segments[segmentIndex].points[previousIndex];
+            const next = view.segments[segmentIndex].points[nextIndex];
+            const doNotInitHandle = previous.hasFrom || next.hasTo;
+            if (previous.mode === CurveMode.Straight || previous.mode === CurveMode.None || !previous.hasFrom) {
+                api.modifyPointCurveMode(page, pathShape, previousIndex, CurveMode.Disconnected, segmentIndex);
+                api.shapeModifyCurvFromPoint(page, pathShape, previousIndex, previous, segmentIndex);
+            }
+            if (!previous.hasFrom) {
+                api.modifyPointHasFrom(page, pathShape, previousIndex, true, segmentIndex);
+            }
+            if (next.mode === CurveMode.Straight || next.mode === CurveMode.None) {
+                api.modifyPointCurveMode(page, pathShape, nextIndex, CurveMode.Disconnected, segmentIndex);
+                api.shapeModifyCurvToPoint(page, pathShape, nextIndex, next, segmentIndex);
+            }
+            if (!next.hasTo) {
+                api.modifyPointHasTo(page, pathShape, nextIndex, true, segmentIndex);
+            }
+            if (doNotInitHandle) return;
+            const dx = next.x - previous.x;
+            const dy = next.y - previous.y;
+            const p1 = { x: previous.x + 1 / 3 * dx, y: previous.y + 1 / 3 * dy };
+            const p2 = { x: previous.x + 2 / 3 * dx, y: previous.y + 2 / 3 * dy };
+            api.shapeModifyCurvFromPoint(page, pathShape, previousIndex, p1, segmentIndex);
+            api.shapeModifyCurvToPoint(page, pathShape, nextIndex, p2, segmentIndex);
+            this.updateView();
+        } catch (e) {
+            console.error(e);
+            this.exception = true;
+        }
+    }
+
+    curveModify(
+        view: PathShapeView,
+        segmentIndex: number,
+        previousIndex: number,
+        nextIndex: number,
+        fromPoint: { x: number, y: number },
+        toPoint: { x: number, y: number }
+    ) {
+        try {
+            const api = this.api;
+            const page = this.page;
+            const pathShape = (this.shape ?? (this.shape = adapt2Shape(view))) as PathShape;
+            const previous = view.segments[segmentIndex].points[previousIndex];
+            const next = view.segments[segmentIndex].points[nextIndex];
+
+            api.shapeModifyCurvFromPoint(page, pathShape, previousIndex, fromPoint, segmentIndex);
+            api.shapeModifyCurvToPoint(page, pathShape, nextIndex, toPoint, segmentIndex);
+
+            if (previous.hasTo) {
+                if (previous.mode === CurveMode.Mirrored) {
+                    const x = previous.x - (previous.fromX! - previous.x);
+                    const y = previous.y - (previous.fromY! - previous.y);
+                    api.shapeModifyCurvToPoint(page, pathShape, previousIndex, { x, y }, segmentIndex);
+                } else if (previous.mode === CurveMode.Asymmetric) {
+                    const rad = getAsymmetricRad(previous, { x: previous.fromX!, y: previous.fromY! });
+                    const point = { x: previous.toX!, y: previous.toY! };
+                    modifyAsymmetricXY(previous as CurvePoint, point, rad, previous.fromX! - previous.x, previous.fromY! - previous.y);
+                    api.shapeModifyCurvToPoint(page, pathShape, previousIndex, point, segmentIndex);
+                }
+            }
+
+            if (next.hasFrom) {
+                if (next.mode === CurveMode.Mirrored) {
+                    const x = next.x - (next.toX! - next.x);
+                    const y = next.y - (next.toY! - next.y);
+                    api.shapeModifyCurvFromPoint(page, pathShape, nextIndex, { x, y }, segmentIndex);
+                } else if (next.mode === CurveMode.Asymmetric) {
+                    const rad = getAsymmetricRad(next, { x: next.toX!, y: next.toY! });
+                    const point = { x: next.fromX!, y: next.fromY! };
+                    modifyAsymmetricXY(next as CurvePoint, point, rad, next.toX! - next.x, next.toY! - next.y);
+                    api.shapeModifyCurvFromPoint(page, pathShape, nextIndex, point, segmentIndex);
+                }
+            }
+
+            this.updateView();
+        } catch (e) {
+            console.error(e);
+            this.exception = true;
+        }
+
+        function getAsymmetricRad(fixed: { x: number, y: number }, point: { x: number, y: number }): number {
+            return Math.atan2(point.x - fixed.x, point.y - fixed.y);
+        }
+
+        function modifyAsymmetricXY(fixed: CurvePoint, point: {
+            x: number,
+            y: number
+        }, rad: number, dx: number, dy: number) {
+            const l = Math.hypot(point.x - fixed.x, point.y - fixed.y);
+            const _l_x = Math.abs(Math.sin(rad) * l);
+            const _l_y = Math.abs(Math.cos(rad) * l);
+
+            point.x = fixed.x - dx / Math.abs(dx) * _l_x;
+            point.y = fixed.y - dy / Math.abs(dy) * _l_y;
         }
     }
 
