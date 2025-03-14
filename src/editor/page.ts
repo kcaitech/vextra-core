@@ -477,6 +477,7 @@ export class PageEditor {
             });
             // 0、save shapes[0].parent？最外层shape？位置？  层级最高图形的parent
             const saveidx = savep.indexOfChild(shapes[0]);
+            gshape.boolOp = savep.childs[0]?.boolOp;
             gshape = group(this.__document, this.page, shapes, gshape, savep, saveidx, api);
             shapes.forEach((shape) => api.shapeModifyBoolOp(this.page, shape, op))
             this.__repo.commit();
