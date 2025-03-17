@@ -42,16 +42,15 @@ import { addCommonAttr, newFlatStyle } from "../creator";
 import * as types from "../../data/typesdefine";
 import { ISave4Restore, LocalCmd, SelectionState } from "../../coop/localcmd";
 import { importStyle } from "../../data/baseimport";
-import { exportStyle } from "../../data/baseexport";
 
 export type ModifyUnits = Map<number, {
-        index: number;
-        x: number;
-        y: number;
-        fromX: number;
-        fromY: number;
-        toX: number;
-        toY: number;
+    index: number;
+    x: number;
+    y: number;
+    fromX: number;
+    fromY: number;
+    toX: number;
+    toY: number;
 }[]>;
 
 /**
@@ -94,15 +93,13 @@ export class PathModifier extends AsyncApiCaller {
 
     createVec(name: string, frame: ShapeFrame, parent: GroupShapeView, _style?: Style) {
         try {
-
-            const style = _style ? importStyle(exportStyle(_style)) : newFlatStyle(this.__document.stylesMgr);
-
+            const style = _style ? importStyle(_style) : newFlatStyle(this.__document.stylesMgr);
             if (!_style) {
                 const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
                 const strokePaints = new BasicArray<Fill>();
                 const strokePaint = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0));
                 strokePaints.push(strokePaint);
-                style.borders = new Border(types.BorderPosition.Inner, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
+                style.borders = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
             } else {
                 style.fills = new BasicArray<Fill>();
                 style.shadows = new BasicArray<Shadow>();
@@ -135,9 +132,8 @@ export class PathModifier extends AsyncApiCaller {
 
             return this.shape;
         } catch (e) {
-            console.error('PathModifier.createVec', e);
+            console.error(e);
             this.exception = true;
-            return false;
         }
     }
 
@@ -185,7 +181,7 @@ export class PathModifier extends AsyncApiCaller {
 
     addSegmentForPen(shape: ShapeView, xy: { x: number, y: number }) {
         try {
-            const _shape = adapt2Shape(shape) as PathShape;;
+            const _shape = adapt2Shape(shape) as PathShape;
             this.shape = _shape;
             const index = (this.shape as PathShape).pathsegs.length;
             const point = new CurvePoint([0] as BasicArray<number>, uuid(), xy.x, xy.y, CurveMode.Straight);
@@ -299,9 +295,9 @@ export class PathModifier extends AsyncApiCaller {
     }
 
     execute4handle(_shape: ShapeView, index: number, side: 'from' | 'to',
-        from: { x: number, y: number },
-        to: { x: number, y: number },
-        segmentIndex: number) {
+                   from: { x: number, y: number },
+                   to: { x: number, y: number },
+                   segmentIndex: number) {
         try {
             const api = this.api;
             const page = this.page;
