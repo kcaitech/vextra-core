@@ -61,12 +61,8 @@ export class PathShapeView extends ShapeView {
 
     get borderPath(): Path {
         return this.m_border_path ?? (this.m_border_path = (() => {
-            if (this.isBorderShape) {
-                const borders = this.getBorders();
-                return border2path(this, borders);
-            } else {
-                return new Path();
-            }
+            const borders = this.getBorders();
+            return border2path(this, borders);
         })());
     }
 
