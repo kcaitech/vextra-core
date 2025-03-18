@@ -123,7 +123,7 @@ export async function importDocument(storage: storage.IStorage, documentPath: st
     const fmtVer = meta.fmtVer ?? 0;
 
     const libs = new BasicArray<StyleSheet>()
-    if (meta.stylelib) {
+    if (meta.stylelib?.length) {
         // 包装一下sheet，让它变成可广播对象
         for (const sheet of meta.stylelib) libs.push(new StyleSheet(sheet.id, sheet.name, sheet.variables));
     }  else {

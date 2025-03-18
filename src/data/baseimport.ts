@@ -31,7 +31,7 @@ type PathShape2_pathsegs = BasicArray<impl.PathSegment>
 type PrototypeInterAction_crdtidx = BasicArray<number>
 type ShadowMask_shadows = BasicArray<impl.Shadow>
 type Shape_prototypeInteractions = BasicArray<impl.PrototypeInterAction>
-type StyleSheet_variables = BasicArray<impl.FillMask | impl.ShadowMask | impl.BlurMask | impl.BorderMask | impl.RadiusMask>
+type StyleSheet_variables = BasicArray<impl.FillMask | impl.ShadowMask | impl.BlurMask | impl.BorderMask | impl.RadiusMask | impl.TextMask>
 type Style_fills = BasicArray<impl.Fill>
 type Style_shadows = BasicArray<impl.Shadow>
 type Style_innerShadows = BasicArray<impl.Shadow>
@@ -739,6 +739,9 @@ export function importStyleSheet_variables(source: types.StyleSheet_variables, c
             if (source.typeId === "radius-mask") {
                 return importRadiusMask(source as types.RadiusMask, ctx)
             }
+            if (source.typeId === "text-mask") {
+                return importTextMask(source as types.TextMask, ctx)
+            }
             throw new Error("unknow typeId: " + source.typeId)
         })())
     })
@@ -1136,6 +1139,7 @@ function importSpanAttrOptional(tar: impl.SpanAttr, source: types.SpanAttr, ctx?
     if (source.placeholder !== undefined) tar.placeholder = source.placeholder
     if (source.fillType !== undefined) tar.fillType = importFillType(source.fillType, ctx)
     if (source.gradient !== undefined) tar.gradient = importGradient(source.gradient, ctx)
+    if (source.textMask !== undefined) tar.textMask = source.textMask
 }
 export function importSpanAttr(source: types.SpanAttr, ctx?: IImportContext): impl.SpanAttr {
     const ret: impl.SpanAttr = new impl.SpanAttr ()
@@ -1267,6 +1271,24 @@ export function importTextAttr(source: types.TextAttr, ctx?: IImportContext): im
 
     const ret: impl.TextAttr = new impl.TextAttr ()
     importTextAttrOptional(ret, source, ctx)
+    return ret
+}
+/* text mask */
+function importTextMaskOptional(tar: impl.TextMask, source: types.TextMask, ctx?: IImportContext) {
+    if (source.disabled !== undefined) tar.disabled = source.disabled
+}
+export function importTextMask(source: types.TextMask, ctx?: IImportContext): impl.TextMask {
+    const ret: impl.TextMask = new impl.TextMask (
+        importCrdtidx(source.crdtidx, ctx),
+        source.sheet,
+        source.id,
+        source.name,
+        source.description,
+        importTextAttr(source.text, ctx))
+    importTextMaskOptional(ret, source, ctx)
+        // inject code
+    if (ctx?.document) ctx.document.stylesMgr.add(ret.id, ret);
+
     return ret
 }
 /* text */

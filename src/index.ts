@@ -146,7 +146,8 @@ export {
     BorderMask,
     BorderMaskType,
     StyleSheet,
-    RadiusMask
+    RadiusMask,
+    TextMask
 } from "./data"
 
 export {
@@ -205,3 +206,4 @@ export { BorderModifier } from "./editor/style/border";
 export { RadiusModifier } from "./editor/style/radius";
 export { ShadowsModifier } from "./editor/style/shadows";
 export { BlurModifier } from "./editor/style/blur";
+export { TextModifier } from "./editor/style/text";

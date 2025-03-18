@@ -26,6 +26,9 @@
           },
           {
             "$ref": "./radius-mask.json"
+          },
+          {
+            "$ref": "./text-mask.json"
           }
         ]
       }

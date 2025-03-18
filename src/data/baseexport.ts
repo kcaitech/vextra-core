@@ -655,6 +655,9 @@ export function exportStyleSheet_variables(source: types.StyleSheet_variables, c
             if (source.typeId === "radius-mask") {
                 return exportRadiusMask(source as types.RadiusMask, ctx)
             }
+            if (source.typeId === "text-mask") {
+                return exportTextMask(source as types.TextMask, ctx)
+            }
             throw new Error("unknow typeId: " + source.typeId)
         })())
     })
@@ -1027,6 +1030,7 @@ export function exportSpanAttr(source: types.SpanAttr, ctx?: IExportContext): ty
     if (source.placeholder !== undefined) ret.placeholder = source.placeholder
     if (source.fillType !== undefined) ret.fillType = exportFillType(source.fillType, ctx)
     if (source.gradient !== undefined) ret.gradient = exportGradient(source.gradient, ctx)
+    if (source.textMask !== undefined) ret.textMask = source.textMask
     return ret
 }
 /* span attr */
@@ -1124,6 +1128,20 @@ export function exportTextAttr(source: types.TextAttr, ctx?: IExportContext): ty
     if (source.orientation !== undefined) ret.orientation = exportTextOrientation(source.orientation, ctx)
     if (source.textBehaviour !== undefined) ret.textBehaviour = exportTextBehaviour(source.textBehaviour, ctx)
     if (source.padding !== undefined) ret.padding = exportPadding(source.padding, ctx)
+    return ret
+}
+/* text mask */
+export function exportTextMask(source: types.TextMask, ctx?: IExportContext): types.TextMask {
+    const ret: types.TextMask = {} as types.TextMask
+    ret.typeId = "text-mask"
+    ret.crdtidx = exportCrdtidx(source.crdtidx, ctx)
+    ret.typeId = source.typeId
+    ret.sheet = source.sheet
+    ret.id = source.id
+    ret.name = source.name
+    ret.description = source.description
+    ret.text = exportTextAttr(source.text, ctx)
+    if (source.disabled !== undefined) ret.disabled = source.disabled
     return ret
 }
 /* text */

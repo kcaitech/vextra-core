@@ -76,6 +76,7 @@ export class SpanAttr extends Basic implements classes.SpanAttr {
     placeholder?: boolean
     fillType?: FillType
     gradient?: Gradient
+    textMask?: string
     constructor(
     ) {
         super()
@@ -130,6 +131,7 @@ export class AttrGetter extends TextAttr {
     bulletNumbersIsMulti: boolean = false;
     fillTypeIsMulti: boolean = false;
     gradientIsMulti: boolean = false;
+    textMaskIsMulti: boolean = false;
 }
 
 export class Span extends SpanAttr implements classes.Span {

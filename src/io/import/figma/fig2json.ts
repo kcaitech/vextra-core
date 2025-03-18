@@ -1,4 +1,4 @@
-import {ByteBuffer, compileSchema, decodeBinarySchema, parseSchema} from "kiwi-schema"
+import { ByteBuffer, compileSchema, decodeBinarySchema, parseSchema } from "kiwi-schema"
 import * as UZIP from "uzip"
 import * as pako from "pako"
 import * as fzstd from "fzstd"
@@ -87,13 +87,13 @@ function parseBlob(key: string, bytes: Uint8Array) {
                         indices.push(segment)
                         offset += 4
                     }
-                    loops.push({segments: indices})
+                    loops.push({ segments: indices })
                 }
 
-                regions.push({styleID, windingRule, loops})
+                regions.push({ styleID, windingRule, loops })
             }
 
-            return {vertices, segments, regions}
+            return { vertices, segments, regions }
 
         case 'commands':
             const path = []
@@ -197,7 +197,7 @@ function convertBase64ToBlobs(json: any): object {
     return {
         ...json,
         blobs: json.blobs.map((blob: any) => {
-            return {bytes: Uint8Array.from(atob(blob), (c) => c.charCodeAt(0))}
+            return { bytes: Uint8Array.from(atob(blob), (c) => c.charCodeAt(0)) }
         })
     }
 }
@@ -303,16 +303,16 @@ function figToBinaryParts(fileBuffer: ArrayBuffer): Uint8Array[] {
         const index = start + 4;
         start += 4 + end;
 
-        let byteTemp: Uint8Array = fileByte.slice(index, index + end)
+        let byteTemp: Uint8Array = fileByte.slice(index, index + end);
 
         // TODO: we might not need to check for this
         // Decompress everything other than PNG bytes (they remain compressed and are handled by image-loaders)
         // WARN: it is possible this byte is not png, maybe I need to check a few more bytes?
         if (!(fileByte[index] == 137 && fileByte[index + 1] == 80)) {
             try {
-                byteTemp = fzstd.decompress(byteTemp) as Uint8Array<ArrayBuffer>;
+                byteTemp = fzstd.decompress(byteTemp);
             } catch (err) {
-                byteTemp = pako.inflateRaw(byteTemp) as Uint8Array<ArrayBuffer>;
+                byteTemp = pako.inflateRaw(byteTemp);
             }
         }
 
