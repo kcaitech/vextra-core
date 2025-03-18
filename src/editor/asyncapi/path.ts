@@ -105,6 +105,8 @@ export class PathModifier extends AsyncApiCaller {
                 style.shadows = new BasicArray<Shadow>();
             }
 
+            style.setStylesMgr(this.__document.stylesMgr);
+
             const p1 = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight);
             const segment = new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(p1), false);
 
@@ -137,72 +139,71 @@ export class PathModifier extends AsyncApiCaller {
         }
     }
 
-    addPoint(shape: ShapeView, segment: number, index: number, apex?: { xy: Point2D, t?: number }) {
+    addPoint(view: ShapeView, segment: number, index: number, apex?: { xy: Point2D, t?: number }) {
         try {
-            const _shape = adapt2Shape(shape) as PathShape;
-            this.shape = _shape;
+            const shape = adapt2Shape(view) as PathShape;
+            this.shape = shape;
             this.modifyBorderSetting();
             this.api.addPointAt(
                 this.page,
-                _shape,
+                shape,
                 index,
                 new CurvePoint(new BasicArray<number>(), uuid(), 0, 0, CurveMode.Straight),
                 segment
             );
-            after_insert_point(this.page, this.api, _shape, index, segment, apex);
+            after_insert_point(this.page, this.api, shape, index, segment, apex);
             this.updateView();
             return true;
         } catch (e) {
             this.exception = true;
-            throw e;
-        }
-    }
-
-    addPointForPen(shape: ShapeView, segment: number, index: number, xy: { x: number, y: number }) {
-        try {
-            if (segment < 0 || index < 0) return false;
-            const _shape = adapt2Shape(shape) as PathShape;
-            this.shape = _shape;
-            this.api.addPointAt(
-                this.page,
-                _shape,
-                index,
-                new CurvePoint(new BasicArray<number>(), uuid(), xy.x, xy.y, CurveMode.Straight),
-                segment
-            );
-
-            this.updateView();
-            return true;
-        } catch (e) {
-            console.log('PathModifier.addPointForPen:', e);
-            return false
-        }
-    }
-
-    addSegmentForPen(shape: ShapeView, xy: { x: number, y: number }) {
-        try {
-            const _shape = adapt2Shape(shape) as PathShape;
-            this.shape = _shape;
-            const index = (this.shape as PathShape).pathsegs.length;
-            const point = new CurvePoint([0] as BasicArray<number>, uuid(), xy.x, xy.y, CurveMode.Straight);
-            const segment = new PathSegment([index] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(point), false);
-            this.api.addSegmentAt(this.page, _shape, index, segment);
-            this.api.shapeEditPoints(this.page, _shape, true);
-
-            this.updateView();
-
-            return true;
-        } catch (e) {
-            console.log('PathModifier.addSegmentForPen:', e);
+            console.error(e);
             return false;
         }
     }
 
-    execute(_shape: ShapeView, units: ModifyUnits) {
+    addPointForPen(view: ShapeView, segment: number, index: number, xy: { x: number, y: number }) {
+        try {
+            if (segment < 0 || index < 0) return false;
+            const shape = adapt2Shape(view) as PathShape;
+            this.shape = shape;
+            this.api.addPointAt(
+                this.page,
+                shape,
+                index,
+                new CurvePoint(new BasicArray<number>(), uuid(), xy.x, xy.y, CurveMode.Straight),
+                segment
+            );
+            this.updateView();
+            return true;
+        } catch (e) {
+            this.exception = true;
+            return false;
+        }
+    }
+
+    addSegmentForPen(view: ShapeView, xy: { x: number, y: number }) {
+        try {
+            const shape = adapt2Shape(view) as PathShape;
+            this.shape = shape;
+            const index = (this.shape as PathShape).pathsegs.length;
+            const point = new CurvePoint([0] as BasicArray<number>, uuid(), xy.x, xy.y, CurveMode.Straight);
+            const segment = new PathSegment([index] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(point), false);
+            this.api.addSegmentAt(this.page, shape, index, segment);
+            this.api.shapeEditPoints(this.page, shape, true);
+            this.updateView();
+            return true;
+        } catch (e) {
+            console.error(e);
+            this.exception = true;
+            return false;
+        }
+    }
+
+    execute(view: ShapeView, units: ModifyUnits) {
         try {
             const api = this.api;
             const page = this.page;
-            const shape = adapt2Shape(_shape) as PathShape;
+            const shape = adapt2Shape(view) as PathShape;
             this.shape = shape;
 
             if (shape.pathType !== PathType.Editable) {
@@ -234,11 +235,9 @@ export class PathModifier extends AsyncApiCaller {
                 }
             })
 
-
-            // update_frame_by_points(api, page, shape as PathShape);
             this.updateView();
         } catch (e) {
-            console.log('PathModifier.execute:', e);
+            console.error(e);
             this.exception = true;
         }
     }
@@ -289,19 +288,19 @@ export class PathModifier extends AsyncApiCaller {
 
             this.updateView();
         } catch (e) {
-            console.error('PathModifier.preCurve2', e);
+            console.error(e);
             this.exception = true;
         }
     }
 
-    execute4handle(_shape: ShapeView, index: number, side: 'from' | 'to',
+    execute4handle(view: ShapeView, index: number, side: 'from' | 'to',
                    from: { x: number, y: number },
                    to: { x: number, y: number },
                    segmentIndex: number) {
         try {
             const api = this.api;
             const page = this.page;
-            this.shape = adapt2Shape(_shape);
+            this.shape = adapt2Shape(view);
             const shape = this.shape as PathShape;
             let mode: CurveMode | undefined = undefined;
             this.modifyBorderSetting();
@@ -430,25 +429,31 @@ export class PathModifier extends AsyncApiCaller {
         }
     }
 
-    closeSegmentAt(_shape: ShapeView, segmentIndex: number) {
-        const shape = adapt2Shape(_shape) as PathShape;
+    closeSegmentAt(view: ShapeView, segmentIndex: number) {
+        try {
+            const shape = adapt2Shape(view) as PathShape;
 
-        this.shape = shape;
+            this.shape = shape;
 
-        const segment = shape.pathsegs[segmentIndex];
+            const segment = shape.pathsegs[segmentIndex];
 
-        if (!segment) {
+            if (!segment) {
+                return false;
+            }
+
+            this.api.setCloseStatus(this.page, shape, true, segmentIndex);
+
+            return true;
+        } catch (e) {
+            this.exception = true;
+            console.error(e);
             return false;
         }
-
-        this.api.setCloseStatus(this.page, shape, true, segmentIndex);
-
-        return true;
     }
 
-    mergeSegment(_shape: ShapeView, segmentIndex: number, toSegmentIndex: number, at: 'start' | 'end') {
+    mergeSegment(view: ShapeView, segmentIndex: number, toSegmentIndex: number, at: 'start' | 'end') {
         try {
-            const shape = adapt2Shape(_shape) as PathShape;
+            const shape = adapt2Shape(view) as PathShape;
 
             this.shape = shape;
 
@@ -456,9 +461,7 @@ export class PathModifier extends AsyncApiCaller {
             const toSegment = shape.pathsegs[toSegmentIndex];
 
             // 两条线段都需要是未闭合的线段才可以进行合并
-            if (!segment || !toSegment || segment.isClosed || toSegment.isClosed) {
-                return false;
-            }
+            if (!segment || !toSegment || segment.isClosed || toSegment.isClosed) return;
 
             const pointsContainer = new BasicArray<CurvePoint>();
 
@@ -523,16 +526,16 @@ export class PathModifier extends AsyncApiCaller {
             return { segment: shape.pathsegs.length - 1, activeIndex };
         } catch (e) {
             this.exception = true;
-            throw e;
+            console.error(e);
         }
     }
 
     /**
      * @description 折断handle
      */
-    breakOffHandle(_shape: ShapeView, segmentIndex: number, index: number) {
+    breakOffHandle(view: ShapeView, segmentIndex: number, index: number) {
         try {
-            const shape = adapt2Shape(_shape) as PathShape;
+            const shape = adapt2Shape(view) as PathShape;
 
             this.shape = shape;
 
@@ -548,7 +551,7 @@ export class PathModifier extends AsyncApiCaller {
 
             return true;
         } catch (e) {
-            console.error('PathModifier.breakOffHandle:', e);
+            console.error(e);
             this.exception = true;
             return false;
         }
@@ -557,9 +560,9 @@ export class PathModifier extends AsyncApiCaller {
     /**
      * @description 恢复handle
      */
-    recoveryHandle(_shape: ShapeView, segmentIndex: number, index: number, recoverTo: CurveMode, activeSide: 'from' | 'to') {
+    recoveryHandle(view: ShapeView, segmentIndex: number, index: number, recoverTo: CurveMode, activeSide: 'from' | 'to') {
         try {
-            const shape = adapt2Shape(_shape) as PathShape;
+            const shape = adapt2Shape(view) as PathShape;
 
             this.shape = shape;
 
@@ -573,7 +576,6 @@ export class PathModifier extends AsyncApiCaller {
             const page = this.page;
 
             api.modifyPointCurveMode(page, shape, index, recoverTo, segmentIndex);
-
 
             if (activeSide === 'from') {
                 if (recoverTo === CurveMode.Mirrored) {
@@ -635,15 +637,15 @@ export class PathModifier extends AsyncApiCaller {
 
             return true;
         } catch (e) {
-            console.error('PathModifier.recoveryHandle:', e);
+            console.error(e);
             this.exception = true;
             return false;
         }
     }
 
-    reversePointsAt(_shape: ShapeView, segmentIndex: number) {
+    reversePointsAt(view: ShapeView, segmentIndex: number) {
         try {
-            const shape = adapt2Shape(_shape) as PathShape;
+            const shape = adapt2Shape(view) as PathShape;
 
             this.shape = shape;
 
@@ -686,102 +688,15 @@ export class PathModifier extends AsyncApiCaller {
 
             return { segment: l, activeIndex: newSegment.points.length - 1 };
         } catch (e) {
-            console.error('PathModifier.reversePointsAt:', e);
+            console.error(e);
             this.exception = true;
             return false;
         }
     }
 
-    /**
-     * @description 剪刀
-     */
-    clip(_shape: ShapeView, segmentIndex: number, index: number) {
+    sortSegment(view: ShapeView) {
         try {
-            const shape = adapt2Shape(_shape) as PathShape;
-
-            this.shape = shape;
-
-            const segment = shape?.pathsegs[segmentIndex];
-            if (!segment) {
-                throw new Error('wrong segment');
-            }
-
-            const { points, isClosed } = segment;
-
-            if (!points[index]) {
-                throw new Error('wrong index');
-            }
-
-            const len = points.length;
-
-            if (len < 2) {
-                throw new Error('wrong length');
-            }
-
-            const page = this.page;
-            const api = this.api;
-
-            if (!isClosed) {
-                if (len === 2) {
-                    //  直接删除线段
-                    api.deleteSegmentAt(page, shape, segmentIndex);
-                } else {
-                    if (index === 0) {
-                        //  删除第0个点
-                        api.deletePoint(page, shape, 0, segmentIndex);
-                    } else if (index === len - 2) {
-                        // 删除最后一个点
-                        api.deletePoint(page, shape, len - 1, segmentIndex);
-                    } else {
-                        //  以index为中间节点，将segment分为A，B两条，index处的点分给A线段
-                        const pointsA = new BasicArray<CurvePoint>();
-                        const pointsB = new BasicArray<CurvePoint>();
-
-                        for (let i = 0; i <= index; i++) {
-                            pointsA.push(points[i]);
-                        }
-                        for (let i = index + 1; i < len; i++) {
-                            pointsB.push(points[i]);
-                        }
-
-                        api.deleteSegmentAt(page, shape, segmentIndex);
-                        pointsA.forEach((i, index) => i.crdtidx = [index] as BasicArray<number>);
-                        pointsB.forEach((i, index) => i.crdtidx = [index] as BasicArray<number>);
-                        const segmentA = new PathSegment([shape.pathsegs.length] as BasicArray<number>, uuid(), pointsA, false);
-                        api.addSegmentAt(page, shape, shape.pathsegs.length, segmentA);
-                        const segmentB = new PathSegment([shape.pathsegs.length] as BasicArray<number>, uuid(), pointsB, false);
-                        api.addSegmentAt(page, shape, shape.pathsegs.length, segmentB);
-                    }
-                }
-            } else {
-                //  打开线段，并将index处的点变成最后一个点
-                const newPoints = new BasicArray<CurvePoint>();
-                for (let i = index + 1; i < len; i++) {
-                    newPoints.push(points[i]);
-                }
-                for (let i = 0; i <= index; i++) {
-                    newPoints.push(points[i]);
-                }
-
-                api.deleteSegmentAt(page, shape, segmentIndex);
-                newPoints.forEach((i, index) => i.crdtidx = [index] as BasicArray<number>);
-                const newSegment = new PathSegment([shape.pathsegs.length] as BasicArray<number>, uuid(), newPoints, false);
-                api.addSegmentAt(page, shape, shape.pathsegs.length, newSegment);
-            }
-
-            this.api.shapeEditPoints(this.page, shape, true);
-
-            return true;
-        } catch (e) {
-            console.error('PathModifier.clip:', e);
-            this.exception = true;
-            return false;
-        }
-    }
-
-    sortSegment(_shape: ShapeView) {
-        try {
-            const shape = adapt2Shape(_shape) as PathShape;
+            const shape = adapt2Shape(view) as PathShape;
 
             this.shape = shape;
 
@@ -802,17 +717,15 @@ export class PathModifier extends AsyncApiCaller {
                     api.deleteSegmentAt(page, shape, i);
                 }
             }
-
         } catch (e) {
-            console.error('PathModifier.sortSegment:', e);
+            console.error(e);
             this.exception = true;
-            return false;
         }
     }
 
-    modifyClosedStatus(_shape: ShapeView, val: boolean) {
+    modifyClosedStatus(view: ShapeView, val: boolean) {
         try {
-            const shape = adapt2Shape(_shape) as PathShape;
+            const shape = adapt2Shape(view) as PathShape;
 
             this.shape = shape;
 
@@ -834,7 +747,7 @@ export class PathModifier extends AsyncApiCaller {
 
             return true;
         } catch (e) {
-            console.error('PathModifier.modifyClosedStatus:', e);
+            console.error(e);
             this.exception = true;
             return false;
         }
