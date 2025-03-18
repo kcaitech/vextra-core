@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { v4 as uuid } from "uuid";
 import { AutoLayout, Page, Artboard, Document, PageListItem, TableShape, StyleMangerMember } from "../data";
 import {
@@ -53,7 +63,7 @@ import {
     TextAttr,
 } from "../data";
 import { BasicArray, BasicMap } from "../data";
-import { Repository } from "../data";
+import { TransactDataGuard } from "../data";
 import { ResourceMgr } from "../data";
 import { TableShape2 } from "../data";
 
@@ -73,7 +83,6 @@ import { ResizingConstraints2 } from "../data";
 import { SymbolMgr } from "../data/symbolmgr";
 import { newText } from "../data/text/textutils";
 import { getPolygonPoints, getPolygonVertices } from "./utils/path";
-import { makeShapeTransform2By1, updateShapeTransform1By2 } from "../data";
 import { is_mac } from "../data/utils";
 import { Path } from "@kcdesign/path";
 import { convertPath2CurvePoints } from "../data/pathconvert";
@@ -89,9 +98,9 @@ function _checkFrame(frame: ShapeSize) {
 }
 
 export function addCommonAttr(shape: Shape) {
-    const transform2 = makeShapeTransform2By1(shape.transform);
+    const transform2 = (shape.transform);
     transform2.setRotateZ(0);
-    updateShapeTransform1By2(shape.transform, transform2);
+    // updateShapeTransform1By2(shape.transform, transform2);
     shape.isVisible = true;
     shape.isLocked = false;
     shape.constrainerProportions = false;
@@ -99,7 +108,7 @@ export function addCommonAttr(shape: Shape) {
     shape.resizingConstraint = ResizingConstraints2.Default;
 }
 
-export function newDocument(documentName: string, repo: Repository): Document {
+export function newDocument(documentName: string, repo: TransactDataGuard): Document {
     const dId = uuid();
     const pageList = new BasicArray<PageListItem>();
     return new Document(dId, documentName, repo, { pageList });
@@ -825,10 +834,10 @@ export function getTransformByEnv(env: GroupShape) {
 export function modifyTransformByEnv(shape: Shape, env: GroupShape) {
     const transform = getTransformByEnv(env);
 
-    const transform2 = makeShapeTransform2By1(shape.transform);
+    const transform2 = (shape.transform);
     const center = shape.matrix2Parent().computeCoord2(shape.size.width / 2, shape.size.height / 2);
-    if (transform.flipH) transform2.flipH(center.x);
-    if (transform.flipV) transform2.flipV(center.y);
+    if (transform.flipH) transform2.flipHoriz(center.x);
+    if (transform.flipV) transform2.flipVert(center.y);
 
     let r = transform.rotation;
 
@@ -841,5 +850,5 @@ export function modifyTransformByEnv(shape: Shape, env: GroupShape) {
 
     transform2.setRotateZ((r % 360) / 180 * Math.PI);
 
-    updateShapeTransform1By2(shape.transform, transform2);
+    // updateShapeTransform1By2(shape.transform, transform2);
 }

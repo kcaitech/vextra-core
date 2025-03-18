@@ -1,10 +1,19 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { CoopRepository } from "../../../coop";
 import { AsyncApiCaller } from "../basic/asyncapi";
 import {
     Artboard,
     BorderSideSetting,
     Document,
-    makeShapeTransform1By2,
     StackSizing,
     Page,
     ResizingConstraints2,
@@ -15,8 +24,8 @@ import {
     SymbolRefShape,
     TextBehaviour,
     TextShape,
-    BasicArray,
-    makeShapeTransform2By1,
+    Transform,
+    PathShape,
 } from "../../../data";
 import {
     ArtboardView,
@@ -30,7 +39,7 @@ import {
     TableView,
     TextShapeView
 } from "../../../dataview";
-import { Api, TextShapeLike } from "../../../coop/recordapi";
+import { Operator, TextShapeLike } from "../../../coop/recordop";
 import { fixTextShapeFrameByLayout } from "../../utils/other";
 import { Transform as Transform2 } from "../../../basic/transform";
 import { ColVector3D } from "../../../basic/matrix2";
@@ -52,7 +61,7 @@ export type SizeRecorder = Map<string, {
     height: number;
 }>;
 
-export type TransformRecorder = Map<string, Transform2>;
+export type TransformRecorder = Map<string, Transform>;
 
 /**
  * @description shape为父级图层，size发生变化后，子元素需要根据约束条件重新布局(先父级变化再子级重排)
@@ -72,7 +81,7 @@ export type TransformRecorder = Map<string, Transform2>;
  * @param _transformRecorder
  */
 export function reLayoutBySizeChanged(
-    api: Api,
+    api: Operator,
     page: Page,
     shape: GroupShapeView,
     scale: { x: number, y: number },
@@ -90,7 +99,7 @@ export function reLayoutBySizeChanged(
 
     if (shape.type === ShapeType.Group || shape.type === ShapeType.BoolShape) {
         // 编组
-        const __p_transform = new Transform2().setScale(ColVector3D.FromXYZ(SX, SY, 1));
+        const __p_transform = new Transform().scale(SX, SY);
         for (const child of children) {
             const data = adapt2Shape(child);
             const transform = getTransform(child).clone();
@@ -107,7 +116,7 @@ export function reLayoutBySizeChanged(
             }
 
             transform.clearScaleSize();
-            api.shapeModifyTransform(page, data, makeShapeTransform1By2(transform));
+            api.shapeModifyTransform(page, data, (transform));
 
             if (child instanceof GroupShapeView) {
                 reLayoutBySizeChanged(api, page, child, _scale, rangeRecorder, sizeRecorder, transformRecorder);
@@ -130,7 +139,7 @@ export function reLayoutBySizeChanged(
             // 水平
             if (ResizingConstraints2.isHorizontalScale(resizingConstraint)) {
                 // 跟随缩放
-                const __p_transform_hor_scale = new Transform2().setScale(ColVector3D.FromXYZ(SX, 1, 1));
+                const __p_transform_hor_scale = new Transform().scale(SX, 1);
 
                 transform.addTransform(__p_transform_hor_scale);
 
@@ -155,7 +164,7 @@ export function reLayoutBySizeChanged(
                 const __target_sx = __target_width / bounding.width;
 
                 // 确定一个缩放区域(BSS)：以bounding左上角为原点的一个坐标系
-                const __sec_transform = new Transform2()
+                const __sec_transform = new Transform()
                     .setTranslate(ColVector3D.FromXY(bounding.x, bounding.y));
 
                 // 让图层进入缩放区域(BSS)
@@ -180,7 +189,7 @@ export function reLayoutBySizeChanged(
                 // 剩下靠左、靠右、居中，这三个场景都需要分别考虑宽度是否固定，其中如果满足靠左固定并且宽度固定，则不需要重新布局
                 if (ResizingConstraints2.isFlexWidth(resizingConstraint)) {
                     // 宽度不固定
-                    const __p_transform_hor_scale = new Transform2().setScale(ColVector3D.FromXYZ(SX, 1, 1));
+                    const __p_transform_hor_scale = new Transform().setScale(ColVector3D.FromXYZ(SX, 1, 1));
 
                     transform.addTransform(__p_transform_hor_scale);
 
@@ -224,7 +233,7 @@ export function reLayoutBySizeChanged(
             // 垂直
             if (ResizingConstraints2.isVerticalScale(resizingConstraint)) {
                 // 跟随缩放
-                const __p_transform_ver_scale = new Transform2().setScale(ColVector3D.FromXYZ(1, SY, 1));
+                const __p_transform_ver_scale = new Transform().setScale(ColVector3D.FromXYZ(1, SY, 1));
                 transform.addTransform(__p_transform_ver_scale);
 
                 const _s = transform.decomposeScale();
@@ -242,7 +251,7 @@ export function reLayoutBySizeChanged(
                 const __target_height = envSize.height * SY - bounding.y - __to_bottom;
                 const __target_sy = __target_height / bounding.height;
 
-                const __sec_transform = new Transform2()
+                const __sec_transform = new Transform()
                     .setTranslate(ColVector3D.FromXY(bounding.x, bounding.y));
 
                 transform.addTransform(__sec_transform.getInverse());
@@ -262,7 +271,7 @@ export function reLayoutBySizeChanged(
             } else {
                 if (ResizingConstraints2.isFlexHeight(resizingConstraint)) {
                     // 高度不固定
-                    const __p_transform_ver_scale = new Transform2().setScale(ColVector3D.FromXYZ(1, SY, 1));
+                    const __p_transform_ver_scale = new Transform().setScale(ColVector3D.FromXYZ(1, SY, 1));
 
                     transform.addTransform(__p_transform_ver_scale);
 
@@ -314,7 +323,7 @@ export function reLayoutBySizeChanged(
                 api.shapeModifyIsCustomSize(page, data as SymbolRefShape, true)
             }
 
-            api.shapeModifyTransform(page, data, makeShapeTransform1By2(transform));
+            api.shapeModifyTransform(page, data, (transform));
 
             if ((oSize.width !== targetWidth || oSize.height !== targetHeight) && child instanceof GroupShapeView) {
                 reLayoutBySizeChanged(api, page, child, __scale, rangeRecorder, sizeRecorder, transformRecorder);
@@ -366,14 +375,14 @@ export function reLayoutBySizeChanged(
             const y = size.y;
             const r = x + size.width;
             const b = y + size.height;
-            const cols = transform.transform([
+            const box = XYsBounding(transform.transform([
                 ColVector3D.FromXY(x, y),
                 ColVector3D.FromXY(r, y),
                 ColVector3D.FromXY(r, b),
                 ColVector3D.FromXY(x, b)
-            ]);
+            ]));
 
-            const box = XYsBounding([cols.col0, cols.col1, cols.col2, cols.col3]);
+            // const box = XYsBounding([cols.col0, cols.col1, cols.col2, cols.col3]);
             RR.box = {
                 x: box.left,
                 y: box.top,
@@ -403,7 +412,7 @@ export function reLayoutBySizeChanged(
     function getTransform(s: ShapeView) {
         let transform = transformRecorder.get(s.id);
         if (!transform) {
-            transform = makeShapeTransform2By1(s.transform);
+            transform = (s.transform.clone());
             transformRecorder.set(s.id, transform);
         }
         return transform;
@@ -468,13 +477,13 @@ export function reLayoutBySizeChanged(
 
 export interface UniformScaleUnit {
     shape: ShapeView;
-    transform: Transform2;
+    transform: Transform;
     size: { width: number, height: number };
     decomposeScale: { x: number, y: number };
 }
 
 export function reLayoutByUniformScale(
-    api: Api,
+    api: Operator,
     page: Page,
     shape: GroupShapeView,
     scale: { x: number, y: number },
@@ -491,7 +500,7 @@ export function reLayoutByUniformScale(
     const children = shape.childs;
     const { x: SX, y: SY } = scale;
 
-    const __p_transform = new Transform2().setScale(ColVector3D.FromXYZ(SX, SY, 1));
+    const __p_transform = new Transform().setScale(ColVector3D.FromXYZ(SX, SY, 1));
 
     for (const child of children) {
         container.push(child);
@@ -525,7 +534,7 @@ export function reLayoutByUniformScale(
         api.shapeModifyWH(page, data, width, height)
 
         transform.clearScaleSize();
-        api.shapeModifyTransform(page, data, makeShapeTransform1By2(transform));
+        api.shapeModifyTransform(page, data, (transform));
 
         if (child instanceof GroupShapeView) {
             reLayoutByUniformScale(api, page, child, _scale, container, rangeRecorder, sizeRecorder, transformRecorder, valueRecorder);
@@ -549,7 +558,7 @@ export function reLayoutByUniformScale(
         function getTransform(s: ShapeView) {
             let transform = transformRecorder.get(s.id);
             if (!transform) {
-                transform = makeShapeTransform2By1(s.transform);
+                transform = (s.transform.clone());
                 transformRecorder.set(s.id, transform);
             }
             return transform;
@@ -558,7 +567,7 @@ export function reLayoutByUniformScale(
 }
 
 export function uniformScale(
-    api: Api,
+    api: Operator,
     page: Page,
     units: UniformScaleUnit[],
     ratio: number,
@@ -576,7 +585,7 @@ export function uniformScale(
         const { transform, shape: view, size, decomposeScale } = unit;
         container4modifyStyle.push(view);
         const shape = adapt2Shape(view);
-        api.shapeModifyTransform(page, shape, makeShapeTransform1By2(transform));
+        api.shapeModifyTransform(page, shape, (transform.clone()));
 
         if (shape instanceof SymbolRefShape) {
             // if (!shape.isCustomSize) api.shapeModifyIsCustomSize(page, shape, true);
@@ -639,7 +648,7 @@ export function uniformScale(
                 segment.points.forEach((point, j) => {
                     const pid = sid + '-point-' + j;
                     const corner = getBaseValue(pid, 'radius', point.radius ?? 0);
-                    corner && api.modifyPointCornerRadius(page, shape, j, corner * ratio, i);
+                    corner && api.modifyPointCornerRadius(page, shape as PathShape, j, corner * ratio, i);
                 });
             });
         }
@@ -739,7 +748,7 @@ export class Scaler extends AsyncApiCaller {
         shape: ShapeView;
         size: { width: number, height: number },
         scale: { x: number, y: number },
-        transform2: Transform2,
+        transform2: Transform,
         w_change: boolean,
         h_change: boolean
     }[]) {
@@ -759,7 +768,7 @@ export class Scaler extends AsyncApiCaller {
                     const size = item.size;
                     api.shapeModifyWH(page, shape, size.width, size.height)
                 }
-                api.shapeModifyTransform(page, shape, makeShapeTransform1By2(item.transform2));
+                api.shapeModifyTransform(page, shape, (item.transform2.clone()));
                 if ((item.shape as ArtboardView).autoLayout) {
                     const _shape = shape4Autolayout(api, item.shape, this._page);
                     if (item.w_change) {

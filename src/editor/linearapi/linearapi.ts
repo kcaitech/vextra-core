@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { Document, OvalShape, Fill, Blur, Variable } from "../../data";
 import { adapt2Shape, ArtboardView, PageView, ShapeView, SymbolRefView, SymbolView, TableCellView, TableView, TextShapeView } from "../../dataview";
 import { modifyPathByArc } from "../asyncapi";
@@ -322,7 +332,7 @@ export class LinearApi {
                     }
                 }
                 if (needUpdateFrame) {
-                    update_frame_by_points(api, page, shape);
+                    update_frame_by_points(api, page, shape as PathShape);
                 }
             }
         });

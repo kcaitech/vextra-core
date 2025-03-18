@@ -1,45 +1,59 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import {
+    CornerRadius,
+    GroupShape,
     OverrideType,
     Shape,
     ShapeType,
     SymbolShape,
-    Variable,
-    VariableType,
     SymbolUnionShape,
-    GroupShape,
-    CornerRadius,
-    TextShape
+    TextShape,
+    Variable,
+    VariableType
 } from "../data/shape";
 import { ExportOptions, SymbolRefShape } from "../data/symbolref";
 import { uuid } from "../basic/uuid";
 import { Page } from "../data/page";
-import { Api } from "../coop/recordapi";
+import { Operator } from "../coop/recordop";
 import { newArtboard } from "./creator";
 import {
+    Artboard,
+    AutoLayout,
     BlendMode,
+    Blur,
+    BlurType,
     Border,
+    BorderSideSetting,
+    BorderStyle,
     ContextSettings,
+    Document,
     Fill,
+    Point2D,
     Shadow,
     ShapeSize,
+    SideType,
+    string2Text,
     Style,
     TableCell,
     TableCellType,
     Text,
-    Transform,
-    Document,
-    Blur,
-    Point2D,
-    BlurType,
-    Artboard, BorderSideSetting, SideType,
-    string2Text,
-    BorderStyle,
-    AutoLayout
+    Transform
 } from "../data/classes";
 import { findOverride } from "../data/utils";
 import { BasicArray } from "../data/basic";
 import {
     IImportContext,
+    importAutoLayout,
+    importBlur,
     importBorder,
     importColor,
     importContextSettings,
@@ -51,28 +65,22 @@ import {
     importStyle,
     importTableCell,
     importTableShape,
-    importText,
-    importBlur,
-    importAutoLayout, importArtboard
+    importText
 } from "../data/baseimport";
 import {
+    adapt2Shape,
     ArtboardView,
+    PageView,
     ShapeView,
     SymbolRefView,
     SymbolView,
     TableCellView,
-    TableView,
-    isAdaptedShape,
-    adapt2Shape,
-    PageView
+    TableView
 } from "../dataview";
 import { newTableCellText } from "../data/text/textutils";
 import { FMT_VER_latest } from "../data/fmtver";
 import * as types from "../data/typesdefine";
-import { exportArtboard, exportVariable } from "../data/baseexport";
-import { makeShapeTransform1By2, makeShapeTransform2By1 } from "../data";
-import { Transform as Transform2 } from "../basic/transform";
-import { ColVector3D } from "../basic/matrix2";
+import { exportArtboard, exportVariable, IExportContext } from "../data/baseexport";
 import { v4 } from "uuid";
 import { overrideTableCell, prepareVar } from "./symbol_utils";
 
@@ -136,14 +144,14 @@ function _varsContainer(view: ShapeView) {
     return varsContainer;
 }
 
-function _ov_newvar(host: SymbolRefShape | SymbolShape, name: string, value: any, type: VariableType, page: Page, api: Api) {
+function _ov_newvar(host: SymbolRefShape | SymbolShape, name: string, value: any, type: VariableType, page: Page, api: Operator) {
     const _var2 = new Variable(uuid(), type, name, value);
     api.shapeAddVariable(page, host, _var2); // create var
     return _var2;
 }
 
 
-export function _ov(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, view: ShapeView, page: PageView, api: Api) {
+export function _ov(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, view: ShapeView, page: PageView, api: Operator) {
     return prepareVar(api, page, view, overrideType, varType, valuefun)?.var
 }
 
@@ -198,7 +206,7 @@ function _clone_value(_var: Variable, document: Document, page: Page) {
     }
 }
 
-export function shape4contextSettings(api: Api, _shape: ShapeView, page: PageView) {
+export function shape4contextSettings(api: Operator, _shape: ShapeView, page: PageView) {
     const valuefun = (_var: Variable | undefined) => {
         const contextSettings = _var?.value ?? _shape.contextSettings;
         return contextSettings && importContextSettings(contextSettings) || new ContextSettings(BlendMode.Normal, 1);
@@ -207,7 +215,7 @@ export function shape4contextSettings(api: Api, _shape: ShapeView, page: PageVie
     return _var || _shape.data;
 }
 
-export function shape4exportOptions(api: Api, _shape: ShapeView, page: PageView) {
+export function shape4exportOptions(api: Operator, _shape: ShapeView, page: PageView) {
     const valuefun = (_var: Variable | undefined) => {
         const options = _var?.value ?? _shape.exportOptions;
         return options && importExportOptions(options) || new ExportOptions(new BasicArray(), 0, false, false, false, false);
@@ -216,7 +224,7 @@ export function shape4exportOptions(api: Api, _shape: ShapeView, page: PageView)
     return _var || _shape.data;
 }
 
-export function shape4blur(api: Api, _shape: ShapeView, page: PageView) {
+export function shape4blur(api: Operator, _shape: ShapeView, page: PageView) {
     const valuefun = (_var: Variable | undefined) => {
         const blur = _var?.value ?? _shape.blur;
         return blur && importBlur(blur) || new Blur(true, new Point2D(0, 0), 10, BlurType.Gaussian);
@@ -225,7 +233,7 @@ export function shape4blur(api: Api, _shape: ShapeView, page: PageView) {
     return _var || _shape.data;
 }
 
-export function shape4Autolayout(api: Api, _shape: ShapeView, page: PageView) {
+export function shape4Autolayout(api: Operator, _shape: ShapeView, page: PageView) {
     const valuefun = (_var: Variable | undefined) => {
         const autolayout = _var?.value ?? (_shape as ArtboardView).autoLayout;
         return autolayout && importAutoLayout(autolayout) || new AutoLayout(10, 10, 0, 0, 0, 0, types.StackSizing.Auto);
@@ -237,7 +245,7 @@ export function shape4Autolayout(api: Api, _shape: ShapeView, page: PageView) {
 // 变量可能的情况
 // 1. 存在于symbolref中，则变量一定是override某个属性或者变量的。此时如果symbolref非virtual，可以直接修改，否则要再override
 // 2. 存在于symbol中，则变量一定是用户定义的某个变量。当前环境如在ref中，则需要override，否则可直接修改。
-export function modify_variable(document: Document, page: Page, view: ShapeView, _var: Variable, attr: { name?: string, value?: any }, api: Api) {
+export function modify_variable(document: Document, page: Page, view: ShapeView, _var: Variable, attr: { name?: string, value?: any }, api: Operator) {
     const p = varParent(_var);
     if (!p) throw new Error();
     const varsContainer = _varsContainer(view);
@@ -352,7 +360,7 @@ export function modify_variable(document: Document, page: Page, view: ShapeView,
 /**
  * @description override "editor/shape/overrideVariable"
  */
-export function override_variable(page: PageView, varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, api: Api, view: ShapeView) {
+export function override_variable(page: PageView, varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, api: Operator, view: ShapeView) {
     // view = view ?? this.__shape;
     return _ov(varType, overrideType, valuefun, view, page, api);
 }
@@ -360,7 +368,7 @@ export function override_variable(page: PageView, varType: VariableType, overrid
 /**
  * @description 由外引入api的变量修改函数
  */
-export function modify_variable_with_api(api: Api, page: PageView, shape: ShapeView, varType: VariableType, overrideType: OverrideType, value: any) {
+export function modify_variable_with_api(api: Operator, page: PageView, shape: ShapeView, varType: VariableType, overrideType: OverrideType, value: any) {
     const _var = _ov(varType, overrideType, () => value, shape, page, api);
     if (_var && _var.value !== value) {
         api.shapeModifyVariable(page.data, _var, value);
@@ -371,7 +379,7 @@ export function modify_variable_with_api(api: Api, page: PageView, shape: ShapeV
 /**
  * @description override "editor/shape/shape4border"
  */
-export function shape4border(api: Api, page: PageView, shape: ShapeView) {
+export function shape4border(api: Operator, page: PageView, shape: ShapeView) {
     const _var = override_variable(page, VariableType.Borders, OverrideType.Borders, (_var) => {
         const borders = _var?.value ?? shape.getBorders();
         return importBorder(borders);
@@ -379,7 +387,7 @@ export function shape4border(api: Api, page: PageView, shape: ShapeView) {
     return _var || shape.data;
 }
 
-export function shape4fill(api: Api, page: PageView, shape: ShapeView) {
+export function shape4fill(api: Operator, page: PageView, shape: ShapeView) {
     const _var = override_variable(page, VariableType.Fills, OverrideType.Fills, (_var) => {
         const fills = _var?.value ?? shape.getFills();
         return new BasicArray(...(fills as Array<Fill>).map((v) => {
@@ -392,7 +400,7 @@ export function shape4fill(api: Api, page: PageView, shape: ShapeView) {
     }, api, shape)
     return _var || shape.data;
 }
-export function shape4fill2(api: Api, page: PageView, shape: ShapeView) {
+export function shape4fill2(api: Operator, page: PageView, shape: ShapeView) {
     return override_variable(page, VariableType.Fills, OverrideType.Fills, (_var) => {
         const fills = _var?.value ?? shape.getFills();
         return new BasicArray(...(fills as Array<Fill>).map((v) => {
@@ -405,7 +413,7 @@ export function shape4fill2(api: Api, page: PageView, shape: ShapeView) {
     }, api, shape)!;
 }
 
-export function shape4shadow(api: Api, page: PageView, shape: ShapeView) {
+export function shape4shadow(api: Operator, page: PageView, shape: ShapeView) {
     const _var = override_variable(page, VariableType.Shadows, OverrideType.Shadows, (_var) => {
         const shadows = _var?.value ?? shape.getShadows();
         return new BasicArray(...(shadows as Array<Shadow>).map((v) => {
@@ -416,7 +424,7 @@ export function shape4shadow(api: Api, page: PageView, shape: ShapeView) {
     return _var || shape.data;
 }
 
-export function shape4cornerRadius(api: Api, page: PageView, shape: ArtboardView | SymbolView | SymbolRefView) {
+export function shape4cornerRadius(api: Operator, page: PageView, shape: ArtboardView | SymbolView | SymbolRefView) {
     const _var = override_variable(page, VariableType.CornerRadius, OverrideType.CornerRadius, (_var) => {
         const cornerRadius = _var?.value ?? shape.cornerRadius;
         return cornerRadius ? importCornerRadius(cornerRadius) : new CornerRadius(v4(),0, 0, 0, 0);
@@ -479,7 +487,7 @@ export function get_state_name(state: SymbolShape, dlt: string) {
     return name_slice.toString();
 }
 
-export function cell4edit2(page: PageView, view: TableView, _cell: TableCellView, api: Api): Variable | undefined {
+export function cell4edit2(page: PageView, view: TableView, _cell: TableCellView, api: Operator): Variable | undefined {
     // cell id 要重新生成
     const index = view.indexOfCell(_cell);
     if (!index) throw new Error();
@@ -510,7 +518,7 @@ export function cell4edit2(page: PageView, view: TableView, _cell: TableCellView
     // return _var;
 }
 
-export function cell4edit(page: PageView, view: TableView, rowIdx: number, colIdx: number, api: Api): TableCellView {
+export function cell4edit(page: PageView, view: TableView, rowIdx: number, colIdx: number, api: Operator): TableCellView {
     const cell = view.getCellAt(rowIdx, colIdx);
     if (!cell) throw new Error("cell init fail?");
 
@@ -569,14 +577,13 @@ export class RefUnbind {
     private static solidify(shape: GroupShape, uniformScale: number) {
         const children = shape.childs;
         for (const child of children) {
-            const t = makeShapeTransform2By1(child.transform);
-            const scale = new Transform2().setScale(ColVector3D.FromXYZ(uniformScale, uniformScale, 1));
-            t.addTransform(scale);
+            const t = child.transform.clone();
+            t.scale(uniformScale, uniformScale);
             const __scale = t.decomposeScale();
             child.size.width *= Math.abs(__scale.x);
             child.size.height *= Math.abs(__scale.y);
             t.clearScaleSize();
-            child.transform = makeShapeTransform1By2(t);
+            child.transform = (t);
             const borders = child.style.borders;
             borders.sideSetting = new BorderSideSetting(
                 SideType.Normal,
@@ -618,9 +625,7 @@ export class RefUnbind {
             }
 
             if (child instanceof GroupShape) {
-                let innerScale = uniformScale;
-                // if (child.uniformScale) innerScale *= child.uniformScale;
-                this.solidify(child, innerScale);
+                this.solidify(child, uniformScale);
             }
         }
 
@@ -642,16 +647,25 @@ export class RefUnbind {
         }
     }
 
-    private static transferVars(rootRef: SymbolRefShape, g: {
-        childs: types.Shape[]
-    }): void {
+    private static transferVars(rootRef: SymbolRefShape, g: { childs: types.Shape[] }, ctx?: IExportContext): void {
         const overrides = rootRef.overrides;
         const vars = rootRef.variables;
+        if (ctx) {
+            vars.forEach(v => {
+                if (v.type === VariableType.BlursMask
+                    || v.type === VariableType.FillsMask
+                    || v.type === VariableType.RadiusMask
+                    || v.type === VariableType.BorderFillsMask
+                    || v.type === VariableType.ShadowsMask
+                    || v.type === VariableType.BordersMask
+                ) ctx.styles?.add(v.value);
+            })
+        }
         if (!overrides) return;
         for (let i = 0, childs = g.childs; i < childs.length; ++i) {
             const c = childs[i];
             if ((c as any).childs) { // group
-                return this.transferVars(rootRef, c as any);
+                return this.transferVars(rootRef, c as any, ctx);
             }
             if (c.typeId !== "symbol-ref-shape") continue;
             let refId = c.id;
@@ -689,9 +703,9 @@ export class RefUnbind {
         }
     }
 
-    static unbind(view: SymbolRefView) {
+    static unbind(view: SymbolRefView, ctx?: IExportContext) {
+        if (view.isVirtualShape) return;
         const shape: SymbolRefShape = adapt2Shape(view) as SymbolRefShape;
-        if (shape.isVirtualShape) return;
         const tmpArtboard: Artboard = newArtboard(view.name, shape.frame, view.style.getStylesMgr()!);
         tmpArtboard.childs = shape.naviChilds! as BasicArray<Shape>;
         tmpArtboard.varbinds = shape.varbinds;
@@ -713,13 +727,12 @@ export class RefUnbind {
         if (radius) {
             tmpArtboard.cornerRadius = importCornerRadius(radius);
         }
-
-        const symbolData = exportArtboard(tmpArtboard); // todo 如果symbol只有一个child时
+        const symbolData = exportArtboard(tmpArtboard, ctx); // todo 如果symbol只有一个child时
 
         if (shape.uniformScale && shape.uniformScale !== 1) this.solidify(symbolData as GroupShape, shape.uniformScale);
 
         // 遍历symbolData,如有symbolref,则查找根shape是否有对应override的变量,如有则存到symbolref内
-        this.transferVars(shape, symbolData);
+        this.transferVars(shape, symbolData, ctx);
         this.clearBindVars(symbolData);
         this.replaceId(symbolData);
         return symbolData;

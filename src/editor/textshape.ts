@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { _travelTextPara } from "../data/text/texttravel";
 import {
     BulletNumbersBehavior,
@@ -23,7 +33,7 @@ import {
     string2Text,
 } from "../data";
 import { CoopRepository } from "../coop/cooprepo";
-import { Api } from "../coop/recordapi";
+import { Operator } from "../coop/recordop";
 import { ShapeEditor } from "./shape";
 import { fixTableShapeFrameByLayout, fixTextShapeFrameByLayout } from "./utils/other";
 import { BasicArray } from "../data";
@@ -81,24 +91,24 @@ export class TextShapeEditor extends ShapeEditor {
         return this.insertText2(text, index, 0, attr);
     }
 
-    public fixFrameByLayout(api: Api) {
+    public fixFrameByLayout(api: Operator) {
         if (this.shape.isVirtualShape) return; // api = basicapi;
         if (this.view instanceof TextShapeView) fixTextShapeFrameByLayout(api, this.__page, this.view);
         else if (this.view instanceof TableCellView) fixTableShapeFrameByLayout(api, this.__page, this.view, this.view.parent as TableView);
     }
-    public fixFrameByLayout2(api: Api, shape: TextShapeView | TableCellView | Variable) {
+    public fixFrameByLayout2(api: Operator, shape: TextShapeView | TableCellView | Variable) {
         if (shape instanceof Variable) return;
         if (shape.isVirtualShape) return; // api = basicapi;
         if (shape instanceof TextShapeView) fixTextShapeFrameByLayout(api, this.__page, shape);
         else if (shape instanceof TableCellView) fixTableShapeFrameByLayout(api, this.__page, shape, this.view.parent as TableView);
     }
 
-    private overrideVariable(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, api: Api, view?: ShapeView) {
+    private overrideVariable(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, api: Operator, view?: ShapeView) {
         view = view ?? this.__shape;
         return prepareVar(api, this._page, view, overrideType, varType, valuefun)?.var;
     }
 
-    public shape4edit(api: Api, shape?: TextShapeView | TableCellView): Variable | TableCellView | TextShapeView {
+    public shape4edit(api: Operator, shape?: TextShapeView | TableCellView): Variable | TableCellView | TextShapeView {
         const _shape = shape ?? this.__shape as (TextShapeView | TableCellView);
 
         if (_shape instanceof TableCellView) {
@@ -202,7 +212,7 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return 0;
     }
-    public updateName(api: Api) {
+    public updateName(api: Operator) {
         const shape = this.shape;
         if (shape.nameIsFixed || shape.isVirtualShape) return;
         const name = (shape as TextShapeLike).text.getText(0, Infinity);
@@ -448,7 +458,7 @@ export class TextShapeEditor extends ShapeEditor {
 
     private __composdelSpan: SpanAttr | undefined;
     private __composdelpara: ParaAttr | undefined;
-    private __composingApi: Api | undefined;
+    private __composingApi: Operator | undefined;
     private __preInputText: string | undefined;
     public composingInputUpdate(text: string): boolean {
         const api = this.__composingApi;

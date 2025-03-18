@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { Page } from "../data/page";
 import { Document } from "../data/document";
 import { PageListItem } from "../data/typesdefine";
@@ -14,7 +24,7 @@ import {
 } from "../data/baseimport";
 import { newDocument } from "./creator";
 import { CoopRepository } from "../coop/cooprepo";
-import { Repository } from "../data/transact";
+import { TransactDataGuard } from "../data/transact";
 import * as types from "../data/typesdefine";
 import { FMT_VER_latest } from "../data/fmtver";
 import { FillMask, ShadowMask, StyleMangerMember, BlurMask, BorderMask, RadiusMask, Blur, TextMask } from "../data/style";
@@ -22,7 +32,7 @@ import { adapt2Shape, PageView, ShapeView } from "../dataview";
 import { Fill, Shadow, BlurType } from "../data/classes";
 import { BasicArray, Point2D, ResourceMgr } from "../data";
 
-export function createDocument(documentName: string, repo: Repository): Document {
+export function createDocument(documentName: string, repo: TransactDataGuard): Document {
     return newDocument(documentName, repo);
 }
 
@@ -227,8 +237,8 @@ export class DocEditor {
     }
 
     insertStyleLib(style: StyleMangerMember, page: PageView, shapes?: ShapeView[]) {
-        const api = this.__repo.start('insertStyleLib');
         try {
+            const api = this.__repo.start('insertStyleLib');
             api.styleInsert(this.__document, style);
             const p = this.__document.pagesMgr.getSync(page.id)
             if (shapes && p) {
@@ -265,10 +275,9 @@ export class DocEditor {
             }
             this.__repo.commit();
         } catch (error) {
-            console.log(error)
             this.__repo.rollback();
+            throw error;
         }
-        return true;
     }
 
     insertStyles(masks: StyleMangerMember[]) {
@@ -287,18 +296,18 @@ export class DocEditor {
             for (const mask of masks) {
                 if (manger.has(mask.id)) continue;
                 let m: StyleMangerMember;
-                if (mask.typeId === 'fill-mask-living') {
+                if (mask.typeId === 'fill-mask') {
                     const fills = new BasicArray<Fill>(...(mask as FillMask).fills.map(i => importFill(i)));
                     m = new FillMask([0] as BasicArray<number>, sheetId, mask.id, mask.name, mask.description, fills, mask.disabled);
-                } else if (mask.typeId === 'shadow-mask-living') {
+                } else if (mask.typeId === 'shadow-mask') {
                     const shadows = new BasicArray<Shadow>(...(mask as ShadowMask).shadows.map(i => importShadow(i)));
                     m = new ShadowMask([0] as BasicArray<number>, sheetId, mask.id, mask.name, mask.description, shadows, mask.disabled)
-                } else if (mask.typeId === 'blur-mask-living') {
+                } else if (mask.typeId === 'blur-mask') {
                     const __mask = mask as BlurMask;
                     const frank = new Blur(true, new Point2D(0, 0), 10, BlurType.Gaussian);
                     const blur = __mask.blur ? importBlur(__mask.blur) : frank;
                     m = new BlurMask([0] as BasicArray<number>, sheetId, mask.id, mask.name, mask.description, blur, mask.disabled);
-                } else if (mask.typeId === 'border-mask-living') {
+                } else if (mask.typeId === 'border-mask') {
                     const __mask = mask as BorderMask;
                     const border = importBorderMaskType(__mask.border);
                     m = new BorderMask([0] as BasicArray<number>, sheetId, mask.id, mask.name, mask.description, border, mask.disabled);

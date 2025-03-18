@@ -1,10 +1,19 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import {
     Artboard,
     BasicArray,
     BoolOp,
     BoolShape,
     Border,
-    BorderMaskType,
     Color,
     ContactShape,
     Document,
@@ -13,8 +22,6 @@ import {
     Fill,
     FillType,
     GroupShape,
-    makeShapeTransform1By2,
-    makeShapeTransform2By1,
     MarkerType,
     OverrideType,
     Page,
@@ -37,31 +44,29 @@ import {
     SymbolUnionShape,
     TextShape,
     Transform,
-    updateShapeTransform1By2,
     Variable,
     VariableType
 } from "../data";
 import { ShapeEditor } from "./shape";
 import * as types from "../data/typesdefine";
 import { newArtboard, newAutoLayoutArtboard, newBoolShape, newGroupShape, newImageFillShape, newPathShape, newSolidColorFill, newSymbolRefShape, newSymbolShape } from "./creator";
-import { expand, translate, translateTo } from "./frame";
+import { expand, expandTo, translate, translateTo } from "./frame";
 import { uuid } from "../basic/uuid";
 import { TextShapeEditor } from "./textshape";
 import { set_childs_id, transform_data } from "../io/cilpboard";
 import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
 import { IImportContext, importArtboard, importAutoLayout, importBlur, importBorder, importCornerRadius, importFill, importGradient, importMarkerType, importOverlayBackgroundAppearance, importOverlayPosition, importPrototypeInterAction, importPrototypeStartingPoint, importShadow, importStop, importStyle, importSymbolShape, importText, importTransform } from "../data/baseimport";
-import { gPal } from "../basic/pal";
 import { TableEditor } from "./table";
 import { exportGradient, exportStop, exportSymbolShape } from "../data/baseexport";
 import { after_remove, clear_binds_effect, find_state_space, fixTextShapeFrameByLayout, get_symbol_by_layer, init_state, make_union, modify_frame_after_inset_state, modify_index } from "./utils/other";
 import { v4 } from "uuid";
-import { is_exist_invalid_shape2, is_part_of_symbol, is_part_of_symbolref, is_state, modify_variable_with_api, shape4border, shape4cornerRadius, shape4fill, shape4shadow, shape4contextSettings, shape4blur, RefUnbind, _ov } from "./symbol";
+import { is_exist_invalid_shape2, is_part_of_symbol, is_part_of_symbolref, is_state, modify_variable_with_api, shape4border, shape4cornerRadius, shape4fill, shape4shadow, shape4contextSettings, shape4blur, RefUnbind, _ov, shape4Autolayout } from "./symbol";
 import { is_circular_ref2 } from "./utils/ref_check";
 import { AutoLayout, BorderSideSetting, BorderStyle, ExportFormat, OverlayBackgroundAppearance, OverlayBackgroundInteraction, OverlayPositionType, PrototypeActions, PrototypeConnectionType, PrototypeEasingBezier, PrototypeEasingType, PrototypeEvent, PrototypeEvents, PrototypeInterAction, PrototypeNavigationType, PrototypeStartingPoint, PrototypeTransitionType, ScrollBehavior, ScrollDirection, Shadow } from "../data/baseclasses";
-import { border2path, calculateInnerAnglePosition, getPolygonPoints, getPolygonVertices, update_frame_by_points } from "./utils/path";
+import { calculateInnerAnglePosition, getPolygonPoints, getPolygonVertices, update_frame_by_points } from "./utils/path";
 import { modify_shapes_height, modify_shapes_width } from "./utils/common";
 import { CoopRepository, ISave4Restore, LocalCmd, SelectionState } from "../coop";
-import { Api, TextShapeLike } from "../coop/recordapi";
+import { Operator, PaddingDir, TextShapeLike } from "../coop/recordop";
 import { unable_to_migrate } from "./utils/migrate";
 import {
     adapt2Shape,
@@ -81,7 +86,6 @@ import {
 } from "../dataview";
 import { FMT_VER_latest } from "../data/fmtver";
 import { ColVector3D } from "../basic/matrix2";
-import { Transform as Transform2 } from "../basic/transform";
 import { TidyUpAlgin, tidyUpLayout } from "./utils/auto_layout";
 
 import { getFormatFromBase64 } from "../basic/utils";
@@ -89,6 +93,7 @@ import { modifyRadius, modifyStartingAngle, modifySweep, uniformScale, UniformSc
 import { Path } from "@kcdesign/path";
 import { prepareVar } from "./symbol_utils";
 import { layoutShapesOrder2, layoutSpacing } from "./utils/auto_layout2";
+import { border2path } from "../dataview/border2path";
 
 // 用于批量操作的单个操作类型
 export interface PositionAdjust { // 涉及属性：frame.x、frame.y
@@ -299,31 +304,25 @@ export class PageEditor {
      * @param artboardname
      * @returns { false | Artboard } 成功则返回容器
      */
-    create_artboard(shapes: ShapeView[], artboardname: string): false | Artboard {
-        // if (shapes.length === 0) return false;
-        // if (shapes.find((v) => !v.parent)) return false;
-        // const fshape = adapt2Shape(shapes[0]);
-        // const savep = fshape.parent as GroupShape;
-        // let artboard = newArtboard(artboardname, new ShapeFrame(0, 0, 100, 100));
-        //
-        // const api = this.__repo.start("create_artboard", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-        //     const state = {} as SelectionState;
-        //     if (!isUndo) state.shapes = [artboard.id];
-        //     else state.shapes = cmd.saveselection?.shapes || [];
-        //     selection.restore(state);
-        // });
-        // try {
-        //     // 0、save shapes[0].parent？最外层shape？位置？  层级最高图形的parent
-        //     const saveidx = savep.indexOfChild(adapt2Shape(shapes[0]));
-        //     // 1、新建一个GroupShape
-        //     artboard = group(this.__document, this.page, shapes.map(s => adapt2Shape(s)), artboard, savep, saveidx, api) as Artboard;
-        //     this.__repo.commit();
-        //     return artboard;
-        // } catch (e) {
-        //     console.log(e)
-        //     this.__repo.rollback();
-        // }
-        return false;
+    createArtboard(shapes: ShapeView[], artboardname: string): Artboard {
+        try {
+            const api = this.__repo.start("createArtboard", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+                const state = {} as SelectionState;
+                if (!isUndo) state.shapes = [artboard.id];
+                else state.shapes = cmd.saveselection?.shapes || [];
+                selection.restore(state);
+            });
+            const fshape = adapt2Shape(shapes[0]);
+            const savep = fshape.parent as GroupShape;
+            let artboard = newArtboard(artboardname, new ShapeFrame(0, 0, 100, 100), this.__document.stylesMgr);
+            const saveidx = savep.indexOfChild(adapt2Shape(shapes[0]));
+            artboard = group(this.__document, this.page, shapes.map(s => adapt2Shape(s)), artboard, savep, saveidx, api) as Artboard;
+            this.__repo.commit();
+            return artboard;
+        } catch (e) {
+            this.__repo.rollback();
+            throw e;
+        }
     }
 
     dissolution_artboard(shapes: ArtboardView[]): false | Shape[] {
@@ -478,6 +477,7 @@ export class PageEditor {
             });
             // 0、save shapes[0].parent？最外层shape？位置？  层级最高图形的parent
             const saveidx = savep.indexOfChild(shapes[0]);
+            gshape.boolOp = savep.childs[0]?.boolOp;
             gshape = group(this.__document, this.page, shapes, gshape, savep, saveidx, api);
             shapes.forEach((shape) => api.shapeModifyBoolOp(this.page, shape, op))
             this.__repo.commit();
@@ -500,7 +500,7 @@ export class PageEditor {
             }
 
             let gshape = newBoolShape(groupname, style);
-            gshape.transform = makeShapeTransform1By2(makeShapeTransform2By1(savep.matrix2Root()));
+            gshape.transform = ((savep.matrix2Root()));
 
             const api = this.__repo.start("boolgroup2", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
                 const state = {} as SelectionState;
@@ -646,7 +646,7 @@ export class PageEditor {
                     om.multiAtLeft(matrixToPage);
 
                     api.shapeMove(page, parent, parent.indexOfChild(symbol), page, page.childs.length);
-                    api.shapeModifyTransform(page, symbol, makeShapeTransform1By2(makeShapeTransform2By1(om)));
+                    api.shapeModifyTransform(page, symbol, ((om)));
 
                     const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
                     if (_types.includes(parent.type)) {
@@ -873,8 +873,8 @@ export class PageEditor {
             this.__repo.commit();
             return [...return_shapes, ...results];
         } catch (e) {
-            console.log(e)
             this.__repo.rollback();
+            throw e;
         }
     }
 
@@ -967,7 +967,7 @@ export class PageEditor {
         const xy = m.computeCoord(bounds.left, bounds.top)
 
         const frame = new ShapeFrame(xy.x, xy.y, bounds.right - bounds.left, bounds.bottom - bounds.top);
-        let pathstr = "";
+        let path: Path | undefined;
         _shapes.forEach((shape) => {
             const shapem = shape.matrix2Root();
             // const shapepath = render2path(shape);
@@ -983,13 +983,14 @@ export class PageEditor {
             shapem.multiAtLeft(m);
             shapepath.transform(shapem);
 
-            if (pathstr.length > 0) {
-                pathstr = gPal.boolop.union(pathstr, shapepath.toString())
+            if (path) {
+                path.union(shapepath)
             } else {
-                pathstr = shapepath.toString();
+                path = shapepath
             }
         })
-        const path = Path.fromSVGString(pathstr);
+        // const path = Path.fromSVGString(pathstr);
+        if (path === undefined) throw new Error()
         path.translate(-frame.x, -frame.y);
 
         let pathShape = newPathShape(name, frame, path, this.__document.stylesMgr, style);
@@ -1063,9 +1064,9 @@ export class PageEditor {
             path.translate(-boundingBox.x, -boundingBox.y);
             let pathShape = newPathShape(shape.name, frame, path, this.__document.stylesMgr, style);
             pathShape.fixedRadius = shape.fixedRadius;
-            pathShape.transform = makeShapeTransform1By2(new Transform2() // shape图层坐标系
-                .setTranslate(ColVector3D.FromXY(x, y)) // pathShape图层坐标系
-                .addTransform(makeShapeTransform2By1(shape.transform))) // pathShape在父级坐标系下的transform;
+            pathShape.transform = new Transform() // shape图层坐标系
+                .translate(x, y) // pathShape图层坐标系
+                .addTransform((shape.transform)) // pathShape在父级坐标系下的transform;
 
             const index = parent.indexOfChild(adapt2Shape(shape));
             const api = this.__repo.start("flattenBoolShape", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
@@ -1173,7 +1174,7 @@ export class PageEditor {
         }
     }
 
-    private removeContactSides(api: Api, page: Page, shape: types.ContactShape) {
+    private removeContactSides(api: Operator, page: Page, shape: types.ContactShape) {
         if (shape.from) {
             const fromShape = page.getShape(shape.from.shapeId);
             const contacts = fromShape?.style.contacts;
@@ -1210,7 +1211,7 @@ export class PageEditor {
         }
     }
 
-    private removeContact(api: Api, page: Page, shape: Shape) {
+    private removeContact(api: Operator, page: Page, shape: Shape) {
         const contacts = shape.style.contacts;
         if (contacts && contacts.length) {
             for (let i = 0, len = contacts.length; i < len; i++) {
@@ -1230,7 +1231,7 @@ export class PageEditor {
         }
     }
 
-    private delete_inner(page: Page, _shape: ShapeView | Shape, api: Api): boolean {
+    private delete_inner(page: Page, _shape: ShapeView | Shape, api: Operator): boolean {
         const shape = _shape instanceof Shape ? _shape : _shape.data;
         const p = shape.parent as GroupShape;
         if (!p) return false;
@@ -1271,9 +1272,6 @@ export class PageEditor {
             if (this.delete_inner(page.data, shape, api)) {
                 if (after_remove(savep)) {
                     this.delete_inner(page.data, savep, api);
-                }
-                if (shape.type === ShapeType.Symbol) {
-                    this.__document.__correspondent.notify('update-symbol-list');
                 }
                 this.__repo.commit()
                 return true;
@@ -1323,9 +1321,6 @@ export class PageEditor {
                 return false;
             }
         }
-        if (need_special_notify) {
-            this.__document.__correspondent.notify('update-symbol-list');
-        }
         this.__repo.commit();
         return true;
     }
@@ -1335,9 +1330,8 @@ export class PageEditor {
         // adjust shape frame refer to parent
         if (!adjusted) {
             const xy = parent.frame2Root();
-            const transform2 = makeShapeTransform2By1(shape.transform);
-            transform2.translate(new ColVector3D([-xy.x, -xy.y, 0]))
-            updateShapeTransform1By2(shape.transform, transform2);
+            const transform2 = (shape.transform);
+            transform2.translate(-xy.x, -xy.y)
         }
         shape.id = uuid(); // 凡插入对象，不管是复制剪切的，都需要新id。要保持同一id，使用move!
         const api = this.__repo.start("insertshape", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
@@ -1392,9 +1386,9 @@ export class PageEditor {
                 const { parent, shape, } = action;
                 if (!adjusted) {
                     const xy = parent.frame2Root();
-                    const transform2 = makeShapeTransform2By1(shape.transform);
+                    const transform2 = (shape.transform);
                     transform2.translate(new ColVector3D([-xy.x, -xy.y, 0]));
-                    updateShapeTransform1By2(shape.transform, transform2);
+                    // updateShapeTransform1By2(shape.transform, transform2);
                 }
                 const s = api.shapeInsert(document, page, parent, shape, action.index ?? parent.childs.length);
                 const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
@@ -1584,10 +1578,6 @@ export class PageEditor {
         }
     }
 
-    createArtboard(name: string, frame: ShapeFrame, fill: Fill, mgr: ResourceMgr<StyleMangerMember>) { // todo 新建图层存在代码冗余
-        return newArtboard(name, frame, mgr, fill);
-    }
-
     shapesModifyRadius(shapes: ShapeView[], values: number[]) {
         try {
             const api = this.__repo.start("shapesModifyRadius");
@@ -1648,7 +1638,7 @@ export class PageEditor {
                     }
                 }
 
-                if (needUpdateFrame) update_frame_by_points(api, this.page, shape);
+                if (needUpdateFrame) update_frame_by_points(api, this.page, shape as PathShape);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1843,17 +1833,18 @@ export class PageEditor {
      * @param src 即将被替代的图形
      * @returns 如果成功替换则返回所有替代品
      */
-    replace(document: Document, replacement: Shape[], src: Shape[]): false | Shape[] {
-        // 收集被替换上去的元素
-        const src_replacement: Shape[] = [];
-
-        const api = this.__repo.start("replace", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-            const state = {} as SelectionState;
-            if (!isUndo) state.shapes = src_replacement.map(s => s.id);
-            else state.shapes = cmd.saveselection?.shapes || [];
-            selection.restore(state);
-        });
+    replace(document: Document, replacement: Shape[], src: Shape[]): Shape[] {
         try {
+            // 收集被替换上去的元素
+            const src_replacement: Shape[] = [];
+
+            const api = this.__repo.start("replace", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+                const state = {} as SelectionState;
+                if (!isUndo) state.shapes = src_replacement.map(s => s.id);
+                else state.shapes = cmd.saveselection?.shapes || [];
+                selection.restore(state);
+            });
+
             const len = replacement.length;
             // 寻找replacement的左上角(lt_point)，该点将和src中每个图形的左上角重合
             const any_r_f = replacement[0].transform;
@@ -1897,13 +1888,13 @@ export class PageEditor {
                     let r = copy[r_i];
                     r.id = uuid();
                     // lt_point与s.frame的xy重合后，用delta_xys中的相对位置计算replacement中每个图形的偏移
-                    const transform2 = makeShapeTransform2By1(r.transform);
+                    const transform2 = (r.transform);
                     transform2.setTranslate(new ColVector3D([
                         save_frame.x + delta_xys[r_i].x,
                         save_frame.y + delta_xys[r_i].y,
                         0,
                     ]))
-                    updateShapeTransform1By2(r.transform, transform2);
+                    // updateShapeTransform1By2(r.transform, transform2);
                     api.shapeInsert(this.__document, this.page, p, r, save_index);
                     src_replacement.push(p.childs[save_index]);
                     save_index++;
@@ -1912,9 +1903,8 @@ export class PageEditor {
             this.__repo.commit();
             return src_replacement;
         } catch (error) {
-            console.log(error);
             this.__repo.rollback();
-            return false;
+            throw error;
         }
     }
 
@@ -2086,14 +2076,14 @@ export class PageEditor {
 
     shapesFlip(params: {
         shape: ShapeView,
-        transform2: Transform2
+        transform2: Transform
     }[]) {
         try {
             const api = this.__repo.start('shapesFlip');
             const page = this.page;
             for (let i = 0; i < params.length; i++) {
                 const { shape, transform2 } = params[i];
-                api.shapeModifyTransform(page, adapt2Shape(shape), makeShapeTransform1By2(transform2 as Transform2));
+                api.shapeModifyTransform(page, adapt2Shape(shape), (transform2.clone()));
             }
             this.__repo.commit();
         } catch (error) {
@@ -2159,8 +2149,8 @@ export class PageEditor {
                 const { fill, stop } = actions[i];
                 const gradient = fill.gradient;
                 if (!gradient) continue;
-                const new_gradient = importGradient(exportGradient(gradient));
-                new_gradient.stops.push(importStop(exportStop(stop)));
+                const new_gradient = importGradient(gradient);
+                new_gradient.stops.push(importStop(stop));
                 const s = new_gradient.stops;
                 s.sort((a, b) => {
                     if (a.position > b.position) {
@@ -2606,7 +2596,7 @@ export class PageEditor {
         }
     }
 
-    private shape4protoActions(api: Api, shape: ShapeView, id: string | undefined) {
+    private shape4protoActions(api: Operator, shape: ShapeView, id: string | undefined) {
         const _var = prepareVar(api, this.view, shape, OverrideType.ProtoInteractions, VariableType.ProtoInteractions, (_var) => {
             const ret = new BasicArray();
             if (id) {
@@ -3289,6 +3279,7 @@ export class PageEditor {
         }
     }
 
+    // 粘贴属性
     pasteProperties(shapes: ShapeView[], source: any) {
         try {
             const api = this.__repo.start('pasteProperties');
@@ -3415,7 +3406,7 @@ export class PageEditor {
                 }
 
                 if (needUpdateFrame && !((shape instanceof StarShape || shape instanceof PolygonShape) && !shape.haveEdit)) {
-                    update_frame_by_points(api, this.page, shape);
+                    update_frame_by_points(api, this.page, shape as PathShape);
                 }
 
                 // contextSetting
@@ -3565,7 +3556,7 @@ export class PageEditor {
                             if (fill.fillType === FillType.Pattern) fill.fillType = FillType.SolidColor;
                             style.fills = new BasicArray<Fill>(fill);
                         }
-                        const path = border2path(view, border, view.frame.width, view.frame.height);
+                        const path = border2path(view, border);
                         let pathshape = newPathShape(view.name + suffix, view.frame, path, this.__document.stylesMgr, style);
                         pathshape.transform = shape.transform.clone();
                         pathshape.mask = shape.mask;
@@ -3804,23 +3795,196 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
+    deleteAutoLayout(shapes: ShapeView[]) {
+        const api = this.__repo.start("deleteAutoLayout");
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const childs = shapes[i].childs;
+                const view = shapes[i];
+                for (let i = 0; i < childs.length; i++) {
+                    const child = childs[i];
+                    api.shapeModifyXY(this.page, adapt2Shape(child), child.transform.translateX, child.transform.translateY);
+                }
+                const w = view.frame.width;
+                const h = view.frame.height;
+                expandTo(api, this.__document, this.page, adapt2Shape(view), w, h);
+                const shape = shape4Autolayout(api, shapes[i], this.view);
+                api.shapeAutoLayout(this.page, shape, undefined);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error);
+            this.__repo.rollback();
+        }
+    }
+
+    modifyAutoLayoutPadding(shapes: ShapeView[], padding: number, direction: PaddingDir) {
+        const api = this.__repo.start("modifyAutoLayoutPadding");
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const shape = shape4Autolayout(api, shapes[i], this.view);
+                api.shapeModifyAutoLayoutPadding(this.page, shape, Math.max(padding, 0), direction);
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+
+    modifyAutoLayoutHorPadding(shapes: ShapeView[], hor: number, right: number) {
+        const api = this.__repo.start("modifyAutoLayoutHorPadding");
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const shape = shape4Autolayout(api, shapes[i], this.view);
+                api.shapeModifyAutoLayoutHorPadding(this.page, shape, Math.max(hor, 0), Math.max(right, 0));
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+
+    modifyAutoLayoutVerPadding(shapes: ShapeView[], ver: number, bottom: number) {
+        const api = this.__repo.start("modifyAutoLayoutVerPadding");
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const shape = shape4Autolayout(api, shapes[i], this.view);
+                api.shapeModifyAutoLayoutVerPadding(this.page, shape, Math.max(ver, 0), Math.max(bottom, 0));
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+
+    modifyAutoLayoutDispersed(shapes: ShapeView[], wrap: types.StackWrap, mode: types.StackMode) {
+        const api = this.__repo.start("modifyAutoLayoutDispersed");
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const shape = shape4Autolayout(api, shapes[i], this.view);
+                api.shapeModifyAutoLayoutWrap(this.page, shape, wrap);
+                api.shapeModifyAutoLayoutMode(this.page, shape, mode);
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+
+    modifyAutoLayoutSpace(shapes: ShapeView[], space: number, direction: PaddingDir) {
+        const api = this.__repo.start("modifyAutoLayoutSpace");
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const shape = shape4Autolayout(api, shapes[i], this.view);
+                api.shapeModifyAutoLayoutSpace(this.page, shape, space, direction);
+                api.shapeModifyAutoLayoutGapSizing(this.page, shape, types.StackSizing.Fixed, direction);
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+
+    modifyAutoLayoutAlignItems(shapes: ShapeView[], primary: types.StackAlign, counter: types.StackAlign) {
+        const api = this.__repo.start("modifyAutoLayoutAlignItems");
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const shape = shape4Autolayout(api, shapes[i], this.view);
+                api.shapeModifyAutoLayoutAlignItems(this.page, shape, primary, counter);
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+
+    modifyAutoLayoutSizing(shapes: ShapeView[], sizing: types.StackSizing, direction: PaddingDir) {
+        const api = this.__repo.start("modifyAutoLayoutSizing");
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const view = shapes[i];
+                const shape = shape4Autolayout(api, view, this.view);
+                api.shapeModifyAutoLayoutSizing(this.page, shape, sizing, direction);
+                api.shapeModifyAutoLayoutGapSizing(this.page, shape, types.StackSizing.Fixed, direction);
+                if (sizing === types.StackSizing.Fixed) {
+                    const w = view.frame.width;
+                    const h = view.frame.height;
+                    expandTo(api, this.__document, this.page, adapt2Shape(view), w, h);
+                }
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+
+    modifyAutoLayoutGapSizing(shapes: ShapeView[], sizing: types.StackSizing, direction: PaddingDir) {
+        const api = this.__repo.start("modifyAutoLayoutGapSizing");
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const shape = shape4Autolayout(api, shapes[i], this.view);
+                api.shapeModifyAutoLayoutGapSizing(this.page, shape, sizing, direction);
+                api.shapeModifyAutoLayoutSizing(this.page, shape, types.StackSizing.Fixed, direction);
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+
+    modifyAutoLayoutZIndex(shapes: ShapeView[], stack: boolean) {
+        const api = this.__repo.start("modifyAutoLayoutZIndex");
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const shape = shape4Autolayout(api, shapes[i], this.view);
+                api.shapeModifyAutoLayoutStackZIndex(this.page, shape, stack);
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+
+    modifyAutoLayoutStroke(shapes: ShapeView[], included: boolean) {
+        const api = this.__repo.start("modifyAutoLayoutStroke");
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const shape = shape4Autolayout(api, shapes[i], this.view);
+                api.shapeModifyAutoLayoutStroke(this.page, shape, included);
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
 }
 
-function getFillMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
+function getFillMaskVariable(api: Operator, page: PageView, view: ShapeView, value: any) {
     return _ov(VariableType.FillsMask, OverrideType.FillsMask, () => value, view, page, api);
 }
-function getBorderFillMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
+function getBorderFillMaskVariable(api: Operator, page: PageView, view: ShapeView, value: any) {
     return _ov(VariableType.BorderFillsMask, OverrideType.BorderFillsMask, () => value, view, page, api);
 }
-function getBorderMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
+function getBorderMaskVariable(api: Operator, page: PageView, view: ShapeView, value: any) {
     return _ov(VariableType.BordersMask, OverrideType.BordersMask, () => value, view, page, api);
 }
-function getRadiusMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
+function getRadiusMaskVariable(api: Operator, page: PageView, view: ShapeView, value: any) {
     return _ov(VariableType.RadiusMask, OverrideType.RadiusMask, () => value, view, page, api);
 }
-function getShadowMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
+function getShadowMaskVariable(api: Operator, page: PageView, view: ShapeView, value: any) {
     return _ov(VariableType.ShadowsMask, OverrideType.ShadowsMask, () => value, view, page, api);
 }
-function getBlurMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
+function getBlurMaskVariable(api: Operator, page: PageView, view: ShapeView, value: any) {
     return _ov(VariableType.BlursMask, OverrideType.BlursMask, () => value, view, page, api);
 }

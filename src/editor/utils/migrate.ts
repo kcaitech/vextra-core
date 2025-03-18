@@ -1,6 +1,16 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { SymbolRefShape, Document, Page, GroupShape, Shape, ShapeType, SymbolUnionShape } from "../../data";
 import { is_circular_ref2 } from "./ref_check";
-import { Api } from "../../coop/recordapi";
+import { Operator } from "../../coop/recordop";
 import { is_exist_invalid_shape2, is_state } from "../symbol";
 
 /**
@@ -43,7 +53,7 @@ export function unable_to_migrate(targetEnv: Shape, wander: Shape) {
     return 0;
 }
 
-export function after_migrate(document: Document, page: Page, api: Api, origin: Shape) {
+export function after_migrate(document: Document, page: Page, api: Operator, origin: Shape) {
     if (origin instanceof SymbolUnionShape && !origin.childs?.length) {
         const origin_parent = origin.parent;
         if (!origin_parent) return;

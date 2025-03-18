@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { AsyncApiCaller } from "./basic/asyncapi";
 import { CoopRepository } from "../../coop/cooprepo";
 import { Document } from "../../data/document";
@@ -14,7 +24,7 @@ export class LineHandleApiCaller extends AsyncApiCaller {
     }
 
     start() {
-        return this.__repo.start('path-modify');
+        return this.__repo.start('straight-line-modify');
     }
 
     execute(start: { x: number, y: number }, end: { x: number, y: number }) {
@@ -38,14 +48,14 @@ export class LineHandleApiCaller extends AsyncApiCaller {
 
             this.updateView();
         } catch (e) {
-            console.log('LineHandleApiCaller.execute:', e);
+            console.error(e);
             this.exception = true;
         }
     }
 
     commit() {
         if (this.__repo.isNeedCommit() && !this.exception) {
-            update_frame_by_points(this.api, this.page, adapt2Shape(this.line), true);
+            update_frame_by_points(this.api, this.page, adapt2Shape(this.line) as PathShape, true);
             this.__repo.commit();
         } else {
             this.__repo.rollback();

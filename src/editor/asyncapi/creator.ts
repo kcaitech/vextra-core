@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { AsyncApiCaller } from "./basic/asyncapi";
 import { CoopRepository } from "../../coop";
 import {
@@ -18,8 +28,7 @@ import {
     Page,
     ContactShape,
     TextAttr,
-    makeShapeTransform1By2,
-    updateShapeTransform1By2
+    Transform
 } from "../../data";
 import { adapt2Shape, GroupShapeView, PageView, ShapeView } from "../../dataview";
 import {
@@ -52,7 +61,7 @@ export interface GeneratorParams {
     namePrefix: string;
     shape: ShapeView | undefined;
 
-    transform2: Transform2;
+    transform2: Transform;
 
     fill?: Fill;
     mark?: boolean;
@@ -118,7 +127,7 @@ export class CreatorApiCaller extends AsyncApiCaller {
                 const f = params.frame;
 
                 api.shapeModifyWH(page, shape, f.width, f.height);
-                this.api.shapeModifyTransform(this.page, shape, makeShapeTransform1By2(params.transform2));
+                this.api.shapeModifyTransform(this.page, shape, (params.transform2.clone()));
 
                 api.shapeModifyConstrainerProportions(page, shape, params.isFixedRatio);
 
@@ -421,10 +430,10 @@ export class CreatorApiCaller extends AsyncApiCaller {
     // 初始化图层的transform
     private setTransform(
         shape: Shape,
-        transform: Transform2,
+        transform: Transform,
         frame: ShapeFrame
     ) {
-        updateShapeTransform1By2(shape.transform, transform);
+        shape.transform = transform.clone();
         shape.size.width = frame.width;
         shape.size.height = frame.height;
     }

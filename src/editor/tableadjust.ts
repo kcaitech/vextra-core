@@ -1,7 +1,17 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { TableView } from "../dataview";
 import { Page } from "../data/page";
 import { TableShape } from "../data/table";
-import { Api } from "../coop/recordapi";
+import { Operator } from "../coop/recordop";
 
 const MinCellSize = TableShape.MinCellSize;
 
@@ -14,7 +24,7 @@ const MinCellSize = TableShape.MinCellSize;
  * @param api 
  * @returns 
  */
-export function adjColum(page: Page, table: TableView, fromIdx: number, toIdx: number, dx: number, api: Api) {
+export function adjColum(page: Page, table: TableView, fromIdx: number, toIdx: number, dx: number, api: Operator) {
     if (dx === 0 || fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) {
         return;
     }
@@ -54,7 +64,7 @@ export function adjColum(page: Page, table: TableView, fromIdx: number, toIdx: n
 }
 
 
-export function adjRow(page: Page, table: TableView, fromIdx: number, toIdx: number, dx: number, api: Api) {
+export function adjRow(page: Page, table: TableView, fromIdx: number, toIdx: number, dx: number, api: Operator) {
     if (dx === 0 || fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) {
         return;
     }
