@@ -9,13 +9,15 @@ import {
     importBlur,
     importBorderMaskType, importFill,
     importPage, importShadow,
+    importTextAttr,
+    importTextMask,
 } from "../data/baseimport";
 import { newDocument } from "./creator";
 import { CoopRepository } from "../coop/cooprepo";
 import { Repository } from "../data/transact";
 import * as types from "../data/typesdefine";
 import { FMT_VER_latest } from "../data/fmtver";
-import { FillMask, ShadowMask, StyleMangerMember, BlurMask, BorderMask, RadiusMask, Blur } from "../data/style";
+import { FillMask, ShadowMask, StyleMangerMember, BlurMask, BorderMask, RadiusMask, Blur, TextMask } from "../data/style";
 import { adapt2Shape, PageView, ShapeView } from "../dataview";
 import { Fill, Shadow, BlurType } from "../data/classes";
 import { BasicArray, Point2D, ResourceMgr } from "../data";
@@ -300,9 +302,13 @@ export class DocEditor {
                     const __mask = mask as BorderMask;
                     const border = importBorderMaskType(__mask.border);
                     m = new BorderMask([0] as BasicArray<number>, sheetId, mask.id, mask.name, mask.description, border, mask.disabled);
-                } else {
+                } else if (mask.typeId === 'radius-mask-living') {
                     const __mask = mask as RadiusMask;
                     m = new RadiusMask([0] as BasicArray<number>, sheetId, mask.id, mask.name, mask.description, new BasicArray<number>(...__mask.radius), mask.disabled)
+                } else {
+                    const __mask = mask as TextMask;
+                    const text = importTextAttr(__mask.text)
+                    m = new TextMask([0] as BasicArray<number>, sheetId, mask.id, mask.name, mask.description, text, mask.disabled)
                 }
                 styles.push(m);
             }
