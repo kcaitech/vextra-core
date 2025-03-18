@@ -48,13 +48,6 @@ export function modifyStartingAngle(api: Api, page: Page, shapes: ShapeView[], v
     }
 }
 
-export function modifyEndingAngle(api: Api, page: Page, shapes: ShapeView[], value: number) {
-    for (const view of shapes) {
-        const shape = adapt2Shape(view);
-        api.ovalModifyEndingAngle(page, shape, value);
-    }
-}
-
 export function modifyRadius(api: Api, page: Page, shapes: ShapeView[], value: number) {
     for (const view of shapes) {
         const shape = adapt2Shape(view);
