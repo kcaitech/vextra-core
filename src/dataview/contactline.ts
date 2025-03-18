@@ -1,12 +1,17 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+import { ContactForm, ContactShape, Page, Shape, ShapeFrame, ShapeType, Fill, Blur } from "../data/classes";
 import {
-    Blur,
-    ContactForm,
-    ContactShape,
     ContactType, CurveMode,
-    CurvePoint, Fill, Page,
-    parsePath, Shape,
-    ShapeFrame,
-    ShapeType,
+    CurvePoint,
+    parsePath,
     Transform
 } from "../data";
 import { DViewCtx, PropsType } from "./viewctx";
@@ -16,7 +21,6 @@ import { BasicArray } from "../data";
 import { PageView } from "./page";
 import { v4 } from "uuid";
 import { Point2D } from "../data/typesdefine";
-import { border2path } from "../editor/utils/path";
 
 export class ContactLineView extends PathShapeView {
     constructor(ctx: DViewCtx, props: PropsType) {
@@ -35,7 +39,6 @@ export class ContactLineView extends PathShapeView {
         this.m_path = undefined;
         this.m_pathstr = undefined;
         this.updateFrames();
-        this.createBorderPath();
     }
 
     /* ===private=== */
@@ -49,7 +52,6 @@ export class ContactLineView extends PathShapeView {
         this.m_pathstr = undefined;
         this.m_ctx.setDirty(this);
         this.updateFrames();
-        this.createBorderPath();
     }
 
     /* 监听端点view以及其所处环境 */
@@ -150,15 +152,6 @@ export class ContactLineView extends PathShapeView {
 
     get points() {
         return (this.segments[0]?.points ?? new BasicArray<CurvePoint>()) as CurvePoint[];
-    }
-
-    createBorderPath() {
-        const borders = this.getBorders();
-        if (borders && borders.strokePaints.some(p => p.isEnabled)) {
-            this.m_border_path = border2path(this, borders, 1, 1);
-            const bbox = this.m_border_path.bbox();
-            this.m_border_path_box = new ShapeFrame(bbox.x, bbox.y, bbox.w, bbox.h);
-        }
     }
 
     onMounted() {

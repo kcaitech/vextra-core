@@ -2,6 +2,9 @@
   "description": "style sheet",
   "type": "object",
   "properties": {
+    "crdtidx": {
+      "$ref": "./crdtidx.json"
+    },
     "id": {
       "type": "string"
     },
@@ -35,6 +38,7 @@
     }
   },
   "required": [
+    "crdtidx",
     "id",
     "name",
     "variables"

@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { BoolOp, BoolShape, BorderPosition, ShapeFrame, parsePath, FillType, GradientType, ShapeType, Fill } from "../data/classes";
 import { ShapeView, updateFrame } from "./shape";
 import { TextShapeView } from "./textshape";
@@ -5,7 +15,6 @@ import { GroupShapeView } from "./groupshape";
 import { EL, elh } from "./el";
 import { renderBorders, renderFills } from "../render";
 import { FrameGrid } from "../basic/framegrid";
-import { border2path } from "../editor/utils/path";
 import { Path } from "@kcdesign/path";
 import { convertPath2CurvePoints } from "../data/pathconvert";
 import { OpType } from "@kcdesign/path";
@@ -13,6 +22,7 @@ import { gPal } from "../basic/pal";
 import { PathShapeView } from "./pathshape";
 import { importFill } from "../data/baseimport";
 import { exportFill } from "../data/baseexport";
+import { border2path } from "./border2path";
 
 function opPath(bop: BoolOp, path0: Path, path1: Path, isIntersect: boolean): Path {
     switch (bop) {
@@ -322,7 +332,7 @@ export class BoolShapeView extends GroupShapeView {
         const borders = this.getBorders();
         const fills = this.getFills();
         if (!fills.length && borders) {
-            this.m_border_path = border2path(this, borders, this.frame.width, this.frame.height);
+            this.m_border_path = border2path(this, borders);
             const bbox = this.m_border_path.bbox();
             this.m_border_path_box = new ShapeFrame(bbox.x, bbox.y, bbox.w, bbox.h);
         }
@@ -339,9 +349,7 @@ const getPath = (shape: ShapeView) => {
         const border = shape.getBorders();
         const isEnabled = border.strokePaints.some(p => p.isEnabled);
         if (isEnabled) {
-            const path = border2path(shape, border, shape.frame.width, shape.frame.height);
-            const p0 = gPal.makePalPath(path.toSVGString());
-            return Path.fromSVGString(p0.toSVGString());
+            return border2path(shape, border);
         }
         return new Path();
     } else {

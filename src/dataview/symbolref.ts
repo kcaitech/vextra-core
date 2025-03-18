@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import {
     AutoLayout, Border, ContextSettings, CornerRadius, Fill, MarkerType, OverrideType, PrototypeInterAction, Shadow,
     Shape, ShapeFrame, ShapeSize, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType, ShapeType,
@@ -414,9 +424,9 @@ export class SymbolRefView extends ShapeView {
     getBorders(): Border {
         if (this.m_borders) return this.m_borders;
         const v = this._findOV2(OverrideType.Borders, VariableType.Borders);
-        const border = v ? { ...v.value } : { ...this.m_data.style.borders };
+        const border = v ? { ...v.value } : { ...this.m_sym?.style.borders };
         const bordersMask = this.bordersMask;
-        const mgr = this.style.getStylesMgr() || this.m_sym?.style.getStylesMgr();
+        const mgr = this.style.getStylesMgr();
         if (bordersMask && mgr) {
             const mask = mgr.getSync(bordersMask) as BorderMask
             border.position = mask.border.position;

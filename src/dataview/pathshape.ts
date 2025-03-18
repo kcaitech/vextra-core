@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import {
     CurvePoint,
     FillType, GradientType,
@@ -19,9 +29,9 @@ import { render as renderLineBorders } from "../render/line_borders"
 import { PageView } from "./page";
 import { importCurvePoint, importFill } from "../data/baseimport";
 import { GroupShapeView } from "./groupshape";
-import { border2path } from "../editor/utils/path";
 import { ArtboardView } from "./artboard";
 import { Path } from "@kcdesign/path";
+import { border2path } from "./border2path";
 
 export class PathShapeView extends ShapeView {
     m_pathsegs?: PathSegment[];
@@ -32,7 +42,6 @@ export class PathShapeView extends ShapeView {
     ): void {
         this.m_pathsegs = undefined;
         super._layout(parentFrame, scale);
-        this.createBorderPath();
     }
 
     protected renderBorders(): EL[] {
@@ -48,6 +57,17 @@ export class PathShapeView extends ShapeView {
             return renderLineBorders(elh, this.data.style, borders, this.startMarkerType, this.endMarkerType, this.getPathStr(), this.m_data);
         }
         return renderBorders(elh, borders, this.frame, this.getPathStr(), this.m_data, this.radius);
+    }
+
+    get borderPath(): Path {
+        return this.m_border_path ?? (this.m_border_path = (() => {
+            if (this.isBorderShape) {
+                const borders = this.getBorders();
+                return border2path(this, borders);
+            } else {
+                return new Path();
+            }
+        })());
     }
 
     get segments() {
@@ -134,18 +154,25 @@ export class PathShapeView extends ShapeView {
     }
 
     onDataChange(...args: any[]): void {
+        this.m_border_path = undefined;
+        this.m_border_path_box = undefined;
+        this.m_is_border_shape = undefined;
         if (args.includes('mask') || args.includes('isVisible')) (this.parent as GroupShapeView).updateMaskMap();
 
-        if (this.parent && (args.includes('transform') || args.includes('size') || args.includes('isVisible'))) {
+        if (this.parent && (args.includes('transform') || args.includes('size') || args.includes('isVisible') || args.includes('autoLayout'))) {
             // 执行父级自动布局
-            const autoLayout = (this.parent as ArtboardView)?.autoLayout;
-            if (autoLayout) {
-                this.parent.m_ctx.setReLayout(this.parent);
+            let p = this.parent as ArtboardView;
+            while (p && p.autoLayout) {
+                p.m_ctx.setReLayout(p);
+                p = p.parent as ArtboardView;
             }
         } else if (this.parent && args.includes('borders')) {
-            const autoLayout = (this.parent as ArtboardView)?.autoLayout;
-            if (autoLayout?.bordersTakeSpace) {
-                this.parent.m_ctx.setReLayout(this.parent);
+            let p = this.parent as ArtboardView;
+            while (p && p.autoLayout) {
+                if (p.autoLayout?.bordersTakeSpace) {
+                    p.m_ctx.setReLayout(p);
+                }
+                p = p.parent as ArtboardView;
             }
         }
         if (args.includes('points')
@@ -159,37 +186,19 @@ export class PathShapeView extends ShapeView {
         ) {
             this.m_path = undefined;
             this.m_pathstr = undefined;
-            this.m_border_path = undefined;
-            this.m_border_path_box = undefined;
-            this.createBorderPath();
         }
 
         if (args.includes('variables')) {
             this.m_fills = undefined;
             this.m_borders = undefined;
-            this.m_border_path = undefined;
-            this.m_border_path_box = undefined;
-            this.createBorderPath();
         } else if (args.includes('fills')) {
             this.m_fills = undefined;
-            this.m_border_path = undefined;
-            this.m_border_path_box = undefined;
-            this.createBorderPath();
         } else if (args.includes('borders')) {
             this.m_borders = undefined;
-            this.m_border_path = undefined;
-            this.m_border_path_box = undefined;
-            this.createBorderPath();
         } else if (args.includes('fillsMask')) {
             this.m_fills = undefined;
-            this.m_border_path = undefined;
-            this.m_border_path_box = undefined;
-            this.createBorderPath();
         } else if (args.includes('bordersMask')) {
             this.m_borders = undefined;
-            this.m_border_path = undefined;
-            this.m_border_path_box = undefined;
-            this.createBorderPath();
         }
 
         const masked = this.masked;
@@ -301,16 +310,6 @@ export class PathShapeView extends ShapeView {
         } else {
             if (blur.length && this.blur?.type === BlurType.Gaussian) props.filter = `url(#${blurId})`;
             return elh("g", props, [...blur, ...fills, ...childs, ...borders]);
-        }
-    }
-
-    createBorderPath() {
-        const borders = this.getBorders();
-        const fills = this.getFills();
-        if (!fills.length && borders && borders.strokePaints.some(p => p.isEnabled)) {
-            this.m_border_path = border2path(this, borders, this.frame.width, this.frame.height);
-            const bbox = this.m_border_path.bbox();
-            this.m_border_path_box = new ShapeFrame(bbox.x, bbox.y, bbox.w, bbox.h);
         }
     }
 

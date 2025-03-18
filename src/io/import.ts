@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { Page } from "../data/page";
 import {
     IImportContext,
@@ -123,11 +133,11 @@ export async function importDocument(storage: storage.IStorage, documentPath: st
     const fmtVer = meta.fmtVer ?? 0;
 
     const libs = new BasicArray<StyleSheet>()
-    if (meta.stylelib?.length) {
-        // 包装一下sheet，让它变成可广播对象
-        for (const sheet of meta.stylelib) libs.push(new StyleSheet(sheet.id, sheet.name, sheet.variables));
-    }  else {
-        libs.push(new StyleSheet(meta.id, meta.name, []));
+    if (meta.stylelib) {
+        for (let i = 0; i < meta.stylelib.length; i++) {
+            const sheet = meta.stylelib[i];
+            libs.push(new StyleSheet([i] as BasicArray<number>, sheet.id, sheet.name, sheet.variables));
+        }
     }
 
     const { id, name, lastCmdId, pagesList, symbolregist, freesymbols } = meta;
@@ -202,9 +212,10 @@ export async function importLocalDocument(storage: storage.IStorage, documentPat
     const fmtVer = meta.fmtVer ?? 0;
     const libs = new BasicArray<StyleSheet>()
     if (meta.stylelib) {
-        for (const sheet of meta.stylelib) libs.push(new StyleSheet(sheet.id, sheet.name, sheet.variables));
-    } else {
-        libs.push(new StyleSheet(meta.id, meta.name, []));
+        for (let i = 0; i < meta.stylelib.length; i++) {
+            const sheet = meta.stylelib[i];
+            libs.push(new StyleSheet([i] as BasicArray<number>, sheet.id, sheet.name, sheet.variables));
+        }
     }
 
     const { id, name, lastCmdId, pagesList, symbolregist, freesymbols } = meta;

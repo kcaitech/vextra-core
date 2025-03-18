@@ -1,6 +1,16 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { DocumentMeta, PageListItem } from "./baseclasses";
 import { Page } from "./page";
-import { BasicArray, BasicMap, IDataGuard, ResourceMgr, WatchableObject } from "./basic";
+import { BasicArray, BasicMap, IDataGuard, ResourceMgr } from "./basic";
 import { GroupShape, Shape, SymbolShape, TextShape } from "./shape";
 import { TableShape } from "./table";
 import { SymbolRefShape } from "./symbolref";
@@ -9,12 +19,6 @@ import { FMT_VER_latest } from "./fmtver";
 import { StyleMangerMember, StyleSheet } from "./style";
 
 export { DocumentMeta, PageListItem } from "./baseclasses";
-
-class SpecialActionCorrespondent extends WatchableObject {
-    constructor() {
-        super();
-    }
-}
 
 function getTextFromGroupShape(shape: GroupShape | undefined): string {
     if (!shape) return "";
@@ -76,6 +80,12 @@ export class Document extends DocumentMeta {
         } else if (path1 === 'freesymbols') {
             if (!this.freesymbols) this.freesymbols = new BasicMap();
             target = this.freesymbols;
+        } else if (path1 === 'stylelib') {
+            if (!this.stylelib?.length) {
+                this.stylelib = new BasicArray<StyleSheet>();
+                this.stylelib.push(new StyleSheet([0] as BasicArray<number>, this.id, this.__name, []));
+            }
+            target = this.stylelib;
         } else {
             i = 1;
         }
@@ -102,7 +112,6 @@ export class Document extends DocumentMeta {
     private __medias: ResourceMgr<{ buff: Uint8Array, base64: string }>
     private __versionId: string;
     private __name: string;
-    __correspondent: SpecialActionCorrespondent; // 额外动作通信
 
     constructor(
         id: string,
@@ -132,9 +141,8 @@ export class Document extends DocumentMeta {
         this.__symbols = new SymbolMgr([id, 'symbols'], symbolRegister, (data: Shape) => guard.guard(data));
         this.__medias = new ResourceMgr<{ buff: Uint8Array, base64: string }>([id, 'medias']);
         this.__styles = new ResourceMgr<StyleMangerMember>([id, 'styles']);
-        this.__correspondent = new SpecialActionCorrespondent();
         this.freesymbols = freesymbols;
-        this.stylelib = source?.stylelib ?? new BasicArray<StyleSheet>();
+        this.stylelib = source?.stylelib;
         return guard.guard(this);
     }
 

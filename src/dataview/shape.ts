@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import { innerShadowId, renderBlur, renderBorders, renderFills, renderShadows } from "../render";
 import {
     BasicArray,
@@ -514,17 +524,21 @@ export class ShapeView extends DataView {
         if (args.includes('mask') || args.includes('isVisible')) {
             (this.parent as GroupShapeView).updateMaskMap();
         }
-
-        if (this.parent && (args.includes('transform') || args.includes('size') || args.includes('isVisible'))) {
+        
+        if (this.parent && (args.includes('transform') || args.includes('size') || args.includes('isVisible') || args.includes('autoLayout'))) {
             // 执行父级自动布局
-            const autoLayout = (this.parent as ArtboardView).autoLayout;
-            if (autoLayout) {
-                this.parent.m_ctx.setReLayout(this.parent);
+            let p = this.parent as ArtboardView;
+            while (p && p.autoLayout) {
+                p.m_ctx.setReLayout(p);
+                p = p.parent as ArtboardView;
             }
         } else if (args.includes('borders') && this.parent) {
-            const autoLayout = (this.parent as ArtboardView).autoLayout;
-            if (autoLayout?.bordersTakeSpace) {
-                this.parent.m_ctx.setReLayout(this.parent);
+            let p = this.parent as ArtboardView;
+            while (p && p.autoLayout) {
+                if (p.autoLayout?.bordersTakeSpace) {
+                    p.m_ctx.setReLayout(p);
+                }
+                p = p.parent as ArtboardView;
             }
         }
 
@@ -544,16 +558,21 @@ export class ShapeView extends DataView {
         if (args.includes('variables')) {
             this.m_fills = undefined;
             this.m_borders = undefined;
+            this.m_is_border_shape = undefined;
         } else if (args.includes('fills')) {
             this.m_fills = undefined;
+            this.m_is_border_shape = undefined;
         } else if (args.includes('borders')) {
             this.m_borders = undefined;
+            this.m_is_border_shape = undefined;
         } else if (args.includes('fillsMask')) {
             this.m_fills = undefined;
+            this.m_is_border_shape = undefined;
         } else if (args.includes('bordersMask')) {
             this.m_borders = undefined;
             this.m_border_path = undefined;
             this.m_border_path_box = undefined;
+            this.m_is_border_shape = undefined;
         }
 
         const masked = this.masked;
@@ -871,11 +890,14 @@ export class ShapeView extends DataView {
     }
 
     get borderPath() {
-        return this.m_border_path;
+        return this.m_border_path ?? (this.m_border_path = (() => new Path())());
     }
 
     get borderPathBox() {
-        return this.m_border_path_box;
+        return this.m_border_path_box ?? (this.m_border_path_box = (() => {
+            const bbox = this.borderPath.bbox();
+            return new ShapeFrame(bbox.x, bbox.y, bbox.w, bbox.h);
+        })());
     }
 
     get isVisible(): boolean {
@@ -1001,6 +1023,9 @@ export class ShapeView extends DataView {
         if (changed) {
             this.m_ctx.addNotifyLayout(this);
             this.m_client_x = this.m_client_y = undefined;
+            this.m_border_path = undefined;
+            this.m_is_border_shape = undefined;
+            this.m_border_path_box = undefined;
         }
 
         return changed;
@@ -1638,5 +1663,14 @@ export class ShapeView extends DataView {
     get radiusMask(): string | undefined {
         const v = this._findOV(OverrideType.RadiusMask, VariableType.RadiusMask);
         return v ? v.value : this.m_data.radiusMask;
+    }
+
+    protected m_is_border_shape: boolean | undefined = undefined;
+
+    get isBorderShape() {
+        return this.m_is_border_shape ?? (this.m_is_border_shape = (() => {
+            const borders = this.getBorders();
+            return !this.getFills().length && borders && borders.strokePaints.some(p => p.isEnabled);
+        })());
     }
 }

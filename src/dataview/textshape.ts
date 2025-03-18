@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import {
     OverrideType,
     TextLayout,
@@ -157,7 +167,7 @@ export class TextShapeView extends ShapeView {
                 return nb;
             });
         }
-        return border && border.strokePaints.some(p => p.isEnabled) ? renderBorders(elh, border, this.size, this.getTextPath().toSVGString(), this.m_data,this.radius) : [];
+        return border && border.strokePaints.some(p => p.isEnabled) ? renderBorders(elh, border, this.size, this.getTextPath().toSVGString(), this.m_data, this.radius) : [];
     }
 
     getTextPath() {
@@ -170,6 +180,13 @@ export class TextShapeView extends ShapeView {
     onDataChange(...args: any[]): void {
         super.onDataChange(...args);
         this.m_textpath = undefined;
+        if (this.parent && (args.includes('text'))) {
+            let p = this.parent as ArtboardView;
+            while (p && p.autoLayout) {
+                p.m_ctx.setReLayout(p);
+                p = p.parent as ArtboardView;
+            }
+        }
         if (args.includes("text") || args.includes("variables")) this.__str = undefined; // 属性变化后需要重新生成text
     }
 

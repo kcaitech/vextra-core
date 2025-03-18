@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import * as classes from "./baseclasses"
 import {
     BlendMode,
@@ -328,9 +338,11 @@ export class StyleSheet extends Basic implements classes.StyleSheet {
     id: string
     name: string
     variables: BasicArray<StyleMangerMember>
+    crdtidx: BasicArray<number>
 
-    constructor(id: string, name: string, variables: StyleSheet_variables) {
+    constructor(crdtidx: BasicArray<number>, id: string, name: string, variables: StyleSheet_variables) {
         super();
+        this.crdtidx = crdtidx;
         this.id = id;
         this.name = name;
         this.variables = this.transform2notifiable(id, variables);
@@ -380,7 +392,6 @@ export class StyleSheet extends Basic implements classes.StyleSheet {
                 const blur = new Blur(isEnabled, center, saturation, type);
                 blur.motionAngle = v.blur.motionAngle;
                 blur.radius = v.blur.radius;
-                blur.mask = v.blur.mask;
                 const blurmask = new BlurMask(v.crdtidx, sheetId, v4(), v.name, v.description, blur);
                 notifiable_variables.push(blurmask);
             } else if (v instanceof classes.BorderMask) {
@@ -405,7 +416,7 @@ export class StyleSheet extends Basic implements classes.StyleSheet {
 }
 
 export class FillMask extends WatchableObject implements classes.FillMask {
-    typeId = 'fill-mask-living';
+    typeId = 'fill-mask';
     crdtidx: BasicArray<number>;
     id: string;
     sheet: string;
@@ -431,7 +442,7 @@ export class FillMask extends WatchableObject implements classes.FillMask {
 }
 
 export class ShadowMask extends WatchableObject implements classes.ShadowMask {
-    typeId = 'shadow-mask-living';
+    typeId = 'shadow-mask';
     crdtidx: BasicArray<number>;
     id: string;
     sheet: string;
@@ -457,7 +468,7 @@ export class ShadowMask extends WatchableObject implements classes.ShadowMask {
 }
 
 export class BlurMask extends WatchableObject implements classes.BlurMask {
-    typeId = 'blur-mask-living';
+    typeId = 'blur-mask';
     crdtidx: BasicArray<number>;
     id: string;
     sheet: string;
@@ -483,7 +494,7 @@ export class BlurMask extends WatchableObject implements classes.BlurMask {
 }
 
 export class BorderMask extends WatchableObject implements classes.BorderMask {
-    typeId = 'border-mask-living';
+    typeId = 'border-mask';
     crdtidx: BasicArray<number>;
     id: string;
     sheet: string;
@@ -509,7 +520,7 @@ export class BorderMask extends WatchableObject implements classes.BorderMask {
 }
 
 export class RadiusMask extends WatchableObject implements classes.RadiusMask {
-    typeId = 'radius-mask-living';
+    typeId = 'radius-mask';
     crdtidx: BasicArray<number>;
     id: string;
     sheet: string;

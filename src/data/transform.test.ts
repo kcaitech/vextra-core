@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 // m00: 0.36926143017001317
 // m01: -0.4736237374594613
 // m02: 35.298167337300676
@@ -12,10 +22,7 @@ const {
     fail,
 } = chai.assert
 
-import { makeShapeTransform1By2, makeShapeTransform2By1 } from "./shape_transform_util"
 import { Transform } from "./transform"
-import { Transform as Transform2 } from "../basic/transform"
-import { ColVector3D } from "../basic/matrix2"
 import { isEqual } from "../basic/number_utils"
 import { Matrix } from "../basic/matrix"
 
@@ -29,26 +36,28 @@ test("transform decompose", () => {
 
 test("transform", () => {
     const o = new Transform(0.36926143017001317, -0.4736237374594613, 35.298167337300676, 0.9293255598490748, 0.8807272877088184, 0)
-    const t = makeShapeTransform2By1(o)
+    const t = o.clone()
     // 0
-    isTrue(o.equals(makeShapeTransform1By2(t)))
+    isTrue(o.equals(t))
 
     const scaleX = 2.0847457627118646
     const scaleY = 1.7394366197183098
     o.scale(scaleX, scaleY)
 
-    const _scale = new Transform2().setScale(ColVector3D.FromXYZ(scaleX, scaleY, 1));
-    t.addTransform(_scale);
+    const _scale = new Transform();
+    _scale.scale(scaleX, scaleY)
+    t.multiAtLeft(_scale)
+    // t.addTransform(_scale);
 
     // 1
-    isTrue(o.equals(makeShapeTransform1By2(t)))
+    isTrue(o.equals((t)))
 
     const ox = o.clearScaleSize()
     const tx = t.decomposeScale()
     t.clearScaleSize()
 
     // 2
-    isTrue(o.equals(makeShapeTransform1By2(t)))
+    isTrue(o.equals((t)))
 
     // 3
     isTrue(isEqual(ox.x, tx.x) && isEqual(ox.y, tx.y))
@@ -58,26 +67,26 @@ test("transform", () => {
 test("transform2", () => {
     const m = new Matrix([0.44246047735214233, 0.8967880010604858, -0.5553208589553833, 0.8316361308097839, 43.527407400266384, 0])
     const o = Transform.from(m)
-    const t = makeShapeTransform2By1(o)
+    const t = (o.clone())
     // 0
-    isTrue(o.equals(makeShapeTransform1By2(t)))
+    isTrue(o.equals((t)))
 
     const scaleX = 2.0847457627118646
     const scaleY = 1.7394366197183098
     o.scale(scaleX, scaleY)
 
-    const _scale = new Transform2().setScale(ColVector3D.FromXYZ(scaleX, scaleY, 1));
+    const _scale = new Transform().scale(scaleX, scaleY);
     t.addTransform(_scale);
 
     // 1
-    isTrue(o.equals(makeShapeTransform1By2(t)))
+    isTrue(o.equals((t)))
 
     const ox = o.clearScaleSize()
     const tx = t.decomposeScale()
     t.clearScaleSize()
 
     // 2
-    isTrue(o.equals(makeShapeTransform1By2(t)))
+    isTrue(o.equals((t)))
 
     // // 3
     isTrue(isEqual(ox.x, tx.x) && isEqual(ox.y, tx.y))

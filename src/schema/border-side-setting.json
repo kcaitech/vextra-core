@@ -2,6 +2,9 @@
     "description": "border side setting",
     "type": "object",
     "properties": {
+        "typeId": {
+            "type": "string"
+        },
         "sideType": {
             "$ref": "./side-type.json"
         },
@@ -20,12 +23,10 @@
         "thicknessRight": {
             "type": "number",
             "default": 1
-        },
-        "mask": {
-            "type": "string"
         }
     },
     "required": [
+        "typeId",
         "sideType",
         "thicknessTop",
         "thicknessLeft",

@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import {NumberArray2D} from "./number_array"
 import {isEqual, isOne, isZero} from "./number_utils"
 
@@ -993,8 +1003,10 @@ export class ColVector3D extends ColVector { // 三维列向量
         return new ColVector3D(matrix.data.resize([3, 1]))
     }
 
-    static FromXY(x: number, y: number) {
-        return new ColVector3D([x, y, 0])
+    static FromXY(x: number, y: number): ColVector3D
+    static FromXY(xy: {x: number, y: number}): ColVector3D
+    static FromXY(xy: {x: number, y: number} | number, y?: number) {
+        return typeof xy === 'number' ? new ColVector3D([xy, y ?? 0, 0]) : new ColVector3D([xy.x, xy.y, 0])
     }
 
     static FromXYZ(x: number, y: number, z: number) {

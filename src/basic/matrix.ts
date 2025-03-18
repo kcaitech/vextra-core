@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 /**
  * 标准矩阵
  *  1  0  0
@@ -239,14 +249,23 @@ export class Matrix {
         if (x || y) this.trans(x || 0, y || 0);
         return this;
     }
-    computeCoord(point: { x: number, y: number }): { x: number, y: number };
-    computeCoord(x: number, y: number): { x: number, y: number };
-    computeCoord(pointOrX: number | { x: number, y: number }, _y?: number) {
+    map(point: { x: number, y: number }): { x: number, y: number };
+    map(x: number, y: number): { x: number, y: number };
+    map(pointOrX: number | { x: number, y: number }, _y?: number) {
         const isPoint = typeof pointOrX === 'object';
         const x = isPoint ? pointOrX.x : pointOrX;
         const y = isPoint ? pointOrX.y : _y!;
         const m = this.m_matrix
         return { x: m[0] * x + m[2] * y + m[4], y: m[1] * x + m[3] * y + m[5] };
+    }
+    /**
+     * @deprecated use map instead
+     * @param point 
+     */
+    computeCoord(point: { x: number, y: number }): { x: number, y: number };
+    computeCoord(x: number, y: number): { x: number, y: number };
+    computeCoord(pointOrX: number | { x: number, y: number }, _y?: number) {
+        return this.map(pointOrX as any, _y as any)
     }
     computeCoord2(x: number, y: number): { x: number, y: number } {
         const m = this.m_matrix

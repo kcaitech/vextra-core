@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import {
     BlurMask,
     BorderMask,
@@ -101,11 +111,6 @@ export function export_shape(shapes: Shape[]) {
     const result: Shape[] = []
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
-        if (shape.radiusMask) ctx.styles.add(shape.radiusMask);
-        if (shape.style.fillsMask) ctx.styles.add(shape.style.fillsMask);
-        if (shape.style.bordersMask) ctx.styles.add(shape.style.bordersMask);
-        if (shape.style.shadowsMask) ctx.styles.add(shape.style.shadowsMask);
-        if (shape.style.blursMask) ctx.styles.add(shape.style.blursMask);
 
         const type = shape.type;
         let content: any;

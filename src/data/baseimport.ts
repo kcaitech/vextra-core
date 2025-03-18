@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 /* 代码生成，勿手动修改 */
 import * as impl from "./classes"
 import * as types from "./typesdefine"
@@ -943,7 +953,6 @@ export function importAutoLayout(source: types.AutoLayout, ctx?: IImportContext)
 function importBlurOptional(tar: impl.Blur, source: types.Blur, ctx?: IImportContext) {
     if (source.motionAngle !== undefined) tar.motionAngle = source.motionAngle
     if (source.radius !== undefined) tar.radius = source.radius
-    if (source.mask !== undefined) tar.mask = source.mask
 }
 export function importBlur(source: types.Blur, ctx?: IImportContext): impl.Blur {
     const ret: impl.Blur = new impl.Blur (
@@ -963,9 +972,6 @@ export function importBorderOptions(source: types.BorderOptions, ctx?: IImportCo
     return ret
 }
 /* border side setting */
-function importBorderSideSettingOptional(tar: impl.BorderSideSetting, source: types.BorderSideSetting, ctx?: IImportContext) {
-    if (source.mask !== undefined) tar.mask = source.mask
-}
 export function importBorderSideSetting(source: types.BorderSideSetting, ctx?: IImportContext): impl.BorderSideSetting {
     const ret: impl.BorderSideSetting = new impl.BorderSideSetting (
         importSideType(source.sideType, ctx),
@@ -973,7 +979,6 @@ export function importBorderSideSetting(source: types.BorderSideSetting, ctx?: I
         source.thicknessLeft,
         source.thicknessBottom,
         source.thicknessRight)
-    importBorderSideSettingOptional(ret, source, ctx)
     return ret
 }
 /* contact form */
@@ -1355,7 +1360,13 @@ export function importFillMask(source: types.FillMask, ctx?: IImportContext): im
 }
 /* style sheet */
 export function importStyleSheet(source: types.StyleSheet, ctx?: IImportContext): impl.StyleSheet {
+    // inject code
+    if (!source.crdtidx) {
+        source.crdtidx = [0];
+    }
+
     const ret: impl.StyleSheet = new impl.StyleSheet (
+        importCrdtidx(source.crdtidx, ctx),
         source.id,
         source.name,
         importStyleSheet_variables(source.variables, ctx))
@@ -1774,11 +1785,11 @@ export function importPathShape2(source: types.PathShape2, ctx?: IImportContext)
             points:[],
             isClosed: true
         }
-        
+
         if ((source as any)?.points?.length) {
             seg.points.push(...(source as any)?.points);
-        } 
-        
+        }
+
         source.pathsegs = [seg];
     }
 

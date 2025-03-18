@@ -1,6 +1,16 @@
+/*
+ * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
+ *
+ * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 import * as chai from 'chai'
 import { BasicArray } from './basic';
-import { Repository } from './transact';
+import { TransactDataGuard } from './transact';
 
 const assert = chai.assert;
 
@@ -10,7 +20,7 @@ test("map", () => {
     map.set(0, 0);
     map.set(2, 2);
 
-    const repo = new Repository({ settrap: false, needundo: true });
+    const repo = new TransactDataGuard({ settrap: false, needundo: true });
     const tmap = repo.guard(map);
 
     assert.Throw(() => { tmap.set(3, 3) });
@@ -50,7 +60,7 @@ test("map", () => {
 test("BasicArray", () => { // push(x)、push(...xxx)、unshift(x)、splice(0, 1)、splice(0, multi)、length、pop(x)
     const array = new BasicArray();
     array.push(...['alpha', 'beta', 'gamma']); // len 3
-    const repo = new Repository({ settrap: false, needundo: true });
+    const repo = new TransactDataGuard({ settrap: false, needundo: true });
     const tarray = repo.guard(array);
     assert.equal(tarray.length, 3);
 
