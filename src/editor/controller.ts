@@ -145,8 +145,8 @@ export class Controller {
             case ShapeType.Star:
                 return newStellateShape(name, frame, this.__document.stylesMgr);
             case ShapeType.Text: {
-                if (attr) return newDefaultTextShape(name, attr, frame);
-                return newTextShape(name, frame);
+                if (attr) return newDefaultTextShape(name, this.__document.stylesMgr, attr, frame);
+                return newTextShape(name, this.__document.stylesMgr, frame);
             }
             default:
                 return newRectShape(name, frame, this.__document.stylesMgr);
