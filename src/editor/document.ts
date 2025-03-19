@@ -311,7 +311,7 @@ export class DocEditor {
                     const __mask = mask as BorderMask;
                     const border = importBorderMaskType(__mask.border);
                     m = new BorderMask([0] as BasicArray<number>, sheetId, mask.id, mask.name, mask.description, border, mask.disabled);
-                } else if (mask.typeId === 'radius-mask-living') {
+                } else if (mask.typeId === 'radius-mask') {
                     const __mask = mask as RadiusMask;
                     m = new RadiusMask([0] as BasicArray<number>, sheetId, mask.id, mask.name, mask.description, new BasicArray<number>(...__mask.radius), mask.disabled)
                 } else {

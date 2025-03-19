@@ -683,6 +683,35 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
 
+    public setTextMask(index: number, len: number, maskid: string) {
+        // fix fontSize
+        if (typeof maskid !== 'string') {
+            maskid = maskid + ''.toString();
+        }
+        if (len === 0) {
+            this.cacheAttr.textMask = maskid;
+            return;
+        }
+
+        const api = this.__repo.start("setTextMask");
+        try {
+            const shape = this.shape4edit(api);
+            const text = shape instanceof ShapeView ? shape.text : shape.value as Text;
+            const text_length = text.length;
+            if (len === text_length - 1) {
+                len = text_length;
+            }
+            api.textModifyTextMask(this.__page, shape, index, len, maskid)
+            this.fixFrameByLayout(api);
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+
     public setTextFontSizeMulti(shapes: (TextShapeView | TableCellView)[], fontSize: number) {
         const api = this.__repo.start("setTextFontSizeMulti");
         try {
