@@ -424,7 +424,7 @@ export function newArrowShape(name: string, frame: ShapeFrame, styleMgr: Resourc
 }
 
 // 后续需要传入字体、字号、颜色信息
-export function newDefaultTextShape(name: string, attr: TextAttr, frame?: ShapeFrame): TextShape {
+export function newDefaultTextShape(name: string, styleMgr: ResourceMgr<StyleMangerMember>, attr: TextAttr, frame?: ShapeFrame): TextShape {
     frame && _checkFrame(frame);
     template_text_shape.id = uuid();
     template_text_shape.name = name;
@@ -436,12 +436,13 @@ export function newDefaultTextShape(name: string, attr: TextAttr, frame?: ShapeF
         textshape.size.width = frame.width;
         textshape.size.height = frame.height;
     }
+    textshape.style = newFlatStyle(styleMgr);
     textshape.text = newText(attr);
     addCommonAttr(textshape);
     return textshape;
 }
 
-export function newTextShape(name: string, frame?: ShapeFrame): TextShape {
+export function newTextShape(name: string, styleMgr: ResourceMgr<StyleMangerMember>, frame?: ShapeFrame): TextShape {
     frame && _checkFrame(frame);
     template_text_shape.id = uuid();
     template_text_shape.name = name;
@@ -453,6 +454,7 @@ export function newTextShape(name: string, frame?: ShapeFrame): TextShape {
         textshape.size.width = frame.width;
         textshape.size.height = frame.height;
     }
+    textshape.style = newFlatStyle(styleMgr);
     addCommonAttr(textshape);
     return textshape;
 }

@@ -8,7 +8,38 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { BoolShape, GroupShape, PathShape, PathShape2, RectShape, Shape, ShapeType, SymbolShape, SymbolUnionShape, TextShape, Variable, VariableType, Color, PathType, Document, SymbolRefShape, Text, Page, BorderStyle, Fill, BoolOp, CurvePoint, ExportFormat, ContactShape, AutoLayout, PathSegment, BasicArray, string2Text, Artboard, ShapeFrame } from "../data";
+import {
+    BoolShape,
+    GroupShape,
+    PathShape,
+    PathShape2,
+    RectShape,
+    Shape,
+    ShapeType,
+    SymbolShape,
+    SymbolUnionShape,
+    TextShape,
+    Variable,
+    VariableType,
+    Color,
+    PathType,
+    Document,
+    SymbolRefShape,
+    Text,
+    Page,
+    BorderStyle,
+    Fill,
+    BoolOp,
+    CurvePoint,
+    ExportFormat,
+    ContactShape,
+    AutoLayout,
+    PathSegment,
+    BasicArray,
+    string2Text,
+    Artboard,
+    ShapeFrame
+} from "../data";
 import { expand, expandTo, translate, translateTo } from "./frame";
 import { CoopRepository } from "../coop/cooprepo";
 import {
@@ -26,11 +57,38 @@ import { Operator, PaddingDir } from "../coop/recordop";
 import { importCurvePoint } from "../data/baseimport";
 import { v4 } from "uuid";
 import { uuid } from "../basic/uuid";
-import { after_remove, clear_binds_effect, find_layers_by_varid, get_symbol_by_layer, is_default_state } from "./utils/other";
+import {
+    after_remove,
+    clear_binds_effect,
+    find_layers_by_varid,
+    get_symbol_by_layer,
+    is_default_state
+} from "./utils/other";
 import { _typing_modify, modify_points_xy, update_frame_by_points } from "./utils/path";
 import { adapt_for_artboard } from "./utils/common";
-import { ShapeView, SymbolRefView, SymbolView, adapt2Shape, findOverride, ArtboardView, findVar, GroupShapeView, PageView } from "../dataview";
-import { is_part_of_symbol, is_symbol_or_union, modify_variable, modify_variable_with_api, shape4Autolayout, shape4border, shape4contextSettings, shape4exportOptions, shape4fill, shape4shadow } from "./symbol";
+import {
+    ShapeView,
+    SymbolRefView,
+    SymbolView,
+    adapt2Shape,
+    findOverride,
+    ArtboardView,
+    findVar,
+    GroupShapeView,
+    PageView
+} from "../dataview";
+import {
+    is_part_of_symbol,
+    is_symbol_or_union,
+    modify_variable,
+    modify_variable_with_api,
+    shape4Autolayout,
+    shape4border,
+    shape4contextSettings,
+    shape4exportOptions,
+    shape4fill,
+    shape4shadow
+} from "./symbol";
 import { ISave4Restore, LocalCmd, SelectionState } from "../coop/localcmd";
 import { exportCurvePoint } from "../data/baseexport";
 import { layoutShapesOrder2, layoutSpacing } from "./utils/auto_layout2";
@@ -696,6 +754,7 @@ export class ShapeEditor {
             });
 
             update_frame_by_points(api, this.__page, this.shape as PathShape);
+            if (!this.shape.haveEdit) api.shapeEditPoints(this.__page, this.shape, true);
             this.__repo.commit();
             return true;
         } catch (e) {
@@ -1373,7 +1432,7 @@ export class ShapeEditor {
             this.__repo.rollback();
         }
     }
-    
+
     /**
      * @description 裁剪路径，把第originSegmentIndex条路径裁成slices，slices不会存在新的闭合路径
      */

@@ -393,9 +393,9 @@ export class CreatorApiCaller extends AsyncApiCaller {
         } else if (type === ShapeType.Text) {
             let text;
             if (params.textFormat) {
-                text = newDefaultTextShape(namePrefix, params.textFormat, frame);
+                text = newDefaultTextShape(namePrefix, this.__document.stylesMgr, params.textFormat, frame);
             } else {
-                text = newTextShape(namePrefix, frame);
+                text = newTextShape(namePrefix, this.__document.stylesMgr, frame);
             }
 
             this.setTransform(text, transform2, frame);
