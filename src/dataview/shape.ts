@@ -809,10 +809,9 @@ export class ShapeView extends DataView {
     }
 
     getShadows(): BasicArray<Shadow> {
-        let shadows: BasicArray<Shadow> = new BasicArray();
+        let shadows: BasicArray<Shadow>;
         if (this.shadowsMask) {
-            const mgr = this.style.getStylesMgr();
-            if (!mgr) return shadows;
+            const mgr = this.style.getStylesMgr()!;
             const mask = mgr.getSync(this.shadowsMask) as ShadowMask;
             shadows = mask.shadows;
             this.watchShadowMask(mask);
