@@ -21,7 +21,7 @@ import {
     UnderlineType
 } from "../baseclasses";
 
-import { Basic, BasicArray } from "../basic";
+import { Basic, BasicArray, ResourceMgr } from "../basic";
 
 export {
     TextVerAlign,
@@ -43,7 +43,7 @@ import { layoutAtDelete, layoutAtFormat, layoutAtInsert } from "./textinclayout"
 import { getSimpleText, getUsedFontNames, getTextFormat, getTextWithFmt } from "./textread";
 import { _travelTextPara } from "./texttravel";
 import { FillType, Padding } from "../baseclasses";
-import { Gradient } from "../style"
+import { Gradient, StyleMangerMember, TextMask } from "../style"
 import { Color } from "../color";
 import { ShapeFrame, ShapeSize } from "../typesdefine";
 import { getNextChar } from "./basic";
@@ -326,6 +326,7 @@ export class Text extends Basic implements classes.Text {
         if (!this.attr) this.attr = new TextAttr();
         return this.attr.getOpTarget(path.splice(1));
     }
+    private __styleMgr?: ResourceMgr<StyleMangerMember>;
 
     constructor(
         paras: BasicArray<Para>
@@ -333,6 +334,15 @@ export class Text extends Basic implements classes.Text {
         super()
         this.paras = paras
     }
+
+    setStylesMgr(styleMgr: ResourceMgr<StyleMangerMember>) {
+        this.__styleMgr = styleMgr;
+    }
+
+    getStylesMgr(): ResourceMgr<StyleMangerMember> | undefined {
+        return this.__styleMgr;
+    }
+
     charAt(index: number): string {
         for (let i = 0, len = this.paras.length; i < len; i++) {
             const para = this.paras[i];
@@ -713,7 +723,7 @@ export function overrideTextText(text: Text, origin: Text): Text {
             if (ps === "paras") {
                 if (_paras) return _paras;
                 const paras = text.paras;
-
+                
                 const ret = new BasicArray<Para>()
                 _paras = ret;
                 paras.forEach((p, i) => {

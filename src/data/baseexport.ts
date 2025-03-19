@@ -1,13 +1,3 @@
-/*
- * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
- *
- * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
- * The full license text can be found in the LICENSE file in the root directory of this source tree.
- *
- * For more information about the AGPL-3.0 license, please visit:
- * https://www.gnu.org/licenses/agpl-3.0.html
- */
-
 /* 代码生成，勿手动修改 */
 import * as types from "./typesdefine"
 export interface IExportContext {
@@ -1048,6 +1038,9 @@ export function exportSpanAttr(source: types.SpanAttr, ctx?: IExportContext): ty
 export function exportSpan(source: types.Span, ctx?: IExportContext): types.Span {
     const ret: types.Span = exportSpanAttr(source, ctx) as types.Span
     ret.length = source.length
+        // inject code
+    if (ctx?.styles) ctx.styles.add(ret.textMask);
+
     return ret
 }
 /* blur mask */
@@ -1122,6 +1115,9 @@ export function exportParaAttr(source: types.ParaAttr, ctx?: IExportContext): ty
     if (source.maximumLineHeight !== undefined) ret.maximumLineHeight = source.maximumLineHeight
     if (source.autoLineHeight !== undefined) ret.autoLineHeight = source.autoLineHeight
     if (source.indent !== undefined) ret.indent = source.indent
+        // inject code
+    if (ctx?.styles) ctx.styles.add(ret.textMask);
+
     return ret
 }
 /* para */

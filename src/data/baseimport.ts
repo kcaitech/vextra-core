@@ -1,13 +1,3 @@
-/*
- * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
- *
- * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
- * The full license text can be found in the LICENSE file in the root directory of this source tree.
- *
- * For more information about the AGPL-3.0 license, please visit:
- * https://www.gnu.org/licenses/agpl-3.0.html
- */
-
 /* 代码生成，勿手动修改 */
 import * as impl from "./classes"
 import * as types from "./typesdefine"
@@ -1304,6 +1294,9 @@ export function importText(source: types.Text, ctx?: IImportContext): impl.Text 
     const ret: impl.Text = new impl.Text (
         importText_paras(source.paras, ctx))
     importTextOptional(ret, source, ctx)
+        // inject code
+    if (ctx?.document) ret.setStylesMgr(ctx.document.stylesMgr);
+
     return ret
 }
 /* border */
@@ -1785,11 +1778,11 @@ export function importPathShape2(source: types.PathShape2, ctx?: IImportContext)
             points:[],
             isClosed: true
         }
-
+        
         if ((source as any)?.points?.length) {
             seg.points.push(...(source as any)?.points);
-        }
-
+        } 
+        
         source.pathsegs = [seg];
     }
 

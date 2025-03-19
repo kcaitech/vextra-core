@@ -462,6 +462,11 @@ inject['Style']['after'] = `\
     // inject code
     if (ctx?.document) ret.setStylesMgr(ctx.document.stylesMgr);
 `
+inject['Text'] = {};
+inject['Text']['after'] = `\
+    // inject code
+    if (ctx?.document) ret.setStylesMgr(ctx.document.stylesMgr);
+`
 inject['Border'] = {};
 inject['Border']['before'] = `\
     // inject code
