@@ -530,7 +530,7 @@ export class LockMouseHandler extends AsyncApiCaller {
         try {
             const api = this.api;
             for (const view of shapes) {
-                const border = view.getBorders();
+                const border = view.getBorder();
                 const linkedVariable = this.getBorderVariable(api, this._page, view);
                 const source = linkedVariable ? linkedVariable.value : view.style.borders;
                 if (view.bordersMask) {

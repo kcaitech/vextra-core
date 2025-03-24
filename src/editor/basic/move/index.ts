@@ -67,7 +67,7 @@ export class ShapePorter {
             if (shape.style.fills.length) api.deleteFills(shape.style.fills, 0, shape.style.fills.length);
             api.addFills(shape.style.fills, fills); // 填入新的值
         }
-        let borders = view.getBorders();
+        let borders = view.getBorder();
         {
             if(borders) importBorder(exportBorder(borders))
             if (shape.style.borders?.strokePaints.length) api.deleteStrokePaints(page, shape, 0, shape.style.borders.strokePaints.length);

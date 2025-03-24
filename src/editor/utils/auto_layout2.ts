@@ -498,7 +498,7 @@ function boundingBox(shape: ShapeView, includedBorder?: boolean): ShapeFrame {
     frame.height = Math.max(frame.height, 1);
     frame.width = Math.max(frame.width, 1);
     if (includedBorder) {
-        const border = shape.getBorders();
+        const border = shape.getBorder();
         let maxtopborder = 0;
         let maxleftborder = 0;
         let maxrightborder = 0;

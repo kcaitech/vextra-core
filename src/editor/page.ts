@@ -2196,7 +2196,7 @@ export class PageEditor {
             const api = this.__repo.start('deleteShapesGradientStop');
             for (let i = 0, l = actions.length; i < l; i++) {
                 const { target, index, type, value } = actions[i];
-                const grad_type = type === 'fills' ? target.getFills() : target.getBorders()?.strokePaints;
+                const grad_type = type === 'fills' ? target.getFills() : target.getBorder()?.strokePaints;
                 if (!grad_type?.length) {
                     continue;
                 }
@@ -3550,7 +3550,7 @@ export class PageEditor {
                     update_frame_by_points(api, page, pathShape);
                     ids.push(pathShape.id);
                 } else {
-                    const borders = view.getBorders();
+                    const borders = view.getBorder();
                     const shape = adapt2Shape(view);
                     if (!borders || !borders.strokePaints.length) {
                         if ((shape instanceof StarShape || shape instanceof PolygonShape) && !shape.haveEdit) {
