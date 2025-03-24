@@ -38,7 +38,10 @@ import {
 import { adapt2Shape, GroupShapeView, PageView, PathShapeView, ShapeView } from "../../dataview";
 import { uuid } from "../../basic/uuid";
 import { __pre_curve, after_insert_point, update_frame_by_points } from "../utils/path";
-import { addCommonAttr, newFlatStyle } from "../creator";
+import { PathType } from "../../data";
+import { addCommonAttr, newflatStyle } from "../creator/creator";
+import { Border, BorderStyle, CornerType, Fill, FillType, Shadow, Style } from "../../data";
+import { Color } from "../../data";
 import * as types from "../../data/typesdefine";
 import { ISave4Restore, LocalCmd, SelectionState } from "../../coop/localcmd";
 import { importStyle } from "../../data/baseimport";
@@ -65,7 +68,7 @@ export class PathModifier extends AsyncApiCaller {
 
         if (needStoreSelection) {
             this.__repo.rollback();
-            this.api = this.__repo.start('path-modify', (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+            this.api = this.__repo.start('create-path', (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
                 const state = {} as SelectionState;
                 if (!isUndo) state.shapes = this.shape ? [this.shape.id] : [];
                 else state.shapes = cmd.saveselection?.shapes || [];

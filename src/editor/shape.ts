@@ -27,6 +27,7 @@ import { importCurvePoint } from "../data/baseimport";
 import { v4 } from "uuid";
 import { uuid } from "../basic/uuid";
 import { after_remove, clear_binds_effect, find_layers_by_varid, get_symbol_by_layer, is_default_state } from "./utils/other";
+import { newText2 } from "./creator/creator";
 import { _typing_modify, modify_points_xy, update_frame_by_points } from "./utils/path";
 import { adapt_for_artboard } from "./utils/common";
 import { ShapeView, SymbolRefView, SymbolView, adapt2Shape, findOverride, ArtboardView, findVar, GroupShapeView, PageView } from "../dataview";
@@ -1373,7 +1374,7 @@ export class ShapeEditor {
             this.__repo.rollback();
         }
     }
-    
+
     /**
      * @description 裁剪路径，把第originSegmentIndex条路径裁成slices，slices不会存在新的闭合路径
      */

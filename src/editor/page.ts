@@ -49,8 +49,22 @@ import {
 } from "../data";
 import { ShapeEditor } from "./shape";
 import * as types from "../data/typesdefine";
-import { newArtboard, newAutoLayoutArtboard, newBoolShape, newGroupShape, newImageFillShape, newPathShape, newSolidColorFill, newSymbolRefShape, newSymbolShape } from "./creator";
-import { expand, expandTo, translate, translateTo } from "./frame";
+import {
+    newArrowShape,
+    newArtboard,
+    newAutoLayoutArtboard,
+    newBoolShape,
+    newGroupShape,
+    newImageFillShape,
+    newLineShape,
+    newOvalShape,
+    newPathShape,
+    newRectShape,
+    newSolidColorFill,
+    newSymbolRefShape,
+    newSymbolShape
+} from "./creator/creator";
+import { expand, translate, translateTo } from "./frame";
 import { uuid } from "../basic/uuid";
 import { TextShapeEditor } from "./textshape";
 import { set_childs_id, transform_data } from "../io/cilpboard";

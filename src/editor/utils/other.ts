@@ -37,7 +37,7 @@ import {
     Fill,
 } from "../../data/classes";
 import { BasicArray, BasicMap } from "../../data/basic";
-import { newSymbolShapeUnion } from "../creator";
+import { newSymbolShapeUnion } from "../creator/creator";
 import { uuid } from "../../basic/uuid";
 import * as types from "../../data/typesdefine";
 import { PageView, ShapeView, TableCellView, TableView, TextShapeView, adapt2Shape } from "../../dataview";

@@ -24,7 +24,7 @@ import { ExportOptions, SymbolRefShape } from "../data/symbolref";
 import { uuid } from "../basic/uuid";
 import { Page } from "../data/page";
 import { Operator } from "../coop/recordop";
-import { newArtboard } from "./creator";
+import { newArtboard, newText2 } from "./creator/creator";
 import {
     Artboard,
     AutoLayout,
