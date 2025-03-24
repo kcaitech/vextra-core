@@ -20,6 +20,7 @@ import { getShapeViewId } from "./basic";
 import { EL } from "./el";
 import { DataView, RootView } from "./view";
 import { DViewCtx, PropsType, VarsContainer } from "./viewctx";
+import { Path } from "../../../kcdesign-path";
 
 export class GroupShapeView extends ShapeView {
 
@@ -97,6 +98,10 @@ export class GroupShapeView extends ShapeView {
                 c.m_ctx.setReLayout(c);
             });
         }
+    }
+
+    getOutLine() {
+        return new Path();
     }
 
     protected _layout(

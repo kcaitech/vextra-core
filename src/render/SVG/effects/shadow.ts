@@ -16,9 +16,9 @@ import {
     ShadowPosition,
     ShapeType,
     VariableType
-} from "../data";
+} from "../../../data";
 import { render as borderR } from "./border";
-import { findOverrideAndVar } from "../data/utils";
+import { findOverrideAndVar } from "../../../data/utils";
 
 const shadowOri: {
     [key: string]: (h: Function, shadow: Shadow, frame: ShapeSize, id: string, i: number, path: string, borders: Border | undefined, shapeType: ShapeType, shape: Shape, radius: number[], blur?: Blur) => any

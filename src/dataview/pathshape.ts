@@ -22,10 +22,10 @@ import {
 } from "../data";
 import { ShapeView } from "./shape";
 import { EL, elh } from "./el";
-import { innerShadowId, renderBorders } from "../render";
+import { innerShadowId, renderBorders } from "../render/SVG/effects";
 import { objectId } from "../basic/objectid";
 import { BlurType, PathSegment } from "../data/typesdefine";
-import { render as renderLineBorders } from "../render/line_borders"
+import { render as renderLineBorders } from "../render/SVG/effects/line_borders"
 import { PageView } from "./page";
 import { importCurvePoint, importFill } from "../data/baseimport";
 import { GroupShapeView } from "./groupshape";
@@ -57,6 +57,20 @@ export class PathShapeView extends ShapeView {
             return renderLineBorders(elh, this.data.style, borders, this.startMarkerType, this.endMarkerType, this.getPathStr(), this.m_data);
         }
         return renderBorders(elh, borders, this.frame, this.getPathStr(), this.m_data, this.radius);
+    }
+
+    render(): number {
+        return this.m_renderer.render(ShapeType.Path);
+    }
+
+    render2(ctx: CanvasRenderingContext2D) {
+        ctx.save();
+        if (!this.checkAndResetDirty()) return this.m_render_version;
+
+
+        ctx.restore();
+
+        return ++this.m_render_version;
     }
 
     get borderPath(): Path {

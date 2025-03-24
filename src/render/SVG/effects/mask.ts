@@ -8,10 +8,24 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Fill, FillType, Gradient, ShapeSize, GradientType, Stop, Color } from "../data";
-import { randomId } from "./basic";
+import {
+    Border,
+    BorderPosition,
+    Fill,
+    FillType,
+    Gradient,
+    Shape,
+    ShapeSize,
+    ShapeType,
+    SideType,
+    GradientType,
+    Stop,
+    Color
+} from "../../../data";
+import { renderCustomBorder } from "./border_custom";
+import { randomId } from "../../basic";
 import { render as clippathR } from "./clippath";
-import { objectId } from "../basic/objectid";
+import { objectId } from "../../../basic/objectid";
 
 // 渐变色 - 纯白色
 const defaultColor = Color.DefaultColor;

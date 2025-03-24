@@ -15,7 +15,7 @@ import {
     Fill,
     OverrideType,
     Shape,
-    ShapeFrame, 
+    ShapeFrame,
     ShapeType,
     Style,
     TableCell,
@@ -37,7 +37,7 @@ import { getTableCells, getTableVisibleCells } from "../data/tableread";
 import { BasicArray } from "../data/basic";
 import { newTableCellText } from "../data/text/textutils";
 import { BorderPosition, CornerType, Point2D, SideType } from "../data/typesdefine";
-import { render as renderLine } from "../render/line_borders";
+import { render as renderLine } from "../render/SVG/effects/line_borders";
 
 export class TableView extends ShapeView {
 

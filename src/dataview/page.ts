@@ -124,11 +124,12 @@ export class PageView extends GroupShapeView implements RootView {
     }
 
     render(): number {
-        const r = super.render();
-        if (r) {
-            this.eltag = "svg";
-        }
-        return r;
+        // const r = super.render();
+        // if (r) {
+        //     this.eltag = "svg";
+        // }
+        // return r;
+        return this.m_renderer.render(this.type);
     }
 
     dbgCheckPath() {

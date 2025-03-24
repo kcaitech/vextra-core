@@ -30,16 +30,16 @@ import {
 } from "../data";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
-import { renderText2Path, renderTextLayout } from "../render/text";
+import { renderText2Path, renderTextLayout } from "../render/SVG/effects/text";
 import {
     CursorLocate, TextLocate, locateCursor,
     locateNextCursor, locatePrevCursor, locateRange, locateText
 } from "../data/text/textlocate";
 import { objectId } from "../basic/objectid";
 import { Path } from "@kcdesign/path";
-import { renderBorders } from "../render";
-import { importBorder, importFill } from "../data/baseimport";
-import { exportBorder, exportFill } from "../data/baseexport";
+import { renderBorders } from "../render/SVG/effects";
+import { importBorder } from "../data/baseimport";
+import { exportBorder } from "../data/baseexport";
 import { ArtboardView } from "./artboard";
 
 export class TextShapeView extends ShapeView {
@@ -193,10 +193,13 @@ export class TextShapeView extends ShapeView {
     asyncRender() {
         return this.render();
     }
-
+    render(): number {
+        return this.m_renderer.render(this.type);
+    }
     renderContents(): EL[] {
-        const layout = this.getLayout();
-        return renderTextLayout(elh, layout, this.frame, this.blur);
+        // const layout = this.getLayout();
+        // return renderTextLayout(elh, layout, this.frame, this.blur);
+        return [];
     }
 
     __origin_frame: ShapeSize = new ShapeSize();

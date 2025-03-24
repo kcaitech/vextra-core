@@ -13,6 +13,10 @@ import { Shape, ShapeSize, SymbolRefShape, SymbolShape } from "../data";
 import { getShapeViewId, stringh } from "./basic";
 import { EL } from "./el";
 import { objectId } from "../basic/objectid";
+import { IRenderer } from "../render/basic";
+import { ShapeView } from "./shape";
+import { SVGRenderer } from "../render/SVG/painters/renderer";
+import { CanvasRenderer } from "../render/canvas/painters/renderer";
 
 // EventEmitter
 
@@ -90,6 +94,7 @@ export interface RootView {
 
 export class DataView extends EventEL {
     m_ctx: DViewCtx;
+    m_renderer: IRenderer;
     m_data: Shape;
     m_children: DataView[] = [];
     m_parent: DataView | undefined;
@@ -116,6 +121,21 @@ export class DataView extends EventEL {
 
         this.m_ctx.setDirty(this);
         ctx.markRaw(this)
+
+        this.m_renderer = this.rendererBuilder();
+    }
+
+    rendererBuilder(): IRenderer {
+        const view = this as unknown as ShapeView;
+        switch (this.m_ctx.gl) {
+            case "SVG": return new SVGRenderer(view);
+            case "Canvas": return new CanvasRenderer(view);
+            default: return new SVGRenderer(view)
+        }
+    }
+
+    get canvasRenderingContext2D(): CanvasRenderingContext2D {
+        return this.m_ctx.m_canvas!;
     }
 
     setData(data: Shape) {
@@ -138,7 +158,6 @@ export class DataView extends EventEL {
             this.m_varsContainer.forEach((c) => c.watch(this._datawatcher));
         }
     }
-
     // mock shape
     get isViewNode() {
         return true;

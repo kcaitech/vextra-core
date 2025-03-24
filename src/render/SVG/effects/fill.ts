@@ -19,32 +19,33 @@ import {
     SymbolRefShape,
     SymbolShape,
     VariableType
-} from "../data/classes";
+} from "../../../data";
 import { render as renderGradient } from "./gradient";
 import { render as clippathR } from "./clippath"
-import { objectId } from "../basic/objectid";
-import { findOverrideAndVar } from "./basic";
+import { objectId } from "../../../basic/objectid";
+import { findOverrideAndVar } from "../../basic";
 import { patternRender } from "./pattern";
+import { EL } from "../../../dataview";
 
 function randomId() {
     return Math.floor((Math.random() * 10000) + 1);
 }
 
-const handler: { [key: string]: (h: Function, frame: ShapeSize, fill: Fill, path: string, id: string) => any } = {};
-handler[FillType.SolidColor] = function (h: Function, frame: ShapeSize, fill: Fill, path: string, id: string): any {
+const handler: { [key: string]: (h: Function, frame: ShapeSize, fill: Fill, path: string, id: string) => EL } = {};
+handler[FillType.SolidColor] = function (h: Function, frame: ShapeSize, fill: Fill, path: string, id: string): EL {
     const color = fill.color;
     return h("path", {
         class: id.replace(/\//g, '-'),
         d: path,
         fill: "rgb(" + color.red + "," + color.green + "," + color.blue + ")",
-        "fill-opacity": (color ? color.alpha : 1),
+        "fill-opacity": color.alpha,
         stroke: 'none',
         'stroke-width': 0,
         "fill-rule": fill.fillRule || "evenodd",
     });
 }
 
-handler[FillType.Gradient] = function (h: Function, frame: ShapeSize, fill: Fill, path: string, id: string): any {
+handler[FillType.Gradient] = function (h: Function, frame: ShapeSize, fill: Fill, path: string, id: string): EL {
     const opacity = fill.gradient?.gradientOpacity;
     const elArr = [];
     const g_ = renderGradient(h, fill.gradient as Gradient, frame);
@@ -75,7 +76,7 @@ handler[FillType.Gradient] = function (h: Function, frame: ShapeSize, fill: Fill
     return h("g", elArr);
 }
 
-handler[FillType.Pattern] = function (h: Function, frame: ShapeSize, fill: Fill, path: string): any {
+handler[FillType.Pattern] = function (h: Function, frame: ShapeSize, fill: Fill, path: string): EL {
     const id = "pattern-fill-" + objectId(fill) + randomId();
     const color = fill.color.alpha ?? 1;
     const pattern = patternRender(h, frame, id, path, fill);
@@ -89,9 +90,9 @@ handler[FillType.Pattern] = function (h: Function, frame: ShapeSize, fill: Fill,
     return h("g", [pattern, _path]);
 }
 
-export function render(h: Function, fills: Fill[], frame: ShapeSize, path: string, id: string): Array<any> {
+export function render(h: Function, fills: Fill[], frame: ShapeSize, path: string, id: string): EL[] {
     const fillsCount = fills.length;
-    const elArr = new Array();
+    const elArr: EL[] = [];
     for (let i = 0; i < fillsCount; i++) {
         const fill = fills[i];
         if (!fill.isEnabled) continue;
@@ -101,12 +102,12 @@ export function render(h: Function, fills: Fill[], frame: ShapeSize, path: strin
     return elArr;
 }
 
-const handler2: { [key: string]: (h: Function, frame: ShapeSize, fill: Fill, path: string, id: string) => any } = {};
-handler2[FillType.SolidColor] = function (h: Function, frame: ShapeSize, fill: Fill, path: string, id: string): any {
+const handler2: { [key: string]: (h: Function, frame: ShapeSize, fill: Fill, path: string, id: string) => EL } = {};
+handler2[FillType.SolidColor] = function (h: Function, frame: ShapeSize, fill: Fill, path: string, id: string): EL {
     return handler[FillType.SolidColor](h, frame, fill, path, id)
 }
 
-handler2[FillType.Gradient] = function (h: Function, frame: ShapeSize, fill: Fill, path: string, id: string): any {
+handler2[FillType.Gradient] = function (h: Function, frame: ShapeSize, fill: Fill, path: string, id: string): EL {
     if (fill.gradient?.gradientType === GradientType.Angular) {
         return handler[FillType.SolidColor](h, frame, fill, path, id);
     }
@@ -140,7 +141,7 @@ handler2[FillType.Gradient] = function (h: Function, frame: ShapeSize, fill: Fil
     return h("g", elArr);
 }
 
-handler2[FillType.Pattern] = function (h: Function, frame: ShapeSize, fill: Fill, path: string, id: string): any {
+handler2[FillType.Pattern] = function (h: Function, frame: ShapeSize, fill: Fill, path: string, id: string): EL {
     return handler[FillType.Pattern](h, frame, fill, path, id)
 }
 

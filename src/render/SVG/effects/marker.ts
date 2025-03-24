@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Border, FillType, MarkerType, Fill, Style } from "../data/style";
+import { Border, FillType, MarkerType, Fill, Style } from "../../../data/style";
 
 const marker: { [key: string]: (h: Function, style: Style, border: Border, id: number | string, strokePaint: Fill) => any } = {};
 marker[MarkerType.FilledArrow] = function (h: Function, style: Style, border: Border, id: number | string, strokePaint: Fill) {

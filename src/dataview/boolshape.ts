@@ -13,7 +13,7 @@ import { ShapeView, updateFrame } from "./shape";
 import { TextShapeView } from "./textshape";
 import { GroupShapeView } from "./groupshape";
 import { EL, elh } from "./el";
-import { renderBorders, renderFills } from "../render";
+import { renderBorders, renderFills } from "../render/SVG/effects";
 import { FrameGrid } from "../basic/framegrid";
 import { Path } from "@kcdesign/path";
 import { convertPath2CurvePoints } from "../data/pathconvert";
@@ -164,7 +164,6 @@ export function render2path(shape: ShapeView, defaultOp = BoolOp.None): Path {
     return resultpath;
 }
 
-
 export class BoolShapeView extends GroupShapeView {
 
     onMounted() {
@@ -218,15 +217,6 @@ export class BoolShapeView extends GroupShapeView {
 
     protected renderFills(): EL[] {
         let fills = this.getFills() as Fill[];
-        if (this.mask) {
-            fills = fills.map(f => {
-                if (f.fillType === FillType.Gradient && f.gradient?.gradientType === GradientType.Angular) {
-                    const nf = importFill(exportFill(f));
-                    nf.fillType = FillType.SolidColor;
-                    return nf;
-                } else return f;
-            })
-        }
         return renderFills(elh, fills, this.size, this.getPathStr(), 'fill-' + this.id);
     }
 
@@ -241,6 +231,9 @@ export class BoolShapeView extends GroupShapeView {
         return this.m_path;
     }
 
+    getOutLine() {
+        return this.getPath();
+    }
     // childs
     protected renderContents(): EL[] {
         return [];
@@ -248,6 +241,10 @@ export class BoolShapeView extends GroupShapeView {
 
     asyncRender() {
         return this.render();
+    }
+
+    render() {
+        return this.m_renderer.render(this.type);
     }
 
     updateFrames(): boolean {

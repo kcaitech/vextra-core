@@ -8,8 +8,8 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { objectId } from "../basic/objectid";
-import { Color, Gradient, GradientType, Stop, ShapeSize } from "../data/classes";
+import { objectId } from "../../../basic/objectid";
+import { ShapeSize, Gradient, GradientType, Stop, Color } from "../../../data/classes";
 
 const defaultColor = Color.DefaultColor;
 
@@ -17,16 +17,15 @@ function renderStop(h: Function, d: Stop): any {
     const position = d.position;
     const color = d.color || defaultColor;
     const rgbColor = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";
-    const n = h("stop", {
+    return h("stop", {
         offset: "" + (position * 100) + "%",
         "stop-color": rgbColor,
         "stop-opacity": color.alpha
     });
-    return n;
 }
 
-export function render(h: Function, value: Gradient, frame: ShapeSize, thickness: number): { id: string, style: string | undefined, node: any } {
-    const id = "gradient" + objectId(value);
+export function render(h: Function, value: Gradient, frame: ShapeSize): { id: string, style: string | undefined, node: any } {
+    const id = "gradient" + objectId(value) + frame.height + '-' + frame.width;
     let style;
     let node: any;
     if (value.gradientType == GradientType.Linear) {
@@ -54,7 +53,7 @@ export function render(h: Function, value: Gradient, frame: ShapeSize, thickness
         }
         const l = Math.sqrt((value.to.y * frame.height - value.from.y * frame.height) ** 2 + (value.to.x * frame.width - value.from.x * frame.width) ** 2);
         const scaleX = l;
-        const scaleY = value.elipseLength ? (value.elipseLength * l * frame.width / frame.height) : 0;
+        const scaleY = value.elipseLength ? (value.elipseLength * l * frame.width / frame.height) : 1;
         const rotate = Math.atan2((value.to.y * frame.height - value.from.y * frame.height), (value.to.x * frame.width - value.from.x * frame.width)) / Math.PI * 180;
 
         node = h("radialGradient", {
@@ -109,16 +108,18 @@ export function render(h: Function, value: Gradient, frame: ShapeSize, thickness
             const { r, g, b, a } = calcSmoothColor();
             gradient = gradient + "," + "rgba(" + r + "," + g + "," + b + "," + a + ")" + " 360deg";
         }
+        // defsChilds.push(h("style", {}, "." + id + "{" +
         const rotate = Math.atan2((value.to.y * frame.height - value.from.y * frame.height), (value.to.x * frame.width - value.from.x * frame.width)) / Math.PI * 180 + 90;
-        // const from = "from " + rotate + "deg at " + ((value.from.x * frame.width) + (thickness * 6)) + "px " + ((value.from.y * frame.height) + (thickness * 6)) + "px";
         const from = "from " + rotate + "deg at " + value.from.x * 100 + "% " + value.from.y * 100 + "%";
         style =
             "background: conic-gradient(" + from + "," + gradient + ");" +
             "height:-webkit-fill-available;" +
             "width:-webkit-fill-available;"
+            // "transform: rotate(90deg);"
+        // "transform-origin: left top;" +
+        // "rotation:90deg" +
+        // "rotation-point:0% 0%;" +
+        // "}"));
     }
     return { id, style, node };
 }
-
-
-

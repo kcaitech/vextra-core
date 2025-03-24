@@ -14,6 +14,8 @@ import {
     parsePath,
     Transform
 } from "../data";
+import { EL, elh } from "./el";
+import { render as renderBorders } from "../render/SVG/effects/contact_borders"
 import { DViewCtx, PropsType } from "./viewctx";
 import { PathShapeView } from "./pathshape";
 import { ShapeView, updateFrame } from "./shape";
