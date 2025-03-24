@@ -9,14 +9,12 @@
  */
 
 import { GroupShapeView } from "./groupshape";
-import { renderBorder, renderFills } from "../render/SVG/effects";
-import { EL, elh } from "./el";
 import {
     CornerRadius, Shape, ShapeFrame, ShapeType, SymbolShape, AutoLayout, BorderPosition, Page, ShadowPosition, BlurType,
     ShapeSize,
     RadiusMask,
     OverrideType,
-    VariableType
+    VariableType, SideType
 } from "../data";
 import { VarsContainer } from "./viewctx";
 import { DataView, RootView } from "./view"
@@ -234,7 +232,9 @@ export class SymbolView extends GroupShapeView {
         return _radius
 
     }
-
+    get isCustomBorder() {
+        return this.getBorder().sideSetting.sideType !== SideType.Normal;
+    }
     render(): number {
         return this.m_renderer.render(this.type);
     }

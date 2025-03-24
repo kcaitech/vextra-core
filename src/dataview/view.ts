@@ -200,7 +200,7 @@ export class DataView extends EventEL {
     onDataChange(...args: any[]) {
     }
 
-    layout() {
+    layout(args: any) {
         throw new Error('not implemented');
     }
 

@@ -8,17 +8,36 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Border, BorderPosition, BorderSideSetting, CornerType, CurveMode, CurvePoint, FillType, Gradient, GradientType, Shape, ShapeSize, SideType, Fill, parsePath } from "../../../data/classes";
+import {
+    Border,
+    BorderPosition,
+    BorderSideSetting,
+    CornerType,
+    CurveMode,
+    CurvePoint,
+    FillType,
+    Gradient,
+    GradientType,
+    Shape,
+    ShapeSize,
+    SideType,
+    Fill,
+    parsePath
+} from "../../../data";
 import { render as renderGradient } from "./gradient";
 import { objectId } from '../../../basic/objectid';
 import { randomId } from "../../basic";
-import { BasicArray } from "../../../data/basic";
+import { BasicArray } from "../../../data";
 import { Matrix } from "../../../basic/matrix";
 
-const handler: { [key: string]: (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: Fill, radius: number[]) => any } = {};
-const angularHandler: { [key: string]: (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: Fill, radius: number[]) => any } = {};
+const handler: {
+    [key: string]: (h: Function, frame: ShapeSize, border: Border, path: string, strokePaints: Fill, radius: number[]) => any
+} = {};
+const angularHandler: {
+    [key: string]: (h: Function, frame: ShapeSize, border: Border, path: string, strokePaints: Fill, radius: number[]) => any
+} = {};
 
-angularHandler[BorderPosition.Inner] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: Fill, radius: number[]): any {
+angularHandler[BorderPosition.Inner] = function (h: Function, frame: ShapeSize, border: Border, path: string, strokePaints: Fill, radius: number[]): any {
     const rId = randomId();
     const clipId = "clippath-border" + objectId(strokePaints) + rId;
     const mask1Id = "mask1-border" + objectId(strokePaints) + rId;
@@ -41,7 +60,7 @@ angularHandler[BorderPosition.Inner] = function (h: Function, frame: ShapeSize, 
         path_props['stroke-dasharray'] = `${length}, ${gap}`
         path_props['stroke-dashoffset'] = length / 2;
     }
-    const mask_path = inner_mask_path(shape, border.sideSetting, false, radius);
+    const mask_path = inner_mask_path(frame, border.sideSetting, false, radius);
     path_props.mask = "url(#" + mask2Id + ")";
     const mask = h(
         "mask",
@@ -77,7 +96,7 @@ angularHandler[BorderPosition.Inner] = function (h: Function, frame: ShapeSize, 
 }
 
 
-angularHandler[BorderPosition.Center] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: Fill, radius: number[]): any {
+angularHandler[BorderPosition.Center] = function (h: Function, frame: ShapeSize, border: Border, path: string, strokePaints: Fill, radius: number[]): any {
     const rId = randomId();
     const mask1Id = "mask1-border" + objectId(strokePaints) + rId;
     const mask2Id = "mask2-border" + objectId(strokePaints) + rId;
@@ -102,8 +121,8 @@ angularHandler[BorderPosition.Center] = function (h: Function, frame: ShapeSize,
         path_props['stroke-dasharray'] = `${length}, ${gap}`
         path_props['stroke-dashoffset'] = length / 2;
     }
-    const mask_outer_path = outer_mask_path(shape, border, true, radius);
-    const mask_inner_path = inner_mask_path(shape, border.sideSetting, true, radius);
+    const mask_outer_path = outer_mask_path(frame, border, true, radius);
+    const mask_inner_path = inner_mask_path(frame, border.sideSetting, true, radius);
     path_props.mask = "url(#" + mask2Id + ")";
     const mask = h(
         "mask",
@@ -143,7 +162,7 @@ angularHandler[BorderPosition.Center] = function (h: Function, frame: ShapeSize,
     ])
 }
 
-angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: Fill, radius: number[]): any {
+angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, border: Border, path: string, strokePaints: Fill, radius: number[]): any {
     const thickness = get_thickness(border.sideSetting);
     const g_ = renderGradient(h, strokePaints.gradient as Gradient, frame);
     const width = frame.width + 2 * thickness;
@@ -168,7 +187,7 @@ angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, 
         path_props['stroke-dasharray'] = `${length}, ${gap}`;
         path_props['stroke-dashoffset'] = length / 2;
     }
-    const maskPath = outer_mask_path(shape, border, false, radius);
+    const maskPath = outer_mask_path(frame, border, false, radius);
     const surplus_path = mask_surplus_path(frame, radius, border.sideSetting)
 
     return h("g", [
@@ -202,7 +221,7 @@ angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, 
     ]);
 }
 
-handler[BorderPosition.Inner] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: Fill, radius: number[]): any {
+handler[BorderPosition.Inner] = function (h: Function, frame: ShapeSize, border: Border, path: string, strokePaints: Fill, radius: number[]): any {
     const { length, gap } = border.borderStyle;
     if (Math.max(...radius) === 0) {
         return get_inner_border_path(h, frame, border, path, strokePaints);
@@ -239,7 +258,7 @@ handler[BorderPosition.Inner] = function (h: Function, frame: ShapeSize, border:
     if (g_ && g_.node) {
         elArr.push(g_.node);
     }
-    const mask_path = inner_mask_path(shape, border.sideSetting, false, radius);
+    const mask_path = inner_mask_path(frame, border.sideSetting, false, radius);
     body_props.mask = "url(#" + maskId + ")";
     const mask = h(
         "mask",
@@ -259,10 +278,10 @@ handler[BorderPosition.Inner] = function (h: Function, frame: ShapeSize, border:
     return h("g", elArr);
 }
 
-handler[BorderPosition.Center] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: Fill, radius: number[]): any {
+handler[BorderPosition.Center] = function (h: Function, frame: ShapeSize, border: Border, path: string, strokePaints: Fill, radius: number[]): any {
     const { length, gap } = border.borderStyle;
     if (Math.max(...radius) === 0 && (length || gap)) {
-        return get_center_border_path(h, frame, border, path, shape, strokePaints, radius);
+        return get_center_border_path(h, frame, border, path, strokePaints, radius);
     }
     const thickness = get_thickness(border.sideSetting);
     const rId = randomId();
@@ -292,8 +311,8 @@ handler[BorderPosition.Center] = function (h: Function, frame: ShapeSize, border
         body_props.opacity = opacity === undefined ? 1 : opacity;
         body_props.stroke = "url(#" + g_.id + ")";
     }
-    const mask_outer_path = outer_mask_path(shape, border, true, radius);
-    const mask_inner_path = inner_mask_path(shape, border.sideSetting, true, radius);
+    const mask_outer_path = outer_mask_path(frame, border, true, radius);
+    const mask_inner_path = inner_mask_path(frame, border.sideSetting, true, radius);
     body_props.mask = "url(#" + maskId + ")";
     const mask = h(
         "mask",
@@ -311,7 +330,7 @@ handler[BorderPosition.Center] = function (h: Function, frame: ShapeSize, border
     }
 }
 
-handler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: Fill, radius: number[]): any {
+handler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, border: Border, path: string, strokePaints: Fill, radius: number[]): any {
     // const frame = shape.frame;
     const thickness = get_thickness(border.sideSetting);
     let g_;
@@ -350,7 +369,7 @@ handler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, border:
     if (g_ && g_.node) {
         elArr.push(g_.node);
     }
-    const maskPath = outer_mask_path(shape, border, false, radius);
+    const maskPath = outer_mask_path(frame, border, false, radius);
     const surplus_path = mask_surplus_path(frame, radius, border.sideSetting)
     const mask = h(
         "mask",
@@ -366,26 +385,26 @@ handler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, border:
     return (h("g", elArr));
 }
 
-export const renderCustomBorder = (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: Fill, radius: number[]) => {
+export const renderCustomBorder = (h: Function, frame: ShapeSize, border: Border, path: string, strokePaints: Fill, radius: number[]) => {
     const fillType = strokePaints.fillType;
     const position = border.position;
     const gradientType = strokePaints.gradient && strokePaints.gradient.gradientType;
     if (fillType == FillType.Gradient && gradientType == GradientType.Angular) {
-        return angularHandler[position](h, frame, border, path, shape, strokePaints, radius)
+        return angularHandler[position](h, frame, border, path, strokePaints, radius)
     }
-    return handler[position](h, frame, border, path, shape, strokePaints, radius);
+    return handler[position](h, frame, border, path, strokePaints, radius);
 }
 
-const outer_mask_path = (shape: Shape, border: Border, iscenter: boolean, radius: number[]) => {
+const outer_mask_path = (frame: ShapeSize, border: Border, iscenter: boolean, radius: number[]) => {
     const cornerType = border.cornerType
-    const { width, height } = shape.size;
+    const { width, height } = frame;
     const { sideType, thicknessBottom, thicknessTop, thicknessLeft, thicknessRight } = border.sideSetting;
     const t = iscenter ? thicknessTop / 2 : thicknessTop;
     const b = iscenter ? thicknessBottom / 2 : thicknessBottom;
     const l = iscenter ? thicknessLeft / 2 : thicknessLeft;
     const r = iscenter ? thicknessRight / 2 : thicknessRight;
     if (Math.max(...radius) > 0 || sideType !== SideType.Custom || cornerType !== CornerType.Bevel) {
-        return outer_radius_border_path(radius, shape.size, border.sideSetting, cornerType, iscenter);
+        return outer_radius_border_path(radius, frame, border.sideSetting, cornerType, iscenter);
     } else {
         //切角
         const w = width + r + l;
@@ -407,7 +426,7 @@ const outer_mask_path = (shape: Shape, border: Border, iscenter: boolean, radius
 }
 
 const get_thickness = (side: BorderSideSetting) => {
-    const { sideType, thicknessBottom, thicknessTop, thicknessLeft, thicknessRight } = side;
+    const { thicknessBottom, thicknessTop, thicknessLeft, thicknessRight } = side;
     return Math.max(thicknessBottom, thicknessTop, thicknessLeft, thicknessRight);
 }
 
@@ -522,8 +541,8 @@ const mask_surplus_path = (frame: ShapeSize, r: number[], side: BorderSideSettin
     return path.toString();
 }
 
-const inner_mask_path = (shape: Shape, sideSetting: BorderSideSetting, iscenter: boolean, radius: number[]) => {
-    const { width, height } = shape.size;
+const inner_mask_path = (frame: ShapeSize, sideSetting: BorderSideSetting, iscenter: boolean, radius: number[]) => {
+    const { width, height } = frame;
     const {thicknessBottom, thicknessTop, thicknessLeft, thicknessRight} = sideSetting;
     const tt = iscenter ? thicknessTop / 2 : thicknessTop;
     const tb = iscenter ? thicknessBottom / 2 : thicknessBottom;
@@ -533,7 +552,7 @@ const inner_mask_path = (shape: Shape, sideSetting: BorderSideSetting, iscenter:
     const p2 = new CurvePoint([] as any, '', 1, 0, CurveMode.Straight);
     const p3 = new CurvePoint([] as any, '', 1, 1, CurveMode.Straight);
     const p4 = new CurvePoint([] as any, '', 0, 1, CurveMode.Straight);
-    const _radius = getCornerSize(radius, shape.size);
+    const _radius = getCornerSize(radius, frame);
 
     if (_radius[0] > 0) {
         const side = Math.max(tl, tt);
@@ -627,7 +646,7 @@ const sidePath = (h: Function, frame: ShapeSize, sideSetting: BorderSideSetting,
     return elArr;
 }
 
-const get_center_border_path = (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: Fill, radius: number[]) => {
+const get_center_border_path = (h: Function, frame: ShapeSize, border: Border, path: string, strokePaints: Fill, radius: number[]) => {
     const thickness = get_thickness(border.sideSetting);
     const rId = randomId();
     const maskId = "mask-border" + objectId(strokePaints) + rId;
@@ -653,7 +672,7 @@ const get_center_border_path = (h: Function, frame: ShapeSize, border: Border, p
         body_props.opacity = opacity === undefined ? 1 : opacity;
         body_props.stroke = "url(#" + g_.id + ")";
     }
-    const mask_outer_path = outer_mask_path(shape, border, true, radius);
+    const mask_outer_path = outer_mask_path(frame, border, true, radius);
     const mask = h(
         "mask",
         { id: maskId, x: -thickness / 2, y: -thickness / 2, width, height },

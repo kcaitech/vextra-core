@@ -8,12 +8,10 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { BoolOp, BoolShape, BorderPosition, ShapeFrame, parsePath, Fill } from "../data";
+import { BoolOp, BoolShape, BorderPosition, ShapeFrame, parsePath } from "../data";
 import { ShapeView, updateFrame } from "./shape";
 import { TextShapeView } from "./textshape";
 import { GroupShapeView } from "./groupshape";
-import { EL, elh } from "./el";
-import { renderBorder, renderFills } from "../render/SVG/effects";
 import { FrameGrid } from "../basic/framegrid";
 import { Path } from "@kcdesign/path";
 import { convertPath2CurvePoints } from "../data/pathconvert";

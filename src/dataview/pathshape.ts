@@ -54,7 +54,7 @@ export class PathShapeView extends ShapeView {
         if ((this.segments.length === 1 && !this.segments[0].isClosed) || this.segments.length > 1) {
             return renderLineBorders(elh, this.data.style, borders, this.startMarkerType, this.endMarkerType, this.getPathStr(), this.m_data);
         }
-        return renderBorder(elh, borders, this.frame, this.getPathStr(), this.m_data, this.radius);
+        return renderBorder(elh, borders, this.frame, this.getPathStr(), this.radius, this.isCustomBorder);
     }
 
     render(): number {

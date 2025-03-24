@@ -21,7 +21,7 @@ import {
     ShapeSize,
     RadiusMask,
     OverrideType,
-    VariableType
+    VariableType, SideType
 } from "../data";
 import { ShapeView, updateFrame } from "./shape";
 import { updateAutoLayout } from "../editor";
@@ -220,5 +220,8 @@ export class ArtboardView extends GroupShapeView {
 
      getOutLine() {
         return this.getPath();
+    }
+    get isCustomBorder() {
+        return !(this.getBorder().sideSetting.sideType === SideType.Normal);
     }
 }

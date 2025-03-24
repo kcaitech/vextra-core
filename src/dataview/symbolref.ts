@@ -15,7 +15,7 @@ import {
     FillMask,
     ShadowMask,
     BorderMask,
-    RadiusMask, BlurMask
+    RadiusMask, BlurMask, SideType
 } from "../data";
 import { ShapeView, fixFrameByConstrain } from "./shape";
 import { DataView, RootView } from "./view";
@@ -25,7 +25,7 @@ import { findOverride, findVar } from "./basic";
 import { objectId } from "../basic/objectid";
 import { findOverrideAll } from "../data/utils";
 import { isEqual } from "../basic/number_utils";
-import { updateAutoLayout } from "../editor/utils/auto_layout2";
+import { updateAutoLayout } from "../editor";
 import { ArtboardView } from "./artboard";
 
 // 播放页组件状态切换会话存储refId的key值；
@@ -628,5 +628,9 @@ export class SymbolRefView extends ShapeView {
         const v = this._findOV2(OverrideType.FrameMaskDisabled, VariableType.FrameMaskDisabled);
         if (v) return v.value;
         return this.m_sym?.frameMaskDisabled;
+    }
+
+    get isCustomBorder() {
+        return this.getBorder().sideSetting.sideType !== SideType.Normal;
     }
 }

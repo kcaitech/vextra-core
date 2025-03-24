@@ -1304,4 +1304,8 @@ export class ShapeView extends DataView {
     get outlineBox(): { w: number, h: number } & { x: number, y: number } & { x2: number, y2: number } {
         return this.__outline_box ?? (this.__outline_box = this.outline.bbox());
     }
+
+    get isCustomBorder() {
+        return false;
+    }
 }

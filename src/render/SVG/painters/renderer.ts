@@ -29,13 +29,12 @@ export class SVGRenderer extends IRenderer {
     }
 
     renderFills(): EL[] {
-        const fills = this.view.getFills();
-        return renderFills(elh, fills, this.view.frame, this.view.getPathStr(), 'fill-' + this.view.id);
+        return renderFills(elh, this.view.getFills(), this.view.frame, this.view.getPathStr());
     }
 
     renderBorder(): EL[] {
-        let borders = this.view.getBorder();
-        return renderBorder(elh, borders, this.view.frame, this.view.getPathStr(), this.view.m_data, this.view.radius);
+        let border = this.view.getBorder();
+        return renderBorder(elh, border, this.view.frame, this.view.getPathStr(), this.view.radius, this.view.isCustomBorder);
     }
 
     renderShadows(id: string): EL[] {

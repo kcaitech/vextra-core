@@ -17,29 +17,23 @@ import {
     FillType,
     Gradient,
     GradientType,
-    Shape,
     ShapeSize,
-    ShapeType,
-    SideType
 } from "../../../data";
 import { randomId } from "../../basic";
 import { renderCustomBorder } from "./border_custom";
+import { EL } from "../../../dataview";
 
 const handler: {
-    [key: string]: (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: Fill, radius: number[]) => any
+    [key: string]: (h: Function, frame: ShapeSize, border: Border, path: string, strokePaints: Fill) => EL
 } = {};
 const angularHandler: {
-    [key: string]: (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: Fill, radius: number[]) => any
+    [key: string]: (h: Function, frame: ShapeSize, border: Border, path: string, strokePaints: Fill) => EL
 } = {};
 
-angularHandler[BorderPosition.Inner] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: Fill, radius: number[]): any {
-    if (shape && is_side_custom(border.sideSetting.sideType, shape)) {
-        return renderCustomBorder(h, frame, border, path, shape, strokePaints, radius);
-    }
+angularHandler[BorderPosition.Inner] = function (h: Function, frame: ShapeSize, border: Border, path: string, strokePaints: Fill): EL {
     const rId = randomId();
     const clipId = "clippath-border" + objectId(strokePaints) + rId;
     const maskId = "mask-border" + objectId(strokePaints) + rId;
-    // const frame = shape.frame;
     const thickness = border.sideSetting.thicknessTop;
     const width = frame.width;
     const height = frame.height;
@@ -58,7 +52,6 @@ angularHandler[BorderPosition.Inner] = function (h: Function, frame: ShapeSize, 
         path_props['stroke-dasharray'] = `${length}, ${gap}`
     }
     return h("g", [
-
         h("mask", {
             id: maskId,
             width,
@@ -89,17 +82,11 @@ angularHandler[BorderPosition.Inner] = function (h: Function, frame: ShapeSize, 
     ]);
 }
 
-angularHandler[BorderPosition.Center] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: Fill, radius: number[]): any {
-    if (shape && is_side_custom(border.sideSetting.sideType, shape)) {
-        return renderCustomBorder(h, frame, border, path, shape, strokePaints, radius);
-    }
+angularHandler[BorderPosition.Center] = function (h: Function, frame: ShapeSize, border: Border, path: string, strokePaints: Fill): EL {
     const rId = randomId();
     const maskId = "mask-border" + objectId(strokePaints) + rId;
-    // const frame = shape.frame;
     const thickness = border.sideSetting.thicknessTop;
-
     const g_ = renderGradient(h, strokePaints.gradient as Gradient, frame);
-
     const x = -thickness / 2;
     const y = -thickness / 2;
     const width = frame.width + thickness;
@@ -139,12 +126,8 @@ angularHandler[BorderPosition.Center] = function (h: Function, frame: ShapeSize,
     ])
 }
 
-angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: Fill, radius: number[]): any {
-    // const frame = shape.frame;
+angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, border: Border, path: string, strokePaints: Fill): EL {
     const thickness = border.sideSetting.thicknessTop;
-    if (shape && is_side_custom(border.sideSetting.sideType, shape)) {
-        return renderCustomBorder(h, frame, border, path, shape, strokePaints, radius);
-    }
     const g_ = renderGradient(h, strokePaints.gradient as Gradient, frame);
     const width = frame.width + 2 * thickness;
     const height = frame.height + 2 * thickness;
@@ -179,7 +162,6 @@ angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, 
                 width,
                 height
             }, [
-                // h("rect", { x: -thickness, y: -thickness, width, height, fill: "white" }),
                 h("path", { d: path, fill: "black", 'stroke-width': 2 * thickness, stroke: 'white' }),
                 h("path", { d: path, fill: "black" }),
             ]),
@@ -197,15 +179,10 @@ angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, 
     ]);
 }
 
-handler[BorderPosition.Inner] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: Fill, radius: number[]): any {
-    if (shape && is_side_custom(border.sideSetting.sideType, shape)) {
-        return renderCustomBorder(h, frame, border, path, shape, strokePaints, radius);
-    }
+handler[BorderPosition.Inner] = function (h: Function, frame: ShapeSize, border: Border, path: string, strokePaints: Fill): EL {
     const rId = randomId();
     const clipId = "clippath-border" + objectId(strokePaints) + rId;
-    // const frame = shape.frame;
     const thickness = border.sideSetting.thicknessTop;
-
     let g_;
     const body_props: any = {
         d: path,
@@ -215,7 +192,6 @@ handler[BorderPosition.Inner] = function (h: Function, frame: ShapeSize, border:
         "stroke-linejoin": border.cornerType,
         'clip-path': "url(#" + clipId + ")"
     }
-    if (shape && Math.max(...radius) > 0) body_props['stroke-linejoin'] = 'miter';
     const { length, gap } = border.borderStyle;
     if (length || gap) {
         body_props['stroke-dasharray'] = `${length}, ${gap}`
@@ -225,8 +201,8 @@ handler[BorderPosition.Inner] = function (h: Function, frame: ShapeSize, border:
         const color = strokePaints.color;
         body_props.stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + (color.alpha) + ")";
     } else {
-        g_ = renderGradient(h, strokePaints.gradient as Gradient, frame);
-        const opacity = strokePaints.gradient?.gradientOpacity;
+        g_ = renderGradient(h, strokePaints.gradient!, frame);
+        const opacity = strokePaints.gradient!.gradientOpacity;
         body_props.opacity = opacity === undefined ? 1 : opacity;
         body_props.stroke = "url(#" + g_.id + ")";
     }
@@ -245,11 +221,7 @@ handler[BorderPosition.Inner] = function (h: Function, frame: ShapeSize, border:
     return h("g", elArr);
 }
 
-handler[BorderPosition.Center] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: Fill, radius: number[]): any {
-    // const frame = shape.frame;
-    if (shape && is_side_custom(border.sideSetting.sideType, shape)) {
-        return renderCustomBorder(h, frame, border, path, shape, strokePaints, radius);
-    }
+handler[BorderPosition.Center] = function (h: Function, frame: ShapeSize, border: Border, path: string, strokePaints: Fill): EL {
     const thickness = border.sideSetting.thicknessTop;
     let g_;
     const body_props: any = {
@@ -259,7 +231,6 @@ handler[BorderPosition.Center] = function (h: Function, frame: ShapeSize, border
         "stroke-linejoin": border.cornerType,
         'stroke-width': thickness
     }
-    // if (shape && Math.max(...shape.radius) > 0) body_props['stroke-linejoin'] = 'miter';
     const { length, gap } = border.borderStyle;
     if (length || gap) {
         body_props['stroke-dasharray'] = `${length}, ${gap}`
@@ -283,11 +254,7 @@ handler[BorderPosition.Center] = function (h: Function, frame: ShapeSize, border
     }
 }
 
-handler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, border: Border, path: string, shape: Shape, strokePaints: Fill, radius: number[]): any {
-    // const frame = shape.frame;
-    if (shape && is_side_custom(border.sideSetting.sideType, shape)) {
-        return renderCustomBorder(h, frame, border, path, shape, strokePaints, radius);
-    }
+handler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, border: Border, path: string, strokePaints: Fill): EL {
     const thickness = border.sideSetting.thicknessTop;
 
     let g_;
@@ -298,7 +265,6 @@ handler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, border:
         "stroke-linejoin": border.cornerType,
         'stroke-width': 2 * thickness,
     }
-    // if (shape && Math.max(...shape.radius) > 0) body_props['stroke-linejoin'] = 'miter';
     const { length, gap } = border.borderStyle;
     if (length || gap) {
         body_props['stroke-dasharray'] = `${length}, ${gap}`;
@@ -329,7 +295,6 @@ handler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, border:
         "mask",
         { id: maskId, x: -thickness, y: -thickness, width, height },
         [
-            // h("rect", { x: -thickness, y: -thickness, width, height, fill: "white" }),
             h("path", { d: path, fill: "black", 'stroke-width': 2 * thickness, stroke: 'white' }),
             h("path", { d: path, fill: "black" }),
         ]
@@ -339,32 +304,24 @@ handler[BorderPosition.Outer] = function (h: Function, frame: ShapeSize, border:
     return (h("g", elArr));
 }
 
-export function render(h: Function, border: Border | undefined, frame: ShapeSize, path: string, shape: Shape, radius: number[],isClosed = true): Array<any> {
-    if(!border) return [];
-    const bc = border.strokePaints.length;
-    const elArr = [];
-    // 不闭合的图层的边框默认以居中效果来渲染
-    const position = isClosed ? border.position : BorderPosition.Center;
-    for (let i = 0; i < bc; i++) {
-        const strokePaints: Fill = border.strokePaints[i];
-        if (!strokePaints.isEnabled) {
+export function render(h: Function, border: Border, frame: ShapeSize, path: string, radius: number[], customSide: boolean): EL[] {
+    const elArr: EL[] = [];
+    for (const fill of border.strokePaints) {
+        if (!fill.isEnabled) continue;
+        if (customSide) {
+            elArr.push(renderCustomBorder(h, frame, border, path, fill, radius));
             continue;
         }
-        const fillType = strokePaints.fillType;
-        const gradientType = strokePaints.gradient && strokePaints.gradient.gradientType;
-
-        fillType == FillType.Gradient && gradientType == GradientType.Angular && (() => {
-            elArr.push(angularHandler[position](h, frame, border, path, shape, strokePaints,radius));
-        })() || (fillType == FillType.SolidColor || fillType == FillType.Gradient) && (() => {
-            elArr.push(handler[position](h, frame, border, path, shape, strokePaints, radius));
-        })() || fillType == FillType.Pattern && (() => {
-            return true; // todo
-        })
+        if (fill.fillType == FillType.SolidColor) {
+            elArr.push(handler[border.position](h, frame, border, path, fill));
+        } else if (fill.fillType == FillType.Gradient) {
+            const gradientType = fill.gradient!.gradientType;
+            if (gradientType === GradientType.Angular) {
+                elArr.push(angularHandler[border.position](h, frame, border, path, fill));
+            } else {
+                elArr.push(handler[border.position](h, frame, border, path, fill));
+            }
+        }
     }
     return elArr;
-}
-
-function is_side_custom(sideType: SideType, shape: Shape) {
-    if (sideType === SideType.Normal || shape.haveEdit) return false;
-    return [ShapeType.Rectangle, ShapeType.Artboard, ShapeType.Image, ShapeType.Symbol, ShapeType.SymbolRef, ShapeType.SymbolUnion].includes(shape.type);
 }

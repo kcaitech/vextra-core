@@ -178,7 +178,7 @@ painter[ShapeType.Path] = (view: PathShapeView, renderer: SVGRenderer) => {
     let bordersEL: EL[];
     if ((view.segments.length === 1 && !view.segments[0].isClosed) || view.segments.length > 1) {
         bordersEL = renderLineBorders(elh, view.data.style, borders, view.startMarkerType, view.endMarkerType, view.getPathStr(), view.m_data);
-    } else bordersEL = renderBorder(elh, borders, view.frame, view.getPathStr(), view.data, view.radius);
+    } else bordersEL = renderBorder(elh, borders, view.frame, view.getPathStr(), view.radius, view.isCustomBorder);
 
     const filterId = `${objectId(view)}`;
     const shadows = renderer.renderShadows(filterId);

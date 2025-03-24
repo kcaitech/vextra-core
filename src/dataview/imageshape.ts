@@ -9,7 +9,7 @@
  */
 
 import { DViewCtx, PropsType } from "./viewctx";
-import { CurvePoint, ImageShape, BasicArray } from "../data";
+import { CurvePoint, ImageShape, BasicArray, SideType } from "../data";
 import { RectShapeView } from "./rect";
 export class ImageShapeView extends RectShapeView {
     private m_imgPH: string;
@@ -30,5 +30,8 @@ export class ImageShapeView extends RectShapeView {
 
     get isImageFill() {
         return true;
+    }
+    get isCustomBorder() {
+        return !(this.getBorder().sideSetting.sideType === SideType.Normal || this.haveEdit);
     }
 }
