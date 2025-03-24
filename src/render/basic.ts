@@ -8,13 +8,8 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-
-
-import { Color } from "../data/classes";
-import { BlurType, Color, SymbolShape } from "../data/classes";
-import { EL, elh, PageView, ShapeView } from "../dataview";
-import { objectId } from "../basic/objectid";
-import { innerShadowId } from "./SVG/effects";
+import { Color } from "../data";
+import { ShapeView } from "../dataview";
 export { findOverrideAndVar } from "../data/utils";
 
 export const DefaultColor = Color.DefaultColor;

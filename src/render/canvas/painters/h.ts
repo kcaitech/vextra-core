@@ -1,5 +1,5 @@
 import { CanvasRenderer } from "./renderer";
-import { ArtboradView, PageView, ShapeView, SymbolRefView } from "../../../dataview";
+import { ArtboardView, PageView, ShapeView, SymbolRefView } from "../../../dataview";
 import { ShapeType } from "../../../data";
 
 export const painter: { [key: string]: (view: any, renderer: CanvasRenderer) => number } = {};
@@ -52,7 +52,7 @@ painter[ShapeType.Page] = (view: PageView, renderer: CanvasRenderer) => {
     return ver;
 }
 
-painter[ShapeType.Artboard] = (view: ArtboradView, renderer: CanvasRenderer) => {
+painter[ShapeType.Artboard] = (view: ArtboardView, renderer: CanvasRenderer) => {
     const ctx = view.canvasRenderingContext2D;
     ctx.save();
     if (renderer.props.opacity) ctx.globalAlpha = renderer.props.opacity;
@@ -77,7 +77,7 @@ painter[ShapeType.Artboard] = (view: ArtboradView, renderer: CanvasRenderer) => 
     return ++renderer.m_render_version;
 }
 
-painter[ShapeType.Contact] = (view: ArtboradView, renderer: CanvasRenderer) => {
+painter[ShapeType.Contact] = (view: ArtboardView, renderer: CanvasRenderer) => {
     const ctx = view.canvasRenderingContext2D;
     ctx.save();
     if (renderer.props.opacity) ctx.globalAlpha = renderer.props.opacity;

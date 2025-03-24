@@ -7,15 +7,13 @@
  * For more information about the AGPL-3.0 license, please visit:
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
-import { ContactForm, ContactShape, Page, Shape, ShapeFrame, ShapeType, Fill, Blur } from "../data/classes";
+import { ContactForm, ContactShape, Page, Shape, ShapeFrame, ShapeType, Fill, Blur } from "../data";
 import {
     ContactType, CurveMode,
     CurvePoint,
     parsePath,
     Transform
 } from "../data";
-import { EL, elh } from "./el";
-import { render as renderBorders } from "../render/SVG/effects/contact_borders"
 import { DViewCtx, PropsType } from "./viewctx";
 import { PathShapeView } from "./pathshape";
 import { ShapeView, updateFrame } from "./shape";

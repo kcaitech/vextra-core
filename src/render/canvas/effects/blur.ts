@@ -1,7 +1,7 @@
 import { ShapeView, TextShapeView } from "../../../dataview";
-import { BlurType, Border, Fill } from "../../../data";
+import { BlurType, Fill } from "../../../data";
 import { Props } from "../painters/renderer";
-import { border2path } from "../../../editor/utils/path";
+import { border2path } from "../../../dataview/border2path";
 
 export function render(view: ShapeView, props: Props): Function | null {
     const blur = view.blur;
@@ -18,7 +18,7 @@ export function render(view: ShapeView, props: Props): Function | null {
 function backgroundBlur(ctx: CanvasRenderingContext2D, view: ShapeView, props: Props) {
     const borders = view.getBorders();
     const fills = view.getFills();
-    const alphaBorder = opacity(borders);
+    const alphaBorder = opacity(borders.strokePaints);
     const alphaFill = opacity(fills);
     if (!alphaFill && !alphaBorder) return null;
     ctx.save();
@@ -32,8 +32,8 @@ function backgroundBlur(ctx: CanvasRenderingContext2D, view: ShapeView, props: P
     if (fills.length && alphaFill) {
         path.addPath(new Path2D(view instanceof TextShapeView ? view.getTextPath().toString() : view.getPath().toString()));
     }
-    if (borders.length && alphaBorder) {
-        const path2D = new Path2D(border2path(view, borders[0]).toString());
+    if (borders.strokePaints.length && alphaBorder) {
+        const path2D = new Path2D(border2path(view, borders).toString());
         const transform = new DOMMatrix();
         transform.translate(view.outerFrame.x, view.outerFrame.y);
         path.addPath(path2D, transform);
@@ -48,7 +48,7 @@ function backgroundBlur(ctx: CanvasRenderingContext2D, view: ShapeView, props: P
     return ctx.restore.bind(ctx);
 }
 
-const opacity = (t: (Fill | Border)[]) => {
+const opacity = (t: Fill[]) => {
     for (let i = 0; i < t.length; i++) {
         const __t = t[i];
         if (__t.color.alpha > 0 && __t.color.alpha < 1 && __t.isEnabled) return true;

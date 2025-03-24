@@ -1,12 +1,10 @@
 import { Border, BorderPosition, Fill, FillType, Shadow, ShadowPosition } from "../../../data";
-import { ArtboradView, BoolShapeView, ShapeView, SymbolRefView, SymbolView, TextShapeView } from "../../../dataview";
+import { ArtboardView, BoolShapeView, ShapeView, SymbolRefView, SymbolView, TextShapeView } from "../../../dataview";
 import { gPal } from "../../../basic/pal";
-import { border2path } from "../../../editor/utils/path";
 import { CanvasRenderer, Props } from "../painters/renderer";
 import { OpType, Path } from "@kcdesign/path";
 
-
-export function render(renderer: CanvasRenderer, view: ShapeView, props: Props, ctx: CanvasRenderingContext2D, shadows: Shadow[], borders: Border[], fills: Fill[]): Function | undefined {
+export function render(renderer: CanvasRenderer, view: ShapeView, props: Props, ctx: CanvasRenderingContext2D, shadows: Shadow[], border: Border, fills: Fill[]): Function | undefined {
     shadows = shadows.filter(i => i.isEnabled);
     if (!shadows.length) return;
 
@@ -25,14 +23,14 @@ export function render(renderer: CanvasRenderer, view: ShapeView, props: Props, 
         return shadows.length === 1
             && shadows[0].position === ShadowPosition.Outer
             && !shadows[0].spread
-            && (borders.length + fills.length) < 2
-            && (borders[0]?.fillType !== FillType.Gradient && fills[0]?.fillType !== FillType.Gradient)
+            && (border.strokePaints.length + fills.length) < 2
+            && (border.strokePaints[0]?.fillType !== FillType.Gradient && fills[0]?.fillType !== FillType.Gradient)
             && (view instanceof BoolShapeView || !view.childs.length)
     }
 
     function isBlurOutlineShadow() {
         return (!view.childs.length || view instanceof BoolShapeView)
-            || ((view instanceof ArtboradView || view instanceof SymbolView || view instanceof SymbolRefView) && !view.frameMaskDisabled);
+            || ((view instanceof ArtboardView || view instanceof SymbolView || view instanceof SymbolRefView));
     }
 }
 
@@ -48,14 +46,14 @@ function frankShadow(ctx: CanvasRenderingContext2D, shadow: Shadow): Function {
 
 function blurOutlineShadow(view: ShapeView, props: Props, ctx: CanvasRenderingContext2D, outerShadows: Shadow[]) {
     let pathStr = view instanceof TextShapeView ? view.getTextPath().toString() :  view.getPath().toString();
-    const border = view.getBorders()[0];
+    const border = view.getBorders();
     if (border && border.position !== BorderPosition.Inner) {
-        const gPath = gPal.makePalPath(pathStr);
-        const borderGPath = gPal.makePalPath(border2path(view, border).toString());
-        gPath.union(borderGPath);
-        pathStr = gPath.toSVGString();
-        gPath.delete();
-        borderGPath.delete();
+        // const gPath = gPal.makePalPath(pathStr);
+        // const borderGPath = gPal.makePalPath(border2path(view, border).toString());
+        // gPath.union(borderGPath);
+        // pathStr = gPath.toSVGString();
+        // gPath.delete();
+        // borderGPath.delete();
     }
     const path2D = new Path2D(pathStr);
     ctx.save();

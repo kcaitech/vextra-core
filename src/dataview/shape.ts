@@ -8,21 +8,18 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { innerShadowId, renderBlur, renderBorders, renderFills, renderShadows } from "../render";
+import { innerShadowId, renderBlur, renderBorders, renderFills, renderShadows } from "../render/SVG/effects";
 import {
     BasicArray,
-    Blur,
-    BlurMask,
+    Blur, BlurMask,
     BlurType,
-    Border,
-    BorderMask,
+    Border, BorderMask,
     BorderPosition,
     ContextSettings,
-    CornerRadius,
-    CurveMode, CurvePoint,
+    CornerRadius, CurveMode,
+    CurvePoint,
     ExportOptions,
-    Fill,
-    FillMask,
+    Fill, FillMask,
     FillType,
     GradientType,
     MarkerType,
@@ -32,14 +29,11 @@ import {
     OverrideType, parsePath,
     PathShape,
     PrototypeInterAction,
-    PrototypeStartingPoint,
-    RadiusMask,
-    RadiusType,
+    PrototypeStartingPoint, RadiusMask, RadiusType,
     ResizingConstraints2,
     ScrollBehavior,
     ScrollDirection,
-    Shadow,
-    ShadowMask,
+    Shadow, ShadowMask,
     ShadowPosition,
     Shape,
     ShapeFrame,
@@ -51,8 +45,6 @@ import {
     Variable,
     VariableType
 } from "../data";
-import { innerShadowId, renderBlur, renderBorders, renderFills, renderShadows } from "../render/SVG/effects";
-import { BasicArray, Blur, BlurType, Border, BorderPosition, ContextSettings, CornerRadius, CurvePoint, ExportOptions, Fill, FillType, GradientType, makeShapeTransform1By2, makeShapeTransform2By1, MarkerType, OverlayBackgroundAppearance, OverlayBackgroundInteraction, OverlayPosition, OverrideType, PathShape, Point2D, PrototypeInterAction, PrototypeStartingPoint, ResizingConstraints2, ScrollBehavior, ScrollDirection, Shadow, ShadowPosition, Shape, ShapeFrame, ShapeSize, ShapeType, SymbolRefShape, SymbolShape, Transform, Variable, VariableType } from "../data";
 import { findOverrideAndVar } from "./basic";
 import { EL, elh } from "./el";
 import { DataView } from "./view"
@@ -62,13 +54,11 @@ import { float_accuracy } from "../basic/consts";
 import { GroupShapeView } from "./groupshape";
 import { importFill } from "../data/baseimport";
 import { exportFill } from "../data/baseexport";
-import { PageView } from "./page";
 import { ArtboardView } from "./artboard";
 import { findOverrideAll } from "../data/utils";
 import { Path } from "@kcdesign/path";
-import { ColVector3D } from "../basic/matrix2";
-import { border2path } from "../editor/utils/path";
 import { isEqual } from "../basic/number_utils";
+import { border2path } from "./border2path";
 
 export function isDiffShapeSize(lsh: ShapeSize | undefined, rsh: ShapeSize | undefined) {
     if (lsh === rsh) { // both undefined
@@ -608,27 +598,6 @@ export class ShapeView extends DataView {
         return m;
     }
 
-    frame2Root(): ShapeFrame {
-        const frame = this.frame;
-        const m = this.matrix2Root();
-        const lt = m.computeCoord(frame.x, frame.y);
-        const rb = m.computeCoord(frame.x + frame.width, frame.y + frame.height);
-        return new ShapeFrame(lt.x, lt.y, rb.x - lt.x, rb.y - lt.y);
-    }
-
-    frame2Parent(): ShapeFrame {
-        if (this.isNoTransform()) {
-            const tx = this.transform.translateX;
-            const ty = this.transform.translateY;
-            return new ShapeFrame(tx + this.frame.x, ty + this.frame.y, this.frame.width, this.frame.height);
-        }
-        const frame = this.frame;
-        const m = this.matrix2Parent();
-        const lt = m.computeCoord(frame.x, frame.y);
-        const rb = m.computeCoord(frame.x + frame.width, frame.y + frame.height);
-        return new ShapeFrame(lt.x, lt.y, rb.x - lt.x, rb.y - lt.y);
-    }
-
     get name(): string {
         const v = this._findOV(OverrideType.Name, VariableType.Name);
         return v ? v.value : this.m_data.name;
@@ -1152,7 +1121,7 @@ export class ShapeView extends DataView {
     }
 
     // 更新frame, vflip, hflip, rotate, fixedRadius, 及对应的cache数据，如path
-    // 更新childs, 及向下更新数据变更了的child(在datachangeset)
+    // 更新childs, 及向下更新数据变更了的child(在data change set)
     // 父级向下更新时带props, 自身更新不带
     layout(props?: PropsType) {
         // todo props没更新时是否要update
@@ -1211,9 +1180,6 @@ export class ShapeView extends DataView {
         return props;
     }
 
-    /**
-     * @deprecated
-     */
     protected renderStaticProps() {
         const frame = this.frame;
         const props: any = {};
@@ -1253,12 +1219,6 @@ export class ShapeView extends DataView {
         const childs = this.m_children;
         childs.forEach((c) => c.render());
         return childs;
-    }
-
-    protected m_render_version: number = 0;
-
-    protected checkAndResetDirty(): boolean {
-        return this.m_ctx.removeDirty(this);
     }
 
     asyncRender(): number {
@@ -1611,7 +1571,7 @@ export class ShapeView extends DataView {
         const path = new Path();
         if (this.getFills().length) path.addPath(this.getPath());
         const borders = this.getBorders();
-        if (borders[0] && borders[0].position !== BorderPosition.Inner) path.addPath(border2path(this, borders[0]));
+        if (borders.position !== BorderPosition.Inner) path.addPath(border2path(this, borders));
         return this.__outline = path;
     }
 

@@ -1,4 +1,4 @@
-import { ArtboradView, ShapeView, TextShapeView } from "../../../dataview";
+import { ArtboardView, ShapeView, TextShapeView } from "../../../dataview";
 import { IRenderer } from "../../basic";
 import { render as renderFills } from "../effects/fill";
 import { render as renderBorders } from "../effects/border";
@@ -6,9 +6,8 @@ import { render as renderShadows } from "../effects/shadow";
 import { render as renderBlur } from "../effects/blur"
 
 import { painter } from "./h";
-import { Path } from "../../../../../kcdesign-path";
-import { border2path } from "../../../editor/utils/path";
 import { renderTextLayout } from "../effects/text";
+import { border2path } from "../../../dataview/border2path";
 
 export type Props = {
     transform: [number, number, number, number, number, number];
@@ -95,8 +94,8 @@ export class CanvasRenderer extends IRenderer {
             const fillP = this.path2D;
             path.addPath(fillP);
         }
-        if (this.view.getBorders().length) {
-            const borderP = border2path(this.view, this.view.getBorders()[0]);
+        if (this.view.getBorders().strokePaints.length) {
+            const borderP = border2path(this.view, this.view.getBorders());
             path.addPath(new Path2D(borderP.toString()));
         }
         const childs = this.view.m_children as ShapeView[];
@@ -115,7 +114,7 @@ export class CanvasRenderer extends IRenderer {
     }
 
     clip(): Function | null {
-        if ((this.view as ArtboradView).frameMaskDisabled) return null;
+        if ((this.view as ArtboardView).frameMaskDisabled) return null;
         this.ctx.save();
         const ot = this.ctx.getTransform();
         this.ctx.transform(...this.props.transform);
@@ -125,7 +124,6 @@ export class CanvasRenderer extends IRenderer {
     }
 
     render(type = "base"): number {
-        // if (!this.checkAndResetDirty()) return this.m_render_version;
         this.view.layout();
         const ver = painter[type] ? painter[type](this.view, this) : painter["base"](this.view, this);
         this.__clear_cache();

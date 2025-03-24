@@ -37,7 +37,7 @@ import { layoutTable } from "../data/tablelayout";
 import { getTableCells, getTableVisibleCells } from "../data/tableread";
 import { BasicArray } from "../data/basic";
 import { BorderPosition, CornerType, FillType, Point2D, SideType } from "../data/typesdefine";
-import { render as renderLine } from "../render/line_borders";
+import { render as renderLine } from "../render/SVG/effects/line_borders";
 import { ArtboardView } from "./artboard";
 import { v4 as uuid } from "uuid";
 

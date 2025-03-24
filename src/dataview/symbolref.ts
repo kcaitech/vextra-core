@@ -11,7 +11,7 @@
 import {
     AutoLayout, Border, ContextSettings, CornerRadius, Fill, MarkerType, OverrideType, PrototypeInterAction, Shadow,
     Shape, ShapeFrame, ShapeSize, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType, ShapeType,
-    BasicArray, getPathOfRadius, Blur, BlurType,
+    BasicArray, Blur,
     FillMask,
     ShadowMask,
     BorderMask,
@@ -24,10 +24,6 @@ import { DViewCtx, PropsType, VarsContainer } from "./viewctx";
 import { findOverride, findVar } from "./basic";
 import { objectId } from "../basic/objectid";
 import { findOverrideAll } from "../data/utils";
-import { PageView } from "./page";
-import { innerShadowId } from "../render/SVG/effects";
-import { elh } from "./el";
-import { render as clippathR } from "../render/SVG/effects/clippath";
 import { isEqual } from "../basic/number_utils";
 import { updateAutoLayout } from "../editor/utils/auto_layout2";
 import { ArtboardView } from "./artboard";

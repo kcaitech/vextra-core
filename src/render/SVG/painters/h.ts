@@ -1,11 +1,20 @@
-import { ArtboradView, CutoutShapeView, EL, elh, PageView, PathShapeView, ShapeView, SymbolRefView, SymbolView, TableCellView } from "../../../dataview";
+import {
+    ArtboardView,
+    CutoutShapeView,
+    EL,
+    elh,
+    PageView,
+    PathShapeView,
+    ShapeView,
+    SymbolRefView,
+    SymbolView,
+    TableCellView
+} from "../../../dataview";
 import { SVGRenderer } from "./renderer";
 import { objectId } from "../../../basic/objectid";
 import { innerShadowId, renderBorders } from "../effects";
-import { BlurType, FillType, GradientType, ScrollBehavior, ShapeType, SymbolShape, Transform } from "../../../data";
+import { BlurType, ScrollBehavior, ShapeType, SymbolShape, Transform } from "../../../data";
 import { render as clippathR } from "../effects/clippath";
-import { importBorder } from "../../../data/baseimport";
-import { exportBorder } from "../../../data/baseexport";
 import { render as renderLineBorders } from "../effects/line_borders";
 
 export const painter: { [key: string]: (view: any, renderer: SVGRenderer) => number } = {};
@@ -166,17 +175,10 @@ painter[ShapeType.Path] = (view: PathShapeView, renderer: SVGRenderer) => {
 
     const fills = renderer.renderFills();
     let borders = view.getBorders();
-    if (view.mask) {
-        borders = borders.map(b => {
-            const nb = importBorder(exportBorder(b));
-            if (nb.fillType === FillType.Gradient && nb.gradient?.gradientType === GradientType.Angular) nb.fillType = FillType.SolidColor;
-            return nb;
-        })
-    }
     let bordersEL: EL[];
     if ((view.segments.length === 1 && !view.segments[0].isClosed) || view.segments.length > 1) {
         bordersEL = renderLineBorders(elh, view.data.style, borders, view.startMarkerType, view.endMarkerType, view.getPathStr(), view.m_data);
-    } else bordersEL = renderBorders(elh, borders, view.frame, view.getPathStr(), view.m_data);
+    } else bordersEL = renderBorders(elh, borders, view.frame, view.getPathStr(), view.data, view.radius);
 
     const filterId = `${objectId(view)}`;
     const shadows = renderer.renderShadows(filterId);
@@ -237,7 +239,7 @@ painter[ShapeType.Page] = (view: ShapeView, renderer: SVGRenderer) => {
     return r;
 }
 
-painter[ShapeType.Artboard] = (view: ArtboradView, renderer: SVGRenderer) => {
+painter[ShapeType.Artboard] = (view: ArtboardView, renderer: SVGRenderer) => {
     if (!renderer.checkAndResetDirty()) return renderer.m_render_version;
 
     const masked = view.masked;

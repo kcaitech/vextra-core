@@ -10,7 +10,7 @@
 
 
 import { BaseCreator } from "./base"
-import * as shapeCreator from "../../../editor/creator"
+import * as shapeCreator from "../../../editor/creator/creator"
 import { ShapeFrame } from "../../../data"
 export class EllipseCreator extends BaseCreator {
     createShape() {

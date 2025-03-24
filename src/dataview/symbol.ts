@@ -9,7 +9,7 @@
  */
 
 import { GroupShapeView } from "./groupshape";
-import { innerShadowId, renderBorders, renderFills } from "../render/SVG/effects";
+import { renderBorders, renderFills } from "../render/SVG/effects";
 import { EL, elh } from "./el";
 import {
     CornerRadius, Shape, ShapeFrame, ShapeType, SymbolShape, AutoLayout, BorderPosition, Page, ShadowPosition, BlurType,
@@ -22,10 +22,7 @@ import { VarsContainer } from "./viewctx";
 import { DataView, RootView } from "./view"
 import { getShapeViewId } from "./basic";
 import { ShapeView, updateFrame } from "./shape";
-import { PageView } from "./page";
-import { objectId } from "../basic/objectid";
-import { render as clippathR } from "../render/SVG/effects/clippath";
-import { updateAutoLayout } from "../editor/utils/auto_layout2";
+import { updateAutoLayout } from "../editor";
 
 export class SymbolView extends GroupShapeView {
     get data() {

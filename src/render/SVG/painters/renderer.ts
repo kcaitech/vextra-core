@@ -1,9 +1,6 @@
 import { EL, elh, ShapeView } from "../../../dataview";
 import { IRenderer } from "../../basic";
 import { renderBlur, renderBorders, renderFills, renderShadows } from "../effects";
-import { importBorder } from "../../../data/baseimport";
-import { exportBorder } from "../../../data/baseexport";
-import { FillType, GradientType } from "../../../data";
 import { painter } from "./h";
 
 export class SVGRenderer extends IRenderer {
@@ -33,24 +30,17 @@ export class SVGRenderer extends IRenderer {
 
     renderFills(): EL[] {
         const fills = this.view.getFills();
-        return renderFills(elh, fills, this.view.size, this.view.getPathStr());
+        return renderFills(elh, fills, this.view.frame, this.view.getPathStr(), 'fill-' + this.view.id);
     }
 
     renderBorders(): EL[] {
         let borders = this.view.getBorders();
-        if (this.view.mask) {
-            borders = borders.map(b => {
-                const nb = importBorder(exportBorder(b));
-                if (nb.fillType === FillType.Gradient && nb.gradient?.gradientType === GradientType.Angular) nb.fillType = FillType.SolidColor;
-                return nb;
-            })
-        }
-        return renderBorders(elh, borders, this.view.size, this.view.getPathStr(), this.view.m_data);
+        return renderBorders(elh, borders, this.view.frame, this.view.getPathStr(), this.view.m_data, this.view.radius);
     }
 
     renderShadows(id: string): EL[] {
         const view = this.view;
-        return renderShadows(elh, id, view.getShadows(), view.getPathStr(), view.frame, view.getFills(), view.getBorders(), view.m_data.type, view.blur);
+        return renderShadows(elh, id, view.getShadows(), view.getPathStr(), view.frame, view.getBorders(), this.view.data, this.view.radius, view.blur);
     }
 
     renderBlur(id: string): EL[] {

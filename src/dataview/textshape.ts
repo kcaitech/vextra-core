@@ -18,19 +18,15 @@ import {
     Transform,
     VariableType,
     ShapeFrame,
-    GradientType,
-    FillType,
     overrideTextText,
     SymbolShape,
     string2Text,
-    Shape,
-    SymbolRefShape,
     TextVerAlign,
     TextHorAlign
 } from "../data";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
-import { renderText2Path, renderTextLayout } from "../render/SVG/effects/text";
+import { renderText2Path } from "../render/SVG/effects/text";
 import {
     CursorLocate, TextLocate, locateCursor,
     locateNextCursor, locatePrevCursor, locateRange, locateText
@@ -38,8 +34,6 @@ import {
 import { objectId } from "../basic/objectid";
 import { Path } from "@kcdesign/path";
 import { renderBorders } from "../render/SVG/effects";
-import { importBorder } from "../data/baseimport";
-import { exportBorder } from "../data/baseexport";
 import { ArtboardView } from "./artboard";
 
 export class TextShapeView extends ShapeView {
@@ -160,13 +154,6 @@ export class TextShapeView extends ShapeView {
     }
     protected renderBorders(): EL[] {
         let border = this.getBorders();
-        if (this.mask && border) {
-            border.strokePaints.map(b => {
-                const nb = importFill(exportFill(b));
-                if (nb.fillType === FillType.Gradient && nb.gradient?.gradientType === GradientType.Angular) nb.fillType = FillType.SolidColor;
-                return nb;
-            });
-        }
         return border && border.strokePaints.some(p => p.isEnabled) ? renderBorders(elh, border, this.size, this.getTextPath().toSVGString(), this.m_data, this.radius) : [];
     }
 

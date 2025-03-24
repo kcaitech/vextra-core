@@ -20,12 +20,9 @@ import {
     Shape,
     ShapeSize,
     ShapeType,
-    SideType,
-    SymbolRefShape,
-    SymbolShape,
-    VariableType
+    SideType
 } from "../../../data";
-import { findOverrideAndVar, randomId } from "../../basic";
+import { randomId } from "../../basic";
 import { renderCustomBorder } from "./border_custom";
 
 const handler: {

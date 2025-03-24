@@ -10,28 +10,23 @@
 
 import { EL, elh } from "./el";
 import { GroupShapeView } from "./groupshape";
-import { innerShadowId, renderBorders, renderFills } from "../render/SVG/effects";
-import { objectId } from "../basic/objectid";
-import { render as clippathR } from "../render/SVG/effects/clippath"
+import { renderBorders, renderFills } from "../render/SVG/effects";
 import {
     AutoLayout,
     BorderPosition,
     CornerRadius,
     Page,
-    ScrollBehavior,
     ShadowPosition,
     ShapeFrame,
     Transform,
     Artboard,
-    BlurType,
     ShapeSize,
     RadiusMask,
     OverrideType,
     VariableType
 } from "../data";
 import { ShapeView, updateFrame } from "./shape";
-import { PageView } from "./page";
-import { updateAutoLayout } from "../editor/utils/auto_layout2";
+import { updateAutoLayout } from "../editor";
 
 export class ArtboardView extends GroupShapeView {
     m_inner_transform: Transform | undefined;

@@ -124,11 +124,6 @@ export class PageView extends GroupShapeView implements RootView {
     }
 
     render(): number {
-        // const r = super.render();
-        // if (r) {
-        //     this.eltag = "svg";
-        // }
-        // return r;
         return this.m_renderer.render(this.type);
     }
 
@@ -138,9 +133,5 @@ export class PageView extends GroupShapeView implements RootView {
 
     get backgroundColor() {
         return this.data.backgroundColor;
-    }
-
-    get connections() {
-        return this.data.connections;
     }
 }
