@@ -9,7 +9,7 @@
  */
 
 import { v4 as uuid } from "uuid";
-import { AutoLayout, Page, Artboard, Document, PageListItem } from "../../data";
+import { AutoLayout, Page, Artboard, Document, PageListItem, StyleMangerMember, TableShape } from "../../data";
 import {
     GroupShape,
     LineShape,

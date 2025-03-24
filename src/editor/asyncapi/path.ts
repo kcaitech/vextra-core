@@ -12,35 +12,27 @@ import { AsyncApiCaller } from "./basic/asyncapi";
 import { CoopRepository } from "../../coop/cooprepo";
 import {
     BasicArray,
-    Border,
     BorderSideSetting,
-    BorderStyle,
-    Color,
     CurveMode,
     CurvePoint,
     Document,
-    Fill,
-    FillType,
     GroupShape,
     PathSegment,
     PathShape,
-    PathType,
     Point2D,
-    Shadow,
     Shape,
     ShapeFrame,
     ShapeSize,
     ShapeType,
     SideType,
-    Style,
     Transform
 } from "../../data";
 import { adapt2Shape, GroupShapeView, PageView, PathShapeView, ShapeView } from "../../dataview";
 import { uuid } from "../../basic/uuid";
 import { __pre_curve, after_insert_point, update_frame_by_points } from "../utils/path";
 import { PathType } from "../../data";
-import { addCommonAttr, newflatStyle } from "../creator/creator";
-import { Border, BorderStyle, CornerType, Fill, FillType, Shadow, Style } from "../../data";
+import { addCommonAttr, newFlatStyle } from "../creator/creator";
+import { Border, BorderStyle, Fill, FillType, Shadow, Style } from "../../data";
 import { Color } from "../../data";
 import * as types from "../../data/typesdefine";
 import { ISave4Restore, LocalCmd, SelectionState } from "../../coop/localcmd";
