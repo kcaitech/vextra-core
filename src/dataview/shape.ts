@@ -8,11 +8,9 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { innerShadowId, renderBlur, renderBorder, renderFills, renderShadows } from "../render/SVG/effects";
 import {
     BasicArray,
     Blur, BlurMask,
-    BlurType,
     Border, BorderMask,
     BorderPosition,
     ContextSettings,
@@ -21,7 +19,6 @@ import {
     ExportOptions,
     Fill, FillMask,
     FillType,
-    GradientType,
     MarkerType,
     OverlayBackgroundAppearance,
     OverlayBackgroundInteraction,
@@ -46,14 +43,12 @@ import {
     VariableType
 } from "../data";
 import { findOverrideAndVar } from "./basic";
-import { EL, elh } from "./el";
+import { EL } from "./el";
 import { DataView } from "./view"
 import { DViewCtx, PropsType } from "./viewctx";
 import { objectId } from "../basic/objectid";
 import { float_accuracy } from "../basic/consts";
 import { GroupShapeView } from "./groupshape";
-import { importFill } from "../data/baseimport";
-import { exportFill } from "../data/baseexport";
 import { ArtboardView } from "./artboard";
 import { findOverrideAll } from "../data/utils";
 import { Path } from "@kcdesign/path";
@@ -350,7 +345,6 @@ export class ShapeView extends DataView {
     m_border_path?: Path;
     m_border_path_box?: ShapeFrame;
 
-    m_transform_from_mask?: Transform;
     m_mask_group?: ShapeView[];
 
     m_fills: BasicArray<Fill> | undefined;
@@ -455,12 +449,6 @@ export class ShapeView extends DataView {
         return this.transform.m12
     }
 
-    /**
-     *  transform -> clientXY
-     *  数据里的值(transform)并不一定是用户直观上的值(clientXY)，需要通过计算来简化或转换
-     *  需要注意的是，frame的偏移目前只发生编组类图形和页面上，其中页面的坐标系需要帮用户隐藏掉，取而代之的是一个固定的Root坐标系
-     *  所以在处理页面下的直接子元素时，也应该忽略掉frame的偏移；
-     */
     protected m_client_x: number | undefined = undefined;
 
     get clientX(): number {
@@ -1134,87 +1122,6 @@ export class ShapeView extends DataView {
         this.m_ctx.addNotifyLayout(this);
     }
 
-    protected renderFills(): EL[] {
-        const fills = this.getFills() as Fill[];
-        return renderFills(elh, fills, this.size, this.getPathStr(), 'fill-' + this.id);
-    }
-
-    protected renderBorder(): EL[] {
-        let border = this.getBorder();
-        if (this.mask && border) {
-            border.strokePaints.map(b => {
-                const nb = importFill(exportFill(b));
-                if (nb.fillType === FillType.Gradient && nb.gradient?.gradientType === GradientType.Angular) nb.fillType = FillType.SolidColor;
-                return nb;
-            });
-        }
-        return renderBorder(elh, border, this.size, this.getPathStr(), this.m_data, this.radius);
-    }
-
-    protected renderShadows(filterId: string): EL[] {
-        return renderShadows(elh, filterId, this.getShadows(), this.getPathStr(), this.frame, this.getBorder(), this.m_data, this.radius, this.blur);
-    }
-
-    protected renderBlur(blurId: string): EL[] {
-        if (!this.blur) return [];
-        return renderBlur(elh, this.blur, blurId, this.frame, this.getFills(), this.getBorder(), this.getPathStr());
-    }
-
-    protected renderProps(): { [key: string]: string } & { style: any } {
-        const props: any = {};
-        const style: any = {};
-
-        style['transform'] = this.transform.toString();
-
-        const contextSettings = this.contextSettings;
-
-        if (contextSettings) {
-            if (contextSettings.opacity !== undefined) {
-                props.opacity = contextSettings.opacity;
-            }
-            style['mix-blend-mode'] = contextSettings.blenMode;
-        }
-
-        props.style = style;
-
-        return props;
-    }
-
-    protected renderStaticProps() {
-        const frame = this.frame;
-        const props: any = {};
-        if (this.isNoTransform()) {
-            if (frame.width > frame.height) {
-                props.transform = `translate(0, ${(frame.width - frame.height) / 2})`;
-            } else {
-                props.transform = `translate(${(frame.height - frame.width) / 2}, 0)`;
-            }
-        } else {
-            const box = this.boundingBox();
-            let modifyX = 0;
-            let modifyY = 0;
-            if (box.width > box.height) {
-                modifyY = (box.width - box.height) / 2;
-            } else {
-                modifyX = (box.height - box.width) / 2;
-            }
-            const __t = this.transform.clone();
-            __t.m02 = modifyX;
-            __t.m12 = modifyY;
-            props.style = { transform: __t.toString() };
-        }
-        const contextSettings = this.style.contextSettings;
-        if (contextSettings) {
-            if (props.style) {
-                props.style['mix-blend-mode'] = contextSettings.blenMode;
-            } else {
-                props.style = { 'mix-blend-mode': contextSettings.blenMode };
-            }
-        }
-
-        return props;
-    }
-
     protected renderContents(): EL[] {
         const childs = this.m_children;
         childs.forEach((c) => c.render());
@@ -1231,68 +1138,6 @@ export class ShapeView extends DataView {
 
     render(): number {
         return this.m_renderer.render();
-    }
-
-    renderStatic() {
-        const fills = this.renderFills() || [];
-        let childs = this.renderContents();
-        const autoInfo = (this as any).autoLayout;
-        if (autoInfo && autoInfo.stackReverseZIndex) {
-            childs = childs.reverse();
-        }
-        const borders = this.renderBorder() || [];
-
-        const props = this.renderStaticProps();
-
-        const filterId = `${objectId(this)}`;
-        const shadows = this.renderShadows(filterId);
-        const blurId = `blur_${objectId(this)}`;
-        const blur = this.renderBlur(blurId);
-        const g_props: any = {}
-        const contextSettings = this.style.contextSettings;
-        if (contextSettings) {
-            const style: any = {
-                'mix-blend-mode': contextSettings.blenMode
-            }
-            if (blur.length) {
-                g_props.style = style;
-                g_props.opacity = props.opacity;
-                delete props.opacity;
-            } else {
-                if (props.style) {
-                    props.style['mix-blend-mode'] = contextSettings.blenMode;
-                } else {
-                    props.style = style;
-                }
-            }
-        }
-
-        if (shadows.length) { // 阴影
-            const ex_props = Object.assign({}, props);
-            delete props.style;
-            delete props.transform;
-            delete props.opacity;
-
-            const inner_url = innerShadowId(filterId, this.getShadows());
-            props.filter = `url(#pd_outer-${filterId}) `;
-            if (blur.length && this.blur?.type === BlurType.Gaussian) props.filter += `url(#${blurId}) `;
-            if (inner_url.length) props.filter += inner_url.join(' ');
-            const body = elh("g", props, [...fills, ...childs, ...borders]);
-            if (blur.length) {
-                const g = elh('g', g_props, [...shadows, body])
-                return elh("g", ex_props, [...blur, g]);
-            } else {
-                return elh("g", ex_props, [...shadows, ...blur, body]);
-            }
-        } else {
-            if (blur.length && this.blur?.type === BlurType.Gaussian) props.filter = `url(#${blurId})`;
-            if (blur.length) {
-                const g = elh('g', g_props, [...fills, ...childs, ...borders])
-                return elh("g", props, [...blur, g])
-            } else {
-                return elh("g", props, [...blur, ...fills, ...childs, ...borders])
-            }
-        }
     }
 
     get isContainer() {
@@ -1409,125 +1254,6 @@ export class ShapeView extends DataView {
 
     get scrollBehavior(): ScrollBehavior | undefined {
         return this.m_data.scrollBehavior;
-    }
-
-    get relyLayers() {
-        if (!this.m_transform_from_mask) this.m_transform_from_mask = this.renderMask();
-        if (!this.m_transform_from_mask) return;
-
-        const group = this.m_mask_group || [];
-        if (group.length < 2) return;
-        const inverse = (this.m_transform_from_mask).inverse;
-        const els: EL[] = [];
-        for (let i = 1; i < group.length; i++) {
-            const __s = group[i];
-            if (!__s.isVisible) continue;
-            const dom = __s.dom;
-            if (!(dom.elattr as any)['style']) {
-                (dom.elattr as any)['style'] = {};
-            }
-            (dom.elattr as any)['style']['transform'] = (__s.transform.clone().multi(inverse)).toString();
-            els.push(dom);
-        }
-
-        return els;
-    }
-
-    get transformFromMask() {
-        this.m_transform_from_mask = this.renderMask();
-        if (!this.m_transform_from_mask) return;
-
-        const space = (this.m_transform_from_mask).inverse;
-
-        return (this.transform.clone().multi(space)).toString()
-    }
-
-    renderMask() {
-        if (!this.mask) return;
-        const parent = this.parent;
-        if (!parent) return;
-        const __children = parent.childs;
-        let index = __children.findIndex(i => i.id === this.id);
-        if (index === -1) return;
-        const maskGroup: ShapeView[] = [this];
-        this.m_mask_group = maskGroup;
-        for (let i = index + 1; i < __children.length; i++) {
-            const cur = __children[i];
-            if (cur && !cur.mask) maskGroup.push(cur);
-            else break;
-        }
-        let x = Infinity;
-        let y = Infinity;
-
-        maskGroup.forEach(s => {
-            const box = s.boundingBox();
-            if (box.x < x) x = box.x;
-            if (box.y < y) y = box.y;
-        });
-
-        return new Transform(1, 0, x, 0, 1, y);
-    }
-
-    bleach(el: EL) {  // 漂白
-        if (el.elattr.fill && el.elattr.fill !== 'none' && !(el.elattr.fill as string).startsWith('url(#gradient')) {
-            el.elattr.fill = '#FFF';
-        }
-        if (el.elattr.stroke && el.elattr.stroke !== 'none' && !(el.elattr.stroke as string).startsWith('url(#gradient')) {
-            el.elattr.stroke = '#FFF';
-        }
-        // 漂白阴影
-        if (el.eltag === 'feColorMatrix' && el.elattr.result) {
-            let values: any = el.elattr.values;
-            if (values) values = values.split(' ');
-            if (values[3]) values[3] = 1;
-            if (values[8]) values[8] = 1;
-            if (values[13]) values[13] = 1;
-            el.elattr.values = values.join(' ');
-        }
-
-        if (Array.isArray(el.elchilds)) el.elchilds.forEach(el => this.bleach(el));
-    }
-
-    get dom() {
-        const fills = this.renderFills();
-        const childs = this.renderContents();
-        const borders = this.renderBorder();
-
-        const filterId = `${objectId(this)}`;
-        const shadows = this.renderShadows(filterId);
-        const blurId = `blur_${objectId(this)}`;
-        const blur = this.renderBlur(blurId);
-
-        const contextSettings = this.style.contextSettings;
-        const props: any = {};
-        if (contextSettings) {
-            if (contextSettings.opacity !== undefined) {
-                props.opacity = contextSettings.opacity;
-            }
-            props.style = { 'mix-blend-mode': contextSettings.blenMode };
-        }
-
-        let children = [...fills, ...childs, ...borders];
-
-        if (shadows.length) {
-            let filter: string = '';
-            const inner_url = innerShadowId(filterId, this.getShadows());
-            if (this.type === ShapeType.Rectangle || this.type === ShapeType.Oval) {
-                if (inner_url.length) filter = `${inner_url.join(' ')}`
-            } else {
-                filter = `url(#pd_outer-${filterId}) `;
-                if (inner_url.length) filter += inner_url.join(' ');
-            }
-            children = [...shadows, elh("g", { filter }, children)];
-        }
-
-        if (blur.length) {
-            let filter: string = '';
-            if (this.blur?.type === BlurType.Gaussian) filter = `url(#${blurId})`;
-            children = [...blur, elh('g', { filter }, children)];
-        }
-
-        return elh("g", props, children);
     }
 
     reloadImage(target?: Set<string>) {

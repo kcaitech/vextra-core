@@ -22,9 +22,8 @@ import {
 } from "../data";
 import { ShapeView } from "./shape";
 import { EL, elh } from "./el";
-import { innerShadowId, renderBorder } from "../render/SVG/effects";
-import { objectId } from "../basic/objectid";
-import { BlurType, PathSegment } from "../data/typesdefine";
+import { renderBorder } from "../render/SVG/effects";
+import { PathSegment } from "../data/typesdefine";
 import { render as renderLineBorders } from "../render/SVG/effects/line_borders"
 import { importCurvePoint, importFill } from "../data/baseimport";
 import { GroupShapeView } from "./groupshape";
@@ -83,34 +82,6 @@ export class PathShapeView extends ShapeView {
 
     get isClosed() {
         return this.data.isClosed;
-    }
-
-    get relyLayers() {
-        if (!this.m_transform_from_mask) this.m_transform_from_mask = this.renderMask();
-        if (!this.m_transform_from_mask) return;
-
-        const group = this.m_mask_group || [];
-        if (group.length < 2) return;
-        const inverse = (this.m_transform_from_mask).inverse;
-        const els: EL[] = [];
-        for (let i = 1; i < group.length; i++) {
-            const __s = group[i];
-            if (!__s.isVisible) continue;
-            const dom = __s.dom;
-            (dom.elattr as any)['style'] = { 'transform': (__s.transform.clone().multi(inverse)).toString() };
-            els.push(dom);
-        }
-
-        return els;
-    }
-
-    get transformFromMask() {
-        this.m_transform_from_mask = this.renderMask();
-        if (!this.m_transform_from_mask) return;
-
-        const space = (this.m_transform_from_mask).getInverse();
-
-        return (this.transform.clone().multi(space)).toString()
     }
 
     get startingAngle() {
@@ -276,43 +247,5 @@ export class PathShapeView extends ShapeView {
         }
 
         if (Array.isArray(el.elchilds)) el.elchilds.forEach(el => this.bleach(el));
-    }
-
-    renderStatic() {
-        const fills = this.renderFills() || []; // cache
-        const childs = this.renderContents(); // VDomArray
-        const borders = this.renderBorder() || []; // ELArray
-
-        const props = this.renderStaticProps();
-
-        const filterId = `${objectId(this)}`;
-        const shadows = this.renderShadows(filterId);
-        const blurId = `blur_${objectId(this)}`;
-        const blur = this.renderBlur(blurId);
-        if (shadows.length > 0) { // 阴影
-            const ex_props = Object.assign({}, props);
-            delete props.style;
-            delete props.transform;
-            delete props.opacity;
-            const inner_url = innerShadowId(filterId, this.getShadows());
-            if (this.type === ShapeType.Rectangle || this.type === ShapeType.Oval) {
-                if (blur.length && inner_url.length) {
-                    props.filter = `${inner_url.join(' ')}`
-                    if (this.blur?.type === BlurType.Gaussian) props.filter += ` url(#${blurId})`
-                } else {
-                    if (inner_url.length) props.filter = inner_url.join(' ');
-                    if (blur.length && this.blur?.type === BlurType.Gaussian) props.filter = `url(#${blurId})`;
-                }
-            } else {
-                props.filter = `url(#pd_outer-${filterId}) `;
-                if (blur.length && this.blur?.type === BlurType.Gaussian) props.filter += `url(#${blurId}) `;
-                if (inner_url.length) props.filter += inner_url.join(' ');
-            }
-            const body = elh("g", props, [...fills, ...childs, ...borders]);
-            return elh("g", ex_props, [...shadows, ...blur, body]);
-        } else {
-            if (blur.length && this.blur?.type === BlurType.Gaussian) props.filter = `url(#${blurId})`;
-            return elh("g", props, [...blur, ...fills, ...childs, ...borders]);
-        }
     }
 }

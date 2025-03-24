@@ -212,15 +212,6 @@ export class BoolShapeView extends GroupShapeView {
         }
     }
 
-    protected renderFills(): EL[] {
-        let fills = this.getFills() as Fill[];
-        return renderFills(elh, fills, this.size, this.getPathStr(), 'fill-' + this.id);
-    }
-
-    protected renderBorder(): EL[] {
-        return renderBorder(elh, this.getBorder(), this.frame, this.getPathStr(), this.data, this.radius);
-    }
-
     getPath() {
         if (this.m_path) return this.m_path;
         this.m_path = render2path(this);
@@ -230,10 +221,6 @@ export class BoolShapeView extends GroupShapeView {
 
     getOutLine() {
         return this.getPath();
-    }
-    // childs
-    protected renderContents(): EL[] {
-        return [];
     }
 
     asyncRender() {

@@ -8,9 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { EL, elh } from "./el";
 import { GroupShapeView } from "./groupshape";
-import { renderBorder, renderFills } from "../render/SVG/effects";
 import {
     AutoLayout,
     BorderPosition,
@@ -98,63 +96,6 @@ export class ArtboardView extends GroupShapeView {
         const selfframe = new ShapeFrame(0, 0, layoutSize.width, layoutSize.height);
         this.updateLayoutArgs(this.transform, selfframe, this.fixedRadius);
         this.updateFrames();
-    }
-
-    protected renderFills(): EL[] {
-        return renderFills(elh, this.getFills(), this.frame, this.getPathStr(), 'fill-' + this.id);
-    }
-
-    protected renderBorder(): EL[] {
-        return renderBorder(elh, this.getBorder(), this.frame, this.getPathStr(), this.data, this.radius);
-    }
-
-    protected renderProps(): { [key: string]: string } & { style: any } {
-        const props: any = {
-            xmlns: "http://www.w3.org/2000/svg",
-            "xmlns:xlink": "http://www.w3.org/1999/xlink",
-            "xmlns:xhtml": "http://www.w3.org/1999/xhtml",
-            preserveAspectRatio: "xMinYMin meet",
-            overflow: "hidden",
-        }
-
-        const frame = this.frame;
-        props.width = frame.width;
-        props.height = frame.height;
-        props.viewBox = `0 0 ${frame.width} ${frame.height}`;
-
-        return props;
-    }
-
-    protected renderStaticProps(): { [key: string]: string } {
-        const props: any = {
-            version: "1.1",
-            xmlns: "http://www.w3.org/2000/svg",
-            "xmlns:xlink": "http://www.w3.org/1999/xlink",
-            "xmlns:xhtml": "http://www.w3.org/1999/xhtml",
-            preserveAspectRatio: "xMinYMin meet",
-            overflow: "hidden"
-        }
-        const contextSettings = this.style.contextSettings;
-        if (contextSettings) {
-            props.style = {
-                'mix-blend-mode': contextSettings.blenMode
-            };
-        }
-        const frame = this.frame;
-
-        if (frame.width > frame.height) {
-            props.transform = `translate(0, ${(frame.width - frame.height) / 2})`;
-        } else {
-            props.transform = `translate(${(frame.height - frame.width) / 2}, 0)`;
-        }
-
-        props.width = frame.width;
-        props.height = frame.height;
-        props.x = 0;
-        props.y = 0;
-        props.viewBox = `0 0 ${frame.width} ${frame.height}`;
-
-        return props;
     }
 
     render(): number {
@@ -276,7 +217,6 @@ export class ArtboardView extends GroupShapeView {
         }
         return _radius
     }
-
 
      getOutLine() {
         return this.getPath();

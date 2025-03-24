@@ -111,18 +111,6 @@ export class PageView extends GroupShapeView implements RootView {
         return (this.m_data as Page).guides;
     }
 
-    protected renderProps() {
-        const prop: any = {
-            version: "1.1",
-            xmlns: "http://www.w3.org/2000/svg",
-            "xmlns:xlink": "http://www.w3.org/1999/xlink",
-            "xmlns:xhtml": "http://www.w3.org/1999/xhtml",
-            preserveAspectRatio: "xMinYMin meet",
-            overflow: "visible"
-        }
-        return prop;
-    }
-
     render(): number {
         return this.m_renderer.render(this.type);
     }

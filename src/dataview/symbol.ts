@@ -61,15 +61,6 @@ export class SymbolView extends GroupShapeView {
         return this.getPath();
     }
 
-    // fills
-    protected renderFills(): EL[] {
-        return renderFills(elh, this.getFills(), this.frame, this.getPathStr(), 'fill-' + this.id);
-    }
-    // borders
-    protected renderBorder(): EL[] {
-        return renderBorder(elh, this.getBorder(), this.frame, this.getPathStr(), this.data, this.radius);
-    }
-
     protected _layout(parentFrame: ShapeSize | undefined, scale: { x: number; y: number; } | undefined): void {
         const autoLayout = this.autoLayout;
         if (!autoLayout) {

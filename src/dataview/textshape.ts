@@ -183,11 +183,6 @@ export class TextShapeView extends ShapeView {
     render(): number {
         return this.m_renderer.render(this.type);
     }
-    renderContents(): EL[] {
-        // const layout = this.getLayout();
-        // return renderTextLayout(elh, layout, this.frame, this.blur);
-        return [];
-    }
 
     __origin_frame: ShapeSize = new ShapeSize();
 
@@ -225,32 +220,6 @@ export class TextShapeView extends ShapeView {
     //         this.notify("shape-frame");
     //     }
     // }
-
-    bleach(el: EL) {  // 漂白
-        if (el.elattr.fill) el.elattr.fill = '#FFF';
-        if (el.elattr.stroke) el.elattr.stroke = '#FFF';
-
-        // 漂白字体
-        if (el.eltag === 'text') {
-            if ((el.elattr?.style as any).fill) {
-                (el.elattr?.style as any).fill = '#FFF'
-            }
-        }
-
-        // 漂白阴影
-        if (el.eltag === 'feColorMatrix' && el.elattr.result) {
-            let values: any = el.elattr.values;
-            if (values) values = values.split(' ');
-            if (values[3]) values[3] = 1;
-            if (values[8]) values[8] = 1;
-            if (values[13]) values[13] = 1;
-            el.elattr.values = values.join(' ');
-        }
-
-        // 渐变漂白不了
-
-        if (Array.isArray(el.elchilds)) el.elchilds.forEach(el => this.bleach(el));
-    }
 
     onDestroy(): void {
         super.onDestroy();

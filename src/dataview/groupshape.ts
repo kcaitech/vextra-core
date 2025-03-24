@@ -115,20 +115,6 @@ export class GroupShapeView extends ShapeView {
         }
     }
 
-    protected renderFills(): EL[] {
-        return []; // group无fill
-    }
-
-    protected renderBorder(): EL[] {
-        return []; // group无border
-    }
-
-    protected renderContents(): EL[] {
-        const childs = this.m_children;
-        childs.forEach((c) => c.render());
-        return childs;
-    }
-
     protected layoutChild(
         parentFrame: ShapeSize,
         child: Shape, idx: number,
