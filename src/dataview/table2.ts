@@ -216,7 +216,7 @@ export class TableView2 extends ShapeView {
         if (this.m_children.length > idx) {
             this.removeChilds(idx, this.m_children.length - idx).forEach((c) => {
                 this.m_cells.delete(c.id);
-                c.destory();
+                c.destroy();
             });
         }
     }

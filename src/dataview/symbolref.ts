@@ -223,7 +223,7 @@ export class SymbolRefView extends ShapeView {
         }
         if (!this.m_sym) {
             this.updateLayoutArgs(transform, shape.frame, 0);
-            this.removeChilds(0, this.m_children.length).forEach((c) => c.destory());
+            this.removeChilds(0, this.m_children.length).forEach((c) => c.destroy());
             this.updateFrames();
             return;
         }
@@ -368,7 +368,7 @@ export class SymbolRefView extends ShapeView {
         if (this.m_children.length > childs.length) {
             const removes = this.removeChilds(childs.length, Number.MAX_VALUE);
             if (rootView) rootView.addDelayDestroy(removes);
-            else removes.forEach((c => c.destory()));
+            else removes.forEach((c => c.destroy()));
             changed = true;
         }
 

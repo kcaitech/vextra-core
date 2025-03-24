@@ -158,7 +158,7 @@ export class GroupShapeView extends ShapeView {
         // 删除多余的
         const removes = this.removeChilds(childs.length, Number.MAX_VALUE);
         if (rootView) rootView.addDelayDestroy(removes);
-        else removes.forEach((c => c.destory()));
+        else removes.forEach((c => c.destroy()));
     }
 
     updateFrames(): boolean {

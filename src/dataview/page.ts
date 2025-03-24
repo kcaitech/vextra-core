@@ -39,7 +39,7 @@ export class PageView extends GroupShapeView implements RootView {
         const destroyDelayDestroys = () => {
             this.m_delaydestorys.forEach((v) => {
                 if (v.parent) return; // 已复用
-                v.destory();
+                v.destroy();
             });
             this.m_delaydestorys.clear();
         }
