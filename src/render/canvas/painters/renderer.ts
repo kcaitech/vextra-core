@@ -1,7 +1,7 @@
 import { ArtboardView, ShapeView, TextShapeView } from "../../../dataview";
 import { IRenderer } from "../../basic";
 import { render as renderFills } from "../effects/fill";
-import { render as renderBorders } from "../effects/border";
+import { render as renderBorder } from "../effects/border";
 import { render as renderShadows } from "../effects/shadow";
 import { render as renderBlur } from "../effects/blur"
 
@@ -59,12 +59,12 @@ export class CanvasRenderer extends IRenderer {
         renderFills(this.props, this.view.canvasRenderingContext2D, fills, this.path2D, this.view.size);
     }
 
-    renderBorders() {
-        renderBorders(this.view, this.props, this.view.canvasRenderingContext2D, this.view.getBorders(), this.path2D);
+    renderBorder() {
+        renderBorder(this.view, this.props, this.view.canvasRenderingContext2D, this.view.getBorder(), this.path2D);
     }
 
     renderShadows() {
-        return renderShadows(this, this.view, this.props, this.view.canvasRenderingContext2D, this.view.getShadows(), this.view.getBorders(), this.view.getFills());
+        return renderShadows(this, this.view, this.props, this.view.canvasRenderingContext2D, this.view.getShadows(), this.view.getBorder(), this.view.getFills());
     }
 
     renderTextLayout() {
@@ -94,8 +94,8 @@ export class CanvasRenderer extends IRenderer {
             const fillP = this.path2D;
             path.addPath(fillP);
         }
-        if (this.view.getBorders().strokePaints.length) {
-            const borderP = border2path(this.view, this.view.getBorders());
+        if (this.view.getBorder().strokePaints.length) {
+            const borderP = border2path(this.view, this.view.getBorder());
             path.addPath(new Path2D(borderP.toString()));
         }
         const childs = this.view.m_children as ShapeView[];

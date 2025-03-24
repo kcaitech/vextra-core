@@ -22,7 +22,7 @@ import {
 } from "../data";
 import { ShapeView } from "./shape";
 import { EL, elh } from "./el";
-import { innerShadowId, renderBorders } from "../render/SVG/effects";
+import { innerShadowId, renderBorder } from "../render/SVG/effects";
 import { objectId } from "../basic/objectid";
 import { BlurType, PathSegment } from "../data/typesdefine";
 import { render as renderLineBorders } from "../render/SVG/effects/line_borders"
@@ -43,8 +43,8 @@ export class PathShapeView extends ShapeView {
         super._layout(parentFrame, scale);
     }
 
-    protected renderBorders(): EL[] {
-        let borders = this.getBorders();
+    protected renderBorder(): EL[] {
+        let borders = this.getBorder();
         if (this.mask && borders) {
             borders.strokePaints.map(b => {
                 const nb = importFill(b);
@@ -55,7 +55,7 @@ export class PathShapeView extends ShapeView {
         if ((this.segments.length === 1 && !this.segments[0].isClosed) || this.segments.length > 1) {
             return renderLineBorders(elh, this.data.style, borders, this.startMarkerType, this.endMarkerType, this.getPathStr(), this.m_data);
         }
-        return renderBorders(elh, borders, this.frame, this.getPathStr(), this.m_data, this.radius);
+        return renderBorder(elh, borders, this.frame, this.getPathStr(), this.m_data, this.radius);
     }
 
     render(): number {
@@ -65,7 +65,7 @@ export class PathShapeView extends ShapeView {
     get borderPath(): Path {
         return this.m_border_path ?? (this.m_border_path = (() => {
             if (this.isBorderShape) {
-                const borders = this.getBorders();
+                const borders = this.getBorder();
                 return border2path(this, borders);
             } else {
                 return new Path();
@@ -193,15 +193,15 @@ export class PathShapeView extends ShapeView {
 
         if (args.includes('variables')) {
             this.m_fills = undefined;
-            this.m_borders = undefined;
+            this.m_border = undefined;
         } else if (args.includes('fills')) {
             this.m_fills = undefined;
         } else if (args.includes('borders')) {
-            this.m_borders = undefined;
+            this.m_border = undefined;
         } else if (args.includes('fillsMask')) {
             this.m_fills = undefined;
         } else if (args.includes('bordersMask')) {
-            this.m_borders = undefined;
+            this.m_border = undefined;
         }
 
         const masked = this.masked;
@@ -281,7 +281,7 @@ export class PathShapeView extends ShapeView {
     renderStatic() {
         const fills = this.renderFills() || []; // cache
         const childs = this.renderContents(); // VDomArray
-        const borders = this.renderBorders() || []; // ELArray
+        const borders = this.renderBorder() || []; // ELArray
 
         const props = this.renderStaticProps();
 

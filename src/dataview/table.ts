@@ -204,7 +204,7 @@ export class TableView extends ShapeView {
         }
     }
 
-    protected renderBorders(): EL[] {
+    protected renderBorder(): EL[] {
         const shape = this.m_data as TableShape;
         const layout = this.getLayout();
 

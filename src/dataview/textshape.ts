@@ -33,7 +33,7 @@ import {
 } from "../data/text/textlocate";
 import { objectId } from "../basic/objectid";
 import { Path } from "@kcdesign/path";
-import { renderBorders } from "../render/SVG/effects";
+import { renderBorder } from "../render/SVG/effects";
 import { ArtboardView } from "./artboard";
 
 export class TextShapeView extends ShapeView {
@@ -152,9 +152,9 @@ export class TextShapeView extends ShapeView {
     locateNextCursor(index: number): number {
         return locateNextCursor(this.getLayout(), index);
     }
-    protected renderBorders(): EL[] {
-        let border = this.getBorders();
-        return border && border.strokePaints.some(p => p.isEnabled) ? renderBorders(elh, border, this.size, this.getTextPath().toSVGString(), this.m_data, this.radius) : [];
+    protected renderBorder(): EL[] {
+        let border = this.getBorder();
+        return border && border.strokePaints.some(p => p.isEnabled) ? renderBorder(elh, border, this.size, this.getTextPath().toSVGString(), this.m_data, this.radius) : [];
     }
 
     getTextPath() {

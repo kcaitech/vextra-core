@@ -15,7 +15,7 @@ painter['base'] = (view: ShapeView, renderer: CanvasRenderer) => {
     const shadowEnd = renderer.renderShadows();
     renderer.renderFills();
     renderer.renderContents();
-    renderer.renderBorders();
+    renderer.renderBorder();
     shadowEnd && shadowEnd();
     blurEnd && blurEnd();
     ctx.restore();
@@ -32,7 +32,7 @@ painter[ShapeType.BoolShape] = (view: ShapeView, renderer) => {
     const blurEnd = renderer.renderBlur();
     const shadowEnd = renderer.renderShadows();
     renderer.renderFills();
-    renderer.renderBorders();
+    renderer.renderBorder();
     shadowEnd && shadowEnd();
     blurEnd && blurEnd();
     ctx.restore();
@@ -66,9 +66,9 @@ painter[ShapeType.Artboard] = (view: ArtboardView, renderer: CanvasRenderer) => 
     if (clipEnd) { // 裁剪容器中的边框需要在内容的上层
         renderer.renderContents();
         clipEnd();
-        renderer.renderBorders();
+        renderer.renderBorder();
     } else {
-        renderer.renderBorders();
+        renderer.renderBorder();
         renderer.renderContents();
     }
     shadowEnd && shadowEnd();
@@ -84,7 +84,7 @@ painter[ShapeType.Contact] = (view: ArtboardView, renderer: CanvasRenderer) => {
     if (renderer.props.globalCompositeOperation) {
         ctx.globalCompositeOperation = renderer.props.globalCompositeOperation;
     }
-    renderer.renderBorders();
+    renderer.renderBorder();
     ctx.restore();
     return ++renderer.m_render_version;
 }
@@ -105,9 +105,9 @@ painter[ShapeType.SymbolRef] = (view: SymbolRefView, renderer: CanvasRenderer) =
     if (clipEnd) { // 裁剪容器中的边框需要在内容的上层
         renderContents();
         clipEnd();
-        renderer.renderBorders();
+        renderer.renderBorder();
     } else {
-        renderer.renderBorders();
+        renderer.renderBorder();
         renderContents();
     }
     shadowEnd && shadowEnd();
@@ -139,7 +139,7 @@ painter[ShapeType.Text] = (view: ShapeView, renderer) => {
     const blurEnd = renderer.renderBlur();
     const shadowEnd = renderer.renderShadows();
     renderer.renderTextLayout();
-    renderer.renderBorders();
+    renderer.renderBorder();
     shadowEnd && shadowEnd();
     blurEnd && blurEnd();
     ctx.restore();

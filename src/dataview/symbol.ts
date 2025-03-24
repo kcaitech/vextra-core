@@ -9,7 +9,7 @@
  */
 
 import { GroupShapeView } from "./groupshape";
-import { renderBorders, renderFills } from "../render/SVG/effects";
+import { renderBorder, renderFills } from "../render/SVG/effects";
 import { EL, elh } from "./el";
 import {
     CornerRadius, Shape, ShapeFrame, ShapeType, SymbolShape, AutoLayout, BorderPosition, Page, ShadowPosition, BlurType,
@@ -66,8 +66,8 @@ export class SymbolView extends GroupShapeView {
         return renderFills(elh, this.getFills(), this.frame, this.getPathStr(), 'fill-' + this.id);
     }
     // borders
-    protected renderBorders(): EL[] {
-        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.data, this.radius);
+    protected renderBorder(): EL[] {
+        return renderBorder(elh, this.getBorder(), this.frame, this.getPathStr(), this.data, this.radius);
     }
 
     protected _layout(parentFrame: ShapeSize | undefined, scale: { x: number; y: number; } | undefined): void {
@@ -142,7 +142,7 @@ export class SymbolView extends GroupShapeView {
             this._save_frame.height = this.m_frame.height;
         }
 
-        const border = this.getBorders();
+        const border = this.getBorder();
         let maxtopborder = 0;
         let maxleftborder = 0;
         let maxrightborder = 0;

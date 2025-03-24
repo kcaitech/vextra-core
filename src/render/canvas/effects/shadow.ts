@@ -46,7 +46,7 @@ function frankShadow(ctx: CanvasRenderingContext2D, shadow: Shadow): Function {
 
 function blurOutlineShadow(view: ShapeView, props: Props, ctx: CanvasRenderingContext2D, outerShadows: Shadow[]) {
     let pathStr = view instanceof TextShapeView ? view.getTextPath().toString() :  view.getPath().toString();
-    const border = view.getBorders();
+    const border = view.getBorder();
     if (border && border.position !== BorderPosition.Inner) {
         // const gPath = gPal.makePalPath(pathStr);
         // const borderGPath = gPal.makePalPath(border2path(view, border).toString());

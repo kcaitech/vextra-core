@@ -53,7 +53,7 @@ class StyleHdl extends HdlBase {
             return this.m_view.getFills();
         }
         if (propStr === 'borders') {
-            return this.m_view.getBorders();
+            return this.m_view.getBorder();
         }
         if (propStr === 'shadows') {
             return this.m_view.getShadows();

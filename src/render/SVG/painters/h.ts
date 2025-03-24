@@ -12,7 +12,7 @@ import {
 } from "../../../dataview";
 import { SVGRenderer } from "./renderer";
 import { objectId } from "../../../basic/objectid";
-import { innerShadowId, renderBorders } from "../effects";
+import { innerShadowId, renderBorder } from "../effects";
 import { BlurType, ScrollBehavior, ShapeType, SymbolShape, Transform } from "../../../data";
 import { render as clippathR } from "../effects/clippath";
 import { render as renderLineBorders } from "../effects/line_borders";
@@ -35,7 +35,7 @@ painter['base'] = (view: ShapeView, renderer: SVGRenderer) => {
     }
 
     const fills = renderer.renderFills();
-    const borders = renderer.renderBorders();
+    const borders = renderer.renderBorder();
     let childs = renderer.renderContents();
 
     const filterId = `${objectId(view)}`;
@@ -105,7 +105,7 @@ painter[ShapeType.BoolShape] = (view: ShapeView, renderer: SVGRenderer) => {
     }
 
     const fills = renderer.renderFills();
-    const borders = renderer.renderBorders();
+    const borders = renderer.renderBorder();
 
     const filterId = `${objectId(view)}`;
     const shadows = renderer.renderShadows(filterId);
@@ -174,11 +174,11 @@ painter[ShapeType.Path] = (view: PathShapeView, renderer: SVGRenderer) => {
     }
 
     const fills = renderer.renderFills();
-    let borders = view.getBorders();
+    let borders = view.getBorder();
     let bordersEL: EL[];
     if ((view.segments.length === 1 && !view.segments[0].isClosed) || view.segments.length > 1) {
         bordersEL = renderLineBorders(elh, view.data.style, borders, view.startMarkerType, view.endMarkerType, view.getPathStr(), view.m_data);
-    } else bordersEL = renderBorders(elh, borders, view.frame, view.getPathStr(), view.data, view.radius);
+    } else bordersEL = renderBorder(elh, borders, view.frame, view.getPathStr(), view.data, view.radius);
 
     const filterId = `${objectId(view)}`;
     const shadows = renderer.renderShadows(filterId);
@@ -257,7 +257,7 @@ painter[ShapeType.Artboard] = (view: ArtboardView, renderer: SVGRenderer) => {
     const fills = renderer.renderFills();
     const childs = renderer.renderContents();
     if (view.autoLayout && view.autoLayout.stackReverseZIndex) childs.reverse();
-    const borders = renderer.renderBorders();
+    const borders = renderer.renderBorder();
 
     const svgprops = renderer.getProps();
     const filterId = `${objectId(view)}`;
@@ -360,7 +360,7 @@ painter[ShapeType.Contact] = (view: CutoutShapeView, renderer: SVGRenderer) => {
         view.reset("g");
         return ++renderer.m_render_version;
     }
-    const borders = renderer.renderBorders();
+    const borders = renderer.renderBorder();
     let props = renderer.getProps();
     let children = [...borders];
     view.reset("g", props, children);
@@ -383,7 +383,7 @@ painter[ShapeType.SymbolRef] = (view: SymbolRefView, renderer: SVGRenderer) => {
     }
 
     const fills = renderer.renderFills();
-    const borders = renderer.renderBorders();
+    const borders = renderer.renderBorder();
     let childs = renderer.renderContents();
 
     if (view.uniformScale) childs = [elh('g', {transform: `scale(${view.uniformScale})`}, childs)];
@@ -470,7 +470,7 @@ painter[ShapeType.Symbol] = (view: SymbolView, renderer: SVGRenderer) => {
     }
 
     const fills = renderer.renderFills();
-    const borders = renderer.renderBorders();
+    const borders = renderer.renderBorder();
     let childs = renderer.renderContents();
     const autoInfo = (view.m_data as SymbolShape).autoLayout;
     if (autoInfo && autoInfo.stackReverseZIndex) childs = childs.reverse();
@@ -550,7 +550,7 @@ painter[ShapeType.TableCell] = (view: TableCellView, renderer: SVGRenderer) => {
     }
 
     const fills = renderer.renderFills();
-    const borders = renderer.renderBorders();
+    const borders = renderer.renderBorder();
     const childs = renderer.renderContents();
 
     const filterId = `${objectId(view)}`;

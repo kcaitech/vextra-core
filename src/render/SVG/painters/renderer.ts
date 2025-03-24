@@ -1,6 +1,6 @@
 import { EL, elh, ShapeView } from "../../../dataview";
 import { IRenderer } from "../../basic";
-import { renderBlur, renderBorders, renderFills, renderShadows } from "../effects";
+import { renderBlur, renderBorder, renderFills, renderShadows } from "../effects";
 import { painter } from "./h";
 
 export class SVGRenderer extends IRenderer {
@@ -33,20 +33,20 @@ export class SVGRenderer extends IRenderer {
         return renderFills(elh, fills, this.view.frame, this.view.getPathStr(), 'fill-' + this.view.id);
     }
 
-    renderBorders(): EL[] {
-        let borders = this.view.getBorders();
-        return renderBorders(elh, borders, this.view.frame, this.view.getPathStr(), this.view.m_data, this.view.radius);
+    renderBorder(): EL[] {
+        let borders = this.view.getBorder();
+        return renderBorder(elh, borders, this.view.frame, this.view.getPathStr(), this.view.m_data, this.view.radius);
     }
 
     renderShadows(id: string): EL[] {
         const view = this.view;
-        return renderShadows(elh, id, view.getShadows(), view.getPathStr(), view.frame, view.getBorders(), this.view.data, this.view.radius, view.blur);
+        return renderShadows(elh, id, view.getShadows(), view.getPathStr(), view.frame, view.getBorder(), this.view.data, this.view.radius, view.blur);
     }
 
     renderBlur(id: string): EL[] {
         const view = this.view;
         if (!view.blur) return [];
-        return renderBlur(elh, view.blur, id, view.frame, view.getFills(), view.getBorders(), view.getPathStr());
+        return renderBlur(elh, view.blur, id, view.frame, view.getFills(), view.getBorder(), view.getPathStr());
     }
 
     renderContents(): EL[] {

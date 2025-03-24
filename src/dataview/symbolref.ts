@@ -417,8 +417,8 @@ export class SymbolRefView extends ShapeView {
         return this.m_fills = fills;
     }
 
-    getBorders(): Border {
-        if (this.m_borders) return this.m_borders;
+    getBorder(): Border {
+        if (this.m_border) return this.m_border;
         const v = this._findOV2(OverrideType.Borders, VariableType.Borders);
         const border = v ? { ...v.value } : { ...this.m_sym?.style.borders };
         const bordersMask = this.bordersMask;

@@ -203,7 +203,7 @@ export class TableCellView extends ShapeView {
         (this.parent as any)?.bubblewatcher(...args);
     }
 
-    protected renderBorders(): EL[] {
+    protected renderBorder(): EL[] {
         return [];
     }
 
@@ -252,7 +252,7 @@ export class TableCellView extends ShapeView {
         // }
         //
         // const fills = this.renderFills();
-        // const borders = this.renderBorders();
+        // const borders = this.renderBorder();
         // const childs = this.renderContents();
         //
         // const filterId = `${objectId(this)}`;

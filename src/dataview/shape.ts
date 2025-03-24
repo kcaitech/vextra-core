@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { innerShadowId, renderBlur, renderBorders, renderFills, renderShadows } from "../render/SVG/effects";
+import { innerShadowId, renderBlur, renderBorder, renderFills, renderShadows } from "../render/SVG/effects";
 import {
     BasicArray,
     Blur, BlurMask,
@@ -354,7 +354,7 @@ export class ShapeView extends DataView {
     m_mask_group?: ShapeView[];
 
     m_fills: BasicArray<Fill> | undefined;
-    m_borders: Border | undefined;
+    m_border: Border | undefined;
 
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
@@ -551,19 +551,19 @@ export class ShapeView extends DataView {
 
         if (args.includes('variables')) {
             this.m_fills = undefined;
-            this.m_borders = undefined;
+            this.m_border = undefined;
             this.m_is_border_shape = undefined;
         } else if (args.includes('fills')) {
             this.m_fills = undefined;
             this.m_is_border_shape = undefined;
         } else if (args.includes('borders')) {
-            this.m_borders = undefined;
+            this.m_border = undefined;
             this.m_is_border_shape = undefined;
         } else if (args.includes('fillsMask')) {
             this.m_fills = undefined;
             this.m_is_border_shape = undefined;
         } else if (args.includes('bordersMask')) {
-            this.m_borders = undefined;
+            this.m_border = undefined;
             this.m_border_path = undefined;
             this.m_border_path_box = undefined;
             this.m_is_border_shape = undefined;
@@ -669,7 +669,7 @@ export class ShapeView extends DataView {
     }
 
     private _onBorderMaskChange() {
-        this.m_borders = undefined;
+        this.m_border = undefined;
         this.m_ctx.setDirty(this);
         this.notify('style', 'border', 'mask');
     }
@@ -688,7 +688,7 @@ export class ShapeView extends DataView {
     }
 
     private _onBorderFillMaskChange() {
-        this.m_borders = undefined;
+        this.m_border = undefined;
         this.m_ctx.setDirty(this);
         this.notify('style', 'paints', 'mask');
     }
@@ -706,10 +706,10 @@ export class ShapeView extends DataView {
         this.m_unbind_border_fill?.();
     }
 
-    getBorders(): Border {
-        if (this.m_borders) return this.m_borders;
+    getBorder(): Border {
+        if (this.m_border) return this.m_border;
         const mgr = this.style.getStylesMgr();
-        if (!mgr) return this.m_borders ?? this.m_data.style.borders;
+        if (!mgr) return this.m_border ?? this.m_data.style.borders;
 
         const v = this._findOV(OverrideType.Borders, VariableType.Borders);
         const border = v ? { ...v.value } : { ...this.m_data.style.borders };
@@ -732,7 +732,7 @@ export class ShapeView extends DataView {
         } else {
             this.unwatchBorderFillMask();
         }
-        return this.m_borders = border;
+        return this.m_border = border;
     }
 
     get bordersMask(): string | undefined {
@@ -934,7 +934,7 @@ export class ShapeView extends DataView {
             this._save_frame.height = this.m_frame.height;
         }
 
-        const border = this.getBorders();
+        const border = this.getBorder();
         let maxtopborder = 0;
         let maxleftborder = 0;
         let maxrightborder = 0;
@@ -1139,8 +1139,8 @@ export class ShapeView extends DataView {
         return renderFills(elh, fills, this.size, this.getPathStr(), 'fill-' + this.id);
     }
 
-    protected renderBorders(): EL[] {
-        let border = this.getBorders();
+    protected renderBorder(): EL[] {
+        let border = this.getBorder();
         if (this.mask && border) {
             border.strokePaints.map(b => {
                 const nb = importFill(exportFill(b));
@@ -1148,16 +1148,16 @@ export class ShapeView extends DataView {
                 return nb;
             });
         }
-        return renderBorders(elh, border, this.size, this.getPathStr(), this.m_data, this.radius);
+        return renderBorder(elh, border, this.size, this.getPathStr(), this.m_data, this.radius);
     }
 
     protected renderShadows(filterId: string): EL[] {
-        return renderShadows(elh, filterId, this.getShadows(), this.getPathStr(), this.frame, this.getBorders(), this.m_data, this.radius, this.blur);
+        return renderShadows(elh, filterId, this.getShadows(), this.getPathStr(), this.frame, this.getBorder(), this.m_data, this.radius, this.blur);
     }
 
     protected renderBlur(blurId: string): EL[] {
         if (!this.blur) return [];
-        return renderBlur(elh, this.blur, blurId, this.frame, this.getFills(), this.getBorders(), this.getPathStr());
+        return renderBlur(elh, this.blur, blurId, this.frame, this.getFills(), this.getBorder(), this.getPathStr());
     }
 
     protected renderProps(): { [key: string]: string } & { style: any } {
@@ -1240,7 +1240,7 @@ export class ShapeView extends DataView {
         if (autoInfo && autoInfo.stackReverseZIndex) {
             childs = childs.reverse();
         }
-        const borders = this.renderBorders() || [];
+        const borders = this.renderBorder() || [];
 
         const props = this.renderStaticProps();
 
@@ -1491,7 +1491,7 @@ export class ShapeView extends DataView {
     get dom() {
         const fills = this.renderFills();
         const childs = this.renderContents();
-        const borders = this.renderBorders();
+        const borders = this.renderBorder();
 
         const filterId = `${objectId(this)}`;
         const shadows = this.renderShadows(filterId);
@@ -1558,7 +1558,7 @@ export class ShapeView extends DataView {
 
     get isBorderShape() {
         return this.m_is_border_shape ?? (this.m_is_border_shape = (() => {
-            const borders = this.getBorders();
+            const borders = this.getBorder();
             return !this.getFills().length && borders && borders.strokePaints.some(p => p.isEnabled);
         })());
     }
@@ -1570,7 +1570,7 @@ export class ShapeView extends DataView {
         if (this.__outline) return this.__outline;
         const path = new Path();
         if (this.getFills().length) path.addPath(this.getPath());
-        const borders = this.getBorders();
+        const borders = this.getBorder();
         if (borders.position !== BorderPosition.Inner) path.addPath(border2path(this, borders));
         return this.__outline = path;
     }

@@ -119,7 +119,7 @@ export class GroupShapeView extends ShapeView {
         return []; // group无fill
     }
 
-    protected renderBorders(): EL[] {
+    protected renderBorder(): EL[] {
         return []; // group无border
     }
 

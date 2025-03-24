@@ -8,12 +8,12 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { BoolOp, BoolShape, BorderPosition, ShapeFrame, parsePath, Fill } from "../data/classes";
+import { BoolOp, BoolShape, BorderPosition, ShapeFrame, parsePath, Fill } from "../data";
 import { ShapeView, updateFrame } from "./shape";
 import { TextShapeView } from "./textshape";
 import { GroupShapeView } from "./groupshape";
 import { EL, elh } from "./el";
-import { renderBorders, renderFills } from "../render/SVG/effects";
+import { renderBorder, renderFills } from "../render/SVG/effects";
 import { FrameGrid } from "../basic/framegrid";
 import { Path } from "@kcdesign/path";
 import { convertPath2CurvePoints } from "../data/pathconvert";
@@ -193,7 +193,7 @@ export class BoolShapeView extends GroupShapeView {
 
         if (args.includes('variables')) {
             this.m_fills = undefined;
-            this.m_borders = undefined;
+            this.m_border = undefined;
             this.m_border_path = undefined;
             this.m_border_path_box = undefined;
             this.createBorderPath();
@@ -205,7 +205,7 @@ export class BoolShapeView extends GroupShapeView {
             this.createBorderPath();
         }
         else if (args.includes('borders')) {
-            this.m_borders = undefined;
+            this.m_border = undefined;
             this.m_border_path = undefined;
             this.m_border_path_box = undefined;
             this.createBorderPath();
@@ -217,8 +217,8 @@ export class BoolShapeView extends GroupShapeView {
         return renderFills(elh, fills, this.size, this.getPathStr(), 'fill-' + this.id);
     }
 
-    protected renderBorders(): EL[] {
-        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.data, this.radius);
+    protected renderBorder(): EL[] {
+        return renderBorder(elh, this.getBorder(), this.frame, this.getPathStr(), this.data, this.radius);
     }
 
     getPath() {
@@ -245,7 +245,7 @@ export class BoolShapeView extends GroupShapeView {
     }
 
     updateFrames(): boolean {
-        const border = this.getBorders();
+        const border = this.getBorder();
         let maxtopborder = 0;
         let maxleftborder = 0;
         let maxrightborder = 0;
@@ -323,7 +323,7 @@ export class BoolShapeView extends GroupShapeView {
     }
 
     createBorderPath() {
-        const borders = this.getBorders();
+        const borders = this.getBorder();
         const fills = this.getFills();
         if (!fills.length && borders) {
             this.m_border_path = border2path(this, borders);
@@ -340,7 +340,7 @@ const getPath = (shape: ShapeView) => {
     } else if (shape instanceof TextShapeView) {
         return shape.getTextPath().clone();
     } else if (shape instanceof PathShapeView && (!shape.data.isClosed || !hasFill(shape))) {
-        const border = shape.getBorders();
+        const border = shape.getBorder();
         const isEnabled = border.strokePaints.some(p => p.isEnabled);
         if (isEnabled) {
             return border2path(shape, border);

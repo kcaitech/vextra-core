@@ -12,7 +12,7 @@ import { PathShape2, Shape, ShapeFrame, SymbolRefShape, SymbolShape } from "../d
 import { ShapeView } from "./shape";
 import { DViewCtx, PropsType } from "./viewctx";
 import { EL, elh } from "./el";
-import { renderBorders } from "../render/SVG/effects";
+import { renderBorder } from "../render/SVG/effects";
 
 /**
  * @deprecated 使用 PathShapeView，PathShapeView2不会渲染

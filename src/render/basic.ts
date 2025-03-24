@@ -29,7 +29,7 @@ export class IRenderer {
     renderFills() {
     }
 
-    renderBorders() {
+    renderBorder() {
     }
 
     renderShadows(id?: string) {

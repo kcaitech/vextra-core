@@ -10,7 +10,7 @@
 
 import { EL, elh } from "./el";
 import { GroupShapeView } from "./groupshape";
-import { renderBorders, renderFills } from "../render/SVG/effects";
+import { renderBorder, renderFills } from "../render/SVG/effects";
 import {
     AutoLayout,
     BorderPosition,
@@ -104,8 +104,8 @@ export class ArtboardView extends GroupShapeView {
         return renderFills(elh, this.getFills(), this.frame, this.getPathStr(), 'fill-' + this.id);
     }
 
-    protected renderBorders(): EL[] {
-        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.data, this.radius);
+    protected renderBorder(): EL[] {
+        return renderBorder(elh, this.getBorder(), this.frame, this.getPathStr(), this.data, this.radius);
     }
 
     protected renderProps(): { [key: string]: string } & { style: any } {
@@ -175,7 +175,7 @@ export class ArtboardView extends GroupShapeView {
             this._save_frame.height = this.m_frame.height;
         }
 
-        const border = this.getBorders();
+        const border = this.getBorder();
         let maxtopborder = 0;
         let maxleftborder = 0;
         let maxrightborder = 0;
