@@ -10,7 +10,6 @@
 
 import {
     CurvePoint,
-    FillType, GradientType,
     OvalShape, parsePath,
     PathShape,
     PathShape2,
@@ -21,11 +20,8 @@ import {
     Transform
 } from "../data";
 import { ShapeView } from "./shape";
-import { EL, elh } from "./el";
-import { renderBorder } from "../render/SVG/effects";
 import { PathSegment } from "../data/typesdefine";
-import { render as renderLineBorders } from "../render/SVG/effects/line_borders"
-import { importCurvePoint, importFill } from "../data/baseimport";
+import { importCurvePoint } from "../data/baseimport";
 import { GroupShapeView } from "./groupshape";
 import { ArtboardView } from "./artboard";
 import { Path } from "@kcdesign/path";
@@ -40,21 +36,6 @@ export class PathShapeView extends ShapeView {
     ): void {
         this.m_pathsegs = undefined;
         super._layout(parentFrame, scale);
-    }
-
-    protected renderBorder(): EL[] {
-        let borders = this.getBorder();
-        if (this.mask && borders) {
-            borders.strokePaints.map(b => {
-                const nb = importFill(b);
-                if (nb.fillType === FillType.Gradient && nb.gradient?.gradientType === GradientType.Angular) nb.fillType = FillType.SolidColor;
-                return nb;
-            });
-        }
-        if ((this.segments.length === 1 && !this.segments[0].isClosed) || this.segments.length > 1) {
-            return renderLineBorders(elh, this.data.style, borders, this.startMarkerType, this.endMarkerType, this.getPathStr(), this.m_data);
-        }
-        return renderBorder(elh, borders, this.frame, this.getPathStr(), this.radius, this.isCustomBorder);
     }
 
     render(): number {
@@ -201,51 +182,5 @@ export class PathShapeView extends ShapeView {
             }
         }
         return path;
-    }
-
-    renderMask() {
-        if (!this.mask) return;
-        const parent = this.parent;
-        if (!parent) return;
-        const __children = parent.childs;
-        let index = __children.findIndex(i => i.id === this.id);
-        if (index === -1) return;
-        const maskGroup: ShapeView[] = [this];
-        this.m_mask_group = maskGroup;
-        for (let i = index + 1; i < __children.length; i++) {
-            const cur = __children[i];
-            if (cur && !cur.mask) maskGroup.push(cur);
-            else break;
-        }
-        let x = Infinity;
-        let y = Infinity;
-
-        maskGroup.forEach(s => {
-            const box = s.boundingBox();
-            if (box.x < x) x = box.x;
-            if (box.y < y) y = box.y;
-        });
-
-        return new Transform(1, 0, x, 0, 1, y);
-    }
-
-    bleach(el: EL) {  // 漂白，mask元素内，白色的像素显示，黑色的像素隐藏
-        if (el.elattr.fill && el.elattr.fill !== 'none' && !(el.elattr.fill as string).startsWith('url(#gradient')) {
-            el.elattr.fill = '#FFF';
-        }
-        if (el.elattr.stroke && el.elattr.stroke !== 'none' && !(el.elattr.stroke as string).startsWith('url(#gradient')) {
-            el.elattr.stroke = '#FFF';
-        }
-        // 漂白阴影
-        if (el.eltag === 'feColorMatrix' && el.elattr.result) {
-            let values: any = el.elattr.values;
-            if (values) values = values.split(' ');
-            if (values[3]) values[3] = 1;
-            if (values[8]) values[8] = 1;
-            if (values[13]) values[13] = 1;
-            el.elattr.values = values.join(' ');
-        }
-
-        if (Array.isArray(el.elchilds)) el.elchilds.forEach(el => this.bleach(el));
     }
 }
