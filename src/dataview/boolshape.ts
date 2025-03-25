@@ -297,9 +297,6 @@ export class BoolShapeView extends GroupShapeView {
         if (mapframe(this.m_frame, this._p_frame)) changed = true;
         if (mapframe(this.m_visibleFrame, this._p_visibleFrame)) changed = true;
         if (mapframe(this.m_outerFrame, this._p_outerFrame)) changed = true;
-        if (changed) {
-            this.m_client_x = this.m_client_y = undefined;
-        }
         return changed;
     }
 

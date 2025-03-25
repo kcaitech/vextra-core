@@ -444,28 +444,20 @@ export class ShapeView extends DataView {
         return this.transform.m12
     }
 
-    protected m_client_x: number | undefined = undefined;
-
     get clientX(): number {
-        return this.m_client_x ?? (this.m_client_x = (() => {
-            let offset = 0;
-            if (this.parent?.type !== ShapeType.Page) {
-                offset = this.parent?.frame.x ?? 0;
-            }
-            return this._p_frame.x - offset;
-        })());
+        let offset = 0;
+        if (this.parent?.type !== ShapeType.Page) {
+            offset = this.parent?.frame.x ?? 0;
+        }
+        return this._p_frame.x - offset;
     }
 
-    protected m_client_y: number | undefined = undefined;
-
     get clientY(): number {
-        return this.m_client_y ?? (this.m_client_y = (() => {
-            let offset = 0;
-            if (this.parent?.type !== ShapeType.Page) {
-                offset = this.parent?.frame.y ?? 0;
-            }
-            return this._p_frame.y - offset;
-        })());
+        let offset = 0;
+        if (this.parent?.type !== ShapeType.Page) {
+            offset = this.parent?.frame.y ?? 0;
+        }
+        return this._p_frame.y - offset;
     }
 
     boundingBox(): ShapeFrame {
@@ -980,7 +972,6 @@ export class ShapeView extends DataView {
 
         if (changed) {
             this.m_ctx.addNotifyLayout(this);
-            this.m_client_x = this.m_client_y = undefined;
             this.m_border_path = undefined;
             this.m_is_border_shape = undefined;
             this.m_border_path_box = undefined;
