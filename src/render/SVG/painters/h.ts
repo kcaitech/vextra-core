@@ -208,8 +208,8 @@ painter[ShapeType.Artboard] = (view: ArtboardView, renderer: SVGRenderer) => {
                 trans.trans(-view.innerTransform.translateX, -view.innerTransform.translateY);
                 return elh("g", {transform: trans.toString()}, [c]);
             } else if (s.scrollBehavior === ScrollBehavior.STICKYSCROLLS && view.innerTransform) {
-                if (s._p_frame.y + view.innerTransform.translateY < 0) {
-                    trans.trans(0, -(s._p_frame.y + view.innerTransform.translateY));
+                if (s.relativeFrame.y + view.innerTransform.translateY < 0) {
+                    trans.trans(0, -(s.relativeFrame.y + view.innerTransform.translateY));
                     return elh("g", {transform: trans.toString()}, [c]);
                 }
             }

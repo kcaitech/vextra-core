@@ -8,7 +8,7 @@ export function render(view: ShapeView, props: Props, ctx: CanvasRenderingContex
     for (const paint of border.strokePaints) {
         if (paint.isEnabled) {
             const path2D = new Path2D(stroke(view).toString());
-            painter[paint.fillType](props, ctx, paint, path2D, view.size, view._p_outerFrame, fillPath);
+            painter[paint.fillType](props, ctx, paint, path2D, view.size, view.m_frame_proxy._p_outerFrame, fillPath);
         }
     }
 }

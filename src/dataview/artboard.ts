@@ -11,10 +11,8 @@
 import { GroupShapeView } from "./groupshape";
 import {
     AutoLayout,
-    BorderPosition,
     CornerRadius,
     Page,
-    ShadowPosition,
     ShapeFrame,
     Transform,
     Artboard,
@@ -23,12 +21,19 @@ import {
     OverrideType,
     VariableType, SideType
 } from "../data";
-import { ShapeView, updateFrame } from "./shape";
 import { updateAutoLayout } from "../editor";
+import { ArtboardFrameProxy, FrameProxy } from "./frame";
+import { DViewCtx, PropsType } from "./viewctx";
 
 export class ArtboardView extends GroupShapeView {
     m_inner_transform: Transform | undefined;
     m_fixed_transform: Transform | undefined;
+    m_frame_proxy: FrameProxy;
+
+    constructor(ctx: DViewCtx, props: PropsType) {
+        super(ctx, props);
+        this.m_frame_proxy = new ArtboardFrameProxy(this);
+    }
     get innerTransform(): Transform | undefined {
         return this.m_inner_transform;
     }
@@ -72,7 +77,7 @@ export class ArtboardView extends GroupShapeView {
         }
         super._layout(parentFrame, scale);
         const childs = this.childs.filter(c => c.isVisible);
-        const frame = new ShapeFrame(this.m_frame.x, this.m_frame.y, this.m_frame.width, this.m_frame.height);
+        const frame = new ShapeFrame(this.frame.x, this.frame.y, this.frame.width, this.frame.height);
         if (childs.length) this._autoLayout(autoLayout, frame);
     }
 
@@ -104,94 +109,6 @@ export class ArtboardView extends GroupShapeView {
 
     get guides() {
         return (this.m_data as Page).guides;
-    }
-
-    updateFrames() {
-        let changed = this._save_frame.x !== this.m_frame.x || this._save_frame.y !== this.m_frame.y ||
-            this._save_frame.width !== this.m_frame.width || this._save_frame.height !== this.m_frame.height;
-        if (changed) {
-            this._save_frame.x = this.m_frame.x;
-            this._save_frame.y = this.m_frame.y;
-            this._save_frame.width = this.m_frame.width;
-            this._save_frame.height = this.m_frame.height;
-        }
-
-        const border = this.getBorder();
-        let maxtopborder = 0;
-        let maxleftborder = 0;
-        let maxrightborder = 0;
-        let maxbottomborder = 0;
-        const isEnabled = border.strokePaints.some(p => p.isEnabled);
-        if (isEnabled) {
-            const outer = border.position === BorderPosition.Outer;
-            maxtopborder = outer ? border.sideSetting.thicknessTop : border.sideSetting.thicknessTop / 2;
-            maxleftborder = outer ? border.sideSetting.thicknessLeft : border.sideSetting.thicknessLeft / 2;
-            maxrightborder = outer ? border.sideSetting.thicknessRight : border.sideSetting.thicknessRight / 2;
-            maxbottomborder = outer ? border.sideSetting.thicknessBottom : border.sideSetting.thicknessBottom / 2;
-        }
-        // 阴影
-        const shadows = this.getShadows();
-        let st = 0, sb = 0, sl = 0, sr = 0;
-        shadows.forEach(s => {
-            if (!s.isEnabled) return;
-            if (s.position !== ShadowPosition.Outer) return;
-            const w = s.blurRadius + s.spread;
-            sl = Math.max(-s.offsetX + w, sl);
-            sr = Math.max(s.offsetX + w, sr);
-            st = Math.max(-s.offsetY + w, st);
-            sb = Math.max(s.offsetY + w, sb);
-        })
-
-        const el = Math.max(maxleftborder, sl);
-        const et = Math.max(maxtopborder, st);
-        const er = Math.max(maxrightborder, sr);
-        const eb = Math.max(maxbottomborder, sb);
-
-        // update visible
-        if (updateFrame(this.m_visibleFrame, this.frame.x - el, this.frame.y - et, this.frame.width + el + er, this.frame.height + et + eb)) changed = true;
-
-        const childouterbounds = this.m_children.map(c => (c as ShapeView)._p_outerFrame);
-        const reducer = (p: { minx: number, miny: number, maxx: number, maxy: number }, c: ShapeFrame, i: number) => {
-            p.minx = Math.min(p.minx, c.x);
-            p.maxx = Math.max(p.maxx, c.x + c.width);
-            p.miny = Math.min(p.miny, c.y);
-            p.maxy = Math.max(p.maxy, c.y + c.height);
-            return p;
-        }
-        const _f = this.m_visibleFrame;
-        const outerbounds = childouterbounds.reduce(reducer, { minx: _f.x, miny: _f.y, maxx: _f.x + _f.width, maxy: _f.y + _f.height });
-        // update outer
-        if (updateFrame(this.m_outerFrame, outerbounds.minx, outerbounds.miny, outerbounds.maxx - outerbounds.minx, outerbounds.maxy - outerbounds.miny)) changed = true;
-
-        // to parent frame
-        const mapframe = (i: ShapeFrame, out: ShapeFrame) => {
-            const transform = this.transform;
-            if (this.isNoTransform()) {
-                return updateFrame(out, i.x + transform.translateX, i.y + transform.translateY, i.width, i.height);
-            }
-            const frame = i;
-            const m = transform;
-            const corners = [
-                { x: frame.x, y: frame.y },
-                { x: frame.x + frame.width, y: frame.y },
-                { x: frame.x + frame.width, y: frame.y + frame.height },
-                { x: frame.x, y: frame.y + frame.height }]
-                .map((p) => m.computeCoord(p));
-            const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
-            const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
-            const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
-            const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
-            return updateFrame(out, minx, miny, maxx - minx, maxy - miny);
-        }
-        if (mapframe(this.m_frame, this._p_frame)) changed = true;
-        if (mapframe(this.m_visibleFrame, this._p_visibleFrame)) changed = true;
-        if (mapframe(this.m_outerFrame, this._p_outerFrame)) changed = true;
-
-        if (changed) {
-            this.m_ctx.addNotifyLayout(this);
-        }
-
-        return changed;
     }
 
     get frameMaskDisabled() {

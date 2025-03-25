@@ -35,8 +35,8 @@ export class TableCellView extends ShapeView {
         this.m_transform.m12 = frame.y;
         // this.m_frame.x = frame.x;
         // this.m_frame.y = frame.y;
-        this.m_frame.width = frame.width;
-        this.m_frame.height = frame.height;
+        this.frame.width = frame.width;
+        this.frame.height = frame.height;
         this.m_index = props.index;
         // this.afterInit();
     }
@@ -76,8 +76,8 @@ export class TableCellView extends ShapeView {
             this.m_transform.m12 = frame.y;
             // this.m_frame.x = frame.x;
             // this.m_frame.y = frame.y;
-            this.m_frame.width = frame.width;
-            this.m_frame.height = frame.height;
+            this.frame.width = frame.width;
+            this.frame.height = frame.height;
             this.m_textpath = undefined;
             this.m_layout = undefined; // todo
             this.m_path = undefined;

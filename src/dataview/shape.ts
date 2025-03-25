@@ -12,7 +12,6 @@ import {
     BasicArray,
     Blur, BlurMask,
     Border, BorderMask,
-    BorderPosition,
     ContextSettings,
     CornerRadius, CurveMode,
     CurvePoint,
@@ -31,7 +30,6 @@ import {
     ScrollBehavior,
     ScrollDirection,
     Shadow, ShadowMask,
-    ShadowPosition,
     Shape,
     ShapeFrame,
     ShapeSize,
@@ -312,17 +310,6 @@ export function matrix2parent(t: Transform, matrix?: Transform) {
     return matrix;
 }
 
-export function updateFrame(frame: ShapeFrame, x: number, y: number, w: number, h: number): boolean {
-    if (frame.x !== x || frame.y !== y || frame.width !== w || frame.height !== h) {
-        frame.x = x;
-        frame.y = y;
-        frame.width = w;
-        frame.height = h;
-        return true;
-    }
-    return false;
-}
-
 export class ShapeView extends DataView {
     m_transform: Transform;
     m_fixedRadius?: number;
@@ -392,6 +379,10 @@ export class ShapeView extends DataView {
         return this.m_frame_proxy.frame;
     }
 
+    get relativeFrame() {
+        return this.m_frame_proxy._p_frame
+    }
+
     /**
      * contentFrame+边框，对象实际显示的位置大小
      */
@@ -399,11 +390,19 @@ export class ShapeView extends DataView {
         return this.m_frame_proxy.visibleFrame;
     }
 
+    get relativeVisibleFrame() {
+        return this.m_frame_proxy._p_visibleFrame;
+    }
+
     /**
      * 包含被裁剪的对象
      */
     get outerFrame() {
         return this.m_frame_proxy.outerFrame;
+    }
+
+    get relativeOuterFrame() {
+        return this.m_frame_proxy._p_outerFrame;
     }
 
     get rotation(): number {
@@ -831,21 +830,15 @@ export class ShapeView extends DataView {
 
     // =================== update ========================
     updateLayoutArgs(trans: Transform, size: ShapeFrame, radius: number | undefined) {
-        if (size.width !== this.m_frame_proxy.m_frame.width || size.height !== this.m_frame_proxy.m_frame.height || size.x !== this.m_frame_proxy.m_frame.x || size.y !== this.m_frame_proxy.m_frame.y) {
+        if (this.m_frame_proxy.updateWHBySize(size)) {
             this.m_pathstr = undefined; // need update
             this.m_path = undefined;
-            this.m_frame_proxy.m_frame.x = size.x;
-            this.m_frame_proxy.m_frame.y = size.y;
-            this.m_frame_proxy.m_frame.width = size.width;
-            this.m_frame_proxy.m_frame.height = size.height;
         }
-
         if ((this.m_fixedRadius || 0) !== (radius || 0)) {
             this.m_fixedRadius = radius;
             this.m_pathstr = undefined; // need update
             this.m_path = undefined;
         }
-
         if (!this.m_transform.equals(trans)) {
             this.m_transform.reset(trans);
             this.m_pathstr = undefined; // need update
@@ -855,9 +848,7 @@ export class ShapeView extends DataView {
 
     updateFrames() {
         const changed = this.m_frame_proxy.updateFrames();
-
         if (changed) this.m_ctx.addNotifyLayout(this);
-
         return changed;
     }
 
