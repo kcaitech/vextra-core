@@ -7,21 +7,19 @@
  * For more information about the AGPL-3.0 license, please visit:
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
-
 import {
     CurvePoint,
-    OvalShape, parsePath,
+    OvalShape,
     PathShape,
     RadiusMask,
     RadiusType,
     ShapeFrame,
-    ShapeType
+    ShapeType,
+    parsePath
 } from "../data";
 import { ShapeView } from "./shape";
 import { PathSegment } from "../data/typesdefine";
 import { importCurvePoint } from "../data/baseimport";
-import { GroupShapeView } from "./groupshape";
-import { ArtboardView } from "./artboard";
 import { Path } from "@kcdesign/path";
 import { border2path } from "./border2path";
 
@@ -110,22 +108,22 @@ export class PathShapeView extends ShapeView {
         this.m_border_path = undefined;
         this.m_border_path_box = undefined;
         this.m_is_border_shape = undefined;
-        if (args.includes('mask') || args.includes('isVisible')) (this.parent as GroupShapeView).updateMaskMap();
+        if (args.includes('mask') || args.includes('isVisible')) this.parent!.updateMaskMap();
 
         if (this.parent && (args.includes('transform') || args.includes('size') || args.includes('isVisible') || args.includes('autoLayout'))) {
             // 执行父级自动布局
-            let p = this.parent as ArtboardView;
+            let p = this.parent as any;
             while (p && p.autoLayout) {
                 p.m_ctx.setReLayout(p);
-                p = p.parent as ArtboardView;
+                p = p.parent as any;
             }
         } else if (this.parent && args.includes('borders')) {
-            let p = this.parent as ArtboardView;
+            let p = this.parent as any;
             while (p && p.autoLayout) {
                 if (p.autoLayout?.bordersTakeSpace) {
                     p.m_ctx.setReLayout(p);
                 }
-                p = p.parent as ArtboardView;
+                p = p.parent as any;
             }
         }
         if (args.includes('points')
