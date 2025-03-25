@@ -100,7 +100,7 @@ import {
 } from "../dataview";
 import { FMT_VER_latest } from "../data/fmtver";
 import { ColVector3D } from "../basic/matrix2";
-import { TidyUpAlgin, tidyUpLayout } from "./utils/auto_layout";
+import { TidyUpAlign, tidyUpLayout } from "./utils/auto_layout";
 
 import { getFormatFromBase64 } from "../basic/utils";
 import { modifyRadius, modifyStartingAngle, modifySweep, uniformScale, UniformScaleUnit, assign } from "./asyncapi";
@@ -3802,7 +3802,7 @@ export class PageEditor {
         return new TableEditor(shape, this.view, this.__repo, this.__document);
     }
 
-    tidyUpShapesLayout(shape_rows: ShapeView[][], hor: number, ver: number, dir: boolean, algin: TidyUpAlgin) {
+    tidyUpShapesLayout(shape_rows: ShapeView[][], hor: number, ver: number, dir: boolean, algin: TidyUpAlign) {
         const api = this.__repo.start('tidyUpShapesLayout');
         try {
             tidyUpLayout(this.page, api, shape_rows, hor, ver, dir, algin);

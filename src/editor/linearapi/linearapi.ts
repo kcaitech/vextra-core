@@ -22,7 +22,7 @@ import { BatchAction, BatchAction5, PageEditor } from "../page";
 import { importGradient, } from "../../data/baseimport";
 import { exportGradient, } from "../../data/baseexport";
 import { TableEditor } from "../table";
-import { TidyUpAlgin, tidyUpLayout } from "../utils/auto_layout";
+import { TidyUpAlign, tidyUpLayout } from "../utils/auto_layout";
 import { TextShapeEditor } from "../textshape";
 
 /**
@@ -658,7 +658,7 @@ export class LinearApi {
      * @description 修改自动布局间距
      */
 
-    tidyUpShapesLayout(shape_rows: ShapeView[][], hor: number, ver: number, dir: boolean, algin: TidyUpAlgin) {
+    tidyUpShapesLayout(shape_rows: ShapeView[][], hor: number, ver: number, dir: boolean, algin: TidyUpAlign) {
         this.execute('tidyup-shapes-layout', () => {
             const api = this.api!;
             const page = this.page;
