@@ -51,6 +51,7 @@ import { float_accuracy } from "../basic/consts";
 import { findOverrideAll } from "../data/utils";
 import { Path } from "@kcdesign/path";
 import { isEqual } from "../basic/number_utils";
+import { FrameProxy } from "./frame";
 
 export function isDiffShapeSize(lsh: ShapeSize | undefined, rsh: ShapeSize | undefined) {
     if (lsh === rsh) { // both undefined
@@ -324,26 +325,14 @@ export function updateFrame(frame: ShapeFrame, x: number, y: number, w: number, 
 
 export class ShapeView extends DataView {
     m_transform: Transform;
-
-    _save_frame: ShapeFrame = new ShapeFrame(); // 对象内坐标系的大小 // 用于updateFrames判断frame是否变更
-    m_frame: ShapeFrame = new ShapeFrame(); // 对象内坐标系的大小
-    m_visibleFrame: ShapeFrame = new ShapeFrame(); // 对象内坐标系的大小
-    m_outerFrame: ShapeFrame = new ShapeFrame(); // 对象内坐标系的大小
-
-    _p_frame: ShapeFrame = new ShapeFrame(); // 父级坐标系的大小 // 用于优化updateFrames, hittest
-    _p_visibleFrame: ShapeFrame = new ShapeFrame(); // 父级坐标系的大小 // 用于优化updateFrames, hittest
-    _p_outerFrame: ShapeFrame = new ShapeFrame(); // 父级坐标系的大小 // 用于优化updateFrames, hittest
-
     m_fixedRadius?: number;
-
     m_path?: Path;
     m_pathstr?: string;
-
     m_border_path?: Path;
     m_border_path_box?: ShapeFrame;
-
     m_fills: BasicArray<Fill> | undefined;
     m_border: Border | undefined;
+    m_frame_proxy: FrameProxy;
 
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
@@ -351,6 +340,7 @@ export class ShapeView extends DataView {
         const t = shape.transform;
         this.m_transform = new Transform(t.m00, t.m01, t.m02, t.m10, t.m11, t.m12)
         this.m_fixedRadius = (shape as PathShape).fixedRadius;
+        this.m_frame_proxy = new FrameProxy(this);
     }
 
     hasSize() {
@@ -399,21 +389,21 @@ export class ShapeView extends DataView {
      * 对象内容区位置大小
      */
     get frame() {
-        return this.m_frame;
+        return this.m_frame_proxy.frame;
     }
 
     /**
      * contentFrame+边框，对象实际显示的位置大小
      */
     get visibleFrame() {
-        return this.m_visibleFrame;
+        return this.m_frame_proxy.visibleFrame;
     }
 
     /**
      * 包含被裁剪的对象
      */
     get outerFrame() {
-        return this.m_outerFrame;
+        return this.m_frame_proxy.outerFrame;
     }
 
     get rotation(): number {
@@ -445,48 +435,15 @@ export class ShapeView extends DataView {
     }
 
     get clientX(): number {
-        let offset = 0;
-        if (this.parent?.type !== ShapeType.Page) {
-            offset = this.parent?.frame.x ?? 0;
-        }
-        return this._p_frame.x - offset;
+        return this.m_frame_proxy.clientX;
     }
 
     get clientY(): number {
-        let offset = 0;
-        if (this.parent?.type !== ShapeType.Page) {
-            offset = this.parent?.frame.y ?? 0;
-        }
-        return this._p_frame.y - offset;
+        return this.m_frame_proxy.clientY;
     }
 
     boundingBox(): ShapeFrame {
-        if (this.isNoTransform()) {
-            const tx = this.transform.translateX;
-            const ty = this.transform.translateY;
-            return new ShapeFrame(tx + this.frame.x, ty + this.frame.y, this.frame.width, this.frame.height);
-        }
-        const path = this.getPath().clone();
-        if (path.length > 0) {
-            const m = this.matrix2Parent();
-            path.transform(m);
-            const bounds = path.bbox();
-            return new ShapeFrame(bounds.x, bounds.y, bounds.w, bounds.h);
-        }
-
-        const frame = this.frame;
-        const m = this.transform;
-        const corners = [
-            { x: frame.x, y: frame.y },
-            { x: frame.x + frame.width, y: frame.y },
-            { x: frame.x + frame.width, y: frame.y + frame.height },
-            { x: frame.x, y: frame.y + frame.height }]
-            .map((p) => m.computeCoord(p));
-        const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
-        const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
-        const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
-        const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
-        return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
+        return this.m_frame_proxy.boundingBox();
     }
     maskMap: Map<string, Shape> = new Map;
     updateMaskMap() {
@@ -874,13 +831,13 @@ export class ShapeView extends DataView {
 
     // =================== update ========================
     updateLayoutArgs(trans: Transform, size: ShapeFrame, radius: number | undefined) {
-        if (size.width !== this.m_frame.width || size.height !== this.m_frame.height || size.x !== this.m_frame.x || size.y !== this.m_frame.y) {
+        if (size.width !== this.m_frame_proxy.m_frame.width || size.height !== this.m_frame_proxy.m_frame.height || size.x !== this.m_frame_proxy.m_frame.x || size.y !== this.m_frame_proxy.m_frame.y) {
             this.m_pathstr = undefined; // need update
             this.m_path = undefined;
-            this.m_frame.x = size.x;
-            this.m_frame.y = size.y;
-            this.m_frame.width = size.width;
-            this.m_frame.height = size.height;
+            this.m_frame_proxy.m_frame.x = size.x;
+            this.m_frame_proxy.m_frame.y = size.y;
+            this.m_frame_proxy.m_frame.width = size.width;
+            this.m_frame_proxy.m_frame.height = size.height;
         }
 
         if ((this.m_fixedRadius || 0) !== (radius || 0)) {
@@ -897,85 +854,9 @@ export class ShapeView extends DataView {
     }
 
     updateFrames() {
-        let changed = this._save_frame.x !== this.m_frame.x || this._save_frame.y !== this.m_frame.y ||
-            this._save_frame.width !== this.m_frame.width || this._save_frame.height !== this.m_frame.height;
+        const changed = this.m_frame_proxy.updateFrames();
 
-        if (changed) {
-            this._save_frame.x = this.m_frame.x;
-            this._save_frame.y = this.m_frame.y;
-            this._save_frame.width = this.m_frame.width;
-            this._save_frame.height = this.m_frame.height;
-        }
-
-        const border = this.getBorder();
-        let maxtopborder = 0;
-        let maxleftborder = 0;
-        let maxrightborder = 0;
-        let maxbottomborder = 0;
-        if (border) {
-            const isEnabled = border.strokePaints.some(p => p.isEnabled);
-            if (isEnabled) {
-                const outer = border.position === BorderPosition.Outer;
-                maxtopborder = outer ? border.sideSetting.thicknessTop : border.sideSetting.thicknessTop / 2;
-                maxleftborder = outer ? border.sideSetting.thicknessLeft : border.sideSetting.thicknessLeft / 2;
-                maxrightborder = outer ? border.sideSetting.thicknessRight : border.sideSetting.thicknessRight / 2;
-                maxbottomborder = outer ? border.sideSetting.thicknessBottom : border.sideSetting.thicknessBottom / 2;
-            }
-        }
-        // 阴影
-        const shadows = this.getShadows();
-        let st = 0, sb = 0, sl = 0, sr = 0;
-        shadows.forEach(s => {
-            if (!s.isEnabled) return;
-            if (s.position !== ShadowPosition.Outer) return;
-            const w = s.blurRadius + s.spread;
-            sl = Math.max(-s.offsetX + w, sl);
-            sr = Math.max(s.offsetX + w, sr);
-            st = Math.max(-s.offsetY + w, st);
-            sb = Math.max(s.offsetY + w, sb);
-        })
-
-        const el = Math.max(maxleftborder, sl);
-        const et = Math.max(maxtopborder, st);
-        const er = Math.max(maxrightborder, sr);
-        const eb = Math.max(maxbottomborder, sb);
-
-        // update visible
-        if (updateFrame(this.m_visibleFrame, this.frame.x - el, this.frame.y - et, this.frame.width + el + er, this.frame.height + et + eb)) changed = true;
-
-        // update outer
-        if (updateFrame(this.m_outerFrame, this.m_visibleFrame.x, this.m_visibleFrame.y, this.m_visibleFrame.width, this.m_visibleFrame.height)) changed = true;
-
-        // to parent frame
-        const mapframe = (i: ShapeFrame, out: ShapeFrame) => {
-            const transform = this.transform;
-            if (this.isNoTransform()) {
-                return updateFrame(out, i.x + transform.translateX, i.y + transform.translateY, i.width, i.height);
-            }
-            const frame = i;
-            const m = transform;
-            const corners = [
-                { x: frame.x, y: frame.y },
-                { x: frame.x + frame.width, y: frame.y },
-                { x: frame.x + frame.width, y: frame.y + frame.height },
-                { x: frame.x, y: frame.y + frame.height }]
-                .map((p) => m.computeCoord(p));
-            const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
-            const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
-            const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
-            const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
-            return updateFrame(out, minx, miny, maxx - minx, maxy - miny);
-        }
-        if (mapframe(this.m_frame, this._p_frame)) changed = true;
-        if (mapframe(this.m_visibleFrame, this._p_visibleFrame)) changed = true;
-        if (mapframe(this.m_outerFrame, this._p_outerFrame)) changed = true;
-
-        if (changed) {
-            this.m_ctx.addNotifyLayout(this);
-            this.m_border_path = undefined;
-            this.m_is_border_shape = undefined;
-            this.m_border_path_box = undefined;
-        }
+        if (changed) this.m_ctx.addNotifyLayout(this);
 
         return changed;
     }
