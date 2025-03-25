@@ -21,7 +21,7 @@ import { ShapeView } from "./shape";
 import { PathSegment } from "../data/typesdefine";
 import { importCurvePoint } from "../data/baseimport";
 import { Path } from "@kcdesign/path";
-import { border2path } from "./border2path";
+import { stroke } from "../render/stroke";
 
 export class PathShapeView extends ShapeView {
     m_pathsegs?: PathSegment[];
@@ -41,8 +41,7 @@ export class PathShapeView extends ShapeView {
     get borderPath(): Path {
         return this.m_border_path ?? (this.m_border_path = (() => {
             if (this.isBorderShape) {
-                const borders = this.getBorder();
-                return border2path(this, borders);
+                return stroke(this);
             } else {
                 return new Path();
             }

@@ -7,7 +7,7 @@ import { render as renderBlur } from "../effects/blur"
 
 import { painter } from "./h";
 import { renderTextLayout } from "../effects/text";
-import { border2path } from "../../../dataview/border2path";
+import { stroke } from "../../stroke";
 
 export type Props = {
     transform: [number, number, number, number, number, number];
@@ -95,7 +95,7 @@ export class CanvasRenderer extends IRenderer {
             path.addPath(fillP);
         }
         if (this.view.getBorder().strokePaints.length) {
-            const borderP = border2path(this.view, this.view.getBorder());
+            const borderP = stroke(this.view);
             path.addPath(new Path2D(borderP.toString()));
         }
         const childs = this.view.m_children as ShapeView[];

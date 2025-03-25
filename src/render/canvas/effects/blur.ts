@@ -1,7 +1,7 @@
 import { ShapeView, TextShapeView } from "../../../dataview";
 import { BlurType, Fill } from "../../../data";
 import { Props } from "../painters/renderer";
-import { border2path } from "../../../dataview/border2path";
+import { stroke } from "../../stroke";
 
 export function render(view: ShapeView, props: Props): Function | null {
     const blur = view.blur;
@@ -33,7 +33,7 @@ function backgroundBlur(ctx: CanvasRenderingContext2D, view: ShapeView, props: P
         path.addPath(new Path2D(view instanceof TextShapeView ? view.getTextPath().toString() : view.getPath().toString()));
     }
     if (borders.strokePaints.length && alphaBorder) {
-        const path2D = new Path2D(border2path(view, borders).toString());
+        const path2D = new Path2D(stroke(view).toString());
         const transform = new DOMMatrix();
         transform.translate(view.outerFrame.x, view.outerFrame.y);
         path.addPath(path2D, transform);

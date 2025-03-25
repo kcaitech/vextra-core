@@ -498,7 +498,6 @@ export class ShapeView extends DataView {
     }
     maskMap: Map<string, Shape> = new Map;
     updateMaskMap() {
-
     }
     onDataChange(...args: any[]): void {
         if (args.includes('mask') || args.includes('isVisible')) {
@@ -874,7 +873,7 @@ export class ShapeView extends DataView {
     }
 
     get masked() {
-        return this.parent!.maskMap?.get(this.m_data.id);
+        return this.parent?.maskMap?.get(this.m_data.id);
     }
 
     indexOfChild(view: ShapeView) {

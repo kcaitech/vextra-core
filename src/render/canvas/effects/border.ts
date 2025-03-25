@@ -2,13 +2,13 @@ import { Border, Fill, FillType, GradientType, ShapeFrame, ShapeSize } from "../
 import { Props } from "../painters/renderer";
 import { ShapeView } from "../../../dataview";
 import { render as renderGradient } from "./gradient";
-import { border2path } from "../../../dataview/border2path";
+import { stroke } from "../../stroke";
 
 export function render(view: ShapeView, props: Props, ctx: CanvasRenderingContext2D, border: Border, fillPath: Path2D) {
-    for (const stroke of border.strokePaints) {
-        if (stroke.isEnabled) {
-            const path2D = new Path2D(border2path(view, border).toString());
-            painter[stroke.fillType](props, ctx, stroke, path2D, view.size, view._p_outerFrame, fillPath);
+    for (const paint of border.strokePaints) {
+        if (paint.isEnabled) {
+            const path2D = new Path2D(stroke(view).toString());
+            painter[paint.fillType](props, ctx, paint, path2D, view.size, view._p_outerFrame, fillPath);
         }
     }
 }

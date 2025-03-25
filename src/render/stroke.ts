@@ -10,18 +10,16 @@
 
 import { Cap, Join, Path } from "@kcdesign/path";
 import { Matrix } from "../basic/matrix";
-import { Border, CornerType, MarkerType, BorderPosition, CurvePoint } from "../data/typesdefine";
-import { ContactLineView } from "./contactline";
-import { PathShapeView } from "./pathshape";
-import { ShapeView } from "./shape";
+import { CornerType, MarkerType, BorderPosition, CurvePoint } from "../data/typesdefine";
+import { ContactLineView, PathShapeView, ShapeView } from "../dataview";
 
 interface XY {
     x: number
     y: number
 }
 
-export function border2path(shape: ShapeView, border: Border) {
-
+export function stroke(shape: ShapeView) {
+   const border = shape.getBorder();
     const dashPath = (p: Path) => p.dash(10, 10, 1);
 
     const position = border.position;

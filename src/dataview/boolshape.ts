@@ -17,7 +17,7 @@ import { Path } from "@kcdesign/path";
 import { convertPath2CurvePoints } from "../data/pathconvert";
 import { OpType } from "@kcdesign/path";
 import { PathShapeView } from "./pathshape";
-import { border2path } from "./border2path";
+import { stroke } from "../render/stroke";
 
 function opPath(bop: BoolOp, path0: Path, path1: Path, isIntersect: boolean): Path {
     switch (bop) {
@@ -307,7 +307,7 @@ export class BoolShapeView extends GroupShapeView {
         const borders = this.getBorder();
         const fills = this.getFills();
         if (!fills.length && borders) {
-            this.m_border_path = border2path(this, borders);
+            this.m_border_path = stroke(this);
             const bbox = this.m_border_path.bbox();
             this.m_border_path_box = new ShapeFrame(bbox.x, bbox.y, bbox.w, bbox.h);
         }
@@ -324,7 +324,7 @@ const getPath = (shape: ShapeView) => {
         const border = shape.getBorder();
         const isEnabled = border.strokePaints.some(p => p.isEnabled);
         if (isEnabled) {
-            return border2path(shape, border);
+            return stroke(shape);
         }
         return new Path();
     } else {
