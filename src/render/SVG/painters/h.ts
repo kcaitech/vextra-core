@@ -3,12 +3,10 @@ import {
     CutoutShapeView,
     EL,
     elh,
-    PageView,
     PathShapeView,
     ShapeView,
     SymbolRefView,
     SymbolView,
-    TableCellView
 } from "../../../dataview";
 import { SVGRenderer } from "./renderer";
 import { objectId } from "../../../basic/objectid";
@@ -21,13 +19,6 @@ export const painter: { [key: string]: (view: any, renderer: SVGRenderer) => num
 
 painter['base'] = (view: ShapeView, renderer: SVGRenderer) => {
     if (!renderer.checkAndResetDirty()) return renderer.m_render_version;
-
-    const masked = view.masked;
-    if (masked) {
-        (view.getPage() as PageView)?.getView(masked.id)?.render();
-        view.reset("g");
-        return ++renderer.m_render_version;
-    }
 
     if (!view.isVisible) {
         view.reset("g");
@@ -71,19 +62,6 @@ painter['base'] = (view: ShapeView, renderer: SVGRenderer) => {
         }
     }
 
-    // const _mask_space = this.renderMask();
-    // if (_mask_space) {
-    //     Object.assign(props.style, {transform: _mask_space.toString()});
-    //     const id = `mask-base-${objectId(this)}`;
-    //     const __body_transform = this.transformFromMask;
-    //     const __body = elh("g", {style: {transform: __body_transform}}, children);
-    //     this.bleach(__body);
-    //     children = [__body];
-    //     const mask = elh('mask', {id}, children);
-    //     const rely = elh('g', {mask: `url(#${id})`}, this.relyLayers);
-    //     children = [mask, rely];
-    // }
-
     view.reset("g", props, children);
 
     return ++renderer.m_render_version;
@@ -91,13 +69,6 @@ painter['base'] = (view: ShapeView, renderer: SVGRenderer) => {
 
 painter[ShapeType.BoolShape] = (view: ShapeView, renderer: SVGRenderer) => {
     if (!renderer.checkAndResetDirty()) return renderer.m_render_version;
-
-    const masked = view.masked;
-    if (masked) {
-        (view.getPage() as PageView)?.getView(masked.id)?.render();
-        view.reset("g");
-        return ++renderer.m_render_version;
-    }
 
     if (!view.isVisible) {
         view.reset("g");
@@ -140,19 +111,6 @@ painter[ShapeType.BoolShape] = (view: ShapeView, renderer: SVGRenderer) => {
         }
     }
 
-    // const _mask_space = this.renderMask();
-    // if (_mask_space) {
-    //     Object.assign(props.style, {transform: _mask_space.toString()});
-    //     const id = `mask-base-${objectId(this)}`;
-    //     const __body_transform = this.transformFromMask;
-    //     const __body = elh("g", {style: {transform: __body_transform}}, children);
-    //     this.bleach(__body);
-    //     children = [__body];
-    //     const mask = elh('mask', {id}, children);
-    //     const rely = elh('g', {mask: `url(#${id})`}, this.relyLayers);
-    //     children = [mask, rely];
-    // }
-
     view.reset("g", props, children);
 
     return ++renderer.m_render_version;
@@ -160,13 +118,6 @@ painter[ShapeType.BoolShape] = (view: ShapeView, renderer: SVGRenderer) => {
 
 painter[ShapeType.Path] = (view: PathShapeView, renderer: SVGRenderer) => {
     if (!renderer.checkAndResetDirty()) return renderer.m_render_version;
-
-    const masked = view.masked;
-    if (masked) {
-        (view.getPage() as PageView)?.getView(masked.id)?.render();
-        view.reset("g");
-        return ++renderer.m_render_version;
-    }
 
     if (!view.isVisible) {
         view.reset("g");
@@ -177,7 +128,7 @@ painter[ShapeType.Path] = (view: PathShapeView, renderer: SVGRenderer) => {
     let borders = view.getBorder();
     let bordersEL: EL[];
     if ((view.segments.length === 1 && !view.segments[0].isClosed) || view.segments.length > 1) {
-        bordersEL = renderLineBorders(elh, view.data.style, borders, view.startMarkerType, view.endMarkerType, view.getPathStr(), view.m_data);
+        bordersEL = renderLineBorders(elh, view.data.style, borders, view.startMarkerType, view.endMarkerType, view.getPathStr(), view.data);
     } else bordersEL = renderBorder(elh, borders, view.frame, view.getPathStr(), view.radius, view.isCustomBorder);
 
     const filterId = `${objectId(view)}`;
@@ -213,19 +164,6 @@ painter[ShapeType.Path] = (view: PathShapeView, renderer: SVGRenderer) => {
         }
     }
 
-    // const _mask_space = this.renderMask();
-    // if (_mask_space) {
-    //     Object.assign(props.style, {transform: _mask_space.toString()});
-    //     const id = `mask-base-${objectId(this)}`;
-    //     const __body_transform = this.transformFromMask;
-    //     const __body = elh("g", {style: {transform: __body_transform}}, children);
-    //     this.bleach(__body);
-    //     children = [__body];
-    //     const mask = elh('mask', {id}, children);
-    //     const rely = elh('g', {mask: `url(#${id})`}, this.relyLayers);
-    //     children = [mask, rely];
-    // }
-
     view.reset("g", props, children);
 
     return ++renderer.m_render_version;
@@ -241,13 +179,6 @@ painter[ShapeType.Page] = (view: ShapeView, renderer: SVGRenderer) => {
 
 painter[ShapeType.Artboard] = (view: ArtboardView, renderer: SVGRenderer) => {
     if (!renderer.checkAndResetDirty()) return renderer.m_render_version;
-
-    const masked = view.masked;
-    if (masked) {
-        (view.getPage() as PageView)?.getView(masked.id)?.render();
-        view.reset("g");
-        return ++renderer.m_render_version;
-    }
 
     if (!view.isVisible) {
         view.reset("g");
@@ -336,19 +267,6 @@ painter[ShapeType.Artboard] = (view: ArtboardView, renderer: SVGRenderer) => {
         }
     }
 
-    // const _mask_space = this.renderMask();
-    // if (_mask_space) {
-    //     Object.assign(props.style, { transform: _mask_space.toString() });
-    //     const id = `mask-base-${objectId(this)}`;
-    //     const __body_transform = this.transformFromMask;
-    //     const __body = elh("g", { style: { transform: __body_transform } }, children);
-    //     this.bleach(__body);
-    //     children = [__body];
-    //     const mask = elh('mask', { id }, children);
-    //     const rely = elh('g', { mask: `url(#${id})` }, this.relyLayers);
-    //     children = [mask, rely];
-    // }
-
     view.reset("g", props, children);
 
     return ++renderer.m_render_version;
@@ -369,13 +287,6 @@ painter[ShapeType.Contact] = (view: CutoutShapeView, renderer: SVGRenderer) => {
 
 painter[ShapeType.SymbolRef] = (view: SymbolRefView, renderer: SVGRenderer) => {
     if (!renderer.checkAndResetDirty()) return renderer.m_render_version;
-
-    const masked = view.masked;
-    if (masked) {
-        (view.getPage() as PageView)?.getView(masked.id)?.render();
-        view.reset("g");
-        return ++renderer.m_render_version;
-    }
 
     if (!view.isVisible) {
         view.reset("g");
@@ -435,20 +346,6 @@ painter[ShapeType.SymbolRef] = (view: SymbolRefView, renderer: SVGRenderer) => {
         }
     }
 
-    // 遮罩
-    // const _mask_space = this.renderMask();
-    // if (_mask_space) {
-    //     Object.assign(props.style, {transform: _mask_space.toString()});
-    //     const id = `mask-base-${objectId(this)}`;
-    //     const __body_transform = this.transformFromMask;
-    //     const __body = elh("g", {style: {transform: __body_transform}}, children);
-    //     this.bleach(__body);
-    //     children = [__body];
-    //     const mask = elh('mask', {id}, children);
-    //     const rely = elh('g', {mask: `url(#${id})`}, this.relyLayers);
-    //     children = [mask, rely];
-    // }
-
     view.reset("g", props, children);
 
     return ++renderer.m_render_version;
@@ -456,13 +353,6 @@ painter[ShapeType.SymbolRef] = (view: SymbolRefView, renderer: SVGRenderer) => {
 
 painter[ShapeType.Symbol] = (view: SymbolView, renderer: SVGRenderer) => {
     if (!renderer.checkAndResetDirty()) return renderer.m_render_version;
-
-    const masked = view.masked;
-    if (masked) {
-        (view.getPage() as PageView)?.getView(masked.id)?.render();
-        view.reset("g");
-        return ++renderer.m_render_version;
-    }
 
     if (!view.isVisible) {
         view.reset("g");
@@ -520,61 +410,6 @@ painter[ShapeType.Symbol] = (view: SymbolView, renderer: SVGRenderer) => {
             }
             children = [...blur, elh('g', __props, children)];
         }
-    }
-
-    // // 遮罩
-    // const _mask_space = this.renderMask();
-    // if (_mask_space) {
-    //     Object.assign(props.style, {transform: _mask_space.toString()});
-    //     const id = `mask-base-${objectId(this)}`;
-    //     const __body_transform = this.transformFromMask;
-    //     const __body = elh("g", {style: {transform: __body_transform}}, children);
-    //     this.bleach(__body);
-    //     children = [__body];
-    //     const mask = elh('mask', {id}, children);
-    //     const rely = elh('g', {mask: `url(#${id})`}, this.relyLayers);
-    //     children = [mask, rely];
-    // }
-
-    view.reset("g", props, children);
-
-    return ++renderer.m_render_version;
-}
-
-painter[ShapeType.TableCell] = (view: TableCellView, renderer: SVGRenderer) => {
-    if (!renderer.checkAndResetDirty()) return renderer.m_render_version;
-
-    if (!view.isVisible) {
-        view.reset("g");
-        return ++renderer.m_render_version;
-    }
-
-    const fills = renderer.renderFills();
-    const borders = renderer.renderBorder();
-    const childs = renderer.renderContents();
-
-    const filterId = `${objectId(view)}`;
-    const shadows = renderer.renderShadows(filterId);
-    const blurId = `blur_${objectId(view)}`;
-    const blur = renderer.renderBlur(blurId);
-
-    let props = renderer.getProps();
-    let children = [...fills, ...childs, ...borders];
-
-    // 阴影
-    if (shadows.length) {
-        let filter: string = '';
-        const inner_url = innerShadowId(filterId, view.getShadows());
-        filter = `url(#pd_outer-${filterId}) `;
-        if (inner_url.length) filter += inner_url.join(' ');
-        children = [...shadows, elh("g", {filter}, children)];
-    }
-
-    // 模糊
-    if (blur.length) {
-        let filter: string = '';
-        if (view.blur?.type === BlurType.Gaussian) filter = `url(#${blurId})`;
-        children = [...blur, elh('g', {filter}, children)];
     }
 
     view.reset("g", props, children);

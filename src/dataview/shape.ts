@@ -53,7 +53,6 @@ import { ArtboardView } from "./artboard";
 import { findOverrideAll } from "../data/utils";
 import { Path } from "@kcdesign/path";
 import { isEqual } from "../basic/number_utils";
-import { border2path } from "./border2path";
 
 export function isDiffShapeSize(lsh: ShapeSize | undefined, rsh: ShapeSize | undefined) {
     if (lsh === rsh) { // both undefined
@@ -1297,7 +1296,7 @@ export class ShapeView extends DataView {
         const path = new Path();
         if (this.getFills().length) path.addPath(this.getPath());
         const borders = this.getBorder();
-        if (borders.position !== BorderPosition.Inner) path.addPath(border2path(this, borders));
+        if (borders.position !== BorderPosition.Inner) path.addPath(new Path());
         return this.__outline = path;
     }
 

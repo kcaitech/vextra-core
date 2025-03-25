@@ -14,7 +14,6 @@ import { getShapeViewId, stringh } from "./basic";
 import { EL } from "./el";
 import { objectId } from "../basic/objectid";
 import { IRenderer } from "../render/basic";
-import { ShapeView } from "./shape";
 import { SVGRenderer } from "../render/SVG/painters/renderer";
 import { CanvasRenderer } from "../render/canvas/painters/renderer";
 
@@ -119,7 +118,7 @@ export class DataView extends EventEL {
     }
 
     rendererBuilder(): IRenderer {
-        const view = this as unknown as ShapeView;
+        const view = this as unknown as any;
         switch (this.m_ctx.gl) {
             case "SVG": return new SVGRenderer(view);
             case "Canvas": return new CanvasRenderer(view);
