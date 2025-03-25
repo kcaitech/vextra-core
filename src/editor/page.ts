@@ -107,7 +107,7 @@ import { modifyRadius, modifyStartingAngle, modifySweep, uniformScale, UniformSc
 import { Path } from "@kcdesign/path";
 import { prepareVar } from "./symbol_utils";
 import { layoutShapesOrder2, layoutSpacing } from "./utils/auto_layout2";
-import { border2path } from "../dataview/border2path";
+import { stroke } from "../render/stroke";
 import { FrameCpt } from "../dataview/frame";
 
 // 用于批量操作的单个操作类型
@@ -3572,7 +3572,7 @@ export class PageEditor {
                             if (fill.fillType === FillType.Pattern) fill.fillType = FillType.SolidColor;
                             style.fills = new BasicArray<Fill>(fill);
                         }
-                        const path = border2path(view, border);
+                        const path = stroke(view);
                         let pathshape = newPathShape(view.name + suffix, view.frame, path, this.__document.stylesMgr, style);
                         pathshape.transform = shape.transform.clone();
                         pathshape.mask = shape.mask;

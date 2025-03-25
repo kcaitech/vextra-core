@@ -141,7 +141,7 @@ export class CreatorApiCaller extends AsyncApiCaller {
                 this.updateView();
             }
         } catch (e) {
-            console.log('CreatorApiCaller.generator:', e);
+            console.error(e);
             this.exception = true;
         }
     }
