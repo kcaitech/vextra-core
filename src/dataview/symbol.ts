@@ -55,10 +55,6 @@ export class SymbolView extends GroupShapeView {
         return (this.m_data as SymbolShape).frameMaskDisabled;
     }
 
-    getOutLine() {
-        return this.getPath();
-    }
-
     protected _layout(parentFrame: ShapeSize | undefined, scale: { x: number; y: number; } | undefined): void {
         const autoLayout = this.autoLayout;
         if (!autoLayout) {

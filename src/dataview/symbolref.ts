@@ -84,8 +84,6 @@ export class SymbolRefView extends ShapeView {
         }
     }
 
-    maskMap: Map<string, Shape | boolean> = new Map;
-
     updateMaskMap() {
         const map = this.maskMap;
         map.clear();

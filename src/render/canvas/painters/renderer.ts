@@ -34,7 +34,7 @@ export class CanvasRenderer extends IRenderer {
     private __path2D_cache: Path2D | undefined = undefined;
 
     private get path2D(): Path2D {
-        return this.__path2D_cache ?? (this.__path2D_cache = new Path2D(this.view.getOutLine().toString()));
+        return this.__path2D_cache ?? (this.__path2D_cache = new Path2D());
     }
 
     private __props_cache: Props | undefined = undefined;

@@ -100,10 +100,6 @@ export class GroupShapeView extends ShapeView {
         }
     }
 
-    getOutLine() {
-        return new Path();
-    }
-
     protected _layout(
         parentFrame: ShapeSize | undefined,
         scale: { x: number, y: number } | undefined,

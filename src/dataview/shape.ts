@@ -48,8 +48,6 @@ import { DataView } from "./view"
 import { DViewCtx, PropsType } from "./viewctx";
 import { objectId } from "../basic/objectid";
 import { float_accuracy } from "../basic/consts";
-import { GroupShapeView } from "./groupshape";
-import { ArtboardView } from "./artboard";
 import { findOverrideAll } from "../data/utils";
 import { Path } from "@kcdesign/path";
 import { isEqual } from "../basic/number_utils";
@@ -344,8 +342,6 @@ export class ShapeView extends DataView {
     m_border_path?: Path;
     m_border_path_box?: ShapeFrame;
 
-    m_mask_group?: ShapeView[];
-
     m_fills: BasicArray<Fill> | undefined;
     m_border: Border | undefined;
 
@@ -500,26 +496,29 @@ export class ShapeView extends DataView {
         const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
         return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
     }
+    maskMap: Map<string, Shape> = new Map;
+    updateMaskMap() {
 
+    }
     onDataChange(...args: any[]): void {
         if (args.includes('mask') || args.includes('isVisible')) {
-            (this.parent as GroupShapeView).updateMaskMap();
+            this.parent!.updateMaskMap();
         }
 
         if (this.parent && (args.includes('transform') || args.includes('size') || args.includes('isVisible') || args.includes('autoLayout'))) {
             // 执行父级自动布局
-            let p = this.parent as ArtboardView;
+            let p = this.parent as any;
             while (p && p.autoLayout) {
                 p.m_ctx.setReLayout(p);
-                p = p.parent as ArtboardView;
+                p = p.parent as any;
             }
         } else if (args.includes('borders') && this.parent) {
-            let p = this.parent as ArtboardView;
+            let p = this.parent as any;
             while (p && p.autoLayout) {
                 if (p.autoLayout?.bordersTakeSpace) {
                     p.m_ctx.setReLayout(p);
                 }
-                p = p.parent as ArtboardView;
+                p = p.parent as any;
             }
         }
 
@@ -577,7 +576,7 @@ export class ShapeView extends DataView {
         const m = this.transform.clone()
         const p = this.parent;
         if (p) {
-            const offset = (p as ArtboardView).innerTransform;
+            const offset = (p as any).innerTransform;
             offset && m.multiAtLeft(offset)
             p.uniformScale && m.scale(p.uniformScale);
             m.multiAtLeft(p.matrix2Root())
@@ -849,10 +848,6 @@ export class ShapeView extends DataView {
         return this.m_path;
     }
 
-    getOutLine(): Path {
-        return this.getPath();
-    }
-
     get borderPath() {
         return this.m_border_path ?? (this.m_border_path = (() => new Path())());
     }
@@ -879,7 +874,7 @@ export class ShapeView extends DataView {
     }
 
     get masked() {
-        return (this.parent as GroupShapeView)?.maskMap?.get(this.m_data.id);
+        return this.parent!.maskMap?.get(this.m_data.id);
     }
 
     indexOfChild(view: ShapeView) {
@@ -1001,7 +996,7 @@ export class ShapeView extends DataView {
     protected _layout(parentFrame: ShapeSize | undefined, scale: { x: number, y: number } | undefined,) {
         const shape = this.data;
         const transform = shape.transform.clone();
-        if (this.parent && (this.parent as ArtboardView).autoLayout) {
+        if (this.parent && (this.parent as any).autoLayout) {
             transform.translateX = this.m_transform.translateX;
             transform.translateY = this.m_transform.translateY;
         }
@@ -1067,7 +1062,7 @@ export class ShapeView extends DataView {
             let layoutSize = new ShapeSize();
             const frame = new ShapeFrame(0, 0, size.width * __decompose_scale.x, size.height * __decompose_scale.y);
 
-            if (this.parent && (this.parent as ArtboardView).autoLayout) {
+            if (this.parent && (this.parent as any).autoLayout) {
                 transform.translateX = this.m_transform.translateX;
                 transform.translateY = this.m_transform.translateY;
             }
@@ -1286,22 +1281,6 @@ export class ShapeView extends DataView {
             const borders = this.getBorder();
             return !this.getFills().length && borders && borders.strokePaints.some(p => p.isEnabled);
         })());
-    }
-
-    private __outline: Path | undefined = undefined;
-    private __outline_box: { w: number, h: number } & { x: number, y: number } & { x2: number, y2: number } | undefined = undefined;
-
-    get outline() {
-        if (this.__outline) return this.__outline;
-        const path = new Path();
-        if (this.getFills().length) path.addPath(this.getPath());
-        const borders = this.getBorder();
-        if (borders.position !== BorderPosition.Inner) path.addPath(new Path());
-        return this.__outline = path;
-    }
-
-    get outlineBox(): { w: number, h: number } & { x: number, y: number } & { x2: number, y2: number } {
-        return this.__outline_box ?? (this.__outline_box = this.outline.bbox());
     }
 
     get isCustomBorder() {

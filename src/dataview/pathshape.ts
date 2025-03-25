@@ -12,12 +12,10 @@ import {
     CurvePoint,
     OvalShape, parsePath,
     PathShape,
-    PathShape2,
     RadiusMask,
     RadiusType,
     ShapeFrame,
-    ShapeType,
-    Transform
+    ShapeType
 } from "../data";
 import { ShapeView } from "./shape";
 import { PathSegment } from "../data/typesdefine";
@@ -54,7 +52,7 @@ export class PathShapeView extends ShapeView {
     }
 
     get segments() {
-        return this.m_pathsegs || (this.m_data as PathShape2).pathsegs;
+        return this.m_pathsegs || this.data.pathsegs;
     }
 
     get data(): PathShape {

@@ -1,8 +1,6 @@
 import { Border, BorderPosition, Fill, FillType, Shadow, ShadowPosition } from "../../../data";
 import { ArtboardView, BoolShapeView, ShapeView, SymbolRefView, SymbolView, TextShapeView } from "../../../dataview";
-import { gPal } from "../../../basic/pal";
 import { CanvasRenderer, Props } from "../painters/renderer";
-import { OpType, Path } from "@kcdesign/path";
 
 export function render(renderer: CanvasRenderer, view: ShapeView, props: Props, ctx: CanvasRenderingContext2D, shadows: Shadow[], border: Border, fills: Fill[]): Function | undefined {
     shadows = shadows.filter(i => i.isEnabled);
@@ -88,37 +86,37 @@ function complexBlurOutlineShadow(renderer: CanvasRenderer, props: Props, ctx: C
 
 function innerShadow(view: ShapeView, props: Props, ctx: CanvasRenderingContext2D, innerShadows: Shadow[]) {
     return () => {
-        const outline = view.outline;
-        const outlineStr = outline.toSVGString();
-        const outlinePath2D = new Path2D(outlineStr);
-        const outlineBox = view.outlineBox;
-        const bodyIPath = new Path(outlineStr);
-        ctx.save();
-        ctx.transform(...props.transform);
-        ctx.clip(outlinePath2D, "evenodd");
-        for (const inSd of innerShadows) {
-            let x1 = outlineBox.x;
-            let y1 = outlineBox.y;
-            let x2 = outlineBox.x2;
-            let y2 = outlineBox.y2;
-            const {offsetX, offsetY, color, spread} = inSd;
-            const blur = inSd.blurRadius / 2;
-            const paddingX = blur + Math.abs(offsetX);
-            const paddingY = blur + Math.abs(offsetY);
-            x1 -= paddingX;
-            y1 -= paddingY;
-            x2 += paddingX;
-            y2 += paddingY;
-            const box = {x: x1, y: y1, w: x2 - x1, h: y2 - y1};
-            const inner = new Path(`M${box.x} ${box.y} h${box.w} v${box.h} h${-box.w} z`);
-            inner.op(bodyIPath, OpType.Difference);
-            ctx.save();
-            ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, ${color.alpha})`;
-            ctx.filter = `blur(${blur}px)`;
-            ctx.translate(offsetX, offsetY);
-            ctx.fill(new Path2D(inner.toSVGString()), "evenodd");
-            ctx.restore();
-        }
-        ctx.restore();
+        // const outline = view.outline;
+        // const outlineStr = outline.toSVGString();
+        // const outlinePath2D = new Path2D(outlineStr);
+        // const outlineBox = view.outlineBox;
+        // const bodyIPath = new Path(outlineStr);
+        // ctx.save();
+        // ctx.transform(...props.transform);
+        // ctx.clip(outlinePath2D, "evenodd");
+        // for (const inSd of innerShadows) {
+        //     let x1 = outlineBox.x;
+        //     let y1 = outlineBox.y;
+        //     let x2 = outlineBox.x2;
+        //     let y2 = outlineBox.y2;
+        //     const {offsetX, offsetY, color, spread} = inSd;
+        //     const blur = inSd.blurRadius / 2;
+        //     const paddingX = blur + Math.abs(offsetX);
+        //     const paddingY = blur + Math.abs(offsetY);
+        //     x1 -= paddingX;
+        //     y1 -= paddingY;
+        //     x2 += paddingX;
+        //     y2 += paddingY;
+        //     const box = {x: x1, y: y1, w: x2 - x1, h: y2 - y1};
+        //     const inner = new Path(`M${box.x} ${box.y} h${box.w} v${box.h} h${-box.w} z`);
+        //     inner.op(bodyIPath, OpType.Difference);
+        //     ctx.save();
+        //     ctx.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, ${color.alpha})`;
+        //     ctx.filter = `blur(${blur}px)`;
+        //     ctx.translate(offsetX, offsetY);
+        //     ctx.fill(new Path2D(inner.toSVGString()), "evenodd");
+        //     ctx.restore();
+        // }
+        // ctx.restore();
     }
 }

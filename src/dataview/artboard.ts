@@ -218,9 +218,6 @@ export class ArtboardView extends GroupShapeView {
         return _radius
     }
 
-     getOutLine() {
-        return this.getPath();
-    }
     get isCustomBorder() {
         return !(this.getBorder().sideSetting.sideType === SideType.Normal);
     }
