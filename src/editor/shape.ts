@@ -1332,18 +1332,18 @@ export class ShapeEditor {
                 layoutInfo.stackWrap = StackWrap.NoWrap;
                 layoutInfo.stackMode = StackMode.Horizontal;
                 layoutInfo.stackCounterSpacing = hor;
-                shape_height += Math.max(...rows.map(s => s.m_frame_proxy._p_frame.height));
+                shape_height += Math.max(...rows.map(s => s.frameProxy._p_frame.height));
                 rows.forEach(s => {
-                    shape_width += s.m_frame_proxy._p_frame.width + hor;
+                    shape_width += s.frameProxy._p_frame.width + hor;
                 })
                 shape_width -= hor;
             } else if (shapes_rows.every(s => s.length === 1)) {
                 layoutInfo.stackWrap = StackWrap.NoWrap;
                 layoutInfo.stackMode = StackMode.Vertical;
                 layoutInfo.stackSpacing = ver;
-                shape_width += Math.max(...rows.map(s => s.m_frame_proxy._p_frame.width));
+                shape_width += Math.max(...rows.map(s => s.frameProxy._p_frame.width));
                 rows.forEach(s => {
-                    shape_height += s.m_frame_proxy._p_frame.height + ver;
+                    shape_height += s.frameProxy._p_frame.height + ver;
                 })
                 shape_height -= ver;
             }
