@@ -224,9 +224,9 @@ export class GroupFrameProxy extends FrameProxy {
 
         const childcontentbounds = children.map(c => (c as ShapeView).relativeFrame);
 
-        const childvisiblebounds = children.map(c => (c as ShapeView).m_frame_proxy._p_visibleFrame);
+        const childvisiblebounds = children.map(c => (c as ShapeView).frameProxy._p_visibleFrame);
 
-        const childouterbounds = children.map(c => (c as ShapeView).m_frame_proxy._p_outerFrame);
+        const childouterbounds = children.map(c => (c as ShapeView).frameProxy._p_outerFrame);
 
         const reducer = (p: { minx: number, miny: number, maxx: number, maxy: number }, c: ShapeFrame, i: number) => {
             if (i === 0) {
@@ -338,7 +338,7 @@ export class ArtboardFrameProxy extends FrameProxy {
         // update visible
         if (updateFrame(this.m_visibleFrame, this.frame.x - el, this.frame.y - et, this.frame.width + el + er, this.frame.height + et + eb)) changed = true;
 
-        const childouterbounds = this.view.m_children.map(c => (c as ShapeView).m_frame_proxy._p_outerFrame);
+        const childouterbounds = this.view.m_children.map(c => (c as ShapeView).frameProxy._p_outerFrame);
         const reducer = (p: { minx: number, miny: number, maxx: number, maxy: number }, c: ShapeFrame, i: number) => {
             p.minx = Math.min(p.minx, c.x);
             p.maxx = Math.max(p.maxx, c.x + c.width);
@@ -488,7 +488,7 @@ export class SymbolFrameProxy extends FrameProxy {
         // update visible
         if (updateFrame(this.m_visibleFrame, this.frame.x - el, this.frame.y - et, this.frame.width + el + er, this.frame.height + et + eb)) changed = true;
 
-        const childouterbounds = this.view.m_children.map(c => (c as ShapeView).m_frame_proxy._p_outerFrame);
+        const childouterbounds = this.view.m_children.map(c => (c as ShapeView).frameProxy._p_outerFrame);
         const reducer = (p: { minx: number, miny: number, maxx: number, maxy: number }, c: ShapeFrame, i: number) => {
             p.minx = Math.min(p.minx, c.x);
             p.maxx = Math.max(p.maxx, c.x + c.width);

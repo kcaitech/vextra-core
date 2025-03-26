@@ -12,16 +12,20 @@ import { GroupShapeView } from "./groupshape";
 import {
     CornerRadius, Shape, ShapeFrame, ShapeType, SymbolShape, AutoLayout, BorderPosition, Page, ShadowPosition, BlurType,
     ShapeSize,
-    RadiusMask,
     OverrideType,
     VariableType, SideType
 } from "../data";
-import { VarsContainer } from "./viewctx";
+import { DViewCtx, PropsType, VarsContainer } from "./viewctx";
 import { DataView, RootView } from "./view"
 import { getShapeViewId } from "./basic";
 import { updateAutoLayout } from "../editor";
+import { SymbolViewCache } from "./cache/cacheProxy";
 
 export class SymbolView extends GroupShapeView {
+    constructor(ctx: DViewCtx, props: PropsType) {
+        super(ctx, props);
+        this.cache = new SymbolViewCache(this);
+    }
     get data() {
         return this.m_data as SymbolShape;
     }
@@ -116,25 +120,6 @@ export class SymbolView extends GroupShapeView {
         this.addChild(cdom, idx);
     }
 
-    get radius(): number[] {
-        let _radius: number[];
-        if (this.radiusMask) {
-            const mgr = this.style.getStylesMgr()!;
-            const mask = mgr.getSync(this.radiusMask) as RadiusMask
-            _radius = [...mask.radius];
-            this.watchRadiusMask(mask);
-        } else {
-            _radius = [
-                this.cornerRadius?.lt ?? 0,
-                this.cornerRadius?.rt ?? 0,
-                this.cornerRadius?.rb ?? 0,
-                this.cornerRadius?.lb ?? 0,
-            ]
-            this.unwatchRadiusMask();
-        }
-        return _radius
-
-    }
     get isCustomBorder() {
         return this.getBorder().sideSetting.sideType !== SideType.Normal;
     }

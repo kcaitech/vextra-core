@@ -28,7 +28,7 @@ export class ContactLineView extends PathShapeView {
         super(ctx, props);
         this.update = this.update.bind(this);
         this.m_ctx.tails.add(this);
-        this.m_frame_proxy = new ContactFrameProxy(this);
+        this.frameProxy = new ContactFrameProxy(this);
     }
 
     layout(props?: PropsType) {

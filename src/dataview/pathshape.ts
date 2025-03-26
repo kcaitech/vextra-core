@@ -22,10 +22,16 @@ import { PathSegment } from "../data/typesdefine";
 import { importCurvePoint } from "../data/baseimport";
 import { Path } from "@kcdesign/path";
 import { stroke } from "../render/stroke";
+import { DViewCtx, PropsType } from "./viewctx";
+import { PathShapeViewCache } from "./cache/cacheProxy";
 
 export class PathShapeView extends ShapeView {
     m_pathsegs?: PathSegment[];
 
+    constructor(ctx: DViewCtx, props: PropsType) {
+        super(ctx, props);
+        this.cache = new PathShapeViewCache(this);
+    }
     protected _layout(
         parentFrame: ShapeFrame | undefined,
         scale: { x: number, y: number } | undefined,
@@ -74,33 +80,6 @@ export class PathShapeView extends ShapeView {
 
     get haveEdit() {
         return this.data.haveEdit;
-    }
-
-    get radius(): number[] {
-        let _radius: number[] = [];
-        if (this.radiusMask) {
-            const mgr = this.style.getStylesMgr()!;
-            const mask = mgr.getSync(this.radiusMask) as RadiusMask;
-            _radius = [...mask.radius];
-            this.watchRadiusMask(mask);
-        } else {
-            let points: CurvePoint[] = [];
-            this.segments.forEach(i => points = points.slice(0).concat(i.points as CurvePoint[]));
-            const firstR = points[0]?.radius ?? 0;
-            for (const p of points) {
-                const radius = p.radius ?? 0;
-                if (radius !== firstR && this.radiusType !== RadiusType.Rect) return _radius = [-1];
-
-                if (this.radiusType === RadiusType.Rect) {
-                    _radius.push(radius);
-                } else {
-                    _radius = [firstR ?? (this.fixedRadius ?? 0)];
-                }
-            }
-            this.unwatchRadiusMask();
-        }
-        return _radius
-
     }
 
     onDataChange(...args: any[]): void {

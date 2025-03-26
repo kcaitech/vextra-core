@@ -10,13 +10,13 @@
 
 import {
     BasicArray,
-    Blur, BlurMask,
-    Border, BorderMask,
+    Blur,
+    Border,
     ContextSettings,
     CornerRadius, CurveMode,
     CurvePoint,
     ExportOptions,
-    Fill, FillMask,
+    Fill,
     FillType,
     MarkerType,
     OverlayBackgroundAppearance,
@@ -25,11 +25,11 @@ import {
     OverrideType, parsePath,
     PathShape,
     PrototypeInterAction,
-    PrototypeStartingPoint, RadiusMask, RadiusType,
+    PrototypeStartingPoint,
     ResizingConstraints2,
     ScrollBehavior,
     ScrollDirection,
-    Shadow, ShadowMask,
+    Shadow,
     Shape,
     ShapeFrame,
     ShapeSize,
@@ -50,6 +50,8 @@ import { findOverrideAll } from "../data/utils";
 import { Path } from "@kcdesign/path";
 import { isEqual } from "../basic/number_utils";
 import { FrameProxy } from "./frame";
+import { ViewCache } from "./cache/cacheProxy";
+import { ViewModifyEffect } from "./cache/effect";
 
 export function isDiffShapeSize(lsh: ShapeSize | undefined, rsh: ShapeSize | undefined) {
     if (lsh === rsh) { // both undefined
@@ -319,7 +321,10 @@ export class ShapeView extends DataView {
     m_border_path_box?: ShapeFrame;
     m_fills: BasicArray<Fill> | undefined;
     m_border: Border | undefined;
-    m_frame_proxy: FrameProxy;
+
+    frameProxy: FrameProxy;
+    cache: ViewCache;
+    effect: ViewModifyEffect;
 
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
@@ -327,7 +332,10 @@ export class ShapeView extends DataView {
         const t = shape.transform;
         this.m_transform = new Transform(t.m00, t.m01, t.m02, t.m10, t.m11, t.m12)
         this.m_fixedRadius = (shape as PathShape).fixedRadius;
-        this.m_frame_proxy = new FrameProxy(this);
+
+        this.frameProxy = new FrameProxy(this);
+        this.cache = new ViewCache(this);
+        this.effect = new ViewModifyEffect(this);
     }
 
     hasSize() {
@@ -376,33 +384,33 @@ export class ShapeView extends DataView {
      * 对象内容区位置大小
      */
     get frame() {
-        return this.m_frame_proxy.frame;
+        return this.frameProxy.frame;
     }
 
     get relativeFrame() {
-        return this.m_frame_proxy._p_frame
+        return this.frameProxy._p_frame
     }
 
     /**
      * contentFrame+边框，对象实际显示的位置大小
      */
     get visibleFrame() {
-        return this.m_frame_proxy.visibleFrame;
+        return this.frameProxy.visibleFrame;
     }
 
     get relativeVisibleFrame() {
-        return this.m_frame_proxy._p_visibleFrame;
+        return this.frameProxy._p_visibleFrame;
     }
 
     /**
      * 包含被裁剪的对象
      */
     get outerFrame() {
-        return this.m_frame_proxy.outerFrame;
+        return this.frameProxy.outerFrame;
     }
 
     get relativeOuterFrame() {
-        return this.m_frame_proxy._p_outerFrame;
+        return this.frameProxy._p_outerFrame;
     }
 
     get rotation(): number {
@@ -434,76 +442,22 @@ export class ShapeView extends DataView {
     }
 
     get clientX(): number {
-        return this.m_frame_proxy.clientX;
+        return this.frameProxy.clientX;
     }
 
     get clientY(): number {
-        return this.m_frame_proxy.clientY;
+        return this.frameProxy.clientY;
     }
 
     boundingBox(): ShapeFrame {
-        return this.m_frame_proxy.boundingBox();
+        return this.frameProxy.boundingBox();
     }
     maskMap: Map<string, Shape> = new Map;
     updateMaskMap() {
     }
     onDataChange(...args: any[]): void {
-        if (args.includes('mask') || args.includes('isVisible')) {
-            this.parent!.updateMaskMap();
-        }
-
-        if (this.parent && (args.includes('transform') || args.includes('size') || args.includes('isVisible') || args.includes('autoLayout'))) {
-            // 执行父级自动布局
-            let p = this.parent as any;
-            while (p && p.autoLayout) {
-                p.m_ctx.setReLayout(p);
-                p = p.parent as any;
-            }
-        } else if (args.includes('borders') && this.parent) {
-            let p = this.parent as any;
-            while (p && p.autoLayout) {
-                if (p.autoLayout?.bordersTakeSpace) {
-                    p.m_ctx.setReLayout(p);
-                }
-                p = p.parent as any;
-            }
-        }
-
-        if (args.includes('points')
-            || args.includes('pathsegs')
-            || args.includes('isClosed')
-            || (this.m_fixedRadius || 0) !== ((this.m_data as any).fixedRadius || 0)
-            || args.includes('cornerRadius')
-            || args.includes('imageRef')
-            || args.includes('radiusMask')
-            || args.includes('variables')
-        ) {
-            this.m_path = undefined;
-            this.m_pathstr = undefined;
-        }
-
-        if (args.includes('variables')) {
-            this.m_fills = undefined;
-            this.m_border = undefined;
-            this.m_is_border_shape = undefined;
-        } else if (args.includes('fills')) {
-            this.m_fills = undefined;
-            this.m_is_border_shape = undefined;
-        } else if (args.includes('borders')) {
-            this.m_border = undefined;
-            this.m_is_border_shape = undefined;
-        } else if (args.includes('fillsMask')) {
-            this.m_fills = undefined;
-            this.m_is_border_shape = undefined;
-        } else if (args.includes('bordersMask')) {
-            this.m_border = undefined;
-            this.m_border_path = undefined;
-            this.m_border_path_box = undefined;
-            this.m_is_border_shape = undefined;
-        }
-
-        const masked = this.masked;
-        if (masked) masked.notify('rerender-mask');
+        this.effect.doEffects(args);
+        this.effect.clearCache(args);
     }
 
     _findOV(ot: OverrideType, vt: VariableType): Variable | undefined {
@@ -564,108 +518,12 @@ export class ShapeView extends DataView {
         return v ? v.value : this.m_data.style.fillsMask;
     }
 
-    private _onFillMaskChange() {
-        this.m_fills = undefined;
-        this.m_ctx.setDirty(this);
-        this.notify('style', 'fills', 'mask');
-    }
-
-    private m_unbind_fill: undefined | (() => void) = undefined;
-
-    private onFillMaskChange = this._onFillMaskChange.bind(this);
-
-    protected watchFillMask(mask: FillMask) {
-        this.m_unbind_fill?.();
-        this.m_unbind_fill = mask.watch(this.onFillMaskChange);
-    }
-
-    protected unwatchFillMask() {
-        this.m_unbind_fill?.();
-    }
-
     getFills(): BasicArray<Fill> {
-        if (this.m_fills) return this.m_fills;
-        let fills: BasicArray<Fill>;
-
-        const fillsMask: string | undefined = this.fillsMask;
-        if (fillsMask) {
-            const mask = this.style.getStylesMgr()!.getSync(fillsMask) as FillMask;
-            fills = mask.fills;
-            this.watchFillMask(mask);
-        } else {
-            const v = this._findOV(OverrideType.Fills, VariableType.Fills);
-            fills = v ? v.value : this.m_data.style.fills;
-            this.unwatchFillMask();
-        }
-
-        return this.m_fills = fills;
-    }
-
-    private _onBorderMaskChange() {
-        this.m_border = undefined;
-        this.m_ctx.setDirty(this);
-        this.notify('style', 'border', 'mask');
-    }
-
-    private m_unbind_border: undefined | (() => void) = undefined;
-
-    private onBorderMaskChange = this._onBorderMaskChange.bind(this);
-
-    protected watchBorderMask(mask: BorderMask) {
-        this.m_unbind_border?.();
-        this.m_unbind_border = mask.watch(this.onBorderMaskChange);
-    }
-
-    protected unwatchBorderMask() {
-        this.m_unbind_border?.();
-    }
-
-    private _onBorderFillMaskChange() {
-        this.m_border = undefined;
-        this.m_ctx.setDirty(this);
-        this.notify('style', 'paints', 'mask');
-    }
-
-    private m_unbind_border_fill: undefined | (() => void) = undefined;
-
-    private onBorderFillMaskChange = this._onBorderFillMaskChange.bind(this);
-
-    protected watchBorderFillMask(mask: FillMask) {
-        this.m_unbind_border_fill?.();
-        this.m_unbind_border_fill = mask.watch(this.onBorderFillMaskChange);
-    }
-
-    protected unwatchBorderFillMask() {
-        this.m_unbind_border_fill?.();
+        return this.cache.fills;
     }
 
     getBorder(): Border {
-        if (this.m_border) return this.m_border;
-        const mgr = this.style.getStylesMgr();
-        if (!mgr) return this.m_border ?? this.m_data.style.borders;
-
-        const v = this._findOV(OverrideType.Borders, VariableType.Borders);
-        const border = v ? { ...v.value } : { ...this.m_data.style.borders };
-
-        const bordersMask: string | undefined = this.bordersMask;
-        if (bordersMask) {
-            const mask = mgr.getSync(bordersMask) as BorderMask
-            border.position = mask.border.position;
-            border.sideSetting = mask.border.sideSetting;
-            this.watchBorderMask(mask);
-        } else {
-            this.unwatchBorderMask();
-        }
-
-        const fillsMask: string | undefined = this.borderFillsMask;
-        if (fillsMask) {
-            const mask = mgr.getSync(fillsMask) as FillMask;
-            border.strokePaints = mask.fills;
-            this.watchBorderFillMask(mask);
-        } else {
-            this.unwatchBorderFillMask();
-        }
-        return this.m_border = border;
+        return this.cache.border;
     }
 
     get bordersMask(): string | undefined {
@@ -697,42 +555,8 @@ export class ShapeView extends DataView {
         return v ? v.value : this.m_data.style.shadowsMask;
     }
 
-    private _onShadowMaskChange() {
-        this.m_ctx.setDirty(this);
-        this.notify('style', 'shadows', 'mask');
-    }
-
-    private m_unbind_shadow: undefined | (() => void) = undefined;
-    private onShadowMaskChange = this._onShadowMaskChange.bind(this);
-
-    protected watchShadowMask(mask: ShadowMask) {
-        this.m_unbind_shadow?.();
-        this.m_unbind_shadow = mask.watch(this.onShadowMaskChange);
-    }
-
-    protected unwatchShadowMask() {
-        this.m_unbind_shadow?.();
-    }
-
     getShadows(): BasicArray<Shadow> {
-        let shadows: BasicArray<Shadow> = new BasicArray();
-        if (this.shadowsMask) {
-            const mgr = this.style.getStylesMgr();
-            if (!mgr) return shadows;
-            const mask = mgr.getSync(this.shadowsMask) as ShadowMask;
-            shadows = mask.shadows;
-            this.watchShadowMask(mask);
-        } else {
-            const v = this._findOV(OverrideType.Shadows, VariableType.Shadows);
-            shadows = v ? v.value : this.m_data.style.shadows;
-            this.unwatchShadowMask()
-        }
-        return shadows;
-    }
-
-    private _onBlurMaskChange() {
-        this.m_ctx.setDirty(this);
-        this.notify('style', 'blur', 'mask');
+        return this.cache.shadows;
     }
 
     get blurMask(): string | undefined {
@@ -740,31 +564,8 @@ export class ShapeView extends DataView {
         return v ? v.value : this.m_data.style.blursMask;
     }
 
-    private m_unbind_blur: undefined | (() => void) = undefined;
-    private onBlurMaskChange = this._onBlurMaskChange.bind(this);
-
-    watchBlurMask(mask: BlurMask) {
-        this.m_unbind_blur?.();
-        this.m_unbind_blur = mask.watch(this.onBlurMaskChange);
-    }
-
-    unwatchBlurMask() {
-        this.m_unbind_blur?.();
-    }
-
     get blur(): Blur | undefined {
-        let blur: Blur;
-        if (this.blurMask) {
-            const mgr = this.style.getStylesMgr()!;
-            const mask = mgr.getSync(this.blurMask) as BlurMask
-            blur = mask.blur;
-            this.watchBlurMask(mask);
-        } else {
-            const v = this._findOV(OverrideType.Blur, VariableType.Blur);
-            blur = v ? v.value : this.m_data.style.blur;
-            this.unwatchBlurMask();
-        }
-        return blur;
+        return this.cache.blur;
     }
 
     getPathOfSize() {
@@ -830,7 +631,7 @@ export class ShapeView extends DataView {
 
     // =================== update ========================
     updateLayoutArgs(trans: Transform, size: ShapeFrame, radius: number | undefined) {
-        if (this.m_frame_proxy.updateWHBySize(size)) {
+        if (this.frameProxy.updateWHBySize(size)) {
             this.m_pathstr = undefined; // need update
             this.m_path = undefined;
         }
@@ -847,7 +648,7 @@ export class ShapeView extends DataView {
     }
 
     updateFrames() {
-        const changed = this.m_frame_proxy.updateFrames();
+        const changed = this.frameProxy.updateFrames();
         if (changed) this.m_ctx.addNotifyLayout(this);
         return changed;
     }
@@ -1008,39 +809,8 @@ export class ShapeView extends DataView {
         return this.m_data.isPathIcon;
     }
 
-    private _onRadiusMaskChange() {
-        this.m_ctx.setDirty(this);
-        this.onDataChange('radiusMask');
-        this.notify('radiusMask');
-    }
-
-    private m_unbind_Radius: undefined | (() => void) = undefined;
-    private onRadiusMaskChange = this._onRadiusMaskChange.bind(this);
-
-    protected watchRadiusMask(mask: RadiusMask) {
-        this.m_unbind_Radius?.();
-        this.m_unbind_Radius = mask.watch(this.onRadiusMaskChange);
-    }
-
-    protected unwatchRadiusMask() {
-        this.m_unbind_Radius?.();
-    }
-
     get radius(): number[] {
-        let _radius: number[];
-        if (this.radiusMask) {
-            const mgr = this.style.getStylesMgr()!;
-            const mask = mgr.getSync(this.radiusMask) as RadiusMask
-            _radius = [...mask.radius];
-            this.watchRadiusMask(mask);
-        } else {
-            _radius = [this.fixedRadius ?? 0]
-            if (this.radiusType === RadiusType.Rect && _radius.length === 1) {
-                _radius = [_radius[0], _radius[0], _radius[0], _radius[0]];
-            }
-            this.unwatchRadiusMask();
-        }
-        return _radius
+        return this.cache.radius;
     }
 
     get radiusType() {

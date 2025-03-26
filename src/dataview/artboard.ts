@@ -17,22 +17,23 @@ import {
     Transform,
     Artboard,
     ShapeSize,
-    RadiusMask,
     OverrideType,
     VariableType, SideType
 } from "../data";
 import { updateAutoLayout } from "../editor";
 import { ArtboardFrameProxy, FrameProxy } from "./frame";
 import { DViewCtx, PropsType } from "./viewctx";
+import { ArtboardViewCache } from "./cache/cacheProxy";
 
 export class ArtboardView extends GroupShapeView {
     m_inner_transform: Transform | undefined;
     m_fixed_transform: Transform | undefined;
-    m_frame_proxy: FrameProxy;
+    frameProxy: FrameProxy;
 
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
-        this.m_frame_proxy = new ArtboardFrameProxy(this);
+        this.frameProxy = new ArtboardFrameProxy(this);
+        this.cache = new ArtboardViewCache(this);
     }
     get innerTransform(): Transform | undefined {
         return this.m_inner_transform;
@@ -113,25 +114,6 @@ export class ArtboardView extends GroupShapeView {
 
     get frameMaskDisabled() {
         return (this.m_data as Artboard).frameMaskDisabled;
-    }
-
-    get radius(): number[] {
-        let _radius: number[];
-        if (this.radiusMask) {
-            const mgr = this.style.getStylesMgr()!;
-            const mask = mgr.getSync(this.radiusMask) as RadiusMask
-            _radius = [...mask.radius];
-            this.watchRadiusMask(mask);
-        } else {
-            _radius = [
-                this.cornerRadius?.lt ?? 0,
-                this.cornerRadius?.rt ?? 0,
-                this.cornerRadius?.rb ?? 0,
-                this.cornerRadius?.lb ?? 0,
-            ]
-            this.unwatchRadiusMask();
-        }
-        return _radius
     }
 
     get isCustomBorder() {

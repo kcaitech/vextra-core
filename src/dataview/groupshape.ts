@@ -32,7 +32,7 @@ export class GroupShapeView extends ShapeView {
         this._bubblewatcher = this._bubblewatcher.bind(this);
         this.m_data.bubblewatch(this._bubblewatcher);
         this.updateMaskMap();
-        this.m_frame_proxy = new GroupFrameProxy(this);
+        this.frameProxy = new GroupFrameProxy(this);
     }
 
     protected _bubblewatcher(...args: any[]) {
