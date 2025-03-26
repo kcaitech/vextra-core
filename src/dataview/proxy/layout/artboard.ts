@@ -1,9 +1,9 @@
-import { ViewLayout } from "./view";
 import { ArtboardView } from "../../artboard";
 import { AutoLayout, ShapeFrame, ShapeSize } from "../../../data";
 import { updateAutoLayout } from "../../../editor";
+import { GroupLayout } from "./group";
 
-export class ArtboardLayout extends ViewLayout {
+export class ArtboardLayout extends GroupLayout {
     constructor(protected view: ArtboardView) {
         super(view);
     }

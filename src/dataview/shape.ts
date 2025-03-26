@@ -608,7 +608,7 @@ export class ShapeView extends DataView {
     }
 
     // =================== update ========================
-    updateLayoutArgs(trans: Transform, size: ShapeFrame, radius: number | undefined) {
+    updateLayoutArgs(trans: Transform, size: ShapeFrame) {
         this.layoutProxy.updateLayoutArgs(trans, size);
     }
 

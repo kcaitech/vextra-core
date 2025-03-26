@@ -18,7 +18,7 @@ import {
     OverrideType,
     VariableType, SideType
 } from "../data";
-import { ArtboardFrameProxy, FrameProxy } from "./frame";
+import { ArtboardFrameProxy } from "./frame";
 import { DViewCtx, PropsType } from "./viewctx";
 import { ArtboardViewCache } from "./proxy/cache/artboard";
 import { ArtboardLayout } from "./proxy/layout/artboard";
@@ -26,7 +26,6 @@ import { ArtboardLayout } from "./proxy/layout/artboard";
 export class ArtboardView extends GroupShapeView {
     m_inner_transform: Transform | undefined;
     m_fixed_transform: Transform | undefined;
-    frameProxy: FrameProxy;
 
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);

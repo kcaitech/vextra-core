@@ -145,7 +145,6 @@ export class ViewLayout {
         const view = this.view;
         const needLayout = view.m_ctx.removeReLayout(view); // remove from changeset
         if (props && !this.updateLayoutProps(props, needLayout)) return;
-
         view.m_ctx.setDirty(view);
         this._layout(view.m_props.layoutSize, view.m_props.scale);
         view.m_ctx.addNotifyLayout(view);

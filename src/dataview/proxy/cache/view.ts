@@ -15,6 +15,7 @@ import { Path } from "@kcdesign/path";
 export class ViewCache {
     protected m_fills: BasicArray<Fill> | undefined;
     protected m_border: Border | undefined;
+    protected m_path: Path | undefined;
 
     constructor(protected view: ShapeView) {
     }
@@ -236,7 +237,12 @@ export class ViewCache {
     }
 
     get path() {
-        return new Path();
+        if (this.m_path) return this.m_path;
+        this.m_path = this.getPathOfSize();
+        const frame = this.view.frame;
+        if (frame.x || frame.y) this.m_path.translate(frame.x, frame.y);
+        this.m_path.freeze();
+        return this.m_path;
     }
 
     get borderPathBox() {

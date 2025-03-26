@@ -1,10 +1,7 @@
-import { Path } from "@kcdesign/path";
 import { BoolShapeView, render2path } from "../../boolshape";
 import { ViewCache } from "./view";
 
 export class BoolShapeViewCache extends ViewCache {
-    private m_path: Path | undefined;
-
     constructor(protected view: BoolShapeView) {
         super(view);
     }

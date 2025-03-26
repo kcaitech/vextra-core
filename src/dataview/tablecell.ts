@@ -41,13 +41,13 @@ export class TableCellView extends ShapeView {
         // this.afterInit();
     }
 
-    onMounted(): void {
-        // const frame = this.frame;
-        // if (!this.isVirtualShape && this.cellType === TableCellType.Text) {
-        //     const text = this.getText();
-        //     text.updateSize(frame.width, frame.height);
-        // }
-    }
+    // onMounted(): void {
+    //     const frame = this.frame;
+    //     if (!this.isVirtualShape && this.cellType === TableCellType.Text) {
+    //         const text = this.getText();
+    //         text.updateSize(frame.width, frame.height);
+    //     }
+    // }
 
     get data(): TableCell {
         return this.m_data as TableCell;

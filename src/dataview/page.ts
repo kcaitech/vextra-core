@@ -26,7 +26,6 @@ function checkPath(v: ShapeView) {
 }
 
 export class PageView extends GroupShapeView implements RootView {
-
     private m_views: Map<string, ShapeView> = new Map();
     private m_artboards: Map<string, ArtboardView> = new Map();
     private m_cutouts: Map<string, CutoutShapeView> = new Map();
