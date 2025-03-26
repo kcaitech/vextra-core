@@ -84,21 +84,6 @@ export class GroupShapeView extends ShapeView {
 
     m_need_updatechilds: boolean = false;
 
-    onDataChange(...args: any[]): void {
-        super.onDataChange(...args);
-        
-        if (args.includes('childs')) {
-            this.updateMaskMap();
-            this.m_need_updatechilds = true;
-        }
-
-        if (args.includes('autoLayout') && !(this as any).autoLayout) {
-            this.childs.forEach(c => {
-                c.m_ctx.setReLayout(c);
-            });
-        }
-    }
-
     protected _layout(
         parentFrame: ShapeSize | undefined,
         scale: { x: number, y: number } | undefined,

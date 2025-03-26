@@ -18,6 +18,8 @@ import { convertPath2CurvePoints } from "../data/pathconvert";
 import { OpType } from "@kcdesign/path";
 import { PathShapeView } from "./pathshape";
 import { stroke } from "../render/stroke";
+import { DViewCtx, PropsType } from "./viewctx";
+import { BoolModifyEffect } from "./cache/effects/bool";
 
 function opPath(bop: BoolOp, path0: Path, path1: Path, isIntersect: boolean): Path {
     switch (bop) {
@@ -158,7 +160,10 @@ export function render2path(shape: ShapeView, defaultOp = BoolOp.None): Path {
 }
 
 export class BoolShapeView extends GroupShapeView {
-
+    constructor(ctx: DViewCtx, props: PropsType) {
+        super(ctx, props);
+        this.effect = new BoolModifyEffect(this);
+    }
     onMounted() {
         super.onMounted();
         this.createBorderPath();
@@ -177,35 +182,6 @@ export class BoolShapeView extends GroupShapeView {
         this.m_path = undefined;
         this.m_pathstr = undefined;
         this.m_ctx.setDirty(this);
-    }
-
-    onDataChange(...args: any[]): void {
-        super.onDataChange(...args);
-
-        if (args.includes('variables') || args.includes('childs')) {
-            this.m_path = undefined;
-            this.m_pathstr = undefined;
-        }
-
-        if (args.includes('variables')) {
-            this.m_fills = undefined;
-            this.m_border = undefined;
-            this.m_border_path = undefined;
-            this.m_border_path_box = undefined;
-            this.createBorderPath();
-        }
-        else if (args.includes('fills')) {
-            this.m_fills = undefined;
-            this.m_border_path = undefined;
-            this.m_border_path_box = undefined;
-            this.createBorderPath();
-        }
-        else if (args.includes('borders')) {
-            this.m_border = undefined;
-            this.m_border_path = undefined;
-            this.m_border_path_box = undefined;
-            this.createBorderPath();
-        }
     }
 
     getPath() {

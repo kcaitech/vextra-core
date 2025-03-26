@@ -114,12 +114,6 @@ export class SymbolRefView extends ShapeView {
     m_sym: SymbolShape | undefined;
     private m_union: SymbolShape | undefined;
 
-    onDataChange(...args: any[]): void {
-        super.onDataChange(...args);
-        this.loadsym();
-        if (args.includes('childs')) this.updateMaskMap();
-    }
-
     symwatcher(...args: any[]) {
         // todo
         this.m_ctx.setReLayout(this);

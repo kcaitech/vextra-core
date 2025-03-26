@@ -11,7 +11,6 @@ import {
     CurvePoint,
     OvalShape,
     PathShape,
-    RadiusMask,
     RadiusType,
     ShapeFrame,
     ShapeType,
@@ -24,6 +23,7 @@ import { Path } from "@kcdesign/path";
 import { stroke } from "../render/stroke";
 import { DViewCtx, PropsType } from "./viewctx";
 import { PathShapeViewCache } from "./cache/cacheProxy";
+import { PathShapeViewModifyEffect } from "./cache/effects/path";
 
 export class PathShapeView extends ShapeView {
     m_pathsegs?: PathSegment[];
@@ -31,6 +31,7 @@ export class PathShapeView extends ShapeView {
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
         this.cache = new PathShapeViewCache(this);
+        this.effect = new PathShapeViewModifyEffect(this);
     }
     protected _layout(
         parentFrame: ShapeFrame | undefined,
@@ -80,58 +81,6 @@ export class PathShapeView extends ShapeView {
 
     get haveEdit() {
         return this.data.haveEdit;
-    }
-
-    onDataChange(...args: any[]): void {
-        this.m_border_path = undefined;
-        this.m_border_path_box = undefined;
-        this.m_is_border_shape = undefined;
-        if (args.includes('mask') || args.includes('isVisible')) this.parent!.updateMaskMap();
-
-        if (this.parent && (args.includes('transform') || args.includes('size') || args.includes('isVisible') || args.includes('autoLayout'))) {
-            // 执行父级自动布局
-            let p = this.parent as any;
-            while (p && p.autoLayout) {
-                p.m_ctx.setReLayout(p);
-                p = p.parent as any;
-            }
-        } else if (this.parent && args.includes('borders')) {
-            let p = this.parent as any;
-            while (p && p.autoLayout) {
-                if (p.autoLayout?.bordersTakeSpace) {
-                    p.m_ctx.setReLayout(p);
-                }
-                p = p.parent as any;
-            }
-        }
-        if (args.includes('points')
-            || args.includes('pathsegs')
-            || args.includes('isClosed')
-            || (this.m_fixedRadius || 0) !== ((this.m_data as any).fixedRadius || 0)
-            || args.includes('cornerRadius')
-            || args.includes('imageRef')
-            || args.includes('radiusMask')
-            || args.includes('variables')
-        ) {
-            this.m_path = undefined;
-            this.m_pathstr = undefined;
-        }
-
-        if (args.includes('variables')) {
-            this.m_fills = undefined;
-            this.m_border = undefined;
-        } else if (args.includes('fills')) {
-            this.m_fills = undefined;
-        } else if (args.includes('borders')) {
-            this.m_border = undefined;
-        } else if (args.includes('fillsMask')) {
-            this.m_fills = undefined;
-        } else if (args.includes('bordersMask')) {
-            this.m_border = undefined;
-        }
-
-        const masked = this.masked;
-        if (masked) masked.notify('rerender-mask');
     }
 
     getPathOfSize() {

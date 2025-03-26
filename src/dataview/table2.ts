@@ -79,10 +79,10 @@ export class TableView2 extends ShapeView {
     private m_savewidth: number = 0;
     private m_saveheight: number = 0;
 
-    onDataChange(...args: any[]): void {
-        super.onDataChange(...args);
-        if (args.includes('rowHeights') || args.includes('colWidths') || args.includes('variables')) this.m_layout = undefined;
-    }
+    // onDataChange(...args: any[]): void {
+    //     super.onDataChange(...args);
+    //     if (args.includes('rowHeights') || args.includes('colWidths') || args.includes('variables')) this.m_layout = undefined;
+    // }
 
     // 单元格不展示
     get naviChilds(): ShapeView[] | undefined {

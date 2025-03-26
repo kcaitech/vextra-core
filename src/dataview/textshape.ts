@@ -163,18 +163,18 @@ export class TextShapeView extends ShapeView {
         return this.m_textpath;
     }
 
-    onDataChange(...args: any[]): void {
-        super.onDataChange(...args);
-        this.m_textpath = undefined;
-        if (this.parent && (args.includes('text'))) {
-            let p = this.parent as ArtboardView;
-            while (p && p.autoLayout) {
-                p.m_ctx.setReLayout(p);
-                p = p.parent as ArtboardView;
-            }
-        }
-        if (args.includes("text") || args.includes("variables")) this.__str = undefined; // 属性变化后需要重新生成text
-    }
+    // onDataChange(...args: any[]): void {
+    //     super.onDataChange(...args);
+    //     this.m_textpath = undefined;
+    //     if (this.parent && (args.includes('text'))) {
+    //         let p = this.parent as ArtboardView;
+    //         while (p && p.autoLayout) {
+    //             p.m_ctx.setReLayout(p);
+    //             p = p.parent as ArtboardView;
+    //         }
+    //     }
+    //     if (args.includes("text") || args.includes("variables")) this.__str = undefined; // 属性变化后需要重新生成text
+    // }
 
     asyncRender() {
         return this.render();

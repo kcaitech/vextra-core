@@ -51,7 +51,7 @@ import { Path } from "@kcdesign/path";
 import { isEqual } from "../basic/number_utils";
 import { FrameProxy } from "./frame";
 import { ViewCache } from "./cache/cacheProxy";
-import { ViewModifyEffect } from "./cache/effect";
+import { ViewModifyEffect } from "./cache/effects/view";
 
 export function isDiffShapeSize(lsh: ShapeSize | undefined, rsh: ShapeSize | undefined) {
     if (lsh === rsh) { // both undefined
@@ -455,8 +455,9 @@ export class ShapeView extends DataView {
     maskMap: Map<string, Shape> = new Map;
     updateMaskMap() {
     }
+
     onDataChange(...args: any[]): void {
-        this.effect.doEffects(args);
+        this.effect.emit(args);
         this.effect.clearCache(args);
     }
 

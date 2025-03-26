@@ -7,7 +7,7 @@
  * For more information about the AGPL-3.0 license, please visit:
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
-import { ContactForm, ContactShape, Page, Shape, ShapeFrame, ShapeType, Fill, Blur } from "../data";
+import { ContactForm, ContactShape, Page, Shape, ShapeType, Fill, Blur } from "../data";
 import {
     ContactType, CurveMode,
     CurvePoint,
@@ -22,6 +22,7 @@ import { PageView } from "./page";
 import { v4 } from "uuid";
 import { Point2D } from "../data/typesdefine";
 import { ContactFrameProxy } from "./frame";
+import { ContactModifyEffect } from "./cache/effects/contact";
 
 export class ContactLineView extends PathShapeView {
     constructor(ctx: DViewCtx, props: PropsType) {
@@ -29,6 +30,7 @@ export class ContactLineView extends PathShapeView {
         this.update = this.update.bind(this);
         this.m_ctx.tails.add(this);
         this.frameProxy = new ContactFrameProxy(this);
+        this.effect = new ContactModifyEffect(this);
     }
 
     layout(props?: PropsType) {
@@ -123,7 +125,7 @@ export class ContactLineView extends PathShapeView {
         }
     }
 
-    private updateApex() {
+     updateApex() {
         this.watchFromApex(this.contactFrom);
         this.watchToApex(this.contactTo)
     }
@@ -225,11 +227,6 @@ export class ContactLineView extends PathShapeView {
         }
         if (d4 < min_dis) op = { x: box.left, y: save.y };
         return op;
-    }
-
-    onDataChange(...args: any[]): void {
-        super.onDataChange(...args);
-        this.updateApex();
     }
 
     onDestroy(): void {

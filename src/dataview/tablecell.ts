@@ -187,17 +187,17 @@ export class TableCellView extends ShapeView {
     // private m_layout?: TextLayout;
     // private m_textpath?: Path;
 
-    onDataChange(...args: any[]): void {
-        super.onDataChange(...args);
-        if (args.includes('text') || this.data.cellType !== TableCellType.Text) { // todo 文本要支持局部重排
-            this.m_layout = undefined;
-            this.m_textpath = undefined;
-        }
-        // if (args.includes('variable')) this.m_layout = undefined; // 不确定是不是text变量？
-        this.renderContents();
-
-        (this.parent as any)?.bubblewatcher(...args);
-    }
+    // onDataChange(...args: any[]): void {
+    //     super.onDataChange(...args);
+    //     if (args.includes('text') || this.data.cellType !== TableCellType.Text) { // todo 文本要支持局部重排
+    //         this.m_layout = undefined;
+    //         this.m_textpath = undefined;
+    //     }
+    //     // if (args.includes('variable')) this.m_layout = undefined; // 不确定是不是text变量？
+    //     this.renderContents();
+    //
+    //     (this.parent as any)?.bubblewatcher(...args);
+    // }
 
     protected renderBorder(): EL[] {
         return [];
