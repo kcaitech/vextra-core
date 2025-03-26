@@ -7,23 +7,12 @@
  * For more information about the AGPL-3.0 license, please visit:
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
-import {
-    CurvePoint,
-    OvalShape,
-    PathShape,
-    RadiusType,
-    ShapeFrame,
-    ShapeType,
-    parsePath
-} from "../data";
+import { OvalShape, PathShape, ShapeFrame, ShapeType } from "../data";
 import { ShapeView } from "./shape";
 import { PathSegment } from "../data/typesdefine";
-import { importCurvePoint } from "../data/baseimport";
-import { Path } from "@kcdesign/path";
-import { stroke } from "../render/stroke";
 import { DViewCtx, PropsType } from "./viewctx";
-import { PathShapeViewCache } from "./cache/cacheProxy";
-import { PathShapeViewModifyEffect } from "./cache/effects/path";
+import { PathShapeViewCache } from "./proxy/cache/cacheProxy";
+import { PathShapeViewModifyEffect } from "./proxy/effects/path";
 
 export class PathShapeView extends ShapeView {
     m_pathsegs?: PathSegment[];
@@ -43,16 +32,6 @@ export class PathShapeView extends ShapeView {
 
     render(): number {
         return this.m_renderer.render(ShapeType.Path);
-    }
-
-    get borderPath(): Path {
-        return this.m_border_path ?? (this.m_border_path = (() => {
-            if (this.isBorderShape) {
-                return stroke(this);
-            } else {
-                return new Path();
-            }
-        })());
     }
 
     get segments() {
@@ -81,29 +60,5 @@ export class PathShapeView extends ShapeView {
 
     get haveEdit() {
         return this.data.haveEdit;
-    }
-
-    getPathOfSize() {
-        const frame = this.frame;
-        const width = frame.width;
-        const height = frame.height;
-
-        let path: Path;
-        if (this.radiusType === RadiusType.Rect) {
-            const radius = this.radius;
-            const points = this.segments[0].points.map(point => importCurvePoint(point));
-            points[0].radius = radius[0];
-            points[1].radius = radius[1] ?? radius[0];
-            points[2].radius = radius[2] ?? radius[0];
-            points[3].radius = radius[3] ?? radius[0];
-            path = parsePath(points, true, width, height);
-        } else {
-            path = new Path();
-            const fixed = this.radiusMask ? this.radius[0] : undefined;
-            for (const segment of this.segments) {
-                path.addPath(parsePath(segment.points as CurvePoint[], segment.isClosed, width, height, fixed));
-            }
-        }
-        return path;
     }
 }

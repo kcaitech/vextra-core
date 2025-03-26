@@ -13,8 +13,7 @@ import {
     Blur,
     Border,
     ContextSettings,
-    CornerRadius, CurveMode,
-    CurvePoint,
+    CornerRadius,
     ExportOptions,
     Fill,
     FillType,
@@ -22,7 +21,7 @@ import {
     OverlayBackgroundAppearance,
     OverlayBackgroundInteraction,
     OverlayPosition,
-    OverrideType, parsePath,
+    OverrideType,
     PathShape,
     PrototypeInterAction,
     PrototypeStartingPoint,
@@ -50,8 +49,8 @@ import { findOverrideAll } from "../data/utils";
 import { Path } from "@kcdesign/path";
 import { isEqual } from "../basic/number_utils";
 import { FrameProxy } from "./frame";
-import { ViewCache } from "./cache/cacheProxy";
-import { ViewModifyEffect } from "./cache/effects/view";
+import { ViewCache } from "./proxy/cache/cacheProxy";
+import { ViewModifyEffect } from "./proxy/effects/view";
 
 export function isDiffShapeSize(lsh: ShapeSize | undefined, rsh: ShapeSize | undefined) {
     if (lsh === rsh) { // both undefined
@@ -317,10 +316,6 @@ export class ShapeView extends DataView {
     m_fixedRadius?: number;
     m_path?: Path;
     m_pathstr?: string;
-    m_border_path?: Path;
-    m_border_path_box?: ShapeFrame;
-    m_fills: BasicArray<Fill> | undefined;
-    m_border: Border | undefined;
 
     frameProxy: FrameProxy;
     cache: ViewCache;
@@ -569,43 +564,20 @@ export class ShapeView extends DataView {
         return this.cache.blur;
     }
 
-    getPathOfSize() {
-        const p1 = new CurvePoint([] as any, '', 0, 0, CurveMode.Straight);
-        const p2 = new CurvePoint([] as any, '', 1, 0, CurveMode.Straight);
-        const p3 = new CurvePoint([] as any, '', 1, 1, CurveMode.Straight);
-        const p4 = new CurvePoint([] as any, '', 0, 1, CurveMode.Straight);
-        const radius = this.radius;
-        p1.radius = radius[0];
-        p2.radius = radius[1] ?? radius[0];
-        p3.radius = radius[2] ?? radius[0];
-        p4.radius = radius[3] ?? radius[0];
-        return parsePath([p1, p2, p3, p4], true, this.frame.width, this.frame.height);
-    }
-
     getPathStr() {
-        if (this.m_pathstr) return this.m_pathstr;
-        this.m_pathstr = this.getPath().toString();
-        return this.m_pathstr;
+        return this.cache.pathStr;
     }
 
     getPath() {
-        if (this.m_path) return this.m_path;
-        this.m_path = this.getPathOfSize();
-        const frame = this.frame;
-        if (frame.x || frame.y) this.m_path.translate(frame.x, frame.y);
-        this.m_path.freeze();
-        return this.m_path;
+        return this.cache.path;
     }
 
     get borderPath() {
-        return this.m_border_path ?? (this.m_border_path = (() => new Path())());
+        return this.cache.borderPath;
     }
 
     get borderPathBox() {
-        return this.m_border_path_box ?? (this.m_border_path_box = (() => {
-            const bbox = this.borderPath.bbox();
-            return new ShapeFrame(bbox.x, bbox.y, bbox.w, bbox.h);
-        })());
+        return this.cache.borderPathBox;
     }
 
     get isVisible(): boolean {
@@ -907,13 +879,8 @@ export class ShapeView extends DataView {
         return v ? v.value : this.m_data.radiusMask;
     }
 
-    protected m_is_border_shape: boolean | undefined = undefined;
-
     get isBorderShape() {
-        return this.m_is_border_shape ?? (this.m_is_border_shape = (() => {
-            const borders = this.getBorder();
-            return !this.getFills().length && borders && borders.strokePaints.some(p => p.isEnabled);
-        })());
+        return this.cache.isBorderShape;
     }
 
     get isCustomBorder() {

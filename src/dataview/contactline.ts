@@ -22,7 +22,8 @@ import { PageView } from "./page";
 import { v4 } from "uuid";
 import { Point2D } from "../data/typesdefine";
 import { ContactFrameProxy } from "./frame";
-import { ContactModifyEffect } from "./cache/effects/contact";
+import { ContactModifyEffect } from "./proxy/effects/contact";
+import { ContactLineViewCache } from "./proxy/cache/cacheProxy";
 
 export class ContactLineView extends PathShapeView {
     constructor(ctx: DViewCtx, props: PropsType) {
@@ -31,6 +32,7 @@ export class ContactLineView extends PathShapeView {
         this.m_ctx.tails.add(this);
         this.frameProxy = new ContactFrameProxy(this);
         this.effect = new ContactModifyEffect(this);
+        this.cache = new ContactLineViewCache(this);
     }
 
     layout(props?: PropsType) {
@@ -320,11 +322,6 @@ export class ContactLineView extends PathShapeView {
         if (!fromShape && toShape) path_for_free_start_contact(points, end, 1, 1);
 
         return slice_invalid_point(points);
-    }
-
-    /* 获取连接线路径 */
-    getPath() {
-        return this.m_path ?? (this.m_path = parsePath(this.getPoints(), false, 1, 1, this.fixedRadius));
     }
 }
 

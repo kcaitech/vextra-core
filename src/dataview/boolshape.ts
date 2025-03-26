@@ -19,7 +19,8 @@ import { OpType } from "@kcdesign/path";
 import { PathShapeView } from "./pathshape";
 import { stroke } from "../render/stroke";
 import { DViewCtx, PropsType } from "./viewctx";
-import { BoolModifyEffect } from "./cache/effects/bool";
+import { BoolModifyEffect } from "./proxy/effects/bool";
+import { BoolShapeViewCache } from "./proxy/cache/cacheProxy";
 
 function opPath(bop: BoolOp, path0: Path, path1: Path, isIntersect: boolean): Path {
     switch (bop) {
@@ -163,10 +164,10 @@ export class BoolShapeView extends GroupShapeView {
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
         this.effect = new BoolModifyEffect(this);
+        this.cache = new BoolShapeViewCache(this);
     }
     onMounted() {
         super.onMounted();
-        this.createBorderPath();
     }
 
     get data(): BoolShape {
@@ -184,29 +185,12 @@ export class BoolShapeView extends GroupShapeView {
         this.m_ctx.setDirty(this);
     }
 
-    getPath() {
-        if (this.m_path) return this.m_path;
-        this.m_path = render2path(this);
-        this.m_path.freeze();
-        return this.m_path;
-    }
-
     asyncRender() {
         return this.render();
     }
 
     render() {
         return this.m_renderer.render(this.type);
-    }
-
-    createBorderPath() {
-        const borders = this.getBorder();
-        const fills = this.getFills();
-        if (!fills.length && borders) {
-            this.m_border_path = stroke(this);
-            const bbox = this.m_border_path.bbox();
-            this.m_border_path_box = new ShapeFrame(bbox.x, bbox.y, bbox.w, bbox.h);
-        }
     }
 }
 

@@ -19,7 +19,7 @@ import { DViewCtx, PropsType, VarsContainer } from "./viewctx";
 import { DataView, RootView } from "./view"
 import { getShapeViewId } from "./basic";
 import { updateAutoLayout } from "../editor";
-import { SymbolViewCache } from "./cache/cacheProxy";
+import { SymbolViewCache } from "./proxy/cache/cacheProxy";
 
 export class SymbolView extends GroupShapeView {
     constructor(ctx: DViewCtx, props: PropsType) {

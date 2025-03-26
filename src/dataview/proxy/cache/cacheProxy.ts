@@ -1,45 +1,35 @@
-import { Path } from "@kcdesign/path";
-import { OverrideType, ShapeFrame, VariableType } from "../../data/typesdefine";
+import { CurveMode, OverrideType, ShapeFrame, VariableType } from "../../../data";
 import {
     BasicArray, Blur,
     BlurMask,
     Border,
     BorderMask, CurvePoint,
     Fill,
-    FillMask,
+    FillMask, parsePath,
     RadiusMask,
     RadiusType,
     Shadow,
     ShadowMask
-} from "../../data";
-import { ShapeView } from "../shape";
-import { SymbolRefView } from "../symbolref";
-import { ArtboardView } from "../artboard";
-import { SymbolView } from "../symbol";
-import { PathShapeView } from "../pathshape";
+} from "../../../data";
+import { ShapeView } from "../../shape";
+import { SymbolRefView } from "../../symbolref";
+import { ArtboardView } from "../../artboard";
+import { SymbolView } from "../../symbol";
+import { PathShapeView } from "../../pathshape";
+import { Path } from "@kcdesign/path";
+import { stroke } from "../../../render/stroke";
+import { importCurvePoint } from "../../../data/baseimport";
+import { BoolShapeView, render2path } from "../../boolshape";
+import { ContactLineView } from "../../contactline";
 
 export class ViewCache {
     protected m_fills: BasicArray<Fill> | undefined;
     protected m_border: Border | undefined;
-    protected m_path: Path | undefined;
-    protected m_pathstr: string | undefined;
-    protected m_is_border_shape: boolean | undefined;
-    protected m_border_path: string | undefined;
-    protected m_border_path_box: ShapeFrame | undefined;
 
     constructor(protected view: ShapeView) {
     }
 
-
-    private __clearCacheByKey(key:
-                                  'm_fills'
-                                  | 'm_border'
-                                  | 'm_path'
-                                  | 'm_pathstr'
-                                  | 'm_is_border_shape'
-                                  | 'm_border_path'
-                                  | 'm_border_path_box'
-    ) {
+    private __clearCacheByKey(key: 'm_fills' | 'm_border') {
         this[key] = undefined;
     }
 
@@ -250,9 +240,49 @@ export class ViewCache {
         }
         return blur;
     }
+
+    get pathStr() {
+        return '';
+    }
+
+    get path() {
+        return new Path();
+    }
+
+    get borderPathBox() {
+        return new ShapeFrame(0, 0, 1, 1);
+    }
+
+    get borderPath() {
+        return new Path();
+    }
+
+    get isBorderShape() {
+        return false;
+    }
+
+    protected getPathOfSize() {
+        const p1 = new CurvePoint([] as any, '', 0, 0, CurveMode.Straight);
+        const p2 = new CurvePoint([] as any, '', 1, 0, CurveMode.Straight);
+        const p3 = new CurvePoint([] as any, '', 1, 1, CurveMode.Straight);
+        const p4 = new CurvePoint([] as any, '', 0, 1, CurveMode.Straight);
+        const radius = this.radius;
+        p1.radius = radius[0];
+        p2.radius = radius[1] ?? radius[0];
+        p3.radius = radius[2] ?? radius[0];
+        p4.radius = radius[3] ?? radius[0];
+        return parsePath([p1, p2, p3, p4], true, this.view.frame.width, this.view.frame.height);
+    }
 }
 
 export class PathShapeViewCache extends ViewCache {
+    // cache
+    private m_path: Path | undefined;
+    private m_pathstr: string | undefined;
+    private m_is_border_shape: boolean | undefined = undefined;
+    private m_border_path: Path | undefined;
+    private m_border_path_box: ShapeFrame | undefined = undefined;
+
     constructor(protected view: PathShapeView) {
         super(view);
     }
@@ -280,6 +310,96 @@ export class PathShapeViewCache extends ViewCache {
             this.unwatchRadiusMask();
         }
         return _radius
+    }
+
+    protected getPathOfSize() {
+        const frame = this.view.frame;
+        const width = frame.width;
+        const height = frame.height;
+
+        let path: Path;
+        if (this.view.radiusType === RadiusType.Rect) {
+            const radius = this.radius;
+            const points = this.view.segments[0].points.map(point => importCurvePoint(point));
+            points[0].radius = radius[0];
+            points[1].radius = radius[1] ?? radius[0];
+            points[2].radius = radius[2] ?? radius[0];
+            points[3].radius = radius[3] ?? radius[0];
+            path = parsePath(points, true, width, height);
+        } else {
+            path = new Path();
+            const fixed = this.view.radiusMask ? this.radius[0] : undefined;
+            for (const segment of this.view.segments) {
+                path.addPath(parsePath(segment.points as CurvePoint[], segment.isClosed, width, height, fixed));
+            }
+        }
+        return path;
+    }
+
+    get pathStr() {
+        if (this.m_pathstr) return this.m_pathstr;
+        this.m_pathstr = this.path.toString();
+        return this.m_pathstr;
+    }
+
+    get path() {
+        if (this.m_path) return this.m_path;
+        this.m_path = this.getPathOfSize();
+        const frame = this.view.frame;
+        if (frame.x || frame.y) this.m_path.translate(frame.x, frame.y);
+        this.m_path.freeze();
+        return this.m_path;
+    }
+
+    get borderPath(): Path {
+        return this.m_border_path ?? (this.m_border_path = (() => {
+            if (this.isBorderShape) {
+                return stroke(this.view);
+            } else {
+                return new Path();
+            }
+        })());
+    }
+
+    get borderPathBox() {
+        return this.m_border_path_box ?? (this.m_border_path_box = (() => {
+            const bbox = this.borderPath.bbox();
+            return new ShapeFrame(bbox.x, bbox.y, bbox.w, bbox.h);
+        })());
+    }
+
+    get isBorderShape() {
+        return this.m_is_border_shape ?? (this.m_is_border_shape = (() => {
+            const borders = this.border;
+            return !this.fills.length && borders && borders.strokePaints.some(p => p.isEnabled);
+        })());
+    }
+}
+
+export class ContactLineViewCache extends ViewCache {
+    private m_path: Path | undefined;
+
+    constructor(protected view: ContactLineView) {
+        super(view);
+    }
+
+    get path() {
+        return this.m_path ?? (this.m_path = parsePath(this.view.getPoints(), false, 1, 1, this.view.fixedRadius));
+    }
+}
+
+export class BoolShapeViewCache extends ViewCache {
+    private m_path: Path | undefined;
+
+    constructor(protected view: BoolShapeView) {
+        super(view);
+    }
+
+    get path() {
+        if (this.m_path) return this.m_path;
+        this.m_path = render2path(this.view);
+        this.m_path.freeze();
+        return this.m_path;
     }
 }
 
