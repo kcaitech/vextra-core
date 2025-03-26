@@ -51,6 +51,7 @@ import { isEqual } from "../basic/number_utils";
 import { FrameProxy } from "./frame";
 import { ViewModifyEffect } from "./proxy/effects/view";
 import { ViewCache } from "./proxy/cache/view";
+import { ViewLayout } from "./proxy/layout/view";
 
 export function isDiffShapeSize(lsh: ShapeSize | undefined, rsh: ShapeSize | undefined) {
     if (lsh === rsh) { // both undefined
@@ -320,6 +321,7 @@ export class ShapeView extends DataView {
     frameProxy: FrameProxy;
     cache: ViewCache;
     effect: ViewModifyEffect;
+    layoutProxy: ViewLayout;
 
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
@@ -331,6 +333,7 @@ export class ShapeView extends DataView {
         this.frameProxy = new FrameProxy(this);
         this.cache = new ViewCache(this);
         this.effect = new ViewModifyEffect(this);
+        this.layoutProxy = new ViewLayout(this);
     }
 
     hasSize() {
@@ -338,7 +341,7 @@ export class ShapeView extends DataView {
     }
 
     onMounted() {
-        this._layout(this.m_props.layoutSize, this.m_props.scale);
+        this.layoutProxy._layout(this.m_props.layoutSize, this.m_props.scale);
     }
 
     get parent(): ShapeView | undefined {
@@ -606,152 +609,18 @@ export class ShapeView extends DataView {
 
     // =================== update ========================
     updateLayoutArgs(trans: Transform, size: ShapeFrame, radius: number | undefined) {
-        if (this.frameProxy.updateWHBySize(size)) {
-            this.m_pathstr = undefined; // need update
-            this.m_path = undefined;
-        }
-        if ((this.m_fixedRadius || 0) !== (radius || 0)) {
-            this.m_fixedRadius = radius;
-            this.m_pathstr = undefined; // need update
-            this.m_path = undefined;
-        }
-        if (!this.m_transform.equals(trans)) {
-            this.m_transform.reset(trans);
-            this.m_pathstr = undefined; // need update
-            this.m_path = undefined;
-        }
+        this.layoutProxy.updateLayoutArgs(trans, size);
     }
 
     updateFrames() {
-        const changed = this.frameProxy.updateFrames();
-        if (changed) this.m_ctx.addNotifyLayout(this);
-        return changed;
-    }
-
-    protected layoutChilds(parentFrame: ShapeSize | undefined, scale?: { x: number, y: number }) {
-    }
-
-    protected _layout(parentFrame: ShapeSize | undefined, scale: { x: number, y: number } | undefined,) {
-        const shape = this.data;
-        const transform = shape.transform.clone();
-        if (this.parent && (this.parent as any).autoLayout) {
-            transform.translateX = this.m_transform.translateX;
-            transform.translateY = this.m_transform.translateY;
-        }
-
-        // case 1 不需要变形
-        if (!scale || isEqual(scale.x, 1) && isEqual(scale.y, 1)) {
-            let frame = this.frame;
-            if (this.hasSize()) frame = this.data.frame;
-            this.updateLayoutArgs(transform, frame, (shape as PathShape).fixedRadius);
-            this.layoutChilds(this.frame);
-            this.updateFrames();
-            return;
-        }
-
-        const skewTransform = (scalex: number, scaley: number) => {
-            let t = transform;
-            if (scalex !== scaley) {
-                t = t.clone();
-                t.scale(scalex, scaley);
-                // 保留skew去除scale
-                t.clearScaleSize();
-            }
-            return t;
-        }
-
-        const resizingConstraint = shape.resizingConstraint ?? 0; // 默认值为靠左、靠顶、宽高固定
-        // 当前对象如果没有frame,需要childs layout完成后才有
-        // 但如果有constrain,则需要提前计算出frame?当前是直接不需要constrain
-        if (!this.hasSize() && (resizingConstraint === 0 || !parentFrame)) {
-            let frame = this.frame; // 不需要更新
-            const t0 = transform.clone();
-            t0.scale(scale.x, scale.y);
-            const save1 = t0.computeCoord(0, 0);
-            const t = skewTransform(scale.x, scale.y).clone();
-            const save2 = t.computeCoord(0, 0)
-            const dx = save1.x - save2.x;
-            const dy = save1.y - save2.y;
-            t.trans(dx, dy);
-            this.updateLayoutArgs(t, frame, (shape as PathShape).fixedRadius);
-            this.layoutChilds(undefined, scale);
-            this.updateFrames();
-            return;
-        }
-
-        const size = this.data.size; // 如果是group,实时计算的大小。view中此时可能没有
-        const saveW = size.width;
-        const saveH = size.height;
-
-        let scaleX = scale.x;
-        let scaleY = scale.y;
-
-        if (parentFrame && resizingConstraint !== 0) {
-            const { transform, targetWidth, targetHeight } = fixFrameByConstrain(shape, parentFrame, scaleX, scaleY);
-            this.updateLayoutArgs((transform), new ShapeFrame(0, 0, targetWidth, targetHeight), (shape as PathShape).fixedRadius);
-            this.layoutChilds(this.frame, { x: targetWidth / saveW, y: targetHeight / saveH });
-        } else {
-            const transform = (shape.transform.clone());
-            transform.scale(scaleX, scaleY);
-            const __decompose_scale = transform.clearScaleSize();
-            // 这里应该是virtual，是整体缩放，位置是会变化的，不需要trans
-            // 保持对象位置不变
-            const size = shape.size;
-            let layoutSize = new ShapeSize();
-            const frame = new ShapeFrame(0, 0, size.width * __decompose_scale.x, size.height * __decompose_scale.y);
-
-            if (this.parent && (this.parent as any).autoLayout) {
-                transform.translateX = this.m_transform.translateX;
-                transform.translateY = this.m_transform.translateY;
-            }
-
-            layoutSize.width = frame.width
-            layoutSize.height = frame.height
-            this.updateLayoutArgs((transform), frame, (shape as PathShape).fixedRadius);
-            this.layoutChilds(this.frame, { x: frame.width / saveW, y: frame.height / saveH });
-        }
-        this.updateFrames();
-    }
-
-    protected updateLayoutProps(props: PropsType, needLayout: boolean) {
-        if (props.data.id !== this.m_data.id) throw new Error('id not match');
-        const dataChanged = objectId(props.data) !== objectId(this.m_data);
-        if (dataChanged) {
-            // data changed
-            this.setData(props.data);
-        }
-        // check
-        const diffScale = isDiffScale(props.scale, this.m_props.scale);
-        const diffLayoutSize = isDiffShapeSize(props.layoutSize, this.m_props.layoutSize)
-        const diffVars = isDiffVarsContainer(props.varsContainer, this.varsContainer);
-        if (!needLayout &&
-            !dataChanged &&
-            !diffScale &&
-            !diffVars &&
-            !diffLayoutSize) {
-            return false;
-        }
-        this.m_props = props
-        this.m_isVirtual = props.isVirtual
-        if (diffVars) {
-            this.m_ctx.removeDirty(this);
-            this.varsContainer = props.varsContainer;
-        }
-        return true;
+        return this.layoutProxy.updateFrames();
     }
 
     // 更新frame, vflip, hflip, rotate, fixedRadius, 及对应的cache数据，如path
     // 更新childs, 及向下更新数据变更了的child(在data change set)
     // 父级向下更新时带props, 自身更新不带
     layout(props?: PropsType) {
-        // todo props没更新时是否要update
-        // 在frame、flip、rotate修改时需要update
-        const needLayout = this.m_ctx.removeReLayout(this); // remove from changeset
-        if (props && !this.updateLayoutProps(props, needLayout)) return;
-
-        this.m_ctx.setDirty(this);
-        this._layout(this.m_props.layoutSize, this.m_props.scale);
-        this.m_ctx.addNotifyLayout(this);
+        this.layoutProxy.layout(props);
     }
 
     protected renderContents(): EL[] {

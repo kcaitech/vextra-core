@@ -89,13 +89,13 @@ export class TableView2 extends ShapeView {
         return undefined;
     }
 
-    protected _layout(
-        parentFrame: ShapeFrame | undefined,
-        scale: { x: number, y: number } | undefined,
-    ): void {
-        super._layout(parentFrame, scale);
-        this.updateChildren();
-    }
+    // protected _layout(
+    //     parentFrame: ShapeFrame | undefined,
+    //     scale: { x: number, y: number } | undefined,
+    // ): void {
+    //     super._layout(parentFrame, scale);
+    //     this.updateChildren();
+    // }
 
     _getCellAttr(rowIdx: number, colIdx: number): TableCellAttr | undefined {
         if (rowIdx < 0 || colIdx < 0 || rowIdx >= this.rowCount || colIdx >= this.colCount) {

@@ -24,6 +24,7 @@ import { Point2D } from "../data/typesdefine";
 import { ContactFrameProxy } from "./frame";
 import { ContactModifyEffect } from "./proxy/effects/contact";
 import { ContactLineViewCache } from "./proxy/cache/contact";
+import { ContactLayout } from "./proxy/layout/contact";
 
 export class ContactLineView extends PathShapeView {
     constructor(ctx: DViewCtx, props: PropsType) {
@@ -33,11 +34,7 @@ export class ContactLineView extends PathShapeView {
         this.frameProxy = new ContactFrameProxy(this);
         this.effect = new ContactModifyEffect(this);
         this.cache = new ContactLineViewCache(this);
-    }
-
-    layout(props?: PropsType) {
-        this.m_ctx.removeReLayout(this);
-        this.m_ctx.tails.add(this);
+        this.layoutProxy = new ContactLayout(this);
     }
 
     updateAtLast() {

@@ -141,7 +141,8 @@ export class DataView extends EventEL {
     get varsContainer() {
         return this.m_varsContainer;
     }
-    protected set varsContainer(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
+
+    set varsContainer(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
         if (this.m_varsContainer) {
             this.m_varsContainer.forEach((c) => c.unwatch(this._data_watcher));
         }

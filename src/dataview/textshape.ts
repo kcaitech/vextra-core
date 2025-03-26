@@ -13,16 +13,11 @@ import {
     TextLayout,
     ShapeSize,
     Text,
-    TextBehaviour,
     TextShape,
-    Transform,
     VariableType,
-    ShapeFrame,
     overrideTextText,
     SymbolShape,
     string2Text,
-    TextVerAlign,
-    TextHorAlign
 } from "../data";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
@@ -34,9 +29,16 @@ import {
 import { objectId } from "../basic/objectid";
 import { Path } from "@kcdesign/path";
 import { renderBorder } from "../render/SVG/effects";
-import { ArtboardView } from "./artboard";
+import { DViewCtx, PropsType } from "./viewctx";
+import { TextModifyEffect } from "./proxy/effects/text";
+import { TextLayoutMgr } from "./proxy/layout/text";
 
 export class TextShapeView extends ShapeView {
+    constructor(ctx: DViewCtx, props: PropsType) {
+        super(ctx, props);
+        this.effect = new TextModifyEffect(this);
+        this.layoutProxy = new TextLayoutMgr(this);
+    }
     __str: string | Text | undefined;
     __strText: Text | undefined;
 
@@ -193,20 +195,6 @@ export class TextShapeView extends ShapeView {
         this.__origin_frame.height = frame.height;
     }
 
-    updateLayoutArgs(trans: Transform, size: ShapeFrame, radius: number | undefined): void {
-        // if (this.isVirtualShape && isDiffShapeFrame(this.m_frame, frame)) {
-        //     this.updateSize(frame.width, frame.height);
-        // }
-        super.updateLayoutArgs(trans, size, radius);
-        // this.__origin_frame.x = frame.x;
-        // this.__origin_frame.y = frame.y;
-        this.__origin_frame.width = size.width;
-        this.__origin_frame.height = size.height;
-        // update frame by layout
-        this.getLayout(); // 要提前排版，不然frame不对，填充不对。也可以考虑先renderContents，再renderFills。
-        // this.updateFrameByLayout(size);
-    }
-
     // private updateFrameByLayout(origin: ShapeSize) {
     //     if (!this.isVirtualShape || !this.m_layout) return;
     //     const text = this.getText();
@@ -223,88 +211,5 @@ export class TextShapeView extends ShapeView {
     onDestroy(): void {
         super.onDestroy();
         if (this.__layoutToken && this.__preText) this.__preText.dropLayout(this.__layoutToken, this.id);
-    }
-
-    protected _layout(parentFrame: ShapeSize | undefined, scale: { x: number; y: number; } | undefined): void {
-        const shape = this.data;
-        const transform = shape.transform.clone();
-        if (this.parent && (this.parent as ArtboardView).autoLayout) {
-            transform.translateX = this.m_transform.translateX;
-            transform.translateY = this.m_transform.translateY;
-        }
-        if (!this.isVirtualShape && this.getText() === this.data.text) {
-            this.updateLayoutArgs(transform, this.data.frame, undefined)
-            this.updateFrames();
-            return
-        }
-
-        function fixTransform(offsetX: number, offsetY: number, transform: Transform, s: ShapeView) {
-            const targetXY = transform.computeCoord(offsetX, offsetY)
-            const dx = targetXY.x - transform.translateX;
-            const dy = targetXY.y - transform.translateY;
-            if (dx || dy) {
-                transform = transform.clone().trans(dx, dy)
-            }
-            if (s.parent && (s.parent as ArtboardView).autoLayout) {
-                transform.translateX = s.m_transform.translateX;
-                transform.translateY = s.m_transform.translateY;
-            }
-            return transform;
-        }
-        const size = this.data.size
-        const frame = this.data.frame;
-        // 根据排版结果更新frame
-        const text = this.getText();
-        const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
-        switch (textBehaviour) {
-            case TextBehaviour.Fixed: {
-                const layout = this.getLayout();
-                const fontsize = text.attr?.fontSize ?? Text.DefaultFontSize;
-                const targetHeight = Math.ceil(Math.max(fontsize, layout.contentHeight));
-                frame.height = targetHeight
-                const verAlign = text.attr?.verAlign ?? TextVerAlign.Top;
-
-                if (verAlign === TextVerAlign.Middle) {
-                    this.updateLayoutArgs(fixTransform(0, (size.height - targetHeight) / 2, this.data.transform, this), frame, undefined);
-                } else if (verAlign === TextVerAlign.Bottom) {
-                    this.updateLayoutArgs(fixTransform(0, (size.height - targetHeight), this.data.transform, this), frame, undefined);
-                }
-                else {
-                    this.updateLayoutArgs(transform, frame, undefined);
-                }
-                break;
-            }
-            case TextBehaviour.Flexible: {
-                const layout = this.getLayout();
-                const targetWidth = Math.ceil(layout.contentWidth);
-                const targetHeight = Math.ceil(layout.contentHeight);
-                frame.width = targetWidth
-                frame.height = targetHeight
-                const verAlign = text.attr?.verAlign ?? TextVerAlign.Top;
-                let transform = this.data.transform;
-                if (verAlign === TextVerAlign.Middle) {
-                    transform = fixTransform(0, (size.height - targetHeight) / 2, transform, this);
-                } else if (verAlign === TextVerAlign.Bottom) {
-                    transform = fixTransform(0, (size.height - targetHeight), transform, this);
-                }
-                for (let i = 0, pc = text.paras.length; i < pc; i++) {
-                    const para = text.paras[i];
-                    const horAlign = para.attr?.alignment ?? TextHorAlign.Left;
-                    if (targetWidth === Math.ceil(layout.paras[i].paraWidth)) {
-                        if (horAlign === TextHorAlign.Centered) {
-                            transform = fixTransform((size.width - targetWidth) / 2, 0, transform, this);
-                        } else if (horAlign === TextHorAlign.Right) {
-                            transform = fixTransform(size.width - targetWidth, 0, transform, this);
-                        }
-                    }
-                }
-                this.updateLayoutArgs(transform, frame, undefined);
-                break;
-            }
-            default:
-                this.updateLayoutArgs(transform, frame, undefined);
-                break;
-        }
-        this.updateFrames();
     }
 }

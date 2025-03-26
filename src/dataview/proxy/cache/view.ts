@@ -23,7 +23,7 @@ export class ViewCache {
         this[key] = undefined;
     }
 
-    clearCacheByKey(keys: string[]) {
+    clearCacheByKeys(keys: string[]) {
         keys.forEach((key: string) => this.__clearCacheByKey(key as any));
     }
 

@@ -54,7 +54,7 @@ export class ViewModifyEffect {
             const target = this.cacheMap[id];
             target && target.forEach(t => task.add(t));
         });
-        this.view.cache.clearCacheByKey(Array.from(task));
+        this.view.cache.clearCacheByKeys(Array.from(task));
     }
 
     emit(taskIds: string[]) {

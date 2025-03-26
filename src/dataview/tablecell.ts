@@ -56,45 +56,45 @@ export class TableCellView extends ShapeView {
         return this.m_index;
     }
 
-    layout(props?: PropsType & { frame: ShapeFrame, index: { row: number, col: number } }): void {
-
-        this.m_ctx.removeReLayout(this);
-
-        if (!props) return;
-
-        if (props.data.id !== this.m_data.id) throw new Error('id not match');
-        const dataChanged = objectId(props.data) !== objectId(this.m_data);
-        if (dataChanged) {
-            // data changed
-            this.setData(props.data);
-        }
-
-        const frame = props.frame;
-        if (this.m_transform.m02 !== frame.x || this.m_transform.m12 !== frame.y || this.frame.width !== frame.width || this.frame.height !== frame.height) {
-            // this.updateLayoutArgs(frame, undefined, undefined, undefined, undefined);
-            this.m_transform.m02 = frame.x;
-            this.m_transform.m12 = frame.y;
-            // this.m_frame.x = frame.x;
-            // this.m_frame.y = frame.y;
-            this.frame.width = frame.width;
-            this.frame.height = frame.height;
-            this.m_textpath = undefined;
-            this.m_layout = undefined; // todo
-            this.m_path = undefined;
-            this.m_pathstr = undefined;
-            // if (!this.m_isVirtual) {
-            //     const shape = this.m_data as TableCell;
-            //     shape.text?.updateSize(frame.width, frame.height);
-            // }
-            this.m_ctx.setDirty(this);
-        }
-
-        const index = props.index;
-        if (index.col !== this.m_index.col || index.row !== this.m_index.row) {
-            this.m_index = index;
-            // this.m_ctx.setDirty(this);
-        }
-    }
+    // layout(props?: PropsType & { frame: ShapeFrame, index: { row: number, col: number } }): void {
+    //
+    //     this.m_ctx.removeReLayout(this);
+    //
+    //     if (!props) return;
+    //
+    //     if (props.data.id !== this.m_data.id) throw new Error('id not match');
+    //     const dataChanged = objectId(props.data) !== objectId(this.m_data);
+    //     if (dataChanged) {
+    //         // data changed
+    //         this.setData(props.data);
+    //     }
+    //
+    //     const frame = props.frame;
+    //     if (this.m_transform.m02 !== frame.x || this.m_transform.m12 !== frame.y || this.frame.width !== frame.width || this.frame.height !== frame.height) {
+    //         // this.updateLayoutArgs(frame, undefined, undefined, undefined, undefined);
+    //         this.m_transform.m02 = frame.x;
+    //         this.m_transform.m12 = frame.y;
+    //         // this.m_frame.x = frame.x;
+    //         // this.m_frame.y = frame.y;
+    //         this.frame.width = frame.width;
+    //         this.frame.height = frame.height;
+    //         this.m_textpath = undefined;
+    //         this.m_layout = undefined; // todo
+    //         this.m_path = undefined;
+    //         this.m_pathstr = undefined;
+    //         // if (!this.m_isVirtual) {
+    //         //     const shape = this.m_data as TableCell;
+    //         //     shape.text?.updateSize(frame.width, frame.height);
+    //         // }
+    //         this.m_ctx.setDirty(this);
+    //     }
+    //
+    //     const index = props.index;
+    //     if (index.col !== this.m_index.col || index.row !== this.m_index.row) {
+    //         this.m_index = index;
+    //         // this.m_ctx.setDirty(this);
+    //     }
+    // }
 
     getText(): Text {
         // const v = this._findOV(OverrideType.Text, VariableType.Text);

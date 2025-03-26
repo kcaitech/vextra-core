@@ -44,6 +44,6 @@ export class TextModifyEffect extends ViewModifyEffect {
             target && target.forEach(t => task.add(t));
         });
         task.add('m_textpath');
-        this.view.cache.clearCacheByKey(Array.from(task));
+        this.view.cache.clearCacheByKeys(Array.from(task));
     }
 }

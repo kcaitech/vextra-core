@@ -13,6 +13,7 @@ import { PathSegment } from "../data/typesdefine";
 import { DViewCtx, PropsType } from "./viewctx";
 import { PathShapeViewModifyEffect } from "./proxy/effects/path";
 import { PathShapeViewCache } from "./proxy/cache/path";
+import { PathLayout } from "./proxy/layout/path";
 
 export class PathShapeView extends ShapeView {
     m_pathsegs?: PathSegment[];
@@ -21,13 +22,7 @@ export class PathShapeView extends ShapeView {
         super(ctx, props);
         this.cache = new PathShapeViewCache(this);
         this.effect = new PathShapeViewModifyEffect(this);
-    }
-    protected _layout(
-        parentFrame: ShapeFrame | undefined,
-        scale: { x: number, y: number } | undefined,
-    ): void {
-        this.m_pathsegs = undefined;
-        super._layout(parentFrame, scale);
+        this.layoutProxy = new PathLayout(this);
     }
 
     render(): number {
@@ -35,7 +30,7 @@ export class PathShapeView extends ShapeView {
     }
 
     get segments() {
-        return this.m_pathsegs || this.data.pathsegs;
+        return this.m_pathsegs ?? this.data.pathsegs;
     }
 
     get data(): PathShape {

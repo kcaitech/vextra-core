@@ -13,17 +13,15 @@ import {
     AutoLayout,
     CornerRadius,
     Page,
-    ShapeFrame,
     Transform,
     Artboard,
-    ShapeSize,
     OverrideType,
     VariableType, SideType
 } from "../data";
-import { updateAutoLayout } from "../editor";
 import { ArtboardFrameProxy, FrameProxy } from "./frame";
 import { DViewCtx, PropsType } from "./viewctx";
 import { ArtboardViewCache } from "./proxy/cache/artboard";
+import { ArtboardLayout } from "./proxy/layout/artboard";
 
 export class ArtboardView extends GroupShapeView {
     m_inner_transform: Transform | undefined;
@@ -34,6 +32,7 @@ export class ArtboardView extends GroupShapeView {
         super(ctx, props);
         this.frameProxy = new ArtboardFrameProxy(this);
         this.cache = new ArtboardViewCache(this);
+        this.layoutProxy = new ArtboardLayout(this);
     }
     get innerTransform(): Transform | undefined {
         return this.m_inner_transform;
@@ -68,40 +67,6 @@ export class ArtboardView extends GroupShapeView {
     get autoLayout(): AutoLayout | undefined {
         const v = this._findOV(OverrideType.AutoLayout, VariableType.AutoLayout);
         return v ? v.value : this.data.autoLayout;
-    }
-
-    protected _layout(parentFrame: ShapeSize | undefined, scale: { x: number; y: number; } | undefined): void {
-        const autoLayout = this.autoLayout;
-        if (!autoLayout) {
-            super._layout(parentFrame, scale);
-            return
-        }
-        super._layout(parentFrame, scale);
-        const childs = this.childs.filter(c => c.isVisible);
-        const frame = new ShapeFrame(this.frame.x, this.frame.y, this.frame.width, this.frame.height);
-        if (childs.length) this._autoLayout(autoLayout, frame);
-    }
-
-    _autoLayout(autoLayout: AutoLayout, layoutSize: ShapeSize) {
-        const childs = this.childs.filter(c => c.isVisible);
-        const layout = updateAutoLayout(childs, autoLayout, layoutSize);
-        let hidden = 0;
-        for (let i = 0, len = this.childs.length; i < len; i++) {
-            const cc = this.childs[i];
-            const newTransform = cc.transform.clone();
-            const index = Math.min(i - hidden, layout.length - 1);
-            newTransform.translateX = layout[index].x;
-            newTransform.translateY = layout[index].y;
-            if (!cc.isVisible) {
-                hidden += 1;
-            }
-            cc.m_ctx.setDirty(cc);
-            cc.updateLayoutArgs(newTransform, cc.frame, cc.fixedRadius);
-            cc.updateFrames();
-        }
-        const selfframe = new ShapeFrame(0, 0, layoutSize.width, layoutSize.height);
-        this.updateLayoutArgs(this.transform, selfframe, this.fixedRadius);
-        this.updateFrames();
     }
 
     render(): number {
