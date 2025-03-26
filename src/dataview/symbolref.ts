@@ -27,7 +27,7 @@ import { findOverrideAll } from "../data/utils";
 import { isEqual } from "../basic/number_utils";
 import { updateAutoLayout } from "../editor";
 import { ArtboardView } from "./artboard";
-import { RefViewCache } from "./proxy/cache/cacheProxy";
+import { RefViewCache } from "./proxy/cache/ref";
 
 // 播放页组件状态切换会话存储refId的key值；
 export const sessionRefIdKey = 'ref-id-cf76c6c6-beed-4c33-ae71-134ee876b990';

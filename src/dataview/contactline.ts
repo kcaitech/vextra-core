@@ -23,7 +23,7 @@ import { v4 } from "uuid";
 import { Point2D } from "../data/typesdefine";
 import { ContactFrameProxy } from "./frame";
 import { ContactModifyEffect } from "./proxy/effects/contact";
-import { ContactLineViewCache } from "./proxy/cache/cacheProxy";
+import { ContactLineViewCache } from "./proxy/cache/contact";
 
 export class ContactLineView extends PathShapeView {
     constructor(ctx: DViewCtx, props: PropsType) {

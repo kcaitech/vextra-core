@@ -11,8 +11,8 @@ import { OvalShape, PathShape, ShapeFrame, ShapeType } from "../data";
 import { ShapeView } from "./shape";
 import { PathSegment } from "../data/typesdefine";
 import { DViewCtx, PropsType } from "./viewctx";
-import { PathShapeViewCache } from "./proxy/cache/cacheProxy";
 import { PathShapeViewModifyEffect } from "./proxy/effects/path";
+import { PathShapeViewCache } from "./proxy/cache/path";
 
 export class PathShapeView extends ShapeView {
     m_pathsegs?: PathSegment[];

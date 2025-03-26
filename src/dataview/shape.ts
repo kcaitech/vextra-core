@@ -49,8 +49,8 @@ import { findOverrideAll } from "../data/utils";
 import { Path } from "@kcdesign/path";
 import { isEqual } from "../basic/number_utils";
 import { FrameProxy } from "./frame";
-import { ViewCache } from "./proxy/cache/cacheProxy";
 import { ViewModifyEffect } from "./proxy/effects/view";
+import { ViewCache } from "./proxy/cache/view";
 
 export function isDiffShapeSize(lsh: ShapeSize | undefined, rsh: ShapeSize | undefined) {
     if (lsh === rsh) { // both undefined
@@ -447,7 +447,9 @@ export class ShapeView extends DataView {
     boundingBox(): ShapeFrame {
         return this.frameProxy.boundingBox();
     }
+
     maskMap: Map<string, Shape> = new Map;
+
     updateMaskMap() {
     }
 

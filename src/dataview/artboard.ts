@@ -23,7 +23,7 @@ import {
 import { updateAutoLayout } from "../editor";
 import { ArtboardFrameProxy, FrameProxy } from "./frame";
 import { DViewCtx, PropsType } from "./viewctx";
-import { ArtboardViewCache } from "./proxy/cache/cacheProxy";
+import { ArtboardViewCache } from "./proxy/cache/artboard";
 
 export class ArtboardView extends GroupShapeView {
     m_inner_transform: Transform | undefined;

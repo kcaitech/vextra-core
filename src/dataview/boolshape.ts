@@ -20,7 +20,7 @@ import { PathShapeView } from "./pathshape";
 import { stroke } from "../render/stroke";
 import { DViewCtx, PropsType } from "./viewctx";
 import { BoolModifyEffect } from "./proxy/effects/bool";
-import { BoolShapeViewCache } from "./proxy/cache/cacheProxy";
+import { BoolShapeViewCache } from "./proxy/cache/bool";
 
 function opPath(bop: BoolOp, path0: Path, path1: Path, isIntersect: boolean): Path {
     switch (bop) {
