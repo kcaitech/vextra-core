@@ -24,6 +24,5 @@ export class ArtboardViewCache extends ViewCache {
             this.unwatchRadiusMask();
         }
         return _radius
-
     }
 }

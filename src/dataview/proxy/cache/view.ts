@@ -16,6 +16,7 @@ export class ViewCache {
     protected m_fills: BasicArray<Fill> | undefined;
     protected m_border: Border | undefined;
     protected m_path: Path | undefined;
+    protected m_pathstr: string | undefined;
 
     constructor(protected view: ShapeView) {
     }
@@ -233,7 +234,9 @@ export class ViewCache {
     }
 
     get pathStr() {
-        return '';
+        if (this.m_pathstr) return this.m_pathstr;
+        this.m_pathstr = this.path.toString();
+        return this.m_pathstr;
     }
 
     get path() {

@@ -10,12 +10,11 @@ export class GroupLayout extends ViewLayout {
         super(view);
     }
 
-     _layout(
+    _layout(
         parentFrame: ShapeSize | undefined,
         scale: { x: number, y: number } | undefined,
     ): void {
         super._layout(parentFrame, scale);
-
         const view = this.view;
         if (view.m_need_updatechilds) {
             view.notify("childs"); // notify childs change
@@ -25,14 +24,15 @@ export class GroupLayout extends ViewLayout {
 
     protected layoutChild(
         parentFrame: ShapeSize,
-        child: Shape, idx: number,
+        child: Shape,
+        idx: number,
         scale: { x: number, y: number } | undefined,
         varsContainer: VarsContainer | undefined,
         resue: Map<string, DataView>,
         rView: RootView | undefined,
     ) {
-        const view = this.view;
         let cdom: DataView | undefined = resue.get(child.id);
+        const view = this.view;
         const props = { data: child, scale, varsContainer, isVirtual: view.m_isVirtual, layoutSize: parentFrame };
         if (cdom) {
             view.moveChild(cdom, idx);

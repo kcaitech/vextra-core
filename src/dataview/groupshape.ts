@@ -13,6 +13,7 @@ import { ShapeView } from "./shape";
 import { DViewCtx, PropsType } from "./viewctx";
 import { GroupFrameProxy } from "./frame";
 import { GroupLayout } from "./proxy/layout/group";
+import { GroupModifyEffect } from "./proxy/effects/group";
 
 export class GroupShapeView extends ShapeView {
 
@@ -28,6 +29,7 @@ export class GroupShapeView extends ShapeView {
         this.updateMaskMap();
         this.frameProxy = new GroupFrameProxy(this);
         this.layoutProxy = new GroupLayout(this);
+        this.effect = new GroupModifyEffect(this);
     }
 
     protected _bubblewatcher(...args: any[]) {

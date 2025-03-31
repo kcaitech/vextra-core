@@ -30,7 +30,7 @@ export class RefLayout extends ViewLayout {
                 hidden += 1;
             }
             cc.m_ctx.setDirty(cc);
-            cc.updateLayoutArgs(newTransform, cc.frame, cc.fixedRadius);
+            cc.updateLayoutArgs(newTransform, cc.frame);
             cc.updateFrames();
         }
         const selfframe = new ShapeFrame(0, 0, layoutSize.width, layoutSize.height);

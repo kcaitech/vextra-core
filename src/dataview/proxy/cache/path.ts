@@ -65,11 +65,7 @@ export class PathShapeViewCache extends ViewCache {
         return path;
     }
 
-    get pathStr() {
-        if (this.m_pathstr) return this.m_pathstr;
-        this.m_pathstr = this.path.toString();
-        return this.m_pathstr;
-    }
+
 
     get path() {
         if (this.m_path) return this.m_path;

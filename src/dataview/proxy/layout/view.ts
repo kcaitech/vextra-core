@@ -100,7 +100,7 @@ export class ViewLayout {
             this.updateLayoutArgs((transform), new ShapeFrame(0, 0, targetWidth, targetHeight));
             this.layoutChilds(view.frame, { x: targetWidth / saveW, y: targetHeight / saveH });
         } else {
-            const transform = (shape.transform.clone());
+            const transform = shape.transform.clone();
             transform.scale(scaleX, scaleY);
             const __decompose_scale = transform.clearScaleSize();
             // 这里应该是virtual，是整体缩放，位置是会变化的，不需要trans
@@ -116,7 +116,7 @@ export class ViewLayout {
 
             layoutSize.width = frame.width
             layoutSize.height = frame.height
-            this.updateLayoutArgs((transform), frame);
+            this.updateLayoutArgs(transform, frame);
             this.layoutChilds(view.frame, { x: frame.width / saveW, y: frame.height / saveH });
         }
         this.updateFrames();

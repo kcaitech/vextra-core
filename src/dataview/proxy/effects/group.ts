@@ -1,4 +1,3 @@
-import { BoolShapeView } from "../../boolshape";
 import { ViewModifyEffect } from "./view";
 import { GroupShapeView } from "../../groupshape";
 import { ArtboardView } from "../../artboard";
@@ -26,7 +25,7 @@ export function updateMask(view: GroupShapeView) {
 }
 
 export class GroupModifyEffect extends ViewModifyEffect {
-    constructor(protected view: BoolShapeView) {
+    constructor(protected view: GroupShapeView) {
         super(view);
     }
 
