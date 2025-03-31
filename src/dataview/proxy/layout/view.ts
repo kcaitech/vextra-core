@@ -141,6 +141,9 @@ export class ViewLayout {
         return changed;
     }
 
+    // 更新frame, vflip, hflip, rotate, fixedRadius, 及对应的cache数据，如path
+    // 更新childs, 及向下更新数据变更了的child(在data change set)
+    // 父级向下更新时带props, 自身更新不带
     layout(props?: PropsType) {
         const view = this.view;
         const needLayout = view.m_ctx.removeReLayout(view); // remove from changeset

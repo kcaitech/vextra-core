@@ -20,6 +20,7 @@ import { objectId } from "../basic/objectid";
 import { findOverrideAll } from "../data/utils";
 import { RefViewCache } from "./proxy/cache/ref";
 import { RefLayout } from "./proxy/layout/ref";
+import { RefViewModifyEffect } from "./proxy/effects/ref";
 
 // 播放页组件状态切换会话存储refId的key值；
 export const sessionRefIdKey = 'ref-id-cf76c6c6-beed-4c33-ae71-134ee876b990';
@@ -34,6 +35,7 @@ export class SymbolRefView extends ShapeView {
 
         this.cache = new RefViewCache(this);
         this.layoutProxy = new RefLayout(this);
+        this.effect = new RefViewModifyEffect(this);
     }
 
     get uniformScale() {

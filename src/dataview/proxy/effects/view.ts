@@ -31,9 +31,9 @@ export class ViewModifyEffect {
         [key: string]: string[];
     } = {
         variables: ['m_fills', 'm_border'],
-        fills: ['m_fills',],
-        borders: ['m_border',],
-        fillsMask: ['m_fills',],
+        fills: ['m_fills'],
+        borders: ['m_border'],
+        fillsMask: ['m_fills'],
         bordersMask: ['m_border'],
     }
 

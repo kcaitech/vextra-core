@@ -9,6 +9,7 @@
  */
 
 import {
+    AutoLayout,
     BasicArray,
     Blur,
     Border,
@@ -48,10 +49,10 @@ import { float_accuracy } from "../basic/consts";
 import { findOverrideAll } from "../data/utils";
 import { Path } from "@kcdesign/path";
 import { isEqual } from "../basic/number_utils";
-import { FrameProxy } from "./frame";
 import { ViewModifyEffect } from "./proxy/effects/view";
 import { ViewCache } from "./proxy/cache/view";
 import { ViewLayout } from "./proxy/layout/view";
+import { FrameProxy } from "./proxy/frame/view";
 
 export function isDiffShapeSize(lsh: ShapeSize | undefined, rsh: ShapeSize | undefined) {
     if (lsh === rsh) { // both undefined
@@ -607,7 +608,6 @@ export class ShapeView extends DataView {
         return this.childs.indexOf(view)
     }
 
-    // =================== update ========================
     updateLayoutArgs(trans: Transform, size: ShapeFrame) {
         this.layoutProxy.updateLayoutArgs(trans, size);
     }
@@ -616,9 +616,6 @@ export class ShapeView extends DataView {
         return this.layoutProxy.updateFrames();
     }
 
-    // 更新frame, vflip, hflip, rotate, fixedRadius, 及对应的cache数据，如path
-    // 更新childs, 及向下更新数据变更了的child(在data change set)
-    // 父级向下更新时带props, 自身更新不带
     layout(props?: PropsType) {
         this.layoutProxy.layout(props);
     }
@@ -756,5 +753,9 @@ export class ShapeView extends DataView {
 
     get isCustomBorder() {
         return false;
+    }
+
+    get autoLayout(): AutoLayout | undefined {
+        return undefined;
     }
 }

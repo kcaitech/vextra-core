@@ -12,16 +12,16 @@ import { GroupShapeView } from "./groupshape";
 import {
     AutoLayout,
     CornerRadius,
-    Page,
     Transform,
     Artboard,
     OverrideType,
     VariableType, SideType
 } from "../data";
-import { ArtboardFrameProxy } from "./frame";
 import { DViewCtx, PropsType } from "./viewctx";
 import { ArtboardViewCache } from "./proxy/cache/artboard";
 import { ArtboardLayout } from "./proxy/layout/artboard";
+import { ArtboardModifyEffect } from "./proxy/effects/artboard";
+import { ArtboardFrameProxy } from "./proxy/frame/artboard";
 
 export class ArtboardView extends GroupShapeView {
     m_inner_transform: Transform | undefined;
@@ -31,6 +31,7 @@ export class ArtboardView extends GroupShapeView {
         super(ctx, props);
         this.frameProxy = new ArtboardFrameProxy(this);
         this.cache = new ArtboardViewCache(this);
+        this.effect = new ArtboardModifyEffect(this);
         this.layoutProxy = new ArtboardLayout(this);
     }
     get innerTransform(): Transform | undefined {
@@ -73,14 +74,14 @@ export class ArtboardView extends GroupShapeView {
     }
 
     get guides() {
-        return (this.m_data as Page).guides;
+        return this.data.guides;
     }
 
     get frameMaskDisabled() {
-        return (this.m_data as Artboard).frameMaskDisabled;
+        return this.data.frameMaskDisabled;
     }
 
     get isCustomBorder() {
-        return !(this.getBorder().sideSetting.sideType === SideType.Normal);
+        return this.getBorder().sideSetting.sideType !== SideType.Normal;
     }
 }

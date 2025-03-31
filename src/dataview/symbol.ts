@@ -16,12 +16,16 @@ import {
 import { DViewCtx, PropsType } from "./viewctx";
 import { SymbolViewCache } from "./proxy/cache/symbol";
 import { SymbolLayout } from "./proxy/layout/symbol";
+import { SymbolModifyEffect } from "./proxy/effects/symbol";
+import { SymbolFrameProxy } from "./proxy/frame/symbol";
 
 export class SymbolView extends GroupShapeView {
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
         this.cache = new SymbolViewCache(this);
         this.layoutProxy = new SymbolLayout(this);
+        this.frameProxy = new SymbolFrameProxy(this);
+        this.effect = new SymbolModifyEffect(this);
     }
     get data() {
         return this.m_data as SymbolShape;

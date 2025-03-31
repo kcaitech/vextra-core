@@ -7,7 +7,6 @@ import { ViewCache } from "./view";
 
 export class PathShapeViewCache extends ViewCache {
     // cache
-    protected m_pathstr: string | undefined;
     protected m_is_border_shape: boolean | undefined = undefined;
     protected m_border_path: Path | undefined;
     protected m_border_path_box: ShapeFrame | undefined = undefined;

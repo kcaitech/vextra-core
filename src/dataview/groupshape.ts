@@ -11,9 +11,9 @@
 import { GroupShape, Shape } from "../data";
 import { ShapeView } from "./shape";
 import { DViewCtx, PropsType } from "./viewctx";
-import { GroupFrameProxy } from "./frame";
 import { GroupLayout } from "./proxy/layout/group";
 import { GroupModifyEffect } from "./proxy/effects/group";
+import { GroupFrameProxy } from "./proxy/frame/group";
 
 export class GroupShapeView extends ShapeView {
 

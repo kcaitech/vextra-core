@@ -21,10 +21,10 @@ import { BasicArray } from "../data";
 import { PageView } from "./page";
 import { v4 } from "uuid";
 import { Point2D } from "../data/typesdefine";
-import { ContactFrameProxy } from "./frame";
 import { ContactModifyEffect } from "./proxy/effects/contact";
 import { ContactLineViewCache } from "./proxy/cache/contact";
 import { ContactLayout } from "./proxy/layout/contact";
+import { ContactFrameProxy } from "./proxy/frame/contact";
 
 export class ContactLineView extends PathShapeView {
     constructor(ctx: DViewCtx, props: PropsType) {
