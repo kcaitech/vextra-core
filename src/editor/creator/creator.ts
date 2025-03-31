@@ -80,7 +80,6 @@ import {
     ExportVisibleScaleType,
     SideType
 } from "../../data";
-import { Matrix } from "../../basic/matrix";
 import { ResizingConstraints2 } from "../../data";
 import { SymbolMgr } from "../../data/symbolmgr";
 import { newText } from "../../data/text/textutils";
