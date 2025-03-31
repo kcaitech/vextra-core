@@ -108,7 +108,6 @@ import { Path } from "@kcdesign/path";
 import { prepareVar } from "./symbol_utils";
 import { layoutShapesOrder2, layoutSpacing } from "./utils/auto_layout2";
 import { stroke } from "../render/stroke";
-import { FrameCpt } from "../dataview/frame";
 
 // 用于批量操作的单个操作类型
 export interface PositionAdjust { // 涉及属性：frame.x、frame.y
@@ -550,7 +549,6 @@ export class PageEditor {
             if (!shapes.length) return;
 
             const shape0 = shapes[0];
-            // const frame = FrameCpt.frame2Parent(shape0);
             const frame = shape0.frame;
 
             const replace = shapes.length === 1
