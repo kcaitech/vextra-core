@@ -1,6 +1,8 @@
 import { Border, BorderPosition, Fill, FillType, Shadow, ShadowPosition } from "../../../data";
 import { ArtboardView, BoolShapeView, ShapeView, SymbolRefView, SymbolView, TextShapeView } from "../../../dataview";
 import { CanvasRenderer, Props } from "../painters/renderer";
+import { Path } from "@kcdesign/path";
+import { stroke } from "../../stroke";
 
 export function render(renderer: CanvasRenderer, view: ShapeView, props: Props, ctx: CanvasRenderingContext2D, shadows: Shadow[], border: Border, fills: Fill[]): Function | undefined {
     shadows = shadows.filter(i => i.isEnabled);
@@ -46,12 +48,10 @@ function blurOutlineShadow(view: ShapeView, props: Props, ctx: CanvasRenderingCo
     let pathStr = view instanceof TextShapeView ? view.getTextPath().toString() :  view.getPath().toString();
     const border = view.getBorder();
     if (border && border.position !== BorderPosition.Inner) {
-        // const gPath = gPal.makePalPath(pathStr);
-        // const borderGPath = gPal.makePalPath(border2path(view, border).toString());
-        // gPath.union(borderGPath);
-        // pathStr = gPath.toSVGString();
-        // gPath.delete();
-        // borderGPath.delete();
+        const gPath = new Path(pathStr);
+        const borderGPath = stroke(view);
+        gPath.union(borderGPath);
+        pathStr = gPath.toSVGString();
     }
     const path2D = new Path2D(pathStr);
     ctx.save();

@@ -212,7 +212,7 @@ export { BorderModifier } from "./editor/style/border";
 export { RadiusModifier } from "./editor/style/radius";
 export { ShadowsModifier } from "./editor/style/shadows";
 export { BlurModifier } from "./editor/style/blur";
-
+export { ScreenPrinter } from "./printscreen";
 
 export async function initModule(textMeasure: MeasureFun, text2path: TextPathFun) {
     gPal.text.textMeasure = textMeasure

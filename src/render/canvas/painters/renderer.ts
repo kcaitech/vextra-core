@@ -1,4 +1,4 @@
-import { ArtboardView, ShapeView, TextShapeView } from "../../../dataview";
+import { ShapeView, TextShapeView } from "../../../dataview";
 import { IRenderer } from "../../basic";
 import { render as renderFills } from "../effects/fill";
 import { render as renderBorder } from "../effects/border";
@@ -26,15 +26,15 @@ export class CanvasRenderer extends IRenderer {
 
     // 清除上次渲染产生的缓存
     private __clear_cache() {
-        this.__path2D_cache = undefined;
+        this.__path_2D_cache = undefined;
         this.__props_cache = undefined;
         this.__flat_path_cache = undefined;
     }
 
-    private __path2D_cache: Path2D | undefined = undefined;
+    private __path_2D_cache: Path2D | undefined = undefined;
 
     private get path2D(): Path2D {
-        return this.__path2D_cache ?? (this.__path2D_cache = new Path2D());
+        return this.__path_2D_cache ?? (this.__path_2D_cache = new Path2D(this.view.getPath().toSVGString()));
     }
 
     private __props_cache: Props | undefined = undefined;
@@ -56,7 +56,7 @@ export class CanvasRenderer extends IRenderer {
 
     renderFills() {
         const fills = this.view.getFills();
-        renderFills(this.props, this.view.canvasRenderingContext2D, fills, this.path2D, this.view.size);
+        renderFills(this.props, this.view.canvasRenderingContext2D, fills, this.path2D, this.view.frame);
     }
 
     renderBorder() {
@@ -114,7 +114,7 @@ export class CanvasRenderer extends IRenderer {
     }
 
     clip(): Function | null {
-        if ((this.view as ArtboardView).frameMaskDisabled) return null;
+        if (this.view.frameMaskDisabled) return null;
         this.ctx.save();
         const ot = this.ctx.getTransform();
         this.ctx.transform(...this.props.transform);

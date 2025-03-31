@@ -40,10 +40,3 @@ painter[FillType.Gradient] = function (props: Props, ctx: CanvasRenderingContext
     }
     ctx.restore();
 }
-
-painter[FillType.Pattern] = function (props: Props, ctx: CanvasRenderingContext2D, fill: Fill, path2D: Path2D, frame: ShapeSize, outerFrame: ShapeFrame) {
-    ctx.save();
-    ctx.transform(...props.transform);
-    ctx.fill(path2D);
-    ctx.restore();
-}

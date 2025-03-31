@@ -108,7 +108,7 @@ export class DViewCtx extends EventEmitter {
     static FRAME_TIME = 20; // 实际会有延迟
 
     gl: GraphicsLibrary;
-    m_canvas?: CanvasRenderingContext2D;
+    m_canvas?: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 
     comsMap: Map<ShapeType, ViewType> = new Map();
 

@@ -127,7 +127,7 @@ export class DataView extends EventEL {
     }
 
     get canvasRenderingContext2D(): CanvasRenderingContext2D {
-        return this.m_ctx.m_canvas!;
+        return this.m_ctx.m_canvas! as CanvasRenderingContext2D;
     }
 
     setData(data: Shape) {

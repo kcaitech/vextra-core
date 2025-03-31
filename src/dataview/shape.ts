@@ -758,4 +758,8 @@ export class ShapeView extends DataView {
     get autoLayout(): AutoLayout | undefined {
         return undefined;
     }
+
+    get frameMaskDisabled(): boolean | undefined {
+        return undefined;
+    }
 }
