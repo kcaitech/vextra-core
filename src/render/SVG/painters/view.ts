@@ -2,11 +2,104 @@ import { EL, elh, ShapeView } from "../../../dataview";
 import { IRenderer } from "../../basic";
 import { innerShadowId, renderBlur, renderBorder, renderFills, renderShadows } from "../effects";
 import { objectId } from "../../../basic/objectid";
-import { BlurType, ShapeType } from "../../../data";
+import { BlurType, ShapeType, Transform } from "../../../data";
+import { stroke } from "../../stroke";
 
 export class ViewSVGRenderer extends IRenderer {
     constructor(view: ShapeView) {
         super(view);
+    }
+
+    protected board(): EL[] {
+        const view = this.view;
+        const path = view.getPath().clone();
+        const border = view.getBorder();
+        const fill = view.getFills();
+        if (border.strokePaints.length) path.addPath(stroke(view));
+        return renderFills(elh, fill, view.frame, path.toSVGString());
+    }
+
+    protected m_mask_group: ShapeView[] | undefined;
+    protected m_mask_transform: Transform | undefined;
+
+    protected getMaskTransform() {
+        const view = this.view;
+        if (!view.mask) return;
+        const parent = view.parent;
+        if (!parent) return;
+        const __children = parent.childs;
+        let index = __children.findIndex(i => i.id === view.id);
+        if (index === -1) return;
+        const maskGroup: ShapeView[] = [view];
+        this.m_mask_group = maskGroup;
+        for (let i = index + 1; i < __children.length; i++) {
+            const cur = __children[i];
+            if (cur && !cur.mask) maskGroup.push(cur);
+            else break;
+        }
+        let x = Infinity;
+        let y = Infinity;
+
+        maskGroup.forEach(s => {
+            const box = s.boundingBox();
+            if (box.x < x) x = box.x;
+            if (box.y < y) y = box.y;
+        });
+
+        return this.m_mask_transform = new Transform(1, 0, x, 0, 1, y);
+    }
+
+    protected bleach(el: EL) {
+
+    }
+
+    protected renderMaskContents() {
+        const transform = this.m_mask_transform!.clone();
+        const group = this.m_mask_group || [];
+        if (group.length < 2) return [];
+        const inverse = transform.inverse;
+        const els: EL[] = [];
+        for (let i = 1; i < group.length; i++) {
+            const __s = group[i];
+            if (!__s.isVisible) continue;
+            const dom = __s.m_renderer.DOM!;
+            if (!(dom.elattr as any)['style']) {
+                (dom.elattr as any)['style'] = {};
+            }
+            (dom.elattr as any)['style']['transform'] = (__s.transform.clone().multi(inverse)).toString();
+            els.push(dom);
+        }
+
+        return els;
+    }
+
+    protected get transformStrFromMaskSpace() {
+        if (!this.m_mask_transform) return;
+        return this.view.transform
+            .clone()
+            .multi(this.m_mask_transform.inverse)
+            .toString();
+    }
+
+    maskGroupRender() {
+        const props = this.getProps();
+        const transform = this.getMaskTransform();
+        console.log(this.view.name, 'maskGroupRender', transform);
+
+        if (transform) {
+            Object.assign(props.style, { transform: transform.toString() });
+            const id = `mask-base-${objectId(this)}`;
+            const __body_transform = this.transformStrFromMaskSpace;
+            let content = this.board();
+            console.log('--content--', content);
+            const __body = elh("g", { style: { transform: __body_transform } }, content);
+            this.bleach(__body);
+            content = [__body];
+            const mask = elh('mask', { id }, content);
+            const rely = elh('g', { mask: `url(#${id})` }, this.renderMaskContents());
+            content = [mask, rely];
+            this.view.reset("g", props, content);
+        }
     }
 
     getProps(): { [key: string]: string } & { style: any } {
@@ -62,12 +155,17 @@ export class ViewSVGRenderer extends IRenderer {
         const masked = view.masked;
         if (masked) {
             view.reset("g");
-            masked.m_ctx.setDirty(masked);
+            masked.render();
             return ++this.m_render_version;
         }
 
         if (!view.isVisible) {
             view.reset("g");
+            return ++this.m_render_version;
+        }
+
+        if (view.mask) {
+            this.maskGroupRender();
             return ++this.m_render_version;
         }
 
