@@ -6,7 +6,7 @@ import {
     PathShapeView,
     ShapeView,
     SymbolRefView,
-    SymbolView,
+    SymbolView, TextShapeView,
 } from "../../../dataview";
 import { SVGRenderer } from "./renderer";
 import { objectId } from "../../../basic/objectid";
@@ -14,6 +14,7 @@ import { innerShadowId, renderBorder } from "../effects";
 import { BlurType, ScrollBehavior, ShapeType, SymbolShape, Transform } from "../../../data";
 import { render as clippathR } from "../effects/clippath";
 import { render as renderLineBorders } from "../effects/line_borders";
+import { renderTextLayout } from "../effects/text";
 
 export const painter: { [key: string]: (view: any, renderer: SVGRenderer) => number } = {};
 
@@ -398,6 +399,59 @@ painter[ShapeType.Symbol] = (view: SymbolView, renderer: SVGRenderer) => {
     if (blur.length) {
         if (view.blur!.type === BlurType.Gaussian) {
             children = [...blur, elh('g', {filter: `url(#${blurId})`}, children)];
+        } else {
+            const __props: any = {};
+            if (props.opacity) {
+                __props.opacity = props.opacity;
+                delete props.opacity;
+            }
+            if (props.style?.["mix-blend-mode"]) {
+                __props["mix-blend-mode"] = props.style["mix-blend-mode"];
+                delete props.style["mix-blend-mode"];
+            }
+            children = [...blur, elh('g', __props, children)];
+        }
+    }
+
+    view.reset("g", props, children);
+
+    return ++renderer.m_render_version;
+}
+
+painter[ShapeType.Text] = (view: TextShapeView, renderer: SVGRenderer) => {
+    if (!renderer.checkAndResetDirty()) return renderer.m_render_version;
+
+    if (!view.isVisible) {
+        view.reset("g");
+        return ++renderer.m_render_version;
+    }
+
+    const fills = renderer.renderFills();
+    const borders = renderer.renderBorder();
+    let childs = (() => {
+        const layout = view.getLayout();
+        return renderTextLayout(elh, layout, view.frame, view.blur);
+    })();
+
+    const filterId = `${objectId(view)}`;
+    const shadows = renderer.renderShadows(filterId);
+
+    let props = renderer.getProps();
+    let children = [...fills, ...childs, ...borders];
+
+    if (shadows.length) {
+        let filter: string = '';
+        const inner_url = innerShadowId(filterId, view.getShadows());
+        filter = `url(#pd_outer-${filterId}) `;
+        if (inner_url.length) filter += inner_url.join(' ');
+        children = [...shadows, elh("g", { filter }, children)];
+    }
+
+    const blurId = `blur_${objectId(view)}`;
+    const blur = renderer.renderBlur(blurId);
+    if (blur.length) {
+        if (view.blur!.type === BlurType.Gaussian) {
+            children = [...blur, elh('g', { filter: `url(#${blurId})` }, children)];
         } else {
             const __props: any = {};
             if (props.opacity) {

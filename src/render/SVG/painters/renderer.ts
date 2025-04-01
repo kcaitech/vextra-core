@@ -54,7 +54,7 @@ export class SVGRenderer extends IRenderer {
         return childs;
     }
 
-    render(type?: string): number {
-        return painter[type ?? "base"](this.view, this);
+    render(type = "base"): number {
+        return painter[type] ? painter[type](this.view, this) : painter["base"](this.view, this);
     }
 }
