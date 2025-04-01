@@ -1,6 +1,6 @@
 import { ShapeView, TextShapeView } from "../../../dataview";
 import { BlurType, Fill } from "../../../data";
-import { Props } from "../painters/renderer";
+import { Props } from "../painters/view";
 import { stroke } from "../../stroke";
 
 export function render(view: ShapeView, props: Props): Function | null {

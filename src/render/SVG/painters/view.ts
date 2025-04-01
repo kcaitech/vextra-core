@@ -1,9 +1,11 @@
 import { EL, elh, ShapeView } from "../../../dataview";
 import { IRenderer } from "../../basic";
-import { renderBlur, renderBorder, renderFills, renderShadows } from "../effects";
+import { innerShadowId, renderBlur, renderBorder, renderFills, renderShadows } from "../effects";
 import { painter } from "./h";
+import { objectId } from "../../../basic/objectid";
+import { BlurType, ShapeType } from "../../../data";
 
-export class SVGRenderer extends IRenderer {
+export class ViewSVGRenderer extends IRenderer {
     constructor(view: ShapeView) {
         super(view);
     }
@@ -63,5 +65,47 @@ export class SVGRenderer extends IRenderer {
         const version = this.render(type);
         this.renderContents = renderContents;
         return version;
+    }
+
+    get DOM(): EL {
+        const fills = this.renderFills();
+        const childs = this.renderContents();
+        const borders = this.renderBorder();
+
+        const filterId = `${objectId(this)}`;
+        const shadows = this.renderShadows(filterId);
+        const blurId = `blur_${objectId(this)}`;
+        const blur = this.renderBlur(blurId);
+
+        const contextSettings = this.view.style.contextSettings;
+        const props: any = {};
+        if (contextSettings) {
+            if (contextSettings.opacity !== undefined) {
+                props.opacity = contextSettings.opacity;
+            }
+            props.style = { 'mix-blend-mode': contextSettings.blenMode };
+        }
+
+        let children = [...fills, ...childs, ...borders];
+
+        if (shadows.length) {
+            let filter: string = '';
+            const inner_url = innerShadowId(filterId, this.view.getShadows());
+            if (this.view.type === ShapeType.Rectangle || this.view.type === ShapeType.Oval) {
+                if (inner_url.length) filter = `${inner_url.join(' ')}`
+            } else {
+                filter = `url(#pd_outer-${filterId}) `;
+                if (inner_url.length) filter += inner_url.join(' ');
+            }
+            children = [...shadows, elh("g", { filter }, children)];
+        }
+
+        if (blur.length) {
+            let filter: string = '';
+            if (this.view.blur?.type === BlurType.Gaussian) filter = `url(#${blurId})`;
+            children = [...blur, elh('g', { filter }, children)];
+        }
+
+        return elh("g", props, children);
     }
 }

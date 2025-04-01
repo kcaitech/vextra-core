@@ -8,7 +8,7 @@ import {
     SymbolRefView,
     SymbolView, TextShapeView,
 } from "../../../dataview";
-import { SVGRenderer } from "./renderer";
+import { ViewSVGRenderer } from "./view";
 import { objectId } from "../../../basic/objectid";
 import { innerShadowId, renderBorder } from "../effects";
 import { BlurType, ScrollBehavior, ShapeType, SymbolShape, Transform } from "../../../data";
@@ -16,9 +16,9 @@ import { render as clippathR } from "../effects/clippath";
 import { render as renderLineBorders } from "../effects/line_borders";
 import { renderTextLayout } from "../effects/text";
 
-export const painter: { [key: string]: (view: any, renderer: SVGRenderer) => number } = {};
+export const painter: { [key: string]: (view: any, renderer: ViewSVGRenderer) => number } = {};
 
-painter['base'] = (view: ShapeView, renderer: SVGRenderer) => {
+painter['base'] = (view: ShapeView, renderer: ViewSVGRenderer) => {
     if (!renderer.checkAndResetDirty()) return renderer.m_render_version;
 
     const masked = view.masked;
@@ -75,7 +75,7 @@ painter['base'] = (view: ShapeView, renderer: SVGRenderer) => {
     return ++renderer.m_render_version;
 }
 
-painter[ShapeType.BoolShape] = (view: ShapeView, renderer: SVGRenderer) => {
+painter[ShapeType.BoolShape] = (view: ShapeView, renderer: ViewSVGRenderer) => {
     if (!renderer.checkAndResetDirty()) return renderer.m_render_version;
 
     if (!view.isVisible) {
@@ -124,7 +124,7 @@ painter[ShapeType.BoolShape] = (view: ShapeView, renderer: SVGRenderer) => {
     return ++renderer.m_render_version;
 }
 
-painter[ShapeType.Path] = (view: PathShapeView, renderer: SVGRenderer) => {
+painter[ShapeType.Path] = (view: PathShapeView, renderer: ViewSVGRenderer) => {
     if (!renderer.checkAndResetDirty()) return renderer.m_render_version;
 
     const masked = view.masked;
@@ -188,7 +188,7 @@ painter[ShapeType.Path] = (view: PathShapeView, renderer: SVGRenderer) => {
     return ++renderer.m_render_version;
 }
 
-painter[ShapeType.Page] = (view: ShapeView, renderer: SVGRenderer) => {
+painter[ShapeType.Page] = (view: ShapeView, renderer: ViewSVGRenderer) => {
     const r = painter['base'](view, renderer);
     if (r) {
         view.eltag = "svg";
@@ -196,7 +196,7 @@ painter[ShapeType.Page] = (view: ShapeView, renderer: SVGRenderer) => {
     return r;
 }
 
-painter[ShapeType.Artboard] = (view: ArtboardView, renderer: SVGRenderer) => {
+painter[ShapeType.Artboard] = (view: ArtboardView, renderer: ViewSVGRenderer) => {
     if (!renderer.checkAndResetDirty()) return renderer.m_render_version;
 
     if (!view.isVisible) {
@@ -291,7 +291,7 @@ painter[ShapeType.Artboard] = (view: ArtboardView, renderer: SVGRenderer) => {
     return ++renderer.m_render_version;
 }
 
-painter[ShapeType.Contact] = (view: CutoutShapeView, renderer: SVGRenderer) => {
+painter[ShapeType.Contact] = (view: CutoutShapeView, renderer: ViewSVGRenderer) => {
     if (!renderer.checkAndResetDirty()) return renderer.m_render_version;
     if (!view.isVisible) {
         view.reset("g");
@@ -304,7 +304,7 @@ painter[ShapeType.Contact] = (view: CutoutShapeView, renderer: SVGRenderer) => {
     return ++renderer.m_render_version;
 }
 
-painter[ShapeType.SymbolRef] = (view: SymbolRefView, renderer: SVGRenderer) => {
+painter[ShapeType.SymbolRef] = (view: SymbolRefView, renderer: ViewSVGRenderer) => {
     if (!renderer.checkAndResetDirty()) return renderer.m_render_version;
 
     if (!view.isVisible) {
@@ -370,7 +370,7 @@ painter[ShapeType.SymbolRef] = (view: SymbolRefView, renderer: SVGRenderer) => {
     return ++renderer.m_render_version;
 }
 
-painter[ShapeType.Symbol] = (view: SymbolView, renderer: SVGRenderer) => {
+painter[ShapeType.Symbol] = (view: SymbolView, renderer: ViewSVGRenderer) => {
     if (!renderer.checkAndResetDirty()) return renderer.m_render_version;
 
     if (!view.isVisible) {
@@ -436,7 +436,7 @@ painter[ShapeType.Symbol] = (view: SymbolView, renderer: SVGRenderer) => {
     return ++renderer.m_render_version;
 }
 
-painter[ShapeType.Text] = (view: TextShapeView, renderer: SVGRenderer) => {
+painter[ShapeType.Text] = (view: TextShapeView, renderer: ViewSVGRenderer) => {
     if (!renderer.checkAndResetDirty()) return renderer.m_render_version;
 
     if (!view.isVisible) {

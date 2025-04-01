@@ -1,5 +1,5 @@
 import { Border, Fill, FillType, GradientType, ShapeFrame, ShapeSize } from "../../../data";
-import { Props } from "../painters/renderer";
+import { Props } from "../painters/view";
 import { ShapeView } from "../../../dataview";
 import { render as renderGradient } from "./gradient";
 import { stroke } from "../../stroke";

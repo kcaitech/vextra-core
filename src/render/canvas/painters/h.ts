@@ -1,10 +1,10 @@
-import { CanvasRenderer } from "./renderer";
+import { ViewCanvasRenderer } from "./view";
 import { ArtboardView, PageView, ShapeView, SymbolRefView } from "../../../dataview";
 import { ShapeType } from "../../../data";
 
-export const painter: { [key: string]: (view: any, renderer: CanvasRenderer) => number } = {};
+export const painter: { [key: string]: (view: any, renderer: ViewCanvasRenderer) => number } = {};
 
-painter['base'] = (view: ShapeView, renderer: CanvasRenderer) => {
+painter['base'] = (view: ShapeView, renderer: ViewCanvasRenderer) => {
     const ctx = view.canvasRenderingContext2D;
     ctx.save();
     if (renderer.props.opacity) ctx.globalAlpha = renderer.props.opacity;
@@ -39,7 +39,7 @@ painter[ShapeType.BoolShape] = (view: ShapeView, renderer) => {
     return ++renderer.m_render_version;
 }
 
-painter[ShapeType.Page] = (view: PageView, renderer: CanvasRenderer) => {
+painter[ShapeType.Page] = (view: PageView, renderer: ViewCanvasRenderer) => {
     const s = Date.now();
     const dpr = view.m_ctx.dpr;
     renderer.ctx.save();
@@ -52,7 +52,7 @@ painter[ShapeType.Page] = (view: PageView, renderer: CanvasRenderer) => {
     return ver;
 }
 
-painter[ShapeType.Artboard] = (view: ArtboardView, renderer: CanvasRenderer) => {
+painter[ShapeType.Artboard] = (view: ArtboardView, renderer: ViewCanvasRenderer) => {
     const ctx = view.canvasRenderingContext2D;
     ctx.save();
     if (renderer.props.opacity) ctx.globalAlpha = renderer.props.opacity;
@@ -77,7 +77,7 @@ painter[ShapeType.Artboard] = (view: ArtboardView, renderer: CanvasRenderer) => 
     return ++renderer.m_render_version;
 }
 
-painter[ShapeType.Contact] = (view: ArtboardView, renderer: CanvasRenderer) => {
+painter[ShapeType.Contact] = (view: ArtboardView, renderer: ViewCanvasRenderer) => {
     const ctx = view.canvasRenderingContext2D;
     ctx.save();
     if (renderer.props.opacity) ctx.globalAlpha = renderer.props.opacity;
@@ -91,7 +91,7 @@ painter[ShapeType.Contact] = (view: ArtboardView, renderer: CanvasRenderer) => {
 
 painter[ShapeType.Symbol] = painter[ShapeType.Artboard];
 
-painter[ShapeType.SymbolRef] = (view: SymbolRefView, renderer: CanvasRenderer) => {
+painter[ShapeType.SymbolRef] = (view: SymbolRefView, renderer: ViewCanvasRenderer) => {
     const ctx = view.canvasRenderingContext2D;
     ctx.save();
     if (renderer.props.opacity) ctx.globalAlpha = renderer.props.opacity;

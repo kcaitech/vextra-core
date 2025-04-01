@@ -4,7 +4,7 @@ import { DefaultColor } from "../../basic";
 import { Color, FillType, Gradient, UnderlineType, StrikethroughType, GradientType } from '../../../data/classes';
 import { GraphArray, TextLayout } from "../../../data/text/textlayout";
 import { render as renderGradient } from "./gradient";
-import { Props } from "../painters/renderer";
+import { Props } from "../painters/view";
 import { TextShapeView } from "src/dataview";
 
 interface DecorateRange {

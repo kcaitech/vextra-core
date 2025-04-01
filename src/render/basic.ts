@@ -9,7 +9,7 @@
  */
 
 import { Color } from "../data";
-import { ShapeView } from "../dataview";
+import { EL, ShapeView } from "../dataview";
 export { findOverrideAndVar } from "../data/utils";
 
 export const DefaultColor = Color.DefaultColor;
@@ -52,5 +52,9 @@ export class IRenderer {
     }
     asyncRender(type?: string) {
         return  0;
+    }
+
+    get DOM() : EL | undefined {
+        return undefined;
     }
 }

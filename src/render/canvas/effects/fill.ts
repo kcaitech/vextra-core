@@ -1,5 +1,5 @@
 import { Fill, FillType, Gradient, GradientType, ShapeSize } from "../../../data";
-import { Props } from "../painters/renderer";
+import { Props } from "../painters/view";
 import { render as renderGradient } from "./gradient";
 import { patternRender } from "./pattern";
 

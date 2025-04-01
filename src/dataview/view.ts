@@ -14,8 +14,8 @@ import { getShapeViewId, stringh } from "./basic";
 import { EL } from "./el";
 import { objectId } from "../basic/objectid";
 import { IRenderer } from "../render/basic";
-import { SVGRenderer } from "../render/SVG/painters/renderer";
-import { CanvasRenderer } from "../render/canvas/painters/renderer";
+import { SVGConstructorMap } from "../render/SVG/painters/map";
+import { CanvasConstructorMap } from "../render/canvas/painters/map";
 
 class EventEL extends EL {
     private _events: { [key: string]: Function[] } = {};
@@ -120,9 +120,15 @@ export class DataView extends EventEL {
     rendererBuilder(): IRenderer {
         const view = this as unknown as any;
         switch (this.m_ctx.gl) {
-            case "SVG": return new SVGRenderer(view);
-            case "Canvas": return new CanvasRenderer(view);
-            default: return new SVGRenderer(view)
+            case "SVG":
+                const SVGRendererConstructor = SVGConstructorMap.get(view.type)!;
+                return new SVGRendererConstructor(view);
+            case "Canvas":
+                const CanvasRendererConstructor = CanvasConstructorMap.get(view.type)!;
+                return new CanvasRendererConstructor(view);
+            default:
+                const DefaultCon = SVGConstructorMap.get(view.type)!;
+                return new DefaultCon(view);
         }
     }
 

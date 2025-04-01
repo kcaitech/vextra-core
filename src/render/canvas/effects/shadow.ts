@@ -1,10 +1,10 @@
 import { Border, BorderPosition, Fill, FillType, Shadow, ShadowPosition } from "../../../data";
 import { ArtboardView, BoolShapeView, ShapeView, SymbolRefView, SymbolView, TextShapeView } from "../../../dataview";
-import { CanvasRenderer, Props } from "../painters/renderer";
+import { ViewCanvasRenderer, Props } from "../painters/view";
 import { Path } from "@kcdesign/path";
 import { stroke } from "../../stroke";
 
-export function render(renderer: CanvasRenderer, view: ShapeView, props: Props, ctx: CanvasRenderingContext2D, shadows: Shadow[], border: Border, fills: Fill[]): Function | undefined {
+export function render(renderer: ViewCanvasRenderer, view: ShapeView, props: Props, ctx: CanvasRenderingContext2D, shadows: Shadow[], border: Border, fills: Fill[]): Function | undefined {
     shadows = shadows.filter(i => i.isEnabled);
     if (!shadows.length) return;
 
@@ -68,7 +68,7 @@ function blurOutlineShadow(view: ShapeView, props: Props, ctx: CanvasRenderingCo
     ctx.restore();
 }
 
-function complexBlurOutlineShadow(renderer: CanvasRenderer, props: Props, ctx: CanvasRenderingContext2D, outerShadows: Shadow[]) {
+function complexBlurOutlineShadow(renderer: ViewCanvasRenderer, props: Props, ctx: CanvasRenderingContext2D, outerShadows: Shadow[]) {
     const path2D = renderer.flat;
     ctx.save();
     ctx.transform(...props.transform);

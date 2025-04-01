@@ -5,7 +5,6 @@ import { render as renderBorder } from "../effects/border";
 import { render as renderShadows } from "../effects/shadow";
 import { render as renderBlur } from "../effects/blur"
 
-import { painter } from "./h";
 import { renderTextLayout } from "../effects/text";
 import { stroke } from "../../stroke";
 
@@ -15,7 +14,7 @@ export type Props = {
     globalCompositeOperation?: GlobalCompositeOperation;
 }
 
-export class CanvasRenderer extends IRenderer {
+export class ViewCanvasRenderer extends IRenderer {
     constructor(view: ShapeView) {
         super(view);
     }
@@ -63,7 +62,7 @@ export class CanvasRenderer extends IRenderer {
         renderBorder(this.view, this.props, this.view.canvasRenderingContext2D, this.view.getBorder(), this.path2D);
     }
 
-    renderShadows() {
+    renderShadows(): Function | undefined {
         return renderShadows(this, this.view, this.props, this.view.canvasRenderingContext2D, this.view.getShadows(), this.view.getBorder(), this.view.getFills());
     }
 
@@ -72,7 +71,7 @@ export class CanvasRenderer extends IRenderer {
         return renderTextLayout(this.props, this.view.canvasRenderingContext2D, layout, this.view as TextShapeView);
     }
 
-    renderBlur() {
+    renderBlur(): Function | null {
         return renderBlur(this.view, this.props);
     }
 
@@ -101,7 +100,7 @@ export class CanvasRenderer extends IRenderer {
         const childs = this.view.m_children as ShapeView[];
         if (childs.length) {
             childs.forEach((c) => {
-                const flat = (c.m_renderer as CanvasRenderer).flat;
+                const flat = (c.m_renderer as ViewCanvasRenderer).flat;
                 const m = c.matrix2Parent().toArray();
                 path.addPath(flat, { a: m[0], b: m[1], c: m[2], d: m[3], e: m[4], f: m[5] });
             });
@@ -123,17 +122,26 @@ export class CanvasRenderer extends IRenderer {
         return this.ctx.restore.bind(this.ctx);
     }
 
-    render(type = "base"): number {
-        this.view.layout();
-        const ver = painter[type] ? painter[type](this.view, this) : painter["base"](this.view, this);
+    render(): number {
+        const ctx = this.view.canvasRenderingContext2D;
+        ctx.save();
+        if (this.props.opacity) ctx.globalAlpha = this.props.opacity;
+        if (this.props.globalCompositeOperation) {
+            ctx.globalCompositeOperation = this.props.globalCompositeOperation;
+        }
+        const blurEnd = this.renderBlur();
+        const shadowEnd = this.renderShadows();
+        this.renderFills();
+        this.renderContents();
+        this.renderBorder();
+        shadowEnd && shadowEnd();
+        blurEnd && blurEnd();
+        ctx.restore();
         this.__clear_cache();
-        return ver;
+        return ++this.m_render_version;
     }
-    asyncRender(type = "base"): number {
-        const renderContents = this.renderContents;
-        this.renderContents = () => this.view.m_children;
-        const version = this.render(type);
-        this.renderContents = renderContents;
-        return version;
+
+    asyncRender(): number {
+        return this.render();
     }
 }
