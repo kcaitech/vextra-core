@@ -47,14 +47,10 @@ export class IRenderer {
 
     m_render_version: number = 0;
 
-    render(type?: string) {
+    render() {
         return 0;
     }
-    asyncRender(type?: string) {
+    asyncRender() {
         return  0;
-    }
-
-    get DOM() : EL | undefined {
-        return undefined;
     }
 }

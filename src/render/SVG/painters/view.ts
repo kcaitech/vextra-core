@@ -10,7 +10,7 @@ export class ViewSVGRenderer extends IRenderer {
         super(view);
     }
 
-    protected board(): EL[] {
+    protected createBoard(): EL[] {
         const view = this.view;
         const path = view.getPath().clone();
         const border = view.getBorder();
@@ -53,6 +53,48 @@ export class ViewSVGRenderer extends IRenderer {
 
     }
 
+    get DOM(): EL {
+        const fills = this.renderFills();
+        const childs = this.renderContents();
+        const borders = this.renderBorder();
+
+        const filterId = `${objectId(this)}`;
+        const shadows = this.renderShadows(filterId);
+        const blurId = `blur_${objectId(this)}`;
+        const blur = this.renderBlur(blurId);
+
+        const contextSettings = this.view.style.contextSettings;
+        const props: any = {};
+        if (contextSettings) {
+            if (contextSettings.opacity !== undefined) {
+                props.opacity = contextSettings.opacity;
+            }
+            props.style = { 'mix-blend-mode': contextSettings.blenMode };
+        }
+
+        let children = [...fills, ...childs, ...borders];
+
+        if (shadows.length) {
+            let filter: string = '';
+            const inner_url = innerShadowId(filterId, this.view.getShadows());
+            if (this.view.type === ShapeType.Rectangle || this.view.type === ShapeType.Oval) {
+                if (inner_url.length) filter = `${inner_url.join(' ')}`
+            } else {
+                filter = `url(#pd_outer-${filterId}) `;
+                if (inner_url.length) filter += inner_url.join(' ');
+            }
+            children = [...shadows, elh("g", { filter }, children)];
+        }
+
+        if (blur.length) {
+            let filter: string = '';
+            if (this.view.blur?.type === BlurType.Gaussian) filter = `url(#${blurId})`;
+            children = [...blur, elh('g', { filter }, children)];
+        }
+
+        return elh("g", props, children);
+    }
+
     protected renderMaskContents() {
         const transform = this.m_mask_transform!.clone();
         const group = this.m_mask_group || [];
@@ -62,7 +104,7 @@ export class ViewSVGRenderer extends IRenderer {
         for (let i = 1; i < group.length; i++) {
             const __s = group[i];
             if (!__s.isVisible) continue;
-            const dom = __s.m_renderer.DOM!;
+            const dom = (__s.m_renderer as ViewSVGRenderer).DOM;
             if (!(dom.elattr as any)['style']) {
                 (dom.elattr as any)['style'] = {};
             }
@@ -84,14 +126,11 @@ export class ViewSVGRenderer extends IRenderer {
     maskGroupRender() {
         const props = this.getProps();
         const transform = this.getMaskTransform();
-        console.log(this.view.name, 'maskGroupRender', transform);
-
         if (transform) {
             Object.assign(props.style, { transform: transform.toString() });
             const id = `mask-base-${objectId(this)}`;
             const __body_transform = this.transformStrFromMaskSpace;
-            let content = this.board();
-            console.log('--content--', content);
+            let content = this.createBoard();
             const __body = elh("g", { style: { transform: __body_transform } }, content);
             this.bleach(__body);
             content = [__body];
@@ -217,47 +256,5 @@ export class ViewSVGRenderer extends IRenderer {
         const version = this.render();
         this.renderContents = renderContents;
         return version;
-    }
-
-    get DOM(): EL {
-        const fills = this.renderFills();
-        const childs = this.renderContents();
-        const borders = this.renderBorder();
-
-        const filterId = `${objectId(this)}`;
-        const shadows = this.renderShadows(filterId);
-        const blurId = `blur_${objectId(this)}`;
-        const blur = this.renderBlur(blurId);
-
-        const contextSettings = this.view.style.contextSettings;
-        const props: any = {};
-        if (contextSettings) {
-            if (contextSettings.opacity !== undefined) {
-                props.opacity = contextSettings.opacity;
-            }
-            props.style = { 'mix-blend-mode': contextSettings.blenMode };
-        }
-
-        let children = [...fills, ...childs, ...borders];
-
-        if (shadows.length) {
-            let filter: string = '';
-            const inner_url = innerShadowId(filterId, this.view.getShadows());
-            if (this.view.type === ShapeType.Rectangle || this.view.type === ShapeType.Oval) {
-                if (inner_url.length) filter = `${inner_url.join(' ')}`
-            } else {
-                filter = `url(#pd_outer-${filterId}) `;
-                if (inner_url.length) filter += inner_url.join(' ');
-            }
-            children = [...shadows, elh("g", { filter }, children)];
-        }
-
-        if (blur.length) {
-            let filter: string = '';
-            if (this.view.blur?.type === BlurType.Gaussian) filter = `url(#${blurId})`;
-            children = [...blur, elh('g', { filter }, children)];
-        }
-
-        return elh("g", props, children);
     }
 }
