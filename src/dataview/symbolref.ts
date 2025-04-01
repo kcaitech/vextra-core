@@ -71,9 +71,9 @@ export class SymbolRefView extends ShapeView {
         const jsonString = this.m_ctx.sessionStorage.get(sessionRefIdKey);
         if (!this.m_ctx.isDocument && jsonString) {
             const refIdArray = JSON.parse(jsonString);
-            const maprefIdArray = new Map(refIdArray) as Map<string, string>;
-            if (maprefIdArray.has(this.id)) {
-                return maprefIdArray.get(this.id) || false;
+            const mapRefIdArray = new Map(refIdArray) as Map<string, string>;
+            if (mapRefIdArray.has(this.id)) {
+                return mapRefIdArray.get(this.id) || false;
             } else {
                 return false;
             }
@@ -86,23 +86,17 @@ export class SymbolRefView extends ShapeView {
         const map = this.maskMap;
         map.clear();
 
-        const children = this.getDataChilds();
-        let mask: Shape | undefined = undefined;
-        const maskShape: Shape[] = [];
+        const children = this.childs;
+        let mask: ShapeView | undefined = undefined;
         for (let i = 0; i < children.length; i++) {
             const child = children[i];
             if (child.mask) {
                 mask = child;
-                maskShape.push(child);
             } else {
                 mask && map.set(child.id, mask);
             }
         }
-        this.childs.forEach(c => {
-            if (c.mask) return;
-            c.m_ctx.setDirty(c);
-        });
-        maskShape.forEach(m => m.notify('rerender-mask'));
+
         this.notify('mask-env-change');
     }
 
@@ -120,7 +114,7 @@ export class SymbolRefView extends ShapeView {
         return findOverride(refId, type, varsContainer || []);
     }
 
-    findVar(varId: string, ret: Variable[]) {            // todo subdata, proxy
+    findVar(varId: string, ret: Variable[]) {            // todo sub data, proxy
         const varsContainer = (this.varsContainer || []).concat(this.data);
         findVar(varId, ret, varsContainer || []);
     }
@@ -134,7 +128,6 @@ export class SymbolRefView extends ShapeView {
 
         if (this.m_sym && objectId(this.m_sym) === objectId(sym)) return;
 
-        // this.m_refId = refId;
         if (this.m_sym) this.m_sym.unwatch(this.symwatcher);
         this.m_sym = sym;
         if (this.m_sym) this.m_sym.watch(this.symwatcher);
@@ -145,8 +138,7 @@ export class SymbolRefView extends ShapeView {
             this.m_union = union;
             if (this.m_union) this.m_union.watch(this.symwatcher);
         }
-        this.m_pathstr = '';
-        this.m_path = undefined;
+        this.cache.clearCacheByKeys(['m_pathstr', 'm_path']);
         this.m_ctx.setReLayout(this);
     }
 

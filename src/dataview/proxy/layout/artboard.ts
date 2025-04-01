@@ -19,9 +19,7 @@ export class ArtboardLayout extends GroupLayout {
             const index = Math.min(i - hidden, layout.length - 1);
             newTransform.translateX = layout[index].x;
             newTransform.translateY = layout[index].y;
-            if (!cc.isVisible) {
-                hidden += 1;
-            }
+            if (!cc.isVisible) hidden += 1;
             cc.m_ctx.setDirty(cc);
             cc.updateLayoutArgs(newTransform, cc.frame);
             cc.updateFrames();
@@ -36,8 +34,10 @@ export class ArtboardLayout extends GroupLayout {
         if (view.autoLayout) {
             super._layout(parentFrame, scale);
             const childs = view.childs.filter(c => c.isVisible);
-            const frame = new ShapeFrame(view.frame.x, view.frame.y, view.frame.width, view.frame.height);
-            if (childs.length) this._autoLayout(view.autoLayout, frame);
+            if (childs.length) {
+                const size = new ShapeSize(view.frame.width, view.frame.height);
+                this._autoLayout(view.autoLayout, size);
+            }
         } else {
             super._layout(parentFrame, scale);
         }

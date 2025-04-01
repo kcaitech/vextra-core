@@ -1,9 +1,9 @@
-import { ViewLayout } from "./view";
 import { AutoLayout, ShapeFrame, ShapeSize } from "../../../data";
 import { SymbolView } from "../../symbol";
 import { updateAutoLayout } from "../../../editor";
+import { GroupLayout } from "./group";
 
-export class SymbolLayout extends ViewLayout {
+export class SymbolLayout extends GroupLayout {
     constructor(protected view: SymbolView) {
         super(view);
     }
@@ -36,8 +36,10 @@ export class SymbolLayout extends ViewLayout {
         if (view.autoLayout) {
             super._layout(parentFrame, scale);
             const childs = view.childs.filter(c => c.isVisible);
-            const frame = new ShapeFrame(view.frame.x, view.frame.y, view.frame.width, view.frame.height);
-            if (childs.length) this._autoLayout(view.autoLayout, frame);
+            if (childs.length) {
+                const size = new ShapeSize(view.frame.width, view.frame.height);
+                this._autoLayout(view.autoLayout, size);
+            }
         } else {
             super._layout(parentFrame, scale);
         }

@@ -23,7 +23,6 @@ import {
     OverlayBackgroundInteraction,
     OverlayPosition,
     OverrideType,
-    PathShape,
     PrototypeInterAction,
     PrototypeStartingPoint,
     ResizingConstraints2,
@@ -47,7 +46,6 @@ import { DViewCtx, PropsType } from "./viewctx";
 import { objectId } from "../basic/objectid";
 import { float_accuracy } from "../basic/consts";
 import { findOverrideAll } from "../data/utils";
-import { Path } from "@kcdesign/path";
 import { isEqual } from "../basic/number_utils";
 import { ViewModifyEffect } from "./proxy/effects/view";
 import { ViewCache } from "./proxy/cache/view";
@@ -306,7 +304,6 @@ export function fixConstrainFrame2(shape: Shape, scale: {
 }
 
 export function matrix2parent(t: Transform, matrix?: Transform) {
-    // const t = this.transform;
     const m = t;
     if (!matrix) return m.clone();
     matrix.multiAtLeft(m);
@@ -315,9 +312,6 @@ export function matrix2parent(t: Transform, matrix?: Transform) {
 
 export class ShapeView extends DataView {
     m_transform: Transform;
-    m_fixedRadius?: number;
-    m_path?: Path;
-    m_pathstr?: string;
 
     frameProxy: FrameProxy;
     cache: ViewCache;
@@ -326,10 +320,8 @@ export class ShapeView extends DataView {
 
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
-        const shape = props.data;
-        const t = shape.transform;
+        const t = props.data.transform;
         this.m_transform = new Transform(t.m00, t.m01, t.m02, t.m10, t.m11, t.m12)
-        this.m_fixedRadius = (shape as PathShape).fixedRadius;
 
         this.frameProxy = new FrameProxy(this);
         this.cache = new ViewCache(this);
@@ -417,7 +409,7 @@ export class ShapeView extends DataView {
     }
 
     get fixedRadius() {
-        return this.m_fixedRadius;
+        return undefined;
     }
 
     get resizingConstraint() {
@@ -452,9 +444,17 @@ export class ShapeView extends DataView {
         return this.frameProxy.boundingBox();
     }
 
-    maskMap: Map<string, Shape> = new Map;
+    maskMap: Map<string, ShapeView> = new Map;
 
     updateMaskMap() {
+    }
+
+    get mask(): boolean {
+        return !!this.m_data.mask;
+    }
+
+    get masked() {
+        return this.parent?.maskMap?.get(this.data.id);
     }
 
     onDataChange(...args: any[]): void {
@@ -596,14 +596,6 @@ export class ShapeView extends DataView {
         return v ? v.value : !!this.m_data.isLocked;
     }
 
-    get mask(): boolean {
-        return !!this.m_data.mask;
-    }
-
-    get masked() {
-        return this.parent?.maskMap?.get(this.m_data.id);
-    }
-
     indexOfChild(view: ShapeView) {
         return this.childs.indexOf(view)
     }
@@ -620,18 +612,8 @@ export class ShapeView extends DataView {
         this.layoutProxy.layout(props);
     }
 
-    protected renderContents(): EL[] {
-        const childs = this.m_children;
-        childs.forEach((c) => c.render());
-        return childs;
-    }
-
     asyncRender(): number {
-        const renderContents = this.renderContents;
-        this.renderContents = () => this.m_children;
-        const version = this.render();
-        this.renderContents = renderContents;
-        return version;
+        return this.m_renderer.asyncRender();
     }
 
     render(): number {
@@ -675,8 +657,7 @@ export class ShapeView extends DataView {
         if (!v) {
             return this.m_data.prototypeInteractions;
         }
-        // 需要做合并
-        // 合并vars
+        // 需要做合并 合并vars
         const overrides = new BasicArray<PrototypeInterAction>();
         v.reverse().forEach(v => {
             const o = (v.value as BasicArray<PrototypeInterAction>).slice(0).reverse();

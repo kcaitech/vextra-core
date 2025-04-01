@@ -16,23 +16,21 @@ import { GroupModifyEffect } from "./proxy/effects/group";
 import { GroupFrameProxy } from "./proxy/frame/group";
 
 export class GroupShapeView extends ShapeView {
-
-    get data(): GroupShape {
-        return this.m_data as GroupShape;
-    }
-
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
 
-        this._bubblewatcher = this._bubblewatcher.bind(this);
-        this.m_data.bubblewatch(this._bubblewatcher);
+        this._bubble_watcher = this._bubble_watcher.bind(this);
+        this.m_data.bubblewatch(this._bubble_watcher);
         this.updateMaskMap();
         this.frameProxy = new GroupFrameProxy(this);
         this.layoutProxy = new GroupLayout(this);
         this.effect = new GroupModifyEffect(this);
     }
+    get data(): GroupShape {
+        return this.m_data as GroupShape;
+    }
 
-    protected _bubblewatcher(...args: any[]) {
+    protected _bubble_watcher(...args: any[]) {
         this.onChildChange(...args);
     }
 
@@ -40,29 +38,24 @@ export class GroupShapeView extends ShapeView {
         if (args.includes('fills') || args.includes('borders')) this.notify(...args);
     }
 
-    maskMap: Map<string, Shape> = new Map;
+    maskMap: Map<string, ShapeView> = new Map;
 
+    // 更新遮罩层关系
     updateMaskMap() {
         const map = this.maskMap;
+
         map.clear();
 
-        const children = this.getDataChilds();
-        let mask: Shape | undefined = undefined;
-        const maskShape: Shape[] = [];
-        for (let i = 0; i < children.length; i++) {
-            const child = children[i];
+        const children = this.childs;
+        let mask: ShapeView | undefined = undefined;
+        for (const child of children) {
             if (child.mask && child.isVisible) {
                 mask = child;
-                maskShape.push(child);
             } else {
                 mask && map.set(child.id, mask);
             }
         }
-        this.childs.forEach(c => {
-            if (c.mask) return;
-            c.m_ctx.setDirty(c);
-        });
-        maskShape.forEach(m => m.notify('rerender-mask'));
+
         this.notify('mask-env-change');
     }
 
@@ -72,12 +65,12 @@ export class GroupShapeView extends ShapeView {
 
     onDestroy(): void {
         super.onDestroy();
-        this.m_data.bubbleunwatch(this._bubblewatcher);
+        this.m_data.bubbleunwatch(this._bubble_watcher);
     }
 
     getDataChilds(): Shape[] {
         return (this.m_data as GroupShape).childs;
     }
 
-    m_need_updatechilds: boolean = false;
+    m_need_update_childs: boolean = false;
 }

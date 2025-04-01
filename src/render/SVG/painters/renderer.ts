@@ -57,4 +57,11 @@ export class SVGRenderer extends IRenderer {
     render(type = "base"): number {
         return painter[type] ? painter[type](this.view, this) : painter["base"](this.view, this);
     }
+    asyncRender(type = "base") {
+        const renderContents = this.renderContents;
+        this.renderContents = () => this.view.m_children;
+        const version = this.render(type);
+        this.renderContents = renderContents;
+        return version;
+    }
 }

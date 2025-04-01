@@ -21,6 +21,13 @@ export const painter: { [key: string]: (view: any, renderer: SVGRenderer) => num
 painter['base'] = (view: ShapeView, renderer: SVGRenderer) => {
     if (!renderer.checkAndResetDirty()) return renderer.m_render_version;
 
+    const masked = view.masked;
+    if (masked) {
+        view.reset("g");
+        masked.m_ctx.setDirty(masked);
+        return ++renderer.m_render_version;
+    }
+
     if (!view.isVisible) {
         view.reset("g");
         return ++renderer.m_render_version;
@@ -120,8 +127,19 @@ painter[ShapeType.BoolShape] = (view: ShapeView, renderer: SVGRenderer) => {
 painter[ShapeType.Path] = (view: PathShapeView, renderer: SVGRenderer) => {
     if (!renderer.checkAndResetDirty()) return renderer.m_render_version;
 
+    const masked = view.masked;
+    if (masked) {
+        view.reset("g");
+        masked.m_ctx.setDirty(masked);
+        return ++renderer.m_render_version;
+    }
+
     if (!view.isVisible) {
         view.reset("g");
+        return ++renderer.m_render_version;
+    }
+
+    if (view.mask) {
         return ++renderer.m_render_version;
     }
 

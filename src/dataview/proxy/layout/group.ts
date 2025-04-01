@@ -16,9 +16,9 @@ export class GroupLayout extends ViewLayout {
     ): void {
         super._layout(parentFrame, scale);
         const view = this.view;
-        if (view.m_need_updatechilds) {
+        if (view.m_need_update_childs) {
             view.notify("childs"); // notify childs change
-            view.m_need_updatechilds = false;
+            view.m_need_update_childs = false;
         }
     }
 
@@ -67,5 +67,7 @@ export class GroupLayout extends ViewLayout {
         const removes = view.removeChilds(childs.length, Number.MAX_VALUE);
         if (rootView) rootView.addDelayDestroy(removes);
         else removes.forEach((c => c.destroy()));
+
+        view.updateMaskMap();
     }
 }

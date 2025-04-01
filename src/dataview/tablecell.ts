@@ -203,43 +203,43 @@ export class TableCellView extends ShapeView {
         return [];
     }
 
-    renderContents(): EL[] {
-        const shape = this.m_data as TableCell;
-        const cellType = shape.cellType ?? TableCellType.None;
-        if (cellType === TableCellType.None) {
-            return [];
-        }
-        const frame = this.frame;
-        if (cellType === TableCellType.Image) {
-            const url = shape.peekImage(true);
-            const img = elh("image", {
-                'xlink:href': url ?? this.m_imgPH,
-                width: frame.width,
-                height: frame.height,
-                x: 0,
-                y: 0,
-                'preserveAspectRatio': 'xMidYMid meet'
-            });
-            return [img];
-        } else if (cellType === TableCellType.Text) {
-            // if (!this.m_isVirtual) {
-            //     shape.text?.updateSize(frame.width, frame.height);
-            // }
-            const layout = this.getLayout();
-            return renderTextLayout(elh, layout, frame, this.blur);
-        }
-        return [];
-    }
+    // renderContents(): EL[] {
+    //     const shape = this.m_data as TableCell;
+    //     const cellType = shape.cellType ?? TableCellType.None;
+    //     if (cellType === TableCellType.None) {
+    //         return [];
+    //     }
+    //     const frame = this.frame;
+    //     if (cellType === TableCellType.Image) {
+    //         const url = shape.peekImage(true);
+    //         const img = elh("image", {
+    //             'xlink:href': url ?? this.m_imgPH,
+    //             width: frame.width,
+    //             height: frame.height,
+    //             x: 0,
+    //             y: 0,
+    //             'preserveAspectRatio': 'xMidYMid meet'
+    //         });
+    //         return [img];
+    //     } else if (cellType === TableCellType.Text) {
+    //         // if (!this.m_isVirtual) {
+    //         //     shape.text?.updateSize(frame.width, frame.height);
+    //         // }
+    //         const layout = this.getLayout();
+    //         return renderTextLayout(elh, layout, frame, this.blur);
+    //     }
+    //     return [];
+    // }
 
     onDestroy(): void {
         super.onDestroy();
         if (this.__layoutToken && this.__preText) this.__preText.dropLayout(this.__layoutToken, this.id);
     }
-    asyncRender() {
-        return this.render();
-    }
+    // asyncRender() {
+    //     return this.render();
+    // }
 
-    render(): number {
+    // render(): number {
         // if (!this.checkAndResetDirty()) return this.m_render_version;
         //
         // if (!this.isVisible) {
@@ -278,6 +278,6 @@ export class TableCellView extends ShapeView {
         // this.reset("g", props, children);
         //
         // return ++this.m_render_version;
-        return this.m_renderer.render(this.type);
-    }
+        // return this.m_renderer.render(this.type);
+    // }
 }

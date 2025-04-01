@@ -15,23 +15,17 @@ export class ViewLayout {
         const view = this.view;
         if (props.data.id !== view.m_data.id) throw new Error('id not match');
         const dataChanged = objectId(props.data) !== objectId(view.m_data);
-        if (dataChanged) {
-            // data changed
-            view.setData(props.data);
-        }
-        // check
+        if (dataChanged) view.setData(props.data);
         const diffScale = isDiffScale(props.scale, view.m_props.scale);
-        const diffLayoutSize = isDiffShapeSize(props.layoutSize, view.m_props.layoutSize)
+        const diffLayoutSize = isDiffShapeSize(props.layoutSize, view.m_props.layoutSize);
         const diffVars = isDiffVarsContainer(props.varsContainer, view.varsContainer);
         if (!needLayout &&
             !dataChanged &&
             !diffScale &&
             !diffVars &&
-            !diffLayoutSize) {
-            return false;
-        }
-        view.m_props = props
-        view.m_isVirtual = props.isVirtual
+            !diffLayoutSize) return false;
+        view.m_props = props;
+        view.m_isVirtual = props.isVirtual;
         if (diffVars) {
             view.m_ctx.removeDirty(view);
             view.varsContainer = props.varsContainer;
@@ -39,11 +33,11 @@ export class ViewLayout {
         return true;
     }
 
-    _layout(parentFrame: ShapeSize | undefined, scale: { x: number, y: number } | undefined,) {
+    _layout(parentFrame: ShapeSize | undefined, scale: { x: number, y: number } | undefined) {
         const view = this.view;
         const shape = view.data;
         const transform = shape.transform.clone();
-        if (view.parent && (view.parent as any).autoLayout) {
+        if (view.parent && view.parent.autoLayout) {
             transform.translateX = view.m_transform.translateX;
             transform.translateY = view.m_transform.translateY;
         }
@@ -109,7 +103,7 @@ export class ViewLayout {
             let layoutSize = new ShapeSize();
             const frame = new ShapeFrame(0, 0, size.width * __decompose_scale.x, size.height * __decompose_scale.y);
 
-            if (view.parent && (view.parent as any).autoLayout) {
+            if (view.parent && view.parent.autoLayout) {
                 transform.translateX = view.m_transform.translateX;
                 transform.translateY = view.m_transform.translateY;
             }

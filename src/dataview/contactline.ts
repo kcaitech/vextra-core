@@ -11,7 +11,6 @@ import { ContactForm, ContactShape, Page, Shape, ShapeType, Fill, Blur } from ".
 import {
     ContactType, CurveMode,
     CurvePoint,
-    parsePath,
     Transform
 } from "../data";
 import { DViewCtx, PropsType } from "./viewctx";
@@ -39,8 +38,7 @@ export class ContactLineView extends PathShapeView {
 
     updateAtLast() {
         this.updateApex();
-        this.m_path = undefined;
-        this.m_pathstr = undefined;
+        this.cache.clearCacheByKeys(['m_path', 'm_pathstr']);
         this.updateFrames();
     }
 
@@ -51,8 +49,7 @@ export class ContactLineView extends PathShapeView {
 
     private update() {
         this.updateApex();
-        this.m_path = undefined;
-        this.m_pathstr = undefined;
+        this.cache.clearCacheByKeys(['m_path', 'm_pathstr']);
         this.m_ctx.setDirty(this);
         this.updateFrames();
     }

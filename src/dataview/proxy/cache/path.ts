@@ -64,7 +64,9 @@ export class PathShapeViewCache extends ViewCache {
         return path;
     }
 
-
+    get fixedRadius() {
+        return this.view.data.fixedRadius;
+    }
 
     get path() {
         if (this.m_path) return this.m_path;

@@ -178,10 +178,9 @@ export class BoolShapeView extends GroupShapeView {
         return this.data.getBoolOp();
     }
 
-    protected _bubblewatcher(...args: any[]) {
-        super._bubblewatcher(...args);
-        this.m_path = undefined;
-        this.m_pathstr = undefined;
+    protected _bubble_watcher(...args: any[]) {
+        super._bubble_watcher(...args);
+        this.cache.clearCacheByKeys(['m_path', 'm_pathstr']);
         this.m_ctx.setDirty(this);
     }
 

@@ -4,7 +4,7 @@ import { ArtboardView } from "../../artboard";
 
 function updateByChild(view: GroupShapeView) {
     view.updateMaskMap();
-    view.m_need_updatechilds = true;
+    view.m_need_update_childs = true;
 }
 
 function updateAutoLayout(view: GroupShapeView) {

@@ -129,4 +129,11 @@ export class CanvasRenderer extends IRenderer {
         this.__clear_cache();
         return ver;
     }
+    asyncRender(type = "base"): number {
+        const renderContents = this.renderContents;
+        this.renderContents = () => this.view.m_children;
+        const version = this.render(type);
+        this.renderContents = renderContents;
+        return version;
+    }
 }

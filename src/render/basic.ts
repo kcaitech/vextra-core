@@ -50,4 +50,7 @@ export class IRenderer {
     render(type?: string) {
         return 0;
     }
+    asyncRender(type?: string) {
+        return  0;
+    }
 }

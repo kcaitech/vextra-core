@@ -9,7 +9,7 @@
  */
 
 import { objectId } from "../../../basic/objectid";
-import { ShapeSize, Gradient, GradientType, Stop, Color } from "../../../data/classes";
+import { ShapeSize, Gradient, GradientType, Stop, Color } from "../../../data";
 
 const defaultColor = Color.DefaultColor;
 
@@ -108,18 +108,12 @@ export function render(h: Function, value: Gradient, frame: ShapeSize): { id: st
             const { r, g, b, a } = calcSmoothColor();
             gradient = gradient + "," + "rgba(" + r + "," + g + "," + b + "," + a + ")" + " 360deg";
         }
-        // defsChilds.push(h("style", {}, "." + id + "{" +
         const rotate = Math.atan2((value.to.y * frame.height - value.from.y * frame.height), (value.to.x * frame.width - value.from.x * frame.width)) / Math.PI * 180 + 90;
         const from = "from " + rotate + "deg at " + value.from.x * 100 + "% " + value.from.y * 100 + "%";
         style =
             "background: conic-gradient(" + from + "," + gradient + ");" +
             "height:-webkit-fill-available;" +
             "width:-webkit-fill-available;"
-            // "transform: rotate(90deg);"
-        // "transform-origin: left top;" +
-        // "rotation:90deg" +
-        // "rotation-point:0% 0%;" +
-        // "}"));
     }
     return { id, style, node };
 }
